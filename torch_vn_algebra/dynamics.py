@@ -15,7 +15,7 @@ from typing import Callable, List, Optional, Sequence, Union
 import torch
 
 from .algebra import TypeIAlgebra
-from .channels import Channel
+from .channels import Channel, InterSectorChannel
 from . import cost
 from .states import DensityMatrix
 
@@ -161,8 +161,20 @@ def lindblad_rhs(H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
     Right-hand side of the GKSL equation
         drho/dt = -i[H, rho] + sum_j g_j (L_j rho L_j^* - 1/2 {L_j^* L_j, rho})
     as a function (t, rho_matrix) -> drho/dt. H and L_j are constant, or callables of t.
+
+    A jump that moves weight between sectors (particle loss N -> N-1, ...) is passed as an
+    InterSectorChannel of the algebra into itself: each of its Kraus operators K_i is one jump operator
+    (blocks K_i^{dc}), contributing sum_i (K_i rho K_i^* - 1/2 {K_i^* K_i, rho}); K_i^* K_i is block
+    diagonal, so the generator still maps M into M and conserves the total trace.
     """
     rates = _rates(jumps, rates)
+    sector_jumps = {}
+    for idx, L in enumerate(jumps):
+        if isinstance(L, InterSectorChannel):
+            if L.algebra_in.k_factors != L.algebra_out.k_factors:
+                raise ValueError("a jump between sectors must map the algebra into itself")
+            K = L.kraus                                                    # (B, r, D, C, m, k)
+            sector_jumps[idx] = (K, (K.conj().transpose(-2, -1) @ K).sum(dim=(1, 2)))   # (B, C, k, k)
 
     def get(x, t):
         return _mat(x(t) if callable(x) else x)
@@ -172,7 +184,14 @@ def lindblad_rhs(H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
         if H is not None:
             Hm = get(H, t).to(rho.dtype)
             out = out - 1j * (Hm @ rho - rho @ Hm)
-        for g, L in zip(rates, jumps):
+        for idx, (g, L) in enumerate(zip(rates, jumps)):
+            if idx in sector_jumps:
+                K, KdK = sector_jumps[idx]
+                Kd = K.to(rho.dtype)
+                gain = (Kd @ rho[:, None, None] @ Kd.conj().transpose(-2, -1)).sum(dim=(1, 3))
+                KdK = KdK.to(rho.dtype)
+                out = out + g * (gain - 0.5 * (KdK @ rho + rho @ KdK))
+                continue
             Lm = get(L, t).to(rho.dtype)
             Ld = Lm.conj().transpose(-2, -1)
             LdL = Ld @ Lm

@@ -155,6 +155,104 @@ class SpinChain:
         op._is_self_adjoint = True
         return op
 
+    def xxz_sparse(self, J: float = 1.0, Delta: float = 1.0, h=None, sector: int = 0):
+        """
+        The XXZ Hamiltonian of one sector in sparse form (krylov.SparseSectorHamiltonian): a batch of
+        diagonals (one per row of h) and one shared sparse hopping matrix; memory O(batch * k + k * L)
+        instead of O(batch * k^2). For krylov.ground_state / krylov.evolve.
+        """
+        from .krylov import SparseSectorHamiltonian
+        h, batch = self._fields(h)
+        diag, rows, cols = self._diag_and_hops(sector, J, Delta, h, batch)
+        k = self.sector_dim(sector)
+        off = None
+        if rows is not None and len(rows):
+            vals = torch.full((len(rows),), J / 2, dtype=self.dtype, device=self.device)
+            off = torch.sparse_coo_tensor(torch.stack([rows, cols]), vals, (k, k), check_invariants=False)
+        return SparseSectorHamiltonian(diag, off, self.dtype)
+
+    # ------------------------------------------------------------------
+    # translation symmetry (periodic chains)
+    # ------------------------------------------------------------------
+    def _translate(self, x: torch.Tensor, j) -> torch.Tensor:
+        """T^j x for labels x, where T moves site i to site i+1 (mod L)."""
+        L, mask = self.L, (1 << self.L) - 1
+        return ((x << j) | (x >> ((L - j) % L))) & mask if not isinstance(j, int) or j % L else x
+
+    def _representatives(self, x: torch.Tensor):
+        """rep(x) = min_j T^j x, the j attaining it (first), and the period of rep(x)."""
+        j = torch.arange(self.L, device=x.device)
+        rot = self._translate(x[:, None], j[None, :])                    # (k, L)
+        rep, jstar = rot.min(dim=1)
+        period = torch.full_like(rep, self.L)
+        for p in range(self.L - 1, 0, -1):                               # smallest period divides L
+            if self.L % p == 0:
+                period = torch.where(self._translate(rep, p) == rep, torch.full_like(rep, p), period)
+        return rep, jstar, period
+
+    def momentum_dims(self, N: int) -> List[int]:
+        """Dimensions of the momentum sectors k = 2 pi m / L, m = 0..L-1, inside sector N."""
+        reps = torch.unique(self._representatives(self.labels[N])[0])
+        _, _, Rr = self._representatives(reps)
+        return [int(((m * Rr) % self.L == 0).sum()) for m in range(self.L)]
+
+    def momentum_algebra(self, N: int) -> TypeIAlgebra:
+        """(+)_m M_{d_m}: the operators commuting with N and with translations, sectors labelled by m."""
+        dims = self.momentum_dims(N)
+        nz = [m for m in range(self.L) if dims[m] > 0]
+        return TypeIAlgebra([dims[m] for m in nz], [dims[m] for m in nz], complex_valued=True,
+                            precision=self.precision, device=self.device, charges=nz)
+
+    def xxz_momentum(self, J: float = 1.0, Delta: float = 1.0, h: float = 0.0, sector: int = 0) -> Operator:
+        """
+        Translation-invariant XXZ Hamiltonian of sector N, block diagonal in the momentum k = 2 pi m / L
+        (requires a periodic, complex chain; h must be uniform). Basis of block m:
+        |a, k> = (1/sqrt(N_a)) sum_j e^{-i k j} T^j |a>, N_a = L^2 / R_a, for representatives a of period
+        R_a with m R_a = 0 mod L. The union of the spectra of all blocks is the spectrum of sector N.
+        """
+        if self.boundary != 'periodic':
+            raise ValueError("momentum sectors need boundary='periodic'")
+        if not self.complex_valued:
+            raise ValueError("momentum sectors need a complex chain (complex_valued=True)")
+        if torch.as_tensor(h).numel() != 1:
+            raise ValueError("a translation-invariant Hamiltonian needs a uniform field h")
+        L, dev = self.L, self.device
+        alg = self.momentum_algebra(sector)
+        lab = self.labels[sector]
+        rep_all, _, _ = self._representatives(lab)
+        reps = torch.unique(rep_all)
+        _, _, Ra = self._representatives(reps)
+        bits = ((reps[:, None] >> torch.arange(L, device=dev)) & 1).to(self.real_dtype) - 0.5
+        diag_all = torch.zeros(len(reps), dtype=self.real_dtype, device=dev)
+        for i, j in self.bonds:
+            diag_all = diag_all + J * Delta * bits[:, i] * bits[:, j]
+        diag_all = diag_all + float(h) * bits.sum(-1)
+        position = torch.full((2 ** L,), -1, dtype=torch.int64, device=dev)
+        blocks = []
+        for m in alg.charges:
+            k = 2 * math.pi * m / L
+            ok = (m * Ra) % L == 0
+            a, R_a, d_a = reps[ok], Ra[ok], diag_all[ok]
+            n = len(a)
+            position[a] = torch.arange(n, device=dev)
+            M = torch.diag_embed(d_a.to(self.dtype))
+            for i, j in self.bonds:
+                src = torch.nonzero(((a >> i) & 1) != ((a >> j) & 1)).squeeze(-1)
+                s_ = a[src] ^ ((1 << i) | (1 << j))
+                b, jstar, R_b = self._representatives(s_)
+                ib = position[b]
+                keep = ib >= 0
+                ib, src, jstar, R_b = ib[keep], src[keep], jstar[keep], R_b[keep]
+                # s = T^{-jstar} b  =>  amplitude J/2 * e^{i k l} * sqrt(R_a / R_b) with l = -jstar
+                phase = torch.exp(1j * k * (-jstar).to(torch.float64)).to(self.dtype)
+                amp = (J / 2) * phase * torch.sqrt(R_a[src].to(torch.float64) / R_b.to(torch.float64)).to(self.dtype)
+                M.index_put_((ib, src), amp, accumulate=True)
+            position[a] = -1
+            blocks.append(M)
+        op = alg.from_blocks(blocks)
+        op._is_self_adjoint = True
+        return op
+
     def heisenberg(self, J: float = 1.0, h=None, sector: Optional[int] = None) -> Operator:
         return self.xxz(J, 1.0, h, sector)
 
@@ -261,6 +359,17 @@ class SpinChain:
                 src = idx[up]
                 dst = self.index_of[lab[up] ^ (1 << i)]
                 K[0, 1, N - 1, N, dst, src] = gamma ** 0.5
+        return InterSectorChannel(alg, alg, K)
+
+    def lowering(self, i: int) -> InterSectorChannel:
+        """S-_i as a single jump operator between sectors N -> N-1 (for Lindblad loss terms)."""
+        alg = self.algebra
+        K = torch.zeros(1, 1, alg.C, alg.C, alg.k_max, alg.k_max, dtype=self.dtype, device=self.device)
+        for N in range(1, self.L + 1):
+            lab = self.labels[N]
+            up = ((lab >> i) & 1).bool()
+            src = torch.arange(len(lab), device=self.device)[up]
+            K[0, 0, N - 1, N, self.index_of[lab[up] ^ (1 << i)], src] = 1.0
         return InterSectorChannel(alg, alg, K)
 
     # ------------------------------------------------------------------

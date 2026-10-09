@@ -152,3 +152,43 @@ class TestSpinChain:
             r[W] = SpinChain.level_spacing_ratio(w[:, k // 4: 3 * k // 4]).mean().item()
         assert 0.49 < r[0.5] < 0.56          # GOE 0.5307
         assert 0.36 < r[10.0] < 0.41         # Poisson 0.3863
+
+
+class TestMomentum:
+    def test_momentum_blocks_reproduce_sector_spectrum(self):
+        for L, N, D, h in [(8, 4, 1.0, 0.0), (9, 4, 0.5, 0.2), (10, 3, 1.3, 0.0)]:
+            ch = SpinChain(L, 'periodic')
+            Hm = ch.xxz_momentum(1.0, D, h, sector=N)
+            assert sum(ch.momentum_dims(N)) == math.comb(L, N)
+            ws = torch.sort(torch.cat([w[0] for w, _ in Hm.eigh()]))[0]
+            wd = torch.linalg.eigvalsh(ch.xxz(1.0, D, h, sector=N).matrix[0, 0])
+            assert torch.allclose(ws, wd, atol=1e-10)
+
+    def test_ground_state_momentum_marshall(self):
+        # Heisenberg ring: ground state at k = 0 for L/2 even and k = pi for L/2 odd
+        for L in (8, 10, 12):
+            ch = SpinChain(L, 'periodic')
+            Hm = ch.xxz_momentum(sector=L // 2)
+            e0 = [w[0].min().item() for w, _ in Hm.eigh()]
+            m = Hm.algebra.charges[min(range(len(e0)), key=lambda i: e0[i])]
+            assert m == (0 if (L // 2) % 2 == 0 else L // 2)
+
+    def test_momentum_requires_periodic_complex(self):
+        with pytest.raises(ValueError):
+            SpinChain(6).xxz_momentum(sector=3)
+        with pytest.raises(ValueError):
+            SpinChain(6, 'periodic', complex_valued=False).xxz_momentum(sector=3)
+
+
+def test_lindblad_loss_between_sectors_is_a_death_process():
+    ch = SpinChain(5, 'periodic')
+    rho0 = ch.basis_state('11011')                    # N = 4
+    g = 0.4
+    out = dynamics.lindblad_evolve(rho0, ch.xxz(1.0, 0.7), [ch.lowering(i) for i in range(5)],
+                                   [0.0, 0.8, 2.0], rates=[g] * 5, substeps=60)
+    for t, r in zip([0.0, 0.8, 2.0], out):
+        q = math.exp(-g * t)
+        binom = torch.tensor([math.comb(4, n) * q ** n * (1 - q) ** (4 - n) for n in range(5)] + [0.0],
+                             dtype=torch.float64)
+        assert torch.allclose(r.sector_probabilities()[0], binom, atol=1e-8)
+        assert abs(r.trace.real.item() - 1) < 1e-10
