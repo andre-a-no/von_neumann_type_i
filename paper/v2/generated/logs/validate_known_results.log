@@ -1,0 +1,47 @@
+E|U_11|^4, U(n)              n = 2                  theory  0.333333  MC  0.335015 +- 0.0015  (z = +1.12)
+E|U_11|^2, U(n)              n = 2                  theory  0.5  MC  0.5014 +- 0.0014  (z = +0.97)
+E|U_11|^4, U(n)              n = 4                  theory  0.1  MC  0.0999686 +- 0.00068  (z = -0.05)
+/home/user/von_neumann_type_i/scripts/paper/validate_known_results.py:64: CostWarning: random_unitary(n=8, batch=40000): about 40 s expected for 40000 blocks of size 8 on cpu (measured on 8 blocks). Consider a smaller batch, double -> single precision or a GPU. Silence with warnings.simplefilter('ignore', torch_vn_algebra.cost.CostWarning).
+  u = alg.random_unitary(n, batch_size=b)[:, 0, 0].abs()
+E|U_11|^4, U(n)              n = 8                  theory  0.0277778  MC  0.0277718 +- 0.00024  (z = -0.02)
+/home/user/von_neumann_type_i/scripts/paper/validate_known_results.py:64: CostWarning: random_unitary(n=16, batch=40000): about 45 s expected for 40000 blocks of size 16 on cpu (measured on 8 blocks). Consider a smaller batch, double -> single precision or a GPU. Silence with warnings.simplefilter('ignore', torch_vn_algebra.cost.CostWarning).
+  u = alg.random_unitary(n, batch_size=b)[:, 0, 0].abs()
+E|U_11|^4, U(n)              n = 16                 theory  0.00735294  MC  0.00737778 +- 7.1e-05  (z = +0.35)
+/home/user/von_neumann_type_i/scripts/paper/validate_known_results.py:64: CostWarning: random_unitary(n=32, batch=40000): about 43 s expected for 40000 blocks of size 32 on cpu (measured on 8 blocks). Consider a smaller batch, double -> single precision or a GPU. Silence with warnings.simplefilter('ignore', torch_vn_algebra.cost.CostWarning).
+  u = alg.random_unitary(n, batch_size=b)[:, 0, 0].abs()
+E|U_11|^4, U(n)              n = 32                 theory  0.00189394  MC  0.00188255 +- 2e-05  (z = -0.58)
+E|U_11|^2, U(n)              n = 32                 theory  0.03125  MC  0.031172 +- 0.00015  (z = -0.52)
+E|U_11|^4, O(n)              n = 2                  theory  0.375  MC  0.373641 +- 0.0018  (z = -0.75)
+E|U_11|^2, O(n)              n = 2                  theory  0.5  MC  0.498956 +- 0.0018  (z = -0.59)
+E|U_11|^4, O(n)              n = 4                  theory  0.125  MC  0.12365 +- 0.00098  (z = -1.37)
+E|U_11|^4, O(n)              n = 8                  theory  0.0375  MC  0.0378452 +- 0.0004  (z = +0.86)
+/home/user/von_neumann_type_i/scripts/paper/validate_known_results.py:64: CostWarning: random_unitary(n=16, batch=40000): about 47 s expected for 40000 blocks of size 16 on cpu (measured on 8 blocks). Consider a smaller batch, double -> single precision or a GPU. Silence with warnings.simplefilter('ignore', torch_vn_algebra.cost.CostWarning).
+  u = alg.random_unitary(n, batch_size=b)[:, 0, 0].abs()
+E|U_11|^4, O(n)              n = 16                 theory  0.0104167  MC  0.0104973 +- 0.00014  (z = +0.60)
+/home/user/von_neumann_type_i/scripts/paper/validate_known_results.py:64: CostWarning: random_unitary(n=32, batch=40000): about 46 s expected for 40000 blocks of size 32 on cpu (measured on 8 blocks). Consider a smaller batch, double -> single precision or a GPU. Silence with warnings.simplefilter('ignore', torch_vn_algebra.cost.CostWarning).
+  u = alg.random_unitary(n, batch_size=b)[:, 0, 0].abs()
+E|U_11|^4, O(n)              n = 32                 theory  0.00275735  MC  0.0027189 +- 3.9e-05  (z = -0.99)
+E|U_11|^2, O(n)              n = 32                 theory  0.03125  MC  0.0311461 +- 0.00021  (z = -0.50)
+E tau((AUBU*)^2)             n = 4                  theory -0.0666667  MC -0.0668132 +- 0.0018  (z = -0.08)
+E tau((AUBU*)^2)             n = 8                  theory -0.015873  MC -0.01533 +- 0.00081  (z = +0.67)
+/home/user/von_neumann_type_i/scripts/paper/validate_known_results.py:85: CostWarning: random_unitary(n=16, batch=20000): about 21 s expected for 20000 blocks of size 16 on cpu (measured on 8 blocks). Consider a smaller batch, double -> single precision or a GPU. Silence with warnings.simplefilter('ignore', torch_vn_algebra.cost.CostWarning).
+  U = alg.random_unitary(N, batch_size=b)
+/home/user/von_neumann_type_i/scripts/paper/validate_known_results.py:85: CostWarning: random_unitary(n=16, batch=20000): about 22 s expected for 20000 blocks of size 16 on cpu (measured on 8 blocks). Consider a smaller batch, double -> single precision or a GPU. Silence with warnings.simplefilter('ignore', torch_vn_algebra.cost.CostWarning).
+  U = alg.random_unitary(N, batch_size=b)
+E tau((AUBU*)^2)             n = 16                 theory -0.00392157  MC -0.00380992 +- 0.0004  (z = +0.28)
+<s^2>, beta = 1              n = 32 (surmise)       theory  1.27324  MC  1.28319 +- 0.0016  (z = +nan)
+<s^2>, beta = 2              n = 32 (surmise)       theory  1.1781  MC  1.17861 +- 0.001  (z = +nan)
+<s^2>, beta = 4              n = 32 (surmise)       theory  1.10447  MC  1.10317 +- 0.00082  (z = +nan)
+Page entropy <S_A>           m = 2, n = 8           theory  0.600372  MC  0.600673 +- 0.00096  (z = +0.31)
+Page entropy <S_A>           m = 4, n = 8           theory  1.15314  MC  1.15257 +- 0.001  (z = -0.56)
+Page entropy <S_A>           m = 8, n = 8           theory  1.58853  MC  1.58895 +- 0.00087  (z = +0.49)
+E Tr rho^2 (induced)         k = 4, r = 2           theory  0.666667  MC  0.666533 +- 0.001  (z = -0.13)
+E Tr rho^2 (induced)         k = 4, r = 4           theory  0.470588  MC  0.47049 +- 0.00068  (z = -0.14)
+E Tr rho^2 (induced)         k = 16, r = 4          theory  0.307692  MC  0.307666 +- 0.0002  (z = -0.13)
+E Tr rho^2 (induced)         k = 16, r = 16         theory  0.124514  MC  0.124431 +- 5.4e-05  (z = -1.52)
+spontaneous emission: max error exp(tL) 2.2e-16, RK4 2.1e-08
+Tr_blunt : f(1) error 0.0e+00, |f(AB)-f(BA)| 3.7e-15, |f(UAU*)-f(A)| 5.4e-15, min f(A*A)/||A||_F^2 = 1.000 > 0
+Tr_norm  : f(1) error 0.0e+00, |f(AB)-f(BA)| 1.3e-15, |f(UAU*)-f(A)| 1.8e-15, min f(A*A)/||A||_F^2 = 0.224 > 0
+tau_vN   : f(1) error 0.0e+00, |f(AB)-f(BA)| 4.4e-16, |f(UAU*)-f(A)| 5.6e-16, min f(A*A)/||A||_F^2 = 0.075 > 0
+written: /home/user/von_neumann_type_i/paper/v2/generated /home/user/von_neumann_type_i/paper/v2/figures
+[resources] wall 28 s, peak host RSS 3.55 GiB

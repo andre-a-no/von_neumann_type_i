@@ -1,37 +1,37 @@
 === examples/paper/ex1_random_operators.py
 torch.Size([10000, 3, 4, 4])
 tensor([0.6000, 0.6000, 0.6000, 0.6000])
-tensor(5.6204) tensor(1.8739) tensor(0.6246)
-tensor(2.8326e-06)
-tensor(-0.6507)
+tensor(5.6317) tensor(1.8769) tensor(0.6256)
+tensor(3.3228e-06)
+tensor(-0.6488)
 === examples/paper/ex2_states_measurement.py
-tensor([[0.5515, 0.4485],
-        [0.4520, 0.5480],
-        [0.2599, 0.7401],
-        [0.1759, 0.8241]])
-tensor([0.0811, 0.2273, 0.1168, 0.1237]) tensor([[1.0000, 0.0000],
-        [1.0000, 0.0000],
-        [1.0000, 0.0000],
-        [1.0000, 0.0000]])
-tensor([ 0.0370, -1.0654,  0.1126,  0.2862]) tensor([ 0.0370, -1.0654,  0.1126,  0.2862])
+tensor([[0.3784, 0.6216],
+        [0.1530, 0.8470],
+        [0.1777, 0.8223],
+        [0.2065, 0.7935]])
+tensor([0.1181, 0.0192, 0.1331, 0.1439]) tensor([[1., 0.],
+        [1., 0.],
+        [1., 0.],
+        [1., 0.]])
+tensor([ 0.2440,  0.2857, -0.4855, -0.0695]) tensor([ 0.2440,  0.2857, -0.4855, -0.0695])
 tensor(1.4901e-08)
 === examples/paper/ex3_channels.py
 True
 tensor([[1.0000, 0.2000, 0.0000],
         [0.0000, 0.8000, 0.4000],
         [0.0000, 0.0000, 0.6000]])
-tensor([[0.2593, 0.5079, 0.2328],
-        [0.3183, 0.6442, 0.0376],
-        [0.4685, 0.4752, 0.0563]])
+tensor([[0.2940, 0.4721, 0.2339],
+        [0.3965, 0.4774, 0.1261],
+        [0.2425, 0.7366, 0.0209]])
 True
-tensor(0.7480)
+tensor(0.7620)
 === examples/paper/ex4_dynamics.py
 t=0.0: P_e 0.360000 (exact 0.360000), |rho_eg| 0.480000 (exact 0.480000), RK4 vs exp(tL): 2.2e-16
 t=1.0: P_e 0.266695 (exact 0.266695), |rho_eg| 0.413140 (exact 0.413140), RK4 vs exp(tL): 3.6e-11
 t=2.0: P_e 0.197572 (exact 0.197572), |rho_eg| 0.355593 (exact 0.355593), RK4 vs exp(tL): 6.3e-11
 t=5.0: P_e 0.080327 (exact 0.080327), |rho_eg| 0.226736 (exact 0.226736), RK4 vs exp(tL): 4.9e-09
 === examples/paper/ex5_page_entropy.py
-<S_A> = 1.15315 +- 0.00052,  Page: 1.15314
+<S_A> = 1.15358 +- 0.00051,  Page: 1.15314
 === examples/paper/ex6_inequality_search.py
 sampling, 10^5 Haar U: -5.3787189496218915
 gradient ascent:      0.05033283550116607
@@ -41,11 +41,11 @@ exact sup:            0.0511663858642839
 h=0.0: ground state in sector N=5
 h=1.0: ground state in sector N=4
 h=2.5: ground state in sector N=0
-W=0.5: <r> = 0.529   (GOE 0.531, Poisson 0.386)
-W=8.0: <r> = 0.395   (GOE 0.531, Poisson 0.386)
+W=0.5: <r> = 0.527   (GOE 0.531, Poisson 0.386)
+W=8.0: <r> = 0.391   (GOE 0.531, Poisson 0.386)
 [0.6931, 0.9374, 1.0512, 1.107, 1.1241]
 === examples/paper/ex8_large_and_open_chains.py
-Heisenberg ring L=16: E0 = -7.142296361 (exact -7.142296361), residual 6.0e-15
+Heisenberg ring L=16: E0 = -7.142296361 (exact -7.142296361), residual 5.8e-15
 S^z_i(t=3): [0.5, 0.5, 0.498, 0.481, 0.385, 0.149, 0.034, -0.034, -0.149, -0.385, -0.481, -0.498, -0.5, -0.5]
 momentum block sizes: [26, 25, 25, 25, 25, 26, 25, 25, 25, 25]
 ground state momentum m = 5 (pi for L/2 odd)
