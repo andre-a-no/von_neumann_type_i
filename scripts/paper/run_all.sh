@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Regenerate every number and figure of paper/v2.
 #   bash scripts/paper/run_all.sh                     # quick mode, CPU or GPU (a few minutes)
-#   bash scripts/paper/run_all.sh quick cuda          # smoke test on the GPU before a full run
+#   bash scripts/paper/run_all.sh check cuda          # the sizes of full, minimal repetitions: tests a full run
+#                                                     # (memory, all code paths) in minutes; output in .check_output/
 #   bash scripts/paper/run_all.sh full cuda           # sizes reported in the paper (GPU recommended)
 #   bash scripts/paper/run_all.sh full cuda tf32      # same, with TF32 tensor-core matmuls
 #   ONLY="chains baselines" bash scripts/paper/run_all.sh full cuda   # a subset of the scripts
@@ -14,7 +15,9 @@ TF32=""
 if [ "${3:-}" = tf32 ]; then TF32="--tf32"; fi
 SCRIPTS=${ONLY:-"validate_known_results inequality_search bounds_search chains numerics baselines benchmark_library"}
 cd "$(dirname "$0")/../.."
-LOGS=paper/v2/generated/logs
+OUTDIR=paper/v2/generated
+if [ "$MODE" = check ]; then OUTDIR=.check_output/generated; fi
+LOGS=$OUTDIR/logs
 mkdir -p "$LOGS"
 python - <<PY | tee "$LOGS/environment.txt"
 import platform, torch
@@ -46,12 +49,12 @@ for s in $SCRIPTS; do
   fi
 done
 if [ -z "${ONLY:-}" ]; then
-  for ex in examples/paper/ex*.py; do echo "=== $ex"; python "$ex" || failed+=("$ex"); done > paper/v2/generated/examples_output.txt 2>&1
+  for ex in examples/paper/ex*.py; do echo "=== $ex"; python "$ex" || failed+=("$ex"); done > "$OUTDIR/examples_output.txt" 2>&1
 fi
 
 echo
 if [ ${#failed[@]} -eq 0 ]; then
-  echo "done: all scripts succeeded; outputs in paper/v2/generated and paper/v2/figures (compile paper/v2/main.tex)"
+  echo "done: all scripts succeeded; outputs in $OUTDIR (compile paper/v2/main.tex)"
 else
   echo "done with failures: ${failed[*]} (logs in $LOGS)"; exit 1
 fi

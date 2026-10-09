@@ -14,6 +14,7 @@ from typing import Optional, Sequence, Tuple
 import torch
 
 from .algebra import TypeIAlgebra
+from . import cost
 
 Operator = TypeIAlgebra.Operator
 
@@ -149,7 +150,11 @@ def random_density_matrix(alg: TypeIAlgebra, batch_size: int = 1, rank: Optional
     The sector weights p_c = Tr rho_c are then random as well (proportional to the squared
     Frobenius norms of the blocks).
     """
-    G = _ginibre(alg, batch_size, rank or alg.k_max)            # (B, C, k_max, rank)
+    r = rank or alg.k_max
+    # G, rho and the temporaries of normalisation: about four batches of (k_max x max(k_max, r)) blocks
+    cost.check_memory(4 * cost.tensor_bytes((batch_size, alg.C, alg.k_max, max(alg.k_max, r)), alg.hilbert.dtype),
+                      alg.hilbert.device, f"random_density_matrix(batch={batch_size}, k_max={alg.k_max})")
+    G = _ginibre(alg, batch_size, r)                            # (B, C, k_max, rank)
     if measure == 'bures':
         U = alg.random_unitary_operator(batch_size).matrix
         eye = alg.identity(batch_size).matrix.to(U.dtype)

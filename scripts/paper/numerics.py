@@ -25,13 +25,14 @@ from torch_vn_algebra import TypeIAlgebra, channels, cost, dynamics, optimize as
 
 args = parse_args(__doc__)
 dev = args.device
-FULL = args.mode == 'full'
+FULL = args.mode in ('full', 'check')            # check: the sizes of full, minimal repetitions
+CHECK = args.mode == 'check'
 CONFIGS = [('float32', False, 'single'), ('float64', False, 'double'),
            ('complex64', True, 'single'), ('complex128', True, 'double')]
 K, C = (32, 16) if FULL else (16, 8)
 TARGET = 2 ** 22 if FULL else 2 ** 18
 B = max(1, TARGET // (C * K * K))
-REPEATS = 5 if FULL else 3
+REPEATS = 1 if CHECK else 5 if FULL else 3
 cost.set_limits(warn_seconds=float('inf'), probe_flops=float('inf'))
 
 

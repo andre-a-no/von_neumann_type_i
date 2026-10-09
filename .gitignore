@@ -15,3 +15,4 @@ experiment_results*/
 *.out
 *.toc
 *.synctex.gz
+.check_output/

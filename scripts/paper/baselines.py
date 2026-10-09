@@ -31,7 +31,8 @@ from torch_vn_algebra import TypeIAlgebra, SpinChain, krylov, cost
 warnings.simplefilter('ignore', cost.CostWarning)
 args = parse_args(__doc__)
 dev = args.device
-FULL = args.mode == 'full'
+FULL = args.mode in ('full', 'check')            # check: the sizes of full, minimal repetitions
+CHECK = args.mode == 'check'
 rng = np.random.default_rng(args.seed)
 rec, rows_a, rows_b = {}, [], []
 
@@ -101,7 +102,7 @@ def timed(fn, *a):
     return time.perf_counter() - t0, out
 
 
-B_LOOP = 2000 if FULL else 300
+B_LOOP = 20 if CHECK else 2000 if FULL else 300
 B_MAX = 100_000 if FULL else 10_000
 ENTRIES = 2 ** 24 if FULL else 2 ** 21     # entries per array; the vectorised versions hold ~10 such arrays
 for C, k in ((1, 2), (16, 16), (32, 16)) if FULL else ((1, 2), (8, 16)):
@@ -130,7 +131,7 @@ def scipy_matrix(H, b):
     return off + sp.diags(H.diag[b].cpu().numpy())
 
 
-for L, R in (((16, 1), (16, 20), (18, 1), (20, 1)) if FULL else ((14, 1), (14, 10), (16, 1))):
+for L, R in (((16, 1), (16, 2 if CHECK else 20), (18, 1), (20, 1)) if FULL else ((14, 1), (14, 10), (16, 1))):
     ch = SpinChain(L, 'periodic', complex_valued=False, device=dev)
     W = 0.0 if R == 1 else 3.0
     h = (2 * torch.rand(R, L, dtype=torch.float64) - 1) * W

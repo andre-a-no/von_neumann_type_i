@@ -32,7 +32,8 @@ from torch_vn_algebra import TypeIAlgebra, optimize as opt
 
 args = parse_args(__doc__)
 dev = args.device
-FULL = args.mode == 'full'
+FULL = args.mode in ('full', 'check')            # check: the sizes of full, minimal repetitions
+CHECK = args.mode == 'check'
 CONFIGS = ([(2, 1), (2, 2), (2, 16), (2, 32), (16, 1), (16, 2), (16, 16), (16, 32)] if FULL
            else [(2, 1), (2, 2), (4, 1)])
 GRID = np.linspace(0.0, 0.99, 23 if FULL else 9)
@@ -40,7 +41,7 @@ GRID2 = np.linspace(0.0, 0.95, 11 if FULL else 5)        # joint (Delta(X), Delt
 CONFIGS_2D = [(2, 1), (2, 2), (4, 1)] if FULL else [(2, 1)]
 STARTS_2D = 32 if FULL else 8
 STARTS = 64 if FULL else 12
-ROUNDS, STEPS = (10, 50) if FULL else (6, 40)
+ROUNDS, STEPS = (1, 2) if CHECK else (10, 50) if FULL else (6, 40)
 MC_DIR = ROOT / 'results' / 'experiments'
 
 

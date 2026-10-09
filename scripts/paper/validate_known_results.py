@@ -28,7 +28,8 @@ from torch_vn_algebra import TypeIAlgebra, DensityMatrix, dynamics, states, tens
 
 args = parse_args(__doc__)
 dev = args.device
-FULL = args.mode == 'full'
+FULL = args.mode in ('full', 'check')            # check: the sizes of full, minimal repetitions
+CHECK = args.mode == 'check'
 rows, record = [], {}
 
 
@@ -54,7 +55,7 @@ def chunks(total, size):
 # ----------------------------------------------------------------------------------------------
 # 1. Haar moments
 # ----------------------------------------------------------------------------------------------
-S_HAAR = 400_000 if FULL else 40_000
+S_HAAR = 50_000 if CHECK else 400_000 if FULL else 40_000
 for cplx in (True, False):
     for n in (2, 4, 8, 16, 32):
         alg = TypeIAlgebra([n], [n], complex_valued=cplx, precision='double', device=dev)
@@ -73,7 +74,7 @@ for cplx in (True, False):
 # ----------------------------------------------------------------------------------------------
 # 2. Weingarten: second-order mixed moment
 # ----------------------------------------------------------------------------------------------
-S_W = 400_000 if FULL else 50_000
+S_W = 20_000 if CHECK else 400_000 if FULL else 50_000
 for N in (4, 16, 64):
     alg = TypeIAlgebra([N], [N], precision='double', device=dev)
     A = torch.diag(torch.tensor([1.0] * (N // 2) + [-1.0] * (N // 2), dtype=torch.complex128, device=dev))
@@ -94,7 +95,7 @@ SURMISE = {
         45 * math.pi / 128),
 }
 N_CE = 64 if FULL else 32
-S_CE = 20_000 if FULL else 2_000
+S_CE = 2_000 if CHECK else 20_000 if FULL else 2_000
 alg_ce = TypeIAlgebra([1], [1], precision='double', device=dev)
 spacings = {}
 for beta, measure in ((1, 'coe'), (2, 'haar'), (4, 'cse')):
@@ -120,7 +121,7 @@ for beta, measure in ((1, 'coe'), (2, 'haar'), (4, 'cse')):
 # ----------------------------------------------------------------------------------------------
 # 4. Page's formula
 # ----------------------------------------------------------------------------------------------
-S_PAGE = 50_000 if FULL else 5_000
+S_PAGE = 5_000 if CHECK else 50_000 if FULL else 5_000
 n_page = 16 if FULL else 8
 page_rows = []
 for m in [mm for mm in (2, 3, 4, 6, 8, 12, 16) if mm <= n_page]:
@@ -128,7 +129,8 @@ for m in [mm for mm in (2, 3, 4, 6, 8, 12, 16) if mm <= n_page]:
     Bs = TypeIAlgebra([n_page], [n_page], precision='double', device=dev)
     AB = tensor_product(A, Bs)
     vals = []
-    for b in chunks(S_PAGE, 5_000):
+    chunk = max(64, min(5_000, 2 ** 23 // (m * n_page) ** 2))      # about 130 MB per batch of states
+    for b in chunks(S_PAGE, chunk):
         psi = states.random_density_matrix(AB, batch_size=b, rank=1)
         vals.append(states.von_neumann_entropy(partial_trace(psi, keep=1)))
     est, err = mean_err(torch.cat(vals))
@@ -140,7 +142,7 @@ for m in [mm for mm in (2, 3, 4, 6, 8, 12, 16) if mm <= n_page]:
 # ----------------------------------------------------------------------------------------------
 # 5. Purity of induced random states
 # ----------------------------------------------------------------------------------------------
-S_PUR = 100_000 if FULL else 10_000
+S_PUR = 20_000 if CHECK else 100_000 if FULL else 10_000
 for k, r in ((4, 2), (4, 4), (16, 4), (16, 16)):
     alg = TypeIAlgebra([k], [k], precision='double', device=dev)
     vals = torch.cat([states.purity(states.random_density_matrix(alg, batch_size=b, rank=r))

@@ -20,12 +20,13 @@ from torch_vn_algebra import TypeIAlgebra
 
 args = parse_args(__doc__)
 dev = args.device
-FULL = args.mode == 'full'
+FULL = args.mode in ('full', 'check')            # check: the sizes of full, minimal repetitions
+CHECK = args.mode == 'check'
 DIMS = (2, 4, 8, 16, 32, 64) if FULL else (2, 4, 8, 16)
-PAIRS = 16 if FULL else 4
-N_SAMPLES = 1_000_000 if FULL else 20_000
+PAIRS = 1 if CHECK else 16 if FULL else 4
+N_SAMPLES = 50_000 if CHECK else 1_000_000 if FULL else 20_000
 STARTS = 128 if FULL else 32
-ROUNDS, STEPS, LR, DECAY = 10, 50, 0.05, 0.6   # learning rate LR * DECAY**round
+ROUNDS, STEPS, LR, DECAY = (1, 2, 0.05, 0.6) if CHECK else (10, 50, 0.05, 0.6)   # learning rate LR * DECAY**round
 
 results = []
 for k in DIMS:

@@ -31,7 +31,8 @@ warnings.simplefilter('ignore', cost.CostWarning)
 
 args = parse_args(__doc__)
 dev = args.device
-FULL = args.mode == 'full'
+FULL = args.mode in ('full', 'check')            # check: the sizes of full, minimal repetitions
+CHECK = args.mode == 'check'
 rec = {}
 
 # exact ground-state energies of the S=1/2 Heisenberg ring, H = sum S_i . S_{i+1}
@@ -116,8 +117,8 @@ print(f"entanglement L={L4}: max deviation from Peschel {err_pes:.1e}")
 
 # 5. level statistics ---------------------------------------------------------------------------
 SIZES = (10, 12, 14) if FULL else (8, 10)
-REAL = 400 if FULL else 40
-WS = [0.5, 1, 2, 3, 4, 6, 8, 12]
+REAL = 20 if CHECK else 400 if FULL else 40
+WS = [0.5, 12] if CHECK else [0.5, 1, 2, 3, 4, 6, 8, 12]
 mbl = {}
 g = torch.Generator().manual_seed(args.seed)
 for L in SIZES:

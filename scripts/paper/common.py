@@ -1,5 +1,6 @@
 """Shared helpers for the scripts that produce the numbers and figures of paper/v2."""
 import argparse
+import atexit
 import json
 import os
 import platform
@@ -18,14 +19,20 @@ PAPER = ROOT / 'paper' / 'v2'
 def parse_args(description):
     p = argparse.ArgumentParser(description=description)
     p.add_argument('--device', default='cuda' if torch.cuda.is_available() else 'cpu')
-    p.add_argument('--mode', choices=['quick', 'full'], default='quick',
-                   help='quick: minutes on a CPU; full: the sizes reported in the paper (GPU)')
+    p.add_argument('--mode', choices=['quick', 'full', 'check'], default='quick',
+                   help='quick: minutes on a CPU; full: the sizes reported in the paper (GPU); check: the sizes '
+                        'of full with minimal repetitions, to test a full run quickly (output not for the paper)')
     p.add_argument('--seed', type=int, default=0)
     p.add_argument('--out', default=str(PAPER / 'generated'), help='directory for generated .tex/.json')
     p.add_argument('--figdir', default=str(PAPER / 'figures'))
     p.add_argument('--tf32', action='store_true',
                    help='allow TF32 tensor-core matmuls for float32 on Ampere+ GPUs (default: full FP32)')
     args = p.parse_args()
+    if args.mode == 'check':          # never overwrite the paper's tables with a check run
+        if args.out == str(PAPER / 'generated'):
+            args.out = str(ROOT / '.check_output' / 'generated')
+        if args.figdir == str(PAPER / 'figures'):
+            args.figdir = str(ROOT / '.check_output' / 'figures')
     torch.manual_seed(args.seed)
     # float32 matrix products: 'highest' = true FP32; 'high' lets cuBLAS use TF32 tensor cores
     # (10-bit mantissa) on A100/H100/B200, faster but only ~1e-3 relative accuracy
@@ -34,7 +41,21 @@ def parse_args(description):
     torch.backends.cudnn.allow_tf32 = bool(args.tf32)
     Path(args.out).mkdir(parents=True, exist_ok=True)
     Path(args.figdir).mkdir(parents=True, exist_ok=True)
+    atexit.register(_report_resources, args.device, time.time())
     return args
+
+
+def _report_resources(device, t0):
+    """Printed at exit into every log: wall time and peak memory (host RSS, and GPU if used)."""
+    msg = f"[resources] wall {time.time() - t0:.0f} s"
+    try:
+        import resource
+        msg += f", peak host RSS {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 2 ** 20:.2f} GiB"
+    except ImportError:
+        pass
+    if str(device).startswith('cuda') and torch.cuda.is_available():
+        msg += f", peak GPU memory {torch.cuda.max_memory_allocated() / 2 ** 30:.2f} GiB"
+    print(msg, flush=True)
 
 
 def environment(device):

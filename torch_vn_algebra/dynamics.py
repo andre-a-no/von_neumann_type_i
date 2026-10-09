@@ -56,6 +56,7 @@ def schrodinger(psi0: torch.Tensor, H: Operator, times) -> torch.Tensor:
     _require_complex(H.algebra)
     if psi0.dim() == 4:
         psi0 = psi0.squeeze(-1)
+    psi0 = psi0.to(H.matrix.device)                       # a state built on the CPU may meet H on a GPU
     ts = _times(times, psi0.device)
     out = torch.zeros(len(ts), *psi0.shape, dtype=H.matrix.dtype, device=psi0.device)
     for c, (w, V) in enumerate(H.eigh()):
