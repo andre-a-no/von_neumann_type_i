@@ -20,12 +20,16 @@
 
 % numbers and tables produced by scripts/paper/*.py (bash scripts/paper/run_all.sh [quick|full] [device])
 \newcommand{\gen}[1]{\IfFileExists{generated/#1.tex}{\input{generated/#1.tex}}{}}
-\gen{validation}\gen{search}\gen{bounds}\gen{benchmark}
+\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{benchmark}
 \providecommand{\ValidationRows}{\multicolumn{6}{c}{\emph{run scripts/paper/validate\_known\_results.py}}\\}
 \providecommand{\SearchRows}{\multicolumn{9}{c}{\emph{run scripts/paper/inequality\_search.py}}\\}
 \providecommand{\BoundsRows}{\multicolumn{7}{c}{\emph{run scripts/paper/bounds\_search.py}}\\}
 \providecommand{\BenchmarkRows}{\multicolumn{5}{c}{\emph{run scripts/paper/benchmark\_library.py}}\\}
 \providecommand{\BenchHasGPU}{0}
+\providecommand{\NumTimeRows}{\multicolumn{9}{c}{\emph{run scripts/paper/numerics.py}}\\}
+\providecommand{\NumAccRows}{\multicolumn{5}{c}{\emph{run scripts/paper/numerics.py}}\\}
+\providecommand{\NumTimeHeader}{generate & eigh $f(A)$ & SVD $|A|$ & channel & expm & opt.\ step}
+\providecommand{\ChainRingRows}{\multicolumn{6}{c}{\emph{run scripts/paper/chains.py}}\\}
 \newcommand{\fig}[2]{\IfFileExists{figures/#1}{\includegraphics[width=#2]{#1}}{\fbox{\small figure #1 not generated}}}
 
 \title{\texttt{torch\_vn\_algebra}: batched random operators, states, channels\\
@@ -43,13 +47,16 @@ quantum systems with superselection rules. Operators, states and channels are st
 block-diagonal tensors, so that thousands of random samples, or thousands of independent starts of
 an optimisation, are processed at once on a CPU or a GPU. The library provides random operators with
 prescribed spectra and Haar-distributed eigenvectors, the three trace functionals that are natural on
-$\M$, states and Lüders conditioning, completely positive maps within and between sectors, tensor
-products and partial traces, Hamiltonian and Lindblad dynamics, differentiable parametrisations with
-a prescribed Michelson contrast, and safeguards that estimate run time and memory before expensive
-steps. We describe the design, show how the library is used on short complete examples, validate it
-against a set of exact results from random matrix theory and quantum information, and apply it to the
-trace inequalities studied in our earlier work. There, constrained optimisation replaces Monte Carlo
-sampling: it recovers the sharp bounds that sampling misses in all but the smallest dimensions.
+$\M$, states and Lüders conditioning, completely positive maps within and between sectors, plain and
+charge-conserving (fused) tensor products with partial traces, spin chains with a conserved
+magnetisation, Hamiltonian and Lindblad dynamics, differentiable parametrisations with a prescribed
+Michelson contrast, and safeguards that estimate run time and memory before expensive steps. We
+describe the design, show how the library is used on short complete examples, and validate it against
+exact results from random matrix theory, quantum information and integrable spin chains (free-fermion
+spectra and dynamics, Heisenberg ring energies, Peschel's entanglement formula, the GOE--Poisson
+crossover of disordered chains). Applied to the trace inequalities of our earlier work, constrained
+optimisation replaces Monte Carlo sampling: it recovers the sharp bounds that sampling misses in all
+but the smallest dimensions.
 \end{abstract}
 
 \section{Introduction}
@@ -67,8 +74,9 @@ General-purpose quantum software (QuTiP~\cite{johansson2013}, Qiskit~\cite{qiski
 \texttt{dynamiqs}~\cite{dynamiqs}) is built around a single Hilbert space; sectors, several traces and
 large batches of random operators with prescribed spectra are not first-class objects there. The
 niche of \texttt{torch\_vn\_algebra} is this combination: the algebra $\M$ and its traces as the basic
-objects, batched random sampling and batched optimisation over them, and enough quantum information
-and dynamics (states, channels, tensor products, Lindblad evolution) to formulate physical questions.
+objects, batched random sampling and batched optimisation over them, and enough quantum information,
+many-body structure and dynamics (states, channels, tensor products that merge sectors of equal charge,
+spin chains, Lindblad evolution) to formulate physical questions.
 We do not aim to replace the packages above for single-system simulations.
 
 This text supersedes the description of the first version of the library~\cite{v1}; the list of
@@ -80,7 +88,8 @@ within and between sectors, tensor products and dynamics that respect the sector
 (Section~\ref{sec:usage}). (iii) A validation suite against exact results (Section~\ref{sec:validation}).
 (iv) Differentiable parametrisations with a hard Michelson-contrast constraint and batched multistart
 optimisation, applied to sharp bounds of trace inequalities (Section~\ref{sec:optimisation}).
-(v) Run-time and memory safeguards (Section~\ref{sec:design}).
+(v) Charge-conserving tensor products and $U(1)$-symmetric spin chains, checked against exact results
+(Section~\ref{sec:chains}). (vi) Run-time and memory safeguards (Section~\ref{sec:design}).
 
 \section{Mathematical setting}\label{sec:math}
 
@@ -116,10 +125,25 @@ with respect to $\operatorname{tr}_w$ on both sides is
 $\Phi^{*,w}(A)_c=\sum_{d,i}(w^{\mathrm{out}}_d/w^{\mathrm{in}}_c)(K_i^{dc})^*A_dK_i^{dc}$; for
 sector-preserving maps on one algebra the weights cancel and all three traces give the same dual.
 
-\paragraph{Tensor products.} $\bigl(\bigoplus_cM_{k_c}\bigr)\otimes\bigl(\bigoplus_dM_{m_d}\bigr)
-=\bigoplus_{(c,d)}M_{k_cm_d}$ is again of Type~I with sectors labelled by pairs. The partial trace
-$(\Tr_2X)_c=\sum_d\Tr_{m_d}X_{(c,d)}$ is a map between sectors in the sense above; its dual with
-respect to $\Tr_{\mathrm{blunt}}$ is the embedding $A\mapsto A\otimes1$.
+\paragraph{Tensor products and fusion of sectors.} $\bigl(\bigoplus_cM_{k_c}\bigr)\otimes\bigl(\bigoplus_dM_{m_d}\bigr)
+=\bigoplus_{(c,d)}M_{k_cm_d}$ is again of Type~I with sectors labelled by pairs. If the sectors carry
+conserved charges $q_c$, $q'_d$ (particle numbers, magnetisation), the operators of the composite system
+that conserve only the \emph{total} charge form the larger algebra
+\[
+  \M_1\mathbin{\hat\otimes}\M_2=\bigoplus_q M_{n_q},\qquad n_q=\sum_{q_c+q'_d=q}k_cm_d ,
+\]
+in which all pairs with the same total charge are merged into one sector. It contains $\M_1\otimes\M_2$
+(block-diagonally in every merged sector), but also operators such as $S^+_iS^-_j$ that move charge
+between the factors. For additive charges, the partial trace $(\Tr_2X)_c=\sum_d\Tr_{m_d}X_{(c,d),(c,d)}$
+still lands in $\M_1$: a block between pairs $(c,d)\ne(c',d)$ with equal total charge would need $c=c'$.
+In both cases the partial trace is a map between sectors in the sense above, and its dual with respect
+to $\Tr_{\mathrm{blunt}}$ is the embedding $A\mapsto A\otimes1$.
+
+\paragraph{Spin chains.} For $L$ spins $1/2$ with conserved $S^z_{\mathrm{tot}}$, iterating the fused
+product of single-site algebras $M_1\oplus M_1$ (charges $0,1$) gives
+$\M=\bigoplus_{N=0}^LM_{\binom LN}(\C)$, $N$ the number of up spins, which contains every
+$S^z_{\mathrm{tot}}$-conserving Hamiltonian, e.g.\ the XXZ chain
+$H=\sum_{\langle ij\rangle}\bigl[\tfrac J2(S^+_iS^-_j+S^-_iS^+_j)+J\Delta S^z_iS^z_j\bigr]+\sum_ih_iS^z_i$.
 
 \paragraph{Dynamics.} For $H=H^*\in\M$ and jump operators $L_j\in\M$ the
 Gorini--Kossakowski--Sudarshan--Lindblad equation
@@ -131,8 +155,9 @@ so the sector probabilities $p_c$ are conserved (superselection).
 \paragraph{Data layout.} An operator is a tensor of shape $(B,C,k_{\max},k_{\max})$: $B$ samples, $C$
 sectors, block $c$ in the top-left $k_c\times k_c$ corner and zeros elsewhere. Linear algebra is applied
 to the batch of active blocks of each sector, so one call to a batched LAPACK/cuSOLVER routine serves all
-samples. The padding costs memory when the sector sizes differ strongly; a bucketed layout is planned
-(Section~\ref{sec:limitations}).
+samples. The padding costs memory when the sector sizes differ strongly (for a chain of 14 spins,
+77\,\% of a padded operator is zeros); the library warns in that case, and \texttt{SpinChain} lets one work
+in single sectors $M_{\binom LN}$ without padding, which is what dense diagonalisation needs anyway.
 
 \paragraph{Objects.} \texttt{Operator} (with \texttt{DensityMatrix} as a subclass for states),
 \texttt{Channel} (sector preserving) and \texttt{InterSectorChannel} (between sectors or algebras) are
@@ -152,7 +177,8 @@ module & content \\
 functional calculus\\
 \texttt{states} & \texttt{DensityMatrix}, random states, Gibbs states, Lüders rule, entropies, fidelity\\
 \texttt{channels} & \texttt{Channel}, \texttt{InterSectorChannel}, Choi matrices, standard and random channels\\
-\texttt{composite} & tensor products, \texttt{kron}, partial traces\\
+\texttt{composite} & plain and fused (charge-conserving) tensor products, \texttt{kron}, partial traces\\
+\texttt{chains} & \texttt{SpinChain}: $U(1)$ sectors, XXZ Hamiltonians with batched disorder, reduced states\\
 \texttt{dynamics} & exact Schrödinger/von Neumann evolution, RK4, Lindblad equation, $e^{t\mathcal L}$\\
 \texttt{optimize} & parametrisations with prescribed contrast, batched multistart \texttt{extremize}\\
 \texttt{cost} & run-time and memory estimates, warnings and errors\\
@@ -168,10 +194,87 @@ $\operatorname{diag}R$~\cite{mezzadri2007}; $SU(n)$ and $SO(n)$ by multiplying w
 a sign flip of one column; the circular orthogonal and symplectic ensembles as $W^TW$ and $W^RW$ with
 $W$ Haar on $U(n)$~\cite{mehta2004}. Section~\ref{sec:validation} checks all of them.
 
-\paragraph{Precision and differentiation.} Algebras are created in single (default) or double
-precision. All operations are composed of differentiable PyTorch primitives, so gradients with respect
-to the matrix entries are available; eigenvalue and singular-value decompositions have singular
-gradients at degenerate spectra, which the parametrisations of Section~\ref{sec:optimisation} avoid.
+\paragraph{Differentiation.} All operations are composed of differentiable PyTorch primitives, so gradients
+with respect to the matrix entries are available; eigenvalue and singular-value decompositions have
+singular gradients at degenerate spectra, which the parametrisations of Section~\ref{sec:optimisation} avoid.
+
+\subsection*{Number field and precision}\label{sec:numerics}
+
+Every algebra is created with two independent switches, \texttt{complex\_valued} (real or complex
+matrices) and \texttt{precision} (\texttt{'single'} or \texttt{'double'}), giving the storage types
+\texttt{float32}, \texttt{float64}, \texttt{complex64} and \texttt{complex128}; everything built on the
+algebra (random operators, states, channels, chains, parametrisations) inherits them.
+\texttt{alg.like(complex\_valued=..., precision=...)} creates the same sector structure with other
+numerics and \texttt{op.cast(alg2)} moves an operator there, e.g.\ to explore in single precision and
+re-evaluate the interesting cases in double precision.
+
+\paragraph{The field is part of the model.} Choosing real matrices is not only a matter of speed: the
+symmetry group and the random ensembles change. Haar matrices of a real algebra are orthogonal, so
+moments, level statistics and extremal values refer to $O(n)$ instead of $U(n)$
+(e.g.\ $\mathbb E|U_{11}|^4=3/(n(n+2))$ instead of $2/(n(n+1))$, Table~\ref{tab:validation}); random
+real symmetric and complex Hermitian matrices have different level statistics, with mean spacing ratios
+\IfFileExists{generated/numerics.tex}{\NumRGOE\ and \NumRGUE}{0.531 and 0.600} for GOE and GUE~\cite{atas2013}
+(computed with the library). Real arithmetic is \emph{exact} (loses nothing) when the problem is
+real: spectra and eigenvectors of real symmetric matrices, ground states and their entanglement for
+Hamiltonians without complex hoppings, statistics of time-reversal-invariant systems, and also some
+extremal problems — for real $X,Y\ge0$ the supremum of $|\Tr(XUY)|$ over unitaries is attained by a real
+orthogonal matrix (the polar decomposition of the real matrix $YX$ is real). Complex matrices are
+\emph{required} for unitary time evolution $e^{-iHt}$ and Lindblad dynamics with a Hamiltonian (the library
+refuses to run them in a real algebra), for Haar unitaries, CUE/CSE and $SU(n)$, for random pure states
+and quantities such as Page's entropy, and for systems without time-reversal symmetry (fluxes, complex
+couplings).
+
+\paragraph{Precision.} Single precision resolves about $10^{-7}$ relative to the largest entry. It is
+sufficient for Monte Carlo statistics whose statistical error is much larger (moments, histograms,
+spacing ratios with $10^3$--$10^5$ samples) and for the first, exploratory pass of an optimisation.
+Double precision is needed when the quantity of interest is small compared with the operators: an
+inequality checked near equality, small spectral gaps, entropies and logarithms of nearly singular
+states, contrasts close to $1$, comparisons with exact results beyond six digits, long RK4 integrations
+and optimisation to high relative accuracy. Table~\ref{tab:numerics-acc} shows how drastic the
+difference can be: the von Neumann entropy of an almost pure state with eigenvalues of order $10^{-9}$ is
+wrong by more than $100\,\%$ in single precision, and the round-off floor of a trace inequality that
+holds with equality is $10^{-5}$ in single and $10^{-13}$ in double precision.
+
+\paragraph{Cost.} An entry takes 4, 8, 8 and 16 bytes for \texttt{float32}, \texttt{float64},
+\texttt{complex64} and \texttt{complex128}, so memory, and the batch that fits, changes by a factor up to four
+(\texttt{alg.bytes\_per\_operator(B)} reports it). A complex multiply--add costs about four real ones, and
+complex eigen- and singular-value solvers are two to four times slower than real ones. Double precision
+costs about a factor two on CPUs, but on GPUs it depends on the hardware: data-centre GPUs execute
+FP64 at half the FP32 rate, consumer GPUs at 1/32--1/64 of it, so that double precision there can be an
+order of magnitude slower. Table~\ref{tab:numerics-time} gives the measured ratios for the current run;
+the recommendation that follows is to use the smallest type that is exact for the model (real if the
+problem is real) and the precision that the size of the effect requires.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lrrrrrrrr}
+\toprule
+type & B/entry & MB/batch & \NumTimeHeader\\
+\midrule
+\NumTimeRows
+\bottomrule
+\end{tabular}
+\caption{Memory and time relative to \texttt{float32} for $C=\IfFileExists{generated/numerics.tex}{\NumC}{8}$
+sectors of size $k=\IfFileExists{generated/numerics.tex}{\NumK}{16}$ and a batch of
+\IfFileExists{generated/numerics.tex}{\NumB}{B} operators\IfFileExists{generated/numerics.tex}{ (\NumMode\ run
+on \NumDevice; float32 times per sample: \NumRefTimes)}{}.}
+\label{tab:numerics-time}
+\end{table}
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lcccc}
+\toprule
+type & $\max\|UU^*-1\|$ & $\|\sqrt A^2-A\|/\|A\|$ & rel.\ error $S(\rho)$, $\rho\approx$ pure & $|z|$ at equality\\
+\midrule
+\NumAccRows
+\bottomrule
+\end{tabular}
+\caption{Accuracy of the same computations in the four storage types: Haar unitaries ($n=64$), SVD square
+root, entropy of $\rho=(1-\varepsilon)|0\rangle\langle0|+\varepsilon\,1/n$ with $\varepsilon=10^{-7}$, and the
+round-off floor of $z=\Tr(Y|X|Y)-\Tr|YXY|$ for commuting $X,Y$ (exactly $0$).}
+\label{tab:numerics-acc}
+\end{table}
 
 \paragraph{Safeguards.} Batched computations make it easy to request hours of work or more memory than
 the device has. The \texttt{cost} module therefore (a) times the first few items of every large
@@ -222,6 +325,13 @@ pure states on $\C^m\otimes\C^n$ and compares it with Page's formula~\cite{page1
 ascent for $\sup_U\bigl(|\Tr(XUY)|-\Tr(XY)\bigr)$, whose exact value $\|YX\|_1-\Tr(XY)$ is positive for
 non-commuting $X,Y\ge0$. Section~\ref{sec:optimisation} studies this systematically.
 \lstinputlisting[caption={Sampling versus optimisation (\texttt{ex6\_inequality\_search.py}).},label=lst:ex6]{../../examples/paper/ex6_inequality_search.py}
+
+\paragraph{Spin chains.} Listing~\ref{lst:ex7} works with a Heisenberg ring of ten spins. A uniform field
+moves the ground state through the sectors until the chain is fully polarised above the saturation
+field $h_s=2J$; 100 realisations of random fields are diagonalised in one batch to compute the mean
+level-spacing ratio; and the entanglement entropy of the ground state is computed from reduced states.
+Section~\ref{sec:chains} checks these tools against exact results.
+\lstinputlisting[caption={Spin chains (\texttt{ex7\_spin\_chain.py}).},label=lst:ex7]{../../examples/paper/ex7_spin_chain.py}
 
 \section{Validation against exact results}\label{sec:validation}
 
@@ -376,6 +486,59 @@ one contrast, the other one being optimised as well.}
 \label{fig:bounds2d}
 \end{figure}
 
+\section{Symmetric tensor products and spin chains}\label{sec:chains}
+
+The basis of \texttt{SpinChain} is, by construction, that of the iterated fused product of single sites:
+the tests check that $S^z_i$ built by the chain coincides with $S^z_i\otimes1$ formed with
+\texttt{kron} in the fused product of the algebra of \texttt{SpinChain(L-1)} with a single site. Beyond that, integrable
+chains provide exact results for every part of the module (Table~\ref{tab:ring}, Figure~\ref{fig:chains};
+script \texttt{scripts/paper/chains.py}):
+\begin{itemize}
+\item \emph{Free fermions.} By the Jordan--Wigner transformation the open XX chain ($\Delta=0$) is a free-fermion
+model with single-particle energies $\varepsilon_k=J\cos\frac{\pi k}{L+1}$, so the spectrum of sector $N$ consists
+of all sums of $N$ distinct $\varepsilon_k$. For $L=\IfFileExists{generated/chains.tex}{\ChainFFL}{10}$ all
+$2^L$ levels agree to \IfFileExists{generated/chains.tex}{$\ChainFFErr$}{machine precision}.
+\item \emph{Heisenberg ring.} Ground-state energies agree with the tabulated exact values to the nine digits of
+the table; $E_0/L$ approaches the Bethe-ansatz value $\tfrac14-\ln2\approx-0.4431$. Every level of sector
+$N<L/2$ reappears in sector $N+1$ (SU(2) multiplets), up to
+\IfFileExists{generated/chains.tex}{$\ChainSUErr$}{round-off}.
+\item \emph{Dynamics.} The melting of a domain wall $|\!\uparrow\cdots\uparrow\downarrow\cdots\downarrow\rangle$ in
+the XX chain, evolved in the sector $N=L/2$ (dimension \IfFileExists{generated/chains.tex}{\ChainDWDim\ for
+$L=\ChainDWL$}{$\binom{L}{L/2}$}), reproduces the single-particle prediction
+$\langle n_i(t)\rangle=[e^{-iht}C(0)e^{iht}]_{ii}$ to \IfFileExists{generated/chains.tex}{$\ChainDWErr$}{round-off}.
+\item \emph{Entanglement.} The entropy of a block of $n$ sites of the XX ground state, obtained with
+\texttt{reduced\_state}, agrees with Peschel's formula $S=-\sum_\nu[\nu\ln\nu+(1-\nu)\ln(1-\nu)]$ over the
+eigenvalues $\nu$ of the restricted correlation matrix~\cite{peschel2003}, including the parity oscillations
+of open chains, to \IfFileExists{generated/chains.tex}{$\ChainPesErr$}{round-off}.
+\item \emph{Disorder.} For the Heisenberg chain with random fields $h_i\in[-W,W]$ the mean ratio of consecutive
+level spacings in the middle of the spectrum crosses over from the GOE value $0.5307$ to the Poisson value
+$2\ln2-1\approx0.3863$~\cite{oganesyan2007,atas2013} as $W$ grows, the hallmark of many-body localisation.
+Here the batch dimension holds the disorder realisations
+(\IfFileExists{generated/chains.tex}{\ChainReal}{many} per point).
+\end{itemize}
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{rrrrrr}
+\toprule
+$L$ & $\dim$ ($N=L/2$) & $E_0$ (library) & $E_0$ (exact) & difference & $E_0/L$\\
+\midrule
+\ChainRingRows
+\bottomrule
+\end{tabular}
+\caption{Ground-state energy of the Heisenberg ring $H=\sum_i\mathbf S_i\cdot\mathbf S_{i+1}$; exact values to
+nine digits\IfFileExists{generated/chains.tex}{ (\ChainMode\ run on \ChainDevice)}{}.}
+\label{tab:ring}
+\end{table}
+
+\begin{figure}[h]
+\centering\fig{chains.pdf}{\textwidth}
+\caption{Left: $\langle S^z_i(t)\rangle$ after a domain-wall quench of the XX chain (light cone).
+Middle: entanglement entropy of the XX ground state, library vs.\ Peschel's formula. Right: mean
+level-spacing ratio of the random-field Heisenberg chain, with the GOE and Poisson values.}
+\label{fig:chains}
+\end{figure}
+
 \section{Performance}\label{sec:performance}
 
 Table~\ref{tab:benchmark} and Figure~\ref{fig:benchmark} report the wall-clock time per sample of library
@@ -414,9 +577,12 @@ operation & $k$ & $C$ & batch & time per sample [$\mu$s]\\
 \section{Limitations and roadmap}\label{sec:limitations}
 
 \begin{itemize}
-\item \emph{Layout.} Blocks are padded to $k_{\max}$; for very different sector sizes (e.g.\ binomial
-sectors of spin chains) a bucketed layout is needed. Merging sectors of equal total charge in tensor
-products (fusion rules) is not implemented yet.
+\item \emph{Layout.} Blocks are padded to $k_{\max}$. For very different sector sizes (binomial sectors of
+spin chains) one works in single sectors; operators acting on all sectors at once would need a bucketed
+layout, which is not implemented yet.
+\item \emph{Symmetries.} Only abelian charges with an arbitrary fusion rule are supported; non-abelian
+symmetries (SU(2) multiplets, Clebsch--Gordan structure) and lattice translations are not used to reduce
+blocks further. Chains are treated by dense diagonalisation, i.e.\ up to about 16--18 spins.
 \item \emph{Optimisation.} The search is local; envelopes are lower bounds for suprema (upper bounds for
 infima). Gradients of spectral functions are singular at degenerate spectra; the parametrisations avoid
 this for the contrast constraint, but not for every user-defined objective.
@@ -461,6 +627,12 @@ state on which device and in which mode they were produced.
   1291--1294.
 \bibitem{zyczkowski2001} K.~\.Zyczkowski, H.-J.~Sommers, ``Induced measures in the space of mixed quantum
   states'', J.\ Phys.\ A 34 (2001), 7111--7125.
+\bibitem{peschel2003} I.~Peschel, ``Calculation of reduced density matrices from correlation functions'',
+  J.\ Phys.\ A 36 (2003), L205--L208.
+\bibitem{oganesyan2007} V.~Oganesyan, D.~A.~Huse, ``Localization of interacting fermions at high temperature'',
+  Phys.\ Rev.\ B 75 (2007), 155111.
+\bibitem{atas2013} Y.~Y.~Atas, E.~Bogomolny, O.~Giraud, G.~Roux, ``Distribution of the ratio of consecutive
+  level spacings in random matrix ensembles'', Phys.\ Rev.\ Lett.\ 110 (2013), 084101.
 \bibitem{paszke2019} A.~Paszke et al., ``PyTorch: An imperative style, high-performance deep learning
   library'', NeurIPS 2019.
 \end{thebibliography}

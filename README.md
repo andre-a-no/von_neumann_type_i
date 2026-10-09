@@ -99,9 +99,10 @@ print((Lt(rho) - rho_t[-1]).frobenius_norm().max())
 | `channels` | `Channel` (Kraus form: apply, `adjoint` = Heisenberg picture, composition `@`, `mix`, `choi`, `superoperator`, `from_superoperator`, TP / unitality checks); identity, unitary, dephasing, depolarizing, amplitude damping, Lüders measurement, conditional expectation onto the centre, random (Stinespring) and random mixed-unitary channels |
 | `states` | `DensityMatrix` (an `Operator` subclass: positive, unit `Tr_blunt`; `expectation`, `mix`, `condition_on`, `density(trace)` / `from_density(..., trace)` for the `Tr_norm` and `tau_vN` conventions; preserved by trace-preserving channels and by the dynamics), random density matrices (Hilbert–Schmidt, Bures, fixed rank), Gibbs states and partition functions, tracial state, sector probabilities, Born probabilities, Lüders update, entropy, relative entropy, fidelity, trace distance, purity |
 | `channels.InterSectorChannel` | CP maps between sectors and between different algebras, Φ(ρ)_d = Σ_c Σ_i K_i^{dc} ρ_c K_i^{dc*}: duals for each of the three traces, composition, sector transition matrix, `from_blocks`, `random_inter_sector_channel` |
-| `composite` | `tensor_product(alg1, alg2)` (sectors = pairs (c, d)), `kron(A, B, alg12)`, `partial_trace` and `partial_trace_channel` (an `InterSectorChannel`; its dual is the embedding A ↦ A ⊗ 1) |
+| `composite` | `tensor_product(alg1, alg2)` (sectors = pairs (c, d)), `fused_tensor_product(alg1, alg2, fuse=add)` (pairs with equal total charge merged into one sector), `kron(A, B, alg12)`, `partial_trace` and `partial_trace_channel` (an `InterSectorChannel`; its dual is the embedding A ↦ A ⊗ 1) |
 | `optimize` | constrained, batched multistart optimisation: `UnitaryParam`, `PositiveParam` / `SelfAdjointParam` with a prescribed or bounded Michelson contrast (hard constraint), `extremize` |
 | `cost` | safeguards: ETA warnings for large batched decompositions and integrators, memory checks with `InsufficientMemoryError`, `set_limits`, `disabled()` |
+| `chains` | `SpinChain`: spin-1/2 chains with conserved S^z, sectors N = 0..L (basis = iterated fused products), XXZ Hamiltonians with batched disorder, full algebra or single sectors, reduced states and entanglement, site amplitude damping between sectors, level-spacing ratio |
 | `dynamics` | exact `propagator`, `schrodinger`, `von_neumann`; RK4 `schrodinger_rk4` (time-dependent H), `solve_operator_ode` (any dX/dt = f(t, X) in M), Lindblad `lindblad_evolve`, `lindblad_superoperator`, `lindblad_channel` |
 
 Lazy operators are evaluated once and cached; after that they drop their recipe, so the
@@ -113,7 +114,19 @@ Channels map each sector to itself, so the Heisenberg dual is the same for `Tr_b
 and `tau_vN`, and Hamiltonian / Lindblad dynamics with generators in M conserve the sector
 probabilities `Tr rho_c`. Unitary dynamics requires `complex_valued=True`.
 
-`precision='double'` switches an algebra (and everything built on it) to float64 / complex128.
+**Number field and precision** are two independent switches of every algebra:
+`complex_valued` (real / complex) and `precision` (`'single'` / `'double'`), i.e. float32, float64,
+complex64 or complex128; `alg.like(complex_valued=..., precision=...)` and `op.cast(alg2)` move between
+them, `alg.bytes_per_operator(B)` reports the memory. Rules of thumb (details and measurements in the
+paper, `scripts/paper/numerics.py`):
+
+| use | when |
+|---|---|
+| real | the problem is real: real symmetric spectra, ground states without complex couplings, GOE statistics, orthogonal conjugation. Real is *exact* there and halves memory. Note that it changes the model otherwise (O(n) instead of U(n), GOE instead of GUE) |
+| complex | unitary dynamics e^{-iHt}, Lindblad with a Hamiltonian, Haar U(n) / CUE / CSE / SU(n), random pure states, broken time reversal |
+| single | Monte Carlo statistics whose statistical error is far above 1e-6, exploratory optimisation |
+| double | effects that are small compared with the operators: inequalities near equality, small gaps, entropies of nearly pure states, contrast near 1, exact-result checks, long RK4 runs. On consumer GPUs FP64 is 32-64x slower than FP32 |
+
 `complex_valued=False` gives real algebras (orthogonal instead of unitary groups). Each
 `force_*` flag (`self_adjoint`, `positive`, `normal`, `invertible`, `projection`) both tags the
 operator and checks the property when the matrix is materialised.
@@ -156,7 +169,7 @@ Stored outputs live in [`results/`](results): `results/experiments/` (current co
 
 ```
 torch_vn_algebra/    library: algebra.py (TypeIAlgebra, Operator), hilbert_space.py, channels.py,
-                     states.py, dynamics.py, composite.py, optimize.py, cost.py
+                     states.py, dynamics.py, composite.py, chains.py, optimize.py, cost.py
 tests/               pytest suite (CPU, runs in CI)
 examples/            short usage examples
 scripts/             validation, experiments and benchmarks from the paper
@@ -177,8 +190,9 @@ pytest -q
   can fail when the dominant eigenvalues are ±λ; its stopping rule is on the change of the
   estimate, not on the error.
 - `Channel`, Hamiltonians and Lindblad generators preserve the sectors; maps between sectors are
-  `InterSectorChannel`s. Tensor products keep the pairs (c, d) as separate sectors: merging sectors
-  with equal total charge (e.g. S_z of a spin chain) is not implemented yet.
+  `InterSectorChannel`s. Only abelian charges are fused; non-abelian symmetries are not used to reduce
+  blocks further, and operators on all sectors of a chain are stored padded (work in single sectors for
+  large chains).
 - `lindblad_channel`, `choi` and `superoperator` work with k_c² × k_c² matrices per block, which
   limits them to blocks of a few tens; use `lindblad_evolve` for larger blocks.
 - No automatic differentiation guarantees, finite dimensions and Type I only.

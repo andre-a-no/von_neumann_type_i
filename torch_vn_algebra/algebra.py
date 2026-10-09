@@ -81,6 +81,32 @@ class TypeIAlgebra:
         else:
             self.hilbert = hilbert
 
+    @property
+    def complex_valued(self) -> bool:
+        return self.hilbert.complex_valued
+
+    @property
+    def precision(self) -> str:
+        return self.hilbert.precision
+
+    @property
+    def dtype(self) -> torch.dtype:
+        return self.hilbert.dtype
+
+    def like(self, complex_valued: Optional[bool] = None, precision: Optional[str] = None,
+             device=None) -> 'TypeIAlgebra':
+        """The same sector structure with another number field / precision / device."""
+        alg = TypeIAlgebra(self.n_factors, self.k_factors,
+                           complex_valued=self.complex_valued if complex_valued is None else complex_valued,
+                           precision=self.precision if precision is None else precision,
+                           device=self.hilbert.device if device is None else device, charges=self.charges)
+        alg.exact_eig_max_dim = self.exact_eig_max_dim
+        return alg
+
+    def bytes_per_operator(self, batch_size: int = 1) -> int:
+        """Memory of one materialised operator of this algebra (padded layout)."""
+        return batch_size * self.C * self.k_max ** 2 * torch.empty((), dtype=self.dtype).element_size()
+
     # ========================================================================
     # Random Unitary / Orthogonal / SU(n)
     # ========================================================================
@@ -589,6 +615,28 @@ class TypeIAlgebra:
 
         def adjoint(self) -> 'TypeIAlgebra.Operator':
             return TypeIAlgebra.Operator(self.algebra, generator=lambda: self.matrix.conj().transpose(-2, -1))
+
+        def cast(self, algebra: 'TypeIAlgebra') -> 'TypeIAlgebra.Operator':
+            """
+            This operator as an element of `algebra` (same sectors, other field / precision / device),
+            e.g. alg.like(precision='double'). Casting a complex operator to a real algebra drops the
+            imaginary part and raises if it is not negligible.
+            """
+            assert algebra.k_factors == self.algebra.k_factors, "sector structure must agree"
+            mat = self.matrix
+            if torch.is_complex(mat) and not algebra.complex_valued:
+                if mat.imag.abs().max() > 1e-6 * max(1.0, mat.abs().max().item()):
+                    raise ValueError("operator has a non-negligible imaginary part; the target algebra is real")
+                mat = mat.real
+            out = type(self).__new__(type(self))
+            out.__dict__.update(self.__dict__)
+            out.algebra = algebra
+            out._matrix = mat.to(dtype=algebra.dtype, device=algebra.hilbert.device)
+            out._is_materialized = True
+            out._generator = None
+            out._lambda_max = out._lambda_min = out._trace = out._inverse = out._abs = None
+            out._update_memory()
+            return out
 
         # ----- general functional calculus (spectral theorem, block by block) -----
         def eigh(self) -> List[Tuple[torch.Tensor, torch.Tensor]]:

@@ -534,3 +534,22 @@ class TestPrecision:
     def test_invalid_precision(self):
         with pytest.raises(ValueError):
             TypeIAlgebra([2], [2], precision='half')
+
+
+class TestNumerics:
+    def test_like_and_cast(self):
+        a = TypeIAlgebra([3, 4], [3, 4], complex_valued=False, device='cpu')
+        X = a.operator_from_eigenvalues(lambda d: 0.1 + torch.rand(4, d), batch_size=4, force_positive=True)
+        b = a.like(complex_valued=True, precision='double')
+        assert b.k_factors == a.k_factors and b.dtype == torch.complex128
+        Y = X.cast(b)
+        assert Y.algebra is b and Y.matrix.dtype == torch.complex128
+        assert torch.allclose(Y.matrix.real.float(), X.matrix)
+        assert torch.allclose(Y.michelson_contrast.float(), X.michelson_contrast, atol=1e-5)
+        assert a.bytes_per_operator(10) * 4 == b.bytes_per_operator(10)
+
+    def test_cast_to_real_requires_real_matrix(self):
+        b = TypeIAlgebra([2], [2], complex_valued=True, device='cpu')
+        U = b.operator(b.random_unitary(2, batch_size=3)[:, None])
+        with pytest.raises(ValueError):
+            U.cast(b.like(complex_valued=False))
