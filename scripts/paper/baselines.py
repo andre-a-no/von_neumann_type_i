@@ -113,6 +113,11 @@ for C, k in ((1, 2), (16, 16), (32, 16)) if FULL else ((1, 2), (8, 16)):
     r = dict(C=C, k=k, batch=B_VEC, us_loop=1e6 * t_loop / B_LOOP, us_numpy_vec=1e6 * t_vec / B_VEC,
              us_lib_cpu=1e6 * t_cpu / B_VEC, mean_z=dict(loop=float(z_loop.mean()), vec=float(z_vec.mean()),
                                                          lib=float(z_cpu.mean())))
+    # the three versions sample the same distribution: largest pairwise difference of the means in standard errors
+    se = {n: float(np.std(v) / math.sqrt(len(v))) for n, v in (('loop', z_loop), ('vec', z_vec), ('lib', z_cpu))}
+    r['stderr_z'] = se
+    r['max_sigma'] = max(abs(r['mean_z'][a] - r['mean_z'][b]) / math.hypot(se[a], se[b])
+                         for a, b in (('loop', 'vec'), ('loop', 'lib'), ('vec', 'lib')))
     if dev != 'cpu':
         t_gpu, _ = timed(library, B_VEC, C, k, dev)
         r['us_lib_gpu'] = 1e6 * t_gpu / B_VEC
@@ -155,6 +160,7 @@ save_json(args, 'baselines', dict(monte_carlo=rows_a, ground_states=rows_b, b_lo
 tex = env_macro(args, 'Base')
 gpu = dev != 'cpu'
 tex += f"\\newcommand{{\\BaseHasGPU}}{{{'1' if gpu else '0'}}}\n"
+tex += f"\\newcommand{{\\BaseMaxSigma}}{{{max(r['max_sigma'] for r in rows_a):.1f}}}\n"
 tex += "\\newcommand{\\BaseMCRows}{%\n"
 for r in rows_a:
     tex += (f"{r['C']} & {r['k']} & {r['us_loop']:.3g} & {r['us_numpy_vec']:.3g} & {r['us_lib_cpu']:.3g}"

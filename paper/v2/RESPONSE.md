@@ -33,10 +33,10 @@ pM_0p ≅ ⊕_c M_{k_c} of a larger algebra M_0 = ⊕_c M_{n_c}, with p_c a proj
 operators, traces and normalisations refer to the corner. Section 2 uses the same notation.
 
 **3. Why do NumPy/SciPy, Qiskit, QuTiP etc. not support this?**
-They can, through the embedding M ⊂ M_N, N = Σ k_c, and the revised Introduction says so (paragraph
+They can, through the embedding M ⊂ M_D, D = Σ k_c, and the revised Introduction says so (paragraph
 "Why not one large matrix?"). It then lists what the embedding loses and the user has to supply:
-the cost (Σ k_c³ instead of N³, a factor C² for C equal blocks); the measures (the unitary group of M
-is Π U(k_c), a null set in U(N), so Haar sampling and gradient steps in M_N leave M); the C-parameter
+the cost (Σ k_c³ instead of D³, a factor C² for C equal blocks); the measures (the unitary group of M
+is Π U(k_c), a null set in U(D), so Haar sampling and gradient steps in M_D leave M); the C-parameter
 family of traces, on which densities and duals of maps between sectors depend; and the centre, which
 carries the classical (superselected) part of the system. A new paragraph "From a symmetry to the
 algebra" explains why physical models with a symmetry live in an algebra of this form (the commutant

@@ -195,6 +195,9 @@ nohup bash scripts/paper/run_all.sh full cuda > full_run.log 2>&1 &   # the full
   their effect; the default is true FP32.
 - Results land in `paper/v2/generated/` (tables as `.tex` and `.json`) and `paper/v2/figures/`. Commit those
   two directories and the logs, then rebuild the PDF; the tables state the device and mode they came from.
+- Memory. The largest single step is the dense diagonalisation of a 12870-dimensional sector in `chains`
+  (about 10 GB on the CPU in the `check` run); use a GPU with at least 24 GB, preferably 40-80 GB, and a host with
+  at least 16 GB RAM. The `check` run shows the peak GPU memory of every script in its `[resources]` line.
 - Double precision is used throughout the validation and chain scripts; a data-centre GPU (A100, H100) is much
   faster there than a consumer GPU (FP64 at 1/2 versus 1/32-1/64 of the FP32 rate).
 

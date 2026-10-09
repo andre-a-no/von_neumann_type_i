@@ -25,12 +25,12 @@ formado por funciones de las «cargas». Así pues, un físico que modela un sis
 en un álgebra de la forma (1), normalmente sin llamarla así. Para una única magnitud conservada Q (un
 operador autoadjunto), los sectores son los autovalores de Q y los bloques son sus autoespacios.
 
-Esto responde también a la pregunta «¿por qué no usar una única matriz grande?». La inclusión M ⊂ M_N
-(N = Σk_c) es exacta, pero se pierde
-- **el coste**: Σk_c³ en lugar de N³; para C bloques iguales esto supone un factor C² en tiempo;
-- **la medida**: el grupo unitario de M es Π U(k_c), un conjunto de medida nula en U(N). Un unitario
-  aleatorio según la medida de Haar en U(N) no está en M, y un paso de gradiente en M_N se sale de M;
-- **las trazas**: en M_N la traza es única salvo un factor; en M las trazas fieles forman la familia
+Esto responde también a la pregunta «¿por qué no usar una única matriz grande?». La inclusión M ⊂ M_D
+(D = Σk_c) es exacta, pero se pierde
+- **el coste**: Σk_c³ en lugar de D³; para C bloques iguales esto supone un factor C² en tiempo;
+- **la medida**: el grupo unitario de M es Π U(k_c), un conjunto de medida nula en U(D). Un unitario
+  aleatorio según la medida de Haar en U(D) no está en M, y un paso de gradiente en M_D se sale de M;
+- **las trazas**: en M_D la traza es única salvo un factor; en M las trazas fieles forman la familia
   de C parámetros Σ w_c Tr_c. La preservación de la traza y las aplicaciones duales dependen de los pesos;
 - **el centro**: las proyecciones de sector son la parte clásica del sistema (sección 2). Las
   probabilidades condicionadas y la posselección son operaciones con el centro, y con una sola matriz

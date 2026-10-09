@@ -57,6 +57,8 @@ def schrodinger(psi0: torch.Tensor, H: Operator, times) -> torch.Tensor:
     if psi0.dim() == 4:
         psi0 = psi0.squeeze(-1)
     psi0 = psi0.to(H.matrix.device)                       # a state built on the CPU may meet H on a GPU
+    B = max(psi0.shape[0], H.matrix.shape[0])             # one initial state for a batch of Hamiltonians, or vice versa
+    psi0 = psi0.expand(B, *psi0.shape[1:])
     ts = _times(times, psi0.device)
     out = torch.zeros(len(ts), *psi0.shape, dtype=H.matrix.dtype, device=psi0.device)
     for c, (w, V) in enumerate(H.eigh()):
@@ -75,6 +77,8 @@ def von_neumann(rho0: Operator, H: Operator, times) -> List[Operator]:
     alg = H.algebra
     blocks = H.eigh()
     rho = rho0.matrix.to(H.matrix.dtype)
+    B = max(rho.shape[0], H.matrix.shape[0])              # one initial state for a batch of Hamiltonians, or vice versa
+    rho = rho.expand(B, *rho.shape[1:])
     out = []
     for t in _times(times, rho.device).tolist():
         mat = torch.zeros_like(rho)

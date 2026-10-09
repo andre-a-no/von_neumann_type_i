@@ -26,11 +26,11 @@ une algèbre de la forme (1), en général sans la désigner ainsi. Pour une seu
 opérateur autoadjoint), les secteurs sont les valeurs propres de Q et les blocs sont ses sous-espaces propres.
 
 Cela répond aussi à la question « pourquoi ne pas utiliser une seule grande matrice ? ». Le plongement
-M ⊂ M_N (N = Σk_c) est exact, mais on y perd
-- **le coût** : Σk_c³ au lieu de N³ ; pour C blocs égaux, c'est un facteur C² en temps ;
-- **la mesure** : le groupe unitaire de M est Π U(k_c), un ensemble de mesure nulle dans U(N). Une matrice
-  unitaire tirée selon la mesure de Haar sur U(N) n'appartient pas à M, et un pas de gradient dans M_N sort de M ;
-- **les traces** : sur M_N, la trace est unique à un facteur près ; sur M, les traces fidèles forment la
+M ⊂ M_D (D = Σk_c) est exact, mais on y perd
+- **le coût** : Σk_c³ au lieu de D³ ; pour C blocs égaux, c'est un facteur C² en temps ;
+- **la mesure** : le groupe unitaire de M est Π U(k_c), un ensemble de mesure nulle dans U(D). Une matrice
+  unitaire tirée selon la mesure de Haar sur U(D) n'appartient pas à M, et un pas de gradient dans M_D sort de M ;
+- **les traces** : sur M_D, la trace est unique à un facteur près ; sur M, les traces fidèles forment la
   famille à C paramètres Σ w_c Tr_c. La « préservation de la trace » et les applications duales dépendent des poids ;
 - **le centre** : les projecteurs de secteur constituent la partie classique du système (section 2).
   Les probabilités conditionnelles et la post-sélection sont des opérations sur le centre ; avec une seule

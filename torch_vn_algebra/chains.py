@@ -80,6 +80,8 @@ class SpinChain:
         self.device = ref.hilbert.device
         self.dtype = ref.hilbert.dtype
         self.real_dtype = ref.hilbert.real_dtype
+        # labels, popcounts, masks and the index: a few 2^L int64 arrays
+        cost.check_memory(5 * cost.tensor_bytes((2 ** L,), torch.int64), self.device, f"SpinChain(L={L}) basis labels")
         self.labels = _labels_tensor(L, self.device)
         index = torch.empty(2 ** L, dtype=torch.int64, device=self.device)
         for lab in self.labels:

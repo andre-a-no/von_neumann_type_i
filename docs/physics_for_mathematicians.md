@@ -23,12 +23,12 @@ the "charges". A physicist who models a system with a symmetry therefore compute
 form (1), usually without calling it that. For a single conserved quantity Q (a self-adjoint operator)
 the sectors are the eigenvalues of Q and the blocks are its eigenspaces.
 
-This also answers the question "why not use one large matrix?". The embedding M ⊂ M_N (N = Σk_c) is
+This also answers the question "why not use one large matrix?". The embedding M ⊂ M_D (D = Σk_c) is
 exact, but it loses
-- **cost**: Σk_c³ instead of N³; for C equal blocks this is a factor C² in time;
-- **measure**: the unitary group of M is Π U(k_c), a null set in U(N). A Haar-random unitary in U(N)
-  is not in M, and a gradient step in M_N leaves M;
-- **traces**: on M_N the trace is unique up to a factor, on M the faithful traces form the
+- **cost**: Σk_c³ instead of D³; for C equal blocks this is a factor C² in time;
+- **measure**: the unitary group of M is Π U(k_c), a null set in U(D). A Haar-random unitary in U(D)
+  is not in M, and a gradient step in M_D leaves M;
+- **traces**: on M_D the trace is unique up to a factor, on M the faithful traces form the
   C-parameter family Σ w_c Tr_c. "Trace preserving" and dual maps depend on the weights;
 - **the centre**: the sector projections are the classical part of the system (Section 2).
   Conditional probabilities and post-selection are operations with the centre, and with one matrix

@@ -25,12 +25,12 @@ Darstellungen λ, die Blockgrößen sind die Multiplizitäten m_λ, und das Zent
 meist ohne sie so zu nennen. Für eine einzelne Erhaltungsgröße Q (einen selbstadjungierten Operator) sind die
 Sektoren die Eigenwerte von Q und die Blöcke ihre Eigenräume.
 
-Damit ist auch die Frage „Warum nicht einfach eine große Matrix?“ beantwortet. Die Einbettung M ⊂ M_N
-(N = Σk_c) ist exakt, aber dabei gehen verloren:
-- **Rechenaufwand**: Σk_c³ statt N³; bei C gleich großen Blöcken ist das ein Faktor C² in der Laufzeit;
-- **Maß**: Die unitäre Gruppe von M ist Π U(k_c), eine Nullmenge in U(N). Ein Haar-zufälliges Unitäres
-  in U(N) liegt nicht in M, und ein Gradientenschritt in M_N führt aus M heraus;
-- **Spuren**: Auf M_N ist die Spur bis auf einen Faktor eindeutig, auf M bilden die treuen Spuren die
+Damit ist auch die Frage „Warum nicht einfach eine große Matrix?“ beantwortet. Die Einbettung M ⊂ M_D
+(D = Σk_c) ist exakt, aber dabei gehen verloren:
+- **Rechenaufwand**: Σk_c³ statt D³; bei C gleich großen Blöcken ist das ein Faktor C² in der Laufzeit;
+- **Maß**: Die unitäre Gruppe von M ist Π U(k_c), eine Nullmenge in U(D). Ein Haar-zufälliges Unitäres
+  in U(D) liegt nicht in M, und ein Gradientenschritt in M_D führt aus M heraus;
+- **Spuren**: Auf M_D ist die Spur bis auf einen Faktor eindeutig, auf M bilden die treuen Spuren die
   C-parametrige Familie Σ w_c Tr_c. „Spurerhaltend“ und duale Abbildungen hängen von den Gewichten ab;
 - **das Zentrum**: Die Sektorprojektionen bilden den klassischen Teil des Systems (Abschnitt 2).
   Bedingte Wahrscheinlichkeiten und Postselektion sind Operationen mit dem Zentrum; arbeitet man mit

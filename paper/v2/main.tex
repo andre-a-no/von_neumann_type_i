@@ -168,18 +168,18 @@ time of writing ($\checkmark$: supported; ($\checkmark$): partly, through plug-i
 \end{table}
 
 \paragraph{Why not one large matrix?} Nothing forces one to treat $\M$ as a separate object: it embeds into
-$M_N(\C)$, $N=\sum_ck_c$, as the block-diagonal matrices, and every package above handles a single $N\times N$
+$M_D(\C)$, $D=\sum_ck_c$, as the block-diagonal matrices, and every package above handles a single $D\times D$
 matrix (the case $C=1$ of~\eqref{eq:M}). The embedding is exact for linear algebra, so the question is only what it
 costs and what has to be supplied by hand.
 \begin{itemize}\itemsep0pt
-\item \emph{Cost.} A product, an inverse or a spectral decomposition in $M_N$ costs $O(N^3)$ time and $O(N^2)$ memory,
+\item \emph{Cost.} A product, an inverse or a spectral decomposition in $M_D$ costs $O(D^3)$ time and $O(D^2)$ memory,
 in $\M$ it costs $\sum_c k_c^3$ and $\sum_c k_c^2$. For $C$ equal blocks this is a factor $C^2$ in time and $C$ in
-memory; for the half-filling sector of a chain of $L=16$ spins ($N=2^{16}$, largest block $12870$) the dense $M_N$
+memory; for the half-filling sector of a chain of $L=16$ spins ($D=2^{16}$, largest block $12870$) the dense $M_D$
 computation is out of reach, the block computation is routine.
-\item \emph{Measures.} The unitary group of $\M$ is $\prod_cU(k_c)$, a subgroup of $U(N)$ of measure zero. A Haar-random
-element of $U(N)$ is not in $\M$, and a random element of $\M$ has to be produced block by block. The same holds for
-random states, for the circular ensembles and for any optimisation: an unconstrained gradient step in $M_N$ leaves $\M$.
-\item \emph{Traces.} On $M_N$ the trace is unique up to a factor; on $\M$ the faithful traces form a $C$-parameter
+\item \emph{Measures.} The unitary group of $\M$ is $\prod_cU(k_c)$, a subgroup of $U(D)$ of measure zero. A Haar-random
+element of $U(D)$ is not in $\M$, and a random element of $\M$ has to be produced block by block. The same holds for
+random states, for the circular ensembles and for any optimisation: an unconstrained gradient step in $M_D$ leaves $\M$.
+\item \emph{Traces.} On $M_D$ the trace is unique up to a factor; on $\M$ the faithful traces form a $C$-parameter
 family $\sum_cw_c\Tr_c$. Densities, ``trace preserving'' and the dual of a map between algebras with different sectors
 depend on the choice of the weights; on the embedded matrices this information is no longer visible.
 \item \emph{Centre.} The centre of $\M$ (the sector projections) is what physicists call the classical or superselected
@@ -481,7 +481,7 @@ be changed, and the checks can be switched off locally.
 \section{Usage by example}\label{sec:usage}
 
 The listings of this section are complete programs from \texttt{examples/paper}; the test suite runs
-them, so they stay in sync with the code. Each runs on a CPU in seconds to about a minute and uses a GPU when available.
+them, so they stay in sync with the code. Each runs on a CPU in under half a minute and uses a GPU when available.
 
 \paragraph{Random operators with a prescribed contrast.} Listing~\ref{lst:ex1} builds $10^4$ positive
 operators in $M_2\oplus M_3\oplus M_4$ whose spectra have contrast $0.6$ and whose eigenvectors are
@@ -843,8 +843,8 @@ positive operators with prescribed contrast and Haar-orthogonal eigenvectors in 
 and $z$. The direct NumPy/SciPy formulation loops over samples and sectors with \texttt{scipy.stats.ortho\_group};
 a hand-vectorised NumPy version uses stacked QR decompositions with the phase correction; the library needs three
 calls. (B)~Ground states of sector Hamiltonians: \texttt{scipy.sparse.linalg.eigsh} (ARPACK~\cite{lehoucq1998}), one
-call per Hamiltonian, against the batched Lanczos solver. The three Monte Carlo versions agree within their statistical
-errors, and the ground-state energies agree to round-off.
+call per Hamiltonian, against the batched Lanczos solver. The three Monte Carlo versions sample the same distribution:
+their means differ by at most \IfFileExists{generated/baselines.tex}{\BaseMaxSigma}{a few} standard errors, and the ground-state energies agree to round-off.
 
 The comparison is instructive in both directions. On a CPU the gain over the loop depends on the block size: it is
 large for small blocks, where the Python overhead of the loop dominates (up to two orders of magnitude for $k=2$),

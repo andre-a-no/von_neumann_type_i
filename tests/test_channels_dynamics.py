@@ -356,3 +356,18 @@ def test_lindblad_channel_rejects_jumps_between_sectors():
     chain = SpinChain(3)
     with pytest.raises(ValueError):
         dy.lindblad_channel(chain.algebra, chain.xxz(1.0, 1.0), [chain.lowering(0)])
+
+
+def test_one_initial_state_for_a_batch_of_hamiltonians():
+    from torch_vn_algebra import SpinChain
+    chain = SpinChain(6, complex_valued=True)
+    H = chain.random_field_heisenberg(2.0, batch_size=5, sector=3)        # 5 disorder realisations
+    psi0 = chain.vector_in_sector('111000')[None, None]                   # one state
+    out = dy.schrodinger(psi0, H, [0.0, 1.0])
+    assert out.shape[1] == 5
+    for b in range(5):
+        Hb = H.algebra.operator(H.matrix[b:b + 1], is_self_adjoint=True)
+        assert torch.allclose(out[:, b], dy.schrodinger(psi0, Hb, [0.0, 1.0])[:, 0], atol=1e-12)
+    rho0 = chain.sector_algebra(3).operator(torch.outer(psi0[0, 0], psi0[0, 0].conj())[None, None])
+    rhos = dy.von_neumann(rho0, H, [1.0])
+    assert rhos[0].matrix.shape[0] == 5
