@@ -142,9 +142,10 @@ for L, R in (((16, 1), (16, 2 if CHECK else 20), (18, 1), (20, 1)) if FULL else 
     h = (2 * torch.rand(R, L, dtype=torch.float64) - 1) * W
     H = ch.xxz_sparse(1.0, 1.0, h, sector=L // 2)
     mats = [scipy_matrix(H, b) for b in range(R)]
-    spla.eigsh(mats[0], k=1, which='SA', tol=1e-12)          # warm-up (as for the library below)
+    v0 = np.random.default_rng(0).standard_normal(H.dim)    # fixed ARPACK start: reproducible digits
+    spla.eigsh(mats[0], k=1, which='SA', tol=1e-12, v0=v0)   # warm-up (as for the library below)
     t0 = time.perf_counter()
-    e_sp = [spla.eigsh(M, k=1, which='SA', tol=1e-12)[0][0] for M in mats]
+    e_sp = [spla.eigsh(M, k=1, which='SA', tol=1e-12, v0=v0)[0][0] for M in mats]
     t_sp = time.perf_counter() - t0
     krylov.ground_state(H)                                   # warm-up
     sync(dev)

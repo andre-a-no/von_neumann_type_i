@@ -719,3 +719,83 @@ def test_central_with_complex_scalars():
         TypeIAlgebra([2], [2], complex_valued=False).central([1j])
     with pytest.raises(ValueError):
         alg.central([1.0])
+
+
+class TestFourthReview:
+    """Regressions from the fourth review round."""
+
+    @pytest.mark.parametrize('complex_valued', [False, True])
+    def test_blockwise_functions_gradcheck_with_padding(self, complex_valued):
+        alg = TypeIAlgebra([2, 3], [2, 3], complex_valued=complex_valued, precision='double')
+        torch.manual_seed(0)
+        U = alg.random_unitary_operator(1)
+        D = alg.from_blocks([torch.diag(torch.tensor(v, dtype=torch.float64)) for v in ([1.0, 2.0], [0.7, 1.5, 3.0])])
+        P = (U @ D @ U.adjoint()).matrix   # positive definite on active blocks
+
+        for f in (lambda X: X.inverse(), lambda X: X.sqrt(), lambda X: X.abs()):
+            def g(m):
+                m = 0.5 * (m + m.conj().transpose(-2, -1))
+                return f(alg.operator(m)).matrix
+            x = P.clone().requires_grad_(True)
+            assert torch.autograd.gradcheck(g, (x,), eps=1e-6, atol=1e-5)
+            out = g(P)
+            assert out[0, 0, 2:, :].abs().max() == 0 and out[0, 0, :, 2:].abs().max() == 0   # padding stays zero
+
+    def test_structure_includes_charges(self):
+        a = TypeIAlgebra([2, 2], [2, 2], charges=[0, 1])
+        b = TypeIAlgebra([2, 2], [2, 2], charges=[1, 2])
+        with pytest.raises(ValueError):
+            a.identity() + b.identity()
+
+    def test_complex_tensor_scalar_rejected_in_real_algebra(self):
+        alg = TypeIAlgebra([2], [2], complex_valued=False)
+        with pytest.raises(ValueError):
+            alg.identity() * torch.tensor(1j)
+
+    def test_central_keeps_gradients_and_per_sample_values(self):
+        alg = TypeIAlgebra([2, 3], [2, 3], precision='double')
+        s = torch.tensor([1.0, 2.0], dtype=torch.float64, requires_grad=True)
+        Z = alg.central([s, 3.0])
+        assert Z.matrix.shape[0] == 2 and Z.is_positive and Z.is_self_adjoint
+        assert torch.allclose(Z.matrix[1, 0, :2, :2], 2 * torch.eye(2, dtype=Z.matrix.dtype))
+        Z.matrix.real.sum().backward()
+        assert torch.allclose(s.grad, torch.tensor([2.0, 2.0], dtype=torch.float64))
+
+    def test_intersector_from_blocks_checks_field(self):
+        from torch_vn_algebra.channels import InterSectorChannel
+        alg = TypeIAlgebra([1, 2], [1, 2], complex_valued=False)
+        with pytest.raises(ValueError):
+            InterSectorChannel.from_blocks(alg, alg, {(0, 1): [torch.ones(1, 2) * 1j]})
+
+    def test_inner_product_n1(self):
+        from torch_vn_algebra.hilbert_space import HilbertSpace
+        H = HilbertSpace(n=1, k=1, device='cpu', precision='double')
+        v = torch.full((1, 1, 1, 1), 1j, dtype=torch.complex128)
+        with pytest.raises(ValueError):
+            H.inner_product(v, v)
+        assert abs(H.inner_product(v, v, bra_is_row=False).item() - 1) < 1e-12
+        assert abs(H.inner_product(v, v, bra_is_row=True).item() + 1) < 1e-12
+
+    def test_lindblad_broadcasts_intersector_and_callable(self):
+        from torch_vn_algebra import SpinChain, dynamics, states
+        ch = SpinChain(2)
+        alg = ch.algebra
+        rho = states.maximally_mixed_state(alg)
+        L = ch.lowering(0)
+        L4 = type(L)(L.algebra_in, L.algebra_out, L.kraus.expand(4, *L.kraus.shape[1:]).clone())
+        out = dynamics.lindblad_evolve(rho, None, [L4], times=[0.0, 0.1])
+        assert out[-1].matrix.shape[0] == 4
+        U = alg.random_unitary_operator(3)
+        H3 = U + U.adjoint()
+        out = dynamics.lindblad_evolve(rho, lambda t: H3, [], times=[0.0, 0.1])
+        assert out[-1].matrix.shape[0] == 3
+
+    def test_mix_checks_algebra_and_scalar_p(self):
+        from torch_vn_algebra import states, channels
+        a, b = TypeIAlgebra([2], [2]), TypeIAlgebra([3], [3])
+        with pytest.raises(ValueError):
+            states.maximally_mixed_state(a).mix(states.maximally_mixed_state(b), 0.5)
+        Phi = channels.random_channel(a, 2)
+        with pytest.raises(ValueError):
+            Phi.mix(Phi, torch.tensor([0.1, 0.2]))
+        assert Phi.mix(Phi, torch.tensor(0.3)).kraus.shape[1] == 4

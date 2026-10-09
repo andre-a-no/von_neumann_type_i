@@ -266,7 +266,7 @@ for ax, beta, name in zip(axes, (1, 2, 4), ('COE', 'CUE', 'CSE')):
 axes[0].set_ylabel('$P(s)$')
 axes[0].legend(frameon=False)
 fig.tight_layout()
-fig.savefig(f"{args.figdir}/spacings.pdf")
+fig.savefig(f"{args.figdir}/spacings.pdf", metadata={"CreationDate": None})
 
 fig, ax = plt.subplots(figsize=(4.5, 3.2))
 ms = [r[0] for r in page_rows]
@@ -277,5 +277,5 @@ ax.set_ylabel('$\\langle S(\\rho_A)\\rangle$')
 ax.set_title(f'$n = \\dim H_B = {n_page}$')
 ax.legend(frameon=False)
 fig.tight_layout()
-fig.savefig(f"{args.figdir}/page.pdf")
+fig.savefig(f"{args.figdir}/page.pdf", metadata={"CreationDate": None})
 print("written:", args.out, args.figdir)

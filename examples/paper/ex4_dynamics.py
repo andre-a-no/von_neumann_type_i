@@ -3,6 +3,7 @@ import math
 import torch
 from torch_vn_algebra import TypeIAlgebra, DensityMatrix, dynamics
 
+torch.manual_seed(0)                               # reproducible output
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 alg = TypeIAlgebra([2], [2], device=dev, precision='double')
 omega, gamma = 1.0, 0.3

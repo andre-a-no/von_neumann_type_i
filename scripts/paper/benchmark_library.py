@@ -143,5 +143,5 @@ if two:
     ax.axhline(1, color='k', lw=0.6)
 ax.legend(frameon=False, fontsize=7, ncol=2)
 fig.tight_layout()
-fig.savefig(f"{args.figdir}/benchmark.pdf")
+fig.savefig(f"{args.figdir}/benchmark.pdf", metadata={"CreationDate": None})
 print("written:", args.out, args.figdir)

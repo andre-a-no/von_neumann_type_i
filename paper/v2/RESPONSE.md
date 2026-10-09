@@ -99,8 +99,10 @@ Table 1); every entry is cited in the text.
 Monte Carlo sampling was replaced by constrained optimisation (Section 6): with the Michelson contrast
 fixed exactly by the parametrisation, gradient ascent/descent finds extremal values beyond the sampled
 clouds; every Monte Carlo sample with both contrasts in [0, 0.999] is checked against the envelopes along
-both contrasts (Table 9 counts the samples outside). Three envelopes are verified analytically: the lower
-envelopes of Exp. 1 and Exp. 3 and, via von Neumann's trace inequality, the upper envelope of Exp. 2. Section 6 shows that sampling misses the extremes in all but the smallest
+both contrasts (Table 9 counts the samples outside). Four envelopes are verified analytically: the lower
+envelopes of Exp. 1 and Exp. 3 and, via von Neumann's trace inequality applied sector by sector, both envelopes
+of Exp. 2; for a single 2×2 block the computed upper envelopes of Exp. 1 and Exp. 3 agree with simple closed
+forms, which we state as conjectures. Section 6 shows that sampling misses the extremes in all but the smallest
 dimensions, states which envelopes are proven and which are local-search bounds, and draws only
 conclusions that the optimisation supports. All envelopes refer to real algebras (orthogonal U), the
 setting of the first version, and the text says so.

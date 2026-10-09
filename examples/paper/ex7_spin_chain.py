@@ -2,6 +2,7 @@
 import torch
 from torch_vn_algebra import SpinChain, DensityMatrix
 
+torch.manual_seed(0)                               # reproducible output
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 chain = SpinChain(L=10, boundary='periodic', device=dev)        # sectors N = 0..10, dims binom(10, N)
 print(chain.algebra.k_factors)

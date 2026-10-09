@@ -37,7 +37,7 @@ rec = {}
 
 # exact ground-state energies of the S=1/2 Heisenberg ring, H = sum S_i . S_{i+1}
 HEISENBERG_RING = {4: -2.0, 6: -2.802775638, 8: -3.651093409, 10: -4.515446354, 12: -5.387390917,
-                   14: -6.263549533, 16: -7.142296361}
+                   14: -6.263549534, 16: -7.142296361}
 BETHE = 0.25 - math.log(2)                                     # infinite-chain energy per site
 
 
@@ -274,5 +274,5 @@ ax.set_ylabel('$\\langle r\\rangle$')
 ax.set_title(f'random-field Heisenberg, {REAL} realisations', fontsize=9)
 ax.legend(frameon=False, fontsize=7)
 fig.tight_layout()
-fig.savefig(f"{args.figdir}/chains.pdf")
+fig.savefig(f"{args.figdir}/chains.pdf", metadata={"CreationDate": None})
 print("written:", args.out, args.figdir)

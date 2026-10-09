@@ -7,6 +7,7 @@ projection of M - detects the first kind of error and post-selection restores pa
 import torch
 from torch_vn_algebra import SpinChain, dynamics, states
 
+torch.manual_seed(0)                               # reproducible output
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 n, w, T = 6, 3, 2.0                                         # qubits, Hamming weight, evolution time
 qubits = SpinChain(n, 'periodic', device=dev)               # ring of qubits, sectors = Hamming weights
@@ -16,10 +17,10 @@ ideal = dynamics.von_neumann(rho0, H, [T])[0]                # noiseless referen
 P = qubits.algebra.central([1.0 if N == w else 0.0 for N in range(n + 1)])   # Hamming-weight projector
 
 T1_jumps = [qubits.lowering(i) for i in range(n)]            # |1> -> |0>: between sectors
-T2_jumps = [qubits.sz(i) for i in range(n)]                  # pure dephasing: inside sectors
+dephasing_jumps = [qubits.sz(i) for i in range(n)]           # pure dephasing: inside sectors
 print(" gamma1  gamma2   P(weight 3)   fidelity   fidelity after post-selection")
 for g1, g2 in ((0.0, 0.0), (0.02, 0.0), (0.0, 0.02), (0.02, 0.02), (0.1, 0.1)):
-    rho = dynamics.lindblad_evolve(rho0, H, T1_jumps + T2_jumps, [0.0, T],
+    rho = dynamics.lindblad_evolve(rho0, H, T1_jumps + dephasing_jumps, [0.0, T],
                                    rates=[g1] * n + [g2] * n, substeps=80)[-1]
     post, p_ok = rho.condition_on(P)                         # Lueders rule for the central projection
     F = states.trace_of_product(rho, ideal).real.item()      # <psi_ideal| rho |psi_ideal>

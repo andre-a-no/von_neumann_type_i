@@ -2,6 +2,7 @@
 import torch
 from torch_vn_algebra import TypeIAlgebra, InterSectorChannel, channels, states
 
+torch.manual_seed(0)                               # reproducible output
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 # sectors N = 0, 1, 2 with bases |00>; |10>, |01>; |11>
 alg = TypeIAlgebra([1, 2, 1], [1, 2, 1], device=dev)

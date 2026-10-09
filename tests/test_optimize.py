@@ -72,3 +72,14 @@ def test_pin_sector_skips_one_dimensional_sectors():
     alg = SpinChain(4, complex_valued=False).algebra                 # sector N=0 has dimension 1
     X = opt.PositiveParam(alg, 3, delta=torch.full((3,), 0.4, dtype=torch.float64))
     assert torch.allclose(X.operator().michelson_contrast, torch.full((3,), 0.4, dtype=torch.float64))
+
+
+def test_extreme_eigenvalues_placed_in_any_sector():
+    a = TypeIAlgebra([2, 2], [2, 2], complex_valued=False, precision='double')
+    S = opt.SpectrumParam(a, 200, delta=torch.full((200,), 0.5, dtype=torch.float64))
+    different = (S.pin_max[:, 0] != S.pin_min[:, 0])
+    assert different.any() and (~different).any()                  # both placements occur among the starts
+    X = opt.PositiveParam(a, 200, delta=torch.full((200,), 0.5, dtype=torch.float64))
+    assert torch.allclose(X.operator().michelson_contrast, torch.full((200,), 0.5, dtype=torch.float64))
+    P = opt.SpectrumParam(a, 5, delta=torch.full((5,), 0.5, dtype=torch.float64), pin_sector=1)
+    assert (P.pin_max[:, 0] == 1).all() and (P.pin_min[:, 0] == 1).all()

@@ -413,22 +413,25 @@ class TypeIAlgebra:
                      for c, k_c in enumerate(self.algebra.k_factors) if k_c]
             return torch.stack(norms, dim=-1).max(dim=-1)[0]
 
+        def _blockwise(self, f: Callable[[torch.Tensor], torch.Tensor], what: str) -> torch.Tensor:
+            """f applied to the active block of every sector (batch, k_c, k_c); the padding stays zero, so that
+            decompositions and their gradients never see the zero singular values of the padding."""
+            mat = self.matrix
+            out = torch.zeros_like(mat)
+            for c, k_c in enumerate(self.algebra.k_factors):
+                if k_c:
+                    out[:, c, :k_c, :k_c] = f(mat[:, c, :k_c, :k_c])
+            return out
+
         def inverse(self, tol: Optional[float] = None) -> 'TypeIAlgebra.Operator':
-            """(Pseudo-)inverse by SVD; singular values below tol are treated as zero (default: relative
-            tolerance k_max * eps * largest singular value of the sample, as in numpy.linalg.pinv)."""
-            def inv_generator():
-                U, S, Vh = cost.batched_call(torch.linalg.svd, self.matrix, "SVD", kind='svd')
-                if tol is None:
-                    eps = torch.finfo(S.dtype).eps
-                    thr = max(self.algebra.k_max, 1) * eps * S.amax(dim=(-2, -1), keepdim=True)
-                else:
-                    thr = tol
+            """(Pseudo-)inverse by SVD of every block; singular values below tol are treated as zero (default:
+            relative tolerance k_c * eps * largest singular value of the block, as numpy.linalg.pinv per block)."""
+            def inv_block(A):
+                U, S, Vh = cost.batched_call(torch.linalg.svd, A, "SVD", kind='svd')
+                thr = (A.shape[-1] * torch.finfo(S.dtype).eps * S.amax(dim=-1, keepdim=True)) if tol is None else tol
                 S_inv = torch.where(S > thr, 1.0 / torch.where(S > thr, S, torch.ones_like(S)), torch.zeros_like(S))
-                S_inv = S_inv.to(dtype=U.dtype)
-                Vh_conj = Vh.conj().transpose(-2, -1)
-                U_conj = U.conj().transpose(-2, -1)
-                return Vh_conj @ torch.diag_embed(S_inv) @ U_conj
-            op = TypeIAlgebra.Operator(self.algebra, generator=inv_generator)
+                return Vh.conj().transpose(-2, -1) @ (S_inv.to(U.dtype).unsqueeze(-1) * U.conj().transpose(-2, -1))
+            op = TypeIAlgebra.Operator(self.algebra, generator=lambda: self._blockwise(inv_block, "inverse"))
             op._is_self_adjoint = self.is_self_adjoint
             op._is_normal = self.is_normal
             op._is_positive = self.is_positive
@@ -442,26 +445,21 @@ class TypeIAlgebra:
             return self._inverse
 
         def abs(self) -> 'TypeIAlgebra.Operator':
-            def abs_generator():
-                U, S, Vh = cost.batched_call(torch.linalg.svd, self.matrix, "SVD", kind='svd')
-                S = S.to(dtype=U.dtype)
-                Vh_conj = Vh.conj().transpose(-2, -1)
-                return Vh_conj @ torch.diag_embed(S) @ Vh
-            op = TypeIAlgebra.Operator(self.algebra, generator=abs_generator)
+            """|A| = (A^* A)^{1/2} by SVD of every active block."""
+            def abs_block(A):
+                U, S, Vh = cost.batched_call(torch.linalg.svd, A, "SVD", kind='svd')
+                return Vh.conj().transpose(-2, -1) @ (S.to(U.dtype).unsqueeze(-1) * Vh)
+            op = TypeIAlgebra.Operator(self.algebra, generator=lambda: self._blockwise(abs_block, "abs"))
             op._is_self_adjoint = True
             op._is_positive = True
             op._is_normal = True
             return op
 
         def sqrt(self) -> 'TypeIAlgebra.Operator':
+            """A^{1/2} of a positive operator (spectral calculus on the active blocks)."""
             if not self.is_positive:
                 raise RuntimeError("sqrt requires positive operator")
-            def sqrt_generator():
-                U, S, Vh = cost.batched_call(torch.linalg.svd, self.matrix, "SVD", kind='svd')
-                S = S.to(dtype=U.dtype)
-                Vh_conj = Vh.conj().transpose(-2, -1)
-                return Vh_conj @ torch.diag_embed(torch.sqrt(S)) @ Vh
-            op = TypeIAlgebra.Operator(self.algebra, generator=sqrt_generator)
+            op = self.apply_function(lambda w: torch.sqrt(torch.clamp(w, min=0)))
             op._is_self_adjoint = True
             op._is_positive = True
             op._is_normal = True
@@ -504,8 +502,8 @@ class TypeIAlgebra:
             if not isinstance(other, TypeIAlgebra.Operator):
                 raise TypeError(f"'{op}' needs two operators; for a multiple of the identity use alg.identity() * x")
             a, b = self.algebra, other.algebra
-            if a is not b and (a.k_factors != b.k_factors or a.dtype != b.dtype
-                               or a.hilbert.device != b.hilbert.device):
+            if a is not b and (a.k_factors != b.k_factors or a.n_factors != b.n_factors or a.charges != b.charges
+                               or a.dtype != b.dtype or a.hilbert.device != b.hilbert.device):
                 raise ValueError(f"'{op}' of operators from different algebras ({a} with {a.dtype} and {b} with "
                                  f"{b.dtype}); convert one with op.cast(alg)")
 
@@ -523,7 +521,8 @@ class TypeIAlgebra:
                 if scalar.dim() != 1:
                     raise ValueError("multiply by a number or by a tensor of shape (batch,)")
                 scalar = scalar.reshape(-1, 1, 1, 1)
-            if isinstance(scalar, complex) and not self.algebra.complex_valued:
+            if not self.algebra.complex_valued and (
+                    isinstance(scalar, complex) or (isinstance(scalar, torch.Tensor) and torch.is_complex(scalar))):
                 raise ValueError("complex scalar in a real algebra")
             def scaled():
                 m = self.matrix
@@ -896,29 +895,34 @@ class TypeIAlgebra:
         op._is_projection = True
         return op
 
-    def central(self, scalars: List[Union[float, complex]], batch_size: int = 1) -> Operator:
-        """Central element sum_c s_c 1_c (one number per sector); complex s_c need a complex algebra."""
+    def central(self, scalars: List[Union[float, complex, torch.Tensor]], batch_size: int = 1) -> Operator:
+        """
+        Central element sum_c s_c 1_c: one number per sector, or a tensor (batch,) per sector for one value per
+        sample. Tensors keep their gradients; complex values need a complex algebra.
+        """
         if len(scalars) != self.C:
             raise ValueError(f"central: need one number per sector ({self.C}), got {len(scalars)}")
-        scalars = [complex(x) for x in scalars]
-        if not self.hilbert.complex_valued and any(x.imag != 0 for x in scalars):
-            raise ValueError("central: complex values in a real algebra (create it with complex_valued=True)")
-        if not self.hilbert.complex_valued:
-            scalars = [x.real for x in scalars]
+        vals = [self._to_field(torch.as_tensor(x), f"central value {c}") for c, x in enumerate(scalars)]
+        if any(v.dim() > 1 for v in vals):
+            raise ValueError("central: each value must be a number or a tensor of shape (batch,)")
+        B = max([batch_size] + [v.shape[0] for v in vals if v.dim() == 1])
+        vals = [v.reshape(-1).expand(B) for v in vals]                      # (B,) per sector
+
         def generator():
-            matrices = []
-            for c, (k_c, scalar) in enumerate(zip(self.k_factors, scalars)):
-                mat = torch.zeros(self.k_max, self.k_max, dtype=self.hilbert.dtype, device=self.hilbert.device)
-                mat[:k_c, :k_c] = scalar * torch.eye(k_c, dtype=self.hilbert.dtype, device=self.hilbert.device)
-                matrices.append(mat)
-            return torch.stack(matrices, dim=0).unsqueeze(0).expand(batch_size, -1, -1, -1)
+            mat = torch.zeros(B, self.C, self.k_max, self.k_max, dtype=self.hilbert.dtype, device=self.hilbert.device)
+            for c, (k_c, v) in enumerate(zip(self.k_factors, vals)):
+                if k_c:
+                    mat[:, c, :k_c, :k_c] = v[:, None, None] * torch.eye(k_c, dtype=mat.dtype, device=mat.device)
+            return mat
         op = self.Operator(self, generator=generator)
-        real = all(complex(x).imag == 0 for x in scalars)
+        act = [v.detach() for v, k_c in zip(vals, self.k_factors) if k_c]
+        real = all(not torch.is_complex(v) or bool((v.imag == 0).all()) for v in act)
+        re = [v.real if torch.is_complex(v) else v for v in act]
         op._is_self_adjoint = real
         op._is_normal = True                               # every central element is normal
-        op._is_positive = real and all(complex(x).real >= 0 for x in scalars)
-        op._is_invertible = all(x != 0 for x, k_c in zip(scalars, self.k_factors) if k_c > 0)
-        op._is_projection = real and all(complex(x).real in (0.0, 1.0) for x in scalars)
+        op._is_positive = real and all(bool((r >= 0).all()) for r in re)
+        op._is_invertible = all(bool((v != 0).all()) for v in act)
+        op._is_projection = real and all(bool(((r == 0) | (r == 1)).all()) for r in re)
         return op
 
     def __repr__(self) -> str:

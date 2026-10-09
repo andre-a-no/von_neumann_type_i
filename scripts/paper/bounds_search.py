@@ -203,7 +203,7 @@ for exp in (1, 2, 3):
         axes[0].legend(frameon=False, fontsize=7, markerscale=5)
         fig.suptitle(f'Experiment {exp}: $k={k}$, $C={C}$', fontsize=10)
         fig.tight_layout()
-        fig.savefig(f"{args.figdir}/bounds_exp{exp}_k{k}_C{C}.pdf")
+        fig.savefig(f"{args.figdir}/bounds_exp{exp}_k{k}_C{C}.pdf", metadata={"CreationDate": None})
         plt.close(fig)
 
 # joint constraints: both contrasts prescribed
@@ -234,7 +234,7 @@ for exp in (1, 2, 3):
             fig.colorbar(im, ax=ax)
         fig.suptitle(f'Experiment {exp}, $k={k}$, $C={C}$: both contrasts prescribed', fontsize=10)
         fig.tight_layout()
-        fig.savefig(f"{args.figdir}/bounds2d_exp{exp}_k{k}_C{C}.pdf")
+        fig.savefig(f"{args.figdir}/bounds2d_exp{exp}_k{k}_C{C}.pdf", metadata={"CreationDate": None})
         plt.close(fig)
 
 # analytic check: for Exp 1, inf over U and Y of z at Delta(X) = d equals -(kC - 2d/(1+d))
@@ -248,16 +248,32 @@ for r in results:
         exact_dev = max(exact_dev, float(np.max(np.abs(np.array(r['inf_vs_x']) - exact) / np.abs(exact))))
 print(f"Exp 1 lower envelope vs exact -(kC - 2d/(1+d)): max relative deviation {exact_dev:.1e}")
 # analytic check: for Exp 2, |X| = X_0 and |Y| = Y_0, so z = ||X_0 V Y_0||_1 - Tr(X_0 Y_0); von Neumann's trace
-# inequality and rearrangement give sup z = sum_i x_i (y_i^desc - y_i^asc) for given spectra. For k = 2, C = 1 and
-# Delta(|X|) = d with the other contrast free this is 1 - lambda_min(X) = 2d/(1+d) (attained as Delta(|Y|) -> 1).
+# inequality, its lower counterpart and rearrangement give, sector by sector,
+# sup z = sum_c sum_i x_ci^desc (y_ci^desc - y_ci^asc) = -inf z for given spectra. For k = 2, C = 1 this is
+# (1 - lambda_min(X)) (1 - lambda_min(Y)); with Delta(|X|) = d and the other contrast free in [0, DMAX] the sup is
+# 2d/(1+d) * (1 - lo(DMAX)), which tends to 2d/(1+d) as DMAX -> 1.
+DMAX = 0.999                                                  # upper end of the free contrast (optimize default)
+lo_max = (1 - DMAX) / (1 + DMAX)
 exact_dev2 = None
 for r in results:
     if r['experiment'] == 2 and r['k'] == 2 and r['C'] == 1:
         g = np.array(r['grid'])
-        exact = 2 * g / (1 + g)
+        exact = 2 * g / (1 + g) * (1 - lo_max)
         mask = exact > 1e-3
-        exact_dev2 = float(np.max(np.abs(np.array(r['sup_vs_x'])[mask] - exact[mask]) / exact[mask]))
-        print(f"Exp 2 upper envelope (k=2, C=1) vs exact 2d/(1+d): max relative deviation {exact_dev2:.1e}")
+        exact_dev2 = float(max(np.max(np.abs(np.array(r['sup_vs_x'])[mask] - exact[mask]) / exact[mask]),
+                               np.max(np.abs(np.array(r['inf_vs_x'])[mask] + exact[mask]) / exact[mask])))
+        print(f"Exp 2 envelopes (k=2, C=1) vs exact +-2d/(1+d)(1-lo): max relative deviation {exact_dev2:.1e}")
+# conjectured closed forms for k = 2, C = 1 along Delta(X) = d (no proof; compared numerically):
+# Exp 1: sup z = d^2 / (2 (1 + d)),  Exp 3: sup z = 1 - d
+conj_dev = {}
+for r in results:
+    if r['k'] == 2 and r['C'] == 1 and r['experiment'] in (1, 3):
+        g = np.array(r['grid'])
+        conj = g ** 2 / (2 * (1 + g)) if r['experiment'] == 1 else 1 - g
+        mask = conj > 1e-3
+        conj_dev[r['experiment']] = float(np.max(np.abs(np.array(r['sup_vs_x'])[mask] - conj[mask]) / conj[mask]))
+        print(f"Exp {r['experiment']} upper envelope (k=2, C=1) vs conjectured closed form: "
+              f"max relative deviation {conj_dev[r['experiment']]:.1e}")
 
 save_json(args, 'bounds', dict(results=results, results_2d=results_2d, starts=STARTS, steps=ROUNDS * STEPS,
                                seconds=time.time() - t_start))
@@ -266,6 +282,8 @@ tex += f"\\newcommand{{\\BoundsStarts}}{{{STARTS}}}\n\\newcommand{{\\BoundsSteps
 tex += f"\\newcommand{{\\BoundsGrid}}{{{len(GRID)}}}\n"
 tex += f"\\newcommand{{\\BoundsExactDev}}{{{exact_dev:.1e}}}\n"
 tex += f"\\newcommand{{\\BoundsExactDevTwo}}{{{'--' if exact_dev2 is None else f'{exact_dev2:.1e}'}}}\n"
+for e, name in ((1, 'One'), (3, 'Three')):
+    tex += f"\\newcommand{{\\BoundsConjDev{name}}}{{{f'{conj_dev[e]:.1e}' if e in conj_dev else '--'}}}\n"
 exp3_inf = max((abs(v) for r in results if r['experiment'] == 3 for v in r['inf_vs_x'] + r['inf_vs_y']), default=0.0)
 mc_checked = sum(r['mc_samples'] or 0 for r in results)
 mc_dropped = sum(r.get('mc_dropped') or 0 for r in results)

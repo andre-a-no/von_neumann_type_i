@@ -92,7 +92,7 @@ is a finite-dimensional Type~I von Neumann algebra
   \M=\bigoplus_{c=1}^{C}M_{k_c}(\C)\quad\text{acting on}\quad\mathcal H=\bigoplus_{c=1}^C\C^{k_c},
 \end{equation}
 where $C$ is the number of sectors (direct summands) and $M_{k}(\C)$ is the algebra of complex $k\times k$
-matrices. Every finite-dimensional von Neumann algebra is of this form~\cite{takesaki2002}, and its centre is
+matrices. Every finite-dimensional von Neumann algebra is $*$-isomorphic to one of this form~\cite{takesaki2002}, and its centre is
 spanned by the sector projections. The library also accepts nominal factor sizes $n_c\ge k_c$: this describes
 computations in the corner $p\M_0p\cong\bigoplus_cM_{k_c}(\C)$ of a larger algebra $\M_0=\bigoplus_cM_{n_c}(\C)$,
 with $p=\bigoplus_cp_c$ and $p_c$ a projection of rank $k_c$. The corner is again of the form~\eqref{eq:M}; all
@@ -120,9 +120,10 @@ quantity, such as the XY mixers of the quantum alternating operator ansatz, whic
 weight~\cite{hadfield2019};
 \item random matrix theory, where symmetries decompose ensembles into blocks and spectral statistics are
 meaningful only inside a block~\cite{dyson1962,mehta2004};
-\item machine learning: by Schur's lemma the linear maps that commute with a group representation (equivariant
-layers) form exactly an algebra of the form~\eqref{eq:M}, whose block sizes are the multiplicities of the
-irreducible representations~\cite{cohen2016,finzi2021}; random-matrix methods are used to analyse trained
+\item machine learning: by Schur's lemma the linear maps that commute with a (complex, unitary) group representation (equivariant
+layers) on one space form an algebra of the form~\eqref{eq:M}, whose block sizes are the multiplicities of the
+irreducible representations, and equivariant layers between two representations are the corresponding off-diagonal
+blocks~\cite{cohen2016,finzi2021} (for real representations the blocks can also be real or quaternionic); random-matrix methods are used to analyse trained
 weights~\cite{martin2021};
 \item operator theory, our original motivation: inequalities between traces of products characterise the trace
 and the centre of an operator algebra~\cite{gardner1979,petz1988,novikov2015,virosztek2017}, and their
@@ -176,7 +177,7 @@ costs and what has to be supplied by hand.
 in $\M$ it costs $\sum_c k_c^3$ and $\sum_c k_c^2$. For $C$ equal blocks this is a factor $C^2$ in time and $C$ in
 memory; for the half-filling sector of a chain of $L=16$ spins ($D=2^{16}$, largest block $12870$) the dense $M_D$
 computation is out of reach, the block computation is routine.
-\item \emph{Measures.} The unitary group of $\M$ is $\prod_cU(k_c)$, a subgroup of $U(D)$ of measure zero. A Haar-random
+\item \emph{Measures.} The unitary group of $\M$ is $\prod_cU(k_c)$, for $C\ge2$ a subgroup of $U(D)$ of measure zero. A Haar-random
 element of $U(D)$ is not in $\M$, and a random element of $\M$ has to be produced block by block. The same holds for
 random states, for the circular ensembles and for any optimisation: an unconstrained gradient step in $M_D$ leaves $\M$.
 \item \emph{Traces.} On $M_D$ the trace is unique up to a factor; on $\M$ the faithful traces form a $C$-parameter
@@ -228,10 +229,11 @@ $\operatorname{tr}_w(A)=\sum_c w_c\Tr A_c$ with weights $w_c\ge0$, and it is fai
   \Tr_{\mathrm{blunt}}:\ w_c=1,\qquad \Tr_{\mathrm{norm}}:\ w_c=\tfrac1{k_c},\qquad
   \tau_{\mathrm{vN}}:\ w_c=\tfrac1{Ck_c},
 \]
-where $\tau_{\mathrm{vN}}$ is the faithful normal tracial state that gives every sector the same weight.
+where $\tau_{\mathrm{vN}}$ is the faithful normal tracial state that gives every sector the same weight
+(the library allows empty sectors, $k_c=0$; they carry no weight, and $C$ in $\tau_{\mathrm{vN}}$ counts the non-empty ones).
 For $A\in\M$, $|A|=(A^*A)^{1/2}$; for $A\ge 0$ the Michelson contrast is
 $\Delta(A)=(\lambda_{\max}-\lambda_{\min})/(\lambda_{\max}+\lambda_{\min})\in[0,1]$, with the extreme
-eigenvalues taken over all sectors; for $A\ge0$, $A\ne0$, $\Delta(A)=0$ if and only if $A$ is a multiple of the identity.
+eigenvalues taken over all sectors, for $A\ne0$ (the library returns $\Delta(0)=0$); for $A\ge0$, $A\ne0$, $\Delta(A)=0$ if and only if $A$ is a multiple of the identity.
 
 \paragraph{States.} A state $\omega$ on $\M$ is represented by its density $\rho\ge0$ with respect to
 $\Tr_{\mathrm{blunt}}$, $\omega(A)=\Tr(\rho A)$, $\sum_c\Tr\rho_c=1$. The restriction of $\omega$ to the
@@ -249,7 +251,7 @@ positive maps between blocks,
 \]
 It preserves $\Tr_{\mathrm{blunt}}$ iff $\sum_{d,i}(K_i^{dc})^*K_i^{dc}=1_c$ for all $c$, and
 $T_{dc}=\Tr\Phi_{dc}(\rho_c)/\Tr\rho_c$ are the transition probabilities between sectors for the input
-state $\rho$ (independent of $\rho$ iff every $\sum_i(K_i^{dc})^*K_i^{dc}$ is a multiple of $1_c$; by default the
+state $\rho$ (defined for $\Tr\rho_c>0$) (independent of $\rho$ iff every $\sum_i(K_i^{dc})^*K_i^{dc}$ is a multiple of $1_c$; by default the
 library uses the maximally mixed state of each input sector). The dual
 with respect to $\operatorname{tr}_w$ on both sides is
 $\Phi^{*,w}(A)_c=\sum_{d,i}(w^{\mathrm{out}}_d/w^{\mathrm{in}}_c)(K_i^{dc})^*A_dK_i^{dc}$; for
@@ -494,9 +496,9 @@ checks that expectation values do not depend on the trace used to represent the 
 \lstinputlisting[caption={States and conditioning (\texttt{ex2\_states\_measurement.py}).},label=lst:ex2]{../../examples/paper/ex2_states_measurement.py}
 
 \paragraph{A map between sectors.} Two fermionic modes have sectors $N=0,1,2$ of dimensions $1,2,1$.
-Particle loss with Kraus operators $\sqrt{1-gN}$, $\sqrt g\,a_1$, $\sqrt g\,a_2$ maps sector $N$ to
+Particle loss with Kraus operators $\sqrt{1-gN}$, $\sqrt g\,a_1$, $\sqrt g\,a_2$ ($0\le g\le\frac12$) maps sector $N$ to
 $N$ and $N-1$. Listing~\ref{lst:ex3} builds it from its blocks; the classical part is the transition
-matrix of a death process,
+matrix of a pure death process (columns: from $N=0,1,2$; rows: to $N=0,1,2$),
 \[
   T=\begin{pmatrix}1&g&0\\0&1-g&2g\\0&0&1-2g\end{pmatrix},
 \]
@@ -521,7 +523,8 @@ non-commuting $X,Y\ge0$. Section~\ref{sec:optimisation} studies this systematica
 
 \paragraph{Spin chains.} Listing~\ref{lst:ex7} works with a Heisenberg ring of ten spins. A uniform field
 moves the ground state through the sectors until the chain is fully polarised above the saturation
-field $h_s=2J$; 100 realisations of random fields are diagonalised in one batch to compute the mean
+field $h_s=2J$ (above it the ground state is the all-down state $N=0$ for our sign $+\sum_ih_iS^z_i$; the last
+crossing is with the one-magnon level at $k=\pi$); 100 realisations of random fields are diagonalised in one batch to compute the mean
 level-spacing ratio; and the entanglement entropy of the ground state is computed from reduced states.
 Section~\ref{sec:chains} checks these tools against exact results.
 \lstinputlisting[caption={Spin chains (\texttt{ex7\_spin\_chain.py}).},label=lst:ex7]{../../examples/paper/ex7_spin_chain.py}
@@ -533,15 +536,17 @@ sectors, and lets particles leak out of the chain through Lindblad jumps between
 \lstinputlisting[caption={Large sectors and open chains (\texttt{ex8\_large\_and\_open\_chains.py}).},label=lst:ex8]{../../examples/paper/ex8_large_and_open_chains.py}
 
 \paragraph{A noisy quantum circuit with a conserved quantity.} The quantum alternating operator ansatz solves
-constrained optimisation problems with ``XY mixers'' $H_M=\frac14\sum_{\langle ij\rangle}(X_iX_j+Y_iY_j)$ that keep the Hamming weight of the
+constrained optimisation problems with ``XY mixers'' (normalised here as $H_M=\frac14\sum_{\langle ij\rangle}(X_iX_j+Y_iY_j)$, the XXZ form with $J=1$, $\Delta=0$) that keep the Hamming weight of the
 computational basis states, so the evolution stays in the feasible subspace~\cite{hadfield2019}. In the language of
 this paper the qubit register carries the algebra $\bigoplus_{N=0}^nM_{\binom nN}$ of Hamming-weight sectors, the
 mixer is an element of it, amplitude damping (time $T_1$) is a Lindblad jump between sectors and pure dephasing (time $T_\varphi$,
 which together with $T_1$ sets the coherence time $T_2$, $1/T_2=1/(2T_1)+1/T_\varphi$) a jump inside them, and reading out the Hamming weight is the measurement of a central projection. Listing~\ref{lst:ex9}
 evolves $|111000\rangle$ (weight $w=3$) on a ring of six qubits under $H_M$ for a time $T=2$ with both kinds of noise,
-jump operators $S^-_i$ at rate $\gamma_1$ (damping) and $S^z_i$ at rate $\gamma_2$ (dephasing), and post-selects on the initial weight. With damping only (equal rates on all qubits), the post-selected fidelity is exactly one and the acceptance probability is $e^{-w\gamma_1T}$: the
+jump operators $S^-_i$ at rate $\gamma_1$ (damping) and $S^z_i=\frac12Z_i$ at rate $\gamma_2$ (dephasing), so that $T_1=1/\gamma_1$,
+$1/T_\varphi=\gamma_2/2$ and $1/T_2=(\gamma_1+\gamma_2)/2$, and post-selects on the initial weight. With damping only (equal rates on all qubits), the post-selected fidelity is exactly one and the acceptance probability is $e^{-w\gamma_1T}$: the
 no-jump evolution is generated by $H-\frac{i}{2}\gamma_1N$, and $N$ is central, so it only rescales the state. This
-exact statement is part of the test suite. Dephasing stays inside the sector and is not detected (fidelity with the noiseless state):
+exact statement is part of the test suite. Dephasing stays inside the sector and is not detected; because $N$ is central, the
+post-selected state does not depend on $\gamma_1$ even with dephasing (fidelity with the noiseless state):
 \begin{center}\footnotesize
 \begin{tabular}{rrrrr}
 \toprule
@@ -624,7 +629,7 @@ $\max|\operatorname{tr}(UAU^*)-\operatorname{tr}(A)|$ & $\min\operatorname{tr}(A
 The first version of this work~\cite{v1} studied three trace functionals by Monte Carlo:
 \begin{align*}
   \text{Exp.~1:}\quad & z=|\Tr(XUY)|-\Tr(XY), && X,Y\ge0,\ U\in\M\ \text{unitary},\\
-  \text{Exp.~2:}\quad & z=\Tr|XY|-\Tr(|X|\,|Y|), && X=UX_0,\ Y=VY_0,\ X_0,Y_0\ge0,\\
+  \text{Exp.~2:}\quad & z=\Tr|XY|-\Tr(|X|\,|Y|), && X=UX_0,\ Y=VY_0,\ X_0,Y_0\ge0,\ U,V\in\M\ \text{unitary},\\
   \text{Exp.~3:}\quad & z=\Tr(Y|X|Y)-\Tr|YXY|, && X=X^*,\ Y\ge0,
 \end{align*}
 with $\Tr=\Tr_{\mathrm{blunt}}$, operators normalised to $\lambda_{\max}=1$, and the contrasts of the
@@ -671,8 +676,10 @@ supremum (symmetric log scale).}
 \]
 (and the same with $\Delta(Y)$, or with both contrasts prescribed), the supremum being taken over all
 remaining variables. The module \texttt{optimize} parametrises the constraint set exactly: the spectrum
-is $\lambda_{\max}=1$, $\lambda_{\min}=(1-\delta)/(1+\delta)$ and the other eigenvalues in between
-(through a sigmoid), the eigenvectors are $U=U_0e^{G-G^*}$ with a Haar-random $U_0$ per start and a chart
+is $\lambda_{\max}=1$, $\lambda_{\min}=(1-\delta)/(1+\delta)$ and the other eigenvalues strictly in between
+(through a sigmoid); the two eigenvalue positions that carry $\lambda_{\max}$ and $\lambda_{\min}$ are drawn at
+random per start, in the same sector or in different ones, so that the starts together cover a dense subset of
+the constraint set, the eigenvectors are $U=U_0e^{G-G^*}$ with a Haar-random $U_0$ per start and a chart
 that is re-centred after every round, and for Exp.~3 the signs of the eigenvalues of $X$ are drawn per
 start and kept fixed. Every grid point and every start is one element of the batch, so each envelope (supremum
 or infimum along one contrast) is computed in one batched optimisation. All envelopes are computed in real algebras
@@ -687,27 +694,40 @@ check of the optimiser.}{} For a single sector of size $k=2$ the samples come cl
 to the envelopes; with two sectors they already miss a substantial part of the range (Table~\ref{tab:bounds}), and
 for larger $k$ sampling misses the extremes entirely (Table~\ref{tab:search}).
 
-Three envelopes can be checked analytically. In Exp.~3, $z\ge0$ always:
+Four envelopes can be checked analytically. In Exp.~3, $z\ge0$ always:
 
 \begin{proposition}
-For $X=X^*$ and $Y\ge0$, $\Tr|YXY|\le\Tr(Y|X|Y)$, with equality if $Y$ commutes with $X$.
+For $X=X^*$ and $Y\ge0$, $\Tr|YXY|\le\Tr(Y|X|Y)$, with equality if and only if $YX_+Y^2X_-Y=0$, in particular
+if $Y$ commutes with $X$.
 \end{proposition}
 \begin{proof}
 With $X=X_+-X_-$, $|X|=X_++X_-$, the triangle inequality for the trace norm gives
-$\|YX_+Y-YX_-Y\|_1\le\Tr(YX_+Y)+\Tr(YX_-Y)$. If $XY=YX$, then $|YXY|=Y^2|X|$.
+$\|YX_+Y-YX_-Y\|_1\le\Tr(YX_+Y)+\Tr(YX_-Y)$; for positive $A,B$, $\|A-B\|_1=\Tr A+\Tr B$ if and only if
+$AB=0$. If $XY=YX$, then $YX_+Y^2X_-Y=Y^4X_+X_-=0$.
 \end{proof}
 \noindent The computed lower envelope of Exp.~3 is zero to within \IfFileExists{generated/bounds.tex}{$\BoundsExpThreeInf$}{round-off}. In Exp.~1, the lower envelope
 for prescribed $\Delta(X)=\delta$ equals $-(kC-2\delta/(1+\delta))$ when all sectors have size $k\ge2$:
 $\Tr(XY)\le\Tr X\le kC-1+\lambda_{\min}(X)$ with equality for $Y=1$, while $|\Tr(UYX)|$ can be made zero
 by a cyclic permutation of the eigenbasis of $X_c$ in every sector. The optimiser reproduces this curve to a relative deviation of
 \IfFileExists{generated/bounds.tex}{\BoundsExactDev}{(not generated)} (from above: the minimiser $Y=1$ has contrast $0$, which
-the sigmoid parametrisation of the free contrast approaches but does not reach). In Exp.~2, $|X|=X_0$ and $|Y|=Y_0$,
-so $z=\|X_0VY_0\|_1-\Tr(X_0Y_0)$; von Neumann's trace inequality and rearrangement give
-$\sup z=\sum_ix_i^\downarrow(y_i^\downarrow-y_i^\uparrow)$ for given spectra, which for $k=2$, $C=1$ and prescribed
-$\Delta(|X|)=\delta$ is $2\delta/(1+\delta)$; the optimiser reproduces it to a relative deviation of
-\IfFileExists{generated/bounds.tex}{\BoundsExactDevTwo}{(not generated)}. The upper envelopes of Exp.~1 and Exp.~3 are, to our knowledge, not known in closed form;
-the computed curves are lower bounds for them (a local search) and suggest conjectures for sharp contrast-dependent inequalities, which we leave
-for future work.
+the sigmoid parametrisation of the free contrast approaches but does not reach). In Exp.~2, $|X|=X_0$ and
+$|Y|=Y_0$ and the unitary $U$ drops out, so $z=\|X_0VY_0\|_1-\Tr(X_0Y_0)$. Since $V$ and the eigenbases act
+sector by sector, von Neumann's trace inequality $\|AB\|_1\le\sum_is_i(A)s_i(B)$, its lower counterpart
+$\|AB\|_1\ge\sum_is_i(A)s_{k+1-i}(B)$ and rearrangement give, for given spectra,
+\[
+  \sup z=-\inf z=\sum_c\sum_i x_{c,i}^\downarrow\bigl(y_{c,i}^\downarrow-y_{c,i}^\uparrow\bigr),
+\]
+with $x_{c,i}^\downarrow$ the eigenvalues of $X_c$ in decreasing order and $y_{c,i}^\downarrow$, $y_{c,i}^\uparrow$ those of
+$Y_c$ in decreasing and increasing order. For $k=2$, $C=1$ this is $(1-\lambda_{\min}(X))(1-\lambda_{\min}(Y))$; with
+$\Delta(|X|)=\delta$ prescribed and $\Delta(|Y|)\le0.999$ free, $\pm\sup z=\pm\frac{2\delta}{1+\delta}(1-\frac{0.001}{1.999})$, and
+$\frac{2\delta}{1+\delta}$ in the limit $\Delta(|Y|)\to1$. The optimiser reproduces both envelopes to a relative deviation of
+\IfFileExists{generated/bounds.tex}{\BoundsExactDevTwo}{(not generated)}.
+For $k=2$, $C=1$ the computed upper envelopes of Exp.~1 and Exp.~3 along $\Delta(X)=\delta$ agree with
+$\delta^2/(2(1+\delta))$ and $1-\delta$ to a relative deviation of
+\IfFileExists{generated/bounds.tex}{\BoundsConjDevOne\ and \BoundsConjDevThree}{(not generated)}; we have no proof of
+these closed forms. For larger $k$ and $C$ the upper envelopes of Exp.~1 and Exp.~3 are, to our knowledge, not known in
+closed form; the computed curves are lower bounds for them (a local search) and suggest conjectures for sharp
+contrast-dependent inequalities, which we leave for future work.
 
 \begin{table}[h]
 \centering\small
@@ -765,12 +785,12 @@ script \texttt{scripts/paper/chains.py}):
 model with single-particle energies $\varepsilon_k=J\cos\frac{\pi k}{L+1}$, so the spectrum of sector $N$ consists
 of all sums of $N$ distinct $\varepsilon_k$. For $L=\IfFileExists{generated/chains.tex}{\ChainFFL}{10}$ all
 $2^L$ levels agree to \IfFileExists{generated/chains.tex}{$\ChainFFErr$}{machine precision}.
-\item \emph{Heisenberg ring.} Ground-state energies agree with the tabulated exact values to the nine digits of
-the table; $E_0/L$ approaches the Bethe-ansatz value $\tfrac14-\ln2\approx-0.4431$. Every level of sector
+\item \emph{Heisenberg ring.} Ground-state energies agree with exact values (Bethe ansatz for $L=4$, independent exact diagonalisation
+for the others, rounded to nine digits) to the nine digits of the table; $E_0/L$ approaches the Bethe-ansatz value $\tfrac14-\ln2\approx-0.4431$. Every level of sector
 $N<L/2$ reappears in sector $N+1$ (SU(2) multiplets), up to
 \IfFileExists{generated/chains.tex}{$\ChainSUErr$}{round-off}.
 \item \emph{Dynamics.} The melting of a domain wall $|\!\uparrow\cdots\uparrow\downarrow\cdots\downarrow\rangle$ in
-the XX chain, evolved in the sector $N=L/2$ (dimension \IfFileExists{generated/chains.tex}{\ChainDWDim\ for
+the open XX chain, evolved in the sector $N=L/2$ (dimension \IfFileExists{generated/chains.tex}{\ChainDWDim\ for
 $L=\ChainDWL$}{$\binom{L}{L/2}$}), reproduces the single-particle prediction
 $\langle n_i(t)\rangle=[e^{iht}C(0)e^{-iht}]_{ii}$, with $h$ the single-particle hopping matrix and
 $C_{ij}=\langle c_i^\dagger c_j\rangle$ the correlation matrix, to \IfFileExists{generated/chains.tex}{$\ChainDWErr$}{round-off}.
@@ -780,18 +800,21 @@ eigenvalues $\nu$ of the restricted correlation matrix~\cite{peschel2003}, inclu
 of open chains, to \IfFileExists{generated/chains.tex}{$\ChainPesErr$}{round-off}.
 \item \emph{Disorder.} For the Heisenberg chain with random fields $h_i\in[-W,W]$ the mean ratio of consecutive
 level spacings in the middle of the spectrum crosses over from the GOE value $0.5307$ to the Poisson value
-$2\ln2-1\approx0.3863$~\cite{oganesyan2007,atas2013} as $W$ grows, the hallmark of many-body localisation.
+$2\ln2-1\approx0.3863$~\cite{oganesyan2007,atas2013} as $W$ grows; at these sizes this is a finite-size crossover,
+the standard spectral diagnostic used in studies of many-body localisation.
 Here the batch dimension holds the disorder realisations
 (\IfFileExists{generated/chains.tex}{\ChainReal}{many} per point).
-\item \emph{Momentum.} For periodic chains the basis $|a,k\rangle=N_a^{-1/2}\sum_je^{-ikj}T^j|a\rangle$ over
-orbit representatives $a$ of the translation $T$ splits sector $N$ into blocks of fixed momentum
+\item \emph{Momentum.} For periodic chains the basis $|a,k\rangle=N_a^{-1/2}\sum_{j=0}^{L-1}e^{-ikj}T^j|a\rangle$ over
+orbit representatives $a$ of the translation $T$ (orbit length $R_a$, $N_a=L^2/R_a$; $a$ contributes to momentum $k$
+iff $kR_a\in2\pi\mathbb Z$) splits sector $N$ into blocks of fixed momentum
 $k=2\pi m/L$ (for $L=\IfFileExists{generated/chains.tex}{\ChainMomL}{12}$ and $N=L/2$ of sizes
 \IfFileExists{generated/chains.tex}{\ChainMomDims}{about $\binom LN/L$}); the union of their spectra is the
 spectrum of the sector to \IfFileExists{generated/chains.tex}{$\ChainMomErr$}{round-off}, and the ground state of
 the antiferromagnetic Heisenberg ring has $k=0$ for even and $k=\pi$ for odd $L/2$ (Marshall's sign rule). Momentum
 blocks with $k\ne0,\pi$ are complex in the plane-wave basis even for real Hamiltonians, one of the cases of
-Section~\ref{sec:numerics} where the field is fixed by the problem (with reflection symmetry their level statistics
-are nevertheless of GOE type).
+Section~\ref{sec:numerics} where the field is fixed by the problem, at least in this basis: combined with reflection,
+time reversal leaves each $k$-block invariant, so for non-integrable translation-invariant Hamiltonians these blocks
+show GOE statistics and admit a real basis; the XXZ ring itself is integrable and its blocks are not of GOE type.
 \item \emph{Beyond dense matrices.} Lanczos with full re-orthogonalisation and restarts, batched over
 Hamiltonians, reproduces the free-fermion ground-state energies of open XX chains and the Heisenberg ring in
 sectors up to the sizes of Table~\ref{tab:krylov} (in the full run beyond the reach of dense diagonalisation); Krylov evolution of the domain wall for

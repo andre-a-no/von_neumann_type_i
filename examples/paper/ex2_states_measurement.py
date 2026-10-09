@@ -2,6 +2,7 @@
 import torch
 from torch_vn_algebra import TypeIAlgebra, DensityMatrix, states
 
+torch.manual_seed(0)                               # reproducible output
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 alg = TypeIAlgebra([2, 3], [2, 3], device=dev)        # two superselection sectors
 

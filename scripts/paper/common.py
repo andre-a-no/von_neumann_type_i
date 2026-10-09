@@ -145,7 +145,7 @@ def write_tex(args, name, text):
 
 def env_macro(args, prefix):
     e = environment(args.device)
-    hw = e.get('gpu') or f"CPU ({e.get('threads')} threads)"
+    hw = e.get('gpu') or f"CPU ({e.get('threads')} thread{'' if e.get('threads') == 1 else 's'})"
     return (f"\\newcommand{{\\{prefix}Device}}{{{hw}}}\n"
             f"\\newcommand{{\\{prefix}Mode}}{{{args.mode}}}\n"
             f"\\newcommand{{\\{prefix}Torch}}{{{e['torch']}}}\n"

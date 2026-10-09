@@ -3,6 +3,7 @@ import math
 import torch
 from torch_vn_algebra import SpinChain, krylov, dynamics
 
+torch.manual_seed(0)                               # reproducible output
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # Lanczos in a sector of dimension binom(16, 8) = 12870, sparse Hamiltonian

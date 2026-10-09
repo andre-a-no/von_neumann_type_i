@@ -70,19 +70,32 @@ class SpectrumParam(Param):
     Michelson contrast equals delta = (1 - lo) / (1 + lo).
 
     delta: tensor (batch,) of prescribed contrasts, or None to optimise the contrast as well
-    within [delta_range[0], delta_range[1]]. The maximum and the minimum are pinned to the first
-    two eigenvalues of sector `pin_sector` (which needs k >= 2); for algebras whose sectors all have
-    the same size this loses no generality.
+    within [delta_range[0], delta_range[1]]. The maximum 1 and the minimum lo are pinned to two
+    eigenvalue slots; the other eigenvalues lie strictly between (through a sigmoid). By default
+    the two slots are drawn at random per start among all active slots (the extremes may lie in the
+    same sector or in different ones), so that a multistart search covers every placement and the
+    union over placements is dense in the constraint set. With `pin_sector` both extremes sit in that
+    sector (which needs k >= 2) for every start; for C >= 2 this is a restriction.
     """
 
     def __init__(self, alg: TypeIAlgebra, batch_size: int, delta: Optional[torch.Tensor] = None,
                  delta_range=(0.0, 0.999), pin_sector: Optional[int] = None):
-        if pin_sector is None:                     # default: the first sector with at least two dimensions
-            pin_sector = next((c for c, k in enumerate(alg.k_factors) if k >= 2), 0)
-        if alg.k_factors[pin_sector] < 2:
-            raise ValueError("the pinned sector needs at least two dimensions")
         self.alg = alg
         rdt, dev = alg.hilbert.real_dtype, alg.hilbert.device
+        slots = [(c, i) for c, k_c in enumerate(alg.k_factors) for i in range(k_c)]   # active (sector, index)
+        if pin_sector is not None:
+            if alg.k_factors[pin_sector] < 2:
+                raise ValueError("the pinned sector needs at least two dimensions")
+            i_max = torch.full((batch_size,), slots.index((pin_sector, 0)), dtype=torch.long)
+            i_min = i_max + 1
+        else:
+            if len(slots) < 2:
+                raise ValueError("a prescribed contrast needs at least two dimensions")
+            i_max = torch.randint(len(slots), (batch_size,))                         # two distinct slots
+            i_min = (i_max + 1 + torch.randint(len(slots) - 1, (batch_size,))) % len(slots)
+        sl = torch.tensor(slots, dtype=torch.long)
+        self.pin_max = sl[i_max].to(dev)          # (batch, 2): sector and index of lambda_max
+        self.pin_min = sl[i_min].to(dev)          # (batch, 2): sector and index of lambda_min
         self.theta = torch.randn(batch_size, alg.C, alg.k_max, dtype=rdt, device=dev).requires_grad_(True)
         self.fixed_delta = None if delta is None else torch.as_tensor(delta, dtype=rdt, device=dev).expand(batch_size)
         self.delta_range = delta_range
@@ -91,7 +104,6 @@ class SpectrumParam(Param):
         for c, k_c in enumerate(alg.k_factors):
             mask[c, :k_c] = True
         self.mask = mask
-        self.pin = pin_sector
 
     def parameters(self):
         return [self.theta] + ([self.eta] if self.eta is not None else [])
@@ -106,12 +118,12 @@ class SpectrumParam(Param):
         """(batch, C, k_max), zero on padding."""
         lo = _contrast_to_lo(self.delta())[:, None, None]
         lam = lo + (1 - lo) * torch.sigmoid(self.theta)
-        pin = torch.zeros_like(lam, dtype=torch.bool)
-        pin[:, self.pin, :2] = True
-        pinned = torch.zeros_like(lam)
-        pinned[:, self.pin, 0] = 1.0
-        pinned[:, self.pin, 1] = lo[:, 0, 0]
-        lam = torch.where(pin, pinned, lam)
+        b = torch.arange(lam.shape[0], device=lam.device)
+        is_max = torch.zeros_like(lam, dtype=torch.bool)
+        is_min = torch.zeros_like(lam, dtype=torch.bool)
+        is_max[b, self.pin_max[:, 0], self.pin_max[:, 1]] = True
+        is_min[b, self.pin_min[:, 0], self.pin_min[:, 1]] = True
+        lam = torch.where(is_max, torch.ones_like(lam), torch.where(is_min, lo.expand_as(lam), lam))
         return lam * self.mask
 
 
