@@ -1,0 +1,69 @@
+{
+  "results": [
+    {
+      "k": 2,
+      "pairs": 4,
+      "found_by_sampling": 2,
+      "found_by_ascent": 4,
+      "sup_over_trXY": 4.441639612196013e-05,
+      "sampling_over_trXY": -0.0004066074616275728,
+      "ascent_over_trXY": 4.441622877493501e-05,
+      "ascent_rel_error_median": 5.442726092041994e-08,
+      "ascent_rel_error_max": 1.7162881408176252e-05,
+      "seconds_sampling": 0.015282094478607178,
+      "seconds_ascent": 0.8628248572349548
+    },
+    {
+      "k": 4,
+      "pairs": 4,
+      "found_by_sampling": 0,
+      "found_by_ascent": 4,
+      "sup_over_trXY": 0.001986165763810277,
+      "sampling_over_trXY": -0.19215622544288635,
+      "ascent_over_trXY": 0.0019861655309796333,
+      "ascent_rel_error_median": 9.419637336804954e-08,
+      "ascent_rel_error_max": 7.456053355723324e-07,
+      "seconds_sampling": 0.04905366897583008,
+      "seconds_ascent": 0.8625988960266113
+    },
+    {
+      "k": 8,
+      "pairs": 4,
+      "found_by_sampling": 0,
+      "found_by_ascent": 4,
+      "sup_over_trXY": 0.0032120386604219675,
+      "sampling_over_trXY": -0.5847220420837402,
+      "ascent_over_trXY": 0.0032120356336236,
+      "ascent_rel_error_median": 4.966785240867466e-07,
+      "ascent_rel_error_max": 2.1104366829932863e-06,
+      "seconds_sampling": 0.18342071771621704,
+      "seconds_ascent": 1.2169468998908997
+    },
+    {
+      "k": 16,
+      "pairs": 4,
+      "found_by_sampling": 0,
+      "found_by_ascent": 4,
+      "sup_over_trXY": 0.004545860458165407,
+      "sampling_over_trXY": -0.775747537612915,
+      "ascent_over_trXY": 0.004545849747955799,
+      "ascent_rel_error_median": 2.5938636554201366e-06,
+      "ascent_rel_error_max": 4.356399708592e-06,
+      "seconds_sampling": 0.7672473788261414,
+      "seconds_ascent": 2.6361207365989685
+    }
+  ],
+  "samples": 20000,
+  "starts": 32,
+  "steps": 500,
+  "pairs": 4,
+  "environment": {
+    "torch": "2.14.1+cu130",
+    "python": "3.13.16",
+    "device": "cpu",
+    "date": "2026-10-09",
+    "cpu": "x86_64",
+    "threads": 4
+  },
+  "mode": "quick"
+}

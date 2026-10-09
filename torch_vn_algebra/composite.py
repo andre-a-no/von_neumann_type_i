@@ -13,6 +13,7 @@ from typing import Tuple
 import torch
 
 from .algebra import TypeIAlgebra
+from . import cost
 from .channels import InterSectorChannel
 from .states import DensityMatrix
 
@@ -25,7 +26,8 @@ def tensor_product(alg1: TypeIAlgebra, alg2: TypeIAlgebra) -> TypeIAlgebra:
         raise ValueError("both factors must be real or both complex")
     n = [n1 * n2 for n1 in alg1.n_factors for n2 in alg2.n_factors]
     k = [k1 * k2 for k1 in alg1.k_factors for k2 in alg2.k_factors]
-    alg = TypeIAlgebra(n, k, complex_valued=alg1.hilbert.complex_valued, device=alg1.hilbert.device)
+    alg = TypeIAlgebra(n, k, complex_valued=alg1.hilbert.complex_valued, device=alg1.hilbert.device,
+                       precision=alg1.hilbert.precision)
     alg.tensor_factors = (alg1, alg2)
     return alg
 
@@ -52,6 +54,8 @@ def kron(A: Operator, B: Operator, alg12: TypeIAlgebra) -> Operator:
         dtype = torch.promote_types(a.dtype, b.dtype)
         a, b = a.to(dtype), b.to(dtype)
         batch = max(a.shape[0], b.shape[0])
+        cost.check_memory(cost.tensor_bytes((batch, alg12.C, alg12.k_max, alg12.k_max), dtype), a.device,
+                          f"kron (batch {batch}, {alg12.C} sectors of size up to {alg12.k_max})")
         out = torch.zeros(batch, alg12.C, alg12.k_max, alg12.k_max, dtype=dtype, device=a.device)
         for c, k_c in enumerate(alg1.k_factors):
             for d, m_d in enumerate(alg2.k_factors):

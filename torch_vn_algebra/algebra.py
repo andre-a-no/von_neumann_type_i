@@ -14,6 +14,7 @@ import torch
 import numpy as np
 from typing import Optional, List, Tuple, Callable, Union
 from .hilbert_space import HilbertSpace
+from . import cost
 
 
 class TypeIAlgebra:
@@ -30,8 +31,13 @@ class TypeIAlgebra:
         hilbert: Optional[HilbertSpace] = None,
         batch_size: int = 1,
         complex_valued: bool = True,
-        device: Optional[torch.device] = None
+        device: Optional[torch.device] = None,
+        precision: str = 'single'
     ):
+        """
+        n_factors, k_factors: sizes n_c of the factors and k_c <= n_c of the active subspaces.
+        precision: 'single' (float32 / complex64, default) or 'double' (float64 / complex128).
+        """
         C = len(n_factors)
         assert len(k_factors) == C, "n_factors and k_factors must have same length"
 
@@ -55,7 +61,8 @@ class TypeIAlgebra:
                 batch_size=batch_size,
                 n_channels=C,
                 complex_valued=complex_valued,
-                device=device
+                device=device,
+                precision=precision
             )
         else:
             self.hilbert = hilbert
@@ -90,9 +97,11 @@ class TypeIAlgebra:
         if measure == 'haar':
             # Mezzadri's recipe: QR of a Ginibre matrix with the phases of diag(R) fixed.
             # torch.randn with a complex dtype already draws circular N(0, 1) entries.
-            dtype = torch.complex64 if complex_ else torch.float32
+            dtype = self.hilbert.dtype
+            cost.check_memory(3 * cost.tensor_bytes((*shape, n, n), dtype), device, f"random_unitary(n={n})")
             Z = torch.randn(*shape, n, n, dtype=dtype, device=device)
-            Q, R = torch.linalg.qr(Z)
+            Q, R = cost.batched_call(torch.linalg.qr, Z, f"random_unitary(n={n}, batch={shape[0] if shape else 1})",
+                                     kind='qr')
             d = torch.diagonal(R, dim1=-2, dim2=-1)
             d = d.sgn() if complex_ else d.sign()
             return Q * d.unsqueeze(-2)
@@ -121,8 +130,8 @@ class TypeIAlgebra:
             W_dual = J @ W.transpose(-2, -1) @ J.transpose(-2, -1)
             return W_dual @ W
         elif measure == 'diag':
-            phases = torch.exp(2j * torch.pi * torch.rand(*shape, n, device=device))
-            return torch.diag_embed(phases.to(torch.complex64))
+            phases = torch.exp(2j * torch.pi * torch.rand(*shape, n, device=device, dtype=self.hilbert.real_dtype))
+            return torch.diag_embed(phases.to(self.hilbert.dtype))
         else:
             raise ValueError(f"Unknown measure: {measure}. Choose from {self.UNITARY_MEASURES}")
 
@@ -315,9 +324,9 @@ class TypeIAlgebra:
             batch, C, k_max, _ = mat.shape
             device = mat.device
             dtype = mat.dtype
-            v = torch.randn(batch, C, k_max, 1, dtype=torch.float32, device=device)
+            v = torch.randn(batch, C, k_max, 1, dtype=mat.real.dtype, device=device)
             if torch.is_complex(mat):
-                v = v.to(torch.complex64)
+                v = v.to(mat.dtype)
                 v = v + 1j * torch.randn(batch, C, k_max, 1, device=device)
             else:
                 v = v.to(dtype)
@@ -388,7 +397,7 @@ class TypeIAlgebra:
                         continue
                     block = A[:, c, :k_c, :k_c]
                     # Не приводим к real, работаем с комплексными эрмитовыми матрицами
-                    eigvals = torch.linalg.eigvalsh(block)   # (batch, k_c)
+                    eigvals = cost.batched_call(torch.linalg.eigvalsh, block, f"eigvalsh (sector {c})")
                     all_eigvals.append(eigvals)
                 all_eigvals = torch.cat(all_eigvals, dim=-1)   # (batch, total_dim)
                 self._lambda_max = all_eigvals.max(dim=1)[0]
@@ -453,7 +462,7 @@ class TypeIAlgebra:
             self._trace = value
 
         def trace_norm(self) -> torch.Tensor:
-            U, S, Vh = torch.linalg.svd(self.matrix)
+            U, S, Vh = cost.batched_call(torch.linalg.svd, self.matrix, "SVD", kind='svd')
             return torch.sum(S, dim=(-2, -1))
 
         def frobenius_norm(self) -> torch.Tensor:
@@ -474,7 +483,7 @@ class TypeIAlgebra:
 
         def inverse(self, tol: float = 1e-12) -> 'TypeIAlgebra.Operator':
             def inv_generator():
-                U, S, Vh = torch.linalg.svd(self.matrix)
+                U, S, Vh = cost.batched_call(torch.linalg.svd, self.matrix, "SVD", kind='svd')
                 S_inv = torch.where(S > tol, 1.0 / S, torch.zeros_like(S))
                 S_inv = S_inv.to(dtype=U.dtype)
                 Vh_conj = Vh.conj().transpose(-2, -1)
@@ -495,7 +504,7 @@ class TypeIAlgebra:
 
         def abs(self) -> 'TypeIAlgebra.Operator':
             def abs_generator():
-                U, S, Vh = torch.linalg.svd(self.matrix)
+                U, S, Vh = cost.batched_call(torch.linalg.svd, self.matrix, "SVD", kind='svd')
                 S = S.to(dtype=U.dtype)
                 Vh_conj = Vh.conj().transpose(-2, -1)
                 return Vh_conj @ torch.diag_embed(S) @ Vh
@@ -509,7 +518,7 @@ class TypeIAlgebra:
             if not self.is_positive:
                 raise RuntimeError("sqrt requires positive operator")
             def sqrt_generator():
-                U, S, Vh = torch.linalg.svd(self.matrix)
+                U, S, Vh = cost.batched_call(torch.linalg.svd, self.matrix, "SVD", kind='svd')
                 S = S.to(dtype=U.dtype)
                 Vh_conj = Vh.conj().transpose(-2, -1)
                 return Vh_conj @ torch.diag_embed(torch.sqrt(S)) @ Vh
@@ -522,7 +531,7 @@ class TypeIAlgebra:
         def trace_a_log_a(self, tol: float = 1e-12) -> torch.Tensor:
             if self._is_positive is not None and not self._is_positive:
                 raise RuntimeError("trace_a_log_a requires positive operator")
-            U, S, Vh = torch.linalg.svd(self.matrix)
+            U, S, Vh = cost.batched_call(torch.linalg.svd, self.matrix, "SVD", kind='svd')
             S_safe = torch.clamp(S, min=tol)
             S_log_S = S_safe * torch.log(S_safe)
             return torch.sum(S_log_S, dim=(-2, -1))
@@ -579,7 +588,7 @@ class TypeIAlgebra:
             mat = self.matrix
             out = []
             for c, k_c in enumerate(self.algebra.k_factors):
-                out.append(torch.linalg.eigh(mat[:, c, :k_c, :k_c]))
+                out.append(cost.batched_call(torch.linalg.eigh, mat[:, c, :k_c, :k_c], f"eigh (sector {c})"))
             return out
 
         def apply_function(self, f: Callable[[torch.Tensor], torch.Tensor]) -> 'TypeIAlgebra.Operator':
@@ -618,7 +627,8 @@ class TypeIAlgebra:
                 out = torch.zeros_like(mat)
                 for c, k_c in enumerate(alg.k_factors):
                     if k_c > 0:
-                        out[:, c, :k_c, :k_c] = torch.linalg.matrix_exp(scale * mat[:, c, :k_c, :k_c])
+                        out[:, c, :k_c, :k_c] = cost.batched_call(
+                            torch.linalg.matrix_exp, scale * mat[:, c, :k_c, :k_c], f"expm (sector {c})", kind='expm')
                 return out
             return TypeIAlgebra.Operator(alg, generator=generator)
 
@@ -689,6 +699,8 @@ class TypeIAlgebra:
         force_invertible: Optional[bool] = None,
         force_projection: Optional[bool] = None,
     ) -> Operator:
+        cost.check_memory(4 * cost.tensor_bytes((batch_size, self.C, self.k_max, self.k_max), self.hilbert.dtype),
+                          self.hilbert.device, f"operator_from_eigenvalues(batch={batch_size})")
         all_eig = []
         inferred_self_adjoint = True
         inferred_positive = True

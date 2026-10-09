@@ -27,7 +27,8 @@ class HilbertSpace:
         batch_size: int = 1,
         n_channels: int = 1,
         complex_valued: bool = True,
-        device: Optional[torch.device] = None
+        device: Optional[torch.device] = None,
+        precision: str = 'single'
     ):
         assert k <= n, f"k={k} > n={n}"
         assert k >= 0
@@ -46,7 +47,15 @@ class HilbertSpace:
         else:
             self.device = device
         
-        self.dtype = torch.complex64 if complex_valued else torch.float32
+        if precision not in ('single', 'double'):
+            raise ValueError("precision must be 'single' or 'double'")
+        self.precision = precision
+        if precision == 'double':
+            self.dtype = torch.complex128 if complex_valued else torch.float64
+            self.real_dtype = torch.float64
+        else:
+            self.dtype = torch.complex64 if complex_valued else torch.float32
+            self.real_dtype = torch.float32
     
     @property
     def dim(self) -> int:

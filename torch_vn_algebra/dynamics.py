@@ -16,6 +16,7 @@ import torch
 
 from .algebra import TypeIAlgebra
 from .channels import Channel
+from . import cost
 from .states import DensityMatrix
 
 Operator = TypeIAlgebra.Operator
@@ -93,14 +94,18 @@ def von_neumann(rho0: Operator, H: Operator, times) -> List[Operator]:
 # Generic RK4
 # ----------------------------------------------------------------------
 def rk4(f: Callable[[float, torch.Tensor], torch.Tensor], y0: torch.Tensor, times,
-        substeps: int = 10) -> torch.Tensor:
+        substeps: int = 10, progress: bool = False) -> torch.Tensor:
     """
     Classical 4th-order Runge-Kutta for dy/dt = f(t, y) on tensors. `times` is an increasing grid;
     each interval is split into `substeps` steps. Returns y at every grid point, shape (T, *y0.shape).
+    After the first step a CostWarning reports the expected run time if it is long;
+    progress=True shows a progress bar (tqdm if installed).
     """
     ts = _times(times, y0.device).tolist()
     y = y0
     out = [y0]
+    cost.check_memory(len(ts) * y0.numel() * y0.element_size(), y0.device, f"rk4 trajectory ({len(ts)} time points)")
+    timer = cost.StepTimer(max(len(ts) - 1, 0) * substeps, "rk4", progress)
     for t0, t1 in zip(ts[:-1], ts[1:]):
         h = (t1 - t0) / substeps
         t = t0
@@ -111,23 +116,25 @@ def rk4(f: Callable[[float, torch.Tensor], torch.Tensor], y0: torch.Tensor, time
             k4 = f(t + h, y + h * k3)
             y = y + h / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
             t += h
+            timer.step(y.device)
         out.append(y)
+    timer.close()
     return torch.stack(out)
 
 
 def solve_operator_ode(f: Callable[[float, torch.Tensor], torch.Tensor], X0: Operator, times,
-                       substeps: int = 10) -> List[Operator]:
+                       substeps: int = 10, progress: bool = False) -> List[Operator]:
     """
     dX/dt = f(t, X) for X in the algebra, f acting on matrices of shape (batch, C, k_max, k_max)
     and returning block-diagonal matrices of the same shape (e.g. Heisenberg, Lyapunov or
     Riccati-type right-hand sides). Returns X at every time of the grid.
     """
-    ys = rk4(f, X0.matrix, times, substeps)
+    ys = rk4(f, X0.matrix, times, substeps, progress)
     return [X0.algebra.operator(y) for y in ys]
 
 
 def schrodinger_rk4(psi0: torch.Tensor, H_of_t: Callable[[float], OperatorLike], times,
-                    substeps: int = 10) -> torch.Tensor:
+                    substeps: int = 10, progress: bool = False) -> torch.Tensor:
     """i dpsi/dt = H(t) psi for a (possibly time-dependent) Hamiltonian; shape (T, batch, C, k_max)."""
     if psi0.dim() == 4:
         psi0 = psi0.squeeze(-1)
@@ -135,7 +142,7 @@ def schrodinger_rk4(psi0: torch.Tensor, H_of_t: Callable[[float], OperatorLike],
     def f(t, psi):
         H = _mat(H_of_t(t)).to(psi.dtype)
         return -1j * (H @ psi.unsqueeze(-1)).squeeze(-1)
-    return rk4(f, psi0.to(torch.complex64) if not torch.is_complex(psi0) else psi0, times, substeps)
+    return rk4(f, psi0.to(torch.promote_types(psi0.dtype, torch.complex64)), times, substeps, progress)
 
 
 # ----------------------------------------------------------------------
@@ -176,12 +183,13 @@ def lindblad_rhs(H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
 
 def lindblad_evolve(rho0: Operator, H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
                     times=(0.0, 1.0), rates: Optional[Sequence[float]] = None,
-                    substeps: int = 20) -> List[Operator]:
+                    substeps: int = 20, progress: bool = False) -> List[Operator]:
     """Integrate the Lindblad equation with RK4; returns rho(t) for every t in `times`."""
-    dtype = torch.complex64 if rho0.algebra.hilbert.complex_valued or H is not None else rho0.matrix.dtype
+    rdt = rho0.matrix.dtype
+    dtype = torch.promote_types(rdt, torch.complex64) if rho0.algebra.hilbert.complex_valued or H is not None else rdt
     if H is not None:
         _require_complex(rho0.algebra)
-    ys = rk4(lindblad_rhs(H, jumps, rates), rho0.matrix.to(dtype), times, substeps)
+    ys = rk4(lindblad_rhs(H, jumps, rates), rho0.matrix.to(dtype), times, substeps, progress)
     alg = rho0.algebra
     if isinstance(rho0, DensityMatrix):
         return [DensityMatrix(alg, matrix=0.5 * (y + y.conj().transpose(-2, -1)), validate=False) for y in ys]
@@ -203,6 +211,8 @@ def lindblad_superoperator(alg: TypeIAlgebra, H: Optional[OperatorLike], jumps: 
         raise ValueError("need a Hamiltonian or at least one jump operator")
     dtype = torch.complex128 if H is not None else torch.promote_types(mats[0].dtype, torch.float64)
     batch = max(m.shape[0] for m in mats)
+    cost.check_memory(4 * sum(cost.tensor_bytes((batch, k * k, k * k), dtype) for k in alg.k_factors),
+                      mats[0].device, "Lindblad superoperator (k_c^2 x k_c^2 per sector)")
     out = []
     for c, k_c in enumerate(alg.k_factors):
         eye = torch.eye(k_c, dtype=dtype, device=mats[0].device)
@@ -226,5 +236,6 @@ def lindblad_channel(alg: TypeIAlgebra, H: Optional[OperatorLike], jumps: Sequen
     """
     if H is not None:
         _require_complex(alg)
-    S = [torch.linalg.matrix_exp(t * G) for G in lindblad_superoperator(alg, H, jumps, rates)]
+    S = [cost.batched_call(torch.linalg.matrix_exp, t * G, f"exp(tL) (sector {c}, size {G.shape[-1]})", kind='expm')
+         for c, G in enumerate(lindblad_superoperator(alg, H, jumps, rates))]
     return Channel.from_superoperator(alg, S)

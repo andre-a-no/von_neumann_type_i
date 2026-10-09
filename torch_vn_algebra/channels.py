@@ -21,6 +21,7 @@ from typing import List, Optional, Sequence
 import torch
 
 from .algebra import TypeIAlgebra
+from . import cost
 from .states import DensityMatrix, _trace_weights
 
 Operator = TypeIAlgebra.Operator
@@ -65,6 +66,9 @@ class Channel:
         def generator():
             rho = op.matrix.unsqueeze(1)
             dtype = torch.promote_types(rho.dtype, K.dtype)
+            B = max(rho.shape[0], K.shape[0])
+            cost.check_memory(3 * cost.tensor_bytes((B, *K.shape[1:]), dtype), K.device,
+                              f"Channel.apply (batch {B}, Kraus rank {K.shape[1]})")
             Kd = K.to(dtype)
             return (Kd @ rho.to(dtype) @ Kd.conj().transpose(-2, -1)).sum(dim=1)
 
@@ -155,6 +159,8 @@ class Channel:
         Positive semidefinite for a completely positive map; Tr_out J = 1 iff trace preserving.
         """
         out = []
+        cost.check_memory(sum(cost.tensor_bytes((self.batch_size, k ** 2, k ** 2), self.kraus.dtype)
+                              for k in self.algebra.k_factors), self.kraus.device, "Channel.choi")
         for c, k_c in enumerate(self.algebra.k_factors):
             K = self.kraus[:, :, c, :k_c, :k_c]                       # (B, r, a, i)
             v = K.transpose(-2, -1).reshape(K.shape[0], K.shape[1], k_c * k_c)  # index (i, a)
@@ -164,6 +170,8 @@ class Channel:
     def superoperator(self) -> List[torch.Tensor]:
         """Matrix of Phi on row-major vec(rho), per channel: S_c = sum_i K_i (x) conj(K_i), (batch, k_c^2, k_c^2)."""
         out = []
+        cost.check_memory(sum(cost.tensor_bytes((self.batch_size, k ** 2, k ** 2), self.kraus.dtype)
+                              for k in self.algebra.k_factors), self.kraus.device, "Channel.superoperator")
         for c, k_c in enumerate(self.algebra.k_factors):
             K = self.kraus[:, :, c, :k_c, :k_c]
             S = torch.einsum('nrai,nrbj->nabij', K, K.conj()).reshape(K.shape[0], k_c * k_c, k_c * k_c)
@@ -190,7 +198,7 @@ class Channel:
             # J[(i,a),(j,b)] = S[(a,b),(i,j)]
             J = S.reshape(batch, k_c, k_c, k_c, k_c).permute(0, 3, 1, 4, 2).reshape(batch, k_c * k_c, k_c * k_c)
             J = 0.5 * (J + J.conj().transpose(-2, -1))
-            w, V = torch.linalg.eigh(J)
+            w, V = cost.batched_call(torch.linalg.eigh, J, f"Choi eigendecomposition (sector {c})")
             scale = max(1.0, w.abs().max().item())
             if torch.any(w < -(tol or 1e-4) * scale):
                 raise ValueError(f"superoperator of channel {c} is not completely positive "
@@ -378,6 +386,10 @@ class InterSectorChannel:
         def generator():
             rho = op.matrix
             dtype = torch.promote_types(rho.dtype, K.dtype)
+            B, r, D, C, m, _ = K.shape
+            B = max(B, rho.shape[0])
+            cost.check_memory(3 * cost.tensor_bytes((B, r, D, C, m, max(m, rho.shape[-1])), dtype), K.device,
+                              f"InterSectorChannel.apply (batch {B}, Kraus rank {r}, {D}x{C} sector pairs)")
             Kd = K.to(dtype)
             rho = rho.to(dtype)[:, None, None]                             # (B, 1, 1, C, k, k)
             out = Kd @ rho @ Kd.conj().transpose(-2, -1)                   # (B, r, D, C, m, m)

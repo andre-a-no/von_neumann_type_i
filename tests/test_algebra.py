@@ -516,3 +516,21 @@ class TestRegressions:
         mat[:, 1] = U
         op = TypeIAlgebra.Operator(basic_algebra, matrix=mat)
         assert op.is_invertible
+
+
+class TestPrecision:
+    @pytest.mark.parametrize("cplx", [True, False])
+    def test_double_precision_end_to_end(self, cplx):
+        alg = TypeIAlgebra([3, 4], [3, 4], complex_valued=cplx, precision='double', device='cpu')
+        expected = torch.complex128 if cplx else torch.float64
+        assert alg.random_unitary(4).dtype == expected
+        op = alg.operator_from_eigenvalues(lambda d: torch.rand(2, d), batch_size=2, force_positive=True)
+        assert op.matrix.dtype == expected
+        assert op.lambda_max.dtype == torch.float64
+        U = alg.random_unitary(6, batch_size=10)
+        eye = torch.eye(6, dtype=expected).expand(10, 6, 6)
+        assert (U @ U.conj().transpose(-2, -1) - eye).abs().max() < 1e-12
+
+    def test_invalid_precision(self):
+        with pytest.raises(ValueError):
+            TypeIAlgebra([2], [2], precision='half')
