@@ -100,6 +100,8 @@ print((Lt(rho) - rho_t[-1]).frobenius_norm().max())
 | `states` | `DensityMatrix` (an `Operator` subclass: positive, unit `Tr_blunt`; `expectation`, `mix`, `condition_on`, `density(trace)` / `from_density(..., trace)` for the `Tr_norm` and `tau_vN` conventions; preserved by trace-preserving channels and by the dynamics), random density matrices (Hilbert–Schmidt, Bures, fixed rank), Gibbs states and partition functions, tracial state, sector probabilities, Born probabilities, Lüders update, entropy, relative entropy, fidelity, trace distance, purity |
 | `channels.InterSectorChannel` | CP maps between sectors and between different algebras, Φ(ρ)_d = Σ_c Σ_i K_i^{dc} ρ_c K_i^{dc*}: duals for each of the three traces, composition, sector transition matrix, `from_blocks`, `random_inter_sector_channel` |
 | `composite` | `tensor_product(alg1, alg2)` (sectors = pairs (c, d)), `kron(A, B, alg12)`, `partial_trace` and `partial_trace_channel` (an `InterSectorChannel`; its dual is the embedding A ↦ A ⊗ 1) |
+| `optimize` | constrained, batched multistart optimisation: `UnitaryParam`, `PositiveParam` / `SelfAdjointParam` with a prescribed or bounded Michelson contrast (hard constraint), `extremize` |
+| `cost` | safeguards: ETA warnings for large batched decompositions and integrators, memory checks with `InsufficientMemoryError`, `set_limits`, `disabled()` |
 | `dynamics` | exact `propagator`, `schrodinger`, `von_neumann`; RK4 `schrodinger_rk4` (time-dependent H), `solve_operator_ode` (any dX/dt = f(t, X) in M), Lindblad `lindblad_evolve`, `lindblad_superoperator`, `lindblad_channel` |
 
 Lazy operators are evaluated once and cached; after that they drop their recipe, so the
@@ -111,6 +113,7 @@ Channels map each sector to itself, so the Heisenberg dual is the same for `Tr_b
 and `tau_vN`, and Hamiltonian / Lindblad dynamics with generators in M conserve the sector
 probabilities `Tr rho_c`. Unitary dynamics requires `complex_valued=True`.
 
+`precision='double'` switches an algebra (and everything built on it) to float64 / complex128.
 `complex_valued=False` gives real algebras (orthogonal instead of unitary groups). Each
 `force_*` flag (`self_adjoint`, `positive`, `normal`, `invertible`, `projection`) both tags the
 operator and checks the property when the matrix is materialised.
@@ -134,6 +137,17 @@ python scripts/experiment.py --dims 2,16 --channels 1,2,16,32 --output-dir resul
 python scripts/benchmark.py --cpu-threads 1 --output-dir results/benchmark_new
 ```
 
+**Paper v2** ([`paper/v2/main.tex`](paper/v2/main.tex), compiled `main.pdf`): a usage-centred description
+with runnable listings ([`examples/paper`](examples/paper), run by the tests), validation against exact
+results, sampling vs. constrained optimisation and library-level benchmarks. All numbers and figures come
+from `scripts/paper/`:
+
+```bash
+bash scripts/paper/run_all.sh              # quick mode on CPU, a few minutes
+bash scripts/paper/run_all.sh full cuda    # sizes of the paper, on a GPU
+cd paper/v2 && pdflatex main.tex && pdflatex main.tex
+```
+
 Stored outputs live in [`results/`](results): `results/experiments/` (current code) and
 `results/benchmark/` (GPU timings, see its README). The corrected paper text is in
 [`paper/`](paper).
@@ -141,13 +155,13 @@ Stored outputs live in [`results/`](results): `results/experiments/` (current co
 ## Repository layout
 
 ```
-torch_vn_algebra/    library: algebra.py (TypeIAlgebra, Operator), hilbert_space.py,
-                     channels.py, states.py, dynamics.py, composite.py
+torch_vn_algebra/    library: algebra.py (TypeIAlgebra, Operator), hilbert_space.py, channels.py,
+                     states.py, dynamics.py, composite.py, optimize.py, cost.py
 tests/               pytest suite (CPU, runs in CI)
 examples/            short usage examples
 scripts/             validation, experiments and benchmarks from the paper
 results/             stored experiment and benchmark outputs
-paper/               paper source and list of corrections
+paper/               corrected text of arXiv:2606.15882v1 + list of corrections; paper/v2: new text
 ```
 
 ## Tests

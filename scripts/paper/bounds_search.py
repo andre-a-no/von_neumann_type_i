@@ -226,13 +226,17 @@ tex = env_macro(args, 'Bounds')
 tex += f"\\newcommand{{\\BoundsStarts}}{{{STARTS}}}\n\\newcommand{{\\BoundsSteps}}{{{ROUNDS * STEPS}}}\n"
 tex += f"\\newcommand{{\\BoundsGrid}}{{{len(GRID)}}}\n"
 tex += f"\\newcommand{{\\BoundsExactDev}}{{{exact_dev:.1e}}}\n"
+def num(x, d=4):
+    return '0' if abs(x) < 1e-6 else f"{x:+.{d}g}"
+
+
 tex += "\\newcommand{\\BoundsRows}{%\n"
 for r in results:
     mc = ('--' if r['mc_samples'] is None else
-          f"$[{r['mc_min']:+.3g},\\,{r['mc_max']:+.3g}]$ & {r['mc_outside']}")
+          f"$[{num(r['mc_min'], 3)},\\,{num(r['mc_max'], 3)}]$ & {r['mc_outside']}")
     if r['mc_samples'] is None:
         mc = '-- & --'
-    tex += (f"{r['experiment']} & {r['k']} & {r['C']} & ${min(r['inf_vs_x']):+.4g}$ & ${max(r['sup_vs_x']):+.4g}$ "
+    tex += (f"{r['experiment']} & {r['k']} & {r['C']} & ${num(min(r['inf_vs_x']))}$ & ${num(max(r['sup_vs_x']))}$ "
             f"& {mc} \\\\\n")
 tex += "}\n"
 write_tex(args, 'bounds', tex)
