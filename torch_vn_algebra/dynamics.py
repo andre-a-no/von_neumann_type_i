@@ -211,8 +211,10 @@ def lindblad_superoperator(alg: TypeIAlgebra, H: Optional[OperatorLike], jumps: 
         raise ValueError("need a Hamiltonian or at least one jump operator")
     dtype = torch.complex128 if H is not None else torch.promote_types(mats[0].dtype, torch.float64)
     batch = max(m.shape[0] for m in mats)
-    cost.check_memory(4 * sum(cost.tensor_bytes((batch, k * k, k * k), dtype) for k in alg.k_factors),
-                      mats[0].device, "Lindblad superoperator (k_c^2 x k_c^2 per sector)")
+    # peak: the generator, one Kronecker product per term and the exponential / Choi / eigenvector
+    # workspaces of lindblad_channel, all of size k_c^4 per sample
+    cost.check_memory((len(jumps) + 10) * max(cost.tensor_bytes((batch, k * k, k * k), dtype) for k in alg.k_factors),
+                      mats[0].device, f"Lindblad superoperator / exp(tL) (batch {batch}, k_c^2 x k_c^2 per sector)")
     out = []
     for c, k_c in enumerate(alg.k_factors):
         eye = torch.eye(k_c, dtype=dtype, device=mats[0].device)

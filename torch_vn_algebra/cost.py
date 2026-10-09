@@ -209,7 +209,14 @@ class StepTimer:
         if self.done == 1 and _config['enabled']:
             if device is not None:
                 _sync(torch.device(device))
-            eta = (time.perf_counter() - self.t0) * (self.total - 1)
+            self.t1 = time.perf_counter()        # the first step includes one-off set-up costs
+            if self.total == 2 and (self.t1 - self.t0) > _config['warn_seconds']:
+                warnings.warn(f"{self.what}: about {_fmt_seconds(self.t1 - self.t0)} expected for the "
+                              f"remaining step.", CostWarning, stacklevel=4)
+        if self.done == 2 and _config['enabled']:
+            if device is not None:
+                _sync(torch.device(device))
+            eta = (time.perf_counter() - self.t1) * (self.total - 2)
             if eta > _config['warn_seconds']:
                 warnings.warn(f"{self.what}: about {_fmt_seconds(eta)} expected for {self.total} steps "
                               f"(pass progress=True for a progress bar).", CostWarning, stacklevel=4)
