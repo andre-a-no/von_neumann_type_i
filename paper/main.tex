@@ -257,7 +257,26 @@ Table~\ref{tab:experiments} summarises the sign of the quantity $z$ in each expe
 figures show scatter plots of $z$ against the contrasts. Raw samples, all plots, and the
 summary table are available in the repository (\texttt{results/experiments}).
 
-%EXPERIMENT_TABLE%
+\begin{table}[h]
+\centering
+\begin{tabular}{rr|rr|rr|rr}
+\toprule
+ & & \multicolumn{2}{c|}{Exp.~1} & \multicolumn{2}{c|}{Exp.~2} & \multicolumn{2}{c}{Exp.~3}\\
+$k$ & $C$ & $z>0$, \% & $\max z$ & $z>0$, \% & $z<0$, \% & $z<0$, \% & $\min z$\\
+\midrule
+2 & 1 & 7.0 & 0.227 & 52.9 & 46.6 & 0.0 & -8.34e-07 \\
+2 & 2 & 0.7 & 0.328 & 54.2 & 45.8 & 0.0 & -9.54e-07 \\
+2 & 16 & 0.0 & -4.37 & 62.4 & 37.6 & 0.0 & 0.00115 \\
+2 & 32 & 0.0 & -15.9 & 68.2 & 31.8 & 0.0 & 0.0764 \\
+16 & 1 & 0.0 & -2.18 & 57.4 & 41.9 & 0.0 & -7.63e-06 \\
+16 & 2 & 0.0 & -5.73 & 63.0 & 36.9 & 0.0 & 1.72e-05 \\
+16 & 16 & 0.0 & -89 & 86.4 & 13.6 & 0.0 & 1.83 \\
+16 & 32 & 0.0 & -193 & 94.1 & 5.9 & 0.0 & 6.11 \\
+\bottomrule
+\end{tabular}
+\caption{Sign of $z$ over $20\,000$ samples per configuration ($|z|\le10^{-4}$ counted as zero).}
+\label{tab:experiments}
+\end{table}
 
 \subsection{Experiment 1 (positive $X$, positive $Y$, unitary $U$)}
 
@@ -272,7 +291,9 @@ choosing $U = W^*$ gives $\Tr(XUY) = \Tr(W^*YX) = \|YX\|_1 \ge \Tr(YX) = \Tr(XY)
 inequality whenever $YX$ is not positive. Random unitaries come close to this extremal choice only rarely, and
 increasingly so as $k$ and $C$ grow. In the simulations $z>0$ occurs in $7.0\%$ of the samples
 for $k = 2$, $C = 1$ and in $0.7\%$ for $k=2$, $C=2$, but in none of the samples with $k = 16$
-or $C\ge 16$. The contrasts $\Delta(X)$ and $\Delta(Y)$ are computed from the global extreme
+or $C\ge 16$. Positive values occur only away from scalar operators: for $k=2$, $C=1$ the
+largest $z$ over samples with $\Delta(X),\Delta(Y)<0.1$ is $-4\times10^{-4}$, and the size of the
+violations grows with $\Delta(X)$ (Figure~\ref{fig:exp1-small}). The contrasts $\Delta(X)$ and $\Delta(Y)$ are computed from the global extreme
 eigenvalues.
 
 \begin{lstlisting}[caption={Experiment 1 implementation}]
@@ -311,6 +332,7 @@ def experiment1(alg, batch_size, num_batches, device):
 \caption{$k=2$, $C=16$}
 \end{subfigure}
 \caption{Experiment 1: small dimension ($k = 2$). Left: $z$ vs.\ $\Delta(X)$; middle: $z$ vs.\ $\Delta(Y)$; right: both.}
+\label{fig:exp1-small}
 \end{figure}
 
 \begin{figure}[p]
@@ -346,7 +368,7 @@ $X = UX_0$, $Y = VY_0$, so that $|X| = X_0$ and $|Y| = Y_0$. The quantity of int
 \]
 $z$ takes both signs: for $V = I$ one has $z = \|X_0Y_0\|_1 - \Tr(X_0Y_0)\ge 0$, while for $V$
 far from the identity $\|X_0VY_0\|_1$ can be much smaller than $\Tr(X_0Y_0)$. In the
-simulations $z>0$ in $53$--$90\%$ of the samples, depending on $k$ and $C$. The contrasts are
+simulations $z>0$ in $53$--$94\%$ of the samples, the share growing with $k$ and $C$. The contrasts are
 computed from $|X| = X_0$ and $|Y| = Y_0$, i.e.\ from the singular values of $X$ and $Y$.
 
 \begin{lstlisting}[caption={Experiment 2 implementation}]
