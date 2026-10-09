@@ -1,9 +1,23 @@
+"""
+CPU vs GPU timing of the batched kernels behind the library operations.
+
+Each test tensor has shape (channels, dim, dim) and holds random *positive definite*
+matrices A = G G^T / dim + 0.1 I, so that every metric below is well defined
+(inverse, entropy, Michelson contrast). Speedup = t_CPU / t_GPU, including the
+.item() synchronisation but excluding host-to-device transfer.
+
+Results in results/benchmark/ were produced by an earlier version of this script
+that used Gaussian (non-symmetric) matrices; see results/benchmark/README.md.
+
+Usage:  python scripts/benchmark.py --dims 2,4,8,16,32,64 --channels 1,2,4,...,1024 --cpu-threads 1
+"""
 import torch
 import numpy as np
 import pandas as pd
 import timeit
 from itertools import product
 import argparse
+import os
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -13,9 +27,8 @@ def trace_batch(A):
     return torch.diagonal(A, dim1=-2, dim2=-1).sum(-1).mean().item()
 
 def lambda_max_batch(A):
-    """Maximum eigenvalue of symmetrized matrix A A^T"""
-    B = A @ A.transpose(-2, -1)
-    eigvals = torch.linalg.eigvalsh(B)
+    """Largest eigenvalue (exact batched diagonalisation, torch.linalg.eigvalsh)"""
+    eigvals = torch.linalg.eigvalsh(A)
     return eigvals.max(dim=-1)[0].mean().item()
 
 def svd_abs_batch(A):
@@ -46,26 +59,16 @@ def multiplication_batch(A):
     return (A @ A).abs().mean().item()
 
 def von_neumann_entropy(A):
-    """von Neumann entropy from singular values"""
-    s = torch.linalg.svdvals(A)
-    if s.dim() == 2:
-        probs = s / (s.sum(dim=-1, keepdim=True) + 1e-12)
-        entropy = -torch.sum(probs * torch.log(probs + 1e-12), dim=-1)
-    else:
-        probs = s / (s.sum() + 1e-12)
-        entropy = -torch.sum(probs * torch.log(probs + 1e-12))
-    return entropy.mean().item()
+    """von Neumann entropy -Tr(rho log rho) of rho = A / Tr A"""
+    w = torch.linalg.eigvalsh(A).clamp_min(1e-30)
+    p = w / w.sum(dim=-1, keepdim=True)
+    return (-(p * torch.log(p)).sum(dim=-1)).mean().item()
 
 def michelson_contrast(A):
-    """Michelson contrast (max-min)/(max+min) over matrix elements"""
-    if A.dim() == 3:
-        amax = A.amax(dim=(1, 2))
-        amin = A.amin(dim=(1, 2))
-    else:
-        amax = A.max()
-        amin = A.min()
-    contrast = (amax - amin) / (amax + amin + 1e-12)
-    return contrast.mean().item()
+    """Michelson contrast (lambda_max - lambda_min) / (lambda_max + lambda_min) per matrix"""
+    w = torch.linalg.eigvalsh(A)
+    lmin, lmax = w[..., 0], w[..., -1]
+    return ((lmax - lmin) / (lmax + lmin)).mean().item()
 
 METRICS = {
     'trace': trace_batch,
@@ -98,7 +101,8 @@ def measure_time(func, tensor, device='cpu', repeats=10):
 # ---------- GENERATE TENSOR WITH FIXED SEED ----------
 def generate_tensor(dim, channels, seed):
     torch.manual_seed(seed)
-    return torch.randn(channels, dim, dim)
+    G = torch.randn(channels, dim, dim)
+    return G @ G.transpose(-2, -1) / dim + 0.1 * torch.eye(dim)
 
 # ---------- MAIN BENCHMARK LOOP ----------
 def run_benchmark(dim_list, channels_list, seeds, repeats=10, device_cpu='cpu', device_gpu='cuda'):
@@ -218,7 +222,18 @@ def main():
                         help='Number of time measurement repetitions per operation')
     parser.add_argument('--no-heatmap', action='store_true',
                         help='Disable heatmap generation')
+    parser.add_argument('--cpu-threads', type=int, default=None,
+                        help='torch.set_num_threads for the CPU runs (default: PyTorch default)')
+    parser.add_argument('--output-dir', type=str, default='.',
+                        help='Directory for CSV files and heatmaps')
     args = parser.parse_args()
+    if args.cpu_threads is not None:
+        torch.set_num_threads(args.cpu_threads)
+    if not torch.cuda.is_available():
+        raise SystemExit("benchmark.py compares CPU with GPU and needs a CUDA device")
+    print(f"CPU threads: {torch.get_num_threads()}")
+    out = args.output_dir
+    os.makedirs(out, exist_ok=True)
     
     dims = [int(d) for d in args.dims.split(',')]
     seeds = [int(s) for s in args.seeds.split(',')]
@@ -243,16 +258,16 @@ def main():
     
     print("\nStarting benchmark...")
     df_full = run_benchmark(dims, channels_list, seeds, repeats)
-    df_full.to_csv('full_benchmark.csv', index=False)
+    df_full.to_csv(os.path.join(out, 'full_benchmark.csv'), index=False)
     print("Saved full_benchmark.csv")
     
     metric_names = list(METRICS.keys())
     pair_df = pairwise_comparison(df_full, metric_names)
-    pair_df.to_csv('pairwise_comparisons.csv', index=False)
+    pair_df.to_csv(os.path.join(out, 'pairwise_comparisons.csv'), index=False)
     print("Saved pairwise_comparisons.csv")
     
     summary_df = summary_speedups(pair_df, metric_names)
-    summary_df.to_csv('summary_speedups.csv', index=False)
+    summary_df.to_csv(os.path.join(out, 'summary_speedups.csv'), index=False)
     print("Saved summary_speedups.csv")
     
     print("\n=== AVERAGE GPU/CPU SPEEDUP PER OPERATION ===")
@@ -268,7 +283,8 @@ def main():
     # Generate heatmaps for ALL metrics (unless disabled)
     if not args.no_heatmap:
         for metric in metric_names:
-            plot_speedup_heatmap(summary_df, metric=metric)
+            plot_speedup_heatmap(summary_df, metric=metric,
+                                 save_path=os.path.join(out, f'speedup_heatmap_{metric}.png'))
 
 if __name__ == '__main__':
     main()

@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """Example: Free additive convolution of a semicircle and a Bernoulli distribution."""
 import torch
-from structures.Algebra import TypeIAlgebra
+from torch_vn_algebra import TypeIAlgebra
+
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def semicircle(dim):
-    eig = torch.randn(dim)
-    return eig / eig.abs().max()
+    """Eigenvalues drawn from the Wigner semicircle law on [-1, 1]
+    (x-coordinate of a uniform point in the unit disk)."""
+    r = torch.sqrt(torch.rand(dim))
+    return r * torch.cos(2 * torch.pi * torch.rand(dim))
 
 def bernoulli(dim):
     """Eigenvalues ±1 with equal probability."""
@@ -14,7 +18,7 @@ def bernoulli(dim):
 def main():
     # Single channel, dimension 500 for good resolution.
     alg = TypeIAlgebra([500], [500], batch_size=1,
-                       complex_valued=False, device='cuda')
+                       complex_valued=False, device=DEVICE)
 
     A = alg.operator_from_eigenvalues(semicircle, batch_size=1,
                                       force_self_adjoint=True)

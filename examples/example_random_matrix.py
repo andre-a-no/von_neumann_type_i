@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 """Example: Random Hamiltonian with parity symmetry (two blocks of size 50)."""
 import torch
-from structures.Algebra import TypeIAlgebra
+from torch_vn_algebra import TypeIAlgebra
+
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def semicircle(dim):
-    """Eigenvalues from the semicircle law (Wigner) scaled to max 1."""
-    eig = torch.randn(dim)
-    return eig / eig.abs().max()
+    """Eigenvalues drawn from the Wigner semicircle law on [-1, 1]
+    (x-coordinate of a uniform point in the unit disk)."""
+    r = torch.sqrt(torch.rand(dim))
+    return r * torch.cos(2 * torch.pi * torch.rand(dim))
 
 def main():
     # Two channels, each acting on a 50‑dimensional subspace.
     n_factors = [50, 50]
     k_factors = [50, 50]
     alg = TypeIAlgebra(n_factors, k_factors, batch_size=1,
-                       complex_valued=False, device='cuda')
+                       complex_valued=False, device=DEVICE)
 
     H = alg.operator_from_eigenvalues(semicircle, batch_size=1,
                                       force_self_adjoint=True)

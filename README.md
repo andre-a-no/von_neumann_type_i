@@ -1,75 +1,137 @@
-# torch_vn_algebra – Type I von Neumann Algebras with PyTorch
+# torch_vn_algebra – Type I von Neumann algebras in PyTorch
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyTorch](https://img.shields.io/badge/PyTorch-1.9+-red.svg)](https://pytorch.org)
 
-GPU‑accelerated Monte Carlo simulations for finite‑dimensional Type I von Neumann algebras.
+Batched, GPU-friendly Monte Carlo for finite-dimensional Type I von Neumann algebras
 
-This library provides a flexible, batched, and GPU‑friendly framework for working with direct sums of matrix algebras (Type I factors). It targets:
+$$\mathcal M = \bigoplus_{c=1}^{C} M_{n_c}(\mathbb C)\quad\text{acting on}\quad \mathcal H=\bigoplus_{c=1}^{C}\mathbb C^{k_c}.$$
 
-- **Operator algebra theorists** – numerical tests of trace inequalities, approximations of hyperfinite factors, and explorations of the Connes embedding problem.
-- **Quantum physicists** – simulations of systems with superselection rules (charge, parity, angular momentum), decoherence, and random Hamiltonians with arbitrary eigenvalue distributions.
-- **Computational scientists** – examples of batched linear algebra, lazy evaluation, and diagonalisation‑free functional calculus on GPUs.
+Operators are stored as one tensor of shape `(batch, C, k_max, k_max)`: the batch axis holds
+Monte Carlo samples, the channel axis holds the direct summands, and block `c` occupies the
+top-left `k_c × k_c` corner (the rest is zero padding).
 
-## Key features
+Companion paper: I. Nikolaeva, A. Novikov, *Finite-Dimensional Type I von Neumann Algebras in
+PyTorch: A GPU-Accelerated Framework for Random Block-Diagonal Operators*, arXiv:2606.15882.
 
-- **Direct sum (block‑diagonal) structure** – native support for channels with independent dimensions.
-- **Arbitrary eigenvalue distributions** – supply any callable that generates eigenvalues.
-- **Three trace functionals** – blunt trace, normalised subspace trace, and the von Neumann tracial state.
-- **Functional calculus without full diagonalisation** – power iteration for extreme eigenvalues, SVD for |A|, sqrt(A), inv(A), and Tr(A log A).
-- **Random unitary matrices** – Haar measure on U(n)/O(n), SU(n), COE, CSE, diagonal random phases.
-- **Lazy evaluation** – postpone matrix construction until needed, save memory.
-- **GPU batching** – process thousands of random operator pairs in parallel on a single GPU.
-- **Modular design** – easy to extend with new samplers, unitary ensembles, or functional calculus methods.
+## Features
+
+- **Random operators with any spectrum** – `operator_from_eigenvalues(sampler, ...)` builds
+  `A_c = U_c diag(λ) U_c*` from a user callable `sampler(dim) -> (dim,) or (batch, dim)`.
+- **Unitary ensembles** – Haar on U(n)/O(n), SU(n)/SO(n), COE, CSE, random diagonal phases;
+  batched (`random_unitary(n, measure, batch_size)`), and block-diagonal unitaries in the algebra
+  (`random_unitary_operator`).
+- **Lazy evaluation** – `X @ Y`, `X + Y`, `X.abs()`, `X.sqrt()`, `X.inv` build a recipe; nothing is
+  computed until `.matrix` (or a scalar functional) is requested.
+- **Functional calculus** – `abs`, `sqrt`, `inverse` (pseudo-inverse), `entropy`, `trace_a_log_a`
+  via batched SVD; `lambda_max`/`lambda_min` by exact diagonalisation for blocks up to
+  `alg.exact_eig_max_dim = 256`, shifted power iteration above that.
+- **Three trace functionals** – `Tr_blunt` (Σ_c Tr A_c), `Tr_norm` (Σ_c Tr A_c / k_c) and the
+  tracial state `tau_vN` ((1/C) Σ_c Tr A_c / k_c); norms `trace_norm`, `frobenius_norm`,
+  `operator_norm`; `michelson_contrast`.
+- **Hilbert space utilities** – `HilbertSpace` with inner products, orthonormal bases
+  (standard / random / Haar), embedding and restriction of vectors and operators.
 
 ## Installation
 
 ```bash
-# Clone the repository
-git clone https://gitlab.com/a.hobukov/von_neumann_type_i.git
+git clone https://github.com/andre-a-no/von_neumann_type_i.git
 cd von_neumann_type_i
+pip install -e .              # library only (torch, numpy)
+pip install -e ".[scripts]"   # + pandas, tqdm, matplotlib, seaborn for scripts/
+pip install -e ".[test]"      # + pytest
+```
 
-# Install dependencies
-pip install torch numpy pandas tqdm matplotlib seaborn
+## Quick start
 
-# (Optional) Install in editable mode
-pip install -e .
-
-
-# Quick start
-
-Here is a minimal example that creates a random positive operator and computes its trace and Michelson contrast:
-
-
+```python
 import torch
-from torch_vn_algebra import Operator, HilbertSpace
+from torch_vn_algebra import TypeIAlgebra
 
-# Set up the algebra: two channels of sizes 4 and 6
-alg = HilbertSpace(k_factors=[4, 6], device='cuda' if torch.cuda.is_available() else 'cpu')
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-# Define a sampler for eigenvalues (uniform in [0,1])
-def uniform_positive(dim):
-    return torch.rand(dim, device=alg.device)
+# M = M_4(C) (+) M_6(C), acting on C^4 (+) C^6
+alg = TypeIAlgebra(n_factors=[4, 6], k_factors=[4, 6], device=device)
 
-# Generate a batch of 100 random positive operators
-batch_size = 100
-X = Operator.from_eigenvalues(
-    alg, 
-    eigenvalue_sampler=uniform_positive, 
-    batch_size=batch_size,
-    force_positive=True,
-    force_self_adjoint=True
-)
+# 100 random positive operators: eigenvalues ~ U[0, 1], Haar-random eigenvectors per block
+X = alg.operator_from_eigenvalues(lambda dim: torch.rand(100, dim, device=device),
+                                  batch_size=100, force_positive=True, force_self_adjoint=True)
 
-# Compute traces
-blunt_trace = X.trace_blunt()          # sum of traces over channels
-norm_trace = X.trace_norm()            # normalised by subspace dimensions
-vN_trace = X.trace_vN()                # von Neumann tracial state (average over channels)
+print(X.Tr_blunt().real.mean())            # sum of block traces
+print(X.Tr_norm().mean())                  # sum of normalised block traces
+print(X.tau_vN().mean())                   # tracial state (1/C) sum_c Tr(A_c)/k_c
+print(X.michelson_contrast.mean())         # (lmax - lmin)/(lmax + lmin), shape (100,)
 
-# Compute Michelson contrast
-lmax, lmin = X.lambda_max, X.lambda_min
-contrast = (lmax - lmin) / (lmax + lmin)
+# operations stay lazy until .matrix or a scalar functional is requested
+U = alg.random_unitary_operator(batch_size=100)        # block-diagonal Haar unitary
+Z = X.sqrt() @ U @ X.sqrt()
+print(Z.trace_norm().mean(), X.entropy().mean())
+```
 
-print(f"Blunt trace: {blunt_trace.mean().item():.4f}")
-print(f"von Neumann trace: {vN_trace.mean().item():.4f}")
-print(f"Mean contrast: {contrast.mean().item():.4f}")
+`complex_valued=False` gives real algebras (orthogonal instead of unitary groups). Each
+`force_*` flag (`self_adjoint`, `positive`, `normal`, `invertible`, `projection`) both tags the
+operator and checks the property when the matrix is materialised.
+
+More in [`examples/`](examples): random Hamiltonian with a parity symmetry, free additive
+convolution, a trace inequality, unitary ensembles, a Zipf density matrix.
+
+## Reproducing the paper
+
+| Script | What it does |
+|---|---|
+| `scripts/validation.py` | Haar moments, power iteration vs. spectral gap, SVD square root accuracy (Sec. 4.1) |
+| `scripts/experiment.py` | Monte Carlo experiments on trace inequalities (Sec. 5); writes raw samples, plots and `summary.csv` |
+| `scripts/benchmark.py` | CPU vs GPU timings and speedup heatmaps (Sec. 4.2; needs CUDA) |
+
+```bash
+python scripts/validation.py
+python scripts/experiment.py --dims 2,16 --channels 1,2,16,32 --output-dir results/experiments
+python scripts/benchmark.py --cpu-threads 1 --output-dir results/benchmark_new
+```
+
+Stored outputs live in [`results/`](results): `results/experiments/` (current code) and
+`results/benchmark/` (GPU timings, see its README). The corrected paper text is in
+[`paper/`](paper).
+
+## Repository layout
+
+```
+torch_vn_algebra/    library: algebra.py (TypeIAlgebra, Operator), hilbert_space.py
+tests/               pytest suite (CPU, runs in CI)
+examples/            short usage examples
+scripts/             validation, experiments and benchmarks from the paper
+results/             stored experiment and benchmark outputs
+paper/               paper source and list of corrections
+```
+
+## Tests
+
+```bash
+pytest -q
+```
+
+## Limitations
+
+- SVD dominates the cost for `k_max ≳ 200` with large batches.
+- Power iteration (blocks above `exact_eig_max_dim`) converges linearly in the spectral gap and
+  can fail when the dominant eigenvalues are ±λ; its stopping rule is on the change of the
+  estimate, not on the error.
+- No automatic differentiation guarantees, finite dimensions and Type I only.
+
+## Citation
+
+```bibtex
+@misc{nikolaeva_novikov_2026_torch_vn_algebra,
+  title  = {Finite-Dimensional Type I von Neumann Algebras in PyTorch:
+            A GPU-Accelerated Framework for Random Block-Diagonal Operators},
+  author = {Nikolaeva, Irina and Novikov, Andrej},
+  year   = {2026},
+  eprint = {2606.15882},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.MS}
+}
+```
+
+## License
+
+MIT.

@@ -1,13 +1,9 @@
 """
 Tests for TypeIAlgebra and Operator classes, including SU(n) generation and eigenvalue extraction.
 
-Run with: pytest structures/tests/test_algebra.py -v
+Run with: pytest tests/test_algebra.py -v
 """
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
-from structures.Algebra import TypeIAlgebra
+from torch_vn_algebra import TypeIAlgebra
 
 import torch
 import pytest
@@ -261,7 +257,7 @@ class TestEntropy:
 class TestMichelsonContrast:
     def test_contrast_identity(self, basic_algebra):
         op = basic_algebra.identity(batch_size=2)
-        assert abs(op.michelson_contrast) < 1e-6
+        assert torch.all(op.michelson_contrast.abs() < 1e-6)
 
     def test_contrast_singular(self, basic_algebra):
         def sampler(dim):
@@ -270,7 +266,7 @@ class TestMichelsonContrast:
             else:
                 return torch.tensor([1.0, 1.0, 0.0])
         op = basic_algebra.operator_from_eigenvalues(sampler, batch_size=1, force_projection=True)
-        assert abs(op.michelson_contrast - 1.0) < 1e-6
+        assert torch.all((op.michelson_contrast - 1.0).abs() < 1e-6)
 
 
 # ============================================================================
@@ -339,15 +335,49 @@ class TestUnitaryMeasures:
         det = torch.linalg.det(U)
         assert torch.allclose(torch.abs(det), torch.tensor(1.0, dtype=det.dtype, device=det.device), atol=1e-6)
 
-    def test_coe_unitary(self, basic_algebra):
+    def test_coe_symmetric_unitary(self, basic_algebra):
         U = basic_algebra.random_unitary(4, measure='coe')
         expected = torch.eye(4, dtype=U.dtype, device=U.device)
-        assert torch.allclose(U @ U.T, expected, atol=1e-6)
+        assert torch.allclose(U @ U.conj().T, expected, atol=1e-5)
+        assert torch.allclose(U, U.T, atol=1e-5)
 
-    def test_cse_unitary(self, basic_algebra):
+    def test_cse_self_dual_unitary(self, basic_algebra):
         U = basic_algebra.random_unitary(4, measure='cse')
         expected = torch.eye(4, dtype=U.dtype, device=U.device)
-        assert torch.allclose(U @ U.T, expected, atol=1e-6)
+        assert torch.allclose(U @ U.conj().T, expected, atol=1e-5)
+        I2, O2 = torch.eye(2, dtype=U.dtype), torch.zeros(2, 2, dtype=U.dtype)
+        J = torch.cat([torch.cat([O2, I2], 1), torch.cat([-I2, O2], 1)], 0)
+        assert torch.allclose(J @ U.T @ J.T, U, atol=1e-5)
+
+    def test_complex_only_measures_reject_real(self, real_algebra):
+        for measure in ('coe', 'cse', 'diag'):
+            with pytest.raises(ValueError):
+                real_algebra.random_unitary(4, measure=measure)
+
+    def test_batched_shape(self, basic_algebra):
+        U = basic_algebra.random_unitary(3, measure='haar', batch_size=7)
+        assert U.shape == (7, 3, 3)
+        expected = torch.eye(3, dtype=U.dtype).expand(7, 3, 3)
+        assert torch.allclose(U @ U.conj().transpose(-2, -1), expected, atol=1e-5)
+
+    def test_haar_is_circular(self, basic_algebra):
+        # For Haar U(n): E|U_11|^2 = 1/n and E[U_11^2] = 0.
+        torch.manual_seed(0)
+        n = 4
+        U = basic_algebra.random_unitary(n, measure='haar', batch_size=40000)
+        u = U[:, 0, 0]
+        assert abs((u.abs() ** 2).mean().item() - 1 / n) < 0.01
+        assert (u ** 2).mean().abs().item() < 0.01
+
+    def test_haar_su_batched_det_one(self, basic_algebra):
+        U = basic_algebra.random_unitary(3, measure='haar_su', batch_size=50)
+        det = torch.linalg.det(U)
+        assert torch.allclose(det, torch.ones_like(det), atol=1e-5)
+
+    def test_haar_so_real_det_one(self, real_algebra):
+        U = real_algebra.random_unitary(3, measure='haar_su', batch_size=50)
+        det = torch.linalg.det(U)
+        assert torch.allclose(det, torch.ones_like(det), atol=1e-5)
 
     def test_diag_unitary(self, basic_algebra):
         U = basic_algebra.random_unitary(4, measure='diag')
@@ -447,3 +477,42 @@ class TestLambdaMaxMin:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])
+
+# ============================================================================
+# Regression tests
+# ============================================================================
+
+class TestRegressions:
+    @pytest.mark.parametrize("k", [8, 300])
+    def test_lambda_min_negative_spectrum(self, k):
+        # k = 300 exercises the power-iteration branch (> exact_eig_max_dim)
+        alg = TypeIAlgebra([k], [k], complex_valued=False, device='cpu')
+        op = alg.operator_from_eigenvalues(lambda d: torch.linspace(-2.0, 1.0, d),
+                                           force_self_adjoint=True)
+        assert abs(op.lambda_max.item() - 1.0) < 1e-3
+        assert abs(op.lambda_min.item() + 2.0) < 1e-3
+
+    def test_large_batch_validation_does_not_fail(self):
+        # property checks must not accumulate round-off over the whole batch
+        alg = TypeIAlgebra([16] * 4, [16] * 4, complex_valued=False, device='cpu')
+        op = alg.operator_from_eigenvalues(lambda d: torch.rand(5000, d), batch_size=5000,
+                                           force_positive=True, force_self_adjoint=True)
+        assert op.matrix.shape == (5000, 4, 16, 16)
+
+    def test_michelson_contrast_global(self, basic_algebra):
+        op = basic_algebra.operator_from_eigenvalues(
+            lambda d: torch.tensor([1.0, 3.0]) if d == 2 else torch.tensor([2.0, 2.0, 2.0]),
+            batch_size=2, force_positive=True)
+        expected = torch.full((2,), (3.0 - 1.0) / (3.0 + 1.0))
+        assert torch.allclose(op.michelson_contrast, expected, atol=1e-5)
+
+    def test_identity_is_invertible(self, basic_algebra):
+        assert basic_algebra.identity().is_invertible
+
+    def test_unitary_is_invertible(self, basic_algebra):
+        U = basic_algebra.random_unitary(3, batch_size=2)
+        mat = torch.zeros(2, 2, 3, 3, dtype=U.dtype)
+        mat[:, 0, :2, :2] = basic_algebra.random_unitary(2, batch_size=2)
+        mat[:, 1] = U
+        op = TypeIAlgebra.Operator(basic_algebra, matrix=mat)
+        assert op.is_invertible

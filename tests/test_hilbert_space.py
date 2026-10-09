@@ -6,12 +6,8 @@ Run with: pytest tests/test_hilbert_space.py -v
 
 import torch
 import pytest
-import sys
-import os
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-
-from Hilbert_space import HilbertSpace, tensor_product_hilbert, direct_sum_hilbert
+from torch_vn_algebra.hilbert_space import HilbertSpace, tensor_product_hilbert, direct_sum_hilbert
 
 
 # ============================================================================

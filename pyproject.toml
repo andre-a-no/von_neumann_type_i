@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "torch_vn_algebra"
+version = "0.2.0"
+description = "GPU-accelerated Monte Carlo for finite-dimensional Type I von Neumann algebras in PyTorch"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Irina Nikolaeva" }, { name = "Andrej Novikov" }]
+requires-python = ">=3.9"
+dependencies = ["torch>=1.9", "numpy"]
+
+[project.optional-dependencies]
+scripts = ["pandas", "tqdm", "matplotlib", "seaborn"]
+test = ["pytest"]
+
+[tool.setuptools]
+packages = ["torch_vn_algebra"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

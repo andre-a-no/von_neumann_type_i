@@ -13,7 +13,7 @@ The remaining (k_max - k_c) dimensions are padding.
 import torch
 import numpy as np
 from typing import Optional, List, Tuple, Callable, Union
-from .Hilbert_space import HilbertSpace
+from .hilbert_space import HilbertSpace
 
 
 class TypeIAlgebra:
@@ -44,6 +44,9 @@ class TypeIAlgebra:
         self.C = C
         self.k_max = max(k_factors) if k_factors else 0
         self.total_subspace_dim = sum(k_factors)
+        # Blocks up to this size are diagonalised exactly (torch.linalg.eigvalsh) in
+        # lambda_max / lambda_min; larger ones fall back to shifted power iteration.
+        self.exact_eig_max_dim = 256
 
         if hilbert is None:
             self.hilbert = HilbertSpace(
@@ -61,51 +64,67 @@ class TypeIAlgebra:
     # Random Unitary / Orthogonal / SU(n)
     # ========================================================================
 
-    def random_unitary(self, n: int, measure: str = 'haar') -> torch.Tensor:
+    UNITARY_MEASURES = ('haar', 'haar_su', 'coe', 'cse', 'diag')
+
+    def random_unitary(self, n: int, measure: str = 'haar',
+                       batch_size: Optional[int] = None) -> torch.Tensor:
+        """
+        Random n x n unitary (orthogonal if the algebra is real).
+
+        measure:
+            'haar'    - Haar measure on U(n) (complex) or O(n) (real)
+            'haar_su' - Haar measure on SU(n) (complex) or SO(n) (real)
+            'coe'     - Circular Orthogonal Ensemble, S = W^T W (complex only)
+            'cse'     - Circular Symplectic Ensemble, S = W^R W with
+                        W^R = J W^T J^T (complex only, n even)
+            'diag'    - diagonal matrix of i.i.d. uniform phases (complex only)
+
+        Returns a tensor of shape (n, n), or (batch_size, n, n) if batch_size is given.
+        """
+        shape = () if batch_size is None else (batch_size,)
         device = self.hilbert.device
         complex_ = self.hilbert.complex_valued
+        if measure in ('coe', 'cse', 'diag') and not complex_:
+            raise ValueError(f"measure '{measure}' requires a complex-valued algebra")
+
         if measure == 'haar':
-            if complex_:
-                Z = torch.randn(n, n, dtype=torch.complex64, device=device)
-                Z = Z + 1j * torch.randn(n, n, device=device)
-            else:
-                Z = torch.randn(n, n, dtype=torch.float32, device=device)
+            # Mezzadri's recipe: QR of a Ginibre matrix with the phases of diag(R) fixed.
+            # torch.randn with a complex dtype already draws circular N(0, 1) entries.
+            dtype = torch.complex64 if complex_ else torch.float32
+            Z = torch.randn(*shape, n, n, dtype=dtype, device=device)
             Q, R = torch.linalg.qr(Z)
-            # Исправлено: для комплексных используем .sgn(), для вещественных .sign()
-            if complex_:
-                d = torch.diag(R).sgn()
-            else:
-                d = torch.diag(R).sign()
-            Q = Q * d.unsqueeze(0)
-            return Q
+            d = torch.diagonal(R, dim1=-2, dim2=-1)
+            d = d.sgn() if complex_ else d.sign()
+            return Q * d.unsqueeze(-2)
         elif measure == 'haar_su':
-            Q = self.random_unitary(n, measure='haar')
+            Q = self.random_unitary(n, 'haar', batch_size)
             det = torch.linalg.det(Q)
-            Q[..., 0, :] = Q[..., 0, :] / det
+            if complex_:
+                # Multiply by det^{-1/n}: a Haar U(n) matrix times a phase is Haar on SU(n).
+                phase = torch.exp(-1j * torch.angle(det) / n).to(Q.dtype)
+                return Q * phase[..., None, None]
+            # Real case: flip the first column when det = -1 to land in SO(n).
+            Q = Q.clone()
+            Q[..., :, 0] = Q[..., :, 0] * det.sign().unsqueeze(-1)
             return Q
-        # Остальные меры (coe, cse, diag) оставить без изменений
         elif measure == 'coe':
-            Z = torch.randn(n, n, dtype=torch.float32, device=device)
-            Z = (Z + Z.T) / 2
-            Q, _ = torch.linalg.qr(Z)
-            return Q
+            W = self.random_unitary(n, 'haar', batch_size)
+            return W.transpose(-2, -1) @ W
         elif measure == 'cse':
-            assert n % 2 == 0, "CSE requires even dimension"
+            if n % 2 != 0:
+                raise ValueError("CSE requires even dimension")
+            W = self.random_unitary(n, 'haar', batch_size)
             half = n // 2
-            A = torch.randn(half, half, dtype=torch.float32, device=device)
-            B = torch.randn(half, half, dtype=torch.float32, device=device)
-            Cmat = torch.randn(half, half, dtype=torch.float32, device=device)
-            D = torch.randn(half, half, dtype=torch.float32, device=device)
-            Z = torch.cat([torch.cat([A, B], dim=-1), torch.cat([Cmat, D], dim=-1)], dim=-2)
-            Q, _ = torch.linalg.qr(Z)
-            return Q
+            I = torch.eye(half, dtype=W.dtype, device=device)
+            O = torch.zeros_like(I)
+            J = torch.cat([torch.cat([O, I], dim=-1), torch.cat([-I, O], dim=-1)], dim=-2)
+            W_dual = J @ W.transpose(-2, -1) @ J.transpose(-2, -1)
+            return W_dual @ W
         elif measure == 'diag':
-            if not complex_:
-                raise ValueError("Diagonal measure requires complex-valued matrices")
-            phases = torch.exp(2j * torch.pi * torch.rand(n, device=device))
-            return torch.diag(phases)
+            phases = torch.exp(2j * torch.pi * torch.rand(*shape, n, device=device))
+            return torch.diag_embed(phases.to(torch.complex64))
         else:
-            raise ValueError(f"Unknown measure: {measure}")
+            raise ValueError(f"Unknown measure: {measure}. Choose from {self.UNITARY_MEASURES}")
 
     # ========================================================================
     # Operator Class
@@ -170,30 +189,44 @@ class TypeIAlgebra:
                 self._update_memory()
             return self._matrix
 
+        def _tol(self) -> float:
+            """Absolute tolerance for property checks, scaled to the precision and size of the entries."""
+            mat = self._matrix
+            eps = 1e-5 if mat.dtype in (torch.float32, torch.complex64) else 1e-10
+            scale = mat.abs().max().item() if mat.numel() else 0.0
+            return eps * max(1.0, scale)
+
+        def _max_abs(self, t: torch.Tensor) -> float:
+            return t.abs().max().item() if t.numel() else 0.0
+
         def _validate_properties(self):
             mat = self._matrix
+            tol = self._tol()
             if self._is_self_adjoint_set and self._is_self_adjoint:
-                diff = mat - mat.conj().transpose(-2, -1)
-                if torch.norm(diff) > 1e-6:
+                if self._max_abs(mat - mat.conj().transpose(-2, -1)) > tol:
                     raise ValueError("Operator marked self-adjoint but not Hermitian")
             if self._is_normal_set and self._is_normal:
                 mat_d = mat.conj().transpose(-2, -1)
-                left = mat @ mat_d
-                right = mat_d @ mat
-                if torch.norm(left - right) > 1e-6:
+                if self._max_abs(mat @ mat_d - mat_d @ mat) > tol * max(1.0, self._max_abs(mat)):
                     raise ValueError("Operator marked normal but not normal")
             if self._is_positive_set and self._is_positive:
-                lambda_min = self.lambda_min
-                if torch.any(lambda_min < -1e-12).item():
+                if torch.any(self.lambda_min < -tol).item():
                     raise ValueError("Operator marked positive but has negative eigenvalues")
             if self._is_invertible_set and self._is_invertible:
-                lambda_min = self.lambda_min
-                if torch.any(lambda_min < 1e-12).item():
+                if torch.any(self._block_svdvals_min() <= tol).item():
                     raise ValueError("Operator marked invertible but has zero eigenvalue")
             if self._is_projection_set and self._is_projection:
-                mat2 = mat @ mat
-                if torch.norm(mat2 - mat) > 1e-6:
+                if self._max_abs(mat @ mat - mat) > tol:
                     raise ValueError("Operator marked projection but P^2 != P")
+
+        def _block_svdvals_min(self) -> torch.Tensor:
+            """Smallest singular value over the active blocks, shape (batch,)."""
+            mat = self.matrix
+            mins = []
+            for c, k_c in enumerate(self.algebra.k_factors):
+                if k_c > 0:
+                    mins.append(torch.linalg.svdvals(mat[:, c, :k_c, :k_c]).min(dim=-1)[0])
+            return torch.stack(mins, dim=-1).min(dim=-1)[0]
 
         @property
         def shape(self) -> Tuple[int, ...]:
@@ -205,8 +238,7 @@ class TypeIAlgebra:
             if self._is_self_adjoint is not None:
                 return self._is_self_adjoint
             mat = self.matrix
-            diff = mat - mat.conj().transpose(-2, -1)
-            self._is_self_adjoint = torch.norm(diff) < 1e-6
+            self._is_self_adjoint = self._max_abs(mat - mat.conj().transpose(-2, -1)) <= self._tol()
             return self._is_self_adjoint
 
         @is_self_adjoint.setter
@@ -220,10 +252,8 @@ class TypeIAlgebra:
                 return self._is_normal
             mat = self.matrix
             mat_d = mat.conj().transpose(-2, -1)
-            left = mat @ mat_d
-            right = mat_d @ mat
-            diff = left - right
-            self._is_normal = torch.norm(diff) < 1e-6
+            diff = mat @ mat_d - mat_d @ mat
+            self._is_normal = self._max_abs(diff) <= self._tol() * max(1.0, self._max_abs(mat))
             return self._is_normal
 
         @is_normal.setter
@@ -238,8 +268,8 @@ class TypeIAlgebra:
             if not self.is_self_adjoint:
                 self._is_positive = False
                 return False
-            lambda_min = self.lambda_min
-            self._is_positive = torch.all(lambda_min >= -1e-12).item()
+            self.matrix
+            self._is_positive = torch.all(self.lambda_min >= -self._tol()).item()
             return self._is_positive
 
         @is_positive.setter
@@ -251,11 +281,8 @@ class TypeIAlgebra:
         def is_invertible(self) -> bool:
             if self._is_invertible is not None:
                 return self._is_invertible
-            if not self.is_self_adjoint:
-                self._is_invertible = False
-                return False
-            lambda_min = self.lambda_min
-            self._is_invertible = torch.all(lambda_min > 1e-12).item()
+            self.matrix
+            self._is_invertible = torch.all(self._block_svdvals_min() > self._tol()).item()
             return self._is_invertible
 
         @is_invertible.setter
@@ -271,9 +298,7 @@ class TypeIAlgebra:
                 self._is_projection = False
                 return False
             mat = self.matrix
-            mat2 = mat @ mat
-            diff = mat2 - mat
-            self._is_projection = (torch.norm(diff) < 1e-6).item()
+            self._is_projection = self._max_abs(mat @ mat - mat) <= self._tol()
             return self._is_projection
 
         @is_projection.setter
@@ -351,7 +376,7 @@ class TypeIAlgebra:
             A = self.matrix  # (batch, C, k_max, k_max)
             batch, C, _, _ = A.shape
             max_k = max(self.algebra.k_factors) if self.algebra.k_factors else 0
-            if max_k <= 64:
+            if max_k <= self.algebra.exact_eig_max_dim:
                 # Точная диагонализация для малых размеров
                 all_eigvals = []
                 for c in range(C):
@@ -400,8 +425,6 @@ class TypeIAlgebra:
                 is_pos = mu_global > 0
                 lmax = torch.where(is_pos, mu_global, mu_global + nu_global)
                 lmin = torch.where(is_pos, mu_global - nu_global, mu_global)
-                # Защита от отрицательных (для положительных операторов)
-                lmin = torch.clamp(lmin, min=0.0)
                 self._lambda_max = lmax
                 self._lambda_min = lmin
                 return lmax
@@ -505,38 +528,18 @@ class TypeIAlgebra:
             return -self.trace_a_log_a()
 
         @property
-        def michelson_contrast(self) -> float:
+        def michelson_contrast(self) -> torch.Tensor:
+            """
+            Michelson contrast Delta(A) = (lambda_max - lambda_min) / (lambda_max + lambda_min)
+            of a positive operator, with the extreme eigenvalues taken over the whole
+            algebra (all channels). Returns a tensor of shape (batch,); Delta = 0 for A = 0.
+            """
             if not self.is_positive:
                 raise RuntimeError("Michelson contrast requires a positive operator.")
-            mat = self.matrix
-            batch, C, _, _ = mat.shape
-            device = mat.device
-            dtype = mat.dtype
-            contrasts = []
-            for b in range(batch):
-                for c in range(C):
-                    k_c = self.algebra.k_factors[c]
-                    if k_c == 0:
-                        continue
-                    block = mat[b, c, :k_c, :k_c]
-                    block_4d = block.reshape(1, 1, k_c, k_c)
-                    lambda_max = self._power_iteration(block_4d).item()
-                    lambda_max = lambda_max.real if isinstance(lambda_max, complex) else lambda_max
-                    I = torch.eye(k_c, dtype=dtype, device=device)
-                    B_mat = lambda_max * I - block
-                    B_4d = B_mat.reshape(1, 1, k_c, k_c)
-                    lambda_max_B = self._power_iteration(B_4d).item()
-                    lambda_max_B = lambda_max_B.real if isinstance(lambda_max_B, complex) else lambda_max_B
-                    lambda_min = lambda_max - lambda_max_B
-                    denom = lambda_max + lambda_min
-                    if denom.real < 1e-12:
-                        contrast = 0.0
-                    else:
-                        contrast = ((lambda_max - lambda_min) / denom).real
-                    contrasts.append(contrast)
-            if not contrasts:
-                return 0.0
-            return sum(contrasts) / len(contrasts)
+            lmax, lmin = self.lambda_max, self.lambda_min
+            denom = lmax + lmin
+            safe = torch.where(denom > 1e-12, denom, torch.ones_like(denom))
+            return torch.where(denom > 1e-12, (lmax - lmin) / safe, torch.zeros_like(denom))
 
         def __add__(self, other: 'TypeIAlgebra.Operator') -> 'TypeIAlgebra.Operator':
             assert self.algebra is other.algebra
@@ -579,9 +582,10 @@ class TypeIAlgebra:
             return total / self.algebra.C
 
         def __repr__(self) -> str:
-            status = "mat" if self._is_materialized else "lazy"
+            if not self._is_materialized:   # do not trigger materialisation
+                return f"Operator(C={self.algebra.C}, k_max={self.algebra.k_max}, lazy)"
             mem = self._bytes_held / 1024
-            return f"Operator({self.shape}, {status}, {mem:.1f}KB)"
+            return f"Operator({tuple(self._matrix.shape)}, materialized, {mem:.1f}KB)"
 
     # ========================================================================
     # Factory Methods
@@ -686,9 +690,16 @@ class TypeIAlgebra:
                 k_c = self.k_factors[c]
                 eig = all_eig[c]                     # (batch, k_c)
                 # Generate batch of unitary matrices
-                U_batch = torch.stack([self.random_unitary(k_c, measure=unitary_measure) for _ in range(batch_size)])
+                if k_c == 0:
+                    batch_matrices.append(torch.zeros(batch_size, self.k_max, self.k_max,
+                                                      dtype=self.hilbert.dtype, device=self.hilbert.device))
+                    continue
+                U_batch = self.random_unitary(k_c, measure=unitary_measure, batch_size=batch_size)
                 diag_eig = torch.diag_embed(eig)      # (batch, k_c, k_c)
                 A_c = U_batch @ diag_eig @ U_batch.conj().transpose(-2, -1)  # (batch, k_c, k_c)
+                if not torch.is_complex(eig) or not torch.any(eig.imag != 0):
+                    # real spectrum: remove round-off so that A_c is exactly Hermitian
+                    A_c = 0.5 * (A_c + A_c.conj().transpose(-2, -1))
                 A_full = torch.zeros(batch_size, self.k_max, self.k_max, dtype=A_c.dtype, device=self.hilbert.device)
                 A_full[:, :k_c, :k_c] = A_c
                 batch_matrices.append(A_full)
@@ -704,6 +715,23 @@ class TypeIAlgebra:
         op._is_projection = inferred_projection
         return op
 
+    def random_unitary_operator(self, batch_size: int = 1, measure: str = 'haar') -> Operator:
+        """
+        Block-diagonal unitary U = (+)_c U_c in the algebra, with independent
+        U_c drawn from `measure` (see random_unitary) for every channel and sample.
+        """
+        def generator():
+            mat = torch.zeros(batch_size, self.C, self.k_max, self.k_max,
+                              dtype=self.hilbert.dtype, device=self.hilbert.device)
+            for c, k_c in enumerate(self.k_factors):
+                if k_c > 0:
+                    mat[:, c, :k_c, :k_c] = self.random_unitary(k_c, measure=measure, batch_size=batch_size)
+            return mat
+        op = self.Operator(self, generator=generator)
+        op._is_normal = True
+        op._is_invertible = True
+        return op
+
     def identity(self, batch_size: int = 1) -> Operator:
         def generator():
             matrices = []
@@ -716,7 +744,7 @@ class TypeIAlgebra:
         op._is_self_adjoint = True
         op._is_normal = True
         op._is_positive = True
-        op._is_invertible = False
+        op._is_invertible = True
         op._is_projection = True
         return op
 
@@ -745,7 +773,7 @@ class TypeIAlgebra:
         op._is_self_adjoint = True
         op._is_normal = True
         op._is_positive = all(s >= 0 for s in scalars)
-        op._is_invertible = all(s != 0 for s in scalars) and all(k_c == self.k_max for k_c in self.k_factors)
+        op._is_invertible = all(s != 0 for s, k_c in zip(scalars, self.k_factors) if k_c > 0)
         op._is_projection = all(s == 0 or s == 1 for s in scalars)
         return op
 
