@@ -30,11 +30,14 @@ Eq. (1) now defines C (number of direct summands), n_c (size of the c-th matrix 
 three traces.
 
 **3. Why do NumPy/SciPy, Qiskit, QuTiP etc. not support this?**
-Table 1 compares NumPy/SciPy, QuTiP, Qiskit quantum_info, dynamiqs, QuSpin, ITensor/TeNPy with this
-work feature by feature; the paragraph "What existing software offers" explains that these packages are
-organised around one large state with symmetry as a reduction of the basis, whereas the problems here
-need many moderately sized operators across sectors, with several traces and batched optimisation. It
-also says explicitly that nothing is impossible with NumPy, and Section 8 quantifies the difference
+They can, through the embedding M ⊂ M_N, N = Σ k_c, and the revised Introduction says so (paragraph
+"Why not one large matrix?"). It then lists what the embedding loses and the user has to supply:
+the cost (Σ k_c³ instead of N³, a factor C² for C equal blocks); the measures (the unitary group of M
+is Π U(k_c), a null set in U(N), so Haar sampling and gradient steps in M_N leave M); the C-parameter
+family of traces, on which densities and duals of maps between sectors depend; and the centre, which
+carries the classical (superselected) part of the system. A new paragraph "From a symmetry to the
+algebra" explains why physical models with a symmetry live in an algebra of this form (the commutant
+of the symmetry). Table 1 compares features, and Section 8 quantifies the difference with NumPy/SciPy
 (see Reviewer #2, point 6).
 
 **4. Other applications, e.g. deep learning.**
