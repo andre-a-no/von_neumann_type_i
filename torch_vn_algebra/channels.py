@@ -15,11 +15,13 @@ each of the traces Tr_blunt, Tr_norm and tau_vN.
 The Kraus batch dimension is 1 (one channel for all samples) or equal to the batch of the
 operators it acts on.
 """
+import warnings
 from typing import List, Optional, Sequence
 
 import torch
 
 from .algebra import TypeIAlgebra
+from .states import DensityMatrix
 
 Operator = TypeIAlgebra.Operator
 
@@ -36,6 +38,7 @@ class Channel:
                              f"{algebra.k_max}), got {tuple(kraus.shape)}")
         self.algebra = algebra
         self.kraus = kraus.to(device=algebra.hilbert.device)
+        self._trace_preserving = None
 
     # ------------------------------------------------------------------
     @property
@@ -51,7 +54,11 @@ class Channel:
 
     # ------------------------------------------------------------------
     def apply(self, op: Operator) -> Operator:
-        """Schroedinger picture: rho -> sum_i K_i rho K_i^*."""
+        """
+        Schroedinger picture: rho -> sum_i K_i rho K_i^* (lazy).
+        A DensityMatrix is mapped to a DensityMatrix if the channel is trace preserving;
+        otherwise the result is a plain Operator and a warning is issued.
+        """
         assert op.algebra is self.algebra
         K = self.kraus
 
@@ -61,6 +68,13 @@ class Channel:
             Kd = K.to(dtype)
             return (Kd @ rho.to(dtype) @ Kd.conj().transpose(-2, -1)).sum(dim=1)
 
+        if isinstance(op, DensityMatrix):
+            if self._trace_preserving is None:
+                self._trace_preserving = self.is_trace_preserving()
+            if self._trace_preserving:
+                return DensityMatrix(self.algebra, generator=generator, validate=False)
+            warnings.warn("channel is not trace preserving: the image of a DensityMatrix is "
+                          "returned as an unnormalised Operator", stacklevel=2)
         out = Operator(self.algebra, generator=generator)
         if op._is_self_adjoint:
             out._is_self_adjoint = True

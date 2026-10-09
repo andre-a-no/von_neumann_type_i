@@ -185,6 +185,9 @@ class TypeIAlgebra:
             if not self._is_materialized:
                 self._matrix = self._generator()
                 self._is_materialized = True
+                # drop the recipe: it holds references to the parent operators (and their
+                # cached matrices), which would otherwise stay alive as long as this one
+                self._generator = None
                 self._validate_properties()
                 self._update_memory()
             return self._matrix

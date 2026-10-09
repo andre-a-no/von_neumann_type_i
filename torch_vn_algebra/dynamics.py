@@ -16,6 +16,7 @@ import torch
 
 from .algebra import TypeIAlgebra
 from .channels import Channel
+from .states import DensityMatrix
 
 Operator = TypeIAlgebra.Operator
 OperatorLike = Union[Operator, torch.Tensor]
@@ -81,7 +82,10 @@ def von_neumann(rho0: Operator, H: Operator, times) -> List[Operator]:
                 continue
             U = (V * torch.exp(-1j * t * w.double()).to(V.dtype).unsqueeze(-2)) @ V.conj().transpose(-2, -1)
             mat[:, c, :k_c, :k_c] = U @ rho[:, c, :k_c, :k_c] @ U.conj().transpose(-2, -1)
-        out.append(alg.operator(mat, is_self_adjoint=rho0._is_self_adjoint, is_positive=rho0._is_positive))
+        if isinstance(rho0, DensityMatrix):
+            out.append(DensityMatrix(alg, matrix=mat, validate=False))
+        else:
+            out.append(alg.operator(mat, is_self_adjoint=rho0._is_self_adjoint, is_positive=rho0._is_positive))
     return out
 
 
@@ -179,6 +183,8 @@ def lindblad_evolve(rho0: Operator, H: Optional[OperatorLike], jumps: Sequence[O
         _require_complex(rho0.algebra)
     ys = rk4(lindblad_rhs(H, jumps, rates), rho0.matrix.to(dtype), times, substeps)
     alg = rho0.algebra
+    if isinstance(rho0, DensityMatrix):
+        return [DensityMatrix(alg, matrix=0.5 * (y + y.conj().transpose(-2, -1)), validate=False) for y in ys]
     return [alg.operator(0.5 * (y + y.conj().transpose(-2, -1)), is_self_adjoint=True) for y in ys]
 
 

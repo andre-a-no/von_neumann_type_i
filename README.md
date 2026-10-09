@@ -97,8 +97,13 @@ print((Lt(rho) - rho_t[-1]).frobenius_norm().max())
 |---|---|
 | `Operator` | `apply_function(f)` (spectral theorem), `expm`, `log`, `power`, `eigh`; `alg.operator(tensor)`, `alg.from_blocks([...])` |
 | `channels` | `Channel` (Kraus form: apply, `adjoint` = Heisenberg picture, composition `@`, `mix`, `choi`, `superoperator`, `from_superoperator`, TP / unitality checks); identity, unitary, dephasing, depolarizing, amplitude damping, Lüders measurement, conditional expectation onto the centre, random (Stinespring) and random mixed-unitary channels |
-| `states` | random density matrices (Hilbert–Schmidt, Bures, fixed rank), Gibbs states and partition functions, tracial state, sector probabilities, Born probabilities, Lüders update, entropy, relative entropy, fidelity, trace distance, purity |
+| `states` | `DensityMatrix` (an `Operator` subclass: positive, unit `Tr_blunt`; `expectation`, `mix`, `condition_on`, `density(trace)` / `from_density(..., trace)` for the `Tr_norm` and `tau_vN` conventions; preserved by trace-preserving channels and by the dynamics), random density matrices (Hilbert–Schmidt, Bures, fixed rank), Gibbs states and partition functions, tracial state, sector probabilities, Born probabilities, Lüders update, entropy, relative entropy, fidelity, trace distance, purity |
 | `dynamics` | exact `propagator`, `schrodinger`, `von_neumann`; RK4 `schrodinger_rk4` (time-dependent H), `solve_operator_ode` (any dX/dt = f(t, X) in M), Lindblad `lindblad_evolve`, `lindblad_superoperator`, `lindblad_channel` |
+
+Lazy operators are evaluated once and cached; after that they drop their recipe, so the
+intermediate results of an expression such as `X @ U @ Y` can be garbage-collected. Laziness
+defers and skips work but does not fuse operations; where it matters the library uses direct
+formulas instead (e.g. `Tr(ρA)` in O(k²) via `states.trace_of_product`).
 
 Channels map each sector to itself, so the Heisenberg dual is the same for `Tr_blunt`, `Tr_norm`
 and `tau_vN`, and Hamiltonian / Lindblad dynamics with generators in M conserve the sector

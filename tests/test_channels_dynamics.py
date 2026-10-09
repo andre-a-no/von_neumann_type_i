@@ -282,3 +282,70 @@ class TestDynamics:
         alg = TypeIAlgebra([2], [2], complex_valued=False, device='cpu')
         with pytest.raises(ValueError):
             dy.propagator(random_sa(alg), 1.0)
+
+
+# ----------------------------------------------------------------------
+# DensityMatrix and laziness
+# ----------------------------------------------------------------------
+class TestDensityMatrix:
+    def test_constructors_return_states(self, alg):
+        H = random_sa(alg)
+        for rho in (st.random_density_matrix(alg, B), st.maximally_mixed_state(alg, B),
+                    st.tracial_state(alg, B), st.gibbs_state(H, 1.0)):
+            assert isinstance(rho, st.DensityMatrix)
+            assert close(rho.trace.real, torch.ones(rho.matrix.shape[0]))
+
+    def test_validation(self, alg):
+        bad = 2 * st.maximally_mixed_state(alg, 1).matrix
+        with pytest.raises(ValueError):
+            st.DensityMatrix(alg, matrix=bad)
+        neg = alg.from_blocks([torch.diag(torch.tensor([1.5, -0.5, 0.0])), torch.zeros(4, 4)]).matrix
+        with pytest.raises(ValueError):
+            st.DensityMatrix(alg, matrix=neg)
+
+    def test_type_propagation(self, alg):
+        rho, A = st.random_density_matrix(alg, B), random_sa(alg)
+        assert isinstance(ch.random_channel(alg, 2, B)(rho), st.DensityMatrix)
+        assert isinstance(rho.mix(st.maximally_mixed_state(alg, B), 0.3), st.DensityMatrix)
+        assert not isinstance(rho @ A, st.DensityMatrix)
+        assert not isinstance(rho - rho, st.DensityMatrix)
+        assert isinstance(rho.condition_on(alg.identity(1))[0], st.DensityMatrix)
+
+    def test_non_trace_preserving_channel_warns(self, alg):
+        rho = st.random_density_matrix(alg, B)
+        half = Channel(alg, 0.5 * ch.identity_channel(alg).kraus)
+        with pytest.warns(UserWarning):
+            out = half(rho)
+        assert not isinstance(out, st.DensityMatrix)
+
+    def test_dynamics_keep_states(self, calg):
+        H, rho = random_sa(calg), st.random_density_matrix(calg, B)
+        assert all(isinstance(r, st.DensityMatrix) for r in dy.von_neumann(rho, H, [0.5, 1.0]))
+        assert all(isinstance(r, st.DensityMatrix) for r in dy.lindblad_evolve(rho, H, [], [0.0, 0.5]))
+
+    @pytest.mark.parametrize('trace', ['blunt', 'norm', 'tau_vN'])
+    def test_density_conventions(self, alg, trace):
+        rho, A = st.random_density_matrix(alg, B), random_sa(alg)
+        d = alg.operator(rho.density(trace))
+        assert close(getattr(d @ A, {'blunt': 'Tr_blunt', 'norm': 'Tr_norm', 'tau_vN': 'tau_vN'}[trace])().real,
+                     rho.expectation(A).real)
+        back = st.DensityMatrix.from_density(alg, rho.density(trace), trace=trace)
+        assert close(back.matrix, rho.matrix)
+
+    def test_trace_of_product(self, alg):
+        X, Y = random_sa(alg), random_pos(alg)
+        assert close(st.trace_of_product(X, Y), (X @ Y).trace)
+
+
+def test_materialized_operator_releases_parents():
+    import gc
+    import weakref
+    alg = TypeIAlgebra([4, 4], [4, 4], device='cpu')
+    X, Y = random_sa(alg), random_sa(alg)
+    mid = X @ Y
+    ref = weakref.ref(mid)
+    Z = mid @ X
+    del mid
+    Z.matrix
+    gc.collect()
+    assert ref() is None
