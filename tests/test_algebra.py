@@ -286,7 +286,8 @@ class TestThreeTraces:
 
     def test_tau_vN_identity(self, basic_algebra):
         op = basic_algebra.identity(batch_size=2)
-        assert torch.allclose(op.tau_vN(), torch.tensor(1.0))
+        assert torch.allclose(op.tau_vN().real, torch.tensor(1.0))
+        assert torch.is_complex(op.tau_vN())   # traces live in the field of the algebra
 
 
 # ============================================================================

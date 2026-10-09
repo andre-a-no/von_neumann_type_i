@@ -169,6 +169,40 @@ record['spontaneous_emission'] = dict(max_error_exp_tL=err_exp, max_error_rk4=er
 print(f"spontaneous emission: max error exp(tL) {err_exp:.1e}, RK4 {err_rk:.1e}")
 
 # ----------------------------------------------------------------------------------------------
+# 7. The three trace functionals (identities that hold exactly)
+# ----------------------------------------------------------------------------------------------
+alg = TypeIAlgebra([2, 3, 5], [2, 3, 5], precision='double', device=dev)
+Bt = 2000
+def rand_op():
+    m = torch.zeros(Bt, alg.C, alg.k_max, alg.k_max, dtype=alg.dtype, device=dev)
+    for c, k in enumerate(alg.k_factors):
+        m[:, c, :k, :k] = torch.randn(Bt, k, k, dtype=alg.dtype, device=dev)
+    return alg.operator(m)
+A, Bop = rand_op(), rand_op()
+U = alg.random_unitary_operator(Bt)
+one = alg.identity(1)
+k = torch.tensor(alg.k_factors, dtype=torch.float64)
+trace_checks = []
+for name, f in (('Tr_blunt', lambda X: X.Tr_blunt()), ('Tr_norm', lambda X: X.Tr_norm()),
+                ('tau_vN', lambda X: X.tau_vN())):
+    norm1 = {'Tr_blunt': float(k.sum()), 'Tr_norm': float(alg.C), 'tau_vN': 1.0}[name]
+    def val(X):
+        return f(X)
+
+    def cmp(a, b):
+        return (a - b).abs().max().item()
+    unit = abs(val(one).real.item() - norm1)
+    tracial = cmp(val(A @ Bop), val(Bop @ A))
+    unitary = cmp(val(U @ A @ U.adjoint()), val(A))
+    positive = (val(A.adjoint() @ A).real / (A.frobenius_norm() ** 2 + 1e-300)).min().item()
+    trace_checks.append(dict(trace=name, unit=unit, tracial=tracial, unitary_invariance=unitary,
+                             min_positivity_ratio=positive))
+    print(f"{name:9s}: f(1) error {unit:.1e}, |f(AB)-f(BA)| {tracial:.1e}, |f(UAU*)-f(A)| {unitary:.1e}, "
+          f"min f(A*A)/||A||_F^2 = {positive:.3f} > 0")
+rel = (A.Tr_norm() - alg.C * A.tau_vN()).abs().max().item()
+record['trace_functionals'] = dict(checks=trace_checks, Tr_norm_equals_C_tau=rel)
+
+# ----------------------------------------------------------------------------------------------
 # Output
 # ----------------------------------------------------------------------------------------------
 save_json(args, 'validation', record)
@@ -180,6 +214,13 @@ tex += f"\\newcommand{{\\ValNPage}}{{{n_page}}}\n"
 for beta in (1, 2, 4):
     name = {1: 'One', 2: 'Two', 4: 'Four'}[beta]
     tex += f"\\newcommand{{\\ValLone{name}}}{{{record['spacing_l1'][beta]:.3f}}}\n"
+tex += "\\newcommand{\\ValTraceRows}{%\n"
+for tc in trace_checks:
+    nm = {'Tr_blunt': '$\\Tr_{\\mathrm{blunt}}$', 'Tr_norm': '$\\Tr_{\\mathrm{norm}}$',
+          'tau_vN': '$\\tau_{\\mathrm{vN}}$'}[tc['trace']]
+    tex += (f"{nm} & ${sci(max(tc['unit'], 1e-300)) if tc['unit'] else '0'}$ & ${sci(tc['tracial'])}$ "
+            f"& ${sci(tc['unitary_invariance'])}$ & {tc['min_positivity_ratio']:.3f} \\\\\n")
+tex += "}\n"
 tex += "\\newcommand{\\ValidationRows}{%\n"
 labels = {
     'E|U_11|^4, U(n)': r'$\mathbb E|U_{11}|^4$, $U(n)$',

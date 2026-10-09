@@ -23,8 +23,15 @@ def parse_args(description):
     p.add_argument('--seed', type=int, default=0)
     p.add_argument('--out', default=str(PAPER / 'generated'), help='directory for generated .tex/.json')
     p.add_argument('--figdir', default=str(PAPER / 'figures'))
+    p.add_argument('--tf32', action='store_true',
+                   help='allow TF32 tensor-core matmuls for float32 on Ampere+ GPUs (default: full FP32)')
     args = p.parse_args()
     torch.manual_seed(args.seed)
+    # float32 matrix products: 'highest' = true FP32; 'high' lets cuBLAS use TF32 tensor cores
+    # (10-bit mantissa) on A100/H100/B200, faster but only ~1e-3 relative accuracy
+    torch.set_float32_matmul_precision('high' if args.tf32 else 'highest')
+    torch.backends.cuda.matmul.allow_tf32 = bool(args.tf32)
+    torch.backends.cudnn.allow_tf32 = bool(args.tf32)
     Path(args.out).mkdir(parents=True, exist_ok=True)
     Path(args.figdir).mkdir(parents=True, exist_ok=True)
     return args
@@ -32,9 +39,13 @@ def parse_args(description):
 
 def environment(device):
     info = {'torch': torch.__version__, 'python': platform.python_version(), 'device': str(device),
-            'date': time.strftime('%Y-%m-%d')}
+            'date': time.strftime('%Y-%m-%d'), 'float32_matmul_precision': torch.get_float32_matmul_precision()}
+    if torch.cuda.is_available():
+        info['cuda'] = torch.version.cuda
+        info['cudnn'] = torch.backends.cudnn.version()
     if str(device).startswith('cuda'):
         info['gpu'] = torch.cuda.get_device_name(torch.device(device))
+        info['compute_capability'] = '.'.join(map(str, torch.cuda.get_device_capability(torch.device(device))))
     else:
         info['cpu'] = platform.processor() or platform.machine()
         info['threads'] = torch.get_num_threads()
@@ -57,7 +68,8 @@ def env_macro(args, prefix):
     hw = e.get('gpu') or f"CPU ({e.get('threads')} threads)"
     return (f"\\newcommand{{\\{prefix}Device}}{{{hw}}}\n"
             f"\\newcommand{{\\{prefix}Mode}}{{{args.mode}}}\n"
-            f"\\newcommand{{\\{prefix}Torch}}{{{e['torch']}}}\n")
+            f"\\newcommand{{\\{prefix}Torch}}{{{e['torch']}}}\n"
+            f"\\newcommand{{\\{prefix}Matmul}}{{{'TF32' if e['float32_matmul_precision'] != 'highest' else 'FP32'}}}\n")
 
 
 def sync(device):

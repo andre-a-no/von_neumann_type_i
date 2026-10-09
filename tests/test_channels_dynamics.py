@@ -197,7 +197,7 @@ class TestStates:
 
     def test_tracial_state_reproduces_tau(self, alg):
         A = random_sa(alg)
-        assert close(st.expectation(st.tracial_state(alg, B), A).real, A.tau_vN())
+        assert close(st.expectation(st.tracial_state(alg, B), A).real, A.tau_vN().real)
 
     def test_entropy_and_distances(self, alg):
         rho, sigma = st.random_density_matrix(alg, B), st.random_density_matrix(alg, B)

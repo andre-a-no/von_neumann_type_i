@@ -217,11 +217,38 @@
     "max_error_exp_tL": 2.220446049250313e-16,
     "max_error_rk4": 2.0706712164364482e-08
   },
+  "trace_functionals": {
+    "checks": [
+      {
+        "trace": "Tr_blunt",
+        "unit": 0.0,
+        "tracial": 3.972054645195637e-15,
+        "unitary_invariance": 7.084580093039168e-15,
+        "min_positivity_ratio": 0.9999999999999994
+      },
+      {
+        "trace": "Tr_norm",
+        "unit": 0.0,
+        "tracial": 8.881784197001252e-16,
+        "unitary_invariance": 1.5543122344752192e-15,
+        "min_positivity_ratio": 0.22252340354756556
+      },
+      {
+        "trace": "tau_vN",
+        "unit": 0.0,
+        "tracial": 4.440892098500626e-16,
+        "unitary_invariance": 5.178149575790769e-16,
+        "min_positivity_ratio": 0.07417446784918853
+      }
+    ],
+    "Tr_norm_equals_C_tau": 2.220446049250313e-16
+  },
   "environment": {
     "torch": "2.14.1+cu130",
     "python": "3.13.16",
     "device": "cpu",
     "date": "2026-10-09",
+    "float32_matmul_precision": "highest",
     "cpu": "x86_64",
     "threads": 4
   },

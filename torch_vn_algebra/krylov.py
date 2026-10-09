@@ -48,7 +48,10 @@ class SparseSectorHamiltonian:
         if self.offdiag is None:
             return None
         if dtype not in self._csr:
-            self._csr[dtype] = self.offdiag.to(dtype).coalesce()
+            # CSR is ~20x faster than COO for sparse @ dense on CPU (PyTorch 2.x); silence its beta warning
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                self._csr[dtype] = self.offdiag.to(dtype).coalesce().to_sparse_csr()
         return self._csr[dtype]
 
     def matvec(self, V: torch.Tensor) -> torch.Tensor:
@@ -60,7 +63,7 @@ class SparseSectorHamiltonian:
         A = self._off(V.dtype)
         if A is not None:
             B, k, m = V.shape
-            AV = torch.sparse.mm(A, V.permute(1, 0, 2).reshape(k, B * m)).reshape(k, B, m).permute(1, 0, 2)
+            AV = (A @ V.permute(1, 0, 2).reshape(k, B * m)).reshape(k, B, m).permute(1, 0, 2)
             out = out + AV
         return out.squeeze(-1) if squeeze else out
 

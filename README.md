@@ -58,8 +58,8 @@ X = alg.operator_from_eigenvalues(lambda dim: torch.rand(100, dim, device=device
                                   batch_size=100, force_positive=True, force_self_adjoint=True)
 
 print(X.Tr_blunt().real.mean())            # sum of block traces
-print(X.Tr_norm().mean())                  # sum of normalised block traces
-print(X.tau_vN().mean())                   # tracial state (1/C) sum_c Tr(A_c)/k_c
+print(X.Tr_norm().real.mean())             # sum of normalised block traces
+print(X.tau_vN().real.mean())              # tracial state (1/C) sum_c Tr(A_c)/k_c (complex in general)
 print(X.michelson_contrast.mean())         # (lmax - lmin)/(lmax + lmin), shape (100,)
 
 # operations stay lazy until .matrix or a scalar functional is requested

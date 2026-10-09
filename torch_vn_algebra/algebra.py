@@ -716,29 +716,24 @@ class TypeIAlgebra:
             op._is_positive = True
             return op
 
+        def _weighted_trace(self, weights) -> torch.Tensor:
+            """sum_c w_c Tr(A_c), in the number field of the algebra (complex for complex algebras)."""
+            tr_c = torch.diagonal(self.matrix, dim1=-2, dim2=-1).sum(-1)          # (batch, C), padding = 0
+            w = torch.tensor(weights, dtype=self.matrix.real.dtype, device=self.matrix.device)
+            return (tr_c * w).sum(-1)
+
         def Tr_blunt(self) -> torch.Tensor:
-            return self.trace
+            """sum_c Tr(A_c)."""
+            return self._weighted_trace([1.0] * self.algebra.C)
 
         def Tr_norm(self, basis=None) -> torch.Tensor:
-            mat = self.matrix
-            total = torch.zeros(mat.shape[0], dtype=mat.real.dtype, device=mat.device)
-            for c, k_c in enumerate(self.algebra.k_factors):
-                if k_c > 0:
-                    block = mat[:, c, :k_c, :k_c]
-                    tr_c = torch.diagonal(block, dim1=-2, dim2=-1).sum(-1).real
-                    total += tr_c / k_c
-            return total
+            """sum_c Tr(A_c) / k_c (normalised trace of every factor, summed)."""
+            return self._weighted_trace([1.0 / k if k else 0.0 for k in self.algebra.k_factors])
 
         def tau_vN(self) -> torch.Tensor:
-            mat = self.matrix
-            B = mat.shape[0]
-            total = torch.zeros(B, dtype=mat.real.dtype, device=mat.device)
-            for c, k_c in enumerate(self.algebra.k_factors):
-                if k_c > 0:
-                    block = mat[:, c, :k_c, :k_c]
-                    tr_c = torch.diagonal(block, dim1=-2, dim2=-1).sum(-1).real
-                    total = total + tr_c / k_c
-            return total / self.algebra.C
+            """(1/C) sum_c Tr(A_c) / k_c: the faithful normal tracial state with equal sector weights."""
+            C = self.algebra.C
+            return self._weighted_trace([1.0 / (C * k) if k else 0.0 for k in self.algebra.k_factors])
 
         def __repr__(self) -> str:
             if not self._is_materialized:   # do not trigger materialisation
