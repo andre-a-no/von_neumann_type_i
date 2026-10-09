@@ -137,6 +137,16 @@ convolution, a trace inequality, unitary ensembles, a Zipf density matrix, decoh
 superselection sectors, the Michelson contrast under unital and non-unital channels, and the
 spectral form factor of GUE vs. Poisson Hamiltonians.
 
+## Physics background
+
+[Physics for mathematicians](docs/physics_for_mathematicians.md) explains the physical models used in the
+library (superselection, open systems, spin chains, quantum circuits, random matrices) in the language of
+the algebra ⊕_c M_{k_c}(C), with pointers to the corresponding functions.
+Translations: [Español](docs/physics_for_mathematicians.es.md) · [Français](docs/physics_for_mathematicians.fr.md) ·
+[Deutsch](docs/physics_for_mathematicians.de.md) · [中文](docs/physics_for_mathematicians.zh.md) ·
+[日本語](docs/physics_for_mathematicians.ja.md) · [Русский](docs/physics_for_mathematicians.ru.md).
+The English version is authoritative.
+
 ## Reproducing the paper
 
 | Script | What it does |
