@@ -68,12 +68,50 @@ Z = X.sqrt() @ U @ X.sqrt()
 print(Z.trace_norm().mean(), X.entropy().mean())
 ```
 
+### Channels, states and dynamics
+
+```python
+import torch
+from torch_vn_algebra import TypeIAlgebra, channels, dynamics, states
+
+alg = TypeIAlgebra([4, 4], [4, 4], complex_valued=True)          # two superselection sectors
+rho = states.random_density_matrix(alg, batch_size=100)            # HS-random states on M
+H = alg.operator_from_eigenvalues(lambda d: torch.randn(100, d), batch_size=100,
+                                  force_self_adjoint=True)
+
+Phi = channels.random_channel(alg, kraus_rank=2, batch_size=100)   # Haar Stinespring isometry
+print(Phi.is_trace_preserving(), Phi.is_unital())
+print(states.relative_entropy(Phi(rho), Phi(states.gibbs_state(H, 1.0))))
+
+psi0 = torch.zeros(100, 2, 4, dtype=torch.complex64)               # state vectors, block layout
+psi0[:, 0, 0] = 1.0
+psi_t = dynamics.schrodinger(psi0, H, times=[0.0, 1.0, 2.0])       # exact, shape (3, 100, 2, 4)
+
+N = alg.from_blocks([torch.diag(torch.arange(4.0))] * 2)           # dephasing jump operator
+rho_t = dynamics.lindblad_evolve(rho, H, jumps=[N], times=[0, 1, 2])  # RK4, list of states
+Lt = dynamics.lindblad_channel(alg, H, jumps=[N], t=2.0)            # exact exp(tL) as a Channel
+print((Lt(rho) - rho_t[-1]).frobenius_norm().max())
+```
+
+| Module | Contents |
+|---|---|
+| `Operator` | `apply_function(f)` (spectral theorem), `expm`, `log`, `power`, `eigh`; `alg.operator(tensor)`, `alg.from_blocks([...])` |
+| `channels` | `Channel` (Kraus form: apply, `adjoint` = Heisenberg picture, composition `@`, `mix`, `choi`, `superoperator`, `from_superoperator`, TP / unitality checks); identity, unitary, dephasing, depolarizing, amplitude damping, Lüders measurement, conditional expectation onto the centre, random (Stinespring) and random mixed-unitary channels |
+| `states` | random density matrices (Hilbert–Schmidt, Bures, fixed rank), Gibbs states and partition functions, tracial state, sector probabilities, Born probabilities, Lüders update, entropy, relative entropy, fidelity, trace distance, purity |
+| `dynamics` | exact `propagator`, `schrodinger`, `von_neumann`; RK4 `schrodinger_rk4` (time-dependent H), `solve_operator_ode` (any dX/dt = f(t, X) in M), Lindblad `lindblad_evolve`, `lindblad_superoperator`, `lindblad_channel` |
+
+Channels map each sector to itself, so the Heisenberg dual is the same for `Tr_blunt`, `Tr_norm`
+and `tau_vN`, and Hamiltonian / Lindblad dynamics with generators in M conserve the sector
+probabilities `Tr rho_c`. Unitary dynamics requires `complex_valued=True`.
+
 `complex_valued=False` gives real algebras (orthogonal instead of unitary groups). Each
 `force_*` flag (`self_adjoint`, `positive`, `normal`, `invertible`, `projection`) both tags the
 operator and checks the property when the matrix is materialised.
 
 More in [`examples/`](examples): random Hamiltonian with a parity symmetry, free additive
-convolution, a trace inequality, unitary ensembles, a Zipf density matrix.
+convolution, a trace inequality, unitary ensembles, a Zipf density matrix, decoherence inside
+superselection sectors, the Michelson contrast under unital and non-unital channels, and the
+spectral form factor of GUE vs. Poisson Hamiltonians.
 
 ## Reproducing the paper
 
@@ -96,7 +134,8 @@ Stored outputs live in [`results/`](results): `results/experiments/` (current co
 ## Repository layout
 
 ```
-torch_vn_algebra/    library: algebra.py (TypeIAlgebra, Operator), hilbert_space.py
+torch_vn_algebra/    library: algebra.py (TypeIAlgebra, Operator), hilbert_space.py,
+                     channels.py, states.py, dynamics.py
 tests/               pytest suite (CPU, runs in CI)
 examples/            short usage examples
 scripts/             validation, experiments and benchmarks from the paper
@@ -116,6 +155,10 @@ pytest -q
 - Power iteration (blocks above `exact_eig_max_dim`) converges linearly in the spectral gap and
   can fail when the dominant eigenvalues are ±λ; its stopping rule is on the change of the
   estimate, not on the error.
+- Channels and generators must preserve the sectors (map every block to itself); maps between
+  different sectors are not supported yet.
+- `lindblad_channel`, `choi` and `superoperator` work with k_c² × k_c² matrices per block, which
+  limits them to blocks of a few tens; use `lindblad_evolve` for larger blocks.
 - No automatic differentiation guarantees, finite dimensions and Type I only.
 
 ## Citation

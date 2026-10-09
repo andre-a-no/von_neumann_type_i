@@ -554,8 +554,92 @@ class TypeIAlgebra:
 
         __rmul__ = __mul__
 
+        def __sub__(self, other: 'TypeIAlgebra.Operator') -> 'TypeIAlgebra.Operator':
+            assert self.algebra is other.algebra
+            return TypeIAlgebra.Operator(self.algebra, generator=lambda: self.matrix - other.matrix)
+
+        def __neg__(self) -> 'TypeIAlgebra.Operator':
+            return TypeIAlgebra.Operator(self.algebra, generator=lambda: -self.matrix)
+
         def adjoint(self) -> 'TypeIAlgebra.Operator':
             return TypeIAlgebra.Operator(self.algebra, generator=lambda: self.matrix.conj().transpose(-2, -1))
+
+        # ----- general functional calculus (spectral theorem, block by block) -----
+        def eigh(self) -> List[Tuple[torch.Tensor, torch.Tensor]]:
+            """
+            Spectral decomposition of a self-adjoint operator, one entry per channel:
+            (eigenvalues (batch, k_c), eigenvectors (batch, k_c, k_c)), A_c = V diag(w) V*.
+            Channels with k_c = 0 give empty tensors.
+            """
+            if not self.is_self_adjoint:
+                raise RuntimeError("eigh requires a self-adjoint operator")
+            mat = self.matrix
+            out = []
+            for c, k_c in enumerate(self.algebra.k_factors):
+                out.append(torch.linalg.eigh(mat[:, c, :k_c, :k_c]))
+            return out
+
+        def apply_function(self, f: Callable[[torch.Tensor], torch.Tensor]) -> 'TypeIAlgebra.Operator':
+            """
+            f(A) for self-adjoint A via the spectral theorem: f(A)_c = V_c f(w_c) V_c*.
+            `f` maps a real tensor of eigenvalues (batch, k_c) to a tensor of the same shape;
+            a complex-valued f (e.g. exp(-i t w)) requires a complex algebra.
+            """
+            alg = self.algebra
+
+            def generator():
+                blocks = self.eigh()
+                out = torch.zeros_like(self.matrix)
+                for c, (w, V) in enumerate(blocks):
+                    k_c = alg.k_factors[c]
+                    if k_c == 0:
+                        continue
+                    fw = f(w)
+                    if torch.is_complex(fw) and not torch.is_complex(out):
+                        if torch.any(fw.imag != 0):
+                            raise ValueError("complex-valued f(A) requires a complex-valued algebra")
+                        fw = fw.real
+                    fw = fw.to(V.dtype)
+                    out[:, c, :k_c, :k_c] = (V * fw.unsqueeze(-2)) @ V.conj().transpose(-2, -1)
+                return out
+            return TypeIAlgebra.Operator(alg, generator=generator)
+
+        def expm(self, scale: Union[float, complex] = 1.0) -> 'TypeIAlgebra.Operator':
+            """exp(scale * A) for any operator (torch.linalg.matrix_exp on each active block)."""
+            alg = self.algebra
+            if isinstance(scale, complex) and not alg.hilbert.complex_valued:
+                raise ValueError("complex scale requires a complex-valued algebra")
+
+            def generator():
+                mat = self.matrix
+                out = torch.zeros_like(mat)
+                for c, k_c in enumerate(alg.k_factors):
+                    if k_c > 0:
+                        out[:, c, :k_c, :k_c] = torch.linalg.matrix_exp(scale * mat[:, c, :k_c, :k_c])
+                return out
+            return TypeIAlgebra.Operator(alg, generator=generator)
+
+        def log(self, eps: float = 1e-12) -> 'TypeIAlgebra.Operator':
+            """log(A) of a positive operator; eigenvalues are clamped to eps."""
+            if not self.is_positive:
+                raise RuntimeError("log requires a positive operator")
+            op = self.apply_function(lambda w: torch.log(torch.clamp(w, min=eps)))
+            op._is_self_adjoint = True
+            return op
+
+        def power(self, p: float) -> 'TypeIAlgebra.Operator':
+            """A^p of a positive operator (negative p: on the support only)."""
+            if not self.is_positive:
+                raise RuntimeError("power requires a positive operator")
+            def f(w):
+                w = torch.clamp(w, min=0.0)
+                if p >= 0:
+                    return w ** p
+                return torch.where(w > 1e-12, torch.clamp(w, min=1e-12) ** p, torch.zeros_like(w))
+            op = self.apply_function(f)
+            op._is_self_adjoint = True
+            op._is_positive = True
+            return op
 
         def Tr_blunt(self) -> torch.Tensor:
             return self.trace
@@ -714,6 +798,27 @@ class TypeIAlgebra:
         op._is_invertible = inferred_invertible
         op._is_projection = inferred_projection
         return op
+
+    def operator(self, matrix: torch.Tensor, **properties) -> Operator:
+        """
+        Wrap a tensor of shape (batch, C, k_max, k_max) as an operator of this algebra.
+        Keyword arguments (is_self_adjoint, is_positive, ...) tag known properties.
+        """
+        expected = (self.C, self.k_max, self.k_max)
+        if tuple(matrix.shape[1:]) != expected:
+            raise ValueError(f"expected shape (batch, {self.C}, {self.k_max}, {self.k_max}), got {tuple(matrix.shape)}")
+        return self.Operator(self, matrix=matrix.to(device=self.hilbert.device), **properties)
+
+    def from_blocks(self, blocks: List[torch.Tensor]) -> Operator:
+        """Operator from a list of C blocks of shape (batch, k_c, k_c) (or (k_c, k_c))."""
+        assert len(blocks) == self.C
+        blocks = [b if b.dim() == 3 else b.unsqueeze(0) for b in blocks]
+        batch = max(b.shape[0] for b in blocks)
+        mat = torch.zeros(batch, self.C, self.k_max, self.k_max, dtype=self.hilbert.dtype, device=self.hilbert.device)
+        for c, (b, k_c) in enumerate(zip(blocks, self.k_factors)):
+            assert b.shape[-1] == k_c, f"block {c} has size {b.shape[-1]}, expected {k_c}"
+            mat[:, c, :k_c, :k_c] = b.to(mat.dtype)
+        return self.Operator(self, matrix=mat)
 
     def random_unitary_operator(self, batch_size: int = 1, measure: str = 'haar') -> Operator:
         """
