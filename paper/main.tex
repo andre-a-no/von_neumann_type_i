@@ -1,0 +1,635 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{subcaption}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{hyperref}
+
+\graphicspath{{../results/experiments/}{../results/benchmark/}}
+
+\newtheorem{proposition}{Proposition}
+\DeclareMathOperator{\Tr}{Tr}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\M}{\mathcal{M}}
+
+\lstset{language=Python, basicstyle=\ttfamily\small, numbers=left, numberstyle=\tiny,
+        frame=single, breaklines=true, columns=fullflexible, keepspaces=true}
+
+\title{Finite-Dimensional Type I von Neumann Algebras in PyTorch:\\
+A GPU-Accelerated Framework for Random Block-Diagonal Operators}
+\author{Irina Nikolaeva \and Andrej Novikov}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We present \texttt{torch\_vn\_algebra}, an open-source Python library built on PyTorch for
+numerical experiments with finite-dimensional Type~I von Neumann algebras (direct sums of matrix
+algebras). The library provides:
+\begin{itemize}
+\item a compact batched tensor representation $(B, C, k_{\max}, k_{\max})$ that handles both Monte
+      Carlo samples and multiple direct summands;
+\item lazy evaluation of operators to avoid unnecessary memory allocation;
+\item generation of random operators with arbitrary eigenvalue distributions (user-provided
+      samplers) and several unitary ensembles (Haar on $U(n)$ and $O(n)$, $SU(n)$ and $SO(n)$,
+      COE, CSE, diagonal phases);
+\item functional calculus via SVD (absolute value, square root, inverse, entropy) and a hybrid
+      method for extreme eigenvalues (exact diagonalisation for blocks of size $k_c\le 256$,
+      otherwise shifted power iteration);
+\item three trace functionals (blunt, normalised subspace trace, and the von Neumann tracial
+      state);
+\item GPU-accelerated batched linear algebra for moderate-scale Monte Carlo studies (e.g.\
+      $2\times 10^4$ samples of operators with up to 32 blocks).
+\end{itemize}
+The library is validated against analytical expectations (Haar moments, trace properties).
+Performance benchmarks on a Tesla P100 GPU are presented and discussed, and three Monte Carlo
+experiments on trace inequalities are reported. Limitations and future work are outlined. The
+code is open-source.
+\end{abstract}
+
+\section{Introduction}
+
+Finite-dimensional Type I von Neumann algebras,
+\[
+  \M = \bigoplus_{c=1}^{C} M_{n_c}(\C),
+\]
+naturally appear in quantum mechanics with superselection rules, decoherence, and in random
+matrix theory when symmetries or constraints force operators into block-diagonal form. Monte
+Carlo simulations of such systems -- averaging over many random operators with controlled
+spectral properties -- require efficient numerical tools that can exploit modern hardware.
+General-purpose libraries (NumPy/SciPy, QuTiP, Qiskit) do not provide a native batched
+representation of block-diagonal (direct-sum) operators together with arbitrary prescribed
+spectra and GPU execution.
+
+\texttt{torch\_vn\_algebra} fills this gap by combining a compact tensor representation that
+batches both Monte Carlo samples and direct summands with padding to a common $k_{\max}$; lazy
+evaluation (operators are built from generators and materialised only when needed); flexible
+random operators (any eigenvalue distribution via a user callable) with several unitary
+ensembles; batched functional calculus with hybrid eigenvalue extraction; three trace
+functionals $\Tr_{\mathrm{blunt}}$, $\Tr_{\mathrm{norm}}$ and the von Neumann tracial state
+$\tau_{\mathrm{vN}}$; and full integration with PyTorch's GPU backend.
+
+The library builds upon the theoretical framework developed in~\cite{abed2024,novikov2020},
+where the Michelson contrast was generalised to operators in von Neumann algebras. The present
+work provides a scalable GPU implementation of these concepts for Monte Carlo studies.
+
+The paper is organised as follows. Section~\ref{sec:background} recalls necessary definitions.
+Section~\ref{sec:implementation} describes the implementation. Section~\ref{sec:benchmarks}
+presents validation and performance benchmarks. Section~\ref{sec:experiments} gives Monte Carlo
+experiments. Section~\ref{sec:limitations} discusses limitations and future work.
+Section~\ref{sec:conclusion} concludes.
+
+\section{Mathematical background}\label{sec:background}
+
+A finite-dimensional Type I von Neumann algebra is $\M = \bigoplus_{c=1}^{C} M_{n_c}(\C)$ acting
+on $\mathcal H = \bigoplus_{c=1}^{C} \C^{k_c}$ with $k_c \le n_c$. Operators are block-diagonal:
+$A = \bigoplus_c A_c$. Three trace functionals are relevant:
+\[
+  \Tr_{\mathrm{blunt}}(A) = \sum_{c=1}^{C} \Tr(A_c), \qquad
+  \Tr_{\mathrm{norm}}(A) = \sum_{c=1}^{C} \frac{1}{k_c}\Tr\bigl(A_c^{(k_c)}\bigr), \qquad
+  \tau_{\mathrm{vN}}(A) = \frac{1}{C}\sum_{c=1}^{C} \frac{1}{k_c}\Tr\bigl(A_c^{(k_c)}\bigr),
+\]
+where $A_c^{(k_c)}$ is the restriction of $A_c$ to the $k_c$-dimensional subspace.
+$\tau_{\mathrm{vN}}$ is a faithful normal tracial state. For $A\in\M$ we write
+$|A| = (A^*A)^{1/2}$. For a density matrix $\rho$ ($\rho\ge 0$, $\Tr\rho = 1$), the von Neumann
+entropy is $S(\rho) = -\Tr(\rho\log\rho)$. For a positive operator $A$, define its Michelson
+contrast as
+\[
+  \Delta(A) = \frac{\lambda_{\max}(A) - \lambda_{\min}(A)}{\lambda_{\max}(A) + \lambda_{\min}(A)},
+\]
+where the extreme eigenvalues are taken over the whole algebra, i.e.\ over all blocks.
+$\Delta(A)\in[0,1]$, and $\Delta(A) = 0$ if and only if $A$ is a scalar multiple of the
+identity.
+
+The theory of noncommutative integration associates to a von Neumann algebra $\M$ equipped with
+a faithful normal trace $\tau$ a family of noncommutative $L^p$-spaces. In the
+finite-dimensional Type I case, the $L^1$-space is simply $\M$ with the norm
+$\|A\|_1 = \tau(|A|)$. For a positive operator $X$ affiliated with $\M$, one can define its
+$L^1$-norm as $\tau(X)$ when finite~\cite{novikov2017}.
+
+\section{Implementation}\label{sec:implementation}
+
+Operators are stored as a 4-D tensor $(B, C, k_{\max}, k_{\max})$ with the active block of size
+$k_c\times k_c$ in the top-left corner; the remaining entries are zero padding. The
+\texttt{Operator} class uses lazy generation: the matrix is materialised only when accessed.
+The auxiliary class \texttt{HilbertSpace} provides inner product, norm, and orthonormal bases
+(standard, random, Haar), supporting embedding and restriction of vectors and operators.
+
+\paragraph{Random operators.} Random operator generation is performed via
+\texttt{operator\_from\_eigenvalues}. The user supplies a callable
+\texttt{eigenvalue\_sampler(dim)} returning either one spectrum of length \texttt{dim} or a
+batch of spectra of shape $(B, \mathtt{dim})$. For each channel a batch of random unitaries $U$ is
+drawn from the chosen ensemble and $A_c = U\,\mathrm{diag}(\lambda)\,U^*$ is formed (and
+symmetrised when the spectrum is real). Properties (self-adjointness, positivity, etc.) are
+inferred from the spectrum; forced properties are validated when the matrix is materialised,
+with tolerances relative to the working precision.
+
+\paragraph{Unitary ensembles.} Haar-distributed unitaries are sampled by the QR decomposition of
+a Ginibre matrix with i.i.d.\ circular complex (or real) standard Gaussian entries, followed by
+fixing the phases of the diagonal of $R$~\cite{mezzadri2007}. $SU(n)$ is obtained by multiplying a
+Haar unitary by $\det(U)^{-1/n}$ and $SO(n)$ by flipping the sign of one column when
+$\det = -1$; both maps push Haar measure forward to Haar measure. The circular orthogonal and
+symplectic ensembles are $S = W^{T} W$ and $S = W^{R} W$, $W^{R} = J W^{T} J^{T}$, with $W$ Haar
+on $U(n)$~\cite{mehta2004}. All samplers are batched.
+
+\paragraph{Extreme eigenvalues.} For self-adjoint operators, $\lambda_{\max}$ and
+$\lambda_{\min}$ are obtained by exact diagonalisation (\texttt{torch.linalg.eigvalsh}) when all
+blocks satisfy $k_c\le 256$ (threshold \texttt{exact\_eig\_max\_dim}). For larger blocks a
+two-stage power iteration is used in double precision: first the eigenvalue $\mu$ of largest
+modulus is found, then the dominant eigenvalue of $\mu I - A$, which gives the opposite end of
+the spectrum (at most 5000 iterations, stopping when the Rayleigh quotient changes by less than
+$10^{-12}$). The operator norm uses a shorter single-precision power iteration on $A^*A$ (at
+most 100 iterations, tolerance $10^{-8}$).
+
+\paragraph{Functional calculus and traces.} $|A|$, $\sqrt{A}$ (for $A\ge 0$), the
+(pseudo-)inverse $A^{-1}$ and $\Tr(A\log A)$ are computed via batched SVD,
+$A = W\Sigma V^*$, $|A| = V\Sigma V^*$. The three traces are implemented as
+\texttt{Tr\_blunt}, \texttt{Tr\_norm} and \texttt{tau\_vN}; the Michelson contrast
+\texttt{michelson\_contrast} returns $\Delta(A)$ for every sample of the batch.
+
+\section{Validation and performance benchmarks}\label{sec:benchmarks}
+
+\subsection{Validation}
+
+All validation runs are reproduced by \texttt{scripts/validation.py}.
+
+\paragraph{Haar measure.} For $U$ Haar-distributed on $U(n)$ one has
+$\mathbb E|U_{11}|^2 = 1/n$ and, by invariance under $U\mapsto e^{i\varphi}U$,
+$\mathbb E[U_{11}^2] = 0$. The second identity fails for non-circular Gaussian input and is
+therefore a useful check of the sampler. Table~\ref{tab:haar} shows the results for
+$n = 2,4,8,16,32$ using $10\,000$ samples generated by the library. All relative errors are
+within about two standard errors of the mean.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{rrrrr}
+\toprule
+$n$ & $1/n$ & relative error of $\mathbb E|U_{11}|^2$ & relative standard error & $|\mathbb E[U_{11}^2]|$\\
+\midrule
+2  & 0.5     & $9.3\times10^{-4}$ & $5.8\times10^{-3}$ & $3.3\times10^{-3}$\\
+4  & 0.25    & $5.1\times10^{-3}$ & $7.8\times10^{-3}$ & $3.5\times10^{-3}$\\
+8  & 0.125   & $4.7\times10^{-3}$ & $8.9\times10^{-3}$ & $6.6\times10^{-4}$\\
+16 & 0.0625  & $1.9\times10^{-2}$ & $9.4\times10^{-3}$ & $3.0\times10^{-4}$\\
+32 & 0.03125 & $2.0\times10^{-2}$ & $9.6\times10^{-3}$ & $2.7\times10^{-4}$\\
+\bottomrule
+\end{tabular}
+\caption{Haar measure on $U(n)$, $10\,000$ samples.}
+\label{tab:haar}
+\end{table}
+
+\paragraph{Power iteration.} For a $3\times3$ matrix with eigenvalues $[1.0, 0.99, 0.98]$
+(gap $0.01$), the power iteration needed $699$ iterations before successive Rayleigh quotients
+differed by less than $10^{-8}$, compared to $15$ iterations for the well-separated spectrum
+$[2, 1, 0.5]$. Note that for the small gap the actual error at that point was
+$4.9\times10^{-7}$, i.e.\ a stopping rule on successive differences overestimates the accuracy
+when the gap is small. This is why the library uses exact diagonalisation up to $k_c = 256$.
+
+\paragraph{Square root.} We generated $1000$ random $100\times 100$ positive matrices
+(eigenvalues uniform in $[0,1]$) and computed $B = \sqrt{A}$ via SVD. The relative error
+$\|B^2 - A\|_F/\|A\|_F$ was $2.0\times10^{-6}$ on average (maximum $2.4\times10^{-6}$) in the
+library's default single precision and $4.0\times10^{-15}$ (maximum $4.9\times10^{-15}$) in double
+precision, i.e.\ at the level of the respective machine epsilon.
+
+\subsection{Benchmark setup and speedup results}
+
+All benchmarks were run on an NVIDIA Tesla P100 (16\,GB) and an Intel Xeon E5-2650 v4
+@ 2.2\,GHz (12 cores) with \texttt{scripts/benchmark.py}. Each test input is a tensor of shape
+$(C, k, k)$, i.e.\ the channel axis plays the role of the batch, with
+$k\in\{2,4,\dots,64\}$ and $C\in\{1,2,4,\dots,1024\}$; every configuration was timed with three
+random seeds and ten repetitions. Speedup is defined as $t_{\mathrm{CPU}}/t_{\mathrm{GPU}}$ and
+includes the final device synchronisation but not the host-to-device transfer. The benchmark
+times the batched PyTorch kernels underlying the library operations (trace, addition,
+multiplication, inverse, SVD, symmetric eigensolver, norms) on Gaussian random matrices; the
+CPU used PyTorch's default thread count.
+% TODO(authors): confirm the CPU thread setting of the stored run.
+
+Table~\ref{tab:speedup} shows the speedup for the inverse and for matrix multiplication. A
+second, independent run with the same configuration (stored in the repository as
+\texttt{results/benchmark/run\_b}) agrees with the first within a median factor of $1.12$, but
+single configurations may differ considerably, so the numbers should be read as orders of
+magnitude. For a single channel the CPU is always faster (speedup $0.3$--$0.7$), because kernel
+launch overhead dominates. The GPU pays off from about $C\ge 64$ blocks of size $k\ge 8$, with
+speedups of 15--135 at $C = 1024$. For the SVD and the symmetric eigensolver the GPU becomes
+\emph{slower} than the CPU at $k = 64$ (speedup $0.2$--$0.6$ for all $C$), which marks the
+transition from the batched small-matrix GPU solvers to the general ones; this is the main
+practical limitation for larger blocks (Section~\ref{sec:limitations}).
+
+\begin{table}[h]
+\centering
+\begin{tabular}{r|rrr|rrr}
+\toprule
+ & \multicolumn{3}{c|}{inverse} & \multicolumn{3}{c}{multiplication}\\
+$k$ & $C=1$ & $C=64$ & $C=1024$ & $C=1$ & $C=64$ & $C=1024$\\
+\midrule
+2  & 0.3 & 1.6 (1.0)   & 11.3  & 0.4 & 0.5 (0.5)  & 0.5\\
+4  & 0.3 & 1.5 (1.2)   & 15.5  & 0.4 & 0.5 (0.4)  & 1.0\\
+8  & 0.3 & 25.1 (16.0) & 134.8 & 0.5 & 2.5 (2.0)  & 27.2\\
+16 & 0.4 & 21.0 (19.1) & 50.6  & 0.5 & 2.8 (2.2)  & 34.8\\
+32 & 0.3 & 34.7 (40.5) & 49.0  & 0.6 & 6.0 (4.1)  & 58.3\\
+64 & 0.5 & 17.9 (10.7) & 18.9  & 0.7 & 11.0 (10.6) & 138.4\\
+\bottomrule
+\end{tabular}
+\caption{Mean speedup $t_{\mathrm{CPU}}/t_{\mathrm{GPU}}$ for $C$ blocks of size $k$
+(first run; values of the second run in parentheses).}
+\label{tab:speedup}
+\end{table}
+
+\section{Monte Carlo experiments on trace inequalities}\label{sec:experiments}
+
+We perform three Monte Carlo experiments that mirror earlier NumPy code and illustrate the
+library's capabilities. All experiments are reproduced by \texttt{scripts/experiment.py}. For
+each block size $k\in\{2,16\}$ and number of channels $C\in\{1,2,16,32\}$ (all $k_c = k$) we
+generate $20\,000$ random operator pairs in the real algebra
+$\M = \bigoplus_{c=1}^C M_k(\mathbb R)$. Operators are constructed via the spectral theorem: in
+every block the largest eigenvalue is $1$, the smallest is $(1-\delta)/(1+\delta)$ with $\delta$
+uniform in $[0,1)$, and the remaining eigenvalues are uniform in between; the eigenvectors are
+Haar-random orthogonal matrices, independent for every block and sample. Throughout this
+section $\Tr = \Tr_{\mathrm{blunt}}$, and ``$U$ unitary in $\M$'' means
+$U = \bigoplus_c U_c$ with independent Haar-random orthogonal $U_c$.
+
+Table~\ref{tab:experiments} summarises the sign of the quantity $z$ in each experiment; the
+figures show scatter plots of $z$ against the contrasts. Raw samples, all plots, and the
+summary table are available in the repository (\texttt{results/experiments}).
+
+\begin{table}[h]
+\centering
+\begin{tabular}{rr|rr|rr|rr}
+\toprule
+ & & \multicolumn{2}{c|}{Exp.~1} & \multicolumn{2}{c|}{Exp.~2} & \multicolumn{2}{c}{Exp.~3}\\
+$k$ & $C$ & $z>0$, \% & $\max z$ & $z>0$, \% & $z<0$, \% & $z<0$, \% & $\min z$\\
+\midrule
+2 & 1 & 7.0 & 0.227 & 52.9 & 46.6 & 0.0 & -8.34e-07 \\
+2 & 2 & 0.7 & 0.328 & 54.2 & 45.8 & 0.0 & -9.54e-07 \\
+2 & 16 & 0.0 & -4.37 & 62.4 & 37.6 & 0.0 & 0.00115 \\
+2 & 32 & 0.0 & -15.9 & 68.2 & 31.8 & 0.0 & 0.0764 \\
+16 & 1 & 0.0 & -2.18 & 57.4 & 41.9 & 0.0 & -7.63e-06 \\
+16 & 2 & 0.0 & -5.73 & 63.0 & 36.9 & 0.0 & 1.72e-05 \\
+16 & 16 & 0.0 & -89 & 86.4 & 13.6 & 0.0 & 1.83 \\
+16 & 32 & 0.0 & -193 & 94.1 & 5.9 & 0.0 & 6.11 \\
+\bottomrule
+\end{tabular}
+\caption{Sign of $z$ over $20\,000$ samples per configuration ($|z|\le10^{-4}$ counted as zero).}
+\label{tab:experiments}
+\end{table}
+
+\subsection{Experiment 1 (positive $X$, positive $Y$, unitary $U$)}
+
+Both $X$ and $Y$ are positive operators and $U$ is a random unitary in $\M$. The quantity of
+interest is
+\[
+  z = |\Tr(XUY)| - \Tr(XY).
+\]
+The inequality $|\Tr(XUY)|\le\Tr(XY)$ holds for all unitaries $U$ when $X$ and $Y$ commute, but
+not in general: writing the polar decomposition $YX = W|YX|$ with $W$ unitary in $\M$ and
+choosing $U = W^*$ gives $\Tr(XUY) = \Tr(W^*YX) = \|YX\|_1 \ge \Tr(YX) = \Tr(XY)$, with strict
+inequality whenever $YX$ is not positive. Random unitaries come close to this extremal choice only rarely, and
+increasingly so as $k$ and $C$ grow. In the simulations $z>0$ occurs in $7.0\%$ of the samples
+for $k = 2$, $C = 1$ and in $0.7\%$ for $k=2$, $C=2$, but in none of the samples with $k = 16$
+or $C\ge 16$. Positive values occur only away from scalar operators: for $k=2$, $C=1$ the
+largest $z$ over samples with $\Delta(X),\Delta(Y)<0.1$ is $-4\times10^{-4}$, and the size of the
+violations grows with $\Delta(X)$ (Figure~\ref{fig:exp1-small}). The contrasts $\Delta(X)$ and $\Delta(Y)$ are computed from the global extreme
+eigenvalues.
+
+\begin{lstlisting}[caption={Experiment 1 implementation}]
+def experiment1(alg, batch_size, num_batches, device):
+    pos = positive_sampler(batch_size, device)
+    out = []
+    for _ in range(num_batches):
+        X = alg.operator_from_eigenvalues(pos, batch_size=batch_size,
+                                          force_positive=True, force_self_adjoint=True)
+        Y = alg.operator_from_eigenvalues(pos, batch_size=batch_size,
+                                          force_positive=True, force_self_adjoint=True)
+        U = alg.random_unitary_operator(batch_size)
+        z = (X @ U @ Y).trace.abs() - (X @ Y).trace.real
+        out.append((X.michelson_contrast, Y.michelson_contrast, z))
+    return collect(out)
+\end{lstlisting}
+
+\begin{figure}[p]
+\centering
+\begin{subfigure}{\textwidth}\centering
+\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim2_ch1_xz.png}
+\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim2_ch1_yz.png}
+\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim2_ch1_3d.png}
+\caption{$k=2$, $C=1$}
+\end{subfigure}
+\begin{subfigure}{\textwidth}\centering
+\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim2_ch2_xz.png}
+\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim2_ch2_yz.png}
+\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim2_ch2_3d.png}
+\caption{$k=2$, $C=2$}
+\end{subfigure}
+\begin{subfigure}{\textwidth}\centering
+\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim2_ch16_xz.png}
+\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim2_ch16_yz.png}
+\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim2_ch16_3d.png}
+\caption{$k=2$, $C=16$}
+\end{subfigure}
+\caption{Experiment 1: small dimension ($k = 2$). Left: $z$ vs.\ $\Delta(X)$; middle: $z$ vs.\ $\Delta(Y)$; right: both.}
+\label{fig:exp1-small}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\begin{subfigure}{\textwidth}\centering
+\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim16_ch1_xz.png}
+\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim16_ch1_yz.png}
+\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim16_ch1_3d.png}
+\caption{$k=16$, $C=1$}
+\end{subfigure}
+\begin{subfigure}{\textwidth}\centering
+\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim16_ch16_xz.png}
+\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim16_ch16_yz.png}
+\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim16_ch16_3d.png}
+\caption{$k=16$, $C=16$}
+\end{subfigure}
+\begin{subfigure}{\textwidth}\centering
+\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim16_ch32_xz.png}
+\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim16_ch32_yz.png}
+\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim16_ch32_3d.png}
+\caption{$k=16$, $C=32$}
+\end{subfigure}
+\caption{Experiment 1: intermediate dimension ($k = 16$). Left: $z$ vs.\ $\Delta(X)$; middle: $z$ vs.\ $\Delta(Y)$; right: both.}
+\end{figure}
+
+
+\subsection{Experiment 2 (non-Hermitian $X$, non-Hermitian $Y$)}
+
+Both $X$ and $Y$ are made non-Hermitian by multiplying positive operators with random unitaries:
+$X = UX_0$, $Y = VY_0$, so that $|X| = X_0$ and $|Y| = Y_0$. The quantity of interest is
+\[
+  z = \Tr|XY| - \Tr(|X|\,|Y|) = \|X_0 V Y_0\|_1 - \Tr(X_0 Y_0).
+\]
+$z$ takes both signs: for $V = I$ one has $z = \|X_0Y_0\|_1 - \Tr(X_0Y_0)\ge 0$, while for $V$
+far from the identity $\|X_0VY_0\|_1$ can be much smaller than $\Tr(X_0Y_0)$. In the
+simulations $z>0$ in $53$--$94\%$ of the samples, the share growing with $k$ and $C$. The contrasts are
+computed from $|X| = X_0$ and $|Y| = Y_0$, i.e.\ from the singular values of $X$ and $Y$.
+
+\begin{lstlisting}[caption={Experiment 2 implementation}]
+def experiment2(alg, batch_size, num_batches, device):
+    pos = positive_sampler(batch_size, device)
+    out = []
+    for _ in range(num_batches):
+        X0 = alg.operator_from_eigenvalues(pos, batch_size=batch_size,
+                                           force_positive=True, force_self_adjoint=True)
+        Y0 = alg.operator_from_eigenvalues(pos, batch_size=batch_size,
+                                           force_positive=True, force_self_adjoint=True)
+        X = alg.random_unitary_operator(batch_size) @ X0
+        Y = alg.random_unitary_operator(batch_size) @ Y0
+        z = (X @ Y).abs().trace.real - (X.abs() @ Y.abs()).trace.real
+        out.append((X0.michelson_contrast, Y0.michelson_contrast, z))
+    return collect(out)
+\end{lstlisting}
+
+\begin{figure}[p]
+\centering
+\begin{subfigure}{\textwidth}\centering
+\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim2_ch1_xz.png}
+\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim2_ch1_yz.png}
+\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim2_ch1_3d.png}
+\caption{$k=2$, $C=1$}
+\end{subfigure}
+\begin{subfigure}{\textwidth}\centering
+\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim2_ch2_xz.png}
+\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim2_ch2_yz.png}
+\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim2_ch2_3d.png}
+\caption{$k=2$, $C=2$}
+\end{subfigure}
+\begin{subfigure}{\textwidth}\centering
+\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim2_ch16_xz.png}
+\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim2_ch16_yz.png}
+\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim2_ch16_3d.png}
+\caption{$k=2$, $C=16$}
+\end{subfigure}
+\caption{Experiment 2: small dimension ($k = 2$). Left: $z$ vs.\ $\Delta(|X|)$; middle: $z$ vs.\ $\Delta(|Y|)$; right: both.}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\begin{subfigure}{\textwidth}\centering
+\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim16_ch1_xz.png}
+\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim16_ch1_yz.png}
+\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim16_ch1_3d.png}
+\caption{$k=16$, $C=1$}
+\end{subfigure}
+\begin{subfigure}{\textwidth}\centering
+\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim16_ch16_xz.png}
+\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim16_ch16_yz.png}
+\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim16_ch16_3d.png}
+\caption{$k=16$, $C=16$}
+\end{subfigure}
+\begin{subfigure}{\textwidth}\centering
+\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim16_ch32_xz.png}
+\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim16_ch32_yz.png}
+\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim16_ch32_3d.png}
+\caption{$k=16$, $C=32$}
+\end{subfigure}
+\caption{Experiment 2: intermediate dimension ($k = 16$). Left: $z$ vs.\ $\Delta(|X|)$; middle: $z$ vs.\ $\Delta(|Y|)$; right: both.}
+\end{figure}
+
+
+\subsection{Experiment 3 (self-adjoint $X$, positive $Y$)}
+
+Here $X$ is self-adjoint (eigenvalues with independent random signs) and $Y$ is positive. The
+quantity of interest is
+\[
+  z = \Tr(Y|X|Y) - \Tr|YXY|.
+\]
+
+\begin{proposition}
+For $X = X^*$ and $Y\ge 0$ in $\M$ one has $z\ge 0$. If $Y$ commutes with $X$ (in particular,
+if $Y$ is central), then $z = 0$.
+\end{proposition}
+\begin{proof}
+Write $X = X_+ - X_-$ with $X_\pm\ge 0$, $|X| = X_+ + X_-$. By the triangle inequality for the
+trace norm, $\Tr|YXY| = \|YX_+Y - YX_-Y\|_1 \le \Tr(YX_+Y) + \Tr(YX_-Y) = \Tr(Y|X|Y)$. If
+$YX = XY$, then $YXY = Y^2X$ and $|YXY| = Y^2|X| = Y|X|Y$.
+\end{proof}
+
+The simulations agree with the proposition: no sample has $z<0$ beyond round-off
+($|z|\le 10^{-5}$). $z = 0$ also occurs whenever all eigenvalues of $X$ have the same sign, which
+for $k = 2$, $C = 1$ happens in half of the samples. The size of $z$ thus measures how far $Y$
+is from commuting with $X$; its dependence on $\Delta(Y)$ is shown in the figures. The relation of
+this quantity to the characterisation of central elements by trace inequalities~\cite{novikov2015}
+and to noncommutative $L^1$-spaces~\cite{novikov2017} is a subject for further study.
+
+\begin{lstlisting}[caption={Experiment 3 implementation}]
+def experiment3(alg, batch_size, num_batches, device):
+    sa = selfadjoint_sampler(batch_size, device)
+    pos = positive_sampler(batch_size, device)
+    out = []
+    for _ in range(num_batches):
+        X = alg.operator_from_eigenvalues(sa, batch_size=batch_size, force_self_adjoint=True)
+        Y = alg.operator_from_eigenvalues(pos, batch_size=batch_size,
+                                          force_positive=True, force_self_adjoint=True)
+        absX = X.abs()
+        z = (Y @ absX @ Y).trace.real - (Y @ X @ Y).abs().trace.real
+        out.append((absX.michelson_contrast, Y.michelson_contrast, z))
+    return collect(out)
+\end{lstlisting}
+
+\begin{figure}[p]
+\centering
+\begin{subfigure}{\textwidth}\centering
+\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim2_ch1_xz.png}
+\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim2_ch1_yz.png}
+\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim2_ch1_3d.png}
+\caption{$k=2$, $C=1$}
+\end{subfigure}
+\begin{subfigure}{\textwidth}\centering
+\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim2_ch2_xz.png}
+\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim2_ch2_yz.png}
+\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim2_ch2_3d.png}
+\caption{$k=2$, $C=2$}
+\end{subfigure}
+\begin{subfigure}{\textwidth}\centering
+\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim2_ch16_xz.png}
+\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim2_ch16_yz.png}
+\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim2_ch16_3d.png}
+\caption{$k=2$, $C=16$}
+\end{subfigure}
+\caption{Experiment 3: small dimension ($k = 2$). Left: $z$ vs.\ $\Delta(|X|)$; middle: $z$ vs.\ $\Delta(Y)$; right: both.}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\begin{subfigure}{\textwidth}\centering
+\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim16_ch1_xz.png}
+\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim16_ch1_yz.png}
+\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim16_ch1_3d.png}
+\caption{$k=16$, $C=1$}
+\end{subfigure}
+\begin{subfigure}{\textwidth}\centering
+\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim16_ch16_xz.png}
+\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim16_ch16_yz.png}
+\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim16_ch16_3d.png}
+\caption{$k=16$, $C=16$}
+\end{subfigure}
+\begin{subfigure}{\textwidth}\centering
+\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim16_ch32_xz.png}
+\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim16_ch32_yz.png}
+\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim16_ch32_3d.png}
+\caption{$k=16$, $C=32$}
+\end{subfigure}
+\caption{Experiment 3: intermediate dimension ($k = 16$). Left: $z$ vs.\ $\Delta(|X|)$; middle: $z$ vs.\ $\Delta(Y)$; right: both.}
+\end{figure}
+
+
+\section{Limitations and future work}\label{sec:limitations}
+
+Current limitations include: batched SVD and symmetric eigensolvers lose their GPU advantage
+already at block size $k = 64$ in our benchmarks (Table~\ref{tab:speedup} and
+Appendix~\ref{app:heatmaps}); power iteration converges linearly in the spectral gap, fails to
+separate eigenvalues $\pm\lambda$ of equal modulus, and its stopping rule controls the change of
+the estimate rather than the error; automatic differentiation through the operations is not
+tested; only Type~I algebras (direct sums) in finite dimensions are supported. Future work
+includes support for tensor products, Cauchy-type functional calculus, distributed GPU
+computing, and mixed-precision SVD. The code is open to contributions.
+
+\section{Conclusion}\label{sec:conclusion}
+
+We have presented \texttt{torch\_vn\_algebra}, a PyTorch library for finite-dimensional Type~I
+von Neumann algebras that combines a compact tensor representation, lazy evaluation, flexible
+random operator generation, and GPU-accelerated functional calculus. The library is validated
+and benchmarked, and is open-source at \url{https://gitlab.com/a.hobukob/von_neumann_type_i/}
+(mirror: \url{https://github.com/andre-a-no/von_neumann_type_i}).
+
+\section*{Data availability}
+All code, raw data and reproduction scripts are at the above repository.
+
+\begin{thebibliography}{99}
+\bibitem{takesaki2003} M.~Takesaki, \emph{Theory of Operator Algebras}, Springer, 2003.
+\bibitem{blackadar2006} B.~Blackadar, \emph{Operator Algebras}, Springer, 2006.
+\bibitem{mehta2004} M.~L.~Mehta, \emph{Random Matrices}, 3rd ed., Elsevier, 2004.
+\bibitem{nielsen2010} M.~A.~Nielsen, I.~L.~Chuang, \emph{Quantum Computation and Quantum
+  Information}, Cambridge University Press, 2010.
+\bibitem{gardner1979} L.~T.~Gardner, ``An inequality characterizes the trace'', Canad.\ J.\
+  Math.\ 31 (1979), 1322--1328.
+\bibitem{novikov2015} A.~Novikov, O.~Tikhonov, ``Characterization of central elements of operator
+  algebras by inequalities'', arXiv:1502.01267 (2015).
+\bibitem{novikov2017} A.~Novikov, ``$L_1$-space for a positive operator affiliated with von
+  Neumann algebra'', Positivity 21 (2017), 359--375.
+\bibitem{petz1988} D.~Petz, J.~Zem\'anek, ``Characterizations of the trace'', Linear Algebra
+  Appl.\ 111 (1988), 43--52.
+\bibitem{virosztek2017} D.~Virosztek, ``Connections between centrality and local monotonicity of
+  certain functions'', J.\ Math.\ Anal.\ Appl.\ 453 (2017), 221--226.
+\bibitem{michelson1927} A.~A.~Michelson, \emph{Studies in Optics}, University of Chicago Press,
+  1927.
+\bibitem{abed2024} S.~A.~Abed, I.~A.~Nikolaeva, A.~A.~Novikov, ``Generalisation of Michelson
+  contrast for operators and its properties'', Lobachevskii J.\ Math.\ 45 (2024), 3835--3848.
+\bibitem{novikov2020} A.~Novikov, S.~A.~Abed, I.~Nikolaeva, ``Generalisation of Michelson contrast
+  for operators'', arXiv:2010.10130 (2020).
+\bibitem{mezzadri2007} F.~Mezzadri, ``How to generate random matrices from the classical compact
+  groups'', Notices Amer.\ Math.\ Soc.\ 54 (2007), 592--604.
+\bibitem{paszke2019} A.~Paszke et al., ``PyTorch: An imperative style, high-performance deep
+  learning library'', NeurIPS 2019.
+\bibitem{harris2020} C.~R.~Harris et al., ``Array programming with NumPy'', Nature 585 (2020),
+  357--362.
+\bibitem{virtanen2020} P.~Virtanen et al., ``SciPy 1.0: fundamental algorithms for scientific
+  computing in Python'', Nat.\ Methods 17 (2020), 261--272.
+\bibitem{johansson2013} J.~R.~Johansson, P.~D.~Nation, F.~Nori, ``QuTiP 2: A Python framework for
+  the dynamics of open quantum systems'', Comput.\ Phys.\ Commun.\ 184 (2013), 1234--1240.
+\bibitem{qiskit2019} Qiskit contributors, ``Qiskit: An open-source framework for quantum
+  computing'', 2019, \url{https://qiskit.org}.
+\end{thebibliography}
+
+\appendix
+\section{Complete set of speedup heatmaps}\label{app:heatmaps}
+
+\texttt{scripts/benchmark.py} generates a heatmap for every operation.
+Figures~\ref{fig:hm-first}--\ref{fig:hm-last} show the mean GPU/CPU speedup as a function of the
+block size $k$ (vertical axis) and the number of channels $C$ (horizontal axis); brighter
+colours (viridis colour map) mean larger speedup, values below $1$ mean that the CPU is faster.
+In the stored run, \texttt{lambda\_max} was computed by exact diagonalisation of $AA^T$,
+\texttt{entropy} from normalised singular values and \texttt{michelson} from the matrix entries
+of Gaussian matrices; the current script evaluates them on positive definite matrices from
+eigenvalues (see \texttt{results/benchmark/README.md}).
+
+\begin{figure}[p]\centering
+\includegraphics[width=\textwidth]{speedup_heatmap_trace.png}
+\caption{Speedup heatmap: trace.}\label{fig:hm-first}
+\end{figure}
+\begin{figure}[p]\centering
+\includegraphics[width=\textwidth]{speedup_heatmap_addition.png}
+\caption{Speedup heatmap: addition.}
+\end{figure}
+\begin{figure}[p]\centering
+\includegraphics[width=\textwidth]{speedup_heatmap_multiplication.png}
+\caption{Speedup heatmap: multiplication.}
+\end{figure}
+\begin{figure}[p]\centering
+\includegraphics[width=\textwidth]{speedup_heatmap_lambda_max.png}
+\caption{Speedup heatmap: largest eigenvalue.}
+\end{figure}
+\begin{figure}[p]\centering
+\includegraphics[width=\textwidth]{speedup_heatmap_svd_abs.png}
+\caption{Speedup heatmap: singular values (\texttt{svd\_abs}).}
+\end{figure}
+\begin{figure}[p]\centering
+\includegraphics[width=\textwidth]{speedup_heatmap_inverse.png}
+\caption{Speedup heatmap: inverse.}
+\end{figure}
+\begin{figure}[p]\centering
+\includegraphics[width=\textwidth]{speedup_heatmap_frobenius_norm.png}
+\caption{Speedup heatmap: Frobenius norm.}
+\end{figure}
+\begin{figure}[p]\centering
+\includegraphics[width=\textwidth]{speedup_heatmap_trace_norm.png}
+\caption{Speedup heatmap: trace (nuclear) norm.}
+\end{figure}
+\begin{figure}[p]\centering
+\includegraphics[width=\textwidth]{speedup_heatmap_entropy.png}
+\caption{Speedup heatmap: entropy.}
+\end{figure}
+\begin{figure}[p]\centering
+\includegraphics[width=\textwidth]{speedup_heatmap_michelson.png}
+\caption{Speedup heatmap: Michelson contrast.}\label{fig:hm-last}
+\end{figure}
+
+\end{document}
