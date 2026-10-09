@@ -207,3 +207,23 @@ def test_post_selection_on_hamming_weight_undoes_uniform_t1_noise():
     post, p = rho.condition_on(q.algebra.central([1.0 if N == w else 0.0 for N in range(n + 1)]))
     assert abs(p.item() - math.exp(-w * g * T)) < 1e-8
     assert abs(st.trace_of_product(post, ideal).real.item() - 1.0) < 1e-8
+
+
+def test_vectorised_labels_match_fusion_order():
+    from torch_vn_algebra.chains import _labels, _labels_tensor
+    for L in range(1, 11):
+        ref = _labels(L)
+        new = _labels_tensor(L)
+        assert [t.tolist() for t in new] == ref
+
+
+def test_long_chain_sparse_only():
+    from torch_vn_algebra import krylov
+    ch = SpinChain(22, 'periodic', complex_valued=False)
+    H = ch.xxz_sparse(1.0, 1.0, sector=1)
+    E, psi, res = krylov.ground_state(H)
+    # one magnon on a ferromagnetic ring: E(k) = J L/4 - J + J cos k, lowest at k = pi: L/4 - 2.
+    # The spectrum is positive and degenerate (k, -k), so Lanczos breaks down early: this checks that
+    # the zero vectors after the breakdown do not produce a spurious eigenvalue 0.
+    assert abs(E.item() - (22 / 4 - 2)) < 1e-9
+    assert res.item() < 1e-8

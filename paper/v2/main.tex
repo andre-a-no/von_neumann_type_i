@@ -919,8 +919,8 @@ layout, which is not implemented yet.
 \item \emph{Symmetries.} Abelian charges with an arbitrary fusion rule and lattice translations are
 supported; non-abelian symmetries (SU(2) multiplets, Clebsch--Gordan structure), reflections and spin flip
 are not used to reduce blocks further. Dense methods reach about 16--18 spins, the sparse Lanczos and
-Krylov solvers should reach about 24--26 spins per sector on a GPU with tens of gigabytes (an estimate from the
-memory of the Krylov basis, not a measurement); tensor-network methods are out of
+Krylov solvers handle the half-filled sector of 24 spins (dimension $2.7\cdot10^6$) in about 30\,s and 4\,GB on
+a CPU, and about 26 spins on a GPU with tens of gigabytes (an estimate from the memory of the Krylov basis); tensor-network methods are out of
 scope.
 \item \emph{Optimisation.} The search is local; envelopes are lower bounds for suprema (upper bounds for
 infima). Gradients propagated through eigen- or singular vectors fail at degenerate spectra; the

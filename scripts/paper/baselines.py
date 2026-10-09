@@ -102,12 +102,14 @@ def timed(fn, *a):
 
 
 B_LOOP = 2000 if FULL else 300
-B_VEC = 100_000 if FULL else 10_000
+B_MAX = 100_000 if FULL else 10_000
+ENTRIES = 2 ** 24 if FULL else 2 ** 21     # entries per array; the vectorised versions hold ~10 such arrays
 for C, k in ((1, 2), (16, 16), (32, 16)) if FULL else ((1, 2), (8, 16)):
+    B_VEC = max(1000, min(B_MAX, ENTRIES // (C * k * k)))
     t_loop, z_loop = timed(numpy_loop, B_LOOP, C, k)
     t_vec, z_vec = timed(numpy_vectorised, B_VEC, C, k)
     t_cpu, z_cpu = timed(library, B_VEC, C, k, 'cpu')
-    r = dict(C=C, k=k, us_loop=1e6 * t_loop / B_LOOP, us_numpy_vec=1e6 * t_vec / B_VEC,
+    r = dict(C=C, k=k, batch=B_VEC, us_loop=1e6 * t_loop / B_LOOP, us_numpy_vec=1e6 * t_vec / B_VEC,
              us_lib_cpu=1e6 * t_cpu / B_VEC, mean_z=dict(loop=float(z_loop.mean()), vec=float(z_vec.mean()),
                                                          lib=float(z_cpu.mean())))
     if dev != 'cpu':
@@ -148,7 +150,7 @@ for L, R in (((16, 1), (16, 20), (18, 1), (20, 1)) if FULL else ((14, 1), (14, 1
     print(f"B: L={L} ({R} Hamiltonian{'s' if R > 1 else ''}, dim {H.dim}): eigsh {t_sp:.2f} s, "
           f"library {t_kr:.2f} s ({dev}), |dE| <= {diff:.1e}")
 
-save_json(args, 'baselines', dict(monte_carlo=rows_a, ground_states=rows_b, b_loop=B_LOOP, b_vec=B_VEC))
+save_json(args, 'baselines', dict(monte_carlo=rows_a, ground_states=rows_b, b_loop=B_LOOP))
 tex = env_macro(args, 'Base')
 gpu = dev != 'cpu'
 tex += f"\\newcommand{{\\BaseHasGPU}}{{{'1' if gpu else '0'}}}\n"

@@ -97,6 +97,7 @@ def lanczos(matvec: Callable, v0: torch.Tensor, m: int) -> Tuple[torch.Tensor, t
     for j in range(m):
         Q[:, j] = q
         w = matvec(q)
+        scale = torch.linalg.vector_norm(w, dim=-1)
         alpha[:, j] = _dot(q, w).real
         # full re-orthogonalisation (twice is enough)
         for _ in range(2):
@@ -104,9 +105,23 @@ def lanczos(matvec: Callable, v0: torch.Tensor, m: int) -> Tuple[torch.Tensor, t
         if j == m - 1:
             break
         b = torch.linalg.vector_norm(w, dim=-1)
-        beta[:, j] = b
-        q = torch.where(b[:, None] > 1e-12, w / torch.clamp(b, min=1e-300)[:, None], torch.zeros_like(w))
+        # breakdown: the remainder is round-off relative to |Hq| (an invariant subspace was reached);
+        # the coupling is then exactly zero and all further vectors are zero
+        ok = b > 1e-10 * torch.clamp(scale, min=1e-300)
+        beta[:, j] = torch.where(ok, b, torch.zeros_like(b))
+        q = torch.where(ok[:, None], w / torch.clamp(b, min=1e-300)[:, None], torch.zeros_like(w))
     return alpha, beta, Q
+
+
+def _ritz_matrix(alpha, beta, Q):
+    """
+    Tridiagonal matrix of a Lanczos run in which the zero vectors after a breakdown are moved above
+    the spectrum (Gershgorin bound), so that they cannot produce spurious low Ritz values.
+    """
+    alive = torch.linalg.vector_norm(Q, dim=-1) > 0                       # (batch, m)
+    bound = (alpha.abs().amax(-1) + 2 * (beta.abs().amax(-1) if beta.shape[-1] else 0) + 1.0)
+    alpha = torch.where(alive, alpha, bound[:, None].expand_as(alpha))
+    return _tridiag(alpha, beta)
 
 
 def _tridiag(alpha, beta):
@@ -131,7 +146,7 @@ def ground_state(H, m: int = 80, tol: float = 1e-10, max_restarts: int = 20,
     v = v0
     for it in range(max_restarts):
         alpha, beta, Q = lanczos(H.matvec, v, m)
-        w, Y = torch.linalg.eigh(_tridiag(alpha, beta))
+        w, Y = torch.linalg.eigh(_ritz_matrix(alpha, beta, Q))
         psi = torch.einsum('bj,bjk->bk', Y[:, :, 0].to(Q.dtype), Q)
         psi = psi / torch.linalg.vector_norm(psi, dim=-1, keepdim=True)
         E = w[:, 0]

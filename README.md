@@ -149,32 +149,45 @@ The English version is authoritative.
 
 ## Reproducing the paper
 
-| Script | What it does |
-|---|---|
-| `scripts/validation.py` | Haar moments, power iteration vs. spectral gap, SVD square root accuracy (Sec. 4.1) |
-| `scripts/experiment.py` | Monte Carlo experiments on trace inequalities (Sec. 5); writes raw samples, plots and `summary.csv` |
-| `scripts/benchmark.py` | CPU vs GPU timings and speedup heatmaps (Sec. 4.2; needs CUDA) |
+**Paper v2** ([`paper/v2/main.tex`](paper/v2/main.tex), compiled `main.pdf`): every number, table and figure
+comes from the scripts in [`scripts/paper`](scripts/paper), run by one driver:
 
 ```bash
-python scripts/validation.py
-python scripts/experiment.py --dims 2,16 --channels 1,2,16,32 --output-dir results/experiments
-python scripts/benchmark.py --cpu-threads 1 --output-dir results/benchmark_new
-```
-
-**Paper v2** ([`paper/v2/main.tex`](paper/v2/main.tex), compiled `main.pdf`): a usage-centred description
-with runnable listings ([`examples/paper`](examples/paper), run by the tests), validation against exact
-results, sampling vs. constrained optimisation and library-level benchmarks. All numbers and figures come
-from `scripts/paper/`:
-
-```bash
-bash scripts/paper/run_all.sh              # quick mode on CPU, a few minutes
-bash scripts/paper/run_all.sh full cuda    # sizes of the paper, on a GPU
+bash scripts/paper/run_all.sh                    # quick mode, a few minutes on a CPU
+bash scripts/paper/run_all.sh full cuda          # sizes of the paper, on a GPU
 cd paper/v2 && pdflatex main.tex && pdflatex main.tex
 ```
 
-Stored outputs live in [`results/`](results): `results/experiments/` (current code) and
-`results/benchmark/` (GPU timings, see its README). The corrected paper text is in
-[`paper/`](paper).
+### Running the full experiments on a GPU server
+
+```bash
+git clone https://github.com/andre-a-no/von_neumann_type_i && cd von_neumann_type_i
+git checkout claude/funny-ptolemy-confo7          # until it is merged into main
+python -m venv .venv && source .venv/bin/activate
+pip install torch                                  # the CUDA build matching the server's driver, see pytorch.org
+pip install -e ".[scripts,test]"
+python -m pytest -q                                # ~30 s, must pass
+bash scripts/paper/run_all.sh quick cuda           # smoke test on the GPU, a few minutes
+nohup bash scripts/paper/run_all.sh full cuda > full_run.log 2>&1 &   # the full run (or inside tmux)
+```
+
+- The driver first prints the GPU, its memory, CUDA and cuDNN versions (also saved to
+  `paper/v2/generated/logs/environment.txt`) and stops if CUDA is not available.
+- Every script writes its own log to `paper/v2/generated/logs/<script>.log`, including run-time estimates
+  from the `cost` module. A failing script does not stop the others; the run ends with a summary.
+- `ONLY="chains baselines" bash scripts/paper/run_all.sh full cuda` reruns a subset.
+- `... full cuda tf32` repeats the run with TF32 tensor-core matrix products (Ampere or newer), to measure
+  their effect; the default is true FP32.
+- Results land in `paper/v2/generated/` (tables as `.tex` and `.json`) and `paper/v2/figures/`. Commit those
+  two directories and the logs, then rebuild the PDF; the tables state the device and mode they came from.
+- Double precision is used throughout the validation and chain scripts; a data-centre GPU (A100, H100) is much
+  faster there than a consumer GPU (FP64 at 1/2 versus 1/32-1/64 of the FP32 rate).
+
+### First version
+
+`scripts/experiment.py` (Monte Carlo samples of the trace inequalities, stored in `results/experiments/` and
+used for comparison in paper v2) and `scripts/benchmark.py` (kernel timings of the first version, stored in
+`results/benchmark/`) reproduce the data of arXiv:2606.15882v1; the corrected v1 text is in [`paper/`](paper).
 
 ## Repository layout
 

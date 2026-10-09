@@ -47,13 +47,30 @@ def _labels(L: int) -> List[List[int]]:
     return labels
 
 
+def _labels_tensor(L: int, device=None) -> List[torch.Tensor]:
+    """
+    The same labels as _labels(L), built with tensor operations: in the iterated fused product the
+    states with the newest (highest) site up come first, recursively, so within a sector the labels
+    are in decreasing numerical order.
+    """
+    x = torch.arange(2 ** L, dtype=torch.int64, device=device)
+    pop = torch.zeros_like(x)
+    for i in range(L):
+        pop += (x >> i) & 1
+    return [x[pop == N].flip(0) for N in range(L + 1)]
+
+
+MAX_L = 30                                               # 2^L labels are held in memory
+
+
 class SpinChain:
     def __init__(self, L: int, boundary: str = 'open', complex_valued: bool = True,
                  precision: str = 'double', device=None):
         if boundary not in ('open', 'periodic'):
             raise ValueError("boundary must be 'open' or 'periodic'")
-        if L > 20:
-            raise ValueError("L > 20 is beyond dense exact diagonalisation")
+        if L > MAX_L:
+            raise ValueError(f"L > {MAX_L} is not supported (the basis labels alone need 2^L integers); "
+                             "dense methods reach L of about 16-18, the sparse Krylov solvers L of about 24-26")
         self.L, self.boundary = L, boundary
         self.complex_valued, self.precision = complex_valued, precision
         self._algebra = None
@@ -63,7 +80,7 @@ class SpinChain:
         self.device = ref.hilbert.device
         self.dtype = ref.hilbert.dtype
         self.real_dtype = ref.hilbert.real_dtype
-        self.labels = [torch.tensor(lab, dtype=torch.int64, device=self.device) for lab in _labels(L)]
+        self.labels = _labels_tensor(L, self.device)
         index = torch.empty(2 ** L, dtype=torch.int64, device=self.device)
         for lab in self.labels:
             index[lab] = torch.arange(len(lab), device=self.device)
