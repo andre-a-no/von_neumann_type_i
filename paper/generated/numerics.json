@@ -1,0 +1,95 @@
+{
+  "rows": [
+    {
+      "config": "float32",
+      "bytes_per_entry": 4,
+      "times": {
+        "generate": 6.592076562839111e-05,
+        "eigh f(A)": 0.00014968964062944679,
+        "SVD |A|": 0.00027359190625020346,
+        "channel": 2.371427343916821e-05,
+        "expm": 4.397914843679018e-05,
+        "opt. step": 0.0005795109687483091
+      },
+      "unitarity": 8.344650268554688e-07,
+      "sqrt_error": 1.921818011396681e-06,
+      "entropy_rel_error": 1.361319679697245,
+      "inequality_floor": 2.288818359375e-05,
+      "operator_MB": 1.0
+    },
+    {
+      "config": "float64",
+      "bytes_per_entry": 8,
+      "times": {
+        "generate": 0.000132402507809104,
+        "eigh f(A)": 0.00017683984375338468,
+        "SVD |A|": 0.0003423488437519495,
+        "channel": 4.2468171876919314e-05,
+        "expm": 5.975331249885585e-05,
+        "opt. step": 0.0007709035859377877
+      },
+      "unitarity": 1.3322676295501878e-15,
+      "sqrt_error": 3.916389700887926e-15,
+      "entropy_rel_error": 2.7747199143963557e-09,
+      "inequality_floor": 6.394884621840902e-14,
+      "operator_MB": 2.0
+    },
+    {
+      "config": "complex64",
+      "bytes_per_entry": 8,
+      "times": {
+        "generate": 0.0001419006718705873,
+        "eigh f(A)": 0.0002180847812525144,
+        "SVD |A|": 0.0004382992031253252,
+        "channel": 6.402598437205143e-05,
+        "expm": 8.358263281138534e-05,
+        "opt. step": 0.0010681346484346932
+      },
+      "unitarity": 8.344650268554688e-07,
+      "sqrt_error": 2.2229496607906185e-06,
+      "entropy_rel_error": 1.8141471284316444,
+      "inequality_floor": 3.0517578125e-05,
+      "operator_MB": 2.0
+    },
+    {
+      "config": "complex128",
+      "bytes_per_entry": 16,
+      "times": {
+        "generate": 0.00024550907812681544,
+        "eigh f(A)": 0.0002880881250035827,
+        "SVD |A|": 0.0004505290234320114,
+        "channel": 0.00014196896093210398,
+        "expm": 0.00010936871093747413,
+        "opt. step": 0.00168316790625056
+      },
+      "unitarity": 9.992007221626409e-16,
+      "sqrt_error": 4.125420872154593e-15,
+      "entropy_rel_error": 2.556532512477324e-09,
+      "inequality_floor": 6.394884621840902e-14,
+      "operator_MB": 4.0
+    }
+  ],
+  "K": 16,
+  "C": 8,
+  "batch": 128,
+  "r": {
+    "real symmetric (GOE)": [
+      0.5329533587177767,
+      0.004130290060206203
+    ],
+    "complex Hermitian (GUE)": [
+      0.608610363606871,
+      0.003977289573453531
+    ]
+  },
+  "environment": {
+    "torch": "2.14.1+cu130",
+    "python": "3.13.16",
+    "device": "cpu",
+    "date": "2026-10-09",
+    "float32_matmul_precision": "highest",
+    "cpu": "x86_64",
+    "threads": 4
+  },
+  "mode": "quick"
+}

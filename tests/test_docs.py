@@ -55,7 +55,7 @@ def test_identifiers_exist(english):
 
 
 def test_every_reference_of_the_paper_is_cited():
-    tex = (Path(__file__).resolve().parents[1] / 'paper' / 'v2' / 'main.tex').read_text(encoding='utf-8')
+    tex = (Path(__file__).resolve().parents[1] / 'paper' / 'main.tex').read_text(encoding='utf-8')
     keys = re.findall(r'\\bibitem\{([^}]+)\}', tex)
     cited = {k.strip() for group in re.findall(r'\\cite\{([^}]+)\}', tex) for k in group.split(',')}
     assert keys and not [k for k in keys if k not in cited]

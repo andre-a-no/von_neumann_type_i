@@ -1,8 +1,0 @@
-float32     4 B/entry | generate   1625.4us eigh f(A)    938.0us SVD |A|   1000.2us channel    451.9us expm   4812.5us opt. step  56163.0us | unitarity 8.3e-07 sqrt 1.9e-06 entropy 1.4e+00 z-floor 2.3e-05
-float64     8 B/entry | generate    956.5us eigh f(A)    891.8us SVD |A|   1124.8us channel    438.0us expm   4750.6us opt. step  60156.3us | unitarity 1.3e-15 sqrt 3.9e-15 entropy 2.8e-09 z-floor 6.4e-14
-complex64   8 B/entry | generate   1217.6us eigh f(A)    731.5us SVD |A|   1649.1us channel    562.6us expm   4750.0us opt. step  60314.4us | unitarity 8.3e-07 sqrt 2.2e-06 entropy 1.8e+00 z-floor 3.1e-05
-complex128 16 B/entry | generate   1749.9us eigh f(A)   1062.5us SVD |A|   1030.9us channel   1095.6us expm   4937.7us opt. step  63844.3us | unitarity 1.0e-15 sqrt 4.1e-15 entropy 2.6e-09 z-floor 6.4e-14
-real symmetric (GOE): <r> = 0.5330 +- 0.0041
-complex Hermitian (GUE): <r> = 0.6086 +- 0.0040
-written: /home/user/von_neumann_type_i/paper/v2/generated /home/user/von_neumann_type_i/paper/v2/figures
-[resources] wall 548 s, peak host RSS 0.89 GiB

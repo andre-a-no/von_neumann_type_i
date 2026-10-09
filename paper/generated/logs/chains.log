@@ -1,0 +1,19 @@
+XX chain L=10: all 1024 levels match free fermions to 8.0e-15
+Heisenberg ring L= 4: E0 = -2.000000000 (exact -2.0), dim 6, 0.0 s
+Heisenberg ring L= 6: E0 = -2.802775638 (exact -2.802775638), dim 20, 0.0 s
+Heisenberg ring L= 8: E0 = -3.651093409 (exact -3.651093409), dim 70, 0.0 s
+Heisenberg ring L=10: E0 = -4.515446354 (exact -4.515446354), dim 252, 0.0 s
+Heisenberg ring L=12: E0 = -5.387390917 (exact -5.387390917), dim 924, 0.1 s
+domain wall L=12 (sector dim 924): max error 5.0e-15
+entanglement L=12: max deviation from Peschel 3.3e-12
+L=8: <r>(W) = 0.515, 0.544, 0.483, 0.426, 0.422, 0.391, 0.412, 0.399  (0 s)
+L=10: <r>(W) = 0.535, 0.525, 0.490, 0.452, 0.398, 0.396, 0.396, 0.398  (1 s)
+Lanczos XX open, $L=12$: dim 924, E0 -3.6481149053, error 4.4e-16, 0.0 s
+Lanczos XX open, $L=16$: dim 12870, E0 -4.9189757237, error 1.8e-15, 0.1 s
+Lanczos XX open, $L=18$: dim 48620, E0 -5.5547827927, error 8.9e-16, 0.2 s
+Lanczos Heisenberg ring, $L=16$: dim 12870, E0 -7.1422963606, error 3.8e-10, 0.1 s
+Krylov domain wall L=16 (dim 12870): error 1.1e-14, 0 s
+momentum sectors L=12: blocks [80, 75, 78, 76, 78, 75, 80, 75, 78, 76, 78, 75], spectra agree to 3.7e-14 (0.10 s vs dense 0.10 s)
+particle loss: sector distribution vs binomial death process, max error 2.4e-10
+written: /home/user/von_neumann_type_i/paper/generated /home/user/von_neumann_type_i/paper/figures
+[resources] wall 7 s, peak host RSS 0.67 GiB

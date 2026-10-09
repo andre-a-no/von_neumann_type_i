@@ -16,7 +16,17 @@ samples (or optimisation starts), the sector axis holds the direct summands, and
 top-left `k_c × k_c` corner (the rest is zero padding).
 
 Companion paper: I. Nikolaeva, A. Novikov, *Finite-Dimensional Type I von Neumann Algebras in
-PyTorch: A GPU-Accelerated Framework for Random Block-Diagonal Operators*, arXiv:2606.15882.
+PyTorch: A GPU-Accelerated Framework for Random Block-Diagonal Operators*, arXiv:2606.15882
+(source and PDF in [`paper/`](paper)).
+
+This README is the entry point of the repository:
+
+| you want to | go to |
+|---|---|
+| use the library | [Installation](#installation), [Quick start](#quick-start), [`examples/`](examples) |
+| understand the physics behind the models | [Physics background](#physics-background) |
+| read the paper | [`paper/main.pdf`](paper/main.pdf) (source `paper/main.tex`, response to the reviewers `paper/RESPONSE.md`) |
+| reproduce every number of the paper | [Reproducing the paper](#reproducing-the-paper) |
 
 ## Features
 
@@ -124,7 +134,7 @@ probabilities `Tr rho_c`. Unitary dynamics requires `complex_valued=True`.
 `complex_valued` (real / complex) and `precision` (`'single'` / `'double'`), i.e. float32, float64,
 complex64 or complex128; `alg.like(complex_valued=..., precision=...)` and `op.cast(alg2)` move between
 them, `alg.bytes_per_operator(B)` reports the memory. Rules of thumb (details and measurements in the
-paper, `scripts/paper/numerics.py`):
+paper, `scripts/numerics.py`):
 
 | use | when |
 |---|---|
@@ -155,13 +165,14 @@ The English version is authoritative.
 
 ## Reproducing the paper
 
-**Paper v2** ([`paper/v2/main.tex`](paper/v2/main.tex), compiled `main.pdf`): every number, table and figure
-comes from the scripts in [`scripts/paper`](scripts/paper), run by one driver:
+The paper ([`paper/main.tex`](paper/main.tex), compiled [`paper/main.pdf`](paper/main.pdf)) contains no number
+typed by hand: every table and figure comes from the scripts in [`scripts`](scripts) and the listings in
+[`examples/paper`](examples/paper), run by one driver:
 
 ```bash
-bash scripts/paper/run_all.sh                    # quick mode, about 4 minutes on a 4-thread CPU
-bash scripts/paper/run_all.sh full cuda          # sizes of the paper, on a GPU
-cd paper/v2 && pdflatex main.tex && pdflatex main.tex
+bash scripts/run_all.sh                    # quick mode, about 4 minutes on a 4-thread CPU
+bash scripts/run_all.sh full cuda          # sizes of the paper, on a GPU
+cd paper && pdflatex main.tex && pdflatex main.tex
 ```
 
 ### Running the full experiments on a GPU server
@@ -173,15 +184,15 @@ python -m venv .venv && source .venv/bin/activate
 pip install torch                                  # the CUDA build matching the server's driver, see pytorch.org
 pip install -e ".[scripts,test]"
 python -m pytest -q                                # ~30 s, must pass
-bash scripts/paper/run_all.sh check cuda           # full sizes, minimal repetitions: tests every code path and the GPU memory
-nohup bash scripts/paper/run_all.sh full cuda > full_run.log 2>&1 &   # the full run (or inside tmux)
+bash scripts/run_all.sh check cuda           # full sizes, minimal repetitions: tests every code path and the GPU memory
+nohup bash scripts/run_all.sh full cuda > full_run.log 2>&1 &   # the full run (or inside tmux)
 ```
 
 - The driver first prints the GPU, its memory, CUDA and cuDNN versions (also saved to
-  `paper/v2/generated/logs/environment.txt`) and stops if CUDA is not available.
-- Every script writes its own log to `paper/v2/generated/logs/<script>.log`, including run-time estimates
+  `paper/generated/logs/environment.txt`) and stops if CUDA is not available.
+- Every script writes its own log to `paper/generated/logs/<script>.log`, including run-time estimates
   from the `cost` module. A failing script does not stop the others; the run ends with a summary.
-- `ONLY="chains baselines" bash scripts/paper/run_all.sh full cuda` reruns a subset.
+- `ONLY="chains baselines" bash scripts/run_all.sh full cuda` reruns a subset.
 - Duration. Measured on a 4-thread CPU, the `check` run takes about 33 minutes, and the full run is estimated at
   35-45 hours, most of it in `bounds_search` (~25 h) and `inequality_search` (~8 h). A GPU is several times
   faster; to estimate the full run on your GPU, multiply these CPU estimates by the ratio of the `check` times on
@@ -190,12 +201,12 @@ nohup bash scripts/paper/run_all.sh full cuda > full_run.log 2>&1 &   # the full
 - Interruptions. `inequality_search` and `bounds_search` save every finished part to `generated/partial/`; after a
   crash or reboot, rerunning the same command continues where it stopped and gives the same numbers.
 - Several GPUs. The scripts are independent, e.g.
-  `CUDA_VISIBLE_DEVICES=0 ONLY=bounds_search bash scripts/paper/run_all.sh full cuda` and
-  `CUDA_VISIBLE_DEVICES=1 ONLY="validate_known_results numerics baselines benchmark_library chains inequality_search" bash scripts/paper/run_all.sh full cuda`
+  `CUDA_VISIBLE_DEVICES=0 ONLY=bounds_search bash scripts/run_all.sh full cuda` and
+  `CUDA_VISIBLE_DEVICES=1 ONLY="validate_known_results numerics baselines benchmark_library chains inequality_search" bash scripts/run_all.sh full cuda`
   in two terminals (the examples run only when `ONLY` is not set).
 - `... full cuda tf32` repeats the run with TF32 tensor-core matrix products (Ampere or newer), to measure
   their effect; the default is true FP32.
-- Results land in `paper/v2/generated/` (tables as `.tex` and `.json`) and `paper/v2/figures/`. Commit those
+- Results land in `paper/generated/` (tables as `.tex` and `.json`) and `paper/figures/`. Commit those
   two directories and the logs, then rebuild the PDF; the tables state the device and mode they came from.
 - Memory. The largest single step is the dense diagonalisation of a 12870-dimensional sector in `chains`
   (about 10 GB on the CPU in the `check` run); use a GPU with at least 24 GB, preferably 40-80 GB, and a host with
@@ -203,11 +214,12 @@ nohup bash scripts/paper/run_all.sh full cuda > full_run.log 2>&1 &   # the full
 - Double precision is used throughout the validation and chain scripts; a data-centre GPU (A100, H100) is much
   faster there than a consumer GPU (FP64 at 1/2 versus 1/32-1/64 of the FP32 rate).
 
-### First version
+### Data of the first version
 
-`scripts/experiment.py` (Monte Carlo samples of the trace inequalities, stored in `results/experiments/` and
-used for comparison in paper v2) and `scripts/benchmark.py` (kernel timings of the first version, stored in
-`results/benchmark/`) reproduce the data of arXiv:2606.15882v1; the corrected v1 text is in [`paper/`](paper).
+The Monte Carlo samples of the first version (arXiv:2606.15882v1), with which Section 6 of the paper compares the
+optimisation, are stored in `results/experiments/` and produced by `scripts/experiment.py`; `run_all.sh full`
+regenerates them if they are missing. The text, scripts and benchmark data of the first version itself are kept
+for reference in `archive/v1/` and are not used by the paper.
 
 ## Repository layout
 
@@ -215,10 +227,12 @@ used for comparison in paper v2) and `scripts/benchmark.py` (kernel timings of t
 torch_vn_algebra/    library: algebra.py (TypeIAlgebra, Operator), hilbert_space.py, channels.py,
                      states.py, dynamics.py, composite.py, chains.py, krylov.py, optimize.py, cost.py
 tests/               pytest suite (CPU, runs in CI)
-examples/            short usage examples
-scripts/             validation, experiments and benchmarks from the paper
-results/             stored experiment and benchmark outputs
-paper/               corrected text of arXiv:2606.15882v1 + list of corrections; paper/v2: new text
+examples/            short usage examples; examples/paper: the code listings of the paper
+docs/                physics for mathematicians (English original and translations)
+paper/               the paper: main.tex, main.pdf, generated/ (tables), figures/, RESPONSE.md
+scripts/             run_all.sh and the scripts behind every table and figure of the paper
+results/             Monte Carlo samples of the first version (input of scripts/bounds_search.py)
+archive/v1/          first version: text, its scripts and benchmark data (reference only)
 ```
 
 ## Tests

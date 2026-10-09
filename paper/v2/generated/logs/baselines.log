@@ -1,7 +1,0 @@
-A: C= 1 k= 2: NumPy loop 110.1 us/sample, NumPy vectorised 1.82, library CPU 35.17;  mean z: -0.468 / -0.444 / -0.448
-A: C= 8 k=16: NumPy loop 1057.4 us/sample, NumPy vectorised 349.01, library CPU 1465.24;  mean z: -60.009 / -60.135 / -60.315
-B: L=14 (1 Hamiltonian, dim 3432): eigsh 0.01 s, library 3.17 s (cpu), |dE| <= 6.2e-15
-B: L=14 (10 Hamiltonians, dim 3432): eigsh 0.12 s, library 6.41 s (cpu), |dE| <= 2.7e-14
-B: L=16 (1 Hamiltonian, dim 12870): eigsh 0.06 s, library 0.98 s (cpu), |dE| <= 8.9e-16
-written: /home/user/von_neumann_type_i/paper/v2/generated
-[resources] wall 30 s, peak host RSS 0.66 GiB

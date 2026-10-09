@@ -12,9 +12,9 @@ experiment_results*/
 # LaTeX build files
 *.aux
 *.log
-!paper/v2/generated*/logs/*.log
+!paper/generated*/logs/*.log
 *.out
 *.toc
 *.synctex.gz
 .check_output/
-paper/v2/generated/partial/
+paper/generated/partial/

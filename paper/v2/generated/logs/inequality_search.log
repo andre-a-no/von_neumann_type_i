@@ -1,6 +1,0 @@
-k=  2: violation found by sampling 1/4, by ascent 4/4; median z/Tr(XY): sup 1.03e-04, sampling -0.001, ascent 1.03e-04 (rel. error median 5.2e-07, max 2.8e-06); 0.0s / 0.9s
-k=  4: violation found by sampling 0/4, by ascent 4/4; median z/Tr(XY): sup 3.66e-03, sampling -0.198, ascent 3.66e-03 (rel. error median 3.1e-08, max 1.4e-06); 0.1s / 0.8s
-k=  8: violation found by sampling 0/4, by ascent 4/4; median z/Tr(XY): sup 5.09e-03, sampling -0.594, ascent 5.09e-03 (rel. error median 4.2e-07, max 5.5e-07); 0.2s / 1.1s
-k= 16: violation found by sampling 0/4, by ascent 4/4; median z/Tr(XY): sup 5.33e-03, sampling -0.777, ascent 5.33e-03 (rel. error median 2.9e-06, max 4.8e-06); 0.7s / 2.3s
-written: /home/user/von_neumann_type_i/paper/v2/generated /home/user/von_neumann_type_i/paper/v2/figures
-[resources] wall 25 s, peak host RSS 1.11 GiB

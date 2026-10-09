@@ -1,0 +1,70 @@
+{
+  "results": [
+    {
+      "k": 2,
+      "pairs": 4,
+      "found_by_sampling": 1,
+      "found_by_ascent": 4,
+      "sup_over_trXY": 0.0001034211745718494,
+      "sampling_over_trXY": -0.0012998826568946242,
+      "ascent_over_trXY": 0.00010342088353354484,
+      "ascent_rel_error_median": 5.23021412845992e-07,
+      "ascent_rel_error_max": 2.764274917934833e-06,
+      "seconds_sampling": 0.016286611557006836,
+      "seconds_ascent": 1.1425299644470215
+    },
+    {
+      "k": 4,
+      "pairs": 4,
+      "found_by_sampling": 0,
+      "found_by_ascent": 4,
+      "sup_over_trXY": 0.0036564692854881287,
+      "sampling_over_trXY": -0.1976151168346405,
+      "ascent_over_trXY": 0.003656469052657485,
+      "ascent_rel_error_median": 3.07972918278665e-08,
+      "ascent_rel_error_max": 1.384455956627288e-06,
+      "seconds_sampling": 0.05493426322937012,
+      "seconds_ascent": 0.77456134557724
+    },
+    {
+      "k": 8,
+      "pairs": 4,
+      "found_by_sampling": 0,
+      "found_by_ascent": 4,
+      "sup_over_trXY": 0.005086797289550304,
+      "sampling_over_trXY": -0.5944885015487671,
+      "ascent_over_trXY": 0.005086794961243868,
+      "ascent_rel_error_median": 4.1803858152889006e-07,
+      "ascent_rel_error_max": 5.475590120680888e-07,
+      "seconds_sampling": 0.1636207103729248,
+      "seconds_ascent": 1.1320921182632446
+    },
+    {
+      "k": 16,
+      "pairs": 4,
+      "found_by_sampling": 0,
+      "found_by_ascent": 4,
+      "sup_over_trXY": 0.0053301299922168255,
+      "sampling_over_trXY": -0.7770519256591797,
+      "ascent_over_trXY": 0.005330106243491173,
+      "ascent_rel_error_median": 2.942663286376046e-06,
+      "ascent_rel_error_max": 4.837246039959199e-06,
+      "seconds_sampling": 0.6933163404464722,
+      "seconds_ascent": 2.117333173751831
+    }
+  ],
+  "samples": 20000,
+  "starts": 32,
+  "steps": 500,
+  "pairs": 4,
+  "environment": {
+    "torch": "2.14.1+cu130",
+    "python": "3.13.16",
+    "device": "cpu",
+    "date": "2026-10-09",
+    "float32_matmul_precision": "highest",
+    "cpu": "x86_64",
+    "threads": 4
+  },
+  "mode": "quick"
+}

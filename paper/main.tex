@@ -6,22 +6,38 @@
 \usepackage{booktabs}
 \usepackage{listings}
 \usepackage{xcolor}
-\usepackage{subcaption}
-\usepackage[margin=2.5cm]{geometry}
+\usepackage[margin=2.4cm]{geometry}
 \usepackage{hyperref}
 
-\graphicspath{{../results/experiments/}{../results/benchmark/}}
-
-\newtheorem{proposition}{Proposition}
+\graphicspath{{figures/}}
 \DeclareMathOperator{\Tr}{Tr}
 \newcommand{\C}{\mathbb{C}}
 \newcommand{\M}{\mathcal{M}}
+\newtheorem{proposition}{Proposition}
 
-\lstset{language=Python, basicstyle=\ttfamily\small, numbers=left, numberstyle=\tiny,
-        frame=single, breaklines=true, columns=fullflexible, keepspaces=true}
+\lstset{language=Python, basicstyle=\ttfamily\footnotesize, frame=single, breaklines=true,
+        columns=fullflexible, keepspaces=true, commentstyle=\color{gray}, showstringspaces=false}
 
-\title{Finite-Dimensional Type I von Neumann Algebras in PyTorch:\\
-A GPU-Accelerated Framework for Random Block-Diagonal Operators}
+% numbers and tables produced by scripts/*.py (bash scripts/run_all.sh [quick|full] [device])
+\newcommand{\gen}[1]{\IfFileExists{generated/#1.tex}{\input{generated/#1.tex}}{}}
+\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}
+\providecommand{\ValidationRows}{\multicolumn{6}{c}{\emph{run scripts/validate\_known\_results.py}}\\}
+\providecommand{\SearchRows}{\multicolumn{9}{c}{\emph{run scripts/inequality\_search.py}}\\}
+\providecommand{\BoundsRows}{\multicolumn{7}{c}{\emph{run scripts/bounds\_search.py}}\\}
+\providecommand{\BenchmarkRows}{\multicolumn{5}{c}{\emph{run scripts/benchmark\_library.py}}\\}
+\providecommand{\BenchHasGPU}{0}
+\providecommand{\NumTimeRows}{\multicolumn{9}{c}{\emph{run scripts/numerics.py}}\\}
+\providecommand{\NumAccRows}{\multicolumn{5}{c}{\emph{run scripts/numerics.py}}\\}
+\providecommand{\NumTimeHeader}{generate & eigh $f(A)$ & SVD $|A|$ & channel & expm & opt.\ step}
+\providecommand{\BaseMCRows}{\multicolumn{6}{c}{\emph{run scripts/baselines.py}}\\}
+\providecommand{\BaseGSRows}{\multicolumn{6}{c}{\emph{run scripts/baselines.py}}\\}
+\providecommand{\ValTraceRows}{\multicolumn{5}{c}{\emph{run scripts/validate\_known\_results.py}}\\}
+\providecommand{\ChainKrylovRows}{\multicolumn{6}{c}{\emph{run scripts/chains.py}}\\}
+\providecommand{\ChainRingRows}{\multicolumn{6}{c}{\emph{run scripts/chains.py}}\\}
+\newcommand{\fig}[2]{\IfFileExists{figures/#1}{\includegraphics[width=#2]{#1}}{\fbox{\small figure #1 not generated}}}
+
+\title{\texttt{torch\_vn\_algebra}: batched random operators, states, channels\\
+and constrained optimisation in finite-dimensional Type~I von Neumann algebras}
 \author{Irina Nikolaeva \and Andrej Novikov}
 \date{}
 
@@ -29,607 +45,1023 @@ A GPU-Accelerated Framework for Random Block-Diagonal Operators}
 \maketitle
 
 \begin{abstract}
-We present \texttt{torch\_vn\_algebra}, an open-source Python library built on PyTorch for
-numerical experiments with finite-dimensional Type~I von Neumann algebras (direct sums of matrix
-algebras). The library provides:
-\begin{itemize}
-\item a compact batched tensor representation $(B, C, k_{\max}, k_{\max})$ that handles both Monte
-      Carlo samples and multiple direct summands;
-\item lazy evaluation of operators to avoid unnecessary memory allocation;
-\item generation of random operators with arbitrary eigenvalue distributions (user-provided
-      samplers) and several unitary ensembles (Haar on $U(n)$ and $O(n)$, $SU(n)$ and $SO(n)$,
-      COE, CSE, diagonal phases);
-\item functional calculus via SVD (absolute value, square root, inverse, entropy) and a hybrid
-      method for extreme eigenvalues (exact diagonalisation for blocks of size $k_c\le 256$,
-      otherwise shifted power iteration);
-\item three trace functionals (blunt, normalised subspace trace, and the von Neumann tracial
-      state);
-\item GPU-accelerated batched linear algebra for moderate-scale Monte Carlo studies (e.g.\
-      $2\times 10^4$ samples of operators with up to 32 blocks).
-\end{itemize}
-The library is validated against analytical expectations (Haar moments, trace properties).
-Performance benchmarks on a Tesla P100 GPU are presented and discussed, and three Monte Carlo
-experiments on trace inequalities are reported. Limitations and future work are outlined. The
-code is open-source.
+\texttt{torch\_vn\_algebra} is a PyTorch library for numerical work in algebras
+$\M=\bigoplus_{c=1}^C M_{k_c}(\C)$, the finite-dimensional Type~I von Neumann algebras that describe
+quantum systems with superselection rules. Operators, states and channels are stored as batched,
+block-diagonal tensors, so that thousands of random samples, or thousands of independent starts of
+an optimisation, are processed at once on a CPU or a GPU. The library provides random operators with
+prescribed spectra and Haar-distributed eigenvectors, the three trace functionals that are natural on
+$\M$, states and Lüders conditioning, completely positive maps within and between sectors, plain and
+charge-conserving (fused) tensor products with partial traces, spin chains with a conserved
+magnetisation and momentum, sparse Lanczos and Krylov solvers for large sectors, Hamiltonian and
+Lindblad dynamics (including jumps between sectors), differentiable parametrisations with a prescribed
+Michelson contrast, and safeguards that estimate run time and memory before expensive steps. We
+describe the design, show how the library is used on short complete examples, and validate it against
+exact results from random matrix theory, quantum information and integrable spin chains (free-fermion
+spectra and dynamics, Heisenberg ring energies, Peschel's entanglement formula, the GOE--Poisson
+crossover of disordered chains). Applied to the trace inequalities of our earlier work, constrained
+optimisation replaces Monte Carlo sampling: it finds extremal values that sampling misses in all but the
+smallest dimensions, and reproduces the bounds that are known in closed form.
 \end{abstract}
 
-\section{Introduction}
+\section*{Program summary}
+\begin{description}\itemsep0pt
+\item[Program title:] \texttt{torch\_vn\_algebra}
+\item[Developer's repository link:] \url{https://github.com/andre-a-no/von_neumann_type_i}
+\item[Licensing provisions:] MIT
+\item[Programming language:] Python ($\ge3.9$), PyTorch ($\ge2.0$)
+\item[Nature of problem:] Numerical experiments in finite-dimensional Type~I von Neumann algebras
+$\bigoplus_cM_{k_c}(\C)$, which describe quantum systems with superselection rules or conserved charges:
+random operators with prescribed spectra, several trace functionals, states, channels within and between
+sectors, symmetric tensor products, spin chains, Hamiltonian and Lindblad dynamics, and extremal problems for
+trace inequalities under spectral constraints.
+\item[Solution method:] Batched block-diagonal tensors processed by PyTorch linear algebra on CPUs and GPUs;
+exact Haar sampling; spectral functional calculus; Kraus representations; Lanczos and Krylov methods for
+sparse sector Hamiltonians; differentiable parametrisations with batched multistart gradient optimisation;
+run-time and memory estimates before expensive steps.
+\item[Additional comments:] more than 250 unit tests, run in continuous integration; every number, table and figure of
+this paper is produced by the scripts and examples in the repository and regenerated by \texttt{scripts/run\_all.sh}.
+\end{description}
 
-Finite-dimensional Type I von Neumann algebras,
-\[
-  \M = \bigoplus_{c=1}^{C} M_{n_c}(\C),
-\]
-naturally appear in quantum mechanics with superselection rules, decoherence, and in random
-matrix theory when symmetries or constraints force operators into block-diagonal form. Monte
-Carlo simulations of such systems -- averaging over many random operators with controlled
-spectral properties -- require efficient numerical tools that can exploit modern hardware.
-General-purpose libraries (NumPy/SciPy, QuTiP, Qiskit) do not provide a native batched
-representation of block-diagonal (direct-sum) operators together with arbitrary prescribed
-spectra and GPU execution.
+\section{Introduction}\label{sec:intro}
 
-\texttt{torch\_vn\_algebra} fills this gap by combining a compact tensor representation that
-batches both Monte Carlo samples and direct summands with padding to a common $k_{\max}$; lazy
-evaluation (operators are built from generators and materialised only when needed); flexible
-random operators (any eigenvalue distribution via a user callable) with several unitary
-ensembles; batched functional calculus with hybrid eigenvalue extraction; three trace
-functionals $\Tr_{\mathrm{blunt}}$, $\Tr_{\mathrm{norm}}$ and the von Neumann tracial state
-$\tau_{\mathrm{vN}}$; and full integration with PyTorch's GPU backend.
+\paragraph{Where block-diagonal algebras arise.} Whenever a conserved quantity, a symmetry or a superselection
+rule splits a Hilbert space into sectors, the physically relevant operators are block diagonal. Their algebra
+is a finite-dimensional Type~I von Neumann algebra
+\begin{equation}\label{eq:M}
+  \M=\bigoplus_{c=1}^{C}M_{k_c}(\C)\quad\text{acting on}\quad\mathcal H=\bigoplus_{c=1}^C\C^{k_c},
+\end{equation}
+where $C$ is the number of sectors (direct summands) and $M_{k}(\C)$ is the algebra of complex $k\times k$
+matrices. Every finite-dimensional von Neumann algebra is $*$-isomorphic to one of this form~\cite{takesaki2002}, and its centre is
+spanned by the sector projections. The library also accepts nominal factor sizes $n_c\ge k_c$: this describes
+computations in the corner $p\M_0p\cong\bigoplus_cM_{k_c}(\C)$ of a larger algebra $\M_0=\bigoplus_cM_{n_c}(\C)$,
+with $p=\bigoplus_cp_c$ and $p_c$ a projection of rank $k_c$. The corner is again of the form~\eqref{eq:M}; all
+operators, traces and normalisations refer to it, and in most applications $k_c=n_c$.
+\paragraph{From a symmetry to the algebra.} The link between physics and~\eqref{eq:M} is the commutant. If a group
+$G$ (or a set of conserved quantities) acts unitarily on $\mathcal H$ and $\mathcal H\cong\bigoplus_\lambda
+V_\lambda\otimes\C^{m_\lambda}$ is its decomposition into irreducible representations $V_\lambda$ with
+multiplicities $m_\lambda$, then the operators commuting with the action form the algebra
+$\bigoplus_\lambda \mathbb 1_{V_\lambda}\otimes M_{m_\lambda}(\C)\cong\bigoplus_\lambda M_{m_\lambda}(\C)$. For one
+conserved self-adjoint charge $Q$ (particle number, magnetisation, Hamming weight) the irreducibles are
+one-dimensional and $m_\lambda$ is the dimension of the eigenspace of $Q$ with eigenvalue $\lambda$. A Hamiltonian
+that conserves $Q$, a time evolution generated by it, and every observable compatible with a superselection rule
+for $Q$ lie in this commutant; the sectors are the eigenvalues of $Q$, and the centre consists of the functions
+of $Q$. Physical modelling with a symmetry is therefore computation in an algebra of the form~\eqref{eq:M}.
 
-The library builds upon the theoretical framework developed in~\cite{abed2024,novikov2020},
-where the Michelson contrast was generalised to operators in von Neumann algebras. The present
-work provides a scalable GPU implementation of these concepts for Monte Carlo studies.
+Examples are abundant:
+\begin{itemize}\itemsep0pt
+\item superselection rules for charge, parity or particle number~\cite{wick1952,bartlett2007} and the
+classical-quantum structure produced by decoherence and einselection~\cite{zurek2003};
+\item many-body Hamiltonians with conserved charges, whose exact diagonalisation and dynamics are carried out
+sector by sector~\cite{sandvik2010,weinberg2017}, and symmetry-resolved entanglement~\cite{goldstein2018,xavier2018};
+\item quantum information: decoherence-free subspaces and noiseless subsystems~\cite{zanardi1997,knill2000},
+operator-algebra quantum error correction~\cite{beny2007}, and quantum algorithms that preserve a conserved
+quantity, such as the XY mixers of the quantum alternating operator ansatz, which keep the Hamming
+weight~\cite{hadfield2019};
+\item random matrix theory, where symmetries decompose ensembles into blocks and spectral statistics are
+meaningful only inside a block~\cite{dyson1962,mehta2004};
+\item machine learning: by Schur's lemma the linear maps that commute with a (complex, unitary) group representation (equivariant
+layers) on one space form an algebra of the form~\eqref{eq:M}, whose block sizes are the multiplicities of the
+irreducible representations, and equivariant layers between two representations are the corresponding off-diagonal
+blocks~\cite{cohen2016,finzi2021} (for real representations the blocks can also be real or quaternionic); random-matrix methods are used to analyse trained
+weights~\cite{martin2021};
+\item operator theory, our original motivation: inequalities between traces of products characterise the trace
+and the centre of an operator algebra~\cite{gardner1979,petz1988,novikov2015,virosztek2017}, and their
+failure can be quantified by spectral quantities such as the Michelson contrast~\cite{abed2024,novikov2020}.
+\end{itemize}
+On $\M$ the trace is not unique: every positive weighting of the sectors gives one, and statements such as
+``trace preserving'' or ``the dual map'' depend on that choice as soon as maps change the sector structure.
 
-The paper is organised as follows. Section~\ref{sec:background} recalls necessary definitions.
-Section~\ref{sec:implementation} describes the implementation. Section~\ref{sec:benchmarks}
-presents validation and performance benchmarks. Section~\ref{sec:experiments} gives Monte Carlo
-experiments. Section~\ref{sec:limitations} discusses limitations and future work.
-Section~\ref{sec:conclusion} concludes.
-
-\section{Mathematical background}\label{sec:background}
-
-A finite-dimensional Type I von Neumann algebra is $\M = \bigoplus_{c=1}^{C} M_{n_c}(\C)$ acting
-on $\mathcal H = \bigoplus_{c=1}^{C} \C^{k_c}$ with $k_c \le n_c$. Operators are block-diagonal:
-$A = \bigoplus_c A_c$. Three trace functionals are relevant:
-\[
-  \Tr_{\mathrm{blunt}}(A) = \sum_{c=1}^{C} \Tr(A_c), \qquad
-  \Tr_{\mathrm{norm}}(A) = \sum_{c=1}^{C} \frac{1}{k_c}\Tr\bigl(A_c^{(k_c)}\bigr), \qquad
-  \tau_{\mathrm{vN}}(A) = \frac{1}{C}\sum_{c=1}^{C} \frac{1}{k_c}\Tr\bigl(A_c^{(k_c)}\bigr),
-\]
-where $A_c^{(k_c)}$ is the restriction of $A_c$ to the $k_c$-dimensional subspace.
-$\tau_{\mathrm{vN}}$ is a faithful normal tracial state. For $A\in\M$ we write
-$|A| = (A^*A)^{1/2}$. For a density matrix $\rho$ ($\rho\ge 0$, $\Tr\rho = 1$), the von Neumann
-entropy is $S(\rho) = -\Tr(\rho\log\rho)$. For a positive operator $A$, define its Michelson
-contrast as
-\[
-  \Delta(A) = \frac{\lambda_{\max}(A) - \lambda_{\min}(A)}{\lambda_{\max}(A) + \lambda_{\min}(A)},
-\]
-where the extreme eigenvalues are taken over the whole algebra, i.e.\ over all blocks.
-$\Delta(A)\in[0,1]$, and $\Delta(A) = 0$ if and only if $A$ is a scalar multiple of the
-identity.
-
-The theory of noncommutative integration associates to a von Neumann algebra $\M$ equipped with
-a faithful normal trace $\tau$ a family of noncommutative $L^p$-spaces. In the
-finite-dimensional Type I case, the $L^1$-space is simply $\M$ with the norm
-$\|A\|_1 = \tau(|A|)$. For a positive operator $X$ affiliated with $\M$, one can define its
-$L^1$-norm as $\tau(X)$ when finite~\cite{novikov2017}.
-
-\section{Implementation}\label{sec:implementation}
-
-Operators are stored as a 4-D tensor $(B, C, k_{\max}, k_{\max})$ with the active block of size
-$k_c\times k_c$ in the top-left corner; the remaining entries are zero padding. The
-\texttt{Operator} class uses lazy generation: the matrix is materialised only when accessed.
-The auxiliary class \texttt{HilbertSpace} provides inner product, norm, and orthonormal bases
-(standard, random, Haar), supporting embedding and restriction of vectors and operators.
-
-\paragraph{Random operators.} Random operator generation is performed via
-\texttt{operator\_from\_eigenvalues}. The user supplies a callable
-\texttt{eigenvalue\_sampler(dim)} returning either one spectrum of length \texttt{dim} or a
-batch of spectra of shape $(B, \mathtt{dim})$. For each channel a batch of random unitaries $U$ is
-drawn from the chosen ensemble and $A_c = U\,\mathrm{diag}(\lambda)\,U^*$ is formed (and
-symmetrised when the spectrum is real). Properties (self-adjointness, positivity, etc.) are
-inferred from the spectrum; forced properties are validated when the matrix is materialised,
-with tolerances relative to the working precision.
-
-\paragraph{Unitary ensembles.} Haar-distributed unitaries are sampled by the QR decomposition of
-a Ginibre matrix with i.i.d.\ circular complex (or real) standard Gaussian entries, followed by
-fixing the phases of the diagonal of $R$~\cite{mezzadri2007}. $SU(n)$ is obtained by multiplying a
-Haar unitary by $\det(U)^{-1/n}$ and $SO(n)$ by flipping the sign of one column when
-$\det = -1$; both maps push Haar measure forward to Haar measure. The circular orthogonal and
-symplectic ensembles are $S = W^{T} W$ and $S = W^{R} W$, $W^{R} = J W^{T} J^{T}$, with $W$ Haar
-on $U(n)$~\cite{mehta2004}. All samplers are batched.
-
-\paragraph{Extreme eigenvalues.} For self-adjoint operators, $\lambda_{\max}$ and
-$\lambda_{\min}$ are obtained by exact diagonalisation (\texttt{torch.linalg.eigvalsh}) when all
-blocks satisfy $k_c\le 256$ (threshold \texttt{exact\_eig\_max\_dim}). For larger blocks a
-two-stage power iteration is used in double precision: first the eigenvalue $\mu$ of largest
-modulus is found, then the dominant eigenvalue of $\mu I - A$, which gives the opposite end of
-the spectrum (at most 5000 iterations, stopping when the Rayleigh quotient changes by less than
-$10^{-12}$). The operator norm uses a shorter single-precision power iteration on $A^*A$ (at
-most 100 iterations, tolerance $10^{-8}$).
-
-\paragraph{Functional calculus and traces.} $|A|$, $\sqrt{A}$ (for $A\ge 0$), the
-(pseudo-)inverse $A^{-1}$ and $\Tr(A\log A)$ are computed via batched SVD,
-$A = W\Sigma V^*$, $|A| = V\Sigma V^*$. The three traces are implemented as
-\texttt{Tr\_blunt}, \texttt{Tr\_norm} and \texttt{tau\_vN}; the Michelson contrast
-\texttt{michelson\_contrast} returns $\Delta(A)$ for every sample of the batch.
-
-\section{Validation and performance benchmarks}\label{sec:benchmarks}
-
-\subsection{Validation}
-
-All validation runs are reproduced by \texttt{scripts/validation.py}.
-
-\paragraph{Haar measure.} For $U$ Haar-distributed on $U(n)$ one has
-$\mathbb E|U_{11}|^2 = 1/n$ and, by invariance under $U\mapsto e^{i\varphi}U$,
-$\mathbb E[U_{11}^2] = 0$. The second identity fails for non-circular Gaussian input and is
-therefore a useful check of the sampler. Table~\ref{tab:haar} shows the results for
-$n = 2,4,8,16,32$ using $10\,000$ samples generated by the library. All relative errors are
-within about two standard errors of the mean.
+\paragraph{What existing software offers.} Table~\ref{tab:software} compares the features relevant here.
+Dense and sparse linear algebra (NumPy/SciPy~\cite{harris2020,virtanen2020}, with ARPACK~\cite{lehoucq1998} for
+sparse eigenproblems) handles single matrices; QuTiP~\cite{johansson2013} and the quantum-information module of
+Qiskit~\cite{qiskit2019} represent states, operators and channels on one Hilbert space; \texttt{dynamiqs}~\cite{dynamiqs}
+adds batching, GPUs and automatic differentiation for Schrödinger and Lindblad dynamics; QuSpin~\cite{weinberg2017}
+builds symmetry-reduced bases for exact diagonalisation; tensor-network libraries (ITensor~\cite{fishman2022},
+TeNPy~\cite{hauschild2018}) store charge-conserving tensors in block-sparse form; RTNI~\cite{fukuda2019} integrates
+Haar-random tensor networks symbolically. None of them treats the algebra~\eqref{eq:M} itself, with its centre,
+several traces, states and maps between algebras of different sector structure, as the basic object, and none
+combines it with batched sampling and optimisation over operators with prescribed spectra.
 
 \begin{table}[h]
-\centering
+\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lccccccc}
+\toprule
+ & NumPy/ & QuTiP & Qiskit & \texttt{dynamiqs} & QuSpin & ITensor/ & this\\
+ & SciPy & & q.\,info & & & TeNPy & work\\
+\midrule
+GPU execution & -- & ($\checkmark$) & -- & $\checkmark$ & -- & ($\checkmark$) & $\checkmark$\\
+batched over many operators & ($\checkmark$) & -- & -- & $\checkmark$ & -- & -- & $\checkmark$\\
+automatic differentiation & -- & ($\checkmark$) & -- & $\checkmark$ & -- & ($\checkmark$) & $\checkmark$\\
+symmetry sectors of many-body systems & -- & -- & -- & -- & $\checkmark$ & $\checkmark$ & $\checkmark$\\
+algebra $\bigoplus_cM_{k_c}$ with centre and several traces & -- & -- & -- & -- & -- & -- & $\checkmark$\\
+channels within and between sectors & -- & ($\checkmark$) & ($\checkmark$) & -- & -- & -- & $\checkmark$\\
+prescribed spectra, Haar/COE/CSE per sector & ($\checkmark$) & ($\checkmark$) & ($\checkmark$) & -- & -- & -- & $\checkmark$\\
+optimisation under spectral constraints & -- & -- & -- & -- & -- & -- & $\checkmark$\\
+large single systems & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & ($\checkmark$)\\
+\bottomrule
+\end{tabular}
+\caption{Features relevant to computations in the algebra~\eqref{eq:M}, to the best of our knowledge at the
+time of writing ($\checkmark$: supported; ($\checkmark$): partly, through plug-ins, or with user code;
+--: not supported). The last row is where the specialised packages are the better choice.}
+\label{tab:software}
+\end{table}
+
+\paragraph{Why not one large matrix?} Nothing forces one to treat $\M$ as a separate object: it embeds into
+$M_D(\C)$, $D=\sum_ck_c$, as the block-diagonal matrices, and every package above handles a single $D\times D$
+matrix (the case $C=1$ of~\eqref{eq:M}). The embedding is exact for linear algebra, so the question is only what it
+costs and what has to be supplied by hand.
+\begin{itemize}\itemsep0pt
+\item \emph{Cost.} A product, an inverse or a spectral decomposition in $M_D$ costs $O(D^3)$ time and $O(D^2)$ memory,
+in $\M$ it costs $\sum_c k_c^3$ and $\sum_c k_c^2$. For $C$ equal blocks this is a factor $C^2$ in time and $C$ in
+memory; for the half-filling sector of a chain of $L=16$ spins ($D=2^{16}$, largest block $12870$) the dense $M_D$
+computation is out of reach, the block computation is routine.
+\item \emph{Measures.} The unitary group of $\M$ is $\prod_cU(k_c)$, for $C\ge2$ a subgroup of $U(D)$ of measure zero. A Haar-random
+element of $U(D)$ is not in $\M$, and a random element of $\M$ has to be produced block by block. The same holds for
+random states, for the circular ensembles and for any optimisation: an unconstrained gradient step in $M_D$ leaves $\M$.
+\item \emph{Traces.} On $M_D$ the trace is unique up to a factor; on $\M$ the faithful traces form a $C$-parameter
+family $\sum_cw_c\Tr_c$. Densities, ``trace preserving'' and the dual of a map between algebras with different sectors
+depend on the choice of the weights; on the embedded matrices this information is no longer visible.
+\item \emph{Centre.} The centre of $\M$ (the sector projections) is what physicists call the classical or superselected
+part of the system; conditioning on a sector, post-selection and sector-resolved quantities are operations with the
+centre, and they have to be reconstructed from the block indices when $\M$ is stored as one matrix.
+\end{itemize}
+The library keeps these four pieces of structure inside the data type. For $C=1$ it reduces to batched
+linear algebra in $M_k(\C)$, and all its functions accept that case. The first version of this
+library~\cite{v1} shows that the bookkeeping is error-prone: its complex Haar sampler was not Haar distributed, its
+circular ensembles were not the circular ensembles, and several conclusions drawn from Monte Carlo samples were wrong;
+all of this is corrected and tested here.
+
+\paragraph{Challenges.} Turning the algebra into an efficient and reliable tool raises concrete problems, each
+addressed by a design decision described in Section~\ref{sec:design}: (i) heterogeneous block sizes have to be
+mapped onto batched GPU kernels; (ii) trace conventions and dual maps must stay consistent when maps change the
+sectors; (iii) random ensembles must be exactly Haar (or COE/CSE) in every block; (iv) gradients propagated through
+eigen- or singular-vector decompositions (as in $f(A)$ or $|X|$) are numerically singular at degenerate spectra,
+exactly where extremal operators tend to lie; (v) extremal
+values sit on sets of tiny measure that random sampling does not reach in higher dimensions
+(Section~\ref{sec:optimisation}); (vi) batched workloads easily exceed the time or memory budget of a device;
+(vii) the number field (real or complex) and the precision change both cost and results
+(Section~\ref{sec:numerics}).
+
+\paragraph{Objective and scope.} \texttt{torch\_vn\_algebra} is a library for numerical experiments \emph{in}
+the algebra~\eqref{eq:M}: sampling and optimising operators, states and channels, evaluating trace and spectral
+functionals, and formulating physical models (spin chains, open systems, noisy symmetric quantum circuits) whose
+symmetry is encoded in the sector structure. It is not a circuit simulator and not a tensor-network code, and for
+single large systems the specialised packages above remain the better choice; Section~\ref{sec:baselines}
+quantifies where the library gains and where it does not.
+
+\paragraph{Contributions and outline.} Section~\ref{sec:math} fixes notation and conventions. Section~\ref{sec:design}
+describes the software stack, the workflow, how the challenges (i)--(vii) are met, and the choice of number field and
+precision. Section~\ref{sec:usage} shows the library on short complete programs, including a noisy quantum circuit.
+Section~\ref{sec:validation} validates it against exact results and checks the trace functionals.
+Section~\ref{sec:optimisation} replaces Monte Carlo sampling by constrained optimisation for the trace inequalities
+of~\cite{v1}. Section~\ref{sec:chains} covers charge-conserving tensor products and spin chains, including momentum
+sectors, sparse Krylov solvers and particle loss. Section~\ref{sec:baselines} compares with NumPy/SciPy,
+Section~\ref{sec:performance} reports performance, and Section~\ref{sec:limitations} discusses limitations.
+
+\section{Mathematical setting}\label{sec:math}
+
+\paragraph{Algebra and traces.} Let $\M=\bigoplus_{c=1}^C M_{k_c}(\C)$ act on
+$\mathcal H=\bigoplus_c\C^{k_c}$; $A\in\M$ is block diagonal, $A=\bigoplus_c A_c$. Every trace on $\M$ is
+$\operatorname{tr}_w(A)=\sum_c w_c\Tr A_c$ with weights $w_c\ge0$, and it is faithful iff all $w_c>0$. The library implements
+\[
+  \Tr_{\mathrm{blunt}}:\ w_c=1,\qquad \Tr_{\mathrm{norm}}:\ w_c=\tfrac1{k_c},\qquad
+  \tau_{\mathrm{vN}}:\ w_c=\tfrac1{Ck_c},
+\]
+where $\tau_{\mathrm{vN}}$ is the faithful normal tracial state that gives every sector the same weight
+(the library allows empty sectors, $k_c=0$; they carry no weight, and $C$ in $\tau_{\mathrm{vN}}$ counts the non-empty ones).
+For $A\in\M$, $|A|=(A^*A)^{1/2}$; for $A\ge 0$ the Michelson contrast is
+$\Delta(A)=(\lambda_{\max}-\lambda_{\min})/(\lambda_{\max}+\lambda_{\min})\in[0,1]$, with the extreme
+eigenvalues taken over all sectors, for $A\ne0$ (the library returns $\Delta(0)=0$); for $A\ge0$, $A\ne0$, $\Delta(A)=0$ if and only if $A$ is a multiple of the identity.
+
+\paragraph{States.} A state $\omega$ on $\M$ is represented by its density $\rho\ge0$ with respect to
+$\Tr_{\mathrm{blunt}}$, $\omega(A)=\Tr(\rho A)$, $\sum_c\Tr\rho_c=1$. The restriction of $\omega$ to the
+centre is the classical distribution $p_c=\Tr\rho_c$ over sectors. The density of the same state with
+respect to $\operatorname{tr}_w$ is $\rho^{(w)}_c=\rho_c/w_c$; the library converts between the
+conventions explicitly, because statements such as ``trace preserving'' or ``the dual map'' depend on
+them as soon as the sectors change.
+
+\paragraph{Maps between sectors.} Let $\M_{\mathrm{in}}=\bigoplus_c M_{k_c}$ and
+$\M_{\mathrm{out}}=\bigoplus_d M_{m_d}$. Every normal completely positive map
+$\Phi:\M_{\mathrm{in}}\to\M_{\mathrm{out}}$ (in the Schrödinger picture) is a sum of completely
+positive maps between blocks,
+\[
+  \Phi(\rho)_d=\sum_c\sum_i K^{dc}_i\,\rho_c\,(K^{dc}_i)^*,\qquad K^{dc}_i:\C^{k_c}\to\C^{m_d}.
+\]
+It preserves $\Tr_{\mathrm{blunt}}$ iff $\sum_{d,i}(K_i^{dc})^*K_i^{dc}=1_c$ for all $c$, and
+$T_{dc}=\Tr\Phi_{dc}(\rho_c)/\Tr\rho_c$ are the transition probabilities between sectors for the input
+state $\rho$ (defined for $\Tr\rho_c>0$) (independent of $\rho$ iff every $\sum_i(K_i^{dc})^*K_i^{dc}$ is a multiple of $1_c$; by default the
+library uses the maximally mixed state of each input sector). The dual
+with respect to $\operatorname{tr}_w$ on both sides is
+$\Phi^{*,w}(A)_c=\sum_{d,i}(w^{\mathrm{out}}_d/w^{\mathrm{in}}_c)(K_i^{dc})^*A_dK_i^{dc}$; for
+sector-preserving maps on one algebra the weights cancel and all three traces give the same dual.
+
+\paragraph{Tensor products and fusion of sectors.} $\bigl(\bigoplus_cM_{k_c}\bigr)\otimes\bigl(\bigoplus_dM_{m_d}\bigr)
+=\bigoplus_{(c,d)}M_{k_cm_d}$ is again of Type~I with sectors labelled by pairs. If the sectors carry
+conserved charges $q_c$, $q'_d$ (particle numbers, magnetisation), the operators of the composite system
+that conserve only the \emph{total} charge form the larger algebra
+\[
+  \M_1\mathbin{\hat\otimes}\M_2=\bigoplus_q M_{n_q},\qquad n_q=\sum_{q_c+q'_d=q}k_cm_d ,
+\]
+in which all pairs with the same total charge are merged into one sector. It contains $\M_1\otimes\M_2$
+(block-diagonally in every merged sector), but also operators such as $S^+_iS^-_j$ that move charge
+between the factors. For additive charges, and distinct charges on distinct sectors of $\M_1$, the partial trace
+$(\Tr_2X)_c=\sum_d\Tr_{m_d}X_{(c,d),(c,d)}$ still lands in $\M_1$: a block between pairs $(c,d)\ne(c',d)$ with equal
+total charge would need $q_c=q_{c'}$, hence $c=c'$.
+In both cases the partial trace is a map between sectors in the sense above, and its dual with respect
+to $\Tr_{\mathrm{blunt}}$ is the embedding $A\mapsto A\otimes1$.
+
+\paragraph{Spin chains.} For $L$ spins $1/2$ with conserved $S^z_{\mathrm{tot}}$, iterating the fused
+product of single-site algebras $M_1\oplus M_1$ (charges $0,1$) gives
+$\M=\bigoplus_{N=0}^LM_{\binom LN}(\C)$, $N$ the number of up spins, which contains every
+$S^z_{\mathrm{tot}}$-conserving Hamiltonian, e.g.\ the XXZ chain
+$H=\sum_{\langle ij\rangle}\bigl[\tfrac J2(S^+_iS^-_j+S^-_iS^+_j)+J\Delta S^z_iS^z_j\bigr]+\sum_ih_iS^z_i$ (the
+anisotropy $\Delta$ is unrelated to the Michelson contrast $\Delta(\cdot)$).
+
+\paragraph{Dynamics.} For $H=H^*\in\M$ and jump operators $L_j\in\M$ the
+Gorini--Kossakowski--Sudarshan--Lindblad equation
+$\dot\rho=-i[H,\rho]+\sum_j\gamma_j(L_j\rho L_j^*-\tfrac12\{L_j^*L_j,\rho\})$ preserves every sector,
+so the sector probabilities $p_c$ are conserved (superselection). Jumps between sectors, such as particle loss,
+are described by maps between sectors as above (Section~\ref{sec:chains}).
+
+\section{Design and implementation}\label{sec:design}
+
+\paragraph{Software stack.} The library is pure Python on top of PyTorch~\cite{paszke2019} ($\ge2.0$) and NumPy~\cite{harris2020}. All dense linear algebra goes through \texttt{torch.linalg}, i.e.\ LAPACK
+(MKL or OpenBLAS) on CPUs and cuSOLVER, cuBLAS and MAGMA on NVIDIA GPUs; sparse products use PyTorch's CSR
+tensors. Automatic differentiation is PyTorch's reverse mode. The validation and paper scripts additionally use
+SciPy, pandas and Matplotlib. Packaging follows \texttt{pyproject.toml}; the test suite runs in continuous
+integration on Python~3.10 and 3.12 (CPU), and the paper scripts state the device and mode in the table captions and record the matmul precision, the
+PyTorch, CUDA and cuDNN versions and the compute capability in a JSON file next to every table.
+
+\paragraph{Workflow.} A computation proceeds in four steps. (1) An algebra is declared by its sector sizes,
+optionally sector charges, number field, precision and device (\texttt{TypeIAlgebra}, or a model such as
+\texttt{SpinChain} that creates it). (2) Objects are created in it: random operators with prescribed spectra,
+states, channels, Hamiltonians, or differentiable parametrisations. (3) They are combined lazily (products,
+functional calculus, channel application, tensor products, time evolution). (4) Functionals are evaluated for the
+whole batch at once (traces, spectra, contrasts, entropies, sector probabilities) and reduced to statistics, or
+fed into an optimiser that updates the parameters of step~(2). Every step keeps the batch dimension, so the same
+code serves one operator and $10^5$ samples.
+
+\begin{table}[h]
+\centering\footnotesize
+\begin{tabular}{p{0.3\textwidth}p{0.62\textwidth}}
+\toprule
+challenge & solution in the library\\
+\midrule
+(i) blocks of different size on batched kernels & padded $(B,C,k_{\max},k_{\max})$ layout, one batched call per
+sector; single-sector algebras and sparse sector Hamiltonians where padding would dominate\\
+(ii) conventions between sectors & states stored as $\Tr_{\mathrm{blunt}}$-densities with explicit conversions;
+duals of maps between sectors computed with the weights of the chosen trace\\
+(iii) exact random ensembles & Mezzadri's QR algorithm with phase correction, $\det^{-1/n}$ for $SU(n)$, $W^TW$ and
+$W^RW$ for COE/CSE, validated against Weingarten moments and spacing statistics\\
+(iv) singular gradients at degenerate spectra & parametrisations that build operators from their spectra
+(no eigendecomposition in the forward pass), exact $|X|$ from the parametrisation\\
+(v) extremes missed by sampling & batched multistart optimisation with exact contrast constraints\\
+(vi) time and memory budgets & probing of batched kernels with an ETA warning, memory estimates checked against the
+free device memory, ETA for time stepping\\
+(vii) field and precision & two switches per algebra, conversions between them, measured trade-offs\\
+\bottomrule
+\end{tabular}
+\caption{Implementation challenges (Section~\ref{sec:intro}) and how they are addressed.}
+\label{tab:challenges}
+\end{table}
+
+\paragraph{Data layout.} An operator is a tensor of shape $(B,C,k_{\max},k_{\max})$: $B$ samples, $C$
+sectors, block $c$ in the top-left $k_c\times k_c$ corner and zeros elsewhere. Linear algebra is applied
+to the batch of active blocks of each sector, so one call to a batched LAPACK/cuSOLVER routine serves all
+samples. The padding costs memory when the sector sizes differ strongly (for a chain of 14 spins,
+77\,\% of a padded operator is zeros); the library warns in that case, and \texttt{SpinChain} lets one work
+in single sectors $M_{\binom LN}$ without padding, which is what dense diagonalisation needs anyway.
+
+\paragraph{Objects.} \texttt{Operator} (with \texttt{DensityMatrix} as a subclass for states),
+\texttt{Channel} (sector preserving) and \texttt{InterSectorChannel} (between sectors or algebras) are
+thin wrappers around such tensors; Table~\ref{tab:modules} lists the modules. Operations on operators
+are lazy: they record how to compute the result and do so on first use; the result is cached and the
+recipe dropped, so intermediates of long expressions can be freed. Laziness defers and skips work but
+does not fuse operations; where this matters the library uses direct formulas, e.g.\
+$\Tr(\rho A)=\sum_{ij}\rho_{ij}A_{ji}$ in $O(k^2)$ instead of forming $\rho A$.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lp{0.78\textwidth}}
+\toprule
+module & content \\
+\midrule
+\texttt{algebra} & \texttt{TypeIAlgebra}, \texttt{Operator}: random operators, unitary ensembles, traces,
+functional calculus\\
+\texttt{states} & \texttt{DensityMatrix}, random states, Gibbs states, Lüders rule, entropies, fidelity\\
+\texttt{channels} & \texttt{Channel}, \texttt{InterSectorChannel}, Choi matrices, standard and random channels\\
+\texttt{composite} & plain and fused (charge-conserving) tensor products, \texttt{kron}, partial traces\\
+\texttt{chains} & \texttt{SpinChain}: $U(1)$ and momentum sectors, XXZ Hamiltonians with batched disorder,
+sparse form, reduced states, jump operators between sectors\\
+\texttt{krylov} & sparse sector Hamiltonians, batched Lanczos ground states, Krylov $e^{-itH}\psi$\\
+\texttt{dynamics} & exact Schrödinger/von Neumann evolution, RK4, Lindblad equation, $e^{t\mathcal L}$\\
+\texttt{optimize} & parametrisations with prescribed contrast, batched multistart \texttt{extremize}\\
+\texttt{cost} & run-time and memory estimates, warnings and errors\\
+\texttt{hilbert\_space} & the padded block layout of $\bigoplus_c\C^{k_c}$ and its random subspace bases\\
+\bottomrule
+\end{tabular}
+\caption{Modules of \texttt{torch\_vn\_algebra}.}
+\label{tab:modules}
+\end{table}
+
+\paragraph{Random unitaries.} Haar unitaries on $U(n)$ and $O(n)$ are obtained from the QR decomposition
+of a Ginibre matrix with i.i.d.\ complex (respectively real) Gaussian entries after fixing the phases (signs) of
+$\operatorname{diag}R$~\cite{mezzadri2007}; $SU(n)$ and $SO(n)$ by multiplying with $\det^{-1/n}$ or by
+a sign flip of one column; the circular orthogonal and symplectic ensembles as $W^TW$ and $W^RW$ with
+$W$ Haar on $U(n)$ ($n$ even for $W^RW$, $W^R$ the quaternion dual)~\cite{mehta2004}. Section~\ref{sec:validation} checks all of them.
+
+\paragraph{Differentiation.} All operations are composed of differentiable PyTorch primitives, so gradients
+with respect to the matrix entries are available; functionals of the eigenvalues alone differentiate
+without problems, but gradients propagated through eigen- or singular vectors contain factors
+$1/(\lambda_i-\lambda_j)$ and fail at degenerate spectra; the parametrisations of Section~\ref{sec:optimisation}
+avoid them. \texttt{Operator.eigenvalues()} computes spectra without forming eigenvectors, which also saves time and
+memory.
+
+\paragraph{GPUs, tensor cores and TF32.} The library computes in FP32 or FP64 (real or complex); it does not use
+half precision. GPU generations differ strongly in what this costs. Tensor cores, absent on the P100 used for the
+first version, accelerate matrix products on Volta and later GPUs; from Ampere (A100) on, FP32 products may be
+executed in the TF32 format with a 10-bit mantissa, which is fast but accurate only to about $10^{-3}$ relative.
+PyTorch (since 1.12) keeps true FP32 for matrix products by default, and the library does not change this setting;
+the paper scripts expose a \texttt{--tf32} switch to measure the effect and record the setting in every table.
+TF32 is acceptable where the statistical error dominates (moments and histograms of many samples) and not where
+small differences matter (eigenvalues near degeneracies, the validation tables, trace inequalities near equality). Eigen- and singular-value solvers do not use
+tensor cores. FP64 throughput is half of FP32 on data-centre GPUs (P100, V100, A100, H100), the latter two with FP64
+tensor cores, but only 1/32--1/64 on consumer GPUs. We therefore recommend a data-centre GPU for double-precision
+work; the full-size runs of this paper are intended for an A100 or newer, and all generated tables state the
+hardware they were produced on.
+
+\subsection*{Number field and precision}\label{sec:numerics}
+
+Every algebra is created with two independent switches, \texttt{complex\_valued} (real or complex
+matrices) and \texttt{precision} (\texttt{'single'} or \texttt{'double'}), giving the storage types
+\texttt{float32}, \texttt{float64}, \texttt{complex64} and \texttt{complex128}; everything built on the
+algebra (random operators, states, channels, chains, parametrisations) inherits them.
+\texttt{alg.like(complex\_valued=..., precision=...)} creates the same sector structure with other
+numerics and \texttt{op.cast(alg2)} moves an operator there, e.g.\ to explore in single precision and
+re-evaluate the interesting cases in double precision.
+
+\paragraph{The field is part of the model.} Choosing real matrices is not only a matter of speed: the
+symmetry group and the random ensembles change. Haar matrices of a real algebra are orthogonal, so
+moments, level statistics and extremal values refer to $O(n)$ instead of $U(n)$
+(e.g.\ $\mathbb E|U_{11}|^4=3/(n(n+2))$ instead of $2/(n(n+1))$, Table~\ref{tab:validation}); random
+real symmetric and complex Hermitian matrices have different level statistics, with mean spacing ratios
+$0.5307$ and $0.5996$ for GOE and GUE~\cite{atas2013}
+(our samples: \IfFileExists{generated/numerics.tex}{\NumRGOE\ and \NumRGUE}{not generated}). Real arithmetic is \emph{exact} (loses nothing) when the problem is
+real: spectra and eigenvectors of real symmetric matrices, ground states and their entanglement for
+Hamiltonians without complex hoppings, statistics of time-reversal-invariant systems, and also some
+extremal problems — for real $X,Y\ge0$ the supremum of $|\Tr(XUY)|$ over unitaries is attained by a real
+orthogonal matrix (the polar decomposition of the real matrix $YX$ is real). Complex matrices are
+\emph{required} for unitary time evolution $e^{-iHt}$ and Lindblad dynamics with a Hamiltonian (the library
+refuses to run them in a real algebra), for Haar unitaries, CUE/CSE and $SU(n)$, for random pure states
+and quantities such as Page's entropy, and for systems without an antiunitary symmetry squaring to $+1$ (orbital fluxes, complex
+couplings).
+
+\paragraph{Precision.} Single precision resolves about $10^{-7}$ relative to the largest entry. It is
+sufficient for Monte Carlo statistics whose statistical error is much larger (moments, histograms,
+spacing ratios with $10^3$--$10^5$ samples) and for the first, exploratory pass of an optimisation.
+Double precision is needed when the quantity of interest is small compared with the operators: an
+inequality checked near equality, small spectral gaps, entropies and logarithms of nearly singular
+states, contrasts close to $1$, comparisons with exact results beyond six digits, long RK4 integrations
+and optimisation to high relative accuracy. Table~\ref{tab:numerics-acc} shows how drastic the
+difference can be: the von Neumann entropy of an almost pure state with eigenvalues of order $10^{-9}$ is
+wrong by more than $100\,\%$ in single precision, and the round-off floor of a trace inequality that
+holds with equality is several orders of magnitude higher in single than in double precision (Table~\ref{tab:numerics-acc}).
+
+\paragraph{Cost.} An entry takes 4, 8, 8 and 16 bytes for \texttt{float32}, \texttt{float64},
+\texttt{complex64} and \texttt{complex128}, so memory, and the batch that fits, changes by a factor up to four
+(\texttt{alg.bytes\_per\_operator(B)} reports it). A complex multiply--add costs about four real ones, which bounds the
+slowdown of complex matrix products; for eigen- and singular-value solvers, and for double against single precision
+on CPUs, the measured ratios are smaller (Table~\ref{tab:numerics-time}). On GPUs double precision depends on the
+hardware: data-centre GPUs execute
+FP64 at half the FP32 rate, consumer GPUs at 1/32--1/64 of it, so that double precision there can be an
+order of magnitude slower. Table~\ref{tab:numerics-time} gives the measured ratios for the current run;
+the recommendation that follows is to use the smallest type that is exact for the model (real if the
+problem is real) and the precision that the size of the effect requires.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lrrrrrrrr}
+\toprule
+type & B/entry & MB/batch & \NumTimeHeader\\
+\midrule
+\NumTimeRows
+\bottomrule
+\end{tabular}
+\caption{Bytes per entry, memory of one batch [MB], and time relative to \texttt{float32} for $C=\IfFileExists{generated/numerics.tex}{\NumC}{8}$
+sectors of size $k=\IfFileExists{generated/numerics.tex}{\NumK}{16}$ and a batch of
+\IfFileExists{generated/numerics.tex}{\NumB}{B} operators\IfFileExists{generated/numerics.tex}{ (\NumMode\ run
+on \NumDevice; float32 times per sample: \NumRefTimes)}{}.}
+\label{tab:numerics-time}
+\end{table}
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lcccc}
+\toprule
+type & $\max\|UU^*-1\|$ & $\|\sqrt A^2-A\|/\|A\|$ & rel.\ error $S(\rho)$, $\rho\approx$ pure & $|z|$ at equality\\
+\midrule
+\NumAccRows
+\bottomrule
+\end{tabular}
+\caption{Accuracy of the same computations in the four storage types: Haar unitaries ($n=64$), SVD square
+root, entropy of $\rho=(1-\varepsilon)|0\rangle\langle0|+\varepsilon\,1/n$ with $\varepsilon=10^{-7}$, and the
+round-off floor of $z=\Tr(Y|X|Y)-\Tr|YXY|$ for commuting $X,Y$ (exactly $0$)\IfFileExists{generated/numerics.tex}{; \NumMode\ run on \NumDevice}{}.}
+\label{tab:numerics-acc}
+\end{table}
+
+\paragraph{Safeguards.} Batched computations make it easy to request hours of work or more memory than
+the device has. The \texttt{cost} module therefore (a) times the first few items of every large
+batched eigen-, singular-value or QR decomposition and matrix exponential and issues a warning with the expected
+total time when it exceeds a threshold (10\,s by default), (b) compares the estimated peak memory of
+large allocations with the free memory of the device, warning above 50\,\% and raising an
+\texttt{InsufficientMemoryError} above 90\,\%, and (c) after the second step of a time-stepping
+or optimisation loop, warns with the expected duration if it exceeds the same threshold; a progress bar is optional. All thresholds can
+be changed, and the checks can be switched off locally.
+
+\section{Usage by example}\label{sec:usage}
+
+The listings of this section are complete programs from \texttt{examples/paper}; the test suite runs
+them, so they stay in sync with the code. Each runs on a CPU in under half a minute and uses a GPU when available.
+
+\paragraph{Random operators with a prescribed contrast.} Listing~\ref{lst:ex1} builds $10^4$ positive
+operators in $M_2\oplus M_3\oplus M_4$ whose spectra have contrast $0.6$ and whose eigenvectors are
+Haar-random in every sector, and evaluates traces and spectral functions.
+\lstinputlisting[caption={Random operators (\texttt{ex1\_random\_operators.py}).},label=lst:ex1]{../examples/paper/ex1_random_operators.py}
+
+\paragraph{States, measurement and trace conventions.} Listing~\ref{lst:ex2} conditions random states on
+the outcome of a projective measurement (Lüders rule), which moves all probability into one sector, and
+checks that expectation values do not depend on the trace used to represent the state.
+\lstinputlisting[caption={States and conditioning (\texttt{ex2\_states\_measurement.py}).},label=lst:ex2]{../examples/paper/ex2_states_measurement.py}
+
+\paragraph{A map between sectors.} Two fermionic modes have sectors $N=0,1,2$ of dimensions $1,2,1$.
+Particle loss with Kraus operators $\sqrt{1-gN}$, $\sqrt g\,a_1$, $\sqrt g\,a_2$ ($0\le g\le\frac12$) maps sector $N$ to
+$N$ and $N-1$. Listing~\ref{lst:ex3} builds it from its blocks; the classical part is the transition
+matrix of a pure death process (columns: from $N=0,1,2$; rows: to $N=0,1,2$),
+\[
+  T=\begin{pmatrix}1&g&0\\0&1-g&2g\\0&0&1-2g\end{pmatrix},
+\]
+which the program prints. The last lines illustrate a simple fact: a unital positive map cannot
+increase the Michelson contrast, since $\lambda_{\min}1\le A\le\lambda_{\max}1$ implies the same bounds
+for $\Phi(A)$; the non-unital loss channel increases it for most samples.
+\lstinputlisting[caption={Particle loss between sectors (\texttt{ex3\_channels.py}).},label=lst:ex3]{../examples/paper/ex3_channels.py}
+
+\paragraph{Open-system dynamics.} Listing~\ref{lst:ex4} integrates spontaneous emission of a two-level
+atom with the RK4 solver and with the exact exponential of the Lindblad generator, and compares both with
+$P_e(t)=P_e(0)e^{-\gamma t}$ and $|\rho_{eg}(t)|=|\rho_{eg}(0)|e^{-\gamma t/2}$.
+\lstinputlisting[caption={Spontaneous emission (\texttt{ex4\_dynamics.py}).},label=lst:ex4]{../examples/paper/ex4_dynamics.py}
+
+\paragraph{Tensor products.} Listing~\ref{lst:ex5} estimates the mean entanglement entropy of random
+pure states on $\C^m\otimes\C^n$ and compares it with Page's formula~\cite{page1993}.
+\lstinputlisting[caption={Page entropy (\texttt{ex5\_page\_entropy.py}).},label=lst:ex5]{../examples/paper/ex5_page_entropy.py}
+
+\paragraph{Searching for a violation.} Listing~\ref{lst:ex6} compares Haar sampling with batched gradient
+ascent for $\sup_U\bigl(|\Tr(XUY)|-\Tr(XY)\bigr)$, whose exact value $\|YX\|_1-\Tr(XY)$ is positive for
+non-commuting $X,Y\ge0$. Section~\ref{sec:optimisation} studies this systematically.
+\lstinputlisting[caption={Sampling versus optimisation (\texttt{ex6\_inequality\_search.py}).},label=lst:ex6]{../examples/paper/ex6_inequality_search.py}
+
+\paragraph{Spin chains.} Listing~\ref{lst:ex7} works with a Heisenberg ring of ten spins. A uniform field
+moves the ground state through the sectors until the chain is fully polarised above the saturation
+field $h_s=2J$ (above it the ground state is the all-down state $N=0$ for our sign $+\sum_ih_iS^z_i$; the last
+crossing is with the one-magnon level at $k=\pi$); 100 realisations of random fields are diagonalised in one batch to compute the mean
+level-spacing ratio; and the entanglement entropy of the ground state is computed from reduced states.
+Section~\ref{sec:chains} checks these tools against exact results.
+\lstinputlisting[caption={Spin chains (\texttt{ex7\_spin\_chain.py}).},label=lst:ex7]{../examples/paper/ex7_spin_chain.py}
+
+\paragraph{Large sectors and open chains.} Dense matrices of a sector of dimension $\binom{L}{L/2}$ stop
+fitting at about $L=16$--$18$. Listing~\ref{lst:ex8} uses the sparse form of the Hamiltonian (a batch of
+diagonals and one shared hopping matrix) with Lanczos and Krylov solvers, splits a ring into momentum
+sectors, and lets particles leak out of the chain through Lindblad jumps between sectors.
+\lstinputlisting[caption={Large sectors and open chains (\texttt{ex8\_large\_and\_open\_chains.py}).},label=lst:ex8]{../examples/paper/ex8_large_and_open_chains.py}
+
+\paragraph{A noisy quantum circuit with a conserved quantity.} The quantum alternating operator ansatz solves
+constrained optimisation problems with ``XY mixers'' (normalised here as $H_M=\frac14\sum_{\langle ij\rangle}(X_iX_j+Y_iY_j)$, the XXZ form with $J=1$, $\Delta=0$) that keep the Hamming weight of the
+computational basis states, so the evolution stays in the feasible subspace~\cite{hadfield2019}. In the language of
+this paper the qubit register carries the algebra $\bigoplus_{N=0}^nM_{\binom nN}$ of Hamming-weight sectors, the
+mixer is an element of it, amplitude damping (time $T_1$) is a Lindblad jump between sectors and pure dephasing (time $T_\varphi$,
+which together with $T_1$ sets the coherence time $T_2$, $1/T_2=1/(2T_1)+1/T_\varphi$) a jump inside them, and reading out the Hamming weight is the measurement of a central projection. Listing~\ref{lst:ex9}
+evolves $|111000\rangle$ (weight $w=3$) on a ring of six qubits under $H_M$ for a time $T=2$ with both kinds of noise,
+jump operators $S^-_i$ at rate $\gamma_1$ (damping) and $S^z_i=\frac12Z_i$ at rate $\gamma_2$ (dephasing), so that $T_1=1/\gamma_1$,
+$1/T_\varphi=\gamma_2/2$ and $1/T_2=(\gamma_1+\gamma_2)/2$, and post-selects on the initial weight. With damping only (equal rates on all qubits), the post-selected fidelity is exactly one and the acceptance probability is $e^{-w\gamma_1T}$: the
+no-jump evolution is generated by $H-\frac{i}{2}\gamma_1N$, and $N$ is central, so it only rescales the state. This
+exact statement is part of the test suite. Dephasing stays inside the sector and is not detected; because $N$ is central, the
+post-selected state does not depend on $\gamma_1$ even with dephasing (fidelity with the noiseless state):
+\begin{center}\footnotesize
 \begin{tabular}{rrrrr}
 \toprule
-$n$ & $1/n$ & relative error of $\mathbb E|U_{11}|^2$ & relative standard error & $|\mathbb E[U_{11}^2]|$\\
+$\gamma_1$ & $\gamma_2$ & $P(\text{weight }3)$ & fidelity & after post-selection\\
 \midrule
-2  & 0.5     & $9.3\times10^{-4}$ & $5.8\times10^{-3}$ & $3.3\times10^{-3}$\\
-4  & 0.25    & $5.1\times10^{-3}$ & $7.8\times10^{-3}$ & $3.5\times10^{-3}$\\
-8  & 0.125   & $4.7\times10^{-3}$ & $8.9\times10^{-3}$ & $6.6\times10^{-4}$\\
-16 & 0.0625  & $1.9\times10^{-2}$ & $9.4\times10^{-3}$ & $3.0\times10^{-4}$\\
-32 & 0.03125 & $2.0\times10^{-2}$ & $9.6\times10^{-3}$ & $2.7\times10^{-4}$\\
+0.02 & 0 & 0.8869 & 0.8869 & 1.0000\\
+0 & 0.02 & 1.0000 & 0.9730 & 0.9730\\
+0.02 & 0.02 & 0.8869 & 0.8629 & 0.9730\\
+0.1 & 0.1 & 0.5488 & 0.4805 & 0.8755\\
 \bottomrule
 \end{tabular}
-\caption{Haar measure on $U(n)$, $10\,000$ samples.}
-\label{tab:haar}
-\end{table}
+\end{center}
+\lstinputlisting[caption={XY mixer with amplitude damping, dephasing and post-selection (\texttt{ex9\_qaoa\_xy\_mixer.py}).},label=lst:ex9]{../examples/paper/ex9_qaoa_xy_mixer.py}
 
-\paragraph{Power iteration.} For a $3\times3$ matrix with eigenvalues $[1.0, 0.99, 0.98]$
-(gap $0.01$), the power iteration needed $699$ iterations before successive Rayleigh quotients
-differed by less than $10^{-8}$, compared to $15$ iterations for the well-separated spectrum
-$[2, 1, 0.5]$. Note that for the small gap the actual error at that point was
-$4.9\times10^{-7}$, i.e.\ a stopping rule on successive differences overestimates the accuracy
-when the gap is small. This is why the library uses exact diagonalisation up to $k_c = 256$.
+\section{Validation against exact results}\label{sec:validation}
 
-\paragraph{Square root.} We generated $1000$ random $100\times 100$ positive matrices
-(eigenvalues uniform in $[0,1]$) and computed $B = \sqrt{A}$ via SVD. The relative error
-$\|B^2 - A\|_F/\|A\|_F$ was $2.0\times10^{-6}$ on average (maximum $2.4\times10^{-6}$) in the
-library's default single precision and $4.0\times10^{-15}$ (maximum $4.9\times10^{-15}$) in double
-precision, i.e.\ at the level of the respective machine epsilon.
-
-\subsection{Benchmark setup and speedup results}
-
-All benchmarks were run on an NVIDIA Tesla P100 (16\,GB) and an Intel Xeon E5-2650 v4
-@ 2.2\,GHz (12 cores) with \texttt{scripts/benchmark.py}. Each test input is a tensor of shape
-$(C, k, k)$, i.e.\ the channel axis plays the role of the batch, with
-$k\in\{2,4,\dots,64\}$ and $C\in\{1,2,4,\dots,1024\}$; every configuration was timed with three
-random seeds and ten repetitions. Speedup is defined as $t_{\mathrm{CPU}}/t_{\mathrm{GPU}}$ and
-includes the final device synchronisation but not the host-to-device transfer. The benchmark
-times the batched PyTorch kernels underlying the library operations (trace, addition,
-multiplication, inverse, SVD, symmetric eigensolver, norms) on Gaussian random matrices; the
-CPU used PyTorch's default thread count.
-% TODO(authors): confirm the CPU thread setting of the stored run.
-
-Table~\ref{tab:speedup} shows the speedup for the inverse and for matrix multiplication. A
-second, independent run with the same configuration (stored in the repository as
-\texttt{results/benchmark/run\_b}) agrees with the first within a median factor of $1.12$, but
-single configurations may differ considerably, so the numbers should be read as orders of
-magnitude. For a single channel the CPU is always faster (speedup $0.3$--$0.7$), because kernel
-launch overhead dominates. The GPU pays off from about $C\ge 64$ blocks of size $k\ge 8$, with
-speedups of 15--135 at $C = 1024$. For the SVD and the symmetric eigensolver the GPU becomes
-\emph{slower} than the CPU at $k = 64$ (speedup $0.2$--$0.6$ for all $C$), which marks the
-transition from the batched small-matrix GPU solvers to the general ones; this is the main
-practical limitation for larger blocks (Section~\ref{sec:limitations}).
+Table~\ref{tab:validation} compares Monte Carlo estimates produced with the library (double precision)
+with exact values: fourth moments of Haar unitaries and orthogonal matrices; the Weingarten-calculus
+value $\mathbb E\,\tau\bigl((AUBU^*)^2\bigr)=-1/(n^2-1)$ for traceless involutions $A=B$ and Haar $U$ in $M_n(\C)$;
+Page's formula for $\langle S(\rho_A)\rangle$; and the mean purity $(k+r)/(kr+1)$ of induced random
+states of rank $r$~\cite{zyczkowski2001}. The last column is the deviation in units of the standard
+error; for a correct sampler these should look like standard normal deviates. For the circular ensembles the Wigner surmise is only an approximation to
+the exact spacing distribution, so no $z$-score is given; Figure~\ref{fig:spacings} shows the
+distributions, with $L^1$ distances
+\IfFileExists{generated/validation.tex}{\ValLoneOne, \ValLoneTwo\ and \ValLoneFour\ for
+$\beta=1,2,4$}{(not generated)} from the surmise; level repulsion $P(s)\sim s^\beta$ is clearly
+visible. The spontaneous-emission example agrees with the analytic solution to
+\IfFileExists{generated/validation.tex}{$\ValEmissionExp$ (exact exponential) and $\ValEmissionRK$ (RK4)}{(not generated)}.
 
 \begin{table}[h]
-\centering
-\begin{tabular}{r|rrr|rrr}
+\centering\small
+\begin{tabular}{llrrrr}
 \toprule
- & \multicolumn{3}{c|}{inverse} & \multicolumn{3}{c}{multiplication}\\
-$k$ & $C=1$ & $C=64$ & $C=1024$ & $C=1$ & $C=64$ & $C=1024$\\
+quantity & parameters & exact & Monte Carlo & std.\ error & $z$\\
 \midrule
-2  & 0.3 & 1.6 (1.0)   & 11.3  & 0.4 & 0.5 (0.5)  & 0.5\\
-4  & 0.3 & 1.5 (1.2)   & 15.5  & 0.4 & 0.5 (0.4)  & 1.0\\
-8  & 0.3 & 25.1 (16.0) & 134.8 & 0.5 & 2.5 (2.0)  & 27.2\\
-16 & 0.4 & 21.0 (19.1) & 50.6  & 0.5 & 2.8 (2.2)  & 34.8\\
-32 & 0.3 & 34.7 (40.5) & 49.0  & 0.6 & 6.0 (4.1)  & 58.3\\
-64 & 0.5 & 17.9 (10.7) & 18.9  & 0.7 & 11.0 (10.6) & 138.4\\
+\ValidationRows
 \bottomrule
 \end{tabular}
-\caption{Mean speedup $t_{\mathrm{CPU}}/t_{\mathrm{GPU}}$ for $C$ blocks of size $k$
-(first run; values of the second run in parentheses).}
-\label{tab:speedup}
+\caption{Monte Carlo estimates versus exact values (for $\langle s^2\rangle$ the Wigner surmise, an approximation,
+hence no $z$)\IfFileExists{generated/validation.tex}{; samples: \ValSHaar\ per Haar moment, \ValSW\ per Weingarten
+row, \ValSce\ matrices per circular ensemble, \ValSPage\ states per Page row, \ValSPur\ per purity row
+(\ValMode\ run on \ValDevice, PyTorch \ValTorch)}{}.}
+\label{tab:validation}
 \end{table}
 
-\section{Monte Carlo experiments on trace inequalities}\label{sec:experiments}
+\begin{figure}[h]
+\centering
+\fig{spacings.pdf}{\textwidth}\\[2mm]
+\fig{page.pdf}{0.45\textwidth}
+\caption{Top: nearest-neighbour spacings of COE, CUE and CSE eigenphases generated by the library\IfFileExists{generated/validation.tex}{ ($n=\ValNce$, \ValSce\ matrices per ensemble)}{},
+against the Wigner surmise. Bottom: mean entanglement entropy of random pure states against Page's
+formula\IfFileExists{generated/validation.tex}{ (\ValSPage\ states per point)}{} (error bars: two standard errors).}
+\label{fig:spacings}
+\end{figure}
 
-We perform three Monte Carlo experiments that mirror earlier NumPy code and illustrate the
-library's capabilities. All experiments are reproduced by \texttt{scripts/experiment.py}. For
-each block size $k\in\{2,16\}$ and number of channels $C\in\{1,2,16,32\}$ (all $k_c = k$) we
-generate $20\,000$ random operator pairs in the real algebra
-$\M = \bigoplus_{c=1}^C M_k(\mathbb R)$. Operators are constructed via the spectral theorem: in
-every block the largest eigenvalue is $1$, the smallest is $(1-\delta)/(1+\delta)$ with $\delta$
-uniform in $[0,1)$, and the remaining eigenvalues are uniform in between; the eigenvectors are
-Haar-random orthogonal matrices, independent for every block and sample. Throughout this
-section $\Tr = \Tr_{\mathrm{blunt}}$, and ``$U$ unitary in $\M$'' means
-$U = \bigoplus_c U_c$ with independent Haar-random orthogonal $U_c$.
-
-Table~\ref{tab:experiments} summarises the sign of the quantity $z$ in each experiment; the
-figures show scatter plots of $z$ against the contrasts. Raw samples, all plots, and the
-summary table are available in the repository (\texttt{results/experiments}).
+\paragraph{Trace functionals.} The three traces are checked on random non-Hermitian operators in
+$M_2\oplus M_3\oplus M_5$ (Table~\ref{tab:traces}): normalisation on the identity ($\sum_ck_c$, $C$ and $1$),
+the tracial property $\operatorname{tr}(AB)=\operatorname{tr}(BA)$, invariance under unitaries of $\M$, and
+positivity $\operatorname{tr}(A^*A)>0$ (faithfulness); the last column is the smallest ratio
+$\operatorname{tr}(A^*A)/\|A\|_F^2$ over the samples, which is bounded below by $\min_cw_c$. The relation $\Tr_{\mathrm{norm}}=C\,\tau_{\mathrm{vN}}$ holds to
+\IfFileExists{generated/validation.tex}{$\ValTraceNormTau$}{round-off}. All three return values
+in the number field of the algebra (complex traces of non-Hermitian operators).
 
 \begin{table}[h]
-\centering
-\begin{tabular}{rr|rr|rr|rr}
+\centering\small
+\begin{tabular}{lcccc}
 \toprule
- & & \multicolumn{2}{c|}{Exp.~1} & \multicolumn{2}{c|}{Exp.~2} & \multicolumn{2}{c}{Exp.~3}\\
-$k$ & $C$ & $z>0$, \% & $\max z$ & $z>0$, \% & $z<0$, \% & $z<0$, \% & $\min z$\\
+trace & error of $\operatorname{tr}(1)$ & $\max|\operatorname{tr}(AB)-\operatorname{tr}(BA)|$ &
+$\max|\operatorname{tr}(UAU^*)-\operatorname{tr}(A)|$ & $\min\operatorname{tr}(A^*A)/\|A\|_F^2$\\
 \midrule
-2 & 1 & 7.0 & 0.227 & 52.9 & 46.6 & 0.0 & -8.34e-07 \\
-2 & 2 & 0.7 & 0.328 & 54.2 & 45.8 & 0.0 & -9.54e-07 \\
-2 & 16 & 0.0 & -4.37 & 62.4 & 37.6 & 0.0 & 0.00115 \\
-2 & 32 & 0.0 & -15.9 & 68.2 & 31.8 & 0.0 & 0.0764 \\
-16 & 1 & 0.0 & -2.18 & 57.4 & 41.9 & 0.0 & -7.63e-06 \\
-16 & 2 & 0.0 & -5.73 & 63.0 & 36.9 & 0.0 & 1.72e-05 \\
-16 & 16 & 0.0 & -89 & 86.4 & 13.6 & 0.0 & 1.83 \\
-16 & 32 & 0.0 & -193 & 94.1 & 5.9 & 0.0 & 6.11 \\
+\ValTraceRows
 \bottomrule
 \end{tabular}
-\caption{Sign of $z$ over $20\,000$ samples per configuration ($|z|\le10^{-4}$ counted as zero).}
-\label{tab:experiments}
+\caption{Identities of the three trace functionals, 2000 random operators in double precision\IfFileExists{generated/validation.tex}{; \ValMode\ run on \ValDevice}{}.}
+\label{tab:traces}
 \end{table}
 
-\subsection{Experiment 1 (positive $X$, positive $Y$, unitary $U$)}
+\section{From sampling to optimisation}\label{sec:optimisation}
 
-Both $X$ and $Y$ are positive operators and $U$ is a random unitary in $\M$. The quantity of
-interest is
+The first version of this work~\cite{v1} studied three trace functionals by Monte Carlo:
+\begin{align*}
+  \text{Exp.~1:}\quad & z=|\Tr(XUY)|-\Tr(XY), && X,Y\ge0,\ U\in\M\ \text{unitary},\\
+  \text{Exp.~2:}\quad & z=\Tr|XY|-\Tr(|X|\,|Y|), && X=UX_0,\ Y=VY_0,\ X_0,Y_0\ge0,\ U,V\in\M\ \text{unitary},\\
+  \text{Exp.~3:}\quad & z=\Tr(Y|X|Y)-\Tr|YXY|, && X=X^*,\ Y\ge0,
+\end{align*}
+with $\Tr=\Tr_{\mathrm{blunt}}$, operators normalised to $\lambda_{\max}=1$, and the contrasts of the
+operators as parameters (for the self-adjoint $X$ of Exp.~3 and the factors of Exp.~2, the contrasts of $|X|$, $|Y|$). Two observations motivate a different approach.
+
+\paragraph{Sampling misses the extremes.} For fixed $X,Y$ the supremum in Exp.~1 is known exactly,
+$\sup_U z=\|YX\|_1-\Tr(XY)>0$. Table~\ref{tab:search} and Figure~\ref{fig:search} show that the best of
+\IfFileExists{generated/search.tex}{\SearchSamples}{many} Haar samples falls short of the supremum for every $k$, misses
+the violation for all pairs from $k=4$ on, and moves further away from it as $k$ grows, while batched gradient ascent
+(\IfFileExists{generated/search.tex}{\SearchStarts\ starts, \SearchSteps\ steps}{multistart}) finds it
+to a relative error of at most \IfFileExists{generated/search.tex}{$\SearchMaxErr$}{about $10^{-5}$} (Table~\ref{tab:search}). This is concentration of measure: the unitaries close to
+the maximiser form a set whose Haar measure decays rapidly with the dimension. This search is done in the complex algebra $M_k(\C)$ ($C=1$, eigenvalues of $X,Y$ uniform in $[0.2,1.2]$, double
+precision); the same concentration effect explains the absence of violations in the (real) Monte Carlo samples
+for $k=16$ reported in~\cite{v1}: it is a property of the sampling, not of the inequality.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{rcccrccrr}
+\toprule
+$k$ & \multicolumn{2}{c}{violation found} & $\sup z/\Tr XY$ & best sample & \multicolumn{2}{c}{ascent rel.\ error}
+& \multicolumn{2}{c}{time [s]}\\
+& sampling & ascent & & $z/\Tr XY$ & median & max & sampl. & ascent\\
+\midrule
+\SearchRows
+\bottomrule
+\end{tabular}
+\caption{Exp.~1 for fixed random $X,Y$ in $M_k(\C)$ (eigenvalues uniform in $[0.2,1.2]$, double precision): Haar
+sampling versus gradient ascent (medians over
+\IfFileExists{generated/search.tex}{\SearchPairs}{several} pairs\IfFileExists{generated/search.tex}{;
+\SearchMode\ run on \SearchDevice}{}).}
+\label{tab:search}
+\end{table}
+
+\begin{figure}[h]
+\centering\fig{search.pdf}{0.55\textwidth}
+\caption{Best $z$ found by sampling and by gradient ascent, relative to $\Tr(XY)$, against the exact
+supremum (symmetric log scale).}
+\label{fig:search}
+\end{figure}
+
+\paragraph{Constrained optimisation.} The natural objects are the envelopes
 \[
-  z = |\Tr(XUY)| - \Tr(XY).
+  \overline z(\delta)=\sup\{z:\Delta(X)=\delta\},\qquad \underline z(\delta)=\inf\{z:\Delta(X)=\delta\},
 \]
-The inequality $|\Tr(XUY)|\le\Tr(XY)$ holds for all unitaries $U$ when $X$ and $Y$ commute, but
-not in general: writing the polar decomposition $YX = W|YX|$ with $W$ unitary in $\M$ and
-choosing $U = W^*$ gives $\Tr(XUY) = \Tr(W^*YX) = \|YX\|_1 \ge \Tr(YX) = \Tr(XY)$, with strict
-inequality whenever $YX$ is not positive. Random unitaries come close to this extremal choice only rarely, and
-increasingly so as $k$ and $C$ grow. In the simulations $z>0$ occurs in $7.0\%$ of the samples
-for $k = 2$, $C = 1$ and in $0.7\%$ for $k=2$, $C=2$, but in none of the samples with $k = 16$
-or $C\ge 16$. Positive values occur only away from scalar operators: for $k=2$, $C=1$ the
-largest $z$ over samples with $\Delta(X),\Delta(Y)<0.1$ is $-4\times10^{-4}$, and the size of the
-violations grows with $\Delta(X)$ (Figure~\ref{fig:exp1-small}). The contrasts $\Delta(X)$ and $\Delta(Y)$ are computed from the global extreme
-eigenvalues.
+(and the same with $\Delta(Y)$, or with both contrasts prescribed), the supremum being taken over all
+remaining variables. The module \texttt{optimize} parametrises the constraint set exactly: the spectrum
+is $\lambda_{\max}=1$, $\lambda_{\min}=(1-\delta)/(1+\delta)$ and the other eigenvalues strictly in between
+(through a sigmoid); the two eigenvalue positions that carry $\lambda_{\max}$ and $\lambda_{\min}$ are drawn at
+random per start, in the same sector or in different ones, so that the starts together cover a dense subset of
+the constraint set, the eigenvectors are $U=U_0e^{G-G^*}$ with a Haar-random $U_0$ per start and a chart
+that is re-centred after every round, and for Exp.~3 the signs of the eigenvalues of $X$ are drawn per
+start and kept fixed. Every grid point and every start is one element of the batch, so each envelope (supremum
+or infimum along one contrast) is computed in one batched optimisation. All envelopes are computed in real algebras
+(real symmetric $X,Y$ and orthogonal $U$), the setting of the Monte Carlo study of~\cite{v1}.
 
-\begin{lstlisting}[caption={Experiment 1 implementation}]
-def experiment1(alg, batch_size, num_batches, device):
-    pos = positive_sampler(batch_size, device)
-    out = []
-    for _ in range(num_batches):
-        X = alg.operator_from_eigenvalues(pos, batch_size=batch_size,
-                                          force_positive=True, force_self_adjoint=True)
-        Y = alg.operator_from_eigenvalues(pos, batch_size=batch_size,
-                                          force_positive=True, force_self_adjoint=True)
-        U = alg.random_unitary_operator(batch_size)
-        z = (X @ U @ Y).trace.abs() - (X @ Y).trace.real
-        out.append((X.michelson_contrast, Y.michelson_contrast, z))
-    return collect(out)
-\end{lstlisting}
+Figures~\ref{fig:bounds} and~\ref{fig:bounds2d} and Table~\ref{tab:bounds} show the result. Each Monte
+Carlo sample of~\cite{v1} is checked against both envelopes, along $\Delta(X)$ and along $\Delta(Y)$; samples that fall
+outside the linear interpolation between grid points are re-optimised at their exact contrast. \IfFileExists{generated/bounds.tex}{Of the \BoundsMcChecked\ samples with both contrasts in the grid (\BoundsMcDropped\ have a contrast above
+$0.999$), \BoundsMcOutside\ remain outside after this step;
+such samples mark contrasts where the local search did not reach the true extremum, so their number is a direct
+check of the optimiser.}{} For a single sector of size $k=2$ the samples come close
+to the envelopes; with two sectors they already miss a substantial part of the range (Table~\ref{tab:bounds}), and
+for larger $k$ sampling misses the extremes entirely (Table~\ref{tab:search}).
 
-\begin{figure}[p]
-\centering
-\begin{subfigure}{\textwidth}\centering
-\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim2_ch1_xz.png}
-\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim2_ch1_yz.png}
-\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim2_ch1_3d.png}
-\caption{$k=2$, $C=1$}
-\end{subfigure}
-\begin{subfigure}{\textwidth}\centering
-\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim2_ch2_xz.png}
-\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim2_ch2_yz.png}
-\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim2_ch2_3d.png}
-\caption{$k=2$, $C=2$}
-\end{subfigure}
-\begin{subfigure}{\textwidth}\centering
-\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim2_ch16_xz.png}
-\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim2_ch16_yz.png}
-\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim2_ch16_3d.png}
-\caption{$k=2$, $C=16$}
-\end{subfigure}
-\caption{Experiment 1: small dimension ($k = 2$). Left: $z$ vs.\ $\Delta(X)$; middle: $z$ vs.\ $\Delta(Y)$; right: both.}
-\label{fig:exp1-small}
-\end{figure}
-
-\begin{figure}[p]
-\centering
-\begin{subfigure}{\textwidth}\centering
-\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim16_ch1_xz.png}
-\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim16_ch1_yz.png}
-\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim16_ch1_3d.png}
-\caption{$k=16$, $C=1$}
-\end{subfigure}
-\begin{subfigure}{\textwidth}\centering
-\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim16_ch16_xz.png}
-\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim16_ch16_yz.png}
-\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim16_ch16_3d.png}
-\caption{$k=16$, $C=16$}
-\end{subfigure}
-\begin{subfigure}{\textwidth}\centering
-\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim16_ch32_xz.png}
-\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim16_ch32_yz.png}
-\includegraphics[width=0.32\textwidth]{exp1/plots/exp1_dim16_ch32_3d.png}
-\caption{$k=16$, $C=32$}
-\end{subfigure}
-\caption{Experiment 1: intermediate dimension ($k = 16$). Left: $z$ vs.\ $\Delta(X)$; middle: $z$ vs.\ $\Delta(Y)$; right: both.}
-\end{figure}
-
-
-\subsection{Experiment 2 (non-Hermitian $X$, non-Hermitian $Y$)}
-
-Both $X$ and $Y$ are made non-Hermitian by multiplying positive operators with random unitaries:
-$X = UX_0$, $Y = VY_0$, so that $|X| = X_0$ and $|Y| = Y_0$. The quantity of interest is
-\[
-  z = \Tr|XY| - \Tr(|X|\,|Y|) = \|X_0 V Y_0\|_1 - \Tr(X_0 Y_0).
-\]
-$z$ takes both signs: for $V = I$ one has $z = \|X_0Y_0\|_1 - \Tr(X_0Y_0)\ge 0$, while for $V$
-far from the identity $\|X_0VY_0\|_1$ can be much smaller than $\Tr(X_0Y_0)$. In the
-simulations $z>0$ in $53$--$94\%$ of the samples, the share growing with $k$ and $C$. The contrasts are
-computed from $|X| = X_0$ and $|Y| = Y_0$, i.e.\ from the singular values of $X$ and $Y$.
-
-\begin{lstlisting}[caption={Experiment 2 implementation}]
-def experiment2(alg, batch_size, num_batches, device):
-    pos = positive_sampler(batch_size, device)
-    out = []
-    for _ in range(num_batches):
-        X0 = alg.operator_from_eigenvalues(pos, batch_size=batch_size,
-                                           force_positive=True, force_self_adjoint=True)
-        Y0 = alg.operator_from_eigenvalues(pos, batch_size=batch_size,
-                                           force_positive=True, force_self_adjoint=True)
-        X = alg.random_unitary_operator(batch_size) @ X0
-        Y = alg.random_unitary_operator(batch_size) @ Y0
-        z = (X @ Y).abs().trace.real - (X.abs() @ Y.abs()).trace.real
-        out.append((X0.michelson_contrast, Y0.michelson_contrast, z))
-    return collect(out)
-\end{lstlisting}
-
-\begin{figure}[p]
-\centering
-\begin{subfigure}{\textwidth}\centering
-\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim2_ch1_xz.png}
-\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim2_ch1_yz.png}
-\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim2_ch1_3d.png}
-\caption{$k=2$, $C=1$}
-\end{subfigure}
-\begin{subfigure}{\textwidth}\centering
-\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim2_ch2_xz.png}
-\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim2_ch2_yz.png}
-\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim2_ch2_3d.png}
-\caption{$k=2$, $C=2$}
-\end{subfigure}
-\begin{subfigure}{\textwidth}\centering
-\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim2_ch16_xz.png}
-\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim2_ch16_yz.png}
-\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim2_ch16_3d.png}
-\caption{$k=2$, $C=16$}
-\end{subfigure}
-\caption{Experiment 2: small dimension ($k = 2$). Left: $z$ vs.\ $\Delta(|X|)$; middle: $z$ vs.\ $\Delta(|Y|)$; right: both.}
-\end{figure}
-
-\begin{figure}[p]
-\centering
-\begin{subfigure}{\textwidth}\centering
-\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim16_ch1_xz.png}
-\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim16_ch1_yz.png}
-\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim16_ch1_3d.png}
-\caption{$k=16$, $C=1$}
-\end{subfigure}
-\begin{subfigure}{\textwidth}\centering
-\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim16_ch16_xz.png}
-\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim16_ch16_yz.png}
-\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim16_ch16_3d.png}
-\caption{$k=16$, $C=16$}
-\end{subfigure}
-\begin{subfigure}{\textwidth}\centering
-\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim16_ch32_xz.png}
-\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim16_ch32_yz.png}
-\includegraphics[width=0.32\textwidth]{exp2/plots/exp2_dim16_ch32_3d.png}
-\caption{$k=16$, $C=32$}
-\end{subfigure}
-\caption{Experiment 2: intermediate dimension ($k = 16$). Left: $z$ vs.\ $\Delta(|X|)$; middle: $z$ vs.\ $\Delta(|Y|)$; right: both.}
-\end{figure}
-
-
-\subsection{Experiment 3 (self-adjoint $X$, positive $Y$)}
-
-Here $X$ is self-adjoint (eigenvalues with independent random signs) and $Y$ is positive. The
-quantity of interest is
-\[
-  z = \Tr(Y|X|Y) - \Tr|YXY|.
-\]
+Four envelopes can be checked analytically. In Exp.~3, $z\ge0$ always:
 
 \begin{proposition}
-For $X = X^*$ and $Y\ge 0$ in $\M$ one has $z\ge 0$. If $Y$ commutes with $X$ (in particular,
-if $Y$ is central), then $z = 0$.
+For $X=X^*$ and $Y\ge0$, $\Tr|YXY|\le\Tr(Y|X|Y)$, with equality if and only if $YX_+Y^2X_-Y=0$, in particular
+if $Y$ commutes with $X$.
 \end{proposition}
 \begin{proof}
-Write $X = X_+ - X_-$ with $X_\pm\ge 0$, $|X| = X_+ + X_-$. By the triangle inequality for the
-trace norm, $\Tr|YXY| = \|YX_+Y - YX_-Y\|_1 \le \Tr(YX_+Y) + \Tr(YX_-Y) = \Tr(Y|X|Y)$. If
-$YX = XY$, then $YXY = Y^2X$ and $|YXY| = Y^2|X| = Y|X|Y$.
+With $X=X_+-X_-$, $|X|=X_++X_-$, the triangle inequality for the trace norm gives
+$\|YX_+Y-YX_-Y\|_1\le\Tr(YX_+Y)+\Tr(YX_-Y)$; for positive $A,B$, $\|A-B\|_1=\Tr A+\Tr B$ if and only if
+$AB=0$. If $XY=YX$, then $YX_+Y^2X_-Y=Y^4X_+X_-=0$.
 \end{proof}
+\noindent The computed lower envelope of Exp.~3 is zero to within \IfFileExists{generated/bounds.tex}{$\BoundsExpThreeInf$}{round-off}. In Exp.~1, the lower envelope
+for prescribed $\Delta(X)=\delta$ equals $-(kC-2\delta/(1+\delta))$ when all sectors have size $k\ge2$:
+$\Tr(XY)\le\Tr X\le kC-1+\lambda_{\min}(X)$ with equality for $Y=1$, while $|\Tr(UYX)|$ can be made zero
+by a cyclic permutation of the eigenbasis of $X_c$ in every sector. The optimiser reproduces this curve to a relative deviation of
+\IfFileExists{generated/bounds.tex}{\BoundsExactDev}{(not generated)} (from above: the minimiser $Y=1$ has contrast $0$, which
+the sigmoid parametrisation of the free contrast approaches but does not reach). In Exp.~2, $|X|=X_0$ and
+$|Y|=Y_0$ and the unitary $U$ drops out, so $z=\|X_0VY_0\|_1-\Tr(X_0Y_0)$. Since $V$ and the eigenbases act
+sector by sector, von Neumann's trace inequality $\|AB\|_1\le\sum_is_i(A)s_i(B)$, its lower counterpart
+$\|AB\|_1\ge\sum_is_i(A)s_{k+1-i}(B)$ and rearrangement give, for given spectra,
+\[
+  \sup z=-\inf z=\sum_c\sum_i x_{c,i}^\downarrow\bigl(y_{c,i}^\downarrow-y_{c,i}^\uparrow\bigr),
+\]
+with $x_{c,i}^\downarrow$ the eigenvalues of $X_c$ in decreasing order and $y_{c,i}^\downarrow$, $y_{c,i}^\uparrow$ those of
+$Y_c$ in decreasing and increasing order. For $k=2$, $C=1$ this is $(1-\lambda_{\min}(X))(1-\lambda_{\min}(Y))$; with
+$\Delta(|X|)=\delta$ prescribed and $\Delta(|Y|)\le0.999$ free, $\pm\sup z=\pm\frac{2\delta}{1+\delta}(1-\frac{0.001}{1.999})$, and
+$\frac{2\delta}{1+\delta}$ in the limit $\Delta(|Y|)\to1$. The optimiser reproduces both envelopes to a relative deviation of
+\IfFileExists{generated/bounds.tex}{\BoundsExactDevTwo}{(not generated)}.
+For $k=2$, $C=1$ the computed upper envelopes of Exp.~1 and Exp.~3 along $\Delta(X)=\delta$ agree with
+$\delta^2/(2(1+\delta))$ and $1-\delta$ to a relative deviation of
+\IfFileExists{generated/bounds.tex}{\BoundsConjDevOne\ and \BoundsConjDevThree}{(not generated)}; we have no proof of
+these closed forms. For larger $k$ and $C$ the upper envelopes of Exp.~1 and Exp.~3 are, to our knowledge, not known in
+closed form; the computed curves are lower bounds for them (a local search) and suggest conjectures for sharp
+contrast-dependent inequalities, which we leave for future work.
 
-The simulations agree with the proposition: no sample has $z<0$ beyond round-off
-($|z|\le 10^{-5}$). $z = 0$ also occurs whenever all eigenvalues of $X$ have the same sign, which
-for $k = 2$, $C = 1$ happens in half of the samples. The size of $z$ thus measures how far $Y$
-is from commuting with $X$; its dependence on $\Delta(Y)$ is shown in the figures. The relation of
-this quantity to the characterisation of central elements by trace inequalities~\cite{novikov2015}
-and to noncommutative $L^1$-spaces~\cite{novikov2017} is a subject for further study.
-
-\begin{lstlisting}[caption={Experiment 3 implementation}]
-def experiment3(alg, batch_size, num_batches, device):
-    sa = selfadjoint_sampler(batch_size, device)
-    pos = positive_sampler(batch_size, device)
-    out = []
-    for _ in range(num_batches):
-        X = alg.operator_from_eigenvalues(sa, batch_size=batch_size, force_self_adjoint=True)
-        Y = alg.operator_from_eigenvalues(pos, batch_size=batch_size,
-                                          force_positive=True, force_self_adjoint=True)
-        absX = X.abs()
-        z = (Y @ absX @ Y).trace.real - (Y @ X @ Y).abs().trace.real
-        out.append((absX.michelson_contrast, Y.michelson_contrast, z))
-    return collect(out)
-\end{lstlisting}
-
-\begin{figure}[p]
-\centering
-\begin{subfigure}{\textwidth}\centering
-\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim2_ch1_xz.png}
-\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim2_ch1_yz.png}
-\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim2_ch1_3d.png}
-\caption{$k=2$, $C=1$}
-\end{subfigure}
-\begin{subfigure}{\textwidth}\centering
-\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim2_ch2_xz.png}
-\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim2_ch2_yz.png}
-\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim2_ch2_3d.png}
-\caption{$k=2$, $C=2$}
-\end{subfigure}
-\begin{subfigure}{\textwidth}\centering
-\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim2_ch16_xz.png}
-\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim2_ch16_yz.png}
-\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim2_ch16_3d.png}
-\caption{$k=2$, $C=16$}
-\end{subfigure}
-\caption{Experiment 3: small dimension ($k = 2$). Left: $z$ vs.\ $\Delta(|X|)$; middle: $z$ vs.\ $\Delta(Y)$; right: both.}
-\end{figure}
+\begin{table}[h]
+\centering\small
+\begin{tabular}{rrrrrcr}
+\toprule
+Exp. & $k$ & $C$ & $\inf z$ & $\sup z$ & Monte Carlo range of $z$ & outside\\
+\midrule
+\BoundsRows
+\bottomrule
+\end{tabular}
+\caption{Global extremes of $z$ over both envelopes and contrasts in $[0,0.999]$ found by constrained optimisation (real algebras,
+orthogonal $U$), the range of the Monte Carlo samples with both contrasts in that interval, and the number of
+samples outside the envelopes (along either contrast) after re-optimisation
+\IfFileExists{generated/bounds.tex}{(\BoundsStarts\ starts per grid point, \BoundsSteps\ steps; \BoundsMode\
+run on \BoundsDevice)}{}; a sample counts as outside if it exceeds the envelope by more than $10^{-6}+10^{-3}\max|z|$;
+``--'': no Monte Carlo data of~\cite{v1} for this configuration.}
+\label{tab:bounds}
+\end{table}
 
 \begin{figure}[p]
 \centering
-\begin{subfigure}{\textwidth}\centering
-\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim16_ch1_xz.png}
-\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim16_ch1_yz.png}
-\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim16_ch1_3d.png}
-\caption{$k=16$, $C=1$}
-\end{subfigure}
-\begin{subfigure}{\textwidth}\centering
-\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim16_ch16_xz.png}
-\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim16_ch16_yz.png}
-\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim16_ch16_3d.png}
-\caption{$k=16$, $C=16$}
-\end{subfigure}
-\begin{subfigure}{\textwidth}\centering
-\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim16_ch32_xz.png}
-\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim16_ch32_yz.png}
-\includegraphics[width=0.32\textwidth]{exp3/plots/exp3_dim16_ch32_3d.png}
-\caption{$k=16$, $C=32$}
-\end{subfigure}
-\caption{Experiment 3: intermediate dimension ($k = 16$). Left: $z$ vs.\ $\Delta(|X|)$; middle: $z$ vs.\ $\Delta(Y)$; right: both.}
+\fig{bounds_exp1_k2_C1.pdf}{0.9\textwidth}\\
+\fig{bounds_exp2_k2_C1.pdf}{0.9\textwidth}\\
+\fig{bounds_exp3_k2_C1.pdf}{0.9\textwidth}
+\IfFileExists{figures/bounds_exp1_k16_C1.pdf}{\\\fig{bounds_exp1_k16_C1.pdf}{0.9\textwidth}}{}
+\caption{Envelopes from constrained optimisation versus sampling for the three trace functionals ($k=2$, $C=1$;
+one row per experiment).
+Horizontal axis: Michelson contrast of the first operator (left) or of the second operator (right); vertical axis:
+$z$ for operators normalised to $\lambda_{\max}=1$. Grey: the Monte Carlo samples of~\cite{v1}; red and blue: the
+upper and lower envelopes found by constrained optimisation, the other contrast being free. In this smallest case the samples come close to the envelopes (the samples outside after
+re-optimisation are counted in Table~\ref{tab:bounds}), which is no longer so for two sectors or larger blocks
+(Tables~\ref{tab:search} and~\ref{tab:bounds}). In Exp.~1 the region $z>0$ (violation of $|\Tr(XUY)|\le\Tr(XY)$)
+extends to the value of $\sup z$ in Table~\ref{tab:bounds}; in Exp.~3 the lower envelope is the proven bound $z\ge0$.}
+\label{fig:bounds}
 \end{figure}
 
+\begin{figure}[h]
+\centering
+\fig{bounds2d_exp1_k2_C1.pdf}{0.8\textwidth}
+\caption{Exp.~1, $k=2$, $C=1$, both contrasts prescribed: $\sup z$ (left) and $\inf z$ (right) on a grid of
+$\Delta(Y)$ (horizontal) and $\Delta(X)$ (vertical). The violation $\sup z>0$ needs both operators to be far from
+scalar and grows with both contrasts.}
+\label{fig:bounds2d}
+\end{figure}
 
-\section{Limitations and future work}\label{sec:limitations}
+\section{Symmetric tensor products and spin chains}\label{sec:chains}
 
-Current limitations include: batched SVD and symmetric eigensolvers lose their GPU advantage
-already at block size $k = 64$ in our benchmarks (Table~\ref{tab:speedup} and
-Appendix~\ref{app:heatmaps}); power iteration converges linearly in the spectral gap, fails to
-separate eigenvalues $\pm\lambda$ of equal modulus, and its stopping rule controls the change of
-the estimate rather than the error; automatic differentiation through the operations is not
-tested; only Type~I algebras (direct sums) in finite dimensions are supported. Future work
-includes support for tensor products, Cauchy-type functional calculus, distributed GPU
-computing, and mixed-precision SVD. The code is open to contributions.
+The basis of \texttt{SpinChain} is, by construction, that of the iterated fused product of single sites:
+the tests check that $S^z_i$ built by the chain coincides with $S^z_i\otimes1$ formed with
+\texttt{kron} in the fused product of the algebra of \texttt{SpinChain(L-1)} with a single site. Beyond that, integrable
+chains provide exact results for every part of the module (Table~\ref{tab:ring}, Figure~\ref{fig:chains};
+script \texttt{scripts/chains.py}):
+\begin{itemize}
+\item \emph{Free fermions.} By the Jordan--Wigner transformation the open XX chain ($\Delta=0$) is a free-fermion
+model with single-particle energies $\varepsilon_k=J\cos\frac{\pi k}{L+1}$, so the spectrum of sector $N$ consists
+of all sums of $N$ distinct $\varepsilon_k$. For $L=\IfFileExists{generated/chains.tex}{\ChainFFL}{10}$ all
+$2^L$ levels agree to \IfFileExists{generated/chains.tex}{$\ChainFFErr$}{machine precision}.
+\item \emph{Heisenberg ring.} Ground-state energies agree with exact values (Bethe ansatz for $L=4$, independent exact diagonalisation
+for the others, rounded to nine digits) to the nine digits of the table; $E_0/L$ approaches the Bethe-ansatz value $\tfrac14-\ln2\approx-0.4431$. Every level of sector
+$N<L/2$ reappears in sector $N+1$ (SU(2) multiplets), up to
+\IfFileExists{generated/chains.tex}{$\ChainSUErr$}{round-off}.
+\item \emph{Dynamics.} The melting of a domain wall $|\!\uparrow\cdots\uparrow\downarrow\cdots\downarrow\rangle$ in
+the open XX chain, evolved in the sector $N=L/2$ (dimension \IfFileExists{generated/chains.tex}{\ChainDWDim\ for
+$L=\ChainDWL$}{$\binom{L}{L/2}$}), reproduces the single-particle prediction
+$\langle n_i(t)\rangle=[e^{iht}C(0)e^{-iht}]_{ii}$, with $h$ the single-particle hopping matrix and
+$C_{ij}=\langle c_i^\dagger c_j\rangle$ the correlation matrix, to \IfFileExists{generated/chains.tex}{$\ChainDWErr$}{round-off}.
+\item \emph{Entanglement.} The entropy of a block of $n$ sites of the XX ground state, obtained with
+\texttt{reduced\_state}, agrees with Peschel's formula $S=-\sum_\nu[\nu\ln\nu+(1-\nu)\ln(1-\nu)]$ over the
+eigenvalues $\nu$ of the restricted correlation matrix~\cite{peschel2003}, including the parity oscillations
+of open chains, to \IfFileExists{generated/chains.tex}{$\ChainPesErr$}{round-off}.
+\item \emph{Disorder.} For the Heisenberg chain with random fields $h_i\in[-W,W]$ the mean ratio of consecutive
+level spacings in the middle of the spectrum crosses over from the GOE value $0.5307$ to the Poisson value
+$2\ln2-1\approx0.3863$~\cite{oganesyan2007,atas2013} as $W$ grows; at these sizes this is a finite-size crossover,
+the standard spectral diagnostic used in studies of many-body localisation.
+Here the batch dimension holds the disorder realisations
+(\IfFileExists{generated/chains.tex}{\ChainReal}{many} per point).
+\item \emph{Momentum.} For periodic chains the basis $|a,k\rangle=N_a^{-1/2}\sum_{j=0}^{L-1}e^{-ikj}T^j|a\rangle$ over
+orbit representatives $a$ of the translation $T$ (orbit length $R_a$, $N_a=L^2/R_a$; $a$ contributes to momentum $k$
+iff $kR_a\in2\pi\mathbb Z$) splits sector $N$ into blocks of fixed momentum
+$k=2\pi m/L$ (for $L=\IfFileExists{generated/chains.tex}{\ChainMomL}{12}$ and $N=L/2$ of sizes
+\IfFileExists{generated/chains.tex}{\ChainMomDims}{about $\binom LN/L$}); the union of their spectra is the
+spectrum of the sector to \IfFileExists{generated/chains.tex}{$\ChainMomErr$}{round-off}, and the ground state of
+the antiferromagnetic Heisenberg ring has $k=0$ for even and $k=\pi$ for odd $L/2$ (Marshall's sign rule). Momentum
+blocks with $k\ne0,\pi$ are complex in the plane-wave basis even for real Hamiltonians, one of the cases of
+Section~\ref{sec:numerics} where the field is fixed by the problem, at least in this basis: combined with reflection,
+time reversal leaves each $k$-block invariant, so for non-integrable translation-invariant Hamiltonians these blocks
+show GOE statistics and admit a real basis; the XXZ ring itself is integrable and its blocks are not of GOE type.
+\item \emph{Beyond dense matrices.} Lanczos with full re-orthogonalisation and restarts, batched over
+Hamiltonians, reproduces the free-fermion ground-state energies of open XX chains and the Heisenberg ring in
+sectors up to the sizes of Table~\ref{tab:krylov} (in the full run beyond the reach of dense diagonalisation); Krylov evolution of the domain wall for
+$L=\IfFileExists{generated/chains.tex}{\ChainKDWL}{16}$ (sector dimension
+\IfFileExists{generated/chains.tex}{\ChainKDWDim}{$\binom L{L/2}$}) agrees with the single-particle solution to
+\IfFileExists{generated/chains.tex}{$\ChainKDWErr$}{round-off}.
+\item \emph{Open chains.} With jump operators $S^-_i$ on every site (Lindblad terms between sectors $N\to N-1$)
+and any $N$-conserving Hamiltonian the particle number performs a pure death process, so the sector
+distribution must be binomial, $p_n(t)=\binom{N_0}{n}e^{-n\gamma t}(1-e^{-\gamma t})^{N_0-n}$; the library
+reproduces it to \IfFileExists{generated/chains.tex}{$\ChainLossErr$}{the RK4 accuracy}.
+\end{itemize}
 
-\section{Conclusion}\label{sec:conclusion}
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lrrrrr}
+\toprule
+model & sector dim & $E_0$ (Lanczos) & $E_0$ (exact) & difference & time [s]\\
+\midrule
+\ChainKrylovRows
+\bottomrule
+\end{tabular}
+\caption{Batched Lanczos on sparse sector Hamiltonians (time includes building the sparse Hamiltonian):
+ground-state energies against free fermions
+($\sum$ of the $L/2$ lowest $\cos\frac{\pi k}{L+1}$) and the tabulated Heisenberg value (nine digits)\IfFileExists{generated/chains.tex}{;
+\ChainMode\ run on \ChainDevice}{}.}
+\label{tab:krylov}
+\end{table}
 
-We have presented \texttt{torch\_vn\_algebra}, a PyTorch library for finite-dimensional Type~I
-von Neumann algebras that combines a compact tensor representation, lazy evaluation, flexible
-random operator generation, and GPU-accelerated functional calculus. The library is validated
-and benchmarked, and is open-source at \url{https://gitlab.com/a.hobukob/von_neumann_type_i/}
-(mirror: \url{https://github.com/andre-a-no/von_neumann_type_i}).
+\begin{table}[h]
+\centering\small
+\begin{tabular}{rrrrrr}
+\toprule
+$L$ & $\dim$ ($N=L/2$) & $E_0$ (library) & $E_0$ (exact) & difference & $E_0/L$\\
+\midrule
+\ChainRingRows
+\bottomrule
+\end{tabular}
+\caption{Ground-state energy of the Heisenberg ring $H=\sum_i\mathbf S_i\cdot\mathbf S_{i+1}$; exact values to
+nine digits\IfFileExists{generated/chains.tex}{ (\ChainMode\ run on \ChainDevice)}{}.}
+\label{tab:ring}
+\end{table}
 
-\section*{Data availability}
-All code, raw data and reproduction scripts are at the above repository.
+\begin{figure}[h]
+\centering\fig{chains.pdf}{\textwidth}
+\caption{Left: $\langle S^z_i(t)\rangle$ after a domain-wall quench of the XX chain (light cone).
+Middle: entanglement entropy of the XX ground state, library vs.\ Peschel's formula. Right: mean
+level-spacing ratio of the random-field Heisenberg chain, with the GOE and Poisson values.}
+\label{fig:chains}
+\end{figure}
 
+\section{Comparison with NumPy/SciPy}\label{sec:baselines}
+
+To separate what the library adds from what plain array code already gives, the same computations were written
+three ways (\texttt{scripts/baselines.py}; Table~\ref{tab:baselines}). (A)~The Monte Carlo of Exp.~1: $B$ pairs of
+positive operators with prescribed contrast and Haar-orthogonal eigenvectors in every sector, a Haar-orthogonal $U\in\M$,
+and $z$. The direct NumPy/SciPy formulation loops over samples and sectors with \texttt{scipy.stats.ortho\_group};
+a hand-vectorised NumPy version uses stacked QR decompositions with the phase correction; the library needs three
+calls. (B)~Ground states of sector Hamiltonians: \texttt{scipy.sparse.linalg.eigsh} (ARPACK~\cite{lehoucq1998}), one
+call per Hamiltonian, against the batched Lanczos solver. The three Monte Carlo versions sample the same distribution:
+their means differ by at most \IfFileExists{generated/baselines.tex}{\BaseMaxSigma}{a few} standard errors, and the ground-state energies agree to round-off.
+
+The comparison is instructive in both directions. On a CPU the gain over the loop depends on the block size: it is
+large for small blocks, where the Python overhead of the loop dominates (up to two orders of magnitude for $k=2$),
+and small for large blocks, where both spend their time in the same LAPACK routines (a small factor for $k=16$).
+Against carefully vectorised NumPy the library is only moderately faster (Table~\ref{tab:baselines}): its value there is that the vectorised, correctly
+sampled, block-aware version is the default rather than an expert rewrite, and that the same code runs on a GPU
+and can be differentiated. For ground states on a CPU, ARPACK is faster than our Lanczos solver, which re-orthogonalises fully for
+robustness (Table~\ref{tab:baselines}; both timed after a warm-up call). The batched solver is what lets the
+computation run on a GPU; for a single large eigenproblem on a CPU we recommend SciPy.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{rrrrrr}
+\toprule
+$C$ & $k$ & NumPy loop & NumPy vectorised & library (CPU) & library (GPU)\\
+\midrule
+\BaseMCRows
+\bottomrule
+\end{tabular}\\[2mm]
+\begin{tabular}{rrrrrr}
+\toprule
+$L$ & sector dim & Hamiltonians & \texttt{eigsh} [s] & library [s] & $\max|\Delta E_0|$\\
+\midrule
+\BaseGSRows
+\bottomrule
+\end{tabular}
+\caption{Top: time per Monte Carlo sample [$\mu$s] for (A); bottom: ground states of Heisenberg rings
+(one Hamiltonian) and random-field chains ($W=3$, several Hamiltonians) in the sector $N=L/2$, total time for all
+Hamiltonians (``--'': no GPU in this run)
+\IfFileExists{generated/baselines.tex}{(\BaseMode\ run on \BaseDevice)}{}.}
+\label{tab:baselines}
+\end{table}
+
+\section{Performance}\label{sec:performance}
+
+Table~\ref{tab:benchmark} and Figure~\ref{fig:benchmark} report the wall-clock time per sample of library
+operations (not of isolated kernels), in single precision, with batch $B=\min\bigl(4096,\,\IfFileExists{generated/benchmark.tex}{2^{\BenchTargetLog}}{2^{22}}/(Ck^2)\bigr)$ (shown in the table)\IfFileExists{generated/benchmark.tex}{ (\BenchMode\ run on \BenchDevice;
+CPU with \BenchCpuThreads\ threads)}{}. On a GPU we expect the CPU to be faster for single small blocks, because
+kernel launches dominate, and the GPU to gain for many sectors and for the matrix products in channels and in
+the optimisation step\ifnum\BenchHasGPU=1; the measured speedups are in the table\fi. The operations are: generating
+random operators with prescribed spectra, $f(A)$ by eigendecomposition, $|A|$ by SVD, the Michelson contrast, applying
+a channel, the Lindblad channel $e^{t\mathcal L}$, and one gradient step of the optimisation.
+
+The first version of this work reported GPU speedups for raw kernels on a P100 and found them only for part of the
+configurations. That observation reflects where GPUs help: a GPU needs enough independent work per kernel launch.
+For computations in~\eqref{eq:M} this means many samples, many sectors or large blocks, and matrix products rather
+than decompositions of small matrices. The design follows from it: everything is batched, so that the batch
+dimension supplies the parallel work, and the cost module warns before configurations that would be slow. For
+workloads that are small or dominated by a single eigenproblem, the CPU (or SciPy, Section~\ref{sec:baselines}) is
+the right tool, and the library runs there unchanged.
+
+\begin{table}[h]
+\centering\small
+\ifnum\BenchHasGPU=1
+\begin{tabular}{lrrrrrr}
+\toprule
+operation & $k$ & $C$ & batch & GPU [$\mu$s] & CPU [$\mu$s] & speedup\\
+\else
+\begin{tabular}{lrrrr}
+\toprule
+operation & $k$ & $C$ & batch & time per sample [$\mu$s]\\
+\fi
+\midrule
+\BenchmarkRows
+\bottomrule
+\end{tabular}
+\caption{Wall-clock time per sample of library operations for $C$ sectors of size $k$ and the batch size shown\IfFileExists{generated/benchmark.tex}{ (\BenchMode\ run on \BenchDevice, CPU with \BenchCpuThreads\ threads)}{}
+(single precision; ``exp($tL$)'' uses a smaller batch because its superoperators have $k^4$ entries). With a GPU the
+table also gives the CPU time and the speedup CPU/GPU.}
+\label{tab:benchmark}
+\end{table}
+
+\begin{figure}[h]
+\centering\fig{benchmark.pdf}{0.8\textwidth}
+\caption{\ifnum\BenchHasGPU=1 Speedup CPU/GPU (logarithmic axis; above 1 the GPU is faster)\else Time per sample
+(logarithmic axis)\fi\ of the operations of Table~\ref{tab:benchmark}, one bar per configuration $(k,C)$.}
+\label{fig:benchmark}
+\end{figure}
+
+\section{Limitations and roadmap}\label{sec:limitations}
+
+\begin{itemize}
+\item \emph{Layout.} Blocks are padded to $k_{\max}$. For very different sector sizes (binomial sectors of
+spin chains) one works in single sectors; operators acting on all sectors at once would need a bucketed
+layout, which is not implemented yet.
+\item \emph{Symmetries.} Abelian charges with an arbitrary fusion rule and lattice translations are
+supported; non-abelian symmetries (SU(2) multiplets, Clebsch--Gordan structure), reflections and spin flip
+are not used to reduce blocks further. Dense methods reach about 16--18 spins, the sparse Lanczos and
+Krylov solvers handle the half-filled sector of 24 spins (dimension $2.7\cdot10^6$; Table~\ref{tab:krylov} in the
+full run), and about 26 spins on a GPU with tens of gigabytes (an estimate from the memory of the Krylov basis); tensor-network methods are out of
+scope.
+\item \emph{Optimisation.} The search is local; envelopes are lower bounds for suprema (upper bounds for
+infima). Gradients propagated through eigen- or singular vectors fail at degenerate spectra; the
+parametrisations avoid this for the contrast constraint, but not for every user-defined objective.
+\item \emph{Scale.} Choi matrices, superoperators and $e^{t\mathcal L}$ work with $k_c^2\times k_c^2$
+matrices and are limited to blocks of a few tens; RK4 integration scales to larger blocks.
+\item \emph{Scope.} Finite dimensions and Type~I only; no tensor-network methods, and sparse methods only for
+sector Hamiltonians (Lanczos and Krylov).
+\end{itemize}
+
+\section{Availability and reproducibility}
+
+The code is available under the MIT licence at
+\begin{center}\url{https://github.com/andre-a-no/von_neumann_type_i}.\end{center}
+\texttt{bash scripts/run\_all.sh full cuda} regenerates every table and figure of this text on a GPU;
+\texttt{bash scripts/run\_all.sh} runs a reduced version on a CPU in a few minutes. The tables
+state on which device and in which mode they were produced.
+
+{\sloppy
 \begin{thebibliography}{99}
-\bibitem{takesaki2003} M.~Takesaki, \emph{Theory of Operator Algebras}, Springer, 2003.
-\bibitem{blackadar2006} B.~Blackadar, \emph{Operator Algebras}, Springer, 2006.
-\bibitem{mehta2004} M.~L.~Mehta, \emph{Random Matrices}, 3rd ed., Elsevier, 2004.
-\bibitem{nielsen2010} M.~A.~Nielsen, I.~L.~Chuang, \emph{Quantum Computation and Quantum
-  Information}, Cambridge University Press, 2010.
-\bibitem{gardner1979} L.~T.~Gardner, ``An inequality characterizes the trace'', Canad.\ J.\
-  Math.\ 31 (1979), 1322--1328.
+\bibitem{v1} I.~Nikolaeva, A.~Novikov, ``Finite-dimensional Type I von Neumann algebras in PyTorch: a
+  GPU-accelerated framework for random block-diagonal operators'', arXiv:2606.15882v1 (2026).
+\bibitem{gardner1979} L.~T.~Gardner, ``An inequality characterizes the trace'', Canad.\ J.\ Math.\ 31
+  (1979), 1322--1328.
+\bibitem{petz1988} D.~Petz, J.~Zem\'anek, ``Characterizations of the trace'', Linear Algebra Appl.\ 111
+  (1988), 43--52.
 \bibitem{novikov2015} A.~Novikov, O.~Tikhonov, ``Characterization of central elements of operator
   algebras by inequalities'', arXiv:1502.01267 (2015).
-\bibitem{novikov2017} A.~Novikov, ``$L_1$-space for a positive operator affiliated with von
-  Neumann algebra'', Positivity 21 (2017), 359--375.
-\bibitem{petz1988} D.~Petz, J.~Zem\'anek, ``Characterizations of the trace'', Linear Algebra
-  Appl.\ 111 (1988), 43--52.
-\bibitem{virosztek2017} D.~Virosztek, ``Connections between centrality and local monotonicity of
-  certain functions'', J.\ Math.\ Anal.\ Appl.\ 453 (2017), 221--226.
-\bibitem{michelson1927} A.~A.~Michelson, \emph{Studies in Optics}, University of Chicago Press,
-  1927.
-\bibitem{abed2024} S.~A.~Abed, I.~A.~Nikolaeva, A.~A.~Novikov, ``Generalisation of Michelson
-  contrast for operators and its properties'', Lobachevskii J.\ Math.\ 45 (2024), 3835--3848.
-\bibitem{novikov2020} A.~Novikov, S.~A.~Abed, I.~Nikolaeva, ``Generalisation of Michelson contrast
-  for operators'', arXiv:2010.10130 (2020).
+\bibitem{virosztek2017} D.~Virosztek, ``Connections between centrality and local monotonicity of certain
+  functions on C*-algebras'', J.\ Math.\ Anal.\ Appl.\ 453 (2017), 221--226.
+\bibitem{abed2024} S.~A.~Abed, I.~A.~Nikolaeva, A.~A.~Novikov, ``Generalisation of Michelson contrast for
+  operators and its properties'', Lobachevskii J.\ Math.\ 45 (2024), 3835--3848.
+\bibitem{novikov2020} A.~Novikov, S.~A.~Abed, I.~Nikolaeva, ``Generalisation of Michelson contrast for
+  operators'', arXiv:2010.10130 (2020).
+\bibitem{johansson2013} J.~R.~Johansson, P.~D.~Nation, F.~Nori, ``QuTiP 2: A Python framework for the
+  dynamics of open quantum systems'', Comput.\ Phys.\ Commun.\ 184 (2013), 1234--1240.
+\bibitem{qiskit2019} Qiskit contributors, ``Qiskit: An open-source framework for quantum computing'', 2019,
+  \url{https://qiskit.org}.
+\bibitem{dynamiqs} P.~Guilmin, R.~Gautier, A.~Bocquet, E.~Genois, D.~Weiss, ``dynamiqs: an open-source
+  Python library for GPU-accelerated and differentiable simulation of quantum systems'',
+  \url{https://github.com/dynamiqs/dynamiqs} (2024).
 \bibitem{mezzadri2007} F.~Mezzadri, ``How to generate random matrices from the classical compact
   groups'', Notices Amer.\ Math.\ Soc.\ 54 (2007), 592--604.
-\bibitem{paszke2019} A.~Paszke et al., ``PyTorch: An imperative style, high-performance deep
-  learning library'', NeurIPS 2019.
-\bibitem{harris2020} C.~R.~Harris et al., ``Array programming with NumPy'', Nature 585 (2020),
-  357--362.
-\bibitem{virtanen2020} P.~Virtanen et al., ``SciPy 1.0: fundamental algorithms for scientific
-  computing in Python'', Nat.\ Methods 17 (2020), 261--272.
-\bibitem{johansson2013} J.~R.~Johansson, P.~D.~Nation, F.~Nori, ``QuTiP 2: A Python framework for
-  the dynamics of open quantum systems'', Comput.\ Phys.\ Commun.\ 184 (2013), 1234--1240.
-\bibitem{qiskit2019} Qiskit contributors, ``Qiskit: An open-source framework for quantum
-  computing'', 2019, \url{https://qiskit.org}.
+\bibitem{mehta2004} M.~L.~Mehta, \emph{Random Matrices}, 3rd ed., Elsevier, 2004.
+\bibitem{page1993} D.~N.~Page, ``Average entropy of a subsystem'', Phys.\ Rev.\ Lett.\ 71 (1993),
+  1291--1294.
+\bibitem{zyczkowski2001} K.~\.Zyczkowski, H.-J.~Sommers, ``Induced measures in the space of mixed quantum
+  states'', J.\ Phys.\ A 34 (2001), 7111--7125.
+\bibitem{peschel2003} I.~Peschel, ``Calculation of reduced density matrices from correlation functions'',
+  J.\ Phys.\ A 36 (2003), L205--L208.
+\bibitem{oganesyan2007} V.~Oganesyan, D.~A.~Huse, ``Localization of interacting fermions at high temperature'',
+  Phys.\ Rev.\ B 75 (2007), 155111.
+\bibitem{atas2013} Y.~Y.~Atas, E.~Bogomolny, O.~Giraud, G.~Roux, ``Distribution of the ratio of consecutive
+  level spacings in random matrix ensembles'', Phys.\ Rev.\ Lett.\ 110 (2013), 084101.
+\bibitem{takesaki2002} M.~Takesaki, \emph{Theory of Operator Algebras I}, Springer, 2002.
+\bibitem{wick1952} G.~C.~Wick, A.~S.~Wightman, E.~P.~Wigner, ``The intrinsic parity of elementary particles'',
+  Phys.\ Rev.\ 88 (1952), 101--105.
+\bibitem{bartlett2007} S.~D.~Bartlett, T.~Rudolph, R.~W.~Spekkens, ``Reference frames, superselection rules, and
+  quantum information'', Rev.\ Mod.\ Phys.\ 79 (2007), 555--609.
+\bibitem{zurek2003} W.~H.~Zurek, ``Decoherence, einselection, and the quantum origins of the classical'',
+  Rev.\ Mod.\ Phys.\ 75 (2003), 715--775.
+\bibitem{sandvik2010} A.~W.~Sandvik, ``Computational studies of quantum spin systems'', AIP Conf.\ Proc.\ 1297
+  (2010), 135--338.
+\bibitem{weinberg2017} P.~Weinberg, M.~Bukov, ``QuSpin: a Python package for dynamics and exact diagonalisation of
+  quantum many body systems part I: spin chains'', SciPost Phys.\ 2 (2017), 003.
+\bibitem{goldstein2018} M.~Goldstein, E.~Sela, ``Symmetry-resolved entanglement in many-body systems'',
+  Phys.\ Rev.\ Lett.\ 120 (2018), 200602.
+\bibitem{xavier2018} J.~C.~Xavier, F.~C.~Alcaraz, G.~Sierra, ``Equipartition of the entanglement entropy'',
+  Phys.\ Rev.\ B 98 (2018), 041106.
+\bibitem{zanardi1997} P.~Zanardi, M.~Rasetti, ``Noiseless quantum codes'', Phys.\ Rev.\ Lett.\ 79 (1997), 3306--3309.
+\bibitem{knill2000} E.~Knill, R.~Laflamme, L.~Viola, ``Theory of quantum error correction for general noise'',
+  Phys.\ Rev.\ Lett.\ 84 (2000), 2525--2528.
+\bibitem{beny2007} C.~B\'eny, A.~Kempf, D.~W.~Kribs, ``Generalization of quantum error correction via the Heisenberg
+  picture'', Phys.\ Rev.\ Lett.\ 98 (2007), 100502.
+\bibitem{hadfield2019} S.~Hadfield, Z.~Wang, B.~O'Gorman, E.~G.~Rieffel, D.~Venturelli, R.~Biswas, ``From the quantum
+  approximate optimization algorithm to a quantum alternating operator ansatz'', Algorithms 12 (2019), 34.
+\bibitem{dyson1962} F.~J.~Dyson, ``The threefold way. Algebraic structure of symmetry groups and ensembles in quantum
+  mechanics'', J.\ Math.\ Phys.\ 3 (1962), 1199--1215.
+\bibitem{cohen2016} T.~Cohen, M.~Welling, ``Group equivariant convolutional networks'', Proc.\ ICML 2016, PMLR 48,
+  2990--2999.
+\bibitem{finzi2021} M.~Finzi, M.~Welling, A.~G.~Wilson, ``A practical method for constructing equivariant multilayer
+  perceptrons for arbitrary matrix groups'', Proc.\ ICML 2021, PMLR 139, 3318--3328.
+\bibitem{martin2021} C.~H.~Martin, M.~W.~Mahoney, ``Implicit self-regularization in deep neural networks: evidence from
+  random matrix theory and implications for learning'', J.\ Mach.\ Learn.\ Res.\ 22 (2021), 1--73.
+\bibitem{harris2020} C.~R.~Harris et al., ``Array programming with NumPy'', Nature 585 (2020), 357--362.
+\bibitem{virtanen2020} P.~Virtanen et al., ``SciPy 1.0: fundamental algorithms for scientific computing in Python'',
+  Nat.\ Methods 17 (2020), 261--272.
+\bibitem{lehoucq1998} R.~B.~Lehoucq, D.~C.~Sorensen, C.~Yang, \emph{ARPACK Users' Guide}, SIAM, 1998.
+\bibitem{fishman2022} M.~Fishman, S.~R.~White, E.~M.~Stoudenmire, ``The ITensor software library for tensor network
+  calculations'', SciPost Phys.\ Codebases 4 (2022).
+\bibitem{hauschild2018} J.~Hauschild, F.~Pollmann, ``Efficient numerical simulations with tensor networks: Tensor
+  Network Python (TeNPy)'', SciPost Phys.\ Lect.\ Notes 5 (2018).
+\bibitem{fukuda2019} M.~Fukuda, R.~K\"onig, I.~Nechita, ``RTNI -- a symbolic integrator for Haar-random tensor
+  networks'', J.\ Phys.\ A 52 (2019), 425303.
+\bibitem{paszke2019} A.~Paszke et al., ``PyTorch: An imperative style, high-performance deep learning
+  library'', NeurIPS 2019.
 \end{thebibliography}
-
-\appendix
-\section{Complete set of speedup heatmaps}\label{app:heatmaps}
-
-\texttt{scripts/benchmark.py} generates a heatmap for every operation.
-Figures~\ref{fig:hm-first}--\ref{fig:hm-last} show the mean GPU/CPU speedup as a function of the
-block size $k$ (vertical axis) and the number of channels $C$ (horizontal axis); brighter
-colours (viridis colour map) mean larger speedup, values below $1$ mean that the CPU is faster.
-In the stored run, \texttt{lambda\_max} was computed by exact diagonalisation of $AA^T$,
-\texttt{entropy} from normalised singular values and \texttt{michelson} from the matrix entries
-of Gaussian matrices; the current script evaluates them on positive definite matrices from
-eigenvalues (see \texttt{results/benchmark/README.md}).
-
-\begin{figure}[p]\centering
-\includegraphics[width=\textwidth]{speedup_heatmap_trace.png}
-\caption{Speedup heatmap: trace.}\label{fig:hm-first}
-\end{figure}
-\begin{figure}[p]\centering
-\includegraphics[width=\textwidth]{speedup_heatmap_addition.png}
-\caption{Speedup heatmap: addition.}
-\end{figure}
-\begin{figure}[p]\centering
-\includegraphics[width=\textwidth]{speedup_heatmap_multiplication.png}
-\caption{Speedup heatmap: multiplication.}
-\end{figure}
-\begin{figure}[p]\centering
-\includegraphics[width=\textwidth]{speedup_heatmap_lambda_max.png}
-\caption{Speedup heatmap: largest eigenvalue.}
-\end{figure}
-\begin{figure}[p]\centering
-\includegraphics[width=\textwidth]{speedup_heatmap_svd_abs.png}
-\caption{Speedup heatmap: singular values (\texttt{svd\_abs}).}
-\end{figure}
-\begin{figure}[p]\centering
-\includegraphics[width=\textwidth]{speedup_heatmap_inverse.png}
-\caption{Speedup heatmap: inverse.}
-\end{figure}
-\begin{figure}[p]\centering
-\includegraphics[width=\textwidth]{speedup_heatmap_frobenius_norm.png}
-\caption{Speedup heatmap: Frobenius norm.}
-\end{figure}
-\begin{figure}[p]\centering
-\includegraphics[width=\textwidth]{speedup_heatmap_trace_norm.png}
-\caption{Speedup heatmap: trace (nuclear) norm.}
-\end{figure}
-\begin{figure}[p]\centering
-\includegraphics[width=\textwidth]{speedup_heatmap_entropy.png}
-\caption{Speedup heatmap: entropy.}
-\end{figure}
-\begin{figure}[p]\centering
-\includegraphics[width=\textwidth]{speedup_heatmap_michelson.png}
-\caption{Speedup heatmap: Michelson contrast.}\label{fig:hm-last}
-\end{figure}
+}
 
 \end{document}
