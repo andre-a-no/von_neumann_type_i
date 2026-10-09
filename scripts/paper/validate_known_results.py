@@ -217,6 +217,7 @@ tex = env_macro(args, 'Val')
 tex += f"\\newcommand{{\\ValEmissionExp}}{{{sci(err_exp)}}}\n\\newcommand{{\\ValEmissionRK}}{{{sci(err_rk)}}}\n"
 tex += f"\\newcommand{{\\ValNce}}{{{N_CE}}}\n\\newcommand{{\\ValSce}}{{{S_CE}}}\n"
 tex += f"\\newcommand{{\\ValSHaar}}{{{S_HAAR}}}\n\\newcommand{{\\ValSPage}}{{{S_PAGE}}}\n"
+tex += f"\\newcommand{{\\ValSW}}{{{S_W}}}\n\\newcommand{{\\ValSPur}}{{{S_PUR}}}\n"
 tex += f"\\newcommand{{\\ValNPage}}{{{n_page}}}\n"
 for beta in (1, 2, 4):
     name = {1: 'One', 2: 'Two', 4: 'Four'}[beta]

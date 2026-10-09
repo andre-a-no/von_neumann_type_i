@@ -668,7 +668,7 @@ class TypeIAlgebra:
             """sum_c Tr(A_c)."""
             return self._weighted_trace([1.0] * self.algebra.C)
 
-        def Tr_norm(self, basis=None) -> torch.Tensor:
+        def Tr_norm(self) -> torch.Tensor:
             """sum_c Tr(A_c) / k_c (normalised trace of every factor, summed)."""
             return self._weighted_trace([1.0 / k if k else 0.0 for k in self.algebra.k_factors])
 
@@ -896,8 +896,15 @@ class TypeIAlgebra:
         op._is_projection = True
         return op
 
-    def central(self, scalars: List[float], batch_size: int = 1) -> Operator:
-        assert len(scalars) == self.C
+    def central(self, scalars: List[Union[float, complex]], batch_size: int = 1) -> Operator:
+        """Central element sum_c s_c 1_c (one number per sector); complex s_c need a complex algebra."""
+        if len(scalars) != self.C:
+            raise ValueError(f"central: need one number per sector ({self.C}), got {len(scalars)}")
+        scalars = [complex(x) for x in scalars]
+        if not self.hilbert.complex_valued and any(x.imag != 0 for x in scalars):
+            raise ValueError("central: complex values in a real algebra (create it with complex_valued=True)")
+        if not self.hilbert.complex_valued:
+            scalars = [x.real for x in scalars]
         def generator():
             matrices = []
             for c, (k_c, scalar) in enumerate(zip(self.k_factors, scalars)):
@@ -906,11 +913,12 @@ class TypeIAlgebra:
                 matrices.append(mat)
             return torch.stack(matrices, dim=0).unsqueeze(0).expand(batch_size, -1, -1, -1)
         op = self.Operator(self, generator=generator)
-        op._is_self_adjoint = True
-        op._is_normal = True
-        op._is_positive = all(s >= 0 for s in scalars)
-        op._is_invertible = all(s != 0 for s, k_c in zip(scalars, self.k_factors) if k_c > 0)
-        op._is_projection = all(s == 0 or s == 1 for s in scalars)
+        real = all(complex(x).imag == 0 for x in scalars)
+        op._is_self_adjoint = real
+        op._is_normal = True                               # every central element is normal
+        op._is_positive = real and all(complex(x).real >= 0 for x in scalars)
+        op._is_invertible = all(x != 0 for x, k_c in zip(scalars, self.k_factors) if k_c > 0)
+        op._is_projection = real and all(complex(x).real in (0.0, 1.0) for x in scalars)
         return op
 
     def __repr__(self) -> str:

@@ -707,3 +707,15 @@ def test_hilbert_space_inner_product_and_haar():
     for V in (Hb.random_basis().V[:, 0], Hb.haar_basis().V[:, 0]):
         assert abs((V[:, 0, 0].abs() ** 4).mean().item() - 2 / 12) < 0.01    # Haar U(3) moment
     assert Hb.random_basis().random_subspace_vector().dtype == torch.complex128
+
+
+def test_central_with_complex_scalars():
+    alg = TypeIAlgebra([2, 3], [2, 3], precision='double')
+    Z = alg.central([1j, 2.0])
+    assert Z.is_normal and not Z.is_self_adjoint and not Z.is_positive
+    assert torch.allclose(Z.matrix[0, 0, :2, :2], 1j * torch.eye(2, dtype=Z.matrix.dtype))
+    assert alg.central([0.0, 1.0]).is_projection
+    with pytest.raises(ValueError):
+        TypeIAlgebra([2], [2], complex_valued=False).central([1j])
+    with pytest.raises(ValueError):
+        alg.central([1.0])
