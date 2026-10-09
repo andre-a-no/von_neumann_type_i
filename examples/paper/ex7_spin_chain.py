@@ -8,13 +8,13 @@ print(chain.algebra.k_factors)
 
 # Heisenberg ring in a uniform field: the ground state changes sector as h grows
 for h in (0.0, 1.0, 2.5):
-    w = [blk[0] for blk, _ in chain.heisenberg(h=h).eigh()]
+    w = [blk[0] for blk in chain.heisenberg(h=h).eigenvalues()]
     print(f"h={h}: ground state in sector N={min(range(11), key=lambda N: w[N].min())}")
 
 # random fields h_i ~ U[-W, W]: 100 disorder realisations in one batch, sector N = 5 only
 for W in (0.5, 8.0):
     H = chain.random_field_heisenberg(W, batch_size=100, sector=5)
-    E, _ = H.eigh()[0]                                          # (100, 252)
+    E = H.eigenvalues()[0]                                      # (100, 252)
     r = SpinChain.level_spacing_ratio(E[:, 63:189]).mean()
     print(f"W={W}: <r> = {r:.3f}   (GOE 0.531, Poisson 0.386)")
 

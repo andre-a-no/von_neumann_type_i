@@ -21,7 +21,7 @@ print("S^z_i(t=3):", [round(x, 3) for x in mag.tolist()])
 ring10 = SpinChain(10, 'periodic', device=dev)
 Hk = ring10.xxz_momentum(J=1.0, Delta=1.0, sector=5)
 print("momentum block sizes:", ring10.momentum_dims(5))
-e0 = {m: w[0].min().item() for m, (w, _) in zip(Hk.algebra.charges, Hk.eigh())}
+e0 = {m: w[0].min().item() for m, w in zip(Hk.algebra.charges, Hk.eigenvalues())}
 print("ground state momentum m =", min(e0, key=e0.get), "(pi for L/2 odd)")
 
 # particle loss S-_i on every site with rate g: the sector distribution stays binomial

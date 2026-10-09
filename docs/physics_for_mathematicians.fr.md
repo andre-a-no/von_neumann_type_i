@@ -45,7 +45,7 @@ Le cas C = 1 est également pris en charge : il s'agit alors d'algèbre linéai
 | physique | mathématiques | dans la bibliothèque |
 |---|---|---|
 | observable (énergie, spin, nombre de particules) | A ∈ M autoadjoint | `Operator` |
-| résultats de mesure possibles | spectre de A | `eigh` |
+| résultats de mesure possibles | spectre de A | `eigenvalues`, `eigh` |
 | état (mixte) | fonctionnelle positive normale ω, ω(1) = 1 ; densité ρ ≥ 0, Tr ρ = 1 | `DensityMatrix` |
 | état pur, « fonction d'onde » | vecteur ψ ∈ H, ρ = \|ψ⟩⟨ψ\| (un projecteur minimal) | `vector_in_sector`, `basis_state` |
 | valeur moyenne | ω(A) = Tr(ρA) | `expectation` |

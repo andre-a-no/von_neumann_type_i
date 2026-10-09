@@ -181,7 +181,7 @@ rec['lanczos'] = kry_rows
 L8 = 14 if FULL else 12
 c8 = SpinChain(L8, 'periodic', device=dev)
 t0 = time.time()
-wk = torch.sort(torch.cat([w[0] for w, _ in c8.xxz_momentum(1.0, 1.0, sector=L8 // 2).eigh()]))[0]
+wk = torch.sort(torch.cat([w[0] for w in c8.xxz_momentum(1.0, 1.0, sector=L8 // 2).eigenvalues()]))[0]
 t_mom = time.time() - t0
 t0 = time.time()
 wd = torch.linalg.eigvalsh(c8.xxz(1.0, 1.0, sector=L8 // 2).matrix[0, 0])

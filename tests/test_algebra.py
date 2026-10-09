@@ -554,3 +554,22 @@ class TestNumerics:
         U = b.operator(b.random_unitary(2, batch_size=3)[:, None])
         with pytest.raises(ValueError):
             U.cast(b.like(complex_valued=False))
+
+
+class TestEigenvalues:
+    def test_matches_eigh_and_is_differentiable(self):
+        alg = TypeIAlgebra([2, 3, 4], [2, 3, 4], precision='double')
+        A = alg.random_unitary_operator(5)
+        H = A + A.adjoint()
+        for w, (w2, _) in zip(H.eigenvalues(), H.eigh()):
+            assert torch.allclose(w, w2, atol=1e-12)
+        m = H.matrix.clone().requires_grad_()
+        S = sum((w ** 2).sum() for w in alg.operator(m).eigenvalues())
+        S.backward()                                       # sum of squared eigenvalues = ||H||_F^2
+        assert torch.allclose(m.grad, 2 * H.matrix, atol=1e-10)
+
+    def test_requires_self_adjoint(self):
+        alg = TypeIAlgebra([2], [2])
+        U = alg.random_unitary_operator(1)
+        with pytest.raises(RuntimeError):
+            U.eigenvalues()

@@ -43,7 +43,7 @@ The case C = 1 is supported as well: it is batched linear algebra in M_n.
 | physics | mathematics | in the library |
 |---|---|---|
 | observable (energy, spin, particle number) | self-adjoint A ∈ M | `Operator` |
-| possible measurement outcomes | spectrum of A | `eigh` |
+| possible measurement outcomes | spectrum of A | `eigenvalues`, `eigh` |
 | (mixed) state | normal positive functional ω, ω(1) = 1; density ρ ≥ 0, Tr ρ = 1 | `DensityMatrix` |
 | pure state, "wave function" | vector ψ ∈ H, ρ = \|ψ⟩⟨ψ\| (a minimal projection) | `vector_in_sector`, `basis_state` |
 | expectation value | ω(A) = Tr(ρA) | `expectation` |

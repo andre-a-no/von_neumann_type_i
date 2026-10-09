@@ -45,7 +45,7 @@ Der Fall C = 1 wird ebenfalls unterstützt: Er ist stapelweise lineare Algebra i
 | Physik | Mathematik | in der Bibliothek |
 |---|---|---|
 | Observable (Energie, Spin, Teilchenzahl) | selbstadjungiertes A ∈ M | `Operator` |
-| mögliche Messergebnisse | Spektrum von A | `eigh` |
+| mögliche Messergebnisse | Spektrum von A | `eigenvalues`, `eigh` |
 | (gemischter) Zustand | normales positives Funktional ω, ω(1) = 1; Dichte ρ ≥ 0, Tr ρ = 1 | `DensityMatrix` |
 | reiner Zustand, „Wellenfunktion“ | Vektor ψ ∈ H, ρ = \|ψ⟩⟨ψ\| (eine minimale Projektion) | `vector_in_sector`, `basis_state` |
 | Erwartungswert | ω(A) = Tr(ρA) | `expectation` |

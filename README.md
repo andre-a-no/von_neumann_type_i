@@ -95,7 +95,7 @@ print((Lt(rho) - rho_t[-1]).frobenius_norm().max())
 
 | Module | Contents |
 |---|---|
-| `Operator` | `apply_function(f)` (spectral theorem), `expm`, `log`, `power`, `eigh`; `alg.operator(tensor)`, `alg.from_blocks([...])` |
+| `Operator` | `apply_function(f)` (spectral theorem), `expm`, `log`, `power`, `eigh`, `eigenvalues` (no eigenvectors, faster); `alg.operator(tensor)`, `alg.from_blocks([...])` |
 | `channels` | `Channel` (Kraus form: apply, `adjoint` = Heisenberg picture, composition `@`, `mix`, `choi`, `superoperator`, `from_superoperator`, TP / unitality checks); identity, unitary, dephasing, depolarizing, amplitude damping, Lüders measurement, conditional expectation onto the centre, random (Stinespring) and random mixed-unitary channels |
 | `states` | `DensityMatrix` (an `Operator` subclass: positive, unit `Tr_blunt`; `expectation`, `mix`, `condition_on`, `density(trace)` / `from_density(..., trace)` for the `Tr_norm` and `tau_vN` conventions; preserved by trace-preserving channels and by the dynamics), random density matrices (Hilbert–Schmidt, Bures, fixed rank), Gibbs states and partition functions, tracial state, sector probabilities, Born probabilities, Lüders update, entropy, relative entropy, fidelity, trace distance, purity |
 | `channels.InterSectorChannel` | CP maps between sectors and between different algebras, Φ(ρ)_d = Σ_c Σ_i K_i^{dc} ρ_c K_i^{dc*}: duals for each of the three traces, composition, sector transition matrix, `from_blocks`, `random_inter_sector_channel` |

@@ -194,7 +194,7 @@ def gibbs_state(H: Operator, beta: float) -> DensityMatrix:
 
 def partition_function(H: Operator, beta: float) -> torch.Tensor:
     """Z = Tr exp(-beta H) (blunt trace), computed from the spectrum."""
-    w = torch.cat([wv[0] for wv in H.eigh() if wv[0].numel()], dim=-1)
+    w = torch.cat([w for w in H.eigenvalues() if w.numel()], dim=-1)
     return torch.exp(-beta * w).sum(dim=-1)
 
 
@@ -229,7 +229,7 @@ def lueders_update(rho: Operator, P: Operator, eps: float = 1e-12) -> Tuple[Dens
 
 def von_neumann_entropy(rho: Operator, eps: float = 1e-12) -> torch.Tensor:
     """S(rho) = -Tr rho log rho (natural logarithm)."""
-    w = torch.cat([wv[0] for wv in rho.eigh() if wv[0].numel()], dim=-1).clamp(min=0)
+    w = torch.cat([w for w in rho.eigenvalues() if w.numel()], dim=-1).clamp(min=0)
     return -(w * torch.log(w.clamp(min=eps))).sum(dim=-1)
 
 

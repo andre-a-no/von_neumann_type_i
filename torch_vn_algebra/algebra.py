@@ -429,16 +429,8 @@ class TypeIAlgebra:
             batch, C, _, _ = A.shape
             max_k = max(self.algebra.k_factors) if self.algebra.k_factors else 0
             if max_k <= self.algebra.exact_eig_max_dim:
-                # Точная диагонализация для малых размеров
-                all_eigvals = []
-                for c in range(C):
-                    k_c = self.algebra.k_factors[c]
-                    if k_c == 0:
-                        continue
-                    block = A[:, c, :k_c, :k_c]
-                    # Не приводим к real, работаем с комплексными эрмитовыми матрицами
-                    eigvals = cost.batched_call(torch.linalg.eigvalsh, block, f"eigvalsh (sector {c})")
-                    all_eigvals.append(eigvals)
+                # exact diagonalisation for small blocks
+                all_eigvals = [w for w in self.eigenvalues() if w.numel()]
                 all_eigvals = torch.cat(all_eigvals, dim=-1)   # (batch, total_dim)
                 self._lambda_max = all_eigvals.max(dim=1)[0]
                 self._lambda_min = all_eigvals.min(dim=1)[0]
@@ -652,6 +644,18 @@ class TypeIAlgebra:
             for c, k_c in enumerate(self.algebra.k_factors):
                 out.append(cost.batched_call(torch.linalg.eigh, mat[:, c, :k_c, :k_c], f"eigh (sector {c})"))
             return out
+
+        def eigenvalues(self) -> List[torch.Tensor]:
+            """
+            Eigenvalues of a self-adjoint operator, one real tensor (batch, k_c) per channel, ascending.
+            Cheaper than eigh() (no eigenvectors are formed or stored); differentiable.
+            Channels with k_c = 0 give empty tensors.
+            """
+            if not self.is_self_adjoint:
+                raise RuntimeError("eigenvalues requires a self-adjoint operator")
+            mat = self.matrix
+            return [cost.batched_call(torch.linalg.eigvalsh, mat[:, c, :k_c, :k_c], f"eigvalsh (sector {c})")
+                    for c, k_c in enumerate(self.algebra.k_factors)]
 
         def apply_function(self, f: Callable[[torch.Tensor], torch.Tensor]) -> 'TypeIAlgebra.Operator':
             """
