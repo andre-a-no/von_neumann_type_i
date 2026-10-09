@@ -171,16 +171,16 @@
     {
       "params": "m = 4, n = 8",
       "theory": 1.1531380525793773,
-      "estimate": 1.153892001708352,
-      "stderr": 0.0010062680086861775,
-      "z": 0.7492528058793566
+      "estimate": 1.1538920017083523,
+      "stderr": 0.001006268008686178,
+      "z": 0.749252805879577
     },
     {
       "params": "m = 8, n = 8",
       "theory": 1.5885337608486263,
       "estimate": 1.588376645845854,
-      "stderr": 0.0008672272890353058,
-      "z": -0.18116934828832693
+      "stderr": 0.0008672272890353063,
+      "z": -0.18116934828832684
     }
   ],
   "E Tr rho^2 (induced)": [
@@ -229,19 +229,19 @@
       {
         "trace": "Tr_norm",
         "unit": 0.0,
-        "tracial": 8.881784197001252e-16,
-        "unitary_invariance": 1.5543122344752192e-15,
+        "tracial": 1.7763568394002505e-15,
+        "unitary_invariance": 1.878377932716794e-15,
         "min_positivity_ratio": 0.22252340354756556
       },
       {
         "trace": "tau_vN",
         "unit": 0.0,
-        "tracial": 4.440892098500626e-16,
-        "unitary_invariance": 5.178149575790769e-16,
-        "min_positivity_ratio": 0.07417446784918853
+        "tracial": 4.47545209131181e-16,
+        "unitary_invariance": 6.275768268723677e-16,
+        "min_positivity_ratio": 0.07417446784918852
       }
     ],
-    "Tr_norm_equals_C_tau": 2.220446049250313e-16
+    "Tr_norm_equals_C_tau": 8.881784197001252e-16
   },
   "environment": {
     "torch": "2.14.1+cu130",

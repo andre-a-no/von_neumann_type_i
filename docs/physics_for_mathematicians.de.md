@@ -114,9 +114,9 @@ unabhängig, und die Exponentialfunktion wird blockweise berechnet.
   - **T1** (Energierelaxation, Amplitudendämpfung): L = σ⁻ = |0⟩⟨1|, ein Qubit zerfällt vom angeregten in
     den Grundzustand. Die Zahl der Anregungen sinkt um eins, es handelt sich also um einen Sprung **zwischen**
     Sektoren. Beispiel: `site_amplitude_damping`, `lowering`.
-  - **T2** (Dephasierung): L = σ^z. Dieser Operator ist diagonal und ändert den Sektor nicht; er zerstört nur
+  - **Reine Dephasierung** (Zeit T_φ): L = σ^z. Dieser Operator ist diagonal und ändert den Sektor nicht; er zerstört nur
     Phasen. Das ist ein Sprung **innerhalb** eines Sektors.
-  - T1 und T2 sind die Standard-Kohärenzzeiten, die für jeden Quantencomputer angegeben werden.
+  - T1 und T2, mit 1/T2 = 1/(2T1) + 1/T_φ, sind die Standard-Kohärenzzeiten, die für jeden Quantencomputer angegeben werden.
 
 ---
 
@@ -181,7 +181,7 @@ unabhängig, und die Exponentialfunktion wird blockweise berechnet.
   „genau k Einsen“ (wähle k von n Objekten) verwendet man den **XY-Mixer** Σ(X_iX_j + Y_iY_j) =
   2Σ(σ⁺σ⁻ + h.c.). Er erhält das Hamming-Gewicht, sodass der gesamte Schaltkreis in ⊕_N M_{C(n,N)} liegt und
   die zulässigen Lösungen genau den Sektor N = k bilden.
-- **Rauschen**: T1 führt aus dem zulässigen Sektor heraus (eine Eins geht verloren), T2 nicht.
+- **Rauschen**: T1 führt aus dem zulässigen Sektor heraus (eine Eins geht verloren), Dephasierung nicht.
 - **Postselektion**: Man misst das Hamming-Gewicht und verwirft fehlerhafte Durchläufe. Das ist die
   Lüders-Regel mit einer **zentralen** Projektion P_k: ρ ↦ P_kρP_k / Tr(P_kρ), mit Erfolgswahrscheinlichkeit
   ω(P_k). Genau das macht `ex9_qaoa_xy_mixer.py`. Bei reinem T1-Rauschen liefert die Postselektion exakt den

@@ -111,9 +111,9 @@ independently, and the exponential is computed block by block.
   - **T1** (energy relaxation, amplitude damping): L = σ⁻ = |0⟩⟨1|, a qubit decays from the excited
     to the ground state. The number of excitations drops by one, so this is a jump **between**
     sectors. Example: `site_amplitude_damping`, `lowering`.
-  - **T2** (dephasing): L = σ^z. It is diagonal and does not change the sector; it only destroys
+  - **Pure dephasing** (time T_φ): L = σ^z. It is diagonal and does not change the sector; it only destroys
     phases. This is a jump **within** a sector.
-  - T1 and T2 are the standard coherence times quoted for every quantum computer.
+  - T1 and T2, with 1/T2 = 1/(2T1) + 1/T_φ, are the standard coherence times quoted for every quantum computer.
 
 ---
 
@@ -178,7 +178,7 @@ independently, and the exponential is computed block by block.
   "exactly k ones" (choose k items out of n) one uses the **XY mixer** Σ(X_iX_j + Y_iY_j) =
   2Σ(σ⁺σ⁻ + h.c.). It conserves the Hamming weight, so the whole circuit lies in ⊕_N M_{C(n,N)} and
   the feasible solutions are exactly the sector N = k.
-- **Noise**: T1 leaves the feasible sector (a one is lost), T2 does not.
+- **Noise**: T1 leaves the feasible sector (a one is lost), dephasing does not.
 - **Post-selection**: measure the Hamming weight and discard wrong runs. This is the Lüders rule with a
   **central** projection P_k: ρ ↦ P_kρP_k / Tr(P_kρ), with success probability ω(P_k). This is what
   `ex9_qaoa_xy_mixer.py` does. For pure T1 noise post-selection returns the ideal state exactly

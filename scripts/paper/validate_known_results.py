@@ -238,7 +238,7 @@ for name, params, theory, est, err, z in rows:
     p = params.replace('(surmise)', '').strip()
     p = p.replace(' = ', '=')
     tex += (f"{labels[name]} & ${p}$ & {fmt(theory, 6)} & {fmt(est, 6)} & ${sci(err)}$ "
-            f"& {'--' if math.isnan(z) else f'{z:+.1f}'} \\\\\n")
+            f"& {'--' if math.isnan(z) else (f'{z:+.1f}' if abs(z) >= 0.05 else '0.0')} \\\\\n")
 tex += "}\n"
 write_tex(args, 'validation', tex)
 

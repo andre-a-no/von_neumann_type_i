@@ -123,9 +123,10 @@ double is required. Every generated table records the precision used.
 
 **6. Novelty compared with plain PyTorch/NumPy.**
 Section 8 "Comparison with NumPy/SciPy" implements the same computations three ways: a straightforward
-NumPy/SciPy loop, hand-vectorised NumPy, and the library. The library matches hand-vectorised NumPy on
-the CPU and is 60–600× faster than loops; for single ground states ARPACK (`eigsh`) is faster than our
-batched Lanczos on the CPU, which we report. The contribution is not new kernels but the correct and
+NumPy/SciPy loop, hand-vectorised NumPy, and the library. On the CPU the library is about 1.5× faster than
+hand-vectorised NumPy; against a plain loop the gain ranges from about two orders of magnitude (small
+blocks, where Python overhead dominates) to about 2× (large blocks, where both spend their time in
+LAPACK). ARPACK (`eigsh`) is faster than our batched Lanczos on the CPU, which we report. The contribution is not new kernels but the correct and
 validated bookkeeping (sectors, traces, duals, Haar measures, constraints) in one batched, differentiable
 interface; Table 2 lists what a user would otherwise reimplement.
 

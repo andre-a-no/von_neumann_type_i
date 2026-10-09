@@ -113,9 +113,9 @@ independiente y la exponencial se calcula bloque a bloque.
   - **T1** (relajación de energía, amortiguamiento de amplitud): L = σ⁻ = |0⟩⟨1|, un qubit decae del
     estado excitado al fundamental. El número de excitaciones disminuye en una unidad, así que se trata de
     un salto **entre** sectores. Ejemplo: `site_amplitude_damping`, `lowering`.
-  - **T2** (desfase, *dephasing*): L = σ^z. Es diagonal y no cambia el sector; solo destruye las fases.
+  - **Desfase puro** (*pure dephasing*, tiempo T_φ): L = σ^z. Es diagonal y no cambia el sector; solo destruye las fases.
     Se trata de un salto **dentro** de un sector.
-  - T1 y T2 son los tiempos de coherencia estándar que se indican para cualquier ordenador cuántico.
+  - T1 y T2, con 1/T2 = 1/(2T1) + 1/T_φ, son los tiempos de coherencia estándar que se indican para cualquier ordenador cuántico.
 
 ---
 
@@ -182,7 +182,7 @@ independiente y la exponencial se calcula bloque a bloque.
   restricción «exactamente k unos» (elegir k elementos de entre n) se usa el **mezclador XY**
   Σ(X_iX_j + Y_iY_j) = 2Σ(σ⁺σ⁻ + h.c.). Este conserva el peso de Hamming, de modo que todo el circuito
   está en ⊕_N M_{C(n,N)} y las soluciones factibles son exactamente el sector N = k.
-- **Ruido**: T1 saca el estado del sector factible (se pierde un uno); T2 no.
+- **Ruido**: T1 saca el estado del sector factible (se pierde un uno); el desfase no.
 - **Posselección**: se mide el peso de Hamming y se descartan las ejecuciones incorrectas. Es la regla de
   Lüders con una proyección **central** P_k: ρ ↦ P_kρP_k / Tr(P_kρ), con probabilidad de éxito ω(P_k).
   Es lo que hace `ex9_qaoa_xy_mixer.py`. Con ruido T1 puro, la posselección devuelve exactamente el estado

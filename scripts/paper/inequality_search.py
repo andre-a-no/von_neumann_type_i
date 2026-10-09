@@ -97,7 +97,7 @@ tex += (f"\\newcommand{{\\SearchSamples}}{{{N_SAMPLES:,}}}\n".replace(',', '\\,'
 tex += "\\newcommand{\\SearchRows}{%\n"
 for r in results:
     tex += (f"{r['k']} & {r['found_by_sampling']}/{r['pairs']} & {r['found_by_ascent']}/{r['pairs']} "
-            f"& ${sci(r['sup_over_trXY'])}$ & ${r['sampling_over_trXY']:+.2f}$ "
+            f"& ${sci(r['sup_over_trXY'])}$ & ${sci(r['sampling_over_trXY']) if abs(r['sampling_over_trXY']) < 0.01 else format(r['sampling_over_trXY'], '+.2f')}$ "
             f"& ${sci(r['ascent_rel_error_median'])}$ & ${sci(r['ascent_rel_error_max'])}$ "
             f"& {r['seconds_sampling']:.2g} & {r['seconds_ascent']:.2g} \\\\\n")
 tex += "}\n"

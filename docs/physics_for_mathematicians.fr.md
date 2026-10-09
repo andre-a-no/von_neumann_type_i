@@ -113,9 +113,9 @@ indépendamment, et l'exponentielle se calcule bloc par bloc.
   - **T1** (relaxation d'énergie, amortissement d'amplitude) : L = σ⁻ = |0⟩⟨1|, un qubit retombe de l'état
     excité vers l'état fondamental. Le nombre d'excitations diminue d'une unité : c'est donc un saut **entre**
     secteurs. Exemple : `site_amplitude_damping`, `lowering`.
-  - **T2** (déphasage) : L = σ^z. Il est diagonal et ne change pas le secteur ; il ne fait que détruire
+  - **Déphasage pur** (temps T_φ) : L = σ^z. Il est diagonal et ne change pas le secteur ; il ne fait que détruire
     les phases. C'est un saut **à l'intérieur** d'un secteur.
-  - T1 et T2 sont les temps de cohérence de référence indiqués pour tout ordinateur quantique.
+  - T1 et T2, avec 1/T2 = 1/(2T1) + 1/T_φ, sont les temps de cohérence de référence indiqués pour tout ordinateur quantique.
 
 ---
 
@@ -180,7 +180,7 @@ indépendamment, et l'exponentielle se calcule bloc par bloc.
   soumis à la contrainte « exactement k uns » (choisir k éléments parmi n), on utilise le **mélangeur XY**
   Σ(X_iX_j + Y_iY_j) = 2Σ(σ⁺σ⁻ + h.c.). Il conserve le poids de Hamming, donc tout le circuit reste dans
   ⊕_N M_{C(n,N)} et les solutions admissibles forment exactement le secteur N = k.
-- **Bruit** : T1 fait sortir du secteur admissible (un 1 est perdu), T2 non.
+- **Bruit** : T1 fait sortir du secteur admissible (un 1 est perdu), le déphasage non.
 - **Post-sélection** : on mesure le poids de Hamming et on rejette les exécutions erronées. C'est la règle
   de Lüders avec un projecteur **central** P_k : ρ ↦ P_kρP_k / Tr(P_kρ), avec la probabilité de succès
   ω(P_k). C'est ce que fait `ex9_qaoa_xy_mixer.py`. Pour un bruit purement T1, la post-sélection restitue
