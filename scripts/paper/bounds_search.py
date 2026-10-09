@@ -26,21 +26,22 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from common import ROOT, parse_args, save_json, write_tex, env_macro, sync
+from common import ROOT, parse_args, save_json, write_tex, env_macro, sync, sci, load_partial, save_partial, finish_partial
 
 from torch_vn_algebra import TypeIAlgebra, optimize as opt
 
 args = parse_args(__doc__)
 dev = args.device
-FULL = args.mode == 'full'
+FULL = args.mode in ('full', 'check')            # check: the sizes of full, minimal repetitions
+CHECK = args.mode == 'check'
 CONFIGS = ([(2, 1), (2, 2), (2, 16), (2, 32), (16, 1), (16, 2), (16, 16), (16, 32)] if FULL
            else [(2, 1), (2, 2), (4, 1)])
-GRID = np.linspace(0.0, 0.99, 23 if FULL else 9)
+GRID = np.append(np.linspace(0.0, 0.99, 23 if FULL else 9), 0.999)   # last point: the samples near contrast 1
 GRID2 = np.linspace(0.0, 0.95, 11 if FULL else 5)        # joint (Delta(X), Delta(Y)) grid
 CONFIGS_2D = [(2, 1), (2, 2), (4, 1)] if FULL else [(2, 1)]
 STARTS_2D = 32 if FULL else 8
 STARTS = 64 if FULL else 12
-ROUNDS, STEPS = (10, 50) if FULL else (6, 40)
+ROUNDS, STEPS = (1, 2) if CHECK else (10, 50) if FULL else (6, 40)
 MC_DIR = ROOT / 'results' / 'experiments'
 
 
@@ -130,39 +131,59 @@ t_start = time.time()
 for exp in (1, 2, 3):
     for k, C in CONFIGS:
         t0 = time.time()
-        env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
-        sync(dev)
         mc = load_mc(exp, k, C)
-        outside = None
-        if mc is not None:
+        mc_dropped = None
+        if mc is not None:                                       # only inside the grid, along both axes
+            inside = (mc['deltaX'] <= GRID[-1]) & (mc['deltaY'] <= GRID[-1])
+            mc_dropped = int((~inside).sum())
+            mc = mc[inside]
+        r = load_partial(args, f'exp{exp}_k{k}_C{C}')
+        if r is not None:                                        # finished in an interrupted earlier run
+            env = {along: {n: np.array(r[f'{n}_vs_{along}']) for n in ('sup', 'inf')} for along in ('x', 'y')}
+            outside, interp_outside = r['mc_outside'], r['mc_outside_interpolated']
+        else:
+            torch.manual_seed(args.seed + 100 * exp + 10 * k + C)    # per configuration: resumable runs agree
+            env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
+            sync(dev)
+            outside = interp_outside = None
+        if mc is not None and r is None:
             tol = 1e-6 + 1e-3 * np.abs(mc['z']).max()
-            mc = mc[mc['deltaX'] <= GRID[-1]]                    # only inside the grid
-            ub = np.interp(mc['deltaX'], GRID, env['x']['sup'])   # linear interpolation between
-            lb = np.interp(mc['deltaX'], GRID, env['x']['inf'])   # grid points (can cut corners)
-            bad = mc[(mc['z'] > ub + tol) | (mc['z'] < lb - tol)]
-            interp_outside = len(bad)
-            # linear interpolation between grid points can cut corners of the envelope: re-optimise at
-            # the exact contrast of every such sample and count those that are still outside
-            outside = 0
-            for _, row in bad.head(50).iterrows():
-                above = row['z'] > np.interp(row['deltaX'], GRID, env['x']['sup'])
-                alg1 = TypeIAlgebra([k] * C, [k] * C, complex_valued=False, precision='double', device=dev)
-                z1, p1 = build(exp, alg1, STARTS, torch.full((STARTS,), float(row['deltaX']), dtype=torch.float64,
-                                                             device=dev), None)
-                v = opt.extremize(z1, p1, maximize=above, rounds=ROUNDS, steps=STEPS)
-                bound = v.max().item() if above else v.min().item()
-                outside += (row['z'] > bound + tol) if above else (row['z'] < bound - tol)
-            outside += max(0, len(bad) - 50)
-        r = dict(experiment=exp, k=k, C=C, grid=GRID.tolist(),
-                 sup_vs_x=env['x']['sup'].tolist(), inf_vs_x=env['x']['inf'].tolist(),
-                 sup_vs_y=env['y']['sup'].tolist(), inf_vs_y=env['y']['inf'].tolist(),
-                 mc_samples=None if mc is None else len(mc), mc_outside=outside,
-                 mc_outside_interpolated=None if mc is None else interp_outside,
-                 mc_max=None if mc is None else float(mc['z'].max()),
-                 mc_min=None if mc is None else float(mc['z'].min()),
-                 seconds=time.time() - t0)
+            # every sample is checked against both envelopes: along Delta(X) and along Delta(Y)
+            alg1 = TypeIAlgebra([k] * C, [k] * C, complex_valued=False, precision='double', device=dev)
+            still_out, interp_out = set(), set()
+            for along, col in (('x', 'deltaX'), ('y', 'deltaY')):
+                ub = np.interp(mc[col], GRID, env[along]['sup'])   # linear interpolation between
+                lb = np.interp(mc[col], GRID, env[along]['inf'])   # grid points (can cut corners)
+                bad = mc[(mc['z'] > ub + tol) | (mc['z'] < lb - tol)]
+                interp_out |= set(bad.index)
+                # interpolation can cut corners of the envelope: re-optimise at the exact contrast of every
+                # such sample (at most 50 per axis) and count those that are still outside
+                for n_row, (idx, row) in enumerate(bad.iterrows()):
+                    if n_row >= 50:
+                        still_out.add(idx)
+                        continue
+                    above = row['z'] > np.interp(row[col], GRID, env[along]['sup'])
+                    d = torch.full((STARTS,), float(row[col]), dtype=torch.float64, device=dev)
+                    z1, p1 = build(exp, alg1, STARTS, *((d, None) if along == 'x' else (None, d)))
+                    v = opt.extremize(z1, p1, maximize=above, rounds=ROUNDS, steps=STEPS)
+                    v = torch.nan_to_num(v, nan=-math.inf if above else math.inf)  # a failed start must not hide a sample
+                    bound = v.max().item() if above else v.min().item()
+                    if (row['z'] > bound + tol) if above else (row['z'] < bound - tol):
+                        still_out.add(idx)
+            interp_outside, outside = len(interp_out), len(still_out)
+        if r is None:
+            r = dict(experiment=exp, k=k, C=C, grid=GRID.tolist(),
+                     sup_vs_x=env['x']['sup'].tolist(), inf_vs_x=env['x']['inf'].tolist(),
+                     sup_vs_y=env['y']['sup'].tolist(), inf_vs_y=env['y']['inf'].tolist(),
+                     mc_samples=None if mc is None else len(mc), mc_dropped=mc_dropped, mc_outside=outside,
+                     mc_outside_interpolated=interp_outside,
+                     mc_max=None if mc is None else float(mc['z'].max()),
+                     mc_min=None if mc is None else float(mc['z'].min()),
+                     seconds=time.time() - t0)
+            save_partial(args, f'exp{exp}_k{k}_C{C}', r)
         results.append(r)
-        print(f"exp{exp} k={k:2d} C={C:2d}: sup z = {max(r['sup_vs_x']):+.4g}, inf z = {min(r['inf_vs_x']):+.4g}"
+        print(f"exp{exp} k={k:2d} C={C:2d}: sup z = {max(r['sup_vs_x'] + r['sup_vs_y']):+.4g}, "
+              f"inf z = {min(r['inf_vs_x'] + r['inf_vs_y']):+.4g}"
               + ("" if mc is None else f"; Monte Carlo range [{r['mc_min']:+.4g}, {r['mc_max']:+.4g}], "
                  f"{interp_outside} of {len(mc)} samples outside the interpolated envelopes, "
                  f"{outside} after re-optimising at their exact contrast")
@@ -186,19 +207,26 @@ for exp in (1, 2, 3):
         plt.close(fig)
 
 # joint constraints: both contrasts prescribed
+h2 = 0.5 * (GRID2[1] - GRID2[0])                         # half a grid cell: imshow cells centred on the grid
 results_2d = []
 for exp in (1, 2, 3):
     for k, C in CONFIGS_2D:
         t0 = time.time()
-        e2 = envelope_2d(exp, k, C)
-        results_2d.append(dict(experiment=exp, k=k, C=C, grid=GRID2.tolist(),
-                               sup=e2['sup'].tolist(), inf=e2['inf'].tolist(), seconds=time.time() - t0))
+        r2 = load_partial(args, f'2d_exp{exp}_k{k}_C{C}')
+        if r2 is None:
+            torch.manual_seed(args.seed + 1000 + 100 * exp + 10 * k + C)
+            e2 = envelope_2d(exp, k, C)
+            r2 = dict(experiment=exp, k=k, C=C, grid=GRID2.tolist(),
+                      sup=e2['sup'].tolist(), inf=e2['inf'].tolist(), seconds=time.time() - t0)
+            save_partial(args, f'2d_exp{exp}_k{k}_C{C}', r2)
+        e2 = {n: np.array(r2[n]) for n in ('sup', 'inf')}
+        results_2d.append(r2)
         print(f"exp{exp} k={k} C={C}, Delta(X), Delta(Y) prescribed: sup on grid in "
               f"[{e2['sup'].min():+.3g}, {e2['sup'].max():+.3g}], inf in [{e2['inf'].min():+.3g}, "
               f"{e2['inf'].max():+.3g}]  ({time.time() - t0:.0f} s)")
         fig, axes = plt.subplots(1, 2, figsize=(8, 3.4))
         for ax, name in zip(axes, ('sup', 'inf')):
-            im = ax.imshow(e2[name], origin='lower', extent=[GRID2[0], GRID2[-1], GRID2[0], GRID2[-1]],
+            im = ax.imshow(e2[name], origin='lower', extent=[GRID2[0] - h2, GRID2[-1] + h2, GRID2[0] - h2, GRID2[-1] + h2],
                            aspect='auto', cmap='coolwarm' if name == 'inf' else 'viridis')
             ax.set_xlabel(LABELS[exp][1])
             ax.set_ylabel(LABELS[exp][0])
@@ -219,6 +247,17 @@ for r in results:
         r['inf_exact'] = exact.tolist()
         exact_dev = max(exact_dev, float(np.max(np.abs(np.array(r['inf_vs_x']) - exact) / np.abs(exact))))
 print(f"Exp 1 lower envelope vs exact -(kC - 2d/(1+d)): max relative deviation {exact_dev:.1e}")
+# analytic check: for Exp 2, |X| = X_0 and |Y| = Y_0, so z = ||X_0 V Y_0||_1 - Tr(X_0 Y_0); von Neumann's trace
+# inequality and rearrangement give sup z = sum_i x_i (y_i^desc - y_i^asc) for given spectra. For k = 2, C = 1 and
+# Delta(|X|) = d with the other contrast free this is 1 - lambda_min(X) = 2d/(1+d) (attained as Delta(|Y|) -> 1).
+exact_dev2 = None
+for r in results:
+    if r['experiment'] == 2 and r['k'] == 2 and r['C'] == 1:
+        g = np.array(r['grid'])
+        exact = 2 * g / (1 + g)
+        mask = exact > 1e-3
+        exact_dev2 = float(np.max(np.abs(np.array(r['sup_vs_x'])[mask] - exact[mask]) / exact[mask]))
+        print(f"Exp 2 upper envelope (k=2, C=1) vs exact 2d/(1+d): max relative deviation {exact_dev2:.1e}")
 
 save_json(args, 'bounds', dict(results=results, results_2d=results_2d, starts=STARTS, steps=ROUNDS * STEPS,
                                seconds=time.time() - t_start))
@@ -226,6 +265,14 @@ tex = env_macro(args, 'Bounds')
 tex += f"\\newcommand{{\\BoundsStarts}}{{{STARTS}}}\n\\newcommand{{\\BoundsSteps}}{{{ROUNDS * STEPS}}}\n"
 tex += f"\\newcommand{{\\BoundsGrid}}{{{len(GRID)}}}\n"
 tex += f"\\newcommand{{\\BoundsExactDev}}{{{exact_dev:.1e}}}\n"
+tex += f"\\newcommand{{\\BoundsExactDevTwo}}{{{'--' if exact_dev2 is None else f'{exact_dev2:.1e}'}}}\n"
+exp3_inf = max((abs(v) for r in results if r['experiment'] == 3 for v in r['inf_vs_x'] + r['inf_vs_y']), default=0.0)
+mc_checked = sum(r['mc_samples'] or 0 for r in results)
+mc_dropped = sum(r.get('mc_dropped') or 0 for r in results)
+mc_out = sum(r['mc_outside'] or 0 for r in results)
+tex += f"\\newcommand{{\\BoundsExpThreeInf}}{{{sci(exp3_inf, 1)}}}\n"          # max |inf z| of Exp. 3 (proven 0)
+tex += f"\\newcommand{{\\BoundsMcChecked}}{{{mc_checked}}}\n\\newcommand{{\\BoundsMcDropped}}{{{mc_dropped}}}\n"
+tex += f"\\newcommand{{\\BoundsMcOutside}}{{{mc_out}}}\n"
 def num(x, d=4):
     return '0' if abs(x) < 1e-6 else f"{x:+.{d}g}"
 
@@ -236,8 +283,10 @@ for r in results:
           f"$[{num(r['mc_min'], 3)},\\,{num(r['mc_max'], 3)}]$ & {r['mc_outside']}")
     if r['mc_samples'] is None:
         mc = '-- & --'
-    tex += (f"{r['experiment']} & {r['k']} & {r['C']} & ${num(min(r['inf_vs_x']))}$ & ${num(max(r['sup_vs_x']))}$ "
+    lo, hi = min(r['inf_vs_x'] + r['inf_vs_y']), max(r['sup_vs_x'] + r['sup_vs_y'])   # over both envelopes
+    tex += (f"{r['experiment']} & {r['k']} & {r['C']} & ${num(lo)}$ & ${num(hi)}$ "
             f"& {mc} \\\\\n")
 tex += "}\n"
 write_tex(args, 'bounds', tex)
+finish_partial(args)
 print("written:", args.out, args.figdir, f"total {time.time() - t_start:.0f} s")

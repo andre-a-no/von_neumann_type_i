@@ -17,22 +17,24 @@ Writes generated/benchmark.tex, generated/benchmark.json and figures/benchmark.p
 
     python scripts/paper/benchmark_library.py --mode full --device cuda
 """
+import math
 import statistics
 import time
 
 import torch
 
-from common import parse_args, save_json, write_tex, env_macro, sync
+from common import parse_args, save_json, write_tex, env_macro, sync, num3
 
 from torch_vn_algebra import TypeIAlgebra, channels, cost, dynamics, optimize as opt, states
 
 args = parse_args(__doc__)
-FULL = args.mode == 'full'
+FULL = args.mode in ('full', 'check')            # check: the sizes of full, minimal repetitions
+CHECK = args.mode == 'check'
 DEVICES = [args.device] + (['cpu'] if args.device != 'cpu' else [])
 DIMS = (4, 16, 64) if FULL else (4, 16)
 CHANNELS = (1, 16, 256) if FULL else (1, 16)
 TARGET = 2 ** 22 if FULL else 2 ** 18
-REPEATS = 5 if FULL else 3
+REPEATS = 1 if CHECK else 5 if FULL else 3
 
 
 def timeit(fn, device):
@@ -86,15 +88,16 @@ if True:
     for k in DIMS:
         for C in CHANNELS:
             B = max(1, min(4096, TARGET // (C * k * k)))
-            per_dev = {}
+            per_dev, batch_of = {}, {}
             for dev in DEVICES:
                 torch.manual_seed(args.seed)
                 alg = TypeIAlgebra([k] * C, [k] * C, complex_valued=True, device=dev)
                 for name, fn in operations(alg, B, dev, k, C).items():
                     fn, b = fn if isinstance(fn, tuple) else (fn, B)
                     per_dev.setdefault(name, {})[dev] = timeit(fn, dev) / b
+                    batch_of[name] = b                    # exp(tL) runs with a smaller batch
             for name, t in per_dev.items():
-                row = dict(op=name, k=k, C=C, batch=B, **{f't_{d}': t[d] for d in DEVICES})
+                row = dict(op=name, k=k, C=C, batch=batch_of[name], **{f't_{d}': t[d] for d in DEVICES})
                 if len(DEVICES) == 2:
                     row['speedup'] = t['cpu'] / t[args.device]
                 rows.append(row)
@@ -105,14 +108,15 @@ if True:
 save_json(args, 'benchmark', dict(rows=rows, devices=DEVICES, target_elements=TARGET))
 tex = env_macro(args, 'Bench')
 tex += f"\\newcommand{{\\BenchCpuThreads}}{{{torch.get_num_threads()}}}\n"
+tex += f"\\newcommand{{\\BenchTargetLog}}{{{int(round(math.log2(TARGET)))}}}\n"     # batch holds ~2^this entries
 two = len(DEVICES) == 2
 tex += f"\\newcommand{{\\BenchHasGPU}}{{{'1' if two else '0'}}}\n"
 tex += "\\newcommand{\\BenchmarkRows}{%\n"
 for r in rows:
     main = 1e6 * r[f't_{args.device}']
-    tex += f"{r['op']} & {r['k']} & {r['C']} & {r['batch']} & {main:.3g}"
+    tex += f"{r['op']} & {r['k']} & {r['C']} & {r['batch']} & {num3(main)}"
     if two:
-        tex += f" & {1e6 * r['t_cpu']:.3g} & {r['speedup']:.1f}"
+        tex += f" & {num3(1e6 * r['t_cpu'])} & {r['speedup']:.1f}"
     tex += " \\\\\n"
 tex += "}\n"
 write_tex(args, 'benchmark', tex)

@@ -14,21 +14,27 @@ import time
 
 import torch
 
-from common import parse_args, save_json, write_tex, env_macro, sync, sci
+from common import parse_args, save_json, write_tex, env_macro, sync, sci, load_partial, save_partial, finish_partial
 
 from torch_vn_algebra import TypeIAlgebra
 
 args = parse_args(__doc__)
 dev = args.device
-FULL = args.mode == 'full'
+FULL = args.mode in ('full', 'check')            # check: the sizes of full, minimal repetitions
+CHECK = args.mode == 'check'
 DIMS = (2, 4, 8, 16, 32, 64) if FULL else (2, 4, 8, 16)
-PAIRS = 16 if FULL else 4
-N_SAMPLES = 1_000_000 if FULL else 20_000
+PAIRS = 1 if CHECK else 16 if FULL else 4
+N_SAMPLES = 50_000 if CHECK else 1_000_000 if FULL else 20_000
 STARTS = 128 if FULL else 32
-ROUNDS, STEPS, LR, DECAY = 10, 50, 0.05, 0.6   # learning rate LR * DECAY**round
+ROUNDS, STEPS, LR, DECAY = (1, 2, 0.05, 0.6) if CHECK else (10, 50, 0.05, 0.6)   # learning rate LR * DECAY**round
 
 results = []
 for k in DIMS:
+    cached = load_partial(args, f'k{k}')
+    if cached is not None:
+        results.append(cached)
+        continue
+    torch.manual_seed(args.seed + 1000 * k)            # per k, so that a resumed run gives the same numbers
     alg = TypeIAlgebra([k], [k], precision='double', device=dev)
     pos = lambda d: 0.2 + torch.rand(1, d)
     rel_sup, rel_mc, rel_opt, err_opt, found_mc, found_opt, t_mc, t_opt = [], [], [], [], 0, 0, 0.0, 0.0
@@ -83,6 +89,7 @@ for k in DIMS:
              ascent_rel_error_median=median(err_opt), ascent_rel_error_max=max(err_opt),
              seconds_sampling=t_mc / PAIRS, seconds_ascent=t_opt / PAIRS)
     results.append(r)
+    save_partial(args, f'k{k}', r)
     print(f"k={k:3d}: violation found by sampling {found_mc}/{PAIRS}, by ascent {found_opt}/{PAIRS}; "
           f"median z/Tr(XY): sup {r['sup_over_trXY']:.2e}, sampling {r['sampling_over_trXY']:+.3f}, "
           f"ascent {r['ascent_over_trXY']:.2e} (rel. error median {r['ascent_rel_error_median']:.1e}, "
@@ -93,11 +100,12 @@ save_json(args, 'search', dict(results=results, samples=N_SAMPLES, starts=STARTS
 tex = env_macro(args, 'Search')
 tex += (f"\\newcommand{{\\SearchSamples}}{{{N_SAMPLES:,}}}\n".replace(',', '\\,')
         + f"\\newcommand{{\\SearchStarts}}{{{STARTS}}}\n\\newcommand{{\\SearchSteps}}{{{ROUNDS * STEPS}}}\n"
-        + f"\\newcommand{{\\SearchPairs}}{{{PAIRS}}}\n")
+        + f"\\newcommand{{\\SearchPairs}}{{{PAIRS}}}\n"
+        + f"\\newcommand{{\\SearchMaxErr}}{{{sci(max(r['ascent_rel_error_max'] for r in results), 1)}}}\n")
 tex += "\\newcommand{\\SearchRows}{%\n"
 for r in results:
     tex += (f"{r['k']} & {r['found_by_sampling']}/{r['pairs']} & {r['found_by_ascent']}/{r['pairs']} "
-            f"& ${sci(r['sup_over_trXY'])}$ & ${r['sampling_over_trXY']:+.2f}$ "
+            f"& ${sci(r['sup_over_trXY'])}$ & ${sci(r['sampling_over_trXY']) if abs(r['sampling_over_trXY']) < 0.01 else format(r['sampling_over_trXY'], '+.2f')}$ "
             f"& ${sci(r['ascent_rel_error_median'])}$ & ${sci(r['ascent_rel_error_max'])}$ "
             f"& {r['seconds_sampling']:.2g} & {r['seconds_ascent']:.2g} \\\\\n")
 tex += "}\n"
@@ -112,7 +120,7 @@ ks = [r['k'] for r in results]
 ax.axhline(0, color='k', lw=0.6)
 ax.plot(ks, [r['sup_over_trXY'] for r in results], 'k-', label='exact $\\sup_U z$')
 ax.plot(ks, [r['ascent_over_trXY'] for r in results], 'o', label=f'gradient ascent ({STARTS} starts)')
-ax.plot(ks, [r['sampling_over_trXY'] for r in results], 's-', label=f'best of {N_SAMPLES:.0e} Haar samples')
+ax.plot(ks, [r['sampling_over_trXY'] for r in results], 's-', label=f'best of {N_SAMPLES:,} Haar samples')
 ax.set_xscale('log', base=2)
 ax.set_yscale('symlog', linthresh=1e-3)
 ax.set_xlabel('$k$')
@@ -120,4 +128,5 @@ ax.set_ylabel('$z / \\mathrm{Tr}(XY)$ (median over pairs)')
 ax.legend(frameon=False, fontsize=8)
 fig.tight_layout()
 fig.savefig(f"{args.figdir}/search.pdf")
+finish_partial(args)
 print("written:", args.out, args.figdir)

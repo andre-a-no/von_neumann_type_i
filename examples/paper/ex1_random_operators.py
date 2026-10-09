@@ -23,9 +23,9 @@ X = alg.operator_from_eigenvalues(contrast_sampler(0.6), batch_size=B,
                                   force_positive=True, force_self_adjoint=True)
 print(X.matrix.shape)                          # (10000, 3, 4, 4): batch, sector, padded block
 print(X.michelson_contrast[:4])                # 0.6 for every sample
-print(X.Tr_blunt().real.mean(), X.Tr_norm().mean(), X.tau_vN().mean())
+print(X.Tr_blunt().real.mean(), X.Tr_norm().real.mean(), X.tau_vN().real.mean())
 
 # functional calculus through the spectral theorem, block by block
 R = X.sqrt()
 print((R @ R - X).frobenius_norm().max())      # ~1e-6 in single precision
-print(X.apply_function(torch.log).tau_vN().mean())   # tau_vN(log X)
+print(X.apply_function(torch.log).tau_vN().real.mean())   # tau_vN(log X)

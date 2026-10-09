@@ -63,3 +63,10 @@ def test_rk4_eta_warning_and_progress(capsys):
 def test_unknown_option():
     with pytest.raises(KeyError):
         tv.cost.set_limits(warn_second=1)
+
+
+def test_step_timer_enabled_after_first_step():
+    t = cost.StepTimer(5, "x")
+    with cost.disabled():
+        t.step()
+    t.step()

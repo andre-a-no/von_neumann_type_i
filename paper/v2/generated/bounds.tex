@@ -2,18 +2,24 @@
 \newcommand{\BoundsDevice}{CPU (4 threads)}
 \newcommand{\BoundsMode}{quick}
 \newcommand{\BoundsTorch}{2.14.1+cu130}
+\newcommand{\BoundsMatmul}{FP32}
 \newcommand{\BoundsStarts}{12}
 \newcommand{\BoundsSteps}{240}
-\newcommand{\BoundsGrid}{9}
-\newcommand{\BoundsExactDev}{8.1e-03}
+\newcommand{\BoundsGrid}{10}
+\newcommand{\BoundsExactDev}{8.7e-03}
+\newcommand{\BoundsExactDevTwo}{4.0e-03}
+\newcommand{\BoundsExpThreeInf}{2\times10^{-9}}
+\newcommand{\BoundsMcChecked}{119602}
+\newcommand{\BoundsMcDropped}{398}
+\newcommand{\BoundsMcOutside}{2}
 \newcommand{\BoundsRows}{%
-1 & 2 & 1 & $-1.994$ & $+0.2436$ & $[-1.98,\,+0.225]$ & 0 \\
-1 & 2 & 2 & $-3.991$ & $+0.4765$ & $[-3.39,\,+0.328]$ & 0 \\
-1 & 4 & 1 & $-3.994$ & $+0.472$ & -- & -- \\
-2 & 2 & 1 & $-0.9931$ & $+0.9934$ & $[-0.921,\,+0.975]$ & 0 \\
-2 & 2 & 2 & $-1.956$ & $+1.963$ & $[-1.43,\,+1.72]$ & 0 \\
-2 & 4 & 1 & $-1.961$ & $+1.957$ & -- & -- \\
-3 & 2 & 1 & $0$ & $+0.9927$ & $[0,\,+0.946]$ & 0 \\
-3 & 2 & 2 & $0$ & $+1.968$ & $[0,\,+1.39]$ & 0 \\
-3 & 4 & 1 & $0$ & $+1.962$ & -- & -- \\
+1 & 2 & 1 & $-1.988$ & $+0.2483$ & $[-1.98,\,+0.227]$ & 1 \\
+1 & 2 & 2 & $-3.99$ & $+0.4849$ & $[-3.39,\,+0.328]$ & 0 \\
+1 & 4 & 1 & $-3.995$ & $+0.4775$ & -- & -- \\
+2 & 2 & 1 & $-0.9959$ & $+0.9987$ & $[-0.921,\,+0.975]$ & 0 \\
+2 & 2 & 2 & $-1.974$ & $+1.975$ & $[-1.43,\,+1.72]$ & 0 \\
+2 & 4 & 1 & $-1.971$ & $+1.972$ & -- & -- \\
+3 & 2 & 1 & $0$ & $+0.9939$ & $[0,\,+0.946]$ & 1 \\
+3 & 2 & 2 & $0$ & $+1.967$ & $[0,\,+1.39]$ & 0 \\
+3 & 4 & 1 & $0$ & $+1.98$ & -- & -- \\
 }

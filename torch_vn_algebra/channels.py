@@ -27,6 +27,19 @@ from .states import DensityMatrix, _trace_weights
 Operator = TypeIAlgebra.Operator
 
 
+def _same_structure(a: TypeIAlgebra, b: TypeIAlgebra) -> bool:
+    return a is b or (a.k_factors == b.k_factors and a.dtype == b.dtype and a.hilbert.device == b.hilbert.device)
+
+
+def _check_input(op, alg: TypeIAlgebra, what: str) -> None:
+    if not isinstance(op, Operator):
+        raise TypeError(f"{what}: expected an Operator or DensityMatrix of {alg}, got {type(op).__name__} "
+                        f"(wrap tensors with alg.operator(...))")
+    if not _same_structure(op.algebra, alg):
+        raise ValueError(f"{what}: the operator belongs to {op.algebra} ({op.algebra.dtype}), the channel to "
+                         f"{alg} ({alg.dtype}); convert with op.cast(alg)")
+
+
 class Channel:
     """Sector-preserving completely positive map given by Kraus operators."""
 
@@ -37,6 +50,7 @@ class Channel:
         if kraus.dim() != 5 or tuple(kraus.shape[2:]) != expected:
             raise ValueError(f"Kraus tensor must have shape (batch, r, {algebra.C}, {algebra.k_max}, "
                              f"{algebra.k_max}), got {tuple(kraus.shape)}")
+        kraus = algebra._to_field(kraus, "Kraus operators")
         self.algebra = algebra
         self.kraus = kraus.to(device=algebra.hilbert.device)
         self._trace_preserving = None
@@ -60,7 +74,7 @@ class Channel:
         A DensityMatrix is mapped to a DensityMatrix if the channel is trace preserving;
         otherwise the result is a plain Operator and a warning is issued.
         """
-        assert op.algebra is self.algebra
+        _check_input(op, self.algebra, "Channel.apply")
         K = self.kraus
 
         def generator():
@@ -96,7 +110,10 @@ class Channel:
 
     def compose(self, other: 'Channel') -> 'Channel':
         """self o other: first `other`, then `self` (Kraus operators K_i L_j)."""
-        assert other.algebra is self.algebra
+        if isinstance(other, InterSectorChannel):
+            return self.to_inter_sector().compose(other)
+        if not isinstance(other, Channel) or not _same_structure(other.algebra, self.algebra):
+            raise ValueError("compose: both channels must act on the same algebra")
         K = self.kraus.unsqueeze(2)            # (B, r1, 1, C, k, k)
         L = other.kraus.unsqueeze(1)           # (B, 1, r2, C, k, k)
         KL = K @ L
@@ -116,7 +133,10 @@ class Channel:
 
     def mix(self, other: 'Channel', p: float) -> 'Channel':
         """Convex combination (1 - p) self + p other."""
-        assert other.algebra is self.algebra
+        if not _same_structure(other.algebra, self.algebra):
+            raise ValueError("mix: both channels must act on the same algebra")
+        if not 0 <= p <= 1:
+            raise ValueError("mix: p must lie in [0, 1]")
         B = max(self.batch_size, other.batch_size)
         a = (1 - p) ** 0.5 * self.kraus.expand(B, *self.kraus.shape[1:])
         b = p ** 0.5 * other.kraus.expand(B, *other.kraus.shape[1:]).to(a.dtype)
@@ -147,10 +167,10 @@ class Channel:
         return 1e-5 if self.kraus.dtype in (torch.float32, torch.complex64) else 1e-10
 
     def is_trace_preserving(self, tol: Optional[float] = None) -> bool:
-        return bool(torch.all(self.trace_preservation_error() <= (tol or self._tol())))
+        return bool(torch.all(self.trace_preservation_error() <= (self._tol() if tol is None else tol)))
 
     def is_unital(self, tol: Optional[float] = None) -> bool:
-        return bool(torch.all(self.unitality_error() <= (tol or self._tol())))
+        return bool(torch.all(self.unitality_error() <= (self._tol() if tol is None else tol)))
 
     # ------------------------------------------------------------------
     def choi(self) -> List[torch.Tensor]:
@@ -179,7 +199,7 @@ class Channel:
         return out
 
     @staticmethod
-    def from_superoperator(algebra: TypeIAlgebra, blocks: Sequence[torch.Tensor], tol: float = 0.0) -> 'Channel':
+    def from_superoperator(algebra: TypeIAlgebra, blocks: Sequence[torch.Tensor], tol: Optional[float] = None) -> 'Channel':
         """
         Channel from per-channel superoperators S_c of shape (batch, k_c^2, k_c^2) acting on row-major
         vec(rho). Kraus operators are obtained from the eigendecomposition of the Choi matrix; S_c must
@@ -200,7 +220,7 @@ class Channel:
             J = 0.5 * (J + J.conj().transpose(-2, -1))
             w, V = cost.batched_call(torch.linalg.eigh, J, f"Choi eigendecomposition (sector {c})")
             scale = max(1.0, w.abs().max().item())
-            if torch.any(w < -(tol or 1e-4) * scale):
+            if torch.any(w < -(1e-4 if tol is None else tol) * scale):
                 raise ValueError(f"superoperator of channel {c} is not completely positive "
                                  f"(Choi eigenvalue {w.min().item():.3g})")
             w = torch.clamp(w, min=0.0)
@@ -316,9 +336,11 @@ def random_channel(alg: TypeIAlgebra, kraus_rank: int, batch_size: int = 1) -> C
 def random_mixed_unitary_channel(alg: TypeIAlgebra, n_unitaries: int, batch_size: int = 1,
                                  weights: Optional[torch.Tensor] = None) -> Channel:
     """rho -> sum_j p_j U_j rho U_j^* with Haar unitaries in M and Dirichlet(1) (or given) weights; unital."""
-    if weights is None:
-        weights = torch.distributions.Dirichlet(torch.ones(n_unitaries)).sample((batch_size,))
-    weights = weights.to(alg.hilbert.device)
+    rdt = alg.hilbert.real_dtype
+    if weights is None:                       # in the algebra's precision, so that the channel is TP to round-off
+        weights = torch.distributions.Dirichlet(torch.ones(n_unitaries, dtype=rdt)).sample((batch_size,))
+    weights = weights.to(device=alg.hilbert.device, dtype=rdt)
+    weights = weights / weights.sum(dim=-1, keepdim=True)
     Us = torch.stack([alg.random_unitary_operator(batch_size).matrix for _ in range(n_unitaries)], dim=1)
     return Channel(alg, Us * weights.sqrt()[:, :, None, None, None].to(Us.dtype))
 
@@ -348,6 +370,7 @@ class InterSectorChannel:
         if kraus.dim() != 6 or tuple(kraus.shape[2:]) != expected:
             raise ValueError(f"Kraus tensor must have shape (batch, r, {expected[0]}, {expected[1]}, "
                              f"{expected[2]}, {expected[3]}), got {tuple(kraus.shape)}")
+        kraus = algebra_out._to_field(kraus, "Kraus operators")
         self.algebra_in = algebra_in
         self.algebra_out = algebra_out
         self.kraus = kraus.to(device=algebra_out.hilbert.device)
@@ -380,7 +403,7 @@ class InterSectorChannel:
     # ------------------------------------------------------------------
     def apply(self, op: Operator) -> Operator:
         """Schroedinger picture (lazy). Trace-preserving maps send a DensityMatrix to a DensityMatrix."""
-        assert op.algebra is self.algebra_in
+        _check_input(op, self.algebra_in, "InterSectorChannel.apply")
         K = self.kraus
 
         def generator():
@@ -431,7 +454,9 @@ class InterSectorChannel:
         """self o other. Kraus operators K_j^{ed} L_i^{dc}, indexed by (j, i, d)."""
         if isinstance(other, Channel):
             other = other.to_inter_sector()
-        assert other.algebra_out is self.algebra_in
+        if not _same_structure(other.algebra_out, self.algebra_in):
+            raise ValueError(f"compose: the output algebra of the first map ({other.algebra_out}) is not the input "
+                             f"algebra of the second ({self.algebra_in})")
         K = self.kraus.unsqueeze(2).unsqueeze(5)          # (B, r2, 1, E, D, 1, m_e, m_d)
         L = other.kraus.unsqueeze(1).unsqueeze(3)         # (B, 1, r1, 1, D, C, m_d, k_c)
         KL = K @ L                                        # (B, r2, r1, E, D, C, m_e, k_c)
@@ -455,12 +480,12 @@ class InterSectorChannel:
         return (gram - self._identity_in()).abs().amax(dim=(-3, -2, -1))
 
     def is_trace_preserving(self, tol: Optional[float] = None) -> bool:
-        tol = tol or (1e-5 if self.kraus.dtype in (torch.float32, torch.complex64) else 1e-10)
+        tol = (1e-5 if self.kraus.dtype in (torch.float32, torch.complex64) else 1e-10) if tol is None else tol
         return bool(torch.all(self.trace_preservation_error() <= tol))
 
     def is_unital(self, tol: Optional[float] = None) -> bool:
         """Phi(1) = 1 (Schroedinger picture, blunt trace)."""
-        tol = tol or (1e-5 if self.kraus.dtype in (torch.float32, torch.complex64) else 1e-10)
+        tol = (1e-5 if self.kraus.dtype in (torch.float32, torch.complex64) else 1e-10) if tol is None else tol
         alg = self.algebra_in
         one = alg.operator(self._identity_in().unsqueeze(0).expand(self.kraus.shape[0], -1, -1, -1).clone())
         out = self.apply(one).matrix

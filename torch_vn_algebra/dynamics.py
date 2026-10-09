@@ -12,10 +12,12 @@ Fixed-step RK4 solvers (any generator, also time dependent):
 """
 from typing import Callable, List, Optional, Sequence, Union
 
+import warnings
+
 import torch
 
 from .algebra import TypeIAlgebra
-from .channels import Channel
+from .channels import Channel, InterSectorChannel
 from . import cost
 from .states import DensityMatrix
 
@@ -56,7 +58,13 @@ def schrodinger(psi0: torch.Tensor, H: Operator, times) -> torch.Tensor:
     _require_complex(H.algebra)
     if psi0.dim() == 4:
         psi0 = psi0.squeeze(-1)
+    psi0 = psi0.to(H.matrix.device)                       # a state built on the CPU may meet H on a GPU
+    B = max(psi0.shape[0], H.matrix.shape[0])             # one initial state for a batch of Hamiltonians, or vice versa
+    psi0 = psi0.expand(B, *psi0.shape[1:])
     ts = _times(times, psi0.device)
+    if psi0.dtype in (torch.float64, torch.complex128) and H.matrix.dtype in (torch.float32, torch.complex64):
+        warnings.warn("schrodinger: psi0 is in double but H in single precision; the evolution is computed in single "
+                      "precision (create H in a double-precision algebra)", UserWarning, stacklevel=2)
     out = torch.zeros(len(ts), *psi0.shape, dtype=H.matrix.dtype, device=psi0.device)
     for c, (w, V) in enumerate(H.eigh()):
         k_c = H.algebra.k_factors[c]
@@ -74,6 +82,8 @@ def von_neumann(rho0: Operator, H: Operator, times) -> List[Operator]:
     alg = H.algebra
     blocks = H.eigh()
     rho = rho0.matrix.to(H.matrix.dtype)
+    B = max(rho.shape[0], H.matrix.shape[0])              # one initial state for a batch of Hamiltonians, or vice versa
+    rho = rho.expand(B, *rho.shape[1:])
     out = []
     for t in _times(times, rho.device).tolist():
         mat = torch.zeros_like(rho)
@@ -161,8 +171,20 @@ def lindblad_rhs(H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
     Right-hand side of the GKSL equation
         drho/dt = -i[H, rho] + sum_j g_j (L_j rho L_j^* - 1/2 {L_j^* L_j, rho})
     as a function (t, rho_matrix) -> drho/dt. H and L_j are constant, or callables of t.
+
+    A jump that moves weight between sectors (particle loss N -> N-1, ...) is passed as an
+    InterSectorChannel of the algebra into itself: each of its Kraus operators K_i is one jump operator
+    (blocks K_i^{dc}), contributing sum_i (K_i rho K_i^* - 1/2 {K_i^* K_i, rho}); K_i^* K_i is block
+    diagonal, so the generator still maps M into M and conserves the total trace.
     """
     rates = _rates(jumps, rates)
+    sector_jumps = {}
+    for idx, L in enumerate(jumps):
+        if isinstance(L, InterSectorChannel):
+            if L.algebra_in.k_factors != L.algebra_out.k_factors:
+                raise ValueError("a jump between sectors must map the algebra into itself")
+            K = L.kraus                                                    # (B, r, D, C, m, k)
+            sector_jumps[idx] = (K, (K.conj().transpose(-2, -1) @ K).sum(dim=(1, 2)))   # (B, C, k, k)
 
     def get(x, t):
         return _mat(x(t) if callable(x) else x)
@@ -172,7 +194,14 @@ def lindblad_rhs(H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
         if H is not None:
             Hm = get(H, t).to(rho.dtype)
             out = out - 1j * (Hm @ rho - rho @ Hm)
-        for g, L in zip(rates, jumps):
+        for idx, (g, L) in enumerate(zip(rates, jumps)):
+            if idx in sector_jumps:
+                K, KdK = sector_jumps[idx]
+                Kd = K.to(rho.dtype)
+                gain = (Kd @ rho[:, None, None] @ Kd.conj().transpose(-2, -1)).sum(dim=(1, 3))
+                KdK = KdK.to(rho.dtype)
+                out = out + g * (gain - 0.5 * (KdK @ rho + rho @ KdK))
+                continue
             Lm = get(L, t).to(rho.dtype)
             Ld = Lm.conj().transpose(-2, -1)
             LdL = Ld @ Lm
@@ -189,7 +218,12 @@ def lindblad_evolve(rho0: Operator, H: Optional[OperatorLike], jumps: Sequence[O
     dtype = torch.promote_types(rdt, torch.complex64) if rho0.algebra.hilbert.complex_valued or H is not None else rdt
     if H is not None:
         _require_complex(rho0.algebra)
-    ys = rk4(lindblad_rhs(H, jumps, rates), rho0.matrix.to(dtype), times, substeps, progress)
+    # one initial state for a batch of Hamiltonians / jump operators (disorder averages), or vice versa
+    batches = [rho0.matrix.shape[0]] + [_mat(X).shape[0] for X in ([H] if H is not None else []) + list(jumps)
+                                        if isinstance(_mat(X), torch.Tensor)]
+    y0 = rho0.matrix.to(dtype)
+    y0 = y0.expand(max(batches), *y0.shape[1:]).clone()
+    ys = rk4(lindblad_rhs(H, jumps, rates), y0, times, substeps, progress)
     alg = rho0.algebra
     if isinstance(rho0, DensityMatrix):
         return [DensityMatrix(alg, matrix=0.5 * (y + y.conj().transpose(-2, -1)), validate=False) for y in ys]
@@ -206,6 +240,13 @@ def lindblad_superoperator(alg: TypeIAlgebra, H: Optional[OperatorLike], jumps: 
                            rates: Optional[Sequence[float]] = None) -> List[torch.Tensor]:
     """Per-channel generator matrices acting on row-major vec(rho), shape (batch, k_c^2, k_c^2)."""
     rates = _rates(jumps, rates)
+    for L in jumps:
+        if type(L).__name__ == 'InterSectorChannel':
+            raise ValueError("lindblad_superoperator / lindblad_channel act sector by sector and do not accept jumps "
+                             "between sectors (InterSectorChannel); use lindblad_evolve for those")
+        if not isinstance(_mat(L), torch.Tensor):
+            raise TypeError(f"jump operators must be Operators or tensors of shape (batch, C, k_max, k_max), "
+                            f"got {type(L).__name__}")
     mats = ([_mat(H)] if H is not None else []) + [_mat(L) for L in jumps]
     if not mats:
         raise ValueError("need a Hamiltonian or at least one jump operator")

@@ -1,3 +1,4 @@
+import math
 """
 Tests for TypeIAlgebra and Operator classes, including SU(n) generation and eigenvalue extraction.
 
@@ -64,8 +65,10 @@ class TestAlgebraInit:
         assert alg.total_subspace_dim == 5
 
     def test_invalid_k_factors(self):
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):
             TypeIAlgebra([2, 3], [3, 4])
+        with pytest.raises(ValueError):
+            TypeIAlgebra([1], [0])                  # no sector with k_c > 0
 
     def test_mismatched_lengths(self):
         with pytest.raises(AssertionError):
@@ -286,7 +289,8 @@ class TestThreeTraces:
 
     def test_tau_vN_identity(self, basic_algebra):
         op = basic_algebra.identity(batch_size=2)
-        assert torch.allclose(op.tau_vN(), torch.tensor(1.0))
+        assert torch.allclose(op.tau_vN().real, torch.tensor(1.0))
+        assert torch.is_complex(op.tau_vN())   # traces live in the field of the algebra
 
 
 # ============================================================================
@@ -485,7 +489,7 @@ if __name__ == "__main__":
 class TestRegressions:
     @pytest.mark.parametrize("k", [8, 300])
     def test_lambda_min_negative_spectrum(self, k):
-        # k = 300 exercises the power-iteration branch (> exact_eig_max_dim)
+        # k = 300: blocks above the former power-iteration threshold (now exact for every size)
         alg = TypeIAlgebra([k], [k], complex_valued=False, device='cpu')
         op = alg.operator_from_eigenvalues(lambda d: torch.linspace(-2.0, 1.0, d),
                                            force_self_adjoint=True)
@@ -534,3 +538,184 @@ class TestPrecision:
     def test_invalid_precision(self):
         with pytest.raises(ValueError):
             TypeIAlgebra([2], [2], precision='half')
+
+
+class TestNumerics:
+    def test_like_and_cast(self):
+        a = TypeIAlgebra([3, 4], [3, 4], complex_valued=False, device='cpu')
+        X = a.operator_from_eigenvalues(lambda d: 0.1 + torch.rand(4, d), batch_size=4, force_positive=True)
+        b = a.like(complex_valued=True, precision='double')
+        assert b.k_factors == a.k_factors and b.dtype == torch.complex128
+        Y = X.cast(b)
+        assert Y.algebra is b and Y.matrix.dtype == torch.complex128
+        assert torch.allclose(Y.matrix.real.float(), X.matrix)
+        assert torch.allclose(Y.michelson_contrast.float(), X.michelson_contrast, atol=1e-5)
+        assert a.bytes_per_operator(10) * 4 == b.bytes_per_operator(10)
+
+    def test_cast_to_real_requires_real_matrix(self):
+        b = TypeIAlgebra([2], [2], complex_valued=True, device='cpu')
+        U = b.operator(b.random_unitary(2, batch_size=3)[:, None])
+        with pytest.raises(ValueError):
+            U.cast(b.like(complex_valued=False))
+
+
+class TestEigenvalues:
+    def test_matches_eigh_and_is_differentiable(self):
+        alg = TypeIAlgebra([2, 3, 4], [2, 3, 4], precision='double')
+        A = alg.random_unitary_operator(5)
+        H = A + A.adjoint()
+        for w, (w2, _) in zip(H.eigenvalues(), H.eigh()):
+            assert torch.allclose(w, w2, atol=1e-12)
+        m = H.matrix.clone().requires_grad_()
+        S = sum((w ** 2).sum() for w in alg.operator(m).eigenvalues())
+        S.backward()                                       # sum of squared eigenvalues = ||H||_F^2
+        assert torch.allclose(m.grad, 2 * H.matrix, atol=1e-10)
+
+    def test_requires_self_adjoint(self):
+        alg = TypeIAlgebra([2], [2])
+        U = alg.random_unitary_operator(1)
+        with pytest.raises(RuntimeError):
+            U.eigenvalues()
+
+
+class TestSecondReview:
+    """Regressions found in the second review round."""
+
+    def test_extremes_exact_for_large_and_symmetric_blocks(self):
+        alg = TypeIAlgebra([4, 3], [4, 3], precision='double')
+        alg.exact_eig_max_dim = 1                      # formerly switched to power iteration
+        M = torch.zeros(1, 2, 4, 4, dtype=torch.complex128)
+        M[0, 0] = torch.diag(torch.tensor([1.0, -1.0, 0.5, 0.2], dtype=torch.complex128))
+        M[0, 1, :3, :3] = torch.diag(torch.tensor([0.3, 0.1, -0.2], dtype=torch.complex128))
+        op = alg.operator(M, is_self_adjoint=True)
+        assert abs(op.lambda_max.item() - 1) < 1e-12 and abs(op.lambda_min.item() + 1) < 1e-12
+
+    def test_operator_norm_exact(self):
+        alg = TypeIAlgebra([5, 3], [5, 3], precision='double')
+        A = alg.operator(torch.randn(2, 2, 5, 5, dtype=torch.complex128) * torch.tensor([1.0, 0.0])[None, :, None, None]
+                         + alg.zero(2).matrix)
+        ref = torch.stack([torch.linalg.matrix_norm(A.matrix[b, 0], ord=2) for b in range(2)])
+        assert torch.allclose(A.operator_norm(), ref)
+
+    def test_flags_for_complex_spectra(self):
+        alg = TypeIAlgebra([2], [2], precision='double')
+        A = alg.operator_from_eigenvalues(lambda d: torch.tensor([1j, 1.0]))
+        assert A.is_normal and not A.is_positive and not A.is_projection and not A.is_self_adjoint
+
+    def test_tau_vN_normalised_with_empty_sector(self):
+        alg = TypeIAlgebra([2, 1, 3], [2, 0, 3], precision='double')
+        assert abs(alg.identity().tau_vN().real.item() - 1) < 1e-12
+
+    def test_entropy_ignores_padding(self):
+        from torch_vn_algebra import states
+        alg = TypeIAlgebra([1] * 50 + [300], [1] * 50 + [300], precision='double')
+        m = torch.zeros(1, 51, 300, 300, dtype=torch.complex128)
+        m[0, 50, :2, :2] = torch.diag(torch.tensor([0.3, 0.7], dtype=torch.complex128))
+        rho = alg.operator(m, is_self_adjoint=True, is_positive=True)
+        exact = -(0.3 * math.log(0.3) + 0.7 * math.log(0.7))
+        assert abs(rho.entropy().item() - exact) < 1e-12
+        assert abs(states.von_neumann_entropy(rho).item() - exact) < 1e-12
+
+    def test_hs_measure_per_block(self):
+        from torch_vn_algebra import states
+        alg = TypeIAlgebra([2, 5], [2, 5], precision='double')
+        rho = states.random_density_matrix(alg, batch_size=20000)
+        b = rho.matrix[:, 0, :2, :2]
+        b = b / torch.diagonal(b, dim1=-2, dim2=-1).sum(-1)[:, None, None]
+        purity = torch.einsum('bij,bji->b', b, b).real.mean().item()
+        assert abs(purity - 0.8) < 0.01                 # HS on M_2: 2k/(k^2+1)
+
+    def test_mixed_unitary_channel_trace_preserving_in_double(self):
+        from torch_vn_algebra import channels
+        alg = TypeIAlgebra([2, 3], [2, 3], precision='double')
+        assert channels.random_mixed_unitary_channel(alg, 5, 4).is_trace_preserving()
+
+
+class TestThirdReview:
+    """Regressions from the third review round (user-level API)."""
+
+    def test_per_sample_scalar(self):
+        alg = TypeIAlgebra([2], [2], precision='double')
+        X = alg.identity(2) * torch.tensor([1.0, 3.0], dtype=torch.float64)
+        assert torch.allclose(X.matrix[0, 0], torch.eye(2, dtype=X.matrix.dtype))
+        assert torch.allclose(X.matrix[1, 0], 3 * torch.eye(2, dtype=X.matrix.dtype))
+        assert X.matrix.dtype == alg.dtype
+
+    def test_pinv_relative_tolerance_single(self):
+        alg = TypeIAlgebra([3], [3])
+        U = alg.random_unitary_operator(1)
+        P = alg.from_blocks([torch.diag(torch.tensor([1.0, 0.0, 0.0]))])
+        A = U @ P @ U.adjoint()
+        assert A.inverse().matrix.abs().max().item() < 10
+
+    def test_entropy_rejects_non_positive(self):
+        alg = TypeIAlgebra([2], [2], precision='double')
+        A = alg.operator(torch.diag(torch.tensor([-0.5, 0.5], dtype=torch.float64))[None, None].to(alg.dtype))
+        with pytest.raises(RuntimeError):
+            A.entropy()
+
+    def test_real_algebra_refuses_complex_data(self):
+        alg = TypeIAlgebra([2], [2], complex_valued=False)
+        with pytest.raises(ValueError):
+            alg.operator(torch.ones(1, 1, 2, 2, dtype=torch.complex64) * 1j)
+        with pytest.raises(ValueError):
+            alg.operator_from_eigenvalues(lambda d: torch.tensor([1 + 1j, 2 - 1j]))
+        assert alg.operator(torch.ones(1, 1, 2, 2, dtype=torch.float64)).matrix.dtype == alg.dtype
+
+    def test_clear_errors_between_algebras(self):
+        a, b = TypeIAlgebra([2], [2]), TypeIAlgebra([3], [3])
+        with pytest.raises(ValueError):
+            a.identity() + b.identity()
+        with pytest.raises(TypeError):
+            a.identity() + 1.0
+        assert torch.allclose((a.identity() + a.like().identity()).matrix, 2 * a.identity().matrix)
+
+    def test_mix_checks_weights(self):
+        from torch_vn_algebra import states
+        alg = TypeIAlgebra([2], [2], precision='double')
+        rho, sig = states.random_density_matrix(alg, 2), states.random_density_matrix(alg, 2)
+        with pytest.raises(ValueError):
+            rho.mix(sig, 2.0)
+        m = rho.mix(sig, torch.tensor([0.0, 1.0]))
+        assert torch.allclose(m.matrix[0], rho.matrix[0]) and torch.allclose(m.matrix[1], sig.matrix[1])
+
+    def test_spacing_ratio_float32_degenerate(self):
+        from torch_vn_algebra import SpinChain
+        r = SpinChain.level_spacing_ratio(torch.tensor([0.0, 0.0, 0.0, 1.0, 2.0]))
+        assert torch.isfinite(r)
+
+    def test_channel_errors_and_mixed_composition(self):
+        from torch_vn_algebra import channels, SpinChain
+        alg = TypeIAlgebra([2], [2])
+        Phi = channels.random_channel(alg, 2)
+        with pytest.raises(TypeError):
+            Phi(torch.eye(2))
+        ch = SpinChain(3)
+        L = ch.lowering(0)                                     # InterSectorChannel on the chain algebra
+        Id = channels.identity_channel(ch.algebra)
+        assert (Id @ L).kraus.shape[-1] == L.kraus.shape[-1]
+
+
+def test_hilbert_space_inner_product_and_haar():
+    from torch_vn_algebra.hilbert_space import HilbertSpace
+    H = HilbertSpace(n=3, k=2, device='cpu', precision='double')
+    b = H.random_basis()
+    assert abs(H.inner_product(b.bra(0), b.ket(0)).item() - 1) < 1e-12
+    assert abs(H.inner_product(b.bra(0), b.ket(1)).item()) < 1e-12
+    assert abs(H.inner_product(b.ket(0), b.ket(0)).item() - 1) < 1e-12        # kets in: conjugated inside
+    Hb = HilbertSpace(n=3, k=3, batch_size=20000, device='cpu', precision='double')
+    for V in (Hb.random_basis().V[:, 0], Hb.haar_basis().V[:, 0]):
+        assert abs((V[:, 0, 0].abs() ** 4).mean().item() - 2 / 12) < 0.01    # Haar U(3) moment
+    assert Hb.random_basis().random_subspace_vector().dtype == torch.complex128
+
+
+def test_central_with_complex_scalars():
+    alg = TypeIAlgebra([2, 3], [2, 3], precision='double')
+    Z = alg.central([1j, 2.0])
+    assert Z.is_normal and not Z.is_self_adjoint and not Z.is_positive
+    assert torch.allclose(Z.matrix[0, 0, :2, :2], 1j * torch.eye(2, dtype=Z.matrix.dtype))
+    assert alg.central([0.0, 1.0]).is_projection
+    with pytest.raises(ValueError):
+        TypeIAlgebra([2], [2], complex_valued=False).central([1j])
+    with pytest.raises(ValueError):
+        alg.central([1.0])
