@@ -36,7 +36,7 @@ Damit ist auch die Frage „Warum nicht einfach eine große Matrix?“ beantwort
   Bedingte Wahrscheinlichkeiten und Postselektion sind Operationen mit dem Zentrum; arbeitet man mit
   einer einzigen Matrix, muss man sie aus Blockindizes rekonstruieren.
 
-Der Fall C = 1 wird ebenfalls unterstützt: Er ist gebatchte lineare Algebra in M_n.
+Der Fall C = 1 wird ebenfalls unterstützt: Er ist stapelweise lineare Algebra in M_n.
 
 ---
 
@@ -58,7 +58,7 @@ Der Fall C = 1 wird ebenfalls unterstützt: Er ist gebatchte lineare Algebra in 
 **Physikalische Bedeutung der drei Spuren.**
 - Tr_blunt (Gewichte 1) ist die physikalische Spur auf H. Normiert ist sie der Zustand bei unendlicher
   Temperatur: Alle N Basiszustände sind gleich wahrscheinlich, und Sektor c hat die Wahrscheinlichkeit k_c/N.
-- Tr_norm (Gewichte 1/k_c): der Gleichverteilungszustand (mikrokanonische Zustand) innerhalb jedes einzelnen
+- Tr_norm (Gewichte 1/k_c): der gleichverteilte (mikrokanonische) Zustand innerhalb jedes einzelnen
   Sektors.
 - τ_vN (Gewichte 1/(C k_c)): die gleichgewichtete Mischung der mikrokanonischen Zustände der Sektoren. Jeder
   *Sektor* (nicht jeder Basiszustand) hat die Wahrscheinlichkeit 1/C.
@@ -139,11 +139,11 @@ unabhängig, und die Exponentialfunktion wird blockweise berechnet.
   Gemeinsame Eigenräume (N, k), wobei e^{ik} ein Eigenwert von T ist, liefern eine feinere Zerlegung mit
   Blöcken, die etwa um den Faktor L kleiner sind.
 - Der **Grundzustand** ist der Eigenvektor von H zum kleinsten Eigenwert, d. h. er beschreibt das Verhalten
-  am absoluten Nullpunkt. Für große Blöcke bestimmt man ihn mit dem Lanczos-Verfahren (`krylov`).
+  bei Temperatur null. Für große Blöcke bestimmt man ihn mit dem Lanczos-Verfahren (`krylov`).
 - Was im Artikel überprüft wird und warum das Standardtests sind:
   - Grundzustandsenergien des Heisenberg-Rings (bekannte exakte Werte, Bethe-Ansatz);
   - die **Marshall-Vorzeichenregel**: Für das Heisenberg-Modell auf einem bipartiten Gitter hat der
-    Grundzustand die Vorzeichen (−1)^{number of ↑ on one sublattice}. Das ist ein Satz und damit ein sauberer Test;
+    Grundzustand die Vorzeichen (−1)^{Anzahl der ↑ auf einem Untergitter}. Das ist ein Satz und damit ein sauberer Test;
   - **SU(2)-Verschachtelung**: Das Heisenberg-Modell besitzt die volle SU(2)-Symmetrie, daher ist für N < L/2
     das Spektrum von Sektor N in dem von Sektor N+1 enthalten (Multipletts);
   - **Schmelzen einer Domänenwand**: |↑…↑↓…↓⟩ zerfließt bei Δ = 0 mit einem bekannten Profil;

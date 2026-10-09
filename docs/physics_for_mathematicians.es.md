@@ -45,7 +45,7 @@ El caso C = 1 también está soportado: es álgebra lineal por lotes en M_n.
 | física | matemáticas | en la biblioteca |
 |---|---|---|
 | observable (energía, espín, número de partículas) | A ∈ M autoadjunto | `Operator` |
-| resultados posibles de una medida | espectro de A | `eigh`, `eigenvalues` |
+| resultados posibles de una medida | espectro de A | `eigh` |
 | estado (mixto) | funcional positivo normal ω, ω(1) = 1; densidad ρ ≥ 0, Tr ρ = 1 | `DensityMatrix` |
 | estado puro, «función de onda» | vector ψ ∈ H, ρ = \|ψ⟩⟨ψ\| (una proyección minimal) | `vector_in_sector`, `basis_state` |
 | valor esperado | ω(A) = Tr(ρA) | `expectation` |
