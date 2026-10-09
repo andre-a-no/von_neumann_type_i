@@ -192,3 +192,18 @@ def test_lindblad_loss_between_sectors_is_a_death_process():
                              dtype=torch.float64)
         assert torch.allclose(r.sector_probabilities()[0], binom, atol=1e-8)
         assert abs(r.trace.real.item() - 1) < 1e-10
+
+
+def test_post_selection_on_hamming_weight_undoes_uniform_t1_noise():
+    # N-conserving H plus uniform loss: the no-jump evolution is H - i g N / 2 with N central,
+    # so post-selection on the initial Hamming weight returns the ideal state with p = exp(-w g T)
+    n, w, T, g = 5, 2, 1.5, 0.05
+    q = SpinChain(n, 'periodic')
+    H = q.xxz(1.0, 0.0)
+    rho0 = q.basis_state('11000')
+    ideal = dynamics.von_neumann(rho0, H, [T])[0]
+    rho = dynamics.lindblad_evolve(rho0, H, [q.lowering(i) for i in range(n)], [0.0, T], rates=[g] * n,
+                                   substeps=80)[-1]
+    post, p = rho.condition_on(q.algebra.central([1.0 if N == w else 0.0 for N in range(n + 1)]))
+    assert abs(p.item() - math.exp(-w * g * T)) < 1e-8
+    assert abs(st.trace_of_product(post, ideal).real.item() - 1.0) < 1e-8

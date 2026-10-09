@@ -2,13 +2,14 @@
 \newcommand{\BaseDevice}{CPU (4 threads)}
 \newcommand{\BaseMode}{quick}
 \newcommand{\BaseTorch}{2.14.1+cu130}
+\newcommand{\BaseMatmul}{FP32}
 \newcommand{\BaseHasGPU}{0}
 \newcommand{\BaseMCRows}{%
-1 & 2 & 112 & 1.7 & 1.27 & -- \\
-8 & 16 & 1.09e+03 & 676 & 415 & -- \\
+1 & 2 & 104 & 1.79 & 1.14 & -- \\
+8 & 16 & 1.02e+03 & 713 & 448 & -- \\
 }
 \newcommand{\BaseGSRows}{%
-14 & 3432 & 1 & 0.0074 & 0.0305 & 8.9e-16 \\
-14 & 3432 & 10 & 0.0751 & 0.126 & 3.2e-14 \\
-16 & 12870 & 1 & 0.0302 & 0.0502 & 6.2e-15 \\
+14 & 3432 & 1 & 0.00741 & 0.024 & 4.4e-15 \\
+14 & 3432 & 10 & 0.075 & 0.125 & 2.5e-14 \\
+16 & 12870 & 1 & 0.0274 & 0.0476 & 8.9e-16 \\
 }
