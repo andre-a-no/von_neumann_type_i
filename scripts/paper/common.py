@@ -87,6 +87,8 @@ def _fingerprint(args):
     h = hashlib.sha256()
     for p in [Path(sys.argv[0]).resolve()] + sorted((ROOT / 'torch_vn_algebra').glob('*.py')) + [Path(__file__)]:
         h.update(p.read_bytes())
+    for p in sorted((ROOT / 'results' / 'experiments').glob('*/tables/*.csv.gz')):   # input data of bounds_search
+        h.update(p.name.encode() + p.read_bytes())
     return dict(seed=args.seed, tf32=bool(args.tf32), device=torch.device(args.device).type, code=h.hexdigest()[:16])
 
 

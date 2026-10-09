@@ -21,8 +21,8 @@ Superauswahlregel), liegt in der **Kommutante** π(G)'. Nach dem Bikommutantensa
 
 also ist π(G)' eine endlichdimensionale Von-Neumann-Algebra vom Typ I. Ihre Sektoren sind die irreduziblen
 Darstellungen λ, die Blockgrößen sind die Multiplizitäten m_λ, und das Zentrum besteht aus Funktionen der
-„Ladungen“. Wer als Physiker ein System mit Symmetrie modelliert, rechnet also in einer Algebra der Form (1),
-meist ohne sie so zu nennen. Für eine einzelne Erhaltungsgröße Q (einen selbstadjungierten Operator) sind die
+„Ladungen“. Wer als Physiker ein System mit Symmetrie modelliert, rechnet also in einer Algebra der Form
+M = ⊕_c M_{k_c}(C), meist ohne sie so zu nennen. Für eine einzelne Erhaltungsgröße Q (einen selbstadjungierten Operator) sind die
 Sektoren die Eigenwerte von Q und die Blöcke ihre Eigenräume.
 
 Damit ist auch die Frage „Warum nicht einfach eine große Matrix?“ beantwortet. Die Einbettung M ⊂ M_D
@@ -47,17 +47,18 @@ Der Fall C = 1 wird ebenfalls unterstützt: Er ist stapelweise lineare Algebra i
 | Observable (Energie, Spin, Teilchenzahl) | selbstadjungiertes A ∈ M | `Operator` |
 | mögliche Messergebnisse | Spektrum von A | `eigenvalues`, `eigh` |
 | (gemischter) Zustand | normales positives Funktional ω, ω(1) = 1; Dichte ρ ≥ 0, Tr ρ = 1 | `DensityMatrix` |
-| reiner Zustand, „Wellenfunktion“ | Vektor ψ ∈ H, ρ = \|ψ⟩⟨ψ\| (eine minimale Projektion) | `vector_in_sector`, `basis_state` |
+| reiner Zustand, „Wellenfunktion“ | Vektor ψ in einem einzigen Sektor C^{k_c}, ρ = \|ψ⟩⟨ψ\| (eine minimale Projektion von M; ein über mehrere Sektoren verteiltes ψ ergibt auf M den gemischten Zustand Σ_c P_c\|ψ⟩⟨ψ\|P_c) | `vector_in_sector`, `basis_state` |
 | Erwartungswert | ω(A) = Tr(ρA) | `expectation` |
 | Wahrscheinlichkeit des Ergebnisses λ | ω(P_λ), P_λ die Spektralprojektion | `apply_function` |
 | Zustand nach einer Messung (Lüders-Regel) | ρ ↦ PρP / Tr(Pρ) | `lueders_update`, `condition_on` |
 | Von-Neumann-Entropie | S(ρ) = −Tr ρ log ρ | `entropy` |
 | Temperatur, thermischer Zustand | ρ = e^{−βH}/Tr e^{−βH} (Gibbs-Zustand = KMS-Zustand) | `gibbs_state` |
-| unendliche Temperatur | Spurzustand τ / τ(1) | `tracial_state` |
+| unendliche Temperatur | ρ = 1/D, D = Σk_c (normierte Tr_blunt) | `maximally_mixed_state` |
+| gleiches Gewicht für jeden Sektor | Dichte von τ_vN, ⊕_c 1_c/(C k_c) | `tracial_state` |
 
 **Physikalische Bedeutung der drei Spuren.**
 - Tr_blunt (Gewichte 1) ist die physikalische Spur auf H. Normiert ist sie der Zustand bei unendlicher
-  Temperatur: Alle N Basiszustände sind gleich wahrscheinlich, und Sektor c hat die Wahrscheinlichkeit k_c/N.
+  Temperatur: Alle D Basiszustände sind gleich wahrscheinlich, und Sektor c hat die Wahrscheinlichkeit k_c/D.
 - Tr_norm (Gewichte 1/k_c): der gleichverteilte (mikrokanonische) Zustand innerhalb jedes einzelnen
   Sektors.
 - τ_vN (Gewichte 1/(C k_c)): die gleichgewichtete Mischung der mikrokanonischen Zustände der Sektoren. Jeder
@@ -142,14 +143,16 @@ unabhängig, und die Exponentialfunktion wird blockweise berechnet.
   bei Temperatur null. Für große Blöcke bestimmt man ihn mit dem Lanczos-Verfahren (`krylov`).
 - Was im Artikel überprüft wird und warum das Standardtests sind:
   - Grundzustandsenergien des Heisenberg-Rings (bekannte exakte Werte, Bethe-Ansatz);
-  - die **Marshall-Vorzeichenregel**: Für das Heisenberg-Modell auf einem bipartiten Gitter hat der
-    Grundzustand die Vorzeichen (−1)^{Anzahl der ↑ auf einem Untergitter}. Das ist ein Satz und damit ein sauberer Test;
+  - die **Marshall-Vorzeichenregel**: Für das antiferromagnetische (J > 0) Heisenberg-Modell auf einem
+    bipartiten Gitter (einem Ring gerader Länge) hat der tiefste Zustand jedes Sektors N die Vorzeichen
+    (−1)^{Anzahl der ↑ auf einem Untergitter}. Das ist ein Satz und damit ein sauberer Test;
   - **SU(2)-Verschachtelung**: Das Heisenberg-Modell besitzt die volle SU(2)-Symmetrie, daher ist für N < L/2
     das Spektrum von Sektor N in dem von Sektor N+1 enthalten (Multipletts);
   - **Schmelzen einer Domänenwand**: |↑…↑↓…↓⟩ zerfließt bei Δ = 0 mit einem bekannten Profil;
   - **Peschel-Formel**: die Verschränkungsentropie freier Fermionen aus der Korrelationsmatrix.
 - **Unordnung und Chaos** (`random_field_heisenberg`, `level_spacing_ratio`): Zufallsfelder
-  h_i ∈ [−W, W]. Für kleines W ist das System „chaotisch“, und die Niveaus stoßen sich ab wie im GOE,
+  h_i ∈ [−W, W]. Für mäßige Unordnung (0 < W ≲ 2; bei W = 0 ist die Kette ohne Unordnung
+  Bethe-Ansatz-integrabel) ist das System „chaotisch“, und die Niveaus stoßen sich ab wie im GOE,
   ⟨r⟩ ≈ 0.53. Für großes W lokalisiert es (Vielteilchenlokalisierung, MBL), und die Niveaus sind unabhängig
   wie bei einem Poisson-Prozess, ⟨r⟩ ≈ 0.386. Niveaustatistik ist nur **innerhalb eines Sektors** sinnvoll:
   Das Vermischen von Sektoren erzeugt künstlich Poisson-Statistik. Das ist ein gutes physikalisches Argument
@@ -161,12 +164,14 @@ unabhängig, und die Exponentialfunktion wird blockweise berechnet.
 
 - Ein zusammengesetztes System A+B: H_A ⊗ H_B, Algebra M_A ⊗ M_B.
 - Der **reduzierte Zustand** ρ_A = Tr_B ρ ist die Einschränkung des Funktionals ω auf die Unteralgebra M_A ⊗ 1.
-  Auf der Ebene der Dichten ist er eine bedingte Erwartung (die partielle Spur). In der Bibliothek:
+  Auf der Ebene der Dichten ist er die partielle Spur, die duale Abbildung zur Inklusion A ↦ A ⊗ 1 (die
+  bedingte Erwartung auf M_A ⊗ 1 ist X ↦ (Tr_B X) ⊗ 1/d_B). In der Bibliothek:
   `partial_trace`, `reduced_state`.
 - Die **Verschränkungsentropie** S(ρ_A) eines reinen ρ misst die Quantenkorrelation zwischen A und B.
 - **Page-Formel**: die exakte mittlere Entropie eines Teilsystems eines zufälligen reinen Zustands. Mit ihr
   wird geprüft, dass der Sampler Haar-verteilt ist.
-- **Symmetrieaufgelöste Verschränkung**: Ist die Ladung erhalten, so ist ρ_A blockdiagonal, und seine Entropie
+- **Symmetrieaufgelöste Verschränkung**: Ist der Zustand symmetrisch, [ρ, Q_A + Q_B] = 0 (z. B. ein Eigenzustand
+  der Gesamtladung), so ist ρ_A blockdiagonal, und seine Entropie
   zerfällt in einen „klassischen“ Anteil (die Entropie der Verteilung auf dem Zentrum) und einen
   „quantenmechanischen“ Anteil (die mittlere Entropie der Blöcke). Das ist eine direkte Anwendung des Zentrums.
 
@@ -184,8 +189,9 @@ unabhängig, und die Exponentialfunktion wird blockweise berechnet.
 - **Rauschen**: T1 führt aus dem zulässigen Sektor heraus (eine Eins geht verloren), Dephasierung nicht.
 - **Postselektion**: Man misst das Hamming-Gewicht und verwirft fehlerhafte Durchläufe. Das ist die
   Lüders-Regel mit einer **zentralen** Projektion P_k: ρ ↦ P_kρP_k / Tr(P_kρ), mit Erfolgswahrscheinlichkeit
-  ω(P_k). Genau das macht `ex9_qaoa_xy_mixer.py`. Bei reinem T1-Rauschen liefert die Postselektion exakt den
-  idealen Zustand (F = 1), weil jeder T1-Sprung den Sektor verlässt.
+  ω(P_k). Genau das macht `ex9_qaoa_xy_mixer.py`. Bei reinem T1-Rauschen mit gleichen Raten auf allen Qubits
+  liefert die Postselektion exakt den idealen Zustand (F = 1): Jeder T1-Sprung verlässt den Sektor, und die
+  Dämpfung ohne Sprung ist für alle Zustände des Sektors gleich (bei ungleichen Raten liegt F etwas unter 1).
 - Dekohärenzfreie Unterräume und operatoralgebraische Fehlerkorrektur: Geschützte Information wird in einem
   Block (oder einem Tensorfaktor eines Blocks) einer Algebra kodiert, auf die das Rauschen nicht einwirkt.
   Auch das ist die Sprache der Typ-I-Algebren (Knill–Laflamme–Viola, Bény–Kempf–Kribs).
@@ -195,14 +201,15 @@ unabhängig, und die Exponentialfunktion wird blockweise berechnet.
 ## 8. Zufallsmatrizen, reell und komplex
 
 Dieser Abschnitt hängt direkt mit dem Parameter `complex_valued` zusammen.
-- Eine **antiunitäre Symmetrie** ist die Zeitumkehr T. Gilt T² = 1 (spinlose Teilchen, kein Magnetfeld), so ist
-  H in einer geeigneten Basis **reell**: GOE, orthogonale Ensembles, COE. Reelle Arithmetik genügt; sie halbiert
+- Eine **antiunitäre Symmetrie** T (die Zeitumkehr oder eine Kombination wie Spiegelung mal komplexe
+  Konjugation) entscheidet über den Körper. Gilt T² = 1, so ist H in einer geeigneten Basis **reell**: GOE, orthogonale Ensembles, COE. Reelle Arithmetik genügt; sie halbiert
   den Speicherbedarf und ist schneller (siehe die Laufzeittabelle im Artikel).
-- Ohne eine solche Symmetrie (Magnetfeld, komplexe Phasen, Impuls k ≠ 0, π) ist H komplex: GUE, CUE.
-  Komplexe Zahlen sind dann unverzichtbar.
+- Ohne jede solche Symmetrie (orbitale magnetische Flüsse, komplexe Hüpfamplituden) ist H komplex: GUE, CUE.
+  Komplexe Zahlen sind dann unverzichtbar. Ein Zeeman-Feld h_i S^z_i allein lässt H reell.
 - Gilt T² = −1 (halbzahliger Spin mit Spin-Bahn-Kopplung), liegt der quaternionische Fall vor: GSE, CSE.
-- Das XXZ-Modell mit reellen Feldern ist reell. Impulssektoren mit k ∉ {0, π} sind komplex. Die Dynamik
-  e^{−itH} ist stets komplex, auch für reelles H. Das ist die Tabelle „was wann genügt“ im Artikel.
+- Das XXZ-Modell mit reellen Feldern ist reell. Impulssektoren mit k ∉ {0, π} sind in der Basis ebener
+  Wellen komplex und erfordern daher komplexe Arithmetik; bei Spiegelsymmetrie ist ihre Niveaustatistik
+  dennoch GOE. Die Dynamik e^{−itH} ist stets komplex, auch für reelles H. Das ist die Tabelle „was wann genügt“ im Artikel.
 - Doppelte Genauigkeit wird benötigt, wenn es auf kleine Unterschiede ankommt: entartete Spektren, Identitäten,
   die bis 1e−12 geprüft werden, lange Zeitentwicklungen, Lanczos mit vielen Schritten. Einfache Genauigkeit
   (und TF32 auf Tensor Cores) genügt für Statistiken über viele Stichproben.
@@ -213,8 +220,9 @@ Dieser Abschnitt hängt direkt mit dem Parameter `complex_valued` zusammen.
 
 Eine äquivariante lineare Schicht ist eine Abbildung W: V → V, die mit einer Gruppendarstellung vertauscht
 (Translationen bei Faltungen, Permutationen bei Graph-Netzen, Drehungen bei Molekülen). Nach dem Schurschen
-Lemma ist der Raum solcher W gleich ⊕_λ M_{m_λ} mit den Multiplizitäten m_λ; eine äquivariante Schicht wird
-also durch ein Element einer Algebra der Form (1) parametrisiert. Die Bibliothek stellt für solche
+Lemma ist der Raum solcher W gleich ⊕_λ M_{m_λ} mit den Multiplizitäten m_λ (über C; für reelle Schichten
+sind die Blöcke M_{m_λ}(D_λ) mit D_λ = R, C oder H, dieselbe Trichotomie wie in Abschnitt 8); eine
+äquivariante Schicht wird also durch ein Element einer Algebra der Form ⊕_c M_{k_c}(C) parametrisiert. Die Bibliothek stellt für solche
 Parametrisierungen zufällige Initialisierung mit dem richtigen Maß, spektrale Nebenbedingungen und Gradienten
 bereit.
 

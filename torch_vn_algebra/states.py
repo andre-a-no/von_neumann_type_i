@@ -112,9 +112,16 @@ class DensityMatrix(Operator):
         return relative_entropy(self, other, eps)
 
     # ----- state -> state -----
-    def mix(self, other: 'DensityMatrix', p: float) -> 'DensityMatrix':
-        """(1 - p) rho + p sigma."""
-        return DensityMatrix(self.algebra, generator=lambda: (1 - p) * self.matrix + p * other.matrix,
+    def mix(self, other: 'DensityMatrix', p) -> 'DensityMatrix':
+        """(1 - p) rho + p sigma for p in [0, 1]; p is a number or a tensor (batch,) with one weight per sample."""
+        pt = torch.as_tensor(p, dtype=self.matrix.real.dtype, device=self.matrix.device)
+        if torch.any(pt < 0) or torch.any(pt > 1):
+            raise ValueError("mix: p must lie in [0, 1] (otherwise the result is not a state)")
+        if pt.dim() == 1:
+            pt = pt.reshape(-1, 1, 1, 1)
+        elif pt.dim() > 1:
+            raise ValueError("mix: p must be a number or a tensor of shape (batch,)")
+        return DensityMatrix(self.algebra, generator=lambda: (1 - pt) * self.matrix + pt * other.matrix,
                              validate=False)
 
     def condition_on(self, P: Operator, eps: float = 1e-12) -> Tuple['DensityMatrix', torch.Tensor]:
@@ -156,6 +163,8 @@ def random_density_matrix(alg: TypeIAlgebra, batch_size: int = 1, rank: Optional
     The sector weights p_c = Tr rho_c are then random as well (proportional to the squared
     Frobenius norms of the blocks).
     """
+    if rank is not None and rank < 1:
+        raise ValueError("rank must be a positive integer (or None for the Hilbert-Schmidt measure)")
     r = rank or alg.k_max
     # G, rho and the temporaries of normalisation: about four batches of (k_max x max(k_max, r)) blocks
     cost.check_memory(4 * cost.tensor_bytes((batch_size, alg.C, alg.k_max, max(alg.k_max, r)), alg.hilbert.dtype),

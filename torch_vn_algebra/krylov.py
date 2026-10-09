@@ -6,7 +6,7 @@ A Hamiltonian is only needed through its action on vectors, `matvec(V)` with V o
 realisation each). `SparseSectorHamiltonian` provides such an operator for spin chains: a
 batch of diagonals plus one shared sparse off-diagonal part.
 
-    E0, psi = krylov.ground_state(H)                     # batched Lanczos with restarts
+    E0, psi, res = krylov.ground_state(H)                # batched Lanczos with restarts
     psi_t   = krylov.evolve(H, psi0, times)              # exp(-i t H) psi0, Krylov steps
 
 Lanczos uses full re-orthogonalisation (memory batch * m * k).

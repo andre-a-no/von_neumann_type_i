@@ -401,5 +401,5 @@ class SpinChain:
         e = torch.sort(energies, dim=-1)[0]
         s = torch.diff(e, dim=-1)
         a, b = s[..., :-1], s[..., 1:]
-        r = torch.minimum(a, b) / torch.clamp(torch.maximum(a, b), min=1e-300)
+        r = torch.minimum(a, b) / torch.clamp(torch.maximum(a, b), min=torch.finfo(s.dtype).tiny)   # 0/0 -> 0
         return r.mean(dim=-1)

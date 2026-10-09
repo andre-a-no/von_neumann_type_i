@@ -65,8 +65,10 @@ class TestAlgebraInit:
         assert alg.total_subspace_dim == 5
 
     def test_invalid_k_factors(self):
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):
             TypeIAlgebra([2, 3], [3, 4])
+        with pytest.raises(ValueError):
+            TypeIAlgebra([1], [0])                  # no sector with k_c > 0
 
     def test_mismatched_lengths(self):
         with pytest.raises(AssertionError):
@@ -627,3 +629,81 @@ class TestSecondReview:
         from torch_vn_algebra import channels
         alg = TypeIAlgebra([2, 3], [2, 3], precision='double')
         assert channels.random_mixed_unitary_channel(alg, 5, 4).is_trace_preserving()
+
+
+class TestThirdReview:
+    """Regressions from the third review round (user-level API)."""
+
+    def test_per_sample_scalar(self):
+        alg = TypeIAlgebra([2], [2], precision='double')
+        X = alg.identity(2) * torch.tensor([1.0, 3.0], dtype=torch.float64)
+        assert torch.allclose(X.matrix[0, 0], torch.eye(2, dtype=X.matrix.dtype))
+        assert torch.allclose(X.matrix[1, 0], 3 * torch.eye(2, dtype=X.matrix.dtype))
+        assert X.matrix.dtype == alg.dtype
+
+    def test_pinv_relative_tolerance_single(self):
+        alg = TypeIAlgebra([3], [3])
+        U = alg.random_unitary_operator(1)
+        P = alg.from_blocks([torch.diag(torch.tensor([1.0, 0.0, 0.0]))])
+        A = U @ P @ U.adjoint()
+        assert A.inverse().matrix.abs().max().item() < 10
+
+    def test_entropy_rejects_non_positive(self):
+        alg = TypeIAlgebra([2], [2], precision='double')
+        A = alg.operator(torch.diag(torch.tensor([-0.5, 0.5], dtype=torch.float64))[None, None].to(alg.dtype))
+        with pytest.raises(RuntimeError):
+            A.entropy()
+
+    def test_real_algebra_refuses_complex_data(self):
+        alg = TypeIAlgebra([2], [2], complex_valued=False)
+        with pytest.raises(ValueError):
+            alg.operator(torch.ones(1, 1, 2, 2, dtype=torch.complex64) * 1j)
+        with pytest.raises(ValueError):
+            alg.operator_from_eigenvalues(lambda d: torch.tensor([1 + 1j, 2 - 1j]))
+        assert alg.operator(torch.ones(1, 1, 2, 2, dtype=torch.float64)).matrix.dtype == alg.dtype
+
+    def test_clear_errors_between_algebras(self):
+        a, b = TypeIAlgebra([2], [2]), TypeIAlgebra([3], [3])
+        with pytest.raises(ValueError):
+            a.identity() + b.identity()
+        with pytest.raises(TypeError):
+            a.identity() + 1.0
+        assert torch.allclose((a.identity() + a.like().identity()).matrix, 2 * a.identity().matrix)
+
+    def test_mix_checks_weights(self):
+        from torch_vn_algebra import states
+        alg = TypeIAlgebra([2], [2], precision='double')
+        rho, sig = states.random_density_matrix(alg, 2), states.random_density_matrix(alg, 2)
+        with pytest.raises(ValueError):
+            rho.mix(sig, 2.0)
+        m = rho.mix(sig, torch.tensor([0.0, 1.0]))
+        assert torch.allclose(m.matrix[0], rho.matrix[0]) and torch.allclose(m.matrix[1], sig.matrix[1])
+
+    def test_spacing_ratio_float32_degenerate(self):
+        from torch_vn_algebra import SpinChain
+        r = SpinChain.level_spacing_ratio(torch.tensor([0.0, 0.0, 0.0, 1.0, 2.0]))
+        assert torch.isfinite(r)
+
+    def test_channel_errors_and_mixed_composition(self):
+        from torch_vn_algebra import channels, SpinChain
+        alg = TypeIAlgebra([2], [2])
+        Phi = channels.random_channel(alg, 2)
+        with pytest.raises(TypeError):
+            Phi(torch.eye(2))
+        ch = SpinChain(3)
+        L = ch.lowering(0)                                     # InterSectorChannel on the chain algebra
+        Id = channels.identity_channel(ch.algebra)
+        assert (Id @ L).kraus.shape[-1] == L.kraus.shape[-1]
+
+
+def test_hilbert_space_inner_product_and_haar():
+    from torch_vn_algebra.hilbert_space import HilbertSpace
+    H = HilbertSpace(n=3, k=2, device='cpu', precision='double')
+    b = H.random_basis()
+    assert abs(H.inner_product(b.bra(0), b.ket(0)).item() - 1) < 1e-12
+    assert abs(H.inner_product(b.bra(0), b.ket(1)).item()) < 1e-12
+    assert abs(H.inner_product(b.ket(0), b.ket(0)).item() - 1) < 1e-12        # kets in: conjugated inside
+    Hb = HilbertSpace(n=3, k=3, batch_size=20000, device='cpu', precision='double')
+    for V in (Hb.random_basis().V[:, 0], Hb.haar_basis().V[:, 0]):
+        assert abs((V[:, 0, 0].abs() ** 4).mean().item() - 2 / 12) < 0.01    # Haar U(3) moment
+    assert Hb.random_basis().random_subspace_vector().dtype == torch.complex128

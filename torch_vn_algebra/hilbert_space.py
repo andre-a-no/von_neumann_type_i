@@ -20,6 +20,16 @@ class HilbertSpace:
         dtype: torch.dtype
     """
     
+    @staticmethod
+    def _qr_haar(Z: torch.Tensor) -> torch.Tensor:
+        """Q of the (batched) QR decomposition with the phases of diag(R) moved into Q (Mezzadri), so that
+        Q is Haar distributed when Z is Ginibre; the real case uses the signs."""
+        q, r = torch.linalg.qr(Z, mode='reduced')
+        d = torch.diagonal(r, dim1=-2, dim2=-1)
+        mag = d.abs()
+        ph = torch.where(mag > 0, d / torch.where(mag > 0, mag, torch.ones_like(mag)).to(d.dtype), torch.ones_like(d))
+        return q * ph.unsqueeze(-2)
+
     def __init__(
         self,
         n: int,
@@ -79,28 +89,21 @@ class HilbertSpace:
     
     def inner_product(self, bra: torch.Tensor, ket: torch.Tensor) -> torch.Tensor:
         """
-        Global inner product ⟨ψ|φ⟩, summing over channels and spatial dimensions.
-        Returns tensor of shape (batch, 1, 1, 1).
+        Global inner product <psi|phi>, summed over channels and components; returns (batch, 1, 1, 1).
+        `bra` is either a bra row (batch, C, 1, n), already conjugated (as returned by Basis.bra), or a
+        ket column (batch, C, n, 1) / flat vector (batch, C, n), which is conjugated here.
+        `ket` is a ket column (batch, C, n, 1) or a flat vector (batch, C, n).
         """
-        # Input shapes: (batch, n_channels, 1, n) and (batch, n_channels, n, 1)
-        # or flattened variants.
         if bra.dim() == 4 and bra.shape[-2] == 1:
-            bra_flat = bra.squeeze(-2)  # (batch, n_channels, n)
+            bra_flat = bra.squeeze(-2)                        # bra row: already conjugated
+        elif bra.dim() == 4 and bra.shape[-1] == 1:
+            bra_flat = bra.squeeze(-1).conj()                 # ket column given as the left argument
         else:
-            bra_flat = bra
-        
-        if ket.dim() == 4 and ket.shape[-1] == 1:
-            ket_flat = ket.squeeze(-1)  # (batch, n_channels, n)
-        else:
-            ket_flat = ket
-        
-        # Sum over n (last dimension) and over channels (dim=1)
-        if self.complex_valued:
-            prod = bra_flat.conj() * ket_flat                 # (batch, n_channels, n)
-            inner = prod.sum(dim=(-1, -2), keepdim=True)      # (batch, 1, 1)
-        else:
-            prod = bra_flat * ket_flat
-            inner = prod.sum(dim=(-1, -2), keepdim=True)
+            bra_flat = bra.conj()
+        ket_flat = ket.squeeze(-1) if ket.dim() == 4 and ket.shape[-1] == 1 else ket
+        if bra_flat.shape[-2:] != ket_flat.shape[-2:]:
+            raise ValueError(f"inner_product: shapes {tuple(bra.shape)} and {tuple(ket.shape)} do not match")
+        inner = (bra_flat * ket_flat).sum(dim=(-1, -2), keepdim=True)   # (batch, 1, 1)
         
         # Expand to (batch, 1, 1, 1) for consistency
         return inner.unsqueeze(-1)   # (batch, 1, 1, 1)
@@ -146,7 +149,7 @@ class HilbertSpace:
             self.complex_valued = parent.complex_valued
             
             if V is not None:
-                self.V = V.to(device=self.device, dtype=self.dtype)
+                self.V = V.to(device=self.device, dtype=self.dtype).clone()   # never alias the caller's tensor
                 expected = (self.batch_size, self.n_channels, self.n, self.k)
                 assert self.V.shape == expected, f"Expected {expected}, got {self.V.shape}"
             else:
@@ -161,43 +164,14 @@ class HilbertSpace:
                 return V
             
             elif method == 'random':
-                random_mat = torch.randn(self.batch_size, self.n_channels, self.n, self.k,
-                                         device=self.device)
-                if self.complex_valued:
-                    random_imag = torch.randn(self.batch_size, self.n_channels, self.n, self.k,
-                                              device=self.device)
-                    random_mat = random_mat + 1j * random_imag
-                random_mat = random_mat.to(self.dtype)
-                
-                # QR per batch and channel
-                V_list = []
-                for b in range(self.batch_size):
-                    V_channel_list = []
-                    for c in range(self.n_channels):
-                        q, r = torch.linalg.qr(random_mat[b, c], mode='reduced')
-                        signs = torch.diag(torch.sign(torch.diag(r).real))
-                        q = torch.matmul(q, signs.to(self.dtype))
-                        V_channel_list.append(q)
-                    V_list.append(torch.stack(V_channel_list, dim=0))
-                return torch.stack(V_list, dim=0)
-            
+                # Haar-random k-frame: QR of an n x k Ginibre matrix with the Mezzadri phase fix
+                Z = torch.randn(self.batch_size, self.n_channels, self.n, self.k, dtype=self.dtype, device=self.device)
+                return HilbertSpace._qr_haar(Z)
+
             elif method == 'haar':
-                full_mat = torch.randn(self.batch_size, self.n_channels, self.n, self.n,
-                                       device=self.device)
-                if self.complex_valued:
-                    full_imag = torch.randn(self.batch_size, self.n_channels, self.n, self.n,
-                                            device=self.device)
-                    full_mat = full_mat + 1j * full_imag
-                full_mat = full_mat.to(self.dtype)
-                
-                V_list = []
-                for b in range(self.batch_size):
-                    V_channel_list = []
-                    for c in range(self.n_channels):
-                        q, _ = torch.linalg.qr(full_mat[b, c])
-                        V_channel_list.append(q[:, :self.k])
-                    V_list.append(torch.stack(V_channel_list, dim=0))
-                return torch.stack(V_list, dim=0)
+                # first k columns of a Haar unitary (same distribution as 'random', via an n x n QR)
+                Z = torch.randn(self.batch_size, self.n_channels, self.n, self.n, dtype=self.dtype, device=self.device)
+                return HilbertSpace._qr_haar(Z)[..., :self.k]
             else:
                 raise ValueError(f"Unknown method: {method}")
         
@@ -252,29 +226,16 @@ class HilbertSpace:
             return torch.allclose(gram, identity_exp, atol=tol)
         
         def orthonormalize(self):
-            V_new_list = []
-            for b in range(self.batch_size):
-                V_channel_list = []
-                for c in range(self.n_channels):
-                    q, r = torch.linalg.qr(self.V[b, c], mode='reduced')
-                    signs = torch.diag(torch.sign(torch.diag(r).real))
-                    q = torch.matmul(q, signs.to(self.dtype))
-                    V_channel_list.append(q)
-                V_new_list.append(torch.stack(V_channel_list, dim=0))
+            q = HilbertSpace._qr_haar(self.V)
             with torch.no_grad():
-                self.V.copy_(torch.stack(V_new_list, dim=0))
+                self.V.copy_(q)
         
         def random_subspace_vector(self, normalize: bool = True) -> torch.Tensor:
             """
             Generate a random vector in the subspace (in ambient coordinates).
             If normalize=True, the global norm (sum over channels) becomes 1.
             """
-            if self.complex_valued:
-                real = torch.randn(self.batch_size, self.n_channels, self.k, 1, device=self.device)
-                imag = torch.randn(self.batch_size, self.n_channels, self.k, 1, device=self.device)
-                v_sub = torch.complex(real, imag)
-            else:
-                v_sub = torch.randn(self.batch_size, self.n_channels, self.k, 1, device=self.device)
+            v_sub = torch.randn(self.batch_size, self.n_channels, self.k, 1, dtype=self.dtype, device=self.device)
             
             if normalize:
                 # Compute global norm: sum over channels (dim=-3) and over k (dim=-2)
@@ -305,6 +266,15 @@ class HilbertSpace:
         return f"Hilbert space H (dim={self.n}) with subspace H0 (dim={self.k}), batch={self.batch_size}, channels={self.n_channels}"
 
 
+def _common_numerics(spaces: List[HilbertSpace]) -> dict:
+    """Number field and precision of a combination of spaces: they must agree."""
+    if len({s.complex_valued for s in spaces}) > 1:
+        raise ValueError("cannot combine real and complex Hilbert spaces")
+    if len({s.precision for s in spaces}) > 1:
+        raise ValueError("cannot combine single- and double-precision Hilbert spaces")
+    return dict(complex_valued=spaces[0].complex_valued, precision=spaces[0].precision, device=spaces[0].device)
+
+
 def tensor_product_hilbert(spaces: List[HilbertSpace]) -> HilbertSpace:
     n_total = 1
     k_total = 1
@@ -313,11 +283,8 @@ def tensor_product_hilbert(spaces: List[HilbertSpace]) -> HilbertSpace:
     for s in spaces:
         n_total *= s.n
         k_total *= s.k
-    return HilbertSpace(
-        n=n_total, k=k_total,
-        batch_size=batch_size, n_channels=n_channels,
-        complex_valued=spaces[0].complex_valued, device=spaces[0].device
-    )
+    return HilbertSpace(n=n_total, k=k_total, batch_size=batch_size, n_channels=n_channels,
+                        **_common_numerics(spaces))
 
 
 def direct_sum_hilbert(spaces: List[HilbertSpace]) -> HilbertSpace:
@@ -325,8 +292,5 @@ def direct_sum_hilbert(spaces: List[HilbertSpace]) -> HilbertSpace:
     k_total = sum(s.k for s in spaces)
     batch_size = max(s.batch_size for s in spaces)
     n_channels = max(s.n_channels for s in spaces)
-    return HilbertSpace(
-        n=n_total, k=k_total,
-        batch_size=batch_size, n_channels=n_channels,
-        complex_valued=spaces[0].complex_valued, device=spaces[0].device
-    )
+    return HilbertSpace(n=n_total, k=k_total, batch_size=batch_size, n_channels=n_channels,
+                        **_common_numerics(spaces))

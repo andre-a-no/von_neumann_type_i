@@ -20,7 +20,7 @@ symmetry (the Hamiltonian, the time evolution, the observables under a supersele
 so π(G)' is a finite-dimensional Type I von Neumann algebra. Its sectors are the irreducible
 representations λ, the block sizes are the multiplicities m_λ, and the centre consists of functions of
 the "charges". A physicist who models a system with a symmetry therefore computes in an algebra of the
-form (1), usually without calling it that. For a single conserved quantity Q (a self-adjoint operator)
+form M = ⊕_c M_{k_c}(C), usually without calling it that. For a single conserved quantity Q (a self-adjoint operator)
 the sectors are the eigenvalues of Q and the blocks are its eigenspaces.
 
 This also answers the question "why not use one large matrix?". The embedding M ⊂ M_D (D = Σk_c) is
@@ -45,17 +45,18 @@ The case C = 1 is supported as well: it is batched linear algebra in M_n.
 | observable (energy, spin, particle number) | self-adjoint A ∈ M | `Operator` |
 | possible measurement outcomes | spectrum of A | `eigenvalues`, `eigh` |
 | (mixed) state | normal positive functional ω, ω(1) = 1; density ρ ≥ 0, Tr ρ = 1 | `DensityMatrix` |
-| pure state, "wave function" | vector ψ ∈ H, ρ = \|ψ⟩⟨ψ\| (a minimal projection) | `vector_in_sector`, `basis_state` |
+| pure state, "wave function" | vector ψ in one sector C^{k_c}, ρ = \|ψ⟩⟨ψ\| (a minimal projection of M; a ψ spread over several sectors gives the mixed state Σ_c P_c\|ψ⟩⟨ψ\|P_c on M) | `vector_in_sector`, `basis_state` |
 | expectation value | ω(A) = Tr(ρA) | `expectation` |
 | probability of outcome λ | ω(P_λ), P_λ the spectral projection | `apply_function` |
 | state after a measurement (Lüders rule) | ρ ↦ PρP / Tr(Pρ) | `lueders_update`, `condition_on` |
 | von Neumann entropy | S(ρ) = −Tr ρ log ρ | `entropy` |
 | temperature, thermal state | ρ = e^{−βH}/Tr e^{−βH} (Gibbs state = KMS state) | `gibbs_state` |
-| infinite temperature | tracial state τ / τ(1) | `tracial_state` |
+| infinite temperature | ρ = 1/D, D = Σk_c (normalised Tr_blunt) | `maximally_mixed_state` |
+| equal weight for every sector | density of τ_vN, ⊕_c 1_c/(C k_c) | `tracial_state` |
 
 **Physical meaning of the three traces.**
 - Tr_blunt (weights 1) is the physical trace on H. Normalised, it is the infinite-temperature state:
-  all N basis states are equally likely, and sector c has probability k_c/N.
+  all D basis states are equally likely, and sector c has probability k_c/D.
 - Tr_norm (weights 1/k_c): the uniform (microcanonical) state inside each sector separately.
 - τ_vN (weights 1/(C k_c)): the uniform mixture of the microcanonical states of the sectors. Each
   *sector* (not each basis state) has probability 1/C.
@@ -139,14 +140,15 @@ independently, and the exponential is computed block by block.
   temperature. For large blocks it is found with the Lanczos method (`krylov`).
 - What the paper checks, and why these are standard tests:
   - ground-state energies of the Heisenberg ring (known exact values, Bethe ansatz);
-  - the **Marshall sign rule**: for the Heisenberg model on a bipartite lattice the ground state has
-    signs (−1)^{number of ↑ on one sublattice}. It is a theorem, which makes it a clean test;
+  - the **Marshall sign rule**: for the antiferromagnetic (J > 0) Heisenberg model on a bipartite lattice
+    (a ring of even length), the lowest state of every sector N has signs (−1)^{number of ↑ on one sublattice}. It is a theorem, which makes it a clean test;
   - **SU(2) nesting**: the Heisenberg model has full SU(2) symmetry, so for N < L/2 the spectrum of
     sector N is contained in that of sector N+1 (multiplets);
   - **domain-wall melting**: |↑…↑↓…↓⟩ at Δ = 0 spreads with a known profile;
   - **Peschel's formula**: the entanglement entropy of free fermions from the correlation matrix.
 - **Disorder and chaos** (`random_field_heisenberg`, `level_spacing_ratio`): random fields
-  h_i ∈ [−W, W]. For small W the system is "chaotic" and levels repel as in the GOE, ⟨r⟩ ≈ 0.53. For
+  h_i ∈ [−W, W]. For moderate disorder (0 < W ≲ 2; at W = 0 the clean chain is Bethe-integrable) the
+  system is "chaotic" and levels repel as in the GOE, ⟨r⟩ ≈ 0.53. For
   large W it localises (many-body localisation, MBL) and levels are independent as for a Poisson
   process, ⟨r⟩ ≈ 0.386. Level statistics only make sense **inside one sector**: mixing sectors produces
   Poisson statistics artificially. This is a good physical argument for working in the algebra with its
@@ -158,12 +160,14 @@ independently, and the exponential is computed block by block.
 
 - A composite system A+B: H_A ⊗ H_B, algebra M_A ⊗ M_B.
 - The **reduced state** ρ_A = Tr_B ρ is the restriction of the functional ω to the subalgebra M_A ⊗ 1.
-  In terms of densities it is a conditional expectation (the partial trace). In the library:
+  In terms of densities it is the partial trace, the dual of the inclusion A ↦ A ⊗ 1 (the conditional
+  expectation onto M_A ⊗ 1 is X ↦ (Tr_B X) ⊗ 1/d_B). In the library:
   `partial_trace`, `reduced_state`.
 - The **entanglement entropy** S(ρ_A) of a pure ρ measures the quantum correlation between A and B.
 - **Page's formula**: the exact mean entropy of a subsystem of a random pure state. It tests that the
   sampler is Haar distributed.
-- **Symmetry-resolved entanglement**: if the charge is conserved, ρ_A is block diagonal and its entropy
+- **Symmetry-resolved entanglement**: if the state is symmetric, [ρ, Q_A + Q_B] = 0 (e.g. an eigenstate of
+  the total charge), ρ_A is block diagonal and its entropy
   splits into a "classical" part (the entropy of the distribution on the centre) and a "quantum" part
   (the average entropy of the blocks). This is a direct use of the centre.
 
@@ -181,8 +185,9 @@ independently, and the exponential is computed block by block.
 - **Noise**: T1 leaves the feasible sector (a one is lost), dephasing does not.
 - **Post-selection**: measure the Hamming weight and discard wrong runs. This is the Lüders rule with a
   **central** projection P_k: ρ ↦ P_kρP_k / Tr(P_kρ), with success probability ω(P_k). This is what
-  `ex9_qaoa_xy_mixer.py` does. For pure T1 noise post-selection returns the ideal state exactly
-  (F = 1), because every T1 jump leaves the sector.
+  `ex9_qaoa_xy_mixer.py` does. For pure T1 noise with equal rates on all qubits, post-selection
+  returns the ideal state exactly (F = 1): every T1 jump leaves the sector, and the no-jump damping is
+  the same for all states of the sector (with unequal rates F is slightly below 1).
 - Decoherence-free subspaces and operator-algebra error correction: protected information is encoded in
   one block (or one tensor factor of a block) of an algebra that the noise does not touch. This, too,
   is the language of Type I algebras (Knill–Laflamme–Viola, Bény–Kempf–Kribs).
@@ -192,13 +197,14 @@ independently, and the exponential is computed block by block.
 ## 8. Random matrices, real and complex
 
 This is directly related to the parameter `complex_valued`.
-- An **antiunitary symmetry** is time reversal T. If T² = 1 (spinless particles, no magnetic field),
-  H is **real** in a suitable basis: GOE, orthogonal ensembles, COE. Real arithmetic is enough; it
+- An **antiunitary symmetry** T (time reversal, or a combination such as reflection times complex
+  conjugation) decides the field. If T² = 1, H is **real** in a suitable basis: GOE, orthogonal ensembles, COE. Real arithmetic is enough; it
   halves the memory and is faster (see the timing table in the paper).
-- Without such a symmetry (a magnetic field, complex phases, momentum k ≠ 0, π) H is complex: GUE, CUE.
-  Complex numbers are required.
+- Without any such symmetry (orbital magnetic fluxes, complex hoppings) H is complex: GUE, CUE.
+  Complex numbers are required. A Zeeman field h_i S^z_i alone keeps H real.
 - If T² = −1 (half-integer spin with spin–orbit coupling), the case is quaternionic: GSE, CSE.
-- The XXZ model with real fields is real. Momentum sectors with k ∉ {0, π} are complex. The dynamics
+- The XXZ model with real fields is real. Momentum sectors with k ∉ {0, π} are complex in the plane-wave
+  basis, so they need complex arithmetic; with reflection symmetry their level statistics are still GOE. The dynamics
   e^{−itH} is always complex, even for real H. This is the "what suffices when" table of the paper.
 - Double precision is needed when small differences matter: degenerate spectra, identities checked to
   1e−12, long time evolutions, Lanczos with many steps. Single precision (and TF32 on tensor cores) is
@@ -210,8 +216,9 @@ This is directly related to the parameter `complex_valued`.
 
 An equivariant linear layer is a map W: V → V that commutes with a group representation (translations
 for convolutions, permutations for graph networks, rotations for molecules). By Schur's lemma the space
-of such W is ⊕_λ M_{m_λ} with multiplicities m_λ, so an equivariant layer is parametrised by an element
-of an algebra of the form (1). The library provides random initialisation with the right measure,
+of such W is ⊕_λ M_{m_λ} with multiplicities m_λ (over C; for real layers the blocks are M_{m_λ}(D_λ) with
+D_λ = R, C or H, the same trichotomy as in Section 8), so an equivariant layer is parametrised by an element
+of an algebra of the form ⊕_c M_{k_c}(C). The library provides random initialisation with the right measure,
 spectral constraints and gradients for such parametrisations.
 
 ---

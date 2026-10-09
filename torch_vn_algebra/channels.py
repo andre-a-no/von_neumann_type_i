@@ -27,6 +27,19 @@ from .states import DensityMatrix, _trace_weights
 Operator = TypeIAlgebra.Operator
 
 
+def _same_structure(a: TypeIAlgebra, b: TypeIAlgebra) -> bool:
+    return a is b or (a.k_factors == b.k_factors and a.dtype == b.dtype and a.hilbert.device == b.hilbert.device)
+
+
+def _check_input(op, alg: TypeIAlgebra, what: str) -> None:
+    if not isinstance(op, Operator):
+        raise TypeError(f"{what}: expected an Operator or DensityMatrix of {alg}, got {type(op).__name__} "
+                        f"(wrap tensors with alg.operator(...))")
+    if not _same_structure(op.algebra, alg):
+        raise ValueError(f"{what}: the operator belongs to {op.algebra} ({op.algebra.dtype}), the channel to "
+                         f"{alg} ({alg.dtype}); convert with op.cast(alg)")
+
+
 class Channel:
     """Sector-preserving completely positive map given by Kraus operators."""
 
@@ -37,6 +50,7 @@ class Channel:
         if kraus.dim() != 5 or tuple(kraus.shape[2:]) != expected:
             raise ValueError(f"Kraus tensor must have shape (batch, r, {algebra.C}, {algebra.k_max}, "
                              f"{algebra.k_max}), got {tuple(kraus.shape)}")
+        kraus = algebra._to_field(kraus, "Kraus operators")
         self.algebra = algebra
         self.kraus = kraus.to(device=algebra.hilbert.device)
         self._trace_preserving = None
@@ -60,7 +74,7 @@ class Channel:
         A DensityMatrix is mapped to a DensityMatrix if the channel is trace preserving;
         otherwise the result is a plain Operator and a warning is issued.
         """
-        assert op.algebra is self.algebra
+        _check_input(op, self.algebra, "Channel.apply")
         K = self.kraus
 
         def generator():
@@ -96,7 +110,10 @@ class Channel:
 
     def compose(self, other: 'Channel') -> 'Channel':
         """self o other: first `other`, then `self` (Kraus operators K_i L_j)."""
-        assert other.algebra is self.algebra
+        if isinstance(other, InterSectorChannel):
+            return self.to_inter_sector().compose(other)
+        if not isinstance(other, Channel) or not _same_structure(other.algebra, self.algebra):
+            raise ValueError("compose: both channels must act on the same algebra")
         K = self.kraus.unsqueeze(2)            # (B, r1, 1, C, k, k)
         L = other.kraus.unsqueeze(1)           # (B, 1, r2, C, k, k)
         KL = K @ L
@@ -116,7 +133,10 @@ class Channel:
 
     def mix(self, other: 'Channel', p: float) -> 'Channel':
         """Convex combination (1 - p) self + p other."""
-        assert other.algebra is self.algebra
+        if not _same_structure(other.algebra, self.algebra):
+            raise ValueError("mix: both channels must act on the same algebra")
+        if not 0 <= p <= 1:
+            raise ValueError("mix: p must lie in [0, 1]")
         B = max(self.batch_size, other.batch_size)
         a = (1 - p) ** 0.5 * self.kraus.expand(B, *self.kraus.shape[1:])
         b = p ** 0.5 * other.kraus.expand(B, *other.kraus.shape[1:]).to(a.dtype)
@@ -350,6 +370,7 @@ class InterSectorChannel:
         if kraus.dim() != 6 or tuple(kraus.shape[2:]) != expected:
             raise ValueError(f"Kraus tensor must have shape (batch, r, {expected[0]}, {expected[1]}, "
                              f"{expected[2]}, {expected[3]}), got {tuple(kraus.shape)}")
+        kraus = algebra_out._to_field(kraus, "Kraus operators")
         self.algebra_in = algebra_in
         self.algebra_out = algebra_out
         self.kraus = kraus.to(device=algebra_out.hilbert.device)
@@ -382,7 +403,7 @@ class InterSectorChannel:
     # ------------------------------------------------------------------
     def apply(self, op: Operator) -> Operator:
         """Schroedinger picture (lazy). Trace-preserving maps send a DensityMatrix to a DensityMatrix."""
-        assert op.algebra is self.algebra_in
+        _check_input(op, self.algebra_in, "InterSectorChannel.apply")
         K = self.kraus
 
         def generator():
@@ -433,7 +454,9 @@ class InterSectorChannel:
         """self o other. Kraus operators K_j^{ed} L_i^{dc}, indexed by (j, i, d)."""
         if isinstance(other, Channel):
             other = other.to_inter_sector()
-        assert other.algebra_out is self.algebra_in
+        if not _same_structure(other.algebra_out, self.algebra_in):
+            raise ValueError(f"compose: the output algebra of the first map ({other.algebra_out}) is not the input "
+                             f"algebra of the second ({self.algebra_in})")
         K = self.kraus.unsqueeze(2).unsqueeze(5)          # (B, r2, 1, E, D, 1, m_e, m_d)
         L = other.kraus.unsqueeze(1).unsqueeze(3)         # (B, 1, r1, 1, D, C, m_d, k_c)
         KL = K @ L                                        # (B, r2, r1, E, D, C, m_e, k_c)

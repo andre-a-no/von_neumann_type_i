@@ -22,7 +22,7 @@ está en el **conmutante** π(G)'. Por el teorema del doble conmutante y el lema
 de modo que π(G)' es un álgebra de von Neumann de tipo I de dimensión finita. Sus sectores son las
 representaciones irreducibles λ, los tamaños de los bloques son las multiplicidades m_λ y el centro está
 formado por funciones de las «cargas». Así pues, un físico que modela un sistema con una simetría calcula
-en un álgebra de la forma (1), normalmente sin llamarla así. Para una única magnitud conservada Q (un
+en un álgebra de la forma M = ⊕_c M_{k_c}(C), normalmente sin llamarla así. Para una única magnitud conservada Q (un
 operador autoadjunto), los sectores son los autovalores de Q y los bloques son sus autoespacios.
 
 Esto responde también a la pregunta «¿por qué no usar una única matriz grande?». La inclusión M ⊂ M_D
@@ -47,17 +47,18 @@ El caso C = 1 también está soportado: es álgebra lineal por lotes en M_n.
 | observable (energía, espín, número de partículas) | A ∈ M autoadjunto | `Operator` |
 | resultados posibles de una medida | espectro de A | `eigenvalues`, `eigh` |
 | estado (mixto) | funcional positivo normal ω, ω(1) = 1; densidad ρ ≥ 0, Tr ρ = 1 | `DensityMatrix` |
-| estado puro, «función de onda» | vector ψ ∈ H, ρ = \|ψ⟩⟨ψ\| (una proyección minimal) | `vector_in_sector`, `basis_state` |
+| estado puro, «función de onda» | vector ψ en un único sector C^{k_c}, ρ = \|ψ⟩⟨ψ\| (una proyección minimal de M; un ψ repartido entre varios sectores da sobre M el estado mixto Σ_c P_c\|ψ⟩⟨ψ\|P_c) | `vector_in_sector`, `basis_state` |
 | valor esperado | ω(A) = Tr(ρA) | `expectation` |
 | probabilidad del resultado λ | ω(P_λ), con P_λ la proyección espectral | `apply_function` |
 | estado tras una medida (regla de Lüders) | ρ ↦ PρP / Tr(Pρ) | `lueders_update`, `condition_on` |
 | entropía de von Neumann | S(ρ) = −Tr ρ log ρ | `entropy` |
 | temperatura, estado térmico | ρ = e^{−βH}/Tr e^{−βH} (estado de Gibbs = estado KMS) | `gibbs_state` |
-| temperatura infinita | estado tracial τ / τ(1) | `tracial_state` |
+| temperatura infinita | ρ = 1/D, D = Σk_c (Tr_blunt normalizada) | `maximally_mixed_state` |
+| el mismo peso para cada sector | densidad de τ_vN, ⊕_c 1_c/(C k_c) | `tracial_state` |
 
 **Significado físico de las tres trazas.**
 - Tr_blunt (pesos 1) es la traza física sobre H. Normalizada, es el estado a temperatura infinita:
-  los N estados de la base son equiprobables y el sector c tiene probabilidad k_c/N.
+  los D estados de la base son equiprobables y el sector c tiene probabilidad k_c/D.
 - Tr_norm (pesos 1/k_c): el estado uniforme (microcanónico) dentro de cada sector por separado.
 - τ_vN (pesos 1/(C k_c)): la mezcla uniforme de los estados microcanónicos de los sectores. Cada
   *sector* (no cada estado de la base) tiene probabilidad 1/C.
@@ -141,17 +142,17 @@ independiente y la exponencial se calcula bloque a bloque.
   temperatura cero. Para bloques grandes se obtiene con el método de Lanczos (`krylov`).
 - Qué se comprueba en el artículo y por qué son pruebas estándar:
   - energías del estado fundamental del anillo de Heisenberg (valores exactos conocidos, ansatz de Bethe);
-  - la **regla de signos de Marshall**: para el modelo de Heisenberg en una red bipartita, el estado
-    fundamental tiene signos (−1)^{número de ↑ en una subred}. Es un teorema, lo que la convierte en una
-    prueba limpia;
+  - la **regla de signos de Marshall**: para el modelo de Heisenberg antiferromagnético (J > 0) en una red
+    bipartita (un anillo de longitud par), el estado más bajo de cada sector N tiene signos
+    (−1)^{número de ↑ en una subred}. Es un teorema, lo que la convierte en una prueba limpia;
   - **anidamiento SU(2)**: el modelo de Heisenberg tiene simetría SU(2) completa, de modo que para N < L/2
     el espectro del sector N está contenido en el del sector N+1 (multipletes);
   - **disolución de una pared de dominio**: |↑…↑↓…↓⟩ con Δ = 0 se ensancha con un perfil conocido;
   - **fórmula de Peschel**: la entropía de entrelazamiento de fermiones libres a partir de la matriz de
     correlación.
 - **Desorden y caos** (`random_field_heisenberg`, `level_spacing_ratio`): campos aleatorios
-  h_i ∈ [−W, W]. Para W pequeño el sistema es «caótico» y los niveles se repelen como en el GOE,
-  ⟨r⟩ ≈ 0.53. Para W grande el sistema se localiza (localización de muchos cuerpos, MBL) y los niveles son
+  h_i ∈ [−W, W]. Para un desorden moderado (0 < W ≲ 2; con W = 0 la cadena sin desorden es integrable
+  por ansatz de Bethe) el sistema es «caótico» y los niveles se repelen como en el GOE, ⟨r⟩ ≈ 0.53. Para W grande el sistema se localiza (localización de muchos cuerpos, MBL) y los niveles son
   independientes como en un proceso de Poisson, ⟨r⟩ ≈ 0.386. La estadística de niveles solo tiene sentido
   **dentro de un sector**: mezclar sectores produce artificialmente estadística de Poisson. Este es un buen
   argumento físico para trabajar en el álgebra con sus sectores.
@@ -162,13 +163,14 @@ independiente y la exponencial se calcula bloque a bloque.
 
 - Un sistema compuesto A+B: H_A ⊗ H_B, álgebra M_A ⊗ M_B.
 - El **estado reducido** ρ_A = Tr_B ρ es la restricción del funcional ω a la subálgebra M_A ⊗ 1.
-  En términos de densidades es una esperanza condicional (la traza parcial). En la biblioteca:
+  En términos de densidades es la traza parcial, la aplicación dual de la inclusión A ↦ A ⊗ 1 (la
+  esperanza condicional sobre M_A ⊗ 1 es X ↦ (Tr_B X) ⊗ 1/d_B). En la biblioteca:
   `partial_trace`, `reduced_state`.
 - La **entropía de entrelazamiento** S(ρ_A) de un ρ puro mide la correlación cuántica entre A y B.
 - **Fórmula de Page**: la entropía media exacta de un subsistema de un estado puro aleatorio. Sirve para
   comprobar que el muestreador sigue la distribución de Haar.
-- **Entrelazamiento resuelto por simetría**: si la carga se conserva, ρ_A es diagonal por bloques y su
-  entropía se descompone en una parte «clásica» (la entropía de la distribución sobre el centro) y una
+- **Entrelazamiento resuelto por simetría**: si el estado es simétrico, [ρ, Q_A + Q_B] = 0 (p. ej., un autoestado
+  de la carga total), ρ_A es diagonal por bloques y su entropía se descompone en una parte «clásica» (la entropía de la distribución sobre el centro) y una
   parte «cuántica» (la entropía media de los bloques). Es un uso directo del centro.
 
 ---
@@ -185,8 +187,10 @@ independiente y la exponencial se calcula bloque a bloque.
 - **Ruido**: T1 saca el estado del sector factible (se pierde un uno); el desfase no.
 - **Posselección**: se mide el peso de Hamming y se descartan las ejecuciones incorrectas. Es la regla de
   Lüders con una proyección **central** P_k: ρ ↦ P_kρP_k / Tr(P_kρ), con probabilidad de éxito ω(P_k).
-  Es lo que hace `ex9_qaoa_xy_mixer.py`. Con ruido T1 puro, la posselección devuelve exactamente el estado
-  ideal (F = 1), porque todo salto T1 sale del sector.
+  Es lo que hace `ex9_qaoa_xy_mixer.py`. Con ruido T1 puro y tasas iguales en todos los qubits, la
+  posselección devuelve exactamente el estado ideal (F = 1): todo salto T1 sale del sector y el
+  amortiguamiento de la evolución sin saltos es el mismo para todos los estados del sector (con tasas
+  distintas, F queda ligeramente por debajo de 1).
 - Subespacios libres de decoherencia y corrección de errores en álgebras de operadores: la información
   protegida se codifica en un bloque (o en un factor tensorial de un bloque) de un álgebra que el ruido no
   afecta. También este es el lenguaje de las álgebras de tipo I (Knill–Laflamme–Viola, Bény–Kempf–Kribs).
@@ -196,14 +200,16 @@ independiente y la exponencial se calcula bloque a bloque.
 ## 8. Matrices aleatorias, reales y complejas
 
 Esto está directamente relacionado con el parámetro `complex_valued`.
-- Una **simetría antiunitaria** es la inversión temporal T. Si T² = 1 (partículas sin espín, sin campo
-  magnético), H es **real** en una base adecuada: GOE, conjuntos ortogonales, COE. Basta con aritmética
+- Una **simetría antiunitaria** T (la inversión temporal, o una combinación como una reflexión compuesta
+  con la conjugación compleja) determina el cuerpo. Si T² = 1, H es **real** en una base adecuada: GOE, conjuntos ortogonales, COE. Basta con aritmética
   real, que reduce la memoria a la mitad y es más rápida (véase la tabla de tiempos del artículo).
-- Sin tal simetría (un campo magnético, fases complejas, momento k ≠ 0, π), H es complejo: GUE, CUE.
-  Los números complejos son imprescindibles.
+- Sin ninguna simetría de este tipo (flujos magnéticos orbitales, amplitudes de salto complejas), H es
+  complejo: GUE, CUE. Los números complejos son imprescindibles. Un campo de Zeeman h_i S^z_i por sí solo
+  mantiene H real.
 - Si T² = −1 (espín semientero con acoplamiento espín–órbita), el caso es cuaterniónico: GSE, CSE.
-- El modelo XXZ con campos reales es real. Los sectores de momento con k ∉ {0, π} son complejos. La
-  dinámica e^{−itH} es siempre compleja, incluso para H real. Esta es la tabla de «qué basta y cuándo»
+- El modelo XXZ con campos reales es real. Los sectores de momento con k ∉ {0, π} son complejos en la
+  base de ondas planas, por lo que requieren aritmética compleja; con simetría de reflexión, su estadística
+  de niveles sigue siendo GOE. La dinámica e^{−itH} es siempre compleja, incluso para H real. Esta es la tabla de «qué basta y cuándo»
   del artículo.
 - La doble precisión es necesaria cuando importan diferencias pequeñas: espectros degenerados, identidades
   comprobadas hasta 1e−12, evoluciones temporales largas, Lanczos con muchos pasos. La precisión simple
@@ -215,8 +221,9 @@ Esto está directamente relacionado con el parámetro `complex_valued`.
 
 Una capa lineal equivariante es una aplicación W: V → V que conmuta con una representación de un grupo
 (traslaciones en las convoluciones, permutaciones en las redes de grafos, rotaciones en las moléculas). Por
-el lema de Schur, el espacio de tales W es ⊕_λ M_{m_λ} con multiplicidades m_λ, de modo que una capa
-equivariante se parametriza mediante un elemento de un álgebra de la forma (1). La biblioteca proporciona
+el lema de Schur, el espacio de tales W es ⊕_λ M_{m_λ} con multiplicidades m_λ (sobre C; para capas reales
+los bloques son M_{m_λ}(D_λ) con D_λ = R, C o H, la misma tricotomía que en la sección 8), de modo que una
+capa equivariante se parametriza mediante un elemento de un álgebra de la forma ⊕_c M_{k_c}(C). La biblioteca proporciona
 inicialización aleatoria con la medida adecuada, restricciones espectrales y gradientes para este tipo de
 parametrizaciones.
 

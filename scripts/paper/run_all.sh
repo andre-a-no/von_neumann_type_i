@@ -23,7 +23,7 @@ OUTDIR=paper/v2/generated
 OUTARGS=""
 if [ "$MODE" = check ]; then OUTDIR=.check_output/generated; fi
 if [ -n "$TF32" ]; then                      # a TF32 run must not overwrite the FP32 tables of the paper
-  OUTDIR=paper/v2/generated_tf32
+  if [ "$MODE" = check ]; then OUTDIR=.check_output/generated_tf32; else OUTDIR=paper/v2/generated_tf32; fi
   OUTARGS="--out $OUTDIR --figdir $OUTDIR/figures"
 fi
 LOGS=$OUTDIR/logs
