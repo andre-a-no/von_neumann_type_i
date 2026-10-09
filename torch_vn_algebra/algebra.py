@@ -32,11 +32,14 @@ class TypeIAlgebra:
         batch_size: int = 1,
         complex_valued: bool = True,
         device: Optional[torch.device] = None,
-        precision: str = 'single'
+        precision: str = 'single',
+        charges: Optional[List] = None
     ):
         """
         n_factors, k_factors: sizes n_c of the factors and k_c <= n_c of the active subspaces.
         precision: 'single' (float32 / complex64, default) or 'double' (float64 / complex128).
+        charges: labels of the sectors (e.g. particle numbers); default 0, 1, ..., C-1. They are
+            used to merge sectors in symmetric tensor products (composite.FusedProduct).
         """
         C = len(n_factors)
         assert len(k_factors) == C, "n_factors and k_factors must have same length"
@@ -53,6 +56,17 @@ class TypeIAlgebra:
         # Blocks up to this size are diagonalised exactly (torch.linalg.eigvalsh) in
         # lambda_max / lambda_min; larger ones fall back to shifted power iteration.
         self.exact_eig_max_dim = 256
+        self.charges = list(range(C)) if charges is None else list(charges)
+        assert len(self.charges) == C, "one charge per sector"
+
+        # padded storage: warn when most of the (C, k_max, k_max) layout is padding
+        padded = C * self.k_max ** 2
+        used = sum(k * k for k in k_factors)
+        if padded > 2 ** 24 and used < 0.5 * padded:
+            import warnings
+            warnings.warn(f"sector sizes are very uneven: {100 * (1 - used / padded):.0f}% of every operator "
+                          f"(C x k_max^2 = {padded:.2e} entries) is padding; consider working in single sectors "
+                          f"(e.g. SpinChain.sector_algebra).", cost.CostWarning, stacklevel=2)
 
         if hilbert is None:
             self.hilbert = HilbertSpace(
