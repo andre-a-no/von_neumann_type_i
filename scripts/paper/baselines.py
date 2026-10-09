@@ -24,7 +24,7 @@ import scipy.sparse.linalg as spla
 import torch
 from scipy.stats import ortho_group
 
-from common import parse_args, save_json, write_tex, env_macro, sync
+from common import parse_args, save_json, write_tex, env_macro, sync, num3
 
 from torch_vn_algebra import TypeIAlgebra, SpinChain, krylov, cost
 
@@ -142,6 +142,7 @@ for L, R in (((16, 1), (16, 2 if CHECK else 20), (18, 1), (20, 1)) if FULL else 
     h = (2 * torch.rand(R, L, dtype=torch.float64) - 1) * W
     H = ch.xxz_sparse(1.0, 1.0, h, sector=L // 2)
     mats = [scipy_matrix(H, b) for b in range(R)]
+    spla.eigsh(mats[0], k=1, which='SA', tol=1e-12)          # warm-up (as for the library below)
     t0 = time.perf_counter()
     e_sp = [spla.eigsh(M, k=1, which='SA', tol=1e-12)[0][0] for M in mats]
     t_sp = time.perf_counter() - t0
@@ -163,11 +164,11 @@ tex += f"\\newcommand{{\\BaseHasGPU}}{{{'1' if gpu else '0'}}}\n"
 tex += f"\\newcommand{{\\BaseMaxSigma}}{{{max(r['max_sigma'] for r in rows_a):.1f}}}\n"
 tex += "\\newcommand{\\BaseMCRows}{%\n"
 for r in rows_a:
-    tex += (f"{r['C']} & {r['k']} & {r['us_loop']:.3g} & {r['us_numpy_vec']:.3g} & {r['us_lib_cpu']:.3g}"
-            + (f" & {r['us_lib_gpu']:.3g}" if gpu else " & --") + " \\\\\n")
+    tex += (f"{r['C']} & {r['k']} & {num3(r['us_loop'])} & {num3(r['us_numpy_vec'])} & {num3(r['us_lib_cpu'])}"
+            + (f" & {num3(r['us_lib_gpu'])}" if gpu else " & --") + " \\\\\n")
 tex += "}\n\\newcommand{\\BaseGSRows}{%\n"
 for r in rows_b:
-    tex += (f"{r['L']} & {r['dim']} & {r['realisations']} & {r['s_scipy']:.3g} & {r['s_library']:.3g} "
+    tex += (f"{r['L']} & {r['dim']} & {r['realisations']} & {num3(r['s_scipy'])} & {num3(r['s_library'])} "
             f"& {r['max_diff']:.1e} \\\\\n")
 tex += "}\n"
 write_tex(args, 'baselines', tex)

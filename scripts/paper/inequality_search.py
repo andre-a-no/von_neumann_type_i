@@ -120,7 +120,7 @@ ks = [r['k'] for r in results]
 ax.axhline(0, color='k', lw=0.6)
 ax.plot(ks, [r['sup_over_trXY'] for r in results], 'k-', label='exact $\\sup_U z$')
 ax.plot(ks, [r['ascent_over_trXY'] for r in results], 'o', label=f'gradient ascent ({STARTS} starts)')
-ax.plot(ks, [r['sampling_over_trXY'] for r in results], 's-', label=f'best of {N_SAMPLES:.0e} Haar samples')
+ax.plot(ks, [r['sampling_over_trXY'] for r in results], 's-', label=f'best of {N_SAMPLES:,} Haar samples')
 ax.set_xscale('log', base=2)
 ax.set_yscale('symlog', linthresh=1e-3)
 ax.set_xlabel('$k$')

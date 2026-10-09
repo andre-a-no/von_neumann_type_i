@@ -187,7 +187,7 @@ part of the system; conditioning on a sector, post-selection and sector-resolved
 centre, and they have to be reconstructed from the block indices when $\M$ is stored as one matrix.
 \end{itemize}
 The library keeps these four pieces of structure inside the data type. For $C=1$ it reduces to batched
-linear algebra in $M_n(\C)$, and all its functions accept that case. The first version of this
+linear algebra in $M_k(\C)$, and all its functions accept that case. The first version of this
 library~\cite{v1} shows that the bookkeeping is error-prone: its complex Haar sampler was not Haar distributed, its
 circular ensembles were not the circular ensembles, and several conclusions drawn from Monte Carlo samples were wrong;
 all of this is corrected and tested here.
@@ -231,7 +231,7 @@ $\operatorname{tr}_w(A)=\sum_c w_c\Tr A_c$ with weights $w_c\ge0$, and it is fai
 where $\tau_{\mathrm{vN}}$ is the faithful normal tracial state that gives every sector the same weight.
 For $A\in\M$, $|A|=(A^*A)^{1/2}$; for $A\ge 0$ the Michelson contrast is
 $\Delta(A)=(\lambda_{\max}-\lambda_{\min})/(\lambda_{\max}+\lambda_{\min})\in[0,1]$, with the extreme
-eigenvalues taken over all sectors; $\Delta(A)=0$ if and only if $A$ is a multiple of the identity.
+eigenvalues taken over all sectors; for $A\ge0$, $A\ne0$, $\Delta(A)=0$ if and only if $A$ is a multiple of the identity.
 
 \paragraph{States.} A state $\omega$ on $\M$ is represented by its density $\rho\ge0$ with respect to
 $\Tr_{\mathrm{blunt}}$, $\omega(A)=\Tr(\rho A)$, $\sum_c\Tr\rho_c=1$. The restriction of $\omega$ to the
@@ -405,8 +405,8 @@ symmetry group and the random ensembles change. Haar matrices of a real algebra 
 moments, level statistics and extremal values refer to $O(n)$ instead of $U(n)$
 (e.g.\ $\mathbb E|U_{11}|^4=3/(n(n+2))$ instead of $2/(n(n+1))$, Table~\ref{tab:validation}); random
 real symmetric and complex Hermitian matrices have different level statistics, with mean spacing ratios
-\IfFileExists{generated/numerics.tex}{\NumRGOE\ and \NumRGUE}{0.531 and 0.600} for GOE and GUE~\cite{atas2013}
-(computed with the library). Real arithmetic is \emph{exact} (loses nothing) when the problem is
+$0.5307$ and $0.5996$ for GOE and GUE~\cite{atas2013}
+(our samples: \IfFileExists{generated/numerics.tex}{\NumRGOE\ and \NumRGUE}{not generated}). Real arithmetic is \emph{exact} (loses nothing) when the problem is
 real: spectra and eigenvectors of real symmetric matrices, ground states and their entanglement for
 Hamiltonians without complex hoppings, statistics of time-reversal-invariant systems, and also some
 extremal problems — for real $X,Y\ge0$ the supremum of $|\Tr(XUY)|$ over unitaries is attained by a real
@@ -425,7 +425,7 @@ states, contrasts close to $1$, comparisons with exact results beyond six digits
 and optimisation to high relative accuracy. Table~\ref{tab:numerics-acc} shows how drastic the
 difference can be: the von Neumann entropy of an almost pure state with eigenvalues of order $10^{-9}$ is
 wrong by more than $100\,\%$ in single precision, and the round-off floor of a trace inequality that
-holds with equality is $10^{-5}$ in single and $10^{-13}$ in double precision.
+holds with equality is several orders of magnitude higher in single than in double precision (Table~\ref{tab:numerics-acc}).
 
 \paragraph{Cost.} An entry takes 4, 8, 8 and 16 bytes for \texttt{float32}, \texttt{float64},
 \texttt{complex64} and \texttt{complex128}, so memory, and the batch that fits, changes by a factor up to four
@@ -447,7 +447,7 @@ type & B/entry & MB/batch & \NumTimeHeader\\
 \NumTimeRows
 \bottomrule
 \end{tabular}
-\caption{Memory and time relative to \texttt{float32} for $C=\IfFileExists{generated/numerics.tex}{\NumC}{8}$
+\caption{Bytes per entry, memory of one batch [MB], and time relative to \texttt{float32} for $C=\IfFileExists{generated/numerics.tex}{\NumC}{8}$
 sectors of size $k=\IfFileExists{generated/numerics.tex}{\NumK}{16}$ and a batch of
 \IfFileExists{generated/numerics.tex}{\NumB}{B} operators\IfFileExists{generated/numerics.tex}{ (\NumMode\ run
 on \NumDevice; float32 times per sample: \NumRefTimes)}{}.}
@@ -465,7 +465,7 @@ type & $\max\|UU^*-1\|$ & $\|\sqrt A^2-A\|/\|A\|$ & rel.\ error $S(\rho)$, $\rho
 \end{tabular}
 \caption{Accuracy of the same computations in the four storage types: Haar unitaries ($n=64$), SVD square
 root, entropy of $\rho=(1-\varepsilon)|0\rangle\langle0|+\varepsilon\,1/n$ with $\varepsilon=10^{-7}$, and the
-round-off floor of $z=\Tr(Y|X|Y)-\Tr|YXY|$ for commuting $X,Y$ (exactly $0$).}
+round-off floor of $z=\Tr(Y|X|Y)-\Tr|YXY|$ for commuting $X,Y$ (exactly $0$)\IfFileExists{generated/numerics.tex}{; \NumMode\ run on \NumDevice}{}.}
 \label{tab:numerics-acc}
 \end{table}
 
@@ -560,7 +560,7 @@ $\gamma_1$ & $\gamma_2$ & $P(\text{weight }3)$ & fidelity & after post-selection
 
 Table~\ref{tab:validation} compares Monte Carlo estimates produced with the library (double precision)
 with exact values: fourth moments of Haar unitaries and orthogonal matrices; the Weingarten-calculus
-value $\mathbb E\,\tau\bigl((AUBU^*)^2\bigr)=-1/(N^2-1)$ for traceless involutions $A=B$ and Haar $U$;
+value $\mathbb E\,\tau\bigl((AUBU^*)^2\bigr)=-1/(n^2-1)$ for traceless involutions $A=B$ and Haar $U$ in $M_n(\C)$;
 Page's formula for $\langle S(\rho_A)\rangle$; and the mean purity $(k+r)/(kr+1)$ of induced random
 states of rank $r$~\cite{zyczkowski2001}. The last column is the deviation in units of the standard
 error; for a correct sampler these should look like standard normal deviates. For the circular ensembles the Wigner surmise is only an approximation to
@@ -590,9 +590,9 @@ hence no $z$)\IfFileExists{generated/validation.tex}{ (\ValMode\ run on
 \centering
 \fig{spacings.pdf}{\textwidth}\\[2mm]
 \fig{page.pdf}{0.45\textwidth}
-\caption{Top: nearest-neighbour spacings of COE, CUE and CSE eigenphases generated by the library,
+\caption{Top: nearest-neighbour spacings of COE, CUE and CSE eigenphases generated by the library\IfFileExists{generated/validation.tex}{ ($n=\ValNce$, \ValSce\ matrices per ensemble)}{},
 against the Wigner surmise. Bottom: mean entanglement entropy of random pure states against Page's
-formula (error bars: two standard errors).}
+formula\IfFileExists{generated/validation.tex}{ (\ValSPage\ states per point)}{} (error bars: two standard errors).}
 \label{fig:spacings}
 \end{figure}
 
@@ -614,7 +614,7 @@ $\max|\operatorname{tr}(UAU^*)-\operatorname{tr}(A)|$ & $\min\operatorname{tr}(A
 \ValTraceRows
 \bottomrule
 \end{tabular}
-\caption{Identities of the three trace functionals, 2000 random operators in double precision.}
+\caption{Identities of the three trace functionals, 2000 random operators in double precision\IfFileExists{generated/validation.tex}{; \ValMode\ run on \ValDevice}{}.}
 \label{tab:traces}
 \end{table}
 
@@ -631,13 +631,13 @@ operators as parameters (for the self-adjoint $X$ of Exp.~3 and the factors of E
 
 \paragraph{Sampling misses the extremes.} For fixed $X,Y$ the supremum in Exp.~1 is known exactly,
 $\sup_U z=\|YX\|_1-\Tr(XY)>0$. Table~\ref{tab:search} and Figure~\ref{fig:search} show that the best of
-\IfFileExists{generated/search.tex}{\SearchSamples}{many} Haar samples is already negative for $k\ge4$ and
-moves further away from the supremum as $k$ grows, while batched gradient ascent
+\IfFileExists{generated/search.tex}{\SearchSamples}{many} Haar samples falls short of the supremum for every $k$, misses
+the violation for all pairs from $k=4$ on, and moves further away from it as $k$ grows, while batched gradient ascent
 (\IfFileExists{generated/search.tex}{\SearchStarts\ starts, \SearchSteps\ steps}{multistart}) finds it
 to a relative error of at most \IfFileExists{generated/search.tex}{$\SearchMaxErr$}{about $10^{-5}$} (Table~\ref{tab:search}). This is concentration of measure: the unitaries close to
-the maximiser form a set whose Haar measure decays rapidly with the dimension. In particular, the absence
-of violations in Monte Carlo samples for $k=16$ reported in~\cite{v1} is a property of the sampling, not
-of the inequality.
+the maximiser form a set whose Haar measure decays rapidly with the dimension. This search is done in the complex algebra $M_k(\C)$ ($C=1$, eigenvalues of $X,Y$ uniform in $[0.2,1.2]$, double
+precision); the same concentration effect explains the absence of violations in the (real) Monte Carlo samples
+for $k=16$ reported in~\cite{v1}: it is a property of the sampling, not of the inequality.
 
 \begin{table}[h]
 \centering\small
@@ -650,7 +650,8 @@ $k$ & \multicolumn{2}{c}{violation found} & $\sup z/\Tr XY$ & best sample & \mul
 \SearchRows
 \bottomrule
 \end{tabular}
-\caption{Exp.~1 for fixed random $X,Y$: Haar sampling versus gradient ascent (medians over
+\caption{Exp.~1 for fixed random $X,Y$ in $M_k(\C)$ (eigenvalues uniform in $[0.2,1.2]$, double precision): Haar
+sampling versus gradient ascent (medians over
 \IfFileExists{generated/search.tex}{\SearchPairs}{several} pairs\IfFileExists{generated/search.tex}{;
 \SearchMode\ run on \SearchDevice}{}).}
 \label{tab:search}
@@ -681,11 +682,11 @@ Carlo sample of~\cite{v1} is checked against both envelopes, along $\Delta(X)$ a
 outside the linear interpolation between grid points are re-optimised at their exact contrast. \IfFileExists{generated/bounds.tex}{Of the \BoundsMcChecked\ samples with both contrasts in the grid (\BoundsMcDropped\ have a contrast above
 $0.999$), \BoundsMcOutside\ remain outside after this step;
 such samples mark contrasts where the local search did not reach the true extremum, so their number is a direct
-check of the optimiser and decreases with the number of starts.}{} For a single sector of size $k=2$ the samples come close
+check of the optimiser.}{} For a single sector of size $k=2$ the samples come close
 to the envelopes; with two sectors they already miss a substantial part of the range (Table~\ref{tab:bounds}), and
 for larger $k$ sampling misses the extremes entirely (Table~\ref{tab:search}).
 
-Two envelopes can be checked analytically. In Exp.~3, $z\ge0$ always:
+Three envelopes can be checked analytically. In Exp.~3, $z\ge0$ always:
 
 \begin{proposition}
 For $X=X^*$ and $Y\ge0$, $\Tr|YXY|\le\Tr(Y|X|Y)$, with equality if $Y$ commutes with $X$.
@@ -699,9 +700,12 @@ for prescribed $\Delta(X)=\delta$ equals $-(kC-2\delta/(1+\delta))$ when all sec
 $\Tr(XY)\le\Tr X\le kC-1+\lambda_{\min}(X)$ with equality for $Y=1$, while $|\Tr(UYX)|$ can be made zero
 by a cyclic permutation of the eigenbasis of $X_c$ in every sector. The optimiser reproduces this curve to a relative deviation of
 \IfFileExists{generated/bounds.tex}{\BoundsExactDev}{(not generated)} (from above: the minimiser $Y=1$ has contrast $0$, which
-the sigmoid parametrisation of the free contrast approaches but does not reach). The upper envelopes of all three
-experiments are, to our knowledge, not known in closed form; the computed curves are lower bounds for
-them (a local search) and suggest conjectures for sharp contrast-dependent inequalities, which we leave
+the sigmoid parametrisation of the free contrast approaches but does not reach). In Exp.~2, $|X|=X_0$ and $|Y|=Y_0$,
+so $z=\|X_0VY_0\|_1-\Tr(X_0Y_0)$; von Neumann's trace inequality and rearrangement give
+$\sup z=\sum_ix_i^\downarrow(y_i^\downarrow-y_i^\uparrow)$ for given spectra, which for $k=2$, $C=1$ and prescribed
+$\Delta(|X|)=\delta$ is $2\delta/(1+\delta)$; the optimiser reproduces it to a relative deviation of
+\IfFileExists{generated/bounds.tex}{\BoundsExactDevTwo}{(not generated)}. The upper envelopes of Exp.~1 and Exp.~3 are, to our knowledge, not known in closed form;
+the computed curves are lower bounds for them (a local search) and suggest conjectures for sharp contrast-dependent inequalities, which we leave
 for future work.
 
 \begin{table}[h]
@@ -713,11 +717,12 @@ Exp. & $k$ & $C$ & $\inf z$ & $\sup z$ & Monte Carlo range of $z$ & outside\\
 \BoundsRows
 \bottomrule
 \end{tabular}
-\caption{Global extremes of $z$ over contrasts in $[0,0.999]$ found by constrained optimisation (real algebras,
+\caption{Global extremes of $z$ over both envelopes and contrasts in $[0,0.999]$ found by constrained optimisation (real algebras,
 orthogonal $U$), the range of the Monte Carlo samples with both contrasts in that interval, and the number of
 samples outside the envelopes (along either contrast) after re-optimisation
 \IfFileExists{generated/bounds.tex}{(\BoundsStarts\ starts per grid point, \BoundsSteps\ steps; \BoundsMode\
-run on \BoundsDevice)}{}.}
+run on \BoundsDevice)}{}; a sample counts as outside if it exceeds the envelope by more than $10^{-6}+10^{-3}\max|z|$;
+``--'': no Monte Carlo data of~\cite{v1} for this configuration.}
 \label{tab:bounds}
 \end{table}
 
@@ -734,7 +739,7 @@ $z$ for operators normalised to $\lambda_{\max}=1$. Grey: the Monte Carlo sample
 upper and lower envelopes found by constrained optimisation, the other contrast being free. In this smallest case the samples come close to the envelopes (the samples outside after
 re-optimisation are counted in Table~\ref{tab:bounds}), which is no longer so for two sectors or larger blocks
 (Tables~\ref{tab:search} and~\ref{tab:bounds}). In Exp.~1 the region $z>0$ (violation of $|\Tr(XUY)|\le\Tr(XY)$)
-extends to $z\approx0.24$; in Exp.~3 the lower envelope is the proven bound $z\ge0$.}
+extends to the value of $\sup z$ in Table~\ref{tab:bounds}; in Exp.~3 the lower envelope is the proven bound $z\ge0$.}
 \label{fig:bounds}
 \end{figure}
 
@@ -788,7 +793,7 @@ Section~\ref{sec:numerics} where the field is fixed by the problem (with reflect
 are nevertheless of GOE type).
 \item \emph{Beyond dense matrices.} Lanczos with full re-orthogonalisation and restarts, batched over
 Hamiltonians, reproduces the free-fermion ground-state energies of open XX chains and the Heisenberg ring in
-sectors far beyond dense diagonalisation (Table~\ref{tab:krylov}); Krylov evolution of the domain wall for
+sectors up to the sizes of Table~\ref{tab:krylov} (in the full run beyond the reach of dense diagonalisation); Krylov evolution of the domain wall for
 $L=\IfFileExists{generated/chains.tex}{\ChainKDWL}{16}$ (sector dimension
 \IfFileExists{generated/chains.tex}{\ChainKDWDim}{$\binom L{L/2}$}) agrees with the single-particle solution to
 \IfFileExists{generated/chains.tex}{$\ChainKDWErr$}{round-off}.
@@ -852,9 +857,9 @@ large for small blocks, where the Python overhead of the loop dominates (up to t
 and small for large blocks, where both spend their time in the same LAPACK routines (a small factor for $k=16$).
 Against carefully vectorised NumPy the library is only moderately faster (Table~\ref{tab:baselines}): its value there is that the vectorised, correctly
 sampled, block-aware version is the default rather than an expert rewrite, and that the same code runs on a GPU
-and can be differentiated. On a CPU, ARPACK is faster than our Lanczos solver (which re-orthogonalises fully for
-robustness), by the factors in Table~\ref{tab:baselines}; batching several Hamiltonians narrows the
-gap and is what lets the solver run on a GPU, but on a CPU we recommend SciPy for sparse eigenproblems.
+and can be differentiated. For ground states on a CPU, ARPACK is faster than our Lanczos solver, which re-orthogonalises fully for
+robustness (Table~\ref{tab:baselines}; both timed after a warm-up call). The batched solver is what lets the
+computation run on a GPU; for a single large eigenproblem on a CPU we recommend SciPy.
 
 \begin{table}[h]
 \centering\small
@@ -873,7 +878,8 @@ $L$ & sector dim & Hamiltonians & \texttt{eigsh} [s] & library [s] & $\max|\Delt
 \bottomrule
 \end{tabular}
 \caption{Top: time per Monte Carlo sample [$\mu$s] for (A); bottom: ground states of Heisenberg rings
-(one Hamiltonian) and random-field chains ($W=3$, several Hamiltonians) in the sector $N=L/2$
+(one Hamiltonian) and random-field chains ($W=3$, several Hamiltonians) in the sector $N=L/2$, total time for all
+Hamiltonians (``--'': no GPU in this run)
 \IfFileExists{generated/baselines.tex}{(\BaseMode\ run on \BaseDevice)}{}.}
 \label{tab:baselines}
 \end{table}
@@ -881,11 +887,12 @@ $L$ & sector dim & Hamiltonians & \texttt{eigsh} [s] & library [s] & $\max|\Delt
 \section{Performance}\label{sec:performance}
 
 Table~\ref{tab:benchmark} and Figure~\ref{fig:benchmark} report the wall-clock time per sample of library
-operations (not of isolated kernels), in single precision, with the batch size chosen so that the batch
-holds about \IfFileExists{generated/benchmark.tex}{$2^{\BenchTargetLog}$}{$2^{22}$} matrix entries\IfFileExists{generated/benchmark.tex}{ (\BenchMode\ run on \BenchDevice;
+operations (not of isolated kernels), in single precision, with batch $B=\min\bigl(4096,\,\IfFileExists{generated/benchmark.tex}{2^{\BenchTargetLog}}{2^{22}}/(Ck^2)\bigr)$ (shown in the table)\IfFileExists{generated/benchmark.tex}{ (\BenchMode\ run on \BenchDevice;
 CPU with \BenchCpuThreads\ threads)}{}. On a GPU we expect the CPU to be faster for single small blocks, because
 kernel launches dominate, and the GPU to gain for many sectors and for the matrix products in channels and in
-the optimisation step; the measured speedups are in the table.
+the optimisation step\ifnum\BenchHasGPU=1; the measured speedups are in the table\fi. The operations are: generating
+random operators with prescribed spectra, $f(A)$ by eigendecomposition, $|A|$ by SVD, the Michelson contrast, applying
+a channel, the Lindblad channel $e^{t\mathcal L}$, and one gradient step of the optimisation.
 
 The first version of this work reported GPU speedups for raw kernels on a P100 and found them only for part of the
 configurations. That observation reflects where GPUs help: a GPU needs enough independent work per kernel launch.
@@ -910,7 +917,7 @@ operation & $k$ & $C$ & batch & time per sample [$\mu$s]\\
 \BenchmarkRows
 \bottomrule
 \end{tabular}
-\caption{Wall-clock time per sample of library operations for $C$ sectors of size $k$ and the batch size shown
+\caption{Wall-clock time per sample of library operations for $C$ sectors of size $k$ and the batch size shown\IfFileExists{generated/benchmark.tex}{ (\BenchMode\ run on \BenchDevice, CPU with \BenchCpuThreads\ threads)}{}
 (single precision; ``exp($tL$)'' uses a smaller batch because its superoperators have $k^4$ entries). With a GPU the
 table also gives the CPU time and the speedup CPU/GPU.}
 \label{tab:benchmark}

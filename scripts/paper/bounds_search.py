@@ -182,7 +182,8 @@ for exp in (1, 2, 3):
                      seconds=time.time() - t0)
             save_partial(args, f'exp{exp}_k{k}_C{C}', r)
         results.append(r)
-        print(f"exp{exp} k={k:2d} C={C:2d}: sup z = {max(r['sup_vs_x']):+.4g}, inf z = {min(r['inf_vs_x']):+.4g}"
+        print(f"exp{exp} k={k:2d} C={C:2d}: sup z = {max(r['sup_vs_x'] + r['sup_vs_y']):+.4g}, "
+              f"inf z = {min(r['inf_vs_x'] + r['inf_vs_y']):+.4g}"
               + ("" if mc is None else f"; Monte Carlo range [{r['mc_min']:+.4g}, {r['mc_max']:+.4g}], "
                  f"{interp_outside} of {len(mc)} samples outside the interpolated envelopes, "
                  f"{outside} after re-optimising at their exact contrast")
@@ -206,6 +207,7 @@ for exp in (1, 2, 3):
         plt.close(fig)
 
 # joint constraints: both contrasts prescribed
+h2 = 0.5 * (GRID2[1] - GRID2[0])                         # half a grid cell: imshow cells centred on the grid
 results_2d = []
 for exp in (1, 2, 3):
     for k, C in CONFIGS_2D:
@@ -224,7 +226,7 @@ for exp in (1, 2, 3):
               f"{e2['inf'].max():+.3g}]  ({time.time() - t0:.0f} s)")
         fig, axes = plt.subplots(1, 2, figsize=(8, 3.4))
         for ax, name in zip(axes, ('sup', 'inf')):
-            im = ax.imshow(e2[name], origin='lower', extent=[GRID2[0], GRID2[-1], GRID2[0], GRID2[-1]],
+            im = ax.imshow(e2[name], origin='lower', extent=[GRID2[0] - h2, GRID2[-1] + h2, GRID2[0] - h2, GRID2[-1] + h2],
                            aspect='auto', cmap='coolwarm' if name == 'inf' else 'viridis')
             ax.set_xlabel(LABELS[exp][1])
             ax.set_ylabel(LABELS[exp][0])
@@ -245,6 +247,17 @@ for r in results:
         r['inf_exact'] = exact.tolist()
         exact_dev = max(exact_dev, float(np.max(np.abs(np.array(r['inf_vs_x']) - exact) / np.abs(exact))))
 print(f"Exp 1 lower envelope vs exact -(kC - 2d/(1+d)): max relative deviation {exact_dev:.1e}")
+# analytic check: for Exp 2, |X| = X_0 and |Y| = Y_0, so z = ||X_0 V Y_0||_1 - Tr(X_0 Y_0); von Neumann's trace
+# inequality and rearrangement give sup z = sum_i x_i (y_i^desc - y_i^asc) for given spectra. For k = 2, C = 1 and
+# Delta(|X|) = d with the other contrast free this is 1 - lambda_min(X) = 2d/(1+d) (attained as Delta(|Y|) -> 1).
+exact_dev2 = None
+for r in results:
+    if r['experiment'] == 2 and r['k'] == 2 and r['C'] == 1:
+        g = np.array(r['grid'])
+        exact = 2 * g / (1 + g)
+        mask = exact > 1e-3
+        exact_dev2 = float(np.max(np.abs(np.array(r['sup_vs_x'])[mask] - exact[mask]) / exact[mask]))
+        print(f"Exp 2 upper envelope (k=2, C=1) vs exact 2d/(1+d): max relative deviation {exact_dev2:.1e}")
 
 save_json(args, 'bounds', dict(results=results, results_2d=results_2d, starts=STARTS, steps=ROUNDS * STEPS,
                                seconds=time.time() - t_start))
@@ -252,6 +265,7 @@ tex = env_macro(args, 'Bounds')
 tex += f"\\newcommand{{\\BoundsStarts}}{{{STARTS}}}\n\\newcommand{{\\BoundsSteps}}{{{ROUNDS * STEPS}}}\n"
 tex += f"\\newcommand{{\\BoundsGrid}}{{{len(GRID)}}}\n"
 tex += f"\\newcommand{{\\BoundsExactDev}}{{{exact_dev:.1e}}}\n"
+tex += f"\\newcommand{{\\BoundsExactDevTwo}}{{{'--' if exact_dev2 is None else f'{exact_dev2:.1e}'}}}\n"
 exp3_inf = max((abs(v) for r in results if r['experiment'] == 3 for v in r['inf_vs_x'] + r['inf_vs_y']), default=0.0)
 mc_checked = sum(r['mc_samples'] or 0 for r in results)
 mc_dropped = sum(r.get('mc_dropped') or 0 for r in results)
@@ -269,7 +283,8 @@ for r in results:
           f"$[{num(r['mc_min'], 3)},\\,{num(r['mc_max'], 3)}]$ & {r['mc_outside']}")
     if r['mc_samples'] is None:
         mc = '-- & --'
-    tex += (f"{r['experiment']} & {r['k']} & {r['C']} & ${num(min(r['inf_vs_x']))}$ & ${num(max(r['sup_vs_x']))}$ "
+    lo, hi = min(r['inf_vs_x'] + r['inf_vs_y']), max(r['sup_vs_x'] + r['sup_vs_y'])   # over both envelopes
+    tex += (f"{r['experiment']} & {r['k']} & {r['C']} & ${num(lo)}$ & ${num(hi)}$ "
             f"& {mc} \\\\\n")
 tex += "}\n"
 write_tex(args, 'bounds', tex)

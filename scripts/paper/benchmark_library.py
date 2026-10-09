@@ -23,7 +23,7 @@ import time
 
 import torch
 
-from common import parse_args, save_json, write_tex, env_macro, sync
+from common import parse_args, save_json, write_tex, env_macro, sync, num3
 
 from torch_vn_algebra import TypeIAlgebra, channels, cost, dynamics, optimize as opt, states
 
@@ -114,9 +114,9 @@ tex += f"\\newcommand{{\\BenchHasGPU}}{{{'1' if two else '0'}}}\n"
 tex += "\\newcommand{\\BenchmarkRows}{%\n"
 for r in rows:
     main = 1e6 * r[f't_{args.device}']
-    tex += f"{r['op']} & {r['k']} & {r['C']} & {r['batch']} & {main:.3g}"
+    tex += f"{r['op']} & {r['k']} & {r['C']} & {r['batch']} & {num3(main)}"
     if two:
-        tex += f" & {1e6 * r['t_cpu']:.3g} & {r['speedup']:.1f}"
+        tex += f" & {num3(1e6 * r['t_cpu'])} & {r['speedup']:.1f}"
     tex += " \\\\\n"
 tex += "}\n"
 write_tex(args, 'benchmark', tex)

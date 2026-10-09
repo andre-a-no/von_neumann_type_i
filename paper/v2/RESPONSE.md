@@ -98,18 +98,19 @@ Table 1); every entry is cited in the text.
 **1. The conclusions drawn from the Monte Carlo study contradict the figures.**
 Monte Carlo sampling was replaced by constrained optimisation (Section 6): with the Michelson contrast
 fixed exactly by the parametrisation, gradient ascent/descent finds extremal values beyond the sampled
-clouds; every Monte Carlo sample is checked against the envelopes along both contrasts (Table 9 counts
-the samples outside). Section 6 shows that sampling misses the extremes in all but the smallest
+clouds; every Monte Carlo sample with both contrasts in [0, 0.999] is checked against the envelopes along
+both contrasts (Table 9 counts the samples outside). Three envelopes are verified analytically: the lower
+envelopes of Exp. 1 and Exp. 3 and, via von Neumann's trace inequality, the upper envelope of Exp. 2. Section 6 shows that sampling misses the extremes in all but the smallest
 dimensions, states which envelopes are proven and which are local-search bounds, and draws only
 conclusions that the optimisation supports. All envelopes refer to real algebras (orthogonal U), the
 setting of the first version, and the text says so.
 
 **2. Benchmark inconsistencies (batch sizes, single-threaded CPU, figure vs. table).**
 The figure and the table of Section 9 are produced by the same script run from the same measurements;
-the batch size is chosen per configuration to hold a fixed number of entries (stated in the text) and the
-batch actually used is printed in every row; the
-CPU runs with all available threads and the thread count is recorded in the caption; timings exclude
-warm-up and synchronise the GPU.
+the batch size follows a stated formula, B = min(4096, 2^m/(Ck^2)), and the batch actually used is printed
+in every row; the
+CPU runs with all available threads and the thread count is recorded in the caption; all timings,
+including the SciPy/ARPACK comparison, exclude a warm-up call and synchronise the GPU.
 
 **3. Validation is limited.**
 Section 5 validates against exact results (Haar moments, Weingarten integrals, Page's formula,

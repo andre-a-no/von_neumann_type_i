@@ -85,7 +85,7 @@ for N in (4, 8, 16):
         U = alg.random_unitary(N, batch_size=b)
         M = A @ U @ A @ U.conj().transpose(-2, -1)
         vals.append((M @ M).diagonal(dim1=-2, dim2=-1).sum(-1).real / N)
-    add("E tau((AUBU*)^2)", f"N = {N}", -1 / (N ** 2 - 1), *mean_err(torch.cat(vals)))
+    add("E tau((AUBU*)^2)", f"n = {N}", -1 / (N ** 2 - 1), *mean_err(torch.cat(vals)))
 
 # ----------------------------------------------------------------------------------------------
 # 3. Circular ensembles: spacing distribution
@@ -121,7 +121,7 @@ for beta, measure in ((1, 'coe'), (2, 'haar'), (4, 'cse')):
     # computed from per-matrix means, not from the pooled spacings
     m, e = mean_err((s_mat ** 2).mean(dim=-1))
     record.setdefault('spacing_l1', {})[beta] = l1
-    add(f"<s^2>, beta = {beta}", f"N = {N_CE} (surmise)", s2, m, e, approx=True)
+    add(f"<s^2>, beta = {beta}", f"n = {N_CE} (surmise)", s2, m, e, approx=True)
 
 # ----------------------------------------------------------------------------------------------
 # 4. Page's formula

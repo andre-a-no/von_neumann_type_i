@@ -70,7 +70,7 @@
       "mc_outside_interpolated": 4,
       "mc_max": 0.2273507,
       "mc_min": -1.98383,
-      "seconds": 9.284172773361206,
+      "seconds": 9.222949266433716,
       "inf_exact": [
         -2.0,
         -1.7797552836484982,
@@ -154,7 +154,7 @@
       "mc_outside_interpolated": 0,
       "mc_max": 0.3275264,
       "mc_min": -3.386318,
-      "seconds": 5.960386037826538,
+      "seconds": 6.401797771453857,
       "inf_exact": [
         -4.0,
         -3.779755283648498,
@@ -238,7 +238,7 @@
       "mc_outside_interpolated": null,
       "mc_max": null,
       "mc_min": null,
-      "seconds": 5.297586679458618,
+      "seconds": 5.025750160217285,
       "inf_exact": [
         -4.0,
         -3.779755283648498,
@@ -322,7 +322,7 @@
       "mc_outside_interpolated": 9,
       "mc_max": 0.9753667,
       "mc_min": -0.9205419,
-      "seconds": 11.780243396759033
+      "seconds": 11.309386491775513
     },
     {
       "experiment": 2,
@@ -394,7 +394,7 @@
       "mc_outside_interpolated": 0,
       "mc_max": 1.724157,
       "mc_min": -1.425424,
-      "seconds": 6.507063865661621
+      "seconds": 6.230064868927002
     },
     {
       "experiment": 2,
@@ -466,7 +466,7 @@
       "mc_outside_interpolated": null,
       "mc_max": null,
       "mc_min": null,
-      "seconds": 5.921037435531616
+      "seconds": 5.714627265930176
     },
     {
       "experiment": 3,
@@ -538,7 +538,7 @@
       "mc_outside_interpolated": 1,
       "mc_max": 0.9461232,
       "mc_min": -8.34465e-07,
-      "seconds": 5.980179786682129
+      "seconds": 6.021778583526611
     },
     {
       "experiment": 3,
@@ -610,7 +610,7 @@
       "mc_outside_interpolated": 1,
       "mc_max": 1.392587,
       "mc_min": -9.536743e-07,
-      "seconds": 8.275462865829468
+      "seconds": 8.27116084098816
     },
     {
       "experiment": 3,
@@ -682,7 +682,7 @@
       "mc_outside_interpolated": null,
       "mc_max": null,
       "mc_min": null,
-      "seconds": 6.638033628463745
+      "seconds": 6.727993965148926
     }
   ],
   "results_2d": [
@@ -771,7 +771,7 @@
           -1.0005039568303031
         ]
       ],
-      "seconds": 2.34356689453125
+      "seconds": 2.3473448753356934
     },
     {
       "experiment": 2,
@@ -858,7 +858,7 @@
           -0.9493407089381382
         ]
       ],
-      "seconds": 2.481221914291382
+      "seconds": 2.3521728515625
     },
     {
       "experiment": 3,
@@ -945,12 +945,12 @@
           0.0
         ]
       ],
-      "seconds": 2.5806827545166016
+      "seconds": 2.6539790630340576
     }
   ],
   "starts": 12,
   "steps": 240,
-  "seconds": 76.80420994758606,
+  "seconds": 76.23644232749939,
   "environment": {
     "torch": "2.14.1+cu130",
     "python": "3.13.16",

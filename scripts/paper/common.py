@@ -2,6 +2,7 @@
 import argparse
 import atexit
 import json
+import math
 import os
 import platform
 import sys
@@ -158,6 +159,14 @@ def sync(device):
 
 def fmt(x, digits=4):
     return f"{x:.{digits}g}"
+
+
+def num3(x):
+    """Three significant digits without exponent notation (1234 -> 1230, 0.01234 -> 0.0123)."""
+    if x == 0 or not math.isfinite(x):
+        return f"{x:g}"
+    d = max(0, 2 - int(math.floor(math.log10(abs(x)))))
+    return f"{round(x, d):.{d}f}" if abs(x) >= 1e-3 else f"{x:.2e}"
 
 
 def sci(x, digits=2):

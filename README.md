@@ -25,11 +25,12 @@ PyTorch: A GPU-Accelerated Framework for Random Block-Diagonal Operators*, arXiv
 - **Unitary ensembles** – Haar on U(n)/O(n), SU(n)/SO(n), COE, CSE, random diagonal phases;
   batched (`random_unitary(n, measure, batch_size)`), and block-diagonal unitaries in the algebra
   (`random_unitary_operator`).
-- **Lazy evaluation** – `X @ Y`, `X + Y`, `X.abs()`, `X.sqrt()`, `X.inv` build a recipe; nothing is
-  computed until `.matrix` (or a scalar functional) is requested.
-- **Functional calculus** – `abs`, `sqrt`, `inverse` (pseudo-inverse), `entropy`, `trace_a_log_a`
-  via batched SVD; `lambda_max`/`lambda_min` by exact diagonalisation for blocks up to
-  `alg.exact_eig_max_dim = 256`, shifted power iteration above that.
+- **Lazy evaluation** – `X @ Y`, `X + Y`, `X * s` and functional calculus build a recipe that is computed when
+  `.matrix` (or a scalar functional) is requested; methods that need a property of the base operator first
+  (e.g. `X.inv`, `X.sqrt()` checking positivity) evaluate the base.
+- **Functional calculus** – `abs`, `sqrt`, `inverse` (pseudo-inverse with a relative cutoff), `entropy`,
+  `trace_a_log_a` via batched SVD of the active blocks; `eigenvalues()` without eigenvectors; `lambda_max`,
+  `lambda_min` and `operator_norm` exact for every block size.
 - **Three trace functionals** – `Tr_blunt` (Σ_c Tr A_c), `Tr_norm` (Σ_c Tr A_c / k_c) and the
   tracial state `tau_vN` ((1/C) Σ_c Tr A_c / k_c); norms `trace_norm`, `frobenius_norm`,
   `operator_norm`; `michelson_contrast`.
@@ -132,9 +133,10 @@ paper, `scripts/paper/numerics.py`):
 | single | Monte Carlo statistics whose statistical error is far above 1e-6, exploratory optimisation |
 | double | effects that are small compared with the operators: inequalities near equality, small gaps, entropies of nearly pure states, contrast near 1, exact-result checks, long RK4 runs. On consumer GPUs FP64 is 32-64x slower than FP32 |
 
-`complex_valued=False` gives real algebras (orthogonal instead of unitary groups). Each
-`force_*` flag (`self_adjoint`, `positive`, `normal`, `invertible`, `projection`) both tags the
-operator and checks the property when the matrix is materialised.
+`complex_valued=False` gives real algebras (orthogonal instead of unitary groups); complex input with a non-zero
+imaginary part is rejected there. Each `force_*` flag (`self_adjoint`, `positive`, `normal`, `invertible`,
+`projection`) tags the operator after checking it against the sampled eigenvalues. The `batch_size` argument of
+`TypeIAlgebra` only sets the batch of its Hilbert-space bases; every factory takes its own `batch_size`.
 
 More in [`examples/`](examples): random Hamiltonian with a parity symmetry, free additive
 convolution, a trace inequality, unitary ensembles, a Zipf density matrix, decoherence inside
@@ -228,9 +230,7 @@ pytest -q
 ## Limitations
 
 - SVD dominates the cost for `k_max ≳ 200` with large batches.
-- Power iteration (blocks above `exact_eig_max_dim`) converges linearly in the spectral gap and
-  can fail when the dominant eigenvalues are ±λ; its stopping rule is on the change of the
-  estimate, not on the error.
+- `SpinChain(2, 'periodic')` has a single bond (the wrap bond is not counted twice), so it equals the open chain.
 - `Channel`, Hamiltonians and Lindblad generators preserve the sectors; maps between sectors are
   `InterSectorChannel`s. Only abelian charges are fused; non-abelian symmetries are not used to reduce
   blocks further, and operators on all sectors of a chain are stored padded (work in single sectors for
