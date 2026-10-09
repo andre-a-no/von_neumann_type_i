@@ -378,7 +378,7 @@ class TypeIAlgebra:
                 v = v.to(dtype)
             norm_sq = (v.conj() * v).real.sum(dim=(1, 2), keepdim=True)
             v = v / torch.sqrt(norm_sq + 1e-12)
-            lambda_old = torch.zeros(batch, dtype=dtype, device=device)
+            lambda_old = torch.zeros(batch, dtype=block.real.dtype, device=device)
             for _ in range(num_iters):
                 v_new = torch.matmul(block, v)
                 vh_v_new = (v.conj() * v_new).real.sum(dim=(1, 2))
@@ -390,7 +390,7 @@ class TypeIAlgebra:
                     break
                 lambda_old = lambda_est
                 v = v_new
-            return lambda_est.to(block.dtype)
+            return lambda_est.to(block.real.dtype)  # Rayleigh quotient of a Hermitian block is real
 
         # ----- lambda_max and lambda_min (global extremes) -----
         @property

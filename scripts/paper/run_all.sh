@@ -9,7 +9,7 @@ cd "$(dirname "$0")/../.."
 if [ "$MODE" = full ] && [ ! -f results/experiments/summary.csv ]; then
   python scripts/experiment.py --dims 2,16 --channels 1,2,16,32 --device "$DEVICE" --output-dir results/experiments
 fi
-for s in validate_known_results inequality_search bounds_search benchmark_library; do
+for s in validate_known_results inequality_search bounds_search chains benchmark_library; do
   echo "=== $s ($MODE, $DEVICE)"
   python "scripts/paper/$s.py" --mode "$MODE" --device "$DEVICE"
 done

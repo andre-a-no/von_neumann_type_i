@@ -56,19 +56,27 @@ class SpinChain:
             raise ValueError("L > 20 is beyond dense exact diagonalisation")
         self.L, self.boundary = L, boundary
         self.complex_valued, self.precision = complex_valued, precision
-        dims = [math.comb(L, N) for N in range(L + 1)]
-        self.algebra = TypeIAlgebra(dims, dims, complex_valued=complex_valued, precision=precision,
-                                    device=device, charges=list(range(L + 1)))
-        self.device = self.algebra.hilbert.device
-        self.dtype = self.algebra.hilbert.dtype
-        self.real_dtype = self.algebra.hilbert.real_dtype
+        self._algebra = None
+        self._device_arg = device
+        self._sector_algebras = {}
+        ref = self.sector_algebra(0)                        # 1 x 1: fixes dtype and device
+        self.device = ref.hilbert.device
+        self.dtype = ref.hilbert.dtype
+        self.real_dtype = ref.hilbert.real_dtype
         self.labels = [torch.tensor(lab, dtype=torch.int64, device=self.device) for lab in _labels(L)]
         index = torch.empty(2 ** L, dtype=torch.int64, device=self.device)
         for lab in self.labels:
             index[lab] = torch.arange(len(lab), device=self.device)
         self.index_of = index                                  # position of a label in its sector
-        self._sector_algebras = {}
 
+    @property
+    def algebra(self) -> TypeIAlgebra:
+        """The full algebra (+)_N M_{binom(L, N)} (created on first use; padded to the largest sector)."""
+        if self._algebra is None:
+            dims = [math.comb(self.L, N) for N in range(self.L + 1)]
+            self._algebra = TypeIAlgebra(dims, dims, complex_valued=self.complex_valued, precision=self.precision,
+                                         device=self.device, charges=list(range(self.L + 1)))
+        return self._algebra
     # ------------------------------------------------------------------
     @property
     def bonds(self) -> List[tuple]:
@@ -85,7 +93,8 @@ class SpinChain:
         if N not in self._sector_algebras:
             d = self.sector_dim(N)
             self._sector_algebras[N] = TypeIAlgebra([d], [d], complex_valued=self.complex_valued,
-                                                    precision=self.precision, device=self.device, charges=[N])
+                                                    precision=self.precision,
+                                                    device=getattr(self, 'device', self._device_arg), charges=[N])
         return self._sector_algebras[N]
 
     def bits(self, N: int) -> torch.Tensor:
