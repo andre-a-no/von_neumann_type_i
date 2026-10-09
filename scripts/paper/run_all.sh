@@ -13,12 +13,19 @@ MODE=${1:-quick}
 DEVICE=${2:-$(python -c "import torch; print('cuda' if torch.cuda.is_available() else 'cpu')")}
 TF32=""
 if [ "${3:-}" = tf32 ]; then TF32="--tf32"; fi
+EXAMPLE_ENV=""
+if [ "$DEVICE" = cpu ]; then EXAMPLE_ENV="CUDA_VISIBLE_DEVICES="; fi   # the examples pick CUDA when visible
 # short scripts first; inequality_search and bounds_search take hours in full mode and resume after an
 # interruption (finished parts are kept in generated/partial/ until the script completes)
 SCRIPTS=${ONLY:-"validate_known_results numerics baselines benchmark_library chains inequality_search bounds_search"}
 cd "$(dirname "$0")/../.."
 OUTDIR=paper/v2/generated
+OUTARGS=""
 if [ "$MODE" = check ]; then OUTDIR=.check_output/generated; fi
+if [ -n "$TF32" ]; then                      # a TF32 run must not overwrite the FP32 tables of the paper
+  OUTDIR=paper/v2/generated_tf32
+  OUTARGS="--out $OUTDIR --figdir $OUTDIR/figures"
+fi
 LOGS=$OUTDIR/logs
 mkdir -p "$LOGS"
 python - <<PY | tee "$LOGS/environment.txt"
@@ -36,14 +43,15 @@ PY
 
 if [ "$MODE" = full ] && [ ! -f results/experiments/summary.csv ]; then
   python scripts/experiment.py --dims 2,16 --channels 1,2,16,32 --device "$DEVICE" --output-dir results/experiments \
-    > "$LOGS/experiment.log" 2>&1 || echo "experiment.py failed (see $LOGS/experiment.log)"
+    > "$LOGS/experiment.log" 2>&1 || experiment_failed=1
 fi
 
 failed=()
+if [ -n "${experiment_failed:-}" ]; then echo "experiment.py FAILED (see $LOGS/experiment.log)"; failed+=("experiment"); fi
 for s in $SCRIPTS; do
   start=$(date +%s)
   echo "=== $s ($MODE, $DEVICE${TF32:+, tf32})  log: $LOGS/$s.log"
-  if python "scripts/paper/$s.py" --mode "$MODE" --device "$DEVICE" $TF32 > "$LOGS/$s.log" 2>&1; then
+  if python "scripts/paper/$s.py" --mode "$MODE" --device "$DEVICE" $TF32 $OUTARGS > "$LOGS/$s.log" 2>&1; then
     echo "    ok in $(( $(date +%s) - start )) s"
   else
     echo "    FAILED after $(( $(date +%s) - start )) s; last lines:"; tail -n 5 "$LOGS/$s.log" | sed 's/^/      /'
@@ -51,7 +59,7 @@ for s in $SCRIPTS; do
   fi
 done
 if [ -z "${ONLY:-}" ]; then
-  for ex in examples/paper/ex*.py; do echo "=== $ex"; python "$ex" || failed+=("$ex"); done > "$OUTDIR/examples_output.txt" 2>&1
+  for ex in examples/paper/ex*.py; do echo "=== $ex"; env $EXAMPLE_ENV python "$ex" || failed+=("$ex"); done > "$OUTDIR/examples_output.txt" 2>&1
 fi
 
 echo

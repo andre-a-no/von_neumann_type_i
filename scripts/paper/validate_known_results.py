@@ -75,11 +75,13 @@ for cplx in (True, False):
 # 2. Weingarten: second-order mixed moment
 # ----------------------------------------------------------------------------------------------
 S_W = 20_000 if CHECK else 400_000 if FULL else 50_000
-for N in (4, 16, 64):
+# the per-sample standard deviation is O(1/N) while the value is -1/(N^2-1): beyond N ~ 16 the test
+# cannot distinguish the formula from zero, so it is run where it is informative
+for N in (4, 8, 16):
     alg = TypeIAlgebra([N], [N], precision='double', device=dev)
     A = torch.diag(torch.tensor([1.0] * (N // 2) + [-1.0] * (N // 2), dtype=torch.complex128, device=dev))
     vals = []
-    for b in chunks(S_W if N < 64 else S_W // 4, 20_000):
+    for b in chunks(S_W, 20_000):
         U = alg.random_unitary(N, batch_size=b)
         M = A @ U @ A @ U.conj().transpose(-2, -1)
         vals.append((M @ M).diagonal(dim1=-2, dim2=-1).sum(-1).real / N)
@@ -108,13 +110,16 @@ for beta, measure in ((1, 'coe'), (2, 'haar'), (4, 'cse')):
         n_eff = theta.shape[-1]
         gaps = torch.diff(theta, dim=-1, append=theta[:, :1] + 2 * math.pi)
         out.append(gaps * n_eff / (2 * math.pi))
-    s = torch.cat(out).flatten().cpu()
+    s_mat = torch.cat(out).cpu()                    # (matrices, spacings)
+    s = s_mat.flatten()
     spacings[beta] = s.numpy()
     p, s2 = SURMISE[beta]
     hist, edges = np.histogram(spacings[beta], bins=60, range=(0, 3), density=True)
     centers = 0.5 * (edges[1:] + edges[:-1])
     l1 = float(np.sum(np.abs(hist - p(centers))) * (edges[1] - edges[0]))
-    m, e = mean_err(s ** 2)
+    # spacings of one matrix are strongly anticorrelated (spectral rigidity): the standard error must be
+    # computed from per-matrix means, not from the pooled spacings
+    m, e = mean_err((s_mat ** 2).mean(dim=-1))
     record.setdefault('spacing_l1', {})[beta] = l1
     add(f"<s^2>, beta = {beta}", f"N = {N_CE} (surmise)", s2, m, e, approx=True)
 
@@ -216,6 +221,7 @@ tex += f"\\newcommand{{\\ValNPage}}{{{n_page}}}\n"
 for beta in (1, 2, 4):
     name = {1: 'One', 2: 'Two', 4: 'Four'}[beta]
     tex += f"\\newcommand{{\\ValLone{name}}}{{{record['spacing_l1'][beta]:.3f}}}\n"
+tex += f"\\newcommand{{\\ValTraceNormTau}}{{{sci(max(rel, 1e-17))}}}\n"    # max |Tr_norm - C tau_vN|
 tex += "\\newcommand{\\ValTraceRows}{%\n"
 for tc in trace_checks:
     nm = {'Tr_blunt': '$\\Tr_{\\mathrm{blunt}}$', 'Tr_norm': '$\\Tr_{\\mathrm{norm}}$',

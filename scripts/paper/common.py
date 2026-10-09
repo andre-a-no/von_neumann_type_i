@@ -81,18 +81,32 @@ def _partial_path(args, key):
     return Path(args.out) / 'partial' / f'{_partial_prefix(args)}{key}.json'
 
 
+def _fingerprint(args):
+    """What a partial result depends on: seed, TF32, device type and the code (script and library)."""
+    import hashlib
+    h = hashlib.sha256()
+    for p in [Path(sys.argv[0]).resolve()] + sorted((ROOT / 'torch_vn_algebra').glob('*.py')) + [Path(__file__)]:
+        h.update(p.read_bytes())
+    return dict(seed=args.seed, tf32=bool(args.tf32), device=torch.device(args.device).type, code=h.hexdigest()[:16])
+
+
 def load_partial(args, key):
     """
-    A partial result saved by save_partial in an earlier run of the same mode that did not finish
-    (crash, reboot, lost connection); None if there is none. finish_partial() deletes them when a
-    script completes, so a later run never picks up results of older code.
+    A partial result saved by save_partial in an earlier, interrupted run (crash, reboot, lost
+    connection) with the same seed, TF32 setting, device type and code; None otherwise. Parts of a
+    run with other settings or older code are ignored, and finish_partial() deletes this script's
+    parts when it completes.
     """
     p = _partial_path(args, key)
-    if p.exists():
-        print(f"[resume] using {p.name} from an interrupted earlier run", flush=True)
-        with open(p) as f:
-            return json.load(f)
-    return None
+    if not p.exists():
+        return None
+    with open(p) as f:
+        saved = json.load(f)
+    if saved.get('fingerprint') != _fingerprint(args):
+        print(f"[resume] ignoring {p.name}: it comes from a run with other settings or older code", flush=True)
+        return None
+    print(f"[resume] using {p.name} from an interrupted earlier run", flush=True)
+    return saved['result']
 
 
 def save_partial(args, key, obj):
@@ -100,7 +114,7 @@ def save_partial(args, key, obj):
     p.parent.mkdir(parents=True, exist_ok=True)
     tmp = p.with_suffix('.tmp')
     with open(tmp, 'w') as f:
-        json.dump(obj, f, default=float)
+        json.dump(dict(fingerprint=_fingerprint(args), result=obj), f, default=float)
     tmp.replace(p)                                    # atomic: an interrupted write leaves no broken file
 
 

@@ -10,7 +10,7 @@ readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Irina Nikolaeva" }, { name = "Andrej Novikov" }]
 requires-python = ">=3.9"
-dependencies = ["torch>=1.9", "numpy"]
+dependencies = ["torch>=2.0", "numpy"]
 
 [project.optional-dependencies]
 scripts = ["scipy", "pandas", "tqdm", "matplotlib", "seaborn"]

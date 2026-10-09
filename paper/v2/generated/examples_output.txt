@@ -1,0 +1,60 @@
+=== examples/paper/ex1_random_operators.py
+torch.Size([10000, 3, 4, 4])
+tensor([0.6000, 0.6000, 0.6000, 0.6000])
+tensor(5.6204) tensor(1.8739) tensor(0.6246)
+tensor(2.8326e-06)
+tensor(-0.6507)
+=== examples/paper/ex2_states_measurement.py
+tensor([[0.5515, 0.4485],
+        [0.4520, 0.5480],
+        [0.2599, 0.7401],
+        [0.1759, 0.8241]])
+tensor([0.0811, 0.2273, 0.1168, 0.1237]) tensor([[1.0000, 0.0000],
+        [1.0000, 0.0000],
+        [1.0000, 0.0000],
+        [1.0000, 0.0000]])
+tensor([ 0.0370, -1.0654,  0.1126,  0.2862]) tensor([ 0.0370, -1.0654,  0.1126,  0.2862])
+tensor(1.4901e-08)
+=== examples/paper/ex3_channels.py
+True
+tensor([[1.0000, 0.2000, 0.0000],
+        [0.0000, 0.8000, 0.4000],
+        [0.0000, 0.0000, 0.6000]])
+tensor([[0.2593, 0.5079, 0.2328],
+        [0.3183, 0.6442, 0.0376],
+        [0.4685, 0.4752, 0.0563]])
+True
+tensor(0.7480)
+=== examples/paper/ex4_dynamics.py
+t=0.0: P_e 0.360000 (exact 0.360000), |rho_eg| 0.480000 (exact 0.480000), RK4 vs exp(tL): 2.2e-16
+t=1.0: P_e 0.266695 (exact 0.266695), |rho_eg| 0.413140 (exact 0.413140), RK4 vs exp(tL): 3.6e-11
+t=2.0: P_e 0.197572 (exact 0.197572), |rho_eg| 0.355593 (exact 0.355593), RK4 vs exp(tL): 6.3e-11
+t=5.0: P_e 0.080327 (exact 0.080327), |rho_eg| 0.226736 (exact 0.226736), RK4 vs exp(tL): 4.9e-09
+=== examples/paper/ex5_page_entropy.py
+<S_A> = 1.15315 +- 0.00052,  Page: 1.15314
+=== examples/paper/ex6_inequality_search.py
+sampling, 10^5 Haar U: -5.3787189496218915
+gradient ascent:      0.05033283550116607
+exact sup:            0.0511663858642839
+=== examples/paper/ex7_spin_chain.py
+[1, 10, 45, 120, 210, 252, 210, 120, 45, 10, 1]
+h=0.0: ground state in sector N=5
+h=1.0: ground state in sector N=4
+h=2.5: ground state in sector N=0
+W=0.5: <r> = 0.529   (GOE 0.531, Poisson 0.386)
+W=8.0: <r> = 0.395   (GOE 0.531, Poisson 0.386)
+[0.6931, 0.9374, 1.0512, 1.107, 1.1241]
+=== examples/paper/ex8_large_and_open_chains.py
+Heisenberg ring L=16: E0 = -7.142296361 (exact -7.142296361), residual 6.0e-15
+S^z_i(t=3): [0.5, 0.5, 0.498, 0.481, 0.385, 0.149, 0.034, -0.034, -0.149, -0.385, -0.481, -0.498, -0.5, -0.5]
+momentum block sizes: [26, 25, 25, 25, 25, 26, 25, 25, 25, 25]
+ground state momentum m = 5 (pi for L/2 odd)
+p_N(t=1): [0.011813, 0.096077, 0.293023, 0.39719, 0.201897, 0.0]
+binomial: [0.011813, 0.096077, 0.293022, 0.397191, 0.201897, 0.0]
+=== examples/paper/ex9_qaoa_xy_mixer.py
+ gamma1  gamma2   P(weight 3)   fidelity   fidelity after post-selection
+  0.00    0.00       1.0000     1.0000     1.0000
+  0.02    0.00       0.8869     0.8869     1.0000
+  0.00    0.02       1.0000     0.9730     0.9730
+  0.02    0.02       0.8869     0.8629     0.9730
+  0.10    0.10       0.5488     0.4805     0.8755

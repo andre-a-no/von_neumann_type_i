@@ -156,7 +156,7 @@ c = SpinChain(16, 'periodic', complex_valued=False, device=dev)
 t0 = time.time()
 E, _, _ = krylov.ground_state(c.xxz_sparse(sector=8))
 kry_rows.append(dict(model='Heisenberg ring, $L=16$', dim=c.sector_dim(8), E=E.item(), exact=-7.142296361,
-                     error=abs(E.item() + 7.142296361), seconds=time.time() - t0))
+                     error=abs(E.item() + 7.142296361), seconds=time.time() - t0, digits=9))
 for r in kry_rows:
     print(f"Lanczos {r['model']}: dim {r['dim']}, E0 {r['E']:.10f}, error {r['error']:.1e}, {r['seconds']:.1f} s")
 
@@ -223,13 +223,21 @@ tex += (f"\\newcommand{{\\ChainFFL}}{{{L1}}}\n\\newcommand{{\\ChainFFErr}}{{{sci
         f"\\newcommand{{\\ChainMomDims}}{{{', '.join(map(str, dims8))}}}\n"
         f"\\newcommand{{\\ChainLossErr}}{{{sci(max(err_loss, 1e-16))}}}\n")
 tex += "\\newcommand{\\ChainKrylovRows}{%\n"
+def diff_cell(err, digits):
+    """An exact value given to `digits` decimals cannot resolve differences below half its last digit."""
+    if digits and err < 0.5 * 10.0 ** -digits:
+        return f"$<{sci(0.5 * 10.0 ** -digits, 1)}$"
+    return f"${sci(max(err, 1e-16))}$"
+
+
 for r in kry_rows:
-    tex += (f"{r['model']} & {r['dim']} & {r['E']:.10f} & {r['exact']:.10f} & ${sci(max(r['error'], 1e-16))}$ "
+    d = r.get('digits')
+    tex += (f"{r['model']} & {r['dim']} & {r['E']:.10f} & {r['exact']:.{d or 10}f} & {diff_cell(r['error'], d)} "
             f"& {r['seconds']:.2g} \\\\\n")
 tex += "}\n"
 tex += "\\newcommand{\\ChainRingRows}{%\n"
 for r in ring:
-    tex += (f"{r['L']} & {r['dim']} & {r['E0']:.9f} & {r['exact']:.9f} & ${sci(max(r['error'], 1e-16))}$ "
+    tex += (f"{r['L']} & {r['dim']} & {r['E0']:.9f} & {r['exact']:.9f} & {diff_cell(r['error'], 9)} "
             f"& {r['E0'] / r['L']:.5f} \\\\\n")
 tex += "}\n"
 write_tex(args, 'chains', tex)

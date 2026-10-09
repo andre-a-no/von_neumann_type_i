@@ -1,7 +1,7 @@
 """
 Quantum-computing example: an XY mixer (QAOA for constrained problems) on 6 qubits keeps the
 Hamming weight, i.e. it acts inside one sector of M = (+)_N M_binom(6,N). Amplitude damping (T1)
-moves weight to lower sectors, dephasing (T2) does not; measuring the Hamming weight - a central
+moves weight to lower sectors, pure dephasing does not; measuring the Hamming weight - a central
 projection of M - detects the first kind of error and post-selection restores part of the fidelity.
 """
 import torch
@@ -16,7 +16,7 @@ ideal = dynamics.von_neumann(rho0, H, [T])[0]                # noiseless referen
 P = qubits.algebra.central([1.0 if N == w else 0.0 for N in range(n + 1)])   # Hamming-weight projector
 
 T1_jumps = [qubits.lowering(i) for i in range(n)]            # |1> -> |0>: between sectors
-T2_jumps = [qubits.sz(i) for i in range(n)]                  # dephasing: inside sectors
+T2_jumps = [qubits.sz(i) for i in range(n)]                  # pure dephasing: inside sectors
 print(" gamma1  gamma2   P(weight 3)   fidelity   fidelity after post-selection")
 for g1, g2 in ((0.0, 0.0), (0.02, 0.0), (0.0, 0.02), (0.02, 0.02), (0.1, 0.1)):
     rho = dynamics.lindblad_evolve(rho0, H, T1_jumps + T2_jumps, [0.0, T],

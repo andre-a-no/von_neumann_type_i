@@ -17,6 +17,7 @@ Writes generated/benchmark.tex, generated/benchmark.json and figures/benchmark.p
 
     python scripts/paper/benchmark_library.py --mode full --device cuda
 """
+import math
 import statistics
 import time
 
@@ -87,15 +88,16 @@ if True:
     for k in DIMS:
         for C in CHANNELS:
             B = max(1, min(4096, TARGET // (C * k * k)))
-            per_dev = {}
+            per_dev, batch_of = {}, {}
             for dev in DEVICES:
                 torch.manual_seed(args.seed)
                 alg = TypeIAlgebra([k] * C, [k] * C, complex_valued=True, device=dev)
                 for name, fn in operations(alg, B, dev, k, C).items():
                     fn, b = fn if isinstance(fn, tuple) else (fn, B)
                     per_dev.setdefault(name, {})[dev] = timeit(fn, dev) / b
+                    batch_of[name] = b                    # exp(tL) runs with a smaller batch
             for name, t in per_dev.items():
-                row = dict(op=name, k=k, C=C, batch=B, **{f't_{d}': t[d] for d in DEVICES})
+                row = dict(op=name, k=k, C=C, batch=batch_of[name], **{f't_{d}': t[d] for d in DEVICES})
                 if len(DEVICES) == 2:
                     row['speedup'] = t['cpu'] / t[args.device]
                 rows.append(row)
@@ -106,6 +108,7 @@ if True:
 save_json(args, 'benchmark', dict(rows=rows, devices=DEVICES, target_elements=TARGET))
 tex = env_macro(args, 'Bench')
 tex += f"\\newcommand{{\\BenchCpuThreads}}{{{torch.get_num_threads()}}}\n"
+tex += f"\\newcommand{{\\BenchTargetLog}}{{{int(round(math.log2(TARGET)))}}}\n"     # batch holds ~2^this entries
 two = len(DEVICES) == 2
 tex += f"\\newcommand{{\\BenchHasGPU}}{{{'1' if two else '0'}}}\n"
 tex += "\\newcommand{\\BenchmarkRows}{%\n"

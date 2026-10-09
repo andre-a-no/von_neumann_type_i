@@ -1,14 +1,18 @@
 # torch_vn_algebra – Type I von Neumann algebras in PyTorch
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PyTorch](https://img.shields.io/badge/PyTorch-1.9+-red.svg)](https://pytorch.org)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org)
 
-Batched, GPU-friendly Monte Carlo for finite-dimensional Type I von Neumann algebras
+Batched operators, states, channels and constrained optimisation in finite-dimensional Type I von Neumann
+algebras, on CPUs and GPUs:
 
-$$\mathcal M = \bigoplus_{c=1}^{C} M_{n_c}(\mathbb C)\quad\text{acting on}\quad \mathcal H=\bigoplus_{c=1}^{C}\mathbb C^{k_c}.$$
+$$\mathcal M = \bigoplus_{c=1}^{C} M_{k_c}(\mathbb C)\quad\text{acting on}\quad \mathcal H=\bigoplus_{c=1}^{C}\mathbb C^{k_c}.$$
+
+(Nominal factor sizes `n_factors` $n_c\ge k_c$ describe computations in the corner $p\mathcal M_0p$ of a larger
+algebra $\mathcal M_0=\bigoplus_c M_{n_c}$ with rank-$k_c$ projections $p_c$; everything refers to the corner.)
 
 Operators are stored as one tensor of shape `(batch, C, k_max, k_max)`: the batch axis holds
-Monte Carlo samples, the channel axis holds the direct summands, and block `c` occupies the
+samples (or optimisation starts), the sector axis holds the direct summands, and block `c` occupies the
 top-left `k_c × k_c` corner (the rest is zero padding).
 
 Companion paper: I. Nikolaeva, A. Novikov, *Finite-Dimensional Type I von Neumann Algebras in
@@ -38,7 +42,7 @@ PyTorch: A GPU-Accelerated Framework for Random Block-Diagonal Operators*, arXiv
 git clone https://github.com/andre-a-no/von_neumann_type_i.git
 cd von_neumann_type_i
 pip install -e .              # library only (torch, numpy)
-pip install -e ".[scripts]"   # + pandas, tqdm, matplotlib, seaborn for scripts/
+pip install -e ".[scripts]"   # + scipy, pandas, tqdm, matplotlib, seaborn for scripts/
 pip install -e ".[test]"      # + pytest
 ```
 
@@ -153,7 +157,7 @@ The English version is authoritative.
 comes from the scripts in [`scripts/paper`](scripts/paper), run by one driver:
 
 ```bash
-bash scripts/paper/run_all.sh                    # quick mode, a few minutes on a CPU
+bash scripts/paper/run_all.sh                    # quick mode, about 4 minutes on a 4-thread CPU
 bash scripts/paper/run_all.sh full cuda          # sizes of the paper, on a GPU
 cd paper/v2 && pdflatex main.tex && pdflatex main.tex
 ```

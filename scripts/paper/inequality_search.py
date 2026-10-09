@@ -100,7 +100,8 @@ save_json(args, 'search', dict(results=results, samples=N_SAMPLES, starts=STARTS
 tex = env_macro(args, 'Search')
 tex += (f"\\newcommand{{\\SearchSamples}}{{{N_SAMPLES:,}}}\n".replace(',', '\\,')
         + f"\\newcommand{{\\SearchStarts}}{{{STARTS}}}\n\\newcommand{{\\SearchSteps}}{{{ROUNDS * STEPS}}}\n"
-        + f"\\newcommand{{\\SearchPairs}}{{{PAIRS}}}\n")
+        + f"\\newcommand{{\\SearchPairs}}{{{PAIRS}}}\n"
+        + f"\\newcommand{{\\SearchMaxErr}}{{{sci(max(r['ascent_rel_error_max'] for r in results), 1)}}}\n")
 tex += "\\newcommand{\\SearchRows}{%\n"
 for r in results:
     tex += (f"{r['k']} & {r['found_by_sampling']}/{r['pairs']} & {r['found_by_ascent']}/{r['pairs']} "

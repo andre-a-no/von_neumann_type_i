@@ -2,35 +2,37 @@
 \newcommand{\BenchDevice}{CPU (4 threads)}
 \newcommand{\BenchMode}{quick}
 \newcommand{\BenchTorch}{2.14.1+cu130}
+\newcommand{\BenchMatmul}{FP32}
 \newcommand{\BenchCpuThreads}{4}
+\newcommand{\BenchTargetLog}{18}
 \newcommand{\BenchHasGPU}{0}
 \newcommand{\BenchmarkRows}{%
-generate & 4 & 1 & 4096 & 1.33 \\
-f(A) eigh & 4 & 1 & 4096 & 3.19 \\
-|A| SVD & 4 & 1 & 4096 & 6.14 \\
-contrast & 4 & 1 & 4096 & 2.07 \\
-channel & 4 & 1 & 4096 & 0.595 \\
-exp(tL) & 4 & 1 & 4096 & 59.6 \\
-opt. step & 4 & 1 & 4096 & 13.6 \\
-generate & 4 & 16 & 1024 & 28.1 \\
-f(A) eigh & 4 & 16 & 1024 & 44.1 \\
-|A| SVD & 4 & 16 & 1024 & 90 \\
-contrast & 4 & 16 & 1024 & 24.3 \\
-channel & 4 & 16 & 1024 & 7.81 \\
-exp(tL) & 4 & 16 & 1024 & 1.42e+03 \\
-opt. step & 4 & 16 & 1024 & 314 \\
-generate & 16 & 1 & 1024 & 18.1 \\
-f(A) eigh & 16 & 1 & 1024 & 35.8 \\
-|A| SVD & 16 & 1 & 1024 & 67.2 \\
-contrast & 16 & 1 & 1024 & 14 \\
-channel & 16 & 1 & 1024 & 2.96 \\
-exp(tL) & 16 & 1 & 1024 & 1.67e+04 \\
-opt. step & 16 & 1 & 1024 & 205 \\
-generate & 16 & 16 & 64 & 439 \\
-f(A) eigh & 16 & 16 & 64 & 495 \\
-|A| SVD & 16 & 16 & 64 & 938 \\
-contrast & 16 & 16 & 64 & 200 \\
-channel & 16 & 16 & 64 & 46.7 \\
-exp(tL) & 16 & 16 & 64 & 2.48e+05 \\
-opt. step & 16 & 16 & 64 & 3e+03 \\
+generate & 4 & 1 & 4096 & 1.39 \\
+f(A) eigh & 4 & 1 & 4096 & 2.76 \\
+|A| SVD & 4 & 1 & 4096 & 5.38 \\
+contrast & 4 & 1 & 4096 & 1.43 \\
+channel & 4 & 1 & 4096 & 0.336 \\
+exp(tL) & 4 & 1 & 1024 & 46.2 \\
+opt. step & 4 & 1 & 4096 & 9.02 \\
+generate & 4 & 16 & 1024 & 32.6 \\
+f(A) eigh & 4 & 16 & 1024 & 45.4 \\
+|A| SVD & 4 & 16 & 1024 & 100 \\
+contrast & 4 & 16 & 1024 & 22.4 \\
+channel & 4 & 16 & 1024 & 7.44 \\
+exp(tL) & 4 & 16 & 64 & 1e+03 \\
+opt. step & 4 & 16 & 1024 & 192 \\
+generate & 16 & 1 & 1024 & 18.8 \\
+f(A) eigh & 16 & 1 & 1024 & 27.1 \\
+|A| SVD & 16 & 1 & 1024 & 70.1 \\
+contrast & 16 & 1 & 1024 & 18.3 \\
+channel & 16 & 1 & 1024 & 3.34 \\
+exp(tL) & 16 & 1 & 4 & 1.3e+04 \\
+opt. step & 16 & 1 & 1024 & 196 \\
+generate & 16 & 16 & 64 & 322 \\
+f(A) eigh & 16 & 16 & 64 & 496 \\
+|A| SVD & 16 & 16 & 64 & 834 \\
+contrast & 16 & 16 & 64 & 214 \\
+channel & 16 & 16 & 64 & 49.1 \\
+exp(tL) & 16 & 16 & 1 & 2.15e+05 \\
+opt. step & 16 & 16 & 64 & 2.53e+03 \\
 }
