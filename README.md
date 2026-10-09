@@ -98,6 +98,8 @@ print((Lt(rho) - rho_t[-1]).frobenius_norm().max())
 | `Operator` | `apply_function(f)` (spectral theorem), `expm`, `log`, `power`, `eigh`; `alg.operator(tensor)`, `alg.from_blocks([...])` |
 | `channels` | `Channel` (Kraus form: apply, `adjoint` = Heisenberg picture, composition `@`, `mix`, `choi`, `superoperator`, `from_superoperator`, TP / unitality checks); identity, unitary, dephasing, depolarizing, amplitude damping, Lüders measurement, conditional expectation onto the centre, random (Stinespring) and random mixed-unitary channels |
 | `states` | `DensityMatrix` (an `Operator` subclass: positive, unit `Tr_blunt`; `expectation`, `mix`, `condition_on`, `density(trace)` / `from_density(..., trace)` for the `Tr_norm` and `tau_vN` conventions; preserved by trace-preserving channels and by the dynamics), random density matrices (Hilbert–Schmidt, Bures, fixed rank), Gibbs states and partition functions, tracial state, sector probabilities, Born probabilities, Lüders update, entropy, relative entropy, fidelity, trace distance, purity |
+| `channels.InterSectorChannel` | CP maps between sectors and between different algebras, Φ(ρ)_d = Σ_c Σ_i K_i^{dc} ρ_c K_i^{dc*}: duals for each of the three traces, composition, sector transition matrix, `from_blocks`, `random_inter_sector_channel` |
+| `composite` | `tensor_product(alg1, alg2)` (sectors = pairs (c, d)), `kron(A, B, alg12)`, `partial_trace` and `partial_trace_channel` (an `InterSectorChannel`; its dual is the embedding A ↦ A ⊗ 1) |
 | `dynamics` | exact `propagator`, `schrodinger`, `von_neumann`; RK4 `schrodinger_rk4` (time-dependent H), `solve_operator_ode` (any dX/dt = f(t, X) in M), Lindblad `lindblad_evolve`, `lindblad_superoperator`, `lindblad_channel` |
 
 Lazy operators are evaluated once and cached; after that they drop their recipe, so the
@@ -140,7 +142,7 @@ Stored outputs live in [`results/`](results): `results/experiments/` (current co
 
 ```
 torch_vn_algebra/    library: algebra.py (TypeIAlgebra, Operator), hilbert_space.py,
-                     channels.py, states.py, dynamics.py
+                     channels.py, states.py, dynamics.py, composite.py
 tests/               pytest suite (CPU, runs in CI)
 examples/            short usage examples
 scripts/             validation, experiments and benchmarks from the paper
@@ -160,8 +162,9 @@ pytest -q
 - Power iteration (blocks above `exact_eig_max_dim`) converges linearly in the spectral gap and
   can fail when the dominant eigenvalues are ±λ; its stopping rule is on the change of the
   estimate, not on the error.
-- Channels and generators must preserve the sectors (map every block to itself); maps between
-  different sectors are not supported yet.
+- `Channel`, Hamiltonians and Lindblad generators preserve the sectors; maps between sectors are
+  `InterSectorChannel`s. Tensor products keep the pairs (c, d) as separate sectors: merging sectors
+  with equal total charge (e.g. S_z of a spin chain) is not implemented yet.
 - `lindblad_channel`, `choi` and `superoperator` work with k_c² × k_c² matrices per block, which
   limits them to blocks of a few tens; use `lindblad_evolve` for larger blocks.
 - No automatic differentiation guarantees, finite dimensions and Type I only.

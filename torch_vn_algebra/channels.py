@@ -21,7 +21,7 @@ from typing import List, Optional, Sequence
 import torch
 
 from .algebra import TypeIAlgebra
-from .states import DensityMatrix
+from .states import DensityMatrix, _trace_weights
 
 Operator = TypeIAlgebra.Operator
 
@@ -100,6 +100,15 @@ class Channel:
         return Channel(self.algebra, KL.reshape(B, -1, *KL.shape[3:]))
 
     __matmul__ = compose
+
+    def to_inter_sector(self) -> 'InterSectorChannel':
+        """The same map as an InterSectorChannel with algebra_in = algebra_out."""
+        K = self.kraus
+        B, r, C, k, _ = K.shape
+        G = torch.zeros(B, r, C, C, k, k, dtype=K.dtype, device=K.device)
+        idx = torch.arange(C, device=K.device)
+        G[:, :, idx, idx] = K
+        return InterSectorChannel(self.algebra, self.algebra, G)
 
     def mix(self, other: 'Channel', p: float) -> 'Channel':
         """Convex combination (1 - p) self + p other."""
@@ -304,3 +313,192 @@ def random_mixed_unitary_channel(alg: TypeIAlgebra, n_unitaries: int, batch_size
     weights = weights.to(alg.hilbert.device)
     Us = torch.stack([alg.random_unitary_operator(batch_size).matrix for _ in range(n_unitaries)], dim=1)
     return Channel(alg, Us * weights.sqrt()[:, :, None, None, None].to(Us.dtype))
+
+
+# ======================================================================
+# Maps between sectors / between different algebras
+# ======================================================================
+class InterSectorChannel:
+    """
+    Completely positive map Phi: M_in = (+)_c M_{k_c} -> M_out = (+)_d M_{m_d} between (possibly
+    different) Type I algebras, in Schroedinger form
+
+        Phi(rho)_d = sum_c sum_i K_i^{dc} rho_c (K_i^{dc})^*,      K_i^{dc}: C^{k_c} -> C^{m_d}.
+
+    Every normal CP map between such algebras has this form: Phi = sum_{d,c} Phi_{dc} with
+    Phi_{dc}: M_{k_c} -> M_{m_d} CP. Kraus operators are stored as one tensor of shape
+    (batch, r, D, C, m_max, k_max); blocks of rank < r are zero padded. The classical part of
+    Phi is the matrix of sector transitions T[d, c] = Tr Phi_{dc}(rho_c) / Tr rho_c.
+
+    Trace preserving iff sum_{d,i} K_i^{dc*} K_i^{dc} = 1_c for every input sector c.
+    """
+
+    def __init__(self, algebra_in: TypeIAlgebra, algebra_out: TypeIAlgebra, kraus: torch.Tensor):
+        if kraus.dim() == 5:
+            kraus = kraus.unsqueeze(0)
+        expected = (algebra_out.C, algebra_in.C, algebra_out.k_max, algebra_in.k_max)
+        if kraus.dim() != 6 or tuple(kraus.shape[2:]) != expected:
+            raise ValueError(f"Kraus tensor must have shape (batch, r, {expected[0]}, {expected[1]}, "
+                             f"{expected[2]}, {expected[3]}), got {tuple(kraus.shape)}")
+        self.algebra_in = algebra_in
+        self.algebra_out = algebra_out
+        self.kraus = kraus.to(device=algebra_out.hilbert.device)
+        self._trace_preserving = None
+
+    def __repr__(self) -> str:
+        return (f"InterSectorChannel(batch={self.kraus.shape[0]}, kraus_rank={self.kraus.shape[1]}, "
+                f"C_in={self.algebra_in.C}, C_out={self.algebra_out.C})")
+
+    # ------------------------------------------------------------------
+    @staticmethod
+    def from_blocks(algebra_in: TypeIAlgebra, algebra_out: TypeIAlgebra, blocks: dict,
+                    batch_size: int = 1) -> 'InterSectorChannel':
+        """
+        Build from {(d, c): [K_1, K_2, ...]} with K_i of shape (m_d, k_c) or (batch, m_d, k_c);
+        missing pairs (d, c) are zero maps.
+        """
+        r = max(len(v) for v in blocks.values())
+        dtype = algebra_out.hilbert.dtype
+        K = torch.zeros(batch_size, r, algebra_out.C, algebra_in.C, algebra_out.k_max, algebra_in.k_max,
+                        dtype=dtype, device=algebra_out.hilbert.device)
+        for (d, c), ops in blocks.items():
+            m_d, k_c = algebra_out.k_factors[d], algebra_in.k_factors[c]
+            for i, op in enumerate(ops):
+                op = torch.as_tensor(op)
+                assert op.shape[-2:] == (m_d, k_c), f"block ({d}, {c}) must be {m_d} x {k_c}"
+                K[:, i, d, c, :m_d, :k_c] = op.to(dtype=dtype, device=K.device)
+        return InterSectorChannel(algebra_in, algebra_out, K)
+
+    # ------------------------------------------------------------------
+    def apply(self, op: Operator) -> Operator:
+        """Schroedinger picture (lazy). Trace-preserving maps send a DensityMatrix to a DensityMatrix."""
+        assert op.algebra is self.algebra_in
+        K = self.kraus
+
+        def generator():
+            rho = op.matrix
+            dtype = torch.promote_types(rho.dtype, K.dtype)
+            Kd = K.to(dtype)
+            rho = rho.to(dtype)[:, None, None]                             # (B, 1, 1, C, k, k)
+            out = Kd @ rho @ Kd.conj().transpose(-2, -1)                   # (B, r, D, C, m, m)
+            return out.sum(dim=(1, 3))                                      # (B, D, m, m)
+
+        if isinstance(op, DensityMatrix):
+            if self._trace_preserving is None:
+                self._trace_preserving = self.is_trace_preserving()
+            if self._trace_preserving:
+                return DensityMatrix(self.algebra_out, generator=generator, validate=False)
+            warnings.warn("map is not trace preserving: the image of a DensityMatrix is returned "
+                          "as an unnormalised Operator", stacklevel=2)
+        out = Operator(self.algebra_out, generator=generator)
+        if op._is_self_adjoint:
+            out._is_self_adjoint = True
+        if op._is_positive:
+            out._is_positive = True
+        return out
+
+    __call__ = apply
+
+    def adjoint(self, trace: str = 'blunt') -> 'InterSectorChannel':
+        """
+        Dual map Phi^*: M_out -> M_in with tr_out(Phi(rho) A) = tr_in(rho Phi^*(A)) for the chosen
+        trace ('blunt', 'norm' or 'tau_vN' on both algebras). With weights w_c of the trace,
+        Phi^*(A)_c = sum_{d,i} (w^out_d / w^in_c) K_i^{dc*} A_d K_i^{dc}.
+        """
+        Kd = self.kraus.conj().transpose(-2, -1).transpose(2, 3)          # (B, r, C, D, k, m)
+        if trace != 'blunt':
+            w_in = _trace_weights(self.algebra_in, trace)
+            w_out = _trace_weights(self.algebra_out, trace)
+            scale = (w_out[None, :] / w_in[:, None]).sqrt()               # (C, D)
+            Kd = Kd * scale[None, None, :, :, None, None].to(device=Kd.device, dtype=Kd.dtype)
+        return InterSectorChannel(self.algebra_out, self.algebra_in, Kd)
+
+    dual = adjoint
+
+    def compose(self, other: 'InterSectorChannel') -> 'InterSectorChannel':
+        """self o other. Kraus operators K_j^{ed} L_i^{dc}, indexed by (j, i, d)."""
+        if isinstance(other, Channel):
+            other = other.to_inter_sector()
+        assert other.algebra_out is self.algebra_in
+        K = self.kraus.unsqueeze(2).unsqueeze(5)          # (B, r2, 1, E, D, 1, m_e, m_d)
+        L = other.kraus.unsqueeze(1).unsqueeze(3)         # (B, 1, r1, 1, D, C, m_d, k_c)
+        KL = K @ L                                        # (B, r2, r1, E, D, C, m_e, k_c)
+        B, r2, r1, E, D, C = KL.shape[:6]
+        KL = KL.permute(0, 1, 2, 4, 3, 5, 6, 7).reshape(B, r2 * r1 * D, E, C, *KL.shape[-2:])
+        return InterSectorChannel(other.algebra_in, self.algebra_out, KL)
+
+    __matmul__ = compose
+
+    # ------------------------------------------------------------------
+    def _identity_in(self) -> torch.Tensor:
+        alg = self.algebra_in
+        eye = torch.zeros(alg.C, alg.k_max, alg.k_max, dtype=self.kraus.dtype, device=self.kraus.device)
+        for c, k_c in enumerate(alg.k_factors):
+            eye[c, :k_c, :k_c] = torch.eye(k_c, dtype=eye.dtype, device=eye.device)
+        return eye
+
+    def trace_preservation_error(self) -> torch.Tensor:
+        K = self.kraus
+        gram = (K.conj().transpose(-2, -1) @ K).sum(dim=(1, 2))           # (B, C, k, k)
+        return (gram - self._identity_in()).abs().amax(dim=(-3, -2, -1))
+
+    def is_trace_preserving(self, tol: Optional[float] = None) -> bool:
+        tol = tol or (1e-5 if self.kraus.dtype in (torch.float32, torch.complex64) else 1e-10)
+        return bool(torch.all(self.trace_preservation_error() <= tol))
+
+    def is_unital(self, tol: Optional[float] = None) -> bool:
+        """Phi(1) = 1 (Schroedinger picture, blunt trace)."""
+        tol = tol or (1e-5 if self.kraus.dtype in (torch.float32, torch.complex64) else 1e-10)
+        alg = self.algebra_in
+        one = alg.operator(self._identity_in().unsqueeze(0).expand(self.kraus.shape[0], -1, -1, -1).clone())
+        out = self.apply(one).matrix
+        eye = torch.zeros_like(out)
+        for d, m_d in enumerate(self.algebra_out.k_factors):
+            eye[:, d, :m_d, :m_d] = torch.eye(m_d, dtype=out.dtype, device=out.device)
+        return bool((out - eye).abs().max() <= tol)
+
+    def transition_matrix(self, rho: Optional[Operator] = None) -> torch.Tensor:
+        """
+        Sector transition probabilities T[b, d, c] = Tr Phi_{dc}(rho_c) / Tr rho_c, for the given state
+        or, by default, for the maximally mixed state of every input sector. Columns sum to 1 for a
+        trace-preserving map.
+        """
+        alg = self.algebra_in
+        if rho is None:
+            mat = self._identity_in().unsqueeze(0)
+            for c, k_c in enumerate(alg.k_factors):
+                if k_c:
+                    mat[:, c] = mat[:, c] / k_c
+        else:
+            mat = rho.matrix
+            tr = torch.diagonal(mat, dim1=-2, dim2=-1).sum(-1).real
+            mat = mat / torch.where(tr > 0, tr, torch.ones_like(tr))[:, :, None, None].to(mat.dtype)
+        K = self.kraus
+        dtype = torch.promote_types(mat.dtype, K.dtype)
+        out = K.to(dtype) @ mat.to(dtype)[:, None, None] @ K.to(dtype).conj().transpose(-2, -1)
+        return torch.diagonal(out, dim1=-2, dim2=-1).sum(-1).real.sum(dim=1)   # (B, D, C)
+
+
+def random_inter_sector_channel(algebra_in: TypeIAlgebra, algebra_out: TypeIAlgebra, kraus_rank: int = 1,
+                                batch_size: int = 1) -> InterSectorChannel:
+    """
+    Random trace-preserving map from a Haar-random Stinespring isometry per input sector,
+    V_c: C^{k_c} -> ((+)_d C^{m_d}) (x) C^r, split into the blocks K_i^{dc}.
+    """
+    if algebra_in.hilbert.complex_valued != algebra_out.hilbert.complex_valued:
+        raise ValueError("both algebras must be real or both complex")
+    m = algebra_out.k_factors
+    n_out = sum(m)
+    K = torch.zeros(batch_size, kraus_rank, algebra_out.C, algebra_in.C, algebra_out.k_max, algebra_in.k_max,
+                    dtype=algebra_out.hilbert.dtype, device=algebra_out.hilbert.device)
+    offsets = [sum(m[:d]) for d in range(len(m))]
+    for c, k_c in enumerate(algebra_in.k_factors):
+        if k_c == 0:
+            continue
+        if n_out * kraus_rank < k_c:
+            raise ValueError("output too small for an isometry: increase kraus_rank")
+        V = algebra_out.random_unitary(n_out * kraus_rank, batch_size=batch_size)[..., :k_c]
+        V = V.reshape(batch_size, kraus_rank, n_out, k_c)
+        for d, m_d in enumerate(m):
+            K[:, :, d, c, :m_d, :k_c] = V[:, :, offsets[d]:offsets[d] + m_d, :]
+    return InterSectorChannel(algebra_in, algebra_out, K)
