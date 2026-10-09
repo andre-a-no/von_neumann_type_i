@@ -102,8 +102,9 @@ print((Lt(rho) - rho_t[-1]).frobenius_norm().max())
 | `composite` | `tensor_product(alg1, alg2)` (sectors = pairs (c, d)), `fused_tensor_product(alg1, alg2, fuse=add)` (pairs with equal total charge merged into one sector), `kron(A, B, alg12)`, `partial_trace` and `partial_trace_channel` (an `InterSectorChannel`; its dual is the embedding A ↦ A ⊗ 1) |
 | `optimize` | constrained, batched multistart optimisation: `UnitaryParam`, `PositiveParam` / `SelfAdjointParam` with a prescribed or bounded Michelson contrast (hard constraint), `extremize` |
 | `cost` | safeguards: ETA warnings for large batched decompositions and integrators, memory checks with `InsufficientMemoryError`, `set_limits`, `disabled()` |
-| `chains` | `SpinChain`: spin-1/2 chains with conserved S^z, sectors N = 0..L (basis = iterated fused products), XXZ Hamiltonians with batched disorder, full algebra or single sectors, reduced states and entanglement, site amplitude damping between sectors, level-spacing ratio |
-| `dynamics` | exact `propagator`, `schrodinger`, `von_neumann`; RK4 `schrodinger_rk4` (time-dependent H), `solve_operator_ode` (any dX/dt = f(t, X) in M), Lindblad `lindblad_evolve`, `lindblad_superoperator`, `lindblad_channel` |
+| `chains` | `SpinChain`: spin-1/2 chains with conserved S^z, sectors N = 0..L (basis = iterated fused products), XXZ Hamiltonians with batched disorder, full algebra or single sectors, sparse form (`xxz_sparse`), momentum sectors of rings (`xxz_momentum`), reduced states and entanglement, site amplitude damping and jump operators `lowering(i)` between sectors, level-spacing ratio |
+| `krylov` | `SparseSectorHamiltonian` (batch of diagonals + shared sparse hopping), batched Lanczos `ground_state`, Krylov `evolve` (exp(-itH) psi with error estimate); with `SpinChain.xxz_sparse` for sectors beyond dense matrices |
+| `dynamics` | (Lindblad jumps may be `InterSectorChannel`s, e.g. particle loss) exact `propagator`, `schrodinger`, `von_neumann`; RK4 `schrodinger_rk4` (time-dependent H), `solve_operator_ode` (any dX/dt = f(t, X) in M), Lindblad `lindblad_evolve`, `lindblad_superoperator`, `lindblad_channel` |
 
 Lazy operators are evaluated once and cached; after that they drop their recipe, so the
 intermediate results of an expression such as `X @ U @ Y` can be garbage-collected. Laziness
@@ -169,7 +170,7 @@ Stored outputs live in [`results/`](results): `results/experiments/` (current co
 
 ```
 torch_vn_algebra/    library: algebra.py (TypeIAlgebra, Operator), hilbert_space.py, channels.py,
-                     states.py, dynamics.py, composite.py, chains.py, optimize.py, cost.py
+                     states.py, dynamics.py, composite.py, chains.py, krylov.py, optimize.py, cost.py
 tests/               pytest suite (CPU, runs in CI)
 examples/            short usage examples
 scripts/             validation, experiments and benchmarks from the paper

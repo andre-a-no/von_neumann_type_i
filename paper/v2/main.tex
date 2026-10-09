@@ -29,6 +29,7 @@
 \providecommand{\NumTimeRows}{\multicolumn{9}{c}{\emph{run scripts/paper/numerics.py}}\\}
 \providecommand{\NumAccRows}{\multicolumn{5}{c}{\emph{run scripts/paper/numerics.py}}\\}
 \providecommand{\NumTimeHeader}{generate & eigh $f(A)$ & SVD $|A|$ & channel & expm & opt.\ step}
+\providecommand{\ChainKrylovRows}{\multicolumn{6}{c}{\emph{run scripts/paper/chains.py}}\\}
 \providecommand{\ChainRingRows}{\multicolumn{6}{c}{\emph{run scripts/paper/chains.py}}\\}
 \newcommand{\fig}[2]{\IfFileExists{figures/#1}{\includegraphics[width=#2]{#1}}{\fbox{\small figure #1 not generated}}}
 
@@ -49,7 +50,8 @@ an optimisation, are processed at once on a CPU or a GPU. The library provides r
 prescribed spectra and Haar-distributed eigenvectors, the three trace functionals that are natural on
 $\M$, states and Lüders conditioning, completely positive maps within and between sectors, plain and
 charge-conserving (fused) tensor products with partial traces, spin chains with a conserved
-magnetisation, Hamiltonian and Lindblad dynamics, differentiable parametrisations with a prescribed
+magnetisation and momentum, sparse Lanczos and Krylov solvers for large sectors, Hamiltonian and
+Lindblad dynamics (including jumps between sectors), differentiable parametrisations with a prescribed
 Michelson contrast, and safeguards that estimate run time and memory before expensive steps. We
 describe the design, show how the library is used on short complete examples, and validate it against
 exact results from random matrix theory, quantum information and integrable spin chains (free-fermion
@@ -88,8 +90,9 @@ within and between sectors, tensor products and dynamics that respect the sector
 (Section~\ref{sec:usage}). (iii) A validation suite against exact results (Section~\ref{sec:validation}).
 (iv) Differentiable parametrisations with a hard Michelson-contrast constraint and batched multistart
 optimisation, applied to sharp bounds of trace inequalities (Section~\ref{sec:optimisation}).
-(v) Charge-conserving tensor products and $U(1)$-symmetric spin chains, checked against exact results
-(Section~\ref{sec:chains}). (vi) Run-time and memory safeguards (Section~\ref{sec:design}).
+(v) Charge-conserving tensor products, $U(1)$- and translation-symmetric spin chains, batched Lanczos
+and Krylov solvers for sectors beyond dense matrices, and Lindblad dynamics with jumps between sectors,
+all checked against exact results (Section~\ref{sec:chains}). (vi) Run-time and memory safeguards (Section~\ref{sec:design}).
 
 \section{Mathematical setting}\label{sec:math}
 
@@ -169,7 +172,7 @@ $\Tr(\rho A)=\sum_{ij}\rho_{ij}A_{ji}$ in $O(k^2)$ instead of forming $\rho A$.
 
 \begin{table}[h]
 \centering\small
-\begin{tabular}{ll}
+\begin{tabular}{lp{0.78\textwidth}}
 \toprule
 module & content \\
 \midrule
@@ -178,7 +181,9 @@ functional calculus\\
 \texttt{states} & \texttt{DensityMatrix}, random states, Gibbs states, Lüders rule, entropies, fidelity\\
 \texttt{channels} & \texttt{Channel}, \texttt{InterSectorChannel}, Choi matrices, standard and random channels\\
 \texttt{composite} & plain and fused (charge-conserving) tensor products, \texttt{kron}, partial traces\\
-\texttt{chains} & \texttt{SpinChain}: $U(1)$ sectors, XXZ Hamiltonians with batched disorder, reduced states\\
+\texttt{chains} & \texttt{SpinChain}: $U(1)$ and momentum sectors, XXZ Hamiltonians with batched disorder,
+sparse form, reduced states, jump operators between sectors\\
+\texttt{krylov} & sparse sector Hamiltonians, batched Lanczos ground states, Krylov $e^{-itH}\psi$\\
 \texttt{dynamics} & exact Schrödinger/von Neumann evolution, RK4, Lindblad equation, $e^{t\mathcal L}$\\
 \texttt{optimize} & parametrisations with prescribed contrast, batched multistart \texttt{extremize}\\
 \texttt{cost} & run-time and memory estimates, warnings and errors\\
@@ -332,6 +337,12 @@ field $h_s=2J$; 100 realisations of random fields are diagonalised in one batch 
 level-spacing ratio; and the entanglement entropy of the ground state is computed from reduced states.
 Section~\ref{sec:chains} checks these tools against exact results.
 \lstinputlisting[caption={Spin chains (\texttt{ex7\_spin\_chain.py}).},label=lst:ex7]{../../examples/paper/ex7_spin_chain.py}
+
+\paragraph{Large sectors and open chains.} Dense matrices of a sector of dimension $\binom{L}{L/2}$ stop
+fitting at about $L=16$--$18$. Listing~\ref{lst:ex8} uses the sparse form of the Hamiltonian (a batch of
+diagonals and one shared hopping matrix) with Lanczos and Krylov solvers, splits a ring into momentum
+sectors, and lets particles leak out of the chain through Lindblad jumps between sectors.
+\lstinputlisting[caption={Large sectors and open chains (\texttt{ex8\_large\_and\_open\_chains.py}).},label=lst:ex8]{../../examples/paper/ex8_large_and_open_chains.py}
 
 \section{Validation against exact results}\label{sec:validation}
 
@@ -515,7 +526,40 @@ level spacings in the middle of the spectrum crosses over from the GOE value $0.
 $2\ln2-1\approx0.3863$~\cite{oganesyan2007,atas2013} as $W$ grows, the hallmark of many-body localisation.
 Here the batch dimension holds the disorder realisations
 (\IfFileExists{generated/chains.tex}{\ChainReal}{many} per point).
+\item \emph{Momentum.} For periodic chains the basis $|a,k\rangle=N_a^{-1/2}\sum_je^{-ikj}T^j|a\rangle$ over
+orbit representatives $a$ of the translation $T$ splits sector $N$ into blocks of fixed momentum
+$k=2\pi m/L$ (for $L=\IfFileExists{generated/chains.tex}{\ChainMomL}{12}$ and $N=L/2$ of sizes
+\IfFileExists{generated/chains.tex}{\ChainMomDims}{about $\binom LN/L$}); the union of their spectra is the
+spectrum of the sector to \IfFileExists{generated/chains.tex}{$\ChainMomErr$}{round-off}, and the ground state of
+the Heisenberg ring has $k=0$ for even and $k=\pi$ for odd $L/2$ (Marshall's sign rule). Momentum blocks are
+complex even for real Hamiltonians, one of the cases of Section~\ref{sec:numerics} where the field is fixed by
+the problem.
+\item \emph{Beyond dense matrices.} Lanczos with full re-orthogonalisation and restarts, batched over
+Hamiltonians, reproduces the free-fermion ground-state energies of open XX chains and the Heisenberg ring in
+sectors far beyond dense diagonalisation (Table~\ref{tab:krylov}); Krylov evolution of the domain wall for
+$L=\IfFileExists{generated/chains.tex}{\ChainKDWL}{16}$ (sector dimension
+\IfFileExists{generated/chains.tex}{\ChainKDWDim}{$\binom L{L/2}$}) agrees with the single-particle solution to
+\IfFileExists{generated/chains.tex}{$\ChainKDWErr$}{round-off}.
+\item \emph{Open chains.} With jump operators $S^-_i$ on every site (Lindblad terms between sectors $N\to N-1$)
+and any $N$-conserving Hamiltonian the particle number performs a pure death process, so the sector
+distribution must be binomial, $p_n(t)=\binom{N_0}{n}e^{-n\gamma t}(1-e^{-\gamma t})^{N_0-n}$; the library
+reproduces it to \IfFileExists{generated/chains.tex}{$\ChainLossErr$}{the RK4 accuracy}.
 \end{itemize}
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lrrrrr}
+\toprule
+model & sector dim & $E_0$ (Lanczos) & $E_0$ (exact) & difference & time [s]\\
+\midrule
+\ChainKrylovRows
+\bottomrule
+\end{tabular}
+\caption{Batched Lanczos on sparse sector Hamiltonians: ground-state energies against free fermions
+($\sum$ of the $L/2$ lowest $\cos\frac{\pi k}{L+1}$) and the tabulated Heisenberg value (nine digits)\IfFileExists{generated/chains.tex}{;
+\ChainMode\ run on \ChainDevice}{}.}
+\label{tab:krylov}
+\end{table}
 
 \begin{table}[h]
 \centering\small
@@ -580,9 +624,11 @@ operation & $k$ & $C$ & batch & time per sample [$\mu$s]\\
 \item \emph{Layout.} Blocks are padded to $k_{\max}$. For very different sector sizes (binomial sectors of
 spin chains) one works in single sectors; operators acting on all sectors at once would need a bucketed
 layout, which is not implemented yet.
-\item \emph{Symmetries.} Only abelian charges with an arbitrary fusion rule are supported; non-abelian
-symmetries (SU(2) multiplets, Clebsch--Gordan structure) and lattice translations are not used to reduce
-blocks further. Chains are treated by dense diagonalisation, i.e.\ up to about 16--18 spins.
+\item \emph{Symmetries.} Abelian charges with an arbitrary fusion rule and lattice translations are
+supported; non-abelian symmetries (SU(2) multiplets, Clebsch--Gordan structure), reflections and spin flip
+are not used to reduce blocks further. Dense methods reach about 16--18 spins, the sparse Lanczos and
+Krylov solvers about 24--26 spins per sector (memory of the Krylov basis); tensor-network methods are out of
+scope.
 \item \emph{Optimisation.} The search is local; envelopes are lower bounds for suprema (upper bounds for
 infima). Gradients of spectral functions are singular at degenerate spectra; the parametrisations avoid
 this for the contrast constraint, but not for every user-defined objective.

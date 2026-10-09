@@ -23,7 +23,11 @@ import torch
 
 from common import parse_args, save_json, write_tex, env_macro, sci, sync
 
-from torch_vn_algebra import SpinChain, DensityMatrix, dynamics
+import warnings
+
+from torch_vn_algebra import SpinChain, DensityMatrix, dynamics, krylov, cost
+
+warnings.simplefilter('ignore', cost.CostWarning)
 
 args = parse_args(__doc__)
 dev = args.device
@@ -136,6 +140,73 @@ for L in SIZES:
     print(f"L={L}: <r>(W) = " + ", ".join(f"{m:.3f}" for m, _ in rs) + f"  ({time.time() - t0:.0f} s)")
 rec['level_statistics'] = dict(W=WS, realisations=REAL, r={str(L): v for L, v in mbl.items()})
 
+# 6. Lanczos beyond dense matrices ---------------------------------------------------------------
+kry_rows = []
+for L in ((16, 20, 24) if FULL else (12, 16, 18)):
+    c = SpinChain(L, complex_valued=False, device=dev)
+    t0 = time.time()
+    E, _, res = krylov.ground_state(c.xxz_sparse(J=1.0, Delta=0.0, sector=L // 2))
+    sync(dev)
+    eps_k = sorted(math.cos(math.pi * k / (L + 1)) for k in range(1, L + 1))
+    exact = sum(eps_k[:L // 2])
+    kry_rows.append(dict(model=f'XX open, $L={L}$', dim=c.sector_dim(L // 2), E=E.item(), exact=exact,
+                         error=abs(E.item() - exact), seconds=time.time() - t0))
+c = SpinChain(16, 'periodic', complex_valued=False, device=dev)
+t0 = time.time()
+E, _, _ = krylov.ground_state(c.xxz_sparse(sector=8))
+kry_rows.append(dict(model='Heisenberg ring, $L=16$', dim=c.sector_dim(8), E=E.item(), exact=-7.142296361,
+                     error=abs(E.item() + 7.142296361), seconds=time.time() - t0))
+for r in kry_rows:
+    print(f"Lanczos {r['model']}: dim {r['dim']}, E0 {r['E']:.10f}, error {r['error']:.1e}, {r['seconds']:.1f} s")
+
+# 7. Krylov evolution beyond dense matrices --------------------------------------------------------
+L7 = 22 if FULL else 16
+N7 = L7 // 2
+c7 = SpinChain(L7, device=dev)
+t0 = time.time()
+out7 = krylov.evolve(c7.xxz_sparse(J=1.0, Delta=0.0, sector=N7), c7.vector_in_sector('1' * N7 + '0' * N7)[None],
+                     [0.0, 2.0, 4.0])
+bits7 = c7.bits(N7).to(torch.float64)
+C07 = torch.diag(torch.tensor([1.0] * N7 + [0.0] * N7, dtype=torch.complex128))
+err_kdw = 0.0
+for t, p in zip([0.0, 2.0, 4.0], out7):
+    U = torch.linalg.matrix_exp(-1j * t * hop(L7))
+    err_kdw = max(err_kdw, ((p[0].abs() ** 2).double().cpu() @ bits7.cpu()
+                            - (U.conj() @ C07 @ U.T).diagonal().real).abs().max().item())
+rec['krylov_domain_wall'] = dict(L=L7, dim=c7.sector_dim(N7), error=err_kdw, seconds=time.time() - t0)
+print(f"Krylov domain wall L={L7} (dim {c7.sector_dim(N7)}): error {err_kdw:.1e}, {time.time() - t0:.0f} s")
+rec['lanczos'] = kry_rows
+
+# 8. momentum sectors ----------------------------------------------------------------------------
+L8 = 14 if FULL else 12
+c8 = SpinChain(L8, 'periodic', device=dev)
+t0 = time.time()
+wk = torch.sort(torch.cat([w[0] for w, _ in c8.xxz_momentum(1.0, 1.0, sector=L8 // 2).eigh()]))[0]
+t_mom = time.time() - t0
+t0 = time.time()
+wd = torch.linalg.eigvalsh(c8.xxz(1.0, 1.0, sector=L8 // 2).matrix[0, 0])
+t_dense = time.time() - t0
+err_mom = (wk - wd).abs().max().item()
+dims8 = c8.momentum_dims(L8 // 2)
+rec['momentum'] = dict(L=L8, dims=dims8, error=err_mom, seconds_momentum=t_mom, seconds_dense=t_dense)
+print(f"momentum sectors L={L8}: blocks {dims8}, spectra agree to {err_mom:.1e} "
+      f"({t_mom:.2f} s vs dense {t_dense:.2f} s)")
+
+# 9. particle loss between sectors -----------------------------------------------------------------
+c9 = SpinChain(6, 'periodic', device=dev)
+g = 0.4
+ts9 = [0.0, 0.5, 1.0, 2.0]
+rhos = dynamics.lindblad_evolve(c9.basis_state('110111'), c9.xxz(1.0, 0.7), [c9.lowering(i) for i in range(6)],
+                                ts9, rates=[g] * 6, substeps=80)
+err_loss = 0.0
+for t, r in zip(ts9, rhos):
+    q = math.exp(-g * t)
+    binom = torch.tensor([math.comb(5, n) * q ** n * (1 - q) ** (5 - n) for n in range(6)] + [0.0],
+                         dtype=torch.float64)
+    err_loss = max(err_loss, (r.sector_probabilities()[0].cpu() - binom).abs().max().item())
+rec['loss'] = dict(error=err_loss)
+print(f"particle loss: sector distribution vs binomial death process, max error {err_loss:.1e}")
+
 # output ---------------------------------------------------------------------------------------
 save_json(args, 'chains', rec)
 tex = env_macro(args, 'Chain')
@@ -144,7 +215,17 @@ tex += (f"\\newcommand{{\\ChainFFL}}{{{L1}}}\n\\newcommand{{\\ChainFFErr}}{{{sci
         f"\\newcommand{{\\ChainDWL}}{{{L3}}}\n\\newcommand{{\\ChainDWDim}}{{{c3.sector_dim(N3)}}}\n"
         f"\\newcommand{{\\ChainDWErr}}{{{sci(err_dw)}}}\n"
         f"\\newcommand{{\\ChainPesL}}{{{L4}}}\n\\newcommand{{\\ChainPesErr}}{{{sci(err_pes)}}}\n"
-        f"\\newcommand{{\\ChainReal}}{{{REAL}}}\n")
+        f"\\newcommand{{\\ChainReal}}{{{REAL}}}\n"
+        f"\\newcommand{{\\ChainKDWL}}{{{L7}}}\n\\newcommand{{\\ChainKDWDim}}{{{c7.sector_dim(N7)}}}\n"
+        f"\\newcommand{{\\ChainKDWErr}}{{{sci(max(err_kdw, 1e-16))}}}\n"
+        f"\\newcommand{{\\ChainMomL}}{{{L8}}}\n\\newcommand{{\\ChainMomErr}}{{{sci(max(err_mom, 1e-16))}}}\n"
+        f"\\newcommand{{\\ChainMomDims}}{{{', '.join(map(str, dims8))}}}\n"
+        f"\\newcommand{{\\ChainLossErr}}{{{sci(max(err_loss, 1e-16))}}}\n")
+tex += "\\newcommand{\\ChainKrylovRows}{%\n"
+for r in kry_rows:
+    tex += (f"{r['model']} & {r['dim']} & {r['E']:.10f} & {r['exact']:.10f} & ${sci(max(r['error'], 1e-16))}$ "
+            f"& {r['seconds']:.2g} \\\\\n")
+tex += "}\n"
 tex += "\\newcommand{\\ChainRingRows}{%\n"
 for r in ring:
     tex += (f"{r['L']} & {r['dim']} & {r['E0']:.9f} & {r['exact']:.9f} & ${sci(max(r['error'], 1e-16))}$ "
