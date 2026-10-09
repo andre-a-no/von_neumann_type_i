@@ -180,11 +180,11 @@ nohup bash scripts/paper/run_all.sh full cuda > full_run.log 2>&1 &   # the full
 - Every script writes its own log to `paper/v2/generated/logs/<script>.log`, including run-time estimates
   from the `cost` module. A failing script does not stop the others; the run ends with a summary.
 - `ONLY="chains baselines" bash scripts/paper/run_all.sh full cuda` reruns a subset.
-- Duration. Measured on a 4-thread CPU, the `check` run takes about 35 minutes, and the full run is estimated at
+- Duration. Measured on a 4-thread CPU, the `check` run takes about 33 minutes, and the full run is estimated at
   35-45 hours, most of it in `bounds_search` (~25 h) and `inequality_search` (~8 h). A GPU is several times
   faster; to estimate the full run on your GPU, multiply these CPU estimates by the ratio of the `check` times on
-  the GPU and on the CPU (CPU `check` times: validate 107 s, numerics 90 s, baselines 51 s, benchmark 205 s,
-  chains 580 s, inequality_search 82 s, bounds_search 1016 s; every log ends with a `[resources]` line).
+  the GPU and on the CPU (CPU `check` times: validate 90 s, numerics 88 s, baselines 45 s, benchmark 189 s,
+  chains 623 s, inequality_search 49 s, bounds_search 871 s; every log ends with a `[resources]` line).
 - Interruptions. `inequality_search` and `bounds_search` save every finished part to `generated/partial/`; after a
   crash or reboot, rerunning the same command continues where it stopped and gives the same numbers.
 - Several GPUs. The scripts are independent, e.g.
