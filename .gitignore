@@ -16,3 +16,4 @@ experiment_results*/
 *.toc
 *.synctex.gz
 .check_output/
+paper/v2/generated/partial/

@@ -13,7 +13,9 @@ MODE=${1:-quick}
 DEVICE=${2:-$(python -c "import torch; print('cuda' if torch.cuda.is_available() else 'cpu')")}
 TF32=""
 if [ "${3:-}" = tf32 ]; then TF32="--tf32"; fi
-SCRIPTS=${ONLY:-"validate_known_results inequality_search bounds_search chains numerics baselines benchmark_library"}
+# short scripts first; inequality_search and bounds_search take hours in full mode and resume after an
+# interruption (finished parts are kept in generated/partial/ until the script completes)
+SCRIPTS=${ONLY:-"validate_known_results numerics baselines benchmark_library chains inequality_search bounds_search"}
 cd "$(dirname "$0")/../.."
 OUTDIR=paper/v2/generated
 if [ "$MODE" = check ]; then OUTDIR=.check_output/generated; fi

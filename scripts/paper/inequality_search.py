@@ -14,7 +14,7 @@ import time
 
 import torch
 
-from common import parse_args, save_json, write_tex, env_macro, sync, sci
+from common import parse_args, save_json, write_tex, env_macro, sync, sci, load_partial, save_partial, finish_partial
 
 from torch_vn_algebra import TypeIAlgebra
 
@@ -30,6 +30,11 @@ ROUNDS, STEPS, LR, DECAY = (1, 2, 0.05, 0.6) if CHECK else (10, 50, 0.05, 0.6)  
 
 results = []
 for k in DIMS:
+    cached = load_partial(args, f'k{k}')
+    if cached is not None:
+        results.append(cached)
+        continue
+    torch.manual_seed(args.seed + 1000 * k)            # per k, so that a resumed run gives the same numbers
     alg = TypeIAlgebra([k], [k], precision='double', device=dev)
     pos = lambda d: 0.2 + torch.rand(1, d)
     rel_sup, rel_mc, rel_opt, err_opt, found_mc, found_opt, t_mc, t_opt = [], [], [], [], 0, 0, 0.0, 0.0
@@ -84,6 +89,7 @@ for k in DIMS:
              ascent_rel_error_median=median(err_opt), ascent_rel_error_max=max(err_opt),
              seconds_sampling=t_mc / PAIRS, seconds_ascent=t_opt / PAIRS)
     results.append(r)
+    save_partial(args, f'k{k}', r)
     print(f"k={k:3d}: violation found by sampling {found_mc}/{PAIRS}, by ascent {found_opt}/{PAIRS}; "
           f"median z/Tr(XY): sup {r['sup_over_trXY']:.2e}, sampling {r['sampling_over_trXY']:+.3f}, "
           f"ascent {r['ascent_over_trXY']:.2e} (rel. error median {r['ascent_rel_error_median']:.1e}, "
@@ -121,4 +127,5 @@ ax.set_ylabel('$z / \\mathrm{Tr}(XY)$ (median over pairs)')
 ax.legend(frameon=False, fontsize=8)
 fig.tight_layout()
 fig.savefig(f"{args.figdir}/search.pdf")
+finish_partial(args)
 print("written:", args.out, args.figdir)

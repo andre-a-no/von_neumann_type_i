@@ -73,6 +73,48 @@ def environment(device):
     return info
 
 
+def _partial_prefix(args):
+    return f"{Path(sys.argv[0]).stem}_{args.mode}_"            # per script: parallel runs do not interfere
+
+
+def _partial_path(args, key):
+    return Path(args.out) / 'partial' / f'{_partial_prefix(args)}{key}.json'
+
+
+def load_partial(args, key):
+    """
+    A partial result saved by save_partial in an earlier run of the same mode that did not finish
+    (crash, reboot, lost connection); None if there is none. finish_partial() deletes them when a
+    script completes, so a later run never picks up results of older code.
+    """
+    p = _partial_path(args, key)
+    if p.exists():
+        print(f"[resume] using {p.name} from an interrupted earlier run", flush=True)
+        with open(p) as f:
+            return json.load(f)
+    return None
+
+
+def save_partial(args, key, obj):
+    p = _partial_path(args, key)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = p.with_suffix('.tmp')
+    with open(tmp, 'w') as f:
+        json.dump(obj, f, default=float)
+    tmp.replace(p)                                    # atomic: an interrupted write leaves no broken file
+
+
+def finish_partial(args):
+    """Delete this script's partial results (only its own: other scripts may run in parallel)."""
+    d = Path(args.out) / 'partial'
+    for p in d.glob(f'{_partial_prefix(args)}*.json'):
+        p.unlink()
+    try:
+        d.rmdir()                                       # only if empty
+    except OSError:
+        pass
+
+
 def save_json(args, name, payload):
     payload = dict(payload, environment=environment(args.device), mode=args.mode)
     with open(Path(args.out) / f'{name}.json', 'w') as f:

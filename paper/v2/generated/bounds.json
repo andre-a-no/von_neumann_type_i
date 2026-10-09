@@ -60,11 +60,11 @@
         -1.0043645298704615
       ],
       "mc_samples": 19804,
-      "mc_outside": 0.0,
+      "mc_outside": 0,
       "mc_outside_interpolated": 1,
       "mc_max": 0.2250034,
       "mc_min": -1.98383,
-      "seconds": 6.335385084152222,
+      "seconds": 6.095686674118042,
       "inf_exact": [
         -2.0,
         -1.7797552836484982,
@@ -141,7 +141,7 @@
       "mc_outside_interpolated": 0,
       "mc_max": 0.3275264,
       "mc_min": -3.386318,
-      "seconds": 5.964552640914917,
+      "seconds": 5.802211284637451,
       "inf_exact": [
         -4.0,
         -3.779755283648498,
@@ -218,7 +218,7 @@
       "mc_outside_interpolated": null,
       "mc_max": null,
       "mc_min": null,
-      "seconds": 5.212001085281372,
+      "seconds": 5.414712190628052,
       "inf_exact": [
         -4.0,
         -3.779755283648498,
@@ -291,11 +291,11 @@
         -0.99241480816043
       ],
       "mc_samples": 19809,
-      "mc_outside": 0.0,
+      "mc_outside": 0,
       "mc_outside_interpolated": 5,
       "mc_max": 0.9753667,
       "mc_min": -0.9205419,
-      "seconds": 8.824358701705933
+      "seconds": 8.904396057128906
     },
     {
       "experiment": 2,
@@ -361,7 +361,7 @@
       "mc_outside_interpolated": 0,
       "mc_max": 1.724157,
       "mc_min": -1.425424,
-      "seconds": 6.228191614151001
+      "seconds": 6.0460205078125
     },
     {
       "experiment": 2,
@@ -427,7 +427,7 @@
       "mc_outside_interpolated": null,
       "mc_max": null,
       "mc_min": null,
-      "seconds": 5.874383926391602
+      "seconds": 5.337313175201416
     },
     {
       "experiment": 3,
@@ -493,7 +493,7 @@
       "mc_outside_interpolated": 0,
       "mc_max": 0.9461232,
       "mc_min": -8.34465e-07,
-      "seconds": 4.407744646072388
+      "seconds": 4.7570836544036865
     },
     {
       "experiment": 3,
@@ -559,7 +559,7 @@
       "mc_outside_interpolated": 0,
       "mc_max": 1.392587,
       "mc_min": -9.536743e-07,
-      "seconds": 6.407223463058472
+      "seconds": 6.534420490264893
     },
     {
       "experiment": 3,
@@ -625,7 +625,7 @@
       "mc_outside_interpolated": null,
       "mc_max": null,
       "mc_min": null,
-      "seconds": 7.1334943771362305
+      "seconds": 6.480846405029297
     }
   ],
   "results_2d": [
@@ -714,7 +714,7 @@
           -1.0005039568303031
         ]
       ],
-      "seconds": 2.3946287631988525
+      "seconds": 2.249023914337158
     },
     {
       "experiment": 2,
@@ -801,7 +801,7 @@
           -0.9493407089381382
         ]
       ],
-      "seconds": 2.2754390239715576
+      "seconds": 2.5238349437713623
     },
     {
       "experiment": 3,
@@ -888,17 +888,18 @@
           0.0
         ]
       ],
-      "seconds": 3.0418667793273926
+      "seconds": 2.501098871231079
     }
   ],
   "starts": 12,
   "steps": 240,
-  "seconds": 68.01508331298828,
+  "seconds": 66.22633743286133,
   "environment": {
     "torch": "2.14.1+cu130",
     "python": "3.13.16",
     "device": "cpu",
     "date": "2026-10-09",
+    "float32_matmul_precision": "highest",
     "cpu": "x86_64",
     "threads": 4
   },

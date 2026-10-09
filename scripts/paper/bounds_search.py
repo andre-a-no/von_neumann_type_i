@@ -26,7 +26,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from common import ROOT, parse_args, save_json, write_tex, env_macro, sync
+from common import ROOT, parse_args, save_json, write_tex, env_macro, sync, load_partial, save_partial, finish_partial
 
 from torch_vn_algebra import TypeIAlgebra, optimize as opt
 
@@ -131,13 +131,20 @@ t_start = time.time()
 for exp in (1, 2, 3):
     for k, C in CONFIGS:
         t0 = time.time()
-        env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
-        sync(dev)
         mc = load_mc(exp, k, C)
-        outside = None
         if mc is not None:
-            tol = 1e-6 + 1e-3 * np.abs(mc['z']).max()
             mc = mc[mc['deltaX'] <= GRID[-1]]                    # only inside the grid
+        r = load_partial(args, f'exp{exp}_k{k}_C{C}')
+        if r is not None:                                        # finished in an interrupted earlier run
+            env = {along: {n: np.array(r[f'{n}_vs_{along}']) for n in ('sup', 'inf')} for along in ('x', 'y')}
+            outside, interp_outside = r['mc_outside'], r['mc_outside_interpolated']
+        else:
+            torch.manual_seed(args.seed + 100 * exp + 10 * k + C)    # per configuration: resumable runs agree
+            env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
+            sync(dev)
+            outside = interp_outside = None
+        if mc is not None and r is None:
+            tol = 1e-6 + 1e-3 * np.abs(mc['z']).max()
             ub = np.interp(mc['deltaX'], GRID, env['x']['sup'])   # linear interpolation between
             lb = np.interp(mc['deltaX'], GRID, env['x']['inf'])   # grid points (can cut corners)
             bad = mc[(mc['z'] > ub + tol) | (mc['z'] < lb - tol)]
@@ -152,16 +159,18 @@ for exp in (1, 2, 3):
                                                              device=dev), None)
                 v = opt.extremize(z1, p1, maximize=above, rounds=ROUNDS, steps=STEPS)
                 bound = v.max().item() if above else v.min().item()
-                outside += (row['z'] > bound + tol) if above else (row['z'] < bound - tol)
-            outside += max(0, len(bad) - 50)
-        r = dict(experiment=exp, k=k, C=C, grid=GRID.tolist(),
-                 sup_vs_x=env['x']['sup'].tolist(), inf_vs_x=env['x']['inf'].tolist(),
-                 sup_vs_y=env['y']['sup'].tolist(), inf_vs_y=env['y']['inf'].tolist(),
-                 mc_samples=None if mc is None else len(mc), mc_outside=outside,
-                 mc_outside_interpolated=None if mc is None else interp_outside,
-                 mc_max=None if mc is None else float(mc['z'].max()),
-                 mc_min=None if mc is None else float(mc['z'].min()),
-                 seconds=time.time() - t0)
+                outside += int((row['z'] > bound + tol) if above else (row['z'] < bound - tol))
+            outside += max(0, int(len(bad)) - 50)
+        if r is None:
+            r = dict(experiment=exp, k=k, C=C, grid=GRID.tolist(),
+                     sup_vs_x=env['x']['sup'].tolist(), inf_vs_x=env['x']['inf'].tolist(),
+                     sup_vs_y=env['y']['sup'].tolist(), inf_vs_y=env['y']['inf'].tolist(),
+                     mc_samples=None if mc is None else len(mc), mc_outside=outside,
+                     mc_outside_interpolated=interp_outside,
+                     mc_max=None if mc is None else float(mc['z'].max()),
+                     mc_min=None if mc is None else float(mc['z'].min()),
+                     seconds=time.time() - t0)
+            save_partial(args, f'exp{exp}_k{k}_C{C}', r)
         results.append(r)
         print(f"exp{exp} k={k:2d} C={C:2d}: sup z = {max(r['sup_vs_x']):+.4g}, inf z = {min(r['inf_vs_x']):+.4g}"
               + ("" if mc is None else f"; Monte Carlo range [{r['mc_min']:+.4g}, {r['mc_max']:+.4g}], "
@@ -191,9 +200,15 @@ results_2d = []
 for exp in (1, 2, 3):
     for k, C in CONFIGS_2D:
         t0 = time.time()
-        e2 = envelope_2d(exp, k, C)
-        results_2d.append(dict(experiment=exp, k=k, C=C, grid=GRID2.tolist(),
-                               sup=e2['sup'].tolist(), inf=e2['inf'].tolist(), seconds=time.time() - t0))
+        r2 = load_partial(args, f'2d_exp{exp}_k{k}_C{C}')
+        if r2 is None:
+            torch.manual_seed(args.seed + 1000 + 100 * exp + 10 * k + C)
+            e2 = envelope_2d(exp, k, C)
+            r2 = dict(experiment=exp, k=k, C=C, grid=GRID2.tolist(),
+                      sup=e2['sup'].tolist(), inf=e2['inf'].tolist(), seconds=time.time() - t0)
+            save_partial(args, f'2d_exp{exp}_k{k}_C{C}', r2)
+        e2 = {n: np.array(r2[n]) for n in ('sup', 'inf')}
+        results_2d.append(r2)
         print(f"exp{exp} k={k} C={C}, Delta(X), Delta(Y) prescribed: sup on grid in "
               f"[{e2['sup'].min():+.3g}, {e2['sup'].max():+.3g}], inf in [{e2['inf'].min():+.3g}, "
               f"{e2['inf'].max():+.3g}]  ({time.time() - t0:.0f} s)")
@@ -241,4 +256,5 @@ for r in results:
             f"& {mc} \\\\\n")
 tex += "}\n"
 write_tex(args, 'bounds', tex)
+finish_partial(args)
 print("written:", args.out, args.figdir, f"total {time.time() - t_start:.0f} s")

@@ -628,7 +628,7 @@ $\sup_U z=\|YX\|_1-\Tr(XY)>0$. Table~\ref{tab:search} and Figure~\ref{fig:search
 \IfFileExists{generated/search.tex}{\SearchSamples}{many} Haar samples is already negative for $k\ge4$ and
 moves further away from the supremum as $k$ grows, while batched gradient ascent
 (\IfFileExists{generated/search.tex}{\SearchStarts\ starts, \SearchSteps\ steps}{multistart}) finds it
-to a relative accuracy of about $10^{-5}$ or better (median $10^{-6}$ or better). This is concentration of measure: the unitaries close to
+to a relative accuracy of order $10^{-6}$--$10^{-5}$ (Table~\ref{tab:search}). This is concentration of measure: the unitaries close to
 the maximiser form a set whose Haar measure decays rapidly with the dimension. In particular, the absence
 of violations in Monte Carlo samples for $k=16$ reported in~\cite{v1} is a property of the sampling, not
 of the inequality.
