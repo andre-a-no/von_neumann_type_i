@@ -76,7 +76,9 @@ class SpectrumParam(Param):
     """
 
     def __init__(self, alg: TypeIAlgebra, batch_size: int, delta: Optional[torch.Tensor] = None,
-                 delta_range=(0.0, 0.999), pin_sector: int = 0):
+                 delta_range=(0.0, 0.999), pin_sector: Optional[int] = None):
+        if pin_sector is None:                     # default: the first sector with at least two dimensions
+            pin_sector = next((c for c, k in enumerate(alg.k_factors) if k >= 2), 0)
         if alg.k_factors[pin_sector] < 2:
             raise ValueError("the pinned sector needs at least two dimensions")
         self.alg = alg
@@ -117,9 +119,9 @@ class PositiveParam(Param):
     """Positive operators X = U diag(lambda) U^* with a prescribed or bounded Michelson contrast."""
 
     def __init__(self, alg: TypeIAlgebra, batch_size: int, delta: Optional[torch.Tensor] = None,
-                 delta_range=(0.0, 0.999)):
+                 delta_range=(0.0, 0.999), pin_sector: Optional[int] = None):
         self.alg = alg
-        self.spectrum = SpectrumParam(alg, batch_size, delta, delta_range)
+        self.spectrum = SpectrumParam(alg, batch_size, delta, delta_range, pin_sector)
         self.unitary = UnitaryParam(alg, batch_size)
 
     def parameters(self):
@@ -155,8 +157,8 @@ class SelfAdjointParam(PositiveParam):
     """
 
     def __init__(self, alg: TypeIAlgebra, batch_size: int, delta: Optional[torch.Tensor] = None,
-                 delta_range=(0.0, 0.999)):
-        super().__init__(alg, batch_size, delta, delta_range)
+                 delta_range=(0.0, 0.999), pin_sector: Optional[int] = None):
+        super().__init__(alg, batch_size, delta, delta_range, pin_sector)
         dev = alg.hilbert.device
         self.signs = (2 * torch.randint(0, 2, (batch_size, alg.C, alg.k_max), device=dev) - 1).to(alg.hilbert.real_dtype)
 

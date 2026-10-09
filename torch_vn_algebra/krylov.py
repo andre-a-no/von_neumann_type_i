@@ -59,6 +59,8 @@ class SparseSectorHamiltonian:
         squeeze = V.dim() == 2
         if squeeze:
             V = V.unsqueeze(-1)
+        # never cast H to the type of V: a real V with a complex H would silently drop Im H
+        V = V.to(torch.promote_types(V.dtype, self.dtype))
         out = self.diag.to(V.dtype).unsqueeze(-1) * V
         A = self._off(V.dtype)
         if A is not None:
@@ -89,14 +91,18 @@ def lanczos(matvec: Callable, v0: torch.Tensor, m: int) -> Tuple[torch.Tensor, t
     Breakdown (an invariant subspace) is handled by zero beta and zero further vectors.
     """
     B, k = v0.shape
-    cost.check_memory(cost.tensor_bytes((B, m, k), v0.dtype), v0.device, f"Lanczos basis (batch {B}, m={m}, k={k})")
-    Q = torch.zeros(B, m, k, dtype=v0.dtype, device=v0.device)
-    alpha = torch.zeros(B, m, dtype=v0.real.dtype, device=v0.device)
-    beta = torch.zeros(B, max(m - 1, 0), dtype=v0.real.dtype, device=v0.device)
     q = v0 / torch.linalg.vector_norm(v0, dim=-1, keepdim=True)
+    w_first = matvec(q)
+    dtype = torch.promote_types(v0.dtype, w_first.dtype)     # a complex H makes the basis complex
+    q = q.to(dtype)
+    # the basis Q plus the copy made by the re-orthogonalisation
+    cost.check_memory(2 * cost.tensor_bytes((B, m, k), dtype), v0.device, f"Lanczos basis (batch {B}, m={m}, k={k})")
+    Q = torch.zeros(B, m, k, dtype=dtype, device=v0.device)
+    alpha = torch.zeros(B, m, dtype=q.real.dtype, device=v0.device)
+    beta = torch.zeros(B, max(m - 1, 0), dtype=q.real.dtype, device=v0.device)
     for j in range(m):
         Q[:, j] = q
-        w = matvec(q)
+        w = w_first.to(dtype) if j == 0 else matvec(q)
         scale = torch.linalg.vector_norm(w, dim=-1)
         alpha[:, j] = _dot(q, w).real
         # full re-orthogonalisation (twice is enough)
@@ -131,19 +137,23 @@ def _tridiag(alpha, beta):
     return T
 
 
-def ground_state(H, m: int = 80, tol: float = 1e-10, max_restarts: int = 20,
+def ground_state(H, m: int = 80, tol: Optional[float] = None, max_restarts: int = 20,
                  v0: Optional[torch.Tensor] = None, generator: Optional[torch.Generator] = None):
     """
     Lowest eigenvalue and eigenvector of every Hamiltonian in the batch by restarted Lanczos.
     H: object with matvec, batch_size, dim, dtype, device (e.g. SparseSectorHamiltonian).
-    Stops when the residual ||H psi - E psi|| < tol * max(1, |E|) for all batch elements.
+    Stops when the residual ||H psi - E psi|| < tol * max(1, |E|) for all batch elements
+    (default tol: 1e-10 in double, 1e-5 in single precision).
     Returns E0 (batch,), psi (batch, k), residual (batch,).
     """
     B, k = H.batch_size, H.dim
     m = min(m, k)
+    if tol is None:
+        tol = 1e-10 if H.dtype in (torch.float64, torch.complex128) else 1e-5
     if v0 is None:
-        v0 = torch.randn(B, k, generator=generator, dtype=torch.float64).to(device=H.device, dtype=H.dtype)
-    v = v0
+        v = torch.randn(B, k, generator=generator, dtype=torch.float64).to(device=H.device, dtype=H.dtype)
+    else:                                                  # never lose Im H to a real start vector
+        v = v0.to(device=H.device, dtype=torch.promote_types(v0.dtype, H.dtype))
     for it in range(max_restarts):
         alpha, beta, Q = lanczos(H.matvec, v, m)
         w, Y = torch.linalg.eigh(_ritz_matrix(alpha, beta, Q))
@@ -181,7 +191,7 @@ def evolve(H, psi0: torch.Tensor, times, m: int = 30, dt: Optional[float] = None
            progress: bool = False) -> torch.Tensor:
     """
     psi(t) = exp(-i t H) psi0 at every time of the increasing grid `times` (starting at times[0]),
-    in Krylov steps of size dt (default 0.5 / ||H|| estimate * m / 10). Warns if the accumulated error
+    in Krylov steps of size dt (default 0.1 * m / ||H||, with ||H|| estimated by a short Lanczos run). Warns if the accumulated error
     estimate exceeds tol. Returns (T, batch, k), complex.
     """
     ts = [float(t) for t in torch.as_tensor(times).reshape(-1).tolist()]

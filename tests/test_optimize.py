@@ -65,3 +65,10 @@ def test_ascent_reaches_known_supremum():
     best = opt.extremize(z, [U], rounds=8, steps=50).max().item()
     sup = ((Y @ X).trace_norm() - trXY).item()
     assert sup > 0 and abs(best - sup) < 1e-3 * abs(trXY.item())
+
+
+def test_pin_sector_skips_one_dimensional_sectors():
+    from torch_vn_algebra import SpinChain
+    alg = SpinChain(4, complex_valued=False).algebra                 # sector N=0 has dimension 1
+    X = opt.PositiveParam(alg, 3, delta=torch.full((3,), 0.4, dtype=torch.float64))
+    assert torch.allclose(X.operator().michelson_contrast, torch.full((3,), 0.4, dtype=torch.float64))

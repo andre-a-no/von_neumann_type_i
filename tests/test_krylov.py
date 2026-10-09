@@ -42,3 +42,27 @@ def test_krylov_evolution_matches_dense():
         kry = krylov.evolve(ch.xxz_sparse(1.0, 0.5, sector=4), psi0[None], ts)[:, 0]
     assert torch.allclose(dense, kry, atol=1e-10)
     assert torch.allclose(torch.linalg.vector_norm(kry, dim=-1), torch.ones(4, dtype=torch.float64), atol=1e-12)
+
+
+def test_real_start_vector_keeps_complex_hamiltonian():
+    # a real v0 must not drop Im H (momentum blocks are complex)
+    from torch_vn_algebra.krylov import SparseSectorHamiltonian
+    ch = SpinChain(8, 'periodic')
+    Hm = ch.xxz_momentum(1.0, 1.0, 0.0, sector=4)
+    c = Hm.algebra.charges.index(1)
+    k = Hm.algebra.k_factors[c]
+    B = Hm.matrix[0, c, :k, :k]
+    H = SparseSectorHamiltonian(B.diagonal().real[None], (B - torch.diag(B.diagonal())).to_sparse(), torch.complex128)
+    E, _, _ = krylov.ground_state(H, v0=torch.randn(1, k, dtype=torch.float64))
+    assert abs(E.item() - torch.linalg.eigvalsh(B)[0].item()) < 1e-9
+    x = torch.randn(1, k, dtype=torch.float64)
+    assert torch.allclose(H.matvec(x), H.matvec(x.to(torch.complex128)))
+
+
+def test_single_precision_converges_without_warning():
+    import warnings
+    ch = SpinChain(10, 'periodic', precision='single')
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
+        E, psi, _ = krylov.ground_state(ch.xxz_sparse(1.0, 1.0, sector=5))
+    assert psi.dtype == torch.complex64 and abs(E.item() + 4.515446354) < 1e-4

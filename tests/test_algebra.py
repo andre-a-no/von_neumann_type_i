@@ -1,3 +1,4 @@
+import math
 """
 Tests for TypeIAlgebra and Operator classes, including SU(n) generation and eigenvalue extraction.
 
@@ -486,7 +487,7 @@ if __name__ == "__main__":
 class TestRegressions:
     @pytest.mark.parametrize("k", [8, 300])
     def test_lambda_min_negative_spectrum(self, k):
-        # k = 300 exercises the power-iteration branch (> exact_eig_max_dim)
+        # k = 300: blocks above the former power-iteration threshold (now exact for every size)
         alg = TypeIAlgebra([k], [k], complex_valued=False, device='cpu')
         op = alg.operator_from_eigenvalues(lambda d: torch.linspace(-2.0, 1.0, d),
                                            force_self_adjoint=True)
@@ -573,3 +574,56 @@ class TestEigenvalues:
         U = alg.random_unitary_operator(1)
         with pytest.raises(RuntimeError):
             U.eigenvalues()
+
+
+class TestSecondReview:
+    """Regressions found in the second review round."""
+
+    def test_extremes_exact_for_large_and_symmetric_blocks(self):
+        alg = TypeIAlgebra([4, 3], [4, 3], precision='double')
+        alg.exact_eig_max_dim = 1                      # formerly switched to power iteration
+        M = torch.zeros(1, 2, 4, 4, dtype=torch.complex128)
+        M[0, 0] = torch.diag(torch.tensor([1.0, -1.0, 0.5, 0.2], dtype=torch.complex128))
+        M[0, 1, :3, :3] = torch.diag(torch.tensor([0.3, 0.1, -0.2], dtype=torch.complex128))
+        op = alg.operator(M, is_self_adjoint=True)
+        assert abs(op.lambda_max.item() - 1) < 1e-12 and abs(op.lambda_min.item() + 1) < 1e-12
+
+    def test_operator_norm_exact(self):
+        alg = TypeIAlgebra([5, 3], [5, 3], precision='double')
+        A = alg.operator(torch.randn(2, 2, 5, 5, dtype=torch.complex128) * torch.tensor([1.0, 0.0])[None, :, None, None]
+                         + alg.zero(2).matrix)
+        ref = torch.stack([torch.linalg.matrix_norm(A.matrix[b, 0], ord=2) for b in range(2)])
+        assert torch.allclose(A.operator_norm(), ref)
+
+    def test_flags_for_complex_spectra(self):
+        alg = TypeIAlgebra([2], [2], precision='double')
+        A = alg.operator_from_eigenvalues(lambda d: torch.tensor([1j, 1.0]))
+        assert A.is_normal and not A.is_positive and not A.is_projection and not A.is_self_adjoint
+
+    def test_tau_vN_normalised_with_empty_sector(self):
+        alg = TypeIAlgebra([2, 1, 3], [2, 0, 3], precision='double')
+        assert abs(alg.identity().tau_vN().real.item() - 1) < 1e-12
+
+    def test_entropy_ignores_padding(self):
+        from torch_vn_algebra import states
+        alg = TypeIAlgebra([1] * 50 + [300], [1] * 50 + [300], precision='double')
+        m = torch.zeros(1, 51, 300, 300, dtype=torch.complex128)
+        m[0, 50, :2, :2] = torch.diag(torch.tensor([0.3, 0.7], dtype=torch.complex128))
+        rho = alg.operator(m, is_self_adjoint=True, is_positive=True)
+        exact = -(0.3 * math.log(0.3) + 0.7 * math.log(0.7))
+        assert abs(rho.entropy().item() - exact) < 1e-12
+        assert abs(states.von_neumann_entropy(rho).item() - exact) < 1e-12
+
+    def test_hs_measure_per_block(self):
+        from torch_vn_algebra import states
+        alg = TypeIAlgebra([2, 5], [2, 5], precision='double')
+        rho = states.random_density_matrix(alg, batch_size=20000)
+        b = rho.matrix[:, 0, :2, :2]
+        b = b / torch.diagonal(b, dim1=-2, dim2=-1).sum(-1)[:, None, None]
+        purity = torch.einsum('bij,bji->b', b, b).real.mean().item()
+        assert abs(purity - 0.8) < 0.01                 # HS on M_2: 2k/(k^2+1)
+
+    def test_mixed_unitary_channel_trace_preserving_in_double(self):
+        from torch_vn_algebra import channels
+        alg = TypeIAlgebra([2, 3], [2, 3], precision='double')
+        assert channels.random_mixed_unitary_channel(alg, 5, 4).is_trace_preserving()

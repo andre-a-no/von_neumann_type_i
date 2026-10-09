@@ -206,10 +206,11 @@ class StepTimer:
                 el = now - self.t0
                 print(f"{self.what}: {self.done}/{self.total}, ETA {_fmt_seconds(el / self.done * (self.total - self.done))}")
                 self._last_print = now
-        if self.done == 1 and _config['enabled']:
-            if device is not None:
+        if self.done == 1:
+            if _config['enabled'] and device is not None:
                 _sync(torch.device(device))
             self.t1 = time.perf_counter()        # the first step includes one-off set-up costs
+        if self.done == 1 and _config['enabled']:
             if self.total == 2 and (self.t1 - self.t0) > _config['warn_seconds']:
                 warnings.warn(f"{self.what}: about {_fmt_seconds(self.t1 - self.t0)} expected for the "
                               f"remaining step.", CostWarning, stacklevel=4)

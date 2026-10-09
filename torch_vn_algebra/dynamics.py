@@ -226,6 +226,9 @@ def lindblad_superoperator(alg: TypeIAlgebra, H: Optional[OperatorLike], jumps: 
                            rates: Optional[Sequence[float]] = None) -> List[torch.Tensor]:
     """Per-channel generator matrices acting on row-major vec(rho), shape (batch, k_c^2, k_c^2)."""
     rates = _rates(jumps, rates)
+    if any(not isinstance(_mat(L), torch.Tensor) for L in jumps):
+        raise ValueError("lindblad_superoperator / lindblad_channel act sector by sector and do not accept jumps "
+                         "between sectors (InterSectorChannel); use lindblad_evolve for those")
     mats = ([_mat(H)] if H is not None else []) + [_mat(L) for L in jumps]
     if not mats:
         raise ValueError("need a Hamiltonian or at least one jump operator")

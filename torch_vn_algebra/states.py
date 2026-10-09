@@ -29,7 +29,8 @@ def _trace_weights(alg: TypeIAlgebra, trace: str) -> torch.Tensor:
     if trace == 'norm':
         return 1.0 / k
     if trace == 'tau_vN':
-        return 1.0 / (alg.C * k)
+        C = sum(1 for k_c in alg.k_factors if k_c)                 # empty sectors are not part of the algebra
+        return 1.0 / (C * k)
     raise ValueError(f"trace must be one of {TRACES}")
 
 
@@ -131,10 +132,14 @@ def _density(alg: TypeIAlgebra, mat: torch.Tensor) -> DensityMatrix:
     return DensityMatrix(alg, matrix=_normalize(mat).to(alg.hilbert.device), validate=False)
 
 
-def _ginibre(alg: TypeIAlgebra, batch_size: int, cols: int) -> torch.Tensor:
-    G = torch.randn(batch_size, alg.C, alg.k_max, cols, dtype=alg.hilbert.dtype, device=alg.hilbert.device)
+def _ginibre(alg: TypeIAlgebra, batch_size: int, cols: Optional[int]) -> torch.Tensor:
+    """Block c is a k_c x cols Ginibre matrix (k_c x k_c if cols is None), zero-padded to k_max x max cols."""
+    G = torch.randn(batch_size, alg.C, alg.k_max, cols or alg.k_max, dtype=alg.hilbert.dtype,
+                    device=alg.hilbert.device)
     for c, k_c in enumerate(alg.k_factors):
         G[:, c, k_c:, :] = 0
+        if cols is None:
+            G[:, c, :, k_c:] = 0
     return G
 
 
@@ -144,7 +149,8 @@ def random_density_matrix(alg: TypeIAlgebra, batch_size: int = 1, rank: Optional
     Random state on M.
 
     measure='hs':    rho = G G^* / Tr(G G^*) with G = (+)_c G_c, G_c a k_c x rank Ginibre matrix
-                     (rank = k_max by default: Hilbert-Schmidt measure within each block).
+                     (by default k_c x k_c: the Hilbert-Schmidt measure within each block; an explicit
+                     rank r gives the induced measure with an ancilla of dimension r).
     measure='bures': rho ~ (1 + U) G G^* (1 + U)^* with U Haar unitary in M (Bures-type measure).
 
     The sector weights p_c = Tr rho_c are then random as well (proportional to the squared
@@ -154,7 +160,7 @@ def random_density_matrix(alg: TypeIAlgebra, batch_size: int = 1, rank: Optional
     # G, rho and the temporaries of normalisation: about four batches of (k_max x max(k_max, r)) blocks
     cost.check_memory(4 * cost.tensor_bytes((batch_size, alg.C, alg.k_max, max(alg.k_max, r)), alg.hilbert.dtype),
                       alg.hilbert.device, f"random_density_matrix(batch={batch_size}, k_max={alg.k_max})")
-    G = _ginibre(alg, batch_size, r)                            # (B, C, k_max, rank)
+    G = _ginibre(alg, batch_size, rank)                         # (B, C, k_max, rank or k_max)
     if measure == 'bures':
         U = alg.random_unitary_operator(batch_size).matrix
         eye = alg.identity(batch_size).matrix.to(U.dtype)

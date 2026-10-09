@@ -349,3 +349,10 @@ def test_materialized_operator_releases_parents():
     Z.matrix
     gc.collect()
     assert ref() is None
+
+
+def test_lindblad_channel_rejects_jumps_between_sectors():
+    from torch_vn_algebra import SpinChain
+    chain = SpinChain(3)
+    with pytest.raises(ValueError):
+        dy.lindblad_channel(chain.algebra, chain.xxz(1.0, 1.0), [chain.lowering(0)])

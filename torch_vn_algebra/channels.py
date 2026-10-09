@@ -147,10 +147,10 @@ class Channel:
         return 1e-5 if self.kraus.dtype in (torch.float32, torch.complex64) else 1e-10
 
     def is_trace_preserving(self, tol: Optional[float] = None) -> bool:
-        return bool(torch.all(self.trace_preservation_error() <= (tol or self._tol())))
+        return bool(torch.all(self.trace_preservation_error() <= (self._tol() if tol is None else tol)))
 
     def is_unital(self, tol: Optional[float] = None) -> bool:
-        return bool(torch.all(self.unitality_error() <= (tol or self._tol())))
+        return bool(torch.all(self.unitality_error() <= (self._tol() if tol is None else tol)))
 
     # ------------------------------------------------------------------
     def choi(self) -> List[torch.Tensor]:
@@ -179,7 +179,7 @@ class Channel:
         return out
 
     @staticmethod
-    def from_superoperator(algebra: TypeIAlgebra, blocks: Sequence[torch.Tensor], tol: float = 0.0) -> 'Channel':
+    def from_superoperator(algebra: TypeIAlgebra, blocks: Sequence[torch.Tensor], tol: Optional[float] = None) -> 'Channel':
         """
         Channel from per-channel superoperators S_c of shape (batch, k_c^2, k_c^2) acting on row-major
         vec(rho). Kraus operators are obtained from the eigendecomposition of the Choi matrix; S_c must
@@ -200,7 +200,7 @@ class Channel:
             J = 0.5 * (J + J.conj().transpose(-2, -1))
             w, V = cost.batched_call(torch.linalg.eigh, J, f"Choi eigendecomposition (sector {c})")
             scale = max(1.0, w.abs().max().item())
-            if torch.any(w < -(tol or 1e-4) * scale):
+            if torch.any(w < -(1e-4 if tol is None else tol) * scale):
                 raise ValueError(f"superoperator of channel {c} is not completely positive "
                                  f"(Choi eigenvalue {w.min().item():.3g})")
             w = torch.clamp(w, min=0.0)
@@ -316,9 +316,11 @@ def random_channel(alg: TypeIAlgebra, kraus_rank: int, batch_size: int = 1) -> C
 def random_mixed_unitary_channel(alg: TypeIAlgebra, n_unitaries: int, batch_size: int = 1,
                                  weights: Optional[torch.Tensor] = None) -> Channel:
     """rho -> sum_j p_j U_j rho U_j^* with Haar unitaries in M and Dirichlet(1) (or given) weights; unital."""
-    if weights is None:
-        weights = torch.distributions.Dirichlet(torch.ones(n_unitaries)).sample((batch_size,))
-    weights = weights.to(alg.hilbert.device)
+    rdt = alg.hilbert.real_dtype
+    if weights is None:                       # in the algebra's precision, so that the channel is TP to round-off
+        weights = torch.distributions.Dirichlet(torch.ones(n_unitaries, dtype=rdt)).sample((batch_size,))
+    weights = weights.to(device=alg.hilbert.device, dtype=rdt)
+    weights = weights / weights.sum(dim=-1, keepdim=True)
     Us = torch.stack([alg.random_unitary_operator(batch_size).matrix for _ in range(n_unitaries)], dim=1)
     return Channel(alg, Us * weights.sqrt()[:, :, None, None, None].to(Us.dtype))
 
@@ -455,12 +457,12 @@ class InterSectorChannel:
         return (gram - self._identity_in()).abs().amax(dim=(-3, -2, -1))
 
     def is_trace_preserving(self, tol: Optional[float] = None) -> bool:
-        tol = tol or (1e-5 if self.kraus.dtype in (torch.float32, torch.complex64) else 1e-10)
+        tol = (1e-5 if self.kraus.dtype in (torch.float32, torch.complex64) else 1e-10) if tol is None else tol
         return bool(torch.all(self.trace_preservation_error() <= tol))
 
     def is_unital(self, tol: Optional[float] = None) -> bool:
         """Phi(1) = 1 (Schroedinger picture, blunt trace)."""
-        tol = tol or (1e-5 if self.kraus.dtype in (torch.float32, torch.complex64) else 1e-10)
+        tol = (1e-5 if self.kraus.dtype in (torch.float32, torch.complex64) else 1e-10) if tol is None else tol
         alg = self.algebra_in
         one = alg.operator(self._identity_in().unsqueeze(0).expand(self.kraus.shape[0], -1, -1, -1).clone())
         out = self.apply(one).matrix
