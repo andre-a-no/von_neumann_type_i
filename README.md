@@ -24,6 +24,7 @@ This README is the entry point of the repository:
 | you want to | go to |
 |---|---|
 | use the library | [Installation](#installation), [Quick start](#quick-start), [`examples/`](examples) |
+| learn the theory and the library step by step | [the course](docs/tutorial/README.md): finite-dimensional von Neumann algebras with complete proofs, applications and checked examples (7 languages) |
 | understand the physics behind the models | [Physics background](#physics-background) |
 | read the paper | [`paper/main.pdf`](paper/main.pdf) (source `paper/main.tex`, response to the reviewers `paper/RESPONSE.md`) |
 | reproduce every number of the paper | [Reproducing the paper](#reproducing-the-paper) |
@@ -228,7 +229,7 @@ torch_vn_algebra/    library: algebra.py (TypeIAlgebra, Operator), hilbert_space
                      states.py, dynamics.py, composite.py, chains.py, krylov.py, optimize.py, cost.py
 tests/               pytest suite (CPU, runs in CI)
 examples/            short usage examples; examples/paper: the code listings of the paper
-docs/                physics for mathematicians (English original and translations)
+docs/                the course (docs/tutorial) and physics for mathematicians, each in 7 languages
 paper/               the paper: main.tex, main.pdf, generated/ (tables), figures/, RESPONSE.md
 scripts/             run_all.sh and the scripts behind every table and figure of the paper
 results/             Monte Carlo samples of the first version (input of scripts/bounds_search.py)
