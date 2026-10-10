@@ -10,8 +10,10 @@ compute with them in `torch_vn_algebra`.
 It is written for two kinds of readers at once:
 
 - **Mathematicians** get complete proofs of every result that is used. Nothing is quoted
-  without proof except standard linear algebra and the fundamental theorem of algebra; where
-  a result from the literature is only applied, this is said explicitly.
+  without proof except standard linear algebra, the fundamental theorem of algebra and
+  elementary facts of analysis and probability (limits, convexity, the Gaussian moment
+  generating function); where a result is stated before it is proved, or only applied, this
+  is said explicitly.
 - **Physicists and engineers** get the physical meaning of each notion in boxes marked
   *Physical meaning*, and working code they can adapt.
 

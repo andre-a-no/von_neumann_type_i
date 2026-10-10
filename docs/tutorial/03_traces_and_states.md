@@ -38,7 +38,7 @@ The library implements three faithful traces:
 |---|---|---|---|
 | `Tr_blunt` | $1$ | $D$ | trace of $\bigoplus_c\mathbb C^{k_c}$ (multiplicities $m_c=1$) |
 | `Tr_norm` | $1/k_c$ | $C$ | every block normalised |
-| `tau_vN` | $1/(Ck_c)$ | $1$ | the tracial state: every sector has weight $1/C$ |
+| `tau_vN` | $1/(Ck_c)$ | $1$ | the tracial state with equal sector weights $1/C$ |
 
 By Chapter 2, the trace of a space on which $\mathcal M$ acts with multiplicities $m_c$
 is $\operatorname{tr}_w$ with $w_c=m_c$. A faithful trace is thus a choice of "how much each
@@ -115,8 +115,10 @@ The restriction of $\omega$ to the centre is a probability distribution on the s
 $p_c=\omega(P_c)=\operatorname{Tr}\rho_c$. If $p_c>0$, the **conditional state** in sector $c$
 has density $\sigma_c=\rho_c/p_c$ on $\mathbb C^{k_c}$, and
 $$
-\rho=\bigoplus_cp_c\,\sigma_c .
+\rho=\bigoplus_cp_c\,\sigma_c
 $$
+(if $p_c=0$ then $\rho_c=0$, since $\rho_c\ge0$ and $\operatorname{Tr}\rho_c=0$, and the term is
+omitted).
 A state on $\mathcal M$ is a classical mixture of quantum states in the sectors. Measuring
 "which sector" does not disturb it: the measurement channel
 $\rho\mapsto\sum_cP_c\rho P_c$ is the identity on $\mathcal M$, because every element of
@@ -142,10 +144,11 @@ $$
 S(\rho)=H(p)+\sum_cp_c\,S(\sigma_c),\qquad H(p)=-\sum_cp_c\log p_c .
 $$
 
-*Proof.* The eigenvalues of $\rho$ are the numbers $p_c\mu$ for the eigenvalues $\mu$ of
-the $\sigma_c$. Hence
-$-\sum_c\sum_\mu p_c\mu\log(p_c\mu)=-\sum_cp_c\log p_c\sum_\mu\mu-\sum_cp_c\sum_\mu\mu\log\mu$,
-and $\sum_\mu\mu=\operatorname{Tr}\sigma_c=1$. $\square$
+*Proof.* The nonzero eigenvalues of $\rho$ are the numbers $p_c\mu$ for the nonzero
+eigenvalues $\mu$ of the $\sigma_c$ (sectors with $p_c>0$); zero eigenvalues contribute $0$
+to both sides. Hence
+$-\sum_c\sum_{\mu>0}p_c\mu\log(p_c\mu)=-\sum_cp_c\log p_c\sum_{\mu>0}\mu-\sum_cp_c\sum_{\mu>0}\mu\log\mu$,
+and $\sum_{\mu>0}\mu=\operatorname{Tr}\sigma_c=1$. $\square$
 
 The entropy relative to another trace is $S_w(\rho)=-\operatorname{tr}_w(\rho_w\log\rho_w)$. By
 Theorem 3.2, $(\rho_w)_c=\rho_c/w_c$, so
@@ -172,44 +175,62 @@ assert torch.allclose(S_tau, S + (p * torch.log(w_tau)).sum(-1))
 ## 3.5 Relative entropy and Klein's inequality
 
 For states with densities $\rho,\sigma$, $\sigma>0$, the **relative entropy** is
-$S(\rho\|\sigma)=\operatorname{Tr}\rho(\log\rho-\log\sigma)$. It does not depend on the trace:
+$S(\rho\|\sigma)=\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\rho\log\sigma$, where
+$\operatorname{Tr}\rho\log\rho:=\sum_i\lambda_i\log\lambda_i$ over the eigenvalues of $\rho$, with
+$0\log0=0$ (and likewise in each block). It does not depend on the trace:
 $\log(\rho_w)_c-\log(\sigma_w)_c=\log\rho_c-\log\sigma_c$ because the factor $1/w_c$ cancels,
 and $\operatorname{tr}_w(\rho_wX)=\operatorname{Tr}(\rho X)$.
 
-**Theorem 3.4 (Klein's inequality).** Let $f$ be convex and differentiable on an interval
-$I$ and $X,Y$ self-adjoint with spectra in $I$. Then
-$\operatorname{Tr}[f(X)-f(Y)-(X-Y)f'(Y)]\ge0$. If $f$ is strictly convex, equality holds only
-for $X=Y$.
+**Lemma (tangent inequality).** Let $f:I\to\mathbb R$ be convex on an interval $I$ and
+differentiable at $b\in I$. Then $f(a)\ge f(b)+(a-b)f'(b)$ for all $a\in I$, strictly for
+$a\neq b$ if $f$ is strictly convex.
+
+*Proof.* For $t\in(0,1]$, convexity gives $f(b+t(a-b))\le(1-t)f(b)+tf(a)$, i.e.
+$\big(f(b+t(a-b))-f(b)\big)/t\le f(a)-f(b)$; letting $t\to0$ gives the inequality. If $f$
+is strictly convex and $a\neq b$, let $m=(a+b)/2$; then
+$f(a)-f(b)>2\big(f(m)-f(b)\big)\ge2(m-b)f'(b)=(a-b)f'(b)$, the first step by strict
+convexity at $m$ and the second by the inequality just proved, applied to $m$. $\square$
+
+**Theorem 3.4 (Klein's inequality).** Let $f:I\to\mathbb R$ be convex on an interval $I$,
+and $X,Y$ self-adjoint with spectra in $I$, with $f$ differentiable at every eigenvalue of $Y$.
+Then $\operatorname{Tr}[f(X)-f(Y)-(X-Y)f'(Y)]\ge0$. If $f$ is strictly convex, equality holds
+only for $X=Y$.
 
 *Proof.* Let $X=\sum_ia_i|u_i\rangle\langle u_i|$ and $Y=\sum_jb_j|v_j\rangle\langle v_j|$ with
 orthonormal eigenbases, and $c_{ij}=|\langle u_i,v_j\rangle|^2$, so $\sum_ic_{ij}=\sum_jc_{ij}=1$.
 Then $\operatorname{Tr}f(X)=\sum_{ij}c_{ij}f(a_i)$, $\operatorname{Tr}f(Y)=\sum_{ij}c_{ij}f(b_j)$ and
 $\operatorname{Tr}Xf'(Y)=\sum_{ij}c_{ij}a_if'(b_j)$, $\operatorname{Tr}Yf'(Y)=\sum_{ij}c_{ij}b_jf'(b_j)$.
 Hence the left side equals $\sum_{ij}c_{ij}[f(a_i)-f(b_j)-(a_i-b_j)f'(b_j)]$, a sum of
-nonnegative terms by convexity. If $f$ is strictly convex and the sum is zero, then
+nonnegative terms by the tangent inequality. If $f$ is strictly convex and the sum is zero, then
 $a_i=b_j$ whenever $c_{ij}>0$, so $Xv_j=\sum_ia_i\langle u_i,v_j\rangle u_i=b_jv_j$ for every $j$,
 and $X=Y$. $\square$
 
 **Corollary 3.5.** $S(\rho\|\sigma)\ge0$, with equality iff $\rho=\sigma$. In particular
 $S(\rho)\le\log D$, with equality iff $\rho=1/D$.
 
-*Proof.* Apply Theorem 3.4 to $f(t)=t\log t$ (strictly convex on $[0,\infty)$,
-$f'(t)=\log t+1$; at $t=0$ only $f$ itself enters, and the computation holds by continuity)
-with $X=\rho$, $Y=\sigma$: the left side is
+*Proof.* Apply Theorem 3.4 to $f(t)=t\log t$, $f(0)=0$, which is strictly convex on
+$I=[0,\infty)$ ($f''(t)=1/t>0$ on $(0,\infty)$, and $f$ is continuous at $0$) and
+differentiable on $(0,\infty)\supseteq\operatorname{spec}\sigma$ with $f'(t)=\log t+1$, with
+$X=\rho$, $Y=\sigma$: the left side is
 $\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\sigma\log\sigma-\operatorname{Tr}(\rho-\sigma)(\log\sigma+1)
 =S(\rho\|\sigma)$, since $\operatorname{Tr}\rho=\operatorname{Tr}\sigma=1$. For the second claim, take
 $\sigma=1/D$: $0\le S(\rho\|1/D)=-S(\rho)+\log D$. $\square$
 
-**Theorem 3.6 (chain rule; monotonicity under the centre).** Let $q_c=\operatorname{Tr}\sigma_c$
-and $\hat\rho_c=\rho_c/p_c$, $\hat\sigma_c=\sigma_c/q_c$. Then
+**Theorem 3.6 (chain rule; monotonicity under the centre).** Let $\rho,\sigma$ be states with
+$\sigma>0$, $p_c=\operatorname{Tr}\rho_c$, $q_c=\operatorname{Tr}\sigma_c>0$, $\hat\sigma_c=\sigma_c/q_c$, and
+for $p_c>0$, $\hat\rho_c=\rho_c/p_c$. Then, with sums over the $c$ with $p_c>0$ (the other
+sectors contribute $0$ by $0\log0=0$),
 $$
 S(\rho\|\sigma)=\sum_cp_c\log\frac{p_c}{q_c}+\sum_cp_c\,S(\hat\rho_c\|\hat\sigma_c)
 \ \ge\ \sum_cp_c\log\frac{p_c}{q_c}=S(E\rho\|E\sigma),
 $$
 where $E$ is the conditional expectation onto the centre (Proposition 2.7).
 
-*Proof.* Blockwise, $\log\rho_c=\log p_c+\log\hat\rho_c$ and similarly for $\sigma$, so
-$\operatorname{Tr}\rho_c(\log\rho_c-\log\sigma_c)=p_c\log(p_c/q_c)+p_cS(\hat\rho_c\|\hat\sigma_c)$.
+*Proof.* For $p_c>0$, $\operatorname{Tr}\rho_c\log\rho_c=p_c\log p_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\rho_c$
+(eigenvalues $p_c\mu$, as in Theorem 3.3) and $\log\sigma_c=(\log q_c)1+\log\hat\sigma_c$, so
+$\operatorname{Tr}\rho_c\log\sigma_c=p_c\log q_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\sigma_c$ and
+$\operatorname{Tr}\rho_c\log\rho_c-\operatorname{Tr}\rho_c\log\sigma_c=p_c\log(p_c/q_c)+p_cS(\hat\rho_c\|\hat\sigma_c)$.
+If $p_c=0$, then $\rho_c=0$ and the sector contributes $0$.
 Sum over $c$; the second sum is $\ge0$ by Corollary 3.5 in each block. Finally
 $E\rho=\bigoplus_c(p_c/k_c)1_{k_c}$, $E\sigma=\bigoplus_c(q_c/k_c)1_{k_c}$, and
 $\operatorname{Tr}E\rho(\log E\rho-\log E\sigma)=\sum_ck_c\frac{p_c}{k_c}\log\frac{p_c}{q_c}$. $\square$
@@ -263,17 +284,21 @@ and $Y$ do not commute.
 $XY=YX$.
 
 *Proof.* $\operatorname{Tr}(XUY)=\operatorname{Tr}(YX\,U)$, so the maximum is $\|YX\|_1$ by Theorem 1.9,
-and $\|YX\|_1\ge|\operatorname{Tr}(YX)|=\operatorname{Tr}(XY)$. If $XY=YX$, then $YX\ge0$ (it equals
-$X^{1/2}YX^{1/2}$, as $X^{1/2}$ commutes with $Y$ by Theorem 1.5(d)), so
-$\|YX\|_1=\operatorname{Tr}(YX)$. Conversely suppose $\|YX\|_1=\operatorname{Tr}(YX)$ and write
+and $\|YX\|_1\ge|\operatorname{Tr}(YX)|=\operatorname{Tr}(XY)$, since
+$\operatorname{Tr}(XY)=\operatorname{Tr}(X^{1/2}YX^{1/2})\ge0$, as
+$X^{1/2}YX^{1/2}=(Y^{1/2}X^{1/2})^*(Y^{1/2}X^{1/2})\ge0$ (Corollary 1.7). If $XY=YX$, then
+$X^{1/2}$ commutes with $Y$ (Theorem 1.5(d)), so $YX=X^{1/2}YX^{1/2}\ge0$ and
+$\|YX\|_1=\operatorname{Tr}(YX)$ (for $P\ge0$, $\|P\|_1=\operatorname{Tr}P$, Section 1.4). Conversely
+suppose $\|YX\|_1=\operatorname{Tr}(YX)$. If $|YX|=0$ then $YX=0=(YX)^*=XY$. Otherwise write
 $YX=W|YX|$. By Theorem 1.9, $\operatorname{Tr}(YX\cdot1)=\|YX\|_1$ means equality in the
 Cauchy–Schwarz step for $U=1$:
 $|YX|^{1/2}$ and $W|YX|^{1/2}$ are proportional with a nonnegative factor, which by
 comparing norms is $1$, so $W|YX|^{1/2}=|YX|^{1/2}$ and $YX=W|YX|=|YX|\ge0$. A positive
 matrix is self-adjoint, so $YX=(YX)^*=XY$. $\square$
 
-The library finds the maximiser with the polar decomposition; Monte Carlo sampling of
-$U$ almost never comes close to it for large $k$ — a central theme of the companion paper.
+The library finds the maximiser with the polar decomposition. The companion paper shows
+numerically that Monte Carlo sampling of $U$ falls short of it, increasingly so as $k$ grows
+— one of its central themes; the code below shows this for one pair.
 
 ```python
 Mk = TypeIAlgebra([6], [6], precision='double')
@@ -301,9 +326,9 @@ multiplicities or the sectors must be weighted differently.
 
 ## Exercises
 
-1. Show that the density of the tracial state $\tau_{\mathrm{vN}}$ with respect to
+1. Show that the density of the tracial state $\tau_{\mathrm{vN}}$ (equal sector weights) with respect to
    $\tau_{\mathrm{vN}}$ is $1$, and compute its blunt density and its entropy $S$.
-2. Show that $S_w(\rho)\le\log\operatorname{tr}_w(1)$, with equality iff
+2. Let $\operatorname{tr}_w$ be faithful. Show that $S_w(\rho)\le\log\operatorname{tr}_w(1)$, with equality iff
    $\rho_w=1/\operatorname{tr}_w(1)$.
 3. Show that the measurement channel $\rho\mapsto\sum_cP_c\rho P_c$ on $M_D$ (not on
    $\mathcal M$!) does disturb states, and compute $S(\rho)$ before and after for a
@@ -322,17 +347,25 @@ assert (tau.density('tau_vN') - one.matrix).abs().max() < 1e-12
 assert abs(tau.von_neumann_entropy().item() - (math.log(3) + sum(math.log(k) for k in (2, 3, 5)) / 3)) < 1e-12
 ```
 
-2. $S_w(\rho)=S(\rho)+\sum_cp_c\log w_c=-\sum_cp_c\log p_c+\sum_cp_cS(\sigma_c)+\sum_cp_c\log w_c
-   \le\sum_cp_c\log\frac{k_cw_c}{p_c}\le\log\sum_ck_cw_c=\log\operatorname{tr}_w(1)$, using
-   $S(\sigma_c)\le\log k_c$ (Corollary 3.5) and Jensen's inequality for the concave
-   $\log$. Equality requires $\sigma_c=1/k_c$ and $k_cw_c/p_c$ constant, i.e.
-   $p_c=k_cw_c/\operatorname{tr}_w(1)$, which means $(\rho_w)_c=\rho_c/w_c=1_{k_c}/\operatorname{tr}_w(1)$.
+2. Sums run over the $c$ with $p_c>0$. Then
+   $S_w(\rho)=S(\rho)+\sum_cp_c\log w_c=-\sum_cp_c\log p_c+\sum_cp_cS(\sigma_c)+\sum_cp_c\log w_c
+   \le\sum_cp_c\log\frac{k_cw_c}{p_c}\le\log\sum_{p_c>0}k_cw_c\le\log\operatorname{tr}_w(1)$, using
+   $S(\sigma_c)\le\log k_c$ (Corollary 3.5) and the finite Jensen inequality
+   $\sum_cp_c\log x_c\le\log\sum_cp_cx_c$ for the concave $\log$ (which follows from the
+   definition of concavity by induction on the number of terms), with $x_c=k_cw_c/p_c$; it is
+   strict unless all $x_c$ are equal, since $\log$ is strictly concave. Equality throughout
+   forces every $p_c>0$, $\sigma_c=1/k_c$ and $k_cw_c/p_c$ constant, i.e.
+   $p_c=k_cw_c/\operatorname{tr}_w(1)$, i.e. $(\rho_w)_c=\rho_c/w_c=1_{k_c}/\operatorname{tr}_w(1)$.
+   Conversely, for $\rho_w=1/\operatorname{tr}_w(1)$,
+   $S_w(\rho)=-\operatorname{tr}_w(1)\cdot\frac1{\operatorname{tr}_w(1)}\log\frac1{\operatorname{tr}_w(1)}=\log\operatorname{tr}_w(1)$.
 
 3. In $M_D$ a pure superposition $\psi=(\psi_1\oplus\psi_2)/\sqrt2$ of unit vectors in two
    sectors has $S=0$; after the measurement the state is
-   $\frac12|\psi_1\rangle\langle\psi_1|\oplus\frac12|\psi_2\rangle\langle\psi_2|$ with $S=\log2$. Such a
-   superposition is not a state *of $\mathcal M$*: restricted to $\mathcal M$ it already is
-   the mixture, which is why superselection rules forbid coherent superpositions of sectors.
+   $\frac12|\psi_1\rangle\langle\psi_1|\oplus\frac12|\psi_2\rangle\langle\psi_2|$ with $S=\log2$. Restricted to
+   $\mathcal M$, however, the vector state of $\psi$ coincides with the mixture:
+   $\langle\psi,A\psi\rangle=\tfrac12\langle\psi_1,A_1\psi_1\rangle+\tfrac12\langle\psi_2,A_2\psi_2\rangle$
+   for all $A\in\mathcal M$. No observable in $\mathcal M$ detects the coherence, which is the
+   content of a superselection rule.
 
 </details>
 

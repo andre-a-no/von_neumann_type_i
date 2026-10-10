@@ -95,7 +95,8 @@ $$
 **Theorem 1.5.** (a) $f(A)$ does not depend on the choice of $U$. (b) For a
 polynomial $p$, $p(A)$ is the usual polynomial in $A$. (c) $f\mapsto f(A)$ is
 linear and multiplicative, $\bar f(A)=f(A)^*$, and $\operatorname{spec}f(A)=f(\operatorname{spec}A)$.
-(d) If $B$ commutes with $A$, then $B$ commutes with $f(A)$.
+(d) If $B$ commutes with $A$, then $B$ commutes with $f(A)$. (e) If $g$ is defined on
+$f(\operatorname{spec}A)$, then $g(f(A))=(g\circ f)(A)$.
 
 *Proof.* (b) $A^k=U\Lambda^kU^*$, so $p(A)=Up(\Lambda)U^*$ by linearity. (a) The
 spectrum is finite, so Lagrange interpolation gives a polynomial $p$ with $p=f$ on
@@ -103,7 +104,8 @@ $\operatorname{spec}A$. Then $U\,f(\Lambda)\,U^*=U\,p(\Lambda)\,U^*=p(A)$ for *e
 unitary $U$ diagonalising $A$, and $p(A)$ is defined without $U$. (c) holds for the
 diagonal matrices $f(\Lambda)$ and is preserved by conjugation with $U$; the spectrum
 of $Uf(\Lambda)U^*$ is the diagonal of $f(\Lambda)$. (d) $B$ commutes with every
-polynomial in $A$, in particular with $p(A)=f(A)$. $\square$
+polynomial in $A$, in particular with $p(A)=f(A)$. (e) $f(A)=Uf(\Lambda)U^*$ is normal and
+diagonalised by the same $U$, so by (a) $g(f(A))=U\,g(f(\Lambda))\,U^*=(g\circ f)(A)$. $\square$
 
 **Theorem 1.6 (square root).** For $A\ge0$ there is exactly one $B\ge0$ with
 $B^2=A$, namely $B=\sqrt A$ defined by the functional calculus.
@@ -156,6 +158,13 @@ $$
 $$
 since $\|UW X\|_2=\|X\|_2$ for unitary $UW$ and $\||A|^{1/2}\|_2^2=\operatorname{Tr}|A|$. $\square$
 
+In particular the three quantities above are norms. $\|\cdot\|$ is an operator norm;
+$\|\cdot\|_2$ is the norm of the inner product $\langle X,Y\rangle_{HS}$; and for
+$\|\cdot\|_1$, Theorem 1.9 gives
+$\|A+B\|_1=\max_U|\operatorname{Tr}(AU)+\operatorname{Tr}(BU)|\le\|A\|_1+\|B\|_1$, while
+$\|A\|_1=0$ forces $|A|=0$ and $A=W|A|=0$. For $P\ge0$, $|P|=(P^2)^{1/2}=P$ by Theorem 1.6,
+so $\|P\|_1=\operatorname{Tr}P$.
+
 ## 1.5 Operators in the library
 
 The library works with algebras $\bigoplus_cM_{k_c}(\mathbb C)$ (Chapter 2). A single
@@ -183,7 +192,8 @@ exactly Theorem 1.3 read backwards: $A=U\Lambda U^*$ with $U$ Haar-distributed. 
 flag `force_positive=True` is checked against the eigenvalues (Corollary 1.4(3)), so
 the library knows that `A` is positive without testing it again.
 
-The functional calculus is `apply_function`; the common functions have their own
+The functional calculus for self-adjoint operators is `apply_function` (it diagonalises each
+block with `eigh`); the common functions have their own
 methods. We check Theorems 1.5 and 1.6:
 
 ```python
@@ -195,7 +205,7 @@ def close(X, Y, tol=1e-10):
 
 R = A.sqrt()
 assert close(R @ R, A)                                  # Theorem 1.6
-assert close(A.log().expm(), A)                         # exp(log A) = A, Theorem 1.5(c)
+assert close(A.log().expm(), A)                         # exp(log A) = A, Theorem 1.5(e)
 assert close(A.apply_function(lambda w: w ** 3), A @ A @ A)   # Theorem 1.5(b)
 assert close(A.power(-1), A.inverse())                  # f(t) = 1/t
 spec = A.apply_function(torch.exp).eigenvalues()[0]     # spec f(A) = f(spec A)
@@ -221,7 +231,7 @@ assert abs(X.frobenius_norm().item() - s.norm().item()) < 1e-12
 assert abs(X.trace_norm().item() - s.sum().item()) < 1e-12
 
 absX = X.abs()
-W = X @ absX.inverse()                                  # |X| is invertible for a Ginibre matrix
+W = X @ absX.inverse()                                  # |X| is invertible (almost surely, for Ginibre)
 assert close(W.adjoint() @ W, M3.identity())            # W is unitary
 assert abs((X @ W.adjoint()).trace.item() - s.sum().item()) < 1e-10    # Tr(X W*) = ||X||_1
 assert abs(X.trace.item()) <= X.trace_norm().item()     # |Tr X| <= ||X||_1
@@ -240,10 +250,18 @@ $\sim N(0,\tfrac12)$, so $\mathbb E|G_{ij}|^2=1$, and let $H=(G+G^*)/\sqrt2$.
 **Proposition 1.10.** $\mathbb E\,\operatorname{Tr}H^4=2n^3+n$. Hence for
 $X=H/\sqrt n$, $\ \mathbb E\,\tfrac1n\operatorname{Tr}X^4=2+\tfrac1{n^2}$.
 
-*Proof.* The entries of $H$ are real-linear combinations of jointly Gaussian
-centred real variables, so Isserlis' (Wick's) theorem applies: the expectation of a
-product of four entries is the sum over the three pairings of products of pair
-expectations. The pair expectations are
+*Proof.* *Isserlis' (Wick's) formula.* Let $Y_1,\dots,Y_4$ be jointly Gaussian centred
+real random variables (repetitions allowed) with $c_{ij}=\mathbb E[Y_iY_j]$. Their joint
+moment generating function is $\mathbb E\,e^{\sum_it_iY_i}=e^{q(t)/2}$ with
+$q(t)=\sum_{ij}c_{ij}t_it_j$ (the Gaussian moment generating function, a standard fact of
+probability). Apply $\partial^4/\partial t_1\cdots\partial t_4$ at $t=0$: on the left this
+gives $\mathbb E[Y_1Y_2Y_3Y_4]$; on the right only the term $q^2/8$ of the exponential
+series contains $t_1t_2t_3t_4$, with coefficient $c_{12}c_{34}+c_{13}c_{24}+c_{14}c_{23}$.
+Hence $\mathbb E[Y_1Y_2Y_3Y_4]$ is the sum over the three pairings of products of pair
+expectations. By multilinearity the same holds for complex variables that are complex
+linear combinations of jointly Gaussian real ones, such as the entries of $H$.
+
+*The moment.* The pair expectations are
 $\mathbb E[H_{ij}H_{kl}]=\tfrac12\mathbb E[(G_{ij}+\bar G_{ji})(G_{kl}+\bar G_{lk})]=\delta_{il}\delta_{jk}$,
 because $\mathbb E[G_{ij}G_{kl}]=0$ and $\mathbb E[G_{ij}\bar G_{kl}]=\delta_{ik}\delta_{jl}$.
 In $\operatorname{Tr}H^4=\sum_{ijkl}H_{ij}H_{jk}H_{kl}H_{li}$ the pairings give:
@@ -305,13 +323,15 @@ assert close(Hs.apply_function(lambda w: torch.sin(w) * torch.exp(w)),
    agree. For the second claim, let $B=V|B|$. For unitary $U$,
    $|\operatorname{Tr}(ABU)|=|\operatorname{Tr}(|B|^{1/2}UAV|B|^{1/2})|
    \le\||B|^{1/2}\|_2\,\|UAV|B|^{1/2}\|_2\le\|A\|\operatorname{Tr}|B|$, using
-   $\|YX\|_2\le\|Y\|\,\|X\|_2$ (apply $\|Yx\|\le\|Y\|\,\|x\|$ to each column of $X$).
+   $\|YX\|_2\le\|Y\|\,\|X\|_2$ (apply $\|Yx\|\le\|Y\|\,\|x\|$ to each column of $X$) and
+   $\|UAV\|=\|A\|$ for unitaries $U,V$ (they preserve the length of vectors).
 
 3. Write $T=A^{-1/2}XA^{-1/2}$. Then $XA^{-1}X=B$ iff $T^2=A^{-1/2}BA^{-1/2}$, and
-   $X\ge0$ iff $T\ge0$ (Corollary 1.7: $T=C^*C$ iff $X=(CA^{1/2})^*(CA^{1/2})$). By
-   Theorem 1.6, $T=(A^{-1/2}BA^{-1/2})^{1/2}$ is the unique positive solution, i.e.
-   $X=A\#B$. The equation $XA^{-1}X=B$ is equivalent to $XB^{-1}X=A$ (multiply by
-   $X^{-1}$ from both sides: $A^{-1}=X^{-1}BX^{-1}$, then invert), so uniqueness gives
+   $X\ge0$ iff $T\ge0$, since $\langle x,Xx\rangle=\langle A^{1/2}x,TA^{1/2}x\rangle$ and
+   $A^{1/2}$ is invertible. By Theorem 1.6, $T=(A^{-1/2}BA^{-1/2})^{1/2}$ is the unique
+   positive solution, i.e. $X=A\#B$. Every solution $X$ of $XA^{-1}X=B$ is invertible,
+   because $\det(X)^2\det(A)^{-1}=\det B\neq0$. So $XA^{-1}X=B$ is equivalent to
+   $XB^{-1}X=A$ (from $A^{-1}=X^{-1}BX^{-1}$, invert both sides), and uniqueness gives
    $A\#B=B\#A$.
 
 ```python

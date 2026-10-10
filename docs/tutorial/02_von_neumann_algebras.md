@@ -21,8 +21,14 @@ the identity $1$.
 For a set $S\subseteq M_n(\mathbb C)$, the **commutant** is
 $S'=\{X\in M_n(\mathbb C):XA=AX\text{ for all }A\in S\}$. It is always a unital algebra;
 if $S$ is closed under adjoints ($S^*=S$), then $S'$ is a $*$-algebra, since
-$XA=AX$ for all $A\in S$ implies $X^*A^*=A^*X^*$ for all $A\in S$. Clearly
-$S\subseteq S''$ and $S'=S'''$.
+$XA=AX$ for all $A\in S$ implies $X^*A^*=A^*X^*$ for all $A\in S$. Every element of $S$
+commutes with every element of $S'$, so $S\subseteq S''$; applied to $S'$ this gives
+$S'\subseteq S'''$, and taking commutants in $S\subseteq S''$ (which reverses inclusions)
+gives $S'''\subseteq S'$. Hence $S'=S'''$.
+
+When an algebra acts on a subspace $E$ of $\mathbb C^n$, we identify $E$ with
+$\mathbb C^{\dim E}$ by an orthonormal basis, so that all results stated on $\mathbb C^n$
+apply to it.
 
 **Definition.** A **von Neumann algebra** on $\mathbb C^n$ is a $*$-algebra
 $\mathcal M$ with $\mathcal M=\mathcal M''$. Its **centre** is
@@ -111,24 +117,30 @@ $V^*\mathcal NV=M_k(\mathbb C)\otimes1_m$. Moreover $V^*\mathcal N'V=1_k\otimes 
 *Proof.* *Step 1: a minimal projection.* $\mathcal N$ contains nonzero projections (e.g. $1$).
 Let $e\in\mathcal N$ be a nonzero projection of minimal rank. We claim
 $e\mathcal Ne=\mathbb Ce$. Let $x=x^*\in e\mathcal Ne$. Each spectral projection $q$ of $x$
-for a nonzero eigenvalue is a polynomial $p(x)$ with $p(0)=0$ (Theorem 1.5), so
-$q\in\mathcal N$ and $q=eqe$, i.e. $q\le e$. By minimality $q=e$ or $q=0$; hence $x$ has at
+for a nonzero eigenvalue $\lambda$ is $q=p(x)$, where $p$ is the Lagrange polynomial with
+$p(\lambda)=1$ and $p(\mu)=0$ for $\mu\in(\operatorname{spec}x\cup\{0\})\setminus\{\lambda\}$
+(proof of Theorem 1.5(a)). As $p(0)=0$ and $x=ex=xe$, $q\in\mathcal N$ and $q=eqe$, so the
+range of $q$ lies in the range of $e$. By minimality $q=e$ or $q=0$; hence $x$ has at
 most one nonzero eigenvalue and its eigenvector space is the range of $e$, so
 $x=\lambda e$. A general element of $e\mathcal Ne$ is $x_1+ix_2$ with
 $x_{1,2}=x_{1,2}^*\in e\mathcal Ne$.
 
 *Step 2: $e$ generates $E$.* Let $F=\operatorname{span}\mathcal Ne E$. It is invariant under
-$\mathcal N$, so its projection $f$ lies in $\mathcal N'$ (Lemma 2.1). It is also invariant
-under $\mathcal N'$: for $b\in\mathcal N'$, $bAe\xi=Aeb\xi\in F$. So $f\in\mathcal N''=\mathcal N$
-(Theorem 2.2), $f\in Z(\mathcal N)=\mathbb C1$, and $f\neq0$, so $F=E$.
+$\mathcal N$, so its projection $p_F$ lies in $\mathcal N'$ (Lemma 2.1). It is also invariant
+under the $*$-algebra $\mathcal N'$: for $b\in\mathcal N'$, $bAe\xi=Aeb\xi\in F$; so by Lemma 2.1
+applied to $\mathcal N'$, $p_F\in\mathcal N''=\mathcal N$ (Theorem 2.2). Hence
+$p_F\in Z(\mathcal N)=\mathbb C1$, and $p_F\neq0$ (as $eE\subseteq F$), so $F=E$.
 
 *Step 3: matrix units.* Call a $v\in\mathcal N$ with $v^*v=e$ an *$e$-isometry*; then $vv^*$
-is a projection in $\mathcal N$ (as $(vv^*)^2=vev^*=vv^*$, since $ve=vv^*v=v$). Choose
+is a projection in $\mathcal N$. (First $v=ve$: for every $x$,
+$\|v(1-e)x\|^2=\langle(1-e)x,v^*v(1-e)x\rangle=\langle(1-e)x,e(1-e)x\rangle=0$. Hence
+$vv^*v=ve=v$ and $(vv^*)^2=vev^*=vv^*$. For the $v_i$ below this gives $e_iv_i=v_i$ and
+$v_i^*e_i=v_i^*$.) Choose
 $e$-isometries $v_1=e,v_2,\dots,v_k$ with mutually orthogonal ranges $e_i=v_iv_i^*$, $k$
 maximal (the ranges are orthogonal subspaces of the same dimension $\operatorname{rank}e$,
-so $k\le n$). We claim $\sum_ie_i=1$. Otherwise $g=1-\sum_ie_i\neq0$ is a projection in
+so $k\le\dim E/\operatorname{rank}e$). We claim $\sum_ie_i=1$. Otherwise $g=1-\sum_ie_i\neq0$ is a projection in
 $\mathcal N$. By Step 2, $gAe\neq0$ for some $A\in\mathcal N$ (if $gAe=0$ for all $A$, then
-$g$ vanishes on $F=E$). Let $y=gAe$. Then $y^*y\in e\mathcal Ne$ is positive and nonzero,
+$gAe\xi=0$ for all $A,\xi$, so $g$ vanishes on $F=E$). Let $y=gAe$. Then $y^*y\in e\mathcal Ne$ is positive and nonzero,
 so $y^*y=\lambda e$ with $\lambda>0$, and $v=y/\sqrt\lambda$ is an $e$-isometry with range
 in $gE$, orthogonal to all $e_i$ — contradicting maximality.
 
@@ -141,7 +153,8 @@ so $A=\sum_{ij}a_{ij}E_{ij}$ with $a_{ij}\in\mathbb C$. Thus $\mathcal N=\operat
 *Step 4: the unitary.* Let $m=\operatorname{rank}e$ and $f_1,\dots,f_m$ an orthonormal basis
 of $eE$. The vectors $v_if_r$ are orthonormal:
 $\langle v_if_r,v_jf_s\rangle=\langle f_r,v_i^*v_jf_s\rangle=\delta_{ij}\langle f_r,ef_s\rangle=\delta_{ij}\delta_{rs}$.
-They span $E$, since $E=\bigoplus_ie_iE$ and $e_iE=v_ieE$. Define $V(e_i\otimes f_r)=v_if_r$.
+They span $E$, since $E=\bigoplus_ie_iE$ and $e_iE=v_ieE$. Define $V(|i\rangle\otimes f_r)=v_if_r$, where $|1\rangle,\dots,|k\rangle$ is
+the standard basis of $\mathbb C^k$ and we identify $\mathbb C^m$ with $eE$ via the $f_r$.
 Then $E_{ij}v_lf_r=\delta_{jl}v_if_r$, i.e. $V^*E_{ij}V=|i\rangle\langle j|\otimes1_m$, and
 $V^*\mathcal NV=M_k(\mathbb C)\otimes1_m$.
 
@@ -161,8 +174,9 @@ $$
 V^*\mathcal MV=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)\otimes1_{m_c},\qquad
 V^*\mathcal M'V=\bigoplus_{c=1}^C1_{k_c}\otimes M_{m_c}(\mathbb C),
 $$
-and $Z(\mathcal M)=\operatorname{span}\{P_1,\dots,P_C\}$, $P_c$ the projection onto the $c$-th
-summand. In particular $\mathcal M\cong\bigoplus_cM_{k_c}(\mathbb C)$ as $*$-algebras, and
+and $V^*Z(\mathcal M)V=\operatorname{span}\{P_1,\dots,P_C\}$, $P_c$ the projection onto the $c$-th
+summand. The pairs $(k_c,m_c)$ are unique up to order: the $P_c$ are unique (Lemma 2.3),
+$k_c^2=\dim\mathcal MP_c$ and $m_c=\operatorname{rank}P_c/k_c$. In particular $\mathcal M\cong\bigoplus_cM_{k_c}(\mathbb C)$ as $*$-algebras, and
 $\dim\mathcal M=\sum_ck_c^2$, $\dim\mathcal M'=\sum_cm_c^2$.
 
 *Proof.* By Lemma 2.3 and the remark after it, $\mathcal M=\bigoplus_c\mathcal M_c$ with
@@ -176,37 +190,59 @@ The numbers $k_c$ describe the algebra itself. The **multiplicities** $m_c$ desc
 it sits in $M_n(\mathbb C)$: they are invisible to the algebraic structure but determine
 the trace of $\mathbb C^n$ restricted to $\mathcal M$,
 $$
-\operatorname{Tr}_{\mathbb C^n}(A)=\sum_cm_c\operatorname{Tr}(A_c),\qquad A=\bigoplus_cA_c\otimes1_{m_c}.
+\operatorname{Tr}_{\mathbb C^n}(A)=\sum_cm_c\operatorname{Tr}(A_c),\qquad A=V\Big(\bigoplus_cA_c\otimes1_{m_c}\Big)V^*.
 $$
 This is why the library works with a family of traces (Chapter 3).
 
 > **Physical meaning.** The $P_c$ are **superselection sectors** or **symmetry
 > sectors**: no observable in $\mathcal M$ connects different sectors, so a measurement
 > of "which sector" is compatible with every other measurement. The centre is the
-> *classical* part of the system. The multiplicity $m_c$ is a degeneracy: every
-> eigenvalue of an observable in sector $c$ appears $m_c$ times in $\mathbb C^n$.
+> *classical* part of the system. The multiplicity $m_c$ is a degeneracy: each
+> eigenvalue of the block $A_c$ appears in $\mathbb C^n$ with $m_c$ times its multiplicity in $A_c$.
 
 ## 2.4 Example: a symmetry group and its commutant
 
 Let a finite group $G$ act on $\mathbb C^n$ by a unitary representation $\pi$. The
 operators that commute with the symmetry form $\pi(G)'$, a von Neumann algebra; its
-commutant $\pi(G)''$ is the span of the $\pi(g)$ (Theorem 2.2 applied to that span,
-which is a $*$-algebra). Decomposing $\pi$ into irreducible representations
-$\pi\cong\bigoplus_\lambda\rho_\lambda\otimes1_{m_\lambda}$ shows (Schur's lemma, or
-Theorem 2.6 applied to $\pi(G)''$) that
+commutant $\pi(G)''$ is the span of the $\pi(g)$ (Theorem 2.2 applied to that span, which
+is a $*$-algebra: it contains $\pi(e)=1$, products $\pi(g)\pi(h)=\pi(gh)$ and adjoints
+$\pi(g)^*=\pi(g^{-1})$).
+
+**Proposition 2.8.** Apply Theorem 2.6 to $\mathcal M=\pi(G)''$. Then
+$V^*\pi(g)V=\bigoplus_c\rho_c(g)\otimes1_{m_c}$, where each $\rho_c$ is an irreducible
+unitary representation of $G$ on $\mathbb C^{k_c}$, and $\rho_c,\rho_d$ are inequivalent for
+$c\neq d$. Consequently
 $$
-\pi(G)''\cong\bigoplus_\lambda M_{\dim\rho_\lambda},\qquad
-\pi(G)'\cong\bigoplus_\lambda M_{m_\lambda}.
+\pi\cong\bigoplus_c\rho_c\otimes1_{m_c},\qquad
+\pi(G)''\cong\bigoplus_cM_{\dim\rho_c},\qquad
+\pi(G)'\cong\bigoplus_cM_{m_c}:
 $$
-The roles of $k_c$ and $m_c$ are exchanged between the algebra and its commutant.
+the blocks of the symmetric operators $\pi(G)'$ have the sizes of the multiplicities of the
+irreducible representations, and the roles of $k_c$ and $m_c$ are exchanged between an
+algebra and its commutant.
+
+*Proof.* $\pi(g)\in\mathcal M$, so $V^*\pi(g)V=\bigoplus_c\rho_c(g)\otimes1_{m_c}$ for some
+$\rho_c(g)\in M_{k_c}$, and $g\mapsto\rho_c(g)$ is a unitary representation because $\pi$ is.
+Since the $\pi(g)$ span $\mathcal M$, the $\rho_c(g)$ span $M_{k_c}$, and more strongly the map
+$\sum_ga_g\pi(g)\mapsto\big(\sum_ga_g\rho_c(g)\big)_c$ is onto $\bigoplus_cM_{k_c}$.
+*Irreducible:* a subspace of $\mathbb C^{k_c}$ invariant under all $\rho_c(g)$ is invariant
+under their span $M_{k_c}$, hence $0$ or $\mathbb C^{k_c}$. *Inequivalent:* if
+$\rho_d(g)=T\rho_c(g)T^{-1}$ for all $g$ and some invertible $T$, $c\neq d$, then every element
+$(x_{c'})_{c'}$ of the image satisfies $x_d=Tx_cT^{-1}$, which excludes the element with
+$x_c=1$, $x_d=0$ — a contradiction to surjectivity. The last two isomorphisms are
+Theorem 2.6. $\square$
+
+That the decomposition of a representation into irreducibles is unique up to equivalence —
+so that the $m_c$ are *the* multiplicities in any decomposition — is proved in Chapter 4.
 
 We take $G=S_3$ permuting the three factors of $(\mathbb C^2)^{\otimes3}$, i.e. three
-qubits or three spins $\tfrac12$. Representation theory predicts: the symmetric subspace
+qubits or three spins $\tfrac12$. Representation theory (a character computation, Chapter 4)
+predicts: the symmetric subspace
 (total spin $\tfrac32$, dimension $4$) carries the trivial representation with
 multiplicity $4$; its complement (dimension $4$) carries the two-dimensional standard
 representation with multiplicity $2$; the sign representation does not occur. So
 $\pi(S_3)''\cong M_1\oplus M_2$ (dimension $5$) and $\pi(S_3)'\cong M_4\oplus M_2$
-(dimension $20$). We verify this by linear algebra: the commutant of a set $S$ is the
+(dimension $20$). We check the dimensions by linear algebra: the commutant of a set $S$ is the
 null space of the linear map $X\mapsto(AX-XA)_{A\in S}$.
 
 ```python
@@ -250,8 +286,9 @@ assert len(commutant_basis(comm)) == 5                   # double commutant theo
 
 The multiplicities are visible in the spectrum. Averaging over the group,
 $X\mapsto\frac1{|G|}\sum_g\pi(g)X\pi(g)^*$, maps any operator into the commutant
-(Exercise 3). A random self-adjoint element of $\pi(S_3)'$ therefore has $4$ simple
-eigenvalues on the symmetric subspace and $2$ doubly degenerate ones on its complement:
+(Exercise 3). A random self-adjoint element of $\pi(S_3)'$ therefore has (almost surely) $4$ simple
+eigenvalues on the symmetric subspace and $2$ doubly degenerate ones on its complement; the
+code checks the degenerate pairs:
 the factor $1_2$ in $M_2\otimes1_2$.
 
 ```python
@@ -333,13 +370,16 @@ E = channels.center_expectation(alg)
 EA = E(A)
 assert close(E(EA), EA)                                  # idempotent
 assert close(E(Z @ A @ P1), Z @ EA @ P1)                 # bimodule property
-assert close(EA @ A, A @ EA)                             # E(A) is central
-for c, k in enumerate(alg.k_factors):                    # Tr E(A)_c = Tr A_c
+A2 = alg.from_blocks([torch.randn(4, 4, dtype=dt), torch.randn(2, 2, dtype=dt)])
+assert close(EA @ A2, A2 @ EA)                           # E(A) commutes with a fresh element
+for c in range(alg.C):                                   # Tr E(A)_c = Tr A_c
     assert abs(EA.matrix[0, c].diagonal().sum() - A.matrix[0, c].diagonal().sum()) < 1e-10
 ```
 
-The group average of Section 2.4 is the conditional expectation onto the commutant
-$\pi(G)'$ inside $M_n(\mathbb C)$ (Exercise 3). Both are instances of the same idea:
+The group average of Section 2.4 is a conditional expectation onto the commutant
+$\pi(G)'$ inside $M_n(\mathbb C)$, and it preserves $\operatorname{Tr}$ (Exercise 3).
+(Conditional expectations are not unique in general: onto $\mathbb C1$, every state
+$\varphi$ gives one, $A\mapsto\varphi(A)1$.) Both are instances of the same idea:
 projecting onto the operators that "do not see" some structure.
 
 ## 2.7 What to compare with
@@ -360,7 +400,7 @@ traces, states, channels, dynamics — stay inside the algebra.
    $\{S\}'$ and $\{S\}''$ and check the dimensions numerically.
 3. For a unitary representation $\pi$ of a finite group, show that
    $E(X)=\frac1{|G|}\sum_g\pi(g)X\pi(g)^*$ is a conditional expectation of
-   $M_n(\mathbb C)$ onto $\pi(G)'$.
+   $M_n(\mathbb C)$ onto $\pi(G)'$ that preserves $\operatorname{Tr}$.
 
 <details>
 <summary>Solutions</summary>
@@ -374,8 +414,9 @@ traces, states, channels, dynamics — stay inside the algebra.
 2. $S$ is unitary with eigenvalues $1,\omega,\omega^2$, $\omega=e^{2\pi i/3}$, each simple.
    An operator commuting with $S$ preserves its eigenspaces, so in the eigenbasis it is
    diagonal: $\{S\}'\cong\mathbb C^3$, the circulant matrices. $\{S\}''$ is then also
-   $\cong\mathbb C^3$ (the commutant of a maximal abelian algebra is itself), spanned by
-   $1,S,S^2$.
+   $\cong\mathbb C^3$, because in the eigenbasis of $S$ a matrix that commutes with all
+   diagonal matrices is diagonal (compare entries of $XD$ and $DX$ for $D$ with distinct
+   diagonal entries); it is spanned by $1,S,S^2$ (Vandermonde: the eigenvalues are distinct).
 
 ```python
 S = torch.roll(torch.eye(3, dtype=dt), 1, dims=0)
@@ -388,6 +429,8 @@ assert span_dim([torch.eye(3, dtype=dt), S, S @ S]) == 3
    $\pi(h)E(X)\pi(h)^*=\frac1{|G|}\sum_g\pi(hg)X\pi(hg)^*=E(X)$, so $E(X)\in\pi(G)'$. If
    $X\in\pi(G)'$, every term equals $X$, so $E(X)=X$. For $B_1,B_2\in\pi(G)'$,
    $\pi(g)B_1XB_2\pi(g)^*=B_1\pi(g)X\pi(g)^*B_2$, which gives the bimodule property.
+   Finally $\operatorname{Tr}(\pi(g)X\pi(g)^*)=\operatorname{Tr}X$ for every $g$, so
+   $\operatorname{Tr}E(X)=\operatorname{Tr}X$.
 
 </details>
 
