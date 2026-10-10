@@ -18,3 +18,5 @@ experiment_results*/
 *.synctex.gz
 .check_output/
 paper/generated/partial/
+# working notes of literature searches (the reports in reports/ are kept)
+research_notes/
