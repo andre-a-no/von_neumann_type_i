@@ -15,113 +15,11 @@ import numpy as np
 from typing import Optional, List, Tuple, Callable, Union
 from .hilbert_space import HilbertSpace
 from . import cost
+from . import functional as _fc
+from .functional import cache_enabled as _fc_cache_enabled
+from .functional import divided_differences as _divided_differences   # noqa: F401 (tests)
 
 
-
-# ----------------------------------------------------------------------
-# Functional calculus with gradients that stay finite at degenerate spectra
-# ----------------------------------------------------------------------
-def _values_and_derivative(f_values: Callable[[torch.Tensor], torch.Tensor], w: torch.Tensor,
-                           create_graph: bool = False) -> Tuple[torch.Tensor, torch.Tensor]:
-    """
-    f(w) and f'(w) for an elementwise f, with one evaluation of f. The values keep their graph to parameters
-    of f (and, with create_graph, to w); the derivative is 0 where f does not depend on w. Non-floating
-    results (e.g. the indicator w > 0 of a spectral projection) are converted to the dtype of w.
-    """
-    with torch.enable_grad():
-        wg = w if create_graph else w.detach().requires_grad_(True)
-        y = f_values(wg)
-        if not (y.is_floating_point() or y.is_complex()):
-            y = y.to(w.dtype)
-        if not y.requires_grad:
-            return y, torch.zeros_like(w)
-
-        def d(part):
-            g, = torch.autograd.grad(part.sum(), wg, retain_graph=True, create_graph=create_graph,
-                                     allow_unused=True)
-            return torch.zeros_like(w) if g is None else g
-        dy = torch.complex(d(y.real), d(y.imag)) if torch.is_complex(y) else d(y)
-    return y, dy
-
-
-def _divided_differences(w: torch.Tensor, fw: torch.Tensor, dfw: torch.Tensor) -> torch.Tensor:
-    """
-    Loewner matrix L_ij = (f(w_i) - f(w_j)) / (w_i - w_j), and (f'(w_i) + f'(w_j)) / 2 where w_i and w_j
-    coincide up to eps^(1/3) relative to max(|w_i|, |w_j|) (which balances the truncation error of the
-    midpoint value against the cancellation error of the quotient). Shape (..., k, k).
-    """
-    dw = w.unsqueeze(-1) - w.unsqueeze(-2)
-    df = fw.unsqueeze(-1) - fw.unsqueeze(-2)
-    finfo = torch.finfo(w.dtype)
-    scale = torch.maximum(w.abs().unsqueeze(-1), w.abs().unsqueeze(-2)).clamp(min=finfo.tiny)
-    close = dw.abs() <= finfo.eps ** (1 / 3) * scale
-    quotient = df / torch.where(close, torch.ones_like(dw), dw).to(df.dtype)
-    return torch.where(close, 0.5 * (dfw.unsqueeze(-1) + dfw.unsqueeze(-2)).to(df.dtype), quotient)
-
-
-def _loewner_backward(V: torch.Tensor, L: torch.Tensor, G: torch.Tensor, fw_is_real: bool):
-    Vh = V.conj().transpose(-2, -1)
-    Gt = Vh @ G @ V
-    gX = V @ (L.conj().to(Gt.dtype) * Gt) @ Vh
-    gfw = torch.diagonal(Gt, dim1=-2, dim2=-1)
-    if fw_is_real and torch.is_complex(gfw):
-        gfw = gfw.real
-    return gX, gfw
-
-
-class _SpectralReconstruction(torch.autograd.Function):
-    """
-    F = V diag(f(w)) V^* for X = V diag(w) V^* self-adjoint, as a function of X and of the values f(w).
-    The derivative in X is the Daleckii-Krein formula dF = V (L o (V^* dX V)) V^* with the Loewner matrix L
-    of divided differences, which stays finite when eigenvalues coincide (unlike differentiation through the
-    eigenvectors). The values f(w) carry the gradient with respect to parameters of f. With create_graph the
-    backward pass is recomputed differentiably (through the eigendecomposition), so that second derivatives are
-    correct at non-degenerate spectra.
-    """
-
-    @staticmethod
-    def forward(ctx, X, fw, V, L, f_values):
-        ctx.save_for_backward(X, V, L)
-        ctx.f_values = f_values
-        ctx.fw_is_real = not torch.is_complex(fw)
-        return (V * fw.to(V.dtype).unsqueeze(-2)) @ V.conj().transpose(-2, -1)
-
-    @staticmethod
-    def backward(ctx, G):
-        X, V, L = ctx.saved_tensors
-        if torch.is_grad_enabled():                              # create_graph: differentiable recomputation
-            w, V = torch.linalg.eigh(X)
-            fw, dfw = _values_and_derivative(ctx.f_values, w, create_graph=True)
-            if torch.is_complex(fw) and not torch.is_complex(V):
-                fw, dfw = fw.real, dfw.real
-            L = _divided_differences(w, fw, dfw)
-        gX, gfw = _loewner_backward(V, L, G, ctx.fw_is_real)
-        return (gX if ctx.needs_input_grad[0] else None,
-                gfw if ctx.needs_input_grad[1] else None, None, None, None)
-
-
-def _spectral_apply(X: torch.Tensor, f_values: Callable[[torch.Tensor], torch.Tensor], what: str) -> torch.Tensor:
-    """f(X) for a stack X (n, k, k) of self-adjoint matrices and an elementwise f acting on eigenvalues (n, k)."""
-    Xh = 0.5 * (X + X.conj().transpose(-2, -1))                 # the function is defined on self-adjoint X
-    with torch.no_grad():
-        w, V = cost.batched_call(torch.linalg.eigh, Xh.detach(), what)
-    needs_grad = Xh.requires_grad and torch.is_grad_enabled()
-    if needs_grad:
-        fw, dfw = _values_and_derivative(f_values, w)            # one evaluation of f
-    else:
-        fw = f_values(w)                                         # may still carry gradients of parameters of f
-        if not (fw.is_floating_point() or fw.is_complex()):
-            fw = fw.to(w.dtype)
-    if torch.is_complex(fw) and not torch.is_complex(V):
-        if torch.any(fw.detach().imag != 0):
-            raise ValueError("complex-valued f(A) requires a complex-valued algebra")
-        fw = fw.real
-        if needs_grad:
-            dfw = dfw.real
-    if not needs_grad:
-        return (V * fw.to(V.dtype).unsqueeze(-2)) @ V.conj().transpose(-2, -1)
-    L = _divided_differences(w, fw.detach(), dfw)
-    return _SpectralReconstruction.apply(Xh, fw, V, L, f_values)
 
 
 class TypeIAlgebra:
@@ -328,6 +226,8 @@ class TypeIAlgebra:
             self._trace = None
             self._inverse = None
             self._abs = None
+            self._spectral_cache = None          # {'kind', 'key', 'groups': [(w, V), ...]} when caching is on
+            self._cache_on = False
 
             self._update_memory()
 
@@ -382,7 +282,7 @@ class TypeIAlgebra:
         def _block_svdvals_min(self) -> torch.Tensor:
             """Smallest singular value over the active blocks, shape (batch,)."""
             B = self.matrix.shape[0]
-            mins = [torch.linalg.svdvals(x).min(dim=-1)[0].reshape(B, -1) for _, _, x in self._groups()]
+            mins = [_fc.singular_values(x.detach())[..., -1].reshape(B, -1) for _, _, x in self._groups()]
             return torch.cat(mins, dim=-1).min(dim=-1)[0]
 
         @property
@@ -505,8 +405,7 @@ class TypeIAlgebra:
                 vals = [cost.batched_call(torch.linalg.eigvalsh, x, f"eigvalsh (blocks of size {k})", kind='eigh').abs()
                         for k, _, x in self._groups()]
             else:
-                vals = [cost.batched_call(torch.linalg.svdvals, x, f"svdvals (blocks of size {k})", kind='svd')
-                        for k, _, x in self._groups()]
+                vals = [_fc.singular_values(x) for k, _, x in self._groups()]
             total = torch.zeros(B, dtype=self.matrix.real.dtype, device=self.matrix.device)
             for v in vals:
                 total = total + v.reshape(B, -1).sum(-1)
@@ -538,7 +437,7 @@ class TypeIAlgebra:
         def operator_norm(self) -> torch.Tensor:
             # largest singular value over the active blocks (exact; the padding is skipped)
             B = self.matrix.shape[0]
-            norms = [torch.linalg.matrix_norm(x, ord=2).reshape(B, -1) for _, _, x in self._groups()]
+            norms = [_fc.singular_values(x)[..., 0].reshape(B, -1) for _, _, x in self._groups()]
             if not norms:
                 return torch.zeros(B, dtype=self.matrix.real.dtype, device=self.matrix.device)
             return torch.cat(norms, dim=-1).max(dim=-1)[0]
@@ -571,10 +470,7 @@ class TypeIAlgebra:
                 return op
 
             def inv_block(A):
-                U, S, Vh = cost.batched_call(torch.linalg.svd, A, "SVD", kind='svd')
-                thr = (A.shape[-1] * torch.finfo(S.dtype).eps * S.amax(dim=-1, keepdim=True)) if tol is None else tol
-                S_inv = torch.where(S > thr, 1.0 / torch.where(S > thr, S, torch.ones_like(S)), torch.zeros_like(S))
-                return Vh.conj().transpose(-2, -1) @ (S_inv.to(U.dtype).unsqueeze(-1) * U.conj().transpose(-2, -1))
+                return _fc.pinv(A, tol)
             op = TypeIAlgebra.Operator(self.algebra, generator=lambda: self._blockwise(inv_block, "inverse"))
             op._is_self_adjoint = self.is_self_adjoint
             op._is_normal = self.is_normal
@@ -589,8 +485,9 @@ class TypeIAlgebra:
             return self._inverse
 
         def abs(self) -> 'TypeIAlgebra.Operator':
-            """|A| = (A^* A)^{1/2}: for self-adjoint A by the functional calculus (Hermitian eigensolver),
-            otherwise by SVD of every active block."""
+            """|A| = (A^* A)^{1/2}: for self-adjoint A by the functional calculus, otherwise from the singular
+            value decomposition (on GPUs for blocks > 32 via the Hermitian eigensolver of [[0, A], [A^*, 0]]);
+            gradients finite at degenerate singular values."""
             if self._is_self_adjoint:
                 op = self.apply_function(torch.abs)
                 op._is_self_adjoint = True
@@ -599,13 +496,22 @@ class TypeIAlgebra:
                 return op
 
             def abs_block(A):
-                U, S, Vh = cost.batched_call(torch.linalg.svd, A, "SVD", kind='svd')
-                return Vh.conj().transpose(-2, -1) @ (S.to(U.dtype).unsqueeze(-1) * Vh)
+                return _fc.abs_(A)
             op = TypeIAlgebra.Operator(self.algebra, generator=lambda: self._blockwise(abs_block, "abs"))
             op._is_self_adjoint = True
             op._is_positive = True
             op._is_normal = True
             return op
+
+        def polar(self) -> Tuple['TypeIAlgebra.Operator', 'TypeIAlgebra.Operator']:
+            """
+            Polar decomposition A = W |A|, block by block: W unitary for invertible A (a partial isometry on the
+            kernel of a singular A), |A| = (A^* A)^{1/2}. |A| is differentiable; W carries no gradient.
+            """
+            def gen_w():
+                return self._blockwise(lambda x: _fc.polar(x)[0], "polar")
+            W = TypeIAlgebra.Operator(self.algebra, generator=gen_w)
+            return W, self.abs()
 
         def sqrt(self) -> 'TypeIAlgebra.Operator':
             """A^{1/2} of a positive operator (spectral calculus on the active blocks)."""
@@ -625,7 +531,8 @@ class TypeIAlgebra:
             B = self.matrix.shape[0]
             out = torch.zeros(B, dtype=self.matrix.real.dtype, device=self.matrix.device)
             for k_c, _, x in self._groups():
-                S = cost.batched_call(torch.linalg.svdvals, x, f"svdvals (blocks of size {k_c})", kind='svd')
+                S = cost.batched_call(torch.linalg.eigvalsh, 0.5 * (x + x.conj().transpose(-2, -1)),
+                                      f"eigvalsh (blocks of size {k_c})")      # positive: eigenvalues = singular values
                 S = torch.where(S > tol, S, torch.zeros_like(S))
                 out = out + torch.special.xlogy(S, S).reshape(B, -1).sum(-1)
             return out
@@ -726,7 +633,27 @@ class TypeIAlgebra:
             """
             if not self.is_self_adjoint:
                 raise RuntimeError("eigh requires a self-adjoint operator")
+            if self._caching() and not (self.matrix.requires_grad and torch.is_grad_enabled()):
+                return self._from_cache(lambda wv: wv)
             return self._per_sector(lambda x: cost.batched_call(torch.linalg.eigh, x, f"eigh (blocks of size {x.shape[-1]})"))
+
+        def _from_cache(self, pick):
+            """Per-sector results pick((w, V)) from the cached Hermitian decomposition."""
+            B = self.matrix.shape[0]
+            res = [None] * self.algebra.C
+            for k, idx, x, (w, V) in self._decompositions('hermitian'):
+                y = pick((w, V))
+                parts = y if isinstance(y, tuple) else (y,)
+                parts = [p.reshape(B, len(idx), *p.shape[1:]) for p in parts]
+                for j, c in enumerate(idx):
+                    r = tuple(p[:, j] for p in parts)
+                    res[c] = r if isinstance(y, tuple) else r[0]
+            mat = self.matrix
+            for c, k_c in enumerate(self.algebra.k_factors):
+                if k_c == 0:
+                    e = torch.linalg.eigh(mat[:, c, :0, :0])
+                    res[c] = pick((e[0], e[1]))
+            return res
 
         def _per_sector(self, fn):
             """fn on the stacked blocks of each size group, split back into one result per sector (tuples
@@ -754,36 +681,128 @@ class TypeIAlgebra:
             """
             if not self.is_self_adjoint:
                 raise RuntimeError("eigenvalues requires a self-adjoint operator")
+            if self._caching() and not (self.matrix.requires_grad and torch.is_grad_enabled()):
+                return self._from_cache(lambda wv: wv[0])
             return self._per_sector(lambda x: cost.batched_call(torch.linalg.eigvalsh, x,
                                                                 f"eigvalsh (blocks of size {x.shape[-1]})"))
 
+        # ----- spectral cache (opt-in) -----
+        def cache_spectrum(self, enable: bool = True) -> 'TypeIAlgebra.Operator':
+            """
+            Keep the eigendecomposition after its first use, so that further functions of this operator
+            (apply_function, sqrt, log, power, eigenvalues, propagators for many times, ...) cost matrix products
+            only. Costs one extra copy of the operator. Also switched on for all operators by
+            `torch_vn_algebra.caching()`. Returns self.
+            """
+            self._cache_on = bool(enable)
+            if not enable:
+                self._spectral_cache = None
+            return self
+
+        def clear_cache(self):
+            self._spectral_cache = None
+
+        def cache_info(self) -> dict:
+            c = self._spectral_cache
+            nbytes = 0 if c is None else sum(t.element_size() * t.numel() for g in c['groups'] for t in g)
+            return {'enabled': self._caching(), 'cached': c is not None and self._cache_valid(c),
+                    'kind': None if c is None else c['kind'], 'bytes': nbytes}
+
+        def _caching(self) -> bool:
+            return self._cache_on or _fc_cache_enabled()
+
+        def _cache_key(self):
+            m = self.matrix
+            return (id(m), m._version)
+
+        def _cache_valid(self, c) -> bool:
+            return c['key'] == self._cache_key()
+
+        def _decompositions(self, kind: str):
+            """[(k, idx, x, (w, V))] per block-size group, from the cache if it is valid (no gradients)."""
+            groups = self._groups()
+            c = self._spectral_cache
+            if c is not None and c['kind'] == kind and self._cache_valid(c):
+                return [(k, idx, x, wv) for (k, idx, x), wv in zip(groups, c['groups'])]
+            out = []
+            with torch.no_grad():
+                for k, idx, x in groups:
+                    xd = x.detach()
+                    wv = (_fc.hermitian_eig(xd, f"eigh (blocks of size {k})") if kind == 'hermitian'
+                          else _fc.normal_eig(xd, f"eigh (blocks of size {k})"))
+                    out.append((k, idx, x, wv))
+            if self._caching():
+                self._spectral_cache = {'kind': kind, 'key': self._cache_key(), 'groups': [o[3] for o in out]}
+            return out
+
         def apply_function(self, f: Callable[[torch.Tensor], torch.Tensor]) -> 'TypeIAlgebra.Operator':
             """
-            f(A) for self-adjoint A via the spectral theorem: f(A)_c = V_c f(w_c) V_c*.
-            `f` acts elementwise on a real tensor of eigenvalues (batch, k_c) and returns a tensor of the
-            same shape; a complex-valued f (e.g. exp(-i t w)) requires a complex algebra.
-            Gradients with respect to A use the Daleckii-Krein formula (divided differences of f), so they
-            are finite also when eigenvalues coincide; gradients with respect to parameters of f (e.g. t)
-            are propagated as usual. Second derivatives recompute the eigendecomposition differentiably
-            and are correct at non-degenerate spectra.
+            f(A) by the spectral theorem, f(A)_c = V_c f(w_c) V_c*, for self-adjoint A (f on the real spectrum)
+            and for normal A such as unitaries (f on the complex spectrum; f must accept complex tensors).
+            `f` acts elementwise on the eigenvalues of one sector, a tensor (batch, k_c), and returns a tensor
+            of the same shape; a complex-valued result requires a complex algebra. Only the Hermitian
+            eigensolver is used (for normal A, on H + alpha K with A = H + iK), one batched call per block size.
+            Gradients with respect to A use the Daleckii-Krein formula (divided differences of f): finite also
+            at degenerate spectra; for normal non-self-adjoint A they assume f holomorphic near the spectrum.
+            Gradients with respect to parameters of f (e.g. t in exp(-itw)) are propagated as usual. For
+            non-normal A use holomorphic_function.
             """
             alg = self.algebra
 
             def generator():
-                if not self.is_self_adjoint:
-                    raise RuntimeError("apply_function requires a self-adjoint operator")
-                out = torch.zeros_like(self.matrix)
-                B = out.shape[0]
-                for k_c, idx, x in self._groups():          # one eigendecomposition per distinct block size
+                if self.is_self_adjoint:
+                    kind = 'hermitian'
+                elif self.is_normal:
+                    kind = 'normal'
+                else:
+                    raise RuntimeError("apply_function requires a self-adjoint or normal operator "
+                                       "(use holomorphic_function for other operators)")
+                B = self.matrix.shape[0]
+                parts = []
+                for k_c, idx, x, wv in self._decompositions(kind):
                     n = len(idx)
 
                     def f_values(w, n=n, k_c=k_c):         # f sees (batch, k_c), one sector at a time
                         wr = w.reshape(B, n, k_c)
                         return torch.stack([f(wr[:, j]) for j in range(n)], dim=1).reshape(-1, k_c)
-                    y = _spectral_apply(x, f_values, f"eigh (blocks of size {k_c})")
-                    if torch.is_complex(y) and not torch.is_complex(out):
-                        y = y.real
-                    out[:, idx, :k_c, :k_c] = y.to(out.dtype).reshape(B, n, k_c, k_c)
+                    y = _fc.spectral_apply(x, f_values, kind, decomposition=wv)
+                    parts.append((k_c, idx, y))
+                cplx = any(torch.is_complex(y) for _, _, y in parts)
+                out_dtype = self.matrix.dtype
+                if cplx and not torch.is_complex(self.matrix):
+                    for _, _, y in parts:
+                        if torch.is_complex(y) and y.detach().imag.abs().max() > self._tol():
+                            raise ValueError("complex-valued f(A) requires a complex-valued algebra")
+                out = torch.zeros(self.matrix.shape, dtype=out_dtype, device=self.matrix.device)
+                for k_c, idx, y in parts:
+                    y = y.real if torch.is_complex(y) and not torch.is_complex(out) else y
+                    out[:, idx, :k_c, :k_c] = y.to(out_dtype).reshape(B, len(idx), k_c, k_c)
+                return out
+            return TypeIAlgebra.Operator(alg, generator=generator)
+
+        def holomorphic_function(self, f: Callable[[torch.Tensor], torch.Tensor], center=None, radius=None,
+                                 nodes: int = 32, max_nodes: int = 2048,
+                                 rtol: Optional[float] = None) -> 'TypeIAlgebra.Operator':
+            """
+            f(A) for any operator A and f holomorphic near the spectrum (holomorphic functional calculus),
+            f(A)_c = (2 pi i)^{-1} oint f(z) (z - A_c)^{-1} dz on a circle, by the trapezoidal rule with batched
+            LU solves; the number of nodes is doubled until the result changes by less than rtol (a warning
+            otherwise). Default circle: center Tr(A_c)/k_c, radius 2 ||A_c - center||_F, which encloses the
+            spectrum; f must be holomorphic on the closed disk and accept complex tensors. For functions with
+            singularities (log, powers, resolvents) pass center and radius (numbers or tensors (batch * n,)
+            per block group) such that the circle encloses the spectrum and avoids the singularities.
+            Differentiable through the solves. For self-adjoint or normal A, apply_function is exact and cheaper.
+            """
+            alg = self.algebra
+
+            def generator():
+                out = torch.zeros_like(self.matrix)
+                B = out.shape[0]
+                self._contour_error = 0.0
+                for k_c, idx, x in self._groups():
+                    y, err = _fc.holomorphic(x, f, center, radius, nodes, max_nodes, rtol)
+                    self._contour_error = max(self._contour_error, err)
+                    out[:, idx, :k_c, :k_c] = y.to(out.dtype).reshape(B, len(idx), k_c, k_c)
                 return out
             return TypeIAlgebra.Operator(alg, generator=generator)
 

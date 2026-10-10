@@ -268,12 +268,7 @@ def relative_entropy(rho: Operator, sigma: Operator, eps: float = 1e-12) -> torc
 
 def fidelity(rho: Operator, sigma: Operator) -> torch.Tensor:
     """Uhlmann fidelity F = (Tr |sqrt(rho) sqrt(sigma)|)^2."""
-    s = 0.0
-    a, b = rho.power(0.5).matrix, sigma.power(0.5).matrix
-    for c, k_c in enumerate(rho.algebra.k_factors):
-        if k_c > 0:
-            s = s + torch.linalg.svdvals(a[:, c, :k_c, :k_c] @ b[:, c, :k_c, :k_c]).sum(dim=-1)
-    return s ** 2
+    return (rho.power(0.5) @ sigma.power(0.5)).trace_norm() ** 2      # batched over sectors of equal size
 
 
 def trace_distance(rho: Operator, sigma: Operator) -> torch.Tensor:
