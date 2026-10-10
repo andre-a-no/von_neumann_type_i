@@ -39,9 +39,13 @@ This README is the entry point of the repository:
 - **Lazy evaluation** – `X @ Y`, `X + Y`, `X * s` and functional calculus build a recipe that is computed when
   `.matrix` (or a scalar functional) is requested; methods that need a property of the base operator first
   (e.g. `X.inv`, `X.sqrt()` checking positivity) evaluate the base.
-- **Functional calculus** – `abs`, `sqrt`, `inverse` (pseudo-inverse with a relative cutoff), `entropy`,
-  `trace_a_log_a` via batched SVD of the active blocks; `eigenvalues()` without eigenvectors; `lambda_max`,
-  `lambda_min` and `operator_norm` exact for every block size.
+- **Functional calculus at four levels** (module `functional`) – `apply_function(f)` for self-adjoint and for normal
+  operators (unitaries; via the Hermitian eigensolver of H + αK), `abs`, `inverse` (pseudo-inverse with a relative
+  cutoff), `polar`, norms and singular values (on GPUs for blocks > 32 via the Hermitian eigensolver of
+  [[0, A], [A*, 0]], since batched SVD stops at 32), `holomorphic_function(f)` for any operator (contour integral,
+  batched LU solves, error estimate); `sqrt`, `log`, `power`, `expm`, `entropy`; `eigenvalues()` without
+  eigenvectors. Gradients are finite at degenerate spectra (Daleckii–Krein divided differences). Opt-in cache of the
+  eigendecomposition: `A.cache_spectrum()` or `with torch_vn_algebra.caching(): ...`.
 - **Three trace functionals** – `Tr_blunt` (Σ_c Tr A_c), `Tr_norm` (Σ_c Tr A_c / k_c) and the
   tracial state `tau_vN` ((1/C) Σ_c Tr A_c / k_c); norms `trace_norm`, `frobenius_norm`,
   `operator_norm`; `michelson_contrast`.
@@ -111,7 +115,7 @@ print((Lt(rho) - rho_t[-1]).frobenius_norm().max())
 
 | Module | Contents |
 |---|---|
-| `Operator` | `apply_function(f)` (spectral theorem), `expm`, `log`, `power`, `eigh`, `eigenvalues` (no eigenvectors, faster); `alg.operator(tensor)`, `alg.from_blocks([...])` |
+| `Operator` | `apply_function(f)` (self-adjoint and normal), `holomorphic_function(f)` (any operator), `polar`, `expm`, `log`, `power`, `eigh`, `eigenvalues` (no eigenvectors, faster), `cache_spectrum`; `alg.operator(tensor)`, `alg.from_blocks([...])` |
 | `channels` | `Channel` (Kraus form: apply, `adjoint` = Heisenberg picture, composition `@`, `mix`, `choi`, `superoperator`, `from_superoperator`, TP / unitality checks); identity, unitary, dephasing, depolarizing, amplitude damping, Lüders measurement, conditional expectation onto the centre, random (Stinespring) and random mixed-unitary channels |
 | `states` | `DensityMatrix` (an `Operator` subclass: positive, unit `Tr_blunt`; `expectation`, `mix`, `condition_on`, `density(trace)` / `from_density(..., trace)` for the `Tr_norm` and `tau_vN` conventions; preserved by trace-preserving channels and by the dynamics), random density matrices (Hilbert–Schmidt, Bures, fixed rank), Gibbs states and partition functions, tracial state, sector probabilities, Born probabilities, Lüders update, entropy, relative entropy, fidelity, trace distance, purity |
 | `channels.InterSectorChannel` | CP maps between sectors and between different algebras, Φ(ρ)_d = Σ_c Σ_i K_i^{dc} ρ_c K_i^{dc*}: duals for each of the three traces, composition, sector transition matrix, `from_blocks`, `random_inter_sector_channel` |
@@ -252,12 +256,11 @@ pytest -q
   large chains).
 - `lindblad_channel`, `choi` and `superoperator` work with k_c² × k_c² matrices per block, which
   limits them to blocks of a few tens; use `lindblad_evolve` for larger blocks.
-- Gradients of the functional calculus (`apply_function`, `sqrt`, `log`, `power`, and `abs`/`inverse` of
-  self-adjoint operators) use divided differences and are finite at degenerate spectra; gradients through the
-  eigenvectors returned by `eigh` or through singular vectors of non-self-adjoint operators are not. Second
-  derivatives of f(A) recompute the eigendecomposition differentiably and are correct at non-degenerate spectra.
-- On GPUs, batched Hermitian eigensolvers cover all block sizes only in recent PyTorch/cuSOLVER releases; batched SVD
-  is limited to blocks of size ≤ 32 (larger blocks are processed one matrix at a time by PyTorch).
+- Gradients of the functional calculus are finite at degenerate spectra; gradients through the eigenvectors
+  returned by `eigh` are not. Second derivatives of f(A) are correct at non-degenerate spectra.
+- `holomorphic_function` needs a circle that encloses the spectrum and on which f is holomorphic (the default circle
+  suits entire functions such as exp); for self-adjoint or normal operators `apply_function` is exact and cheaper.
+- On GPUs, batched Hermitian eigensolvers cover all block sizes only in recent PyTorch/cuSOLVER releases.
 - Finite dimensions and Type I only.
 
 ## Citation

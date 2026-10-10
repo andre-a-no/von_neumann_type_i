@@ -357,6 +357,7 @@ functional calculus\\
 sparse form, reduced states, jump operators between sectors\\
 \texttt{krylov} & sparse sector Hamiltonians, batched Lanczos ground states, Krylov $e^{-itH}\psi$\\
 \texttt{dynamics} & exact Schrödinger/von Neumann evolution, RK4, Lindblad equation, $e^{t\mathcal L}$\\
+\texttt{functional} & functional calculus: self-adjoint, normal, singular values, holomorphic (contour); spectral cache\\
 \texttt{optimize} & parametrisations with prescribed contrast, batched multistart \texttt{extremize}\\
 \texttt{cost} & run-time and memory estimates, warnings and errors\\
 \texttt{hilbert\_space} & the padded block layout of $\bigoplus_c\C^{k_c}$ and its random subspace bases\\
@@ -372,6 +373,20 @@ $\operatorname{diag}R$~\cite{mezzadri2007}; $SU(n)$ and $SO(n)$ by multiplying w
 a sign flip of one column; the circular orthogonal and symplectic ensembles as $W^TW$ and $W^RW$ with
 $W$ Haar on $U(n)$ ($n$ even for $W^RW$, $W^R$ the quaternion dual)~\cite{mehta2004}. Section~\ref{sec:validation} checks all of them.
 
+\paragraph{Functional calculus.} The module \texttt{functional} provides $f(A)$ at four levels of generality,
+all built on kernels that are batched on GPUs for every block size~\cite{higham2008}. (1) For self-adjoint $A$,
+$f(A)=Vf(\Lambda)V^*$ from the Hermitian eigensolver, for any function on the real spectrum. (2) For normal
+$A=H+iK$ (unitaries), $H$ and $K$ commute, and the eigenvectors of the Hermitian matrix $H+\alpha K$ diagonalise $A$ for
+all but finitely many $\alpha$; the library tries a few irrational values and checks the result, so normal operators
+also need only the Hermitian eigensolver. (3) Singular values, $|A|$, the pseudo-inverse and the polar decomposition
+come from the Hermitian eigensolver of the dilation $\left(\begin{smallmatrix}0&A\\A^*&0\end{smallmatrix}\right)$, whose
+eigenvalues are $\pm s_i$: batched SVD on GPUs is limited to blocks of size at most $32$, while the batched Hermitian
+eigensolver is not. (4) For arbitrary $A$ and $f$ holomorphic near the spectrum,
+$f(A)=(2\pi i)^{-1}\oint f(z)(z-A)^{-1}dz$ is evaluated by the trapezoidal rule on a circle~\cite{trefethen2014},
+i.e.\ by batched LU solves, with the number of nodes doubled until two results agree. An opt-in cache keeps the
+eigendecomposition of an operator, so that many functions of it (for example $e^{-itH}$ for many $t$) cost matrix
+products only.
+
 \paragraph{Differentiation.} All operations are differentiable. Gradients propagated naively through
 eigenvectors contain factors $1/(\lambda_i-\lambda_j)$ and fail at degenerate spectra, which are typical here
 (projections, symmetric operators, extremal operators). The functional calculus $f(A)=Vf(\Lambda)V^*$ therefore
@@ -380,9 +395,11 @@ a self-adjoint $A$ is $dF=V\,(L\circ V^*dA\,V)\,V^*$ with the Loewner matrix of 
 $L_{ij}=(f(\lambda_i)-f(\lambda_j))/(\lambda_i-\lambda_j)$, replaced by $f'$ for coinciding eigenvalues, which is
 finite whenever $f$ is differentiable on the spectrum (see also~\cite{kasim2020}). Gradients with respect to
 parameters of $f$ (a time in $e^{-itA}$) are propagated as usual. The same applies to $\sqrt A$, $\log A$, $A^p$,
-and to $|A|$ and the inverse of self-adjoint $A$, which use the Hermitian eigensolver instead of the SVD. Gradients
-through the eigenvectors returned by \texttt{eigh} and through singular vectors of non-self-adjoint operators keep
-the factors $1/(\lambda_i-\lambda_j)$; the parametrisations of Section~\ref{sec:optimisation} avoid them. \texttt{Operator.eigenvalues()} computes spectra without forming eigenvectors, which also saves time and
+and to $|A|$ and the inverse of self-adjoint $A$, which use the Hermitian eigensolver instead of the SVD. For normal $A$ the same formula with complex divided differences is the derivative of the
+holomorphic calculus, for holomorphic $f$. $|A|$ of a general $A$ is differentiated as the square root of $A^*A$,
+with $L_{ij}=1/(s_i+s_j)$, and the pseudo-inverse by the constant-rank formula; the contour integral is
+differentiated through the solves. Only gradients through the eigenvectors returned by \texttt{eigh} keep the
+factors $1/(\lambda_i-\lambda_j)$; the parametrisations of Section~\ref{sec:optimisation} avoid them. \texttt{Operator.eigenvalues()} computes spectra without forming eigenvectors, which also saves time and
 memory.
 
 \paragraph{GPUs, tensor cores and TF32.} The library computes in FP32 or FP64 (real or complex); it does not use
@@ -977,7 +994,7 @@ full run), and about 26 spins on a GPU with tens of gigabytes (an estimate from 
 scope.
 \item \emph{Optimisation.} The search is local; envelopes are lower bounds for suprema (upper bounds for
 infima). Gradients of the functional calculus are finite at degenerate spectra, but gradients through the
-eigenvectors returned by \texttt{eigh} or through singular vectors of non-self-adjoint operators are not;
+eigenvectors returned by \texttt{eigh} are not;
 second derivatives of $f(A)$ are correct at non-degenerate spectra only.
 \item \emph{Scale.} Choi matrices, superoperators and $e^{t\mathcal L}$ work with $k_c^2\times k_c^2$
 matrices and are limited to blocks of a few tens; RK4 integration scales to larger blocks.
@@ -1069,6 +1086,9 @@ state on which device and in which mode they were produced.
   Network Python (TeNPy)'', SciPost Phys.\ Lect.\ Notes 5 (2018).
 \bibitem{fukuda2019} M.~Fukuda, R.~K\"onig, I.~Nechita, ``RTNI -- a symbolic integrator for Haar-random tensor
   networks'', J.\ Phys.\ A 52 (2019), 425303.
+\bibitem{higham2008} N.~J.~Higham, \emph{Functions of Matrices: Theory and Computation}, SIAM, 2008.
+\bibitem{trefethen2014} L.~N.~Trefethen, J.~A.~C.~Weideman, ``The exponentially convergent trapezoidal rule'',
+SIAM Rev. 56 (2014) 385--458.
 \bibitem{daleckii1965} Ju.~L.~Daleckii, S.~G.~Krein, ``Integration and differentiation of functions of Hermitian
 operators and applications to the theory of perturbations'', Amer. Math. Soc. Transl. (2) 47 (1965) 1--30.
 \bibitem{bhatia1997} R.~Bhatia, \emph{Matrix Analysis}, Graduate Texts in Mathematics 169, Springer, 1997.
