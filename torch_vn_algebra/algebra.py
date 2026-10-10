@@ -526,7 +526,7 @@ class TypeIAlgebra:
         def trace_a_log_a(self, tol: float = 1e-12) -> torch.Tensor:
             if not self.is_positive:                       # checked (via eigenvalues) if not known
                 raise RuntimeError("trace_a_log_a requires positive operator")
-            # singular values of the active blocks only (the zero padding must not contribute);
+            # eigenvalues of the active blocks only (the zero padding must not contribute);
             # values below tol count as exact zeros, 0 log 0 = 0
             B = self.matrix.shape[0]
             out = torch.zeros(B, dtype=self.matrix.real.dtype, device=self.matrix.device)
@@ -692,7 +692,8 @@ class TypeIAlgebra:
             Keep the eigendecomposition after its first use, so that further functions of this operator
             (apply_function, sqrt, log, power, eigenvalues, propagators for many times, ...) cost matrix products
             only. Costs one extra copy of the operator. Also switched on for all operators by
-            `torch_vn_algebra.caching()`. Returns self.
+            `torch_vn_algebra.caching()`. Returns self. The cache is invalidated by in-place changes of the matrix
+            (PyTorch version counter), but not by changes through `.data`.
             """
             self._cache_on = bool(enable)
             if not enable:
@@ -786,25 +787,30 @@ class TypeIAlgebra:
             """
             f(A) for any operator A and f holomorphic near the spectrum (holomorphic functional calculus),
             f(A)_c = (2 pi i)^{-1} oint f(z) (z - A_c)^{-1} dz on a circle, by the trapezoidal rule with batched
-            LU solves; the number of nodes is doubled until the result changes by less than rtol (a warning
-            otherwise). Default circle: center Tr(A_c)/k_c, radius 2 ||A_c - center||_F, which encloses the
-            spectrum; f must be holomorphic on the closed disk and accept complex tensors. For functions with
-            singularities (log, powers, resolvents) pass center and radius (numbers or tensors (batch * n,)
-            per block group) such that the circle encloses the spectrum and avoids the singularities.
-            Differentiable through the solves. For self-adjoint or normal A, apply_function is exact and cheaper.
+            LU solves; the number of nodes is doubled until the result changes by less than rtol (default 1e-10 in
+            double, 1e-5 in single precision) relative to its size; ValueError if the estimate stays above
+            sqrt(rtol). Default circle: just around the spectrum of every block (functional.default_contour);
+            f must be holomorphic on the closed disk and accept complex tensors. For functions with singularities
+            (log, powers, resolvents) pass center and radius: numbers, or callables mapping a stack of blocks
+            (n, k, k) to tensors (n,). The estimated error is stored as result.contour_error after evaluation.
+            Differentiable through the solves. For self-adjoint or normal A, apply_function is exact and cheaper;
+            for exp, expm is more accurate when the spectrum is spread.
             """
             alg = self.algebra
+            result = None
 
             def generator():
                 out = torch.zeros_like(self.matrix)
                 B = out.shape[0]
-                self._contour_error = 0.0
+                error = 0.0
                 for k_c, idx, x in self._groups():
                     y, err = _fc.holomorphic(x, f, center, radius, nodes, max_nodes, rtol)
-                    self._contour_error = max(self._contour_error, err)
+                    error = max(error, err)
                     out[:, idx, :k_c, :k_c] = y.to(out.dtype).reshape(B, len(idx), k_c, k_c)
+                result.contour_error = error
                 return out
-            return TypeIAlgebra.Operator(alg, generator=generator)
+            result = TypeIAlgebra.Operator(alg, generator=generator)
+            return result
 
         def expm(self, scale: Union[float, complex] = 1.0) -> 'TypeIAlgebra.Operator':
             """exp(scale * A) for any operator (torch.linalg.matrix_exp on each active block)."""

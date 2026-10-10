@@ -13,8 +13,10 @@ Functional calculus on stacks of blocks (n, k, k), at four levels of generality.
 Gradients. Levels 1 and 2 use the Daleckii-Krein formula dF = V (L o V^* dX V) V^* with the Loewner matrix
 of divided differences of f (f' for coinciding eigenvalues), which is finite at degenerate spectra; level 2
 assumes f holomorphic near the spectrum (the derivative is then the Frechet derivative of the holomorphic
-calculus in every direction). Level 3 has explicit backward formulas (L_ij = 1/(s_i + s_j) for |X|, the
-constant-rank formula for the pseudo-inverse). Level 4 is differentiated through the linear solves.
+calculus in every direction). Second derivatives (create_graph) recompute the decomposition differentiably
+(eigh for self-adjoint, eig for normal X) and are correct at non-degenerate spectra. Level 3 has explicit
+backward formulas (L_ij = 1/(s_i + s_j) for |X| on the range, the constant-rank formula for the pseudo-inverse);
+level 4 is differentiated through the linear solves.
 """
 import math
 import warnings
@@ -107,29 +109,64 @@ def hermitian_eig(X: torch.Tensor, what: str = "eigh") -> Tuple[torch.Tensor, to
     return cost.batched_call(torch.linalg.eigh, Xh, what)
 
 
+def _normal_pass(Xc: torch.Tensor, H: torch.Tensor, K: torch.Tensor, a1: float, a2: float, what: str):
+    """Eigenbasis from eigh(H + a1 K), refined inside clusters of nearly equal mu = Re + a1 Im of the eigenvalues
+    (where eigh may mix eigenvectors of distinct eigenvalues) by eigh of H_D + a2 K_D restricted to the clusters."""
+    mu, V = cost.batched_call(torch.linalg.eigh, H + a1 * K, what)
+    D = V.conj().transpose(-2, -1) @ Xc @ V
+    eps = torch.finfo(Xc.real.dtype).eps
+    scale = torch.diagonal(D, dim1=-2, dim2=-1).abs().amax(dim=-1, keepdim=True).clamp(min=torch.finfo(Xc.real.dtype).tiny)
+    brk = torch.cat([torch.ones_like(mu[..., :1], dtype=torch.bool), (mu[..., 1:] - mu[..., :-1]) > eps ** 0.25 * scale],
+                    dim=-1)
+    cid = torch.cumsum(brk.long(), dim=-1)
+    same = cid.unsqueeze(-1) == cid.unsqueeze(-2)                 # pairs in the same cluster (sorted mu: contiguous)
+    Ds = D.conj().transpose(-2, -1)
+    M = 0.5 * (D + Ds) - 0.5j * a2 * (D - Ds)
+    _, W = cost.batched_call(torch.linalg.eigh, torch.where(same, M, torch.zeros_like(M)), what)
+    V = V @ W
+    D = V.conj().transpose(-2, -1) @ Xc @ V
+    lam = torch.diagonal(D, dim1=-2, dim2=-1)
+    off = (D - torch.diag_embed(lam)).abs().amax(dim=(-2, -1)) / lam.abs().amax(dim=-1).clamp(
+        min=torch.finfo(Xc.real.dtype).tiny)
+    return lam, V, off
+
+
 def normal_eig(X: torch.Tensor, what: str = "eigh", rtol: Optional[float] = None
                ) -> Tuple[torch.Tensor, torch.Tensor]:
     """
     Eigenvalues (complex) and a unitary eigenbasis of a stack X of normal matrices, from the Hermitian
     eigensolver: X = H + i K with commuting self-adjoint H, K, and the eigenvectors of H + alpha K diagonalise
-    both when alpha separates the eigenvalues (true for all but finitely many alpha; several irrational
-    values are tried). Raises ValueError if X is not normal to working precision.
+    both when alpha separates the eigenvalues (true for all but finitely many alpha). Eigenvectors of nearly
+    tied values of Re + alpha Im are refined with a second coefficient; several irrational coefficients are tried
+    and the best result is kept per matrix. Raises ValueError if some X is not normal to working precision
+    (relative off-diagonal residual above rtol, default 100 k eps).
     """
-    Xc = X if torch.is_complex(X) else X.to(torch.promote_types(X.dtype, torch.complex64))
+    out_dtype = X.dtype if torch.is_complex(X) else torch.promote_types(X.dtype, torch.complex64)
+    if out_dtype == torch.complex64:
+        # in single precision the separation of nearly tied Re + alpha Im values fails for blocks of a few hundred;
+        # the decomposition is computed in double precision and returned in single precision
+        tol32 = rtol if rtol is not None else 100 * torch.finfo(torch.float32).eps * max(1, X.shape[-1])
+        lam, V = normal_eig(X.to(torch.complex128), what, tol32)
+        return lam.to(out_dtype), V.to(out_dtype)
+    Xc = X.to(out_dtype)
     Xs = Xc.conj().transpose(-2, -1)
     H, K = 0.5 * (Xc + Xs), -0.5j * (Xc - Xs)
-    eps = torch.finfo(Xc.real.dtype).eps
-    tol = (rtol if rtol is not None else 1e3 * eps * max(1, X.shape[-1]))
-    scale = Xc.abs().amax(dim=(-2, -1)).clamp(min=torch.finfo(Xc.real.dtype).tiny)
-    for alpha in _ALPHAS:
-        _, V = cost.batched_call(torch.linalg.eigh, H + alpha * K, what)
-        D = V.conj().transpose(-2, -1) @ Xc @ V
-        lam = torch.diagonal(D, dim1=-2, dim2=-1)
-        off = (D - torch.diag_embed(lam)).abs().amax(dim=(-2, -1))
-        if bool((off <= tol * scale).all()):
-            return lam, V
-    raise ValueError("the operator is not normal to working precision (use holomorphic_function for "
-                     "non-normal operators)")
+    k = X.shape[-1]
+    tol = rtol if rtol is not None else 100 * torch.finfo(Xc.real.dtype).eps * max(1, k)
+    best = None
+    for i, a1 in enumerate(_ALPHAS):
+        lam, V, off = _normal_pass(Xc, H, K, a1, _ALPHAS[(i + 1) % len(_ALPHAS)], what)
+        if best is None:
+            best = [lam, V, off]
+        else:
+            better = off < best[2]
+            best[0] = torch.where(better[:, None], lam, best[0])
+            best[1] = torch.where(better[:, None, None], V, best[1])
+            best[2] = torch.minimum(off, best[2])
+        if bool((best[2] <= tol).all()):
+            return best[0], best[1]
+    raise ValueError(f"the operator is not normal to working precision (relative residual "
+                     f"{best[2].max().item():.1e} > {tol:.1e}); use holomorphic_function for non-normal operators")
 
 
 class _SpectralReconstruction(torch.autograd.Function):
@@ -150,11 +187,13 @@ class _SpectralReconstruction(torch.autograd.Function):
     @staticmethod
     def backward(ctx, G):
         X, V, L = ctx.saved_tensors
-        if torch.is_grad_enabled():
-            V, L = ctx.recompute(X)
-        Vh = V.conj().transpose(-2, -1)
-        Gt = Vh @ G.to(V.dtype) @ V
-        gX = V @ (L.conj().to(Gt.dtype) * Gt) @ Vh
+        Vinv = V.conj().transpose(-2, -1)                      # unitary eigenbasis
+        if torch.is_grad_enabled():                            # create_graph: differentiable recomputation
+            V, Vinv, L = ctx.recompute(X)
+        # F = V f(Λ) V^{-1}, dF = V (L o V^{-1} dX V) V^{-1}  =>  grad_X = V^{-*} (conj(L) o V^* G V^{-*}) V^*
+        Vh, Vinvh = V.conj().transpose(-2, -1), Vinv.conj().transpose(-2, -1)
+        Gt = Vh @ G.to(V.dtype) @ Vinvh
+        gX = Vinvh @ (L.conj().to(Gt.dtype) * Gt) @ Vh
         if not torch.is_complex(X) and torch.is_complex(gX):
             gX = gX.real
         gfw = torch.diagonal(Gt, dim1=-2, dim2=-1)
@@ -186,23 +225,39 @@ def spectral_apply(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], k
     else:
         w, V = decomposition
     needs_grad = Xin.requires_grad and torch.is_grad_enabled()
-    if needs_grad:
+    correct = kind == 'normal'          # first-order correction for the residual off-diagonal part of V^* X V
+    if needs_grad or correct:
         fw, dfw = values_and_derivative(f, w)
     else:
         fw = f(w)
         if not (fw.is_floating_point() or fw.is_complex()):
             fw = fw.to(w.dtype)
+    correction = None
+    if correct:
+        with torch.no_grad():
+            Vh = V.conj().transpose(-2, -1)
+            E = Vh @ Xin.detach().to(V.dtype) @ V
+            E = E - torch.diag_embed(torch.diagonal(E, dim1=-2, dim2=-1))
+            L0 = divided_differences(w, fw.detach(), dfw)
+            correction = V @ (L0.to(E.dtype) * E) @ Vh      # f(V(Λ+E)V^*) = V(f(Λ) + L o E)V^* + O(|E|^2)
     if not needs_grad:
-        return (V * fw.to(torch.promote_types(V.dtype, fw.dtype)).unsqueeze(-2)) @ \
-            V.conj().transpose(-2, -1).to(torch.promote_types(V.dtype, fw.dtype))
+        dt = torch.promote_types(V.dtype, fw.dtype)
+        out = (V.to(dt) * fw.to(dt).unsqueeze(-2)) @ V.conj().transpose(-2, -1).to(dt)
+        return out if correction is None else out + correction.to(dt)
     L = divided_differences(w, fw.detach(), dfw)
 
     def recompute(Y):                                   # differentiable decomposition for second derivatives
-        w2, V2 = decompose(Y)
+        if kind == 'hermitian':
+            w2, V2 = decompose(Y)
+            V2inv = V2.conj().transpose(-2, -1)
+        else:                                           # off the normal matrices: the eigenvectors of Y itself
+            w2, V2 = torch.linalg.eig(Y)
+            V2inv = torch.linalg.inv(V2)
         fw2, dfw2 = values_and_derivative(f, w2, create_graph=True)
-        return V2, divided_differences(w2, fw2, dfw2)
+        return V2, V2inv, divided_differences(w2, fw2, dfw2)
     Vc = V if torch.is_complex(fw) == torch.is_complex(V) or torch.is_complex(V) else V.to(fw.dtype)
-    return _SpectralReconstruction.apply(Xin, fw, Vc, L, recompute)
+    out = _SpectralReconstruction.apply(Xin, fw, Vc, L, recompute)
+    return out if correction is None else out + correction.to(out.dtype)
 
 
 # ----------------------------------------------------------------------
@@ -247,23 +302,35 @@ def svd(X: torch.Tensor, method: str = 'auto') -> Tuple[torch.Tensor, torch.Tens
 
 
 class _Abs(torch.autograd.Function):
-    """|X| = (X^* X)^{1/2} = V diag(s) V^*; backward through sqrt at X^* X with L_ij = 1/(s_i + s_j)."""
+    """
+    |X| = (X^* X)^{1/2} = V diag(s) V^*. Backward through the square root at Y = X^* X, using only the right
+    singular vectors V_r of the singular values above the relative cutoff of the pseudo-inverse:
+    grad_Y = V_r (L o V_r^* G V_r) V_r^* + V_r S_r^{-1} V_r^* G P + P G V_r S_r^{-1} V_r^*, L_ij = 1/(s_i + s_j),
+    P = 1 - V_r V_r^* (the derivative of |X| along directions that keep the kernel), and grad_X = X (grad_Y + h.c.).
+    """
 
     @staticmethod
     def forward(ctx, X, method):
         U, s, V = svd(X, method)
-        ctx.save_for_backward(X, s, V)
-        return (V * s.to(V.dtype).unsqueeze(-2)) @ V.conj().transpose(-2, -1)
+        keep = s > _pinv_threshold(s, X.shape[-1], None)
+        ctx.save_for_backward(X, s, V, keep)
+        return (V * (s * keep).to(V.dtype).unsqueeze(-2)) @ V.conj().transpose(-2, -1)
 
     @staticmethod
     @torch.autograd.function.once_differentiable
     def backward(ctx, G):
-        X, s, V = ctx.saved_tensors
-        S = s.unsqueeze(-1) + s.unsqueeze(-2)
-        L = torch.where(S > torch.finfo(s.dtype).tiny, 1.0 / torch.where(S > 0, S, torch.ones_like(S)),
-                        torch.zeros_like(S))          # kernel of X: |X| is not differentiable there; 0 is used
-        Vh = V.conj().transpose(-2, -1)
-        gY = V @ (L.to(V.dtype) * (Vh @ G.to(V.dtype) @ V)) @ Vh       # gradient at Y = X^* X
+        X, s, V, keep = ctx.saved_tensors
+        Vr = V * keep.to(V.dtype).unsqueeze(-2)                     # kernel columns zeroed (never used)
+        s_safe = torch.where(keep, s, torch.ones_like(s))
+        S = s_safe.unsqueeze(-1) + s_safe.unsqueeze(-2)
+        both = keep.unsqueeze(-1) & keep.unsqueeze(-2)
+        L = torch.where(both, 1.0 / S, torch.zeros_like(S))
+        Vrh = Vr.conj().transpose(-2, -1)
+        G = G.to(V.dtype)
+        k = X.shape[-1]
+        P = torch.eye(k, dtype=V.dtype, device=V.device) - Vr @ Vrh
+        Vs = Vr * torch.where(keep, 1.0 / s_safe, torch.zeros_like(s)).to(V.dtype).unsqueeze(-2)   # V_r S_r^{-1}
+        gY = Vr @ (L.to(V.dtype) * (Vrh @ G @ Vr)) @ Vrh + Vs @ Vrh @ G @ P + P @ G @ Vs @ Vrh
         return X @ (gY + gY.conj().transpose(-2, -1)), None
 
 
@@ -307,71 +374,115 @@ def pinv(X: torch.Tensor, tol: Optional[float] = None, method: str = 'auto') -> 
 def polar(X: torch.Tensor, method: str = 'auto') -> Tuple[torch.Tensor, torch.Tensor]:
     """
     X = W |X| with W = U V^* (unitary for invertible X; on the kernel of a singular X the factor W is the
-    partial isometry from the SVD) and |X| from _Abs (differentiable). W has no gradient.
+    partial isometry from the SVD) and |X| from _Abs (differentiable). W has no gradient. Two Newton-Schulz steps
+    W <- (3W - W W^* W)/2 restore orthonormality lost to rounding (the dilation mixes the eigenvectors of +-s
+    for singular values small compared with the largest).
     """
     U, s, V = svd(X, method)
     thr = _pinv_threshold(s, X.shape[-1], None)
     keep = (s > thr).to(U.dtype).unsqueeze(-2)
-    return (U * keep) @ V.conj().transpose(-2, -1), abs_(X, method)
+    W = (U * keep) @ V.conj().transpose(-2, -1)
+    for _ in range(2):
+        W = 1.5 * W - 0.5 * W @ W.conj().transpose(-2, -1) @ W
+    return W, abs_(X, method)
 
 
 # ----------------------------------------------------------------------
 # level 4: holomorphic functional calculus by contour integration
 # ----------------------------------------------------------------------
-def holomorphic(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], center=None, radius=None,
-                nodes: int = 32, max_nodes: int = 2048, rtol: Optional[float] = None) -> Tuple[torch.Tensor, float]:
+def default_contour(X: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
     """
-    f(X) = (2 pi i)^{-1} oint f(z) (z - X)^{-1} dz on the circle |z - center| = radius, by the trapezoidal
-    rule with N nodes, N doubled until two successive results agree to rtol (the nodes of N are reused for
-    2N). Default contour: center Tr(X)/k, radius 2 ||X - center||_F, which encloses the spectrum; f must be
-    holomorphic on the closed disk and accept complex tensors elementwise. Returns (f(X), error estimate).
+    Circle around the spectrum: center c = Tr(X)/k and radius 1.25 max|lambda_i - c| + 0.5 ||X - c||_F / sqrt(k)
+    (the second term keeps the circle away from the eigenvalues of non-normal blocks, whose resolvent is large near
+    the spectrum, and is positive for X = c + nilpotent). Eigenvalues from torch.linalg.eigvals, without gradients.
     """
     k = X.shape[-1]
+    with torch.no_grad():
+        cdt = X.dtype if torch.is_complex(X) else torch.promote_types(X.dtype, torch.complex64)
+        Xc = X.detach().to(cdt)
+        c = torch.diagonal(Xc, dim1=-2, dim2=-1).sum(-1) / k
+        Y = Xc - c[:, None, None] * torch.eye(k, dtype=cdt, device=X.device)
+        rho = torch.linalg.eigvals(Y).abs().amax(dim=-1)
+        spread = torch.linalg.matrix_norm(Y) / math.sqrt(k)
+        r = 1.25 * rho + 0.5 * spread
+        r = torch.where(r > 0, r, torch.ones_like(r))          # X = c * 1: any circle around c
+    return c, r
+
+
+def holomorphic(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], center=None, radius=None,
+                nodes: int = 32, max_nodes: int = 2048, rtol: Optional[float] = None,
+                memory_bytes: int = 2 ** 28) -> Tuple[torch.Tensor, float]:
+    """
+    f(X) = (2 pi i)^{-1} oint f(z) (z - X)^{-1} dz on the circle |z - center| = radius, by the trapezoidal
+    rule with N nodes, N doubled until two successive results agree to rtol relative to their size (the nodes of N
+    are reused for 2N). Default contour: default_contour(X), a circle just around the spectrum; f must be
+    holomorphic on the closed disk and accept complex tensors elementwise. center and radius may be numbers,
+    tensors (n,) or callables X -> (n,). Raises ValueError if the estimated error stays above sqrt(rtol) (a
+    warning between rtol and sqrt(rtol)). Returns (f(X), error estimate).
+    """
+    k, n = X.shape[-1], X.shape[0]
     cdt = X.dtype if torch.is_complex(X) else torch.promote_types(X.dtype, torch.complex64)
     Xc = X.to(cdt)
     eye = torch.eye(k, dtype=cdt, device=X.device)
-    if center is None:
-        center = torch.diagonal(Xc, dim1=-2, dim2=-1).sum(-1) / k
-    center = torch.as_tensor(center, dtype=cdt, device=X.device).expand(X.shape[0])
-    if radius is None:
-        spread = torch.linalg.matrix_norm(Xc - center[:, None, None] * eye).detach()
-        radius = 2.0 * spread + torch.finfo(Xc.real.dtype).eps ** 0.5
-    radius = torch.as_tensor(radius, dtype=Xc.real.dtype, device=X.device).expand(X.shape[0])
+    if center is None or radius is None:
+        c0, r0 = default_contour(X)
+        center = c0 if center is None else center
+        radius = r0 if radius is None else radius
+    center = center(X) if callable(center) else center
+    radius = radius(X) if callable(radius) else radius
+    center = torch.as_tensor(center, dtype=cdt, device=X.device).expand(n)
+    radius = torch.as_tensor(radius, dtype=Xc.real.dtype, device=X.device).expand(n)
     if rtol is None:
         rtol = 1e-10 if Xc.real.dtype == torch.float64 else 1e-5
+    max_nodes = max(max_nodes, 2 * nodes)
+    with torch.no_grad():               # |f| on the spectrum: a lower bound for ||f(X)||, used to detect cancellation
+        rho_f = f(torch.linalg.eigvals(Xc.detach())).to(cdt).abs().amax(dim=-1)
+    chunk = max(1, int(memory_bytes // max(1, 3 * n * k * k * Xc.element_size())))
 
-    def partial_sum(phases):                              # sum over nodes z = c + r e^{i phi} of f(z)(z-c)(z-X)^{-1}
-        e = torch.exp(1j * phases.to(Xc.real.dtype)).to(cdt)                      # (m,)
-        z = center[None, :] + radius[None, :] * e[:, None]                         # (m, n)
-        fz = f(z)
-        if not torch.isfinite(torch.view_as_real(fz.to(cdt))).all():
-            raise ValueError("f is not finite on the contour: choose center and radius so that the circle encloses "
-                             "the spectrum and f is holomorphic on the closed disk")
-        R = cost.batched_call(torch.linalg.inv, (z[..., None, None] * eye - Xc[None]).reshape(-1, k, k),
-                              f"resolvents (blocks of size {k})", kind='lu').reshape(len(e), *Xc.shape)
-        w = (fz.to(cdt) * (z - center[None, :]))[..., None, None]
-        return (w * R).sum(0)
+    def partial_sum(phases):                    # sum over nodes z = c + r e^{i phi} of f(z)(z-c)(z-X)^{-1}
+        acc = torch.zeros_like(Xc)
+        mag = torch.zeros(n, dtype=Xc.real.dtype, device=X.device)    # sum of |terms|: rounding error estimate
+        for i in range(0, len(phases), chunk):
+            e = torch.exp(1j * phases[i:i + chunk]).to(cdt)                         # (m,)
+            z = center[None, :] + radius[None, :] * e[:, None]                       # (m, n)
+            fz = f(z).to(cdt)
+            if not torch.isfinite(torch.view_as_real(fz)).all():
+                raise ValueError("f is not finite on the contour: choose center and radius so that the circle "
+                                 "encloses the spectrum and f is holomorphic on the closed disk")
+            R = cost.batched_call(torch.linalg.inv, (z[..., None, None] * eye - Xc[None]).reshape(-1, k, k),
+                                  f"resolvents (blocks of size {k})", kind='lu').reshape(len(e), *Xc.shape)
+            term = (fz * (z - center[None, :]))[..., None, None] * R
+            acc = acc + term.sum(0)
+            mag = mag + term.detach().abs().amax(dim=(-2, -1)).sum(0)
+        return acc, mag
 
     N = nodes
-    total = partial_sum(2 * math.pi * torch.arange(N, device=X.device, dtype=torch.float64) / N)
+    total, mag = partial_sum(2 * math.pi * torch.arange(N, device=X.device, dtype=torch.float64) / N)
     F = total / N
+    eps = torch.finfo(Xc.real.dtype).eps
     err = float('inf')
     while N < max_nodes:
-        total = total + partial_sum(2 * math.pi * (torch.arange(N, device=X.device, dtype=torch.float64) + 0.5) / N)
+        t2, m2 = partial_sum(2 * math.pi * (torch.arange(N, device=X.device, dtype=torch.float64) + 0.5) / N)
+        total, mag = total + t2, mag + m2
         N *= 2
         F_new = total / N
-        scale = F_new.detach().abs().amax().clamp(min=1.0)
-        err = float((F_new - F).detach().abs().amax() / scale)
+        size = F_new.detach().abs().amax(dim=(-2, -1)).clamp(min=torch.finfo(Xc.real.dtype).tiny)
+        quadrature = (F_new - F).detach().abs().amax(dim=(-2, -1)) / size
+        true_size = torch.where(rho_f > 0, torch.minimum(rho_f, size), size)
+        rounding = k * eps * (mag / N) / true_size             # cancellation between the terms of the sum
+        err = float(torch.maximum(quadrature, rounding).max())
         F = F_new
         if err <= rtol:
             break
+    if err > rtol ** 0.5:
+        raise ValueError(f"holomorphic_function: the contour integral did not converge (estimated relative error "
+                         f"{err:.1e} with {N} nodes); choose a circle closer to the spectrum on which f is holomorphic, "
+                         f"or use apply_function (self-adjoint or normal operators) or expm")
     if err > rtol:
-        warnings.warn(f"holomorphic_function: contour integral not converged with {N} nodes (estimated relative "
-                      f"error {err:.1e}); adjust the contour (center, radius) or increase max_nodes", RuntimeWarning,
-                      stacklevel=3)
+        warnings.warn(f"holomorphic_function: estimated relative error {err:.1e} with {N} nodes is above rtol "
+                      f"{rtol:.0e}", RuntimeWarning, stacklevel=3)
     if not torch.is_complex(X):
-        if F.detach().imag.abs().amax() > 1e3 * max(rtol, err if err < float('inf') else 0) * \
-                F.detach().abs().amax().clamp(min=1.0):
+        if F.detach().imag.abs().amax() > 1e3 * max(rtol, err) * F.detach().abs().amax().clamp(min=1.0):
             raise ValueError("f(X) is not real for a real X: f must satisfy f(conj z) = conj f(z) "
                              "(use a complex-valued algebra otherwise)")
         F = F.real

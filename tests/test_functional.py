@@ -159,10 +159,12 @@ class TestHolomorphic:
         A = alg.operator(torch.diag(torch.tensor([1.0, 1.5], dtype=torch.complex128))[None, None])
         with pytest.raises(ValueError):                    # the contour passes through the pole z = 3
             A.holomorphic_function(lambda z: 1 / (z - 3), center=1.5, radius=1.5).matrix
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter('always')
+        with pytest.raises(ValueError):                    # too few nodes for a large circle: not converged
             A.holomorphic_function(torch.exp, radius=50.0, nodes=4, max_nodes=8).matrix
-        assert any('not converged' in str(x.message) for x in w)
+        B = torch.randn(6, 6, dtype=torch.float64)
+        with pytest.raises(ValueError):                    # catastrophic cancellation for exp of a large spread
+            TypeIAlgebra([6], [6], precision='double').operator(((B + B.T) * 50)[None, None]).holomorphic_function(
+                torch.exp).matrix
 
 
 # ----------------------------------------------------------------------
@@ -198,3 +200,64 @@ class TestCache:
         monkeypatch.setattr(torch.linalg, 'eigh', lambda x, *a, **k: (calls.append(1), real(x, *a, **k))[1])
         Us = [dynamics.propagator(H, t).matrix for t in (0.1, 0.2, 0.3)]
         assert not calls and close(Us[2], U1)
+
+
+class TestReviewRegressions:
+    """Defects found in the review of the functional calculus."""
+
+    @pytest.mark.parametrize('prec,k', [('double', 400), ('single', 400)])
+    def test_large_unitaries_are_normal(self, prec, k):
+        torch.manual_seed(12)
+        alg = TypeIAlgebra([k], [k], precision=prec)
+        U = alg.random_unitary_operator(2)
+        tol = 1e-12 if prec == 'double' else 1e-5
+        assert close(U.apply_function(lambda z: z ** 2), U @ U, tol)
+
+    def test_second_derivatives_normal(self):
+        torch.manual_seed(13)
+        Q, R = torch.linalg.qr(torch.randn(4, 4, dtype=torch.complex128))
+        U = (Q * (R.diagonal() / R.diagonal().abs()))[None]
+        G, H = torch.randn_like(U), torch.randn_like(U)
+
+        def hvp(F):
+            X = U.clone().requires_grad_(True)
+            g, = torch.autograd.grad((F(X) * G.conj()).real.sum(), X, create_graph=True)
+            return torch.autograd.grad((g.conj() * H).real.sum(), X)[0]
+        assert (hvp(lambda Y: fc.spectral_apply(Y, torch.exp, 'normal')) - hvp(torch.linalg.matrix_exp)).abs().max() < 1e-10
+
+    @pytest.mark.parametrize('method', ['svd', 'eigh'])
+    def test_abs_gradient_rank_deficient(self, method):
+        torch.manual_seed(14)
+        k = 6
+        Q1, _ = torch.linalg.qr(torch.randn(k, k, dtype=torch.complex128))
+        Q2, _ = torch.linalg.qr(torch.randn(k, k, dtype=torch.complex128))
+        s = torch.zeros(k, dtype=torch.complex128); s[:3] = torch.tensor([3.0, 2.0, 1.0])
+        X0 = (Q1 @ torch.diag(s) @ Q2.mH)[None]
+        M = torch.zeros(k, k, dtype=torch.complex128); M[:3, :3] = torch.randn(3, 3, dtype=torch.complex128)
+        E = (Q1 @ M @ Q2.mH)[None]                          # a direction that keeps the kernel
+        G = torch.randn_like(X0)
+        X = X0.clone().requires_grad_(True)
+        (fc.abs_(X, method) * G.conj()).real.sum().backward()
+        h = 1e-6
+        fd = ((fc.abs_(X0 + h * E, 'svd') - fc.abs_(X0 - h * E, 'svd')) / (2 * h) * G.conj()).real.sum()
+        assert abs((X.grad.conj() * E).real.sum() - fd) < 1e-6
+
+    def test_polar_factor_unitary_for_ill_conditioned(self):
+        torch.manual_seed(15)
+        k = 40
+        Q1, _ = torch.linalg.qr(torch.randn(k, k, dtype=torch.complex128))
+        Q2, _ = torch.linalg.qr(torch.randn(k, k, dtype=torch.complex128))
+        s = torch.ones(k, dtype=torch.complex128); s[-1] = 1e-13
+        X = (Q1 @ torch.diag(s) @ Q2.mH)[None]
+        W, P = fc.polar(X, 'eigh')
+        assert (W.mH @ W - torch.eye(k, dtype=X.dtype)).abs().max() < 1e-12
+        assert (W @ P - X).abs().max() < 1e-12
+
+    def test_contour_exact_for_nilpotent_and_tight_default_circle(self):
+        N = torch.diag(torch.ones(5, dtype=torch.complex128), 1)
+        F, err = fc.holomorphic(N[None], torch.exp)
+        assert (F - torch.linalg.matrix_exp(N[None])).abs().max() < 1e-12
+        B = torch.randn(6, 6, dtype=torch.float64)
+        F, err = fc.holomorphic(((B + B.T) * 2)[None], torch.exp)      # the old radius lost 7 digits here
+        ref = torch.linalg.matrix_exp(((B + B.T) * 2)[None])
+        assert ((F - ref).abs().max() / ref.abs().max()) < 1e-11
