@@ -2,6 +2,7 @@
 import torch
 from torch_vn_algebra import TypeIAlgebra
 
+torch.manual_seed(0)                               # reproducible output
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 alg = TypeIAlgebra(n_factors=[2, 3, 4], k_factors=[2, 3, 4], device=dev)
 B = 10_000                                     # Monte Carlo samples, processed as one batch

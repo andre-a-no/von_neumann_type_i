@@ -1,0 +1,10 @@
+k=  2: violation found by sampling 1/4, by ascent 4/4; median z/Tr(XY): sup 1.03e-04, sampling -0.001, ascent 1.03e-04 (rel. error median 5.2e-07, max 2.8e-06); 0.1s / 12.4s
+k=  4: violation found by sampling 0/4, by ascent 4/4; median z/Tr(XY): sup 3.66e-03, sampling -0.198, ascent 3.66e-03 (rel. error median 3.1e-08, max 1.4e-06); 0.3s / 45.8s
+k=  8: violation found by sampling 0/4, by ascent 4/4; median z/Tr(XY): sup 5.09e-03, sampling -0.594, ascent 5.09e-03 (rel. error median 4.2e-07, max 5.5e-07); 0.5s / 62.8s
+/home/user/von_neumann_type_i/torch_vn_algebra/algebra.py:993: CostWarning: random_unitary(n=16, batch=20000): about 20 s expected for 20000 blocks of size 16 on cpu (measured on 8 blocks). Consider a smaller batch, double -> single precision or a GPU. Silence with warnings.simplefilter('ignore', torch_vn_algebra.cost.CostWarning).
+  mat[:, c, :k_c, :k_c] = self.random_unitary(k_c, measure=measure, batch_size=batch_size)
+/home/user/von_neumann_type_i/torch_vn_algebra/algebra.py:993: CostWarning: random_unitary(n=16, batch=20000): about 30 s expected for 20000 blocks of size 16 on cpu (measured on 8 blocks). Consider a smaller batch, double -> single precision or a GPU. Silence with warnings.simplefilter('ignore', torch_vn_algebra.cost.CostWarning).
+  mat[:, c, :k_c, :k_c] = self.random_unitary(k_c, measure=measure, batch_size=batch_size)
+k= 16: violation found by sampling 0/4, by ascent 4/4; median z/Tr(XY): sup 5.33e-03, sampling -0.777, ascent 5.33e-03 (rel. error median 2.9e-06, max 4.8e-06); 1.5s / 101.5s
+written: /home/user/von_neumann_type_i/paper/generated /home/user/von_neumann_type_i/paper/figures
+[resources] wall 902 s, peak host RSS 1.11 GiB

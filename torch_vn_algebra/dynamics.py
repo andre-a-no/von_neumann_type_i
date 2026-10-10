@@ -219,8 +219,14 @@ def lindblad_evolve(rho0: Operator, H: Optional[OperatorLike], jumps: Sequence[O
     if H is not None:
         _require_complex(rho0.algebra)
     # one initial state for a batch of Hamiltonians / jump operators (disorder averages), or vice versa
-    batches = [rho0.matrix.shape[0]] + [_mat(X).shape[0] for X in ([H] if H is not None else []) + list(jumps)
-                                        if isinstance(_mat(X), torch.Tensor)]
+    t0 = float(_times(times, 'cpu')[0])
+
+    def _batch(X):                                     # batch size of a (possibly time-dependent) H or jump
+        if isinstance(X, InterSectorChannel):
+            return X.kraus.shape[0]
+        X = _mat(X(t0)) if callable(X) and not isinstance(X, Operator) else _mat(X)
+        return X.shape[0] if isinstance(X, torch.Tensor) else 1
+    batches = [rho0.matrix.shape[0]] + [_batch(X) for X in ([H] if H is not None else []) + list(jumps)]
     y0 = rho0.matrix.to(dtype)
     y0 = y0.expand(max(batches), *y0.shape[1:]).clone()
     ys = rk4(lindblad_rhs(H, jumps, rates), y0, times, substeps, progress)

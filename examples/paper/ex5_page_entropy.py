@@ -2,6 +2,7 @@
 import torch
 from torch_vn_algebra import TypeIAlgebra, tensor_product, partial_trace, states
 
+torch.manual_seed(0)                               # reproducible output
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 m, n, B = 4, 8, 20_000
 A = TypeIAlgebra([m], [m], device=dev, precision='double')

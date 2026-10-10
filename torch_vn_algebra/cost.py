@@ -133,7 +133,7 @@ def tensor_bytes(shape, dtype) -> int:
 
 def kernel_flops(kind: str, k: int, complex_: bool) -> float:
     """Rough flop count of one k x k kernel (only used to skip probing of small problems)."""
-    c = {'matmul': 2, 'qr': 4, 'eigh': 10, 'svd': 22, 'expm': 30}.get(kind, 10)
+    c = {'matmul': 2, 'lu': 2, 'qr': 4, 'eigh': 10, 'svd': 22, 'expm': 30}.get(kind, 10)
     return c * k ** 3 * (4 if complex_ else 1)
 
 

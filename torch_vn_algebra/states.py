@@ -114,6 +114,9 @@ class DensityMatrix(Operator):
     # ----- state -> state -----
     def mix(self, other: 'DensityMatrix', p) -> 'DensityMatrix':
         """(1 - p) rho + p sigma for p in [0, 1]; p is a number or a tensor (batch,) with one weight per sample."""
+        from .channels import _same_structure
+        if not _same_structure(other.algebra, self.algebra):
+            raise ValueError("mix: both states must live in the same algebra")
         pt = torch.as_tensor(p, dtype=self.matrix.real.dtype, device=self.matrix.device)
         if torch.any(pt < 0) or torch.any(pt > 1):
             raise ValueError("mix: p must lie in [0, 1] (otherwise the result is not a state)")
@@ -265,12 +268,7 @@ def relative_entropy(rho: Operator, sigma: Operator, eps: float = 1e-12) -> torc
 
 def fidelity(rho: Operator, sigma: Operator) -> torch.Tensor:
     """Uhlmann fidelity F = (Tr |sqrt(rho) sqrt(sigma)|)^2."""
-    s = 0.0
-    a, b = rho.power(0.5).matrix, sigma.power(0.5).matrix
-    for c, k_c in enumerate(rho.algebra.k_factors):
-        if k_c > 0:
-            s = s + torch.linalg.svdvals(a[:, c, :k_c, :k_c] @ b[:, c, :k_c, :k_c]).sum(dim=-1)
-    return s ** 2
+    return (rho.power(0.5) @ sigma.power(0.5)).trace_norm() ** 2      # batched over sectors of equal size
 
 
 def trace_distance(rho: Operator, sigma: Operator) -> torch.Tensor:

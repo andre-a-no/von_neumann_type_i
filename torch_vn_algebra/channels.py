@@ -28,7 +28,8 @@ Operator = TypeIAlgebra.Operator
 
 
 def _same_structure(a: TypeIAlgebra, b: TypeIAlgebra) -> bool:
-    return a is b or (a.k_factors == b.k_factors and a.dtype == b.dtype and a.hilbert.device == b.hilbert.device)
+    return a is b or (a.k_factors == b.k_factors and a.n_factors == b.n_factors and a.charges == b.charges
+                      and a.dtype == b.dtype and a.hilbert.device == b.hilbert.device)
 
 
 def _check_input(op, alg: TypeIAlgebra, what: str) -> None:
@@ -135,6 +136,9 @@ class Channel:
         """Convex combination (1 - p) self + p other."""
         if not _same_structure(other.algebra, self.algebra):
             raise ValueError("mix: both channels must act on the same algebra")
+        if isinstance(p, torch.Tensor) and p.numel() != 1:
+            raise ValueError("Channel.mix: p must be a single number (mix channels of a batch one by one)")
+        p = float(p)
         if not 0 <= p <= 1:
             raise ValueError("mix: p must lie in [0, 1]")
         B = max(self.batch_size, other.batch_size)
@@ -397,7 +401,7 @@ class InterSectorChannel:
             for i, op in enumerate(ops):
                 op = torch.as_tensor(op)
                 assert op.shape[-2:] == (m_d, k_c), f"block ({d}, {c}) must be {m_d} x {k_c}"
-                K[:, i, d, c, :m_d, :k_c] = op.to(dtype=dtype, device=K.device)
+                K[:, i, d, c, :m_d, :k_c] = algebra_out._to_field(op, f"Kraus block ({d}, {c})").to(dtype)
         return InterSectorChannel(algebra_in, algebra_out, K)
 
     # ------------------------------------------------------------------

@@ -1,0 +1,3 @@
+graft docs
+graft examples
+prune examples/**/__pycache__

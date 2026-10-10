@@ -87,14 +87,25 @@ class HilbertSpace:
     def shape_bra(self) -> Tuple[int, int, int, int]:
         return (self.batch_size, self.n_channels, 1, self.n)
     
-    def inner_product(self, bra: torch.Tensor, ket: torch.Tensor) -> torch.Tensor:
+    def inner_product(self, bra: torch.Tensor, ket: torch.Tensor, bra_is_row: Optional[bool] = None) -> torch.Tensor:
         """
         Global inner product <psi|phi>, summed over channels and components; returns (batch, 1, 1, 1).
         `bra` is either a bra row (batch, C, 1, n), already conjugated (as returned by Basis.bra), or a
         ket column (batch, C, n, 1) / flat vector (batch, C, n), which is conjugated here.
         `ket` is a ket column (batch, C, n, 1) or a flat vector (batch, C, n).
+        For n = 1 a row and a column have the same shape (batch, C, 1, 1); in a complex space pass
+        bra_is_row=True (already conjugated) or False (conjugate it) to say which one is meant.
         """
-        if bra.dim() == 4 and bra.shape[-2] == 1:
+        if bra.dim() == 4 and bra.shape[-2] == 1 and bra.shape[-1] == 1:
+            if bra_is_row is None:
+                if bra.is_complex():
+                    raise ValueError("inner_product: for n = 1 a bra row and a ket column have the same shape; "
+                                     "pass bra_is_row=True or False")
+                bra_is_row = True                             # real: both readings agree
+            bra_flat = bra.squeeze(-1) if bra_is_row else bra.squeeze(-1).conj()
+        elif bra_is_row is not None and bra.dim() == 4 and bra.shape[-2] != 1 and bra_is_row:
+            raise ValueError(f"inner_product: bra_is_row=True, but bra has shape {tuple(bra.shape)}")
+        elif bra.dim() == 4 and bra.shape[-2] == 1:
             bra_flat = bra.squeeze(-2)                        # bra row: already conjugated
         elif bra.dim() == 4 and bra.shape[-1] == 1:
             bra_flat = bra.squeeze(-1).conj()                 # ket column given as the left argument

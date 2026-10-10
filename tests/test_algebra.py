@@ -719,3 +719,190 @@ def test_central_with_complex_scalars():
         TypeIAlgebra([2], [2], complex_valued=False).central([1j])
     with pytest.raises(ValueError):
         alg.central([1.0])
+
+
+class TestFourthReview:
+    """Regressions from the fourth review round."""
+
+    @pytest.mark.parametrize('complex_valued', [False, True])
+    def test_blockwise_functions_gradcheck_with_padding(self, complex_valued):
+        alg = TypeIAlgebra([2, 3], [2, 3], complex_valued=complex_valued, precision='double')
+        torch.manual_seed(0)
+        U = alg.random_unitary_operator(1)
+        D = alg.from_blocks([torch.diag(torch.tensor(v, dtype=torch.float64)) for v in ([1.0, 2.0], [0.7, 1.5, 3.0])])
+        P = (U @ D @ U.adjoint()).matrix   # positive definite on active blocks
+
+        for f in (lambda X: X.inverse(), lambda X: X.sqrt(), lambda X: X.abs()):
+            def g(m):
+                m = 0.5 * (m + m.conj().transpose(-2, -1))
+                return f(alg.operator(m)).matrix
+            x = P.clone().requires_grad_(True)
+            assert torch.autograd.gradcheck(g, (x,), eps=1e-6, atol=1e-5)
+            out = g(P)
+            assert out[0, 0, 2:, :].abs().max() == 0 and out[0, 0, :, 2:].abs().max() == 0   # padding stays zero
+
+    def test_structure_includes_charges(self):
+        a = TypeIAlgebra([2, 2], [2, 2], charges=[0, 1])
+        b = TypeIAlgebra([2, 2], [2, 2], charges=[1, 2])
+        with pytest.raises(ValueError):
+            a.identity() + b.identity()
+
+    def test_complex_tensor_scalar_rejected_in_real_algebra(self):
+        alg = TypeIAlgebra([2], [2], complex_valued=False)
+        with pytest.raises(ValueError):
+            alg.identity() * torch.tensor(1j)
+
+    def test_central_keeps_gradients_and_per_sample_values(self):
+        alg = TypeIAlgebra([2, 3], [2, 3], precision='double')
+        s = torch.tensor([1.0, 2.0], dtype=torch.float64, requires_grad=True)
+        Z = alg.central([s, 3.0])
+        assert Z.matrix.shape[0] == 2 and Z.is_positive and Z.is_self_adjoint
+        assert torch.allclose(Z.matrix[1, 0, :2, :2], 2 * torch.eye(2, dtype=Z.matrix.dtype))
+        Z.matrix.real.sum().backward()
+        assert torch.allclose(s.grad, torch.tensor([2.0, 2.0], dtype=torch.float64))
+
+    def test_intersector_from_blocks_checks_field(self):
+        from torch_vn_algebra.channels import InterSectorChannel
+        alg = TypeIAlgebra([1, 2], [1, 2], complex_valued=False)
+        with pytest.raises(ValueError):
+            InterSectorChannel.from_blocks(alg, alg, {(0, 1): [torch.ones(1, 2) * 1j]})
+
+    def test_inner_product_n1(self):
+        from torch_vn_algebra.hilbert_space import HilbertSpace
+        H = HilbertSpace(n=1, k=1, device='cpu', precision='double')
+        v = torch.full((1, 1, 1, 1), 1j, dtype=torch.complex128)
+        with pytest.raises(ValueError):
+            H.inner_product(v, v)
+        assert abs(H.inner_product(v, v, bra_is_row=False).item() - 1) < 1e-12
+        assert abs(H.inner_product(v, v, bra_is_row=True).item() + 1) < 1e-12
+
+    def test_lindblad_broadcasts_intersector_and_callable(self):
+        from torch_vn_algebra import SpinChain, dynamics, states
+        ch = SpinChain(2)
+        alg = ch.algebra
+        rho = states.maximally_mixed_state(alg)
+        L = ch.lowering(0)
+        L4 = type(L)(L.algebra_in, L.algebra_out, L.kraus.expand(4, *L.kraus.shape[1:]).clone())
+        out = dynamics.lindblad_evolve(rho, None, [L4], times=[0.0, 0.1])
+        assert out[-1].matrix.shape[0] == 4
+        U = alg.random_unitary_operator(3)
+        H3 = U + U.adjoint()
+        out = dynamics.lindblad_evolve(rho, lambda t: H3, [], times=[0.0, 0.1])
+        assert out[-1].matrix.shape[0] == 3
+
+    def test_mix_checks_algebra_and_scalar_p(self):
+        from torch_vn_algebra import states, channels
+        a, b = TypeIAlgebra([2], [2]), TypeIAlgebra([3], [3])
+        with pytest.raises(ValueError):
+            states.maximally_mixed_state(a).mix(states.maximally_mixed_state(b), 0.5)
+        Phi = channels.random_channel(a, 2)
+        with pytest.raises(ValueError):
+            Phi.mix(Phi, torch.tensor([0.1, 0.2]))
+        assert Phi.mix(Phi, torch.tensor(0.3)).kraus.shape[1] == 4
+
+
+def test_decompositions_grouped_by_block_size(monkeypatch):
+    """Sectors of equal size share one batched eigendecomposition; results equal the per-sector ones."""
+    alg = TypeIAlgebra([3, 2, 3, 3], [3, 2, 3, 3], precision='double')
+    A = alg.operator_from_eigenvalues(lambda d: torch.rand(5, d) + 0.1, batch_size=5, force_positive=True)
+    calls = []
+    real_eigh = torch.linalg.eigh
+    monkeypatch.setattr(torch.linalg, 'eigh', lambda x, *a, **k: (calls.append(x.shape), real_eigh(x, *a, **k))[1])
+    R = A.apply_function(torch.sqrt).matrix
+    assert len(calls) == 2                                    # sizes 3 and 2: two calls, not four
+    monkeypatch.setattr(torch.linalg, 'eigh', real_eigh)
+    for c, k in enumerate(alg.k_factors):
+        blk = A.matrix[:, c, :k, :k]
+        w, V = torch.linalg.eigh(blk)
+        ref = (V * w.sqrt().unsqueeze(-2).to(V.dtype)) @ V.conj().transpose(-2, -1)
+        assert torch.allclose(R[:, c, :k, :k], ref, atol=1e-12)
+        assert R[:, c, k:, :].abs().sum() == 0
+    assert [e.shape for e in A.eigenvalues()] == [(5, 3), (5, 2), (5, 3), (5, 3)]
+
+
+class TestSpectralGradients:
+    """Functional calculus: Daleckii-Krein gradients, finite at degenerate spectra."""
+
+    def _degenerate(self, alg):
+        U = alg.random_unitary_operator(1)
+        D = alg.from_blocks([torch.diag(torch.tensor([1.0, 1.0, 2.0], dtype=torch.float64))])
+        return (U @ D @ U.adjoint()).matrix
+
+    @pytest.mark.parametrize('complex_valued', [False, True])
+    def test_finite_and_correct_at_degenerate_spectrum(self, complex_valued):
+        torch.manual_seed(1)
+        alg = TypeIAlgebra([3], [3], complex_valued=complex_valued, precision='double')
+        X0 = self._degenerate(alg)
+        for f in (torch.sqrt, torch.exp, lambda w: w ** 3):
+            X = X0.clone().requires_grad_(True)
+            Y = alg.operator(X, is_self_adjoint=True).apply_function(f).matrix
+            G = torch.randn_like(Y)
+            (Y * G.conj()).real.sum().backward()
+            assert torch.isfinite(X.grad).all()
+            # directional derivative along a random self-adjoint direction H, against central differences
+            H = torch.randn_like(X0); H = 0.5 * (H + H.conj().transpose(-2, -1))
+            h = 1e-6
+            Fp = alg.operator(X0 + h * H, is_self_adjoint=True).apply_function(f).matrix
+            Fm = alg.operator(X0 - h * H, is_self_adjoint=True).apply_function(f).matrix
+            fd = ((Fp - Fm) / (2 * h) * G.conj()).real.sum()
+            assert abs((X.grad.conj() * H).real.sum() - fd) < 1e-6 * (1 + abs(fd))
+
+    @pytest.mark.parametrize('complex_valued', [False, True])
+    def test_gradcheck(self, complex_valued):
+        torch.manual_seed(2)
+        alg = TypeIAlgebra([2, 3], [2, 3], complex_valued=complex_valued, precision='double')
+        A = alg.operator_from_eigenvalues(lambda d: 0.5 + torch.rand(1, d), force_positive=True).matrix
+
+        def g(m):
+            return alg.operator(0.5 * (m + m.conj().transpose(-2, -1))).apply_function(torch.log).matrix
+        assert torch.autograd.gradcheck(g, (A.clone().requires_grad_(True),), eps=1e-6, atol=1e-5)
+
+    def test_gradient_with_respect_to_a_parameter_of_f(self):
+        alg = TypeIAlgebra([3], [3], precision='double')
+        X = self._degenerate(alg)
+        t = torch.tensor(0.7, dtype=torch.float64, requires_grad=True)
+        U = alg.operator(X, is_self_adjoint=True).apply_function(lambda w: torch.exp(-1j * t * w))
+        U.trace.real.backward()
+        w = torch.tensor([1.0, 1.0, 2.0], dtype=torch.float64)
+        exact = -(w * torch.sin(0.7 * w)).sum()                   # d/dt Re Tr e^{-itX} = -sum_i w_i sin(t w_i)
+        assert abs(t.grad - exact) < 1e-10
+
+    def test_self_adjoint_paths_agree_with_svd(self):
+        torch.manual_seed(3)
+        alg = TypeIAlgebra([3, 2], [3, 2], precision='double')
+        A = alg.operator_from_eigenvalues(lambda d: torch.randn(4, d), batch_size=4, force_self_adjoint=True)
+        plain = alg.operator(A.matrix.clone())                    # flags unknown: SVD paths
+        assert torch.allclose(A.abs().matrix, plain.abs().matrix, atol=1e-10)
+        assert torch.allclose(A.inverse().matrix, plain.inverse().matrix, atol=1e-8)
+        assert torch.allclose(A.trace_norm(), plain.trace_norm(), atol=1e-10)
+
+
+class TestSpectralGradientsReview:
+    """Regressions from the review of the Daleckii-Krein backward pass."""
+
+    def test_second_derivatives(self):
+        torch.manual_seed(0)
+        alg = TypeIAlgebra([3], [3], complex_valued=False, precision='double')
+        X = torch.randn(1, 1, 3, 3, dtype=torch.float64); X = (X + X.transpose(-1, -2)).requires_grad_(True)
+        H = torch.randn_like(X); H = H + H.transpose(-1, -2)
+        g, = torch.autograd.grad(alg.operator(X).apply_function(torch.exp).trace.sum(), X, create_graph=True)
+        hv, = torch.autograd.grad((g * H).sum(), X)
+        ref = lambda Y: torch.linalg.matrix_exp(0.5 * (Y + Y.transpose(-1, -2))).diagonal(dim1=-2, dim2=-1).sum()
+        _, hv_ref = torch.autograd.functional.hvp(ref, X.detach(), H)
+        assert (hv - hv_ref).abs().max() < 1e-10
+
+    def test_indicator_function_with_gradients(self):
+        alg = TypeIAlgebra([3], [3], precision='double')
+        A = alg.operator_from_eigenvalues(lambda d: torch.tensor([[-1.0, 0.5, 2.0]]), force_self_adjoint=True)
+        X = A.matrix.clone().requires_grad_(True)
+        P = alg.operator(X, is_self_adjoint=True).apply_function(lambda w: w > 0)
+        P.trace.real.backward()
+        assert abs(P.trace.real.item() - 2) < 1e-12 and torch.isfinite(X.grad).all()
+
+    def test_divided_differences_of_tiny_eigenvalues(self):
+        from torch_vn_algebra.algebra import _divided_differences
+        w = torch.tensor([1e-10, 1.1e-10], dtype=torch.float64)
+        L = _divided_differences(w, torch.log(w), 1 / w)
+        exact = (math.log(1.1e-10) - math.log(1e-10)) / 1e-11
+        assert abs(L[0, 1].item() - exact) < 1e-12 * exact
+
