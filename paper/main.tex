@@ -377,13 +377,16 @@ $W$ Haar on $U(n)$ ($n$ even for $W^RW$, $W^R$ the quaternion dual)~\cite{mehta2
 all built on kernels that are batched on GPUs for every block size~\cite{higham2008}. (1) For self-adjoint $A$,
 $f(A)=Vf(\Lambda)V^*$ from the Hermitian eigensolver, for any function on the real spectrum. (2) For normal
 $A=H+iK$ (unitaries), $H$ and $K$ commute, and the eigenvectors of the Hermitian matrix $H+\alpha K$ diagonalise $A$ for
-all but finitely many $\alpha$; the library tries a few irrational values and checks the result, so normal operators
-also need only the Hermitian eigensolver. (3) Singular values, $|A|$, the pseudo-inverse and the polar decomposition
+all but finitely many $\alpha$; the library tries a few irrational values, refines the eigenvectors of nearly tied values
+with a second coefficient and corrects the remaining residual to first order, so normal operators also need only
+the Hermitian eigensolver (in single precision this decomposition is computed in double precision). (3) Singular values, $|A|$, the pseudo-inverse and the polar decomposition
 come from the Hermitian eigensolver of the dilation $\left(\begin{smallmatrix}0&A\\A^*&0\end{smallmatrix}\right)$, whose
 eigenvalues are $\pm s_i$: batched SVD on GPUs is limited to blocks of size at most $32$, while the batched Hermitian
 eigensolver is not. (4) For arbitrary $A$ and $f$ holomorphic near the spectrum,
 $f(A)=(2\pi i)^{-1}\oint f(z)(z-A)^{-1}dz$ is evaluated by the trapezoidal rule on a circle~\cite{trefethen2014},
-i.e.\ by batched LU solves, with the number of nodes doubled until two results agree. An opt-in cache keeps the
+i.e.\ by batched LU solves, on a circle just around the spectrum, with the number of nodes doubled until two
+results agree; the error estimate includes the rounding error of cancelling terms, and an unconverged result raises
+an error instead of returning a wrong matrix. An opt-in cache keeps the
 eigendecomposition of an operator, so that many functions of it (for example $e^{-itH}$ for many $t$) cost matrix
 products only.
 
