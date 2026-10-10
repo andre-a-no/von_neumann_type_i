@@ -799,3 +799,22 @@ class TestFourthReview:
         with pytest.raises(ValueError):
             Phi.mix(Phi, torch.tensor([0.1, 0.2]))
         assert Phi.mix(Phi, torch.tensor(0.3)).kraus.shape[1] == 4
+
+
+def test_decompositions_grouped_by_block_size(monkeypatch):
+    """Sectors of equal size share one batched eigendecomposition; results equal the per-sector ones."""
+    alg = TypeIAlgebra([3, 2, 3, 3], [3, 2, 3, 3], precision='double')
+    A = alg.operator_from_eigenvalues(lambda d: torch.rand(5, d) + 0.1, batch_size=5, force_positive=True)
+    calls = []
+    real_eigh = torch.linalg.eigh
+    monkeypatch.setattr(torch.linalg, 'eigh', lambda x, *a, **k: (calls.append(x.shape), real_eigh(x, *a, **k))[1])
+    R = A.apply_function(torch.sqrt).matrix
+    assert len(calls) == 2                                    # sizes 3 and 2: two calls, not four
+    monkeypatch.setattr(torch.linalg, 'eigh', real_eigh)
+    for c, k in enumerate(alg.k_factors):
+        blk = A.matrix[:, c, :k, :k]
+        w, V = torch.linalg.eigh(blk)
+        ref = (V * w.sqrt().unsqueeze(-2).to(V.dtype)) @ V.conj().transpose(-2, -1)
+        assert torch.allclose(R[:, c, :k, :k], ref, atol=1e-12)
+        assert R[:, c, k:, :].abs().sum() == 0
+    assert [e.shape for e in A.eigenvalues()] == [(5, 3), (5, 2), (5, 3), (5, 3)]

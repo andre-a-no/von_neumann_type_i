@@ -39,7 +39,9 @@ Two consequences make this more than bookkeeping.
 
 - **Cost.** A product or a spectral decomposition in $\mathcal M$ costs $\sum_ck_c^3$ operations,
   against $D^3$ for the embedding into $M_D(\mathbb C)$, $D=\sum_ck_c$; for $C$ equal blocks this is a
-  factor $C^2$. All $B\cdot C$ blocks are processed by one call, which keeps a GPU busy.
+  factor $C^2$. Products, sums and traces process all $B\cdot C$ blocks in one call; decompositions (eigenvalues,
+  singular values) run as one call per distinct block size — a single call when all sectors have
+  the same size. This keeps a GPU busy.
 - **Correctness by construction.** Everything that is computed stays in $\mathcal M$: random
   unitaries are Haar distributed on $\prod_cU(k_c)$ (a null set inside $U(D)$, never reached by
   sampling $U(D)$), gradient steps do not leave the algebra, and the trace, the densities and the
@@ -76,10 +78,11 @@ assert abs(A.sqrt().Tr_blunt().item() - root_big.trace().item()) < 1e-9
 print(f"in the algebra: {t_blocks * 1e3:.1f} ms, as one 1024 x 1024 matrix: {t_big * 1e3:.1f} ms")
 ```
 
-The results agree to round-off. The algebra version is faster — several times on a typical CPU
-for this size (about 35 ms against 240 ms on the 4-core machine where this course was tested) —
-though far less than the operation count $C^2=4096$ suggests, because one large eigensolver call
-uses the hardware better than many small ones. The gap grows with the number of sectors, and
+The results agree to round-off. The algebra version is faster — about ten times on a typical CPU
+for this size (about 16 ms against 200 ms on the 4-core machine where this course was tested;
+all 64 blocks go to the eigensolver in one call) — though far less than the operation count
+$C^2=4096$ suggests, because one large eigensolver call uses the hardware better than many small
+ones. The gap grows with the number of sectors, and
 the memory saving is a factor $C$. With a batch of $B$ elements the algebra
 version stays one call; the large-matrix version becomes $B$ large eigenproblems.
 
@@ -109,7 +112,8 @@ algebras. What we found falls into four groups, all useful and all different in 
 To our knowledge there is no general library in which a finite-dimensional von Neumann algebra
 is the basic data type for batched, differentiable numerical computation. The novelty is therefore
 not new mathematics but **efficient computation**: the identification of §0.1, implemented so that
-the structure of the algebra is preserved and every operation runs as one batched kernel. If you
+the structure of the algebra is preserved and every operation runs as batched kernels (one per
+distinct block size for decompositions). If you
 know of related software, we would be glad to hear about it.
 
 ## 0.4 How to read this course

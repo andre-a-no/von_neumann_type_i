@@ -41,8 +41,10 @@ Zwei Konsequenzen machen dies zu mehr als bloßer Buchführung.
 
 - **Aufwand.** Ein Produkt oder eine Spektralzerlegung in $\mathcal M$ kostet $\sum_ck_c^3$
   Operationen, gegenüber $D^3$ für die Einbettung in $M_D(\mathbb C)$, $D=\sum_ck_c$; für $C$
-  gleich große Blöcke ist das ein Faktor $C^2$. Alle $B\cdot C$ Blöcke werden in einem einzigen
-  Aufruf verarbeitet, was eine GPU auslastet.
+  gleich große Blöcke ist das ein Faktor $C^2$. Produkte, Summen und Spuren verarbeiten alle
+  $B\cdot C$ Blöcke in einem einzigen Aufruf; Zerlegungen (Eigenwerte, Singulärwerte) laufen als ein
+  Aufruf pro vorkommender Blockgröße – ein einziger Aufruf, wenn alle Sektoren gleich groß sind.
+  Das lastet eine GPU aus.
 - **Korrektheit durch Konstruktion.** Alles, was berechnet wird, bleibt in $\mathcal M$:
   Zufällige unitäre Elemente sind Haar-verteilt auf $\prod_cU(k_c)$ (einer Nullmenge in $U(D)$,
   die man durch Stichproben aus $U(D)$ nie erreicht), Gradientenschritte verlassen die Algebra
@@ -82,8 +84,9 @@ print(f"in the algebra: {t_blocks * 1e3:.1f} ms, as one 1024 x 1024 matrix: {t_b
 ```
 
 Die Ergebnisse stimmen bis auf Rundungsfehler überein. Die Version in der Algebra ist schneller –
-bei dieser Größe auf einer typischen CPU um ein Mehrfaches (etwa 35 ms gegenüber 240 ms auf der
-4-Kern-Maschine, auf der dieser Kurs getestet wurde) –, allerdings weit weniger, als die Zahl der
+bei dieser Größe auf einer typischen CPU etwa um das Zehnfache (etwa 16 ms gegenüber 200 ms auf der
+4-Kern-Maschine, auf der dieser Kurs getestet wurde; alle 64 Blöcke gehen in einem einzigen Aufruf
+an den Eigenwertlöser) –, allerdings weit weniger, als die Zahl der
 Operationen $C^2=4096$ nahelegt, weil ein einziger Aufruf eines großen Eigenwertlösers die
 Hardware besser nutzt als viele kleine. Der Abstand wächst mit der Zahl der Sektoren, und die
 Speicherersparnis beträgt einen Faktor $C$. Bei einem Stapel von $B$ Elementen bleibt die Version in der Algebra ein einziger
@@ -119,7 +122,7 @@ Unseres Wissens gibt es keine allgemeine Bibliothek, in der eine endlichdimensio
 von-Neumann-Algebra der grundlegende Datentyp für gestapelte, differenzierbare numerische
 Rechnungen ist. Das Neue ist daher keine neue Mathematik, sondern **effizientes Rechnen**: die
 Identifikation aus §0.1, so implementiert, dass die Struktur der Algebra erhalten bleibt und
-jede Operation als ein einziger gestapelter Kernel läuft. Wenn Sie verwandte Software kennen,
+jede Operation als gestapelte Kernel läuft (einer pro vorkommender Blockgröße bei Zerlegungen). Wenn Sie verwandte Software kennen,
 freuen wir uns über einen Hinweis.
 
 ## 0.4 Wie man diesen Kurs liest

@@ -309,8 +309,7 @@ code serves one operator and $10^5$ samples.
 \toprule
 challenge & solution in the library\\
 \midrule
-(i) blocks of different size on batched kernels & padded $(B,C,k_{\max},k_{\max})$ layout, one batched call per
-sector; single-sector algebras and sparse sector Hamiltonians where padding would dominate\\
+(i) blocks of different size on batched kernels & padded $(B,C,k_{\max},k_{\max})$ layout; products and traces in one batched call, decompositions in one batched call per distinct block size; single-sector algebras and sparse sector Hamiltonians where padding would dominate\\
 (ii) conventions between sectors & states stored as $\Tr_{\mathrm{blunt}}$-densities with explicit conversions;
 duals of maps between sectors computed with the weights of the chosen trace\\
 (iii) exact random ensembles & Mezzadri's QR algorithm with phase correction, $\det^{-1/n}$ for $SU(n)$, $W^TW$ and

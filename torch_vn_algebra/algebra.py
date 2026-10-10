@@ -274,12 +274,9 @@ class TypeIAlgebra:
 
         def _block_svdvals_min(self) -> torch.Tensor:
             """Smallest singular value over the active blocks, shape (batch,)."""
-            mat = self.matrix
-            mins = []
-            for c, k_c in enumerate(self.algebra.k_factors):
-                if k_c > 0:
-                    mins.append(torch.linalg.svdvals(mat[:, c, :k_c, :k_c]).min(dim=-1)[0])
-            return torch.stack(mins, dim=-1).min(dim=-1)[0]
+            B = self.matrix.shape[0]
+            mins = [torch.linalg.svdvals(x).min(dim=-1)[0].reshape(B, -1) for _, _, x in self._groups()]
+            return torch.cat(mins, dim=-1).min(dim=-1)[0]
 
         @property
         def shape(self) -> Tuple[int, ...]:
@@ -407,20 +404,34 @@ class TypeIAlgebra:
                 total_sq += torch.sum(block.conj() * block, dim=(-2, -1)).real
             return torch.sqrt(total_sq)
 
+        def _groups(self):
+            """
+            Sectors grouped by block size: [(k, idx, blocks)] with idx a list of sector indices of size k and
+            blocks the active blocks of these sectors, shape (batch * len(idx), k, k). Decompositions run as
+            one batched call per distinct block size (one call in total when all sectors have the same size).
+            """
+            mat = self.matrix
+            out = []
+            for k, idx in self.algebra._size_groups():
+                x = mat[:, idx, :k, :k] if len(idx) > 1 else mat[:, idx[0]:idx[0] + 1, :k, :k]
+                out.append((k, idx, x.reshape(-1, k, k)))
+            return out
+
         def operator_norm(self) -> torch.Tensor:
             # largest singular value over the active blocks (exact; the padding is skipped)
-            norms = [torch.linalg.matrix_norm(self.matrix[:, c, :k_c, :k_c], ord=2)
-                     for c, k_c in enumerate(self.algebra.k_factors) if k_c]
-            return torch.stack(norms, dim=-1).max(dim=-1)[0]
+            B = self.matrix.shape[0]
+            norms = [torch.linalg.matrix_norm(x, ord=2).reshape(B, -1) for _, _, x in self._groups()]
+            return torch.cat(norms, dim=-1).max(dim=-1)[0]
 
         def _blockwise(self, f: Callable[[torch.Tensor], torch.Tensor], what: str) -> torch.Tensor:
-            """f applied to the active block of every sector (batch, k_c, k_c); the padding stays zero, so that
-            decompositions and their gradients never see the zero singular values of the padding."""
+            """f applied to the active block of every sector, one call per distinct block size (f acts on a
+            stack (n, k, k)); the padding stays zero, so that decompositions and their gradients never see the
+            zero singular values of the padding."""
             mat = self.matrix
+            B = mat.shape[0]
             out = torch.zeros_like(mat)
-            for c, k_c in enumerate(self.algebra.k_factors):
-                if k_c:
-                    out[:, c, :k_c, :k_c] = f(mat[:, c, :k_c, :k_c])
+            for k, idx, x in self._groups():
+                out[:, idx, :k, :k] = f(x).reshape(B, len(idx), k, k)
             return out
 
         def inverse(self, tol: Optional[float] = None) -> 'TypeIAlgebra.Operator':
@@ -470,14 +481,12 @@ class TypeIAlgebra:
                 raise RuntimeError("trace_a_log_a requires positive operator")
             # singular values of the active blocks only (the zero padding must not contribute);
             # values below tol count as exact zeros, 0 log 0 = 0
-            out = torch.zeros(self.matrix.shape[0], dtype=self.matrix.real.dtype, device=self.matrix.device)
-            for c, k_c in enumerate(self.algebra.k_factors):
-                if k_c == 0:
-                    continue
-                S = cost.batched_call(torch.linalg.svdvals, self.matrix[:, c, :k_c, :k_c], f"svdvals (sector {c})",
-                                      kind='svd')
+            B = self.matrix.shape[0]
+            out = torch.zeros(B, dtype=self.matrix.real.dtype, device=self.matrix.device)
+            for k_c, _, x in self._groups():
+                S = cost.batched_call(torch.linalg.svdvals, x, f"svdvals (blocks of size {k_c})", kind='svd')
                 S = torch.where(S > tol, S, torch.zeros_like(S))
-                out = out + torch.special.xlogy(S, S).sum(-1)
+                out = out + torch.special.xlogy(S, S).reshape(B, -1).sum(-1)
             return out
 
         def entropy(self) -> torch.Tensor:
@@ -576,11 +585,25 @@ class TypeIAlgebra:
             """
             if not self.is_self_adjoint:
                 raise RuntimeError("eigh requires a self-adjoint operator")
+            return self._per_sector(lambda x: cost.batched_call(torch.linalg.eigh, x, f"eigh (blocks of size {x.shape[-1]})"))
+
+        def _per_sector(self, fn):
+            """fn on the stacked blocks of each size group, split back into one result per sector (tuples
+            of tensors with leading dimensions (batch, ...)); empty sectors give empty tensors."""
             mat = self.matrix
-            out = []
+            B = mat.shape[0]
+            res = [None] * self.algebra.C
+            for k, idx, x in self._groups():
+                y = fn(x)
+                parts = y if isinstance(y, tuple) else (y,)
+                parts = [p.reshape(B, len(idx), *p.shape[1:]) for p in parts]
+                for j, c in enumerate(idx):
+                    r = tuple(p[:, j] for p in parts)
+                    res[c] = r if isinstance(y, tuple) else r[0]
             for c, k_c in enumerate(self.algebra.k_factors):
-                out.append(cost.batched_call(torch.linalg.eigh, mat[:, c, :k_c, :k_c], f"eigh (sector {c})"))
-            return out
+                if k_c == 0:                                  # keep the old behaviour for empty sectors
+                    res[c] = fn(mat[:, c, :0, :0])
+            return res
 
         def eigenvalues(self) -> List[torch.Tensor]:
             """
@@ -590,9 +613,8 @@ class TypeIAlgebra:
             """
             if not self.is_self_adjoint:
                 raise RuntimeError("eigenvalues requires a self-adjoint operator")
-            mat = self.matrix
-            return [cost.batched_call(torch.linalg.eigvalsh, mat[:, c, :k_c, :k_c], f"eigvalsh (sector {c})")
-                    for c, k_c in enumerate(self.algebra.k_factors)]
+            return self._per_sector(lambda x: cost.batched_call(torch.linalg.eigvalsh, x,
+                                                                f"eigvalsh (blocks of size {x.shape[-1]})"))
 
         def apply_function(self, f: Callable[[torch.Tensor], torch.Tensor]) -> 'TypeIAlgebra.Operator':
             """
@@ -603,19 +625,20 @@ class TypeIAlgebra:
             alg = self.algebra
 
             def generator():
-                blocks = self.eigh()
+                if not self.is_self_adjoint:
+                    raise RuntimeError("eigh requires a self-adjoint operator")
                 out = torch.zeros_like(self.matrix)
-                for c, (w, V) in enumerate(blocks):
-                    k_c = alg.k_factors[c]
-                    if k_c == 0:
-                        continue
-                    fw = f(w)
+                B = out.shape[0]
+                for k_c, idx, x in self._groups():          # one eigendecomposition per distinct block size
+                    w, V = cost.batched_call(torch.linalg.eigh, x, f"eigh (blocks of size {k_c})")
+                    wr = w.reshape(B, len(idx), k_c)              # f sees (batch, k_c), one sector at a time
+                    fw = torch.stack([f(wr[:, j]) for j in range(len(idx))], dim=1).reshape(-1, k_c)
                     if torch.is_complex(fw) and not torch.is_complex(out):
                         if torch.any(fw.imag != 0):
                             raise ValueError("complex-valued f(A) requires a complex-valued algebra")
                         fw = fw.real
                     fw = fw.to(V.dtype)
-                    out[:, c, :k_c, :k_c] = (V * fw.unsqueeze(-2)) @ V.conj().transpose(-2, -1)
+                    out[:, idx, :k_c, :k_c] = ((V * fw.unsqueeze(-2)) @ V.conj().transpose(-2, -1)).reshape(B, len(idx), k_c, k_c)
                 return out
             return TypeIAlgebra.Operator(alg, generator=generator)
 
@@ -626,13 +649,8 @@ class TypeIAlgebra:
                 raise ValueError("complex scale requires a complex-valued algebra")
 
             def generator():
-                mat = self.matrix
-                out = torch.zeros_like(mat)
-                for c, k_c in enumerate(alg.k_factors):
-                    if k_c > 0:
-                        out[:, c, :k_c, :k_c] = cost.batched_call(
-                            torch.linalg.matrix_exp, scale * mat[:, c, :k_c, :k_c], f"expm (sector {c})", kind='expm')
-                return out
+                return self._blockwise(lambda x: cost.batched_call(
+                    torch.linalg.matrix_exp, scale * x, f"expm (blocks of size {x.shape[-1]})", kind='expm'), 'expm')
             return TypeIAlgebra.Operator(alg, generator=generator)
 
         def log(self, eps: float = 1e-12) -> 'TypeIAlgebra.Operator':
@@ -894,6 +912,14 @@ class TypeIAlgebra:
         op._is_invertible = False
         op._is_projection = True
         return op
+
+    def _size_groups(self) -> List[Tuple[int, List[int]]]:
+        """Non-empty sectors grouped by block size, in order of first appearance: [(k, [c, ...]), ...]."""
+        groups = {}
+        for c, k_c in enumerate(self.k_factors):
+            if k_c:
+                groups.setdefault(k_c, []).append(c)
+        return list(groups.items())
 
     def central(self, scalars: List[Union[float, complex, torch.Tensor]], batch_size: int = 1) -> Operator:
         """

@@ -41,8 +41,10 @@ Deux conséquences en font davantage qu'une simple affaire de comptabilité.
 
 - **Coût.** Un produit ou une décomposition spectrale dans $\mathcal M$ coûte $\sum_ck_c^3$
   opérations, contre $D^3$ pour le plongement dans $M_D(\mathbb C)$, $D=\sum_ck_c$ ; pour $C$ blocs
-  égaux, cela représente un facteur $C^2$. Les $B\cdot C$ blocs sont traités en un seul appel, ce
-  qui occupe pleinement un GPU.
+  égaux, cela représente un facteur $C^2$. Les produits, sommes et traces traitent les $B\cdot C$
+  blocs en un seul appel ; les décompositions (valeurs propres, valeurs singulières) s'exécutent en
+  un appel par taille de bloc distincte — un seul appel lorsque tous les secteurs ont la même
+  taille. Cela occupe pleinement un GPU.
 - **Correction par construction.** Tout ce qui est calculé reste dans $\mathcal M$ : les unitaires
   aléatoires suivent la loi de Haar sur $\prod_cU(k_c)$ (un ensemble négligeable dans $U(D)$, que
   l'on n'atteint jamais en échantillonnant $U(D)$), les pas de gradient ne sortent pas de
@@ -82,8 +84,9 @@ print(f"in the algebra: {t_blocks * 1e3:.1f} ms, as one 1024 x 1024 matrix: {t_b
 ```
 
 Les résultats coïncident aux erreurs d'arrondi près. La version dans l'algèbre est plus rapide
-(plusieurs fois sur un CPU courant pour cette taille : environ 35 ms contre 240 ms sur la machine
-à 4 cœurs où ce cours a été testé), mais bien moins que ne le laisse penser le nombre
+(environ dix fois sur un CPU courant pour cette taille : environ 16 ms contre 200 ms sur la machine
+à 4 cœurs où ce cours a été testé ; les 64 blocs passent au solveur de valeurs propres en un seul
+appel), mais bien moins que ne le laisse penser le nombre
 d'opérations $C^2=4096$, car un seul appel à un grand solveur de valeurs propres exploite mieux le
 matériel que de nombreux petits. L'écart croît avec le nombre de secteurs, et le gain de mémoire
 est d'un facteur $C$. Avec un lot de $B$ éléments, la version dans l'algèbre reste un seul appel ;
@@ -120,7 +123,7 @@ et tous conçus pour d'autres fins :
 Neumann de dimension finie soit le type de données de base pour un calcul numérique par lots et
 différentiable. La nouveauté n'est donc pas mathématique mais réside dans un **calcul
 efficace** : l'identification du §0.1, implémentée de sorte que la structure de l'algèbre soit
-préservée et que chaque opération s'exécute en un seul noyau par lots. Si vous connaissez des
+préservée et que chaque opération s'exécute en noyaux par lots (un par taille de bloc distincte pour les décompositions). Si vous connaissez des
 logiciels apparentés, nous serons heureux d'en entendre parler.
 
 ## 0.4 Comment lire ce cours

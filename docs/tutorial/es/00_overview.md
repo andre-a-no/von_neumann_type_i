@@ -41,8 +41,10 @@ Dos consecuencias hacen que esto sea algo más que una cuestión de contabilidad
 
 - **Coste.** Un producto o una descomposición espectral en $\mathcal M$ cuesta $\sum_ck_c^3$
   operaciones, frente a $D^3$ para la inmersión en $M_D(\mathbb C)$, $D=\sum_ck_c$; con $C$ bloques
-  iguales, esto supone un factor $C^2$. Los $B\cdot C$ bloques se procesan en una sola llamada, lo
-  que mantiene ocupada una GPU.
+  iguales, esto supone un factor $C^2$. Los productos, las sumas y las trazas procesan los
+  $B\cdot C$ bloques en una sola llamada; las descomposiciones (valores propios, valores singulares)
+  se ejecutan como una llamada por cada tamaño de bloque distinto, es decir, una sola llamada cuando
+  todos los sectores tienen el mismo tamaño. Esto mantiene ocupada una GPU.
 - **Corrección por construcción.** Todo lo que se calcula permanece en $\mathcal M$: los unitarios
   aleatorios están distribuidos según la medida de Haar en $\prod_cU(k_c)$ (un conjunto de medida
   nula dentro de $U(D)$, que nunca se alcanza muestreando $U(D)$), los pasos de gradiente no se
@@ -81,8 +83,9 @@ print(f"in the algebra: {t_blocks * 1e3:.1f} ms, as one 1024 x 1024 matrix: {t_b
 ```
 
 Los resultados coinciden salvo errores de redondeo. La versión en el álgebra es más rápida
-(varias veces en una CPU típica para este tamaño: unos 35 ms frente a 240 ms en la máquina de
-4 núcleos en la que se probó este curso), aunque mucho menos de lo que sugiere el recuento de
+(unas diez veces en una CPU típica para este tamaño: unos 16 ms frente a 200 ms en la máquina de
+4 núcleos en la que se probó este curso; los 64 bloques van al solucionador de valores propios en
+una sola llamada), aunque mucho menos de lo que sugiere el recuento de
 operaciones $C^2=4096$, porque una sola llamada a un solucionador de valores propios grande
 aprovecha mejor el hardware que muchas pequeñas. La diferencia crece con el número de sectores,
 y el ahorro de memoria es un factor $C$. Con un lote de $B$ elementos, la versión en el álgebra
@@ -118,7 +121,7 @@ Hasta donde sabemos, no existe ninguna biblioteca general en la que un álgebra 
 dimensión finita sea el tipo de datos básico para el cálculo numérico por lotes y diferenciable.
 La novedad no es, por tanto, matemática nueva, sino **cálculo eficiente**: la identificación de la
 §0.1, implementada de modo que se preserve la estructura del álgebra y cada operación se ejecute
-como un único núcleo por lotes. Si conoce software relacionado, nos alegrará saberlo.
+como núcleos por lotes (uno por cada tamaño de bloque distinto en las descomposiciones). Si conoce software relacionado, nos alegrará saberlo.
 
 ## 0.4 Cómo leer este curso
 
