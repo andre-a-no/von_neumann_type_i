@@ -875,3 +875,34 @@ class TestSpectralGradients:
         assert torch.allclose(A.abs().matrix, plain.abs().matrix, atol=1e-10)
         assert torch.allclose(A.inverse().matrix, plain.inverse().matrix, atol=1e-8)
         assert torch.allclose(A.trace_norm(), plain.trace_norm(), atol=1e-10)
+
+
+class TestSpectralGradientsReview:
+    """Regressions from the review of the Daleckii-Krein backward pass."""
+
+    def test_second_derivatives(self):
+        torch.manual_seed(0)
+        alg = TypeIAlgebra([3], [3], complex_valued=False, precision='double')
+        X = torch.randn(1, 1, 3, 3, dtype=torch.float64); X = (X + X.transpose(-1, -2)).requires_grad_(True)
+        H = torch.randn_like(X); H = H + H.transpose(-1, -2)
+        g, = torch.autograd.grad(alg.operator(X).apply_function(torch.exp).trace.sum(), X, create_graph=True)
+        hv, = torch.autograd.grad((g * H).sum(), X)
+        ref = lambda Y: torch.linalg.matrix_exp(0.5 * (Y + Y.transpose(-1, -2))).diagonal(dim1=-2, dim2=-1).sum()
+        _, hv_ref = torch.autograd.functional.hvp(ref, X.detach(), H)
+        assert (hv - hv_ref).abs().max() < 1e-10
+
+    def test_indicator_function_with_gradients(self):
+        alg = TypeIAlgebra([3], [3], precision='double')
+        A = alg.operator_from_eigenvalues(lambda d: torch.tensor([[-1.0, 0.5, 2.0]]), force_self_adjoint=True)
+        X = A.matrix.clone().requires_grad_(True)
+        P = alg.operator(X, is_self_adjoint=True).apply_function(lambda w: w > 0)
+        P.trace.real.backward()
+        assert abs(P.trace.real.item() - 2) < 1e-12 and torch.isfinite(X.grad).all()
+
+    def test_divided_differences_of_tiny_eigenvalues(self):
+        from torch_vn_algebra.algebra import _divided_differences
+        w = torch.tensor([1e-10, 1.1e-10], dtype=torch.float64)
+        L = _divided_differences(w, torch.log(w), 1 / w)
+        exact = (math.log(1.1e-10) - math.log(1e-10)) / 1e-11
+        assert abs(L[0, 1].item() - exact) < 1e-12 * exact
+

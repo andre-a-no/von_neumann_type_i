@@ -21,34 +21,52 @@ from . import cost
 # ----------------------------------------------------------------------
 # Functional calculus with gradients that stay finite at degenerate spectra
 # ----------------------------------------------------------------------
-def _elementwise_derivative(f_values: Callable[[torch.Tensor], torch.Tensor], w: torch.Tensor) -> torch.Tensor:
-    """f'(w) for an elementwise function f, by automatic differentiation (0 where f does not depend on w)."""
+def _values_and_derivative(f_values: Callable[[torch.Tensor], torch.Tensor], w: torch.Tensor,
+                           create_graph: bool = False) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    f(w) and f'(w) for an elementwise f, with one evaluation of f. The values keep their graph to parameters
+    of f (and, with create_graph, to w); the derivative is 0 where f does not depend on w. Non-floating
+    results (e.g. the indicator w > 0 of a spectral projection) are converted to the dtype of w.
+    """
     with torch.enable_grad():
-        wg = w.detach().requires_grad_(True)
+        wg = w if create_graph else w.detach().requires_grad_(True)
         y = f_values(wg)
+        if not (y.is_floating_point() or y.is_complex()):
+            y = y.to(w.dtype)
         if not y.requires_grad:
-            return torch.zeros_like(y)
-        if torch.is_complex(y):
-            dr, = torch.autograd.grad(y.real.sum(), wg, retain_graph=True, allow_unused=True)
-            di, = torch.autograd.grad(y.imag.sum(), wg, allow_unused=True)
-            dr = torch.zeros_like(wg) if dr is None else dr
-            di = torch.zeros_like(wg) if di is None else di
-            return torch.complex(dr, di)
-        d, = torch.autograd.grad(y.sum(), wg, allow_unused=True)
-        return torch.zeros_like(wg) if d is None else d
+            return y, torch.zeros_like(w)
+
+        def d(part):
+            g, = torch.autograd.grad(part.sum(), wg, retain_graph=True, create_graph=create_graph,
+                                     allow_unused=True)
+            return torch.zeros_like(w) if g is None else g
+        dy = torch.complex(d(y.real), d(y.imag)) if torch.is_complex(y) else d(y)
+    return y, dy
 
 
 def _divided_differences(w: torch.Tensor, fw: torch.Tensor, dfw: torch.Tensor) -> torch.Tensor:
     """
     Loewner matrix L_ij = (f(w_i) - f(w_j)) / (w_i - w_j), and (f'(w_i) + f'(w_j)) / 2 where w_i and w_j
-    coincide up to sqrt(eps) relative to the spectral radius (the limit of the quotient). Shape (..., k, k).
+    coincide up to eps^(1/3) relative to max(|w_i|, |w_j|) (which balances the truncation error of the
+    midpoint value against the cancellation error of the quotient). Shape (..., k, k).
     """
     dw = w.unsqueeze(-1) - w.unsqueeze(-2)
     df = fw.unsqueeze(-1) - fw.unsqueeze(-2)
-    scale = w.abs().amax(dim=-1, keepdim=True).unsqueeze(-1).clamp(min=1.0)
-    close = dw.abs() <= torch.finfo(w.dtype).eps ** 0.5 * scale
+    finfo = torch.finfo(w.dtype)
+    scale = torch.maximum(w.abs().unsqueeze(-1), w.abs().unsqueeze(-2)).clamp(min=finfo.tiny)
+    close = dw.abs() <= finfo.eps ** (1 / 3) * scale
     quotient = df / torch.where(close, torch.ones_like(dw), dw).to(df.dtype)
     return torch.where(close, 0.5 * (dfw.unsqueeze(-1) + dfw.unsqueeze(-2)).to(df.dtype), quotient)
+
+
+def _loewner_backward(V: torch.Tensor, L: torch.Tensor, G: torch.Tensor, fw_is_real: bool):
+    Vh = V.conj().transpose(-2, -1)
+    Gt = Vh @ G @ V
+    gX = V @ (L.conj().to(Gt.dtype) * Gt) @ Vh
+    gfw = torch.diagonal(Gt, dim1=-2, dim2=-1)
+    if fw_is_real and torch.is_complex(gfw):
+        gfw = gfw.real
+    return gX, gfw
 
 
 class _SpectralReconstruction(torch.autograd.Function):
@@ -56,26 +74,30 @@ class _SpectralReconstruction(torch.autograd.Function):
     F = V diag(f(w)) V^* for X = V diag(w) V^* self-adjoint, as a function of X and of the values f(w).
     The derivative in X is the Daleckii-Krein formula dF = V (L o (V^* dX V)) V^* with the Loewner matrix L
     of divided differences, which stays finite when eigenvalues coincide (unlike differentiation through the
-    eigenvectors). The values f(w) carry the gradient with respect to parameters of f.
+    eigenvectors). The values f(w) carry the gradient with respect to parameters of f. With create_graph the
+    backward pass is recomputed differentiably (through the eigendecomposition), so that second derivatives are
+    correct at non-degenerate spectra.
     """
 
     @staticmethod
-    def forward(ctx, X, fw, V, L):
-        ctx.save_for_backward(V, L)
+    def forward(ctx, X, fw, V, L, f_values):
+        ctx.save_for_backward(X, V, L)
+        ctx.f_values = f_values
         ctx.fw_is_real = not torch.is_complex(fw)
         return (V * fw.to(V.dtype).unsqueeze(-2)) @ V.conj().transpose(-2, -1)
 
     @staticmethod
-    @torch.autograd.function.once_differentiable
     def backward(ctx, G):
-        V, L = ctx.saved_tensors
-        Vh = V.conj().transpose(-2, -1)
-        Gt = Vh @ G @ V
-        gX = V @ (L.conj().to(Gt.dtype) * Gt) @ Vh
-        gfw = torch.diagonal(Gt, dim1=-2, dim2=-1)
-        if ctx.fw_is_real and torch.is_complex(gfw):
-            gfw = gfw.real
-        return gX, gfw, None, None
+        X, V, L = ctx.saved_tensors
+        if torch.is_grad_enabled():                              # create_graph: differentiable recomputation
+            w, V = torch.linalg.eigh(X)
+            fw, dfw = _values_and_derivative(ctx.f_values, w, create_graph=True)
+            if torch.is_complex(fw) and not torch.is_complex(V):
+                fw, dfw = fw.real, dfw.real
+            L = _divided_differences(w, fw, dfw)
+        gX, gfw = _loewner_backward(V, L, G, ctx.fw_is_real)
+        return (gX if ctx.needs_input_grad[0] else None,
+                gfw if ctx.needs_input_grad[1] else None, None, None, None)
 
 
 def _spectral_apply(X: torch.Tensor, f_values: Callable[[torch.Tensor], torch.Tensor], what: str) -> torch.Tensor:
@@ -83,18 +105,23 @@ def _spectral_apply(X: torch.Tensor, f_values: Callable[[torch.Tensor], torch.Te
     Xh = 0.5 * (X + X.conj().transpose(-2, -1))                 # the function is defined on self-adjoint X
     with torch.no_grad():
         w, V = cost.batched_call(torch.linalg.eigh, Xh.detach(), what)
-    fw = f_values(w)                                             # carries gradients of parameters of f
+    needs_grad = Xh.requires_grad and torch.is_grad_enabled()
+    if needs_grad:
+        fw, dfw = _values_and_derivative(f_values, w)            # one evaluation of f
+    else:
+        fw = f_values(w)                                         # may still carry gradients of parameters of f
+        if not (fw.is_floating_point() or fw.is_complex()):
+            fw = fw.to(w.dtype)
     if torch.is_complex(fw) and not torch.is_complex(V):
         if torch.any(fw.detach().imag != 0):
             raise ValueError("complex-valued f(A) requires a complex-valued algebra")
         fw = fw.real
-    if not (Xh.requires_grad or fw.requires_grad):
+        if needs_grad:
+            dfw = dfw.real
+    if not needs_grad:
         return (V * fw.to(V.dtype).unsqueeze(-2)) @ V.conj().transpose(-2, -1)
-    dfw = _elementwise_derivative(f_values, w)
-    if torch.is_complex(dfw) and not torch.is_complex(V):
-        dfw = dfw.real
     L = _divided_differences(w, fw.detach(), dfw)
-    return _SpectralReconstruction.apply(Xh, fw, V, L)
+    return _SpectralReconstruction.apply(Xh, fw, V, L, f_values)
 
 
 class TypeIAlgebra:
@@ -475,12 +502,15 @@ class TypeIAlgebra:
             computed with the batched Hermitian eigensolver)."""
             B = self.matrix.shape[0]
             if self._is_self_adjoint:
-                vals = [cost.batched_call(torch.linalg.eigvalsh, x, f"eigvalsh (blocks of size {k})").abs()
+                vals = [cost.batched_call(torch.linalg.eigvalsh, x, f"eigvalsh (blocks of size {k})", kind='eigh').abs()
                         for k, _, x in self._groups()]
             else:
                 vals = [cost.batched_call(torch.linalg.svdvals, x, f"svdvals (blocks of size {k})", kind='svd')
                         for k, _, x in self._groups()]
-            return sum(v.reshape(B, -1).sum(-1) for v in vals)
+            total = torch.zeros(B, dtype=self.matrix.real.dtype, device=self.matrix.device)
+            for v in vals:
+                total = total + v.reshape(B, -1).sum(-1)
+            return total
 
         def frobenius_norm(self) -> torch.Tensor:
             mat = self.matrix
@@ -509,6 +539,8 @@ class TypeIAlgebra:
             # largest singular value over the active blocks (exact; the padding is skipped)
             B = self.matrix.shape[0]
             norms = [torch.linalg.matrix_norm(x, ord=2).reshape(B, -1) for _, _, x in self._groups()]
+            if not norms:
+                return torch.zeros(B, dtype=self.matrix.real.dtype, device=self.matrix.device)
             return torch.cat(norms, dim=-1).max(dim=-1)[0]
 
         def _blockwise(self, f: Callable[[torch.Tensor], torch.Tensor], what: str) -> torch.Tensor:
@@ -732,7 +764,8 @@ class TypeIAlgebra:
             same shape; a complex-valued f (e.g. exp(-i t w)) requires a complex algebra.
             Gradients with respect to A use the Daleckii-Krein formula (divided differences of f), so they
             are finite also when eigenvalues coincide; gradients with respect to parameters of f (e.g. t)
-            are propagated as usual. Second derivatives with respect to A are not supported.
+            are propagated as usual. Second derivatives recompute the eigendecomposition differentiably
+            and are correct at non-degenerate spectra.
             """
             alg = self.algebra
 

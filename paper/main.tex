@@ -977,8 +977,8 @@ full run), and about 26 spins on a GPU with tens of gigabytes (an estimate from 
 scope.
 \item \emph{Optimisation.} The search is local; envelopes are lower bounds for suprema (upper bounds for
 infima). Gradients of the functional calculus are finite at degenerate spectra, but gradients through the
-eigenvectors returned by \texttt{eigh} or through singular vectors of non-self-adjoint operators are not, and
-second derivatives of $f(A)$ are not provided.
+eigenvectors returned by \texttt{eigh} or through singular vectors of non-self-adjoint operators are not;
+second derivatives of $f(A)$ are correct at non-degenerate spectra only.
 \item \emph{Scale.} Choi matrices, superoperators and $e^{t\mathcal L}$ work with $k_c^2\times k_c^2$
 matrices and are limited to blocks of a few tens; RK4 integration scales to larger blocks.
 \item \emph{Scope.} Finite dimensions and Type~I only; no tensor-network methods, and sparse methods only for

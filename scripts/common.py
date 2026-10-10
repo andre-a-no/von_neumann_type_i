@@ -146,24 +146,35 @@ def write_tex(args, name, text):
 
 
 def _cusolver_version():
-    """cuSOLVER version as reported by the library PyTorch loaded (batched eigh on GPU depends on it), or None."""
-    import ctypes
-    import glob
-    import os
-    candidates = [os.path.join(os.path.dirname(torch.__file__), 'lib')]
+    """Version of the cuSOLVER library that PyTorch loaded (batched eigh on GPUs depends on it), or None."""
     try:
-        import nvidia                                              # pip wheels ship cuSOLVER separately
-        candidates += [d for p in nvidia.__path__ for d in glob.glob(os.path.join(p, '**', 'lib'), recursive=True)]
-    except ImportError:
-        pass
-    for d in candidates:
-        for lib in sorted(glob.glob(os.path.join(d, 'libcusolver.so*'))):
+        import ctypes
+        import glob
+        import os
+        torch.linalg.eigh(torch.eye(2, device='cuda'))            # make sure cuSOLVER is loaded
+        paths = []
+        try:
+            with open('/proc/self/maps') as maps:                  # the library actually loaded (Linux)
+                paths = sorted({line.split()[-1] for line in maps if 'libcusolver' in line and '/' in line})
+        except OSError:
+            pass
+        if not paths:
+            dirs = [os.path.join(os.path.dirname(torch.__file__), 'lib')]
+            try:
+                import nvidia
+                dirs += [d for p in nvidia.__path__ for d in glob.glob(os.path.join(p, '**', 'lib'), recursive=True)]
+            except ImportError:
+                pass
+            paths = [lib for d in dirs for lib in sorted(glob.glob(os.path.join(d, 'libcusolver.so*')))]
+        for lib in paths:
             try:
                 v = ctypes.c_int()
                 if ctypes.CDLL(lib).cusolverGetVersion(ctypes.byref(v)) == 0:
                     return v.value
-            except OSError:
+            except Exception:
                 continue
+    except Exception:
+        pass
     return None
 
 

@@ -254,8 +254,8 @@ pytest -q
   limits them to blocks of a few tens; use `lindblad_evolve` for larger blocks.
 - Gradients of the functional calculus (`apply_function`, `sqrt`, `log`, `power`, and `abs`/`inverse` of
   self-adjoint operators) use divided differences and are finite at degenerate spectra; gradients through the
-  eigenvectors returned by `eigh` or through singular vectors of non-self-adjoint operators are not, and second
-  derivatives of f(A) are not provided.
+  eigenvectors returned by `eigh` or through singular vectors of non-self-adjoint operators are not. Second
+  derivatives of f(A) recompute the eigendecomposition differentiably and are correct at non-degenerate spectra.
 - On GPUs, batched Hermitian eigensolvers cover all block sizes only in recent PyTorch/cuSOLVER releases; batched SVD
   is limited to blocks of size ≤ 32 (larger blocks are processed one matrix at a time by PyTorch).
 - Finite dimensions and Type I only.
