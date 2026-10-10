@@ -30,4 +30,4 @@ Tr_blunt : f(1) error 0.0e+00, |f(AB)-f(BA)| 3.7e-15, |f(UAU*)-f(A)| 5.4e-15, mi
 Tr_norm  : f(1) error 0.0e+00, |f(AB)-f(BA)| 1.3e-15, |f(UAU*)-f(A)| 1.8e-15, min f(A*A)/||A||_F^2 = 0.224 > 0
 tau_vN   : f(1) error 0.0e+00, |f(AB)-f(BA)| 4.4e-16, |f(UAU*)-f(A)| 5.6e-16, min f(A*A)/||A||_F^2 = 0.075 > 0
 written: /home/user/von_neumann_type_i/paper/generated /home/user/von_neumann_type_i/paper/figures
-[resources] wall 17 s, peak host RSS 3.55 GiB
+[resources] wall 26 s, peak host RSS 3.55 GiB

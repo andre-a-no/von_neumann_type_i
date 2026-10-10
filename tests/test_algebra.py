@@ -818,3 +818,60 @@ def test_decompositions_grouped_by_block_size(monkeypatch):
         assert torch.allclose(R[:, c, :k, :k], ref, atol=1e-12)
         assert R[:, c, k:, :].abs().sum() == 0
     assert [e.shape for e in A.eigenvalues()] == [(5, 3), (5, 2), (5, 3), (5, 3)]
+
+
+class TestSpectralGradients:
+    """Functional calculus: Daleckii-Krein gradients, finite at degenerate spectra."""
+
+    def _degenerate(self, alg):
+        U = alg.random_unitary_operator(1)
+        D = alg.from_blocks([torch.diag(torch.tensor([1.0, 1.0, 2.0], dtype=torch.float64))])
+        return (U @ D @ U.adjoint()).matrix
+
+    @pytest.mark.parametrize('complex_valued', [False, True])
+    def test_finite_and_correct_at_degenerate_spectrum(self, complex_valued):
+        torch.manual_seed(1)
+        alg = TypeIAlgebra([3], [3], complex_valued=complex_valued, precision='double')
+        X0 = self._degenerate(alg)
+        for f in (torch.sqrt, torch.exp, lambda w: w ** 3):
+            X = X0.clone().requires_grad_(True)
+            Y = alg.operator(X, is_self_adjoint=True).apply_function(f).matrix
+            G = torch.randn_like(Y)
+            (Y * G.conj()).real.sum().backward()
+            assert torch.isfinite(X.grad).all()
+            # directional derivative along a random self-adjoint direction H, against central differences
+            H = torch.randn_like(X0); H = 0.5 * (H + H.conj().transpose(-2, -1))
+            h = 1e-6
+            Fp = alg.operator(X0 + h * H, is_self_adjoint=True).apply_function(f).matrix
+            Fm = alg.operator(X0 - h * H, is_self_adjoint=True).apply_function(f).matrix
+            fd = ((Fp - Fm) / (2 * h) * G.conj()).real.sum()
+            assert abs((X.grad.conj() * H).real.sum() - fd) < 1e-6 * (1 + abs(fd))
+
+    @pytest.mark.parametrize('complex_valued', [False, True])
+    def test_gradcheck(self, complex_valued):
+        torch.manual_seed(2)
+        alg = TypeIAlgebra([2, 3], [2, 3], complex_valued=complex_valued, precision='double')
+        A = alg.operator_from_eigenvalues(lambda d: 0.5 + torch.rand(1, d), force_positive=True).matrix
+
+        def g(m):
+            return alg.operator(0.5 * (m + m.conj().transpose(-2, -1))).apply_function(torch.log).matrix
+        assert torch.autograd.gradcheck(g, (A.clone().requires_grad_(True),), eps=1e-6, atol=1e-5)
+
+    def test_gradient_with_respect_to_a_parameter_of_f(self):
+        alg = TypeIAlgebra([3], [3], precision='double')
+        X = self._degenerate(alg)
+        t = torch.tensor(0.7, dtype=torch.float64, requires_grad=True)
+        U = alg.operator(X, is_self_adjoint=True).apply_function(lambda w: torch.exp(-1j * t * w))
+        U.trace.real.backward()
+        w = torch.tensor([1.0, 1.0, 2.0], dtype=torch.float64)
+        exact = -(w * torch.sin(0.7 * w)).sum()                   # d/dt Re Tr e^{-itX} = -sum_i w_i sin(t w_i)
+        assert abs(t.grad - exact) < 1e-10
+
+    def test_self_adjoint_paths_agree_with_svd(self):
+        torch.manual_seed(3)
+        alg = TypeIAlgebra([3, 2], [3, 2], precision='double')
+        A = alg.operator_from_eigenvalues(lambda d: torch.randn(4, d), batch_size=4, force_self_adjoint=True)
+        plain = alg.operator(A.matrix.clone())                    # flags unknown: SVD paths
+        assert torch.allclose(A.abs().matrix, plain.abs().matrix, atol=1e-10)
+        assert torch.allclose(A.inverse().matrix, plain.inverse().matrix, atol=1e-8)
+        assert torch.allclose(A.trace_norm(), plain.trace_norm(), atol=1e-10)

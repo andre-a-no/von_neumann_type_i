@@ -1,30 +1,30 @@
-k=  4 C=   1 B= 4096 generate   cpu:      1.43 us/sample
-k=  4 C=   1 B= 4096 f(A) eigh  cpu:      2.83 us/sample
-k=  4 C=   1 B= 4096 |A| SVD    cpu:      6.42 us/sample
-k=  4 C=   1 B= 4096 contrast   cpu:      1.44 us/sample
-k=  4 C=   1 B= 4096 channel    cpu:      0.52 us/sample
-k=  4 C=   1 B= 4096 exp(tL)    cpu:     53.57 us/sample
-k=  4 C=   1 B= 4096 opt. step  cpu:      9.80 us/sample
-k=  4 C=  16 B= 1024 generate   cpu:     27.65 us/sample
-k=  4 C=  16 B= 1024 f(A) eigh  cpu:     43.30 us/sample
-k=  4 C=  16 B= 1024 |A| SVD    cpu:     85.24 us/sample
-k=  4 C=  16 B= 1024 contrast   cpu:     21.28 us/sample
-k=  4 C=  16 B= 1024 channel    cpu:      4.16 us/sample
-k=  4 C=  16 B= 1024 exp(tL)    cpu:    847.35 us/sample
-k=  4 C=  16 B= 1024 opt. step  cpu:    227.89 us/sample
-k= 16 C=   1 B= 1024 generate   cpu:     17.92 us/sample
-k= 16 C=   1 B= 1024 f(A) eigh  cpu:     24.83 us/sample
-k= 16 C=   1 B= 1024 |A| SVD    cpu:     67.27 us/sample
-k= 16 C=   1 B= 1024 contrast   cpu:     11.27 us/sample
-k= 16 C=   1 B= 1024 channel    cpu:      2.68 us/sample
-k= 16 C=   1 B= 1024 exp(tL)    cpu:  11359.65 us/sample
-k= 16 C=   1 B= 1024 opt. step  cpu:    149.53 us/sample
-k= 16 C=  16 B=   64 generate   cpu:    293.84 us/sample
-k= 16 C=  16 B=   64 f(A) eigh  cpu:    497.82 us/sample
-k= 16 C=  16 B=   64 |A| SVD    cpu:   1180.34 us/sample
-k= 16 C=  16 B=   64 contrast   cpu:    253.49 us/sample
-k= 16 C=  16 B=   64 channel    cpu:     53.24 us/sample
-k= 16 C=  16 B=   64 exp(tL)    cpu: 205901.93 us/sample
-k= 16 C=  16 B=   64 opt. step  cpu:   2367.41 us/sample
+k=  4 C=   1 B= 4096 generate   cpu:      1.75 us/sample
+k=  4 C=   1 B= 4096 f(A) eigh  cpu:      4.55 us/sample
+k=  4 C=   1 B= 4096 |A| SVD    cpu:      5.98 us/sample
+k=  4 C=   1 B= 4096 contrast   cpu:      1.52 us/sample
+k=  4 C=   1 B= 4096 channel    cpu:      0.41 us/sample
+k=  4 C=   1 B= 4096 exp(tL)    cpu:     49.80 us/sample
+k=  4 C=   1 B= 4096 opt. step  cpu:     12.02 us/sample
+k=  4 C=  16 B= 1024 generate   cpu:     33.07 us/sample
+k=  4 C=  16 B= 1024 f(A) eigh  cpu:     45.07 us/sample
+k=  4 C=  16 B= 1024 |A| SVD    cpu:     84.95 us/sample
+k=  4 C=  16 B= 1024 contrast   cpu:     22.31 us/sample
+k=  4 C=  16 B= 1024 channel    cpu:      5.67 us/sample
+k=  4 C=  16 B= 1024 exp(tL)    cpu:   1038.59 us/sample
+k=  4 C=  16 B= 1024 opt. step  cpu:    212.00 us/sample
+k= 16 C=   1 B= 1024 generate   cpu:     13.73 us/sample
+k= 16 C=   1 B= 1024 f(A) eigh  cpu:     28.89 us/sample
+k= 16 C=   1 B= 1024 |A| SVD    cpu:     53.92 us/sample
+k= 16 C=   1 B= 1024 contrast   cpu:     12.16 us/sample
+k= 16 C=   1 B= 1024 channel    cpu:      3.93 us/sample
+k= 16 C=   1 B= 1024 exp(tL)    cpu:  12146.51 us/sample
+k= 16 C=   1 B= 1024 opt. step  cpu:    193.06 us/sample
+k= 16 C=  16 B=   64 generate   cpu:    415.57 us/sample
+k= 16 C=  16 B=   64 f(A) eigh  cpu:    523.51 us/sample
+k= 16 C=  16 B=   64 |A| SVD    cpu:    826.61 us/sample
+k= 16 C=  16 B=   64 contrast   cpu:    207.95 us/sample
+k= 16 C=  16 B=   64 channel    cpu:     50.39 us/sample
+k= 16 C=  16 B=   64 exp(tL)    cpu: 223766.75 us/sample
+k= 16 C=  16 B=   64 opt. step  cpu:   2942.02 us/sample
 written: /home/user/von_neumann_type_i/paper/generated /home/user/von_neumann_type_i/paper/figures
-[resources] wall 8 s, peak host RSS 0.75 GiB
+[resources] wall 8 s, peak host RSS 0.73 GiB

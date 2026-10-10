@@ -252,7 +252,13 @@ pytest -q
   large chains).
 - `lindblad_channel`, `choi` and `superoperator` work with k_c² × k_c² matrices per block, which
   limits them to blocks of a few tens; use `lindblad_evolve` for larger blocks.
-- No automatic differentiation guarantees, finite dimensions and Type I only.
+- Gradients of the functional calculus (`apply_function`, `sqrt`, `log`, `power`, and `abs`/`inverse` of
+  self-adjoint operators) use divided differences and are finite at degenerate spectra; gradients through the
+  eigenvectors returned by `eigh` or through singular vectors of non-self-adjoint operators are not, and second
+  derivatives of f(A) are not provided.
+- On GPUs, batched Hermitian eigensolvers cover all block sizes only in recent PyTorch/cuSOLVER releases; batched SVD
+  is limited to blocks of size ≤ 32 (larger blocks are processed one matrix at a time by PyTorch).
+- Finite dimensions and Type I only.
 
 ## Citation
 

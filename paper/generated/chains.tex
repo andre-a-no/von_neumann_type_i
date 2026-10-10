@@ -2,6 +2,8 @@
 \newcommand{\ChainDevice}{CPU (4 threads)}
 \newcommand{\ChainMode}{quick}
 \newcommand{\ChainTorch}{2.14.1+cu130}
+\newcommand{\ChainCuda}{none}
+\newcommand{\ChainCusolver}{none}
 \newcommand{\ChainMatmul}{FP32}
 \newcommand{\ChainFFL}{10}
 \newcommand{\ChainFFErr}{8.0\times10^{-15}}
@@ -20,10 +22,10 @@
 \newcommand{\ChainMomDims}{80, 75, 78, 76, 78, 75, 80, 75, 78, 76, 78, 75}
 \newcommand{\ChainLossErr}{2.4\times10^{-10}}
 \newcommand{\ChainKrylovRows}{%
-XX open, $L=12$ & 924 & -3.6481149053 & -3.6481149053 & $4.4\times10^{-16}$ & 0.026 \\
-XX open, $L=16$ & 12870 & -4.9189757237 & -4.9189757237 & $1.8\times10^{-15}$ & 0.09 \\
-XX open, $L=18$ & 48620 & -5.5547827927 & -5.5547827927 & $8.9\times10^{-16}$ & 0.25 \\
-Heisenberg ring, $L=16$ & 12870 & -7.1422963606 & -7.142296361 & $<5\times10^{-10}$ & 0.13 \\
+XX open, $L=12$ & 924 & -3.6481149053 & -3.6481149053 & $4.4\times10^{-16}$ & 0.022 \\
+XX open, $L=16$ & 12870 & -4.9189757237 & -4.9189757237 & $1.8\times10^{-15}$ & 0.074 \\
+XX open, $L=18$ & 48620 & -5.5547827927 & -5.5547827927 & $8.9\times10^{-16}$ & 0.21 \\
+Heisenberg ring, $L=16$ & 12870 & -7.1422963606 & -7.142296361 & $<5\times10^{-10}$ & 0.071 \\
 }
 \newcommand{\ChainRingRows}{%
 4 & 6 & -2.000000000 & -2.000000000 & $<5\times10^{-10}$ & -0.50000 \\
