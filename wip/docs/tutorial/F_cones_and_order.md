@@ -15,8 +15,10 @@ through the third derivative of the logarithm of its characteristic function; wh
 preserves positivity in both directions preserves squares; and why every such map of $\bigoplus_cM_{k_c}$ permutes
 equal blocks and acts on each block by $UxU^*$ or by $Ux^TU^*$.
 
-Besides linear algebra and calculus, Section F.3 uses Lebesgue integration (Fatou's lemma, dominated convergence and
-differentiation under the integral sign, the linear change of variables formula); nothing else is assumed. A
+Besides linear algebra, calculus and results of Chapters 1, 6 and 13 cited by number, Section F.3 uses Lebesgue
+integration (Fatou's lemma, dominated convergence and differentiation under the integral sign, the linear change of
+variables formula); nothing else is assumed. The spectral theorem of Appendix E, with Jordan frames, refines Theorem
+F.3 below; nothing here depends on it. A
 **Euclidean space** is a finite-dimensional real vector space $V\ne\{0\}$ with an inner product
 $\langle\cdot,\cdot\rangle$; $|x|$ is the norm, $\|A\|$ the operator norm of a linear map $A$ of $V$, $A^T$ its adjoint
 ($\langle Ax,y\rangle=\langle x,A^Ty\rangle$), and $A\ge0$ ($A>0$) means that $A=A^T$ is positive semidefinite
@@ -33,9 +35,10 @@ $P(x)=2L(x)^2-L(x^2)$.
 Its **cone of squares** is $Q=\{x^2:x\in V\}$.
 
 Examples: $M_{sa}$ and $\operatorname{Herm}_n(\mathbb R)$ with $\langle x,y\rangle=\operatorname{Tr}(xy)$ (Lemma 13.1;
-$\operatorname{Tr}((x\circ y)z)=\frac12\operatorname{Tr}(xyz+yxz)$ is symmetric in $x,y,z$ by cyclicity and
-$\operatorname{Tr}(a^T)=\operatorname{Tr}a$); the spin factors $V_m$ with $\langle x,y\rangle=\operatorname{tr}(x\circ y)$,
-since $\operatorname{tr}((x\circ y)\circ z)=2(abc+c\,u\cdot v+a\,v\cdot w+b\,u\cdot w)$ for $x=(a,u)$, $y=(b,v)$, $z=(c,w)$
+$\operatorname{Tr}((x\circ y)z)=\frac12\operatorname{Tr}(xyz+yxz)=\operatorname{Re}\operatorname{Tr}(xyz)$, since
+$\operatorname{Tr}(yxz)=\overline{\operatorname{Tr}((yxz)^*)}=\overline{\operatorname{Tr}(zxy)}=\overline{\operatorname{Tr}(xyz)}$,
+is invariant under cyclic permutations and, for the same reason, under $x\leftrightarrow z$, hence symmetric in
+$x,y,z$); the spin factors $V_m$ with $\langle x,y\rangle=\operatorname{tr}(x\circ y)$, since $\operatorname{tr}((x\circ y)\circ z)=2(abc+c\,u\cdot v+a\,v\cdot w+b\,u\cdot w)$ for $x=(a,u)$, $y=(b,v)$, $z=(c,w)$
 is symmetric; and $\mathbb R^N$ with the coordinatewise product.
 
 **Lemma F.1.** In every Jordan algebra, for all $a,b,d,x,y$:
@@ -183,8 +186,9 @@ $$
 =\nu_j\big(|d_j|^2-s\langle b,d_j\rangle\big),
 $$
 where the left inequality is Theorem F.5(1)(iv). The bracket is $\ge(1-s\|L(b)\|)|d_j|^2>0$, so all $\nu_j\ge0$ and
-$z\in Q$. For $t\ge0$, $(I-\frac tnL(b))^{-n}\to e^{tL(b)}$ as $n\to\infty$ (in an orthonormal eigenbasis of $L(b)$ this
-is $(1-t\beta/n)^{-n}\to e^{t\beta}$), and $Q$ is closed, so $e^{tL(b)}Q\subseteq Q$. With $-b$ in place of $b$,
+$z\in Q$. Hence, for $t\ge0$ and $n>t\|L(b)\|$, $(I-\frac tnL(b))^{-n}Q\subseteq Q$. As $n\to\infty$ this operator tends
+to $e^{tL(b)}$ (in an orthonormal eigenbasis of $L(b)$: $(1-t\beta/n)^{-n}\to e^{t\beta}$), and $Q$ is closed, so
+$e^{tL(b)}Q\subseteq Q$. With $-b$ in place of $b$,
 $e^{-L(b)}Q\subseteq Q$, so $e^{L(b)}Q=Q$, and the homeomorphism $e^{L(b)}$ maps $\operatorname{int}Q$ onto itself.
 Finally $L(b)^re=b^r$ (Jordan powers), so $e^{L(b)}e=\sum_rb^r/r!=\sum_ie^{\beta_i}d_i=\exp b$ for $b=\sum_i\beta_id_i$,
 by Theorem F.3.
@@ -197,9 +201,9 @@ $\lambda_i\lambda_j=e^{\log\lambda_i+\log\lambda_j}$. Use (1), and $P(y)e=2y\cir
 
 (4) Let $y=\sum_i\lambda_ic_i$, $c=\sum_{\lambda_i\ge0}c_i$ (an idempotent), $s=2c-e=\sum_i\varepsilon_ic_i$ with
 $\varepsilon_i=\pm1$, and $|y|=\sum_i|\lambda_i|c_i$. By Lemma F.4(4), $P(s)$, $P(|y|)$ and $P(y)$ act on $V_{ij}$ as
-$\varepsilon_i\varepsilon_j$, $|\lambda_i\lambda_j|$ and $\lambda_i\lambda_j$, so $P(y)=P(s)P(|y|)$. For $\varepsilon>0$,
-$|y|+\varepsilon e\in\Omega$, so $P(|y|+\varepsilon e)Q\subseteq Q$ by (3); $P(\cdot)$ is a polynomial and $Q$ is closed, so
-$P(|y|)Q\subseteq Q$ ($\varepsilon\to0$). $P(s)$ is a Jordan automorphism (Lemma F.4(3)), so $P(s)x^2=(P(s)x)^2\in Q$. $\square$
+$\varepsilon_i\varepsilon_j$, $|\lambda_i\lambda_j|$ and $\lambda_i\lambda_j$, so $P(y)=P(s)P(|y|)$. For $\eta>0$,
+$|y|+\eta e\in\Omega$, so $P(|y|+\eta e)Q\subseteq Q$ by (3); $P(\cdot)$ is a polynomial and $Q$ is closed, so
+$P(|y|)Q\subseteq Q$ ($\eta\to0$). $P(s)$ is a Jordan automorphism (Lemma F.4(3)), so $P(s)x^2=(P(s)x)^2\in Q$. $\square$
 
 Section 13.6 proved $\operatorname{tr}|P(y)x|\le\operatorname{tr}P(y)|x|$ in $V_m$ from three properties. They hold in
 every Euclidean Jordan algebra for the linear form $\tau(x)=\langle x,e\rangle$, which is $\operatorname{Tr}$ on
@@ -217,8 +221,9 @@ $$
 If $x\in Q$, then $x_-=0$ and $z=A\in Q$, so $|z|=z=P(y)|x|$; similarly if $-x\in Q$. $\square$
 
 The code checks Theorem F.5 for $\operatorname{Herm}_4(\mathbb C)$ and for the Lorentz cone $Q\subseteq V_4$ (the
-negative pairing is the witness $c_i$ of (iv)$\Rightarrow$(ii)), and Theorem F.6 in $V_4$, where in the coordinates
-$(a,u)$ the operators $L(b)$ and $P(y)$ are $5\times5$ symmetric matrices:
+negative pairing is the witness $c_i$ of (iv)$\Rightarrow$(ii)), Theorem F.6 in $V_4$, where in the coordinates
+$(a,u)$ the operators $L(b)$ and $P(y)$ are $5\times5$ symmetric matrices, and Corollary F.7 in
+$\operatorname{Herm}_5(\mathbb R)$:
 
 ```python
 import math
@@ -274,7 +279,7 @@ assert (rhs - lhs > -1e-9 * rhs).all()
 ## F.3 The Koecher–Vinberg theorem
 
 Section F.2 proved that the interior of the cone of squares of a Euclidean Jordan algebra is symmetric. The converse
-reconstructs the Jordan product from the cone. Throughout this section $\Omega$ is a self-dual open convex cone in a
+reconstructs the Jordan product from the cone. Up to Theorem F.12, $\Omega$ is a self-dual open convex cone in a
 Euclidean space $V$ of dimension $N$, and $dy$ is Lebesgue measure in orthonormal coordinates (orthogonal changes
 of coordinates have $|\det|=1$).
 
@@ -408,9 +413,9 @@ Euclidean Jordan algebra; let $\Omega_J$ be the interior of its cone of squares.
 Theorem F.6(2), $\Omega_J\subseteq\Omega$. Both cones are self-dual for $\langle\cdot,\cdot\rangle$ (Theorem F.5(2)), so
 $\Omega=\Omega^*\subseteq\Omega_J^*=\Omega_J$. $\square$
 
-The proof follows the structure of J. Faraut, A. Korányi, *Analysis on Symmetric Cones* (Oxford 1994), Chapters I–III,
-but replaces their use of Lie group theory by Lemma F.10 and Proposition F.11(3), which produce the needed one-parameter
-groups directly. M. Koecher (1957) and E. B. Vinberg (1960) proved the theorem.
+The proof follows the structure of J. Faraut, A. Korányi, *Analysis on Symmetric Cones* (Oxford 1994), Chapters I–III;
+where they use the Lie group structure of $G(\Omega)$, Lemma F.10 and Proposition F.11(3) produce the needed
+one-parameter groups directly. M. Koecher (1957) and E. B. Vinberg (1960) proved the theorem.
 
 **Example F.13 (the cone of semidefinite programming).** Let $V=\operatorname{Herm}_n(\mathbb R)$, $\langle x,y\rangle=\operatorname{Tr}(xy)$,
 $N=n(n+1)/2$, and $\Omega$ the positive definite matrices, symmetric by Theorems F.5 and F.6. Then
@@ -420,7 +425,9 @@ $u\circ_\kappa v=\frac1{2\kappa}(uv+vu)$, so $x\mapsto x/\kappa$ is an isomorphi
 *Proof.* For $a\in\Omega$, $P(a)x=axa$ lies in $G(\Omega)$ (Theorem F.6(3)). In an orthonormal eigenbasis of $a$ the
 matrices $E_{ii}$ and $(E_{ij}+E_{ji})/\sqrt2$ ($i<j$) form an orthonormal basis of eigenvectors of $P(a)$ with
 eigenvalues $a_ia_j$, so $\det P(a)=\prod_{i\le j}a_ia_j=\det(a)^{n+1}$ (each $a_i$ occurs $n+1$ times). Lemma F.9(2) gives
-$\varphi(a^2)=\varphi(P(a)1)=\det(a)^{-(n+1)}\varphi(1)$. With $D\log\det(x)[u]=\operatorname{Tr}(x^{-1}u)$:
+$\varphi(a^2)=\varphi(P(a)1)=\det(a)^{-(n+1)}\varphi(1)$, and every $x\in\Omega$ is $a^2$ with $a=\sqrt x$. With
+$D\log\det(x)[u]=\operatorname{Tr}(x^{-1}u)$ (from $\det(x+su)=\det x\,\det(1+sx^{-1}u)=\det x\,(1+s\operatorname{Tr}(x^{-1}u)+O(s^2))$)
+and $D(x^{-1})[u]=-x^{-1}ux^{-1}$:
 $x^*=\kappa^2x^{-1}$, $e=\kappa1$, $D^2f(x)[v,w]=\kappa^2\operatorname{Tr}(x^{-1}vx^{-1}w)$, and
 $D^3f(e)[u,v,w]=-\kappa^2\kappa^{-3}\operatorname{Tr}(uvw+vuw)=-\frac2\kappa\operatorname{Tr}((u\circ v)w)$. $\square$
 
@@ -602,7 +609,7 @@ $[U^*A_{ij}U]=(1\otimes U)^*[A_{ij}](1\otimes U)\ge0$; this contradicts Proposit
 either, by Theorem F.17. $\square$
 
 So a unital order isomorphism is determined, up to the unitaries, by which equal blocks it exchanges and which blocks it
-transposes; only the transposes distinguish it from a reversible quantum operation. The code builds the Jordan
+transposes, and by Corollary F.19 the transposed blocks are exactly what prevents complete positivity. The code builds the Jordan
 automorphism $x\mapsto Ux^TU^*$ of $M_3$ and recovers $U$ (up to a phase) by the steps of the proof of Theorem F.17:
 
 ```python
