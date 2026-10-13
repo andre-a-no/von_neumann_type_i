@@ -329,7 +329,7 @@ $$
 *Proof.* The equality is Proposition 11.11 for $A=YX$ and Proposition 3.9. $\sum_is_i^2\le(\sum_is_i)^2$ gives
 $1/\sqrt k$. As $s_1(A)\le\|Y\|\|X\|\le b^2$ and $s_k(A)=\min_{\|v\|=1}\|YXv\|\ge a^2$, $\|A\|_2^2\le kb^4$ and
 $\|A\|_1\ge ka^2$. Finally $\operatorname{Tr}(XY)=\operatorname{Tr}(X^{1/2}YX^{1/2})\ge a\operatorname{Tr}X\ge ka^2$, and
-Chebyshev's inequality bounds the probability by $(kb^4/k)/(ka^2)^2$. $\square$
+Markov's inequality for $|\operatorname{Tr}(XUY)|^2$ bounds the probability by $(kb^4/k)/(ka^2)^2$. $\square$
 
 So $N$ Haar samples find a violation of $|\operatorname{Tr}(XUY)|\le\operatorname{Tr}(XY)$ with probability at most
 $Nb^4/(a^4k^2)$, although one exists for every non-commuting pair. The truth is more drastic: $f(U)=|\operatorname{Tr}(AU)|$
@@ -402,8 +402,8 @@ assert z_mc.max().item() < 0                                               # ...
 `optimize.extremize(objective, params, maximize)` runs Adam in `rounds` rounds of `steps` steps (learning rate
 `lr * decay**round`), re-centres the unitary charts after every round, and returns **per start** the best value
 attained. Every batch element is an independent start with its own slots, signs, $U_0$ and contrast. The signs of
-`SelfAdjointParam` are discrete: between rounds, `discrete_step` flips one random sign per start and keeps the flip
-where the objective improves.
+`SelfAdjointParam` are discrete: between rounds, `discrete_step` tries eight single sign flips per start, one after
+the other, and keeps each flip that improves the objective.
 
 Since every iterate is admissible (Proposition 11.2), every returned value is attained: a maximisation gives a
 **lower bound** for the supremum, a minimisation an upper bound for the infimum, and nothing more — a local search
@@ -476,7 +476,7 @@ sup_M22, inf3 = best3[0].item(), -best3[1].item()
 s_M2 = exp3(TypeIAlgebra([2], [2], precision='double'),
             torch.tensor([0.0, 0.5], dtype=torch.float64).repeat_interleave(S), 1.0)
 direct_sum = (s_M2[1] + s_M2.max()).item()                                 # delta = 0.5, best delta' <= 0.5
-conj = [(1 - dl) * (2 * 0.999 / 1.999) ** 2 for dl in (0.0, 0.5)]          # unproven closed form, D = 0.999
+conj = [(1 - dl) * (2 * 0.999 / 1.999) ** 2 for dl in (0.0, 0.5)]          # unproven closed form, d = 0.999
 print(f"Exp. 3  inf {inf3:.1e};  sup for M_2 at delta = 0, 0.5: {s_M2[0]:.5f}, {s_M2[1]:.5f}"
       f"  (closed form {conj[0]:.5f}, {conj[1]:.5f})")
 print(f"        sup for M_2 (+) M_2 at 0.5: search {sup_M22:.5f}, direct sum {direct_sum:.5f}")
@@ -484,18 +484,21 @@ assert inf3 >= -1e-12 and inf3 < 1e-6                                       # Pr
 assert sup_M22 >= direct_sum - 5e-3 * direct_sum                           # (ii), up to 0.5 %
 ```
 
-The search on $M_2\oplus M_2$ falls short of the direct sum by about $0.1\,\%$: it has not fully converged, and the
+The search on $M_2\oplus M_2$ falls short of the direct sum by about $0.2\,\%$: it has not fully converged, and the
 best lower bound for $\overline z_{M_2\oplus M_2}(0.5)$ is the larger number — detecting this is the purpose of check
-(ii). The values for $M_2$ agree to $10^{-4}$ with $(1-\delta)(2D/(1+D))^2$, $D=0.999$, a closed form the companion
-paper found numerically but could not prove. Elsewhere the upper envelopes of Exp. 1 and Exp. 3 are not known in
-closed form; computed curves are then lower bounds and conjectures, nothing more.
+(ii). The values for $M_2$ agree to $10^{-4}$ with $(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2$, where
+$d=0.999$ is the largest admitted contrast of $Y$: a closed form that the companion paper observed numerically (in
+real algebras) and could not prove; the code does not assert it. For larger blocks the upper envelopes of Exp. 1 and
+Exp. 3 are, to our knowledge, not known in closed form; computed curves are then lower bounds and conjectures,
+nothing more.
 
 ## 11.6 What to compare with
 
-**Manopt**, **pymanopt** and **geoopt** provide unitary and Stiefel manifolds with retractions (QR, polar, Cayley)
-and Riemannian solvers more sophisticated than Adam in a chart. **cvxpy** with an SDP solver finds certified global
-optima of problems convex in one operator, and semidefinite relaxations give rigorous bounds in the direction a
-local search cannot. **NCTSSOS**, **ncpol2sdpa** and **NCSOStools** bound eigenvalues and traces of noncommutative
+**Manopt**, **pymanopt** and **geoopt** provide matrix manifolds (Stiefel manifolds, orthogonal and unitary groups)
+with retractions such as QR, polar or Cayley, and Riemannian solvers (conjugate gradients, trust regions, Riemannian
+Adam) that are often more efficient than Adam in a re-centred chart. **cvxpy** with an SDP solver solves convex
+problems in operator variables to global optimality, with a dual certificate up to the solver tolerance, and
+semidefinite relaxations give rigorous bounds in the direction a local search cannot. **NCTSSOS**, **ncpol2sdpa** and **NCSOStools** bound eigenvalues and traces of noncommutative
 polynomials in all dimensions at once (Section 0.3). The library adds exact parametrisations of the spectral and
 contrast constraints of $\bigoplus_cM_{k_c}$ (the extremes may sit in any sector), unitaries that respect the
 blocks, and one batched computation for many starts and constraint values, on a CPU or a GPU. It produces candidate
@@ -531,7 +534,8 @@ assert torch.allclose((I4 - Cay) @ torch.linalg.inv(I4 + Cay), Sk, atol=1e-10)
 assert torch.linalg.eigvals(Cay).add(1).abs().min() > 1e-6        # -1 is never an eigenvalue
 ```
 
-2. The proof of Lemma 11.10 works for a real Ginibre matrix (density $\propto e^{-\|Z\|_2^2/2}$) and orthogonal $V$.
+2. Theorem 5.3 and its proof hold for a real Gaussian matrix (density $\propto e^{-\|Z\|_2^2/2}$), the orthogonal
+   group and orthogonal $V$ (the remark after Theorem 5.3), so $VO$ has the law of $O$.
    Left multiplication by $\operatorname{diag}(\pm1)$ gives $\mathbb E[O_{ij}O_{lm}]=0$ for $i\ne l$, permutations show
    that $\mathbb E[O_{ij}O_{im}]$ does not depend on $i$, and $\sum_iO_{ij}O_{im}=\delta_{jm}$; so
    $\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k$ and $\mathbb E\operatorname{Tr}(AO)^2=\sum_{ij}A_{ji}^2/k$.

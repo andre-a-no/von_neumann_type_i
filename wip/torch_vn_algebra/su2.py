@@ -247,9 +247,10 @@ class SU2Chain:
         if L < 1:
             raise ValueError("L must be at least 1")
         if L > MAX_L:
+            gb = sum(multiplicity(L, t / 2) * math.comb(L, (L + t) // 2) for t in two_spins(L)) * 8 / 2 ** 30
             raise ValueError(f"L > {MAX_L} is not supported: the highest-weight bases of all spins need about "
-                             f"{sum(multiplicity(L, t / 2) * math.comb(L, (L + t) // 2) for t in two_spins(L)) * 8 / 2**30:.0f} GB "
-                             "(dense SU(2) methods reach L = 16 for all spins, L = 18 for single spins)")
+                             f"{gb:.0f} GB (dense SU(2) methods reach L = 16 for all spins, L = 18 for single "
+                             "spins; use the sparse Lanczos solvers of krylov for ground states beyond)")
         self.u1 = SpinChain(L, boundary, complex_valued, precision, device)
         self.L, self.boundary = L, boundary
         self.complex_valued, self.precision = complex_valued, precision
@@ -406,7 +407,8 @@ class SU2Chain:
         """
         Orthonormal basis of the highest-weight vectors of spin S, as the columns of a real (binom(L, N), m_S)
         matrix in the basis of the U(1) sector N = L/2 + S of `u1` (Yamanouchi order, see `paths`). Computed once
-        for all S (float64) and cached; dtype: cast (cached), default float64.
+        on first use (float64) and cached; dtype: cast (cached), default float64. The cached tensor is returned:
+        clone it before modifying it in place.
         """
         t = _twice(S, 'S')
         self.sector_index(S)
@@ -428,7 +430,8 @@ class SU2Chain:
 
     def multiplet_basis(self, S: Spin, M: Spin) -> torch.Tensor:
         """The states |S, M, a> (a = 1..m_S) as columns in the U(1) sector N = L/2 + M of `u1`:
-        (S^-)^{S-M} B_S, normalised by prod sqrt((S + M')(S - M' + 1)) (Condon-Shortley); float64."""
+        (S^-)^{S-M} B_S, normalised by prod sqrt((S + M')(S - M' + 1)) (Condon-Shortley); float64 (for M = S the
+        cached hw_basis(S) itself)."""
         t, tm = _twice(S, 'S'), _twice(M, 'M')
         N = self.u1_sector(S, M)
         X = self.hw_basis(S)

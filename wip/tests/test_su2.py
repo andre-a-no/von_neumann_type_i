@@ -6,7 +6,6 @@ site i = bit i), the U(1) route of chains.SpinChain, exact Heisenberg-ring energ
 the Lieb-Mattis theorem, textbook Clebsch-Gordan values and SymPy.
 """
 import ast
-import itertools
 import math
 import pathlib
 from fractions import Fraction
@@ -243,7 +242,8 @@ def test_batched_couplings_and_fields():
     for b in range(3):
         Hb = c.heisenberg(J=J[b].item(), J2=J2[b].item(), h=h[b].item())
         assert torch.allclose(H.matrix[b], Hb.matrix[0], atol=1e-13)
-        assert np.abs(E[b].numpy() - reference_spectrum(7, 'periodic', J[b].item(), J2[b].item(), h[b].item())).max() < 1e-10
+        ref = reference_spectrum(7, 'periodic', J[b].item(), J2[b].item(), h[b].item())
+        assert np.abs(E[b].numpy() - ref).max() < 1e-10
 
 
 def test_explicit_bonds_random_couplings():
