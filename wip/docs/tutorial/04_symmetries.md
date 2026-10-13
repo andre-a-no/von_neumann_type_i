@@ -382,7 +382,7 @@ assert sorted(W.shape[1] for W in spaces) == [1, 1, 1, 1, 2, 2]      # Lemma 4.6
 assert all(close(G @ W, W @ (W.mH @ G @ W)) for W in spaces)           # invariant subspaces
 Y = dc.twirl(G, torch.randn(8, 8, dtype=dt))
 Wa, Wb = [W for W in spaces if W.shape[1] == 2]
-s = torch.linalg.svdvals(Wa.mH @ Y @ Wb)                               # Lemma 4.8: a multiple of a unitary
+s = torch.linalg.svdvals(Wa.mH @ Y @ Wb)                               # Lemma 4.8(b): a multiple of a unitary
 assert s[1] > 1e-3 and abs(s[0] - s[1]) < 1e-10
 assert all(close(W.mH @ Y @ Wa, 0) for W in spaces if W.shape[1] == 1)   # different summands: zero
 ```
