@@ -49,16 +49,21 @@ and sigma + eps 1. The thresholds are relative, so all results are invariant und
 
 Numerical evaluation
 --------------------
-The Renyi quantities are evaluated with rescaled operators (factors (rho/a)^alpha, (sigma/b)^{1-alpha} <= 1 and a
-common logarithmic scale), so that large alpha (D_max as a limit) does not overflow, also in single precision.
-The spectrum of the sandwich sigma^g rho sigma^g is obtained as the squared singular values of sigma^g rho^{1/2}:
-the SVD resolves it down to (eps ||sigma^g|| ||rho||^{1/2})^2, not only down to eps ||sigma^g rho sigma^g|| as the
-eigenvalues of the product would (this matters for alpha < 1, where eigenvalues lambda contribute lambda^alpha);
-singular values below rtol * max(s_max, ||sigma^g|| ||rho||^{1/2}) count as zeros. Limit of accuracy: for alpha < 1
-the value depends on all eigenvalues of the sandwich, whose condition number can reach cond(sigma)^{2g} cond(rho)
-with g = (1-alpha)/(2 alpha) -> inf as alpha -> 0; eigenvalues below the resolution above cannot be represented,
-so for small alpha and ill-conditioned states the computed sandwiched divergence is not accurate (see
-scripts/renyi_threshold.py, which therefore restricts alpha >= 0.2 and bounds the condition of the states).
+The Renyi quantities are evaluated per sector as logarithms log Q_c, with rescaled factors (every factor <= 1, scales
+per block), so that large alpha (D_max as a limit) neither overflows nor underflows, also in single precision; the
+divergence is (alpha-1)^{-1} (logsumexp_c log Q_c - log Tr rho). The Petz value is the exact pair sum
+Q_c = sum_ij lambda_i^alpha mu_j^{1-alpha} |<v_i|u_j>|^2 over the eigenpairs of rho_c and sigma_c (a logsumexp; the
+matrix form Tr rho^alpha sigma^{1-alpha} loses all digits when its dominant pair is not (lambda_max, mu_min), as for
+nearly commuting states at large alpha); its gradient is that of the matrix form (Daleckii-Krein), which is dropped
+where the rescaled matrix form is below sqrt(eps). The spectrum of the sandwich sigma^g rho sigma^g is obtained as
+the squared singular values of sigma^g rho^{1/2}: the SVD resolves it down to (eps ||sigma^g|| ||rho||^{1/2})^2, not
+only down to eps ||sigma^g rho sigma^g|| as the eigenvalues of the product would (this matters for alpha < 1, where
+eigenvalues lambda contribute lambda^alpha); singular values below rtol * max(s_max, ||sigma^g|| ||rho||^{1/2}) (per
+block) count as zeros. Limit of accuracy: for alpha < 1 the value depends on all eigenvalues of the sandwich, whose
+condition number can reach cond(sigma)^{2g} cond(rho) with g = (1-alpha)/(2 alpha) -> inf as alpha -> 0; eigenvalues
+below the resolution above cannot be represented, so for small alpha and ill-conditioned states the computed
+sandwiched divergence is not accurate (see scripts/renyi_threshold.py, which therefore restricts alpha >= 0.2 and
+bounds the condition of the states).
 
 Trace conventions
 -----------------
@@ -271,9 +276,9 @@ def _tr(x: torch.Tensor) -> torch.Tensor:
     return torch.diagonal(x, dim1=-2, dim2=-1).sum(-1).real
 
 
-def _scatter(alg: TypeIAlgebra, parts, B: int, dtype) -> torch.Tensor:
-    """Per-sector values (B, C) from [(idx, values (B n,))] (zero for empty sectors)."""
-    out = torch.zeros(B, alg.C, dtype=dtype, device=alg.hilbert.device)
+def _scatter(alg: TypeIAlgebra, parts, B: int, dtype, fill: float = 0.0) -> torch.Tensor:
+    """Per-sector values (B, C) from [(idx, values (B n,))] (`fill` for empty sectors)."""
+    out = torch.full((B, alg.C), fill, dtype=dtype, device=alg.hilbert.device)
     for idx, v in parts:
         out[:, alg._sel(idx)] = v.reshape(B, len(idx)).to(dtype)
     return out
@@ -288,36 +293,55 @@ def _eigvalsh(M: torch.Tensor) -> torch.Tensor:
 # per-sector quantities
 # ======================================================================
 class _Terms(NamedTuple):
-    terms: torch.Tensor      # (B, C) Renyi: Q_c exp(-log_scale) (Q_c the per-sector Q_alpha or ~Q_alpha);
-                             #        Umegaki: Tr rho_c (log rho_c - log sigma_c)
-    log_scale: Optional[torch.Tensor]   # (B,) Renyi: log of the common scale of the terms; Umegaki: None
+    log_terms: Optional[torch.Tensor]   # (B, C) Renyi: log Q_c (Q_c the per-sector Q_alpha or ~Q_alpha; -inf where
+                                        # Q_c = 0, also for empty sectors); Umegaki: None
+    ent: Optional[torch.Tensor]         # (B, C) Umegaki terms Tr rho_c (log rho_c - log sigma_c) (for kind 'umegaki',
+                                        # and for alpha given per sample: entries alpha = 1); else None
     leak: torch.Tensor       # (B, C) Tr rho_c (1 - Pi_sigma_c) (no gradient)
     p: torch.Tensor          # (B, C) Tr rho_c
     q: torch.Tensor          # (B, C) Tr sigma_c
     alpha: torch.Tensor      # (B,) (ones for Umegaki)
-    umegaki: Optional[torch.Tensor]     # (B, C) Umegaki terms as well, for alpha given per sample (entries alpha = 1)
 
 
-def _scale(values: List[torch.Tensor], thr: torch.Tensor, B: int, smallest: torch.Tensor) -> torch.Tensor:
-    """Per sample (B,): the smallest value above thr (where `smallest`) or the largest value, over all groups
-    (each (B n, k)); 1 if there is none (zero operator). Without gradient: a constant rescaling."""
+def _block_scale(w: torch.Tensor, thr: torch.Tensor, smallest: torch.Tensor) -> torch.Tensor:
+    """Per block (rows of w, (B n, k)): the smallest eigenvalue above thr (B n, 1) where `smallest` (B n, 1), else the
+    largest one; 1 for a block without support. Shape (B n, 1), without gradient (a constant rescaling)."""
     with torch.no_grad():
-        big = torch.stack([v.reshape(B, -1).amax(-1) for v in values], dim=-1).amax(-1)
-        small = torch.stack([torch.where(v > _rep(thr, v.shape[0] // B), v, torch.full_like(v, math.inf))
-                             .reshape(B, -1).amin(-1) for v in values], dim=-1).amin(-1)
-        s = torch.where(smallest, small, big)
+        big = w > thr
+        hi = torch.where(big, w, torch.zeros_like(w)).amax(-1, keepdim=True)
+        lo = torch.where(big, w, torch.full_like(w, math.inf)).amin(-1, keepdim=True)
+        s = torch.where(smallest, lo, hi)
         return torch.where(torch.isfinite(s) & (s > 0), s, torch.ones_like(s))
+
+
+def _log_or_ninf(x: torch.Tensor, pos: torch.Tensor) -> torch.Tensor:
+    """log x where pos, -inf elsewhere (gradients finite in both branches)."""
+    return torch.where(pos, torch.log(torch.where(pos, x, torch.ones_like(x))), torch.full_like(x, -math.inf))
+
+
+def _logsumexp(L: torch.Tensor, dims) -> torch.Tensor:
+    """log sum exp over dims, -inf for an empty sum, without NaN gradients (torch.logsumexp gives NaN gradients when
+    every entry is -inf)."""
+    m = L.detach().amax(dim=dims, keepdim=True)
+    m = torch.where(torch.isfinite(m), m, torch.zeros_like(m))
+    s = torch.exp(L - m).sum(dim=dims, keepdim=True)
+    return (m + _log_or_ninf(s, s > 0)).sum(dim=dims)          # (summing over the kept size-1 dimensions)
 
 
 def _terms(rho: Operator, sigma: Operator, alpha: Optional[Alpha], kind: str, trace: str,
            rtol: Optional[float]) -> _Terms:
     """
     Per-sector Renyi / Umegaki quantities; one batched eigendecomposition per block size of rho and of sigma (from
-    the spectral cache if there is one). The Renyi quantities are evaluated with rescaled factors, Q = exp(log_scale)
-    sum_c terms_c, so that large alpha (D_max as a limit) and single precision do not overflow: Petz with
-    (rho / a)^alpha (sigma / b)^{1-alpha}, sandwiched with the singular values s of (sigma / b)^g rho^{1/2} as
-    (s / m)^{2 alpha}; a = lambda_max(rho), m = s_max, b = the smallest eigenvalue of sigma on its support for
-    alpha > 1 and lambda_max(sigma) for alpha < 1 (every factor <= 1).
+    the spectral cache if there is one). The Renyi quantities are returned as logarithms log Q_c, so that large alpha
+    (D_max as a limit) and single precision neither overflow nor underflow:
+
+    Petz: the value is the pair sum Q_c = sum_ij lambda_i^alpha mu_j^{1-alpha} |<v_i|u_j>|^2 over the eigenpairs of
+        rho_c and sigma_c (on the supports), evaluated as a logsumexp; the gradient is that of the matrix form
+        Tr (rho_c/a)^alpha (sigma_c/b)^{1-alpha} (Daleckii-Krein; per-block scales a = lambda_max(rho_c), b = the
+        smallest eigenvalue of sigma_c on its support for alpha > 1 and lambda_max(sigma_c) for alpha < 1, so that every
+        factor is <= 1), which carries no gradient where it is not resolved in floating point (a scaled trace below
+        sqrt(eps): very large alpha with nearly commuting states).
+    sandwiched: from the singular values s of (sigma_c/b)^g (rho_c/a)^{1/2} as (s/m)^{2 alpha}, m = s_max of the block.
     """
     rho = _as_blunt(rho, trace, "rho")
     sigma = _as_blunt(sigma, trace, "sigma")
@@ -332,69 +356,65 @@ def _terms(rho: Operator, sigma: Operator, alpha: Optional[Alpha], kind: str, tr
     a = a.expand(B)
     rt = _rtol(alg, rtol)
     ds = _decomposed(sigma, B)
-    ws = [w for *_, w, _ in ds]
-    thr_s = rt * _global_max(ws, B)
-    parts, leaks, ps, qs = [], [], [], []
-    log_scale = None
-    if kind != 'umegaki':
-        b = _scale(ws, thr_s, B, a > 1)                       # sigma / b: factors (sigma / b)^{1-alpha}, ^g <= 1
-
+    thr_s = rt * _global_max([w for *_, w, _ in ds], B)
     dr = _decomposed(rho, B)
-    wr_all = [w for *_, w, _ in dr]
-    thr_r = rt * _global_max(wr_all, B)
+    thr_r = rt * _global_max([w for *_, w, _ in dr], B)
     per_sample = kind != 'umegaki' and isinstance(alpha, torch.Tensor)
-    uparts = []
-    if kind == 'umegaki' or per_sample:          # Tr rho log rho - Tr rho log sigma, logarithms on the supports
-        for (k, idx, xr, wr, Vr), (_, _, xs, ws_, Vs) in zip(dr, ds):
-            n = len(idx)
-            tr_, ts = _rep(thr_r, n), _rep(thr_s, n)
+    resolved = math.sqrt(torch.finfo(rdt).eps)
+    uparts, parts, leaks, ps, qs = [], [], [], [], []
+    for (k, idx, xr, wr, Vr), (_, _, xs, ws, Vs) in zip(dr, ds):
+        n = len(idx)
+        tr_, ts, an = _rep(thr_r, n), _rep(thr_s, n), _rep(a, n)
+        if kind == 'umegaki' or per_sample:      # Tr rho log rho - Tr rho log sigma, logarithms on the supports
             ent = _tr(_apply(xr, wr, Vr, lambda lam, t=tr_: torch.where(lam > t, torch.special.xlogy(lam, lam),
                                                                         torch.zeros_like(lam))))
-            uparts.append((idx, ent - _tr_prod(xr, _apply(xs, ws_, Vs, _support_log(ts)))))
-    if kind == 'umegaki':
-        parts = uparts
-    elif kind == 'petz':
-        ar = _scale(wr_all, thr_r, B, torch.zeros_like(a, dtype=torch.bool))
-        log_scale = a * torch.log(ar) + (1 - a) * torch.log(b)
-        for (k, idx, xr, wr, Vr), (_, _, xs, ws_, Vs) in zip(dr, ds):
-            n = len(idx)
-            an, arn, bn = _rep(a, n), _rep(ar, n), _rep(b, n)
-            v = _tr_prod(_apply(xr, wr, Vr, _support_power(an, _rep(thr_r, n), arn)),
-                         _apply(xs, ws_, Vs, _support_power(1 - an, _rep(thr_s, n), bn)))
-            parts.append((idx, v))
-    elif kind == 'sandwiched':
-        # the nonzero spectrum of S rho S (S = (sigma/b)^g) is that of B B^* with B = S rho^{1/2}: its eigenvalues
-        # are the squared singular values of B, which the SVD resolves down to (eps ||S|| ||rho^{1/2}||)^2 instead of
-        # eps ||S rho S|| for the eigenvalues of the product (they matter: lambda^alpha is not small for small alpha)
-        svs, smax, hmax = [], [], []
-        for (k, idx, xr, wr, Vr), (_, _, xs, ws_, Vs) in zip(dr, ds):
-            n = len(idx)
-            an, bn = _rep(a, n), _rep(b, n)
-            f = _support_power((1 - an) / (2 * an), _rep(thr_s, n), bn)
-            S = _apply(xs, ws_, Vs, f)
-            H = _apply(xr, wr, Vr, _support_power(0.5, _rep(thr_r, n)))
-            svs.append(_fc.singular_values(S @ H.to(S.dtype)))
-            smax.append(f(ws_).detach())
-            hmax.append(wr.clamp(min=0).sqrt())
-        m = _global_max([sv.detach() for sv in svs], B)
-        m = torch.where(m > 0, m, torch.ones_like(m))
-        # singular values below the rounding level of B = S rho^{1/2} count as zeros
-        thr_sv = rt * torch.maximum(m, _global_max(smax, B) * _global_max(hmax, B))
-        log_scale = (1 - a) * torch.log(b) + 2 * a * torch.log(m)
-        for (k, idx, x, w, V), sv in zip(ds, svs):
-            n = len(idx)
-            parts.append((idx, _support_power(2 * _rep(a, n), _rep(thr_sv, n), _rep(m, n))(sv).sum(-1)))
-    else:
-        raise ValueError(f"unknown kind {kind!r}")
-
-    for (k, idx, xr, _, _), (_, _, xs, ws_, Vs) in zip(dr, ds):
-        n = len(idx)
+            uparts.append((idx, ent - _tr_prod(xr, _apply(xs, ws, Vs, _support_log(ts)))))
+        if kind == 'petz':
+            ar = _block_scale(wr, tr_, torch.zeros_like(an, dtype=torch.bool))
+            bs = _block_scale(ws, ts, an > 1)
+            log_ab = (an * torch.log(ar) + (1 - an) * torch.log(bs)).squeeze(-1)
+            Qm = _tr_prod(_apply(xr, wr, Vr, _support_power(an, tr_, ar)),
+                          _apply(xs, ws, Vs, _support_power(1 - an, ts, bs)))
+            ok = Qm > resolved
+            L_mat = log_ab + torch.log(torch.where(ok, Qm, torch.ones_like(Qm)))
+            with torch.no_grad():                # exact pair sum (value)
+                lf = torch.where(wr > tr_, an * torch.log(torch.where(wr > tr_, wr, torch.ones_like(wr))),
+                                 torch.full_like(wr, -math.inf))
+                lg = torch.where(ws > ts, (1 - an) * torch.log(torch.where(ws > ts, ws, torch.ones_like(ws))),
+                                 torch.full_like(ws, -math.inf))
+                W = Vr.conj().transpose(-2, -1) @ Vs.to(Vr.dtype)
+                O = (W.real ** 2 + W.imag ** 2) if torch.is_complex(W) else W ** 2
+                L_pair = _logsumexp(lf.unsqueeze(-1) + lg.unsqueeze(-2) + torch.log(O), (-2, -1))
+            # value of the pair sum, gradient of the matrix form (where it is resolved)
+            parts.append((idx, L_pair + torch.where(ok, L_mat - L_mat.detach(), torch.zeros_like(L_mat))))
+        elif kind == 'sandwiched':
+            # the nonzero spectrum of S R S (S = (sigma/b)^g, R = rho/a) is that of M M^* with M = S R^{1/2}: the
+            # squared singular values of M, which the SVD resolves down to (eps ||S|| ||R^{1/2}||)^2 instead of
+            # eps ||S R S|| for the eigenvalues of the product (they matter: lambda^alpha is not small for small alpha)
+            ar = _block_scale(wr, tr_, torch.zeros_like(an, dtype=torch.bool))
+            bs = _block_scale(ws, ts, an > 1)
+            f = _support_power((1 - an) / (2 * an), ts, bs)
+            S = _apply(xs, ws, Vs, f)
+            H = _apply(xr, wr, Vr, _support_power(0.5, tr_, ar))
+            sv = _fc.singular_values(S @ H.to(S.dtype))
+            with torch.no_grad():
+                m = sv.amax(-1, keepdim=True)
+                m = torch.where(m > 0, m, torch.ones_like(m))
+                hmax = (torch.where(wr > tr_, wr, torch.zeros_like(wr)).amax(-1, keepdim=True) / ar).sqrt()
+                # singular values below the rounding level of M count as zeros
+                thr_sv = rt * torch.maximum(m, f(ws).amax(-1, keepdim=True) * hmax)
+            terms = _support_power(2 * an, thr_sv, m)(sv).sum(-1)
+            log_ab = (an * torch.log(ar) + (1 - an) * torch.log(bs) + 2 * an * torch.log(m)).squeeze(-1)
+            parts.append((idx, log_ab + _log_or_ninf(terms, terms > 0)))
+        elif kind != 'umegaki':
+            raise ValueError(f"unknown kind {kind!r}")
         xd = xr.detach()
-        leaks.append((idx, _tr(xd) - _tr_prod(xd, _projection(ws_, Vs, _rep(thr_s, n)))))
+        leaks.append((idx, _tr(xd) - _tr_prod(xd, _projection(ws, Vs, ts))))
         ps.append((idx, _tr(xr)))
         qs.append((idx, _tr(xs)))
-    return _Terms(_scatter(alg, parts, B, rdt), log_scale, _scatter(alg, leaks, B, rdt), _scatter(alg, ps, B, rdt),
-                  _scatter(alg, qs, B, rdt), a, _scatter(alg, uparts, B, rdt) if per_sample else None)
+    log_terms = None if kind == 'umegaki' else _scatter(alg, parts, B, rdt, fill=-math.inf)
+    ent = _scatter(alg, uparts, B, rdt) if uparts else None
+    return _Terms(log_terms, ent, _scatter(alg, leaks, B, rdt), _scatter(alg, ps, B, rdt), _scatter(alg, qs, B, rdt), a)
 
 
 def _from_terms(t: _Terms, supp_tol: float) -> torch.Tensor:
@@ -404,18 +424,18 @@ def _from_terms(t: _Terms, supp_tol: float) -> torch.Tensor:
     tr_safe = torch.where(tr > 0, tr, torch.ones_like(tr))
     leak = t.leak.sum(-1) > supp_tol * tr
     inf = torch.full_like(tr, math.inf)
-    if t.log_scale is None:                                  # Umegaki
-        return torch.where(leak, inf, t.terms.sum(-1) / tr_safe)
+    if t.log_terms is None:                                  # Umegaki
+        return torch.where(leak, inf, t.ent.sum(-1) / tr_safe)
     a = t.alpha
     one = a == 1
-    Q = t.terms.sum(-1)
-    pos = Q > 0
+    logQ = _logsumexp(t.log_terms, -1)
+    pos = torch.isfinite(logQ)
     den = torch.where(one, torch.ones_like(a), a - 1)        # finite in both branches (no NaN gradients)
-    D = (t.log_scale + torch.log(torch.where(pos, Q, torch.ones_like(Q))) - torch.log(tr_safe)) / den
+    D = (torch.where(pos, logQ, torch.zeros_like(logQ)) - torch.log(tr_safe)) / den
     D = torch.where(pos, D, inf)
     D = torch.where(leak & (a > 1), inf, D)
-    if t.umegaki is not None:
-        D = torch.where(one, torch.where(leak, inf, t.umegaki.sum(-1) / tr_safe), D)
+    if t.ent is not None:
+        D = torch.where(one, torch.where(leak, inf, t.ent.sum(-1) / tr_safe), D)
     return D
 
 
@@ -548,7 +568,8 @@ class SectorContributions(NamedTuple):
     p, q:        sector weights Tr rho_c, Tr sigma_c.
     terms:       Renyi kinds: Q_c = Tr rho_c^alpha sigma_c^{1-alpha} (Petz) or Tr (sigma_c^g rho_c sigma_c^g)^alpha
                  (sandwiched), so that Tr rho^alpha sigma^{1-alpha} = sum_c Q_c (and likewise ~Q); these may
-                 overflow for very large alpha, the conditional divergences are computed in logarithms and do not;
+                 overflow or underflow for very large alpha, the conditional divergences are computed from log Q_c
+                 and do not;
                  Umegaki: Tr rho_c (log rho_c - log sigma_c), summing to Tr rho D(rho||sigma).
     conditional: D(rho_c / p_c || sigma_c / q_c), the divergence of the conditional states of sector c: NaN where
                  p_c = 0 (rounding level: p_c <= rtol Tr rho), +inf where q_c = 0 < p_c or where the support
@@ -591,19 +612,19 @@ def sector_contributions(rho: Operator, sigma: Operator, alpha: Optional[Alpha] 
     def umegaki_conditional(ent):
         return torch.where(leak, inf, (ent - ps * torch.log(ps / qs)) / ps)
     if kind == 'umegaki':
-        terms = t.terms
+        terms = t.ent
         cond = umegaki_conditional(terms)
-    else:                                         # in logarithms: the scaled terms do not overflow
-        ls = t.log_scale[:, None]
-        terms = t.terms * torch.exp(ls)
-        pos = t.terms > 0
+    else:                                         # in logarithms: log Q_c does not overflow
+        L = t.log_terms
+        terms = torch.exp(L)
+        pos = torch.isfinite(L)
         is_one = a == 1                           # alpha given per sample: entries 1 are the Umegaki limit
         den = torch.where(is_one, torch.ones_like(a), a - 1)
-        cond = (ls + torch.log(torch.where(pos, t.terms, one)) - a * torch.log(ps) - (1 - a) * torch.log(qs)) / den
+        cond = (torch.where(pos, L, torch.zeros_like(L)) - a * torch.log(ps) - (1 - a) * torch.log(qs)) / den
         cond = torch.where(pos, cond, inf)
         cond = torch.where(leak & (a > 1), inf, cond)
-        if t.umegaki is not None:
-            cond = torch.where(is_one, umegaki_conditional(t.umegaki), cond)
+        if t.ent is not None:
+            cond = torch.where(is_one, umegaki_conditional(t.ent), cond)
     cond = torch.where(has_p & ~has_q, inf, cond)
     cond = torch.where(has_p, cond, nan)
     return SectorContributions(p, q, terms, cond, t.alpha)

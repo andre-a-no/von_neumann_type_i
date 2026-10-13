@@ -295,6 +295,58 @@ def test_unnormalised_inputs_scale():
                           atol=1e-12)
 
 
+def _petz_pairs_ref(alg, r, s, a):
+    """log-domain pair sum log sum_ij lambda_i^a mu_j^(1-a) |<v_i|u_j>|^2 over the blocks (numpy eigh)."""
+    terms = []
+    for x, y in zip(_blocks_np(alg, r), _blocks_np(alg, s)):
+        lam, V = np.linalg.eigh(x)
+        mu, U = np.linalg.eigh(y)
+        terms.append((a * np.log(lam)[:, None] + (1 - a) * np.log(mu)[None, :]
+                      + np.log(np.abs(V.conj().T @ U) ** 2)).ravel())
+    t = np.concatenate(terms)
+    return (t.max() + np.log(np.exp(t - t.max()).sum())) / (a - 1)
+
+
+def test_large_alpha():
+    """Large alpha neither underflows nor overflows (the extreme eigenvalues of rho and sigma in different sectors,
+    nearly commuting states): Petz against the pair sum in logarithms, commuting states against the classical
+    formula (logsumexp), sandwiched against D_max, single and double precision; finite gradients."""
+    alg = _alg((3, 2, 1))
+    rho, sigma = _random_states(alg, 4, 23)
+    for a in (100.0, 1000.0, 1e5):
+        D = dv.petz_renyi_divergence(rho, sigma, a)
+        ref = [_petz_pairs_ref(alg, rho.matrix[b], sigma.matrix[b], a) for b in range(4)]
+        assert np.allclose(D.numpy(), ref, atol=1e-10, rtol=0)
+        D32 = dv.petz_renyi_divergence(rho.cast(alg.like(precision='single')),
+                                       sigma.cast(alg.like(precision='single')), a)
+        assert np.allclose(D32.double().numpy(), ref, atol=1e-4, rtol=0)
+        S32 = dv.sandwiched_renyi_divergence(rho.cast(alg.like(precision='single')),
+                                             sigma.cast(alg.like(precision='single')), a)
+        S = dv.sandwiched_renyi_divergence(rho, sigma, a)
+        assert torch.isfinite(S32).all() and torch.allclose(S32.double(), S, atol=1e-4)
+        assert (S <= dv.max_relative_entropy(rho, sigma) + 1e-12).all()
+    # commuting states: sum_i p_i^a q_i^(1-a) is dominated by the largest ratio p_i / q_i, not by (p_max, q_min)
+    p = torch.tensor([[0.5, 0.3, 0.1, 0.05, 0.04, 0.01]], dtype=torch.float64)
+    q = torch.tensor([[0.4, 0.3, 0.12, 0.08, 0.07, 0.03]], dtype=torch.float64)
+    def diag(v):
+        m = torch.zeros(1, alg.C, alg.k_max, alg.k_max, dtype=alg.dtype)
+        m[0, 0, :3, :3] = torch.diag(v[0, :3]).to(alg.dtype)
+        m[0, 1, :2, :2] = torch.diag(v[0, 3:5]).to(alg.dtype)
+        m[0, 2, 0, 0] = v[0, 5]
+        return m
+    R, S = DensityMatrix(alg, matrix=diag(p)), DensityMatrix(alg, matrix=diag(q))
+    for a in (50.0, 500.0, 5000.0):
+        t = a * torch.log(p) + (1 - a) * torch.log(q)
+        ref = torch.logsumexp(t, -1) / (a - 1)
+        assert torch.allclose(dv.petz_renyi_divergence(R, S, a), ref, atol=1e-12, rtol=0)
+        assert torch.allclose(dv.sandwiched_renyi_divergence(R, S, a), ref, atol=1e-12, rtol=0)
+    # gradients stay finite at large alpha
+    G = rho.matrix.clone().requires_grad_(True)
+    D = dv.petz_renyi_divergence(DensityMatrix(alg, matrix=G, validate=False), sigma, 1000.0)
+    D.sum().backward()
+    assert torch.isfinite(G.grad).all()
+
+
 def test_single_precision():
     alg = _alg(precision='single')
     torch.manual_seed(7)
