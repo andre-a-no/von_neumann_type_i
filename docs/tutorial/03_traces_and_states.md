@@ -80,7 +80,7 @@ $$
 $\mathcal M$, there is a unique $R$ with $\omega(A)=\langle R,A\rangle_w=\operatorname{tr}_w(R^*A)$; set
 $\rho_w=R^*$. If $\rho_w\ge0$, then
 $\omega(A^*A)=\sum_cw_c\operatorname{Tr}(A_c\,(\rho_w)_c\,A_c^*)\ge0$, since
-$A_c(\rho_w)_cA_c^*\ge0$ (Corollary 1.7 with $C=(\rho_w)_c^{1/2}A_c^*$). Conversely, if
+$A_c(\rho_w)_cA_c^*\ge0$ (Corollary 1.7 with $T=(\rho_w)_c^{1/2}A_c^*$). Conversely, if
 $\omega$ is positive, take $x\in\mathbb C^{k_c}$ and $A$ the rank-one operator
 $|x\rangle\langle x|$ in block $c$; then $A=A^*A/\|x\|^2$ and
 $0\le\omega(A)=w_c\langle x,(\rho_w)_cx\rangle$, so $(\rho_w)_c\ge0$. The normalisation is
@@ -150,6 +150,11 @@ to both sides. Hence
 $-\sum_c\sum_{\mu>0}p_c\mu\log(p_c\mu)=-\sum_cp_c\log p_c\sum_{\mu>0}\mu-\sum_cp_c\sum_{\mu>0}\mu\log\mu$,
 and $\sum_{\mu>0}\mu=\operatorname{Tr}\sigma_c=1$. $\square$
 
+> **Physical meaning.** The formula splits the uncertainty about the system into two parts:
+> $H(p)$, the classical uncertainty about the charge (which sector the system is in), and
+> $\sum_cp_cS(\sigma_c)$, the average quantum uncertainty within the sectors. Under a
+> superselection rule the first part is the entropy of a classical random variable, the charge.
+
 The entropy relative to another trace is $S_w(\rho)=-\operatorname{tr}_w(\rho_w\log\rho_w)$. By
 Theorem 3.2, $(\rho_w)_c=\rho_c/w_c$, so
 $$
@@ -177,11 +182,14 @@ assert torch.allclose(S_tau, S + (p * torch.log(w_tau)).sum(-1))
 For states with densities $\rho,\sigma$, $\sigma>0$, the **relative entropy** is
 $S(\rho\|\sigma)=\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\rho\log\sigma$, where
 $\operatorname{Tr}\rho\log\rho:=\sum_i\lambda_i\log\lambda_i$ over the eigenvalues of $\rho$, with
-$0\log0=0$ (and likewise in each block). It does not depend on the trace:
-$\log(\rho_w)_c-\log(\sigma_w)_c=\log\rho_c-\log\sigma_c$ because the factor $1/w_c$ cancels,
-and $\operatorname{tr}_w(\rho_wX)=\operatorname{Tr}(\rho X)$.
+$0\log0=0$ (and likewise in each block). It does not depend on the trace: by Theorem 3.2,
+$(\rho_w)_c=\rho_c/w_c$ and $(\sigma_w)_c=\sigma_c/w_c$, so the eigenvalues of $(\rho_w)_c$ are those of
+$\rho_c$ divided by $w_c$, and both $\operatorname{tr}_w(\rho_w\log\rho_w)$ and
+$\operatorname{tr}_w(\rho_w\log\sigma_w)$ differ from $\operatorname{Tr}\rho\log\rho$ and
+$\operatorname{Tr}\rho\log\sigma$ by the same amount $-\sum_cp_c\log w_c$ (the logarithm of $\rho$
+is only needed on its support, by the convention $0\log0=0$). The difference is unchanged.
 
-**Lemma (tangent inequality).** Let $f:I\to\mathbb R$ be convex on an interval $I$ and
+**Lemma 3.4 (tangent inequality).** Let $f:I\to\mathbb R$ be convex on an interval $I$ and
 differentiable at $b\in I$. Then $f(a)\ge f(b)+(a-b)f'(b)$ for all $a\in I$, strictly for
 $a\neq b$ if $f$ is strictly convex.
 
@@ -191,7 +199,7 @@ is strictly convex and $a\neq b$, let $m=(a+b)/2$; then
 $f(a)-f(b)>2\big(f(m)-f(b)\big)\ge2(m-b)f'(b)=(a-b)f'(b)$, the first step by strict
 convexity at $m$ and the second by the inequality just proved, applied to $m$. $\square$
 
-**Theorem 3.4 (Klein's inequality).** Let $f:I\to\mathbb R$ be convex on an interval $I$,
+**Theorem 3.5 (Klein's inequality).** Let $f:I\to\mathbb R$ be convex on an interval $I$,
 and $X,Y$ self-adjoint with spectra in $I$, with $f$ differentiable at every eigenvalue of $Y$.
 Then $\operatorname{Tr}[f(X)-f(Y)-(X-Y)f'(Y)]\ge0$. If $f$ is strictly convex, equality holds
 only for $X=Y$.
@@ -201,14 +209,14 @@ orthonormal eigenbases, and $c_{ij}=|\langle u_i,v_j\rangle|^2$, so $\sum_ic_{ij
 Then $\operatorname{Tr}f(X)=\sum_{ij}c_{ij}f(a_i)$, $\operatorname{Tr}f(Y)=\sum_{ij}c_{ij}f(b_j)$ and
 $\operatorname{Tr}Xf'(Y)=\sum_{ij}c_{ij}a_if'(b_j)$, $\operatorname{Tr}Yf'(Y)=\sum_{ij}c_{ij}b_jf'(b_j)$.
 Hence the left side equals $\sum_{ij}c_{ij}[f(a_i)-f(b_j)-(a_i-b_j)f'(b_j)]$, a sum of
-nonnegative terms by the tangent inequality. If $f$ is strictly convex and the sum is zero, then
+nonnegative terms by Lemma 3.4. If $f$ is strictly convex and the sum is zero, then
 $a_i=b_j$ whenever $c_{ij}>0$, so $Xv_j=\sum_ia_i\langle u_i,v_j\rangle u_i=b_jv_j$ for every $j$,
 and $X=Y$. $\square$
 
-**Corollary 3.5.** $S(\rho\|\sigma)\ge0$, with equality iff $\rho=\sigma$. In particular
+**Corollary 3.6.** $S(\rho\|\sigma)\ge0$, with equality iff $\rho=\sigma$. In particular
 $S(\rho)\le\log D$, with equality iff $\rho=1/D$.
 
-*Proof.* Apply Theorem 3.4 to $f(t)=t\log t$, $f(0)=0$, which is strictly convex on
+*Proof.* Apply Theorem 3.5 to $f(t)=t\log t$, $f(0)=0$, which is strictly convex on
 $I=[0,\infty)$ ($f''(t)=1/t>0$ on $(0,\infty)$, and $f$ is continuous at $0$) and
 differentiable on $(0,\infty)\supseteq\operatorname{spec}\sigma$ with $f'(t)=\log t+1$, with
 $X=\rho$, $Y=\sigma$: the left side is
@@ -216,7 +224,7 @@ $\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\sigma\log\sigma-\operatorname{T
 =S(\rho\|\sigma)$, since $\operatorname{Tr}\rho=\operatorname{Tr}\sigma=1$. For the second claim, take
 $\sigma=1/D$: $0\le S(\rho\|1/D)=-S(\rho)+\log D$. $\square$
 
-**Theorem 3.6 (chain rule; monotonicity under the centre).** Let $\rho,\sigma$ be states with
+**Theorem 3.7 (chain rule; monotonicity under the conditional expectation onto the centre).** Let $\rho,\sigma$ be states with
 $\sigma>0$, $p_c=\operatorname{Tr}\rho_c$, $q_c=\operatorname{Tr}\sigma_c>0$, $\hat\sigma_c=\sigma_c/q_c$, and
 for $p_c>0$, $\hat\rho_c=\rho_c/p_c$. Then, with sums over the $c$ with $p_c>0$ (the other
 sectors contribute $0$ by $0\log0=0$),
@@ -224,14 +232,14 @@ $$
 S(\rho\|\sigma)=\sum_cp_c\log\frac{p_c}{q_c}+\sum_cp_c\,S(\hat\rho_c\|\hat\sigma_c)
 \ \ge\ \sum_cp_c\log\frac{p_c}{q_c}=S(E\rho\|E\sigma),
 $$
-where $E$ is the conditional expectation onto the centre (Proposition 2.7).
+where $E$ is the conditional expectation onto the centre (Proposition 2.8).
 
 *Proof.* For $p_c>0$, $\operatorname{Tr}\rho_c\log\rho_c=p_c\log p_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\rho_c$
 (eigenvalues $p_c\mu$, as in Theorem 3.3) and $\log\sigma_c=(\log q_c)1+\log\hat\sigma_c$, so
 $\operatorname{Tr}\rho_c\log\sigma_c=p_c\log q_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\sigma_c$ and
 $\operatorname{Tr}\rho_c\log\rho_c-\operatorname{Tr}\rho_c\log\sigma_c=p_c\log(p_c/q_c)+p_cS(\hat\rho_c\|\hat\sigma_c)$.
 If $p_c=0$, then $\rho_c=0$ and the sector contributes $0$.
-Sum over $c$; the second sum is $\ge0$ by Corollary 3.5 in each block. Finally
+Sum over $c$; the second sum is $\ge0$ by Corollary 3.6 in each block. Finally
 $E\rho=\bigoplus_c(p_c/k_c)1_{k_c}$, $E\sigma=\bigoplus_c(q_c/k_c)1_{k_c}$, and
 $\operatorname{Tr}E\rho(\log E\rho-\log E\sigma)=\sum_ck_c\frac{p_c}{k_c}\log\frac{p_c}{q_c}$. $\square$
 
@@ -245,9 +253,9 @@ q = sigma_state.sector_probabilities()
 D_rel = states.relative_entropy(rho, sigma_state)
 kl = (p * torch.log(p / q)).sum(-1)
 E = channels.center_expectation(alg)
-assert (D_rel >= kl - 1e-12).all()                                       # Theorem 3.6
+assert (D_rel >= kl - 1e-12).all()                                       # Theorem 3.7
 assert torch.allclose(states.relative_entropy(E(rho), E(sigma_state)), kl)
-assert (rho.von_neumann_entropy() <= math.log(10) + 1e-12).all()         # Corollary 3.5
+assert (rho.von_neumann_entropy() <= math.log(10) + 1e-12).all()         # Corollary 3.6
 assert abs(states.maximally_mixed_state(alg).von_neumann_entropy().item() - math.log(10)) < 1e-12
 ```
 
@@ -258,7 +266,7 @@ $\Delta(A)=(\lambda_{\max}-\lambda_{\min})/(\lambda_{\max}+\lambda_{\min})\in[0,
 extreme eigenvalues taken over all sectors (and $\Delta(0)=0$). It measures how far $A$ is
 from a multiple of the identity: $\Delta(A)=0$ iff $A=\lambda1$.
 
-**Proposition 3.7.** If $\Phi:\mathcal M\to\mathcal M$ is linear, positive and unital
+**Proposition 3.8.** If $\Phi:\mathcal M\to\mathcal M$ is linear, positive and unital
 ($\Phi(1)=1$), then $\Delta(\Phi(A))\le\Delta(A)$ for all $A\ge0$.
 
 *Proof.* $\lambda_{\min}1\le A\le\lambda_{\max}1$, and positivity and unitality give
@@ -280,8 +288,8 @@ For positive $X,Y$ in $M_k$ and a unitary $U$, is $|\operatorname{Tr}(XUY)|\le\o
 holds for $U=1$ and looks like a Cauchy–Schwarz-type statement. It is false whenever $X$
 and $Y$ do not commute.
 
-**Proposition 3.8.** $\max_U|\operatorname{Tr}(XUY)|=\|YX\|_1\ge\operatorname{Tr}(XY)$, with equality iff
-$XY=YX$.
+**Proposition 3.9.** Let $X,Y\ge0$ in $M_k$. Then $\max_U|\operatorname{Tr}(XUY)|=\|YX\|_1\ge\operatorname{Tr}(XY)$, the maximum taken over the unitary
+$U\in M_k$, with equality iff $XY=YX$.
 
 *Proof.* $\operatorname{Tr}(XUY)=\operatorname{Tr}(YX\,U)$, so the maximum is $\|YX\|_1$ by Theorem 1.9,
 and $\|YX\|_1\ge|\operatorname{Tr}(YX)|=\operatorname{Tr}(XY)$, since
@@ -298,7 +306,10 @@ matrix is self-adjoint, so $YX=(YX)^*=XY$. $\square$
 
 The library finds the maximiser with the polar decomposition. The companion paper shows
 numerically that Monte Carlo sampling of $U$ falls short of it, increasingly so as $k$ grows
-— one of its central themes; the code below shows this for one pair.
+— one of its central themes; the code below shows this for one pair. The reason is that
+$U=1$ is already close to optimal, while for a Haar-random $U$ in high dimension
+$|\operatorname{Tr}(XUY)|$ is typically much smaller than $\operatorname{Tr}(XY)$ (a random
+unitary scrambles the phases), so all samples stay far below the exact supremum.
 
 ```python
 Mk = TypeIAlgebra([6], [6], precision='double')
@@ -350,7 +361,7 @@ assert abs(tau.von_neumann_entropy().item() - (math.log(3) + sum(math.log(k) for
 2. Sums run over the $c$ with $p_c>0$. Then
    $S_w(\rho)=S(\rho)+\sum_cp_c\log w_c=-\sum_cp_c\log p_c+\sum_cp_cS(\sigma_c)+\sum_cp_c\log w_c
    \le\sum_cp_c\log\frac{k_cw_c}{p_c}\le\log\sum_{p_c>0}k_cw_c\le\log\operatorname{tr}_w(1)$, using
-   $S(\sigma_c)\le\log k_c$ (Corollary 3.5) and the finite Jensen inequality
+   $S(\sigma_c)\le\log k_c$ (Corollary 3.6) and the finite Jensen inequality
    $\sum_cp_c\log x_c\le\log\sum_cp_cx_c$ for the concave $\log$ (which follows from the
    definition of concavity by induction on the number of terms), with $x_c=k_cw_c/p_c$; it is
    strict unless all $x_c$ are equal, since $\log$ is strictly concave. Equality throughout

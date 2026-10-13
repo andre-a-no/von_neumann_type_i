@@ -122,8 +122,8 @@ $\mu_j\ge0$. Alors $A=V\,\mathrm{diag}(\mu_j^2)\,V^*$, donc $\operatorname{spec}
 Soit $p$ un polynôme tel que $p(t)=\sqrt t$ sur $\operatorname{spec}A$. Alors
 $p(A)=\sqrt A$ et $p(A)=p(B^2)=V\,\mathrm{diag}(p(\mu_j^2))\,V^*=V\,\mathrm{diag}(\mu_j)\,V^*=B$. $\square$
 
-**Corollaire 1.7.** $A\ge0$ si et seulement si $A=C^*C$ pour une certaine matrice $C$. (Si
-$A\ge0$, on prend $C=\sqrt A$ ; réciproquement, $\langle x,C^*Cx\rangle=\|Cx\|^2\ge0$.)
+**Corollaire 1.7.** $A\ge0$ si et seulement si $A=T^*T$ pour une certaine matrice $T$. (Si
+$A\ge0$, on prend $T=\sqrt A$ ; réciproquement, $\langle x,T^*Tx\rangle=\|Tx\|^2\ge0$.)
 
 ## 1.4 Décomposition polaire et valeurs singulières
 
@@ -152,7 +152,7 @@ $\|A\|=\||A|\|=s_1$ d'après le corollaire 1.4(1) ; la deuxième car
 $\operatorname{Tr}A^*A=\operatorname{Tr}|A|^2=\sum_is_i^2$.
 
 **Théorème 1.9 (dualité de la norme trace).**
-$\|A\|_1=\max_{U\text{ unitary}}|\operatorname{Tr}(AU)|$ (maximum sur les matrices
+$\|A\|_1=\max_{U}|\operatorname{Tr}(AU)|$ (maximum sur les matrices
 unitaires $U$), et ce maximum est atteint en $U=W^*$, où $A=W|A|$. En particulier
 $|\operatorname{Tr}A|\le\|A\|_1$.
 
@@ -203,8 +203,11 @@ $A=U\Lambda U^*$ avec $U$ distribuée selon la mesure de Haar. L'option
 la bibliothèque sait que `A` est positif sans avoir à le tester de nouveau.
 
 Le calcul fonctionnel pour les opérateurs autoadjoints est assuré par `apply_function` (qui
-diagonalise chaque bloc au moyen de `eigh`) ; les fonctions usuelles disposent de leurs
-propres méthodes. Vérifions les théorèmes 1.5 et 1.6 :
+diagonalise chaque bloc au moyen de `eigh`). La fonction $f$ doit agir coefficient par
+coefficient : elle reçoit les valeurs propres de tous les secteurs d'une même taille $k$ sous la
+forme d'un seul tenseur de forme `(batch, n·k)`, où $n$ est le nombre de ces secteurs, et renvoie
+un tenseur de même forme. Les fonctions usuelles disposent de leurs propres méthodes. Vérifions
+les théorèmes 1.5 et 1.6 :
 
 ```python
 def close(X, Y, tol=1e-10):
@@ -266,7 +269,11 @@ $X=H/\sqrt n$, $\ \mathbb E\,\tfrac1n\operatorname{Tr}X^4=2+\tfrac1{n^2}$.
 aléatoires réelles centrées conjointement gaussiennes (les répétitions sont permises), et
 $c_{ij}=\mathbb E[Y_iY_j]$. Leur fonction génératrice des moments conjointe est
 $\mathbb E\,e^{\sum_it_iY_i}=e^{q(t)/2}$ avec $q(t)=\sum_{ij}c_{ij}t_it_j$ (fonction
-génératrice des moments d'une gaussienne, résultat classique de probabilités). Appliquons
+génératrice des moments d'une gaussienne, résultat classique de probabilités). La dérivation sous l'espérance est légitime : la fonction
+génératrice des moments est finie pour tout $t$, et pour $|t_i|\le1$ toutes les dérivées partielles
+de $e^{\sum_it_iY_i}$ jusqu'à l'ordre $4$ sont majorées par $(1+\sum_i|Y_i|)^4e^{\sum_i|Y_i|}$, qui est
+intégrable car $e^{\sum_i|Y_i|}\le\sum_{s\in\{\pm1\}^4}e^{\sum_is_iY_i}$ ; le théorème de convergence
+dominée s'applique donc. Appliquons
 $\partial^4/\partial t_1\cdots\partial t_4$ en $t=0$ : à gauche, on obtient
 $\mathbb E[Y_1Y_2Y_3Y_4]$ ; à droite, seul le terme $q^2/8$ de la série exponentielle
 contient $t_1t_2t_3t_4$, avec le coefficient $c_{12}c_{34}+c_{13}c_{24}+c_{14}c_{23}$.

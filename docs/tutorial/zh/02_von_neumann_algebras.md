@@ -16,7 +16,7 @@ $\mathcal M\subseteq M_n(\mathbb C)$，它在乘积和伴随运算下封闭，�
 ## 2.1 交换子与双交换子定理
 
 对集合 $S\subseteq M_n(\mathbb C)$，其**交换子**为
-$S'=\{X\in M_n(\mathbb C):XA=AX\text{ for all }A\in S\}$（即与 $S$ 中所有元素可交换的矩阵之集）。
+$S'=\{X\in M_n(\mathbb C):XA=AX\ \forall A\in S\}$（即与 $S$ 中所有元素可交换的矩阵之集）。
 它总是一个含单位元的代数；若 $S$ 在伴随运算下封闭（$S^*=S$），则 $S'$ 是一个 $*$-代数，因为
 对所有 $A\in S$ 有 $XA=AX$ 蕴含对所有 $A\in S$ 有 $X^*A^*=A^*X^*$。$S$ 的每个元素都与 $S'$
 的每个元素可交换，所以 $S\subseteq S''$；把这一点应用于 $S'$ 得到
@@ -86,7 +86,7 @@ $P_c$ 为到 $E_c$ 上的投影。则对每个 $z\in\mathcal Z$ 有 $z=\sum_c\ch
 $\chi_c(z_{cd})\neq\chi_d(z_{cd})$。乘积
 $\prod_{d\neq c}\big(z_{cd}-\chi_d(z_{cd})1\big)/\big(\chi_c(z_{cd})-\chi_d(z_{cd})\big)$
 属于 $\mathcal Z$，在 $E_c$ 上作用为 $1$，在每个 $E_d$（$d\neq c$）上作用为 $0$；因此它就是
-$P_c$。极小性与唯一性：投影 $\sum_c a_cP_c$ 满足 $a_c\in\{0,1\}$，所以
+$P_c$（当 $C=1$ 时 $P_1=1$：空积等于 $1$）。极小性与唯一性：投影 $\sum_c a_cP_c$ 满足 $a_c\in\{0,1\}$，所以
 $\mathcal Z$ 的非零投影恰好是若干个（非空集合的）$P_c$ 之和。$\square$
 
 将此引理应用于 $\mathcal Z=Z(\mathcal M)$，投影 $P_c$ 称为 $\mathcal M$ 的**极小中心
@@ -168,8 +168,8 @@ $$
 V^*\mathcal MV=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)\otimes1_{m_c},\qquad
 V^*\mathcal M'V=\bigoplus_{c=1}^C1_{k_c}\otimes M_{m_c}(\mathbb C),
 $$
-并且 $V^*Z(\mathcal M)V=\operatorname{span}\{P_1,\dots,P_C\}$，其中 $P_c$ 是到第 $c$ 个
-直和项上的投影。数对 $(k_c,m_c)$ 在不计顺序的意义下唯一：$P_c$ 是唯一的（引理 2.3），
+并且 $V^*Z(\mathcal M)V=\operatorname{span}\{V^*P_1V,\dots,V^*P_CV\}$，其中 $P_1,\dots,P_C$ 是
+$\mathcal M$ 的极小中心投影（引理 2.3），而 $V^*P_cV$ 是到第 $c$ 个直和项上的投影。数对 $(k_c,m_c)$ 在不计顺序的意义下唯一：$P_c$ 是唯一的（引理 2.3），
 $k_c^2=\dim\mathcal MP_c$，且 $m_c=\operatorname{rank}P_c/k_c$。特别地，作为 $*$-代数有 $\mathcal M\cong\bigoplus_cM_{k_c}(\mathbb C)$，并且
 $\dim\mathcal M=\sum_ck_c^2$，$\dim\mathcal M'=\sum_cm_c^2$。
 
@@ -199,7 +199,7 @@ $\pi(G)'$，这是一个冯·诺依曼代数；它的交换子 $\pi(G)''$ 是诸
 张成应用定理 2.2，它是一个 $*$-代数：包含 $\pi(e)=1$，对乘积 $\pi(g)\pi(h)=\pi(gh)$ 和伴随
 $\pi(g)^*=\pi(g^{-1})$ 封闭）。
 
-**命题 2.8.** 对 $\mathcal M=\pi(G)''$ 应用定理 2.6。则
+**命题 2.7.** 对 $\mathcal M=\pi(G)''$ 应用定理 2.6。则
 $V^*\pi(g)V=\bigoplus_c\rho_c(g)\otimes1_{m_c}$，其中每个 $\rho_c$ 是 $G$ 在 $\mathbb C^{k_c}$
 上的不可约酉表示，且当 $c\neq d$ 时 $\rho_c,\rho_d$ 不等价。因此
 $$
@@ -222,17 +222,36 @@ $(x_{c'})_{c'}$ 都满足 $x_d=Tx_cT^{-1}$，这就排除了满足
 $x_c=1$、$x_d=0$ 的元素——与满射性矛盾。最后两个同构即
 定理 2.6。$\square$
 
-表示分解为不可约表示的方式在等价意义下唯一——从而 $m_c$ 是任何分解中*唯一确定的*
-重数——这一点将在第 4 章证明。
+表示分解为不可约表示的方式在等价意义下唯一，从而 $m_c$ 是任何分解中*唯一确定的*重数。
+*证明。* 设 $\rho,\rho'$ 不可约，$T$ 是一个缠结算子，即对所有 $g$ 有 $T\rho(g)=\rho'(g)T$。$T$ 的核与
+像都是不变子空间，所以 $T=0$ 或 $T$ 可逆（Schur 引理）；若 $\rho'=\rho$，对 $T$ 的一个特征值
+$\lambda$，同样的结论适用于 $T-\lambda1$，故 $T=\lambda1$。因此从 $\rho$ 到 $\rho'$ 的缠结算子构成的
+空间，当 $\rho\cong\rho'$ 时维数为 $1$，否则为 $0$。若 $\pi\cong\bigoplus_j\sigma_j$，其中 $\sigma_j$
+不可约（允许重复），则从不可约表示 $\rho$ 到 $\pi$ 的缠结算子构成维数为 $\#\{j:\sigma_j\cong\rho\}$
+的空间，这个数只依赖于 $\pi$ 和 $\rho$。对于命题 2.7 的分解，其中各 $\rho_c$ 两两不等价，这个数在
+$\rho\cong\rho_c$ 时为 $m_c$，在 $\rho$ 不与任何 $\rho_c$ 等价时为 $0$。$\square$
 
 我们取 $G=S_3$，它置换 $(\mathbb C^2)^{\otimes3}$ 的三个张量因子，即三个
-量子比特或三个自旋 $\tfrac12$。表示论（一个特征标计算，第 4 章）
-预言：对称子空间
-（总自旋 $\tfrac32$，维数 $4$）承载重数为 $4$ 的平凡表示；它的补空间（维数 $4$）承载重数为
-$2$ 的二维标准表示；符号表示不出现。所以
+量子比特或三个自旋 $\tfrac12$。其分解为：对称子空间（总自旋 $\tfrac32$，维数 $4$）承载重数为 $4$
+的平凡表示；它的补空间（维数 $4$）承载重数为 $2$ 的二维标准表示；符号表示不出现。所以
 $\pi(S_3)''\cong M_1\oplus M_2$（维数 $5$），$\pi(S_3)'\cong M_4\oplus M_2$
-（维数 $20$）。我们用线性代数检验这些维数：集合 $S$ 的交换子是
-线性映射 $X\mapsto(AX-XA)_{A\in S}$ 的零空间。
+（维数 $20$）。
+
+*证明。* 写 $\pi(S_3)''\cong\bigoplus_cM_{k_c}\otimes1_{m_c}$（定理 2.6）。于是
+$\sum_ck_cm_c=8$，$\sum_ck_c^2=\dim\pi(S_3)''=5$，$\sum_cm_c^2=\dim\pi(S_3)'=20$；这两个维数由下面的
+代码用精确的线性代数算出（集合 $S$ 的交换子是线性映射 $X\mapsto(AX-XA)_{A\in S}$ 的零空间）。
+数 $20$ 也可以手算：$X$ 与所有 $\pi(g)$ 可交换，当且仅当它的矩阵元 $X_{xy}$（$x,y\in\{0,1\}^3$）
+在 $S_3$ 作用于数对 $(x,y)$（即 $\{0,1\}^2$ 中元素的三元组）的轨道上为常数，而这样的轨道共有
+$\binom63=20$ 个（从 $4$ 个元素中取大小为 $3$ 的多重集）。由 $\sum_ck_c^2=5$ 得 $k=(1,2)$ 或
+$k=(1,1,1,1,1)$。在第一种情形，$m_1+2m_2=8$ 与 $m_1^2+m_2^2=20$ 给出 $m=(4,2)$。在第二种情形，
+和为 $8$、平方和为 $20$ 的五个正整数必为 $m=(4,1,1,1,1)$；但这样 $\pi(S_3)''$ 就是交换的，而对换
+$(12)$ 与 $(23)$ 并不交换：$\pi((12))\pi((23))|001\rangle=|100\rangle$，而
+$\pi((23))\pi((12))|001\rangle=|010\rangle$。所以 $k=(1,2)$，$m=(4,2)$。一维表示 $\rho_1$ 是平凡表示
+或符号表示。它不是符号表示：每个基向量 $|b_1b_2b_3\rangle$ 都有两个相同的比特，因此被某个对换 $t$
+固定，而满足 $A\pi(t)=-A$ 的 $A=\sum_g\operatorname{sgn}(g)\pi(g)$ 给出
+$A|b_1b_2b_3\rangle=A\pi(t)|b_1b_2b_3\rangle=-A|b_1b_2b_3\rangle$；故 $A=0$，符号表示不出现。
+因此 $\rho_1$ 是平凡表示，它的 $4$ 个拷贝张成对称子空间，而 $\rho_2$ 是二维不可约表示
+（命题 2.7），即标准表示。$\square$
 
 ```python
 import itertools
@@ -276,9 +295,8 @@ assert len(commutant_basis(comm)) == 5                   # double commutant theo
 重数在谱中是可见的。对群取平均，
 $X\mapsto\frac1{|G|}\sum_g\pi(g)X\pi(g)^*$，把任意算子映入交换子
 （习题 3）。因此 $\pi(S_3)'$ 的一个随机自伴元素（几乎必然）在对称子空间上有 $4$ 个单重
-特征值，在其补空间上有 $2$ 个二重简并特征值；
-代码检验了这些简并对：
-它们来自 $M_2\otimes1_2$ 中的因子 $1_2$。
+特征值，在其补空间上有 $2$ 个二重简并特征值，因为在那里 $\pi(S_3)'$ 的块是 $1_2\otimes M_2$；
+代码检验了这些简并对。
 
 ```python
 def group_average(X):
@@ -337,7 +355,7 @@ $\mathcal N\subseteq\mathcal M$ 上的**条件期望**是一个线性映射 $E:\
 它是正的（$A\ge0\Rightarrow E(A)\ge0$），对 $B\in\mathcal N$ 满足 $E(B)=B$，并且是
 $\mathcal N$-双模映射：对 $B_1,B_2\in\mathcal N$ 有 $E(B_1AB_2)=B_1E(A)B_2$。
 
-**命题 2.7.** 对 $\mathcal M=\bigoplus_cM_{k_c}$ 和 $\mathcal N=Z(\mathcal M)$，
+**命题 2.8.** 对 $\mathcal M=\bigoplus_cM_{k_c}$ 和 $\mathcal N=Z(\mathcal M)$，
 $$
 E(A)=\sum_c\frac{\operatorname{Tr}A_c}{k_c}\,P_c
 $$
@@ -368,6 +386,12 @@ $\pi(G)'$ 上的条件期望，并且保持 $\operatorname{Tr}$（习题 3）。
 （条件期望一般不唯一：到 $\mathbb C1$ 上，每个态
 $\varphi$ 都给出一个条件期望 $A\mapsto\varphi(A)1$。）两者都是同一思想的实例：
 投影到"看不见"某种结构的算子上。
+
+> **物理意义。** 在完整的矩阵代数 $M_D(\mathbb C)$, $D=\sum_ck_c$ 上，映射 $X\mapsto\sum_cP_cXP_c$
+> 是到 $\mathcal M$ 上的条件期望：它抹去超选择扇区之间的相干性，这正是测量荷（扇区）而不记录
+> 结果时发生的事情。到中心上的条件期望 $E$ 走得更远：它只保留经典信息，即每个扇区的权重 $p_c$，
+> 并把每个扇区内部的态换成最大混合态。态 $\omega$ 与态 $\omega\circ E$ 在每个只问"处于哪个扇区？"
+> 的可观测量上取值相同。
 
 ## 2.7 可与之比较的工具
 

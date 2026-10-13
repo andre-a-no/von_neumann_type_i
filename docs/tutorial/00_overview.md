@@ -37,11 +37,14 @@ and without approximation:
 
 Two consequences make this more than bookkeeping.
 
-- **Cost.** A product or a spectral decomposition in $\mathcal M$ costs $\sum_ck_c^3$ operations,
-  against $D^3$ for the embedding into $M_D(\mathbb C)$, $D=\sum_ck_c$; for $C$ equal blocks this is a
-  factor $C^2$. Products, sums and traces process all $B\cdot C$ blocks in one call; decompositions (eigenvalues,
-  singular values) run as one call per distinct block size — a single call when all sectors have
-  the same size. This keeps a GPU busy.
+- **Cost.** A spectral decomposition in $\mathcal M$ costs $\sum_ck_c^3$ operations (the blocks are
+  grouped by size), against $D^3$ for the embedding into $M_D(\mathbb C)$, $D=\sum_ck_c$; for $C$ equal
+  blocks this is a factor $C^2$. Products and sums run on the padded tensor and cost
+  $C\,k_{\max}^3$, which equals $\sum_ck_c^3$ when all blocks have the same size. Products, sums and
+  traces process all $B\cdot C$ blocks in one call; decompositions (eigenvalues, singular values)
+  run as one batched call per distinct block size — a single call when all sectors have the same
+  size — and on a multi-core CPU the library splits each such call into one chunk per thread.
+  This keeps a GPU, or all cores of a CPU, busy.
 - **Correctness by construction.** Everything that is computed stays in $\mathcal M$: random
   unitaries are Haar distributed on $\prod_cU(k_c)$ (a null set inside $U(D)$, never reached by
   sampling $U(D)$), gradient steps do not leave the algebra, and the trace, the densities and the
@@ -51,6 +54,9 @@ Two consequences make this more than bookkeeping.
 
 We compare the same computation done in $\mathcal M=\bigoplus_{c=1}^{64}M_{16}(\mathbb C)$ and in its
 embedding into $M_{1024}(\mathbb C)$: the square root of a random positive element, and its trace.
+`TypeIAlgebra(n_factors, k_factors)` takes two lists of block sizes: the nominal sizes $n_c$ and
+the sizes $k_c\le n_c$ of the blocks actually used; in this course the two lists are always equal
+(Section 1.5).
 
 ```python
 import time
@@ -78,13 +84,14 @@ assert abs(A.sqrt().Tr_blunt().item() - root_big.trace().item()) < 1e-9
 print(f"in the algebra: {t_blocks * 1e3:.1f} ms, as one 1024 x 1024 matrix: {t_big * 1e3:.1f} ms")
 ```
 
-The results agree to round-off. The algebra version is faster — about ten times on a typical CPU
-for this size (about 16 ms against 200 ms on the 4-core machine where this course was tested;
-all 64 blocks go to the eigensolver in one call) — though far less than the operation count
-$C^2=4096$ suggests, because one large eigensolver call uses the hardware better than many small
-ones. The gap grows with the number of sectors, and
-the memory saving is a factor $C$. With a batch of $B$ elements the algebra
-version stays one call; the large-matrix version becomes $B$ large eigenproblems.
+The results agree to round-off. The algebra version is tens of times faster on a CPU (about
+10 ms against 400 ms on a 4-core machine; the exact numbers depend on the hardware — the code
+prints them). The 64 blocks go to the eigensolver as one batched call, which on a multi-core CPU
+the library splits into one chunk per thread. The speed-up is still far less than the operation
+count $C^2=4096$ suggests, because one large eigensolver call uses the hardware better than many
+small ones. The gap grows with the number of sectors, and the memory saving is a factor $C$. With
+a batch of $B$ elements the algebra version stays one batched call; the large-matrix version
+becomes $B$ large eigenproblems.
 
 ## 0.3 What exists, and what is new
 
@@ -113,7 +120,7 @@ To our knowledge there is no general library in which a finite-dimensional von N
 is the basic data type for batched, differentiable numerical computation. The novelty is therefore
 not new mathematics but **efficient computation**: the identification of §0.1, implemented so that
 the structure of the algebra is preserved and every operation runs as batched kernels (one per
-distinct block size for decompositions). If you
+distinct block size for decompositions, split into one chunk per thread on a multi-core CPU). If you
 know of related software, we would be glad to hear about it.
 
 ## 0.4 How to read this course

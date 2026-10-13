@@ -81,7 +81,7 @@ $$
 $\mathcal M$ существует единственный $R$ с $\omega(A)=\langle R,A\rangle_w=\operatorname{tr}_w(R^*A)$; положим
 $\rho_w=R^*$. Если $\rho_w\ge0$, то
 $\omega(A^*A)=\sum_cw_c\operatorname{Tr}(A_c\,(\rho_w)_c\,A_c^*)\ge0$, поскольку
-$A_c(\rho_w)_cA_c^*\ge0$ (следствие 1.7 с $C=(\rho_w)_c^{1/2}A_c^*$). Обратно, если
+$A_c(\rho_w)_cA_c^*\ge0$ (следствие 1.7 с $T=(\rho_w)_c^{1/2}A_c^*$). Обратно, если
 $\omega$ положителен, возьмём $x\in\mathbb C^{k_c}$ и в качестве $A$ — оператор ранга один
 $|x\rangle\langle x|$ в блоке $c$; тогда $A=A^*A/\|x\|^2$ и
 $0\le\omega(A)=w_c\langle x,(\rho_w)_cx\rangle$, так что $(\rho_w)_c\ge0$. Нормировка означает
@@ -151,6 +151,11 @@ $$
 $-\sum_c\sum_{\mu>0}p_c\mu\log(p_c\mu)=-\sum_cp_c\log p_c\sum_{\mu>0}\mu-\sum_cp_c\sum_{\mu>0}\mu\log\mu$,
 и $\sum_{\mu>0}\mu=\operatorname{Tr}\sigma_c=1$. $\square$
 
+> **Физический смысл.** Формула делит неопределённость системы на две части: $H(p)$ —
+> классическую неопределённость заряда (в каком секторе находится система) и
+> $\sum_cp_cS(\sigma_c)$ — среднюю квантовую неопределённость внутри секторов. При правиле
+> суперотбора первая часть есть энтропия классической случайной величины — заряда.
+
 Энтропия относительно другого следа равна $S_w(\rho)=-\operatorname{tr}_w(\rho_w\log\rho_w)$. По
 теореме 3.2 $(\rho_w)_c=\rho_c/w_c$, поэтому
 $$
@@ -178,11 +183,14 @@ assert torch.allclose(S_tau, S + (p * torch.log(w_tau)).sum(-1))
 Для состояний с плотностями $\rho,\sigma$, $\sigma>0$, **относительная энтропия** равна
 $S(\rho\|\sigma)=\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\rho\log\sigma$, где
 $\operatorname{Tr}\rho\log\rho:=\sum_i\lambda_i\log\lambda_i$ по собственным значениям $\rho$ с
-$0\log0=0$ (и аналогично в каждом блоке). Она не зависит от следа:
-$\log(\rho_w)_c-\log(\sigma_w)_c=\log\rho_c-\log\sigma_c$, поскольку множитель $1/w_c$ сокращается,
-и $\operatorname{tr}_w(\rho_wX)=\operatorname{Tr}(\rho X)$.
+$0\log0=0$ (и аналогично в каждом блоке). Она не зависит от следа: по теореме 3.2
+$(\rho_w)_c=\rho_c/w_c$ и $(\sigma_w)_c=\sigma_c/w_c$, так что собственные значения $(\rho_w)_c$ — это
+собственные значения $\rho_c$, делённые на $w_c$, и как $\operatorname{tr}_w(\rho_w\log\rho_w)$, так и
+$\operatorname{tr}_w(\rho_w\log\sigma_w)$ отличаются от $\operatorname{Tr}\rho\log\rho$ и
+$\operatorname{Tr}\rho\log\sigma$ на одну и ту же величину $-\sum_cp_c\log w_c$ (логарифм $\rho$ нужен
+лишь на её носителе, по соглашению $0\log0=0$). Разность не меняется.
 
-**Лемма (неравенство для касательной).** Пусть $f:I\to\mathbb R$ выпукла на промежутке $I$ и
+**Лемма 3.4 (неравенство для касательной).** Пусть $f:I\to\mathbb R$ выпукла на промежутке $I$ и
 дифференцируема в точке $b\in I$. Тогда $f(a)\ge f(b)+(a-b)f'(b)$ для всех $a\in I$, причём
 при $a\neq b$ неравенство строгое, если $f$ строго выпукла.
 
@@ -192,7 +200,7 @@ $\big(f(b+t(a-b))-f(b)\big)/t\le f(a)-f(b)$; переходя к пределу 
 $f(a)-f(b)>2\big(f(m)-f(b)\big)\ge2(m-b)f'(b)=(a-b)f'(b)$: первый шаг — по строгой
 выпуклости в точке $m$, второй — по только что доказанному неравенству, применённому к $m$. $\square$
 
-**Теорема 3.4 (неравенство Клейна).** Пусть $f:I\to\mathbb R$ выпукла на промежутке $I$,
+**Теорема 3.5 (неравенство Клейна).** Пусть $f:I\to\mathbb R$ выпукла на промежутке $I$,
 $X,Y$ самосопряжены и их спектры лежат в $I$, причём $f$ дифференцируема в каждом собственном значении $Y$.
 Тогда $\operatorname{Tr}[f(X)-f(Y)-(X-Y)f'(Y)]\ge0$. Если $f$ строго выпукла, равенство достигается
 только при $X=Y$.
@@ -202,14 +210,14 @@ $X,Y$ самосопряжены и их спектры лежат в $I$, пр�
 Тогда $\operatorname{Tr}f(X)=\sum_{ij}c_{ij}f(a_i)$, $\operatorname{Tr}f(Y)=\sum_{ij}c_{ij}f(b_j)$ и
 $\operatorname{Tr}Xf'(Y)=\sum_{ij}c_{ij}a_if'(b_j)$, $\operatorname{Tr}Yf'(Y)=\sum_{ij}c_{ij}b_jf'(b_j)$.
 Следовательно, левая часть равна $\sum_{ij}c_{ij}[f(a_i)-f(b_j)-(a_i-b_j)f'(b_j)]$ — сумме
-неотрицательных слагаемых в силу неравенства для касательной. Если $f$ строго выпукла и сумма равна нулю, то
+неотрицательных слагаемых в силу леммы 3.4. Если $f$ строго выпукла и сумма равна нулю, то
 $a_i=b_j$ всякий раз, когда $c_{ij}>0$, поэтому $Xv_j=\sum_ia_i\langle u_i,v_j\rangle u_i=b_jv_j$ для каждого $j$,
 и $X=Y$. $\square$
 
-**Следствие 3.5.** $S(\rho\|\sigma)\ge0$, причём равенство имеет место тогда и только тогда, когда $\rho=\sigma$. В частности,
+**Следствие 3.6.** $S(\rho\|\sigma)\ge0$, причём равенство имеет место тогда и только тогда, когда $\rho=\sigma$. В частности,
 $S(\rho)\le\log D$, причём равенство имеет место тогда и только тогда, когда $\rho=1/D$.
 
-*Доказательство.* Применим теорему 3.4 к функции $f(t)=t\log t$, $f(0)=0$, которая строго выпукла на
+*Доказательство.* Применим теорему 3.5 к функции $f(t)=t\log t$, $f(0)=0$, которая строго выпукла на
 $I=[0,\infty)$ ($f''(t)=1/t>0$ на $(0,\infty)$, и $f$ непрерывна в $0$) и
 дифференцируема на $(0,\infty)\supseteq\operatorname{spec}\sigma$ с $f'(t)=\log t+1$, при
 $X=\rho$, $Y=\sigma$: левая часть равна
@@ -217,7 +225,7 @@ $\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\sigma\log\sigma-\operatorname{T
 =S(\rho\|\sigma)$, поскольку $\operatorname{Tr}\rho=\operatorname{Tr}\sigma=1$. Для второго утверждения возьмём
 $\sigma=1/D$: $0\le S(\rho\|1/D)=-S(\rho)+\log D$. $\square$
 
-**Теорема 3.6 (цепное правило; монотонность при переходе к центру).** Пусть $\rho,\sigma$ — состояния,
+**Теорема 3.7 (цепное правило; монотонность при условном ожидании на центр).** Пусть $\rho,\sigma$ — состояния,
 $\sigma>0$, $p_c=\operatorname{Tr}\rho_c$, $q_c=\operatorname{Tr}\sigma_c>0$, $\hat\sigma_c=\sigma_c/q_c$ и
 $\hat\rho_c=\rho_c/p_c$ при $p_c>0$. Тогда, если суммы берутся по тем $c$, для которых $p_c>0$ (остальные
 секторы дают вклад $0$ в силу $0\log0=0$),
@@ -225,14 +233,14 @@ $$
 S(\rho\|\sigma)=\sum_cp_c\log\frac{p_c}{q_c}+\sum_cp_c\,S(\hat\rho_c\|\hat\sigma_c)
 \ \ge\ \sum_cp_c\log\frac{p_c}{q_c}=S(E\rho\|E\sigma),
 $$
-где $E$ — условное ожидание на центр (предложение 2.7).
+где $E$ — условное ожидание на центр (предложение 2.8).
 
 *Доказательство.* При $p_c>0$ имеем $\operatorname{Tr}\rho_c\log\rho_c=p_c\log p_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\rho_c$
 (собственные значения $p_c\mu$, как в теореме 3.3) и $\log\sigma_c=(\log q_c)1+\log\hat\sigma_c$, поэтому
 $\operatorname{Tr}\rho_c\log\sigma_c=p_c\log q_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\sigma_c$ и
 $\operatorname{Tr}\rho_c\log\rho_c-\operatorname{Tr}\rho_c\log\sigma_c=p_c\log(p_c/q_c)+p_cS(\hat\rho_c\|\hat\sigma_c)$.
 Если $p_c=0$, то $\rho_c=0$, и вклад сектора равен $0$.
-Просуммируем по $c$; вторая сумма $\ge0$ по следствию 3.5, применённому в каждом блоке. Наконец,
+Просуммируем по $c$; вторая сумма $\ge0$ по следствию 3.6, применённому в каждом блоке. Наконец,
 $E\rho=\bigoplus_c(p_c/k_c)1_{k_c}$, $E\sigma=\bigoplus_c(q_c/k_c)1_{k_c}$ и
 $\operatorname{Tr}E\rho(\log E\rho-\log E\sigma)=\sum_ck_c\frac{p_c}{k_c}\log\frac{p_c}{q_c}$. $\square$
 
@@ -246,9 +254,9 @@ q = sigma_state.sector_probabilities()
 D_rel = states.relative_entropy(rho, sigma_state)
 kl = (p * torch.log(p / q)).sum(-1)
 E = channels.center_expectation(alg)
-assert (D_rel >= kl - 1e-12).all()                                       # Theorem 3.6
+assert (D_rel >= kl - 1e-12).all()                                       # Theorem 3.7
 assert torch.allclose(states.relative_entropy(E(rho), E(sigma_state)), kl)
-assert (rho.von_neumann_entropy() <= math.log(10) + 1e-12).all()         # Corollary 3.5
+assert (rho.von_neumann_entropy() <= math.log(10) + 1e-12).all()         # Corollary 3.6
 assert abs(states.maximally_mixed_state(alg).von_neumann_entropy().item() - math.log(10)) < 1e-12
 ```
 
@@ -259,7 +267,7 @@ $\Delta(A)=(\lambda_{\max}-\lambda_{\min})/(\lambda_{\max}+\lambda_{\min})\in[0,
 крайние собственные значения берутся по всем секторам (и $\Delta(0)=0$). Он измеряет, насколько $A$
 далёк от кратного единицы: $\Delta(A)=0$ тогда и только тогда, когда $A=\lambda1$.
 
-**Предложение 3.7.** Если $\Phi:\mathcal M\to\mathcal M$ линейно, положительно и унитально
+**Предложение 3.8.** Если $\Phi:\mathcal M\to\mathcal M$ линейно, положительно и унитально
 ($\Phi(1)=1$), то $\Delta(\Phi(A))\le\Delta(A)$ для всех $A\ge0$.
 
 *Доказательство.* $\lambda_{\min}1\le A\le\lambda_{\max}1$, и из положительности и унитальности следует
@@ -281,8 +289,8 @@ assert (E(A_pos).michelson_contrast <= A_pos.michelson_contrast + 1e-12).all()
 так при $U=1$, и утверждение похоже на неравенство типа Коши–Буняковского. Однако оно неверно всякий раз,
 когда $X$ и $Y$ не коммутируют.
 
-**Предложение 3.8.** $\max_U|\operatorname{Tr}(XUY)|=\|YX\|_1\ge\operatorname{Tr}(XY)$, причём равенство имеет место тогда и только тогда, когда
-$XY=YX$.
+**Предложение 3.9.** Пусть $X,Y\ge0$ в $M_k$. Тогда $\max_U|\operatorname{Tr}(XUY)|=\|YX\|_1\ge\operatorname{Tr}(XY)$, где максимум берётся по
+унитарным $U\in M_k$, причём равенство имеет место тогда и только тогда, когда $XY=YX$.
 
 *Доказательство.* $\operatorname{Tr}(XUY)=\operatorname{Tr}(YX\,U)$, поэтому максимум равен $\|YX\|_1$ по теореме 1.9,
 и $\|YX\|_1\ge|\operatorname{Tr}(YX)|=\operatorname{Tr}(XY)$, поскольку
@@ -300,6 +308,9 @@ $|YX|^{1/2}$ и $W|YX|^{1/2}$ пропорциональны с неотрица
 Библиотека находит точку максимума с помощью полярного разложения. В сопроводительной статье
 численно показано, что выборка $U$ методом Монте-Карло до максимума не дотягивает, и тем
 сильнее, чем больше $k$, — это одна из её центральных тем; код ниже демонстрирует это для одной пары.
+Причина в том, что $U=1$ уже близко к оптимуму, а для случайного по Хаару $U$ в большой
+размерности $|\operatorname{Tr}(XUY)|$, как правило, гораздо меньше $\operatorname{Tr}(XY)$ (случайная
+унитарная матрица перемешивает фазы), поэтому все выборки остаются далеко ниже точного супремума.
 
 ```python
 Mk = TypeIAlgebra([6], [6], precision='double')
@@ -351,7 +362,7 @@ assert abs(tau.von_neumann_entropy().item() - (math.log(3) + sum(math.log(k) for
 2. Суммы берутся по тем $c$, для которых $p_c>0$. Тогда
    $S_w(\rho)=S(\rho)+\sum_cp_c\log w_c=-\sum_cp_c\log p_c+\sum_cp_cS(\sigma_c)+\sum_cp_c\log w_c
    \le\sum_cp_c\log\frac{k_cw_c}{p_c}\le\log\sum_{p_c>0}k_cw_c\le\log\operatorname{tr}_w(1)$; здесь использованы
-   $S(\sigma_c)\le\log k_c$ (следствие 3.5) и конечное неравенство Йенсена
+   $S(\sigma_c)\le\log k_c$ (следствие 3.6) и конечное неравенство Йенсена
    $\sum_cp_c\log x_c\le\log\sum_cp_cx_c$ для вогнутого $\log$ (оно следует из
    определения вогнутости индукцией по числу слагаемых) с $x_c=k_cw_c/p_c$; это неравенство
    строгое, если не все $x_c$ равны, так как $\log$ строго вогнут. Равенство во всей цепочке

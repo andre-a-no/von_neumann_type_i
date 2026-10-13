@@ -20,7 +20,7 @@ Er richtet sich zugleich an zwei Arten von Lesern:
   in Kästen mit der Überschrift *Physikalische Bedeutung* sowie lauffähigen Code,
   den sie anpassen können.
 
-Jedes Kapitel ist gleich aufgebaut: Theorie mit Beweisen; der Bibliothekscode zu jedem
+Die Kapitel 1–3 sind gleich aufgebaut: Theorie mit Beweisen; der Bibliothekscode zu jedem
 Ergebnis; eine Überprüfung des Codes an einem exakten Ergebnis (einem Satz, einer
 geschlossenen Formel oder einer unabhängigen Rechnung); ein Abschnitt *Womit man
 vergleichen sollte*, der die Standardwerkzeuge für dieselbe Aufgabe nennt; und Aufgaben
@@ -36,7 +36,7 @@ jedes Beispiel funktioniert also mit der aktuellen Version der Bibliothek.
 | 0 | [Worum es in diesem Kurs geht](00_overview.md) | die Algebra als Datentyp: Blockstruktur = gestapelte Tensoren; Aufwand; was es gibt und was neu ist |
 | 1 | [Matrixalgebren und Funktionalkalkül](01_matrix_algebras.md) | Spektralsatz, Funktionalkalkül, Polarzerlegung, Dualität der Spurnorm, ein GUE-Moment |
 | 2 | [Endlichdimensionale von-Neumann-Algebren](02_von_neumann_algebras.md) | Bikommutantensatz, Struktursatz, Zentrum, Symmetriegruppen und Kommutanten, bedingte Erwartungen |
-| 3 | [Spuren, Zustände und Entropie](03_traces_and_states.md) | Klassifikation der Spuren, Dichten, Entropie der Sektoren, Kleinsche Ungleichung, Monotonie, Michelson-Kontrast |
+| 3 | [Spuren, Zustände und Entropie](03_traces_and_states.md) | Klassifikation der Spuren, Dichten, Entropie der Sektoren, Kleinsche Ungleichung, Monotonie unter der bedingten Erwartung auf das Zentrum, Michelson-Kontrast |
 | 4 | Symmetrien und Darstellungen *(in Vorbereitung)* | Schursches Lemma, Ladungssektoren, $U(1)$ und $SU(2)$, Spinsysteme |
 | 5 | Zufallsmatrizen in einer Algebra *(in Vorbereitung)* | Haar-Maß auf $\prod_cU(k_c)$, Weingarten-Kalkül, Niveaustatistik und warum Sektoren nicht vermischt werden dürfen |
 | 6 | Quantenkanäle *(in Vorbereitung)* | Kraus und Stinespring, duale Abbildungen bezüglich einer Spur, Abbildungen zwischen Sektoren, Dekohärenz |
@@ -68,5 +68,6 @@ ein Jupyter-Notebook eingefügt werden. Die Blöcke eines Kapitels teilen sich i
 M. Takesaki, *Theory of Operator Algebras I* (Springer, 2002); V. Jones,
 *von Neumann algebras*, Vorlesungsskript; D. Petz, *Quantum Information Theory and Quantum
 Statistics* (Springer, 2008); J. Watrous, *The Theory of Quantum Information* (Cambridge,
-2018); M. L. Mehta, *Random Matrices* (Elsevier, 2004). Die Begleitarbeit zur Bibliothek
-befindet sich in [`paper/`](../../../paper).
+2018); M. L. Mehta, *Random Matrices* (Elsevier, 2004). Den physikalischen Hintergrund in
+mathematischer Sprache bietet [Physik für Mathematiker](../../physics_for_mathematicians.de.md).
+Die Begleitarbeit zur Bibliothek ist [`paper/main.pdf`](https://github.com/andre-a-no/von_neumann_type_i/blob/main/paper/main.pdf).

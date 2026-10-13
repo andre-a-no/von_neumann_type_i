@@ -117,8 +117,8 @@ $A=V\,\mathrm{diag}(\mu_j^2)\,V^*$, also $\operatorname{spec}A=\{\mu_j^2\}$. Sei
 Polynom mit $p(t)=\sqrt t$ auf $\operatorname{spec}A$. Dann gilt
 $p(A)=\sqrt A$ und $p(A)=p(B^2)=V\,\mathrm{diag}(p(\mu_j^2))\,V^*=V\,\mathrm{diag}(\mu_j)\,V^*=B$. $\square$
 
-**Korollar 1.7.** $A\ge0$ genau dann, wenn $A=C^*C$ für ein $C$ gilt. (Ist $A\ge0$, so nehme man $C=\sqrt A$;
-umgekehrt ist $\langle x,C^*Cx\rangle=\|Cx\|^2\ge0$.)
+**Korollar 1.7.** $A\ge0$ genau dann, wenn $A=T^*T$ für ein $T$ gilt. (Ist $A\ge0$, so nehme man $T=\sqrt A$;
+umgekehrt ist $\langle x,T^*Tx\rangle=\|Tx\|^2\ge0$.)
 
 ## 1.4 Polarzerlegung und Singulärwerte
 
@@ -147,7 +147,7 @@ $\|A\|=\||A|\|=s_1$ nach Korollar 1.4(1); die zweite, weil
 $\operatorname{Tr}A^*A=\operatorname{Tr}|A|^2=\sum_is_i^2$.
 
 **Satz 1.9 (Dualität der Spurnorm).**
-$\|A\|_1=\max_{U\text{ unitary}}|\operatorname{Tr}(AU)|$, und das Maximum wird bei
+$\|A\|_1=\max_{U\text{ unitär}}|\operatorname{Tr}(AU)|$, und das Maximum wird bei
 $U=W^*$ angenommen, wobei $A=W|A|$. Insbesondere ist $|\operatorname{Tr}A|\le\|A\|_1$.
 
 *Beweis.* $\operatorname{Tr}(AW^*)=\operatorname{Tr}(W|A|W^*)=\operatorname{Tr}|A|$. Für jedes unitäre $U$
@@ -194,8 +194,10 @@ $U$. Das Flag `force_positive=True` wird an den Eigenwerten überprüft (Korolla
 sodass die Bibliothek weiß, dass `A` positiv ist, ohne dies erneut zu testen.
 
 Der Funktionalkalkül für selbstadjungierte Operatoren ist `apply_function` (die Methode
-diagonalisiert jeden Block mit `eigh`); die gebräuchlichen Funktionen haben eigene
-Methoden. Wir überprüfen die Sätze 1.5 und 1.6:
+diagonalisiert jeden Block mit `eigh`). Die Funktion $f$ muss elementweise wirken: Sie erhält die
+Eigenwerte aller Sektoren einer Größe $k$ als einen Tensor der Form `(batch, n·k)`, wobei $n$ die
+Zahl dieser Sektoren ist, und gibt einen Tensor derselben Form zurück. Die gebräuchlichen
+Funktionen haben eigene Methoden. Wir überprüfen die Sätze 1.5 und 1.6:
 
 ```python
 def close(X, Y, tol=1e-10):
@@ -255,7 +257,11 @@ $X=H/\sqrt n$: $\ \mathbb E\,\tfrac1n\operatorname{Tr}X^4=2+\tfrac1{n^2}$.
 zentrierte reelle Zufallsvariablen (Wiederholungen erlaubt) mit $c_{ij}=\mathbb E[Y_iY_j]$.
 Ihre gemeinsame momenterzeugende Funktion ist $\mathbb E\,e^{\sum_it_iY_i}=e^{q(t)/2}$ mit
 $q(t)=\sum_{ij}c_{ij}t_it_j$ (die momenterzeugende Funktion der Normalverteilung, eine
-Standardtatsache der Wahrscheinlichkeitstheorie). Man wende $\partial^4/\partial t_1\cdots\partial t_4$
+Standardtatsache der Wahrscheinlichkeitstheorie). Das Differenzieren unter dem Erwartungswert ist
+erlaubt: Die momenterzeugende Funktion ist für alle $t$ endlich, und für $|t_i|\le1$ sind alle
+partiellen Ableitungen von $e^{\sum_it_iY_i}$ bis zur Ordnung $4$ durch $(1+\sum_i|Y_i|)^4e^{\sum_i|Y_i|}$
+beschränkt, was integrierbar ist, da $e^{\sum_i|Y_i|}\le\sum_{s\in\{\pm1\}^4}e^{\sum_is_iY_i}$; also
+greift der Satz von der majorisierten Konvergenz. Man wende $\partial^4/\partial t_1\cdots\partial t_4$
 bei $t=0$ an: Links ergibt dies $\mathbb E[Y_1Y_2Y_3Y_4]$; rechts enthält nur der Term
 $q^2/8$ der Exponentialreihe das Monom $t_1t_2t_3t_4$, und zwar mit dem Koeffizienten
 $c_{12}c_{34}+c_{13}c_{24}+c_{14}c_{23}$. Also ist $\mathbb E[Y_1Y_2Y_3Y_4]$ die Summe über

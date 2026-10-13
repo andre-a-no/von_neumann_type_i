@@ -92,7 +92,7 @@ It remains to show $P_c\in\mathcal Z$. For $d\neq c$ choose $z_{cd}\in\mathcal Z
 $\chi_c(z_{cd})\neq\chi_d(z_{cd})$. The product
 $\prod_{d\neq c}\big(z_{cd}-\chi_d(z_{cd})1\big)/\big(\chi_c(z_{cd})-\chi_d(z_{cd})\big)$
 lies in $\mathcal Z$, acts as $1$ on $E_c$ and as $0$ on every $E_d$, $d\neq c$; it is
-$P_c$. Minimality and uniqueness: a projection $\sum_c a_cP_c$ has $a_c\in\{0,1\}$, so
+$P_c$ (for $C=1$, $P_1=1$: the empty product is $1$). Minimality and uniqueness: a projection $\sum_c a_cP_c$ has $a_c\in\{0,1\}$, so
 the nonzero projections of $\mathcal Z$ are the sums of nonempty sets of the $P_c$. $\square$
 
 Applied to $\mathcal Z=Z(\mathcal M)$, the projections $P_c$ are the **minimal central
@@ -174,8 +174,9 @@ $$
 V^*\mathcal MV=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)\otimes1_{m_c},\qquad
 V^*\mathcal M'V=\bigoplus_{c=1}^C1_{k_c}\otimes M_{m_c}(\mathbb C),
 $$
-and $V^*Z(\mathcal M)V=\operatorname{span}\{P_1,\dots,P_C\}$, $P_c$ the projection onto the $c$-th
-summand. The pairs $(k_c,m_c)$ are unique up to order: the $P_c$ are unique (Lemma 2.3),
+and $V^*Z(\mathcal M)V=\operatorname{span}\{V^*P_1V,\dots,V^*P_CV\}$, where $P_1,\dots,P_C$ are the
+minimal central projections of $\mathcal M$ (Lemma 2.3) and $V^*P_cV$ is the projection onto the
+$c$-th summand. The pairs $(k_c,m_c)$ are unique up to order: the $P_c$ are unique (Lemma 2.3),
 $k_c^2=\dim\mathcal MP_c$ and $m_c=\operatorname{rank}P_c/k_c$. In particular $\mathcal M\cong\bigoplus_cM_{k_c}(\mathbb C)$ as $*$-algebras, and
 $\dim\mathcal M=\sum_ck_c^2$, $\dim\mathcal M'=\sum_cm_c^2$.
 
@@ -208,7 +209,7 @@ commutant $\pi(G)''$ is the span of the $\pi(g)$ (Theorem 2.2 applied to that sp
 is a $*$-algebra: it contains $\pi(e)=1$, products $\pi(g)\pi(h)=\pi(gh)$ and adjoints
 $\pi(g)^*=\pi(g^{-1})$).
 
-**Proposition 2.8.** Apply Theorem 2.6 to $\mathcal M=\pi(G)''$. Then
+**Proposition 2.7.** Apply Theorem 2.6 to $\mathcal M=\pi(G)''$. Then
 $V^*\pi(g)V=\bigoplus_c\rho_c(g)\otimes1_{m_c}$, where each $\rho_c$ is an irreducible
 unitary representation of $G$ on $\mathbb C^{k_c}$, and $\rho_c,\rho_d$ are inequivalent for
 $c\neq d$. Consequently
@@ -232,18 +233,44 @@ $(x_{c'})_{c'}$ of the image satisfies $x_d=Tx_cT^{-1}$, which excludes the elem
 $x_c=1$, $x_d=0$ — a contradiction to surjectivity. The last two isomorphisms are
 Theorem 2.6. $\square$
 
-That the decomposition of a representation into irreducibles is unique up to equivalence —
-so that the $m_c$ are *the* multiplicities in any decomposition — is proved in Chapter 4.
+The decomposition of a representation into irreducibles is unique up to equivalence, so that
+the $m_c$ are *the* multiplicities in any decomposition. *Proof.* Let $\rho,\rho'$ be irreducible
+and $T$ an intertwiner, $T\rho(g)=\rho'(g)T$ for all $g$. Kernel and range of $T$ are invariant,
+so $T=0$ or $T$ is invertible (Schur's lemma); if $\rho'=\rho$, the same applies to $T-\lambda1$
+for an eigenvalue $\lambda$ of $T$, so $T=\lambda1$. Hence the intertwiners from $\rho$ to $\rho'$
+form a space of dimension $1$ if $\rho\cong\rho'$ and $0$ otherwise. If $\pi\cong\bigoplus_j\sigma_j$
+with irreducible $\sigma_j$ (repetitions allowed), the intertwiners from an irreducible $\rho$ to
+$\pi$ therefore form a space of dimension $\#\{j:\sigma_j\cong\rho\}$, a number that depends only
+on $\pi$ and $\rho$. For the decomposition of Proposition 2.7, whose $\rho_c$ are pairwise
+inequivalent, it is $m_c$ if $\rho\cong\rho_c$ and $0$ if $\rho$ is equivalent to no $\rho_c$. $\square$
 
 We take $G=S_3$ permuting the three factors of $(\mathbb C^2)^{\otimes3}$, i.e. three
-qubits or three spins $\tfrac12$. Representation theory (a character computation, Chapter 4)
-predicts: the symmetric subspace
-(total spin $\tfrac32$, dimension $4$) carries the trivial representation with
-multiplicity $4$; its complement (dimension $4$) carries the two-dimensional standard
-representation with multiplicity $2$; the sign representation does not occur. So
+qubits or three spins $\tfrac12$. The decomposition is: the symmetric subspace (total spin
+$\tfrac32$, dimension $4$) carries the trivial representation with multiplicity $4$; its
+complement (dimension $4$) carries the two-dimensional standard representation with
+multiplicity $2$; the sign representation does not occur. So
 $\pi(S_3)''\cong M_1\oplus M_2$ (dimension $5$) and $\pi(S_3)'\cong M_4\oplus M_2$
-(dimension $20$). We check the dimensions by linear algebra: the commutant of a set $S$ is the
-null space of the linear map $X\mapsto(AX-XA)_{A\in S}$.
+(dimension $20$).
+
+*Proof.* Write $\pi(S_3)''\cong\bigoplus_cM_{k_c}\otimes1_{m_c}$ (Theorem 2.6). Then
+$\sum_ck_cm_c=8$, $\sum_ck_c^2=\dim\pi(S_3)''=5$ and $\sum_cm_c^2=\dim\pi(S_3)'=20$; the two
+dimensions are computed by the code below by exact linear algebra (the commutant of a set $S$ is
+the null space of the linear map $X\mapsto(AX-XA)_{A\in S}$). The number $20$ can also be counted
+by hand: $X$ commutes with all $\pi(g)$ iff its entries $X_{xy}$, $x,y\in\{0,1\}^3$, are constant on
+the orbits of $S_3$ on the pairs $(x,y)$, i.e. on triples of elements of $\{0,1\}^2$, and there
+are $\binom63=20$ such orbits (multisets of size $3$ from $4$ elements). From $\sum_ck_c^2=5$,
+either $k=(1,2)$ or $k=(1,1,1,1,1)$. In the first case $m_1+2m_2=8$ and $m_1^2+m_2^2=20$ give
+$m=(4,2)$. In the second case five positive integers with sum $8$ and sum of squares $20$ must be
+$m=(4,1,1,1,1)$; but then $\pi(S_3)''$ would be commutative, whereas the transpositions
+$(12)$ and $(23)$ act non-commutingly: $\pi((12))\pi((23))|001\rangle=|100\rangle$ but
+$\pi((23))\pi((12))|001\rangle=|010\rangle$. So $k=(1,2)$ and $m=(4,2)$. The one-dimensional
+$\rho_1$ is the trivial or the sign representation. It is not the sign: every basis vector
+$|b_1b_2b_3\rangle$ has two equal bits, so it is fixed by a transposition $t$, and
+$A=\sum_g\operatorname{sgn}(g)\pi(g)$, which satisfies $A\pi(t)=-A$, gives
+$A|b_1b_2b_3\rangle=A\pi(t)|b_1b_2b_3\rangle=-A|b_1b_2b_3\rangle$; hence $A=0$, and the sign
+representation does not occur. So $\rho_1$ is trivial, its $4$ copies span the symmetric subspace,
+and $\rho_2$ is an irreducible two-dimensional representation (Proposition 2.7): the standard
+representation. $\square$
 
 ```python
 import itertools
@@ -287,9 +314,8 @@ assert len(commutant_basis(comm)) == 5                   # double commutant theo
 The multiplicities are visible in the spectrum. Averaging over the group,
 $X\mapsto\frac1{|G|}\sum_g\pi(g)X\pi(g)^*$, maps any operator into the commutant
 (Exercise 3). A random self-adjoint element of $\pi(S_3)'$ therefore has (almost surely) $4$ simple
-eigenvalues on the symmetric subspace and $2$ doubly degenerate ones on its complement; the
-code checks the degenerate pairs:
-the factor $1_2$ in $M_2\otimes1_2$.
+eigenvalues on the symmetric subspace and $2$ doubly degenerate ones on its complement,
+because the block of $\pi(S_3)'$ there is $1_2\otimes M_2$; the code checks the degenerate pairs.
 
 ```python
 def group_average(X):
@@ -350,7 +376,7 @@ $\mathcal N\subseteq\mathcal M$ is a linear map $E:\mathcal M\to\mathcal N$ that
 ($A\ge0\Rightarrow E(A)\ge0$), satisfies $E(B)=B$ for $B\in\mathcal N$, and is an
 $\mathcal N$-bimodule map: $E(B_1AB_2)=B_1E(A)B_2$ for $B_1,B_2\in\mathcal N$.
 
-**Proposition 2.7.** For $\mathcal M=\bigoplus_cM_{k_c}$ and $\mathcal N=Z(\mathcal M)$,
+**Proposition 2.8.** For $\mathcal M=\bigoplus_cM_{k_c}$ and $\mathcal N=Z(\mathcal M)$,
 $$
 E(A)=\sum_c\frac{\operatorname{Tr}A_c}{k_c}\,P_c
 $$
@@ -381,6 +407,14 @@ $\pi(G)'$ inside $M_n(\mathbb C)$, and it preserves $\operatorname{Tr}$ (Exercis
 (Conditional expectations are not unique in general: onto $\mathbb C1$, every state
 $\varphi$ gives one, $A\mapsto\varphi(A)1$.) Both are instances of the same idea:
 projecting onto the operators that "do not see" some structure.
+
+> **Physical meaning.** On the full matrix algebra $M_D(\mathbb C)$, $D=\sum_ck_c$, the map $X\mapsto\sum_cP_cXP_c$ is the
+> conditional expectation onto $\mathcal M$: it erases the coherences between superselection
+> sectors, which is what happens when the charge (the sector) is measured and the result is not
+> recorded. The conditional expectation $E$ onto the centre goes further: it keeps only the
+> classical information, the weight $p_c$ of each sector, and replaces the state inside each
+> sector by the maximally mixed one. A state $\omega$ and the state $\omega\circ E$ agree on every
+> observable that only asks "which sector?".
 
 ## 2.7 What to compare with
 

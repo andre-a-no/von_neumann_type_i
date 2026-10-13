@@ -19,7 +19,7 @@ und die Identität $1$ enthält.
 ## 2.1 Kommutanten und der Bikommutantensatz
 
 Für eine Menge $S\subseteq M_n(\mathbb C)$ ist die **Kommutante**
-$S'=\{X\in M_n(\mathbb C):XA=AX\text{ for all }A\in S\}$. Sie ist stets eine unitale Algebra;
+$S'=\{X\in M_n(\mathbb C):XA=AX\text{ für alle }A\in S\}$. Sie ist stets eine unitale Algebra;
 ist $S$ unter Adjungierten abgeschlossen ($S^*=S$), so ist $S'$ eine $*$-Algebra, denn aus
 $XA=AX$ für alle $A\in S$ folgt $X^*A^*=A^*X^*$ für alle $A\in S$. Jedes Element von $S$
 kommutiert mit jedem Element von $S'$, also gilt $S\subseteq S''$; auf $S'$ angewandt ergibt
@@ -95,7 +95,7 @@ Es bleibt $P_c\in\mathcal Z$ zu zeigen. Zu $d\neq c$ wähle man $z_{cd}\in\mathc
 $\chi_c(z_{cd})\neq\chi_d(z_{cd})$. Das Produkt
 $\prod_{d\neq c}\big(z_{cd}-\chi_d(z_{cd})1\big)/\big(\chi_c(z_{cd})-\chi_d(z_{cd})\big)$
 liegt in $\mathcal Z$, wirkt als $1$ auf $E_c$ und als $0$ auf jedem $E_d$, $d\neq c$; es ist
-also $P_c$. Minimalität und Eindeutigkeit: Für eine Projektion $\sum_c a_cP_c$ gilt
+also $P_c$ (für $C=1$ ist $P_1=1$: das leere Produkt ist $1$). Minimalität und Eindeutigkeit: Für eine Projektion $\sum_c a_cP_c$ gilt
 $a_c\in\{0,1\}$, also sind die von null verschiedenen Projektionen von $\mathcal Z$ genau die
 Summen über nichtleere Mengen der $P_c$. $\square$
 
@@ -183,8 +183,9 @@ $$
 V^*\mathcal MV=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)\otimes1_{m_c},\qquad
 V^*\mathcal M'V=\bigoplus_{c=1}^C1_{k_c}\otimes M_{m_c}(\mathbb C),
 $$
-und $V^*Z(\mathcal M)V=\operatorname{span}\{P_1,\dots,P_C\}$, wobei $P_c$ die Projektion auf den
-$c$-ten Summanden ist. Die Paare $(k_c,m_c)$ sind bis auf die Reihenfolge eindeutig: Die
+und $V^*Z(\mathcal M)V=\operatorname{span}\{V^*P_1V,\dots,V^*P_CV\}$, wobei $P_1,\dots,P_C$ die
+minimalen zentralen Projektionen von $\mathcal M$ sind (Lemma 2.3) und $V^*P_cV$ die Projektion
+auf den $c$-ten Summanden ist. Die Paare $(k_c,m_c)$ sind bis auf die Reihenfolge eindeutig: Die
 $P_c$ sind eindeutig (Lemma 2.3), $k_c^2=\dim\mathcal MP_c$ und
 $m_c=\operatorname{rank}P_c/k_c$. Insbesondere ist $\mathcal M\cong\bigoplus_cM_{k_c}(\mathbb C)$ als $*$-Algebren, und
 $\dim\mathcal M=\sum_ck_c^2$, $\dim\mathcal M'=\sum_cm_c^2$.
@@ -218,7 +219,7 @@ deren Kommutante $\pi(G)''$ ist der Spann der $\pi(g)$ (Satz 2.2, angewandt auf 
 Spann, der eine $*$-Algebra ist: Er enthält $\pi(e)=1$, die Produkte $\pi(g)\pi(h)=\pi(gh)$
 und die Adjungierten $\pi(g)^*=\pi(g^{-1})$).
 
-**Proposition 2.8.** Man wende Satz 2.6 auf $\mathcal M=\pi(G)''$ an. Dann gilt
+**Proposition 2.7.** Man wende Satz 2.6 auf $\mathcal M=\pi(G)''$ an. Dann gilt
 $V^*\pi(g)V=\bigoplus_c\rho_c(g)\otimes1_{m_c}$, wobei jedes $\rho_c$ eine irreduzible
 unitäre Darstellung von $G$ auf $\mathbb C^{k_c}$ ist und $\rho_c,\rho_d$ für $c\neq d$
 inäquivalent sind. Folglich gilt
@@ -243,18 +244,46 @@ jedes Element $(x_{c'})_{c'}$ des Bildes $x_d=Tx_cT^{-1}$, was das Element mit
 $x_c=1$, $x_d=0$ ausschließt – ein Widerspruch zur Surjektivität. Die letzten beiden
 Isomorphien sind Satz 2.6. $\square$
 
-Dass die Zerlegung einer Darstellung in irreduzible bis auf Äquivalenz eindeutig ist –
-sodass die $m_c$ *die* Vielfachheiten in jeder Zerlegung sind –, wird in Kapitel 4 bewiesen.
+Die Zerlegung einer Darstellung in irreduzible ist bis auf Äquivalenz eindeutig, sodass die
+$m_c$ *die* Vielfachheiten in jeder Zerlegung sind. *Beweis.* Seien $\rho,\rho'$ irreduzibel und
+$T$ ein Verflechtungsoperator, $T\rho(g)=\rho'(g)T$ für alle $g$. Kern und Bild von $T$ sind
+invariant, also ist $T=0$ oder $T$ invertierbar (Lemma von Schur); ist $\rho'=\rho$, so gilt
+dasselbe für $T-\lambda1$ mit einem Eigenwert $\lambda$ von $T$, also $T=\lambda1$. Daher bilden
+die Verflechtungsoperatoren von $\rho$ nach $\rho'$ einen Raum der Dimension $1$, falls
+$\rho\cong\rho'$, und $0$ sonst. Ist $\pi\cong\bigoplus_j\sigma_j$ mit irreduziblen $\sigma_j$
+(Wiederholungen erlaubt), so bilden die Verflechtungsoperatoren von einer irreduziblen $\rho$ nach
+$\pi$ folglich einen Raum der Dimension $\#\{j:\sigma_j\cong\rho\}$, eine Zahl, die nur von $\pi$
+und $\rho$ abhängt. Für die Zerlegung aus Proposition 2.7, deren $\rho_c$ paarweise inäquivalent
+sind, ist sie $m_c$ für $\rho\cong\rho_c$ und $0$, wenn $\rho$ zu keinem $\rho_c$ äquivalent ist.
+$\square$
 
 Wir nehmen $G=S_3$, das die drei Faktoren von $(\mathbb C^2)^{\otimes3}$ permutiert, also
-drei Qubits oder drei Spins $\tfrac12$. Die Darstellungstheorie (eine Charakterrechnung,
-Kapitel 4) sagt voraus: Der symmetrische Unterraum
-(Gesamtspin $\tfrac32$, Dimension $4$) trägt die triviale Darstellung mit
-Vielfachheit $4$; sein Komplement (Dimension $4$) trägt die zweidimensionale
-Standarddarstellung mit Vielfachheit $2$; die Signumsdarstellung tritt nicht auf. Also gilt
-$\pi(S_3)''\cong M_1\oplus M_2$ (Dimension $5$) und $\pi(S_3)'\cong M_4\oplus M_2$
-(Dimension $20$). Wir überprüfen die Dimensionen mit linearer Algebra: Die Kommutante einer
-Menge $S$ ist der Kern der linearen Abbildung $X\mapsto(AX-XA)_{A\in S}$.
+drei Qubits oder drei Spins $\tfrac12$. Die Zerlegung lautet: Der symmetrische Unterraum
+(Gesamtspin $\tfrac32$, Dimension $4$) trägt die triviale Darstellung mit Vielfachheit $4$; sein
+Komplement (Dimension $4$) trägt die zweidimensionale Standarddarstellung mit Vielfachheit
+$2$; die Signumsdarstellung tritt nicht auf. Also gilt $\pi(S_3)''\cong M_1\oplus M_2$
+(Dimension $5$) und $\pi(S_3)'\cong M_4\oplus M_2$ (Dimension $20$).
+
+*Beweis.* Man schreibe $\pi(S_3)''\cong\bigoplus_cM_{k_c}\otimes1_{m_c}$ (Satz 2.6). Dann gilt
+$\sum_ck_cm_c=8$, $\sum_ck_c^2=\dim\pi(S_3)''=5$ und $\sum_cm_c^2=\dim\pi(S_3)'=20$; beide
+Dimensionen berechnet der Code unten mit exakter linearer Algebra (die Kommutante einer Menge $S$
+ist der Kern der linearen Abbildung $X\mapsto(AX-XA)_{A\in S}$). Die Zahl $20$ lässt sich auch von
+Hand abzählen: $X$ vertauscht genau dann mit allen $\pi(g)$, wenn seine Einträge $X_{xy}$,
+$x,y\in\{0,1\}^3$, auf den Bahnen von $S_3$ auf den Paaren $(x,y)$ konstant sind, d. h. auf
+Tripeln von Elementen von $\{0,1\}^2$, und es gibt $\binom63=20$ solche Bahnen (Multimengen der
+Größe $3$ aus $4$ Elementen). Aus $\sum_ck_c^2=5$ folgt $k=(1,2)$ oder $k=(1,1,1,1,1)$. Im ersten
+Fall ergeben $m_1+2m_2=8$ und $m_1^2+m_2^2=20$ die Lösung $m=(4,2)$. Im zweiten Fall müssen fünf
+positive ganze Zahlen mit Summe $8$ und Quadratsumme $20$ gleich $m=(4,1,1,1,1)$ sein; dann wäre
+aber $\pi(S_3)''$ kommutativ, während die Transpositionen $(12)$ und $(23)$ nicht vertauschen:
+$\pi((12))\pi((23))|001\rangle=|100\rangle$, aber $\pi((23))\pi((12))|001\rangle=|010\rangle$.
+Also ist $k=(1,2)$ und $m=(4,2)$. Die eindimensionale Darstellung $\rho_1$ ist die triviale oder
+die Signumsdarstellung. Sie ist nicht das Signum: Jeder Basisvektor $|b_1b_2b_3\rangle$ hat zwei
+gleiche Bits und wird daher von einer Transposition $t$ festgehalten, und
+$A=\sum_g\operatorname{sgn}(g)\pi(g)$, das $A\pi(t)=-A$ erfüllt, liefert
+$A|b_1b_2b_3\rangle=A\pi(t)|b_1b_2b_3\rangle=-A|b_1b_2b_3\rangle$; also ist $A=0$, und die
+Signumsdarstellung tritt nicht auf. Somit ist $\rho_1$ trivial, ihre $4$ Kopien spannen den
+symmetrischen Unterraum auf, und $\rho_2$ ist eine irreduzible zweidimensionale Darstellung
+(Proposition 2.7): die Standarddarstellung. $\square$
 
 ```python
 import itertools
@@ -299,8 +328,8 @@ Die Vielfachheiten sind im Spektrum sichtbar. Die Mittelung über die Gruppe,
 $X\mapsto\frac1{|G|}\sum_g\pi(g)X\pi(g)^*$, bildet jeden Operator in die Kommutante ab
 (Aufgabe 3). Ein zufälliges selbstadjungiertes Element von $\pi(S_3)'$ hat daher (fast
 sicher) $4$ einfache Eigenwerte auf dem symmetrischen Unterraum und $2$ zweifach entartete
-auf dessen Komplement; der Code überprüft die entarteten Paare:
-den Faktor $1_2$ in $M_2\otimes1_2$.
+auf dessen Komplement, weil der Block von $\pi(S_3)'$ dort $1_2\otimes M_2$ ist; der Code
+überprüft die entarteten Paare.
 
 ```python
 def group_average(X):
@@ -361,7 +390,7 @@ $\mathcal N\subseteq\mathcal M$ ist eine lineare Abbildung $E:\mathcal M\to\math
 positiv ist ($A\ge0\Rightarrow E(A)\ge0$), $E(B)=B$ für $B\in\mathcal N$ erfüllt und eine
 $\mathcal N$-Bimodulabbildung ist: $E(B_1AB_2)=B_1E(A)B_2$ für $B_1,B_2\in\mathcal N$.
 
-**Proposition 2.7.** Für $\mathcal M=\bigoplus_cM_{k_c}$ und $\mathcal N=Z(\mathcal M)$ ist
+**Proposition 2.8.** Für $\mathcal M=\bigoplus_cM_{k_c}$ und $\mathcal N=Z(\mathcal M)$ ist
 $$
 E(A)=\sum_c\frac{\operatorname{Tr}A_c}{k_c}\,P_c
 $$
@@ -392,6 +421,14 @@ $\pi(G)'$ innerhalb von $M_n(\mathbb C)$, und sie erhält $\operatorname{Tr}$ (A
 (Bedingte Erwartungen sind im Allgemeinen nicht eindeutig: Auf $\mathbb C1$ liefert jeder
 Zustand $\varphi$ eine, nämlich $A\mapsto\varphi(A)1$.) Beides sind Beispiele derselben Idee:
 die Projektion auf diejenigen Operatoren, die eine gewisse Struktur „nicht sehen“.
+
+> **Physikalische Bedeutung.** Auf der vollen Matrixalgebra $M_D(\mathbb C)$, $D=\sum_ck_c$, ist
+> die Abbildung $X\mapsto\sum_cP_cXP_c$ die bedingte Erwartung auf $\mathcal M$: Sie löscht die
+> Kohärenzen zwischen Superauswahlsektoren, und genau das geschieht, wenn man die Ladung (den
+> Sektor) misst, ohne das Ergebnis zu notieren. Die bedingte Erwartung $E$ auf das Zentrum geht
+> weiter: Sie behält nur die klassische Information, das Gewicht $p_c$ jedes Sektors, und ersetzt
+> den Zustand innerhalb jedes Sektors durch den maximal gemischten. Ein Zustand $\omega$ und der
+> Zustand $\omega\circ E$ stimmen auf jeder Observablen überein, die nur fragt: „Welcher Sektor?“
 
 ## 2.7 Womit man vergleichen sollte
 

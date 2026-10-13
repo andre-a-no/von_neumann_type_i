@@ -107,8 +107,8 @@ $A=V\,\mathrm{diag}(\mu_j^2)\,V^*$，所以 $\operatorname{spec}A=\{\mu_j^2\}$�
 在 $\operatorname{spec}A$ 上满足 $p(t)=\sqrt t$ 的多项式。则
 $p(A)=\sqrt A$，且 $p(A)=p(B^2)=V\,\mathrm{diag}(p(\mu_j^2))\,V^*=V\,\mathrm{diag}(\mu_j)\,V^*=B$。$\square$
 
-**推论 1.7.** $A\ge0$ 当且仅当对某个 $C$ 有 $A=C^*C$。（若 $A\ge0$，取 $C=\sqrt A$；
-反之 $\langle x,C^*Cx\rangle=\|Cx\|^2\ge0$。）
+**推论 1.7.** $A\ge0$ 当且仅当对某个 $T$ 有 $A=T^*T$。（若 $A\ge0$，取 $T=\sqrt A$；
+反之 $\langle x,T^*Tx\rangle=\|Tx\|^2\ge0$。）
 
 ## 1.4 极分解与奇异值
 
@@ -136,7 +136,7 @@ $\|A\|=\||A|\|=s_1$；第二个等式成立是因为
 $\operatorname{Tr}A^*A=\operatorname{Tr}|A|^2=\sum_is_i^2$。
 
 **定理 1.9（迹范数的对偶性）。**
-$\|A\|_1=\max_{U\text{ unitary}}|\operatorname{Tr}(AU)|$（最大值取遍酉矩阵 $U$），且最大值在
+$\|A\|_1=\max_{U}|\operatorname{Tr}(AU)|$（最大值取遍酉矩阵 $U$），且最大值在
 $U=W^*$ 处取得，其中 $A=W|A|$。特别地 $|\operatorname{Tr}A|\le\|A\|_1$。
 
 *证明。* $\operatorname{Tr}(AW^*)=\operatorname{Tr}(W|A|W^*)=\operatorname{Tr}|A|$。对任意酉矩阵 $U$，
@@ -181,8 +181,9 @@ print(A.eigenvalues()[0])      # one tensor per block, eigenvalues in ascending 
 其中 $U$ 服从 Haar 分布。标志 `force_positive=True` 会根据特征值加以检查（推论 1.4(3)），
 因此库知道 `A` 是正的，无需再次检验。
 
-自伴算子的函数演算由 `apply_function` 实现（它用 `eigh` 对角化每个块）；常用函数有各自
-专门的方法。我们来检验定理 1.5 和定理 1.6：
+自伴算子的函数演算由 `apply_function` 实现（它用 `eigh` 对角化每个块）。函数 $f$ 必须逐元素作用：
+它把同一大小 $k$ 的所有扇区的特征值作为一个形状为 `(batch, n·k)` 的张量接收（$n$ 为这类扇区的个数），
+并返回同样形状的张量。常用函数有各自专门的方法。我们来检验定理 1.5 和定理 1.6：
 
 ```python
 def close(X, Y, tol=1e-10):
@@ -238,7 +239,9 @@ $X=H/\sqrt n$，$\ \mathbb E\,\tfrac1n\operatorname{Tr}X^4=2+\tfrac1{n^2}$。
 *证明。* *Isserlis（Wick）公式。* 设 $Y_1,\dots,Y_4$ 是联合高斯、中心化的实随机变量
 （允许重复），$c_{ij}=\mathbb E[Y_iY_j]$。它们的联合矩母函数为
 $\mathbb E\,e^{\sum_it_iY_i}=e^{q(t)/2}$，其中
-$q(t)=\sum_{ij}c_{ij}t_it_j$（高斯矩母函数，这是概率论中的标准事实）。在 $t=0$ 处作用
+$q(t)=\sum_{ij}c_{ij}t_it_j$（高斯矩母函数，这是概率论中的标准事实）。在期望号下求导是允许的：矩母函数对所有 $t$ 都有限，
+且当 $|t_i|\le1$ 时，$e^{\sum_it_iY_i}$ 的直到 $4$ 阶的所有偏导数都被 $(1+\sum_i|Y_i|)^4e^{\sum_i|Y_i|}$ 控制，
+而后者可积，因为 $e^{\sum_i|Y_i|}\le\sum_{s\in\{\pm1\}^4}e^{\sum_is_iY_i}$；所以控制收敛定理适用。在 $t=0$ 处作用
 $\partial^4/\partial t_1\cdots\partial t_4$：左边得到 $\mathbb E[Y_1Y_2Y_3Y_4]$；右边在指数
 级数中只有 $q^2/8$ 一项含有 $t_1t_2t_3t_4$，其系数为 $c_{12}c_{34}+c_{13}c_{24}+c_{14}c_{23}$。
 因此 $\mathbb E[Y_1Y_2Y_3Y_4]$ 等于对三种配对求和，每种配对贡献各对期望的乘积。由多线性，

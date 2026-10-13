@@ -81,7 +81,7 @@ $$
 $\mathcal M$ gibt es genau ein $R$ mit $\omega(A)=\langle R,A\rangle_w=\operatorname{tr}_w(R^*A)$;
 man setze $\rho_w=R^*$. Ist $\rho_w\ge0$, so gilt
 $\omega(A^*A)=\sum_cw_c\operatorname{Tr}(A_c\,(\rho_w)_c\,A_c^*)\ge0$, da
-$A_c(\rho_w)_cA_c^*\ge0$ (Korollar 1.7 mit $C=(\rho_w)_c^{1/2}A_c^*$). Ist umgekehrt
+$A_c(\rho_w)_cA_c^*\ge0$ (Korollar 1.7 mit $T=(\rho_w)_c^{1/2}A_c^*$). Ist umgekehrt
 $\omega$ positiv, so nehme man $x\in\mathbb C^{k_c}$ und als $A$ den Rang-eins-Operator
 $|x\rangle\langle x|$ im Block $c$; dann ist $A=A^*A/\|x\|^2$ und
 $0\le\omega(A)=w_c\langle x,(\rho_w)_cx\rangle$, also $(\rho_w)_c\ge0$. Die Normierung lautet
@@ -151,6 +151,11 @@ null tragen zu beiden Seiten $0$ bei. Folglich ist
 $-\sum_c\sum_{\mu>0}p_c\mu\log(p_c\mu)=-\sum_cp_c\log p_c\sum_{\mu>0}\mu-\sum_cp_c\sum_{\mu>0}\mu\log\mu$,
 und $\sum_{\mu>0}\mu=\operatorname{Tr}\sigma_c=1$. $\square$
 
+> **Physikalische Bedeutung.** Die Formel zerlegt die Unsicherheit über das System in zwei Teile:
+> $H(p)$, die klassische Unsicherheit über die Ladung (in welchem Sektor sich das System befindet),
+> und $\sum_cp_cS(\sigma_c)$, die mittlere Quantenunsicherheit innerhalb der Sektoren. Unter einer
+> Superauswahlregel ist der erste Teil die Entropie einer klassischen Zufallsvariablen: der Ladung.
+
 Die Entropie bezüglich einer anderen Spur ist $S_w(\rho)=-\operatorname{tr}_w(\rho_w\log\rho_w)$.
 Nach Satz 3.2 ist $(\rho_w)_c=\rho_c/w_c$, also
 $$
@@ -178,11 +183,15 @@ assert torch.allclose(S_tau, S + (p * torch.log(w_tau)).sum(-1))
 Für Zustände mit Dichten $\rho,\sigma$, $\sigma>0$, ist die **relative Entropie**
 $S(\rho\|\sigma)=\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\rho\log\sigma$, wobei
 $\operatorname{Tr}\rho\log\rho:=\sum_i\lambda_i\log\lambda_i$, summiert über die Eigenwerte von
-$\rho$, mit $0\log0=0$ (und ebenso in jedem Block). Sie hängt nicht von der Spur ab:
-$\log(\rho_w)_c-\log(\sigma_w)_c=\log\rho_c-\log\sigma_c$, da sich der Faktor $1/w_c$ weghebt,
-und $\operatorname{tr}_w(\rho_wX)=\operatorname{Tr}(\rho X)$.
+$\rho$, mit $0\log0=0$ (und ebenso in jedem Block). Sie hängt nicht von der Spur ab: Nach Satz 3.2
+ist $(\rho_w)_c=\rho_c/w_c$ und $(\sigma_w)_c=\sigma_c/w_c$, die Eigenwerte von $(\rho_w)_c$ sind also
+die von $\rho_c$, geteilt durch $w_c$, und sowohl $\operatorname{tr}_w(\rho_w\log\rho_w)$ als auch
+$\operatorname{tr}_w(\rho_w\log\sigma_w)$ unterscheiden sich von $\operatorname{Tr}\rho\log\rho$ bzw.
+$\operatorname{Tr}\rho\log\sigma$ um denselben Betrag $-\sum_cp_c\log w_c$ (der Logarithmus von $\rho$
+wird nach der Konvention $0\log0=0$ nur auf dessen Träger gebraucht). Die Differenz bleibt
+unverändert.
 
-**Lemma (Tangentenungleichung).** Sei $f:I\to\mathbb R$ konvex auf einem Intervall $I$ und
+**Lemma 3.4 (Tangentenungleichung).** Sei $f:I\to\mathbb R$ konvex auf einem Intervall $I$ und
 differenzierbar in $b\in I$. Dann gilt $f(a)\ge f(b)+(a-b)f'(b)$ für alle $a\in I$, und zwar
 strikt für $a\neq b$, wenn $f$ strikt konvex ist.
 
@@ -192,7 +201,7 @@ Ist $f$ strikt konvex und $a\neq b$, so sei $m=(a+b)/2$; dann gilt
 $f(a)-f(b)>2\big(f(m)-f(b)\big)\ge2(m-b)f'(b)=(a-b)f'(b)$, der erste Schritt wegen strikter
 Konvexität in $m$, der zweite nach der eben bewiesenen Ungleichung, angewandt auf $m$. $\square$
 
-**Satz 3.4 (Kleinsche Ungleichung).** Sei $f:I\to\mathbb R$ konvex auf einem Intervall $I$,
+**Satz 3.5 (Kleinsche Ungleichung).** Sei $f:I\to\mathbb R$ konvex auf einem Intervall $I$,
 und seien $X,Y$ selbstadjungiert mit Spektren in $I$, wobei $f$ in jedem Eigenwert von $Y$
 differenzierbar ist. Dann gilt $\operatorname{Tr}[f(X)-f(Y)-(X-Y)f'(Y)]\ge0$. Ist $f$ strikt
 konvex, so gilt Gleichheit nur für $X=Y$.
@@ -203,14 +212,14 @@ $\sum_ic_{ij}=\sum_jc_{ij}=1$. Dann ist $\operatorname{Tr}f(X)=\sum_{ij}c_{ij}f(
 $\operatorname{Tr}f(Y)=\sum_{ij}c_{ij}f(b_j)$ und
 $\operatorname{Tr}Xf'(Y)=\sum_{ij}c_{ij}a_if'(b_j)$, $\operatorname{Tr}Yf'(Y)=\sum_{ij}c_{ij}b_jf'(b_j)$.
 Folglich ist die linke Seite gleich $\sum_{ij}c_{ij}[f(a_i)-f(b_j)-(a_i-b_j)f'(b_j)]$, nach
-der Tangentenungleichung eine Summe nichtnegativer Terme. Ist $f$ strikt konvex und die
+Lemma 3.4 eine Summe nichtnegativer Terme. Ist $f$ strikt konvex und die
 Summe null, so gilt $a_i=b_j$, sobald $c_{ij}>0$, also
 $Xv_j=\sum_ia_i\langle u_i,v_j\rangle u_i=b_jv_j$ für jedes $j$, und $X=Y$. $\square$
 
-**Korollar 3.5.** $S(\rho\|\sigma)\ge0$, mit Gleichheit genau dann, wenn $\rho=\sigma$.
+**Korollar 3.6.** $S(\rho\|\sigma)\ge0$, mit Gleichheit genau dann, wenn $\rho=\sigma$.
 Insbesondere ist $S(\rho)\le\log D$, mit Gleichheit genau dann, wenn $\rho=1/D$.
 
-*Beweis.* Man wende Satz 3.4 auf $f(t)=t\log t$, $f(0)=0$, an – eine Funktion, die auf
+*Beweis.* Man wende Satz 3.5 auf $f(t)=t\log t$, $f(0)=0$, an – eine Funktion, die auf
 $I=[0,\infty)$ strikt konvex ist ($f''(t)=1/t>0$ auf $(0,\infty)$, und $f$ ist stetig in $0$)
 und auf $(0,\infty)\supseteq\operatorname{spec}\sigma$ differenzierbar mit $f'(t)=\log t+1$ –,
 mit $X=\rho$, $Y=\sigma$: Die linke Seite ist
@@ -218,7 +227,7 @@ $\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\sigma\log\sigma-\operatorname{T
 =S(\rho\|\sigma)$, da $\operatorname{Tr}\rho=\operatorname{Tr}\sigma=1$. Für die zweite Behauptung
 nehme man $\sigma=1/D$: $0\le S(\rho\|1/D)=-S(\rho)+\log D$. $\square$
 
-**Satz 3.6 (Kettenregel; Monotonie unter dem Zentrum).** Seien $\rho,\sigma$ Zustände mit
+**Satz 3.7 (Kettenregel; Monotonie unter der bedingten Erwartung auf das Zentrum).** Seien $\rho,\sigma$ Zustände mit
 $\sigma>0$, $p_c=\operatorname{Tr}\rho_c$, $q_c=\operatorname{Tr}\sigma_c>0$, $\hat\sigma_c=\sigma_c/q_c$ und,
 für $p_c>0$, $\hat\rho_c=\rho_c/p_c$. Dann gilt, mit Summen über die $c$ mit $p_c>0$ (die
 übrigen Sektoren tragen wegen $0\log0=0$ den Wert $0$ bei),
@@ -226,14 +235,14 @@ $$
 S(\rho\|\sigma)=\sum_cp_c\log\frac{p_c}{q_c}+\sum_cp_c\,S(\hat\rho_c\|\hat\sigma_c)
 \ \ge\ \sum_cp_c\log\frac{p_c}{q_c}=S(E\rho\|E\sigma),
 $$
-wobei $E$ die bedingte Erwartung auf das Zentrum ist (Proposition 2.7).
+wobei $E$ die bedingte Erwartung auf das Zentrum ist (Proposition 2.8).
 
 *Beweis.* Für $p_c>0$ ist $\operatorname{Tr}\rho_c\log\rho_c=p_c\log p_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\rho_c$
 (Eigenwerte $p_c\mu$, wie in Satz 3.3) und $\log\sigma_c=(\log q_c)1+\log\hat\sigma_c$, also
 $\operatorname{Tr}\rho_c\log\sigma_c=p_c\log q_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\sigma_c$ und
 $\operatorname{Tr}\rho_c\log\rho_c-\operatorname{Tr}\rho_c\log\sigma_c=p_c\log(p_c/q_c)+p_cS(\hat\rho_c\|\hat\sigma_c)$.
 Ist $p_c=0$, so ist $\rho_c=0$, und der Sektor trägt $0$ bei.
-Man summiere über $c$; die zweite Summe ist nach Korollar 3.5, angewandt in jedem Block,
+Man summiere über $c$; die zweite Summe ist nach Korollar 3.6, angewandt in jedem Block,
 $\ge0$. Schließlich ist
 $E\rho=\bigoplus_c(p_c/k_c)1_{k_c}$, $E\sigma=\bigoplus_c(q_c/k_c)1_{k_c}$, und
 $\operatorname{Tr}E\rho(\log E\rho-\log E\sigma)=\sum_ck_c\frac{p_c}{k_c}\log\frac{p_c}{q_c}$. $\square$
@@ -248,9 +257,9 @@ q = sigma_state.sector_probabilities()
 D_rel = states.relative_entropy(rho, sigma_state)
 kl = (p * torch.log(p / q)).sum(-1)
 E = channels.center_expectation(alg)
-assert (D_rel >= kl - 1e-12).all()                                       # Theorem 3.6
+assert (D_rel >= kl - 1e-12).all()                                       # Theorem 3.7
 assert torch.allclose(states.relative_entropy(E(rho), E(sigma_state)), kl)
-assert (rho.von_neumann_entropy() <= math.log(10) + 1e-12).all()         # Corollary 3.5
+assert (rho.von_neumann_entropy() <= math.log(10) + 1e-12).all()         # Corollary 3.6
 assert abs(states.maximally_mixed_state(alg).von_neumann_entropy().item() - math.log(10)) < 1e-12
 ```
 
@@ -261,7 +270,7 @@ $\Delta(A)=(\lambda_{\max}-\lambda_{\min})/(\lambda_{\max}+\lambda_{\min})\in[0,
 extremalen Eigenwerte über alle Sektoren genommen werden (und $\Delta(0)=0$). Er misst, wie
 weit $A$ von einem Vielfachen der Identität entfernt ist: $\Delta(A)=0$ genau dann, wenn $A=\lambda1$.
 
-**Proposition 3.7.** Ist $\Phi:\mathcal M\to\mathcal M$ linear, positiv und unital
+**Proposition 3.8.** Ist $\Phi:\mathcal M\to\mathcal M$ linear, positiv und unital
 ($\Phi(1)=1$), so gilt $\Delta(\Phi(A))\le\Delta(A)$ für alle $A\ge0$.
 
 *Beweis.* Es ist $\lambda_{\min}1\le A\le\lambda_{\max}1$, und Positivität und Unitalität
@@ -283,8 +292,8 @@ Gilt für positive $X,Y$ in $M_k$ und ein unitäres $U$ die Ungleichung
 $|\operatorname{Tr}(XUY)|\le\operatorname{Tr}(XY)$? Sie gilt für $U=1$ und sieht wie eine
 Aussage vom Cauchy-Schwarz-Typ aus. Sie ist jedoch falsch, sobald $X$ und $Y$ nicht kommutieren.
 
-**Proposition 3.8.** $\max_U|\operatorname{Tr}(XUY)|=\|YX\|_1\ge\operatorname{Tr}(XY)$, mit Gleichheit
-genau dann, wenn $XY=YX$.
+**Proposition 3.9.** Seien $X,Y\ge0$ in $M_k$. Dann gilt $\max_U|\operatorname{Tr}(XUY)|=\|YX\|_1\ge\operatorname{Tr}(XY)$, wobei das Maximum
+über die unitären $U\in M_k$ läuft, mit Gleichheit genau dann, wenn $XY=YX$.
 
 *Beweis.* $\operatorname{Tr}(XUY)=\operatorname{Tr}(YX\,U)$, also ist das Maximum nach Satz 1.9
 gleich $\|YX\|_1$, und $\|YX\|_1\ge|\operatorname{Tr}(YX)|=\operatorname{Tr}(XY)$, da
@@ -302,7 +311,10 @@ Eine positive Matrix ist selbstadjungiert, also $YX=(YX)^*=XY$. $\square$
 Die Bibliothek findet die Maximalstelle mithilfe der Polarzerlegung. Die Begleitarbeit zeigt
 numerisch, dass Monte-Carlo-Stichproben von $U$ dahinter zurückbleiben, und zwar umso
 deutlicher, je größer $k$ wird – eines ihrer zentralen Themen; der folgende Code zeigt dies
-für ein Paar.
+für ein Paar. Der Grund: $U=1$ ist bereits nahezu optimal, während für ein Haar-zufälliges $U$
+in hoher Dimension $|\operatorname{Tr}(XUY)|$ typischerweise viel kleiner als $\operatorname{Tr}(XY)$ ist
+(eine zufällige unitäre Matrix verwürfelt die Phasen); daher bleiben alle Stichproben weit unter
+dem exakten Supremum.
 
 ```python
 Mk = TypeIAlgebra([6], [6], precision='double')
@@ -356,7 +368,7 @@ assert abs(tau.von_neumann_entropy().item() - (math.log(3) + sum(math.log(k) for
 2. Summiert wird über die $c$ mit $p_c>0$. Dann gilt
    $S_w(\rho)=S(\rho)+\sum_cp_c\log w_c=-\sum_cp_c\log p_c+\sum_cp_cS(\sigma_c)+\sum_cp_c\log w_c
    \le\sum_cp_c\log\frac{k_cw_c}{p_c}\le\log\sum_{p_c>0}k_cw_c\le\log\operatorname{tr}_w(1)$, wobei
-   $S(\sigma_c)\le\log k_c$ (Korollar 3.5) und die endliche Jensensche Ungleichung
+   $S(\sigma_c)\le\log k_c$ (Korollar 3.6) und die endliche Jensensche Ungleichung
    $\sum_cp_c\log x_c\le\log\sum_cp_cx_c$ für den konkaven $\log$ (die aus der Definition der
    Konkavität durch Induktion nach der Anzahl der Terme folgt) mit $x_c=k_cw_c/p_c$
    verwendet wurden; sie ist strikt, außer wenn alle $x_c$ gleich sind, da $\log$ strikt

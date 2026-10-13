@@ -94,8 +94,8 @@ $A=V\,\mathrm{diag}(\mu_j^2)\,V^*$ であるから $\operatorname{spec}A=\{\mu_j
 $\operatorname{spec}A$ 上で $p(t)=\sqrt t$ となる多項式とする。すると
 $p(A)=\sqrt A$ かつ $p(A)=p(B^2)=V\,\mathrm{diag}(p(\mu_j^2))\,V^*=V\,\mathrm{diag}(\mu_j)\,V^*=B$ である。$\square$
 
-**系 1.7.** $A\ge0$ $\iff$ ある $C$ により $A=C^*C$。（$A\ge0$ ならば $C=\sqrt A$ ととればよい。
-逆に $\langle x,C^*Cx\rangle=\|Cx\|^2\ge0$ である。）
+**系 1.7.** $A\ge0$ $\iff$ ある $T$ により $A=T^*T$。（$A\ge0$ ならば $T=\sqrt A$ ととればよい。
+逆に $\langle x,T^*Tx\rangle=\|Tx\|^2\ge0$ である。）
 
 ## 1.4 極分解と特異値
 
@@ -121,7 +121,7 @@ $\|A\|=\||A|\|=s_1$ となることから成り立つ。第二の等式は
 $\operatorname{Tr}A^*A=\operatorname{Tr}|A|^2=\sum_is_i^2$ による。
 
 **定理 1.9（トレースノルムの双対性）.**
-$\|A\|_1=\max_{U\text{ unitary}}|\operatorname{Tr}(AU)|$ であり、最大値は
+$\|A\|_1=\max_U|\operatorname{Tr}(AU)|$（$U$ はユニタリ行列全体を動く）であり、最大値は
 $A=W|A|$ として $U=W^*$ で達成される。特に $|\operatorname{Tr}A|\le\|A\|_1$ である。
 
 *証明.* $\operatorname{Tr}(AW^*)=\operatorname{Tr}(W|A|W^*)=\operatorname{Tr}|A|$ である。任意のユニタリ $U$ に対し、
@@ -161,7 +161,7 @@ print(A.eigenvalues()[0])      # one tensor per block, eigenvalues in ascending 
 
 各作用素は形状 `(batch, C, k_max, k_max)` の一つのテンソルとして格納される。すなわち作用素のバッチであって、各作用素は `C` 個のブロックのリストである。ここでは `batch = C = 1` である。この構成はまさに定理 1.3 を逆向きに読んだものである：$U$ をハール分布に従うユニタリとして $A=U\Lambda U^*$。フラグ `force_positive=True` は固有値に対して検査される（系 1.4(3)）ので、ライブラリは改めて検査することなく `A` が正であることを知っている。
 
-自己共役作用素に対する関数計算は `apply_function` である（各ブロックを `eigh` で対角化する）。よく使う関数には専用のメソッドがある。定理 1.5 と 1.6 を検証しよう。
+自己共役作用素に対する関数計算は `apply_function` である（各ブロックを `eigh` で対角化する）。関数 $f$ は要素ごとに作用しなければならない：同じサイズ $k$ のすべてのセクターの固有値を、形 `(batch, n·k)` の一つのテンソルとして受け取り（$n$ はそのようなセクターの個数）、同じ形のテンソルを返す。よく使う関数には専用のメソッドがある。定理 1.5 と 1.6 を検証しよう。
 
 ```python
 def close(X, Y, tol=1e-10):
@@ -212,7 +212,7 @@ $\sim N(0,\tfrac12)$ に従うものとする。したがって $\mathbb E|G_{ij
 $X=H/\sqrt n$ に対し $\ \mathbb E\,\tfrac1n\operatorname{Tr}X^4=2+\tfrac1{n^2}$ である。
 
 *証明.* *イッサーリス（ウィック）の公式.* $Y_1,\dots,Y_4$ を同時ガウス型で中心化された実確率変数（重複を許す）とし、$c_{ij}=\mathbb E[Y_iY_j]$ とおく。それらの同時積率母関数は
-$q(t)=\sum_{ij}c_{ij}t_it_j$ として $\mathbb E\,e^{\sum_it_iY_i}=e^{q(t)/2}$ である（ガウス分布の積率母関数であり、確率論の標準的事実である）。$t=0$ において $\partial^4/\partial t_1\cdots\partial t_4$ を作用させる。左辺からは
+$q(t)=\sum_{ij}c_{ij}t_it_j$ として $\mathbb E\,e^{\sum_it_iY_i}=e^{q(t)/2}$ である（ガウス分布の積率母関数であり、確率論の標準的事実である）。期待値の下での微分は正当化される：積率母関数はすべての $t$ で有限であり、$|t_i|\le1$ では $e^{\sum_it_iY_i}$ の4階までのすべての偏導関数が $(1+\sum_i|Y_i|)^4e^{\sum_i|Y_i|}$ で抑えられ、$e^{\sum_i|Y_i|}\le\sum_{s\in\{\pm1\}^4}e^{\sum_is_iY_i}$ よりこれは可積分である。したがって優収束定理が適用できる。$t=0$ において $\partial^4/\partial t_1\cdots\partial t_4$ を作用させる。左辺からは
 $\mathbb E[Y_1Y_2Y_3Y_4]$ が得られる。右辺では指数級数のうち項 $q^2/8$ のみが $t_1t_2t_3t_4$ を含み、その係数は $c_{12}c_{34}+c_{13}c_{24}+c_{14}c_{23}$ である。
 したがって $\mathbb E[Y_1Y_2Y_3Y_4]$ は、三通りの対合わせ（ペアリング）にわたる、対ごとの期待値の積の和である。多重線形性により、同時ガウス型の実確率変数の複素線形結合である複素確率変数（$H$ の成分など）についても同じことが成り立つ。
 

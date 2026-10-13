@@ -86,7 +86,7 @@ $\mathcal M$ (théorème 3.1). D'après le théorème de représentation de Ries
 de dimension finie $\mathcal M$, il existe un unique $R$ tel que
 $\omega(A)=\langle R,A\rangle_w=\operatorname{tr}_w(R^*A)$ ; on pose $\rho_w=R^*$. Si
 $\rho_w\ge0$, alors $\omega(A^*A)=\sum_cw_c\operatorname{Tr}(A_c\,(\rho_w)_c\,A_c^*)\ge0$,
-puisque $A_c(\rho_w)_cA_c^*\ge0$ (corollaire 1.7 avec $C=(\rho_w)_c^{1/2}A_c^*$).
+puisque $A_c(\rho_w)_cA_c^*\ge0$ (corollaire 1.7 avec $T=(\rho_w)_c^{1/2}A_c^*$).
 Réciproquement, si $\omega$ est positive, prenons $x\in\mathbb C^{k_c}$ et pour $A$
 l'opérateur de rang un $|x\rangle\langle x|$ dans le bloc $c$ ; alors $A=A^*A/\|x\|^2$ et
 $0\le\omega(A)=w_c\langle x,(\rho_w)_cx\rangle$, donc $(\rho_w)_c\ge0$. La normalisation
@@ -159,6 +159,12 @@ les valeurs propres nulles contribuent pour $0$ aux deux membres. Par conséquen
 $-\sum_c\sum_{\mu>0}p_c\mu\log(p_c\mu)=-\sum_cp_c\log p_c\sum_{\mu>0}\mu-\sum_cp_c\sum_{\mu>0}\mu\log\mu$,
 et $\sum_{\mu>0}\mu=\operatorname{Tr}\sigma_c=1$. $\square$
 
+> **Interprétation physique.** La formule sépare l'incertitude sur le système en deux parts :
+> $H(p)$, l'incertitude classique sur la charge (le secteur où se trouve le système), et
+> $\sum_cp_cS(\sigma_c)$, l'incertitude quantique moyenne à l'intérieur des secteurs. Sous une règle
+> de supersélection, la première part est l'entropie d'une variable aléatoire classique : la
+> charge.
+
 L'entropie relativement à une autre trace est $S_w(\rho)=-\operatorname{tr}_w(\rho_w\log\rho_w)$.
 D'après le théorème 3.2, $(\rho_w)_c=\rho_c/w_c$, donc
 $$
@@ -187,10 +193,14 @@ Pour des états de densités $\rho,\sigma$, avec $\sigma>0$, l'**entropie relati
 $S(\rho\|\sigma)=\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\rho\log\sigma$, où
 $\operatorname{Tr}\rho\log\rho:=\sum_i\lambda_i\log\lambda_i$, la somme portant sur les
 valeurs propres de $\rho$, avec $0\log0=0$ (et de même dans chaque bloc). Elle ne dépend
-pas de la trace : $\log(\rho_w)_c-\log(\sigma_w)_c=\log\rho_c-\log\sigma_c$ car le facteur
-$1/w_c$ se simplifie, et $\operatorname{tr}_w(\rho_wX)=\operatorname{Tr}(\rho X)$.
+pas de la trace : d'après le théorème 3.2, $(\rho_w)_c=\rho_c/w_c$ et $(\sigma_w)_c=\sigma_c/w_c$, donc
+les valeurs propres de $(\rho_w)_c$ sont celles de $\rho_c$ divisées par $w_c$, et
+$\operatorname{tr}_w(\rho_w\log\rho_w)$ comme $\operatorname{tr}_w(\rho_w\log\sigma_w)$ diffèrent de
+$\operatorname{Tr}\rho\log\rho$ et de $\operatorname{Tr}\rho\log\sigma$ de la même quantité
+$-\sum_cp_c\log w_c$ (le logarithme de $\rho$ n'intervient que sur son support, par la convention
+$0\log0=0$). La différence est donc inchangée.
 
-**Lemme (inégalité de la tangente).** Soit $f:I\to\mathbb R$ convexe sur un intervalle $I$
+**Lemme 3.4 (inégalité de la tangente).** Soit $f:I\to\mathbb R$ convexe sur un intervalle $I$
 et dérivable en $b\in I$. Alors $f(a)\ge f(b)+(a-b)f'(b)$ pour tout $a\in I$, avec
 inégalité stricte pour $a\neq b$ si $f$ est strictement convexe.
 
@@ -201,7 +211,7 @@ alors $f(a)-f(b)>2\big(f(m)-f(b)\big)\ge2(m-b)f'(b)=(a-b)f'(b)$, la première é
 stricte convexité en $m$, la seconde par l'inégalité qui vient d'être démontrée, appliquée
 à $m$. $\square$
 
-**Théorème 3.4 (inégalité de Klein).** Soit $f:I\to\mathbb R$ convexe sur un intervalle
+**Théorème 3.5 (inégalité de Klein).** Soit $f:I\to\mathbb R$ convexe sur un intervalle
 $I$, et $X,Y$ autoadjoints de spectres contenus dans $I$, $f$ étant dérivable en chaque
 valeur propre de $Y$. Alors $\operatorname{Tr}[f(X)-f(Y)-(X-Y)f'(Y)]\ge0$. Si $f$ est
 strictement convexe, l'égalité n'a lieu que pour $X=Y$.
@@ -212,14 +222,14 @@ $c_{ij}=|\langle u_i,v_j\rangle|^2$, de sorte que $\sum_ic_{ij}=\sum_jc_{ij}=1$.
 $\operatorname{Tr}f(X)=\sum_{ij}c_{ij}f(a_i)$, $\operatorname{Tr}f(Y)=\sum_{ij}c_{ij}f(b_j)$ et
 $\operatorname{Tr}Xf'(Y)=\sum_{ij}c_{ij}a_if'(b_j)$, $\operatorname{Tr}Yf'(Y)=\sum_{ij}c_{ij}b_jf'(b_j)$.
 Le membre de gauche vaut donc $\sum_{ij}c_{ij}[f(a_i)-f(b_j)-(a_i-b_j)f'(b_j)]$, somme de
-termes positifs d'après l'inégalité de la tangente. Si $f$ est strictement convexe et que
+termes positifs d'après le lemme 3.4. Si $f$ est strictement convexe et que
 la somme est nulle, alors $a_i=b_j$ dès que $c_{ij}>0$, donc
 $Xv_j=\sum_ia_i\langle u_i,v_j\rangle u_i=b_jv_j$ pour tout $j$, et $X=Y$. $\square$
 
-**Corollaire 3.5.** $S(\rho\|\sigma)\ge0$, avec égalité si et seulement si $\rho=\sigma$.
+**Corollaire 3.6.** $S(\rho\|\sigma)\ge0$, avec égalité si et seulement si $\rho=\sigma$.
 En particulier $S(\rho)\le\log D$, avec égalité si et seulement si $\rho=1/D$.
 
-*Démonstration.* On applique le théorème 3.4 à $f(t)=t\log t$, $f(0)=0$, qui est
+*Démonstration.* On applique le théorème 3.5 à $f(t)=t\log t$, $f(0)=0$, qui est
 strictement convexe sur $I=[0,\infty)$ ($f''(t)=1/t>0$ sur $(0,\infty)$, et $f$ est
 continue en $0$) et dérivable sur $(0,\infty)\supseteq\operatorname{spec}\sigma$ avec
 $f'(t)=\log t+1$, et à $X=\rho$, $Y=\sigma$ : le membre de gauche vaut
@@ -227,7 +237,7 @@ $\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\sigma\log\sigma-\operatorname{T
 =S(\rho\|\sigma)$, puisque $\operatorname{Tr}\rho=\operatorname{Tr}\sigma=1$. Pour la seconde
 assertion, on prend $\sigma=1/D$ : $0\le S(\rho\|1/D)=-S(\rho)+\log D$. $\square$
 
-**Théorème 3.6 (règle de la chaîne ; monotonie par passage au centre).** Soient
+**Théorème 3.7 (règle de la chaîne ; monotonie sous l'espérance conditionnelle sur le centre).** Soient
 $\rho,\sigma$ des états avec $\sigma>0$, $p_c=\operatorname{Tr}\rho_c$,
 $q_c=\operatorname{Tr}\sigma_c>0$, $\hat\sigma_c=\sigma_c/q_c$ et, pour $p_c>0$,
 $\hat\rho_c=\rho_c/p_c$. Alors, les sommes portant sur les $c$ tels que $p_c>0$ (les autres
@@ -236,7 +246,7 @@ $$
 S(\rho\|\sigma)=\sum_cp_c\log\frac{p_c}{q_c}+\sum_cp_c\,S(\hat\rho_c\|\hat\sigma_c)
 \ \ge\ \sum_cp_c\log\frac{p_c}{q_c}=S(E\rho\|E\sigma),
 $$
-où $E$ est l'espérance conditionnelle sur le centre (proposition 2.7).
+où $E$ est l'espérance conditionnelle sur le centre (proposition 2.8).
 
 *Démonstration.* Pour $p_c>0$,
 $\operatorname{Tr}\rho_c\log\rho_c=p_c\log p_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\rho_c$
@@ -245,7 +255,7 @@ $\log\sigma_c=(\log q_c)1+\log\hat\sigma_c$, donc
 $\operatorname{Tr}\rho_c\log\sigma_c=p_c\log q_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\sigma_c$ et
 $\operatorname{Tr}\rho_c\log\rho_c-\operatorname{Tr}\rho_c\log\sigma_c=p_c\log(p_c/q_c)+p_cS(\hat\rho_c\|\hat\sigma_c)$.
 Si $p_c=0$, alors $\rho_c=0$ et le secteur contribue pour $0$.
-On somme sur $c$ ; la seconde somme est $\ge0$ d'après le corollaire 3.5 appliqué dans
+On somme sur $c$ ; la seconde somme est $\ge0$ d'après le corollaire 3.6 appliqué dans
 chaque bloc. Enfin $E\rho=\bigoplus_c(p_c/k_c)1_{k_c}$, $E\sigma=\bigoplus_c(q_c/k_c)1_{k_c}$,
 et $\operatorname{Tr}E\rho(\log E\rho-\log E\sigma)=\sum_ck_c\frac{p_c}{k_c}\log\frac{p_c}{q_c}$. $\square$
 
@@ -259,9 +269,9 @@ q = sigma_state.sector_probabilities()
 D_rel = states.relative_entropy(rho, sigma_state)
 kl = (p * torch.log(p / q)).sum(-1)
 E = channels.center_expectation(alg)
-assert (D_rel >= kl - 1e-12).all()                                       # Theorem 3.6
+assert (D_rel >= kl - 1e-12).all()                                       # Theorem 3.7
 assert torch.allclose(states.relative_entropy(E(rho), E(sigma_state)), kl)
-assert (rho.von_neumann_entropy() <= math.log(10) + 1e-12).all()         # Corollary 3.5
+assert (rho.von_neumann_entropy() <= math.log(10) + 1e-12).all()         # Corollary 3.6
 assert abs(states.maximally_mixed_state(alg).von_neumann_entropy().item() - math.log(10)) < 1e-12
 ```
 
@@ -273,7 +283,7 @@ propres extrêmes étant prises sur l'ensemble des secteurs (et $\Delta(0)=0$). 
 l'écart entre $A$ et un multiple de l'identité : $\Delta(A)=0$ si et seulement si
 $A=\lambda1$.
 
-**Proposition 3.7.** Si $\Phi:\mathcal M\to\mathcal M$ est linéaire, positive et unifère
+**Proposition 3.8.** Si $\Phi:\mathcal M\to\mathcal M$ est linéaire, positive et unifère
 ($\Phi(1)=1$), alors $\Delta(\Phi(A))\le\Delta(A)$ pour tout $A\ge0$.
 
 *Démonstration.* $\lambda_{\min}1\le A\le\lambda_{\max}1$, et la positivité ainsi que
@@ -295,8 +305,8 @@ Pour $X,Y$ positifs dans $M_k$ et $U$ unitaire, a-t-on
 $|\operatorname{Tr}(XUY)|\le\operatorname{Tr}(XY)$ ? C'est vrai pour $U=1$, et cela ressemble à
 un énoncé de type Cauchy–Schwarz. C'est pourtant faux dès que $X$ et $Y$ ne commutent pas.
 
-**Proposition 3.8.** $\max_U|\operatorname{Tr}(XUY)|=\|YX\|_1\ge\operatorname{Tr}(XY)$, avec
-égalité si et seulement si $XY=YX$.
+**Proposition 3.9.** Soient $X,Y\ge0$ dans $M_k$. Alors $\max_U|\operatorname{Tr}(XUY)|=\|YX\|_1\ge\operatorname{Tr}(XY)$, le maximum
+portant sur les unitaires $U\in M_k$, avec égalité si et seulement si $XY=YX$.
 
 *Démonstration.* $\operatorname{Tr}(XUY)=\operatorname{Tr}(YX\,U)$, donc le maximum vaut
 $\|YX\|_1$ d'après le théorème 1.9, et $\|YX\|_1\ge|\operatorname{Tr}(YX)|=\operatorname{Tr}(XY)$,
@@ -314,7 +324,10 @@ $YX=W|YX|=|YX|\ge0$. Une matrice positive est autoadjointe, donc $YX=(YX)^*=XY$.
 La bibliothèque trouve le point où le maximum est atteint grâce à la décomposition polaire.
 L'article qui accompagne la bibliothèque montre numériquement qu'un échantillonnage de
 Monte-Carlo de $U$ n'y parvient pas, et ce d'autant moins que $k$ est grand — c'est l'un de
-ses thèmes centraux ; le code ci-dessous l'illustre pour un couple.
+ses thèmes centraux ; le code ci-dessous l'illustre pour un couple. La raison en est que $U=1$ est déjà proche de
+l'optimum, tandis que pour un $U$ tiré selon la loi de Haar en grande dimension,
+$|\operatorname{Tr}(XUY)|$ est typiquement bien plus petit que $\operatorname{Tr}(XY)$ (un unitaire
+aléatoire brouille les phases) : tous les échantillons restent loin en dessous du supremum exact.
 
 ```python
 Mk = TypeIAlgebra([6], [6], precision='double')
@@ -369,7 +382,7 @@ assert abs(tau.von_neumann_entropy().item() - (math.log(3) + sum(math.log(k) for
 2. Les sommes portent sur les $c$ tels que $p_c>0$. Alors
    $S_w(\rho)=S(\rho)+\sum_cp_c\log w_c=-\sum_cp_c\log p_c+\sum_cp_cS(\sigma_c)+\sum_cp_c\log w_c
    \le\sum_cp_c\log\frac{k_cw_c}{p_c}\le\log\sum_{p_c>0}k_cw_c\le\log\operatorname{tr}_w(1)$, en
-   utilisant $S(\sigma_c)\le\log k_c$ (corollaire 3.5) et l'inégalité de Jensen finie
+   utilisant $S(\sigma_c)\le\log k_c$ (corollaire 3.6) et l'inégalité de Jensen finie
    $\sum_cp_c\log x_c\le\log\sum_cp_cx_c$ pour la fonction concave $\log$ (qui découle de la
    définition de la concavité par récurrence sur le nombre de termes), avec
    $x_c=k_cw_c/p_c$ ; elle est stricte sauf si tous les $x_c$ sont égaux, puisque $\log$ est

@@ -20,7 +20,7 @@ identidad $1$.
 ## 2.1 Conmutantes y el teorema del doble conmutante
 
 Para un conjunto $S\subseteq M_n(\mathbb C)$, el **conmutante** es
-$S'=\{X\in M_n(\mathbb C):XA=AX\text{ for all }A\in S\}$. Siempre es un álgebra unital;
+$S'=\{X\in M_n(\mathbb C):XA=AX\text{ para todo }A\in S\}$. Siempre es un álgebra unital;
 si $S$ es cerrado para adjuntos ($S^*=S$), entonces $S'$ es una $*$-álgebra, ya que
 $XA=AX$ para todo $A\in S$ implica $X^*A^*=A^*X^*$ para todo $A\in S$. Todo elemento de $S$
 conmuta con todo elemento de $S'$, luego $S\subseteq S''$; aplicado a $S'$, esto da
@@ -95,7 +95,7 @@ Falta ver que $P_c\in\mathcal Z$. Para $d\neq c$ elegimos $z_{cd}\in\mathcal Z$ 
 $\chi_c(z_{cd})\neq\chi_d(z_{cd})$. El producto
 $\prod_{d\neq c}\big(z_{cd}-\chi_d(z_{cd})1\big)/\big(\chi_c(z_{cd})-\chi_d(z_{cd})\big)$
 pertenece a $\mathcal Z$, actúa como $1$ sobre $E_c$ y como $0$ sobre cada $E_d$, $d\neq c$;
-es $P_c$. Minimalidad y unicidad: una proyección $\sum_c a_cP_c$ tiene $a_c\in\{0,1\}$, luego
+es $P_c$ (para $C=1$, $P_1=1$: el producto vacío es $1$). Minimalidad y unicidad: una proyección $\sum_c a_cP_c$ tiene $a_c\in\{0,1\}$, luego
 las proyecciones no nulas de $\mathcal Z$ son las sumas de conjuntos no vacíos de las $P_c$. $\square$
 
 Aplicadas a $\mathcal Z=Z(\mathcal M)$, las proyecciones $P_c$ son las **proyecciones
@@ -178,7 +178,8 @@ $$
 V^*\mathcal MV=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)\otimes1_{m_c},\qquad
 V^*\mathcal M'V=\bigoplus_{c=1}^C1_{k_c}\otimes M_{m_c}(\mathbb C),
 $$
-y $V^*Z(\mathcal M)V=\operatorname{span}\{P_1,\dots,P_C\}$, donde $P_c$ es la proyección
+y $V^*Z(\mathcal M)V=\operatorname{span}\{V^*P_1V,\dots,V^*P_CV\}$, donde $P_1,\dots,P_C$ son
+las proyecciones centrales minimales de $\mathcal M$ (lema 2.3) y $V^*P_cV$ es la proyección
 sobre el $c$-ésimo sumando. Los pares $(k_c,m_c)$ son únicos salvo el orden: las $P_c$ son
 únicas (lema 2.3), $k_c^2=\dim\mathcal MP_c$ y $m_c=\operatorname{rank}P_c/k_c$. En particular,
 $\mathcal M\cong\bigoplus_cM_{k_c}(\mathbb C)$ como $*$-álgebras, y
@@ -213,7 +214,7 @@ Neumann; su conmutante $\pi(G)''$ es el subespacio generado por los $\pi(g)$ (te
 aplicado a dicho subespacio, que es una $*$-álgebra: contiene $\pi(e)=1$, los productos
 $\pi(g)\pi(h)=\pi(gh)$ y los adjuntos $\pi(g)^*=\pi(g^{-1})$).
 
-**Proposición 2.8.** Apliquemos el teorema 2.6 a $\mathcal M=\pi(G)''$. Entonces
+**Proposición 2.7.** Apliquemos el teorema 2.6 a $\mathcal M=\pi(G)''$. Entonces
 $V^*\pi(g)V=\bigoplus_c\rho_c(g)\otimes1_{m_c}$, donde cada $\rho_c$ es una representación
 unitaria irreducible de $G$ sobre $\mathbb C^{k_c}$, y $\rho_c,\rho_d$ no son equivalentes
 para $c\neq d$. En consecuencia,
@@ -238,19 +239,46 @@ todo elemento $(x_{c'})_{c'}$ de la imagen satisface $x_d=Tx_cT^{-1}$, lo que ex
 elemento con $x_c=1$, $x_d=0$, en contradicción con la sobreyectividad. Los dos últimos
 isomorfismos son el teorema 2.6. $\square$
 
-Que la descomposición de una representación en irreducibles sea única salvo
-equivalencia —de modo que las $m_c$ sean *las* multiplicidades en cualquier
-descomposición— se demuestra en el capítulo 4.
+La descomposición de una representación en irreducibles es única salvo equivalencia, de modo
+que las $m_c$ son *las* multiplicidades en cualquier descomposición. *Demostración.* Sean
+$\rho,\rho'$ irreducibles y $T$ un operador de entrelazamiento, $T\rho(g)=\rho'(g)T$ para todo $g$.
+El núcleo y la imagen de $T$ son invariantes, luego $T=0$ o $T$ es invertible (lema de Schur); si
+$\rho'=\rho$, lo mismo vale para $T-\lambda1$ con $\lambda$ un valor propio de $T$, luego
+$T=\lambda1$. Por tanto, los operadores de entrelazamiento de $\rho$ en $\rho'$ forman un espacio de
+dimensión $1$ si $\rho\cong\rho'$ y $0$ en otro caso. Si $\pi\cong\bigoplus_j\sigma_j$ con $\sigma_j$
+irreducibles (se admiten repeticiones), los operadores de entrelazamiento de una $\rho$ irreducible
+en $\pi$ forman, pues, un espacio de dimensión $\#\{j:\sigma_j\cong\rho\}$, un número que solo
+depende de $\pi$ y de $\rho$. Para la descomposición de la proposición 2.7, cuyas $\rho_c$ son dos a
+dos no equivalentes, este número es $m_c$ si $\rho\cong\rho_c$ y $0$ si $\rho$ no es equivalente a
+ninguna $\rho_c$. $\square$
 
 Tomamos $G=S_3$ actuando por permutación de los tres factores de $(\mathbb C^2)^{\otimes3}$,
-es decir, tres cúbits o tres espines $\tfrac12$. La teoría de representaciones (un cálculo
-de caracteres, capítulo 4) predice: el subespacio simétrico (espín total $\tfrac32$,
-dimensión $4$) porta la representación trivial con multiplicidad $4$; su complemento
-(dimensión $4$) porta la representación estándar de dimensión dos con multiplicidad $2$; la
-representación signo no aparece. Así, $\pi(S_3)''\cong M_1\oplus M_2$ (dimensión $5$) y
-$\pi(S_3)'\cong M_4\oplus M_2$ (dimensión $20$). Comprobamos las dimensiones mediante
-álgebra lineal: el conmutante de un conjunto $S$ es el núcleo de la aplicación lineal
-$X\mapsto(AX-XA)_{A\in S}$.
+es decir, tres cúbits o tres espines $\tfrac12$. La descomposición es: el subespacio simétrico
+(espín total $\tfrac32$, dimensión $4$) porta la representación trivial con multiplicidad $4$; su
+complemento (dimensión $4$) porta la representación estándar de dimensión dos con multiplicidad
+$2$; la representación signo no aparece. Así, $\pi(S_3)''\cong M_1\oplus M_2$ (dimensión $5$) y
+$\pi(S_3)'\cong M_4\oplus M_2$ (dimensión $20$).
+
+*Demostración.* Escribamos $\pi(S_3)''\cong\bigoplus_cM_{k_c}\otimes1_{m_c}$ (teorema 2.6).
+Entonces $\sum_ck_cm_c=8$, $\sum_ck_c^2=\dim\pi(S_3)''=5$ y $\sum_cm_c^2=\dim\pi(S_3)'=20$; el
+código de abajo calcula ambas dimensiones mediante álgebra lineal exacta (el conmutante de un
+conjunto $S$ es el núcleo de la aplicación lineal $X\mapsto(AX-XA)_{A\in S}$). El número $20$
+también se puede contar a mano: $X$ conmuta con todos los $\pi(g)$ si y solo si sus entradas
+$X_{xy}$, $x,y\in\{0,1\}^3$, son constantes en las órbitas de $S_3$ sobre los pares $(x,y)$, es
+decir, sobre las ternas de elementos de $\{0,1\}^2$, y hay $\binom63=20$ de tales órbitas
+(multiconjuntos de tamaño $3$ formados con $4$ elementos). De $\sum_ck_c^2=5$ se sigue
+$k=(1,2)$ o $k=(1,1,1,1,1)$. En el primer caso, $m_1+2m_2=8$ y $m_1^2+m_2^2=20$ dan $m=(4,2)$.
+En el segundo, cinco enteros positivos de suma $8$ y suma de cuadrados $20$ han de ser
+$m=(4,1,1,1,1)$; pero entonces $\pi(S_3)''$ sería conmutativa, mientras que las transposiciones
+$(12)$ y $(23)$ no conmutan: $\pi((12))\pi((23))|001\rangle=|100\rangle$, pero
+$\pi((23))\pi((12))|001\rangle=|010\rangle$. Así, $k=(1,2)$ y $m=(4,2)$. La representación
+unidimensional $\rho_1$ es la trivial o la signo. No es la signo: cada vector de la base
+$|b_1b_2b_3\rangle$ tiene dos bits iguales, luego queda fijo por una transposición $t$, y
+$A=\sum_g\operatorname{sgn}(g)\pi(g)$, que cumple $A\pi(t)=-A$, da
+$A|b_1b_2b_3\rangle=A\pi(t)|b_1b_2b_3\rangle=-A|b_1b_2b_3\rangle$; por tanto $A=0$, y la
+representación signo no aparece. Así, $\rho_1$ es trivial, sus $4$ copias generan el subespacio
+simétrico, y $\rho_2$ es una representación irreducible de dimensión dos (proposición 2.7): la
+representación estándar. $\square$
 
 ```python
 import itertools
@@ -295,8 +323,8 @@ Las multiplicidades se observan en el espectro. El promedio sobre el grupo,
 $X\mapsto\frac1{|G|}\sum_g\pi(g)X\pi(g)^*$, lleva cualquier operador al conmutante
 (ejercicio 3). Por tanto, un elemento autoadjunto aleatorio de $\pi(S_3)'$ tiene (casi
 seguramente) $4$ valores propios simples en el subespacio simétrico y $2$ doblemente
-degenerados en su complemento; el código comprueba los pares degenerados: el factor $1_2$
-de $M_2\otimes1_2$.
+degenerados en su complemento, porque allí el bloque de $\pi(S_3)'$ es $1_2\otimes M_2$; el
+código comprueba los pares degenerados.
 
 ```python
 def group_average(X):
@@ -357,7 +385,7 @@ $\mathcal N\subseteq\mathcal M$ es una aplicación lineal $E:\mathcal M\to\mathc
 positiva ($A\ge0\Rightarrow E(A)\ge0$), satisface $E(B)=B$ para $B\in\mathcal N$ y es un
 morfismo de $\mathcal N$-bimódulos: $E(B_1AB_2)=B_1E(A)B_2$ para $B_1,B_2\in\mathcal N$.
 
-**Proposición 2.7.** Para $\mathcal M=\bigoplus_cM_{k_c}$ y $\mathcal N=Z(\mathcal M)$,
+**Proposición 2.8.** Para $\mathcal M=\bigoplus_cM_{k_c}$ y $\mathcal N=Z(\mathcal M)$,
 $$
 E(A)=\sum_c\frac{\operatorname{Tr}A_c}{k_c}\,P_c
 $$
@@ -388,6 +416,14 @@ conmutante $\pi(G)'$ dentro de $M_n(\mathbb C)$, y conserva $\operatorname{Tr}$ 
 (Las esperanzas condicionales no son únicas en general: sobre $\mathbb C1$, cada estado
 $\varphi$ da una, $A\mapsto\varphi(A)1$.) Ambas son casos particulares de la misma idea:
 proyectar sobre los operadores que "no ven" cierta estructura.
+
+> **Significado físico.** En el álgebra de matrices completa $M_D(\mathbb C)$, $D=\sum_ck_c$, la
+> aplicación $X\mapsto\sum_cP_cXP_c$ es la esperanza condicional sobre $\mathcal M$: borra las
+> coherencias entre sectores de superselección, que es lo que ocurre cuando se mide la carga (el
+> sector) sin registrar el resultado. La esperanza condicional $E$ sobre el centro va más allá:
+> solo conserva la información clásica, el peso $p_c$ de cada sector, y reemplaza el estado
+> dentro de cada sector por el maximalmente mixto. Un estado $\omega$ y el estado $\omega\circ E$
+> coinciden en todo observable que solo pregunta "¿en qué sector?".
 
 ## 2.7 Con qué comparar
 

@@ -19,7 +19,7 @@ l'adjoint, et contenant l'identité $1$.
 ## 2.1 Commutants et théorème du bicommutant
 
 Pour une partie $S\subseteq M_n(\mathbb C)$, le **commutant** est
-$S'=\{X\in M_n(\mathbb C):XA=AX\text{ for all }A\in S\}$ (l'ensemble des $X$ tels que
+$S'=\{X\in M_n(\mathbb C):XA=AX\text{ pour tout }A\in S\}$ (l'ensemble des $X$ tels que
 $XA=AX$ pour tout $A\in S$). C'est toujours une algèbre unifère ; si $S$ est stable par
 passage à l'adjoint ($S^*=S$), alors $S'$ est une $*$-algèbre, puisque $XA=AX$ pour tout
 $A\in S$ entraîne $X^*A^*=A^*X^*$ pour tout $A\in S$. Tout élément de $S$ commute avec tout
@@ -98,7 +98,7 @@ Il reste à montrer que $P_c\in\mathcal Z$. Pour $d\neq c$, choisissons $z_{cd}\
 tel que $\chi_c(z_{cd})\neq\chi_d(z_{cd})$. Le produit
 $\prod_{d\neq c}\big(z_{cd}-\chi_d(z_{cd})1\big)/\big(\chi_c(z_{cd})-\chi_d(z_{cd})\big)$
 appartient à $\mathcal Z$, agit comme $1$ sur $E_c$ et comme $0$ sur chaque $E_d$,
-$d\neq c$ : c'est $P_c$. Minimalité et unicité : un projecteur $\sum_c a_cP_c$ vérifie
+$d\neq c$ : c'est $P_c$ (pour $C=1$, $P_1=1$ : le produit vide vaut $1$). Minimalité et unicité : un projecteur $\sum_c a_cP_c$ vérifie
 $a_c\in\{0,1\}$, donc les projecteurs non nuls de $\mathcal Z$ sont les sommes des $P_c$
 indexées par des parties non vides. $\square$
 
@@ -187,7 +187,8 @@ $$
 V^*\mathcal MV=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)\otimes1_{m_c},\qquad
 V^*\mathcal M'V=\bigoplus_{c=1}^C1_{k_c}\otimes M_{m_c}(\mathbb C),
 $$
-et $V^*Z(\mathcal M)V=\operatorname{span}\{P_1,\dots,P_C\}$, où $P_c$ est le projecteur sur
+et $V^*Z(\mathcal M)V=\operatorname{span}\{V^*P_1V,\dots,V^*P_CV\}$, où $P_1,\dots,P_C$ sont
+les projecteurs centraux minimaux de $\mathcal M$ (lemme 2.3) et $V^*P_cV$ est le projecteur sur
 le $c$-ième facteur de la somme directe. Les couples $(k_c,m_c)$ sont uniques à l'ordre
 près : les $P_c$ sont uniques (lemme 2.3), $k_c^2=\dim\mathcal MP_c$ et
 $m_c=\operatorname{rank}P_c/k_c$. En particulier $\mathcal M\cong\bigoplus_cM_{k_c}(\mathbb C)$
@@ -226,7 +227,7 @@ Neumann ; son commutant $\pi(G)''$ est le sous-espace engendré par les $\pi(g)$
 (théorème 2.2 appliqué à ce sous-espace, qui est une $*$-algèbre : il contient $\pi(e)=1$,
 les produits $\pi(g)\pi(h)=\pi(gh)$ et les adjoints $\pi(g)^*=\pi(g^{-1})$).
 
-**Proposition 2.8.** Appliquons le théorème 2.6 à $\mathcal M=\pi(G)''$. Alors
+**Proposition 2.7.** Appliquons le théorème 2.6 à $\mathcal M=\pi(G)''$. Alors
 $V^*\pi(g)V=\bigoplus_c\rho_c(g)\otimes1_{m_c}$, où chaque $\rho_c$ est une représentation
 unitaire irréductible de $G$ sur $\mathbb C^{k_c}$, et où $\rho_c,\rho_d$ ne sont pas
 équivalentes pour $c\neq d$. Par conséquent
@@ -252,19 +253,47 @@ de l'image vérifie $x_d=Tx_cT^{-1}$, ce qui exclut l'élément tel que $x_c=1$,
 contradiction avec la surjectivité. Les deux derniers isomorphismes découlent du
 théorème 2.6. $\square$
 
-Le fait que la décomposition d'une représentation en irréductibles soit unique à
-équivalence près — de sorte que les $m_c$ sont *les* multiplicités dans toute
-décomposition — est démontré au chapitre 4.
+La décomposition d'une représentation en irréductibles est unique à équivalence près, de sorte
+que les $m_c$ sont *les* multiplicités dans toute décomposition. *Démonstration.* Soient
+$\rho,\rho'$ irréductibles et $T$ un opérateur d'entrelacement, $T\rho(g)=\rho'(g)T$ pour tout $g$.
+Le noyau et l'image de $T$ sont invariants, donc $T=0$ ou $T$ est inversible (lemme de Schur) ; si
+$\rho'=\rho$, il en va de même de $T-\lambda1$ pour une valeur propre $\lambda$ de $T$, donc
+$T=\lambda1$. Ainsi les opérateurs d'entrelacement de $\rho$ vers $\rho'$ forment un espace de
+dimension $1$ si $\rho\cong\rho'$ et $0$ sinon. Si $\pi\cong\bigoplus_j\sigma_j$ avec des $\sigma_j$
+irréductibles (répétitions permises), les opérateurs d'entrelacement d'une $\rho$ irréductible vers
+$\pi$ forment donc un espace de dimension $\#\{j:\sigma_j\cong\rho\}$, nombre qui ne dépend que de
+$\pi$ et de $\rho$. Pour la décomposition de la proposition 2.7, dont les $\rho_c$ sont deux à deux
+non équivalentes, ce nombre vaut $m_c$ si $\rho\cong\rho_c$ et $0$ si $\rho$ n'est équivalente à
+aucune $\rho_c$. $\square$
 
 Prenons $G=S_3$ agissant par permutation des trois facteurs de $(\mathbb C^2)^{\otimes3}$,
-c'est-à-dire trois qubits ou trois spins $\tfrac12$. La théorie des représentations (un
-calcul de caractères, chapitre 4) prévoit : le sous-espace symétrique (spin total
-$\tfrac32$, dimension $4$) porte la représentation triviale avec multiplicité $4$ ; son
-supplémentaire (dimension $4$) porte la représentation standard de dimension deux avec
-multiplicité $2$ ; la représentation signature n'apparaît pas. Ainsi
+c'est-à-dire trois qubits ou trois spins $\tfrac12$. La décomposition est la suivante : le
+sous-espace symétrique (spin total $\tfrac32$, dimension $4$) porte la représentation triviale
+avec multiplicité $4$ ; son supplémentaire (dimension $4$) porte la représentation standard de
+dimension deux avec multiplicité $2$ ; la représentation signature n'apparaît pas. Ainsi
 $\pi(S_3)''\cong M_1\oplus M_2$ (dimension $5$) et $\pi(S_3)'\cong M_4\oplus M_2$
-(dimension $20$). Vérifions ces dimensions par l'algèbre linéaire : le commutant d'une
-partie $S$ est le noyau de l'application linéaire $X\mapsto(AX-XA)_{A\in S}$.
+(dimension $20$).
+
+*Démonstration.* Écrivons $\pi(S_3)''\cong\bigoplus_cM_{k_c}\otimes1_{m_c}$ (théorème 2.6). Alors
+$\sum_ck_cm_c=8$, $\sum_ck_c^2=\dim\pi(S_3)''=5$ et $\sum_cm_c^2=\dim\pi(S_3)'=20$ ; le code
+ci-dessous calcule ces deux dimensions par algèbre linéaire exacte (le commutant d'une partie $S$
+est le noyau de l'application linéaire $X\mapsto(AX-XA)_{A\in S}$). Le nombre $20$ se compte
+aussi à la main : $X$ commute avec tous les $\pi(g)$ si et seulement si ses coefficients
+$X_{xy}$, $x,y\in\{0,1\}^3$, sont constants sur les orbites de $S_3$ agissant sur les couples
+$(x,y)$, c'est-à-dire sur les triplets d'éléments de $\{0,1\}^2$, et il y a $\binom63=20$ telles
+orbites (multiensembles de taille $3$ dans un ensemble à $4$ éléments). De $\sum_ck_c^2=5$ on tire
+$k=(1,2)$ ou $k=(1,1,1,1,1)$. Dans le premier cas, $m_1+2m_2=8$ et $m_1^2+m_2^2=20$ donnent
+$m=(4,2)$. Dans le second, cinq entiers strictement positifs de somme $8$ et de somme des carrés
+$20$ sont nécessairement $m=(4,1,1,1,1)$ ; mais alors $\pi(S_3)''$ serait commutative, alors que
+les transpositions $(12)$ et $(23)$ ne commutent pas : $\pi((12))\pi((23))|001\rangle=|100\rangle$
+mais $\pi((23))\pi((12))|001\rangle=|010\rangle$. Donc $k=(1,2)$ et $m=(4,2)$. La représentation
+de dimension un $\rho_1$ est la triviale ou la signature. Ce n'est pas la signature : chaque
+vecteur de base $|b_1b_2b_3\rangle$ a deux bits égaux, donc il est fixé par une transposition $t$,
+et $A=\sum_g\operatorname{sgn}(g)\pi(g)$, qui vérifie $A\pi(t)=-A$, donne
+$A|b_1b_2b_3\rangle=A\pi(t)|b_1b_2b_3\rangle=-A|b_1b_2b_3\rangle$ ; ainsi $A=0$, et la
+représentation signature n'apparaît pas. Donc $\rho_1$ est triviale, ses $4$ copies engendrent le
+sous-espace symétrique, et $\rho_2$ est une représentation irréductible de dimension deux
+(proposition 2.7) : la représentation standard. $\square$
 
 ```python
 import itertools
@@ -309,8 +338,8 @@ Les multiplicités se lisent sur le spectre. La moyenne sur le groupe,
 $X\mapsto\frac1{|G|}\sum_g\pi(g)X\pi(g)^*$, envoie tout opérateur dans le commutant
 (exercice 3). Un élément autoadjoint aléatoire de $\pi(S_3)'$ possède donc (presque
 sûrement) $4$ valeurs propres simples sur le sous-espace symétrique et $2$ valeurs propres
-doubles sur son supplémentaire ; le code vérifie les paires dégénérées, qui proviennent du
-facteur $1_2$ dans $M_2\otimes1_2$.
+doubles sur son supplémentaire, car le bloc de $\pi(S_3)'$ y est $1_2\otimes M_2$ ; le code
+vérifie les paires dégénérées.
 
 ```python
 def group_average(X):
@@ -372,7 +401,7 @@ positive ($A\ge0\Rightarrow E(A)\ge0$), telle que $E(B)=B$ pour $B\in\mathcal N$
 un morphisme de $\mathcal N$-bimodules : $E(B_1AB_2)=B_1E(A)B_2$ pour
 $B_1,B_2\in\mathcal N$.
 
-**Proposition 2.7.** Pour $\mathcal M=\bigoplus_cM_{k_c}$ et $\mathcal N=Z(\mathcal M)$,
+**Proposition 2.8.** Pour $\mathcal M=\bigoplus_cM_{k_c}$ et $\mathcal N=Z(\mathcal M)$,
 $$
 E(A)=\sum_c\frac{\operatorname{Tr}A_c}{k_c}\,P_c
 $$
@@ -405,6 +434,15 @@ commutant $\pi(G)'$ dans $M_n(\mathbb C)$, et elle préserve $\operatorname{Tr}$
 $\mathbb C1$, chaque état $\varphi$ en fournit une, $A\mapsto\varphi(A)1$.) Ce sont deux
 instances d'une même idée : projeter sur les opérateurs qui « ne voient pas » une certaine
 structure.
+
+> **Interprétation physique.** Dans l'algèbre de matrices complète $M_D(\mathbb C)$, $D=\sum_ck_c$,
+> l'application $X\mapsto\sum_cP_cXP_c$ est l'espérance conditionnelle sur $\mathcal M$ : elle
+> efface les cohérences entre secteurs de supersélection, ce qui se produit lorsque l'on mesure la
+> charge (le secteur) sans enregistrer le résultat. L'espérance conditionnelle $E$ sur le centre va
+> plus loin : elle ne garde que l'information classique, le poids $p_c$ de chaque secteur, et
+> remplace l'état à l'intérieur de chaque secteur par l'état maximalement mélangé. Un état
+> $\omega$ et l'état $\omega\circ E$ coïncident sur toute observable qui ne demande que « quel
+> secteur ? ».
 
 ## 2.7 Points de comparaison
 

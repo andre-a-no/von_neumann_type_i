@@ -18,7 +18,7 @@ Il s'adresse simultanément à deux publics :
   notion, dans des encadrés intitulés *Interprétation physique*, ainsi que du code
   fonctionnel qu'ils pourront adapter.
 
-Tous les chapitres suivent le même plan : la théorie avec ses démonstrations ; le code de la
+Les chapitres 1 à 3 suivent le même plan : la théorie avec ses démonstrations ; le code de la
 bibliothèque correspondant à chaque résultat ; une vérification de ce code par rapport à un
 résultat exact (un théorème, une formule close ou un calcul indépendant) ; une section
 *Points de comparaison* qui cite les outils de référence pour la même tâche ; enfin des
@@ -34,7 +34,7 @@ sorte que chaque exemple fonctionne avec la version actuelle de la bibliothèque
 | 0 | [L'objet de ce cours](00_overview.md) | l'algèbre comme type de données : structure par blocs = tenseurs par lots ; coût ; ce qui existe et ce qui est nouveau |
 | 1 | [Algèbres de matrices et calcul fonctionnel](01_matrix_algebras.md) | théorème spectral, calcul fonctionnel, décomposition polaire, dualité de la norme trace, un moment du GUE |
 | 2 | [Algèbres de von Neumann de dimension finie](02_von_neumann_algebras.md) | théorème du bicommutant, théorème de structure, centre, groupes de symétrie et commutants, espérances conditionnelles |
-| 3 | [Traces, états et entropie](03_traces_and_states.md) | classification des traces, densités, entropie des secteurs, inégalité de Klein, monotonie, contraste de Michelson |
+| 3 | [Traces, états et entropie](03_traces_and_states.md) | classification des traces, densités, entropie des secteurs, inégalité de Klein, monotonie sous l'espérance conditionnelle sur le centre, contraste de Michelson |
 | 4 | Symétries et représentations *(en préparation)* | lemme de Schur, secteurs de charge, $U(1)$ et $SU(2)$, systèmes de spins |
 | 5 | Matrices aléatoires dans une algèbre *(en préparation)* | mesure de Haar sur $\prod_cU(k_c)$, calcul de Weingarten, statistique des niveaux et pourquoi il ne faut pas mélanger les secteurs |
 | 6 | Canaux quantiques *(en préparation)* | Kraus et Stinespring, duaux relativement à une trace, applications entre secteurs, décohérence |
@@ -67,5 +67,6 @@ Jupyter. Les blocs d'un même chapitre partagent leurs variables.
 M. Takesaki, *Theory of Operator Algebras I* (Springer, 2002) ; V. Jones,
 *von Neumann algebras*, notes de cours ; D. Petz, *Quantum Information Theory and Quantum
 Statistics* (Springer, 2008) ; J. Watrous, *The Theory of Quantum Information* (Cambridge,
-2018) ; M. L. Mehta, *Random Matrices* (Elsevier, 2004). L'article qui accompagne la
-bibliothèque se trouve dans [`paper/`](../../../paper).
+2018) ; M. L. Mehta, *Random Matrices* (Elsevier, 2004). Pour le contexte physique dans un
+langage mathématique, voir [La physique pour les mathématiciens](../../physics_for_mathematicians.fr.md).
+L'article qui accompagne la bibliothèque est [`paper/main.pdf`](https://github.com/andre-a-no/von_neumann_type_i/blob/main/paper/main.pdf).

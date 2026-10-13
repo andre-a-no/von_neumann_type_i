@@ -77,7 +77,7 @@ $$
 存在唯一的 $R$ 使得 $\omega(A)=\langle R,A\rangle_w=\operatorname{tr}_w(R^*A)$；令
 $\rho_w=R^*$。若 $\rho_w\ge0$，则
 $\omega(A^*A)=\sum_cw_c\operatorname{Tr}(A_c\,(\rho_w)_c\,A_c^*)\ge0$，因为
-$A_c(\rho_w)_cA_c^*\ge0$（取 $C=(\rho_w)_c^{1/2}A_c^*$ 应用推论 1.7）。反之，若
+$A_c(\rho_w)_cA_c^*\ge0$（取 $T=(\rho_w)_c^{1/2}A_c^*$ 应用推论 1.7）。反之，若
 $\omega$ 是正的，取 $x\in\mathbb C^{k_c}$，并令 $A$ 为块 $c$ 中的秩一算子
 $|x\rangle\langle x|$；则 $A=A^*A/\|x\|^2$，且
 $0\le\omega(A)=w_c\langle x,(\rho_w)_cx\rangle$，所以 $(\rho_w)_c\ge0$。归一化条件就是
@@ -144,6 +144,10 @@ $$
 $-\sum_c\sum_{\mu>0}p_c\mu\log(p_c\mu)=-\sum_cp_c\log p_c\sum_{\mu>0}\mu-\sum_cp_c\sum_{\mu>0}\mu\log\mu$，
 而 $\sum_{\mu>0}\mu=\operatorname{Tr}\sigma_c=1$。$\square$
 
+> **物理意义。** 这个公式把关于系统的不确定性分成两部分：$H(p)$，即关于荷（系统处于哪个扇区）
+> 的经典不确定性；以及 $\sum_cp_cS(\sigma_c)$，即扇区内部的平均量子不确定性。在超选择定则下，
+> 第一部分是一个经典随机变量——荷——的熵。
+
 相对于另一个迹的熵为 $S_w(\rho)=-\operatorname{tr}_w(\rho_w\log\rho_w)$。由
 定理 3.2，$(\rho_w)_c=\rho_c/w_c$，所以
 $$
@@ -170,11 +174,13 @@ assert torch.allclose(S_tau, S + (p * torch.log(w_tau)).sum(-1))
 对密度为 $\rho,\sigma$ 且 $\sigma>0$ 的态，**相对熵**为
 $S(\rho\|\sigma)=\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\rho\log\sigma$，其中
 $\operatorname{Tr}\rho\log\rho:=\sum_i\lambda_i\log\lambda_i$，求和遍及 $\rho$ 的特征值，约定
-$0\log0=0$（在每个块中也同样如此）。它与迹的选取无关：
-$\log(\rho_w)_c-\log(\sigma_w)_c=\log\rho_c-\log\sigma_c$，因为因子 $1/w_c$ 相消，
-并且 $\operatorname{tr}_w(\rho_wX)=\operatorname{Tr}(\rho X)$。
+$0\log0=0$（在每个块中也同样如此）。它与迹的选取无关：由定理 3.2，
+$(\rho_w)_c=\rho_c/w_c$，$(\sigma_w)_c=\sigma_c/w_c$，所以 $(\rho_w)_c$ 的特征值是 $\rho_c$ 的特征值除以 $w_c$，
+从而 $\operatorname{tr}_w(\rho_w\log\rho_w)$ 与 $\operatorname{tr}_w(\rho_w\log\sigma_w)$ 分别与
+$\operatorname{Tr}\rho\log\rho$ 和 $\operatorname{Tr}\rho\log\sigma$ 相差同一个量 $-\sum_cp_c\log w_c$
+（按约定 $0\log0=0$，$\rho$ 的对数只在其支撑上需要）。二者之差不变。
 
-**引理（切线不等式）。** 设 $f:I\to\mathbb R$ 在区间 $I$ 上是凸的，且在
+**引理 3.4（切线不等式）。** 设 $f:I\to\mathbb R$ 在区间 $I$ 上是凸的，且在
 $b\in I$ 处可微。则对所有 $a\in I$ 有 $f(a)\ge f(b)+(a-b)f'(b)$；若 $f$ 严格凸，则当
 $a\neq b$ 时不等式严格成立。
 
@@ -184,7 +190,7 @@ $\big(f(b+t(a-b))-f(b)\big)/t\le f(a)-f(b)$；令 $t\to0$ 即得该不等式。�
 $f(a)-f(b)>2\big(f(m)-f(b)\big)\ge2(m-b)f'(b)=(a-b)f'(b)$，第一步用到在 $m$ 处的严格
 凸性，第二步用到刚刚证明的不等式（应用于 $m$）。$\square$
 
-**定理 3.4（Klein 不等式）。** 设 $f:I\to\mathbb R$ 在区间 $I$ 上是凸的，
+**定理 3.5（Klein 不等式）。** 设 $f:I\to\mathbb R$ 在区间 $I$ 上是凸的，
 $X,Y$ 是谱含于 $I$ 的自伴算子，且 $f$ 在 $Y$ 的每个特征值处可微。
 则 $\operatorname{Tr}[f(X)-f(Y)-(X-Y)f'(Y)]\ge0$。若 $f$ 严格凸，则等号
 仅当 $X=Y$ 时成立。
@@ -193,15 +199,15 @@ $X,Y$ 是谱含于 $I$ 的自伴算子，且 $f$ 在 $Y$ 的每个特征值处�
 两组特征基都是规范正交的，并令 $c_{ij}=|\langle u_i,v_j\rangle|^2$，于是 $\sum_ic_{ij}=\sum_jc_{ij}=1$。
 则 $\operatorname{Tr}f(X)=\sum_{ij}c_{ij}f(a_i)$，$\operatorname{Tr}f(Y)=\sum_{ij}c_{ij}f(b_j)$，
 $\operatorname{Tr}Xf'(Y)=\sum_{ij}c_{ij}a_if'(b_j)$，$\operatorname{Tr}Yf'(Y)=\sum_{ij}c_{ij}b_jf'(b_j)$。
-因此左边等于 $\sum_{ij}c_{ij}[f(a_i)-f(b_j)-(a_i-b_j)f'(b_j)]$，由切线不等式，这是
+因此左边等于 $\sum_{ij}c_{ij}[f(a_i)-f(b_j)-(a_i-b_j)f'(b_j)]$，由引理 3.4，这是
 非负项之和。若 $f$ 严格凸且该和为零，则
 只要 $c_{ij}>0$ 就有 $a_i=b_j$，所以对每个 $j$ 有 $Xv_j=\sum_ia_i\langle u_i,v_j\rangle u_i=b_jv_j$，
 从而 $X=Y$。$\square$
 
-**推论 3.5.** $S(\rho\|\sigma)\ge0$，等号成立当且仅当 $\rho=\sigma$。特别地
+**推论 3.6.** $S(\rho\|\sigma)\ge0$，等号成立当且仅当 $\rho=\sigma$。特别地
 $S(\rho)\le\log D$，等号成立当且仅当 $\rho=1/D$。
 
-*证明。* 对 $f(t)=t\log t$，$f(0)=0$ 应用定理 3.4；它在
+*证明。* 对 $f(t)=t\log t$，$f(0)=0$ 应用定理 3.5；它在
 $I=[0,\infty)$ 上严格凸（在 $(0,\infty)$ 上 $f''(t)=1/t>0$，且 $f$ 在 $0$ 处连续），并在
 $(0,\infty)\supseteq\operatorname{spec}\sigma$ 上可微，$f'(t)=\log t+1$；取
 $X=\rho$，$Y=\sigma$：左边为
@@ -209,7 +215,7 @@ $\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\sigma\log\sigma-\operatorname{T
 =S(\rho\|\sigma)$，因为 $\operatorname{Tr}\rho=\operatorname{Tr}\sigma=1$。对于第二个结论，取
 $\sigma=1/D$：$0\le S(\rho\|1/D)=-S(\rho)+\log D$。$\square$
 
-**定理 3.6（链式法则；在取中心下的单调性）。** 设 $\rho,\sigma$ 是态，
+**定理 3.7（链式法则；在到中心的条件期望下的单调性）。** 设 $\rho,\sigma$ 是态，
 $\sigma>0$，$p_c=\operatorname{Tr}\rho_c$，$q_c=\operatorname{Tr}\sigma_c>0$，$\hat\sigma_c=\sigma_c/q_c$，并且
 当 $p_c>0$ 时令 $\hat\rho_c=\rho_c/p_c$。则在对满足 $p_c>0$ 的 $c$ 求和的意义下（其余
 扇区由 $0\log0=0$ 贡献为 $0$），
@@ -217,14 +223,14 @@ $$
 S(\rho\|\sigma)=\sum_cp_c\log\frac{p_c}{q_c}+\sum_cp_c\,S(\hat\rho_c\|\hat\sigma_c)
 \ \ge\ \sum_cp_c\log\frac{p_c}{q_c}=S(E\rho\|E\sigma),
 $$
-其中 $E$ 是到中心上的条件期望（命题 2.7）。
+其中 $E$ 是到中心上的条件期望（命题 2.8）。
 
 *证明。* 对 $p_c>0$，$\operatorname{Tr}\rho_c\log\rho_c=p_c\log p_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\rho_c$
 （特征值为 $p_c\mu$，同定理 3.3），且 $\log\sigma_c=(\log q_c)1+\log\hat\sigma_c$，所以
 $\operatorname{Tr}\rho_c\log\sigma_c=p_c\log q_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\sigma_c$，从而
 $\operatorname{Tr}\rho_c\log\rho_c-\operatorname{Tr}\rho_c\log\sigma_c=p_c\log(p_c/q_c)+p_cS(\hat\rho_c\|\hat\sigma_c)$。
 若 $p_c=0$，则 $\rho_c=0$，该扇区贡献为 $0$。
-对 $c$ 求和；由推论 3.5 在每个块中的应用，第二个和 $\ge0$。最后
+对 $c$ 求和；由推论 3.6 在每个块中的应用，第二个和 $\ge0$。最后
 $E\rho=\bigoplus_c(p_c/k_c)1_{k_c}$，$E\sigma=\bigoplus_c(q_c/k_c)1_{k_c}$，且
 $\operatorname{Tr}E\rho(\log E\rho-\log E\sigma)=\sum_ck_c\frac{p_c}{k_c}\log\frac{p_c}{q_c}$。$\square$
 
@@ -237,9 +243,9 @@ q = sigma_state.sector_probabilities()
 D_rel = states.relative_entropy(rho, sigma_state)
 kl = (p * torch.log(p / q)).sum(-1)
 E = channels.center_expectation(alg)
-assert (D_rel >= kl - 1e-12).all()                                       # Theorem 3.6
+assert (D_rel >= kl - 1e-12).all()                                       # Theorem 3.7
 assert torch.allclose(states.relative_entropy(E(rho), E(sigma_state)), kl)
-assert (rho.von_neumann_entropy() <= math.log(10) + 1e-12).all()         # Corollary 3.5
+assert (rho.von_neumann_entropy() <= math.log(10) + 1e-12).all()         # Corollary 3.6
 assert abs(states.maximally_mixed_state(alg).von_neumann_entropy().item() - math.log(10)) < 1e-12
 ```
 
@@ -250,7 +256,7 @@ $\Delta(A)=(\lambda_{\max}-\lambda_{\min})/(\lambda_{\max}+\lambda_{\min})\in[0,
 极端特征值取遍所有扇区（并约定 $\Delta(0)=0$）。它度量 $A$ 偏离单位算子的倍数的程度：
 $\Delta(A)=0$ 当且仅当 $A=\lambda1$。
 
-**命题 3.7.** 若 $\Phi:\mathcal M\to\mathcal M$ 是线性、正且保单位的
+**命题 3.8.** 若 $\Phi:\mathcal M\to\mathcal M$ 是线性、正且保单位的
 （$\Phi(1)=1$），则对所有 $A\ge0$ 有 $\Delta(\Phi(A))\le\Delta(A)$。
 
 *证明。* $\lambda_{\min}1\le A\le\lambda_{\max}1$，由正性和保单位性得
@@ -272,8 +278,8 @@ assert (E(A_pos).michelson_contrast <= A_pos.michelson_contrast + 1e-12).all()
 它对 $U=1$ 成立，看起来像一个 Cauchy–Schwarz 型的命题。但只要 $X$
 与 $Y$ 不可交换，它就不成立。
 
-**命题 3.8.** $\max_U|\operatorname{Tr}(XUY)|=\|YX\|_1\ge\operatorname{Tr}(XY)$，等号成立当且仅当
-$XY=YX$。
+**命题 3.9.** 设 $X,Y\ge0$ 属于 $M_k$。则 $\max_U|\operatorname{Tr}(XUY)|=\|YX\|_1\ge\operatorname{Tr}(XY)$（最大值取遍酉矩阵
+$U\in M_k$），等号成立当且仅当 $XY=YX$。
 
 *证明。* $\operatorname{Tr}(XUY)=\operatorname{Tr}(YX\,U)$，所以由定理 1.9 最大值为 $\|YX\|_1$，
 并且 $\|YX\|_1\ge|\operatorname{Tr}(YX)|=\operatorname{Tr}(XY)$，因为
@@ -290,7 +296,9 @@ $W|YX|^{1/2}=|YX|^{1/2}$，从而 $YX=W|YX|=|YX|\ge0$。正矩阵是自伴的，
 
 本库借助极分解求出最大值点。配套论文用数值方法表明，对 $U$ 进行蒙特卡罗采样达不到这个
 最大值，且随着 $k$ 增大差距越来越明显——这是该论文的核心主题之一；下面的代码对一对矩阵
-展示了这一点。
+展示了这一点。原因在于 $U=1$ 已经接近最优，而对于高维中按 Haar 测度随机取的 $U$，
+$|\operatorname{Tr}(XUY)|$ 通常远小于 $\operatorname{Tr}(XY)$（随机酉矩阵打乱了相位），因此所有样本都远低于
+精确的上确界。
 
 ```python
 Mk = TypeIAlgebra([6], [6], precision='double')
@@ -341,7 +349,7 @@ assert abs(tau.von_neumann_entropy().item() - (math.log(3) + sum(math.log(k) for
 2. 求和遍及满足 $p_c>0$ 的 $c$。则
    $S_w(\rho)=S(\rho)+\sum_cp_c\log w_c=-\sum_cp_c\log p_c+\sum_cp_cS(\sigma_c)+\sum_cp_c\log w_c
    \le\sum_cp_c\log\frac{k_cw_c}{p_c}\le\log\sum_{p_c>0}k_cw_c\le\log\operatorname{tr}_w(1)$，这里用到
-   $S(\sigma_c)\le\log k_c$（推论 3.5）以及关于凹函数 $\log$ 的有限 Jensen 不等式
+   $S(\sigma_c)\le\log k_c$（推论 3.6）以及关于凹函数 $\log$ 的有限 Jensen 不等式
    $\sum_cp_c\log x_c\le\log\sum_cp_cx_c$（它可由凹性的定义对项数归纳得到），其中
    $x_c=k_cw_c/p_c$；由于 $\log$ 严格凹，除非所有 $x_c$ 相等，该不等式是严格的。各处都取等号
    迫使每个 $p_c>0$、$\sigma_c=1/k_c$ 且 $k_cw_c/p_c$ 为常数，即

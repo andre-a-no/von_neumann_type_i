@@ -39,12 +39,15 @@ exakt und ohne Näherung:
 
 Zwei Konsequenzen machen dies zu mehr als bloßer Buchführung.
 
-- **Aufwand.** Ein Produkt oder eine Spektralzerlegung in $\mathcal M$ kostet $\sum_ck_c^3$
-  Operationen, gegenüber $D^3$ für die Einbettung in $M_D(\mathbb C)$, $D=\sum_ck_c$; für $C$
-  gleich große Blöcke ist das ein Faktor $C^2$. Produkte, Summen und Spuren verarbeiten alle
-  $B\cdot C$ Blöcke in einem einzigen Aufruf; Zerlegungen (Eigenwerte, Singulärwerte) laufen als ein
-  Aufruf pro vorkommender Blockgröße – ein einziger Aufruf, wenn alle Sektoren gleich groß sind.
-  Das lastet eine GPU aus.
+- **Aufwand.** Eine Spektralzerlegung in $\mathcal M$ kostet $\sum_ck_c^3$ Operationen (die Blöcke
+  werden nach Größe gruppiert), gegenüber $D^3$ für die Einbettung in $M_D(\mathbb C)$,
+  $D=\sum_ck_c$; für $C$ gleich große Blöcke ist das ein Faktor $C^2$. Produkte und Summen laufen
+  auf dem aufgefüllten Tensor und kosten $C\,k_{\max}^3$, was mit $\sum_ck_c^3$ übereinstimmt, wenn
+  alle Blöcke gleich groß sind. Produkte, Summen und Spuren verarbeiten alle $B\cdot C$ Blöcke in
+  einem einzigen Aufruf; Zerlegungen (Eigenwerte, Singulärwerte) laufen als ein gestapelter Aufruf
+  pro vorkommender Blockgröße – ein einziger Aufruf, wenn alle Sektoren gleich groß sind –, und auf
+  einer Mehrkern-CPU teilt die Bibliothek jeden solchen Aufruf in ein Teilstück pro Thread auf.
+  Das lastet eine GPU oder alle Kerne einer CPU aus.
 - **Korrektheit durch Konstruktion.** Alles, was berechnet wird, bleibt in $\mathcal M$:
   Zufällige unitäre Elemente sind Haar-verteilt auf $\prod_cU(k_c)$ (einer Nullmenge in $U(D)$,
   die man durch Stichproben aus $U(D)$ nie erreicht), Gradientenschritte verlassen die Algebra
@@ -55,7 +58,9 @@ Zwei Konsequenzen machen dies zu mehr als bloßer Buchführung.
 
 Wir vergleichen dieselbe Rechnung in $\mathcal M=\bigoplus_{c=1}^{64}M_{16}(\mathbb C)$ und in
 dessen Einbettung in $M_{1024}(\mathbb C)$: die Quadratwurzel eines zufälligen positiven Elements
-und deren Spur.
+und deren Spur. `TypeIAlgebra(n_factors, k_factors)` erhält zwei Listen von Blockgrößen: die nominellen
+Größen $n_c$ und die Größen $k_c\le n_c$ der tatsächlich benutzten Blöcke; in diesem Kurs sind
+beide Listen stets gleich (Abschnitt 1.5).
 
 ```python
 import time
@@ -83,14 +88,16 @@ assert abs(A.sqrt().Tr_blunt().item() - root_big.trace().item()) < 1e-9
 print(f"in the algebra: {t_blocks * 1e3:.1f} ms, as one 1024 x 1024 matrix: {t_big * 1e3:.1f} ms")
 ```
 
-Die Ergebnisse stimmen bis auf Rundungsfehler überein. Die Version in der Algebra ist schneller –
-bei dieser Größe auf einer typischen CPU etwa um das Zehnfache (etwa 16 ms gegenüber 200 ms auf der
-4-Kern-Maschine, auf der dieser Kurs getestet wurde; alle 64 Blöcke gehen in einem einzigen Aufruf
-an den Eigenwertlöser) –, allerdings weit weniger, als die Zahl der
-Operationen $C^2=4096$ nahelegt, weil ein einziger Aufruf eines großen Eigenwertlösers die
-Hardware besser nutzt als viele kleine. Der Abstand wächst mit der Zahl der Sektoren, und die
-Speicherersparnis beträgt einen Faktor $C$. Bei einem Stapel von $B$ Elementen bleibt die Version in der Algebra ein einziger
-Aufruf; die Version mit der großen Matrix wird zu $B$ großen Eigenwertproblemen.
+Die Ergebnisse stimmen bis auf Rundungsfehler überein. Die Version in der Algebra ist auf einer
+CPU um einen Faktor von einigen Zehn schneller (etwa 10 ms gegenüber 400 ms auf
+einer 4-Kern-Maschine; die genauen Zahlen hängen von der Hardware ab – der Code gibt sie aus).
+Die 64 Blöcke gehen als ein gestapelter Aufruf an den Eigenwertlöser, den die Bibliothek auf einer
+Mehrkern-CPU in ein Teilstück pro Thread aufteilt. Der Gewinn ist trotzdem weit kleiner, als die
+Zahl der Operationen $C^2=4096$ nahelegt, weil ein einziger Aufruf eines großen Eigenwertlösers
+die Hardware besser nutzt als viele kleine. Der Abstand wächst mit der Zahl der Sektoren, und die
+Speicherersparnis beträgt einen Faktor $C$. Bei einem Stapel von $B$ Elementen bleibt die Version
+in der Algebra ein einziger gestapelter Aufruf; die Version mit der großen Matrix wird zu $B$
+großen Eigenwertproblemen.
 
 ## 0.3 Was es gibt und was neu ist
 
@@ -122,7 +129,8 @@ Unseres Wissens gibt es keine allgemeine Bibliothek, in der eine endlichdimensio
 von-Neumann-Algebra der grundlegende Datentyp für gestapelte, differenzierbare numerische
 Rechnungen ist. Das Neue ist daher keine neue Mathematik, sondern **effizientes Rechnen**: die
 Identifikation aus §0.1, so implementiert, dass die Struktur der Algebra erhalten bleibt und
-jede Operation als gestapelte Kernel läuft (einer pro vorkommender Blockgröße bei Zerlegungen). Wenn Sie verwandte Software kennen,
+jede Operation als gestapelte Kernel läuft (einer pro vorkommender Blockgröße bei Zerlegungen, auf einer
+Mehrkern-CPU in ein Teilstück pro Thread aufgeteilt). Wenn Sie verwandte Software kennen,
 freuen wir uns über einen Hinweis.
 
 ## 0.4 Wie man diesen Kurs liest

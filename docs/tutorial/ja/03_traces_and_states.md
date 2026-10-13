@@ -71,7 +71,7 @@ $$
 $\mathcal M$ におけるリースの表現定理により、$\omega(A)=\langle R,A\rangle_w=\operatorname{tr}_w(R^*A)$ を満たす $R$ がただ一つ存在する。
 $\rho_w=R^*$ とおく。$\rho_w\ge0$ ならば
 $\omega(A^*A)=\sum_cw_c\operatorname{Tr}(A_c\,(\rho_w)_c\,A_c^*)\ge0$ である。実際
-$A_c(\rho_w)_cA_c^*\ge0$ である（系 1.7 を $C=(\rho_w)_c^{1/2}A_c^*$ として適用）。逆に
+$A_c(\rho_w)_cA_c^*\ge0$ である（系 1.7 を $T=(\rho_w)_c^{1/2}A_c^*$ として適用）。逆に
 $\omega$ が正であるとし、$x\in\mathbb C^{k_c}$ をとり、$A$ をブロック $c$ における階数1の作用素
 $|x\rangle\langle x|$ とする。すると $A=A^*A/\|x\|^2$ であり
 $0\le\omega(A)=w_c\langle x,(\rho_w)_cx\rangle$ であるから $(\rho_w)_c\ge0$ である。正規化は
@@ -138,6 +138,10 @@ $$
 $-\sum_c\sum_{\mu>0}p_c\mu\log(p_c\mu)=-\sum_cp_c\log p_c\sum_{\mu>0}\mu-\sum_cp_c\sum_{\mu>0}\mu\log\mu$
 であり、$\sum_{\mu>0}\mu=\operatorname{Tr}\sigma_c=1$ である。$\square$
 
+> **物理的意味.** この公式は系についての不確かさを二つの部分に分ける：$H(p)$ は電荷（系がどのセクターにあるか）に
+> ついての古典的な不確かさであり、$\sum_cp_cS(\sigma_c)$ はセクター内部の平均的な量子的不確かさである。超選択則の
+> もとでは、前者は古典的な確率変数、すなわち電荷のエントロピーである。
+
 他のトレースに関するエントロピーは $S_w(\rho)=-\operatorname{tr}_w(\rho_w\log\rho_w)$ である。
 定理 3.2 により $(\rho_w)_c=\rho_c/w_c$ であるから、
 $$
@@ -165,11 +169,13 @@ assert torch.allclose(S_tau, S + (p * torch.log(w_tau)).sum(-1))
 密度 $\rho,\sigma$（$\sigma>0$）をもつ状態に対し、**相対エントロピー** を
 $S(\rho\|\sigma)=\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\rho\log\sigma$ と定める。ここで
 $\operatorname{Tr}\rho\log\rho:=\sum_i\lambda_i\log\lambda_i$ は $\rho$ の固有値にわたる和であり、
-$0\log0=0$ とする（各ブロックについても同様）。これはトレースに依存しない：
-因子 $1/w_c$ が相殺するので $\log(\rho_w)_c-\log(\sigma_w)_c=\log\rho_c-\log\sigma_c$ であり、
-また $\operatorname{tr}_w(\rho_wX)=\operatorname{Tr}(\rho X)$ である。
+$0\log0=0$ とする（各ブロックについても同様）。これはトレースに依存しない：定理 3.2 により
+$(\rho_w)_c=\rho_c/w_c$、$(\sigma_w)_c=\sigma_c/w_c$ であるから、$(\rho_w)_c$ の固有値は $\rho_c$ の固有値を $w_c$ で割ったものであり、
+$\operatorname{tr}_w(\rho_w\log\rho_w)$ と $\operatorname{tr}_w(\rho_w\log\sigma_w)$ はそれぞれ
+$\operatorname{Tr}\rho\log\rho$ と $\operatorname{Tr}\rho\log\sigma$ から同じ量 $-\sum_cp_c\log w_c$ だけずれる
+（規約 $0\log0=0$ により、$\rho$ の対数はその台の上でのみ必要である）。したがって差は変わらない。
 
-**補題（接線不等式）.** $f:I\to\mathbb R$ を区間 $I$ 上の凸関数とし、
+**補題 3.4（接線不等式）.** $f:I\to\mathbb R$ を区間 $I$ 上の凸関数とし、
 $b\in I$ で微分可能とする。このときすべての $a\in I$ に対し $f(a)\ge f(b)+(a-b)f'(b)$ であり、$f$ が狭義凸ならば
 $a\neq b$ に対して不等号は狭義である。
 
@@ -179,7 +185,7 @@ $\big(f(b+t(a-b))-f(b)\big)/t\le f(a)-f(b)$ を得る。$t\to0$ とすれば不�
 $f(a)-f(b)>2\big(f(m)-f(b)\big)\ge2(m-b)f'(b)=(a-b)f'(b)$ である。第一段は $m$ における狭義
 凸性により、第二段は今証明した不等式を $m$ に適用したものである。$\square$
 
-**定理 3.4（クラインの不等式）.** $f:I\to\mathbb R$ を区間 $I$ 上の凸関数とし、
+**定理 3.5（クラインの不等式）.** $f:I\to\mathbb R$ を区間 $I$ 上の凸関数とし、
 $X,Y$ をスペクトルが $I$ に含まれる自己共役作用素とし、$f$ は $Y$ のすべての固有値で微分可能とする。
 このとき $\operatorname{Tr}[f(X)-f(Y)-(X-Y)f'(Y)]\ge0$ である。$f$ が狭義凸ならば、等号は
 $X=Y$ のときに限り成り立つ。
@@ -188,15 +194,15 @@ $X=Y$ のときに限り成り立つ。
 $c_{ij}=|\langle u_i,v_j\rangle|^2$ とおく。すると $\sum_ic_{ij}=\sum_jc_{ij}=1$ である。
 このとき $\operatorname{Tr}f(X)=\sum_{ij}c_{ij}f(a_i)$、$\operatorname{Tr}f(Y)=\sum_{ij}c_{ij}f(b_j)$、
 $\operatorname{Tr}Xf'(Y)=\sum_{ij}c_{ij}a_if'(b_j)$、$\operatorname{Tr}Yf'(Y)=\sum_{ij}c_{ij}b_jf'(b_j)$ である。
-したがって左辺は $\sum_{ij}c_{ij}[f(a_i)-f(b_j)-(a_i-b_j)f'(b_j)]$ に等しく、これは接線不等式により
+したがって左辺は $\sum_{ij}c_{ij}[f(a_i)-f(b_j)-(a_i-b_j)f'(b_j)]$ に等しく、これは補題 3.4 により
 非負の項の和である。$f$ が狭義凸で和が零ならば、
 $c_{ij}>0$ のときは常に $a_i=b_j$ であるから、すべての $j$ に対し $Xv_j=\sum_ia_i\langle u_i,v_j\rangle u_i=b_jv_j$ となり、
 $X=Y$ である。$\square$
 
-**系 3.5.** $S(\rho\|\sigma)\ge0$ であり、等号は $\rho=\sigma$ のときかつそのときに限り成り立つ。特に
+**系 3.6.** $S(\rho\|\sigma)\ge0$ であり、等号は $\rho=\sigma$ のときかつそのときに限り成り立つ。特に
 $S(\rho)\le\log D$ であり、等号は $\rho=1/D$ のときかつそのときに限り成り立つ。
 
-*証明.* 定理 3.4 を $f(t)=t\log t$, $f(0)=0$ に適用する。これは
+*証明.* 定理 3.5 を $f(t)=t\log t$, $f(0)=0$ に適用する。これは
 $I=[0,\infty)$ 上で狭義凸であり（$(0,\infty)$ 上で $f''(t)=1/t>0$ であり、$f$ は $0$ で連続）、
 $(0,\infty)\supseteq\operatorname{spec}\sigma$ 上で微分可能で $f'(t)=\log t+1$ である。
 $X=\rho$, $Y=\sigma$ とすると、左辺は
@@ -204,7 +210,7 @@ $\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\sigma\log\sigma-\operatorname{T
 =S(\rho\|\sigma)$ である。$\operatorname{Tr}\rho=\operatorname{Tr}\sigma=1$ だからである。第二の主張については
 $\sigma=1/D$ ととる：$0\le S(\rho\|1/D)=-S(\rho)+\log D$。$\square$
 
-**定理 3.6（連鎖律；中心への制限に関する単調性）.** $\rho,\sigma$ を
+**定理 3.7（連鎖律；中心への条件付き期待値に関する単調性）.** $\rho,\sigma$ を
 $\sigma>0$ なる状態とし、$p_c=\operatorname{Tr}\rho_c$、$q_c=\operatorname{Tr}\sigma_c>0$、$\hat\sigma_c=\sigma_c/q_c$ とおき、
 $p_c>0$ に対し $\hat\rho_c=\rho_c/p_c$ とおく。このとき、和を $p_c>0$ なる $c$ にわたってとると（その他の
 セクターは $0\log0=0$ により $0$ を寄与する）、
@@ -212,14 +218,14 @@ $$
 S(\rho\|\sigma)=\sum_cp_c\log\frac{p_c}{q_c}+\sum_cp_c\,S(\hat\rho_c\|\hat\sigma_c)
 \ \ge\ \sum_cp_c\log\frac{p_c}{q_c}=S(E\rho\|E\sigma),
 $$
-が成り立つ。ここで $E$ は中心の上への条件付き期待値である（命題 2.7）。
+が成り立つ。ここで $E$ は中心の上への条件付き期待値である（命題 2.8）。
 
 *証明.* $p_c>0$ に対し $\operatorname{Tr}\rho_c\log\rho_c=p_c\log p_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\rho_c$
 （固有値は $p_c\mu$、定理 3.3 と同様）かつ $\log\sigma_c=(\log q_c)1+\log\hat\sigma_c$ であるから、
 $\operatorname{Tr}\rho_c\log\sigma_c=p_c\log q_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\sigma_c$ であり、
 $\operatorname{Tr}\rho_c\log\rho_c-\operatorname{Tr}\rho_c\log\sigma_c=p_c\log(p_c/q_c)+p_cS(\hat\rho_c\|\hat\sigma_c)$ である。
 $p_c=0$ ならば $\rho_c=0$ であり、そのセクターは $0$ を寄与する。
-$c$ について和をとる。第二の和は各ブロックにおける系 3.5 により $\ge0$ である。最後に
+$c$ について和をとる。第二の和は各ブロックにおける系 3.6 により $\ge0$ である。最後に
 $E\rho=\bigoplus_c(p_c/k_c)1_{k_c}$、$E\sigma=\bigoplus_c(q_c/k_c)1_{k_c}$ であり、
 $\operatorname{Tr}E\rho(\log E\rho-\log E\sigma)=\sum_ck_c\frac{p_c}{k_c}\log\frac{p_c}{q_c}$ である。$\square$
 
@@ -231,9 +237,9 @@ q = sigma_state.sector_probabilities()
 D_rel = states.relative_entropy(rho, sigma_state)
 kl = (p * torch.log(p / q)).sum(-1)
 E = channels.center_expectation(alg)
-assert (D_rel >= kl - 1e-12).all()                                       # Theorem 3.6
+assert (D_rel >= kl - 1e-12).all()                                       # Theorem 3.7
 assert torch.allclose(states.relative_entropy(E(rho), E(sigma_state)), kl)
-assert (rho.von_neumann_entropy() <= math.log(10) + 1e-12).all()         # Corollary 3.5
+assert (rho.von_neumann_entropy() <= math.log(10) + 1e-12).all()         # Corollary 3.6
 assert abs(states.maximally_mixed_state(alg).von_neumann_entropy().item() - math.log(10)) < 1e-12
 ```
 
@@ -244,7 +250,7 @@ $\Delta(A)=(\lambda_{\max}-\lambda_{\min})/(\lambda_{\max}+\lambda_{\min})\in[0,
 両端の固有値はすべてのセクターにわたってとる（また $\Delta(0)=0$ とする）。これは $A$ が
 単位元のスカラー倍からどれだけ離れているかを測る：$\Delta(A)=0$ $\iff$ $A=\lambda1$。
 
-**命題 3.7.** $\Phi:\mathcal M\to\mathcal M$ が線形、正かつ単位的
+**命題 3.8.** $\Phi:\mathcal M\to\mathcal M$ が線形、正かつ単位的
 （$\Phi(1)=1$）ならば、すべての $A\ge0$ に対し $\Delta(\Phi(A))\le\Delta(A)$ である。
 
 *証明.* $\lambda_{\min}1\le A\le\lambda_{\max}1$ であり、正値性と単位性から
@@ -266,8 +272,8 @@ $M_k$ の正の $X,Y$ とユニタリ $U$ に対し、$|\operatorname{Tr}(XUY)|\
 $U=1$ のときは成り立ち、コーシー・シュワルツ型の主張のように見える。しかし $X$
 と $Y$ が可換でないときは常に偽である。
 
-**命題 3.8.** $\max_U|\operatorname{Tr}(XUY)|=\|YX\|_1\ge\operatorname{Tr}(XY)$ であり、等号は
-$XY=YX$ のときかつそのときに限り成り立つ。
+**命題 3.9.** $X,Y\ge0$ を $M_k$ の元とする。このとき $\max_U|\operatorname{Tr}(XUY)|=\|YX\|_1\ge\operatorname{Tr}(XY)$ である（最大値は
+ユニタリ $U\in M_k$ 全体にわたってとる）。等号は $XY=YX$ のときかつそのときに限り成り立つ。
 
 *証明.* $\operatorname{Tr}(XUY)=\operatorname{Tr}(YX\,U)$ であるから、定理 1.9 により最大値は $\|YX\|_1$ であり、
 $\|YX\|_1\ge|\operatorname{Tr}(YX)|=\operatorname{Tr}(XY)$ である。ここで
@@ -283,7 +289,7 @@ $|YX|^{1/2}$ と $W|YX|^{1/2}$ は非負の因子で比例し、その因子は
 行列は自己共役であるから、$YX=(YX)^*=XY$ である。$\square$
 
 ライブラリは極分解によって最大値を与える $U$ を求める。解説論文は、$U$ のモンテカルロ・サンプリングではそれに届かず、$k$ が大きくなるほどその差が広がることを数値的に示している
-——これは論文の中心的な主題の一つである。以下のコードは一つの組についてこれを示す。
+——これは論文の中心的な主題の一つである。以下のコードは一つの組についてこれを示す。その理由は、$U=1$ がすでに最適に近い一方で、高次元でハール分布に従うランダムな $U$ に対しては $|\operatorname{Tr}(XUY)|$ が典型的に $\operatorname{Tr}(XY)$ よりずっと小さい（ランダムなユニタリは位相をかき乱す）ことにある。そのため、すべてのサンプルは厳密な上限よりはるかに下にとどまる。
 
 ```python
 Mk = TypeIAlgebra([6], [6], precision='double')
@@ -329,7 +335,7 @@ assert abs(tau.von_neumann_entropy().item() - (math.log(3) + sum(math.log(k) for
 2. 和は $p_c>0$ なる $c$ にわたる。このとき
    $S_w(\rho)=S(\rho)+\sum_cp_c\log w_c=-\sum_cp_c\log p_c+\sum_cp_cS(\sigma_c)+\sum_cp_c\log w_c
    \le\sum_cp_c\log\frac{k_cw_c}{p_c}\le\log\sum_{p_c>0}k_cw_c\le\log\operatorname{tr}_w(1)$ である。ここで
-   $S(\sigma_c)\le\log k_c$（系 3.5）と、凹関数 $\log$ に対する有限形のイェンセンの不等式
+   $S(\sigma_c)\le\log k_c$（系 3.6）と、凹関数 $\log$ に対する有限形のイェンセンの不等式
    $\sum_cp_c\log x_c\le\log\sum_cp_cx_c$（これは凹性の定義から項数に関する帰納法で従う）を
    $x_c=k_cw_c/p_c$ として用いた。$\log$ は狭義凹であるから、この不等式はすべての $x_c$ が等しい場合を除いて狭義である。すべてで等号が成り立つためには、すべての $p_c>0$、$\sigma_c=1/k_c$ かつ $k_cw_c/p_c$ が一定、すなわち
    $p_c=k_cw_c/\operatorname{tr}_w(1)$、すなわち $(\rho_w)_c=\rho_c/w_c=1_{k_c}/\operatorname{tr}_w(1)$ でなければならない。

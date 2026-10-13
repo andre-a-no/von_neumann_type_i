@@ -17,7 +17,7 @@ It is written for two kinds of readers at once:
 - **Physicists and engineers** get the physical meaning of each notion in boxes marked
   *Physical meaning*, and working code they can adapt.
 
-Every chapter has the same structure: theory with proofs; the library code for each
+Chapters 1–3 have the same structure: theory with proofs; the library code for each
 result; a check of the code against an exact result (a theorem, a closed formula or an
 independent computation); a section *What to compare with* that names the standard tools
 for the same task; and exercises with solutions.
@@ -32,7 +32,7 @@ example works with the current version of the library.
 | 0 | [What this course is about](00_overview.md) | the algebra as a data type: block structure = batched tensors; cost; what exists and what is new |
 | 1 | [Matrix algebras and functional calculus](01_matrix_algebras.md) | spectral theorem, functional calculus, polar decomposition, trace-norm duality, a GUE moment |
 | 2 | [Finite-dimensional von Neumann algebras](02_von_neumann_algebras.md) | double commutant theorem, structure theorem, centre, symmetry groups and commutants, conditional expectations |
-| 3 | [Traces, states and entropy](03_traces_and_states.md) | classification of traces, densities, entropy of sectors, Klein's inequality, monotonicity, Michelson contrast |
+| 3 | [Traces, states and entropy](03_traces_and_states.md) | classification of traces, densities, entropy of sectors, Klein's inequality, monotonicity under the conditional expectation onto the centre, Michelson contrast |
 | 4 | Symmetries and representations *(in preparation)* | Schur's lemma, charge sectors, $U(1)$ and $SU(2)$, spin systems |
 | 5 | Random matrices in an algebra *(in preparation)* | Haar measure on $\prod_cU(k_c)$, Weingarten calculus, level statistics and why sectors must not be mixed |
 | 6 | Quantum channels *(in preparation)* | Kraus and Stinespring, duals with respect to a trace, maps between sectors, decoherence |
@@ -63,5 +63,7 @@ Jupyter notebook. The blocks of one chapter share their variables.
 M. Takesaki, *Theory of Operator Algebras I* (Springer, 2002); V. Jones,
 *von Neumann algebras*, lecture notes; D. Petz, *Quantum Information Theory and Quantum
 Statistics* (Springer, 2008); J. Watrous, *The Theory of Quantum Information* (Cambridge,
-2018); M. L. Mehta, *Random Matrices* (Elsevier, 2004). The companion paper of the library
-is in [`paper/`](../../paper).
+2018); M. L. Mehta, *Random Matrices* (Elsevier, 2004). For the physical background in
+mathematical language see [Physics for mathematicians](../physics_for_mathematicians.md). The
+companion paper of the library is
+[`paper/main.pdf`](https://github.com/andre-a-no/von_neumann_type_i/blob/main/paper/main.pdf).

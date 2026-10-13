@@ -116,8 +116,8 @@ $A=V\,\mathrm{diag}(\mu_j^2)\,V^*$, so $\operatorname{spec}A=\{\mu_j^2\}$. Let $
 polynomial with $p(t)=\sqrt t$ on $\operatorname{spec}A$. Then
 $p(A)=\sqrt A$ and $p(A)=p(B^2)=V\,\mathrm{diag}(p(\mu_j^2))\,V^*=V\,\mathrm{diag}(\mu_j)\,V^*=B$. $\square$
 
-**Corollary 1.7.** $A\ge0$ iff $A=C^*C$ for some $C$. (If $A\ge0$ take $C=\sqrt A$;
-conversely $\langle x,C^*Cx\rangle=\|Cx\|^2\ge0$.)
+**Corollary 1.7.** $A\ge0$ iff $A=T^*T$ for some $T$. (If $A\ge0$ take $T=\sqrt A$;
+conversely $\langle x,T^*Tx\rangle=\|Tx\|^2\ge0$.)
 
 ## 1.4 Polar decomposition and singular values
 
@@ -193,8 +193,10 @@ flag `force_positive=True` is checked against the eigenvalues (Corollary 1.4(3))
 the library knows that `A` is positive without testing it again.
 
 The functional calculus for self-adjoint operators is `apply_function` (it diagonalises each
-block with `eigh`); the common functions have their own
-methods. We check Theorems 1.5 and 1.6:
+block with `eigh`). The function $f$ must act elementwise: it receives the eigenvalues of all
+sectors of one size $k$ as one tensor of shape `(batch, n·k)`, $n$ the number of such sectors,
+and returns a tensor of the same shape. The common functions have their own methods. We check
+Theorems 1.5 and 1.6:
 
 ```python
 def close(X, Y, tol=1e-10):
@@ -254,7 +256,10 @@ $X=H/\sqrt n$, $\ \mathbb E\,\tfrac1n\operatorname{Tr}X^4=2+\tfrac1{n^2}$.
 real random variables (repetitions allowed) with $c_{ij}=\mathbb E[Y_iY_j]$. Their joint
 moment generating function is $\mathbb E\,e^{\sum_it_iY_i}=e^{q(t)/2}$ with
 $q(t)=\sum_{ij}c_{ij}t_it_j$ (the Gaussian moment generating function, a standard fact of
-probability). Apply $\partial^4/\partial t_1\cdots\partial t_4$ at $t=0$: on the left this
+probability). Differentiating under the expectation is allowed: the moment generating function
+is finite for every $t$, and for $|t_i|\le1$ all partial derivatives of $e^{\sum_it_iY_i}$ up to
+order $4$ are bounded by $(1+\sum_i|Y_i|)^4e^{\sum_i|Y_i|}$, which is integrable because
+$e^{\sum_i|Y_i|}\le\sum_{s\in\{\pm1\}^4}e^{\sum_is_iY_i}$; so dominated convergence applies. Apply $\partial^4/\partial t_1\cdots\partial t_4$ at $t=0$: on the left this
 gives $\mathbb E[Y_1Y_2Y_3Y_4]$; on the right only the term $q^2/8$ of the exponential
 series contains $t_1t_2t_3t_4$, with coefficient $c_{12}c_{34}+c_{13}c_{24}+c_{14}c_{23}$.
 Hence $\mathbb E[Y_1Y_2Y_3Y_4]$ is the sum over the three pairings of products of pair

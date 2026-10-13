@@ -118,8 +118,8 @@ $A=V\,\mathrm{diag}(\mu_j^2)\,V^*$, luego $\operatorname{spec}A=\{\mu_j^2\}$. Se
 polinomio con $p(t)=\sqrt t$ en $\operatorname{spec}A$. Entonces
 $p(A)=\sqrt A$ y $p(A)=p(B^2)=V\,\mathrm{diag}(p(\mu_j^2))\,V^*=V\,\mathrm{diag}(\mu_j)\,V^*=B$. $\square$
 
-**Corolario 1.7.** $A\ge0$ si y solo si $A=C^*C$ para alguna $C$. (Si $A\ge0$, tómese
-$C=\sqrt A$; recíprocamente, $\langle x,C^*Cx\rangle=\|Cx\|^2\ge0$.)
+**Corolario 1.7.** $A\ge0$ si y solo si $A=T^*T$ para alguna $T$. (Si $A\ge0$, tómese
+$T=\sqrt A$; recíprocamente, $\langle x,T^*Tx\rangle=\|Tx\|^2\ge0$.)
 
 ## 1.4 Descomposición polar y valores singulares
 
@@ -148,7 +148,7 @@ $\|A\|=\||A|\|=s_1$ por el corolario 1.4(1); la segunda, porque
 $\operatorname{Tr}A^*A=\operatorname{Tr}|A|^2=\sum_is_i^2$.
 
 **Teorema 1.9 (dualidad de la norma traza).**
-$\|A\|_1=\max_{U\text{ unitary}}|\operatorname{Tr}(AU)|$, y el máximo se alcanza en
+$\|A\|_1=\max_{U\text{ unitaria}}|\operatorname{Tr}(AU)|$, y el máximo se alcanza en
 $U=W^*$, donde $A=W|A|$. En particular $|\operatorname{Tr}A|\le\|A\|_1$.
 
 *Demostración.* $\operatorname{Tr}(AW^*)=\operatorname{Tr}(W|A|W^*)=\operatorname{Tr}|A|$. Para cualquier unitaria $U$,
@@ -196,8 +196,10 @@ los valores propios (corolario 1.4(3)), de modo que la biblioteca sabe que `A` e
 sin tener que comprobarlo de nuevo.
 
 El cálculo funcional para operadores autoadjuntos es `apply_function` (diagonaliza cada
-bloque con `eigh`); las funciones habituales tienen sus propios métodos. Comprobamos los
-teoremas 1.5 y 1.6:
+bloque con `eigh`). La función $f$ debe actuar elemento a elemento: recibe los valores propios de
+todos los sectores de un mismo tamaño $k$ como un único tensor de forma `(batch, n·k)`, donde $n$
+es el número de tales sectores, y devuelve un tensor de la misma forma. Las funciones habituales
+tienen sus propios métodos. Comprobamos los teoremas 1.5 y 1.6:
 
 ```python
 def close(X, Y, tol=1e-10):
@@ -257,7 +259,10 @@ $X=H/\sqrt n$, $\ \mathbb E\,\tfrac1n\operatorname{Tr}X^4=2+\tfrac1{n^2}$.
 reales centradas conjuntamente gaussianas (se admiten repeticiones) con
 $c_{ij}=\mathbb E[Y_iY_j]$. Su función generatriz de momentos conjunta es
 $\mathbb E\,e^{\sum_it_iY_i}=e^{q(t)/2}$ con $q(t)=\sum_{ij}c_{ij}t_it_j$ (la función
-generatriz de momentos gaussiana, un hecho estándar de probabilidad). Apliquemos
+generatriz de momentos gaussiana, un hecho estándar de probabilidad). Derivar bajo la esperanza está permitido: la función generatriz
+de momentos es finita para todo $t$, y para $|t_i|\le1$ todas las derivadas parciales de $e^{\sum_it_iY_i}$
+hasta el orden $4$ están acotadas por $(1+\sum_i|Y_i|)^4e^{\sum_i|Y_i|}$, que es integrable porque
+$e^{\sum_i|Y_i|}\le\sum_{s\in\{\pm1\}^4}e^{\sum_is_iY_i}$; así que se aplica el teorema de convergencia dominada. Apliquemos
 $\partial^4/\partial t_1\cdots\partial t_4$ en $t=0$: a la izquierda se obtiene
 $\mathbb E[Y_1Y_2Y_3Y_4]$; a la derecha, solo el término $q^2/8$ de la serie exponencial
 contiene $t_1t_2t_3t_4$, con coeficiente $c_{12}c_{34}+c_{13}c_{24}+c_{14}c_{23}$.
