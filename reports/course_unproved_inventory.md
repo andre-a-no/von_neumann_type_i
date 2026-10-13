@@ -132,7 +132,7 @@ Otherwise Ch.6 is complete (Choi, Kraus, Stinespring in finite dimensions, unita
 | ID | line | statement | what is missing | action |
 |---|---|---|---|---|
 | 8.1 | 212–217 | **Theorem 8.7 (GKSL converse) "stated without proof"**; Christensen–Evans for general von Neumann algebras | Unproved. | A: Appendix D, finite-dimensional proof ~45 lines on $M_D$ (Choi matrix of $\mathcal L$; $T_t$ CP ⇒ $\mathcal L$ conditionally completely positive, i.e. $P_\Omega^\perp J(\mathcal L)P_\Omega^\perp\ge0$; read off $\Phi$ and $K$; trace preservation fixes $K$). Or R. |
-| 8.2 | 219–224 | derivation, *from Christensen–Evans*, that every generator on $\mathcal M=\bigoplus M_{k_c}$ has the form of §8.3 | Rests on 8.1's unproved theorem. | A: +15 lines in Appendix D (extend $T_t$ to $M_D$ via the conditional expectation $E(X)=\sum P_cXP_c$; $T_t\circ E$ is a QDS on $M_D$; compress the GKSL form of its generator). Or R together with 8.1. |
+| 8.2 | 219–224 | derivation, *from Christensen–Evans*, that every generator on $\mathcal M=\bigoplus M_{k_c}$ has the form of §8.3 | Rests on 8.1's unproved theorem. | A: +15 lines in Appendix D (extend $T_t$ to $M_D$ via the conditional expectation $E(X)=\sum P_cXP_c$; $T_t\circ E$ is a CP semigroup on $M_D$ with $\hat T_0=E$, not a QDS; compress the GKSL form of its generator). Or R together with 8.1. |
 | 8.3 | 226–230 (box) | Born–Markov approximation leads to semigroups | PHYS. | PHYS. |
 | 8.4 | 408–414 (box) | counting-process interpretation (Davies, Srinivas–Davies, MCWF) | PHYS (text says only the math is used). | PHYS. |
 | 8.5 | 560–563 | uniqueness criteria (Frigerio) "are not proved here" | Unproved, unused. | R (keep "the code finds one stationary state per sector" as N). |

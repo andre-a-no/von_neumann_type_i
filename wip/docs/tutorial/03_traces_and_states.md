@@ -366,9 +366,15 @@ assert abs(tau.von_neumann_entropy().item() - (math.log(3) + sum(math.log(k) for
    $S_w(\rho)=S(\rho)+\sum_cp_c\log w_c=-\sum_cp_c\log p_c+\sum_cp_cS(\sigma_c)+\sum_cp_c\log w_c
    \le\sum_cp_c\log\frac{k_cw_c}{p_c}\le\log\sum_{p_c>0}k_cw_c\le\log\operatorname{tr}_w(1)$, using
    $S(\sigma_c)\le\log k_c$ (Corollary 3.6) and the finite Jensen inequality
-   $\sum_cp_c\log x_c\le\log\sum_cp_cx_c$ for the concave $\log$ (which follows from the
-   definition of concavity by induction on the number of terms), with $x_c=k_cw_c/p_c$; it is
-   strict unless all $x_c$ are equal, since $\log$ is strictly concave. Equality throughout
+   $\sum_{c=1}^mp_c\log x_c\le\log\sum_{c=1}^mp_cx_c$ ($p_c>0$, $\sum_cp_c=1$, $x_c>0$), with
+   equality only if all $x_c$ are equal, applied to $x_c=k_cw_c/p_c$. Proof by induction on $m$:
+   for $m=1$ there is nothing to prove. For $m\ge2$ put $q=1-p_m\in(0,1)$ and
+   $\bar x=\sum_{c<m}(p_c/q)x_c$; by the induction hypothesis
+   $\sum_{c<m}(p_c/q)\log x_c\le\log\bar x$, with equality only if $x_1=\dots=x_{m-1}$, and by
+   strict concavity of $\log$ ($\log''<0$) $q\log\bar x+p_m\log x_m\le\log(q\bar x+p_mx_m)$,
+   with equality only if $\bar x=x_m$. Multiplying the first inequality by $q$ and adding,
+   $\sum_cp_c\log x_c\le\log\sum_cp_cx_c$, and equality forces $x_1=\dots=x_{m-1}=\bar x=x_m$.
+   Equality throughout
    forces every $p_c>0$, $\sigma_c=1/k_c$ and $k_cw_c/p_c$ constant, i.e.
    $p_c=k_cw_c/\operatorname{tr}_w(1)$, i.e. $(\rho_w)_c=\rho_c/w_c=1_{k_c}/\operatorname{tr}_w(1)$.
    Conversely, for $\rho_w=1/\operatorname{tr}_w(1)$,

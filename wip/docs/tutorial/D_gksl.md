@@ -6,7 +6,7 @@ Chapter 8 proved that a generator of Gorini–Kossakowski–Sudarshan–Lindblad
 quantum dynamical semigroup (Theorem 8.6) and used the converse (Theorem 8.7) and its version for
 $\mathcal M=\bigoplus_cM_{k_c}$. This appendix proves both in finite dimensions, together with the
 freedom in the GKSL form and a criterion for the uniqueness of the stationary state. The tool is the
-Choi matrix of Chapter 6: a generator is not completely positive, but its Choi matrix is positive on
+Choi matrix of Chapter 6: a generator is in general not completely positive, but its Choi matrix is positive on
 the orthogonal complement of the maximally entangled vector. The same kind of argument — positivity
 of a family of operators, then a decomposition — proves in the last section the theorem on operator
 algebra error correction stated in Chapter 10 (Theorem 10.7), with an explicit recovery channel.
@@ -45,7 +45,7 @@ $J$ is linear and injective, and every block matrix $[X_{ij}]$ is the Choi matri
 with $E_{ij}\mapsto X_{ij}$. (b) $(1\otimes K)\Omega=\sum_ie_i\otimes Ke_i$ has the $i$-th block $Ke_i$, the
 $i$-th column of $K$, which determines $K$, and every $v$ arises in this way. Then
 $\langle\sum_ie_i\otimes Ke_i,\sum_je_j\otimes Le_j\rangle=\sum_i\langle Ke_i,Le_i\rangle=\operatorname{Tr}(K^*L)$;
-for the last claim take $1$ in place of $K$. (c) The $(i,j)$ block of the right-hand side is
+for the last claim replace $(K,L)$ by $(1,K)$. (c) The $(i,j)$ block of the right-hand side is
 $Ke_i(Le_j)^*=KE_{ij}L^*$. (d) The $(i,j)$ block of $J(\Psi)^*$ is $\Psi(E_{ji})^*$. If $\Psi$ is
 Hermiticity preserving, $\Psi(E_{ji})^*=\Psi(E_{ji}^*)=\Psi(E_{ij})$. Conversely, if
 $\Psi(E_{ji})^*=\Psi(E_{ij})$ for all $i,j$ and $A=\sum a_{ij}E_{ij}$, then
@@ -104,7 +104,7 @@ $\operatorname{Tr}(L_j^*L_k)=0$ for $j\neq k$, and $G$ with $\operatorname{Tr}G\
 linear on a finite-dimensional space, hence continuous, so
 $J(e^{t\mathcal L})=J(\mathrm{id})+t\,J\big((e^{t\mathcal L}-\mathrm{id})/t\big)$ with the last Choi matrix tending to
 $J(\mathcal L)$. For $v\perp\Omega$, $\langle v,J(\mathrm{id})v\rangle=|\langle\Omega,v\rangle|^2=0$ (Lemma D.1(c)), so
-for $t>0$
+for $t>0$, as $J(e^{t\mathcal L})\ge0$ (Theorem 6.2),
 $$
 0\le\frac1t\langle v,J(e^{t\mathcal L})v\rangle=\big\langle v,J\big((e^{t\mathcal L}-\mathrm{id})/t\big)v\big\rangle
 \;\xrightarrow[t\to0]{}\;\langle v,J(\mathcal L)v\rangle .
@@ -122,14 +122,15 @@ as $J(\mathcal L)$ is self-adjoint.
 (3)$\Rightarrow$(1). Steps 1–4 of the proof of Theorem 8.6 use only that the generator is
 $\mathcal L_0+\Phi$ with $\mathcal L_0(\rho)=-i(H_{\mathrm{eff}}\rho-\rho H_{\mathrm{eff}}^*)$ for some matrix
 $H_{\mathrm{eff}}$ and $\Phi$ CP. With $H_{\mathrm{eff}}=iG$, $\mathcal L_0(\rho)=G\rho+\rho G^*$, and these
-steps show that $e^{t\mathcal L}=\sum_nS_n(t)$ is CP. $\square$
+steps show that $e^{t\mathcal L}=\sum_{m\ge0}S_m(t)$ is CP. $\square$
 
-Positivity alone would not do. Let $\theta$ be the transpose and $\mathcal L=\theta-\mathrm{id}$. As $\theta^2=\mathrm{id}$,
+Positivity alone would not do. Let $n\ge2$, let $\theta$ be the transpose on $M_n$ and $\mathcal L=\theta-\mathrm{id}$. As $\theta^2=\mathrm{id}$,
 $$
 e^{t\mathcal L}=e^{-t}\big(\cosh t\,\mathrm{id}+\sinh t\,\theta\big)=\tfrac{1+e^{-2t}}2\,\mathrm{id}+\tfrac{1-e^{-2t}}2\,\theta ,
 $$
-a convex combination of positive trace preserving maps (Proposition 6.1). But $J(\theta)=[E_{ji}]$ maps
-$v=e_1\otimes e_2-e_2\otimes e_1$, which is orthogonal to $\Omega$, to $-v$ (proof of Proposition 6.1), so
+a convex combination of positive trace preserving maps (Proposition 6.1). But $J(\theta)=[E_{ji}]=\sum_{i,j}E_{ij}\otimes E_{ji}$ is the swap $e_k\otimes e_l\mapsto e_l\otimes e_k$, so it maps
+$v=e_1\otimes e_2-e_2\otimes e_1$, which is orthogonal to $\Omega$, to $-v$ (as in the proof of Proposition 6.1); with
+$\|v\|^2=2$ and $\langle v,J(\mathrm{id})v\rangle=|\langle\Omega,v\rangle|^2=0$,
 $\langle v,J(\mathcal L)v\rangle=-2$: $\mathcal L$ is not CCP, and indeed
 $\langle v,J(e^{t\mathcal L})v\rangle=-(1-e^{-2t})<0$ for every $t>0$. A semigroup of positive trace preserving maps
 need not consist of channels.
@@ -187,6 +188,7 @@ X = cplx(n, n)
 for t in (0.01, 0.1, 1.0):
     T_t = sla.expm(t * L_theta)
     b = (1 - math.exp(-2 * t)) / 2
+    assert abs(anti @ choi_of(T_t, n) @ anti + (1 - math.exp(-2 * t))) < 1e-12        # <v, J(e^{tL}) v>
     assert np.abs(T_t - ((1 - b) * np.eye(n * n) + b * superop(lambda Y: Y.T, n))).max() < 1e-12
     assert abs(np.trace((T_t @ X.reshape(-1)).reshape(n, n)) - np.trace(X)) < 1e-12   # trace preserving
     assert np.linalg.eigvalsh(choi_of(T_t, n)).min() < -0.9 * b                     # but not CP
@@ -297,19 +299,23 @@ with data $(H;L_1,\dots,L_r)$. If $\mathcal L$ has a faithful stationary state $
 matrices commuting with $H$ and all $L_j$, $L_j^*$ are the multiples of $1$, then $\ker\mathcal L=\mathbb C\sigma$:
 $\sigma$ is the only stationary state. Moreover $\ker\mathcal L^*=\mathbb C1$.
 
-*Proof.* The dual for the trace pairing is
-$\mathcal L^*(A)=i[H,A]+\sum_j(L_j^*AL_j-\frac12\{L_j^*L_j,A\})$ (Chapter 8, Exercise 1, with its solution).
+*Proof.* The dual for the trace pairing, $\operatorname{Tr}(\mathcal L(\rho)A)=\operatorname{Tr}(\rho\,\mathcal L^*(A))$, is
+$\mathcal L^*(A)=i[H,A]+\sum_j(L_j^*AL_j-\frac12\{L_j^*L_j,A\})$: by cyclicity
+$\operatorname{Tr}(-i[H,\rho]A)=\operatorname{Tr}(\rho\,i[H,A])$, $\operatorname{Tr}(L\rho L^*A)=\operatorname{Tr}(\rho L^*AL)$ and
+$\operatorname{Tr}(\{L^*L,\rho\}A)=\operatorname{Tr}(\rho\{L^*L,A\})$ (this is Exercise 1 of Chapter 8).
 A direct expansion, in which the Hamiltonian terms cancel because $A\mapsto i[H,A]$ is a derivation, gives
 for every $X$
 $$
 \mathcal L^*(X^*X)-X^*\mathcal L^*(X)-\mathcal L^*(X^*)X=\sum_j[L_j,X]^*[L_j,X]:
 $$
-for one jump, the left side is $L^*X^*XL-X^*L^*XL-L^*X^*LX+X^*L^*LX$ (the anticommutator terms cancel in
-pairs), which is $(XL-LX)^*(XL-LX)$. Let $X\in\ker\mathcal L^*$. Then $\mathcal L^*(X^*)=\mathcal L^*(X)^*=0$, as $\mathcal L^*$
+for one jump, of the six anticommutator terms four cancel in pairs and the other two,
+$\frac12X^*L^*LX+\frac12X^*L^*LX$, add up, so the left side is $L^*X^*XL-X^*L^*XL-L^*X^*LX+X^*L^*LX$, which is
+$(XL-LX)^*(XL-LX)$. Let $X\in\ker\mathcal L^*$. Then $\mathcal L^*(X^*)=\mathcal L^*(X)^*=0$, as $\mathcal L^*$
 is Hermiticity preserving, so $\mathcal L^*(X^*X)=\sum_j[L_j,X]^*[L_j,X]=:Y\ge0$, and
 $\operatorname{Tr}(\sigma Y)=\operatorname{Tr}(\mathcal L(\sigma)X^*X)=0$. Since $\sigma>0$,
 $\operatorname{Tr}(\sigma Y)=\operatorname{Tr}(\sigma^{1/2}Y\sigma^{1/2})$ with $\sigma^{1/2}Y\sigma^{1/2}\ge0$ vanishes only if
-$\sigma^{1/2}Y\sigma^{1/2}=0$, i.e. $Y=0$; so $[L_j,X]=0$ for all $j$. The same argument for $X^*\in\ker\mathcal L^*$
+$\sigma^{1/2}Y\sigma^{1/2}=0$, i.e. $Y=0$; taking traces, $\sum_j\operatorname{Tr}([L_j,X]^*[L_j,X])=0$ with nonnegative
+terms, so $[L_j,X]=0$ for all $j$. The same argument for $X^*\in\ker\mathcal L^*$
 gives $[L_j,X^*]=0$, i.e. $[L_j^*,X]=0$. Then $X$ commutes with $L_j^*L_j$, the dissipative part of $\mathcal L^*(X)$
 vanishes, and $0=\mathcal L^*(X)=i[H,X]$. By hypothesis $X\in\mathbb C1$; conversely $\mathcal L^*(1)=0$. So
 $\ker\mathcal L^*=\mathbb C1$. In the bases $(E_{ij})$ and $(E_{ji})$ of $M_n$, which are dual for the pairing
@@ -317,10 +323,14 @@ $(\rho,A)\mapsto\operatorname{Tr}(\rho A)$, the matrix of $\mathcal L^*$ is the 
 same rank, and $\dim\ker\mathcal L=\dim\ker\mathcal L^*=1$. A state in $\mathbb C\sigma$ with trace $1$ is $\sigma$. $\square$
 
 This is the finite-dimensional case of a criterion of Frigerio [*Commun. Math. Phys.* 63, 269 (1978)],
-quoted in Section 8.5. Both hypotheses are needed: in Exercise 4 of Chapter 8 the state $\frac12$ is faithful
-and stationary, but $H$ and $\sigma_z$ commute with all diagonal matrices, and the stationary states form a
-two-dimensional family. For the random generator above the code checks the hypotheses and the conclusion
-(the matrix of $\mathcal L^*$ on row-major vectors of $A^T$ is $S^T$):
+used in Section 8.5. Both hypotheses are needed. In Exercise 4 of Chapter 8 the state $\tfrac12\,1$ is faithful
+and stationary, but $H$ and $\sigma_z$ commute with all diagonal matrices, and the stationary states span the
+two-dimensional space of diagonal matrices. Conversely, on $M_3$ let $H=0$, $L_1=|e_1\rangle\langle e_3|$,
+$L_2=|e_2\rangle\langle e_3|$. The $*$-algebra generated by $L_1,L_2$ contains $L_1L_2^*=E_{12}$, $L_1^*L_1=E_{33}$ and hence
+all matrix units, so only the multiples of $1$ commute with $L_j,L_j^*$; but every $\rho=P\rho P$ with $P=E_{11}+E_{22}$
+is stationary, as $L_j\rho=0=\rho L_j^*$ and $\{E_{33},\rho\}=0$, so $\dim\ker\mathcal L\ge4$; by Theorem D.6 no stationary
+state is faithful. For the random generator above the code checks the hypotheses and the conclusion
+(the matrix of $\mathcal L^*$ on row-major vectors of $A^T$ is $S^T$), and the second example:
 
 ```python
 def kernel_dim(S, tol=1e-9):
@@ -337,6 +347,13 @@ assert np.abs(sigma - sigma.conj().T).max() < 1e-10 and np.linalg.eigvalsh(sigma
 assert commutant_dim([H] + Ls + [L.conj().T for L in Ls], n) == 1
 assert kernel_dim(S) == 1 and kernel_dim(S.T) == 1        # Theorem D.6
 assert np.abs(S.T @ np.eye(n).reshape(-1)).max() < 1e-12  # ker L^* = C 1
+
+e3 = np.eye(3)
+L_abs = [np.outer(e3[0], e3[2]), np.outer(e3[1], e3[2])]       # L_1 = |e_1><e_3|, L_2 = |e_2><e_3|
+S_abs = superop(lambda R: sum(L @ R @ L.T - 0.5 * (L.T @ L @ R + R @ L.T @ L) for L in L_abs), 3)
+assert commutant_dim(L_abs + [L.T for L in L_abs], 3) == 1
+print("second example: dim ker L =", kernel_dim(S_abs))
+assert kernel_dim(S_abs) == 4                             # no faithful stationary state, no uniqueness
 ```
 
 ## D.4 Algebras with sectors
@@ -494,7 +511,8 @@ $F^c_\alpha e_a=E_i|c;a,b\rangle$, and $\Lambda^c_{\alpha\beta}=(\Lambda^c_{ij})
 $F^{c*}_\alpha F^d_\beta=\delta_{cd}\Lambda^c_{\alpha\beta}1_{k_c}$: a Knill–Laflamme condition for the "errors" $F^c_\alpha$ on the
 code $\mathbb C^{k_c}$, with in addition orthogonality between the sectors.
 
-*Step 2.* As in the proof of Theorem 10.5, $\Lambda^c$ is self-adjoint and positive, since
+*Step 2.* As in the proof of Theorem 10.5, $\Lambda^c$ is self-adjoint, since
+$\Lambda^c_{\beta\alpha}1=F^{c*}_\beta F^c_\alpha=(F^{c*}_\alpha F^c_\beta)^*=\bar\Lambda^c_{\alpha\beta}1$, and positive, since
 $\sum\bar z_\alpha z_\beta\Lambda^c_{\alpha\beta}1=(\sum z_\alpha F^c_\alpha)^*(\sum z_\beta F^c_\beta)\ge0$. Write
 $\Lambda^c=U^c\operatorname{diag}(d^c_\kappa)U^{c*}$ with $U^c$ unitary and $d^c_\kappa\ge0$, and
 $G^c_\kappa=\sum_\alpha u^c_{\alpha\kappa}F^c_\alpha$. Then $G^{c*}_\kappa G^d_\lambda=\delta_{cd}\delta_{\kappa\lambda}d^c_\kappa1$, so
@@ -536,7 +554,11 @@ algebra of the form $M_{m}\otimes1_{k}$ after exchanging the two factors. Then $
 $\mathcal R=\mathrm{id}$, and $PE_i^*E_jP=V(E_{i,c}^*E_{j,c}\otimes1_{m_c})V^*\in\mathfrak A'$.
 
 *Proof.* (a) $\mathfrak A'=\mathbb CP$ is the case $C=1$, $m_1=1$ of the description of $\mathfrak A'$ above, and
-$PE_i^*E_jP\in\mathbb CP$ is the Knill–Laflamme condition. (b) $T\in B(\mathcal C)$ commutes with all $P_c$ iff
+$PE_i^*E_jP\in\mathbb CP$ is the Knill–Laflamme condition. Correctability of $B(\mathcal C)$ is correction in the sense of
+Section 10.2: if $\mathcal R(\Phi(\rho))=\rho$ for all states $\rho$ supported in $\mathcal C$, then
+$\operatorname{Tr}(\rho\,P(\mathcal R\circ\Phi)^*(A)P)=\operatorname{Tr}(\rho A)$ for all of them, and these $\rho$ span $B(\mathcal C)$; the
+converse is shown in Section 10.3. With $C=1$, $m_1=1$ the Kraus operators $\iota_1V^{1*}_\kappa$ of Step 3 are those
+of Theorem 10.5, because $\iota_1\iota_1^*=P$. (b) $T\in B(\mathcal C)$ commutes with all $P_c$ iff
 $P_cTP_d=0$ for $c\ne d$, which is condition 2 of Proposition 10.6. (c) Every $A\in\mathfrak A$, extended by $0$ to the
 other summands, lies in $\mathcal A'=V(\bigoplus_c1_{k_c}\otimes M_{m_c})V^*$ (Theorem 2.6), so $\Phi^*(A)=A$ by Proposition
 10.1(a) and $PAP=A$. The formula for $PE_i^*E_jP$ follows from $V^*E_iV=\bigoplus_cE_{i,c}\otimes1_{m_c}$, and

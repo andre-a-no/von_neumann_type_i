@@ -193,7 +193,7 @@ comm = lambda A, B: A @ B - B @ A
 C3 = structure(*herm(3, 2))                       # Herm_3(C), dimension 9
 x, y, w = torch.randn(3, 9, dtype=dt)
 lhs = Lop(C3, mul(C3, mul(C3, x, w), y)) - Lop(C3, mul(C3, x, mul(C3, w, y)))
-assert torch.allclose(lhs, comm(Lop(C3, w), comm(Lop(C3, x), Lop(C3, y))))     # Lemma E.1(d)
+assert torch.allclose(lhs, comm(Lop(C3, w), comm(Lop(C3, x), Lop(C3, y))))     # Lemma E.1(4)
 
 def jpow(C, x, k):                                # Jordan powers x^1 = x, x^(k+1) = x o x^k
     p = x
@@ -220,16 +220,15 @@ for i in range(3):
         assert torch.allclose(mul(C3, cs[i], cs[j]), cs[i] if i == j else torch.zeros(9, dtype=dt), atol=1e-10)
 assert torch.allclose(sum(l * c for l, c in zip(lam, cs)), xz)
 
-c = cs[0] + cs[1]                                 # an idempotent of "rank 2": Proposition E.4
+c = cs[0] + cs[1]                                 # the idempotent c_1 + c_2: Proposition E.4
 Lc = Lop(C3, c)
 assert torch.allclose(Lc @ (2 * Lc - torch.eye(9, dtype=dt)) @ (Lc - torch.eye(9, dtype=dt)), torch.zeros(9, 9, dtype=dt), atol=1e-10)
 ev = torch.linalg.eigvals(Lc).real.sort().values
 print("eigenvalues of L(c):", ev.numpy().round(6))
 tau = lambda C: torch.einsum('abc,c->ab', C, torch.einsum('cbb->c', Lop(C, torch.eye(C.shape[0], dtype=dt))))  # Tr L(e_a o e_b)
 T3 = tau(C3)
-assert torch.linalg.eigvalsh(T3).min() > 0                                     # Theorem E.5(b)
-assert torch.allclose(mul(C3, x, y) @ T3 @ w, x @ T3 @ mul(C3, y, w))         # Theorem E.5(a)
-
+assert torch.linalg.eigvalsh(T3).min() > 0                                     # Theorem E.5(2)
+assert torch.allclose(mul(C3, x, y) @ T3 @ w, x @ T3 @ mul(C3, y, w))         # Theorem E.5(1)
 ```
 
 ## E.4 Jordan frames and the spectral theorem
@@ -503,7 +502,6 @@ def M(q):                                         # H -> M_2(C): (a, b) -> [[a, 
     return torch.stack([torch.stack([za, -zb], -1), torch.stack([zb.conj(), za.conj()], -1)], -2)
 p4, q4 = torch.randn(2, 1000, 4, dtype=dt)
 assert torch.allclose(M(cd(p4, q4)), M(p4) @ M(q4)) and torch.allclose(M(conj(p4)), M(p4).mH)
-
 ```
 
 ## E.7 Coordinatisation
@@ -681,3 +679,146 @@ identity of $\operatorname{Herm}_3(\mathbb O)$ and the associativity and positiv
 shows numerically that the Jordan identity fails in $\operatorname{Herm}_4(\mathbb O)$ (Corollary E.25), checks the
 automorphism of Lemma E.23, and runs the three steps (a)–(c) of the proof of Theorem E.24(2) on a random element:
 
+```python
+n3, prod3 = herm(3, 8)
+X, Y, Z = torch.randn(3, 200, 27, dtype=dt)
+X2 = prod3(X, X)
+assert (prod3(prod3(X2, Y), X) - prod3(X2, prod3(Y, X))).abs().max() < 1e-10    # Jordan identity, Theorem E.24(2)
+n4, prod4 = herm(4, 8)
+X4, Y4 = torch.randn(2, 200, n4, dtype=dt)
+X42 = prod4(X4, X4)
+print("Herm_4(O): max |Jordan defect| =", (prod4(prod4(X42, Y4), X4) - prod4(X42, prod4(Y4, X4))).abs().max().item())
+retr = lambda v: v[..., :3].sum(-1)               # Re tr
+assert torch.allclose(retr(prod3(prod3(X, Y), Z)), retr(prod3(X, prod3(Y, Z))))
+sq = (X[:, :3] ** 2).sum(-1) + 2 * (X[:, 3:] ** 2).sum(-1)
+assert torch.allclose(retr(prod3(X, X)), sq)                                    # (X|X) = sum of N(X_ij)
+
+def moufang_auto(v, uu):                          # (L_u, R_u, B_u) on the entries a_12, a_23, a_13
+    a12, a13, a23 = v[..., 3:11], v[..., 11:19], v[..., 19:27]   # pairs order (0,1),(0,2),(1,2)
+    uu = uu.expand_as(a12)
+    return torch.cat([v[..., :3], cd(uu, a12), cd(cd(uu, a13), uu), cd(a23, uu)], -1)
+uu = torch.randn(8, dtype=dt); uu = uu / uu.norm()
+assert torch.allclose(moufang_auto(prod3(X, Y), uu), prod3(moufang_auto(X, uu), moufang_auto(Y, uu)))
+
+x = torch.randn(27, dtype=dt)                     # steps (a)-(c) of the proof of Theorem E.24(2)
+s = x[11:19]
+im = torch.cat([torch.zeros(1, dtype=dt), s[1:]])
+v, th = im / im.norm(), torch.atan2(im.norm(), s[0]).item()
+x1 = moufang_auto(x, math.cos(th / 2) * e[0] - math.sin(th / 2) * v)            # (a): (1,3) entry -> |s|
+imq = torch.cat([torch.zeros(1, dtype=dt), x1[20:27]])
+g = torch.cat([torch.zeros(1, dtype=dt), torch.randn(7, dtype=dt)])
+g = g - (g @ imq) / (imq @ imq) * imq                                             # u perpendicular to 1 and q
+x2 = moufang_auto(x1, g / g.norm())                                               # (b): (2,3) entry imaginary
+x3 = moufang_auto(x2, x2[19:27] / x2[19:27].norm())                              # (c): (2,3) entry real
+print("entries (1,3), (2,3) after (a)-(c):", x3[11:19].numpy().round(3), x3[19:27].numpy().round(3))
+assert x3[12:19].abs().max() < 1e-12 and x3[20:27].abs().max() < 1e-12
+assert abs(abs(x3[11].item()) - s.norm().item()) < 1e-12
+```
+
+## E.9 The classification
+
+**Theorem E.27 (Jordan–von Neumann–Wigner).**
+
+1. Every finite-dimensional formally real (equivalently, Euclidean) Jordan algebra is a direct sum of simple ideals,
+   and every simple one is isomorphic to $\operatorname{Herm}_n(\mathbb R)$, $\operatorname{Herm}_n(\mathbb C)$ or
+   $\operatorname{Herm}_n(\mathbb H)$ for some $n\ge1$, to a spin factor $V_m$ with $m\ge2$, or to the Albert algebra
+   $\operatorname{Herm}_3(\mathbb O)$.
+2. The algebras $\mathbb R$; $V_m$ ($m\ge2$); $\operatorname{Herm}_n(D)$ ($D=\mathbb R,\mathbb C,\mathbb H$, $n\ge3$);
+   $\operatorname{Herm}_3(\mathbb O)$ are simple, formally real and pairwise non-isomorphic, so every simple formally
+   real Jordan algebra is isomorphic to exactly one of them. Moreover $\operatorname{Herm}_1(D)\cong\mathbb R$ and
+   $\operatorname{Herm}_2(D)\cong V_{\dim D+1}$ for $D=\mathbb R,\mathbb C,\mathbb H,\mathbb O$.
+3. In a simple formally real Jordan algebra all Jordan frames have the same number $r$ of elements and all their Peirce
+   spaces $J_{ij}$ the same dimension $d$: $r=1$ for $\mathbb R$, $(r,d)=(2,m-1)$ for $V_m$ and $(n,\dim D)$ for
+   $\operatorname{Herm}_n(D)$, $n\ge2$.
+
+*Proof.* (1) By Theorem E.9, $J$ is a direct sum of simple formally real ideals. Such an ideal has a Jordan frame of some
+size $r$ (Lemma E.6(2)); it is $\cong\mathbb R=\operatorname{Herm}_1(\mathbb R)$ if $r=1$, $\cong V_{d+1}$ if $r=2$
+(Theorem E.13), and $\cong\operatorname{Herm}_r(D)$ with $D\ne\mathbb O$ if $r\ge4$ and $D\in\{\mathbb R,\mathbb C,\mathbb H,\mathbb O\}$
+if $r=3$ (Theorem E.22).
+
+(2) For $\operatorname{Herm}_n(D)$ see Theorem E.24. $V_m$ is a Jordan algebra by Lemma 13.3 and Euclidean for
+$\langle(a,u),(b,v)\rangle=ab+u\cdot v$, since $\langle x\circ y,z\rangle=abc+c\,u\cdot v+a\,v\cdot w+b\,u\cdot w$ is symmetric
+in $x=(a,u)$, $y=(b,v)$, $z=(c,w)$. For a unit vector $w$, $c_{\pm w}=\frac12(1,\pm w)$ is a Jordan frame
+(Theorem 13.4(1)) with $J_{12}=\{(0,v):v\perp w\}$, of dimension $m-1\ge1$ (the dimensions add up to $m+1$); so $V_m$
+is simple by Proposition E.11. To separate the algebras, let $s(J)$ be the largest number of pairwise orthogonal non-zero
+idempotents (finite by Lemma E.6(2)); $s$ and $\dim$ are invariant under isomorphism. Clearly $s(\mathbb R)=1$. In
+$V_m$ the non-zero idempotents are $1$ and the $c_w$, with $1\circ c_w=c_w$ and $c_w\circ c_{w'}=0$ only for $w'=-w$
+(Theorem 13.4(1)); so $s(V_m)=2$. For $D\in\{\mathbb R,\mathbb C,\mathbb H\}$, $s(\operatorname{Herm}_n(D))=n$: the
+$E_{ii}$ give $s\ge n$. Conversely, orthogonal idempotents $p_k\ne0$ satisfy $p_kp_l=0$ for $k\ne l$ (as in the proof of
+Theorem E.26), so the right $D$-submodules $V_k=p_kD^n$ of $D^n$ are non-zero and independent: if $\sum_kv_k=0$ with
+$v_k\in V_k$, then $v_l=p_l\sum_kv_k=0$. A non-zero $V_k$ contains some $v\ne0$ and then $vD$, of real dimension $d$
+($D$ has no zero divisors); so $sd\le nd$. For $\operatorname{Herm}_3(\mathbb O)$, the $E_{ii}$ give $s\ge3$; and $s$
+pairwise orthogonal non-zero idempotents, together with $1$ minus their sum, refine as in the proof of Theorem E.7 to a
+Jordan frame of $r'\ge s$ elements. By Proposition E.11(2) and Theorem E.22, $27=r'+d'\frac{r'(r'-1)}2$ with $d'\ge1$, and
+$d'\in\{1,2,4\}$ if $r'\ge4$. For $r'=4,5,6$ the right side lies in $\{10,16,28\}$, $\{15,25,45\}$, $\{21,36,66\}$, and
+for $r'\ge7$ it exceeds $27$; so $s\le r'=3$. The pairs $(s,\dim)$ are $(1,1)$, $(2,m+1)$, $(n,\frac{n(n+1)}2)$,
+$(n,n^2)$, $(n,n(2n-1))$ for $n\ge3$, and $(3,27)$, all different, as $\frac{n(n+1)}2<n^2<n(2n-1)$ and $6,9,15\ne27$.
+The isomorphisms in rank $1$ and $2$ are Theorem E.24(3).
+
+(3) If $F$ is a Jordan frame of $r_F$ elements of a simple $J$, the proof of (1), applied with $F$, gives an isomorphism of
+$J$ with a model of rank $r_F$ in (2), and $s$ of that model is $r_F$. So $r_F=s(J)$ for every frame, and then
+$d=(\dim J-r)/\binom r2$ for $r\ge2$ (Proposition E.11(2)). $\square$
+
+**Corollary E.28 (rank and trace).** In every formally real Jordan algebra all Jordan frames have the same number of
+elements, the **rank**. If $J$ is simple of rank $r$, then $\operatorname{tr}x=\frac r{\dim J}\operatorname{Tr}L(x)$ satisfies
+$\operatorname{tr}c=1$ for every primitive idempotent $c$, hence $\operatorname{tr}(\sum_i\lambda_ic_i)=\sum_i\lambda_i$ for
+every decomposition of Theorem E.7, and $\operatorname{tr}(x\circ y)$ is an associative inner product.
+
+*Proof.* Let $J=\bigoplus_pJ^{(p)}$ as in Theorem E.9 and $c$ primitive. Its components $c^{(p)}\in J^{(p)}$ are
+pairwise orthogonal idempotents ($c^2=\sum_p(c^{(p)})^2$), so exactly one is non-zero. Hence the members of a Jordan frame
+of $J$ that lie in $J^{(p)}$ form a Jordan frame of $J^{(p)}$ (they add up to the component $1^{(p)}$ of $1$), and the rank
+of $J$ is the sum of the ranks of the $J^{(p)}$ (Theorem E.27(3)). In a simple $J$, a primitive $c$ belongs to a Jordan frame
+(refine $1-c$ as in the proof of Theorem E.7), so $\operatorname{Tr}L(c)=t=\dim J/r$ by Proposition E.11(2) (for $r=1$,
+$J=\mathbb Rc$ and $\operatorname{Tr}L(c)=1$). Finally $\operatorname{tr}(x\circ y)=\frac r{\dim J}\tau(x,y)$ (Theorem E.5). $\square$
+
+The code computes, for every type, the Jordan frame $(E_{ii})$ or $(c_w,c_{-w})$, the dimensions of the Peirce spaces as
+common eigenspaces of the $L(c_i)$ (Theorem E.8), the dimension formula of Proposition E.11(2) and the positivity of the trace
+form $\tau$ (Theorem E.5):
+
+```python
+def peirce(C, frame):
+    """dimensions of the joint Peirce spaces J_ij = {x : c_i o x = c_j o x = x/2}"""
+    I = torch.eye(C.shape[0], dtype=dt)
+    Ls = [Lop(C, f) for f in frame]
+    return [C.shape[0] - torch.linalg.matrix_rank(torch.cat([Ls[i] - I / 2, Ls[j] - I / 2])).item()
+            for i in range(len(frame)) for j in range(i + 1, len(frame))]
+
+cases = [(f"Herm_{n}({'RCHO'[k]})", herm(n, 2 ** k), n, 2 ** k) for n, k in ((2, 0), (3, 0), (4, 0), (3, 1), (4, 1), (3, 2), (2, 3), (3, 3))]
+cases += [(f"V_{m}", spin(m), 2, m - 1) for m in (2, 3, 5)]
+for name, (dim, prod), r, d in cases:
+    C = structure(dim, prod)
+    if name.startswith('V'):
+        frame = [0.5 * torch.eye(dim, dtype=dt)[0] + s * 0.5 * torch.eye(dim, dtype=dt)[1] for s in (1, -1)]
+    else:
+        frame = list(torch.eye(dim, dtype=dt)[:r])
+    for i, f in enumerate(frame):
+        assert torch.allclose(mul(C, f, f), f) and all(torch.allclose(mul(C, f, g), torch.zeros(dim, dtype=dt)) for g in frame[i + 1:])
+    dims = peirce(C, frame)
+    t = torch.einsum('cbb->c', Lop(C, torch.eye(dim, dtype=dt)))
+    gram = torch.einsum('abc,c->ab', C, t)
+    print(f"{name:10s} dim {dim:2d}  rank {r}  Peirce dimensions {dims}  min eig of trace form {torch.linalg.eigvalsh(gram).min().item():.2f}")
+    assert dims == [d] * (r * (r - 1) // 2) and dim == r + d * r * (r - 1) // 2
+    assert torch.linalg.eigvalsh(gram).min() > 0
+```
+
+## E.10 What this appendix proves for Chapter 13
+
+| statement in Chapter 13 | proved here |
+|---|---|
+| formally real $\Leftrightarrow$ Euclidean (Section 13.4) | Theorem E.5 |
+| Theorem 13.7: decomposition into simple ideals, the list, "exactly one" | Theorems E.9, E.27 |
+| $\operatorname{Herm}_2(\mathbb K)\cong V_{\dim\mathbb K+1}$ for $\mathbb K=\mathbb R,\mathbb C,\mathbb H,\mathbb O$ | Theorem E.24(3) |
+| $\operatorname{Herm}_r(\mathbb H)$ embeds into $\operatorname{Herm}_{2r}(\mathbb C)$ | Theorem E.24(1) |
+| the Albert algebra is a Jordan algebra and is exceptional | Theorems E.24(2), E.26 |
+| $\operatorname{Herm}_r(\mathbb O)$ is a Jordan algebra only for $r\le3$ | Theorem E.24(2), Corollary E.25 |
+| spectral theorem with Jordan frames, rank, $\operatorname{tr}z=\sum_i\mu_i$, associativity of $\operatorname{tr}(x\circ y)$ (Section 13.6) | Theorem E.7, Corollary E.28 |
+
+**Notes.** The classification is due to P. Jordan, J. von Neumann and E. Wigner, *On an algebraic generalization of the
+quantum mechanical formalism*, Ann. of Math. 35 (1934) 29–64, and the exceptionality of $\operatorname{Herm}_3(\mathbb O)$
+to A. A. Albert (same volume, 65–73). The proof above follows the structure of Faraut–Korányi, *Analysis on Symmetric
+Cones* (Oxford 1994), Chapters II–V; the doubling proof of Hurwitz's theorem (Nachr. Ges. Wiss. Göttingen 1898, 309–316) is as in
+J. H. Conway, D. A. Smith, *On Quaternions and Octonions* (2003) and T. A. Springer, F. D. Veldkamp, *Octonions, Jordan
+Algebras and Exceptional Groups* (2000), and the proof of Frobenius' theorem (1878) is R. S. Palais', Amer. Math. Monthly
+75 (1968) 366–368. A different proof of exceptionality uses polynomial identities that hold in all special Jordan
+algebras but not in $\operatorname{Herm}_3(\mathbb O)$ (C. M. Glennie, Pacific J. Math. 16 (1966) 47–59); McCrimmon's
+*A Taste of Jordan Algebras* (2004) tells the history and develops the general theory.
