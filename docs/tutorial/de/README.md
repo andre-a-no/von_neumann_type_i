@@ -42,7 +42,7 @@ jedes Beispiel funktioniert also mit der aktuellen Version der Bibliothek.
 | 6 | [Quantenkanäle](06_quantum_channels.md) | Kraus und Stinespring, duale Abbildungen bezüglich einer Spur, Abbildungen zwischen Sektoren, Dekohärenz |
 | 7 | [Tensorprodukte und Verschränkung](07_tensor_products.md) | partielle Spur, Pagesche Formel, Fusion von Ladungen |
 | 8 | [Dynamik](08_dynamics.md) | Schrödinger- und Lindblad-Gleichung, Sprünge zwischen Sektoren, Postselektion |
-| 9 | Spinketten *(in Vorbereitung)* | Sektoren von Magnetisierung und Impuls, Lanczos, Überprüfungen mit dem Bethe-Ansatz, Unordnung |
+| 9 | [Spinketten](09_spin_chains.md) | Sektoren von Magnetisierung und Impuls, Lanczos, Überprüfungen mit dem Bethe-Ansatz, Unordnung |
 | 10 | [Quantencomputing](10_quantum_computing.md) | dekohärenzfreie Unterräume, Fehlerkorrektur mit Operatoralgebren, Mixer mit Nebenbedingungen |
 | 11 | [Optimierung und Spurungleichungen](11_optimisation.md) | Parametrisierungen mit Nebenbedingungen, Stichprobenziehung versus Optimierung |
 | 12 | [Äquivariantes maschinelles Lernen](12_equivariant_learning.md) | äquivariante Schichten als Kommutanten |
