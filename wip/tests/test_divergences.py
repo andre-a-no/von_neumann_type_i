@@ -269,6 +269,15 @@ def test_per_sample_alpha_and_broadcasting():
         assert torch.allclose(D1, ref1, atol=1e-13, rtol=0)
         with pytest.raises(ValueError):
             DIV[kind](rho, sigma, torch.ones(3, dtype=torch.float64))   # batch 3 against 5
+        # entries alpha = 1 give the Umegaki relative entropy, with finite gradients
+        G = rho.matrix.clone().requires_grad_(True)
+        a1 = torch.tensor([0.5, 1.0, 1.0, 2.0, 1.0], dtype=torch.float64)
+        D = DIV[kind](DensityMatrix(alg, matrix=G, validate=False), sigma, a1)
+        U = dv.umegaki_relative_entropy(rho, sigma)
+        assert torch.allclose(D[a1 == 1], U[a1 == 1], atol=1e-13, rtol=0)
+        assert torch.allclose(D[0], DIV[kind](rho, sigma, 0.5)[0], atol=1e-13, rtol=0)
+        D.sum().backward()
+        assert torch.isfinite(G.grad).all()
 
 
 def test_unnormalised_inputs_scale():

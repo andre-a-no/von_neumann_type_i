@@ -36,12 +36,7 @@ Support conventions
 Powers (including negative ones) and logarithms of a positive operator are taken on its numerical support: the
 eigenvalues above rtol * lambda_max (lambda_max over all sectors of the sample; default rtol = N eps with
 N = sum_c k_c, the cut-off of numpy.linalg.pinv) are kept, the others count as exact zeros, and f(0) := 0 for every
-power p != 0 as well as for the logarithm (x^0 is the support projection). The spectrum of the sandwich
-sigma^g rho sigma^g is computed as the squared singular values of sigma^g rho^{1/2} (accurate down to
-(eps ||sigma^g|| ||rho||^{1/2})^2 rather than eps ||sigma^g rho sigma^g||, which matters for small alpha); singular values
-below rtol * max(s_max, ||sigma^g|| ||rho||^{1/2}) count as zeros. Accuracy limit: for alpha < 1 the result depends on
-all eigenvalues of the sandwich, and eigenvalues below that resolution (e.g. alpha -> 0 with ill-conditioned states,
-whose sandwich has condition number up to cond(sigma)^{2g} cond(rho)) cannot be represented in floating point. Hence Q_alpha and ~Q_alpha only involve
+power p != 0 as well as for the logarithm (x^0 is the support projection). Hence Q_alpha and ~Q_alpha only involve
 the compression of rho to supp sigma. The support condition supp rho <= supp sigma is tested through the weight of
 rho outside supp sigma, leak = Tr rho (1 - Pi_sigma); it counts as violated when leak > supp_tol * Tr rho (default
 supp_tol = 100 N eps). Then
@@ -49,9 +44,21 @@ supp_tol = 100 N eps). Then
     alpha > 1 (both families), D (Umegaki) and D_max:  the divergence is +inf;
     alpha < 1:  the divergence is finite unless Q_alpha = 0 (rho and sigma with orthogonal supports): +inf.
 
-These are the standard conventions (Tomamichel 2016, Ch. 4): for alpha < 1 the divergences are continuous in rho on
-the boundary, for alpha >= 1 they jump to +inf. The thresholds are relative, so all results are invariant under
-rescaling of the inputs.
+These are the standard conventions (Tomamichel 2016, Ch. 4); they are the limits eps -> 0 of the divergences of rho
+and sigma + eps 1. The thresholds are relative, so all results are invariant under rescaling of the inputs.
+
+Numerical evaluation
+--------------------
+The Renyi quantities are evaluated with rescaled operators (factors (rho/a)^alpha, (sigma/b)^{1-alpha} <= 1 and a
+common logarithmic scale), so that large alpha (D_max as a limit) does not overflow, also in single precision.
+The spectrum of the sandwich sigma^g rho sigma^g is obtained as the squared singular values of sigma^g rho^{1/2}:
+the SVD resolves it down to (eps ||sigma^g|| ||rho||^{1/2})^2, not only down to eps ||sigma^g rho sigma^g|| as the
+eigenvalues of the product would (this matters for alpha < 1, where eigenvalues lambda contribute lambda^alpha);
+singular values below rtol * max(s_max, ||sigma^g|| ||rho||^{1/2}) count as zeros. Limit of accuracy: for alpha < 1
+the value depends on all eigenvalues of the sandwich, whose condition number can reach cond(sigma)^{2g} cond(rho)
+with g = (1-alpha)/(2 alpha) -> inf as alpha -> 0; eigenvalues below the resolution above cannot be represented,
+so for small alpha and ill-conditioned states the computed sandwiched divergence is not accurate (see
+scripts/renyi_threshold.py, which therefore restricts alpha >= 0.2 and bounds the condition of the states).
 
 Trace conventions
 -----------------
@@ -82,11 +89,16 @@ the state-weighted norms of Kosaki [Kosaki 1984] ||x||_{p,rho,eta} = ||rho^{eta/
 the symmetric embedding used by Beigi 2013, eta = 1 / 0: left / right). For example
 ~D_alpha(rho||sigma) = alpha/(alpha-1) log ||sigma^{-1/2} rho sigma^{-1/2}||_{alpha,sigma} [Beigi 2013].
 
-Data processing (theorems; tested on random instances in tests/test_divergences.py, explored numerically in
-scripts/renyi_threshold.py): for every positive trace-preserving map Phi... more precisely for every CPTP Phi,
-~D_alpha(Phi rho||Phi sigma) <= ~D_alpha(rho||sigma) for alpha >= 1/2 [Frank-Lieb 2013, Beigi 2013 (alpha > 1),
-MDSFT 2013 and WWY 2014 (1 < alpha <= 2)], and D_alpha(Phi rho||Phi sigma) <= D_alpha(rho||sigma) for alpha in
-(0, 2] [Petz 1986]. Both fail in general outside these ranges.
+Data processing
+---------------
+For every completely positive trace-preserving Phi (theorems; tested on random instances in
+tests/test_divergences.py and explored by scripts/renyi_threshold.py):
+    ~D_alpha(Phi rho||Phi sigma) <= ~D_alpha(rho||sigma)  for alpha >= 1/2  [Frank-Lieb 2013; Beigi 2013 (alpha > 1);
+                                                                            MDSFT 2013, WWY 2014 (1 < alpha <= 2)],
+    D_alpha(Phi rho||Phi sigma)  <= D_alpha(rho||sigma)   for 0 < alpha <= 2 [Petz 1986],
+and both fail in general outside these ranges. Further properties used in the tests: ~D_alpha <= D_alpha
+(Araki-Lieb-Thirring), both families nondecreasing in alpha (Petz on (0, inf), sandwiched on [1/2, inf)), and
+positive for states (sandwiched for alpha >= 1/2) with equality iff rho = sigma.
 
 References
 ----------
@@ -281,6 +293,7 @@ class _Terms(NamedTuple):
     p: torch.Tensor          # (B, C) Tr rho_c
     q: torch.Tensor          # (B, C) Tr sigma_c
     alpha: torch.Tensor      # (B,) (ones for Umegaki)
+    umegaki: Optional[torch.Tensor]     # (B, C) Umegaki terms as well, for alpha given per sample (entries alpha = 1)
 
 
 def _scale(values: List[torch.Tensor], thr: torch.Tensor, B: int, smallest: torch.Tensor) -> torch.Tensor:
@@ -297,11 +310,12 @@ def _scale(values: List[torch.Tensor], thr: torch.Tensor, B: int, smallest: torc
 def _terms(rho: Operator, sigma: Operator, alpha: Optional[Alpha], kind: str, trace: str,
            rtol: Optional[float]) -> _Terms:
     """
-    Per-sector Renyi / Umegaki quantities; one batched decomposition per block size and operator. The Renyi
-    quantities are evaluated with rescaled operators, Q = exp(log_scale) sum_c terms_c, so that large alpha (D_max as
-    a limit) and single precision do not overflow: Petz with (rho / a)^alpha (sigma / b)^{1-alpha}, sandwiched with
-    ((sigma / b)^g rho (sigma / b)^g / m)^alpha, a = lambda_max(rho), m = lambda_max of the sandwich, and b the
-    smallest eigenvalue of sigma on its support for alpha > 1, lambda_max(sigma) for alpha < 1 (every factor <= 1).
+    Per-sector Renyi / Umegaki quantities; one batched eigendecomposition per block size of rho and of sigma (from
+    the spectral cache if there is one). The Renyi quantities are evaluated with rescaled factors, Q = exp(log_scale)
+    sum_c terms_c, so that large alpha (D_max as a limit) and single precision do not overflow: Petz with
+    (rho / a)^alpha (sigma / b)^{1-alpha}, sandwiched with the singular values s of (sigma / b)^g rho^{1/2} as
+    (s / m)^{2 alpha}; a = lambda_max(rho), m = s_max, b = the smallest eigenvalue of sigma on its support for
+    alpha > 1 and lambda_max(sigma) for alpha < 1 (every factor <= 1).
     """
     rho = _as_blunt(rho, trace, "rho")
     sigma = _as_blunt(sigma, trace, "sigma")
@@ -323,31 +337,33 @@ def _terms(rho: Operator, sigma: Operator, alpha: Optional[Alpha], kind: str, tr
     if kind != 'umegaki':
         b = _scale(ws, thr_s, B, a > 1)                       # sigma / b: factors (sigma / b)^{1-alpha}, ^g <= 1
 
-    if kind in ('petz', 'umegaki'):
-        dr = _decomposed(rho, B)
-        wr_all = [w for *_, w, _ in dr]
-        thr_r = rt * _global_max(wr_all, B)
-        if kind == 'petz':
-            ar = _scale(wr_all, thr_r, B, torch.zeros_like(a, dtype=torch.bool))
-            log_scale = a * torch.log(ar) + (1 - a) * torch.log(b)
+    dr = _decomposed(rho, B)
+    wr_all = [w for *_, w, _ in dr]
+    thr_r = rt * _global_max(wr_all, B)
+    per_sample = kind != 'umegaki' and isinstance(alpha, torch.Tensor)
+    uparts = []
+    if kind == 'umegaki' or per_sample:          # Tr rho log rho - Tr rho log sigma, logarithms on the supports
         for (k, idx, xr, wr, Vr), (_, _, xs, ws_, Vs) in zip(dr, ds):
             n = len(idx)
             tr_, ts = _rep(thr_r, n), _rep(thr_s, n)
-            if kind == 'petz':
-                an, arn, bn = _rep(a, n), _rep(ar, n), _rep(b, n)
-                v = _tr_prod(_apply(xr, wr, Vr, _support_power(an, tr_, arn)),
-                             _apply(xs, ws_, Vs, _support_power(1 - an, ts, bn)))
-            else:                         # Tr rho log rho - Tr rho log sigma, logarithms on the supports
-                ent = _tr(_apply(xr, wr, Vr, lambda lam, t=tr_: torch.where(lam > t, torch.special.xlogy(lam, lam),
-                                                                            torch.zeros_like(lam))))
-                v = ent - _tr_prod(xr, _apply(xs, ws_, Vs, _support_log(ts)))
+            ent = _tr(_apply(xr, wr, Vr, lambda lam, t=tr_: torch.where(lam > t, torch.special.xlogy(lam, lam),
+                                                                        torch.zeros_like(lam))))
+            uparts.append((idx, ent - _tr_prod(xr, _apply(xs, ws_, Vs, _support_log(ts)))))
+    if kind == 'umegaki':
+        parts = uparts
+    elif kind == 'petz':
+        ar = _scale(wr_all, thr_r, B, torch.zeros_like(a, dtype=torch.bool))
+        log_scale = a * torch.log(ar) + (1 - a) * torch.log(b)
+        for (k, idx, xr, wr, Vr), (_, _, xs, ws_, Vs) in zip(dr, ds):
+            n = len(idx)
+            an, arn, bn = _rep(a, n), _rep(ar, n), _rep(b, n)
+            v = _tr_prod(_apply(xr, wr, Vr, _support_power(an, _rep(thr_r, n), arn)),
+                         _apply(xs, ws_, Vs, _support_power(1 - an, _rep(thr_s, n), bn)))
             parts.append((idx, v))
     elif kind == 'sandwiched':
         # the nonzero spectrum of S rho S (S = (sigma/b)^g) is that of B B^* with B = S rho^{1/2}: its eigenvalues
         # are the squared singular values of B, which the SVD resolves down to (eps ||S|| ||rho^{1/2}||)^2 instead of
         # eps ||S rho S|| for the eigenvalues of the product (they matter: lambda^alpha is not small for small alpha)
-        dr = _decomposed(rho, B)
-        thr_r = rt * _global_max([w for *_, w, _ in dr], B)
         svs, smax, hmax = [], [], []
         for (k, idx, xr, wr, Vr), (_, _, xs, ws_, Vs) in zip(dr, ds):
             n = len(idx)
@@ -369,30 +385,36 @@ def _terms(rho: Operator, sigma: Operator, alpha: Optional[Alpha], kind: str, tr
     else:
         raise ValueError(f"unknown kind {kind!r}")
 
-    for (k, idx, xr), (_, _, xs, ws_, Vs) in zip(_blocks(rho, B), ds):
+    for (k, idx, xr, _, _), (_, _, xs, ws_, Vs) in zip(dr, ds):
         n = len(idx)
         xd = xr.detach()
         leaks.append((idx, _tr(xd) - _tr_prod(xd, _projection(ws_, Vs, _rep(thr_s, n)))))
         ps.append((idx, _tr(xr)))
         qs.append((idx, _tr(xs)))
     return _Terms(_scatter(alg, parts, B, rdt), log_scale, _scatter(alg, leaks, B, rdt), _scatter(alg, ps, B, rdt),
-                  _scatter(alg, qs, B, rdt), a)
+                  _scatter(alg, qs, B, rdt), a, _scatter(alg, uparts, B, rdt) if per_sample else None)
 
 
 def _from_terms(t: _Terms, supp_tol: float) -> torch.Tensor:
-    """Divergence (B,) from the per-sector quantities, with the support conventions of the module docstring."""
-    Q = t.terms.sum(-1)
+    """Divergence (B,) from the per-sector quantities, with the support conventions of the module docstring; for alpha
+    given per sample, entries alpha = 1 give the Umegaki relative entropy."""
     tr = t.p.sum(-1)
     tr_safe = torch.where(tr > 0, tr, torch.ones_like(tr))
     leak = t.leak.sum(-1) > supp_tol * tr
-    inf = torch.full_like(Q, math.inf)
+    inf = torch.full_like(tr, math.inf)
     if t.log_scale is None:                                  # Umegaki
-        return torch.where(leak, inf, Q / tr_safe)
+        return torch.where(leak, inf, t.terms.sum(-1) / tr_safe)
     a = t.alpha
+    one = a == 1
+    Q = t.terms.sum(-1)
     pos = Q > 0
-    D = (t.log_scale + torch.log(torch.where(pos, Q, torch.ones_like(Q))) - torch.log(tr_safe)) / (a - 1)
+    den = torch.where(one, torch.ones_like(a), a - 1)        # finite in both branches (no NaN gradients)
+    D = (t.log_scale + torch.log(torch.where(pos, Q, torch.ones_like(Q))) - torch.log(tr_safe)) / den
     D = torch.where(pos, D, inf)
-    return torch.where(leak & (a > 1), inf, D)
+    D = torch.where(leak & (a > 1), inf, D)
+    if t.umegaki is not None:
+        D = torch.where(one, torch.where(leak, inf, t.umegaki.sum(-1) / tr_safe), D)
+    return D
 
 
 # ======================================================================
@@ -405,8 +427,8 @@ def petz_renyi_divergence(rho: Operator, sigma: Operator, alpha: Alpha, trace: s
     (batch,).
 
     rho, sigma: states (DensityMatrix) or positive Operators of the same algebra, batch 1 or B.
-    alpha: a number in (0, 1) u (1, inf) (checked), or a tensor (batch,) of such values, one per sample (not checked:
-        alpha = 1 gives NaN, see renyi_divergence for the limits).
+    alpha: a number in (0, 1) u (1, inf) (checked), or a tensor (batch,) of positive values, one per sample (not
+        checked; entries alpha = 1 give the Umegaki relative entropy, computed in the same pass).
     trace: the trace for which plain Operator inputs are densities (module docstring; the value does not depend on it).
     rtol, supp_tol: support thresholds (module docstring). +inf for alpha > 1 if supp rho is not in supp sigma, and
         for alpha < 1 if the supports are orthogonal.

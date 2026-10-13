@@ -41,9 +41,9 @@ dev = args.device
 FULL = args.mode in ('full', 'check')            # check: the sizes of full, minimal repetitions
 CHECK = args.mode == 'check'
 DIMS = (2, 3) if FULL else (2,)
-STARTS = 64 if FULL else 12                      # independent starts per value of alpha
+STARTS = 64 if FULL else 16                      # independent starts per value of alpha
 ROUNDS, STEPS, LR, DECAY = (1, 4, 0.1, 0.6) if CHECK else (8, 75, 0.1, 0.6) if FULL else (5, 60, 0.1, 0.6)
-REFINE_ROUNDS, REFINE_POINTS = (1, 3) if CHECK else (3, 7) if FULL else (2, 7)
+REFINE_ROUNDS, REFINE_POINTS = (1, 3) if CHECK else (3, 7)
 EPS = 0.01                                       # states rho >= EPS / d
 TOL = 1e-9                                       # a certified v above TOL is a violation
 DIGITS = 50                                      # mpmath precision of the certification
@@ -303,27 +303,35 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.0), sharey=True)
-markers = {'dephasing': 'o', 'stinespring': 's'}
+colors = {'dephasing': 'C0', 'stinespring': 'C1'}
 labels = {'dephasing': 'complete dephasing', 'stinespring': 'channels, environment $d$'}
+FLOOR = TOL / 30                     # certified v <= TOL (no violation found) is drawn on this line
 for ax, kind in zip(axes, KINDS):
     t = KNOWN[kind]
     lo, hi = (t, 3.05) if kind == 'sandwiched' else (0.15, t)
-    ax.axvspan(lo, hi, color='0.92', lw=0)
+    ax.axvspan(lo, hi, color='0.93', lw=0)
     ax.axvline(t, color='k', ls='--', lw=0.8)
+    ax.axhline(TOL, color='0.6', ls=':', lw=0.8)
     for d in DIMS:
         for f in FAMILIES:
             pts = results[f'd{d}_{f}_{kind}']['points']
             a = np.array([r['alpha'] for r in pts])
             v = np.array([r['certified'] for r in pts])
-            ax.plot(a, v, markers[f] + ('-' if d == DIMS[0] else ':'), ms=3.5, lw=0.8,
-                    mfc='none' if d != DIMS[0] else None, label=f"{labels[f]}, $d={d}$")
-    ax.set_yscale('symlog', linthresh=1e-9)
-    ax.axhline(0, color='k', lw=0.5)
+            viol = v > TOL
+            ls = '-' if d == DIMS[0] else ':'
+            ax.plot(a[viol], v[viol], 'o' + ls, color=colors[f], ms=3, lw=0.8, label=f"{labels[f]}, $d={d}$")
+            ax.plot(a[~viol], np.full((~viol).sum(), FLOOR), 'o', color=colors[f], ms=3, mfc='none', lw=0)
+    ax.set_yscale('log')
+    ax.set_ylim(FLOOR / 3, 30)
     ax.set_xlim(0.15, 3.05)
     ax.set_xlabel('$\\alpha$')
     ax.set_title('sandwiched $\\widetilde D_\\alpha$' if kind == 'sandwiched' else 'Petz $D_\\alpha$', fontsize=9)
-axes[0].set_ylabel('largest $v(\\alpha)$ found (certified)')
-axes[1].legend(frameon=False, fontsize=7, loc='lower right')
+    ax.text(0.98 if kind == 'sandwiched' else 0.02, 0.4, 'DPI theorem', transform=ax.transAxes, fontsize=7,
+            ha='right' if kind == 'sandwiched' else 'left', color='0.4')
+axes[0].set_ylabel('largest certified violation $v(\\alpha)$')
+axes[0].text(0.02, 0.06, f'open circles: no violation ($v \\leq {sci(TOL, 1)}$)',
+             transform=axes[0].transAxes, fontsize=7, color='0.3')
+axes[1].legend(frameon=False, fontsize=7, loc='upper left')
 fig.tight_layout()
 fig.savefig(f"{args.figdir}/renyi_threshold.pdf", metadata={"CreationDate": None})
 finish_partial(args)
