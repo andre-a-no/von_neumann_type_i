@@ -192,8 +192,11 @@ def partial_trace_channel(alg12: TypeIAlgebra, keep: int = 1) -> InterSectorChan
     """
     Partial trace alg12 -> alg1 (keep=1, trace out the second factor) or -> alg2 (keep=2), as a
     trace-preserving map between sectors with Kraus operators 1 (x) <j| (resp. <j| (x) 1) on every pair
-    block. Works for plain and fused products (for additive charges, blocks of a fused operator
-    between different pairs never contribute). Its blunt-trace adjoint is the embedding A -> A (x) 1.
+    block. Works for plain and fused products and any fusion rule: the result is the restriction of the
+    state to alg1 (resp. alg2) as a subalgebra of B(H1 (x) H2) -- the Hilbert-space partial trace followed by the
+    conditional expectation onto alg1, which drops blocks between pairs of different charges of the kept factor
+    (for a plain product, or additive charges without repetitions, those blocks are zero anyway). Its
+    blunt-trace adjoint is the embedding A -> A (x) 1.
     """
     alg1, alg2 = _factors(alg12)
     if keep not in (1, 2):

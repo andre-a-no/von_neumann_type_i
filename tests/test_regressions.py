@@ -112,3 +112,39 @@ def test_to_inter_sector_keeps_tp_flag():
     alg = _cplx((2, 3))
     Phi = ch.random_channel(alg, 2)
     assert Phi.to_inter_sector()._trace_preserving is True
+
+
+def test_lanczos_large_shift_not_truncated():
+    """A large uniform field is a constant shift in a sector; it must not make Lanczos stop early."""
+    from torch_vn_algebra.chains import SpinChain
+    from torch_vn_algebra import krylov
+    ch_ = SpinChain(10, 'open', complex_valued=False, precision='double')
+    H = ch_.xxz_sparse(1.0, 1.0, 1e5, sector=2)
+    Hd = H.to_dense()[0].numpy()
+    w, V = np.linalg.eigh(Hd)
+    rng = np.random.default_rng(0)
+    v = V[:, 5] + 1e-6 * rng.standard_normal(V.shape[0]); v /= np.linalg.norm(v)
+    psi0 = torch.tensor(v)[None]
+    out = krylov.evolve(H, psi0, [0.0, 0.2])[-1, 0].numpy()
+    ref = scipy.linalg.expm(-0.2j * Hd) @ v
+    assert np.abs(out - ref).max() < 1e-9
+    E, _, _ = krylov.ground_state(H, v0=torch.tensor(V[:, 5] + 1e-6 * V[:, 0])[None])
+    assert abs(E.item() - w[0]) < 1e-6
+
+
+def test_krylov_zero_vector():
+    from torch_vn_algebra.chains import SpinChain
+    from torch_vn_algebra import krylov
+    H = SpinChain(8, 'open', precision='double').xxz_sparse(1.0, 1.0, None, sector=4)
+    psi0 = torch.randn(2, H.dim, dtype=torch.complex128); psi0[1] = 0
+    out = krylov.evolve(H, psi0, [0.0, 1.0])
+    assert torch.isfinite(out).all() and out[-1, 1].abs().max() == 0
+
+
+def test_hilbert_norm_flat_vectors():
+    from torch_vn_algebra.hilbert_space import HilbertSpace
+    hs = HilbertSpace(3, 3, batch_size=2, n_channels=2, precision='double', device='cpu')
+    v = torch.randn(2, 2, 3, dtype=torch.complex128)
+    n = hs.norm(v).reshape(-1)
+    assert torch.allclose(n ** 2, hs.inner_product(v, v).reshape(-1).real)
+    assert torch.allclose(hs.norm(hs.normalize(v)).reshape(-1), torch.ones(2, dtype=torch.float64))

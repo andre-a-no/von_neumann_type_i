@@ -95,7 +95,7 @@ def lanczos(matvec: Callable, v0: torch.Tensor, m: int) -> Tuple[torch.Tensor, t
     Breakdown (an invariant subspace) is handled by zero beta and zero further vectors.
     """
     B, k = v0.shape
-    q = v0 / torch.linalg.vector_norm(v0, dim=-1, keepdim=True)
+    q = v0 / torch.clamp(torch.linalg.vector_norm(v0, dim=-1, keepdim=True), min=1e-300)   # v0 = 0 stays 0
     w_first = matvec(q)
     dtype = torch.promote_types(v0.dtype, w_first.dtype)     # a complex H makes the basis complex
     q = q.to(dtype)
@@ -118,9 +118,11 @@ def lanczos(matvec: Callable, v0: torch.Tensor, m: int) -> Tuple[torch.Tensor, t
         if j == m - 1:
             break
         b = torch.linalg.vector_norm(w, dim=-1)
-        # breakdown: the remainder is round-off relative to |Hq| (an invariant subspace was reached);
-        # the coupling is then exactly zero and all further vectors are zero
-        ok = b > 1e-10 * torch.clamp(scale, min=1e-300)
+        # breakdown: the remainder is at the round-off level of |Hq| (an invariant subspace was reached);
+        # the coupling is then exactly zero and all further vectors are zero. The threshold is tied to the
+        # machine epsilon: a fixed relative threshold would cut off genuine couplings when H carries a large
+        # constant shift (|Hq| ~ |shift|, while beta does not depend on it)
+        ok = b > 100 * torch.finfo(b.dtype).eps * torch.clamp(scale, min=1e-300)
         beta[:, j] = torch.where(ok, b, torch.zeros_like(b))
         q = torch.where(ok[:, None], w / torch.clamp(b, min=1e-300)[:, None], torch.zeros_like(w))
     return alpha, beta, Q
@@ -179,7 +181,8 @@ def ground_state(H, m: int = 80, tol: Optional[float] = None, max_restarts: int 
 def expm_multiply_step(H, psi: torch.Tensor, dt: float, m: int = 30) -> Tuple[torch.Tensor, torch.Tensor]:
     """
     exp(-i dt H) psi in an m-dimensional Krylov space. Returns the new state and an error estimate
-    per batch element, beta_m |[exp(-i dt T)]_{m-1, 0}| (the standard a-posteriori bound).
+    per batch element, beta_m |[exp(-i dt T)]_{m-1, 0}| (the standard a-posteriori estimate; it is not a bound:
+    for well-resolved steps it overestimates the error, for steps far too large it can underestimate it).
     """
     nrm = torch.linalg.vector_norm(psi, dim=-1)
     alpha, beta, Q = lanczos(H.matvec, psi, m)
