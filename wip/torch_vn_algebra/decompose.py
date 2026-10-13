@@ -45,7 +45,11 @@ Kojima 2010). In the canonical form a Hermitian :math:`K\in\mathcal A'` is
 :math:`\mathbb C^{k_c}\otimes|e\rangle` (:math:`e` an eigenvector of :math:`\kappa_c`): irreducible
 submodules, one per copy, of dimension :math:`k_c`. Their computation needs no knowledge of
 :math:`V`: an eigenspace of :math:`K` is :math:`\mathcal A`-invariant because :math:`K` commutes with
-:math:`\mathcal A`.
+:math:`\mathcal A`. If eigenvalues of different copies coincide or are closer than the clustering
+tolerance, an eigenspace is a sum of several irreducible pieces. This is detected without knowing
+the pieces: the compression :math:`Q^*YQ` of another random :math:`Y\in\mathcal A'` to the eigenspace
+is a generic element of the commutant of :math:`\mathcal A` restricted there, which is scalar iff the
+restriction is irreducible; if it is not scalar, its eigenspaces split the subspace further.
 
 *Why a second random element aligns the copies.* For two irreducible submodules with orthonormal
 bases :math:`Q_i,Q_j` and a generic :math:`Y\in\mathcal A'`, the block :math:`T=Q_i^*YQ_j` is an
@@ -144,9 +148,9 @@ References
   of matrix \*-algebras with application to semidefinite programming*, Japan J. Indust. Appl. Math.
   27 (2010) 125-160 (the random-commutant-element algorithm used here).
 * T. Maehara, K. Murota, *A numerical algorithm for block-diagonal decomposition of matrix
-  \*-algebras with general irreducible components*, Japan J. Indust. Appl. Math. 27 (2010) 263-293;
-  and *Error-controlling algorithm for simultaneous block-diagonalization and its application to
-  independent component analysis*, SIAM J. Matrix Anal. Appl. 31 (2010) 2216-2240.
+  \*-algebras with general irreducible components*, Japan J. Indust. Appl. Math. 27 (2010) 263-293.
+* T. Maehara, K. Murota, *Algorithm for error-controlled simultaneous block-diagonalization of
+  matrices*, SIAM J. Matrix Anal. Appl. 32 (2011) 605-620.
 * W. Fulton, J. Harris, *Representation Theory: A First Course*, Springer GTM 129 (1991): Schur's
   lemma, characters (Sec. 1-2), Schur-Weyl duality (Sec. 6.1).
 * Course, docs/tutorial/02_von_neumann_algebras.md, Theorem 2.6 and Proposition 2.7.
@@ -576,7 +580,7 @@ class Decomposition:
         self._commutant_algebra = None
         self._maps = {}
         self.diagnostics = dict(diagnostics or {})
-        self._verify_data = None                 # (generators, sampler, commutant dim, seed) set by wedderburn
+        self._verify_data = None                 # generators, sampler, dim A', acceptance tol: set by wedderburn
 
     # ----- sizes -----
     @property

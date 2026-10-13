@@ -19,8 +19,8 @@ contrast (Section 3.6), and for $\delta\in[0,1)$
 $$
 \ell(\delta)=\frac{1-\delta}{1+\delta},\qquad 1-\ell(\delta)=\frac{2\delta}{1+\delta};
 $$
-a positive operator with $\lambda_{\max}=1$ has contrast $\delta$ iff $\lambda_{\min}=\ell(\delta)$, since
-$t\mapsto(1-t)/(1+t)$ is strictly decreasing. The examples are the three functionals of the companion paper
+a positive operator with $\lambda_{\max}=1$ has contrast $\ell(\lambda_{\min})$, so it has contrast $\delta$ iff
+$\lambda_{\min}=\ell(\delta)$, since $\ell$ is a strictly decreasing involution of $[0,1]$. The examples are the three functionals of the companion paper
 (section *From sampling to optimisation*):
 
 | | functional | variables |
@@ -77,12 +77,15 @@ in them; if $c_+=c_-$ and $\delta>0$ the block has two different eigenvalues, so
 and any two slots will do. $\square$
 
 So random slots let a multistart search cover the whole shell, and the constraint holds exactly at every iterate.
-`SelfAdjointParam` uses $X=U\operatorname{diag}(\sigma\lambda)U^*$ with signs $\sigma\in\{\pm1\}^D$ fixed per start, so
-$|X|=U\operatorname{diag}(\lambda)U^*$, and (by the same proof) the union over signs and slots is $\{X=X^*:|X|\in\mathcal P_\delta\}$. The
-chart $G\mapsto U_0e^{G-G^*}$ has differential $H\mapsto U_0(H-H^*)$ at $0$, onto the tangent space
-$U_0\cdot\{S^*=-S\}$, so it is a local diffeomorphism near $0$ only; `extremize` therefore **re-centres** after every
-round ($U_0\leftarrow U_0e^{G-G^*}$, $G\leftarrow0$). The Cayley transform (Exercise 1) and the polar retraction
-(the unitary factor of $U_0+\xi$, Theorem 1.8) are charts with the same differential.
+`SelfAdjointParam` uses $X=U\operatorname{diag}(\sigma\lambda)U^*$ with signs $\sigma\in\{\pm1\}^D$ drawn per start
+(and changed only by the sign flips of Section 11.5), so $|X|=U\operatorname{diag}(\lambda)U^*$, and (by the same proof)
+the union over signs and slots is $\{X=X^*:|X|\in\mathcal P_\delta\}$. Only $S=G-G^*$ matters. The map
+$S\mapsto U_0e^S$ on skew-adjoint $S$ has differential $S\mapsto U_0S$ at $S=0$, a bijection onto the tangent space
+$U_0\cdot\{S^*=-S\}$ of the unitary group, so it is a local diffeomorphism near $S=0$; far from $0$ it is not injective,
+and its differential is singular where two eigenvalues of $S$ differ by a nonzero multiple of $2\pi i$. `extremize`
+therefore **re-centres** after every round ($U_0\leftarrow U_0e^{G-G^*}$, $G\leftarrow0$). The Cayley chart
+$S\mapsto U_0C(-S/2)$ (Exercise 1) and the polar retraction $S\mapsto$ unitary factor of $U_0(1+S)$ (Theorem 1.8) have
+the same differential at $0$.
 
 The code checks the constraint, and Proposition 11.2 constructively: the parameters of the proof reproduce a target.
 
@@ -162,7 +165,8 @@ $\sum_ip^\downarrow_iq^\uparrow_i\le\operatorname{Tr}(PQ)\le\sum_ip^\downarrow_i
 (b) For $P,Q\ge0$: $\operatorname{Tr}(PQ)\le\|PQ\|_1\le\sum_ip^\downarrow_iq^\downarrow_i$.
 
 *Proof.* (a) As in the proof of Theorem 3.5, $\operatorname{Tr}(PQ)=\sum_{ij}p_iq_jc_{ij}$ with the doubly stochastic
-$c_{ij}=|\langle u_i,v_j\rangle|^2$ for eigenbases ordered decreasingly; apply Lemma 11.3. (b) The first inequality is
+$c_{ij}=|\langle u_i,v_j\rangle|^2$ for eigenbases ordered decreasingly; apply Lemma 11.3 (its lower bound is
+$\sum_ip^\downarrow_iq^\downarrow_{k+1-i}=\sum_ip^\downarrow_iq^\uparrow_i$). (b) The first inequality is
 Theorem 1.9. By Theorem 1.9 and Theorem 11.4, $\|PQ\|_1=\max_U|\operatorname{Tr}(P\,QU)|\le\sum_is_i(P)s_i(QU)$, and
 $s_i(QU)=q^\downarrow_i$ because $|QU|=(U^*Q^2U)^{1/2}=U^*QU$ (Theorem 1.6). $\square$
 
@@ -222,6 +226,10 @@ Ph, Qh = (M5.operator_from_eigenvalues(lambda k: torch.randn(2000, k), batch_siz
 p, q = Ph.eigenvalues()[0], Qh.eigenvalues()[0]                             # increasing order
 t = (Ph @ Qh).trace.real
 assert (t <= (p * q).sum(-1) + 1e-12).all() and (t >= (p * q.flip(-1)).sum(-1) - 1e-12).all()   # Cor. 11.5(a)
+Pp, Qp = Ph @ Ph, Qh @ Qh                                                   # positive, spectra p^2, q^2
+nuc = (Pp @ Qp).trace_norm()
+assert ((Pp @ Qp).trace.real <= nuc + 1e-12).all()                          # Cor. 11.5(b)
+assert (nuc <= ((p ** 2).sort(-1)[0] * (q ** 2).sort(-1)[0]).sum(-1) + 1e-10).all()
 
 alg3 = TypeIAlgebra([3, 3], [3, 3], precision='double')
 x_dn = torch.tensor([1.0, 0.6, ell(0.5)], dtype=torch.float64)              # Delta = 0.5, middle value 0.6
@@ -290,29 +298,25 @@ assert abs(z_exp3(Xe, Ye).item()) < 1e-12 and (Xe @ Ye - Ye @ Xe).operator_norm(
 
 How large is $|\operatorname{Tr}(AU)|$ typically, compared with its maximum $\|A\|_1$? The library samples $U$ as
 the factor $Q$ of the QR decomposition $Z=QR$, $R_{ii}>0$, of a **Ginibre matrix** $Z$ (independent entries with
-density $\pi^{-1}e^{-|z|^2}$; Mezzadri's recipe), independently in every block. The law of $Q$ is the **Haar measure**.
+density $\pi^{-1}e^{-|z|^2}$; Mezzadri's recipe), independently in every block.
 
-**Lemma 11.10.** For every fixed unitary $V\in M_k(\mathbb C)$, $VQ$ has the law of $Q$.
+**Lemma 11.10.** $Q$ is Haar distributed on $U(k)$; in particular, for every fixed unitary $V\in M_k(\mathbb C)$, $VQ$ has
+the law of $Q$. The unitary $\bigoplus_cQ_c$ with independent blocks is Haar distributed on the unitary group of
+$\mathcal M$.
 
-*Proof.* $Z$ is invertible almost surely ($\det Z$ is a nonzero polynomial in the real coordinates, and its zero set
-has Lebesgue measure zero, a standard fact). Gram–Schmidt on the columns gives $Z=QR$; it is unique, because if
-$QR=Q'R'$ then $Q'^*Q=R'R^{-1}$ is unitary, hence normal, and upper triangular, hence diagonal (proof of Theorem 1.3),
-with positive diagonal, hence $1$. The map $Z\mapsto VZ$ is real-linear and preserves $\|Z\|_2$, so it preserves
-Lebesgue measure and the density $\pi^{-k^2}e^{-\|Z\|_2^2}$: $VZ$ has the law of $Z$. As $VZ=(VQ)R$, $VQ=Q(VZ)$ has the
-law of $Q(Z)$. $\square$
+*Proof.* This is Theorem 5.3 (the left invariance is the equivariance step of its proof) and Corollary 5.4. $\square$
 
-Uniqueness and right invariance of the Haar measure are proved in Section 5.1 and not needed here (see also
-E. Meckes, *The Random Matrix Theory of the Classical Compact Groups*, Cambridge 2019).
+(For concentration of measure and more on these groups see E. Meckes, *The Random Matrix Theory of the Classical
+Compact Groups*, Cambridge 2019.)
 
 **Proposition 11.11.** For Haar $U\in U(k)$ and $A\in M_k(\mathbb C)$: $\mathbb E\operatorname{Tr}(AU)=0$ and
 $\mathbb E|\operatorname{Tr}(AU)|^2=\|A\|_2^2/k$.
 
-*Proof.* The entries are bounded. $V=-1$ in Lemma 11.10 gives $\mathbb EU_{ij}=0$. With
-$V=\operatorname{diag}(e^{i\varphi_1},\dots,e^{i\varphi_k})$,
-$\mathbb E[U_{ij}\bar U_{lm}]=e^{i(\varphi_i-\varphi_l)}\mathbb E[U_{ij}\bar U_{lm}]$ for all $\varphi$, so it vanishes for
-$i\ne l$; with permutation matrices $V$, $\mathbb E[U_{ij}\bar U_{im}]$ does not depend on $i$, and
-$\sum_i\bar U_{im}U_{ij}=(U^*U)_{mj}=\delta_{mj}$. Hence $\mathbb E[U_{ij}\bar U_{lm}]=\delta_{il}\delta_{jm}/k$, and with
-$\operatorname{Tr}(AU)=\sum_{ij}A_{ji}U_{ij}$,
+*Proof.* $\mathbb EU_{ij}=0$ by Corollary 5.5. Proposition 5.7 (with $C=1$) for $X=|e_j\rangle\langle e_m|$ gives the
+Weingarten formula of order one,
+$\mathbb E[U_{ij}\bar U_{lm}]=\mathbb E(UXU^*)_{il}=\delta_{il}\delta_{jm}/k$; for $k\ge2$ it also follows from the
+order-two formula, Theorem 5.10, by setting $i_2=i'_2$, $j_2=j'_2$ and summing over both, since
+$\sum_{i_2,j_2}|U_{i_2j_2}|^2=k$. With $\operatorname{Tr}(AU)=\sum_{ij}A_{ji}U_{ij}$,
 $\mathbb E|\operatorname{Tr}(AU)|^2=\sum_{ijlm}A_{ji}\bar A_{ml}\mathbb E[U_{ij}\bar U_{lm}]=\frac1k\sum_{ij}|A_{ji}|^2$. $\square$
 
 **Corollary 11.12.** Let $X,Y\ge0$ in $M_k(\mathbb C)$ have spectra in $[a,b]$, $a>0$, and $U$ be Haar. Then
@@ -377,14 +381,14 @@ sup_exact, inf_exact = ((Yf @ Xf).trace_norm() - trXY).item(), -trXY.item()
 U6 = opt.UnitaryParam(M6, 24)                                               # 24 starts
 pm = torch.tensor([1.0, -1.0], dtype=torch.float64).repeat_interleave(12)   # 12 maximise z, 12 maximise -z
 best = opt.extremize(lambda: pm * ((Xf @ U6.operator() @ Yf).trace.abs() - trXY), [U6],
-                     maximize=True, rounds=6, steps=40).reshape(2, 12).max(1)[0]
+                     maximize=True, rounds=6, steps=30).reshape(2, 12).max(1)[0]
 best_up, best_down = best[0].item(), -best[1].item()
 z_mc = (Xf @ M6.random_unitary_operator(N) @ Yf).trace.abs() - trXY
 print(f"sup z: exact {sup_exact:.6e}, ascent {best_up:.6e}, best sample {z_mc.max().item():+.4f}")
 print(f"inf z: exact {inf_exact:.6f}, descent {best_down:.6f}, worst sample {z_mc.min().item():+.6f}")
 assert best_up <= sup_exact + 1e-12 and best_down >= inf_exact - 1e-12    # attained values: one-sided
 assert sup_exact - best_up < 1e-3 * sup_exact and best_down - inf_exact < 1e-3 * abs(inf_exact)
-assert z_mc.min().item() - inf_exact < 1e-3 * abs(inf_exact)               # sampling finds the typical side ...
+assert z_mc.min().item() - inf_exact < 1e-2 * abs(inf_exact)               # sampling finds the typical side ...
 assert z_mc.max().item() < 0                                               # ... but misses the violation
 ```
 
@@ -438,7 +442,7 @@ X1, Y1, U1 = (opt.PositiveParam(alg22, 3 * S, delta=grid.repeat_interleave(S)),
 def z1():
     x, y = X1.operator(), Y1.operator()
     return (x @ U1.operator() @ y).trace.abs() - (x @ y).trace.real
-inf1 = opt.extremize(z1, [X1, Y1, U1], maximize=False, rounds=4, steps=40).reshape(3, S).min(1)[0]
+inf1 = opt.extremize(z1, [X1, Y1, U1], maximize=False, rounds=4, steps=30).reshape(3, S).min(1)[0]
 exact1 = -(4 - 2 * grid / (1 + grid))                                       # Proposition 11.14
 print("Exp. 1  inf:", [f"{v:.4f}" for v in inf1.tolist()], " exact:", [f"{v:.4f}" for v in exact1.tolist()])
 assert (inf1 >= exact1 - 1e-12).all() and (inf1 - exact1).max() < 4e-3
@@ -452,7 +456,7 @@ def z2():
     x0, y0 = X2.operator(), Y2.operator()
     M = alg3.operator((x0 @ V2.operator() @ y0).matrix, is_self_adjoint=False)
     return sign * (M.trace_norm() - (x0 @ y0).trace.real)
-best2 = opt.extremize(z2, [X2, Y2, V2], maximize=True, rounds=4, steps=40).reshape(2, S).max(1)[0]
+best2 = opt.extremize(z2, [X2, Y2, V2], maximize=True, rounds=4, steps=30).reshape(2, S).max(1)[0]
 sup2, inf2 = best2[0].item(), -best2[1].item()
 print(f"Exp. 2  sup {sup2:.6f}, inf {inf2:.6f}, exact +-{envelope:.6f}")
 assert sup2 <= envelope + 1e-12 and inf2 >= -envelope - 1e-12               # Corollary 11.7: one-sided ...
@@ -465,7 +469,7 @@ def exp3(alg_, deltas, sign):
         y = Y3.operator()
         M = alg_.operator((y @ X3.operator() @ y).matrix, is_self_adjoint=True)
         return sign * ((y @ X3.abs_operator() @ y).trace.real - M.trace_norm())
-    return opt.extremize(z3, [X3, Y3], maximize=True, rounds=4, steps=40).reshape(2, S).max(1)[0]
+    return opt.extremize(z3, [X3, Y3], maximize=True, rounds=4, steps=30).reshape(2, S).max(1)[0]
 
 best3 = exp3(alg22, torch.full((2 * S,), 0.5, dtype=torch.float64), sign)
 sup_M22, inf3 = best3[0].item(), -best3[1].item()

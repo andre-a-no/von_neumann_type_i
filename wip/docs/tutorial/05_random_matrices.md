@@ -108,11 +108,12 @@ measure of the compact group $U(\mathcal M)$. Conversely, by uniqueness every Ha
 this law. $\square$
 
 The group $U(\mathcal M)$ is much smaller than $U(D)$: for $C\ge2$ a Haar unitary of $U(D)$ lies
-in $\mathcal M$ with probability zero (its first column is $z/\|z\|$ for a Gaussian vector $z$, by
-Theorem 5.3 and the Gram–Schmidt construction in Lemma 5.2, so all its entries are nonzero almost surely). The Haar measure of
-$SU(k)$ is obtained in the same spirit: if $U$ is Haar on $U(k)$ and $\theta=\arg\det U$, then
-$V=e^{-i\theta/k}U\in SU(k)$, and for $W\in SU(k)$, $\det(WU)=\det U$ gives $V(WU)=WV(U)$; since
-$WU$ has the law of $U$, the law of $V$ is left-invariant on $SU(k)$.
+in $\mathcal M$ with probability zero (by Theorem 5.3 and the Gram–Schmidt construction in
+Lemma 5.2, its first column is $z/\|z\|$ for a Gaussian vector $z$, so all its entries are nonzero
+almost surely). The Haar measure of $SU(k)$ is obtained in the same spirit: if $U$ is Haar on
+$U(k)$ and $\theta=\arg\det U$, then $V=e^{-i\theta/k}U\in SU(k)$, and for $W\in SU(k)$,
+$\det(WU)=\det U$ gives $V(WU)=WV(U)$; since $WU$ has the law of $U$, the law of $V$ is
+left-invariant on $SU(k)$, hence the Haar measure of $SU(k)$ by Lemma 5.1.
 
 **Corollary 5.5 (first moments of the entries).** If $U$ is Haar distributed on $U(k)$, then
 $\mathbb EU_{ij}=0$ and $\mathbb E|U_{ij}|^2=1/k$.
@@ -583,13 +584,14 @@ spectrum with all sectors mixed gives $0.39$.
 ## 5.5 What to compare with
 
 Haar unitaries: `scipy.stats.unitary_group` (the corrected QR of Theorem 5.3) and `ortho_group`,
-QuTiP's Haar-random unitaries and any `numpy`/`torch` QR followed by the phase
-correction. Weingarten calculus: the symbolic packages IntU (Mathematica; Z. Puchała,
-J. A. Miszczak), RTNI (Mathematica and Python; M. Fukuda, R. König, I. Nechita, J. Phys. A 52 (2019),
-425303) and the Python package Haarpy compute moments of every order symbolically; the formulas of this
-chapter are their order-two case. Level statistics are usually computed with a few lines of
-`numpy`, and exact-diagonalisation codes such as QuSpin supply spectra sector by sector. What the library adds is the unitary group of an algebra as one object: independent Haar
-blocks of all sizes drawn in batched calls, the twirl identified with the conditional expectation
+QuTiP's Haar-random unitaries, and any `numpy`/`torch` QR followed by the phase correction.
+Weingarten calculus: the symbolic packages IntU (Mathematica; Z. Puchała, J. A. Miszczak), RTNI
+(Mathematica and Python; M. Fukuda, R. König, I. Nechita, J. Phys. A 52 (2019), 425303) and the
+Python package Haarpy compute moments of every order symbolically; the formulas proved in this
+chapter are their order-two case. Level statistics are usually computed with a few lines of `numpy`,
+and exact-diagonalisation codes such as QuSpin supply spectra sector by sector. What the library
+adds is the unitary group of an algebra as one object: independent Haar blocks of all sizes drawn in
+batched calls, the twirl identified with the conditional expectation
 `channels.center_expectation`, and spectra returned per sector, so that mixing sectors is never
 the default.
 
@@ -609,21 +611,19 @@ the default.
 <details>
 <summary>Solutions</summary>
 
-1. Write $t_c=\operatorname{Tr}U_c$. Multiplying $U$ by $\bigoplus_ce^{i\theta_c}1_{k_c}\in U(\mathcal M)$
-   does not change its law and multiplies $t_at_b\bar t_c\bar t_d$ by
-   $e^{i(\theta_a+\theta_b-\theta_c-\theta_d)}$, so $\mathbb E[t_at_b\bar t_c\bar t_d]=0$ unless
-   $\{a,b\}=\{c,d\}$ as multisets (choose $\theta$ as in Lemma 5.8); likewise $\mathbb E[t_a\bar t_b]=0$
-   for $a\neq b$. By Proposition 5.7,
-   $\mathbb E|t_c|^2=\sum_{i,j}\mathbb E\langle e_i,U_ce_ie_j^*U_c^*e_j\rangle=\sum_{i,j}\delta_{ij}\frac{\operatorname{Tr}(e_ie_j^*)}{k_c}=1$,
-   so $\mathbb E|\operatorname{Tr}U|^2=C$. In $\mathbb E|\sum_at_a|^4=\sum\mathbb E[t_at_b\bar t_c\bar t_d]$
-   the terms with $a=b$ give $\sum_a\mathbb E|t_a|^4$, and those with $a\neq b$ give
-   $2\sum_{a\neq b}\mathbb E|t_a|^2\mathbb E|t_b|^2=2C(C-1)$ (two choices of $(c,d)$; independence).
-   For $k=1$, $|t|=1$. For $k\ge2$, $\mathbb E|t|^4=\sum\mathbb E[U_{ii}U_{jj}\overline{U_{i'i'}U_{j'j'}}]$,
-   summed over $i,j,i',j'$. In Theorem 5.10 (with $i_1=j_1=i$, $i_2=j_2=j$, $i'_1=j'_1=i'$, $i'_2=j'_2=j'$)
-   the two terms with $\sigma=\pi$ force $\{i',j'\}=\{i,j\}$ in one way and contribute $k^2\mathrm{Wg}(e)$
-   each after summation; the two terms with $\sigma\neq\pi$ force $i=j=i'=j'$ and contribute
-   $k\,\mathrm{Wg}(\tau)$ each. In total $2\big(\frac{k^2}{k^2-1}-\frac{k}{k(k^2-1)}\big)=2$. The case
-   $C=1$, $k=D$ gives the values $1$ and $2$ for $U(D)$. For $\mathcal M=M_1\oplus M_2\oplus M_3$:
+1. Write $t_c=\operatorname{Tr}U_c$; the $t_c$ are independent (Corollary 5.4). Multiplying $U_c$ by
+   $e^{i\theta}$ does not change its law and multiplies $t_c$ by $e^{i\theta}$; so a moment
+   $\mathbb E[t_at_b\bar t_c\bar t_d]$ vanishes unless every sector occurs as often in $(a,b)$ as in
+   $(c,d)$, i.e. $\{a,b\}=\{c,d\}$ as multisets, and likewise $\mathbb E[t_a\bar t_b]=0$ for $a\neq b$. By
+   Proposition 5.7, $\mathbb E[(U_c)_{ii}\overline{(U_c)_{jj}}]=\langle e_i,\mathbb E[U_ce_ie_j^*U_c^*]e_j\rangle=\delta_{ij}/k_c$,
+   so $\mathbb E|t_c|^2=1$ and $\mathbb E|\operatorname{Tr}U|^2=C$. In $\mathbb E|\sum_at_a|^4$ the terms with
+   $a=b$ give $\sum_a\mathbb E|t_a|^4$, those with $a\neq b$ give
+   $2\sum_{a\neq b}\mathbb E|t_a|^2\,\mathbb E|t_b|^2=2C(C-1)$ (two choices of $(c,d)$). For $k=1$, $|t|=1$.
+   For $k\ge2$, $\mathbb E|t|^4=\sum_{i,j,i',j'}\mathbb E[U_{ii}U_{jj}\overline{U_{i'i'}U_{j'j'}}]$; in
+   Theorem 5.10 the two terms with $\sigma=\pi$ force $\{i',j'\}=\{i,j\}$ in one way and give
+   $k^2\mathrm{Wg}(e)$ each after summation, the two with $\sigma\neq\pi$ force $i=j=i'=j'$ and give
+   $k\,\mathrm{Wg}(\tau)$ each: in total $2\big(\frac{k^2}{k^2-1}-\frac1{k^2-1}\big)=2$. The case $C=1$,
+   $k=D$ gives $1$ and $2$ for $U(D)$. For $M_1\oplus M_2\oplus M_3$:
    $\mathbb E|\operatorname{Tr}U|^4=1+2+2+12=17$, against $2$ for a Haar unitary of $U(6)$.
 
 ```python

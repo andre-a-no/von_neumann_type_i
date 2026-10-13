@@ -453,9 +453,9 @@ $\frac d{dt}(e^{-tG}x)=0$). Then $\dot B_{ww}=-i[H,B_{ww}]-\gamma_1wB_{ww}+\gamm
 $e^{\gamma_1wt}B_{ww}$ solves the equation of $\sigma$ with the same initial value, and equals $\sigma$.
 That generator has trace zero (cyclicity), so $\operatorname{Tr}\sigma(t)=1$. $\square$
 
-For $\gamma_2=0$, $\sigma(t)=e^{-iHt}\rho(0)e^{iHt}$: post-selection is perfect. The companion paper (`examples/paper/ex9_qaoa_xy_mixer.py`) evolves
-$|111000\rangle$ under $H_M$ for $T=2$; we reproduce its row $\gamma_1=\gamma_2=0.1$: $P(w=3)=e^{-0.6}=0.5488$,
-fidelity $0.4805$, after post-selection $0.8755$, as for $\gamma_1=0$.
+For $\gamma_2=0$, $\sigma(t)=e^{-iHt}\rho(0)e^{iHt}$: post-selection is perfect. The companion paper
+(`examples/paper/ex9_qaoa_xy_mixer.py`) evolves $|111000\rangle$ under $H_M$ for $T=2$; we reproduce its
+row $\gamma_1=\gamma_2=0.1$: $P(w=3)=e^{-0.6}=0.5488$, fidelity $0.4805$, post-selected $0.8755$ (as for $\gamma_1=0$).
 
 ```python
 T = 2.0

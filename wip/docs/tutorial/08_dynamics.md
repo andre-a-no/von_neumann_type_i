@@ -7,9 +7,9 @@ coupled to an environment that is not observed — by a semigroup of channels. I
 sectors both have a feature that is invisible on a single matrix algebra: a Hamiltonian in
 $\mathcal M$ can never change the sector, so the charges are conserved, while an open system can
 jump between sectors, for instance by losing a particle. This chapter proves the basic facts about
-both kinds of evolution, writes the Lindblad equation with jumps between sectors, and shows that
-"no particle was lost" is a measurement of the charge whose post-selected state follows a
-non-Hermitian evolution.
+both kinds of evolution, writes the Lindblad equation with jumps between sectors, and shows that "no
+particle was lost" is a measurement of the charge whose post-selected state evolves by a non-Hermitian
+Hamiltonian.
 
 **You will learn** why sector weights are constants of motion, why the generators of
 Gorini–Kossakowski–Sudarshan–Lindblad (GKSL) form produce channels, how jumps between sectors enter
@@ -79,7 +79,7 @@ cyclicity. (3) The same computation with $A$. $\square$
 > **Physical meaning.** A Hamiltonian in $\mathcal M$ commutes with the charges (particle number,
 > magnetisation, a symmetry quantum number), so the probability of each charge is a constant of
 > motion, even for driven, time-dependent Hamiltonians. Computationally the evolution splits into
-> $C$ independent problems: one diagonalisation costs $\sum_ck_c^3$ operations instead of $D^3$.
+> $C$ independent problems: one diagonalisation costs of order $\sum_ck_c^3$ operations instead of $D^3$.
 
 The library computes $U(t)$ with one eigendecomposition per block size (`dynamics.propagator`), and
 `dynamics.von_neumann` evolves a density to many times at once in the eigenbasis, where
@@ -91,7 +91,7 @@ import numpy as np
 import scipy.integrate
 import scipy.linalg as sla
 import torch
-from torch_vn_algebra import TypeIAlgebra, DensityMatrix, InterSectorChannel, channels, dynamics, krylov, states
+from torch_vn_algebra import TypeIAlgebra, DensityMatrix, InterSectorChannel, channels, dynamics, states
 
 torch.manual_seed(0)
 f64, c128 = torch.float64, torch.complex128
@@ -116,15 +116,13 @@ A_t = U.adjoint() @ A @ U                                          # Heisenberg 
 assert abs(rho0.expectation(A_t) - dynamics.von_neumann(rho0, H, [t])[0].expectation(A)) < 1e-12
 ```
 
-A vector $\psi=\bigoplus_c\psi_c$ defines on $\mathcal M$ the state
-$A\mapsto\sum_c\langle\psi_c,A_c\psi_c\rangle$, the mixture $\bigoplus_c|\psi_c\rangle\langle\psi_c|$
-(Chapter 3, Exercise 3), so `dynamics.schrodinger` (vectors in the block layout
-`(batch, C, k_max)`) and `von_neumann` must agree on it. For a time-dependent $H(t)$ the library uses
-the classical fixed-step Runge–Kutta method (`dynamics.rk4`, `schrodinger_rk4`). One step multiplies
-$\psi$ by a polynomial in values of $H(t)\in\mathcal M$, so it never moves amplitude between sectors;
-it is not exactly unitary, and the sector weights drift at the level of the discretisation error.
-For one large sector, `krylov.evolve` needs only matrix–vector products (Lanczos; Chapter 9, in
-preparation):
+On $\mathcal M$ a vector $\psi=\bigoplus_c\psi_c$ defines the state of the mixture
+$\bigoplus_c|\psi_c\rangle\langle\psi_c|$ (Chapter 3, Exercise 3), so `dynamics.schrodinger` (vectors in
+the block layout `(batch, C, k_max)`) and `von_neumann` must agree on it. For a time-dependent $H(t)$
+the library uses fixed-step classical Runge–Kutta (`dynamics.rk4`, `schrodinger_rk4`): a step multiplies
+$\psi$ by a polynomial in values of $H(t)\in\mathcal M$, so it never moves amplitude between sectors,
+but it is not exactly unitary, and the sector weights drift at the level of the discretisation error.
+(For one large sector, `krylov.evolve` needs only matrix–vector products; see Chapter 9.)
 
 ```python
 rows = torch.tensor([[1, 1, 0, 0], [1, 1, 1, 0], [1, 1, 1, 1]], dtype=c128)   # entries of C^2 (+) C^3 (+) C^4
@@ -144,13 +142,6 @@ drift = ((psi_rk.abs() ** 2).sum(-1) - p_vec[0]).abs().max().item()
 print(f"RK4, time-dependent H: largest change of a sector weight {drift:.1e}")
 assert drift < 1e-8 and (dynamics.schrodinger_rk4(psi0, H, times, substeps=50) - psi).abs().max() < 1e-7
 
-n, hop = 60, torch.diag(torch.ones(59, dtype=f64), 1)              # one larger sector: a disordered chain
-chain = krylov.SparseSectorHamiltonian(torch.randn(1, n, dtype=f64), (hop + hop.T).to_sparse(), c128)
-v0 = torch.zeros(1, n, dtype=c128)
-v0[0, n // 2] = 1.0                                                # a particle on the middle site
-psi_kr = krylov.evolve(chain, v0, [0.0, 2.0], m=20, dt=1.0)        # matrix-vector products only
-chain_H = TypeIAlgebra([n], [n], precision='double').operator(chain.to_dense()[:, None])
-assert (psi_kr[:, 0] - dynamics.schrodinger(v0[:, None], chain_H, [0.0, 2.0])[:, 0, 0]).abs().max() < 1e-10
 ```
 
 The sector weights change by $1.1\cdot10^{-9}$ under RK4 and by nothing beyond rounding under the
@@ -158,10 +149,9 @@ exact solvers.
 
 ## 8.2 Quantum dynamical semigroups
 
-Completely positive (CP) and trace-preserving (TP) maps, and channels, are defined in Section 6.1
-([Chapter 6](06_quantum_channels.md)).
-Besides Theorem 6.2 and Proposition 6.4 (a map $A\mapsto\sum_lK_lAK_l^*$, also between sectors, is
-CP) we need three closure properties.
+CP and TP maps and channels are defined in Section 6.1 ([Chapter 6](06_quantum_channels.md)). Besides
+Theorem 6.2 and Proposition 6.4 (a map $A\mapsto\sum_lK_lAK_l^*$, also between sectors, is CP) we need
+three closure properties.
 
 **Lemma 8.4.** (a) Sums, nonnegative multiples and compositions of CP maps are CP. If
 $\Phi$ is CP on $M_D$ and maps a $*$-subalgebra $\mathcal N\subseteq M_D$ (such as $\mathcal M$, or
@@ -171,7 +161,8 @@ $P_c\mathcal MP_c\cong M_{k_c}$ with unit $P_c$) into itself, then $\Phi|_{\math
 
 *Proof.* (a) $\Phi\mapsto\Phi_n$ is linear and $(\Phi\Psi)_n=\Phi_n\Psi_n$; sums of positive matrices are
 positive. For the restriction: $M_n(\mathcal N)\subseteq M_n(M_D)$, and positivity is the same
-condition in both (positivity of a matrix). (b) The positive matrices form a closed set ($\langle x,Xx\rangle\ge0$ for each
+condition in both (after a permutation of the basis, an element of $M_n(\mathcal N)$ is a direct sum of
+the blocks $[(A_{ij})_c]$ and zeros). (b) The positive matrices form a closed set ($\langle x,Xx\rangle\ge0$ for each
 $x$ is a closed condition), and $(\Phi_m)_n(X)\to\Phi_n(X)$. (c) The Riemann sums are CP by (a) and
 converge to the integral, since $\Psi$ is uniformly continuous; apply (b). $\square$
 
@@ -218,18 +209,17 @@ $\operatorname{Tr}\mathcal L(\rho)=\sum_j\big(\operatorname{Tr}(L_j\rho L_j^*)-\
 hence $\frac d{dt}\operatorname{Tr}e^{t\mathcal L}\rho=\operatorname{Tr}\mathcal L(e^{t\mathcal L}\rho)=0$: every
 $e^{t\mathcal L}$ is TP. The semigroup law and continuity are Lemma 8.1. $\square$
 
-The converse is deep, and we state it without proof.
-
-**Theorem 8.7 (Gorini–Kossakowski–Sudarshan; Lindblad).** The generator of every quantum
+**Theorem 8.7 (Gorini–Kossakowski–Sudarshan; Lindblad; stated without proof).** Conversely, the generator of every quantum
 dynamical semigroup on $M_D$ has the form of Theorem 8.6. [V. Gorini, A. Kossakowski,
 E. C. G. Sudarshan, *J. Math. Phys.* 17, 821 (1976); G. Lindblad, *Commun. Math. Phys.* 48, 119
-(1976).] For a general von Neumann algebra, Christensen and Evans [*J. London Math. Soc.* 20, 358
-(1979)] showed that the generator in the Heisenberg picture is $A\mapsto\Psi(A)+K^*A+AK$ with
-$\Psi$ CP and $K\in\mathcal M$.
+(1976).] For a norm-continuous semigroup of unital CP maps on a general von Neumann algebra
+$\mathcal M$, Christensen and Evans [*J. London Math. Soc.* 20, 358 (1979)] showed that the generator
+is $A\mapsto\Psi(A)+K^*A+AK$ with $\Psi$ CP and $K\in\mathcal M$.
 
-On $\mathcal M=\bigoplus_cM_{k_c}$ the Schrödinger form of this is $\mathcal L(\rho)=\Phi(\rho)+G\rho+\rho G^*$
-with $\Phi$ CP on $\mathcal M$ (with Kraus operators between sectors, Proposition 6.4) and $G\in\mathcal M$.
-Trace preservation, $\operatorname{Tr}\big((\Phi^*(1)+G+G^*)\rho\big)=0$ for all $\rho\in\mathcal M$, forces
+On $\mathcal M=\bigoplus_cM_{k_c}$ apply this to the Heisenberg-picture semigroup $(T_t^*)$, whose
+maps are CP and unital (Proposition 6.8, Corollary 6.9(b)) and whose generator is $\mathcal L^*$.
+Taking blunt duals back, $\mathcal L(\rho)=\Phi(\rho)+G\rho+\rho G^*$ with $\Phi=\Psi^*$ CP on
+$\mathcal M$ (Kraus operators between sectors, Proposition 6.4) and $G=K$. Trace preservation, $\operatorname{Tr}\big((\Phi^*(1)+G+G^*)\rho\big)=0$ for all $\rho\in\mathcal M$, forces
 $G+G^*=-\Phi^*(1)$, i.e. $G=-iH-\frac12\Phi^*(1)$ with $H=H^*\in\mathcal M$: exactly the generators of
 the next section.
 
@@ -326,8 +316,9 @@ and $\operatorname{Tr}(P_d\tfrac12\{\Phi^*(1),\rho\})=\sum_{d'}\operatorname{Tr}
 the terms $c=d$ and $d'=d$ cancel. This proves (1), and under the hypothesis of (2) the remaining terms
 are $\sum_{c\ne d}r_{dc}p_c-\sum_{d'\ne d}r_{d'd}p_d$. Lemma 8.1 gives $p(t)=e^{tQ}p(0)$. $\square$
 
-Under the hypothesis of (2), $r_{m,dc}$ is the transition matrix $T_{dc}$ of $\Phi_m$ (Proposition 6.12)
-for every state; this is what `transition_matrix()` returns.
+Under the hypothesis of (2), for $d\ne c$, $r_{m,dc}$ is the entry $T_{dc}(\rho)$ of the transition
+matrix of $\Phi_m$ (defined before Proposition 6.12) for every state $\rho$. So, for one jump with rate
+$1$, $Q=R-\operatorname{diag}(\sum_dR_{dc})_c$ with $R$ = `transition_matrix()` (the diagonal of $R$ cancels).
 
 **Example: particle loss.** Two bosonic modes with at most two particles; the sectors are
 $N=0,1,2$ with bases $|00\rangle$; $|10\rangle,|01\rangle$; $|20\rangle,|11\rangle,|02\rangle$, so
@@ -369,13 +360,14 @@ for s, rho_s in zip(ts, traj):
     p = rho_s.sector_probabilities()[0]
     assert (p - torch.tensor([(1 - q) ** 2, 2 * q * (1 - q), q ** 2], dtype=f64)).abs().max() < 1e-8
     assert (p - torch.from_numpy(sla.expm(gamma * s * Q.numpy())[:, 2])).abs().max() < 1e-8
-    assert min(w.min().item() for w in rho_s.eigenvalues()) > -1e-7          # positive up to the RK4 error
-print(traj[-1].sector_probabilities())
+neg = min(w.min().item() for rho_s in traj for w in rho_s.eigenvalues())
+print(f"smallest eigenvalue of rho(t) under RK4: {neg:.1e}")
+assert neg > -1e-7                                                 # positive up to the RK4 error
 ```
 
 RK4 is not exactly completely positive: the eigenvalues of $\rho(t)$ can be negative at the level of
-the discretisation error ($10^{-7}$ here, with steps $0.02$); `lindblad_channel` is exact but treats
-only jumps inside the sectors. Finally we check Proposition 8.8(2) for a random map between the
+the discretisation error ($-2.5\cdot10^{-8}$ here, with steps up to $0.02$); `lindblad_channel` is exact
+but treats only jumps inside the sectors. Finally we check Proposition 8.8(2) for a random map between the
 sectors, against the GKSL generator on $M_6$ built with numpy:
 
 ```python
@@ -434,7 +426,7 @@ $$
 $$
 
 *Proof.* $S_0(s)$ maps operators supported in sector $N$ to operators supported in sector $N$, as
-$H_{\mathrm{eff}}\in\mathcal M$; $\Phi_{\mathrm{tot}}$ maps sector $N\ge1$ to sector $N-1$ and sector $0$ to $0$.
+$H_{\mathrm{eff}}\in\mathcal M$; $\Phi_{\mathrm{tot}}$ maps sector $N\ge1$ to sector $N-1$ and annihilates sector $0$.
 By induction $S_n(s)\rho$ is supported in sector $N_0-n$ for all $s$, and is $0$ for $n>N_0$. Compressing
 $\rho(t)=\sum_nS_n(t)\rho$ with $P_{N_0-n}$ keeps exactly the $n$-th term. $\square$
 
@@ -526,7 +518,8 @@ $\sqrt p\,|g\rangle\langle e|$), and $\mathcal U_t$ multiplies $\rho_{ge}$ by $e
 fixes $\rho_{gg}$. Finally $\rho(t)-|g\rangle\langle g|$ is traceless and self-adjoint with diagonal
 $(-\rho_{ee}(t),\rho_{ee}(t))$, so its eigenvalues are $\pm(\rho_{ee}(t)^2+|\rho_{ge}(t)|^2)^{1/2}$. $\square$
 
-The coherence decays at half the rate of the population, the relation $T_2=2T_1$ of Section 6.4; the
+The coherence decays at half the rate of the population, the relation $T_2=2T_1$ of Section 6.4 without
+pure dephasing; the
 slowest nonzero rate, the **spectral gap** $\gamma/2$, controls the relaxation. We check the spectrum
 with `lindblad_superoperator`, the channel and the trace distance with `lindblad_channel`, and
 Corollary 8.13 for random jumps inside the sectors of $M_2\oplus M_3$:
@@ -576,13 +569,15 @@ quantum trajectories, `steadystate`, `liouvillian`), dynamiqs (JAX; batched and 
 Schrödinger and Lindblad solvers on GPUs), QuantumOptics.jl, and SciPy (`scipy.linalg.expm`, and
 `scipy.sparse.linalg.expm_multiply` for $e^{t\mathcal L}\rho$ with a sparse vectorised generator) solve
 the same equations on one Hilbert space, and for the problems above they must give the same numbers.
-On $\mathcal M$ they can be used with $D\times D$ block-diagonal matrices, at the price of superoperators
-of size $D^2\times D^2$ instead of $k_c^2\times k_c^2$ per sector. The library adds the block structure:
-exact propagators and Lindblad channels sector by sector, batches of Hamiltonians and jump operators
-(for disorder averages), jumps between sectors as `InterSectorChannel`s with the compression of
-Proposition 8.8, and automatic differentiation. It has no adaptive step-size control (RK4 is fixed
-step and only approximately positive), no trajectory solver, and `lindblad_channel` does not accept
-jumps between sectors; for those, QuTiP or dynamiqs on $M_D$ are the reference.
+On $\mathcal M$ one passes them $D\times D$ block-diagonal matrices; the vectorised generator then
+lives on a $D^2$-dimensional space (sparse, but with the sectors coupled in one solve) unless the user
+splits the problem into sectors by hand. The library builds the block structure in: exact propagators
+and Lindblad channels sector by sector ($k_c^2\times k_c^2$ superoperators), jumps between sectors as
+`InterSectorChannel`s with the compression of Proposition 8.8, batches of Hamiltonians and jump
+operators (for disorder averages) and automatic differentiation (the last two also in dynamiqs). It
+has no adaptive step-size control (RK4 is fixed step and only approximately positive), no trajectory
+solver, and `lindblad_channel` does not accept jumps between sectors; for those, QuTiP or dynamiqs on
+$M_D$ are the reference.
 
 ## Exercises
 
@@ -607,7 +602,7 @@ jumps between sectors; for those, QuTiP or dynamiqs on $M_D$ are the reference.
    $\operatorname{Tr}(\{L^*L,\rho\}A)=\operatorname{Tr}(\rho\{L^*L,A\})$ and
    $\operatorname{Tr}(-i[H,\rho]A)=\operatorname{Tr}(\rho\,i[H,A])$; for jumps between sectors,
    $\operatorname{Tr}(\Phi(\rho)A)=\operatorname{Tr}(\rho\Phi^*(A))$ is the definition of $\Phi^*$
-   (Proposition 6.8). Then $\mathcal L^*(1)=\sum_jg_j(L_j^*L_j-L_j^*L_j)+\sum_mg_m(\Phi_m^*(1)-\Phi_m^*(1))=0$,
+   (Section 6.3). Then $\mathcal L^*(1)=\sum_jg_j(L_j^*L_j-L_j^*L_j)+\sum_mg_m(\Phi_m^*(1)-\Phi_m^*(1))=0$,
    which is trace preservation once more. Without jumps between sectors, $P_c$ commutes with $H$ and
    all $L_j$, so $L_j^*P_cL_j=L_j^*L_jP_c=\frac12\{L_j^*L_j,P_c\}$ and $\mathcal L^*(P_c)=0$; then
    $p_c'=\operatorname{Tr}(\rho\mathcal L^*(P_c))=0$, a second proof of Proposition 8.9(1).
@@ -624,8 +619,9 @@ lam = np.linalg.eigvals(H_eff[1])
 delta = (g1 - g2) / 4
 root = np.sqrt(J ** 2 - delta ** 2 + 0j)
 assert np.allclose(sorted(lam, key=np.real), sorted(-0.25j * (g1 + g2) + np.array([root, -root]), key=np.real))
-Y = np.array([[-1j * delta, delta], [delta, 1j * delta]])          # J = delta: the exceptional point
-assert np.abs(Y @ Y).max() < 1e-15 and np.abs(Y).max() > 0
+H_ep = np.array([[-0.5j * g1, delta], [delta, -0.5j * g2]])         # J = delta: the exceptional point
+Y = H_ep + 0.25j * (g1 + g2) * np.eye(2)                           # H_ep minus its only eigenvalue
+assert np.abs(Y @ Y).max() < 1e-15 and np.linalg.matrix_rank(Y) == 1   # one Jordan block of size 2
 ```
 
 3. On the sector $N$, $\sum_ja_j^*a_j=N1$, and the only pair of sectors is $(N-1,N)$, so Proposition
@@ -637,7 +633,7 @@ assert np.abs(Y @ Y).max() < 1e-15 and np.abs(Y).max() > 0
 4. $L\rho L^*-\frac12\{L^*L,\rho\}=\sigma_z\rho\sigma_z-\rho$ multiplies the off-diagonal entries by $-2$ and
    kills the diagonal, and $-i[H,\rho]_{ge}=i\omega\rho_{ge}$. So $\mathcal L(\sigma)=0$ iff $\sigma_{ge}=0$ (for
    $\gamma>0$), and the spectrum is $\{0,0,-2\gamma\pm i\omega\}$. Since $H$ and $\sigma_z$ commute and
-   $(\sigma_z\cdot\sigma_z)^2=\mathrm{id}$, $e^{t\mathcal L}(\rho)=\frac{1+e^{-2\gamma t}}2U_t\rho U_t^*
+   $X\mapsto\sigma_zX\sigma_z$ is an involution, $e^{t\mathcal L}(\rho)=\frac{1+e^{-2\gamma t}}2U_t\rho U_t^*
    +\frac{1-e^{-2\gamma t}}2U_t\sigma_z\rho\sigma_zU_t^*$ with $U_t=e^{-itH}$: a unital channel whose fixed
    points are the matrices commuting with its Kraus operators (Theorem 6.10), the diagonal ones.
 
@@ -653,4 +649,4 @@ assert np.allclose(sorted(ev.tolist(), key=lambda z: (z.real, z.imag))[:2],
 </details>
 
 **Next:** Chapter 9 (in preparation) treats spin chains: sectors of magnetisation and momentum,
-Lanczos and the Krylov time evolution used above at scale, and disorder.
+Lanczos and Krylov time evolution for large sectors, and disorder.
