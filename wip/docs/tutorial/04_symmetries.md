@@ -777,6 +777,9 @@ def ket(j, m):                                            # |j, m> of Theorem 4.
 up, dn = ket(0.5, 0.5), ket(0.5, -0.5)
 for j in (0.5, 1.0, 1.5, 2.0):                            # Theorem 4.16
     Sj = dc.spin_matrices(j)
+    sp_j = [math.sqrt(j * (j + 1) - (j - k) * (j - k + 1)) for k in range(1, int(2 * j) + 1)]
+    assert close(Sj[0] + 1j * Sj[1], torch.diag(torch.tensor(sp_j, dtype=dt), 1))     # S_+ of Theorem 4.11
+    assert close(Sj[2], torch.diag(torch.tensor([j - k for k in range(int(2 * j) + 1)], dtype=dt)))
     Sc = torch.stack([torch.kron(a, torch.eye(2, dtype=dt)) + torch.kron(torch.eye(len(a), dtype=dt), b)
                       for a, b in zip(Sj, dc.spin_matrices(0.5))])
     Sp, Sm = Sc[0] + 1j * Sc[1], Sc[0] - 1j * Sc[1]
@@ -824,6 +827,7 @@ E_su2, S_lev, _ = sym.full_spectrum(H_su2, return_quantum_numbers=True)   # leve
 E_su2, S_lev = E_su2[0], S_lev[0]
 assert close(E_u1, E_su2)
 assert S_lev[0] == 0 and (S_lev[1:4] == 1).all() and E_su2[4] - E_su2[3] > 1e-3     # singlet, then triplet
+assert E_su2[1] - E_su2[0] > 1e-3 and close(E_su2[1:4], E_su2[1].expand(3))       # simple singlet (Theorem 9.9)
 assert close(sym.restrict(H_u1).matrix, H_su2.matrix)      # Proposition 4.15(b)
 flops = lambda ks: sum(k ** 3 for k in ks)
 print(u1.algebra.k_factors, sym.multiplicities, flops(u1.algebra.k_factors), flops(sym.multiplicities))
@@ -915,13 +919,15 @@ for a, b, ks in ((1.0, 0.5, (2, 4)), (1.0, 1.0, (1, 3, 5))):  # 1 (x) 1/2 = 1/2 
 3. $U_\theta=\sum_qe^{iq\theta}P_q$, and $e^{iq\theta}=e^{iq'\theta}$ iff $(q-q')\theta\in2\pi\mathbb Z$, which for irrational
    $\theta/2\pi$ forces $q=q'$. So the eigenspaces of $U_\theta$ are the ranges of the $P_q$, and an operator
    commutes with the normal matrix $U_\theta$ iff it preserves its eigenspaces (Theorem 1.5(d) and Lagrange
-   interpolation as in Section 2.2), i.e. iff $X=\sum_qP_qXP_q$; this is $U(1)'$ by Proposition 4.10.
+   interpolation as in Section 2.2), i.e. iff $X=\sum_qP_qXP_q$; this is $U(1)'$ by Proposition 4.10. The argument only uses that the $e^{iq\theta}$ for the
+   charges $q$ that occur are distinct; the code takes $\theta=1$ and the charges $0,\dots,4$ of four qubits, for which
+   $0<|q-q'|\le4<2\pi$ suffices.
    For $\theta=\pi$ the eigenvalue $(-1)^w$ only sees the parity of the Hamming weight: two eigenspaces of
    dimension $2^{n-1}$ (for $n\ge1$, the configurations of even and of odd weight; flipping the first bit is a bijection
    between them), and the commutant is $M_{2^{n-1}}\oplus M_{2^{n-1}}$.
 
 ```python
-for theta, m in ((1.0, (1, 1, 4, 4, 6)), (math.pi, (8, 8))):
+for theta, m in ((1.0, (1, 1, 4, 4, 6)), (math.pi, (8, 8))):   # theta = 1: e^{iq}, q = 0..4, distinct as 4 < 2 pi
     D_theta = dc.from_generators(torch.linalg.matrix_exp(1j * theta * N_op))
     assert D_theta.multiplicities == m and set(D_theta.k_factors) == {1}
 ```

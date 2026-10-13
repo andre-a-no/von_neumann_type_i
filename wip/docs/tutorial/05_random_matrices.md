@@ -337,9 +337,10 @@ formula for the moments and part (e) the vanishing of unbalanced moments. $\squa
 (The formula is due to D. Weingarten, J. Math. Phys. 19 (1978), 999–1001, and B. Collins, Int. Math. Res.
 Not. 2003, 953–982; see also B. Collins, P. Śniady, Comm. Math. Phys. 264 (2006), 773–795.)
 
-We check Proposition 5.7 against `channels.center_expectation`, the commutant of Lemma 5.8 by
-exact linear algebra, and Theorem 5.10 and Corollary 5.11 by Monte Carlo with the $U(3)$ block
-of the samples above:
+We check Proposition 5.7 against `channels.center_expectation`, Lemma 5.8 by linear algebra (the
+commutant of three sampled $V\otimes V$, computed as a null space, contains $F$ and is $2$-dimensional, so by
+Lemma 5.8 it is already $\operatorname{span}\{1,F\}$), and Theorem 5.10 and Corollary 5.11 by Monte Carlo with the
+$U(3)$ block of the samples above:
 
 ```python
 X = alg.from_blocks([torch.randn(k, k, dtype=dt) for k in alg.k_factors])      # a fixed element
@@ -453,7 +454,8 @@ A ratio needs three levels, so the smallest Gaussian matrices with a spacing rat
 the mean ratio can be computed exactly, as the surmise was for $2\times2$.
 
 **Proposition 5.14 (mean spacing ratios).** (a) *Independent levels.* Let $s,s'$ be independent with the
-same exponential distribution (as two consecutive spacings of a Poisson process). Then
+same exponential distribution (as two consecutive spacings of the levels $e_0+\dots+e_{k-1}$ built from
+independent exponential $e_j$, Section A.7). Then
 $r=\min(s,s')/\max(s,s')$ has $P(r\le t)=\frac{2t}{1+t}$ on $[0,1]$, density $\frac2{(1+t)^2}$, and
 $$
 \mathbb Er=2\ln2-1\approx0.3863 .
@@ -464,7 +466,7 @@ Then $x=s_2/s_1$ has a density proportional to
 $$
 f_\beta(x)=\frac{(x+x^2)^\beta}{(1+x+x^2)^{1+3\beta/2}}\qquad\text{on }(0,\infty),
 $$
-and
+$r$ has the density $f_\beta/I_0$ on $(0,1)$, where $I_0=\int_0^1f_\beta$, and
 $$
 \mathbb Er=4-2\sqrt3\approx0.5359\quad(\text{GOE}),\qquad
 \mathbb Er=\frac{2\sqrt3}\pi-\frac12\approx0.6027\quad(\text{GUE}).
@@ -495,10 +497,11 @@ where the substitution $s_1=(3/q(x))^{1/2}u$ gives the factor, with $\gamma_\bet
 So $x$ has the density $f_\beta/\int_0^\infty f_\beta$.
 
 *Reduction to $[0,1]$.* $f_\beta(1/x)=x^2f_\beta(x)$ (multiply numerator and denominator by powers of $x$). With
-$x=1/y$, $\int_1^\infty f_\beta(x)\,dx=\int_0^1f_\beta(1/y)y^{-2}dy=\int_0^1f_\beta$ and
-$\int_1^\infty x^{-1}f_\beta(x)\,dx=\int_0^1yf_\beta(y)\,dy$. As $r=\min(x,1/x)$,
+$x=1/y$, $\int_{1/A}f_\beta(x)\,dx=\int_Af_\beta(1/y)y^{-2}dy=\int_Af_\beta$ for Borel $A\subseteq(0,1)$, where
+$1/A=\{1/y:y\in A\}$; in particular $\int_0^\infty f_\beta=2I_0$ with $I_j=\int_0^1x^jf_\beta(x)\,dx$. As $r=\min(x,1/x)$ and
+$P(x=1)=0$, $\{r\in A\}=\{x\in A\}\cup\{x\in1/A\}$ (disjoint), so
 $$
-\mathbb Er=\frac{\int_0^\infty\min(x,1/x)f_\beta(x)\,dx}{\int_0^\infty f_\beta}=\frac{I_1}{I_0},\qquad I_j=\int_0^1x^jf_\beta(x)\,dx .
+P(r\in A)=\frac{2\int_Af_\beta}{2I_0}=\int_A\frac{f_\beta}{I_0},\qquad \mathbb Er=\frac{I_1}{I_0} .
 $$
 Since $x+x^2=q-1$, $f_\beta=g_\beta(q)$ with $g_1(u)=u^{-3/2}-u^{-5/2}$ and $g_2(u)=(u-1)^2u^{-4}$. Write
 $x=\frac12(q'(x)-1)$ with $q'=2x+1$, and substitute $u=q(x)$ (from $q(0)=1$ to $q(1)=3$):
@@ -525,9 +528,10 @@ The values in (b) were found by Y. Y. Atas, E. Bogomolny, O. Giraud and G. Roux 
 (2013), 084101). For larger $n$ the mean ratio is not computed in this course; the code below *observes*
 it numerically for the GOE with $n=64$.
 
-Part (a) holds exactly for $n$ independent uniform levels on an interval: their spacings have the law of
-$(e_0,\dots,e_n)/\sum_je_j$ for independent exponential $e_j$, so each ratio $s_i/s_{i+1}$ has the law of
-$e_i/e_{i+1}$ (Theorem A.25 and Corollary A.26).
+Part (a) holds exactly for $n$ independent uniform levels on an interval: their $n+1$ spacings (including the
+two end gaps) have the law of $(e_0,\dots,e_n)/\sum_je_j$ for independent exponential $e_j$, so each ratio
+$s_i/s_{i+1}$ of consecutive spacings has the law of $e_i/e_{i+1}$, and each spacing ratio $r_i$ has the law of $r$ in (a)
+(Theorem A.25 and Corollary A.26(b),(d)).
 
 The function `SpinChain.level_spacing_ratio` (in `chains`) returns the mean ratio of each row of
 levels. We check Propositions 5.13 and 5.14 and record the GOE value for $n=64$:
@@ -661,7 +665,7 @@ $0.42$ for two sectors and to about $0.39$, within $0.01$ of the value $2\ln2-1$
 $C$ grows is what the code observes; it is not proved in this course.
 
 The same happens in a physical model. The Heisenberg chain with random fields (Chapter 9) conserves
-the magnetisation, so its Hamiltonian lies in $\bigoplus_{N=0}^LM_{\binom LN}$. Its blocks are *not*
+the magnetisation, so its Hamiltonian lies in $\bigoplus_{N=0}^LM_{\binom LN}$ (Proposition 9.1). Its blocks are *not*
 independent — all of them depend on the same random fields — so Theorem 5.15 does not apply as stated;
 the experiment below shows the same effect, as a numerical observation.
 
