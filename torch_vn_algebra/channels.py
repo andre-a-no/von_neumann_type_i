@@ -349,7 +349,7 @@ def measurement_channel(projections: Sequence[Operator]) -> Channel:
 def random_channel(alg: TypeIAlgebra, kraus_rank: int, batch_size: int = 1) -> Channel:
     """
     Random trace-preserving channel from a Haar-random Stinespring isometry
-    V_c: C^{k_c} -> C^{k_c} (x) C^r in every block, K_{i,c} = (<i| (x) 1) V_c.
+    V_c: C^{k_c} -> C^r (x) C^{k_c} in every block (environment first), K_{i,c} = (<i| (x) 1) V_c.
     """
     K = _empty_kraus(alg, kraus_rank, batch_size)
     for k, idx in alg._size_groups():                  # one draw for all sectors of the same size

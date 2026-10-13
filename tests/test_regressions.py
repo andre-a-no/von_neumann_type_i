@@ -234,3 +234,8 @@ def test_operator_validate_option():
     m = torch.tensor([[[[1.0, 2.0], [0.0, -3.0]]]], dtype=A.dtype)
     with pytest.raises(ValueError):
         A.operator(m, validate=True, is_self_adjoint=True)
+
+
+def test_central_python_numbers_in_double():
+    A = TypeIAlgebra([2, 3], [2, 3], precision='double')
+    assert abs(A.central([1 / 3, 2.0]).matrix[0, 0, 0, 0].real.item() - 1 / 3) < 1e-16

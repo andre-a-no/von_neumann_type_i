@@ -1343,7 +1343,11 @@ class TypeIAlgebra:
         """
         if len(scalars) != self.C:
             raise ValueError(f"central: need one number per sector ({self.C}), got {len(scalars)}")
-        ts = [torch.as_tensor(x) for x in scalars]
+        # Python numbers in the algebra's precision (torch.as_tensor(1/3) would be float32)
+        ts = [x if isinstance(x, torch.Tensor) else
+              torch.tensor(x, dtype=(torch.complex128 if self.hilbert.real_dtype == torch.float64 else torch.complex64)
+                           if isinstance(x, complex) else self.hilbert.real_dtype)
+              for x in scalars]
         if any(t.dim() > 1 for t in ts):
             raise ValueError("central: each value must be a number or a tensor of shape (batch,)")
         B = max([batch_size] + [t.shape[0] for t in ts if t.dim() == 1])
