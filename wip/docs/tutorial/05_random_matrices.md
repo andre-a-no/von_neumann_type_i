@@ -144,7 +144,7 @@ def close(X, Y, tol=1e-10):
 def mc(samples, exact, name):
     """Monte Carlo mean of real samples with its standard error; must agree within 5 standard errors."""
     mean, err = samples.mean().item(), samples.std().item() / math.sqrt(samples.numel())
-    print(f"{name}: {mean:.4f} +- {err:.4f}   (exact {exact:.4f})")
+    print(f"{name}: {mean:.4f} +- {err:.4f}   (theory {exact:.4f})")
     assert abs(mean - exact) <= 5 * err + 1e-12
     return mean
 

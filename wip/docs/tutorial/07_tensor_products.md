@@ -619,8 +619,9 @@ chains separately, Chapter 4).
    =\sum_{c,d}\frac1{C_1C_2k_cl_d}\operatorname{Tr}\big(X_{cd}\,C_2l_d(A_c\otimes1)\big)$, so the dual is
    $A\mapsto\bigoplus_{c,d}C_2l_d\,A_c\otimes1_{l_d}=A\otimes Z$ with the central element
    $Z=\bigoplus_dC_2l_d1_{l_d}$ of $\mathcal M_2$. It is not unital: of the three traces of the
-   library, only the blunt ones make $\operatorname{Tr}_2$ the dual of $A\mapsto A\otimes1$ (in general, $\operatorname{tr}_w$ on $\mathcal M_1$ and the weights
-   $w_{cd}=w_c$ on the product do, by the same computation).
+   library, only the blunt ones make $\operatorname{Tr}_2$ the dual of $A\mapsto A\otimes1$ (in general,
+   $\operatorname{tr}_w$ on $\mathcal M_1$ and the weights $w_{cd}=w_c$ on the product do, by the same
+   computation).
 
 ```python
 dual_tau = composite.partial_trace_channel(alg12, keep=1).adjoint('tau_vN')
