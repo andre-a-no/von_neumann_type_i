@@ -13,4 +13,4 @@ Operator = TypeIAlgebra.Operator
 __all__ = ["TypeIAlgebra", "Operator", "HilbertSpace", "tensor_product_hilbert", "direct_sum_hilbert",
            "Channel", "InterSectorChannel", "DensityMatrix", "tensor_product", "fused_tensor_product", "kron", "partial_trace",
            "SpinChain", "chains", "channels", "composite", "krylov", "cost", "dynamics", "optimize", "states", "functional", "caching"]
-__version__ = "0.5.0"
+__version__ = "1.0.0"

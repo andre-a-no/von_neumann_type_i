@@ -1,3 +1,5 @@
 graft docs
 graft examples
 prune examples/**/__pycache__
+include CHANGELOG.md CITATION.cff CONTRIBUTING.md CODE_OF_CONDUCT.md
+include RELEASING.md

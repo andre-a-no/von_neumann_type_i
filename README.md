@@ -54,6 +54,14 @@ This README is the entry point of the repository:
 
 ## Installation
 
+From PyPI (once version 1.0.0 is released; install PyTorch for your CPU/GPU first, see <https://pytorch.org>):
+
+```bash
+pip install torch_vn_algebra
+```
+
+From the repository (needed for the scripts, tests and the paper):
+
 ```bash
 git clone https://github.com/andre-a-no/von_neumann_type_i.git
 cd von_neumann_type_i
@@ -255,6 +263,11 @@ archive/v1/          first version: text, its scripts and benchmark data (refere
 pytest -q
 ```
 
+## Contributing
+
+Bug reports, questions and pull requests are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md) and the
+[Code of Conduct](CODE_OF_CONDUCT.md). Changes between versions are listed in [CHANGELOG.md](CHANGELOG.md).
+
 ## Limitations
 
 - SVD dominates the cost for `k_max ≳ 200` with large batches.
@@ -274,6 +287,10 @@ pytest -q
 
 ## Citation
 
+Please cite the paper and, for reproducibility, the version of the software you used (metadata in
+[CITATION.cff](CITATION.cff); GitHub shows a "Cite this repository" button; every release is archived with a DOI
+on Zenodo).
+
 ```bibtex
 @misc{nikolaeva_novikov_2026_torch_vn_algebra,
   title  = {Finite-Dimensional Type I von Neumann Algebras in PyTorch:
@@ -288,4 +305,4 @@ pytest -q
 
 ## License
 
-MIT.
+MIT, see [LICENSE](LICENSE).

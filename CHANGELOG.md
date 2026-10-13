@@ -1,0 +1,56 @@
+# Changelog
+
+All notable changes to `torch_vn_algebra`. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
+versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the public API is everything exported by
+`torch_vn_algebra/__init__.py` and documented in the module docstrings).
+
+## [1.0.0] – unreleased
+
+First release, the version described in the paper (arXiv:2606.15882v2) and submitted with it.
+
+### Added
+- `TypeIAlgebra.operator(..., validate=True)` checks property flags passed by the user (they are trusted otherwise).
+- `Operator.apply_function(f, per_block=True)` for functions that couple the eigenvalues of one block.
+- `holomorphic_function(..., atol=...)`: absolute scale of the error estimate where f(X) may vanish.
+- `schrodinger_rk4(..., algebra=...)` and `lindblad_rhs(..., algebra=...)` restrict raw tensors to the blocks.
+- `states.log_partition_function`; release metadata (`CITATION.cff`, `.zenodo.json`), contribution guidelines.
+
+### Fixed (independent correctness audit against dense NumPy/SciPy references)
+- `inverse()` and `power(p < 0)` of self-adjoint operators: the support threshold is per block again (small
+  sectors next to large sectors of the same size were set to zero).
+- `krylov.evolve` rounded the time grid to float32 (phase error of order E·3e-9).
+- Lanczos stopped early when H carried a large constant shift (uniform field) and could return an excited state;
+  the breakdown threshold is now tied to the machine epsilon. Zero initial vectors give zero, not NaN.
+- Lindblad evolution in real algebras with jump operators failed (complex effective Hamiltonian).
+- Garbage in the padding of raw tensors changed the results of `lindblad_rhs`/`lindblad_evolve`/`schrodinger_rk4`,
+  `DensityMatrix(matrix=...)` and `DensityMatrix.from_density`.
+- Property checks used an absolute tolerance floor; operators of small norm were misclassified (e.g. 1e-6 times a
+  nilpotent as self-adjoint, -1e-6·1 as positive).
+- `0 * A` kept stale property flags; `michelson_contrast` depended on the scale of A; `frobenius_norm` overflowed in
+  single precision; `apply_function` of normal operators returned tensors attached to an internal graph.
+- `holomorphic_function`: default contour for blocks that are scalar up to rounding.
+- `gibbs_state` with negative beta (overflow); `random_mixed_unitary_channel` with invalid weights;
+  `Channel.from_superoperator` tolerance in double precision; `random_density_matrix(measure='bures')` is rejected
+  for real algebras (1 + O is singular for det O = -1).
+- `HilbertSpace.norm/normalize` for flat vectors; `optimize.extremize` returns NaN (not ±inf) for starts without a
+  finite value.
+
+### Changed
+- Decompositions run as one batched call per distinct block size, split into one chunk per thread on a multi-core
+  CPU; no host synchronisations in the computational paths (GPU).
+- `optimize`: spectra parametrised to reach the ends of [lambda_min, 1]; sign patterns of self-adjoint operators are
+  searched; the best iterate of every start is returned.
+
+## 0.x – development versions (not released)
+
+- **0.5** (2026-10-10): functional calculus at four levels (self-adjoint, normal, holomorphic, general) with
+  Daleckii–Krein gradients and a spectral cache.
+- **0.4** (2026-10-09): sparse sector Hamiltonians, batched Lanczos and Krylov evolution, momentum sectors, Lindblad
+  jumps between sectors, NumPy/SciPy baselines.
+- **0.3** (2026-10-09): charge-conserving (fused) tensor products, U(1) spin chains.
+- **0.2** (2026-10-09): channels, states, dynamics, maps between sectors, tensor products and partial traces, double
+  precision, cost safeguards, constrained optimisation.
+- **0.1** (2026-10-09): the code of the first version of the paper (arXiv:2606.15882v1), with its Haar sampler and
+  spectrum bugs fixed.
+
+[1.0.0]: https://github.com/andre-a-no/von_neumann_type_i/releases/tag/v1.0.0

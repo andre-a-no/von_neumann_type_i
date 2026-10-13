@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite both the software and the paper."
+title: "torch_vn_algebra: finite-dimensional Type I von Neumann algebras in PyTorch"
+type: software
+authors:
+  - given-names: Irina
+    family-names: Nikolaeva
+  - given-names: Andrej
+    family-names: Novikov
+version: 1.0.0
+license: MIT
+repository-code: "https://github.com/andre-a-no/von_neumann_type_i"
+keywords:
+  - von Neumann algebra
+  - operator algebra
+  - quantum information
+  - quantum channels
+  - random matrices
+  - superselection sectors
+  - spin chains
+  - PyTorch
+  - GPU
+abstract: >-
+  Batched operators, states, channels and constrained optimisation in
+  finite-dimensional Type I von Neumann algebras (direct sums of matrix
+  algebras), with block-diagonal storage, exact Haar sampling, functional
+  calculus with spectral gradients, channels between sectors, tensor
+  products with charge fusion, spin chains with U(1) and momentum sectors,
+  Krylov solvers and Lindblad dynamics, on CPUs and GPUs.
+preferred-citation:
+  type: article
+  title: "Finite-Dimensional Type I von Neumann Algebras in PyTorch: A GPU-Accelerated Framework for Random Block-Diagonal Operators"
+  authors:
+    - given-names: Irina
+      family-names: Nikolaeva
+    - given-names: Andrej
+      family-names: Novikov
+  year: 2026
+  identifiers:
+    - type: other
+      value: "arXiv:2606.15882"
+  url: "https://arxiv.org/abs/2606.15882"

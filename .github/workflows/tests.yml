@@ -21,3 +21,22 @@ jobs:
           pip install -e ".[test]"
       - name: Test
         run: pytest -q
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build and check the distribution
+        run: |
+          pip install build twine
+          python -m build
+          twine check --strict dist/*
+      - name: Install the wheel in a clean environment
+        run: |
+          python -m venv /tmp/env
+          /tmp/env/bin/pip install torch --index-url https://download.pytorch.org/whl/cpu
+          /tmp/env/bin/pip install dist/*.whl
+          cd /tmp && /tmp/env/bin/python -c "import torch_vn_algebra as t; A = t.TypeIAlgebra([2, 3], [2, 3]); print(t.__version__, A.random_unitary_operator(2).matrix.shape)"
