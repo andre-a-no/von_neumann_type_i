@@ -50,7 +50,7 @@ substituting $\mathbf j=\mathbf i\circ\sigma^{-1}$ gives $\sum_{\mathbf j}\prod_
 which is the claimed product vector.
 (b) By (a), on a product vector: $\pi(\sigma)^*=\pi(\sigma^{-1})$ puts $x_{\sigma(m)}$ into slot $m$, the operator applies
 $A_m$ there, and $\pi(\sigma)$ moves slot $m$ to slot $\sigma(m)$; so slot $p$ ends up holding $A_{\sigma^{-1}(p)}x_p$. Product
-vectors span $\mathcal H_n$. For $A^{(m)}$ the factor $A$ moves from slot $m$ to slot $\sigma(m)$, so $d\Pi(X)$ is fixed.
+vectors span $\mathcal H_n$. For $X^{(m)}$ the factor $X$ moves from slot $m$ to slot $\sigma(m)$, so $d\Pi(X)=\sum_mX^{(m)}$ is fixed.
 (c) $\pi(\sigma)$ is a permutation matrix, and $e_{\mathbf i}$ is fixed iff $i_{\sigma^{-1}(p)}=i_p$ for all $p$, i.e. iff
 $\mathbf i$ is constant on the cycles of $\sigma$: there are $d^{\#\text{cycles}(\sigma)}$ such $\mathbf i$. Then
 $\langle\pi(\sigma),\pi(\tau)\rangle=\operatorname{Tr}(\pi(\sigma^{-1})\pi(\tau))=\operatorname{Tr}\pi(\sigma^{-1}\tau)$. The cycles of
