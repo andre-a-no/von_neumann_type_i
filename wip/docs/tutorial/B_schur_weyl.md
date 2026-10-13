@@ -591,11 +591,11 @@ $O'\operatorname{diag}(\operatorname{sgn}R'_{ii})=O$. For Haar distributed $O$ a
 $\mathbb E[OXO^T]=\frac{\operatorname{Tr}X}k1$; in particular $\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k$.
 
 *Proof.* $\det Z$ is a nonzero polynomial in the $k^2$ real entries, and $Z$ has a density, so $\det Z\neq0$ almost surely
-(as in the proof of Theorem 5.3). Gram–Schmidt applied to real columns produces real $q_j$ and real coefficients, i.e. a
+(as in the proof of Theorem 5.3; Corollary A.7). Gram–Schmidt applied to real columns produces real $q_j$ and real coefficients, i.e. a
 real decomposition $Z=OR$ with $R_{jj}>0$; by the uniqueness in Lemma 5.2 it is the decomposition of Lemma 5.2, so $O$
 depends continuously on $Z$. The density $(2\pi)^{-k^2/2}e^{-\|Z\|_2^2/2}$ of $Z$ is invariant under $Z\mapsto VZ$ for
 $V\in O(k)$, a linear map of $\mathbb R^{k^2}$ that preserves $\|Z\|_2^2=\operatorname{Tr}(Z^TZ)$, hence orthogonal with Jacobian $1$;
-so $VZ$ has the law of $Z$. As $VZ=(VO)R$, uniqueness gives $O(VZ)=VO(Z)$, so the law of $O$ is left-invariant on the
+so $VZ$ has the law of $Z$ (Proposition A.14(a)). As $VZ=(VO)R$, uniqueness gives $O(VZ)=VO(Z)$, so the law of $O$ is left-invariant on the
 compact group $O(k)$, and Lemma 5.1 applies. The sign correction is the end of the proof of Theorem 5.3, with
 $\operatorname{sgn}R'_{ii}=R'_{ii}/|R'_{ii}|$. Finally $T=\mathbb E[OXO^T]$ satisfies $VTV^T=T$ for $V\in O(k)$, since $VO$ has the law of
 $O$. With $V$ the diagonal matrix with $-1$ in position $i$ and $1$ elsewhere, $T_{ij}=-T_{ij}$ for $j\neq i$; with
