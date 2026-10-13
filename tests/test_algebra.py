@@ -373,6 +373,17 @@ class TestUnitaryMeasures:
         assert abs((u.abs() ** 2).mean().item() - 1 / n) < 0.01
         assert (u ** 2).mean().abs().item() < 0.01
 
+    def test_gram_schmidt_equals_qr_with_phase_fix(self):
+        # the GPU path for small blocks: Q with diag(R) > 0 is unique, so it must equal Mezzadri's QR recipe
+        from torch_vn_algebra.algebra import _orthonormal_columns
+        torch.manual_seed(0)
+        for dtype in (torch.float64, torch.complex128):
+            Z = torch.randn(200, 6, 6, dtype=dtype)
+            Q, R = torch.linalg.qr(Z)
+            d = torch.diagonal(R, dim1=-2, dim2=-1)
+            d = d.sgn() if dtype.is_complex else d.sign()
+            assert torch.allclose(_orthonormal_columns(Z), Q * d.unsqueeze(-2), atol=1e-12)
+
     def test_haar_su_batched_det_one(self, basic_algebra):
         U = basic_algebra.random_unitary(3, measure='haar_su', batch_size=50)
         det = torch.linalg.det(U)

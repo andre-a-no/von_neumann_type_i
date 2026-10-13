@@ -19,7 +19,30 @@ from . import functional as _fc
 from .functional import cache_enabled as _fc_cache_enabled
 from .functional import divided_differences as _divided_differences   # noqa: F401 (tests)
 
+def _gram_schmidt_preferred(Z: torch.Tensor) -> bool:
+    """On a GPU, torch.linalg.qr factorises a batch of small matrices one matrix at a time (tens of
+    microseconds each); Gram-Schmidt costs O(n) batched kernels regardless of the batch, so it is used
+    when the batch is large compared with n. On the CPU, LAPACK QR is fast and is kept."""
+    return Z.is_cuda and Z.dim() == 3 and Z.shape[-1] <= 256 and Z.shape[0] >= Z.shape[-1]
 
+
+def _orthonormal_columns(Z: torch.Tensor) -> torch.Tensor:
+    """
+    Q of the QR decomposition Z = QR with diag(R) > 0, for a batch of square matrices of full rank, by
+    classical Gram-Schmidt with one reorthogonalisation ("twice is enough"; orthogonality to working
+    precision). With diag(R) > 0 the factor Q is unique, so for a Ginibre Z it is Haar distributed
+    (the same matrix as Mezzadri's QR recipe with the phase correction).
+    """
+    n = Z.shape[-1]
+    Q = torch.empty_like(Z)
+    for j in range(n):
+        v = Z[..., j:j + 1]
+        if j:
+            P = Q[..., :j]
+            v = v - P @ (P.mH @ v)
+            v = v - P @ (P.mH @ v)
+        Q[..., j:j + 1] = v / torch.linalg.vector_norm(v, dim=-2, keepdim=True)
+    return Q
 
 
 class TypeIAlgebra:
@@ -146,6 +169,8 @@ class TypeIAlgebra:
             dtype = self.hilbert.dtype
             cost.check_memory(3 * cost.tensor_bytes((*shape, n, n), dtype), device, f"random_unitary(n={n})")
             Z = torch.randn(*shape, n, n, dtype=dtype, device=device)
+            if _gram_schmidt_preferred(Z):
+                return _orthonormal_columns(Z)
             Q, R = cost.batched_call(torch.linalg.qr, Z, f"random_unitary(n={n}, batch={shape[0] if shape else 1})",
                                      kind='qr')
             d = torch.diagonal(R, dim1=-2, dim2=-1)
@@ -888,43 +913,25 @@ class TypeIAlgebra:
         cost.check_memory(4 * cost.tensor_bytes((batch_size, self.C, self.k_max, self.k_max), self.hilbert.dtype),
                           self.hilbert.device, f"operator_from_eigenvalues(batch={batch_size})")
         all_eig = []
-        inferred_self_adjoint = True
-        inferred_positive = True
-        inferred_normal = True
-        inferred_invertible = True
-        inferred_projection = True
-
+        flags = []                                   # per sector: non-real, negative, zero, not 0/1
         for c in range(self.C):
-            k_c = self.k_factors[c]
-            eig = eigenvalue_sampler(k_c)
+            eig = eigenvalue_sampler(self.k_factors[c])
             if isinstance(eig, np.ndarray):
                 eig = torch.from_numpy(eig)
             eig = self._to_field(eig, "eigenvalues")
             all_eig.append(eig)
-
-            if torch.is_complex(eig):
-                # U diag(eig) U^* is always normal; a non-real eigenvalue rules out self-adjoint,
-                # positive and projection
-                nonreal = bool(torch.any(eig.imag.abs() > 1e-12))
-                if nonreal:
-                    inferred_self_adjoint = False
-                    inferred_positive = False
-                    inferred_projection = False
-                if torch.any(eig.real < -1e-12):
-                    inferred_positive = False
-                if torch.any(torch.abs(eig) < 1e-12):
-                    inferred_invertible = False
-                proj_ok = torch.all((torch.abs(eig.real) < 1e-12) | (torch.abs(eig.real - 1) < 1e-12))
-                if not proj_ok:
-                    inferred_projection = False
-            else:
-                if torch.any(eig < -1e-12):
-                    inferred_positive = False
-                if torch.any(torch.abs(eig) < 1e-12):
-                    inferred_invertible = False
-                proj_ok = torch.all((torch.abs(eig) < 1e-12) | (torch.abs(eig - 1) < 1e-12))
-                if not proj_ok:
-                    inferred_projection = False
+            re, im = (eig.real, eig.imag.abs()) if torch.is_complex(eig) else (eig, torch.zeros_like(eig))
+            flags.append(torch.stack([torch.any(im > 1e-12), torch.any(re < -1e-12),
+                                      torch.any(torch.abs(eig) < 1e-12),
+                                      ~torch.all((torch.abs(re) < 1e-12) | (torch.abs(re - 1) < 1e-12))]))
+        flags = torch.stack(flags).tolist()          # one host synchronisation for all sectors
+        nonreal = [f[0] for f in flags]
+        # U diag(eig) U^* is always normal; a non-real eigenvalue rules out self-adjoint, positive and projection
+        inferred_normal = True
+        inferred_self_adjoint = not any(nonreal)
+        inferred_positive = not any(f[0] or f[1] for f in flags)
+        inferred_invertible = not any(f[2] for f in flags)
+        inferred_projection = not any(f[0] or f[3] for f in flags)
 
         if force_self_adjoint is not None:
             if force_self_adjoint and not inferred_self_adjoint:
@@ -977,26 +984,19 @@ class TypeIAlgebra:
             inferred_projection = force_projection
 
         def generator():
-            batch_matrices = []
-            for c in range(self.C):
-                k_c = self.k_factors[c]
-                eig = all_eig[c]                     # (batch, k_c)
-                # Generate batch of unitary matrices
-                if k_c == 0:
-                    batch_matrices.append(torch.zeros(batch_size, self.k_max, self.k_max,
-                                                      dtype=self.hilbert.dtype, device=self.hilbert.device))
-                    continue
-                U_batch = self.random_unitary(k_c, measure=unitary_measure, batch_size=batch_size)
-                diag_eig = torch.diag_embed(eig)      # (batch, k_c, k_c)
-                A_c = U_batch @ diag_eig @ U_batch.conj().transpose(-2, -1)  # (batch, k_c, k_c)
-                if not torch.is_complex(eig) or not torch.any(eig.imag.abs() > 1e-12):   # same threshold as the flags
-                    # real spectrum: remove round-off so that A_c is exactly Hermitian
-                    A_c = 0.5 * (A_c + A_c.conj().transpose(-2, -1))
-                A_full = torch.zeros(batch_size, self.k_max, self.k_max, dtype=A_c.dtype, device=self.hilbert.device)
-                A_full[:, :k_c, :k_c] = A_c
-                batch_matrices.append(A_full)
-            matrix = torch.stack(batch_matrices, dim=1)   # (batch, C, k_max, k_max)
-            return matrix
+            # one random_unitary call per distinct block size, for all sectors of that size at once
+            mat = torch.zeros(batch_size, self.C, self.k_max, self.k_max, dtype=self.hilbert.dtype,
+                              device=self.hilbert.device)
+            for k, idx in self._size_groups():
+                eig = torch.stack([torch.broadcast_to(all_eig[c], (batch_size, k)) for c in idx], dim=1)
+                U = self.random_unitary(k, measure=unitary_measure, batch_size=batch_size * len(idx))
+                U = U.reshape(batch_size, len(idx), k, k)
+                A = (U * eig.unsqueeze(-2)) @ U.mH
+                real = torch.tensor([not nonreal[c] for c in idx], device=A.device)
+                # real spectrum: remove round-off so that the block is exactly Hermitian
+                A = torch.where(real[:, None, None], 0.5 * (A + A.mH), A)
+                mat[:, idx, :k, :k] = A
+            return mat
 
         op = self.Operator(self, generator=generator)
         op._eigenvalues = all_eig
@@ -1046,9 +1046,9 @@ class TypeIAlgebra:
         def generator():
             mat = torch.zeros(batch_size, self.C, self.k_max, self.k_max,
                               dtype=self.hilbert.dtype, device=self.hilbert.device)
-            for c, k_c in enumerate(self.k_factors):
-                if k_c > 0:
-                    mat[:, c, :k_c, :k_c] = self.random_unitary(k_c, measure=measure, batch_size=batch_size)
+            for k, idx in self._size_groups():          # one call per distinct block size
+                U = self.random_unitary(k, measure=measure, batch_size=batch_size * len(idx))
+                mat[:, idx, :k, :k] = U.reshape(batch_size, len(idx), k, k)
             return mat
         op = self.Operator(self, generator=generator)
         op._is_normal = True
