@@ -342,32 +342,40 @@ def span_dim(ops, tol=1e-10):
 
 comm = commutant_basis(group)
 print(len(comm), span_dim(group), len(commutant_basis(comm)))
-assert len(comm) == 20                                   # pi(S3)'  = M_4 (+) M_2
-assert span_dim(group) == 5                              # pi(S3)'' = M_1 (+) M_2
+assert len(comm) == 20                                   # Step 1: pi(S3)'  = M_4 (+) M_2
+assert span_dim(group) == 5                              # Step 2: pi(S3)'' = M_1 (+) M_2
 assert len(commutant_basis(comm)) == 5                   # double commutant theorem
 ```
 
-The multiplicities are visible in the spectrum. Averaging over the group,
-$X\mapsto\frac1{|G|}\sum_g\pi(g)X\pi(g)^*$, maps any operator into the commutant
-(Exercise 3). A random self-adjoint element of $\pi(S_3)'$ therefore has (almost surely) $4$ simple
-eigenvalues on the symmetric subspace and $2$ doubly degenerate ones on its complement,
-because the block of $\pi(S_3)'$ there is $1_2\otimes M_2$; the code checks the degenerate pairs.
+The multiplicities are visible in the spectrum. Every self-adjoint $K\in\pi(S_3)'$ has the form
+$V^*KV=(1_1\otimes\kappa_1)\oplus(1_2\otimes\kappa_2)$ with self-adjoint $\kappa_1\in M_4$, $\kappa_2\in M_2$
+(Theorem 2.6). On $F$ its eigenvalues are those of $\kappa_1$; on the complement of $F$ they are those
+of $\kappa_2$, each repeated twice, since $1_2\otimes\kappa_2$ is two copies of $\kappa_2$. So *every* eigenvalue of
+$K$ on the complement of $F$ has even multiplicity. For a random $K$ more is true. Averaging over the
+group, $E(X)=\frac1{|G|}\sum_g\pi(g)X\pi(g)^*$, maps $M_8(\mathbb C)$ onto the commutant and is the
+identity there (Exercise 3), so for a Ginibre matrix $Z$ (independent standard complex Gaussian
+entries) $K=E(Z+Z^*)$ has a density on the real vector space $\pi(S_3)'_h$ of self-adjoint elements
+(Theorem A.15 and the remark after it). By Proposition 4.7(a), with probability one the six
+eigenvalues of $\kappa_1$ and $\kappa_2$ are pairwise distinct: $K$ then has $4$ simple eigenvalues on $F$ and
+$2$ doubly degenerate ones on its complement. The code checks the degenerate pairs, using that
+$P_F=\frac1{|G|}\sum_g\pi(g)$ is the orthogonal projection onto $F$ ($\pi(h)P_F=P_F$ for all $h$, so its
+range lies in $F$; $P_Fv=v$ for $v\in F$; and $P_F^*=P_F$, by the substitution $g\to g^{-1}$).
 
 ```python
 def group_average(X):
     return sum(g @ X @ g.conj().T for g in group) / len(group)
 
-H0 = torch.randn(8, 8, dtype=dt)
-Hsym = group_average(H0 + H0.conj().T)                  # a random symmetric Hamiltonian
+H0 = torch.randn(8, 8, dtype=dt)                        # Ginibre: Re, Im independent N(0, 1/2)
+Hsym = group_average(H0 + H0.conj().T)                  # K = E(Z + Z^*), a random symmetric Hamiltonian
 assert all(torch.allclose(g @ Hsym, Hsym @ g) for g in group)
 
-P_sym = sum(group) / len(group)                         # projection onto the symmetric subspace
+P_sym = sum(group) / len(group)                         # P_F, the projection onto the symmetric subspace
 w, Q = torch.linalg.eigh(P_sym)
 Q_rest = Q[:, w.real < 0.5]                             # orthonormal basis of the complement (dim 4)
 e_rest = torch.linalg.eigvalsh(Q_rest.conj().T @ Hsym @ Q_rest)
 print(e_rest)
 assert Q_rest.shape[1] == 4
-assert torch.allclose(e_rest[0], e_rest[1]) and torch.allclose(e_rest[2], e_rest[3])
+assert torch.allclose(e_rest[0], e_rest[1]) and torch.allclose(e_rest[2], e_rest[3])   # even multiplicities
 ```
 
 ## 2.5 The algebra in the library

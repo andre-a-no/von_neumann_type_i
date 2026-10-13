@@ -583,10 +583,28 @@ print("stationary states per sector:", kernel)
 assert all(dim >= 1 for dim in kernel)                             # Corollary 8.13
 ```
 
-For these random jumps the code finds exactly one stationary state per sector. Criteria for
-uniqueness — for instance, a faithful stationary state together with $\{H,L_j,L_j^*\}'=\mathbb C1$
-[A. Frigerio, *Commun. Math. Phys.* 63, 269 (1978)] — are not proved here; Exercise 4 shows that
-uniqueness can fail even in a factor.
+Numerical observation: for these random jumps the code finds exactly one stationary state per sector.
+Theorem D.6 (the finite-dimensional case of a criterion of A. Frigerio) gives a sufficient condition: if a
+GKSL generator on $M_k$ with data $(H;L_1,\dots,L_r)$ has a faithful stationary state $\sigma>0$ and the only
+matrices commuting with $H$ and all $L_j$, $L_j^*$ are the multiples of $1$, then $\sigma$ is the only
+stationary state. Without jumps between sectors the restriction of $\mathcal L$ to $P_c\mathcal MP_c\cong M_{k_c}$
+is the GKSL generator with data $(H_c;L_{1,c},\dots)$, so the theorem applies sector by sector; the code
+checks its two hypotheses (in floating point) for the generator above. Exercise 4 shows that
+uniqueness can fail even in a factor: there the second hypothesis fails.
+
+```python
+for c, k in enumerate(two.k_factors):                              # Theorem D.6 in every sector
+    G_c = dynamics.lindblad_superoperator(two, H_two, L_two)[c][0].numpy()   # on row-major vec(rho_c)
+    w_c, V_c = np.linalg.eig(G_c)
+    sigma_c = V_c[:, np.argmin(abs(w_c))].reshape(k, k)
+    sigma_c = sigma_c / np.trace(sigma_c)
+    assert np.abs(G_c @ sigma_c.reshape(-1)).max() < 1e-12            # stationary
+    assert np.abs(sigma_c - sigma_c.conj().T).max() < 1e-10 and np.linalg.eigvalsh(sigma_c).min() > 1e-3   # faithful
+    ops = [H_two.matrix[0, c, :k, :k].numpy()] + [L.matrix[0, c, :k, :k].numpy() for L in L_two]
+    ops += [A.conj().T for A in ops[1:]]
+    comm = np.concatenate([np.kron(A, np.eye(k)) - np.kron(np.eye(k), A.T) for A in ops])   # X -> [A, X]
+    assert int((np.linalg.svd(comm, compute_uv=False) < 1e-9).sum()) == 1   # commutant = C 1
+```
 
 ## 8.6 What to compare with
 
