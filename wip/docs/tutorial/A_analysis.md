@@ -116,7 +116,9 @@ cube ($Q_\infty(a)=\mathbb R^n$).
 **Definition.** A function $f:Q_\rho(a)\to\mathbb R$ is a **power series on $Q_\rho(a)$** if
 $f(x)=\sum_\alpha c_\alpha(x-a)^\alpha$ with $\sum_\alpha|c_\alpha|r^{|\alpha|}<\infty$ for every $0<r<\rho$.
 
-Polynomials are power series on $\mathbb R^n$ (finitely many $c_\alpha\neq0$). On the closed cube of radius
+Polynomials are power series on $\mathbb R^n$ (finitely many $c_\alpha\neq0$); in several variables the course applies
+Theorem A.6 only to polynomials. (A function that is only locally a power series on a connected open set would need, in
+addition, the identity theorem in several variables, which the course does not use.) On the closed cube of radius
 $r<\rho$ the terms are bounded by $|c_\alpha|r^{|\alpha|}$, so the series converges absolutely and uniformly
 there (Weierstrass M-test): its sum does not depend on the order of the terms, and $f$ is continuous.
 
@@ -642,8 +644,8 @@ Y = rng.standard_normal((1_000_000, 3)) @ Amat.T
 for idx in ((0, 1, 2, 0), (0, 0, 0, 0), (0, 1, 1, 2, 2, 0)):
     mc(np.prod(Y[:, list(idx)], axis=1), wick(cov, idx), f"E Y{idx}")
 mc(np.prod(Y[:, [0, 1, 2]], axis=1), 0.0, "E Y(0, 1, 2), odd")
-zc = np.array([[1, 0], [0, 1]]) @ [[1, 1], [1j, -1j]] / math.sqrt(2)    # (z, conj z) = linear image of (x, y)
-cz = zc @ zc.T / 2                                                       # E[Z_a Z_b], with E x^2 = E y^2 = 1/2
+M = np.array([[1, 1j], [1, -1j]])                  # (z, conj z) = M (x, y) with x, y independent N(0, 1/2)
+cz = M @ M.T / 2                                     # E[Z_a Z_b] = [[0, 1], [1, 0]]
 assert abs(wick(cz, (0, 1, 0, 1)) - 2) < 1e-12                           # E|z|^4 = 2
 ```
 
@@ -658,7 +660,7 @@ $t^ne^{-t}/n!$ on $(0,\infty)$, and $(X_1,\dots,X_n)$ and $T$ are independent. I
 $(e_0,\dots,e_n)/T$ is independent of $T$.
 
 *Proof.* The map $\Phi(x,t)=t\,(x_1,\ x_2-x_1,\ \dots,\ x_n-x_{n-1},\ 1-x_n)$ is a bijection from the open set
-$\Delta_n\times(0,\infty)$ onto $(0,\infty)^{n+1}$, with inverse $y\mapsto\big((y_0+\dots+y_{k-1})/\sum_iy_i\big)_k,\sum_iy_i\big)$;
+$\Delta_n\times(0,\infty)$ onto $(0,\infty)^{n+1}$, with inverse $y\mapsto\big(((y_0+\dots+y_{k-1})/\sum_iy_i)_{k=1}^n,\ \sum_iy_i\big)$;
 both are $C^1$. In the Jacobian matrix of $\Phi$ the column of $\partial/\partial t$ has entry sum $1$ and each column
 $\partial/\partial x_j$ (entries $t$ and $-t$) has entry sum $0$. Replacing the last row by the sum of all rows (which does
 not change the determinant) gives the row $(0,\dots,0,1)$, and the remaining $n\times n$ block is lower triangular with
@@ -713,10 +715,10 @@ for name, sp in (("uniform spacings", s), ("normalised exponentials", w)):
     mc(sp[:, 0] * sp[:, n], 1 / ((n + 1) * (n + 2)), f"{name}: E s_0 s_n")
     for tt in (0.5, 2.0):
         mc(sp[:, 1] / sp[:, 2] <= tt, tt / (1 + tt), f"{name}: P(s_1 / s_2 <= {tt})")
-r = np.minimum(s[:, 1:-1], s[:, 2:]) / np.maximum(s[:, 1:-1], s[:, 2:])    # ratios of interior spacings
+r = np.minimum(s[:, 1:-2], s[:, 2:-1]) / np.maximum(s[:, 1:-2], s[:, 2:-1])    # ratios of interior spacings
 mc(r.mean(axis=1), 2 * math.log(2) - 1, "<r>, uniform levels")
 T = e.sum(axis=1)
-mc(w[:, 0] * T ** 2, 1 / ((n + 1) * (n + 2)) * 0 + 1 / (n + 1) * (n + 1) * (n + 2), "E[w_0 T^2] = E w_0 E T^2")
+mc(w[:, 0] * T ** 2, n + 2, "E[w_0 T^2] = E w_0 E T^2 (independence)")
 ```
 
 **Back to the** [contents](README.md).
