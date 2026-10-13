@@ -213,7 +213,8 @@ class SpinChain:
         """Dimensions of the momentum sectors k = 2 pi m / L, m = 0..L-1, inside sector N."""
         reps = torch.unique(self._representatives(self.labels[N])[0])
         _, _, Rr = self._representatives(reps)
-        return [int(((m * Rr) % self.L == 0).sum()) for m in range(self.L)]
+        m = torch.arange(self.L, device=Rr.device)
+        return (((m[:, None] * Rr[None, :]) % self.L) == 0).sum(dim=1).tolist()     # one synchronisation
 
     def momentum_algebra(self, N: int) -> TypeIAlgebra:
         """(+)_m M_{d_m}: the operators commuting with N and with translations, sectors labelled by m."""
@@ -340,16 +341,17 @@ class SpinChain:
             block = mat[:, N if sector is None else 0]
             lab = self.labels[N]
             a, b = lab & mask, lab >> n_left
-            ca = torch.tensor([bin(int(x)).count('1') for x in a.tolist()], device=mat.device)
+            ca = sum((a >> i) & 1 for i in range(n_left)) if n_left else torch.zeros_like(a)   # popcount on the device
             for c in range(max(0, N - nB), min(N, n_left) + 1):
                 sel = torch.nonzero(ca == c).squeeze(-1)
                 ia = left.index_of[a[sel]]
                 ib = right_index[b[sel]] if nB else torch.zeros_like(ia)
                 dA, dB = left.sector_dim(c), math.comb(nB, N - c)
-                sub = block[:, sel][:, :, sel]                                   # (B, s, s)
-                R = torch.zeros(B, dA, dB, dA, dB, dtype=mat.dtype, device=mat.device)
-                R[:, ia[:, None], ib[:, None], ia[None, :], ib[None, :]] = sub
-                out[:, c, :dA, :dA] += torch.diagonal(R, dim1=2, dim2=4).sum(-1)
+                # (a, b) -> position in the sector is a bijection onto dA x dB: gather the block in (a, b) order
+                rows = torch.empty(dA * dB, dtype=torch.long, device=mat.device)
+                rows[ia * dB + ib] = sel
+                sub = block[:, rows][:, :, rows].reshape(B, dA, dB, dA, dB)
+                out[:, c, :dA, :dA] += torch.diagonal(sub, dim1=2, dim2=4).sum(-1)
         if isinstance(rho, DensityMatrix):
             return DensityMatrix(left.algebra, matrix=out, validate=False)
         return Operator(left.algebra, matrix=out)

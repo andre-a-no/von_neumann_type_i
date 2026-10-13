@@ -46,18 +46,28 @@ class UnitaryParam(Param):
         self.alg = alg
         self.base = alg.random_unitary_operator(batch_size).matrix if base is None else base
         self.G = torch.zeros_like(self.base, requires_grad=True)
+        self._cache = (None, None)
 
     def parameters(self):
         return [self.G]
 
+    def matrix(self) -> torch.Tensor:
+        """U as a tensor; computed once per parameter state (an objective that uses U several times, e.g. X and
+        |X| of a PositiveParam, pays one matrix exponential)."""
+        key = (self.G._version, id(self.base), torch.is_grad_enabled())
+        if self._cache[0] != key:
+            skew = self.G - self.G.conj().transpose(-2, -1)
+            self._cache = (key, self.base @ self.alg.operator(skew).expm().matrix)
+        return self._cache[1]
+
     def operator(self) -> Operator:
-        skew = self.G - self.G.conj().transpose(-2, -1)
-        return self.alg.operator(self.base) @ self.alg.operator(skew).expm()
+        return self.alg.operator(self.matrix(), is_normal=None)
 
     def recenter(self):
-        self.base = self.operator().matrix.detach()
         with torch.no_grad():
+            self.base = self.matrix().detach()
             self.G.zero_()
+        self._cache = (None, None)
 
 
 def _contrast_to_lo(delta: torch.Tensor) -> torch.Tensor:
@@ -100,10 +110,13 @@ class SpectrumParam(Param):
         self.fixed_delta = None if delta is None else torch.as_tensor(delta, dtype=rdt, device=dev).expand(batch_size)
         self.delta_range = delta_range
         self.eta = None if delta is not None else torch.randn(batch_size, dtype=rdt, device=dev).requires_grad_(True)
-        mask = torch.zeros(alg.C, alg.k_max, dtype=torch.bool, device=dev)
-        for c, k_c in enumerate(alg.k_factors):
-            mask[c, :k_c] = True
-        self.mask = mask
+        self.mask = alg._const('rows')
+        b = torch.arange(batch_size, device=dev)
+        is_max = torch.zeros(batch_size, alg.C, alg.k_max, dtype=torch.bool, device=dev)
+        is_min = torch.zeros_like(is_max)
+        is_max[b, self.pin_max[:, 0], self.pin_max[:, 1]] = True
+        is_min[b, self.pin_min[:, 0], self.pin_min[:, 1]] = True
+        self._is_max, self._is_min = is_max, is_min               # constant: built once
 
     def parameters(self):
         return [self.theta] + ([self.eta] if self.eta is not None else [])
@@ -120,12 +133,7 @@ class SpectrumParam(Param):
         # (1 + sin)/2 reaches the ends of [lo, 1] at finite theta (a sigmoid only asymptotically, which
         # slows the search down: extremal spectra often have all eigenvalues at lo or 1)
         lam = lo + (1 - lo) * 0.5 * (1 + torch.sin(self.theta))
-        b = torch.arange(lam.shape[0], device=lam.device)
-        is_max = torch.zeros_like(lam, dtype=torch.bool)
-        is_min = torch.zeros_like(lam, dtype=torch.bool)
-        is_max[b, self.pin_max[:, 0], self.pin_max[:, 1]] = True
-        is_min[b, self.pin_min[:, 0], self.pin_min[:, 1]] = True
-        lam = torch.where(is_max, torch.ones_like(lam), torch.where(is_min, lo.expand_as(lam), lam))
+        lam = torch.where(self._is_max, torch.ones_like(lam), torch.where(self._is_min, lo.expand_as(lam), lam))
         return lam * self.mask
 
 
@@ -148,7 +156,7 @@ class PositiveParam(Param):
         return lam
 
     def _build(self, lam: torch.Tensor) -> Operator:
-        U = self.unitary.operator().matrix
+        U = self.unitary.matrix()
         lam = lam.to(U.dtype)
         return self.alg.operator((U * lam.unsqueeze(-2)) @ U.conj().transpose(-2, -1))
 
@@ -197,8 +205,10 @@ class SelfAdjointParam(PositiveParam):
         """Local search over the signs: flip the sign of one random active eigenvalue per start and keep the
         flip where the objective improves (between the gradient rounds of extremize)."""
         alg, B = self.alg, self.signs.shape[0]
-        slots = torch.tensor([(c, i) for c, k_c in enumerate(alg.k_factors) for i in range(k_c)],
-                             device=self.signs.device)
+        slots = alg._const_cache.get('active_slots')
+        if slots is None:
+            slots = alg._const_cache['active_slots'] = torch.tensor(
+                [(c, i) for c, k_c in enumerate(alg.k_factors) for i in range(k_c)], device=self.signs.device)
         b = torch.arange(B, device=self.signs.device)
         with torch.no_grad():
             best = evaluate()
@@ -207,7 +217,8 @@ class SelfAdjointParam(PositiveParam):
                 self.signs[b, c, i] *= -1
                 v = evaluate()
                 better = v > best if maximize else v < best
-                self.signs[b[~better], c[~better], i[~better]] *= -1          # undo where it did not help
+                # undo where it did not help (no data-dependent indexing: no synchronisation)
+                self.signs[b, c, i] *= torch.where(better, 1.0, -1.0).to(self.signs.dtype)
                 best = torch.where(better, v, best)
 
 
@@ -217,15 +228,25 @@ def extremize(objective: Callable[[], torch.Tensor], params: Sequence[Param], ma
     """
     Gradient ascent (maximize=True) or descent on objective() -> tensor (batch,), every batch
     element being an independent start. Adam with learning rate lr * decay**round; unitary charts
-    are re-centred after every round. Returns the objective at the final point (no gradient).
+    are re-centred after every round. Returns, per start, the best objective value attained at any
+    iterate (every iterate is an admissible point; no gradient).
     """
     sign = -1.0 if maximize else 1.0
     timer = cost.StepTimer(rounds * steps, "optimize.extremize", progress)
+    best = None
+
+    def keep(v):
+        nonlocal best
+        v = torch.nan_to_num(v.detach(), nan=-float('inf') if maximize else float('inf'))
+        best = v if best is None else (torch.maximum(best, v) if maximize else torch.minimum(best, v))
+
     for rnd in range(rounds):
         tensors = [t for p in params for t in p.parameters()]
         opt = torch.optim.Adam(tensors, lr=lr * decay ** rnd)
         for _ in range(steps):
-            loss = sign * objective().sum()
+            v = objective()
+            keep(v)
+            loss = sign * v.sum()
             opt.zero_grad()
             loss.backward()
             opt.step()
@@ -238,4 +259,5 @@ def extremize(objective: Callable[[], torch.Tensor], params: Sequence[Param], ma
                     p.discrete_step(objective, maximize)
     timer.close()
     with torch.no_grad():
-        return objective().detach()
+        keep(objective())
+    return best

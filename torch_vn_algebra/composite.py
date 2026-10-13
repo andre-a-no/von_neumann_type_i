@@ -113,18 +113,11 @@ def kron(A: Operator, B: Operator, alg12: TypeIAlgebra) -> Operator:
         dtype = torch.promote_types(a.dtype, b.dtype)
         a, b = a.to(dtype), b.to(dtype)
         batch = max(a.shape[0], b.shape[0])
-        cost.check_memory(cost.tensor_bytes((batch, alg12.C, alg12.k_max, alg12.k_max), dtype), a.device,
+        cost.check_memory(3 * cost.tensor_bytes((batch, alg12.C, alg12.k_max, alg12.k_max), dtype), a.device,
                           f"kron (batch {batch}, {alg12.C} sectors of size up to {alg12.k_max})")
-        out = torch.zeros(batch, alg12.C, alg12.k_max, alg12.k_max, dtype=dtype, device=a.device)
-        for sec, pairs in enumerate(alg12.product_blocks):
-            for c, d, off in pairs:
-                k_c, m_d = alg1.k_factors[c], alg2.k_factors[d]
-                if k_c * m_d == 0:
-                    continue
-                ac, bd = a[:, c, :k_c, :k_c], b[:, d, :m_d, :m_d]
-                blk = (ac[:, :, None, :, None] * bd[:, None, :, None, :]).reshape(-1, k_c * m_d, k_c * m_d)
-                out[:, sec, off:off + k_c * m_d, off:off + k_c * m_d] = blk
-        return out
+        ci, ai, aj, di, bi, bj, mask = _kron_index(alg12)
+        # one gather per factor: (A (x) B)[s, i, j] = A[c, a_i, a_j] B[d, b_i, b_j] inside a pair block, else 0
+        return a[:, ci, ai, aj] * b[:, di, bi, bj] * mask.to(dtype)
 
     if isinstance(A, DensityMatrix) and isinstance(B, DensityMatrix):
         return DensityMatrix(alg12, generator=generator, validate=False)
@@ -134,6 +127,65 @@ def kron(A: Operator, B: Operator, alg12: TypeIAlgebra) -> Operator:
     if A._is_positive and B._is_positive:
         out._is_positive = True
     return out
+
+
+def _kron_index(alg12: TypeIAlgebra):
+    """Gather maps of kron, built once per product algebra: for every entry (s, i, j) of alg12 the sector and
+    indices of the factors (c, a_i, a_j), (d, b_i, b_j), and a mask that is 1 inside the pair blocks."""
+    key = ('kron_index',)
+    idx = alg12._const_cache.get(key)
+    if idx is not None:
+        return idx
+    alg1, alg2 = _factors(alg12)
+    C, K = alg12.C, alg12.k_max
+    pair = torch.full((C, K), -1, dtype=torch.long)                      # pair id of every row
+    c_of, d_of, a_of, b_of = (torch.zeros(C, K, dtype=torch.long) for _ in range(4))
+    pid = 0
+    for s, pairs in enumerate(alg12.product_blocks):
+        for c, d, off in pairs:
+            k_c, m_d = alg1.k_factors[c], alg2.k_factors[d]
+            if k_c * m_d == 0:
+                continue
+            r = torch.arange(k_c * m_d)
+            pair[s, off:off + k_c * m_d] = pid
+            c_of[s, off:off + k_c * m_d] = c
+            d_of[s, off:off + k_c * m_d] = d
+            a_of[s, off:off + k_c * m_d] = r // m_d
+            b_of[s, off:off + k_c * m_d] = r % m_d
+            pid += 1
+    mask = (pair[:, :, None] == pair[:, None, :]) & (pair[:, :, None] >= 0)
+    dev = alg12.hilbert.device
+    idx = tuple(t.to(dev) for t in (c_of[:, :, None].expand(C, K, K), a_of[:, :, None].expand(C, K, K),
+                                    a_of[:, None, :].expand(C, K, K), d_of[:, :, None].expand(C, K, K),
+                                    b_of[:, :, None].expand(C, K, K), b_of[:, None, :].expand(C, K, K), mask))
+    alg12._const_cache[key] = idx
+    return idx
+
+
+def _ptrace_index(alg12: TypeIAlgebra, keep: int):
+    """Per group of pair blocks with equal sizes (k_c, m_d): (k, m, sector s, row indices (P, k m), output sector)
+    for the direct partial trace; built once per product algebra."""
+    key = ('ptrace_index', keep)
+    groups = alg12._const_cache.get(key)
+    if groups is not None:
+        return groups
+    alg1, alg2 = _factors(alg12)
+    by_size = {}
+    for s, pairs in enumerate(alg12.product_blocks):
+        for c, d, off in pairs:
+            k_c, m_d = alg1.k_factors[c], alg2.k_factors[d]
+            if k_c * m_d:
+                by_size.setdefault((k_c, m_d), []).append((s, off, c if keep == 1 else d))
+    dev = alg12.hilbert.device
+    groups = []
+    for (k_c, m_d), entries in by_size.items():
+        S = torch.tensor([e[0] for e in entries], dtype=torch.long, device=dev)
+        rows = torch.tensor([e[1] for e in entries], dtype=torch.long, device=dev)[:, None] + \
+            torch.arange(k_c * m_d, device=dev)[None, :]
+        out = torch.tensor([e[2] for e in entries], dtype=torch.long, device=dev)
+        groups.append((k_c, m_d, S, rows, out))
+    alg12._const_cache[key] = groups
+    return groups
 
 
 def partial_trace_channel(alg12: TypeIAlgebra, keep: int = 1) -> InterSectorChannel:
@@ -181,5 +233,35 @@ def partial_trace_channel(alg12: TypeIAlgebra, keep: int = 1) -> InterSectorChan
 
 
 def partial_trace(X: Operator, keep: int = 1) -> Operator:
-    """Tr_2 X (keep=1) or Tr_1 X (keep=2) for X in a tensor-product algebra."""
-    return partial_trace_channel(X.algebra, keep)(X)
+    """
+    Tr_2 X (keep=1) or Tr_1 X (keep=2) for X in a tensor-product algebra, computed directly: every pair block
+    (c, d) is reshaped to (k_c, m_d, k_c, m_d) and traced over one factor, one gather per group of equal block
+    sizes (O(B sum k^2 m) operations; partial_trace_channel gives the same map as a channel, e.g. for its
+    adjoint). States give states.
+    """
+    alg12 = X.algebra
+    alg1, alg2 = _factors(alg12)
+    if keep not in (1, 2):
+        raise ValueError("keep must be 1 or 2")
+    out_alg = alg1 if keep == 1 else alg2
+
+    def generator():
+        x = X.matrix
+        B = x.shape[0]
+        out = torch.zeros(B, out_alg.C, out_alg.k_max, out_alg.k_max, dtype=x.dtype, device=x.device)
+        for k_c, m_d, S, rows, osec in _ptrace_index(alg12, keep):
+            blk = x[:, S[:, None, None], rows[:, :, None], rows[:, None, :]]              # (B, P, km, km)
+            blk = blk.reshape(B, len(S), k_c, m_d, k_c, m_d)
+            red = blk.diagonal(dim1=3, dim2=5).sum(-1) if keep == 1 else blk.diagonal(dim1=2, dim2=4).sum(-1)
+            n = red.shape[-1]
+            pad = torch.zeros(B, len(S), out_alg.k_max, out_alg.k_max, dtype=x.dtype, device=x.device)
+            pad[:, :, :n, :n] = red
+            out.index_add_(1, osec, pad)
+        return out
+
+    if isinstance(X, DensityMatrix):
+        return DensityMatrix(out_alg, generator=generator, validate=False)
+    out = Operator(out_alg, generator=generator)
+    out._is_self_adjoint = X._is_self_adjoint
+    out._is_positive = X._is_positive
+    return out
