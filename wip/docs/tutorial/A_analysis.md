@@ -626,7 +626,7 @@ Both sides are power series on $\mathbb R$ in the sense of Section A.2: on the r
 $\sum_k\frac{\rho^k}{k!}|\mathbb E[S^k]|\le\mathbb E\sum_k\frac{\rho^k|S|^k}{k!}=\mathbb Ee^{\rho|S|}<\infty$ for every $\rho>0$
 (monotone convergence and Lemma A.23). So their coefficients agree (Lemma A.5(c) applied to the difference). Hence $\mathbb E\langle t,Y\rangle^m/m!$ equals $0$ for odd $m$ and $\langle t,Ct\rangle^p/(2^pp!)$ for $m=2p$, for every
 $t\in\mathbb R^m$. Both sides are polynomials in $t$, so their coefficients agree (Corollary A.7(a) applied to the difference).
-In $\mathbb E\langle t,Y\rangle^m=\sum_{i_1,\dots,i_m}t_{i_1}\cdots t_{i_m}\mathbb E[Y_{i_1}\cdots Y_{i_m}]$ the monomial $t_1t_2\cdots t_m$
+In $\mathbb E\langle t,Y\rangle^m=\sum_{i_1,\dots,i_m}t_{i_1}\cdots t_{i_m}\mathbb E[Y_{i_1}\cdots Y_{i_m}]$ (integrable: $|Y_{i_1}\cdots Y_{i_m}|\le\sum_k|Y_{i_k}|^m$, Lemma A.23) the monomial $t_1t_2\cdots t_m$
 comes from the $m!$ sequences $(i_1,\dots,i_m)$ that are permutations of $(1,\dots,m)$, so its coefficient in
 $\mathbb E\langle t,Y\rangle^m/m!$ is $\mathbb E[Y_1\cdots Y_m]$. For $m$ odd it is therefore $0$. For $m=2p$,
 $q^p=\sum c_{i_1j_1}\cdots c_{i_pj_p}\,t_{i_1}t_{j_1}\cdots t_{i_p}t_{j_p}$ over all sequences of $p$ ordered pairs; the monomial

@@ -623,7 +623,7 @@ $\sum_k\frac{\rho^k}{k!}|\mathbb E[S^k]|\le\mathbb E\sum_k\frac{\rho^k|S|^k}{k!}
 （単調収束定理と補題 A.23）。よってそれらの係数は一致する（差に補題 A.5(c) を適用する）。ゆえにすべての
 $t\in\mathbb R^m$ に対し、$\mathbb E\langle t,Y\rangle^m/m!$ は $m$ が奇数ならば $0$ に、$m=2p$ ならば $\langle t,Ct\rangle^p/(2^pp!)$ に等しい。
 両辺は $t$ の多項式であるから、それらの係数は一致する（差に系 A.7(a) を適用する）。
-$\mathbb E\langle t,Y\rangle^m=\sum_{i_1,\dots,i_m}t_{i_1}\cdots t_{i_m}\mathbb E[Y_{i_1}\cdots Y_{i_m}]$ において、単項式 $t_1t_2\cdots t_m$ は
+$\mathbb E\langle t,Y\rangle^m=\sum_{i_1,\dots,i_m}t_{i_1}\cdots t_{i_m}\mathbb E[Y_{i_1}\cdots Y_{i_m}]$ ($|Y_{i_1}\cdots Y_{i_m}|\le\sum_k|Y_{i_k}|^m$, A.23) において、単項式 $t_1t_2\cdots t_m$ は
 $(1,\dots,m)$ の置換であるような $m!$ 個の列 $(i_1,\dots,i_m)$ から生じるので、
 $\mathbb E\langle t,Y\rangle^m/m!$ におけるその係数は $\mathbb E[Y_1\cdots Y_m]$ である。したがって $m$ が奇数ならばそれは $0$ である。$m=2p$ ならば
 $q^p=\sum c_{i_1j_1}\cdots c_{i_pj_p}\,t_{i_1}t_{j_1}\cdots t_{i_p}t_{j_p}$ であり、和は $p$ 個の順序対からなるすべての列にわたる。単項式

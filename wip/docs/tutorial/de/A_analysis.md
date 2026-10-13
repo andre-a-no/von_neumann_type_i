@@ -625,7 +625,7 @@ Beide Seiten sind Potenzreihen auf $\mathbb R$ im Sinne von Abschnitt A.2: Recht
 $\sum_k\frac{\rho^k}{k!}|\mathbb E[S^k]|\le\mathbb E\sum_k\frac{\rho^k|S|^k}{k!}=\mathbb Ee^{\rho|S|}<\infty$ für jedes $\rho>0$
 (monotone Konvergenz und Lemma A.23). Also stimmen ihre Koeffizienten überein (Lemma A.5(c), angewandt auf die Differenz). Folglich ist $\mathbb E\langle t,Y\rangle^m/m!$ gleich $0$ für ungerades $m$ und gleich $\langle t,Ct\rangle^p/(2^pp!)$ für $m=2p$, für jedes
 $t\in\mathbb R^m$. Beide Seiten sind Polynome in $t$, also stimmen ihre Koeffizienten überein (Korollar A.7(a), angewandt auf die Differenz).
-In $\mathbb E\langle t,Y\rangle^m=\sum_{i_1,\dots,i_m}t_{i_1}\cdots t_{i_m}\mathbb E[Y_{i_1}\cdots Y_{i_m}]$ stammt das Monom $t_1t_2\cdots t_m$
+In $\mathbb E\langle t,Y\rangle^m=\sum_{i_1,\dots,i_m}t_{i_1}\cdots t_{i_m}\mathbb E[Y_{i_1}\cdots Y_{i_m}]$ ($|Y_{i_1}\cdots Y_{i_m}|\le\sum_k|Y_{i_k}|^m$, A.23) stammt das Monom $t_1t_2\cdots t_m$
 von den $m!$ Folgen $(i_1,\dots,i_m)$, die Permutationen von $(1,\dots,m)$ sind, also ist sein Koeffizient in
 $\mathbb E\langle t,Y\rangle^m/m!$ gleich $\mathbb E[Y_1\cdots Y_m]$. Für ungerades $m$ ist er daher $0$. Für $m=2p$ ist
 $q^p=\sum c_{i_1j_1}\cdots c_{i_pj_p}\,t_{i_1}t_{j_1}\cdots t_{i_p}t_{j_p}$ über alle Folgen von $p$ geordneten Paaren; das Monom

@@ -627,7 +627,7 @@ $$
 $\sum_k\frac{\rho^k}{k!}|\mathbb E[S^k]|\le\mathbb E\sum_k\frac{\rho^k|S|^k}{k!}=\mathbb Ee^{\rho|S|}<\infty$ при любом $\rho>0$
 (теорема о монотонной сходимости и лемма A.23). Поэтому их коэффициенты совпадают (лемма A.5(c), применённая к разности). Следовательно, $\mathbb E\langle t,Y\rangle^m/m!$ равно $0$ при нечётном $m$ и $\langle t,Ct\rangle^p/(2^pp!)$ при $m=2p$, для любого
 $t\in\mathbb R^m$. Обе части — многочлены от $t$, поэтому их коэффициенты совпадают (следствие A.7(a), применённое к разности).
-В $\mathbb E\langle t,Y\rangle^m=\sum_{i_1,\dots,i_m}t_{i_1}\cdots t_{i_m}\mathbb E[Y_{i_1}\cdots Y_{i_m}]$ одночлен $t_1t_2\cdots t_m$
+В $\mathbb E\langle t,Y\rangle^m=\sum_{i_1,\dots,i_m}t_{i_1}\cdots t_{i_m}\mathbb E[Y_{i_1}\cdots Y_{i_m}]$ ($|Y_{i_1}\cdots Y_{i_m}|\le\sum_k|Y_{i_k}|^m$, A.23) одночлен $t_1t_2\cdots t_m$
 возникает из $m!$ последовательностей $(i_1,\dots,i_m)$, являющихся перестановками $(1,\dots,m)$, так что его коэффициент в
 $\mathbb E\langle t,Y\rangle^m/m!$ равен $\mathbb E[Y_1\cdots Y_m]$. Поэтому при нечётном $m$ он равен $0$. При $m=2p$
 $q^p=\sum c_{i_1j_1}\cdots c_{i_pj_p}\,t_{i_1}t_{j_1}\cdots t_{i_p}t_{j_p}$ по всем последовательностям из $p$ упорядоченных пар; одночлен

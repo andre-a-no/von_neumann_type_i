@@ -627,7 +627,7 @@ Ambos lados son series de potencias sobre $\mathbb R$ en el sentido de la secci�
 $\sum_k\frac{\rho^k}{k!}|\mathbb E[S^k]|\le\mathbb E\sum_k\frac{\rho^k|S|^k}{k!}=\mathbb Ee^{\rho|S|}<\infty$ para todo $\rho>0$
 (convergencia monótona y lema A.23). Así, sus coeficientes coinciden (lema A.5(c) aplicado a la diferencia). Por tanto, $\mathbb E\langle t,Y\rangle^m/m!$ vale $0$ para $m$ impar y $\langle t,Ct\rangle^p/(2^pp!)$ para $m=2p$, para todo
 $t\in\mathbb R^m$. Ambos lados son polinomios en $t$, así que sus coeficientes coinciden (corolario A.7(a) aplicado a la diferencia).
-En $\mathbb E\langle t,Y\rangle^m=\sum_{i_1,\dots,i_m}t_{i_1}\cdots t_{i_m}\mathbb E[Y_{i_1}\cdots Y_{i_m}]$, el monomio $t_1t_2\cdots t_m$
+En $\mathbb E\langle t,Y\rangle^m=\sum_{i_1,\dots,i_m}t_{i_1}\cdots t_{i_m}\mathbb E[Y_{i_1}\cdots Y_{i_m}]$ ($|Y_{i_1}\cdots Y_{i_m}|\le\sum_k|Y_{i_k}|^m$, A.23), el monomio $t_1t_2\cdots t_m$
 procede de las $m!$ sucesiones $(i_1,\dots,i_m)$ que son permutaciones de $(1,\dots,m)$, así que su coeficiente en
 $\mathbb E\langle t,Y\rangle^m/m!$ es $\mathbb E[Y_1\cdots Y_m]$. Para $m$ impar es, por tanto, $0$. Para $m=2p$,
 $q^p=\sum c_{i_1j_1}\cdots c_{i_pj_p}\,t_{i_1}t_{j_1}\cdots t_{i_p}t_{j_p}$ sobre todas las sucesiones de $p$ pares ordenados; el monomio

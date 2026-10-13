@@ -608,7 +608,7 @@ $\sum_k\frac{\rho^k}{k!}|\mathbb E[S^k]|\le\mathbb E\sum_k\frac{\rho^k|S|^k}{k!}
 （单调收敛定理和引理 A.23）。所以它们的系数相同（对二者之差应用引理 A.5(c)）。因此对每个
 $t\in\mathbb R^m$，$\mathbb E\langle t,Y\rangle^m/m!$ 当 $m$ 为奇数时等于 $0$，当 $m=2p$ 时等于 $\langle t,Ct\rangle^p/(2^pp!)$。
 两边都是 $t$ 的多项式，所以它们的系数相同（对二者之差应用推论 A.7(a)）。
-在 $\mathbb E\langle t,Y\rangle^m=\sum_{i_1,\dots,i_m}t_{i_1}\cdots t_{i_m}\mathbb E[Y_{i_1}\cdots Y_{i_m}]$ 中，单项式 $t_1t_2\cdots t_m$
+在 $\mathbb E\langle t,Y\rangle^m=\sum_{i_1,\dots,i_m}t_{i_1}\cdots t_{i_m}\mathbb E[Y_{i_1}\cdots Y_{i_m}]$ ($|Y_{i_1}\cdots Y_{i_m}|\le\sum_k|Y_{i_k}|^m$, A.23) 中，单项式 $t_1t_2\cdots t_m$
 来自那 $m!$ 个是 $(1,\dots,m)$ 的排列的序列 $(i_1,\dots,i_m)$，所以它在
 $\mathbb E\langle t,Y\rangle^m/m!$ 中的系数是 $\mathbb E[Y_1\cdots Y_m]$。因此当 $m$ 为奇数时它为 $0$。当 $m=2p$ 时，
 $q^p=\sum c_{i_1j_1}\cdots c_{i_pj_p}\,t_{i_1}t_{j_1}\cdots t_{i_p}t_{j_p}$，求和取遍由 $p$ 个有序对组成的所有序列；单项式

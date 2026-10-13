@@ -74,7 +74,9 @@ consists of the roots of $\det(A-\lambda)=\det(T-\lambda)$. $\square$
 1. $\|A\|=\max_i|\lambda_i|$;
 2. $A$ is self-adjoint iff all $\lambda_i\in\mathbb R$; unitary iff all $|\lambda_i|=1$;
    a projection iff all $\lambda_i\in\{0,1\}$;
-3. $A\ge0$ iff $A$ is self-adjoint and all $\lambda_i\ge0$.
+3. $A\ge0$ iff $A$ is self-adjoint and all $\lambda_i\ge0$. Moreover every positive matrix is
+   self-adjoint, hence normal, so (3) characterises positivity among *all* matrices and the
+   functional calculus below applies to every $A\ge0$.
 
 *Proof.* With $y=U^*x$, $\|Ax\|^2=\sum_i|\lambda_i|^2|y_i|^2$ and $\|y\|=\|x\|$,
 which gives (1), with equality for $x=Ue_i$, $|\lambda_i|$ maximal. In (2), $A^*=U\bar\Lambda U^*$,
@@ -100,7 +102,8 @@ $f(\operatorname{spec}A)$, then $g(f(A))=(g\circ f)(A)$.
 
 *Proof.* (b) $A^k=U\Lambda^kU^*$, so $p(A)=Up(\Lambda)U^*$ by linearity. (a) The
 spectrum is finite, so Lagrange interpolation gives a polynomial $p$ with $p=f$ on
-$\operatorname{spec}A$. Then $U\,f(\Lambda)\,U^*=U\,p(\Lambda)\,U^*=p(A)$ for *every*
+$\operatorname{spec}A$: if $\mu_1,\dots,\mu_r$ are the distinct eigenvalues, take
+$p(t)=\sum_if(\mu_i)\prod_{j\neq i}(t-\mu_j)/(\mu_i-\mu_j)$. Then $U\,f(\Lambda)\,U^*=U\,p(\Lambda)\,U^*=p(A)$ for *every*
 unitary $U$ diagonalising $A$, and $p(A)$ is defined without $U$. (c) holds for the
 diagonal matrices $f(\Lambda)$ and is preserved by conjugation with $U$; the spectrum
 of $Uf(\Lambda)U^*$ is the diagonal of $f(\Lambda)$. (d) $B$ commutes with every
@@ -132,8 +135,12 @@ Hence $W_0:|A|x\mapsto Ax$ is a well-defined linear isometry from the range
 $R_1$ of $|A|$ onto the range $R_2$ of $A$: if $|A|x=|A|x'$ then
 $\|A(x-x')\|=\||A|(x-x')\|=0$. In particular $\dim R_1=\dim R_2$, so the orthogonal
 complements also have equal dimension; let $W_1:R_1^\perp\to R_2^\perp$ be any
-isometry between them (map an orthonormal basis to an orthonormal basis). Then
-$W=W_0\oplus W_1$ is unitary and $W|A|x=W_0|A|x=Ax$. $\square$
+isometry between them (map an orthonormal basis to an orthonormal basis). Let
+$W=W_0\oplus W_1$, i.e. $W(u_1+u_2)=W_0u_1+W_1u_2$ for $u_1\in R_1$, $u_2\in R_1^\perp$. As
+$W_0u_1\in R_2\perp R_2^\perp\ni W_1u_2$, Pythagoras gives $\|Wu\|^2=\|u_1\|^2+\|u_2\|^2=\|u\|^2$
+for all $u$. Hence $\langle u,(W^*W-1)u\rangle=0$ for all $u$, so $W^*W=1$ by polarisation (proof of
+Corollary 1.4(3)); then $W$ is invertible with $W^{-1}=W^*$, so also $WW^*=1$: $W$ is unitary, and
+$W|A|x=W_0|A|x=Ax$. $\square$
 
 The eigenvalues $s_1\ge\dots\ge s_n\ge0$ of $|A|$ are the **singular values** of
 $A$. Three norms are used throughout:
@@ -161,7 +168,8 @@ since $\|UW X\|_2=\|X\|_2$ for unitary $UW$ and $\||A|^{1/2}\|_2^2=\operatorname
 In particular the three quantities above are norms. $\|\cdot\|$ is an operator norm;
 $\|\cdot\|_2$ is the norm of the inner product $\langle X,Y\rangle_{HS}$; and for
 $\|\cdot\|_1$, Theorem 1.9 gives
-$\|A+B\|_1=\max_U|\operatorname{Tr}(AU)+\operatorname{Tr}(BU)|\le\|A\|_1+\|B\|_1$, while
+$\|A+B\|_1=\max_U|\operatorname{Tr}(AU)+\operatorname{Tr}(BU)|\le\|A\|_1+\|B\|_1$ and
+$\|cA\|_1=\max_U|c\operatorname{Tr}(AU)|=|c|\,\|A\|_1$, while
 $\|A\|_1=0$ forces $|A|=0$ and $A=W|A|=0$. For $P\ge0$, $|P|=(P^2)^{1/2}=P$ by Theorem 1.6,
 so $\|P\|_1=\operatorname{Tr}P$.
 
@@ -191,8 +199,12 @@ of operators, each a list of `C` blocks. Here `batch = C = 1`. The construction 
 exactly Theorem 1.3 read backwards: $A=U\Lambda U^*$ with $U$ Haar-distributed (the library
 draws $U$ by the QR construction of Theorem 5.3). The flag `force_positive=True` is checked
 against the prescribed eigenvalues (the library raises an error if one of them is below
-$-10^{-12}$); by Corollary 1.4(3) the result is then positive, and the library records this
-instead of testing it again.
+$-10^{-12}$); by Corollary 1.4(3) the result is then positive (exactly so when the prescribed
+eigenvalues are $\ge0$, as here; up to this tolerance in general), and the library records this
+instead of testing it again. For the same reason `A.eigenvalues()` above returns the prescribed
+spectrum, sorted, without computing anything; it is not a check. The check of
+$\operatorname{spec}f(A)=f(\operatorname{spec}A)$ below does compute: `apply_function` diagonalises the
+matrix of $A$, and the eigenvalues of the resulting matrix $e^A$ are computed from scratch.
 
 The functional calculus for self-adjoint operators is `apply_function` (it diagonalises each
 block with `eigh`). The function $f$ must act elementwise: it receives the eigenvalues of all
@@ -346,7 +358,10 @@ assert close(Hs.apply_function(lambda w: torch.sin(w) * torch.exp(w)),
 
 3. Write $T=A^{-1/2}XA^{-1/2}$. Then $XA^{-1}X=B$ iff $T^2=A^{-1/2}BA^{-1/2}$, and
    $X\ge0$ iff $T\ge0$, since $\langle x,Xx\rangle=\langle A^{1/2}x,TA^{1/2}x\rangle$ and
-   $A^{1/2}$ is invertible. By Theorem 1.6, $T=(A^{-1/2}BA^{-1/2})^{1/2}$ is the unique
+   $A^{1/2}$ is invertible (here $A^{\pm1/2}$ are given by the functional calculus with $t^{\pm1/2}$ on
+   $\operatorname{spec}A\subset(0,\infty)$, so $A^{-1/2}A^{1/2}=1$ by Theorem 1.5(c)). Also
+   $A^{-1/2}BA^{-1/2}\ge0$, since $\langle x,A^{-1/2}BA^{-1/2}x\rangle=\langle A^{-1/2}x,BA^{-1/2}x\rangle\ge0$.
+   By Theorem 1.6, $T=(A^{-1/2}BA^{-1/2})^{1/2}$ is the unique
    positive solution, i.e. $X=A\#B$. Every solution $X$ of $XA^{-1}X=B$ is invertible,
    because $\det(X)^2\det(A)^{-1}=\det B\neq0$. So $XA^{-1}X=B$ is equivalent to
    $XB^{-1}X=A$ (from $A^{-1}=X^{-1}BX^{-1}$, invert both sides), and uniqueness gives

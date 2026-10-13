@@ -625,7 +625,7 @@ Les deux membres sont des séries entières sur $\mathbb R$ au sens de la sectio
 $\sum_k\frac{\rho^k}{k!}|\mathbb E[S^k]|\le\mathbb E\sum_k\frac{\rho^k|S|^k}{k!}=\mathbb Ee^{\rho|S|}<\infty$ pour tout $\rho>0$
 (convergence monotone et lemme A.23). Leurs coefficients coïncident donc (lemme A.5(c) appliqué à la différence). Par conséquent $\mathbb E\langle t,Y\rangle^m/m!$ vaut $0$ pour $m$ impair et $\langle t,Ct\rangle^p/(2^pp!)$ pour $m=2p$, pour tout
 $t\in\mathbb R^m$. Les deux membres sont des polynômes en $t$, donc leurs coefficients coïncident (corollaire A.7(a) appliqué à la différence).
-Dans $\mathbb E\langle t,Y\rangle^m=\sum_{i_1,\dots,i_m}t_{i_1}\cdots t_{i_m}\mathbb E[Y_{i_1}\cdots Y_{i_m}]$, le monôme $t_1t_2\cdots t_m$
+Dans $\mathbb E\langle t,Y\rangle^m=\sum_{i_1,\dots,i_m}t_{i_1}\cdots t_{i_m}\mathbb E[Y_{i_1}\cdots Y_{i_m}]$ ($|Y_{i_1}\cdots Y_{i_m}|\le\sum_k|Y_{i_k}|^m$, A.23), le monôme $t_1t_2\cdots t_m$
 provient des $m!$ suites $(i_1,\dots,i_m)$ qui sont des permutations de $(1,\dots,m)$, donc son coefficient dans
 $\mathbb E\langle t,Y\rangle^m/m!$ est $\mathbb E[Y_1\cdots Y_m]$. Pour $m$ impair, il est donc nul. Pour $m=2p$,
 $q^p=\sum c_{i_1j_1}\cdots c_{i_pj_p}\,t_{i_1}t_{j_1}\cdots t_{i_p}t_{j_p}$ sur toutes les suites de $p$ couples ordonnés ; le monôme
