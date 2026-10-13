@@ -160,3 +160,77 @@ def test_krylov_times_in_double():
     v = V[:, 0] + V[:, 3]; v /= np.linalg.norm(v)
     out = krylov.evolve(H, torch.tensor(v, dtype=torch.complex128)[None], [0.0, 0.2])[-1, 0].numpy()
     assert np.abs(out - V @ (np.exp(-0.2j * w) * (V.conj().T @ v))).max() < 1e-11
+
+
+# ----- algebra / functional calculus -----
+def test_inverse_threshold_per_block():
+    A = TypeIAlgebra([2, 2], [2, 2], precision='double')
+    H = A.from_blocks([torch.diag(torch.tensor([1e10, 1.0], dtype=A.dtype)),
+                       torch.diag(torch.tensor([1e-7, 2e-7], dtype=A.dtype))])
+    H = A.operator(H.matrix, is_self_adjoint=True)
+    d = H.inverse().matrix[0, 1].diagonal().real
+    assert torch.allclose(d, torch.tensor([1e7, 5e6], dtype=torch.float64))
+
+
+def test_power_negative_support_relative():
+    torch.manual_seed(0)
+    A = TypeIAlgebra([4], [4])                         # single precision
+    v = torch.randn(4, 2, dtype=torch.complex64)
+    P = A.operator((v @ v.mH)[None, None], is_self_adjoint=True, is_positive=True)
+    ref = torch.linalg.pinv(P.matrix[0, 0].to(torch.complex128), hermitian=True, rtol=1e-5)   # support of the float32 matrix
+    assert (P.power(-1).matrix[0, 0].to(torch.complex128) - ref).abs().max() < 1e-3 * ref.abs().max()
+
+
+def test_small_operators_classified_by_relative_tolerance():
+    A = TypeIAlgebra([2], [2])
+    N = A.from_blocks([1e-6 * torch.tensor([[0.0, 1.0], [0.0, 0.0]])])
+    assert not N.is_self_adjoint and not N.is_normal
+    assert not A.operator(-1e-6 * A.identity().matrix).is_positive
+    assert A.operator(1e-5 * A.identity().matrix).is_invertible
+
+
+def test_zero_times_operator_flags():
+    A = TypeIAlgebra([2], [2], precision='double')
+    X = A.from_blocks([torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=A.dtype)])
+    assert not X.is_self_adjoint
+    assert torch.all((0 * X).eigenvalues()[0] == 0)
+
+
+def test_michelson_scale_invariant():
+    A = TypeIAlgebra([2], [2], precision='double')
+    P = A.operator(torch.diag(torch.tensor([1.0, 0.25], dtype=A.dtype))[None, None], is_self_adjoint=True,
+                   is_positive=True)
+    for s in (1.0, 1e-150):
+        assert abs((P * s).michelson_contrast.item() - 0.6) < 1e-12
+
+
+def test_frobenius_no_overflow_single():
+    A = TypeIAlgebra([2], [2])
+    X = A.operator(1e20 * A.identity().matrix)
+    assert abs(X.frobenius_norm().item() / (1e20 * 2 ** 0.5) - 1) < 1e-6
+
+
+def test_normal_apply_function_no_spurious_grad():
+    A = TypeIAlgebra([3], [3], precision='double')
+    U = A.random_unitary_operator(2)
+    F = U.apply_function(torch.exp).matrix
+    assert not F.requires_grad
+    t = torch.tensor([0.3, 0.7], dtype=torch.float64, requires_grad=True)
+    G = U.apply_function(lambda w: torch.exp(1j * t[:, None] * w)).matrix
+    assert G.requires_grad
+
+
+def test_holomorphic_scalar_block_and_zero_result():
+    A = TypeIAlgebra([3], [3], precision='double')
+    I = A.operator_from_eigenvalues(lambda k: torch.ones(k, dtype=torch.float64))
+    assert torch.allclose(I.holomorphic_function(torch.exp).matrix,
+                          np.e * A.identity().matrix, atol=1e-12)
+    Z = A.operator(torch.zeros(1, 1, 3, 3, dtype=A.dtype))
+    assert Z.holomorphic_function(torch.sin, atol=1.0).matrix.abs().max() < 1e-12
+
+
+def test_operator_validate_option():
+    A = TypeIAlgebra([2], [2], precision='double')
+    m = torch.tensor([[[[1.0, 2.0], [0.0, -3.0]]]], dtype=A.dtype)
+    with pytest.raises(ValueError):
+        A.operator(m, validate=True, is_self_adjoint=True)

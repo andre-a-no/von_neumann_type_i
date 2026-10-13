@@ -74,7 +74,7 @@ class DensityMatrix(Operator):
             return
         super()._validate_properties()
         tr = torch.diagonal(self._matrix, dim1=-2, dim2=-1).sum(dim=(-2, -1)).real
-        if bool(((tr - 1).abs() > 100 * self._tol_t()).any()):
+        if bool(((tr - 1).abs() > 100 * self._eps()).any()):        # the trace is 1: an absolute tolerance
             raise ValueError("DensityMatrix must have unit trace (Tr_blunt)")
 
     def __repr__(self) -> str:

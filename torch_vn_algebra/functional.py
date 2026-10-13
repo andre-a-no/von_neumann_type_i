@@ -71,6 +71,14 @@ def values_and_derivative(f: Callable[[torch.Tensor], torch.Tensor], w: torch.Te
             y = y.to(w.dtype)
         if not y.requires_grad:
             return y, torch.zeros_like(w if torch.is_complex(w) or not torch.is_complex(y) else y)
+    values = y
+    if not create_graph:
+        # the values must not carry the graph of the internal leaf wg (they would report requires_grad and keep
+        # the graph alive): evaluate f once more on w itself, in the caller's grad mode (elementwise, O(k))
+        values = f(w)
+        if not (values.is_floating_point() or values.is_complex()):
+            values = values.to(w.dtype)
+    with torch.enable_grad():
 
         def d(part):
             g, = torch.autograd.grad(part.sum(), wg, retain_graph=True, create_graph=create_graph, allow_unused=True)
@@ -81,7 +89,7 @@ def values_and_derivative(f: Callable[[torch.Tensor], torch.Tensor], w: torch.Te
             dy = torch.complex(d(y.real), d(y.imag))
         else:
             dy = d(y)
-    return y, dy
+    return values, dy
 
 
 def divided_differences(w: torch.Tensor, fw: torch.Tensor, dfw: torch.Tensor) -> torch.Tensor:
@@ -443,20 +451,27 @@ def _contour_and_spectrum(X: torch.Tensor):
         rho = (lam - c[..., None]).abs().amax(dim=-1)
         spread = torch.linalg.matrix_norm(Y) / math.sqrt(k)
         r = 1.25 * rho + 0.5 * spread
-        r = torch.where(r > 0, r, torch.ones_like(r))          # X = c * 1: any circle around c
+        # a block that is scalar up to rounding would get a radius at the rounding level: keep the circle at a
+        # distance eps^(1/3) relative to the size of X (any circle around c encloses a scalar block's spectrum)
+        size = torch.maximum(c.abs(), torch.linalg.matrix_norm(Xc) / math.sqrt(k))
+        floor = torch.finfo(size.dtype).eps ** (1 / 3) * size
+        r = torch.maximum(r, floor)
+        r = torch.where(r > 0, r, torch.ones_like(r))          # X = 0: any circle around 0
     return c, r, lam
 
 
 def holomorphic(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], center=None, radius=None,
                 nodes: int = 32, max_nodes: int = 2048, rtol: Optional[float] = None,
-                memory_bytes: int = 2 ** 28) -> Tuple[torch.Tensor, float]:
+                memory_bytes: int = 2 ** 28, atol: float = 0.0) -> Tuple[torch.Tensor, float]:
     """
     f(X) = (2 pi i)^{-1} oint f(z) (z - X)^{-1} dz on the circle |z - center| = radius, by the trapezoidal
     rule with N nodes, N doubled until two successive results agree to rtol relative to their size (the nodes of N
     are reused for 2N). Default contour: default_contour(X), a circle just around the spectrum; f must be
     holomorphic on the closed disk and accept complex tensors elementwise. center and radius may be numbers,
     tensors (n,) or callables X -> (n,). Raises ValueError if the estimated error stays above sqrt(rtol) (a
-    warning between rtol and sqrt(rtol)). Returns (f(X), error estimate).
+    warning between rtol and sqrt(rtol)). The error is relative to max(|f(X)|, atol): when f(X) may vanish (sin at
+    X = 0, z^3 at a nilpotent block) pass atol > 0, a scale for f near the spectrum (e.g. 1.0); the absolute
+    accuracy accepted where |f(X)| < atol is then rtol * atol. Returns (f(X), error estimate).
     """
     k, n = X.shape[-1], X.shape[0]
     cdt = X.dtype if torch.is_complex(X) else torch.promote_types(X.dtype, torch.complex64)
@@ -507,9 +522,13 @@ def holomorphic(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], cent
         total, mag = total + t2, mag + m2
         N *= 2
         F_new = total / N
-        size = F_new.detach().abs().amax(dim=(-2, -1)).clamp(min=torch.finfo(Xc.real.dtype).tiny)
+        # errors are relative to |f(X)|, or to atol where |f(X)| is smaller (f(X) = 0 at rounding level: sin at
+        # X = 0, z^3 at a nilpotent block; there a relative error is meaningless and the rounding noise of the
+        # sum cannot be told apart from catastrophic cancellation without an absolute scale from the caller)
+        tiny = torch.finfo(Xc.real.dtype).tiny
+        size = F_new.detach().abs().amax(dim=(-2, -1)).clamp(min=max(atol, tiny))
         quadrature = (F_new - F).detach().abs().amax(dim=(-2, -1)) / size
-        true_size = torch.where(rho_f > 0, torch.minimum(rho_f, size), size)
+        true_size = torch.where(rho_f > 0, torch.minimum(rho_f, size), size).clamp(min=max(atol, tiny))
         rounding = k * eps * (mag / N) / true_size             # cancellation between the terms of the sum
         err_t = torch.maximum(quadrature, rounding).max()
         err_t = torch.where(bad, torch.full_like(err_t, -1.0), err_t)               # -1 flags a failure
@@ -524,7 +543,7 @@ def holomorphic(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], cent
     if err > rtol ** 0.5:
         raise ValueError(f"holomorphic_function: the contour integral did not converge (estimated relative error "
                          f"{err:.1e} with {N} nodes); choose a circle closer to the spectrum on which f is holomorphic, "
-                         f"or use apply_function (self-adjoint or normal operators) or expm")
+                         f"or use apply_function (self-adjoint or normal operators) or expm; if f(X) may be 0, pass atol")
     if err > rtol:
         warnings.warn(f"holomorphic_function: estimated relative error {err:.1e} with {N} nodes is above rtol "
                       f"{rtol:.0e}", RuntimeWarning, stacklevel=3)

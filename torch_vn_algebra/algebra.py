@@ -368,11 +368,12 @@ class TypeIAlgebra:
             return 1e-5 if self._matrix.dtype in (torch.float32, torch.complex64) else 1e-10
 
         def _tol_t(self) -> torch.Tensor:
-            """Absolute tolerance for property checks as a 0-dim tensor on the device (no synchronisation): eps
-            times max(1, largest |entry|)."""
+            """Tolerance for property checks as a 0-dim tensor on the device (no synchronisation): eps times the
+            largest |entry|, i.e. relative to the size of the operator (an absolute floor would misclassify
+            operators of small norm, e.g. 1e-6 times a nilpotent as self-adjoint)."""
             mat = self._matrix
             scale = mat.abs().amax() if mat.numel() else mat.new_zeros((), dtype=mat.real.dtype)
-            return self._eps() * torch.clamp(scale, min=1.0)
+            return self._eps() * torch.clamp(scale, min=torch.finfo(scale.dtype).tiny)
 
         def _tol(self) -> float:
             """The same tolerance as a Python number (one host synchronisation)."""
@@ -382,8 +383,9 @@ class TypeIAlgebra:
             return t.abs().max().item() if t.numel() else 0.0
 
         def _validate_properties(self):
-            """Check the property flags passed to the constructor (one host synchronisation for all of them); flags
-            set by the library itself are mathematically guaranteed and not checked."""
+            """Check the property flags passed by the user (one host synchronisation for all of them): run when a
+            lazy operator is materialised, and by alg.operator(..., validate=True); flags of an eager operator are
+            otherwise trusted. Flags set by the library itself are mathematically guaranteed and not checked."""
             checks = []
             want = lambda flag: getattr(self, f'_is_{flag}_set') and getattr(self, f'_is_{flag}')
             if not any(want(f) for f in ('self_adjoint', 'normal', 'positive', 'invertible', 'projection')):
@@ -397,7 +399,7 @@ class TypeIAlgebra:
                 checks.append(("Operator marked self-adjoint but not Hermitian", (mat - mat_d).abs().amax() > tol))
             if want('normal'):
                 checks.append(("Operator marked normal but not normal",
-                               (mat @ mat_d - mat_d @ mat).abs().amax() > tol * torch.clamp(mat.abs().amax(), min=1)))
+                               (mat @ mat_d - mat_d @ mat).abs().amax() > tol * mat.abs().amax()))
             if want('positive'):
                 checks.append(("Operator marked positive but has negative eigenvalues", (self.lambda_min < -tol).any()))
             if want('invertible'):
@@ -454,7 +456,7 @@ class TypeIAlgebra:
                 return True
             mat_d = mat.conj().transpose(-2, -1)
             diff = mat @ mat_d - mat_d @ mat
-            self._is_normal = bool(diff.abs().amax() <= self._tol_t() * torch.clamp(mat.abs().amax(), min=1))
+            self._is_normal = bool(diff.abs().amax() <= self._tol_t() * mat.abs().amax())
             return self._is_normal
 
         @is_normal.setter
@@ -558,7 +560,9 @@ class TypeIAlgebra:
 
         def frobenius_norm(self) -> torch.Tensor:
             """(sum_c ||A_c||_F^2)^{1/2}; the padding is zero."""
-            return torch.linalg.vector_norm(self.matrix, dim=(-3, -2, -1))
+            mat = self.matrix
+            s = mat.abs().amax(dim=(-3, -2, -1)).clamp(min=torch.finfo(mat.real.dtype).tiny)      # no overflow
+            return s * torch.linalg.vector_norm(mat / s[:, None, None, None].to(mat.dtype), dim=(-3, -2, -1))
 
         def _groups(self):
             """
@@ -603,12 +607,12 @@ class TypeIAlgebra:
             """(Pseudo-)inverse by SVD of every block; singular values below tol are treated as zero (default:
             relative tolerance k_c * eps * largest singular value of the block, as numpy.linalg.pinv per block)."""
             if self.is_self_adjoint:                        # Hermitian eigensolver instead of an SVD
-                def f(w):
+                def f(w):                                   # w: eigenvalues of one block, (..., k_c)
                     thr = (w.shape[-1] * torch.finfo(w.dtype).eps * w.abs().amax(dim=-1, keepdim=True)
                            if tol is None else tol)
                     big = w.abs() > thr
                     return torch.where(big, 1.0 / torch.where(big, w, torch.ones_like(w)), torch.zeros_like(w))
-                op = self.apply_function(f)
+                op = self.apply_function(f, per_block=True)
                 op._is_self_adjoint = True
                 op._is_normal = True
                 op._is_positive = self._is_positive
@@ -727,8 +731,10 @@ class TypeIAlgebra:
                 raise RuntimeError("Michelson contrast requires a positive operator.")
             lmax, lmin = self.lambda_max, self.lambda_min
             denom = lmax + lmin
-            safe = torch.where(denom > 1e-12, denom, torch.ones_like(denom))
-            return torch.where(denom > 1e-12, (lmax - lmin) / safe, torch.zeros_like(denom))
+            # A = 0 (up to rounding): Delta = 0; the cutoff is relative, Delta does not depend on the scale of A
+            ok = denom > 4 * torch.finfo(denom.dtype).eps * (lmax.abs() + lmin.abs())
+            safe = torch.where(ok, denom, torch.ones_like(denom))
+            return torch.where(ok, (lmax - lmin) / safe, torch.zeros_like(denom))
 
         def _compatible(self, other, op: str) -> None:
             """Binary operations need operators of the same algebra (or of algebras with the same structure)."""
@@ -779,6 +785,8 @@ class TypeIAlgebra:
             real = isinstance(scalar, (int, float)) or (isinstance(scalar, torch.Tensor) and not torch.is_complex(scalar))
             nonneg = isinstance(scalar, (int, float)) and scalar >= 0
             nonzero = isinstance(scalar, (int, float, complex)) and scalar != 0
+            if isinstance(scalar, (int, float, complex)) and scalar == 0:     # 0 * A = 0, whatever A is
+                return self._derived(scaled, normal=True, self_adjoint=True, positive=True, invertible=None)
             out = self._derived(scaled, normal=self._is_normal,
                                 self_adjoint=self._is_self_adjoint if real else None,
                                 positive=True if (self._is_positive and nonneg) else None,
@@ -948,12 +956,17 @@ class TypeIAlgebra:
                                         'once': not self._caching()}
             return out
 
-        def apply_function(self, f: Callable[[torch.Tensor], torch.Tensor]) -> 'TypeIAlgebra.Operator':
+        def apply_function(self, f: Callable[[torch.Tensor], torch.Tensor],
+                           per_block: bool = False) -> 'TypeIAlgebra.Operator':
             """
             f(A) by the spectral theorem, f(A)_c = V_c f(w_c) V_c*, for self-adjoint A (f on the real spectrum)
             and for normal A such as unitaries (f on the complex spectrum; f must accept complex tensors).
-            `f` acts elementwise on the eigenvalues of one sector, a tensor (batch, k_c), and returns a tensor
-            of the same shape; a complex-valued result requires a complex algebra. Only the Hermitian
+            `f` must act elementwise: it is called once per block size with the eigenvalues of all n sectors of
+            that size, a tensor (batch, n * k_c), and returns a tensor of the same shape (per-sample parameters
+            of shape (batch, 1) broadcast; the operator must then have the full batch, e.g. (A * t) instead of a
+            batch-1 A). With per_block=True f instead receives one block per row, (batch * n, k_c), and may
+            couple the eigenvalues of a block (e.g. thresholds relative to the block); per-sample parameters do
+            not broadcast then. A complex-valued result requires a complex algebra. Only the Hermitian
             eigensolver is used (for normal A, on H + alpha K with A = H + iK), one batched call per block size.
             Gradients with respect to A use the Daleckii-Krein formula (divided differences of f): finite also
             at degenerate spectra; for normal non-self-adjoint A they assume f holomorphic near the spectrum.
@@ -978,6 +991,8 @@ class TypeIAlgebra:
                     def f_values(w, n=n, k_c=k_c):
                         # f sees the eigenvalues as (batch, n * k_c) (one call for all sectors of this size; an
                         # elementwise f with per-sample parameters of shape (batch, 1) broadcasts as for (batch, k_c))
+                        if per_block:
+                            return f(w)
                         return f(w.reshape(B, n * k_c)).reshape(-1, k_c)
                     y = _fc.spectral_apply(x, f_values, kind, decomposition=wv)
                     parts.append((k_c, idx, y))
@@ -1000,7 +1015,7 @@ class TypeIAlgebra:
 
         def holomorphic_function(self, f: Callable[[torch.Tensor], torch.Tensor], center=None, radius=None,
                                  nodes: int = 32, max_nodes: int = 2048,
-                                 rtol: Optional[float] = None) -> 'TypeIAlgebra.Operator':
+                                 rtol: Optional[float] = None, atol: float = 0.0) -> 'TypeIAlgebra.Operator':
             """
             f(A) for any operator A and f holomorphic near the spectrum (holomorphic functional calculus),
             f(A)_c = (2 pi i)^{-1} oint f(z) (z - A_c)^{-1} dz on a circle, by the trapezoidal rule with batched
@@ -1010,7 +1025,9 @@ class TypeIAlgebra:
             f must be holomorphic on the closed disk and accept complex tensors. For functions with singularities
             (log, powers, resolvents) pass center and radius: numbers, or callables mapping a stack of blocks
             (n, k, k) to tensors (n,). The estimated error is stored as result.contour_error after evaluation.
-            Differentiable through the solves. For self-adjoint or normal A, apply_function is exact and cheaper;
+            The error is relative to max(|f(X_c)|, atol): when f(X) may vanish (sin at X = 0, z^3 at a
+            nilpotent block) pass atol > 0, a scale for f near the spectrum; the absolute accuracy accepted where
+            |f(X_c)| < atol is rtol * atol. Differentiable through the solves. For self-adjoint or normal A, apply_function is exact and cheaper;
             for exp, expm is more accurate when the spectrum is spread.
             """
             alg = self.algebra
@@ -1021,7 +1038,7 @@ class TypeIAlgebra:
                 B = out.shape[0]
                 error = 0.0
                 for k_c, idx, x in self._groups():
-                    y, err = _fc.holomorphic(x, f, center, radius, nodes, max_nodes, rtol)
+                    y, err = _fc.holomorphic(x, f, center, radius, nodes, max_nodes, rtol, atol=atol)
                     error = max(error, err)
                     out[:, alg._sel(idx), :k_c, :k_c] = y.to(out.dtype).reshape(B, len(idx), k_c, k_c)
                 result.contour_error = error
@@ -1053,12 +1070,15 @@ class TypeIAlgebra:
         def power(self, p: float) -> 'TypeIAlgebra.Operator':
             """A^p of a positive operator (negative p: on the support only)."""
             self._require_positive("power requires a positive operator")
-            def f(w):
+            def f(w):                                       # w: eigenvalues of one block, (..., k_c)
                 w = torch.clamp(w, min=0.0)
                 if p >= 0:
                     return w ** p
-                return torch.where(w > 1e-12, torch.clamp(w, min=1e-12) ** p, torch.zeros_like(w))
-            op = self.apply_function(f)
+                # support: eigenvalues above the rounding level of the block (as for inverse / pinv)
+                thr = w.shape[-1] * torch.finfo(w.dtype).eps * w.amax(dim=-1, keepdim=True)
+                big = w > thr
+                return torch.where(big, torch.where(big, w, torch.ones_like(w)) ** p, torch.zeros_like(w))
+            op = self.apply_function(f, per_block=p < 0)
             op._is_self_adjoint = True
             op._is_positive = True
             return op
@@ -1230,10 +1250,12 @@ class TypeIAlgebra:
             t = t.real
         return t.to(device=self.hilbert.device, dtype=self.hilbert.dtype)
 
-    def operator(self, matrix: torch.Tensor, **properties) -> Operator:
+    def operator(self, matrix: torch.Tensor, validate: bool = False, **properties) -> Operator:
         """
         Wrap a tensor of shape (batch, C, k_max, k_max) as an operator of this algebra.
-        Keyword arguments (is_self_adjoint, is_positive, ...) tag known properties.
+        Keyword arguments (is_self_adjoint, is_positive, ...) tag known properties. They are trusted (no
+        synchronisation, no decomposition) unless validate=True, which checks them once; a wrong flag selects a
+        wrong algorithm (e.g. a non-Hermitian matrix tagged is_self_adjoint is treated as its Hermitian part).
         """
         expected = (self.C, self.k_max, self.k_max)
         if tuple(matrix.shape[1:]) != expected:
@@ -1241,7 +1263,10 @@ class TypeIAlgebra:
         mat = self._to_field(matrix, "matrix")
         if any(k_c < self.k_max for k_c in self.k_factors):     # the padding must be zero (one mask product)
             mat = mat * self._const('block_mask', torch.bool)
-        return self.Operator(self, matrix=mat, **properties)
+        op = self.Operator(self, matrix=mat, **properties)
+        if validate:
+            op._validate_properties()
+        return op
 
     def from_blocks(self, blocks: List[torch.Tensor]) -> Operator:
         """Operator from a list of C blocks of shape (batch, k_c, k_c) (or (k_c, k_c))."""
