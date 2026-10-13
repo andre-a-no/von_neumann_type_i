@@ -86,22 +86,23 @@ The chart $S\mapsto U_0e^S$ is well behaved near $S=0$ only. Let $\mathfrak u=\{
 $\mathcal M_h=\{H\in\mathcal M:H^*=H\}$, real subspaces with $\mathcal M=\mathfrak u\oplus\mathcal M_h$
 ($X=\frac{X-X^*}2+\frac{X+X^*}2$). *Near $0$, $S\mapsto U_0e^S$ is a homeomorphism of an open ball $N\ni0$ of
 $\mathfrak u$ onto a neighbourhood of $U_0$ in the unitary group.* Indeed, $\Psi(S,H)=U_0e^Se^H$ is a $C^1$ map
-$\mathfrak u\times\mathcal M_h\to\mathcal M$ (its entries are power series in the real coordinates, convergent
-everywhere), and $e^{tS}e^{tH}=1+t(S+H)+O(t^2)$ shows that its differential at $0$ is $(S,H)\mapsto U_0(S+H)$, a
-bijection onto $\mathcal M$. By the inverse function theorem there are open balls $N\ni0$ in $\mathfrak u$ and
-$N_h\ni0$ in $\mathcal M_h$ such that $\Psi$ is a homeomorphism of $N\times N_h$ onto an open set $O\subseteq\mathcal M$.
-If $\Psi(S,H)$ is unitary, then so is $e^H=e^{-S}U_0^*\Psi(S,H)$ (in an eigenbasis of the normal matrix $S$, whose
+$\mathfrak u\times\mathcal M_h\to\mathcal M$ (the series $\sum_{m,n\ge0}U_0S^mH^n/(m!\,n!)$ and the series of the
+partial derivatives of its terms with respect to the real coordinates converge uniformly on bounded sets), and
+$e^{tS}e^{tH}=1+t(S+H)+O(t^2)$ shows that its differential at $0$ is $(S,H)\mapsto U_0(S+H)$, a bijection onto
+$\mathcal M$. By the inverse function theorem there are open balls $N\ni0$ in $\mathfrak u$ and $N_h\ni0$ in
+$\mathcal M_h$ such that $\Psi$ is a homeomorphism of $N\times N_h$ onto an open set $O\subseteq\mathcal M$. If
+$\Psi(S,H)$ is unitary, then so is $e^H=e^{-S}U_0^*\Psi(S,H)$ (in an eigenbasis of the normal matrix $S$, whose
 eigenvalues are imaginary, $e^{\pm S}$ are diagonal with entries of modulus $1$ and inverse to each other); but $e^H$
 has the positive eigenvalues $e^{h_i}$, $h_i$ the eigenvalues of $H$, so $e^{h_i}=1$ (Corollary 1.4(2)) and $H=0$.
 Hence $O\cap U(\mathcal M)=U_0e^N$, where $U(\mathcal M)$ is the unitary group of $\mathcal M$: a neighbourhood of
 $U_0$ in $U(\mathcal M)$, and $S\mapsto U_0e^S$ is a continuous bijection $N\to U_0e^N$ whose inverse, the first
-component of $\Psi^{-1}$, is continuous. Far from $0$ the chart is not injective: $e^{2\pi iP}=1=e^0$ for every projection
-$P\in\mathcal M$. `extremize` therefore **re-centres** after every round ($U_0\leftarrow U_0e^{G-G^*}$, $G\leftarrow0$).
-Two other charts have the same differential $S\mapsto U_0S$ at $0$. The Cayley chart $S\mapsto U_0C(-S/2)$
-(Exercise 1): $(1+tS/2)(1-tS/2)^{-1}=(1+tS/2)(1+tS/2+O(t^2))=1+tS+O(t^2)$. The polar retraction, $S\mapsto$ the
-unitary factor of $A=U_0(1+S)$ (Theorem 1.8): $A^*A=(1-S)(1+S)=1+S^*S\ge1$ is invertible, so $|A|$ is invertible and
-the unitary factor is $A|A|^{-1}$; for $tS$ in place of $S$, $|A|^{-1}=(1+t^2S^*S)^{-1/2}=1+O(t^2)$ (in an eigenbasis of
-$S^*S$), so the factor is $U_0(1+tS)+O(t^2)$.
+component of $\Psi^{-1}$, is continuous. Far from $0$ the chart is not injective: $e^{2\pi iP}=1=e^0$ for every
+projection $P\in\mathcal M$. `extremize` therefore **re-centres** after every round ($U_0\leftarrow U_0e^{G-G^*}$,
+$G\leftarrow0$). Two other charts have the same differential $S\mapsto U_0S$ at $0$. The Cayley chart
+$S\mapsto U_0C(-S/2)$ (Exercise 1): $(1+tS/2)(1-tS/2)^{-1}=(1+tS/2)(1+tS/2+O(t^2))=1+tS+O(t^2)$. The polar retraction,
+$S\mapsto$ the unitary factor of $A=U_0(1+S)$ (Theorem 1.8): $A^*A=(1-S)(1+S)=1+S^*S\ge1$ is invertible, so $|A|$ is
+invertible and the unitary factor is $A|A|^{-1}$; for $tS$ in place of $S$, $|A|^{-1}=(1+t^2S^*S)^{-1/2}=1+O(t^2)$
+(in an eigenbasis of $S^*S$), so the factor is $U_0(1+tS)+O(t^2)$.
 
 The code checks the constraint, and Proposition 11.2 constructively: the parameters of the proof reproduce a target.
 

@@ -12,8 +12,8 @@ algebra structure for unitary, positive and spectral layers that are equivariant
 **You will learn** why the equivariant linear maps between two representations are block matrices of
 sizes given by multiplicities; how to count them by orbits or by characters (DeepSets and the Bell numbers of
 graph networks); why averaging over the group is the orthogonal projection onto the equivariant maps; how
-functional calculus and unitary parametrisations act blockwise on the commutant; and how invariant vectors
-and invariant quadratic forms are counted.
+functional calculus and unitary parametrisations act blockwise on the commutant; and how invariant vectors,
+invariant quadratic forms and invariant polynomials of every degree (Molien's formula) are counted.
 
 Throughout, $G$ is a finite group, and a **representation** of $G$ on $\mathbb C^n$ is a homomorphism
 $\pi:G\to M_n(\mathbb C)$ with unitary values (no restriction: invertible $\pi(g)$ are unitary for the inner product
@@ -169,12 +169,12 @@ $a=(1,0,0,1)$ in the four sectors of $\pi_1\oplus\pi_2$ (trivial, dimension $2$,
 features $\pi_2$ have $b=(2,1,1,3)$, so $\dim\operatorname{Hom}_G=1\cdot2+1\cdot3=5=B_3$, as Corollary 12.2(b) proves.
 
 > **Physical meaning** (physical interpretation, not a theorem of this course). Theorem 12.4 is the linear-algebra
-> core of **selection rules** and the scalar case of
-> the Wigner–Eckart theorem: an operator that commutes with the symmetry can only connect states of the same
-> symmetry type, and within a type it acts as $1_{k_c}\otimes y_c$, i.e. by a "reduced matrix element" $y_c$ that
-> is blind to the position inside the multiplet. (Operators that themselves transform by a non-trivial
-> representation, such as vectors, need in addition the Clebsch–Gordan coefficients.) A symmetric Hamiltonian
-> is the case $\pi_1=\pi_2$; its degeneracies $k_c$ are the dimensions of the irreducible representations.
+> core of **selection rules** and the scalar case of the Wigner–Eckart theorem: an operator that commutes with the
+> symmetry can only connect states of the same symmetry type, and within a type it acts as $1_{k_c}\otimes y_c$,
+> i.e. by a "reduced matrix element" $y_c$ that is blind to the position inside the multiplet. (Operators that
+> themselves transform by a non-trivial representation, such as vectors, need in addition the Clebsch–Gordan
+> coefficients.) A symmetric Hamiltonian is the case $\pi_1=\pi_2$; its degeneracies $k_c$ are the dimensions of
+> the irreducible representations.
 
 ## 12.2 An equivariant layer with the library
 
@@ -304,9 +304,9 @@ $(\pi(g)x)_{gy}=x_y$; for other representations it is not, and one uses nonlinea
 the coefficients of a basis that $G$ permutes (Exercise 3).
 
 > **Physical meaning** (physical interpretation, not a theorem of this course). The twirl is the conditional
-> expectation onto the commutant (Exercise 3 of Chapter 2):
-> averaging a coupling over all symmetry operations keeps exactly its symmetric part. "Symmetrising" a
-> Hamiltonian or an interaction by summing over the symmetry group is the same projection.
+> expectation onto the commutant (Exercise 3 of Chapter 2): averaging a coupling over all symmetry operations
+> keeps exactly its symmetric part. "Symmetrising" a Hamiltonian or an interaction by summing over the symmetry
+> group is the same projection.
 
 ## 12.3 Constrained and spectral layers
 
@@ -379,10 +379,10 @@ assert (E - torch.linalg.matrix_exp(-0.7 * L)).abs().max() < 1e-12          # Pr
 assert abs(t.grad.item() - (Z.conj() * dE).sum().real.item()) < 1e-10
 ```
 
-> **Physical meaning** (physical interpretation, not a theorem of this course). A symmetric Hamiltonian $H\in\pi(G)'$
-> generates a symmetric time evolution
-> $e^{-itH}\in\pi(G)'$ (Chapter 8), which never mixes sectors and acts on the multiplicity spaces only. An
-> equivariant unitary layer is such an evolution, learned instead of given.
+> **Physical meaning** (physical interpretation, not a theorem of this course). A symmetric Hamiltonian
+> $H\in\pi(G)'$ generates a symmetric time evolution $e^{-itH}\in\pi(G)'$ (Chapter 8), which never mixes sectors
+> and acts on the multiplicity spaces only. An equivariant unitary layer is such an evolution, learned instead of
+> given.
 
 ## 12.4 Invariants
 
@@ -457,9 +457,67 @@ print(f"invariant quadratic polynomials: vertices {degree2(G_node):.4f}, edges {
 assert abs(degree2(G_node) - 2) < 1e-12 and abs(degree2(G_edge) - orbits2) < 1e-12 and orbits2 == 11
 ```
 
-On $\mathbb C^4$ they are $\sum_ix_i^2$ and $\sum_{i<j}x_ix_j$. All degrees are counted by Molien's formula
-$\sum_d\dim\mathbb C[x]^G_dt^d=|G|^{-1}\sum_g\det(1-t\pi(g))^{-1}$, whose coefficient of $t^2$ is (c) (stated without
-proof; B. Sturmfels, *Algorithms in Invariant Theory*, Springer 2008, Theorem 2.2.1).
+On $\mathbb C^4$ they are $\sum_ix_i^2$ and $\sum_{i<j}x_ix_j$. The proof of (c) works in every degree:
+
+**Proposition 12.8 (Molien's formula).** Let $\mathbb C[x]_d$ be the space of homogeneous polynomials of degree $d$ in
+$x_1,\dots,x_n$ and $\mathbb C[x]^G_d$ the subspace of invariant ones, $p(\pi(g)x)=p(x)$ for all $g$. For $|t|<1$,
+$$
+\sum_{d\ge0}\dim\mathbb C[x]^G_d\,t^d=\frac1{|G|}\sum_{g\in G}\frac1{\det\big(1-t\pi(g)\big)} .
+$$
+For a permutation representation, $\dim\mathbb C[x]^G_d$ is the number of orbits of $G$ on the monomials of degree $d$
+(the multisets of $d$ elements of $\Omega$). The coefficient of $t^2$ is Proposition 12.7(c).
+
+*Proof.* For an invertible matrix $M$ let $\phi_M(p)(x)=p(Mx)$ (substitution). $\phi_M$ is linear, maps $\mathbb C[x]_d$
+into itself, and $\phi_N\circ\phi_M=\phi_{MN}$, so $\phi_M$ is bijective with inverse $\phi_{M^{-1}}$. Hence
+$\sigma(g)=\phi_{\pi(g)^{-1}}$ satisfies $\sigma(g)\sigma(h)=\sigma(gh)$, and $p$ is invariant iff $\sigma(g)p=p$ for all
+$g$. As in the proof of Proposition 12.7(c), $M_d=|G|^{-1}\sum_g\sigma(g)$ on $\mathbb C[x]_d$ is idempotent with range
+$\mathbb C[x]^G_d$, so $\dim\mathbb C[x]^G_d=\operatorname{Tr}M_d=|G|^{-1}\sum_g\operatorname{Tr}\sigma_d(g)$, $\sigma_d(g)$ the
+restriction of $\sigma(g)$ to $\mathbb C[x]_d$. Fix $g$ and write the unitary $A=\pi(g)^{-1}$ as $A=R\Lambda R^{-1}$,
+$\Lambda=\operatorname{diag}(\lambda_1,\dots,\lambda_n)$, $|\lambda_i|=1$ (Theorem 1.3). With the linear forms
+$\ell_i(x)=(R^{-1}x)_i$, the products $\ell^\alpha=\prod_i\ell_i^{\alpha_i}=\phi_{R^{-1}}(x^\alpha)$, $|\alpha|=d$, are a basis of
+$\mathbb C[x]_d$ (the image of the monomial basis under the bijection $\phi_{R^{-1}}$), and since $R^{-1}A=\Lambda R^{-1}$,
+$$
+(\sigma(g)\ell^\alpha)(x)=\prod_i\big((R^{-1}Ax)_i\big)^{\alpha_i}=\prod_i\big(\lambda_i\ell_i(x)\big)^{\alpha_i}=\lambda^\alpha\ell^\alpha(x).
+$$
+So $\operatorname{Tr}\sigma_d(g)=\sum_{|\alpha|=d}\lambda^\alpha$. For $|t|<1$ the product of the $n$ absolutely convergent
+series $(1-t\lambda_i)^{-1}=\sum_{a\ge0}t^a\lambda_i^a$ may be expanded and regrouped by degree:
+$$
+\frac1{\det(1-tA)}=\prod_{i=1}^n\frac1{1-t\lambda_i}=\sum_\alpha t^{|\alpha|}\lambda^\alpha=\sum_{d\ge0}t^d\operatorname{Tr}\sigma_d(g).
+$$
+Averaging over $g$ and replacing $g$ by $g^{-1}$ (so that $A=\pi(g)$) gives the formula; both sides converge, as
+$\dim\mathbb C[x]^G_d\le\dim\mathbb C[x]_d=\binom{n+d-1}d$. For a permutation representation,
+$(\pi(g)^{-1}x)_y=x_{gy}$, so $\sigma(g)$ maps the monomial $\prod_jx_{y_j}$ to the monomial $\prod_jx_{gy_j}$: $G$
+permutes the monomials of degree $d$, a polynomial is invariant iff its coefficients are constant on the orbits, and
+the orbit sums are a basis of $\mathbb C[x]^G_d$. $\square$
+
+(This is Molien's theorem of 1897; see B. Sturmfels, *Algorithms in Invariant Theory*, Springer 2008, Section 2.2,
+for further reading.) The code expands the right side up to $t^4$, multiplying by one geometric series per
+eigenvalue, and compares with the orbits of monomials; for $S_4$ on $\mathbb C^4$ the counts $1,1,2,3,5$ are the
+partitions of $d$ into at most four parts (the orbits of multisets are determined by their multiplicities, sorted).
+
+```python
+def molien(G, d_max):
+    """Coefficients of |G|^{-1} sum_g det(1 - t pi(g))^{-1} up to t^d_max: products of geometric series."""
+    lam = torch.linalg.eigvals(G)                                # (|G|, n), |lambda| = 1
+    c = torch.zeros(G.shape[0], d_max + 1, dtype=dt)
+    c[:, 0] = 1
+    for i in range(lam.shape[1]):                                # multiply by 1 / (1 - t lambda_i)
+        for d in range(1, d_max + 1):
+            c[:, d] = c[:, d] + lam[:, i] * c[:, d - 1]
+    return c.mean(0)
+
+def monomial_orbits(G, d):
+    """Orbits of G on the monomials of degree d, i.e. on the multisets of d points of Omega."""
+    act = [g.real.argmax(0).tolist() for g in G]                 # pi(g) e_x = e_{act[x]}
+    mons = itertools.combinations_with_replacement(range(G.shape[-1]), d)
+    return len({min(tuple(sorted(a[x] for x in m)) for a in act) for m in mons})
+
+for G in (G_node, G_edge):
+    series, counts = molien(G, 4), [monomial_orbits(G, d) for d in range(5)]
+    print("Molien series:", [f"{v.real:.4f}" for v in series], " orbits of monomials:", counts)
+    assert (series - torch.tensor(counts, dtype=dt)).abs().max() < 1e-9          # Proposition 12.8
+assert [monomial_orbits(G_node, d) for d in range(5)] == [1, 1, 2, 3, 5] and monomial_orbits(G_edge, 2) == orbits2
+```
 
 > **Physical meaning** (physical interpretation, not a theorem of this course). In Landau's theory of phase
 > transitions the free energy is an invariant polynomial in a real order parameter $x$, on which $G$ acts by real
@@ -508,8 +566,8 @@ through them, and `to_commutant`/`from_commutant` translate between the two pict
    $V^*x_i$ in sector $c$ as $\sum_{a,j}(X_{i,c})_{aj}e_a\otimes e_j$ with $X_{i,c}\in M_{k_c\times m_c}$, and let
    $S_c\in M_{Nk_c\times m_c}$ be the matrices $X_{1,c},\dots,X_{N,c}$ stacked. Show that the equivariant $T$ with
    $Tx_1=\dots=Tx_N=0$ form a space of dimension $\sum_cm_c(m_c-\operatorname{rank}S_c)$; for independent standard
-   complex Gaussian vectors $x_i$ this is $\sum_cm_c\max(0,m_c-Nk_c)$ almost surely. For the edge representation, two samples determine an equivariant
-   layer, while an arbitrary $16\times16$ matrix needs sixteen.
+   complex Gaussian vectors $x_i$ this is $\sum_cm_c\max(0,m_c-Nk_c)$ almost surely. For the edge representation,
+   two samples determine an equivariant layer, while an arbitrary $16\times16$ matrix needs sixteen.
 
 <details>
 <summary>Solutions</summary>
