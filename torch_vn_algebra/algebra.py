@@ -23,12 +23,13 @@ def _gram_schmidt_preferred(Z: torch.Tensor) -> bool:
     """On a GPU, torch.linalg.qr factorises a batch of small matrices one matrix at a time (tens of
     microseconds each); Gram-Schmidt costs O(n) batched kernels regardless of the batch, so it is used
     when the batch is large compared with n. On the CPU, LAPACK QR is fast and is kept."""
-    return Z.is_cuda and Z.dim() == 3 and Z.shape[-1] <= 256 and Z.shape[0] >= Z.shape[-1]
+    return Z.is_cuda and Z.dim() == 3 and Z.shape[-1] <= 256 and Z.shape[0] >= Z.shape[-1] \
+        and Z.shape[-2] <= 4096
 
 
 def _orthonormal_columns(Z: torch.Tensor) -> torch.Tensor:
     """
-    Q of the QR decomposition Z = QR with diag(R) > 0, for a batch of square matrices of full rank, by
+    Q of the thin QR decomposition Z = QR with diag(R) > 0, for a batch of matrices of full column rank, by
     classical Gram-Schmidt with one reorthogonalisation ("twice is enough"; orthogonality to working
     precision). With diag(R) > 0 the factor Q is unique, so for a Ginibre Z it is Haar distributed
     (the same matrix as Mezzadri's QR recipe with the phase correction).
@@ -141,6 +142,23 @@ class TypeIAlgebra:
     # ========================================================================
 
     UNITARY_MEASURES = ('haar', 'haar_su', 'coe', 'cse', 'diag')
+
+    def random_isometry(self, n: int, m: int, batch_size: Optional[int] = None) -> torch.Tensor:
+        """
+        Haar-random isometry C^m -> C^n (R^m -> R^n for a real algebra), m <= n: the first m columns of a Haar
+        unitary, drawn directly as the Q factor of an n x m Ginibre matrix with diag(R) > 0.
+        Returns a tensor of shape (n, m), or (batch_size, n, m) if batch_size is given.
+        """
+        if not 0 < m <= n:
+            raise ValueError(f"need 0 < m <= n, got n={n}, m={m}")
+        shape = () if batch_size is None else (batch_size,)
+        Z = torch.randn(*shape, n, m, dtype=self.hilbert.dtype, device=self.hilbert.device)
+        if _gram_schmidt_preferred(Z):
+            return _orthonormal_columns(Z)
+        Q, R = torch.linalg.qr(Z, mode='reduced')
+        d = torch.diagonal(R, dim1=-2, dim2=-1)
+        d = d.sgn() if self.hilbert.complex_valued else d.sign()
+        return Q * d.unsqueeze(-2)
 
     def random_unitary(self, n: int, measure: str = 'haar',
                        batch_size: Optional[int] = None) -> torch.Tensor:

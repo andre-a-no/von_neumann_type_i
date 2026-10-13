@@ -144,13 +144,12 @@ def _density(alg: TypeIAlgebra, mat: torch.Tensor) -> DensityMatrix:
 
 def _ginibre(alg: TypeIAlgebra, batch_size: int, cols: Optional[int]) -> torch.Tensor:
     """Block c is a k_c x cols Ginibre matrix (k_c x k_c if cols is None), zero-padded to k_max x max cols."""
-    G = torch.randn(batch_size, alg.C, alg.k_max, cols or alg.k_max, dtype=alg.hilbert.dtype,
-                    device=alg.hilbert.device)
-    for c, k_c in enumerate(alg.k_factors):
-        G[:, c, k_c:, :] = 0
-        if cols is None:
-            G[:, c, :, k_c:] = 0
-    return G
+    dev = alg.hilbert.device
+    G = torch.randn(batch_size, alg.C, alg.k_max, cols or alg.k_max, dtype=alg.hilbert.dtype, device=dev)
+    k = torch.tensor(alg.k_factors, device=dev)[:, None]
+    rows = torch.arange(alg.k_max, device=dev) < k                        # (C, k_max): active rows
+    mask = rows[:, :, None] & (rows[:, None, :] if cols is None else torch.ones_like(rows[:, :1, None]))
+    return G * mask
 
 
 def random_density_matrix(alg: TypeIAlgebra, batch_size: int = 1, rank: Optional[int] = None,

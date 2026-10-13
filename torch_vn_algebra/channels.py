@@ -329,11 +329,10 @@ def random_channel(alg: TypeIAlgebra, kraus_rank: int, batch_size: int = 1) -> C
     V_c: C^{k_c} -> C^{k_c} (x) C^r in every block, K_{i,c} = (<i| (x) 1) V_c.
     """
     K = _empty_kraus(alg, kraus_rank, batch_size)
-    for c, k_c in enumerate(alg.k_factors):
-        if k_c == 0:
-            continue
-        V = alg.random_unitary(k_c * kraus_rank, batch_size=batch_size)[..., :k_c]   # (B, r k, k)
-        K[:, :, c, :k_c, :k_c] = V.reshape(batch_size, kraus_rank, k_c, k_c)
+    for k, idx in alg._size_groups():                  # one draw for all sectors of the same size
+        V = alg.random_isometry(k * kraus_rank, k, batch_size=batch_size * len(idx))   # (B n, r k, k)
+        V = V.reshape(batch_size, len(idx), kraus_rank, k, k).transpose(1, 2)
+        K[:, :, idx, :k, :k] = V
     return Channel(alg, K)
 
 
@@ -538,7 +537,7 @@ def random_inter_sector_channel(algebra_in: TypeIAlgebra, algebra_out: TypeIAlge
             continue
         if n_out * kraus_rank < k_c:
             raise ValueError("output too small for an isometry: increase kraus_rank")
-        V = algebra_out.random_unitary(n_out * kraus_rank, batch_size=batch_size)[..., :k_c]
+        V = algebra_out.random_isometry(n_out * kraus_rank, k_c, batch_size=batch_size)
         V = V.reshape(batch_size, kraus_rank, n_out, k_c)
         for d, m_d in enumerate(m):
             K[:, :, d, c, :m_d, :k_c] = V[:, :, offsets[d]:offsets[d] + m_d, :]
