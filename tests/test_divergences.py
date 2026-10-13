@@ -5,7 +5,6 @@ classical formulas for commuting states, generalised eigenvalues for D_max, and 
 data processing, Petz's equality condition, the recoverability bound of Junge-Renner-Sutter-Wilde-Winter).
 """
 import math
-import warnings
 
 import numpy as np
 import pytest

@@ -33,7 +33,7 @@ Changelog = "https://github.com/andre-a-no/von_neumann_type_i/blob/main/CHANGELO
 Paper = "https://arxiv.org/abs/2606.15882"
 
 [project.optional-dependencies]
-scripts = ["scipy", "pandas", "tqdm", "matplotlib", "seaborn"]
+scripts = ["scipy", "pandas", "tqdm", "matplotlib", "seaborn", "mpmath"]
 test = ["pytest", "scipy"]
 
 [tool.setuptools]
