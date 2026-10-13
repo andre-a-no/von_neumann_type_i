@@ -158,7 +158,7 @@ $x'\in\mathbb R^{n-1}$, $Q=Q'\times I$ и $a=(a',a_n)$, и сгруппируе�
 $$
 f(x',t)=\sum_kh_k(x')(t-a_n)^k,\qquad h_k(x')=\sum_{\alpha'}c_{(\alpha',k)}(x'-a')^{\alpha'} .
 $$
-Это законно: для $x'\in Q'$ и $\max_i|x'_i-a_i|\le r<\rho$
+Это законно: для $x'\in Q'$ и $\max_i|x'_i-a'_i|\le r<\rho$
 $\sum_k\sum_{\alpha'}|c_{(\alpha',k)}||x'-a'|^{\alpha'}r^k\le\sum_\alpha|c_\alpha|r^{|\alpha|}<\infty$ (где
 $|y|^{\alpha'}=\prod_i|y_i|^{\alpha'_i}$). Та же оценка показывает, что каждая $h_k$ — степенной ряд на $Q'$ и что при
 фиксированном $x'\in Q'$ функция $g_{x'}(t)=f(x',t)$ — степенной ряд на $I$ с коэффициентами $h_k(x')$.
@@ -544,7 +544,7 @@ $\sigma_1(B)=\lambda_1(\Theta(B))/2\pi$ (точка $\theta=0$ имеет мер
 **Следствие A.21 (моменты равномерного единичного вектора).** Если $u\sim\sigma_{2N-1}$ на единичной сфере $\mathbb C^N$, то
 $\mathbb E[u_a\bar u_b]=\delta_{ab}/N$, $\mathbb E|u_1|^4=\frac2{N(N+1)}$ и $\mathbb E|u_1|^2|u_2|^2=\frac1{N(N+1)}$ ($N\ge2$). Если
 $u\sim\sigma_{n-1}$ на $S^{n-1}\subset\mathbb R^n$, то $\mathbb Eu_1^2=\frac1n$, $\mathbb Eu_1^4=\frac3{n(n+2)}$ и
-$\mathbb Eu_1^2u_2^2=\frac1{n(n+2)}$.
+$\mathbb Eu_1^2u_2^2=\frac1{n(n+2)}$ ($n\ge2$).
 
 *Доказательство.* Возьмём $u=z/|z|$, как в теореме A.20(b). Поскольку $z_a\bar z_b=|z|^2u_a\bar u_b$, а $|z|$ и $u$ независимы,
 $\delta_{ab}=\mathbb E[z_a\bar z_b]=\mathbb E|z|^2\,\mathbb E[u_a\bar u_b]=N\,\mathbb E[u_a\bar u_b]$ ($\mathbb E|z|^2=N$ по

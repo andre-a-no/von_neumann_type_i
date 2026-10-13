@@ -157,7 +157,7 @@ $x'\in\mathbb R^{n-1}$, $Q=Q'\times I$ and $a=(a',a_n)$, and group the terms by 
 $$
 f(x',t)=\sum_kh_k(x')(t-a_n)^k,\qquad h_k(x')=\sum_{\alpha'}c_{(\alpha',k)}(x'-a')^{\alpha'} .
 $$
-This is allowed: for $x'\in Q'$ and $\max_i|x'_i-a_i|\le r<\rho$,
+This is allowed: for $x'\in Q'$ and $\max_i|x'_i-a'_i|\le r<\rho$,
 $\sum_k\sum_{\alpha'}|c_{(\alpha',k)}||x'-a'|^{\alpha'}r^k\le\sum_\alpha|c_\alpha|r^{|\alpha|}<\infty$ (with
 $|y|^{\alpha'}=\prod_i|y_i|^{\alpha'_i}$). The same bound shows that each $h_k$ is a power series on $Q'$ and that, for
 fixed $x'\in Q'$, $g_{x'}(t)=f(x',t)$ is a power series on $I$ with coefficients $h_k(x')$.
@@ -543,7 +543,7 @@ $\sigma_1(B)=\lambda_1(\Theta(B))/2\pi$ (the point $\theta=0$ is a null set).
 **Corollary A.21 (moments of a uniform unit vector).** If $u\sim\sigma_{2N-1}$ on the unit sphere of $\mathbb C^N$, then
 $\mathbb E[u_a\bar u_b]=\delta_{ab}/N$, $\mathbb E|u_1|^4=\frac2{N(N+1)}$ and $\mathbb E|u_1|^2|u_2|^2=\frac1{N(N+1)}$ ($N\ge2$). If
 $u\sim\sigma_{n-1}$ on $S^{n-1}\subset\mathbb R^n$, then $\mathbb Eu_1^2=\frac1n$, $\mathbb Eu_1^4=\frac3{n(n+2)}$ and
-$\mathbb Eu_1^2u_2^2=\frac1{n(n+2)}$.
+$\mathbb Eu_1^2u_2^2=\frac1{n(n+2)}$ ($n\ge2$).
 
 *Proof.* Take $u=z/|z|$ as in Theorem A.20(b). Since $z_a\bar z_b=|z|^2u_a\bar u_b$ and $|z|$, $u$ are independent,
 $\delta_{ab}=\mathbb E[z_a\bar z_b]=\mathbb E|z|^2\,\mathbb E[u_a\bar u_b]=N\,\mathbb E[u_a\bar u_b]$ ($\mathbb E|z|^2=N$ by

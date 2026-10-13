@@ -156,7 +156,7 @@ $x'\in\mathbb R^{n-1}$, $Q=Q'\times I$ und $a=(a',a_n)$ und fasse die Terme nach
 $$
 f(x',t)=\sum_kh_k(x')(t-a_n)^k,\qquad h_k(x')=\sum_{\alpha'}c_{(\alpha',k)}(x'-a')^{\alpha'} .
 $$
-Das ist zulässig: Für $x'\in Q'$ und $\max_i|x'_i-a_i|\le r<\rho$ ist
+Das ist zulässig: Für $x'\in Q'$ und $\max_i|x'_i-a'_i|\le r<\rho$ ist
 $\sum_k\sum_{\alpha'}|c_{(\alpha',k)}||x'-a'|^{\alpha'}r^k\le\sum_\alpha|c_\alpha|r^{|\alpha|}<\infty$ (mit
 $|y|^{\alpha'}=\prod_i|y_i|^{\alpha'_i}$). Dieselbe Abschätzung zeigt, dass jedes $h_k$ eine Potenzreihe auf $Q'$ ist und dass für
 festes $x'\in Q'$ die Funktion $g_{x'}(t)=f(x',t)$ eine Potenzreihe auf $I$ mit Koeffizienten $h_k(x')$ ist.
@@ -542,7 +542,7 @@ $\sigma_1(B)=\lambda_1(\Theta(B))/2\pi$ (der Punkt $\theta=0$ ist eine Nullmenge
 **Korollar A.21 (Momente eines gleichverteilten Einheitsvektors).** Ist $u\sim\sigma_{2N-1}$ auf der Einheitssphäre von $\mathbb C^N$, so ist
 $\mathbb E[u_a\bar u_b]=\delta_{ab}/N$, $\mathbb E|u_1|^4=\frac2{N(N+1)}$ und $\mathbb E|u_1|^2|u_2|^2=\frac1{N(N+1)}$ ($N\ge2$). Ist
 $u\sim\sigma_{n-1}$ auf $S^{n-1}\subset\mathbb R^n$, so ist $\mathbb Eu_1^2=\frac1n$, $\mathbb Eu_1^4=\frac3{n(n+2)}$ und
-$\mathbb Eu_1^2u_2^2=\frac1{n(n+2)}$.
+$\mathbb Eu_1^2u_2^2=\frac1{n(n+2)}$ ($n\ge2$).
 
 *Beweis.* Man nehme $u=z/|z|$ wie in Satz A.20(b). Da $z_a\bar z_b=|z|^2u_a\bar u_b$ und $|z|$, $u$ unabhängig sind, ist
 $\delta_{ab}=\mathbb E[z_a\bar z_b]=\mathbb E|z|^2\,\mathbb E[u_a\bar u_b]=N\,\mathbb E[u_a\bar u_b]$ ($\mathbb E|z|^2=N$ nach

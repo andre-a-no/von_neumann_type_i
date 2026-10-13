@@ -154,7 +154,7 @@ $x'\in\mathbb R^{n-1}$ として $x=(x',t)$、$Q=Q'\times I$、$a=(a',a_n)$ と�
 $$
 f(x',t)=\sum_kh_k(x')(t-a_n)^k,\qquad h_k(x')=\sum_{\alpha'}c_{(\alpha',k)}(x'-a')^{\alpha'} .
 $$
-これは許される：$x'\in Q'$ かつ $\max_i|x'_i-a_i|\le r<\rho$ に対し
+これは許される：$x'\in Q'$ かつ $\max_i|x'_i-a'_i|\le r<\rho$ に対し
 $\sum_k\sum_{\alpha'}|c_{(\alpha',k)}||x'-a'|^{\alpha'}r^k\le\sum_\alpha|c_\alpha|r^{|\alpha|}<\infty$ である（
 $|y|^{\alpha'}=\prod_i|y_i|^{\alpha'_i}$ とする）。同じ評価により、各 $h_k$ は $Q'$ 上のべき級数であり、
 固定した $x'\in Q'$ に対し $g_{x'}(t)=f(x',t)$ は係数 $h_k(x')$ をもつ $I$ 上のべき級数である。
@@ -539,7 +539,7 @@ $\sigma_1(B)=\lambda_1(\Theta(B))/2\pi$ である（点 $\theta=0$ は零集合�
 **系 A.21（一様な単位ベクトルのモーメント）.** $u\sim\sigma_{2N-1}$ が $\mathbb C^N$ の単位球面上にあるならば、
 $\mathbb E[u_a\bar u_b]=\delta_{ab}/N$、$\mathbb E|u_1|^4=\frac2{N(N+1)}$、$\mathbb E|u_1|^2|u_2|^2=\frac1{N(N+1)}$（$N\ge2$）である。
 $u\sim\sigma_{n-1}$ が $S^{n-1}\subset\mathbb R^n$ 上にあるならば、$\mathbb Eu_1^2=\frac1n$、$\mathbb Eu_1^4=\frac3{n(n+2)}$、
-$\mathbb Eu_1^2u_2^2=\frac1{n(n+2)}$ である。
+$\mathbb Eu_1^2u_2^2=\frac1{n(n+2)}$ ($n\ge2$) である。
 
 *証明.* 定理 A.20(b) のように $u=z/|z|$ とする。$z_a\bar z_b=|z|^2u_a\bar u_b$ であり $|z|$ と $u$ は独立であるから、
 $\delta_{ab}=\mathbb E[z_a\bar z_b]=\mathbb E|z|^2\,\mathbb E[u_a\bar u_b]=N\,\mathbb E[u_a\bar u_b]$ である（命題 A.16(a) により

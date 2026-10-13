@@ -147,7 +147,7 @@ $x'\in\mathbb R^{n-1}$，$Q=Q'\times I$，$a=(a',a_n)$，并按 $t-a_n$ 的幂�
 $$
 f(x',t)=\sum_kh_k(x')(t-a_n)^k,\qquad h_k(x')=\sum_{\alpha'}c_{(\alpha',k)}(x'-a')^{\alpha'} .
 $$
-这是允许的：对 $x'\in Q'$ 及 $\max_i|x'_i-a_i|\le r<\rho$，
+这是允许的：对 $x'\in Q'$ 及 $\max_i|x'_i-a'_i|\le r<\rho$，
 $\sum_k\sum_{\alpha'}|c_{(\alpha',k)}||x'-a'|^{\alpha'}r^k\le\sum_\alpha|c_\alpha|r^{|\alpha|}<\infty$（其中
 $|y|^{\alpha'}=\prod_i|y_i|^{\alpha'_i}$）。同一个界说明每个 $h_k$ 都是 $Q'$ 上的幂级数，并且对固定的
 $x'\in Q'$，$g_{x'}(t)=f(x',t)$ 是 $I$ 上以 $h_k(x')$ 为系数的幂级数。
@@ -526,7 +526,7 @@ $\sigma_1(B)=\lambda_1(\Theta(B))/2\pi$（点 $\theta=0$ 是零测集）。
 **推论 A.21（均匀单位向量的矩）。** 若 $u\sim\sigma_{2N-1}$ 在 $\mathbb C^N$ 的单位球面上，则
 $\mathbb E[u_a\bar u_b]=\delta_{ab}/N$，$\mathbb E|u_1|^4=\frac2{N(N+1)}$，$\mathbb E|u_1|^2|u_2|^2=\frac1{N(N+1)}$（$N\ge2$）。若
 $u\sim\sigma_{n-1}$ 在 $S^{n-1}\subset\mathbb R^n$ 上，则 $\mathbb Eu_1^2=\frac1n$，$\mathbb Eu_1^4=\frac3{n(n+2)}$，
-$\mathbb Eu_1^2u_2^2=\frac1{n(n+2)}$。
+$\mathbb Eu_1^2u_2^2=\frac1{n(n+2)}$ ($n\ge2$)。
 
 *证明。* 如定理 A.20(b) 中那样取 $u=z/|z|$。由于 $z_a\bar z_b=|z|^2u_a\bar u_b$，且 $|z|$ 与 $u$ 相互独立，
 $\delta_{ab}=\mathbb E[z_a\bar z_b]=\mathbb E|z|^2\,\mathbb E[u_a\bar u_b]=N\,\mathbb E[u_a\bar u_b]$（由命题 A.16(a)，

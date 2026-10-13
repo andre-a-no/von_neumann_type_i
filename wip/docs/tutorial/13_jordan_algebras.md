@@ -530,7 +530,7 @@ and in Jordan language it reads
 $$
 \operatorname{tr}|P(y)x|\le\operatorname{tr}P(y)|x|,
 $$
-which makes sense in every Euclidean Jordan algebra. We prove it in $V_m$ by an argument that uses three properties
+which makes sense in every Euclidean Jordan algebra once a trace is fixed. We prove it in $V_m$ by an argument that uses three properties
 only.
 
 **Proposition 13.14 (Exp. 3 in a spin factor).** For $x,y\in V_m$,
@@ -553,17 +553,23 @@ $\square$
 
 The proof uses only: (i) $P(y)Q\subseteq Q$ for every $y$; (ii) the spectral theorem: every $z$ is
 $\sum_i\mu_ic_i$ with orthogonal idempotents $c_i$ summing to $1$, and $f(z)=\sum_if(\mu_i)c_i$ (so $x_\pm$ and the
-idempotents are squares); (iii) $\operatorname{tr}$ is linear, $\operatorname{tr}(\sum_i\mu_ic_i)=\sum_i\mu_i\operatorname{tr}c_i$
-with $\operatorname{tr}c_i\ge0$, and $\operatorname{tr}(a\circ b)\ge0$ for $a,b\in Q$. In a Euclidean Jordan algebra
-of rank $r$, (ii) holds with $r$ primitive idempotents $c_i$ (a Jordan frame), the trace is
-$\operatorname{tr}z=\sum_i\mu_i$, the form $\operatorname{tr}(x\circ y)$ is associative,
-$\operatorname{tr}((x\circ y)\circ z)=\operatorname{tr}(x\circ(y\circ z))$, and (i) holds [FK94, Chapters II–III];
-we do not prove these facts. The last part of (iii) then follows from (i): expanding $P(a^{1/2})=2L(a^{1/2})^2-L(a)$
-and using associativity, $\operatorname{tr}(a\circ b)=\operatorname{tr}P(a^{1/2})b$, the trace of an element of $Q$,
-hence $\ge0$. So the inequality holds in every Euclidean Jordan algebra — including
-$\operatorname{Herm}_r(\mathbb H)$ and the Albert algebra, which are not Jordan isomorphic to self-adjoint parts of
-complex $*$-algebras. In $M_{sa}$ the same argument, with $\operatorname{Tr}$ and $P(y)x=yxy$, reproves
-Proposition 11.9. In $V_m$ the inequality also follows from Proposition 11.9
+idempotents are squares); (iii) $\operatorname{tr}$ is linear, $\operatorname{tr}(a\circ1)=\operatorname{tr}a$, and
+$\operatorname{tr}(a\circ b)\ge0$ for $a,b\in Q$. All three hold in every Euclidean Jordan algebra $V$ with unit $e$
+for the linear form $\tau(x)=\langle x,e\rangle$, for which $\tau(a\circ b)=\langle b,a\circ e\rangle=\langle a,b\rangle$:
+(ii) is Theorem F.3, (i) is Theorem F.6(4), and $\langle a,b\rangle\ge0$ for $a,b\in Q$ is Theorem F.5(1). Corollary F.7
+carries out the argument: $\tau(|P(y)x|)\le\tau(P(y)|x|)$ in every Euclidean Jordan algebra, with equality if $x\in Q$
+or $-x\in Q$. On $M_{sa}$ with $\langle x,y\rangle=\operatorname{Tr}(xy)$, $\tau=\operatorname{Tr}$ and $P(y)x=yxy$, and
+this reproves Proposition 11.9 for all $Y=Y^*$; on $V_m$ with $\langle x,y\rangle=\operatorname{tr}(x\circ y)$,
+$\tau=\operatorname{tr}$, and this is Proposition 13.14. In a simple Euclidean Jordan algebra $J$ of rank $r$, the trace
+$\operatorname{tr}x=\frac r{\dim J}\operatorname{Tr}L(x)$ of Corollary E.28 satisfies
+$\operatorname{tr}(\sum_i\mu_ic_i)=\sum_i\mu_i$ for every Jordan frame $(c_i)$ (Theorem E.7), and
+$\langle x,y\rangle=\operatorname{tr}(x\circ y)$ is an associative inner product; for it $\tau=\operatorname{tr}$, so the
+inequality holds for this trace. This applies to $\operatorname{Herm}_r(\mathbb H)$ and to the Albert algebra, which are
+simple Euclidean Jordan algebras (Theorem E.24). For $r\ge3$ they are not Jordan isomorphic to $M_{sa}$ for any
+$\mathcal M=\bigoplus_cM_{k_c}$: $M_{sa}=\bigoplus_c\operatorname{Herm}_{k_c}(\mathbb C)$ is a direct sum of ideals, so it
+is simple only with a single block, and $\operatorname{Herm}_k(\mathbb C)$ ($\cong\mathbb R$ for $k=1$, $\cong V_3$ for
+$k=2$) is not isomorphic to $\operatorname{Herm}_r(\mathbb H)$, $r\ge3$, or to $\operatorname{Herm}_3(\mathbb O)$, by the
+uniqueness in Theorem 13.7. In $V_m$ the inequality also follows from Proposition 11.9 (extended above to $Y=Y^*$)
 through $\phi$, since $\phi(P(y)x)=\phi(y)\phi(x)\phi(y)$ and $\phi(|x|)=|\phi(x)|$; the code checks both:
 
 ```python
@@ -582,8 +588,9 @@ for m in (2, 4, 7):
     assert (tn - Vm.representation_dim / 2 * lhs[:200]).abs().max() < 1e-10 * tn.max()
 ```
 
-The gap $\operatorname{tr}P(y)|x|-\operatorname{tr}|P(y)x|$ vanishes for definite $x$ and is positive for typical
-indefinite $x$ (the printed maxima are of order $10^1$–$10^2$ for these Gaussian samples).
+The gap $\operatorname{tr}P(y)|x|-\operatorname{tr}|P(y)x|$ vanishes for definite $x$ (Proposition 13.14). Numerical
+observation (not a theorem): for these Gaussian samples the printed maximal gaps are of order $10^1$–$10^2$, so the
+inequality is far from an equality for indefinite $x$.
 
 ## 13.7 What to compare with
 
@@ -636,8 +643,7 @@ assert V4.in_cone(V4.quadratic_representation(yv, xi)).all()
 
 2. $\theta(\rho_p)=\frac p2F+\frac{1-p}4$ by Proposition 13.12. $F$ has eigenvalues $1$ (three times) and $-1$ (once), so
    the spectrum is $\frac{1+p}4$ (three times) and $\frac{1-3p}4$, which is negative iff $p>\frac13$; then $\rho_p$ is not
-   separable by the PPT criterion. (For $2\times2$ systems the converse also holds: M., P. and R. Horodecki, Phys.
-   Lett. A 223 (1996) 1; we do not prove it.)
+   separable by the PPT criterion.
 
 ```python
 for pp in (0.2, 1 / 3, 0.5):
@@ -663,8 +669,8 @@ assert V3c.in_cone(V3c.product(V3c.element(1.0, wv[0]), V3c.element(1.0, wv[0]))
 
 </details>
 
-**Where to go from here.** This is the last chapter of the course. The standard reference for the finite-dimensional
-theory is [FK94]; K. McCrimmon, *A Taste of Jordan Algebras* (Springer 2004), covers the algebra and the history, and
+**Where to go from here.** This is the last chapter of the course; Appendices E and F complete its proofs. For
+further reading, the standard reference for the finite-dimensional theory is [FK94]; K. McCrimmon, *A Taste of Jordan Algebras* (Springer 2004), covers the algebra and the history, and
 H. Hanche-Olsen and E. Størmer, *Jordan Operator Algebras* (Pitman 1984), and Alfsen–Shultz (2003) the
 infinite-dimensional theory and its relation to C\*-algebras. For the role of composite systems in reconstructions of
 quantum theory from operational axioms, see the papers of Barnum and Wilce cited above. For trace inequalities beyond

@@ -156,7 +156,7 @@ $x'\in\mathbb R^{n-1}$, $Q=Q'\times I$ et $a=(a',a_n)$, et regroupons les termes
 $$
 f(x',t)=\sum_kh_k(x')(t-a_n)^k,\qquad h_k(x')=\sum_{\alpha'}c_{(\alpha',k)}(x'-a')^{\alpha'} .
 $$
-C'est légitime : pour $x'\in Q'$ et $\max_i|x'_i-a_i|\le r<\rho$,
+C'est légitime : pour $x'\in Q'$ et $\max_i|x'_i-a'_i|\le r<\rho$,
 $\sum_k\sum_{\alpha'}|c_{(\alpha',k)}||x'-a'|^{\alpha'}r^k\le\sum_\alpha|c_\alpha|r^{|\alpha|}<\infty$ (avec
 $|y|^{\alpha'}=\prod_i|y_i|^{\alpha'_i}$). La même majoration montre que chaque $h_k$ est une série entière sur $Q'$ et que, pour
 $x'\in Q'$ fixé, $g_{x'}(t)=f(x',t)$ est une série entière sur $I$ de coefficients $h_k(x')$.
@@ -542,7 +542,7 @@ $\sigma_1(B)=\lambda_1(\Theta(B))/2\pi$ (le point $\theta=0$ est négligeable).
 **Corollaire A.21 (moments d'un vecteur unitaire uniforme).** Si $u\sim\sigma_{2N-1}$ sur la sphère unité de $\mathbb C^N$, alors
 $\mathbb E[u_a\bar u_b]=\delta_{ab}/N$, $\mathbb E|u_1|^4=\frac2{N(N+1)}$ et $\mathbb E|u_1|^2|u_2|^2=\frac1{N(N+1)}$ ($N\ge2$). Si
 $u\sim\sigma_{n-1}$ sur $S^{n-1}\subset\mathbb R^n$, alors $\mathbb Eu_1^2=\frac1n$, $\mathbb Eu_1^4=\frac3{n(n+2)}$ et
-$\mathbb Eu_1^2u_2^2=\frac1{n(n+2)}$.
+$\mathbb Eu_1^2u_2^2=\frac1{n(n+2)}$ ($n\ge2$).
 
 *Démonstration.* Prenons $u=z/|z|$ comme dans le théorème A.20(b). Comme $z_a\bar z_b=|z|^2u_a\bar u_b$ et que $|z|$ et $u$ sont indépendants,
 $\delta_{ab}=\mathbb E[z_a\bar z_b]=\mathbb E|z|^2\,\mathbb E[u_a\bar u_b]=N\,\mathbb E[u_a\bar u_b]$ ($\mathbb E|z|^2=N$ d'après la
