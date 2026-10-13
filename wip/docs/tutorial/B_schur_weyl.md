@@ -5,10 +5,10 @@
 The unitary group $U(d)$ acts on $(\mathbb C^d)^{\otimes n}$ by $V\mapsto V^{\otimes n}$, and the symmetric group
 $S_n$ by permuting the tensor factors. Each of the two families of operators is the commutant of the other
 (**Schur–Weyl duality**). This appendix proves the duality completely and derives from it the Weingarten formula
-for the moments of a Haar unitary of every order. Along the way it proves the facts that Chapters 4, 5 and 9 use
-without proof: Theorem 4.14(b) for all $L$, the irreducibility of the $S_L$-representations on the multiplicity
+for the moments of a Haar unitary of every order. Along the way it proves the facts that Chapters 4, 5, 9 and 11
+take from here: Theorem 4.14(b) for all $L$, the irreducibility of the $S_L$-representations on the multiplicity
 spaces of the total spin, the Catalan numbers of Section 4.5, Theorem 5.12, the Wigner–Eckart theorem for $SU(2)$
-quoted in Section 9.3, and the Haar measure of the orthogonal group used in Chapter 11.
+used in Section 9.3, and the Haar measure of the orthogonal group used in Chapter 11.
 
 The route is elementary: a polarisation identity identifies the commutant of the permutations with the span of all
 $A^{\otimes n}$, $A\in M_d(\mathbb C)$; a Cayley-transform argument shows that the unitaries $V^{\otimes n}$ span the same
@@ -113,7 +113,7 @@ $d^2$ entries, homogeneous of degree $n\ge1$. If $p(V)=0$ for all $V\in U(d)$, t
 
 *Proof.* *Step 1 (Cayley transform).* For $A\in M_d$ let $q(A)=p\big((1+iA)\operatorname{adj}(1-iA)\big)$, where
 $\operatorname{adj}$ is the adjugate matrix; $q$ is a polynomial in the entries of $A$. Let $H$ be Hermitian. Its
-eigenvalues are real (Theorem 1.3), so $1-iH$ is invertible, $\operatorname{adj}(1-iH)=\det(1-iH)(1-iH)^{-1}$ (Cramer's
+eigenvalues are real (Corollary 1.4), so $1-iH$ is invertible, $\operatorname{adj}(1-iH)=\det(1-iH)(1-iH)^{-1}$ (Cramer's
 rule), and by homogeneity $q(H)=\det(1-iH)^n\,p(C)$ with $C=(1+iH)(1-iH)^{-1}$. The matrices $1\pm iH$ and their inverses
 are functions of $H$ and commute (Theorem 1.5), and $(1+iH)^*=1-iH$, so
 $C^*C=(1+iH)^{-1}(1-iH)(1+iH)(1-iH)^{-1}=1$. Hence $q(H)=0$.
@@ -180,8 +180,9 @@ need the exponential parametrisation of $SU(2)$ mentioned in Section 4.5.
 
 The code compares, for small $d$ and $n$, four dimensions: of $\operatorname{span}\pi(S_n)$, of the commutant of two random
 $V^{\otimes n}$ (which contains $\{V^{\otimes n}\}'=\operatorname{span}\pi(S_n)$, and coincides with it in all cases printed), and of
-the spans of many random $A^{\otimes n}$ and $V^{\otimes n}$ against $\binom{d^2+n-1}n$. It also checks Lemma B.2 and the
-Newton recursion of the proof of Theorem B.6(b).
+the spans of many random $A^{\otimes n}$ and $V^{\otimes n}$ against $\binom{d^2+n-1}n$. It also checks that the library's
+`permutation_representation` follows the convention of Lemma B.1(a), Lemma B.2, and the Newton recursion of the proof of
+Theorem B.6(b).
 
 ```python
 import functools
@@ -223,7 +224,7 @@ for d, n in ((2, 2), (2, 3), (2, 4), (3, 2), (3, 3)):
     comm_V = commutant_dim(power(haar(d, 2), n))       # commutant of two random V^{(x) n}
     print(d, n, rank(P), comm_V, span_A, span_V, N_sym)
     assert span_A == span_V == N_sym == commutant_dim(P)                     # Theorem B.6(a)
-    assert comm_V == rank(P)                                                 # Theorem B.6(c)
+    assert comm_V == rank(P)              # numerical observation: two V suffice here (B.6(c) gives >=)
     assert rank(P) == (math.factorial(n) if n <= d else math.comb(2 * n, n) // (n + 1))   # B.1(d), B.10
 
 A = torch.randn(3, 2, 2, dtype=dt)                     # Lemma B.2 for n = 3
@@ -231,6 +232,12 @@ lhs = sum(functools.reduce(torch.kron, [A[s[0]], A[s[1]], A[s[2]]]) for s in ite
 rhs = sum((-1) ** (3 - sum(eps)) * functools.reduce(torch.kron, [sum(e * a for e, a in zip(eps, A))] * 3)
           for eps in itertools.product((0, 1), repeat=3))
 assert close(lhs, rhs)
+
+xs = torch.randn(3, 2, dtype=dt)                       # Lemma B.1(a): pi(s) x_1 (x) x_2 (x) x_3 = (x) x_{s^-1(p)}
+for s in itertools.permutations(range(3)):
+    inv = [s.index(m) for m in range(3)]
+    Ps = dc.permutation_representation(3, 2, [list(s)])[0]
+    assert close(Ps @ functools.reduce(torch.kron, list(xs)), functools.reduce(torch.kron, [xs[inv[p]] for p in range(3)]))
 
 def d_pi(X, n):                                        # sum_m 1 (x) .. (x) X (x) .. (x) 1
     eye = torch.eye(X.shape[0], dtype=dt)
@@ -268,10 +275,7 @@ $\sum_la_lV_l^{\otimes n}\mapsto(\sum_la_l\tau_c(V_l))_c$ is onto $\bigoplus_cM_
 $\tau_c$ follow word for word as in the proof of Proposition 2.7. The dimensions are Theorem 2.6, Proposition B.3
 and Lemma B.1(d). $\square$
 
-Theorem B.8 is the decomposition usually written $(\mathbb C^d)^{\otimes n}\cong\bigoplus_\lambda S_\lambda\otimes V_\lambda$. Further
-reading (R. Goodman, N. R. Wallach, *Symmetry, Representations, and Invariants*, Springer 2009, Chapter 9) describes the
-index set by Young diagrams; that description is not proved in this course and nothing here depends on it. For $d=2$
-the sectors are identified by the total spin:
+For $d=2$ the sectors are identified by the total spin:
 
 **Corollary B.9 ($L$ spins $\frac12$).** Let $V$ be a unitary with $V^*S_aV=\bigoplus_SS^{(S)}_a\otimes1_{m_S}$ for the total
 spin of $L$ spins $\frac12$ (Corollary 4.12, Proposition 4.13). Then
@@ -285,8 +289,9 @@ In particular $\dim\operatorname{span}\pi(S_L)=\sum_Sm_S^2$ and $\dim\pi(S_L)'=\
 *Proof.* By Theorem 4.3, $V^*\{S_a\}'V=\bigoplus_S1_{2S+1}\otimes M_{m_S}$, and $\{S_a\}'=\operatorname{span}\pi(S_L)$ by Corollary B.7. So
 $V^*\pi(\sigma)V=\bigoplus_S1\otimes\rho_S(\sigma)$ with a unitary representation $\rho_S$, and the map
 $\sum_\sigma a_\sigma\pi(\sigma)\mapsto(\sum_\sigma a_\sigma\rho_S(\sigma))_S$ is onto $\bigoplus_SM_{m_S}$; irreducibility and inequivalence
-follow as in the proof of Proposition 2.7. The values of $m_S$ are Proposition 4.13. The last two dimensions are
-Theorem 4.3 and Proposition B.3 with $d=2$. $\square$
+follow as in the proof of Proposition 2.7. The values of $m_S$ are Proposition 4.13. By Theorem 4.3,
+$\dim\{S_a\}'=\sum_Sm_S^2$ and $\dim\{S_a\}''=\sum_S(2S+1)^2$; by Corollary B.7, $\{S_a\}'=\operatorname{span}\pi(S_L)$ and
+$\{S_a\}''=\pi(S_L)'$, whose dimension is $\binom{4+L-1}L=\binom{L+3}3$ by Proposition B.3 with $d=2$. $\square$
 
 **Corollary B.10 (Catalan numbers).** For $L\ge1$, $\displaystyle\sum_Sm_S^2=\binom{2L}L\frac1{L+1}$; this is
 $\dim\{S_a\}'=\dim\operatorname{span}\pi(S_L)$ on $(\mathbb C^2)^{\otimes L}$.
@@ -396,7 +401,7 @@ the phase $U=U_{11}$ is $\sum_{\sigma,\tau}\frac1{(n!)^2}=1=|U_{11}|^{2n}$, as i
 
 **Corollary B.14.** For all $n,d\ge1$, $\mathbb E|U_{11}|^{2n}=\dfrac{n!}{d(d+1)\cdots(d+n-1)}$.
 
-*Proof.* With all indices $1$ in Theorem B.13(d), the moment is $\sum_{\sigma,\tau}W_{\sigma^{-1}\tau^{-1}}=\mathbf 1^TW\mathbf 1$. Every row
+*Proof.* With all indices $1$ in Theorem B.13(d), the moment is $\sum_{\sigma,\tau}\mathrm{Wg}(\sigma\tau^{-1})=\sum_{\sigma,\tau}W_{\sigma^{-1},\tau^{-1}}=\mathbf 1^TW\mathbf 1$ (part (a)). Every row
 sum of $G$ is $c_n(d)=\sum_{\rho\in S_n}d^{\#\text{cycles}(\rho)}\ge d^n>0$, so $G\mathbf 1=c_n(d)\mathbf 1$, $W\mathbf 1=\mathbf 1/c_n(d)$
 and the moment is $n!/c_n(d)$. Finally $c_n(x)=x(x+1)\cdots(x+n-1)$ (Chapter 5, Exercise 2, solution). $\square$
 
@@ -514,21 +519,26 @@ so $R$, and with it the whole block of $T$ between the multiplets $S$ and $S'$, 
 $\langle S',S';a|T_q|S,S'-q;b\rangle$ between the highest-weight vectors of $S'$ and one vector of each copy of $S$.
 
 *Proof.* Fix $a\le m_{S'}$, $b\le m_S$, and let $J:\mathbb C^{2S+1}\to\mathbb C^N$, $Jx=V(x\otimes f_b)$ (in the summand $S$), and
-$K:\mathbb C^N\to\mathbb C^{2S'+1}$ the adjoint of $x\mapsto V(x\otimes f_a)$ (in the summand $S'$). From the form of $V^*S_aV$,
-$S_aJ=JS^{(S)}_a$ and, taking adjoints of the same relation for $S'$, $KS_a=S^{(S')}_aK$. Let $t=K\Psi(J\otimes1)$ with $\Psi$ of
-Lemma B.15(c); its matrix elements are $\langle S',M'|t(|S,M\rangle\otimes|k,q\rangle)\rangle=\langle S',M';a|T_q|S,M;b\rangle$, and
+$K:\mathbb C^N\to\mathbb C^{2S'+1}$ the adjoint of $x\mapsto V(x\otimes f_a)$ (in the summand $S'$). Write $\alpha\in\{x,y,z\}$ for the
+component index. From the form of $V^*S_\alpha V$, $S_\alpha J=JS^{(S)}_\alpha$ and, taking adjoints of the same relation for $S'$
+(the spin matrices are Hermitian), $KS_\alpha=S^{(S')}_\alpha K$. Let $t=K\Psi(J\otimes1)$ with $\Psi$ of Lemma B.15(c); its matrix
+elements are $\langle S',M'|t(|S,M\rangle\otimes|k,q\rangle)\rangle=\langle S',M';a|T_q|S,M;b\rangle$, and
 $$
-t\,(S^{(S)}_a\otimes1+1\otimes S^{(k)}_a)=K\Psi(S_a\otimes1+1\otimes S^{(k)}_a)(J\otimes1)=KS_a\Psi(J\otimes1)=S^{(S')}_a\,t,
+t\,(S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha)=K\Psi(S_\alpha\otimes1+1\otimes S^{(k)}_\alpha)(J\otimes1)=KS_\alpha\Psi(J\otimes1)=S^{(S')}_\alpha\,t,
 $$
-so $t$ is an intertwiner from spin $S\otimes$ spin $k$ (a spin representation, Section 4.5) to spin $S'$. Taking adjoints
-is a bijection between these intertwiners and $\operatorname{Hom}(\text{spin }S',\text{spin }S\otimes\text{spin }k)$ (take the
-adjoint of $t\rho(x)=\rho'(x)t$; the spin matrices are Hermitian), whose dimension is the multiplicity of spin $S'$
-in spin $S\otimes$ spin $k$ (Theorem 4.3). By Chapter 4, Exercise 2 (proved in its solution from Corollary 4.12), that
-multiplicity is $1$ for $S'\in\{|S-k|,\dots,S+k\}$ and $0$ otherwise.
+so $t$ is an intertwiner from $\rho=$ spin $S\otimes$ spin $k$ (the spin representation
+$S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha$, Section 4.5) to $\sigma=$ spin $S'$. Taking adjoints is a linear bijection between
+$\operatorname{Hom}(\rho,\sigma)$ and $\operatorname{Hom}(\sigma,\rho)$ (the adjoint of $t\rho(\alpha)=\sigma(\alpha)t$ is
+$\rho(\alpha)t^*=t^*\sigma(\alpha)$, as all matrices involved are Hermitian). By Corollary 4.12 and Chapter 4, Exercise 2 (proved
+in its solution from Corollary 4.12 alone), $\rho$ is unitarily equivalent to $\bigoplus_j(\text{spin }j)$, one copy of each
+$j\in\{|S-k|,|S-k|+1,\dots,S+k\}$. These spins are irreducible and pairwise inequivalent (Theorem 4.11), so this is a
+decomposition as in Theorem 4.3, and its last statement gives $\dim\operatorname{Hom}(\sigma,\rho)=1$ if $S'$ is one of these
+$j$, and $\operatorname{Hom}(\sigma,\rho)=0$ otherwise (spin $S'$ is then equivalent to none of them, by Theorem 4.11).
 This gives (a), and in case (b) $t=R_{ab}C$ for a unique number $R_{ab}$.
 (c) The intertwining relation for $S_z$ gives $M'\langle S',M'|t(|S,M\rangle\otimes|k,q\rangle)\rangle=(M+q)\langle S',M'|t(|S,M\rangle\otimes|k,q\rangle)\rangle$.
 The range of $C\neq0$ is a nonzero invariant subspace of the irreducible spin $S'$, hence everything, so
-$\langle S',S'|C(|S,M\rangle\otimes|k,q\rangle)\rangle\neq0$ for some basis vector, and then $M=S'-q$. Divide by this number. $\square$
+$\langle S',S'|C(|S,M\rangle\otimes|k,q\rangle)\rangle\neq0$ for some basis vector, and then $M=S'-q$ by the same relation for
+the intertwiner $C$. Divide by this number. $\square$
 
 By Lemma B.15(a), the block between multiplets $S$ and $S'$ of a scalar product such as
 $\mathbf s^{(i)}\cdot\mathbf s^{(j)}=\sum_q(-1)^q s^{(i)}_qs^{(j)}_{-q}$ is
@@ -577,30 +587,37 @@ assert close(X @ X2 + Y @ Y2 + Z @ Z2, sum((-1) ** q * T[q] @ T2[-q] for q in (-
 
 ## B.7 Haar measures used in the course
 
-The course uses the Haar measure of exactly these groups: $U(k)$ (Theorem 5.3), $U(1)$ (the case $k=1$; Chapter 5,
-Exercise 3), $U(\mathcal M)\cong\prod_cU(k_c)$ (Corollary 5.4), $SU(k)$ (Section 5.1, after Corollary 5.4), and the
-orthogonal group $O(k)$ (Section 5.1, Chapter 11, Exercise 2, and real algebras). Uniqueness for all of them is
-Lemma 5.1, since each is a closed subgroup of some $U(n)$; existence is a construction in each case, and the
-construction for $O(k)$ is the following. The Haar measure of no other group (in particular of no symplectic group
-and of no general compact group) is used, so the general existence theorem mentioned in Section 5.1 is not needed.
+The course uses the Haar measures of the following groups: $U(k)$ (Theorem 5.3), $U(1)$ (the case $k=1$; Chapter 5,
+Exercise 3), $U(\mathcal M)\cong\prod_cU(k_c)$ (Corollary 5.4), $SU(k)$ (Section 5.1, after Corollary 5.4), the orthogonal
+group $O(k)$ (Section 5.1, Chapter 11, Exercise 2, and real algebras), and the diagonal groups $T$ of Lemma C.2. Uniqueness
+for all of them is Lemma 5.1, since each is a closed subgroup of some $U(n)$; existence is an explicit construction in
+each case (for $T$ in Lemma C.2), and the construction for $O(k)$ is the following. No general existence theorem for the
+Haar measure of a compact group is used anywhere in the course.
 
 **Theorem B.17 (Haar measure of the orthogonal group).** Let $Z$ be a $k\times k$ real matrix with independent
 $N(0,1)$ entries. Then $Z$ is invertible with probability one, $Z=OR$ with $O$ orthogonal and $R$ real upper triangular
-with positive diagonal, and $O$ is Haar distributed on $O(k)$. If $Z=O'R'$ is any real QR decomposition, then
-$O'\operatorname{diag}(\operatorname{sgn}R'_{ii})=O$. For Haar distributed $O$ and $X\in M_k(\mathbb C)$,
-$\mathbb E[OXO^T]=\frac{\operatorname{Tr}X}k1$; in particular $\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k$.
+with positive diagonal, and $O$ is Haar distributed on $O(k)$. If $Z=O'R'$ is any real QR decomposition ($O'$ orthogonal,
+$R'$ real upper triangular), then $O'\operatorname{diag}(\operatorname{sgn}R'_{ii})=O$. For Haar distributed $O$ and
+$X\in M_k(\mathbb C)$, $\mathbb E[O]=0$ and $\mathbb E[OXO^T]=\frac{\operatorname{Tr}X}k1$; in particular
+$\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k$.
 
-*Proof.* $\det Z$ is a nonzero polynomial in the $k^2$ real entries, and $Z$ has a density, so $\det Z\neq0$ almost surely
-(as in the proof of Theorem 5.3; Corollary A.7). Gram–Schmidt applied to real columns produces real $q_j$ and real coefficients, i.e. a
+*Proof.* $\det Z$ is a polynomial in the $k^2$ real entries, not identically zero ($\det1=1$), and $Z$ has a density, so
+$\det Z\neq0$ almost surely (Corollary A.7(b), as in the proof of Theorem 5.3). Gram–Schmidt applied to real columns produces real $q_j$ and real coefficients, i.e. a
 real decomposition $Z=OR$ with $R_{jj}>0$; by the uniqueness in Lemma 5.2 it is the decomposition of Lemma 5.2, so $O$
 depends continuously on $Z$. The density $(2\pi)^{-k^2/2}e^{-\|Z\|_2^2/2}$ of $Z$ is invariant under $Z\mapsto VZ$ for
 $V\in O(k)$, a linear map of $\mathbb R^{k^2}$ that preserves $\|Z\|_2^2=\operatorname{Tr}(Z^TZ)$, hence orthogonal with Jacobian $1$;
 so $VZ$ has the law of $Z$ (Proposition A.14(a)). As $VZ=(VO)R$, uniqueness gives $O(VZ)=VO(Z)$, so the law of $O$ is left-invariant on the
 compact group $O(k)$, and Lemma 5.1 applies. The sign correction is the end of the proof of Theorem 5.3, with
-$\operatorname{sgn}R'_{ii}=R'_{ii}/|R'_{ii}|$. Finally $T=\mathbb E[OXO^T]$ satisfies $VTV^T=T$ for $V\in O(k)$, since $VO$ has the law of
+$\operatorname{sgn}R'_{ii}=R'_{ii}/|R'_{ii}|$ ($R'_{ii}\neq0$ as $Z$ is invertible). Since $-1\in O(k)$, $-O$ has the law of $O$, so
+$\mathbb E[O]=-\mathbb E[O]=0$ (the entries are bounded by $1$). Finally $T=\mathbb E[OXO^T]$ satisfies $VTV^T=T$ for $V\in O(k)$, since $VO$ has the law of
 $O$. With $V$ the diagonal matrix with $-1$ in position $i$ and $1$ elsewhere, $T_{ij}=-T_{ij}$ for $j\neq i$; with
 permutation matrices, all $T_{ii}$ are equal (as in Lemma 5.6). So $T=\lambda1$, and $k\lambda=\operatorname{Tr}T=\operatorname{Tr}X$. For
 $X=|e_j\rangle\langle e_m|$, $(OXO^T)_{il}=O_{ij}O_{lm}$. $\square$
+
+The code checks the second moments, $\mathbb E\operatorname{Tr}O=0$ and $\mathbb E(\operatorname{Tr}O)^2=\sum_{i,l}\mathbb E[O_{ii}O_{ll}]=1$ by
+Monte Carlo. It also records a *numerical observation* about the QR routine of `torch.linalg.qr` (a statement about that
+routine, not a theorem): without the sign correction its factor $Q'$ has $\mathbb E\operatorname{Tr}Q'$ many standard errors
+away from $0$, so it is not Haar distributed.
 
 ```python
 k, B = 3, 100_000

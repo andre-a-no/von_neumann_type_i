@@ -4,8 +4,8 @@
 
 The chapters use a handful of facts from analysis and probability that go beyond the prerequisites
 of the course but are not theorems of their own: zero sets of polynomials are null sets, the ordered
-eigenvalues of a Hermitian matrix depend continuously on it, linear images of Gaussian vectors have
-densities, the direction of a Gaussian vector is uniform on the sphere and independent of its length,
+eigenvalues of a Hermitian matrix depend continuously on it, non-degenerate linear images of Gaussian vectors
+have densities, the direction of a Gaussian vector is uniform on the sphere and independent of its length,
 Gaussian moments are sums over pairings, and the spacings of uniform points are normalised
 exponential variables. This appendix proves them, so that the chapters can cite them by number.
 
@@ -44,7 +44,7 @@ $\mathcal F=\sigma(\mathcal P)\subseteq d\subseteq\{\mu=\nu\}$. $\square$
 **Corollary A.2.** Two finite Borel measures $\mu,\nu$ on a metric space $M$ with $\int f\,d\mu=\int f\,d\nu$
 for every bounded continuous $f:M\to\mathbb R$ are equal.
 
-*Proof.* With $f=1$, $\mu(M)=\nu(M)$. For a closed set $K$, the continuous functions
+*Proof.* With $f=1$, $\mu(M)=\nu(M)$. For a nonempty closed set $K$ (for $K=\emptyset$ there is nothing to prove), the continuous functions
 $f_k(x)=\max(0,1-k\operatorname{dist}(x,K))$ take values in $[0,1]$ and decrease to the indicator of $K$
 (for $x\notin K$, $\operatorname{dist}(x,K)>0$). By dominated convergence $\mu(K)=\nu(K)$. The closed sets are
 closed under finite intersections and generate the Borel sets; apply Lemma A.1. $\square$
@@ -77,7 +77,9 @@ $\operatorname{Re}\operatorname{Tr}(X^*Y)$, for which every map $X\mapsto VXW$ w
 (it preserves $\operatorname{Tr}(X^*Y)$). On the Hermitian matrices $\operatorname{Herm}_n$ we use the coordinates
 $h_{ii}$ and $\operatorname{Re}h_{ij},\operatorname{Im}h_{ij}$ ($i<j$); they are not orthonormal for the real inner
 product $\operatorname{Tr}(XY)$, but by (b) the maps $H\mapsto UHU^*$ ($U$ unitary), which are orthogonal for it,
-still preserve Lebesgue measure.
+still preserve Lebesgue measure. Likewise, on the real symmetric matrices $\operatorname{Sym}_n(\mathbb R)$ we use the
+coordinates $h_{ii}$ and $h_{ij}$ ($i<j$), and the maps $H\mapsto OHO^T$ ($O\in O(n)$), orthogonal for $\operatorname{Tr}(XY)$,
+preserve Lebesgue measure.
 
 **Lemma A.4 (integrals of vector-valued functions).** Let $V$ be a finite-dimensional real or complex vector
 space and $F:[a,b]\to V$ continuous. Define $\int_a^bF(t)\,dt$ coordinatewise in a basis (real and imaginary
@@ -87,7 +89,7 @@ parts separately). Then:
 $\sum_iF(\tau_i)(t_i-t_{i-1})$ converge to $\int_a^bF$ as $\max_i(t_i-t_{i-1})\to0$; in particular the integral
 does not depend on the basis;
 
-(b) $L\int_a^bF=\int_a^bLF$ for every linear map $L:V\to V'$;
+(b) $L\int_a^bF=\int_a^bLF$ for every (real-)linear map $L:V\to V'$ into a finite-dimensional space $V'$;
 
 (c) $\|\int_a^bF\|\le\int_a^b\|F(t)\|\,dt$ for every norm on $V$;
 
@@ -183,7 +185,7 @@ $x$. Then $\mathbb P((X,Y)\in N)=0$.
 
 *Proof.* (a) The first statement is Theorem A.6 with $Q=\mathbb R^n$. For the second, induction on $n$: write
 $p(x',t)=\sum_kp_k(x')t^k$; some $p_k$ has a nonzero coefficient, so $p_k(x'_0)\neq0$ for some $x'_0$ by
-induction; then $t\mapsto p(x'_0,t)$ is a nonzero polynomial in one variable, which has finitely many roots.
+induction (for $n=1$ the $p_k$ are constants and there is no $x'$); then $t\mapsto p(x'_0,t)$ is a nonzero polynomial in one variable, which has finitely many roots.
 (b) A change of basis is linear, so $p$ remains a polynomial, and $\{p=0\}$ is null by (a) and Lemma A.3(a);
 then $\mathbb P(p(X)=0)=\int_{\{p=0\}}f\,d\lambda=0$. (c) Choose a nonzero linear functional $\ell$ vanishing on $U$
 and apply (b) to $p=\ell$. For the example, $v\mapsto P_Ev$ ($P_E$ the orthogonal projection) is a nonzero real-linear
@@ -203,19 +205,21 @@ import numpy as np
 rng = np.random.default_rng(0)
 
 
-def mc(samples, exact, label):
-    """Monte Carlo mean with standard error; the exact value must lie within 5 standard errors."""
+def mc(samples, exact, label, kind="exact"):
+    """Monte Carlo mean with standard error; the reference value must lie within 5 standard errors."""
     samples = np.asarray(samples, dtype=float)
     mean, err = samples.mean(), samples.std() / math.sqrt(samples.size)
-    print(f"{label}: {mean:.4f} +- {err:.4f}   (exact {exact:.4f})")
+    print(f"{label}: {mean:.4f} +- {err:.4f}   ({kind} {exact:.4f})")
     assert abs(mean - exact) <= 5 * err + 1e-12, label
 
 
-# Corollary A.7: det Z = 0 has probability 0 for a real Gaussian 3 x 3 matrix; P(|det Z| < eps) -> 0 linearly
+# Corollary A.7: det Z = 0 has probability 0 for a real Gaussian 3 x 3 matrix, so by continuity of the measure
+# P(|det Z| < eps) -> 0 as eps -> 0. Numerical observation (not a theorem of this appendix): the fractions
+# below shrink by about a factor 10 per factor 10 in eps.
 d = np.abs(np.linalg.det(rng.standard_normal((200_000, 3, 3))))
 fractions = [(d < eps).mean() for eps in (1e-1, 1e-2, 1e-3)]
 print("P(|det Z| < eps) for eps = 0.1, 0.01, 0.001:", fractions)
-assert d.min() > 0 and fractions[1] < 0.2 * fractions[0] and fractions[2] < 0.2 * fractions[1]
+assert fractions[1] < 0.2 * fractions[0] and fractions[2] < 0.2 * fractions[1]
 ```
 
 ## A.3 Eigenvalues of Hermitian matrices
@@ -266,7 +270,7 @@ $|\lambda_j(A+E)-\lambda_j(A)|\le\max(|\lambda_1(E)|,|\lambda_n(E)|)=\|E\|$, and
 
 **Corollary A.11.** Each $\lambda_j:\operatorname{Herm}_n\to\mathbb R$ is $1$-Lipschitz for $\|\cdot\|$, hence continuous and
 Borel. For a random Hermitian matrix $H$, $(\lambda_1(H),\dots,\lambda_n(H))$ is a random vector, and so are its spacings and
-spacing ratios; the eigenvalue vectors of independent random Hermitian matrices are independent. The matrices with
+spacing ratios (on the Borel set where their denominators are nonzero); the eigenvalue vectors of independent random Hermitian matrices are independent. The matrices with
 $n$ distinct eigenvalues form an open set.
 
 *Proof.* Theorem A.10 with $E=B-A$. Functions of independent random variables are independent. If
@@ -356,8 +360,9 @@ $W=W_1\oplus W_2$ orthogonally, its components are independent standard Gaussian
 is another orthonormal basis, $O$ is orthogonal and $\sum_ig_iw'_i=\sum_j(Og)_jw_j$, which has the law of
 $\sum_jg_jw_j$ by (a). The coordinates of $X=\sum_ig_iw_i$ in another orthonormal basis $(w'_i)$ are $O^Tg$, again
 standard by (a). An orthogonal map $L$ maps $(w_i)$ to an orthonormal basis, and $LX=\sum_ig_iLw_i$. For the last
-claim take $(w_i)$ adapted to $W_1\oplus W_2$. (c) For $v\neq0$ complete $v/|v|$ to an orthonormal basis; by (b) the
-coordinate $\langle v/|v|,g\rangle$ is $N(0,1)$. $\square$
+claim take $(w_i)$ adapted to $W_1\oplus W_2$. (c) For $v=0$ both sides are the point mass at $0$. For $v\neq0$
+complete $v/|v|$ to an orthonormal basis; by (b) the coordinate $\langle v/|v|,g\rangle$ is $N(0,1)$, so
+$\langle v,g\rangle=|v|\,\langle v/|v|,g\rangle$ has the density $(2\pi|v|^2)^{-1/2}e^{-y^2/2|v|^2}$ (Lemma A.3(c) with $m=1$). $\square$
 
 **Definition.** A **centred Gaussian vector** in a finite-dimensional real vector space $W$ is $X=Ag$ for a linear
 map $A:\mathbb R^M\to W$ and a standard Gaussian vector $g$ of $\mathbb R^M$. In coordinates ($W=\mathbb R^m$) its
@@ -387,9 +392,12 @@ $K^\perp\to W$; so $\dim K^\perp=m$. In an orthonormal basis of $K^\perp$ comple
 $(B\ 0)$, so $C=AA^T=BB^T$. The coordinates of $g_1$ have the density $\varphi_m$, and by Lemma A.3(c) $X$ has
 the density $\varphi_m(B^{-1}x)/|\det B|$, with $|B^{-1}x|^2=\langle x,(BB^T)^{-1}x\rangle$ and $|\det B|=(\det C)^{1/2}$. If
 $X$ is degenerate and had a density $f$, then $1=\mathbb P(X\in\operatorname{ran}A)=\int_{\operatorname{ran}A}f\,d\lambda=0$.
-(c) $\ker C=\ker A^T$ (if $AA^Tx=0$ then $|A^Tx|^2=0$), so $\operatorname{ran}C=\operatorname{ran}A$ contains $X$. Let
-$P:\operatorname{ran}C\to\mathbb R^d$ be an isometric isomorphism. Then $PX=(PA)g$ is non-degenerate in $\mathbb R^d$ with
-covariance $PCP^T$, so by (b) its law, and with it the law of $X=P^{-1}(PX)$, depends only on $C$. $\square$
+(c) $\ker C=\ker A^T$ (if $AA^Tx=0$ then $|A^Tx|^2=0$), so $\operatorname{ran}C=(\ker C)^\perp=(\ker A^T)^\perp=\operatorname{ran}A$
+contains $X$. Let $d=\operatorname{rank}C$ (if $d=0$, then $X=0$), choose an orthonormal basis $p_1,\dots,p_d$ of
+$\operatorname{ran}C$ (it depends on $C$ only) and let $P$ be the $d\times m$ matrix with rows $p_k^T$, so that $PP^T=1_d$ and
+$P^TP$ is the orthogonal projection onto $\operatorname{ran}C$. Then $PX=(PA)g$ with $PA$ onto $\mathbb R^d$, a non-degenerate
+centred Gaussian vector with covariance $PCP^T$; by (b) its law depends only on $C$, and so does the law of
+$X=P^T(PX)$. $\square$
 
 For instance, in Chapter 4 the twirl $P$ is a linear projection of $M_n(\mathbb C)$ onto $\mathcal A'$, so
 $Z\mapsto P(Z)$ and $Z\mapsto P(Z+Z^*)$ are real-linear surjections onto $\mathcal A'$ and onto $\mathcal A'_h$ (for
@@ -415,14 +423,14 @@ coordinates of $\sqrt2z$ in the orthonormal basis $(e_i,ie_i)$. By Lemma A.3(c) 
 $(2\pi)^{-n}e^{-|\sqrt2z|^2/2}2^{n}=\pi^{-n}e^{-|z|^2}$. A unitary $U$ is real-linear and preserves
 $\operatorname{Re}\langle u,w\rangle$, hence orthogonal; apply Proposition A.14(b). The coordinates in the basis $(w_i)$ are
 $W^*z$ with $W$ the unitary of columns $w_i$. Finally, with $z_j=x_j+iy_j$,
-$\mathbb E[z_i\bar z_j]=\mathbb E[x_ix_j+y_iy_j]=\delta_{ij}$ and $\mathbb E[z_iz_j]=\mathbb E[x_ix_j-y_iy_j]+i\,\mathbb E[x_iy_j+y_ix_j]=0$.
+$\mathbb E[z_i\bar z_j]=\mathbb E[x_ix_j+y_iy_j]+i\,\mathbb E[y_ix_j-x_iy_j]=\delta_{ij}$ and $\mathbb E[z_iz_j]=\mathbb E[x_ix_j-y_iy_j]+i\,\mathbb E[x_iy_j+y_ix_j]=0$.
 (b) $M_{a\times b}(\mathbb C)\cong\mathbb C^{ab}$ with $|G|=\|G\|_2$, and $X\mapsto VXW$ is unitary for
 $\operatorname{Tr}(X^*Y)$ (conventions after Lemma A.3); apply (a). (c) The same with $\mathbb R^{ab}$ and Proposition A.14. $\square$
 
 **Proposition A.17 (GOE and GUE).** Let $H=(G+G^T)/2$ with $G$ a real $n\times n$ matrix with independent $N(0,1)$ entries
 (GOE), or $H=(G+G^*)/\sqrt2$ with $G$ a Ginibre matrix (GUE). Then the entries $h_{ij}$, $i\le j$, are independent,
 $h_{ii}\sim N(0,1)$, and for $i<j$, $h_{ij}\sim N(0,\frac12)$ (GOE), resp. $\operatorname{Re}h_{ij},\operatorname{Im}h_{ij}$ are
-independent $N(0,\frac12)$ (GUE). The density of $H$ in the coordinates of Lemma A.3 is
+independent $N(0,\frac12)$ (GUE). The density of $H$ in the coordinates fixed after Lemma A.3 is
 $$
 (2\pi)^{-n/2}\pi^{-n(n-1)/4}e^{-\operatorname{Tr}H^2/2}\ \ \text{(GOE)},\qquad
 (2\pi)^{-n/2}\pi^{-n(n-1)/2}e^{-\operatorname{Tr}H^2/2}\ \ \text{(GUE)},
@@ -451,7 +459,8 @@ h = 1 / 400                                              # midpoint rule for the
 grid = (np.arange(400) + 0.5) * h
 xx = np.stack(np.meshgrid(grid, grid, indexing='ij'), -1).reshape(-1, 2)
 dens = np.exp(-0.5 * np.einsum('ni,ij,nj->n', xx, np.linalg.inv(C), xx)) / (2 * math.pi * math.sqrt(np.linalg.det(C)))
-mc(((X >= 0) & (X <= 1)).all(axis=1), dens.sum() * h * h, "P(X in [0,1]^2) against the integral of f_X")
+mc(((X >= 0) & (X <= 1)).all(axis=1), dens.sum() * h * h, "P(X in [0,1]^2) against the integral of f_X",
+   kind="midpoint rule")
 
 nn, B = 4, 100_000                                       # Proposition A.17
 G = rng.standard_normal((B, nn, nn))
@@ -523,9 +532,13 @@ For $O\in O(n)$, $OC(B)=C(OB)$ and $\lambda_n(OE)=\lambda_n(E)$ (Lemma A.3(b)). 
 orthogonal on $\mathbb R^{2N}$. The density of $|g|$ is $s_{2N}(2\pi)^{-N}r^{2N-1}e^{-r^2/2}$ with $s_{2N}=2\pi^N/(N-1)!$, and the
 substitution $t=r^2/2$ gives the density of $|z|^2$; then $\mathbb E|z|^4=\int_0^\infty t^{N+1}e^{-t}dt/(N-1)!=(N+1)N$. $\square$
 
-Lemma 7.9 is part (b). For $N=1$, $\sigma_1$ is normalised arc length: the cone over the arc
-$\{e^{i\theta}:\alpha\le\theta<\beta\}$ is a sector of area $(\beta-\alpha)/2$ (polar coordinates $re^{i\theta}$, Jacobian $r$),
-and $V_2=\pi$.
+Lemma 7.9 is part (b). For $N=1$, $\sigma_1$ is normalised arc length, that is, the push-forward of
+$\frac1{2\pi}\lambda_1$ on $[0,2\pi)$ under $\theta\mapsto e^{i\theta}$: for Borel $B\subseteq S^1$ let
+$\Theta(B)=\{\theta\in(0,2\pi):e^{i\theta}\in B\}$. The map $(r,\theta)\mapsto re^{i\theta}$ is a $C^1$ bijection of the open set
+$(0,1)\times(0,2\pi)$ onto the open unit disc minus the segment $[0,1)$, with Jacobian $r$, and $C(B)$ differs from the
+image of $(0,1)\times\Theta(B)$ by a subset of that segment and of the unit circle, a null set. By the change of variables
+formula $\lambda_2(C(B))=\int_{\Theta(B)}\int_0^1r\,dr\,d\theta=\frac12\lambda_1(\Theta(B))$, and with $V_2=\pi$,
+$\sigma_1(B)=\lambda_1(\Theta(B))/2\pi$ (the point $\theta=0$ is a null set).
 
 **Corollary A.21 (moments of a uniform unit vector).** If $u\sim\sigma_{2N-1}$ on the unit sphere of $\mathbb C^N$, then
 $\mathbb E[u_a\bar u_b]=\delta_{ab}/N$, $\mathbb E|u_1|^4=\frac2{N(N+1)}$ and $\mathbb E|u_1|^2|u_2|^2=\frac1{N(N+1)}$ ($N\ge2$). If
@@ -536,8 +549,11 @@ $\mathbb Eu_1^2u_2^2=\frac1{n(n+2)}$.
 $\delta_{ab}=\mathbb E[z_a\bar z_b]=\mathbb E|z|^2\,\mathbb E[u_a\bar u_b]=N\,\mathbb E[u_a\bar u_b]$ ($\mathbb E|z|^2=N$ by
 Proposition A.16(a)). Likewise $\mathbb E|z_1|^4=N(N+1)\mathbb E|u_1|^4$ and
 $\mathbb E|z_1|^2|z_2|^2=N(N+1)\mathbb E|u_1|^2|u_2|^2$, where $\mathbb E|z_1|^2|z_2|^2=1$ by independence and
-$\mathbb E|z_1|^4=\mathbb E(x^2+y^2)^2=\frac34+2\cdot\frac14+\frac34=2$ for $x,y\sim N(0,\frac12)$. In the real case
-$\mathbb E|g|^2=n$, $\mathbb E|g|^4=s_n(2\pi)^{-n/2}I_{n+4}=I_{n+4}/I_n=n(n+2)$, $\mathbb Eg_1^4=3$, $\mathbb Eg_1^2g_2^2=1$. $\square$
+$\mathbb E|z_1|^4=\mathbb E(x^2+y^2)^2=\frac34+2\cdot\frac14+\frac34=2$ for independent $x,y\sim N(0,\frac12)$. (For
+$Y\sim N(0,s^2)$, integration by parts gives $\mathbb EY^4=3s^2\,\mathbb EY^2=3s^4$, since
+$y^3\cdot ye^{-y^2/2s^2}=-s^2y^3\frac d{dy}e^{-y^2/2s^2}$.) In the real case $\mathbb E|g|^2=n$,
+$\mathbb E|g|^4=s_n(2\pi)^{-n/2}I_{n+4}=I_{n+4}/I_n=n(n+2)$ (Corollary A.19), $\mathbb Eg_1^4=3$, $\mathbb Eg_1^2g_2^2=1$, and
+$|g|^2$, $|g|^4$ are independent of $u=g/|g|$ (Theorem A.20(a)). $\square$
 
 These agree with Lemma 6.14, which derives them from unitary invariance alone. Conversely, invariance determines the law:
 
@@ -547,7 +563,7 @@ on the circle is normalised arc length.
 
 *Proof.* Let $Q$ be Haar distributed on $U(N)$ (Theorem 5.3) and independent of $u$. For a fixed unit vector $v$ choose
 $W\in U(N)$ with $We_1=v$. By Lemma 5.1, $QW$ is Haar distributed, so $Qv=(QW)e_1$ has the law of $Qe_1$. In
-Theorem 5.3, $Q$ is the Gram–Schmidt factor of a Ginibre matrix, so $Qe_1=z/|z|$ for its first column $z$, which has
+Theorem 5.3, $Q$ is the Gram–Schmidt factor of a Ginibre matrix (Lemma 5.2), so $Qe_1=z/|z|$ for its first column $z$, which has
 the law $\sigma_{2N-1}$ by Theorem A.20(b). Conditioning on $u$ (Fubini, independence), $\mathbb P(Qu\in B)=\sigma_{2N-1}(B)$
 for every Borel $B$. Conditioning on $Q$ instead, and using that $Uu$ has the law of $u$ for each fixed unitary $U$,
 $\mathbb P(Qu\in B)=\mathbb P(u\in B)$. A probability measure on the circle is the law of the identity map, and
@@ -587,7 +603,8 @@ $\langle t,Y\rangle=\sum_ka_kg_k$, and by independence
 $\mathbb Ee^{\langle t,Y\rangle}=\prod_k\mathbb Ee^{a_kg_k}=\prod_ke^{a_k^2/2}=e^{|A^Tt|^2/2}=e^{\langle t,Ct\rangle/2}$. Finally
 $e^{|s|}\le e^s+e^{-s}$ and $|Y_i|^k\le k!\,e^{|Y_i|}$. $\square$
 
-A **pairing** of $\{1,\dots,2p\}$ is a partition into $p$ two-element blocks; there are $(2p-1)!!=(2p)!/(2^pp!)$ of them.
+A **pairing** of $\{1,\dots,2p\}$ is a partition into $p$ two-element blocks; there are $(2p-1)!!=(2p)!/(2^pp!)$ of them
+(the partner of $1$ can be chosen in $2p-1$ ways, and the remaining $2p-2$ elements are then paired; induction on $p$).
 
 **Theorem A.24 (Isserlis–Wick).** Let $Y_1,\dots,Y_m$ be coordinates of a centred Gaussian vector (repetitions
 allowed). If $m$ is odd, $\mathbb E[Y_1\cdots Y_m]=0$; if $m=2p$,
@@ -605,8 +622,9 @@ convergence and Lemma A.23,
 $$
 \sum_{k\ge0}\frac{s^k}{k!}\mathbb E[S^k]=\mathbb Ee^{sS}=e^{s^2q/2}=\sum_{p\ge0}\frac{s^{2p}q^p}{2^pp!},\qquad q=\langle t,Ct\rangle .
 $$
-Both sides are power series in $s$ converging on $\mathbb R$, so their coefficients agree (Lemma A.5(c) applied to the
-difference). Hence $\mathbb E\langle t,Y\rangle^m/m!$ equals $0$ for odd $m$ and $\langle t,Ct\rangle^p/(2^pp!)$ for $m=2p$, for every
+Both sides are power series on $\mathbb R$ in the sense of Section A.2: on the right this is clear, and on the left
+$\sum_k\frac{\rho^k}{k!}|\mathbb E[S^k]|\le\mathbb E\sum_k\frac{\rho^k|S|^k}{k!}=\mathbb Ee^{\rho|S|}<\infty$ for every $\rho>0$
+(monotone convergence and Lemma A.23). So their coefficients agree (Lemma A.5(c) applied to the difference). Hence $\mathbb E\langle t,Y\rangle^m/m!$ equals $0$ for odd $m$ and $\langle t,Ct\rangle^p/(2^pp!)$ for $m=2p$, for every
 $t\in\mathbb R^m$. Both sides are polynomials in $t$, so their coefficients agree (Corollary A.7(a) applied to the difference).
 In $\mathbb E\langle t,Y\rangle^m=\sum_{i_1,\dots,i_m}t_{i_1}\cdots t_{i_m}\mathbb E[Y_{i_1}\cdots Y_{i_m}]$ the monomial $t_1t_2\cdots t_m$
 comes from the $m!$ sequences $(i_1,\dots,i_m)$ that are permutations of $(1,\dots,m)$, so its coefficient in
@@ -682,11 +700,12 @@ $U_{(1)}<\dots<U_{(n)}$ and spacings $s_0=U_{(1)}$, $s_k=U_{(k+1)}-U_{(k)}$ ($1\
 
 (c) $\mathbb Es_i=\frac1{n+1}$, $\mathbb Es_i^2=\frac2{(n+1)(n+2)}$ and $\mathbb E[s_is_j]=\frac1{(n+1)(n+2)}$ for $i\neq j$;
 
-(d) for $i\neq j$, $s_i/s_j$ has the law of $e_i/e_j$, with $\mathbb P(e_i/e_j\le t)=\frac t{1+t}$; so the spacing ratio
-$\min(s_i,s_{i+1})/\max(s_i,s_{i+1})$ has the law of Proposition 5.14 and the mean $2\ln2-1$.
+(d) for $i\neq j$, $s_i/s_j$ has the law of $e_i/e_j$, with $\mathbb P(e_i/e_j\le t)=\frac t{1+t}$ ($t>0$); so for
+$0\le i\le n-1$ the spacing ratio $\min(s_i,s_{i+1})/\max(s_i,s_{i+1})$ has the law of $\min(e_i,e_{i+1})/\max(e_i,e_{i+1})$
+found in Proposition 5.14(a), $\mathbb P(r\le t)=\frac{2t}{1+t}$ on $[0,1]$, with mean $2\ln2-1$.
 
-The same holds for $n$ independent uniform points on any interval $[a,b]$, since the affine map $u\mapsto a+(b-a)u$
-multiplies all spacings by $b-a$.
+For $n$ independent uniform points on an interval $[a,b]$, the affine map $u\mapsto a+(b-a)u$ multiplies all spacings
+by $b-a$: the spacings divided by $b-a$ satisfy (b) and (c), and the ratios in (d) are unchanged.
 
 *Proof.* (a) The set where two coordinates coincide is a finite union of hyperplanes, a null set (Corollary A.7(c)). Off it
 there is exactly one permutation $\pi$ with $U_{\pi(1)}<\dots<U_{\pi(n)}$, so for Borel $E\subseteq\Delta_n$ the event
@@ -697,11 +716,17 @@ $1_{(0,1)^n}$ and permuting coordinates preserves both $\lambda_n$ and $(0,1)^n$
 function of either. (c) Let $w=(e_0,\dots,e_n)/T$, independent of $T$ (Theorem A.25), with $\mathbb ET=n+1$ and
 $\mathbb ET^2=\int_0^\infty t^{n+2}e^{-t}dt/n!=(n+1)(n+2)$. From $e_i=Tw_i$: $1=\mathbb Ee_i=\mathbb ET\,\mathbb Ew_i$,
 $2=\mathbb Ee_i^2=\mathbb ET^2\,\mathbb Ew_i^2$ and $1=\mathbb E[e_ie_j]=\mathbb ET^2\,\mathbb E[w_iw_j]$. (d) $s_i/s_j=w_i/w_j=e_i/e_j$, and by
-Tonelli $\mathbb P(e_i\le te_j)=\int_0^\infty e^{-y}(1-e^{-ty})\,dy=1-\frac1{1+t}$; the rest is Proposition 5.14. $\square$
+Tonelli $\mathbb P(e_i\le te_j)=\int_0^\infty e^{-y}(1-e^{-ty})\,dy=1-\frac1{1+t}$. The spacing ratio is a function of
+$s_i/s_{i+1}$ (namely $\min(x,1/x)$ at $x=s_i/s_{i+1}$, defined almost surely since all $e_k>0$), so it has the law of the
+same function of $e_i/e_{i+1}$, which is the ratio $r$ of Proposition 5.14(a) for the independent $\operatorname{Exp}(1)$
+variables $e_i,e_{i+1}$. $\square$
 
-In particular the "Poisson levels" $\lambda_k=e_1+\dots+e_k$ (independent exponential spacings) and $n$ sorted uniform
-levels are two models of independent levels with the same spacing-ratio statistics; by Theorem A.25 the first $n$ Poisson
-levels divided by the $(n+1)$-st have exactly the law of $n$ sorted uniform points.
+In particular, consider the "Poisson levels" $\lambda_k=e_0+\dots+e_{k-1}$, $k=1,\dots,n+1$ (independent exponential
+spacings $e_0,\dots,e_n$), and $n$ sorted uniform points with their $n+1$ spacings $s_0,\dots,s_n$. The vector of
+consecutive spacing ratios $r_i=\min(d_i,d_{i+1})/\max(d_i,d_{i+1})$, $0\le i<n$, has the same joint law for
+$d=(e_0,\dots,e_n)$ and for $d=(s_0,\dots,s_n)$, because the ratios do not change when all $d_i$ are divided by $T$, and
+$(e_0,\dots,e_n)/T$ has the law of $(s_0,\dots,s_n)$ (part (b)); and by Theorem A.25 the first $n$ Poisson levels divided by the $(n+1)$-st have exactly the law of $n$ sorted
+uniform points.
 
 ```python
 n, B = 5, 200_000                                       # Corollary A.26
