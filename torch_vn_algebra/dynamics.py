@@ -65,14 +65,16 @@ def schrodinger(psi0: torch.Tensor, H: Operator, times) -> torch.Tensor:
     if psi0.dtype in (torch.float64, torch.complex128) and H.matrix.dtype in (torch.float32, torch.complex64):
         warnings.warn("schrodinger: psi0 is in double but H in single precision; the evolution is computed in single "
                       "precision (create H in a double-precision algebra)", UserWarning, stacklevel=2)
+    alg = H.algebra
+    Bh = H.matrix.shape[0]
     out = torch.zeros(len(ts), *psi0.shape, dtype=H.matrix.dtype, device=psi0.device)
-    for c, (w, V) in enumerate(H.eigh()):
-        k_c = H.algebra.k_factors[c]
-        if k_c == 0:
-            continue
-        coeff = (V.conj().transpose(-2, -1) @ psi0[:, c, :k_c, None].to(V.dtype)).squeeze(-1)  # (B, k)
-        phase = torch.exp(-1j * ts[:, None, None] * w[None].double()).to(V.dtype)          # (T, B, k)
-        out[:, :, c, :k_c] = (V[None] @ (phase * coeff[None]).unsqueeze(-1)).squeeze(-1)
+    for k, idx, _, (w, V) in H._decompositions('hermitian'):      # one decomposition per block size
+        n = len(idx)
+        sel = alg._sel(idx)
+        V = V.reshape(Bh, n, k, k)
+        coeff = (V.conj().transpose(-2, -1) @ psi0[:, sel, :k, None].to(V.dtype)).squeeze(-1)   # (B, n, k)
+        phase = torch.exp(-1j * ts[:, None, None, None] * w.reshape(Bh, n, k)[None].double()).to(V.dtype)
+        out[:, :, sel, :k] = (V[None] @ (phase * coeff[None]).unsqueeze(-1)).squeeze(-1)     # (T, B, n, k)
     return out
 
 
@@ -80,19 +82,26 @@ def von_neumann(rho0: Operator, H: Operator, times) -> List[Operator]:
     """rho(t) = U(t) rho0 U(t)^* for every t in `times` (exact)."""
     _require_complex(H.algebra)
     alg = H.algebra
-    blocks = H.eigh()
     rho = rho0.matrix.to(H.matrix.dtype)
-    B = max(rho.shape[0], H.matrix.shape[0])              # one initial state for a batch of Hamiltonians, or vice versa
+    Bh = H.matrix.shape[0]
+    B = max(rho.shape[0], Bh)                             # one initial state for a batch of Hamiltonians, or vice versa
     rho = rho.expand(B, *rho.shape[1:])
+    ts = _times(times, rho.device)
+    T = len(ts)
+    cost.check_memory(2 * T * rho.numel() * rho.element_size(), rho.device, f"von_neumann ({T} time points)")
+    traj = torch.zeros(T, *rho.shape, dtype=rho.dtype, device=rho.device)
+    for k, idx, _, (w, V) in H._decompositions('hermitian'):      # one decomposition per block size
+        n = len(idx)
+        sel = alg._sel(idx)
+        V = V.reshape(Bh, n, k, k)
+        Vh = V.conj().transpose(-2, -1)
+        R = Vh @ rho[:, sel, :k, :k] @ V                                  # rho in the eigenbasis, (B, n, k, k)
+        wd = w.reshape(Bh, n, k).double()
+        # all times at once: rho(t)_ij = exp(-i t (w_i - w_j)) rho_ij in the eigenbasis (phases in double)
+        phase = torch.exp(-1j * ts[:, None, None, None, None] * (wd[..., :, None] - wd[..., None, :])[None])
+        traj[:, :, sel, :k, :k] = V[None] @ (phase.to(R.dtype) * R[None]) @ Vh[None]
     out = []
-    for t in _times(times, rho.device).tolist():
-        mat = torch.zeros_like(rho)
-        for c, (w, V) in enumerate(blocks):
-            k_c = alg.k_factors[c]
-            if k_c == 0:
-                continue
-            U = (V * torch.exp(-1j * t * w.double()).to(V.dtype).unsqueeze(-2)) @ V.conj().transpose(-2, -1)
-            mat[:, c, :k_c, :k_c] = U @ rho[:, c, :k_c, :k_c] @ U.conj().transpose(-2, -1)
+    for mat in traj:
         if isinstance(rho0, DensityMatrix):
             out.append(DensityMatrix(alg, matrix=mat, validate=False))
         else:
@@ -111,25 +120,25 @@ def rk4(f: Callable[[float, torch.Tensor], torch.Tensor], y0: torch.Tensor, time
     After the first step a CostWarning reports the expected run time if it is long;
     progress=True shows a progress bar (tqdm if installed).
     """
-    ts = _times(times, y0.device).tolist()
+    ts = _times(times, 'cpu').tolist()                     # the grid stays on the host (no device round trip)
     y = y0
-    out = [y0]
     cost.check_memory(len(ts) * y0.numel() * y0.element_size(), y0.device, f"rk4 trajectory ({len(ts)} time points)")
+    out = y0.new_empty((len(ts), *y0.shape))
+    out[0] = y0
     timer = cost.StepTimer(max(len(ts) - 1, 0) * substeps, "rk4", progress)
-    for t0, t1 in zip(ts[:-1], ts[1:]):
+    for i, (t0, t1) in enumerate(zip(ts[:-1], ts[1:])):
         h = (t1 - t0) / substeps
-        t = t0
-        for _ in range(substeps):
+        for s_ in range(substeps):
+            t = t0 + s_ * h                                 # no accumulated rounding of t
             k1 = f(t, y)
             k2 = f(t + h / 2, y + h / 2 * k1)
             k3 = f(t + h / 2, y + h / 2 * k2)
             k4 = f(t + h, y + h * k3)
             y = y + h / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
-            t += h
             timer.step(y.device)
-        out.append(y)
+        out[i + 1] = y
     timer.close()
-    return torch.stack(out)
+    return out
 
 
 def solve_operator_ode(f: Callable[[float, torch.Tensor], torch.Tensor], X0: Operator, times,
@@ -148,11 +157,16 @@ def schrodinger_rk4(psi0: torch.Tensor, H_of_t: Callable[[float], OperatorLike],
     """i dpsi/dt = H(t) psi for a (possibly time-dependent) Hamiltonian; shape (T, batch, C, k_max)."""
     if psi0.dim() == 4:
         psi0 = psi0.squeeze(-1)
+    const = None if callable(H_of_t) and not isinstance(H_of_t, Operator) else _mat(H_of_t)
+    if const is not None:
+        psi0 = psi0.to(const.device)
+    y0 = psi0.to(torch.promote_types(psi0.dtype, torch.complex64))
+    Hc = None if const is None else (-1j * const.to(y0.dtype))      # hoisted: constant H is cast once
 
     def f(t, psi):
-        H = _mat(H_of_t(t)).to(psi.dtype)
-        return -1j * (H @ psi.unsqueeze(-1)).squeeze(-1)
-    return rk4(f, psi0.to(torch.promote_types(psi0.dtype, torch.complex64)), times, substeps, progress)
+        A = Hc if Hc is not None else -1j * _mat(H_of_t(t)).to(psi.dtype)
+        return (A @ psi.unsqueeze(-1)).squeeze(-1)
+    return rk4(f, y0, times, substeps, progress)
 
 
 # ----------------------------------------------------------------------
@@ -173,39 +187,73 @@ def lindblad_rhs(H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
     as a function (t, rho_matrix) -> drho/dt. H and L_j are constant, or callables of t.
 
     A jump that moves weight between sectors (particle loss N -> N-1, ...) is passed as an
-    InterSectorChannel of the algebra into itself: each of its Kraus operators K_i is one jump operator
-    (blocks K_i^{dc}), contributing sum_i (K_i rho K_i^* - 1/2 {K_i^* K_i, rho}); K_i^* K_i is block
-    diagonal, so the generator still maps M into M and conserves the total trace.
+    InterSectorChannel Phi of the algebra into itself; it contributes Phi(rho) - 1/2 {Phi^*(1), rho}, where
+    Phi^*(1)_c = sum_{d,i} K_i^{dc*} K_i^{dc} is block diagonal. This is the GKSL generator of the jumps
+    K_i^{dc} compressed to M (the conditional expectation onto M applied to the generator on B(H)); it maps M
+    into M and conserves the total trace. Constant H and jumps are combined once (H_eff = H - i/2 sum g L^* L);
+    callables of t are evaluated at every step.
     """
     rates = _rates(jumps, rates)
-    sector_jumps = {}
-    for idx, L in enumerate(jumps):
-        if isinstance(L, InterSectorChannel):
-            if L.algebra_in.k_factors != L.algebra_out.k_factors:
-                raise ValueError("a jump between sectors must map the algebra into itself")
-            K = L.kraus                                                    # (B, r, D, C, m, k)
-            sector_jumps[idx] = (K, (K.conj().transpose(-2, -1) @ K).sum(dim=(1, 2)))   # (B, C, k, k)
+    for L in jumps:
+        if isinstance(L, Channel):
+            raise TypeError("a sector-preserving Channel is not a jump operator; pass its Kraus operators, or "
+                            "channel.to_inter_sector() for a jump between sectors")
+    inter = [(g, L) for g, L in zip(rates, jumps) if isinstance(L, InterSectorChannel)]
+    for _, L in inter:
+        if L.algebra_in.k_factors != L.algebra_out.k_factors:
+            raise ValueError("a jump between sectors must map the algebra into itself")
+    plain = [(g, L) for g, L in zip(rates, jumps) if not isinstance(L, InterSectorChannel)]
+    timedep = (callable(H) and not isinstance(H, Operator)) or any(callable(L) and not isinstance(L, Operator)
+                                                                     for _, L in plain)
 
     def get(x, t):
-        return _mat(x(t) if callable(x) else x)
+        return _mat(x(t) if callable(x) and not isinstance(x, Operator) else x)
+
+    def parts(t, dtype, device):
+        """(H_eff, stacked jumps (B, J, C, k, k) with their rates, inter-sector Kraus tensors): with
+        A = sum_j g_j L_j^* L_j, drho/dt = -i (H_eff rho - rho H_eff^*) + sum_j g_j L_j rho L_j^* + (between
+        sectors) with H_eff = H - (i/2) A."""
+        Heff = None
+        if H is not None:
+            Heff = get(H, t).to(device=device, dtype=dtype)
+        A = None
+        Ls, gs = None, None
+        if plain:
+            Ls = torch.stack(torch.broadcast_tensors(*[get(L, t).to(device=device, dtype=dtype) for _, L in plain]),
+                             dim=1)                                           # (B, J, C, k, k)
+            gs = torch.tensor([g for g, _ in plain], dtype=Ls.real.dtype, device=device)
+            A = torch.einsum('j,bjcai,bjcak->bcik', gs.to(dtype), Ls.conj(), Ls)
+        Ks = []
+        for g, L in inter:
+            K = L.kraus.to(device=device, dtype=dtype)                        # (B, r, D, C, m, k)
+            KdK = (K.conj().transpose(-2, -1) @ K).sum(dim=(1, 2))            # (B, C, k, k), block diagonal
+            A = g * KdK if A is None else A + g * KdK
+            Ks.append((g, K))
+        if A is not None:
+            Heff = -0.5j * A if Heff is None else Heff - 0.5j * A
+        return Heff, Ls, gs, Ks
+
+    cache = {}
 
     def f(t, rho):
-        out = torch.zeros_like(rho)
-        if H is not None:
-            Hm = get(H, t).to(rho.dtype)
-            out = out - 1j * (Hm @ rho - rho @ Hm)
-        for idx, (g, L) in enumerate(zip(rates, jumps)):
-            if idx in sector_jumps:
-                K, KdK = sector_jumps[idx]
-                Kd = K.to(rho.dtype)
-                gain = (Kd @ rho[:, None, None] @ Kd.conj().transpose(-2, -1)).sum(dim=(1, 3))
-                KdK = KdK.to(rho.dtype)
-                out = out + g * (gain - 0.5 * (KdK @ rho + rho @ KdK))
-                continue
-            Lm = get(L, t).to(rho.dtype)
-            Ld = Lm.conj().transpose(-2, -1)
-            LdL = Ld @ Lm
-            out = out + g * (Lm @ rho @ Ld - 0.5 * (LdL @ rho + rho @ LdL))
+        key = (rho.dtype, rho.device)
+        if timedep or key not in cache:
+            cache[key] = parts(t, rho.dtype, rho.device)
+        Heff, Ls, gs, Ks = cache[key]
+        out = torch.zeros_like(rho) if Heff is None else -1j * (Heff @ rho - rho @ Heff.conj().transpose(-2, -1))
+        if Ls is not None:                     # sum_j g_j L_j rho L_j^*: one product over the merged (j, column) index
+            X = (Ls @ rho.unsqueeze(1)) * gs[:, None, None, None].to(rho.dtype)          # (B, J, C, k, k)
+            Bx, J, C, k = X.shape[0], X.shape[1], X.shape[2], X.shape[-1]
+            Xc = X.permute(0, 2, 3, 1, 4).reshape(Bx, C, k, J * k)
+            Lc = Ls.permute(0, 2, 3, 1, 4).reshape(Ls.shape[0], C, k, J * k)
+            out = out + Xc @ Lc.conj().transpose(-2, -1)
+        for g, K in Ks:                        # gain between sectors: sum_{i, c} K^{dc} rho_c K^{dc*}
+            B_, r, D, C, m, k = K.shape
+            X = K @ rho[:, None, None]                                          # (B, r, D, C, m, k)
+            Bx = X.shape[0]
+            Xc = X.permute(0, 2, 4, 1, 3, 5).reshape(Bx, D, m, r * C * k)
+            Kc = K.permute(0, 2, 4, 1, 3, 5).reshape(B_, D, m, r * C * k)
+            out = out + g * (Xc @ Kc.conj().transpose(-2, -1))
         return out
     return f
 
@@ -231,9 +279,10 @@ def lindblad_evolve(rho0: Operator, H: Optional[OperatorLike], jumps: Sequence[O
     y0 = y0.expand(max(batches), *y0.shape[1:]).clone()
     ys = rk4(lindblad_rhs(H, jumps, rates), y0, times, substeps, progress)
     alg = rho0.algebra
+    ys = 0.5 * (ys + ys.conj().transpose(-2, -1))          # once for the whole trajectory
     if isinstance(rho0, DensityMatrix):
-        return [DensityMatrix(alg, matrix=0.5 * (y + y.conj().transpose(-2, -1)), validate=False) for y in ys]
-    return [alg.operator(0.5 * (y + y.conj().transpose(-2, -1)), is_self_adjoint=True) for y in ys]
+        return [DensityMatrix(alg, matrix=y, validate=False) for y in ys]
+    return [alg.operator(y, is_self_adjoint=True) for y in ys]
 
 
 def _kron(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
@@ -242,9 +291,9 @@ def _kron(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
     return (A[..., :, None, :, None] * B[..., None, :, None, :]).reshape(*batch, k * k, k * k)
 
 
-def lindblad_superoperator(alg: TypeIAlgebra, H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
-                           rates: Optional[Sequence[float]] = None) -> List[torch.Tensor]:
-    """Per-channel generator matrices acting on row-major vec(rho), shape (batch, k_c^2, k_c^2)."""
+def _lindblad_generators(alg: TypeIAlgebra, H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
+                         rates: Optional[Sequence[float]] = None):
+    """[(k, idx, G)] with G (batch, n, k^2, k^2) the generators of the n sectors of block size k (row-major vec)."""
     rates = _rates(jumps, rates)
     for L in jumps:
         if type(L).__name__ == 'InterSectorChannel':
@@ -256,24 +305,49 @@ def lindblad_superoperator(alg: TypeIAlgebra, H: Optional[OperatorLike], jumps: 
     mats = ([_mat(H)] if H is not None else []) + [_mat(L) for L in jumps]
     if not mats:
         raise ValueError("need a Hamiltonian or at least one jump operator")
-    dtype = torch.complex128 if H is not None else torch.promote_types(mats[0].dtype, torch.float64)
+    dtype = torch.float64
+    for m in mats:
+        dtype = torch.promote_types(dtype, m.dtype)
+    if H is not None:
+        dtype = torch.complex128
+    dev = mats[0].device
     batch = max(m.shape[0] for m in mats)
-    # peak: the generator, one Kronecker product per term and the exponential / Choi / eigenvector
-    # workspaces of lindblad_channel, all of size k_c^4 per sample
-    cost.check_memory((len(jumps) + 10) * max(cost.tensor_bytes((batch, k * k, k * k), dtype) for k in alg.k_factors),
-                      mats[0].device, f"Lindblad superoperator / exp(tL) (batch {batch}, k_c^2 x k_c^2 per sector)")
+    # peak: the generator, a few Kronecker products and the exponential / Choi / eigenvector workspaces of
+    # lindblad_channel, all of size k_c^4 per sector and sample
+    cost.check_memory(12 * sum(cost.tensor_bytes((batch, k * k, k * k), dtype) for k in alg.k_factors),
+                      dev, f"Lindblad superoperator / exp(tL) (batch {batch}, k_c^2 x k_c^2 per sector)")
     out = []
-    for c, k_c in enumerate(alg.k_factors):
-        eye = torch.eye(k_c, dtype=dtype, device=mats[0].device)
-        G = torch.zeros(batch, k_c * k_c, k_c * k_c, dtype=dtype, device=mats[0].device)
+    for k, idx in alg._size_groups():
+        sel = alg._sel(idx)
+        n = len(idx)
+        eye = torch.eye(k, dtype=dtype, device=dev)
+        G = torch.zeros(batch, n, k * k, k * k, dtype=dtype, device=dev)
+        A = None
+        if jumps:
+            Ls = torch.stack(torch.broadcast_tensors(*[_mat(L)[:, sel, :k, :k].to(device=dev, dtype=dtype)
+                                                       for L in jumps]), dim=1)      # (B, J, n, k, k)
+            g = torch.tensor(rates, dtype=dtype, device=dev)
+            # sum_j g_j L_j (x) conj(L_j) in one contraction, and A = sum_j g_j L_j^* L_j
+            G = G + torch.einsum('j,bjnai,bjnck->bnacik', g, Ls, Ls.conj()).reshape(Ls.shape[0], n, k * k, k * k)
+            A = torch.einsum('j,bjnai,bjnak->bnik', g, Ls.conj(), Ls)
         if H is not None:
-            Hc = _mat(H)[:, c, :k_c, :k_c].to(dtype)
+            Hc = _mat(H)[:, sel, :k, :k].to(device=dev, dtype=dtype)
             G = G - 1j * (_kron(Hc, eye) - _kron(eye, Hc.transpose(-2, -1)))
-        for g, L in zip(rates, jumps):
-            Lc = _mat(L)[:, c, :k_c, :k_c].to(dtype)
-            LdL = Lc.conj().transpose(-2, -1) @ Lc
-            G = G + g * (_kron(Lc, Lc.conj()) - 0.5 * _kron(LdL, eye) - 0.5 * _kron(eye, LdL.transpose(-2, -1)))
-        out.append(G)
+        if A is not None:
+            G = G - 0.5 * (_kron(A, eye) + _kron(eye, A.transpose(-2, -1)))
+        out.append((k, idx, G))
+    return out
+
+
+def lindblad_superoperator(alg: TypeIAlgebra, H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
+                           rates: Optional[Sequence[float]] = None) -> List[torch.Tensor]:
+    """Per-channel generator matrices acting on row-major vec(rho), shape (batch, k_c^2, k_c^2)."""
+    groups = _lindblad_generators(alg, H, jumps, rates)
+    dtype, dev = groups[0][2].dtype, groups[0][2].device
+    out = [torch.zeros(groups[0][2].shape[0], 0, 0, dtype=dtype, device=dev)] * alg.C
+    for k, idx, G in groups:
+        for j, c in enumerate(idx):
+            out[c] = G[:, j]
     return out
 
 
@@ -281,10 +355,21 @@ def lindblad_channel(alg: TypeIAlgebra, H: Optional[OperatorLike], jumps: Sequen
                      t: float = 1.0, rates: Optional[Sequence[float]] = None) -> Channel:
     """
     The channel exp(t L) of a time-independent Lindblad generator, computed exactly in double
-    precision from the k_c^2 x k_c^2 superoperators (practical for k_c up to a few tens).
+    precision from the k_c^2 x k_c^2 superoperators (practical for k_c up to a few tens); one matrix exponential
+    and one Choi eigendecomposition per block size.
     """
     if H is not None:
         _require_complex(alg)
-    S = [cost.batched_call(torch.linalg.matrix_exp, t * G, f"exp(tL) (sector {c}, size {G.shape[-1]})", kind='expm')
-         for c, G in enumerate(lindblad_superoperator(alg, H, jumps, rates))]
-    return Channel.from_superoperator(alg, S)
+    groups = _lindblad_generators(alg, H, jumps, rates)
+    S = [None] * alg.C
+    for k, idx, G in groups:
+        E = cost.batched_call(torch.linalg.matrix_exp, (t * G).reshape(-1, k * k, k * k),
+                              f"exp(tL) (blocks of size {k * k})", kind='expm').reshape(G.shape)
+        for j, c in enumerate(idx):
+            S[c] = E[:, j]
+    for c, k_c in enumerate(alg.k_factors):
+        if S[c] is None:
+            S[c] = torch.zeros(groups[0][2].shape[0], 0, 0, dtype=groups[0][2].dtype, device=groups[0][2].device)
+    ch = Channel.from_superoperator(alg, S)
+    ch._trace_preserving = True                   # exp(tL) of a GKSL generator is trace preserving
+    return ch

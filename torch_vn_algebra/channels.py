@@ -20,7 +20,7 @@ from typing import List, Optional, Sequence
 
 import torch
 
-from .algebra import TypeIAlgebra
+from .algebra import TypeIAlgebra, _same_device
 from . import cost
 from .states import DensityMatrix, _trace_weights
 
@@ -29,7 +29,7 @@ Operator = TypeIAlgebra.Operator
 
 def _same_structure(a: TypeIAlgebra, b: TypeIAlgebra) -> bool:
     return a is b or (a.k_factors == b.k_factors and a.n_factors == b.n_factors and a.charges == b.charges
-                      and a.dtype == b.dtype and a.hilbert.device == b.hilbert.device)
+                      and a.dtype == b.dtype and _same_device(a.hilbert.device, b.hilbert.device))
 
 
 def _check_input(op, alg: TypeIAlgebra, what: str) -> None:
@@ -44,7 +44,8 @@ def _check_input(op, alg: TypeIAlgebra, what: str) -> None:
 class Channel:
     """Sector-preserving completely positive map given by Kraus operators."""
 
-    def __init__(self, algebra: TypeIAlgebra, kraus: torch.Tensor):
+    def __init__(self, algebra: TypeIAlgebra, kraus: torch.Tensor, trace_preserving: Optional[bool] = None):
+        """trace_preserving: known by construction (not checked); None: checked on first use with a state."""
         if kraus.dim() == 4:                   # (r, C, k, k): a single channel
             kraus = kraus.unsqueeze(0)
         expected = (algebra.C, algebra.k_max, algebra.k_max)
@@ -52,9 +53,11 @@ class Channel:
             raise ValueError(f"Kraus tensor must have shape (batch, r, {algebra.C}, {algebra.k_max}, "
                              f"{algebra.k_max}), got {tuple(kraus.shape)}")
         kraus = algebra._to_field(kraus, "Kraus operators")
+        if any(k_c < algebra.k_max for k_c in algebra.k_factors):        # the padding must be zero
+            kraus = kraus * algebra._const('block_mask', torch.bool)
         self.algebra = algebra
-        self.kraus = kraus.to(device=algebra.hilbert.device)
-        self._trace_preserving = None
+        self.kraus = kraus
+        self._trace_preserving = trace_preserving
 
     # ------------------------------------------------------------------
     @property
@@ -79,16 +82,21 @@ class Channel:
         K = self.kraus
 
         def generator():
-            rho = op.matrix.unsqueeze(1)
+            rho = op.matrix
             dtype = torch.promote_types(rho.dtype, K.dtype)
             B = max(rho.shape[0], K.shape[0])
-            cost.check_memory(3 * cost.tensor_bytes((B, *K.shape[1:]), dtype), K.device,
-                              f"Channel.apply (batch {B}, Kraus rank {K.shape[1]})")
+            r, C, k = K.shape[1], K.shape[2], K.shape[-1]
+            cost.check_memory(2 * cost.tensor_bytes((B, *K.shape[1:]), dtype), K.device,
+                              f"Channel.apply (batch {B}, Kraus rank {r})")
             Kd = K.to(dtype)
-            return (Kd @ rho.to(dtype) @ Kd.conj().transpose(-2, -1)).sum(dim=1)
+            X = Kd @ rho.to(dtype).unsqueeze(1)                                # (B, r, C, k, k)
+            # sum_i X_i K_i^* as one product over the merged index (i, column)
+            Xc = X.permute(0, 2, 3, 1, 4).reshape(B, C, k, r * k)
+            Kc = Kd.permute(0, 2, 3, 1, 4).reshape(Kd.shape[0], C, k, r * k)
+            return Xc @ Kc.conj().transpose(-2, -1)
 
         if isinstance(op, DensityMatrix):
-            if self._trace_preserving is None:
+            if self._trace_preserving is None:                 # checked once per channel (one synchronisation)
                 self._trace_preserving = self.is_trace_preserving()
             if self._trace_preserving:
                 return DensityMatrix(self.algebra, generator=generator, validate=False)
@@ -119,7 +127,8 @@ class Channel:
         L = other.kraus.unsqueeze(1)           # (B, 1, r2, C, k, k)
         KL = K @ L
         B = KL.shape[0]
-        return Channel(self.algebra, KL.reshape(B, -1, *KL.shape[3:]))
+        tp = True if (self._trace_preserving and other._trace_preserving) else None
+        return Channel(self.algebra, KL.reshape(B, -1, *KL.shape[3:]), trace_preserving=tp)
 
     __matmul__ = compose
 
@@ -144,15 +153,12 @@ class Channel:
         B = max(self.batch_size, other.batch_size)
         a = (1 - p) ** 0.5 * self.kraus.expand(B, *self.kraus.shape[1:])
         b = p ** 0.5 * other.kraus.expand(B, *other.kraus.shape[1:]).to(a.dtype)
-        return Channel(self.algebra, torch.cat([a, b], dim=1))
+        tp = True if (self._trace_preserving and other._trace_preserving) else None
+        return Channel(self.algebra, torch.cat([a, b], dim=1), trace_preserving=tp)
 
     # ------------------------------------------------------------------
     def _active_identity(self) -> torch.Tensor:
-        alg = self.algebra
-        eye = torch.zeros(alg.C, alg.k_max, alg.k_max, dtype=self.kraus.dtype, device=self.kraus.device)
-        for c, k_c in enumerate(alg.k_factors):
-            eye[c, :k_c, :k_c] = torch.eye(k_c, dtype=self.kraus.dtype, device=self.kraus.device)
-        return eye
+        return self.algebra._const('eye', self.kraus.dtype)
 
     def _deviation(self, gram: torch.Tensor) -> torch.Tensor:
         return (gram - self._active_identity()).abs().amax(dim=(-3, -2, -1))
@@ -182,25 +188,32 @@ class Channel:
         Choi matrices per channel c, J_c = sum_ij |i><j| (x) Phi(|i><j|), shape (batch, k_c^2, k_c^2).
         Positive semidefinite for a completely positive map; Tr_out J = 1 iff trace preserving.
         """
-        out = []
         cost.check_memory(sum(cost.tensor_bytes((self.batch_size, k ** 2, k ** 2), self.kraus.dtype)
                               for k in self.algebra.k_factors), self.kraus.device, "Channel.choi")
-        for c, k_c in enumerate(self.algebra.k_factors):
-            K = self.kraus[:, :, c, :k_c, :k_c]                       # (B, r, a, i)
-            v = K.transpose(-2, -1).reshape(K.shape[0], K.shape[1], k_c * k_c)  # index (i, a)
-            out.append(torch.einsum('brx,bry->bxy', v, v.conj()))
+
+        def f(K, k):                                                  # K (B, r, n, k, k), index (a, i)
+            v = K.transpose(-2, -1).reshape(*K.shape[:3], k * k)      # index (i, a)
+            return torch.einsum('brnx,brny->bnxy', v, v.conj())
+        return self._per_size(f)
+
+    def _per_size(self, f) -> List[torch.Tensor]:
+        """f(K_group, k) for the Kraus blocks of each block-size group (one call per size), split per sector."""
+        alg = self.algebra
+        out = [torch.zeros(self.batch_size, 0, 0, dtype=self.kraus.dtype, device=self.kraus.device)] * alg.C
+        for k, idx in alg._size_groups():
+            res = f(self.kraus[:, :, alg._sel(idx), :k, :k], k)       # (B, n, k^2, k^2)
+            for j, c in enumerate(idx):
+                out[c] = res[:, j]
         return out
 
     def superoperator(self) -> List[torch.Tensor]:
         """Matrix of Phi on row-major vec(rho), per channel: S_c = sum_i K_i (x) conj(K_i), (batch, k_c^2, k_c^2)."""
-        out = []
         cost.check_memory(sum(cost.tensor_bytes((self.batch_size, k ** 2, k ** 2), self.kraus.dtype)
                               for k in self.algebra.k_factors), self.kraus.device, "Channel.superoperator")
-        for c, k_c in enumerate(self.algebra.k_factors):
-            K = self.kraus[:, :, c, :k_c, :k_c]
-            S = torch.einsum('nrai,nrbj->nabij', K, K.conj()).reshape(K.shape[0], k_c * k_c, k_c * k_c)
-            out.append(S)
-        return out
+
+        def f(K, k):
+            return torch.einsum('zrnai,zrnbj->znabij', K, K.conj()).reshape(K.shape[0], K.shape[2], k * k, k * k)
+        return self._per_size(f)
 
     @staticmethod
     def from_superoperator(algebra: TypeIAlgebra, blocks: Sequence[torch.Tensor], tol: Optional[float] = None) -> 'Channel':
@@ -209,35 +222,38 @@ class Channel:
         vec(rho). Kraus operators are obtained from the eigendecomposition of the Choi matrix; S_c must
         describe a completely positive map (eigenvalues of the Choi matrix below -tol raise).
         """
-        assert len(blocks) == algebra.C
+        if len(blocks) != algebra.C:
+            raise ValueError(f"from_superoperator: need {algebra.C} blocks, got {len(blocks)}")
         k_max, C = algebra.k_max, algebra.C
-        batch = max(S.shape[0] if S.dim() == 3 else 1 for S in blocks)
+        blocks = [torch.as_tensor(S) for S in blocks]
+        batch = max(S.shape[0] if S.dim() == 3 else 1 for S, k_c in zip(blocks, algebra.k_factors) if k_c)
         r = k_max * k_max
-        kraus = None
-        for c, (S, k_c) in enumerate(zip(blocks, algebra.k_factors)):
-            if k_c == 0:
-                continue
-            S = S if S.dim() == 3 else S.unsqueeze(0)
-            S = S.expand(batch, *S.shape[1:])
+        kraus = torch.zeros(batch, r, C, k_max, k_max, dtype=algebra.hilbert.dtype, device=algebra.hilbert.device)
+        checks = []                                    # validated together at the end: one synchronisation
+        for k_c, idx in algebra._size_groups():        # one Choi eigendecomposition per block size
+            S = torch.stack([(blocks[c] if blocks[c].dim() == 3 else blocks[c].unsqueeze(0)).expand(batch, -1, -1)
+                             .to(device=algebra.hilbert.device) for c in idx], dim=1)      # (B, n, k^2, k^2)
+            n = len(idx)
             # J[(i,a),(j,b)] = S[(a,b),(i,j)]
-            J = S.reshape(batch, k_c, k_c, k_c, k_c).permute(0, 3, 1, 4, 2).reshape(batch, k_c * k_c, k_c * k_c)
+            J = S.reshape(batch, n, k_c, k_c, k_c, k_c).permute(0, 1, 4, 2, 5, 3).reshape(batch * n, k_c * k_c,
+                                                                                       k_c * k_c)
             J = 0.5 * (J + J.conj().transpose(-2, -1))
-            w, V = cost.batched_call(torch.linalg.eigh, J, f"Choi eigendecomposition (sector {c})")
-            scale = max(1.0, w.abs().max().item())
-            if torch.any(w < -(1e-4 if tol is None else tol) * scale):
-                raise ValueError(f"superoperator of channel {c} is not completely positive "
-                                 f"(Choi eigenvalue {w.min().item():.3g})")
+            w, V = cost.batched_call(torch.linalg.eigh, J, f"Choi eigendecomposition (blocks of size {k_c})")
+            scale = torch.clamp(w.abs().amax(), min=1.0)
+            checks.append(("superoperator is not completely positive", w.amin() < -(1e-4 if tol is None else tol) * scale))
             w = torch.clamp(w, min=0.0)
-            if kraus is None:
-                kraus = torch.zeros(batch, r, C, k_max, k_max, dtype=algebra.hilbert.dtype, device=V.device)
             # K_m[a, i] = sqrt(w_m) V[(i, a), m]
             Km = (V * w.sqrt().unsqueeze(-2).to(V.dtype)).transpose(-2, -1)
-            Km = Km.reshape(batch, k_c * k_c, k_c, k_c).transpose(-2, -1)
+            Km = Km.reshape(batch, n, k_c * k_c, k_c, k_c).transpose(-2, -1)
             if torch.is_complex(Km) and not torch.is_complex(kraus):
-                if Km.imag.abs().max() > 1e-5 * max(1.0, Km.abs().max().item()):
-                    raise ValueError("complex Kraus operators require a complex-valued algebra")
+                checks.append(("complex Kraus operators require a complex-valued algebra",
+                               Km.imag.abs().amax() > 1e-5 * torch.clamp(Km.abs().amax(), min=1.0)))
                 Km = Km.real
-            kraus[:, :k_c * k_c, c, :k_c, :k_c] = Km.to(kraus.dtype)
+            kraus[:, :k_c * k_c, algebra._sel(idx), :k_c, :k_c] = Km.transpose(1, 2).to(kraus.dtype)
+        if checks:
+            for (msg, _), bad in zip(checks, torch.stack([c for _, c in checks]).tolist()):
+                if bad:
+                    raise ValueError(msg)
         return Channel(algebra, kraus)
 
 
@@ -250,10 +266,7 @@ def _empty_kraus(alg: TypeIAlgebra, r: int, batch: int = 1, dtype=None) -> torch
 
 
 def identity_channel(alg: TypeIAlgebra) -> Channel:
-    K = _empty_kraus(alg, 1)
-    for c, k_c in enumerate(alg.k_factors):
-        K[0, 0, c, :k_c, :k_c] = torch.eye(k_c, dtype=K.dtype, device=K.device)
-    return Channel(alg, K)
+    return Channel(alg, alg._const('eye').reshape(1, 1, alg.C, alg.k_max, alg.k_max).clone(), trace_preserving=True)
 
 
 def unitary_channel(U: Operator) -> Channel:
@@ -271,12 +284,15 @@ def kraus_channel(ops: Sequence[Operator]) -> Channel:
 
 def dephasing_channel(alg: TypeIAlgebra, p: float) -> Channel:
     """rho_c -> (1 - p) rho_c + p diag(rho_c) in the standard basis of each block (unital)."""
-    K = _empty_kraus(alg, 1 + alg.k_max)
-    for c, k_c in enumerate(alg.k_factors):
-        K[0, 0, c, :k_c, :k_c] = (1 - p) ** 0.5 * torch.eye(k_c, dtype=K.dtype, device=K.device)
-        for i in range(k_c):
-            K[0, 1 + i, c, i, i] = p ** 0.5
-    return Channel(alg, K)
+    if not 0 <= p <= 1:
+        raise ValueError("dephasing_channel: p must lie in [0, 1]")
+    km = alg.k_max
+    rows = alg._const('rows').to(alg.dtype)                            # (C, km): active diagonal entries
+    K = _empty_kraus(alg, 1 + km)
+    K[0, 0] = (1 - p) ** 0.5 * alg._const('eye')
+    i = torch.arange(km, device=K.device)
+    K[0, 1 + i, :, i, i] = p ** 0.5 * rows.T                          # K_{1+i} = sqrt(p) |i><i| in every block
+    return Channel(alg, K, trace_preserving=True)
 
 
 def depolarizing_channel(alg: TypeIAlgebra, p: float) -> Channel:
@@ -284,16 +300,18 @@ def depolarizing_channel(alg: TypeIAlgebra, p: float) -> Channel:
     rho_c -> (1 - p) rho_c + p Tr(rho_c) 1/k_c in every block (unital, keeps the weight of each
     sector). p = 1 is the trace-preserving conditional expectation onto the centre of M.
     """
+    if not 0 <= p <= 1:
+        raise ValueError("depolarizing_channel: p must lie in [0, 1]")
     km = alg.k_max
     K = _empty_kraus(alg, 1 + km * km)
-    for c, k_c in enumerate(alg.k_factors):
-        if k_c == 0:
-            continue
-        K[0, 0, c, :k_c, :k_c] = (1 - p) ** 0.5 * torch.eye(k_c, dtype=K.dtype, device=K.device)
-        for i in range(k_c):
-            for j in range(k_c):
-                K[0, 1 + i * km + j, c, i, j] = (p / k_c) ** 0.5
-    return Channel(alg, K)
+    K[0, 0] = (1 - p) ** 0.5 * alg._const('eye')
+    i = torch.arange(km, device=K.device).repeat_interleave(km)
+    j = torch.arange(km, device=K.device).repeat(km)
+    k = alg._const('k', alg.hilbert.real_dtype)
+    amp = torch.where(k > 0, (p / k.clamp(min=1)) ** 0.5, torch.zeros_like(k))            # (C,)
+    vals = alg._const('block_mask', torch.bool)[:, i, j].T * amp                          # (km^2, C), zero on padding
+    K[0, 1 + i * km + j, :, i, j] = vals.to(K.dtype)                  # K_{ij} = sqrt(p/k_c) |i><j| in every block
+    return Channel(alg, K, trace_preserving=True)
 
 
 def center_expectation(alg: TypeIAlgebra) -> Channel:
@@ -307,15 +325,17 @@ def amplitude_damping_channel(alg: TypeIAlgebra, gamma: float) -> Channel:
     K_0 = |0><0| + sqrt(1 - gamma) sum_{i>0} |i><i|,  K_i = sqrt(gamma) |0><i|.
     Trace preserving, not unital for gamma > 0.
     """
-    K = _empty_kraus(alg, alg.k_max)
-    for c, k_c in enumerate(alg.k_factors):
-        if k_c == 0:
-            continue
-        K[0, 0, c, 0, 0] = 1.0
-        for i in range(1, k_c):
-            K[0, 0, c, i, i] = (1 - gamma) ** 0.5
-            K[0, i, c, 0, i] = gamma ** 0.5
-    return Channel(alg, K)
+    if not 0 <= gamma <= 1:
+        raise ValueError("amplitude_damping_channel: gamma must lie in [0, 1]")
+    km = alg.k_max
+    rows = alg._const('rows').to(alg.dtype)                            # (C, km)
+    K = _empty_kraus(alg, km)
+    d = torch.full((km,), (1 - gamma) ** 0.5, dtype=alg.dtype, device=K.device)
+    d[0] = 1.0
+    K[0, 0] = torch.diag_embed(rows * d)
+    i = torch.arange(1, km, device=K.device)
+    K[0, i, :, 0, i] = gamma ** 0.5 * rows[:, 1:].T                     # K_i = sqrt(gamma) |0><i|
+    return Channel(alg, K, trace_preserving=True)
 
 
 def measurement_channel(projections: Sequence[Operator]) -> Channel:
@@ -332,8 +352,8 @@ def random_channel(alg: TypeIAlgebra, kraus_rank: int, batch_size: int = 1) -> C
     for k, idx in alg._size_groups():                  # one draw for all sectors of the same size
         V = alg.random_isometry(k * kraus_rank, k, batch_size=batch_size * len(idx))   # (B n, r k, k)
         V = V.reshape(batch_size, len(idx), kraus_rank, k, k).transpose(1, 2)
-        K[:, :, idx, :k, :k] = V
-    return Channel(alg, K)
+        K[:, :, alg._sel(idx), :k, :k] = V
+    return Channel(alg, K, trace_preserving=True)
 
 
 def random_mixed_unitary_channel(alg: TypeIAlgebra, n_unitaries: int, batch_size: int = 1,
@@ -342,10 +362,13 @@ def random_mixed_unitary_channel(alg: TypeIAlgebra, n_unitaries: int, batch_size
     rdt = alg.hilbert.real_dtype
     if weights is None:                       # in the algebra's precision, so that the channel is TP to round-off
         weights = torch.distributions.Dirichlet(torch.ones(n_unitaries, dtype=rdt)).sample((batch_size,))
-    weights = weights.to(device=alg.hilbert.device, dtype=rdt)
+    weights = torch.as_tensor(weights).to(device=alg.hilbert.device, dtype=rdt)
+    weights = weights.expand(batch_size, n_unitaries) if weights.dim() == 1 else weights
     weights = weights / weights.sum(dim=-1, keepdim=True)
-    Us = torch.stack([alg.random_unitary_operator(batch_size).matrix for _ in range(n_unitaries)], dim=1)
-    return Channel(alg, Us * weights.sqrt()[:, :, None, None, None].to(Us.dtype))
+    # all unitaries in one draw
+    Us = alg.random_unitary_operator(batch_size * n_unitaries).matrix.reshape(batch_size, n_unitaries, alg.C,
+                                                                              alg.k_max, alg.k_max)
+    return Channel(alg, Us * weights.sqrt()[:, :, None, None, None].to(Us.dtype), trace_preserving=True)
 
 
 # ======================================================================
@@ -366,7 +389,8 @@ class InterSectorChannel:
     Trace preserving iff sum_{d,i} K_i^{dc*} K_i^{dc} = 1_c for every input sector c.
     """
 
-    def __init__(self, algebra_in: TypeIAlgebra, algebra_out: TypeIAlgebra, kraus: torch.Tensor):
+    def __init__(self, algebra_in: TypeIAlgebra, algebra_out: TypeIAlgebra, kraus: torch.Tensor,
+                 trace_preserving: Optional[bool] = None):
         if kraus.dim() == 5:
             kraus = kraus.unsqueeze(0)
         expected = (algebra_out.C, algebra_in.C, algebra_out.k_max, algebra_in.k_max)
@@ -374,10 +398,15 @@ class InterSectorChannel:
             raise ValueError(f"Kraus tensor must have shape (batch, r, {expected[0]}, {expected[1]}, "
                              f"{expected[2]}, {expected[3]}), got {tuple(kraus.shape)}")
         kraus = algebra_out._to_field(kraus, "Kraus operators")
+        if any(k < algebra_out.k_max for k in algebra_out.k_factors) or any(k < algebra_in.k_max
+                                                                             for k in algebra_in.k_factors):
+            rows_out = algebra_out._const('rows')            # (D, m_max)
+            rows_in = algebra_in._const('rows').to(rows_out.device)     # (C, k_max)
+            kraus = kraus * (rows_out[:, None, :, None] & rows_in[None, :, None, :])   # zero padding
         self.algebra_in = algebra_in
         self.algebra_out = algebra_out
-        self.kraus = kraus.to(device=algebra_out.hilbert.device)
-        self._trace_preserving = None
+        self.kraus = kraus
+        self._trace_preserving = trace_preserving
 
     def __repr__(self) -> str:
         return (f"InterSectorChannel(batch={self.kraus.shape[0]}, kraus_rank={self.kraus.shape[1]}, "
@@ -414,12 +443,15 @@ class InterSectorChannel:
             dtype = torch.promote_types(rho.dtype, K.dtype)
             B, r, D, C, m, _ = K.shape
             B = max(B, rho.shape[0])
-            cost.check_memory(3 * cost.tensor_bytes((B, r, D, C, m, max(m, rho.shape[-1])), dtype), K.device,
+            cost.check_memory(2 * cost.tensor_bytes((B, r, D, C, m, max(m, rho.shape[-1])), dtype), K.device,
                               f"InterSectorChannel.apply (batch {B}, Kraus rank {r}, {D}x{C} sector pairs)")
             Kd = K.to(dtype)
-            rho = rho.to(dtype)[:, None, None]                             # (B, 1, 1, C, k, k)
-            out = Kd @ rho @ Kd.conj().transpose(-2, -1)                   # (B, r, D, C, m, m)
-            return out.sum(dim=(1, 3))                                      # (B, D, m, m)
+            X = Kd @ rho.to(dtype)[:, None, None]                          # (B, r, D, C, m, k)
+            k = X.shape[-1]
+            # sum over (i, c) of X K^* as one product over the merged index (i, c, column)
+            Xc = X.permute(0, 2, 4, 1, 3, 5).reshape(B, D, m, r * C * k)
+            Kc = Kd.permute(0, 2, 4, 1, 3, 5).reshape(Kd.shape[0], D, m, r * C * k)
+            return Xc @ Kc.conj().transpose(-2, -1)                        # (B, D, m, m)
 
         if isinstance(op, DensityMatrix):
             if self._trace_preserving is None:
@@ -465,17 +497,14 @@ class InterSectorChannel:
         KL = K @ L                                        # (B, r2, r1, E, D, C, m_e, k_c)
         B, r2, r1, E, D, C = KL.shape[:6]
         KL = KL.permute(0, 1, 2, 4, 3, 5, 6, 7).reshape(B, r2 * r1 * D, E, C, *KL.shape[-2:])
-        return InterSectorChannel(other.algebra_in, self.algebra_out, KL)
+        tp = True if (self._trace_preserving and other._trace_preserving) else None
+        return InterSectorChannel(other.algebra_in, self.algebra_out, KL, trace_preserving=tp)
 
     __matmul__ = compose
 
     # ------------------------------------------------------------------
     def _identity_in(self) -> torch.Tensor:
-        alg = self.algebra_in
-        eye = torch.zeros(alg.C, alg.k_max, alg.k_max, dtype=self.kraus.dtype, device=self.kraus.device)
-        for c, k_c in enumerate(alg.k_factors):
-            eye[c, :k_c, :k_c] = torch.eye(k_c, dtype=eye.dtype, device=eye.device)
-        return eye
+        return self.algebra_in._const('eye', self.kraus.dtype)
 
     def trace_preservation_error(self) -> torch.Tensor:
         K = self.kraus
@@ -492,10 +521,7 @@ class InterSectorChannel:
         alg = self.algebra_in
         one = alg.operator(self._identity_in().unsqueeze(0).expand(self.kraus.shape[0], -1, -1, -1).clone())
         out = self.apply(one).matrix
-        eye = torch.zeros_like(out)
-        for d, m_d in enumerate(self.algebra_out.k_factors):
-            eye[:, d, :m_d, :m_d] = torch.eye(m_d, dtype=out.dtype, device=out.device)
-        return bool((out - eye).abs().max() <= tol)
+        return bool((out - self.algebra_out._const('eye', out.dtype)).abs().max() <= tol)
 
     def transition_matrix(self, rho: Optional[Operator] = None) -> torch.Tensor:
         """
@@ -505,18 +531,16 @@ class InterSectorChannel:
         """
         alg = self.algebra_in
         if rho is None:
-            mat = self._identity_in().unsqueeze(0)
-            for c, k_c in enumerate(alg.k_factors):
-                if k_c:
-                    mat[:, c] = mat[:, c] / k_c
+            mat = (self._identity_in() * alg._const('w_norm', self.kraus.real.dtype)[:, None, None]).unsqueeze(0)
         else:
             mat = rho.matrix
             tr = torch.diagonal(mat, dim1=-2, dim2=-1).sum(-1).real
             mat = mat / torch.where(tr > 0, tr, torch.ones_like(tr))[:, :, None, None].to(mat.dtype)
         K = self.kraus
         dtype = torch.promote_types(mat.dtype, K.dtype)
-        out = K.to(dtype) @ mat.to(dtype)[:, None, None] @ K.to(dtype).conj().transpose(-2, -1)
-        return torch.diagonal(out, dim1=-2, dim2=-1).sum(-1).real.sum(dim=1)   # (B, D, C)
+        Kd = K.to(dtype)
+        # Tr(K rho K^*) = sum_{m,i,j} K_mi rho_ij conj(K_mj), without forming the images
+        return torch.einsum('brdcmi,bcij,brdcmj->bdc', Kd, mat.to(dtype), Kd.conj()).real
 
 
 def random_inter_sector_channel(algebra_in: TypeIAlgebra, algebra_out: TypeIAlgebra, kraus_rank: int = 1,
@@ -532,13 +556,14 @@ def random_inter_sector_channel(algebra_in: TypeIAlgebra, algebra_out: TypeIAlge
     K = torch.zeros(batch_size, kraus_rank, algebra_out.C, algebra_in.C, algebra_out.k_max, algebra_in.k_max,
                     dtype=algebra_out.hilbert.dtype, device=algebra_out.hilbert.device)
     offsets = [sum(m[:d]) for d in range(len(m))]
-    for c, k_c in enumerate(algebra_in.k_factors):
-        if k_c == 0:
-            continue
+    for k_c, idx in algebra_in._size_groups():          # one isometry draw per input block size
         if n_out * kraus_rank < k_c:
             raise ValueError("output too small for an isometry: increase kraus_rank")
-        V = algebra_out.random_isometry(n_out * kraus_rank, k_c, batch_size=batch_size)
-        V = V.reshape(batch_size, kraus_rank, n_out, k_c)
+        n = len(idx)
+        V = algebra_out.random_isometry(n_out * kraus_rank, k_c, batch_size=batch_size * n)
+        V = V.reshape(batch_size, n, kraus_rank, n_out, k_c).transpose(1, 2)     # (B, r, n, n_out, k_c)
+        sel = algebra_in._sel(idx)
         for d, m_d in enumerate(m):
-            K[:, :, d, c, :m_d, :k_c] = V[:, :, offsets[d]:offsets[d] + m_d, :]
-    return InterSectorChannel(algebra_in, algebra_out, K)
+            if m_d:
+                K[:, :, d, sel, :m_d, :k_c] = V[:, :, :, offsets[d]:offsets[d] + m_d, :]
+    return InterSectorChannel(algebra_in, algebra_out, K, trace_preserving=True)
