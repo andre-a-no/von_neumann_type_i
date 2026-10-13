@@ -189,6 +189,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install torch                                  # the CUDA build matching the server's driver, see pytorch.org
 pip install -e ".[scripts,test]"
 python -m pytest -q                                # ~30 s, must pass
+python scripts/gpu_check.py                        # ~1 min: GPU code paths correct, GPU faster than CPU where it should be
 bash scripts/run_all.sh check cuda           # full sizes, minimal repetitions: tests every code path and the GPU memory
 nohup bash scripts/run_all.sh full cuda > full_run.log 2>&1 &   # the full run (or inside tmux)
 ```
@@ -198,10 +199,12 @@ nohup bash scripts/run_all.sh full cuda > full_run.log 2>&1 &   # the full run (
 - Every script writes its own log to `paper/generated/logs/<script>.log`, including run-time estimates
   from the `cost` module. A failing script does not stop the others; the run ends with a summary.
 - `ONLY="chains baselines" bash scripts/run_all.sh full cuda` reruns a subset.
-- Duration. Measured on a 4-thread CPU, the `check` run takes about 33 minutes, and the full run is estimated at
-  35-45 hours, most of it in `bounds_search` (~25 h) and `inequality_search` (~8 h). A GPU is several times
-  faster; to estimate the full run on your GPU, multiply these CPU estimates by the ratio of the `check` times on
-  the GPU and on the CPU (CPU `check` times: validate 90 s, numerics 88 s, baselines 45 s, benchmark 189 s,
+- `scripts/gpu_check.py` compares GPU results with the CPU and prints CPU/GPU times per sample for the operations of
+  the benchmark at three sizes; it fails if the GPU is slower than the CPU for a large batch of generation,
+  eigendecompositions, |A| or optimisation steps. Run it first on a new machine or after changing the library.
+- Duration. On an RTX 5090 (16-thread CPU) the full run took about 5 hours: validate 12 min, numerics and
+  baselines 3 min, benchmark 8 min, chains 7 min, inequality_search 3.4 h, bounds_search 1.3 h. On a 4-thread CPU
+  the `check` run takes about 33 minutes (validate 90 s, numerics 88 s, baselines 45 s, benchmark 189 s,
   chains 623 s, inequality_search 49 s, bounds_search 871 s; every log ends with a `[resources]` line).
 - Interruptions. `inequality_search` and `bounds_search` save every finished part to `generated/partial/`; after a
   crash or reboot, rerunning the same command continues where it stopped and gives the same numbers.

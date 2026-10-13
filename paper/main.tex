@@ -33,6 +33,7 @@
 \providecommand{\BaseGSRows}{\multicolumn{6}{c}{\emph{run scripts/baselines.py}}\\}
 \providecommand{\ValTraceRows}{\multicolumn{5}{c}{\emph{run scripts/validate\_known\_results.py}}\\}
 \providecommand{\ChainKrylovRows}{\multicolumn{6}{c}{\emph{run scripts/chains.py}}\\}
+\providecommand{\BoundsStChecked}{--}\providecommand{\BoundsStOutside}{--}\providecommand{\BoundsShortfall}{--}
 \providecommand{\ChainRingRows}{\multicolumn{6}{c}{\emph{run scripts/chains.py}}\\}
 \newcommand{\fig}[2]{\IfFileExists{figures/#1}{\includegraphics[width=#2]{#1}}{\fbox{\small figure #1 not generated}}}
 
@@ -711,14 +712,32 @@ start and kept fixed. Every grid point and every start is one element of the bat
 or infimum along one contrast) is computed in one batched optimisation. All envelopes are computed in real algebras
 (real symmetric $X,Y$ and orthogonal $U$), the setting of the Monte Carlo study of~\cite{v1}.
 
-Figures~\ref{fig:bounds} and~\ref{fig:bounds2d} and Table~\ref{tab:bounds} show the result. Each Monte
-Carlo sample of~\cite{v1} is checked against both envelopes, along $\Delta(X)$ and along $\Delta(Y)$; samples that fall
-outside the linear interpolation between grid points are re-optimised at their exact contrast. \IfFileExists{generated/bounds.tex}{Of the \BoundsMcChecked\ samples with both contrasts in the grid (\BoundsMcDropped\ have a contrast above
-$0.999$), \BoundsMcOutside\ remain outside after this step;
-such samples mark contrasts where the local search did not reach the true extremum, so their number is a direct
-check of the optimiser.}{} For a single sector of size $k=2$ the samples come close
+Figures~\ref{fig:bounds} and~\ref{fig:bounds2d} and Table~\ref{tab:bounds} show the result. The search is local,
+so the computed envelopes are checked in three independent ways that involve no optimisation. (i)~Where an
+envelope is known in closed form (below), it is compared with the formula. (ii)~Since $z$ is additive over
+orthogonal blocks and the contrast of a direct sum is the largest contrast of its summands, a direct sum of
+$kC/2$ copies of a solution for $k=2$, $C=1$ is an admissible configuration: with $s(\delta)$ the upper envelope
+for $k=2$, $C=1$,
+\[
+  \overline z_{k,C}(\delta)\ \ge\ s(\delta)+\bigl(\tfrac{kC}2-1\bigr)\max_{\delta'\le\delta}s(\delta')\qquad(k\ \text{even}),
+\]
+and the same with $\min$ for the lower envelopes. The reported envelopes are the better of the multistart search
+and this value. (iii)~Each Monte Carlo sample of~\cite{v1} and each of
+\IfFileExists{generated/bounds.tex}{\BoundsStChecked}{several thousand} \emph{structured samples} is checked against
+both envelopes, along $\Delta(X)$ and along $\Delta(Y)$; samples that fall outside the linear interpolation between
+grid points are re-optimised at their exact contrast. The structured samples are computed with plain NumPy: all
+spectra take only the two values $1$ and $\lambda_{\min}$, and the eigenbases and $U$ are random signed permutations
+composed with direct sums of $2\times2$ rotations. Unlike Haar samples they come close to the extremal
+configurations in every dimension, so they test the optimiser where Monte Carlo cannot.
+\IfFileExists{generated/bounds.tex}{Of the \BoundsMcChecked\ Monte Carlo samples with both contrasts in the grid
+(\BoundsMcDropped\ have a contrast above $0.999$), \BoundsMcOutside\ remain outside after re-optimisation, and
+\BoundsStOutside\ of the structured samples; the search alone falls short of the direct sums~(ii) by at most
+\BoundsShortfall\% of the largest value of the curve (for Exp.~1 at small contrast and many sectors, where the
+landscape is flat).}{} For a single sector of size $k=2$ the Haar samples come close
 to the envelopes; with two sectors they already miss a substantial part of the range (Table~\ref{tab:bounds}), and
-for larger $k$ sampling misses the extremes entirely (Table~\ref{tab:search}).
+for larger $k$ or $C$ they stay in a narrow band far from both envelopes (Figure~\ref{fig:bounds}, bottom row; Table~\ref{tab:search}):
+the extremes are attained at degenerate spectra with aligned eigenbases, a set that Haar sampling essentially never
+reaches.
 
 Four envelopes can be checked analytically. In Exp.~3, $z\ge0$ always:
 
@@ -744,16 +763,24 @@ $\|AB\|_1\ge\sum_is_i(A)s_{k+1-i}(B)$ and rearrangement give, for given spectra,
   \sup z=-\inf z=\sum_c\sum_i x_{c,i}^\downarrow\bigl(y_{c,i}^\downarrow-y_{c,i}^\uparrow\bigr),
 \]
 with $x_{c,i}^\downarrow$ the eigenvalues of $X_c$ in decreasing order and $y_{c,i}^\downarrow$, $y_{c,i}^\uparrow$ those of
-$Y_c$ in decreasing and increasing order. For $k=2$, $C=1$ this is $(1-\lambda_{\min}(X))(1-\lambda_{\min}(Y))$; with
-$\Delta(|X|)=\delta$ prescribed and $\Delta(|Y|)\le0.999$ free, $\pm\sup z=\pm\frac{2\delta}{1+\delta}(1-\frac{0.001}{1.999})$, and
-$\frac{2\delta}{1+\delta}$ in the limit $\Delta(|Y|)\to1$. The optimiser reproduces both envelopes to a relative deviation of
+$Y_c$ in decreasing and increasing order. Pairing $i$ with $k+1-i$,
+$\sum_ix_{c,i}^\downarrow(y_{c,i}^\downarrow-y_{c,i}^\uparrow)=\sum_{i\le k/2}(x_{c,i}^\downarrow-x_{c,k+1-i}^\downarrow)
+(y_{c,i}^\downarrow-y_{c,k+1-i}^\downarrow)\le\lfloor k/2\rfloor(1-\lambda_{\min}(X))(1-\lambda_{\min}(Y))$, with equality
+for two-level spectra. Hence, for $C$ sectors of size $k$, $\Delta(|X|)=\delta$ prescribed and $\Delta(|Y|)\le0.999$
+free,
+\[
+  \sup z=-\inf z=C\Bigl\lfloor\frac k2\Bigr\rfloor\,\frac{2\delta}{1+\delta}\Bigl(1-\frac{0.001}{1.999}\Bigr),
+\]
+which tends to $C\lfloor k/2\rfloor\frac{2\delta}{1+\delta}$ as $\Delta(|Y|)\to1$. The optimiser reproduces all sixteen
+envelopes of Exp.~2 (eight configurations, along either contrast) to a relative deviation of
 \IfFileExists{generated/bounds.tex}{\BoundsExactDevTwo}{(not generated)}.
 For $k=2$, $C=1$ the computed upper envelopes of Exp.~1 and Exp.~3 along $\Delta(X)=\delta$ agree with
 $\delta^2/(2(1+\delta))$ and $1-\delta$ to a relative deviation of
 \IfFileExists{generated/bounds.tex}{\BoundsConjDevOne\ and \BoundsConjDevThree}{(not generated)}; we have no proof of
 these closed forms. For larger $k$ and $C$ the upper envelopes of Exp.~1 and Exp.~3 are, to our knowledge, not known in
-closed form; the computed curves are lower bounds for them (a local search) and suggest conjectures for sharp
-contrast-dependent inequalities, which we leave for future work.
+closed form; the computed curves are lower bounds for them (a local search), consistent with the direct sums~(ii),
+and suggest conjectures for sharp contrast-dependent inequalities (for instance, that the direct sums are optimal),
+which we leave for future work.
 
 \begin{table}[h]
 \centering\small
@@ -778,14 +805,18 @@ run on \BoundsDevice)}{}; a sample counts as outside if it exceeds the envelope 
 \fig{bounds_exp1_k2_C1.pdf}{0.9\textwidth}\\
 \fig{bounds_exp2_k2_C1.pdf}{0.9\textwidth}\\
 \fig{bounds_exp3_k2_C1.pdf}{0.9\textwidth}
-\IfFileExists{figures/bounds_exp1_k16_C1.pdf}{\\\fig{bounds_exp1_k16_C1.pdf}{0.9\textwidth}}{}
-\caption{Envelopes from constrained optimisation versus sampling for the three trace functionals ($k=2$, $C=1$;
-one row per experiment).
+\IfFileExists{figures/bounds_exp2_k16_C1.pdf}{\\\fig{bounds_exp2_k16_C1.pdf}{0.9\textwidth}}{}
+\caption{Envelopes from constrained optimisation versus sampling for the three trace functionals (rows 1--3: $k=2$,
+$C=1$; row 4: Exp.~2 for $k=16$, $C=1$).
 Horizontal axis: Michelson contrast of the first operator (left) or of the second operator (right); vertical axis:
-$z$ for operators normalised to $\lambda_{\max}=1$. Grey: the Monte Carlo samples of~\cite{v1}; red and blue: the
-upper and lower envelopes found by constrained optimisation, the other contrast being free. In this smallest case the samples come close to the envelopes (the samples outside after
-re-optimisation are counted in Table~\ref{tab:bounds}), which is no longer so for two sectors or larger blocks
-(Tables~\ref{tab:search} and~\ref{tab:bounds}). In Exp.~1 the region $z>0$ (violation of $|\Tr(XUY)|\le\Tr(XY)$)
+$z$ for operators normalised to $\lambda_{\max}=1$. Grey: the Monte Carlo samples of~\cite{v1} (Haar eigenbases,
+uniform spectra); orange: structured samples (two-level spectra, permutation and rotation bases; computed with NumPy,
+independently of the library); red and blue: the upper and lower envelopes found by constrained optimisation, the
+other contrast being free; dashed: envelopes known in closed form; dotted: direct sums of the $k=2$, $C=1$ solution
+(where they apply). No sample lies outside the envelopes beyond the counts in Table~\ref{tab:bounds}. In the
+smallest case the Haar samples fill the region between the envelopes; for $k=16$ (row 4) they stay in a narrow band
+around $z=0$, while the structured samples and the exact envelopes $\pm8\cdot\frac{2\delta}{1+\delta}(1-\frac{0.001}{1.999})$
+show how far the range really extends. In Exp.~1 the region $z>0$ (violation of $|\Tr(XUY)|\le\Tr(XY)$)
 extends to the value of $\sup z$ in Table~\ref{tab:bounds}; in Exp.~3 the lower envelope is the proven bound $z\ge0$.}
 \label{fig:bounds}
 \end{figure}

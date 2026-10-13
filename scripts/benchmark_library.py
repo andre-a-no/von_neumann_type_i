@@ -116,7 +116,7 @@ for r in rows:
     main = 1e6 * r[f't_{args.device}']
     tex += f"{r['op']} & {r['k']} & {r['C']} & {r['batch']} & {num3(main)}"
     if two:
-        tex += f" & {num3(1e6 * r['t_cpu'])} & {r['speedup']:.1f}"
+        tex += f" & {num3(1e6 * r['t_cpu'])} & {num3(r['speedup'])}"
     tex += " \\\\\n"
 tex += "}\n"
 write_tex(args, 'benchmark', tex)
