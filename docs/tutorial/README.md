@@ -17,7 +17,7 @@ It is written for two kinds of readers at once:
 - **Physicists and engineers** get the physical meaning of each notion in boxes marked
   *Physical meaning*, and working code they can adapt.
 
-Chapters 1–12 have the same structure: theory with proofs; the library code for each
+Chapters 1–13 have the same structure: theory with proofs; the library code for each
 result; a check of the code against an exact result (a theorem, a closed formula or an
 independent computation); a section *What to compare with* that names the standard tools
 for the same task; and exercises with solutions.
@@ -42,6 +42,7 @@ example works with the current version of the library.
 | 10 | [Quantum computing](10_quantum_computing.md) | decoherence-free subspaces, operator-algebra error correction, constrained mixers |
 | 11 | [Optimisation and trace inequalities](11_optimisation.md) | constrained parametrisations, sampling versus optimisation |
 | 12 | [Equivariant machine learning](12_equivariant_learning.md) | equivariant layers as commutants |
+| 13 | [Jordan algebras: why quantum mechanics uses *-algebras](13_jordan_algebras.md) | Jordan product and quadratic representation, spin factors and the Lorentz cone, the Jordan–von Neumann–Wigner classification, the transpose and the partial transpose, a trace inequality in Jordan form |
 
 ## Prerequisites
 

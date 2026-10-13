@@ -544,7 +544,7 @@ for N, lost in ((1, 2), (2, 0)):
 
 </details>
 
-**下一步。** 这是本课程的最后一章。[第 4 章](04_symmetries.md)发展了这里用到的表示论：Schur 引理、
+**下一步。** 最后一章，[第 13 章](13_jordan_algebras.md)，讨论量子力学为何使用 *-代数而不是若尔当代数。[第 4 章](04_symmetries.md)发展了这里用到的表示论：Schur 引理、
 特征标，以及 `dc.from_group` 背后的随机化算法（4.1–4.3 节）。[第 9 章](09_spin_chains.md)把同样的扇区应用于
 自旋链，而[第 5 章](05_random_matrices.md)中 $\prod_cU(m_c)$ 上的 Haar 测度给出了等变酉层的自然随机
 初始化。数学方面参见 J.-P. Serre, *Linear Representations of Finite Groups* (Springer 1977) 与

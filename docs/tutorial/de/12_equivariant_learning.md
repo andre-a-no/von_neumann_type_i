@@ -591,7 +591,7 @@ for N, lost in ((1, 2), (2, 0)):
 
 </details>
 
-**Wie es weitergeht.** Dies ist das letzte Kapitel des Kurses. [Kapitel 4](04_symmetries.md) entwickelt die hier
+**Wie es weitergeht.** Das letzte Kapitel, [Kapitel 13](13_jordan_algebras.md), fragt, warum die Quantenmechanik *-Algebren und nicht Jordan-Algebren verwendet. [Kapitel 4](04_symmetries.md) entwickelt die hier
 verwendete Darstellungstheorie: das Lemma von Schur, Charaktere und den randomisierten Algorithmus hinter
 `dc.from_group` (Abschnitte 4.1–4.3). [Kapitel 9](09_spin_chains.md) wendet dieselben Sektoren auf Spinketten an, und das
 Haar-Maß auf $\prod_cU(m_c)$ aus [Kapitel 5](05_random_matrices.md) liefert die natürliche zufällige Initialisierung

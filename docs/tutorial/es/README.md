@@ -17,7 +17,7 @@ Está escrito a la vez para dos tipos de lectores:
 - **Los físicos y los ingenieros** encontrarán el significado físico de cada noción en
   recuadros titulados *Significado físico*, y código operativo que pueden adaptar.
 
-Los capítulos 1–12 tienen la misma estructura: teoría con demostraciones; el código de la
+Los capítulos 1–13 tienen la misma estructura: teoría con demostraciones; el código de la
 biblioteca para cada resultado; una comprobación del código frente a un resultado exacto (un
 teorema, una fórmula cerrada o un cálculo independiente); una sección *Con qué comparar* que
 menciona las herramientas habituales para la misma tarea; y ejercicios con soluciones.
@@ -42,6 +42,7 @@ modo que cada ejemplo funciona con la versión actual de la biblioteca.
 | 10 | [Computación cuántica](10_quantum_computing.md) | subespacios libres de decoherencia, corrección de errores en álgebras de operadores, mezcladores con restricciones |
 | 11 | [Optimización y desigualdades de trazas](11_optimisation.md) | parametrizaciones con restricciones, muestreo frente a optimización |
 | 12 | [Aprendizaje automático equivariante](12_equivariant_learning.md) | capas equivariantes como conmutantes |
+| 13 | [Álgebras de Jordan: por qué la mecánica cuántica usa *-álgebras](13_jordan_algebras.md) | producto de Jordan y representación cuadrática, factores de espín y el cono de Lorentz, la clasificación de Jordan–von Neumann–Wigner, la traspuesta y la traspuesta parcial, una desigualdad de trazas en forma de Jordan |
 
 ## Requisitos previos
 

@@ -599,7 +599,7 @@ for N, lost in ((1, 2), (2, 0)):
 
 </details>
 
-**Pour aller plus loin.** Ce chapitre est le dernier du cours. Le [chapitre 4](04_symmetries.md) développe la théorie
+**Pour aller plus loin.** Le dernier chapitre, le [chapitre 13](13_jordan_algebras.md), explique pourquoi la mécanique quantique utilise des *-algèbres plutôt que des algèbres de Jordan. Le [chapitre 4](04_symmetries.md) développe la théorie
 des représentations utilisée ici : le lemme de Schur, les caractères et l'algorithme randomisé sur lequel repose
 `dc.from_group` (sections 4.1–4.3). Le [chapitre 9](09_spin_chains.md) applique les mêmes secteurs aux chaînes de spins,
 et la mesure de Haar sur $\prod_cU(m_c)$ du [chapitre 5](05_random_matrices.md) fournit l'initialisation aléatoire

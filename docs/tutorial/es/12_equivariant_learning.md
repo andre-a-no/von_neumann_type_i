@@ -590,7 +590,7 @@ for N, lost in ((1, 2), (2, 0)):
 
 </details>
 
-**Cómo seguir.** Este es el último capítulo del curso. El [capítulo 4](04_symmetries.md) desarrolla la teoría de
+**Cómo seguir.** El último capítulo, el [capítulo 13](13_jordan_algebras.md), explica por qué la mecánica cuántica usa *-álgebras y no álgebras de Jordan. El [capítulo 4](04_symmetries.md) desarrolla la teoría de
 representaciones usada aquí: el lema de Schur, los caracteres y el algoritmo aleatorizado en que se basa
 `dc.from_group` (secciones 4.1–4.3). El [capítulo 9](09_spin_chains.md) aplica los mismos sectores a las cadenas de
 espines, y la medida de Haar sobre $\prod_cU(m_c)$ del [capítulo 5](05_random_matrices.md) proporciona la

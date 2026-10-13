@@ -141,6 +141,7 @@ freuen wir uns über einen Hinweis.
 | 1–3 | die Mathematik: Matrixalgebren, der Struktursatz, Spuren, Zustände und Entropie – mit vollständigen Beweisen |
 | 4–8 | woher diese Algebren kommen und was man in ihnen berechnet: Symmetrien, Zufallsmatrizen, Kanäle, Tensorprodukte, Dynamik |
 | 9–12 | Anwendungen: Spinketten, Quantencomputing, Optimierung, äquivariantes maschinelles Lernen |
+| 13 | Grundlagen: Jordan-Algebren und warum die Quantenmechanik *-Algebren verwendet |
 
 Jedes Kapitel formuliert Ergebnisse mit Beweisen, zeigt den Bibliothekscode, überprüft den Code
 an einem exakten Ergebnis und nennt die Standardwerkzeuge zum Vergleich.

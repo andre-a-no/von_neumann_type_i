@@ -52,7 +52,7 @@ $P(P(y)x)z=yxy\,z\,yxy=P(y)P(x)P(y)z$ by associativity. (2) Cyclicity of the tra
 $yxy=(x^{1/2}y)^*(x^{1/2}y)\ge0$ (Corollary 1.7), and $P(y)P(y^{-1})=P(y^{-1})P(y)=\mathrm{id}$. (4)
 $p\circ q=\frac14\begin{pmatrix}2&1\\1&0\end{pmatrix}$. $\square$
 
-Every identity in (1) is written with $\circ$ alone, so it holds in every special Jordan algebra; the fundamental
+With $P(y)$ written as $2L(y)^2-L(y^2)$, every identity in (1) is expressed with $\circ$ alone, so it holds in every special Jordan algebra; the fundamental
 formula holds in every Jordan algebra (K. McCrimmon, *A Taste of Jordan Algebras*, Springer 2004, which we do not
 reproduce). The module `torch_vn_algebra.jordan` implements these maps on operators of a `TypeIAlgebra`, lazily
 and batched over all sectors:
@@ -124,7 +124,8 @@ transported back by $\phi$. Finally $s_{2j-1}s_{2j}=1\otimes\cdots\otimes XY\oti
 $j$), so the $*$-algebra generated contains $Z_j$, then $X_j=Z_1\cdots Z_{j-1}s_{2j-1}$ and $Y_j$, hence all
 tensor products of Pauli matrices, a basis of $M_D(\mathbb C)$. $\square$
 
-These are the Jordan–Wigner strings of Section 9.4 (with $Y$ in place of $s^-$).
+Up to signs, $s_{2j-1}$ and $s_{2j}$ are the Majorana operators $c_j+c_j^*$ and $i(c_j-c_j^*)$ of the Jordan–Wigner
+fermions $c_j$ of Section 9.4.
 
 **Theorem 13.4 (spectral theory of $V_m$).** Let $x=(a,u)\in V_m$ and $\lambda_\pm=a\pm|u|$.
 
@@ -271,11 +272,12 @@ All of these except the Albert algebra are special: $\operatorname{Herm}_r(\math
 $\operatorname{Herm}_{2r}(\mathbb C)$ by writing quaternions as $2\times2$ complex matrices, and $V_m$ by Lemma 13.3.
 The Albert algebra is **exceptional**: it is not isomorphic to a Jordan subalgebra of any associative algebra
 (A. A. Albert, *On a certain algebra of quantum mechanics*, Ann. of Math. 35 (1934) 65–73). A reason that can be
-stated briefly: C. M. Glennie (1966) found polynomial identities that hold in every special Jordan algebra but fail
-in $\operatorname{Herm}_3(\mathbb O)$ (see McCrimmon, *A Taste of Jordan Algebras*). The octonions are not
+stated briefly: C. M. Glennie found polynomial identities that hold in every special Jordan algebra but fail
+in $\operatorname{Herm}_3(\mathbb O)$ (*Some identities valid in special Jordan algebras but not valid in all Jordan
+algebras*, Pacific J. Math. 16 (1966) 47–59; see McCrimmon, *A Taste of Jordan Algebras*). The octonions are not
 associative, and $\operatorname{Herm}_r(\mathbb O)$ satisfies the Jordan identity only for $r\le3$, which is why the
-list stops there. No matrix library can therefore represent $\operatorname{Herm}_3(\mathbb O)$ by matrices with the
-product $\frac12(xy+yx)$.
+list stops there. So $\operatorname{Herm}_3(\mathbb O)$ cannot be represented faithfully by real or complex matrices
+(or inside any associative algebra) with the product $\frac12(xy+yx)$; software has to work with octonion entries.
 
 **Theorem 13.8 (Koecher–Vinberg; stated without proof).** The interiors of the cones of squares of Euclidean Jordan
 algebras are exactly the **symmetric cones**: open convex cones in a Euclidean space that are self-dual and
@@ -309,7 +311,9 @@ structure:
 
 **Theorem 13.10 (Kadison; stated without proof).** Let $\Phi$ be a linear bijection between unital C\*-algebras with
 $\Phi(1)=1$ such that $\Phi$ and $\Phi^{-1}$ are positive. Then $\Phi$ is a Jordan $*$-isomorphism. (R. V. Kadison,
-*Isometries of operator algebras*, Ann. of Math. 54 (1951) 325–338.)
+*A generalized Schwarz inequality and algebraic invariants for operator algebras*, Ann. of Math. 56 (1952) 494–503,
+Corollary 5. In *Isometries of operator algebras*, Ann. of Math. 54 (1951) 325–338, he had shown that a linear
+isometry $\Phi$ of one unital C\*-algebra onto another is $\Phi(1)$, a unitary, times a Jordan $*$-isomorphism.)
 
 The converse is immediate: a Jordan $*$-isomorphism maps squares $h^2=h\circ h$ of self-adjoint elements to squares,
 hence the positive cone onto the positive cone. For the factors $M_n$, the Jordan automorphisms are known exactly:
@@ -355,17 +359,22 @@ $\operatorname{Herm}_n,\operatorname{Herm}_m$ form a complex basis of $M_{nm}$, 
 coefficients in it). So $\circ_\theta$ is a Jordan product and $\theta$ an isomorphism. Since $(y^T\circ y'^T)^T=y\circ y'$ and
 $[y^T,y'^T]^T=-[y,y']$, applying $\theta$ to the formula for $(x\otimes y^T)\circ(x'\otimes y'^T)$ gives the formula for
 $\circ_\theta$. On local observables the commutator term vanishes ($[1,1]=0$, $[x,1]=0$). The squares are
-$A\circ_\theta A=\theta(\theta(A)^2)$. Finally $\theta(\omega)=\frac12\sum_{ij}E_{ij}\otimes E_{ji}=\frac12F$
-(Proposition 13.9(b)). $\square$
+$A\circ_\theta A=\theta(\theta(A)^2)$, and $\omega$ lies in $\theta(\operatorname{Herm}_{nm}^+)$ iff $\theta(\omega)\ge0$,
+since $\theta^2=\mathrm{id}$. Finally $\theta(\omega)=\frac12\sum_{ij}E_{ij}\otimes E_{ji}=\frac12F$
+(Proposition 13.9(b); this is the computation in the proof of Proposition 6.1). $\square$
 
 The two products are equally good Jordan algebras, they agree on everything that can be measured on one subsystem
 at a time, and they disagree on which joint operators are positive, that is, on what the states of the
 composite system are. What distinguishes them is the sign of the commutator term, and this sign is fixed by the
-$*$-algebra $M_n\otimes M_m$ and not by the Jordan algebras of the factors. The same computation gives the **PPT
-criterion** (A. Peres, Phys. Rev. Lett. 77 (1996) 1413): a separable state
-$\rho=\sum_kp_ka_k\otimes b_k$, $a_k,b_k\ge0$, has $\theta(\rho)=\sum_kp_ka_k\otimes b_k^T\ge0$ (because
-$a\otimes b=(a^{1/2}\otimes b^{1/2})^2$), so $\omega$ is entangled. For results on which composites of Jordan
-algebras exist, see H. Hanche-Olsen, Canad. J. Math. 35 (1983) 1059–1074, and H. Barnum, M. Graydon, A. Wilce,
+$*$-algebra $M_n\otimes M_m$ and not by the Jordan algebras of the factors. ($\circ_\theta$ is the Jordan product of the
+associative product $A\star B=\theta(\theta(A)\theta(B))$, for which $(x\otimes y)\star(x'\otimes y')=xx'\otimes y'y$:
+the algebra $M_n\otimes M_m^{\rm op}$.) The cone $\theta(\operatorname{Herm}_{nm}^+)$ is
+what gives the **PPT criterion** (A. Peres, Phys. Rev. Lett. 77 (1996) 1413): a separable state
+$\rho=\sum_kp_ka_k\otimes b_k$, $p_k\ge0$, $a_k,b_k\ge0$, lies in both cones, since
+$\theta(\rho)=\sum_kp_ka_k\otimes b_k^T$ with $b_k^T\ge0$ (Proposition 13.9(a)) and
+$a\otimes b=(a^{1/2}\otimes b^{1/2})^2\ge0$. So $\omega$, which is not in $\theta(\operatorname{Herm}_4^+)$, is
+entangled. For results on which composites of Jordan algebras exist, see H. Hanche-Olsen, *On the structure and tensor
+products of JC-algebras*, Canad. J. Math. 35 (1983) 1059–1074, and H. Barnum, M. Graydon, A. Wilce,
 *Composites and categories of Euclidean Jordan algebras*, Quantum 4 (2020) 359.
 
 **Dynamics.** One might hope that time evolution forces the associative product. It does not:
@@ -443,8 +452,10 @@ assert close(jm(z1, jm(z2, Hm)) - jm(z2, jm(z1, Hm)), 0.25 * cm(cm(z1, z2), Hm))
 
 ## 13.6 Back to trace inequalities
 
-Proposition 11.9 (Exp. 3) states $\operatorname{Tr}|YXY|\le\operatorname{Tr}(Y|X|Y)$ for $X=X^*$ and $Y\ge0$. Its proof
-uses $Y$ only through $Z\mapsto YZY$, so it holds for all $Y=Y^*$, and in Jordan language it reads
+Proposition 11.9 (Exp. 3) states $\operatorname{Tr}|YXY|\le\operatorname{Tr}(Y|X|Y)$ for $X=X^*$ and $Y\ge0$ (here
+$X,Y$ are operators of $\mathcal M$, not Pauli matrices). Its proof never uses $Y\ge0$: $YX_\pm Y=T^*T$ with
+$T=X_\pm^{1/2}Y$ needs only $Y=Y^*$, and Lemma 11.8 is applied to $YX_+Y$ and $YX_-Y$. So it holds for all $Y=Y^*$,
+and in Jordan language it reads
 $$
 \operatorname{tr}|P(y)x|\le\operatorname{tr}P(y)|x|,
 $$
@@ -456,9 +467,12 @@ $\operatorname{tr}|P(y)x|\le\operatorname{tr}P(y)|x|$, with equality if $x\in Q$
 
 *Proof.* Let $x_\pm=f_\pm(x)$ with $f_+(t)=\max(t,0)$, $f_-(t)=\max(-t,0)$ (Theorem 13.4(3)): $x_\pm\in Q$, $x=x_+-x_-$ and
 $|x|=x_++x_-$. Put $A=P(y)x_+$ and $B=P(y)x_-$; they lie in $Q$ by Theorem 13.4(5), and $P(y)x=A-B$. Let
-$P(y)x=\mu_1c_1+\mu_2c_2$ be a spectral decomposition (Theorem 13.4(2)), $c$ the sum of the $c_i$ with $\mu_i>0$, and
+$P(y)x=\mu_1c_1+\mu_2c_2$ be a spectral decomposition (Theorem 13.4(2); $c_1=c_w$, $c_2=c_{-w}$, so $c_1+c_2=1$ and
+$c_1\circ c_2=0$), $c$ the sum of the $c_i$ with $\mu_i>0$, and
 $s=2c-1=\sum_i\operatorname{sgn}'(\mu_i)c_i$ with $\operatorname{sgn}'(t)=1$ for $t>0$ and $-1$ otherwise. Then
-$|P(y)x|=s\circ P(y)x$ by Theorem 13.4(3), and $c,1-c\in Q$ (idempotents are squares). By self-duality (Theorem 13.4(4)),
+$s\circ P(y)x=\sum_i|\mu_i|c_i=|P(y)x|$ (by Theorem 13.4(2,3) this does not depend on the choice of $w$ when
+$\mu_1=\mu_2$), and $c,1-c\in Q$ (idempotents are squares). By the easy half of self-duality (Theorem 13.4(4):
+$\operatorname{tr}(a\circ b)\ge0$ for $a,b\in Q$), applied to $\operatorname{tr}(A\circ(1-c))$ and $\operatorname{tr}(B\circ c)$,
 $$
 \operatorname{tr}|P(y)x|=\operatorname{tr}(A\circ c)-\operatorname{tr}(A\circ(1-c))-\operatorname{tr}(B\circ c)+\operatorname{tr}(B\circ(1-c))
 \le\operatorname{tr}A+\operatorname{tr}B=\operatorname{tr}P(y)|x|.
@@ -466,11 +480,19 @@ $$
 If $x\in Q$, then $x_-=0$, $B=0$ and $|P(y)x|=A$, so both sides equal $\operatorname{tr}A$; likewise for $-x\in Q$.
 $\square$
 
-The proof uses only: (i) $P(y)$ maps the cone into itself; (ii) the spectral decomposition; (iii)
-$\operatorname{tr}(a\circ b)\ge0$ for $a,b$ in the cone. All three hold in every Euclidean Jordan algebra [FK94,
-Chapter III] (we do not prove this), so the inequality holds in every Euclidean Jordan algebra — including
-$\operatorname{Herm}_r(\mathbb H)$ and the Albert algebra, which are not self-adjoint parts of complex $*$-algebras. In
-$M_{sa}$ the same argument reproves Proposition 11.9. In $V_m$ the inequality also follows from Proposition 11.9
+The proof uses only: (i) $P(y)Q\subseteq Q$ for every $y$; (ii) the spectral theorem: every $z$ is
+$\sum_i\mu_ic_i$ with orthogonal idempotents $c_i$ summing to $1$, and $f(z)=\sum_if(\mu_i)c_i$ (so $x_\pm$ and the
+idempotents are squares); (iii) $\operatorname{tr}$ is linear, $\operatorname{tr}(\sum_i\mu_ic_i)=\sum_i\mu_i\operatorname{tr}c_i$
+with $\operatorname{tr}c_i\ge0$, and $\operatorname{tr}(a\circ b)\ge0$ for $a,b\in Q$. In a Euclidean Jordan algebra
+of rank $r$, (ii) holds with $r$ primitive idempotents $c_i$ (a Jordan frame), the trace is
+$\operatorname{tr}z=\sum_i\mu_i$, the form $\operatorname{tr}(x\circ y)$ is associative,
+$\operatorname{tr}((x\circ y)\circ z)=\operatorname{tr}(x\circ(y\circ z))$, and (i) holds [FK94, Chapters II–III];
+we do not prove these facts. The last part of (iii) then follows from (i): expanding $P(a^{1/2})=2L(a^{1/2})^2-L(a)$
+and using associativity, $\operatorname{tr}(a\circ b)=\operatorname{tr}P(a^{1/2})b$, the trace of an element of $Q$,
+hence $\ge0$. So the inequality holds in every Euclidean Jordan algebra — including
+$\operatorname{Herm}_r(\mathbb H)$ and the Albert algebra, which are not Jordan isomorphic to self-adjoint parts of
+complex $*$-algebras. In $M_{sa}$ the same argument, with $\operatorname{Tr}$ and $P(y)x=yxy$, reproves
+Proposition 11.9. In $V_m$ the inequality also follows from Proposition 11.9
 through $\phi$, since $\phi(P(y)x)=\phi(y)\phi(x)\phi(y)$ and $\phi(|x|)=|\phi(x)|$; the code checks both:
 
 ```python
@@ -496,8 +518,9 @@ indefinite $x$ (the printed maxima are of order $10^1$–$10^2$ for these Gaussi
 
 To our knowledge there is no mainstream numerical library for Jordan algebras; the operations of this chapter are
 usually written by hand in terms of matrices. Computer algebra covers the algebraic side: SageMath's `JordanAlgebra` builds
-special Jordan algebras and Jordan algebras of symmetric bilinear forms (which include the spin factors), and
-nonassociative-algebra systems test polynomial identities such as Glennie's. The Lorentz cones are standard in
+special Jordan algebras, Jordan algebras of symmetric bilinear forms (which include the spin factors) and, from an
+octonion algebra, the 27-dimensional exceptional Jordan algebra; Magma also has constructors for Jordan algebras,
+including the exceptional one. These are exact algebraic tools rather than batched numerical ones. The Lorentz cones are standard in
 optimisation: SOCP solvers (ECOS, SCS, Clarabel, MOSEK, accessible through cvxpy's `SOC` constraint) use the spectral
 decomposition of $V_m$ (to project onto the cone) or its quadratic representation (for the Nesterov–Todd scaling of
 interior-point methods), and semidefinite solvers do the same for $\operatorname{Herm}_n$. The library adds Jordan products, the quadratic

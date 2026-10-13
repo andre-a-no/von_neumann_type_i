@@ -130,6 +130,7 @@ know of related software, we would be glad to hear about it.
 | 1–3 | the mathematics: matrix algebras, the structure theorem, traces, states and entropy — with complete proofs |
 | 4–8 | where these algebras come from and what one computes in them: symmetries, random matrices, channels, tensor products, dynamics |
 | 9–12 | applications: spin chains, quantum computing, optimisation, equivariant machine learning |
+| 13 | foundations: Jordan algebras, and why quantum mechanics uses *-algebras |
 
 Each chapter states results with proofs, shows the library code, checks the code against an exact
 result, and names the standard tools to compare with.

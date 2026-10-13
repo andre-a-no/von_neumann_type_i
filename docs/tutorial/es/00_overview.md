@@ -140,6 +140,7 @@ en una CPU de varios núcleos). Si conoce software relacionado, nos alegrará sa
 | 1–3 | las matemáticas: álgebras de matrices, el teorema de estructura, trazas, estados y entropía, con demostraciones completas |
 | 4–8 | de dónde surgen estas álgebras y qué se calcula en ellas: simetrías, matrices aleatorias, canales, productos tensoriales, dinámica |
 | 9–12 | aplicaciones: cadenas de espines, computación cuántica, optimización, aprendizaje automático equivariante |
+| 13 | fundamentos: álgebras de Jordan y por qué la mecánica cuántica usa *-álgebras |
 
 Cada capítulo enuncia resultados con sus demostraciones, muestra el código de la biblioteca, lo
 contrasta con un resultado exacto e indica las herramientas estándar con las que compararlo.

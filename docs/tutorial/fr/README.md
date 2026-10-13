@@ -18,7 +18,7 @@ Il s'adresse simultanément à deux publics :
   notion, dans des encadrés intitulés *Interprétation physique*, ainsi que du code
   fonctionnel qu'ils pourront adapter.
 
-Les chapitres 1 à 3 suivent le même plan : la théorie avec ses démonstrations ; le code de la
+Les chapitres 1 à 13 suivent le même plan : la théorie avec ses démonstrations ; le code de la
 bibliothèque correspondant à chaque résultat ; une vérification de ce code par rapport à un
 résultat exact (un théorème, une formule close ou un calcul indépendant) ; une section
 *Points de comparaison* qui cite les outils de référence pour la même tâche ; enfin des
@@ -44,6 +44,7 @@ sorte que chaque exemple fonctionne avec la version actuelle de la bibliothèque
 | 10 | [Calcul quantique](10_quantum_computing.md) | sous-espaces sans décohérence, correction d'erreurs par algèbres d'opérateurs, mélangeurs sous contraintes |
 | 11 | [Optimisation et inégalités de traces](11_optimisation.md) | paramétrisations sous contraintes, échantillonnage ou optimisation |
 | 12 | [Apprentissage automatique équivariant](12_equivariant_learning.md) | les couches équivariantes comme commutants |
+| 13 | [Algèbres de Jordan : pourquoi la mécanique quantique utilise des *-algèbres](13_jordan_algebras.md) | produit de Jordan et représentation quadratique, facteurs de spin et cône de Lorentz, classification de Jordan–von Neumann–Wigner, transposée et transposée partielle, une inégalité de traces sous forme jordanienne |
 
 ## Prérequis
 

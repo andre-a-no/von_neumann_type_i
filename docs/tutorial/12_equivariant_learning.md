@@ -567,7 +567,7 @@ for N, lost in ((1, 2), (2, 0)):
 
 </details>
 
-**Where to go from here.** This is the last chapter of the course. [Chapter 4](04_symmetries.md) develops the
+**Where to go from here.** The last chapter, [Chapter 13](13_jordan_algebras.md), asks why quantum mechanics uses *-algebras rather than Jordan algebras. [Chapter 4](04_symmetries.md) develops the
 representation theory used here: Schur's lemma, characters, and the randomised algorithm behind `dc.from_group`
 (Sections 4.1–4.3). [Chapter 9](09_spin_chains.md) applies the same sectors to spin chains, and the Haar measure on
 $\prod_cU(m_c)$ of [Chapter 5](05_random_matrices.md) gives the natural random initialisation of an equivariant

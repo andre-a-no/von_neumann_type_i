@@ -20,7 +20,7 @@ Er richtet sich zugleich an zwei Arten von Lesern:
   in Kästen mit der Überschrift *Physikalische Bedeutung* sowie lauffähigen Code,
   den sie anpassen können.
 
-Die Kapitel 1–12 sind gleich aufgebaut: Theorie mit Beweisen; der Bibliothekscode zu jedem
+Die Kapitel 1–13 sind gleich aufgebaut: Theorie mit Beweisen; der Bibliothekscode zu jedem
 Ergebnis; eine Überprüfung des Codes an einem exakten Ergebnis (einem Satz, einer
 geschlossenen Formel oder einer unabhängigen Rechnung); ein Abschnitt *Womit man
 vergleichen sollte*, der die Standardwerkzeuge für dieselbe Aufgabe nennt; und Aufgaben
@@ -46,6 +46,7 @@ jedes Beispiel funktioniert also mit der aktuellen Version der Bibliothek.
 | 10 | [Quantencomputing](10_quantum_computing.md) | dekohärenzfreie Unterräume, Fehlerkorrektur mit Operatoralgebren, Mixer mit Nebenbedingungen |
 | 11 | [Optimierung und Spurungleichungen](11_optimisation.md) | Parametrisierungen mit Nebenbedingungen, Stichprobenziehung versus Optimierung |
 | 12 | [Äquivariantes maschinelles Lernen](12_equivariant_learning.md) | äquivariante Schichten als Kommutanten |
+| 13 | [Jordan-Algebren: warum die Quantenmechanik *-Algebren verwendet](13_jordan_algebras.md) | Jordan-Produkt und quadratische Darstellung, Spinfaktoren und Lorentz-Kegel, die Klassifikation von Jordan–von Neumann–Wigner, Transposition und partielle Transposition, eine Spurungleichung in Jordan-Form |
 
 ## Voraussetzungen
 

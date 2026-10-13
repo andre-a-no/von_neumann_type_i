@@ -141,6 +141,7 @@ logiciels apparentés, nous serons heureux d'en entendre parler.
 | 1–3 | les mathématiques : algèbres de matrices, théorème de structure, traces, états et entropie, avec des démonstrations complètes |
 | 4–8 | d'où viennent ces algèbres et ce que l'on y calcule : symétries, matrices aléatoires, canaux, produits tensoriels, dynamique |
 | 9–12 | applications : chaînes de spins, calcul quantique, optimisation, apprentissage automatique équivariant |
+| 13 | fondements : algèbres de Jordan, et pourquoi la mécanique quantique utilise des *-algèbres |
 
 Chaque chapitre énonce des résultats avec leurs démonstrations, présente le code de la
 bibliothèque, le confronte à un résultat exact et indique les outils standard auxquels le
