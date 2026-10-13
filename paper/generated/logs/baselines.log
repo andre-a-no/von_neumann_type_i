@@ -1,7 +1,9 @@
-A: C= 1 k= 2: NumPy loop 110.4 us/sample, NumPy vectorised 1.83, library CPU 1.35;  mean z: -0.468 / -0.444 / -0.448
-A: C= 8 k=16: NumPy loop 1121.3 us/sample, NumPy vectorised 388.12, library CPU 306.02;  mean z: -60.009 / -60.135 / -60.315
-B: L=14 (1 Hamiltonian, dim 3432): eigsh 0.01 s, library 0.06 s (cpu), |dE| <= 6.2e-15
-B: L=14 (10 Hamiltonians, dim 3432): eigsh 0.07 s, library 0.14 s (cpu), |dE| <= 2.7e-14
-B: L=16 (1 Hamiltonian, dim 12870): eigsh 0.03 s, library 0.05 s (cpu), |dE| <= 8.9e-16
-written: /home/user/von_neumann_type_i/paper/generated
-[resources] wall 4 s, peak host RSS 0.66 GiB
+A: C= 1 k= 2: NumPy loop 160.2 us/sample, NumPy vectorised 2.49, library CPU 1.50, library GPU 124.013;  mean z: -0.455 / -0.449 / -0.451
+A: C=16 k=16: NumPy loop 2852.0 us/sample, NumPy vectorised 689.66, library CPU 883.84, library GPU 1999.554;  mean z: -121.179 / -121.319 / -121.181
+A: C=32 k=16: NumPy loop 5701.9 us/sample, NumPy vectorised 1379.97, library CPU 1688.46, library GPU 4005.279;  mean z: -243.100 / -243.336 / -243.504
+B: L=16 (1 Hamiltonian, dim 12870): eigsh 0.03 s, library 0.06 s (cuda), |dE| <= 6.2e-15
+B: L=16 (20 Hamiltonians, dim 12870): eigsh 0.62 s, library 0.11 s (cuda), |dE| <= 4.3e-14
+B: L=18 (1 Hamiltonian, dim 48620): eigsh 0.12 s, library 0.06 s (cuda), |dE| <= 3.6e-15
+B: L=20 (1 Hamiltonian, dim 184756): eigsh 0.54 s, library 0.06 s (cuda), |dE| <= 1.1e-14
+written: /home/user/von_neumann_type_i/von_neumann_type_i/paper/generated
+[resources] wall 122 s, peak host RSS 2.14 GiB, peak GPU memory 0.70 GiB

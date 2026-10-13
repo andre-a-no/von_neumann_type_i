@@ -83,3 +83,37 @@ def test_extreme_eigenvalues_placed_in_any_sector():
     assert torch.allclose(X.operator().michelson_contrast, torch.full((200,), 0.5, dtype=torch.float64))
     P = opt.SpectrumParam(a, 5, delta=torch.full((5,), 0.5, dtype=torch.float64), pin_sector=1)
     assert (P.pin_max[:, 0] == 1).all() and (P.pin_min[:, 0] == 1).all()
+
+
+def test_sign_patterns_cover_balanced_sectors():
+    # the number of negative eigenvalues is drawn per sector, or one fraction for all sectors: a pattern with one
+    # negative eigenvalue in every one of 8 sectors of size 2 must be common (iid signs: probability 2^-8)
+    torch.manual_seed(0)
+    S = opt.SelfAdjointParam(alg(k=2, C=8), 400)
+    balanced = ((S.signs < 0).sum(-1) == 1).all(-1).float().mean().item()
+    assert balanced > 0.1
+
+
+def test_exp3_sign_search_reaches_direct_sum():
+    # Exp. 3 at Delta(|X|) = 0: |X| = 1, z = Tr Y^2 - ||Y X Y||_1; a direct sum of C optimal 2x2 blocks gives z -> C
+    # (Y -> projection onto (e1 + e2)/sqrt2 per block, X = diag(1, -1)); it needs a mixed sign pattern in every sector
+    torch.manual_seed(0)
+    a = alg(k=2, C=4)
+    d = torch.zeros(32, dtype=torch.float64)
+    X, Y = opt.SelfAdjointParam(a, 32, delta=d), opt.PositiveParam(a, 32)
+
+    def z():
+        x, y = X.operator(), Y.operator()
+        return (y @ X.abs_operator() @ y).trace.real - (y @ x @ y).trace_norm()
+    v = opt.extremize(z, [X, Y], maximize=True, rounds=6, steps=40)
+    assert v.max().item() > 0.97 * 4
+
+
+def test_objective_twice_without_step():
+    # U is cached per parameter state; a backward pass must invalidate the cache (its graph is freed)
+    a = alg(k=3, C=2)
+    X, U = opt.PositiveParam(a, 4), opt.UnitaryParam(a, 4)
+    for _ in range(2):
+        z = (X.operator() @ U.operator()).trace.real.sum() + X.abs_operator().trace.real.sum()
+        z.backward()
+    assert U.G.grad is not None and torch.isfinite(U.G.grad).all()

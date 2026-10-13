@@ -78,8 +78,8 @@ def numpy_vectorised(B, C, k):
     return np.abs(t1) - t2
 
 
-def library(B, C, k, device):
-    alg = TypeIAlgebra([k] * C, [k] * C, complex_valued=False, precision='double', device=device)
+def library(B, C, k, device, precision='double'):
+    alg = TypeIAlgebra([k] * C, [k] * C, complex_valued=False, precision=precision, device=device)
 
     def sampler(d):
         delta = torch.rand(B, 1, device=device)
@@ -93,13 +93,21 @@ def library(B, C, k, device):
     return ((X @ U @ Y).trace.abs() - (X @ Y).trace.real).cpu().numpy()
 
 
-def timed(fn, *a):
-    fn(*a)                                                  # warm-up
-    t0 = time.perf_counter()
-    out = fn(*a)
-    if 'device' in fn.__code__.co_varnames:
-        sync(a[-1])
-    return time.perf_counter() - t0, out
+def timed(fn, *a, repeats=5, budget=20.0):
+    """Median wall-clock time over up to `repeats` runs after a warm-up (fewer if one run exceeds budget/repeats);
+    the output of the last run."""
+    dev_ = next((x for x in a if isinstance(x, str) and (x == 'cpu' or x.startswith('cuda'))), 'cpu')
+    fn(*a)                                                  # warm-up (library loading, cost probes, caches)
+    times = []
+    while True:
+        sync(dev_)
+        t0 = time.perf_counter()
+        out = fn(*a)
+        sync(dev_)
+        times.append(time.perf_counter() - t0)
+        if len(times) >= repeats or sum(times) > budget:
+            break
+    return float(np.median(times)), out
 
 
 B_LOOP = 20 if CHECK else 2000 if FULL else 300
@@ -118,13 +126,17 @@ for C, k in ((1, 2), (16, 16), (32, 16)) if FULL else ((1, 2), (8, 16)):
     r['stderr_z'] = se
     r['max_sigma'] = max(abs(r['mean_z'][a] - r['mean_z'][b]) / math.hypot(se[a], se[b])
                          for a, b in (('loop', 'vec'), ('loop', 'lib'), ('vec', 'lib')))
+    from scipy.stats import ks_2samp
+    r['ks_p'] = float(ks_2samp(z_vec, z_cpu).pvalue)                  # same distribution of z (two-sample KS)
     if dev != 'cpu':
         t_gpu, _ = timed(library, B_VEC, C, k, dev)
+        t_gpu32, _ = timed(library, B_VEC, C, k, dev, 'single')     # FP64 is slow on consumer GPUs
         r['us_lib_gpu'] = 1e6 * t_gpu / B_VEC
+        r['us_lib_gpu32'] = 1e6 * t_gpu32 / B_VEC
     rows_a.append(r)
     print(f"A: C={C:2d} k={k:2d}: NumPy loop {r['us_loop']:.1f} us/sample, NumPy vectorised "
           f"{r['us_numpy_vec']:.2f}, library CPU {r['us_lib_cpu']:.2f}"
-          + (f", library GPU {r['us_lib_gpu']:.3f}" if 'us_lib_gpu' in r else '')
+          + (f", library GPU {r['us_lib_gpu']:.3f} (FP32 {r['us_lib_gpu32']:.3f})" if 'us_lib_gpu' in r else '')
           + f";  mean z: {r['mean_z']['loop']:.3f} / {r['mean_z']['vec']:.3f} / {r['mean_z']['lib']:.3f}")
 
 
@@ -147,30 +159,39 @@ for L, R in (((16, 1), (16, 2 if CHECK else 20), (18, 1), (20, 1)) if FULL else 
     t0 = time.perf_counter()
     e_sp = [spla.eigsh(M, k=1, which='SA', tol=1e-12, v0=v0)[0][0] for M in mats]
     t_sp = time.perf_counter() - t0
-    krylov.ground_state(H)                                   # warm-up
-    sync(dev)
-    t0 = time.perf_counter()
-    E, _, _ = krylov.ground_state(H)
-    sync(dev)
-    t_kr = time.perf_counter() - t0
+    times = {}
+    for d in (['cpu'] + ([dev] if dev != 'cpu' else [])):            # the library on the CPU, and on the GPU
+        Hd = H if d == dev else SpinChain(L, 'periodic', complex_valued=False, device=d).xxz_sparse(1.0, 1.0, h, sector=L // 2)
+        krylov.ground_state(Hd)                                       # warm-up
+        sync(d)
+        t0 = time.perf_counter()
+        Ed, _, _ = krylov.ground_state(Hd)
+        sync(d)
+        times[d] = time.perf_counter() - t0
+        if d == dev:
+            E = Ed
     diff = float(np.max(np.abs(E.cpu().numpy() - np.array(e_sp))))
-    rows_b.append(dict(L=L, realisations=R, dim=H.dim, s_scipy=t_sp, s_library=t_kr, max_diff=diff))
+    rows_b.append(dict(L=L, realisations=R, dim=H.dim, s_scipy=t_sp, s_library_cpu=times['cpu'],
+                       s_library_gpu=times.get(dev) if dev != 'cpu' else None, max_diff=diff))
     print(f"B: L={L} ({R} Hamiltonian{'s' if R > 1 else ''}, dim {H.dim}): eigsh {t_sp:.2f} s, "
-          f"library {t_kr:.2f} s ({dev}), |dE| <= {diff:.1e}")
+          f"library CPU {times['cpu']:.2f} s" + (f", GPU {times[dev]:.2f} s" if dev != 'cpu' else '')
+          + f", |dE| <= {diff:.1e}")
 
 save_json(args, 'baselines', dict(monte_carlo=rows_a, ground_states=rows_b, b_loop=B_LOOP))
 tex = env_macro(args, 'Base')
 gpu = dev != 'cpu'
 tex += f"\\newcommand{{\\BaseHasGPU}}{{{'1' if gpu else '0'}}}\n"
 tex += f"\\newcommand{{\\BaseMaxSigma}}{{{max(r['max_sigma'] for r in rows_a):.1f}}}\n"
+tex += f"\\newcommand{{\\BaseMinKS}}{{{min(r['ks_p'] for r in rows_a):.2f}}}\n"
 tex += "\\newcommand{\\BaseMCRows}{%\n"
 for r in rows_a:
     tex += (f"{r['C']} & {r['k']} & {num3(r['us_loop'])} & {num3(r['us_numpy_vec'])} & {num3(r['us_lib_cpu'])}"
-            + (f" & {num3(r['us_lib_gpu'])}" if gpu else " & --") + " \\\\\n")
+            + (f" & {num3(r['us_lib_gpu'])} & {num3(r['us_lib_gpu32'])}" if gpu else " & -- & --") + " \\\\\n")
 tex += "}\n\\newcommand{\\BaseGSRows}{%\n"
 for r in rows_b:
-    tex += (f"{r['L']} & {r['dim']} & {r['realisations']} & {num3(r['s_scipy'])} & {num3(r['s_library'])} "
-            f"& {r['max_diff']:.1e} \\\\\n")
+    tex += (f"{r['L']} & {r['dim']} & {r['realisations']} & {num3(r['s_scipy'])} & {num3(r['s_library_cpu'])} & "
+            + (num3(r['s_library_gpu']) if r['s_library_gpu'] is not None else '--')
+            + f" & {r['max_diff']:.1e} \\\\\n")
 tex += "}\n"
 write_tex(args, 'baselines', tex)
 print("written:", args.out)

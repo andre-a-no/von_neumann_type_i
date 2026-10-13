@@ -60,7 +60,7 @@ def operations(alg, B, dev, k, C):
     ops = {
         'generate': lambda: gen().matrix,
         'f(A) eigh': lambda: alg.operator(X.matrix, is_self_adjoint=True).apply_function(torch.sqrt).matrix,
-        '|A| SVD': lambda: alg.operator(X.matrix).abs().matrix,
+        '|A|': lambda: alg.operator(X.matrix).abs().matrix,
         'contrast': lambda: alg.operator(X.matrix, is_self_adjoint=True, is_positive=True).michelson_contrast,
         'channel': lambda: Phi(rho).matrix,
     }
@@ -116,7 +116,7 @@ for r in rows:
     main = 1e6 * r[f't_{args.device}']
     tex += f"{r['op']} & {r['k']} & {r['C']} & {r['batch']} & {num3(main)}"
     if two:
-        tex += f" & {num3(1e6 * r['t_cpu'])} & {r['speedup']:.1f}"
+        tex += f" & {num3(1e6 * r['t_cpu'])} & {num3(r['speedup'])}"
     tex += " \\\\\n"
 tex += "}\n"
 write_tex(args, 'benchmark', tex)

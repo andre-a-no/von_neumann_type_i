@@ -29,6 +29,7 @@ import torch
 from common import ROOT, parse_args, save_json, write_tex, env_macro, sync, sci, load_partial, save_partial, finish_partial
 
 from torch_vn_algebra import TypeIAlgebra, optimize as opt
+from bounds_checks import DMAX, structured_samples, direct_sum_bound, exact_envelope
 
 args = parse_args(__doc__)
 dev = args.device
@@ -41,6 +42,8 @@ GRID2 = np.linspace(0.0, 0.95, 11 if FULL else 5)        # joint (Delta(X), Delt
 CONFIGS_2D = [(2, 1), (2, 2), (4, 1)] if FULL else [(2, 1)]
 STARTS_2D = 32 if FULL else 8
 STARTS = 64 if FULL else 12
+STRUCTURED = 400 if CHECK else 4000 if FULL else 1000     # structured samples per configuration (k C <= 64)
+REOPT = 200                                              # outside samples re-optimised per axis and direction
 ROUNDS, STEPS = (1, 2) if CHECK else (10, 50) if FULL else (6, 40)
 MC_DIR = ROOT / 'results' / 'experiments'
 
@@ -65,13 +68,17 @@ def build(exp, alg, batch, delta_x, delta_y):
     elif exp == 2:
         def z():
             x0, y0 = X.operator(), Y.operator()
-            return trace_norm(x0 @ U.operator() @ y0) - (x0 @ y0).trace.real
+            M = x0 @ U.operator() @ y0
+            M._is_self_adjoint = False                    # not self-adjoint: singular values, no check per step
+            return trace_norm(M) - (x0 @ y0).trace.real
         params = [X, Y, U]
     else:
         def z():
             x, y = X.operator(), Y.operator()
             absx = X.abs_operator()                       # |X| = U diag(lambda) U^*, known exactly
-            return (y @ absx @ y).trace.real - trace_norm(y @ x @ y)
+            M = y @ x @ y
+            M._is_self_adjoint = True                     # Y X Y is self-adjoint: eigenvalues, no check per step
+            return (y @ absx @ y).trace.real - trace_norm(M)
         params = [X, Y]
     return z, params
 
@@ -84,7 +91,9 @@ def envelope(exp, k, C, along):
     grid = torch.tensor(GRID, dtype=torch.float64, device=dev).repeat_interleave(STARTS)
     out = {}
     for name, maximize in (('sup', True), ('inf', False)):
-        torch.manual_seed(args.seed + 17 * exp + (0 if maximize else 1))
+        # independent starting points for every configuration, axis and direction (reproducible)
+        torch.manual_seed(args.seed + 100000 * exp + 1000 * k + 10 * C + (0 if along == 'x' else 5)
+                          + (0 if maximize else 1))
         dx, dy = (grid, None) if along == 'x' else (None, grid)
         z, params = build(exp, alg, batch, dx, dy)
         vals = opt.extremize(z, params, maximize=maximize, rounds=ROUNDS, steps=STEPS)
@@ -146,31 +155,51 @@ for exp in (1, 2, 3):
             env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
             sync(dev)
             outside = interp_outside = None
-        if mc is not None and r is None:
-            tol = 1e-6 + 1e-3 * np.abs(mc['z']).max()
-            # every sample is checked against both envelopes: along Delta(X) and along Delta(Y)
+        # the envelope is the multistart search; the direct sums of the k = 2, C = 1 solution (computed first) are
+        # admissible configurations and serve as an independent check (and are drawn in the figure)
+        base = next((b for b in results if b['experiment'] == exp and b['k'] == 2 and b['C'] == 1), None)
+        dsum = None if base is None or (k, C) == (2, 1) or k % 2 else \
+            {along: {n: direct_sum_bound(base, along, n, k * C // 2) for n in ('sup', 'inf')} for along in ('x', 'y')}
+
+        def outside_count(samples):
+            """Samples outside the search envelopes (along either contrast), before and after re-optimising at
+            their exact contrast (all outside samples of an axis and direction in one batched search, at most
+            REOPT of them; further ones count as outside)."""
+            tol = 1e-6 + 1e-3 * np.abs(samples['z']).max()
             alg1 = TypeIAlgebra([k] * C, [k] * C, complex_valued=False, precision='double', device=dev)
             still_out, interp_out = set(), set()
             for along, col in (('x', 'deltaX'), ('y', 'deltaY')):
-                ub = np.interp(mc[col], GRID, env[along]['sup'])   # linear interpolation between
-                lb = np.interp(mc[col], GRID, env[along]['inf'])   # grid points (can cut corners)
-                bad = mc[(mc['z'] > ub + tol) | (mc['z'] < lb - tol)]
-                interp_out |= set(bad.index)
-                # interpolation can cut corners of the envelope: re-optimise at the exact contrast of every
-                # such sample (at most 50 per axis) and count those that are still outside
-                for n_row, (idx, row) in enumerate(bad.iterrows()):
-                    if n_row >= 50:
-                        still_out.add(idx)
+                ub = np.interp(samples[col], GRID, env[along]['sup'])   # linear interpolation between
+                lb = np.interp(samples[col], GRID, env[along]['inf'])   # grid points (can cut corners)
+                for above, bad in ((True, samples[samples['z'] > ub + tol]), (False, samples[samples['z'] < lb - tol])):
+                    interp_out |= set(bad.index)
+                    if bad.empty:
                         continue
-                    above = row['z'] > np.interp(row[col], GRID, env[along]['sup'])
-                    d = torch.full((STARTS,), float(row[col]), dtype=torch.float64, device=dev)
-                    z1, p1 = build(exp, alg1, STARTS, *((d, None) if along == 'x' else (None, d)))
-                    v = opt.extremize(z1, p1, maximize=above, rounds=ROUNDS, steps=STEPS)
-                    v = torch.nan_to_num(v, nan=-math.inf if above else math.inf)  # a failed start must not hide a sample
-                    bound = v.max().item() if above else v.min().item()
-                    if (row['z'] > bound + tol) if above else (row['z'] < bound - tol):
-                        still_out.add(idx)
-            interp_outside, outside = len(interp_out), len(still_out)
+                    still_out |= set(bad.index[REOPT:])
+                    bad = bad.iloc[:REOPT]
+                    # batched: as many samples per search as fit the batch of one envelope (G * STARTS starts)
+                    per = max(1, (len(GRID) * STARTS) // STARTS)
+                    for i0 in range(0, len(bad), per):
+                        part = bad.iloc[i0:i0 + per]
+                        n = len(part)
+                        d = torch.tensor(part[col].to_numpy(), dtype=torch.float64, device=dev).repeat_interleave(STARTS)
+                        torch.manual_seed(args.seed + 7 + i0)
+                        z1, p1 = build(exp, alg1, n * STARTS, *((d, None) if along == 'x' else (None, d)))
+                        v = opt.extremize(z1, p1, maximize=above, rounds=ROUNDS, steps=STEPS).reshape(n, STARTS)
+                        bound = (v.max(dim=1)[0] if above else v.min(dim=1)[0]).cpu().numpy()
+                        zs = part['z'].to_numpy()
+                        out = zs > bound + tol if above else zs < bound - tol
+                        still_out |= set(part.index[out])
+            return len(interp_out), len(still_out)
+
+        st = structured_samples(exp, k, C, STRUCTURED if k * C <= 64 else STRUCTURED // 4, args.seed + 7 * exp + k + C,
+                                GRID[-1])
+        if r is None:
+            if mc is not None:
+                interp_outside, outside = outside_count(mc)
+            st_interp, st_outside = outside_count(st)
+        else:
+            st_interp, st_outside = r['structured_outside_interpolated'], r['structured_outside']
         if r is None:
             r = dict(experiment=exp, k=k, C=C, grid=GRID.tolist(),
                      sup_vs_x=env['x']['sup'].tolist(), inf_vs_x=env['x']['inf'].tolist(),
@@ -179,6 +208,9 @@ for exp in (1, 2, 3):
                      mc_outside_interpolated=interp_outside,
                      mc_max=None if mc is None else float(mc['z'].max()),
                      mc_min=None if mc is None else float(mc['z'].min()),
+                     structured_samples=len(st), structured_outside=st_outside,
+                     structured_outside_interpolated=st_interp,
+                     structured_max=float(st['z'].max()), structured_min=float(st['z'].min()),
                      seconds=time.time() - t0)
             save_partial(args, f'exp{exp}_k{k}_C{C}', r)
         results.append(r)
@@ -187,20 +219,44 @@ for exp in (1, 2, 3):
               + ("" if mc is None else f"; Monte Carlo range [{r['mc_min']:+.4g}, {r['mc_max']:+.4g}], "
                  f"{interp_outside} of {len(mc)} samples outside the interpolated envelopes, "
                  f"{outside} after re-optimising at their exact contrast")
+              + f"; structured samples [{r['structured_min']:+.4g}, {r['structured_max']:+.4g}], "
+              f"{st_outside} of {len(st)} outside"
               + f"  ({r['seconds']:.0f} s)")
+        if dsum is not None:
+            # how far the computed envelope falls short of the direct-sum configurations (relative to the range of
+            # z); positive: the optimiser missed a configuration that exists
+            short = []
+            scale = max(np.abs(env[a][n]).max() for n in ('sup', 'inf') for a in ('x', 'y'))
+            for along in ('x', 'y'):
+                for n, sgn in (('sup', 1), ('inf', -1)):
+                    ref, got = dsum[along][n], env[along][n]
+                    short.append(float(np.max(sgn * (ref - got)) / max(np.abs(ref).max(), 1e-3 * scale)))
+            r['direct_sum_shortfall'] = max(short)
+            print(f"    search vs direct sums of the k=2, C=1 solutions: largest shortfall "
+                  f"{100 * r['direct_sum_shortfall']:.2f}% of the largest |value| of that curve")
 
         fig, axes = plt.subplots(1, 2, figsize=(9, 3.4), sharey=True)
         for ax, along, col, label in ((axes[0], 'x', 'deltaX', LABELS[exp][0]),
                                       (axes[1], 'y', 'deltaY', LABELS[exp][1])):
             if mc is not None:
                 ax.scatter(mc[col], mc['z'], s=1, alpha=0.25, color='#9ab', rasterized=True,
-                           label=f'Monte Carlo ({len(mc)})')
+                           label=f'Monte Carlo, Haar ({len(mc)})')
+            ax.scatter(st[col], st['z'], s=1, alpha=0.35, color='#e8a33d', rasterized=True,
+                       label=f'two-level spectra, structured bases ({len(st)})')
             ax.plot(GRID, env[along]['sup'], 'r-', lw=1.5, label='sup (optimisation)')
             ax.plot(GRID, env[along]['inf'], 'b-', lw=1.5, label='inf (optimisation)')
+            for curve in (exact_envelope(exp, k, C, GRID) or {}).values():
+                ax.plot(GRID, curve, 'k--', lw=0.9, label='exact')
+            if dsum is not None and exp in (1, 3):
+                ax.plot(GRID, dsum[along]['sup'], 'k:', lw=1.2, label='direct sum of $k=2$ solutions')
             ax.axhline(0, color='k', lw=0.5)
             ax.set_xlabel(label)
         axes[0].set_ylabel('$z$')
-        axes[0].legend(frameon=False, fontsize=7, markerscale=5)
+        handles, labels = axes[0].get_legend_handles_labels()
+        seen = {}
+        for h, lab in zip(handles, labels):
+            seen.setdefault(lab, h)
+        axes[0].legend(seen.values(), seen.keys(), frameon=False, fontsize=6, markerscale=5)
         fig.suptitle(f'Experiment {exp}: $k={k}$, $C={C}$', fontsize=10)
         fig.tight_layout()
         fig.savefig(f"{args.figdir}/bounds_exp{exp}_k{k}_C{C}.pdf", metadata={"CreationDate": None})
@@ -245,24 +301,26 @@ for r in results:
         g = np.array(r['grid'])
         exact = -(r['k'] * r['C'] - 2 * g / (1 + g))
         r['inf_exact'] = exact.tolist()
-        exact_dev = max(exact_dev, float(np.max(np.abs(np.array(r['inf_vs_x']) - exact) / np.abs(exact))))
-print(f"Exp 1 lower envelope vs exact -(kC - 2d/(1+d)): max relative deviation {exact_dev:.1e}")
+        # along Delta(Y) the same (Tr(X U Y) = Tr(Y U^T X) in a real algebra: X and Y exchange roles)
+        for along in ('x', 'y'):
+            exact_dev = max(exact_dev, float(np.max(np.abs(np.array(r[f'inf_vs_{along}']) - exact) / np.abs(exact))))
+print(f"Exp 1 lower envelopes (both contrasts) vs exact -(kC - 2d/(1+d)): max relative deviation {exact_dev:.1e}")
 # analytic check: for Exp 2, |X| = X_0 and |Y| = Y_0, so z = ||X_0 V Y_0||_1 - Tr(X_0 Y_0); von Neumann's trace
 # inequality, its lower counterpart and rearrangement give, sector by sector,
-# sup z = sum_c sum_i x_ci^desc (y_ci^desc - y_ci^asc) = -inf z for given spectra. For k = 2, C = 1 this is
-# (1 - lambda_min(X)) (1 - lambda_min(Y)); with Delta(|X|) = d and the other contrast free in [0, DMAX] the sup is
-# 2d/(1+d) * (1 - lo(DMAX)), which tends to 2d/(1+d) as DMAX -> 1.
-DMAX = 0.999                                                  # upper end of the free contrast (optimize default)
-lo_max = (1 - DMAX) / (1 + DMAX)
-exact_dev2 = None
+# sup z = sum_c sum_i x_ci^desc (y_ci^desc - y_ci^asc) = -inf z for given spectra, and
+# sum_i x_i^desc (y_i^desc - y_i^asc) = sum_{i <= k/2} (x_i^desc - x_{k+1-i}^desc)(y_i^desc - y_{k+1-i}^desc)
+# <= floor(k/2) (1 - lo_X)(1 - lo_Y), attained for two-level spectra. With Delta(|X|) = d prescribed and the other
+# contrast free in [0, DMAX]: sup z = -inf z = C floor(k/2) 2d/(1+d) (1 - lo(DMAX)).
+exact_dev2 = 0.0
 for r in results:
-    if r['experiment'] == 2 and r['k'] == 2 and r['C'] == 1:
-        g = np.array(r['grid'])
-        exact = 2 * g / (1 + g) * (1 - lo_max)
-        mask = exact > 1e-3
-        exact_dev2 = float(max(np.max(np.abs(np.array(r['sup_vs_x'])[mask] - exact[mask]) / exact[mask]),
-                               np.max(np.abs(np.array(r['inf_vs_x'])[mask] + exact[mask]) / exact[mask])))
-        print(f"Exp 2 envelopes (k=2, C=1) vs exact +-2d/(1+d)(1-lo): max relative deviation {exact_dev2:.1e}")
+    if r['experiment'] == 2:
+        for along in ('x', 'y'):
+            ex = exact_envelope(2, r['k'], r['C'], GRID)['sup']
+            mask = ex > 1e-3
+            for n, sgn in (('sup', 1), ('inf', -1)):
+                exact_dev2 = max(exact_dev2, float(np.max(np.abs(sgn * np.array(r[f'{n}_vs_{along}'])[mask] - ex[mask])
+                                                          / ex[mask])))
+print(f"Exp 2 envelopes (all k, C) vs exact +-C floor(k/2) 2d/(1+d)(1-lo): max relative deviation {exact_dev2:.1e}")
 # conjectured closed forms for k = 2, C = 1 along Delta(X) = d (no proof; compared numerically):
 # Exp 1: sup z = d^2 / (2 (1 + d)),  Exp 3: sup z = 1 - d
 conj_dev = {}
@@ -281,7 +339,7 @@ tex = env_macro(args, 'Bounds')
 tex += f"\\newcommand{{\\BoundsStarts}}{{{STARTS}}}\n\\newcommand{{\\BoundsSteps}}{{{ROUNDS * STEPS}}}\n"
 tex += f"\\newcommand{{\\BoundsGrid}}{{{len(GRID)}}}\n"
 tex += f"\\newcommand{{\\BoundsExactDev}}{{{exact_dev:.1e}}}\n"
-tex += f"\\newcommand{{\\BoundsExactDevTwo}}{{{'--' if exact_dev2 is None else f'{exact_dev2:.1e}'}}}\n"
+tex += f"\\newcommand{{\\BoundsExactDevTwo}}{{{exact_dev2:.1e}}}\n"
 for e, name in ((1, 'One'), (3, 'Three')):
     tex += f"\\newcommand{{\\BoundsConjDev{name}}}{{{f'{conj_dev[e]:.1e}' if e in conj_dev else '--'}}}\n"
 exp3_inf = max((abs(v) for r in results if r['experiment'] == 3 for v in r['inf_vs_x'] + r['inf_vs_y']), default=0.0)
@@ -291,6 +349,11 @@ mc_out = sum(r['mc_outside'] or 0 for r in results)
 tex += f"\\newcommand{{\\BoundsExpThreeInf}}{{{sci(exp3_inf, 1)}}}\n"          # max |inf z| of Exp. 3 (proven 0)
 tex += f"\\newcommand{{\\BoundsMcChecked}}{{{mc_checked}}}\n\\newcommand{{\\BoundsMcDropped}}{{{mc_dropped}}}\n"
 tex += f"\\newcommand{{\\BoundsMcOutside}}{{{mc_out}}}\n"
+st_checked = sum(r['structured_samples'] for r in results)
+st_out = sum(r['structured_outside'] for r in results)
+shortfall = max((r.get('direct_sum_shortfall') or 0.0 for r in results), default=0.0)
+tex += f"\\newcommand{{\\BoundsStChecked}}{{{st_checked}}}\n\\newcommand{{\\BoundsStOutside}}{{{st_out}}}\n"
+tex += f"\\newcommand{{\\BoundsShortfall}}{{{100 * max(shortfall, 0.0):.1f}}}\n"         # percent of max|z|
 def num(x, d=4):
     return '0' if abs(x) < 1e-6 else f"{x:+.{d}g}"
 

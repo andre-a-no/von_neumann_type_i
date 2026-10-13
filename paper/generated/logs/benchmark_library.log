@@ -1,30 +1,62 @@
-k=  4 C=   1 B= 4096 generate   cpu:      1.75 us/sample
-k=  4 C=   1 B= 4096 f(A) eigh  cpu:      4.55 us/sample
-k=  4 C=   1 B= 4096 |A| SVD    cpu:      5.98 us/sample
-k=  4 C=   1 B= 4096 contrast   cpu:      1.52 us/sample
-k=  4 C=   1 B= 4096 channel    cpu:      0.41 us/sample
-k=  4 C=   1 B= 4096 exp(tL)    cpu:     49.80 us/sample
-k=  4 C=   1 B= 4096 opt. step  cpu:     12.02 us/sample
-k=  4 C=  16 B= 1024 generate   cpu:     33.07 us/sample
-k=  4 C=  16 B= 1024 f(A) eigh  cpu:     45.07 us/sample
-k=  4 C=  16 B= 1024 |A| SVD    cpu:     84.95 us/sample
-k=  4 C=  16 B= 1024 contrast   cpu:     22.31 us/sample
-k=  4 C=  16 B= 1024 channel    cpu:      5.67 us/sample
-k=  4 C=  16 B= 1024 exp(tL)    cpu:   1038.59 us/sample
-k=  4 C=  16 B= 1024 opt. step  cpu:    212.00 us/sample
-k= 16 C=   1 B= 1024 generate   cpu:     13.73 us/sample
-k= 16 C=   1 B= 1024 f(A) eigh  cpu:     28.89 us/sample
-k= 16 C=   1 B= 1024 |A| SVD    cpu:     53.92 us/sample
-k= 16 C=   1 B= 1024 contrast   cpu:     12.16 us/sample
-k= 16 C=   1 B= 1024 channel    cpu:      3.93 us/sample
-k= 16 C=   1 B= 1024 exp(tL)    cpu:  12146.51 us/sample
-k= 16 C=   1 B= 1024 opt. step  cpu:    193.06 us/sample
-k= 16 C=  16 B=   64 generate   cpu:    415.57 us/sample
-k= 16 C=  16 B=   64 f(A) eigh  cpu:    523.51 us/sample
-k= 16 C=  16 B=   64 |A| SVD    cpu:    826.61 us/sample
-k= 16 C=  16 B=   64 contrast   cpu:    207.95 us/sample
-k= 16 C=  16 B=   64 channel    cpu:     50.39 us/sample
-k= 16 C=  16 B=   64 exp(tL)    cpu: 223766.75 us/sample
-k= 16 C=  16 B=   64 opt. step  cpu:   2942.02 us/sample
-written: /home/user/von_neumann_type_i/paper/generated /home/user/von_neumann_type_i/paper/figures
-[resources] wall 8 s, peak host RSS 0.73 GiB
+k=  4 C=   1 B= 4096 generate   cuda:     63.52 us/sample  cpu:      1.90 us/sample  speedup 0.0x
+k=  4 C=   1 B= 4096 f(A) eigh  cuda:      0.16 us/sample  cpu:      3.06 us/sample  speedup 19.2x
+k=  4 C=   1 B= 4096 |A| SVD    cuda:      0.39 us/sample  cpu:      5.27 us/sample  speedup 13.6x
+k=  4 C=   1 B= 4096 contrast   cuda:      0.10 us/sample  cpu:      1.44 us/sample  speedup 14.7x
+k=  4 C=   1 B= 4096 channel    cuda:      0.12 us/sample  cpu:      0.19 us/sample  speedup 1.6x
+k=  4 C=   1 B= 4096 exp(tL)    cuda:      2.05 us/sample  cpu:     34.07 us/sample  speedup 16.6x
+k=  4 C=   1 B= 4096 opt. step  cuda:      2.76 us/sample  cpu:      7.78 us/sample  speedup 2.8x
+k=  4 C=  16 B= 4096 generate   cuda:    995.24 us/sample  cpu:     28.14 us/sample  speedup 0.0x
+k=  4 C=  16 B= 4096 f(A) eigh  cuda:      0.51 us/sample  cpu:     44.69 us/sample  speedup 86.9x
+k=  4 C=  16 B= 4096 |A| SVD    cuda:      4.17 us/sample  cpu:     80.73 us/sample  speedup 19.4x
+k=  4 C=  16 B= 4096 contrast   cuda:      0.36 us/sample  cpu:     22.00 us/sample  speedup 61.5x
+k=  4 C=  16 B= 4096 channel    cuda:      1.34 us/sample  cpu:      4.53 us/sample  speedup 3.4x
+k=  4 C=  16 B= 4096 exp(tL)    cuda:     49.22 us/sample  cpu:    555.99 us/sample  speedup 11.3x
+k=  4 C=  16 B= 4096 opt. step  cuda:      9.54 us/sample  cpu:     80.24 us/sample  speedup 8.4x
+k=  4 C= 256 B= 1024 generate   cuda:  15709.57 us/sample  cpu:    534.06 us/sample  speedup 0.0x
+k=  4 C= 256 B= 1024 f(A) eigh  cuda:      9.01 us/sample  cpu:    741.58 us/sample  speedup 82.3x
+k=  4 C= 256 B= 1024 |A| SVD    cuda:     66.27 us/sample  cpu:   1283.25 us/sample  speedup 19.4x
+k=  4 C= 256 B= 1024 contrast   cuda:      5.63 us/sample  cpu:    358.55 us/sample  speedup 63.7x
+k=  4 C= 256 B= 1024 channel    cuda:     20.87 us/sample  cpu:     65.02 us/sample  speedup 3.1x
+k=  4 C= 256 B= 1024 exp(tL)    cuda:   7743.42 us/sample  cpu:  15365.46 us/sample  speedup 2.0x
+k=  4 C= 256 B= 1024 opt. step  cuda:    133.45 us/sample  cpu:   1603.66 us/sample  speedup 12.0x
+k= 16 C=   1 B= 4096 generate   cuda:     60.92 us/sample  cpu:     17.26 us/sample  speedup 0.3x
+k= 16 C=   1 B= 4096 f(A) eigh  cuda:      0.21 us/sample  cpu:     23.83 us/sample  speedup 115.9x
+k= 16 C=   1 B= 4096 |A| SVD    cuda:      0.78 us/sample  cpu:     44.53 us/sample  speedup 57.0x
+k= 16 C=   1 B= 4096 contrast   cuda:      0.14 us/sample  cpu:     10.91 us/sample  speedup 79.5x
+k= 16 C=   1 B= 4096 channel    cuda:      0.13 us/sample  cpu:      1.72 us/sample  speedup 13.4x
+k= 16 C=   1 B= 4096 exp(tL)    cuda:   1148.55 us/sample  cpu:  13607.58 us/sample  speedup 11.8x
+k= 16 C=   1 B= 4096 opt. step  cuda:      3.61 us/sample  cpu:     74.28 us/sample  speedup 20.6x
+k= 16 C=  16 B= 1024 generate   cuda:   1032.34 us/sample  cpu:    290.23 us/sample  speedup 0.3x
+k= 16 C=  16 B= 1024 f(A) eigh  cuda:      1.76 us/sample  cpu:    418.74 us/sample  speedup 237.7x
+k= 16 C=  16 B= 1024 |A| SVD    cuda:     10.71 us/sample  cpu:    745.95 us/sample  speedup 69.6x
+k= 16 C=  16 B= 1024 contrast   cuda:      1.26 us/sample  cpu:    182.06 us/sample  speedup 144.6x
+k= 16 C=  16 B= 1024 channel    cuda:      1.63 us/sample  cpu:     65.02 us/sample  speedup 39.8x
+k= 16 C=  16 B= 1024 exp(tL)    cuda:  79221.14 us/sample  cpu: 181417.46 us/sample  speedup 2.3x
+k= 16 C=  16 B= 1024 opt. step  cuda:     34.94 us/sample  cpu:   1504.83 us/sample  speedup 43.1x
+k= 16 C= 256 B=   64 generate   cuda:  18837.86 us/sample  cpu:   5936.53 us/sample  speedup 0.3x
+k= 16 C= 256 B=   64 f(A) eigh  cuda:     78.04 us/sample  cpu:   6735.64 us/sample  speedup 86.3x
+k= 16 C= 256 B=   64 |A| SVD    cuda:    172.21 us/sample  cpu:  11860.23 us/sample  speedup 68.9x
+k= 16 C= 256 B=   64 contrast   cuda:     36.94 us/sample  cpu:   2871.48 us/sample  speedup 77.7x
+k= 16 C= 256 B=   64 channel    cuda:     26.29 us/sample  cpu:    989.43 us/sample  speedup 37.6x
+k= 16 C= 256 B=   64 exp(tL)    cuda: 2349043.10 us/sample  cpu: 3558629.22 us/sample  speedup 1.5x
+k= 16 C= 256 B=   64 opt. step  cuda:    566.60 us/sample  cpu:  21656.73 us/sample  speedup 38.2x
+k= 64 C=   1 B= 1024 generate   cuda:     62.05 us/sample  cpu:    328.67 us/sample  speedup 5.3x
+k= 64 C=   1 B= 1024 f(A) eigh  cuda:      3.47 us/sample  cpu:    393.34 us/sample  speedup 113.2x
+k= 64 C=   1 B= 1024 |A| SVD    cuda:     13.14 us/sample  cpu:    819.90 us/sample  speedup 62.4x
+k= 64 C=   1 B= 1024 contrast   cuda:      2.48 us/sample  cpu:    211.01 us/sample  speedup 85.0x
+k= 64 C=   1 B= 1024 channel    cuda:      0.86 us/sample  cpu:     71.24 us/sample  speedup 82.9x
+k= 64 C=   1 B= 1024 opt. step  cuda:     34.19 us/sample  cpu:   1736.86 us/sample  speedup 50.8x
+k= 64 C=  16 B=   64 generate   cuda:   1261.95 us/sample  cpu:   4994.57 us/sample  speedup 4.0x
+k= 64 C=  16 B=   64 f(A) eigh  cuda:     59.17 us/sample  cpu:   6495.20 us/sample  speedup 109.8x
+k= 64 C=  16 B=   64 |A| SVD    cuda:    211.18 us/sample  cpu:  12965.51 us/sample  speedup 61.4x
+k= 64 C=  16 B=   64 contrast   cuda:     41.24 us/sample  cpu:   3424.35 us/sample  speedup 83.0x
+k= 64 C=  16 B=   64 channel    cuda:     13.72 us/sample  cpu:   1054.29 us/sample  speedup 76.8x
+k= 64 C=  16 B=   64 opt. step  cuda:    549.68 us/sample  cpu:  28154.40 us/sample  speedup 51.2x
+k= 64 C= 256 B=    4 generate   cuda: 132631.36 us/sample  cpu: 103301.19 us/sample  speedup 0.8x
+k= 64 C= 256 B=    4 f(A) eigh  cuda:   1753.10 us/sample  cpu:  99206.35 us/sample  speedup 56.6x
+k= 64 C= 256 B=    4 |A| SVD    cuda:   3398.17 us/sample  cpu: 204739.77 us/sample  speedup 60.2x
+k= 64 C= 256 B=    4 contrast   cuda:    933.08 us/sample  cpu:  54525.75 us/sample  speedup 58.4x
+k= 64 C= 256 B=    4 channel    cuda:    216.53 us/sample  cpu:  12345.68 us/sample  speedup 57.0x
+k= 64 C= 256 B=    4 opt. step  cuda:   8866.52 us/sample  cpu: 448972.57 us/sample  speedup 50.6x
+written: /home/user/von_neumann_type_i/von_neumann_type_i/paper/generated /home/user/von_neumann_type_i/von_neumann_type_i/paper/figures
+[resources] wall 505 s, peak host RSS 4.92 GiB, peak GPU memory 4.88 GiB

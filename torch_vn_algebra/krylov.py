@@ -31,6 +31,7 @@ class SparseSectorHamiltonian:
         self.offdiag = offdiag.coalesce() if offdiag is not None else None
         self.dtype = dtype
         self._csr = {}
+        self._diag = {}
 
     @property
     def batch_size(self) -> int:
@@ -61,7 +62,10 @@ class SparseSectorHamiltonian:
             V = V.unsqueeze(-1)
         # never cast H to the type of V: a real V with a complex H would silently drop Im H
         V = V.to(torch.promote_types(V.dtype, self.dtype))
-        out = self.diag.to(V.dtype).unsqueeze(-1) * V
+        d = self._diag.get(V.dtype)
+        if d is None:                                   # cast once per dtype
+            d = self._diag[V.dtype] = self.diag.to(V.dtype).unsqueeze(-1)
+        out = d * V
         A = self._off(V.dtype)
         if A is not None:
             B, k, m = V.shape
@@ -95,8 +99,7 @@ def lanczos(matvec: Callable, v0: torch.Tensor, m: int) -> Tuple[torch.Tensor, t
     w_first = matvec(q)
     dtype = torch.promote_types(v0.dtype, w_first.dtype)     # a complex H makes the basis complex
     q = q.to(dtype)
-    # the basis Q plus the copy made by the re-orthogonalisation
-    cost.check_memory(2 * cost.tensor_bytes((B, m, k), dtype), v0.device, f"Lanczos basis (batch {B}, m={m}, k={k})")
+    cost.check_memory(1.2 * cost.tensor_bytes((B, m, k), dtype), v0.device, f"Lanczos basis (batch {B}, m={m}, k={k})")
     Q = torch.zeros(B, m, k, dtype=dtype, device=v0.device)
     alpha = torch.zeros(B, m, dtype=q.real.dtype, device=v0.device)
     beta = torch.zeros(B, max(m - 1, 0), dtype=q.real.dtype, device=v0.device)
@@ -106,8 +109,12 @@ def lanczos(matvec: Callable, v0: torch.Tensor, m: int) -> Tuple[torch.Tensor, t
         scale = torch.linalg.vector_norm(w, dim=-1)
         alpha[:, j] = _dot(q, w).real
         # full re-orthogonalisation (twice is enough)
+        # (the projection conj(Q) w is computed as conj(Q conj(w)): no conjugated copy of the basis)
+        Qj = Q[:, :j + 1]
         for _ in range(2):
-            w = w - torch.einsum('bj,bjk->bk', torch.einsum('bjk,bk->bj', Q[:, :j + 1].conj(), w), Q[:, :j + 1])
+            coef = torch.einsum('bjk,bk->bj', Qj, w.conj()).conj() if torch.is_complex(w) else \
+                torch.einsum('bjk,bk->bj', Qj, w)
+            w = w - torch.einsum('bj,bjk->bk', coef, Qj)
         if j == m - 1:
             break
         b = torch.linalg.vector_norm(w, dim=-1)

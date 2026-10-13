@@ -118,16 +118,18 @@ def _normal_pass(Xc: torch.Tensor, H: torch.Tensor, K: torch.Tensor, a1: float, 
     scale = torch.diagonal(D, dim1=-2, dim2=-1).abs().amax(dim=-1, keepdim=True).clamp(min=torch.finfo(Xc.real.dtype).tiny)
     brk = torch.cat([torch.ones_like(mu[..., :1], dtype=torch.bool), (mu[..., 1:] - mu[..., :-1]) > eps ** 0.25 * scale],
                     dim=-1)
-    cid = torch.cumsum(brk.long(), dim=-1)
-    same = cid.unsqueeze(-1) == cid.unsqueeze(-2)                 # pairs in the same cluster (sorted mu: contiguous)
-    Ds = D.conj().transpose(-2, -1)
-    M = 0.5 * (D + Ds) - 0.5j * a2 * (D - Ds)
-    _, W = cost.batched_call(torch.linalg.eigh, torch.where(same, M, torch.zeros_like(M)), what)
-    V = V @ W
-    D = V.conj().transpose(-2, -1) @ Xc @ V
+    if not bool(brk.all()):                 # some cluster has two or more values: refine (one synchronisation)
+        cid = torch.cumsum(brk.long(), dim=-1)
+        same = cid.unsqueeze(-1) == cid.unsqueeze(-2)             # pairs in the same cluster (sorted mu: contiguous)
+        Ds = D.conj().transpose(-2, -1)
+        M = 0.5 * (D + Ds) - 0.5j * a2 * (D - Ds)
+        _, W = cost.batched_call(torch.linalg.eigh, torch.where(same, M, torch.zeros_like(M)), what)
+        V = V @ W
+        D = V.conj().transpose(-2, -1) @ Xc @ V
     lam = torch.diagonal(D, dim1=-2, dim2=-1)
-    off = (D - torch.diag_embed(lam)).abs().amax(dim=(-2, -1)) / lam.abs().amax(dim=-1).clamp(
-        min=torch.finfo(Xc.real.dtype).tiny)
+    offdiag = D.clone()
+    offdiag.diagonal(dim1=-2, dim2=-1).zero_()
+    off = offdiag.abs().amax(dim=(-2, -1)) / lam.abs().amax(dim=-1).clamp(min=torch.finfo(Xc.real.dtype).tiny)
     return lam, V, off
 
 
@@ -142,9 +144,10 @@ def normal_eig(X: torch.Tensor, what: str = "eigh", rtol: Optional[float] = None
     (relative off-diagonal residual above rtol, default 100 k eps).
     """
     out_dtype = X.dtype if torch.is_complex(X) else torch.promote_types(X.dtype, torch.complex64)
-    if out_dtype == torch.complex64:
+    if out_dtype == torch.complex64 and X.shape[-1] > 64:
         # in single precision the separation of nearly tied Re + alpha Im values fails for blocks of a few hundred;
-        # the decomposition is computed in double precision and returned in single precision
+        # the decomposition is computed in double precision and returned in single precision (smaller blocks are
+        # tried in single precision first, see below)
         tol32 = rtol if rtol is not None else 100 * torch.finfo(torch.float32).eps * max(1, X.shape[-1])
         lam, V = normal_eig(X.to(torch.complex128), what, tol32)
         return lam.to(out_dtype), V.to(out_dtype)
@@ -165,8 +168,27 @@ def normal_eig(X: torch.Tensor, what: str = "eigh", rtol: Optional[float] = None
             best[2] = torch.minimum(off, best[2])
         if bool((best[2] <= tol).all()):
             return best[0], best[1]
+    if Xc.dtype == torch.complex64:                    # single precision did not separate: redo in double
+        lam, V = normal_eig(X.to(torch.complex128), what, tol)
+        return lam.to(torch.complex64), V.to(torch.complex64)
     raise ValueError(f"the operator is not normal to working precision (relative residual "
                      f"{best[2].max().item():.1e} > {tol:.1e}); use holomorphic_function for non-normal operators")
+
+
+def _warn_if_degenerate(w: torch.Tensor):
+    """Second derivatives come from differentiating the eigendecomposition, which is singular at repeated
+    eigenvalues: warn if the spectrum is (nearly) degenerate (one synchronisation, only with create_graph)."""
+    k = w.shape[-1]
+    if k < 2:
+        return
+    wd = w.detach()
+    gap = (wd.unsqueeze(-1) - wd.unsqueeze(-2)).abs()
+    gap = gap + torch.eye(k, device=w.device, dtype=gap.dtype) * gap.amax().clamp(min=1)
+    scale = wd.abs().amax().clamp(min=torch.finfo(gap.dtype).tiny)
+    if bool(gap.amin() <= torch.finfo(gap.dtype).eps ** (1 / 3) * scale):
+        warnings.warn("second derivatives of a spectral function at a (nearly) degenerate spectrum are not reliable "
+                      "(they differentiate the eigendecomposition); use holomorphic_function for exact second "
+                      "derivatives", RuntimeWarning, stacklevel=4)
 
 
 class _SpectralReconstruction(torch.autograd.Function):
@@ -253,6 +275,7 @@ def spectral_apply(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], k
         else:                                           # off the normal matrices: the eigenvectors of Y itself
             w2, V2 = torch.linalg.eig(Y)
             V2inv = torch.linalg.inv(V2)
+        _warn_if_degenerate(w2)
         fw2, dfw2 = values_and_derivative(f, w2, create_graph=True)
         return V2, V2inv, divided_differences(w2, fw2, dfw2)
     Vc = V if torch.is_complex(fw) == torch.is_complex(V) or torch.is_complex(V) else V.to(fw.dtype)
@@ -264,8 +287,11 @@ def spectral_apply(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], k
 # level 3: singular values from the Hermitian eigensolver of the dilation
 # ----------------------------------------------------------------------
 def _dilation(X: torch.Tensor) -> torch.Tensor:
-    Z = torch.zeros_like(X)
-    return torch.cat([torch.cat([Z, X], dim=-1), torch.cat([X.conj().transpose(-2, -1), Z], dim=-1)], dim=-2)
+    k = X.shape[-1]
+    D = X.new_zeros(*X.shape[:-2], 2 * k, 2 * k)
+    D[..., :k, k:] = X
+    D[..., k:, :k] = X.conj().transpose(-2, -1)
+    return D
 
 
 def use_dilation(X: torch.Tensor, method: str = 'auto') -> bool:
@@ -310,8 +336,8 @@ class _Abs(torch.autograd.Function):
     """
 
     @staticmethod
-    def forward(ctx, X, method):
-        U, s, V = svd(X, method)
+    def forward(ctx, X, method, usv=None):
+        U, s, V = svd(X, method) if usv is None else usv
         keep = s > _pinv_threshold(s, X.shape[-1], None)
         ctx.save_for_backward(X, s, V, keep)
         return (V * (s * keep).to(V.dtype).unsqueeze(-2)) @ V.conj().transpose(-2, -1)
@@ -327,11 +353,15 @@ class _Abs(torch.autograd.Function):
         L = torch.where(both, 1.0 / S, torch.zeros_like(S))
         Vrh = Vr.conj().transpose(-2, -1)
         G = G.to(V.dtype)
-        k = X.shape[-1]
-        P = torch.eye(k, dtype=V.dtype, device=V.device) - Vr @ Vrh
-        Vs = Vr * torch.where(keep, 1.0 / s_safe, torch.zeros_like(s)).to(V.dtype).unsqueeze(-2)   # V_r S_r^{-1}
-        gY = Vr @ (L.to(V.dtype) * (Vrh @ G @ Vr)) @ Vrh + Vs @ Vrh @ G @ P + P @ G @ Vs @ Vrh
-        return X @ (gY + gY.conj().transpose(-2, -1)), None
+        s_inv = torch.where(keep, 1.0 / s_safe, torch.zeros_like(s)).to(V.dtype)
+        # with P = 1 - V_r V_r^*, A = V_r^* G, M = A V_r, Bm = G V_r (no explicit projector):
+        # V_r S^-1 V_r^* G P = (V_r S^-1)(A - M V_r^*),  P G V_r S^-1 V_r^* = ((Bm - V_r M) S^-1) V_r^*
+        A = Vrh @ G
+        M = A @ Vr
+        Bm = G @ Vr
+        gY = (Vr @ (L.to(V.dtype) * M) @ Vrh + (Vr * s_inv.unsqueeze(-2)) @ (A - M @ Vrh)
+              + ((Bm - Vr @ M) * s_inv.unsqueeze(-2)) @ Vrh)
+        return X @ (gY + gY.conj().transpose(-2, -1)), None, None
 
 
 def abs_(X: torch.Tensor, method: str = 'auto') -> torch.Tensor:
@@ -382,9 +412,10 @@ def polar(X: torch.Tensor, method: str = 'auto') -> Tuple[torch.Tensor, torch.Te
     thr = _pinv_threshold(s, X.shape[-1], None)
     keep = (s > thr).to(U.dtype).unsqueeze(-2)
     W = (U * keep) @ V.conj().transpose(-2, -1)
-    for _ in range(2):
-        W = 1.5 * W - 0.5 * W @ W.conj().transpose(-2, -1) @ W
-    return W, abs_(X, method)
+    if use_dilation(X, method):                     # only the dilation loses orthonormality to rounding
+        for _ in range(2):
+            W = 1.5 * W - 0.5 * W @ W.conj().transpose(-2, -1) @ W
+    return W, _Abs.apply(X, method, (U, s, V))      # |X| from the same decomposition
 
 
 # ----------------------------------------------------------------------
@@ -396,17 +427,24 @@ def default_contour(X: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
     (the second term keeps the circle away from the eigenvalues of non-normal blocks, whose resolvent is large near
     the spectrum, and is positive for X = c + nilpotent). Eigenvalues from torch.linalg.eigvals, without gradients.
     """
+    return _contour_and_spectrum(X)[:2]
+
+
+def _contour_and_spectrum(X: torch.Tensor):
+    """(center, radius, eigenvalues) of default_contour, with one eigenvalue computation."""
     k = X.shape[-1]
     with torch.no_grad():
         cdt = X.dtype if torch.is_complex(X) else torch.promote_types(X.dtype, torch.complex64)
         Xc = X.detach().to(cdt)
+        lam = torch.linalg.eigvals(Xc)
         c = torch.diagonal(Xc, dim1=-2, dim2=-1).sum(-1) / k
-        Y = Xc - c[:, None, None] * torch.eye(k, dtype=cdt, device=X.device)
-        rho = torch.linalg.eigvals(Y).abs().amax(dim=-1)
+        Y = Xc.clone()
+        Y.diagonal(dim1=-2, dim2=-1).sub_(c[..., None])
+        rho = (lam - c[..., None]).abs().amax(dim=-1)
         spread = torch.linalg.matrix_norm(Y) / math.sqrt(k)
         r = 1.25 * rho + 0.5 * spread
         r = torch.where(r > 0, r, torch.ones_like(r))          # X = c * 1: any circle around c
-    return c, r
+    return c, r, lam
 
 
 def holomorphic(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], center=None, radius=None,
@@ -423,11 +461,9 @@ def holomorphic(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], cent
     k, n = X.shape[-1], X.shape[0]
     cdt = X.dtype if torch.is_complex(X) else torch.promote_types(X.dtype, torch.complex64)
     Xc = X.to(cdt)
-    eye = torch.eye(k, dtype=cdt, device=X.device)
-    if center is None or radius is None:
-        c0, r0 = default_contour(X)
-        center = c0 if center is None else center
-        radius = r0 if radius is None else radius
+    c0, r0, lam = _contour_and_spectrum(X)          # one (non-Hermitian) eigenvalue computation
+    center = c0 if center is None else center
+    radius = r0 if radius is None else radius
     center = center(X) if callable(center) else center
     radius = radius(X) if callable(radius) else radius
     center = torch.as_tensor(center, dtype=cdt, device=X.device).expand(n)
@@ -436,24 +472,29 @@ def holomorphic(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], cent
         rtol = 1e-10 if Xc.real.dtype == torch.float64 else 1e-5
     max_nodes = max(max_nodes, 2 * nodes)
     with torch.no_grad():               # |f| on the spectrum: a lower bound for ||f(X)||, used to detect cancellation
-        rho_f = f(torch.linalg.eigvals(Xc.detach())).to(cdt).abs().amax(dim=-1)
-    chunk = max(1, int(memory_bytes // max(1, 3 * n * k * k * Xc.element_size())))
+        rho_f = f(lam).to(cdt).abs().amax(dim=-1)
+    # live per node and matrix: the shifted matrix, LU workspace and identity of inv, the resolvent, |R|
+    chunk = max(1, int(memory_bytes // max(1, 5 * n * k * k * Xc.element_size())))
+    bad = torch.zeros((), dtype=torch.bool, device=X.device)       # f not finite / singular resolvent (no sync)
 
     def partial_sum(phases):                    # sum over nodes z = c + r e^{i phi} of f(z)(z-c)(z-X)^{-1}
+        nonlocal bad
         acc = torch.zeros_like(Xc)
         mag = torch.zeros(n, dtype=Xc.real.dtype, device=X.device)    # sum of |terms|: rounding error estimate
         for i in range(0, len(phases), chunk):
             e = torch.exp(1j * phases[i:i + chunk]).to(cdt)                         # (m,)
             z = center[None, :] + radius[None, :] * e[:, None]                       # (m, n)
             fz = f(z).to(cdt)
-            if not torch.isfinite(torch.view_as_real(fz)).all():
-                raise ValueError("f is not finite on the contour: choose center and radius so that the circle "
-                                 "encloses the spectrum and f is holomorphic on the closed disk")
-            R = cost.batched_call(torch.linalg.inv, (z[..., None, None] * eye - Xc[None]).reshape(-1, k, k),
-                                  f"resolvents (blocks of size {k})", kind='lu').reshape(len(e), *Xc.shape)
-            term = (fz * (z - center[None, :]))[..., None, None] * R
-            acc = acc + term.sum(0)
-            mag = mag + term.detach().abs().amax(dim=(-2, -1)).sum(0)
+            bad = bad | ~torch.isfinite(torch.view_as_real(fz)).all()
+            A = (-Xc).expand(len(e), *Xc.shape).clone()                            # z - X without z * eye
+            A.diagonal(dim1=-2, dim2=-1).add_(z[..., None])
+            R, info = cost.batched_call(lambda a: torch.linalg.inv_ex(a), A.reshape(-1, k, k),
+                                        f"resolvents (blocks of size {k})", kind='lu')
+            bad = bad | (info != 0).any()
+            R = R.reshape(len(e), *Xc.shape)
+            w = fz * (z - center[None, :])                                           # (m, n)
+            acc = acc + torch.einsum('mn,mnij->nij', w, R)
+            mag = mag + (w.detach().abs() * R.detach().abs().amax(dim=(-2, -1))).sum(0)
         return acc, mag
 
     N = nodes
@@ -470,7 +511,13 @@ def holomorphic(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], cent
         quadrature = (F_new - F).detach().abs().amax(dim=(-2, -1)) / size
         true_size = torch.where(rho_f > 0, torch.minimum(rho_f, size), size)
         rounding = k * eps * (mag / N) / true_size             # cancellation between the terms of the sum
-        err = float(torch.maximum(quadrature, rounding).max())
+        err_t = torch.maximum(quadrature, rounding).max()
+        err_t = torch.where(bad, torch.full_like(err_t, -1.0), err_t)               # -1 flags a failure
+        err = float(err_t)                                     # one synchronisation per doubling
+        if err < 0:
+            raise ValueError("f is not finite on the contour, or the contour passes through the spectrum: choose "
+                             "center and radius so that the circle encloses the spectrum and f is holomorphic on "
+                             "the closed disk")
         F = F_new
         if err <= rtol:
             break

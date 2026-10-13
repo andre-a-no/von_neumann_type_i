@@ -1,48 +1,101 @@
-/home/user/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 11 s expected for 240 steps (pass progress=True for a progress bar).
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 10 s expected for 500 steps (pass progress=True for a progress bar).
   env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
-/home/user/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 12 s expected for 240 steps (pass progress=True for a progress bar).
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 18 s expected for 500 steps (pass progress=True for a progress bar).
   env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
-exp1 k= 2 C= 1: sup z = +0.2489, inf z = -1.993; Monte Carlo range [-1.984, +0.2274], 0 of 19957 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (39 s)
-/home/user/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 13 s expected for 240 steps (pass progress=True for a progress bar).
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 15 s expected for 500 steps (pass progress=True for a progress bar).
   env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
-exp1 k= 2 C= 2: sup z = +0.476, inf z = -3.991; Monte Carlo range [-3.386, +0.3275], 0 of 19904 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (46 s)
-/home/user/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 65 s expected for 240 steps (pass progress=True for a progress bar).
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 48 s expected for 500 steps (pass progress=True for a progress bar).
   env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
-/home/user/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 68 s expected for 240 steps (pass progress=True for a progress bar).
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 47 s expected for 500 steps (pass progress=True for a progress bar).
   env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
-/home/user/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 63 s expected for 240 steps (pass progress=True for a progress bar).
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 90 s expected for 500 steps (pass progress=True for a progress bar).
   env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
-/home/user/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 64 s expected for 240 steps (pass progress=True for a progress bar).
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 91 s expected for 500 steps (pass progress=True for a progress bar).
   env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
-exp1 k= 4 C= 1: sup z = +0.466, inf z = -3.995  (211 s)
-<sys>:0: CostWarning: optimize.extremize: about 11 s expected for 240 steps (pass progress=True for a progress bar).
-<sys>:0: CostWarning: optimize.extremize: about 12 s expected for 240 steps (pass progress=True for a progress bar).
-exp2 k= 2 C= 1: sup z = +0.9963, inf z = -0.9972; Monte Carlo range [-0.9205, +0.9754], 9 of 19956 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (154 s)
-exp2 k= 2 C= 2: sup z = +1.975, inf z = -1.971; Monte Carlo range [-1.425, +1.724], 0 of 19908 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (48 s)
-/home/user/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 61 s expected for 240 steps (pass progress=True for a progress bar).
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 14 s expected for 500 steps (pass progress=True for a progress bar).
   env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
-exp2 k= 4 C= 1: sup z = +1.974, inf z = -1.972  (253 s)
-/home/user/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 16 s expected for 240 steps (pass progress=True for a progress bar).
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 13 s expected for 500 steps (pass progress=True for a progress bar).
   env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
-exp3 k= 2 C= 1: sup z = +0.9971, inf z = -4.441e-16; Monte Carlo range [-8.345e-07, +0.9461], 1 of 19961 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (59 s)
-/home/user/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 10 s expected for 240 steps (pass progress=True for a progress bar).
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 20 s expected for 500 steps (pass progress=True for a progress bar).
   env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
-exp3 k= 2 C= 2: sup z = +1.953, inf z = -4.441e-16; Monte Carlo range [-9.537e-07, +1.393], 1 of 19916 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (60 s)
-/home/user/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 69 s expected for 240 steps (pass progress=True for a progress bar).
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 13 s expected for 500 steps (pass progress=True for a progress bar).
   env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
-exp3 k= 4 C= 1: sup z = +1.978, inf z = -8.882e-16  (209 s)
-/home/user/von_neumann_type_i/scripts/bounds_search.py:218: CostWarning: optimize.extremize: about 13 s expected for 240 steps (pass progress=True for a progress bar).
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 12 s expected for 500 steps (pass progress=True for a progress bar).
+  env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 26 s expected for 500 steps (pass progress=True for a progress bar).
+  env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 108 s expected for 500 steps (pass progress=True for a progress bar).
+  env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 107 s expected for 500 steps (pass progress=True for a progress bar).
+  env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 3 min expected for 500 steps (pass progress=True for a progress bar).
+  env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 14 s expected for 500 steps (pass progress=True for a progress bar).
+  env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 15 s expected for 500 steps (pass progress=True for a progress bar).
+  env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 21 s expected for 500 steps (pass progress=True for a progress bar).
+  env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 22 s expected for 500 steps (pass progress=True for a progress bar).
+  env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 13 s expected for 500 steps (pass progress=True for a progress bar).
+  env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 28 s expected for 500 steps (pass progress=True for a progress bar).
+  env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 27 s expected for 500 steps (pass progress=True for a progress bar).
+  env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 105 s expected for 500 steps (pass progress=True for a progress bar).
+  env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 104 s expected for 500 steps (pass progress=True for a progress bar).
+  env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 103 s expected for 500 steps (pass progress=True for a progress bar).
+  env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:146: CostWarning: optimize.extremize: about 3 min expected for 500 steps (pass progress=True for a progress bar).
+  env = {along: envelope(exp, k, C, along) for along in ('x', 'y')}
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:218: CostWarning: optimize.extremize: about 11 s expected for 500 steps (pass progress=True for a progress bar).
   e2 = envelope_2d(exp, k, C)
-exp1 k=2 C=1, Delta(X), Delta(Y) prescribed: sup on grid in [-0.712, +0.214], inf in [-2, -1]  (20 s)
-/home/user/von_neumann_type_i/scripts/bounds_search.py:218: CostWarning: optimize.extremize: about 11 s expected for 240 steps (pass progress=True for a progress bar).
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:218: CostWarning: optimize.extremize: about 10 s expected for 500 steps (pass progress=True for a progress bar).
   e2 = envelope_2d(exp, k, C)
-exp2 k=2 C=1, Delta(X), Delta(Y) prescribed: sup on grid in [+4.44e-16, +0.949], inf in [-0.949, -2.22e-16]  (24 s)
-/home/user/von_neumann_type_i/scripts/bounds_search.py:218: CostWarning: optimize.extremize: about 14 s expected for 240 steps (pass progress=True for a progress bar).
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:218: CostWarning: optimize.extremize: about 11 s expected for 500 steps (pass progress=True for a progress bar).
   e2 = envelope_2d(exp, k, C)
-exp3 k=2 C=1, Delta(X), Delta(Y) prescribed: sup on grid in [+0, +0.949], inf in [-4.44e-16, +0]  (24 s)
-Exp 1 lower envelope vs exact -(kC - 2d/(1+d)): max relative deviation 1.4e-02
-Exp 2 envelopes (k=2, C=1) vs exact +-2d/(1+d)(1-lo): max relative deviation 3.5e-03
-Exp 1 upper envelope (k=2, C=1) vs conjectured closed form: max relative deviation 1.1e-02
-Exp 3 upper envelope (k=2, C=1) vs conjectured closed form: max relative deviation 2.3e-02
-written: /home/user/von_neumann_type_i/paper/generated /home/user/von_neumann_type_i/paper/figures total 1149 s
-[resources] wall 1150 s, peak host RSS 0.75 GiB
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/bounds_search.py:218: CostWarning: optimize.extremize: about 10 s expected for 500 steps (pass progress=True for a progress bar).
+  e2 = envelope_2d(exp, k, C)
+exp1 k= 2 C= 1: sup z = +0.2492, inf z = -1.999; Monte Carlo range [-1.984, +0.2274], 0 of 19957 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (37 s)
+exp1 k= 2 C= 2: sup z = +0.4943, inf z = -3.998; Monte Carlo range [-3.386, +0.3275], 0 of 19904 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (35 s)
+exp1 k= 2 C=16: sup z = +3.73, inf z = -32; Monte Carlo range [-20.03, -4.37], 0 of 19408 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (51 s)
+exp1 k= 2 C=32: sup z = +7.28, inf z = -64; Monte Carlo range [-36.45, -15.92], 0 of 18728 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (65 s)
+exp1 k=16 C= 1: sup z = +1.913, inf z = -16; Monte Carlo range [-15.55, -2.179], 0 of 19966 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (36 s)
+exp1 k=16 C= 2: sup z = +3.706, inf z = -32; Monte Carlo range [-29, -5.732], 0 of 19923 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (64 s)
+exp1 k=16 C=16: sup z = +28.55, inf z = -256; Monte Carlo range [-166.3, -88.97], 0 of 19391 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (202 s)
+exp1 k=16 C=32: sup z = +57.05, inf z = -512; Monte Carlo range [-294.8, -193], 0 of 18816 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (379 s)
+exp2 k= 2 C= 1: sup z = +0.9988, inf z = -0.9985; Monte Carlo range [-0.9205, +0.9754], 0 of 19956 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (43 s)
+exp2 k= 2 C= 2: sup z = +1.991, inf z = -1.989; Monte Carlo range [-1.425, +1.724], 0 of 19908 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (42 s)
+exp2 k= 2 C=16: sup z = +15.85, inf z = -15.86; Monte Carlo range [-3.326, +3.831], 0 of 19361 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (73 s)
+exp2 k= 2 C=32: sup z = +31.68, inf z = -31.7; Monte Carlo range [-5.216, +6.1], 0 of 18720 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (112 s)
+exp2 k=16 C= 1: sup z = +7.944, inf z = -7.948; Monte Carlo range [-0.5258, +0.89], 0 of 19957 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (56 s)
+exp2 k=16 C= 2: sup z = +15.88, inf z = -15.88; Monte Carlo range [-0.5494, +0.8693], 0 of 19900 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (112 s)
+exp2 k=16 C=16: sup z = +126.9, inf z = -126.9; Monte Carlo range [-1.119, +2.287], 0 of 19398 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (477 s)
+exp2 k=16 C=32: sup z = +253.8, inf z = -253.7; Monte Carlo range [-1.067, +3.103], 0 of 18754 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (938 s)
+exp3 k= 2 C= 1: sup z = +0.9981, inf z = -1.11e-15; Monte Carlo range [-8.345e-07, +0.9461], 0 of 19961 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (46 s)
+exp3 k= 2 C= 2: sup z = +1.989, inf z = -1.332e-15; Monte Carlo range [-9.537e-07, +1.393], 0 of 19916 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (52 s)
+exp3 k= 2 C=16: sup z = +14.86, inf z = -7.105e-15; Monte Carlo range [+0.001151, +3.022], 0 of 19437 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (74 s)
+exp3 k= 2 C=32: sup z = +25.63, inf z = -1.421e-14; Monte Carlo range [+0.0764, +4.512], 0 of 18794 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (114 s)
+exp3 k=16 C= 1: sup z = +7.958, inf z = -2.842e-14; Monte Carlo range [-7.629e-06, +2.147], 0 of 19975 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (57 s)
+exp3 k=16 C= 2: sup z = +15.89, inf z = -3.553e-14; Monte Carlo range [+1.717e-05, +3.332], 0 of 19921 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (112 s)
+exp3 k=16 C=16: sup z = +116.8, inf z = -1.99e-13; Monte Carlo range [+1.897, +12.65], 0 of 19359 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (435 s)
+exp3 k=16 C=32: sup z = +223, inf z = -3.411e-13; Monte Carlo range [+6.113, +20.08], 0 of 18776 samples outside the interpolated envelopes, 0 after re-optimising at their exact contrast  (849 s)
+exp1 k=2 C=1, Delta(X), Delta(Y) prescribed: sup on grid in [-9.17e-11, +0.214], inf in [-2, -1]  (20 s)
+exp1 k=2 C=2, Delta(X), Delta(Y) prescribed: sup on grid in [-6.48e-10, +0.423], inf in [-4, -2.98]  (23 s)
+exp1 k=4 C=1, Delta(X), Delta(Y) prescribed: sup on grid in [-1.57e-09, +0.426], inf in [-4, -2.99]  (21 s)
+exp2 k=2 C=1, Delta(X), Delta(Y) prescribed: sup on grid in [+6.66e-16, +0.949], inf in [-0.949, -4.44e-16]  (19 s)
+exp2 k=2 C=2, Delta(X), Delta(Y) prescribed: sup on grid in [+8.88e-16, +1.89], inf in [-1.89, -8.88e-16]  (23 s)
+exp2 k=4 C=1, Delta(X), Delta(Y) prescribed: sup on grid in [+2.66e-15, +1.89], inf in [-1.89, -1.33e-15]  (22 s)
+exp3 k=2 C=1, Delta(X), Delta(Y) prescribed: sup on grid in [+4.44e-16, +0.949], inf in [-1.33e-15, -5.55e-17]  (20 s)
+exp3 k=2 C=2, Delta(X), Delta(Y) prescribed: sup on grid in [+4.44e-16, +1.89], inf in [-1.78e-15, +0]  (24 s)
+exp3 k=4 C=1, Delta(X), Delta(Y) prescribed: sup on grid in [+1.78e-15, +1.89], inf in [-4.44e-15, +2.52e-10]  (23 s)
+Exp 1 lower envelope vs exact -(kC - 2d/(1+d)): max relative deviation 1.0e-02
+Exp 2 envelopes (k=2, C=1) vs exact +-2d/(1+d)(1-lo): max relative deviation 6.9e-04
+Exp 1 upper envelope (k=2, C=1) vs conjectured closed form: max relative deviation 4.8e-03
+Exp 3 upper envelope (k=2, C=1) vs conjectured closed form: max relative deviation 4.0e-03
+written: /home/user/von_neumann_type_i/von_neumann_type_i/paper/generated /home/user/von_neumann_type_i/von_neumann_type_i/paper/figures total 4668 s
+[resources] wall 4668 s, peak host RSS 2.14 GiB, peak GPU memory 7.11 GiB

@@ -189,6 +189,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install torch                                  # the CUDA build matching the server's driver, see pytorch.org
 pip install -e ".[scripts,test]"
 python -m pytest -q                                # ~30 s, must pass
+python scripts/gpu_check.py                        # ~10 min: correctness against the CPU, no per-sector work, timings
 bash scripts/run_all.sh check cuda           # full sizes, minimal repetitions: tests every code path and the GPU memory
 nohup bash scripts/run_all.sh full cuda > full_run.log 2>&1 &   # the full run (or inside tmux)
 ```
@@ -198,10 +199,18 @@ nohup bash scripts/run_all.sh full cuda > full_run.log 2>&1 &   # the full run (
 - Every script writes its own log to `paper/generated/logs/<script>.log`, including run-time estimates
   from the `cost` module. A failing script does not stop the others; the run ends with a summary.
 - `ONLY="chains baselines" bash scripts/run_all.sh full cuda` reruns a subset.
-- Duration. Measured on a 4-thread CPU, the `check` run takes about 33 minutes, and the full run is estimated at
-  35-45 hours, most of it in `bounds_search` (~25 h) and `inequality_search` (~8 h). A GPU is several times
-  faster; to estimate the full run on your GPU, multiply these CPU estimates by the ratio of the `check` times on
-  the GPU and on the CPU (CPU `check` times: validate 90 s, numerics 88 s, baselines 45 s, benchmark 189 s,
+- `scripts/gpu_check.py` (about 10 minutes, most of it the CPU side of the timings) has three parts:
+  (1) correctness: the same inputs on the CPU and the GPU, all operations of the paper, single and double precision,
+  Haar sampling (Gram-Schmidt on the GPU against QR, moments); (2) structure: host synchronisations and kernel
+  launches per operation must not grow with the number of sectors (C = 1, 16, 256 at a fixed total size);
+  (3) timings against all CPU cores, with the verdict on the hypothesis "the GPU is faster for large batches" and a
+  comparison of the batched generation with the per-sector algorithm of the first full run. It exits with an
+  error if (1) or (2) fails, and writes `gpu_check.json`. Run it first on a new machine or after changing the
+  library. `tests/test_sync_free.py` checks the absence of host reads on the CPU, in the normal test suite.
+- Duration. On an RTX 5090 (16-thread CPU) the first full run took about 5 hours: validate 12 min, numerics and
+  baselines 3 min, benchmark 8 min, chains 7 min, inequality_search 3.4 h, bounds_search 1.3 h; most of
+  inequality_search was Haar sampling with a per-matrix QR on the GPU, now batched. On a 4-thread CPU
+  the `check` run takes about 33 minutes (validate 90 s, numerics 88 s, baselines 45 s, benchmark 189 s,
   chains 623 s, inequality_search 49 s, bounds_search 871 s; every log ends with a `[resources]` line).
 - Interruptions. `inequality_search` and `bounds_search` save every finished part to `generated/partial/`; after a
   crash or reboot, rerunning the same command continues where it stopped and gives the same numbers.
