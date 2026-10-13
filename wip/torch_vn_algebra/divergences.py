@@ -36,7 +36,8 @@ Support conventions
 Powers (including negative ones) and logarithms of a positive operator are taken on its numerical support: the
 eigenvalues above rtol * lambda_max (lambda_max over all sectors of the sample; default rtol = N eps with
 N = sum_c k_c, the cut-off of numpy.linalg.pinv) are kept, the others count as exact zeros, and f(0) := 0 for every
-power p != 0 as well as for the logarithm (x^0 is the support projection). Hence Q_alpha and ~Q_alpha only involve
+power p != 0 as well as for the logarithm (x^0 is the support projection). Likewise the eigenvalues of the sandwich
+sigma^g rho sigma^g below its rounding level rtol * max(lambda_max(sandwich), ||sigma^g||^2 ||rho||) count as zeros. Hence Q_alpha and ~Q_alpha only involve
 the compression of rho to supp sigma. The support condition supp rho <= supp sigma is tested through the weight of
 rho outside supp sigma, leak = Tr rho (1 - Pi_sigma); it counts as violated when leak > supp_tol * Tr rho (default
 supp_tol = 100 N eps). Then
@@ -338,16 +339,21 @@ def _terms(rho: Operator, sigma: Operator, alpha: Optional[Alpha], kind: str, tr
                 v = ent - _tr_prod(xr, _apply(xs, ws_, Vs, _support_log(ts)))
             parts.append((idx, v))
     elif kind == 'sandwiched':
-        lams = []
+        lams, smax, rnorm = [], [], []
         for (k, idx, xr), (_, _, xs, ws_, Vs) in zip(_blocks(rho, B), ds):
             n = len(idx)
             an, bn = _rep(a, n), _rep(b, n)
-            g = (1 - an) / (2 * an)
-            S = _apply(xs, ws_, Vs, _support_power(g, _rep(thr_s, n), bn))
+            f = _support_power((1 - an) / (2 * an), _rep(thr_s, n), bn)
+            S = _apply(xs, ws_, Vs, f)
             lams.append(_eigvalsh(S @ xr.to(S.dtype) @ S))
+            smax.append(f(ws_).detach())
+            rnorm.append(torch.linalg.matrix_norm(xr.detach(), ord=2).reshape(-1, 1))
         m = _global_max([lam.detach() for lam in lams], B)
         m = torch.where(m > 0, m, torch.ones_like(m))
-        thr_m = rt * m
+        # the computed sandwich has rounding errors of order eps ||S||^2 ||rho||, which can exceed eps ||S rho S||
+        # by far (rank-deficient rho, S large off its support); its eigenvalues below that level are zeros
+        # (they would contribute (noise)^alpha, not small for small alpha)
+        thr_m = rt * torch.maximum(m, _global_max(smax, B) ** 2 * _global_max(rnorm, B))
         log_scale = (1 - a) * torch.log(b) + a * torch.log(m)
         for (k, idx, x, w, V), lam in zip(ds, lams):
             n = len(idx)
