@@ -117,7 +117,8 @@ finita. Lo que encontramos se divide en cuatro grupos, todos útiles y todos con
 - **La diagonalización numérica por bloques** de $*$-álgebras de matrices [2, 3, 4] encuentra la
   descomposición $\mathcal M\cong\bigoplus_cM_{k_c}\otimes1_{m_c}$ de un álgebra dada, normalmente
   para reducir el tamaño de programas semidefinidos con simetría. Esto es complementario: esos
-  algoritmos encuentran los bloques; esta biblioteca calcula en ellos. En álgebra computacional
+  algoritmos encuentran los bloques; esta biblioteca calcula en ellos e implementa uno de ellos como
+  paso de entrada (`decompose`, capítulo 4). En álgebra computacional
   existen descomposiciones simbólicas exactas de álgebras de grupo (por ejemplo, el paquete
   Wedderga de GAP).
 - **La optimización polinómica no conmutativa** (NCSOStools, ncpol2sdpa) acota valores propios y

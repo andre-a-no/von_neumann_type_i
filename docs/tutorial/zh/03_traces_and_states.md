@@ -367,5 +367,5 @@ assert abs(tau.von_neumann_entropy().item() - (math.log(3) + sum(math.log(k) for
 
 </details>
 
-**下一章：** 第 4 章（编写中）讨论对称性与表示：物理系统上的群作用如何产生扇区，以及本库
+**下一章：** [第 4 章](04_symmetries.md)讨论对称性与表示：物理系统上的群作用如何产生扇区，以及本库
 如何为自旋系统和量子比特寄存器构造相应的代数。

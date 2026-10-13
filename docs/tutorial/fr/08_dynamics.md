@@ -715,6 +715,6 @@ assert np.allclose(sorted(ev.tolist(), key=lambda z: (z.real, z.imag))[:2],
 
 </details>
 
-**Suite :** le chapitre 9 (en préparation) traite des chaînes de spins : secteurs d'aimantation et
+**Suite :** le [chapitre 9](09_spin_chains.md) traite des chaînes de spins : secteurs d'aimantation et
 d'impulsion, évolution temporelle par les méthodes de Lanczos et de Krylov pour les grands secteurs,
 et désordre.

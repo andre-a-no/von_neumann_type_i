@@ -642,5 +642,5 @@ assert np.allclose(sorted(ev.tolist(), key=lambda z: (z.real, z.imag))[:2],
 
 </details>
 
-**下一章：** 第 9 章（编写中）讨论自旋链：磁化扇区与动量扇区，
+**下一章：** [第 9 章](09_spin_chains.md)讨论自旋链：磁化扇区与动量扇区，
 大扇区的 Lanczos 与 Krylov 时间演化，以及无序。

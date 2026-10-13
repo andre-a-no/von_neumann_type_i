@@ -584,6 +584,6 @@ assert abs(tr2.mean().item() - Ar.frobenius_norm().item() ** 2 / 5) < 5 * tr2.st
 
 </details>
 
-**Suite :** le chapitre 12 (en préparation) traite de l'apprentissage automatique équivariant : les couches qui
+**Suite :** le [chapitre 12](12_equivariant_learning.md) traite de l'apprentissage automatique équivariant : les couches qui
 commutent avec une symétrie sont des éléments d'un commutant (chapitre 2), construits à partir des mêmes opérateurs
 différentiables et traités par lots.

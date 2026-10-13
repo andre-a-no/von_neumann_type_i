@@ -554,5 +554,5 @@ assert abs(tr2.mean().item() - Ar.frobenius_norm().item() ** 2 / 5) < 5 * tr2.st
 
 </details>
 
-**Next:** Chapter 12 (in preparation) treats equivariant machine learning: layers that commute with a symmetry are
+**Next:** [Chapter 12](12_equivariant_learning.md) treats equivariant machine learning: layers that commute with a symmetry are
 elements of a commutant (Chapter 2), built from the same batched, differentiable operators.

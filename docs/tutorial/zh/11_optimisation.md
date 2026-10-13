@@ -550,5 +550,5 @@ assert abs(tr2.mean().item() - Ar.frobenius_norm().item() ** 2 / 5) < 5 * tr2.st
 
 </details>
 
-**下一章：** 第 12 章（编写中）讨论等变机器学习：与对称性可交换的层是
+**下一章：** [第 12 章](12_equivariant_learning.md)讨论等变机器学习：与对称性可交换的层是
 交换子（第 2 章）的元素，它们由同样的批量化、可微分的算子构造而成。

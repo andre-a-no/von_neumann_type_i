@@ -648,5 +648,5 @@ assert np.allclose(sorted(ev.tolist(), key=lambda z: (z.real, z.imag))[:2],
 
 </details>
 
-**Next:** Chapter 9 (in preparation) treats spin chains: sectors of magnetisation and momentum,
+**Next:** [Chapter 9](09_spin_chains.md) treats spin chains: sectors of magnetisation and momentum,
 Lanczos and Krylov time evolution for large sectors, and disorder.

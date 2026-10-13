@@ -583,6 +583,6 @@ assert abs(tr2.mean().item() - Ar.frobenius_norm().item() ** 2 / 5) < 5 * tr2.st
 
 </details>
 
-**Weiter:** Kapitel 12 (in Vorbereitung) behandelt äquivariantes maschinelles Lernen: Schichten, die mit einer
+**Weiter:** [Kapitel 12](12_equivariant_learning.md) behandelt äquivariantes maschinelles Lernen: Schichten, die mit einer
 Symmetrie kommutieren, sind Elemente einer Kommutante (Kapitel 2), aufgebaut aus denselben gebündelten,
 differenzierbaren Operatoren.

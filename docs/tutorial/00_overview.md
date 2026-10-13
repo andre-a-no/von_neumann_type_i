@@ -109,7 +109,7 @@ algebras. What we found falls into four groups, all useful and all different in 
 - **Numerical block diagonalisation** of matrix $*$-algebras [2, 3, 4] finds the decomposition
   $\mathcal M\cong\bigoplus_cM_{k_c}\otimes1_{m_c}$ of a given algebra — typically to reduce the size
   of semidefinite programs with symmetry. This is complementary: those algorithms find the blocks;
-  this library computes in them. Exact symbolic decompositions of group algebras exist in computer
+  this library computes in them, and implements one of them as its input step (`decompose`, Chapter 4). Exact symbolic decompositions of group algebras exist in computer
   algebra (e.g. the GAP package Wedderga).
 - **Noncommutative polynomial optimisation** (NCSOStools, ncpol2sdpa) bounds eigenvalues and traces
   of polynomials in noncommuting variables, over all matrix sizes at once, by semidefinite

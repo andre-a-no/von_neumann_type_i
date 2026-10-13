@@ -721,5 +721,5 @@ assert np.allclose(sorted(ev.tolist(), key=lambda z: (z.real, z.imag))[:2],
 
 </details>
 
-**Weiter:** Kapitel 9 (in Vorbereitung) behandelt Spinketten: Sektoren von Magnetisierung und
+**Weiter:** [Kapitel 9](09_spin_chains.md) behandelt Spinketten: Sektoren von Magnetisierung und
 Impuls, Lanczos- und Krylov-Zeitentwicklung für große Sektoren sowie Unordnung.

@@ -389,6 +389,6 @@ assert abs(tau.von_neumann_entropy().item() - (math.log(3) + sum(math.log(k) for
 
 </details>
 
-**Weiter:** Kapitel 4 (in Vorbereitung) behandelt Symmetrien und Darstellungen: wie eine
+**Weiter:** [Kapitel 4](04_symmetries.md) behandelt Symmetrien und Darstellungen: wie eine
 Gruppenwirkung auf einem physikalischen System die Sektoren hervorbringt und wie die
 Bibliothek die zugehörigen Algebren für Spinsysteme und Qubit-Register konstruiert.

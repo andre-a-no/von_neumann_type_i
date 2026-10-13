@@ -601,7 +601,7 @@ for N, lost in ((1, 2), (2, 0)):
 
 **Pour aller plus loin.** Ce chapitre est le dernier du cours. Le [chapitre 4](04_symmetries.md) développe la théorie
 des représentations utilisée ici : le lemme de Schur, les caractères et l'algorithme randomisé sur lequel repose
-`dc.from_group` (sections 4.1–4.3). Le chapitre 9 (en préparation) applique les mêmes secteurs aux chaînes de spins,
+`dc.from_group` (sections 4.1–4.3). Le [chapitre 9](09_spin_chains.md) applique les mêmes secteurs aux chaînes de spins,
 et la mesure de Haar sur $\prod_cU(m_c)$ du [chapitre 5](05_random_matrices.md) fournit l'initialisation aléatoire
 naturelle d'une couche unitaire équivariante. Pour les mathématiques, voir J.-P. Serre, *Linear Representations of
 Finite Groups* (Springer 1977) et W. Fulton et J. Harris, *Representation Theory* (Springer 1991) ; pour

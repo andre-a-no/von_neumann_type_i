@@ -17,7 +17,7 @@ It is written for two kinds of readers at once:
 - **Physicists and engineers** get the physical meaning of each notion in boxes marked
   *Physical meaning*, and working code they can adapt.
 
-Chapters 1–3 have the same structure: theory with proofs; the library code for each
+Chapters 1–12 have the same structure: theory with proofs; the library code for each
 result; a check of the code against an exact result (a theorem, a closed formula or an
 independent computation); a section *What to compare with* that names the standard tools
 for the same task; and exercises with solutions.

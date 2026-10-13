@@ -117,7 +117,8 @@ et tous conçus pour d'autres fins :
 - **La diagonalisation numérique par blocs** des $*$-algèbres de matrices [2, 3, 4] détermine la
   décomposition $\mathcal M\cong\bigoplus_cM_{k_c}\otimes1_{m_c}$ d'une algèbre donnée, typiquement
   pour réduire la taille de programmes semi-définis présentant une symétrie. C'est
-  complémentaire : ces algorithmes trouvent les blocs ; cette bibliothèque calcule dedans. Le
+  complémentaire : ces algorithmes trouvent les blocs ; cette bibliothèque calcule dedans et en
+  implémente un comme étape d'entrée (`decompose`, chapitre 4). Le
   calcul formel dispose de décompositions symboliques exactes des algèbres de groupe (par exemple
   le paquet Wedderga de GAP).
 - **L'optimisation polynomiale non commutative** (NCSOStools, ncpol2sdpa) majore les valeurs

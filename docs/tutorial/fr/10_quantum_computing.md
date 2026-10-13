@@ -172,7 +172,7 @@ scalaire. On applique la proposition 10.1(b). $\square$
 
 Pour $n=4$, le code trouve $\dim K=2$, $\dim\mathcal B'=14$, $\dim\mathcal B=35$, comme pour
 $\mathcal B\cong M_5\oplus M_3\oplus M_1$ avec les multiplicités $1,3,2$ (spin total $2,1,0$), ce que
-le chapitre 4 (en préparation) établit : quatre qubits portent un qubit sans décohérence ($k=1$,
+le [chapitre 4](04_symmetries.md) établit : quatre qubits portent un qubit sans décohérence ($k=1$,
 $m=2$) et un qutrit sans bruit ($k=3$, $m=3$).
 
 ```python

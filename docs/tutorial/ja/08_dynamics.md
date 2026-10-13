@@ -649,5 +649,5 @@ assert np.allclose(sorted(ev.tolist(), key=lambda z: (z.real, z.imag))[:2],
 
 </details>
 
-**次へ：**第9章（準備中）ではスピン鎖を扱う：磁化と運動量のセクター、
+**次へ：**[第9章](09_spin_chains.md)ではスピン鎖を扱う：磁化と運動量のセクター、
 大きなセクターに対するランチョス法とクリロフ法による時間発展、そして不規則性。

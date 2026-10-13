@@ -158,7 +158,7 @@ whose Kraus operators lie in $\mathcal B$ fixes every state supported in $K$.
 $K$, so each element of $\mathcal B$ acts on $K$ as a scalar. Apply Proposition 10.1(b). $\square$
 
 For $n=4$ the code finds $\dim K=2$, $\dim\mathcal B'=14$, $\dim\mathcal B=35$, as for $\mathcal B\cong M_5\oplus M_3\oplus M_1$
-with multiplicities $1,3,2$ (total spin $2,1,0$), which Chapter 4 (in preparation) derives: four
+with multiplicities $1,3,2$ (total spin $2,1,0$), which [Chapter 4](04_symmetries.md) derives: four
 qubits carry a decoherence-free qubit ($k=1$, $m=2$) and a noiseless qutrit ($k=3$, $m=3$).
 
 ```python

@@ -170,7 +170,7 @@ Proposition 10.1(b) an. $\square$
 
 Für $n=4$ findet der Code $\dim K=2$, $\dim\mathcal B'=14$, $\dim\mathcal B=35$, wie für
 $\mathcal B\cong M_5\oplus M_3\oplus M_1$ mit den Vielfachheiten $1,3,2$ (Gesamtspin $2,1,0$), was
-Kapitel 4 (in Vorbereitung) herleitet: Vier Qubits tragen ein dekohärenzfreies Qubit ($k=1$, $m=2$)
+[Kapitel 4](04_symmetries.md) herleitet: Vier Qubits tragen ein dekohärenzfreies Qubit ($k=1$, $m=2$)
 und ein rauschfreies Qutrit ($k=3$, $m=3$).
 
 ```python

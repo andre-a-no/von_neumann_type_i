@@ -569,7 +569,7 @@ for N, lost in ((1, 2), (2, 0)):
 
 **Where to go from here.** This is the last chapter of the course. [Chapter 4](04_symmetries.md) develops the
 representation theory used here: Schur's lemma, characters, and the randomised algorithm behind `dc.from_group`
-(Sections 4.1–4.3). Chapter 9 (in preparation) applies the same sectors to spin chains, and the Haar measure on
+(Sections 4.1–4.3). [Chapter 9](09_spin_chains.md) applies the same sectors to spin chains, and the Haar measure on
 $\prod_cU(m_c)$ of [Chapter 5](05_random_matrices.md) gives the natural random initialisation of an equivariant
 unitary layer. For the mathematics see J.-P. Serre, *Linear Representations of Finite Groups* (Springer 1977) and
 W. Fulton and J. Harris, *Representation Theory* (Springer 1991); for equivariant learning, M. Bronstein, J. Bruna,

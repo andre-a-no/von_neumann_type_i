@@ -17,7 +17,7 @@ Está escrito a la vez para dos tipos de lectores:
 - **Los físicos y los ingenieros** encontrarán el significado físico de cada noción en
   recuadros titulados *Significado físico*, y código operativo que pueden adaptar.
 
-Los capítulos 1–3 tienen la misma estructura: teoría con demostraciones; el código de la
+Los capítulos 1–12 tienen la misma estructura: teoría con demostraciones; el código de la
 biblioteca para cada resultado; una comprobación del código frente a un resultado exacto (un
 teorema, una fórmula cerrada o un cálculo independiente); una sección *Con qué comparar* que
 menciona las herramientas habituales para la misma tarea; y ejercicios con soluciones.

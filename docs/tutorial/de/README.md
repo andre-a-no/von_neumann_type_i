@@ -20,7 +20,7 @@ Er richtet sich zugleich an zwei Arten von Lesern:
   in Kästen mit der Überschrift *Physikalische Bedeutung* sowie lauffähigen Code,
   den sie anpassen können.
 
-Die Kapitel 1–3 sind gleich aufgebaut: Theorie mit Beweisen; der Bibliothekscode zu jedem
+Die Kapitel 1–12 sind gleich aufgebaut: Theorie mit Beweisen; der Bibliothekscode zu jedem
 Ergebnis; eine Überprüfung des Codes an einem exakten Ergebnis (einem Satz, einer
 geschlossenen Formel oder einer unabhängigen Rechnung); ein Abschnitt *Womit man
 vergleichen sollte*, der die Standardwerkzeuge für dieselbe Aufgabe nennt; und Aufgaben

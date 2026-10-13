@@ -580,6 +580,6 @@ assert abs(tr2.mean().item() - Ar.frobenius_norm().item() ** 2 / 5) < 5 * tr2.st
 
 </details>
 
-**Siguiente:** el capítulo 12 (en preparación) trata el aprendizaje automático equivariante: las capas que conmutan
+**Siguiente:** el [capítulo 12](12_equivariant_learning.md) trata el aprendizaje automático equivariante: las capas que conmutan
 con una simetría son elementos de un conmutante (capítulo 2), construidos con los mismos operadores por lotes y
 diferenciables.

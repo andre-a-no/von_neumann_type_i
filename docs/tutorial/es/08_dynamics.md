@@ -709,6 +709,6 @@ assert np.allclose(sorted(ev.tolist(), key=lambda z: (z.real, z.imag))[:2],
 
 </details>
 
-**Siguiente:** el capítulo 9 (en preparación) trata las cadenas de espines: sectores de
+**Siguiente:** el [capítulo 9](09_spin_chains.md) trata las cadenas de espines: sectores de
 magnetización y de momento, evolución temporal de Lanczos y de Krylov para sectores grandes, y
 desorden.

@@ -592,7 +592,7 @@ for N, lost in ((1, 2), (2, 0)):
 
 **Cómo seguir.** Este es el último capítulo del curso. El [capítulo 4](04_symmetries.md) desarrolla la teoría de
 representaciones usada aquí: el lema de Schur, los caracteres y el algoritmo aleatorizado en que se basa
-`dc.from_group` (secciones 4.1–4.3). El capítulo 9 (en preparación) aplica los mismos sectores a las cadenas de
+`dc.from_group` (secciones 4.1–4.3). El [capítulo 9](09_spin_chains.md) aplica los mismos sectores a las cadenas de
 espines, y la medida de Haar sobre $\prod_cU(m_c)$ del [capítulo 5](05_random_matrices.md) proporciona la
 inicialización aleatoria natural de una capa unitaria equivariante. Para las matemáticas, véanse J.-P. Serre,
 *Linear Representations of Finite Groups* (Springer 1977) y W. Fulton y J. Harris, *Representation Theory*

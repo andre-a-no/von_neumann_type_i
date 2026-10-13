@@ -388,7 +388,7 @@ assert abs(tau.von_neumann_entropy().item() - (math.log(3) + sum(math.log(k) for
 
 </details>
 
-**Siguiente:** el capítulo 4 (en preparación) trata las simetrías y las representaciones:
+**Siguiente:** el [capítulo 4](04_symmetries.md) trata las simetrías y las representaciones:
 cómo la acción de un grupo sobre un sistema físico da lugar a los sectores, y cómo la
 biblioteca construye las álgebras correspondientes para sistemas de espines y registros de
 cúbits.

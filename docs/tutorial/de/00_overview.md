@@ -117,7 +117,8 @@ alle mit unterschiedlichem Zweck:
 - **Numerische Blockdiagonalisierung** von Matrix-$*$-Algebren [2, 3, 4] findet die Zerlegung
   $\mathcal M\cong\bigoplus_cM_{k_c}\otimes1_{m_c}$ einer gegebenen Algebra – typischerweise, um
   semidefinite Programme mit Symmetrie zu verkleinern. Das ist komplementär: Jene Algorithmen
-  finden die Blöcke; diese Bibliothek rechnet in ihnen. Exakte symbolische Zerlegungen von
+  finden die Blöcke; diese Bibliothek rechnet in ihnen und implementiert einen davon als
+  Eingabeschritt (`decompose`, Kapitel 4). Exakte symbolische Zerlegungen von
   Gruppenalgebren gibt es in der Computeralgebra (z. B. das GAP-Paket Wedderga).
 - **Nichtkommutative polynomiale Optimierung** (NCSOStools, ncpol2sdpa) schätzt Eigenwerte und
   Spuren von Polynomen in nichtkommutierenden Variablen über alle Matrixgrößen zugleich durch

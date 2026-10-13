@@ -593,7 +593,7 @@ for N, lost in ((1, 2), (2, 0)):
 
 **Wie es weitergeht.** Dies ist das letzte Kapitel des Kurses. [Kapitel 4](04_symmetries.md) entwickelt die hier
 verwendete Darstellungstheorie: das Lemma von Schur, Charaktere und den randomisierten Algorithmus hinter
-`dc.from_group` (Abschnitte 4.1–4.3). Kapitel 9 (in Vorbereitung) wendet dieselben Sektoren auf Spinketten an, und das
+`dc.from_group` (Abschnitte 4.1–4.3). [Kapitel 9](09_spin_chains.md) wendet dieselben Sektoren auf Spinketten an, und das
 Haar-Maß auf $\prod_cU(m_c)$ aus [Kapitel 5](05_random_matrices.md) liefert die natürliche zufällige Initialisierung
 einer äquivarianten unitären Schicht. Zur Mathematik siehe J.-P. Serre, *Linear Representations of Finite Groups*
 (Springer 1977) und W. Fulton und J. Harris, *Representation Theory* (Springer 1991); zum äquivarianten Lernen

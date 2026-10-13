@@ -168,7 +168,7 @@ escalar. Aplíquese la proposición 10.1(b). $\square$
 
 Para $n=4$ el código halla $\dim K=2$, $\dim\mathcal B'=14$, $\dim\mathcal B=35$, como corresponde a
 $\mathcal B\cong M_5\oplus M_3\oplus M_1$ con multiplicidades $1,3,2$ (espín total $2,1,0$), lo que
-deduce el capítulo 4 (en preparación): cuatro cúbits contienen un cúbit libre de decoherencia
+deduce el [capítulo 4](04_symmetries.md): cuatro cúbits contienen un cúbit libre de decoherencia
 ($k=1$, $m=2$) y un cútrit sin ruido ($k=3$, $m=3$).
 
 ```python

@@ -380,6 +380,6 @@ assert abs(tau.von_neumann_entropy().item() - (math.log(3) + sum(math.log(k) for
 
 </details>
 
-**Next:** Chapter 4 (in preparation) treats symmetries and representations: how a
+**Next:** [Chapter 4](04_symmetries.md) treats symmetries and representations: how a
 group action on a physical system produces the sectors, and how the library builds
 the corresponding algebras for spin systems and qubit registers.
