@@ -126,7 +126,7 @@ def test_lanczos_large_shift_not_truncated():
     v = V[:, 5] + 1e-6 * rng.standard_normal(V.shape[0]); v /= np.linalg.norm(v)
     psi0 = torch.tensor(v)[None]
     out = krylov.evolve(H, psi0, [0.0, 0.2])[-1, 0].numpy()
-    ref = scipy.linalg.expm(-0.2j * Hd) @ v
+    ref = V @ (np.exp(-0.2j * w) * (V.T @ v))
     assert np.abs(out - ref).max() < 1e-9
     E, _, _ = krylov.ground_state(H, v0=torch.tensor(V[:, 5] + 1e-6 * V[:, 0])[None])
     assert abs(E.item() - w[0]) < 1e-6
@@ -148,3 +148,15 @@ def test_hilbert_norm_flat_vectors():
     n = hs.norm(v).reshape(-1)
     assert torch.allclose(n ** 2, hs.inner_product(v, v).reshape(-1).real)
     assert torch.allclose(hs.norm(hs.normalize(v)).reshape(-1), torch.ones(2, dtype=torch.float64))
+
+
+def test_krylov_times_in_double():
+    """Times given as Python floats must not be rounded to float32 (phase error E * 3e-9 at t = 0.2)."""
+    from torch_vn_algebra.chains import SpinChain
+    from torch_vn_algebra import krylov
+    H = SpinChain(8, 'open', precision='double').xxz_sparse(1.0, 1.0, 1e3, sector=4)
+    Hd = H.to_dense()[0].numpy()
+    w, V = np.linalg.eigh(Hd)
+    v = V[:, 0] + V[:, 3]; v /= np.linalg.norm(v)
+    out = krylov.evolve(H, torch.tensor(v, dtype=torch.complex128)[None], [0.0, 0.2])[-1, 0].numpy()
+    assert np.abs(out - V @ (np.exp(-0.2j * w) * (V.conj().T @ v))).max() < 1e-11

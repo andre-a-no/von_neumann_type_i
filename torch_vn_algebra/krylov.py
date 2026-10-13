@@ -204,7 +204,7 @@ def evolve(H, psi0: torch.Tensor, times, m: int = 30, dt: Optional[float] = None
     in Krylov steps of size dt (default 0.1 * m / ||H||, with ||H|| estimated by a short Lanczos run). Warns if the accumulated error
     estimate exceeds tol. Returns (T, batch, k), complex.
     """
-    ts = [float(t) for t in torch.as_tensor(times).reshape(-1).tolist()]
+    ts = [float(t) for t in torch.as_tensor(times, dtype=torch.float64).reshape(-1).tolist()]   # float64: no float32 rounding of t
     psi = psi0.to(torch.promote_types(psi0.dtype, torch.complex64))
     if dt is None:
         alpha, beta, _ = lanczos(H.matvec, psi, min(20, H.dim))
