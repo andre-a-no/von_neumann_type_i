@@ -30,7 +30,7 @@ $\bigoplus_cM_{k_c}(\mathbb C)$——的理论，以及它们在量子物理、�
 | 2 | [有限维冯·诺依曼代数](02_von_neumann_algebras.md) | 双交换子定理、结构定理、中心、对称群与交换子、条件期望 |
 | 3 | [迹、态与熵](03_traces_and_states.md) | 迹的分类、密度、扇区的熵、Klein 不等式、在到中心的条件期望下的单调性、Michelson 对比度 |
 | 4 | 对称性与表示 *（编写中）* | Schur 引理、荷扇区、$U(1)$ 与 $SU(2)$、自旋系统 |
-| 5 | 代数中的随机矩阵 *（编写中）* | $\prod_cU(k_c)$ 上的 Haar 测度、Weingarten 演算、能级统计以及为何不能混合扇区 |
+| 5 | [代数中的随机矩阵](05_random_matrices.md) | $\prod_cU(k_c)$ 上的 Haar 测度、Weingarten 演算、能级统计以及为何不能混合扇区 |
 | 6 | [量子信道](06_quantum_channels.md) | Kraus 表示与 Stinespring 表示、关于迹的对偶、扇区之间的映射、退相干 |
 | 7 | [张量积与纠缠](07_tensor_products.md) | 偏迹、Page 公式、荷的融合 |
 | 8 | 动力学 *（编写中）* | Schrödinger 方程与 Lindblad 方程、扇区间的跃迁、后选择 |

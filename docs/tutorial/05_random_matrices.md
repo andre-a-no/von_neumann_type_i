@@ -373,7 +373,8 @@ Let $H$ be a random self-adjoint $n\times n$ matrix with eigenvalues
 $\lambda_1\le\dots\le\lambda_n$. Its **spacings** are $s_i=\lambda_{i+1}-\lambda_i$. Two ensembles
 are standard: the **GOE**, $H=(G+G^T)/2$ with $G$ real with independent $N(0,1)$ entries, and the
 **GUE**, $H=(G+G^*)/\sqrt2$ with $G$ Ginibre (Section 1.7). In both, the diagonal entries are
-$N(0,1)$, the real and imaginary parts of the entries above the diagonal are $N(0,\tfrac12)$, and the
+$N(0,1)$, the entries above the diagonal are $N(0,\tfrac12)$ in the GOE and have independent real and
+imaginary parts $N(0,\tfrac12)$ in the GUE, and the
 density of $H$ is proportional to $e^{-\operatorname{Tr}H^2/2}$.
 
 **Proposition 5.13 (Wigner surmise).** Let $n=2$, $s=\lambda_2-\lambda_1$ and $S=s/\mathbb Es$.
@@ -437,7 +438,7 @@ $\mathbb Er=\int_0^1\frac{2t}{(1+t)^2}dt=2\Big[\ln(1+t)+\frac1{1+t}\Big]_0^1=2\l
 
 The same holds exactly for $n$ independent uniform levels on an interval, because their spacings
 have the law of $(e_1,\dots,e_{n+1})/\sum_je_j$ for independent exponential $e_j$, so that each
-ratio $s_i/s_{i+1}=e_i/e_{i+1}$ (W. Feller, *An Introduction to Probability Theory and Its
+ratio $s_i/s_{i+1}$ has the law of $e_i/e_{i+1}$ (W. Feller, *An Introduction to Probability Theory and Its
 Applications*, Vol. II, Wiley, 1971, Chapter I; stated without proof). For the GOE and the GUE in the
 limit $n\to\infty$, $\langle r\rangle=0.5307$ and $0.5996$ (numerical values; the $3\times3$ analogues
 of the surmise give $4-2\sqrt3\approx0.5359$ and $2\sqrt3/\pi-\frac12\approx0.6027$; Y. Y. Atas,
