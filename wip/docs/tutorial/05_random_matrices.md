@@ -49,9 +49,9 @@ so $\mu_1$ is right-invariant and inversion-invariant. $\square$
 random element with this law is **Haar distributed**.
 
 Lemma 5.1 says nothing about existence. The course needs the Haar measures of $U(k)$, $U(1)$,
-$U(\mathcal M)$, $SU(k)$ and $O(k)$ only, and each of them is constructed explicitly: $U(k)$ in
-Theorem 5.3, $U(\mathcal M)$ in Corollary 5.4, $SU(k)$ after it, $O(k)$ in Theorem B.17 (see
-Section B.7).
+$U(\mathcal M)$, $SU(k)$, $O(k)$ and of the diagonal groups $T$ of Lemma C.2 only, and each of them is
+constructed explicitly: $U(k)$ in Theorem 5.3, $U(\mathcal M)$ in Corollary 5.4, $SU(k)$ after it,
+$O(k)$ in Theorem B.17, $T$ in Lemma C.2 (see Section B.7).
 
 **Lemma 5.2 (QR decomposition).** Every invertible $Z\in M_k(\mathbb C)$ can be written $Z=QR$
 with $Q$ unitary and $R$ upper triangular with positive diagonal. $Q$ and $R$ are unique and
@@ -118,7 +118,7 @@ $\mathbb C^D$, so $P(z_i=0)=0$ (Corollary A.7(c)), and all entries of the first 
 surely. An element of $\mathcal M$ has zero entries in the first column outside the rows of the
 first block, and these rows exist when $C\ge2$.
 
-The Haar measure of $SU(k)$ is obtained in the same spirit: if $U$ is Haar on $U(k)$ and $\theta=\arg\det U$, then $V=e^{-i\theta/k}U\in SU(k)$, and for $W\in SU(k)$,
+The Haar measure of $SU(k)$ is obtained in the same spirit: if $U$ is Haar on $U(k)$ and $\theta=\arg\det U\in(-\pi,\pi]$ (a Borel function of $U$), then $V=e^{-i\theta/k}U\in SU(k)$, and for $W\in SU(k)$,
 $\det(WU)=\det U$ gives $V(WU)=WV(U)$; since $WU$ has the law of $U$, the law of $V$ is
 left-invariant on $SU(k)$, hence the Haar measure of $SU(k)$ by Lemma 5.1.
 
@@ -214,7 +214,8 @@ The normalisation is that of Proposition 2.8 and of `channels.center_expectation
 $X\in\mathcal M$ commutes with $U(\mathcal M)$, then $UXU^*=X$, so $X=E(X)$ is central; the Haar
 average is the continuous analogue of the group average of Chapter 2, Exercise 3. If instead $U$ is
 Haar on $U(D)$, the same proof (with $C=1$) gives $\mathbb E[UXU^*]=\frac{\operatorname{Tr}X}{D}1$: the
-sector weights are lost, and $UXU^*$ is not even in $\mathcal M$.
+sector weights are lost, and $UXU^*$ need not even lie in $\mathcal M$ (for $C\ge2$, $X=P_1$ and the rotation $U$
+by $\pi/4$ in the plane of $e_1$ and $e_{k_1+1}$, $UP_1U^*$ has the entry $\frac12$ in position $(1,k_1+1)$).
 
 > **Physical meaning.** A Haar-random unitary of the algebra is a random evolution that respects
 > the superselection rule. Averaging over it scrambles everything inside each sector and keeps

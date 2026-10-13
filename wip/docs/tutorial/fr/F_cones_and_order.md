@@ -97,7 +97,7 @@ Enfin $p(x)=\sum_ip(\lambda_i)c_i$ : c'est vrai pour $p=1$ et $p=t$, et $x\circ\
 Unicité. Soit $x=\sum_j\mu_jd_j$ avec des $\mu_j$ distincts et un système complet d'idempotents orthogonaux non nuls $d_j$.
 Comme ci-dessus, $p(x)=\sum_jp(\mu_j)d_j$. Les $d_j$ sont linéairement indépendants (multiplier $\sum_ja_jd_j=0$ par
 $d_i$), donc $p(x)=0$ si et seulement si $p(\mu_j)=0$ pour tout $j$. Ainsi $m(x)=0$ donne $\{\mu_j\}\subseteq\{\lambda_i\}$,
-et $m'(t)=\prod_j(t-\mu_j)$ vérifie $m'(M)q(x)=m'(x)\circ q(x)=0$, donc $m$ divise $m'$ et $\{\lambda_i\}\subseteq\{\mu_j\}$.
+et $\tilde m(t)=\prod_j(t-\mu_j)$ vérifie $\tilde m(M)q(x)=\tilde m(x)\circ q(x)=0$, donc $m$ divise $\tilde m$ et $\{\lambda_i\}\subseteq\{\mu_j\}$.
 Alors $d_j=\ell_j(x)=c_j$. $\square$
 
 **Lemme F.4 (décomposition de Peirce).** Soient $V$ une algèbre de Jordan euclidienne et $c$ un idempotent ($c^2=c$).

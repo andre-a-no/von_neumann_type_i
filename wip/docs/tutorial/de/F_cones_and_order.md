@@ -99,7 +99,7 @@ Eindeutigkeit. Sei $x=\sum_j\mu_jd_j$ mit verschiedenen $\mu_j$ und einem vollst
 orthogonaler Idempotente $d_j$. Wie oben ist $p(x)=\sum_jp(\mu_j)d_j$. Die $d_j$ sind linear unabhängig (man
 multipliziere $\sum_ja_jd_j=0$ mit $d_i$), also ist $p(x)=0$ genau dann, wenn $p(\mu_j)=0$ für alle $j$. Somit liefert
 $m(x)=0$ die Inklusion $\{\mu_j\}\subseteq\{\lambda_i\}$, und
-$m'(t)=\prod_j(t-\mu_j)$ erfüllt $m'(M)q(x)=m'(x)\circ q(x)=0$, also teilt $m$ das Polynom $m'$, und $\{\lambda_i\}\subseteq\{\mu_j\}$.
+$\tilde m(t)=\prod_j(t-\mu_j)$ erfüllt $\tilde m(M)q(x)=\tilde m(x)\circ q(x)=0$, also teilt $m$ das Polynom $\tilde m$, und $\{\lambda_i\}\subseteq\{\mu_j\}$.
 Dann ist $d_j=\ell_j(x)=c_j$. $\square$
 
 **Lemma F.4 (Peirce-Zerlegung).** Sei $V$ eine euklidische Jordan-Algebra und $c$ ein Idempotent ($c^2=c$).

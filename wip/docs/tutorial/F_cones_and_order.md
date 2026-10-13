@@ -96,7 +96,7 @@ Finally $p(x)=\sum_ip(\lambda_i)c_i$: true for $p=1$ and $p=t$, and $x\circ\sum_
 Uniqueness. Let $x=\sum_j\mu_jd_j$ with distinct $\mu_j$ and a complete system of nonzero orthogonal idempotents $d_j$.
 As above $p(x)=\sum_jp(\mu_j)d_j$. The $d_j$ are linearly independent (multiply $\sum_ja_jd_j=0$ by $d_i$), so
 $p(x)=0$ iff $p(\mu_j)=0$ for all $j$. Thus $m(x)=0$ gives $\{\mu_j\}\subseteq\{\lambda_i\}$, and
-$m'(t)=\prod_j(t-\mu_j)$ satisfies $m'(M)q(x)=m'(x)\circ q(x)=0$, so $m$ divides $m'$ and $\{\lambda_i\}\subseteq\{\mu_j\}$.
+$\tilde m(t)=\prod_j(t-\mu_j)$ satisfies $\tilde m(M)q(x)=\tilde m(x)\circ q(x)=0$, so $m$ divides $\tilde m$ and $\{\lambda_i\}\subseteq\{\mu_j\}$.
 Then $d_j=\ell_j(x)=c_j$. $\square$
 
 **Lemma F.4 (Peirce decomposition).** Let $V$ be a Euclidean Jordan algebra and $c$ an idempotent ($c^2=c$).
