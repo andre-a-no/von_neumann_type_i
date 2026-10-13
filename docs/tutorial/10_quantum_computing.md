@@ -560,4 +560,4 @@ for phi in (0.2, 1.0, 2.5):
 
 </details>
 
-**Next:** Chapter 11 (in preparation): optimisation over the unitary groups of an algebra, and trace inequalities.
+**Next:** [Chapter 11](11_optimisation.md): optimisation over the unitary groups of an algebra, and trace inequalities.

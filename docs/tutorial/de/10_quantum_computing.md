@@ -602,5 +602,5 @@ for phi in (0.2, 1.0, 2.5):
 
 </details>
 
-**Weiter:** Kapitel 11 (in Vorbereitung): Optimierung über die unitären Gruppen einer Algebra und
+**Weiter:** [Kapitel 11](11_optimisation.md): Optimierung über die unitären Gruppen einer Algebra und
 Spurungleichungen.

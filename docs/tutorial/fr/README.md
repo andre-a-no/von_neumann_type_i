@@ -41,7 +41,7 @@ sorte que chaque exemple fonctionne avec la version actuelle de la bibliothèque
 | 7 | [Produits tensoriels et intrication](07_tensor_products.md) | trace partielle, formule de Page, fusion des charges |
 | 8 | [Dynamique](08_dynamics.md) | équations de Schrödinger et de Lindblad, sauts entre secteurs, post-sélection |
 | 9 | Chaînes de spins *(en préparation)* | secteurs d'aimantation et d'impulsion, Lanczos, vérifications par l'ansatz de Bethe, désordre |
-| 10 | Calcul quantique *(en préparation)* | sous-espaces sans décohérence, correction d'erreurs par algèbres d'opérateurs, mélangeurs sous contraintes |
+| 10 | [Calcul quantique](10_quantum_computing.md) | sous-espaces sans décohérence, correction d'erreurs par algèbres d'opérateurs, mélangeurs sous contraintes |
 | 11 | [Optimisation et inégalités de traces](11_optimisation.md) | paramétrisations sous contraintes, échantillonnage ou optimisation |
 | 12 | Apprentissage automatique équivariant *(en préparation)* | les couches équivariantes comme commutants |
 

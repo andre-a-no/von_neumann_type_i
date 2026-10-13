@@ -609,5 +609,5 @@ for phi in (0.2, 1.0, 2.5):
 
 </details>
 
-**Suite :** chapitre 11 (en préparation) : optimisation sur les groupes unitaires d'une algèbre, et
+**Suite :** [chapitre 11](11_optimisation.md) : optimisation sur les groupes unitaires d'une algèbre, et
 inégalités de traces.

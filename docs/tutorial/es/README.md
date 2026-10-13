@@ -39,7 +39,7 @@ modo que cada ejemplo funciona con la versión actual de la biblioteca.
 | 7 | [Productos tensoriales y entrelazamiento](07_tensor_products.md) | traza parcial, fórmula de Page, fusión de cargas |
 | 8 | [Dinámica](08_dynamics.md) | ecuaciones de Schrödinger y de Lindblad, saltos entre sectores, postselección |
 | 9 | Cadenas de espines *(en preparación)* | sectores de magnetización y de momento, Lanczos, comprobaciones con el ansatz de Bethe, desorden |
-| 10 | Computación cuántica *(en preparación)* | subespacios libres de decoherencia, corrección de errores en álgebras de operadores, mezcladores con restricciones |
+| 10 | [Computación cuántica](10_quantum_computing.md) | subespacios libres de decoherencia, corrección de errores en álgebras de operadores, mezcladores con restricciones |
 | 11 | [Optimización y desigualdades de trazas](11_optimisation.md) | parametrizaciones con restricciones, muestreo frente a optimización |
 | 12 | Aprendizaje automático equivariante *(en preparación)* | capas equivariantes como conmutantes |
 

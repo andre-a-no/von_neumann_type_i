@@ -600,5 +600,5 @@ for phi in (0.2, 1.0, 2.5):
 
 </details>
 
-**Siguiente:** el capítulo 11 (en preparación): optimización sobre los grupos unitarios de un
+**Siguiente:** el [capítulo 11](11_optimisation.md): optimización sobre los grupos unitarios de un
 álgebra, y desigualdades de trazas.
