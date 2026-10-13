@@ -177,6 +177,10 @@ class TestChannels:
 class TestStates:
     @pytest.mark.parametrize('measure', ['hs', 'bures'])
     def test_random_density(self, alg, measure):
+        if measure == 'bures' and not alg.hilbert.complex_valued:
+            with pytest.raises(ValueError, match="complex"):
+                st.random_density_matrix(alg, B, measure=measure)
+            return
         rho = st.random_density_matrix(alg, B, measure=measure)
         assert close(rho.trace.real, torch.ones(B))
         assert rho.lambda_min.min() > -1e-6
