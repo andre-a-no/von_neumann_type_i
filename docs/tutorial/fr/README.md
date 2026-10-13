@@ -43,7 +43,7 @@ sorte que chaque exemple fonctionne avec la version actuelle de la bibliothèque
 | 9 | Chaînes de spins *(en préparation)* | secteurs d'aimantation et d'impulsion, Lanczos, vérifications par l'ansatz de Bethe, désordre |
 | 10 | [Calcul quantique](10_quantum_computing.md) | sous-espaces sans décohérence, correction d'erreurs par algèbres d'opérateurs, mélangeurs sous contraintes |
 | 11 | [Optimisation et inégalités de traces](11_optimisation.md) | paramétrisations sous contraintes, échantillonnage ou optimisation |
-| 12 | Apprentissage automatique équivariant *(en préparation)* | les couches équivariantes comme commutants |
+| 12 | [Apprentissage automatique équivariant](12_equivariant_learning.md) | les couches équivariantes comme commutants |
 
 ## Prérequis
 

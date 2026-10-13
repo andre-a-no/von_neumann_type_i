@@ -45,7 +45,7 @@ jedes Beispiel funktioniert also mit der aktuellen Version der Bibliothek.
 | 9 | Spinketten *(in Vorbereitung)* | Sektoren von Magnetisierung und Impuls, Lanczos, Überprüfungen mit dem Bethe-Ansatz, Unordnung |
 | 10 | [Quantencomputing](10_quantum_computing.md) | dekohärenzfreie Unterräume, Fehlerkorrektur mit Operatoralgebren, Mixer mit Nebenbedingungen |
 | 11 | [Optimierung und Spurungleichungen](11_optimisation.md) | Parametrisierungen mit Nebenbedingungen, Stichprobenziehung versus Optimierung |
-| 12 | Äquivariantes maschinelles Lernen *(in Vorbereitung)* | äquivariante Schichten als Kommutanten |
+| 12 | [Äquivariantes maschinelles Lernen](12_equivariant_learning.md) | äquivariante Schichten als Kommutanten |
 
 ## Voraussetzungen
 

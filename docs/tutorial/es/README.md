@@ -41,7 +41,7 @@ modo que cada ejemplo funciona con la versión actual de la biblioteca.
 | 9 | Cadenas de espines *(en preparación)* | sectores de magnetización y de momento, Lanczos, comprobaciones con el ansatz de Bethe, desorden |
 | 10 | [Computación cuántica](10_quantum_computing.md) | subespacios libres de decoherencia, corrección de errores en álgebras de operadores, mezcladores con restricciones |
 | 11 | [Optimización y desigualdades de trazas](11_optimisation.md) | parametrizaciones con restricciones, muestreo frente a optimización |
-| 12 | Aprendizaje automático equivariante *(en preparación)* | capas equivariantes como conmutantes |
+| 12 | [Aprendizaje automático equivariante](12_equivariant_learning.md) | capas equivariantes como conmutantes |
 
 ## Requisitos previos
 

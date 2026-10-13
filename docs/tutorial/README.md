@@ -41,7 +41,7 @@ example works with the current version of the library.
 | 9 | Spin chains *(in preparation)* | sectors of magnetisation and momentum, Lanczos, Bethe ansatz checks, disorder |
 | 10 | [Quantum computing](10_quantum_computing.md) | decoherence-free subspaces, operator-algebra error correction, constrained mixers |
 | 11 | [Optimisation and trace inequalities](11_optimisation.md) | constrained parametrisations, sampling versus optimisation |
-| 12 | Equivariant machine learning *(in preparation)* | equivariant layers as commutants |
+| 12 | [Equivariant machine learning](12_equivariant_learning.md) | equivariant layers as commutants |
 
 ## Prerequisites
 
