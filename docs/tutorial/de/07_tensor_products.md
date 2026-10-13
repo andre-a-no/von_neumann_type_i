@@ -706,5 +706,5 @@ assert abs(r1.von_neumann_entropy().item() - math.log(2)) < 1e-12
 
 </details>
 
-**Weiter:** Kapitel 8 (in Vorbereitung) behandelt die Dynamik: die Schrödinger- und die
+**Weiter:** [Kapitel 8](08_dynamics.md) behandelt die Dynamik: die Schrödinger- und die
 Lindblad-Gleichung in einer Algebra mit Sektoren, Sprünge zwischen Sektoren und Postselektion.

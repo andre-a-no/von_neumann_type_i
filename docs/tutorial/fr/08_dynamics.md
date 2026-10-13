@@ -408,7 +408,7 @@ assert neg > -1e-7                                                 # positive up
 ```
 
 RK4 n'est pas exactement complètement positif : les valeurs propres de $\rho(t)$ peuvent être
-négatives au niveau de l'erreur de discrétisation (ici $-2.5\cdot10^{-8}$, avec des pas allant
+négatives au niveau de l'erreur de discrétisation (ici $\approx-2\cdot10^{-8}$, avec des pas allant
 jusqu'à $0.02$) ; `lindblad_channel` est exact mais ne traite que les sauts à l'intérieur des
 secteurs. Enfin, nous vérifions la proposition 8.8(2) pour une application aléatoire entre les
 secteurs, en la comparant au générateur GKSL sur $M_6$ construit avec numpy :
@@ -476,7 +476,7 @@ $$
 *Démonstration.* $S_0(s)$ envoie les opérateurs à support dans le secteur $N$ sur des opérateurs à
 support dans le secteur $N$, car $H_{\mathrm{eff}}\in\mathcal M$ ; $\Phi_{\mathrm{tot}}$ envoie le
 secteur $N\ge1$ sur le secteur $N-1$ et annule le secteur $0$. Par récurrence, $S_n(s)\rho$ est à
-support dans le secteur $N_0-n$ pour tout $s$, et nul pour $n>N_0$. Comprimer
+support dans le secteur $N_0-n$ pour tout $s$, et égal à $0$ pour $n>N_0$. Comprimer
 $\rho(t)=\sum_nS_n(t)\rho$ par $P_{N_0-n}$ conserve exactement le $n$-ième terme. $\square$
 
 La fonction `states.lueders_update(rho, P)` de la bibliothèque renvoie
@@ -647,7 +647,7 @@ $M_D$ font référence.
    que $\mathcal L^*(1)=0$, et que $\mathcal L^*(P_c)=0$ s'il n'y a pas de sauts entre secteurs.
 2. (Point exceptionnel) Dans le secteur $N=1$ de la section 8.4,
    $H_{\mathrm{eff}}=\begin{pmatrix}-i\gamma_1/2&J\\J&-i\gamma_2/2\end{pmatrix}$. Trouver ses
-   valeurs propres et montrer que, pour $J=|\gamma_1-\gamma_2|/4$, il n'est pas diagonalisable.
+   valeurs propres et montrer que, pour $J=|\gamma_1-\gamma_2|/4>0$, il n'est pas diagonalisable.
 3. On suppose que $N_0$ bosons répartis sur $m$ modes sont perdus chacun au taux $\gamma$ (sauts
    $a_1,\dots,a_m$ restreints à $N\to N-1$). Montrer que $p_N(t)=\binom{N_0}Nq^N(1-q)^{N_0-N}$ avec
    $q=e^{-\gamma t}$, pour tout hamiltonien de $\mathcal M$.

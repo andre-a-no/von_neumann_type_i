@@ -39,7 +39,7 @@ sorte que chaque exemple fonctionne avec la version actuelle de la bibliothèque
 | 5 | [Matrices aléatoires dans une algèbre](05_random_matrices.md) | mesure de Haar sur $\prod_cU(k_c)$, calcul de Weingarten, statistique des niveaux et pourquoi il ne faut pas mélanger les secteurs |
 | 6 | [Canaux quantiques](06_quantum_channels.md) | Kraus et Stinespring, duaux relativement à une trace, applications entre secteurs, décohérence |
 | 7 | [Produits tensoriels et intrication](07_tensor_products.md) | trace partielle, formule de Page, fusion des charges |
-| 8 | Dynamique *(en préparation)* | équations de Schrödinger et de Lindblad, sauts entre secteurs, post-sélection |
+| 8 | [Dynamique](08_dynamics.md) | équations de Schrödinger et de Lindblad, sauts entre secteurs, post-sélection |
 | 9 | Chaînes de spins *(en préparation)* | secteurs d'aimantation et d'impulsion, Lanczos, vérifications par l'ansatz de Bethe, désordre |
 | 10 | Calcul quantique *(en préparation)* | sous-espaces sans décohérence, correction d'erreurs par algèbres d'opérateurs, mélangeurs sous contraintes |
 | 11 | Optimisation et inégalités de traces *(en préparation)* | paramétrisations sous contraintes, échantillonnage ou optimisation |

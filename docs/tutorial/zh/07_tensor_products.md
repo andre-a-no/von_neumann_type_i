@@ -626,5 +626,5 @@ assert abs(r1.von_neumann_entropy().item() - math.log(2)) < 1e-12
 
 </details>
 
-**下一章：** 第 8 章（编写中）讨论动力学：带扇区的代数中的 Schrödinger 方程与 Lindblad 方程、
+**下一章：** [第 8 章](08_dynamics.md)讨论动力学：带扇区的代数中的 Schrödinger 方程与 Lindblad 方程、
 扇区之间的跃迁以及后选择。

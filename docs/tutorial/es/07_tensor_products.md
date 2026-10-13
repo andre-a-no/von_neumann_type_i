@@ -699,5 +699,5 @@ assert abs(r1.von_neumann_entropy().item() - math.log(2)) < 1e-12
 
 </details>
 
-**Siguiente:** el capítulo 8 (en preparación) trata la dinámica: las ecuaciones de Schrödinger y de
+**Siguiente:** el [capítulo 8](08_dynamics.md) trata la dinámica: las ecuaciones de Schrödinger y de
 Lindblad en un álgebra con sectores, los saltos entre sectores y la postselección.

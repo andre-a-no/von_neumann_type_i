@@ -362,7 +362,7 @@ assert neg > -1e-7                                                 # positive up
 ```
 
 RK4 不是严格完全正的：$\rho(t)$ 的特征值可以在
-离散化误差的量级上为负（这里为 $-2.5\cdot10^{-8}$，步长至多 $0.02$）；`lindblad_channel` 是精确的，
+离散化误差的量级上为负（这里为 $\approx-2\cdot10^{-8}$，步长至多 $0.02$）；`lindblad_channel` 是精确的，
 但只处理扇区内部的跳跃。最后，我们对扇区之间的一个随机映射检验命题 8.8(2)，
 并与用 numpy 构造的 $M_6$ 上的 GKSL 生成元进行比较：
 
@@ -582,7 +582,7 @@ Schrödinger 与 Lindblad 求解器）、QuantumOptics.jl 以及 SciPy（`scipy.
    证明 $\mathcal L^*(1)=0$，并且若没有扇区之间的跳跃，则 $\mathcal L^*(P_c)=0$。
 2. （例外点）在 8.4 节的扇区 $N=1$ 中，
    $H_{\mathrm{eff}}=\begin{pmatrix}-i\gamma_1/2&J\\J&-i\gamma_2/2\end{pmatrix}$。求它的特征值，并证明
-   当 $J=|\gamma_1-\gamma_2|/4$ 时它不可对角化。
+   当 $J=|\gamma_1-\gamma_2|/4>0$ 时它不可对角化。
 3. 设 $m$ 个模式中的 $N_0$ 个玻色子各自以速率 $\gamma$ 丢失（跳跃 $a_1,\dots,a_m$ 限制在
    $N\to N-1$ 上）。证明对 $\mathcal M$ 中的每个哈密顿量，$p_N(t)=\binom{N_0}Nq^N(1-q)^{N_0-N}$，其中 $q=e^{-\gamma t}$。
 4. （纯退相位）在 $M_2$ 上令 $H=\omega|e\rangle\langle e|$，$L=\sigma_z=\operatorname{diag}(1,-1)$，速率为

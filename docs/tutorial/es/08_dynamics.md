@@ -366,7 +366,7 @@ $$
 p_2(t)=q^2,\qquad p_1(t)=2q(1-q),\qquad p_0(t)=(1-q)^2,\qquad q=e^{-\gamma t},
 $$
 una ley binomial: cada partícula sobrevive independientemente con probabilidad $e^{-\gamma t}$,
-hagan lo que hagan el término de salto entre modos (hopping) y la interacción (compruébese $p'=Qp$
+hagan lo que hagan el efecto túnel entre modos (hopping) y la interacción (compruébese $p'=Qp$
 derivando).
 
 ```python
@@ -403,7 +403,7 @@ assert neg > -1e-7                                                 # positive up
 ```
 
 RK4 no es exactamente completamente positivo: los valores propios de $\rho(t)$ pueden ser negativos
-al nivel del error de discretización (aquí $-2.5\cdot10^{-8}$, con pasos de hasta $0.02$);
+al nivel del error de discretización (aquí $\approx-2\cdot10^{-8}$, con pasos de hasta $0.02$);
 `lindblad_channel` es exacto, pero solo trata saltos dentro de los sectores. Por último, comprobamos
 la proposición 8.8(2) para una aplicación aleatoria entre los sectores, frente al generador GKSL
 sobre $M_6$ construido con numpy:
@@ -517,10 +517,10 @@ S1 = scipy.integrate.simpson(S0(2.0 - s_grid, 1, jump(S0(s_grid, 2, rho_20))), x
 assert np.abs(S1 - traj[-1].matrix[0, 1, :2, :2].numpy()).max() < 1e-8     # Proposition 8.11, n = 1
 ```
 
-En $t=2$ la probabilidad de no perder ninguna partícula es $0.230$; sin el término de salto entre
-modos sería $e^{-2\gamma_1t}=0.091$, así que aquí los pesos de los sectores sí dependen del
-hamiltoniano. El estado postseleccionado está a distancia de traza $0.135$ del estado del sistema
-cerrado: no perder ninguna partícula es información.
+En $t=2$ la probabilidad de no perder ninguna partícula es $0.230$; sin efecto túnel sería
+$e^{-2\gamma_1t}=0.091$, así que aquí los pesos de los sectores sí dependen del hamiltoniano. El
+estado postseleccionado está a distancia de traza $0.135$ del estado del sistema cerrado: no perder
+ninguna partícula es información.
 
 ## 8.5 Estados estacionarios y relajación
 
@@ -642,7 +642,7 @@ admite saltos entre sectores; para ello, la referencia son QuTiP o dynamiqs sobr
    que $\mathcal L^*(1)=0$, y que $\mathcal L^*(P_c)=0$ si no hay saltos entre sectores.
 2. (Punto excepcional) En el sector $N=1$ de la sección 8.4,
    $H_{\mathrm{eff}}=\begin{pmatrix}-i\gamma_1/2&J\\J&-i\gamma_2/2\end{pmatrix}$. Halle sus valores
-   propios y demuestre que para $J=|\gamma_1-\gamma_2|/4$ no es diagonalizable.
+   propios y demuestre que para $J=|\gamma_1-\gamma_2|/4>0$ no es diagonalizable.
 3. Supongamos que $N_0$ bosones en $m$ modos se pierden cada uno con tasa $\gamma$ (saltos
    $a_1,\dots,a_m$ restringidos a $N\to N-1$). Demuestre que $p_N(t)=\binom{N_0}Nq^N(1-q)^{N_0-N}$
    con $q=e^{-\gamma t}$, para todo hamiltoniano de $\mathcal M$.

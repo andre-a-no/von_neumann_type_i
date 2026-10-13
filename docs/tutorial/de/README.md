@@ -41,7 +41,7 @@ jedes Beispiel funktioniert also mit der aktuellen Version der Bibliothek.
 | 5 | [Zufallsmatrizen in einer Algebra](05_random_matrices.md) | Haar-Maß auf $\prod_cU(k_c)$, Weingarten-Kalkül, Niveaustatistik und warum Sektoren nicht vermischt werden dürfen |
 | 6 | [Quantenkanäle](06_quantum_channels.md) | Kraus und Stinespring, duale Abbildungen bezüglich einer Spur, Abbildungen zwischen Sektoren, Dekohärenz |
 | 7 | [Tensorprodukte und Verschränkung](07_tensor_products.md) | partielle Spur, Pagesche Formel, Fusion von Ladungen |
-| 8 | Dynamik *(in Vorbereitung)* | Schrödinger- und Lindblad-Gleichung, Sprünge zwischen Sektoren, Postselektion |
+| 8 | [Dynamik](08_dynamics.md) | Schrödinger- und Lindblad-Gleichung, Sprünge zwischen Sektoren, Postselektion |
 | 9 | Spinketten *(in Vorbereitung)* | Sektoren von Magnetisierung und Impuls, Lanczos, Überprüfungen mit dem Bethe-Ansatz, Unordnung |
 | 10 | Quantencomputing *(in Vorbereitung)* | dekohärenzfreie Unterräume, Fehlerkorrektur mit Operatoralgebren, Mixer mit Nebenbedingungen |
 | 11 | Optimierung und Spurungleichungen *(in Vorbereitung)* | Parametrisierungen mit Nebenbedingungen, Stichprobenziehung versus Optimierung |

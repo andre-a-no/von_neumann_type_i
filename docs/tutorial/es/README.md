@@ -37,7 +37,7 @@ modo que cada ejemplo funciona con la versión actual de la biblioteca.
 | 5 | [Matrices aleatorias en un álgebra](05_random_matrices.md) | medida de Haar en $\prod_cU(k_c)$, cálculo de Weingarten, estadística de niveles y por qué no deben mezclarse los sectores |
 | 6 | [Canales cuánticos](06_quantum_channels.md) | Kraus y Stinespring, duales respecto de una traza, aplicaciones entre sectores, decoherencia |
 | 7 | [Productos tensoriales y entrelazamiento](07_tensor_products.md) | traza parcial, fórmula de Page, fusión de cargas |
-| 8 | Dinámica *(en preparación)* | ecuaciones de Schrödinger y de Lindblad, saltos entre sectores, postselección |
+| 8 | [Dinámica](08_dynamics.md) | ecuaciones de Schrödinger y de Lindblad, saltos entre sectores, postselección |
 | 9 | Cadenas de espines *(en preparación)* | sectores de magnetización y de momento, Lanczos, comprobaciones con el ansatz de Bethe, desorden |
 | 10 | Computación cuántica *(en preparación)* | subespacios libres de decoherencia, corrección de errores en álgebras de operadores, mezcladores con restricciones |
 | 11 | Optimización y desigualdades de trazas *(en preparación)* | parametrizaciones con restricciones, muestreo frente a optimización |

@@ -33,7 +33,7 @@ $\bigoplus_cM_{k_c}(\mathbb C)$——的理论，以及它们在量子物理、�
 | 5 | [代数中的随机矩阵](05_random_matrices.md) | $\prod_cU(k_c)$ 上的 Haar 测度、Weingarten 演算、能级统计以及为何不能混合扇区 |
 | 6 | [量子信道](06_quantum_channels.md) | Kraus 表示与 Stinespring 表示、关于迹的对偶、扇区之间的映射、退相干 |
 | 7 | [张量积与纠缠](07_tensor_products.md) | 偏迹、Page 公式、荷的融合 |
-| 8 | 动力学 *（编写中）* | Schrödinger 方程与 Lindblad 方程、扇区间的跃迁、后选择 |
+| 8 | [动力学](08_dynamics.md) | Schrödinger 方程与 Lindblad 方程、扇区间的跃迁、后选择 |
 | 9 | 自旋链 *（编写中）* | 磁化与动量扇区、Lanczos 方法、Bethe 拟设检验、无序 |
 | 10 | 量子计算 *（编写中）* | 无退相干子空间、算子代数纠错、带约束的混合算子 |
 | 11 | 优化与迹不等式 *（编写中）* | 带约束的参数化、采样与优化的对比 |

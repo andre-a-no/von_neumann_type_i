@@ -37,7 +37,7 @@ example works with the current version of the library.
 | 5 | [Random matrices in an algebra](05_random_matrices.md) | Haar measure on $\prod_cU(k_c)$, Weingarten calculus, level statistics and why sectors must not be mixed |
 | 6 | [Quantum channels](06_quantum_channels.md) | Kraus and Stinespring, duals with respect to a trace, maps between sectors, decoherence |
 | 7 | [Tensor products and entanglement](07_tensor_products.md) | partial trace, Page's formula, fusion of charges |
-| 8 | Dynamics *(in preparation)* | Schrödinger and Lindblad equations, jumps between sectors, post-selection |
+| 8 | [Dynamics](08_dynamics.md) | Schrödinger and Lindblad equations, jumps between sectors, post-selection |
 | 9 | Spin chains *(in preparation)* | sectors of magnetisation and momentum, Lanczos, Bethe ansatz checks, disorder |
 | 10 | Quantum computing *(in preparation)* | decoherence-free subspaces, operator-algebra error correction, constrained mixers |
 | 11 | Optimisation and trace inequalities *(in preparation)* | constrained parametrisations, sampling versus optimisation |

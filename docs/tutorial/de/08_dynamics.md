@@ -408,7 +408,7 @@ assert neg > -1e-7                                                 # positive up
 ```
 
 RK4 ist nicht exakt vollständig positiv: Die Eigenwerte von $\rho(t)$ können in der Größenordnung
-des Diskretisierungsfehlers negativ werden (hier $-2.5\cdot10^{-8}$, mit Schrittweiten bis $0.02$);
+des Diskretisierungsfehlers negativ werden (hier $\approx-2\cdot10^{-8}$, mit Schrittweiten bis $0.02$);
 `lindblad_channel` ist exakt, behandelt aber nur Sprünge innerhalb der Sektoren. Schließlich prüfen
 wir Proposition 8.8(2) für eine zufällige Abbildung zwischen den Sektoren, im Vergleich mit dem
 GKSL-Generator auf $M_6$, der mit numpy aufgebaut wird:
@@ -652,7 +652,7 @@ auf $M_D$ die Referenz.
    gibt.
 2. (Exzeptioneller Punkt) Im Sektor $N=1$ aus Abschnitt 8.4 ist
    $H_{\mathrm{eff}}=\begin{pmatrix}-i\gamma_1/2&J\\J&-i\gamma_2/2\end{pmatrix}$. Man bestimme seine
-   Eigenwerte und zeige, dass er für $J=|\gamma_1-\gamma_2|/4$ nicht diagonalisierbar ist.
+   Eigenwerte und zeige, dass er für $J=|\gamma_1-\gamma_2|/4>0$ nicht diagonalisierbar ist.
 3. $N_0$ Bosonen in $m$ Moden mögen jeweils mit der Rate $\gamma$ verloren gehen (Sprünge
    $a_1,\dots,a_m$, eingeschränkt auf $N\to N-1$). Man zeige $p_N(t)=\binom{N_0}Nq^N(1-q)^{N_0-N}$
    mit $q=e^{-\gamma t}$ für jeden Hamiltonoperator in $\mathcal M$.

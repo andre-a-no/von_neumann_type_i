@@ -366,7 +366,7 @@ assert neg > -1e-7                                                 # positive up
 ```
 
 RK4 is not exactly completely positive: the eigenvalues of $\rho(t)$ can be negative at the level of
-the discretisation error ($-2.5\cdot10^{-8}$ here, with steps up to $0.02$); `lindblad_channel` is exact
+the discretisation error ($\approx-2\cdot10^{-8}$ here, with steps up to $0.02$); `lindblad_channel` is exact
 but treats only jumps inside the sectors. Finally we check Proposition 8.8(2) for a random map between the
 sectors, against the GKSL generator on $M_6$ built with numpy:
 
@@ -587,7 +587,7 @@ $M_D$ are the reference.
    that $\mathcal L^*(1)=0$, and that $\mathcal L^*(P_c)=0$ if there are no jumps between sectors.
 2. (Exceptional point) In the sector $N=1$ of Section 8.4,
    $H_{\mathrm{eff}}=\begin{pmatrix}-i\gamma_1/2&J\\J&-i\gamma_2/2\end{pmatrix}$. Find its eigenvalues and show that
-   for $J=|\gamma_1-\gamma_2|/4$ it is not diagonalisable.
+   for $J=|\gamma_1-\gamma_2|/4>0$ it is not diagonalisable.
 3. Let $N_0$ bosons in $m$ modes each be lost at rate $\gamma$ (jumps $a_1,\dots,a_m$ restricted to
    $N\to N-1$). Show that $p_N(t)=\binom{N_0}Nq^N(1-q)^{N_0-N}$ with $q=e^{-\gamma t}$, for every Hamiltonian
    in $\mathcal M$.
