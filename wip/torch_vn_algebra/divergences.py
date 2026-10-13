@@ -36,8 +36,12 @@ Support conventions
 Powers (including negative ones) and logarithms of a positive operator are taken on its numerical support: the
 eigenvalues above rtol * lambda_max (lambda_max over all sectors of the sample; default rtol = N eps with
 N = sum_c k_c, the cut-off of numpy.linalg.pinv) are kept, the others count as exact zeros, and f(0) := 0 for every
-power p != 0 as well as for the logarithm (x^0 is the support projection). Likewise the eigenvalues of the sandwich
-sigma^g rho sigma^g below its rounding level rtol * max(lambda_max(sandwich), ||sigma^g||^2 ||rho||) count as zeros. Hence Q_alpha and ~Q_alpha only involve
+power p != 0 as well as for the logarithm (x^0 is the support projection). The spectrum of the sandwich
+sigma^g rho sigma^g is computed as the squared singular values of sigma^g rho^{1/2} (accurate down to
+(eps ||sigma^g|| ||rho||^{1/2})^2 rather than eps ||sigma^g rho sigma^g||, which matters for small alpha); singular values
+below rtol * max(s_max, ||sigma^g|| ||rho||^{1/2}) count as zeros. Accuracy limit: for alpha < 1 the result depends on
+all eigenvalues of the sandwich, and eigenvalues below that resolution (e.g. alpha -> 0 with ill-conditioned states,
+whose sandwich has condition number up to cond(sigma)^{2g} cond(rho)) cannot be represented in floating point. Hence Q_alpha and ~Q_alpha only involve
 the compression of rho to supp sigma. The support condition supp rho <= supp sigma is tested through the weight of
 rho outside supp sigma, leak = Tr rho (1 - Pi_sigma); it counts as violated when leak > supp_tol * Tr rho (default
 supp_tol = 100 N eps). Then
@@ -339,25 +343,29 @@ def _terms(rho: Operator, sigma: Operator, alpha: Optional[Alpha], kind: str, tr
                 v = ent - _tr_prod(xr, _apply(xs, ws_, Vs, _support_log(ts)))
             parts.append((idx, v))
     elif kind == 'sandwiched':
-        lams, smax, rnorm = [], [], []
-        for (k, idx, xr), (_, _, xs, ws_, Vs) in zip(_blocks(rho, B), ds):
+        # the nonzero spectrum of S rho S (S = (sigma/b)^g) is that of B B^* with B = S rho^{1/2}: its eigenvalues
+        # are the squared singular values of B, which the SVD resolves down to (eps ||S|| ||rho^{1/2}||)^2 instead of
+        # eps ||S rho S|| for the eigenvalues of the product (they matter: lambda^alpha is not small for small alpha)
+        dr = _decomposed(rho, B)
+        thr_r = rt * _global_max([w for *_, w, _ in dr], B)
+        svs, smax, hmax = [], [], []
+        for (k, idx, xr, wr, Vr), (_, _, xs, ws_, Vs) in zip(dr, ds):
             n = len(idx)
             an, bn = _rep(a, n), _rep(b, n)
             f = _support_power((1 - an) / (2 * an), _rep(thr_s, n), bn)
             S = _apply(xs, ws_, Vs, f)
-            lams.append(_eigvalsh(S @ xr.to(S.dtype) @ S))
+            H = _apply(xr, wr, Vr, _support_power(0.5, _rep(thr_r, n)))
+            svs.append(_fc.singular_values(S @ H.to(S.dtype)))
             smax.append(f(ws_).detach())
-            rnorm.append(torch.linalg.matrix_norm(xr.detach(), ord=2).reshape(-1, 1))
-        m = _global_max([lam.detach() for lam in lams], B)
+            hmax.append(wr.clamp(min=0).sqrt())
+        m = _global_max([sv.detach() for sv in svs], B)
         m = torch.where(m > 0, m, torch.ones_like(m))
-        # the computed sandwich has rounding errors of order eps ||S||^2 ||rho||, which can exceed eps ||S rho S||
-        # by far (rank-deficient rho, S large off its support); its eigenvalues below that level are zeros
-        # (they would contribute (noise)^alpha, not small for small alpha)
-        thr_m = rt * torch.maximum(m, _global_max(smax, B) ** 2 * _global_max(rnorm, B))
-        log_scale = (1 - a) * torch.log(b) + a * torch.log(m)
-        for (k, idx, x, w, V), lam in zip(ds, lams):
+        # singular values below the rounding level of B = S rho^{1/2} count as zeros
+        thr_sv = rt * torch.maximum(m, _global_max(smax, B) * _global_max(hmax, B))
+        log_scale = (1 - a) * torch.log(b) + 2 * a * torch.log(m)
+        for (k, idx, x, w, V), sv in zip(ds, svs):
             n = len(idx)
-            parts.append((idx, _support_power(_rep(a, n), _rep(thr_m, n))(lam / _rep(m, n)).sum(-1)))
+            parts.append((idx, _support_power(2 * _rep(a, n), _rep(thr_sv, n), _rep(m, n))(sv).sum(-1)))
     else:
         raise ValueError(f"unknown kind {kind!r}")
 
@@ -404,8 +412,8 @@ def petz_renyi_divergence(rho: Operator, sigma: Operator, alpha: Alpha, trace: s
         for alpha < 1 if the supports are orthogonal.
     Differentiable in rho, sigma (and alpha) at points where the supports are stable.
     """
-    alg = rho.algebra
-    return _from_terms(_terms(rho, sigma, alpha, 'petz', trace, rtol), _supp_tol(alg, supp_tol))
+    t = _terms(rho, sigma, alpha, 'petz', trace, rtol)
+    return _from_terms(t, _supp_tol(rho.algebra, supp_tol))
 
 
 def sandwiched_renyi_divergence(rho: Operator, sigma: Operator, alpha: Alpha, trace: str = 'blunt',
@@ -414,8 +422,8 @@ def sandwiched_renyi_divergence(rho: Operator, sigma: Operator, alpha: Alpha, tr
     Sandwiched Renyi divergence ~D_alpha(rho||sigma) = (alpha-1)^{-1} log(Tr (sigma^g rho sigma^g)^alpha / Tr rho),
     g = (1-alpha)/(2 alpha), shape (batch,). Arguments as for petz_renyi_divergence; ~D_{1/2} = -log F (fidelity).
     """
-    alg = rho.algebra
-    return _from_terms(_terms(rho, sigma, alpha, 'sandwiched', trace, rtol), _supp_tol(alg, supp_tol))
+    t = _terms(rho, sigma, alpha, 'sandwiched', trace, rtol)
+    return _from_terms(t, _supp_tol(rho.algebra, supp_tol))
 
 
 def umegaki_relative_entropy(rho: Operator, sigma: Operator, trace: str = 'blunt', rtol: Optional[float] = None,
@@ -425,8 +433,8 @@ def umegaki_relative_entropy(rho: Operator, sigma: Operator, trace: str = 'blunt
     support convention (+inf if supp rho is not in supp sigma; 0 log 0 = 0). For states with supp rho in supp sigma
     it agrees with states.relative_entropy, which instead clamps the spectrum of sigma (finite values ~ -log eps).
     """
-    alg = rho.algebra
-    return _from_terms(_terms(rho, sigma, None, 'umegaki', trace, rtol), _supp_tol(alg, supp_tol))
+    t = _terms(rho, sigma, None, 'umegaki', trace, rtol)
+    return _from_terms(t, _supp_tol(rho.algebra, supp_tol))
 
 
 def max_relative_entropy(rho: Operator, sigma: Operator, trace: str = 'blunt', rtol: Optional[float] = None,

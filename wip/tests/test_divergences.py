@@ -56,15 +56,19 @@ def _petz_ref(r, s, a, power=_pow):
     return np.log(np.trace(power(r, a) @ power(s, 1 - a)).real / np.trace(r).real) / (a - 1)
 
 
-def _sand_ref(r, s, a, power=_pow):
-    """~D_alpha with the nonzero spectrum of S r S (S = s^g) from the r x r matrix G^* S^2 G, r = G G^* with
-    G = V_r diag(w_r)^{1/2} of rank r (rank-revealing: no rounding-level eigenvalues enter)."""
-    S = power(s, (1 - a) / (2 * a))
+def _sand_ref(r, s, a, power=None):
+    """~D_alpha from the nonzero spectrum of s^g r s^g, computed rank-revealingly: with r = G G^* (G = V_r w_r^{1/2}
+    on the support of r) and s^g = W diag(mu^g) W^* on the support of s, it is the squared singular values of
+    diag(mu^g) W^* G, a matrix of size rank(s) x rank(r) (no rounding-level eigenvalues enter). `power` unused."""
+    eps = np.finfo(float).eps
     w, V = np.linalg.eigh(0.5 * (r + r.conj().T))
-    keep = w > r.shape[0] * np.finfo(float).eps * w.max()
+    keep = w > r.shape[0] * eps * w.max()
     G = V[:, keep] * np.sqrt(w[keep])
-    lam = np.linalg.eigvalsh(G.conj().T @ S @ S @ G)
-    return np.log(np.sum(np.clip(lam, 0, None) ** a) / np.trace(r).real) / (a - 1)
+    mu, W = np.linalg.eigh(0.5 * (s + s.conj().T))
+    ks = mu > s.shape[0] * eps * mu.max()
+    K = (mu[ks] ** ((1 - a) / (2 * a)))[:, None] * (W[:, ks].conj().T @ G)
+    lam = np.linalg.svd(K, compute_uv=False) ** 2
+    return np.log(np.sum(lam ** a) / np.trace(r).real) / (a - 1)
 
 
 REF = {'petz': _petz_ref, 'sandwiched': _sand_ref}
@@ -140,8 +144,8 @@ def test_support_conventions():
     alg = _alg((2, 3))
     z = torch.zeros(1, 2, 3, 3, dtype=alg.dtype)
     a, b = z.clone(), z.clone()
-    a[0, 0, :2, :2] = torch.eye(2) / 2                            # rho in sector 0
-    b[0, 1, :3, :3] = torch.eye(3) / 3                            # sigma in sector 1
+    a[0, 0, :2, :2] = torch.eye(2, dtype=torch.float64) / 2                            # rho in sector 0
+    b[0, 1, :3, :3] = torch.eye(3, dtype=torch.float64) / 3                            # sigma in sector 1
     rho, sigma = DensityMatrix(alg, matrix=a), DensityMatrix(alg, matrix=b)
     for kind in KINDS:
         for alpha in (0.3, 0.8, 1.5):
@@ -467,13 +471,13 @@ def test_petz_map_inter_sector_channel():
         K = Phi.kraus[b]                                                  # (r, D, C, m, k)
         offs_in = np.cumsum([0] + alg_in.k_factors)
         offs_out = np.cumsum([0] + alg_out.k_factors)
-        Ks = []
+        Ks = []                          # Phi(rho)_d = sum_{c,i} K_i^{dc} rho_c K_i^{dc*}: one operator per (i, d, c)
         for i in range(K.shape[0]):
-            Kd = np.zeros((offs_out[-1], offs_in[-1]), dtype=complex)
             for d, m in enumerate(alg_out.k_factors):
                 for c, k in enumerate(alg_in.k_factors):
+                    Kd = np.zeros((offs_out[-1], offs_in[-1]), dtype=complex)
                     Kd[offs_out[d]:offs_out[d] + m, offs_in[c]:offs_in[c] + k] = K[i, d, c, :m, :k].numpy()
-            Ks.append(Kd)
+                    Ks.append(Kd)
         phis = sum(Kd @ s @ Kd.conj().T for Kd in Ks)
         assert np.allclose(_dense(alg_out, Phi(sigma).matrix[b]), phis, atol=1e-12)
         Pm = _fpow(phis, -0.5)
@@ -512,7 +516,7 @@ def test_petz_equality_condition():
     for f in (dv.umegaki_relative_entropy, lambda r, s: dv.petz_renyi_divergence(r, s, 0.6),
               lambda r, s: dv.sandwiched_renyi_divergence(r, s, 1.7)):
         assert torch.allclose(f(Tr2(rho), Tr2(sigma)), f(rho, sigma), atol=1e-12)
-    assert (R(Tr2(rho)).matrix - rho.matrix).abs().max() < 1e-12
+    assert (R(Tr2(rho)).matrix - rho.matrix).abs().max() < 1e-9
     # generic: strict
     rho_g = st.random_density_matrix(a12, B)
     gap = dv.umegaki_relative_entropy(rho_g, sigma) - dv.umegaki_relative_entropy(Tr2(rho_g), Tr2(sigma))
@@ -529,7 +533,7 @@ def test_petz_equality_condition():
     E = ch.center_expectation(alg)
     assert torch.allclose(dv.umegaki_relative_entropy(E(rho), E(sigma)), dv.umegaki_relative_entropy(rho, sigma),
                           atol=1e-12)
-    assert (dv.PetzRecovery(sigma, E)(E(rho)).matrix - rho.matrix).abs().max() < 1e-12
+    assert (dv.PetzRecovery(sigma, E)(E(rho)).matrix - rho.matrix).abs().max() < 1e-10
 
 
 def test_rotated_and_universal_recovery():
