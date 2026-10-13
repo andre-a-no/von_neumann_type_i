@@ -29,11 +29,11 @@
 \providecommand{\NumTimeRows}{\multicolumn{9}{c}{\emph{run scripts/numerics.py}}\\}
 \providecommand{\NumAccRows}{\multicolumn{5}{c}{\emph{run scripts/numerics.py}}\\}
 \providecommand{\NumTimeHeader}{generate & eigh $f(A)$ & SVD $|A|$ & channel & expm & opt.\ step}
-\providecommand{\BaseMCRows}{\multicolumn{6}{c}{\emph{run scripts/baselines.py}}\\}
-\providecommand{\BaseGSRows}{\multicolumn{6}{c}{\emph{run scripts/baselines.py}}\\}
+\providecommand{\BaseMCRows}{\multicolumn{7}{c}{\emph{run scripts/baselines.py}}\\}
+\providecommand{\BaseGSRows}{\multicolumn{7}{c}{\emph{run scripts/baselines.py}}\\}
 \providecommand{\ValTraceRows}{\multicolumn{5}{c}{\emph{run scripts/validate\_known\_results.py}}\\}
 \providecommand{\ChainKrylovRows}{\multicolumn{6}{c}{\emph{run scripts/chains.py}}\\}
-\providecommand{\BoundsStChecked}{--}\providecommand{\BoundsStOutside}{--}\providecommand{\BoundsShortfall}{--}
+\providecommand{\BaseMinKS}{--}\providecommand{\BoundsStChecked}{--}\providecommand{\BoundsStOutside}{--}\providecommand{\BoundsShortfall}{--}
 \providecommand{\ChainRingRows}{\multicolumn{6}{c}{\emph{run scripts/chains.py}}\\}
 \newcommand{\fig}[2]{\IfFileExists{figures/#1}{\includegraphics[width=#2]{#1}}{\fbox{\small figure #1 not generated}}}
 
@@ -375,7 +375,7 @@ a sign flip of one column; the circular orthogonal and symplectic ensembles as $
 $W$ Haar on $U(n)$ ($n$ even for $W^RW$, $W^R$ the quaternion dual)~\cite{mehta2004}. Section~\ref{sec:validation} checks all of them.
 
 \paragraph{Functional calculus.} The module \texttt{functional} provides $f(A)$ at four levels of generality,
-all built on kernels that are batched on GPUs for every block size~\cite{higham2008}. (1) For self-adjoint $A$,
+all built on batched kernels, one call per distinct block size~\cite{higham2008}. (1) For self-adjoint $A$,
 $f(A)=Vf(\Lambda)V^*$ from the Hermitian eigensolver, for any function on the real spectrum. (2) For normal
 $A=H+iK$ (unitaries), $H$ and $K$ commute, and the eigenvectors of the Hermitian matrix $H+\alpha K$ diagonalise $A$ for
 all but finitely many $\alpha$; the library tries a few irrational values, refines the eigenvectors of nearly tied values
@@ -416,8 +416,8 @@ TF32 is acceptable where the statistical error dominates (moments and histograms
 small differences matter (eigenvalues near degeneracies, the validation tables, trace inequalities near equality). Eigen- and singular-value solvers do not use
 tensor cores. FP64 throughput is half of FP32 on data-centre GPUs (P100, V100, A100, H100), the latter two with FP64
 tensor cores, but only 1/32--1/64 on consumer GPUs. We therefore recommend a data-centre GPU for double-precision
-work; the full-size runs of this paper are intended for an A100 or newer, and all generated tables state the
-hardware they were produced on.
+work. The full-size runs of this paper were made on a consumer GPU (the tables state the hardware); the
+double-precision timings there are therefore pessimistic for the GPU.
 
 \subsection*{Number field and precision}\label{sec:numerics}
 
@@ -703,17 +703,20 @@ supremum (symmetric log scale).}
 \]
 (and the same with $\Delta(Y)$, or with both contrasts prescribed), the supremum being taken over all
 remaining variables. The module \texttt{optimize} parametrises the constraint set exactly: the spectrum
-is $\lambda_{\max}=1$, $\lambda_{\min}=(1-\delta)/(1+\delta)$ and the other eigenvalues strictly in between
-(through a sigmoid); the two eigenvalue positions that carry $\lambda_{\max}$ and $\lambda_{\min}$ are drawn at
+is $\lambda_{\max}=1$, $\lambda_{\min}=(1-\delta)/(1+\delta)$ and the other eigenvalues in between, as
+$\lambda_{\min}+(1-\lambda_{\min})(1+\sin\theta)/2$ (unlike a sigmoid, this reaches both ends at finite $\theta$; extremal
+spectra often have all eigenvalues at the ends); the two eigenvalue positions that carry $\lambda_{\max}$ and $\lambda_{\min}$ are drawn at
 random per start, in the same sector or in different ones, so that the starts together cover a dense subset of
 the constraint set, the eigenvectors are $U=U_0e^{G-G^*}$ with a Haar-random $U_0$ per start and a chart
-that is re-centred after every round, and for Exp.~3 the signs of the eigenvalues of $X$ are drawn per
-start and kept fixed. Every grid point and every start is one element of the batch, so each envelope (supremum
+that is re-centred after every round. For Exp.~3 the signs of the eigenvalues of $X$ are discrete
+variables: the number of negative eigenvalues is drawn per sector (for half of the starts as one fraction common to
+all sectors), and between the gradient rounds single signs are flipped where this improves $z$. Every iterate is an
+admissible point, so the best value seen per start is kept. Every grid point and every start is one element of the batch, so each envelope (supremum
 or infimum along one contrast) is computed in one batched optimisation. All envelopes are computed in real algebras
 (real symmetric $X,Y$ and orthogonal $U$), the setting of the Monte Carlo study of~\cite{v1}.
 
 Figures~\ref{fig:bounds} and~\ref{fig:bounds2d} and Table~\ref{tab:bounds} show the result. The search is local,
-so the computed envelopes are checked in three independent ways that involve no optimisation. (i)~Where an
+so the computed envelopes are checked in three independent ways. (i)~Where an
 envelope is known in closed form (below), it is compared with the formula. (ii)~Since $z$ is additive over
 orthogonal blocks and the contrast of a direct sum is the largest contrast of its summands, a direct sum of
 $kC/2$ copies of a solution for $k=2$, $C=1$ is an admissible configuration: with $s(\delta)$ the upper envelope
@@ -721,8 +724,8 @@ for $k=2$, $C=1$,
 \[
   \overline z_{k,C}(\delta)\ \ge\ s(\delta)+\bigl(\tfrac{kC}2-1\bigr)\max_{\delta'\le\delta}s(\delta')\qquad(k\ \text{even}),
 \]
-and the same with $\min$ for the lower envelopes. The reported envelopes are the better of the multistart search
-and this value. (iii)~Each Monte Carlo sample of~\cite{v1} and each of
+and the same with $\min$ for the lower envelopes; the computed envelopes must not lie below this value (above, for
+the infima). (iii)~Each Monte Carlo sample of~\cite{v1} and each of
 \IfFileExists{generated/bounds.tex}{\BoundsStChecked}{several thousand} \emph{structured samples} is checked against
 both envelopes, along $\Delta(X)$ and along $\Delta(Y)$; samples that fall outside the linear interpolation between
 grid points are re-optimised at their exact contrast. The structured samples are computed with plain NumPy: all
@@ -731,9 +734,8 @@ composed with direct sums of $2\times2$ rotations. Unlike Haar samples they come
 configurations in every dimension, so they test the optimiser where Monte Carlo cannot.
 \IfFileExists{generated/bounds.tex}{Of the \BoundsMcChecked\ Monte Carlo samples with both contrasts in the grid
 (\BoundsMcDropped\ have a contrast above $0.999$), \BoundsMcOutside\ remain outside after re-optimisation, and
-\BoundsStOutside\ of the structured samples; the search alone falls short of the direct sums~(ii) by at most
-\BoundsShortfall\% of the largest value of the curve (for Exp.~1 at small contrast and many sectors, where the
-landscape is flat).}{} For a single sector of size $k=2$ the Haar samples come close
+\BoundsStOutside\ of the structured samples; the envelopes fall short of the direct sums~(ii) by at most
+\BoundsShortfall\% of the largest value of the curve.}{} For a single sector of size $k=2$ the Haar samples come close
 to the envelopes; with two sectors they already miss a substantial part of the range (Table~\ref{tab:bounds}), and
 for larger $k$ or $C$ they stay in a narrow band far from both envelopes (Figure~\ref{fig:bounds}, bottom row; Table~\ref{tab:search}):
 the extremes are attained at degenerate spectra with aligned eigenbases, a set that Haar sampling essentially never
@@ -754,8 +756,8 @@ $AB=0$. If $XY=YX$, then $YX_+Y^2X_-Y=Y^4X_+X_-=0$.
 for prescribed $\Delta(X)=\delta$ equals $-(kC-2\delta/(1+\delta))$ when all sectors have size $k\ge2$:
 $\Tr(XY)\le\Tr X\le kC-1+\lambda_{\min}(X)$ with equality for $Y=1$, while $|\Tr(UYX)|$ can be made zero
 by a cyclic permutation of the eigenbasis of $X_c$ in every sector. The optimiser reproduces this curve to a relative deviation of
-\IfFileExists{generated/bounds.tex}{\BoundsExactDev}{(not generated)} (from above: the minimiser $Y=1$ has contrast $0$, which
-the sigmoid parametrisation of the free contrast approaches but does not reach). In Exp.~2, $|X|=X_0$ and
+\IfFileExists{generated/bounds.tex}{\BoundsExactDev}{(not generated)} (along either contrast: in a real algebra
+$\Tr(XUY)=\Tr(YU^TX)$, so $X$ and $Y$ exchange roles). In Exp.~2, $|X|=X_0$ and
 $|Y|=Y_0$ and the unitary $U$ drops out, so $z=\|X_0VY_0\|_1-\Tr(X_0Y_0)$. Since $V$ and the eigenbases act
 sector by sector, von Neumann's trace inequality $\|AB\|_1\le\sum_is_i(A)s_i(B)$, its lower counterpart
 $\|AB\|_1\ge\sum_is_i(A)s_{k+1-i}(B)$ and rearrangement give, for given spectra,
@@ -771,8 +773,8 @@ free,
 \[
   \sup z=-\inf z=C\Bigl\lfloor\frac k2\Bigr\rfloor\,\frac{2\delta}{1+\delta}\Bigl(1-\frac{0.001}{1.999}\Bigr),
 \]
-which tends to $C\lfloor k/2\rfloor\frac{2\delta}{1+\delta}$ as $\Delta(|Y|)\to1$. The optimiser reproduces all sixteen
-envelopes of Exp.~2 (eight configurations, along either contrast) to a relative deviation of
+which tends to $C\lfloor k/2\rfloor\frac{2\delta}{1+\delta}$ as $\Delta(|Y|)\to1$. The optimiser reproduces the upper and
+lower envelopes of Exp.~2 for all eight configurations, along either contrast, to a relative deviation of
 \IfFileExists{generated/bounds.tex}{\BoundsExactDevTwo}{(not generated)}.
 For $k=2$, $C=1$ the computed upper envelopes of Exp.~1 and Exp.~3 along $\Delta(X)=\delta$ agree with
 $\delta^2/(2(1+\delta))$ and $1-\delta$ to a relative deviation of
@@ -931,29 +933,33 @@ and $z$. The direct NumPy/SciPy formulation loops over samples and sectors with 
 a hand-vectorised NumPy version uses stacked QR decompositions with the phase correction; the library needs three
 calls. (B)~Ground states of sector Hamiltonians: \texttt{scipy.sparse.linalg.eigsh} (ARPACK~\cite{lehoucq1998}), one
 call per Hamiltonian, against the batched Lanczos solver. The three Monte Carlo versions sample the same distribution:
-their means differ by at most \IfFileExists{generated/baselines.tex}{\BaseMaxSigma}{a few} standard errors, and the ground-state energies agree to round-off.
+their means differ by at most \IfFileExists{generated/baselines.tex}{\BaseMaxSigma}{a few} standard errors, a two-sample
+Kolmogorov--Smirnov test of the library against vectorised NumPy gives $p\ge\IfFileExists{generated/baselines.tex}{\BaseMinKS}{0.01}$,
+and the ground-state energies agree to round-off. All times are medians of up to five runs after a warm-up.
 
 The comparison is instructive in both directions. On a CPU the gain over the loop depends on the block size: it is
-large for small blocks, where the Python overhead of the loop dominates (up to two orders of magnitude for $k=2$),
-and small for large blocks, where both spend their time in the same LAPACK routines (a small factor for $k=16$).
-Against carefully vectorised NumPy the library is only moderately faster (Table~\ref{tab:baselines}): its value there is that the vectorised, correctly
+large for small blocks, where the Python overhead of the loop dominates, and small for large blocks, where both spend
+their time in the same LAPACK routines. Against carefully vectorised NumPy the library is not systematically faster on a
+CPU (Table~\ref{tab:baselines}): both call the same kernels. Its value there is that the vectorised, correctly
 sampled, block-aware version is the default rather than an expert rewrite, and that the same code runs on a GPU
-and can be differentiated. For ground states on a CPU, ARPACK is faster than our Lanczos solver, which re-orthogonalises fully for
-robustness (Table~\ref{tab:baselines}; both timed after a warm-up call). The batched solver is what lets the
-computation run on a GPU; for a single large eigenproblem on a CPU we recommend SciPy.
+and can be differentiated. The NumPy versions work in double precision, so the library's CPU and GPU columns do too;
+the last column repeats the GPU run in single precision, since double precision is 32--64 times slower on consumer
+GPUs. For ground states, ARPACK is the reference for a single Hamiltonian on a CPU; our Lanczos solver
+re-orthogonalises fully for robustness and is batched over Hamiltonians, which is what lets disorder averages and GPUs
+pay off (Table~\ref{tab:baselines}).
 
 \begin{table}[h]
 \centering\small
-\begin{tabular}{rrrrrr}
+\begin{tabular}{rrrrrrr}
 \toprule
-$C$ & $k$ & NumPy loop & NumPy vectorised & library (CPU) & library (GPU)\\
+$C$ & $k$ & NumPy loop & NumPy vectorised & library (CPU) & library (GPU) & GPU, FP32\\
 \midrule
 \BaseMCRows
 \bottomrule
 \end{tabular}\\[2mm]
-\begin{tabular}{rrrrrr}
+\begin{tabular}{rrrrrrr}
 \toprule
-$L$ & sector dim & Hamiltonians & \texttt{eigsh} [s] & library [s] & $\max|\Delta E_0|$\\
+$L$ & sector dim & Hamiltonians & \texttt{eigsh} [s] & library, CPU [s] & library, GPU [s] & $\max|\Delta E_0|$\\
 \midrule
 \BaseGSRows
 \bottomrule
@@ -972,11 +978,21 @@ operations (not of isolated kernels), in single precision, with batch $B=\min\bi
 CPU with \BenchCpuThreads\ threads; PyTorch \BenchTorch, CUDA \BenchCuda, cuSOLVER \BenchCusolver)}{}. The versions matter:
 batched Hermitian eigensolvers on GPUs cover all block sizes only in recent cuSOLVER and PyTorch releases (older
 releases fall back to a loop over the matrices for blocks larger than $32$), and batched SVD on GPUs is limited to blocks
-of size at most $32$, which is why the library uses the Hermitian eigensolver wherever the operator is self-adjoint. On a GPU we expect the CPU to be faster for single small blocks, because
-kernel launches dominate, and the GPU to gain for many sectors and for the matrix products in channels and in
-the optimisation step\ifnum\BenchHasGPU=1; the measured speedups are in the table\fi. The operations are: generating
-random operators with prescribed spectra, $f(A)$ by eigendecomposition, $|A|$ by SVD, the Michelson contrast, applying
-a channel, the Lindblad channel $e^{t\mathcal L}$, and one gradient step of the optimisation.
+of size at most $32$, which is why the library uses the Hermitian eigensolver wherever the operator is self-adjoint
+(and the eigensolver of the Hermitian dilation $\bigl(\begin{smallmatrix}0&A\\A^*&0\end{smallmatrix}\bigr)$ for singular values of
+larger blocks). Batched QR on GPUs factorises small matrices one at a time; Haar sampling therefore uses a batched
+Gram--Schmidt orthonormalisation with reorthogonalisation on GPUs, which gives the same matrices as QR with the phase
+correction. On the CPU, PyTorch's batched eigen-, singular-value and QR decompositions loop over the matrices on one
+core; the library splits such batches into one chunk per thread (identical results), so the CPU column uses all cores.
+The operations are: generating random operators with prescribed spectra, $f(A)$ by eigendecomposition, $|A|$ (singular
+values), the Michelson contrast, applying a channel, the Lindblad channel $e^{t\mathcal L}$, and one gradient step of
+the optimisation\ifnum\BenchHasGPU=1; the table gives the CPU and GPU times and their ratio\fi.
+
+Besides speed, the structure of the computation is checked directly (\texttt{scripts/gpu\_check.py} on a GPU,
+\texttt{tests/test\_sync\_free.py} on a CPU): the operations read no values back to the host (each such read
+synchronises a GPU), and their number of kernel launches does not grow with the number of sectors $C$ at a fixed total
+size. Per-sector work of this kind made the random generation of an earlier version of the library slower on a GPU
+than on a CPU; the check would have found it.
 
 The first version of this work reported GPU speedups for raw kernels on a P100 and found them only for part of the
 configurations. That observation reflects where GPUs help: a GPU needs enough independent work per kernel launch.
@@ -1041,8 +1057,10 @@ sector Hamiltonians (Lanczos and Krylov).
 The code is available under the MIT licence at
 \begin{center}\url{https://github.com/andre-a-no/von_neumann_type_i}.\end{center}
 \texttt{bash scripts/run\_all.sh full cuda} regenerates every table and figure of this text on a GPU;
-\texttt{bash scripts/run\_all.sh} runs a reduced version on a CPU in a few minutes. The tables
-state on which device and in which mode they were produced.
+\texttt{bash scripts/run\_all.sh} runs a reduced version on a CPU in a few minutes (written to
+\texttt{.quick\_output/}, not into the paper's tables), and \texttt{python scripts/gpu\_check.py} checks a GPU in a few
+minutes (correctness against the CPU, absence of per-sector work, timings). The tables state the device, the mode
+and the commit of the code they were produced with.
 
 {\sloppy
 \begin{thebibliography}{99}

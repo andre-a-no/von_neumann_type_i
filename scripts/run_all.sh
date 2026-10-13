@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Regenerate every number and figure of paper.
-#   bash scripts/run_all.sh                     # quick mode, CPU or GPU (a few minutes)
+#   bash scripts/run_all.sh                     # quick mode, CPU or GPU (a few minutes); output in .quick_output/
 #   bash scripts/run_all.sh check cuda          # the sizes of full, minimal repetitions: tests a full run
 #                                                     # (memory, all code paths) in minutes; output in .check_output/
 #   bash scripts/run_all.sh full cuda           # sizes reported in the paper (GPU recommended)
@@ -19,11 +19,12 @@ if [ "$DEVICE" = cpu ]; then EXAMPLE_ENV="CUDA_VISIBLE_DEVICES="; fi   # the exa
 # interruption (finished parts are kept in generated/partial/ until the script completes)
 SCRIPTS=${ONLY:-"validate_known_results numerics baselines benchmark_library chains inequality_search bounds_search"}
 cd "$(dirname "$0")/.."
-OUTDIR=paper/generated
+OUTDIR=paper/generated                       # only full runs write the paper's tables
 OUTARGS=""
 if [ "$MODE" = check ]; then OUTDIR=.check_output/generated; fi
+if [ "$MODE" = quick ]; then OUTDIR=.quick_output/generated; fi
 if [ -n "$TF32" ]; then                      # a TF32 run must not overwrite the FP32 tables of the paper
-  if [ "$MODE" = check ]; then OUTDIR=.check_output/generated_tf32; else OUTDIR=paper/generated_tf32; fi
+  if [ "$MODE" = full ]; then OUTDIR=paper/generated_tf32; else OUTDIR=.${MODE}_output/generated_tf32; fi
   OUTARGS="--out $OUTDIR --figdir $OUTDIR/figures"
 fi
 LOGS=$OUTDIR/logs

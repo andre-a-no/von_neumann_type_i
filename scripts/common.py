@@ -29,11 +29,11 @@ def parse_args(description):
     p.add_argument('--tf32', action='store_true',
                    help='allow TF32 tensor-core matmuls for float32 on Ampere+ GPUs (default: full FP32)')
     args = p.parse_args()
-    if args.mode == 'check':          # never overwrite the paper's tables with a check run
+    if args.mode in ('check', 'quick'):    # only full runs write the paper's tables (unless --out is given)
         if args.out == str(PAPER / 'generated'):
-            args.out = str(ROOT / '.check_output' / 'generated')
+            args.out = str(ROOT / f'.{args.mode}_output' / 'generated')
         if args.figdir == str(PAPER / 'figures'):
-            args.figdir = str(ROOT / '.check_output' / 'figures')
+            args.figdir = str(ROOT / f'.{args.mode}_output' / 'figures')
     torch.manual_seed(args.seed)
     # float32 matrix products: 'highest' = true FP32; 'high' lets cuBLAS use TF32 tensor cores
     # (10-bit mantissa) on A100/H100/B200, faster but only ~1e-3 relative accuracy
@@ -70,10 +70,39 @@ def environment(device):
     if str(device).startswith('cuda'):
         info['gpu'] = torch.cuda.get_device_name(torch.device(device))
         info['compute_capability'] = '.'.join(map(str, torch.cuda.get_device_capability(torch.device(device))))
-    else:
-        info['cpu'] = platform.processor() or platform.machine()
-        info['threads'] = torch.get_num_threads()
+    info['cpu'] = _cpu_model()
+    info['threads'] = torch.get_num_threads()
+    for mod in ('numpy', 'scipy'):
+        try:
+            info[mod] = __import__(mod).__version__
+        except ImportError:
+            pass
+    info['git'] = _git_state()
     return info
+
+
+def _cpu_model() -> str:
+    try:
+        with open('/proc/cpuinfo') as f:
+            for line in f:
+                if line.startswith('model name'):
+                    return line.split(':', 1)[1].strip()
+    except OSError:
+        pass
+    return platform.processor() or platform.machine()
+
+
+def _git_state() -> str:
+    """Commit of the code that produced the numbers (with '+dirty' if there are uncommitted changes)."""
+    import subprocess
+    try:
+        commit = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], cwd=ROOT, capture_output=True, text=True,
+                                timeout=10).stdout.strip()
+        dirty = subprocess.run(['git', 'status', '--porcelain', '--untracked-files=no', '--', 'torch_vn_algebra',
+                                'scripts'], cwd=ROOT, capture_output=True, text=True, timeout=10).stdout.strip()
+        return commit + ('+dirty' if dirty else '') if commit else 'unknown'
+    except Exception:
+        return 'unknown'
 
 
 def _partial_prefix(args):
@@ -88,7 +117,8 @@ def _fingerprint(args):
     """What a partial result depends on: seed, TF32, device type and the code (script and library)."""
     import hashlib
     h = hashlib.sha256()
-    for p in [Path(sys.argv[0]).resolve()] + sorted((ROOT / 'torch_vn_algebra').glob('*.py')) + [Path(__file__)]:
+    for p in [Path(sys.argv[0]).resolve()] + sorted((ROOT / 'torch_vn_algebra').glob('*.py')) + \
+            sorted((ROOT / 'scripts').glob('*.py')):
         h.update(p.read_bytes())
     for p in sorted((ROOT / 'results' / 'experiments').glob('*/tables/*.csv.gz')):   # input data of bounds_search
         h.update(p.name.encode() + p.read_bytes())

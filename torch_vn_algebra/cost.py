@@ -150,7 +150,7 @@ def batched_call(fn: Callable, x: torch.Tensor, what: str, kind: str = 'eigh'):
     computed in one call.
     """
     if not _config['enabled'] or x.dim() < 3 or x.shape[0] == 0:
-        return fn(x)
+        return _run(fn, x, kind)
     n_items = x.shape[0]
     probe = _config['probe_items']
     k = x.shape[-1]
@@ -159,7 +159,7 @@ def batched_call(fn: Callable, x: torch.Tensor, what: str, kind: str = 'eigh'):
         per_item *= int(d)
     flops = n_items * per_item * kernel_flops(kind, k, torch.is_complex(x))
     if n_items < 4 * probe or flops < _config['probe_flops']:
-        return fn(x)
+        return _run(fn, x, kind)
     key = (getattr(fn, '__qualname__', repr(fn)), kind, tuple(x.shape[1:]), x.dtype, str(x.device))
     t_item = _probe_cache.get(key)
     if t_item is None:
@@ -176,7 +176,31 @@ def batched_call(fn: Callable, x: torch.Tensor, what: str, kind: str = 'eigh'):
                           f"on {x.device} (measured on {m} items). Consider a smaller batch, double -> single "
                           f"precision or a GPU. Silence with warnings.simplefilter('ignore', "
                           f"torch_vn_algebra.cost.CostWarning).", CostWarning, stacklevel=3)
-    return fn(x)
+    return _run(fn, x, kind)
+
+
+_pool = None
+_THREADED_KINDS = ('eigh', 'svd', 'qr', 'lu')
+
+
+def _run(fn: Callable, x: torch.Tensor, kind: str):
+    """fn(x); on the CPU, batched decompositions are split into one chunk per thread and run in parallel threads:
+    PyTorch's CPU kernels for batched eigh / SVD / QR loop serially over the batch (they do not use the intra-op
+    threads), so this gives the multi-core speed-up that the matrix products already have. The results are
+    identical (the same LAPACK calls on the same matrices)."""
+    n_threads = torch.get_num_threads()
+    if (x.device.type != 'cpu' or n_threads < 2 or kind not in _THREADED_KINDS or x.dim() < 3
+            or x.shape[0] < 2 * n_threads or x.shape[0] * x.shape[-1] ** 3 < 2 ** 18):
+        return fn(x)
+    global _pool
+    if _pool is None or _pool._max_workers != n_threads:
+        from concurrent.futures import ThreadPoolExecutor
+        _pool = ThreadPoolExecutor(n_threads, thread_name_prefix='tv_linalg')
+    parts = list(_pool.map(fn, x.chunk(n_threads)))
+    first = parts[0]
+    if isinstance(first, torch.Tensor):
+        return torch.cat(parts, dim=0)
+    return tuple(torch.cat([p[i] for p in parts], dim=0) for i in range(len(first)))
 
 
 class StepTimer:

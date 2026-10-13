@@ -143,6 +143,9 @@ rec['level_statistics'] = dict(W=WS, realisations=REAL, r={str(L): v for L, v in
 
 # 6. Lanczos beyond dense matrices ---------------------------------------------------------------
 kry_rows = []
+_w = SpinChain(10, complex_valued=False, device=dev)            # warm-up: one-off CUDA / cuSPARSE initialisation
+krylov.ground_state(_w.xxz_sparse(J=1.0, Delta=0.0, sector=5))
+sync(dev)
 for L in ((16, 20, 24) if FULL else (12, 16, 18)):
     c = SpinChain(L, complex_valued=False, device=dev)
     t0 = time.time()
@@ -155,6 +158,7 @@ for L in ((16, 20, 24) if FULL else (12, 16, 18)):
 c = SpinChain(16, 'periodic', complex_valued=False, device=dev)
 t0 = time.time()
 E, _, _ = krylov.ground_state(c.xxz_sparse(sector=8))
+sync(dev)
 kry_rows.append(dict(model='Heisenberg ring, $L=16$', dim=c.sector_dim(8), E=E.item(), exact=-7.142296361,
                      error=abs(E.item() + 7.142296361), seconds=time.time() - t0, digits=9))
 for r in kry_rows:
@@ -183,9 +187,11 @@ L8 = 14 if FULL else 12
 c8 = SpinChain(L8, 'periodic', device=dev)
 t0 = time.time()
 wk = torch.sort(torch.cat([w[0] for w in c8.xxz_momentum(1.0, 1.0, sector=L8 // 2).eigenvalues()]))[0]
+sync(dev)
 t_mom = time.time() - t0
 t0 = time.time()
 wd = torch.linalg.eigvalsh(c8.xxz(1.0, 1.0, sector=L8 // 2).matrix[0, 0])
+sync(dev)
 t_dense = time.time() - t0
 err_mom = (wk - wd).abs().max().item()
 dims8 = c8.momentum_dims(L8 // 2)

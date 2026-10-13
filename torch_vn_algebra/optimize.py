@@ -47,6 +47,11 @@ class UnitaryParam(Param):
         self.base = alg.random_unitary_operator(batch_size).matrix if base is None else base
         self.G = torch.zeros_like(self.base, requires_grad=True)
         self._cache = (None, None)
+        self.G.register_hook(self._invalidate)       # a backward pass frees the graph of the cached U
+
+    def _invalidate(self, grad):
+        self._cache = (None, None)
+        return None
 
     def parameters(self):
         return [self.G]
@@ -125,7 +130,7 @@ class SpectrumParam(Param):
         if self.fixed_delta is not None:
             return self.fixed_delta
         a, b = self.delta_range
-        return a + (b - a) * torch.sigmoid(self.eta)
+        return a + (b - a) * 0.5 * (1 + torch.sin(self.eta))      # reaches both ends (e.g. Y = 1 at contrast 0)
 
     def eigenvalues(self) -> torch.Tensor:
         """(batch, C, k_max), zero on padding."""

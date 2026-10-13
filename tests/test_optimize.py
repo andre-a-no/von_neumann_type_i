@@ -107,3 +107,13 @@ def test_exp3_sign_search_reaches_direct_sum():
         return (y @ X.abs_operator() @ y).trace.real - (y @ x @ y).trace_norm()
     v = opt.extremize(z, [X, Y], maximize=True, rounds=6, steps=40)
     assert v.max().item() > 0.97 * 4
+
+
+def test_objective_twice_without_step():
+    # U is cached per parameter state; a backward pass must invalidate the cache (its graph is freed)
+    a = alg(k=3, C=2)
+    X, U = opt.PositiveParam(a, 4), opt.UnitaryParam(a, 4)
+    for _ in range(2):
+        z = (X.operator() @ U.operator()).trace.real.sum() + X.abs_operator().trace.real.sum()
+        z.backward()
+    assert U.G.grad is not None and torch.isfinite(U.G.grad).all()

@@ -60,7 +60,7 @@ def operations(alg, B, dev, k, C):
     ops = {
         'generate': lambda: gen().matrix,
         'f(A) eigh': lambda: alg.operator(X.matrix, is_self_adjoint=True).apply_function(torch.sqrt).matrix,
-        '|A| SVD': lambda: alg.operator(X.matrix).abs().matrix,
+        '|A|': lambda: alg.operator(X.matrix).abs().matrix,
         'contrast': lambda: alg.operator(X.matrix, is_self_adjoint=True, is_positive=True).michelson_contrast,
         'channel': lambda: Phi(rho).matrix,
     }

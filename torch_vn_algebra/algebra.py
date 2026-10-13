@@ -226,7 +226,8 @@ class TypeIAlgebra:
         Z = torch.randn(*shape, n, m, dtype=self.hilbert.dtype, device=self.hilbert.device)
         if _gram_schmidt_preferred(Z):
             return _orthonormal_columns(Z)
-        Q, R = torch.linalg.qr(Z, mode='reduced')
+        Q, R = cost.batched_call(torch.linalg.qr, Z, f"random_isometry(n={n}, m={m})", kind='qr') if Z.dim() == 3 \
+            else torch.linalg.qr(Z)
         d = torch.diagonal(R, dim1=-2, dim2=-1)
         d = d.sgn() if self.hilbert.complex_valued else d.sign()
         return Q * d.unsqueeze(-2)

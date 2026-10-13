@@ -25,7 +25,7 @@ def exact_envelope(exp, k, C, grid, along='x'):
     if exp == 2:                          # sup = -inf = C floor(k/2) (1 - lo(delta)) (1 - lo(DMAX))
         v = C * (k // 2) * 2 * g / (1 + g) * (1 - (1 - DMAX) / (1 + DMAX))
         return {'sup': v, 'inf': -v}
-    if exp == 1 and along == 'x':
+    if exp == 1:                          # along either contrast (X and Y exchange roles in a real algebra)
         return {'inf': -(k * C - 2 * g / (1 + g))}
     if exp == 3:
         return {'inf': np.zeros_like(g)}
