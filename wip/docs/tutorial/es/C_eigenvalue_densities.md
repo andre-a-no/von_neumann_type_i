@@ -412,7 +412,7 @@ a, b, B = 3, 5, 100_000
 G = torch.randn(B, a, b, dtype=dt)                        # E|G_ij|^2 = 1
 W = G @ G.mH
 L = torch.linalg.cholesky(W)                              # W = L L*, L in T_+
-for i in range(a):                                        # L_ii^2 ~ Gamma(b - i) (i = 1, ..., a)
+for i in range(a):                                        # 0-based i: L_ii^2 ~ Gamma(b - i) (Lemma C.11, index i + 1)
     mc(L[:, i, i].real ** 2, b - i, f"E L_{i + 1}{i + 1}^2")
     mc(L[:, i, i].real ** 4, (b - i) * (b - i + 1), f"E L_{i + 1}{i + 1}^4")
 mc(L[:, 2, 0].abs() ** 2 * L[:, 1, 1].real ** 2, 1.0 * (b - 1), "E |L_31|^2 L_22^2")   # independence

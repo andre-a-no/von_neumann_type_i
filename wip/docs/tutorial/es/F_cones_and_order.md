@@ -395,7 +395,7 @@ $$
 \langle u\circ v,w\rangle=-\tfrac12\,D^3\log\varphi(e)[u,v,w].
 $$
 
-*Demostración.* El «si» son los teoremas F.5(2) y F.6(2). Recíprocamente, sean $\Omega$ simétrico y $e$ como en la
+*Demostración.* La implicación «si» la dan los teoremas F.5(2) y F.6(2). Recíprocamente, sean $\Omega$ simétrico y $e$ como en la
 proposición F.11(2), y definamos $L(u)$ por $\langle L(u)v,w\rangle=-\frac12D^3f(e)[u,v,w]$ y $u\circ v=L(u)v$.
 
 *Paso 1: conmutatividad, simetría, unidad.* $D^3f(e)$ es simétrica en sus tres argumentos, así que $u\circ v=v\circ u$ y
