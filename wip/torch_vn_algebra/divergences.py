@@ -35,7 +35,7 @@ Support conventions
 -------------------
 Powers (including negative ones) and logarithms of a positive operator are taken on its numerical support: the
 eigenvalues above rtol * lambda_max (lambda_max over all sectors of the sample; default rtol = N eps with
-N = sum_c k_c, the cut-off of numpy.linalg.pinv) are kept, the others count as exact zeros, and f(0) := 0 for every
+N = sum_c k_c, the cut-off of numpy.linalg.matrix_rank) are kept, the others count as exact zeros, and f(0) := 0 for every
 power p != 0 as well as for the logarithm (x^0 is the support projection). Hence Q_alpha and ~Q_alpha only involve
 the compression of rho to supp sigma. The support condition supp rho <= supp sigma is tested through the weight of
 rho outside supp sigma, leak = Tr rho (1 - Pi_sigma); it counts as violated when leak > supp_tol * Tr rho (default
@@ -77,8 +77,8 @@ For a completely positive map Phi: M_in -> M_out (Channel or InterSectorChannel)
     R_{sigma,Phi}(X) = sigma^{1/2} Phi^*( Phi(sigma)^{-1/2} X Phi(sigma)^{-1/2} ) sigma^{1/2},
 
 with the adjoint Phi^* for Tr_blunt (the trace in which states are densities) and the inverse square root on
-supp Phi(sigma). R is completely positive, R(Phi(sigma)) = sigma (on supp sigma) and Tr R(X) = Tr(Pi_{Phi(sigma)} X)
-when Phi is trace preserving. The rotated maps R^t = U_{sigma,t} o R o U_{Phi(sigma),-t}, U_{s,t}(X) = s^{it} X s^{-it}
+supp Phi(sigma). R is completely positive with Tr R(X) = Tr(Pi_{Phi(sigma)} X), and R(Phi(sigma)) = sigma when Phi is
+trace preserving. The rotated maps R^t = U_{sigma,t} o R o U_{Phi(sigma),-t}, U_{s,t}(X) = s^{it} X s^{-it}
 [JRSWW 2018], and the universal recovery map R_univ = int beta_0(t) R^{t/2} dt, beta_0(t) = pi/2 (cosh(pi t) + 1)^{-1},
 satisfy D(rho||sigma) - D(Phi rho||Phi sigma) >= -log F(rho, R_univ(Phi(rho))) [JRSWW 2018, Thm. 2.1].
 
@@ -86,7 +86,9 @@ L^p norms
 ---------
 ||A||_{p,w} = (sum_c w_c Tr|A_c|^p)^{1/p} for p in [1, inf), ||A||_inf = max_c ||A_c|| (sectors with w_c > 0), and
 the state-weighted norms of Kosaki [Kosaki 1984] ||x||_{p,rho,eta} = ||rho^{eta/p} x rho^{(1-eta)/p}||_p (eta = 1/2:
-the symmetric embedding used by Beigi 2013, eta = 1 / 0: left / right). For example
+the symmetric embedding used by Beigi 2013, eta = 1 / 0: left / right), i.e. the norm in the Haagerup L^p space of
+the image of x under the embedding x -> d^{eta/p} x d^{(1-eta)/p} (d the density of the state; in finite dimensions
+the Haagerup L^p space is M with the Schatten norm of the trace). For example
 ~D_alpha(rho||sigma) = alpha/(alpha-1) log ||sigma^{-1/2} rho sigma^{-1/2}||_{alpha,sigma} [Beigi 2013].
 
 Data processing
@@ -550,7 +552,8 @@ class SectorContributions(NamedTuple):
                  Umegaki: Tr rho_c (log rho_c - log sigma_c), summing to Tr rho D(rho||sigma).
     conditional: D(rho_c / p_c || sigma_c / q_c), the divergence of the conditional states of sector c: NaN where
                  p_c = 0 (rounding level: p_c <= rtol Tr rho), +inf where q_c = 0 < p_c or where the support
-                 conventions of the module give +inf for the sector.
+                 conventions of the module give +inf for the sector; for alpha given per sample, entries alpha = 1
+                 give the conditional Umegaki relative entropies (terms are then Tr rho_c Pi_sigma_c).
     alpha:       (batch,).
     Identities (sectors with p_c, q_c > 0):  Q_c = p_c^alpha q_c^{1-alpha} exp((alpha-1) conditional_c), hence
     D_alpha(rho||sigma) = (alpha-1)^{-1} log sum_c p_c^alpha q_c^{1-alpha} exp((alpha-1) D_alpha(rho_c/p_c||sigma_c/q_c))
@@ -571,6 +574,8 @@ def sector_contributions(rho: Operator, sigma: Operator, alpha: Optional[Alpha] 
     (kind='umegaki', alpha ignored); see SectorContributions."""
     if kind not in ('petz', 'sandwiched', 'umegaki'):
         raise ValueError("kind must be 'petz', 'sandwiched' or 'umegaki'")
+    if kind != 'umegaki' and alpha is None:
+        raise ValueError(f"kind={kind!r} needs alpha (kind='umegaki' for the relative entropy)")
     t = _terms(rho, sigma, alpha, kind, trace, rtol)
     alg = rho.algebra
     rt, st = _rtol(alg, rtol), _supp_tol(alg, supp_tol)
@@ -582,17 +587,23 @@ def sector_contributions(rho: Operator, sigma: Operator, alpha: Optional[Alpha] 
     ps, qs = torch.where(ok, p, one), torch.where(ok, q, one)
     leak = t.leak > st * torch.where(has_p, p, one)
     inf, nan = torch.full_like(p, math.inf), torch.full_like(p, math.nan)
+
+    def umegaki_conditional(ent):
+        return torch.where(leak, inf, (ent - ps * torch.log(ps / qs)) / ps)
     if kind == 'umegaki':
         terms = t.terms
-        cond = (terms - ps * torch.log(ps / qs)) / ps
-        cond = torch.where(leak, inf, cond)
+        cond = umegaki_conditional(terms)
     else:                                         # in logarithms: the scaled terms do not overflow
         ls = t.log_scale[:, None]
         terms = t.terms * torch.exp(ls)
         pos = t.terms > 0
-        cond = (ls + torch.log(torch.where(pos, t.terms, one)) - a * torch.log(ps) - (1 - a) * torch.log(qs)) / (a - 1)
+        is_one = a == 1                           # alpha given per sample: entries 1 are the Umegaki limit
+        den = torch.where(is_one, torch.ones_like(a), a - 1)
+        cond = (ls + torch.log(torch.where(pos, t.terms, one)) - a * torch.log(ps) - (1 - a) * torch.log(qs)) / den
         cond = torch.where(pos, cond, inf)
         cond = torch.where(leak & (a > 1), inf, cond)
+        if t.umegaki is not None:
+            cond = torch.where(is_one, umegaki_conditional(t.umegaki), cond)
     cond = torch.where(has_p & ~has_q, inf, cond)
     cond = torch.where(has_p, cond, nan)
     return SectorContributions(p, q, terms, cond, t.alpha)
@@ -662,8 +673,8 @@ class PetzRecovery:
     sigma: positive operator (e.g. a DensityMatrix) on M_in, batch 1 or B. The inverse powers act on the numerical
     support of Phi(sigma) (relative threshold rtol, module docstring). t != 0 needs a complex algebra.
 
-    R^t is completely positive; for trace-preserving Phi, Tr R^t(X) = Tr(Pi_{Phi(sigma)} X) (= Tr X if supp X is in
-    supp Phi(sigma)) and R^t(Phi(sigma)) = sigma (on supp sigma). Calling the map on an Operator X of M_out returns
+    R^t is completely positive with Tr R^t(X) = Tr(Pi_{Phi(sigma)} X) (= Tr X if supp X is in supp Phi(sigma)); for
+    trace-preserving Phi, R^t(Phi(sigma)) = sigma. Calling the map on an Operator X of M_out returns
     a lazy Operator of M_in (flagged positive if X is; wrap it as a DensityMatrix when X is a state supported in
     supp Phi(sigma)), differentiable in X, sigma and the Kraus operators. sigma and Phi(sigma) are decomposed once
     per map, also for several rotation parameters (method rotated).
@@ -753,7 +764,7 @@ def universal_recovery(sigma: Operator, channel, X: Operator, step: float = 0.12
     (a probability density), with R^t the rotated Petz maps of PetzRecovery. The integral is computed by the
     trapezoidal rule with the given step on [-cutoff, cutoff] (universal_recovery_nodes): the integrand is analytic in
     the strip |Im t| < 1, so the discretisation error decays like exp(-2 pi / step) times a factor that grows with the
-    condition of sigma and Phi(sigma), and the truncation error is about 2 pi exp(-pi cutoff) (~1e-15 with the
+    condition of sigma and Phi(sigma), and the truncation error is about 2 exp(-pi cutoff) (~1e-16 with the
     defaults). sigma and Phi(sigma) are decomposed once. Complex algebras only. Returns a lazy Operator of M_in
     (positive if X is).
     """
@@ -824,6 +835,8 @@ def lp_norm(A: Operator, p: float, trace: str = 'blunt', weights: Optional[torch
     non-degenerate singular values).
     """
     p = _check_p(p)
+    if not isinstance(A, Operator):
+        raise TypeError(f"A: expected an Operator, got {type(A).__name__}")
     alg = A.algebra
     B = A.matrix.shape[0]
     w = _weights(alg, trace, weights)
@@ -846,6 +859,8 @@ def kosaki_norm(x: Operator, rho: Operator, p: float, eta: float = 0.5, trace: s
     if not 0 <= eta <= 1:
         raise ValueError("eta must lie in [0, 1]")
     rho = _as_blunt(rho, trace, "rho")
+    if not isinstance(x, Operator):
+        raise TypeError(f"x: expected an Operator, got {type(x).__name__}")
     if not _same_structure(x.algebra, rho.algebra):
         raise ValueError("x and rho must belong to the same algebra")
     alg = rho.algebra

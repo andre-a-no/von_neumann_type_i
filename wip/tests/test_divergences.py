@@ -408,6 +408,18 @@ def test_sector_contributions(kind):
                 s = sigma.matrix[b, c, :k, :k].numpy() / q[b, j].item()
                 ref = _umegaki_ref(r, s) if kind == 'umegaki' else REF[kind](r, s, a)
                 assert abs(cond[b, j].item() - ref) < 1e-10
+    if kind != 'umegaki':
+        # alpha per sample, with an entry alpha = 1 (the Umegaki conditional divergences)
+        a3 = torch.tensor([0.4, 1.0, 1.8], dtype=torch.float64)
+        sc = dv.sector_contributions(rho, sigma, a3, kind)
+        su = dv.sector_contributions(rho, sigma, kind='umegaki')
+        assert torch.allclose(sc.conditional[1, [0, 3]], su.conditional[1, [0, 3]], atol=1e-12)
+        assert torch.allclose(sc.terms[1], sc.p[1], atol=1e-12)                 # Tr rho_c Pi_sigma_c = p_c
+        for i in (0, 2):
+            ref = dv.sector_contributions(rho, sigma, a3[i].item(), kind).conditional[i, [0, 3]]
+            assert torch.allclose(sc.conditional[i, [0, 3]], ref, atol=1e-12)
+        with pytest.raises(ValueError):
+            dv.sector_contributions(rho, sigma, None, kind)
 
 
 # ----------------------------------------------------------------------------------------------------------------
@@ -559,6 +571,21 @@ def test_rotated_and_universal_recovery():
     R = dv.PetzRecovery(sigma, Phi)
     for t in (0.0, 0.7, -2.3):
         assert (R.rotated(Phi(sigma), t).matrix - sigma.matrix).abs().max() < 1e-10
+    # dense reference: R^t(X) = sigma^{1/2+it} Phi^*(Phi(sigma)^{-1/2-it} X Phi(sigma)^{-1/2+it}) sigma^{1/2-it}, complex
+    # powers from numpy.linalg.eigh
+    def cpow(A, z):
+        w, V = np.linalg.eigh(0.5 * (A + A.conj().T))
+        return (V * w.astype(complex) ** z) @ V.conj().T
+    X = st.random_density_matrix(alg, B)
+    for t in (0.9, -1.6):
+        out = R.rotated(X, t)
+        for b in range(B):
+            s = _dense(alg, sigma.matrix[b])
+            Ks = [_dense(alg, K) for K in Phi.kraus[b]]
+            phis = sum(K @ s @ K.conj().T for K in Ks)
+            Y = cpow(phis, -0.5 - 1j * t) @ _dense(alg, X.matrix[b]) @ cpow(phis, -0.5 + 1j * t)
+            ref = cpow(s, 0.5 + 1j * t) @ sum(K.conj().T @ Y @ K for K in Ks) @ cpow(s, 0.5 - 1j * t)
+            assert np.abs(_dense(alg, out.matrix[b]) - ref).max() < 1e-10
     out = R.rotated(Phi(rho), 0.9)
     assert torch.allclose(out.trace.real, torch.ones(B, dtype=torch.float64), atol=1e-10)
     U = dv.universal_recovery(sigma, Phi, Phi(rho))

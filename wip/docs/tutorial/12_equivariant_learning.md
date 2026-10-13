@@ -17,10 +17,10 @@ and invariant quadratic forms are counted.
 
 Throughout, $G$ is a finite group, and a **representation** of $G$ on $\mathbb C^n$ is a homomorphism
 $\pi:G\to M_n(\mathbb C)$ with unitary values (no restriction: invertible $\pi(g)$ are unitary for the inner product
-$\sum_g\langle\pi(g)x,\pi(g)y\rangle$). Its **character** is $\chi_\pi(g)=\operatorname{Tr}\pi(g)$. Irreducible and
+$\sum_g\langle\pi(g)x,\pi(g)y\rangle$, Section 4.1). Its **character** is $\chi_\pi(g)=\operatorname{Tr}\pi(g)$. Irreducible and
 equivalent representations and the **multiplicity** $m_\rho(\pi)$ of an irreducible $\rho$ in $\pi$ ($0$ if $\rho$
 does not occur) are as in Section 2.4, which proves that $m_\rho(\pi)$ does not depend on the decomposition and
-proves Schur's lemma; Chapter 4 (in preparation) treats both at length. On rectangular matrices
+proves Schur's lemma; [Chapter 4](04_symmetries.md) treats both at length (Sections 4.1–4.2). On rectangular matrices
 $\langle S,T\rangle=\operatorname{Tr}(S^*T)$ is the **Hilbert–Schmidt** inner product. In the code a batch of vectors
 is a tensor of shape `(batch, n)`, on which a matrix $T$ acts as `x @ T.T`.
 
@@ -167,15 +167,17 @@ For Corollary 12.2(b) with $n=4$: vertex features $\pi_1$ have $a=(1,0,0,1)$ in 
 $\pi_1\oplus\pi_2$ (trivial, dimension $2$, the two of dimension $3$), edge features $\pi_2$ have
 $b=(2,1,1,3)$, so $\dim\operatorname{Hom}_G=1\cdot2+1\cdot3=5=B_3$.
 
-> **Physical meaning.** Theorem 12.4 is the linear-algebra core of **selection rules** and of the
-> Wigner–Eckart theorem: an operator that transforms covariantly can only connect states of the same symmetry
-> type, and within a type it acts as $1_{k_c}\otimes y_c$, i.e. by a "reduced matrix element" $y_c$ that is
-> blind to the position inside the multiplet. A symmetric Hamiltonian is the case $\pi_1=\pi_2$; its
-> degeneracies $k_c$ are the dimensions of the irreducible representations.
+> **Physical meaning.** Theorem 12.4 is the linear-algebra core of **selection rules** and the scalar case of
+> the Wigner–Eckart theorem: an operator that commutes with the symmetry can only connect states of the same
+> symmetry type, and within a type it acts as $1_{k_c}\otimes y_c$, i.e. by a "reduced matrix element" $y_c$ that
+> is blind to the position inside the multiplet. (Operators that themselves transform by a non-trivial
+> representation, such as vectors, need in addition the Clebsch–Gordan coefficients.) A symmetric Hamiltonian
+> is the case $\pi_1=\pi_2$; its degeneracies $k_c$ are the dimensions of the irreducible representations.
 
 ## 12.2 An equivariant layer with the library
 
-The proof of Theorem 12.4 is an algorithm. For $\pi_1=\pi_2$ it is just Theorem 2.6: the weights are blocks
+The proof of Theorem 12.4 is an algorithm, once the decomposition of Theorem 2.6 is known; `dc.from_group`
+computes it by the randomised method of Section 4.3. For $\pi_1=\pi_2$ it is just Theorem 2.6: the weights are blocks
 $w_c\in M_{m_c}$, an operator of the abstract commutant `D.commutant_algebra()` $=\bigoplus_cM_{m_c}$, and the
 layer is $x\mapsto V\big(\bigoplus_c1_{k_c}\otimes w_c\big)V^*x$, computed by `D.from_commutant`. The module
 below is chapter code, not part of the library.
@@ -271,8 +273,9 @@ self-adjoint idempotent is the orthogonal projection onto its range. Its trace i
 $W\mapsto AWB$ on $M_{n_2\times n_1}$ has trace $\operatorname{Tr}A\operatorname{Tr}B$ (the coefficient of the
 matrix unit $E_{ij}$ in $AE_{ij}B$ is $A_{ii}B_{jj}$); with $A=\pi_2(g)$, $B=\pi_1(g)^*$ this gives the formula. $\square$
 
-With Theorem 12.4, $\sum_\rho m_\rho(\pi_1)m_\rho(\pi_2)=|G|^{-1}\sum_g\overline{\chi_{\pi_1}(g)}\chi_{\pi_2}(g)$
-(`dc.commutant_dimension` evaluates $\pi_1=\pi_2$). The parametrisation $W\mapsto\mathcal P(W)$ reaches every
+With Theorem 12.4, $\sum_\rho m_\rho(\pi_1)m_\rho(\pi_2)=|G|^{-1}\sum_g\overline{\chi_{\pi_1}(g)}\chi_{\pi_2}(g)$;
+for $\pi_1=\pi_2$ this is the character formula for $\dim\pi(G)'$ of Section 4.2, which `dc.commutant_dimension`
+evaluates. The parametrisation $W\mapsto\mathcal P(W)$ reaches every
 equivariant map, $\mathcal P(W)$ is the equivariant map closest to $W$, and as $\mathcal P$ is self-adjoint, the
 gradient with respect to $W$ is $\mathcal P$ of the gradient with respect to $T=\mathcal P(W)$. But
 $n_1n_2-\dim\operatorname{Hom}_G$ parameters are wasted on the kernel ($256-15$ for edge features), and an
@@ -310,8 +313,9 @@ applies to them. Write $\Phi(w)=V\big(\bigoplus_c1_{k_c}\otimes w_c\big)V^*$ for
 **Proposition 12.6.** (a) $\Phi$ is a $*$-isomorphism of $\bigoplus_cM_{m_c}$ onto $\pi(G)'$, and $\Phi(w)$ is
 self-adjoint, unitary or positive iff every $w_c$ is. (b) For normal $w$ and a function $f$ on
 $\bigcup_c\operatorname{spec}w_c$, $f(\Phi(w))=\Phi\big((f(w_c))_c\big)$; in particular $f(X)\in\pi(G)'$ for every
-normal $X\in\pi(G)'$. (c) The equivariant unitaries are the $\Phi(u_0e^{s-s^*})$ for any fixed unitary $u_0$, $s$
-ranging over $\bigoplus_cM_{m_c}$; in particular they are the exponentials $e^S$ of the skew-adjoint $S\in\pi(G)'$.
+normal $X\in\pi(G)'$. (c) The equivariant unitaries are the $\Phi(u_0e^{s-s^*})$, $s$ ranging over
+$\bigoplus_cM_{m_c}$, for any fixed unitary $u_0\in\bigoplus_cM_{m_c}$; in particular they are the exponentials $e^S$
+of the skew-adjoint $S\in\pi(G)'$.
 
 *Proof.* (a) $\Phi$ is linear, unital, multiplicative and $*$-preserving because $(1\otimes x)(1\otimes y)=1\otimes xy$
 and $(1\otimes x)^*=1\otimes x^*$; it is injective, and onto $\pi(G)'$ by Theorem 2.6. Hence $\Phi(w)^*=\Phi(w)$ iff
@@ -327,7 +331,8 @@ the skew-adjoint elements of $\pi(G)'$. $\square$
 
 So an orthogonal (unitary) equivariant layer is `optimize.UnitaryParam` on `D.commutant_algebra()` followed by
 $\Phi$; by (c) this parametrisation reaches every equivariant unitary, and every iterate of a gradient method is
-exactly unitary and exactly equivariant. Likewise `PositiveParam` gives positive equivariant layers, and a
+exactly unitary and exactly equivariant. Likewise `PositiveParam` gives positive equivariant layers, normalised as
+in Chapter 11 (spectrum in $[\ell,1]$ with maximum $1$; by (a), a general positive layer is $\Phi(t^*t)$), and a
 spectral layer $f(L)$ of a self-adjoint equivariant generator $L$, such as the diffusion $e^{-tL}$, needs
 eigendecompositions of cost $\sum_cm_c^3$ ($37$ here) instead of $n^3=4096$, with gradients by the
 Daleckii–Krein formula (`apply_function`). The code fits an equivariant unitary to $32$ input–output pairs, and checks (b)
@@ -451,9 +456,10 @@ $\sum_d\dim\mathbb C[x]^G_dt^d=|G|^{-1}\sum_g\det(1-t\pi(g))^{-1}$, whose coeffi
 proof; B. Sturmfels, *Algorithms in Invariant Theory*, Springer 2008, Theorem 2.2.1).
 
 > **Physical meaning.** In Landau's theory of phase transitions the free energy is an invariant polynomial in a
-> real order parameter $x$. Its quadratic part is $x^TBx$ with $B$ in the commutant (as $\pi(g)^T=\pi(g)^{-1}$), so
-> by (b) it is block diagonal over the sectors: the symmetric phase becomes unstable in the sector where an
-> eigenvalue of $B$ first changes sign, and that irreducible representation fixes the symmetry of the ordered phase.
+> real order parameter $x$, on which $G$ acts by real orthogonal matrices. Its quadratic part is $x^TBx$ with $B$ in
+> the commutant (as $\pi(g)^T=\pi(g)^{-1}$), so by Proposition 12.6(a) it is block diagonal over the sectors: the
+> symmetric phase becomes unstable in the sector where an eigenvalue of $B$ first changes sign, and (generically)
+> the irreducible representation of that sector determines the symmetry of the ordered phase.
 
 ## 12.5 What to compare with
 
@@ -463,13 +469,15 @@ representations and harmonic bases of kernels; **e3nn** (Geiger and Smidt 2022) 
 from spherical harmonics and Clebsch–Gordan tensor products. **EMLP** (Finzi, Welling and Wilson 2021) handles any
 matrix group: it imposes $\pi_2(g)T=T\pi_1(g)$ for discrete generators and $d\pi_2(X)T=Td\pi_1(X)$ for Lie algebra
 generators and computes a basis of the solutions as a numerical null space — the linear problem of
-`dc.commutant_basis`. Group convolutions (Cohen and Welling
-2016) are the case of the regular representation, and Kondor and Trivedi (2018) show that equivariance forces
-convolution. For permutations, DeepSets (Zaheer et al. 2017) and the bases of Maron et al. (2019) are Corollary 12.2.
+`dc.commutant_basis`. Group convolutions (Cohen and Welling 2016) are the case of the regular representation,
+and Kondor and Trivedi (2018) show that, for feature maps on homogeneous spaces of a compact group, equivariant
+linear layers are generalised convolutions. For permutations, DeepSets (Zaheer et al. 2017) and the bases of
+Maron et al. (2019) are Corollary 12.2.
 
 The library does not provide convolutions on grids, steerable kernels on continuous spaces, decompositions over
-$\mathbb R$ (real, complex and quaternionic types; Exercise 2 treats real matrices), or large $n$: $V$ is a dense $n\times n$ matrix and the decomposition costs $O(|G|n^3)$ for a group
-given by all its elements (Lie algebra generators go through `dc.from_generators`). What it adds is the
+$\mathbb R$ (real, complex and quaternionic types; Exercise 2 treats real matrices), or large $n$: $V$ is a dense
+$n\times n$ matrix and the decomposition costs $O(|G|n^3)$ per random sample for a group given by all its elements
+(Lie algebra generators go through `dc.from_generators`; Section 4.3). What it adds is the
 **structure** of the solution space: a basis of the commutant is a list of matrices, whereas the decomposition
 identifies the commutant with the $*$-algebra $\bigoplus_cM_{m_c}$. Products, adjoints, unitarity, positivity and
 the functional calculus then act blockwise on small matrices, with gradients (Proposition 12.6), and
@@ -543,9 +551,11 @@ assert max((gate(g @ x) - g @ gate(x)).abs().max().item() for g in G_edge) < 1e-
    matrix $X_{i,c}w_c^T$. Hence $Tx_i=0$ for all $i$ iff $S_cw_c^T=0$ for all $c$, i.e. iff every column of $w_c^T$ lies in
    $\ker S_c$, a space of dimension $m_c-\operatorname{rank}S_c$: the $w_c$ with this property form a space of
    dimension $m_c(m_c-\operatorname{rank}S_c)$, and $\Phi$ is injective. For Gaussian $x_i$, $V^*x_i$ is Gaussian
-   ($V$ is unitary), so $S_c$ has independent Gaussian entries and rank $\min(Nk_c,m_c)$ almost surely: a minor of
-   that size is a non-zero polynomial in the entries, whose zero set has Lebesgue measure $0$. For the edge
-   representation the sector $(k,m)=(1,2)$ gives $2\cdot(2-1)=2$ for $N=1$, and $0$ for $N=2$.
+   ($V$ is unitary), so $S_c$ has independent Gaussian entries and rank $\min(Nk_c,m_c)$ almost surely: for the
+   leading square submatrix of that size, $|\det|^2$ is a real polynomial in the real and imaginary parts of the
+   entries, not identically zero (it is $1$ when the submatrix is the identity), and such a polynomial vanishes
+   only on a Lebesgue null set (proved in Section 4.3). For the edge representation, $(k,m)=(1,2),(2,1),(3,1),(3,3)$,
+   only the sector $(1,2)$ contributes: $2\cdot(2-1)=2$ for $N=1$, and $0$ for $N=2$.
 
 ```python
 basis = D_edge.basis('commutant')                                # (15, 16, 16), Hilbert-Schmidt orthonormal
@@ -557,9 +567,12 @@ for N, lost in ((1, 2), (2, 0)):
 
 </details>
 
-**Where to go from here.** Chapter 4 (in preparation) develops the representation theory used here, and
-Chapter 9 (in preparation) applies the same sectors to spin chains. For the mathematics see J.-P. Serre, *Linear
-Representations of Finite Groups* (Springer 1977) and W. Fulton and J. Harris, *Representation Theory* (Springer 1991);
-for equivariant learning, M. Bronstein, J. Bruna, T. Cohen and P. Veličković, *Geometric Deep Learning* (2021), and
-M. Weiler et al., *Equivariant and Coordinate Independent Convolutional Networks* (2023); for the decomposition
-algorithm, the references in `torch_vn_algebra/decompose.py`.
+**Where to go from here.** This is the last chapter of the course. [Chapter 4](04_symmetries.md) develops the
+representation theory used here: Schur's lemma, characters, and the randomised algorithm behind `dc.from_group`
+(Sections 4.1–4.3). Chapter 9 (in preparation) applies the same sectors to spin chains, and the Haar measure on
+$\prod_cU(m_c)$ of [Chapter 5](05_random_matrices.md) gives the natural random initialisation of an equivariant
+unitary layer. For the mathematics see J.-P. Serre, *Linear Representations of Finite Groups* (Springer 1977) and
+W. Fulton and J. Harris, *Representation Theory* (Springer 1991); for equivariant learning, M. Bronstein, J. Bruna,
+T. Cohen and P. Veličković, *Geometric Deep Learning* (2021), and M. Weiler et al., *Equivariant and Coordinate
+Independent Convolutional Networks* (2023); for the decomposition algorithm, the references in
+`torch_vn_algebra/decompose.py`.
