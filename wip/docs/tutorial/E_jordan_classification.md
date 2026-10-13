@@ -349,3 +349,335 @@ $w\circ w'=B(w,w')1$ for $w,w'\in W$, where $B(\alpha f+x,\beta f+y)=\alpha\beta
 If $U:W\to\mathbb R^{d+1}$ is an isometry, $a1+w\mapsto(a,Uw)$ maps
 $(a1+w)\circ(b1+w')=(ab+B(w,w'))1+aw'+bw$ to the product of $V_{d+1}$. $\square$
 
+## E.6 Composition algebras: the theorems of Hurwitz and Frobenius
+
+A **composition algebra** is an algebra $A$ with unit $1$ and a positive definite quadratic form $N$ such that
+$N(xy)=N(x)N(y)$. We write $\langle\cdot,\cdot\rangle$ for the polar form ($N(x)=\langle x,x\rangle$),
+$\operatorname{Re}x=\langle x,1\rangle$ and $\bar x=2\operatorname{Re}(x)1-x$, the reflection in the line $\mathbb R1$;
+so $x\mapsto\bar x$ is an isometric involution. An isomorphism of composition algebras is an isometric algebra
+isomorphism. The **associator** is $(x,y,z)=(xy)z-x(yz)$.
+
+**Lemma E.14.** In a composition algebra, for all $x,y,z,w$:
+
+1. $N(1)=1$, $\langle xy,xz\rangle=N(x)\langle y,z\rangle$, $\langle yx,zx\rangle=\langle y,z\rangle N(x)$ and
+   $\langle xy,wz\rangle+\langle wy,xz\rangle=2\langle x,w\rangle\langle y,z\rangle$;
+2. $\langle xy,z\rangle=\langle y,\bar xz\rangle=\langle x,z\bar y\rangle$;
+3. $\bar x(xy)=N(x)y=(yx)\bar x$; hence $\bar xx=x\bar x=N(x)1$, $x^2-2\operatorname{Re}(x)x+N(x)1=0$,
+   $xy+yx=2\operatorname{Re}(x)y+2\operatorname{Re}(y)x-2\langle x,y\rangle1$,
+   $\bar x(wy)+\bar w(xy)=2\langle x,w\rangle y$ and $(yx)\bar w+(yw)\bar x=2\langle x,w\rangle y$;
+4. $\overline{xy}=\bar y\bar x$, $\operatorname{Re}(xy)=\operatorname{Re}(yx)$ and
+   $\operatorname{Re}((xy)z)=\operatorname{Re}(x(yz))$;
+5. $x(xy)=x^2y$ and $(yx)x=yx^2$; the associator is alternating (it changes sign when two arguments are exchanged).
+
+*Proof.* (1) $N(1)=N(1)^2>0$. Polarise $N(xy)=N(x)N(y)$ in $y$, respectively in $x$, and then $\langle xy,xz\rangle=N(x)\langle y,z\rangle$ in $x$.
+(2) The last identity of (1) with $w=1$ reads $\langle xy,z\rangle+\langle y,xz\rangle=2\operatorname{Re}(x)\langle y,z\rangle$,
+i.e. $\langle xy,z\rangle=\langle y,\bar xz\rangle$; the polarisation of $\langle yx,zx\rangle=\langle y,z\rangle N(x)$ in $x$,
+with one of the two variables equal to $1$, gives $\langle yx,z\rangle=\langle y,z\bar x\rangle$. (3) By (2) and (1),
+$\langle\bar x(xy),z\rangle=\langle xy,xz\rangle=N(x)\langle y,z\rangle$ for all $z$, and likewise on the right. Put $y=1$
+and substitute $\bar x=2\operatorname{Re}(x)1-x$; then polarise. (4) By (2) and the isometry of the conjugation,
+$\langle\bar y\bar x,z\rangle=\langle\bar x,yz\rangle=\langle\bar x\bar z,y\rangle=\langle\bar z,xy\rangle=\langle z,\overline{xy}\rangle$.
+Next $\operatorname{Re}(xy)=\langle y,\bar x\rangle=\langle\bar y,x\rangle=\operatorname{Re}(yx)$, and
+$\operatorname{Re}((xy)z)=\langle xy,\bar z\rangle=\langle y,\bar x\bar z\rangle=\langle yz,\bar x\rangle=\operatorname{Re}(x(yz))$.
+(5) By (3), $x(xy)=(2\operatorname{Re}(x)-\bar x)(xy)=(2\operatorname{Re}(x)x-N(x))y=x^2y$, and likewise on the right. So
+$(x,x,y)=(y,x,x)=0$; polarising, the associator changes sign when the first two or the last two arguments are
+exchanged, and these transpositions generate all permutations. $\square$
+
+**The Cayley–Dickson construction.** For an algebra $B$ with unit, involution $b\mapsto\bar b$ and quadratic form $N$, let
+$\operatorname{CD}(B)=B\times B$ with
+$$
+(a,b)(c,d)=(ac-\bar db,\;da+b\bar c),\qquad N(a,b)=N(a)+N(b).
+$$
+Starting from $\mathbb R$ ($\bar x=x$, $N(x)=x^2$) we define $\mathbb C=\operatorname{CD}(\mathbb R)$,
+$\mathbb H=\operatorname{CD}(\mathbb C)$ and $\mathbb O=\operatorname{CD}(\mathbb H)$, of dimensions $1,2,4,8$. In
+$\mathbb C$, $(a,b)(c,d)=(ac-bd,ad+bc)$: these are the complex numbers $a+bi$. $B$ is the subalgebra $B\times0$.
+
+**Lemma E.15.** (1) If $B$ is an associative composition algebra, then $\operatorname{CD}(B)$ is a composition algebra
+with unit $(1,0)$ and conjugation $\overline{(a,b)}=(\bar a,-b)$. (2) $\mathbb C$ is commutative and associative.
+$M(a,b)=\begin{pmatrix}a&-b\\\bar b&\bar a\end{pmatrix}$ is an injective algebra homomorphism $\mathbb H\to M_2(\mathbb C)$
+with $M(\bar q)=M(q)^*$; so $\mathbb H$ is associative; it is not commutative. $\mathbb O$ is not associative. (3)
+$\mathbb R,\mathbb C,\mathbb H,\mathbb O$ are composition algebras, and $\mathbb R,\mathbb C,\mathbb H$ are division algebras:
+every $x\ne0$ has the two-sided inverse $\bar x/N(x)$, so $xy=0$ implies $x=0$ or $y=0$.
+
+*Proof.* (1) $N((a,b)(c,d))=N(a)N(c)+N(d)N(b)+N(d)N(a)+N(b)N(c)-2\langle ac,\bar db\rangle+2\langle da,b\bar c\rangle$, and by
+Lemma E.14(2) $\langle ac,\bar db\rangle=\langle d(ac),b\rangle$ and $\langle da,b\bar c\rangle=\langle(da)c,b\rangle$, which
+agree when $B$ is associative. $(1,0)$ is a unit, and $2\langle(a,b),(1,0)\rangle(1,0)-(a,b)=(\bar a,-b)$. (2) Multiplying
+out and using that $\mathbb C$ is commutative, $M(a,b)M(c,d)=M(ac-\bar db,da+b\bar c)$; $M$ is linear and injective, and
+$M(\bar a,-b)=M(a,b)^*$. In $\mathbb H$, $(i,0)(0,1)=(0,i)$ but $(0,1)(i,0)=(0,-i)$. In $\mathbb O=\mathbb H\times\mathbb H$ let
+$p=((i,0),0)$, $q=((0,1),0)$, $s=(0,1)$; then $(pq)s=(0,(0,i))$ and $p(qs)=(0,(0,-i))$. (3) By (1), (2) and induction. If
+$x\ne0$, $x(\bar x/N(x))=(\bar x/N(x))x=1$ by Lemma E.14(3); in an associative algebra, $xy=0$ then gives
+$y=(\bar x/N(x))(xy)=0$. $\square$
+
+**Lemma E.16 (doubling).** Let $A$ be a composition algebra, $B\subseteq A$ a subalgebra with $1\in B$, and $i\in A$ with
+$i\perp B$ and $N(i)=1$. For $a,b,c,d\in B$: $Bi\perp B$, $N(a+bi)=N(a)+N(b)$ and
+$$
+(a+bi)(c+di)=(ac-\bar db)+(da+b\bar c)\,i .
+$$
+So $B\oplus Bi$ is a subalgebra of dimension $2\dim B$, and $a+bi\mapsto(h(a),h(b))$ is an isomorphism
+$B\oplus Bi\cong\operatorname{CD}(D)$ whenever $h:B\to D$ is an isomorphism of composition algebras. Moreover $B$ is
+associative; if $B\oplus Bi$ is associative, $B$ is commutative; if $B\oplus Bi$ is commutative, $B=\mathbb R1$.
+
+*Proof.* $B$ contains $\bar b=2\operatorname{Re}(b)1-b$ with $b$. By Lemma E.14, $\langle bi,a\rangle=\langle i,\bar ba\rangle=0$,
+$N(bi)=N(b)$, $\bar i=-i$, and $ci+ic=2\operatorname{Re}(c)i$, i.e. $ci=i\bar c$, for $c\in B$. The identities of
+Lemma E.14(3) give, in turn: with $(x,w,y)=(\bar a,i,b)$, $a(ib)=i(\bar ab)$; since $ib=\bar bi$ and
+$i(\bar ab)=\overline{\bar ab}\,i=(\bar ba)i$, replacing $b$ by $\bar b$ gives $a(bi)=(ba)i$. With $(y,x,w)=(a,i,\bar c)$,
+$(ai)c=(a\bar c)i$. With $x=i$, $i(iy)=-y$. With $(x,w,y)=(ai,i,\bar d)$, where $\overline{ai}=-ai$ (as $ai\perp1$) and
+$\langle ai,i\rangle=\operatorname{Re}a$ (Lemma E.14(1)),
+$$
+-(ai)(i\bar d)-i((ai)\bar d)=2\operatorname{Re}(a)\bar d .
+$$
+Here $i\bar d=di$ and $i((ai)\bar d)=i((ad)i)=i(i\,\overline{ad})=-\bar d\bar a$, so
+$(ai)(di)=\bar d\bar a-2\operatorname{Re}(a)\bar d=-\bar da$. Expanding $(a+bi)(c+di)$ with these four rules gives the formula,
+and $N$ and the products match those of $\operatorname{CD}(D)$ under $h$. Since $N$ is multiplicative on
+$B\oplus Bi\subseteq A$, the computation in the proof of Lemma E.15(1) gives $\langle d(ac)-(da)c,b\rangle=0$ for all
+$b\in B$, so $B$ is associative. If $B\oplus Bi$ is associative, $(ab)i=a(bi)=(ba)i$, so $ab=ba$. If it is commutative,
+$ai=ia=\bar ai$, so $a=\bar a\in\mathbb R1$. $\square$
+
+**Theorem E.17 (Hurwitz).** Every composition algebra is isomorphic to exactly one of $\mathbb R,\mathbb C,\mathbb H,\mathbb O$.
+
+*Proof.* Put $B_0=\mathbb R1\cong\mathbb R$. While $B_k\ne A$, choose $i_{k+1}\perp B_k$ with $N(i_{k+1})=1$ and put
+$B_{k+1}=B_k\oplus B_ki_{k+1}$; by Lemma E.16, $B_k\cong\operatorname{CD}^k(\mathbb R)$ has dimension $2^k$. If $B_4$
+existed, Lemma E.16 would make $B_3$ associative, hence $B_2$ commutative, hence $B_1=\mathbb R1$, which has dimension
+$1\ne2$. So $A=B_k$ for some $k\le3$. The four algebras have different dimensions. $\square$
+
+**Lemma E.18.** Let $A$ be a composition algebra. (1) Any two elements of $A$ lie in an associative subalgebra.
+(2) (**Moufang identity**) $(ux)(yu)=u((xy)u)=(u(xy))u$ for all $u,x,y$.
+
+*Proof.* (1) Let $p,q\in A$; we may assume $p\notin\mathbb R1$ (else exchange them, and if both are real use $\mathbb R1$).
+$B=\operatorname{span}\{1,p\}$ is a subalgebra ($p^2=2\operatorname{Re}(p)p-N(p)1$), a composition algebra of dimension $2$,
+so $B\cong\mathbb C$ (Theorem E.17). If $q\in B$ we are done; otherwise let $i$ be the normalised component of $q$
+orthogonal to $B$. By Lemma E.16, $B\oplus Bi\cong\operatorname{CD}(\mathbb C)=\mathbb H$ is associative and contains $p,q$.
+(2) The associator is alternating (Lemma E.14(5)), so $(u,xy,u)=0$, which is the second equality. Let $X=(u,x,y)$.
+$\operatorname{Re}X=0$ by Lemma E.14(4), and $\langle u,X\rangle=\langle u\bar y,ux\rangle-N(u)\langle1,xy\rangle
+=N(u)(\langle\bar y,x\rangle-\langle\bar x,y\rangle)=0$; so the polarised quadratic identity of Lemma E.14(3) gives
+$uX+Xu=2\operatorname{Re}(u)X$, i.e. $\bar uX=Xu$. Expanding the definitions shows that in every algebra
+$$
+(wx,y,z)-(w,xy,z)+(w,x,yz)=w(x,y,z)+(w,x,y)z .
+$$
+With $(w,x,y,z)=(u,u,x,y)$, and $(u^2,x,y)=2\operatorname{Re}(u)X$: $(u,ux,y)=2\operatorname{Re}(u)X-uX=\bar uX=Xu$. With
+$(w,x,y,z)=(u,x,y,u)$, $(ux,y,u)=(u,ux,y)=Xu$ and $(x,y,u)=X$ (cyclic permutations): $(u,x,yu)=uX+Xu-Xu=uX$. Hence
+$(ux)(yu)-u((xy)u)=(u,x,yu)-u(x,y,u)=uX-uX=0$. $\square$
+
+**Theorem E.19 (Frobenius).** Every finite-dimensional associative real algebra $A$ with unit $1\ne0$ and without zero
+divisors is isomorphic to $\mathbb R$, $\mathbb C$ or $\mathbb H$.
+
+*Proof.* (i) For $x\in A$ the powers $1,x,x^2,\dots$ are linearly dependent; let $\mu$ be the monic real polynomial of least
+degree with $\mu(x)=0$. If $\mu=fg$ with $\deg f,\deg g\ge1$, then $f(x)g(x)=0$ forces $f(x)=0$ or $g(x)=0$; so $\mu$ is
+irreducible, hence (fundamental theorem of algebra) $\mu=t-\alpha$ or $\mu=(t-\alpha)^2+\beta^2$, $\beta>0$. Let
+$V=\{v\in A:v^2\in(-\infty,0]\cdot1\}$. Then $A=\mathbb R1+V$ (in the second case $x-\alpha\in V$), and
+$\mathbb R1\cap V=0$. (ii) $V$ is a subspace: it is closed under scalars, and for $u,v\in V$ we show $u+v\in V$. If
+$u,v$ are linearly dependent, $u+v$ is a multiple of one of them; so let them be independent. Then $1,u,v$ are independent: if
+$1=\alpha u+\gamma v$ with, say, $\alpha\ne0$, then $u^2=(1-2\gamma v+\gamma^2v^2)/\alpha^2\in\mathbb R1$ forces $\gamma=0$
+and $u\in\mathbb R1\cap V=0$. By (i), $(u\pm v)^2=p_\pm(u\pm v)+q_\pm1$ with real $p_\pm,q_\pm$; adding,
+$2u^2+2v^2=(p_++p_-)u+(p_+-p_-)v+(q_++q_-)1$, so $p_\pm=0$. If $q_+>0$, then
+$(u+v-\sqrt{q_+})(u+v+\sqrt{q_+})=0$ and $u+v\in\mathbb R1$, which is impossible; so $u+v\in V$. (iii) For $u,v\in V$,
+$uv+vu=(u+v)^2-u^2-v^2=-2\langle u,v\rangle1$ defines a symmetric bilinear form with $\langle u,u\rangle=-u^2\ge0$, and
+$\langle u,u\rangle=0$ only if $u^2=0$, i.e. $u=0$: an inner product. Orthogonal $u,v\in V$ anticommute. (iv) If $V=0$,
+$A=\mathbb R$. If $\dim V=1$, $V=\mathbb Ri$ with $i^2=-1$, and $A\cong\mathbb C$. If $\dim V\ge2$, take orthonormal
+$i,j\in V$ and $k=ij$. Then $k^2=ijij=-i^2j^2=-1$, so $k\in V$, $ik+ki=-j+j=0$ and $jk+kj=i-i=0$: $i,j,k$ are
+orthonormal, with $ij=-ji=k$, $jk=-kj=i$, $ki=-ik=j$. If there were a unit $l\in V$ orthogonal to $i,j,k$, then
+$lk=(li)j=-i(lj)=(ij)l=kl$ and $lk=-kl$, so $kl=0$, impossible. Hence $A=\operatorname{span}\{1,i,j,k\}$. In $\mathbb H$, the
+elements $I=(i,0)$, $J=(0,1)$, $K=(0,i)$ have the same multiplication table (Lemma E.15(2) gives $IJ=K=-JI$, and
+$I^2=J^2=-1$, $K=IJ$ determine the rest by associativity), so $A\cong\mathbb H$. $\square$
+
+The code builds $\mathbb O$ by Cayley–Dickson doubling and checks the identities of Lemma E.14, the Moufang identity
+of Lemma E.18 and the non-associativity of Lemma E.15 on random octonions, and the homomorphism $M$:
+
+```python
+o = torch.randn(4, 1000, 8, dtype=dt)             # random octonions
+a, b, cc, u = o
+N = lambda z: (z * z).sum(-1)
+ip = lambda p, q: (p * q).sum(-1)
+assert torch.allclose(N(cd(a, b)), N(a) * N(b))                               # composition
+assert torch.allclose(ip(cd(a, b), cc), ip(b, cd(conj(a), cc)))               # (H3)
+assert torch.allclose(ip(cd(a, b), cc), ip(a, cd(cc, conj(b))))
+assert torch.allclose(conj(cd(a, b)), cd(conj(b), conj(a)))                   # (H5)
+assert torch.allclose(cd(a, cd(a, b)), cd(cd(a, a), b))                       # alternative
+assert torch.allclose(cd(cd(u, a), cd(b, u)), cd(u, cd(cd(a, b), u)))         # Moufang
+assoc = cd(cd(a, b), cc) - cd(a, cd(b, cc))
+assert assoc[..., 0].abs().max() < 1e-12 and assoc.abs().max() > 1          # Re-associative, not associative
+e = torch.eye(8, dtype=dt)
+print("(e1 e2) e4 =", cd(cd(e[1], e[2]), e[4]).tolist(), "\ne1 (e2 e4) =", cd(e[1], cd(e[2], e[4])).tolist())
+
+def M(q):                                         # H -> M_2(C): (a, b) -> [[a, -b], [b*, a*]]
+    za, zb = torch.complex(q[..., 0], q[..., 1]), torch.complex(q[..., 2], q[..., 3])
+    return torch.stack([torch.stack([za, -zb], -1), torch.stack([zb.conj(), za.conj()], -1)], -2)
+p4, q4 = torch.randn(2, 1000, 4, dtype=dt)
+assert torch.allclose(M(cd(p4, q4)), M(p4) @ M(q4)) and torch.allclose(M(conj(p4)), M(p4).mH)
+
+```
+
+## E.7 Coordinatisation
+
+For $D\in\{\mathbb R,\mathbb C,\mathbb H,\mathbb O\}$, $d=\dim D$ and $n\ge1$, let
+$\operatorname{Herm}_n(D)=\{X\in M_n(D):X_{ji}=\overline{X_{ij}}\}$ with $X\circ Y=\frac12(XY+YX)$, where
+$(XY)_{ik}=\sum_jX_{ij}Y_{jk}$ (no associativity of $D$ is needed to define this). Diagonal entries satisfy $\bar x=x$, so
+they are real. Let $E_{ij}$ be the matrix units and, for $i\ne j$ and $a\in D$, $a[ij]=aE_{ij}+\bar aE_{ji}$; thus
+$a[ji]=\bar a[ij]$.
+
+**Lemma E.20.** $\operatorname{Herm}_n(D)$ is closed under $\circ$, has the unit $\sum_iE_{ii}$ and dimension
+$n+d\frac{n(n-1)}2$, and for distinct $i,j,k,l$ and $a,b\in D$:
+$$
+E_{ii}\circ E_{jj}=\delta_{ij}E_{ii},\quad E_{kk}\circ a[ij]=\tfrac12(\delta_{ki}+\delta_{kj})a[ij],\quad
+a[ij]\circ b[ij]=\langle a,b\rangle(E_{ii}+E_{jj}),\quad a[ij]\circ b[jk]=\tfrac12(ab)[ik],\quad a[ij]\circ b[kl]=0 .
+$$
+Moreover $(X|Y)=\operatorname{Re}\operatorname{tr}(XY)$ is an inner product with $(X\circ Y|Z)=(Y|X\circ Z)$.
+
+*Proof.* Matrix multiplication: $a[ij]\,b[ij]=a\bar bE_{ii}+\bar abE_{jj}$, and $a\bar b+b\bar a=\bar ab+\bar ba=2\langle a,b\rangle$
+(polarise $x\bar x=\bar xx=N(x)$); $a[ij]\,b[jk]=abE_{ik}$ and $b[jk]\,a[ij]=\bar b\bar aE_{ki}=\overline{ab}E_{ki}$; the
+other products are immediate. All basis products lie in $\operatorname{Herm}_n(D)$, hence so do all products. Next,
+$(X|X)=\sum_{i,j}\operatorname{Re}(X_{ij}\overline{X_{ij}})=\sum_{i,j}N(X_{ij})>0$ for $X\ne0$. Let
+$T(X,Y,Z)=\operatorname{Re}\operatorname{tr}((XY)Z)=\sum_{i,j,k}\operatorname{Re}((X_{ij}Y_{jk})Z_{ki})$. By Lemma E.14(4),
+$\operatorname{Re}\operatorname{tr}(AB)=\operatorname{Re}\operatorname{tr}(BA)$, $T(X,Y,Z)=T(Z,X,Y)$, and, taking conjugates
+($\operatorname{Re}\bar p=\operatorname{Re}p$, $\overline{(pq)r}=\bar r(\bar q\bar p)$) and using that $X,Y,Z$ are Hermitian,
+$T(X,Y,Z)=\sum\operatorname{Re}(Z_{ik}(Y_{kj}X_{ji}))=T(Z,Y,X)$. So $T$ is symmetric, and
+$(X\circ Y|Z)=\frac12(T(X,Y,Z)+T(Y,X,Z))=T(X,Y,Z)$ is symmetric in $X,Y,Z$. $\square$
+
+**Lemma E.21 (orientations).** Let $P_{12},P_{13},P_{23}$ be inner product spaces, $P_{ji}=P_{ij}$, and for every
+ordered triple $(i,j,k)$ of distinct elements of $\{1,2,3\}$ let $m:P_{ij}\times P_{jk}\to P_{ik}$ be bilinear, such that
+$m(x,y)=m(y,x)$ (the right side being the map for $(k,j,i)$) and $\langle m(x,y),z\rangle=\langle y,m(x,z)\rangle$ for
+$x\in P_{ij}$, $y\in P_{jk}$, $z\in P_{ik}$. Let $D$ be a composition algebra and $\iota_{ij}:D\to P_{ij}$ ($i<j$) linear
+isometric bijections with $m(\iota_{12}a,\iota_{23}b)=\iota_{13}(ab)$; put $\iota_{ji}(a)=\iota_{ij}(\bar a)$. Then
+$m(\iota_{ij}a,\iota_{jk}b)=\iota_{ik}(ab)$ for all ordered triples and all $a,b\in D$.
+
+The hypotheses hold (i) for three indices of a Jordan frame of a simple $J$, with the Peirce spaces and $m=2\circ$
+(commutativity and Lemma E.12(2)); (ii) in $\operatorname{Herm}_3(D)$, with $P_{ij}=\{a[ij]\}$,
+$\langle a[ij],b[ij]\rangle=\langle a,b\rangle$ (well defined, as conjugation is isometric) and $m=2\circ$, since
+$m(a[ij],b[jk])=(ab)[ik]$ and, for $c[ik]$, $\langle ab,c\rangle=\langle b,\bar ac\rangle$ (Lemma E.14(2)).
+
+*Proof.* If the claim holds for $(i,j,k)$, it holds for $(k,j,i)$:
+$m(\iota_{kj}a,\iota_{ji}b)=m(\iota_{ij}\bar b,\iota_{jk}\bar a)=\iota_{ik}(\bar b\bar a)=\iota_{ik}(\overline{ab})=\iota_{ki}(ab)$.
+So it suffices to treat $(2,1,3)$ and $(1,3,2)$, given $(1,2,3)$. For all $c\in D$, using the adjointness, $(1,2,3)$ and
+Lemma E.14(2),
+$$
+\langle m(\iota_{21}a,\iota_{13}b),\iota_{23}c\rangle=\langle\iota_{13}b,m(\iota_{12}\bar a,\iota_{23}c)\rangle=\langle b,\bar ac\rangle=\langle ab,c\rangle=\langle\iota_{23}(ab),\iota_{23}c\rangle,
+$$
+$$
+\langle m(\iota_{13}a,\iota_{32}b),\iota_{12}c\rangle=\langle\iota_{13}a,m(\iota_{12}c,\iota_{23}\bar b)\rangle=\langle a,c\bar b\rangle=\langle ab,c\rangle=\langle\iota_{12}(ab),\iota_{12}c\rangle,
+$$
+and $\iota_{23},\iota_{12}$ are onto. (In the second line the adjointness is used for $y=\iota_{32}b$ in the role of $x$,
+after $m(x,y)=m(y,x)$.) $\square$
+
+**Theorem E.22 (coordinatisation).** Let $J$ be simple with a Jordan frame $(c_1,\dots,c_r)$, $r\ge3$. Then there are a
+composition algebra $D\in\{\mathbb R,\mathbb C,\mathbb H,\mathbb O\}$ of dimension $d$ and an algebra isomorphism
+$\Phi:\operatorname{Herm}_r(D)\to J$ with $\Phi(E_{ii})=c_i$. If $r\ge4$, $D$ is associative, i.e. $D\ne\mathbb O$.
+
+*Proof.* *Step 1 (one triangle).* Choose $e_{12}\in J_{12}$, $e_{23}\in J_{23}$ with $N=1$ (Proposition E.11). On
+$D'=J_{13}$ define $p\cdot q=m(m(p,e_{23}),m(e_{12},q))$, using the products $J_{13}\times J_{32}\to J_{12}$,
+$J_{21}\times J_{13}\to J_{23}$ and $J_{12}\times J_{23}\to J_{13}$. By Lemma E.12(1), $1'=m(e_{12},e_{23})$ is a unit:
+$p\cdot1'=m(m(p,e_{23}),e_{23})=p$ and $1'\cdot q=m(e_{12},m(e_{12},q))=q$; and $N(p\cdot q)=N(p)N(q)$. So $(D',N)$ is a
+composition algebra, and by Theorem E.17 there is an isomorphism $h:D\to D'$ with $D\in\{\mathbb R,\mathbb C,\mathbb H,\mathbb O\}$.
+Put $\iota_{13}=h$, $\iota_{12}=m(h(\cdot),e_{23})$ and $\iota_{23}=m(e_{12},h(\cdot))$; these are isometric bijections
+(Lemma E.12(1)) and $m(\iota_{12}a,\iota_{23}b)=h(a)\cdot h(b)=\iota_{13}(ab)$. By Lemma E.21, for $k=3$:
+
+> $(\mathrm T_k)$ there are isometric bijections $\iota_{ij}:D\to J_{ij}$, $i<j\le k$, such that, with $\iota_{ji}(a)=\iota_{ij}(\bar a)$,
+> $m(\iota_{ij}a,\iota_{jl}b)=\iota_{il}(ab)$ for all distinct $i,j,l\le k$ and all $a,b\in D$.
+
+*Step 2 (adding an index).* Assume $(\mathrm T_{k-1})$ with $4\le k\le r$. Choose $v\in J_{1k}$ with $N(v)=1$ and put
+$\iota_{ik}(a)=m(\iota_{i1}a,v)$ for $2\le i<k$ and $\iota_{1k}(a)=m(\iota_{12}a,\iota_{2k}1)$, isometric bijections by
+Lemma E.12(1). Using Lemma E.12(3) (four distinct indices each time) and $(\mathrm T_{k-1})$: for distinct
+$i,j\in\{2,\dots,k-1\}$,
+$$
+m(\iota_{ij}a,\iota_{jk}b)=m(\iota_{ij}a,m(\iota_{j1}b,v))=m(m(\iota_{ij}a,\iota_{j1}b),v)=m(\iota_{i1}(ab),v)=\iota_{ik}(ab).
+$$
+In particular $\iota_{2k}(b)=m(\iota_{23}b,\iota_{3k}1)$, and hence
+$$
+m(\iota_{12}a,\iota_{2k}b)=m(m(\iota_{12}a,\iota_{23}b),\iota_{3k}1)=m(\iota_{13}(ab),\iota_{3k}1)
+=m(m(\iota_{12}(ab),\iota_{23}1),\iota_{3k}1)=m(\iota_{12}(ab),\iota_{2k}1)=\iota_{1k}(ab).
+$$
+For $3\le j<k$, $\iota_{1j}a=m(\iota_{12}a,\iota_{2j}1)$, so
+$m(\iota_{1j}a,\iota_{jk}b)=m(\iota_{12}a,m(\iota_{2j}1,\iota_{jk}b))=m(\iota_{12}a,\iota_{2k}b)=\iota_{1k}(ab)$. So the relation
+holds for all triples $i<j<k$, and Lemma E.21, applied to each triangle $\{i,j,k\}$, gives $(\mathrm T_k)$.
+
+*Step 3 (associativity).* If $r\ge4$, by $(\mathrm T_4)$ and Lemma E.12(3),
+$\iota_{14}((ab)c)=m(m(\iota_{12}a,\iota_{23}b),\iota_{34}c)=m(\iota_{12}a,m(\iota_{23}b,\iota_{34}c))=\iota_{14}(a(bc))$.
+
+*Step 4 (the isomorphism).* By $(\mathrm T_r)$, define the linear map
+$\Phi(\sum_i\alpha_iE_{ii}+\sum_{i<j}a_{ij}[ij])=\sum_i\alpha_ic_i+\sum_{i<j}\iota_{ij}(a_{ij})$; it is bijective by
+Theorem E.8(1), and $\Phi(a[ij])=\iota_{ij}(a)$ for all $i\ne j$. By Theorem E.8 and $(\mathrm T_r)$,
+$c_i\circ c_j=\delta_{ij}c_i$, $c_k\circ\iota_{ij}(a)=\frac12(\delta_{ki}+\delta_{kj})\iota_{ij}(a)$,
+$\iota_{ij}(a)\circ\iota_{ij}(b)=\langle a,b\rangle(c_i+c_j)$, $\iota_{ij}(a)\circ\iota_{jk}(b)=\frac12\iota_{ik}(ab)$ and
+$\iota_{ij}(a)\circ\iota_{kl}(b)=0$: the table of Lemma E.20. By bilinearity $\Phi(X\circ Y)=\Phi(X)\circ\Phi(Y)$. $\square$
+
+## E.8 The Albert algebra
+
+**Lemma E.23 (automorphisms of $\operatorname{Herm}_3(D)$).** Let $D$ be a composition algebra and $f_{12},f_{23},f_{13}$
+isometric linear bijections of $D$ with $f_{13}(ab)=f_{12}(a)f_{23}(b)$ for all $a,b$. Then
+$$
+\Phi\Big(\sum_i\alpha_iE_{ii}+\sum_{i<j}a_{ij}[ij]\Big)=\sum_i\alpha_iE_{ii}+\sum_{i<j}f_{ij}(a_{ij})[ij]
+$$
+is an automorphism of $(\operatorname{Herm}_3(D),\circ)$. For every $u\in D$ with $N(u)=1$,
+$(f_{12},f_{23},f_{13})=(L_u,R_u,B_u)$ with $L_ua=ua$, $R_ua=au$, $B_ua=uau$ is such a triple.
+
+*Proof.* Apply Lemma E.21 in example (ii) to $\iota_{ij}(a)=f_{ij}(a)[ij]$: then $\Phi(a[ij])=\iota_{ij}(a)$ for all $i\ne j$,
+and $2\iota_{ij}(a)\circ\iota_{jk}(b)=\iota_{ik}(ab)$ for all distinct $i,j,k$. As $\Phi$ fixes the $E_{ii}$ and the $f_{ij}$
+are isometric, $\Phi$ preserves every product in the table of Lemma E.20, hence $\circ$. For the triple, $L_u,R_u,B_u$
+are isometric ($N(ua)=N(a)$), bijective, and $u(ab)u=(ua)(bu)$ is the Moufang identity (Lemma E.18(2)). $\square$
+
+**Theorem E.24.** (1) For $D\in\{\mathbb R,\mathbb C,\mathbb H\}$ and $n\ge1$, $\operatorname{Herm}_n(D)$ is a Euclidean Jordan
+algebra, and $\operatorname{Herm}_n(\mathbb H)$ is isomorphic to a Jordan subalgebra of $\operatorname{Herm}_{2n}(\mathbb C)$.
+(2) The **Albert algebra** $\operatorname{Herm}_3(\mathbb O)$ (dimension $27$) and $\operatorname{Herm}_2(\mathbb O)$ are
+Euclidean Jordan algebras. (3) In each of these, $(E_{11},\dots,E_{nn})$ is a Jordan frame with Peirce spaces
+$J_{ij}=\{a[ij]:a\in D\}$ of dimension $d=\dim D$; the algebra is simple; $\operatorname{Herm}_1(D)\cong\mathbb R$ and
+$\operatorname{Herm}_2(D)\cong V_{d+1}$ for $D=\mathbb R,\mathbb C,\mathbb H,\mathbb O$.
+
+*Proof.* (1) $M_n(D)$ is an associative real algebra (Lemma E.15(2)), so by Lemma E.20 and Lemma 13.1
+$\operatorname{Herm}_n(D)$ is a Jordan algebra, Euclidean by Lemma E.20. Replacing each entry $X_{ij}\in\mathbb H$ by the
+$2\times2$ block $M(X_{ij})$ is an injective algebra homomorphism $M_n(\mathbb H)\to M_{2n}(\mathbb C)$ (Lemma E.15(2)) that
+maps Hermitian matrices to Hermitian matrices, as $M(\bar q)=M(q)^*$; so it preserves $\circ$.
+
+(2) Let $J(x,y)=(x^2\circ y)\circ x-x^2\circ(y\circ x)$ on $\operatorname{Herm}_3(\mathbb O)$; an automorphism $\Phi$ satisfies
+$J(\Phi x,\Phi y)=\Phi J(x,y)$. Let $x=\sum_i\alpha_iE_{ii}+p[12]+q[23]+s[13]$. We compose three automorphisms of the
+form of Lemma E.23 so that the entries at $(1,3)$ and $(2,3)$ become real. (a) If $s\notin\mathbb R$, write
+$s=|s|(\cos\theta+v\sin\theta)$ with $v\perp1$, $N(v)=1$, so $v^2=-1$ (Lemma E.14(3)); for
+$u=\cos\frac\theta2-v\sin\frac\theta2$, computing in the commutative subalgebra $\operatorname{span}\{1,v\}\cong\mathbb C$,
+$B_us=u^2s=|s|$. (b) Now $s$ is real. Choose $u\perp1$ with $N(u)=1$ and $u\perp q$ (possible as $\dim\mathbb O=8$);
+then $B_us=su^2=-s$ is real and $\operatorname{Re}(qu)=\langle u,\bar q\rangle=0$, as $\bar q\in\operatorname{span}\{1,q\}$.
+(c) Now $q\perp1$; if $q\ne0$, take $u=q/|q|$: $qu=q^2/|q|=-|q|$ and $B_us=-s$ are real. So there is an automorphism
+$\Phi$ such that $\Phi x$ has real entries except possibly $p'$ at $(1,2)$. Since $J(\Phi x,\cdot)$ is linear, it suffices
+to show $J(\Phi x,y)=0$ for $y=E_{ii}$ and $y=c[ij]$, $c\in\mathbb O$. By Lemma E.18(1), $p'$ and $c$ lie in an associative
+subalgebra $Q$; then $\Phi x,y\in\operatorname{Herm}_3(Q)$, a subalgebra of $\operatorname{Herm}_3(\mathbb O)$ inside the
+associative algebra $M_3(Q)$, and $J(\Phi x,y)=0$ by Lemma 13.1. Hence $J(x,\Phi^{-1}y)=\Phi^{-1}J(\Phi x,y)=0$ for all $y$:
+the Jordan identity holds, and Lemma E.20 makes the algebra Euclidean. The matrices with zero third row and column form
+a subalgebra (Lemma E.20) with unit $E_{11}+E_{22}$, which is $\operatorname{Herm}_2(\mathbb O)$.
+
+(3) By Lemma E.20 the $E_{ii}$ are pairwise orthogonal idempotents with sum $1$; $L(E_{kk})$ acts on $E_{jj}$ by
+$\delta_{kj}$ and on $a[ij]$ by $\frac12(\delta_{ki}+\delta_{kj})$, so $J_1(E_{ii})=\mathbb RE_{ii}$ and $J_{1/2}(E_{ii})\cap
+J_{1/2}(E_{jj})=\{a[ij]\}$. $E_{ii}$ is primitive: if $E_{ii}=g+g'$ with orthogonal non-zero idempotents, then
+$g=E_{ii}\circ g\in\mathbb RE_{ii}$, so $g=E_{ii}$ and $g'=0$. The graph of Proposition E.11 is complete, so the algebra is
+simple. For $n=1,2$ apply Theorem E.13. $\square$
+
+**Corollary E.25.** For $n\ge4$, $\operatorname{Herm}_n(\mathbb O)$ is not a Jordan algebra.
+
+*Proof.* If it were, Lemma E.10(2) would apply: its proof uses only the Jordan identity and the products of Lemma E.20
+(with $c_k=E_{kk}$). Then $\frac14((ab)c)[14]=(a[12]\circ b[23])\circ c[34]=a[12]\circ(b[23]\circ c[34])=\frac14(a(bc))[14]$
+for all $a,b,c\in\mathbb O$, contradicting Lemma E.15(2). $\square$
+
+**Theorem E.26 (Albert).** Let $D$ be a composition algebra. If there are an associative real algebra $A$ and an
+injective linear map $\varphi:\operatorname{Herm}_3(D)\to A$ with $\varphi(x\circ y)=\frac12(\varphi(x)\varphi(y)+\varphi(y)\varphi(x))$,
+then $D$ is associative. In particular the Albert algebra is **exceptional**: it is not isomorphic to a Jordan subalgebra of
+any associative algebra, such as $M_N(\mathbb C)$.
+
+*Proof.* Put $e_i=\varphi(E_{ii})$ and $e=e_1+e_2+e_3=\varphi(1)$. Then $e_i^2=e_i$, and $e_ie_j+e_je_i=0$ for $i\ne j$;
+multiplying by $e_i$ on the left, respectively on the right, gives $e_ie_j+e_ie_je_i=0=e_ie_je_i+e_je_i$, so
+$e_ie_j=e_je_i=0$. For $x=\varphi(X)$, $ex+xe=2x$ gives $exe=ex=xe=x$, so $x=\sum_{p,q}x_{pq}$ with
+$x_{pq}=e_pxe_q$. For $X=a[ij]$ the relations $e_i\circ x=e_j\circ x=\frac12x$ and $e_k\circ x=0$ ($k\ne i,j$) say
+$\frac12([p=i]+[q=i])x_{pq}=\frac12x_{pq}$ and so on, which leaves only $x_{ij}$ and $x_{ji}$. Define, for ordered pairs,
+$\alpha_{ij}(a)=e_i\varphi(a[ij])e_j$. For distinct $i,j,k$, $\varphi(a[ij])\varphi(b[jk])=\alpha_{ij}(a)\alpha_{jk}(b)$ is the
+only term in $e_iAe_k$ of $\varphi(a[ij])\varphi(b[jk])+\varphi(b[jk])\varphi(a[ij])=\varphi((ab)[ik])$, so
+$$
+\alpha_{ij}(a)\,\alpha_{jk}(b)=\alpha_{ik}(ab).
+$$
+From $\varphi(1[13])^2=\varphi(E_{11}+E_{33})$ we get $\alpha_{13}(1)\alpha_{31}(1)=e_1$, $\alpha_{31}(1)\alpha_{13}(1)=e_3$;
+from $\varphi(a[13])^2=N(a)(e_1+e_3)$, $\alpha_{13}(a)\alpha_{31}(\bar a)=N(a)e_1$, so $\alpha_{13}$ is injective. Now
+$$
+\alpha_{13}(ay)=\alpha_{12}(a)\alpha_{23}(y)=\alpha_{13}(a)\alpha_{32}(1)\alpha_{21}(1)\alpha_{13}(y)=\alpha_{13}(a)\alpha_{31}(1)\alpha_{13}(y),
+$$
+and therefore, with $\pi=\alpha_{31}(1)$ and associativity in $A$,
+$\alpha_{13}((ab)c)=\alpha_{13}(a)\pi\alpha_{13}(b)\pi\alpha_{13}(c)=\alpha_{13}(a(bc))$. So $(ab)c=a(bc)$. By Lemma E.15(2),
+$\mathbb O$ is not associative. $\square$
+
+Albert's original argument (A. A. Albert, Ann. of Math. 35 (1934) 65–73) is of this kind. The code checks the Jordan
+identity of $\operatorname{Herm}_3(\mathbb O)$ and the associativity and positivity of its trace form on random elements,
+shows numerically that the Jordan identity fails in $\operatorname{Herm}_4(\mathbb O)$ (Corollary E.25), checks the
+automorphism of Lemma E.23, and runs the three steps (a)–(c) of the proof of Theorem E.24(2) on a random element:
+
