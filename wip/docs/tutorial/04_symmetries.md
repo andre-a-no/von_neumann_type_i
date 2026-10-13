@@ -909,7 +909,8 @@ for a, b, ks in ((1.0, 0.5, (2, 4)), (1.0, 1.0, (1, 3, 5))):  # 1 (x) 1/2 = 1/2 
    commutes with the normal matrix $U_\theta$ iff it preserves its eigenspaces (Theorem 1.5(d) and Lagrange
    interpolation as in Section 2.2), i.e. iff $X=\sum_qP_qXP_q$; this is $U(1)'$ by Proposition 4.10.
    For $\theta=\pi$ the eigenvalue $(-1)^w$ only sees the parity of the Hamming weight: two eigenspaces of
-   dimension $2^{n-1}$ (for $n\ge1$, the even and odd subsets), and the commutant is $M_{2^{n-1}}\oplus M_{2^{n-1}}$.
+   dimension $2^{n-1}$ (for $n\ge1$, the configurations of even and of odd weight; flipping the first bit is a bijection
+   between them), and the commutant is $M_{2^{n-1}}\oplus M_{2^{n-1}}$.
 
 ```python
 for theta, m in ((1.0, (1, 1, 4, 4, 6)), (math.pi, (8, 8))):
