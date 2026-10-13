@@ -322,7 +322,7 @@ $*$-代数包含 $L_1L_2^*=E_{12}$ 与 $L_1^*L_1=E_{33}$，从而包含所有矩
 只有 $1$ 的倍数；但满足 $\rho=P\rho P$（$P=E_{11}+E_{22}$）的每个 $\rho$ 都是稳态，因为
 $L_j\rho=0=\rho L_j^*$ 且 $\{E_{33},\rho\}=0$，所以 $\dim\ker\mathcal L\ge4$；由定理 D.6，没有一个稳态
 是忠实的。对上面的随机生成元，代码检验了假设与结论（$\mathcal L^*$ 在 $A^T$ 的按行展开向量上的矩阵是
-$S^T$），并检验了第二个例子：
+$S^T$: $\operatorname{vec}(\mathcal L^*(A)^T)=S^T\operatorname{vec}(A^T)$），并检验了第二个例子：
 
 ```python
 def kernel_dim(S, tol=1e-9):
@@ -543,7 +543,7 @@ $P_c\ne0$ 是两两正交的投影，$\sum_cP_c=P$，它就是命题 10.6 中 2 
 子系统。*）沿用命题 10.1(a) 的记号，设 $\mathcal C=V(\mathbb C^{k_c}\otimes\mathbb C^{m_c})$ 是 $\Phi$ 的相互作用代数
 $\mathcal A$ 的第 $c$ 个直和项，而 $\mathfrak A=V(1_{k_c}\otimes M_{m_c})V^*$ 作用在 $\mathcal C$ 上，交换两个因子之后，它是
 形如 $M_{m}\otimes1_{k}$ 的代数。则 $\mathfrak A$ 被 $\mathcal R=\mathrm{id}$ 纠正，并且
-$PE_i^*E_jP=V(E_{i,c}^*E_{j,c}\otimes1_{m_c})V^*\in\mathfrak A'$。
+$PE_i^*E_jP=V(E_{i,c}^*E_{j,c}\otimes1_{m_c})V^*\in\mathfrak A'$ ($P=VV^*$)。
 
 *证明。* (a) $\mathfrak A'=\mathbb CP$ 是上面对 $\mathfrak A'$ 的描述中 $C=1$，$m_1=1$ 的情形，而
 $PE_i^*E_jP\in\mathbb CP$ 就是 Knill–Laflamme 条件。$B(\mathcal C)$ 的可纠正性就是 10.2 节意义下的纠错：

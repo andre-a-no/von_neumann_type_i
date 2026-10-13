@@ -331,7 +331,7 @@ $L_2=|e_2\rangle\langle e_3|$. La $*$-álgebra generada por $L_1,L_2$ contiene $
 todas las unidades matriciales, así que solo los múltiplos de $1$ conmutan con $L_j,L_j^*$; pero todo $\rho=P\rho P$ con $P=E_{11}+E_{22}$
 es estacionario, pues $L_j\rho=0=\rho L_j^*$ y $\{E_{33},\rho\}=0$, así que $\dim\ker\mathcal L\ge4$; por el teorema D.6, ningún estado
 estacionario es fiel. Para el generador aleatorio anterior, el código comprueba las hipótesis y la conclusión
-(la matriz de $\mathcal L^*$ sobre los vectores de $A^T$ ordenados por filas es $S^T$), y el segundo ejemplo:
+(la matriz de $\mathcal L^*$ sobre los vectores de $A^T$ ordenados por filas es $S^T$: $\operatorname{vec}(\mathcal L^*(A)^T)=S^T\operatorname{vec}(A^T)$), y el segundo ejemplo:
 
 ```python
 def kernel_dim(S, tol=1e-9):
@@ -552,7 +552,7 @@ proyecciones ortogonales $P_c\ne0$, $\sum_cP_c=P$, es la equivalencia de 2 y 3 e
 sin ruido.*) Con la notación de la proposición 10.1(a), sean $\mathcal C=V(\mathbb C^{k_c}\otimes\mathbb C^{m_c})$ el $c$-ésimo
 sumando para el álgebra de interacción $\mathcal A$ de $\Phi$, y $\mathfrak A=V(1_{k_c}\otimes M_{m_c})V^*$ sobre $\mathcal C$, un
 álgebra de la forma $M_{m}\otimes1_{k}$ tras intercambiar los dos factores. Entonces $\mathfrak A$ es corregida por
-$\mathcal R=\mathrm{id}$, y $PE_i^*E_jP=V(E_{i,c}^*E_{j,c}\otimes1_{m_c})V^*\in\mathfrak A'$.
+$\mathcal R=\mathrm{id}$, y $PE_i^*E_jP=V(E_{i,c}^*E_{j,c}\otimes1_{m_c})V^*\in\mathfrak A'$ ($P=VV^*$).
 
 *Demostración.* (a) $\mathfrak A'=\mathbb CP$ es el caso $C=1$, $m_1=1$ de la descripción de $\mathfrak A'$ de arriba, y
 $PE_i^*E_jP\in\mathbb CP$ es la condición de Knill–Laflamme. La corregibilidad de $B(\mathcal C)$ es la corrección en el sentido de la

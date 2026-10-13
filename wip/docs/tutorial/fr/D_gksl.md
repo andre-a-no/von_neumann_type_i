@@ -330,7 +330,7 @@ $L_2=|e_2\rangle\langle e_3|$. La $*$-algèbre engendrée par $L_1,L_2$ contient
 toutes les unités matricielles, de sorte que seuls les multiples de $1$ commutent avec les $L_j,L_j^*$ ; mais tout $\rho=P\rho P$ avec $P=E_{11}+E_{22}$
 est stationnaire, puisque $L_j\rho=0=\rho L_j^*$ et $\{E_{33},\rho\}=0$, donc $\dim\ker\mathcal L\ge4$ ; d'après le théorème D.6, aucun état
 stationnaire n'est fidèle. Pour le générateur aléatoire ci-dessus, le code vérifie les hypothèses et la conclusion
-(la matrice de $\mathcal L^*$ sur les vecteurs de $A^T$ rangés ligne par ligne est $S^T$), ainsi que le second exemple :
+(la matrice de $\mathcal L^*$ sur les vecteurs de $A^T$ rangés ligne par ligne est $S^T$: $\operatorname{vec}(\mathcal L^*(A)^T)=S^T\operatorname{vec}(A^T)$), ainsi que le second exemple :
 
 ```python
 def kernel_dim(S, tol=1e-9):
@@ -551,7 +551,7 @@ des projecteurs orthogonaux $P_c\ne0$, $\sum_cP_c=P$, c'est l'équivalence de 2 
 sans bruit.*) Avec les notations de la proposition 10.1(a), soient $\mathcal C=V(\mathbb C^{k_c}\otimes\mathbb C^{m_c})$ le $c$-ième
 terme pour l'algèbre d'interaction $\mathcal A$ de $\Phi$, et $\mathfrak A=V(1_{k_c}\otimes M_{m_c})V^*$ sur $\mathcal C$, une
 algèbre de la forme $M_{m}\otimes1_{k}$ après échange des deux facteurs. Alors $\mathfrak A$ est corrigée par
-$\mathcal R=\mathrm{id}$, et $PE_i^*E_jP=V(E_{i,c}^*E_{j,c}\otimes1_{m_c})V^*\in\mathfrak A'$.
+$\mathcal R=\mathrm{id}$, et $PE_i^*E_jP=V(E_{i,c}^*E_{j,c}\otimes1_{m_c})V^*\in\mathfrak A'$ ($P=VV^*$).
 
 *Démonstration.* (a) $\mathfrak A'=\mathbb CP$ est le cas $C=1$, $m_1=1$ de la description de $\mathfrak A'$ ci-dessus, et
 $PE_i^*E_jP\in\mathbb CP$ est la condition de Knill–Laflamme. La corrigeabilité de $B(\mathcal C)$ est la correction au sens de la

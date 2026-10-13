@@ -330,7 +330,7 @@ $L_2=|e_2\rangle\langle e_3|$. Die von $L_1,L_2$ erzeugte $*$-Algebra enthält $
 alle Matrixeinheiten, also kommutieren nur die Vielfachen von $1$ mit $L_j,L_j^*$; aber jedes $\rho=P\rho P$ mit $P=E_{11}+E_{22}$
 ist stationär, da $L_j\rho=0=\rho L_j^*$ und $\{E_{33},\rho\}=0$, also ist $\dim\ker\mathcal L\ge4$; nach Satz D.6 ist kein stationärer
 Zustand treu. Für den obigen zufälligen Generator prüft der Code die Voraussetzungen und die Folgerung
-(die Matrix von $\mathcal L^*$ auf den zeilenweise gebildeten Vektoren von $A^T$ ist $S^T$) sowie das zweite Beispiel:
+(die Matrix von $\mathcal L^*$ auf den zeilenweise gebildeten Vektoren von $A^T$ ist $S^T$: $\operatorname{vec}(\mathcal L^*(A)^T)=S^T\operatorname{vec}(A^T)$) sowie das zweite Beispiel:
 
 ```python
 def kernel_dim(S, tol=1e-9):
@@ -551,7 +551,7 @@ orthogonalen Projektionen $P_c\ne0$, $\sum_cP_c=P$, ist er die Äquivalenz von 2
 Teilsysteme.*) In der Notation von Proposition 10.1(a) sei $\mathcal C=V(\mathbb C^{k_c}\otimes\mathbb C^{m_c})$ der $c$-te
 Summand zur Wechselwirkungsalgebra $\mathcal A$ von $\Phi$ und $\mathfrak A=V(1_{k_c}\otimes M_{m_c})V^*$ auf $\mathcal C$, eine
 Algebra der Form $M_{m}\otimes1_{k}$ nach Vertauschen der beiden Faktoren. Dann wird $\mathfrak A$ durch
-$\mathcal R=\mathrm{id}$ korrigiert, und $PE_i^*E_jP=V(E_{i,c}^*E_{j,c}\otimes1_{m_c})V^*\in\mathfrak A'$.
+$\mathcal R=\mathrm{id}$ korrigiert, und $PE_i^*E_jP=V(E_{i,c}^*E_{j,c}\otimes1_{m_c})V^*\in\mathfrak A'$ ($P=VV^*$).
 
 *Beweis.* (a) $\mathfrak A'=\mathbb CP$ ist der Fall $C=1$, $m_1=1$ der obigen Beschreibung von $\mathfrak A'$, und
 $PE_i^*E_jP\in\mathbb CP$ ist die Knill–Laflamme-Bedingung. Korrigierbarkeit von $B(\mathcal C)$ ist Korrektur im Sinne von

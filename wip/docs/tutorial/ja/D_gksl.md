@@ -330,7 +330,7 @@ $L_2=|e_2\rangle\langle e_3|$ とする。$L_1,L_2$ が生成する $*$-環は $
 $P=E_{11}+E_{22}$ に対し $\rho=P\rho P$ をみたすすべての $\rho$ は定常である。$L_j\rho=0=\rho L_j^*$ かつ
 $\{E_{33},\rho\}=0$ だからである。よって $\dim\ker\mathcal L\ge4$ であり、定理 D.6 により、どの定常状態も
 忠実ではない。上のランダムな生成子について、コードは仮定と結論を確かめ（行優先に並べた $A^T$ のベクトルに
-作用する $\mathcal L^*$ の行列は $S^T$ である）、さらに第二の例を確かめる：
+作用する $\mathcal L^*$ の行列は $S^T$: $\operatorname{vec}(\mathcal L^*(A)^T)=S^T\operatorname{vec}(A^T)$ である）、さらに第二の例を確かめる：
 
 ```python
 def kernel_dim(S, tol=1e-9):
@@ -552,7 +552,7 @@ $\sum_cP_c=P$ による $\mathfrak A=\operatorname{span}\{P_1,\dots,P_C\}$ に�
 (c)（*ノイズレス部分系.*）命題 10.1(a) の記号で、$\mathcal C=V(\mathbb C^{k_c}\otimes\mathbb C^{m_c})$ を $\Phi$ の
 相互作用環 $\mathcal A$ に関する第 $c$ 直和成分とし、$\mathcal C$ 上で $\mathfrak A=V(1_{k_c}\otimes M_{m_c})V^*$ とする。これは
 二つの因子を入れ替えれば $M_{m}\otimes1_{k}$ の形の環である。このとき $\mathfrak A$ は $\mathcal R=\mathrm{id}$ により訂正され、
-$PE_i^*E_jP=V(E_{i,c}^*E_{j,c}\otimes1_{m_c})V^*\in\mathfrak A'$ である。
+$PE_i^*E_jP=V(E_{i,c}^*E_{j,c}\otimes1_{m_c})V^*\in\mathfrak A'$ ($P=VV^*$) である。
 
 *証明.* (a) $\mathfrak A'=\mathbb CP$ は上で述べた $\mathfrak A'$ の記述の $C=1$、$m_1=1$ の場合であり、
 $PE_i^*E_jP\in\mathbb CP$ はクニル–ラフラム条件である。$B(\mathcal C)$ の訂正可能性は 10.2節の意味での訂正である：
