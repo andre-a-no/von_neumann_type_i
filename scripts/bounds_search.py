@@ -321,13 +321,15 @@ for r in results:
                 exact_dev2 = max(exact_dev2, float(np.max(np.abs(sgn * np.array(r[f'{n}_vs_{along}'])[mask] - ex[mask])
                                                           / ex[mask])))
 print(f"Exp 2 envelopes (all k, C) vs exact +-C floor(k/2) 2d/(1+d)(1-lo): max relative deviation {exact_dev2:.1e}")
-# conjectured closed forms for k = 2, C = 1 along Delta(X) = d (no proof; compared numerically):
-# Exp 1: sup z = d^2 / (2 (1 + d)),  Exp 3: sup z = 1 - d
+# conjectured closed forms for k = 2, C = 1 along Delta(X) = d with the free contrast capped at D = DMAX (no proof;
+# compared numerically): Exp 1: sup z = d^2 D^2 / ((1 + d)(1 + D)),  Exp 3: sup z = (1 - d)(2D / (1 + D))^2
+# (for D -> 1: d^2 / (2 (1 + d)) and 1 - d)
 conj_dev = {}
 for r in results:
     if r['k'] == 2 and r['C'] == 1 and r['experiment'] in (1, 3):
         g = np.array(r['grid'])
-        conj = g ** 2 / (2 * (1 + g)) if r['experiment'] == 1 else 1 - g
+        D = DMAX
+        conj = g ** 2 * D ** 2 / ((1 + g) * (1 + D)) if r['experiment'] == 1 else (1 - g) * (2 * D / (1 + D)) ** 2
         mask = conj > 1e-3
         conj_dev[r['experiment']] = float(np.max(np.abs(np.array(r['sup_vs_x'])[mask] - conj[mask]) / conj[mask]))
         print(f"Exp {r['experiment']} upper envelope (k=2, C=1) vs conjectured closed form: "

@@ -718,7 +718,9 @@ or infimum along one contrast) is computed in one batched optimisation. All enve
 Figures~\ref{fig:bounds} and~\ref{fig:bounds2d} and Table~\ref{tab:bounds} show the result. The search is local,
 so the computed envelopes are checked in three independent ways. (i)~Where an
 envelope is known in closed form (below), it is compared with the formula. (ii)~Since $z$ is additive over
-orthogonal blocks and the contrast of a direct sum is the largest contrast of its summands, a direct sum of
+orthogonal blocks (in Exp.~1 the trace $|\Tr(XUY)|$ is only subadditive, but replacing $U$ by $-U$ on a block aligns
+the phases of the block traces, so the bound below holds) and the contrast of a direct sum is the largest contrast of
+its summands, a direct sum of
 $kC/2$ copies of a solution for $k=2$, $C=1$ is an admissible configuration: with $s(\delta)$ the upper envelope
 for $k=2$, $C=1$,
 \[
@@ -768,7 +770,8 @@ with $x_{c,i}^\downarrow$ the eigenvalues of $X_c$ in decreasing order and $y_{c
 $Y_c$ in decreasing and increasing order. Pairing $i$ with $k+1-i$,
 $\sum_ix_{c,i}^\downarrow(y_{c,i}^\downarrow-y_{c,i}^\uparrow)=\sum_{i\le k/2}(x_{c,i}^\downarrow-x_{c,k+1-i}^\downarrow)
 (y_{c,i}^\downarrow-y_{c,k+1-i}^\downarrow)\le\lfloor k/2\rfloor(1-\lambda_{\min}(X))(1-\lambda_{\min}(Y))$, with equality
-for two-level spectra. Hence, for $C$ sectors of size $k$, $\Delta(|X|)=\delta$ prescribed and $\Delta(|Y|)\le0.999$
+for two-level spectra. Hence, for sectors of sizes $k_c$, $\sup z=-\inf z=\sum_c\lfloor k_c/2\rfloor(1-\lambda_{\min}(X))(1-\lambda_{\min}(Y))$, and for
+$C$ sectors of size $k$, $\Delta(|X|)=\delta$ prescribed and $\Delta(|Y|)\le0.999$
 free,
 \[
   \sup z=-\inf z=C\Bigl\lfloor\frac k2\Bigr\rfloor\,\frac{2\delta}{1+\delta}\Bigl(1-\frac{0.001}{1.999}\Bigr),
@@ -776,8 +779,9 @@ free,
 which tends to $C\lfloor k/2\rfloor\frac{2\delta}{1+\delta}$ as $\Delta(|Y|)\to1$. The optimiser reproduces the upper and
 lower envelopes of Exp.~2 for all eight configurations, along either contrast, to a relative deviation of
 \IfFileExists{generated/bounds.tex}{\BoundsExactDevTwo}{(not generated)}.
-For $k=2$, $C=1$ the computed upper envelopes of Exp.~1 and Exp.~3 along $\Delta(X)=\delta$ agree with
-$\delta^2/(2(1+\delta))$ and $1-\delta$ to a relative deviation of
+For $k=2$, $C=1$ the computed upper envelopes of Exp.~1 and Exp.~3 along $\Delta(X)=\delta$, with the free contrast
+capped at $D=0.999$, agree with
+$\delta^2D^2/((1+\delta)(1+D))$ and $(1-\delta)\,(2D/(1+D))^2$ (for $D\to1$: $\delta^2/(2(1+\delta))$ and $1-\delta$) to a relative deviation of
 \IfFileExists{generated/bounds.tex}{\BoundsConjDevOne\ and \BoundsConjDevThree}{(not generated)}; we have no proof of
 these closed forms. For larger $k$ and $C$ the upper envelopes of Exp.~1 and Exp.~3 are, to our knowledge, not known in
 closed form; the computed curves are lower bounds for them (a local search), consistent with the direct sums~(ii),
@@ -798,7 +802,8 @@ orthogonal $U$), the range of the Monte Carlo samples with both contrasts in tha
 samples outside the envelopes (along either contrast) after re-optimisation
 \IfFileExists{generated/bounds.tex}{(\BoundsStarts\ starts per grid point, \BoundsSteps\ steps; \BoundsMode\
 run on \BoundsDevice)}{}; a sample counts as outside if it exceeds the envelope by more than $10^{-6}+10^{-3}\max|z|$;
-``--'': no Monte Carlo data of~\cite{v1} for this configuration.}
+``--'': no Monte Carlo data of~\cite{v1} for this configuration. Monte Carlo values of $z$ slightly below
+$0$ in Exp.~3 (where $z\ge0$ is proved) are single-precision round-off of the samples of~\cite{v1}.}
 \label{tab:bounds}
 \end{table}
 
