@@ -193,13 +193,14 @@ the trace of $\mathbb C^n$ restricted to $\mathcal M$,
 $$
 \operatorname{Tr}_{\mathbb C^n}(A)=\sum_cm_c\operatorname{Tr}(A_c),\qquad A=V\Big(\bigoplus_cA_c\otimes1_{m_c}\Big)V^*.
 $$
-This is why the library works with a family of traces (Chapter 3).
+This is why the library works with a family of traces (Chapter 3). Likewise, for self-adjoint $A$,
+the restriction of $A$ to $V(\mathbb C^{k_c}\otimes\mathbb C^{m_c})$ has the eigenvalues of the block $A_c$, each with
+$m_c$ times its multiplicity in $A_c$, since $A_c\otimes1_{m_c}$ is $m_c$ copies of $A_c$.
 
 > **Physical meaning.** The $P_c$ are **superselection sectors** or **symmetry
 > sectors**: no observable in $\mathcal M$ connects different sectors, so a measurement
 > of "which sector" is compatible with every other measurement. The centre is the
-> *classical* part of the system. The multiplicity $m_c$ is a degeneracy: each
-> eigenvalue of the block $A_c$ appears in $\mathbb C^n$ with $m_c$ times its multiplicity in $A_c$.
+> *classical* part of the system. The multiplicity $m_c$ is a degeneracy of every observable in $\mathcal M$.
 
 ## 2.4 Example: a symmetry group and its commutant
 
@@ -276,7 +277,7 @@ Hence $m$ is, up to order, $(4,2)$, $(4,1,1,1,1)$ or $(3,3,1,1)$. In the last tw
 $\sum_cm_c=8=\sum_ck_cm_c$ forces all $k_c=1$, and then $\pi(S_3)''\cong\bigoplus_cM_1$ would be
 commutative, whereas the transpositions $(12)$ and $(23)$ act non-commutingly:
 $\pi((12))\pi((23))|001\rangle=|100\rangle$ but $\pi((23))\pi((12))|001\rangle=|010\rangle$. So
-$m=(4,2)$, and $4k_1+2k_2=8$ with $k_1,k_2\ge1$ gives $k=(1,2)$. In particular
+$m=(4,2)$ (numbering the summands so that $m_1=4$), and $4k_1+2k_2=8$ with $k_1,k_2\ge1$ gives $k=(1,2)$. In particular
 $\dim\pi(S_3)''=\sum_ck_c^2=5$.
 
 *Step 3: the trivial and the sign representation.* $\rho_2$ fixes no nonzero vector $u$: the line
@@ -447,18 +448,26 @@ for c in range(alg.C):                                   # Tr E(A)_c = Tr A_c
 ```
 
 The group average of Section 2.4 is a conditional expectation onto the commutant
-$\pi(G)'$ inside $M_n(\mathbb C)$, and it preserves $\operatorname{Tr}$ (Exercise 3).
-(Conditional expectations are not unique in general: onto $\mathbb C1$, every state
-$\varphi$ gives one, $A\mapsto\varphi(A)1$.) Both are instances of the same idea:
+$\pi(G)'$ inside $M_n(\mathbb C)$, and it preserves $\operatorname{Tr}$ (Exercise 3). Similarly, on the full
+matrix algebra $M_D(\mathbb C)$, $D=\sum_ck_c$, which contains $\mathcal M=\bigoplus_cM_{k_c}$ as its
+block-diagonal matrices, the map $E_{\mathcal M}(X)=\sum_cP_cXP_c$ is a conditional expectation onto
+$\mathcal M$ that preserves $\operatorname{Tr}$. *Proof.* $P_cXP_c$ vanishes outside the $c$-th diagonal block,
+so $E_{\mathcal M}(X)\in\mathcal M$. For $X\ge0$, $\langle v,P_cXP_cv\rangle=\langle P_cv,XP_cv\rangle\ge0$. An element
+$B\in\mathcal M$ is block diagonal, so $BP_c=P_cB$ and $B=\sum_cP_cBP_c$; hence $E_{\mathcal M}(B)=B$ and
+$E_{\mathcal M}(B_1XB_2)=\sum_cB_1P_cXP_cB_2=B_1E_{\mathcal M}(X)B_2$ for $B_1,B_2\in\mathcal M$. Finally
+$\sum_c\operatorname{Tr}(P_cXP_c)=\sum_c\operatorname{Tr}(P_cX)=\operatorname{Tr}X$. $\square$
+For a state $\omega$ on $\mathcal M$, Proposition 2.8 gives
+$\omega(E(A))=\sum_c\omega(P_c)\operatorname{Tr}(A_c)/k_c$, and $\omega\circ E=\omega$ on the centre, since $E(z)=z$
+there. (Conditional expectations are not unique in general: onto $\mathbb C1$, every state
+$\varphi$ gives one, $A\mapsto\varphi(A)1$; on $M_2(\mathbb C)$ the states $A\mapsto A_{11}$ and $A\mapsto A_{22}$
+give two different ones.) All are instances of the same idea:
 projecting onto the operators that "do not see" some structure.
 
-> **Physical meaning.** On the full matrix algebra $M_D(\mathbb C)$, $D=\sum_ck_c$, the map $X\mapsto\sum_cP_cXP_c$ is the
-> conditional expectation onto $\mathcal M$: it erases the coherences between superselection
+> **Physical meaning.** The map $E_{\mathcal M}$ erases the coherences between superselection
 > sectors, which is what happens when the charge (the sector) is measured and the result is not
 > recorded. The conditional expectation $E$ onto the centre goes further: it keeps only the
-> classical information, the weight $p_c$ of each sector, and replaces the state inside each
-> sector by the maximally mixed one. A state $\omega$ and the state $\omega\circ E$ agree on every
-> observable that only asks "which sector?".
+> classical information, the weight $\omega(P_c)$ of each sector, and replaces the state inside each
+> sector by the maximally mixed one (the normalised trace $\operatorname{Tr}(A_c)/k_c$).
 
 ## 2.7 What to compare with
 

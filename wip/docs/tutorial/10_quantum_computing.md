@@ -157,9 +157,16 @@ whose Kraus operators lie in $\mathcal B$ fixes every state supported in $K$.
 *Proof.* $\mathcal B$ is spanned by the words in $S_x,S_y,S_z$ (and $1$); words of length $\ge1$ annihilate
 $K$, so each element of $\mathcal B$ acts on $K$ as a scalar. Apply Proposition 10.1(b). $\square$
 
-For $n=4$ the code finds $\dim K=2$, $\dim\mathcal B'=14$, $\dim\mathcal B=35$, as for $\mathcal B\cong M_5\oplus M_3\oplus M_1$
-with multiplicities $1,3,2$ (total spin $2,1,0$), which [Chapter 4](04_symmetries.md) derives: four
-qubits carry a decoherence-free qubit ($k=1$, $m=2$) and a noiseless qutrit ($k=3$, $m=3$).
+For $n=4$, Proposition 4.13 ([Chapter 4](04_symmetries.md), case $L=4$) gives
+$\mathcal B\cong M_5\oplus M_3\oplus M_1$ with multiplicities $1,3,2$ (total spin $2,1,0$), so $\dim\mathcal B=35$ and
+$\mathcal B'\cong M_1\oplus M_3\oplus M_2$ has dimension $14$. Moreover $\dim K=m_0=2$: the $S_a$ act summand by summand,
+so $K$ is the sum of its intersections with the summands; on the spin-$S$ summand they act as $S^{(S)}_a\otimes1$, and
+$\sum_bu_b\otimes f_b$ ($f_b$ a basis of $\mathbb C^{m_S}$) is annihilated by all of them iff every $u_b$ is annihilated by
+all $S^{(S)}_a$. Those $u$ form an invariant subspace of the irreducible spin $S$, which is not everything for $S>0$
+(as $S^{(S)}_z\neq0$), hence $0$, while for $S=0$ it is $\mathbb C^1$. The code finds the same numbers. Proposition 10.1(a) and its proof
+hold verbatim for any $*$-algebra of the form $V(\bigoplus_cM_{k_c}\otimes1_{m_c})V^*$ that contains the Kraus
+operators, here $\mathcal B$: four qubits carry a decoherence-free qubit ($k=1$, $m=2$) and a noiseless qutrit
+($k=3$, $m=3$) for every channel whose Kraus operators lie in $\mathcal B$.
 
 ```python
 S = [sum(on(P, j, n) for j in range(n)) / 2 for P in (X, Y, Z)]
@@ -218,7 +225,8 @@ the orthogonal subspaces $Q_k\mathbb C^D$ contains the state — and rotates the
 flip", $E_0=\sqrt{p_0}\,1$, $E_j=\sqrt{p_j}\,X_j$. For $i\neq j$, $X_iX_j$ (with $X_0=1$) flips one or two
 bits and maps $\mathcal C$ into $\mathcal C^\perp$; so $\Lambda=\operatorname{diag}(p_0,\dots,p_3)$, $V_k=X_kP$,
 $Q=1$ and $\mathcal R(\sigma)=\sum_{k=0}^3PX_k\sigma X_kP$. If every qubit flips independently with
-probability $p$, the condition fails, and $\mathcal R$ maps $|0_L\rangle=|000\rangle$ to $|1_L\rangle$ whenever
+probability $p$, the condition fails (the Kraus operators include multiples of $X_1X_2$ and $X_3$, and
+$PX_1X_2X_3P=|000\rangle\langle111|+|111\rangle\langle000|$ is not a multiple of $P$), and $\mathcal R$ maps $|0_L\rangle=|000\rangle$ to $|1_L\rangle$ whenever
 $\ge2$ flips occur and leaves it in place otherwise: the fidelity of $|0_L\rangle$ after recovery is the
 probability of at most one flip, $(1-p)^3+3p(1-p)^2=1-3p^2+2p^3=0.972$ for $p=0.1$. In the library $M_8$ is an
 algebra with one block, and `R @ Phi` is the composition $\mathcal R\circ\Phi$:
@@ -304,16 +312,24 @@ positive and sum to $\mathcal R^*(1)=1$. For $\rho$ supported in $P_c\mathbb C^D
 $\operatorname{Tr}(N_d\Phi(\rho))=\operatorname{Tr}(\rho\,P(\mathcal R\circ\Phi)^*(P_d)P)=\operatorname{Tr}(\rho P_d)=\delta_{cd}$, hence also
 $\operatorname{Tr}(N_C\Phi(\rho))=\delta_{cC}$. $\square$
 
-**Theorem 10.7 (Bény–Kempf–Kribs 2007; stated without proof).** A von Neumann algebra $\mathfrak A$
+**Theorem 10.7 (Bény–Kempf–Kribs).** A von Neumann algebra $\mathfrak A$
 on $\mathcal C$ is correctable for $\Phi$ iff $PE_i^*E_jP\in\mathfrak A'$ for all $i,j$, where
 $\mathfrak A'$ is the commutant of $\mathfrak A$ in $B(\mathcal C)$.
 
+*Proof.* This is Theorem D.9, proved in [Appendix D](D_gksl.md), whose proof also constructs a recovery
+channel: it measures the sector of $\mathfrak A\cong\bigoplus_cM_{k_c}$ and a syndrome, and undoes the error on
+each factor $\mathbb C^{k_c}$ as in the proof of Theorem 10.5. $\square$
+
 For $\mathfrak A=B(\mathcal C)$, $\mathfrak A'=\mathbb CP$ and this is Theorem 10.5; Proposition 10.6 is the
-case of a commutative $\mathfrak A$. For
+case of the commutative $\mathfrak A=\operatorname{span}\{P_c\}$ (Corollary D.10(a),(b)). For
 $\mathfrak A=M_k\otimes1_m$ on $\mathcal C=\mathbb C^k\otimes\mathbb C^m$ one obtains the operator (subsystem)
-codes of Kribs–Laflamme–Poulin (*Phys. Rev. Lett.* 94, 180501, 2005), which contain the noiseless
-subsystems of Section 10.1 with $\mathcal R=\mathrm{id}$. For the proof see C. Bény, A. Kempf, D. W.
-Kribs, *Phys. Rev. Lett.* 98, 100502 (2007) and *Phys. Rev. A* 76, 042303 (2007).
+codes; the noiseless subsystems of Section 10.1 are such codes, corrected by $\mathcal R=\mathrm{id}$
+(Corollary D.10(c), with the two tensor factors exchanged). By Theorem 2.6 every $\mathfrak A$ is
+$*$-isomorphic to some $\bigoplus_cM_{k_c}$; when $C\ge2$ and some $k_c\ge2$, a correctable $\mathfrak A$ protects the
+sector label $c$ together with the quantum information of each $M_{k_c}$ — a **hybrid** code (remark after
+Corollary D.10, with an example where the Knill–Laflamme condition fails but Theorem 10.7 applies).
+Historically: C. Bény, A. Kempf, D. W. Kribs, *Phys. Rev. Lett.* 98, 100502 (2007) and *Phys. Rev. A* 76,
+042303 (2007); operator codes: Kribs–Laflamme–Poulin, *Phys. Rev. Lett.* 94, 180501 (2005).
 
 **Example.** The repetition code under independent phase flips (probability $q$ per qubit) followed
 by at most one bit flip. The Kraus operators are multiples of $X_kZ^s$, $s\in\{0,1\}^3$, and each
@@ -322,7 +338,12 @@ $P_1=|111\rangle\langle111|$: the classical bit survives, read out by majority v
 $N_0=\sum_{|b|\le1}|b\rangle\langle b|$, $N_1=1-N_0$. The qubit does not: $PZ_1P$ is not a multiple of $P$,
 and after the recovery $\mathcal R$ of Section 10.2 the state $|{+_L}\rangle=(|000\rangle+|111\rangle)/\sqrt2$ suffers the logical phase flip
 $Z_1Z_2Z_3$ exactly when an odd number of phase flips occurred; its fidelity is
-$(1+(1-2q)^3)/2=0.8645$ for $q=0.05$.
+$(1+(1-2q)^3)/2=0.8645$ for $q=0.05$. (The channel is $\Phi_{\mathrm{one}}\circ\mathcal Z$, with $\Phi_{\mathrm{one}}$ the
+channel "at most one bit flip" of the bit-flip example and $\mathcal Z$ the independent phase flips;
+on $\mathcal C$ every $Z^s$ acts as $Z_1^{|s|}$, so $\mathcal Z(\rho)=\sum_sq^{|s|}(1-q)^{3-|s|}Z_1^{|s|}\rho Z_1^{|s|}$ is
+again supported in $\mathcal C$, and $\mathcal R\circ\Phi_{\mathrm{one}}$ is the identity on such states by Theorem 10.5.
+$Z_1$ maps $|{+_L}\rangle$ to $|{-_L}\rangle\perp|{+_L}\rangle$, and $|s|$ is even with probability
+$\frac12\big((1-q+q)^3+(1-q-q)^3\big)$.)
 
 ```python
 q = 0.05
@@ -342,9 +363,10 @@ print(f"fidelity of |+_L> {F_plus:.4f}, exact {(1 + (1 - 2 * q)**3) / 2:.4f}")
 assert abs(F_plus - (1 + (1 - 2 * q) ** 3) / 2) < 1e-12
 ```
 
-> **Physical meaning.** Protecting a commutative algebra means protecting classical information (a
-> bit, the label of a superselection sector), which is much cheaper than protecting a qubit: noise
-> commuting with the sector projections is harmless. "Hybrid codes" correspond to $\bigoplus_cM_{k_c}$.
+> **Physical meaning** (physical interpretation, not a theorem of this course). Protecting a commutative
+> algebra means protecting classical information (a bit, the label of a superselection sector), which is
+> much cheaper than protecting a qubit: noise commuting with the sector projections is harmless (then
+> $P_cE_i^*E_jP_d=E_i^*E_jP_cP_d=0$ for $c\neq d$, condition 2 of Proposition 10.6).
 
 ## 10.4 Constrained mixers
 
@@ -367,7 +389,8 @@ is its XXZ Hamiltonian $J\sum_{(i,j)}\big(\tfrac12(S^+_iS^-_j+S^-_iS^+_j)+\Delta
 $\Delta=0$, as $S^+_iS^-_j+S^-_iS^+_j=\tfrac12(X_iX_j+Y_iY_j)$; we check it against the dense
 $64\times64$ matrix. For $H_C$ we take graph bisection on the triangles $\{0,1,2\}$, $\{3,4,5\}$ joined
 by the edges $(2,3)$, $(5,0)$: $H_C=\sum_{(i,j)\in E}\tfrac12(1-Z_iZ_j)$, $Z_iZ_j=4S^z_iS^z_j$, counts the cut
-edges. The best bisection cuts $2$ edges; we start from $|101010\rangle$, which cuts $6$. Finally the whole
+edges. The best bisection cuts $2$ edges (the two triangles; any other set of three vertices splits both
+triangles, and a split triangle has two cut edges); we start from $|101010\rangle$, which cuts $6$. Finally the whole
 ansatz is recomputed with dense $64\times64$ matrices, independently of the library.
 
 ```python
@@ -439,8 +462,9 @@ assert abs(accept.item() - (1 - g) ** (w * len(layers))) < 1e-12              # 
 assert abs(post.fidelity(ideal).item() - 1) < 1e-10 and abs(cut(post) - cut(ideal)) < 1e-10
 ```
 
-The infeasible part lowers the expected cut from $4.3789$ to $4.3123$, a spurious improvement that
-would mislead an optimiser of the angles; after post-selection the value is exact.
+Numerical observation (the printed values): the infeasible part lowers the expected cut from $4.3789$ to
+$4.3123$, a spurious improvement that would mislead an optimiser of the angles; after post-selection the
+value is exact (Proposition 10.9).
 
 **Continuous time.** The same holds for the Lindblad equation (Theorem 8.6, [Chapter 8](08_dynamics.md))
 $$
@@ -466,7 +490,9 @@ inside the sector is allowed.
 
 For $\gamma_2=0$, $\sigma(t)=e^{-iHt}\rho(0)e^{iHt}$: post-selection is perfect. The companion paper
 (`examples/paper/ex9_qaoa_xy_mixer.py`) evolves $|111000\rangle$ under $H_M$ for $T=2$; we reproduce its
-row $\gamma_1=\gamma_2=0.1$: $P(w=3)=e^{-0.6}=0.5488$, fidelity $0.4805$, post-selected $0.8755$ (as for $\gamma_1=0$).
+row $\gamma_1=\gamma_2=0.1$: $P(w=3)=e^{-0.6}=0.5488$ (Proposition 10.10), and, as a numerical observation of the
+code below, fidelity $0.4805$ and post-selected fidelity $0.8755$; by Proposition 10.10 the latter is the same as
+for $\gamma_1=0$.
 
 ```python
 T = 2.0
@@ -484,7 +510,7 @@ assert abs(post_T[0.1, 0.0].fidelity(ideal_T).item() - 1) < 1e-6               #
 assert post_T[0.1, 0.1].trace_distance(post_T[0.0, 0.1]).item() < 1e-6       # independent of gamma_1
 ```
 
-> **Physical meaning.** Energy relaxation ($T_1$), a leading error of superconducting qubits, is a
+> **Physical meaning** (physical interpretation, not a theorem of this course). Energy relaxation ($T_1$), a leading error of superconducting qubits, is a
 > jump to a lower sector. Measuring the Hamming weight — a central projection, harmless inside a
 > sector (Section 3.3) — detects it, and post-selection removes it at the price of the acceptance
 > rate. Dephasing commutes with the sector projections and is not detected.
@@ -494,7 +520,7 @@ assert post_T[0.1, 0.1].trace_distance(post_T[0.0, 0.1]).item() < 1e-6       # i
 Qiskit (`qiskit.quantum_info`, Aer noise models, `QAOAAnsatz` with a custom mixer), Cirq, PennyLane
 (`qml.qaoa.xy_mixer`, `default.mixed`) and QuTiP/`qutip-qip` simulate all of this on $n$ full qubits
 and are the right tools for circuits; stim samples Clifford circuits with Pauli-type noise on thousands
-of qubits (amplitude damping is not a Pauli channel). We know of no function in these packages that
+of qubits (amplitude damping is not a Pauli channel: Pauli channels are unital, amplitude damping is not). We know of no function in these packages that
 computes the interaction algebra of a channel, its commutant or its whole fixed-point algebra (QuTiP's
 `steadystate` returns one stationary state of a Lindbladian); for numerical block decompositions of matrix $*$-algebras see
 Murota et al., *Japan J. Indust. Appl. Math.* 27 (2010). The library adds storage in
