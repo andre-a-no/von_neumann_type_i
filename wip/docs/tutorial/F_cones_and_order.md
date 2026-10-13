@@ -16,11 +16,12 @@ preserves positivity in both directions preserves squares; and why every such ma
 equal blocks and acts on each block by $UxU^*$ or by $Ux^TU^*$.
 
 Besides linear algebra, calculus and results of Chapters 1, 6 and 13 cited by number, Section F.3 uses Lebesgue
-integration (Fatou's lemma, dominated convergence and differentiation under the integral sign, the linear change of
-variables formula); nothing else is assumed. The spectral theorem of Appendix E, with Jordan frames, refines Theorem
+integration (Fatou's lemma, dominated convergence and differentiation under the integral sign, Fubini–Tonelli, the
+linear change of variables formula); nothing else is assumed. The spectral theorem of Appendix E, with Jordan frames, refines Theorem
 F.3 below; nothing here depends on it. A
 **Euclidean space** is a finite-dimensional real vector space $V\ne\{0\}$ with an inner product
-$\langle\cdot,\cdot\rangle$; $|x|$ is the norm, $\|A\|$ the operator norm of a linear map $A$ of $V$, $A^T$ its adjoint
+$\langle\cdot,\cdot\rangle$; $\|x\|$ is the norm (single bars $|x|$ of an element of $V$ will denote the absolute
+value of Theorem F.3, never the norm), $\|A\|$ the operator norm of a linear map $A$ of $V$, $A^T$ its adjoint
 ($\langle Ax,y\rangle=\langle x,A^Ty\rangle$), and $A\ge0$ ($A>0$) means that $A=A^T$ is positive semidefinite
 (definite). $e^A=\exp A=\sum_{k\ge0}A^k/k!$.
 
@@ -34,12 +35,15 @@ $P(x)=2L(x)^2-L(x^2)$.
 ($e\circ x=x$) and an inner product for which every $L(x)$ is symmetric: $\langle x\circ y,z\rangle=\langle y,x\circ z\rangle$.
 Its **cone of squares** is $Q=\{x^2:x\in V\}$.
 
-Examples: $M_{sa}$ and $\operatorname{Herm}_n(\mathbb R)$ with $\langle x,y\rangle=\operatorname{Tr}(xy)$ (Lemma 13.1;
+Examples: $M_{sa}$ (the self-adjoint part of $\bigoplus_cM_{k_c}(\mathbb C)$) and $\operatorname{Herm}_n(\mathbb R)$
+with $\langle x,y\rangle=\operatorname{Tr}(xy)$, which is real and has $\operatorname{Tr}(x^2)=\sum_{ij}|x_{ij}|^2$ (Lemma 13.1;
 $\operatorname{Tr}((x\circ y)z)=\frac12\operatorname{Tr}(xyz+yxz)=\operatorname{Re}\operatorname{Tr}(xyz)$, since
 $\operatorname{Tr}(yxz)=\overline{\operatorname{Tr}((yxz)^*)}=\overline{\operatorname{Tr}(zxy)}=\overline{\operatorname{Tr}(xyz)}$,
 is invariant under cyclic permutations and, for the same reason, under $x\leftrightarrow z$, hence symmetric in
-$x,y,z$); the spin factors $V_m$ with $\langle x,y\rangle=\operatorname{tr}(x\circ y)$, since $\operatorname{tr}((x\circ y)\circ z)=2(abc+c\,u\cdot v+a\,v\cdot w+b\,u\cdot w)$ for $x=(a,u)$, $y=(b,v)$, $z=(c,w)$
-is symmetric; and $\mathbb R^N$ with the coordinatewise product.
+$x,y,z$); the spin factors $V_m$ (Jordan algebras by Lemma 13.3) with the inner product
+$\langle x,y\rangle=\operatorname{tr}(x\circ y)=2(ab+u\cdot v)$ for $x=(a,u)$, $y=(b,v)$, since
+$\operatorname{tr}((x\circ y)\circ z)=2(abc+c\,u\cdot v+a\,v\cdot w+b\,u\cdot w)$ for $z=(c,w)$ is symmetric in
+$x,y,z$; and $\mathbb R^N$ with the coordinatewise product (Exercise 1).
 
 **Lemma F.1.** In every Jordan algebra, for all $a,b,d,x,y$:
 
@@ -125,7 +129,11 @@ $P(s)(z\circ w)=(z'-z'')\circ(w'-w'')=P(s)z\circ P(s)w$.
 (4) The $c_l$ are polynomials in $x$, so the $L(c_l)$ commute (Proposition F.2); being symmetric, they have a common
 orthonormal eigenbasis. On a common eigenvector $L(c_l)$ has an eigenvalue $\varepsilon_l\in\{0,\frac12,1\}$ by (1), and
 $\sum_l\varepsilon_l=1$ because $\sum_lL(c_l)=L(e)=I$. So either one $\varepsilon_i=1$ and the others vanish, or
-$\varepsilon_i=\varepsilon_j=\frac12$ for one pair $i<j$ and the others vanish; the common eigenspaces are the $V_{ij}$. Since
+$\varepsilon_i=\varepsilon_j=\frac12$ for one pair $i<j$ and the others vanish. So $V$ is the orthogonal sum of the
+common eigenspaces $W_{ii}$ (where $L(c_i)=1$, $L(c_l)=0$ for $l\ne i$) and $W_{ij}$ (where $L(c_i)=L(c_j)=\frac12$,
+$L(c_l)=0$ otherwise), and $W_{ij}=V_{ij}$: a vector with $c_i\circ z=z$ (resp. $c_i\circ z=c_j\circ z=\frac12z$) has no
+component in the other common eigenspaces, on which $L(c_i)$ (resp. the pair $(L(c_i),L(c_j))$) takes a different
+value. Since
 $a^2=\sum_la_l^2c_l$, on $V_{ij}$ ($i<j$) $L(a)=\frac12(a_i+a_j)$, $L(a^2)=\frac12(a_i^2+a_j^2)$ and
 $P(a)=\frac12(a_i+a_j)^2-\frac12(a_i^2+a_j^2)=a_ia_j$; on $V_{ii}$, $L(a)=a_i$ and $P(a)=2a_i^2-a_i^2$. $\square$
 
@@ -148,21 +156,22 @@ then $\Omega_2^*\subseteq\Omega_1^*$.
 4. $x^2=0$ implies $x=0$, and $Q\cap(-Q)=\{0\}$.
 
 *Proof.* We use $\langle y,x^2\rangle=\langle y\circ x,x\rangle=\langle L(y)x,x\rangle$ and
-$\langle x^2,e\rangle=\langle x,x\circ e\rangle=|x|^2$; the latter gives (4) together with (1)(ii), since the
+$\langle x^2,e\rangle=\langle x,x\circ e\rangle=\|x\|^2$; the latter gives (4) together with (1)(ii), since the
 eigenvalues of $-y$ are the $-\lambda_i$ by uniqueness.
 
 (1) (i)$\Rightarrow$(iii): if $y=x^2$ with $x=\sum_i\mu_id_i$, then $y=\sum_i\mu_i^2d_i$ and
 $L(y)=\sum_i\mu_i^2L(d_i)\ge0$ by Lemma F.4(1). (iii)$\Leftrightarrow$(iv) by the first identity.
-(iii)$\Rightarrow$(ii): $0\le\langle L(y)c_i,c_i\rangle=\lambda_i|c_i|^2$. (ii)$\Rightarrow$(i):
+(iii)$\Rightarrow$(ii): $0\le\langle L(y)c_i,c_i\rangle=\lambda_i\|c_i\|^2$. (ii)$\Rightarrow$(i):
 $y=(\sum_i\sqrt{\lambda_i}c_i)^2$. By (iv), $Q$ is an intersection of closed half-spaces through $0$.
 
 (2) (ii)$\Rightarrow$(iii): $L(y)=\sum_i\lambda_iL(c_i)\ge(\min_i\lambda_i)\sum_iL(c_i)=(\min_i\lambda_i)I$.
 (iii)$\Rightarrow$(iv): a nonzero $x\in Q$ is $z^2$ with $z\ne0$, and $\langle y,x\rangle=\langle L(y)z,z\rangle>0$.
-(iv)$\Rightarrow$(ii): $\langle y,c_i\rangle=\lambda_i|c_i|^2$ and $c_i=c_i^2\in Q\setminus\{0\}$. (iii)$\Rightarrow$(i): if
-$L(y)\ge mI$ with $m>0$, then $L(y')\ge(m-\|L\|\,|y-y'|)I$, so a neighbourhood of $y$ consists of elements with
+(iv)$\Rightarrow$(ii): $\langle y,c_i\rangle=\lambda_i\|c_i\|^2$ and $c_i=c_i^2\in Q\setminus\{0\}$. (iii)$\Rightarrow$(i): if
+$L(y)\ge mI$ with $m>0$, then $L(y')\ge(m-\|L\|\,\|y-y'\|)I$, where $\|L\|$ is the norm of the linear map
+$b\mapsto L(b)$, so a neighbourhood of $y$ consists of elements with
 $L>0$, which lie in $Q$ by (1). (i)$\Rightarrow$(iii): $L(y)\ge0$ by (1); if $\langle L(y)z,z\rangle=0$ with $z\ne0$, then
 $x=z^2\ne0$ and $\langle y,x\rangle=0$; for small $\varepsilon>0$, $y-\varepsilon x\in Q$ but
-$\langle y-\varepsilon x,x\rangle=-\varepsilon|x|^2<0$, contradicting (1)(iv). Next, $L(e)=I>0$, and for $y\in Q$,
+$\langle y-\varepsilon x,x\rangle=-\varepsilon\|x\|^2<0$, contradicting (1)(iv). Next, $L(e)=I>0$, and for $y\in Q$,
 $y+\varepsilon e\in\Omega$ tends to $y$, so $\bar\Omega=Q$; then $\Omega^*=\{y:\langle y,x\rangle>0\ \forall x\in Q\setminus\{0\}\}=\Omega$
 by (iv). $\Omega=\{L>0\}$ is convex.
 
@@ -179,13 +188,14 @@ $\Omega$ as in Theorem F.5.
 4. $P(y)Q\subseteq Q$ for every $y\in V$.
 
 *Proof.* (1) Let $0\le s<1/\|L(b)\|$ (any $s\ge0$ if $L(b)=0$). The symmetric operator $I-sL(b)$ has eigenvalues
-$\ge1-s\|L(b)\|>0$. Let $x\in Q$ and $z=(I-sL(b))^{-1}x=\sum_j\nu_jd_j$ (Theorem F.3). Using $z\circ d_j=\nu_jd_j$ and
-$\langle b,d_j\rangle=\langle b,d_j^2\rangle=\langle L(b)d_j,d_j\rangle\le\|L(b)\|\,|d_j|^2$,
+$\ge1-s\|L(b)\|>0$. Let $x\in Q$ and $z=(I-sL(b))^{-1}x=\sum_j\nu_jd_j$ (Theorem F.3). Using $z\circ d_j=\nu_jd_j$,
+$\langle d_l,d_j\rangle=\langle d_l,d_j\circ d_j\rangle=\langle d_l\circ d_j,d_j\rangle=\delta_{lj}\|d_j\|^2$ and
+$\langle b,d_j\rangle=\langle b,d_j^2\rangle=\langle L(b)d_j,d_j\rangle\le\|L(b)\|\,\|d_j\|^2$,
 $$
-0\le\langle x,d_j\rangle=\langle z-s\,b\circ z,d_j\rangle=\nu_j|d_j|^2-s\langle b,z\circ d_j\rangle
-=\nu_j\big(|d_j|^2-s\langle b,d_j\rangle\big),
+0\le\langle x,d_j\rangle=\langle z-s\,b\circ z,d_j\rangle=\nu_j\|d_j\|^2-s\langle b,z\circ d_j\rangle
+=\nu_j\big(\|d_j\|^2-s\langle b,d_j\rangle\big),
 $$
-where the left inequality is Theorem F.5(1)(iv). The bracket is $\ge(1-s\|L(b)\|)|d_j|^2>0$, so all $\nu_j\ge0$ and
+where the left inequality is Theorem F.5(1)(iv). The bracket is $\ge(1-s\|L(b)\|)\|d_j\|^2>0$, so all $\nu_j\ge0$ and
 $z\in Q$. Hence, for $t\ge0$ and $n>t\|L(b)\|$, $(I-\frac tnL(b))^{-n}Q\subseteq Q$. As $n\to\infty$ this operator tends
 to $e^{tL(b)}$ (in an orthonormal eigenbasis of $L(b)$: $(1-t\beta/n)^{-n}\to e^{t\beta}$), and $Q$ is closed, so
 $e^{tL(b)}Q\subseteq Q$. With $-b$ in place of $b$,
@@ -242,14 +252,14 @@ Z = torch.randn(500, 4, 4, dtype=dt)
 Z = Z + Z.mH
 w, U = torch.linalg.eigh(Z)
 c1 = U[:, :, :1] @ U[:, :, :1].mH                                  # eigenprojection of the smallest eigenvalue
-pair = (Z @ c1).diagonal(dim1=-2, dim2=-1).sum(-1).real            # <Z, c1> = lambda_min |c1|^2
+pair = (Z @ c1).diagonal(dim1=-2, dim2=-1).sum(-1).real            # <Z, c1> = lambda_min ||c1||^2
 assert close(pair, w[:, 0]) and (pair < 0).float().mean() > 0.9   # witnesses of Z not in Q
 
 V = SpinFactor(4)                                                  # <x, y> = tr(x o y) = V.inner
 x, y = V.random(2000, cone=True), V.random(2000, cone=True)
 assert (V.inner(x, y) > -1e-12).all()
 z = V.random(2000)
-lam, idem = V.spectral_decomposition(z)                            # (lambda-, lambda+), (c-, c+); |c-|^2 = 1
+lam, idem = V.spectral_decomposition(z)                            # (lambda-, lambda+), (c-, c+); ||c-||^2 = 1
 assert close(V.inner(z, idem[:, 0]), lam[:, 0])
 assert ((lam[:, 0] < 0) == ~V.in_cone(z, tol=0.0)).all()
 
@@ -286,7 +296,7 @@ of coordinates have $|\det|=1$).
 **Lemma F.8.** Let $\Omega$ be self-dual.
 
 1. $0\notin\Omega$; $\langle x,y\rangle\ge0$ for $x,y\in\bar\Omega$; for each $x\in\Omega$ there is $\delta>0$ with
-   $\langle x,y\rangle\ge\delta|y|$ for all $y\in\bar\Omega$.
+   $\langle x,y\rangle\ge\delta\|y\|$ for all $y\in\bar\Omega$.
 2. If $x\in\bar\Omega\setminus\Omega$, there is $u\in\bar\Omega\setminus\{0\}$ with $\langle x,u\rangle=0$. If $y\in\Omega$,
    $u\in\bar\Omega$ and $t\ge0$, then $y+tu\in\Omega$.
 3. $\Omega$ is the interior of $\bar\Omega$.
@@ -295,10 +305,10 @@ of coordinates have $|\det|=1$).
 *Proof.* (1) If $0\in\Omega$, then $\Omega$ contains a ball around $0$, hence $\Omega=V$; but $V^*=\emptyset$. For
 $x,y\in\Omega$, $\langle x,y\rangle>0$ because $y\in\Omega^*$; by continuity $\langle x,y\rangle\ge0$ on $\bar\Omega$. If the
 closed ball $\bar B(x,\delta)$ lies in $\Omega$ and $y\in\bar\Omega\setminus\{0\}$, then
-$\langle x-\delta y/|y|,y\rangle\ge0$. (2) $x\notin\Omega=\Omega^*$ gives $u\in\bar\Omega\setminus\{0\}$ with
+$\langle x-\delta y/\|y\|,y\rangle\ge0$. (2) $x\notin\Omega=\Omega^*$ gives $u\in\bar\Omega\setminus\{0\}$ with
 $\langle u,x\rangle\le0$, and $\langle u,x\rangle\ge0$ by (1). For $x'\in\bar\Omega\setminus\{0\}$,
 $\langle x',y+tu\rangle\ge\langle x',y\rangle>0$, so $y+tu\in\Omega^*=\Omega$. (3) If $\bar B(y,\varepsilon)\subseteq\bar\Omega$,
-then for $x\in\bar\Omega\setminus\{0\}$, $\langle x,y-\varepsilon x/|x|\rangle\ge0$, so $\langle x,y\rangle\ge\varepsilon|x|>0$ and
+then for $x\in\bar\Omega\setminus\{0\}$, $\langle x,y-\varepsilon x/\|x\|\rangle\ge0$, so $\langle x,y\rangle\ge\varepsilon\|x\|>0$ and
 $y\in\Omega^*=\Omega$. (4) For $g\in G(\Omega)$, $g$ maps $\bar\Omega\setminus\{0\}$ onto itself, so for $y\in\Omega$ and
 $x\in\bar\Omega\setminus\{0\}$, $\langle x,g^Ty\rangle=\langle gx,y\rangle>0$: $g^T\Omega\subseteq\Omega$. The same for $g^{-1}$
 gives $g^T\Omega=\Omega$. If $g_k\in G(\Omega)$ converge to $g\in GL(V)$, then $g\Omega\subseteq\bar\Omega$ is open, so
@@ -315,29 +325,31 @@ $x^*=-\nabla f(x)$, i.e. $Df(x)[u]=-\langle x^*,u\rangle$.
 3. $H(x)>0$ and $x^*\in\Omega$ for $x\in\Omega$.
 4. $H(x)x=x^*$ and $D^3f(x)[x,u,v]=-2\langle H(x)u,v\rangle$; for $g\in G(\Omega)$, $(gx)^*=g^{-T}x^*$ and
    $H(gx)=g^{-T}H(x)g^{-1}$.
-5. $\varphi(x)\ge c|x|^{-N}$ for a constant $c>0$, and $\varphi(x_k)\to\infty$ if $x_k\in\Omega$ converge to a point of
+5. $\varphi(x)\ge c\|x\|^{-N}$ for a constant $c>0$, and $\varphi(x_k)\to\infty$ if $x_k\in\Omega$ converge to a point of
    $\bar\Omega\setminus\Omega$.
 
-*Proof.* (1) Let $x\in\Omega$ and $\delta$ as in Lemma F.8(1). For $|x'-x|<\delta/2$ and $y\in\Omega$,
-$\langle x',y\rangle\ge\frac\delta2|y|$, so the $k$-th derivatives of the integrand in $x'$,
-$(-1)^k\prod_{i}\langle u_i,y\rangle e^{-\langle x',y\rangle}$, are bounded by $\prod_i|u_i|\,|y|^ke^{-\delta|y|/2}$, which is
-integrable ($|y|\ge N^{-1/2}\sum_i|y_i|$ and Fubini). Dominated convergence allows differentiation under the integral
+*Proof.* (1) Let $x\in\Omega$ and $\delta$ as in Lemma F.8(1). For $\|x'-x\|<\delta/2$ and $y\in\Omega$,
+$\langle x',y\rangle\ge\frac\delta2\|y\|$, so the $k$-th derivatives of the integrand in $x'$,
+$(-1)^k\prod_{i}\langle u_i,y\rangle e^{-\langle x',y\rangle}$, are bounded by $\prod_i\|u_i\|\,\|y\|^ke^{-\delta\|y\|/2}$, which is
+integrable ($\|y\|\ge N^{-1/2}\sum_i|y_i|$ and Fubini). Dominated convergence allows differentiation under the integral
 sign. (2) Substitute $y=y'/t$, which maps $\Omega$ onto $\Omega$; and $y'=g^Ty$, which maps $\Omega$ onto $\Omega$ by Lemma
 F.8(4), with $\langle gx,y\rangle=\langle x,y'\rangle$ and $dy=|\det g|^{-1}dy'$.
 (3) Let $\mu_x$ be the probability measure $e^{-\langle x,y\rangle}dy/\varphi(x)$ on $\Omega$. By (1),
 $Df(x)[u]=-\mathbb E\langle u,y\rangle$ and $D^2f(x)[u,u]=\mathbb E\langle u,y\rangle^2-(\mathbb E\langle u,y\rangle)^2$, the
-variance of $\langle u,y\rangle$. It vanishes only if $\langle u,y\rangle$ is constant $\mu_x$-almost everywhere, i.e. on
-almost all of the open set $\Omega$, which forces $u=0$. And $x^*=\mathbb E\,y$, so $\langle z,x^*\rangle=\mathbb E\langle z,y\rangle>0$
+variance of $\langle u,y\rangle$. It vanishes only if $\langle u,y\rangle$ equals a constant $\gamma$ $\mu_x$-almost
+everywhere, i.e. Lebesgue-almost everywhere on $\Omega$ (the density of $\mu_x$ is positive); the set
+$\{y\in\Omega:\langle u,y\rangle\ne\gamma\}$ is open and null, hence empty, so the linear function $\langle u,\cdot\rangle$ is
+constant on a ball, which forces $u=0$. And $x^*=\mathbb E\,y$, so $\langle z,x^*\rangle=\mathbb E\langle z,y\rangle>0$
 for $z\in\bar\Omega\setminus\{0\}$: $x^*\in\Omega^*=\Omega$.
 (4) By (2), $f(tx)=f(x)-N\log t$, so $Df(x)[x]=-N$ on $\Omega$. Differentiating in $x$ along $u$:
 $D^2f(x)[x,u]+Df(x)[u]=0$, i.e. $\langle H(x)x,u\rangle=\langle x^*,u\rangle$; once more along $v$:
 $D^3f(x)[x,u,v]+2D^2f(x)[u,v]=0$. Differentiating $f(gx)=f(x)-\log|\det g|$ once and twice gives
 $\langle(gx)^*,gu\rangle=\langle x^*,u\rangle$ and $\langle H(gx)gu,gv\rangle=\langle H(x)u,v\rangle$.
-(5) $\langle x,y\rangle\le|x||y|\le1$ for $|y|\le1/|x|$, so $\varphi(x)\ge e^{-1}\operatorname{vol}(\Omega\cap B(0,1/|x|))=c|x|^{-N}$
+(5) $\langle x,y\rangle\le\|x\|\|y\|\le1$ for $\|y\|\le1/\|x\|$, so $\varphi(x)\ge e^{-1}\operatorname{vol}(\Omega\cap B(0,1/\|x\|))=c\|x\|^{-N}$
 with $c=e^{-1}\operatorname{vol}(\Omega\cap B(0,1))>0$. Let $x_k\to x_0\in\bar\Omega\setminus\Omega$. By Fatou's lemma,
 $\liminf\varphi(x_k)\ge\int_\Omega e^{-\langle x_0,y\rangle}dy$. Take $u$ as in Lemma F.8(2), a ball $B(y_1,r)\subseteq\Omega$
-and the disjoint balls $B_l=B(y_1+2lru/|u|,r)$, $l\ge0$; they lie in $\Omega$ by Lemma F.8(2), and on $B_l$,
-$\langle x_0,y\rangle=\langle x_0,y-2lru/|u|\rangle\le|x_0|(|y_1|+r)$. So the integral is infinite. $\square$
+and the disjoint balls $B_l=B(y_1+2lru/\|u\|,r)$, $l\ge0$; they lie in $\Omega$ by Lemma F.8(2), and on $B_l$,
+$\langle x_0,y\rangle=\langle x_0,y-2lru/\|u\|\rangle\le\|x_0\|(\|y_1\|+r)$. So the integral is infinite. $\square$
 
 **Lemma F.10 (one-parameter groups).** Let $G$ be a closed subgroup of $GL(V)$ and
 $\mathfrak g=\{Z:e^{tZ}\in G\text{ for all }t\in\mathbb R\}$.
@@ -367,8 +379,8 @@ $g^{-T}\in G$ (Lemma F.8(4)), Lemma F.9(2,4) gives
 $f(gx)+f((gx)^*)=f(x)-\log|\det g|+f(g^{-T}x^*)=f(x)+f(x^*)$, so $F(x)=f(x)+f(x^*)$ is constant on the orbit
 $G x=\Omega$. Hence $0=DF(x)[u]=-\langle x^*,u\rangle+\langle x^{**},H(x)u\rangle$, i.e. $H(x)x^{**}=x^*=H(x)x$
 (Lemma F.9(4)), and $x^{**}=x$ as $H(x)$ is invertible. Differentiating $x^{**}=x$ gives $H(x^*)H(x)=I$.
-(2) $F_2(x)=f(x)+\frac12|x|^2$ satisfies $F_2(x)\ge\log c-N\log|x|+\frac12|x|^2$ (Lemma F.9(5)), which tends to $\infty$ as
-$|x|\to\infty$. So $S=\{x\in\Omega:F_2(x)\le F_2(x_1)\}$ ($x_1\in\Omega$) is bounded; it is closed in $V$, because a limit
+(2) $F_2(x)=f(x)+\frac12\|x\|^2$ satisfies $F_2(x)\ge\log c-N\log\|x\|+\frac12\|x\|^2$ (Lemma F.9(5)), which tends to $\infty$ as
+$\|x\|\to\infty$. So $S=\{x\in\Omega:F_2(x)\le F_2(x_1)\}$ ($x_1\in\Omega$) is bounded; it is closed in $V$, because a limit
 point in $\bar\Omega\setminus\Omega$ would make $f$ unbounded on $S$ (Lemma F.9(5)). The continuous $F_2$ attains its minimum
 on the compact set $S$ at some $e$ in the open set $\Omega$, where $0=\nabla F_2(e)=-e^*+e$. Then $H(e)=H(e^*)=H(e)^{-1}$
 by (1), so $H(e)^2=I$, and $H(e)=I$ since $H(e)>0$.
@@ -389,9 +401,10 @@ define $L(u)$ by $\langle L(u)v,w\rangle=-\frac12D^3f(e)[u,v,w]$ and $u\circ v=L
 *Step 1: commutativity, symmetry, unit.* $D^3f(e)$ is symmetric in its three arguments, so $u\circ v=v\circ u$ and
 $L(u)^T=L(u)$. By Lemma F.9(4) and $H(e)=I$, $\langle e\circ v,w\rangle=\langle H(e)v,w\rangle=\langle v,w\rangle$: $e$ is a unit.
 
-*Step 2: $L(u)\in\mathfrak g$.* $P(x)=H(x)^{-1}$ lies in $G$ (Proposition F.11(3)), is smooth, and $P(e)=I$. Its
-derivative is $DP(e)[u]=-H(e)^{-1}DH(e)[u]H(e)^{-1}=-DH(e)[u]=2L(u)$, since $\langle DH(e)[u]v,w\rangle=D^3f(e)[u,v,w]$.
-Lemma F.10(1) for $c(s)=P(e+su)$ gives $2L(u)\in\mathfrak g$.
+*Step 2: $L(u)\in\mathfrak g$.* $R(x)=H(x)^{-1}$ lies in $G$ (Proposition F.11(3)), is smooth, and $R(e)=I$. Its
+derivative is $DR(e)[u]=-H(e)^{-1}DH(e)[u]H(e)^{-1}=-DH(e)[u]=2L(u)$, since $\langle DH(e)[u]v,w\rangle=D^3f(e)[u,v,w]$.
+Lemma F.10(1) for $c(s)=R(e+su)$ ($s\ge0$ small, so that $e+su\in\Omega$), with the closed subgroup $G$ (Lemma F.8(4)),
+gives $2L(u)\in\mathfrak g$, hence $L(u)\in\mathfrak g$.
 
 *Step 3: uniqueness.* If $Y\in\mathfrak g$ is symmetric, then $Y=L(Ye)$: the symmetric $Y-L(Ye)\in\mathfrak g$ kills $e$
 ($L(w)e=w\circ e=w$), so it is also antisymmetric by Proposition F.11(4), hence $0$.
@@ -422,13 +435,16 @@ $N=n(n+1)/2$, and $\Omega$ the positive definite matrices, symmetric by Theorems
 $\varphi(x)=\varphi(1)\det(x)^{-(n+1)/2}$, $e=\kappa1$ with $\kappa=\sqrt{(n+1)/2}$, and the product of Theorem F.12 is
 $u\circ_\kappa v=\frac1{2\kappa}(uv+vu)$, so $x\mapsto x/\kappa$ is an isomorphism onto the usual Jordan algebra.
 
-*Proof.* For $a\in\Omega$, $P(a)x=axa$ lies in $G(\Omega)$ (Theorem F.6(3)). In an orthonormal eigenbasis of $a$ the
+*Proof.* The spectral decomposition $x=\sum_i\lambda_ip_i$ of a symmetric matrix into its eigenprojections is the
+decomposition of Theorem F.3 (uniqueness; $p_i\circ p_j=p_ip_j$ since the $p_i$ commute), so by Theorem F.5(2) the
+interior of the cone of squares is indeed the set of positive definite matrices. For $a\in\Omega$, $P(a)x=axa$
+(Proposition 13.2(1)) lies in $G(\Omega)$ (Theorem F.6(3)). In an orthonormal eigenbasis of $a$ the
 matrices $E_{ii}$ and $(E_{ij}+E_{ji})/\sqrt2$ ($i<j$) form an orthonormal basis of eigenvectors of $P(a)$ with
 eigenvalues $a_ia_j$, so $\det P(a)=\prod_{i\le j}a_ia_j=\det(a)^{n+1}$ (each $a_i$ occurs $n+1$ times). Lemma F.9(2) gives
 $\varphi(a^2)=\varphi(P(a)1)=\det(a)^{-(n+1)}\varphi(1)$, and every $x\in\Omega$ is $a^2$ with $a=\sqrt x$. With
 $D\log\det(x)[u]=\operatorname{Tr}(x^{-1}u)$ (from $\det(x+su)=\det x\,\det(1+sx^{-1}u)=\det x\,(1+s\operatorname{Tr}(x^{-1}u)+O(s^2))$)
 and $D(x^{-1})[u]=-x^{-1}ux^{-1}$:
-$x^*=\kappa^2x^{-1}$, $e=\kappa1$, $D^2f(x)[v,w]=\kappa^2\operatorname{Tr}(x^{-1}vx^{-1}w)$, and
+$x^*=\kappa^2x^{-1}$; so $e^*=e$ means $e^2=\kappa^2 1$ with $e$ positive definite, i.e. $e=\kappa1$; $D^2f(x)[v,w]=\kappa^2\operatorname{Tr}(x^{-1}vx^{-1}w)$, and
 $D^3f(e)[u,v,w]=-\kappa^2\kappa^{-3}\operatorname{Tr}(uvw+vuw)=-\frac2\kappa\operatorname{Tr}((u\circ v)w)$. $\square$
 
 The code computes $D^3f$ at $e$ by automatic differentiation of $f(x)=-\frac{n+1}2\log\det x$ in orthonormal
@@ -465,7 +481,9 @@ Let $\mathcal M=\bigoplus_cM_{k_c}(\mathbb C)$ and $\mathcal N=\bigoplus_dM_{k'_
 $x\ge0$ means $x=x^*$ with nonnegative eigenvalues (equivalently, every block is positive semidefinite), and
 $[0,1]=\{a\in\mathcal M_{sa}:0\le a\le1\}$. A **projection** is $p=p^*=p^2$. A linear map $\Phi$ is **positive** if
 $x\ge0$ implies $\Phi(x)\ge0$; a **Jordan $*$-isomorphism** is a linear bijection with $\Phi(x^*)=\Phi(x)^*$ and
-$\Phi(x\circ y)=\Phi(x)\circ\Phi(y)$ (Section 13.5).
+$\Phi(x\circ y)=\Phi(x)\circ\Phi(y)$ (Section 13.5). A point $a$ of a convex set $K$ is **extreme** if it is not the
+midpoint $\frac12(b+b')$ of two distinct points $b,b'\in K$ (equivalently, not of the form $tb+(1-t)b'$ with $b\ne b'$
+and $0<t<1$: such an $a$ is the midpoint of $a\pm\varepsilon(b-b')\in K$ for small $\varepsilon>0$).
 
 **Lemma F.14.** In $\mathcal M$:
 
@@ -486,7 +504,9 @@ $p+q\le1$, then for every $\xi$, $\|qp\xi\|^2=\langle p\xi,qp\xi\rangle\le\langl
 $p\circ q=0$, then $pq=-qp$, so $pq=p(pq)=-pqp=(qp)p=qp$, and $pq=-pq=0$.
 (3) $pq=p$ implies $qp=p$, $p\circ q=p$, and $q-p=(q-p)^2\ge0$. If $p\circ q=p$, multiplying $pq+qp=2p$ by $p$ from
 the left and from the right gives $pq+pqp=2p=pqp+qp$, so $pq=qp=p$. If $p\le q$, then $p+(1-q)\le1$ and (2) gives
-$p(1-q)=0$. A projection of rank $\ge2$ dominates the projection onto a line in its range (inside one block).
+$p(1-q)=0$. A projection of rank $\ge2$ strictly dominates the projection $\xi\xi^*$ onto a line in its range inside
+one block ($\xi$ a unit vector in the range of one block of $p$). A rank-one projection $p$ lies in one block, and if
+$0\ne q\le p$, then $q=pq$ has range in that of $p$, so $q=p$.
 (4) $x=pxp+px(1-p)+(1-p)xp+(1-p)x(1-p)$, and $px(1-p)+(1-p)xp=0$ iff both terms vanish (multiply by $p$ and $1-p$),
 iff $px=pxp=xp$. A central element commutes with all matrix units of each block, so it is a scalar $z_c$ on block
 $c$, and $z_c\in\{0,1\}$ for a projection. $\square$
@@ -669,5 +689,6 @@ assert not close(Psi_t(p) @ Psi_t(p), Psi_t(p))                   # not a projec
 
 </details>
 
-**Back to:** [Chapter 13](13_jordan_algebras.md), Sections 13.4–13.6, where Theorems 13.8 and 13.10, Proposition 13.11
-and Proposition 13.14 use the results of this appendix.
+**Back to:** [Chapter 13](13_jordan_algebras.md), Sections 13.4–13.6: Theorem F.12 proves Theorem 13.8, Theorem F.15
+proves Theorem 13.10 for the algebras $\bigoplus_cM_{k_c}(\mathbb C)$, Theorem F.17 extends Proposition 13.11 to all
+$n$, and Corollary F.7 extends Proposition 13.14 to every Euclidean Jordan algebra.
