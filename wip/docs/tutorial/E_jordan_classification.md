@@ -7,7 +7,7 @@ This appendix proves it completely, from the Jordan identity and finite-dimensio
 the classical one (J. Faraut, A. Korányi, *Analysis on Symmetric Cones*, Chapters II–V; K. McCrimmon, *A Taste of
 Jordan Algebras*): power associativity and a spectral lemma give idempotents and an associative positive trace form;
 the Peirce decomposition with respect to a Jordan frame splits the algebra into pieces $J_{ij}$ whose products obey
-strict rules; in a simple algebra of rank $r\ge3$ these rules turn $J_{12}$ into a composition algebra, which by
+strict rules; in a simple algebra of rank $r\ge3$ these rules turn the Peirce space $J_{13}$ into a composition algebra, which by
 Hurwitz's theorem is $\mathbb R,\mathbb C,\mathbb H$ or $\mathbb O$, and the whole algebra is then
 $\operatorname{Herm}_r$ of it. Section E.6 also proves Frobenius' theorem on real associative division algebras, and
 Section E.8 proves that the Albert algebra $\operatorname{Herm}_3(\mathbb O)$ is a Jordan algebra that does not embed
@@ -15,7 +15,7 @@ into any associative algebra.
 
 **You will learn** why power associativity, positivity of the trace form and the existence of a unit follow from
 formal reality alone; the Peirce rules and how they force the coordinates of a simple algebra to multiply like
-numbers; the proof of Hurwitz's theorem by Cayley–Dickson doubling; and why the octonions occur only in rank $3$.
+numbers; the proof of Hurwitz's theorem by Cayley–Dickson doubling; and why the octonions give a new simple algebra only in rank $3$.
 
 **Conventions.** All algebras are finite-dimensional real vector spaces with a bilinear product. A **Jordan algebra**
 is as in Section 13.1: $x\circ y=y\circ x$ and $(x^2\circ y)\circ x=x^2\circ(y\circ x)$, $x^2=x\circ x$; a unit is not
@@ -106,7 +106,8 @@ each eigenspace of $L(c)$ into itself if $z\in J_0\cup J_1$. This gives the firs
 $J_1\circ J_0\subseteq J_1\cap J_0=0$. For $y\in J_{1/2}$, $L(y^2)$ commutes with $L(c)$, so $c\circ y^2=y^2\circ c$ is
 an eigenvector of $L(c)$ for $1$, as $c$ is; writing $y^2=a_1+a_{1/2}+a_0$, $c\circ y^2=a_1+\frac12a_{1/2}$ lies in $J_1$,
 so $a_{1/2}=0$. Polarising ($y\to y+y'$) gives the last rule. (4) $(c+c')^2=c+2c\circ c'+c'=c+c'$, and
-$c'\in J_0(c)$, so $L(c)$ and $L(c')$ commute by (2) and are simultaneously diagonalisable. On a common eigenvector
+$c'\in J_0(c)$, so $L(c)$ and $L(c')$ commute by (2) and are simultaneously diagonalisable; in particular $J_1(c')$ is
+spanned by common eigenvectors. On a common eigenvector
 with eigenvalues $\alpha$ for $L(c)$ and $1$ for $L(c')$, $L(c+c')$ has the eigenvalue $\alpha+1\in\{0,\frac12,1\}$, so
 $\alpha=0$. $\square$
 
@@ -352,8 +353,9 @@ $(a1+w)\circ(b1+w')=(ab+B(w,w'))1+aw'+bw$ to the product of $V_{d+1}$. $\square$
 
 A **composition algebra** is an algebra $A$ with unit $1$ and a positive definite quadratic form $N$ such that
 $N(xy)=N(x)N(y)$. We write $\langle\cdot,\cdot\rangle$ for the polar form ($N(x)=\langle x,x\rangle$),
-$\operatorname{Re}x=\langle x,1\rangle$ and $\bar x=2\operatorname{Re}(x)1-x$, the reflection in the line $\mathbb R1$;
-so $x\mapsto\bar x$ is an isometric involution. An isomorphism of composition algebras is an isometric algebra
+$\operatorname{Re}x=\langle x,1\rangle$ and $\bar x=2\operatorname{Re}(x)1-x$. Since $N(1)=1$ (Lemma E.14(1), whose
+proof does not use the conjugation), this is the reflection in the line $\mathbb R1$, so $x\mapsto\bar x$ is an isometric
+involution and $\operatorname{Re}\bar x=\operatorname{Re}x$. An isomorphism of composition algebras is an isometric algebra
 isomorphism. The **associator** is $(x,y,z)=(xy)z-x(yz)$.
 
 **Lemma E.14.** In a composition algebra, for all $x,y,z,w$:
@@ -384,10 +386,12 @@ exchanged, and these transpositions generate all permutations. $\square$
 **The Cayley–Dickson construction.** For an algebra $B$ with unit, involution $b\mapsto\bar b$ and quadratic form $N$, let
 $\operatorname{CD}(B)=B\times B$ with
 $$
-(a,b)(c,d)=(ac-\bar db,\;da+b\bar c),\qquad N(a,b)=N(a)+N(b).
+(a,b)(c,d)=(ac-\bar db,\;da+b\bar c),\qquad N(a,b)=N(a)+N(b),\qquad\overline{(a,b)}=(\bar a,-b).
 $$
 Starting from $\mathbb R$ ($\bar x=x$, $N(x)=x^2$) we define $\mathbb C=\operatorname{CD}(\mathbb R)$,
-$\mathbb H=\operatorname{CD}(\mathbb C)$ and $\mathbb O=\operatorname{CD}(\mathbb H)$, of dimensions $1,2,4,8$. In
+$\mathbb H=\operatorname{CD}(\mathbb C)$ and $\mathbb O=\operatorname{CD}(\mathbb H)$, of dimensions $1,2,4,8$, each doubling
+using the involution and the form just defined (by Lemma E.15(1) below, they are the conjugation and the norm of the
+composition algebra). In
 $\mathbb C$, $(a,b)(c,d)=(ac-bd,ad+bc)$: these are the complex numbers $a+bi$. $B$ is the subalgebra $B\times0$.
 
 **Lemma E.15.** (1) If $B$ is an associative composition algebra, then $\operatorname{CD}(B)$ is a composition algebra
@@ -487,9 +491,9 @@ a, b, cc, u = o
 N = lambda z: (z * z).sum(-1)
 ip = lambda p, q: (p * q).sum(-1)
 assert torch.allclose(N(cd(a, b)), N(a) * N(b))                               # composition
-assert torch.allclose(ip(cd(a, b), cc), ip(b, cd(conj(a), cc)))               # (H3)
+assert torch.allclose(ip(cd(a, b), cc), ip(b, cd(conj(a), cc)))               # Lemma E.14(2)
 assert torch.allclose(ip(cd(a, b), cc), ip(a, cd(cc, conj(b))))
-assert torch.allclose(conj(cd(a, b)), cd(conj(b), conj(a)))                   # (H5)
+assert torch.allclose(conj(cd(a, b)), cd(conj(b), conj(a)))                   # Lemma E.14(4)
 assert torch.allclose(cd(a, cd(a, b)), cd(cd(a, a), b))                       # alternative
 assert torch.allclose(cd(cd(u, a), cd(b, u)), cd(u, cd(cd(a, b), u)))         # Moufang
 assoc = cd(cd(a, b), cc) - cd(a, cd(b, cc))
@@ -687,7 +691,9 @@ assert (prod3(prod3(X2, Y), X) - prod3(X2, prod3(Y, X))).abs().max() < 1e-10    
 n4, prod4 = herm(4, 8)
 X4, Y4 = torch.randn(2, 200, n4, dtype=dt)
 X42 = prod4(X4, X4)
-print("Herm_4(O): max |Jordan defect| =", (prod4(prod4(X42, Y4), X4) - prod4(X42, prod4(Y4, X4))).abs().max().item())
+defect4 = (prod4(prod4(X42, Y4), X4) - prod4(X42, prod4(Y4, X4))).abs().max().item()
+print("Herm_4(O): max |Jordan defect| =", defect4)
+assert defect4 > 1                                                               # Corollary E.25
 retr = lambda v: v[..., :3].sum(-1)               # Re tr
 assert torch.allclose(retr(prod3(prod3(X, Y), Z)), retr(prod3(X, prod3(Y, Z))))
 sq = (X[:, :3] ** 2).sum(-1) + 2 * (X[:, 3:] ** 2).sum(-1)
@@ -739,7 +745,8 @@ if $r=3$ (Theorem E.22).
 (2) For $\operatorname{Herm}_n(D)$ see Theorem E.24. $V_m$ is a Jordan algebra by Lemma 13.3 and Euclidean for
 $\langle(a,u),(b,v)\rangle=ab+u\cdot v$, since $\langle x\circ y,z\rangle=abc+c\,u\cdot v+a\,v\cdot w+b\,u\cdot w$ is symmetric
 in $x=(a,u)$, $y=(b,v)$, $z=(c,w)$. For a unit vector $w$, $c_{\pm w}=\frac12(1,\pm w)$ is a Jordan frame
-(Theorem 13.4(1)) with $J_{12}=\{(0,v):v\perp w\}$, of dimension $m-1\ge1$ (the dimensions add up to $m+1$); so $V_m$
+(Theorem 13.4(1); $c_{\pm w}$ is primitive because a sum $c_{w'}+c_{-w'}$ of two orthogonal non-zero idempotents is $1$)
+with $J_{12}=\{(0,v):v\perp w\}$, of dimension $m-1\ge1$ (the dimensions add up to $m+1$); so $V_m$
 is simple by Proposition E.11. To separate the algebras, let $s(J)$ be the largest number of pairwise orthogonal non-zero
 idempotents (finite by Lemma E.6(2)); $s$ and $\dim$ are invariant under isomorphism. Clearly $s(\mathbb R)=1$. In
 $V_m$ the non-zero idempotents are $1$ and the $c_w$, with $1\circ c_w=c_w$ and $c_w\circ c_{w'}=0$ only for $w'=-w$
@@ -819,6 +826,6 @@ to A. A. Albert (same volume, 65–73). The proof above follows the structure of
 Cones* (Oxford 1994), Chapters II–V; the doubling proof of Hurwitz's theorem (Nachr. Ges. Wiss. Göttingen 1898, 309–316) is as in
 J. H. Conway, D. A. Smith, *On Quaternions and Octonions* (2003) and T. A. Springer, F. D. Veldkamp, *Octonions, Jordan
 Algebras and Exceptional Groups* (2000), and the proof of Frobenius' theorem (1878) is R. S. Palais', Amer. Math. Monthly
-75 (1968) 366–368. A different proof of exceptionality uses polynomial identities that hold in all special Jordan
-algebras but not in $\operatorname{Herm}_3(\mathbb O)$ (C. M. Glennie, Pacific J. Math. 16 (1966) 47–59); McCrimmon's
-*A Taste of Jordan Algebras* (2004) tells the history and develops the general theory.
+75 (1968) 366–368. Further reading (not used anywhere in the course): C. M. Glennie, Pacific J. Math. 16 (1966)
+47–59, for a different approach to exceptionality through polynomial identities, and McCrimmon's *A Taste of Jordan
+Algebras* (2004) for the history and the general theory.
