@@ -2,19 +2,17 @@
 
 # 9. Spin chains
 
-A chain of $L$ spins $\frac12$ lives on $(\mathbb C^2)^{\otimes L}$, and dense linear algebra on this space
-of dimension $2^L$ stops at $L\approx14$. Symmetries push the limit: the magnetisation splits the space into
-$L+1$ sectors (Chapter 4), translations split each sector again, and $SU(2)$ reduces the blocks once more.
-This chapter builds these sectors for the XXZ chain, proves what the symmetries say about ground states,
-checks the library against free fermions and the Bethe ansatz, and goes beyond dense matrices with Krylov
-methods and beyond clean chains with disorder.
+A chain of $L$ spins $\frac12$ lives on $(\mathbb C^2)^{\otimes L}$, and dense linear algebra in dimension $2^L$
+stops at $L\approx14$. Symmetries push the limit: the magnetisation splits the space into $L+1$ sectors
+(Chapter 4), translations split each sector again, and $SU(2)$ reduces the blocks once more. This chapter
+builds these sectors for the XXZ chain, proves what they say about ground states, checks the library against
+free fermions and the Bethe ansatz, and goes beyond dense matrices (Krylov methods) and clean chains (disorder).
 
 **You will learn** why the algebra of a chain is $\bigoplus_NM_{\binom LN}$ and why the tower of these
-algebras has Pascal's triangle as Bratteli diagram and index $4\cos^2\frac\pi{2L+4}$, how momentum
-sectors are counted, the Marshall sign rule and what it implies for the momentum and the spin of
-ground states (Lieb–Mattis), the Jordan–Wigner solution of the XX chain, the Bethe equations for two
-magnons, why the Lanczos method converges monotonically, and how to measure level statistics and
-entanglement in a disordered or free-fermion chain.
+algebras has Pascal's triangle as Bratteli diagram and index $4\cos^2\frac\pi{2L+4}$, how momentum sectors
+are counted, the Marshall sign rule and its consequences for the momentum and spin of ground states
+(Lieb–Mattis), the Jordan–Wigner solution of the XX chain, the two-magnon Bethe equations, why Lanczos
+converges monotonically, and how to measure level statistics and free-fermion entanglement.
 
 Throughout, the sites are $0,\dots,L-1$, the basis of $(\mathbb C^2)^{\otimes L}$ consists of the
 configurations $|b\rangle=|b_0\dots b_{L-1}\rangle$ with $b_i=1$ for spin up (the library's convention: bit
@@ -29,9 +27,8 @@ The **XXZ chain** with anisotropy $\Delta\in\mathbb R$ and fields $h_i\in\mathbb
 $$
 H=J\sum_{(i,j)}\Big[\tfrac12\big(s^+_is^-_j+s^-_is^+_j\big)+\Delta\,s^z_is^z_j\Big]+\sum_ih_is^z_i ,
 $$
-the sum over the bonds; $\frac12(s^+_is^-_j+s^-_is^+_j)=s^x_is^x_j+s^y_is^y_j$. For $\Delta=1$ it is the
-Heisenberg chain $J\sum\mathbf s_i\cdot\mathbf s_j$, for $\Delta=0$ the XX chain. The term $s^+_is^-_j$ moves an
-up spin from $j$ to $i$; the diagonal terms count parallel and antiparallel bonds.
+the sum over the bonds; $\frac12(s^+_is^-_j+s^-_is^+_j)=s^x_is^x_j+s^y_is^y_j$ moves an up spin along the bond.
+For $\Delta=1$ it is the Heisenberg chain $J\sum\mathbf s_i\cdot\mathbf s_j$, for $\Delta=0$ the XX chain.
 
 **Proposition 9.1.** $[H,S^z]=0$. Hence $H\in U(1)'\cong\bigoplus_{N=0}^LM_{\binom LN}(\mathbb C)$, the
 block $N$ acting on the span of the configurations with $N$ up spins.
@@ -87,11 +84,11 @@ $\mathcal A_L$ once each; the dimensions add up to Pascal's rule. In the biparti
 $\mathcal A_{L+1}$ is joined to $N-1$ and $N$ of $\mathcal A_L$, which gives the path
 $0'-0-1'-1-\cdots-L'-L-(L+1)'$ (primes for $\mathcal A_{L+1}$). $\square$
 
-A path from the top of the Bratteli diagram to sector $N$ at level $L$ is a configuration $b$, and their
-number $\binom LN$ is the size of the block. For a connected inclusion with inclusion matrix $\Lambda$ we take
-as **index** $\|\Lambda\|^2$, the index of the Markov trace (V. Jones, *Invent. Math.* 72 (1983); F. Goodman,
+A path from the top of the Bratteli diagram to sector $N$ at level $L$ is a configuration $b$; there are
+$\binom LN$ of them, the size of the block. For a connected inclusion with inclusion matrix $\Lambda$ we take as
+**index** $\|\Lambda\|^2$, the index of the Markov trace (V. Jones, *Invent. Math.* 72 (1983); F. Goodman,
 P. de la Harpe, V. Jones, *Coxeter graphs and towers of algebras*, Springer 1989, Ch. 2–3); for
-$M_k\otimes1\subset M_k\otimes M_m$ it is Jones' $m^2$ of Chapter 7, and `Inclusion.index` computes it.
+$M_k\otimes1\subset M_k\otimes M_m$ it is the $m^2$ of Section 7.2. `Inclusion.index` computes it.
 
 **Lemma 9.3.** The adjacency matrix $A_n$ of the path with vertices $1,\dots,n$ has the eigenvalues
 $2\cos\frac{\pi k}{n+1}$, $k=1,\dots,n$, with eigenvectors $v_k(j)=\sin\frac{\pi jk}{n+1}$; hence
@@ -141,7 +138,7 @@ size of its orbit $\{T^ja\}$. (a) $R_a$ divides $L$; for $k=2\pi m/L$ with $mR_a
 $|a,k\rangle=\sum_{j=0}^{R_a-1}e^{-ikj}T^j|a\rangle$ is nonzero and $T|a,k\rangle=e^{ik}|a,k\rangle$, and these
 $R_a$ vectors form an orthogonal basis of the span of the orbit. (b) The eigenvalue $e^{2\pi im/L}$ of $T$ on
 sector $N$ has multiplicity $d_{N,m}=\#\{\text{orbits }:mR_a\equiv0\pmod L\}$, and every operator commuting with
-$S^z$ and $T$ — e.g. the translation-invariant XXZ chain — lies in $\bigoplus_N\bigoplus_mM_{d_{N,m}}$.
+$S^z$ and $T$ — e.g. the translation-invariant XXZ chain — is block diagonal, in $\bigoplus_N\bigoplus_mM_{d_{N,m}}$.
 
 *Proof.* (a) The stabiliser of $a$ in the cyclic group $\{T^j\}\cong\mathbb Z_L$ is a subgroup, and $R_a$ is its
 index, a divisor of $L$; the vectors $T^j|a\rangle$, $0\le j<R_a$, are orthonormal and $T^{R_a}|a\rangle=|a\rangle$. If
@@ -153,7 +150,7 @@ commuting with $S^z$ and $T$ commutes with their spectral projections $P_N$, $Q_
 $X=\sum_{N,m}P_NQ_mXP_NQ_m$. $\square$
 
 `xxz_momentum` builds the blocks in the normalised basis $|a,k\rangle$, one representative $a$ per orbit. We
-count the orbits independently and compare the spectra with the dense sector:
+count orbits independently and compare spectra with the dense sector:
 
 ```python
 L = 12
@@ -239,20 +236,21 @@ $S_{\min}\in\{0,\frac12\}$: the ground state is a single multiplet of the smalle
 $H$ and preserves the sector, so $\mathbf S^2\psi$ lies in the one-dimensional ground space: $\psi$ has a total
 spin $S'$. Let $\chi$ be the product of singlets $\frac1{\sqrt2}(|{\uparrow\downarrow}\rangle-|{\downarrow\uparrow}\rangle)$ on
 the pairs $(0,1),(2,3),\dots,(L-2S-2,L-2S-1)$ with the remaining $2S$ sites up. $S^+$ annihilates every factor,
-and $S^z\chi=S\chi$, so $\mathbf S^2\chi=(S^-S^++S_z^2+S_z)\chi=S(S+1)\chi$ (Section 4.5). On each pair the up spin
+and $S^z\chi=S\chi$, so $\mathbf S^2\chi=(S^-S^++(S^z)^2+S^z)\chi=S(S+1)\chi$ (Section 4.5). On each pair the up spin
 sits on the even site (coefficient $+$) or on the odd one ($-$), so $(-1)^{N_B(b)}\chi(b)$ has the same sign for
-all $b$; with $V,\varphi$ as in Theorem 9.7, $\langle\psi,\chi\rangle=\langle\varphi,V\chi\rangle\neq0$. Eigenvectors of
-$\mathbf S^2$ for distinct eigenvalues are orthogonal, so $S'=S$. By Corollary 4.12 the spectrum of $H$ on the
-sector $S^z=S$ is the union of the spectra of the $H_{S'}$, $S'\ge S$; its lowest eigenvalue is simple and
-belongs to $H_S$ alone, so it is $E_0(S)$, simple, and $E_0(S)<E_0(S')$ for $S'>S$. $\square$
+all $b$ in its support; with $V,\varphi$ as in Theorem 9.7, $\langle\psi,\chi\rangle=\langle\varphi,V\chi\rangle\neq0$. Eigenvectors of
+$\mathbf S^2$ for distinct eigenvalues are orthogonal, so $S'=S$. By Proposition 4.15(a) and Corollary 4.12 each
+multiplet of spin $S'\ge S$ meets the sector $S^z=S$ in one vector, so the spectrum of $H$ there is the union of
+the spectra of the $H_{S'}$, $S'\ge S$, with multiplicities. Its lowest eigenvalue is simple and its eigenvector has
+spin $S$, so it is $E_0(S)$, simple in $H_S$, and not an eigenvalue of $H_{S'}$, $S'>S$: $E_0(S)<E_0(S')$. $\square$
 
-Lieb and Mattis proved more: for any bipartite lattice with sublattice spins $S_A,S_B$ and couplings
-that are antiferromagnetic between and ferromagnetic within the sublattices, $E_0(S)$ increases for
-$S\ge|S_A-S_B|$ and the ground state has spin $|S_A-S_B|$ (E. Lieb, D. Mattis, *J. Math. Phys.* 3 (1962) 749;
-stated without proof). The **singlet–triplet gap** $E_0(1)-E_0(0)$ is positive by Theorem 9.9; on the ring it
-closes as $L\to\infty$, with $L(E_0(1)-E_0(0))\to\pi^2/2$ and logarithmic corrections (J. des Cloizeaux,
-J. Pearson, *Phys. Rev.* 128 (1962) 2131; I. Affleck et al., *J. Phys. A* 22 (1989) 511; stated without proof).
-We compare the block sizes for twelve spins, check Theorem 9.9 against the $U(1)$ sectors, and compute the gap:
+Lieb and Mattis proved more: for a connected bipartite lattice with sublattice spins $S_A,S_B$ and couplings
+antiferromagnetic between and ferromagnetic within the sublattices, $E_0(S)$ increases for $S\ge|S_A-S_B|$
+and the ground state has spin $|S_A-S_B|$ (E. Lieb, D. Mattis, *J. Math. Phys.* 3 (1962) 749; stated without
+proof). The **singlet–triplet gap** $E_0(1)-E_0(0)$ is positive by Theorem 9.9; on the ring
+$L(E_0(1)-E_0(0))\to\pi^2/2$ with logarithmic corrections (J. des Cloizeaux, J. Pearson, *Phys. Rev.* 128
+(1962) 2131; I. Affleck, D. Gepner, H. Schulz, T. Ziman, *J. Phys. A* 22 (1989) 511; stated without proof).
+We compare block sizes for twelve spins, check Theorem 9.9 against the $U(1)$ sectors, and compute the gap:
 
 ```python
 sym = SU2Chain(12, boundary='periodic', complex_valued=False)
@@ -276,13 +274,12 @@ The $SU(2)$ blocks have sizes $m_S=132,297,275,154,54,11,1$ against $924$ for th
 cost $\sum k^3$ of diagonalising drops from $2.0\cdot10^9$ to $5.3\cdot10^7$. $L$ times the gap grows slowly,
 $4.108,4.181,4.232,4.270$ for $L=6,\dots,12$, toward $\pi^2/2\approx4.935$.
 
-**Correlations.** The site spins are a rank-one tensor operator, and by the **Wigner–Eckart theorem** their
-matrix elements between multiplets factor into a Clebsch–Gordan coefficient and a **reduced matrix element**
-$\langle S',a\|\mathbf s_i\|S,b\rangle$ that does not depend on the magnetic quantum numbers (A. R. Edmonds, *Angular Momentum in Quantum
-Mechanics*, Princeton 1957, Ch. 5; stated without proof). `spin_correlation` uses it to build
-$\mathbf s_i\cdot\mathbf s_j$ on every $H_S$ from the reduced elements of highest-weight vectors alone; the
-`'direct'` method projects the bond operator instead. We compare both with the ground state written out in
-the $U(1)$ sector:
+**Correlations.** The site spins form a rank-one tensor operator, and by the **Wigner–Eckart theorem** their
+matrix elements between multiplets are a Clebsch–Gordan coefficient times a **reduced matrix element**
+$\langle S',a\|\mathbf s_i\|S,b\rangle$ independent of the magnetic quantum numbers (A. R. Edmonds, *Angular
+Momentum in Quantum Mechanics*, Princeton 1957, Ch. 5; stated without proof). `spin_correlation` uses it to
+build $\mathbf s_i\cdot\mathbf s_j$ on every $H_S$ from highest-weight vectors alone; the `'direct'` method
+projects the bond operator instead. We compare both with the ground state written out in the $U(1)$ sector:
 
 ```python
 gs = sym.ground_state(H_su2)
@@ -305,11 +302,12 @@ print([round(x, 4) for x in corr_we.tolist()])
 ```
 
 The correlations $\langle\mathbf s_0\cdot\mathbf s_r\rangle=0.75,-0.4489,0.1878,-0.1658,0.1209,-0.1224,0.1070,\dots$
-alternate in sign, and this is forced by Theorems 9.7 and 9.9: the singlet is invariant under rotations, which
-permute the axes, so $\langle\mathbf s_0\cdot\mathbf s_r\rangle=3\langle s^x_0s^x_r\rangle=\frac34\langle s^+_0s^-_r+s^-_0s^+_r\rangle
-=\frac34\sum_{b_0\ne b_r}\psi(b)\psi(b')$, with $b'$ obtained from $b$ by exchanging the spins of sites $0$ and $r$; as
-$N_B(b')-N_B(b)$ is $\pm1$ for odd $r$ and $0$ for even $r$, every term has the sign $(-1)^r$. The decay is slow,
-like $(-1)^r/r$ up to a logarithmic factor as $L\to\infty$ (stated without proof).
+alternate in sign, as Theorems 9.7 and 9.9 force: the singlet is invariant under rotations, which permute
+the axes, and $\langle s^+_0s^+_r\rangle=0$ in the sector $S^z=0$, so $\langle\mathbf s_0\cdot\mathbf s_r\rangle=3\langle s^x_0s^x_r\rangle=
+\frac34\langle s^+_0s^-_r+s^-_0s^+_r\rangle=\frac34\sum_{b_0\ne b_r}\psi(b)\psi(b')$, with $b'$ obtained from $b$ by exchanging the
+spins of sites $0$ and $r$; as $N_B(b')-N_B(b)$ is $\pm1$ for odd $r$ and $0$ for even $r$, every term has the sign
+$(-1)^r$. The decay is slow, like $(-1)^r\sqrt{\log r}/r$ as $L\to\infty$ (Affleck et al., *loc. cit.*; stated
+without proof).
 
 ## 9.4 Exact checks: free fermions and the Bethe ansatz
 
@@ -345,7 +343,7 @@ for N in range(L + 1):
 ```
 
 **Magnons.** On the ring with $h=0$ the fully polarised state $|0\rangle$ has energy $E_F=J\Delta L/4$. One up
-spin at $x$ breaks two bonds: $H|x\rangle=(E_F-J\Delta)|x\rangle+\frac J2(|x-1\rangle+|x+1\rangle)$.
+spin at $x$ breaks two bonds: $H|x\rangle=(E_F-J\Delta)|x\rangle+\frac J2(|x-1\rangle+|x+1\rangle)$ ($L\ge3$).
 
 **Proposition 9.11 (one magnon).** In sector $N=1$ of the ring, $|k\rangle=\sum_xe^{-ikx}|x\rangle$,
 $k=2\pi m/L$, satisfies $T|k\rangle=e^{ik}|k\rangle$ and $H|k\rangle=\big(E_F+J(\cos k-\Delta)\big)|k\rangle$.
@@ -379,9 +377,11 @@ $(x_1+1,x_2)$, $(x_1,x_2-1)$ are blocked and the diagonal is $E_F-J\Delta$; by (
 $(H\Psi)(x_1,x_2)=(E_F-J\Delta)\psi+\frac J2\big(2(\cos k_1+\cos k_2)\psi-\psi(x_1,x_1)-\psi(x_1+1,x_1+1)\big)=E\psi$.
 If $x_2=x_1+L-1$, use the representative $(x_2,x_1+L)$, which is of the previous kind ($L\ge3$). $\square$
 
-Write $k_{1,2}=K/2\pm q$ and $c=\cos\frac K2$. Then $1+e^{iK}-2\Delta e^{ik_{1,2}}=2e^{iK/2}(c-\Delta e^{\pm iq})$,
-so $A_{12}=c-\Delta e^{iq}$, $A_{21}=-(c-\Delta e^{-iq})$ solve (i); for $K=2\pi n/L$ (ii) is equivalent to
-$F(q)=(-1)^ne^{iqL}(c-\Delta e^{-iq})+c-\Delta e^{iq}=0$, one equation in one variable. We look for its roots
+Proposition 9.12 only says that solutions give eigenvectors; it does not say that all eigenvectors arise
+this way. Write $k_{1,2}=K/2\pm q$ and $c=\cos\frac K2$. Then $1+e^{iK}-2\Delta e^{ik_{1,2}}=2e^{iK/2}(c-\Delta e^{\pm iq})$,
+so $A_{12}=c-\Delta e^{iq}$, $A_{21}=-(c-\Delta e^{-iq})$ solve (i). Multiplying the two equations (ii) gives
+$e^{iKL}=1$, $K=2\pi n/L$, and then (ii) is equivalent to $F(q)=(-1)^ne^{iqL}(c-\Delta e^{-iq})+c-\Delta e^{iq}=0$,
+one equation in one variable. We look for its roots
 $q\in(0,\pi)$, where $e^{-iqL/2}F(q)$ is real or imaginary because $c-\Delta e^{\pm iq}$ are complex conjugate
 (scattering states), and on the lines $q=i\kappa$, $\pi+i\kappa$, $\kappa>0$, where $F$ is real (bound states);
 for $L=9$, $\Delta=0.6$ we build $\Psi$ for each root and compare with the sector $N=2$ of $36$ states:
@@ -415,18 +415,26 @@ for n in range(L):
 assert torch.linalg.matrix_rank(torch.stack(vecs)) == 36             # a complete eigenbasis
 assert close(torch.sort(torch.tensor(E_bethe)).values, torch.linalg.eigvalsh(H2))
 print(len(E_bethe), n_bound)
+ring8, Phi = SpinChain(8, 'periodic'), torch.zeros(28, dtype=c128)     # even L: Phi = sum_x (-1)^x |x, x+1>
+for x in range(8):
+    Phi[ring8.index_of[(1 << x) | (1 << (x + 1) % 8)]] = (-1) ** x
+assert close(ring8.xxz(1.0, Delta, sector=2).matrix[0, 0] @ Phi, (8 * Delta / 4 - Delta) * Phi)   # E_F - J Delta
 ```
 
-All $36$ eigenstates come from the Bethe equations: $34$ scattering states and $2$ bound states. (For even
-$L$ the same search misses one state with $K=\pi$, where $1+e^{iK}=0$ and the ansatz degenerates; for $N>2$
-magnons the ansatz has $N!$ terms and the Bethe equations become $N$ coupled equations — M. Karbach,
-G. Müller, *Computers in Physics* 11 (1997) 36; H. Bethe, *Z. Phys.* 71 (1931) 205.)
+For $L=9$ all $36$ eigenstates come from the Bethe equations: $34$ scattering states and $2$ bound states.
+Completeness is checked here, not proved, and for even $L$ it fails. If $\Delta\ne0$, $\Phi=\sum_x(-1)^x|x,x+1\rangle$
+satisfies $T\Phi=-\Phi$ and $H\Phi=(E_F-J\Delta)\Phi$ (the hops to $|x-1,x+1\rangle$ and $|x,x+2\rangle$ cancel in pairs). A
+Bethe vector has $T\Psi=e^{-iK}\Psi$, as $\psi(x_1-1,x_2-1)=e^{-iK}\psi(x_1,x_2)$; if $e^{iK}=-1$, then
+$\cos k_1+\cos k_2=2\cos\frac K2\cos\frac{k_1-k_2}2=0$ and its energy is $E_F-2J\Delta$. So $\Phi$ is orthogonal to all
+Bethe vectors (the last lines of the code check $H\Phi$ for $L=8$). With $\Delta=0.6$ and $4\le L\le13$ the search
+above finds every state for odd $L$, and every state but $\Phi$ for even $L$. For $N>2$ magnons the ansatz has $N!$ terms and $N$ coupled Bethe equations (H. Bethe, *Z. Phys.* 71 (1931)
+205; M. Karbach, G. Müller, *Computers in Physics* 11 (1997) 36).
 
 > **Physical meaning.** A magnon is a spin wave: one flipped spin delocalised over the ring with
 > momentum $k$. Two magnons scatter with a phase shift (real $q$) or bind (complex $q$). Bethe's insight was
 > that for $N$ magnons the scattering factorises into two-body phases; his equations give, for example, the
-> ground-state energy per site $\frac14-\log2$ of the infinite Heisenberg chain (L. Hulthén, 1938; stated
-> without proof).
+> ground-state energy per site $\frac14-\log2$ of the infinite Heisenberg chain (L. Hulthén, *Ark. Mat. Astron.
+> Fys.* 26A (1938) no. 11; stated without proof).
 
 ## 9.5 Lanczos and Krylov methods
 
@@ -434,16 +442,19 @@ The sector $N=L/2$ has dimension $12870$ for $L=16$ and $184756$ for $L=20$, but
 entries per row, `xxz_sparse`), and Krylov methods need only products $Hv$. Let $H$ be Hermitian of size $n$ and
 $v\ne0$. The **Krylov space** is $\mathcal K_m=\operatorname{span}\{v,Hv,\dots,H^{m-1}v\}$.
 
-**Proposition 9.13 (Lanczos).** Suppose $\dim\mathcal K_{m+1}=m+1$. Let $q_1=v/\|v\|$ and let $q_{j+1}$ be the
-normalised component of $Hq_j$ orthogonal to $\mathcal K_j$, $j\le m$. Then $q_1,\dots,q_m$ is an orthonormal basis of
-$\mathcal K_m$, and with $Q_m=(q_1\cdots q_m)$, $T_m=Q_m^*HQ_m$ is real symmetric tridiagonal,
-$\alpha_j=\langle q_j,Hq_j\rangle$, $\beta_j=\langle q_{j+1},Hq_j\rangle>0$, and $HQ_m=Q_mT_m+\beta_mq_{m+1}e_m^T$.
+**Proposition 9.13 (Lanczos).** Suppose $\dim\mathcal K_m=m$. Let $q_1=v/\|v\|$ and, for $j<m$, let $q_{j+1}$ be
+the normalised component of $Hq_j$ orthogonal to $\mathcal K_j$. Then $q_1,\dots,q_m$ is an orthonormal basis of
+$\mathcal K_m$; with $Q_m=(q_1\cdots q_m)$, $T_m=Q_m^*HQ_m$ is real symmetric tridiagonal with diagonal
+$\alpha_j=\langle q_j,Hq_j\rangle$ and off-diagonal $\beta_j=\langle q_{j+1},Hq_j\rangle>0$; and $HQ_m=Q_mT_m+r_me_m^T$, where
+$r_m\perp\mathcal K_m$ vanishes iff $\mathcal K_{m+1}=\mathcal K_m$ (otherwise $r_m=\beta_mq_{m+1}$, $q_{m+1}=r_m/\|r_m\|$).
 
-*Proof.* By induction $\operatorname{span}\{q_1,\dots,q_j\}=\mathcal K_j$: $Hq_j\in\mathcal K_{j+1}$, and its component orthogonal
-to $\mathcal K_j$ is nonzero because $H^jv\in H\mathcal K_j\subseteq\mathcal K_j+\mathbb CHq_j$ and $\dim\mathcal K_{j+1}=j+1$. For
-$i>j+1$, $q_i\perp\mathcal K_{j+1}\ni Hq_j$, so $(T_m)_{ij}=0$; $T_m$ is Hermitian, so also $(T_m)_{ij}=0$ for
-$i<j-1$. $\alpha_j$ is real, and $\beta_j=\langle q_{j+1},Hq_j\rangle$ is the norm of the component, $>0$. Finally
-$Hq_j=\beta_{j-1}q_{j-1}+\alpha_jq_j+\beta_jq_{j+1}$, which is the matrix identity. $\square$
+*Proof.* Suppose $\operatorname{span}\{q_1,\dots,q_j\}=\mathcal K_j$ (true for $j=1$). Then $H\mathcal K_j\subseteq\mathcal K_j+\mathbb CHq_j$,
+as $Hq_i\in\mathcal K_{i+1}$; so $\mathcal K_{j+1}=\mathcal K_j+\mathbb CH^jv\subseteq\mathcal K_j+\mathbb CHq_j\subseteq\mathcal K_{j+1}$, and
+$\mathcal K_{j+1}=\mathcal K_j+\mathbb CHq_j$. For $j<m$ the dimension grows, so the component of $Hq_j$ orthogonal to
+$\mathcal K_j$ is nonzero and the induction proceeds; for $j=m$ that component, $r_m$, vanishes iff
+$\mathcal K_{m+1}=\mathcal K_m$. For $i>j+1$, $q_i\perp\mathcal K_{j+1}\ni Hq_j$, so $(T_m)_{ij}=0$, and $(T_m)_{ji}=0$ as $T_m$ is
+Hermitian. $\alpha_j$ is real, and $\beta_j=\langle q_{j+1},Hq_j\rangle$ is the norm of the component, $>0$. So
+$Hq_j=\beta_{j-1}q_{j-1}+\alpha_jq_j+\beta_jq_{j+1}$ for $j<m$ and $Hq_m=\beta_{m-1}q_{m-1}+\alpha_mq_m+r_m$. $\square$
 
 The eigenvalues $\theta^{(m)}_1\le\dots\le\theta^{(m)}_m$ of $T_m$ are the **Ritz values**.
 
@@ -458,7 +469,7 @@ $\langle y,T_my\rangle=\langle Q_my,HQ_my\rangle$. The same formula over $U\subs
 over $U\subseteq\mathbb C^n$ gives $\lambda_j$; minimising over more subspaces gives a smaller value. If
 $\mathcal K_{m+1}=\mathcal K_m$, then $\mathcal K_m$ is $H$-invariant and contains $p(H)v$ for every polynomial $p$, in
 particular $P_1v\ne0$ ($P_1$ the spectral projection of $\lambda_1$, a polynomial in $H$ by Lagrange
-interpolation, as in Theorem 1.5); then $\langle x,Hx\rangle=\lambda_1$ at $x=P_1v/\|P_1v\|\in\mathcal K_m$. $\square$
+interpolation, as in Theorem 1.5); so $\theta^{(m)}_1\le\langle x,Hx\rangle=\lambda_1$ at $x=P_1v/\|P_1v\|\in\mathcal K_m$. $\square$
 
 How fast $\theta^{(m)}_1\to\lambda_1$ depends on the gap $\lambda_2-\lambda_1$ relative to the spread of the spectrum
 (Kaniel–Paige–Saad bounds via Chebyshev polynomials; Y. Saad, *Numerical Methods for Large Eigenvalue
@@ -479,11 +490,10 @@ print([f"{(ritz[m - 1] - E_xx).item():.1e}" for m in (5, 10, 20, 40)])
 ```
 
 The error of the lowest Ritz value falls monotonically, $0.42$, $3.1\cdot10^{-3}$ and $3.1\cdot10^{-6}$ after
-$5$, $10$ and $20$ steps, and reaches rounding level after $40$, in a space of dimension $924$.
-`krylov.ground_state` restarts Lanczos until the residual $\|H\psi-E\psi\|$ is below $10^{-10}$. We check it
-against the exact ground-state energies of the Heisenberg ring, tabulated to nine digits in
-`scripts/chains.py` (the reference values of the companion paper), dense up to $L=12$ and by Lanczos for
-$L=16$:
+$5$, $10$ and $20$ steps, and reaches rounding level after $40$, in dimension $924$. `krylov.ground_state`
+restarts Lanczos until the residual $\|H\psi-E\psi\|$ is below $10^{-10}$. We check it against the Heisenberg-ring
+energies tabulated to nine digits in `scripts/chains.py` (the reference values of the companion paper), dense
+up to $L=12$ and by Lanczos for $L=16$:
 
 ```python
 RING = {4: -2.0, 6: -2.802775638, 8: -3.651093409, 10: -4.515446354, 12: -5.387390917,
@@ -506,21 +516,20 @@ of the infinite chain from below.
 
 **Time evolution.** For $e^{-i\tau H}v$ one projects onto $\mathcal K_m$: $w_\tau=\|v\|\,Q_me^{-i\tau T_m}e_1$.
 
-**Proposition 9.15.** For every $m$ and $\tau$, $\|w_\tau\|=\|v\|$ and $\langle w_\tau,Hw_\tau\rangle=\langle v,Hv\rangle$. If
+**Proposition 9.15.** Let $\dim\mathcal K_m=m$. For every $\tau$, $\|w_\tau\|=\|v\|$ and $\langle w_\tau,Hw_\tau\rangle=\langle v,Hv\rangle$. If
 $\mathcal K_m$ is $H$-invariant, $w_\tau=e^{-i\tau H}v$.
 
 *Proof.* $Q_m$ is an isometry and $e^{-i\tau T_m}$ is unitary ($T_m$ is real symmetric), which gives the norm.
 Since $Q_m^*HQ_m=T_m$ commutes with $e^{-i\tau T_m}$,
 $\langle w_\tau,Hw_\tau\rangle=\|v\|^2\langle e^{-i\tau T_m}e_1,T_me^{-i\tau T_m}e_1\rangle=\|v\|^2\langle e_1,T_me_1\rangle=\langle v,Hv\rangle$. If
-$\mathcal K_m$ is invariant, $HQ_m=Q_mT_m$, so $H^jQ_m=Q_mT_m^j$ and $e^{-i\tau H}Q_m=Q_me^{-i\tau T_m}$; apply to
+$\mathcal K_m$ is invariant, $HQ_m=Q_mT_m$ (Proposition 9.13, $r_m=0$), so $H^jQ_m=Q_mT_m^j$ and $e^{-i\tau H}Q_m=Q_me^{-i\tau T_m}$; apply to
 $e_1$, with $Q_me_1=v/\|v\|$. $\square$
 
-So norm and energy are conserved by every Krylov step whether or not the step is accurate; accuracy
-requires $\tau\|H\|$ to be small compared with $m$, and `krylov.evolve` subdivides the time interval and
-estimates the error a posteriori (M. Hochbruck, C. Lubich, *SIAM J. Numer. Anal.* 34 (1997) 1911; stated
-without proof). We quench the Néel state $|{\uparrow\downarrow\uparrow\downarrow}\cdots\rangle$ on the Heisenberg ring
-and follow the staggered magnetisation $m_s=\frac2L\sum_i(-1)^i\langle s^z_i\rangle$; for $L=12$ we compare with
-the dense propagator, for $L=16$ we check the conservation laws:
+So every Krylov step conserves norm and energy, accurate or not; accuracy needs $m$ large compared with
+$\tau\|H\|$, and `krylov.evolve` subdivides the time interval and estimates the error a posteriori
+(M. Hochbruck, C. Lubich, *SIAM J. Numer. Anal.* 34 (1997) 1911; stated without proof). We quench the Néel
+state $|{\uparrow\downarrow\uparrow\downarrow}\cdots\rangle$ on the Heisenberg ring and follow the staggered magnetisation
+$m_s=\frac2L\sum_i(-1)^i\langle s^z_i\rangle$, comparing with the dense propagator for $L=12$:
 
 ```python
 times, m_s = [0.0, 0.5, 1.0, 2.0, 4.0], {}
@@ -542,20 +551,18 @@ for n in (12, 16):
 print(f"{max(abs(a - b) for a, b in zip(m_s[12][:4], m_s[16][:4])):.1e}")   # L = 12 vs 16 up to t = 2
 ```
 
-The staggered magnetisation decays from $1$ through $0.770$ and $0.279$ to $-0.183$ at $t=2$ for both sizes,
-which agree to $1.7\cdot10^{-5}$ up to $t=2$; at $t=4$ they differ ($0.026$ against $0.035$): the finite size
-of the smaller ring becomes visible.
+$m_s$ decays from $1$ through $0.770$ and $0.279$ to $-0.183$ at $t=2$, for both sizes to $1.7\cdot10^{-5}$; at
+$t=4$ they differ ($0.026$ against $0.035$): the finite size of the smaller ring becomes visible.
 
 ## 9.6 Disorder: level statistics and entanglement
 
 The **random-field Heisenberg chain** has independent fields $h_i$ uniform on $[-W,W]$. It conserves $S^z$
-(Proposition 9.1) and nothing else: translations, reflections, the spin flip and $SU(2)$ are all broken by
-the fields. So each sector $N$ is (generically) one symmetry class, and level statistics must be computed per sector
-(Theorem 5.15 and the experiment of Section 5.4: mixing sectors fakes independent levels). For weak disorder the
-levels repel as in the GOE, $\langle r\rangle\approx0.5307$; for strong disorder the eigenstates localise
-(**many-body localisation**) and the levels become independent, $\langle r\rangle=2\log2-1\approx0.3863$
-(Proposition 5.14). We compute $\langle r\rangle$ in the middle half of the sector $N=L/2$, with one standard error
-over the realisations (each realisation gives one mean ratio; the realisations are independent):
+(Proposition 9.1) and generically nothing else: the fields break translations, reflections, the spin flip and
+$SU(2)$. So level statistics are computed per sector $N$ (Theorem 5.15 and Section 5.4: mixing sectors fakes
+independent levels). For weak disorder the levels repel as in the GOE, $\langle r\rangle\approx0.5307$ (Section 5.3);
+for strong disorder the eigenstates localise (**many-body localisation**) and the levels become independent,
+$\langle r\rangle=2\log2-1\approx0.3863$ (Proposition 5.14). We compute $\langle r\rangle$ in the middle half of the sector
+$N=L/2$, with one standard error over the independent realisations (each gives one mean ratio):
 
 ```python
 gen = torch.Generator().manual_seed(1)
@@ -573,44 +580,44 @@ assert r_mean[10, 1][0] > r_mean[10, 2][0] > r_mean[10, 4][0] > r_mean[10, 8][0]
 ```
 
 For $L=10$ the mean ratio goes from $0.530$ ($W=0.5$) through $0.484$ ($W=2$) and $0.410$ ($W=4$) to $0.384$
-($W=16$), with standard errors of $0.003$–$0.004$. For $L=8$ the value at $W=0.5$ ($0.507$) is already below
-the one at $W=1$ ($0.525$): at $W=0$ the chain is integrable and has all the symmetries listed above, and a
-GOE value needs disorder that is weak but large compared with the level spacing. The crossover is broad at
-these sizes and drifts with $L$; finite-size scaling places it near $W\approx3.7$ (D. Luitz, N. Laflorencie,
-F. Alet, *Phys. Rev. B* 91 (2015) 081103), and whether a localised phase survives as $L\to\infty$ is debated
-(J. Šuntajs, J. Bonča, T. Prosen, L. Vidmar, *Phys. Rev. E* 102 (2020) 062144).
+($W=16$), with standard errors $0.003$–$0.004$. For $L=8$ the value at $W=0.5$ ($0.507$) is below the one at
+$W=1$ ($0.525$): at $W=0$ the chain is integrable and has all the symmetries above, and a GOE value needs
+disorder large compared with the level spacing. The crossover is broad and drifts with $L$; finite-size
+scaling places it near $W\approx3.7$ (D. Luitz, N. Laflorencie, F. Alet, *Phys. Rev. B* 91 (2015) 081103), and
+whether a localised phase survives as $L\to\infty$ is debated (J. Šuntajs, J. Bonča, T. Prosen, L. Vidmar,
+*Phys. Rev. E* 102 (2020) 062144).
 
-**Entanglement of free fermions.** For the ground state of the open XX chain the entanglement entropy of
+**Entanglement of free fermions.** For the eigenstates of the open XX chain the entanglement entropy of
 the first $n$ sites is determined by an $n\times n$ matrix.
 
 **Theorem 9.16 (Peschel's formula).** Let $\Phi=b_{k_1}^*\cdots b_{k_N}^*|0\rangle$ as in Theorem 9.10,
-$C_{ij}=\langle\Phi,c_i^*c_j\Phi\rangle$ and $C_A=(C_{ij})_{i,j<n}$. Then $0\le C_A\le1$ and the entanglement entropy of sites $0,\dots,n-1$ is
+$C_{ij}=\langle\Phi,c_i^*c_j\Phi\rangle$ and $C_A=(C_{ij})_{i,j<n}$. Then $0\le C_A\le1$, and the entanglement entropy
+of the sites $A=\{0,\dots,n-1\}$ is, with $\nu$ running over the eigenvalues of $C_A$ counted with multiplicity,
 $$
-S_A=\sum_{\nu\in\operatorname{spec}C_A}\big(-\nu\log\nu-(1-\nu)\log(1-\nu)\big)\qquad(0\log0=0).
+S_A=\sum_\nu \eta(\nu),\qquad \eta(\nu)=-\nu\log\nu-(1-\nu)\log(1-\nu)\quad(0\log0=0).
 $$
 
 *Proof.* For a real vector $x$ put $b(x)=\sum_jx_jc_j$; then $b(x)^*b(y)^*=-b(y)^*b(x)^*$ and
-$\{b(x),b(y)^*\}=\langle x,y\rangle$.
-Let $U\subseteq\mathbb R^L$ be the span of the $u_{k_a}$ and $P_A$, $P_B=1-P_A$ the coordinate projections on
+$\{b(x),b(y)^*\}=\langle x,y\rangle$. Let $U\subseteq\mathbb R^L$ be the span of the $u_{k_a}$ and $P_A$, $P_B=1-P_A$ the coordinate projections on
 $\{0,\dots,n-1\}$ and its complement. Diagonalising the form $\langle P_Ax,P_Ay\rangle$ on $U$ gives an orthonormal basis
 $\phi_1,\dots,\phi_N$ of $U$ with $\langle P_A\phi_a,P_A\phi_b\rangle=\nu_a\delta_{ab}$, hence
 $\langle P_B\phi_a,P_B\phi_b\rangle=(1-\nu_a)\delta_{ab}$. Since $(x_1,\dots,x_N)\mapsto b(x_1)^*\cdots b(x_N)^*|0\rangle$ is
 multilinear and alternating, $\Phi=\pm\prod_a\big(\sqrt{\nu_a}f_a^*+\sqrt{1-\nu_a}\,g_a^*\big)|0\rangle$ with
 $f_a=b(P_A\phi_a/\sqrt{\nu_a})$, $g_a=b(P_B\phi_a/\sqrt{1-\nu_a})$ (terms with a zero coefficient omitted).
-Expanding, $\Phi=\sum_{S}\pm\prod_{a\in S}\sqrt{\nu_a}\prod_{a\notin S}\sqrt{1-\nu_a}\,F_S^*G_{S^c}^*|0\rangle$ over the
-subsets $S$, with $F_S^*$, $G_{S^c}^*$ the ordered products. For $j\ge n$ the string of $c_j^*$ contains all of
+Expanding, $\Phi=\sum_I\pm\prod_{a\in I}\sqrt{\nu_a}\prod_{a\notin I}\sqrt{1-\nu_a}\,F_I^*G_{I^c}^*|0\rangle$ over the
+subsets $I$, with $F_I^*$, $G_{I^c}^*$ the ordered products. For $j\ge n$ the string of $c_j^*$ contains all of
 $A$: $c_j^*=(-1)^{N_A}\otimes\tilde c_j^*$ with Jordan–Wigner operators $\tilde c_j$ of the sites $\ge n$, while for
 $i<n$, $c_i^*=\hat c_i^*\otimes1$. As $(-1)^{N_A}$ is $1$ on $|0_A\rangle$,
-$F_S^*G_{S^c}^*|0\rangle=\pm\xi_S\otimes\chi_{S^c}$ with $\xi_S=\hat F_S^*|0_A\rangle$, $\chi_{S^c}=\tilde G_{S^c}^*|0_B\rangle$, which are
+$F_I^*G_{I^c}^*|0\rangle=\xi_I\otimes\chi_{I^c}$ with $\xi_I=\hat F_I^*|0_A\rangle$, $\chi_{I^c}=\tilde G_{I^c}^*|0_B\rangle$, which are
 orthonormal families by the CAR computation of Theorem 9.10. This is a Schmidt decomposition (Lemma 7.7) with
-weights $p_S=\prod_{a\in S}\nu_a\prod_{a\notin S}(1-\nu_a)$, the law of independent Bernoulli variables, so
-$S_A=-\sum_Sp_S\log p_S=\sum_ah(\nu_a)$ with the binary entropy $h$. Finally $C_{ij}=\sum_a\phi_a(i)\phi_a(j)$
+weights $p_I=\prod_{a\in I}\nu_a\prod_{a\notin I}(1-\nu_a)$, the law of independent Bernoulli variables, so
+$S_A=-\sum_Ip_I\log p_I=\sum_a\eta(\nu_a)$. Finally $C_{ij}=\sum_a\phi_a(i)\phi_a(j)$
 (expand $c_i^*c_j$ in the $b(\phi_a)$), so $C_A=\sum_a(P_A\phi_a)(P_A\phi_a)^T$ has the eigenvalues $\nu_a$ on the
-orthogonal vectors $P_A\phi_a$ and $0$ elsewhere, and $h(0)=0$. $\square$
+orthogonal vectors $P_A\phi_a$ and $0$ elsewhere, and $\eta(0)=0$. $\square$
 
 `entanglement_entropy` computes the reduced state sector by sector (it commutes with the magnetisation of
-the block, Proposition 7.8) and its entropy; the ground state of the XX chain is $\Phi$ with the $N$
-lowest modes, simple because the $\varepsilon_k$ are distinct:
+the block, Proposition 7.8) and its entropy. The ground state of sector $N$ is $\Phi$ with the $N$ lowest
+modes, simple because the $\varepsilon_k$ are distinct:
 
 ```python
 L, N = 12, 6
@@ -627,30 +634,28 @@ print([round(s, 4) for s in S_lib[:6]])
 ```
 
 The entropies $0.6931,0.5199,0.7456,0.6283,0.7719,0.6560$ for $n=1,\dots,6$ oscillate with the parity of $n$
-and grow with the block, like $\frac16\log L$ at fixed $n/L$, the conformal-field-theory law for an open free-fermion chain
-(P. Calabrese, J. Cardy, *J. Stat. Mech.* (2004) P06002; I. Peschel, *J. Phys. A* 36 (2003) L205; stated
-without proof).
+and grow like $\frac16\log L$ at fixed $n/L$, the conformal-field-theory law for an open chain (I. Peschel,
+*J. Phys. A* 36 (2003) L205; P. Calabrese, J. Cardy, *J. Stat. Mech.* (2004) P06002; stated without proof).
 
 ## 9.7 What to compare with
 
 QuSpin (Python) builds spin-chain Hamiltonians in sectors of magnetisation, momentum, parity and spin
-inversion and calls SciPy's ARPACK (`eigsh`) and `expm_multiply`; XDiag, HΦ and SPINPACK are optimised
-exact-diagonalisation codes that reach $L\approx40$–$50$ with all lattice symmetries; ITensor, TeNPy and
-TensorKit.jl (with $SU(2)$ fusion trees) treat long chains with matrix-product states. For the checks of
-Section 9.4 the reference values come from the literature. What the library adds is modest and specific:
-the chain as a `TypeIAlgebra` $\bigoplus_NM_{\binom LN}$, so that states, channels, entropies and the dynamics
-of Chapters 3–8 apply sector by sector; the inclusion tower with its
-index; $SU(2)$ blocks from highest-weight vectors with Wigner–Eckart correlations; batches of disorder
-realisations in one call (dense or sparse); and reduced states of symmetric states without leaving the
-sectors. It has no reflection or spin-flip sectors, momentum sectors only for uniform XXZ chains, dense
-methods to $L\approx16$ and Krylov methods to $L\approx24$–$26$, and no tensor networks.
+inversion and uses SciPy's sparse eigensolvers and matrix exponentials; dedicated exact-diagonalisation codes
+(XDiag, SPINPACK, HΦ) are optimised for large sparse problems, and with lattice symmetries and large machines
+such codes have reached about 40–50 spins; ITensor, TeNPy and TensorKit.jl (with $SU(2)$ fusion trees) treat
+long chains with matrix-product states. What the library adds is modest and specific: the chain as a
+`TypeIAlgebra` $\bigoplus_NM_{\binom LN}$, so that the states, channels, entropies and dynamics of Chapters 3–8
+apply sector by sector; the inclusion tower with its index; $SU(2)$ blocks from highest-weight vectors with
+Wigner–Eckart correlations; batches of disorder realisations in one call; and reduced states that never leave
+the sectors. It has no reflection or spin-flip sectors, momentum sectors only for uniform XXZ chains, dense
+methods to $L\approx16$, Krylov methods to $L\approx24$ (about $26$ on a large GPU), and no tensor networks.
 
 ## Exercises
 
 1. (Momentum sectors by hand.) For $L=4$ and $N=2$ find the orbits of the six configurations under $T$
    and the dimensions $d_{2,m}$, $m=0,\dots,3$.
 2. (Sum rules.) Let $\psi$ be the ground state of the Heisenberg ring with $L$ even. Show that
-   $E_0=L\langle\mathbf s_0\cdot\mathbf s_1\rangle$ and $\sum_r\langle\mathbf s_0\cdot\mathbf s_r\rangle=0$.
+   $E_0=JL\langle\mathbf s_0\cdot\mathbf s_1\rangle$ and $\sum_r\langle\mathbf s_0\cdot\mathbf s_r\rangle=0$.
 3. (Too much symmetry.) Show that in sector $N=L/2$ the vector with all coefficients equal to $1$ is a
    multiple of $(S^-)^{L/2}|{\uparrow\cdots\uparrow}\rangle$ and an eigenvector of the Heisenberg ring with energy
    $JL/4$, and that every Krylov space $\mathcal K_m(H,v)$ lies in each $H$-invariant subspace containing $v$.
@@ -667,9 +672,9 @@ methods to $L\approx16$ and Krylov methods to $L\approx24$–$26$, and no tensor
 assert SpinChain(4, 'periodic').momentum_dims(2) == [2, 1, 2, 1]
 ```
 
-2. The ground state is simple (Theorem 9.7) and $T$ commutes with $H$, so $T\psi=e^{ik}\psi$. As
+2. The ground state is a simple singlet (Theorem 9.9) and $T$ commutes with $H$, so $T\psi=e^{ik}\psi$. As
    $\mathbf s_i\cdot\mathbf s_{i+1}=T^i(\mathbf s_0\cdot\mathbf s_1)T^{*i}$, $\langle\mathbf s_i\cdot\mathbf s_{i+1}\rangle$ is the same for all $L$ bonds, and
-   $E_0=\sum_i\langle\mathbf s_i\cdot\mathbf s_{i+1}\rangle=L\langle\mathbf s_0\cdot\mathbf s_1\rangle$. It is a singlet (Theorem 9.9), so
+   $E_0=J\sum_i\langle\mathbf s_i\cdot\mathbf s_{i+1}\rangle=JL\langle\mathbf s_0\cdot\mathbf s_1\rangle$. As $\mathbf S^2\psi=0$,
    $0=\langle\mathbf S^2\rangle=\sum_{i,j}\langle\mathbf s_i\cdot\mathbf s_j\rangle=L\sum_r\langle\mathbf s_0\cdot\mathbf s_r\rangle$, by translation
    invariance again.
 
