@@ -37,8 +37,8 @@ sorte que chaque exemple fonctionne avec la version actuelle de la bibliothèque
 | 3 | [Traces, états et entropie](03_traces_and_states.md) | classification des traces, densités, entropie des secteurs, inégalité de Klein, monotonie sous l'espérance conditionnelle sur le centre, contraste de Michelson |
 | 4 | Symétries et représentations *(en préparation)* | lemme de Schur, secteurs de charge, $U(1)$ et $SU(2)$, systèmes de spins |
 | 5 | Matrices aléatoires dans une algèbre *(en préparation)* | mesure de Haar sur $\prod_cU(k_c)$, calcul de Weingarten, statistique des niveaux et pourquoi il ne faut pas mélanger les secteurs |
-| 6 | Canaux quantiques *(en préparation)* | Kraus et Stinespring, duaux relativement à une trace, applications entre secteurs, décohérence |
-| 7 | Produits tensoriels et intrication *(en préparation)* | trace partielle, formule de Page, fusion des charges |
+| 6 | [Canaux quantiques](06_quantum_channels.md) | Kraus et Stinespring, duaux relativement à une trace, applications entre secteurs, décohérence |
+| 7 | [Produits tensoriels et intrication](07_tensor_products.md) | trace partielle, formule de Page, fusion des charges |
 | 8 | Dynamique *(en préparation)* | équations de Schrödinger et de Lindblad, sauts entre secteurs, post-sélection |
 | 9 | Chaînes de spins *(en préparation)* | secteurs d'aimantation et d'impulsion, Lanczos, vérifications par l'ansatz de Bethe, désordre |
 | 10 | Calcul quantique *(en préparation)* | sous-espaces sans décohérence, correction d'erreurs par algèbres d'opérateurs, mélangeurs sous contraintes |

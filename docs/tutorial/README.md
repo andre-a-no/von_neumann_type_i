@@ -35,8 +35,8 @@ example works with the current version of the library.
 | 3 | [Traces, states and entropy](03_traces_and_states.md) | classification of traces, densities, entropy of sectors, Klein's inequality, monotonicity under the conditional expectation onto the centre, Michelson contrast |
 | 4 | Symmetries and representations *(in preparation)* | Schur's lemma, charge sectors, $U(1)$ and $SU(2)$, spin systems |
 | 5 | Random matrices in an algebra *(in preparation)* | Haar measure on $\prod_cU(k_c)$, Weingarten calculus, level statistics and why sectors must not be mixed |
-| 6 | Quantum channels *(in preparation)* | Kraus and Stinespring, duals with respect to a trace, maps between sectors, decoherence |
-| 7 | Tensor products and entanglement *(in preparation)* | partial trace, Page's formula, fusion of charges |
+| 6 | [Quantum channels](06_quantum_channels.md) | Kraus and Stinespring, duals with respect to a trace, maps between sectors, decoherence |
+| 7 | [Tensor products and entanglement](07_tensor_products.md) | partial trace, Page's formula, fusion of charges |
 | 8 | Dynamics *(in preparation)* | Schrödinger and Lindblad equations, jumps between sectors, post-selection |
 | 9 | Spin chains *(in preparation)* | sectors of magnetisation and momentum, Lanczos, Bethe ansatz checks, disorder |
 | 10 | Quantum computing *(in preparation)* | decoherence-free subspaces, operator-algebra error correction, constrained mixers |

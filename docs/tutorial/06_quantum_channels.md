@@ -517,7 +517,7 @@ the mean is $(kr^2+k^2r)/(kr(kr+1))$. $\square$
 For $r=1$ the channel is unitary and the purity is $1$; as $r\to\infty$ it tends to $1/k$, the
 purity of the maximally mixed state. The proof used only the unitary invariance of the law of $u$,
 so it also gives Lubkin's mean purity of the reduced state of a random pure state $u=g/\|g\|$,
-$g$ Gaussian, which Chapter 7, Theorem 7.10 proves with Gaussian integrals; the numbers
+$g$ Gaussian, which Chapter 7, Theorem 7.11 proves with Gaussian integrals; the numbers
 $\alpha,\beta$ of Lemma 6.14 are those of Corollary 5.11 for the entries of a Haar unitary.
 
 ```python
@@ -629,6 +629,6 @@ for t in trace:
 
 </details>
 
-**Next:** Chapter 7 (in preparation) treats tensor products and entanglement: the partial trace —
+**Next:** [Chapter 7](07_tensor_products.md) treats tensor products and entanglement: the partial trace —
 a channel between different algebras whose dual is the embedding $A\mapsto A\otimes1$ — Page's
 formula, and the fusion of charges.

@@ -35,8 +35,8 @@ modo que cada ejemplo funciona con la versión actual de la biblioteca.
 | 3 | [Trazas, estados y entropía](03_traces_and_states.md) | clasificación de las trazas, densidades, entropía de los sectores, desigualdad de Klein, monotonía bajo la esperanza condicional sobre el centro, contraste de Michelson |
 | 4 | Simetrías y representaciones *(en preparación)* | lema de Schur, sectores de carga, $U(1)$ y $SU(2)$, sistemas de espines |
 | 5 | Matrices aleatorias en un álgebra *(en preparación)* | medida de Haar en $\prod_cU(k_c)$, cálculo de Weingarten, estadística de niveles y por qué no deben mezclarse los sectores |
-| 6 | Canales cuánticos *(en preparación)* | Kraus y Stinespring, duales respecto de una traza, aplicaciones entre sectores, decoherencia |
-| 7 | Productos tensoriales y entrelazamiento *(en preparación)* | traza parcial, fórmula de Page, fusión de cargas |
+| 6 | [Canales cuánticos](06_quantum_channels.md) | Kraus y Stinespring, duales respecto de una traza, aplicaciones entre sectores, decoherencia |
+| 7 | [Productos tensoriales y entrelazamiento](07_tensor_products.md) | traza parcial, fórmula de Page, fusión de cargas |
 | 8 | Dinámica *(en preparación)* | ecuaciones de Schrödinger y de Lindblad, saltos entre sectores, postselección |
 | 9 | Cadenas de espines *(en preparación)* | sectores de magnetización y de momento, Lanczos, comprobaciones con el ansatz de Bethe, desorden |
 | 10 | Computación cuántica *(en preparación)* | subespacios libres de decoherencia, corrección de errores en álgebras de operadores, mezcladores con restricciones |
