@@ -71,7 +71,7 @@ class SpectrumParam(Param):
 
     delta: tensor (batch,) of prescribed contrasts, or None to optimise the contrast as well
     within [delta_range[0], delta_range[1]]. The maximum 1 and the minimum lo are pinned to two
-    eigenvalue slots; the other eigenvalues lie strictly between (through a sigmoid). By default
+    eigenvalue slots; the other eigenvalues lie in [lo, 1] (through (1 + sin theta) / 2). By default
     the two slots are drawn at random per start among all active slots (the extremes may lie in the
     same sector or in different ones), so that a multistart search covers every placement and the
     union over placements is dense in the constraint set. With `pin_sector` both extremes sit in that
@@ -117,7 +117,9 @@ class SpectrumParam(Param):
     def eigenvalues(self) -> torch.Tensor:
         """(batch, C, k_max), zero on padding."""
         lo = _contrast_to_lo(self.delta())[:, None, None]
-        lam = lo + (1 - lo) * torch.sigmoid(self.theta)
+        # (1 + sin)/2 reaches the ends of [lo, 1] at finite theta (a sigmoid only asymptotically, which
+        # slows the search down: extremal spectra often have all eigenvalues at lo or 1)
+        lam = lo + (1 - lo) * 0.5 * (1 + torch.sin(self.theta))
         b = torch.arange(lam.shape[0], device=lam.device)
         is_max = torch.zeros_like(lam, dtype=torch.bool)
         is_min = torch.zeros_like(lam, dtype=torch.bool)
@@ -172,10 +174,41 @@ class SelfAdjointParam(PositiveParam):
                  delta_range=(0.0, 0.999), pin_sector: Optional[int] = None):
         super().__init__(alg, batch_size, delta, delta_range, pin_sector)
         dev = alg.hilbert.device
-        self.signs = (2 * torch.randint(0, 2, (batch_size, alg.C, alg.k_max), device=dev) - 1).to(alg.hilbert.real_dtype)
+        # U absorbs permutations within a sector, so the sign pattern matters only through the number n_c of
+        # negative eigenvalues in every sector. Independent signs would almost never give a pattern that is
+        # the same in all C sectors; n_c is therefore drawn uniformly in {0, ..., k_c}, for half of the starts
+        # independently per sector and for the other half as one fraction common to all sectors.
+        B, C = batch_size, alg.C
+        k = torch.tensor(alg.k_factors, device=dev, dtype=torch.float64)
+        frac = torch.rand(B, C, device=dev, dtype=torch.float64)
+        common = torch.rand(B, device=dev) < 0.5
+        frac = torch.where(common[:, None], frac[:, :1].expand(B, C), frac)
+        n_neg = torch.floor(frac * (k + 1)).clamp(max=k)                              # (B, C)
+        keys = torch.rand(B, C, alg.k_max, device=dev, dtype=torch.float64)
+        keys = keys + (torch.arange(alg.k_max, device=dev) >= k[:, None]).to(keys.dtype)   # padding ranks last
+        rank = torch.argsort(torch.argsort(keys, dim=-1), dim=-1)                   # random order within a sector
+        neg = rank < n_neg[..., None]
+        self.signs = torch.where(neg, -1.0, 1.0).to(alg.hilbert.real_dtype)
 
     def _signed(self, lam):
         return lam * self.signs
+
+    def discrete_step(self, evaluate: Callable[[], torch.Tensor], maximize: bool, trials: int = 8):
+        """Local search over the signs: flip the sign of one random active eigenvalue per start and keep the
+        flip where the objective improves (between the gradient rounds of extremize)."""
+        alg, B = self.alg, self.signs.shape[0]
+        slots = torch.tensor([(c, i) for c, k_c in enumerate(alg.k_factors) for i in range(k_c)],
+                             device=self.signs.device)
+        b = torch.arange(B, device=self.signs.device)
+        with torch.no_grad():
+            best = evaluate()
+            for _ in range(trials):
+                c, i = slots[torch.randint(len(slots), (B,), device=slots.device)].unbind(-1)
+                self.signs[b, c, i] *= -1
+                v = evaluate()
+                better = v > best if maximize else v < best
+                self.signs[b[~better], c[~better], i[~better]] *= -1          # undo where it did not help
+                best = torch.where(better, v, best)
 
 
 def extremize(objective: Callable[[], torch.Tensor], params: Sequence[Param], maximize: bool = True,
@@ -199,6 +232,10 @@ def extremize(objective: Callable[[], torch.Tensor], params: Sequence[Param], ma
             timer.step(tensors[0].device)
         for p in params:
             p.recenter()
+        if rnd < rounds - 1:
+            for p in params:
+                if hasattr(p, 'discrete_step'):
+                    p.discrete_step(objective, maximize)
     timer.close()
     with torch.no_grad():
         return objective().detach()
