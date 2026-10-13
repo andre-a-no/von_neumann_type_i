@@ -368,7 +368,7 @@ tiny Haar measure, which a gradient method reaches directly. For the pair `Xf, Y
 
 **Lemma 11.13.** If $k\ge2$, then $\min_U|\operatorname{Tr}(AU)|=0$ for every $A\in M_k(\mathbb C)$.
 
-*Proof.* Let $A=W\Sigma V^*$ and $P$ the cyclic shift, $Pe_i=e_{i+1\bmod k}$, whose diagonal vanishes for $k\ge2$. For
+*Proof.* Let $A=W\Sigma V^*$ and $P$ the cyclic shift, $Pe_i=e_{(i\bmod k)+1}$, whose diagonal vanishes for $k\ge2$. For
 $U=VPW^*$, $\operatorname{Tr}(AU)=\operatorname{Tr}(\Sigma P)=0$. $\square$
 
 So $\inf_Uz=-\operatorname{Tr}(XY)$ and $\sup_Uz=\|YX\|_1-\operatorname{Tr}(XY)$. One call of `extremize` finds both, with

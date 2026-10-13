@@ -370,7 +370,7 @@ for k in (2, 4, 8, 16, 32):
 
 **Лемма 11.13.** Если $k\ge2$, то $\min_U|\operatorname{Tr}(AU)|=0$ для всякой $A\in M_k(\mathbb C)$.
 
-*Доказательство.* Пусть $A=W\Sigma V^*$, а $P$ — циклический сдвиг, $Pe_i=e_{i+1\bmod k}$, диагональ которого при $k\ge2$ нулевая. Для
+*Доказательство.* Пусть $A=W\Sigma V^*$, а $P$ — циклический сдвиг, $Pe_i=e_{(i\bmod k)+1}$, диагональ которого при $k\ge2$ нулевая. Для
 $U=VPW^*$ имеем $\operatorname{Tr}(AU)=\operatorname{Tr}(\Sigma P)=0$. $\square$
 
 Поэтому $\inf_Uz=-\operatorname{Tr}(XY)$ и $\sup_Uz=\|YX\|_1-\operatorname{Tr}(XY)$. Один вызов `extremize` находит оба, причём

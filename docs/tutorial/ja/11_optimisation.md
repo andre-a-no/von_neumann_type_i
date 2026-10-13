@@ -366,7 +366,7 @@ for k in (2, 4, 8, 16, 32):
 
 **補題 11.13.** $k\ge2$ ならば、任意の $A\in M_k(\mathbb C)$ に対し $\min_U|\operatorname{Tr}(AU)|=0$ である。
 
-*証明.* $A=W\Sigma V^*$ とし、$P$ を巡回シフト $Pe_i=e_{i+1\bmod k}$ とする。$k\ge2$ ならばその対角成分は零である。
+*証明.* $A=W\Sigma V^*$ とし、$P$ を巡回シフト $Pe_i=e_{(i\bmod k)+1}$ とする。$k\ge2$ ならばその対角成分は零である。
 $U=VPW^*$ に対し $\operatorname{Tr}(AU)=\operatorname{Tr}(\Sigma P)=0$ である。$\square$
 
 したがって $\inf_Uz=-\operatorname{Tr}(XY)$、$\sup_Uz=\|YX\|_1-\operatorname{Tr}(XY)$ である。`extremize` を一回呼び出せば両方が求まる。

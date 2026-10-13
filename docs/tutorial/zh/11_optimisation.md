@@ -366,7 +366,7 @@ for k in (2, 4, 8, 16, 32):
 
 **引理 11.13.** 若 $k\ge2$，则对每个 $A\in M_k(\mathbb C)$ 有 $\min_U|\operatorname{Tr}(AU)|=0$。
 
-*证明。* 设 $A=W\Sigma V^*$，$P$ 为循环移位 $Pe_i=e_{i+1\bmod k}$，当 $k\ge2$ 时其对角线为零。对
+*证明。* 设 $A=W\Sigma V^*$，$P$ 为循环移位 $Pe_i=e_{(i\bmod k)+1}$，当 $k\ge2$ 时其对角线为零。对
 $U=VPW^*$，$\operatorname{Tr}(AU)=\operatorname{Tr}(\Sigma P)=0$。$\square$
 
 所以 $\inf_Uz=-\operatorname{Tr}(XY)$，$\sup_Uz=\|YX\|_1-\operatorname{Tr}(XY)$。调用一次 `extremize` 就能同时求出二者：
