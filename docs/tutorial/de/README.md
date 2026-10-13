@@ -37,7 +37,7 @@ jedes Beispiel funktioniert also mit der aktuellen Version der Bibliothek.
 | 1 | [Matrixalgebren und Funktionalkalkül](01_matrix_algebras.md) | Spektralsatz, Funktionalkalkül, Polarzerlegung, Dualität der Spurnorm, ein GUE-Moment |
 | 2 | [Endlichdimensionale von-Neumann-Algebren](02_von_neumann_algebras.md) | Bikommutantensatz, Struktursatz, Zentrum, Symmetriegruppen und Kommutanten, bedingte Erwartungen |
 | 3 | [Spuren, Zustände und Entropie](03_traces_and_states.md) | Klassifikation der Spuren, Dichten, Entropie der Sektoren, Kleinsche Ungleichung, Monotonie unter der bedingten Erwartung auf das Zentrum, Michelson-Kontrast |
-| 4 | Symmetrien und Darstellungen *(in Vorbereitung)* | Schursches Lemma, Ladungssektoren, $U(1)$ und $SU(2)$, Spinsysteme |
+| 4 | [Symmetrien und Darstellungen](04_symmetries.md) | Schursches Lemma, Ladungssektoren, $U(1)$ und $SU(2)$, Spinsysteme |
 | 5 | [Zufallsmatrizen in einer Algebra](05_random_matrices.md) | Haar-Maß auf $\prod_cU(k_c)$, Weingarten-Kalkül, Niveaustatistik und warum Sektoren nicht vermischt werden dürfen |
 | 6 | [Quantenkanäle](06_quantum_channels.md) | Kraus und Stinespring, duale Abbildungen bezüglich einer Spur, Abbildungen zwischen Sektoren, Dekohärenz |
 | 7 | [Tensorprodukte und Verschränkung](07_tensor_products.md) | partielle Spur, Pagesche Formel, Fusion von Ladungen |

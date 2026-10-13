@@ -33,7 +33,7 @@ modo que cada ejemplo funciona con la versión actual de la biblioteca.
 | 1 | [Álgebras de matrices y cálculo funcional](01_matrix_algebras.md) | teorema espectral, cálculo funcional, descomposición polar, dualidad de la norma traza, un momento del GUE |
 | 2 | [Álgebras de von Neumann de dimensión finita](02_von_neumann_algebras.md) | teorema del doble conmutante, teorema de estructura, centro, grupos de simetría y conmutantes, esperanzas condicionales |
 | 3 | [Trazas, estados y entropía](03_traces_and_states.md) | clasificación de las trazas, densidades, entropía de los sectores, desigualdad de Klein, monotonía bajo la esperanza condicional sobre el centro, contraste de Michelson |
-| 4 | Simetrías y representaciones *(en preparación)* | lema de Schur, sectores de carga, $U(1)$ y $SU(2)$, sistemas de espines |
+| 4 | [Simetrías y representaciones](04_symmetries.md) | lema de Schur, sectores de carga, $U(1)$ y $SU(2)$, sistemas de espines |
 | 5 | [Matrices aleatorias en un álgebra](05_random_matrices.md) | medida de Haar en $\prod_cU(k_c)$, cálculo de Weingarten, estadística de niveles y por qué no deben mezclarse los sectores |
 | 6 | [Canales cuánticos](06_quantum_channels.md) | Kraus y Stinespring, duales respecto de una traza, aplicaciones entre sectores, decoherencia |
 | 7 | [Productos tensoriales y entrelazamiento](07_tensor_products.md) | traza parcial, fórmula de Page, fusión de cargas |

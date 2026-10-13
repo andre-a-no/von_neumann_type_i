@@ -349,8 +349,8 @@ $\bigoplus_qM_{d_q}\otimes1_1$, whose commutant is $\bigoplus_q1_{d_q}\otimes M_
 Then $e^{itH}$ commutes with $P_q$ (Theorem 1.5(d), twice), and
 $\operatorname{Tr}(P_q\rho(t))=\operatorname{Tr}(e^{itH}P_qe^{-itH}\rho)=\operatorname{Tr}(P_q\rho)$. $\square$
 
-The irreducible representations of $U(1)$ are thus the characters $\theta\mapsto e^{iq\theta}$, $q\in\mathbb Z$ (one-
-dimensional, as for every abelian group), and the multiplicity of the charge $q$ is $d_q$. Charges add
+The irreducible representations of $U(1)$ are thus the characters $\theta\mapsto e^{iq\theta}$, $q\in\mathbb Z$
+(one-dimensional, as for every abelian group), and the multiplicity of the charge $q$ is $d_q$. Charges add
 under tensor products: $e^{i\theta(Q_1\otimes1+1\otimes Q_2)}=e^{i\theta Q_1}\otimes e^{i\theta Q_2}$ acts on the range of
 $P_{q_1}\otimes P_{q_2}$ with charge $q_1+q_2$. This is the fusion rule $(q_1,q_2)\mapsto q_1+q_2$ of the fused
 tensor products of Chapter 7.
