@@ -1,33 +1,37 @@
-E|U_11|^4, U(n)              n = 2                  theory  0.333333  MC  0.335015 +- 0.0015  (z = +1.12)
-E|U_11|^2, U(n)              n = 2                  theory  0.5  MC  0.5014 +- 0.0014  (z = +0.97)
-E|U_11|^4, U(n)              n = 4                  theory  0.1  MC  0.0999686 +- 0.00068  (z = -0.05)
-E|U_11|^4, U(n)              n = 8                  theory  0.0277778  MC  0.0277718 +- 0.00024  (z = -0.02)
-E|U_11|^4, U(n)              n = 16                 theory  0.00735294  MC  0.00737778 +- 7.1e-05  (z = +0.35)
-E|U_11|^4, U(n)              n = 32                 theory  0.00189394  MC  0.00188255 +- 2e-05  (z = -0.58)
-E|U_11|^2, U(n)              n = 32                 theory  0.03125  MC  0.031172 +- 0.00015  (z = -0.52)
-E|U_11|^4, O(n)              n = 2                  theory  0.375  MC  0.373641 +- 0.0018  (z = -0.75)
-E|U_11|^2, O(n)              n = 2                  theory  0.5  MC  0.498956 +- 0.0018  (z = -0.59)
-E|U_11|^4, O(n)              n = 4                  theory  0.125  MC  0.12365 +- 0.00098  (z = -1.37)
-E|U_11|^4, O(n)              n = 8                  theory  0.0375  MC  0.0378452 +- 0.0004  (z = +0.86)
-E|U_11|^4, O(n)              n = 16                 theory  0.0104167  MC  0.0104973 +- 0.00014  (z = +0.60)
-E|U_11|^4, O(n)              n = 32                 theory  0.00275735  MC  0.0027189 +- 3.9e-05  (z = -0.99)
-E|U_11|^2, O(n)              n = 32                 theory  0.03125  MC  0.0311461 +- 0.00021  (z = -0.50)
-E tau((AUBU*)^2)             n = 4                  theory -0.0666667  MC -0.0668132 +- 0.0018  (z = -0.08)
-E tau((AUBU*)^2)             n = 8                  theory -0.015873  MC -0.01533 +- 0.00081  (z = +0.67)
-E tau((AUBU*)^2)             n = 16                 theory -0.00392157  MC -0.00380992 +- 0.0004  (z = +0.28)
-<s^2>, beta = 1              n = 32 (surmise)       theory  1.27324  MC  1.28319 +- 0.0016  (z = +nan)
-<s^2>, beta = 2              n = 32 (surmise)       theory  1.1781  MC  1.17861 +- 0.001  (z = +nan)
-<s^2>, beta = 4              n = 32 (surmise)       theory  1.10447  MC  1.10317 +- 0.00082  (z = +nan)
-Page entropy <S_A>           m = 2, n = 8           theory  0.600372  MC  0.600673 +- 0.00096  (z = +0.31)
-Page entropy <S_A>           m = 4, n = 8           theory  1.15314  MC  1.15257 +- 0.001  (z = -0.56)
-Page entropy <S_A>           m = 8, n = 8           theory  1.58853  MC  1.58895 +- 0.00087  (z = +0.49)
-E Tr rho^2 (induced)         k = 4, r = 2           theory  0.666667  MC  0.666533 +- 0.001  (z = -0.13)
-E Tr rho^2 (induced)         k = 4, r = 4           theory  0.470588  MC  0.47049 +- 0.00068  (z = -0.14)
-E Tr rho^2 (induced)         k = 16, r = 4          theory  0.307692  MC  0.307666 +- 0.0002  (z = -0.13)
-E Tr rho^2 (induced)         k = 16, r = 16         theory  0.124514  MC  0.124431 +- 5.4e-05  (z = -1.52)
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/validate_known_results.py:64: CostWarning: random_unitary(n=32, batch=50000): about 16 s expected for 50000 blocks of size 32 on cuda:0 (measured on 8 blocks). Consider a smaller batch, double -> single precision or a GPU. Silence with warnings.simplefilter('ignore', torch_vn_algebra.cost.CostWarning).
+  u = alg.random_unitary(n, batch_size=b)[:, 0, 0].abs()
+/home/user/von_neumann_type_i/von_neumann_type_i/scripts/validate_known_results.py:64: CostWarning: random_unitary(n=32, batch=50000): about 15 s expected for 50000 blocks of size 32 on cuda:0 (measured on 8 blocks). Consider a smaller batch, double -> single precision or a GPU. Silence with warnings.simplefilter('ignore', torch_vn_algebra.cost.CostWarning).
+  u = alg.random_unitary(n, batch_size=b)[:, 0, 0].abs()
+E|U_11|^4, U(n)              n = 2                  theory  0.333333  MC  0.333604 +- 0.00047  (z = +0.57)
+E|U_11|^2, U(n)              n = 2                  theory  0.5  MC  0.500277 +- 0.00046  (z = +0.61)
+E|U_11|^4, U(n)              n = 4                  theory  0.1  MC  0.10028 +- 0.00022  (z = +1.29)
+E|U_11|^4, U(n)              n = 8                  theory  0.0277778  MC  0.0277966 +- 7.5e-05  (z = +0.25)
+E|U_11|^4, U(n)              n = 16                 theory  0.00735294  MC  0.00735803 +- 2.3e-05  (z = +0.23)
+E|U_11|^4, U(n)              n = 32                 theory  0.00189394  MC  0.00189625 +- 6.2e-06  (z = +0.37)
+E|U_11|^2, U(n)              n = 32                 theory  0.03125  MC  0.0312403 +- 4.8e-05  (z = -0.20)
+E|U_11|^4, O(n)              n = 2                  theory  0.375  MC  0.375106 +- 0.00058  (z = +0.18)
+E|U_11|^2, O(n)              n = 2                  theory  0.5  MC  0.500155 +- 0.00056  (z = +0.28)
+E|U_11|^4, O(n)              n = 4                  theory  0.125  MC  0.125085 +- 0.00031  (z = +0.27)
+E|U_11|^4, O(n)              n = 8                  theory  0.0375  MC  0.0376573 +- 0.00013  (z = +1.24)
+E|U_11|^4, O(n)              n = 16                 theory  0.0104167  MC  0.0104046 +- 4.3e-05  (z = -0.28)
+E|U_11|^4, O(n)              n = 32                 theory  0.00275735  MC  0.0027558 +- 1.2e-05  (z = -0.12)
+E|U_11|^2, O(n)              n = 32                 theory  0.03125  MC  0.0312731 +- 6.7e-05  (z = +0.35)
+E tau((AUBU*)^2)             n = 4                  theory -0.0666667  MC -0.0661548 +- 0.00063  (z = +0.82)
+E tau((AUBU*)^2)             n = 8                  theory -0.015873  MC -0.0159874 +- 0.00028  (z = -0.40)
+E tau((AUBU*)^2)             n = 16                 theory -0.00392157  MC -0.00414221 +- 0.00014  (z = -1.58)
+<s^2>, beta = 1              n = 64 (surmise)       theory  1.27324  MC  1.28582 +- 0.00037  (z = +nan)
+<s^2>, beta = 2              n = 64 (surmise)       theory  1.1781  MC  1.18024 +- 0.00024  (z = +nan)
+<s^2>, beta = 4              n = 64 (surmise)       theory  1.10447  MC  1.10392 +- 0.0002  (z = +nan)
+Page entropy <S_A>           m = 2, n = 16          theory  0.646516  MC  0.646516 +- 0.00016  (z = +0.00)
+Page entropy <S_A>           m = 8, n = 16          theory  1.83367  MC  1.83388 +- 0.00017  (z = +1.24)
+Page entropy <S_A>           m = 16, n = 16         theory  2.27487  MC  2.27495 +- 0.00014  (z = +0.58)
+E Tr rho^2 (induced)         k = 4, r = 2           theory  0.666667  MC  0.666312 +- 0.00032  (z = -1.12)
+E Tr rho^2 (induced)         k = 4, r = 4           theory  0.470588  MC  0.470523 +- 0.00021  (z = -0.31)
+E Tr rho^2 (induced)         k = 16, r = 4          theory  0.307692  MC  0.307726 +- 6.4e-05  (z = +0.53)
+E Tr rho^2 (induced)         k = 16, r = 16         theory  0.124514  MC  0.124527 +- 1.7e-05  (z = +0.80)
 spontaneous emission: max error exp(tL) 2.2e-16, RK4 2.1e-08
-Tr_blunt : f(1) error 0.0e+00, |f(AB)-f(BA)| 3.7e-15, |f(UAU*)-f(A)| 5.4e-15, min f(A*A)/||A||_F^2 = 1.000 > 0
-Tr_norm  : f(1) error 0.0e+00, |f(AB)-f(BA)| 1.3e-15, |f(UAU*)-f(A)| 1.8e-15, min f(A*A)/||A||_F^2 = 0.224 > 0
-tau_vN   : f(1) error 0.0e+00, |f(AB)-f(BA)| 4.4e-16, |f(UAU*)-f(A)| 5.6e-16, min f(A*A)/||A||_F^2 = 0.075 > 0
-written: /home/user/von_neumann_type_i/paper/generated /home/user/von_neumann_type_i/paper/figures
-[resources] wall 26 s, peak host RSS 3.55 GiB
+Tr_blunt : f(1) error 0.0e+00, |f(AB)-f(BA)| 4.0e-15, |f(UAU*)-f(A)| 5.9e-15, min f(A*A)/||A||_F^2 = 1.000 > 0
+Tr_norm  : f(1) error 0.0e+00, |f(AB)-f(BA)| 1.4e-15, |f(UAU*)-f(A)| 1.9e-15, min f(A*A)/||A||_F^2 = 0.223 > 0
+tau_vN   : f(1) error 0.0e+00, |f(AB)-f(BA)| 4.4e-16, |f(UAU*)-f(A)| 6.1e-16, min f(A*A)/||A||_F^2 = 0.074 > 0
+written: /home/user/von_neumann_type_i/von_neumann_type_i/paper/generated /home/user/von_neumann_type_i/von_neumann_type_i/paper/figures
+[resources] wall 697 s, peak host RSS 2.15 GiB, peak GPU memory 5.40 GiB

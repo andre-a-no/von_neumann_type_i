@@ -4,92 +4,96 @@
       "config": "float32",
       "bytes_per_entry": 4,
       "times": {
-        "generate": 0.00011241796875038901,
-        "eigh f(A)": 0.0001651688906250115,
-        "SVD |A|": 0.00029472229687499407,
-        "channel": 2.8791539062655858e-05,
-        "expm": 5.716049999993089e-05,
-        "opt. step": 0.0006205515390624861
+        "generate": 0.000918126007812603,
+        "eigh f(A)": 7.238949219612323e-06,
+        "SVD |A|": 1.1434324218129177e-05,
+        "channel": 1.8251953122216946e-06,
+        "expm": 4.957355468349078e-06,
+        "opt. step": 7.092728515623037e-05
       },
-      "unitarity": 8.344650268554688e-07,
-      "sqrt_error": 1.921818011396681e-06,
-      "entropy_rel_error": 1.361319679697245,
-      "inequality_floor": 2.288818359375e-05,
-      "operator_MB": 1.0
+      "unitarity": 6.556510925292969e-07,
+      "sqrt_error": 1.9957290078309597e-06,
+      "entropy_rel_error": 1.9717570741864525,
+      "inequality_floor": 0.0005340576171875,
+      "operator_MB": 16.0
     },
     {
       "config": "float64",
       "bytes_per_entry": 8,
       "times": {
-        "generate": 0.00012072229687509761,
-        "eigh f(A)": 0.00023837090625011825,
-        "SVD |A|": 0.0004669639921877078,
-        "channel": 1.1124015625085804e-05,
-        "expm": 4.486940625003655e-05,
-        "opt. step": 0.0010582649687500556
+        "generate": 0.0010953860156242001,
+        "eigh f(A)": 5.602037109397884e-05,
+        "SVD |A|": 0.00024451242578038546,
+        "channel": 6.694589844258303e-06,
+        "expm": 1.0227484374070173e-05,
+        "opt. step": 0.00024008465624980602
       },
       "unitarity": 1.3322676295501878e-15,
-      "sqrt_error": 3.916389700887926e-15,
-      "entropy_rel_error": 2.7747199143963557e-09,
-      "inequality_floor": 5.684341886080802e-14,
-      "operator_MB": 2.0
+      "sqrt_error": 3.962195927772601e-15,
+      "entropy_rel_error": 6.647576478103247e-09,
+      "inequality_floor": 1.4210854715202004e-12,
+      "operator_MB": 32.0
     },
     {
       "config": "complex64",
       "bytes_per_entry": 8,
       "times": {
-        "generate": 0.0001359331171872924,
-        "eigh f(A)": 0.00021133763281255824,
-        "SVD |A|": 0.0003966555078127598,
-        "channel": 1.9591960937592745e-05,
-        "expm": 4.33719531249821e-05,
-        "opt. step": 0.0016735660390625462
+        "generate": 0.0010160979921867153,
+        "eigh f(A)": 1.1465472656624343e-05,
+        "SVD |A|": 2.082149609350381e-05,
+        "channel": 3.3759882800410423e-06,
+        "expm": 7.660468750003702e-06,
+        "opt. step": 0.0001262430742201559
       },
-      "unitarity": 8.344650268554688e-07,
-      "sqrt_error": 2.2229496607906185e-06,
-      "entropy_rel_error": 1.8141471284316444,
-      "inequality_floor": 2.288818359375e-05,
-      "operator_MB": 2.0
+      "unitarity": 8.344657658199139e-07,
+      "sqrt_error": 2.2849096694699256e-06,
+      "entropy_rel_error": 2.3281463739359705,
+      "inequality_floor": 0.0001983642578125,
+      "operator_MB": 32.0
     },
     {
       "config": "complex128",
       "bytes_per_entry": 16,
       "times": {
-        "generate": 0.0003248137343749846,
-        "eigh f(A)": 0.00026242821093758195,
-        "SVD |A|": 0.00048701584374999385,
-        "channel": 3.5180968749770614e-05,
-        "expm": 5.7712203124893335e-05,
-        "opt. step": 0.0026976919687498047
+        "generate": 0.0029006528007808896,
+        "eigh f(A)": 7.899903124908292e-05,
+        "SVD |A|": 0.0007379745039060026,
+        "channel": 2.3606988280633345e-05,
+        "expm": 2.6616457031281016e-05,
+        "opt. step": 0.000762055972655773
       },
-      "unitarity": 9.992007221626409e-16,
-      "sqrt_error": 4.125420872154593e-15,
-      "entropy_rel_error": 2.556532512477324e-09,
-      "inequality_floor": 4.973799150320701e-14,
-      "operator_MB": 4.0
+      "unitarity": 1.5543273847918155e-15,
+      "sqrt_error": 4.4842442151334726e-15,
+      "entropy_rel_error": 8.925777248315438e-09,
+      "inequality_floor": 1.8189894035458565e-12,
+      "operator_MB": 64.0
     }
   ],
-  "K": 16,
-  "C": 8,
-  "batch": 128,
+  "K": 32,
+  "C": 16,
+  "batch": 256,
   "r": {
     "real symmetric (GOE)": [
-      0.5329533587177767,
-      0.004130290060206203
+      0.5312944486233337,
+      0.0015902780537126078
     ],
     "complex Hermitian (GUE)": [
-      0.608610363606871,
-      0.003977289573453531
+      0.599289514553767,
+      0.0014281506224445416
     ]
   },
   "environment": {
     "torch": "2.14.1+cu130",
-    "python": "3.13.16",
-    "device": "cpu",
-    "date": "2026-10-10",
+    "python": "3.10.12",
+    "device": "cuda",
+    "date": "2026-10-11",
     "float32_matmul_precision": "highest",
-    "cpu": "x86_64",
-    "threads": 4
+    "cuda": "13.0",
+    "cudnn": 92400,
+    "cusolver": 12004,
+    "linalg_backend": "_LinalgBackend.Default",
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "compute_capability": "12.0"
   },
-  "mode": "quick"
+  "mode": "full"
 }
