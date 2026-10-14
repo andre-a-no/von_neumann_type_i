@@ -16,7 +16,7 @@ completa, cómo un grupo de simetría da lugar a un álgebra de este tipo, qué 
 qué es una esperanza condicional. Las comprobaciones numéricas de este capítulo están en el
 [Tutorial 2](../../tutorial/es/02_von_neumann_algebras.md).
 
-En todo el capítulo, *$`\ast`$-álgebra sobre $`\mathbb C^n`$* significa un subespacio lineal complejo
+En todo el capítulo, *$`\ast`$-álgebra sobre* $`\mathbb C^n`$ significa un subespacio lineal complejo
 $`\mathcal M\subseteq M_n(\mathbb C)`$ cerrado para productos y adjuntos y que contiene la
 identidad $`1`$.
 
