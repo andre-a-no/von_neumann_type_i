@@ -328,21 +328,43 @@ for n in (6, 8, 10, 12):
     s = SU2Chain(n, 'periodic', complex_valued=False)
     e = [torch.linalg.eigvalsh(s.heisenberg(spin=S).matrix[0, 0])[0].item() for S in (0, 1)]
     gap[n] = n * (e[1] - e[0])
-print({n: round(g, 4) for n, g in gap.items()}, round(math.pi ** 2 / 2, 4))
-assert 0 < gap[6] < gap[8] < gap[10] < gap[12] < math.pi ** 2 / 2
+print({n: round(g, 4) for n, g in gap.items()})
+assert 0 < gap[6] < gap[8] < gap[10] < gap[12]                      # > 0: Theorem 9.9; increase: numerical
+n8, A_set = 8, (0, 1, 2, 3, 4)                                      # A = {0, ..., 4}, B = {5, 6, 7}
+edges = [(0, 5), (1, 5), (1, 6), (2, 6), (3, 6), (4, 7), (0, 7), (0, 1), (2, 3), (5, 6)]   # connected
+g8 = torch.Generator().manual_seed(2)
+J8 = [(1 if (i in A_set) != (j in A_set) else -1) * (0.5 + torch.rand(1, generator=g8).item()) for i, j in edges]
+dot = lambda i, j: 0.5 * (op(n8, {i: sp, j: sm}) + op(n8, {i: sm, j: sp})) + op(n8, {i: sz, j: sz})
+H8 = sum(Jij * dot(i, j) for Jij, (i, j) in zip(J8, edges))          # J_ij > 0 between, < 0 within A, B
+Sp8, Sz8 = sum(op(n8, {i: sp}) for i in range(n8)), sum(op(n8, {i: sz}) for i in range(n8))
+S2 = Sp8.T @ Sp8 + Sz8 @ Sz8 + Sz8                                  # S^2 = S^- S^+ + (S^z)^2 + S^z
+n_up = torch.tensor([bin(b).count('1') for b in range(2 ** n8)])
+n_B = torch.tensor([bin(b >> 5).count('1') for b in range(2 ** n8)])  # up spins on B
+for N in range(4, 9):                                               # sectors S^z = M = N - 4 >= 0
+    idx = torch.nonzero(n_up == N).flatten()
+    w, U = torch.linalg.eigh(H8[idx][:, idx])
+    x, spin = (-1.0) ** n_B[idx] * U[:, 0], max(N - 4, 1)            # expected spin max(M, S_*)
+    assert (x * x.sum().sign()).min() > 0 and (len(w) == 1 or w[1] - w[0] > 1e-8)          # Theorem 9.7
+    assert abs(U[:, 0] @ S2[idx][:, idx] @ U[:, 0] - spin * (spin + 1)) < 1e-10           # Theorem 9.9(a)
+w8 = torch.linalg.eigvalsh(H8)
+assert w8[2] - w8[0] < 1e-10 and w8[3] - w8[0] > 1e-8                # ground space: one triplet, S_* = 1
 ```
 
 Los bloques de $SU(2)$ tienen tamaños $m_S=132,297,275,154,54,11,1$ frente a $924$ del mayor bloque de $U(1)$, y
-el coste $\sum k^3$ de la diagonalización baja de $2.0\cdot10^9$ a $5.3\cdot10^7$. $L$ veces la brecha crece
-lentamente, $4.108,4.181,4.232,4.270$ para $L=6,\dots,12$, hacia $\pi^2/2\approx4.935$.
+el coste $\sum k^3$ de la diagonalización baja de $2.0\cdot10^9$ a $5.3\cdot10^7$. *Observación numérica:* $L$ veces
+la brecha crece lentamente, $4.108,4.181,4.232,4.270$ para $L=6,\dots,12$; no demostramos nada sobre su
+comportamiento cuando $L\to\infty$.
 
-**Correlaciones.** Los espines de los sitios forman un operador tensorial de rango uno y, por el **teorema de
-Wigner–Eckart**, sus elementos de matriz entre multipletes son un coeficiente de Clebsch–Gordan por un
-**elemento de matriz reducido** $\langle S',a\|\mathbf s_i\|S,b\rangle$ independiente de los números cuánticos
-magnéticos (A. R. Edmonds, *Angular Momentum in Quantum Mechanics*, Princeton 1957, cap. 5; enunciado sin
-demostración). `spin_correlation` lo usa para construir $\mathbf s_i\cdot\mathbf s_j$ sobre cada $H_S$ a partir
-únicamente de los vectores de peso máximo; el método `'direct'` proyecta en cambio el operador de enlace.
-Comparamos ambos con el estado fundamental escrito en el sector $U(1)$:
+**Correlaciones.** Los espines de los sitios forman operadores vectoriales, y sus componentes esféricas,
+operadores tensoriales de rango uno (lema B.15(a),(b)). Por el **teorema de Wigner–Eckart** (teorema B.16), sus
+elementos de matriz entre dos multipletes son un coeficiente de Clebsch–Gordan por un **elemento de matriz
+reducido** que no depende de los números cuánticos magnéticos, y
+$\mathbf s_i\cdot\mathbf s_j=\sum_q(-1)^qs^{(i)}_qs^{(j)}_{-q}$ (lema B.15(a)). `spin_correlation` lo usa para construir
+$\mathbf s_i\cdot\mathbf s_j$ sobre cada $H_S$ a partir únicamente de los vectores de peso máximo; el método `'direct'`
+comprime en cambio el operador de enlace a los vectores de peso máximo, lo cual es correcto por la
+proposición 4.15(b), ya que $\mathbf s_i\cdot\mathbf s_j\in\{S_a\}'$. Que la implementación del primer método es correcta no
+se demuestra aquí; el código comprueba que ambos coinciden entre sí y con la definición, evaluados en el estado
+fundamental escrito en el sector $U(1)$:
 
 ```python
 gs = sym.ground_state(H_su2)
@@ -365,12 +387,21 @@ print([round(x, 4) for x in corr_we.tolist()])
 ```
 
 Las correlaciones $\langle\mathbf s_0\cdot\mathbf s_r\rangle=0.75,-0.4489,0.1878,-0.1658,0.1209,-0.1224,0.1070,\dots$
-alternan de signo, como imponen los teoremas 9.7 y 9.9: el singlete es invariante bajo rotaciones, que permutan
-los ejes, y $\langle s^+_0s^+_r\rangle=0$ en el sector $S^z=0$, así que $\langle\mathbf s_0\cdot\mathbf s_r\rangle=3\langle s^x_0s^x_r\rangle=
-\frac34\langle s^+_0s^-_r+s^-_0s^+_r\rangle=\frac34\sum_{b_0\ne b_r}\psi(b)\psi(b')$, donde $b'$ se obtiene de $b$
-intercambiando los espines de los sitios $0$ y $r$; como $N_B(b')-N_B(b)$ vale $\pm1$ para $r$ impar y $0$ para $r$
-par, cada término tiene el signo $(-1)^r$. El decaimiento es lento, como $(-1)^r\sqrt{\log r}/r$ cuando
-$L\to\infty$ (Affleck et al., *loc. cit.*; enunciado sin demostración).
+alternan de signo, y los teoremas 9.7 y 9.9 lo imponen para todo anillo par. Sea $\psi$ el estado fundamental
+real normalizado, un singlete (teorema 9.9) y, por tanto, el estado fundamental del sector $S^z=0$. De
+$\mathbf S^2\psi=0$ se sigue $\|S^\pm\psi\|^2=\langle\psi,S^\mp S^\pm\psi\rangle=\langle\psi,(\mathbf S^2-(S^z)^2\mp S^z)\psi\rangle=0$, así que
+$S^\pm\psi=0$ y $\langle\psi,[S^+,[S^-,X]]\psi\rangle=0$ para todo $X$ (cada uno de los cuatro términos tiene $S^\pm$ junto a
+$\psi$). Para $X=s^z_0s^z_r$, $r\ne0$, las relaciones $[s^\pm,s^z]=\mp s^\pm$, $[s^+,s^-]=2s^z$ dan
+$[S^-,X]=s^-_0s^z_r+s^z_0s^-_r$ y $[S^+,[S^-,X]]=4s^z_0s^z_r-s^+_0s^-_r-s^-_0s^+_r$. Por tanto,
+$\langle s^z_0s^z_r\rangle=\frac14\langle s^+_0s^-_r+s^-_0s^+_r\rangle$ y
+$$
+\langle\mathbf s_0\cdot\mathbf s_r\rangle=\langle s^z_0s^z_r\rangle+\tfrac12\langle s^+_0s^-_r+s^-_0s^+_r\rangle
+=\tfrac34\sum_{b_0\ne b_r}\psi(b)\psi(b') ,
+$$
+donde $b'$ se obtiene de $b$ intercambiando los espines de los sitios $0$ y $r$. Por el teorema 9.7,
+$\psi(b)\psi(b')$ tiene el signo de $(-1)^{N_B(b)+N_B(b')}$, y $N_B(b')-N_B(b)$ vale $\pm1$ para $r$ impar y $0$ para
+$r$ par; la suma no es vacía, así que $\langle\mathbf s_0\cdot\mathbf s_r\rangle$ es no nulo y tiene el signo $(-1)^r$ para
+$0<r<L$.
 
 ## 9.4 Comprobaciones exactas: fermiones libres y el ansatz de Bethe
 
@@ -386,7 +417,8 @@ ortonormal de vectores propios del sector $N$, con energías $\sum_{k\in K}\vare
 *Demostración.* (a) Los operadores en sitios distintos conmutan, y en un mismo sitio $(-1)^n$ anticonmuta con
 $s^\pm$. Para $i<j$, $c_i$ y $c_j^*$ (o $c_j$) se encuentran en el sitio $i$ como $s^-_i$ y $(-1)^{n_i}$ —una
 anticonmutación— y por lo demás conmutan, así que anticonmutan. Para $i=j$, las cadenas de signos tienen cuadrado
-$1$ y $c_jc_j^*+c_j^*c_j=s^-_js^+_j+s^+_js^-_j=1$, $c_j^*c_j=s^+_js^-_j=n_j$. (b)
+$1$ y $c_jc_j^*+c_j^*c_j=s^-_js^+_j+s^+_js^-_j=1$, $c_j^*c_j=s^+_js^-_j=n_j$, $c_j^2=(s^-_j)^2=0$; el caso $i>j$ se
+sigue intercambiando los papeles de $i,j$ (y tomando adjuntos). (b)
 $c_j^*c_{j+1}=s^+_j(-1)^{n_j}s^-_{j+1}=s^+_js^-_{j+1}$, porque $s^+_j\neq0$ solo sobre $n_j=0$; se toman adjuntos.
 (c) $\{b_k,b_l^*\}=\sum_ju_k(j)u_l(j)=\delta_{kl}$ y $\{b_k,b_l\}=0$, y $H=\sum_k\varepsilon_kb_k^*b_k$ por la
 descomposición espectral de $h$. De las CAR, $[b_l^*b_l,b_k^*]=\delta_{lk}b_k^*$, así que $[H,b_k^*]=\varepsilon_kb_k^*$;
@@ -445,7 +477,8 @@ Si $x_2=x_1+L-1$, se usa el representante $(x_2,x_1+L)$, que es del tipo anterio
 La proposición 9.12 solo dice que las soluciones dan vectores propios; no dice que todos los vectores propios
 surjan así. Escribamos $k_{1,2}=K/2\pm q$ y $c=\cos\frac K2$. Entonces
 $1+e^{iK}-2\Delta e^{ik_{1,2}}=2e^{iK/2}(c-\Delta e^{\pm iq})$, así que $A_{12}=c-\Delta e^{iq}$,
-$A_{21}=-(c-\Delta e^{-iq})$ resuelven (i). Multiplicar las dos ecuaciones (ii) da $e^{iKL}=1$, $K=2\pi n/L$, y
+$A_{21}=-(c-\Delta e^{-iq})$ resuelven (i). Por (ii) y $(A_{12},A_{21})\ne0$, ambos coeficientes son no nulos, así
+que multiplicar las dos ecuaciones (ii) da $e^{iKL}=1$, $K=2\pi n/L$, y
 entonces (ii) equivale a $F(q)=(-1)^ne^{iqL}(c-\Delta e^{-iq})+c-\Delta e^{iq}=0$, una ecuación en una variable.
 Buscamos sus raíces $q\in(0,\pi)$, donde $e^{-iqL/2}F(q)$ es real o imaginario porque $c-\Delta e^{\pm iq}$ son
 complejos conjugados (estados de dispersión), y sobre las rectas $q=i\kappa$, $\pi+i\kappa$, $\kappa>0$, donde $F$ es
@@ -487,22 +520,22 @@ for x in range(8):
 assert close(ring8.xxz(1.0, Delta, sector=2).matrix[0, 0] @ Phi, (8 * Delta / 4 - Delta) * Phi)   # E_F - J Delta
 ```
 
-Para $L=9$, los $36$ estados propios provienen de las ecuaciones de Bethe: $34$ estados de dispersión y $2$ estados
-ligados. La completitud se comprueba aquí, no se demuestra, y para $L$ par falla. Si $\Delta\ne0$,
+*Observación numérica:* para $L=9$ y $\Delta=0.6$, la búsqueda encuentra $36$ raíces, $34$ estados de dispersión y
+$2$ estados ligados, cuyos vectores son vectores propios linealmente independientes (salvo redondeo): los $36$
+estados propios provienen de las ecuaciones de Bethe. No demostramos la completitud para otros $L$, y para $L$
+par y $\Delta\ne0$ falla, como mostramos ahora. Si $\Delta\ne0$,
 $\Phi=\sum_x(-1)^x|x,x+1\rangle$ cumple $T\Phi=-\Phi$ y $H\Phi=(E_F-J\Delta)\Phi$ (los saltos a $|x-1,x+1\rangle$ y
 $|x,x+2\rangle$ se cancelan por pares). Un vector de Bethe cumple $T\Psi=e^{-iK}\Psi$, ya que
-$\psi(x_1-1,x_2-1)=e^{-iK}\psi(x_1,x_2)$; si $e^{iK}=-1$, entonces
-$\cos k_1+\cos k_2=2\cos\frac K2\cos\frac{k_1-k_2}2=0$ y su energía es $E_F-2J\Delta$. Así, $\Phi$ es ortogonal a todos
-los vectores de Bethe (las últimas líneas del código comprueban $H\Phi$ para $L=8$). Con $\Delta=0.6$ y
-$4\le L\le13$, la búsqueda anterior encuentra todos los estados para $L$ impar, y todos salvo $\Phi$ para $L$ par.
-Para $N>2$ magnones, el ansatz tiene $N!$ términos y $N$ ecuaciones de Bethe acopladas (H. Bethe, *Z. Phys.* 71
-(1931) 205; M. Karbach, G. Müller, *Computers in Physics* 11 (1997) 36).
+$\psi(x_1-1,x_2-1)=e^{-iK}\psi(x_1,x_2)$. Si $e^{-iK}\ne-1$, $\Psi\perp\Phi$ porque son vectores propios del unitario $T$
+para valores propios distintos; si $e^{iK}=-1$, entonces $\cos k_1+\cos k_2=2\cos\frac K2\cos\frac{k_1-k_2}2=0$, la
+energía de $\Psi$ es $E_F-2J\Delta\ne E_F-J\Delta$, y $\Psi\perp\Phi$ como vectores propios de $H$ para valores propios
+distintos. Así, $\Phi$ es ortogonal a todos los vectores de Bethe de la proposición 9.12, que por tanto nunca
+generan el sector $N=2$ de un anillo par (las últimas líneas del código comprueban $H\Phi$ para $L=8$). El cálculo
+de dos magnones es el caso $N=2$ del ansatz de H. Bethe (*Z. Phys.* 71 (1931) 205); no usamos ningún otro caso.
 
-> **Significado físico.** Un magnón es una onda de espín: un espín invertido deslocalizado sobre el anillo con
-> momento $k$. Dos magnones se dispersan con un desfase (con $q$ real) o forman un estado ligado (con $q$ complejo).
-> La intuición de Bethe fue que, para $N$ magnones, la dispersión se factoriza en fases de dos cuerpos; sus
-> ecuaciones dan, por ejemplo, la energía del estado fundamental por sitio $\frac14-\log2$ de la cadena de
-> Heisenberg infinita (L. Hulthén, *Ark. Mat. Astron. Fys.* 26A (1938) n.º 11; enunciado sin demostración).
+> **Significado físico** (interpretación física, no un teorema de este curso). Un magnón es una onda de espín:
+> un espín invertido deslocalizado sobre el anillo con momento $k$. Dos magnones se dispersan con un desfase (con
+> $q$ real) o forman un estado ligado (con $q$ complejo).
 
 ## 9.5 Lanczos y métodos de Krylov
 
@@ -534,20 +567,19 @@ $\dim\mathcal K_m=m$. Entonces $\theta^{(m)}_j\ge\lambda_j$, y $\theta^{(m)}_j\g
 $\dim\mathcal K_{m+1}=m+1$ ($j\le m$). Si $v$ tiene una componente no nula en el espacio propio de $\lambda_1$ y
 $\mathcal K_{m+1}=\mathcal K_m$, entonces $\theta^{(m)}_1=\lambda_1$.
 
-*Demostración.* Por Courant–Fischer (álgebra lineal estándar),
-$\theta^{(m)}_j=\min_{U}\max_{x\in U,\|x\|=1}\langle x,Hx\rangle$ sobre los $U\subseteq\mathcal K_m$ de dimensión $j$, ya que
-$Q_m$ es una isometría sobre $\mathcal K_m$ y $\langle y,T_my\rangle=\langle Q_my,HQ_my\rangle$. La misma fórmula sobre
-$U\subseteq\mathcal K_{m+1}$ da $\theta^{(m+1)}_j$ y sobre $U\subseteq\mathbb C^n$ da $\lambda_j$; minimizar sobre más
-subespacios da un valor menor. Si $\mathcal K_{m+1}=\mathcal K_m$, entonces $\mathcal K_m$ es $H$-invariante y contiene
+*Demostración.* Por el corolario A.9 (Courant–Fischer para compresiones, teorema A.8) aplicado a $Q=Q_m$,
+$\theta^{(m)}_j=\min_{U}\max_{x\in U,\|x\|=1}\langle x,Hx\rangle$ sobre los $U\subseteq\mathcal K_m=\operatorname{ran}Q_m$ de
+dimensión $j$. La misma fórmula sobre $U\subseteq\mathcal K_{m+1}$ da $\theta^{(m+1)}_j$ y sobre $U\subseteq\mathbb C^n$ da
+$\lambda_j$ (teorema A.8); minimizar sobre más subespacios da un valor menor. Si $\mathcal K_{m+1}=\mathcal K_m$, entonces $\mathcal K_m$ es $H$-invariante y contiene
 $p(H)v$ para todo polinomio $p$, en particular $P_1v\ne0$ ($P_1$ la proyección espectral de $\lambda_1$, un
 polinomio en $H$ por interpolación de Lagrange, como en el teorema 1.5); así que
 $\theta^{(m)}_1\le\langle x,Hx\rangle=\lambda_1$ en $x=P_1v/\|P_1v\|\in\mathcal K_m$. $\square$
 
-La rapidez con que $\theta^{(m)}_1\to\lambda_1$ depende de la brecha $\lambda_2-\lambda_1$ en relación con la amplitud del
-espectro (cotas de Kaniel–Paige–Saad mediante polinomios de Chebyshev; Y. Saad, *Numerical Methods for Large
-Eigenvalue Problems*, SIAM 2011, cap. 6; enunciado sin demostración). En coma flotante, los $q_j$ pierden la
-ortogonalidad; `krylov.lanczos` reortogonaliza por completo. Para la cadena XX se conoce la energía exacta del
-estado fundamental (teorema 9.10):
+El teorema 9.14 no dice nada sobre la rapidez con que $\theta^{(m)}_1$ se acerca a $\lambda_1$; solo la observamos
+más abajo. En coma flotante, los $q_j$ pierden la ortogonalidad; `krylov.lanczos` reortogonaliza por completo, y
+el código comprueba que los $q_j$ calculados son ortonormales y que $Q_m^*HQ_m=T_m$ salvo redondeo. Para la cadena
+XX abierta, la energía exacta del estado fundamental del sector $N$ es la suma de los $N$ menores $\varepsilon_k$
+(teorema 9.10(c)):
 
 ```python
 L, N = 12, 6
@@ -562,30 +594,42 @@ assert (ritz[1:] <= ritz[:-1] + 1e-12).all() and (ritz >= E_xx - 1e-12).all()   
 print([f"{(ritz[m - 1] - E_xx).item():.1e}" for m in (5, 10, 20, 40)])
 ```
 
-El error del menor valor de Ritz cae monótonamente, $0.42$, $3.1\cdot10^{-3}$ y $3.1\cdot10^{-6}$ tras $5$, $10$ y
-$20$ pasos, y alcanza el nivel de redondeo tras $40$, en dimensión $924$. `krylov.ground_state` reinicia Lanczos
-hasta que el residuo $\|H\psi-E\psi\|$ queda por debajo de $10^{-10}$. Lo comprobamos frente a las energías del
-anillo de Heisenberg tabuladas con nueve cifras en `scripts/chains.py` (los valores de referencia del artículo
-complementario), de forma densa hasta $L=12$ y con Lanczos para $L=16$:
+*Observación numérica:* el error del menor valor de Ritz cae monótonamente (como debe, por el teorema 9.14),
+$0.42$, $3.1\cdot10^{-3}$ y $3.1\cdot10^{-6}$ tras $5$, $10$ y $20$ pasos, y alcanza el nivel de redondeo tras $40$, en
+dimensión $924$. `krylov.ground_state` reinicia Lanczos (desde un vector aleatorio gaussiano, salvo que se dé
+`v0`) hasta que el residuo $\|H\psi-E\psi\|$ de su par de Ritz normalizado $(E,\psi)$ queda por debajo de
+$10^{-10}\max(1,|E|)$ (como mucho $20$ reinicios, con una advertencia en caso contrario), y devuelve el residuo.
+Un residuo pequeño certifica un valor propio cercano: para $H$ hermítica y $\|\psi\|=1$,
+$\|H\psi-E\psi\|^2=\sum_i|\lambda_i-E|^2|\langle u_i,\psi\rangle|^2\ge\min_i|\lambda_i-E|^2$ ($u_i$ una base ortonormal de vectores
+propios). No certifica que ese valor propio sea el menor, así que comparamos con la diagonalización densa, que es
+nuestra única referencia (calculada aquí, así que los valores son numéricos): el sector $N=L/2$ hasta $L=12$ y,
+para $L=16$, el bloque de momento $k=0$ de dimensión $810$, que contiene el estado fundamental del sector $N=8$ por
+el corolario 9.8. Para $L=4$ el valor es exacto: con $\mathbf S_A=\mathbf s_0+\mathbf s_2$, $\mathbf S_B=\mathbf s_1+\mathbf s_3$, el
+anillo es $H=J\,\mathbf S_A\cdot\mathbf S_B=\frac J2(\mathbf S^2-\mathbf S_A^2-\mathbf S_B^2)\ge\frac J2(0-2-2)=-2J$, ya que
+$\mathbf S^2\ge0$ y $\mathbf S_A^2,\mathbf S_B^2$ tienen los valores propios $0,2$ (proposición 4.13 con $L=2$); la igualdad se
+da en un vector de espín $0$ del producto de los dos tripletes, que existe por el capítulo 4, ejercicio 2
+($1\otimes1\cong2\oplus1\oplus0$).
 
 ```python
-RING = {4: -2.0, 6: -2.802775638, 8: -3.651093409, 10: -4.515446354, 12: -5.387390917,
-        14: -6.263549534, 16: -7.142296361}
+E_dense = {}                                                         # numerical references, dense
 for n in (4, 6, 8, 10, 12):
-    e0 = torch.linalg.eigvalsh(SpinChain(n, 'periodic').heisenberg(sector=n // 2).matrix[0, 0])[0].item()
-    assert abs(e0 - RING[n]) < 5e-10
-    print(n, round(e0 / n, 6))
+    E_dense[n] = torch.linalg.eigvalsh(SpinChain(n, 'periodic').heisenberg(sector=n // 2).matrix[0, 0])[0].item()
+    print(n, round(E_dense[n] / n, 6))
+assert abs(E_dense[4] + 2) < 1e-12                                   # exact value for L = 4
+ring16 = SpinChain(16, 'periodic')
+k0 = ring16.momentum_dims(8)[0]                                      # dimension of the block k = 0
+H16 = ring16.xxz_momentum(J=1.0, Delta=1.0, sector=8).matrix[0, 0, :k0, :k0]
+E_dense[16] = torch.linalg.eigvalsh(H16)[0].item()                   # ground state of N = 8 (Corollary 9.8)
 t0 = time.time()
 E16, psi16, res = krylov.ground_state(SpinChain(16, 'periodic', complex_valued=False).xxz_sparse(sector=8),
                                       generator=torch.Generator().manual_seed(0))
-print(f"L = 16: E0 = {E16.item():.10f}, residual {res.item():.1e}, {time.time() - t0:.2f} s; "
-      f"infinite chain: {0.25 - math.log(2):.6f}")
-assert abs(E16.item() - RING[16]) < 5e-10 and res.item() < 1e-9
+print(f"L = 16: E0 = {E16.item():.10f}, residual {res.item():.1e}, {time.time() - t0:.2f} s; k = 0 block: {k0}")
+assert abs(E16.item() - E_dense[16]) < 1e-9 and res.item() < 1e-9
 ```
 
-Para $L=16$ (dimensión $12870$), Lanczos tarda bastante menos de un segundo en un hilo de CPU. La energía por
-sitio, $-0.5,-0.467129,-0.456387,-0.451545,-0.448949$ para $L=4,\dots,12$, se acerca por debajo al valor
-$\frac14-\log2=-0.443147$ de la cadena infinita.
+Para $L=16$ (dimensión $12870$), Lanczos tarda bastante menos de un segundo en un hilo de CPU. *Observación
+numérica:* la energía por sitio, $-0.5,-0.467129,-0.456387,-0.451545,-0.448949$ para $L=4,\dots,12$, crece con $L$;
+no demostramos nada sobre su límite.
 
 **Evolución temporal.** Para $e^{-i\tau H}v$ se proyecta sobre $\mathcal K_m$: $w_\tau=\|v\|\,Q_me^{-i\tau T_m}e_1$.
 
@@ -595,12 +639,14 @@ $\langle w_\tau,Hw_\tau\rangle=\langle v,Hv\rangle$. Si $\mathcal K_m$ es $H$-in
 *Demostración.* $Q_m$ es una isometría y $e^{-i\tau T_m}$ es unitaria ($T_m$ es real simétrica), lo que da la norma.
 Como $Q_m^*HQ_m=T_m$ conmuta con $e^{-i\tau T_m}$,
 $\langle w_\tau,Hw_\tau\rangle=\|v\|^2\langle e^{-i\tau T_m}e_1,T_me^{-i\tau T_m}e_1\rangle=\|v\|^2\langle e_1,T_me_1\rangle=\langle v,Hv\rangle$. Si
-$\mathcal K_m$ es invariante, $HQ_m=Q_mT_m$ (proposición 9.13, $r_m=0$), así que $H^jQ_m=Q_mT_m^j$ y
-$e^{-i\tau H}Q_m=Q_me^{-i\tau T_m}$; se aplica a $e_1$, con $Q_me_1=v/\|v\|$. $\square$
+$\mathcal K_m$ es invariante, $HQ_m=Q_mT_m$ (proposición 9.13, $r_m=0$), así que $H^jQ_m=Q_mT_m^j$ y, sumando la
+serie exponencial (proposición 8.2(1)), $e^{-i\tau H}Q_m=Q_me^{-i\tau T_m}$; se aplica a $e_1$, con $Q_me_1=v/\|v\|$. $\square$
 
-Así, cada paso de Krylov conserva la norma y la energía, sea preciso o no; la precisión exige un $m$ grande en
-comparación con $\tau\|H\|$, y `krylov.evolve` subdivide el intervalo de tiempo y estima el error a posteriori
-(M. Hochbruck, C. Lubich, *SIAM J. Numer. Anal.* 34 (1997) 1911; enunciado sin demostración). Realizamos un
+Así, cada paso de Krylov conserva la norma y la energía, sea preciso o no; la proposición 9.15 no dice nada
+sobre la precisión salvo que $\mathcal K_m$ sea invariante. `krylov.evolve` subdivide el intervalo de tiempo en pasos
+cortos, cada uno realizado en un espacio de Krylov con $m=30$, y emite una advertencia cuando un indicador
+heurístico del error es grande; no demostramos ninguna cota de error para él y, en su lugar, lo comparamos con
+$e^{-itH}$ calculada a partir de una descomposición espectral densa (teorema 1.5). Realizamos un
 *quench* desde el estado de Néel $|{\uparrow\downarrow\uparrow\downarrow}\cdots\rangle$ en el anillo de Heisenberg y
 seguimos la magnetización alternada $m_s=\frac2L\sum_i(-1)^i\langle s^z_i\rangle$, comparando con el propagador denso
 para $L=12$:
@@ -625,20 +671,21 @@ for n in (12, 16):
 print(f"{max(abs(a - b) for a, b in zip(m_s[12][:4], m_s[16][:4])):.1e}")   # L = 12 vs 16 up to t = 2
 ```
 
-$m_s$ decae desde $1$, pasando por $0.770$ y $0.279$, hasta $-0.183$ en $t=2$, para ambos tamaños con una
-diferencia de $1.7\cdot10^{-5}$; en $t=4$ difieren ($0.026$ frente a $0.035$): el tamaño finito del anillo más
-pequeño se hace visible.
+*Observación numérica:* $m_s$ decae desde $1$, pasando por $0.770$ y $0.279$, hasta $-0.183$ en $t=2$, igual para
+ambos tamaños salvo $1.7\cdot10^{-5}$; en $t=4$ difieren ($0.026$ frente a $0.035$).
 
 ## 9.6 Desorden: estadística de niveles y entrelazamiento
 
 La **cadena de Heisenberg con campo aleatorio** tiene campos independientes $h_i$ uniformes en $[-W,W]$. Conserva
-$S^z$ (proposición 9.1) y, genéricamente, nada más: los campos rompen las traslaciones, las reflexiones, la
-inversión de espines y $SU(2)$. Por eso la estadística de niveles se calcula por sector $N$ (teorema 5.15 y
-sección 5.4: mezclar sectores simula niveles independientes). Para desorden débil, los niveles se repelen como
-en el GOE, $\langle r\rangle\approx0.5307$ (sección 5.3); para desorden fuerte, los estados propios se localizan
-(**localización de muchos cuerpos**) y los niveles se vuelven independientes, $\langle r\rangle=2\log2-1\approx0.3863$
-(proposición 5.14). Calculamos $\langle r\rangle$ en la mitad central del sector $N=L/2$, con un error estándar sobre
-las realizaciones independientes (cada una da un cociente medio):
+$S^z$ (proposición 9.1), así que la estadística de niveles se calcula por sector $N$ (teorema 5.15 y sección 5.4:
+mezclar sectores simula niveles independientes). Si dos campos difieren, $THT^*-H=\sum_i(h_{i-1}-h_i)s^z_i\ne0$, así
+que las traslaciones dejan de ser una simetría. Calculamos $\langle r\rangle$ en la mitad central del sector $N=L/2$,
+con un error estándar sobre las realizaciones independientes (cada una da un cociente medio), y comparamos con
+dos referencias: $2\log2-1\approx0.3863$, el cociente medio exacto de espaciamientos exponenciales independientes
+(proposición 5.14(a)), y el cociente medio de matrices del GOE (definidas como en la sección 5.3; el código
+muestrea $G+G^T$, el doble de una matriz del GOE, lo que no cambia ningún cociente) del mismo tamaño $252$ que el
+sector para $L=10$, muestreadas aquí. Las comparaciones son observaciones numéricas, no teoremas: no demostramos
+nada sobre el espectro de la cadena aleatoria.
 
 ```python
 gen = torch.Generator().manual_seed(1)
@@ -651,17 +698,29 @@ for n, R in ((8, 200), (10, 100)):
         r = SpinChain.level_spacing_ratio(E[:, k // 4: 3 * k // 4])     # one value per realisation
         r_mean[n, W] = (r.mean().item(), (r.std() / math.sqrt(R)).item())
     print(n, '  '.join(f"W={W}: {m:.3f}+-{s:.3f}" for (n_, W), (m, s) in r_mean.items() if n_ == n))
-assert abs(r_mean[10, 0.5][0] - 0.5307) < 0.015 and abs(r_mean[10, 16][0] - 0.3863) < 0.015
+X = torch.randn(100, k, k, dtype=f64, generator=gen)                  # 100 GOE matrices of size k = 252
+r_goe = SpinChain.level_spacing_ratio(torch.linalg.eigvalsh(X + X.mT)[:, k // 4: 3 * k // 4])
+print(f"GOE({k}): {r_goe.mean().item():.3f}+-{(r_goe.std() / 10).item():.3f}, Poisson: {2 * math.log(2) - 1:.4f}")
+assert abs(r_mean[10, 0.5][0] - r_goe.mean().item()) < 0.015               # numerical observation
+assert abs(r_mean[10, 16][0] - (2 * math.log(2) - 1)) < 0.015               # numerical observation
 assert r_mean[10, 1][0] > r_mean[10, 2][0] > r_mean[10, 4][0] > r_mean[10, 8][0]
 ```
 
-Para $L=10$, el cociente medio va de $0.530$ ($W=0.5$), pasando por $0.484$ ($W=2$) y $0.410$ ($W=4$), hasta
-$0.384$ ($W=16$), con errores estándar de $0.003$–$0.004$. Para $L=8$, el valor en $W=0.5$ ($0.507$) está por
-debajo del de $W=1$ ($0.525$): en $W=0$ la cadena es integrable y tiene todas las simetrías anteriores, y un valor
-de GOE requiere un desorden grande en comparación con el espaciamiento entre niveles. La transición es amplia y se
-desplaza con $L$; el escalado de tamaño finito la sitúa cerca de $W\approx3.7$ (D. Luitz, N. Laflorencie, F. Alet,
-*Phys. Rev. B* 91 (2015) 081103), y se debate si una fase localizada sobrevive cuando $L\to\infty$ (J. Šuntajs,
-J. Bonča, T. Prosen, L. Vidmar, *Phys. Rev. E* 102 (2020) 062144).
+*Observación numérica:* para $L=10$, el cociente medio va de $0.530$ ($W=0.5$), cercano al valor muestreado del
+GOE, $0.533$, pasando por $0.484$ ($W=2$) y $0.410$ ($W=4$), hasta $0.384$ ($W=16$), cercano a $2\log2-1$, con errores
+estándar de $0.003$–$0.004$. Para $L=8$, el valor en $W=0.5$ ($0.507$) está por debajo del de $W=1$ ($0.525$). En
+$W=0$ el anillo conmuta con $T$ (sección 9.2) y con el espín total (sección 9.3), así que su sector $N=L/2$ se
+divide en bloques; los campos acoplan estos bloques solo a través de $\sum_ih_is^z_i$, de norma de operador a lo
+sumo $\frac{WL}2$.
+
+> **Significado físico** (interpretación física, no un teorema de este curso). Los físicos interpretan el cambio
+> de $\langle r\rangle$ como una transición desde niveles que se repelen como los del GOE (desorden débil) hacia
+> niveles que se comportan como independientes, atribuida a la **localización de muchos cuerpos** de los estados
+> propios (desorden fuerte). La transición se desplaza con $L$; dónde se sitúa cuando $L\to\infty$, y si existe
+> siquiera una fase localizada, son cuestiones abiertas en la literatura física (D. Luitz, N. Laflorencie,
+> F. Alet, *Phys. Rev. B* 91 (2015) 081103; J. Šuntajs, J. Bonča, T. Prosen, L. Vidmar, *Phys. Rev. E* 102 (2020)
+> 062144). La caída en $L=8$, $W=0.5$ se interpreta como un resto de la estructura de bloques adicional en $W=0$
+> (compárese con la sección 5.4).
 
 **Entrelazamiento de fermiones libres.** Para los estados propios de la cadena XX abierta, la entropía de
 entrelazamiento de los primeros $n$ sitios está determinada por una matriz $n\times n$.
@@ -678,7 +737,7 @@ $$
 $\{b(x),b(y)^*\}=\langle x,y\rangle$. Sean $U\subseteq\mathbb R^L$ el subespacio generado por los $u_{k_a}$, y $P_A$,
 $P_B=1-P_A$ las proyecciones de coordenadas sobre $\{0,\dots,n-1\}$ y su complemento. Diagonalizar la forma
 $\langle P_Ax,P_Ay\rangle$ sobre $U$ da una base ortonormal $\phi_1,\dots,\phi_N$ de $U$ con
-$\langle P_A\phi_a,P_A\phi_b\rangle=\nu_a\delta_{ab}$ y, por tanto, $\langle P_B\phi_a,P_B\phi_b\rangle=(1-\nu_a)\delta_{ab}$. Como
+$\langle P_A\phi_a,P_A\phi_b\rangle=\nu_a\delta_{ab}$, donde $\nu_a=\|P_A\phi_a\|^2\in[0,1]$, y, por tanto, $\langle P_B\phi_a,P_B\phi_b\rangle=(1-\nu_a)\delta_{ab}$. Como
 $(x_1,\dots,x_N)\mapsto b(x_1)^*\cdots b(x_N)^*|0\rangle$ es multilineal y alternada,
 $\Phi=\pm\prod_a\big(\sqrt{\nu_a}f_a^*+\sqrt{1-\nu_a}\,g_a^*\big)|0\rangle$ con $f_a=b(P_A\phi_a/\sqrt{\nu_a})$,
 $g_a=b(P_B\phi_a/\sqrt{1-\nu_a})$ (omitiendo los términos con coeficiente nulo). Desarrollando,
@@ -688,8 +747,9 @@ $A$: $c_j^*=(-1)^{N_A}\otimes\tilde c_j^*$ con operadores de Jordan–Wigner $\t
 mientras que para $i<n$, $c_i^*=\hat c_i^*\otimes1$. Como $(-1)^{N_A}$ vale $1$ sobre $|0_A\rangle$,
 $F_I^*G_{I^c}^*|0\rangle=\xi_I\otimes\chi_{I^c}$ con $\xi_I=\hat F_I^*|0_A\rangle$, $\chi_{I^c}=\tilde G_{I^c}^*|0_B\rangle$, que son
 familias ortonormales por el cálculo con las CAR del teorema 9.10. Esto es una descomposición de Schmidt
-(lema 7.7) con pesos $p_I=\prod_{a\in I}\nu_a\prod_{a\notin I}(1-\nu_a)$, la ley de variables de Bernoulli
-independientes, así que $S_A=-\sum_Ip_I\log p_I=\sum_a\eta(\nu_a)$. Por último, $C_{ij}=\sum_a\phi_a(i)\phi_a(j)$
+(lema 7.7) con pesos $p_I=\prod_{a\in I}\nu_a\prod_{a\notin I}(1-\nu_a)$ (los signos se incorporan a $\xi_I$), la
+ley de variables de Bernoulli independientes, así que, como
+$\log p_I=\sum_{a\in I}\log\nu_a+\sum_{a\notin I}\log(1-\nu_a)$ y $\sum_{I\ni a}p_I=\nu_a$, $S_A=-\sum_Ip_I\log p_I=\sum_a\eta(\nu_a)$. Por último, $C_{ij}=\sum_a\phi_a(i)\phi_a(j)$
 (desarrollando $c_i^*c_j$ en los $b(\phi_a)$), así que $C_A=\sum_a(P_A\phi_a)(P_A\phi_a)^T$ tiene los valores propios
 $\nu_a$ sobre los vectores ortogonales $P_A\phi_a$ y $0$ en el resto, y $\eta(0)=0$. $\square$
 
@@ -711,10 +771,8 @@ assert np.allclose(S_lib, S_peschel, atol=1e-9)                       # Theorem 
 print([round(s, 4) for s in S_lib[:6]])
 ```
 
-Las entropías $0.6931,0.5199,0.7456,0.6283,0.7719,0.6560$ para $n=1,\dots,6$ oscilan con la paridad de $n$ y
-crecen como $\frac16\log L$ con $n/L$ fijo, la ley de la teoría de campos conforme para una cadena abierta
-(I. Peschel, *J. Phys. A* 36 (2003) L205; P. Calabrese, J. Cardy, *J. Stat. Mech.* (2004) P06002; enunciado sin
-demostración).
+*Observación numérica:* las entropías $0.6931,0.5199,0.7456,0.6283,0.7719,0.6560$ para $n=1,\dots,6$ oscilan con la
+paridad de $n$. El teorema 9.16 se debe a I. Peschel (*J. Phys. A* 36 (2003) L205).
 
 ## 9.7 Con qué comparar
 
@@ -769,13 +827,18 @@ assert abs(12 * corr_we[1].item() - gs.energy.item()) < 1e-10 and abs(corr_we.su
    $|{\uparrow\cdots\uparrow}\rangle$ tiene los $L$ enlaces paralelos, energía $JL/4$, y $S^-$ conmuta con $H$, así que
    el vector es un vector propio con la misma energía. Si $W$ es invariante y $v\in W$, entonces $H^jv\in W$ para
    todo $j$. Aquí $\mathcal K_m=\mathbb Cv$ para todo $m$, y `ground_state` devuelve $E=JL/4$, el extremo superior
-   del espectro (cada $\mathbf s_i\cdot\mathbf s_j\le\frac14$); un vector inicial aleatorio lo evita con probabilidad
-   uno.
+   del espectro (cada $\mathbf s_i\cdot\mathbf s_j=\frac12F_{ij}-\frac14\le\frac14$ por la proposición 4.15(a), ya que $F_{ij}$ es
+   una matriz de permutación simétrica con valores propios $\pm1$). Un vector inicial aleatorio evita esta trampa:
+   un $v$ gaussiano tiene densidad, así que casi seguramente tiene una componente no nula $P_1v$ en el espacio
+   propio de $\lambda_1$ (corolario A.7(c); para un $v$ real se aplica en $W=\mathbb R^n$ al subespacio estricto
+   $\{v:P_1v=0\}$, estricto porque la matriz real $P_1\ne0$ tiene una columna no nula), y entonces, por el
+   teorema 9.14, un espacio de Krylov $H$-invariante $\mathcal K_m(H,v)$ tiene como menor valor de Ritz $\lambda_1$,
+   mientras que aquí el espacio invariante $\mathcal K_1=\mathbb Cv$ tiene el valor de Ritz $JL/4$.
 
 ```python
 c10 = SpinChain(10, 'periodic', complex_valued=False)
 E_sym, _, _ = krylov.ground_state(c10.xxz_sparse(1.0, 1.0, sector=5), v0=torch.ones(1, 252, dtype=f64))
-assert abs(E_sym.item() - 2.5) < 1e-10 and E_sym.item() > RING[10] + 7     # far from E_0
+assert abs(E_sym.item() - 2.5) < 1e-10 and E_sym.item() > E_dense[10] + 7  # far from E_0
 ```
 
 </details>
