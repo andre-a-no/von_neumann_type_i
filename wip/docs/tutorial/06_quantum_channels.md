@@ -98,13 +98,14 @@ Proposition 6.4 with shape `(batch, r, C', C, k'_max, k_max)`. `Channel.choi()` 
 $J(\Phi_{cc})$ for every sector and `Channel.superoperator()` the matrix $S_c$ of $\Phi_{cc}$ on
 row-major vectors, $\operatorname{vec}(X)_{(a,b)}=X_{ab}$. Both contain the numbers
 $\Phi(E_{ij})_{ab}=J_{(i,a),(j,b)}=S_{(a,b),(i,j)}$ in a different order. `Channel.from_superoperator`
-replaces each Choi matrix $J$ by its Hermitian part $(J+J^*)/2$, diagonalises it as in the proof of
-Theorem 6.2 (negative eigenvalues within the tolerance are set to $0$), and raises `ValueError` if an
-eigenvalue is below $-10^{-10}s$ (in double precision), where $s$ is the maximum of $1$ and the
-largest $\|J\|$ among the Choi matrices of the same block size in the call. If $\Phi(X^*)=\Phi(X)^*$
-for all $X$, then $J^*=J$ (the $(i,j)$ block of $J^*$ is $\Phi(E_{ji})^*=\Phi(E_{ij})$), so for such maps
-it refuses, by Theorem 6.2, exactly those that are not CP, up to this rounding tolerance. For other
-maps it is not a test: for $X\mapsto iX$ the Hermitian part of $J$ is $0$, and the zero map is returned.
+raises `ValueError` if a Choi matrix is not Hermitian, $\|J-J^*\|>2\cdot10^{-10}s$ (in double precision), where
+$s=\max(1,\|J\|)$ with the spectral norm; otherwise it replaces $J$ by its Hermitian part $(J+J^*)/2$,
+diagonalises it as in the proof of Theorem 6.2, raises `ValueError` if an eigenvalue is below $-10^{-10}s$,
+and sets the remaining negative eigenvalues to $0$. If $\Phi(X^*)=\Phi(X)^*$ for all $X$, then $J^*=J$ (the
+$(i,j)$ block of $J^*$ is $\Phi(E_{ji})^*=\Phi(E_{ij})$); conversely $J^*=J$ gives $\Phi(E_{ji})^*=\Phi(E_{ij})$,
+hence $\Phi(X^*)=\Phi(X)^*$ by linearity. So, up to these rounding tolerances, it refuses exactly the maps
+that do not preserve adjoints and, by Theorem 6.2, among the others exactly those that are not CP; for
+example $X\mapsto iX$ is refused.
 
 ```python
 import math
@@ -165,8 +166,11 @@ try:
     raise AssertionError("the transpose was accepted")
 except ValueError as e:
     print(e)                                              # superoperator is not completely positive
-times_i = Channel.from_superoperator(alg, [1j * torch.eye(k * k, dtype=dt)[None] for k in (2, 3)])
-assert times_i.kraus.abs().max() == 0                     # X -> iX: not refused, the zero map is returned
+try:
+    Channel.from_superoperator(alg, [1j * torch.eye(k * k, dtype=dt)[None] for k in (2, 3)])
+    raise AssertionError("X -> iX was accepted")
+except ValueError as e:
+    print(e)                                              # superoperator does not preserve Hermiticity
 ```
 
 > **Physical meaning** (physical interpretation, not a theorem of this course). A system is never alone: it may be correlated with an untouched ancilla
@@ -392,8 +396,8 @@ $$
 \sum_lY_lY_l^*=\sum_l\big(K_lX^2K_l^*-K_lXK_l^*X-XK_lXK_l^*+XK_lK_l^*X\big)
 =\Phi(X^2)-\Phi(X)X-X\Phi(X)+X\Phi(1)X=\Phi(X^2)-X^2,
 $$
-using $Y_l^*=XK_l^*-K_l^*X$, $\Phi(X)=X$ and $\Phi(1)=1$. Its trace is $0$ because $\Phi$ is TP. As $\operatorname{Tr}Y_lY_l^*=\|Y_l\|_2^2\ge0$, every $Y_l=0$;
-taking adjoints, $X$ commutes with $K_l^*$ too. These $X$ form the commutant of a self-adjoint set,
+using $Y_l^*=XK_l^*-K_l^*X$, $\Phi(X)=X$ and $\Phi(1)=1$. Its trace is $0$ because $\Phi$ is TP. As
+$\operatorname{Tr}Y_lY_l^*=\|Y_l\|_2^2\ge0$, every $Y_l=0$; taking adjoints, $X$ commutes with $K_l^*$ too. These $X$ form the commutant of a self-adjoint set,
 intersected with $\mathcal M$: a $*$-algebra containing $1$, hence a von Neumann algebra
 (Theorem 2.2). $\square$
 

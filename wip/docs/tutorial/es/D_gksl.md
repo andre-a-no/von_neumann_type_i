@@ -481,7 +481,7 @@ $PE_i^*E_jP\in\mathfrak A'$ para todos $i,j$. En ese caso, el canal $\mathcal R$
 
 *Demostración.* *Necesidad.* Supongamos que $\mathcal R$ corrige $\mathfrak A$ y pongamos $W_{mi}=R_mE_iP$, de modo que
 $\sum_{m,i}W_{mi}^*XW_{mi}=P(\mathcal R\circ\Phi)^*(X)P$ para todo $X\in M_D$. Esto es igual a $X$ para $X\in\mathfrak A$, y a $P$ para
-$X=1$, porque $(\mathcal R\circ\Phi)^*$ es unital (corolario 6.9(b)). Sea $p\in\mathfrak A$ una proyección; entonces $p\le P$
+$X=1$, porque $(\mathcal R\circ\Phi)^*$ es unital (corolario 6.9(a)). Sea $p\in\mathfrak A$ una proyección; entonces $p\le P$
 y $\sum W_{mi}^*(1-p)W_{mi}=P-p$. Para $x=px$,
 $\sum_{m,i}\|(1-p)W_{mi}x\|^2=\langle x,(P-p)x\rangle=0$, y para $x=(P-p)x$,
 $\sum_{m,i}\|pW_{mi}x\|^2=\langle x,px\rangle=0$. Por tanto, $(1-p)W_{mi}p=0$ y $pW_{mi}(P-p)=0$, y como

@@ -234,7 +234,7 @@ $$
 Ist $x\in Q$, so ist $x_-=0$ und $z=A\in Q$, also $|z|=z=P(y)|x|$; ebenso für $-x\in Q$. $\square$
 
 Der Code prüft Satz F.5 für $\operatorname{Herm}_4(\mathbb C)$ und für den Lorentz-Kegel $Q\subseteq V_4$ (die negative
-Paarung ist der Zeuge $c_i$ aus (iv)$\Rightarrow$(ii)), Satz F.6 in $V_4$, wo die Operatoren $L(b)$ und $P(y)$ in den
+Paarung ist der Zeuge $c_i$ aus (1), $\langle y,c_i\rangle=\lambda_i\|c_i\|^2<0$), Satz F.6 in $V_4$, wo die Operatoren $L(b)$ und $P(y)$ in den
 Koordinaten $(a,u)$ symmetrische $5\times5$-Matrizen sind, und Korollar F.7 in
 $\operatorname{Herm}_5(\mathbb R)$:
 
@@ -627,8 +627,8 @@ $$
 $$
 Umgekehrt ist jede solche Abbildung ein Jordan-$*$-Isomorphismus, und $S$ ist bis auf Blöcke mit $k_c=1$ eindeutig.
 
-*Beweis.* Nach Lemma F.16 und Lemma F.14(4) ist $\Phi(P_c)=Q_{\sigma(c)}$ für eine Bijektion $\sigma$ zwischen den
-minimalen zentralen Projektionen, also $C=C'$. Ist $x=P_cxP_c$, so ist $\Phi(x)=Q_{\sigma(c)}\Phi(x)Q_{\sigma(c)}$, also
+*Beweis.* Nach Lemma F.16 und Lemma F.14(4) ist $\Phi(P_c)=P'_{\sigma(c)}$ für eine Bijektion $\sigma$ zwischen den
+minimalen zentralen Projektionen, also $C=C'$. Ist $x=P_cxP_c$, so ist $\Phi(x)=P'_{\sigma(c)}\Phi(x)P'_{\sigma(c)}$, also
 bildet $\Phi$ Block $c$ in Block $\sigma(c)$ ab, und $\Phi^{-1}$ bildet Block $\sigma(c)$ in Block $c$ ab; daher ist
 $k_c^2=k'^2_{\sigma(c)}$, und die Einschränkung ist ein Jordan-$*$-Isomorphismus $M_{k_c}\to M_{k_c}$, nach Satz F.17 von
 einer der beiden Formen. Da $x=\sum_cP_cxP_c$, bestimmt das $\Phi$. Die Umkehrung gilt blockweise (Proposition 13.9), und

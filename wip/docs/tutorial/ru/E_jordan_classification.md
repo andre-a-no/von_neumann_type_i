@@ -1,0 +1,831 @@
+[English](../E_jordan_classification.md) · [Español](../es/E_jordan_classification.md) · [Français](../fr/E_jordan_classification.md) · [Deutsch](../de/E_jordan_classification.md) · [中文](../zh/E_jordan_classification.md) · [日本語](../ja/E_jordan_classification.md) · **Русский**
+
+# Приложение E. Классификация евклидовых йордановых алгебр
+
+В главе 13 использовалась классификация Йордана–фон Неймана–Вигнера конечномерных формально вещественных йордановых алгебр.
+В этом приложении она доказывается полностью, исходя лишь из йорданова тождества и конечномерной линейной алгебры. Путь
+классический (J. Faraut, A. Korányi, *Analysis on Symmetric Cones*, Chapters II–V; K. McCrimmon, *A Taste of
+Jordan Algebras*): степенная ассоциативность и спектральная лемма дают идемпотенты и ассоциативную положительную следовую форму;
+разложение Пирса относительно йорданова репера разбивает алгебру на части $J_{ij}$, произведения которых подчиняются
+жёстким правилам; в простой алгебре ранга $r\ge3$ эти правила превращают пространство Пирса $J_{13}$ в композиционную алгебру, которая по
+теореме Гурвица есть $\mathbb R,\mathbb C,\mathbb H$ или $\mathbb O$, и тогда вся алгебра есть
+$\operatorname{Herm}_r$ над ней. В разделе E.6 доказывается также теорема Фробениуса о вещественных ассоциативных алгебрах с делением, а
+в разделе E.8 — что алгебра Альберта $\operatorname{Herm}_3(\mathbb O)$ является йордановой алгеброй, которая не вкладывается
+ни в какую ассоциативную алгебру.
+
+**Вы узнаете**, почему степенная ассоциативность, положительность следовой формы и существование единицы следуют
+из одной лишь формальной вещественности; правила Пирса и то, как они заставляют координаты простой алгебры перемножаться как
+числа; доказательство теоремы Гурвица с помощью удвоения Кэли–Диксона; и почему октонионы дают новую простую алгебру лишь в ранге $3$.
+
+**Соглашения.** Все алгебры — конечномерные вещественные векторные пространства с билинейным произведением. **Йорданова алгебра**
+— как в разделе 13.1: $x\circ y=y\circ x$ и $(x^2\circ y)\circ x=x^2\circ(y\circ x)$, $x^2=x\circ x$; единица не
+предполагается. $L(x)y=x\circ y$, $[A,B]=AB-BA$, а $\operatorname{Tr}$ — след линейного отображения. **Подалгебра** —
+подпространство, замкнутое относительно $\circ$, **идеал** — подпространство $I$ с $J\circ I\subseteq I$, и $J$ **простая**, если
+$J\ne0$ и её единственные идеалы — $0$ и $J$. **Идемпотент** — это $c$ с $c^2=c$; идемпотенты $c,c'$
+**ортогональны**, если $c\circ c'=0$. $J$ **формально вещественна**, если из $\sum_ix_i^2=0$ следует, что все $x_i=0$, и
+**евклидова**, если у неё есть единица $1$ и скалярное произведение с $\langle x\circ y,z\rangle=\langle y,x\circ z\rangle$.
+Полиномиальные тождества **линеаризуются** так: если $p(t)=\sum_kp_kt^k$ имеет векторные коэффициенты и $p(t)=0$ для
+всех вещественных $t$, то все $p_k=0$ (вычислить значения в $\deg p+1$ различных точках и обратить матрицу Вандермонда).
+
+## E.1 Линеаризованные йордановы тождества и степенная ассоциативность
+
+**Лемма E.1.** В любой йордановой алгебре для всех $x,y,z,w$:
+
+1. $[L(x),L(x^2)]=0$ и $[L(x^2),L(z)]+2[L(x\circ z),L(x)]=0$;
+2. $L(x^2\circ y)=2L(x\circ y)L(x)+L(x^2)L(y)-2L(x)L(y)L(x)$;
+3. $L((x\circ w)\circ y)=L(w\circ y)L(x)+L(x\circ y)L(w)+L(x\circ w)L(y)-L(w)L(y)L(x)-L(x)L(y)L(w)$;
+4. $L((x\circ w)\circ y)-L(x\circ(w\circ y))=[L(w),[L(x),L(y)]]$; в частности,
+   $\operatorname{Tr}L((x\circ w)\circ y)=\operatorname{Tr}L(x\circ(w\circ y))$.
+
+*Доказательство.* (1) Йорданово тождество означает, что $L(x)L(x^2)y=L(x^2)L(x)y$. Заменим $x$ на $x+tz$; коэффициент при $t$ равен
+$[L(z),L(x^2)]+2[L(x),L(x\circ z)]=0$. (2) Заменим $x$ на $x+tz$ в самом йордановом тождестве; коэффициент при $t$ равен
+$$
+2((x\circ z)\circ y)\circ x+(x^2\circ y)\circ z=2(x\circ z)\circ(y\circ x)+x^2\circ(y\circ z).
+$$
+Как линейные отображения от $z$ четыре слагаемых суть $2L(x)L(y)L(x)z$, $L(x^2\circ y)z$, $2L(x\circ y)L(x)z$ и
+$L(x^2)L(y)z$. (3) Заменим $x$ на $x+sw$ в (2) и возьмём коэффициент при $s$, делённый на $2$. (4) Запишем (3) один раз
+как есть и один раз с переставленными $x$ и $y$. Первые три слагаемых правых частей совпадают, и
+$(y\circ w)\circ x=x\circ(w\circ y)$, поэтому разность равна
+$-L(w)L(y)L(x)-L(x)L(y)L(w)+L(w)L(x)L(y)+L(y)L(x)L(w)=[L(w),[L(x),L(y)]]$ — коммутатору, след которого равен $0$.
+$\square$
+
+**Лемма E.2 (степенная ассоциативность).** Положим $x^1=x$ и $x^{k+1}=x\circ x^k$. Тогда $x^p\circ x^q=x^{p+q}$ для всех
+$p,q\ge1$, и операторы $L(x^k)$ попарно коммутируют. Следовательно, для вещественных многочленов $f,g$ без свободного члена и
+$f(x):=\sum_kf_kx^k$ имеем $(fg)(x)=f(x)\circ g(x)$, и $\mathbb R[x]=\{f(x)\}$ — ассоциативная коммутативная подалгебра.
+
+*Доказательство.* $L(x)$ и $L(x^2)$ коммутируют по лемме E.1(1); пусть $\mathcal A$ — коммутативная алгебра операторов, которую они
+порождают. Докажем индукцией по $n\ge2$: $x^p\circ x^q=x^{p+q}$ при $p+q\le n$, и $L(x^k)\in\mathcal A$ при
+$k\le n$. При $n=2$ это определение. Пусть это верно для $n$, и пусть $p+q=n+1$. Если $q=1$, то $x^p\circ x=x^{n+1}$ по
+коммутативности. Если $q\ge2$, то
+$x^p\circ x^q=L(x^p)L(x)x^{q-1}=L(x)L(x^p)x^{q-1}=L(x)x^{n}=x^{n+1}$. Далее, лемма E.1(2) при $y=x^{n-1}$ вместе с
+$x^2\circ x^{n-1}=x^{n+1}$ даёт $L(x^{n+1})=2L(x^n)L(x)+L(x^2)L(x^{n-1})-2L(x)^2L(x^{n-1})\in\mathcal A$. Остальное
+следует по билинейности. $\square$
+
+## E.2 Идемпотенты и разложение Пирса
+
+**Лемма E.3 (спектральная лемма).** Пусть $J$ формально вещественна и $x\in J$. Существуют $k\ge0$, различные ненулевые вещественные числа
+$\lambda_1,\dots,\lambda_k$ и ненулевые попарно ортогональные идемпотенты $c_1,\dots,c_k\in\mathbb R[x]$, такие что
+$$
+x=\sum_{i=1}^k\lambda_ic_i,\qquad x^n=\sum_{i=1}^k\lambda_i^nc_i\quad(n\ge1),\qquad\mathbb R[x]=\operatorname{span}\{c_1,\dots,c_k\}.
+$$
+В частности, всякая ненулевая формально вещественная йорданова алгебра содержит ненулевой идемпотент.
+
+*Доказательство.* Формальная вещественность с одним слагаемым означает, что из $z^2=0$ следует $z=0$. Пусть $K=\{q\in\mathbb R[t]:(tq)(x)=0\}$. По
+лемме E.2 $K$ — идеал в $\mathbb R[t]$: если $q\in K$ и $s=s_0+s_1$ с $s_1(0)=0$, то
+$(tqs)(x)=s_0(tq)(x)+(tq)(x)\circ s_1(x)=0$. Так как $x,x^2,\dots,x^{\dim J+1}$ линейно зависимы, $K\ne0$, поэтому
+$K=\mu\,\mathbb R[t]$ для унитарного многочлена $\mu$. (i) $\mu(0)\neq0$: если $\mu=th$, то $w=(th)(x)$ удовлетворяет
+$w^2=(t\cdot\mu h)(x)=0$, так как $\mu h\in K$; значит, $w=0$, $h\in K$ и $\mu\mid h$, что невозможно по степени. (ii) У $\mu$ нет
+кратных множителей: если $\mu=g^2h$ с $\deg g\ge1$, то $w=(tgh)(x)$ удовлетворяет $w^2=(t\cdot\mu\cdot th)(x)=0$, поэтому $gh\in K$, что
+невозможно по степени. (iii) У $\mu$ нет невещественных корней: если $\mu=((t-\alpha)^2+\beta^2)h$ с $\beta\ne0$, то
+$a=(t(t-\alpha)h)(x)$ и $b=(\beta th)(x)$ удовлетворяют $a^2+b^2=(t\cdot\mu\cdot th)(x)=0$, поэтому $b=0$ и $h\in K$, что невозможно.
+Следовательно, $\mu=\prod_{i=1}^k(t-\lambda_i)$ с различными ненулевыми вещественными $\lambda_i$. Положим
+$$
+p_i(t)=\frac t{\lambda_i}\prod_{j\ne i}\frac{t-\lambda_j}{\lambda_i-\lambda_j},\qquad c_i=p_i(x).
+$$
+Многочлен $p_ip_l-\delta_{il}p_i$ равен $t$, умноженному на многочлен, обращающийся в нуль в каждой точке $\lambda_j$, т. е. $t$, умноженному на
+элемент $K$; поэтому $c_i\circ c_l=\delta_{il}c_i$. Аналогично $t-\sum_i\lambda_ip_i=t\big(1-\sum_i\lambda_ip_i/t\big)$, и
+выражение в скобках обращается в нуль в каждой точке $\lambda_j$, так что $x=\sum_i\lambda_ic_i$. Если $c_i=0$, то $p_i/t\in K$, а его степень $k-1<\deg\mu$;
+поэтому $c_i\ne0$. Формула для $x^n$ следует из ортогональности, и она показывает, что $\mathbb R[x]\subseteq\operatorname{span}\{c_i\}$.
+$\square$
+
+**Предложение E.4 (разложение Пирса относительно идемпотента).** Пусть $c$ — идемпотент йордановой алгебры $J$.
+
+1. $L(c)(2L(c)-1)(L(c)-1)=0$. Следовательно, $J=J_1(c)\oplus J_{1/2}(c)\oplus J_0(c)$, где
+   $J_\alpha(c)=\{x:c\circ x=\alpha x\}$, и $c\in J_1(c)$.
+2. $[L(c),L(z)]=0$ для $z\in J_0(c)\cup J_1(c)$ и $[L(c),L(y^2)]=0$ для $y\in J_{1/2}(c)$.
+3. $J_1\circ J_1\subseteq J_1$, $J_0\circ J_0\subseteq J_0$, $J_1\circ J_0=0$, $(J_1+J_0)\circ J_{1/2}\subseteq J_{1/2}$
+   и $J_{1/2}\circ J_{1/2}\subseteq J_1+J_0$ (всё относительно $c$).
+4. Если $c'$ — идемпотент, ортогональный $c$, то $c+c'$ — идемпотент, $[L(c),L(c')]=0$ и
+   $J_1(c')\subseteq J_0(c)$.
+
+*Доказательство.* (1) Лемма E.1(2) при $x=y=c$ даёт $L(c)=3L(c)^2-2L(c)^3$. Линейное отображение, аннулируемое многочленом с
+простыми корнями, диагонализуемо, и его собственные значения лежат среди этих корней. (2) Лемма E.1(1) при $x=c$ даёт
+$[L(c),L(z)]=2[L(c),L(c\circ z)]$, т. е. $(1-2\alpha)[L(c),L(z)]=0$ для $z\in J_\alpha(c)$. Лемма E.1(1) при $x=y$
+и $z=c$ даёт $[L(y^2),L(c)]+2[L(y\circ c),L(y)]=[L(y^2),L(c)]+[L(y),L(y)]=[L(y^2),L(c)]=0$. (3) По (2) $L(z)$ переводит
+каждое собственное подпространство $L(c)$ в себя, если $z\in J_0\cup J_1$. Это даёт первое, второе и четвёртое правила, а также
+$J_1\circ J_0\subseteq J_1\cap J_0=0$. Для $y\in J_{1/2}$ оператор $L(y^2)$ коммутирует с $L(c)$, поэтому $c\circ y^2=y^2\circ c$ —
+собственный вектор $L(c)$ с собственным значением $1$, как и $c$; если записать $y^2=a_1+a_{1/2}+a_0$, то $c\circ y^2=a_1+\frac12a_{1/2}$ лежит в $J_1$,
+поэтому $a_{1/2}=0$. Поляризация ($y\to y+y'$) даёт последнее правило. (4) $(c+c')^2=c+2c\circ c'+c'=c+c'$, и
+$c'\in J_0(c)$, поэтому $L(c)$ и $L(c')$ коммутируют по (2) и одновременно диагонализуемы; в частности, $J_1(c')$
+натянуто на общие собственные векторы. На общем собственном векторе
+с собственными значениями $\alpha$ для $L(c)$ и $1$ для $L(c')$ оператор $L(c+c')$ имеет собственное значение $\alpha+1\in\{0,\frac12,1\}$, поэтому
+$\alpha=0$. $\square$
+
+## E.3 Следовая форма; евклидова = формально вещественная
+
+**Теорема E.5.** Пусть $J$ формально вещественна и $\tau(x,y)=\operatorname{Tr}L(x\circ y)$.
+
+1. $\tau$ симметрична, билинейна и **ассоциативна**: $\tau(x\circ y,z)=\tau(x,y\circ z)$.
+2. $\tau$ положительно определена; для любого ненулевого идемпотента $c$ имеем $\tau(c,c)=\operatorname{Tr}L(c)\ge1$.
+3. У $J$ есть единичный элемент.
+4. $J$ евклидова со скалярным произведением $\tau$. Обратно, всякая евклидова йорданова алгебра формально вещественна.
+
+*Доказательство.* (1) Лемма E.1(4). (2) По предложению E.4(1) $\operatorname{Tr}L(c)=\dim J_1(c)+\frac12\dim J_{1/2}(c)\ge1$, так как
+$0\ne c\in J_1(c)$. Для $x=\sum_i\lambda_ic_i$ как в лемме E.3 имеем $x^2=\sum_i\lambda_i^2c_i$ и
+$\tau(x,x)=\operatorname{Tr}L(x^2)=\sum_i\lambda_i^2\operatorname{Tr}L(c_i)$, что $>0$, если только не $k=0$, т. е. $x=0$.
+(3) Пусть $J\neq0$ и $e$ — ненулевой идемпотент (лемма E.3) с максимальной $\dim J_1(e)$. Если $J_0(e)\ne0$, то это
+формально вещественная подалгебра (предложение E.4(3)), и она содержит ненулевой идемпотент $f$; $f$ ортогонален $e$, поэтому
+$e+f$ — идемпотент, $J_1(e)\subseteq J_1(e+f)$ (так как $f\circ J_1(e)\subseteq J_0\circ J_1=0$) и
+$f\in J_1(e+f)\setminus J_1(e)$, что противоречит максимальности. Итак, $J_0(e)=0$. Тогда для $y\in J_{1/2}(e)$ имеем
+$y^2\in J_1(e)$, и ассоциативность даёт
+$\frac12\tau(y,y)=\tau(e\circ y,y)=\tau(e,y^2)=\operatorname{Tr}L(e\circ y^2)=\operatorname{Tr}L(y^2)=\tau(y,y)$, поэтому $y=0$.
+Следовательно, $J=J_1(e)$ и $e$ — единица. (4) По (1)–(3) $\tau(x\circ y,z)=\tau(y,x\circ z)$. Обратно, если $J$ евклидова и
+$\sum_ix_i^2=0$, то $0=\sum_i\langle x_i\circ x_i,1\rangle=\sum_i\langle x_i,x_i\rangle$. $\square$
+
+Итак, «формально вещественные» и «евклидовы» — это один и тот же класс конечномерных алгебр. Отныне $J$ формально вещественна,
+$1$ — её единица, а $\tau$ — её следовая форма. Код проверяет лемму E.1(4), лемму E.3 (идемпотенты $p_i(x)$ вычисляются
+только через йордановы степени), предложение E.4 и теорему E.5 в $\operatorname{Herm}_3(\mathbb C)$, заданной структурными константами;
+используемое для её построения произведение Кэли–Диксона `cd` — то же, что в разделе E.6.
+
+```python
+import math
+import torch
+
+torch.manual_seed(0)
+dt = torch.float64
+
+def conj(x):                                      # Cayley-Dickson conjugation (a, b)* = (a*, -b) on R^(2^k)
+    if x.shape[-1] == 1:
+        return x
+    h = x.shape[-1] // 2
+    return torch.cat([conj(x[..., :h]), -x[..., h:]], -1)
+
+def cd(x, y):                                     # (a, b)(c, d) = (ac - d*b, da + bc*): R, C, H, O for 1, 2, 4, 8
+    if x.shape[-1] == 1:
+        return x * y
+    h = x.shape[-1] // 2
+    a, b, c, d = x[..., :h], x[..., h:], y[..., :h], y[..., h:]
+    return torch.cat([cd(a, c) - cd(conj(d), b), cd(d, a) + cd(b, conj(c))], -1)
+
+def herm(n, d):
+    """Herm_n(D), D = R, C, H, O for d = 1, 2, 4, 8; coordinates: diagonal, then the entries a_ij, i < j."""
+    pairs = [(i, j) for i in range(n) for j in range(i + 1, n)]
+    def to_mat(v):
+        X = torch.zeros(v.shape[:-1] + (n, n, d), dtype=dt)
+        X[..., range(n), range(n), 0] = v[..., :n]
+        for p, (i, j) in enumerate(pairs):
+            X[..., i, j, :] = v[..., n + d * p:n + d * (p + 1)]
+            X[..., j, i, :] = conj(X[..., i, j, :])
+        return X
+    def from_mat(X):
+        return torch.cat([X[..., range(n), range(n), 0]] + [X[..., i, j, :] for i, j in pairs], -1)
+    def matmul(X, Y):
+        return torch.stack([torch.stack([sum(cd(X[..., i, k, :], Y[..., k, j, :]) for k in range(n))
+                                         for j in range(n)], -2) for i in range(n)], -3)
+    def prod(x, y):
+        X, Y = to_mat(x), to_mat(y)
+        return from_mat(0.5 * (matmul(X, Y) + matmul(Y, X)))
+    return n + d * len(pairs), prod
+
+def spin(m):                                      # V_m: (a, u) o (b, v) = (ab + u.v, av + bu)
+    def prod(x, y):
+        return torch.cat([x[..., :1] * y[..., :1] + (x[..., 1:] * y[..., 1:]).sum(-1, keepdim=True),
+                          x[..., :1] * y[..., 1:] + y[..., :1] * x[..., 1:]], -1)
+    return m + 1, prod
+
+def structure(dim, prod):                         # C[a, b] = e_a o e_b
+    E = torch.eye(dim, dtype=dt)
+    return prod(E[:, None, :].expand(dim, dim, dim), E[None, :, :].expand(dim, dim, dim))
+
+mul = lambda C, x, y: torch.einsum('...a,...b,abc->...c', x, y, C)
+Lop = lambda C, x: torch.einsum('...a,abc->...cb', x, C)          # matrix of L(x)
+comm = lambda A, B: A @ B - B @ A
+
+C3 = structure(*herm(3, 2))                       # Herm_3(C), dimension 9
+x, y, w = torch.randn(3, 9, dtype=dt)
+lhs = Lop(C3, mul(C3, mul(C3, x, w), y)) - Lop(C3, mul(C3, x, mul(C3, w, y)))
+assert torch.allclose(lhs, comm(Lop(C3, w), comm(Lop(C3, x), Lop(C3, y))))     # Lemma E.1(4)
+
+def jpow(C, x, k):                                # Jordan powers x^1 = x, x^(k+1) = x o x^k
+    p = x
+    for _ in range(k - 1):
+        p = mul(C, x, p)
+    return p
+
+def coords(Z):                                    # complex Hermitian 3 x 3 -> coordinates of Herm_3(C)
+    return torch.cat([Z.diagonal().real] + [torch.stack([Z[i, j].real, Z[i, j].imag]) for i, j in ((0, 1), (0, 2), (1, 2))])
+
+G = torch.randn(3, 3, dtype=torch.complex128)
+Z = G + G.mH
+lam = torch.linalg.eigvalsh(Z)                    # distinct and non-zero (almost surely)
+xz = coords(Z)
+powers = torch.stack([jpow(C3, xz, k) for k in range(1, 4)])  # x, x^2, x^3
+cs = []
+for i in range(3):                                # Lagrange idempotents p_i(x) of Lemma E.3
+    others = [lam[j] for j in range(3) if j != i]
+    coef = torch.tensor([others[0] * others[1], -(others[0] + others[1]), 1.0], dtype=dt)
+    den = lam[i] * (lam[i] - others[0]) * (lam[i] - others[1])
+    cs.append((coef[:, None] * powers).sum(0) / den)
+for i in range(3):
+    for j in range(3):
+        assert torch.allclose(mul(C3, cs[i], cs[j]), cs[i] if i == j else torch.zeros(9, dtype=dt), atol=1e-10)
+assert torch.allclose(sum(l * c for l, c in zip(lam, cs)), xz)
+
+c = cs[0] + cs[1]                                 # the idempotent c_1 + c_2: Proposition E.4
+Lc = Lop(C3, c)
+assert torch.allclose(Lc @ (2 * Lc - torch.eye(9, dtype=dt)) @ (Lc - torch.eye(9, dtype=dt)), torch.zeros(9, 9, dtype=dt), atol=1e-10)
+ev = torch.linalg.eigvals(Lc).real.sort().values
+print("eigenvalues of L(c):", ev.numpy().round(6))
+tau = lambda C: torch.einsum('abc,c->ab', C, torch.einsum('cbb->c', Lop(C, torch.eye(C.shape[0], dtype=dt))))  # Tr L(e_a o e_b)
+T3 = tau(C3)
+assert torch.linalg.eigvalsh(T3).min() > 0                                     # Theorem E.5(2)
+assert torch.allclose(mul(C3, x, y) @ T3 @ w, x @ T3 @ mul(C3, y, w))         # Theorem E.5(1)
+```
+
+## E.4 Йордановы реперы и спектральная теорема
+
+Ненулевой идемпотент называется **примитивным**, если он не является суммой двух ненулевых ортогональных идемпотентов. **Йордановым репером**
+называется семейство $(c_1,\dots,c_r)$ попарно ортогональных примитивных идемпотентов с $\sum_ic_i=1$.
+
+**Лемма E.6.** (1) Если $c$ примитивен, то $J_1(c)=\mathbb Rc$. (2) Попарно ортогональные ненулевые идемпотенты
+линейно независимы; всякий ненулевой идемпотент есть сумма попарно ортогональных примитивных идемпотентов; и у $J$ есть
+йорданов репер.
+
+*Доказательство.* (1) $J_1(c)$ — формально вещественная подалгебра с единицей $c$ (предложение E.4(3)). Для $x\in J_1(c)$ запишем
+$x=\sum_i\lambda_ic_i$ по лемме E.3, где $c_i\in\mathbb R[x]\subseteq J_1(c)$. Тогда $c-c_i$ — идемпотент, ортогональный
+$c_i$ ($(c-c_i)^2=c-2c_i+c_i$ и $c_i\circ(c-c_i)=0$), поэтому $c-c_i=0$ в силу примитивности. Различные $c_i$ ортогональны,
+так что их не более одного, и $x\in\mathbb Rc$. (2) Если $\sum_ia_if_i=0$, то умножение на $f_j$ даёт $a_jf_j=0$. Поэтому
+идемпотент $e$ есть сумма наибольшего возможного числа попарно ортогональных ненулевых идемпотентов. Если бы один из них, $f$,
+был равен $g+g'$ с ортогональными ненулевыми идемпотентами $g,g'$, то $g=f\circ g\in J_1(f)\subseteq J_0(f')$ для любого другого
+слагаемого $f'$ (предложение E.4(4)), и то же для $g'$, так что $f$ можно было бы заменить на $g,g'$. Возьмём $e=1$. $\square$
+
+**Теорема E.7 (спектральная теорема).** Для любого $x\in J$ существуют йорданов репер $(c_1,\dots,c_r)$ и вещественные числа
+$\lambda_1,\dots,\lambda_r$ (не обязательно различные) с $x=\sum_i\lambda_ic_i$.
+
+*Доказательство.* Запишем $x=\sum_{i=1}^k\lambda_ie_i$ по лемме E.3 и добавим $e_0=1-\sum_ie_i$, $\lambda_0=0$; $e_0$ —
+идемпотент, ортогональный всем $e_i$. Разложим каждый ненулевой $e_i$ в сумму попарно ортогональных примитивных идемпотентов
+(лемма E.6(2)). Часть $f$ идемпотента $e_i$ лежит в $J_1(e_i)\subseteq J_0(e_l)$ при $l\ne i$, а часть $e_l$ лежит в
+$J_1(e_l)$; так как $J_0(e_l)\circ J_1(e_l)=0$, все части попарно ортогональны. Их сумма равна $\sum_ie_i=1$. $\square$
+
+То, что все йордановы реперы $J$ состоят из одного и того же числа элементов, доказано в следствии E.28.
+
+**Теорема E.8 (разложение Пирса относительно репера).** Пусть $(c_1,\dots,c_r)$ — йорданов репер, $t_i=\tau(c_i,c_i)$ и
+для $i\ne j$ $J_{ij}=J_{ji}=J_{1/2}(c_i)\cap J_{1/2}(c_j)$.
+
+1. Операторы $L(c_k)$ коммутируют, $J=\bigoplus_i\mathbb Rc_i\oplus\bigoplus_{i<j}J_{ij}$ и
+   $c_k\circ x=\frac12(\delta_{ki}+\delta_{kj})x$ для $x\in J_{ij}$.
+2. Для различных $i,j,k$: $J_{ij}\circ J_{jk}\subseteq J_{ik}$; и $J_{ij}\circ J_{kl}=0$, если $\{i,j\}\cap\{k,l\}=\emptyset$.
+3. На $J_{ij}$ существует положительно определённая квадратичная форма $N$ с $x^2=N(x)(c_i+c_j)$; для её полярной формы
+   $\langle\cdot,\cdot\rangle$ имеем $x\circ y=\langle x,y\rangle(c_i+c_j)$ и $\tau(x,y)=(t_i+t_j)\langle x,y\rangle$ для
+   $x,y\in J_{ij}$. Если $J_{ij}\ne0$, то $t_i=t_j$.
+
+*Доказательство.* (1) Операторы $L(c_k)$ коммутируют по предложению E.4(4), диагонализуемы и в сумме дают $L(1)=\mathrm{id}$. Общий
+собственный вектор имеет собственные значения $\alpha_k\in\{0,\frac12,1\}$ с $\sum_k\alpha_k=1$: либо одно $\alpha_i=1$, а остальные
+равны нулю, и тогда вектор лежит в $J_1(c_i)=\mathbb Rc_i$ (лемма E.6(1)); либо $\alpha_i=\alpha_j=\frac12$ для одной пары, а
+остальные равны нулю. Итак, $J_{ij}$ — это в точности общее собственное подпространство второго рода, и $J$ есть прямая сумма общих
+собственных подпространств. (2) Пусть $x\in J_{ij}$ и $y\in J_{jk}$. Относительно $c_i$ имеем $x\in J_{1/2}$ и $y\in J_0$, поэтому
+$x\circ y\in J_{1/2}(c_i)$; относительно $c_k$ аналогично $x\circ y\in J_{1/2}(c_k)$. Следовательно, $x\circ y\in J_{ik}$. Если же
+$y\in J_{kl}$, то $x\circ y$ лежит в $J_{1/2}(c_p)$ для $p=i,j,k,l$; общего собственного вектора с четырьмя собственными значениями
+$\frac12$ не существует, поэтому $x\circ y=0$. (3) Для $x,y\in J_{ij}$ имеем $x\circ y\in J_0(c_p)+J_1(c_p)$ при $p=i,j$ и
+$x\circ y\in J_0(c_k)$ при $k\notin\{i,j\}$ (предложение E.4(3)); по (1) $x\circ y\in\mathbb Rc_i+\mathbb Rc_j$. Запишем
+$x^2=\alpha c_i+\beta c_j$. Йорданово тождество с $y=c_i$ даёт $(x^2\circ c_i)\circ x=\frac12\alpha x$ и
+$x^2\circ(c_i\circ x)=\frac12x^2\circ x=\frac14(\alpha+\beta)x$, поэтому $\alpha=\beta$, если $x\ne0$; положим $N(x)=\alpha$. Так как
+$\tau(c_i,1)=\operatorname{Tr}L(c_i)=t_i$, имеем $\tau(x,x)=\tau(x^2,1)=N(x)(t_i+t_j)$; поэтому $N$ — квадратичная форма, положительно
+определённая по теореме E.5(2), и поляризация даёт формулы для $x\circ y$ и $\tau$. Наконец,
+$N(x)t_i=\tau(x^2,c_i)=\tau(x,x\circ c_i)=\frac12\tau(x,x)$, и то же для $j$; поэтому $t_i=t_j$, если существует $x\ne0$. $\square$
+
+## E.5 Простые алгебры и ранг два
+
+**Теорема E.9.** $J$ есть прямая сумма $J^{(1)}\oplus\dots\oplus J^{(s)}$ простых идеалов с
+$J^{(p)}\circ J^{(q)}=0$ при $p\ne q$. Каждая $J^{(p)}$ — формально вещественная йорданова алгебра.
+
+*Доказательство.* Если $I$ — идеал, то и его ортогональное дополнение $I^\perp$ относительно $\tau$ — идеал:
+$\tau(J\circ I^\perp,I)=\tau(I^\perp,J\circ I)=0$. Следовательно, $J=I\oplus I^\perp$ и $I\circ I^\perp\subseteq I\cap I^\perp=0$, так что
+$J$ — прямая сумма алгебр $I$ и $I^\perp$, и идеал одного слагаемого является идеалом $J$. Пусть $I$ —
+ненулевой идеал наименьшей размерности; тогда $I$ прост, и мы завершаем доказательство индукцией по размерности, применённой к
+формально вещественной алгебре $I^\perp$. $\square$
+
+**Лемма E.10.** Пусть $(c_i)$ — йорданов репер, $i,j,k,l$ различны, $u\in J_{ij}$, $w\in J_{jk}$ и $z\in J_{kl}$. Тогда
+(1) $u\circ(u\circ w)=\frac14N(u)w$ и (2) $(u\circ w)\circ z=u\circ(w\circ z)$.
+
+*Доказательство.* (1) Применим лемму E.1(1) с $x=u$ к $c_j$. С учётом $L(u^2)=N(u)L(c_i+c_j)$, $c_j\circ w=\frac12w$,
+$c_j\circ u=\frac12u$ и $c_j\circ(u\circ w)=0$ (так как $u\circ w\in J_{ik}$) получаем
+$[L(u^2),L(w)]c_j=\frac14N(u)w-\frac12N(u)w$ и $2[L(u\circ w),L(u)]c_j=(u\circ w)\circ u$; их сумма равна нулю. (2) Применим
+лемму E.1(3), где $(x,w,y)$ заменено на $(u,z,w)$, к $c_j$. Здесь $u\circ z=0$ (теорема E.8(2)), $c_j\circ u=\frac12u$
+и $c_j\circ z=0$, поэтому $0=\frac12(z\circ w)\circ u-\frac12z\circ(w\circ u)$. $\square$
+
+**Предложение E.11.** Пусть $(c_1,\dots,c_r)$ — йорданов репер $J$; соединим $i\neq j$ ребром, если $J_{ij}\ne0$.
+
+1. $J$ проста тогда и только тогда, когда этот граф связен.
+2. Если $J$ проста и $r\ge2$, то все $J_{ij}$, $i\ne j$, имеют одну и ту же размерность $d\ge1$, все $t_i$ равны
+   $t=1+\frac{(r-1)d}2$ и $\dim J=r+d\,\frac{r(r-1)}2=rt$.
+
+*Доказательство.* (1) Если граф несвязен, пусть $S$ — компонента связности, $I$ — линейная оболочка $c_i$ и $J_{ij}$
+с $i,j\in S$, а $I'$ — то же для дополнения. Тогда $J=I\oplus I'$ (все $J_{ij}$ с $i\in S$, $j\notin S$ равны нулю),
+$I\circ I\subseteq I$ и $I\circ I'=0$ по теореме E.8; значит, $I$ — идеал, $\ne0,J$. Обратно, пусть граф
+связен и $I\ne0$ — идеал. $I$ инвариантен относительно коммутирующих диагонализуемых $L(c_k)$, поэтому он есть сумма своих
+пересечений с общими собственными подпространствами. Если $0\ne x\in I\cap J_{ij}$, то $c_i\circ x^2=N(x)c_i\in I$; итак, некоторый $c_i$
+лежит в $I$. Если $c_i\in I$ и $0\ne x\in J_{ij}$, то $x=2c_i\circ x\in I$ и $c_j=c_j\circ x^2/N(x)\in I$. В силу
+связности все $c_j\in I$, поэтому $1\in I$ и $I=J$. (2) Пусть $u\in J_{ij}$ с $N(u)=1$ и $k\notin\{i,j\}$. По
+теореме E.8(2) $2L(u)$ переводит $J_{jk}$ в $J_{ik}$ и $J_{ik}$ в $J_{jk}$, а по лемме E.10(1) (также с переставленными $i,j$)
+его квадрат тождествен на обоих пространствах. Поэтому $\dim J_{ik}=\dim J_{jk}$, как только $J_{ij}\ne0$. Таким образом, рёбра $ij$, $jk$
+влекут ребро $ik$; тогда связный граф полон, и, меняя по одному индексу за раз, получаем, что все $\dim J_{ij}$
+равны. Наконец, $L(c_i)$ имеет собственное значение $1$ на $\mathbb Rc_i$, $\frac12$ на $r-1$ пространствах $J_{ij}$ и $0$
+на остальном, поэтому $t_i=\operatorname{Tr}L(c_i)=1+\frac{(r-1)d}2$. $\square$
+
+До конца раздела $J$ проста, $(c_1,\dots,c_r)$ — йорданов репер с $r\ge2$, и для $x\in J_{ij}$,
+$y\in J_{jk}$ ($i,j,k$ различны) мы пишем
+$$
+m(x,y)=2\,x\circ y\in J_{ik}.
+$$
+По теореме E.8(3) и предложению E.11(2) $\tau(x,y)=2t\langle x,y\rangle$ на каждом $J_{ij}$.
+
+**Лемма E.12.** Для различных $i,j,k$ и $x\in J_{ij}$, $y\in J_{jk}$, $z\in J_{ik}$:
+
+1. $N(m(x,y))=N(x)N(y)$ и $m(x,m(x,y))=N(x)y$;
+2. $\langle m(x,y),z\rangle=\langle y,m(x,z)\rangle=\langle x,m(y,z)\rangle$;
+3. $m(m(x,y),v)=m(x,m(y,v))$ для $l\notin\{i,j,k\}$ и $v\in J_{kl}$.
+
+*Доказательство.* (2) Эти три числа равны $\tau(x\circ y,z)/t$, $\tau(y,x\circ z)/t$ и $\tau(x,y\circ z)/t$ и совпадают в силу
+ассоциативности и коммутативности. (1) Вторая формула — это лемма E.10(1). Тогда
+$2tN(m(x,y))=4\tau(x\circ y,x\circ y)=4\tau(y,x\circ(x\circ y))=N(x)\tau(y,y)=2tN(x)N(y)$. (3) Лемма E.10(2). $\square$
+
+**Теорема E.13 (ранг один и два).** Пусть $J$ проста и имеет йорданов репер из $r$ элементов. Если $r=1$, то
+$J=\mathbb Rc_1\cong\mathbb R$. Если $r=2$, то $J\cong V_{d+1}$ с $d=\dim J_{12}\ge1$ (спин-факторы — как в разделе 13.2).
+
+*Доказательство.* $r=1$: теорема E.8(1). $r=2$: $J=\mathbb R1\oplus W$ с $W=\mathbb Rf\oplus J_{12}$, $f=c_1-c_2$. По
+теореме E.8 $f\circ f=1$, $f\circ x=\frac12x-\frac12x=0$ и $x\circ y=\langle x,y\rangle1$ для $x,y\in J_{12}$. Поэтому
+$w\circ w'=B(w,w')1$ для $w,w'\in W$, где $B(\alpha f+x,\beta f+y)=\alpha\beta+\langle x,y\rangle$ — скалярное произведение.
+Если $U:W\to\mathbb R^{d+1}$ — изометрия, то $a1+w\mapsto(a,Uw)$ переводит
+$(a1+w)\circ(b1+w')=(ab+B(w,w'))1+aw'+bw$ в произведение в $V_{d+1}$. $\square$
+
+## E.6 Композиционные алгебры: теоремы Гурвица и Фробениуса
+
+**Композиционная алгебра** — это алгебра $A$ с единицей $1$ и положительно определённой квадратичной формой $N$, такой что
+$N(xy)=N(x)N(y)$. Полярную форму мы обозначаем $\langle\cdot,\cdot\rangle$ ($N(x)=\langle x,x\rangle$),
+$\operatorname{Re}x=\langle x,1\rangle$ и $\bar x=2\operatorname{Re}(x)1-x$. Так как $N(1)=1$ (лемма E.14(1), доказательство которой
+не использует сопряжения), это отражение относительно прямой $\mathbb R1$, так что $x\mapsto\bar x$ — изометрическая
+инволюция и $\operatorname{Re}\bar x=\operatorname{Re}x$. Изоморфизм композиционных алгебр — это изометрический изоморфизм
+алгебр. **Ассоциатор** — это $(x,y,z)=(xy)z-x(yz)$.
+
+**Лемма E.14.** В композиционной алгебре для всех $x,y,z,w$:
+
+1. $N(1)=1$, $\langle xy,xz\rangle=N(x)\langle y,z\rangle$, $\langle yx,zx\rangle=\langle y,z\rangle N(x)$ и
+   $\langle xy,wz\rangle+\langle wy,xz\rangle=2\langle x,w\rangle\langle y,z\rangle$;
+2. $\langle xy,z\rangle=\langle y,\bar xz\rangle=\langle x,z\bar y\rangle$;
+3. $\bar x(xy)=N(x)y=(yx)\bar x$; следовательно, $\bar xx=x\bar x=N(x)1$, $x^2-2\operatorname{Re}(x)x+N(x)1=0$,
+   $xy+yx=2\operatorname{Re}(x)y+2\operatorname{Re}(y)x-2\langle x,y\rangle1$,
+   $\bar x(wy)+\bar w(xy)=2\langle x,w\rangle y$ и $(yx)\bar w+(yw)\bar x=2\langle x,w\rangle y$;
+4. $\overline{xy}=\bar y\bar x$, $\operatorname{Re}(xy)=\operatorname{Re}(yx)$ и
+   $\operatorname{Re}((xy)z)=\operatorname{Re}(x(yz))$;
+5. $x(xy)=x^2y$ и $(yx)x=yx^2$; ассоциатор знакопеременен (он меняет знак при перестановке двух аргументов).
+
+*Доказательство.* (1) $N(1)=N(1)^2>0$. Поляризуем $N(xy)=N(x)N(y)$ по $y$, соответственно по $x$, а затем $\langle xy,xz\rangle=N(x)\langle y,z\rangle$ по $x$.
+(2) Последнее тождество из (1) при $w=1$ имеет вид $\langle xy,z\rangle+\langle y,xz\rangle=2\operatorname{Re}(x)\langle y,z\rangle$,
+т. е. $\langle xy,z\rangle=\langle y,\bar xz\rangle$; поляризация $\langle yx,zx\rangle=\langle y,z\rangle N(x)$ по $x$,
+где одна из двух переменных равна $1$, даёт $\langle yx,z\rangle=\langle y,z\bar x\rangle$. (3) По (2) и (1)
+$\langle\bar x(xy),z\rangle=\langle xy,xz\rangle=N(x)\langle y,z\rangle$ для всех $z$, и аналогично справа. Положим $y=1$
+и подставим $\bar x=2\operatorname{Re}(x)1-x$; затем поляризуем. (4) По (2) и изометричности сопряжения
+$\langle\bar y\bar x,z\rangle=\langle\bar x,yz\rangle=\langle\bar x\bar z,y\rangle=\langle\bar z,xy\rangle=\langle z,\overline{xy}\rangle$.
+Далее, $\operatorname{Re}(xy)=\langle y,\bar x\rangle=\langle\bar y,x\rangle=\operatorname{Re}(yx)$ и
+$\operatorname{Re}((xy)z)=\langle xy,\bar z\rangle=\langle y,\bar x\bar z\rangle=\langle yz,\bar x\rangle=\operatorname{Re}(x(yz))$.
+(5) По (3) $x(xy)=(2\operatorname{Re}(x)-\bar x)(xy)=(2\operatorname{Re}(x)x-N(x))y=x^2y$, и аналогично справа. Поэтому
+$(x,x,y)=(y,x,x)=0$; после поляризации ассоциатор меняет знак при перестановке первых двух или последних двух аргументов,
+а эти транспозиции порождают все перестановки. $\square$
+
+**Конструкция Кэли–Диксона.** Для алгебры $B$ с единицей, инволюцией $b\mapsto\bar b$ и квадратичной формой $N$ пусть
+$\operatorname{CD}(B)=B\times B$ с
+$$
+(a,b)(c,d)=(ac-\bar db,\;da+b\bar c),\qquad N(a,b)=N(a)+N(b),\qquad\overline{(a,b)}=(\bar a,-b).
+$$
+Исходя из $\mathbb R$ ($\bar x=x$, $N(x)=x^2$), определим $\mathbb C=\operatorname{CD}(\mathbb R)$,
+$\mathbb H=\operatorname{CD}(\mathbb C)$ и $\mathbb O=\operatorname{CD}(\mathbb H)$ размерностей $1,2,4,8$; каждое удвоение
+использует только что определённые инволюцию и форму (по лемме E.15(1) ниже это сопряжение и норма
+композиционной алгебры). В
+$\mathbb C$ имеем $(a,b)(c,d)=(ac-bd,ad+bc)$: это комплексные числа $a+bi$. $B$ — подалгебра $B\times0$.
+
+**Лемма E.15.** (1) Если $B$ — ассоциативная композиционная алгебра, то $\operatorname{CD}(B)$ — композиционная алгебра
+с единицей $(1,0)$ и сопряжением $\overline{(a,b)}=(\bar a,-b)$. (2) $\mathbb C$ коммутативна и ассоциативна.
+$M(a,b)=\begin{pmatrix}a&-b\\\bar b&\bar a\end{pmatrix}$ — инъективный гомоморфизм алгебр $\mathbb H\to M_2(\mathbb C)$
+с $M(\bar q)=M(q)^*$; поэтому $\mathbb H$ ассоциативна; она не коммутативна. $\mathbb O$ не ассоциативна. (3)
+$\mathbb R,\mathbb C,\mathbb H,\mathbb O$ — композиционные алгебры, а $\mathbb R,\mathbb C,\mathbb H$ — алгебры с делением:
+всякий $x\ne0$ имеет двусторонний обратный $\bar x/N(x)$, так что из $xy=0$ следует $x=0$ или $y=0$.
+
+*Доказательство.* (1) $N((a,b)(c,d))=N(a)N(c)+N(d)N(b)+N(d)N(a)+N(b)N(c)-2\langle ac,\bar db\rangle+2\langle da,b\bar c\rangle$, и по
+лемме E.14(2) $\langle ac,\bar db\rangle=\langle d(ac),b\rangle$ и $\langle da,b\bar c\rangle=\langle(da)c,b\rangle$, что
+совпадает, когда $B$ ассоциативна. $(1,0)$ — единица, и $2\langle(a,b),(1,0)\rangle(1,0)-(a,b)=(\bar a,-b)$. (2) Раскрывая
+произведение и пользуясь коммутативностью $\mathbb C$, получаем $M(a,b)M(c,d)=M(ac-\bar db,da+b\bar c)$; $M$ линейно и инъективно, и
+$M(\bar a,-b)=M(a,b)^*$. В $\mathbb H$ имеем $(i,0)(0,1)=(0,i)$, но $(0,1)(i,0)=(0,-i)$. В $\mathbb O=\mathbb H\times\mathbb H$ пусть
+$p=((i,0),0)$, $q=((0,1),0)$, $s=(0,1)$; тогда $(pq)s=(0,(0,i))$ и $p(qs)=(0,(0,-i))$. (3) По (1), (2) и индукции. Если
+$x\ne0$, то $x(\bar x/N(x))=(\bar x/N(x))x=1$ по лемме E.14(3); в ассоциативной алгебре из $xy=0$ тогда следует
+$y=(\bar x/N(x))(xy)=0$. $\square$
+
+**Лемма E.16 (удвоение).** Пусть $A$ — композиционная алгебра, $B\subseteq A$ — подалгебра с $1\in B$, и $i\in A$ с
+$i\perp B$ и $N(i)=1$. Для $a,b,c,d\in B$: $Bi\perp B$, $N(a+bi)=N(a)+N(b)$ и
+$$
+(a+bi)(c+di)=(ac-\bar db)+(da+b\bar c)\,i .
+$$
+Поэтому $B\oplus Bi$ — подалгебра размерности $2\dim B$, и $a+bi\mapsto(h(a),h(b))$ — изоморфизм
+$B\oplus Bi\cong\operatorname{CD}(D)$, если только $h:B\to D$ — изоморфизм композиционных алгебр. Кроме того, $B$
+ассоциативна; если $B\oplus Bi$ ассоциативна, то $B$ коммутативна; если $B\oplus Bi$ коммутативна, то $B=\mathbb R1$.
+
+*Доказательство.* Вместе с $b$ алгебра $B$ содержит $\bar b=2\operatorname{Re}(b)1-b$. По лемме E.14 $\langle bi,a\rangle=\langle i,\bar ba\rangle=0$,
+$N(bi)=N(b)$, $\bar i=-i$ и $ci+ic=2\operatorname{Re}(c)i$, т. е. $ci=i\bar c$, для $c\in B$. Тождества
+леммы E.14(3) дают последовательно: при $(x,w,y)=(\bar a,i,b)$ — $a(ib)=i(\bar ab)$; так как $ib=\bar bi$ и
+$i(\bar ab)=\overline{\bar ab}\,i=(\bar ba)i$, замена $b$ на $\bar b$ даёт $a(bi)=(ba)i$. При $(y,x,w)=(a,i,\bar c)$ —
+$(ai)c=(a\bar c)i$. При $x=i$ — $i(iy)=-y$. При $(x,w,y)=(ai,i,\bar d)$, где $\overline{ai}=-ai$ (так как $ai\perp1$) и
+$\langle ai,i\rangle=\operatorname{Re}a$ (лемма E.14(1)), —
+$$
+-(ai)(i\bar d)-i((ai)\bar d)=2\operatorname{Re}(a)\bar d .
+$$
+Здесь $i\bar d=di$ и $i((ai)\bar d)=i((ad)i)=i(i\,\overline{ad})=-\bar d\bar a$, поэтому
+$(ai)(di)=\bar d\bar a-2\operatorname{Re}(a)\bar d=-\bar da$. Раскрытие $(a+bi)(c+di)$ по этим четырём правилам даёт формулу,
+и $N$ и произведения соответствуют таковым в $\operatorname{CD}(D)$ при $h$. Так как $N$ мультипликативна на
+$B\oplus Bi\subseteq A$, вычисление из доказательства леммы E.15(1) даёт $\langle d(ac)-(da)c,b\rangle=0$ для всех
+$b\in B$, поэтому $B$ ассоциативна. Если $B\oplus Bi$ ассоциативна, то $(ab)i=a(bi)=(ba)i$, так что $ab=ba$. Если она коммутативна,
+то $ai=ia=\bar ai$, так что $a=\bar a\in\mathbb R1$. $\square$
+
+**Теорема E.17 (Гурвиц).** Всякая композиционная алгебра изоморфна ровно одной из алгебр $\mathbb R,\mathbb C,\mathbb H,\mathbb O$.
+
+*Доказательство.* Положим $B_0=\mathbb R1\cong\mathbb R$. Пока $B_k\ne A$, выберем $i_{k+1}\perp B_k$ с $N(i_{k+1})=1$ и положим
+$B_{k+1}=B_k\oplus B_ki_{k+1}$; по лемме E.16 $B_k\cong\operatorname{CD}^k(\mathbb R)$ имеет размерность $2^k$. Если бы $B_4$
+существовала, то по лемме E.16 $B_3$ была бы ассоциативной, а значит, $B_2$ — коммутативной, а значит, $B_1=\mathbb R1$, что имеет размерность
+$1\ne2$. Поэтому $A=B_k$ для некоторого $k\le3$. Четыре алгебры имеют разные размерности. $\square$
+
+**Лемма E.18.** Пусть $A$ — композиционная алгебра. (1) Любые два элемента $A$ лежат в некоторой ассоциативной подалгебре.
+(2) (**Тождество Муфанг**) $(ux)(yu)=u((xy)u)=(u(xy))u$ для всех $u,x,y$.
+
+*Доказательство.* (1) Пусть $p,q\in A$; можно считать, что $p\notin\mathbb R1$ (иначе поменяем их местами, а если оба вещественны, возьмём $\mathbb R1$).
+$B=\operatorname{span}\{1,p\}$ — подалгебра ($p^2=2\operatorname{Re}(p)p-N(p)1$), композиционная алгебра размерности $2$,
+поэтому $B\cong\mathbb C$ (теорема E.17). Если $q\in B$, всё доказано; иначе пусть $i$ — нормированная компонента $q$,
+ортогональная $B$. По лемме E.16 $B\oplus Bi\cong\operatorname{CD}(\mathbb C)=\mathbb H$ ассоциативна и содержит $p,q$.
+(2) Ассоциатор знакопеременен (лемма E.14(5)), поэтому $(u,xy,u)=0$, что и есть второе равенство. Пусть $X=(u,x,y)$.
+$\operatorname{Re}X=0$ по лемме E.14(4), и $\langle u,X\rangle=\langle u\bar y,ux\rangle-N(u)\langle1,xy\rangle
+=N(u)(\langle\bar y,x\rangle-\langle\bar x,y\rangle)=0$; поэтому поляризованное квадратичное тождество из леммы E.14(3) даёт
+$uX+Xu=2\operatorname{Re}(u)X$, т. е. $\bar uX=Xu$. Раскрывая определения, видим, что в любой алгебре
+$$
+(wx,y,z)-(w,xy,z)+(w,x,yz)=w(x,y,z)+(w,x,y)z .
+$$
+При $(w,x,y,z)=(u,u,x,y)$ и $(u^2,x,y)=2\operatorname{Re}(u)X$: $(u,ux,y)=2\operatorname{Re}(u)X-uX=\bar uX=Xu$. При
+$(w,x,y,z)=(u,x,y,u)$, $(ux,y,u)=(u,ux,y)=Xu$ и $(x,y,u)=X$ (циклические перестановки): $(u,x,yu)=uX+Xu-Xu=uX$. Следовательно,
+$(ux)(yu)-u((xy)u)=(u,x,yu)-u(x,y,u)=uX-uX=0$. $\square$
+
+**Теорема E.19 (Фробениус).** Всякая конечномерная ассоциативная вещественная алгебра $A$ с единицей $1\ne0$ и без делителей
+нуля изоморфна $\mathbb R$, $\mathbb C$ или $\mathbb H$.
+
+*Доказательство.* (i) Для $x\in A$ степени $1,x,x^2,\dots$ линейно зависимы; пусть $\mu$ — унитарный вещественный многочлен наименьшей
+степени с $\mu(x)=0$. Если $\mu=fg$ с $\deg f,\deg g\ge1$, то из $f(x)g(x)=0$ следует $f(x)=0$ или $g(x)=0$; поэтому $\mu$
+неприводим, а значит (основная теорема алгебры), $\mu=t-\alpha$ или $\mu=(t-\alpha)^2+\beta^2$, $\beta>0$. Пусть
+$V=\{v\in A:v^2\in(-\infty,0]\cdot1\}$. Тогда $A=\mathbb R1+V$ (во втором случае $x-\alpha\in V$) и
+$\mathbb R1\cap V=0$. (ii) $V$ — подпространство: оно замкнуто относительно умножения на скаляры, и для $u,v\in V$ покажем, что $u+v\in V$. Если
+$u,v$ линейно зависимы, то $u+v$ кратно одному из них; поэтому пусть они независимы. Тогда $1,u,v$ независимы: если
+$1=\alpha u+\gamma v$, скажем, с $\alpha\ne0$, то $u^2=(1-2\gamma v+\gamma^2v^2)/\alpha^2\in\mathbb R1$ влечёт $\gamma=0$
+и $u\in\mathbb R1\cap V=0$. По (i) $(u\pm v)^2=p_\pm(u\pm v)+q_\pm1$ с вещественными $p_\pm,q_\pm$; складывая, получаем
+$2u^2+2v^2=(p_++p_-)u+(p_+-p_-)v+(q_++q_-)1$, поэтому $p_\pm=0$. Если $q_+>0$, то
+$(u+v-\sqrt{q_+})(u+v+\sqrt{q_+})=0$ и $u+v\in\mathbb R1$, что невозможно; поэтому $u+v\in V$. (iii) Для $u,v\in V$
+равенство $uv+vu=(u+v)^2-u^2-v^2=-2\langle u,v\rangle1$ задаёт симметричную билинейную форму с $\langle u,u\rangle=-u^2\ge0$, причём
+$\langle u,u\rangle=0$ лишь при $u^2=0$, т. е. $u=0$: это скалярное произведение. Ортогональные $u,v\in V$ антикоммутируют. (iv) Если $V=0$,
+то $A=\mathbb R$. Если $\dim V=1$, то $V=\mathbb Ri$ с $i^2=-1$, и $A\cong\mathbb C$. Если $\dim V\ge2$, возьмём ортонормированные
+$i,j\in V$ и $k=ij$. Тогда $k^2=ijij=-i^2j^2=-1$, поэтому $k\in V$, $ik+ki=-j+j=0$ и $jk+kj=i-i=0$: $i,j,k$
+ортонормированы, причём $ij=-ji=k$, $jk=-kj=i$, $ki=-ik=j$. Если бы существовал единичный вектор $l\in V$, ортогональный $i,j,k$, то
+$lk=(li)j=-i(lj)=(ij)l=kl$ и $lk=-kl$, так что $kl=0$, что невозможно. Следовательно, $A=\operatorname{span}\{1,i,j,k\}$. В $\mathbb H$
+элементы $I=(i,0)$, $J=(0,1)$, $K=(0,i)$ имеют ту же таблицу умножения (лемма E.15(2) даёт $IJ=K=-JI$, а
+$I^2=J^2=-1$, $K=IJ$ определяют остальное в силу ассоциативности), поэтому $A\cong\mathbb H$. $\square$
+
+Код строит $\mathbb O$ удвоением Кэли–Диксона и проверяет на случайных октонионах тождества леммы E.14, тождество Муфанг
+из леммы E.18 и неассоциативность из леммы E.15, а также гомоморфизм $M$:
+
+```python
+o = torch.randn(4, 1000, 8, dtype=dt)             # random octonions
+a, b, cc, u = o
+N = lambda z: (z * z).sum(-1)
+ip = lambda p, q: (p * q).sum(-1)
+assert torch.allclose(N(cd(a, b)), N(a) * N(b))                               # composition
+assert torch.allclose(ip(cd(a, b), cc), ip(b, cd(conj(a), cc)))               # Lemma E.14(2)
+assert torch.allclose(ip(cd(a, b), cc), ip(a, cd(cc, conj(b))))
+assert torch.allclose(conj(cd(a, b)), cd(conj(b), conj(a)))                   # Lemma E.14(4)
+assert torch.allclose(cd(a, cd(a, b)), cd(cd(a, a), b))                       # alternative
+assert torch.allclose(cd(cd(u, a), cd(b, u)), cd(u, cd(cd(a, b), u)))         # Moufang
+assoc = cd(cd(a, b), cc) - cd(a, cd(b, cc))
+assert assoc[..., 0].abs().max() < 1e-12 and assoc.abs().max() > 1          # Re-associative, not associative
+e = torch.eye(8, dtype=dt)
+print("(e1 e2) e4 =", cd(cd(e[1], e[2]), e[4]).tolist(), "\ne1 (e2 e4) =", cd(e[1], cd(e[2], e[4])).tolist())
+
+def M(q):                                         # H -> M_2(C): (a, b) -> [[a, -b], [b*, a*]]
+    za, zb = torch.complex(q[..., 0], q[..., 1]), torch.complex(q[..., 2], q[..., 3])
+    return torch.stack([torch.stack([za, -zb], -1), torch.stack([zb.conj(), za.conj()], -1)], -2)
+p4, q4 = torch.randn(2, 1000, 4, dtype=dt)
+assert torch.allclose(M(cd(p4, q4)), M(p4) @ M(q4)) and torch.allclose(M(conj(p4)), M(p4).mH)
+```
+
+## E.7 Координатизация
+
+Для $D\in\{\mathbb R,\mathbb C,\mathbb H,\mathbb O\}$, $d=\dim D$ и $n\ge1$ пусть
+$\operatorname{Herm}_n(D)=\{X\in M_n(D):X_{ji}=\overline{X_{ij}}\}$ с $X\circ Y=\frac12(XY+YX)$, где
+$(XY)_{ik}=\sum_jX_{ij}Y_{jk}$ (для этого определения ассоциативность $D$ не нужна). Диагональные элементы удовлетворяют $\bar x=x$, поэтому
+они вещественны. Пусть $E_{ij}$ — матричные единицы, и для $i\ne j$ и $a\in D$ пусть $a[ij]=aE_{ij}+\bar aE_{ji}$; таким образом,
+$a[ji]=\bar a[ij]$.
+
+**Лемма E.20.** $\operatorname{Herm}_n(D)$ замкнута относительно $\circ$, имеет единицу $\sum_iE_{ii}$ и размерность
+$n+d\frac{n(n-1)}2$, и для различных $i,j,k,l$ и $a,b\in D$:
+$$
+E_{ii}\circ E_{jj}=\delta_{ij}E_{ii},\quad E_{kk}\circ a[ij]=\tfrac12(\delta_{ki}+\delta_{kj})a[ij],\quad
+a[ij]\circ b[ij]=\langle a,b\rangle(E_{ii}+E_{jj}),\quad a[ij]\circ b[jk]=\tfrac12(ab)[ik],\quad a[ij]\circ b[kl]=0 .
+$$
+Кроме того, $(X|Y)=\operatorname{Re}\operatorname{tr}(XY)$ — скалярное произведение с $(X\circ Y|Z)=(Y|X\circ Z)$.
+
+*Доказательство.* Матричное умножение: $a[ij]\,b[ij]=a\bar bE_{ii}+\bar abE_{jj}$, и $a\bar b+b\bar a=\bar ab+\bar ba=2\langle a,b\rangle$
+(поляризуем $x\bar x=\bar xx=N(x)$); $a[ij]\,b[jk]=abE_{ik}$ и $b[jk]\,a[ij]=\bar b\bar aE_{ki}=\overline{ab}E_{ki}$;
+остальные произведения очевидны. Все произведения базисных элементов лежат в $\operatorname{Herm}_n(D)$, а значит, и все произведения. Далее,
+$(X|X)=\sum_{i,j}\operatorname{Re}(X_{ij}\overline{X_{ij}})=\sum_{i,j}N(X_{ij})>0$ для $X\ne0$. Пусть
+$T(X,Y,Z)=\operatorname{Re}\operatorname{tr}((XY)Z)=\sum_{i,j,k}\operatorname{Re}((X_{ij}Y_{jk})Z_{ki})$. По лемме E.14(4)
+$\operatorname{Re}\operatorname{tr}(AB)=\operatorname{Re}\operatorname{tr}(BA)$, $T(X,Y,Z)=T(Z,X,Y)$, а переходя к сопряжённым
+($\operatorname{Re}\bar p=\operatorname{Re}p$, $\overline{(pq)r}=\bar r(\bar q\bar p)$) и пользуясь эрмитовостью $X,Y,Z$, получаем
+$T(X,Y,Z)=\sum\operatorname{Re}(Z_{ik}(Y_{kj}X_{ji}))=T(Z,Y,X)$. Поэтому $T$ симметрична, и
+$(X\circ Y|Z)=\frac12(T(X,Y,Z)+T(Y,X,Z))=T(X,Y,Z)$ симметрично по $X,Y,Z$. $\square$
+
+**Лемма E.21 (ориентации).** Пусть $P_{12},P_{13},P_{23}$ — пространства со скалярным произведением, $P_{ji}=P_{ij}$, и для каждой
+упорядоченной тройки $(i,j,k)$ различных элементов $\{1,2,3\}$ пусть $m:P_{ij}\times P_{jk}\to P_{ik}$ — билинейное отображение, причём
+$m(x,y)=m(y,x)$ (правая часть — отображение для $(k,j,i)$) и $\langle m(x,y),z\rangle=\langle y,m(x,z)\rangle$ для
+$x\in P_{ij}$, $y\in P_{jk}$, $z\in P_{ik}$. Пусть $D$ — композиционная алгебра и $\iota_{ij}:D\to P_{ij}$ ($i<j$) — линейные
+изометрические биекции с $m(\iota_{12}a,\iota_{23}b)=\iota_{13}(ab)$; положим $\iota_{ji}(a)=\iota_{ij}(\bar a)$. Тогда
+$m(\iota_{ij}a,\iota_{jk}b)=\iota_{ik}(ab)$ для всех упорядоченных троек и всех $a,b\in D$.
+
+Предположения выполнены (i) для трёх индексов йорданова репера простой $J$ с пространствами Пирса и $m=2\circ$
+(коммутативность и лемма E.12(2)); (ii) в $\operatorname{Herm}_3(D)$ с $P_{ij}=\{a[ij]\}$,
+$\langle a[ij],b[ij]\rangle=\langle a,b\rangle$ (корректно определено, так как сопряжение изометрично) и $m=2\circ$, поскольку
+$m(a[ij],b[jk])=(ab)[ik]$ и для $c[ik]$ имеем $\langle ab,c\rangle=\langle b,\bar ac\rangle$ (лемма E.14(2)).
+
+*Доказательство.* Если утверждение верно для $(i,j,k)$, то оно верно и для $(k,j,i)$:
+$m(\iota_{kj}a,\iota_{ji}b)=m(\iota_{ij}\bar b,\iota_{jk}\bar a)=\iota_{ik}(\bar b\bar a)=\iota_{ik}(\overline{ab})=\iota_{ki}(ab)$.
+Поэтому, зная $(1,2,3)$, достаточно рассмотреть $(2,1,3)$ и $(1,3,2)$. Для всех $c\in D$, используя сопряжённость, $(1,2,3)$ и
+лемму E.14(2), получаем
+$$
+\langle m(\iota_{21}a,\iota_{13}b),\iota_{23}c\rangle=\langle\iota_{13}b,m(\iota_{12}\bar a,\iota_{23}c)\rangle=\langle b,\bar ac\rangle=\langle ab,c\rangle=\langle\iota_{23}(ab),\iota_{23}c\rangle,
+$$
+$$
+\langle m(\iota_{13}a,\iota_{32}b),\iota_{12}c\rangle=\langle\iota_{13}a,m(\iota_{12}c,\iota_{23}\bar b)\rangle=\langle a,c\bar b\rangle=\langle ab,c\rangle=\langle\iota_{12}(ab),\iota_{12}c\rangle,
+$$
+а $\iota_{23},\iota_{12}$ сюръективны. (Во второй строке сопряжённость применяется к $y=\iota_{32}b$ в роли $x$,
+после $m(x,y)=m(y,x)$.) $\square$
+
+**Теорема E.22 (координатизация).** Пусть $J$ проста и имеет йорданов репер $(c_1,\dots,c_r)$, $r\ge3$. Тогда существуют
+композиционная алгебра $D\in\{\mathbb R,\mathbb C,\mathbb H,\mathbb O\}$ размерности $d$ и изоморфизм алгебр
+$\Phi:\operatorname{Herm}_r(D)\to J$ с $\Phi(E_{ii})=c_i$. Если $r\ge4$, то $D$ ассоциативна, т. е. $D\ne\mathbb O$.
+
+*Доказательство.* *Шаг 1 (один треугольник).* Выберем $e_{12}\in J_{12}$, $e_{23}\in J_{23}$ с $N=1$ (предложение E.11). На
+$D'=J_{13}$ определим $p\cdot q=m(m(p,e_{23}),m(e_{12},q))$, используя произведения $J_{13}\times J_{32}\to J_{12}$,
+$J_{21}\times J_{13}\to J_{23}$ и $J_{12}\times J_{23}\to J_{13}$. По лемме E.12(1) $1'=m(e_{12},e_{23})$ — единица:
+$p\cdot1'=m(m(p,e_{23}),e_{23})=p$ и $1'\cdot q=m(e_{12},m(e_{12},q))=q$; и $N(p\cdot q)=N(p)N(q)$. Поэтому $(D',N)$ —
+композиционная алгебра, и по теореме E.17 существует изоморфизм $h:D\to D'$ с $D\in\{\mathbb R,\mathbb C,\mathbb H,\mathbb O\}$.
+Положим $\iota_{13}=h$, $\iota_{12}=m(h(\cdot),e_{23})$ и $\iota_{23}=m(e_{12},h(\cdot))$; это изометрические биекции
+(лемма E.12(1)), и $m(\iota_{12}a,\iota_{23}b)=h(a)\cdot h(b)=\iota_{13}(ab)$. По лемме E.21 при $k=3$ выполнено:
+
+> $(\mathrm T_k)$ существуют изометрические биекции $\iota_{ij}:D\to J_{ij}$, $i<j\le k$, такие что при $\iota_{ji}(a)=\iota_{ij}(\bar a)$
+> $m(\iota_{ij}a,\iota_{jl}b)=\iota_{il}(ab)$ для всех различных $i,j,l\le k$ и всех $a,b\in D$.
+
+*Шаг 2 (добавление индекса).* Пусть выполнено $(\mathrm T_{k-1})$, где $4\le k\le r$. Выберем $v\in J_{1k}$ с $N(v)=1$ и положим
+$\iota_{ik}(a)=m(\iota_{i1}a,v)$ для $2\le i<k$ и $\iota_{1k}(a)=m(\iota_{12}a,\iota_{2k}1)$; это изометрические биекции по
+лемме E.12(1). Используя лемму E.12(3) (каждый раз с четырьмя различными индексами) и $(\mathrm T_{k-1})$, для различных
+$i,j\in\{2,\dots,k-1\}$ получаем
+$$
+m(\iota_{ij}a,\iota_{jk}b)=m(\iota_{ij}a,m(\iota_{j1}b,v))=m(m(\iota_{ij}a,\iota_{j1}b),v)=m(\iota_{i1}(ab),v)=\iota_{ik}(ab).
+$$
+В частности, $\iota_{2k}(b)=m(\iota_{23}b,\iota_{3k}1)$, и, следовательно,
+$$
+m(\iota_{12}a,\iota_{2k}b)=m(m(\iota_{12}a,\iota_{23}b),\iota_{3k}1)=m(\iota_{13}(ab),\iota_{3k}1)
+=m(m(\iota_{12}(ab),\iota_{23}1),\iota_{3k}1)=m(\iota_{12}(ab),\iota_{2k}1)=\iota_{1k}(ab).
+$$
+Для $3\le j<k$ имеем $\iota_{1j}a=m(\iota_{12}a,\iota_{2j}1)$, поэтому
+$m(\iota_{1j}a,\iota_{jk}b)=m(\iota_{12}a,m(\iota_{2j}1,\iota_{jk}b))=m(\iota_{12}a,\iota_{2k}b)=\iota_{1k}(ab)$. Итак, соотношение
+выполнено для всех троек $i<j<k$, и лемма E.21, применённая к каждому треугольнику $\{i,j,k\}$, даёт $(\mathrm T_k)$.
+
+*Шаг 3 (ассоциативность).* Если $r\ge4$, то по $(\mathrm T_4)$ и лемме E.12(3)
+$\iota_{14}((ab)c)=m(m(\iota_{12}a,\iota_{23}b),\iota_{34}c)=m(\iota_{12}a,m(\iota_{23}b,\iota_{34}c))=\iota_{14}(a(bc))$.
+
+*Шаг 4 (изоморфизм).* С помощью $(\mathrm T_r)$ определим линейное отображение
+$\Phi(\sum_i\alpha_iE_{ii}+\sum_{i<j}a_{ij}[ij])=\sum_i\alpha_ic_i+\sum_{i<j}\iota_{ij}(a_{ij})$; оно биективно по
+теореме E.8(1), и $\Phi(a[ij])=\iota_{ij}(a)$ для всех $i\ne j$. По теореме E.8 и $(\mathrm T_r)$
+$c_i\circ c_j=\delta_{ij}c_i$, $c_k\circ\iota_{ij}(a)=\frac12(\delta_{ki}+\delta_{kj})\iota_{ij}(a)$,
+$\iota_{ij}(a)\circ\iota_{ij}(b)=\langle a,b\rangle(c_i+c_j)$, $\iota_{ij}(a)\circ\iota_{jk}(b)=\frac12\iota_{ik}(ab)$ и
+$\iota_{ij}(a)\circ\iota_{kl}(b)=0$: это таблица из леммы E.20. По билинейности $\Phi(X\circ Y)=\Phi(X)\circ\Phi(Y)$. $\square$
+
+## E.8 Алгебра Альберта
+
+**Лемма E.23 (автоморфизмы $\operatorname{Herm}_3(D)$).** Пусть $D$ — композиционная алгебра и $f_{12},f_{23},f_{13}$ —
+изометрические линейные биекции $D$ с $f_{13}(ab)=f_{12}(a)f_{23}(b)$ для всех $a,b$. Тогда
+$$
+\Phi\Big(\sum_i\alpha_iE_{ii}+\sum_{i<j}a_{ij}[ij]\Big)=\sum_i\alpha_iE_{ii}+\sum_{i<j}f_{ij}(a_{ij})[ij]
+$$
+— автоморфизм $(\operatorname{Herm}_3(D),\circ)$. Для любого $u\in D$ с $N(u)=1$ тройка
+$(f_{12},f_{23},f_{13})=(L_u,R_u,B_u)$, где $L_ua=ua$, $R_ua=au$, $B_ua=uau$, является такой тройкой.
+
+*Доказательство.* Применим лемму E.21 в примере (ii) к $\iota_{ij}(a)=f_{ij}(a)[ij]$: тогда $\Phi(a[ij])=\iota_{ij}(a)$ для всех $i\ne j$
+и $2\iota_{ij}(a)\circ\iota_{jk}(b)=\iota_{ik}(ab)$ для всех различных $i,j,k$. Так как $\Phi$ оставляет на месте $E_{ii}$, а $f_{ij}$
+изометричны, $\Phi$ сохраняет каждое произведение из таблицы леммы E.20, а значит, и $\circ$. Что касается тройки, $L_u,R_u,B_u$
+изометричны ($N(ua)=N(a)$), биективны, а $u(ab)u=(ua)(bu)$ — это тождество Муфанг (лемма E.18(2)). $\square$
+
+**Теорема E.24.** (1) Для $D\in\{\mathbb R,\mathbb C,\mathbb H\}$ и $n\ge1$ $\operatorname{Herm}_n(D)$ — евклидова йорданова
+алгебра, и $\operatorname{Herm}_n(\mathbb H)$ изоморфна йордановой подалгебре $\operatorname{Herm}_{2n}(\mathbb C)$.
+(2) **Алгебра Альберта** $\operatorname{Herm}_3(\mathbb O)$ (размерности $27$) и $\operatorname{Herm}_2(\mathbb O)$ —
+евклидовы йордановы алгебры. (3) В каждой из них $(E_{11},\dots,E_{nn})$ — йорданов репер с пространствами Пирса
+$J_{ij}=\{a[ij]:a\in D\}$ размерности $d=\dim D$; алгебра проста; $\operatorname{Herm}_1(D)\cong\mathbb R$ и
+$\operatorname{Herm}_2(D)\cong V_{d+1}$ для $D=\mathbb R,\mathbb C,\mathbb H,\mathbb O$.
+
+*Доказательство.* (1) $M_n(D)$ — ассоциативная вещественная алгебра (лемма E.15(2)), поэтому по лемме E.20 и лемме 13.1
+$\operatorname{Herm}_n(D)$ — йорданова алгебра, евклидова по лемме E.20. Замена каждого элемента $X_{ij}\in\mathbb H$ на
+блок $2\times2$ $M(X_{ij})$ — инъективный гомоморфизм алгебр $M_n(\mathbb H)\to M_{2n}(\mathbb C)$ (лемма E.15(2)), который
+переводит эрмитовы матрицы в эрмитовы, так как $M(\bar q)=M(q)^*$; поэтому он сохраняет $\circ$.
+
+(2) Пусть $J(x,y)=(x^2\circ y)\circ x-x^2\circ(y\circ x)$ на $\operatorname{Herm}_3(\mathbb O)$; автоморфизм $\Phi$ удовлетворяет
+$J(\Phi x,\Phi y)=\Phi J(x,y)$. Пусть $x=\sum_i\alpha_iE_{ii}+p[12]+q[23]+s[13]$. Мы составим композицию трёх автоморфизмов
+вида из леммы E.23 так, чтобы элементы в позициях $(1,3)$ и $(2,3)$ стали вещественными. (a) Если $s\notin\mathbb R$, запишем
+$s=|s|(\cos\theta+v\sin\theta)$ с $v\perp1$, $N(v)=1$, так что $v^2=-1$ (лемма E.14(3)); для
+$u=\cos\frac\theta2-v\sin\frac\theta2$, вычисляя в коммутативной подалгебре $\operatorname{span}\{1,v\}\cong\mathbb C$, получаем
+$B_us=u^2s=|s|$. (b) Теперь $s$ вещественно. Выберем $u\perp1$ с $N(u)=1$ и $u\perp q$ (это возможно, так как $\dim\mathbb O=8$);
+тогда $B_us=su^2=-s$ вещественно и $\operatorname{Re}(qu)=\langle u,\bar q\rangle=0$, так как $\bar q\in\operatorname{span}\{1,q\}$.
+(c) Теперь $q\perp1$; если $q\ne0$, возьмём $u=q/|q|$: $qu=q^2/|q|=-|q|$ и $B_us=-s$ вещественны. Итак, существует автоморфизм
+$\Phi$, такой что все элементы $\Phi x$ вещественны, кроме, быть может, $p'$ в позиции $(1,2)$. Так как $J(\Phi x,\cdot)$ линейно, достаточно
+показать, что $J(\Phi x,y)=0$ для $y=E_{ii}$ и $y=c[ij]$, $c\in\mathbb O$. По лемме E.18(1) $p'$ и $c$ лежат в ассоциативной
+подалгебре $Q$; тогда $\Phi x,y\in\operatorname{Herm}_3(Q)$ — подалгебре $\operatorname{Herm}_3(\mathbb O)$, лежащей внутри
+ассоциативной алгебры $M_3(Q)$, и $J(\Phi x,y)=0$ по лемме 13.1. Следовательно, $J(x,\Phi^{-1}y)=\Phi^{-1}J(\Phi x,y)=0$ для всех $y$:
+йорданово тождество выполнено, и по лемме E.20 алгебра евклидова. Матрицы с нулевыми третьей строкой и третьим столбцом образуют
+подалгебру (лемма E.20) с единицей $E_{11}+E_{22}$, которая и есть $\operatorname{Herm}_2(\mathbb O)$.
+
+(3) По лемме E.20 $E_{ii}$ — попарно ортогональные идемпотенты с суммой $1$; $L(E_{kk})$ действует на $E_{jj}$ умножением на
+$\delta_{kj}$, а на $a[ij]$ — умножением на $\frac12(\delta_{ki}+\delta_{kj})$, поэтому $J_1(E_{ii})=\mathbb RE_{ii}$ и $J_{1/2}(E_{ii})\cap
+J_{1/2}(E_{jj})=\{a[ij]\}$. $E_{ii}$ примитивен: если $E_{ii}=g+g'$ с ортогональными ненулевыми идемпотентами, то
+$g=E_{ii}\circ g\in\mathbb RE_{ii}$, поэтому $g=E_{ii}$ и $g'=0$. Граф из предложения E.11 полон, поэтому алгебра
+проста. Для $n=1,2$ применим теорему E.13. $\square$
+
+**Следствие E.25.** При $n\ge4$ $\operatorname{Herm}_n(\mathbb O)$ не является йордановой алгеброй.
+
+*Доказательство.* Если бы она была йордановой, то была бы применима лемма E.10(2): её доказательство использует только йорданово тождество и произведения из леммы E.20
+(с $c_k=E_{kk}$). Тогда $\frac14((ab)c)[14]=(a[12]\circ b[23])\circ c[34]=a[12]\circ(b[23]\circ c[34])=\frac14(a(bc))[14]$
+для всех $a,b,c\in\mathbb O$, что противоречит лемме E.15(2). $\square$
+
+**Теорема E.26 (Альберт).** Пусть $D$ — композиционная алгебра. Если существуют ассоциативная вещественная алгебра $A$ и
+инъективное линейное отображение $\varphi:\operatorname{Herm}_3(D)\to A$ с $\varphi(x\circ y)=\frac12(\varphi(x)\varphi(y)+\varphi(y)\varphi(x))$,
+то $D$ ассоциативна. В частности, алгебра Альберта **исключительна**: она не изоморфна йордановой подалгебре
+никакой ассоциативной алгебры, например $M_N(\mathbb C)$.
+
+*Доказательство.* Положим $e_i=\varphi(E_{ii})$ и $e=e_1+e_2+e_3=\varphi(1)$. Тогда $e_i^2=e_i$ и $e_ie_j+e_je_i=0$ при $i\ne j$;
+умножение на $e_i$ слева, соответственно справа, даёт $e_ie_j+e_ie_je_i=0=e_ie_je_i+e_je_i$, поэтому
+$e_ie_j=e_je_i=0$. Для $x=\varphi(X)$ из $ex+xe=2x$ следует $exe=ex=xe=x$, так что $x=\sum_{p,q}x_{pq}$ с
+$x_{pq}=e_pxe_q$. Для $X=a[ij]$ соотношения $e_i\circ x=e_j\circ x=\frac12x$ и $e_k\circ x=0$ ($k\ne i,j$) означают
+$\frac12([p=i]+[q=i])x_{pq}=\frac12x_{pq}$ и т. д., что оставляет лишь $x_{ij}$ и $x_{ji}$. Определим для упорядоченных пар
+$\alpha_{ij}(a)=e_i\varphi(a[ij])e_j$. Для различных $i,j,k$ произведение $\varphi(a[ij])\varphi(b[jk])=\alpha_{ij}(a)\alpha_{jk}(b)$ — единственное
+слагаемое из $e_iAe_k$ в $\varphi(a[ij])\varphi(b[jk])+\varphi(b[jk])\varphi(a[ij])=\varphi((ab)[ik])$, поэтому
+$$
+\alpha_{ij}(a)\,\alpha_{jk}(b)=\alpha_{ik}(ab).
+$$
+Из $\varphi(1[13])^2=\varphi(E_{11}+E_{33})$ получаем $\alpha_{13}(1)\alpha_{31}(1)=e_1$, $\alpha_{31}(1)\alpha_{13}(1)=e_3$;
+из $\varphi(a[13])^2=N(a)(e_1+e_3)$ — $\alpha_{13}(a)\alpha_{31}(\bar a)=N(a)e_1$, так что $\alpha_{13}$ инъективно. Теперь
+$$
+\alpha_{13}(ay)=\alpha_{12}(a)\alpha_{23}(y)=\alpha_{13}(a)\alpha_{32}(1)\alpha_{21}(1)\alpha_{13}(y)=\alpha_{13}(a)\alpha_{31}(1)\alpha_{13}(y),
+$$
+и поэтому, при $\pi=\alpha_{31}(1)$ и в силу ассоциативности $A$,
+$\alpha_{13}((ab)c)=\alpha_{13}(a)\pi\alpha_{13}(b)\pi\alpha_{13}(c)=\alpha_{13}(a(bc))$. Итак, $(ab)c=a(bc)$. По лемме E.15(2)
+$\mathbb O$ не ассоциативна. $\square$
+
+Исходное рассуждение Альберта (A. A. Albert, Ann. of Math. 35 (1934) 65–73) именно такого рода. Код проверяет на случайных элементах йорданово
+тождество в $\operatorname{Herm}_3(\mathbb O)$ и ассоциативность и положительность её следовой формы,
+численно показывает, что йорданово тождество нарушается в $\operatorname{Herm}_4(\mathbb O)$ (следствие E.25), проверяет
+автоморфизм из леммы E.23 и выполняет три шага (a)–(c) доказательства теоремы E.24(2) на случайном элементе:
+
+```python
+n3, prod3 = herm(3, 8)
+X, Y, Z = torch.randn(3, 200, 27, dtype=dt)
+X2 = prod3(X, X)
+assert (prod3(prod3(X2, Y), X) - prod3(X2, prod3(Y, X))).abs().max() < 1e-10    # Jordan identity, Theorem E.24(2)
+n4, prod4 = herm(4, 8)
+X4, Y4 = torch.randn(2, 200, n4, dtype=dt)
+X42 = prod4(X4, X4)
+defect4 = (prod4(prod4(X42, Y4), X4) - prod4(X42, prod4(Y4, X4))).abs().max().item()
+print("Herm_4(O): max |Jordan defect| =", defect4)
+assert defect4 > 1                                                               # Corollary E.25
+retr = lambda v: v[..., :3].sum(-1)               # Re tr
+assert torch.allclose(retr(prod3(prod3(X, Y), Z)), retr(prod3(X, prod3(Y, Z))))
+sq = (X[:, :3] ** 2).sum(-1) + 2 * (X[:, 3:] ** 2).sum(-1)
+assert torch.allclose(retr(prod3(X, X)), sq)                                    # (X|X) = sum of N(X_ij)
+
+def moufang_auto(v, uu):                          # (L_u, R_u, B_u) on the entries a_12, a_23, a_13
+    a12, a13, a23 = v[..., 3:11], v[..., 11:19], v[..., 19:27]   # pairs order (0,1),(0,2),(1,2)
+    uu = uu.expand_as(a12)
+    return torch.cat([v[..., :3], cd(uu, a12), cd(cd(uu, a13), uu), cd(a23, uu)], -1)
+uu = torch.randn(8, dtype=dt); uu = uu / uu.norm()
+assert torch.allclose(moufang_auto(prod3(X, Y), uu), prod3(moufang_auto(X, uu), moufang_auto(Y, uu)))
+
+x = torch.randn(27, dtype=dt)                     # steps (a)-(c) of the proof of Theorem E.24(2)
+s = x[11:19]
+im = torch.cat([torch.zeros(1, dtype=dt), s[1:]])
+v, th = im / im.norm(), torch.atan2(im.norm(), s[0]).item()
+x1 = moufang_auto(x, math.cos(th / 2) * e[0] - math.sin(th / 2) * v)            # (a): (1,3) entry -> |s|
+imq = torch.cat([torch.zeros(1, dtype=dt), x1[20:27]])
+g = torch.cat([torch.zeros(1, dtype=dt), torch.randn(7, dtype=dt)])
+g = g - (g @ imq) / (imq @ imq) * imq                                             # u perpendicular to 1 and q
+x2 = moufang_auto(x1, g / g.norm())                                               # (b): (2,3) entry imaginary
+x3 = moufang_auto(x2, x2[19:27] / x2[19:27].norm())                              # (c): (2,3) entry real
+print("entries (1,3), (2,3) after (a)-(c):", x3[11:19].numpy().round(3), x3[19:27].numpy().round(3))
+assert x3[12:19].abs().max() < 1e-12 and x3[20:27].abs().max() < 1e-12
+assert abs(abs(x3[11].item()) - s.norm().item()) < 1e-12
+```
+
+## E.9 Классификация
+
+**Теорема E.27 (Йордан–фон Нейман–Вигнер).**
+
+1. Всякая конечномерная формально вещественная (что равносильно, евклидова) йорданова алгебра есть прямая сумма простых идеалов,
+   и всякая простая такая алгебра изоморфна $\operatorname{Herm}_n(\mathbb R)$, $\operatorname{Herm}_n(\mathbb C)$ или
+   $\operatorname{Herm}_n(\mathbb H)$ для некоторого $n\ge1$, спин-фактору $V_m$ с $m\ge2$ или алгебре Альберта
+   $\operatorname{Herm}_3(\mathbb O)$.
+2. Алгебры $\mathbb R$; $V_m$ ($m\ge2$); $\operatorname{Herm}_n(D)$ ($D=\mathbb R,\mathbb C,\mathbb H$, $n\ge3$);
+   $\operatorname{Herm}_3(\mathbb O)$ просты, формально вещественны и попарно неизоморфны, так что всякая простая формально
+   вещественная йорданова алгебра изоморфна ровно одной из них. Кроме того, $\operatorname{Herm}_1(D)\cong\mathbb R$ и
+   $\operatorname{Herm}_2(D)\cong V_{\dim D+1}$ для $D=\mathbb R,\mathbb C,\mathbb H,\mathbb O$.
+3. В простой формально вещественной йордановой алгебре все йордановы реперы состоят из одного и того же числа $r$ элементов, и все их пространства
+   Пирса $J_{ij}$ имеют одну и ту же размерность $d$: $r=1$ для $\mathbb R$, $(r,d)=(2,m-1)$ для $V_m$ и $(n,\dim D)$ для
+   $\operatorname{Herm}_n(D)$, $n\ge2$.
+
+*Доказательство.* (1) По теореме E.9 $J$ — прямая сумма простых формально вещественных идеалов. У такого идеала есть йорданов репер некоторого
+размера $r$ (лемма E.6(2)); он $\cong\mathbb R=\operatorname{Herm}_1(\mathbb R)$, если $r=1$, $\cong V_{d+1}$, если $r=2$
+(теорема E.13), и $\cong\operatorname{Herm}_r(D)$, где $D\ne\mathbb O$, если $r\ge4$, и $D\in\{\mathbb R,\mathbb C,\mathbb H,\mathbb O\}$,
+если $r=3$ (теорема E.22).
+
+(2) Для $\operatorname{Herm}_n(D)$ см. теорему E.24. $V_m$ — йорданова алгебра по лемме 13.3 и евклидова относительно
+$\langle(a,u),(b,v)\rangle=ab+u\cdot v$, так как $\langle x\circ y,z\rangle=abc+c\,u\cdot v+a\,v\cdot w+b\,u\cdot w$ симметрично
+по $x=(a,u)$, $y=(b,v)$, $z=(c,w)$. Для единичного вектора $w$ пара $c_{\pm w}=\frac12(1,\pm w)$ — йорданов репер
+(теорема 13.4(1); $c_{\pm w}$ примитивны, поскольку сумма $c_{w'}+c_{-w'}$ двух ортогональных ненулевых идемпотентов равна $1$)
+с $J_{12}=\{(0,v):v\perp w\}$ размерности $m-1\ge1$ (размерности в сумме дают $m+1$); поэтому $V_m$
+проста по предложению E.11. Чтобы различить алгебры, обозначим через $s(J)$ наибольшее число попарно ортогональных ненулевых
+идемпотентов (оно конечно по лемме E.6(2)); $s$ и $\dim$ инвариантны относительно изоморфизмов. Очевидно, $s(\mathbb R)=1$. В
+$V_m$ ненулевые идемпотенты — это $1$ и $c_w$, причём $1\circ c_w=c_w$ и $c_w\circ c_{w'}=0$ лишь при $w'=-w$
+(теорема 13.4(1)); поэтому $s(V_m)=2$. Для $D\in\{\mathbb R,\mathbb C,\mathbb H\}$ имеем $s(\operatorname{Herm}_n(D))=n$:
+$E_{ii}$ дают $s\ge n$. Обратно, ортогональные идемпотенты $p_k\ne0$ удовлетворяют $p_kp_l=0$ при $k\ne l$ (как в доказательстве
+теоремы E.26), поэтому правые $D$-подмодули $V_k=p_kD^n$ модуля $D^n$ ненулевые и независимые: если $\sum_kv_k=0$ с
+$v_k\in V_k$, то $v_l=p_l\sum_kv_k=0$. Ненулевой $V_k$ содержит некоторый $v\ne0$, а с ним и $vD$ вещественной размерности $d$
+($D$ не имеет делителей нуля); поэтому $sd\le nd$. Для $\operatorname{Herm}_3(\mathbb O)$ элементы $E_{ii}$ дают $s\ge3$; а $s$
+попарно ортогональных ненулевых идемпотентов вместе с $1$ минус их сумма измельчаются, как в доказательстве теоремы E.7, до
+йорданова репера из $r'\ge s$ элементов. По предложению E.11(2) и теореме E.22 $27=r'+d'\frac{r'(r'-1)}2$ с $d'\ge1$, причём
+$d'\in\{1,2,4\}$, если $r'\ge4$. При $r'=4,5,6$ правая часть лежит в $\{10,16,28\}$, $\{15,25,45\}$, $\{21,36,66\}$, а
+при $r'\ge7$ она больше $27$; поэтому $s\le r'=3$. Пары $(s,\dim)$ равны $(1,1)$, $(2,m+1)$, $(n,\frac{n(n+1)}2)$,
+$(n,n^2)$, $(n,n(2n-1))$ при $n\ge3$ и $(3,27)$ и все различны, так как $\frac{n(n+1)}2<n^2<n(2n-1)$ и $6,9,15\ne27$.
+Изоморфизмы в ранге $1$ и $2$ — это теорема E.24(3).
+
+(3) Если $F$ — йорданов репер из $r_F$ элементов простой $J$, то доказательство (1), проведённое с $F$, даёт изоморфизм
+$J$ с моделью ранга $r_F$ из (2), а $s$ этой модели равно $r_F$. Поэтому $r_F=s(J)$ для любого репера, и тогда
+$d=(\dim J-r)/\binom r2$ при $r\ge2$ (предложение E.11(2)). $\square$
+
+**Следствие E.28 (ранг и след).** В любой формально вещественной йордановой алгебре все йордановы реперы состоят из одного и того же числа
+элементов — **ранга**. Если $J$ проста ранга $r$, то $\operatorname{tr}x=\frac r{\dim J}\operatorname{Tr}L(x)$ удовлетворяет
+$\operatorname{tr}c=1$ для любого примитивного идемпотента $c$, следовательно, $\operatorname{tr}(\sum_i\lambda_ic_i)=\sum_i\lambda_i$ для
+любого разложения из теоремы E.7, и $\operatorname{tr}(x\circ y)$ — ассоциативное скалярное произведение.
+
+*Доказательство.* Пусть $J=\bigoplus_pJ^{(p)}$, как в теореме E.9, и $c$ примитивен. Его компоненты $c^{(p)}\in J^{(p)}$ —
+попарно ортогональные идемпотенты ($c^2=\sum_p(c^{(p)})^2$), поэтому ровно одна из них ненулевая. Следовательно, элементы йорданова репера
+$J$, лежащие в $J^{(p)}$, образуют йорданов репер $J^{(p)}$ (в сумме они дают компоненту $1^{(p)}$ единицы $1$), и ранг
+$J$ равен сумме рангов $J^{(p)}$ (теорема E.27(3)). В простой $J$ примитивный $c$ принадлежит некоторому йорданову реперу
+(измельчим $1-c$, как в доказательстве теоремы E.7), поэтому $\operatorname{Tr}L(c)=t=\dim J/r$ по предложению E.11(2) (при $r=1$
+$J=\mathbb Rc$ и $\operatorname{Tr}L(c)=1$). Наконец, $\operatorname{tr}(x\circ y)=\frac r{\dim J}\tau(x,y)$ (теорема E.5). $\square$
+
+Код вычисляет для каждого типа йорданов репер $(E_{ii})$ или $(c_w,c_{-w})$, размерности пространств Пирса как
+общих собственных подпространств операторов $L(c_i)$ (теорема E.8), формулу размерности из предложения E.11(2) и положительность следовой
+формы $\tau$ (теорема E.5):
+
+```python
+def peirce(C, frame):
+    """dimensions of the joint Peirce spaces J_ij = {x : c_i o x = c_j o x = x/2}"""
+    I = torch.eye(C.shape[0], dtype=dt)
+    Ls = [Lop(C, f) for f in frame]
+    return [C.shape[0] - torch.linalg.matrix_rank(torch.cat([Ls[i] - I / 2, Ls[j] - I / 2])).item()
+            for i in range(len(frame)) for j in range(i + 1, len(frame))]
+
+cases = [(f"Herm_{n}({'RCHO'[k]})", herm(n, 2 ** k), n, 2 ** k) for n, k in ((2, 0), (3, 0), (4, 0), (3, 1), (4, 1), (3, 2), (2, 3), (3, 3))]
+cases += [(f"V_{m}", spin(m), 2, m - 1) for m in (2, 3, 5)]
+for name, (dim, prod), r, d in cases:
+    C = structure(dim, prod)
+    if name.startswith('V'):
+        frame = [0.5 * torch.eye(dim, dtype=dt)[0] + s * 0.5 * torch.eye(dim, dtype=dt)[1] for s in (1, -1)]
+    else:
+        frame = list(torch.eye(dim, dtype=dt)[:r])
+    for i, f in enumerate(frame):
+        assert torch.allclose(mul(C, f, f), f) and all(torch.allclose(mul(C, f, g), torch.zeros(dim, dtype=dt)) for g in frame[i + 1:])
+    dims = peirce(C, frame)
+    t = torch.einsum('cbb->c', Lop(C, torch.eye(dim, dtype=dt)))
+    gram = torch.einsum('abc,c->ab', C, t)
+    print(f"{name:10s} dim {dim:2d}  rank {r}  Peirce dimensions {dims}  min eig of trace form {torch.linalg.eigvalsh(gram).min().item():.2f}")
+    assert dims == [d] * (r * (r - 1) // 2) and dim == r + d * r * (r - 1) // 2
+    assert torch.linalg.eigvalsh(gram).min() > 0
+```
+
+## E.10 Что это приложение доказывает для главы 13
+
+| утверждение в главе 13 | где доказано |
+|---|---|
+| формально вещественная $\Leftrightarrow$ евклидова (раздел 13.4) | теорема E.5 |
+| теорема 13.7: разложение на простые идеалы, список, «ровно одной» | теоремы E.9, E.27 |
+| $\operatorname{Herm}_2(\mathbb K)\cong V_{\dim\mathbb K+1}$ для $\mathbb K=\mathbb R,\mathbb C,\mathbb H,\mathbb O$ | теорема E.24(3) |
+| $\operatorname{Herm}_r(\mathbb H)$ вкладывается в $\operatorname{Herm}_{2r}(\mathbb C)$ | теорема E.24(1) |
+| алгебра Альберта — йорданова алгебра, и она исключительна | теоремы E.24(2), E.26 |
+| $\operatorname{Herm}_r(\mathbb O)$ — йорданова алгебра лишь при $r\le3$ | теорема E.24(2), следствие E.25 |
+| спектральная теорема с йордановыми реперами, ранг, $\operatorname{tr}z=\sum_i\mu_i$, ассоциативность $\operatorname{tr}(x\circ y)$ (раздел 13.6) | теорема E.7, следствие E.28 |
+
+**Примечания.** Классификация принадлежит P. Jordan, J. von Neumann и E. Wigner, *On an algebraic generalization of the
+quantum mechanical formalism*, Ann. of Math. 35 (1934) 29–64, а исключительность $\operatorname{Herm}_3(\mathbb O)$ —
+A. A. Albert (тот же том, 65–73). Приведённое доказательство следует структуре книги Faraut–Korányi, *Analysis on Symmetric
+Cones* (Oxford 1994), Chapters II–V; доказательство теоремы Гурвица (Nachr. Ges. Wiss. Göttingen 1898, 309–316) через удвоение изложено как в
+J. H. Conway, D. A. Smith, *On Quaternions and Octonions* (2003) и T. A. Springer, F. D. Veldkamp, *Octonions, Jordan
+Algebras and Exceptional Groups* (2000), а доказательство теоремы Фробениуса (1878) принадлежит R. S. Palais, Amer. Math. Monthly
+75 (1968) 366–368. Дополнительная литература (нигде в курсе не используется): C. M. Glennie, Pacific J. Math. 16 (1966)
+47–59 — иной подход к исключительности через полиномиальные тождества, и книга McCrimmon *A Taste of Jordan
+Algebras* (2004) — история и общая теория.

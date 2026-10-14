@@ -480,7 +480,7 @@ $PE_i^*E_jP\in\mathfrak A'$ pour tous $i,j$. Dans ce cas, le canal $\mathcal R$ 
 
 *Démonstration.* *Condition nécessaire.* Supposons que $\mathcal R$ corrige $\mathfrak A$ et posons $W_{mi}=R_mE_iP$, de sorte que
 $\sum_{m,i}W_{mi}^*XW_{mi}=P(\mathcal R\circ\Phi)^*(X)P$ pour tout $X\in M_D$. Ceci vaut $X$ pour $X\in\mathfrak A$, et $P$ pour
-$X=1$, car $(\mathcal R\circ\Phi)^*$ est unifère (corollaire 6.9(b)). Soit $p\in\mathfrak A$ un projecteur ; alors $p\le P$
+$X=1$, car $(\mathcal R\circ\Phi)^*$ est unifère (corollaire 6.9(a)). Soit $p\in\mathfrak A$ un projecteur ; alors $p\le P$
 et $\sum W_{mi}^*(1-p)W_{mi}=P-p$. Pour $x=px$,
 $\sum_{m,i}\|(1-p)W_{mi}x\|^2=\langle x,(P-p)x\rangle=0$, et pour $x=(P-p)x$,
 $\sum_{m,i}\|pW_{mi}x\|^2=\langle x,px\rangle=0$. Par conséquent $(1-p)W_{mi}p=0$ et $pW_{mi}(P-p)=0$, et comme

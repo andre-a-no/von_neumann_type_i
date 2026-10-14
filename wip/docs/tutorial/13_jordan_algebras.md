@@ -5,7 +5,7 @@
 The product $xy$ of two observables is not an observable unless $x$ and $y$ commute, but the symmetrised product
 $x\circ y=\frac12(xy+yx)$ always is. In 1933 P. Jordan proposed to take the observables with this product as the
 basic structure of quantum mechanics, and Jordan, von Neumann and Wigner classified the finite-dimensional algebras
-that arise. This chapter develops the finite-dimensional theory, with complete proofs here or, for the three long
+that arise. This chapter develops the finite-dimensional theory, with complete proofs here or, for the four long
 ones (the classification, the Koecher–Vinberg theorem, Kadison's theorem and the Jordan automorphisms of
 $\bigoplus_cM_{k_c}$), in Appendices E and F, and asks what the Jordan structure misses. The answer is the sign of the
 commutator: the Jordan algebra of one system determines the commutator only up to sign (Section 13.5), but composite

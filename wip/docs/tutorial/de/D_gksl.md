@@ -480,7 +480,7 @@ $PE_i^*E_jP\in\mathfrak A'$ für alle $i,j$. In diesem Fall korrigiert der im Be
 
 *Beweis.* *Notwendigkeit.* $\mathcal R$ korrigiere $\mathfrak A$; man setze $W_{mi}=R_mE_iP$, so dass
 $\sum_{m,i}W_{mi}^*XW_{mi}=P(\mathcal R\circ\Phi)^*(X)P$ für alle $X\in M_D$. Dies ist gleich $X$ für $X\in\mathfrak A$ und gleich $P$ für
-$X=1$, weil $(\mathcal R\circ\Phi)^*$ unital ist (Korollar 6.9(b)). Sei $p\in\mathfrak A$ eine Projektion; dann ist $p\le P$
+$X=1$, weil $(\mathcal R\circ\Phi)^*$ unital ist (Korollar 6.9(a)). Sei $p\in\mathfrak A$ eine Projektion; dann ist $p\le P$
 und $\sum W_{mi}^*(1-p)W_{mi}=P-p$. Für $x=px$ ist
 $\sum_{m,i}\|(1-p)W_{mi}x\|^2=\langle x,(P-p)x\rangle=0$, und für $x=(P-p)x$ ist
 $\sum_{m,i}\|pW_{mi}x\|^2=\langle x,px\rangle=0$. Daher ist $(1-p)W_{mi}p=0$ und $pW_{mi}(P-p)=0$, und wegen

@@ -227,7 +227,7 @@ $$
 若 $x\in Q$，则 $x_-=0$ 且 $z=A\in Q$，所以 $|z|=z=P(y)|x|$；$-x\in Q$ 时同理。$\square$
 
 代码对 $\operatorname{Herm}_4(\mathbb C)$ 以及洛伦兹锥 $Q\subseteq V_4$ 检验定理 F.5（负的配对值就是
-(iv)$\Rightarrow$(ii) 中的见证 $c_i$），在 $V_4$ 中检验定理 F.6（在坐标
+(1), $\langle y,c_i\rangle=\lambda_i\|c_i\|^2<0$ 中的见证 $c_i$），在 $V_4$ 中检验定理 F.6（在坐标
 $(a,u)$ 下，算子 $L(b)$ 与 $P(y)$ 是 $5\times5$ 对称矩阵），并在
 $\operatorname{Herm}_5(\mathbb R)$ 中检验推论 F.7：
 
@@ -607,7 +607,7 @@ $$
 反之，每个这样的映射都是若尔当 $*$-同构，并且 $S$ 在相差 $k_c=1$ 的块的意义下唯一。
 
 *证明。* 由引理 F.16 与引理 F.14(4)，对极小中心投影之间的某个双射 $\sigma$ 有
-$\Phi(P_c)=Q_{\sigma(c)}$，所以 $C=C'$。若 $x=P_cxP_c$，则 $\Phi(x)=Q_{\sigma(c)}\Phi(x)Q_{\sigma(c)}$，所以 $\Phi$ 把块 $c$ 映入块
+$\Phi(P_c)=P'_{\sigma(c)}$，所以 $C=C'$。若 $x=P_cxP_c$，则 $\Phi(x)=P'_{\sigma(c)}\Phi(x)P'_{\sigma(c)}$，所以 $\Phi$ 把块 $c$ 映入块
 $\sigma(c)$，而 $\Phi^{-1}$ 把块 $\sigma(c)$ 映入块 $c$；因此 $k_c^2=k'^2_{\sigma(c)}$，并且其限制是
 若尔当 $*$-同构 $M_{k_c}\to M_{k_c}$，由定理 F.17 它具有两种形式之一。由于 $x=\sum_cP_cxP_c$，这就
 决定了 $\Phi$。逆命题逐块成立（命题 13.9），而 $S$ 的唯一性由定理 F.17 得出。$\square$

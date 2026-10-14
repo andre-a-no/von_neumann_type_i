@@ -472,7 +472,7 @@ $PE_i^*E_jP\in\mathfrak A'$。在这种情况下，证明中构造的信道 $\ma
 
 *证明。* *必要性。* 设 $\mathcal R$ 纠正 $\mathfrak A$，令 $W_{mi}=R_mE_iP$，于是对所有 $X\in M_D$ 有
 $\sum_{m,i}W_{mi}^*XW_{mi}=P(\mathcal R\circ\Phi)^*(X)P$。对 $X\in\mathfrak A$ 它等于 $X$；对 $X=1$ 它等于 $P$，
-因为 $(\mathcal R\circ\Phi)^*$ 是保单位的（推论 6.9(b)）。设 $p\in\mathfrak A$ 是投影；则 $p\le P$，
+因为 $(\mathcal R\circ\Phi)^*$ 是保单位的（推论 6.9(a)）。设 $p\in\mathfrak A$ 是投影；则 $p\le P$，
 并且 $\sum W_{mi}^*(1-p)W_{mi}=P-p$。对 $x=px$，
 $\sum_{m,i}\|(1-p)W_{mi}x\|^2=\langle x,(P-p)x\rangle=0$；对 $x=(P-p)x$，
 $\sum_{m,i}\|pW_{mi}x\|^2=\langle x,px\rangle=0$。因此 $(1-p)W_{mi}p=0$ 且 $pW_{mi}(P-p)=0$，又由于

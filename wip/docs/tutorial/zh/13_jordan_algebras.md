@@ -5,7 +5,7 @@
 两个可观测量的乘积 $xy$ 不是可观测量，除非 $x$ 与 $y$ 对易；但对称化乘积
 $x\circ y=\frac12(xy+yx)$ 总是可观测量。1933 年 P. Jordan 提议把带有这一乘积的可观测量作为量子力学的
 基本结构，随后 Jordan、von Neumann 与 Wigner 对由此产生的有限维代数进行了分类。本章发展有限维理论并给出
-完整证明——或者就在本章中给出，或者对于较长的证明（分类定理、Koecher–Vinberg 定理、Kadison 定理以及
+完整证明——或者就在本章中给出，或者对于四个较长的证明（分类定理、Koecher–Vinberg 定理、Kadison 定理以及
 $\bigoplus_cM_{k_c}$ 的若尔当自同构）在附录 E 与 F 中给出——并追问若尔当结构遗漏了什么。答案是对易子的
 符号：单个系统的若尔当代数只在相差一个符号的意义下决定对易子（13.5 节），但复合系统需要这个符号：它决定
 哪些联合算子是正的，而由它构造的 PPT 检验能够探测纠缠（命题 13.12）。
@@ -312,9 +312,9 @@ $\operatorname{Herm}_r(\mathbb K)$（$\mathbb K=\mathbb R,\mathbb C$）由引理
 就把 $\operatorname{Herm}_r(\mathbb H)$ 嵌入 $\operatorname{Herm}_{2r}(\mathbb C)$（定理 E.24(1)）；$V_m$ 则由引理 13.3。
 Albert 代数是若尔当代数（定理 E.24(2)），并且是**例外的**：它不同构于任何实或复结合代数的若尔当子代数
 （定理 E.26，这是 A. A. Albert 所用的那一类论证，*On a certain algebra of quantum mechanics*, Ann. of Math. 35 (1934)
-65–73：嵌入一个结合代数的若尔当嵌入会使八元数乘积满足结合律，而它并不满足，引理 E.15(2)）。对 $r\ge4$，
+65–73：到结合代数中的若尔当嵌入会使八元数乘积满足结合律，而它并不满足，引理 E.15(2)）。对 $r\ge4$，
 $\operatorname{Herm}_r(\mathbb O)$ 不满足若尔当恒等式（推论 E.25），而具有 $r\ge4$ 个元素的若尔当标架的单代数是
-$\operatorname{Herm}_r(D)$，其中 $D\ne\mathbb O$ 是结合的复合代数（定理 E.22），这就是八元数只在 $r\le3$ 时出现的
+$\operatorname{Herm}_r(D)$，其中 $D\ne\mathbb O$ 是结合的合成代数（定理 E.22），这就是八元数只在 $r\le3$ 时出现的
 原因。所以 $\operatorname{Herm}_3(\mathbb O)$ 不能用实或复矩阵（也不能在任何结合代数中）
 以乘积 $\frac12(xy+yx)$ 忠实地表示；在其中进行计算必须使用八元数乘积（或其结构常数），而不是矩阵乘积。
 
@@ -551,7 +551,7 @@ $|x|$ 就是矩阵绝对值。于是这对所有 $Y=Y^*$ 重新证明了命题 1
 $V_m$ 上，$\tau=\operatorname{tr}$，定理 F.3 的分解就是定理 13.4(2) 的分解（若 $u=0$ 则 $x=a1$），这就是命题 13.14。
 在秩为 $r$ 的单欧几里得若尔当代数 $J$ 中，推论 E.28 的迹 $\operatorname{tr}x=\frac r{\dim J}\operatorname{Tr}L(x)$ 对每个
 若尔当标架 $(c_i)$ 满足 $\operatorname{tr}(\sum_i\mu_ic_i)=\sum_i\mu_i$（定理 E.7），并且
-$\langle x,y\rangle=\operatorname{tr}(x\circ y)$ 是结合内积；对它有 $\tau=\operatorname{tr}$，所以该不等式对这个迹成立。
+$\langle x,y\rangle=\operatorname{tr}(x\circ y)$ 是结合的内积；对它有 $\tau=\operatorname{tr}$，所以该不等式对这个迹成立。
 这适用于 $\operatorname{Herm}_r(\mathbb H)$ 与 Albert 代数，它们都是单欧几里得若尔当代数（定理 E.24）。对 $r\ge3$，
 它们不若尔当同构于任何 $\mathcal M=\bigoplus_cM_{k_c}$ 的 $M_{sa}$：$M_{sa}=\bigoplus_c\operatorname{Herm}_{k_c}(\mathbb C)$
 是理想的直和，所以它只在只有一个块时才是单的，而由定理 13.7 中的唯一性，

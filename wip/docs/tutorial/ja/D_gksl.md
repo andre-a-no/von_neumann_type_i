@@ -480,7 +480,7 @@ $R_m$ をもつならば、$\mathcal R\circ\Phi$ はクラウス作用素 $R_mE_
 
 *証明.* *必要性.* $\mathcal R$ が $\mathfrak A$ を訂正するとし、$W_{mi}=R_mE_iP$ とおくと、すべての $X\in M_D$ に対し
 $\sum_{m,i}W_{mi}^*XW_{mi}=P(\mathcal R\circ\Phi)^*(X)P$ である。これは $X\in\mathfrak A$ に対しては $X$ に等しく、
-$X=1$ に対しては $P$ に等しい。$(\mathcal R\circ\Phi)^*$ は単位的だからである（系 6.9(b)）。$p\in\mathfrak A$ を射影とする。
+$X=1$ に対しては $P$ に等しい。$(\mathcal R\circ\Phi)^*$ は単位的だからである（系 6.9(a)）。$p\in\mathfrak A$ を射影とする。
 すると $p\le P$ であり、$\sum W_{mi}^*(1-p)W_{mi}=P-p$ である。$x=px$ に対しては
 $\sum_{m,i}\|(1-p)W_{mi}x\|^2=\langle x,(P-p)x\rangle=0$ であり、$x=(P-p)x$ に対しては
 $\sum_{m,i}\|pW_{mi}x\|^2=\langle x,px\rangle=0$ である。ゆえに $(1-p)W_{mi}p=0$ かつ $pW_{mi}(P-p)=0$ であり、

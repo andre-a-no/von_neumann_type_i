@@ -2,8 +2,8 @@
 
 # 8. Dynamics
 
-A closed quantum system evolves by a one-parameter group of unitaries, an open one — a system
-coupled to an environment that is not observed — by a semigroup of channels. In an algebra with
+In quantum mechanics a closed system is modelled by a one-parameter group of unitaries, an open one — a
+system coupled to an environment that is not observed — by a semigroup of channels. In an algebra with
 sectors both have a feature that is invisible on a single matrix algebra: a Hamiltonian in
 $\mathcal M$ can never change the sector, so the charges are conserved, while an open system can
 jump between sectors, for instance by losing a particle. This chapter proves the basic facts about
@@ -76,11 +76,11 @@ $\frac d{dt}\langle\psi,P_c\psi\rangle=\langle-iH\psi,P_c\psi\rangle+\langle\psi
 $\frac d{dt}\operatorname{Tr}(Z\rho)=-i\operatorname{Tr}(Z[H,\rho])=-i\operatorname{Tr}([Z,H]\rho)=0$ by
 cyclicity. (3) The same computation with $A$. $\square$
 
-> **Physical meaning.** A Hamiltonian in $\mathcal M$ commutes with the charges (particle number,
-> magnetisation, a symmetry quantum number), so the probability of each charge is a constant of
-> motion, even for driven, time-dependent Hamiltonians. Computationally the evolution splits into
-> $C$ independent problems: one diagonalisation costs of order $\sum_ck_c^3$ operations instead of $D^3$.
+> **Physical meaning** (physical interpretation, not a theorem of this course). A Hamiltonian in
+> $\mathcal M$ commutes with the charges (particle number, magnetisation, a symmetry quantum number),
+> so the probability of each charge is a constant of motion, even for driven, time-dependent Hamiltonians.
 
+By Proposition 8.2(1) the evolution splits into $C$ independent problems of sizes $k_c$, one per block.
 The library computes $U(t)$ with one eigendecomposition per block size (`dynamics.propagator`), and
 `dynamics.von_neumann` evolves a density to many times at once in the eigenbasis, where
 $\rho(t)_{ij}=e^{-it(\lambda_i-\lambda_j)}\rho_{ij}$. We check against `scipy.linalg.expm`:
@@ -116,14 +116,20 @@ A_t = U.adjoint() @ A @ U                                          # Heisenberg 
 assert abs(rho0.expectation(A_t) - dynamics.von_neumann(rho0, H, [t])[0].expectation(A)) < 1e-12
 ```
 
-On $\mathcal M$ a vector $\psi=\bigoplus_c\psi_c$ defines the state of the mixture
-$\bigoplus_c|\psi_c\rangle\langle\psi_c|$ (Chapter 3, Exercise 3), so `dynamics.schrodinger` (vectors in
-the block layout `(batch, C, k_max)`) and `von_neumann` must agree on it. For a time-dependent $H(t)$
+On $\mathcal M$ a unit vector $\psi=\bigoplus_c\psi_c$ defines the state of the mixture
+$\bigoplus_c|\psi_c\rangle\langle\psi_c|$: every $A\in\mathcal M$ is block diagonal, so
+$\langle\psi,A\psi\rangle=\sum_c\langle\psi_c,A_c\psi_c\rangle=\operatorname{Tr}\big(A\bigoplus_c|\psi_c\rangle\langle\psi_c|\big)$
+(as in Chapter 3, Exercise 3). If $\psi(t)$ solves $i\psi'=H\psi$, then
+$\bigoplus_c|\psi_c(t)\rangle\langle\psi_c(t)|=U(t)\big(\bigoplus_c|\psi_c(0)\rangle\langle\psi_c(0)|\big)U(t)^*$, as $U(t)$ is block
+diagonal, so `dynamics.schrodinger` (vectors in the block layout `(batch, C, k_max)`) and `von_neumann`
+must agree on it. For a time-dependent $H(t)$
 the library uses fixed-step classical Runge–Kutta (`dynamics.rk4`, `schrodinger_rk4`): a step multiplies
 $\psi$ by a polynomial in values of $H(t)\in\mathcal M$, so it never moves amplitude between sectors,
 but it is not unitary: for constant $H$ a step of size $h$ multiplies an eigenvector of $H$ with eigenvalue
 $\lambda$ by $T(-ih\lambda)$, $T(z)=\sum_{k=0}^4z^k/k!$, and $|T(ix)|^2=1-\frac{x^6}{72}+\frac{x^8}{576}<1$ for
-$0<|x|<2\sqrt2$ (expand). So the sector weights drift at the level of the discretisation error.
+$0<|x|<2\sqrt2$ (expand). So RK4 does not conserve the sector weights exactly: for constant $H$, a sector
+component with a nonzero coefficient on an eigenvector with $0<|h\lambda|<2\sqrt2$ loses weight in every step.
+How much they change in a run is a numerical observation (below).
 (For one large sector, `krylov.evolve` needs only matrix–vector products; see Chapter 9.)
 
 ```python
@@ -156,16 +162,20 @@ CP and TP maps and channels are defined in Section 6.1 ([Chapter 6](06_quantum_c
 Theorem 6.2 and Proposition 6.4 (a map $A\mapsto\sum_lK_lAK_l^*$, also between sectors, is CP) we need
 three closure properties.
 
-**Lemma 8.4.** (a) Sums, nonnegative multiples and compositions of CP maps are CP. If
-$\Phi$ is CP on $M_D$ and maps a $*$-subalgebra $\mathcal N\subseteq M_D$ (such as $\mathcal M$, or
-$P_c\mathcal MP_c\cong M_{k_c}$ with unit $P_c$) into itself, then $\Phi|_{\mathcal N}$ is CP.
+**Lemma 8.4.** (a) Sums, nonnegative multiples and compositions of CP maps are CP. Let $\Phi$ be CP on
+$\mathcal A=M_D$ or on $\mathcal A=\mathcal M$, and let $\mathcal N\subseteq\mathcal A$ be $\mathcal M$ (if
+$\mathcal A=M_D$) or one of the corners $P_c\mathcal MP_c\cong M_{k_c}$ (with unit $P_c$). If $\Phi$ maps
+$\mathcal N$ into itself, then $\Phi|_{\mathcal N}$ is CP.
 (b) If CP maps $\Phi_m$ converge to $\Phi$ (that is, $\Phi_m(A)\to\Phi(A)$ for all $A$), then $\Phi$ is CP.
 (c) If $s\mapsto\Psi(s)$ is a continuous map from $[a,b]$ into the CP maps, then $\int_a^b\Psi(s)\,ds$ is CP.
 
 *Proof.* (a) $\Phi\mapsto\Phi_n$ is linear and $(\Phi\Psi)_n=\Phi_n\Psi_n$; sums of positive matrices are
-positive. For the restriction: $M_n(\mathcal N)\subseteq M_n(M_D)$, and positivity is the same
-condition in both (after a permutation of the basis, an element of $M_n(\mathcal N)$ is a direct sum of
-the blocks $[(A_{ij})_c]$ and zeros). (b) The positive matrices form a closed set ($\langle x,Xx\rangle\ge0$ for each
+positive. For the restriction: $M_n(\mathcal N)\subseteq M_n(\mathcal A)$, and positivity is the same
+condition in both. Indeed, by Section 6.1 an element $[A_{ij}]$ of $M_n(\mathcal M)$ is positive iff every
+block matrix $[(A_{ij})_c]$ is; for $\mathcal A=M_D$ this is positivity of $[A_{ij}]\in M_{nD}$, because after a
+permutation of the basis $[A_{ij}]$ is the direct sum of these blocks (all $A_{ij}$ are block diagonal);
+and an element of $M_n(P_c\mathcal MP_c)$ has the single nonzero block $[(A_{ij})_c]$, whose positivity is
+positivity in $M_n(M_{k_c})$. (b) The positive matrices form a closed set ($\langle x,Xx\rangle\ge0$ for each
 $x$ is a closed condition), and $(\Phi_m)_n(X)\to\Phi_n(X)$. (c) The Riemann sums are CP by (a) and
 converge to the integral (Lemma A.4(a)); apply (b). $\square$
 
@@ -232,9 +242,10 @@ both proved in [Appendix D](D_gksl.md). $\square$
 
 The key step (Theorem D.3) is that the Choi matrix of the generator of a semigroup of CP maps is positive on
 the orthogonal complement of the maximally entangled vector; the semigroup property alone, with positive
-maps $T_t$, would not suffice (the example after Theorem D.3). For (2) the semigroup is extended to $M_D$ by
-the conditional expectation $E(X)=\sum_cP_cXP_c$, and the GKSL form obtained there is compressed back to
-$\mathcal M$. In the Heisenberg picture (Corollary D.8) the generator of a continuous semigroup of unital CP
+maps $T_t$, would not suffice (the example after Theorem D.3). For (2) the maps $T_t\circ E$ with the
+conditional expectation $E(X)=\sum_cP_cXP_c$ are CP on $M_D$; the Choi matrix of the derivative
+$\mathcal L\circ E$ at $t=0$ is positive on the orthogonal complement of the vectors $(1\otimes P_c)\Omega$, which
+gives a decomposition of $\mathcal L\circ E$ (Lemma D.2), and this is compressed back to $\mathcal M$ by $E$. In the Heisenberg picture (Corollary D.8) the generator of a continuous semigroup of unital CP
 maps on $\mathcal M$ is $A\mapsto\Psi(A)+K^*A+AK$ with $\Psi$ CP and $K\in\mathcal M$. Historically, (1) is
 due to V. Gorini, A. Kossakowski, E. C. G. Sudarshan [*J. Math. Phys.* 17, 821 (1976)] and G. Lindblad
 [*Commun. Math. Phys.* 48, 119 (1976)], and the Heisenberg-picture form, for norm-continuous semigroups on
@@ -301,9 +312,13 @@ and zeros elsewhere.
    $\hat{\mathcal L}$ on $M_D$ with jumps $\sqrt{g_j}L_j$ and $\sqrt{g_m}J^{dc}_{m,l}$ (all $m,l,d,c$). Hence
    $(e^{t\mathcal L})_{t\ge0}$ is a quantum dynamical semigroup on $\mathcal M$.
 2. Let instead $\tilde{\mathcal L}$ be the GKSL generator on $M_D$ in which the blocks of one Kraus
-   index are summed into one jump, $L_{m,l}=\sum_{d,c}J^{dc}_{m,l}$. Then
+   index are summed into one jump, $L_{m,l}=\sum_{d,c}J^{dc}_{m,l}$ (with the same Hamiltonian, the same
+   jumps $\sqrt{g_j}L_j$ and the jumps $\sqrt{g_m}L_{m,l}$). Then
    $\mathcal L(\rho)=E\big(\tilde{\mathcal L}(\rho)\big)$ for $\rho\in\mathcal M$, where $E(X)=\sum_dP_dXP_d$ is
    the conditional expectation of $M_D$ onto $\mathcal M$; in general $\tilde{\mathcal L}(\rho)\notin\mathcal M$.
+3. If every $L_{m,l}$ has at most one nonzero block in each block row and in each block column (for
+   instance if it maps sector $c$ into sector $c-1$ only, as the annihilation operators of the example below),
+   then $\tilde{\mathcal L}(\rho)=\mathcal L(\rho)$ for $\rho\in\mathcal M$.
 
 *Proof.* Since $\rho=\sum_cP_c\rho P_c$ and $J^{dc}P_{c'}=\delta_{cc'}J^{dc}$,
 $J^{dc}\rho J^{dc*}$ is the block $K^{dc}\rho_cK^{dc*}$ in position $(d,d)$, and $J^{dc*}J^{dc}$ is
@@ -313,13 +328,19 @@ into $\mathcal M$, $e^{t\hat{\mathcal L}}|_{\mathcal M}=e^{t\mathcal L}$, and th
 Theorem 8.6 and Lemma 8.4(a). (2) $L\rho L^*=\sum_{d,d',c}J^{dc}\rho J^{d'c*}$ for $L=\sum_{d,c}J^{dc}$, and
 $E$ keeps the terms $d=d'$. For $B\in\mathcal M$, $P_dXBP_d=P_dXP_dB$, so $E(XB)=E(X)B$ and
 $E(BX)=BE(X)$; thus $E\{L^*L,\rho\}=\{E(L^*L),\rho\}$, and $E(L^*L)=\sum_cP_cL^*LP_c=\sum_{c,d}J^{dc*}J^{dc}$
-because $J^{dc*}J^{d'c}=0$ for $d\ne d'$. Finally $E(-i[H,\rho])=-i[H,\rho]$. $\square$
+because $J^{dc*}J^{d'c}=0$ for $d\ne d'$. Finally $E(-i[H,\rho])=-i[H,\rho]$, and the terms of the jumps
+$\sqrt{g_j}L_j\in\mathcal M$ lie in $\mathcal M$. (3) Let $L=\sum_{(d,c)\in S}J^{dc}$, where the set $S$ of pairs
+contains at most one pair with a given $d$ and at most one with a given $c$. For $\rho\in\mathcal M$,
+$J^{dc}\rho J^{d'c'*}=J^{dc}P_c\rho P_{c'}J^{d'c'*}$ vanishes unless $c=c'$, and then $d=d'$; and
+$J^{dc*}J^{d'c'}$ vanishes unless $d=d'$, and then $c=c'$. So $L\rho L^*$ and $L^*L$ are block diagonal, all
+terms of $\tilde{\mathcal L}(\rho)$ lie in $\mathcal M$, and $\tilde{\mathcal L}(\rho)=E(\tilde{\mathcal L}(\rho))=\mathcal L(\rho)$
+by (2). $\square$
 
-> **Physical meaning.** Part (2) says that the Lindblad equation on $\mathcal M$ is what remains of an
-> equation on $M_D$ when the coherences between sectors that the jumps create are erased at once —
-> the content of a superselection rule. For particle loss nothing is erased: the annihilation
-> operator $a_j$ lowers the particle number by exactly one, so $a_j\rho a_j^*$ and $a_j^*a_j=n_j$ are
-> block diagonal, and the equation on $\mathcal M$ is the usual one.
+> **Physical meaning** (physical interpretation, not a theorem of this course). Part (2) says that the
+> Lindblad equation on $\mathcal M$ is what remains of an equation on $M_D$ when the coherences between
+> sectors that the jumps create are erased at once — the content of a superselection rule. For particle
+> loss nothing is erased (part (3)): the usual Lindblad equation with the annihilation operators as jumps
+> is already an equation on $\mathcal M$.
 
 **Proposition 8.9 (sector weights).** Let $\rho(t)=e^{t\mathcal L}\rho_0$ and $p(t)$ its sector weights.
 

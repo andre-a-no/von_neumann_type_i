@@ -481,7 +481,7 @@ $PE_i^*E_jP\in\mathfrak A'$ для всех $i,j$. В этом случае ка
 
 *Доказательство.* *Необходимость.* Пусть $\mathcal R$ корректирует $\mathfrak A$; положим $W_{mi}=R_mE_iP$, так что
 $\sum_{m,i}W_{mi}^*XW_{mi}=P(\mathcal R\circ\Phi)^*(X)P$ для всех $X\in M_D$. Это равно $X$ при $X\in\mathfrak A$ и $P$ при
-$X=1$, поскольку $(\mathcal R\circ\Phi)^*$ унитально (следствие 6.9(b)). Пусть $p\in\mathfrak A$ — проектор; тогда $p\le P$
+$X=1$, поскольку $(\mathcal R\circ\Phi)^*$ унитально (следствие 6.9(a)). Пусть $p\in\mathfrak A$ — проектор; тогда $p\le P$
 и $\sum W_{mi}^*(1-p)W_{mi}=P-p$. Для $x=px$
 $\sum_{m,i}\|(1-p)W_{mi}x\|^2=\langle x,(P-p)x\rangle=0$, а для $x=(P-p)x$
 $\sum_{m,i}\|pW_{mi}x\|^2=\langle x,px\rangle=0$. Следовательно, $(1-p)W_{mi}p=0$ и $pW_{mi}(P-p)=0$, и, поскольку

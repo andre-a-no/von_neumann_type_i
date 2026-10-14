@@ -234,7 +234,7 @@ $$
 Si $x\in Q$, alors $x_-=0$ et $z=A\in Q$, donc $|z|=z=P(y)|x|$ ; de même si $-x\in Q$. $\square$
 
 Le code vérifie le théorème F.5 pour $\operatorname{Herm}_4(\mathbb C)$ et pour le cône de Lorentz $Q\subseteq V_4$ (le
-produit scalaire négatif est le témoin $c_i$ de (iv)$\Rightarrow$(ii)), le théorème F.6 dans $V_4$, où, dans les
+produit scalaire négatif est le témoin $c_i$ de (1), $\langle y,c_i\rangle=\lambda_i\|c_i\|^2<0$), le théorème F.6 dans $V_4$, où, dans les
 coordonnées $(a,u)$, les opérateurs $L(b)$ et $P(y)$ sont des matrices symétriques $5\times5$, et le corollaire F.7 dans
 $\operatorname{Herm}_5(\mathbb R)$ :
 
@@ -630,8 +630,8 @@ $$
 Réciproquement, toute application de ce type est un $*$-isomorphisme de Jordan, et $S$ est unique aux blocs tels que
 $k_c=1$ près.
 
-*Démonstration.* D'après le lemme F.16 et le lemme F.14(4), $\Phi(P_c)=Q_{\sigma(c)}$ pour une bijection $\sigma$ entre les
-projecteurs centraux minimaux, donc $C=C'$. Si $x=P_cxP_c$, alors $\Phi(x)=Q_{\sigma(c)}\Phi(x)Q_{\sigma(c)}$, donc $\Phi$
+*Démonstration.* D'après le lemme F.16 et le lemme F.14(4), $\Phi(P_c)=P'_{\sigma(c)}$ pour une bijection $\sigma$ entre les
+projecteurs centraux minimaux, donc $C=C'$. Si $x=P_cxP_c$, alors $\Phi(x)=P'_{\sigma(c)}\Phi(x)P'_{\sigma(c)}$, donc $\Phi$
 envoie le bloc $c$ dans le bloc $\sigma(c)$, et $\Phi^{-1}$ envoie le bloc $\sigma(c)$ dans le bloc $c$ ; par conséquent
 $k_c^2=k'^2_{\sigma(c)}$, et la restriction est un $*$-isomorphisme de Jordan $M_{k_c}\to M_{k_c}$, de l'une des deux formes
 d'après le théorème F.17. Comme $x=\sum_cP_cxP_c$, cela détermine $\Phi$. La réciproque se vérifie bloc par bloc

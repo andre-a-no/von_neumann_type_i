@@ -6,7 +6,7 @@ Das Produkt $xy$ zweier Observablen ist keine Observable, es sei denn, $x$ und $
 Produkt $x\circ y=\frac12(xy+yx)$ dagegen immer. 1933 schlug P. Jordan vor, die Observablen mit diesem Produkt als
 Grundstruktur der Quantenmechanik zu nehmen, und Jordan, von Neumann und Wigner klassifizierten die
 endlichdimensionalen Algebren, die dabei auftreten. Dieses Kapitel entwickelt die endlichdimensionale Theorie, mit
-vollständigen Beweisen hier oder, für die drei langen (die Klassifikation, den Satz von Koecher–Vinberg, den Satz von
+vollständigen Beweisen hier oder, für die vier langen (die Klassifikation, den Satz von Koecher–Vinberg, den Satz von
 Kadison und die Jordan-Automorphismen von $\bigoplus_cM_{k_c}$), in den Anhängen E und F, und fragt, was der
 Jordan-Struktur entgeht. Die Antwort ist das Vorzeichen des Kommutators: Die Jordan-Algebra eines Systems bestimmt den
 Kommutator nur bis auf das Vorzeichen (Abschnitt 13.5), zusammengesetzte Systeme brauchen aber das Vorzeichen: Es

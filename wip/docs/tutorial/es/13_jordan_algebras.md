@@ -6,7 +6,7 @@ El producto $xy$ de dos observables no es un observable salvo que $x$ e $y$ conm
 $x\circ y=\frac12(xy+yx)$ siempre lo es. En 1933 P. Jordan propuso tomar los observables con este producto como la
 estructura básica de la mecánica cuántica, y Jordan, von Neumann y Wigner clasificaron las álgebras de dimensión finita
 que aparecen. Este capítulo desarrolla la teoría en dimensión finita, con demostraciones completas aquí o, para las
-tres largas (la clasificación, el teorema de Koecher–Vinberg, el teorema de Kadison y los automorfismos de Jordan de
+cuatro largas (la clasificación, el teorema de Koecher–Vinberg, el teorema de Kadison y los automorfismos de Jordan de
 $\bigoplus_cM_{k_c}$), en los apéndices E y F, y se pregunta qué se le escapa a la estructura de Jordan. La respuesta es
 el signo del conmutador: el álgebra de Jordan de un sistema determina el conmutador solo salvo signo (sección 13.5),
 pero los sistemas compuestos necesitan el signo: decide qué operadores conjuntos son positivos, y el test PPT

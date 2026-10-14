@@ -480,7 +480,7 @@ $PE_i^*E_jP\in\mathfrak A'$ for all $i,j$. In that case the channel $\mathcal R$
 
 *Proof.* *Necessity.* Let $\mathcal R$ correct $\mathfrak A$ and put $W_{mi}=R_mE_iP$, so that
 $\sum_{m,i}W_{mi}^*XW_{mi}=P(\mathcal R\circ\Phi)^*(X)P$ for all $X\in M_D$. This equals $X$ for $X\in\mathfrak A$, and $P$ for
-$X=1$, because $(\mathcal R\circ\Phi)^*$ is unital (Corollary 6.9(b)). Let $p\in\mathfrak A$ be a projection; then $p\le P$,
+$X=1$, because $(\mathcal R\circ\Phi)^*$ is unital (Corollary 6.9(a)). Let $p\in\mathfrak A$ be a projection; then $p\le P$,
 and $\sum W_{mi}^*(1-p)W_{mi}=P-p$. For $x=px$,
 $\sum_{m,i}\|(1-p)W_{mi}x\|^2=\langle x,(P-p)x\rangle=0$, and for $x=(P-p)x$,
 $\sum_{m,i}\|pW_{mi}x\|^2=\langle x,px\rangle=0$. Hence $(1-p)W_{mi}p=0$ and $pW_{mi}(P-p)=0$, and since

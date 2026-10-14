@@ -231,7 +231,7 @@ $$
 If $x\in Q$, then $x_-=0$ and $z=A\in Q$, so $|z|=z=P(y)|x|$; similarly if $-x\in Q$. $\square$
 
 The code checks Theorem F.5 for $\operatorname{Herm}_4(\mathbb C)$ and for the Lorentz cone $Q\subseteq V_4$ (the
-negative pairing is the witness $c_i$ of (iv)$\Rightarrow$(ii)), Theorem F.6 in $V_4$, where in the coordinates
+negative pairing is the witness $c_i$ of (1), $\langle y,c_i\rangle=\lambda_i\|c_i\|^2<0$), Theorem F.6 in $V_4$, where in the coordinates
 $(a,u)$ the operators $L(b)$ and $P(y)$ are $5\times5$ symmetric matrices, and Corollary F.7 in
 $\operatorname{Herm}_5(\mathbb R)$:
 
@@ -611,8 +611,8 @@ $$
 $$
 Conversely every such map is a Jordan $*$-isomorphism, and $S$ is unique up to blocks with $k_c=1$.
 
-*Proof.* By Lemma F.16 and Lemma F.14(4), $\Phi(P_c)=Q_{\sigma(c)}$ for a bijection $\sigma$ between the minimal central
-projections, so $C=C'$. If $x=P_cxP_c$, then $\Phi(x)=Q_{\sigma(c)}\Phi(x)Q_{\sigma(c)}$, so $\Phi$ maps block $c$ into block
+*Proof.* By Lemma F.16 and Lemma F.14(4), $\Phi(P_c)=P'_{\sigma(c)}$ for a bijection $\sigma$ between the minimal central
+projections, so $C=C'$. If $x=P_cxP_c$, then $\Phi(x)=P'_{\sigma(c)}\Phi(x)P'_{\sigma(c)}$, so $\Phi$ maps block $c$ into block
 $\sigma(c)$, and $\Phi^{-1}$ maps block $\sigma(c)$ into block $c$; hence $k_c^2=k'^2_{\sigma(c)}$, and the restriction is a
 Jordan $*$-isomorphism $M_{k_c}\to M_{k_c}$, of one of the two forms by Theorem F.17. Since $x=\sum_cP_cxP_c$, this
 determines $\Phi$. The converse holds blockwise (Proposition 13.9), and uniqueness of $S$ follows from Theorem F.17. $\square$

@@ -231,7 +231,7 @@ $$
 Si $x\in Q$, entonces $x_-=0$ y $z=A\in Q$, luego $|z|=z=P(y)|x|$; análogamente si $-x\in Q$. $\square$
 
 El código comprueba el teorema F.5 para $\operatorname{Herm}_4(\mathbb C)$ y para el cono de Lorentz $Q\subseteq V_4$ (el
-emparejamiento negativo es el testigo $c_i$ de (iv)$\Rightarrow$(ii)), el teorema F.6 en $V_4$, donde en las coordenadas
+emparejamiento negativo es el testigo $c_i$ de (1), $\langle y,c_i\rangle=\lambda_i\|c_i\|^2<0$), el teorema F.6 en $V_4$, donde en las coordenadas
 $(a,u)$ los operadores $L(b)$ y $P(y)$ son matrices simétricas $5\times5$, y el corolario F.7 en
 $\operatorname{Herm}_5(\mathbb R)$:
 
@@ -616,8 +616,8 @@ $$
 $$
 Recíprocamente, toda aplicación de este tipo es un $*$-isomorfismo de Jordan, y $S$ es único salvo bloques con $k_c=1$.
 
-*Demostración.* Por el lema F.16 y el lema F.14(4), $\Phi(P_c)=Q_{\sigma(c)}$ para una biyección $\sigma$ entre las
-proyecciones centrales minimales, así que $C=C'$. Si $x=P_cxP_c$, entonces $\Phi(x)=Q_{\sigma(c)}\Phi(x)Q_{\sigma(c)}$, así
+*Demostración.* Por el lema F.16 y el lema F.14(4), $\Phi(P_c)=P'_{\sigma(c)}$ para una biyección $\sigma$ entre las
+proyecciones centrales minimales, así que $C=C'$. Si $x=P_cxP_c$, entonces $\Phi(x)=P'_{\sigma(c)}\Phi(x)P'_{\sigma(c)}$, así
 que $\Phi$ lleva el bloque $c$ en el bloque $\sigma(c)$, y $\Phi^{-1}$ lleva el bloque $\sigma(c)$ en el bloque $c$; por
 tanto, $k_c^2=k'^2_{\sigma(c)}$, y la restricción es un $*$-isomorfismo de Jordan $M_{k_c}\to M_{k_c}$, de una de las dos
 formas por el teorema F.17. Como $x=\sum_cP_cxP_c$, esto determina $\Phi$. El recíproco vale bloque a bloque
