@@ -3,7 +3,7 @@
 # 9. 自旋链
 
 由 $L$ 个自旋 $\frac12$ 组成的链位于 $(\mathbb C^2)^{\otimes L}$ 上，而维数为 $2^L$ 的稠密线性代数在
-$L\approx14$ 处就止步了。对称性能推高这一极限：磁化把空间分成 $L+1$ 个扇区（第 4 章），平移把每个扇区再分一次，
+$L\approx14$ 以上就变得代价高昂（一个稠密矩阵有 $4^L$ 个元素）。对称性能推高这一极限：磁化把空间分成 $L+1$ 个扇区（第 4 章），平移把每个扇区再分一次，
 而 $SU(2)$ 又一次约化这些块。本章为 XXZ 链构造这些扇区，证明它们关于基态说明了什么，用自由费米子和 Bethe
 拟设检验本库，并超越稠密矩阵（Krylov 方法）和纯净的链（无序）。
 
@@ -33,7 +33,8 @@ $\Delta=1$ 时它是 Heisenberg 链 $J\sum\mathbf s_i\cdot\mathbf s_j$，$\Delta
 
 *证明。* 对角项与对角的 $S^z$ 可交换。对 $i\neq j$，$s^+_is^-_j$ 与 $s^z_l$（$l\ne i,j$）可交换，并且由
 $[s^z,s^\pm]=\pm s^\pm$（4.5 节），$[s^z_i+s^z_j,s^+_is^-_j]=[s^z_i,s^+_i]s^-_j+s^+_i[s^z_j,s^-_j]=s^+_is^-_j-s^+_is^-_j=0$；
-对 $s^-_is^+_j$ 取伴随即可。其余部分是命题 4.10(2)。$\square$
+对 $s^-_is^+_j$ 取伴随即可。因此 $H$ 与 $N=S^z+\frac L2$ 可交换，后者具有整数特征值 $0,\dots,L$，其特征空间由
+含 $N$ 个向上自旋的构型张成，维数为 $\binom LN$；其余部分是取 $Q=N$ 的命题 4.10(2)。$\square$
 
 `SpinChain(L).xxz` 直接由每个扇区的构型（`chain.labels[N]`）构造这些块。
 我们把它们与用 Kronecker 积构造的完整 $2^L\times2^L$ 矩阵作比较：
@@ -83,10 +84,10 @@ $x\otimes1$ 分别作用为 $x_N$ 和 $x_{N-1}$，所以 $\mathcal A_{L+1}$ 的�
 $0'-0-1'-1-\cdots-L'-L-(L+1)'$（带撇号的属于 $\mathcal A_{L+1}$）。$\square$
 
 从 Bratteli 图顶端到第 $L$ 层扇区 $N$ 的一条路径就是一个构型 $b$；这样的路径共有
-$\binom LN$ 条，恰为块的大小。对包含矩阵为 $\Lambda$ 的连通包含，我们取
-$\|\Lambda\|^2$ 作为**指标**，即 Markov 迹的指标（V. Jones, *Invent. Math.* 72 (1983)；F. Goodman,
-P. de la Harpe, V. Jones, *Coxeter graphs and towers of algebras*, Springer 1989, Ch. 2–3）；对
-$M_k\otimes1\subset M_k\otimes M_m$，它就是 7.2 节的 $m^2$。`Inclusion.index` 计算它。
+$\binom LN$ 条，恰为块的大小。对包含矩阵为 $\Lambda$ 的连通包含，我们把 $\|\Lambda\|^2$（算子范数）
+**定义**为**指标**；对 $M_k\otimes1\subset M_k\otimes M_m$，包含矩阵是 $1\times1$ 矩阵 $(m)$，所以指标就是
+7.2 节的 $m^2$。`Inclusion.index` 计算它。（这个名称借自 V. Jones 的指标理论，*Invent. Math.* 72 (1983) 1；
+在本课程中，有限维代数之包含的指标就是这个定义，仅此而已。）
 
 **引理 9.3.** 顶点为 $1,\dots,n$ 的路径的邻接矩阵 $A_n$ 的特征值为
 $2\cos\frac{\pi k}{n+1}$，$k=1,\dots,n$，对应的特征向量为 $v_k(j)=\sin\frac{\pi jk}{n+1}$；因此
@@ -104,9 +105,6 @@ $B=\begin{pmatrix}0&\Lambda_L\\\Lambda_L^T&0\end{pmatrix}$ 就变成 $A_{2L+3}$�
 $\|B\|^2=\|B^2\|$ 且 $\|\Lambda_L\Lambda_L^T\|=\|\Lambda_L^T\Lambda_L\|=\|\Lambda_L\|^2$，而 $B^2=\Lambda_L\Lambda_L^T\oplus\Lambda_L^T\Lambda_L$，所以
 $\|B\|=\|\Lambda_L\|$；取 $n=2L+3$ 的引理 9.3 给出其值。$\square$
 
-数 $4\cos^2\frac\pi n$（$n\ge3$）恰好是子因子的指标在 $4$ 以下所能取到的值
-（Jones，前引文献）；这里出现的是偶数 $n$，原因是引理 9.3 这一初等事实。
-
 ```python
 tower = inclusions.chain_tower(8)                                    # A_0 c A_1 c ... c A_8
 print(inclusions.bratteli_diagram(tower).levels[:6])                 # Pascal's triangle
@@ -120,8 +118,8 @@ for L_, inc in enumerate(tower):
     assert abs(inc.index() - 4 * math.cos(math.pi / (2 * L_ + 4)) ** 2) < 1e-12           # Corollary 9.4
 ```
 
-> **物理意义。** 只要相互作用在绕 $z$ 轴的转动下不变，$S^z$ 就是守恒的；$N$ 计数向上自旋，
-> 或者在 9.4 节的 Jordan–Wigner 映射之后计数粒子。在塔中，较长链的每个荷扇区
+> **物理意义**（物理解释，而非本课程的定理）。只要相互作用在绕 $z$ 轴的转动下不变，$S^z$ 就是守恒的；
+> $N$ 计数向上自旋，或者在 9.4 节的 Jordan–Wigner 映射之后计数粒子。在塔中，较长链的每个荷扇区
 > 都由较短链的两个扇区供给。
 
 ## 9.2 平移、动量与 Marshall 符号规则
@@ -129,7 +127,7 @@ for L_, inc in enumerate(tower):
 在周期链上，令 $T$ 为平移 $T|b_0b_1\dots b_{L-1}\rangle=|b_{L-1}b_0\dots b_{L-2}\rangle$，
 它把格点 $i$ 移到格点 $i+1$。$T$ 是置换矩阵，所以是酉的，$T^L=1$ 且
 $Ts^a_iT^*=s^a_{i+1}$。因此 $TS^zT^*=S^z$，并且对均匀外场 $h_i=h$ 有 $THT^*=H$：$T$ 把键映为键。
-它的特征值为 $e^{ik}$，其中**动量** $k=2\pi m/L$，$m=0,\dots,L-1$。
+因此它的特征值具有 $e^{ik}$ 的形式，其中**动量** $k=2\pi m/L$，$m=0,\dots,L-1$。
 
 **命题 9.5（动量扇区）。** 固定 $N$。对含 $N$ 个向上自旋的构型 $a$，令 $R_a$ 为
 其轨道 $\{T^ja\}$ 的大小。(a) $R_a$ 整除 $L$；对满足 $mR_a\equiv0\pmod L$ 的 $k=2\pi m/L$，向量
@@ -143,8 +141,9 @@ $S^z$ 和 $T$ 都可交换的算子——例如平移不变的 XXZ 链——都�
 $e^{ikR_a}=1$，则 $T|a,k\rangle=e^{ik}\sum_{j=1}^{R_a}e^{-ikj}T^j|a\rangle=e^{ik}|a,k\rangle$，因为 $j=R_a$ 的项等于
 $j=0$ 的项；$|a\rangle$ 的系数为 $1$。容许的 $m\in\{0,\dots,L-1\}$ 是
 $L/R_a$ 的倍数，共 $R_a$ 个，对应酉算子 $T$ 的互不相同的特征值，所以这些向量相互正交，并张成
-轨道所张成的 $R_a$ 维空间。(b) 扇区 $N$ 是其各轨道张成空间的正交和。与 $S^z$ 和 $T$ 都可交换的 $X$
-与它们的谱投影 $P_N$、$Q_m$ 可交换（定理 1.5(d)），所以
+轨道所张成的 $R_a$ 维空间。(b) 扇区 $N$ 是其各轨道张成空间的正交和，每个都在 $T$ 下不变，并且由 (a)，
+若 $mR_a\equiv0\pmod L$，特征值 $e^{2\pi im/L}$ 在 $a$ 的轨道张成的空间中恰出现一次，否则不出现。与 $S^z$ 和 $T$
+都可交换的 $X$ 与它们的谱投影 $P_N$、$Q_m$ 可交换（定理 1.5(d)），所以
 $X=\sum_{N,m}P_NQ_mXP_NQ_m$。$\square$
 
 `xxz_momentum` 在归一化的基 $|a,k\rangle$ 中构造这些块，每条轨道取一个代表元 $a$。我们
@@ -179,18 +178,33 @@ $0=(\lambda-M_{ii})|x|_i=\sum_{j\ne i}M_{ij}|x|_j$ 迫使 $i$ 的所有邻点 $j
 连通性得 $x=0$。所以非零特征向量没有为零的分量；但维数 $\ge2$ 的特征空间
 含有一个满足 $x_1=0$ 的非零向量。因此 $\lambda$ 是单的，且 $|x|>0$ 是特征向量。$\square$
 
-**定理 9.7（Marshall 符号规则）。** 设链为开链，或 $L$ 为偶数的周期链；令 $B$ 为
-奇数格点的集合，$N_B(b)$ 为 $b$ 在 $B$ 上的向上自旋数；设 $J>0$，$\Delta,h_i\in\mathbb R$ 任意。
-在每个扇区 $N$ 中，$H_N$ 的最低特征值是单的，并且其特征向量可以选得使
-对每个含 $N$ 个向上自旋的构型 $b$ 都有 $(-1)^{N_B(b)}\psi(b)>0$。
+我们对任意二部的耦合排布证明符号规则；链是其特例。
 
-*证明。* 令 $V|b\rangle=(-1)^{N_B(b)}|b\rangle$；$V$ 是对角的，$V=V^*=V^{-1}$。每条键都连接一个偶数格点和一个
-奇数格点（对环而言是因为 $L$ 为偶数），所以 $s^+_is^-_j$ 使 $N_B$ 改变 $\pm1$，且
-$Vs^+_is^-_jV=-s^+_is^-_j$。于是 $M=-VH_NV$ 在相差一条键上两个自旋交换的构型之间
-的非对角元为 $J/2>0$，其余非对角元为 $0$。它的图是连通的：相邻格点 $(i,i+1)$（$i<L-1$）的交换
-生成格点的所有置换，因而连接任意两个含 $N$ 个向上自旋的构型
-（交换两个相同的自旋不起作用）。由引理 9.6，$M$ 的最大特征值——即 $H_N$ 最低特征值的
-相反数——是单的，并有特征向量 $\varphi>0$；取 $\psi=V\varphi$。$\square$
+**定理 9.7（Marshall 符号规则）。** 设格点 $\{0,\dots,L-1\}$ 被分成两个集合 $A\sqcup B$，并设
+$$
+H=\sum_{i<j}\Big[\tfrac{J_{ij}}2\big(s^+_is^-_j+s^-_is^+_j\big)+K_{ij}\,s^z_is^z_j\Big]+\sum_ih_is^z_i
+$$
+其中 $K_{ij},h_i$ 为实数，$J_{ij}$ 为实数，且当 $i,j$ 位于不同集合时 $J_{ij}\ge0$，位于同一集合时 $J_{ij}\le0$，
+并且格点上的图 $G$（$i\sim j$ 当且仅当 $J_{ij}\ne0$）是连通的。令 $N_B(b)$ 为 $b$ 在 $B$ 上的向上自旋数。
+在每个扇区 $N$ 中，$H_N$ 的最低特征值是单的，并且其特征向量可以选得使对每个含 $N$ 个向上自旋的
+构型 $b$ 都有 $(-1)^{N_B(b)}\psi(b)>0$。
+
+特别地，对 $J>0$、$\Delta,h_i$ 任意的 XXZ 链，若链是开链或 $L$ 为偶数的周期链，取 $A$ 为偶数格点、
+$B$ 为奇数格点，则上述结论成立：此时在键上 $J_{ij}=J$，$K_{ij}=J\Delta$，其余为 $0$；每条键都连接一个
+偶数格点和一个奇数格点（对环而言是因为 $L$ 为偶数），并且 $G$ 包含路径 $0-1-\cdots-(L-1)$。
+
+*证明。* 令 $V|b\rangle=(-1)^{N_B(b)}|b\rangle$；$V$ 是对角的，$V=V^*=V^{-1}$。算子 $s^+_is^-_j$ 把一个向上自旋
+从 $j$ 移到 $i$；若 $i,j$ 位于不同集合，它使 $N_B$ 改变 $\pm1$，否则使 $N_B$ 不变，所以相应地
+$Vs^+_is^-_jV=\mp s^+_is^-_j$，对 $s^-_is^+_j$ 也一样。两个不同的构型 $b,b'$ 由这样一项相连，当且仅当 $b'$ 由
+$b$ 交换两个格点 $i,j$ 上相反的自旋得到，而此时 $i,j$ 由 $b,b'$ 确定（即它们相异的格点）。因此
+$M=-VH_NV$ 的非对角元为 $J_{ij}/2$（不同集合）或 $-J_{ij}/2$（同一集合），即在两种情形下都是
+$|J_{ij}|/2\ge0$，它为正当且仅当在 $G$ 中 $i\sim j$；而在以其他方式相异的构型之间为 $0$。$M$ 的图是连通的。
+事实上，用 $(i\,j)$ 表示交换格点 $i,j$ 上的自旋；对互不相同的 $a,b,c$ 有 $(a\,c)=(a\,b)(b\,c)(a\,b)$，所以沿
+$G$ 中从 $i$ 到 $j$ 的一条路径归纳可知，每个 $(i\,j)$ 都是沿 $G$ 的边的交换的复合，而每个这样的交换要么
+固定一个构型（自旋相同），要么沿 $M$ 的图的一条边移动。若含 $N$ 个向上自旋的 $b\ne b'$，则存在格点
+$i$（在 $b$ 中向上、在 $b'$ 中向下）和格点 $j$（在 $b$ 中向下、在 $b'$ 中向上）；$(i\,j)b$ 与 $b'$ 相异的格点比
+$b$ 少两个，所以有限多步这样的操作就从 $b$ 到达 $b'$。由引理 9.6，$M$ 的最大特征值——即 $H_N$ 最低
+特征值的相反数——是单的，并有特征向量 $\varphi>0$；取 $\psi=V\varphi$。$\square$
 
 **推论 9.8（基态的动量）。** 在 $L$ 为偶数、$J>0$ 且外场均匀的周期链上，
 扇区 $N$ 的基态在 $N$ 为偶数时动量为 $k=0$，在 $N$ 为奇数时动量为 $k=\pi$。
@@ -214,41 +228,62 @@ for N in range(1, L):
     assert sorted(lowest)[1] - lowest[m0] > 1e-8
 ```
 
-> **物理意义。** 在反铁磁体中，晶格决定了基态的符号：使一个自旋越过一条键会
-> 改变符号。这使得二部反铁磁体的量子 Monte Carlo 没有符号问题；
-> 对于阻挫链，即有耦合连接同一子格的格点时，这一点不再成立。
+> **物理意义**（物理解释，而非本课程的定理）。在反铁磁体中，晶格决定了基态的符号：使一个自旋越过
+> 一条键会改变符号。物理学家利用这一点在二部反铁磁体上进行没有符号问题的量子 Monte Carlo 计算；
+> 对于阻挫链，即有反铁磁耦合连接同一集合的两个格点时，定理 9.7 的假设不成立。
 
 ## 9.3 $\Delta=1$ 时的 $SU(2)$
 
 对 $\Delta=1$ 和 $h=0$，$H=J\sum\mathbf s_i\cdot\mathbf s_j$ 与 $S^x,S^y,S^z$ 可交换（命题 4.15），所以
 $H\cong\bigoplus_S1_{2S+1}\otimes H_S$，其中块 $H_S\in M_{m_S}$，$m_S=\binom L{L/2-S}-\binom L{L/2-S-1}$
 （命题 4.13），而模块 `su2` 在最高权向量上构造 $H_S$（命题 4.15(b)）。
-令 $E_0(S)$ 为 $H_S$ 的最低特征值。
+对每个 $J_{ij}$ 为实数的 $H=\sum_{i<j}J_{ij}\,\mathbf s_i\cdot\mathbf s_j$ 同样成立：由命题 4.15(a)，每个
+$\mathbf s_i\cdot\mathbf s_j$ 都属于 $\{S_a\}'$。对出现的自旋 $S$，令 $E_0(S)$ 为 $H_S$ 的最低特征值。
 
-**定理 9.9（链的 Lieb–Mattis 序）。** 设链如定理 9.7 中所述，$\Delta=1$，$h_i=0$，
-$J>0$。对 $L$ 个自旋的每个总自旋 $S$，扇区 $S^z=S$ 的基态具有总自旋 $S$。因此
-$E_0(S)$ 是 $H_S$ 的单特征值，并且 $E_0(S_{\min})<E_0(S_{\min}+1)<\dots<E_0(\frac L2)$，其中
-$S_{\min}\in\{0,\frac12\}$：基态是自旋最小的单个多重态。
+**定理 9.9（Lieb–Mattis）。** 设 $H=\sum_{i<j}J_{ij}\,\mathbf s_i\cdot\mathbf s_j$，其中 $A,B,J_{ij}$ 如定理 9.7 中所述
+（所以 $K_{ij}=J_{ij}$，$h_i=0$），$n_A=|A|\ge n_B=|B|$，且 $S_*=\frac{n_A-n_B}2$。
+(a) 对 $S_*\le S\le\frac L2$（$S-\frac L2$ 为整数），扇区 $S^z=S$ 的基态具有总自旋 $S$；
+对 $0\le M\le S_*$（$M-\frac L2$ 为整数），扇区 $S^z=M$ 的基态具有总自旋 $S_*$。
+(b) 因此对 $S\ge S_*$，$E_0(S)$ 是 $H_S$ 的单特征值，$E_0(S_*)<E_0(S_*+1)<\dots<E_0(\frac L2)$，并且对
+$S<S_*$ 有 $E_0(S)>E_0(S_*)$：$H$ 的基态空间是单个多重态，其自旋为 $S_*$。
+对 $J>0$ 的 Heisenberg 链（开链，或 $L$ 为偶数的周期链），$A$ 和 $B$ 是偶数格点和奇数格点，
+$L$ 为偶数时 $S_*=0$，$L$ 为奇数时 $S_*=\frac12$（开链），并且 $E_0(S_*)<E_0(S_*+1)<\dots<E_0(\frac L2)$。
 
-*证明。* 设 $\psi$ 为扇区 $S^z=S$ 的基态，由定理 9.7 它是单的。$\mathbf S^2$ 与
-$H$ 可交换并保持该扇区，所以 $\mathbf S^2\psi$ 位于一维的基态空间中：$\psi$ 具有某个总
-自旋 $S'$。令 $\chi$ 为在格点对
-$(0,1),(2,3),\dots,(L-2S-2,L-2S-1)$ 上的单态 $\frac1{\sqrt2}(|{\uparrow\downarrow}\rangle-|{\downarrow\uparrow}\rangle)$ 之积，其余 $2S$ 个格点自旋向上。$S^+$ 湮灭每个因子，
-且 $S^z\chi=S\chi$，所以 $\mathbf S^2\chi=(S^-S^++(S^z)^2+S^z)\chi=S(S+1)\chi$（4.5 节）。在每一对上，向上自旋
-位于偶数格点（系数 $+$）或奇数格点（$-$），所以 $(-1)^{N_B(b)}\chi(b)$ 对其支撑中的所有 $b$
-符号相同；取定理 9.7 中的 $V,\varphi$，有 $\langle\psi,\chi\rangle=\langle\varphi,V\chi\rangle\neq0$。
-$\mathbf S^2$ 属于不同特征值的特征向量相互正交，所以 $S'=S$。由命题 4.15(a) 和推论 4.12，每个
-自旋 $S'\ge S$ 的多重态与扇区 $S^z=S$ 恰好交于一个向量，所以 $H$ 在该扇区的谱是
-各 $H_{S'}$（$S'\ge S$）的谱的并（计重数）。它的最低特征值是单的，其特征向量的
-自旋为 $S$，所以它就是 $E_0(S)$，在 $H_S$ 中是单的，且不是 $H_{S'}$（$S'>S$）的特征值：$E_0(S)<E_0(S')$。$\square$
+*证明。* (a) 设 $M\ge0$，$M-\frac L2\in\mathbb Z$，$s=\max(M,S_*)$，并设 $\psi$ 为扇区 $S^z=M$ 的基态，
+由定理 9.7 它是单的：$\psi=V\varphi$，其中 $\varphi>0$。$\mathbf S^2$ 与 $H$ 和 $S^z$ 都可交换，所以它保持该扇区
+的一维基态空间：$\psi$ 具有某个总自旋 $S'$。我们构造该扇区中的一个向量 $\chi$，使
+$\mathbf S^2\chi=s(s+1)\chi$ 且 $\langle\psi,\chi\rangle\ne0$；由于 $\mathbf S^2$ 属于不同特征值的特征向量相互正交，
+这就给出 $S'=s$。令 $p=\frac L2-s$；则 $0\le p\le n_B$，因为 $s\ge S_*$ 意味着
+$p\le\frac{n_A+n_B}2-\frac{n_A-n_B}2$。取互不相同的 $a_1,\dots,a_p\in A$ 和 $b_1,\dots,b_p\in B$，令 $R$ 为其余
+$2s$ 个格点，并令
+$$
+\chi_0=\bigotimes_{l=1}^p\tfrac1{\sqrt2}\big(|{\uparrow}_{a_l}{\downarrow}_{b_l}\rangle-|{\downarrow}_{a_l}{\uparrow}_{b_l}\rangle\big)\otimes|{\uparrow\cdots\uparrow}\rangle_R ,
+\qquad \chi=(S^-)^{s-M}\chi_0 .
+$$
+每个单态都被 $s^\pm_{a_l}+s^\pm_{b_l}$ 湮灭，$R$ 上的向上自旋被 $s^+_i$ 湮灭，所以 $S^+\chi_0=0$；结合
+$S^z\chi_0=s\chi_0$ 得 $\mathbf S^2\chi_0=(S^-S^++(S^z)^2+S^z)\chi_0=s(s+1)\chi_0$（4.5 节），又由于 $\mathbf S^2$ 与 $S^-$
+可交换，$\mathbf S^2\chi=s(s+1)\chi$。写 $S^-=\sum_l(s^-_{a_l}+s^-_{b_l})+S^-_R$，各项相互可交换，前面各项湮灭
+单态，所以 $\chi$ 是这些单态与 $(S^-_R)^{s-M}|{\uparrow\cdots\uparrow}\rangle_R=(s-M)!\sum_D|D\rangle$ 之积，后者的求和
+遍及 $R$ 上恰有 $s-M$ 个自旋向下的构型（这样的构型存在，因为 $s-M\le2s=|R|$）；于是 $\chi\ne0$，
+$S^z\chi=M\chi$，且 $\chi$ 的系数是实的。其符号：一个单态在其向上自旋位于 $A$ 上时贡献 $+$，位于 $B$ 上时
+贡献 $-$，而 $R$ 部分是正的。若 $M=s$，$R$ 的格点全部向上；若 $M<s$，则 $s=S_*$，$p=n_B$，且
+$R\subseteq A$。在两种情形下，$N_B(b)$ 都等于向上自旋位于 $B$ 上的单态个数加上一个常数 $|R\cap B|$
+（若 $M=s$）或 $0$，所以 $(-1)^{N_B(b)}\chi(b)$ 对所有满足 $\chi(b)\ne0$ 的 $b$ 符号相同。因此
+$\langle\psi,\chi\rangle=\langle\varphi,V\chi\rangle=\pm\sum_b\varphi(b)|\chi(b)|\ne0$。
 
-Lieb 和 Mattis 证明了更多：对子格自旋为 $S_A,S_B$ 的连通二部格子，若耦合在
-子格之间为反铁磁、在子格内部为铁磁，则 $E_0(S)$ 在 $S\ge|S_A-S_B|$ 时递增，
-且基态的自旋为 $|S_A-S_B|$（E. Lieb, D. Mattis, *J. Math. Phys.* 3 (1962) 749；不加
-证明地陈述）。由定理 9.9，**单态–三重态能隙** $E_0(1)-E_0(0)$ 为正；在环上
-$L(E_0(1)-E_0(0))\to\pi^2/2$，带有对数修正（J. des Cloizeaux, J. Pearson, *Phys. Rev.* 128
-(1962) 2131；I. Affleck, D. Gepner, H. Schulz, T. Ziman, *J. Phys. A* 22 (1989) 511；不加证明地陈述）。
-我们比较十二个自旋时的块大小，用 $U(1)$ 扇区检验定理 9.9，并计算能隙：
+(b) 由命题 4.15(a)、推论 4.12 和定理 4.11，自旋为 $S'$ 的多重态在 $S'\ge|M|$ 时与扇区 $S^z=M$ 恰好交于
+一个向量，否则不相交，所以 $H$ 在扇区 $S^z=M\ge0$ 上的谱是各 $H_{S'}$（$S'\ge M$）的谱的并（计重数）。
+由 (a)，它的最低特征值是单的，并属于自旋 $s=\max(M,S_*)$：所以 $E_0(s)$ 在 $H_s$ 中是单的，并且对所有
+$S'\ge M$、$S'\ne s$ 有 $E_0(s)<E_0(S')$。对 $M=S\ge S_*$，这给出单性以及对 $S'>S$ 有 $E_0(S)<E_0(S')$；
+对 $M=S<S_*$，它给出 $E_0(S_*)<E_0(S)$。所以 $E_0(S_*)$ 是 $H$ 的最低特征值，只在 $H_{S_*}$ 中取到，并且在
+其中是单的。对链而言，偶数格点比奇数格点多 $0$ 个（$L$ 为偶数）或 $1$ 个（$L$ 为奇数）。$\square$
+
+定理 9.7 可追溯到 W. Marshall（*Proc. Roy. Soc. A* 232 (1955) 48），定理 9.9 可追溯到 E. Lieb 和
+D. Mattis（*J. Math. Phys.* 3 (1962) 749）。由定理 9.9，偶数 Heisenberg 环的**单态–三重态能隙**
+$E_0(1)-E_0(0)$ 为正。
+
+我们比较十二个自旋时的块大小，用 $U(1)$ 扇区检验定理 9.9，计算能隙，并在一个不是链的二部图上
+（$n_A=5$，$n_B=3$，$S_*=1$，随机耦合）检验定理 9.7 和 9.9：
 
 ```python
 sym = SU2Chain(12, boundary='periodic', complex_valued=False)
@@ -264,20 +299,39 @@ for n in (6, 8, 10, 12):
     s = SU2Chain(n, 'periodic', complex_valued=False)
     e = [torch.linalg.eigvalsh(s.heisenberg(spin=S).matrix[0, 0])[0].item() for S in (0, 1)]
     gap[n] = n * (e[1] - e[0])
-print({n: round(g, 4) for n, g in gap.items()}, round(math.pi ** 2 / 2, 4))
-assert 0 < gap[6] < gap[8] < gap[10] < gap[12] < math.pi ** 2 / 2
+print({n: round(g, 4) for n, g in gap.items()})
+assert 0 < gap[6] < gap[8] < gap[10] < gap[12]                      # > 0: Theorem 9.9; increase: numerical
+n8, A_set = 8, (0, 1, 2, 3, 4)                                      # A = {0, ..., 4}, B = {5, 6, 7}
+edges = [(0, 5), (1, 5), (1, 6), (2, 6), (3, 6), (4, 7), (0, 7), (0, 1), (2, 3), (5, 6)]   # connected
+g8 = torch.Generator().manual_seed(2)
+J8 = [(1 if (i in A_set) != (j in A_set) else -1) * (0.5 + torch.rand(1, generator=g8).item()) for i, j in edges]
+dot = lambda i, j: 0.5 * (op(n8, {i: sp, j: sm}) + op(n8, {i: sm, j: sp})) + op(n8, {i: sz, j: sz})
+H8 = sum(Jij * dot(i, j) for Jij, (i, j) in zip(J8, edges))          # J_ij > 0 between, < 0 within A, B
+Sp8, Sz8 = sum(op(n8, {i: sp}) for i in range(n8)), sum(op(n8, {i: sz}) for i in range(n8))
+S2 = Sp8.T @ Sp8 + Sz8 @ Sz8 + Sz8                                  # S^2 = S^- S^+ + (S^z)^2 + S^z
+n_up = torch.tensor([bin(b).count('1') for b in range(2 ** n8)])
+n_B = torch.tensor([bin(b >> 5).count('1') for b in range(2 ** n8)])  # up spins on B
+for N in range(4, 9):                                               # sectors S^z = M = N - 4 >= 0
+    idx = torch.nonzero(n_up == N).flatten()
+    w, U = torch.linalg.eigh(H8[idx][:, idx])
+    x, spin = (-1.0) ** n_B[idx] * U[:, 0], max(N - 4, 1)            # expected spin max(M, S_*)
+    assert (x * x.sum().sign()).min() > 0 and (len(w) == 1 or w[1] - w[0] > 1e-8)          # Theorem 9.7
+    assert abs(U[:, 0] @ S2[idx][:, idx] @ U[:, 0] - spin * (spin + 1)) < 1e-10           # Theorem 9.9(a)
+w8 = torch.linalg.eigvalsh(H8)
+assert w8[2] - w8[0] < 1e-10 and w8[3] - w8[0] > 1e-8                # ground space: one triplet, S_* = 1
 ```
 
 $SU(2)$ 块的大小为 $m_S=132,297,275,154,54,11,1$，而最大的 $U(1)$ 块为 $924$，
-对角化的开销 $\sum k^3$ 从 $2.0\cdot10^9$ 降到 $5.3\cdot10^7$。$L$ 乘以能隙增长得很慢，
-对 $L=6,\dots,12$ 依次为 $4.108,4.181,4.232,4.270$，趋向 $\pi^2/2\approx4.935$。
+对角化的开销 $\sum k^3$ 从 $2.0\cdot10^9$ 降到 $5.3\cdot10^7$。*数值观察*：$L$ 乘以能隙增长得很慢，
+对 $L=6,\dots,12$ 依次为 $4.108,4.181,4.232,4.270$；关于它在 $L\to\infty$ 时的行为，我们不作任何证明。
 
-**关联。** 各格点的自旋构成一个秩一张量算子，由 **Wigner–Eckart 定理**，它们在
-多重态之间的矩阵元等于一个 Clebsch–Gordan 系数乘以一个与磁量子数无关的**约化矩阵元**
-$\langle S',a\|\mathbf s_i\|S,b\rangle$（A. R. Edmonds, *Angular
-Momentum in Quantum Mechanics*, Princeton 1957, Ch. 5；不加证明地陈述）。`spin_correlation` 利用它
-仅从最高权向量出发在每个 $H_S$ 上构造 $\mathbf s_i\cdot\mathbf s_j$；`'direct'` 方法
-则改为投影键算子。我们把两者与在 $U(1)$ 扇区中显式写出的基态作比较：
+**关联。** 各格点的自旋构成矢量算子，其球分量构成秩一张量算子（引理 B.15(a)、(b)）。由
+**Wigner–Eckart 定理**（定理 B.16），它们在两个多重态之间的矩阵元等于一个 Clebsch–Gordan 系数乘以一个
+与磁量子数无关的**约化矩阵元**，并且 $\mathbf s_i\cdot\mathbf s_j=\sum_q(-1)^qs^{(i)}_qs^{(j)}_{-q}$（引理 B.15(a)）。
+`spin_correlation` 利用这一点仅从最高权向量出发在每个 $H_S$ 上构造 $\mathbf s_i\cdot\mathbf s_j$；`'direct'` 方法则改为
+把键算子压缩到最高权向量上，由于 $\mathbf s_i\cdot\mathbf s_j\in\{S_a\}'$，由命题 4.15(b) 这是正确的。第一种方法的
+实现是否正确，这里不作证明；代码检验两者彼此一致，并与按定义在 $U(1)$ 扇区中显式写出的
+基态上计算的值一致：
 
 ```python
 gs = sym.ground_state(H_su2)
@@ -300,12 +354,19 @@ print([round(x, 4) for x in corr_we.tolist()])
 ```
 
 关联 $\langle\mathbf s_0\cdot\mathbf s_r\rangle=0.75,-0.4489,0.1878,-0.1658,0.1209,-0.1224,0.1070,\dots$
-符号交替，这正是定理 9.7 和 9.9 所强制的：单态在转动下不变，而转动置换
-坐标轴，并且在扇区 $S^z=0$ 中 $\langle s^+_0s^+_r\rangle=0$，所以 $\langle\mathbf s_0\cdot\mathbf s_r\rangle=3\langle s^x_0s^x_r\rangle=
-\frac34\langle s^+_0s^-_r+s^-_0s^+_r\rangle=\frac34\sum_{b_0\ne b_r}\psi(b)\psi(b')$，其中 $b'$ 由 $b$ 交换
-格点 $0$ 与 $r$ 的自旋得到；由于 $N_B(b')-N_B(b)$ 对奇数 $r$ 为 $\pm1$、对偶数 $r$ 为 $0$，每一项的符号都是
-$(-1)^r$。衰减很慢，当 $L\to\infty$ 时如 $(-1)^r\sqrt{\log r}/r$（Affleck 等，前引文献；不加
-证明地陈述）。
+符号交替，而定理 9.7 和 9.9 对每个偶数环都强制这一点。设 $\psi$ 为实的归一化基态，它是单态
+（定理 9.9），因而是扇区 $S^z=0$ 的基态。由 $\mathbf S^2\psi=0$ 得
+$\|S^\pm\psi\|^2=\langle\psi,S^\mp S^\pm\psi\rangle=\langle\psi,(\mathbf S^2-(S^z)^2\mp S^z)\psi\rangle=0$，所以 $S^\pm\psi=0$，
+并且对每个 $X$ 有 $\langle\psi,[S^+,[S^-,X]]\psi\rangle=0$（四项中的每一项都有 $S^\pm$ 紧挨着 $\psi$）。对
+$X=s^z_0s^z_r$（$r\ne0$），关系式 $[s^\pm,s^z]=\mp s^\pm$、$[s^+,s^-]=2s^z$ 给出 $[S^-,X]=s^-_0s^z_r+s^z_0s^-_r$ 和
+$[S^+,[S^-,X]]=4s^z_0s^z_r-s^+_0s^-_r-s^-_0s^+_r$。因此 $\langle s^z_0s^z_r\rangle=\frac14\langle s^+_0s^-_r+s^-_0s^+_r\rangle$，并且
+$$
+\langle\mathbf s_0\cdot\mathbf s_r\rangle=\langle s^z_0s^z_r\rangle+\tfrac12\langle s^+_0s^-_r+s^-_0s^+_r\rangle
+=\tfrac34\sum_{b_0\ne b_r}\psi(b)\psi(b') ,
+$$
+其中 $b'$ 由 $b$ 交换格点 $0$ 与 $r$ 的自旋得到。由定理 9.7，$\psi(b)\psi(b')$ 的符号与
+$(-1)^{N_B(b)+N_B(b')}$ 相同，而 $N_B(b')-N_B(b)$ 对奇数 $r$ 为 $\pm1$、对偶数 $r$ 为 $0$；该求和非空，
+所以对 $0<r<L$，$\langle\mathbf s_0\cdot\mathbf s_r\rangle$ 非零且符号为 $(-1)^r$。
 
 ## 9.4 精确检验：自由费米子与 Bethe 拟设
 
@@ -321,7 +382,8 @@ $N$ 的一组规范正交特征基，能量为 $\sum_{k\in K}\varepsilon_k$。
 *证明。* (a) 不同格点上的算子可交换，而在同一格点上 $(-1)^n$ 与 $s^\pm$ 反对易。对
 $i<j$，$c_i$ 与 $c_j^*$（或 $c_j$）在格点 $i$ 上以 $s^-_i$ 和 $(-1)^{n_i}$ 的形式相遇——一次反对易——
 在其他地方可交换，所以它们反对易。对 $i=j$，弦算子的平方为 $1$，且
-$c_jc_j^*+c_j^*c_j=s^-_js^+_j+s^+_js^-_j=1$，$c_j^*c_j=s^+_js^-_j=n_j$。(b) $c_j^*c_{j+1}=s^+_j(-1)^{n_j}s^-_{j+1}=s^+_js^-_{j+1}$，
+$c_jc_j^*+c_j^*c_j=s^-_js^+_j+s^+_js^-_j=1$，$c_j^*c_j=s^+_js^-_j=n_j$，$c_j^2=(s^-_j)^2=0$；$i>j$ 的情形
+交换 $i,j$ 的角色（并取伴随）即得。(b) $c_j^*c_{j+1}=s^+_j(-1)^{n_j}s^-_{j+1}=s^+_js^-_{j+1}$，
 因为 $s^+_j$ 仅在 $n_j=0$ 上非零；再取伴随。(c) $\{b_k,b_l^*\}=\sum_ju_k(j)u_l(j)=\delta_{kl}$ 且
 $\{b_k,b_l\}=0$，并由 $h$ 的谱分解得 $H=\sum_k\varepsilon_kb_k^*b_k$。由正则反对易关系（CAR），
 $[b_l^*b_l,b_k^*]=\delta_{lk}b_k^*$，所以 $[H,b_k^*]=\varepsilon_kb_k^*$；结合 $H|0\rangle=0$ 得
@@ -377,7 +439,8 @@ $(H\Psi)(x_1,x_2)=(E_F-J\Delta)\psi+\frac J2\big(2(\cos k_1+\cos k_2)\psi-\psi(x
 
 命题 9.12 只说明解给出特征向量；它并没有说所有特征向量都以这种方式得到。
 记 $k_{1,2}=K/2\pm q$ 和 $c=\cos\frac K2$。则 $1+e^{iK}-2\Delta e^{ik_{1,2}}=2e^{iK/2}(c-\Delta e^{\pm iq})$，
-所以 $A_{12}=c-\Delta e^{iq}$，$A_{21}=-(c-\Delta e^{-iq})$ 是 (i) 的解。把 (ii) 的两个方程相乘得
+所以 $A_{12}=c-\Delta e^{iq}$，$A_{21}=-(c-\Delta e^{-iq})$ 是 (i) 的解。由 (ii) 和 $(A_{12},A_{21})\ne0$，
+两个系数都非零，所以把 (ii) 的两个方程相乘得
 $e^{iKL}=1$，$K=2\pi n/L$，于是 (ii) 等价于 $F(q)=(-1)^ne^{iqL}(c-\Delta e^{-iq})+c-\Delta e^{iq}=0$，
 这是一个单变量方程。我们在
 $q\in(0,\pi)$ 中寻找它的根，这里由于 $c-\Delta e^{\pm iq}$ 互为复共轭，$e^{-iqL/2}F(q)$ 为实数或纯虚数
@@ -419,20 +482,19 @@ for x in range(8):
 assert close(ring8.xxz(1.0, Delta, sector=2).matrix[0, 0] @ Phi, (8 * Delta / 4 - Delta) * Phi)   # E_F - J Delta
 ```
 
-对 $L=9$，全部 $36$ 个本征态都来自 Bethe 方程：$34$ 个散射态和 $2$ 个束缚态。
-完备性在这里是检验出来的，而不是证明出来的，并且对偶数 $L$ 它不成立。若 $\Delta\ne0$，$\Phi=\sum_x(-1)^x|x,x+1\rangle$
-满足 $T\Phi=-\Phi$ 和 $H\Phi=(E_F-J\Delta)\Phi$（到 $|x-1,x+1\rangle$ 和 $|x,x+2\rangle$ 的跳跃成对抵消）。
-Bethe 向量满足 $T\Psi=e^{-iK}\Psi$，因为 $\psi(x_1-1,x_2-1)=e^{-iK}\psi(x_1,x_2)$；若 $e^{iK}=-1$，则
-$\cos k_1+\cos k_2=2\cos\frac K2\cos\frac{k_1-k_2}2=0$，其能量为 $E_F-2J\Delta$。所以 $\Phi$ 与所有
-Bethe 向量正交（代码的最后几行对 $L=8$ 检验了 $H\Phi$）。取 $\Delta=0.6$ 和 $4\le L\le13$，上面的
-搜索对奇数 $L$ 找到所有态，对偶数 $L$ 找到除 $\Phi$ 以外的所有态。对 $N>2$ 个磁振子，拟设有 $N!$ 项和 $N$ 个耦合的 Bethe 方程（H. Bethe, *Z. Phys.* 71 (1931)
-205；M. Karbach, G. Müller, *Computers in Physics* 11 (1997) 36）。
+*数值观察*：对 $L=9$ 和 $\Delta=0.6$，搜索找到 $36$ 个根，即 $34$ 个散射态和 $2$ 个束缚态，它们的向量
+是线性无关的特征向量（在舍入误差范围内）：全部 $36$ 个本征态都来自 Bethe 方程。对其他 $L$ 我们不证明
+完备性，而对偶数 $L$ 和 $\Delta\ne0$ 它不成立，下面就来说明这一点。若 $\Delta\ne0$，
+$\Phi=\sum_x(-1)^x|x,x+1\rangle$ 满足 $T\Phi=-\Phi$ 和 $H\Phi=(E_F-J\Delta)\Phi$（到 $|x-1,x+1\rangle$ 和
+$|x,x+2\rangle$ 的跳跃成对抵消）。Bethe 向量满足 $T\Psi=e^{-iK}\Psi$，因为 $\psi(x_1-1,x_2-1)=e^{-iK}\psi(x_1,x_2)$。若
+$e^{-iK}\ne-1$，则 $\Psi\perp\Phi$，因为它们是酉算子 $T$ 属于不同特征值的特征向量；若
+$e^{iK}=-1$，则 $\cos k_1+\cos k_2=2\cos\frac K2\cos\frac{k_1-k_2}2=0$，$\Psi$ 的能量为 $E_F-2J\Delta\ne E_F-J\Delta$，
+从而 $\Psi\perp\Phi$，因为它们是 $H$ 属于不同特征值的特征向量。所以 $\Phi$ 与命题 9.12 的所有 Bethe 向量正交，
+因此这些向量永远张不成偶数环的扇区 $N=2$（代码的最后几行对 $L=8$ 检验了
+$H\Phi$）。双磁振子的计算是 H. Bethe 拟设（*Z. Phys.* 71 (1931) 205）的 $N=2$ 情形；我们不使用其他情形。
 
-> **物理意义。** 磁振子是自旋波：一个翻转的自旋以动量 $k$ 离域在整个环上。
-> 两个磁振子发生带相移的散射（实的 $q$）或形成束缚态（复的 $q$）。Bethe 的洞见在于，
-> 对 $N$ 个磁振子，散射分解为两体相位之积；例如，他的方程给出无限长 Heisenberg 链
-> 每个格点的基态能量 $\frac14-\log2$（L. Hulthén, *Ark. Mat. Astron.
-> Fys.* 26A (1938) no. 11；不加证明地陈述）。
+> **物理意义**（物理解释，而非本课程的定理）。磁振子是自旋波：一个翻转的自旋以动量 $k$ 离域在
+> 整个环上。两个磁振子发生带相移的散射（实的 $q$）或形成束缚态（复的 $q$）。
 
 ## 9.5 Lanczos 与 Krylov 方法
 
@@ -461,18 +523,18 @@ $\dim\mathcal K_m=m$。则 $\theta^{(m)}_j\ge\lambda_j$，并且若 $\dim\mathca
 （$j\le m$）。若 $v$ 在 $\lambda_1$ 的特征空间中有非零分量且 $\mathcal K_{m+1}=\mathcal K_m$，则
 $\theta^{(m)}_1=\lambda_1$。
 
-*证明。* 由 Courant–Fischer（标准的线性代数），$\theta^{(m)}_j=\min_{U}\max_{x\in U,\|x\|=1}\langle x,Hx\rangle$，
-其中 $U$ 取遍 $\mathcal K_m$ 的 $j$ 维子空间，因为 $Q_m$ 是到 $\mathcal K_m$ 上的等距，且
-$\langle y,T_my\rangle=\langle Q_my,HQ_my\rangle$。同一公式对 $U\subseteq\mathcal K_{m+1}$ 给出 $\theta^{(m+1)}_j$，
-对 $U\subseteq\mathbb C^n$ 给出 $\lambda_j$；在更多子空间上取最小给出更小的值。若
+*证明。* 由推论 A.9（压缩的 Courant–Fischer 定理，定理 A.8）应用于 $Q=Q_m$，
+$\theta^{(m)}_j=\min_{U}\max_{x\in U,\|x\|=1}\langle x,Hx\rangle$，其中 $U$ 取遍 $\mathcal K_m=\operatorname{ran}Q_m$ 的 $j$ 维子空间。
+同一公式对 $U\subseteq\mathcal K_{m+1}$ 给出 $\theta^{(m+1)}_j$，对 $U\subseteq\mathbb C^n$ 给出 $\lambda_j$
+（定理 A.8）；在更多子空间上取最小给出更小的值。若
 $\mathcal K_{m+1}=\mathcal K_m$，则 $\mathcal K_m$ 是 $H$-不变的，并对每个多项式 $p$ 含有 $p(H)v$，
 特别地含有 $P_1v\ne0$（$P_1$ 为 $\lambda_1$ 的谱投影，由 Lagrange
 插值它是 $H$ 的多项式，如定理 1.5 中那样）；所以在 $x=P_1v/\|P_1v\|\in\mathcal K_m$ 处 $\theta^{(m)}_1\le\langle x,Hx\rangle=\lambda_1$。$\square$
 
-$\theta^{(m)}_1\to\lambda_1$ 的快慢取决于能隙 $\lambda_2-\lambda_1$ 与谱的展宽之比
-（借助 Chebyshev 多项式的 Kaniel–Paige–Saad 界；Y. Saad, *Numerical Methods for Large Eigenvalue
-Problems*, SIAM 2011, Ch. 6；不加证明地陈述）。在浮点运算中 $q_j$ 会失去正交性；`krylov.lanczos`
-进行完全再正交化。对 XX 链，精确的基态能量是已知的（定理 9.10）：
+定理 9.14 并没有说明 $\theta^{(m)}_1$ 趋近 $\lambda_1$ 的快慢；我们只在下面观察它。在浮点运算中
+$q_j$ 会失去正交性；`krylov.lanczos` 进行完全再正交化，代码检验计算出的 $q_j$ 在舍入误差范围内
+规范正交且 $Q_m^*HQ_m=T_m$。对开放 XX 链，扇区 $N$ 的精确基态能量是 $N$ 个最低的 $\varepsilon_k$ 之和
+（定理 9.10(c)）：
 
 ```python
 L, N = 12, 6
@@ -487,30 +549,39 @@ assert (ritz[1:] <= ritz[:-1] + 1e-12).all() and (ritz >= E_xx - 1e-12).all()   
 print([f"{(ritz[m - 1] - E_xx).item():.1e}" for m in (5, 10, 20, 40)])
 ```
 
-最低 Ritz 值的误差单调下降，在 $5$、$10$ 和 $20$ 步之后分别为 $0.42$、$3.1\cdot10^{-3}$ 和 $3.1\cdot10^{-6}$，
-在 $40$ 步之后达到舍入误差水平，而维数为 $924$。`krylov.ground_state`
-反复重启 Lanczos，直到残差 $\|H\psi-E\psi\|$ 低于 $10^{-10}$。我们用 `scripts/chains.py` 中列出的九位有效数字的
-Heisenberg 环能量（配套论文的参考值）来检验它：对 $L\le12$ 用稠密方法，
-对 $L=16$ 用 Lanczos：
+*数值观察*：最低 Ritz 值的误差单调下降（由定理 9.14，这是必然的），在 $5$、$10$ 和 $20$ 步之后分别为
+$0.42$、$3.1\cdot10^{-3}$ 和 $3.1\cdot10^{-6}$，在 $40$ 步之后达到舍入误差水平，而维数为 $924$。
+`krylov.ground_state` 反复重启 Lanczos（除非给定 `v0`，否则从一个高斯随机向量出发），直到其归一化
+Ritz 对 $(E,\psi)$ 的残差 $\|H\psi-E\psi\|$ 低于 $10^{-10}\max(1,|E|)$（至多重启 $20$ 次，否则发出警告），
+并返回该残差。小的残差保证附近有一个特征值：对厄米的 $H$ 和 $\|\psi\|=1$，
+$\|H\psi-E\psi\|^2=\sum_i|\lambda_i-E|^2|\langle u_i,\psi\rangle|^2\ge\min_i|\lambda_i-E|^2$（$u_i$ 为一组规范正交特征基）。
+它并不保证这个特征值是最低的，所以我们与稠密对角化作比较，这是我们唯一的参照（在这里计算，
+所以这些值是数值结果）：对 $L\le12$ 用扇区 $N=L/2$，对 $L=16$ 用维数为 $810$ 的动量块 $k=0$，
+由推论 9.8 它包含扇区 $N=8$ 的基态。对 $L=4$ 该值是精确的：令 $\mathbf S_A=\mathbf s_0+\mathbf s_2$，
+$\mathbf S_B=\mathbf s_1+\mathbf s_3$，则环为
+$H=J\,\mathbf S_A\cdot\mathbf S_B=\frac J2(\mathbf S^2-\mathbf S_A^2-\mathbf S_B^2)\ge\frac J2(0-2-2)=-2J$，因为 $\mathbf S^2\ge0$，而
+$\mathbf S_A^2,\mathbf S_B^2$ 的特征值为 $0,2$（取 $L=2$ 的命题 4.13）；在两个三重态之积中的一个自旋为 $0$ 的
+向量上等号成立，由第 4 章习题 2（$1\otimes1\cong2\oplus1\oplus0$），这样的向量存在。
 
 ```python
-RING = {4: -2.0, 6: -2.802775638, 8: -3.651093409, 10: -4.515446354, 12: -5.387390917,
-        14: -6.263549534, 16: -7.142296361}
+E_dense = {}                                                         # numerical references, dense
 for n in (4, 6, 8, 10, 12):
-    e0 = torch.linalg.eigvalsh(SpinChain(n, 'periodic').heisenberg(sector=n // 2).matrix[0, 0])[0].item()
-    assert abs(e0 - RING[n]) < 5e-10
-    print(n, round(e0 / n, 6))
+    E_dense[n] = torch.linalg.eigvalsh(SpinChain(n, 'periodic').heisenberg(sector=n // 2).matrix[0, 0])[0].item()
+    print(n, round(E_dense[n] / n, 6))
+assert abs(E_dense[4] + 2) < 1e-12                                   # exact value for L = 4
+ring16 = SpinChain(16, 'periodic')
+k0 = ring16.momentum_dims(8)[0]                                      # dimension of the block k = 0
+H16 = ring16.xxz_momentum(J=1.0, Delta=1.0, sector=8).matrix[0, 0, :k0, :k0]
+E_dense[16] = torch.linalg.eigvalsh(H16)[0].item()                   # ground state of N = 8 (Corollary 9.8)
 t0 = time.time()
 E16, psi16, res = krylov.ground_state(SpinChain(16, 'periodic', complex_valued=False).xxz_sparse(sector=8),
                                       generator=torch.Generator().manual_seed(0))
-print(f"L = 16: E0 = {E16.item():.10f}, residual {res.item():.1e}, {time.time() - t0:.2f} s; "
-      f"infinite chain: {0.25 - math.log(2):.6f}")
-assert abs(E16.item() - RING[16]) < 5e-10 and res.item() < 1e-9
+print(f"L = 16: E0 = {E16.item():.10f}, residual {res.item():.1e}, {time.time() - t0:.2f} s; k = 0 block: {k0}")
+assert abs(E16.item() - E_dense[16]) < 1e-9 and res.item() < 1e-9
 ```
 
-对 $L=16$（维数 $12870$），Lanczos 在单个 CPU 线程上用时远少于一秒。每个格点的能量
-$-0.5,-0.467129,-0.456387,-0.451545,-0.448949$（$L=4,\dots,12$）从下方趋近无限长链的值
-$\frac14-\log2=-0.443147$。
+对 $L=16$（维数 $12870$），Lanczos 在单个 CPU 线程上用时远少于一秒。*数值观察*：每个格点的能量
+$-0.5,-0.467129,-0.456387,-0.451545,-0.448949$（$L=4,\dots,12$）随 $L$ 增大；关于其极限我们不作任何证明。
 
 **时间演化。** 对 $e^{-i\tau H}v$，我们投影到 $\mathcal K_m$ 上：$w_\tau=\|v\|\,Q_me^{-i\tau T_m}e_1$。
 
@@ -520,13 +591,14 @@ $\mathcal K_m$ 是 $H$-不变的，则 $w_\tau=e^{-i\tau H}v$。
 *证明。* $Q_m$ 是等距，$e^{-i\tau T_m}$ 是酉的（$T_m$ 是实对称的），这给出范数的结论。
 由于 $Q_m^*HQ_m=T_m$ 与 $e^{-i\tau T_m}$ 可交换，
 $\langle w_\tau,Hw_\tau\rangle=\|v\|^2\langle e^{-i\tau T_m}e_1,T_me^{-i\tau T_m}e_1\rangle=\|v\|^2\langle e_1,T_me_1\rangle=\langle v,Hv\rangle$。若
-$\mathcal K_m$ 是不变的，则 $HQ_m=Q_mT_m$（命题 9.13，$r_m=0$），所以 $H^jQ_m=Q_mT_m^j$ 且 $e^{-i\tau H}Q_m=Q_me^{-i\tau T_m}$；将其作用于
+$\mathcal K_m$ 是不变的，则 $HQ_m=Q_mT_m$（命题 9.13，$r_m=0$），所以 $H^jQ_m=Q_mT_m^j$，再对指数级数求和
+（命题 8.2(1)）得 $e^{-i\tau H}Q_m=Q_me^{-i\tau T_m}$；将其作用于
 $e_1$，并注意 $Q_me_1=v/\|v\|$。$\square$
 
-所以每个 Krylov 步都保持范数和能量，不论精确与否；精度要求 $m$ 相对于
-$\tau\|H\|$ 足够大，而 `krylov.evolve` 细分时间区间并作后验误差估计
-（M. Hochbruck, C. Lubich, *SIAM J. Numer. Anal.* 34 (1997) 1911；不加证明地陈述）。我们在 Heisenberg 环上
-对 Néel 态 $|{\uparrow\downarrow\uparrow\downarrow}\cdots\rangle$ 作淬火，跟踪交错磁化
+所以每个 Krylov 步都保持范数和能量，不论精确与否；除非 $\mathcal K_m$ 是不变的，命题 9.15 对精度什么也
+没有说。`krylov.evolve` 把时间区间细分为短步，每一步都在 $m=30$ 的 Krylov 空间中完成，并在一个启发式
+误差指标较大时发出警告；我们不为它证明任何误差界，而是把它与由稠密特征分解（定理 1.5）计算出的
+$e^{-itH}$ 作比较。我们在 Heisenberg 环上对 Néel 态 $|{\uparrow\downarrow\uparrow\downarrow}\cdots\rangle$ 作淬火，跟踪交错磁化
 $m_s=\frac2L\sum_i(-1)^i\langle s^z_i\rangle$，并对 $L=12$ 与稠密传播子作比较：
 
 ```python
@@ -549,18 +621,19 @@ for n in (12, 16):
 print(f"{max(abs(a - b) for a, b in zip(m_s[12][:4], m_s[16][:4])):.1e}")   # L = 12 vs 16 up to t = 2
 ```
 
-$m_s$ 从 $1$ 经过 $0.770$ 和 $0.279$ 衰减到 $t=2$ 时的 $-0.183$，两种尺寸的结果相差在 $1.7\cdot10^{-5}$ 以内；在
-$t=4$ 时它们不同（$0.026$ 对 $0.035$）：较小的环的有限尺寸效应显现出来。
+*数值观察*：$m_s$ 从 $1$ 经过 $0.770$ 和 $0.279$ 衰减到 $t=2$ 时的 $-0.183$，两种尺寸的结果相差在
+$1.7\cdot10^{-5}$ 以内；在 $t=4$ 时它们不同（$0.026$ 对 $0.035$）。
 
 ## 9.6 无序：能级统计与纠缠
 
 **随机场 Heisenberg 链**的外场 $h_i$ 相互独立，在 $[-W,W]$ 上均匀分布。它保持 $S^z$ 守恒
-（命题 9.1），而在一般情形下不再有其他守恒量：外场破坏了平移、反射、自旋翻转和
-$SU(2)$。所以能级统计按扇区 $N$ 分别计算（定理 5.15 和 5.4 节：混合扇区会伪造出
-独立的能级）。对弱无序，能级像 GOE 中那样相互排斥，$\langle r\rangle\approx0.5307$（5.3 节）；
-对强无序，本征态局域化（**多体局域化**），能级变得相互独立，
-$\langle r\rangle=2\log2-1\approx0.3863$（命题 5.14）。我们在扇区 $N=L/2$ 的中间一半能级中计算 $\langle r\rangle$，
-并给出关于独立实现的一个标准误差（每个实现给出一个平均比值）：
+（命题 9.1），所以能级统计按扇区 $N$ 分别计算（定理 5.15 和 5.4 节：混合扇区会伪造出独立的能级）。
+若两个外场不同，则 $THT^*-H=\sum_i(h_{i-1}-h_i)s^z_i\ne0$，所以平移不再是对称性。我们在扇区 $N=L/2$
+的中间一半能级中计算 $\langle r\rangle$，给出关于独立实现的一个标准误差（每个实现给出一个平均比值），
+并与两个参照值比较：$2\log2-1\approx0.3863$，即独立指数间距的精确平均比值（命题 5.14(a)），以及在这里
+抽样得到的、与 $L=10$ 时该扇区大小相同（$252$）的 GOE 矩阵（按 5.3 节的定义；代码抽样 $G+G^T$，它是
+GOE 矩阵的两倍，这不改变任何比值）的平均比值。这些比较是数值观察，而不是定理：关于随机链的谱，
+我们不作任何证明。
 
 ```python
 gen = torch.Generator().manual_seed(1)
@@ -573,17 +646,25 @@ for n, R in ((8, 200), (10, 100)):
         r = SpinChain.level_spacing_ratio(E[:, k // 4: 3 * k // 4])     # one value per realisation
         r_mean[n, W] = (r.mean().item(), (r.std() / math.sqrt(R)).item())
     print(n, '  '.join(f"W={W}: {m:.3f}+-{s:.3f}" for (n_, W), (m, s) in r_mean.items() if n_ == n))
-assert abs(r_mean[10, 0.5][0] - 0.5307) < 0.015 and abs(r_mean[10, 16][0] - 0.3863) < 0.015
+X = torch.randn(100, k, k, dtype=f64, generator=gen)                  # 100 GOE matrices of size k = 252
+r_goe = SpinChain.level_spacing_ratio(torch.linalg.eigvalsh(X + X.mT)[:, k // 4: 3 * k // 4])
+print(f"GOE({k}): {r_goe.mean().item():.3f}+-{(r_goe.std() / 10).item():.3f}, Poisson: {2 * math.log(2) - 1:.4f}")
+assert abs(r_mean[10, 0.5][0] - r_goe.mean().item()) < 0.015               # numerical observation
+assert abs(r_mean[10, 16][0] - (2 * math.log(2) - 1)) < 0.015               # numerical observation
 assert r_mean[10, 1][0] > r_mean[10, 2][0] > r_mean[10, 4][0] > r_mean[10, 8][0]
 ```
 
-对 $L=10$，平均比值从 $0.530$（$W=0.5$）经过 $0.484$（$W=2$）和 $0.410$（$W=4$）变到 $0.384$
-（$W=16$），标准误差为 $0.003$–$0.004$。对 $L=8$，$W=0.5$ 处的值（$0.507$）低于
-$W=1$ 处的值（$0.525$）：在 $W=0$ 时链是可积的，并具有上述所有对称性，而要得到 GOE 的值，
-无序须比能级间距大得多。这一交叉过渡很宽，并随 $L$ 漂移；有限尺寸
-标度把它定在 $W\approx3.7$ 附近（D. Luitz, N. Laflorencie, F. Alet, *Phys. Rev. B* 91 (2015) 081103），而
-局域相在 $L\to\infty$ 时是否存活仍有争议（J. Šuntajs, J. Bonča, T. Prosen, L. Vidmar,
-*Phys. Rev. E* 102 (2020) 062144）。
+*数值观察*：对 $L=10$，平均比值从 $0.530$（$W=0.5$，接近抽样得到的 GOE 值 $0.533$）经过 $0.484$（$W=2$）
+和 $0.410$（$W=4$）变到 $0.384$（$W=16$，接近 $2\log2-1$），标准误差为 $0.003$–$0.004$。对 $L=8$，$W=0.5$
+处的值（$0.507$）低于 $W=1$ 处的值（$0.525$）。在 $W=0$ 时，环与 $T$（9.2 节）以及总自旋（9.3 节）可交换，
+所以它的扇区 $N=L/2$ 分裂成若干块；外场只通过 $\sum_ih_is^z_i$ 耦合这些块，其算子范数至多为 $\frac{WL}2$。
+
+> **物理意义**（物理解释，而非本课程的定理）。物理学家把 $\langle r\rangle$ 的变化解读为从像 GOE 的能级那样
+> 相互排斥的能级（弱无序）到表现得像相互独立的能级的交叉过渡，并将后者归因于本征态的
+> **多体局域化**（强无序）。这一交叉过渡随 $L$ 漂移；它在 $L\to\infty$ 时位于何处，以及局域相究竟是否
+> 存在，都是物理文献中的开放问题（D. Luitz, N. Laflorencie, F. Alet, *Phys. Rev. B* 91 (2015) 081103；
+> J. Šuntajs, J. Bonča, T. Prosen, L. Vidmar, *Phys. Rev. E* 102 (2020) 062144）。$L=8$、$W=0.5$ 处的下凹被解读为
+> $W=0$ 时额外块结构的残留（参见 5.4 节）。
 
 **自由费米子的纠缠。** 对开放 XX 链的本征态，前 $n$ 个格点的纠缠熵
 由一个 $n\times n$ 矩阵决定。
@@ -598,7 +679,7 @@ $$
 *证明。* 对实向量 $x$ 令 $b(x)=\sum_jx_jc_j$；则 $b(x)^*b(y)^*=-b(y)^*b(x)^*$，且
 $\{b(x),b(y)^*\}=\langle x,y\rangle$。令 $U\subseteq\mathbb R^L$ 为各 $u_{k_a}$ 张成的空间，$P_A$、$P_B=1-P_A$ 为到
 $\{0,\dots,n-1\}$ 及其补集上的坐标投影。在 $U$ 上对角化形式 $\langle P_Ax,P_Ay\rangle$，得到 $U$ 的一组规范正交基
-$\phi_1,\dots,\phi_N$，满足 $\langle P_A\phi_a,P_A\phi_b\rangle=\nu_a\delta_{ab}$，因而
+$\phi_1,\dots,\phi_N$，满足 $\langle P_A\phi_a,P_A\phi_b\rangle=\nu_a\delta_{ab}$，其中 $\nu_a=\|P_A\phi_a\|^2\in[0,1]$，因而
 $\langle P_B\phi_a,P_B\phi_b\rangle=(1-\nu_a)\delta_{ab}$。由于 $(x_1,\dots,x_N)\mapsto b(x_1)^*\cdots b(x_N)^*|0\rangle$ 是
 多重线性且交错的，$\Phi=\pm\prod_a\big(\sqrt{\nu_a}f_a^*+\sqrt{1-\nu_a}\,g_a^*\big)|0\rangle$，其中
 $f_a=b(P_A\phi_a/\sqrt{\nu_a})$，$g_a=b(P_B\phi_a/\sqrt{1-\nu_a})$（系数为零的项略去）。
@@ -608,7 +689,8 @@ $A$：$c_j^*=(-1)^{N_A}\otimes\tilde c_j^*$，其中 $\tilde c_j$ 是格点 $\ge
 $i<n$，$c_i^*=\hat c_i^*\otimes1$。由于 $(-1)^{N_A}$ 在 $|0_A\rangle$ 上为 $1$，
 $F_I^*G_{I^c}^*|0\rangle=\xi_I\otimes\chi_{I^c}$，其中 $\xi_I=\hat F_I^*|0_A\rangle$，$\chi_{I^c}=\tilde G_{I^c}^*|0_B\rangle$，由定理 9.10 的 CAR 计算，
 它们都是规范正交族。这是一个 Schmidt 分解（引理 7.7），其
-权重 $p_I=\prod_{a\in I}\nu_a\prod_{a\notin I}(1-\nu_a)$ 是独立 Bernoulli 变量的分布，所以
+权重 $p_I=\prod_{a\in I}\nu_a\prod_{a\notin I}(1-\nu_a)$（符号归入 $\xi_I$），即独立 Bernoulli 变量的分布，所以，由于
+$\log p_I=\sum_{a\in I}\log\nu_a+\sum_{a\notin I}\log(1-\nu_a)$ 且 $\sum_{I\ni a}p_I=\nu_a$，
 $S_A=-\sum_Ip_I\log p_I=\sum_a\eta(\nu_a)$。最后 $C_{ij}=\sum_a\phi_a(i)\phi_a(j)$
 （把 $c_i^*c_j$ 用 $b(\phi_a)$ 展开），所以 $C_A=\sum_a(P_A\phi_a)(P_A\phi_a)^T$ 在
 正交向量 $P_A\phi_a$ 上的特征值为 $\nu_a$，在其他地方为 $0$，而 $\eta(0)=0$。$\square$
@@ -631,9 +713,8 @@ assert np.allclose(S_lib, S_peschel, atol=1e-9)                       # Theorem 
 print([round(s, 4) for s in S_lib[:6]])
 ```
 
-熵 $0.6931,0.5199,0.7456,0.6283,0.7719,0.6560$（$n=1,\dots,6$）随 $n$ 的奇偶性振荡，
-并在固定 $n/L$ 时如 $\frac16\log L$ 增长，这是开链的共形场论规律（I. Peschel,
-*J. Phys. A* 36 (2003) L205；P. Calabrese, J. Cardy, *J. Stat. Mech.* (2004) P06002；不加证明地陈述）。
+*数值观察*：熵 $0.6931,0.5199,0.7456,0.6283,0.7719,0.6560$（$n=1,\dots,6$）随 $n$ 的奇偶性振荡。
+定理 9.16 归功于 I. Peschel（*J. Phys. A* 36 (2003) L205）。
 
 ## 9.7 可与之比较的工具
 
@@ -683,13 +764,17 @@ assert abs(12 * corr_we[1].item() - gs.energy.item()) < 1e-10 and abs(corr_we.su
    含 $L/2$ 个向上自旋的构型，每种次序的系数都是 $1$。$|{\uparrow\cdots\uparrow}\rangle$ 的全部
    $L$ 条键都是平行的，能量为 $JL/4$，而 $S^-$ 与 $H$ 可交换，所以该向量是具有相同
    能量的特征向量。若 $W$ 是不变的且 $v\in W$，则对所有 $j$ 有 $H^jv\in W$。这里对所有 $m$ 有 $\mathcal K_m=\mathbb Cv$，
-   `ground_state` 返回 $E=JL/4$，即谱的顶端（每个 $\mathbf s_i\cdot\mathbf s_j\le\frac14$）；随机的初始
-   向量以概率一避免这种情况。
+   `ground_state` 返回 $E=JL/4$，即谱的顶端（由命题 4.15(a)，每个
+   $\mathbf s_i\cdot\mathbf s_j=\frac12F_{ij}-\frac14\le\frac14$，因为 $F_{ij}$ 是特征值为 $\pm1$ 的对称置换矩阵）。随机的初始向量
+   可以避开这个陷阱：高斯向量 $v$ 有密度，所以它几乎必然在 $\lambda_1$ 的特征空间中有非零分量 $P_1v$
+   （推论 A.7(c)；对实的 $v$，在 $W=\mathbb R^n$ 中把它应用于真子空间 $\{v:P_1v=0\}$，它之所以是真子空间，
+   是因为实矩阵 $P_1\ne0$ 有一个非零列），于是由定理 9.14，$H$-不变的 Krylov 空间 $\mathcal K_m(H,v)$ 的
+   最低 Ritz 值为 $\lambda_1$，而这里不变的 $\mathcal K_1=\mathbb Cv$ 的 Ritz 值为 $JL/4$。
 
 ```python
 c10 = SpinChain(10, 'periodic', complex_valued=False)
 E_sym, _, _ = krylov.ground_state(c10.xxz_sparse(1.0, 1.0, sector=5), v0=torch.ones(1, 252, dtype=f64))
-assert abs(E_sym.item() - 2.5) < 1e-10 and E_sym.item() > RING[10] + 7     # far from E_0
+assert abs(E_sym.item() - 2.5) < 1e-10 and E_sym.item() > E_dense[10] + 7  # far from E_0
 ```
 
 </details>
