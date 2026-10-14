@@ -7,7 +7,7 @@ $*$-Algebra seiner Kraus-Operatoren. Ihre Struktur (Kapitel 2) zeigt, welche Inf
 Rauschen unberührt übersteht; eine Bedingung an Produkte von Kraus-Operatoren, in die eine weitere
 Algebra eingeht, zeigt, welche Information eine Wiederherstellung zurückgewinnen kann. Der letzte
 Teil behandelt Algorithmen, die eine Ladung erhalten: Ihre Zustände leben in der Algebra der
-Ladungssektoren, und das dominierende Rauschen verschiebt sie zwischen den Sektoren.
+Ladungssektoren, und die Amplitudendämpfung verschiebt sie zwischen den Sektoren.
 
 **Sie lernen**, warum ein unitaler Kanal und sein dualer Kanal dieselben Fixpunkte haben (den
 Kommutanten des Rauschens), den Satz von Knill–Laflamme mit vollständigem Beweis, wie man nur die
@@ -68,8 +68,8 @@ $\operatorname{Fix}(\Phi^*)=\mathcal A'$. Die letzte Behauptung ist Satz 2.6. $\
 
 Für jeden Kanal gilt $\mathcal A'\subseteq\operatorname{Fix}(\Phi^*)$ (Proposition 10.1(a)), aber ohne
 Unitalität gilt der Satz nicht: Für die Amplitudendämpfung ist $\operatorname{Fix}(\Phi)=\mathbb C|0\rangle\langle0|$,
-während $\mathcal A'=\operatorname{Fix}(\Phi^*)=\mathbb C1$ (Abschnitt 6.4 und Aufgabe 1). (Kribs 2003,
-Arias–Gheondea–Gudder 2002; in unendlicher Dimension braucht man weitere Voraussetzungen.)
+während $\mathcal A'=\operatorname{Fix}(\Phi^*)=\mathbb C1$ (Abschnitt 6.4 und Aufgabe 1). (Historisch: Kribs 2003,
+Arias–Gheondea–Gudder 2002.)
 
 **Korollar 10.3 (kollektive Dephasierung).** Sei $U=e^{-i\theta Z_{\mathrm{tot}}}$,
 $Z_{\mathrm{tot}}=\sum_jZ_j$, mit $e^{2i\theta d}\neq1$ für $d=1,\dots,n$, und
@@ -150,16 +150,18 @@ rho = states.random_density_matrix(M, batch_size=3)
 assert (Phi_M(rho).matrix - rho.matrix).abs().max() < 1e-12      # no state of M is disturbed
 ```
 
-> **Physikalische Bedeutung.** Ein fluktuierendes Feld, das auf allen Qubits gleich ist, verschiebt
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Ein fluktuierendes Feld, das auf allen Qubits gleich ist, verschiebt
 > die Phase von $|b\rangle$ proportional zu $n-2|b|$. Zustände gleichen Hamming-Gewichts erhalten eine
 > gemeinsame Phase, sodass $|01\rangle,|10\rangle$ ein gegen dieses Rauschen immunes Qubit kodieren
 > (gefangene Ionen: Kielpinski et al., *Science* 291, 2001), während Kohärenzen zwischen
 > verschiedenen Gewichten zerfallen: Das Rauschen erzwingt eine Superauswahlregel (Abschnitt 3.3).
 
-**Kollektive Dekohärenz.** Fluktuiert das Feld auch in seiner Richtung, so sind die
-Kraus-Operatoren Drehungen $e^{-i\theta\,\mathbf n\cdot\mathbf S}$, $S_\alpha=\tfrac12\sum_j\sigma_{\alpha,j}$,
-$\sigma\in\{X,Y,Z\}$, die in der von $1,S_x,S_y,S_z$ erzeugten $*$-Algebra $\mathcal B$ liegen (Satz
-1.5(a)).
+**Kollektive Dekohärenz.** Wir nennen einen Kanal **kollektiv**, wenn seine Kraus-Operatoren Vielfache
+von Drehungen $e^{-i\theta\,\mathbf n\cdot\mathbf S}$ sind ($\theta\in\mathbb R$, $\mathbf n\in\mathbb R^3$ ein Einheitsvektor),
+$S_\alpha=\tfrac12\sum_j\sigma_{\alpha,j}$, $\sigma\in\{X,Y,Z\}$; das modelliert ein Feld, das auch in seiner Richtung
+fluktuiert (das Modell, kein Satz). Da $\mathbf n\cdot\mathbf S$ selbstadjungiert ist, ist $e^{-i\theta\,\mathbf n\cdot\mathbf S}$
+ein Polynom darin (Beweis von Satz 1.5(a)), also liegen diese Kraus-Operatoren in der von $1,S_x,S_y,S_z$ erzeugten
+$*$-Algebra $\mathcal B$.
 
 **Proposition 10.4 (Singulett-Unterraum).** Sei $K=\ker S_x\cap\ker S_y\cap\ker S_z$. Jeder Kanal,
 dessen Kraus-Operatoren in $\mathcal B$ liegen, lässt jeden Zustand mit Träger in $K$ fest.
@@ -168,10 +170,18 @@ dessen Kraus-Operatoren in $\mathcal B$ liegen, lässt jeden Zustand mit Träger
 $\ge1$ annullieren $K$, also wirkt jedes Element von $\mathcal B$ auf $K$ als Skalar. Man wende
 Proposition 10.1(b) an. $\square$
 
-Für $n=4$ findet der Code $\dim K=2$, $\dim\mathcal B'=14$, $\dim\mathcal B=35$, wie für
-$\mathcal B\cong M_5\oplus M_3\oplus M_1$ mit den Vielfachheiten $1,3,2$ (Gesamtspin $2,1,0$), was
-[Kapitel 4](04_symmetries.md) herleitet: Vier Qubits tragen ein dekohärenzfreies Qubit ($k=1$, $m=2$)
-und ein rauschfreies Qutrit ($k=3$, $m=3$).
+Für $n=4$ liefert Proposition 4.13 ([Kapitel 4](04_symmetries.md), Fall $L=4$)
+$\mathcal B\cong M_5\oplus M_3\oplus M_1$ mit den Vielfachheiten $1,3,2$ (Gesamtspin $2,1,0$), also ist $\dim\mathcal B=35$,
+und $\mathcal B'\cong M_1\oplus M_3\oplus M_2$ hat die Dimension $14$. Außerdem ist $\dim K=m_0=2$: Die $S_a$ wirken
+summandenweise, also ist $K$ die Summe seiner Durchschnitte mit den Summanden; auf dem Summanden zum Spin $S$ wirken sie
+als $S^{(S)}_a\otimes1$ (Korollar 4.12), und
+$\sum_bu_b\otimes f_b$ ($f_b$ eine Basis von $\mathbb C^{m_S}$) wird genau dann von allen annulliert, wenn jedes $u_b$ von
+allen $S^{(S)}_a$ annulliert wird. Diese $u$ bilden einen invarianten Unterraum des irreduziblen Spins $S$ (Satz 4.11), der
+für $S>0$ nicht der ganze Raum ist (da $S^{(S)}_z\neq0$), also $0$, während er für $S=0$ gleich $\mathbb C^1$ ist. Der Code
+findet dieselben Zahlen. Proposition 10.1(a) und ihr Beweis gelten wörtlich für jede $*$-Algebra der Form
+$V(\bigoplus_cM_{k_c}\otimes1_{m_c})V^*$, die die Kraus-Operatoren enthält, hier $\mathcal B$: Vier Qubits tragen ein
+dekohärenzfreies Qubit ($k=1$, $m=2$) und ein rauschfreies Qutrit ($k=3$, $m=3$) für jeden Kanal, dessen Kraus-Operatoren
+in $\mathcal B$ liegen.
 
 ```python
 S = [sum(on(P, j, n) for j in range(n)) / 2 for P in (X, Y, Z)]
@@ -191,7 +201,7 @@ for G in (K @ torch.randn(2, 2, dtype=dt), torch.randn(16, 16, dtype=dt)):  # su
 
 ## 10.2 Fehlerkorrektur: der Satz von Knill–Laflamme
 
-Ein **Code** ist ein Unterraum $\mathcal C\subseteq\mathbb C^D$ mit Projektion $P$. Er **korrigiert**
+Ein **Code** ist ein von null verschiedener Unterraum $\mathcal C\subseteq\mathbb C^D$ mit Projektion $P$. Er **korrigiert**
 $\Phi$, wenn es einen Kanal $\mathcal R$ (die **Wiederherstellung**) mit $\mathcal R(\Phi(\rho))=\rho$
 für jeden Zustand $\rho$ mit Träger in $\mathcal C$ gibt.
 
@@ -233,7 +243,8 @@ zurück.
 Bitflip“, $E_0=\sqrt{p_0}\,1$, $E_j=\sqrt{p_j}\,X_j$. Für $i\neq j$ kippt $X_iX_j$ (mit $X_0=1$) ein oder
 zwei Bits und bildet $\mathcal C$ in $\mathcal C^\perp$ ab; also ist $\Lambda=\operatorname{diag}(p_0,\dots,p_3)$,
 $V_k=X_kP$, $Q=1$ und $\mathcal R(\sigma)=\sum_{k=0}^3PX_k\sigma X_kP$. Kippt jedes Qubit unabhängig mit
-Wahrscheinlichkeit $p$, so ist die Bedingung verletzt, und $\mathcal R$ bildet $|0_L\rangle=|000\rangle$ auf
+Wahrscheinlichkeit $p$, so ist die Bedingung verletzt (unter den Kraus-Operatoren sind Vielfache von $X_1X_2$ und $X_3$, und
+$PX_1X_2X_3P=|000\rangle\langle111|+|111\rangle\langle000|$ ist kein Vielfaches von $P$), und $\mathcal R$ bildet $|0_L\rangle=|000\rangle$ auf
 $|1_L\rangle$ ab, sobald $\ge2$ Bitflips auftreten, und lässt es sonst an seinem Platz: Die Fidelität
 von $|0_L\rangle$ nach der Wiederherstellung ist die Wahrscheinlichkeit für höchstens einen Bitflip,
 $(1-p)^3+3p(1-p)^2=1-3p^2+2p^3=0.972$ für $p=0.1$. In der Bibliothek ist $M_8$ eine Algebra mit einem
@@ -284,9 +295,13 @@ $$
 P\,(\mathcal R\circ\Phi)^*(A)\,P=A\qquad\text{for all }A\in\mathfrak A,
 $$
 d. h. $\operatorname{Tr}(\mathcal R(\Phi(\rho))A)=\operatorname{Tr}(\rho A)$ für alle Zustände $\rho$ mit Träger in
-$\mathcal C$ und alle $A\in\mathfrak A$. Für $\mathfrak A=B(\mathcal C)$ ist das die Korrektur aus
-Abschnitt 10.2: Erfüllt $\sigma=\mathcal R(\Phi(\rho))$ die Gleichung $P\sigma P=\rho$, so ist
-$\operatorname{Tr}(1-P)\sigma(1-P)=0$, also $\sigma^{1/2}(1-P)=0$ und $\sigma=\rho$. Das andere Extrem ist eine
+$\mathcal C$ und alle $A\in\mathfrak A$ (die linke Seite ist $\operatorname{Tr}(\rho\,P(\mathcal R\circ\Phi)^*(A)P)$, und ein
+Operator $Y\in B(\mathcal C)$ mit $\operatorname{Tr}(\rho Y)=0$ für alle diese $\rho$ verschwindet:
+$\langle x,Yx\rangle=\langle Px,YPx\rangle=0$ für alle $x$, und Polarisation wie im Beweis von Korollar 1.4). Für
+$\mathfrak A=B(\mathcal C)$ ist das die Korrektur aus Abschnitt 10.2: Erfüllt $\sigma=\mathcal R(\Phi(\rho))$ die Gleichung
+$P\sigma P=\rho$ (man nehme alle $A\in B(\mathcal C)$), so ist, da $\mathcal R\circ\Phi$ spurerhaltend ist,
+$\operatorname{Tr}(1-P)\sigma(1-P)=\operatorname{Tr}\sigma-\operatorname{Tr}P\sigma P=1-1=0$, also $\sigma^{1/2}(1-P)=0$ und
+$\sigma=\rho$; umgekehrt liefert $\mathcal R(\Phi(\rho))=\rho$ die Gleichheit der Spuren. Das andere Extrem ist eine
 kommutative Algebra: Nur eine klassische Bezeichnung wird geschützt.
 
 **Proposition 10.6 (Korrektur einer Sektorbezeichnung).** Sei $P=\sum_{c=1}^CP_c$ mit paarweise
@@ -314,7 +329,7 @@ summiert über $d$, $N_cE_iP_c=E_iP_c$. Daher ist $P_cE_i^*E_jP_d=P_cE_i^*N_cE_j
 („messen, dann präparieren“), ein Kanal mit den Kraus-Operatoren $\sqrt\mu\,|u\rangle\langle f|N_c^{1/2}$
 für die Eigenpaare $(\mu,u)$ von $\omega_c$ und die Vektoren $f$ einer Orthonormalbasis. Da
 $\operatorname{Tr}(\mathcal R(\sigma)P_d)=\operatorname{Tr}(N_d\sigma)$, ist $\mathcal R^*(P_d)=N_d$. Mit
-$N_dE_iP_c=\delta_{cd}E_iP_c$ (aus dem vorigen Schritt) und dann 2 folgt
+$N_dE_iP_c=\delta_{cd}E_iP_c$ (aus dem vorigen Schritt) und dann $\sum_iE_i^*E_i=1$ folgt
 $$
 P(\mathcal R\circ\Phi)^*(P_d)P=P\,\Phi^*(N_d)\,P=\sum_i\sum_{c,c'}P_{c'}E_i^*N_dE_iP_c=\sum_i\sum_{c'}P_{c'}E_i^*E_iP_d=P_d\Big(\sum_iE_i^*E_i\Big)P_d=P_d .
 $$
@@ -323,17 +338,24 @@ positiv, und ihre Summe ist $\mathcal R^*(1)=1$. Für $\rho$ mit Träger in $P_c
 $\operatorname{Tr}(N_d\Phi(\rho))=\operatorname{Tr}(\rho\,P(\mathcal R\circ\Phi)^*(P_d)P)=\operatorname{Tr}(\rho P_d)=\delta_{cd}$,
 also auch $\operatorname{Tr}(N_C\Phi(\rho))=\delta_{cC}$. $\square$
 
-**Satz 10.7 (Bény–Kempf–Kribs 2007; ohne Beweis angegeben).** Eine von-Neumann-Algebra
+**Satz 10.7 (Bény–Kempf–Kribs).** Eine von-Neumann-Algebra
 $\mathfrak A$ auf $\mathcal C$ ist genau dann korrigierbar für $\Phi$, wenn $PE_i^*E_jP\in\mathfrak A'$
 für alle $i,j$, wobei $\mathfrak A'$ der Kommutant von $\mathfrak A$ in $B(\mathcal C)$ ist.
 
+*Beweis.* Dies ist Satz D.9, bewiesen in [Anhang D](D_gksl.md), dessen Beweis auch einen Wiederherstellungskanal
+konstruiert: Er misst den Sektor von $\mathfrak A\cong\bigoplus_cM_{k_c}$ und ein Syndrom und macht den Fehler auf jedem
+Faktor $\mathbb C^{k_c}$ wie im Beweis von Satz 10.5 rückgängig. $\square$
+
 Für $\mathfrak A=B(\mathcal C)$ ist $\mathfrak A'=\mathbb CP$, und dies ist Satz 10.5; Proposition 10.6
-ist der Fall eines kommutativen $\mathfrak A$. Für
+ist der Fall des kommutativen $\mathfrak A=\operatorname{span}\{P_c\}$ (Korollar D.10(a),(b)). Für
 $\mathfrak A=M_k\otimes1_m$ auf $\mathcal C=\mathbb C^k\otimes\mathbb C^m$ erhält man die Operator-Codes
-(Subsystem-Codes) von Kribs–Laflamme–Poulin (*Phys. Rev. Lett.* 94, 180501, 2005), die die
-rauschfreien Teilsysteme aus Abschnitt 10.1 mit $\mathcal R=\mathrm{id}$ enthalten. Zum Beweis siehe
-C. Bény, A. Kempf, D. W. Kribs, *Phys. Rev. Lett.* 98, 100502 (2007) und *Phys. Rev. A* 76, 042303
-(2007).
+(Subsystem-Codes); die rauschfreien Teilsysteme aus Abschnitt 10.1 sind solche Codes, korrigiert durch
+$\mathcal R=\mathrm{id}$ (Korollar D.10(c), mit vertauschten Tensorfaktoren). Nach Satz 2.6 ist jedes $\mathfrak A$
+$*$-isomorph zu einer Algebra $\bigoplus_cM_{k_c}$; ist $C\ge2$ und $k_c\ge2$ für ein $c$, so schützt ein korrigierbares
+$\mathfrak A$ die Sektorbezeichnung $c$ zusammen mit der Quanteninformation jedes $M_{k_c}$ – ein **hybrider** Code
+(Bemerkung nach Korollar D.10, mit einem Beispiel, in dem die Knill–Laflamme-Bedingung verletzt ist, Satz 10.7 aber
+greift). Historisch: C. Bény, A. Kempf, D. W. Kribs, *Phys. Rev. Lett.* 98, 100502 (2007) und *Phys. Rev. A* 76,
+042303 (2007); Operator-Codes: Kribs–Laflamme–Poulin, *Phys. Rev. Lett.* 94, 180501 (2005).
 
 **Beispiel.** Der Wiederholungscode unter unabhängigen Phasenflips (Wahrscheinlichkeit $q$ pro
 Qubit), gefolgt von höchstens einem Bitflip. Die Kraus-Operatoren sind Vielfache von $X_kZ^s$,
@@ -343,7 +365,12 @@ Mehrheitsentscheid ausgelesen, $N_0=\sum_{|b|\le1}|b\rangle\langle b|$, $N_1=1-N
 nicht: $PZ_1P$ ist kein Vielfaches von $P$, und nach der Wiederherstellung $\mathcal R$ aus Abschnitt
 10.2 erleidet der Zustand $|{+_L}\rangle=(|000\rangle+|111\rangle)/\sqrt2$ den logischen Phasenflip
 $Z_1Z_2Z_3$ genau dann, wenn eine ungerade Anzahl von Phasenflips aufgetreten ist; seine Fidelität
-ist $(1+(1-2q)^3)/2=0.8645$ für $q=0.05$.
+ist $(1+(1-2q)^3)/2=0.8645$ für $q=0.05$. (Der Kanal ist $\Phi_{\mathrm{one}}\circ\mathcal Z$, mit dem Kanal
+$\Phi_{\mathrm{one}}$ „höchstens ein Bitflip“ aus dem Bitflip-Beispiel und den unabhängigen Phasenflips $\mathcal Z$;
+auf $\mathcal C$ wirkt jedes $Z^s$ als $Z_1^{|s|}$, also hat $\mathcal Z(\rho)=\sum_sq^{|s|}(1-q)^{3-|s|}Z_1^{|s|}\rho Z_1^{|s|}$
+wieder Träger in $\mathcal C$, und $\mathcal R\circ\Phi_{\mathrm{one}}$ ist nach Satz 10.5 die Identität auf solchen
+Zuständen. $Z_1$ bildet $|{+_L}\rangle$ auf $|{-_L}\rangle\perp|{+_L}\rangle$ ab, und $|s|$ ist mit Wahrscheinlichkeit
+$\frac12\big((1-q+q)^3+(1-q-q)^3\big)$ gerade.)
 
 ```python
 q = 0.05
@@ -363,10 +390,11 @@ print(f"fidelity of |+_L> {F_plus:.4f}, exact {(1 + (1 - 2 * q)**3) / 2:.4f}")
 assert abs(F_plus - (1 + (1 - 2 * q) ** 3) / 2) < 1e-12
 ```
 
-> **Physikalische Bedeutung.** Eine kommutative Algebra zu schützen heißt, klassische Information
-> zu schützen (ein Bit, die Bezeichnung eines Superauswahlsektors), was viel billiger ist, als ein
-> Qubit zu schützen: Rauschen, das mit den Sektorprojektionen kommutiert, ist harmlos. „Hybride
-> Codes“ entsprechen $\bigoplus_cM_{k_c}$.
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Eine kommutative
+> Algebra zu schützen heißt, klassische Information zu schützen (ein Bit, die Bezeichnung eines
+> Superauswahlsektors), was viel billiger ist, als ein Qubit zu schützen: Rauschen, das mit den
+> Sektorprojektionen kommutiert, ist harmlos (dann ist $P_cE_i^*E_jP_d=E_i^*E_jP_cP_d=0$ für $c\neq d$,
+> Bedingung 2 von Proposition 10.6).
 
 ## 10.4 Mixer mit Nebenbedingungen
 
@@ -391,7 +419,8 @@ $J\sum_{(i,j)}\big(\tfrac12(S^+_iS^-_j+S^-_iS^+_j)+\Delta S^z_iS^z_j\big)$ mit $
 $S^+_iS^-_j+S^-_iS^+_j=\tfrac12(X_iX_j+Y_iY_j)$; wir prüfen das an der dichten $64\times64$-Matrix. Für
 $H_C$ nehmen wir die Graphbisektion der Dreiecke $\{0,1,2\}$, $\{3,4,5\}$, verbunden durch die Kanten
 $(2,3)$, $(5,0)$: $H_C=\sum_{(i,j)\in E}\tfrac12(1-Z_iZ_j)$, $Z_iZ_j=4S^z_iS^z_j$, zählt die geschnittenen
-Kanten. Die beste Bisektion schneidet $2$ Kanten; wir starten bei $|101010\rangle$, das $6$ schneidet.
+Kanten. Die beste Bisektion schneidet $2$ Kanten (die beiden Dreiecke; jede andere Menge von drei Ecken
+teilt beide Dreiecke, und ein geteiltes Dreieck hat zwei geschnittene Kanten); wir starten bei $|101010\rangle$, das $6$ schneidet.
 Schließlich wird der ganze Ansatz mit dichten $64\times64$-Matrizen unabhängig von der Bibliothek
 nachgerechnet.
 
@@ -445,7 +474,8 @@ ist blockdiagonal mit Gewichten $\le w$, und sein Block zum Gewicht $w$ stammt a
 $K_0|b\rangle=(1-g)^{|b|/2}|b\rangle$, ist $P_w\mathcal D(\sigma)P_w=(1-g)^wP_w\sigma P_w$. Die $U_l$ kommutieren
 mit den $P_v$; Induktion über $l$. $\square$
 
-Ein `InterSectorChannel` behält nur die Diagonalblöcke seiner Ausgabe; hier gibt es keine anderen,
+Ein `InterSectorChannel` behält nur die Diagonalblöcke seiner Ausgabe; hier gibt es keine anderen
+(der Beweis von Proposition 10.9 gilt wörtlich für die Dämpfung eines einzelnen Qubits, mit $s\in\{0,1\}$),
 also geht nichts verloren. Mit $g=0.05$ und $p=2$ ist die Akzeptanz $0.95^6=0.7351$:
 
 ```python
@@ -467,9 +497,9 @@ assert abs(accept.item() - (1 - g) ** (w * len(layers))) < 1e-12              # 
 assert abs(post.fidelity(ideal).item() - 1) < 1e-10 and abs(cut(post) - cut(ideal)) < 1e-10
 ```
 
-Der unzulässige Anteil senkt den erwarteten Schnitt von $4.3789$ auf $4.3123$, eine scheinbare
-Verbesserung, die einen Optimierer der Winkel in die Irre führen würde; nach der Postselektion ist
-der Wert exakt.
+Numerische Beobachtung (die ausgegebenen Werte): Der unzulässige Anteil senkt den erwarteten Schnitt
+von $4.3789$ auf $4.3123$, eine scheinbare Verbesserung, die einen Optimierer der Winkel in die Irre
+führen würde; nach der Postselektion ist der Wert exakt (Proposition 10.9).
 
 **Kontinuierliche Zeit.** Dasselbe gilt für die Lindblad-Gleichung (Satz 8.6, [Kapitel 8](08_dynamics.md))
 $$
@@ -499,8 +529,9 @@ Faktor der Skalar $e^{-\gamma_1wt}$ ist und Dephasierung innerhalb des Sektors e
 
 Für $\gamma_2=0$ ist $\sigma(t)=e^{-iHt}\rho(0)e^{iHt}$: Die Postselektion ist perfekt. Der
 Begleitartikel (`examples/paper/ex9_qaoa_xy_mixer.py`) lässt $|111000\rangle$ unter $H_M$ bis $T=2$
-evolvieren; wir reproduzieren seine Zeile $\gamma_1=\gamma_2=0.1$: $P(w=3)=e^{-0.6}=0.5488$, Fidelität
-$0.4805$, postselektiert $0.8755$ (wie für $\gamma_1=0$).
+evolvieren; wir reproduzieren seine Zeile $\gamma_1=\gamma_2=0.1$: $P(w=3)=e^{-0.6}=0.5488$ (Proposition
+10.10) sowie, als numerische Beobachtung des folgenden Codes, die Fidelität $0.4805$ und die postselektierte
+Fidelität $0.8755$; nach Proposition 10.10 ist letztere dieselbe wie für $\gamma_1=0$.
 
 ```python
 T = 2.0
@@ -518,7 +549,7 @@ assert abs(post_T[0.1, 0.0].fidelity(ideal_T).item() - 1) < 1e-6               #
 assert post_T[0.1, 0.1].trace_distance(post_T[0.0, 0.1]).item() < 1e-6       # independent of gamma_1
 ```
 
-> **Physikalische Bedeutung.** Energierelaxation ($T_1$), einer der wichtigsten Fehler
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Energierelaxation ($T_1$), einer der wichtigsten Fehler
 > supraleitender Qubits, ist ein Sprung in einen niedrigeren Sektor. Die Messung des
 > Hamming-Gewichts – eine zentrale Projektion, harmlos innerhalb eines Sektors (Abschnitt 3.3) –
 > entdeckt ihn, und die Postselektion entfernt ihn um den Preis der Akzeptanzrate. Dephasierung
@@ -529,7 +560,7 @@ assert post_T[0.1, 0.1].trace_distance(post_T[0.0, 0.1]).item() < 1e-6       # i
 Qiskit (`qiskit.quantum_info`, Rauschmodelle von Aer, `QAOAAnsatz` mit einem eigenen Mixer), Cirq,
 PennyLane (`qml.qaoa.xy_mixer`, `default.mixed`) und QuTiP/`qutip-qip` simulieren all dies auf $n$
 vollen Qubits und sind die richtigen Werkzeuge für Schaltkreise; stim sampelt Clifford-Schaltkreise
-mit Pauli-artigem Rauschen auf Tausenden von Qubits (Amplitudendämpfung ist kein Pauli-Kanal). Uns
+mit Pauli-artigem Rauschen auf Tausenden von Qubits (Amplitudendämpfung ist kein Pauli-Kanal: Pauli-Kanäle sind unital, die Amplitudendämpfung nicht). Uns
 ist in diesen Paketen keine Funktion bekannt, die die Wechselwirkungsalgebra eines Kanals, ihren
 Kommutanten oder seine ganze Fixpunktalgebra berechnet (QuTiPs `steadystate` liefert einen
 stationären Zustand eines Lindblad-Operators); zu numerischen Blockzerlegungen von

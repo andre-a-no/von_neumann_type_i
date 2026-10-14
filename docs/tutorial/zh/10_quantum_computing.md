@@ -5,7 +5,7 @@
 量子计算机上的噪声是一个信道，而信道生成一个代数：由其 Kraus 算子生成的 $*$-代数。这个代数的
 结构（第 2 章）告诉我们哪些信息能毫发无损地经受住噪声；一个关于 Kraus 算子乘积、涉及另一个代数的
 条件告诉我们恢复操作能够还原哪些信息。最后一部分讨论守恒某个荷的算法：它们的态处在荷扇区的代数中，
-而占主导地位的噪声会使态在扇区之间移动。
+而振幅阻尼会使态在扇区之间移动。
 
 **你将学到**为什么保单位信道与其对偶具有相同的不动点（噪声的交换子），带完整证明的
 Knill–Laflamme 定理，如何只保护扇区的标记，以及量子交替算子拟设的 XY 混合算子、振幅阻尼和后选择
@@ -61,8 +61,8 @@ $\sum_iE_i^*E_i=1$（保单位），并且生成同一个 $*$-代数 $\mathcal A
 
 对每个信道都有 $\mathcal A'\subseteq\operatorname{Fix}(\Phi^*)$（命题 10.1(a)），但没有
 保单位性，该定理就不成立：对振幅阻尼，$\operatorname{Fix}(\Phi)=\mathbb C|0\rangle\langle0|$，而
-$\mathcal A'=\operatorname{Fix}(\Phi^*)=\mathbb C1$（6.4 节与习题 1）。（Kribs 2003，
-Arias–Gheondea–Gudder 2002；无穷维情形需要更多的假设。）
+$\mathcal A'=\operatorname{Fix}(\Phi^*)=\mathbb C1$（6.4 节与习题 1）。（历史上：Kribs 2003，
+Arias–Gheondea–Gudder 2002。）
 
 **推论 10.3（集体退相位）。** 设 $U=e^{-i\theta Z_{\mathrm{tot}}}$，
 $Z_{\mathrm{tot}}=\sum_jZ_j$，其中对 $d=1,\dots,n$ 有 $e^{2i\theta d}\neq1$，并设
@@ -140,14 +140,17 @@ rho = states.random_density_matrix(M, batch_size=3)
 assert (Phi_M(rho).matrix - rho.matrix).abs().max() < 1e-12      # no state of M is disturbed
 ```
 
-> **物理意义。** 一个在所有量子比特上都相同的涨落场使 $|b\rangle$ 的相位按 $n-2|b|$ 的比例
+> **物理意义**（物理解释，而非本课程的定理）。一个在所有量子比特上都相同的涨落场使 $|b\rangle$ 的相位按 $n-2|b|$ 的比例
 > 移动。同一汉明重量的态获得共同的相位，因此 $|01\rangle,|10\rangle$
 > 编码了一个对这种噪声免疫的量子比特（离子阱：Kielpinski et al., *Science* 291, 2001），而
 > 不同重量之间的相干性会衰减：噪声施加了一个超选择定则（3.3 节）。
 
-**集体退相干。** 若场的方向也在涨落，则 Kraus 算子是转动
-$e^{-i\theta\,\mathbf n\cdot\mathbf S}$，$S_\alpha=\tfrac12\sum_j\sigma_{\alpha,j}$，$\sigma\in\{X,Y,Z\}$，
-它们属于由 $1,S_x,S_y,S_z$ 生成的 $*$-代数 $\mathcal B$（定理 1.5(a)）。
+**集体退相干。** 若一个信道的 Kraus 算子都是转动
+$e^{-i\theta\,\mathbf n\cdot\mathbf S}$（$\theta\in\mathbb R$，$\mathbf n\in\mathbb R^3$ 为单位向量）的倍数，其中
+$S_\alpha=\tfrac12\sum_j\sigma_{\alpha,j}$，$\sigma\in\{X,Y,Z\}$，我们就称该信道是**集体的**；它模拟方向也在涨落的场
+（这是模型，而不是定理）。由于 $\mathbf n\cdot\mathbf S$ 是自伴的，$e^{-i\theta\,\mathbf n\cdot\mathbf S}$ 是
+$\mathbf n\cdot\mathbf S$ 的多项式（定理 1.5(a) 的证明），所以这些 Kraus 算子属于由
+$1,S_x,S_y,S_z$ 生成的 $*$-代数 $\mathcal B$。
 
 **命题 10.4（单态子空间）。** 设 $K=\ker S_x\cap\ker S_y\cap\ker S_z$。每个 Kraus 算子属于
 $\mathcal B$ 的信道都固定每个支撑在 $K$ 中的态。
@@ -155,9 +158,16 @@ $\mathcal B$ 的信道都固定每个支撑在 $K$ 中的态。
 *证明。* $\mathcal B$ 由 $S_x,S_y,S_z$ 的字（以及 $1$）张成；长度 $\ge1$ 的字把 $K$ 映为零，
 所以 $\mathcal B$ 的每个元素在 $K$ 上都作用为一个数乘。应用命题 10.1(b)。$\square$
 
-对 $n=4$，代码求得 $\dim K=2$，$\dim\mathcal B'=14$，$\dim\mathcal B=35$，这与 $\mathcal B\cong M_5\oplus M_3\oplus M_1$、
-重数为 $1,3,2$（总自旋 $2,1,0$）的情形相符，[第 4 章](04_symmetries.md)将推导这一点：四个
-量子比特承载一个无退相干的量子比特（$k=1$，$m=2$）和一个无噪声的三能级系统（qutrit，$k=3$，$m=3$）。
+对 $n=4$，命题 4.13（[第 4 章](04_symmetries.md)，$L=4$ 的情形）给出
+$\mathcal B\cong M_5\oplus M_3\oplus M_1$，重数为 $1,3,2$（总自旋 $2,1,0$），所以 $\dim\mathcal B=35$，而
+$\mathcal B'\cong M_1\oplus M_3\oplus M_2$ 的维数为 $14$。此外 $\dim K=m_0=2$：各 $S_a$ 逐个直和项地作用，
+所以 $K$ 是它与各直和项之交的和；在自旋 $S$ 的直和项上，它们作用为 $S^{(S)}_a\otimes1$（推论 4.12），而
+$\sum_bu_b\otimes f_b$（$f_b$ 是 $\mathbb C^{m_S}$ 的一组基）被它们全部映为零，当且仅当每个 $u_b$ 都被
+所有 $S^{(S)}_a$ 映为零。这样的 $u$ 构成不可约自旋 $S$ 表示的一个不变子空间（定理 4.11），当 $S>0$ 时它不是整个空间
+（因为 $S^{(S)}_z\neq0$），因此为 $0$，而当 $S=0$ 时它是 $\mathbb C^1$。代码求得相同的数值。命题 10.1(a) 及其证明
+对任何包含 Kraus 算子、形如 $V(\bigoplus_cM_{k_c}\otimes1_{m_c})V^*$ 的 $*$-代数逐字成立，这里即
+$\mathcal B$：对每个 Kraus 算子属于 $\mathcal B$ 的信道，四个量子比特承载一个无退相干的量子比特
+（$k=1$，$m=2$）和一个无噪声的三能级系统（qutrit，$k=3$，$m=3$）。
 
 ```python
 S = [sum(on(P, j, n) for j in range(n)) / 2 for P in (X, Y, Z)]
@@ -177,7 +187,7 @@ for G in (K @ torch.randn(2, 2, dtype=dt), torch.randn(16, 16, dtype=dt)):  # su
 
 ## 10.2 纠错：Knill–Laflamme 定理
 
-**码**是一个投影为 $P$ 的子空间 $\mathcal C\subseteq\mathbb C^D$。若存在信道 $\mathcal R$
+**码**是一个投影为 $P$ 的非零子空间 $\mathcal C\subseteq\mathbb C^D$。若存在信道 $\mathcal R$
 （**恢复**），使得对每个支撑在 $\mathcal C$ 中的态 $\rho$ 有 $\mathcal R(\Phi(\rho))=\rho$，则称
 $\mathcal C$ 能**纠正** $\Phi$。
 
@@ -216,7 +226,8 @@ $\sum_kd_k=\operatorname{Tr}\Lambda=1$，因为 $\sum_i\lambda_{ii}P=P\sum_iE_i^
 翻转"，$E_0=\sqrt{p_0}\,1$，$E_j=\sqrt{p_j}\,X_j$。当 $i\neq j$ 时，$X_iX_j$（其中 $X_0=1$）翻转一个或两个
 比特，并把 $\mathcal C$ 映入 $\mathcal C^\perp$；所以 $\Lambda=\operatorname{diag}(p_0,\dots,p_3)$，$V_k=X_kP$，
 $Q=1$，且 $\mathcal R(\sigma)=\sum_{k=0}^3PX_k\sigma X_kP$。若每个量子比特以概率 $p$ 独立地
-翻转，则该条件不成立：当发生 $\ge2$ 次翻转时，$\mathcal R$ 把 $|0_L\rangle=|000\rangle$ 映为 $|1_L\rangle$，
+翻转，则该条件不成立（Kraus 算子中包含 $X_1X_2$ 和 $X_3$ 的倍数，而
+$PX_1X_2X_3P=|000\rangle\langle111|+|111\rangle\langle000|$ 不是 $P$ 的倍数）；当发生 $\ge2$ 次翻转时，$\mathcal R$ 把 $|0_L\rangle=|000\rangle$ 映为 $|1_L\rangle$，
 否则保持不变；因此恢复后 $|0_L\rangle$ 的保真度就是
 至多发生一次翻转的概率，$p=0.1$ 时 $(1-p)^3+3p(1-p)^2=1-3p^2+2p^3=0.972$。在本库中，$M_8$ 是
 只有一个块的代数，而 `R @ Phi` 就是复合 $\mathcal R\circ\Phi$：
@@ -265,10 +276,13 @@ $$
 P\,(\mathcal R\circ\Phi)^*(A)\,P=A\qquad\text{for all }A\in\mathfrak A,
 $$
 即对所有支撑在 $\mathcal C$ 中的态 $\rho$
-和所有 $A\in\mathfrak A$ 有 $\operatorname{Tr}(\mathcal R(\Phi(\rho))A)=\operatorname{Tr}(\rho A)$，则称 $\mathfrak A$ 对
-$\Phi$ 是**可纠正的**。对 $\mathfrak A=B(\mathcal C)$，这就是 10.2 节意义下的纠错：若
-$\sigma=\mathcal R(\Phi(\rho))$ 满足 $P\sigma P=\rho$，则 $\operatorname{Tr}(1-P)\sigma(1-P)=0$，所以 $\sigma^{1/2}(1-P)=0$，从而
-$\sigma=\rho$。另一个极端是交换代数：只有一个经典标记受到保护。
+和所有 $A\in\mathfrak A$ 有 $\operatorname{Tr}(\mathcal R(\Phi(\rho))A)=\operatorname{Tr}(\rho A)$（左边等于
+$\operatorname{Tr}(\rho\,P(\mathcal R\circ\Phi)^*(A)P)$，而对所有这些 $\rho$ 都满足 $\operatorname{Tr}(\rho Y)=0$ 的算子
+$Y\in B(\mathcal C)$ 必为零：对所有 $x$ 有 $\langle x,Yx\rangle=\langle Px,YPx\rangle=0$，再像推论 1.4 的证明那样
+使用极化恒等式），则称 $\mathfrak A$ 对 $\Phi$ 是**可纠正的**。对 $\mathfrak A=B(\mathcal C)$，这就是 10.2 节意义下的纠错：若
+$\sigma=\mathcal R(\Phi(\rho))$ 满足 $P\sigma P=\rho$（取所有 $A\in B(\mathcal C)$），则由于 $\mathcal R\circ\Phi$ 保迹，
+$\operatorname{Tr}(1-P)\sigma(1-P)=\operatorname{Tr}\sigma-\operatorname{Tr}P\sigma P=1-1=0$，所以 $\sigma^{1/2}(1-P)=0$，从而
+$\sigma=\rho$；反之，由 $\mathcal R(\Phi(\rho))=\rho$ 可得迹的等式。另一个极端是交换代数：只有一个经典标记受到保护。
 
 **命题 10.6（纠正扇区标记）。** 设 $P=\sum_{c=1}^CP_c$，其中 $P_c\neq0$ 是两两正交的
 投影，并设 $\mathfrak A=\operatorname{span}\{P_1,\dots,P_C\}$。以下各条等价：
@@ -293,7 +307,7 @@ $d$ 求和得 $N_cE_iP_c=E_iP_c$。从而当 $c\neq d$ 时 $P_cE_i^*E_jP_d=P_cE_
 （"先测量，再制备"），这是一个信道，其 Kraus 算子为 $\sqrt\mu\,|u\rangle\langle f|N_c^{1/2}$，其中
 $(\mu,u)$ 取遍 $\omega_c$ 的特征对，$f$ 取遍一组规范正交基中的向量。由于
 $\operatorname{Tr}(\mathcal R(\sigma)P_d)=\operatorname{Tr}(N_d\sigma)$，有 $\mathcal R^*(P_d)=N_d$。利用 $N_dE_iP_c=\delta_{cd}E_iP_c$
-（由上一步得到），再利用条件 2，
+（由上一步得到），再利用 $\sum_iE_i^*E_i=1$，
 $$
 P(\mathcal R\circ\Phi)^*(P_d)P=P\,\Phi^*(N_d)\,P=\sum_i\sum_{c,c'}P_{c'}E_i^*N_dE_iP_c=\sum_i\sum_{c'}P_{c'}E_i^*E_iP_d=P_d\Big(\sum_iE_i^*E_i\Big)P_d=P_d .
 $$
@@ -302,16 +316,24 @@ $$
 $\operatorname{Tr}(N_d\Phi(\rho))=\operatorname{Tr}(\rho\,P(\mathcal R\circ\Phi)^*(P_d)P)=\operatorname{Tr}(\rho P_d)=\delta_{cd}$，因此也有
 $\operatorname{Tr}(N_C\Phi(\rho))=\delta_{cC}$。$\square$
 
-**定理 10.7（Bény–Kempf–Kribs 2007；不加证明地陈述）。** $\mathcal C$ 上的冯·诺依曼代数 $\mathfrak A$
+**定理 10.7（Bény–Kempf–Kribs）。** $\mathcal C$ 上的冯·诺依曼代数 $\mathfrak A$
 对 $\Phi$ 是可纠正的，当且仅当对所有 $i,j$ 有 $PE_i^*E_jP\in\mathfrak A'$，其中
 $\mathfrak A'$ 是 $\mathfrak A$ 在 $B(\mathcal C)$ 中的交换子。
 
+*证明。* 这就是定理 D.9，在[附录 D](D_gksl.md)中证明；其证明还构造了一个恢复信道：它测量
+$\mathfrak A\cong\bigoplus_cM_{k_c}$ 的扇区和一个综合征，并像定理 10.5 的证明那样撤销每个因子
+$\mathbb C^{k_c}$ 上的错误。$\square$
+
 对 $\mathfrak A=B(\mathcal C)$，$\mathfrak A'=\mathbb CP$，这就是定理 10.5；命题 10.6 是
-$\mathfrak A$ 为交换代数的情形。对
-$\mathcal C=\mathbb C^k\otimes\mathbb C^m$ 上的 $\mathfrak A=M_k\otimes1_m$，得到 Kribs–Laflamme–Poulin 的算子（子系统）
-码（*Phys. Rev. Lett.* 94, 180501, 2005），它们包含 10.1 节中取 $\mathcal R=\mathrm{id}$ 的无噪声
-子系统。证明见 C. Bény, A. Kempf, D. W.
-Kribs, *Phys. Rev. Lett.* 98, 100502 (2007) 以及 *Phys. Rev. A* 76, 042303 (2007)。
+交换代数 $\mathfrak A=\operatorname{span}\{P_c\}$ 的情形（推论 D.10(a),(b)）。对
+$\mathcal C=\mathbb C^k\otimes\mathbb C^m$ 上的 $\mathfrak A=M_k\otimes1_m$，得到算子（子系统）
+码；10.1 节的无噪声子系统就是这样的码，由 $\mathcal R=\mathrm{id}$ 纠正
+（推论 D.10(c)，交换两个张量因子）。由定理 2.6，每个 $\mathfrak A$ 都
+$*$-同构于某个 $\bigoplus_cM_{k_c}$；当 $C\ge2$ 且某个 $k_c\ge2$ 时，可纠正的 $\mathfrak A$ 既保护扇区标记 $c$，
+又保护每个 $M_{k_c}$ 的量子信息——这就是**混合**码（见推论 D.10 之后的说明，那里有一个
+Knill–Laflamme 条件不成立而定理 10.7 适用的例子）。
+历史上：C. Bény, A. Kempf, D. W. Kribs, *Phys. Rev. Lett.* 98, 100502 (2007) 以及 *Phys. Rev. A* 76,
+042303 (2007)；算子码：Kribs–Laflamme–Poulin, *Phys. Rev. Lett.* 94, 180501 (2005)。
 
 **例。** 重复码先受到独立的相位翻转（每个量子比特的概率为 $q$），再受到
 至多一个比特翻转。Kraus 算子是 $X_kZ^s$（$s\in\{0,1\}^3$）的倍数，每个
@@ -320,7 +342,12 @@ $P_1=|111\rangle\langle111|$ 成立：经典比特得以保存，可以通过多
 $N_0=\sum_{|b|\le1}|b\rangle\langle b|$，$N_1=1-N_0$。量子比特则不然：$PZ_1P$ 不是 $P$ 的倍数，
 并且在 10.2 节的恢复 $\mathcal R$ 之后，态 $|{+_L}\rangle=(|000\rangle+|111\rangle)/\sqrt2$ 恰好在发生奇数次
 相位翻转时遭受逻辑相位翻转 $Z_1Z_2Z_3$；其保真度为
-$(1+(1-2q)^3)/2=0.8645$（$q=0.05$ 时）。
+$(1+(1-2q)^3)/2=0.8645$（$q=0.05$ 时）。（该信道是 $\Phi_{\mathrm{one}}\circ\mathcal Z$，其中 $\Phi_{\mathrm{one}}$ 是
+比特翻转例子中"至多一个比特翻转"的信道，$\mathcal Z$ 是独立的相位翻转；
+在 $\mathcal C$ 上每个 $Z^s$ 都作用为 $Z_1^{|s|}$，所以 $\mathcal Z(\rho)=\sum_sq^{|s|}(1-q)^{3-|s|}Z_1^{|s|}\rho Z_1^{|s|}$
+仍支撑在 $\mathcal C$ 中，而由定理 10.5，$\mathcal R\circ\Phi_{\mathrm{one}}$ 在这样的态上是恒等映射。
+$Z_1$ 把 $|{+_L}\rangle$ 映为 $|{-_L}\rangle\perp|{+_L}\rangle$，而 $|s|$ 为偶数的概率是
+$\frac12\big((1-q+q)^3+(1-q-q)^3\big)$。）
 
 ```python
 q = 0.05
@@ -340,9 +367,9 @@ print(f"fidelity of |+_L> {F_plus:.4f}, exact {(1 + (1 - 2 * q)**3) / 2:.4f}")
 assert abs(F_plus - (1 + (1 - 2 * q) ** 3) / 2) < 1e-12
 ```
 
-> **物理意义。** 保护一个交换代数意味着保护经典信息（一个
+> **物理意义**（物理解释，而非本课程的定理）。保护一个交换代数意味着保护经典信息（一个
 > 比特、一个超选择扇区的标记），这比保护一个量子比特便宜得多：与扇区投影
-> 可交换的噪声是无害的。"混合码"对应于 $\bigoplus_cM_{k_c}$。
+> 可交换的噪声是无害的（此时对 $c\neq d$ 有 $P_cE_i^*E_jP_d=E_i^*E_jP_cP_d=0$，即命题 10.6 的条件 2）。
 
 ## 10.4 带约束的混合算子
 
@@ -365,7 +392,8 @@ $Y|1\rangle=-i|0\rangle$）：当比特 $i,j$ 不同时，$X_iX_j+Y_iY_j$ 交换
 $\Delta=0$，因为 $S^+_iS^-_j+S^-_iS^+_j=\tfrac12(X_iX_j+Y_iY_j)$；我们将它与稠密的
 $64\times64$ 矩阵进行对照。对于 $H_C$，我们取由边 $(2,3)$、$(5,0)$ 连接的两个三角形 $\{0,1,2\}$、$\{3,4,5\}$
 上的图二分问题：$H_C=\sum_{(i,j)\in E}\tfrac12(1-Z_iZ_j)$（$Z_iZ_j=4S^z_iS^z_j$）计算被切割的
-边数。最优的二分切割 $2$ 条边；我们从切割 $6$ 条边的 $|101010\rangle$ 出发。最后，整个
+边数。最优的二分切割 $2$ 条边（即分开两个三角形；任何其他由三个顶点构成的集合都会把两个
+三角形都分割开，而一个被分割的三角形有两条被切割的边）；我们从切割 $6$ 条边的 $|101010\rangle$ 出发。最后，整个
 拟设用稠密的 $64\times64$ 矩阵重新计算一遍，与本库无关。
 
 ```python
@@ -415,8 +443,8 @@ $v>w-|s|$ 时为零：$\mathcal D(\sigma)$ 是重量 $\le w$ 的块对角算子�
 只来自 $s=0$。由于 $K_0|b\rangle=(1-g)^{|b|/2}|b\rangle$，$P_w\mathcal D(\sigma)P_w=(1-g)^wP_w\sigma P_w$。各 $U_l$
 与 $P_v$ 可交换；对 $l$ 归纳即可。$\square$
 
-`InterSectorChannel` 只保留其输出的对角块；这里不存在其他块，所以
-没有任何损失。取 $g=0.05$、$p=2$，接受概率为 $0.95^6=0.7351$：
+`InterSectorChannel` 只保留其输出的对角块；这里不存在其他块（命题 10.9 的证明逐字适用于单个量子比特的阻尼，
+此时 $s\in\{0,1\}$），所以没有任何损失。取 $g=0.05$、$p=2$，接受概率为 $0.95^6=0.7351$：
 
 ```python
 g = 0.05
@@ -437,8 +465,8 @@ assert abs(accept.item() - (1 - g) ** (w * len(layers))) < 1e-12              # 
 assert abs(post.fidelity(ideal).item() - 1) < 1e-10 and abs(cut(post) - cut(ideal)) < 1e-10
 ```
 
-不可行部分使期望切割数从 $4.3789$ 降为 $4.3123$，这是一种虚假的改进，
-会误导角度的优化器；后选择之后，该值是精确的。
+*数值观察*（打印出的值）：不可行部分使期望切割数从 $4.3789$ 降为 $4.3123$，这是一种虚假的改进，
+会误导角度的优化器；后选择之后，该值是精确的（命题 10.9）。
 
 **连续时间。** 同样的结论对 Lindblad 方程（定理 8.6，[第 8 章](08_dynamics.md)）也成立：
 $$
@@ -464,7 +492,8 @@ $e^{\gamma_1wt}B_{ww}$ 是 $\sigma$ 所满足的方程的解，且初值相同�
 
 当 $\gamma_2=0$ 时，$\sigma(t)=e^{-iHt}\rho(0)e^{iHt}$：后选择是完美的。配套论文
 （`examples/paper/ex9_qaoa_xy_mixer.py`）让 $|111000\rangle$ 在 $H_M$ 下演化到 $T=2$；我们重现其中
-$\gamma_1=\gamma_2=0.1$ 那一行：$P(w=3)=e^{-0.6}=0.5488$，保真度 $0.4805$，后选择后为 $0.8755$（与 $\gamma_1=0$ 时相同）。
+$\gamma_1=\gamma_2=0.1$ 那一行：$P(w=3)=e^{-0.6}=0.5488$（命题 10.10），而作为下面代码的*数值观察*，保真度为 $0.4805$，
+后选择后的保真度为 $0.8755$；由命题 10.10，后者与 $\gamma_1=0$ 时相同。
 
 ```python
 T = 2.0
@@ -482,7 +511,7 @@ assert abs(post_T[0.1, 0.0].fidelity(ideal_T).item() - 1) < 1e-6               #
 assert post_T[0.1, 0.1].trace_distance(post_T[0.0, 0.1]).item() < 1e-6       # independent of gamma_1
 ```
 
-> **物理意义。** 能量弛豫（$T_1$）是超导量子比特的主要误差之一，它是
+> **物理意义**（物理解释，而非本课程的定理）。能量弛豫（$T_1$）是超导量子比特的主要误差之一，它是
 > 跃迁到较低扇区的跳跃。测量汉明重量——一个中心投影，在扇区内部是无害的
 > （3.3 节）——可以探测到它，而后选择以接受率为代价将其去除。
 > 退相位与扇区投影可交换，因而探测不到。
@@ -492,7 +521,7 @@ assert post_T[0.1, 0.1].trace_distance(post_T[0.0, 0.1]).item() < 1e-6       # i
 Qiskit（`qiskit.quantum_info`、Aer 噪声模型、带自定义混合算子的 `QAOAAnsatz`）、Cirq、PennyLane
 （`qml.qaoa.xy_mixer`、`default.mixed`）以及 QuTiP/`qutip-qip` 在 $n$ 个完整的量子比特上模拟上述全部内容，
 是处理线路的合适工具；stim 对带 Pauli 型噪声的 Clifford 线路进行采样，可处理数千个
-量子比特（振幅阻尼不是 Pauli 信道）。据我们所知，这些软件包中没有任何函数能
+量子比特（振幅阻尼不是 Pauli 信道：Pauli 信道是保单位的，而振幅阻尼不是）。据我们所知，这些软件包中没有任何函数能
 计算信道的相互作用代数、它的交换子或它的整个不动点代数（QuTiP 的
 `steadystate` 返回 Lindblad 生成元的一个稳态）；关于矩阵 $*$-代数的数值块分解，见
 Murota et al., *Japan J. Indust. Appl. Math.* 27 (2010)。本库增加的是：在

@@ -6,8 +6,8 @@ El ruido en un ordenador cuántico es un canal, y un canal genera un álgebra: l
 operadores de Kraus. Su estructura (capítulo 2) dice qué información sobrevive intacta al ruido;
 una condición sobre los productos de operadores de Kraus, en la que interviene otra álgebra, dice
 qué información puede restaurar una recuperación. La última parte trata algoritmos que conservan
-una carga: sus estados viven en el álgebra de los sectores de carga, y el ruido dominante los
-traslada de un sector a otro.
+una carga: sus estados viven en el álgebra de los sectores de carga, y el amortiguamiento de
+amplitud los traslada de un sector a otro.
 
 **Aprenderá** por qué un canal unital y su dual tienen los mismos puntos fijos (el conmutante del
 ruido), el teorema de Knill–Laflamme con una demostración completa, cómo proteger solo la etiqueta
@@ -68,8 +68,8 @@ La última afirmación es el teorema 2.6. $\square$
 
 Para todo canal, $\mathcal A'\subseteq\operatorname{Fix}(\Phi^*)$ (proposición 10.1(a)), pero sin
 unitalidad el teorema falla: para el amortiguamiento de amplitud, $\operatorname{Fix}(\Phi)=\mathbb C|0\rangle\langle0|$,
-mientras que $\mathcal A'=\operatorname{Fix}(\Phi^*)=\mathbb C1$ (sección 6.4 y ejercicio 1). (Kribs 2003,
-Arias–Gheondea–Gudder 2002; en dimensión infinita hacen falta más hipótesis.)
+mientras que $\mathcal A'=\operatorname{Fix}(\Phi^*)=\mathbb C1$ (sección 6.4 y ejercicio 1). (Históricamente: Kribs 2003,
+Arias–Gheondea–Gudder 2002.)
 
 **Corolario 10.3 (desfase colectivo).** Sean $U=e^{-i\theta Z_{\mathrm{tot}}}$,
 $Z_{\mathrm{tot}}=\sum_jZ_j$, con $e^{2i\theta d}\neq1$ para $d=1,\dots,n$, y
@@ -149,15 +149,18 @@ rho = states.random_density_matrix(M, batch_size=3)
 assert (Phi_M(rho).matrix - rho.matrix).abs().max() < 1e-12      # no state of M is disturbed
 ```
 
-> **Significado físico.** Un campo fluctuante que es el mismo en todos los cúbits desplaza la fase
+> **Significado físico** (interpretación física, no un teorema de este curso). Un campo fluctuante que es el mismo en todos los cúbits desplaza la fase
 > de $|b\rangle$ en proporción a $n-2|b|$. Los estados de un mismo peso de Hamming adquieren una fase
 > común, de modo que $|01\rangle,|10\rangle$ codifican un cúbit inmune a este ruido (iones atrapados:
 > Kielpinski et al., *Science* 291, 2001), mientras que las coherencias entre pesos decaen: el ruido
 > impone una regla de superselección (sección 3.3).
 
-**Decoherencia colectiva.** Si el campo fluctúa también en dirección, los operadores de Kraus son
-rotaciones $e^{-i\theta\,\mathbf n\cdot\mathbf S}$, $S_\alpha=\tfrac12\sum_j\sigma_{\alpha,j}$, $\sigma\in\{X,Y,Z\}$,
-que están en la $*$-álgebra $\mathcal B$ generada por $1,S_x,S_y,S_z$ (teorema 1.5(a)).
+**Decoherencia colectiva.** Llamamos **colectivo** a un canal si sus operadores de Kraus son múltiplos
+de rotaciones $e^{-i\theta\,\mathbf n\cdot\mathbf S}$ ($\theta\in\mathbb R$, $\mathbf n\in\mathbb R^3$ un vector unitario),
+$S_\alpha=\tfrac12\sum_j\sigma_{\alpha,j}$, $\sigma\in\{X,Y,Z\}$; esto modela un campo que fluctúa también en dirección
+(el modelo, no un teorema). Como $\mathbf n\cdot\mathbf S$ es autoadjunto, $e^{-i\theta\,\mathbf n\cdot\mathbf S}$ es un
+polinomio en él (demostración del teorema 1.5(a)), así que estos operadores de Kraus están en la $*$-álgebra $\mathcal B$
+generada por $1,S_x,S_y,S_z$.
 
 **Proposición 10.4 (subespacio singlete).** Sea $K=\ker S_x\cap\ker S_y\cap\ker S_z$. Todo canal
 cuyos operadores de Kraus están en $\mathcal B$ fija todo estado con soporte en $K$.
@@ -166,10 +169,18 @@ cuyos operadores de Kraus están en $\mathcal B$ fija todo estado con soporte en
 palabras de longitud $\ge1$ anulan $K$, así que cada elemento de $\mathcal B$ actúa sobre $K$ como un
 escalar. Aplíquese la proposición 10.1(b). $\square$
 
-Para $n=4$ el código halla $\dim K=2$, $\dim\mathcal B'=14$, $\dim\mathcal B=35$, como corresponde a
-$\mathcal B\cong M_5\oplus M_3\oplus M_1$ con multiplicidades $1,3,2$ (espín total $2,1,0$), lo que
-deduce el [capítulo 4](04_symmetries.md): cuatro cúbits contienen un cúbit libre de decoherencia
-($k=1$, $m=2$) y un cútrit sin ruido ($k=3$, $m=3$).
+Para $n=4$, la proposición 4.13 ([capítulo 4](04_symmetries.md), caso $L=4$) da
+$\mathcal B\cong M_5\oplus M_3\oplus M_1$ con multiplicidades $1,3,2$ (espín total $2,1,0$), luego $\dim\mathcal B=35$ y
+$\mathcal B'\cong M_1\oplus M_3\oplus M_2$ tiene dimensión $14$. Además, $\dim K=m_0=2$: los $S_a$ actúan sumando a sumando,
+así que $K$ es la suma de sus intersecciones con los sumandos; sobre el sumando de espín $S$ actúan como $S^{(S)}_a\otimes1$
+(corolario 4.12), y
+$\sum_bu_b\otimes f_b$ ($f_b$ una base de $\mathbb C^{m_S}$) es anulado por todos ellos si y solo si cada $u_b$ es anulado por
+todos los $S^{(S)}_a$. Esos $u$ forman un subespacio invariante del espín $S$ irreducible (teorema 4.11), que no es todo el espacio
+para $S>0$ (pues $S^{(S)}_z\neq0$), luego es $0$, mientras que para $S=0$ es $\mathbb C^1$. El código halla los mismos números. La
+proposición 10.1(a) y su demostración valen literalmente para cualquier $*$-álgebra de la forma
+$V(\bigoplus_cM_{k_c}\otimes1_{m_c})V^*$ que contenga los operadores de Kraus, aquí $\mathcal B$: cuatro cúbits contienen un
+cúbit libre de decoherencia ($k=1$, $m=2$) y un cútrit sin ruido ($k=3$, $m=3$) para todo canal cuyos operadores de Kraus
+están en $\mathcal B$.
 
 ```python
 S = [sum(on(P, j, n) for j in range(n)) / 2 for P in (X, Y, Z)]
@@ -189,7 +200,7 @@ for G in (K @ torch.randn(2, 2, dtype=dt), torch.randn(16, 16, dtype=dt)):  # su
 
 ## 10.2 Corrección de errores: el teorema de Knill–Laflamme
 
-Un **código** es un subespacio $\mathcal C\subseteq\mathbb C^D$ con proyección $P$. **Corrige** $\Phi$
+Un **código** es un subespacio no nulo $\mathcal C\subseteq\mathbb C^D$ con proyección $P$. **Corrige** $\Phi$
 si existe un canal $\mathcal R$ (la **recuperación**) con $\mathcal R(\Phi(\rho))=\rho$ para todo estado
 $\rho$ con soporte en $\mathcal C$.
 
@@ -230,8 +241,9 @@ una rotación.
 "a lo sumo una inversión de bit", $E_0=\sqrt{p_0}\,1$, $E_j=\sqrt{p_j}\,X_j$. Para $i\neq j$, $X_iX_j$
 (con $X_0=1$) invierte uno o dos bits y envía $\mathcal C$ a $\mathcal C^\perp$; así,
 $\Lambda=\operatorname{diag}(p_0,\dots,p_3)$, $V_k=X_kP$, $Q=1$ y $\mathcal R(\sigma)=\sum_{k=0}^3PX_k\sigma X_kP$.
-Si cada cúbit se invierte de forma independiente con probabilidad $p$, la condición falla, y
-$\mathcal R$ envía $|0_L\rangle=|000\rangle$ a $|1_L\rangle$ siempre que se producen $\ge2$ inversiones y
+Si cada cúbit se invierte de forma independiente con probabilidad $p$, la condición falla (los operadores
+de Kraus incluyen múltiplos de $X_1X_2$ y de $X_3$, y $PX_1X_2X_3P=|000\rangle\langle111|+|111\rangle\langle000|$ no es un
+múltiplo de $P$), y $\mathcal R$ envía $|0_L\rangle=|000\rangle$ a $|1_L\rangle$ siempre que se producen $\ge2$ inversiones y
 lo deja en su sitio en otro caso: la fidelidad de $|0_L\rangle$ tras la recuperación es la
 probabilidad de a lo sumo una inversión, $(1-p)^3+3p(1-p)^2=1-3p^2+2p^3=0.972$ para $p=0.1$. En la
 biblioteca, $M_8$ es un álgebra con un solo bloque, y `R @ Phi` es la composición $\mathcal R\circ\Phi$:
@@ -281,9 +293,14 @@ $$
 P\,(\mathcal R\circ\Phi)^*(A)\,P=A\qquad\text{for all }A\in\mathfrak A,
 $$
 es decir, $\operatorname{Tr}(\mathcal R(\Phi(\rho))A)=\operatorname{Tr}(\rho A)$ para todos los estados $\rho$
-con soporte en $\mathcal C$ y todo $A\in\mathfrak A$. Para $\mathfrak A=B(\mathcal C)$ esto es la
-corrección de la sección 10.2: si $\sigma=\mathcal R(\Phi(\rho))$ cumple $P\sigma P=\rho$, entonces
-$\operatorname{Tr}(1-P)\sigma(1-P)=0$, luego $\sigma^{1/2}(1-P)=0$ y $\sigma=\rho$. El extremo opuesto es un
+con soporte en $\mathcal C$ y todo $A\in\mathfrak A$ (el lado izquierdo es
+$\operatorname{Tr}(\rho\,P(\mathcal R\circ\Phi)^*(A)P)$, y un operador $Y\in B(\mathcal C)$ con $\operatorname{Tr}(\rho Y)=0$ para todos
+estos $\rho$ es nulo: $\langle x,Yx\rangle=\langle Px,YPx\rangle=0$ para todo $x$, y polarización como en la demostración del
+corolario 1.4). Para $\mathfrak A=B(\mathcal C)$ esto es la corrección de la sección 10.2: si
+$\sigma=\mathcal R(\Phi(\rho))$ cumple $P\sigma P=\rho$ (tómense todos los $A\in B(\mathcal C)$), entonces, como
+$\mathcal R\circ\Phi$ preserva la traza,
+$\operatorname{Tr}(1-P)\sigma(1-P)=\operatorname{Tr}\sigma-\operatorname{Tr}P\sigma P=1-1=0$, luego $\sigma^{1/2}(1-P)=0$ y
+$\sigma=\rho$; recíprocamente, $\mathcal R(\Phi(\rho))=\rho$ da la igualdad de trazas. El extremo opuesto es un
 álgebra conmutativa: solo se protege una etiqueta clásica.
 
 **Proposición 10.6 (corrección de la etiqueta de un sector).** Sean $P=\sum_{c=1}^CP_c$ con
@@ -312,7 +329,7 @@ sumando sobre $d$, $N_cE_iP_c=E_iP_c$. Por tanto $P_cE_i^*E_jP_d=P_cE_i^*N_cE_jP
 ("medir y luego preparar"), un canal con los operadores de Kraus $\sqrt\mu\,|u\rangle\langle f|N_c^{1/2}$
 para los pares propios $(\mu,u)$ de $\omega_c$ y los vectores $f$ de una base ortonormal. Como
 $\operatorname{Tr}(\mathcal R(\sigma)P_d)=\operatorname{Tr}(N_d\sigma)$, $\mathcal R^*(P_d)=N_d$. Usando
-$N_dE_iP_c=\delta_{cd}E_iP_c$ (del paso anterior) y después 2,
+$N_dE_iP_c=\delta_{cd}E_iP_c$ (del paso anterior) y después $\sum_iE_i^*E_i=1$,
 $$
 P(\mathcal R\circ\Phi)^*(P_d)P=P\,\Phi^*(N_d)\,P=\sum_i\sum_{c,c'}P_{c'}E_i^*N_dE_iP_c=\sum_i\sum_{c'}P_{c'}E_i^*E_iP_d=P_d\Big(\sum_iE_i^*E_i\Big)P_d=P_d .
 $$
@@ -321,17 +338,25 @@ positivos y suman $\mathcal R^*(1)=1$. Para $\rho$ con soporte en $P_c\mathbb C^
 $\operatorname{Tr}(N_d\Phi(\rho))=\operatorname{Tr}(\rho\,P(\mathcal R\circ\Phi)^*(P_d)P)=\operatorname{Tr}(\rho P_d)=\delta_{cd}$,
 y por tanto también $\operatorname{Tr}(N_C\Phi(\rho))=\delta_{cC}$. $\square$
 
-**Teorema 10.7 (Bény–Kempf–Kribs 2007; enunciado sin demostración).** Un álgebra de von Neumann
+**Teorema 10.7 (Bény–Kempf–Kribs).** Un álgebra de von Neumann
 $\mathfrak A$ sobre $\mathcal C$ es corregible para $\Phi$ si y solo si $PE_i^*E_jP\in\mathfrak A'$ para
 todos $i,j$, donde $\mathfrak A'$ es el conmutante de $\mathfrak A$ en $B(\mathcal C)$.
 
+*Demostración.* Es el teorema D.9, demostrado en el [apéndice D](D_gksl.md), cuya demostración construye además
+un canal de recuperación: mide el sector de $\mathfrak A\cong\bigoplus_cM_{k_c}$ y un síndrome, y deshace el error en
+cada factor $\mathbb C^{k_c}$ como en la demostración del teorema 10.5. $\square$
+
 Para $\mathfrak A=B(\mathcal C)$, $\mathfrak A'=\mathbb CP$ y esto es el teorema 10.5; la proposición
-10.6 es el caso de un $\mathfrak A$ conmutativo. Para
+10.6 es el caso del $\mathfrak A=\operatorname{span}\{P_c\}$ conmutativo (corolario D.10(a),(b)). Para
 $\mathfrak A=M_k\otimes1_m$ sobre $\mathcal C=\mathbb C^k\otimes\mathbb C^m$ se obtienen los códigos de
-operadores (de subsistemas) de Kribs–Laflamme–Poulin (*Phys. Rev. Lett.* 94, 180501, 2005), que
-contienen los subsistemas sin ruido de la sección 10.1 con $\mathcal R=\mathrm{id}$. Para la
-demostración, véanse C. Bény, A. Kempf, D. W. Kribs, *Phys. Rev. Lett.* 98, 100502 (2007) y
-*Phys. Rev. A* 76, 042303 (2007).
+operadores (de subsistemas); los subsistemas sin ruido de la sección 10.1 son códigos de este tipo, corregidos
+por $\mathcal R=\mathrm{id}$ (corolario D.10(c), con los dos factores tensoriales intercambiados). Por el
+teorema 2.6, toda $\mathfrak A$ es $*$-isomorfa a algún $\bigoplus_cM_{k_c}$; cuando $C\ge2$ y algún $k_c\ge2$, una
+$\mathfrak A$ corregible protege la etiqueta del sector $c$ junto con la información cuántica de cada $M_{k_c}$: un
+código **híbrido** (observación tras el corolario D.10, con un ejemplo en el que la condición de Knill–Laflamme
+falla pero se aplica el teorema 10.7). Históricamente: C. Bény, A. Kempf, D. W. Kribs, *Phys. Rev. Lett.* 98,
+100502 (2007) y *Phys. Rev. A* 76, 042303 (2007); códigos de operadores: Kribs–Laflamme–Poulin,
+*Phys. Rev. Lett.* 94, 180501 (2005).
 
 **Ejemplo.** El código de repetición bajo inversiones de fase independientes (probabilidad $q$ por
 cúbit) seguidas de a lo sumo una inversión de bit. Los operadores de Kraus son múltiplos de
@@ -341,7 +366,13 @@ por voto mayoritario, $N_0=\sum_{|b|\le1}|b\rangle\langle b|$, $N_1=1-N_0$. El c
 $PZ_1P$ no es un múltiplo de $P$, y tras la recuperación $\mathcal R$ de la sección 10.2 el estado
 $|{+_L}\rangle=(|000\rangle+|111\rangle)/\sqrt2$ sufre la inversión de fase lógica $Z_1Z_2Z_3$ exactamente
 cuando se ha producido un número impar de inversiones de fase; su fidelidad es
-$(1+(1-2q)^3)/2=0.8645$ para $q=0.05$.
+$(1+(1-2q)^3)/2=0.8645$ para $q=0.05$. (El canal es $\Phi_{\mathrm{one}}\circ\mathcal Z$, con $\Phi_{\mathrm{one}}$ el
+canal "a lo sumo una inversión de bit" del ejemplo de inversión de bit y $\mathcal Z$ las inversiones de fase
+independientes; sobre $\mathcal C$ cada $Z^s$ actúa como $Z_1^{|s|}$, así que
+$\mathcal Z(\rho)=\sum_sq^{|s|}(1-q)^{3-|s|}Z_1^{|s|}\rho Z_1^{|s|}$ tiene de nuevo soporte en $\mathcal C$, y
+$\mathcal R\circ\Phi_{\mathrm{one}}$ es la identidad sobre tales estados por el teorema 10.5.
+$Z_1$ envía $|{+_L}\rangle$ a $|{-_L}\rangle\perp|{+_L}\rangle$, y $|s|$ es par con probabilidad
+$\frac12\big((1-q+q)^3+(1-q-q)^3\big)$.)
 
 ```python
 q = 0.05
@@ -361,10 +392,11 @@ print(f"fidelity of |+_L> {F_plus:.4f}, exact {(1 + (1 - 2 * q)**3) / 2:.4f}")
 assert abs(F_plus - (1 + (1 - 2 * q) ** 3) / 2) < 1e-12
 ```
 
-> **Significado físico.** Proteger un álgebra conmutativa significa proteger información clásica
-> (un bit, la etiqueta de un sector de superselección), lo que es mucho más barato que proteger un
-> cúbit: el ruido que conmuta con las proyecciones de los sectores es inofensivo. Los "códigos
-> híbridos" corresponden a $\bigoplus_cM_{k_c}$.
+> **Significado físico** (interpretación física, no un teorema de este curso). Proteger un álgebra
+> conmutativa significa proteger información clásica (un bit, la etiqueta de un sector de superselección),
+> lo que es mucho más barato que proteger un cúbit: el ruido que conmuta con las proyecciones de los
+> sectores es inofensivo (entonces $P_cE_i^*E_jP_d=E_i^*E_jP_cP_d=0$ para $c\neq d$, condición 2 de la
+> proposición 10.6).
 
 ## 10.4 Mezcladores con restricciones
 
@@ -389,7 +421,8 @@ $J\sum_{(i,j)}\big(\tfrac12(S^+_iS^-_j+S^-_iS^+_j)+\Delta S^z_iS^z_j\big)$ con $
 $S^+_iS^-_j+S^-_iS^+_j=\tfrac12(X_iX_j+Y_iY_j)$; lo comprobamos frente a la matriz densa de
 $64\times64$. Para $H_C$ tomamos la bisección del grafo formado por los triángulos $\{0,1,2\}$,
 $\{3,4,5\}$ unidos por las aristas $(2,3)$, $(5,0)$: $H_C=\sum_{(i,j)\in E}\tfrac12(1-Z_iZ_j)$,
-$Z_iZ_j=4S^z_iS^z_j$, cuenta las aristas cortadas. La mejor bisección corta $2$ aristas; partimos de
+$Z_iZ_j=4S^z_iS^z_j$, cuenta las aristas cortadas. La mejor bisección corta $2$ aristas (los dos triángulos; cualquier otro conjunto de tres vértices
+parte ambos triángulos, y un triángulo partido tiene dos aristas cortadas); partimos de
 $|101010\rangle$, que corta $6$. Por último, todo el ansatz se recalcula con matrices densas de
 $64\times64$, independientemente de la biblioteca.
 
@@ -444,8 +477,9 @@ $\le w$, y su bloque de peso $w$ proviene solo de $s=0$. Como $K_0|b\rangle=(1-g
 $P_w\mathcal D(\sigma)P_w=(1-g)^wP_w\sigma P_w$. Las $U_l$ conmutan con las $P_v$; se concluye por
 inducción sobre $l$. $\square$
 
-Un `InterSectorChannel` conserva solo los bloques diagonales de su salida; aquí no hay otros, así
-que no se pierde nada. Con $g=0.05$ y $p=2$, la tasa de aceptación es $0.95^6=0.7351$:
+Un `InterSectorChannel` conserva solo los bloques diagonales de su salida; aquí no hay otros (la
+demostración de la proposición 10.9 se aplica literalmente al amortiguamiento de un solo cúbit, con
+$s\in\{0,1\}$), así que no se pierde nada. Con $g=0.05$ y $p=2$, la tasa de aceptación es $0.95^6=0.7351$:
 
 ```python
 g = 0.05
@@ -466,8 +500,9 @@ assert abs(accept.item() - (1 - g) ** (w * len(layers))) < 1e-12              # 
 assert abs(post.fidelity(ideal).item() - 1) < 1e-10 and abs(cut(post) - cut(ideal)) < 1e-10
 ```
 
-La parte no factible reduce el corte esperado de $4.3789$ a $4.3123$, una mejora espuria que
-engañaría a un optimizador de los ángulos; tras la postselección, el valor es exacto.
+Observación numérica (los valores impresos): la parte no factible reduce el corte esperado de $4.3789$
+a $4.3123$, una mejora espuria que engañaría a un optimizador de los ángulos; tras la postselección, el
+valor es exacto (proposición 10.9).
 
 **Tiempo continuo.** Lo mismo vale para la ecuación de Lindblad (teorema 8.6, [capítulo 8](08_dynamics.md))
 $$
@@ -497,8 +532,9 @@ sin saltos es el escalar $e^{-\gamma_1wt}$ y se admite el desfase dentro del sec
 
 Para $\gamma_2=0$, $\sigma(t)=e^{-iHt}\rho(0)e^{iHt}$: la postselección es perfecta. El artículo
 complementario (`examples/paper/ex9_qaoa_xy_mixer.py`) hace evolucionar $|111000\rangle$ bajo $H_M$
-durante $T=2$; reproducimos su fila $\gamma_1=\gamma_2=0.1$: $P(w=3)=e^{-0.6}=0.5488$, fidelidad
-$0.4805$, postseleccionada $0.8755$ (como para $\gamma_1=0$).
+durante $T=2$; reproducimos su fila $\gamma_1=\gamma_2=0.1$: $P(w=3)=e^{-0.6}=0.5488$ (proposición
+10.10) y, como observación numérica del código siguiente, fidelidad $0.4805$ y fidelidad postseleccionada
+$0.8755$; por la proposición 10.10, esta última es la misma que para $\gamma_1=0$.
 
 ```python
 T = 2.0
@@ -516,7 +552,7 @@ assert abs(post_T[0.1, 0.0].fidelity(ideal_T).item() - 1) < 1e-6               #
 assert post_T[0.1, 0.1].trace_distance(post_T[0.0, 0.1]).item() < 1e-6       # independent of gamma_1
 ```
 
-> **Significado físico.** La relajación de energía ($T_1$), uno de los errores principales de los
+> **Significado físico** (interpretación física, no un teorema de este curso). La relajación de energía ($T_1$), uno de los errores principales de los
 > cúbits superconductores, es un salto a un sector inferior. Medir el peso de Hamming —una proyección
 > central, inofensiva dentro de un sector (sección 3.3)— lo detecta, y la postselección lo elimina
 > al precio de la tasa de aceptación. El desfase conmuta con las proyecciones de los sectores y no
@@ -528,7 +564,7 @@ Qiskit (`qiskit.quantum_info`, modelos de ruido de Aer, `QAOAAnsatz` con un mezc
 personalizado), Cirq, PennyLane (`qml.qaoa.xy_mixer`, `default.mixed`) y QuTiP/`qutip-qip` simulan
 todo esto sobre $n$ cúbits completos y son las herramientas adecuadas para circuitos; stim muestrea
 circuitos de Clifford con ruido de tipo Pauli sobre miles de cúbits (el amortiguamiento de amplitud
-no es un canal de Pauli). No conocemos ninguna función de estos paquetes que calcule el álgebra de
+no es un canal de Pauli: los canales de Pauli son unitales, el amortiguamiento de amplitud no). No conocemos ninguna función de estos paquetes que calcule el álgebra de
 interacción de un canal, su conmutante o toda su álgebra de puntos fijos (`steadystate` de QuTiP
 devuelve un único estado estacionario de un lindbladiano); para descomposiciones numéricas por
 bloques de $*$-álgebras de matrices, véase Murota et al., *Japan J. Indust. Appl. Math.* 27 (2010).

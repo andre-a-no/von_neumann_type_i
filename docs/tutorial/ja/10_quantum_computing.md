@@ -5,7 +5,7 @@
 量子計算機上のノイズはチャネルであり、チャネルは一つの環を生成する：そのクラウス作用素が生成する $*$-環である。
 その構造（第2章）は、どの情報がノイズを受けても無傷で残るかを教えてくれる。また、別の環が関わる、クラウス作用素の積に
 ついての条件は、回復操作によってどの情報を復元できるかを教えてくれる。最後の部分では電荷を保存するアルゴリズムを扱う：
-その状態は電荷セクターの環の中にあり、支配的なノイズは状態をセクター間で移動させる。
+その状態は電荷セクターの環の中にあり、振幅減衰は状態をセクター間で移動させる。
 
 **本章で学ぶこと**：単位的チャネルとその双対が同じ不動点（ノイズの可換子環）をもつ理由、完全な証明付きの
 クニル–ラフラム（Knill–Laflamme）の定理、セクターのラベルだけを保護する方法、そして量子交互作用素アンザッツの
@@ -61,8 +61,8 @@ $\Phi^*$ に適用すると $\operatorname{Fix}(\Phi^*)=\mathcal A'$ を得る�
 
 任意のチャネルについて $\mathcal A'\subseteq\operatorname{Fix}(\Phi^*)$ である（命題 10.1(a)）が、
 単位性がなければ定理は成り立たない：振幅減衰については $\operatorname{Fix}(\Phi)=\mathbb C|0\rangle\langle0|$ である一方、
-$\mathcal A'=\operatorname{Fix}(\Phi^*)=\mathbb C1$ である（6.4節と演習問題 1）。（Kribs 2003、
-Arias–Gheondea–Gudder 2002。無限次元ではさらに仮定が必要である。）
+$\mathcal A'=\operatorname{Fix}(\Phi^*)=\mathbb C1$ である（6.4節と演習問題 1）。（歴史的には：Kribs 2003、
+Arias–Gheondea–Gudder 2002。）
 
 **系 10.3（集団的位相緩和）.** $U=e^{-i\theta Z_{\mathrm{tot}}}$、
 $Z_{\mathrm{tot}}=\sum_jZ_j$ とし、$d=1,\dots,n$ に対し $e^{2i\theta d}\neq1$ であるとし、
@@ -140,14 +140,16 @@ rho = states.random_density_matrix(M, batch_size=3)
 assert (Phi_M(rho).matrix - rho.matrix).abs().max() < 1e-12      # no state of M is disturbed
 ```
 
-> **物理的意味.** すべての量子ビットで同じである揺らぐ場は、$|b\rangle$ の位相を
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. すべての量子ビットで同じである揺らぐ場は、$|b\rangle$ の位相を
 > $n-2|b|$ に比例してずらす。同じハミング重みの状態は共通の位相を獲得するので、$|01\rangle,|10\rangle$
 > はこのノイズの影響を受けない量子ビットを符号化する（イオントラップ：Kielpinski et al., *Science* 291, 2001）。一方、
 > 異なる重みの間のコヒーレンスは減衰する：ノイズが超選択則を課すのである（3.3節）。
 
-**集団的デコヒーレンス.** 場の向きも揺らぐ場合、クラウス作用素は
-回転 $e^{-i\theta\,\mathbf n\cdot\mathbf S}$、$S_\alpha=\tfrac12\sum_j\sigma_{\alpha,j}$、$\sigma\in\{X,Y,Z\}$ であり、
-これらは $1,S_x,S_y,S_z$ が生成する $*$-環 $\mathcal B$ に属する（定理 1.5(a)）。
+**集団的デコヒーレンス.** チャネルのクラウス作用素が回転 $e^{-i\theta\,\mathbf n\cdot\mathbf S}$
+（$\theta\in\mathbb R$、$\mathbf n\in\mathbb R^3$ は単位ベクトル）の定数倍であるとき、そのチャネルを **集団的** と呼ぶ。ここで
+$S_\alpha=\tfrac12\sum_j\sigma_{\alpha,j}$、$\sigma\in\{X,Y,Z\}$ である。これは向きも揺らぐ場のモデルである（モデルであって、定理ではない）。
+$\mathbf n\cdot\mathbf S$ は自己共役であるから、$e^{-i\theta\,\mathbf n\cdot\mathbf S}$ は $\mathbf n\cdot\mathbf S$ の多項式であり
+（定理 1.5(a) の証明）、したがってこれらのクラウス作用素は $1,S_x,S_y,S_z$ が生成する $*$-環 $\mathcal B$ に属する。
 
 **命題 10.4（一重項部分空間）.** $K=\ker S_x\cap\ker S_y\cap\ker S_z$ とする。クラウス作用素が
 $\mathcal B$ に属する任意のチャネルは、$K$ に台をもつすべての状態を固定する。
@@ -155,8 +157,15 @@ $\mathcal B$ に属する任意のチャネルは、$K$ に台をもつすべて
 *証明.* $\mathcal B$ は $S_x,S_y,S_z$ の語（および $1$）で張られる。長さ $\ge1$ の語は $K$ を
 零に写すので、$\mathcal B$ の各元は $K$ 上でスカラーとして作用する。命題 10.1(b) を適用すればよい。$\square$
 
-$n=4$ に対し、コードは $\dim K=2$、$\dim\mathcal B'=14$、$\dim\mathcal B=35$ を与える。これは重複度 $1,3,2$
-（全スピン $2,1,0$）をもつ $\mathcal B\cong M_5\oplus M_3\oplus M_1$ の場合に一致し、このことは[第4章](04_symmetries.md)で導かれる：四つの
+$n=4$ に対し、命題 4.13（[第4章](04_symmetries.md)、$L=4$ の場合）により
+$\mathcal B\cong M_5\oplus M_3\oplus M_1$ であり、重複度は $1,3,2$（全スピン $2,1,0$）である。よって $\dim\mathcal B=35$ であり、
+$\mathcal B'\cong M_1\oplus M_3\oplus M_2$ の次元は $14$ である。さらに $\dim K=m_0=2$ である：$S_a$ は直和成分ごとに作用するので、
+$K$ は各直和成分との共通部分の和である。スピン $S$ の直和成分上では、それらは $S^{(S)}_a\otimes1$ として作用し（系 4.12）、
+$\sum_bu_b\otimes f_b$（$f_b$ は $\mathbb C^{m_S}$ の基底）がそれらすべてによって零に写されるための必要十分条件は、各 $u_b$ が
+すべての $S^{(S)}_a$ によって零に写されることである。そのような $u$ は既約なスピン $S$ の不変部分空間をなし（定理 4.11）、
+$S>0$ ならば全体ではない（$S^{(S)}_z\neq0$ だから）ので $0$ であり、$S=0$ ならば $\mathbb C^1$ である。コードも同じ値を見いだす。
+命題 10.1(a) とその証明は、クラウス作用素を含む $V(\bigoplus_cM_{k_c}\otimes1_{m_c})V^*$ の形の任意の $*$-環に対して
+そのまま成り立つ。ここではそれは $\mathcal B$ である：クラウス作用素が $\mathcal B$ に属するすべてのチャネルに対し、四つの
 量子ビットは、デコヒーレンスフリーな量子ビット（$k=1$、$m=2$）とノイズレスなクォートリット（$k=3$、$m=3$）を担う。
 
 ```python
@@ -177,7 +186,7 @@ for G in (K @ torch.randn(2, 2, dtype=dt), torch.randn(16, 16, dtype=dt)):  # su
 
 ## 10.2 誤り訂正：クニル–ラフラムの定理
 
-**符号** とは、射影 $P$ をもつ部分空間 $\mathcal C\subseteq\mathbb C^D$ のことである。$\mathcal C$ に台をもつ
+**符号** とは、射影 $P$ をもつ零でない部分空間 $\mathcal C\subseteq\mathbb C^D$ のことである。$\mathcal C$ に台をもつ
 すべての状態 $\rho$ に対し $\mathcal R(\Phi(\rho))=\rho$ となるチャネル $\mathcal R$（**回復**）が存在するとき、
 $\mathcal C$ は $\Phi$ を **訂正する** という。
 
@@ -216,7 +225,8 @@ $\sum_i\lambda_{ii}P=P\sum_iE_i^*E_iP=P$ であるから $\sum_kd_k=\operatornam
 反転」、$E_0=\sqrt{p_0}\,1$、$E_j=\sqrt{p_j}\,X_j$ とする。$i\neq j$ に対し、$X_iX_j$（$X_0=1$ とする）は一つまたは二つの
 ビットを反転し、$\mathcal C$ を $\mathcal C^\perp$ に写す。したがって $\Lambda=\operatorname{diag}(p_0,\dots,p_3)$、$V_k=X_kP$、
 $Q=1$、$\mathcal R(\sigma)=\sum_{k=0}^3PX_k\sigma X_kP$ である。各量子ビットが確率 $p$ で独立に
-反転する場合には条件は成り立たず、$\mathcal R$ は $\ge2$ 個の反転が起きたときには $|0_L\rangle=|000\rangle$ を $|1_L\rangle$ に写し、
+反転する場合には条件は成り立たない（クラウス作用素には $X_1X_2$ と $X_3$ の定数倍が含まれ、
+$PX_1X_2X_3P=|000\rangle\langle111|+|111\rangle\langle000|$ は $P$ の定数倍ではない）。そして $\mathcal R$ は $\ge2$ 個の反転が起きたときには $|0_L\rangle=|000\rangle$ を $|1_L\rangle$ に写し、
 そうでなければそのままにする：回復後の $|0_L\rangle$ の忠実度は
 高々一つの反転が起きる確率であり、$p=0.1$ に対して $(1-p)^3+3p(1-p)^2=1-3p^2+2p^3=0.972$ である。ライブラリでは $M_8$ は
 ブロックが一つの環であり、`R @ Phi` は合成 $\mathcal R\circ\Phi$ である：
@@ -266,9 +276,13 @@ $$
 P\,(\mathcal R\circ\Phi)^*(A)\,P=A\qquad\text{for all }A\in\mathfrak A,
 $$
 すなわち、$\mathcal C$ に台をもつすべての状態 $\rho$
-とすべての $A\in\mathfrak A$ に対し $\operatorname{Tr}(\mathcal R(\Phi(\rho))A)=\operatorname{Tr}(\rho A)$ である。$\mathfrak A=B(\mathcal C)$ に対しては、これは10.2節の意味での訂正である：
-$\sigma=\mathcal R(\Phi(\rho))$ が $P\sigma P=\rho$ を満たすならば $\operatorname{Tr}(1-P)\sigma(1-P)=0$ であるから $\sigma^{1/2}(1-P)=0$ であり、
-$\sigma=\rho$ となる。反対の極端は可換環である：古典的なラベルだけが保護される。
+とすべての $A\in\mathfrak A$ に対し $\operatorname{Tr}(\mathcal R(\Phi(\rho))A)=\operatorname{Tr}(\rho A)$ である（左辺は
+$\operatorname{Tr}(\rho\,P(\mathcal R\circ\Phi)^*(A)P)$ であり、これらすべての $\rho$ に対し $\operatorname{Tr}(\rho Y)=0$ を満たす作用素
+$Y\in B(\mathcal C)$ は零である：すべての $x$ に対し $\langle x,Yx\rangle=\langle Px,YPx\rangle=0$ であり、系 1.4 の証明と同様に
+偏極を用いればよい）。$\mathfrak A=B(\mathcal C)$ に対しては、これは10.2節の意味での訂正である：
+$\sigma=\mathcal R(\Phi(\rho))$ が $P\sigma P=\rho$ を満たすならば（すべての $A\in B(\mathcal C)$ をとる）、$\mathcal R\circ\Phi$ はトレース保存であるから
+$\operatorname{Tr}(1-P)\sigma(1-P)=\operatorname{Tr}\sigma-\operatorname{Tr}P\sigma P=1-1=0$ であり、したがって $\sigma^{1/2}(1-P)=0$ であり、
+$\sigma=\rho$ となる。逆に、$\mathcal R(\Phi(\rho))=\rho$ ならばトレースの等式が成り立つ。反対の極端は可換環である：古典的なラベルだけが保護される。
 
 **命題 10.6（セクターのラベルの訂正）.** 互いに直交する
 射影 $P_c\neq0$ により $P=\sum_{c=1}^CP_c$ とし、$\mathfrak A=\operatorname{span}\{P_1,\dots,P_C\}$ とする。次は同値である：
@@ -293,7 +307,7 @@ $d$ について和をとると $N_cE_iP_c=E_iP_c$ である。ゆえに $c\neq 
 （「測定してから準備する」）とおく。これは、$\omega_c$ の固有対 $(\mu,u)$ と正規直交基底のベクトル $f$ にわたる
 クラウス作用素 $\sqrt\mu\,|u\rangle\langle f|N_c^{1/2}$ をもつチャネルである。
 $\operatorname{Tr}(\mathcal R(\sigma)P_d)=\operatorname{Tr}(N_d\sigma)$ であるから $\mathcal R^*(P_d)=N_d$ である。$N_dE_iP_c=\delta_{cd}E_iP_c$
-（前段より）を用い、次に 2 を用いると
+（前段より）を用い、次に $\sum_iE_i^*E_i=1$ を用いると
 $$
 P(\mathcal R\circ\Phi)^*(P_d)P=P\,\Phi^*(N_d)\,P=\sum_i\sum_{c,c'}P_{c'}E_i^*N_dE_iP_c=\sum_i\sum_{c'}P_{c'}E_i^*E_iP_d=P_d\Big(\sum_iE_i^*E_i\Big)P_d=P_d .
 $$
@@ -302,16 +316,24 @@ $$
 $\operatorname{Tr}(N_d\Phi(\rho))=\operatorname{Tr}(\rho\,P(\mathcal R\circ\Phi)^*(P_d)P)=\operatorname{Tr}(\rho P_d)=\delta_{cd}$ であり、したがって
 $\operatorname{Tr}(N_C\Phi(\rho))=\delta_{cC}$ でもある。$\square$
 
-**定理 10.7（Bény–Kempf–Kribs 2007；証明なしで述べる）.** $\mathcal C$ 上のフォン・ノイマン環 $\mathfrak A$
+**定理 10.7（Bény–Kempf–Kribs）.** $\mathcal C$ 上のフォン・ノイマン環 $\mathfrak A$
 が $\Phi$ に対して訂正可能であるための必要十分条件は、すべての $i,j$ に対し $PE_i^*E_jP\in\mathfrak A'$ となることである。ここで
 $\mathfrak A'$ は $\mathfrak A$ の $B(\mathcal C)$ における可換子環である。
 
+*証明.* これは[付録 D](D_gksl.md)で証明される定理 D.9 である。その証明は回復チャネルも構成する：それは
+$\mathfrak A\cong\bigoplus_cM_{k_c}$ のセクターとシンドロームを測定し、定理 10.5 の証明と同様に各因子 $\mathbb C^{k_c}$ 上の
+誤りを元に戻す。$\square$
+
 $\mathfrak A=B(\mathcal C)$ に対しては $\mathfrak A'=\mathbb CP$ であり、これは定理 10.5 である。命題 10.6 は
-可換な $\mathfrak A$ の場合である。
-$\mathcal C=\mathbb C^k\otimes\mathbb C^m$ 上の $\mathfrak A=M_k\otimes1_m$ に対しては、Kribs–Laflamme–Poulin の作用素（部分系）
-符号（*Phys. Rev. Lett.* 94, 180501, 2005）が得られ、これは10.1節のノイズレス部分系を
-$\mathcal R=\mathrm{id}$ として含む。証明については C. Bény, A. Kempf, D. W.
-Kribs, *Phys. Rev. Lett.* 98, 100502 (2007) および *Phys. Rev. A* 76, 042303 (2007) を参照。
+可換な $\mathfrak A=\operatorname{span}\{P_c\}$ の場合である（系 D.10(a),(b)）。
+$\mathcal C=\mathbb C^k\otimes\mathbb C^m$ 上の $\mathfrak A=M_k\otimes1_m$ に対しては作用素（部分系）
+符号が得られる。10.1節のノイズレス部分系はそのような符号であり、$\mathcal R=\mathrm{id}$ によって訂正される
+（系 D.10(c)、ただし二つのテンソル因子を入れ替える）。定理 2.6 により、すべての $\mathfrak A$ はある
+$\bigoplus_cM_{k_c}$ と $*$-同型である。$C\ge2$ で、ある $k_c\ge2$ であるとき、訂正可能な $\mathfrak A$ はセクターのラベル $c$ を
+各 $M_{k_c}$ の量子情報とともに保護する——**ハイブリッド** 符号である（系 D.10 の後の注意。そこにはクニル–ラフラム条件は
+成り立たないが定理 10.7 が適用できる例がある）。
+歴史的には：C. Bény, A. Kempf, D. W. Kribs, *Phys. Rev. Lett.* 98, 100502 (2007) および *Phys. Rev. A* 76,
+042303 (2007)。作用素符号：Kribs–Laflamme–Poulin, *Phys. Rev. Lett.* 94, 180501 (2005)。
 
 **例.** 独立な位相反転（量子ビットごとの確率 $q$）を受け、その後に
 高々一つのビット反転を受ける繰り返し符号を考える。クラウス作用素は $X_kZ^s$（$s\in\{0,1\}^3$）の定数倍であり、各
@@ -320,7 +342,12 @@ $P_1=|111\rangle\langle111|$ について条件 2 が成り立つ：古典ビッ
 $N_0=\sum_{|b|\le1}|b\rangle\langle b|$、$N_1=1-N_0$ で読み出される。量子ビットは生き残らない：$PZ_1P$ は $P$ の定数倍ではなく、
 10.2節の回復 $\mathcal R$ の後、状態 $|{+_L}\rangle=(|000\rangle+|111\rangle)/\sqrt2$ は、奇数個の位相反転が起きたときに
 ちょうど論理的な位相反転 $Z_1Z_2Z_3$ を被る。その忠実度は $q=0.05$ に対して
-$(1+(1-2q)^3)/2=0.8645$ である。
+$(1+(1-2q)^3)/2=0.8645$ である。（チャネルは $\Phi_{\mathrm{one}}\circ\mathcal Z$ である。ここで $\Phi_{\mathrm{one}}$ は
+ビット反転の例のチャネル「高々一つのビット反転」、$\mathcal Z$ は独立な位相反転である。
+$\mathcal C$ 上ではすべての $Z^s$ が $Z_1^{|s|}$ として作用するので、$\mathcal Z(\rho)=\sum_sq^{|s|}(1-q)^{3-|s|}Z_1^{|s|}\rho Z_1^{|s|}$ は
+再び $\mathcal C$ に台をもち、定理 10.5 により $\mathcal R\circ\Phi_{\mathrm{one}}$ はそのような状態の上で恒等写像である。
+$Z_1$ は $|{+_L}\rangle$ を $|{-_L}\rangle\perp|{+_L}\rangle$ に写し、$|s|$ が偶数である確率は
+$\frac12\big((1-q+q)^3+(1-q-q)^3\big)$ である。）
 
 ```python
 q = 0.05
@@ -340,9 +367,9 @@ print(f"fidelity of |+_L> {F_plus:.4f}, exact {(1 + (1 - 2 * q)**3) / 2:.4f}")
 assert abs(F_plus - (1 + (1 - 2 * q) ** 3) / 2) < 1e-12
 ```
 
-> **物理的意味.** 可換環を保護することは、古典的な情報（一つの
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. 可換環を保護することは、古典的な情報（一つの
 > ビット、超選択セクターのラベル）を保護することを意味し、これは量子ビットを保護するよりずっと安価である：セクターの射影と
-> 可換なノイズは無害である。「ハイブリッド符号」は $\bigoplus_cM_{k_c}$ に対応する。
+> 可換なノイズは無害である（このとき $c\neq d$ に対し $P_cE_i^*E_jP_d=E_i^*E_jP_cP_d=0$ であり、これは命題 10.6 の条件 2 である）。
 
 ## 10.4 制約付きミキサー
 
@@ -365,7 +392,8 @@ $Y|1\rangle=-i|0\rangle$ を用いる）：$X_iX_j+Y_iY_j$ はビット $i,j$ �
 $\Delta=0$ としたものである。実際 $S^+_iS^-_j+S^-_iS^+_j=\tfrac12(X_iX_j+Y_iY_j)$ である。これを稠密な
 $64\times64$ 行列と照合する。$H_C$ としては、辺 $(2,3)$、$(5,0)$ で結ばれた三角形 $\{0,1,2\}$、$\{3,4,5\}$
 上のグラフ二分割をとる：$H_C=\sum_{(i,j)\in E}\tfrac12(1-Z_iZ_j)$（$Z_iZ_j=4S^z_iS^z_j$）はカットされる
-辺の数を数える。最良の二分割は $2$ 本の辺をカットする。我々は $6$ 本をカットする $|101010\rangle$ から出発する。最後に、
+辺の数を数える。最良の二分割は $2$ 本の辺をカットする（二つの三角形に分けるもの。三つの頂点からなる他のどの集合も両方の三角形を
+分割し、分割された三角形は二本のカットされる辺をもつ）。我々は $6$ 本をカットする $|101010\rangle$ から出発する。最後に、
 アンザッツ全体を稠密な $64\times64$ 行列で、ライブラリとは独立に計算し直す。
 
 ```python
@@ -415,8 +443,8 @@ $v>w-|s|$ のとき消える：$\mathcal D(\sigma)$ は重み $\le w$ のブロ�
 $s=0$ からのみ生じる。$K_0|b\rangle=(1-g)^{|b|/2}|b\rangle$ であるから $P_w\mathcal D(\sigma)P_w=(1-g)^wP_w\sigma P_w$ である。$U_l$
 は $P_v$ と可換である。$l$ に関する帰納法を用いればよい。$\square$
 
-`InterSectorChannel` は出力の対角ブロックだけを保持する。ここではそれ以外のブロックはないので、
-何も失われない。$g=0.05$、$p=2$ のとき受理確率は $0.95^6=0.7351$ である：
+`InterSectorChannel` は出力の対角ブロックだけを保持する。ここではそれ以外のブロックはない（命題 10.9 の証明は、$s\in\{0,1\}$ として一つの量子ビットの減衰に
+そのまま適用できる）ので、何も失われない。$g=0.05$、$p=2$ のとき受理確率は $0.95^6=0.7351$ である：
 
 ```python
 g = 0.05
@@ -437,8 +465,8 @@ assert abs(accept.item() - (1 - g) ** (w * len(layers))) < 1e-12              # 
 assert abs(post.fidelity(ideal).item() - 1) < 1e-10 and abs(cut(post) - cut(ideal)) < 1e-10
 ```
 
-実行不可能な部分は期待カット数を $4.3789$ から $4.3123$ に下げる。これは見かけ上の改善であり、
-角度の最適化器を誤らせるであろう。事後選択の後では値は厳密である。
+*数値的観察*（出力される値）：実行不可能な部分は期待カット数を $4.3789$ から $4.3123$ に下げる。これは見かけ上の改善であり、
+角度の最適化器を誤らせるであろう。事後選択の後では値は厳密である（命題 10.9）。
 
 **連続時間.** 同じことがリンドブラッド方程式（定理 8.6、[第8章](08_dynamics.md)）
 $$
@@ -464,7 +492,8 @@ $e^{\gamma_1wt}B_{ww}$ は同じ初期値をもつ $\sigma$ の方程式の解�
 
 $\gamma_2=0$ ならば $\sigma(t)=e^{-iHt}\rho(0)e^{iHt}$ であり、事後選択は完全である。解説論文
 （`examples/paper/ex9_qaoa_xy_mixer.py`）は $|111000\rangle$ を $H_M$ のもとで $T=2$ まで時間発展させる。我々はその
-$\gamma_1=\gamma_2=0.1$ の行を再現する：$P(w=3)=e^{-0.6}=0.5488$、忠実度 $0.4805$、事後選択後 $0.8755$（$\gamma_1=0$ の場合と同じ）。
+$\gamma_1=\gamma_2=0.1$ の行を再現する：$P(w=3)=e^{-0.6}=0.5488$（命題 10.10）であり、下のコードの *数値的観察* として、忠実度は $0.4805$、
+事後選択後の忠実度は $0.8755$ である。命題 10.10 により、後者は $\gamma_1=0$ の場合と同じである。
 
 ```python
 T = 2.0
@@ -482,7 +511,7 @@ assert abs(post_T[0.1, 0.0].fidelity(ideal_T).item() - 1) < 1e-6               #
 assert post_T[0.1, 0.1].trace_distance(post_T[0.0, 0.1]).item() < 1e-6       # independent of gamma_1
 ```
 
-> **物理的意味.** エネルギー緩和（$T_1$）は超伝導量子ビットの主要な誤りの一つであり、
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. エネルギー緩和（$T_1$）は超伝導量子ビットの主要な誤りの一つであり、
 > より低いセクターへのジャンプである。ハミング重みの測定——中心射影であり、セクター内部では
 > 無害である（3.3節）——によってそれは検出され、事後選択によって受理率と引き換えに取り除かれる。
 > 位相緩和はセクターの射影と可換であり、検出されない。
@@ -492,7 +521,7 @@ assert post_T[0.1, 0.1].trace_distance(post_T[0.0, 0.1]).item() < 1e-6       # i
 Qiskit（`qiskit.quantum_info`、Aer のノイズモデル、カスタム・ミキサー付きの `QAOAAnsatz`）、Cirq、PennyLane
 （`qml.qaoa.xy_mixer`、`default.mixed`）、および QuTiP/`qutip-qip` は、これらすべてを $n$ 個の完全な量子ビット上でシミュレートし、
 回路のための適切な道具である。stim はパウリ型ノイズをもつクリフォード回路を数千
-量子ビットでサンプリングする（振幅減衰はパウリ・チャネルではない）。我々の知る限り、これらのパッケージには、
+量子ビットでサンプリングする（振幅減衰はパウリ・チャネルではない：パウリ・チャネルは単位的であるが、振幅減衰はそうではない）。我々の知る限り、これらのパッケージには、
 チャネルの相互作用環、その可換子環、あるいはその不動点環全体を計算する関数はない（QuTiP の
 `steadystate` はリンドブラッド生成子の定常状態を一つ返す）。行列 $*$-環の数値的なブロック分解については
 Murota et al., *Japan J. Indust. Appl. Math.* 27 (2010) を参照。ライブラリが付け加えるのは、
