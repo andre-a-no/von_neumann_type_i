@@ -3,23 +3,23 @@
 # Tutorial 3. Traces, states and entropy
 
 This tutorial accompanies [Chapter 3](../lecture_notes/03_traces_and_states.md) of the lecture notes, which classifies the traces
-on $\mathcal M=\bigoplus_cM_{k_c}$ ([Theorem 3.1](../lecture_notes/03_traces_and_states.md#r-3-1)), represents states by densities
+on $`\mathcal M=\bigoplus_cM_{k_c}`$ ([Theorem 3.1](../lecture_notes/03_traces_and_states.md#r-3-1)), represents states by densities
 ([Theorem 3.2](../lecture_notes/03_traces_and_states.md#r-3-2)) and proves the basic entropy inequalities. We use the three traces of the
-library, convert densities between them, and check the theorems numerically on $M_2\oplus M_3\oplus M_5$.
+library, convert densities between them, and check the theorems numerically on $`M_2\oplus M_3\oplus M_5`$.
 
 <a id="s-3-1"></a>
 
 ## 3.1 Traces
 
-*Lecture notes:* [Section 3.1](../lecture_notes/03_traces_and_states.md#s-3-1); by [Theorem 3.1](../lecture_notes/03_traces_and_states.md#r-3-1) every trace is $\mathrm{tr}_w(A)=\sum_cw_c\mathrm{Tr}\,A_c$.
+*Lecture notes:* [Section 3.1](../lecture_notes/03_traces_and_states.md#s-3-1); by [Theorem 3.1](../lecture_notes/03_traces_and_states.md#r-3-1) every trace is $`\mathrm{tr}_w(A)=\sum_cw_c\mathrm{Tr}\,A_c`$.
 
 The library implements three faithful traces:
 
-| name | weights $w_c$ | value on $1$ | meaning |
+| name | weights $`w_c`$ | value on $`1`$ | meaning |
 |---|---|---|---|
-| `Tr_blunt` | $1$ | $D$ | trace of $\bigoplus_c\mathbb C^{k_c}$ (multiplicities $m_c=1$) |
-| `Tr_norm` | $1/k_c$ | $C$ | every block normalised |
-| `tau_vN` | $1/(Ck_c)$ | $1$ | the tracial state with equal sector weights $1/C$ |
+| `Tr_blunt` | $`1`$ | $`D`$ | trace of $`\bigoplus_c\mathbb C^{k_c}`$ (multiplicities $`m_c=1`$) |
+| `Tr_norm` | $`1/k_c`$ | $`C`$ | every block normalised |
+| `tau_vN` | $`1/(Ck_c)`$ | $`1`$ | the tracial state with equal sector weights $`1/C`$ |
 
 ```python
 import math
@@ -43,9 +43,9 @@ assert (A.Tr_norm() - 3 * A.tau_vN()).abs().max() < 1e-12       # Tr_norm = C ta
 
 ## 3.2 States and densities
 
-*Lecture notes:* [Section 3.2](../lecture_notes/03_traces_and_states.md#s-3-2); [Theorem 3.2](../lecture_notes/03_traces_and_states.md#r-3-2) gives the density $\rho_w$ of a state for every faithful trace, with $w_c(\rho_w)_c=w'_c(\rho_{w'})_c$.
+*Lecture notes:* [Section 3.2](../lecture_notes/03_traces_and_states.md#s-3-2); [Theorem 3.2](../lecture_notes/03_traces_and_states.md#r-3-2) gives the density $`\rho_w`$ of a state for every faithful trace, with $`w_c(\rho_w)_c=w'_c(\rho_{w'})_c`$.
 
-The library stores a state by its density $\rho=\rho_{\mathrm{blunt}}$ with respect to
+The library stores a state by its density $`\rho=\rho_{\mathrm{blunt}}`$ with respect to
 `Tr_blunt` (class `DensityMatrix`); `density(trace)` and `DensityMatrix.from_density`
 convert. The value of the state does not depend on the convention:
 
@@ -64,7 +64,7 @@ for trace, tr in (('blunt', lambda X: X.Tr_blunt()), ('norm', lambda X: X.Tr_nor
 
 ## 3.3 The classical part of a state
 
-*Lecture notes:* [Section 3.3](../lecture_notes/03_traces_and_states.md#s-3-3): the sector probabilities $p_c=\mathrm{Tr}\,\rho_c$, and the map $\rho\mapsto\sum_cP_c\rho P_c$, which is the identity on $\mathcal M$.
+*Lecture notes:* [Section 3.3](../lecture_notes/03_traces_and_states.md#s-3-3): the sector probabilities $`p_c=\mathrm{Tr}\,\rho_c`$, and the map $`\rho\mapsto\sum_cP_c\rho P_c`$, which is the identity on $`\mathcal M`$.
 
 ```python
 p = rho.sector_probabilities()                                   # shape (batch, C)
@@ -78,7 +78,7 @@ assert (measure_sector(rho).matrix - rho.matrix).abs().max() < 1e-12   # no dist
 
 ## 3.4 Entropy
 
-*Lecture notes:* [Section 3.4](../lecture_notes/03_traces_and_states.md#s-3-4); [Theorem 3.3](../lecture_notes/03_traces_and_states.md#r-3-3) gives $S(\rho)=H(p)+\sum_cp_cS(\sigma_c)$, and the entropy relative to $\mathrm{tr}_w$ is $S_w(\rho)=S(\rho)+\sum_cp_c\log w_c$.
+*Lecture notes:* [Section 3.4](../lecture_notes/03_traces_and_states.md#s-3-4); [Theorem 3.3](../lecture_notes/03_traces_and_states.md#r-3-3) gives $`S(\rho)=H(p)+\sum_cp_cS(\sigma_c)`$, and the entropy relative to $`\mathrm{tr}_w`$ is $`S_w(\rho)=S(\rho)+\sum_cp_c\log w_c`$.
 
 ```python
 S = rho.von_neumann_entropy()
@@ -97,7 +97,7 @@ assert torch.allclose(S_tau, S + (p * torch.log(w_tau)).sum(-1))
 
 ## 3.5 Relative entropy and Klein's inequality
 
-*Lecture notes:* [Section 3.5](../lecture_notes/03_traces_and_states.md#s-3-5); [Corollary 3.6](../lecture_notes/03_traces_and_states.md#r-3-6) ($S(\rho)\le\log D$, with equality for $\rho=1/D$) and [Theorem 3.7](../lecture_notes/03_traces_and_states.md#r-3-7) ($S(\rho\|\sigma)\ge S(E\rho\|E\sigma)=\sum_cp_c\log(p_c/q_c)$ for the conditional expectation $E$ onto the centre).
+*Lecture notes:* [Section 3.5](../lecture_notes/03_traces_and_states.md#s-3-5); [Corollary 3.6](../lecture_notes/03_traces_and_states.md#r-3-6) ($`S(\rho)\le\log D`$, with equality for $`\rho=1/D`$) and [Theorem 3.7](../lecture_notes/03_traces_and_states.md#r-3-7) ($`S(\rho\|\sigma)\ge S(E\rho\|E\sigma)=\sum_cp_c\log(p_c/q_c)`$ for the conditional expectation $`E`$ onto the centre).
 
 ```python
 sigma_state = states.random_density_matrix(alg, batch_size=4)
@@ -128,15 +128,15 @@ assert (E(A_pos).michelson_contrast <= A_pos.michelson_contrast + 1e-12).all()
 
 ## 3.7 A plausible inequality that is false
 
-*Lecture notes:* [Section 3.7](../lecture_notes/03_traces_and_states.md#s-3-7); by [Proposition 3.9](../lecture_notes/03_traces_and_states.md#r-3-9), for $X,Y\ge0$ in $M_k$, $\max_U|\mathrm{Tr}(XUY)|=\|YX\|_1\ge\mathrm{Tr}(XY)$, with equality iff $XY=YX$.
+*Lecture notes:* [Section 3.7](../lecture_notes/03_traces_and_states.md#s-3-7); by [Proposition 3.9](../lecture_notes/03_traces_and_states.md#r-3-9), for $`X,Y\ge0`$ in $`M_k`$, $`\max_U|\mathrm{Tr}(XUY)|=\|YX\|_1\ge\mathrm{Tr}(XY)`$, with equality iff $`XY=YX`$.
 
-The library finds the maximiser with the polar decomposition: for $YX=W|YX|$ the unitary $U=W^*$
-attains $\|YX\|_1$ ([lecture notes, Theorem 1.9](../lecture_notes/01_matrix_algebras.md#r-1-9)). Random search over
-Haar-distributed unitaries (the library samples $U$ in this way) is worse on average
-([lecture notes, Section 3.7](../lecture_notes/03_traces_and_states.md#s-3-7)); the probability bound $b^4/(a^4k^2)$ recalled there says nothing
-in the run below, where $b/a=6$ and $k=6$. The code
-computes the exact supremum for one non-commuting pair with $k=6$ and the best of $20000$ Haar
-samples, both minus $\mathrm{Tr}(XY)$. By Proposition 3.9 no sample can exceed the supremum; how far
+The library finds the maximiser with the polar decomposition: for $`YX=W|YX|`$ the unitary $`U=W^*`$
+attains $`\|YX\|_1`$ ([lecture notes, Theorem 1.9](../lecture_notes/01_matrix_algebras.md#r-1-9)). Random search over
+Haar-distributed unitaries (the library samples $`U`$ in this way) is worse on average
+([lecture notes, Section 3.7](../lecture_notes/03_traces_and_states.md#s-3-7)); the probability bound $`b^4/(a^4k^2)`$ recalled there says nothing
+in the run below, where $`b/a=6`$ and $`k=6`$. The code
+computes the exact supremum for one non-commuting pair with $`k=6`$ and the best of $`20000`$ Haar
+samples, both minus $`\mathrm{Tr}(XY)`$. By Proposition 3.9 no sample can exceed the supremum; how far
 the best sample stays below it is a numerical observation of this run, not a theorem.
 
 ```python
@@ -162,7 +162,7 @@ assert best.item() <= gap.item() + 1e-10               # Proposition 3.9: no sam
 
 QuTiP (`entropy_vn`, `entropy_relative`) and other quantum-information packages (e.g.
 `toqito`) compute entropies and relative entropies of density matrices on a
-single Hilbert space, with the trace of that space; on $\bigoplus_c\mathbb C^{k_c}$ this is the
+single Hilbert space, with the trace of that space; on $`\bigoplus_c\mathbb C^{k_c}`$ this is the
 blunt trace here (up to the base of the logarithm, which differs between packages). What they do not provide is the family of traces of Theorem 3.1 and
 the conversions of Theorem 3.2, which become necessary as soon as an algebra acts with
 multiplicities or the sectors must be weighted differently.
@@ -171,9 +171,9 @@ multiplicities or the sectors must be weighted differently.
 
 ## Exercises
 
-[Exercise 1](../lecture_notes/03_traces_and_states.md#x-3) of the lecture notes: the density of the tracial state $\tau_{\mathrm{vN}}$
-(`states.tracial_state`) with respect to $\tau_{\mathrm{vN}}$ is $1$, and its entropy is
-$S=\log C+\frac1C\sum_c\log k_c$. Check both for $M_2\oplus M_3\oplus M_5$.
+[Exercise 1](../lecture_notes/03_traces_and_states.md#x-3) of the lecture notes: the density of the tracial state $`\tau_{\mathrm{vN}}`$
+(`states.tracial_state`) with respect to $`\tau_{\mathrm{vN}}`$ is $`1`$, and its entropy is
+$`S=\log C+\frac1C\sum_c\log k_c`$. Check both for $`M_2\oplus M_3\oplus M_5`$.
 
 <details>
 <summary>Solutions</summary>

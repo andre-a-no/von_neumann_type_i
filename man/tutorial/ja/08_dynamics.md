@@ -2,22 +2,22 @@
 
 # チュートリアル 8. ダイナミクス
 
-このチュートリアルは講義ノートの[第8章](../../lecture_notes/ja/08_dynamics.md)に対応する。同章では、$\mathcal M$ のハミルトニアンが
+このチュートリアルは講義ノートの[第8章](../../lecture_notes/ja/08_dynamics.md)に対応する。同章では、$`\mathcal M`$ のハミルトニアンが
 セクターの重みを保存すること（[定理 8.3](../../lecture_notes/ja/08_dynamics.md#r-8-3)）、GKSL 形の生成子が量子動力学的半群を生み出すこと
 （[定理 8.6](../../lecture_notes/ja/08_dynamics.md#r-8-6)）を証明し、セクター間のジャンプ、事後選択、定常状態を扱う。ここでは `dynamics` の
 厳密なソルバーとルンゲ–クッタ・ソルバーを用いてシュレーディンガー方程式、フォン・ノイマン方程式、リンドブラッド方程式を解き、
-結果を SciPy および $M_D$ 上の GKSL 生成子と照合する。
+結果を SciPy および $`M_D`$ 上の GKSL 生成子と照合する。
 
 <a id="s-8-1"></a>
 
 ## 8.1 閉じた系
 
-*講義ノート：* [8.1節](../../lecture_notes/ja/08_dynamics.md#s-8-1)；[命題 8.2](../../lecture_notes/ja/08_dynamics.md#r-8-2)（時間発展演算子 $U(t)=e^{-itH}$）、[定理 8.3](../../lecture_notes/ja/08_dynamics.md#r-8-3)（電荷の保存）。
+*講義ノート：* [8.1節](../../lecture_notes/ja/08_dynamics.md#s-8-1)；[命題 8.2](../../lecture_notes/ja/08_dynamics.md#r-8-2)（時間発展演算子 $`U(t)=e^{-itH}`$）、[定理 8.3](../../lecture_notes/ja/08_dynamics.md#r-8-3)（電荷の保存）。
 
-命題 8.2(1) により、時間発展はブロックごとに一つずつ、サイズ $k_c$ の $C$ 個の独立な問題に分かれる。
-ライブラリはブロックサイズごとに一回の固有値分解で $U(t)$ を計算し（`dynamics.propagator`）、
+命題 8.2(1) により、時間発展はブロックごとに一つずつ、サイズ $`k_c`$ の $`C`$ 個の独立な問題に分かれる。
+ライブラリはブロックサイズごとに一回の固有値分解で $`U(t)`$ を計算し（`dynamics.propagator`）、
 `dynamics.von_neumann` は固有基底において密度を多数の時刻へ一度に発展させる。固有基底では
-$\rho(t)_{ij}=e^{-it(\lambda_i-\lambda_j)}\rho_{ij}$ である。`scipy.linalg.expm` と照合する：
+$`\rho(t)_{ij}=e^{-it(\lambda_i-\lambda_j)}\rho_{ij}`$ である。`scipy.linalg.expm` と照合する：
 
 ```python
 import math
@@ -50,15 +50,15 @@ A_t = U.adjoint() @ A @ U                                          # Heisenberg 
 assert abs(rho0.expectation(A_t) - dynamics.von_neumann(rho0, H, [t])[0].expectation(A)) < 1e-12
 ```
 
-単位ベクトル $\psi=\bigoplus_c\psi_c$ は $\mathcal M$ 上の状態 $\bigoplus_c|\psi_c\rangle\langle\psi_c|$ を定め、これは
-$U(t)$ によって時間発展する（[講義ノート、8.1節](../../lecture_notes/ja/08_dynamics.md#s-8-1)）。したがって `dynamics.schrodinger`（ブロック配置 `(batch, C, k_max)` のベクトル）と `von_neumann`
-はその上で一致しなければならない。時間依存の $H(t)$ に対しては、
+単位ベクトル $`\psi=\bigoplus_c\psi_c`$ は $`\mathcal M`$ 上の状態 $`\bigoplus_c|\psi_c\rangle\langle\psi_c|`$ を定め、これは
+$`U(t)`$ によって時間発展する（[講義ノート、8.1節](../../lecture_notes/ja/08_dynamics.md#s-8-1)）。したがって `dynamics.schrodinger`（ブロック配置 `(batch, C, k_max)` のベクトル）と `von_neumann`
+はその上で一致しなければならない。時間依存の $`H(t)`$ に対しては、
 ライブラリは固定刻みの古典的ルンゲ–クッタ法（`dynamics.rk4`、`schrodinger_rk4`）を用いる：一つのステップは
-$\psi$ に $H(t)\in\mathcal M$ のいくつかの値の多項式を掛けるので、セクター間で振幅を移すことは決してないが、
-ユニタリではない：定数の $H$ に対し、刻み幅 $h$ の一ステップは固有値 $\lambda$ に属する $H$ の固有ベクトルに
-$T(-ih\lambda)$ を掛ける。ここで $T(z)=\sum_{k=0}^4z^k/k!$ であり、$0<|x|<2\sqrt2$ に対し
-$|T(ix)|^2=1-\frac{x^6}{72}+\frac{x^8}{576}<1$ である（展開せよ）。したがって RK4 はセクターの重みを厳密には
-保存しない：定数の $H$ に対し、$0<|h\lambda|<2\sqrt2$ を満たす固有ベクトル上に零でない係数をもつセクター成分は、
+$`\psi`$ に $`H(t)\in\mathcal M`$ のいくつかの値の多項式を掛けるので、セクター間で振幅を移すことは決してないが、
+ユニタリではない：定数の $`H`$ に対し、刻み幅 $`h`$ の一ステップは固有値 $`\lambda`$ に属する $`H`$ の固有ベクトルに
+$`T(-ih\lambda)`$ を掛ける。ここで $`T(z)=\sum_{k=0}^4z^k/k!`$ であり、$`0<|x|<2\sqrt2`$ に対し
+$`|T(ix)|^2=1-\frac{x^6}{72}+\frac{x^8}{576}<1`$ である（展開せよ）。したがって RK4 はセクターの重みを厳密には
+保存しない：定数の $`H`$ に対し、$`0<|h\lambda|<2\sqrt2`$ を満たす固有ベクトル上に零でない係数をもつセクター成分は、
 各ステップで重みを失う。一回の実行でそれらがどれだけ変化するかは数値的観察である（下記）。
 （一つの大きなセクターに対しては、`krylov.evolve` は行列–ベクトル積しか必要としない。[チュートリアル 9、9.5節](../../tutorial/ja/09_spin_chains.md#s-9-5)を参照。）
 
@@ -82,8 +82,8 @@ assert drift < 1e-8 and (dynamics.schrodinger_rk4(psi0, H, times, substeps=50) -
 
 ```
 
-*数値的観察*：この実行では、セクターの重みは RK4 のもとでは $1.1\cdot10^{-9}$（出力される値）だけ変化し、
-厳密なソルバーのもとでは assert の許容誤差 $10^{-12}$ 未満しか変化しない。厳密なソルバーについては、
+*数値的観察*：この実行では、セクターの重みは RK4 のもとでは $`1.1\cdot10^{-9}`$（出力される値）だけ変化し、
+厳密なソルバーのもとでは assert の許容誤差 $`10^{-12}`$ 未満しか変化しない。厳密なソルバーについては、
 定理 8.3 が厳密な保存を与える。
 
 <a id="s-8-2"></a>
@@ -94,11 +94,11 @@ assert drift < 1e-8 and (dynamics.schrodinger_rk4(psi0, H, times, substeps=50) -
 
 ライブラリには四つのリンドブラッド・ルーチンがある：`lindblad_rhs` は右辺を
 `rk4` 用の関数として返す。`lindblad_evolve` は RK4 で積分する。`lindblad_superoperator` は各セクターについて、
-行優先の $\mathrm{vec}\,\rho_c$ に作用する $\mathcal L$ の $k_c^2\times k_c^2$ 行列を返す。そして
-`lindblad_channel` は $e^{t\mathcal L}$ をセクターごとに厳密に計算し、`Channel` として返す。
-$M_3$ 上の任意のジャンプについて定理 8.6 を確かめる：$e^{t\mathcal L}$ のチョイ行列は正であり（定理
+行優先の $`\mathrm{vec}\,\rho_c`$ に作用する $`\mathcal L`$ の $`k_c^2\times k_c^2`$ 行列を返す。そして
+`lindblad_channel` は $`e^{t\mathcal L}`$ をセクターごとに厳密に計算し、`Channel` として返す。
+$`M_3`$ 上の任意のジャンプについて定理 8.6 を確かめる：$`e^{t\mathcal L}`$ のチョイ行列は正であり（定理
 6.2）、写像は TP であり、半群法則が成り立ち、RK4 は指数関数と一致し、ジャンプ部分
-$e^{t\mathcal L}-S_0(t)=\sum_{n\ge1}S_n(t)$ それ自体が CP である：
+$`e^{t\mathcal L}-S_0(t)=\sum_{n\ge1}S_n(t)`$ それ自体が CP である：
 
 ```python
 M3 = TypeIAlgebra([3], [3], precision='double')
@@ -128,16 +128,16 @@ assert jump_part.min() > -1e-12                                    # sum_{n >= 1
 
 ## 8.3 セクターをもつ環におけるリンドブラッド方程式
 
-*講義ノート：* [8.3節](../../lecture_notes/ja/08_dynamics.md#s-8-3)：`dynamics.lindblad_rhs` が実装する、セクター内およびセクター間のジャンプをもつ生成子 $\mathcal L$；[命題 8.8](../../lecture_notes/ja/08_dynamics.md#r-8-8)、[命題 8.9](../../lecture_notes/ja/08_dynamics.md#r-8-9)（セクターの重み）。
+*講義ノート：* [8.3節](../../lecture_notes/ja/08_dynamics.md#s-8-3)：`dynamics.lindblad_rhs` が実装する、セクター内およびセクター間のジャンプをもつ生成子 $`\mathcal L`$；[命題 8.8](../../lecture_notes/ja/08_dynamics.md#r-8-8)、[命題 8.9](../../lecture_notes/ja/08_dynamics.md#r-8-9)（セクターの重み）。
 
 **例：粒子損失**（[講義ノート、8.3節](../../lecture_notes/ja/08_dynamics.md#s-8-3)）. 粒子数が高々二の二つのボース・モード、
-$\mathcal M=M_1\oplus M_2\oplus M_3$（セクター $N=0,1,2$）、ボース–ハバード二量体
-$H=J(a_1^*a_2+a_2^*a_1)+\frac U2\sum_jn_j(n_j-1)$ を考え、各モードはレート $\gamma$ で粒子を失うとする：これはクラウス作用素
-$a_1,a_2$ を $N\to N-1$ に制限した一つの `InterSectorChannel` である。
-[命題 8.9(2)](../../lecture_notes/ja/08_dynamics.md#r-8-9) により、セクターの重みは $p'=Qp$ に従う。ここでレート $1$ に対し $Q=R-\mathrm{diag}(\sum_dR_{dc})_c$、
-$R$ = `transition_matrix()` である。$N=2$ から出発すると、重みはホッピングと相互作用が何をしようとも二項分布 $p_2=q^2$、$p_1=2q(1-q)$、$p_0=(1-q)^2$、
-$q=e^{-\gamma t}$ に従う。コードは
-$\Phi^*(1)=0\oplus1\oplus2$、すなわち用いるブロック上で $a_1^*a_1+a_2^*a_2=N$ であることを確かめ、$p(t)$ を両方の公式と照合する。
+$`\mathcal M=M_1\oplus M_2\oplus M_3`$（セクター $`N=0,1,2`$）、ボース–ハバード二量体
+$`H=J(a_1^*a_2+a_2^*a_1)+\frac U2\sum_jn_j(n_j-1)`$ を考え、各モードはレート $`\gamma`$ で粒子を失うとする：これはクラウス作用素
+$`a_1,a_2`$ を $`N\to N-1`$ に制限した一つの `InterSectorChannel` である。
+[命題 8.9(2)](../../lecture_notes/ja/08_dynamics.md#r-8-9) により、セクターの重みは $`p'=Qp`$ に従う。ここでレート $`1`$ に対し $`Q=R-\mathrm{diag}(\sum_dR_{dc})_c`$、
+$`R`$ = `transition_matrix()` である。$`N=2`$ から出発すると、重みはホッピングと相互作用が何をしようとも二項分布 $`p_2=q^2`$、$`p_1=2q(1-q)`$、$`p_0=(1-q)^2`$、
+$`q=e^{-\gamma t}`$ に従う。コードは
+$`\Phi^*(1)=0\oplus1\oplus2`$、すなわち用いるブロック上で $`a_1^*a_1+a_2^*a_2=N`$ であることを確かめ、$`p(t)`$ を両方の公式と照合する。
 
 ```python
 fock = TypeIAlgebra([1, 2, 3], [1, 2, 3], precision='double', charges=[0, 1, 2])   # N = 0, 1, 2
@@ -177,15 +177,15 @@ step = dynamics.rk4(decay, torch.diag(torch.tensor([0.0, 1.0], dtype=c128)), [0.
 assert (step - torch.diag(torch.tensor([-3 / 8, 11 / 8], dtype=c128))).abs().max() < 1e-14   # not positive
 ```
 
-RK4 は正値性を保つことが保証されていない：$\rho'=\mathcal L\rho$ に対し、刻み幅 $h$ の一ステップは
-8.1節の多項式 $T$ による $\rho\mapsto T(h\mathcal L)\rho$ である（四つの段を代入せよ）。これはトレースを保存する
-（すべての $X$ に対し $\mathrm{Tr}\,\mathcal L(X)=0$ であるから）が、正値である必要はない。たとえば、基底
-$|g\rangle,|e\rangle$ をもつ $M_2$ 上で、$H=0$、レート $\gamma$ の一つのジャンプ $|g\rangle\langle e|$ とすると、$\mathcal L$ は
-$\mathrm{diag}(a,b)$ を $\gamma b\mathrm{diag}(1,-1)$ に写すので、$h\gamma=3$ の一ステップは $\mathrm{diag}(0,1)$ を
-$\mathrm{diag}(1-T(-3),T(-3))=\mathrm{diag}(-\frac38,\frac{11}8)$ に写す。*数値的観察*：この実行では
-$\rho(t)$ の最小固有値は $\approx-2\cdot10^{-8}$ である（出力される値。刻み幅は高々 $0.02$）。`lindblad_channel` は厳密であるが、
+RK4 は正値性を保つことが保証されていない：$`\rho'=\mathcal L\rho`$ に対し、刻み幅 $`h`$ の一ステップは
+8.1節の多項式 $`T`$ による $`\rho\mapsto T(h\mathcal L)\rho`$ である（四つの段を代入せよ）。これはトレースを保存する
+（すべての $`X`$ に対し $`\mathrm{Tr}\,\mathcal L(X)=0`$ であるから）が、正値である必要はない。たとえば、基底
+$`|g\rangle,|e\rangle`$ をもつ $`M_2`$ 上で、$`H=0`$、レート $`\gamma`$ の一つのジャンプ $`|g\rangle\langle e|`$ とすると、$`\mathcal L`$ は
+$`\mathrm{diag}(a,b)`$ を $`\gamma b\mathrm{diag}(1,-1)`$ に写すので、$`h\gamma=3`$ の一ステップは $`\mathrm{diag}(0,1)`$ を
+$`\mathrm{diag}(1-T(-3),T(-3))=\mathrm{diag}(-\frac38,\frac{11}8)`$ に写す。*数値的観察*：この実行では
+$`\rho(t)`$ の最小固有値は $`\approx-2\cdot10^{-8}`$ である（出力される値。刻み幅は高々 $`0.02`$）。`lindblad_channel` は厳密であるが、
 セクター内のジャンプしか扱わない。最後に、セクター間のランダムな写像について命題 8.8(2) を、
-粒子損失について命題 8.8(3) を、numpy で組み立てた $M_6$ 上の GKSL 生成子と照合して確かめる：
+粒子損失について命題 8.8(3) を、numpy で組み立てた $`M_6`$ 上の GKSL 生成子と照合して確かめる：
 
 ```python
 Phi = channels.random_inter_sector_channel(fock, fock, kraus_rank=2)
@@ -213,14 +213,14 @@ assert np.abs(full_loss - embed(loss_on_M)).max() < 1e-12         # Proposition 
 
 ## 8.4 事後選択とジャンプなしの時間発展
 
-*講義ノート：* [8.4節](../../lecture_notes/ja/08_dynamics.md#s-8-4)；[命題 8.10](../../lecture_notes/ja/08_dynamics.md#r-8-10)（ジャンプなしの確率 $w_0$）、[命題 8.11](../../lecture_notes/ja/08_dynamics.md#r-8-11)（「粒子が一つも失われなかった」への事後選択）。
+*講義ノート：* [8.4節](../../lecture_notes/ja/08_dynamics.md#s-8-4)；[命題 8.10](../../lecture_notes/ja/08_dynamics.md#r-8-10)（ジャンプなしの確率 $`w_0`$）、[命題 8.11](../../lecture_notes/ja/08_dynamics.md#r-8-11)（「粒子が一つも失われなかった」への事後選択）。
 
-ライブラリの `states.lueders_update(rho, P)` は $P\rho P/\mathrm{Tr}(P\rho P)$ と
-$\mathrm{Tr}(\rho P)$ を返す。今度は二つのモードが異なるレート $\gamma_1>\gamma_2$ で漏れ出すとする。すると
-$A=\gamma_1n_1+\gamma_2n_2$ は中心に属さず（セクター $N=2$ では、基底 $|20\rangle,|11\rangle,|02\rangle$ において
-$\mathrm{diag}(2\gamma_1,\gamma_1+\gamma_2,2\gamma_2)$ である）、命題 8.9(2) は適用できず、$N=2$ に事後選択された状態は、
-反エルミート部分 $-\frac i2A$ がそのセクターで $1$ の定数倍でない $H_{\mathrm{eff}}$ による規格化された時間発展である。命題 8.11 を $n=0$ について確かめ、さらに
-$S_1$ の積分をシンプソン則で計算して $n=1$ についても確かめる：
+ライブラリの `states.lueders_update(rho, P)` は $`P\rho P/\mathrm{Tr}(P\rho P)`$ と
+$`\mathrm{Tr}(\rho P)`$ を返す。今度は二つのモードが異なるレート $`\gamma_1>\gamma_2`$ で漏れ出すとする。すると
+$`A=\gamma_1n_1+\gamma_2n_2`$ は中心に属さず（セクター $`N=2`$ では、基底 $`|20\rangle,|11\rangle,|02\rangle`$ において
+$`\mathrm{diag}(2\gamma_1,\gamma_1+\gamma_2,2\gamma_2)`$ である）、命題 8.9(2) は適用できず、$`N=2`$ に事後選択された状態は、
+反エルミート部分 $`-\frac i2A`$ がそのセクターで $`1`$ の定数倍でない $`H_{\mathrm{eff}}`$ による規格化された時間発展である。命題 8.11 を $`n=0`$ について確かめ、さらに
+$`S_1`$ の積分をシンプソン則で計算して $`n=1`$ についても確かめる：
 
 ```python
 g1, g2 = 0.6, 0.2                                                  # mode 1 leaks faster
@@ -258,11 +258,11 @@ S1 = scipy.integrate.simpson(S0(2.0 - s_grid, 1, jump(S0(s_grid, 2, rho_20))), x
 assert np.abs(S1 - traj[-1].matrix[0, 1, :2, :2].numpy()).max() < 1e-8     # Proposition 8.11, n = 1
 ```
 
-*数値的観察*：$t=2$ において、セクター $N=2$ の重み $p_2(2)=w_0(2)$（「損失なし」）は $0.230$ である（上で出力）。
-ホッピングがなければ（$J=0$）、それはちょうど $e^{-2\gamma_1t}=e^{-2.4}=0.091$ となるはずである。そのとき $|20\rangle$ は
-固有値 $U-i\gamma_1$ をもつ $H_{\mathrm{eff}}$ の固有ベクトルであり、$w_0(t)=|e^{-it(U-i\gamma_1)}|^2$ だからである（命題 8.10）。したがって
+*数値的観察*：$`t=2`$ において、セクター $`N=2`$ の重み $`p_2(2)=w_0(2)`$（「損失なし」）は $`0.230`$ である（上で出力）。
+ホッピングがなければ（$`J=0`$）、それはちょうど $`e^{-2\gamma_1t}=e^{-2.4}=0.091`$ となるはずである。そのとき $`|20\rangle`$ は
+固有値 $`U-i\gamma_1`$ をもつ $`H_{\mathrm{eff}}`$ の固有ベクトルであり、$`w_0(t)=|e^{-it(U-i\gamma_1)}|^2`$ だからである（命題 8.10）。したがって
 ここではセクターの重みがハミルトニアンに依存している。事後選択された状態は、閉じた系の状態から
-トレース距離 $0.135$（上で出力）だけ離れている：$N=2$ という条件づけは、ユニタリな時間発展を超えて状態を変える。
+トレース距離 $`0.135`$（上で出力）だけ離れている：$`N=2`$ という条件づけは、ユニタリな時間発展を超えて状態を変える。
 
 <a id="s-8-5"></a>
 
@@ -270,11 +270,11 @@ assert np.abs(S1 - traj[-1].matrix[0, 1, :2, :2].numpy()).max() < 1e-8     # Pro
 
 *講義ノート：* [8.5節](../../lecture_notes/ja/08_dynamics.md#s-8-5)；[系 8.13](../../lecture_notes/ja/08_dynamics.md#r-8-13)、[命題 8.14](../../lecture_notes/ja/08_dynamics.md#r-8-14)（自然放出）。
 
-[命題 8.14](../../lecture_notes/ja/08_dynamics.md#r-8-14) により、$M_2$ 上の自然放出（$H=\omega|e\rangle\langle e|$、レート $\gamma$ の一つのジャンプ
-$|g\rangle\langle e|$）は $e^{t\mathcal L}=\mathcal U_t\circ\mathcal A_{1-e^{-\gamma t}}$、スペクトル
-$\{0,-\gamma,-\gamma/2\pm i\omega\}$、スペクトルギャップ $\gamma/2$ をもつ。スペクトルを
+[命題 8.14](../../lecture_notes/ja/08_dynamics.md#r-8-14) により、$`M_2`$ 上の自然放出（$`H=\omega|e\rangle\langle e|`$、レート $`\gamma`$ の一つのジャンプ
+$`|g\rangle\langle e|`$）は $`e^{t\mathcal L}=\mathcal U_t\circ\mathcal A_{1-e^{-\gamma t}}`$、スペクトル
+$`\{0,-\gamma,-\gamma/2\pm i\omega\}`$、スペクトルギャップ $`\gamma/2`$ をもつ。スペクトルを
 `lindblad_superoperator` で、チャネルとトレース距離を `lindblad_channel` で確かめ、さらに
-$M_2\oplus M_3$ のセクター内のランダムなジャンプについて[系 8.13](../../lecture_notes/ja/08_dynamics.md#r-8-13)を確かめる：
+$`M_2\oplus M_3`$ のセクター内のランダムなジャンプについて[系 8.13](../../lecture_notes/ja/08_dynamics.md#r-8-13)を確かめる：
 
 ```python
 q2 = TypeIAlgebra([2], [2], precision='double')                    # basis |g>, |e>
@@ -311,8 +311,8 @@ assert all(dim >= 1 for dim in kernel)                             # Corollary 8
 
 *数値的観察*：これらのランダムなジャンプについて、コードはセクターごとにちょうど一つの定常状態を見つける。
 セクターごとに適用した定理 D.6（[講義ノート、8.5節](../../lecture_notes/ja/08_dynamics.md#s-8-5)）により、各セクターが忠実な定常状態をもち、
-$H_c$ およびすべての $L_{j,c}$、$L_{j,c}^*$ と可換な行列が $1$ の定数倍だけならば、このことが成り立つ。
-コードはこの二つの仮定を（浮動小数点で、上で用いたレート $g_j=1$ について）確かめ、それから結論を assert する。
+$`H_c`$ およびすべての $`L_{j,c}`$、$`L_{j,c}^*`$ と可換な行列が $`1`$ の定数倍だけならば、このことが成り立つ。
+コードはこの二つの仮定を（浮動小数点で、上で用いたレート $`g_j=1`$ について）確かめ、それから結論を assert する。
 
 ```python
 for c, k in enumerate(two.k_factors):                              # Theorem D.6 in every sector
@@ -336,25 +336,25 @@ assert kernel == [1, 1]                                            # the conclus
 QuTiP（`sesolve`、適応的 ODE ソルバーによるリンドブラッド方程式用の `mesolve`、量子軌跡用の `mcsolve`、
 `steadystate`、`liouvillian`）、dynamiqs（JAX。GPU 上でバッチ化され微分可能な
 シュレーディンガー・ソルバーとリンドブラッド・ソルバー）、QuantumOptics.jl、および SciPy（`scipy.linalg.expm`、および
-疎なベクトル化された生成子に対して $e^{t\mathcal L}\rho$ を計算する `scipy.sparse.linalg.expm_multiply`）は、
+疎なベクトル化された生成子に対して $`e^{t\mathcal L}\rho`$ を計算する `scipy.sparse.linalg.expm_multiply`）は、
 同じ方程式を一つのヒルベルト空間上で解く。上の問題に対しては、それらは同じ数値を与えなければならない。
-$\mathcal M$ 上では、それらに $D\times D$ のブロック対角行列を渡すことになる。このときベクトル化された生成子は
-$D^2$ 次元の空間に作用し（疎ではあるが、一回の求解の中でセクターどうしが結合される）、ユーザーが
+$`\mathcal M`$ 上では、それらに $`D\times D`$ のブロック対角行列を渡すことになる。このときベクトル化された生成子は
+$`D^2`$ 次元の空間に作用し（疎ではあるが、一回の求解の中でセクターどうしが結合される）、ユーザーが
 問題を手作業でセクターに分割しない限りそうなる。ライブラリはブロック構造を組み込んでいる：セクターごとの
-厳密なプロパゲーターとリンドブラッド・チャネル（$k_c^2\times k_c^2$ の超演算子）、命題 8.8 の圧縮を伴う
+厳密なプロパゲーターとリンドブラッド・チャネル（$`k_c^2\times k_c^2`$ の超演算子）、命題 8.8 の圧縮を伴う
 `InterSectorChannel` としてのセクター間のジャンプ、ハミルトニアンとジャンプ
 作用素のバッチ（不規則性の平均のため）、そして自動微分（最後の二つは dynamiqs にもある）。
 適応的な刻み幅制御はなく（RK4 は固定刻みで、近似的にしか正値性を保たない）、軌跡
-ソルバーもなく、`lindblad_channel` はセクター間のジャンプを受け付けない。それらについては、$M_D$ 上の QuTiP や dynamiqs
+ソルバーもなく、`lindblad_channel` はセクター間のジャンプを受け付けない。それらについては、$`M_D`$ 上の QuTiP や dynamiqs
 が基準となる。
 
 <a id="x-8"></a>
 
 ## 演習問題
 
-講義ノートの[演習問題 2 と 4](../../lecture_notes/ja/08_dynamics.md#x-8)：8.4節のセクター $N=1$ における $H_{\mathrm{eff}}$ の固有値
-$-\frac i4(\gamma_1+\gamma_2)\pm\sqrt{J^2-\delta^2}$、$\delta=(\gamma_1-\gamma_2)/4$ と、$J=|\delta|$ でのサイズ $2$ のただ一つのジョルダン細胞；
-および $M_2$ 上の純粋位相緩和（$L=\sigma_z$）のスペクトル $\{0,0,-2\gamma\pm i\omega\}$。両方を数値的に確かめよ。
+講義ノートの[演習問題 2 と 4](../../lecture_notes/ja/08_dynamics.md#x-8)：8.4節のセクター $`N=1`$ における $`H_{\mathrm{eff}}`$ の固有値
+$`-\frac i4(\gamma_1+\gamma_2)\pm\sqrt{J^2-\delta^2}`$、$`\delta=(\gamma_1-\gamma_2)/4`$ と、$`J=|\delta|`$ でのサイズ $`2`$ のただ一つのジョルダン細胞；
+および $`M_2`$ 上の純粋位相緩和（$`L=\sigma_z`$）のスペクトル $`\{0,0,-2\gamma\pm i\omega\}`$。両方を数値的に確かめよ。
 
 <details>
 <summary>解答</summary>

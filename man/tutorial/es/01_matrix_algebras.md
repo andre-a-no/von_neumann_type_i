@@ -3,7 +3,7 @@
 # Tutorial 1. Álgebras de matrices y cálculo funcional
 
 Este tutorial acompaña al [capítulo 1](../../lecture_notes/es/01_matrix_algebras.md) de los apuntes de clase, que demuestra el teorema
-espectral, el cálculo funcional, la descomposición polar y la dualidad de la norma traza en $M_n(\mathbb C)$.
+espectral, el cálculo funcional, la descomposición polar y la dualidad de la norma traza en $`M_n(\mathbb C)`$.
 Aquí se comprueba cada uno de estos resultados con la biblioteca.
 
 **Aprenderá** a construir operadores con un espectro prescrito, a aplicar una función a un
@@ -16,8 +16,8 @@ resultado exacto.
 
 *Apuntes:* [sección 1.2](../../lecture_notes/es/01_matrix_algebras.md#s-1-2) y [sección 1.3](../../lecture_notes/es/01_matrix_algebras.md#s-1-3): [teorema 1.3](../../lecture_notes/es/01_matrix_algebras.md#r-1-3), [corolario 1.4](../../lecture_notes/es/01_matrix_algebras.md#r-1-4), [teorema 1.5](../../lecture_notes/es/01_matrix_algebras.md#r-1-5), [teorema 1.6](../../lecture_notes/es/01_matrix_algebras.md#r-1-6).
 
-La biblioteca trabaja con álgebras $\bigoplus_cM_{k_c}(\mathbb C)$ (capítulo 2). Un único
-bloque corresponde al caso $C=1$: `TypeIAlgebra([n], [n])` es $M_n(\mathbb C)$. (Las dos
+La biblioteca trabaja con álgebras $`\bigoplus_cM_{k_c}(\mathbb C)`$ (capítulo 2). Un único
+bloque corresponde al caso $`C=1`$: `TypeIAlgebra([n], [n])` es $`M_n(\mathbb C)`$. (Las dos
 listas son los tamaños de bloque nominales y los reales; por ahora coinciden.)
 
 ```python
@@ -37,21 +37,21 @@ print(A.eigenvalues()[0])      # one tensor per block, eigenvalues in ascending 
 
 Cada operador se almacena como un único tensor de forma `(batch, C, k_max, k_max)`: un lote
 de operadores, cada uno de ellos una lista de `C` bloques. Aquí `batch = C = 1`. La
-construcción es exactamente el teorema 1.3 leído al revés: $A=U\Lambda U^*$ con $U$
-distribuida según la medida de Haar (la biblioteca genera $U$ mediante la construcción QR del
+construcción es exactamente el teorema 1.3 leído al revés: $`A=U\Lambda U^*`$ con $`U`$
+distribuida según la medida de Haar (la biblioteca genera $`U`$ mediante la construcción QR del
 teorema 5.3). El indicador `force_positive=True` se verifica sobre los valores propios prescritos
-(la biblioteca lanza un error si alguno de ellos es menor que $-10^{-12}$); por el corolario 1.4(3),
-el resultado es entonces positivo (de forma exacta cuando los valores propios prescritos son $\ge0$,
+(la biblioteca lanza un error si alguno de ellos es menor que $`-10^{-12}`$); por el corolario 1.4(3),
+el resultado es entonces positivo (de forma exacta cuando los valores propios prescritos son $`\ge0`$,
 como aquí; en general, salvo esta tolerancia), y la biblioteca lo registra en lugar de comprobarlo
 de nuevo. Por la misma razón, `A.eigenvalues()` devuelve más arriba el espectro prescrito,
 ordenado, sin calcular nada; no es una comprobación. La comprobación de
-$\mathrm{spec}\,f(A)=f(\mathrm{spec}\,A)$ de más abajo sí calcula: `apply_function`
-diagonaliza la matriz de $A$, y los valores propios de la matriz resultante $e^A$ se calculan
+$`\mathrm{spec}\,f(A)=f(\mathrm{spec}\,A)`$ de más abajo sí calcula: `apply_function`
+diagonaliza la matriz de $`A`$, y los valores propios de la matriz resultante $`e^A`$ se calculan
 desde cero.
 
 El cálculo funcional para operadores autoadjuntos es `apply_function` (diagonaliza cada
-bloque con `eigh`). La función $f$ debe actuar elemento a elemento: recibe los valores propios de
-todos los sectores de un mismo tamaño $k$ como un único tensor de forma `(batch, n·k)`, donde $n$
+bloque con `eigh`). La función $`f`$ debe actuar elemento a elemento: recibe los valores propios de
+todos los sectores de un mismo tamaño $`k`$ como un único tensor de forma `(batch, n·k)`, donde $`n`$
 es el número de tales sectores, y devuelve un tensor de la misma forma. Las funciones habituales
 tienen sus propios métodos. Comprobamos los teoremas 1.5 y 1.6:
 
@@ -101,10 +101,10 @@ assert abs(X.trace.item()) <= X.trace_norm().item()     # |Tr X| <= ||X||_1
 ```
 
 `torch.randn` con un dtype complejo genera entradas independientes con partes real e imaginaria
-independientes $\sim N(0,\tfrac12)$, de modo que `G` es una matriz de Ginibre, que tiene densidad
-(proposición A.16(b)). $|X|$ es invertible casi seguramente:
-$(\det|X|)^2=\det(|X|^2)=\det(X^*X)=|\det X|^2$, y $|\det X|^2$ es un polinomio en las partes real e
-imaginaria de las entradas que vale $1$ en $X=1$, así que se anula con probabilidad cero
+independientes $`\sim N(0,\tfrac12)`$, de modo que `G` es una matriz de Ginibre, que tiene densidad
+(proposición A.16(b)). $`|X|`$ es invertible casi seguramente:
+$`(\det|X|)^2=\det(|X|^2)=\det(X^*X)=|\det X|^2`$, y $`|\det X|^2`$ es un polinomio en las partes real e
+imaginaria de las entradas que vale $`1`$ en $`X=1`$, así que se anula con probabilidad cero
 (corolario A.7(b); este es también el primer paso del teorema 5.3).
 
 <a id="s-1-7"></a>
@@ -118,8 +118,8 @@ métodos de Monte Carlo y la optimización con múltiples arranques necesitan mi
 operadores, y una única llamada por lotes sustituye a un bucle de Python sobre ellos. Como
 ejemplo, comprobamos un momento exacto del **conjunto gaussiano unitario** (GUE).
 
-Según los [apuntes de clase, proposición 1.10](../../lecture_notes/es/01_matrix_algebras.md#r-1-10), si $G$ tiene entradas independientes con partes
-real e imaginaria independientes $\sim N(0,\tfrac12)$ y $X=(G+G^*)/\sqrt{2n}$, entonces $\mathbb E\,\tfrac1n\mathrm{Tr}\,X^4=2+\tfrac1{n^2}$.
+Según los [apuntes de clase, proposición 1.10](../../lecture_notes/es/01_matrix_algebras.md#r-1-10), si $`G`$ tiene entradas independientes con partes
+real e imaginaria independientes $`\sim N(0,\tfrac12)`$ y $`X=(G+G^*)/\sqrt{2n}`$, entonces $`\mathbb E\,\tfrac1n\mathrm{Tr}\,X^4=2+\tfrac1{n^2}`$.
 
 ```python
 n, B = 4, 200_000
@@ -135,12 +135,12 @@ assert abs(mean - (2 + 1 / n**2)) < 5 * err
 ```
 
 Una comprobación de Monte Carlo es un contraste estadístico: la estimación debe coincidir
-con el valor exacto salvo unos pocos errores típicos. La variable $\tfrac1n\mathrm{Tr}\,X^4$ es un
-polinomio en variables gaussianas, así que tiene varianza finita $\sigma^2$ (lema A.23: todos los
-momentos gaussianos son finitos; los productos se tratan con $|y_1\cdots y_r|\le\sum_i|y_i|^r$), y por
-la desigualdad de Chebyshev la media de $B$ muestras independientes se aparta del valor exacto en
-más de $5\sigma/\sqrt B$ con probabilidad a lo sumo $1/25$. El código usa la desviación típica
-muestral en lugar de $\sigma$, y la semilla fija hace que la comprobación sea reproducible. Este es
+con el valor exacto salvo unos pocos errores típicos. La variable $`\tfrac1n\mathrm{Tr}\,X^4`$ es un
+polinomio en variables gaussianas, así que tiene varianza finita $`\sigma^2`$ (lema A.23: todos los
+momentos gaussianos son finitos; los productos se tratan con $`|y_1\cdots y_r|\le\sum_i|y_i|^r`$), y por
+la desigualdad de Chebyshev la media de $`B`$ muestras independientes se aparta del valor exacto en
+más de $`5\sigma/\sqrt B`$ con probabilidad a lo sumo $`1/25`$. El código usa la desviación típica
+muestral en lugar de $`\sigma`$, y la semilla fija hace que la comprobación sea reproducible. Este es
 el esquema de toda comprobación frente a resultados demostrados en este tutorial: un enunciado
 exacto, una estimación numérica y una tolerancia explícita.
 
@@ -160,9 +160,9 @@ operaciones.
 ## Ejercicios
 
 [Ejercicios 1 y 3](../../lecture_notes/es/01_matrix_algebras.md#x-1) de los apuntes de clase, numéricamente:
-- Compruebe que $(fg)(A)=f(A)g(A)$ para $f=\sin$, $g=\exp$ y una $A$ autoadjunta aleatoria (ejercicio 1).
-- La **media geométrica** de $A,B>0$ es $A\#B=A^{1/2}(A^{-1/2}BA^{-1/2})^{1/2}A^{1/2}$, la única solución
-  positiva $X$ de $XA^{-1}X=B$ (ejercicio 3). Compruebe numéricamente esta ecuación y que $A\#B=B\#A$.
+- Compruebe que $`(fg)(A)=f(A)g(A)`$ para $`f=\sin`$, $`g=\exp`$ y una $`A`$ autoadjunta aleatoria (ejercicio 1).
+- La **media geométrica** de $`A,B>0`$ es $`A\#B=A^{1/2}(A^{-1/2}BA^{-1/2})^{1/2}A^{1/2}`$, la única solución
+  positiva $`X`$ de $`XA^{-1}X=B`$ (ejercicio 3). Compruebe numéricamente esta ecuación y que $`A\#B=B\#A`$.
 
 <details>
 <summary>Soluciones</summary>
@@ -187,4 +187,4 @@ assert close(GM @ P.inverse() @ GM, Q, 1e-9)
 
 </details>
 
-**Siguiente:** [Tutorial 2](02_von_neumann_algebras.md): conmutantes, el centro y el álgebra $\bigoplus_cM_{k_c}(\mathbb C)$ en la biblioteca.
+**Siguiente:** [Tutorial 2](02_von_neumann_algebras.md): conmutantes, el centro y el álgebra $`\bigoplus_cM_{k_c}(\mathbb C)`$ en la biblioteca.

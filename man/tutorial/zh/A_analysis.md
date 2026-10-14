@@ -4,7 +4,7 @@
 
 本教程配合讲义的[附录 A](../../lecture_notes/zh/A_analysis.md)，该附录证明了各章按编号引用的分析与概率中的事实：多项式的零点集、
 特征值不等式、高斯向量及其方向、高斯矩以及均匀间距。这里的检验只使用 NumPy，不使用本库：每个代码块对随机向量
-或随机矩阵抽样，并与精确的结论比较。第一个代码块中定义的辅助函数 `mc` 断言蒙特卡罗均值与精确值之差在 $5$ 个
+或随机矩阵抽样，并与精确的结论比较。第一个代码块中定义的辅助函数 `mc` 断言蒙特卡罗均值与精确值之差在 $`5`$ 个
 标准误差以内。
 
 <a id="s-A-2"></a>
@@ -13,9 +13,9 @@
 
 *讲义：* [A.2 节](../../lecture_notes/zh/A_analysis.md#s-A-2)；[推论 A.7](../../lecture_notes/zh/A_analysis.md#r-A-7)。
 
-由[推论 A.7](../../lecture_notes/zh/A_analysis.md#r-A-7)，不恒为零的多项式在具有密度的随机向量处取零的概率为 $0$。对 $\det Z$，其中 $Z$
-是元素相互独立且服从 $N(0,1)$ 的 $3\times3$ 实矩阵，这给出当 $\varepsilon\to0$ 时
-$\mathbb P(|\det Z|<\varepsilon)\to0$。
+由[推论 A.7](../../lecture_notes/zh/A_analysis.md#r-A-7)，不恒为零的多项式在具有密度的随机向量处取零的概率为 $`0`$。对 $`\det Z`$，其中 $`Z`$
+是元素相互独立且服从 $`N(0,1)`$ 的 $`3\times3`$ 实矩阵，这给出当 $`\varepsilon\to0`$ 时
+$`\mathbb P(|\det Z|<\varepsilon)\to0`$。
 
 ```python
 import math
@@ -48,9 +48,9 @@ assert fractions[1] < 0.2 * fractions[0] and fractions[2] < 0.2 * fractions[1]
 *讲义：* [A.3 节](../../lecture_notes/zh/A_analysis.md#s-A-3)；[定理 A.8](../../lecture_notes/zh/A_analysis.md#r-A-8)、[推论 A.9](../../lecture_notes/zh/A_analysis.md#r-A-9)、[定理 A.10](../../lecture_notes/zh/A_analysis.md#r-A-10)、[引理 A.12](../../lecture_notes/zh/A_analysis.md#r-A-12)。
 
 该代码块在随机 Hermite 矩阵上检验 Weyl 不等式
-$\lambda_j(A)+\lambda_1(E)\le\lambda_j(A+E)\le\lambda_j(A)+\lambda_n(E)$（[定理 A.10](../../lecture_notes/zh/A_analysis.md#r-A-10)）、对 $j$ 维 $U$ 的
-Courant–Fischer 界 $\max_{x\in U,|x|=1}\langle x,Ax\rangle\ge\lambda_j(A)$（[定理 A.8](../../lecture_notes/zh/A_analysis.md#r-A-8)）、交错不等式
-$\lambda_j(A)\le\lambda_j(Q^*AQ)\le\lambda_{j+n-m}(A)$（[推论 A.9](../../lecture_notes/zh/A_analysis.md#r-A-9)），以及谱投影的 Lagrange 公式
+$`\lambda_j(A)+\lambda_1(E)\le\lambda_j(A+E)\le\lambda_j(A)+\lambda_n(E)`$（[定理 A.10](../../lecture_notes/zh/A_analysis.md#r-A-10)）、对 $`j`$ 维 $`U`$ 的
+Courant–Fischer 界 $`\max_{x\in U,|x|=1}\langle x,Ax\rangle\ge\lambda_j(A)`$（[定理 A.8](../../lecture_notes/zh/A_analysis.md#r-A-8)）、交错不等式
+$`\lambda_j(A)\le\lambda_j(Q^*AQ)\le\lambda_{j+n-m}(A)`$（[推论 A.9](../../lecture_notes/zh/A_analysis.md#r-A-9)），以及谱投影的 Lagrange 公式
 （[引理 A.12](../../lecture_notes/zh/A_analysis.md#r-A-12)）。
 
 ```python
@@ -94,9 +94,9 @@ for i, m_i in enumerate(mult):
 
 *讲义：* [A.4 节](../../lecture_notes/zh/A_analysis.md#s-A-4)；[定理 A.15](../../lecture_notes/zh/A_analysis.md#r-A-15)、[命题 A.17](../../lecture_notes/zh/A_analysis.md#r-A-17)。
 
-[定理 A.15](../../lecture_notes/zh/A_analysis.md#r-A-15) 给出非退化中心化高斯向量 $X$ 的密度 $f_X$；该代码块把 $\mathbb P(X\in[0,1]^2)$
-与用中点法则算出的 $f_X$ 的积分比较。由[命题 A.17](../../lecture_notes/zh/A_analysis.md#r-A-17)，$\mathbb E\mathrm{Tr}\,H^2$ 对 GOE 为
-$n(n+1)/2$，对 GUE 为 $n^2$，并且 $OHO^T$ 与 GOE 矩阵 $H$ 同分布；该代码块检验其元素的两个矩。
+[定理 A.15](../../lecture_notes/zh/A_analysis.md#r-A-15) 给出非退化中心化高斯向量 $`X`$ 的密度 $`f_X`$；该代码块把 $`\mathbb P(X\in[0,1]^2)`$
+与用中点法则算出的 $`f_X`$ 的积分比较。由[命题 A.17](../../lecture_notes/zh/A_analysis.md#r-A-17)，$`\mathbb E\mathrm{Tr}\,H^2`$ 对 GOE 为
+$`n(n+1)/2`$，对 GUE 为 $`n^2`$，并且 $`OHO^T`$ 与 GOE 矩阵 $`H`$ 同分布；该代码块检验其元素的两个矩。
 
 ```python
 Amat = rng.standard_normal((2, 4))                       # Theorem A.15: X = A g in R^2, A of rank 2
@@ -128,9 +128,9 @@ mc(rot[:, 0, 1] ** 2, 0.5, "E (O H O^T)_12^2")
 
 *讲义：* [A.5 节](../../lecture_notes/zh/A_analysis.md#s-A-5)；[推论 A.19](../../lecture_notes/zh/A_analysis.md#r-A-19)、[定理 A.20](../../lecture_notes/zh/A_analysis.md#r-A-20)、[推论 A.21](../../lecture_notes/zh/A_analysis.md#r-A-21)。
 
-对标准复高斯向量 $z\in\mathbb C^3$，[定理 A.20](../../lecture_notes/zh/A_analysis.md#r-A-20)(b) 指出 $|z|^2$ 有密度
-$t^{N-1}e^{-t}/(N-1)!$，并且 $z/|z|$ 在球面上均匀分布且与 $|z|$ 独立；[推论 A.21](../../lecture_notes/zh/A_analysis.md#r-A-21) 给出均匀单位向量的矩。
-该代码块检验这些结论、单位球的体积 $V_3=4\pi/3$（[推论 A.19](../../lecture_notes/zh/A_analysis.md#r-A-19)），以及 $z_1$ 的相位是均匀的
+对标准复高斯向量 $`z\in\mathbb C^3`$，[定理 A.20](../../lecture_notes/zh/A_analysis.md#r-A-20)(b) 指出 $`|z|^2`$ 有密度
+$`t^{N-1}e^{-t}/(N-1)!`$，并且 $`z/|z|`$ 在球面上均匀分布且与 $`|z|`$ 独立；[推论 A.21](../../lecture_notes/zh/A_analysis.md#r-A-21) 给出均匀单位向量的矩。
+该代码块检验这些结论、单位球的体积 $`V_3=4\pi/3`$（[推论 A.19](../../lecture_notes/zh/A_analysis.md#r-A-19)），以及 $`z_1`$ 的相位是均匀的
 （[A.5 节](../../lecture_notes/zh/A_analysis.md#s-A-5)，定理 A.20 之后）。
 
 ```python
@@ -162,9 +162,9 @@ mc((phase >= 0) & (phase < 1), 1 / (2 * math.pi), "P(arg z_1 in [0, 1))")
 
 *讲义：* [A.6 节](../../lecture_notes/zh/A_analysis.md#s-A-6)；[定理 A.24](../../lecture_notes/zh/A_analysis.md#r-A-24)。
 
-Isserlis–Wick 公式（[定理 A.24](../../lecture_notes/zh/A_analysis.md#r-A-24)）把中心化高斯向量的矩写成对 $(2p-1)!!$ 个配对求和的协方差乘积之和。
-该代码块枚举这些配对，把公式与 $\mathbb R^3$ 中高斯向量的蒙特卡罗矩比较，并由定理的复形式对标准复高斯变量 $z$
-重新得到 $\mathbb E|z|^4=2$。
+Isserlis–Wick 公式（[定理 A.24](../../lecture_notes/zh/A_analysis.md#r-A-24)）把中心化高斯向量的矩写成对 $`(2p-1)!!`$ 个配对求和的协方差乘积之和。
+该代码块枚举这些配对，把公式与 $`\mathbb R^3`$ 中高斯向量的蒙特卡罗矩比较，并由定理的复形式对标准复高斯变量 $`z`$
+重新得到 $`\mathbb E|z|^4=2`$。
 
 ```python
 def pairings(idx):
@@ -199,9 +199,9 @@ assert abs(wick(cz, (0, 1, 0, 1)) - 2) < 1e-12                           # E|z|^
 
 *讲义：* [A.7 节](../../lecture_notes/zh/A_analysis.md#s-A-7)；[定理 A.25](../../lecture_notes/zh/A_analysis.md#r-A-25)、[推论 A.26](../../lecture_notes/zh/A_analysis.md#r-A-26)。
 
-由[推论 A.26](../../lecture_notes/zh/A_analysis.md#r-A-26)，$n$ 个排好序的均匀点的 $n+1$ 个间距与归一化指数变量 $(e_0,\dots,e_n)/T$ 同分布，
-具有 (c) 部分的矩、$\mathbb P(s_i/s_j\le t)=t/(1+t)$，以及平均间距比 $2\ln2-1$。该代码块对 $n=5$ 的两族检验这些
-结论，并通过 $\mathbb E[w_0T^2]=\mathbb Ew_0\,\mathbb ET^2=n+2$ 检验 $(e_0,\dots,e_n)/T$ 与 $T$ 的独立性
+由[推论 A.26](../../lecture_notes/zh/A_analysis.md#r-A-26)，$`n`$ 个排好序的均匀点的 $`n+1`$ 个间距与归一化指数变量 $`(e_0,\dots,e_n)/T`$ 同分布，
+具有 (c) 部分的矩、$`\mathbb P(s_i/s_j\le t)=t/(1+t)`$，以及平均间距比 $`2\ln2-1`$。该代码块对 $`n=5`$ 的两族检验这些
+结论，并通过 $`\mathbb E[w_0T^2]=\mathbb Ew_0\,\mathbb ET^2=n+2`$ 检验 $`(e_0,\dots,e_n)/T`$ 与 $`T`$ 的独立性
 （[定理 A.25](../../lecture_notes/zh/A_analysis.md#r-A-25)）。
 
 ```python

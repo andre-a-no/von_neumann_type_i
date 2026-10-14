@@ -13,10 +13,10 @@
 
 *Конспект:* [раздел E.3](../../lecture_notes/ru/E_jordan_classification.md#s-E-3); [лемма E.1](../../lecture_notes/ru/E_jordan_classification.md#r-E-1), [лемма E.3](../../lecture_notes/ru/E_jordan_classification.md#r-E-3), [предложение E.4](../../lecture_notes/ru/E_jordan_classification.md#r-E-4), [теорема E.5](../../lecture_notes/ru/E_jordan_classification.md#r-E-5).
 
-В формально вещественной йордановой алгебре следовая форма $\tau(x,y)=\mathrm{Tr}\,L(x\circ y)$ ассоциативна и положительно
+В формально вещественной йордановой алгебре следовая форма $`\tau(x,y)=\mathrm{Tr}\,L(x\circ y)`$ ассоциативна и положительно
 определена ([конспект лекций, теорема E.5](../../lecture_notes/ru/E_jordan_classification.md#r-E-5)). Код проверяет [лемму E.1(4)](../../lecture_notes/ru/E_jordan_classification.md#r-E-1),
-[лемму E.3](../../lecture_notes/ru/E_jordan_classification.md#r-E-3) (идемпотенты $p_i(x)$ вычисляются только через йордановы степени), [предложение E.4](../../lecture_notes/ru/E_jordan_classification.md#r-E-4)
-и теорему E.5 в $\mathrm{Herm}_3(\mathbb C)$, заданной структурными константами (алгебры $\mathrm{Herm}_n(D)$ из
+[лемму E.3](../../lecture_notes/ru/E_jordan_classification.md#r-E-3) (идемпотенты $`p_i(x)`$ вычисляются только через йордановы степени), [предложение E.4](../../lecture_notes/ru/E_jordan_classification.md#r-E-4)
+и теорему E.5 в $`\mathrm{Herm}_3(\mathbb C)`$, заданной структурными константами (алгебры $`\mathrm{Herm}_n(D)`$ из
 [раздела E.7](../../lecture_notes/ru/E_jordan_classification.md#s-E-7)); используемое для её построения произведение Кэли–Диксона `cd` — то же, что в [разделе E.6](../../lecture_notes/ru/E_jordan_classification.md#s-E-6).
 
 ```python
@@ -120,8 +120,8 @@ assert torch.allclose(mul(C3, x, y) @ T3 @ w, x @ T3 @ mul(C3, y, w))         # 
 
 *Конспект:* [раздел E.6](../../lecture_notes/ru/E_jordan_classification.md#s-E-6); [лемма E.14](../../lecture_notes/ru/E_jordan_classification.md#r-E-14), [лемма E.15](../../lecture_notes/ru/E_jordan_classification.md#r-E-15), [лемма E.18](../../lecture_notes/ru/E_jordan_classification.md#r-E-18).
 
-Код строит $\mathbb O$ удвоением Кэли–Диксона и проверяет на случайных октонионах тождества леммы E.14, тождество Муфанг
-из леммы E.18 и неассоциативность из леммы E.15, а также гомоморфизм $M$:
+Код строит $`\mathbb O`$ удвоением Кэли–Диксона и проверяет на случайных октонионах тождества леммы E.14, тождество Муфанг
+из леммы E.18 и неассоциативность из леммы E.15, а также гомоморфизм $`M`$:
 
 ```python
 o = torch.randn(4, 1000, 8, dtype=dt)             # random octonions
@@ -152,9 +152,9 @@ assert torch.allclose(M(cd(p4, q4)), M(p4) @ M(q4)) and torch.allclose(M(conj(p4
 
 *Конспект:* [раздел E.8](../../lecture_notes/ru/E_jordan_classification.md#s-E-8); [лемма E.20](../../lecture_notes/ru/E_jordan_classification.md#r-E-20), [лемма E.23](../../lecture_notes/ru/E_jordan_classification.md#r-E-23), [теорема E.24](../../lecture_notes/ru/E_jordan_classification.md#r-E-24), [следствие E.25](../../lecture_notes/ru/E_jordan_classification.md#r-E-25).
 
-Код проверяет на случайных элементах йорданово тождество в алгебре Альберта $\mathrm{Herm}_3(\mathbb O)$
+Код проверяет на случайных элементах йорданово тождество в алгебре Альберта $`\mathrm{Herm}_3(\mathbb O)`$
 ([конспект лекций, теорема E.24(2)](../../lecture_notes/ru/E_jordan_classification.md#r-E-24)) и ассоциативность и положительность её следовой формы
-([лемма E.20](../../lecture_notes/ru/E_jordan_classification.md#r-E-20)), численно показывает, что йорданово тождество нарушается в $\mathrm{Herm}_4(\mathbb O)$
+([лемма E.20](../../lecture_notes/ru/E_jordan_classification.md#r-E-20)), численно показывает, что йорданово тождество нарушается в $`\mathrm{Herm}_4(\mathbb O)`$
 ([следствие E.25](../../lecture_notes/ru/E_jordan_classification.md#r-E-25)), проверяет автоморфизм из [леммы E.23](../../lecture_notes/ru/E_jordan_classification.md#r-E-23) и выполняет три шага (a)–(c)
 доказательства теоремы E.24(2) на случайном элементе:
 
@@ -202,9 +202,9 @@ assert abs(abs(x3[11].item()) - s.norm().item()) < 1e-12
 
 *Конспект:* [раздел E.9](../../lecture_notes/ru/E_jordan_classification.md#s-E-9); [теорема E.5](../../lecture_notes/ru/E_jordan_classification.md#r-E-5), [теорема E.8](../../lecture_notes/ru/E_jordan_classification.md#r-E-8), [предложение E.11](../../lecture_notes/ru/E_jordan_classification.md#r-E-11), [теорема E.27](../../lecture_notes/ru/E_jordan_classification.md#r-E-27).
 
-Код вычисляет для каждого типа йорданов репер $(E_{ii})$ или $(c_w,c_{-w})$, размерности пространств Пирса как
-общих собственных подпространств операторов $L(c_i)$ (теорема E.8), формулу размерности из предложения E.11(2) и положительность следовой
-формы $\tau$ (теорема E.5):
+Код вычисляет для каждого типа йорданов репер $`(E_{ii})`$ или $`(c_w,c_{-w})`$, размерности пространств Пирса как
+общих собственных подпространств операторов $`L(c_i)`$ (теорема E.8), формулу размерности из предложения E.11(2) и положительность следовой
+формы $`\tau`$ (теорема E.5):
 
 ```python
 def peirce(C, frame):

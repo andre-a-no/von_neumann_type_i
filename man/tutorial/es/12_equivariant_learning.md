@@ -5,10 +5,10 @@
 Este tutorial acompaña al [capítulo 12](../../lecture_notes/es/12_equivariant_learning.md) de los apuntes de clase, que demuestra que las aplicaciones lineales
 equivariantes entre dos representaciones de un grupo finito son matrices por bloques ([teorema 12.4](../../lecture_notes/es/12_equivariant_learning.md#r-12-4)), que
 promediar sobre el grupo es la proyección ortogonal sobre ellas ([teorema 12.5](../../lecture_notes/es/12_equivariant_learning.md#r-12-5)), y cuenta invariantes.
-Aquí construimos y entrenamos capas equivariantes con `torch_vn_algebra.decompose`, para $S_4$ actuando sobre las
+Aquí construimos y entrenamos capas equivariantes con `torch_vn_algebra.decompose`, para $`S_4`$ actuando sobre las
 características de vértices y de aristas de grafos, y comprobamos numéricamente estos resultados.
 
-En el código, un lote de vectores es un tensor de forma `(batch, n)`, sobre el que una matriz $T$ actúa como `x @ T.T`.
+En el código, un lote de vectores es un tensor de forma `(batch, n)`, sobre el que una matriz $`T`$ actúa como `x @ T.T`.
 
 <a id="s-12-1"></a>
 
@@ -18,7 +18,7 @@ En el código, un lote de vectores es un tensor de forma `(batch, n)`, sobre el 
 
 La capa DeepSets (Zaheer et al. 2017) es [apuntes de clase, corolario 12.2](../../lecture_notes/es/12_equivariant_learning.md#r-12-2)(a); las bases de Maron et al. (2019) para redes de grafos son (b).
 El código cuenta las órbitas por fuerza bruta, las compara con el conmutante calculado numéricamente ([lema 12.1](../../lecture_notes/es/12_equivariant_learning.md#r-12-1))
-y descompone ambas representaciones de $S_4$:
+y descompone ambas representaciones de $`S_4`$:
 
 ```python
 import itertools
@@ -59,15 +59,15 @@ assert (D_node.k_factors, D_node.multiplicities) == ((1, 3), (1, 1))
 assert (D_edge.k_factors, D_edge.multiplicities) == ((1, 2, 3, 3), (2, 1, 1, 3))
 ```
 
-Así, en la descomposición calculada por `dc.from_group` (los asserts comprueban su resultado), $\mathbb C^{16}$
-contiene una representación de dimensión $1$ dos veces —la trivial, cuya multiplicidad es el número $2$ de órbitas
-sobre $[4]^2$ por la proposición 12.7(a) y el lema 12.1 (el código de la sección 12.4 identifica este sector)—, una
-de dimensión $2$ una vez, y dos de dimensión $3$, una vez y tres veces:
-$16=1\cdot2+2\cdot1+3\cdot1+3\cdot3$, y $15=2^2+1^2+1^2+3^2$ concuerda con el recuento de órbitas del lema 12.1 y
-con $\dim\pi(G)'=\sum_cm_c^2$ (teorema 2.6). Para dos representaciones, todo se reduce a un solo conmutante:
+Así, en la descomposición calculada por `dc.from_group` (los asserts comprueban su resultado), $`\mathbb C^{16}`$
+contiene una representación de dimensión $`1`$ dos veces —la trivial, cuya multiplicidad es el número $`2`$ de órbitas
+sobre $`[4]^2`$ por la proposición 12.7(a) y el lema 12.1 (el código de la sección 12.4 identifica este sector)—, una
+de dimensión $`2`$ una vez, y dos de dimensión $`3`$, una vez y tres veces:
+$`16=1\cdot2+2\cdot1+3\cdot1+3\cdot3`$, y $`15=2^2+1^2+1^2+3^2`$ concuerda con el recuento de órbitas del lema 12.1 y
+con $`\dim\pi(G)'=\sum_cm_c^2`$ (teorema 2.6). Para dos representaciones, todo se reduce a un solo conmutante:
 
-Según los [apuntes de clase, lema 12.3](../../lecture_notes/es/12_equivariant_learning.md#r-12-3), $\mathrm{Hom}_G(\pi_1,\pi_2)=Q_2^*\,\pi(G)'\,Q_1$ para $\pi=\pi_1\oplus\pi_2$, y por el
-[teorema 12.4](../../lecture_notes/es/12_equivariant_learning.md#r-12-4) es, en bases adecuadas, $\bigoplus_cM_{b_c\times a_c}(\mathbb C)$, de dimensión $\sum_\rho m_\rho(\pi_1)\,m_\rho(\pi_2)$.
+Según los [apuntes de clase, lema 12.3](../../lecture_notes/es/12_equivariant_learning.md#r-12-3), $`\mathrm{Hom}_G(\pi_1,\pi_2)=Q_2^*\,\pi(G)'\,Q_1`$ para $`\pi=\pi_1\oplus\pi_2`$, y por el
+[teorema 12.4](../../lecture_notes/es/12_equivariant_learning.md#r-12-4) es, en bases adecuadas, $`\bigoplus_cM_{b_c\times a_c}(\mathbb C)`$, de dimensión $`\sum_\rho m_\rho(\pi_1)\,m_\rho(\pi_2)`$.
 
 <a id="s-12-2"></a>
 
@@ -77,9 +77,9 @@ Según los [apuntes de clase, lema 12.3](../../lecture_notes/es/12_equivariant_l
 
 La demostración del teorema 12.4 es un algoritmo, una vez conocida la descomposición del teorema 2.6; `dc.from_group`
 la calcula mediante el método aleatorizado de la sección 4.3 (correcto con probabilidad uno en aritmética exacta;
-aquí los asserts comprueban el resultado calculado). Para $\pi_1=\pi_2$ es simplemente el teorema 2.6: los
-pesos son bloques $w_c\in M_{m_c}$, un operador del conmutante abstracto `D.commutant_algebra()` $=\bigoplus_cM_{m_c}$,
-y la capa es $x\mapsto V\big(\bigoplus_c1_{k_c}\otimes w_c\big)V^*x$, calculada por `D.from_commutant`. El módulo
+aquí los asserts comprueban el resultado calculado). Para $`\pi_1=\pi_2`$ es simplemente el teorema 2.6: los
+pesos son bloques $`w_c\in M_{m_c}`$, un operador del conmutante abstracto `D.commutant_algebra()` $`=\bigoplus_cM_{m_c}`$,
+y la capa es $`x\mapsto V\big(\bigoplus_c1_{k_c}\otimes w_c\big)V^*x`$, calculada por `D.from_commutant`. El módulo
 siguiente es código del capítulo, no forma parte de la biblioteca.
 
 ```python
@@ -110,15 +110,15 @@ print(f"edge -> edge: {n_params} parameters, equivariance error {err:.1e}")
 assert n_params == D_edge.commutant_dim == bell[4] and err < 1e-12
 ```
 
-Para $\pi_1\ne\pi_2$ se sigue la demostración línea a línea: se descompone $\pi_1\oplus\pi_2$, se calculan los
-bloques $p_c$ de $P_1$ con `to_commutant`, se diagonalizan y se conservan las esquinas inferiores izquierdas. La
-traza de $p_c$ es $a_c=m_c(\pi_1)$.
+Para $`\pi_1\ne\pi_2`$ se sigue la demostración línea a línea: se descompone $`\pi_1\oplus\pi_2`$, se calculan los
+bloques $`p_c`$ de $`P_1`$ con `to_commutant`, se diagonalizan y se conservan las esquinas inferiores izquierdas. La
+traza de $`p_c`$ es $`a_c=m_c(\pi_1)`$.
 
-Para el corolario 12.2(b) con $n=4$, en la descomposición calculada (impresa y comprobada más abajo): las
-características de vértices $\pi_1$ tienen $a=(1,0,0,1)$ en los cuatro sectores de $\pi_1\oplus\pi_2$ (de
-dimensiones $1,2,3,3$; el primero es el trivial, pues por el corolario 12.2(a) el único constituyente de dimensión
-uno de $\pi_1$ es el trivial), y las características de aristas $\pi_2$ tienen $b=(2,1,1,3)$, luego
-$\dim\mathrm{Hom}_G=1\cdot2+1\cdot3=5=B_3$, como demuestra el corolario 12.2(b).
+Para el corolario 12.2(b) con $`n=4`$, en la descomposición calculada (impresa y comprobada más abajo): las
+características de vértices $`\pi_1`$ tienen $`a=(1,0,0,1)`$ en los cuatro sectores de $`\pi_1\oplus\pi_2`$ (de
+dimensiones $`1,2,3,3`$; el primero es el trivial, pues por el corolario 12.2(a) el único constituyente de dimensión
+uno de $`\pi_1`$ es el trivial), y las características de aristas $`\pi_2`$ tienen $`b=(2,1,1,3)`$, luego
+$`\dim\mathrm{Hom}_G=1\cdot2+1\cdot3=5=B_3`$, como demuestra el corolario 12.2(b).
 
 ```python
 class EquivariantMap(torch.nn.Module):
@@ -162,16 +162,16 @@ assert torch.linalg.matrix_rank(corners).item() == bell[3]
 ```
 
 La segunda manera de hacer equivariante una capa es promediarla sobre el grupo. El **twirl** es
-$$
+```math
 \mathcal P(W)=\frac1{|G|}\sum_{g\in G}\pi_2(g)\,W\,\pi_1(g)^*,\qquad W\in M_{n_2\times n_1}(\mathbb C).
-$$
+```
 
-Según los [apuntes de clase, teorema 12.5](../../lecture_notes/es/12_equivariant_learning.md#r-12-5), $\mathcal P$ es la proyección ortogonal, para el producto escalar de Hilbert–Schmidt, sobre $\mathrm{Hom}_G(\pi_1,\pi_2)$, y
-$\dim\mathrm{Hom}_G(\pi_1,\pi_2)=|G|^{-1}\sum_g\overline{\chi_{\pi_1}(g)}\chi_{\pi_2}(g)$; para $\pi_1=\pi_2$, `dc.commutant_dimension` evalúa esta
-fórmula de caracteres. La parametrización $W\mapsto\mathcal P(W)$ desperdicia $n_1n_2-\dim\mathrm{Hom}_G$ parámetros en el núcleo ($256-15$ para las características de aristas), y una
-evaluación cuesta $O(|G|n_1n_2(n_1+n_2))$ para $\pi(g)$ densas, con $|G|=n!$ para $S_n$. La biblioteca calcula la misma
-proyección a partir de la descomposición, `D.conditional_expectation(W, 'commutant')`, con cuatro productos $n\times n$.
-El código comprueba que `dc.twirl` y `D.conditional_expectation` coinciden, que $\mathcal P$ es la identidad sobre $\pi(G)'$
+Según los [apuntes de clase, teorema 12.5](../../lecture_notes/es/12_equivariant_learning.md#r-12-5), $`\mathcal P`$ es la proyección ortogonal, para el producto escalar de Hilbert–Schmidt, sobre $`\mathrm{Hom}_G(\pi_1,\pi_2)`$, y
+$`\dim\mathrm{Hom}_G(\pi_1,\pi_2)=|G|^{-1}\sum_g\overline{\chi_{\pi_1}(g)}\chi_{\pi_2}(g)`$; para $`\pi_1=\pi_2`$, `dc.commutant_dimension` evalúa esta
+fórmula de caracteres. La parametrización $`W\mapsto\mathcal P(W)`$ desperdicia $`n_1n_2-\dim\mathrm{Hom}_G`$ parámetros en el núcleo ($`256-15`$ para las características de aristas), y una
+evaluación cuesta $`O(|G|n_1n_2(n_1+n_2))`$ para $`\pi(g)`$ densas, con $`|G|=n!`$ para $`S_n`$. La biblioteca calcula la misma
+proyección a partir de la descomposición, `D.conditional_expectation(W, 'commutant')`, con cuatro productos $`n\times n`$.
+El código comprueba que `dc.twirl` y `D.conditional_expectation` coinciden, que $`\mathcal P`$ es la identidad sobre $`\pi(G)'`$
 y autoadjunta, y la fórmula de dimensión de las características de vértices a las de aristas.
 
 ```python
@@ -194,28 +194,28 @@ assert abs((chi_node.conj() * chi_edge).mean() - bell[3]) < 1e-12           # Th
 
 *Apuntes:* [sección 12.3](../../lecture_notes/es/12_equivariant_learning.md#s-12-3): [proposición 12.6](../../lecture_notes/es/12_equivariant_learning.md#r-12-6).
 
-Los pesos $w=(w_c)_c$ de `EquivariantLinear` viven en una $*$-álgebra, de modo que toda construcción de los
-capítulos 1 y 11 se les aplica. Escribamos $\Phi(w)=V\big(\bigoplus_c1_{k_c}\otimes w_c\big)V^*$ para
-$w\in\bigoplus_cM_{m_c}$.
+Los pesos $`w=(w_c)_c`$ de `EquivariantLinear` viven en una $`*`$-álgebra, de modo que toda construcción de los
+capítulos 1 y 11 se les aplica. Escribamos $`\Phi(w)=V\big(\bigoplus_c1_{k_c}\otimes w_c\big)V^*`$ para
+$`w\in\bigoplus_cM_{m_c}`$.
 
-Según los [apuntes de clase, proposición 12.6](../../lecture_notes/es/12_equivariant_learning.md#r-12-6), (a) $\Phi$ es un $*$-isomorfismo de $\bigoplus_cM_{m_c}$ sobre $\pi(G)'$, y $\Phi(w)$ es
-autoadjunto, unitario o positivo si y solo si lo es cada $w_c$; (b) $f(\Phi(w))=\Phi\big((f(w_c))_c\big)$ para $w$ normal; (c) las
-unitarias equivariantes son las $\Phi(u_0e^{s-s^*})$.
+Según los [apuntes de clase, proposición 12.6](../../lecture_notes/es/12_equivariant_learning.md#r-12-6), (a) $`\Phi`$ es un $`*`$-isomorfismo de $`\bigoplus_cM_{m_c}`$ sobre $`\pi(G)'`$, y $`\Phi(w)`$ es
+autoadjunto, unitario o positivo si y solo si lo es cada $`w_c`$; (b) $`f(\Phi(w))=\Phi\big((f(w_c))_c\big)`$ para $`w`$ normal; (c) las
+unitarias equivariantes son las $`\Phi(u_0e^{s-s^*})`$.
 
 Así, una capa equivariante ortogonal (unitaria) es `optimize.UnitaryParam` sobre `D.commutant_algebra()` seguida de
-$\Phi$; por (c), esta parametrización alcanza toda unitaria equivariante, y en aritmética exacta cada iterado de un
-método de gradiente es unitario y equivariante (el código comprueba ambas cosas hasta $10^{-12}$ tras el
+$`\Phi`$; por (c), esta parametrización alcanza toda unitaria equivariante, y en aritmética exacta cada iterado de un
+método de gradiente es unitario y equivariante (el código comprueba ambas cosas hasta $`10^{-12}`$ tras el
 entrenamiento). Del mismo modo, `PositiveParam` da capas equivariantes positivas,
-normalizadas como en el capítulo 11 (espectro en $[\ell,1]$ con máximo $1$; por (a), una capa positiva general es
-$\Phi(t^*t)$), y una capa espectral $f(L)$ de un generador equivariante autoadjunto $L$, como la difusión $e^{-tL}$,
-requiere descomposiciones espectrales de los bloques $w_c$, de coste del orden de $\sum_cm_c^3$ (aquí $37$) en lugar
-de $n^3=4096$; la biblioteca diferencia a través de `apply_function` (no demostramos nada sobre su paso hacia atrás;
-el código comprueba una derivada más abajo). El código ajusta una unitaria equivariante a $32$ pares
+normalizadas como en el capítulo 11 (espectro en $`[\ell,1]`$ con máximo $`1`$; por (a), una capa positiva general es
+$`\Phi(t^*t)`$), y una capa espectral $`f(L)`$ de un generador equivariante autoadjunto $`L`$, como la difusión $`e^{-tL}`$,
+requiere descomposiciones espectrales de los bloques $`w_c`$, de coste del orden de $`\sum_cm_c^3`$ (aquí $`37`$) en lugar
+de $`n^3=4096`$; la biblioteca diferencia a través de `apply_function` (no demostramos nada sobre su paso hacia atrás;
+el código comprueba una derivada más abajo). El código ajusta una unitaria equivariante a $`32`$ pares
 entrada–salida con Adam —una observación numérica de esta ejecución, no un teorema: la pérdida disminuye en más de
-un factor $10^3$, lo que comprueba el assert, y no se afirma ningún resultado de convergencia— y contrasta (b) y el
-gradiente respecto de $t$ con matrices densas y con la fórmula $\frac d{dt}e^{-tL}=-Le^{-tL}$ (para
-$L=U\mathrm{diag}(\lambda)U^*$, $e^{-tL}=U\mathrm{diag}(e^{-t\lambda_i})U^*$ por el teorema 1.5, y $U$ no
-depende de $t$).
+un factor $`10^3`$, lo que comprueba el assert, y no se afirma ningún resultado de convergencia— y contrasta (b) y el
+gradiente respecto de $`t`$ con matrices densas y con la fórmula $`\frac d{dt}e^{-tL}=-Le^{-tL}`$ (para
+$`L=U\mathrm{diag}(\lambda)U^*`$, $`e^{-tL}=U\mathrm{diag}(e^{-t\lambda_i})U^*`$ por el teorema 1.5, y $`U`$ no
+depende de $`t`$).
 
 ```python
 from torch_vn_algebra import optimize as opt
@@ -260,8 +260,8 @@ assert abs(t.grad.item() - (Z.conj() * dE).sum().real.item()) < 1e-10
 *Apuntes:* [sección 12.4](../../lecture_notes/es/12_equivariant_learning.md#s-12-4): [proposición 12.7](../../lecture_notes/es/12_equivariant_learning.md#r-12-7) (vectores invariantes y formas cuadráticas) y [proposición 12.8](../../lecture_notes/es/12_equivariant_learning.md#r-12-8) (fórmula de Molien).
 
 Para grafos, las características de aristas invariantes están generadas por las indicadoras de la diagonal y de su
-complemento ($B_2=2$), y las lecturas lineales invariantes son la suma de las entradas diagonales y la de las no
-diagonales. El código encuentra el sector trivial a partir de los bloques $\rho_c(g)$ (`to_algebra`) y comprueba
+complemento ($`B_2=2`$), y las lecturas lineales invariantes son la suma de las entradas diagonales y la de las no
+diagonales. El código encuentra el sector trivial a partir de los bloques $`\rho_c(g)`$ (`to_algebra`) y comprueba
 (a), (b) y los dos recuentos de (c).
 
 ```python
@@ -292,16 +292,16 @@ print(f"invariant quadratic polynomials: vertices {degree2(G_node):.4f}, edges {
 assert abs(degree2(G_node) - 2) < 1e-12 and abs(degree2(G_edge) - orbits2) < 1e-12 and orbits2 == 11
 ```
 
-Sobre $\mathbb C^4$ son $\sum_ix_i^2$ y $\sum_{i<j}x_ix_j$. La demostración de (c) funciona en todos los grados:
+Sobre $`\mathbb C^4`$ son $`\sum_ix_i^2`$ y $`\sum_{i<j}x_ix_j`$. La demostración de (c) funciona en todos los grados:
 
 Según los [apuntes de clase, proposición 12.8](../../lecture_notes/es/12_equivariant_learning.md#r-12-8) (fórmula de Molien),
-$\sum_{d\ge0}\dim\mathbb C[x]^G_d\,t^d=|G|^{-1}\sum_g\det\big(1-t\pi(g)\big)^{-1}$, y para una representación de permutación
-$\dim\mathbb C[x]^G_d$ es el número de órbitas de $G$ sobre los monomios de grado $d$.
+$`\sum_{d\ge0}\dim\mathbb C[x]^G_d\,t^d=|G|^{-1}\sum_g\det\big(1-t\pi(g)\big)^{-1}`$, y para una representación de permutación
+$`\dim\mathbb C[x]^G_d`$ es el número de órbitas de $`G`$ sobre los monomios de grado $`d`$.
 
 (Es el teorema de Molien de 1897; para profundizar, véase B. Sturmfels, *Algorithms in Invariant Theory*, Springer
-2008, sección 2.2.) El código desarrolla el miembro derecho hasta $t^4$, multiplicando por una serie geométrica por
-cada valor propio, y lo compara con las órbitas de monomios; para $S_4$ sobre $\mathbb C^4$, los recuentos
-$1,1,2,3,5$ son las particiones de $d$ en a lo sumo cuatro partes (las órbitas de multiconjuntos están determinadas
+2008, sección 2.2.) El código desarrolla el miembro derecho hasta $`t^4`$, multiplicando por una serie geométrica por
+cada valor propio, y lo compara con las órbitas de monomios; para $`S_4`$ sobre $`\mathbb C^4`$, los recuentos
+$`1,1,2,3,5`$ son las particiones de $`d`$ en a lo sumo cuatro partes (las órbitas de multiconjuntos están determinadas
 por sus multiplicidades, ordenadas).
 
 ```python
@@ -333,24 +333,24 @@ assert [monomial_orbits(G_node, d) for d in range(5)] == [1, 1, 2, 3, 5] and mon
 ## 12.5 Con qué comparar
 
 Hay bibliotecas maduras que proporcionan capas equivariantes para grupos concretos. **escnn** (Cesa, Lang y Weiler
-2022, sucesora de e2cnn) construye convoluciones orientables (*steerable*) para subgrupos de $O(2)$ y $O(3)$ a partir
+2022, sucesora de e2cnn) construye convoluciones orientables (*steerable*) para subgrupos de $`O(2)`$ y $`O(3)`$ a partir
 de representaciones irreducibles y de bases armónicas de núcleos; **e3nn** (Geiger y Smidt 2022) construye redes
-$E(3)$-equivariantes a partir de armónicos esféricos y de productos tensoriales de Clebsch–Gordan. **EMLP** (Finzi,
-Welling y Wilson 2021) trata cualquier grupo de matrices: impone $\pi_2(g)T=T\pi_1(g)$ para generadores discretos y
-$d\pi_2(X)T=Td\pi_1(X)$ para generadores del álgebra de Lie, y calcula una base de las soluciones como un núcleo
+$`E(3)`$-equivariantes a partir de armónicos esféricos y de productos tensoriales de Clebsch–Gordan. **EMLP** (Finzi,
+Welling y Wilson 2021) trata cualquier grupo de matrices: impone $`\pi_2(g)T=T\pi_1(g)`$ para generadores discretos y
+$`d\pi_2(X)T=Td\pi_1(X)`$ para generadores del álgebra de Lie, y calcula una base de las soluciones como un núcleo
 numérico, que es el problema lineal de `dc.commutant_basis`. Las convoluciones de grupo (Cohen y Welling 2016) son el
-caso $\Omega_1=\Omega_2=G$ del lema 12.1, con $G$ actuando sobre sí mismo por multiplicación a la izquierda: $(y,x)$ e
-$(y',x')$ están en la misma órbita si y solo si $x^{-1}y=x'^{-1}y'$ (en tal caso, $g=x'x^{-1}$ lleva un par al otro),
-de modo que las aplicaciones equivariantes son $(Tv)(y)=\sum_xf(x^{-1}y)v(x)$, las convoluciones con funciones $f$
-sobre $G$. Kondor y Trivedi (2018) estudian la cuestión análoga para espacios homogéneos de grupos compactos, que
+caso $`\Omega_1=\Omega_2=G`$ del lema 12.1, con $`G`$ actuando sobre sí mismo por multiplicación a la izquierda: $`(y,x)`$ e
+$`(y',x')`$ están en la misma órbita si y solo si $`x^{-1}y=x'^{-1}y'`$ (en tal caso, $`g=x'x^{-1}`$ lleva un par al otro),
+de modo que las aplicaciones equivariantes son $`(Tv)(y)=\sum_xf(x^{-1}y)v(x)`$, las convoluciones con funciones $`f`$
+sobre $`G`$. Kondor y Trivedi (2018) estudian la cuestión análoga para espacios homogéneos de grupos compactos, que
 este curso no trata. Para permutaciones, DeepSets (Zaheer et al. 2017) y las bases de Maron et al. (2019) son el corolario 12.2.
 
 La biblioteca no proporciona convoluciones sobre rejillas, núcleos orientables sobre espacios continuos,
-descomposiciones sobre $\mathbb R$ (tipos real, complejo y cuaterniónico; el ejercicio 2 trata las matrices reales)
-ni $n$ grande: $V$ es una matriz densa $n\times n$ y la descomposición cuesta $O(|G|n^3)$ por muestra aleatoria para
+descomposiciones sobre $`\mathbb R`$ (tipos real, complejo y cuaterniónico; el ejercicio 2 trata las matrices reales)
+ni $`n`$ grande: $`V`$ es una matriz densa $`n\times n`$ y la descomposición cuesta $`O(|G|n^3)`$ por muestra aleatoria para
 un grupo dado por todos sus elementos (los generadores de álgebras de Lie pasan por `dc.from_generators`;
 sección 4.3). Lo que aporta es la **estructura** del espacio de soluciones: una base del conmutante es una lista de
-matrices, mientras que la descomposición identifica el conmutante con la $*$-álgebra $\bigoplus_cM_{m_c}$. Los
+matrices, mientras que la descomposición identifica el conmutante con la $`*`$-álgebra $`\bigoplus_cM_{m_c}`$. Los
 productos, los adjuntos, la unitariedad, la positividad y el cálculo funcional actúan entonces bloque a bloque sobre
 matrices pequeñas (proposición 12.6), la biblioteca diferencia a través de ellos, y
 `to_commutant`/`from_commutant` traducen entre las dos imágenes.
@@ -362,11 +362,11 @@ matrices pequeñas (proposición 12.6), la biblioteca diferencia a través de el
 [Ejercicios](../../lecture_notes/es/12_equivariant_learning.md#x-12) 1, 3 y 4 de los apuntes de clase, numéricamente:
 
 - *Ejercicio 1* (DeepSets con canales): compruebe con `EquivariantMap` que las aplicaciones equivariantes de
-  $\mathbb C^n\otimes\mathbb C^{d_1}$ en $\mathbb C^n\otimes\mathbb C^{d_2}$ son las $1\otimes A+J\otimes B$.
+  $`\mathbb C^n\otimes\mathbb C^{d_1}`$ en $`\mathbb C^n\otimes\mathbb C^{d_2}`$ son las $`1\otimes A+J\otimes B`$.
 - *Ejercicio 3* (no linealidades): ReLU sobre las coordenadas conmuta con la representación de permutación, pero no
-  con la rotación de ángulo $\pi/2$ de $\mathbb R^2$; $x\mapsto\varphi(\|x\|)x$ conmuta con toda representación unitaria.
+  con la rotación de ángulo $`\pi/2`$ de $`\mathbb R^2`$; $`x\mapsto\varphi(\|x\|)x`$ conmuta con toda representación unitaria.
 - *Ejercicio 4*: para la representación de aristas, una muestra gaussiana deja sin determinar un espacio de capas
-  equivariantes de dimensión $2$; dos muestras determinan la capa.
+  equivariantes de dimensión $`2`$; dos muestras determinan la capa.
 
 <details>
 <summary>Soluciones</summary>

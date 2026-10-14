@@ -7,25 +7,25 @@ the plain and the fused tensor product of two algebras with sectors, defines the
 of an embedding, and studies entanglement and random states. Here we build these products in the library,
 compute partial traces and entanglement entropies, and check the theorems numerically.
 
-Throughout, $\mathcal M_1=\bigoplus_{c=1}^{C_1}M_{k_c}(\mathbb C)$ acts on
-$H_1=\bigoplus_c\mathbb C^{k_c}$ with minimal central projections $P_c$, and
-$\mathcal M_2=\bigoplus_{d=1}^{C_2}M_{l_d}(\mathbb C)$ acts on $H_2=\bigoplus_d\mathbb C^{l_d}$
-with minimal central projections $Q_d$. $\mathrm{Tr}$ is the trace of the space on which an
-operator acts; on $\mathcal M_i$ it is the blunt trace of Chapter 3. For $X$ on
-$\mathbb C^k\otimes\mathbb C^l$ we write $X_{(a,b),(a',b')}=\langle e_a\otimes e_b,X\,e_{a'}\otimes e_{b'}\rangle$,
-and we identify $\mathbb C^k\otimes\mathbb C^l$ with $\mathbb C^{kl}$ by $e_a\otimes e_b\mapsto e_{(a-1)l+b}$
-(the Kronecker convention), so that $(A\otimes B)_{(a,b),(a',b')}=A_{aa'}B_{bb'}$.
+Throughout, $`\mathcal M_1=\bigoplus_{c=1}^{C_1}M_{k_c}(\mathbb C)`$ acts on
+$`H_1=\bigoplus_c\mathbb C^{k_c}`$ with minimal central projections $`P_c`$, and
+$`\mathcal M_2=\bigoplus_{d=1}^{C_2}M_{l_d}(\mathbb C)`$ acts on $`H_2=\bigoplus_d\mathbb C^{l_d}`$
+with minimal central projections $`Q_d`$. $`\mathrm{Tr}`$ is the trace of the space on which an
+operator acts; on $`\mathcal M_i`$ it is the blunt trace of Chapter 3. For $`X`$ on
+$`\mathbb C^k\otimes\mathbb C^l`$ we write $`X_{(a,b),(a',b')}=\langle e_a\otimes e_b,X\,e_{a'}\otimes e_{b'}\rangle`$,
+and we identify $`\mathbb C^k\otimes\mathbb C^l`$ with $`\mathbb C^{kl}`$ by $`e_a\otimes e_b\mapsto e_{(a-1)l+b}`$
+(the Kronecker convention), so that $`(A\otimes B)_{(a,b),(a',b')}=A_{aa'}B_{bb'}`$.
 
 <a id="s-7-1"></a>
 
 ## 7.1 The tensor product of two algebras
 
-*Lecture notes:* [Section 7.1](../lecture_notes/07_tensor_products.md#s-7-1): [Theorem 7.1](../lecture_notes/07_tensor_products.md#r-7-1) (the structure of $\mathcal M_1\otimes\mathcal M_2$).
+*Lecture notes:* [Section 7.1](../lecture_notes/07_tensor_products.md#s-7-1): [Theorem 7.1](../lecture_notes/07_tensor_products.md#r-7-1) (the structure of $`\mathcal M_1\otimes\mathcal M_2`$).
 
-`tensor_product(alg1, alg2)` builds this algebra. Sector $(c,d)$ has index $s=cC_2+d$ (indices
-from $0$ in the code) and charge $(q_c,r_d)$, and inside it $e_a\otimes e_b$ has index $a\,l_d+b$.
-`kron(A, B, alg12)` computes $A\otimes B$. The sector order differs from the Kronecker order of
-$H_1\otimes H_2$ by a permutation of the basis, which `kron_rows` below builds explicitly; with it
+`tensor_product(alg1, alg2)` builds this algebra. Sector $`(c,d)`$ has index $`s=cC_2+d`$ (indices
+from $`0`$ in the code) and charge $`(q_c,r_d)`$, and inside it $`e_a\otimes e_b`$ has index $`a\,l_d+b`$.
+`kron(A, B, alg12)` computes $`A\otimes B`$. The sector order differs from the Kronecker order of
+$`H_1\otimes H_2`$ by a permutation of the basis, which `kron_rows` below builds explicitly; with it
 we compare with Kronecker products of full matrices.
 
 ```python
@@ -85,11 +85,11 @@ for tr in ('Tr_blunt', 'Tr_norm', 'tau_vN'):                                   #
 
 ## 7.2 The partial trace
 
-*Lecture notes:* [Section 7.2](../lecture_notes/07_tensor_products.md#s-7-2): the definition of $\mathrm{Tr}_2$, [Proposition 7.2](../lecture_notes/07_tensor_products.md#r-7-2), [Theorem 7.3](../lecture_notes/07_tensor_products.md#r-7-3) (the partial trace is a channel) and [Proposition 7.4](../lecture_notes/07_tensor_products.md#r-7-4) (a conditional expectation of index $m^2$).
+*Lecture notes:* [Section 7.2](../lecture_notes/07_tensor_products.md#s-7-2): the definition of $`\mathrm{Tr}_2`$, [Proposition 7.2](../lecture_notes/07_tensor_products.md#r-7-2), [Theorem 7.3](../lecture_notes/07_tensor_products.md#r-7-3) (the partial trace is a channel) and [Proposition 7.4](../lecture_notes/07_tensor_products.md#r-7-4) (a conditional expectation of index $`m^2`$).
 
-`partial_trace(X, keep=1)` reshapes each block $\rho_{cd}$ to $(k_c,l_d,k_c,l_d)$ and traces;
+`partial_trace(X, keep=1)` reshapes each block $`\rho_{cd}`$ to $`(k_c,l_d,k_c,l_d)`$ and traces;
 `composite.partial_trace_channel(alg12, keep=1)` is the channel of Theorem 7.3, with Kraus operators
-$1_{k_c}\otimes\langle j|$ from sector $(c,d)$ to sector $c$. We check both against the definition,
+$`1_{k_c}\otimes\langle j|`$ from sector $`(c,d)`$ to sector $`c`$. We check both against the definition,
 an independent `numpy.einsum`, and the duality:
 
 ```python
@@ -111,8 +111,8 @@ assert close(Ptr.adjoint('blunt')(A), kron(A, one2, alg12))                 # Th
 ```
 
 The module `torch_vn_algebra.inclusions` implements inclusions, their conditional expectations and indices;
-`from_tensor_product(alg1, m)` builds the inclusion $\mathcal M_1\otimes1\subset\mathcal M_1\otimes M_m$ of
-[Proposition 7.4](../lecture_notes/07_tensor_products.md#r-7-4), with inclusion matrix $\Lambda=m1_{C_1}$ and index $m^2$
+`from_tensor_product(alg1, m)` builds the inclusion $`\mathcal M_1\otimes1\subset\mathcal M_1\otimes M_m`$ of
+[Proposition 7.4](../lecture_notes/07_tensor_products.md#r-7-4), with inclusion matrix $`\Lambda=m1_{C_1}`$ and index $`m^2`$
 ([lecture notes, Section 7.2](../lecture_notes/07_tensor_products.md#s-7-2)):
 
 ```python
@@ -144,11 +144,11 @@ print(inc.matrix.tolist(), inc.component_indices())           # Lambda = 3 * 1_2
 *Lecture notes:* [Section 7.3](../lecture_notes/07_tensor_products.md#s-7-3): [Proposition 7.5](../lecture_notes/07_tensor_products.md#r-7-5) (the fused product) and [Theorem 7.6](../lecture_notes/07_tensor_products.md#r-7-6) (the reduced state of a fused product).
 
 `fused_tensor_product(alg1, alg2, fuse)` (default `fuse`: addition) orders its sectors by the fused
-charge and the pairs $(c,d)$ inside a sector lexicographically, each with the basis $e_a\otimes e_b$.
+charge and the pairs $`(c,d)`$ inside a sector lexicographically, each with the basis $`e_a\otimes e_b`$.
 Example: hard-core bosons ([lecture notes, Section 7.3](../lecture_notes/07_tensor_products.md#s-7-3)). The number-conserving operators
-on two sites form $M_1\oplus M_2\oplus M_1$ (charges $0,1,2$), on three sites $M_1\oplus M_3\oplus M_3\oplus M_1$, and by
-[Proposition 7.5(c)](../lecture_notes/07_tensor_products.md#r-7-5) their fused product is $\{N\}'$ for the total occupation number of five sites,
-with $n_q=\binom5q$.
+on two sites form $`M_1\oplus M_2\oplus M_1`$ (charges $`0,1,2`$), on three sites $`M_1\oplus M_3\oplus M_3\oplus M_1`$, and by
+[Proposition 7.5(c)](../lecture_notes/07_tensor_products.md#r-7-5) their fused product is $`\{N\}'`$ for the total occupation number of five sites,
+with $`n_q=\binom5q`$.
 
 ```python
 bos1 = TypeIAlgebra([1, 2, 1], [1, 2, 1], precision='double', charges=[0, 1, 2])
@@ -167,21 +167,21 @@ A, B = random_operator(bos1), random_operator(bos2)
 assert close(full12(kron(A, B, F)), full12(kron(A, B, P)))   # Proposition 7.5(b)
 ```
 
-The fused algebra has dimension $\sum_q\binom5q^2=\binom{10}5=252$ (Vandermonde again), the plain
-product $(1+4+1)(1+9+9+1)=120$ (Theorem 7.1(b)). By Theorem 7.1(a) and Proposition 7.5(b) the plain
-product consists of the elements of the fused one that are block diagonal for the pairs $(c,d)$; the
-remaining $132$ dimensions are spanned by the operators that map a pair block $(c,d)$ into a
-different pair block $(c',d')$ of the same $H_q$, $c'\ne c$ (so $d'\ne d$): they change the charge
+The fused algebra has dimension $`\sum_q\binom5q^2=\binom{10}5=252`$ (Vandermonde again), the plain
+product $`(1+4+1)(1+9+9+1)=120`$ (Theorem 7.1(b)). By Theorem 7.1(a) and Proposition 7.5(b) the plain
+product consists of the elements of the fused one that are block diagonal for the pairs $`(c,d)`$; the
+remaining $`132`$ dimensions are spanned by the operators that map a pair block $`(c,d)`$ into a
+different pair block $`(c',d')`$ of the same $`H_q`$, $`c'\ne c`$ (so $`d'\ne d`$): they change the charge
 of each part while conserving the total, i.e. here they move particles between the two parts.
 
-By the block formula of Theorem 7.6, $(\rho_1)_c=\sum_d\mathrm{tr}_{l_d}\,\rho_{(c,d),(c,d)}$. Both library
+By the block formula of Theorem 7.6, $`(\rho_1)_c=\sum_d\mathrm{tr}_{l_d}\,\rho_{(c,d),(c,d)}`$. Both library
 implementations are built to compute this map for any fusion rule: `partial_trace` traces only
-the diagonal pair blocks $\rho_{(c,d),(c,d)}$, and `partial_trace_channel` uses separate Kraus
-indices for pairs of one sector with the same $c$, so that its dual is again $A\mapsto A\otimes1$. The
+the diagonal pair blocks $`\rho_{(c,d),(c,d)}`$, and `partial_trace_channel` uses separate Kraus
+indices for pairs of one sector with the same $`c`$, so that its dual is again $`A\mapsto A\otimes1`$. The
 code checks both, for the two fusion rules below and both choices of the kept factor, against
-$E_1(\mathrm{Tr}_{H_2}\,\rho)$ computed independently with `einsum`, and the dual against $A\otimes1$. With
-addition $E_1$ does nothing in our example; with the parity rule $f(q,r)=q+r\bmod2$ the charges $0$
-and $2$ of `bos1` fuse identically with every $r$, and $E_1$ removes genuine coherences:
+$`E_1(\mathrm{Tr}_{H_2}\,\rho)`$ computed independently with `einsum`, and the dual against $`A\otimes1`$. With
+addition $`E_1`$ does nothing in our example; with the parity rule $`f(q,r)=q+r\bmod2`$ the charges $`0`$
+and $`2`$ of `bos1` fuse identically with every $`r`$, and $`E_1`$ removes genuine coherences:
 
 ```python
 G = fused_tensor_product(bos1, bos2, fuse=lambda q, r: (q + r) % 2)       # only the parity is conserved
@@ -208,11 +208,11 @@ for alg, coherent in ((F, False), (G, True)):
 
 ## 7.4 Entanglement of pure states
 
-*Lecture notes:* [Section 7.4](../lecture_notes/07_tensor_products.md#s-7-4): [Lemma 7.7](../lecture_notes/07_tensor_products.md#r-7-7) (Schmidt decomposition) and [Proposition 7.8](../lecture_notes/07_tensor_products.md#r-7-8) (symmetry-resolved entanglement): $E(\psi)=H(p)+\sum_cp_cE(\hat\psi_c)$, where $p_c$ is the probability of the sector $c$ of the first part.
+*Lecture notes:* [Section 7.4](../lecture_notes/07_tensor_products.md#s-7-4): [Lemma 7.7](../lecture_notes/07_tensor_products.md#r-7-7) (Schmidt decomposition) and [Proposition 7.8](../lecture_notes/07_tensor_products.md#r-7-8) (symmetry-resolved entanglement): $`E(\psi)=H(p)+\sum_cp_cE(\hat\psi_c)`$, where $`p_c`$ is the probability of the sector $`c`$ of the first part.
 
-$H(p)$ is the **number entanglement** and $\sum_cp_cE(\hat\psi_c)$ the **configurational
-entanglement**. For a random state of $2$ particles on the five sites we compute $E(\psi)$ from the
-partial traces on both sides and from the singular values of the $4\times8$ matrix $\Psi$:
+$`H(p)`$ is the **number entanglement** and $`\sum_cp_cE(\hat\psi_c)`$ the **configurational
+entanglement**. For a random state of $`2`$ particles on the five sites we compute $`E(\psi)`$ from the
+partial traces on both sides and from the singular values of the $`4\times8`$ matrix $`\Psi`$:
 
 ```python
 s = F.charges.index(2)                                      # the sector of two particles, n_q = 10
@@ -250,8 +250,8 @@ assert abs(E_psi - H_num - S_conf) < 1e-10                  # Proposition 7.8
 
 *Lecture notes:* [Section 7.5](../lecture_notes/07_tensor_products.md#s-7-5): [Theorem 7.11](../lecture_notes/07_tensor_products.md#r-7-11) (Lubkin), [Corollary 7.12](../lecture_notes/07_tensor_products.md#r-7-12), [Theorem 7.13](../lecture_notes/07_tensor_products.md#r-7-13) (Page's formula) and [Proposition 7.14](../lecture_notes/07_tensor_products.md#r-7-14) (the induced measure).
 
-We check Theorems 7.11 and 7.13 on $10^4$ pure states of $\mathbb C^3\otimes\mathbb C^6$ reduced with
-`partial_trace` and on the induced measure, and Proposition 7.14 for $M_1\oplus M_2\oplus M_3$, $r=2$:
+We check Theorems 7.11 and 7.13 on $`10^4`$ pure states of $`\mathbb C^3\otimes\mathbb C^6`$ reduced with
+`partial_trace` and on the induced measure, and Proposition 7.14 for $`M_1\oplus M_2\oplus M_3`$, $`r=2`$:
 
 ```python
 a, b, n_samples = 3, 6, 10_000
@@ -298,8 +298,8 @@ library adds the algebraic layer: products are von Neumann algebras with sectors
 fusion rule is any map of the labels, the partial trace is a channel with its dual for each trace
 and the correct restriction for fused products (Theorems 7.3, 7.6), and all of it is batched. It has
 no tensor networks, and `fused_tensor_product` takes a rule with one outcome per pair of charges, as
-for abelian symmetries; a non-abelian rule, as for $SU(2)$, where a pair of spins $j_1,j_2$ combines to
-the several total spins $|j_1-j_2|,\dots,j_1+j_2$ (Chapter 4, Exercise 2), is not a fused product here (the library treats $SU(2)$ for spin-$\frac12$
+for abelian symmetries; a non-abelian rule, as for $`SU(2)`$, where a pair of spins $`j_1,j_2`$ combines to
+the several total spins $`|j_1-j_2|,\dots,j_1+j_2`$ (Chapter 4, Exercise 2), is not a fused product here (the library treats $`SU(2)`$ for spin-$`\frac12`$
 chains separately, Chapter 4).
 
 <a id="x-7"></a>
@@ -308,12 +308,12 @@ chains separately, Chapter 4).
 
 [Exercises](../lecture_notes/07_tensor_products.md#x-7) of the lecture notes, numerically:
 
-1. Check that the dual of $\mathrm{Tr}_2$ with respect to $\tau_{\mathrm{vN}}$,
-   `partial_trace_channel(alg12).adjoint('tau_vN')`, is $A\mapsto A\otimes Z$ with $Z=\bigoplus_dC_2l_d1_{l_d}$.
+1. Check that the dual of $`\mathrm{Tr}_2`$ with respect to $`\tau_{\mathrm{vN}}`$,
+   `partial_trace_channel(alg12).adjoint('tau_vN')`, is $`A\mapsto A\otimes Z`$ with $`Z=\bigoplus_dC_2l_d1_{l_d}`$.
 2. (Subadditivity.) Check on random states of `alg12` that the mutual information
-   $S(\rho_1)+S(\rho_2)-S(\rho)$ is positive and equals $S(\rho\|\rho_1\otimes\rho_2)$.
-3. For one particle shared by two sites, $\psi=(|01\rangle+|10\rangle)/\sqrt2$, check that
-   $E(\psi)=H(p)=\log2$.
+   $`S(\rho_1)+S(\rho_2)-S(\rho)`$ is positive and equals $`S(\rho\|\rho_1\otimes\rho_2)`$.
+3. For one particle shared by two sites, $`\psi=(|01\rangle+|10\rangle)/\sqrt2`$, check that
+   $`E(\psi)=H(p)=\log2`$.
 
 <details>
 <summary>Solutions</summary>

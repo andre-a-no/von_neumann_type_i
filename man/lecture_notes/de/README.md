@@ -3,7 +3,7 @@
 # Endlichdimensionale von-Neumann-Algebren: Vorlesungsnotizen
 
 Dieser Kurs behandelt die Theorie der endlichdimensionalen von-Neumann-Algebren – der
-Algebren $\bigoplus_cM_{k_c}(\mathbb C)$ – zusammen mit ihren Anwendungen in der
+Algebren $`\bigoplus_cM_{k_c}(\mathbb C)`$ – zusammen mit ihren Anwendungen in der
 Quantenphysik, der Quanteninformation, der Theorie der Zufallsmatrizen und dem
 maschinellen Lernen.
 
@@ -13,7 +13,7 @@ Er richtet sich zugleich an zwei Arten von Lesern:
   Konstante und jede Ungleichung, die formuliert wird, wird im Kurs aus den unten
   aufgeführten Voraussetzungen bewiesen — im Kapitel selbst oder in einem der Anhänge A–F,
   die mit Nummer zitiert werden. Zahlen, die nur berechnet werden (etwa die Niveaustatistik
-  für großes $n$), sind als *numerische Beobachtung* gekennzeichnet und werden nie als
+  für großes $`n`$), sind als *numerische Beobachtung* gekennzeichnet und werden nie als
   Prämissen oder Testziele verwendet. Literaturangaben dienen der historischen Zuordnung
   oder als weiterführende Lektüre, nie als Ersatz für einen Beweis.
 - **Physiker und Ingenieure** finden die physikalische Bedeutung jedes Begriffs
@@ -34,8 +34,8 @@ an der dies geschieht.
 | 1 | [Matrixalgebren und Funktionalkalkül](01_matrix_algebras.md) | Spektralsatz, Funktionalkalkül, Polarzerlegung, Dualität der Spurnorm, ein GUE-Moment |
 | 2 | [Endlichdimensionale von-Neumann-Algebren](02_von_neumann_algebras.md) | Bikommutantensatz, Struktursatz, Zentrum, Symmetriegruppen und Kommutanten, bedingte Erwartungen |
 | 3 | [Spuren, Zustände und Entropie](03_traces_and_states.md) | Klassifikation der Spuren, Dichten, Entropie der Sektoren, Kleinsche Ungleichung, Monotonie unter der bedingten Erwartung auf das Zentrum, Michelson-Kontrast |
-| 4 | [Symmetrien und Darstellungen](04_symmetries.md) | Schursches Lemma, Ladungssektoren, $U(1)$ und $SU(2)$, Spinsysteme, reeller, komplexer und quaternionischer Typ |
-| 5 | [Zufallsmatrizen in einer Algebra](05_random_matrices.md) | Haar-Maß auf $\prod_cU(k_c)$, Weingarten-Kalkül, Niveaustatistik und warum Sektoren nicht vermischt werden dürfen |
+| 4 | [Symmetrien und Darstellungen](04_symmetries.md) | Schursches Lemma, Ladungssektoren, $`U(1)`$ und $`SU(2)`$, Spinsysteme, reeller, komplexer und quaternionischer Typ |
+| 5 | [Zufallsmatrizen in einer Algebra](05_random_matrices.md) | Haar-Maß auf $`\prod_cU(k_c)`$, Weingarten-Kalkül, Niveaustatistik und warum Sektoren nicht vermischt werden dürfen |
 | 6 | [Quantenkanäle](06_quantum_channels.md) | Kraus und Stinespring, duale Abbildungen bezüglich einer Spur, Abbildungen zwischen Sektoren, Dekohärenz |
 | 7 | [Tensorprodukte und Verschränkung](07_tensor_products.md) | partielle Spur, Pagesche Formel, Fusion von Ladungen |
 | 8 | [Dynamik](08_dynamics.md) | Schrödinger- und Lindblad-Gleichung, Sprünge zwischen Sektoren, Postselektion |
@@ -45,11 +45,11 @@ an der dies geschieht.
 | 12 | [Äquivariantes maschinelles Lernen](12_equivariant_learning.md) | äquivariante Schichten als Kommutanten |
 | 13 | [Jordan-Algebren: warum die Quantenmechanik *-Algebren verwendet](13_jordan_algebras.md) | Jordan-Produkt und quadratische Darstellung, Spinfaktoren und Lorentz-Kegel, die Klassifikation von Jordan–von Neumann–Wigner, Transposition und partielle Transposition, eine Spurungleichung in Jordan-Form |
 | A | [Tatsachen aus Analysis und Wahrscheinlichkeitstheorie](A_analysis.md) | Potenzreihen und Nullmengen, Gaußsche Vektoren, sphärische Maße, Eigenwertungleichungen, Isserlis–Wick |
-| B | [Schur-Weyl-Dualität und der Weingarten-Kalkül](B_schur_weyl.md) | Schur-Weyl-Dualität, Weingarten-Funktionen, Satz von Wigner–Eckart, Haar-Maß auf $O(k)$ |
+| B | [Schur-Weyl-Dualität und der Weingarten-Kalkül](B_schur_weyl.md) | Schur-Weyl-Dualität, Weingarten-Funktionen, Satz von Wigner–Eckart, Haar-Maß auf $`O(k)`$ |
 | C | [Eigenwertdichten und die Pagesche Formel](C_eigenvalue_densities.md) | Weylsche Integrationsformel, GOE/GUE, Wishart- und induzierte Dichten, Pagesche Formel |
 | D | [Generatoren quantendynamischer Halbgruppen](D_gksl.md) | der GKSL-Satz, Generatoren auf direkten Summen, Satz von Frigerio, Bény–Kempf–Kribs |
 | E | [Klassifikation der euklidischen Jordan-Algebren](E_jordan_classification.md) | Peirce-Zerlegung, Sätze von Hurwitz und Frobenius, Koordinatisierung, die Albert-Algebra, der Satz von Jordan–von Neumann–Wigner |
-| F | [Symmetrische Kegel, Ordnungsisomorphismen und Jordan-Abbildungen](F_cones_and_order.md) | Kegel der Quadrate, der Satz von Koecher–Vinberg, der Satz von Kadison, Jordan-Automorphismen von $\bigoplus_cM_{k_c}$ |
+| F | [Symmetrische Kegel, Ordnungsisomorphismen und Jordan-Abbildungen](F_cones_and_order.md) | Kegel der Quadrate, der Satz von Koecher–Vinberg, der Satz von Kadison, Jordan-Automorphismen von $`\bigoplus_cM_{k_c}`$ |
 
 <a id="prerequisites"></a>
 
@@ -57,15 +57,15 @@ an der dies geschieht.
 
 Der Kurs setzt nur das Folgende voraus und beweist alles Übrige.
 
-- Lineare Algebra über $\mathbb R$ und $\mathbb C$ (endlichdimensional) und der
+- Lineare Algebra über $`\mathbb R`$ und $`\mathbb C`$ (endlichdimensional) und der
   Fundamentalsatz der Algebra.
 - Standardstoff der reellen Analysis und der Differentialrechnung in mehreren Variablen:
-  Grenzwerte, Stetigkeit, Kompaktheit im $\mathbb R^n$, Differentiation, der
+  Grenzwerte, Stetigkeit, Kompaktheit im $`\mathbb R^n`$, Differentiation, der
   Mittelwertsatz, die Taylorsche Formel, der Satz über die Umkehrfunktion und der Satz über
   implizite Funktionen.
 - Standardstoff der Maß- und Integrationstheorie: Lebesgue-Maß, Produktmaße und
   Fubini–Tonelli, majorisierte und monotone Konvergenz, Variablentransformation im
-  $\mathbb R^n$, Bildmaße, Dichten, Unabhängigkeit.
+  $`\mathbb R^n`$, Bildmaße, Dichten, Unabhängigkeit.
 - Elementare Wahrscheinlichkeitstheorie: Erwartungswert, Varianz, Unabhängigkeit, die
   Normalverteilung und ihre momenterzeugende Funktion, die Markow- und die
   Tschebyschow-Ungleichung, das Gesetz der großen Zahlen.

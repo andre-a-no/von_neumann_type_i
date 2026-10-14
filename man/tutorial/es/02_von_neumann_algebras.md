@@ -3,8 +3,8 @@
 # Tutorial 2. Álgebras de von Neumann de dimensión finita
 
 Este tutorial acompaña al [capítulo 2](../../lecture_notes/es/02_von_neumann_algebras.md) de los apuntes de clase, que demuestra
-que toda álgebra de von Neumann sobre $\mathbb C^n$ es, salvo un cambio de base unitario,
-$\bigoplus_cM_{k_c}(\mathbb C)\otimes1_{m_c}$ ([teorema 2.6](../../lecture_notes/es/02_von_neumann_algebras.md#r-2-6)).
+que toda álgebra de von Neumann sobre $`\mathbb C^n`$ es, salvo un cambio de base unitario,
+$`\bigoplus_cM_{k_c}(\mathbb C)\otimes1_{m_c}`$ ([teorema 2.6](../../lecture_notes/es/02_von_neumann_algebras.md#r-2-6)).
 Calculamos conmutantes numéricamente en el ejemplo de un grupo de simetría y vemos cómo la biblioteca
 almacena un álgebra de este tipo, su centro y la esperanza condicional sobre el centro.
 
@@ -14,12 +14,12 @@ almacena un álgebra de este tipo, su centro y la esperanza condicional sobre el
 
 *Apuntes:* [sección 2.4](../../lecture_notes/es/02_von_neumann_algebras.md#s-2-4); [teorema 2.2](../../lecture_notes/es/02_von_neumann_algebras.md#r-2-2), [teorema 2.6](../../lecture_notes/es/02_von_neumann_algebras.md#r-2-6), [proposición 2.7](../../lecture_notes/es/02_von_neumann_algebras.md#r-2-7).
 
-La [sección 2.4](../../lecture_notes/es/02_von_neumann_algebras.md#s-2-4) de los apuntes de clase descompone la representación $\pi$ de
-$S_3$ por permutación de los tres factores de $(\mathbb C^2)^{\otimes3}$: $\pi(S_3)'\cong M_4\oplus M_2$ tiene dimensión
-$20$ y $\pi(S_3)''\cong M_1\oplus M_2$ tiene dimensión $5$. El código de abajo confirma numéricamente las dos dimensiones,
-y que el conmutante de $\pi(S_3)'$ es de nuevo $\pi(S_3)''$
-([teorema 2.2](../../lecture_notes/es/02_von_neumann_algebras.md#r-2-2)): el conmutante de un conjunto $S$ es el
-núcleo de la aplicación lineal $X\mapsto(AX-XA)_{A\in S}$, cuya dimensión se calcula aquí en coma
+La [sección 2.4](../../lecture_notes/es/02_von_neumann_algebras.md#s-2-4) de los apuntes de clase descompone la representación $`\pi`$ de
+$`S_3`$ por permutación de los tres factores de $`(\mathbb C^2)^{\otimes3}`$: $`\pi(S_3)'\cong M_4\oplus M_2`$ tiene dimensión
+$`20`$ y $`\pi(S_3)''\cong M_1\oplus M_2`$ tiene dimensión $`5`$. El código de abajo confirma numéricamente las dos dimensiones,
+y que el conmutante de $`\pi(S_3)'`$ es de nuevo $`\pi(S_3)''`$
+([teorema 2.2](../../lecture_notes/es/02_von_neumann_algebras.md#r-2-2)): el conmutante de un conjunto $`S`$ es el
+núcleo de la aplicación lineal $`X\mapsto(AX-XA)_{A\in S}`$, cuya dimensión se calcula aquí en coma
 flotante, contando los valores singulares por encima de una tolerancia.
 
 ```python
@@ -63,11 +63,11 @@ assert len(commutant_basis(comm)) == 5                   # double commutant theo
 
 Las multiplicidades se observan en el espectro ([apuntes de clase, sección 2.4](../../lecture_notes/es/02_von_neumann_algebras.md#s-2-4), a partir del
 [teorema 2.6](../../lecture_notes/es/02_von_neumann_algebras.md#r-2-6)):
-todo $K\in\pi(S_3)'$ autoadjunto tiene valores propios de multiplicidad par sobre el complemento del subespacio
-simétrico $F$, y para $K=E(Z+Z^*)$, con $Z$ una matriz de Ginibre y $E$ el promedio sobre el grupo, con probabilidad uno
-$K$ tiene $4$ valores propios simples sobre $F$ y $2$ doblemente degenerados sobre su complemento. El código comprueba los
-pares degenerados (que se dan para todo $K$) y, para el $K$ muestreado, que los dos pares y los cuatro
-valores propios sobre $F$ son distintos, usando la proyección ortogonal $P_F=\frac1{|G|}\sum_g\pi(g)$ sobre $F$.
+todo $`K\in\pi(S_3)'`$ autoadjunto tiene valores propios de multiplicidad par sobre el complemento del subespacio
+simétrico $`F`$, y para $`K=E(Z+Z^*)`$, con $`Z`$ una matriz de Ginibre y $`E`$ el promedio sobre el grupo, con probabilidad uno
+$`K`$ tiene $`4`$ valores propios simples sobre $`F`$ y $`2`$ doblemente degenerados sobre su complemento. El código comprueba los
+pares degenerados (que se dan para todo $`K`$) y, para el $`K`$ muestreado, que los dos pares y los cuatro
+valores propios sobre $`F`$ son distintos, usando la proyección ortogonal $`P_F=\frac1{|G|}\sum_g\pi(g)`$ sobre $`F`$.
 
 ```python
 def group_average(X):
@@ -96,9 +96,9 @@ assert (e_sym[:, None] - e_rest[None, :]).abs().min() > 1e-6                    
 
 *Apuntes:* [sección 2.3](../../lecture_notes/es/02_von_neumann_algebras.md#s-2-3), [teorema 2.6](../../lecture_notes/es/02_von_neumann_algebras.md#r-2-6); el centro: [sección 2.2](../../lecture_notes/es/02_von_neumann_algebras.md#s-2-2), [lema 2.3](../../lecture_notes/es/02_von_neumann_algebras.md#r-2-3).
 
-La biblioteca almacena el álgebra abstracta $\bigoplus_cM_{k_c}(\mathbb C)$ del teorema 2.6
-sobre $\bigoplus_c\mathbb C^{k_c}$, sin las multiplicidades: un operador es la lista de sus
-bloques $A_c$, rellenados hasta un tamaño común. El conmutante del ejemplo es
+La biblioteca almacena el álgebra abstracta $`\bigoplus_cM_{k_c}(\mathbb C)`$ del teorema 2.6
+sobre $`\bigoplus_c\mathbb C^{k_c}`$, sin las multiplicidades: un operador es la lista de sus
+bloques $`A_c`$, rellenados hasta un tamaño común. El conmutante del ejemplo es
 `TypeIAlgebra([4, 2], [4, 2])`.
 
 ```python
@@ -112,7 +112,7 @@ print(A.matrix.shape)              # (1, 2, 4, 4): block 1 occupies the top-left
 assert A.matrix[0, 1, 2:, :].abs().max() == 0 and A.matrix[0, 1, :, 2:].abs().max() == 0
 ```
 
-El centro está formado por los elementos $\sum_cz_cP_c$; `alg.central` los construye, y
+El centro está formado por los elementos $`\sum_cz_cP_c`$; `alg.central` los construye, y
 conmutan con todo:
 
 ```python
@@ -135,9 +135,9 @@ assert close(A @ P0 + A @ P1, A)                         # A = sum_c A P_c
 
 *Apuntes:* [sección 2.6](../../lecture_notes/es/02_von_neumann_algebras.md#s-2-6).
 
-Según [apuntes de clase, proposición 2.8](../../lecture_notes/es/02_von_neumann_algebras.md#r-2-8), $E(A)=\sum_c\frac{\mathrm{Tr}\,A_c}{k_c}\,P_c$
-es una esperanza condicional de $\bigoplus_cM_{k_c}$ sobre su centro: es positiva, es la identidad sobre el centro,
-es un morfismo de bimódulos sobre el centro y conserva toda traza $\sum_cw_c\mathrm{Tr}\,A_c$.
+Según [apuntes de clase, proposición 2.8](../../lecture_notes/es/02_von_neumann_algebras.md#r-2-8), $`E(A)=\sum_c\frac{\mathrm{Tr}\,A_c}{k_c}\,P_c`$
+es una esperanza condicional de $`\bigoplus_cM_{k_c}`$ sobre su centro: es positiva, es la identidad sobre el centro,
+es un morfismo de bimódulos sobre el centro y conserva toda traza $`\sum_cw_c\mathrm{Tr}\,A_c`$.
 
 En la biblioteca, esta aplicación es el canal `channels.center_expectation(alg)`. Al
 aplicarla a operadores se obtiene su parte clásica (promediada en cada sector):
@@ -161,7 +161,7 @@ for c, k in enumerate(alg.k_factors):                    # E(A)_c = (Tr A_c / k_
 
 Los ejemplos de la sección 2.4 pueden comprobarse con cualquier paquete de álgebra lineal;
 el software de teoría de representaciones (GAP, SageMath) da la descomposición
-$\pi\cong\bigoplus\rho_\lambda\otimes1_{m_\lambda}$ de forma simbólica. Los códigos de
+$`\pi\cong\bigoplus\rho_\lambda\otimes1_{m_\lambda}`$ de forma simbólica. Los códigos de
 diagonalización exacta en física (QuSpin, los módulos de simetría de QuTiP) usan la misma
 estructura de bloques para diagonalizar hamiltonianos sector a sector. La biblioteca toma
 la estructura como punto de partida: una vez conocidos los bloques, todos los cálculos
@@ -171,8 +171,8 @@ posteriores —funciones, trazas, estados, canales, dinámica— permanecen dent
 
 ## Ejercicios
 
-[Ejercicio 2](../../lecture_notes/es/02_von_neumann_algebras.md#x-2) de los apuntes de clase: para el desplazamiento cíclico $S$ en $\mathbb C^3$,
-$Se_i=e_{i+1\bmod3}$, tanto $\{S\}'$ como $\{S\}''$ son iguales a $\mathrm{span}\{1,S,S^2\}$, las matrices
+[Ejercicio 2](../../lecture_notes/es/02_von_neumann_algebras.md#x-2) de los apuntes de clase: para el desplazamiento cíclico $`S`$ en $`\mathbb C^3`$,
+$`Se_i=e_{i+1\bmod3}`$, tanto $`\{S\}'`$ como $`\{S\}''`$ son iguales a $`\mathrm{span}\{1,S,S^2\}`$, las matrices
 circulantes. Compruebe numéricamente las dimensiones.
 
 <details>

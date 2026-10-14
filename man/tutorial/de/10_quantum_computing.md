@@ -3,10 +3,10 @@
 # Tutorial 10. Quantencomputing
 
 Dieses Tutorial begleitet [Kapitel 10](../../lecture_notes/de/10_quantum_computing.md) der Vorlesungsnotizen, das Rauschen auf einem Quantencomputer
-durch die $*$-Algebra seiner Kraus-Operatoren beschreibt. Wir berechnen Fixpunktalgebren und rauschfreie Teilsysteme
+durch die $`*`$-Algebra seiner Kraus-Operatoren beschreibt. Wir berechnen Fixpunktalgebren und rauschfreie Teilsysteme
 ([Satz 10.2](../../lecture_notes/de/10_quantum_computing.md#r-10-2)), prüfen den Satz von Knill–Laflamme ([Satz 10.5](../../lecture_notes/de/10_quantum_computing.md#r-10-5)) und die Korrektur der Bezeichnung eines
 Sektors ([Proposition 10.6](../../lecture_notes/de/10_quantum_computing.md#r-10-6)) am Wiederholungscode und simulieren einen Ansatz mit XY-Mixer, Amplitudendämpfung
-und Postselektion in der Algebra $\bigoplus_wM_{\binom nw}$ der Hamming-Gewichts-Sektoren
+und Postselektion in der Algebra $`\bigoplus_wM_{\binom nw}`$ der Hamming-Gewichts-Sektoren
 ([Propositionen 10.8](../../lecture_notes/de/10_quantum_computing.md#r-10-8)–[10.10](../../lecture_notes/de/10_quantum_computing.md#r-10-10)).
 
 <a id="s-10-1"></a>
@@ -15,15 +15,15 @@ und Postselektion in der Algebra $\bigoplus_wM_{\binom nw}$ der Hamming-Gewichts
 
 *Vorlesungsnotizen:* [Abschnitt 10.1](../../lecture_notes/de/10_quantum_computing.md#s-10-1); [Satz 10.2](../../lecture_notes/de/10_quantum_computing.md#r-10-2), [Korollar 10.3](../../lecture_notes/de/10_quantum_computing.md#r-10-3), [Proposition 10.4](../../lecture_notes/de/10_quantum_computing.md#r-10-4).
 
-Nach [Vorlesungsnotizen, Korollar 10.3](../../lecture_notes/de/10_quantum_computing.md#r-10-3) hat die kollektive Dephasierung $\Phi(\rho)=\tfrac12(U\rho U^*+U^*\rho U)$,
-$U=e^{-i\theta Z_{\mathrm{tot}}}$, auf $n$ Qubits die Wechselwirkungsalgebra $\mathcal A=\mathrm{span}\{P_0,\dots,P_n\}$
-($P_w$ die Projektion auf den Spann $H_w$ der Basisvektoren vom Hamming-Gewicht $w$), und
-$\mathrm{Fix}(\Phi)=\mathcal A'=\bigoplus_wB(H_w)$ ([Satz 10.2](../../lecture_notes/de/10_quantum_computing.md#r-10-2)).
+Nach [Vorlesungsnotizen, Korollar 10.3](../../lecture_notes/de/10_quantum_computing.md#r-10-3) hat die kollektive Dephasierung $`\Phi(\rho)=\tfrac12(U\rho U^*+U^*\rho U)`$,
+$`U=e^{-i\theta Z_{\mathrm{tot}}}`$, auf $`n`$ Qubits die Wechselwirkungsalgebra $`\mathcal A=\mathrm{span}\{P_0,\dots,P_n\}`$
+($`P_w`$ die Projektion auf den Spann $`H_w`$ der Basisvektoren vom Hamming-Gewicht $`w`$), und
+$`\mathrm{Fix}(\Phi)=\mathcal A'=\bigoplus_wB(H_w)`$ ([Satz 10.2](../../lecture_notes/de/10_quantum_computing.md#r-10-2)).
 
-Kommutanten sind Nullräume von $T\mapsto(AT-TA)_A$ (Kapitel 2), Fixpunkte der von
-$\sum_iE_i\otimes\bar E_i-1$ (der Matrix von $\Phi-\mathrm{id}$ auf zeilenweise vektorisierten
-Matrizen). Für $n=4$ haben die drei Räume des Korollars die Dimensionen $5$, $70=1+16+36+16+1$ und
-$70$:
+Kommutanten sind Nullräume von $`T\mapsto(AT-TA)_A`$ (Kapitel 2), Fixpunkte der von
+$`\sum_iE_i\otimes\bar E_i-1`$ (der Matrix von $`\Phi-\mathrm{id}`$ auf zeilenweise vektorisierten
+Matrizen). Für $`n=4`$ haben die drei Räume des Korollars die Dimensionen $`5`$, $`70=1+16+36+16+1`$ und
+$`70`$:
 
 ```python
 import itertools
@@ -67,9 +67,9 @@ span = torch.linalg.svdvals(torch.stack([F.reshape(-1) for F in comm + fix]))
 assert int((span > 1e-9).sum()) == 70                             # Fix(Phi) = A' (Theorem 10.2)
 ```
 
-$\bigoplus_wM_{\binom nw}$ ist die Algebra einer `SpinChain` (Kapitel 9), deren Sektoren die Anzahlen
+$`\bigoplus_wM_{\binom nw}`$ ist die Algebra einer `SpinChain` (Kapitel 9), deren Sektoren die Anzahlen
 der Spins nach oben sind, d. h. die Hamming-Gewichte. Dort sind die Kraus-Operatoren zentral,
-$U=\sum_we^{-i\theta(n-2w)}P_w$, und der Kanal ist die Identität: Die Bibliothek speichert den
+$`U=\sum_we^{-i\theta(n-2w)}P_w`$, und der Kanal ist die Identität: Die Bibliothek speichert den
 rauschfreien Teil.
 
 ```python
@@ -85,11 +85,11 @@ rho = states.random_density_matrix(M, batch_size=3)
 assert (Phi_M(rho).matrix - rho.matrix).abs().max() < 1e-12      # no state of M is disturbed
 ```
 
-Kollektive Drehungen $e^{-i\theta\,\mathbf n\cdot\mathbf S}$, $S_\alpha=\tfrac12\sum_j\sigma_{\alpha,j}$, liegen in der von
-$1,S_x,S_y,S_z$ erzeugten $*$-Algebra $\mathcal B$. Für $n=4$ zeigt [Abschnitt 10.1](../../lecture_notes/de/10_quantum_computing.md#s-10-1) der Vorlesungsnotizen $\dim\mathcal B=35$,
-$\dim\mathcal B'=14$ und $\dim K=2$ für $K=\ker S_x\cap\ker S_y\cap\ker S_z$; der Code findet dieselben Zahlen und
+Kollektive Drehungen $`e^{-i\theta\,\mathbf n\cdot\mathbf S}`$, $`S_\alpha=\tfrac12\sum_j\sigma_{\alpha,j}`$, liegen in der von
+$`1,S_x,S_y,S_z`$ erzeugten $`*`$-Algebra $`\mathcal B`$. Für $`n=4`$ zeigt [Abschnitt 10.1](../../lecture_notes/de/10_quantum_computing.md#s-10-1) der Vorlesungsnotizen $`\dim\mathcal B=35`$,
+$`\dim\mathcal B'=14`$ und $`\dim K=2`$ für $`K=\ker S_x\cap\ker S_y\cap\ker S_z`$; der Code findet dieselben Zahlen und
 prüft [Proposition 10.4](../../lecture_notes/de/10_quantum_computing.md#r-10-4): Ein Kanal mit zufälligen kollektiven Drehungen als Kraus-Operatoren lässt einen
-Zustand mit Träger in $K$ fest und bewegt einen generischen.
+Zustand mit Träger in $`K`$ fest und bewegt einen generischen.
 
 ```python
 S = [sum(on(P, j, n) for j in range(n)) / 2 for P in (X, Y, Z)]
@@ -113,13 +113,13 @@ for G in (K @ torch.randn(2, 2, dtype=dt), torch.randn(16, 16, dtype=dt)):  # su
 
 *Vorlesungsnotizen:* [Abschnitt 10.2](../../lecture_notes/de/10_quantum_computing.md#s-10-2); [Satz 10.5](../../lecture_notes/de/10_quantum_computing.md#r-10-5).
 
-Das Bitflip-Beispiel aus [Abschnitt 10.2](../../lecture_notes/de/10_quantum_computing.md#s-10-2) der Vorlesungsnotizen: Für $\mathcal C=\mathrm{span}\{|000\rangle,|111\rangle\}$ und
+Das Bitflip-Beispiel aus [Abschnitt 10.2](../../lecture_notes/de/10_quantum_computing.md#s-10-2) der Vorlesungsnotizen: Für $`\mathcal C=\mathrm{span}\{|000\rangle,|111\rangle\}`$ und
 „höchstens ein Bitflip“ gilt die Knill–Laflamme-Bedingung aus [Satz 10.5](../../lecture_notes/de/10_quantum_computing.md#r-10-5) mit
-$\Lambda=\mathrm{diag}(p_0,\dots,p_3)$, und die Wiederherstellung $\mathcal R(\sigma)=\sum_{k=0}^3PX_k\sigma X_kP$ stellt jeden
-Zustand des Codes wieder her. Kippt jedes Qubit unabhängig mit Wahrscheinlichkeit $p$, so ist die Bedingung verletzt,
-und die Fidelität von $|0_L\rangle$ nach der Wiederherstellung ist $1-3p^2+2p^3=0.972$ für $p=0.1$. Die Hilfsfunktion
-`kl_matrix` liefert $\Lambda$ oder `None`, wenn die Bedingung verletzt ist. In der Bibliothek ist $M_8$ eine Algebra mit
-einem Block, und `R @ Phi` ist die Komposition $\mathcal R\circ\Phi$:
+$`\Lambda=\mathrm{diag}(p_0,\dots,p_3)`$, und die Wiederherstellung $`\mathcal R(\sigma)=\sum_{k=0}^3PX_k\sigma X_kP`$ stellt jeden
+Zustand des Codes wieder her. Kippt jedes Qubit unabhängig mit Wahrscheinlichkeit $`p`$, so ist die Bedingung verletzt,
+und die Fidelität von $`|0_L\rangle`$ nach der Wiederherstellung ist $`1-3p^2+2p^3=0.972`$ für $`p=0.1`$. Die Hilfsfunktion
+`kl_matrix` liefert $`\Lambda`$ oder `None`, wenn die Bedingung verletzt ist. In der Bibliothek ist $`M_8`$ eine Algebra mit
+einem Block, und `R @ Phi` ist die Komposition $`\mathcal R\circ\Phi`$:
 
 ```python
 M8 = TypeIAlgebra([8], [8], precision='double')
@@ -163,11 +163,11 @@ assert abs(F - (1 - 3 * p**2 + 2 * p**3)) < 1e-12
 *Vorlesungsnotizen:* [Abschnitt 10.3](../../lecture_notes/de/10_quantum_computing.md#s-10-3); [Proposition 10.6](../../lecture_notes/de/10_quantum_computing.md#r-10-6).
 
 Das Beispiel aus [Abschnitt 10.3](../../lecture_notes/de/10_quantum_computing.md#s-10-3) der Vorlesungsnotizen: der Wiederholungscode unter unabhängigen Phasenflips
-(Wahrscheinlichkeit $q$ pro Qubit), gefolgt von höchstens einem Bitflip. Das Qubit ist nicht geschützt (die
+(Wahrscheinlichkeit $`q`$ pro Qubit), gefolgt von höchstens einem Bitflip. Das Qubit ist nicht geschützt (die
 Knill–Laflamme-Bedingung ist verletzt), wohl aber das klassische Bit: Bedingung 2 aus [Proposition 10.6](../../lecture_notes/de/10_quantum_computing.md#r-10-6) gilt für
-$P_0=|000\rangle\langle000|$, $P_1=|111\rangle\langle111|$, und der Mehrheitsentscheid $N_0=\sum_{|b|\le1}|b\rangle\langle b|$,
-$N_1=1-N_0$ liest das Bit aus. Nach der Wiederherstellung aus Abschnitt 10.2 ist die Fidelität von $|{+_L}\rangle$ gleich
-$(1+(1-2q)^3)/2=0.8645$ für $q=0.05$.
+$`P_0=|000\rangle\langle000|`$, $`P_1=|111\rangle\langle111|`$, und der Mehrheitsentscheid $`N_0=\sum_{|b|\le1}|b\rangle\langle b|`$,
+$`N_1=1-N_0`$ liest das Bit aus. Nach der Wiederherstellung aus Abschnitt 10.2 ist die Fidelität von $`|{+_L}\rangle`$ gleich
+$`(1+(1-2q)^3)/2=0.8645`$ für $`q=0.05`$.
 
 ```python
 q = 0.05
@@ -193,20 +193,20 @@ assert abs(F_plus - (1 + (1 - 2 * q) ** 3) / 2) < 1e-12
 
 *Vorlesungsnotizen:* [Abschnitt 10.4](../../lecture_notes/de/10_quantum_computing.md#s-10-4); [Proposition 10.8](../../lecture_notes/de/10_quantum_computing.md#r-10-8), [Proposition 10.9](../../lecture_notes/de/10_quantum_computing.md#r-10-9), [Proposition 10.10](../../lecture_notes/de/10_quantum_computing.md#r-10-10).
 
-Der Quantum Alternating Operator Ansatz wechselt $e^{-i\gamma H_C}$, $H_C$ ein diagonaler Kosten-Hamiltonoperator,
-und $e^{-i\beta H_M}$ ab, $H_M=\tfrac14\sum_{(i,j)}(X_iX_j+Y_iY_j)$ der XY-Mixer auf einem Ring. Nach
-[Vorlesungsnotizen, Proposition 10.8](../../lecture_notes/de/10_quantum_computing.md#r-10-8) liegen sie alle in $\mathcal M=\{P_0,\dots,P_n\}'\cong\bigoplus_wM_{\binom nw}$,
+Der Quantum Alternating Operator Ansatz wechselt $`e^{-i\gamma H_C}`$, $`H_C`$ ein diagonaler Kosten-Hamiltonoperator,
+und $`e^{-i\beta H_M}`$ ab, $`H_M=\tfrac14\sum_{(i,j)}(X_iX_j+Y_iY_j)`$ der XY-Mixer auf einem Ring. Nach
+[Vorlesungsnotizen, Proposition 10.8](../../lecture_notes/de/10_quantum_computing.md#r-10-8) liegen sie alle in $`\mathcal M=\{P_0,\dots,P_n\}'\cong\bigoplus_wM_{\binom nw}`$,
 also verlässt der Ansatz den Hamming-Gewichts-Sektor seines Anfangszustands nie.
 
-In der Bibliothek ist $\mathcal M$ die Algebra `SpinChain(n).algebra` (Bit $1$ = Spin nach oben,
-also $S^z_i=-\tfrac12Z_i$), und $H_M$ ist ihr XXZ-Hamiltonoperator
-$J\sum_{(i,j)}\big(\tfrac12(S^+_iS^-_j+S^-_iS^+_j)+\Delta S^z_iS^z_j\big)$ mit $J=1$, $\Delta=0$, da
-$S^+_iS^-_j+S^-_iS^+_j=\tfrac12(X_iX_j+Y_iY_j)$; wir prüfen das an der dichten $64\times64$-Matrix. Für
-$H_C$ nehmen wir die Graphbisektion der Dreiecke $\{0,1,2\}$, $\{3,4,5\}$, verbunden durch die Kanten
-$(2,3)$, $(5,0)$: $H_C=\sum_{(i,j)\in E}\tfrac12(1-Z_iZ_j)$, $Z_iZ_j=4S^z_iS^z_j$, zählt die geschnittenen
-Kanten. Die beste Bisektion schneidet $2$ Kanten (die beiden Dreiecke; jede andere Menge von drei Ecken
-teilt beide Dreiecke, und ein geteiltes Dreieck hat zwei geschnittene Kanten); wir starten bei $|101010\rangle$, das $6$ schneidet.
-Schließlich wird der ganze Ansatz mit dichten $64\times64$-Matrizen unabhängig von der Bibliothek
+In der Bibliothek ist $`\mathcal M`$ die Algebra `SpinChain(n).algebra` (Bit $`1`$ = Spin nach oben,
+also $`S^z_i=-\tfrac12Z_i`$), und $`H_M`$ ist ihr XXZ-Hamiltonoperator
+$`J\sum_{(i,j)}\big(\tfrac12(S^+_iS^-_j+S^-_iS^+_j)+\Delta S^z_iS^z_j\big)`$ mit $`J=1`$, $`\Delta=0`$, da
+$`S^+_iS^-_j+S^-_iS^+_j=\tfrac12(X_iX_j+Y_iY_j)`$; wir prüfen das an der dichten $`64\times64`$-Matrix. Für
+$`H_C`$ nehmen wir die Graphbisektion der Dreiecke $`\{0,1,2\}`$, $`\{3,4,5\}`$, verbunden durch die Kanten
+$`(2,3)`$, $`(5,0)`$: $`H_C=\sum_{(i,j)\in E}\tfrac12(1-Z_iZ_j)`$, $`Z_iZ_j=4S^z_iS^z_j`$, zählt die geschnittenen
+Kanten. Die beste Bisektion schneidet $`2`$ Kanten (die beiden Dreiecke; jede andere Menge von drei Ecken
+teilt beide Dreiecke, und ein geteiltes Dreieck hat zwei geschnittene Kanten); wir starten bei $`|101010\rangle`$, das $`6`$ schneidet.
+Schließlich wird der ganze Ansatz mit dichten $`64\times64`$-Matrizen unabhängig von der Bibliothek
 nachgerechnet.
 
 ```python
@@ -237,18 +237,18 @@ assert abs(psi[weight == w].norm().item() - 1) < 1e-12           # Proposition 1
 assert abs((psi.conj() @ HC_dense @ psi).real.item() - states.expectation(ideal, H_C).real.item()) < 1e-10
 ```
 
-Die **Amplitudendämpfung** des Qubits $i$ ($|1\rangle\to|0\rangle$ mit Wahrscheinlichkeit $g$) hat die
-Kraus-Operatoren $K_0^{(i)}=|0\rangle\langle0|_i+\sqrt{1-g}\,|1\rangle\langle1|_i$ und
-$K_1^{(i)}=\sqrt g\,|0\rangle\langle1|_i$, der das Gewicht senkt: eine Abbildung zwischen Sektoren,
+Die **Amplitudendämpfung** des Qubits $`i`$ ($`|1\rangle\to|0\rangle`$ mit Wahrscheinlichkeit $`g`$) hat die
+Kraus-Operatoren $`K_0^{(i)}=|0\rangle\langle0|_i+\sqrt{1-g}\,|1\rangle\langle1|_i`$ und
+$`K_1^{(i)}=\sqrt g\,|0\rangle\langle1|_i`$, der das Gewicht senkt: eine Abbildung zwischen Sektoren,
 `chain.site_amplitude_damping(i, g)` (ein `InterSectorChannel`).
 
 Nach [Vorlesungsnotizen, Proposition 10.9](../../lecture_notes/de/10_quantum_computing.md#r-10-9) wird, wenn auf jede Schicht des Schaltkreises die Dämpfung
-aller Qubits folgt, das Gewicht $w$ des Anfangszustands nach $p$ Schichten noch mit Wahrscheinlichkeit $(1-g)^{wp}$
+aller Qubits folgt, das Gewicht $`w`$ des Anfangszustands nach $`p`$ Schichten noch mit Wahrscheinlichkeit $`(1-g)^{wp}`$
 gefunden, und der postselektierte Zustand ist der rauschfreie.
 
 Ein `InterSectorChannel` behält nur die Diagonalblöcke seiner Ausgabe; hier gibt es keine anderen
-(der Beweis von Proposition 10.9 gilt wörtlich für die Dämpfung eines einzelnen Qubits, mit $s\in\{0,1\}$),
-also geht nichts verloren. Mit $g=0.05$ und $p=2$ ist die Akzeptanz $0.95^6=0.7351$:
+(der Beweis von Proposition 10.9 gilt wörtlich für die Dämpfung eines einzelnen Qubits, mit $`s\in\{0,1\}`$),
+also geht nichts verloren. Mit $`g=0.05`$ und $`p=2`$ ist die Akzeptanz $`0.95^6=0.7351`$:
 
 ```python
 g = 0.05
@@ -270,17 +270,17 @@ assert abs(post.fidelity(ideal).item() - 1) < 1e-10 and abs(cut(post) - cut(idea
 ```
 
 Numerische Beobachtung (die ausgegebenen Werte): Der unzulässige Anteil senkt den erwarteten Schnitt
-von $4.3789$ auf $4.3123$, eine scheinbare Verbesserung, die einen Optimierer der Winkel in die Irre
+von $`4.3789`$ auf $`4.3123`$, eine scheinbare Verbesserung, die einen Optimierer der Winkel in die Irre
 führen würde; nach der Postselektion ist der Wert exakt (Proposition 10.9).
 
 Nach [Vorlesungsnotizen, Proposition 10.10](../../lecture_notes/de/10_quantum_computing.md#r-10-10) behält unter der Lindblad-Gleichung mit Amplitudendämpfung
-(Rate $\gamma_1$) und Dephasierung $L_k=S^z_k$ (Rate $\gamma_2$) ein in $H_w$ startender Zustand das Gewicht $w$ mit
-Wahrscheinlichkeit $e^{-\gamma_1wt}$, und der postselektierte Zustand hängt nicht von $\gamma_1$ ab; für $\gamma_2=0$
+(Rate $`\gamma_1`$) und Dephasierung $`L_k=S^z_k`$ (Rate $`\gamma_2`$) ein in $`H_w`$ startender Zustand das Gewicht $`w`$ mit
+Wahrscheinlichkeit $`e^{-\gamma_1wt}`$, und der postselektierte Zustand hängt nicht von $`\gamma_1`$ ab; für $`\gamma_2=0`$
 ist die Postselektion perfekt. Der
-Begleitartikel (`examples/paper/ex9_qaoa_xy_mixer.py`) lässt $|111000\rangle$ unter $H_M$ bis $T=2$
-evolvieren; wir reproduzieren seine Zeile $\gamma_1=\gamma_2=0.1$: $P(w=3)=e^{-0.6}=0.5488$ (Proposition
-10.10) sowie, als numerische Beobachtung des folgenden Codes, die Fidelität $0.4805$ und die postselektierte
-Fidelität $0.8755$; nach Proposition 10.10 ist letztere dieselbe wie für $\gamma_1=0$.
+Begleitartikel (`examples/paper/ex9_qaoa_xy_mixer.py`) lässt $`|111000\rangle`$ unter $`H_M`$ bis $`T=2`$
+evolvieren; wir reproduzieren seine Zeile $`\gamma_1=\gamma_2=0.1`$: $`P(w=3)=e^{-0.6}=0.5488`$ (Proposition
+10.10) sowie, als numerische Beobachtung des folgenden Codes, die Fidelität $`0.4805`$ und die postselektierte
+Fidelität $`0.8755`$; nach Proposition 10.10 ist letztere dieselbe wie für $`\gamma_1=0`$.
 
 ```python
 T = 2.0
@@ -303,17 +303,17 @@ assert post_T[0.1, 0.1].trace_distance(post_T[0.0, 0.1]).item() < 1e-6       # i
 ## 10.5 Womit man vergleichen sollte
 
 Qiskit (`qiskit.quantum_info`, Rauschmodelle von Aer, `QAOAAnsatz` mit einem eigenen Mixer), Cirq,
-PennyLane (`qml.qaoa.xy_mixer`, `default.mixed`) und QuTiP/`qutip-qip` simulieren all dies auf $n$
+PennyLane (`qml.qaoa.xy_mixer`, `default.mixed`) und QuTiP/`qutip-qip` simulieren all dies auf $`n`$
 vollen Qubits und sind die richtigen Werkzeuge für Schaltkreise; stim sampelt Clifford-Schaltkreise
 mit Pauli-artigem Rauschen auf Tausenden von Qubits (Amplitudendämpfung ist kein Pauli-Kanal: Pauli-Kanäle sind unital, die Amplitudendämpfung nicht). Uns
 ist in diesen Paketen keine Funktion bekannt, die die Wechselwirkungsalgebra eines Kanals, ihren
 Kommutanten oder seine ganze Fixpunktalgebra berechnet (QuTiPs `steadystate` liefert einen
 stationären Zustand eines Lindblad-Operators); zu numerischen Blockzerlegungen von
-Matrix-$*$-Algebren siehe Murota et al., *Japan J. Indust. Appl. Math.* 27 (2010). Die Bibliothek
-ergänzt die Speicherung in $\bigoplus_wM_{\binom nw}$, Abbildungen zwischen Sektoren und Postselektion
-als zentrale Projektion, gestapelt. Ein Sektor braucht $\binom nw^2$ Einträge statt $4^n$
-($1.7\cdot10^8$ gegenüber $4.3\cdot10^9$ für $n=16$, $w=8$), aber die ganze Algebra wird auf
-$(n+1)\binom n{\lfloor n/2\rfloor}^2$ Einträge ($2.8\cdot10^9$) aufgefüllt, eine bescheidene Ersparnis. Sie
+Matrix-$`*`$-Algebren siehe Murota et al., *Japan J. Indust. Appl. Math.* 27 (2010). Die Bibliothek
+ergänzt die Speicherung in $`\bigoplus_wM_{\binom nw}`$, Abbildungen zwischen Sektoren und Postselektion
+als zentrale Projektion, gestapelt. Ein Sektor braucht $`\binom nw^2`$ Einträge statt $`4^n`$
+($`1.7\cdot10^8`$ gegenüber $`4.3\cdot10^9`$ für $`n=16`$, $`w=8`$), aber die ganze Algebra wird auf
+$`(n+1)\binom n{\lfloor n/2\rfloor}^2`$ Einträge ($`2.8\cdot10^9`$) aufgefüllt, eine bescheidene Ersparnis. Sie
 ist kein Schaltkreissimulator und hat keinen Stabilisatorformalismus.
 
 <a id="x-10"></a>
@@ -321,9 +321,9 @@ ist kein Schaltkreissimulator und hat keinen Stabilisatorformalismus.
 ## Aufgaben
 
 [Aufgaben 1–3](../../lecture_notes/de/10_quantum_computing.md#x-10) der Vorlesungsnotizen, numerisch: Für die Amplitudendämpfung eines Qubits sind
-$\mathcal A'$, $\mathrm{Fix}(\Phi)$ und $\mathrm{Fix}(\Phi^*)$ eindimensional (Aufgabe 1); für den Kanal aus
-[Korollar 10.3](../../lecture_notes/de/10_quantum_computing.md#r-10-3) mit $\theta=\pi/2$ und $n=4$ ist $\dim\mathrm{Fix}(\Phi)=128$ (Aufgabe 2); die Wiederherstellung
-$\mathcal R$ des Bitflip-Codes korrigiert den kohärenten Fehler $e^{-i\phi X_1}$ (Aufgabe 3).
+$`\mathcal A'`$, $`\mathrm{Fix}(\Phi)`$ und $`\mathrm{Fix}(\Phi^*)`$ eindimensional (Aufgabe 1); für den Kanal aus
+[Korollar 10.3](../../lecture_notes/de/10_quantum_computing.md#r-10-3) mit $`\theta=\pi/2`$ und $`n=4`$ ist $`\dim\mathrm{Fix}(\Phi)=128`$ (Aufgabe 2); die Wiederherstellung
+$`\mathcal R`$ des Bitflip-Codes korrigiert den kohärenten Fehler $`e^{-i\phi X_1}`$ (Aufgabe 3).
 
 <details>
 <summary>Lösungen</summary>

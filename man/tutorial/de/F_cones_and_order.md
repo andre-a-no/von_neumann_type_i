@@ -4,9 +4,9 @@
 
 Dieses Tutorial begleitet [Anhang F](../../lecture_notes/de/F_cones_and_order.md) der Vorlesungsnotizen, der beweist, dass der Kegel der Quadrate einer
 euklidischen Jordan-Algebra symmetrisch ist, und den Satz von Koecher–Vinberg ([Satz F.12](../../lecture_notes/de/F_cones_and_order.md#r-F-12)), den Satz von Kadison und
-die Form der Jordan-$*$-Isomorphismen für die Algebren $\bigoplus_cM_{k_c}(\mathbb C)$
+die Form der Jordan-$`*`$-Isomorphismen für die Algebren $`\bigoplus_cM_{k_c}(\mathbb C)`$
 ([Sätze F.15](../../lecture_notes/de/F_cones_and_order.md#r-F-15) und [F.18](../../lecture_notes/de/F_cones_and_order.md#r-F-18)) beweist. Wir prüfen diese Ergebnisse numerisch an Matrizen, am Spinfaktor
-$V_4$ der Bibliothek und am Kegel der positiv definiten Matrizen.
+$`V_4`$ der Bibliothek und am Kegel der positiv definiten Matrizen.
 
 <a id="s-F-2"></a>
 
@@ -14,13 +14,13 @@ $V_4$ der Bibliothek und am Kegel der positiv definiten Matrizen.
 
 *Vorlesungsnotizen:* [Abschnitt F.2](../../lecture_notes/de/F_cones_and_order.md#s-F-2); [Satz F.5](../../lecture_notes/de/F_cones_and_order.md#r-F-5), [Satz F.6](../../lecture_notes/de/F_cones_and_order.md#r-F-6), [Korollar F.7](../../lecture_notes/de/F_cones_and_order.md#r-F-7).
 
-In $V_4$ verwendet der Code den `SpinFactor` der Bibliothek ([Tutorial, Abschnitt 13.2](../../tutorial/de/13_jordan_algebras.md#s-13-2)): `random` (mit `cone=True` für Elemente von $Q$),
+In $`V_4`$ verwendet der Code den `SpinFactor` der Bibliothek ([Tutorial, Abschnitt 13.2](../../tutorial/de/13_jordan_algebras.md#s-13-2)): `random` (mit `cone=True` für Elemente von $`Q`$),
 `inner`, `spectral_decomposition`, `in_cone`, `product`, `quadratic_representation`, `exp`, `log` und `apply_function`.
 
-Der Code prüft Satz F.5 für $\mathrm{Herm}_4(\mathbb C)$ und für den Lorentz-Kegel $Q\subseteq V_4$ (die negative
-Paarung ist der Zeuge $c_i$ aus (1), $\langle y,c_i\rangle=\lambda_i\|c_i\|^2<0$), Satz F.6 in $V_4$, wo die Operatoren $L(b)$ und $P(y)$ in den
-Koordinaten $(a,u)$ symmetrische $5\times5$-Matrizen sind, und Korollar F.7 in
-$\mathrm{Herm}_5(\mathbb R)$:
+Der Code prüft Satz F.5 für $`\mathrm{Herm}_4(\mathbb C)`$ und für den Lorentz-Kegel $`Q\subseteq V_4`$ (die negative
+Paarung ist der Zeuge $`c_i`$ aus (1), $`\langle y,c_i\rangle=\lambda_i\|c_i\|^2<0`$), Satz F.6 in $`V_4`$, wo die Operatoren $`L(b)`$ und $`P(y)`$ in den
+Koordinaten $`(a,u)`$ symmetrische $`5\times5`$-Matrizen sind, und Korollar F.7 in
+$`\mathrm{Herm}_5(\mathbb R)`$:
 
 ```python
 import math
@@ -79,8 +79,8 @@ assert (rhs - lhs > -1e-9 * rhs).all()
 
 *Vorlesungsnotizen:* [Abschnitt F.3](../../lecture_notes/de/F_cones_and_order.md#s-F-3); [Proposition F.11](../../lecture_notes/de/F_cones_and_order.md#r-F-11), [Satz F.12](../../lecture_notes/de/F_cones_and_order.md#r-F-12), [Beispiel F.13](../../lecture_notes/de/F_cones_and_order.md#r-F-13).
 
-Der Code berechnet $D^3f$ in $e$ durch automatisches Differenzieren von $f(x)=-\frac{n+1}2\log\det x$ in
-Orthonormalkoordinaten von $\mathrm{Herm}_3(\mathbb R)$ und prüft die Aussagen von Proposition F.11 und Satz F.12:
+Der Code berechnet $`D^3f`$ in $`e`$ durch automatisches Differenzieren von $`f(x)=-\frac{n+1}2\log\det x`$ in
+Orthonormalkoordinaten von $`\mathrm{Herm}_3(\mathbb R)`$ und prüft die Aussagen von Proposition F.11 und Satz F.12:
 
 ```python
 from torch.autograd.functional import jacobian, hessian
@@ -113,10 +113,10 @@ assert close(prod(u, prod(u2, v)), prod(u2, prod(u, v)))           # Jordan iden
 
 *Vorlesungsnotizen:* [Abschnitt F.4](../../lecture_notes/de/F_cones_and_order.md#s-F-4); [Satz F.15](../../lecture_notes/de/F_cones_and_order.md#r-F-15), [Satz F.18](../../lecture_notes/de/F_cones_and_order.md#r-F-18).
 
-Nach [Vorlesungsnotizen, Satz F.15](../../lecture_notes/de/F_cones_and_order.md#r-F-15) ist eine unitale lineare Bijektion $\Phi$, für die $\Phi$ und $\Phi^{-1}$
-positiv sind, ein Jordan-$*$-Isomorphismus. Der Code konstruiert eine solche Abbildung von $M_2\oplus M_2\oplus M_3$ von der Form aus
-[Satz F.18](../../lecture_notes/de/F_cones_and_order.md#r-F-18): Sie vertauscht die beiden $M_2$-Blöcke, transponiert zwei Blöcke und konjugiert mit Unitären. Er
-prüft, dass $\Phi$ unital und in beiden Richtungen positiv ist, dass sie das Jordan-Produkt erhält und dass sie nicht
+Nach [Vorlesungsnotizen, Satz F.15](../../lecture_notes/de/F_cones_and_order.md#r-F-15) ist eine unitale lineare Bijektion $`\Phi`$, für die $`\Phi`$ und $`\Phi^{-1}`$
+positiv sind, ein Jordan-$`*`$-Isomorphismus. Der Code konstruiert eine solche Abbildung von $`M_2\oplus M_2\oplus M_3`$ von der Form aus
+[Satz F.18](../../lecture_notes/de/F_cones_and_order.md#r-F-18): Sie vertauscht die beiden $`M_2`$-Blöcke, transponiert zwei Blöcke und konjugiert mit Unitären. Er
+prüft, dass $`\Phi`$ unital und in beiden Richtungen positiv ist, dass sie das Jordan-Produkt erhält und dass sie nicht
 multiplikativ ist:
 
 ```python
@@ -150,11 +150,11 @@ assert not close(Phi([s @ t for s, t in zip(x, y)])[0], (Phi(x)[0] @ Phi(y)[0]))
 
 <a id="s-F-5"></a>
 
-## F.5 Jordan-$*$-Isomorphismen von $\bigoplus_cM_{k_c}$
+## F.5 Jordan-$`*`$-Isomorphismen von $`\bigoplus_cM_{k_c}`$
 
 *Vorlesungsnotizen:* [Abschnitt F.5](../../lecture_notes/de/F_cones_and_order.md#s-F-5); [Satz F.17](../../lecture_notes/de/F_cones_and_order.md#r-F-17).
 
-Der Code konstruiert den Jordan-Automorphismus $x\mapsto Ux^TU^*$ von $M_3$ und gewinnt $U$ (bis auf eine Phase) mit den
+Der Code konstruiert den Jordan-Automorphismus $`x\mapsto Ux^TU^*`$ von $`M_3`$ und gewinnt $`U`$ (bis auf eine Phase) mit den
 Schritten des Beweises ([Vorlesungsnotizen, Satz F.17](../../lecture_notes/de/F_cones_and_order.md#r-F-17)) zurück:
 
 ```python
@@ -184,9 +184,9 @@ print("U recovered up to the phase", complex(phase))
 
 ## Aufgaben
 
-[Aufgabe 2](../../lecture_notes/de/F_cones_and_order.md#x-F) der Vorlesungsnotizen: Für $0<t<1$ ist $\Psi_t(x)=(1-t)x+\frac tn\mathrm{Tr}(x)1$ auf $M_n$ eine
+[Aufgabe 2](../../lecture_notes/de/F_cones_and_order.md#x-F) der Vorlesungsnotizen: Für $`0<t<1`$ ist $`\Psi_t(x)=(1-t)x+\frac tn\mathrm{Tr}(x)1`$ auf $`M_n`$ eine
 unitale positive Bijektion, deren Inverse nicht positiv ist, und sie bildet Projektionen nicht auf Projektionen ab. Man prüfe
-dies numerisch für $n=3$, $t=\frac14$ und eine Rang-eins-Projektion $p$.
+dies numerisch für $`n=3`$, $`t=\frac14`$ und eine Rang-eins-Projektion $`p`$.
 
 <details>
 <summary>Lösungen</summary>

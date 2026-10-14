@@ -7,21 +7,21 @@
 我们用 `SpinChain` 和 `SU2Chain` 构造链，用自由费米子和 Bethe 拟设检验本库，对稠密矩阵无法处理的大扇区使用
 `krylov` 的 Lanczos 与 Krylov 方法，并计算能级统计和纠缠。
 
-在本章中，格点为 $0,\dots,L-1$，$(\mathbb C^2)^{\otimes L}$ 的基由构型
-$|b\rangle=|b_0\dots b_{L-1}\rangle$ 组成，自旋向上时 $b_i=1$（本库的约定：标号的第 $i$ 位
-对应格点 $i$），$s^a_i$（$a=x,y,z$）是格点 $i$ 上的自旋矩阵 $\frac12\sigma_a$，
-$s^\pm_i=s^x_i\pm is^y_i$，$n_i=s^z_i+\frac12$，$S^a=\sum_is^a_i$，而 $N=S^z+\frac L2$ 是向上自旋的
-个数。链是**开链**（键 $(i,i+1)$，$i<L-1$）或**周期链**（还有键 $(L-1,0)$；此时
-$L\ge3$，指标取模 $L$）。$J>0$（反铁磁），$\hbar=1$，$\log$ 为自然对数。
+在本章中，格点为 $`0,\dots,L-1`$，$`(\mathbb C^2)^{\otimes L}`$ 的基由构型
+$`|b\rangle=|b_0\dots b_{L-1}\rangle`$ 组成，自旋向上时 $`b_i=1`$（本库的约定：标号的第 $`i`$ 位
+对应格点 $`i`$），$`s^a_i`$（$`a=x,y,z`$）是格点 $`i`$ 上的自旋矩阵 $`\frac12\sigma_a`$，
+$`s^\pm_i=s^x_i\pm is^y_i`$，$`n_i=s^z_i+\frac12`$，$`S^a=\sum_is^a_i`$，而 $`N=S^z+\frac L2`$ 是向上自旋的
+个数。链是**开链**（键 $`(i,i+1)`$，$`i<L-1`$）或**周期链**（还有键 $`(L-1,0)`$；此时
+$`L\ge3`$，指标取模 $`L`$）。$`J>0`$（反铁磁），$`\hbar=1`$，$`\log`$ 为自然对数。
 
 <a id="s-9-1"></a>
 
-## 9.1 XXZ 链及其 $U(1)$ 扇区
+## 9.1 XXZ 链及其 $`U(1)`$ 扇区
 
-*讲义：* [9.1 节](../../lecture_notes/zh/09_spin_chains.md#s-9-1)；[命题 9.1](../../lecture_notes/zh/09_spin_chains.md#r-9-1)（$H$ 保持 $S^z$ 守恒）、[命题 9.2](../../lecture_notes/zh/09_spin_chains.md#r-9-2)、[引理 9.3](../../lecture_notes/zh/09_spin_chains.md#r-9-3) 和[推论 9.4](../../lecture_notes/zh/09_spin_chains.md#r-9-4)（链的塔及其指标）。
+*讲义：* [9.1 节](../../lecture_notes/zh/09_spin_chains.md#s-9-1)；[命题 9.1](../../lecture_notes/zh/09_spin_chains.md#r-9-1)（$`H`$ 保持 $`S^z`$ 守恒）、[命题 9.2](../../lecture_notes/zh/09_spin_chains.md#r-9-2)、[引理 9.3](../../lecture_notes/zh/09_spin_chains.md#r-9-3) 和[推论 9.4](../../lecture_notes/zh/09_spin_chains.md#r-9-4)（链的塔及其指标）。
 
 `SpinChain(L).xxz` 直接由每个扇区的构型（`chain.labels[N]`）构造这些块。
-我们把它们与用 Kronecker 积构造的完整 $2^L\times2^L$ 矩阵作比较：
+我们把它们与用 Kronecker 积构造的完整 $`2^L\times2^L`$ 矩阵作比较：
 
 ```python
 import functools, itertools, math, time
@@ -51,9 +51,9 @@ for N, k in enumerate(chain.algebra.k_factors):
     assert close(H.matrix[0, N, :k, :k], H_full[lab][:, lab])
 ```
 
-链的塔 $\mathcal A_0\subset\mathcal A_1\subset\cdots$：`inclusions.chain_tower` 构造这些包含，
-`inclusions.bratteli_diagram` 构造它们的 Bratteli 图，`Inclusion.index` 给出指标 $\|\Lambda\|^2$。代码检验
-Pascal 法则、[引理 9.3](../../lecture_notes/zh/09_spin_chains.md#r-9-3) 以及 $[\mathcal A_{L+1}:\mathcal A_L]=4\cos^2\frac\pi{2L+4}$（[推论 9.4](../../lecture_notes/zh/09_spin_chains.md#r-9-4)）。
+链的塔 $`\mathcal A_0\subset\mathcal A_1\subset\cdots`$：`inclusions.chain_tower` 构造这些包含，
+`inclusions.bratteli_diagram` 构造它们的 Bratteli 图，`Inclusion.index` 给出指标 $`\|\Lambda\|^2`$。代码检验
+Pascal 法则、[引理 9.3](../../lecture_notes/zh/09_spin_chains.md#r-9-3) 以及 $`[\mathcal A_{L+1}:\mathcal A_L]=4\cos^2\frac\pi{2L+4}`$（[推论 9.4](../../lecture_notes/zh/09_spin_chains.md#r-9-4)）。
 
 ```python
 tower = inclusions.chain_tower(8)                                    # A_0 c A_1 c ... c A_8
@@ -74,7 +74,7 @@ for L_, inc in enumerate(tower):
 
 *讲义：* [9.2 节](../../lecture_notes/zh/09_spin_chains.md#s-9-2)；[命题 9.5](../../lecture_notes/zh/09_spin_chains.md#r-9-5)（动量扇区）、[定理 9.7](../../lecture_notes/zh/09_spin_chains.md#r-9-7)（Marshall 符号规则）、[推论 9.8](../../lecture_notes/zh/09_spin_chains.md#r-9-8)（基态的动量）。
 
-`xxz_momentum` 在归一化的基 $|a,k\rangle$ 中构造这些块，每条轨道取一个代表元 $a$。我们
+`xxz_momentum` 在归一化的基 $`|a,k\rangle`$ 中构造这些块，每条轨道取一个代表元 $`a`$。我们
 独立地计数轨道，并把谱与稠密扇区作比较：
 
 ```python
@@ -92,11 +92,11 @@ E_k = torch.sort(torch.cat([e[0] for e in Hk.eigenvalues()])).values
 assert close(E_k, torch.linalg.eigvalsh(ring.xxz(1.0, 1.0, h=0.2, sector=6).matrix[0, 0]))
 ```
 
-含 $924$ 个态的扇区 $N=6$ 分裂成大小为 $80,75,78,76,78,75,80,75,78,76,78,75$ 的块。
+含 $`924`$ 个态的扇区 $`N=6`$ 分裂成大小为 $`80,75,78,76,78,75,80,75,78,76,78,75`$ 的块。
 
 由 Marshall 符号规则（[定理 9.7](../../lecture_notes/zh/09_spin_chains.md#r-9-7)），对带随机场的开链和周期链，
-$(-1)^{N_B(b)}\psi(b)$ 在每个扇区中只有一种符号；由[推论 9.8](../../lecture_notes/zh/09_spin_chains.md#r-9-8)，环的扇区 $N$ 的最低能级
-对偶数 $N$ 位于动量块 $k=0$ 中，对奇数 $N$ 位于 $k=\pi$ 中：
+$`(-1)^{N_B(b)}\psi(b)`$ 在每个扇区中只有一种符号；由[推论 9.8](../../lecture_notes/zh/09_spin_chains.md#r-9-8)，环的扇区 $`N`$ 的最低能级
+对偶数 $`N`$ 位于动量块 $`k=0`$ 中，对奇数 $`N`$ 位于 $`k=\pi`$ 中：
 
 ```python
 for bc in ('open', 'periodic'):
@@ -114,12 +114,12 @@ for N in range(1, L):
 
 <a id="s-9-3"></a>
 
-## 9.3 $\Delta=1$ 时的 $SU(2)$
+## 9.3 $`\Delta=1`$ 时的 $`SU(2)`$
 
-*讲义：* [9.3 节](../../lecture_notes/zh/09_spin_chains.md#s-9-3)；[定理 9.9](../../lecture_notes/zh/09_spin_chains.md#r-9-9)（Lieb–Mattis）。对 $\Delta=1$ 和 $h=0$，$H\cong\bigoplus_S1_{2S+1}\otimes H_S$，而 `SU2Chain` 在最高权向量上构造块 $H_S$。
+*讲义：* [9.3 节](../../lecture_notes/zh/09_spin_chains.md#s-9-3)；[定理 9.9](../../lecture_notes/zh/09_spin_chains.md#r-9-9)（Lieb–Mattis）。对 $`\Delta=1`$ 和 $`h=0`$，$`H\cong\bigoplus_S1_{2S+1}\otimes H_S`$，而 `SU2Chain` 在最高权向量上构造块 $`H_S`$。
 
-我们比较十二个自旋时的块大小，用 $U(1)$ 扇区检验定理 9.9，计算能隙，并在一个不是链的二部图上
-（$n_A=5$，$n_B=3$，$S_*=1$，随机耦合）检验定理 9.7 和 9.9：
+我们比较十二个自旋时的块大小，用 $`U(1)`$ 扇区检验定理 9.9，计算能隙，并在一个不是链的二部图上
+（$`n_A=5`$，$`n_B=3`$，$`S_*=1`$，随机耦合）检验定理 9.7 和 9.9：
 
 ```python
 sym = SU2Chain(12, boundary='periodic', complex_valued=False)
@@ -157,16 +157,16 @@ w8 = torch.linalg.eigvalsh(H8)
 assert w8[2] - w8[0] < 1e-10 and w8[3] - w8[0] > 1e-8                # ground space: one triplet, S_* = 1
 ```
 
-$SU(2)$ 块的大小为 $m_S=132,297,275,154,54,11,1$，而最大的 $U(1)$ 块为 $924$，
-对角化的开销 $\sum k^3$ 从 $2.0\cdot10^9$ 降到 $5.3\cdot10^7$。*数值观察*：$L$ 乘以能隙增长得很慢，
-对 $L=6,\dots,12$ 依次为 $4.108,4.181,4.232,4.270$；关于它在 $L\to\infty$ 时的行为，我们不作任何证明。
+$`SU(2)`$ 块的大小为 $`m_S=132,297,275,154,54,11,1`$，而最大的 $`U(1)`$ 块为 $`924`$，
+对角化的开销 $`\sum k^3`$ 从 $`2.0\cdot10^9`$ 降到 $`5.3\cdot10^7`$。*数值观察*：$`L`$ 乘以能隙增长得很慢，
+对 $`L=6,\dots,12`$ 依次为 $`4.108,4.181,4.232,4.270`$；关于它在 $`L\to\infty`$ 时的行为，我们不作任何证明。
 
 **关联。** 各格点的自旋构成矢量算子，其球分量构成秩一张量算子（引理 B.15(a)、(b)）。由
 **Wigner–Eckart 定理**（定理 B.16），它们在两个多重态之间的矩阵元等于一个 Clebsch–Gordan 系数乘以一个
-与磁量子数无关的**约化矩阵元**，并且 $\mathbf s_i\cdot\mathbf s_j=\sum_q(-1)^qs^{(i)}_qs^{(j)}_{-q}$（引理 B.15(a)）。
-`spin_correlation` 利用这一点仅从最高权向量出发在每个 $H_S$ 上构造 $\mathbf s_i\cdot\mathbf s_j$；`'direct'` 方法则改为
-把键算子压缩到最高权向量上，由于 $\mathbf s_i\cdot\mathbf s_j\in\{S_a\}'$，由命题 4.15(b) 这是正确的。第一种方法的
-实现是否正确，这里不作证明；代码检验两者彼此一致，并与按定义在 $U(1)$ 扇区中显式写出的
+与磁量子数无关的**约化矩阵元**，并且 $`\mathbf s_i\cdot\mathbf s_j=\sum_q(-1)^qs^{(i)}_qs^{(j)}_{-q}`$（引理 B.15(a)）。
+`spin_correlation` 利用这一点仅从最高权向量出发在每个 $`H_S`$ 上构造 $`\mathbf s_i\cdot\mathbf s_j`$；`'direct'` 方法则改为
+把键算子压缩到最高权向量上，由于 $`\mathbf s_i\cdot\mathbf s_j\in\{S_a\}'`$，由命题 4.15(b) 这是正确的。第一种方法的
+实现是否正确，这里不作证明；代码检验两者彼此一致，并与按定义在 $`U(1)`$ 扇区中显式写出的
 基态上计算的值一致：
 
 ```python
@@ -189,14 +189,14 @@ assert ((-1.0) ** torch.arange(1, 12) * corr_we[1:] > 0).all()       # signs (-1
 print([round(x, 4) for x in corr_we.tolist()])
 ```
 
-关联 $\langle\mathbf s_0\cdot\mathbf s_r\rangle=0.75,-0.4489,0.1878,-0.1658,0.1209,-0.1224,0.1070,\dots$
+关联 $`\langle\mathbf s_0\cdot\mathbf s_r\rangle=0.75,-0.4489,0.1878,-0.1658,0.1209,-0.1224,0.1070,\dots`$
 符号交替，这正是定理 9.7 和 9.9 对每个偶数环所强制的（[讲义，9.3 节](../../lecture_notes/zh/09_spin_chains.md#s-9-3)）。
 
 <a id="s-9-4"></a>
 
 ## 9.4 精确检验：自由费米子与 Bethe 拟设
 
-*讲义：* [9.4 节](../../lecture_notes/zh/09_spin_chains.md#s-9-4)；由[定理 9.10](../../lecture_notes/zh/09_spin_chains.md#r-9-10)，开 XX 链扇区 $N$ 的能量是 $N$ 个互不相同的 $\varepsilon_k=J\cos\frac{\pi k}{L+1}$ 之和；[命题 9.12](../../lecture_notes/zh/09_spin_chains.md#r-9-12)（双磁振子，Bethe 方程）。
+*讲义：* [9.4 节](../../lecture_notes/zh/09_spin_chains.md#s-9-4)；由[定理 9.10](../../lecture_notes/zh/09_spin_chains.md#r-9-10)，开 XX 链扇区 $`N`$ 的能量是 $`N`$ 个互不相同的 $`\varepsilon_k=J\cos\frac{\pi k}{L+1}`$ 之和；[命题 9.12](../../lecture_notes/zh/09_spin_chains.md#r-9-12)（双磁振子，Bethe 方程）。
 
 ```python
 L = 10
@@ -209,11 +209,11 @@ for N in range(L + 1):
     assert abs(E[0].item() - sum(sorted(eps)[:N])) < 1e-12           # ground state: the N lowest modes
 ```
 
-由[命题 9.12](../../lecture_notes/zh/09_spin_chains.md#r-9-12)，$F(q)=(-1)^ne^{iqL}(c-\Delta e^{-iq})+c-\Delta e^{iq}$（其中
-$K=2\pi n/L$，$c=\cos\frac K2$）的每个根 $q$ 都给出环的扇区 $N=2$ 的一个特征向量 $\Psi$
-（[讲义，9.4 节](../../lecture_notes/zh/09_spin_chains.md#s-9-4)）。代码在 $q\in(0,\pi)$ 中（散射态）以及在直线
-$q=i\kappa$、$\pi+i\kappa$（$\kappa>0$）上（束缚态）寻找根，对 $L=9$、$\Delta=0.6$ 为每个根构造 $\Psi$，
-并与含 $36$ 个态的扇区 $N=2$ 作比较：
+由[命题 9.12](../../lecture_notes/zh/09_spin_chains.md#r-9-12)，$`F(q)=(-1)^ne^{iqL}(c-\Delta e^{-iq})+c-\Delta e^{iq}`$（其中
+$`K=2\pi n/L`$，$`c=\cos\frac K2`$）的每个根 $`q`$ 都给出环的扇区 $`N=2`$ 的一个特征向量 $`\Psi`$
+（[讲义，9.4 节](../../lecture_notes/zh/09_spin_chains.md#s-9-4)）。代码在 $`q\in(0,\pi)`$ 中（散射态）以及在直线
+$`q=i\kappa`$、$`\pi+i\kappa`$（$`\kappa>0`$）上（束缚态）寻找根，对 $`L=9`$、$`\Delta=0.6`$ 为每个根构造 $`\Psi`$，
+并与含 $`36`$ 个态的扇区 $`N=2`$ 作比较：
 
 ```python
 L, Delta = 9, 0.6
@@ -250,24 +250,24 @@ for x in range(8):
 assert close(ring8.xxz(1.0, Delta, sector=2).matrix[0, 0] @ Phi, (8 * Delta / 4 - Delta) * Phi)   # E_F - J Delta
 ```
 
-*数值观察*：对 $L=9$ 和 $\Delta=0.6$，搜索找到 $36$ 个根，即 $34$ 个散射态和 $2$ 个束缚态，它们的向量
-是线性无关的特征向量（在舍入误差范围内）：全部 $36$ 个本征态都来自 Bethe 方程。对其他 $L$，完备性没有得到证明，
-而对偶数 $L$ 和 $\Delta\ne0$ 它不成立（[讲义，9.4 节](../../lecture_notes/zh/09_spin_chains.md#s-9-4)）：向量 $\Phi=\sum_x(-1)^x|x,x+1\rangle$ 与所有 Bethe 向量正交，
-代码的最后几行对 $L=8$ 检验了 $H\Phi=(E_F-J\Delta)\Phi$。
+*数值观察*：对 $`L=9`$ 和 $`\Delta=0.6`$，搜索找到 $`36`$ 个根，即 $`34`$ 个散射态和 $`2`$ 个束缚态，它们的向量
+是线性无关的特征向量（在舍入误差范围内）：全部 $`36`$ 个本征态都来自 Bethe 方程。对其他 $`L`$，完备性没有得到证明，
+而对偶数 $`L`$ 和 $`\Delta\ne0`$ 它不成立（[讲义，9.4 节](../../lecture_notes/zh/09_spin_chains.md#s-9-4)）：向量 $`\Phi=\sum_x(-1)^x|x,x+1\rangle`$ 与所有 Bethe 向量正交，
+代码的最后几行对 $`L=8`$ 检验了 $`H\Phi=(E_F-J\Delta)\Phi`$。
 
 <a id="s-9-5"></a>
 
 ## 9.5 Lanczos 与 Krylov 方法
 
-*讲义：* [9.5 节](../../lecture_notes/zh/09_spin_chains.md#s-9-5)；[命题 9.13](../../lecture_notes/zh/09_spin_chains.md#r-9-13)（Lanczos：$T_m=Q_m^*HQ_m$ 是三对角的）、[定理 9.14](../../lecture_notes/zh/09_spin_chains.md#r-9-14)（Ritz 值，即 $T_m$ 的特征值，满足 $\theta^{(m)}_j\ge\lambda_j$ 并随 $m$ 递减）、[命题 9.15](../../lecture_notes/zh/09_spin_chains.md#r-9-15)（Krylov 时间演化）。
+*讲义：* [9.5 节](../../lecture_notes/zh/09_spin_chains.md#s-9-5)；[命题 9.13](../../lecture_notes/zh/09_spin_chains.md#r-9-13)（Lanczos：$`T_m=Q_m^*HQ_m`$ 是三对角的）、[定理 9.14](../../lecture_notes/zh/09_spin_chains.md#r-9-14)（Ritz 值，即 $`T_m`$ 的特征值，满足 $`\theta^{(m)}_j\ge\lambda_j`$ 并随 $`m`$ 递减）、[命题 9.15](../../lecture_notes/zh/09_spin_chains.md#r-9-15)（Krylov 时间演化）。
 
-扇区 $N=L/2$ 的维数在 $L=16$ 时为 $12870$，在 $L=20$ 时为 $184756$，但 $H$ 是稀疏的（每行 $O(L)$ 个非零
-元素，`xxz_sparse`），而 Krylov 方法只需要乘积 $Hv$。设 $H$ 是 $n$ 阶厄米矩阵，
-$v\ne0$。**Krylov 空间**为 $\mathcal K_m=\mathrm{span}\{v,Hv,\dots,H^{m-1}v\}$。
+扇区 $`N=L/2`$ 的维数在 $`L=16`$ 时为 $`12870`$，在 $`L=20`$ 时为 $`184756`$，但 $`H`$ 是稀疏的（每行 $`O(L)`$ 个非零
+元素，`xxz_sparse`），而 Krylov 方法只需要乘积 $`Hv`$。设 $`H`$ 是 $`n`$ 阶厄米矩阵，
+$`v\ne0`$。**Krylov 空间**为 $`\mathcal K_m=\mathrm{span}\{v,Hv,\dots,H^{m-1}v\}`$。
 
-定理 9.14 并没有说明 $\theta^{(m)}_1$ 趋近 $\lambda_1$ 的快慢；我们只在下面观察它。在浮点运算中
-$q_j$ 会失去正交性；`krylov.lanczos` 进行完全再正交化，代码检验计算出的 $q_j$ 在舍入误差范围内
-规范正交且 $Q_m^*HQ_m=T_m$。对开放 XX 链，扇区 $N$ 的精确基态能量是 $N$ 个最低的 $\varepsilon_k$ 之和
+定理 9.14 并没有说明 $`\theta^{(m)}_1`$ 趋近 $`\lambda_1`$ 的快慢；我们只在下面观察它。在浮点运算中
+$`q_j`$ 会失去正交性；`krylov.lanczos` 进行完全再正交化，代码检验计算出的 $`q_j`$ 在舍入误差范围内
+规范正交且 $`Q_m^*HQ_m=T_m`$。对开放 XX 链，扇区 $`N`$ 的精确基态能量是 $`N`$ 个最低的 $`\varepsilon_k`$ 之和
 （定理 9.10(c)）：
 
 ```python
@@ -283,14 +283,14 @@ assert (ritz[1:] <= ritz[:-1] + 1e-12).all() and (ritz >= E_xx - 1e-12).all()   
 print([f"{(ritz[m - 1] - E_xx).item():.1e}" for m in (5, 10, 20, 40)])
 ```
 
-*数值观察*：最低 Ritz 值的误差单调下降（由定理 9.14，这是必然的），在 $5$、$10$ 和 $20$ 步之后分别为
-$0.42$、$3.1\cdot10^{-3}$ 和 $3.1\cdot10^{-6}$，在 $40$ 步之后达到舍入误差水平，而维数为 $924$。
+*数值观察*：最低 Ritz 值的误差单调下降（由定理 9.14，这是必然的），在 $`5`$、$`10`$ 和 $`20`$ 步之后分别为
+$`0.42`$、$`3.1\cdot10^{-3}`$ 和 $`3.1\cdot10^{-6}`$，在 $`40`$ 步之后达到舍入误差水平，而维数为 $`924`$。
 `krylov.ground_state` 反复重启 Lanczos（除非给定 `v0`，否则从一个高斯随机向量出发），直到其归一化
-Ritz 对 $(E,\psi)$ 的残差 $\|H\psi-E\psi\|$ 低于 $10^{-10}\max(1,|E|)$（至多重启 $20$ 次，否则发出警告），
+Ritz 对 $`(E,\psi)`$ 的残差 $`\|H\psi-E\psi\|`$ 低于 $`10^{-10}\max(1,|E|)`$（至多重启 $`20`$ 次，否则发出警告），
 并返回该残差。小的残差保证附近有一个特征值，但不保证它是最低的（[讲义，9.5 节](../../lecture_notes/zh/09_spin_chains.md#s-9-5)），
 所以我们与稠密对角化作比较，这是我们唯一的参照（在这里计算，
-所以这些值是数值结果）：直到 $L=12$ 用扇区 $N=L/2$，对 $L=16$ 用维数为 $810$ 的动量块 $k=0$，
-由推论 9.8 它包含扇区 $N=8$ 的基态。对 $L=4$，值 $-2J$ 是精确的（[讲义，9.5 节](../../lecture_notes/zh/09_spin_chains.md#s-9-5)）。
+所以这些值是数值结果）：直到 $`L=12`$ 用扇区 $`N=L/2`$，对 $`L=16`$ 用维数为 $`810`$ 的动量块 $`k=0`$，
+由推论 9.8 它包含扇区 $`N=8`$ 的基态。对 $`L=4`$，值 $`-2J`$ 是精确的（[讲义，9.5 节](../../lecture_notes/zh/09_spin_chains.md#s-9-5)）。
 
 ```python
 E_dense = {}                                                         # numerical references, dense
@@ -309,19 +309,19 @@ print(f"L = 16: E0 = {E16.item():.10f}, residual {res.item():.1e}, {time.time() 
 assert abs(E16.item() - E_dense[16]) < 1e-9 and res.item() < 1e-9
 ```
 
-对 $L=16$（维数 $12870$），Lanczos 在单个 CPU 线程上用时远少于一秒。*数值观察*：每个格点的能量
-$-0.5,-0.467129,-0.456387,-0.451545,-0.448949$（$L=4,\dots,12$）随 $L$ 增大；关于其极限我们不作任何证明。
+对 $`L=16`$（维数 $`12870`$），Lanczos 在单个 CPU 线程上用时远少于一秒。*数值观察*：每个格点的能量
+$`-0.5,-0.467129,-0.456387,-0.451545,-0.448949`$（$`L=4,\dots,12`$）随 $`L`$ 增大；关于其极限我们不作任何证明。
 
-**时间演化。** 对 $e^{-i\tau H}v$，我们投影到 $\mathcal K_m$ 上：$w_\tau=\|v\|\,Q_me^{-i\tau T_m}e_1$。
+**时间演化。** 对 $`e^{-i\tau H}v`$，我们投影到 $`\mathcal K_m`$ 上：$`w_\tau=\|v\|\,Q_me^{-i\tau T_m}e_1`$。
 
-由[命题 9.15](../../lecture_notes/zh/09_spin_chains.md#r-9-15)，对每个 $\tau$ 有 $\|w_\tau\|=\|v\|$ 和 $\langle w_\tau,Hw_\tau\rangle=\langle v,Hv\rangle$，并且若
-$\mathcal K_m$ 是 $H$-不变的，则 $w_\tau=e^{-i\tau H}v$。
+由[命题 9.15](../../lecture_notes/zh/09_spin_chains.md#r-9-15)，对每个 $`\tau`$ 有 $`\|w_\tau\|=\|v\|`$ 和 $`\langle w_\tau,Hw_\tau\rangle=\langle v,Hv\rangle`$，并且若
+$`\mathcal K_m`$ 是 $`H`$-不变的，则 $`w_\tau=e^{-i\tau H}v`$。
 
-所以每个 Krylov 步都保持范数和能量，不论精确与否；除非 $\mathcal K_m$ 是不变的，命题 9.15 对精度什么也
-没有说。`krylov.evolve` 把时间区间细分为短步，每一步都在 $m=30$ 的 Krylov 空间中完成，并在一个启发式
+所以每个 Krylov 步都保持范数和能量，不论精确与否；除非 $`\mathcal K_m`$ 是不变的，命题 9.15 对精度什么也
+没有说。`krylov.evolve` 把时间区间细分为短步，每一步都在 $`m=30`$ 的 Krylov 空间中完成，并在一个启发式
 误差指标较大时发出警告；我们不为它证明任何误差界，而是把它与由稠密特征分解（定理 1.5）计算出的
-$e^{-itH}$ 作比较。我们在 Heisenberg 环上对 Néel 态 $|{\uparrow\downarrow\uparrow\downarrow}\cdots\rangle$ 作淬火，跟踪交错磁化
-$m_s=\frac2L\sum_i(-1)^i\langle s^z_i\rangle$，并对 $L=12$ 与稠密传播子作比较：
+$`e^{-itH}`$ 作比较。我们在 Heisenberg 环上对 Néel 态 $`|{\uparrow\downarrow\uparrow\downarrow}\cdots\rangle`$ 作淬火，跟踪交错磁化
+$`m_s=\frac2L\sum_i(-1)^i\langle s^z_i\rangle`$，并对 $`L=12`$ 与稠密传播子作比较：
 
 ```python
 times, m_s = [0.0, 0.5, 1.0, 2.0, 4.0], {}
@@ -343,8 +343,8 @@ for n in (12, 16):
 print(f"{max(abs(a - b) for a, b in zip(m_s[12][:4], m_s[16][:4])):.1e}")   # L = 12 vs 16 up to t = 2
 ```
 
-*数值观察*：$m_s$ 从 $1$ 经过 $0.770$ 和 $0.279$ 衰减到 $t=2$ 时的 $-0.183$，两种尺寸的结果相差在
-$1.7\cdot10^{-5}$ 以内；在 $t=4$ 时它们不同（$0.026$ 对 $0.035$）。
+*数值观察*：$`m_s`$ 从 $`1`$ 经过 $`0.770`$ 和 $`0.279`$ 衰减到 $`t=2`$ 时的 $`-0.183`$，两种尺寸的结果相差在
+$`1.7\cdot10^{-5}`$ 以内；在 $`t=4`$ 时它们不同（$`0.026`$ 对 $`0.035`$）。
 
 <a id="s-9-6"></a>
 
@@ -352,12 +352,12 @@ $1.7\cdot10^{-5}$ 以内；在 $t=4$ 时它们不同（$0.026$ 对 $0.035$）。
 
 *讲义：* [9.6 节](../../lecture_notes/zh/09_spin_chains.md#s-9-6)；[定理 9.16](../../lecture_notes/zh/09_spin_chains.md#r-9-16)（Peschel 公式）。
 
-**随机场 Heisenberg 链**的外场 $h_i$ 相互独立，在 $[-W,W]$ 上均匀分布。它保持 $S^z$ 守恒
-（命题 9.1），所以能级统计按扇区 $N$ 分别计算（定理 5.15 和 5.4 节：混合扇区会伪造出独立的能级）。
-若两个外场不同，则 $THT^*-H=\sum_i(h_{i-1}-h_i)s^z_i\ne0$，所以平移不再是对称性。我们在扇区 $N=L/2$
-的中间一半能级中计算 $\langle r\rangle$，给出关于独立实现的一个标准误差（每个实现给出一个平均比值），
-并与两个参照值比较：$2\log2-1\approx0.3863$，即独立指数间距的精确平均比值（命题 5.14(a)），以及在这里
-抽样得到的、与 $L=10$ 时该扇区大小相同（$252$）的 GOE 矩阵（按 5.3 节的定义；代码抽样 $G+G^T$，它是
+**随机场 Heisenberg 链**的外场 $`h_i`$ 相互独立，在 $`[-W,W]`$ 上均匀分布。它保持 $`S^z`$ 守恒
+（命题 9.1），所以能级统计按扇区 $`N`$ 分别计算（定理 5.15 和 5.4 节：混合扇区会伪造出独立的能级）。
+若两个外场不同，则 $`THT^*-H=\sum_i(h_{i-1}-h_i)s^z_i\ne0`$，所以平移不再是对称性。我们在扇区 $`N=L/2`$
+的中间一半能级中计算 $`\langle r\rangle`$，给出关于独立实现的一个标准误差（每个实现给出一个平均比值），
+并与两个参照值比较：$`2\log2-1\approx0.3863`$，即独立指数间距的精确平均比值（命题 5.14(a)），以及在这里
+抽样得到的、与 $`L=10`$ 时该扇区大小相同（$`252`$）的 GOE 矩阵（按 5.3 节的定义；代码抽样 $`G+G^T`$，它是
 GOE 矩阵的两倍，这不改变任何比值）的平均比值。这些比较是数值观察，而不是定理：关于随机链的谱，
 我们不作任何证明。
 
@@ -380,24 +380,24 @@ assert abs(r_mean[10, 16][0] - (2 * math.log(2) - 1)) < 0.015               # nu
 assert r_mean[10, 1][0] > r_mean[10, 2][0] > r_mean[10, 4][0] > r_mean[10, 8][0]
 ```
 
-*数值观察*：对 $L=10$，平均比值从 $0.530$（$W=0.5$，接近抽样得到的 GOE 值 $0.533$）经过 $0.484$（$W=2$）
-和 $0.410$（$W=4$）变到 $0.384$（$W=16$，接近 $2\log2-1$），标准误差为 $0.003$–$0.004$。对 $L=8$，$W=0.5$
-处的值（$0.507$）低于 $W=1$ 处的值（$0.525$）。在 $W=0$ 时，环与 $T$（9.2 节）以及总自旋（9.3 节）可交换，
-所以它的扇区 $N=L/2$ 分裂成若干块；外场只通过 $\sum_ih_is^z_i$ 耦合这些块，其算子范数至多为 $\frac{WL}2$。
+*数值观察*：对 $`L=10`$，平均比值从 $`0.530`$（$`W=0.5`$，接近抽样得到的 GOE 值 $`0.533`$）经过 $`0.484`$（$`W=2`$）
+和 $`0.410`$（$`W=4`$）变到 $`0.384`$（$`W=16`$，接近 $`2\log2-1`$），标准误差为 $`0.003`$–$`0.004`$。对 $`L=8`$，$`W=0.5`$
+处的值（$`0.507`$）低于 $`W=1`$ 处的值（$`0.525`$）。在 $`W=0`$ 时，环与 $`T`$（9.2 节）以及总自旋（9.3 节）可交换，
+所以它的扇区 $`N=L/2`$ 分裂成若干块；外场只通过 $`\sum_ih_is^z_i`$ 耦合这些块，其算子范数至多为 $`\frac{WL}2`$。
 
-> **物理意义**（物理解释，而非本课程的定理）。物理学家把 $\langle r\rangle$ 的变化解读为从像 GOE 的能级那样
+> **物理意义**（物理解释，而非本课程的定理）。物理学家把 $`\langle r\rangle`$ 的变化解读为从像 GOE 的能级那样
 > 相互排斥的能级（弱无序）到表现得像相互独立的能级的交叉过渡，并将后者归因于本征态的
-> **多体局域化**（强无序）。这一交叉过渡随 $L$ 漂移；它在 $L\to\infty$ 时位于何处，以及局域相究竟是否
+> **多体局域化**（强无序）。这一交叉过渡随 $`L`$ 漂移；它在 $`L\to\infty`$ 时位于何处，以及局域相究竟是否
 > 存在，都是物理文献中的开放问题（D. Luitz, N. Laflorencie, F. Alet, *Phys. Rev. B* 91 (2015) 081103；
-> J. Šuntajs, J. Bonča, T. Prosen, L. Vidmar, *Phys. Rev. E* 102 (2020) 062144）。$L=8$、$W=0.5$ 处的下凹被解读为
-> $W=0$ 时额外块结构的残留（参见 5.4 节）。
+> J. Šuntajs, J. Bonča, T. Prosen, L. Vidmar, *Phys. Rev. E* 102 (2020) 062144）。$`L=8`$、$`W=0.5`$ 处的下凹被解读为
+> $`W=0`$ 时额外块结构的残留（参见 5.4 节）。
 
-**自由费米子的纠缠。** 对开放 XX 链的本征态，前 $n$ 个格点的纠缠熵
-由一个 $n\times n$ 矩阵决定。
+**自由费米子的纠缠。** 对开放 XX 链的本征态，前 $`n`$ 个格点的纠缠熵
+由一个 $`n\times n`$ 矩阵决定。
 
 `entanglement_entropy` 逐个扇区计算约化态（它与块的磁化可交换，
-命题 7.8）及其熵。扇区 $N$ 的基态是由 $N$ 个最低模构成的 $\Phi$，
-由于各 $\varepsilon_k$ 互不相同，它是单的：
+命题 7.8）及其熵。扇区 $`N`$ 的基态是由 $`N`$ 个最低模构成的 $`\Phi`$，
+由于各 $`\varepsilon_k`$ 互不相同，它是单的：
 
 ```python
 L, N = 12, 6
@@ -413,7 +413,7 @@ assert np.allclose(S_lib, S_peschel, atol=1e-9)                       # Theorem 
 print([round(s, 4) for s in S_lib[:6]])
 ```
 
-*数值观察*：熵 $0.6931,0.5199,0.7456,0.6283,0.7719,0.6560$（$n=1,\dots,6$）随 $n$ 的奇偶性振荡。
+*数值观察*：熵 $`0.6931,0.5199,0.7456,0.6283,0.7719,0.6560`$（$`n=1,\dots,6`$）随 $`n`$ 的奇偶性振荡。
 定理 9.16 归功于 I. Peschel（*J. Phys. A* 36 (2003) L205）。
 
 <a id="s-9-7"></a>
@@ -423,21 +423,21 @@ print([round(s, 4) for s in S_lib[:6]])
 QuSpin（Python）在磁化、动量、宇称和自旋反演的扇区中构造自旋链哈密顿量，
 并使用 SciPy 的稀疏本征求解器和矩阵指数；专门的精确对角化程序
 （XDiag、SPINPACK、HΦ）针对大型稀疏问题作了优化，借助格点对称性和大型计算机，
-这类程序已达到约 40–50 个自旋；ITensor、TeNPy 和 TensorKit.jl（带有 $SU(2)$ 融合树）用
+这类程序已达到约 40–50 个自旋；ITensor、TeNPy 和 TensorKit.jl（带有 $`SU(2)`$ 融合树）用
 矩阵乘积态处理长链。本库所增加的东西不多而具体：把链作为
-`TypeIAlgebra` $\bigoplus_NM_{\binom LN}$，使第 3–8 章的态、信道、熵和动力学
-可以逐扇区应用；带有指标的包含塔；由最高权向量得到的 $SU(2)$ 块以及
+`TypeIAlgebra` $`\bigoplus_NM_{\binom LN}`$，使第 3–8 章的态、信道、熵和动力学
+可以逐扇区应用；带有指标的包含塔；由最高权向量得到的 $`SU(2)`$ 块以及
 Wigner–Eckart 关联；一次调用处理一批无序实现；以及从不离开扇区的约化态。
 它没有反射或自旋翻转扇区，动量扇区仅适用于均匀 XXZ 链，稠密
-方法到 $L\approx16$，Krylov 方法到 $L\approx24$（在大型 GPU 上约 $26$），并且没有张量网络。
+方法到 $`L\approx16`$，Krylov 方法到 $`L\approx24`$（在大型 GPU 上约 $`26`$），并且没有张量网络。
 
 <a id="x-9"></a>
 
 ## 习题
 
-讲义的[习题 1–3](../../lecture_notes/zh/09_spin_chains.md#x-9)：$L=4$、$N=2$ 时动量扇区的维数 $d_{2,m}=2,1,2,1$；
-Heisenberg 环基态的求和规则 $E_0=JL\langle\mathbf s_0\cdot\mathbf s_1\rangle$ 和 $\sum_r\langle\mathbf s_0\cdot\mathbf s_r\rangle=0$；
-以及从扇区 $N=L/2$ 中所有系数都为 $1$ 的向量出发的 `krylov.ground_state`，它返回谱的顶端 $E=JL/4$。
+讲义的[习题 1–3](../../lecture_notes/zh/09_spin_chains.md#x-9)：$`L=4`$、$`N=2`$ 时动量扇区的维数 $`d_{2,m}=2,1,2,1`$；
+Heisenberg 环基态的求和规则 $`E_0=JL\langle\mathbf s_0\cdot\mathbf s_1\rangle`$ 和 $`\sum_r\langle\mathbf s_0\cdot\mathbf s_r\rangle=0`$；
+以及从扇区 $`N=L/2`$ 中所有系数都为 $`1`$ 的向量出发的 `krylov.ground_state`，它返回谱的顶端 $`E=JL/4`$。
 用数值方法检验它们。
 
 <details>

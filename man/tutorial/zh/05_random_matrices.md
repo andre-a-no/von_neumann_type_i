@@ -2,34 +2,34 @@
 
 # 教程 5. 代数中的随机矩阵
 
-本教程配合讲义的[第 5 章](../../lecture_notes/zh/05_random_matrices.md)。该章构造了 $\mathcal M=\bigoplus_cM_{k_c}$ 的酉群上的 Haar 测度
+本教程配合讲义的[第 5 章](../../lecture_notes/zh/05_random_matrices.md)。该章构造了 $`\mathcal M=\bigoplus_cM_{k_c}`$ 的酉群上的 Haar 测度
 （[推论 5.4](../../lecture_notes/zh/05_random_matrices.md#r-5-4)），计算了它的一阶矩和二阶矩（[命题 5.7](../../lecture_notes/zh/05_random_matrices.md#r-5-7)、[定理 5.10](../../lecture_notes/zh/05_random_matrices.md#r-5-10)），并说明了为什么能级统计
 必须逐个扇区计算（[定理 5.15](../../lecture_notes/zh/05_random_matrices.md#r-5-15)）。我们用本库抽取 Haar 酉矩阵和高斯系综，并用蒙特卡罗方法检验这些
-结果：均值与精确值之差必须在 $5$ 个标准误差之内。没有定理支撑的结果都标为数值观察。
+结果：均值与精确值之差必须在 $`5`$ 个标准误差之内。没有定理支撑的结果都标为数值观察。
 
-在本章中，$\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)$，$D=\sum_ck_c$，$P_c$ 为
-极小中心投影，$E$ 是命题 2.8 中到中心上的条件期望。$U(k)$ 是 $k\times k$ 酉矩阵构成的群，
-$U(\mathcal M)=\{U\in\mathcal M:U^*U=1\}$ 是 $\mathcal M$ 的酉群。随机变量定义在一个
-概率空间上，期望记为 $\mathbb E$；随机矩阵的期望按元素逐个取。*标准复高斯*变量的实部与虚部
-相互独立且 $\sim N(0,\tfrac12)$，从而 $\mathbb E|z|^2=1$（按照 `torch.randn` 的文档，这正是它对复数
+在本章中，$`\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)`$，$`D=\sum_ck_c`$，$`P_c`$ 为
+极小中心投影，$`E`$ 是命题 2.8 中到中心上的条件期望。$`U(k)`$ 是 $`k\times k`$ 酉矩阵构成的群，
+$`U(\mathcal M)=\{U\in\mathcal M:U^*U=1\}`$ 是 $`\mathcal M`$ 的酉群。随机变量定义在一个
+概率空间上，期望记为 $`\mathbb E`$；随机矩阵的期望按元素逐个取。*标准复高斯*变量的实部与虚部
+相互独立且 $`\sim N(0,\tfrac12)`$，从而 $`\mathbb E|z|^2=1`$（按照 `torch.randn` 的文档，这正是它对复数
 dtype 抽取的分布；第一个代码块检验了二阶矩）；*Ginibre 矩阵*的元素是相互独立的标准复高斯变量。
 
 <a id="s-5-1"></a>
 
 ## 5.1 Haar 测度
 
-*讲义：* [5.1 节](../../lecture_notes/zh/05_random_matrices.md#s-5-1)；[定理 5.3](../../lecture_notes/zh/05_random_matrices.md#r-5-3)（Ginibre 矩阵 QR 分解的酉因子在用 $\Lambda=\mathrm{diag}(R'_{ii}/|R'_{ii}|)$ 固定相位后服从 Haar 分布）、[推论 5.4](../../lecture_notes/zh/05_random_matrices.md#r-5-4)（$U(\mathcal M)$ 上 Haar 酉元的各块相互独立且服从 Haar 分布）和[推论 5.5](../../lecture_notes/zh/05_random_matrices.md#r-5-5)（$\mathbb EU_{ij}=0$，$\mathbb E|U_{ij}|^2=1/k$）。$SU(k)$ 的 Haar 测度是 $e^{-i\theta/k}U$ 的分布，其中 $\theta=\arg\det U$。
+*讲义：* [5.1 节](../../lecture_notes/zh/05_random_matrices.md#s-5-1)；[定理 5.3](../../lecture_notes/zh/05_random_matrices.md#r-5-3)（Ginibre 矩阵 QR 分解的酉因子在用 $`\Lambda=\mathrm{diag}(R'_{ii}/|R'_{ii}|)`$ 固定相位后服从 Haar 分布）、[推论 5.4](../../lecture_notes/zh/05_random_matrices.md#r-5-4)（$`U(\mathcal M)`$ 上 Haar 酉元的各块相互独立且服从 Haar 分布）和[推论 5.5](../../lecture_notes/zh/05_random_matrices.md#r-5-5)（$`\mathbb EU_{ij}=0`$，$`\mathbb E|U_{ij}|^2=1/k`$）。$`SU(k)`$ 的 Haar 测度是 $`e^{-i\theta/k}U`$ 的分布，其中 $`\theta=\arg\det U`$。
 
-若不作[定理 5.3](../../lecture_notes/zh/05_random_matrices.md#r-5-3) 中的修正 $\Lambda$，$Q'$ 的分布依赖于 QR 例程的符号约定。
+若不作[定理 5.3](../../lecture_notes/zh/05_random_matrices.md#r-5-3) 中的修正 $`\Lambda`$，$`Q'`$ 的分布依赖于 QR 例程的符号约定。
 对 `torch.linalg.qr` 所调用的例程（LAPACK），下面的代码发现
-$\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'$ 离 $0$ 有许多个标准误差，而 Haar 酉矩阵满足
-$\mathbb EU=0$（推论 5.5）：所以这个 $Q'$ 不服从 Haar 分布。这是关于该例程的陈述，
+$`\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'`$ 离 $`0`$ 有许多个标准误差，而 Haar 酉矩阵满足
+$`\mathbb EU=0`$（推论 5.5）：所以这个 $`Q'`$ 不服从 Haar 分布。这是关于该例程的陈述，
 由代码检验，而不是定理。
 
-本库用 `random_unitary_operator` 抽取 $U(\mathcal M)$ 上的 Haar 酉元：对每种块大小，
+本库用 `random_unitary_operator` 抽取 $`U(\mathcal M)`$ 上的 Haar 酉元：对每种块大小，
 一次批量 QR 分解同时处理所有扇区和所有样本（在 GPU 上则用 Gram–Schmidt，由引理 5.2 中的
-唯一性，它给出相同的 $Q$）。测度 `'haar'` 就是在每个块中应用定理 5.3；对复代数，
-`'haar_su'` 如上乘以 $e^{-i\theta/k}$；`'coe'` 是习题 3 中的系综 $S=W^TW$（本库的其他测度
+唯一性，它给出相同的 $`Q`$）。测度 `'haar'` 就是在每个块中应用定理 5.3；对复代数，
+`'haar_su'` 如上乘以 $`e^{-i\theta/k}`$；`'coe'` 是习题 3 中的系综 $`S=W^TW`$（本库的其他测度
 在本课程中不使用）。我们检验推论 5.4 和 5.5，
 并检验本库的采样器恰好就是定理 5.3 中经过修正的 QR：
 
@@ -83,19 +83,19 @@ print(f"E Re Tr Q without the phase correction: {raw.mean():.4f} +- {raw.std() /
 assert abs(raw.mean()) > 20 * raw.std() / math.sqrt(B)               # far from 0: not Haar
 ```
 
-*数值观察。* 若不作修正，代码对 $k=2$ 得到
-$\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'\approx-0.84$，而 Haar 酉矩阵满足 $\mathbb EU=0$。
+*数值观察。* 若不作修正，代码对 $`k=2`$ 得到
+$`\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'\approx-0.84`$，而 Haar 酉矩阵满足 $`\mathbb EU=0`$。
 
 <a id="s-5-2"></a>
 
 ## 5.2 矩与 Weingarten 演算
 
-*讲义：* [5.2 节](../../lecture_notes/zh/05_random_matrices.md#s-5-2)；[命题 5.7](../../lecture_notes/zh/05_random_matrices.md#r-5-7)（$\mathbb E[UXU^*]=E(X)$）、[引理 5.8](../../lecture_notes/zh/05_random_matrices.md#r-5-8)（所有 $V\otimes V$ 的交换子是 $\mathrm{span}\{1,F\}$，$F$ 为交换算子）、[定理 5.10](../../lecture_notes/zh/05_random_matrices.md#r-5-10)（二阶 Weingarten 公式）和[推论 5.11](../../lecture_notes/zh/05_random_matrices.md#r-5-11)。
+*讲义：* [5.2 节](../../lecture_notes/zh/05_random_matrices.md#s-5-2)；[命题 5.7](../../lecture_notes/zh/05_random_matrices.md#r-5-7)（$`\mathbb E[UXU^*]=E(X)`$）、[引理 5.8](../../lecture_notes/zh/05_random_matrices.md#r-5-8)（所有 $`V\otimes V`$ 的交换子是 $`\mathrm{span}\{1,F\}`$，$`F`$ 为交换算子）、[定理 5.10](../../lecture_notes/zh/05_random_matrices.md#r-5-10)（二阶 Weingarten 公式）和[推论 5.11](../../lecture_notes/zh/05_random_matrices.md#r-5-11)。
 
 我们将命题 5.7 与 `channels.center_expectation` 对照检验，用线性代数检验引理 5.8（三个抽样得到的
-$V\otimes V$ 的交换子作为零空间计算，它包含 $F$ 且是 $2$ 维的，所以由
-引理 5.8 它已经就是 $\mathrm{span}\{1,F\}$），并用上面样本中的
-$U(3)$ 块通过蒙特卡罗方法检验定理 5.10 和推论 5.11：
+$`V\otimes V`$ 的交换子作为零空间计算，它包含 $`F`$ 且是 $`2`$ 维的，所以由
+引理 5.8 它已经就是 $`\mathrm{span}\{1,F\}`$），并用上面样本中的
+$`U(3)`$ 块通过蒙特卡罗方法检验定理 5.10 和推论 5.11：
 
 ```python
 X = alg.from_blocks([torch.randn(k, k, dtype=dt) for k in alg.k_factors])      # a fixed element
@@ -144,10 +144,10 @@ assert ((mean - alpha * torch.eye(k * k, dtype=dt) - beta * F).abs() <= 5 * err)
 
 ## 5.3 能级统计
 
-*讲义：* [5.3 节](../../lecture_notes/zh/05_random_matrices.md#s-5-3)：GOE $H=(G+G^T)/2$，GUE $H=(G+G^*)/\sqrt2$，以及能级间距 $s_i=\lambda_{i+1}-\lambda_i$ 的间距比 $r_i=\min(s_i,s_{i+1})/\max(s_i,s_{i+1})$；[命题 5.13](../../lecture_notes/zh/05_random_matrices.md#r-5-13)（$2\times2$ 矩阵的 Wigner 猜测）和[命题 5.14](../../lecture_notes/zh/05_random_matrices.md#r-5-14)（平均间距比对独立能级为 $2\ln2-1$，对 $3\times3$ 的 GOE 与 GUE 分别为 $4-2\sqrt3$ 和 $\frac{2\sqrt3}\pi-\frac12$，其中 $\mathbb Er=I_1/I_0$，$I_j=\int_0^1x^jf_\beta(x)\,dx$）。
+*讲义：* [5.3 节](../../lecture_notes/zh/05_random_matrices.md#s-5-3)：GOE $`H=(G+G^T)/2`$，GUE $`H=(G+G^*)/\sqrt2`$，以及能级间距 $`s_i=\lambda_{i+1}-\lambda_i`$ 的间距比 $`r_i=\min(s_i,s_{i+1})/\max(s_i,s_{i+1})`$；[命题 5.13](../../lecture_notes/zh/05_random_matrices.md#r-5-13)（$`2\times2`$ 矩阵的 Wigner 猜测）和[命题 5.14](../../lecture_notes/zh/05_random_matrices.md#r-5-14)（平均间距比对独立能级为 $`2\ln2-1`$，对 $`3\times3`$ 的 GOE 与 GUE 分别为 $`4-2\sqrt3`$ 和 $`\frac{2\sqrt3}\pi-\frac12`$，其中 $`\mathbb Er=I_1/I_0`$，$`I_j=\int_0^1x^jf_\beta(x)\,dx`$）。
 
 函数 `SpinChain.level_spacing_ratio`（位于 `chains` 中）返回每一行能级的平均间距比。
-我们检验命题 5.13 和 5.14，并记录 $n=64$ 时 GOE 的数值：
+我们检验命题 5.13 和 5.14，并记录 $`n=64`$ 时 GOE 的数值：
 
 ```python
 ratio = SpinChain.level_spacing_ratio
@@ -198,23 +198,23 @@ def same_mean(a, b, name):
     assert abs(a.mean().item() - b.mean().item()) <= 5 * math.hypot(ea, eb)
 ```
 
-*数值观察。* 代码对 $n=64$ 的 GOE 谱的中间一半得到 $\langle r\rangle\approx0.53$，低于
-$3\times3$ 的精确值 $4-2\sqrt3\approx0.536$，而远高于独立能级的值
-$2\ln2-1\approx0.386$。这个数是计算的输出，而不是
-定理；下面它作为同样大小 $64$ 的 GOE 块的参考值，这些块的间距比具有
+*数值观察。* 代码对 $`n=64`$ 的 GOE 谱的中间一半得到 $`\langle r\rangle\approx0.53`$，低于
+$`3\times3`$ 的精确值 $`4-2\sqrt3\approx0.536`$，而远高于独立能级的值
+$`2\ln2-1\approx0.386`$。这个数是计算的输出，而不是
+定理；下面它作为同样大小 $`64`$ 的 GOE 块的参考值，这些块的间距比具有
 完全相同的分布。
 
 <a id="s-5-4"></a>
 
 ## 5.4 为何不能混合扇区
 
-*讲义：* [5.4 节](../../lecture_notes/zh/05_random_matrices.md#s-5-4)；由[定理 5.15](../../lecture_notes/zh/05_random_matrices.md#r-5-15)，不同的独立块的能级之间并不排斥：对两个 GOE 块，合并谱的最小间距 $\delta$ 满足 $P(\delta<\varepsilon)$ 至少是 $\varepsilon$ 的量级，而在一个 GOE 块内部它至多是 $\varepsilon^2$ 的量级。
+*讲义：* [5.4 节](../../lecture_notes/zh/05_random_matrices.md#s-5-4)；由[定理 5.15](../../lecture_notes/zh/05_random_matrices.md#r-5-15)，不同的独立块的能级之间并不排斥：对两个 GOE 块，合并谱的最小间距 $`\delta`$ 满足 $`P(\delta<\varepsilon)`$ 至少是 $`\varepsilon`$ 的量级，而在一个 GOE 块内部它至多是 $`\varepsilon^2`$ 的量级。
 
 扇区越多，这一效应越强。我们不对多个扇区证明极限定理；下面的
 实验是一个数值观察。在本库中，各块从一开始就是分开的：
-`eigenvalues()` 对每个扇区返回一个谱，混合它们需要显式地调用 `torch.cat`。我们把 $C$
-个大小为 $64$ 的独立 GOE 块放进一个代数，并比较每个扇区的平均间距比与
-合并谱的平均间距比。每个扇区都是大小为 $64$ 的 GOE 矩阵，所以它的间距比与上面的 `r_goe`
+`eigenvalues()` 对每个扇区返回一个谱，混合它们需要显式地调用 `torch.cat`。我们把 $`C`$
+个大小为 $`64`$ 的独立 GOE 块放进一个代数，并比较每个扇区的平均间距比与
+合并谱的平均间距比。每个扇区都是大小为 $`64`$ 的 GOE 矩阵，所以它的间距比与上面的 `r_goe`
 具有完全相同的分布，代码检验了这一点；合并谱的行为则只是被观察到：
 
 ```python
@@ -234,13 +234,13 @@ assert merged_r[1] > merged_r[2] > merged_r[4] > merged_r[16]       # numerical 
 assert abs(merged_r[16] - (2 * math.log(2) - 1)) < 0.01              # numerical observation
 ```
 
-*数值观察。* 每个扇区都有 $\langle r\rangle\approx0.53$，即 5.3 节中 GOE(64) 的值
+*数值观察。* 每个扇区都有 $`\langle r\rangle\approx0.53`$，即 5.3 节中 GOE(64) 的值
 （这一吻合是对一个事实的检验：各扇区都是 GOE(64) 矩阵）。合并谱在两个扇区时降到
-$0.42$，在 $8$ 和 $16$ 个扇区时降到约 $0.39$，与独立能级的值 $2\ln2-1$ 相差不到 $0.01$
-（命题 5.14(a)）。随着 $C$ 增大合并谱趋近于独立能级，这是代码观察到的现象；本课程并不证明它。
+$`0.42`$，在 $`8`$ 和 $`16`$ 个扇区时降到约 $`0.39`$，与独立能级的值 $`2\ln2-1`$ 相差不到 $`0.01`$
+（命题 5.14(a)）。随着 $`C`$ 增大合并谱趋近于独立能级，这是代码观察到的现象；本课程并不证明它。
 
 在物理模型中也会发生同样的事情。带随机场的 Heisenberg 链（第 9 章）守恒
-磁化强度，所以它的哈密顿量属于 $\bigoplus_{N=0}^LM_{\binom LN}$（命题 9.1）。它的各块*不是*
+磁化强度，所以它的哈密顿量属于 $`\bigoplus_{N=0}^LM_{\binom LN}`$（命题 9.1）。它的各块*不是*
 相互独立的——它们都依赖于同一组随机场——所以定理 5.15 不能照原样应用；
 下面的实验显示出同样的效应，作为一个数值观察。
 
@@ -255,8 +255,8 @@ print(f"Heisenberg chain, L = 10: <r> in sector N = 5: {r_sector:.4f}, all secto
 assert r_sector > 0.49 and r_all < 0.42                             # numerical observation
 ```
 
-*数值观察。* 在扇区 $N=5$ 内部，代码得到 $\langle r\rangle\approx0.53$，接近上面
-GOE(64) 的值，而所有扇区混合后的谱给出 $0.39$，接近 $2\ln2-1$。
+*数值观察。* 在扇区 $`N=5`$ 内部，代码得到 $`\langle r\rangle\approx0.53`$，接近上面
+GOE(64) 的值，而所有扇区混合后的谱给出 $`0.39`$，接近 $`2\ln2-1`$。
 
 <a id="s-5-5"></a>
 
@@ -279,13 +279,13 @@ Python 软件包 Haarpy 能符号地计算任意阶的矩；定理 5.10 是它�
 ## 习题
 
 讲义中[习题](../../lecture_notes/zh/05_random_matrices.md#x-5)的数值部分：
-1. 对 $U(\mathcal M)$ 上服从 Haar 分布的 $U$，$\mathcal M=M_1\oplus M_2\oplus M_3$，检验 $\mathbb E|\mathrm{Tr}\,U|^2=C=3$ 和
-   $\mathbb E|\mathrm{Tr}\,U|^4=17$。
-2. 对 $k=3$ 数值计算 $3$ 阶 Weingarten 矩阵（[定理 5.12](../../lecture_notes/zh/05_random_matrices.md#r-5-12)），并检验
-   $\mathbb E|U_{11}|^6=\frac1{10}$。
-3. **圆正交系综**（`measure='coe'`）是 $S=W^TW$，其中 $W$ 在 $U(k)$ 上服从 Haar 分布。检验本库的 COE
-   就是 $W^TW$，$S$ 是酉且对称的，对 $m=1,2,3$ 有 $\mathbb E\mathrm{Tr}\,S^m=0$，并且本征相位的平均密度是均匀的。
-   对 $k=32$ 的 COE 计算其本征相位的 $\langle r\rangle$，并与 5.3 节中 GOE 的值比较（一个数值观察）。
+1. 对 $`U(\mathcal M)`$ 上服从 Haar 分布的 $`U`$，$`\mathcal M=M_1\oplus M_2\oplus M_3`$，检验 $`\mathbb E|\mathrm{Tr}\,U|^2=C=3`$ 和
+   $`\mathbb E|\mathrm{Tr}\,U|^4=17`$。
+2. 对 $`k=3`$ 数值计算 $`3`$ 阶 Weingarten 矩阵（[定理 5.12](../../lecture_notes/zh/05_random_matrices.md#r-5-12)），并检验
+   $`\mathbb E|U_{11}|^6=\frac1{10}`$。
+3. **圆正交系综**（`measure='coe'`）是 $`S=W^TW`$，其中 $`W`$ 在 $`U(k)`$ 上服从 Haar 分布。检验本库的 COE
+   就是 $`W^TW`$，$`S`$ 是酉且对称的，对 $`m=1,2,3`$ 有 $`\mathbb E\mathrm{Tr}\,S^m=0`$，并且本征相位的平均密度是均匀的。
+   对 $`k=32`$ 的 COE 计算其本征相位的 $`\langle r\rangle`$，并与 5.3 节中 GOE 的值比较（一个数值观察）。
 
 <details>
 <summary>解答</summary>
@@ -322,8 +322,8 @@ mc(u3[:, 0, 0].abs() ** 6, 0.1, "E|U_11|^6")
 
 *习题 3.*
 
-   *数值观察。* 代码对 $k=32$ 的 COE 得到 $\langle r\rangle\approx0.53$，与 5.3 节中 GOE(64) 的值
-   相差不到 $0.015$。这一吻合是计算的输出；本课程中没有任何
+   *数值观察。* 代码对 $`k=32`$ 的 COE 得到 $`\langle r\rangle\approx0.53`$，与 5.3 节中 GOE(64) 的值
+   相差不到 $`0.015`$。这一吻合是计算的输出；本课程中没有任何
    定理把 COE 的间距统计与 GOE 的间距统计联系起来（关于
    圆系综，见 F. J. Dyson, J. Math. Phys. 3 (1962), 140–156）。
 

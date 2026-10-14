@@ -12,9 +12,9 @@
 
 *讲义：* [E.3 节](../../lecture_notes/zh/E_jordan_classification.md#s-E-3)；[引理 E.1](../../lecture_notes/zh/E_jordan_classification.md#r-E-1)、[引理 E.3](../../lecture_notes/zh/E_jordan_classification.md#r-E-3)、[命题 E.4](../../lecture_notes/zh/E_jordan_classification.md#r-E-4)、[定理 E.5](../../lecture_notes/zh/E_jordan_classification.md#r-E-5)。
 
-在形式实若尔当代数中，迹形式 $\tau(x,y)=\mathrm{Tr}\,L(x\circ y)$ 是结合的且正定的
-（[讲义，定理 E.5](../../lecture_notes/zh/E_jordan_classification.md#r-E-5)）。下面的代码在由结构常数给出的 $\mathrm{Herm}_3(\mathbb C)$（即
-[E.7 节](../../lecture_notes/zh/E_jordan_classification.md#s-E-7)中的代数 $\mathrm{Herm}_n(D)$ 之一）中检验[引理 E.1(4)](../../lecture_notes/zh/E_jordan_classification.md#r-E-1)、[引理 E.3](../../lecture_notes/zh/E_jordan_classification.md#r-E-3)（幂等元 $p_i(x)$ 仅用
+在形式实若尔当代数中，迹形式 $`\tau(x,y)=\mathrm{Tr}\,L(x\circ y)`$ 是结合的且正定的
+（[讲义，定理 E.5](../../lecture_notes/zh/E_jordan_classification.md#r-E-5)）。下面的代码在由结构常数给出的 $`\mathrm{Herm}_3(\mathbb C)`$（即
+[E.7 节](../../lecture_notes/zh/E_jordan_classification.md#s-E-7)中的代数 $`\mathrm{Herm}_n(D)`$ 之一）中检验[引理 E.1(4)](../../lecture_notes/zh/E_jordan_classification.md#r-E-1)、[引理 E.3](../../lecture_notes/zh/E_jordan_classification.md#r-E-3)（幂等元 $`p_i(x)`$ 仅用
 若尔当幂计算）、[命题 E.4](../../lecture_notes/zh/E_jordan_classification.md#r-E-4) 和定理 E.5；
 用来构造它的 Cayley–Dickson 乘积 `cd` 就是[E.6 节](../../lecture_notes/zh/E_jordan_classification.md#s-E-6)中的那个。
 
@@ -119,8 +119,8 @@ assert torch.allclose(mul(C3, x, y) @ T3 @ w, x @ T3 @ mul(C3, y, w))         # 
 
 *讲义：* [E.6 节](../../lecture_notes/zh/E_jordan_classification.md#s-E-6)；[引理 E.14](../../lecture_notes/zh/E_jordan_classification.md#r-E-14)、[引理 E.15](../../lecture_notes/zh/E_jordan_classification.md#r-E-15)、[引理 E.18](../../lecture_notes/zh/E_jordan_classification.md#r-E-18)。
 
-下面的代码用 Cayley–Dickson 倍增构造 $\mathbb O$，并在随机八元数上检验引理 E.14 的恒等式、引理 E.18 的 Moufang 恒等式
-以及引理 E.15 的非结合性，还检验同态 $M$：
+下面的代码用 Cayley–Dickson 倍增构造 $`\mathbb O`$，并在随机八元数上检验引理 E.14 的恒等式、引理 E.18 的 Moufang 恒等式
+以及引理 E.15 的非结合性，还检验同态 $`M`$：
 
 ```python
 o = torch.randn(4, 1000, 8, dtype=dt)             # random octonions
@@ -151,9 +151,9 @@ assert torch.allclose(M(cd(p4, q4)), M(p4) @ M(q4)) and torch.allclose(M(conj(p4
 
 *讲义：* [E.8 节](../../lecture_notes/zh/E_jordan_classification.md#s-E-8)；[引理 E.20](../../lecture_notes/zh/E_jordan_classification.md#r-E-20)、[引理 E.23](../../lecture_notes/zh/E_jordan_classification.md#r-E-23)、[定理 E.24](../../lecture_notes/zh/E_jordan_classification.md#r-E-24)、[推论 E.25](../../lecture_notes/zh/E_jordan_classification.md#r-E-25)。
 
-下面的代码在随机元素上检验 Albert 代数 $\mathrm{Herm}_3(\mathbb O)$ 的若尔当恒等式
+下面的代码在随机元素上检验 Albert 代数 $`\mathrm{Herm}_3(\mathbb O)`$ 的若尔当恒等式
 （[讲义，定理 E.24(2)](../../lecture_notes/zh/E_jordan_classification.md#r-E-24)）以及其迹形式的结合性与正性（[引理 E.20](../../lecture_notes/zh/E_jordan_classification.md#r-E-20)），
-数值地表明若尔当恒等式在 $\mathrm{Herm}_4(\mathbb O)$ 中不成立（[推论 E.25](../../lecture_notes/zh/E_jordan_classification.md#r-E-25)），检验
+数值地表明若尔当恒等式在 $`\mathrm{Herm}_4(\mathbb O)`$ 中不成立（[推论 E.25](../../lecture_notes/zh/E_jordan_classification.md#r-E-25)），检验
 [引理 E.23](../../lecture_notes/zh/E_jordan_classification.md#r-E-23) 的自同构，并在一个随机元素上执行定理 E.24(2) 证明中的三个步骤 (a)–(c)：
 
 ```python
@@ -200,9 +200,9 @@ assert abs(abs(x3[11].item()) - s.norm().item()) < 1e-12
 
 *讲义：* [E.9 节](../../lecture_notes/zh/E_jordan_classification.md#s-E-9)；[定理 E.5](../../lecture_notes/zh/E_jordan_classification.md#r-E-5)、[定理 E.8](../../lecture_notes/zh/E_jordan_classification.md#r-E-8)、[命题 E.11](../../lecture_notes/zh/E_jordan_classification.md#r-E-11)、[定理 E.27](../../lecture_notes/zh/E_jordan_classification.md#r-E-27)。
 
-下面的代码对每种类型计算若尔当标架 $(E_{ii})$ 或 $(c_w,c_{-w})$、作为诸 $L(c_i)$ 的公共特征空间的
+下面的代码对每种类型计算若尔当标架 $`(E_{ii})`$ 或 $`(c_w,c_{-w})`$、作为诸 $`L(c_i)`$ 的公共特征空间的
 Peirce 空间的维数（定理 E.8）、命题 E.11(2) 的维数公式以及迹
-形式 $\tau$ 的正性（定理 E.5）：
+形式 $`\tau`$ 的正性（定理 E.5）：
 
 ```python
 def peirce(C, frame):

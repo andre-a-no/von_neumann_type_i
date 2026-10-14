@@ -3,22 +3,22 @@
 # Tutorial 8. Dinámica
 
 Este tutorial acompaña al [capítulo 8](../../lecture_notes/es/08_dynamics.md) de los apuntes de clase, que demuestra que un
-hamiltoniano de $\mathcal M$ conserva los pesos de los sectores ([teorema 8.3](../../lecture_notes/es/08_dynamics.md#r-8-3)), que los generadores
+hamiltoniano de $`\mathcal M`$ conserva los pesos de los sectores ([teorema 8.3](../../lecture_notes/es/08_dynamics.md#r-8-3)), que los generadores
 en forma GKSL producen semigrupos dinámicos cuánticos ([teorema 8.6](../../lecture_notes/es/08_dynamics.md#r-8-6)), y trata los saltos entre
 sectores, la postselección y los estados estacionarios. Usamos los solucionadores exactos y de Runge–Kutta de
 `dynamics` para las ecuaciones de Schrödinger, de von Neumann y de Lindblad, y comprobamos los resultados
-frente a SciPy y frente a generadores GKSL sobre $M_D$.
+frente a SciPy y frente a generadores GKSL sobre $`M_D`$.
 
 <a id="s-8-1"></a>
 
 ## 8.1 Sistemas cerrados
 
-*Apuntes:* [sección 8.1](../../lecture_notes/es/08_dynamics.md#s-8-1); [proposición 8.2](../../lecture_notes/es/08_dynamics.md#r-8-2) (el propagador $U(t)=e^{-itH}$), [teorema 8.3](../../lecture_notes/es/08_dynamics.md#r-8-3) (conservación de la carga).
+*Apuntes:* [sección 8.1](../../lecture_notes/es/08_dynamics.md#s-8-1); [proposición 8.2](../../lecture_notes/es/08_dynamics.md#r-8-2) (el propagador $`U(t)=e^{-itH}`$), [teorema 8.3](../../lecture_notes/es/08_dynamics.md#r-8-3) (conservación de la carga).
 
-Por la proposición 8.2(1), la evolución se separa en $C$ problemas independientes de tamaños $k_c$, uno
-por bloque. La biblioteca calcula $U(t)$ con una descomposición espectral por cada tamaño de bloque
+Por la proposición 8.2(1), la evolución se separa en $`C`$ problemas independientes de tamaños $`k_c`$, uno
+por bloque. La biblioteca calcula $`U(t)`$ con una descomposición espectral por cada tamaño de bloque
 (`dynamics.propagator`), y `dynamics.von_neumann` hace evolucionar una densidad hasta muchos
-instantes a la vez en la base propia, donde $\rho(t)_{ij}=e^{-it(\lambda_i-\lambda_j)}\rho_{ij}$.
+instantes a la vez en la base propia, donde $`\rho(t)_{ij}=e^{-it(\lambda_i-\lambda_j)}\rho_{ij}`$.
 Comprobamos frente a `scipy.linalg.expm`:
 
 ```python
@@ -52,16 +52,16 @@ A_t = U.adjoint() @ A @ U                                          # Heisenberg 
 assert abs(rho0.expectation(A_t) - dynamics.von_neumann(rho0, H, [t])[0].expectation(A)) < 1e-12
 ```
 
-Un vector unitario $\psi=\bigoplus_c\psi_c$ define sobre $\mathcal M$ el estado $\bigoplus_c|\psi_c\rangle\langle\psi_c|$,
-que evoluciona por $U(t)$ ([apuntes de clase, sección 8.1](../../lecture_notes/es/08_dynamics.md#s-8-1)), así que `dynamics.schrodinger` (vectores con
-la disposición por bloques `(batch, C, k_max)`) y `von_neumann` deben coincidir sobre él. Para un $H(t)$ dependiente
+Un vector unitario $`\psi=\bigoplus_c\psi_c`$ define sobre $`\mathcal M`$ el estado $`\bigoplus_c|\psi_c\rangle\langle\psi_c|`$,
+que evoluciona por $`U(t)`$ ([apuntes de clase, sección 8.1](../../lecture_notes/es/08_dynamics.md#s-8-1)), así que `dynamics.schrodinger` (vectores con
+la disposición por bloques `(batch, C, k_max)`) y `von_neumann` deben coincidir sobre él. Para un $`H(t)`$ dependiente
 del tiempo, la biblioteca usa el método de Runge–Kutta clásico de paso fijo (`dynamics.rk4`, `schrodinger_rk4`): un
-paso multiplica $\psi$ por un polinomio en valores de $H(t)\in\mathcal M$, por lo que nunca traslada
-amplitud entre sectores, pero no es unitario: para $H$ constante, un paso de tamaño $h$ multiplica un
-vector propio de $H$ con valor propio $\lambda$ por $T(-ih\lambda)$, $T(z)=\sum_{k=0}^4z^k/k!$, y
-$|T(ix)|^2=1-\frac{x^6}{72}+\frac{x^8}{576}<1$ para $0<|x|<2\sqrt2$ (desarróllese). Así pues, RK4 no
-conserva exactamente los pesos de los sectores: para $H$ constante, una componente de sector con un
-coeficiente no nulo sobre un vector propio con $0<|h\lambda|<2\sqrt2$ pierde peso en cada paso. Cuánto
+paso multiplica $`\psi`$ por un polinomio en valores de $`H(t)\in\mathcal M`$, por lo que nunca traslada
+amplitud entre sectores, pero no es unitario: para $`H`$ constante, un paso de tamaño $`h`$ multiplica un
+vector propio de $`H`$ con valor propio $`\lambda`$ por $`T(-ih\lambda)`$, $`T(z)=\sum_{k=0}^4z^k/k!`$, y
+$`|T(ix)|^2=1-\frac{x^6}{72}+\frac{x^8}{576}<1`$ para $`0<|x|<2\sqrt2`$ (desarróllese). Así pues, RK4 no
+conserva exactamente los pesos de los sectores: para $`H`$ constante, una componente de sector con un
+coeficiente no nulo sobre un vector propio con $`0<|h\lambda|<2\sqrt2`$ pierde peso en cada paso. Cuánto
 cambian en una ejecución es una observación numérica (véase más abajo). (Para un único
 sector grande, `krylov.evolve` solo necesita productos matriz–vector; véase el [Tutorial 9, sección 9.5](../../tutorial/es/09_spin_chains.md#s-9-5).)
 
@@ -85,8 +85,8 @@ assert drift < 1e-8 and (dynamics.schrodinger_rk4(psi0, H, times, substeps=50) -
 
 ```
 
-Observación numérica: en esta ejecución, los pesos de los sectores cambian en $1.1\cdot10^{-9}$ con RK4
-(el valor impreso) y en menos que la tolerancia $10^{-12}$ de los `assert` con los métodos exactos, para
+Observación numérica: en esta ejecución, los pesos de los sectores cambian en $`1.1\cdot10^{-9}`$ con RK4
+(el valor impreso) y en menos que la tolerancia $`10^{-12}`$ de los `assert` con los métodos exactos, para
 los que el teorema 8.3 da conservación exacta.
 
 <a id="s-8-2"></a>
@@ -97,11 +97,11 @@ los que el teorema 8.3 da conservación exacta.
 
 La biblioteca tiene cuatro rutinas de Lindblad: `lindblad_rhs` devuelve el segundo miembro como
 función para `rk4`; `lindblad_evolve` integra con RK4; `lindblad_superoperator` devuelve, para cada
-sector, la matriz $k_c^2\times k_c^2$ de $\mathcal L$ sobre $\mathrm{vec}\,\rho_c$ ordenado por
-filas; y `lindblad_channel` calcula $e^{t\mathcal L}$ exactamente, sector a sector, como un
-`Channel`. Comprobamos el teorema 8.6 para saltos arbitrarios sobre $M_3$: la matriz de Choi de
-$e^{t\mathcal L}$ es positiva (teorema 6.2), la aplicación es TP, se cumple la ley de semigrupo, RK4
-coincide con la exponencial, y la parte de saltos $e^{t\mathcal L}-S_0(t)=\sum_{n\ge1}S_n(t)$ es a
+sector, la matriz $`k_c^2\times k_c^2`$ de $`\mathcal L`$ sobre $`\mathrm{vec}\,\rho_c`$ ordenado por
+filas; y `lindblad_channel` calcula $`e^{t\mathcal L}`$ exactamente, sector a sector, como un
+`Channel`. Comprobamos el teorema 8.6 para saltos arbitrarios sobre $`M_3`$: la matriz de Choi de
+$`e^{t\mathcal L}`$ es positiva (teorema 6.2), la aplicación es TP, se cumple la ley de semigrupo, RK4
+coincide con la exponencial, y la parte de saltos $`e^{t\mathcal L}-S_0(t)=\sum_{n\ge1}S_n(t)`$ es a
 su vez CP:
 
 ```python
@@ -132,16 +132,16 @@ assert jump_part.min() > -1e-12                                    # sum_{n >= 1
 
 ## 8.3 Ecuaciones de Lindblad en un álgebra con sectores
 
-*Apuntes:* [sección 8.3](../../lecture_notes/es/08_dynamics.md#s-8-3): el generador $\mathcal L$ con saltos dentro de los sectores y entre ellos, que implementa `dynamics.lindblad_rhs`; [proposición 8.8](../../lecture_notes/es/08_dynamics.md#r-8-8), [proposición 8.9](../../lecture_notes/es/08_dynamics.md#r-8-9) (pesos de los sectores).
+*Apuntes:* [sección 8.3](../../lecture_notes/es/08_dynamics.md#s-8-3): el generador $`\mathcal L`$ con saltos dentro de los sectores y entre ellos, que implementa `dynamics.lindblad_rhs`; [proposición 8.8](../../lecture_notes/es/08_dynamics.md#r-8-8), [proposición 8.9](../../lecture_notes/es/08_dynamics.md#r-8-9) (pesos de los sectores).
 
 **Ejemplo: pérdida de partículas** ([apuntes de clase, sección 8.3](../../lecture_notes/es/08_dynamics.md#s-8-3)). Dos modos bosónicos con a lo sumo
-dos partículas, $\mathcal M=M_1\oplus M_2\oplus M_3$ (sectores $N=0,1,2$), el dímero de Bose–Hubbard
-$H=J(a_1^*a_2+a_2^*a_1)+\frac U2\sum_jn_j(n_j-1)$, y cada modo pierde partículas con tasa $\gamma$: un
-`InterSectorChannel` con operadores de Kraus $a_1,a_2$, restringidos a $N\to N-1$. Por la
-[proposición 8.9(2)](../../lecture_notes/es/08_dynamics.md#r-8-9), los pesos de los sectores obedecen $p'=Qp$ con $Q=R-\mathrm{diag}(\sum_dR_{dc})_c$ para tasa $1$,
-$R$ = `transition_matrix()`, y partiendo de $N=2$ siguen la ley binomial $p_2=q^2$, $p_1=2q(1-q)$, $p_0=(1-q)^2$,
-$q=e^{-\gamma t}$, hagan lo que hagan el efecto túnel entre modos (hopping) y la interacción. El código comprueba
-$\Phi^*(1)=0\oplus1\oplus2$, es decir, $a_1^*a_1+a_2^*a_2=N$ sobre los bloques usados, y $p(t)$ frente a ambas fórmulas.
+dos partículas, $`\mathcal M=M_1\oplus M_2\oplus M_3`$ (sectores $`N=0,1,2`$), el dímero de Bose–Hubbard
+$`H=J(a_1^*a_2+a_2^*a_1)+\frac U2\sum_jn_j(n_j-1)`$, y cada modo pierde partículas con tasa $`\gamma`$: un
+`InterSectorChannel` con operadores de Kraus $`a_1,a_2`$, restringidos a $`N\to N-1`$. Por la
+[proposición 8.9(2)](../../lecture_notes/es/08_dynamics.md#r-8-9), los pesos de los sectores obedecen $`p'=Qp`$ con $`Q=R-\mathrm{diag}(\sum_dR_{dc})_c`$ para tasa $`1`$,
+$`R`$ = `transition_matrix()`, y partiendo de $`N=2`$ siguen la ley binomial $`p_2=q^2`$, $`p_1=2q(1-q)`$, $`p_0=(1-q)^2`$,
+$`q=e^{-\gamma t}`$, hagan lo que hagan el efecto túnel entre modos (hopping) y la interacción. El código comprueba
+$`\Phi^*(1)=0\oplus1\oplus2`$, es decir, $`a_1^*a_1+a_2^*a_2=N`$ sobre los bloques usados, y $`p(t)`$ frente a ambas fórmulas.
 
 ```python
 fock = TypeIAlgebra([1, 2, 3], [1, 2, 3], precision='double', charges=[0, 1, 2])   # N = 0, 1, 2
@@ -181,17 +181,17 @@ step = dynamics.rk4(decay, torch.diag(torch.tensor([0.0, 1.0], dtype=c128)), [0.
 assert (step - torch.diag(torch.tensor([-3 / 8, 11 / 8], dtype=c128))).abs().max() < 1e-14   # not positive
 ```
 
-No está garantizado que RK4 preserve la positividad: para $\rho'=\mathcal L\rho$, un paso de tamaño
-$h$ es $\rho\mapsto T(h\mathcal L)\rho$ con el polinomio $T$ de la sección 8.1 (insértense las cuatro
-etapas), que preserva la traza (pues $\mathrm{Tr}\,\mathcal L(X)=0$ para todo $X$) pero no tiene
-por qué ser positivo. Por ejemplo, sobre $M_2$ con base $|g\rangle,|e\rangle$, $H=0$ y un salto
-$|g\rangle\langle e|$ con tasa $\gamma$, $\mathcal L$ lleva $\mathrm{diag}(a,b)$ a
-$\gamma b\mathrm{diag}(1,-1)$, así que un paso con $h\gamma=3$ lleva $\mathrm{diag}(0,1)$ a
-$\mathrm{diag}(1-T(-3),T(-3))=\mathrm{diag}(-\frac38,\frac{11}8)$. Observación numérica: en
-esta ejecución, el menor valor propio de $\rho(t)$ es $\approx-2\cdot10^{-8}$ (el valor impreso, con
-pasos de hasta $0.02$). `lindblad_channel` es exacto, pero solo trata saltos dentro de los sectores. Por
+No está garantizado que RK4 preserve la positividad: para $`\rho'=\mathcal L\rho`$, un paso de tamaño
+$`h`$ es $`\rho\mapsto T(h\mathcal L)\rho`$ con el polinomio $`T`$ de la sección 8.1 (insértense las cuatro
+etapas), que preserva la traza (pues $`\mathrm{Tr}\,\mathcal L(X)=0`$ para todo $`X`$) pero no tiene
+por qué ser positivo. Por ejemplo, sobre $`M_2`$ con base $`|g\rangle,|e\rangle`$, $`H=0`$ y un salto
+$`|g\rangle\langle e|`$ con tasa $`\gamma`$, $`\mathcal L`$ lleva $`\mathrm{diag}(a,b)`$ a
+$`\gamma b\mathrm{diag}(1,-1)`$, así que un paso con $`h\gamma=3`$ lleva $`\mathrm{diag}(0,1)`$ a
+$`\mathrm{diag}(1-T(-3),T(-3))=\mathrm{diag}(-\frac38,\frac{11}8)`$. Observación numérica: en
+esta ejecución, el menor valor propio de $`\rho(t)`$ es $`\approx-2\cdot10^{-8}`$ (el valor impreso, con
+pasos de hasta $`0.02`$). `lindblad_channel` es exacto, pero solo trata saltos dentro de los sectores. Por
 último, comprobamos la proposición 8.8(2) para una aplicación aleatoria entre los sectores y la
-proposición 8.8(3) para la pérdida de partículas, frente a generadores GKSL sobre $M_6$ construidos
+proposición 8.8(3) para la pérdida de partículas, frente a generadores GKSL sobre $`M_6`$ construidos
 con numpy:
 
 ```python
@@ -220,17 +220,17 @@ assert np.abs(full_loss - embed(loss_on_M)).max() < 1e-12         # Proposition 
 
 ## 8.4 Postselección y evolución sin saltos
 
-*Apuntes:* [sección 8.4](../../lecture_notes/es/08_dynamics.md#s-8-4); [proposición 8.10](../../lecture_notes/es/08_dynamics.md#r-8-10) (la probabilidad sin saltos $w_0$), [proposición 8.11](../../lecture_notes/es/08_dynamics.md#r-8-11) (postselección en "no se perdió ninguna partícula").
+*Apuntes:* [sección 8.4](../../lecture_notes/es/08_dynamics.md#s-8-4); [proposición 8.10](../../lecture_notes/es/08_dynamics.md#r-8-10) (la probabilidad sin saltos $`w_0`$), [proposición 8.11](../../lecture_notes/es/08_dynamics.md#r-8-11) (postselección en "no se perdió ninguna partícula").
 
 La función `states.lueders_update(rho, P)` de la biblioteca devuelve
-$P\rho P/\mathrm{Tr}(P\rho P)$ y $\mathrm{Tr}(\rho P)$. Supongamos ahora que los dos
-modos pierden partículas con tasas distintas $\gamma_1>\gamma_2$; entonces
-$A=\gamma_1n_1+\gamma_2n_2$ no es central (en el sector $N=2$ es
-$\mathrm{diag}(2\gamma_1,\gamma_1+\gamma_2,2\gamma_2)$ en la base
-$|20\rangle,|11\rangle,|02\rangle$), la proposición 8.9(2) no se aplica, y el estado postseleccionado en
-$N=2$ es la evolución normalizada por $H_{\mathrm{eff}}$, cuya parte antihermítica $-\frac i2A$ no es
-múltiplo de $1$ en ese sector. Comprobamos la proposición 8.11 para $n=0$ y,
-calculando la integral de $S_1$ con la regla de Simpson, para $n=1$:
+$`P\rho P/\mathrm{Tr}(P\rho P)`$ y $`\mathrm{Tr}(\rho P)`$. Supongamos ahora que los dos
+modos pierden partículas con tasas distintas $`\gamma_1>\gamma_2`$; entonces
+$`A=\gamma_1n_1+\gamma_2n_2`$ no es central (en el sector $`N=2`$ es
+$`\mathrm{diag}(2\gamma_1,\gamma_1+\gamma_2,2\gamma_2)`$ en la base
+$`|20\rangle,|11\rangle,|02\rangle`$), la proposición 8.9(2) no se aplica, y el estado postseleccionado en
+$`N=2`$ es la evolución normalizada por $`H_{\mathrm{eff}}`$, cuya parte antihermítica $`-\frac i2A`$ no es
+múltiplo de $`1`$ en ese sector. Comprobamos la proposición 8.11 para $`n=0`$ y,
+calculando la integral de $`S_1`$ con la regla de Simpson, para $`n=1`$:
 
 ```python
 g1, g2 = 0.6, 0.2                                                  # mode 1 leaks faster
@@ -268,12 +268,12 @@ S1 = scipy.integrate.simpson(S0(2.0 - s_grid, 1, jump(S0(s_grid, 2, rho_20))), x
 assert np.abs(S1 - traj[-1].matrix[0, 1, :2, :2].numpy()).max() < 1e-8     # Proposition 8.11, n = 1
 ```
 
-Observación numérica: en $t=2$, el peso $p_2(2)=w_0(2)$ del sector $N=2$ ("ninguna pérdida") es
-$0.230$ (impreso arriba). Sin efecto túnel ($J=0$) sería exactamente
-$e^{-2\gamma_1t}=e^{-2.4}=0.091$, ya que entonces $|20\rangle$ es un vector propio de $H_{\mathrm{eff}}$
-con valor propio $U-i\gamma_1$ y $w_0(t)=|e^{-it(U-i\gamma_1)}|^2$ (proposición 8.10); así que aquí los
+Observación numérica: en $`t=2`$, el peso $`p_2(2)=w_0(2)`$ del sector $`N=2`$ ("ninguna pérdida") es
+$`0.230`$ (impreso arriba). Sin efecto túnel ($`J=0`$) sería exactamente
+$`e^{-2\gamma_1t}=e^{-2.4}=0.091`$, ya que entonces $`|20\rangle`$ es un vector propio de $`H_{\mathrm{eff}}`$
+con valor propio $`U-i\gamma_1`$ y $`w_0(t)=|e^{-it(U-i\gamma_1)}|^2`$ (proposición 8.10); así que aquí los
 pesos de los sectores sí dependen del hamiltoniano. El estado postseleccionado está a distancia de
-traza $0.135$ (impresa arriba) del estado del sistema cerrado: condicionar a $N=2$ cambia el estado,
+traza $`0.135`$ (impresa arriba) del estado del sistema cerrado: condicionar a $`N=2`$ cambia el estado,
 más allá de la evolución unitaria.
 
 <a id="s-8-5"></a>
@@ -282,11 +282,11 @@ más allá de la evolución unitaria.
 
 *Apuntes:* [sección 8.5](../../lecture_notes/es/08_dynamics.md#s-8-5); [corolario 8.13](../../lecture_notes/es/08_dynamics.md#r-8-13), [proposición 8.14](../../lecture_notes/es/08_dynamics.md#r-8-14) (emisión espontánea).
 
-Por la [proposición 8.14](../../lecture_notes/es/08_dynamics.md#r-8-14), la emisión espontánea sobre $M_2$ ($H=\omega|e\rangle\langle e|$, un salto
-$|g\rangle\langle e|$ con tasa $\gamma$) tiene $e^{t\mathcal L}=\mathcal U_t\circ\mathcal A_{1-e^{-\gamma t}}$, el espectro
-$\{0,-\gamma,-\gamma/2\pm i\omega\}$ y la brecha espectral $\gamma/2$. Comprobamos el espectro con `lindblad_superoperator`,
+Por la [proposición 8.14](../../lecture_notes/es/08_dynamics.md#r-8-14), la emisión espontánea sobre $`M_2`$ ($`H=\omega|e\rangle\langle e|`$, un salto
+$`|g\rangle\langle e|`$ con tasa $`\gamma`$) tiene $`e^{t\mathcal L}=\mathcal U_t\circ\mathcal A_{1-e^{-\gamma t}}`$, el espectro
+$`\{0,-\gamma,-\gamma/2\pm i\omega\}`$ y la brecha espectral $`\gamma/2`$. Comprobamos el espectro con `lindblad_superoperator`,
 el canal y la distancia de traza con `lindblad_channel`, y el
-[corolario 8.13](../../lecture_notes/es/08_dynamics.md#r-8-13) para saltos aleatorios dentro de los sectores de $M_2\oplus M_3$:
+[corolario 8.13](../../lecture_notes/es/08_dynamics.md#r-8-13) para saltos aleatorios dentro de los sectores de $`M_2\oplus M_3`$:
 
 ```python
 q2 = TypeIAlgebra([2], [2], precision='double')                    # basis |g>, |e>
@@ -323,9 +323,9 @@ assert all(dim >= 1 for dim in kernel)                             # Corollary 8
 
 Observación numérica: para estos saltos aleatorios, el código encuentra exactamente un estado
 estacionario por sector. Por el teorema D.6, aplicado sector a sector ([apuntes de clase, sección 8.5](../../lecture_notes/es/08_dynamics.md#s-8-5)), esto se cumple
-si cada sector tiene un estado estacionario fiel y las únicas matrices que conmutan con $H_c$ y con todos los
-$L_{j,c}$, $L_{j,c}^*$ son los múltiplos de $1$; el código comprueba estas dos hipótesis (en coma flotante, para las
-tasas $g_j=1$ usadas arriba) y después verifica la conclusión.
+si cada sector tiene un estado estacionario fiel y las únicas matrices que conmutan con $`H_c`$ y con todos los
+$`L_{j,c}`$, $`L_{j,c}^*`$ son los múltiplos de $`1`$; el código comprueba estas dos hipótesis (en coma flotante, para las
+tasas $`g_j=1`$ usadas arriba) y después verifica la conclusión.
 
 ```python
 for c, k in enumerate(two.k_factors):                              # Theorem D.6 in every sector
@@ -349,27 +349,27 @@ assert kernel == [1, 1]                                            # the conclus
 QuTiP (`sesolve`, `mesolve` para la ecuación de Lindblad con integradores de EDO adaptativos,
 `mcsolve` para trayectorias cuánticas, `steadystate`, `liouvillian`), dynamiqs (JAX; integradores de
 Schrödinger y de Lindblad por lotes y diferenciables en GPU), QuantumOptics.jl y SciPy
-(`scipy.linalg.expm`, y `scipy.sparse.linalg.expm_multiply` para $e^{t\mathcal L}\rho$ con un
+(`scipy.linalg.expm`, y `scipy.sparse.linalg.expm_multiply` para $`e^{t\mathcal L}\rho`$ con un
 generador vectorizado disperso) resuelven las mismas ecuaciones sobre un único espacio de Hilbert, y
-para los problemas anteriores deben dar los mismos números. Sobre $\mathcal M$ se les pasan matrices
-$D\times D$ diagonales por bloques; el generador vectorizado vive entonces en un espacio de
-dimensión $D^2$ (disperso, pero con los sectores acoplados en una sola resolución), salvo que el
+para los problemas anteriores deben dar los mismos números. Sobre $`\mathcal M`$ se les pasan matrices
+$`D\times D`$ diagonales por bloques; el generador vectorizado vive entonces en un espacio de
+dimensión $`D^2`$ (disperso, pero con los sectores acoplados en una sola resolución), salvo que el
 usuario separe el problema en sectores a mano. La biblioteca incorpora la estructura de bloques:
-propagadores exactos y canales de Lindblad sector a sector (superoperadores $k_c^2\times k_c^2$),
+propagadores exactos y canales de Lindblad sector a sector (superoperadores $`k_c^2\times k_c^2`$),
 saltos entre sectores como `InterSectorChannel` con la compresión de la proposición 8.8, lotes de
 hamiltonianos y de operadores de salto (para promedios sobre el desorden) y diferenciación
 automática (estas dos últimas también en dynamiqs). No tiene control adaptativo del paso (RK4 es de
 paso fijo y solo aproximadamente positivo), ni integrador de trayectorias, y `lindblad_channel` no
-admite saltos entre sectores; para ello, la referencia son QuTiP o dynamiqs sobre $M_D$.
+admite saltos entre sectores; para ello, la referencia son QuTiP o dynamiqs sobre $`M_D`$.
 
 <a id="x-8"></a>
 
 ## Ejercicios
 
 [Ejercicios 2 y 4](../../lecture_notes/es/08_dynamics.md#x-8) de los apuntes de clase: los valores propios
-$-\frac i4(\gamma_1+\gamma_2)\pm\sqrt{J^2-\delta^2}$, $\delta=(\gamma_1-\gamma_2)/4$, de $H_{\mathrm{eff}}$ en el sector $N=1$ de la
-sección 8.4, con un único bloque de Jordan de tamaño $2$ en $J=|\delta|$; y el espectro $\{0,0,-2\gamma\pm i\omega\}$ del
-desfase puro sobre $M_2$ ($L=\sigma_z$). Compruebe ambos numéricamente.
+$`-\frac i4(\gamma_1+\gamma_2)\pm\sqrt{J^2-\delta^2}`$, $`\delta=(\gamma_1-\gamma_2)/4`$, de $`H_{\mathrm{eff}}`$ en el sector $`N=1`$ de la
+sección 8.4, con un único bloque de Jordan de tamaño $`2`$ en $`J=|\delta|`$; y el espectro $`\{0,0,-2\gamma\pm i\omega\}`$ del
+desfase puro sobre $`M_2`$ ($`L=\sigma_z`$). Compruebe ambos numéricamente.
 
 <details>
 <summary>Soluciones</summary>

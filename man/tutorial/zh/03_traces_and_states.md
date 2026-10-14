@@ -3,23 +3,23 @@
 # 教程 3. 迹、态与熵
 
 本教程配合讲义的[第 3 章](../../lecture_notes/zh/03_traces_and_states.md)。该章对
-$\mathcal M=\bigoplus_cM_{k_c}$ 上的迹进行分类（[定理 3.1](../../lecture_notes/zh/03_traces_and_states.md#r-3-1)），用密度表示态
+$`\mathcal M=\bigoplus_cM_{k_c}`$ 上的迹进行分类（[定理 3.1](../../lecture_notes/zh/03_traces_and_states.md#r-3-1)），用密度表示态
 （[定理 3.2](../../lecture_notes/zh/03_traces_and_states.md#r-3-2)），并证明基本的熵不等式。我们使用本库的三种迹，
-在它们之间换算密度，并在 $M_2\oplus M_3\oplus M_5$ 上数值地检验这些定理。
+在它们之间换算密度，并在 $`M_2\oplus M_3\oplus M_5`$ 上数值地检验这些定理。
 
 <a id="s-3-1"></a>
 
 ## 3.1 迹
 
-*讲义：* [3.1 节](../../lecture_notes/zh/03_traces_and_states.md#s-3-1)；由[定理 3.1](../../lecture_notes/zh/03_traces_and_states.md#r-3-1)，每个迹都是 $\mathrm{tr}_w(A)=\sum_cw_c\mathrm{Tr}\,A_c$。
+*讲义：* [3.1 节](../../lecture_notes/zh/03_traces_and_states.md#s-3-1)；由[定理 3.1](../../lecture_notes/zh/03_traces_and_states.md#r-3-1)，每个迹都是 $`\mathrm{tr}_w(A)=\sum_cw_c\mathrm{Tr}\,A_c`$。
 
 本库实现了三种忠实迹：
 
-| 名称 | 权重 $w_c$ | 在 $1$ 上的值 | 含义 |
+| 名称 | 权重 $`w_c`$ | 在 $`1`$ 上的值 | 含义 |
 |---|---|---|---|
-| `Tr_blunt` | $1$ | $D$ | $\bigoplus_c\mathbb C^{k_c}$ 的迹（重数 $m_c=1$） |
-| `Tr_norm` | $1/k_c$ | $C$ | 每个块都归一化 |
-| `tau_vN` | $1/(Ck_c)$ | $1$ | 各扇区权重均为 $1/C$ 的迹态 |
+| `Tr_blunt` | $`1`$ | $`D`$ | $`\bigoplus_c\mathbb C^{k_c}`$ 的迹（重数 $`m_c=1`$） |
+| `Tr_norm` | $`1/k_c`$ | $`C`$ | 每个块都归一化 |
+| `tau_vN` | $`1/(Ck_c)`$ | $`1`$ | 各扇区权重均为 $`1/C`$ 的迹态 |
 
 ```python
 import math
@@ -43,9 +43,9 @@ assert (A.Tr_norm() - 3 * A.tau_vN()).abs().max() < 1e-12       # Tr_norm = C ta
 
 ## 3.2 态与密度
 
-*讲义：* [3.2 节](../../lecture_notes/zh/03_traces_and_states.md#s-3-2)；[定理 3.2](../../lecture_notes/zh/03_traces_and_states.md#r-3-2) 对每个忠实迹给出态的密度 $\rho_w$，且 $w_c(\rho_w)_c=w'_c(\rho_{w'})_c$。
+*讲义：* [3.2 节](../../lecture_notes/zh/03_traces_and_states.md#s-3-2)；[定理 3.2](../../lecture_notes/zh/03_traces_and_states.md#r-3-2) 对每个忠实迹给出态的密度 $`\rho_w`$，且 $`w_c(\rho_w)_c=w'_c(\rho_{w'})_c`$。
 
-本库通过态关于 `Tr_blunt` 的密度 $\rho=\rho_{\mathrm{blunt}}$ 来存储态
+本库通过态关于 `Tr_blunt` 的密度 $`\rho=\rho_{\mathrm{blunt}}`$ 来存储态
 （类 `DensityMatrix`）；`density(trace)` 和 `DensityMatrix.from_density`
 负责换算。态的取值与约定无关：
 
@@ -64,7 +64,7 @@ for trace, tr in (('blunt', lambda X: X.Tr_blunt()), ('norm', lambda X: X.Tr_nor
 
 ## 3.3 态的经典部分
 
-*讲义：* [3.3 节](../../lecture_notes/zh/03_traces_and_states.md#s-3-3)：扇区概率 $p_c=\mathrm{Tr}\,\rho_c$，以及在 $\mathcal M$ 上为恒等映射的映射 $\rho\mapsto\sum_cP_c\rho P_c$。
+*讲义：* [3.3 节](../../lecture_notes/zh/03_traces_and_states.md#s-3-3)：扇区概率 $`p_c=\mathrm{Tr}\,\rho_c`$，以及在 $`\mathcal M`$ 上为恒等映射的映射 $`\rho\mapsto\sum_cP_c\rho P_c`$。
 
 ```python
 p = rho.sector_probabilities()                                   # shape (batch, C)
@@ -78,7 +78,7 @@ assert (measure_sector(rho).matrix - rho.matrix).abs().max() < 1e-12   # no dist
 
 ## 3.4 熵
 
-*讲义：* [3.4 节](../../lecture_notes/zh/03_traces_and_states.md#s-3-4)；[定理 3.3](../../lecture_notes/zh/03_traces_and_states.md#r-3-3) 给出 $S(\rho)=H(p)+\sum_cp_cS(\sigma_c)$，而相对于 $\mathrm{tr}_w$ 的熵为 $S_w(\rho)=S(\rho)+\sum_cp_c\log w_c$。
+*讲义：* [3.4 节](../../lecture_notes/zh/03_traces_and_states.md#s-3-4)；[定理 3.3](../../lecture_notes/zh/03_traces_and_states.md#r-3-3) 给出 $`S(\rho)=H(p)+\sum_cp_cS(\sigma_c)`$，而相对于 $`\mathrm{tr}_w`$ 的熵为 $`S_w(\rho)=S(\rho)+\sum_cp_c\log w_c`$。
 
 ```python
 S = rho.von_neumann_entropy()
@@ -97,7 +97,7 @@ assert torch.allclose(S_tau, S + (p * torch.log(w_tau)).sum(-1))
 
 ## 3.5 相对熵与 Klein 不等式
 
-*讲义：* [3.5 节](../../lecture_notes/zh/03_traces_and_states.md#s-3-5)；[推论 3.6](../../lecture_notes/zh/03_traces_and_states.md#r-3-6)（$S(\rho)\le\log D$，当 $\rho=1/D$ 时取等号）与[定理 3.7](../../lecture_notes/zh/03_traces_and_states.md#r-3-7)（对到中心上的条件期望 $E$，$S(\rho\|\sigma)\ge S(E\rho\|E\sigma)=\sum_cp_c\log(p_c/q_c)$）。
+*讲义：* [3.5 节](../../lecture_notes/zh/03_traces_and_states.md#s-3-5)；[推论 3.6](../../lecture_notes/zh/03_traces_and_states.md#r-3-6)（$`S(\rho)\le\log D`$，当 $`\rho=1/D`$ 时取等号）与[定理 3.7](../../lecture_notes/zh/03_traces_and_states.md#r-3-7)（对到中心上的条件期望 $`E`$，$`S(\rho\|\sigma)\ge S(E\rho\|E\sigma)=\sum_cp_c\log(p_c/q_c)`$）。
 
 ```python
 sigma_state = states.random_density_matrix(alg, batch_size=4)
@@ -128,14 +128,14 @@ assert (E(A_pos).michelson_contrast <= A_pos.michelson_contrast + 1e-12).all()
 
 ## 3.7 一个看似合理却不成立的不等式
 
-*讲义：* [3.7 节](../../lecture_notes/zh/03_traces_and_states.md#s-3-7)；由[命题 3.9](../../lecture_notes/zh/03_traces_and_states.md#r-3-9)，对 $M_k$ 中的 $X,Y\ge0$，$\max_U|\mathrm{Tr}(XUY)|=\|YX\|_1\ge\mathrm{Tr}(XY)$，等号成立当且仅当 $XY=YX$。
+*讲义：* [3.7 节](../../lecture_notes/zh/03_traces_and_states.md#s-3-7)；由[命题 3.9](../../lecture_notes/zh/03_traces_and_states.md#r-3-9)，对 $`M_k`$ 中的 $`X,Y\ge0`$，$`\max_U|\mathrm{Tr}(XUY)|=\|YX\|_1\ge\mathrm{Tr}(XY)`$，等号成立当且仅当 $`XY=YX`$。
 
-本库借助极分解求出最大值点：对 $YX=W|YX|$，酉矩阵 $U=W^*$ 达到 $\|YX\|_1$
+本库借助极分解求出最大值点：对 $`YX=W|YX|`$，酉矩阵 $`U=W^*`$ 达到 $`\|YX\|_1`$
 （[讲义，定理 1.9](../../lecture_notes/zh/01_matrix_algebras.md#r-1-9)）。在按 Haar 分布的酉矩阵上随机搜索
-（本库正是这样对 $U$ 采样的）平均而言更差
-（[讲义，3.7 节](../../lecture_notes/zh/03_traces_and_states.md#s-3-7)）；那里回顾的概率上界 $b^4/(a^4k^2)$ 在下面的运行中
-什么也没说，因为 $b/a=6$ 且 $k=6$。代码对一对 $k=6$ 的不可交换矩阵计算精确的上确界以及 $20000$ 个 Haar
-样本中的最佳值，二者都减去 $\mathrm{Tr}(XY)$。由命题 3.9，没有样本能超过上确界；最佳样本低于上确界
+（本库正是这样对 $`U`$ 采样的）平均而言更差
+（[讲义，3.7 节](../../lecture_notes/zh/03_traces_and_states.md#s-3-7)）；那里回顾的概率上界 $`b^4/(a^4k^2)`$ 在下面的运行中
+什么也没说，因为 $`b/a=6`$ 且 $`k=6`$。代码对一对 $`k=6`$ 的不可交换矩阵计算精确的上确界以及 $`20000`$ 个 Haar
+样本中的最佳值，二者都减去 $`\mathrm{Tr}(XY)`$。由命题 3.9，没有样本能超过上确界；最佳样本低于上确界
 多少，是本次运行的*数值观察*，而不是定理。
 
 ```python
@@ -161,7 +161,7 @@ assert best.item() <= gap.item() + 1e-10               # Proposition 3.9: no sam
 
 QuTiP（`entropy_vn`、`entropy_relative`）以及其他量子信息软件包（例如
 `toqito`）用单个 Hilbert 空间的迹计算该空间上密度矩阵的熵与相对熵；在
-$\bigoplus_c\mathbb C^{k_c}$ 上，这就是这里的 blunt 迹（至多相差对数的底，不同软件包的取法不同）。它们不提供的是定理 3.1
+$`\bigoplus_c\mathbb C^{k_c}`$ 上，这就是这里的 blunt 迹（至多相差对数的底，不同软件包的取法不同）。它们不提供的是定理 3.1
 中的迹族以及定理 3.2 中的换算，而一旦代数以一定重数作用，或者各扇区必须赋予不同权重，
 这些就变得必不可少。
 
@@ -169,9 +169,9 @@ $\bigoplus_c\mathbb C^{k_c}$ 上，这就是这里的 blunt 迹（至多相差�
 
 ## 习题
 
-讲义的[习题 1](../../lecture_notes/zh/03_traces_and_states.md#x-3)：迹态 $\tau_{\mathrm{vN}}$
-（`states.tracial_state`）关于 $\tau_{\mathrm{vN}}$ 的密度为 $1$，其熵为
-$S=\log C+\frac1C\sum_c\log k_c$。对 $M_2\oplus M_3\oplus M_5$ 检验这两点。
+讲义的[习题 1](../../lecture_notes/zh/03_traces_and_states.md#x-3)：迹态 $`\tau_{\mathrm{vN}}`$
+（`states.tracial_state`）关于 $`\tau_{\mathrm{vN}}`$ 的密度为 $`1`$，其熵为
+$`S=\log C+\frac1C\sum_c\log k_c`$。对 $`M_2\oplus M_3\oplus M_5`$ 检验这两点。
 
 <details>
 <summary>解答</summary>

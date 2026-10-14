@@ -3,7 +3,7 @@
 # チュートリアル 13. ジョルダン代数：量子力学はなぜ *-環を用いるのか
 
 このチュートリアルは講義ノートの[第13章](../../lecture_notes/ja/13_jordan_algebras.md)に対応する。同章はジョルダン積
-$x\circ y=\frac12(xy+yx)$ と二次表現 $P(y)x=yxy$、スピン因子 $V_m$ とローレンツ錐を調べ、
+$`x\circ y=\frac12(xy+yx)`$ と二次表現 $`P(y)x=yxy`$、スピン因子 $`V_m`$ とローレンツ錐を調べ、
 ジョルダン構造が交換子を符号を除いてしか決定しないこと、そしてその符号を複合系が検出することを示す
 （[命題 13.12](../../lecture_notes/ja/13_jordan_algebras.md#r-13-12)）。ここではモジュール `torch_vn_algebra.jordan` とクラス `SpinFactor` を用いて、
 これらの結果を数値的に確かめる。
@@ -14,9 +14,9 @@ $x\circ y=\frac12(xy+yx)$ と二次表現 $P(y)x=yxy$、スピン因子 $V_m$ �
 
 *講義ノート：* [13.1節](../../lecture_notes/ja/13_jordan_algebras.md#s-13-1)：[補題 13.1](../../lecture_notes/ja/13_jordan_algebras.md#r-13-1)（ジョルダン恒等式）と[命題 13.2](../../lecture_notes/ja/13_jordan_algebras.md#r-13-2)（二次表現）。
 
-モジュール `torch_vn_algebra.jordan` は、ジョルダン積 $x\circ y$、ジョルダン冪、および二次表現
-$P(y)=2L(y)^2-L(y^2)$ を `TypeIAlgebra` の作用素の上に、遅延評価で、かつすべてのセクターにわたってバッチ化して実装している。
-コードは $M_2\oplus M_3$ のランダムな自己共役元に対して[補題 13.1](../../lecture_notes/ja/13_jordan_algebras.md#r-13-1)と[命題 13.2](../../lecture_notes/ja/13_jordan_algebras.md#r-13-2)を確かめる：
+モジュール `torch_vn_algebra.jordan` は、ジョルダン積 $`x\circ y`$、ジョルダン冪、および二次表現
+$`P(y)=2L(y)^2-L(y^2)`$ を `TypeIAlgebra` の作用素の上に、遅延評価で、かつすべてのセクターにわたってバッチ化して実装している。
+コードは $`M_2\oplus M_3`$ のランダムな自己共役元に対して[補題 13.1](../../lecture_notes/ja/13_jordan_algebras.md#r-13-1)と[命題 13.2](../../lecture_notes/ja/13_jordan_algebras.md#r-13-2)を確かめる：
 
 ```python
 import math
@@ -57,13 +57,13 @@ assert abs(torch.linalg.det(jp(p, q).matrix[0, 0]).real.item() + 1 / 16) < 1e-14
 
 ## 13.2 スピン因子とローレンツ錐
 
-*講義ノート：* [13.2節](../../lecture_notes/ja/13_jordan_algebras.md#s-13-2)：[補題 13.3](../../lecture_notes/ja/13_jordan_algebras.md#r-13-3)（反可換な対称元）、[定理 13.4](../../lecture_notes/ja/13_jordan_algebras.md#r-13-4)（$V_m$ のスペクトル理論）、[命題 13.5](../../lecture_notes/ja/13_jordan_algebras.md#r-13-5)。
+*講義ノート：* [13.2節](../../lecture_notes/ja/13_jordan_algebras.md#s-13-2)：[補題 13.3](../../lecture_notes/ja/13_jordan_algebras.md#r-13-3)（反可換な対称元）、[定理 13.4](../../lecture_notes/ja/13_jordan_algebras.md#r-13-4)（$`V_m`$ のスペクトル理論）、[命題 13.5](../../lecture_notes/ja/13_jordan_algebras.md#r-13-5)。
 
-クラス `SpinFactor(m)` は $V_m$ の元 $x=(a,u)$ を形状 `(batch, m+1)` のテンソルとして格納し、積、
-スペクトル分解、および[定理 13.4](../../lecture_notes/ja/13_jordan_algebras.md#r-13-4)の関数計算を備える。`to_matrix` は[補題 13.3](../../lecture_notes/ja/13_jordan_algebras.md#r-13-3)の写像 $\phi$ であり、
-`jordan.anticommuting_symmetries(m)` の $s_i$ から構成される。コードは $V_5$ におけるジョルダン恒等式と
-定理 13.4、ランダムな直交行列 $O$ に対する[命題 13.5](../../lecture_notes/ja/13_jordan_algebras.md#r-13-5)(b) と $m\le6$ に対する (c)、そして
-$p=3$ に対する 9.4節のマヨラナ演算子（[講義ノート、13.2節](../../lecture_notes/ja/13_jordan_algebras.md#s-13-2)）を確かめる：
+クラス `SpinFactor(m)` は $`V_m`$ の元 $`x=(a,u)`$ を形状 `(batch, m+1)` のテンソルとして格納し、積、
+スペクトル分解、および[定理 13.4](../../lecture_notes/ja/13_jordan_algebras.md#r-13-4)の関数計算を備える。`to_matrix` は[補題 13.3](../../lecture_notes/ja/13_jordan_algebras.md#r-13-3)の写像 $`\phi`$ であり、
+`jordan.anticommuting_symmetries(m)` の $`s_i`$ から構成される。コードは $`V_5`$ におけるジョルダン恒等式と
+定理 13.4、ランダムな直交行列 $`O`$ に対する[命題 13.5](../../lecture_notes/ja/13_jordan_algebras.md#r-13-5)(b) と $`m\le6`$ に対する (c)、そして
+$`p=3`$ に対する 9.4節のマヨラナ演算子（[講義ノート、13.2節](../../lecture_notes/ja/13_jordan_algebras.md#s-13-2)）を確かめる：
 
 ```python
 V = SpinFactor(5)
@@ -104,7 +104,7 @@ for j in range(1, pq + 1):
     assert close(s6[2 * j - 2], sign * (c + c.mH)) and close(s6[2 * j - 1], sign * 1j * (c - c.mH))
 ```
 
-$m=1$ のとき、$s_1=Z$ は対角行列を生成し、その次元は $2=m+1$ であり、$V_1\cong\mathbb R\oplus\mathbb R$ は単純ではない。表示される次元は、$m=2$ で $3,4$、$m=4$ で $5,16$、$m=6$ で $7,64$ である。
+$`m=1`$ のとき、$`s_1=Z`$ は対角行列を生成し、その次元は $`2=m+1`$ であり、$`V_1\cong\mathbb R\oplus\mathbb R`$ は単純ではない。表示される次元は、$`m=2`$ で $`3,4`$、$`m=4`$ で $`5,16`$、$`m=6`$ で $`7,64`$ である。
 
 <a id="s-13-3"></a>
 
@@ -112,10 +112,10 @@ $m=1$ のとき、$s_1=Z$ は対角行列を生成し、その次元は $2=m+1$ 
 
 *講義ノート：* [13.3節](../../lecture_notes/ja/13_jordan_algebras.md#s-13-3)：[命題 13.6](../../lecture_notes/ja/13_jordan_algebras.md#r-13-6)。
 
-`jordan.compare_with_star_algebra` は、与えられたエルミート行列と $1$ が生成するジョルダン代数の次元と、
-それらが生成する $*$-代数の自己共役部分の次元を計算する。コードは実対称行列のランダムな組に対して
-[命題 13.6](../../lecture_notes/ja/13_jordan_algebras.md#r-13-6)(a) を $n=2,\dots,5$ で確かめ、(b) を確かめる：二つのランダムな $2\times2$ エルミート行列に対し
-次元は $3$ と $4$ であり、証明のユニタリ $U$ は両方を実行列にする。
+`jordan.compare_with_star_algebra` は、与えられたエルミート行列と $`1`$ が生成するジョルダン代数の次元と、
+それらが生成する $`*`$-代数の自己共役部分の次元を計算する。コードは実対称行列のランダムな組に対して
+[命題 13.6](../../lecture_notes/ja/13_jordan_algebras.md#r-13-6)(a) を $`n=2,\dots,5`$ で確かめ、(b) を確かめる：二つのランダムな $`2\times2`$ エルミート行列に対し
+次元は $`3`$ と $`4`$ であり、証明のユニタリ $`U`$ は両方を実行列にする。
 
 ```python
 for n in range(2, 6):                                            # Proposition 13.6(a), a random real pair
@@ -139,7 +139,7 @@ Um = W2 @ W1.mH                                                  # U (n . sigma)
 assert all((Um @ A @ Um.mH).imag.abs().max() < 1e-12 for A in H[:2])
 ```
 
-一般の三つの $2\times2$ エルミート行列は $\mathrm{Herm}_2(\mathbb C)$ 全体を生成する：両方の列で次元は $4$ である。したがって $\mathcal M$ の $M_2$ ブロックの中では、二つのオブザーバブルが複素構造を明らかにすることは決してないが、三つ目のオブザーバブルはそれを明らかにしうる。
+一般の三つの $`2\times2`$ エルミート行列は $`\mathrm{Herm}_2(\mathbb C)`$ 全体を生成する：両方の列で次元は $`4`$ である。したがって $`\mathcal M`$ の $`M_2`$ ブロックの中では、二つのオブザーバブルが複素構造を明らかにすることは決してないが、三つ目のオブザーバブルはそれを明らかにしうる。
 
 <a id="s-13-5"></a>
 
@@ -147,9 +147,9 @@ assert all((Um @ A @ Um.mH).imag.abs().max() < 1e-12 for A in H[:2])
 
 *講義ノート：* [13.5節](../../lecture_notes/ja/13_jordan_algebras.md#s-13-5)：[命題 13.9](../../lecture_notes/ja/13_jordan_algebras.md#r-13-9)（転置）、[命題 13.11](../../lecture_notes/ja/13_jordan_algebras.md#r-13-11)、[命題 13.12](../../lecture_notes/ja/13_jordan_algebras.md#r-13-12)（複合系）、[命題 13.13](../../lecture_notes/ja/13_jordan_algebras.md#r-13-13)（ダイナミクス）。
 
-`jordan.transpose_map` はブロックごとに適用される転置 $T$ である。コードは[命題 13.9](../../lecture_notes/ja/13_jordan_algebras.md#r-13-9)（$M_3$ 上の $T$ の
-チョイ行列を用いて）、[命題 13.11](../../lecture_notes/ja/13_jordan_algebras.md#r-13-11)の証明に現れるブロッホ・ベクトル上の転置の行列 $O_T=\mathrm{diag}(1,-1,1)$、
-[命題 13.12](../../lecture_notes/ja/13_jordan_algebras.md#r-13-12)の積の公式と $\circ_\theta$（ベル状態の部分転置のスペクトルとともに）、
+`jordan.transpose_map` はブロックごとに適用される転置 $`T`$ である。コードは[命題 13.9](../../lecture_notes/ja/13_jordan_algebras.md#r-13-9)（$`M_3`$ 上の $`T`$ の
+チョイ行列を用いて）、[命題 13.11](../../lecture_notes/ja/13_jordan_algebras.md#r-13-11)の証明に現れるブロッホ・ベクトル上の転置の行列 $`O_T=\mathrm{diag}(1,-1,1)`$、
+[命題 13.12](../../lecture_notes/ja/13_jordan_algebras.md#r-13-12)の積の公式と $`\circ_\theta`$（ベル状態の部分転置のスペクトルとともに）、
 そして[命題 13.13](../../lecture_notes/ja/13_jordan_algebras.md#r-13-13)(a)、(b) を確かめる：
 
 ```python
@@ -201,10 +201,10 @@ assert close(jm(z1, jm(z2, Hm)) - jm(z2, jm(z1, Hm)), 0.25 * cm(cm(z1, z2), Hm))
 
 *講義ノート：* [13.6節](../../lecture_notes/ja/13_jordan_algebras.md#s-13-6)：[命題 13.14](../../lecture_notes/ja/13_jordan_algebras.md#r-13-14)。
 
-[講義ノート、命題 13.14](../../lecture_notes/ja/13_jordan_algebras.md#r-13-14) により、$V_m$ において $\mathrm{tr}|P(y)x|\le\mathrm{tr}\,P(y)|x|$ であり、$x\in Q$ または
-$-x\in Q$ ならば等号が成り立つ。$\phi(P(y)x)=\phi(y)\phi(x)\phi(y)$ と $\phi(|x|)=|\phi(x)|$ を満たす $\phi$ を通せば、これは
-$Y=Y^*$ に対する命題 11.9 の不等式 $\mathrm{Tr}|YXY|\le\mathrm{Tr}(Y|X|Y)$ でもある（[講義ノート、13.6節](../../lecture_notes/ja/13_jordan_algebras.md#s-13-6)）。
-コードは $m=2,4,7$ に対して両方を確かめる：
+[講義ノート、命題 13.14](../../lecture_notes/ja/13_jordan_algebras.md#r-13-14) により、$`V_m`$ において $`\mathrm{tr}|P(y)x|\le\mathrm{tr}\,P(y)|x|`$ であり、$`x\in Q`$ または
+$`-x\in Q`$ ならば等号が成り立つ。$`\phi(P(y)x)=\phi(y)\phi(x)\phi(y)`$ と $`\phi(|x|)=|\phi(x)|`$ を満たす $`\phi`$ を通せば、これは
+$`Y=Y^*`$ に対する命題 11.9 の不等式 $`\mathrm{Tr}|YXY|\le\mathrm{Tr}(Y|X|Y)`$ でもある（[講義ノート、13.6節](../../lecture_notes/ja/13_jordan_algebras.md#s-13-6)）。
+コードは $`m=2,4,7`$ に対して両方を確かめる：
 
 ```python
 for m in (2, 4, 7):
@@ -227,13 +227,13 @@ for m in (2, 4, 7):
     assert (tr_rhs - tn >= -1e-10 * tr_rhs).all()                       # Proposition 11.9 for Y = Y*
 ```
 
-差 $\mathrm{tr}\,P(y)|x|-\mathrm{tr}|P(y)x|$ は定符号の $x$ に対しては零となる（命題 13.14）。*数値的観察*（定理ではない）：これらのガウス・サンプルについて、表示される差の最大値は $10^1$–$10^2$ の程度であり、したがって不定符号の $x$ に対しては、この不等式は等式からほど遠い。
+差 $`\mathrm{tr}\,P(y)|x|-\mathrm{tr}|P(y)x|`$ は定符号の $`x`$ に対しては零となる（命題 13.14）。*数値的観察*（定理ではない）：これらのガウス・サンプルについて、表示される差の最大値は $`10^1`$–$`10^2`$ の程度であり、したがって不定符号の $`x`$ に対しては、この不等式は等式からほど遠い。
 
 <a id="s-13-7"></a>
 
 ## 13.7 比較の対象
 
-我々の知る限り、ジョルダン代数のための主流の数値ライブラリは存在しない。本章の演算は通常、行列を用いて手で書かれる。代数的な側面は計算機代数がカバーしている：SageMath の `JordanAlgebra` は特殊ジョルダン代数、対称双線形形式のジョルダン代数（スピン因子を含む）、そして八元数代数から 27 次元の例外ジョルダン代数を構成する。Magma にもジョルダン代数のコンストラクタがあり、例外的なものも含まれる。これらは厳密な代数的道具であって、バッチ化された数値的道具ではない。ローレンツ錐は最適化では標準的である：SOCP ソルバー（ECOS、SCS、Clarabel、MOSEK。cvxpy の `SOC` 制約を通じて利用できる）は、$V_m$ のスペクトル分解（錐への射影のため）またはその二次表現（内点法のネステロフ–トッド・スケーリングのため）を用い、半正定値計画のソルバーは $\mathrm{Herm}_n$ について同じことを行う。本ライブラリが付け加えるのは、$\bigoplus_cM_{k_c}$ 上のバッチ化された微分可能な作用素としてのジョルダン積、二次表現、転置、関数計算と行列表現を備えたスピン因子、そして与えられた行列が生成するジョルダン代数の乱択計算と、それらが生成する $*$-代数との比較である。
+我々の知る限り、ジョルダン代数のための主流の数値ライブラリは存在しない。本章の演算は通常、行列を用いて手で書かれる。代数的な側面は計算機代数がカバーしている：SageMath の `JordanAlgebra` は特殊ジョルダン代数、対称双線形形式のジョルダン代数（スピン因子を含む）、そして八元数代数から 27 次元の例外ジョルダン代数を構成する。Magma にもジョルダン代数のコンストラクタがあり、例外的なものも含まれる。これらは厳密な代数的道具であって、バッチ化された数値的道具ではない。ローレンツ錐は最適化では標準的である：SOCP ソルバー（ECOS、SCS、Clarabel、MOSEK。cvxpy の `SOC` 制約を通じて利用できる）は、$`V_m`$ のスペクトル分解（錐への射影のため）またはその二次表現（内点法のネステロフ–トッド・スケーリングのため）を用い、半正定値計画のソルバーは $`\mathrm{Herm}_n`$ について同じことを行う。本ライブラリが付け加えるのは、$`\bigoplus_cM_{k_c}`$ 上のバッチ化された微分可能な作用素としてのジョルダン積、二次表現、転置、関数計算と行列表現を備えたスピン因子、そして与えられた行列が生成するジョルダン代数の乱択計算と、それらが生成する $`*`$-代数との比較である。
 
 <a id="x-13"></a>
 
@@ -241,10 +241,10 @@ for m in (2, 4, 7):
 
 講義ノートの[演習問題](../../lecture_notes/ja/13_jordan_algebras.md#x-13) 1–3 の数値的検証：
 
-- *演習問題 1*（ローレンツ錐の等質性）：$V_4$ において $P(x^{1/2})1=x$、$P(y^{-1})P(y)=\mathrm{id}$、$P(y)Q\subseteq Q$。
-- *演習問題 2*（等方的状態）：$\theta(\rho_p)$ の最小固有値は $\frac{1-3p}4$ である。
-- *演習問題 3*（境界点の積）：ランダムな単位ベクトル $w,w'$ に対し $(1,w)\circ(1,w')\notin Q$ であり、
-  $(1,w)\circ(1,w)\in Q$ である。
+- *演習問題 1*（ローレンツ錐の等質性）：$`V_4`$ において $`P(x^{1/2})1=x`$、$`P(y^{-1})P(y)=\mathrm{id}`$、$`P(y)Q\subseteq Q`$。
+- *演習問題 2*（等方的状態）：$`\theta(\rho_p)`$ の最小固有値は $`\frac{1-3p}4`$ である。
+- *演習問題 3*（境界点の積）：ランダムな単位ベクトル $`w,w'`$ に対し $`(1,w)\circ(1,w')\notin Q`$ であり、
+  $`(1,w)\circ(1,w)\in Q`$ である。
 
 <details>
 <summary>解答</summary>

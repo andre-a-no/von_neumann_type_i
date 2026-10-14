@@ -13,9 +13,9 @@ algorithms on random examples, with the Lindblad routines of the library and `nu
 
 *Lecture notes:* [Section D.2](../lecture_notes/D_gksl.md#s-D-2); [Lemma D.1](../lecture_notes/D_gksl.md#r-D-1), [Theorem D.3](../lecture_notes/D_gksl.md#r-D-3).
 
-We check Theorem D.3 on a GKSL generator with arbitrary jumps on $M_3$, built by `lindblad_superoperator`
-(the matrix $S$ of $\mathcal L$ on row-major $\mathrm{vec}\,\rho$, so that $J_{(i,a),(j,b)}=S_{(a,b),(i,j)}$ as in
-Section 6.1), and on $\theta-\mathrm{id}$:
+We check Theorem D.3 on a GKSL generator with arbitrary jumps on $`M_3`$, built by `lindblad_superoperator`
+(the matrix $`S`$ of $`\mathcal L`$ on row-major $`\mathrm{vec}\,\rho`$, so that $`J_{(i,a),(j,b)}=S_{(a,b),(i,j)}`$ as in
+Section 6.1), and on $`\theta-\mathrm{id}`$:
 
 ```python
 import math
@@ -78,8 +78,8 @@ for t in (0.01, 0.1, 1.0):
 
 *Lecture notes:* [Section D.3](../lecture_notes/D_gksl.md#s-D-3); [Theorem D.4](../lecture_notes/D_gksl.md#r-D-4), [Theorem D.5](../lecture_notes/D_gksl.md#r-D-5), [Theorem D.6](../lecture_notes/D_gksl.md#r-D-6).
 
-The proof of Theorem D.4 is an algorithm: $\Phi$ from the compression of $J(\mathcal L)$ to $\Omega^\perp$, then
-$G$ from $\xi_1$, then $H$. We run it on the generator above, rebuild the generator with the library, and
+The proof of Theorem D.4 is an algorithm: $`\Phi`$ from the compression of $`J(\mathcal L)`$ to $`\Omega^\perp`$, then
+$`G`$ from $`\xi_1`$, then $`H`$. We run it on the generator above, rebuild the generator with the library, and
 compare with the normalised form of the original data computed by Theorem D.5(iii) and (i):
 
 ```python
@@ -113,12 +113,12 @@ assert np.abs(Wr @ u - Wn).max() < 1e-12 and np.abs(u.conj().T @ u - np.eye(2)).
 print("eigenvalues of the normalised H:", np.round(np.linalg.eigvalsh(H_rec), 4), " jumps:", len(L_rec))
 ```
 
-By [Theorem D.6](../lecture_notes/D_gksl.md#r-D-6), a faithful stationary state $\sigma$ is unique when only the multiples of $1$ commute
-with $H$ and all $L_j$, $L_j^*$; then also $\ker\mathcal L^*=\mathbb C1$. For the random generator above the code checks the
-hypotheses and the conclusion (the matrix of $\mathcal L^*$ on row-major vectors of $A^T$ is $S^T$:
-$\mathrm{vec}(\mathcal L^*(A)^T)=S^T\mathrm{vec}(A^T)$), and the second example of
-[lecture notes, Section D.3](../lecture_notes/D_gksl.md#s-D-3): on $M_3$, $H=0$, $L_1=|e_1\rangle\langle e_3|$, $L_2=|e_2\rangle\langle e_3|$, where
-only the multiples of $1$ commute with $L_j,L_j^*$ but $\dim\ker\mathcal L=4$:
+By [Theorem D.6](../lecture_notes/D_gksl.md#r-D-6), a faithful stationary state $`\sigma`$ is unique when only the multiples of $`1`$ commute
+with $`H`$ and all $`L_j`$, $`L_j^*`$; then also $`\ker\mathcal L^*=\mathbb C1`$. For the random generator above the code checks the
+hypotheses and the conclusion (the matrix of $`\mathcal L^*`$ on row-major vectors of $`A^T`$ is $`S^T`$:
+$`\mathrm{vec}(\mathcal L^*(A)^T)=S^T\mathrm{vec}(A^T)`$), and the second example of
+[lecture notes, Section D.3](../lecture_notes/D_gksl.md#s-D-3): on $`M_3`$, $`H=0`$, $`L_1=|e_1\rangle\langle e_3|`$, $`L_2=|e_2\rangle\langle e_3|`$, where
+only the multiples of $`1`$ commute with $`L_j,L_j^*`$ but $`\dim\ker\mathcal L=4`$:
 
 ```python
 def kernel_dim(S, tol=1e-9):
@@ -150,9 +150,9 @@ assert kernel_dim(S_abs) == 4                             # no faithful stationa
 
 *Lecture notes:* [Section D.4](../lecture_notes/D_gksl.md#s-D-4); [Theorem D.7](../lecture_notes/D_gksl.md#r-D-7), [Corollary D.8](../lecture_notes/D_gksl.md#r-D-8).
 
-We check [Theorem D.7](../lecture_notes/D_gksl.md#r-D-7) on $M_1\oplus M_2\subseteq M_3$ for a generator of `lindblad_rhs` with a jump inside the
+We check [Theorem D.7](../lecture_notes/D_gksl.md#r-D-7) on $`M_1\oplus M_2\subseteq M_3`$ for a generator of `lindblad_rhs` with a jump inside the
 sectors and a random jump between them, following the five steps of the proof, and the dual generator of
-[Corollary D.8](../lecture_notes/D_gksl.md#r-D-8). As remarked after the proof, $J(\mathcal L\circ E)$ is not positive on $\Omega^\perp$ here:
+[Corollary D.8](../lecture_notes/D_gksl.md#r-D-8). As remarked after the proof, $`J(\mathcal L\circ E)`$ is not positive on $`\Omega^\perp`$ here:
 
 ```python
 alg = TypeIAlgebra([1, 2], [1, 2], precision='double')    # M = M_1 (+) M_2 in M_3
@@ -201,12 +201,12 @@ assert np.linalg.eigvalsh(Pomega @ J @ Pomega).min() < -0.1
 
 *Lecture notes:* [Section D.5](../lecture_notes/D_gksl.md#s-D-5); [Theorem D.9](../lecture_notes/D_gksl.md#r-D-9), [Corollary D.10](../lecture_notes/D_gksl.md#r-D-10).
 
-A correctable $\mathfrak A$ with $C\ge2$ sectors, some $k_c\ge2$, is a **hybrid** code ([lecture notes, Section D.5](../lecture_notes/D_gksl.md#s-D-5)).
-As an example we take $\mathfrak A=(M_2\otimes1_2)\oplus M_1$ on a random
-five-dimensional code in $\mathbb C^8$ and noise that acts on the gauge factors $\mathbb C^{m_c}$ through
-$\sum_iB_{c,i}^*B_{c,i}=1_{m_c}$, maps the sectors to orthogonal subspaces, scrambles $\mathcal C^\perp$, and is then mixed by a
+A correctable $`\mathfrak A`$ with $`C\ge2`$ sectors, some $`k_c\ge2`$, is a **hybrid** code ([lecture notes, Section D.5](../lecture_notes/D_gksl.md#s-D-5)).
+As an example we take $`\mathfrak A=(M_2\otimes1_2)\oplus M_1`$ on a random
+five-dimensional code in $`\mathbb C^8`$ and noise that acts on the gauge factors $`\mathbb C^{m_c}`$ through
+$`\sum_iB_{c,i}^*B_{c,i}=1_{m_c}`$, maps the sectors to orthogonal subspaces, scrambles $`\mathcal C^\perp`$, and is then mixed by a
 random unitary (Theorem 6.7). The Knill–Laflamme condition fails, the condition of [Theorem D.9](../lecture_notes/D_gksl.md#r-D-9) holds, and the
-recovery of the proof restores every $A\in\mathfrak A$ but not a generic operator on $\mathcal C$:
+recovery of the proof restores every $`A\in\mathfrak A`$ but not a generic operator on $`\mathcal C`$:
 
 ```python
 D, dims = 8, [(2, 2), (1, 1)]                             # A = (M_2 (x) 1_2) (+) (M_1 (x) 1_1), dim C = 5

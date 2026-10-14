@@ -2,21 +2,21 @@
 
 # 教程 8. 动力学
 
-本教程配合讲义的[第 8 章](../../lecture_notes/zh/08_dynamics.md)。该章证明 $\mathcal M$ 中的哈密顿量保持扇区权重不变
+本教程配合讲义的[第 8 章](../../lecture_notes/zh/08_dynamics.md)。该章证明 $`\mathcal M`$ 中的哈密顿量保持扇区权重不变
 （[定理 8.3](../../lecture_notes/zh/08_dynamics.md#r-8-3)），GKSL 形式的生成元产生量子动力学半群（[定理 8.6](../../lecture_notes/zh/08_dynamics.md#r-8-6)），
 并讨论扇区间的跳跃、后选择与稳态。我们用 `dynamics` 的精确求解器和 Runge–Kutta 求解器求解 Schrödinger、
-von Neumann 和 Lindblad 方程，并将结果与 SciPy 以及 $M_D$ 上的 GKSL 生成元对照。
+von Neumann 和 Lindblad 方程，并将结果与 SciPy 以及 $`M_D`$ 上的 GKSL 生成元对照。
 
 <a id="s-8-1"></a>
 
 ## 8.1 封闭系统
 
-*讲义：* [8.1 节](../../lecture_notes/zh/08_dynamics.md#s-8-1)；[命题 8.2](../../lecture_notes/zh/08_dynamics.md#r-8-2)（传播子 $U(t)=e^{-itH}$）、[定理 8.3](../../lecture_notes/zh/08_dynamics.md#r-8-3)（荷守恒）。
+*讲义：* [8.1 节](../../lecture_notes/zh/08_dynamics.md#s-8-1)；[命题 8.2](../../lecture_notes/zh/08_dynamics.md#r-8-2)（传播子 $`U(t)=e^{-itH}`$）、[定理 8.3](../../lecture_notes/zh/08_dynamics.md#r-8-3)（荷守恒）。
 
-由命题 8.2(1)，演化分解为 $C$ 个大小为 $k_c$ 的独立问题，每个块一个。
-本库对每种块大小做一次特征分解来计算 $U(t)$（`dynamics.propagator`），而
+由命题 8.2(1)，演化分解为 $`C`$ 个大小为 $`k_c`$ 的独立问题，每个块一个。
+本库对每种块大小做一次特征分解来计算 $`U(t)`$（`dynamics.propagator`），而
 `dynamics.von_neumann` 在本征基中一次性把密度演化到许多时刻，在该基中
-$\rho(t)_{ij}=e^{-it(\lambda_i-\lambda_j)}\rho_{ij}$。我们用 `scipy.linalg.expm` 加以检验：
+$`\rho(t)_{ij}=e^{-it(\lambda_i-\lambda_j)}\rho_{ij}`$。我们用 `scipy.linalg.expm` 加以检验：
 
 ```python
 import math
@@ -49,15 +49,15 @@ A_t = U.adjoint() @ A @ U                                          # Heisenberg 
 assert abs(rho0.expectation(A_t) - dynamics.von_neumann(rho0, H, [t])[0].expectation(A)) < 1e-12
 ```
 
-单位向量 $\psi=\bigoplus_c\psi_c$ 在 $\mathcal M$ 上定义态 $\bigoplus_c|\psi_c\rangle\langle\psi_c|$，它按 $U(t)$ 演化
+单位向量 $`\psi=\bigoplus_c\psi_c`$ 在 $`\mathcal M`$ 上定义态 $`\bigoplus_c|\psi_c\rangle\langle\psi_c|`$，它按 $`U(t)`$ 演化
 （[讲义，8.1 节](../../lecture_notes/zh/08_dynamics.md#s-8-1)），所以 `dynamics.schrodinger`（向量采用块布局 `(batch, C, k_max)`）与 `von_neumann`
-在它上面必须一致。对含时的 $H(t)$，
+在它上面必须一致。对含时的 $`H(t)`$，
 本库使用固定步长的经典 Runge–Kutta 方法（`dynamics.rk4`、`schrodinger_rk4`）：每一步把
-$\psi$ 乘以 $H(t)\in\mathcal M$ 若干取值的一个多项式，所以它从不在扇区之间转移振幅，
-但它不是酉的：对常数 $H$，步长为 $h$ 的一步把 $H$ 的属于特征值 $\lambda$ 的特征向量乘以
-$T(-ih\lambda)$，其中 $T(z)=\sum_{k=0}^4z^k/k!$，而对 $0<|x|<2\sqrt2$ 有
-$|T(ix)|^2=1-\frac{x^6}{72}+\frac{x^8}{576}<1$（展开即得）。所以 RK4 并不严格守恒扇区权重：对常数 $H$，
-一个在某个满足 $0<|h\lambda|<2\sqrt2$ 的特征向量上系数非零的扇区分量在每一步都会损失权重。
+$`\psi`$ 乘以 $`H(t)\in\mathcal M`$ 若干取值的一个多项式，所以它从不在扇区之间转移振幅，
+但它不是酉的：对常数 $`H`$，步长为 $`h`$ 的一步把 $`H`$ 的属于特征值 $`\lambda`$ 的特征向量乘以
+$`T(-ih\lambda)`$，其中 $`T(z)=\sum_{k=0}^4z^k/k!`$，而对 $`0<|x|<2\sqrt2`$ 有
+$`|T(ix)|^2=1-\frac{x^6}{72}+\frac{x^8}{576}<1`$（展开即得）。所以 RK4 并不严格守恒扇区权重：对常数 $`H`$，
+一个在某个满足 $`0<|h\lambda|<2\sqrt2`$ 的特征向量上系数非零的扇区分量在每一步都会损失权重。
 它们在一次运行中变化多少是一个数值观察（见下文）。
 （对于一个大的扇区，`krylov.evolve` 只需要矩阵–向量乘积；见[教程 9，9.5 节](../../tutorial/zh/09_spin_chains.md#s-9-5)。）
 
@@ -81,8 +81,8 @@ assert drift < 1e-8 and (dynamics.schrodinger_rk4(psi0, H, times, substeps=50) -
 
 ```
 
-*数值观察*：在这次运行中，扇区权重在 RK4 下的变化为 $1.1\cdot10^{-9}$（打印出的值），而在精确
-求解器下的变化小于断言所用的容差 $10^{-12}$；对精确求解器，定理 8.3 给出严格的守恒。
+*数值观察*：在这次运行中，扇区权重在 RK4 下的变化为 $`1.1\cdot10^{-9}`$（打印出的值），而在精确
+求解器下的变化小于断言所用的容差 $`10^{-12}`$；对精确求解器，定理 8.3 给出严格的守恒。
 
 <a id="s-8-2"></a>
 
@@ -91,12 +91,12 @@ assert drift < 1e-8 and (dynamics.schrodinger_rk4(psi0, H, times, substeps=50) -
 *讲义：* [8.2 节](../../lecture_notes/zh/08_dynamics.md#s-8-2)；[定理 8.6](../../lecture_notes/zh/08_dynamics.md#r-8-6)（GKSL 生成元与 Dyson 展开）、[定理 8.7](../../lecture_notes/zh/08_dynamics.md#r-8-7)。
 
 本库有四个 Lindblad 例程：`lindblad_rhs` 以函数形式返回右端项，供
-`rk4` 使用；`lindblad_evolve` 用 RK4 积分；`lindblad_superoperator` 对每个扇区返回 $\mathcal L$ 作用在
-按行展开的 $\mathrm{vec}\,\rho_c$ 上的 $k_c^2\times k_c^2$ 矩阵；
-`lindblad_channel` 逐扇区精确计算 $e^{t\mathcal L}$，结果为一个 `Channel`。我们对
-$M_3$ 上任意的跳跃检验定理 8.6：$e^{t\mathcal L}$ 的 Choi 矩阵是正的（定理
+`rk4` 使用；`lindblad_evolve` 用 RK4 积分；`lindblad_superoperator` 对每个扇区返回 $`\mathcal L`$ 作用在
+按行展开的 $`\mathrm{vec}\,\rho_c`$ 上的 $`k_c^2\times k_c^2`$ 矩阵；
+`lindblad_channel` 逐扇区精确计算 $`e^{t\mathcal L}`$，结果为一个 `Channel`。我们对
+$`M_3`$ 上任意的跳跃检验定理 8.6：$`e^{t\mathcal L}`$ 的 Choi 矩阵是正的（定理
 6.2），该映射是 TP 的，半群律成立，RK4 与指数一致，并且跳跃部分
-$e^{t\mathcal L}-S_0(t)=\sum_{n\ge1}S_n(t)$ 本身是 CP 的：
+$`e^{t\mathcal L}-S_0(t)=\sum_{n\ge1}S_n(t)`$ 本身是 CP 的：
 
 ```python
 M3 = TypeIAlgebra([3], [3], precision='double')
@@ -126,16 +126,16 @@ assert jump_part.min() > -1e-12                                    # sum_{n >= 1
 
 ## 8.3 有扇区的代数中的 Lindblad 方程
 
-*讲义：* [8.3 节](../../lecture_notes/zh/08_dynamics.md#s-8-3)：扇区内部与扇区之间都有跳跃的生成元 $\mathcal L$，由 `dynamics.lindblad_rhs` 实现；[命题 8.8](../../lecture_notes/zh/08_dynamics.md#r-8-8)、[命题 8.9](../../lecture_notes/zh/08_dynamics.md#r-8-9)（扇区权重）。
+*讲义：* [8.3 节](../../lecture_notes/zh/08_dynamics.md#s-8-3)：扇区内部与扇区之间都有跳跃的生成元 $`\mathcal L`$，由 `dynamics.lindblad_rhs` 实现；[命题 8.8](../../lecture_notes/zh/08_dynamics.md#r-8-8)、[命题 8.9](../../lecture_notes/zh/08_dynamics.md#r-8-9)（扇区权重）。
 
 **例：粒子丢失**（[讲义，8.3 节](../../lecture_notes/zh/08_dynamics.md#s-8-3)）。两个玻色模式，至多两个粒子，
-$\mathcal M=M_1\oplus M_2\oplus M_3$（扇区 $N=0,1,2$），Bose–Hubbard 二聚体
-$H=J(a_1^*a_2+a_2^*a_1)+\frac U2\sum_jn_j(n_j-1)$，并且每个模式以速率 $\gamma$ 丢失粒子：这是一个
-`InterSectorChannel`，其 Kraus 算子为 $a_1,a_2$，限制在 $N\to N-1$ 上。由
-[命题 8.9(2)](../../lecture_notes/zh/08_dynamics.md#r-8-9)，扇区权重服从 $p'=Qp$，其中对速率 $1$ 有 $Q=R-\mathrm{diag}(\sum_dR_{dc})_c$，
-$R$ = `transition_matrix()`；从 $N=2$ 出发，它们服从二项分布 $p_2=q^2$，$p_1=2q(1-q)$，$p_0=(1-q)^2$，
-$q=e^{-\gamma t}$，无论隧穿与相互作用如何。代码检验
-$\Phi^*(1)=0\oplus1\oplus2$，即在所用的块上 $a_1^*a_1+a_2^*a_2=N$，并用两个公式检验 $p(t)$。
+$`\mathcal M=M_1\oplus M_2\oplus M_3`$（扇区 $`N=0,1,2`$），Bose–Hubbard 二聚体
+$`H=J(a_1^*a_2+a_2^*a_1)+\frac U2\sum_jn_j(n_j-1)`$，并且每个模式以速率 $`\gamma`$ 丢失粒子：这是一个
+`InterSectorChannel`，其 Kraus 算子为 $`a_1,a_2`$，限制在 $`N\to N-1`$ 上。由
+[命题 8.9(2)](../../lecture_notes/zh/08_dynamics.md#r-8-9)，扇区权重服从 $`p'=Qp`$，其中对速率 $`1`$ 有 $`Q=R-\mathrm{diag}(\sum_dR_{dc})_c`$，
+$`R`$ = `transition_matrix()`；从 $`N=2`$ 出发，它们服从二项分布 $`p_2=q^2`$，$`p_1=2q(1-q)`$，$`p_0=(1-q)^2`$，
+$`q=e^{-\gamma t}`$，无论隧穿与相互作用如何。代码检验
+$`\Phi^*(1)=0\oplus1\oplus2`$，即在所用的块上 $`a_1^*a_1+a_2^*a_2=N`$，并用两个公式检验 $`p(t)`$。
 
 ```python
 fock = TypeIAlgebra([1, 2, 3], [1, 2, 3], precision='double', charges=[0, 1, 2])   # N = 0, 1, 2
@@ -175,15 +175,15 @@ step = dynamics.rk4(decay, torch.diag(torch.tensor([0.0, 1.0], dtype=c128)), [0.
 assert (step - torch.diag(torch.tensor([-3 / 8, 11 / 8], dtype=c128))).abs().max() < 1e-14   # not positive
 ```
 
-RK4 不能保证保持正性：对 $\rho'=\mathcal L\rho$，步长为 $h$ 的一步是
-$\rho\mapsto T(h\mathcal L)\rho$，其中 $T$ 是 8.1 节的多项式（代入四个阶段即得）；它是
-保迹的（因为对所有 $X$ 有 $\mathrm{Tr}\,\mathcal L(X)=0$），但不一定是正的。例如，在以
-$|g\rangle,|e\rangle$ 为基的 $M_2$ 上，取 $H=0$ 和一个速率为 $\gamma$ 的跳跃 $|g\rangle\langle e|$，则 $\mathcal L$ 把
-$\mathrm{diag}(a,b)$ 映为 $\gamma b\mathrm{diag}(1,-1)$，所以 $h\gamma=3$ 的一步把 $\mathrm{diag}(0,1)$ 映为
-$\mathrm{diag}(1-T(-3),T(-3))=\mathrm{diag}(-\frac38,\frac{11}8)$。*数值观察*：在这次运行中，
-$\rho(t)$ 的最小特征值为 $\approx-2\cdot10^{-8}$（打印出的值，步长至多 $0.02$）。`lindblad_channel` 是精确的，
+RK4 不能保证保持正性：对 $`\rho'=\mathcal L\rho`$，步长为 $`h`$ 的一步是
+$`\rho\mapsto T(h\mathcal L)\rho`$，其中 $`T`$ 是 8.1 节的多项式（代入四个阶段即得）；它是
+保迹的（因为对所有 $`X`$ 有 $`\mathrm{Tr}\,\mathcal L(X)=0`$），但不一定是正的。例如，在以
+$`|g\rangle,|e\rangle`$ 为基的 $`M_2`$ 上，取 $`H=0`$ 和一个速率为 $`\gamma`$ 的跳跃 $`|g\rangle\langle e|`$，则 $`\mathcal L`$ 把
+$`\mathrm{diag}(a,b)`$ 映为 $`\gamma b\mathrm{diag}(1,-1)`$，所以 $`h\gamma=3`$ 的一步把 $`\mathrm{diag}(0,1)`$ 映为
+$`\mathrm{diag}(1-T(-3),T(-3))=\mathrm{diag}(-\frac38,\frac{11}8)`$。*数值观察*：在这次运行中，
+$`\rho(t)`$ 的最小特征值为 $`\approx-2\cdot10^{-8}`$（打印出的值，步长至多 $`0.02`$）。`lindblad_channel` 是精确的，
 但只处理扇区内部的跳跃。最后，我们对扇区之间的一个随机映射检验命题 8.8(2)，
-并对粒子丢失检验命题 8.8(3)，与用 numpy 构造的 $M_6$ 上的 GKSL 生成元进行比较：
+并对粒子丢失检验命题 8.8(3)，与用 numpy 构造的 $`M_6`$ 上的 GKSL 生成元进行比较：
 
 ```python
 Phi = channels.random_inter_sector_channel(fock, fock, kraus_rank=2)
@@ -211,14 +211,14 @@ assert np.abs(full_loss - embed(loss_on_M)).max() < 1e-12         # Proposition 
 
 ## 8.4 后选择与无跳跃演化
 
-*讲义：* [8.4 节](../../lecture_notes/zh/08_dynamics.md#s-8-4)；[命题 8.10](../../lecture_notes/zh/08_dynamics.md#r-8-10)（无跳跃概率 $w_0$）、[命题 8.11](../../lecture_notes/zh/08_dynamics.md#r-8-11)（对"没有粒子丢失"的后选择）。
+*讲义：* [8.4 节](../../lecture_notes/zh/08_dynamics.md#s-8-4)；[命题 8.10](../../lecture_notes/zh/08_dynamics.md#r-8-10)（无跳跃概率 $`w_0`$）、[命题 8.11](../../lecture_notes/zh/08_dynamics.md#r-8-11)（对"没有粒子丢失"的后选择）。
 
-本库的 `states.lueders_update(rho, P)` 返回 $P\rho P/\mathrm{Tr}(P\rho P)$ 和
-$\mathrm{Tr}(\rho P)$。现在让两个模式以不同的速率 $\gamma_1>\gamma_2$ 泄漏；则
-$A=\gamma_1n_1+\gamma_2n_2$ 不是中心元（在扇区 $N=2$ 中，它在基 $|20\rangle,|11\rangle,|02\rangle$ 下是
-$\mathrm{diag}(2\gamma_1,\gamma_1+\gamma_2,2\gamma_2)$），命题 8.9(2) 不适用，而 $N=2$ 上后选择的态是
-由 $H_{\mathrm{eff}}$ 给出的归一化演化，其反厄米部分 $-\frac i2A$ 在该扇区中不是 $1$ 的倍数。我们对 $n=0$ 检验命题 8.11，并通过用 Simpson 公式计算
-$S_1$ 的积分，对 $n=1$ 检验它：
+本库的 `states.lueders_update(rho, P)` 返回 $`P\rho P/\mathrm{Tr}(P\rho P)`$ 和
+$`\mathrm{Tr}(\rho P)`$。现在让两个模式以不同的速率 $`\gamma_1>\gamma_2`$ 泄漏；则
+$`A=\gamma_1n_1+\gamma_2n_2`$ 不是中心元（在扇区 $`N=2`$ 中，它在基 $`|20\rangle,|11\rangle,|02\rangle`$ 下是
+$`\mathrm{diag}(2\gamma_1,\gamma_1+\gamma_2,2\gamma_2)`$），命题 8.9(2) 不适用，而 $`N=2`$ 上后选择的态是
+由 $`H_{\mathrm{eff}}`$ 给出的归一化演化，其反厄米部分 $`-\frac i2A`$ 在该扇区中不是 $`1`$ 的倍数。我们对 $`n=0`$ 检验命题 8.11，并通过用 Simpson 公式计算
+$`S_1`$ 的积分，对 $`n=1`$ 检验它：
 
 ```python
 g1, g2 = 0.6, 0.2                                                  # mode 1 leaks faster
@@ -256,11 +256,11 @@ S1 = scipy.integrate.simpson(S0(2.0 - s_grid, 1, jump(S0(s_grid, 2, rho_20))), x
 assert np.abs(S1 - traj[-1].matrix[0, 1, :2, :2].numpy()).max() < 1e-8     # Proposition 8.11, n = 1
 ```
 
-*数值观察*：在 $t=2$ 时，扇区 $N=2$ 的权重 $p_2(2)=w_0(2)$（"没有损失"）为 $0.230$（见上面的
-打印输出）。若没有隧穿（$J=0$），它将恰好是 $e^{-2\gamma_1t}=e^{-2.4}=0.091$，因为这时 $|20\rangle$ 是
-$H_{\mathrm{eff}}$ 的属于特征值 $U-i\gamma_1$ 的特征向量，且 $w_0(t)=|e^{-it(U-i\gamma_1)}|^2$（命题 8.10）；所以
+*数值观察*：在 $`t=2`$ 时，扇区 $`N=2`$ 的权重 $`p_2(2)=w_0(2)`$（"没有损失"）为 $`0.230`$（见上面的
+打印输出）。若没有隧穿（$`J=0`$），它将恰好是 $`e^{-2\gamma_1t}=e^{-2.4}=0.091`$，因为这时 $`|20\rangle`$ 是
+$`H_{\mathrm{eff}}`$ 的属于特征值 $`U-i\gamma_1`$ 的特征向量，且 $`w_0(t)=|e^{-it(U-i\gamma_1)}|^2`$（命题 8.10）；所以
 这里扇区权重确实依赖于哈密顿量。后选择的态与封闭系统的态之间的迹距离为
-$0.135$（见上面的打印输出）：以 $N=2$ 为条件会改变态，这种改变超出了酉演化。
+$`0.135`$（见上面的打印输出）：以 $`N=2`$ 为条件会改变态，这种改变超出了酉演化。
 
 <a id="s-8-5"></a>
 
@@ -268,11 +268,11 @@ $0.135$（见上面的打印输出）：以 $N=2$ 为条件会改变态，这种
 
 *讲义：* [8.5 节](../../lecture_notes/zh/08_dynamics.md#s-8-5)；[推论 8.13](../../lecture_notes/zh/08_dynamics.md#r-8-13)、[命题 8.14](../../lecture_notes/zh/08_dynamics.md#r-8-14)（自发辐射）。
 
-由[命题 8.14](../../lecture_notes/zh/08_dynamics.md#r-8-14)，$M_2$ 上的自发辐射（$H=\omega|e\rangle\langle e|$，一个速率为 $\gamma$ 的跳跃
-$|g\rangle\langle e|$）满足 $e^{t\mathcal L}=\mathcal U_t\circ\mathcal A_{1-e^{-\gamma t}}$，其谱为
-$\{0,-\gamma,-\gamma/2\pm i\omega\}$，谱隙为 $\gamma/2$。我们用
+由[命题 8.14](../../lecture_notes/zh/08_dynamics.md#r-8-14)，$`M_2`$ 上的自发辐射（$`H=\omega|e\rangle\langle e|`$，一个速率为 $`\gamma`$ 的跳跃
+$`|g\rangle\langle e|`$）满足 $`e^{t\mathcal L}=\mathcal U_t\circ\mathcal A_{1-e^{-\gamma t}}`$，其谱为
+$`\{0,-\gamma,-\gamma/2\pm i\omega\}`$，谱隙为 $`\gamma/2`$。我们用
 `lindblad_superoperator` 检验谱，用 `lindblad_channel` 检验信道与迹距离，并对
-$M_2\oplus M_3$ 扇区内部的随机跳跃检验[推论 8.13](../../lecture_notes/zh/08_dynamics.md#r-8-13)：
+$`M_2\oplus M_3`$ 扇区内部的随机跳跃检验[推论 8.13](../../lecture_notes/zh/08_dynamics.md#r-8-13)：
 
 ```python
 q2 = TypeIAlgebra([2], [2], precision='double')                    # basis |g>, |e>
@@ -308,8 +308,8 @@ assert all(dim >= 1 for dim in kernel)                             # Corollary 8
 ```
 
 *数值观察*：对这些随机跳跃，代码在每个扇区中恰好找到一个稳态。
-由逐扇区应用的定理 D.6（[讲义，8.5 节](../../lecture_notes/zh/08_dynamics.md#s-8-5)），只要每个扇区都有一个忠实的稳态，并且与 $H_c$ 以及所有
-$L_{j,c}$、$L_{j,c}^*$ 可交换的矩阵只有 $1$ 的倍数，这一点就成立；代码检验这两个假设（在浮点运算中，对上面所用的速率 $g_j=1$），
+由逐扇区应用的定理 D.6（[讲义，8.5 节](../../lecture_notes/zh/08_dynamics.md#s-8-5)），只要每个扇区都有一个忠实的稳态，并且与 $`H_c`$ 以及所有
+$`L_{j,c}`$、$`L_{j,c}^*`$ 可交换的矩阵只有 $`1`$ 的倍数，这一点就成立；代码检验这两个假设（在浮点运算中，对上面所用的速率 $`g_j=1`$），
 然后断言其结论。
 
 ```python
@@ -334,25 +334,25 @@ assert kernel == [1, 1]                                            # the conclus
 QuTiP（`sesolve`；`mesolve` 以自适应 ODE 求解器求解 Lindblad 方程；`mcsolve` 用于
 量子轨迹；`steadystate`；`liouvillian`）、dynamiqs（JAX；在 GPU 上成批且可微的
 Schrödinger 与 Lindblad 求解器）、QuantumOptics.jl 以及 SciPy（`scipy.linalg.expm`，以及对稀疏的
-向量化生成元计算 $e^{t\mathcal L}\rho$ 的 `scipy.sparse.linalg.expm_multiply`）在单个 Hilbert 空间上
+向量化生成元计算 $`e^{t\mathcal L}\rho`$ 的 `scipy.sparse.linalg.expm_multiply`）在单个 Hilbert 空间上
 求解同样的方程，对于上面的问题它们必须给出相同的数值。
-在 $\mathcal M$ 上，需要把 $D\times D$ 的块对角矩阵传给它们；这时向量化的生成元
-位于一个 $D^2$ 维空间上（稀疏，但各扇区在一次求解中耦合在一起），除非用户
+在 $`\mathcal M`$ 上，需要把 $`D\times D`$ 的块对角矩阵传给它们；这时向量化的生成元
+位于一个 $`D^2`$ 维空间上（稀疏，但各扇区在一次求解中耦合在一起），除非用户
 手动把问题拆分到各扇区。本库内建了块结构：逐扇区的精确传播子
-与 Lindblad 信道（$k_c^2\times k_c^2$ 超算子），作为
+与 Lindblad 信道（$`k_c^2\times k_c^2`$ 超算子），作为
 `InterSectorChannel` 的扇区间跳跃以及命题 8.8 的压缩，成批的哈密顿量与跳跃
 算子（用于无序平均），以及自动微分（后两者 dynamiqs 也有）。它
 没有自适应步长控制（RK4 是固定步长的，并且只是近似保正），没有轨迹
-求解器，并且 `lindblad_channel` 不接受扇区之间的跳跃；对于这些情形，以 $M_D$ 上的 QuTiP 或 dynamiqs
+求解器，并且 `lindblad_channel` 不接受扇区之间的跳跃；对于这些情形，以 $`M_D`$ 上的 QuTiP 或 dynamiqs
 为参照。
 
 <a id="x-8"></a>
 
 ## 习题
 
-讲义的[习题 2 和 4](../../lecture_notes/zh/08_dynamics.md#x-8)：8.4 节扇区 $N=1$ 中 $H_{\mathrm{eff}}$ 的特征值
-$-\frac i4(\gamma_1+\gamma_2)\pm\sqrt{J^2-\delta^2}$，$\delta=(\gamma_1-\gamma_2)/4$，在 $J=|\delta|$ 处只有一个大小为 $2$ 的
-Jordan 块；以及 $M_2$ 上纯退相位（$L=\sigma_z$）的谱 $\{0,0,-2\gamma\pm i\omega\}$。用数值方法检验这两者。
+讲义的[习题 2 和 4](../../lecture_notes/zh/08_dynamics.md#x-8)：8.4 节扇区 $`N=1`$ 中 $`H_{\mathrm{eff}}`$ 的特征值
+$`-\frac i4(\gamma_1+\gamma_2)\pm\sqrt{J^2-\delta^2}`$，$`\delta=(\gamma_1-\gamma_2)/4`$，在 $`J=|\delta|`$ 处只有一个大小为 $`2`$ 的
+Jordan 块；以及 $`M_2`$ 上纯退相位（$`L=\sigma_z`$）的谱 $`\{0,0,-2\gamma\pm i\omega\}`$。用数值方法检验这两者。
 
 <details>
 <summary>解答</summary>

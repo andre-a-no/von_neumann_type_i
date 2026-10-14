@@ -4,8 +4,8 @@
 
 Este tutorial acompaña al [capítulo 4](../../lecture_notes/es/04_symmetries.md) de los apuntes de clase, que desarrolla la teoría de
 representaciones que hay detrás de las álgebras de simetrías, la convierte en un algoritmo aleatorizado que descompone el
-álgebra de von Neumann generada por cualquier lista de matrices ([proposición 4.9](../../lecture_notes/es/04_symmetries.md#r-4-9)), la aplica a $U(1)$ y
-$SU(2)$, y clasifica los sectores de un álgebra generada por matrices reales en tipo real, complejo y cuaterniónico
+álgebra de von Neumann generada por cualquier lista de matrices ([proposición 4.9](../../lecture_notes/es/04_symmetries.md#r-4-9)), la aplica a $`U(1)`$ y
+$`SU(2)`$, y clasifica los sectores de un álgebra generada por matrices reales en tipo real, complejo y cuaterniónico
 ([teorema 4.20](../../lecture_notes/es/04_symmetries.md#r-4-20)). Calculamos caracteres, ejecutamos la descomposición sobre grupos y sobre generadores,
 construimos cadenas de espines sector por sector con `SpinChain` y `su2.SU2Chain`, y calculamos la estructura real de
 una descomposición.
@@ -17,19 +17,19 @@ una descomposición.
 *Apuntes:* [sección 4.2](../../lecture_notes/es/04_symmetries.md#s-4-2); [teorema 4.3](../../lecture_notes/es/04_symmetries.md#r-4-3), [teorema 4.4](../../lecture_notes/es/04_symmetries.md#r-4-4), [corolario 4.5](../../lecture_notes/es/04_symmetries.md#r-4-5).
 
 La [sección 4.2](../../lecture_notes/es/04_symmetries.md#s-4-2) de los apuntes de clase calcula a mano los caracteres de tres representaciones
-irreducibles de $S_3$ —la trivial, el signo y la representación estándar sobre $(1,1,1)^\perp\subseteq\mathbb C^3$— y de la
-representación $\pi$ que permuta los tres factores de $(\mathbb C^2)^{\otimes3}$, $\chi_\pi(\sigma)=2^{\#\text{cycles}(\sigma)}$
-(tabla de abajo), y obtiene del [corolario 4.5](../../lecture_notes/es/04_symmetries.md#r-4-5) las multiplicidades $m_{\rm triv}=4$, $m_{\rm sgn}=0$,
-$m_{\rm std}=2$ y $\dim\pi(S_3)'=20$. El código recalcula la tabla: obtiene $P_\sigma$ como la restricción de $\pi(\sigma)$
-al subespacio invariante generado por $|100\rangle,|010\rangle,|001\rangle$ (sobre el que $\pi(\sigma)$ permuta las
-posiciones del único $1$, lema B.1(a)), y $\#\text{cycles}(\sigma)=\dim\ker(P_\sigma-1)$ (los vectores constantes en los ciclos).
+irreducibles de $`S_3`$ —la trivial, el signo y la representación estándar sobre $`(1,1,1)^\perp\subseteq\mathbb C^3`$— y de la
+representación $`\pi`$ que permuta los tres factores de $`(\mathbb C^2)^{\otimes3}`$, $`\chi_\pi(\sigma)=2^{\#\text{cycles}(\sigma)}`$
+(tabla de abajo), y obtiene del [corolario 4.5](../../lecture_notes/es/04_symmetries.md#r-4-5) las multiplicidades $`m_{\rm triv}=4`$, $`m_{\rm sgn}=0`$,
+$`m_{\rm std}=2`$ y $`\dim\pi(S_3)'=20`$. El código recalcula la tabla: obtiene $`P_\sigma`$ como la restricción de $`\pi(\sigma)`$
+al subespacio invariante generado por $`|100\rangle,|010\rangle,|001\rangle`$ (sobre el que $`\pi(\sigma)`$ permuta las
+posiciones del único $`1`$, lema B.1(a)), y $`\#\text{cycles}(\sigma)=\dim\ker(P_\sigma-1)`$ (los vectores constantes en los ciclos).
 
-| | identidad ($1$) | transposiciones ($3$) | $3$-ciclos ($2$) |
+| | identidad ($`1`$) | transposiciones ($`3`$) | $`3`$-ciclos ($`2`$) |
 |---|---|---|---|
-| $\chi_{\rm triv}$ | $1$ | $1$ | $1$ |
-| $\mathrm{sgn}$ | $1$ | $-1$ | $1$ |
-| $\chi_{\rm std}$ | $2$ | $0$ | $-1$ |
-| $\chi_\pi$ | $8$ | $4$ | $2$ |
+| $`\chi_{\rm triv}`$ | $`1`$ | $`1`$ | $`1`$ |
+| $`\mathrm{sgn}`$ | $`1`$ | $`-1`$ | $`1`$ |
+| $`\chi_{\rm std}`$ | $`2`$ | $`0`$ | $`-1`$ |
+| $`\chi_\pi`$ | $`8`$ | $`4`$ | $`2`$ |
 
 ```python
 import math
@@ -67,17 +67,17 @@ Es la descomposición de la sección 2.4, obtenida ahora a partir de una tabla d
 
 El algoritmo aleatorizado de los apuntes de clase es `decompose.wedderburn`, con las interfaces `from_group` (todos los
 elementos de un grupo finito; el conmutante se muestrea con el twirl `decompose.twirl`) y `from_generators` (cualquier
-lista de matrices; el conmutante es un núcleo, `decompose.commutant_basis`). Divide $\mathbb C^n$ en los subespacios
-propios de un $K\in\mathcal A'_h$ aleatorio, los agrupa y los alinea con los bloques de un $Y\in\mathcal A'$ aleatorio, y
-devuelve una `Decomposition` con la unitaria `V`, los $k_c$ (`k_factors`) y los $m_c$ (`multiplicities`). En coma
+lista de matrices; el conmutante es un núcleo, `decompose.commutant_basis`). Divide $`\mathbb C^n`$ en los subespacios
+propios de un $`K\in\mathcal A'_h`$ aleatorio, los agrupa y los alinea con los bloques de un $`Y\in\mathcal A'`$ aleatorio, y
+devuelve una `Decomposition` con la unitaria `V`, los $`k_c`$ (`k_factors`) y los $`m_c`$ (`multiplicities`). En coma
 flotante trata como iguales los valores propios más cercanos que una tolerancia y divide los subespacios resultantes
 comprimiendo en ellos nuevos elementos aleatorios del conmutante ([lema 4.8(a)](../../lecture_notes/es/04_symmetries.md#r-4-8)).
 
 `Decomposition.verify()` informa de las distancias relativas de los generadores (y de nuevos elementos del
-conmutante) a $\mathcal B$ (resp. $\mathcal B'$), y compara $\sum_cm_c^2$ con $\dim\mathcal A'$ (a partir de los
-caracteres para un grupo, corolario 4.5(c); a partir del núcleo para generadores). Lo ejecutamos sobre $S_3$ y tres
-cúbits, y luego miramos dentro: los subespacios propios de un $K$ aleatorio y los operadores de entrelazamiento de
-un $Y$ aleatorio.
+conmutante) a $`\mathcal B`$ (resp. $`\mathcal B'`$), y compara $`\sum_cm_c^2`$ con $`\dim\mathcal A'`$ (a partir de los
+caracteres para un grupo, corolario 4.5(c); a partir del núcleo para generadores). Lo ejecutamos sobre $`S_3`$ y tres
+cúbits, y luego miramos dentro: los subespacios propios de un $`K`$ aleatorio y los operadores de entrelazamiento de
+un $`Y`$ aleatorio.
 
 ```python
 D = dc.from_group(G)                                     # the twirl samples pi(S_3)'
@@ -105,23 +105,23 @@ assert s[1] > 1e-3 and abs(s[0] - s[1]) < 1e-10
 assert all(close(W.mH @ Y @ Wa, 0) for W in spaces if W.shape[1] == 1)   # different summands: zero
 ```
 
-El conmutante domina el coste: una muestra del twirl cuesta $|G|$ productos de matrices $n\times n$. Para generadores,
-la biblioteca diagonaliza primero un elemento hermítico $R=U\mathrm{diag}(\lambda)U^*$ de $\mathcal A$ (una
+El conmutante domina el coste: una muestra del twirl cuesta $`|G|`$ productos de matrices $`n\times n`$. Para generadores,
+la biblioteca diagonaliza primero un elemento hermítico $`R=U\mathrm{diag}(\lambda)U^*`$ de $`\mathcal A`$ (una
 combinación real aleatoria de las partes hermíticas de los generadores más un múltiplo de un producto simetrizado de
-dos de tales combinaciones). Todo $X\in\mathcal A'$ conmuta con $R$, y por tanto con sus proyecciones espectrales
-(teorema 1.5(d)), así que $U^*XU$ es diagonal por bloques respecto de los subespacios propios de $R$, de dimensiones
-$d_\lambda$; esto se impone de antemano, y el problema del núcleo tiene $N_R=\sum_\lambda d_\lambda^2$ incógnitas en
-lugar de $n^2$. Agrupar varios valores propios solo agranda los bloques, así que el problema reducido tiene el mismo
-conjunto de soluciones $\mathcal A'$. En la descomposición, $V^*RV=\bigoplus_cr_c\otimes1_{m_c}$ con $r_c\in M_{k_c}$
-hermíticas; si $\lambda$ tiene multiplicidad $\mu_c(\lambda)$ en $r_c$, entonces $d_\lambda=\sum_c\mu_c(\lambda)m_c$ y,
-como $\mu^2\ge\mu$ para enteros $\mu\ge0$,
-$$
+dos de tales combinaciones). Todo $`X\in\mathcal A'`$ conmuta con $`R`$, y por tanto con sus proyecciones espectrales
+(teorema 1.5(d)), así que $`U^*XU`$ es diagonal por bloques respecto de los subespacios propios de $`R`$, de dimensiones
+$`d_\lambda`$; esto se impone de antemano, y el problema del núcleo tiene $`N_R=\sum_\lambda d_\lambda^2`$ incógnitas en
+lugar de $`n^2`$. Agrupar varios valores propios solo agranda los bloques, así que el problema reducido tiene el mismo
+conjunto de soluciones $`\mathcal A'`$. En la descomposición, $`V^*RV=\bigoplus_cr_c\otimes1_{m_c}`$ con $`r_c\in M_{k_c}`$
+hermíticas; si $`\lambda`$ tiene multiplicidad $`\mu_c(\lambda)`$ en $`r_c`$, entonces $`d_\lambda=\sum_c\mu_c(\lambda)m_c`$ y,
+como $`\mu^2\ge\mu`$ para enteros $`\mu\ge0`$,
+```math
 N_R=\sum_\lambda\Big(\sum_c\mu_c(\lambda)m_c\Big)^2\ge\sum_{\lambda,c}\mu_c(\lambda)^2m_c^2\ge\sum_{\lambda,c}\mu_c(\lambda)m_c^2=\sum_ck_cm_c^2,
-$$
-con igualdad si y solo si los valores propios de todas las $r_c$ son simples y distintos dos a dos. Para el espín
-total de $L=3,4,5$ espines, el código de abajo encuentra la igualdad (observación numérica). Incluso el mínimo es
-grande: para ocho espines $\frac12$ ($n=256$), $\sum_ck_cm_c^2=4900$, y el sistema reducido, una matriz
-$(n^2+N_R)\times N_R$, tiene $3.5\cdot10^8$ entradas complejas. Por eso, para cadenas de espines, la sección 4.6 usa
+```
+con igualdad si y solo si los valores propios de todas las $`r_c`$ son simples y distintos dos a dos. Para el espín
+total de $`L=3,4,5`$ espines, el código de abajo encuentra la igualdad (observación numérica). Incluso el mínimo es
+grande: para ocho espines $`\frac12`$ ($`n=256`$), $`\sum_ck_cm_c^2=4900`$, y el sistema reducido, una matriz
+$`(n^2+N_R)\times N_R`$, tiene $`3.5\cdot10^8`$ entradas complejas. Por eso, para cadenas de espines, la sección 4.6 usa
 el módulo `su2`, que conoce la respuesta de antemano.
 
 ```python
@@ -135,15 +135,15 @@ for n in (3, 4, 5):
 
 <a id="s-4-4"></a>
 
-## 4.4 $U(1)$ y sectores de carga
+## 4.4 $`U(1)`$ y sectores de carga
 
 *Apuntes:* [sección 4.4](../../lecture_notes/es/04_symmetries.md#s-4-4); [proposición 4.10](../../lecture_notes/es/04_symmetries.md#r-4-10).
 
-Para $n$ cúbits, la carga es el operador número $\hat N=\sum_jn_j$, con $n_j=|1\rangle\langle1|$ sobre el cúbit $j$, y los
-operadores que la conservan forman $U(1)'\cong\bigoplus_{w=0}^nM_{\binom nw}(\mathbb C)$ ([apuntes de clase, sección 4.4](../../lecture_notes/es/04_symmetries.md#s-4-4)),
-que es `chains.SpinChain(n).algebra` (bit $1$ = espín hacia arriba, $\hat N=S^z+\frac n2$; en `decompose.total_spin`, en
-cambio, el espín hacia arriba es el *primer* vector de la base de $\mathbb C^2$, lo que reetiqueta la base pero no los
-sectores). Todo hamiltoniano XXZ está en $U(1)'$. El código encuentra los sectores a partir únicamente de $\hat N$ y
+Para $`n`$ cúbits, la carga es el operador número $`\hat N=\sum_jn_j`$, con $`n_j=|1\rangle\langle1|`$ sobre el cúbit $`j`$, y los
+operadores que la conservan forman $`U(1)'\cong\bigoplus_{w=0}^nM_{\binom nw}(\mathbb C)`$ ([apuntes de clase, sección 4.4](../../lecture_notes/es/04_symmetries.md#s-4-4)),
+que es `chains.SpinChain(n).algebra` (bit $`1`$ = espín hacia arriba, $`\hat N=S^z+\frac n2`$; en `decompose.total_spin`, en
+cambio, el espín hacia arriba es el *primer* vector de la base de $`\mathbb C^2`$, lo que reetiqueta la base pero no los
+sectores). Todo hamiltoniano XXZ está en $`U(1)'`$. El código encuentra los sectores a partir únicamente de $`\hat N`$ y
 diagonaliza sector por sector un anillo XXZ de cuatro espines.
 
 ```python
@@ -175,14 +175,14 @@ assert close(torch.sort(E_sec).values, torch.linalg.eigvalsh(H))
 
 <a id="s-4-5"></a>
 
-## 4.5 $SU(2)$: el espín
+## 4.5 $`SU(2)`$: el espín
 
-*Apuntes:* [sección 4.5](../../lecture_notes/es/04_symmetries.md#s-4-5); [teorema 4.11](../../lecture_notes/es/04_symmetries.md#r-4-11), [proposición 4.13](../../lecture_notes/es/04_symmetries.md#r-4-13), [teorema 4.14](../../lecture_notes/es/04_symmetries.md#r-4-14). El espín $s$ es `decompose.spin_matrices(s)`, y el espín total de $L$ espines $\frac12$ es `decompose.total_spin(L)`.
+*Apuntes:* [sección 4.5](../../lecture_notes/es/04_symmetries.md#s-4-5); [teorema 4.11](../../lecture_notes/es/04_symmetries.md#r-4-11), [proposición 4.13](../../lecture_notes/es/04_symmetries.md#r-4-13), [teorema 4.14](../../lecture_notes/es/04_symmetries.md#r-4-14). El espín $`s`$ es `decompose.spin_matrices(s)`, y el espín total de $`L`$ espines $`\frac12`$ es `decompose.total_spin(L)`.
 
-Para $L=4$, según los [apuntes de clase, proposición 4.13](../../lecture_notes/es/04_symmetries.md#r-4-13), $\{S_x,S_y,S_z\}''\cong M_5\oplus M_3\oplus M_1$
-con multiplicidades $1,3,2$, de dimensión $35$, y el conmutante es $\{S_x,S_y,S_z\}'\cong M_1\oplus M_3\oplus M_2$, de
-dimensión $14$. La biblioteca encuentra lo mismo a partir únicamente de los tres generadores (sectores ordenados por
-$(k_c,m_c)$), y $\mathbf S^2=S(S+1)$ sobre el espín $S$ ([teorema 4.11](../../lecture_notes/es/04_symmetries.md#r-4-11)):
+Para $`L=4`$, según los [apuntes de clase, proposición 4.13](../../lecture_notes/es/04_symmetries.md#r-4-13), $`\{S_x,S_y,S_z\}''\cong M_5\oplus M_3\oplus M_1`$
+con multiplicidades $`1,3,2`$, de dimensión $`35`$, y el conmutante es $`\{S_x,S_y,S_z\}'\cong M_1\oplus M_3\oplus M_2`$, de
+dimensión $`14`$. La biblioteca encuentra lo mismo a partir únicamente de los tres generadores (sectores ordenados por
+$`(k_c,m_c)`$), y $`\mathbf S^2=S(S+1)`$ sobre el espín $`S`$ ([teorema 4.11](../../lecture_notes/es/04_symmetries.md#r-4-11)):
 
 ```python
 S4 = dc.total_spin(4)
@@ -199,8 +199,8 @@ for c, k in enumerate(D4.k_factors):
 ```
 
 Según los [apuntes de clase, teorema 4.14](../../lecture_notes/es/04_symmetries.md#r-4-14) (dualidad de Schur–Weyl), las permutaciones de los
-sitios generan el conmutante del espín total: $\mathrm{span}\,\pi(S_L)=\{S_x,S_y,S_z\}'$. Para $L\le5$ el código compara
-numéricamente los dos espacios: por la parte (a) del teorema, $\mathrm{span}\,\pi(S_L)\subseteq\{S_x,S_y,S_z\}'$, basta con
+sitios generan el conmutante del espín total: $`\mathrm{span}\,\pi(S_L)=\{S_x,S_y,S_z\}'`$. Para $`L\le5`$ el código compara
+numéricamente los dos espacios: por la parte (a) del teorema, $`\mathrm{span}\,\pi(S_L)\subseteq\{S_x,S_y,S_z\}'`$, basta con
 que tengan la misma dimensión.
 
 ```python
@@ -215,12 +215,12 @@ print(Dp)
 assert sorted(zip(Dp.multiplicities, Dp.k_factors)) == sorted(zip(D4.k_factors, D4.multiplicities))
 ```
 
-Las dimensiones impresas son $2,5,14,42$, los números de Catalan $\binom{2L}L/(L+1)$; el corolario B.10 demuestra
-$\dim\{S_a\}'=\sum_Sm_S^2=\binom{2L}L/(L+1)$ para todo $L$. La última línea es la
-dualidad en acción: $\pi(S_4)''$ tiene bloques $k=(1,2,3)$ con multiplicidades $(5,1,3)$, los pares $(k_c,m_c)$ del
-espín total con los papeles intercambiados. En general (corolario B.9), el espacio de multiplicidad del espín $S$
-porta una representación irreducible de $S_L$, de dimensión $m_S$, y estas son no equivalentes dos a dos; aquí las
-dimensiones son $1,3,2$ para $S=2,1,0$.
+Las dimensiones impresas son $`2,5,14,42`$, los números de Catalan $`\binom{2L}L/(L+1)`$; el corolario B.10 demuestra
+$`\dim\{S_a\}'=\sum_Sm_S^2=\binom{2L}L/(L+1)`$ para todo $`L`$. La última línea es la
+dualidad en acción: $`\pi(S_4)''`$ tiene bloques $`k=(1,2,3)`$ con multiplicidades $`(5,1,3)`$, los pares $`(k_c,m_c)`$ del
+espín total con los papeles intercambiados. En general (corolario B.9), el espacio de multiplicidad del espín $`S`$
+porta una representación irreducible de $`S_L`$, de dimensión $`m_S`$, y estas son no equivalentes dos a dos; aquí las
+dimensiones son $`1,3,2`$ para $`S=2,1,0`$.
 
 <a id="s-4-6"></a>
 
@@ -229,10 +229,10 @@ dimensiones son $1,3,2$ para $S=2,1,0$.
 *Apuntes:* [sección 4.6](../../lecture_notes/es/04_symmetries.md#s-4-6); [proposición 4.15](../../lecture_notes/es/04_symmetries.md#r-4-15), [teorema 4.16](../../lecture_notes/es/04_symmetries.md#r-4-16), [corolario 4.17](../../lecture_notes/es/04_symmetries.md#r-4-17).
 
 Según los [apuntes de clase, corolario 4.17](../../lecture_notes/es/04_symmetries.md#r-4-17), las bases ortonormales de los vectores de peso máximo de
-$L$ espines $\frac12$ pueden construirse sitio a sitio con los coeficientes de Clebsch–Gordan del [teorema 4.16](../../lecture_notes/es/04_symmetries.md#r-4-16).
-Etiquetar cada vector de la base por su sucesión de espines intermedios $S_1=\frac12,S_2,\dots,S_L=S$ da la base de
+$`L`$ espines $`\frac12`$ pueden construirse sitio a sitio con los coeficientes de Clebsch–Gordan del [teorema 4.16](../../lecture_notes/es/04_symmetries.md#r-4-16).
+Etiquetar cada vector de la base por su sucesión de espines intermedios $`S_1=\frac12,S_2,\dots,S_L=S`$ da la base de
 Yamanouchi que construye `su2.SU2Chain` (su código fuente usa exactamente estos coeficientes; el código de abajo solo
-comprueba las conclusiones del corolario 4.17), dentro del sector $U(1)$ $\hat N=\frac L2+S$ de `SpinChain` (cuya
+comprueba las conclusiones del corolario 4.17), dentro del sector $`U(1)`$ $`\hat N=\frac L2+S`$ de `SpinChain` (cuya
 ordenación de los sitios es un reetiquetado de los factores tensoriales, que conmuta con el espín total por el lema
 B.1(b)). El código comprueba el teorema 4.16 frente a matrices densas y frente a `su2.clebsch_gordan` de la biblioteca, y
 después las conclusiones del corolario 4.17 para las bases de ocho espines. Comprobamos también la
@@ -308,74 +308,74 @@ print(u1.algebra.k_factors, sym.multiplicities, flops(u1.algebra.k_factors), flo
 print(f"ground state energy {E_su2[0].item():.6f}, first excited {E_su2[1].item():.6f} (x3)")
 ```
 
-Para el anillo de ocho espines, los bloques de $U(1)$ tienen tamaños $\binom8w=1,8,28,56,70,56,28,8,1$ (sección 4.4), y
-los bloques de $SU(2)$ tamaños $m_S=14,28,20,7,1$ para $S=0,\dots,4$ (proposición 4.13). El coste de diagonalizar,
-$\sum k^3$, baja de $739162$ a $33040$, en un factor $22$; la dimensión del álgebra, $\sum k^2$, de
-$\sum_w\binom8w\binom8{8-w}=\binom{16}8=12870$ (elegir $8$ de $16$ elementos, $w$ de ellos entre los $8$ primeros) a
-$\sum_Sm_S^2=1430=\binom{16}8/9$ (corolario B.10). Por el teorema 9.9 (el anillo tiene longitud par y $J>0$), el estado
-fundamental es un único singlete y $E_0(0)<E_0(1)$. *Observación numérica* (calculada por el código de
-arriba): la energía fundamental es $-3.651093$, y el primer nivel excitado es un triplete en $-3.128419$.
+Para el anillo de ocho espines, los bloques de $`U(1)`$ tienen tamaños $`\binom8w=1,8,28,56,70,56,28,8,1`$ (sección 4.4), y
+los bloques de $`SU(2)`$ tamaños $`m_S=14,28,20,7,1`$ para $`S=0,\dots,4`$ (proposición 4.13). El coste de diagonalizar,
+$`\sum k^3`$, baja de $`739162`$ a $`33040`$, en un factor $`22`$; la dimensión del álgebra, $`\sum k^2`$, de
+$`\sum_w\binom8w\binom8{8-w}=\binom{16}8=12870`$ (elegir $`8`$ de $`16`$ elementos, $`w`$ de ellos entre los $`8`$ primeros) a
+$`\sum_Sm_S^2=1430=\binom{16}8/9`$ (corolario B.10). Por el teorema 9.9 (el anillo tiene longitud par y $`J>0`$), el estado
+fundamental es un único singlete y $`E_0(0)<E_0(1)`$. *Observación numérica* (calculada por el código de
+arriba): la energía fundamental es $`-3.651093`$, y el primer nivel excitado es un triplete en $`-3.128419`$.
 
 <a id="s-4-7"></a>
 
 ## 4.7 Álgebras reales: tipo real, complejo y cuaterniónico
 
-*Apuntes:* [sección 4.7](../../lecture_notes/es/04_symmetries.md#s-4-7). Para una $*$-álgebra $\mathcal A$ cerrada para la conjugación compleja,
-con una descomposición $V$ cuyos bloques de columnas $V_c$ pertenecen a los sectores, el [teorema 4.20](../../lecture_notes/es/04_symmetries.md#r-4-20) da la
-permutación $\sigma$ de los sectores con $\bar P_c=P_{\sigma(c)}$, unitarias $J_c$, $M_c$ con $\overline{V_c}=V_{\sigma(c)}(J_c\otimes M_c)$
-y, para $\sigma(c)=c$, el signo $\varepsilon_c$ con $J_c\bar J_c=\varepsilon_c1$; los tipos y el álgebra real $\mathcal A_{\mathbb R}$
+*Apuntes:* [sección 4.7](../../lecture_notes/es/04_symmetries.md#s-4-7). Para una $`*`$-álgebra $`\mathcal A`$ cerrada para la conjugación compleja,
+con una descomposición $`V`$ cuyos bloques de columnas $`V_c`$ pertenecen a los sectores, el [teorema 4.20](../../lecture_notes/es/04_symmetries.md#r-4-20) da la
+permutación $`\sigma`$ de los sectores con $`\bar P_c=P_{\sigma(c)}`$, unitarias $`J_c`$, $`M_c`$ con $`\overline{V_c}=V_{\sigma(c)}(J_c\otimes M_c)`$
+y, para $`\sigma(c)=c`$, el signo $`\varepsilon_c`$ con $`J_c\bar J_c=\varepsilon_c1`$; los tipos y el álgebra real $`\mathcal A_{\mathbb R}`$
 están en el [teorema 4.21](../../lecture_notes/es/04_symmetries.md#r-4-21), el lema de Schur real es el [teorema 4.22](../../lecture_notes/es/04_symmetries.md#r-4-22), y los
 elementos reales del conmutante los describe la [proposición 4.23](../../lecture_notes/es/04_symmetries.md#r-4-23).
 
-`Decomposition.real_structure()` calcula $\sigma$, $J_c$, $M_c$ y los tipos para una descomposición devuelta por
+`Decomposition.real_structure()` calcula $`\sigma`$, $`J_c`$, $`M_c`$ y los tipos para una descomposición devuelta por
 `wedderburn` (`from_generators`, `from_group`). Comprueba que los conjugados de los generadores almacenados están en
-$V(\bigoplus_cM_{k_c}\otimes1)V^*$ (residuo relativo `'conjugation'`) y forma la unitaria $P=V^*\bar V$, cuyo bloque
-de columnas $c$ es $V^*\overline{V_c}$: por el teorema 4.20(a), está soportado en las filas del sector $\sigma(c)$,
-donde es igual a $J_c\otimes M_c$. La biblioteca toma como $\sigma(c)$ el sector que lleva la mayor parte del bloque,
-exige $(k_{\sigma(c)},m_{\sigma(c)})=(k_c,m_c)$ y acota el resto (`'leak'`); reordena el bloque en la matriz
-$k_c^2\times m_c^2$ de entradas $T_{(a,b),(j,l)}=T_{(a,j),(b,l)}$, que para $T=J\otimes M$ es la matriz de rango uno
-$\mathrm{vec}\,J\,(\mathrm{vec}\,M)^T$, lee $J_c$ y $M_c$ en sus vectores singulares principales (con
-$\|J_c\|_F^2=k_c$), y registra la distancia del bloque a $J_c\otimes M_c$ (`'kron'`). Si uno de estos tres residuos
+$`V(\bigoplus_cM_{k_c}\otimes1)V^*`$ (residuo relativo `'conjugation'`) y forma la unitaria $`P=V^*\bar V`$, cuyo bloque
+de columnas $`c`$ es $`V^*\overline{V_c}`$: por el teorema 4.20(a), está soportado en las filas del sector $`\sigma(c)`$,
+donde es igual a $`J_c\otimes M_c`$. La biblioteca toma como $`\sigma(c)`$ el sector que lleva la mayor parte del bloque,
+exige $`(k_{\sigma(c)},m_{\sigma(c)})=(k_c,m_c)`$ y acota el resto (`'leak'`); reordena el bloque en la matriz
+$`k_c^2\times m_c^2`$ de entradas $`T_{(a,b),(j,l)}=T_{(a,j),(b,l)}`$, que para $`T=J\otimes M`$ es la matriz de rango uno
+$`\mathrm{vec}\,J\,(\mathrm{vec}\,M)^T`$, lee $`J_c`$ y $`M_c`$ en sus vectores singulares principales (con
+$`\|J_c\|_F^2=k_c`$), y registra la distancia del bloque a $`J_c\otimes M_c`$ (`'kron'`). Si uno de estos tres residuos
 supera la tolerancia, los tamaños no coinciden o los compañeros no forman una involución, lanza `ValueError` (el
-álgebra no es cerrada para la conjugación). Para $\sigma(c)=c$ toma como $\varepsilon_c$ el signo de
-$\mathrm{Re}\,\mathrm{Tr}(J_c\bar J_c)/k_c$ —exactamente $\pm1$ en aritmética exacta, de modo que los dos
-candidatos distan $2$— y registra como `'sign'` el máximo sobre estos sectores de
-$\|J_c\bar J_c-\varepsilon_c\|_F/\sqrt{k_c}$ y $\|M_c\bar M_c-\varepsilon_c\|_F/\sqrt{m_c}$, elevado al menos a $1$ si
-algún $\varepsilon_c=-1$ con $k_c$ o $m_c$ impar (imposible por el teorema 4.20(b)). El resultado tiene `types`,
-`partner` ($\sigma$), `J`, `M`, `residuals` y `ok`, que indica que todos los residuos son a lo sumo la tolerancia (por
+álgebra no es cerrada para la conjugación). Para $`\sigma(c)=c`$ toma como $`\varepsilon_c`$ el signo de
+$`\mathrm{Re}\,\mathrm{Tr}(J_c\bar J_c)/k_c`$ —exactamente $`\pm1`$ en aritmética exacta, de modo que los dos
+candidatos distan $`2`$— y registra como `'sign'` el máximo sobre estos sectores de
+$`\|J_c\bar J_c-\varepsilon_c\|_F/\sqrt{k_c}`$ y $`\|M_c\bar M_c-\varepsilon_c\|_F/\sqrt{m_c}`$, elevado al menos a $`1`$ si
+algún $`\varepsilon_c=-1`$ con $`k_c`$ o $`m_c`$ impar (imposible por el teorema 4.20(b)). El resultado tiene `types`,
+`partner` ($`\sigma`$), `J`, `M`, `residuals` y `ok`, que indica que todos los residuos son a lo sumo la tolerancia (por
 defecto, el umbral de aceptación de la descomposición); entonces
-$|\mathrm{Tr}(J_c\bar J_c)/k_c-\varepsilon_c|\le\|J_c\bar J_c-\varepsilon_c\|_F/\sqrt{k_c}$ (Cauchy–Schwarz)
+$`|\mathrm{Tr}(J_c\bar J_c)/k_c-\varepsilon_c|\le\|J_c\bar J_c-\varepsilon_c\|_F/\sqrt{k_c}`$ (Cauchy–Schwarz)
 también es a lo sumo la tolerancia.
 
-`Decomposition.real_basis()` devuelve una matriz ortogonal real $O$ de tamaño $n\times n$ y una lista que describe sus
+`Decomposition.real_basis()` devuelve una matriz ortogonal real $`O`$ de tamaño $`n\times n`$ y una lista que describe sus
 bloques de columnas (tipo, sectores, rango de columnas): para un sector de tipo real, las columnas
-$O_c=V_c(W_J\otimes W_M)$ del teorema 4.21(a), de modo que $O_c^TaO_c=\alpha_c(a)\otimes1_{m_c}$ con $\alpha_c(a)$
-real; para un sector de tipo cuaterniónico, las columnas $V_cW$ con $J_c\otimes M_c=WW^T$ y $(J_c\otimes M_c)\bar W=W$
-(lema 4.19(c) con $\varepsilon=1$, pues $(J_c\otimes M_c)\overline{(J_c\otimes M_c)}=\varepsilon_c^2=1$), que son
-reales por el cálculo del teorema 4.21(a); y para un par $c,\sigma(c)$ (con $c<\sigma(c)$), las columnas
-$\sqrt2\mathrm{Re}\,V_c$ seguidas de $\sqrt2\mathrm{Im}\,V_c$. Son ortonormales:
-$V_c^*\overline{V_c}=V_c^*V_{\sigma(c)}(J_c\otimes M_c)=0$ y $V_c^T\overline{V_c}=\overline{V_c^*V_c}=1$, junto con
+$`O_c=V_c(W_J\otimes W_M)`$ del teorema 4.21(a), de modo que $`O_c^TaO_c=\alpha_c(a)\otimes1_{m_c}`$ con $`\alpha_c(a)`$
+real; para un sector de tipo cuaterniónico, las columnas $`V_cW`$ con $`J_c\otimes M_c=WW^T`$ y $`(J_c\otimes M_c)\bar W=W`$
+(lema 4.19(c) con $`\varepsilon=1`$, pues $`(J_c\otimes M_c)\overline{(J_c\otimes M_c)}=\varepsilon_c^2=1`$), que son
+reales por el cálculo del teorema 4.21(a); y para un par $`c,\sigma(c)`$ (con $`c<\sigma(c)`$), las columnas
+$`\sqrt2\mathrm{Re}\,V_c`$ seguidas de $`\sqrt2\mathrm{Im}\,V_c`$. Son ortonormales:
+$`V_c^*\overline{V_c}=V_c^*V_{\sigma(c)}(J_c\otimes M_c)=0`$ y $`V_c^T\overline{V_c}=\overline{V_c^*V_c}=1`$, junto con
 sus conjugadas, dan
-$(\mathrm{Re}\,V_c)^T\mathrm{Re}\,V_c=(\mathrm{Im}\,V_c)^T\mathrm{Im}\,V_c=\frac12$ y
-$(\mathrm{Re}\,V_c)^T\mathrm{Im}\,V_c=0$; las columnas de bloques distintos están en las imágenes de las
-proyecciones ortogonales $P_{\mathcal O}=\sum_{e\in\mathcal O}P_e$ de órbitas distintas $\mathcal O$ de $\sigma$ (pues
-$\overline{V_c}=V_{\sigma(c)}(J_c\otimes M_c)$), así que $O$ es ortogonal. Tomando partes real e imaginaria de
-$aV_c=V_cx$, $x=\pi_c(a)\otimes1_{m_c}$, para $a$ real,
-$$
+$`(\mathrm{Re}\,V_c)^T\mathrm{Re}\,V_c=(\mathrm{Im}\,V_c)^T\mathrm{Im}\,V_c=\frac12`$ y
+$`(\mathrm{Re}\,V_c)^T\mathrm{Im}\,V_c=0`$; las columnas de bloques distintos están en las imágenes de las
+proyecciones ortogonales $`P_{\mathcal O}=\sum_{e\in\mathcal O}P_e`$ de órbitas distintas $`\mathcal O`$ de $`\sigma`$ (pues
+$`\overline{V_c}=V_{\sigma(c)}(J_c\otimes M_c)`$), así que $`O`$ es ortogonal. Tomando partes real e imaginaria de
+$`aV_c=V_cx`$, $`x=\pi_c(a)\otimes1_{m_c}`$, para $`a`$ real,
+```math
 O^TaO=\begin{pmatrix}\mathrm{Re}\,x&\mathrm{Im}\,x\\-\mathrm{Im}\,x&\mathrm{Re}\,x\end{pmatrix}\quad\text{on these columns.}
-$$
-Los factores de Takagi $W$ con $WW^T=J$ de una unitaria simétrica $J=X+iY$ se calculan a partir de una diagonalización
-ortogonal de $X+tY$ para un $t$ aleatorio ($X$ e $Y$ son matrices reales simétricas que conmutan, pues la parte
-imaginaria de $J\bar J=JJ^*=1$ es $YX-XY$); la biblioteca acepta el resultado según sus residuos
-$\|WW^T-J\|_F/\|J\|_F$ y $\|\mathrm{Im}(V_cW)\|_F/\sqrt{k_cm_c}$ y emite un aviso (`DecompositionWarning`) si
-uno de ellos supera $\max(\text{tolerancia},10^3\,\epsilon_{\rm mach}\,n)$.
+```
+Los factores de Takagi $`W`$ con $`WW^T=J`$ de una unitaria simétrica $`J=X+iY`$ se calculan a partir de una diagonalización
+ortogonal de $`X+tY`$ para un $`t`$ aleatorio ($`X`$ e $`Y`$ son matrices reales simétricas que conmutan, pues la parte
+imaginaria de $`J\bar J=JJ^*=1`$ es $`YX-XY`$); la biblioteca acepta el resultado según sus residuos
+$`\|WW^T-J\|_F/\|J\|_F`$ y $`\|\mathrm{Im}(V_cW)\|_F/\sqrt{k_cm_c}`$ y emite un aviso (`DecompositionWarning`) si
+uno de ellos supera $`\max(\text{tolerancia},10^3\,\epsilon_{\rm mach}\,n)`$.
 
 La [sección 4.7](../../lecture_notes/es/04_symmetries.md#s-4-7) de los apuntes de clase estudia tres álgebras generadas por matrices reales: (i)
-$L_a\otimes1_2$ sobre $\mathbb R^3\otimes\mathbb R^2$, con los generadores $(L_a)_{bc}=-\epsilon_{abc}$ de las rotaciones de
-$\mathbb R^3$: un sector de tipo real, $k=3$, $m=2$; (ii) $\Omega_2\otimes1_2$ sobre $\mathbb R^2\otimes\mathbb R^2$: un par de
-tipo complejo, $k=1$, $m=2$; (iii) las multiplicaciones por la izquierda $1_2\otimes L_q$ por los cuaterniones sobre
-$\mathbb H^2=\mathbb R^8$: un sector de tipo cuaterniónico, $k=2$, $m=4$. El código calcula la descomposición y la
-estructura real de cada una, y comprueba el teorema 4.20(a),(b) y la forma por bloques de $O^TaO$ para el tipo real
+$`L_a\otimes1_2`$ sobre $`\mathbb R^3\otimes\mathbb R^2`$, con los generadores $`(L_a)_{bc}=-\epsilon_{abc}`$ de las rotaciones de
+$`\mathbb R^3`$: un sector de tipo real, $`k=3`$, $`m=2`$; (ii) $`\Omega_2\otimes1_2`$ sobre $`\mathbb R^2\otimes\mathbb R^2`$: un par de
+tipo complejo, $`k=1`$, $`m=2`$; (iii) las multiplicaciones por la izquierda $`1_2\otimes L_q`$ por los cuaterniones sobre
+$`\mathbb H^2=\mathbb R^8`$: un sector de tipo cuaterniónico, $`k=2`$, $`m=4`$. El código calcula la descomposición y la
+estructura real de cada una, y comprueba el teorema 4.20(a),(b) y la forma por bloques de $`O^TaO`$ para el tipo real
 (teorema 4.21(a)) y para el par.
 
 ```python
@@ -426,10 +426,10 @@ assert close(O_t.T @ real_examples['C'][0][0] @ O_t,
              torch.cat([torch.cat([x_t.real, x_t.imag], 1), torch.cat([-x_t.imag, x_t.real], 1)]))
 ```
 
-El código comprueba el teorema 4.22 sobre los módulos reales irreducibles $\mathbb R^3$, $\mathbb R^2$, $\mathbb R^4$
-de los tres ejemplos (los tipos y multiplicidades que encuentra la biblioteca —real con $m=1$, un par complejo con
-$m=1$, cuaterniónico con $m=2$— los hacen irreducibles por el teorema 4.22(c)), calculando el conmutante real como el
-espacio nulo de las ecuaciones lineales reales $Xs=sX$, $Xs^T=s^TX$, y después la proposición 4.23 para un elemento
+El código comprueba el teorema 4.22 sobre los módulos reales irreducibles $`\mathbb R^3`$, $`\mathbb R^2`$, $`\mathbb R^4`$
+de los tres ejemplos (los tipos y multiplicidades que encuentra la biblioteca —real con $`m=1`$, un par complejo con
+$`m=1`$, cuaterniónico con $`m=2`$— los hacen irreducibles por el teorema 4.22(c)), calculando el conmutante real como el
+espacio nulo de las ecuaciones lineales reales $`Xs=sX`$, $`Xs^T=s^TX`$, y después la proposición 4.23 para un elemento
 real simétrico aleatorio del conmutante en cada ejemplo.
 
 ```python
@@ -473,26 +473,26 @@ las multiplicidades; RepLAB (MATLAB; D. Rosset, F. Montealegre-Mora, J.-D. Banca
 representaciones de grupos finitos y compactos, también con elementos aleatorios del conmutante, y
 SymbolicWedderburn.jl (Julia) calcula descomposiciones de Wedderburn para la reducción por simetría de programas
 semidefinidos. En física, QuSpin y otros códigos de diagonalización exacta diagonalizan por bloques las simetrías
-$U(1)$ y de red, ITensor y TeNPy manejan cargas abelianas en redes tensoriales, y TensorKit.jl trata $SU(2)$ con
-árboles de fusión. El módulo `decompose` de la biblioteca es un método denso para matrices pequeñas ($n$ de hasta
+$`U(1)`$ y de red, ITensor y TeNPy manejan cargas abelianas en redes tensoriales, y TensorKit.jl trata $`SU(2)`$ con
+árboles de fusión. El módulo `decompose` de la biblioteca es un método denso para matrices pequeñas ($`n`$ de hasta
 unos pocos cientos); acepta cualquier lista de matrices (elementos de un grupo o generadores), certifica su
 resultado (proposición 4.9) y devuelve el álgebra y su conmutante como objetos `TypeIAlgebra` con `to_algebra`,
 `from_algebra`, `to_commutant`, `from_commutant`, de modo que los capítulos 3 y 5–8 se aplican de inmediato. Para
-cadenas de espín $\frac12$, `su2.SU2Chain` da directamente los bloques de $SU(2)$ (corolario 4.17); acepta hasta
-$L=18$ espines, un límite fijado por la memoria de las bases.
+cadenas de espín $`\frac12`$, `su2.SU2Chain` da directamente los bloques de $`SU(2)`$ (corolario 4.17); acepta hasta
+$`L=18`$ espines, un límite fijado por la memoria de las bases.
 
 <a id="x-4"></a>
 
 ## Ejercicios
 
 Los [ejercicios](../../lecture_notes/es/04_symmetries.md#x-4) de los apuntes de clase, comprobados numéricamente (las soluciones de abajo siguen este orden):
-1. $\dim\pi(S_L)'=\binom{d^2+L-1}L$ para $d=2$ y $L=3,4$ (los valores $20$ y $35$);
-2. $1\otimes\frac12\cong\frac12\oplus\frac32$ y $1\otimes1\cong0\oplus1\oplus2$, con `from_generators`;
-3. el conmutante de $e^{i\theta\hat N}$ sobre cuatro cúbits para $\theta=1$ (las cargas $0,\dots,4$ dan $e^{iq}$ distintos, pues
-   $0<|q-q'|\le4<2\pi$) y para $\theta=\pi$;
-4. el desdoblamiento Zeeman: el espectro de $H+hS_z$ para el anillo de Heisenberg de ocho espines, con `su2.SU2Chain` y en los
-   sectores $U(1)$;
-5. los sectores de la representación regular de $Q_8$, con `real_structure`.
+1. $`\dim\pi(S_L)'=\binom{d^2+L-1}L`$ para $`d=2`$ y $`L=3,4`$ (los valores $`20`$ y $`35`$);
+2. $`1\otimes\frac12\cong\frac12\oplus\frac32`$ y $`1\otimes1\cong0\oplus1\oplus2`$, con `from_generators`;
+3. el conmutante de $`e^{i\theta\hat N}`$ sobre cuatro cúbits para $`\theta=1`$ (las cargas $`0,\dots,4`$ dan $`e^{iq}`$ distintos, pues
+   $`0<|q-q'|\le4<2\pi`$) y para $`\theta=\pi`$;
+4. el desdoblamiento Zeeman: el espectro de $`H+hS_z`$ para el anillo de Heisenberg de ocho espines, con `su2.SU2Chain` y en los
+   sectores $`U(1)`$;
+5. los sectores de la representación regular de $`Q_8`$, con `real_structure`.
 
 <details>
 <summary>Soluciones</summary>

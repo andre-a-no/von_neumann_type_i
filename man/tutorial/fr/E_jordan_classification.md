@@ -13,10 +13,10 @@ des éléments aléatoires. Les produits de Jordan d'opérateurs dans la bibliot
 
 *Notes de cours :* [section E.3](../../lecture_notes/fr/E_jordan_classification.md#s-E-3) ; [lemme E.1](../../lecture_notes/fr/E_jordan_classification.md#r-E-1), [lemme E.3](../../lecture_notes/fr/E_jordan_classification.md#r-E-3), [proposition E.4](../../lecture_notes/fr/E_jordan_classification.md#r-E-4), [théorème E.5](../../lecture_notes/fr/E_jordan_classification.md#r-E-5).
 
-Dans une algèbre de Jordan formellement réelle, la forme trace $\tau(x,y)=\mathrm{Tr}\,L(x\circ y)$ est associative et
+Dans une algèbre de Jordan formellement réelle, la forme trace $`\tau(x,y)=\mathrm{Tr}\,L(x\circ y)`$ est associative et
 définie positive ([notes de cours, théorème E.5](../../lecture_notes/fr/E_jordan_classification.md#r-E-5)). Le code vérifie le [lemme E.1(4)](../../lecture_notes/fr/E_jordan_classification.md#r-E-1),
-le [lemme E.3](../../lecture_notes/fr/E_jordan_classification.md#r-E-3) (les idempotents $p_i(x)$ calculés uniquement avec des puissances de Jordan), la [proposition E.4](../../lecture_notes/fr/E_jordan_classification.md#r-E-4)
-et le théorème E.5 dans $\mathrm{Herm}_3(\mathbb C)$, donnée par ses constantes de structure (les algèbres $\mathrm{Herm}_n(D)$ de la
+le [lemme E.3](../../lecture_notes/fr/E_jordan_classification.md#r-E-3) (les idempotents $`p_i(x)`$ calculés uniquement avec des puissances de Jordan), la [proposition E.4](../../lecture_notes/fr/E_jordan_classification.md#r-E-4)
+et le théorème E.5 dans $`\mathrm{Herm}_3(\mathbb C)`$, donnée par ses constantes de structure (les algèbres $`\mathrm{Herm}_n(D)`$ de la
 [section E.7](../../lecture_notes/fr/E_jordan_classification.md#s-E-7)) ; le produit de Cayley–Dickson `cd` utilisé pour la construire est celui de la [section E.6](../../lecture_notes/fr/E_jordan_classification.md#s-E-6).
 
 ```python
@@ -120,8 +120,8 @@ assert torch.allclose(mul(C3, x, y) @ T3 @ w, x @ T3 @ mul(C3, y, w))         # 
 
 *Notes de cours :* [section E.6](../../lecture_notes/fr/E_jordan_classification.md#s-E-6) ; [lemme E.14](../../lecture_notes/fr/E_jordan_classification.md#r-E-14), [lemme E.15](../../lecture_notes/fr/E_jordan_classification.md#r-E-15), [lemme E.18](../../lecture_notes/fr/E_jordan_classification.md#r-E-18).
 
-Le code construit $\mathbb O$ par doublement de Cayley–Dickson et vérifie sur des octonions aléatoires les identités du
-lemme E.14, l'identité de Moufang du lemme E.18 et la non-associativité du lemme E.15, ainsi que l'homomorphisme $M$ :
+Le code construit $`\mathbb O`$ par doublement de Cayley–Dickson et vérifie sur des octonions aléatoires les identités du
+lemme E.14, l'identité de Moufang du lemme E.18 et la non-associativité du lemme E.15, ainsi que l'homomorphisme $`M`$ :
 
 ```python
 o = torch.randn(4, 1000, 8, dtype=dt)             # random octonions
@@ -152,9 +152,9 @@ assert torch.allclose(M(cd(p4, q4)), M(p4) @ M(q4)) and torch.allclose(M(conj(p4
 
 *Notes de cours :* [section E.8](../../lecture_notes/fr/E_jordan_classification.md#s-E-8) ; [lemme E.20](../../lecture_notes/fr/E_jordan_classification.md#r-E-20), [lemme E.23](../../lecture_notes/fr/E_jordan_classification.md#r-E-23), [théorème E.24](../../lecture_notes/fr/E_jordan_classification.md#r-E-24), [corollaire E.25](../../lecture_notes/fr/E_jordan_classification.md#r-E-25).
 
-Le code vérifie sur des éléments aléatoires l'identité de Jordan de l'algèbre d'Albert $\mathrm{Herm}_3(\mathbb O)$
+Le code vérifie sur des éléments aléatoires l'identité de Jordan de l'algèbre d'Albert $`\mathrm{Herm}_3(\mathbb O)`$
 ([notes de cours, théorème E.24(2)](../../lecture_notes/fr/E_jordan_classification.md#r-E-24)) ainsi que l'associativité et la positivité de sa forme trace
-([lemme E.20](../../lecture_notes/fr/E_jordan_classification.md#r-E-20)), montre numériquement que l'identité de Jordan est fausse dans $\mathrm{Herm}_4(\mathbb O)$
+([lemme E.20](../../lecture_notes/fr/E_jordan_classification.md#r-E-20)), montre numériquement que l'identité de Jordan est fausse dans $`\mathrm{Herm}_4(\mathbb O)`$
 ([corollaire E.25](../../lecture_notes/fr/E_jordan_classification.md#r-E-25)), vérifie l'automorphisme du [lemme E.23](../../lecture_notes/fr/E_jordan_classification.md#r-E-23), et exécute les trois étapes (a)–(c)
 de la démonstration du théorème E.24(2) sur un élément aléatoire :
 
@@ -202,9 +202,9 @@ assert abs(abs(x3[11].item()) - s.norm().item()) < 1e-12
 
 *Notes de cours :* [section E.9](../../lecture_notes/fr/E_jordan_classification.md#s-E-9) ; [théorème E.5](../../lecture_notes/fr/E_jordan_classification.md#r-E-5), [théorème E.8](../../lecture_notes/fr/E_jordan_classification.md#r-E-8), [proposition E.11](../../lecture_notes/fr/E_jordan_classification.md#r-E-11), [théorème E.27](../../lecture_notes/fr/E_jordan_classification.md#r-E-27).
 
-Le code calcule, pour chaque type, le repère de Jordan $(E_{ii})$ ou $(c_w,c_{-w})$, les dimensions des espaces de
-Peirce comme sous-espaces propres communs des $L(c_i)$ (théorème E.8), la formule de dimension de la proposition
-E.11(2) et la positivité de la forme trace $\tau$ (théorème E.5) :
+Le code calcule, pour chaque type, le repère de Jordan $`(E_{ii})`$ ou $`(c_w,c_{-w})`$, les dimensions des espaces de
+Peirce comme sous-espaces propres communs des $`L(c_i)`$ (théorème E.8), la formule de dimension de la proposition
+E.11(2) et la positivité de la forme trace $`\tau`$ (théorème E.5) :
 
 ```python
 def peirce(C, frame):

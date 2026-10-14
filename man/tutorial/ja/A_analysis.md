@@ -6,7 +6,7 @@
 事実を証明する：多項式の零点集合、固有値の不等式、ガウスベクトルとその方向、ガウス分布のモーメント、そして一様な
 間隔である。検証にはライブラリではなく NumPy のみを用いる：各ブロックはランダムなベクトルや行列をサンプリングし、
 厳密な主張と比較する。最初のブロックで定義される補助関数 `mc` は、モンテカルロ平均が厳密な値から標準誤差の
-$5$ 倍以内にあることを確かめる。
+$`5`$ 倍以内にあることを確かめる。
 
 <a id="s-A-2"></a>
 
@@ -14,9 +14,9 @@ $5$ 倍以内にあることを確かめる。
 
 *講義ノート：* [A.2節](../../lecture_notes/ja/A_analysis.md#s-A-2)；[系 A.7](../../lecture_notes/ja/A_analysis.md#r-A-7)。
 
-[系 A.7](../../lecture_notes/ja/A_analysis.md#r-A-7) により、恒等的に零ではない多項式は、密度をもつランダムなベクトルにおいて確率 $0$ で
-零になる。$Z$ を成分が独立に $N(0,1)$ に従う $3\times3$ 実行列とすると、$\det Z$ についてこれは
-$\varepsilon\to0$ のとき $\mathbb P(|\det Z|<\varepsilon)\to0$ を与える。
+[系 A.7](../../lecture_notes/ja/A_analysis.md#r-A-7) により、恒等的に零ではない多項式は、密度をもつランダムなベクトルにおいて確率 $`0`$ で
+零になる。$`Z`$ を成分が独立に $`N(0,1)`$ に従う $`3\times3`$ 実行列とすると、$`\det Z`$ についてこれは
+$`\varepsilon\to0`$ のとき $`\mathbb P(|\det Z|<\varepsilon)\to0`$ を与える。
 
 ```python
 import math
@@ -49,9 +49,9 @@ assert fractions[1] < 0.2 * fractions[0] and fractions[2] < 0.2 * fractions[1]
 *講義ノート：* [A.3節](../../lecture_notes/ja/A_analysis.md#s-A-3)；[定理 A.8](../../lecture_notes/ja/A_analysis.md#r-A-8)、[系 A.9](../../lecture_notes/ja/A_analysis.md#r-A-9)、[定理 A.10](../../lecture_notes/ja/A_analysis.md#r-A-10)、[補題 A.12](../../lecture_notes/ja/A_analysis.md#r-A-12)。
 
 このブロックはランダムなエルミート行列について、ワイルの不等式
-$\lambda_j(A)+\lambda_1(E)\le\lambda_j(A+E)\le\lambda_j(A)+\lambda_n(E)$（[定理 A.10](../../lecture_notes/ja/A_analysis.md#r-A-10)）、$j$ 次元の $U$ に
-対するクーラント・フィッシャーの評価 $\max_{x\in U,|x|=1}\langle x,Ax\rangle\ge\lambda_j(A)$（[定理 A.8](../../lecture_notes/ja/A_analysis.md#r-A-8)）、
-インターレーシング $\lambda_j(A)\le\lambda_j(Q^*AQ)\le\lambda_{j+n-m}(A)$（[系 A.9](../../lecture_notes/ja/A_analysis.md#r-A-9)）、そしてスペクトル射影に
+$`\lambda_j(A)+\lambda_1(E)\le\lambda_j(A+E)\le\lambda_j(A)+\lambda_n(E)`$（[定理 A.10](../../lecture_notes/ja/A_analysis.md#r-A-10)）、$`j`$ 次元の $`U`$ に
+対するクーラント・フィッシャーの評価 $`\max_{x\in U,|x|=1}\langle x,Ax\rangle\ge\lambda_j(A)`$（[定理 A.8](../../lecture_notes/ja/A_analysis.md#r-A-8)）、
+インターレーシング $`\lambda_j(A)\le\lambda_j(Q^*AQ)\le\lambda_{j+n-m}(A)`$（[系 A.9](../../lecture_notes/ja/A_analysis.md#r-A-9)）、そしてスペクトル射影に
 対するラグランジュの公式（[補題 A.12](../../lecture_notes/ja/A_analysis.md#r-A-12)）を確かめる。
 
 ```python
@@ -95,9 +95,9 @@ for i, m_i in enumerate(mult):
 
 *講義ノート：* [A.4節](../../lecture_notes/ja/A_analysis.md#s-A-4)；[定理 A.15](../../lecture_notes/ja/A_analysis.md#r-A-15)、[命題 A.17](../../lecture_notes/ja/A_analysis.md#r-A-17)。
 
-[定理 A.15](../../lecture_notes/ja/A_analysis.md#r-A-15) は非退化な中心化ガウスベクトル $X$ の密度 $f_X$ を与える。このブロックは
-$\mathbb P(X\in[0,1]^2)$ を、中点則で計算した $f_X$ の積分と比較する。[命題 A.17](../../lecture_notes/ja/A_analysis.md#r-A-17) により、
-$\mathbb E\mathrm{Tr}\,H^2$ は GOE では $n(n+1)/2$、GUE では $n^2$ であり、$OHO^T$ は GOE 行列 $H$ と同じ分布を
+[定理 A.15](../../lecture_notes/ja/A_analysis.md#r-A-15) は非退化な中心化ガウスベクトル $`X`$ の密度 $`f_X`$ を与える。このブロックは
+$`\mathbb P(X\in[0,1]^2)`$ を、中点則で計算した $`f_X`$ の積分と比較する。[命題 A.17](../../lecture_notes/ja/A_analysis.md#r-A-17) により、
+$`\mathbb E\mathrm{Tr}\,H^2`$ は GOE では $`n(n+1)/2`$、GUE では $`n^2`$ であり、$`OHO^T`$ は GOE 行列 $`H`$ と同じ分布を
 もつ。このブロックはその成分の二つのモーメントを確かめる。
 
 ```python
@@ -130,10 +130,10 @@ mc(rot[:, 0, 1] ** 2, 0.5, "E (O H O^T)_12^2")
 
 *講義ノート：* [A.5節](../../lecture_notes/ja/A_analysis.md#s-A-5)；[系 A.19](../../lecture_notes/ja/A_analysis.md#r-A-19)、[定理 A.20](../../lecture_notes/ja/A_analysis.md#r-A-20)、[系 A.21](../../lecture_notes/ja/A_analysis.md#r-A-21)。
 
-標準複素ガウスベクトル $z\in\mathbb C^3$ に対し、[定理 A.20](../../lecture_notes/ja/A_analysis.md#r-A-20)(b) は、$|z|^2$ が密度
-$t^{N-1}e^{-t}/(N-1)!$ をもち、$z/|z|$ が球面上で一様かつ $|z|$ と独立であることを述べる。[系 A.21](../../lecture_notes/ja/A_analysis.md#r-A-21) は
-一様な単位ベクトルのモーメントを与える。このブロックはこれらと、単位球の体積 $V_3=4\pi/3$（[系 A.19](../../lecture_notes/ja/A_analysis.md#r-A-19)）、
-そして $z_1$ の位相が一様であること（[A.5節](../../lecture_notes/ja/A_analysis.md#s-A-5)、定理 A.20 の後）を確かめる。
+標準複素ガウスベクトル $`z\in\mathbb C^3`$ に対し、[定理 A.20](../../lecture_notes/ja/A_analysis.md#r-A-20)(b) は、$`|z|^2`$ が密度
+$`t^{N-1}e^{-t}/(N-1)!`$ をもち、$`z/|z|`$ が球面上で一様かつ $`|z|`$ と独立であることを述べる。[系 A.21](../../lecture_notes/ja/A_analysis.md#r-A-21) は
+一様な単位ベクトルのモーメントを与える。このブロックはこれらと、単位球の体積 $`V_3=4\pi/3`$（[系 A.19](../../lecture_notes/ja/A_analysis.md#r-A-19)）、
+そして $`z_1`$ の位相が一様であること（[A.5節](../../lecture_notes/ja/A_analysis.md#s-A-5)、定理 A.20 の後）を確かめる。
 
 ```python
 N, B = 3, 400_000                                   # Theorem A.20 (b), Corollary A.21, in C^3
@@ -164,9 +164,9 @@ mc((phase >= 0) & (phase < 1), 1 / (2 * math.pi), "P(arg z_1 in [0, 1))")
 
 *講義ノート：* [A.6節](../../lecture_notes/ja/A_analysis.md#s-A-6)；[定理 A.24](../../lecture_notes/ja/A_analysis.md#r-A-24)。
 
-イッサーリス・ウィックの公式（[定理 A.24](../../lecture_notes/ja/A_analysis.md#r-A-24)）は、中心化ガウスベクトルのモーメントを、$(2p-1)!!$ 個の
-ペアリングにわたる共分散の積の和として表す。このブロックはペアリングを列挙し、公式を $\mathbb R^3$ のガウスベクトルの
-モンテカルロ・モーメントと比較し、定理の複素形から標準複素ガウス変数 $z$ に対する $\mathbb E|z|^4=2$ を再現する。
+イッサーリス・ウィックの公式（[定理 A.24](../../lecture_notes/ja/A_analysis.md#r-A-24)）は、中心化ガウスベクトルのモーメントを、$`(2p-1)!!`$ 個の
+ペアリングにわたる共分散の積の和として表す。このブロックはペアリングを列挙し、公式を $`\mathbb R^3`$ のガウスベクトルの
+モンテカルロ・モーメントと比較し、定理の複素形から標準複素ガウス変数 $`z`$ に対する $`\mathbb E|z|^4=2`$ を再現する。
 
 ```python
 def pairings(idx):
@@ -201,10 +201,10 @@ assert abs(wick(cz, (0, 1, 0, 1)) - 2) < 1e-12                           # E|z|^
 
 *講義ノート：* [A.7節](../../lecture_notes/ja/A_analysis.md#s-A-7)；[定理 A.25](../../lecture_notes/ja/A_analysis.md#r-A-25)、[系 A.26](../../lecture_notes/ja/A_analysis.md#r-A-26)。
 
-[系 A.26](../../lecture_notes/ja/A_analysis.md#r-A-26) により、整列した $n$ 個の一様な点の $n+1$ 個の間隔は、正規化された指数変数
-$(e_0,\dots,e_n)/T$ と同じ分布をもち、(c) のモーメント、$\mathbb P(s_i/s_j\le t)=t/(1+t)$、そして平均間隔比
-$2\ln2-1$ をもつ。このブロックは $n=5$ として両方の族についてこれらを確かめ、さらに
-$\mathbb E[w_0T^2]=\mathbb Ew_0\,\mathbb ET^2=n+2$ を通じて $(e_0,\dots,e_n)/T$ と $T$ の独立性
+[系 A.26](../../lecture_notes/ja/A_analysis.md#r-A-26) により、整列した $`n`$ 個の一様な点の $`n+1`$ 個の間隔は、正規化された指数変数
+$`(e_0,\dots,e_n)/T`$ と同じ分布をもち、(c) のモーメント、$`\mathbb P(s_i/s_j\le t)=t/(1+t)`$、そして平均間隔比
+$`2\ln2-1`$ をもつ。このブロックは $`n=5`$ として両方の族についてこれらを確かめ、さらに
+$`\mathbb E[w_0T^2]=\mathbb Ew_0\,\mathbb ET^2=n+2`$ を通じて $`(e_0,\dots,e_n)/T`$ と $`T`$ の独立性
 （[定理 A.25](../../lecture_notes/ja/A_analysis.md#r-A-25)）を確かめる。
 
 ```python

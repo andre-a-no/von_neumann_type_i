@@ -13,8 +13,8 @@
 
 *講義ノート：* [C.2節](../../lecture_notes/ja/C_eigenvalue_densities.md#s-C-2)；[補題 C.4](../../lecture_notes/ja/C_eigenvalue_densities.md#r-C-4)、[定理 C.5](../../lecture_notes/ja/C_eigenvalue_densities.md#r-C-5)。
 
-以下の検証では、$n=2,3$ と両方の $\beta$ について $\Psi$ を数値的に微分する：$X=0$ においてヤコビアンは $\Delta(\lambda)^\beta$ であり、
-固定した $X\neq0$ においてはその $\Delta(\lambda)^\beta$ に対する比は $\lambda$ に依存しない（補題 C.4(a)）。
+以下の検証では、$`n=2,3`$ と両方の $`\beta`$ について $`\Psi`$ を数値的に微分する：$`X=0`$ においてヤコビアンは $`\Delta(\lambda)^\beta`$ であり、
+固定した $`X\neq0`$ においてはその $`\Delta(\lambda)^\beta`$ に対する比は $`\lambda`$ に依存しない（補題 C.4(a)）。
 
 ```python
 import math
@@ -81,10 +81,10 @@ for n in (2, 3):
 
 *講義ノート：* [C.3節](../../lecture_notes/ja/C_eigenvalue_densities.md#s-C-3)；[定理 C.7](../../lecture_notes/ja/C_eigenvalue_densities.md#r-C-7)、[系 C.8](../../lecture_notes/ja/C_eigenvalue_densities.md#r-C-8)。
 
-$n=3$ について定理 C.7 を検証する：GOE の準位密度を、同時密度を格子上で他の二つの固有値について積分して計算し、
+$`n=3`$ について定理 C.7 を検証する：GOE の準位密度を、同時密度を格子上で他の二つの固有値について積分して計算し、
 各ビンの中の固有値の平均個数と比較する。また、固有ベクトルが固有値と無相関であることも検証する
-（$|\tilde U_{11}|^2$ は位相 $D$ によらないので、`eigh` が返すどの固有フレームからも読み取れる）。ハール分布に従う
-$U\in O(3)$ に対し $\mathbb E|U_{11}|^2=\frac13$ である（[講義ノート、C.3節](../../lecture_notes/ja/C_eigenvalue_densities.md#s-C-3)）。
+（$`|\tilde U_{11}|^2`$ は位相 $`D`$ によらないので、`eigh` が返すどの固有フレームからも読み取れる）。ハール分布に従う
+$`U\in O(3)`$ に対し $`\mathbb E|U_{11}|^2=\frac13`$ である（[講義ノート、C.3節](../../lecture_notes/ja/C_eigenvalue_densities.md#s-C-3)）。
 
 ```python
 B, n = 200_000, 3
@@ -115,9 +115,9 @@ mc((u11 - 1 / 3) * goe_lam[:, 0], 0.0, "GOE(3): E (|U_11|^2 - 1/3) lambda_1")   
 
 *講義ノート：* [C.4節](../../lecture_notes/ja/C_eigenvalue_densities.md#s-C-4)；[補題 C.10](../../lecture_notes/ja/C_eigenvalue_densities.md#r-C-10)。
 
-[補題 C.10](../../lecture_notes/ja/C_eigenvalue_densities.md#r-C-10) と講義ノートの系 C.6 により、GUE の準位密度は $K_n(x)e^{-x^2/2}$ であり、
-$K_n=v^TM^{-1}v$ はモーメントの行列 $M$ から計算される。$n=3$ について、モーメント
-$\int x^{2m}e^{-x^2/2}dx=\sqrt{2\pi}(2m-1)(2m-3)\cdots1$ を用いてこれを検証する：
+[補題 C.10](../../lecture_notes/ja/C_eigenvalue_densities.md#r-C-10) と講義ノートの系 C.6 により、GUE の準位密度は $`K_n(x)e^{-x^2/2}`$ であり、
+$`K_n=v^TM^{-1}v`$ はモーメントの行列 $`M`$ から計算される。$`n=3`$ について、モーメント
+$`\int x^{2m}e^{-x^2/2}dx=\sqrt{2\pi}(2m-1)(2m-3)\cdots1`$ を用いてこれを検証する：
 
 ```python
 def one_point(x, n, moment, w):
@@ -141,12 +141,12 @@ for lo, hi in zip(edges[:-1], edges[1:]):
 
 *講義ノート：* [C.5節](../../lecture_notes/ja/C_eigenvalue_densities.md#s-C-5)；[補題 C.11](../../lecture_notes/ja/C_eigenvalue_densities.md#r-C-11)（バートレット）、[補題 C.12](../../lecture_notes/ja/C_eigenvalue_densities.md#r-C-12)（コレスキー）、[定理 C.14](../../lecture_notes/ja/C_eigenvalue_densities.md#r-C-14)（誘導測度）。
 
-ライブラリでは、`states.random_density_matrix(TypeIAlgebra([a], [a]), N, rank=b)` が、$G$ を $a\times b$ の
-ジニブル行列として $N$ 個の状態 $\rho_A=GG^*/\mathrm{Tr}\,GG^*$ をサンプリングする。これは[定理 C.14](../../lecture_notes/ja/C_eigenvalue_densities.md#r-C-14) の
+ライブラリでは、`states.random_density_matrix(TypeIAlgebra([a], [a]), N, rank=b)` が、$`G`$ を $`a\times b`$ の
+ジニブル行列として $`N`$ 個の状態 $`\rho_A=GG^*/\mathrm{Tr}\,GG^*`$ をサンプリングする。これは[定理 C.14](../../lecture_notes/ja/C_eigenvalue_densities.md#r-C-14) の
 誘導測度である。`rho.eigenvalues()` は各ブロックの固有値を昇順で返す。
 
-補題 C.11 を `torch.linalg.cholesky` で計算したコレスキー因子（補題 C.12 により、これは一意的な $L\in T_+$ である）について検証し、
-定理 C.14 を $a=2$ について検証する。このとき $\mu_1\in(0,\frac12)$ は密度 $\propto(1-2t)^2(t(1-t))^{b-2}$ をもつ：
+補題 C.11 を `torch.linalg.cholesky` で計算したコレスキー因子（補題 C.12 により、これは一意的な $`L\in T_+`$ である）について検証し、
+定理 C.14 を $`a=2`$ について検証する。このとき $`\mu_1\in(0,\frac12)`$ は密度 $`\propto(1-2t)^2(t(1-t))^{b-2}`$ をもつ：
 
 ```python
 a, b, B = 3, 5, 100_000
@@ -176,9 +176,9 @@ for b2 in (2, 4):
 
 *講義ノート：* [C.6節](../../lecture_notes/ja/C_eigenvalue_densities.md#s-C-6)；[補題 C.15](../../lecture_notes/ja/C_eigenvalue_densities.md#r-C-15)、[補題 C.16](../../lecture_notes/ja/C_eigenvalue_densities.md#r-C-16)、[定理 C.17](../../lecture_notes/ja/C_eigenvalue_densities.md#r-C-17)（ペイジの公式）、[系 C.18](../../lecture_notes/ja/C_eigenvalue_densities.md#r-C-18)。
 
-ラゲール準位密度をヒストグラムと比較し、補題 C.16 の値 $A^{(\alpha)}_{k,m}$ と中間
-結果 $\int x\log x\,\rho_{a,b}=ab\,I_0+\Sigma$ を数値積分で（$I_0$ 自身も数値積分で計算して）検証し、
-$\Sigma$ に関する恒等式を厳密な算術で検証し、ペイジの公式を $a=2$ に対する誘導密度の直接積分（厳密な有理数値）
+ラゲール準位密度をヒストグラムと比較し、補題 C.16 の値 $`A^{(\alpha)}_{k,m}`$ と中間
+結果 $`\int x\log x\,\rho_{a,b}=ab\,I_0+\Sigma`$ を数値積分で（$`I_0`$ 自身も数値積分で計算して）検証し、
+$`\Sigma`$ に関する恒等式を厳密な算術で検証し、ペイジの公式を $`a=2`$ に対する誘導密度の直接積分（厳密な有理数値）
 およびモンテカルロと比較し、最後に系 C.18 を検証する：
 
 ```python

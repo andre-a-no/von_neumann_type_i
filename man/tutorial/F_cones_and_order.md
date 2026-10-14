@@ -4,9 +4,9 @@
 
 This tutorial accompanies [Appendix F](../lecture_notes/F_cones_and_order.md) of the lecture notes, which proves that the cone of squares of a
 Euclidean Jordan algebra is symmetric, the Koecher–Vinberg theorem ([Theorem F.12](../lecture_notes/F_cones_and_order.md#r-F-12)), and Kadison's theorem and
-the form of the Jordan $*$-isomorphisms for the algebras $\bigoplus_cM_{k_c}(\mathbb C)$
+the form of the Jordan $`*`$-isomorphisms for the algebras $`\bigoplus_cM_{k_c}(\mathbb C)`$
 ([Theorems F.15](../lecture_notes/F_cones_and_order.md#r-F-15) and [F.18](../lecture_notes/F_cones_and_order.md#r-F-18)). We check these results numerically on matrices, on the spin
-factor $V_4$ of the library, and on the cone of positive definite matrices.
+factor $`V_4`$ of the library, and on the cone of positive definite matrices.
 
 <a id="s-F-2"></a>
 
@@ -14,13 +14,13 @@ factor $V_4$ of the library, and on the cone of positive definite matrices.
 
 *Lecture notes:* [Section F.2](../lecture_notes/F_cones_and_order.md#s-F-2); [Theorem F.5](../lecture_notes/F_cones_and_order.md#r-F-5), [Theorem F.6](../lecture_notes/F_cones_and_order.md#r-F-6), [Corollary F.7](../lecture_notes/F_cones_and_order.md#r-F-7).
 
-In $V_4$ the code uses the library's `SpinFactor` ([tutorial, Section 13.2](../tutorial/13_jordan_algebras.md#s-13-2)): `random` (with `cone=True` for elements of $Q$),
+In $`V_4`$ the code uses the library's `SpinFactor` ([tutorial, Section 13.2](../tutorial/13_jordan_algebras.md#s-13-2)): `random` (with `cone=True` for elements of $`Q`$),
 `inner`, `spectral_decomposition`, `in_cone`, `product`, `quadratic_representation`, `exp`, `log` and `apply_function`.
 
-The code checks Theorem F.5 for $\mathrm{Herm}_4(\mathbb C)$ and for the Lorentz cone $Q\subseteq V_4$ (the
-negative pairing is the witness $c_i$ of (1), $\langle y,c_i\rangle=\lambda_i\|c_i\|^2<0$), Theorem F.6 in $V_4$, where in the coordinates
-$(a,u)$ the operators $L(b)$ and $P(y)$ are $5\times5$ symmetric matrices, and Corollary F.7 in
-$\mathrm{Herm}_5(\mathbb R)$:
+The code checks Theorem F.5 for $`\mathrm{Herm}_4(\mathbb C)`$ and for the Lorentz cone $`Q\subseteq V_4`$ (the
+negative pairing is the witness $`c_i`$ of (1), $`\langle y,c_i\rangle=\lambda_i\|c_i\|^2<0`$), Theorem F.6 in $`V_4`$, where in the coordinates
+$`(a,u)`$ the operators $`L(b)`$ and $`P(y)`$ are $`5\times5`$ symmetric matrices, and Corollary F.7 in
+$`\mathrm{Herm}_5(\mathbb R)`$:
 
 ```python
 import math
@@ -79,8 +79,8 @@ assert (rhs - lhs > -1e-9 * rhs).all()
 
 *Lecture notes:* [Section F.3](../lecture_notes/F_cones_and_order.md#s-F-3); [Proposition F.11](../lecture_notes/F_cones_and_order.md#r-F-11), [Theorem F.12](../lecture_notes/F_cones_and_order.md#r-F-12), [Example F.13](../lecture_notes/F_cones_and_order.md#r-F-13).
 
-The code computes $D^3f$ at $e$ by automatic differentiation of $f(x)=-\frac{n+1}2\log\det x$ in orthonormal
-coordinates of $\mathrm{Herm}_3(\mathbb R)$ and checks the claims of Proposition F.11 and Theorem F.12:
+The code computes $`D^3f`$ at $`e`$ by automatic differentiation of $`f(x)=-\frac{n+1}2\log\det x`$ in orthonormal
+coordinates of $`\mathrm{Herm}_3(\mathbb R)`$ and checks the claims of Proposition F.11 and Theorem F.12:
 
 ```python
 from torch.autograd.functional import jacobian, hessian
@@ -113,10 +113,10 @@ assert close(prod(u, prod(u2, v)), prod(u2, prod(u, v)))           # Jordan iden
 
 *Lecture notes:* [Section F.4](../lecture_notes/F_cones_and_order.md#s-F-4); [Theorem F.15](../lecture_notes/F_cones_and_order.md#r-F-15), [Theorem F.18](../lecture_notes/F_cones_and_order.md#r-F-18).
 
-By [lecture notes, Theorem F.15](../lecture_notes/F_cones_and_order.md#r-F-15), a unital linear bijection $\Phi$ such that $\Phi$ and $\Phi^{-1}$ are
-positive is a Jordan $*$-isomorphism. The code builds such a map of $M_2\oplus M_2\oplus M_3$, of the form of
-[Theorem F.18](../lecture_notes/F_cones_and_order.md#r-F-18): it exchanges the two $M_2$ blocks, transposes two blocks and conjugates by unitaries. It
-checks that $\Phi$ is unital and positive in both directions, that it preserves the Jordan product, and that it is not
+By [lecture notes, Theorem F.15](../lecture_notes/F_cones_and_order.md#r-F-15), a unital linear bijection $`\Phi`$ such that $`\Phi`$ and $`\Phi^{-1}`$ are
+positive is a Jordan $`*`$-isomorphism. The code builds such a map of $`M_2\oplus M_2\oplus M_3`$, of the form of
+[Theorem F.18](../lecture_notes/F_cones_and_order.md#r-F-18): it exchanges the two $`M_2`$ blocks, transposes two blocks and conjugates by unitaries. It
+checks that $`\Phi`$ is unital and positive in both directions, that it preserves the Jordan product, and that it is not
 multiplicative:
 
 ```python
@@ -150,11 +150,11 @@ assert not close(Phi([s @ t for s, t in zip(x, y)])[0], (Phi(x)[0] @ Phi(y)[0]))
 
 <a id="s-F-5"></a>
 
-## F.5 Jordan $*$-isomorphisms of $\bigoplus_cM_{k_c}$
+## F.5 Jordan $`*`$-isomorphisms of $`\bigoplus_cM_{k_c}`$
 
 *Lecture notes:* [Section F.5](../lecture_notes/F_cones_and_order.md#s-F-5); [Theorem F.17](../lecture_notes/F_cones_and_order.md#r-F-17).
 
-The code builds the Jordan automorphism $x\mapsto Ux^TU^*$ of $M_3$ and recovers $U$ (up to a phase) by the steps of the
+The code builds the Jordan automorphism $`x\mapsto Ux^TU^*`$ of $`M_3`$ and recovers $`U`$ (up to a phase) by the steps of the
 proof of [lecture notes, Theorem F.17](../lecture_notes/F_cones_and_order.md#r-F-17):
 
 ```python
@@ -184,9 +184,9 @@ print("U recovered up to the phase", complex(phase))
 
 ## Exercises
 
-[Exercise 2](../lecture_notes/F_cones_and_order.md#x-F) of the lecture notes: for $0<t<1$, $\Psi_t(x)=(1-t)x+\frac tn\mathrm{Tr}(x)1$ on $M_n$ is a
+[Exercise 2](../lecture_notes/F_cones_and_order.md#x-F) of the lecture notes: for $`0<t<1`$, $`\Psi_t(x)=(1-t)x+\frac tn\mathrm{Tr}(x)1`$ on $`M_n`$ is a
 unital positive bijection whose inverse is not positive, and it does not map projections to projections. Check this
-numerically for $n=3$, $t=\frac14$ and a rank-one projection $p$.
+numerically for $`n=3`$, $`t=\frac14`$ and a rank-one projection $`p`$.
 
 <details>
 <summary>Solutions</summary>

@@ -3,8 +3,8 @@
 # Tutorial 2. Finite-dimensional von Neumann algebras
 
 This tutorial accompanies [Chapter 2](../lecture_notes/02_von_neumann_algebras.md) of the lecture notes, which proves
-that every von Neumann algebra on $\mathbb C^n$ is, up to a unitary change of basis,
-$\bigoplus_cM_{k_c}(\mathbb C)\otimes1_{m_c}$ ([Theorem 2.6](../lecture_notes/02_von_neumann_algebras.md#r-2-6)).
+that every von Neumann algebra on $`\mathbb C^n`$ is, up to a unitary change of basis,
+$`\bigoplus_cM_{k_c}(\mathbb C)\otimes1_{m_c}`$ ([Theorem 2.6](../lecture_notes/02_von_neumann_algebras.md#r-2-6)).
 We compute commutants numerically on the example of a symmetry group, and see how the library
 stores such an algebra, its centre and the conditional expectation onto the centre.
 
@@ -14,12 +14,12 @@ stores such an algebra, its centre and the conditional expectation onto the cent
 
 *Lecture notes:* [Section 2.4](../lecture_notes/02_von_neumann_algebras.md#s-2-4); [Theorem 2.2](../lecture_notes/02_von_neumann_algebras.md#r-2-2), [Theorem 2.6](../lecture_notes/02_von_neumann_algebras.md#r-2-6), [Proposition 2.7](../lecture_notes/02_von_neumann_algebras.md#r-2-7).
 
-[Section 2.4](../lecture_notes/02_von_neumann_algebras.md#s-2-4) of the lecture notes decomposes the representation $\pi$ of
-$S_3$ permuting the three factors of $(\mathbb C^2)^{\otimes3}$: $\pi(S_3)'\cong M_4\oplus M_2$ has dimension
-$20$ and $\pi(S_3)''\cong M_1\oplus M_2$ has dimension $5$. The code below confirms the two dimensions
-numerically, and that the commutant of $\pi(S_3)'$ is again $\pi(S_3)''$
-([Theorem 2.2](../lecture_notes/02_von_neumann_algebras.md#r-2-2)): the commutant of a set $S$ is the null
-space of the linear map $X\mapsto(AX-XA)_{A\in S}$, whose dimension is computed here in floating
+[Section 2.4](../lecture_notes/02_von_neumann_algebras.md#s-2-4) of the lecture notes decomposes the representation $`\pi`$ of
+$`S_3`$ permuting the three factors of $`(\mathbb C^2)^{\otimes3}`$: $`\pi(S_3)'\cong M_4\oplus M_2`$ has dimension
+$`20`$ and $`\pi(S_3)''\cong M_1\oplus M_2`$ has dimension $`5`$. The code below confirms the two dimensions
+numerically, and that the commutant of $`\pi(S_3)'`$ is again $`\pi(S_3)''`$
+([Theorem 2.2](../lecture_notes/02_von_neumann_algebras.md#r-2-2)): the commutant of a set $`S`$ is the null
+space of the linear map $`X\mapsto(AX-XA)_{A\in S}`$, whose dimension is computed here in floating
 point, by counting the singular values above a tolerance.
 
 ```python
@@ -63,11 +63,11 @@ assert len(commutant_basis(comm)) == 5                   # double commutant theo
 
 The multiplicities are visible in the spectrum ([lecture notes, Section 2.4](../lecture_notes/02_von_neumann_algebras.md#s-2-4), from
 [Theorem 2.6](../lecture_notes/02_von_neumann_algebras.md#r-2-6)):
-every self-adjoint $K\in\pi(S_3)'$ has eigenvalues of even multiplicity on the complement of the symmetric
-subspace $F$, and for $K=E(Z+Z^*)$, with $Z$ a Ginibre matrix and $E$ the group average, with probability one
-$K$ has $4$ simple eigenvalues on $F$ and $2$ doubly degenerate ones on its complement. The code checks the
-degenerate pairs (which hold for every $K$) and, for the sampled $K$, that the two pairs and the four
-eigenvalues on $F$ are distinct, using the orthogonal projection $P_F=\frac1{|G|}\sum_g\pi(g)$ onto $F$.
+every self-adjoint $`K\in\pi(S_3)'`$ has eigenvalues of even multiplicity on the complement of the symmetric
+subspace $`F`$, and for $`K=E(Z+Z^*)`$, with $`Z`$ a Ginibre matrix and $`E`$ the group average, with probability one
+$`K`$ has $`4`$ simple eigenvalues on $`F`$ and $`2`$ doubly degenerate ones on its complement. The code checks the
+degenerate pairs (which hold for every $`K`$) and, for the sampled $`K`$, that the two pairs and the four
+eigenvalues on $`F`$ are distinct, using the orthogonal projection $`P_F=\frac1{|G|}\sum_g\pi(g)`$ onto $`F`$.
 
 ```python
 def group_average(X):
@@ -96,9 +96,9 @@ assert (e_sym[:, None] - e_rest[None, :]).abs().min() > 1e-6                    
 
 *Lecture notes:* [Section 2.3](../lecture_notes/02_von_neumann_algebras.md#s-2-3), [Theorem 2.6](../lecture_notes/02_von_neumann_algebras.md#r-2-6); the centre: [Section 2.2](../lecture_notes/02_von_neumann_algebras.md#s-2-2), [Lemma 2.3](../lecture_notes/02_von_neumann_algebras.md#r-2-3).
 
-The library stores the abstract algebra $\bigoplus_cM_{k_c}(\mathbb C)$ of Theorem 2.6 on
-$\bigoplus_c\mathbb C^{k_c}$, without the multiplicities: an operator is the list of its
-blocks $A_c$, padded to a common size. The commutant of the example is
+The library stores the abstract algebra $`\bigoplus_cM_{k_c}(\mathbb C)`$ of Theorem 2.6 on
+$`\bigoplus_c\mathbb C^{k_c}`$, without the multiplicities: an operator is the list of its
+blocks $`A_c`$, padded to a common size. The commutant of the example is
 `TypeIAlgebra([4, 2], [4, 2])`.
 
 ```python
@@ -112,7 +112,7 @@ print(A.matrix.shape)              # (1, 2, 4, 4): block 1 occupies the top-left
 assert A.matrix[0, 1, 2:, :].abs().max() == 0 and A.matrix[0, 1, :, 2:].abs().max() == 0
 ```
 
-The centre consists of the elements $\sum_cz_cP_c$; `alg.central` builds them, and
+The centre consists of the elements $`\sum_cz_cP_c`$; `alg.central` builds them, and
 they commute with everything:
 
 ```python
@@ -135,9 +135,9 @@ assert close(A @ P0 + A @ P1, A)                         # A = sum_c A P_c
 
 *Lecture notes:* [Section 2.6](../lecture_notes/02_von_neumann_algebras.md#s-2-6).
 
-By [lecture notes, Proposition 2.8](../lecture_notes/02_von_neumann_algebras.md#r-2-8), $E(A)=\sum_c\frac{\mathrm{Tr}\,A_c}{k_c}\,P_c$
-is a conditional expectation of $\bigoplus_cM_{k_c}$ onto its centre: it is positive, it is the identity on the centre,
-it is a bimodule map over the centre, and it preserves every trace $\sum_cw_c\mathrm{Tr}\,A_c$.
+By [lecture notes, Proposition 2.8](../lecture_notes/02_von_neumann_algebras.md#r-2-8), $`E(A)=\sum_c\frac{\mathrm{Tr}\,A_c}{k_c}\,P_c`$
+is a conditional expectation of $`\bigoplus_cM_{k_c}`$ onto its centre: it is positive, it is the identity on the centre,
+it is a bimodule map over the centre, and it preserves every trace $`\sum_cw_c\mathrm{Tr}\,A_c`$.
 
 In the library this map is the channel `channels.center_expectation(alg)`. Applying it
 to operators gives the classical (sector-averaged) part:
@@ -161,7 +161,7 @@ for c, k in enumerate(alg.k_factors):                    # E(A)_c = (Tr A_c / k_
 
 The examples of Section 2.4 can be checked with any linear-algebra package;
 representation-theory software (GAP, SageMath) gives the decomposition
-$\pi\cong\bigoplus\rho_\lambda\otimes1_{m_\lambda}$ symbolically. Exact-diagonalisation
+$`\pi\cong\bigoplus\rho_\lambda\otimes1_{m_\lambda}`$ symbolically. Exact-diagonalisation
 codes in physics (QuSpin, the symmetry modules of QuTiP) use the same block structure to
 diagonalise Hamiltonians sector by sector. The library takes the structure as the
 starting point: once the blocks are known, all further computations — functions,
@@ -171,8 +171,8 @@ traces, states, channels, dynamics — stay inside the algebra.
 
 ## Exercises
 
-[Exercise 2](../lecture_notes/02_von_neumann_algebras.md#x-2) of the lecture notes: for the cyclic shift $S$ on $\mathbb C^3$,
-$Se_i=e_{i+1\bmod3}$, both $\{S\}'$ and $\{S\}''$ equal $\mathrm{span}\{1,S,S^2\}$, the circulant
+[Exercise 2](../lecture_notes/02_von_neumann_algebras.md#x-2) of the lecture notes: for the cyclic shift $`S`$ on $`\mathbb C^3`$,
+$`Se_i=e_{i+1\bmod3}`$, both $`\{S\}'`$ and $`\{S\}''`$ equal $`\mathrm{span}\{1,S,S^2\}`$, the circulant
 matrices. Check the dimensions numerically.
 
 <details>

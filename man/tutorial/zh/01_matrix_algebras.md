@@ -2,7 +2,7 @@
 
 # 教程 1. 矩阵代数与函数演算
 
-本教程配合讲义的[第 1 章](../../lecture_notes/zh/01_matrix_algebras.md)，该章证明了 $M_n(\mathbb C)$ 中的谱定理、函数演算、极分解
+本教程配合讲义的[第 1 章](../../lecture_notes/zh/01_matrix_algebras.md)，该章证明了 $`M_n(\mathbb C)`$ 中的谱定理、函数演算、极分解
 以及迹范数的对偶性。这里用库逐一检验这些结果。
 
 **你将学到**如何构造具有指定谱的算子，如何把一个函数作用于算子，算子的批量是如何存储的，
@@ -14,8 +14,8 @@
 
 *讲义：* [1.2 节](../../lecture_notes/zh/01_matrix_algebras.md#s-1-2)和[1.3 节](../../lecture_notes/zh/01_matrix_algebras.md#s-1-3)：[定理 1.3](../../lecture_notes/zh/01_matrix_algebras.md#r-1-3)、[推论 1.4](../../lecture_notes/zh/01_matrix_algebras.md#r-1-4)、[定理 1.5](../../lecture_notes/zh/01_matrix_algebras.md#r-1-5)、[定理 1.6](../../lecture_notes/zh/01_matrix_algebras.md#r-1-6)。
 
-本库处理代数 $\bigoplus_cM_{k_c}(\mathbb C)$（第 2 章）。单个块是 $C=1$ 的情形：
-`TypeIAlgebra([n], [n])` 就是 $M_n(\mathbb C)$。（两个列表分别是名义块大小和实际块大小；
+本库处理代数 $`\bigoplus_cM_{k_c}(\mathbb C)`$（第 2 章）。单个块是 $`C=1`$ 的情形：
+`TypeIAlgebra([n], [n])` 就是 $`M_n(\mathbb C)`$。（两个列表分别是名义块大小和实际块大小；
 目前二者相同。）
 
 ```python
@@ -34,16 +34,16 @@ print(A.eigenvalues()[0])      # one tensor per block, eigenvalues in ascending 
 ```
 
 每个算子存储为一个形状为 `(batch, C, k_max, k_max)` 的张量：一批算子，每个算子是 `C` 个块
-组成的列表。这里 `batch = C = 1`。这一构造恰好是把定理 1.3 反过来读：$A=U\Lambda U^*$，
-其中 $U$ 服从 Haar 分布（库通过定理 5.3 的 QR 构造抽取 $U$）。标志 `force_positive=True` 会根据
-指定的特征值加以检查（若其中某个小于 $-10^{-12}$，库会报错）；由推论 1.4(3)，所得结果就是正的
-（当指定的特征值都 $\ge0$ 时严格如此，如此处；一般情形下在该容差范围内成立），库会记录这一点，
+组成的列表。这里 `batch = C = 1`。这一构造恰好是把定理 1.3 反过来读：$`A=U\Lambda U^*`$，
+其中 $`U`$ 服从 Haar 分布（库通过定理 5.3 的 QR 构造抽取 $`U`$）。标志 `force_positive=True` 会根据
+指定的特征值加以检查（若其中某个小于 $`-10^{-12}`$，库会报错）；由推论 1.4(3)，所得结果就是正的
+（当指定的特征值都 $`\ge0`$ 时严格如此，如此处；一般情形下在该容差范围内成立），库会记录这一点，
 而不再次检验。出于同样的原因，上面的 `A.eigenvalues()` 返回排好序的指定谱，不做任何计算；
-它并不是检验。下面对 $\mathrm{spec}\,f(A)=f(\mathrm{spec}\,A)$ 的检验则确实要计算：
-`apply_function` 对角化 $A$ 的矩阵，所得矩阵 $e^A$ 的特征值是从头计算的。
+它并不是检验。下面对 $`\mathrm{spec}\,f(A)=f(\mathrm{spec}\,A)`$ 的检验则确实要计算：
+`apply_function` 对角化 $`A`$ 的矩阵，所得矩阵 $`e^A`$ 的特征值是从头计算的。
 
-自伴算子的函数演算由 `apply_function` 实现（它用 `eigh` 对角化每个块）。函数 $f$ 必须逐元素作用：
-它把同一大小 $k$ 的所有扇区的特征值作为一个形状为 `(batch, n·k)` 的张量接收（$n$ 为这类扇区的个数），
+自伴算子的函数演算由 `apply_function` 实现（它用 `eigh` 对角化每个块）。函数 $`f`$ 必须逐元素作用：
+它把同一大小 $`k`$ 的所有扇区的特征值作为一个形状为 `(batch, n·k)` 的张量接收（$`n`$ 为这类扇区的个数），
 并返回同样形状的张量。常用函数有各自专门的方法。我们来检验定理 1.5 和定理 1.6：
 
 ```python
@@ -91,9 +91,9 @@ assert abs(X.trace.item()) <= X.trace_norm().item()     # |Tr X| <= ||X||_1
 ```
 
 带复数 dtype 的 `torch.randn` 抽取相互独立的元素，其实部与虚部相互独立且
-$\sim N(0,\tfrac12)$，所以 `G` 是 Ginibre 矩阵，它有密度（命题 A.16(b)）。
-$|X|$ 几乎必然可逆：$(\det|X|)^2=\det(|X|^2)=\det(X^*X)=|\det X|^2$，而 $|\det X|^2$ 是各元素实部与虚部的
-多项式，在 $X=1$ 处等于 $1$，所以它为零的概率为零（推论 A.7(b)；这也是定理 5.3 证明的第一步）。
+$`\sim N(0,\tfrac12)`$，所以 `G` 是 Ginibre 矩阵，它有密度（命题 A.16(b)）。
+$`|X|`$ 几乎必然可逆：$`(\det|X|)^2=\det(|X|^2)=\det(X^*X)=|\det X|^2`$，而 $`|\det X|^2`$ 是各元素实部与虚部的
+多项式，在 $`X=1`$ 处等于 $`1`$，所以它为零的概率为零（推论 A.7(b)；这也是定理 5.3 证明的第一步）。
 
 <a id="s-1-7"></a>
 
@@ -104,8 +104,8 @@ $|X|$ 几乎必然可逆：$(\det|X|)^2=\det(|X|^2)=\det(X^*X)=|\det X|^2$，而
 批量轴正是本库存在的理由：随机矩阵理论、蒙特卡罗方法和多起点优化需要成千上万个算子，
 而一次批量调用就取代了对它们的 Python 循环。作为例子，我们检验**高斯酉系综**（GUE）的一个精确矩。
 
-由[讲义，命题 1.10](../../lecture_notes/zh/01_matrix_algebras.md#r-1-10)，若 $G$ 的各元素相互独立，其实部与虚部相互独立且
-$\sim N(0,\tfrac12)$，并且 $X=(G+G^*)/\sqrt{2n}$，则 $\mathbb E\,\tfrac1n\mathrm{Tr}\,X^4=2+\tfrac1{n^2}$。
+由[讲义，命题 1.10](../../lecture_notes/zh/01_matrix_algebras.md#r-1-10)，若 $`G`$ 的各元素相互独立，其实部与虚部相互独立且
+$`\sim N(0,\tfrac12)`$，并且 $`X=(G+G^*)/\sqrt{2n}`$，则 $`\mathbb E\,\tfrac1n\mathrm{Tr}\,X^4=2+\tfrac1{n^2}`$。
 
 ```python
 n, B = 4, 200_000
@@ -121,9 +121,9 @@ assert abs(mean - (2 + 1 / n**2)) < 5 * err
 ```
 
 蒙特卡罗检验是一种统计检验：估计值必须在几个标准误差的范围内与精确值吻合。变量
-$\tfrac1n\mathrm{Tr}\,X^4$ 是高斯变量的多项式，所以它有有限的方差 $\sigma^2$（引理 A.23：所有高斯矩都有限；
-乘积用 $|y_1\cdots y_r|\le\sum_i|y_i|^r$ 处理），由 Chebyshev 不等式，$B$ 个独立样本的均值偏离精确值
-超过 $5\sigma/\sqrt B$ 的概率至多为 $1/25$。代码用样本标准差代替 $\sigma$，固定的随机种子使检验可以复现。
+$`\tfrac1n\mathrm{Tr}\,X^4`$ 是高斯变量的多项式，所以它有有限的方差 $`\sigma^2`$（引理 A.23：所有高斯矩都有限；
+乘积用 $`|y_1\cdots y_r|\le\sum_i|y_i|^r`$ 处理），由 Chebyshev 不等式，$`B`$ 个独立样本的均值偏离精确值
+超过 $`5\sigma/\sqrt B`$ 的概率至多为 $`1/25`$。代码用样本标准差代替 $`\sigma`$，固定的随机种子使检验可以复现。
 这是本教程中所有与已证明的结果对照的检验所遵循的模式：一个精确的命题、一个数值估计和一个明确的容差。
 
 <a id="s-1-8"></a>
@@ -139,9 +139,9 @@ $\tfrac1n\mathrm{Tr}\,X^4$ 是高斯变量的多项式，所以它有有限的�
 ## 习题
 
 讲义的[习题 1 和习题 3](../../lecture_notes/zh/01_matrix_algebras.md#x-1)，数值检验：
-- 对随机自伴矩阵 $A$ 以及 $f=\sin$、$g=\exp$，检验 $(fg)(A)=f(A)g(A)$（习题 1）。
-- $A,B>0$ 的**几何平均** $A\#B=A^{1/2}(A^{-1/2}BA^{-1/2})^{1/2}A^{1/2}$ 是方程 $XA^{-1}X=B$ 的唯一正解
-  $X$（习题 3）。对这个方程和 $A\#B=B\#A$ 进行数值检验。
+- 对随机自伴矩阵 $`A`$ 以及 $`f=\sin`$、$`g=\exp`$，检验 $`(fg)(A)=f(A)g(A)`$（习题 1）。
+- $`A,B>0`$ 的**几何平均** $`A\#B=A^{1/2}(A^{-1/2}BA^{-1/2})^{1/2}A^{1/2}`$ 是方程 $`XA^{-1}X=B`$ 的唯一正解
+  $`X`$（习题 3）。对这个方程和 $`A\#B=B\#A`$ 进行数值检验。
 
 <details>
 <summary>解答</summary>
@@ -166,4 +166,4 @@ assert close(GM @ P.inverse() @ GM, Q, 1e-9)
 
 </details>
 
-**下一章：** [教程 2](02_von_neumann_algebras.md)：库中的交换子、中心与代数 $\bigoplus_cM_{k_c}(\mathbb C)$。
+**下一章：** [教程 2](02_von_neumann_algebras.md)：库中的交换子、中心与代数 $`\bigoplus_cM_{k_c}(\mathbb C)`$。

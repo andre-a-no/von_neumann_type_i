@@ -4,7 +4,7 @@
 
 This tutorial accompanies [Appendix B](../lecture_notes/B_schur_weyl.md) of the lecture notes, which proves Schur–Weyl duality
 ([Theorem B.6](../lecture_notes/B_schur_weyl.md#r-B-6)) and the Weingarten formula of every order ([Theorem B.13](../lecture_notes/B_schur_weyl.md#r-B-13)). We check the
-dimensions in the duality, the decomposition of $(\mathbb C^d)^{\otimes n}$ computed by the library, the
+dimensions in the duality, the decomposition of $`(\mathbb C^d)^{\otimes n}`$ computed by the library, the
 Weingarten function against Monte Carlo averages over Haar unitaries, the Wigner–Eckart theorem, and the Haar
 measure of the orthogonal group.
 
@@ -14,10 +14,10 @@ measure of the orthogonal group.
 
 *Lecture notes:* [Section B.3](../lecture_notes/B_schur_weyl.md#s-B-3); [Lemma B.1](../lecture_notes/B_schur_weyl.md#r-B-1), [Lemma B.2](../lecture_notes/B_schur_weyl.md#r-B-2), [Proposition B.3](../lecture_notes/B_schur_weyl.md#r-B-3), [Lemma B.5](../lecture_notes/B_schur_weyl.md#r-B-5), [Theorem B.6](../lecture_notes/B_schur_weyl.md#r-B-6).
 
-The code compares, for small $d$ and $n$, four dimensions: of $\mathrm{span}\,\pi(S_n)$, of the commutant of two random
-$V^{\otimes n}$ (which contains $\{V^{\otimes n}\}'=\mathrm{span}\,\pi(S_n)$, and coincides with it in all cases printed), and of
-the spans of many random $A^{\otimes n}$ and $V^{\otimes n}$ against $\binom{d^2+n-1}n$ ([Proposition B.3](../lecture_notes/B_schur_weyl.md#r-B-3),
-[Theorem B.6](../lecture_notes/B_schur_weyl.md#r-B-6)). The operators $\pi(\sigma)$ are built by `decompose.permutation_representation(n, d)`;
+The code compares, for small $`d`$ and $`n`$, four dimensions: of $`\mathrm{span}\,\pi(S_n)`$, of the commutant of two random
+$`V^{\otimes n}`$ (which contains $`\{V^{\otimes n}\}'=\mathrm{span}\,\pi(S_n)`$, and coincides with it in all cases printed), and of
+the spans of many random $`A^{\otimes n}`$ and $`V^{\otimes n}`$ against $`\binom{d^2+n-1}n`$ ([Proposition B.3](../lecture_notes/B_schur_weyl.md#r-B-3),
+[Theorem B.6](../lecture_notes/B_schur_weyl.md#r-B-6)). The operators $`\pi(\sigma)`$ are built by `decompose.permutation_representation(n, d)`;
 the code checks that it follows the convention of [Lemma B.1(a)](../lecture_notes/B_schur_weyl.md#r-B-1), and it checks [Lemma B.2](../lecture_notes/B_schur_weyl.md#r-B-2) and the
 Newton recursion of [Lemma B.5](../lecture_notes/B_schur_weyl.md#r-B-5), used in the proof of Theorem B.6(b).
 
@@ -90,14 +90,14 @@ assert close(e[n], functools.reduce(torch.kron, [A] * n), 1e-8)
 
 <a id="s-B-4"></a>
 
-## B.4 The decomposition of $(\mathbb C^d)^{\otimes n}$
+## B.4 The decomposition of $`(\mathbb C^d)^{\otimes n}`$
 
 *Lecture notes:* [Section B.4](../lecture_notes/B_schur_weyl.md#s-B-4); [Theorem B.8](../lecture_notes/B_schur_weyl.md#r-B-8), [Corollary B.9](../lecture_notes/B_schur_weyl.md#r-B-9), [Corollary B.10](../lecture_notes/B_schur_weyl.md#r-B-10).
 
-The code decomposes $\pi(S_3)$ on $(\mathbb C^3)^{\otimes3}$ with `decompose.from_group`, whose `k_factors` and
-`multiplicities` are the $k_c$ and $m_c$, and checks the dimensions of [Theorem B.8](../lecture_notes/B_schur_weyl.md#r-B-8); then it decomposes
-$\pi(S_L)$ on $(\mathbb C^2)^{\otimes L}$ for $L=5,6$ and compares the pairs $(k_c,m_c)$ with $(m_S,2S+1)$ of
-[Corollary B.9](../lecture_notes/B_schur_weyl.md#r-B-9), and $\sum_ck_c^2$ with the Catalan number of [Corollary B.10](../lecture_notes/B_schur_weyl.md#r-B-10). The algorithm behind
+The code decomposes $`\pi(S_3)`$ on $`(\mathbb C^3)^{\otimes3}`$ with `decompose.from_group`, whose `k_factors` and
+`multiplicities` are the $`k_c`$ and $`m_c`$, and checks the dimensions of [Theorem B.8](../lecture_notes/B_schur_weyl.md#r-B-8); then it decomposes
+$`\pi(S_L)`$ on $`(\mathbb C^2)^{\otimes L}`$ for $`L=5,6`$ and compares the pairs $`(k_c,m_c)`$ with $`(m_S,2S+1)`$ of
+[Corollary B.9](../lecture_notes/B_schur_weyl.md#r-B-9), and $`\sum_ck_c^2`$ with the Catalan number of [Corollary B.10](../lecture_notes/B_schur_weyl.md#r-B-10). The algorithm behind
 `from_group` is explained in [Tutorial 4, Section 4.3](04_symmetries.md#s-4-3).
 
 ```python
@@ -123,10 +123,10 @@ for L in (5, 6):
 
 *Lecture notes:* [Section B.5](../lecture_notes/B_schur_weyl.md#s-B-5); [Lemma B.11](../lecture_notes/B_schur_weyl.md#r-B-11), [Theorem B.13](../lecture_notes/B_schur_weyl.md#r-B-13), [Corollary B.14](../lecture_notes/B_schur_weyl.md#r-B-14).
 
-The code computes $\mathrm{Wg}$ from the pseudo-inverse, checks [Theorem B.13(a), (b)](../lecture_notes/B_schur_weyl.md#r-B-13) and
-[Theorem 5.10](../lecture_notes/05_random_matrices.md#r-5-10), and compares the whole moment tensor of order $n=3$ for $d=2$ — a
-case with singular $G$ — and the twirl of a random $X$ ([Lemma B.11](../lecture_notes/B_schur_weyl.md#r-B-11)) with Monte Carlo averages over
-Haar unitaries; the entry $\mathbb E|U_{11}|^6=\frac{3!}{2\cdot3\cdot4}$ is [Corollary B.14](../lecture_notes/B_schur_weyl.md#r-B-14).
+The code computes $`\mathrm{Wg}`$ from the pseudo-inverse, checks [Theorem B.13(a), (b)](../lecture_notes/B_schur_weyl.md#r-B-13) and
+[Theorem 5.10](../lecture_notes/05_random_matrices.md#r-5-10), and compares the whole moment tensor of order $`n=3`$ for $`d=2`$ — a
+case with singular $`G`$ — and the twirl of a random $`X`$ ([Lemma B.11](../lecture_notes/B_schur_weyl.md#r-B-11)) with Monte Carlo averages over
+Haar unitaries; the entry $`\mathbb E|U_{11}|^6=\frac{3!}{2\cdot3\cdot4}`$ is [Corollary B.14](../lecture_notes/B_schur_weyl.md#r-B-14).
 
 ```python
 def n_cycles(p):                                        # number of cycles of a permutation in one-line form
@@ -192,14 +192,14 @@ assert ((Y.mean(0) - T).abs() <= 5 * Y.std(0) / math.sqrt(B) + 1e-12).all()   # 
 
 <a id="s-B-6"></a>
 
-## B.6 Tensor operators and the Wigner–Eckart theorem for $SU(2)$
+## B.6 Tensor operators and the Wigner–Eckart theorem for $`SU(2)`$
 
 *Lecture notes:* [Section B.6](../lecture_notes/B_schur_weyl.md#s-B-6); [Lemma B.15](../lecture_notes/B_schur_weyl.md#r-B-15), [Theorem B.16](../lecture_notes/B_schur_weyl.md#r-B-16).
 
-The code checks [Lemma B.15](../lecture_notes/B_schur_weyl.md#r-B-15) for the site spins of six spins $\frac12$ (`decompose.total_spin`,
+The code checks [Lemma B.15](../lecture_notes/B_schur_weyl.md#r-B-15) for the site spins of six spins $`\frac12`$ (`decompose.total_spin`,
 `decompose.spin_matrices`) and [Theorem B.16](../lecture_notes/B_schur_weyl.md#r-B-16) in a basis-free form: in the decomposition computed by
-`decompose.from_generators` (whose sector bases, the column blocks of `V`, need not be the $|S,M\rangle$), the block of
-$(T_q)_q$ between two multiplets, as a matrix with rows $(M',M,q)$ and columns $(a,b)$, has rank at most one, and it is
+`decompose.from_generators` (whose sector bases, the column blocks of `V`, need not be the $`|S,M\rangle`$), the block of
+$`(T_q)_q`$ between two multiplets, as a matrix with rows $`(M',M,q)`$ and columns $`(a,b)`$, has rank at most one, and it is
 zero outside the range of (a). The theorem is the principle behind `su2.spin_correlation`, which
 [Tutorial 9, Section 9.3](09_spin_chains.md#s-9-3) checks against the `'direct'` method.
 
@@ -244,14 +244,14 @@ assert close(X @ X2 + Y @ Y2 + Z @ Z2, sum((-1) ** q * T[q] @ T2[-q] for q in (-
 
 *Lecture notes:* [Section B.7](../lecture_notes/B_schur_weyl.md#s-B-7); [Theorem B.17](../lecture_notes/B_schur_weyl.md#r-B-17).
 
-By [Theorem B.17](../lecture_notes/B_schur_weyl.md#r-B-17), the orthogonal factor $O$ of the QR decomposition $Z=OR$ of a real Gaussian
-matrix, normalised by $R_{ii}>0$, is Haar distributed on $O(k)$, with $\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k$;
-for any other QR decomposition $Z=O'R'$, $O=O'\mathrm{diag}(\mathrm{sgn}\,R'_{ii})$.
+By [Theorem B.17](../lecture_notes/B_schur_weyl.md#r-B-17), the orthogonal factor $`O`$ of the QR decomposition $`Z=OR`$ of a real Gaussian
+matrix, normalised by $`R_{ii}>0`$, is Haar distributed on $`O(k)`$, with $`\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k`$;
+for any other QR decomposition $`Z=O'R'`$, $`O=O'\mathrm{diag}(\mathrm{sgn}\,R'_{ii})`$.
 
-The code checks the second moments, $\mathbb E\mathrm{Tr}\,O=0$ and $\mathbb E(\mathrm{Tr}\,O)^2=\sum_{i,l}\mathbb E[O_{ii}O_{ll}]=1$ by
+The code checks the second moments, $`\mathbb E\mathrm{Tr}\,O=0`$ and $`\mathbb E(\mathrm{Tr}\,O)^2=\sum_{i,l}\mathbb E[O_{ii}O_{ll}]=1`$ by
 Monte Carlo. It also records a *numerical observation* about the QR routine of `torch.linalg.qr` (a statement about that
-routine, not a theorem): without the sign correction its factor $Q'$ has $\mathbb E\mathrm{Tr}\,Q'$ many standard errors
-away from $0$, so it is not Haar distributed.
+routine, not a theorem): without the sign correction its factor $`Q'`$ has $`\mathbb E\mathrm{Tr}\,Q'`$ many standard errors
+away from $`0`$, so it is not Haar distributed.
 
 ```python
 k, B = 3, 100_000

@@ -4,7 +4,7 @@
 
 Dieses Tutorial begleitet [Kapitel 4](../../lecture_notes/de/04_symmetries.md) der Vorlesungsnotizen, das die Darstellungstheorie hinter den
 Symmetriealgebren entwickelt, daraus einen randomisierten Algorithmus gewinnt, der die von einer beliebigen Liste von
-Matrizen erzeugte von-Neumann-Algebra zerlegt ([Proposition 4.9](../../lecture_notes/de/04_symmetries.md#r-4-9)), ihn auf $U(1)$ und $SU(2)$ anwendet und
+Matrizen erzeugte von-Neumann-Algebra zerlegt ([Proposition 4.9](../../lecture_notes/de/04_symmetries.md#r-4-9)), ihn auf $`U(1)`$ und $`SU(2)`$ anwendet und
 die Sektoren einer von reellen Matrizen erzeugten Algebra in reellen, komplexen und quaternionischen Typ einteilt
 ([Satz 4.20](../../lecture_notes/de/04_symmetries.md#r-4-20)). Wir berechnen Charaktere, wenden die Zerlegung auf Gruppen und auf Erzeuger an, bauen
 Spinketten sektorweise mit `SpinChain` und `su2.SU2Chain` auf und berechnen die reelle Struktur einer Zerlegung.
@@ -16,19 +16,19 @@ Spinketten sektorweise mit `SpinChain` und `su2.SU2Chain` auf und berechnen die 
 *Vorlesungsnotizen:* [Abschnitt 4.2](../../lecture_notes/de/04_symmetries.md#s-4-2); [Satz 4.3](../../lecture_notes/de/04_symmetries.md#r-4-3), [Satz 4.4](../../lecture_notes/de/04_symmetries.md#r-4-4), [Korollar 4.5](../../lecture_notes/de/04_symmetries.md#r-4-5).
 
 [Abschnitt 4.2](../../lecture_notes/de/04_symmetries.md#s-4-2) der Vorlesungsnotizen berechnet von Hand die Charaktere dreier irreduzibler
-Darstellungen von $S_3$ – der trivialen, des Signums und der Standarddarstellung auf $(1,1,1)^\perp\subseteq\mathbb C^3$ – und
-der Darstellung $\pi$, die die drei Faktoren von $(\mathbb C^2)^{\otimes3}$ permutiert, $\chi_\pi(\sigma)=2^{\#\text{cycles}(\sigma)}$
-(Tabelle unten), und gewinnt aus [Korollar 4.5](../../lecture_notes/de/04_symmetries.md#r-4-5) die Vielfachheiten $m_{\rm triv}=4$, $m_{\rm sgn}=0$,
-$m_{\rm std}=2$ und $\dim\pi(S_3)'=20$. Der Code berechnet die Tabelle neu: Er gewinnt $P_\sigma$ als Einschränkung von
-$\pi(\sigma)$ auf den invarianten Spann von $|100\rangle,|010\rangle,|001\rangle$ (auf dem $\pi(\sigma)$ die Positionen der
-einzigen $1$ permutiert, Lemma B.1(a)), und $\#\text{cycles}(\sigma)=\dim\ker(P_\sigma-1)$ (die auf den Zyklen konstanten Vektoren).
+Darstellungen von $`S_3`$ – der trivialen, des Signums und der Standarddarstellung auf $`(1,1,1)^\perp\subseteq\mathbb C^3`$ – und
+der Darstellung $`\pi`$, die die drei Faktoren von $`(\mathbb C^2)^{\otimes3}`$ permutiert, $`\chi_\pi(\sigma)=2^{\#\text{cycles}(\sigma)}`$
+(Tabelle unten), und gewinnt aus [Korollar 4.5](../../lecture_notes/de/04_symmetries.md#r-4-5) die Vielfachheiten $`m_{\rm triv}=4`$, $`m_{\rm sgn}=0`$,
+$`m_{\rm std}=2`$ und $`\dim\pi(S_3)'=20`$. Der Code berechnet die Tabelle neu: Er gewinnt $`P_\sigma`$ als Einschränkung von
+$`\pi(\sigma)`$ auf den invarianten Spann von $`|100\rangle,|010\rangle,|001\rangle`$ (auf dem $`\pi(\sigma)`$ die Positionen der
+einzigen $`1`$ permutiert, Lemma B.1(a)), und $`\#\text{cycles}(\sigma)=\dim\ker(P_\sigma-1)`$ (die auf den Zyklen konstanten Vektoren).
 
-| | Identität ($1$) | Transpositionen ($3$) | $3$-Zyklen ($2$) |
+| | Identität ($`1`$) | Transpositionen ($`3`$) | $`3`$-Zyklen ($`2`$) |
 |---|---|---|---|
-| $\chi_{\rm triv}$ | $1$ | $1$ | $1$ |
-| $\mathrm{sgn}$ | $1$ | $-1$ | $1$ |
-| $\chi_{\rm std}$ | $2$ | $0$ | $-1$ |
-| $\chi_\pi$ | $8$ | $4$ | $2$ |
+| $`\chi_{\rm triv}`$ | $`1`$ | $`1`$ | $`1`$ |
+| $`\mathrm{sgn}`$ | $`1`$ | $`-1`$ | $`1`$ |
+| $`\chi_{\rm std}`$ | $`2`$ | $`0`$ | $`-1`$ |
+| $`\chi_\pi`$ | $`8`$ | $`4`$ | $`2`$ |
 
 ```python
 import math
@@ -66,17 +66,17 @@ Das ist die Zerlegung aus Abschnitt 2.4, nun gewonnen aus einer Tabelle von sech
 
 Der randomisierte Algorithmus der Vorlesungsnotizen ist `decompose.wedderburn`, mit den Schnittstellen `from_group` (alle
 Elemente einer endlichen Gruppe; die Kommutante wird mit dem Twirl `decompose.twirl` abgetastet) und `from_generators`
-(eine beliebige Liste von Matrizen; die Kommutante ist ein Kern, `decompose.commutant_basis`). Er zerlegt $\mathbb C^n$
-in die Eigenräume eines zufälligen $K\in\mathcal A'_h$, gruppiert sie und richtet sie mit den Blöcken eines zufälligen
-$Y\in\mathcal A'$ aus und gibt eine `Decomposition` mit dem unitären `V`, den $k_c$ (`k_factors`) und den $m_c$
+(eine beliebige Liste von Matrizen; die Kommutante ist ein Kern, `decompose.commutant_basis`). Er zerlegt $`\mathbb C^n`$
+in die Eigenräume eines zufälligen $`K\in\mathcal A'_h`$, gruppiert sie und richtet sie mit den Blöcken eines zufälligen
+$`Y\in\mathcal A'`$ aus und gibt eine `Decomposition` mit dem unitären `V`, den $`k_c`$ (`k_factors`) und den $`m_c`$
 (`multiplicities`) zurück. In Gleitkommaarithmetik behandelt er Eigenwerte, die näher als eine Toleranz beieinanderliegen,
 als gleich und zerlegt die entstehenden Unterräume weiter, indem er neue zufällige Elemente der Kommutante auf sie
 komprimiert ([Lemma 4.8(a)](../../lecture_notes/de/04_symmetries.md#r-4-8)).
 
 `Decomposition.verify()` meldet die relativen Abstände der Erzeuger (und neuer Elemente der Kommutante) von
-$\mathcal B$ (bzw. $\mathcal B'$) und vergleicht $\sum_cm_c^2$ mit $\dim\mathcal A'$ (für eine Gruppe aus den
-Charakteren, Korollar 4.5(c); für Erzeuger aus dem Kern). Wir wenden es auf $S_3$ und drei Qubits an und schauen
-dann hinein: die Eigenräume eines zufälligen $K$ und die Verflechtungsoperatoren eines zufälligen $Y$.
+$`\mathcal B`$ (bzw. $`\mathcal B'`$) und vergleicht $`\sum_cm_c^2`$ mit $`\dim\mathcal A'`$ (für eine Gruppe aus den
+Charakteren, Korollar 4.5(c); für Erzeuger aus dem Kern). Wir wenden es auf $`S_3`$ und drei Qubits an und schauen
+dann hinein: die Eigenräume eines zufälligen $`K`$ und die Verflechtungsoperatoren eines zufälligen $`Y`$.
 
 ```python
 D = dc.from_group(G)                                     # the twirl samples pi(S_3)'
@@ -104,23 +104,23 @@ assert s[1] > 1e-3 and abs(s[0] - s[1]) < 1e-10
 assert all(close(W.mH @ Y @ Wa, 0) for W in spaces if W.shape[1] == 1)   # different summands: zero
 ```
 
-Die Kommutante bestimmt die Kosten: Eine Twirl-Stichprobe kostet $|G|$ Produkte von $n\times n$-Matrizen. Für Erzeuger
-diagonalisiert die Bibliothek zunächst ein hermitesches Element $R=U\mathrm{diag}(\lambda)U^*$ von $\mathcal A$
+Die Kommutante bestimmt die Kosten: Eine Twirl-Stichprobe kostet $`|G|`$ Produkte von $`n\times n`$-Matrizen. Für Erzeuger
+diagonalisiert die Bibliothek zunächst ein hermitesches Element $`R=U\mathrm{diag}(\lambda)U^*`$ von $`\mathcal A`$
 (eine zufällige reelle Linearkombination der hermiteschen Teile der Erzeuger plus ein Vielfaches eines
-symmetrisierten Produkts zweier solcher Kombinationen). Jedes $X\in\mathcal A'$ vertauscht mit $R$, also mit dessen
-Spektralprojektionen (Satz 1.5(d)), sodass $U^*XU$ blockdiagonal bezüglich der Eigenräume von $R$ der Dimensionen
-$d_\lambda$ ist; dies wird vorab erzwungen, und das Kernproblem hat $N_R=\sum_\lambda d_\lambda^2$ statt $n^2$ Unbekannte.
+symmetrisierten Produkts zweier solcher Kombinationen). Jedes $`X\in\mathcal A'`$ vertauscht mit $`R`$, also mit dessen
+Spektralprojektionen (Satz 1.5(d)), sodass $`U^*XU`$ blockdiagonal bezüglich der Eigenräume von $`R`$ der Dimensionen
+$`d_\lambda`$ ist; dies wird vorab erzwungen, und das Kernproblem hat $`N_R=\sum_\lambda d_\lambda^2`$ statt $`n^2`$ Unbekannte.
 Das Zusammenfassen mehrerer Eigenwerte vergrößert nur die Blöcke, sodass das reduzierte Problem dieselbe
-Lösungsmenge $\mathcal A'$ hat. In der Zerlegung ist $V^*RV=\bigoplus_cr_c\otimes1_{m_c}$ mit hermiteschen
-$r_c\in M_{k_c}$; hat $\lambda$ in $r_c$ die Vielfachheit $\mu_c(\lambda)$, so ist $d_\lambda=\sum_c\mu_c(\lambda)m_c$, und da
-$\mu^2\ge\mu$ für ganze Zahlen $\mu\ge0$ gilt,
-$$
+Lösungsmenge $`\mathcal A'`$ hat. In der Zerlegung ist $`V^*RV=\bigoplus_cr_c\otimes1_{m_c}`$ mit hermiteschen
+$`r_c\in M_{k_c}`$; hat $`\lambda`$ in $`r_c`$ die Vielfachheit $`\mu_c(\lambda)`$, so ist $`d_\lambda=\sum_c\mu_c(\lambda)m_c`$, und da
+$`\mu^2\ge\mu`$ für ganze Zahlen $`\mu\ge0`$ gilt,
+```math
 N_R=\sum_\lambda\Big(\sum_c\mu_c(\lambda)m_c\Big)^2\ge\sum_{\lambda,c}\mu_c(\lambda)^2m_c^2\ge\sum_{\lambda,c}\mu_c(\lambda)m_c^2=\sum_ck_cm_c^2,
-$$
-mit Gleichheit genau dann, wenn die Eigenwerte aller $r_c$ einfach und paarweise verschieden sind. Für den
-Gesamtspin von $L=3,4,5$ Spins findet der folgende Code Gleichheit (numerische Beobachtung). Selbst das Minimum ist
-groß: Für acht Spins $\frac12$ ($n=256$) ist $\sum_ck_cm_c^2=4900$, und das reduzierte System, eine
-$(n^2+N_R)\times N_R$-Matrix, hat $3.5\cdot10^8$ komplexe Einträge. Für Spinketten verwendet Abschnitt 4.6 daher das
+```
+mit Gleichheit genau dann, wenn die Eigenwerte aller $`r_c`$ einfach und paarweise verschieden sind. Für den
+Gesamtspin von $`L=3,4,5`$ Spins findet der folgende Code Gleichheit (numerische Beobachtung). Selbst das Minimum ist
+groß: Für acht Spins $`\frac12`$ ($`n=256`$) ist $`\sum_ck_cm_c^2=4900`$, und das reduzierte System, eine
+$`(n^2+N_R)\times N_R`$-Matrix, hat $`3.5\cdot10^8`$ komplexe Einträge. Für Spinketten verwendet Abschnitt 4.6 daher das
 Modul `su2`, das die Antwort im Voraus kennt.
 
 ```python
@@ -134,16 +134,16 @@ for n in (3, 4, 5):
 
 <a id="s-4-4"></a>
 
-## 4.4 $U(1)$ und Ladungssektoren
+## 4.4 $`U(1)`$ und Ladungssektoren
 
 *Vorlesungsnotizen:* [Abschnitt 4.4](../../lecture_notes/de/04_symmetries.md#s-4-4); [Proposition 4.10](../../lecture_notes/de/04_symmetries.md#r-4-10).
 
-Für $n$ Qubits ist die Ladung der Teilchenzahloperator $\hat N=\sum_jn_j$, $n_j=|1\rangle\langle1|$ auf Qubit $j$, und die
-Operatoren, die sie erhalten, bilden $U(1)'\cong\bigoplus_{w=0}^nM_{\binom nw}(\mathbb C)$
-([Vorlesungsnotizen, Abschnitt 4.4](../../lecture_notes/de/04_symmetries.md#s-4-4)); das ist `chains.SpinChain(n).algebra` (Bit $1$ = Spin aufwärts,
-$\hat N=S^z+\frac n2$; in `decompose.total_spin` ist Spin aufwärts dagegen der *erste* Basisvektor von $\mathbb C^2$, was die
-Basis umbenennt, nicht aber die Sektoren). Jeder XXZ-Hamiltonoperator liegt in $U(1)'$. Der Code findet die Sektoren
-allein aus $\hat N$ und diagonalisiert einen XXZ-Ring aus vier Spins sektorweise.
+Für $`n`$ Qubits ist die Ladung der Teilchenzahloperator $`\hat N=\sum_jn_j`$, $`n_j=|1\rangle\langle1|`$ auf Qubit $`j`$, und die
+Operatoren, die sie erhalten, bilden $`U(1)'\cong\bigoplus_{w=0}^nM_{\binom nw}(\mathbb C)`$
+([Vorlesungsnotizen, Abschnitt 4.4](../../lecture_notes/de/04_symmetries.md#s-4-4)); das ist `chains.SpinChain(n).algebra` (Bit $`1`$ = Spin aufwärts,
+$`\hat N=S^z+\frac n2`$; in `decompose.total_spin` ist Spin aufwärts dagegen der *erste* Basisvektor von $`\mathbb C^2`$, was die
+Basis umbenennt, nicht aber die Sektoren). Jeder XXZ-Hamiltonoperator liegt in $`U(1)'`$. Der Code findet die Sektoren
+allein aus $`\hat N`$ und diagonalisiert einen XXZ-Ring aus vier Spins sektorweise.
 
 ```python
 import functools
@@ -174,14 +174,14 @@ assert close(torch.sort(E_sec).values, torch.linalg.eigvalsh(H))
 
 <a id="s-4-5"></a>
 
-## 4.5 $SU(2)$: Spin
+## 4.5 $`SU(2)`$: Spin
 
-*Vorlesungsnotizen:* [Abschnitt 4.5](../../lecture_notes/de/04_symmetries.md#s-4-5); [Satz 4.11](../../lecture_notes/de/04_symmetries.md#r-4-11), [Proposition 4.13](../../lecture_notes/de/04_symmetries.md#r-4-13), [Satz 4.14](../../lecture_notes/de/04_symmetries.md#r-4-14). Spin $s$ ist `decompose.spin_matrices(s)`, und der Gesamtspin von $L$ Spins $\frac12$ ist `decompose.total_spin(L)`.
+*Vorlesungsnotizen:* [Abschnitt 4.5](../../lecture_notes/de/04_symmetries.md#s-4-5); [Satz 4.11](../../lecture_notes/de/04_symmetries.md#r-4-11), [Proposition 4.13](../../lecture_notes/de/04_symmetries.md#r-4-13), [Satz 4.14](../../lecture_notes/de/04_symmetries.md#r-4-14). Spin $`s`$ ist `decompose.spin_matrices(s)`, und der Gesamtspin von $`L`$ Spins $`\frac12`$ ist `decompose.total_spin(L)`.
 
-Für $L=4$ liefert [Vorlesungsnotizen, Proposition 4.13](../../lecture_notes/de/04_symmetries.md#r-4-13) $\{S_x,S_y,S_z\}''\cong M_5\oplus M_3\oplus M_1$
-mit den Vielfachheiten $1,3,2$, der Dimension $35$, und die Kommutante $\{S_x,S_y,S_z\}'\cong M_1\oplus M_3\oplus M_2$, der
-Dimension $14$. Die Bibliothek findet dasselbe allein aus den drei Erzeugern (Sektoren sortiert nach $(k_c,m_c)$), und
-$\mathbf S^2=S(S+1)$ auf Spin $S$ ([Satz 4.11](../../lecture_notes/de/04_symmetries.md#r-4-11)):
+Für $`L=4`$ liefert [Vorlesungsnotizen, Proposition 4.13](../../lecture_notes/de/04_symmetries.md#r-4-13) $`\{S_x,S_y,S_z\}''\cong M_5\oplus M_3\oplus M_1`$
+mit den Vielfachheiten $`1,3,2`$, der Dimension $`35`$, und die Kommutante $`\{S_x,S_y,S_z\}'\cong M_1\oplus M_3\oplus M_2`$, der
+Dimension $`14`$. Die Bibliothek findet dasselbe allein aus den drei Erzeugern (Sektoren sortiert nach $`(k_c,m_c)`$), und
+$`\mathbf S^2=S(S+1)`$ auf Spin $`S`$ ([Satz 4.11](../../lecture_notes/de/04_symmetries.md#r-4-11)):
 
 ```python
 S4 = dc.total_spin(4)
@@ -198,8 +198,8 @@ for c, k in enumerate(D4.k_factors):
 ```
 
 Nach [Vorlesungsnotizen, Satz 4.14](../../lecture_notes/de/04_symmetries.md#r-4-14) (Schur-Weyl-Dualität) spannen die Permutationen der Plätze die
-Kommutante des Gesamtspins auf: $\mathrm{span}\,\pi(S_L)=\{S_x,S_y,S_z\}'$. Für $L\le5$ vergleicht der Code die beiden
-Räume numerisch: Wegen Teil (a) des Satzes, $\mathrm{span}\,\pi(S_L)\subseteq\{S_x,S_y,S_z\}'$, genügt es, dass sie
+Kommutante des Gesamtspins auf: $`\mathrm{span}\,\pi(S_L)=\{S_x,S_y,S_z\}'`$. Für $`L\le5`$ vergleicht der Code die beiden
+Räume numerisch: Wegen Teil (a) des Satzes, $`\mathrm{span}\,\pi(S_L)\subseteq\{S_x,S_y,S_z\}'`$, genügt es, dass sie
 dieselbe Dimension haben.
 
 ```python
@@ -214,12 +214,12 @@ print(Dp)
 assert sorted(zip(Dp.multiplicities, Dp.k_factors)) == sorted(zip(D4.k_factors, D4.multiplicities))
 ```
 
-Die ausgegebenen Dimensionen sind $2,5,14,42$, die Catalan-Zahlen $\binom{2L}L/(L+1)$; Korollar B.10 beweist
-$\dim\{S_a\}'=\sum_Sm_S^2=\binom{2L}L/(L+1)$ für jedes $L$. Die letzte Zeile zeigt die
-Dualität in Aktion: $\pi(S_4)''$ hat Blöcke $k=(1,2,3)$ mit Vielfachheiten $(5,1,3)$ – die Paare $(k_c,m_c)$ des
-Gesamtspins mit vertauschten Rollen. Allgemein (Korollar B.9) trägt der Vielfachheitsraum von Spin $S$ eine
-irreduzible Darstellung von $S_L$ der Dimension $m_S$, und diese sind paarweise inäquivalent; hier sind die
-Dimensionen $1,3,2$ für $S=2,1,0$.
+Die ausgegebenen Dimensionen sind $`2,5,14,42`$, die Catalan-Zahlen $`\binom{2L}L/(L+1)`$; Korollar B.10 beweist
+$`\dim\{S_a\}'=\sum_Sm_S^2=\binom{2L}L/(L+1)`$ für jedes $`L`$. Die letzte Zeile zeigt die
+Dualität in Aktion: $`\pi(S_4)''`$ hat Blöcke $`k=(1,2,3)`$ mit Vielfachheiten $`(5,1,3)`$ – die Paare $`(k_c,m_c)`$ des
+Gesamtspins mit vertauschten Rollen. Allgemein (Korollar B.9) trägt der Vielfachheitsraum von Spin $`S`$ eine
+irreduzible Darstellung von $`S_L`$ der Dimension $`m_S`$, und diese sind paarweise inäquivalent; hier sind die
+Dimensionen $`1,3,2`$ für $`S=2,1,0`$.
 
 <a id="s-4-6"></a>
 
@@ -228,10 +228,10 @@ Dimensionen $1,3,2$ für $S=2,1,0$.
 *Vorlesungsnotizen:* [Abschnitt 4.6](../../lecture_notes/de/04_symmetries.md#s-4-6); [Proposition 4.15](../../lecture_notes/de/04_symmetries.md#r-4-15), [Satz 4.16](../../lecture_notes/de/04_symmetries.md#r-4-16), [Korollar 4.17](../../lecture_notes/de/04_symmetries.md#r-4-17).
 
 Nach [Vorlesungsnotizen, Korollar 4.17](../../lecture_notes/de/04_symmetries.md#r-4-17) lassen sich Orthonormalbasen der Höchstgewichtsvektoren von
-$L$ Spins $\frac12$ Platz für Platz mit den Clebsch-Gordan-Koeffizienten aus [Satz 4.16](../../lecture_notes/de/04_symmetries.md#r-4-16) aufbauen.
-Bezeichnet man jeden Basisvektor durch seine Folge von Zwischenspins $S_1=\frac12,S_2,\dots,S_L=S$, so erhält man die
+$`L`$ Spins $`\frac12`$ Platz für Platz mit den Clebsch-Gordan-Koeffizienten aus [Satz 4.16](../../lecture_notes/de/04_symmetries.md#r-4-16) aufbauen.
+Bezeichnet man jeden Basisvektor durch seine Folge von Zwischenspins $`S_1=\frac12,S_2,\dots,S_L=S`$, so erhält man die
 Yamanouchi-Basis, die `su2.SU2Chain` aufbaut (ihr Quellcode verwendet genau diese Koeffizienten; der folgende Code prüft
-nur die Aussagen von Korollar 4.17), innerhalb des $U(1)$-Sektors $\hat N=\frac L2+S$ von `SpinChain` (dessen Anordnung
+nur die Aussagen von Korollar 4.17), innerhalb des $`U(1)`$-Sektors $`\hat N=\frac L2+S`$ von `SpinChain` (dessen Anordnung
 der Plätze eine Umbenennung der Tensorfaktoren ist, die nach Lemma B.1(b) mit dem Gesamtspin vertauscht). Der Code prüft
 Satz 4.16 an dichten Matrizen und gegen `su2.clebsch_gordan` der Bibliothek, dann die Aussagen von Korollar 4.17 für die
 Basen von acht Spins. Außerdem prüfen wir [Proposition 4.15(a)](../../lecture_notes/de/04_symmetries.md#r-4-15) an einem Ring aus vier Spins mit
@@ -306,76 +306,76 @@ print(u1.algebra.k_factors, sym.multiplicities, flops(u1.algebra.k_factors), flo
 print(f"ground state energy {E_su2[0].item():.6f}, first excited {E_su2[1].item():.6f} (x3)")
 ```
 
-Für den Ring aus acht Spins haben die $U(1)$-Blöcke die Größen $\binom8w=1,8,28,56,70,56,28,8,1$ (Abschnitt 4.4), die
-$SU(2)$-Blöcke die Größen $m_S=14,28,20,7,1$ für $S=0,\dots,4$ (Proposition 4.13). Der Aufwand der Diagonalisierung,
-$\sum k^3$, sinkt von $739162$ auf $33040$, um einen Faktor $22$; die Dimension der Algebra, $\sum k^2$, von
-$\sum_w\binom8w\binom8{8-w}=\binom{16}8=12870$ (man wähle $8$ von $16$ Elementen, $w$ davon unter den ersten $8$) auf
-$\sum_Sm_S^2=1430=\binom{16}8/9$ (Korollar B.10). Nach Satz 9.9 (der Ring hat gerade Länge und $J>0$) ist der
-Grundzustand ein einzelnes Singulett, und $E_0(0)<E_0(1)$. *Numerische Beobachtung* (berechnet vom obigen Code): Die
-Grundzustandsenergie ist $-3.651093$, und das erste angeregte Niveau ist ein Triplett bei $-3.128419$.
+Für den Ring aus acht Spins haben die $`U(1)`$-Blöcke die Größen $`\binom8w=1,8,28,56,70,56,28,8,1`$ (Abschnitt 4.4), die
+$`SU(2)`$-Blöcke die Größen $`m_S=14,28,20,7,1`$ für $`S=0,\dots,4`$ (Proposition 4.13). Der Aufwand der Diagonalisierung,
+$`\sum k^3`$, sinkt von $`739162`$ auf $`33040`$, um einen Faktor $`22`$; die Dimension der Algebra, $`\sum k^2`$, von
+$`\sum_w\binom8w\binom8{8-w}=\binom{16}8=12870`$ (man wähle $`8`$ von $`16`$ Elementen, $`w`$ davon unter den ersten $`8`$) auf
+$`\sum_Sm_S^2=1430=\binom{16}8/9`$ (Korollar B.10). Nach Satz 9.9 (der Ring hat gerade Länge und $`J>0`$) ist der
+Grundzustand ein einzelnes Singulett, und $`E_0(0)<E_0(1)`$. *Numerische Beobachtung* (berechnet vom obigen Code): Die
+Grundzustandsenergie ist $`-3.651093`$, und das erste angeregte Niveau ist ein Triplett bei $`-3.128419`$.
 
 <a id="s-4-7"></a>
 
 ## 4.7 Reelle Algebren: reeller, komplexer und quaternionischer Typ
 
 *Vorlesungsnotizen:* [Abschnitt 4.7](../../lecture_notes/de/04_symmetries.md#s-4-7). Für eine unter komplexer Konjugation abgeschlossene
-$*$-Algebra $\mathcal A$ mit einer Zerlegung $V$, deren Spaltenblöcke $V_c$ zu den Sektoren gehören, liefert
-[Satz 4.20](../../lecture_notes/de/04_symmetries.md#r-4-20) die Permutation $\sigma$ der Sektoren mit $\bar P_c=P_{\sigma(c)}$, unitäre $J_c$, $M_c$ mit
-$\overline{V_c}=V_{\sigma(c)}(J_c\otimes M_c)$ und, für $\sigma(c)=c$, das Vorzeichen $\varepsilon_c$ mit $J_c\bar J_c=\varepsilon_c1$;
-die Typen und die reelle Algebra $\mathcal A_{\mathbb R}$ stehen in [Satz 4.21](../../lecture_notes/de/04_symmetries.md#r-4-21), das reelle Schursche
+$`*`$-Algebra $`\mathcal A`$ mit einer Zerlegung $`V`$, deren Spaltenblöcke $`V_c`$ zu den Sektoren gehören, liefert
+[Satz 4.20](../../lecture_notes/de/04_symmetries.md#r-4-20) die Permutation $`\sigma`$ der Sektoren mit $`\bar P_c=P_{\sigma(c)}`$, unitäre $`J_c`$, $`M_c`$ mit
+$`\overline{V_c}=V_{\sigma(c)}(J_c\otimes M_c)`$ und, für $`\sigma(c)=c`$, das Vorzeichen $`\varepsilon_c`$ mit $`J_c\bar J_c=\varepsilon_c1`$;
+die Typen und die reelle Algebra $`\mathcal A_{\mathbb R}`$ stehen in [Satz 4.21](../../lecture_notes/de/04_symmetries.md#r-4-21), das reelle Schursche
 Lemma ist [Satz 4.22](../../lecture_notes/de/04_symmetries.md#r-4-22), und die reellen Elemente der Kommutante beschreibt
 [Proposition 4.23](../../lecture_notes/de/04_symmetries.md#r-4-23).
 
-`Decomposition.real_structure()` berechnet $\sigma$, $J_c$, $M_c$ und die Typen für eine von `wedderburn`
+`Decomposition.real_structure()` berechnet $`\sigma`$, $`J_c`$, $`M_c`$ und die Typen für eine von `wedderburn`
 (`from_generators`, `from_group`) gelieferte Zerlegung. Sie prüft, dass die Konjugierten der gespeicherten Erzeuger in
-$V(\bigoplus_cM_{k_c}\otimes1)V^*$ liegen (relatives Residuum `'conjugation'`), und bildet die unitäre Matrix
-$P=V^*\bar V$, deren Spaltenblock $c$ gleich $V^*\overline{V_c}$ ist: Nach Satz 4.20(a) ist er auf den Zeilen des
-Sektors $\sigma(c)$ getragen und dort gleich $J_c\otimes M_c$. Die Bibliothek nimmt als $\sigma(c)$ den Sektor, der
-den größten Teil des Blocks trägt, verlangt $(k_{\sigma(c)},m_{\sigma(c)})=(k_c,m_c)$ und schätzt den Rest ab
-(`'leak'`); sie ordnet den Block zur $k_c^2\times m_c^2$-Matrix mit den Einträgen $T_{(a,b),(j,l)}=T_{(a,j),(b,l)}$
-um, die für $T=J\otimes M$ die Rang-eins-Matrix $\mathrm{vec}\,J\,(\mathrm{vec}\,M)^T$ ist, liest $J_c$ und
-$M_c$ an ihren führenden Singulärvektoren ab (mit $\|J_c\|_F^2=k_c$) und speichert den Abstand des Blocks von
-$J_c\otimes M_c$ (`'kron'`). Überschreitet eines dieser drei Residuen die Toleranz, passen die Größen nicht zusammen
+$`V(\bigoplus_cM_{k_c}\otimes1)V^*`$ liegen (relatives Residuum `'conjugation'`), und bildet die unitäre Matrix
+$`P=V^*\bar V`$, deren Spaltenblock $`c`$ gleich $`V^*\overline{V_c}`$ ist: Nach Satz 4.20(a) ist er auf den Zeilen des
+Sektors $`\sigma(c)`$ getragen und dort gleich $`J_c\otimes M_c`$. Die Bibliothek nimmt als $`\sigma(c)`$ den Sektor, der
+den größten Teil des Blocks trägt, verlangt $`(k_{\sigma(c)},m_{\sigma(c)})=(k_c,m_c)`$ und schätzt den Rest ab
+(`'leak'`); sie ordnet den Block zur $`k_c^2\times m_c^2`$-Matrix mit den Einträgen $`T_{(a,b),(j,l)}=T_{(a,j),(b,l)}`$
+um, die für $`T=J\otimes M`$ die Rang-eins-Matrix $`\mathrm{vec}\,J\,(\mathrm{vec}\,M)^T`$ ist, liest $`J_c`$ und
+$`M_c`$ an ihren führenden Singulärvektoren ab (mit $`\|J_c\|_F^2=k_c`$) und speichert den Abstand des Blocks von
+$`J_c\otimes M_c`$ (`'kron'`). Überschreitet eines dieser drei Residuen die Toleranz, passen die Größen nicht zusammen
 oder bilden die Partner keine Involution, so löst sie `ValueError` aus (die Algebra ist nicht unter Konjugation
-abgeschlossen). Für $\sigma(c)=c$ setzt sie $\varepsilon_c$ gleich dem Vorzeichen von
-$\mathrm{Re}\,\mathrm{Tr}(J_c\bar J_c)/k_c$ – in exakter Arithmetik genau $\pm1$, sodass die beiden
-Kandidaten den Abstand $2$ haben – und speichert als `'sign'` das Maximum über diese Sektoren von
-$\|J_c\bar J_c-\varepsilon_c\|_F/\sqrt{k_c}$ und $\|M_c\bar M_c-\varepsilon_c\|_F/\sqrt{m_c}$, auf mindestens $1$
-angehoben, wenn ein $\varepsilon_c=-1$ mit ungeradem $k_c$ oder $m_c$ auftritt (nach Satz 4.20(b) unmöglich). Das
-Ergebnis hat `types`, `partner` ($\sigma$), `J`, `M`, `residuals` und `ok`; letzteres besagt, dass alle Residuen
+abgeschlossen). Für $`\sigma(c)=c`$ setzt sie $`\varepsilon_c`$ gleich dem Vorzeichen von
+$`\mathrm{Re}\,\mathrm{Tr}(J_c\bar J_c)/k_c`$ – in exakter Arithmetik genau $`\pm1`$, sodass die beiden
+Kandidaten den Abstand $`2`$ haben – und speichert als `'sign'` das Maximum über diese Sektoren von
+$`\|J_c\bar J_c-\varepsilon_c\|_F/\sqrt{k_c}`$ und $`\|M_c\bar M_c-\varepsilon_c\|_F/\sqrt{m_c}`$, auf mindestens $`1`$
+angehoben, wenn ein $`\varepsilon_c=-1`$ mit ungeradem $`k_c`$ oder $`m_c`$ auftritt (nach Satz 4.20(b) unmöglich). Das
+Ergebnis hat `types`, `partner` ($`\sigma`$), `J`, `M`, `residuals` und `ok`; letzteres besagt, dass alle Residuen
 höchstens gleich der Toleranz sind (standardmäßig die Annahmeschwelle der Zerlegung); dann ist auch
-$|\mathrm{Tr}(J_c\bar J_c)/k_c-\varepsilon_c|\le\|J_c\bar J_c-\varepsilon_c\|_F/\sqrt{k_c}$ (Cauchy–Schwarz)
+$`|\mathrm{Tr}(J_c\bar J_c)/k_c-\varepsilon_c|\le\|J_c\bar J_c-\varepsilon_c\|_F/\sqrt{k_c}`$ (Cauchy–Schwarz)
 höchstens gleich der Toleranz.
 
-`Decomposition.real_basis()` liefert eine reelle orthogonale $n\times n$-Matrix $O$ und eine Liste, die ihre
+`Decomposition.real_basis()` liefert eine reelle orthogonale $`n\times n`$-Matrix $`O`$ und eine Liste, die ihre
 Spaltenblöcke beschreibt (Typ, Sektoren, Spaltenbereich): für einen Sektor vom reellen Typ die Spalten
-$O_c=V_c(W_J\otimes W_M)$ aus Satz 4.21(a), sodass $O_c^TaO_c=\alpha_c(a)\otimes1_{m_c}$ mit reellem $\alpha_c(a)$;
-für einen Sektor vom quaternionischen Typ die Spalten $V_cW$ mit $J_c\otimes M_c=WW^T$ und $(J_c\otimes M_c)\bar W=W$
-(Lemma 4.19(c) mit $\varepsilon=1$, da $(J_c\otimes M_c)\overline{(J_c\otimes M_c)}=\varepsilon_c^2=1$), die nach der
-Rechnung aus Satz 4.21(a) reell sind; und für ein Paar $c,\sigma(c)$ (mit $c<\sigma(c)$) die Spalten
-$\sqrt2\mathrm{Re}\,V_c$, gefolgt von $\sqrt2\mathrm{Im}\,V_c$. Diese sind orthonormal:
-$V_c^*\overline{V_c}=V_c^*V_{\sigma(c)}(J_c\otimes M_c)=0$ und $V_c^T\overline{V_c}=\overline{V_c^*V_c}=1$ ergeben
+$`O_c=V_c(W_J\otimes W_M)`$ aus Satz 4.21(a), sodass $`O_c^TaO_c=\alpha_c(a)\otimes1_{m_c}`$ mit reellem $`\alpha_c(a)`$;
+für einen Sektor vom quaternionischen Typ die Spalten $`V_cW`$ mit $`J_c\otimes M_c=WW^T`$ und $`(J_c\otimes M_c)\bar W=W`$
+(Lemma 4.19(c) mit $`\varepsilon=1`$, da $`(J_c\otimes M_c)\overline{(J_c\otimes M_c)}=\varepsilon_c^2=1`$), die nach der
+Rechnung aus Satz 4.21(a) reell sind; und für ein Paar $`c,\sigma(c)`$ (mit $`c<\sigma(c)`$) die Spalten
+$`\sqrt2\mathrm{Re}\,V_c`$, gefolgt von $`\sqrt2\mathrm{Im}\,V_c`$. Diese sind orthonormal:
+$`V_c^*\overline{V_c}=V_c^*V_{\sigma(c)}(J_c\otimes M_c)=0`$ und $`V_c^T\overline{V_c}=\overline{V_c^*V_c}=1`$ ergeben
 zusammen mit ihren Konjugierten
-$(\mathrm{Re}\,V_c)^T\mathrm{Re}\,V_c=(\mathrm{Im}\,V_c)^T\mathrm{Im}\,V_c=\frac12$ und
-$(\mathrm{Re}\,V_c)^T\mathrm{Im}\,V_c=0$; Spalten verschiedener Blöcke liegen in den Bildern der
-Orthogonalprojektionen $P_{\mathcal O}=\sum_{e\in\mathcal O}P_e$ verschiedener Bahnen $\mathcal O$ von $\sigma$ (da
-$\overline{V_c}=V_{\sigma(c)}(J_c\otimes M_c)$), also ist $O$ orthogonal. Real- und Imaginärteil von $aV_c=V_cx$,
-$x=\pi_c(a)\otimes1_{m_c}$, ergeben für reelles $a$
-$$
+$`(\mathrm{Re}\,V_c)^T\mathrm{Re}\,V_c=(\mathrm{Im}\,V_c)^T\mathrm{Im}\,V_c=\frac12`$ und
+$`(\mathrm{Re}\,V_c)^T\mathrm{Im}\,V_c=0`$; Spalten verschiedener Blöcke liegen in den Bildern der
+Orthogonalprojektionen $`P_{\mathcal O}=\sum_{e\in\mathcal O}P_e`$ verschiedener Bahnen $`\mathcal O`$ von $`\sigma`$ (da
+$`\overline{V_c}=V_{\sigma(c)}(J_c\otimes M_c)`$), also ist $`O`$ orthogonal. Real- und Imaginärteil von $`aV_c=V_cx`$,
+$`x=\pi_c(a)\otimes1_{m_c}`$, ergeben für reelles $`a`$
+```math
 O^TaO=\begin{pmatrix}\mathrm{Re}\,x&\mathrm{Im}\,x\\-\mathrm{Im}\,x&\mathrm{Re}\,x\end{pmatrix}\quad\text{on these columns.}
-$$
-Die Takagi-Faktoren $W$ mit $WW^T=J$ einer symmetrischen unitären Matrix $J=X+iY$ werden aus einer orthogonalen
-Diagonalisierung von $X+tY$ für ein zufälliges $t$ berechnet ($X$ und $Y$ sind vertauschende reelle symmetrische
-Matrizen, da der Imaginärteil von $J\bar J=JJ^*=1$ gleich $YX-XY$ ist); die Bibliothek akzeptiert das Ergebnis anhand
-seiner Residuen $\|WW^T-J\|_F/\|J\|_F$ und $\|\mathrm{Im}(V_cW)\|_F/\sqrt{k_cm_c}$ und warnt
-(`DecompositionWarning`), wenn eines davon $\max(\text{Toleranz},10^3\,\epsilon_{\rm mach}\,n)$ überschreitet.
+```
+Die Takagi-Faktoren $`W`$ mit $`WW^T=J`$ einer symmetrischen unitären Matrix $`J=X+iY`$ werden aus einer orthogonalen
+Diagonalisierung von $`X+tY`$ für ein zufälliges $`t`$ berechnet ($`X`$ und $`Y`$ sind vertauschende reelle symmetrische
+Matrizen, da der Imaginärteil von $`J\bar J=JJ^*=1`$ gleich $`YX-XY`$ ist); die Bibliothek akzeptiert das Ergebnis anhand
+seiner Residuen $`\|WW^T-J\|_F/\|J\|_F`$ und $`\|\mathrm{Im}(V_cW)\|_F/\sqrt{k_cm_c}`$ und warnt
+(`DecompositionWarning`), wenn eines davon $`\max(\text{Toleranz},10^3\,\epsilon_{\rm mach}\,n)`$ überschreitet.
 
 [Abschnitt 4.7](../../lecture_notes/de/04_symmetries.md#s-4-7) der Vorlesungsnotizen behandelt drei von reellen Matrizen erzeugte Algebren: (i)
-$L_a\otimes1_2$ auf $\mathbb R^3\otimes\mathbb R^2$, mit den Erzeugern $(L_a)_{bc}=-\epsilon_{abc}$ der Drehungen des
-$\mathbb R^3$: ein Sektor vom reellen Typ, $k=3$, $m=2$; (ii) $\Omega_2\otimes1_2$ auf $\mathbb R^2\otimes\mathbb R^2$: ein
-Paar vom komplexen Typ, $k=1$, $m=2$; (iii) die Linksmultiplikationen $1_2\otimes L_q$ mit den Quaternionen auf
-$\mathbb H^2=\mathbb R^8$: ein Sektor vom quaternionischen Typ, $k=2$, $m=4$. Der Code berechnet für jede die Zerlegung
-und die reelle Struktur und prüft Satz 4.20(a),(b) sowie die Blockform von $O^TaO$ für den reellen Typ (Satz 4.21(a))
+$`L_a\otimes1_2`$ auf $`\mathbb R^3\otimes\mathbb R^2`$, mit den Erzeugern $`(L_a)_{bc}=-\epsilon_{abc}`$ der Drehungen des
+$`\mathbb R^3`$: ein Sektor vom reellen Typ, $`k=3`$, $`m=2`$; (ii) $`\Omega_2\otimes1_2`$ auf $`\mathbb R^2\otimes\mathbb R^2`$: ein
+Paar vom komplexen Typ, $`k=1`$, $`m=2`$; (iii) die Linksmultiplikationen $`1_2\otimes L_q`$ mit den Quaternionen auf
+$`\mathbb H^2=\mathbb R^8`$: ein Sektor vom quaternionischen Typ, $`k=2`$, $`m=4`$. Der Code berechnet für jede die Zerlegung
+und die reelle Struktur und prüft Satz 4.20(a),(b) sowie die Blockform von $`O^TaO`$ für den reellen Typ (Satz 4.21(a))
 und für das Paar.
 
 ```python
@@ -426,10 +426,10 @@ assert close(O_t.T @ real_examples['C'][0][0] @ O_t,
              torch.cat([torch.cat([x_t.real, x_t.imag], 1), torch.cat([-x_t.imag, x_t.real], 1)]))
 ```
 
-Der Code prüft Satz 4.22 an den irreduziblen reellen Moduln $\mathbb R^3$, $\mathbb R^2$, $\mathbb R^4$ der drei
-Beispiele (die von der Bibliothek gefundenen Typen und Vielfachheiten – reell mit $m=1$, ein komplexes Paar mit $m=1$,
-quaternionisch mit $m=2$ – machen sie nach Satz 4.22(c) irreduzibel), wobei er die reelle Kommutante als Nullraum der
-reellen linearen Gleichungen $Xs=sX$, $Xs^T=s^TX$ berechnet, und danach Proposition 4.23 für ein zufälliges reelles
+Der Code prüft Satz 4.22 an den irreduziblen reellen Moduln $`\mathbb R^3`$, $`\mathbb R^2`$, $`\mathbb R^4`$ der drei
+Beispiele (die von der Bibliothek gefundenen Typen und Vielfachheiten – reell mit $`m=1`$, ein komplexes Paar mit $`m=1`$,
+quaternionisch mit $`m=2`$ – machen sie nach Satz 4.22(c) irreduzibel), wobei er die reelle Kommutante als Nullraum der
+reellen linearen Gleichungen $`Xs=sX`$, $`Xs^T=s^TX`$ berechnet, und danach Proposition 4.23 für ein zufälliges reelles
 symmetrisches Element der Kommutante in jedem Beispiel.
 
 ```python
@@ -472,13 +472,13 @@ Für endliche Gruppen berechnen GAP und SageMath Charaktertafeln exakt, und Koro
 Vielfachheiten; RepLAB (MATLAB; D. Rosset, F. Montealegre-Mora, J.-D. Bancal) zerlegt Darstellungen endlicher und
 kompakter Gruppen numerisch, ebenfalls mit zufälligen Elementen der Kommutante, und SymbolicWedderburn.jl (Julia)
 berechnet Wedderburn-Zerlegungen zur Symmetriereduktion semidefiniter Programme. In der Physik bringen QuSpin und
-andere Codes für exakte Diagonalisierung $U(1)$- und Gittersymmetrien in Blockdiagonalform, ITensor und TeNPy
-führen abelsche Ladungen in Tensornetzwerken mit, und TensorKit.jl behandelt $SU(2)$ mit Fusionsbäumen. Das Modul
-`decompose` der Bibliothek ist ein dichtes Verfahren für kleine Matrizen ($n$ bis zu einigen Hundert); es akzeptiert
+andere Codes für exakte Diagonalisierung $`U(1)`$- und Gittersymmetrien in Blockdiagonalform, ITensor und TeNPy
+führen abelsche Ladungen in Tensornetzwerken mit, und TensorKit.jl behandelt $`SU(2)`$ mit Fusionsbäumen. Das Modul
+`decompose` der Bibliothek ist ein dichtes Verfahren für kleine Matrizen ($`n`$ bis zu einigen Hundert); es akzeptiert
 jede Liste von Matrizen (Gruppenelemente oder Erzeuger), zertifiziert sein Ergebnis (Proposition 4.9) und gibt die
 Algebra und ihre Kommutante als `TypeIAlgebra`-Objekte mit `to_algebra`, `from_algebra`, `to_commutant`,
-`from_commutant` zurück, sodass die Kapitel 3 und 5–8 unmittelbar anwendbar sind. Für Spin-$\frac12$-Ketten liefert
-`su2.SU2Chain` die $SU(2)$-Blöcke direkt (Korollar 4.17); es akzeptiert bis zu $L=18$ Spins, eine Grenze, die durch
+`from_commutant` zurück, sodass die Kapitel 3 und 5–8 unmittelbar anwendbar sind. Für Spin-$`\frac12`$-Ketten liefert
+`su2.SU2Chain` die $`SU(2)`$-Blöcke direkt (Korollar 4.17); es akzeptiert bis zu $`L=18`$ Spins, eine Grenze, die durch
 den Speicherbedarf der Basen gesetzt ist.
 
 <a id="x-4"></a>
@@ -486,13 +486,13 @@ den Speicherbedarf der Basen gesetzt ist.
 ## Aufgaben
 
 Die [Aufgaben](../../lecture_notes/de/04_symmetries.md#x-4) der Vorlesungsnotizen, numerisch geprüft (die Lösungen unten folgen dieser Reihenfolge):
-1. $\dim\pi(S_L)'=\binom{d^2+L-1}L$ für $d=2$ und $L=3,4$ (die Werte $20$ und $35$);
-2. $1\otimes\frac12\cong\frac12\oplus\frac32$ und $1\otimes1\cong0\oplus1\oplus2$, mit `from_generators`;
-3. die Kommutante von $e^{i\theta\hat N}$ auf vier Qubits für $\theta=1$ (die Ladungen $0,\dots,4$ ergeben verschiedene
-   $e^{iq}$, da $0<|q-q'|\le4<2\pi$) und für $\theta=\pi$;
-4. die Zeeman-Aufspaltung: das Spektrum von $H+hS_z$ für den Heisenberg-Ring aus acht Spins, mit `su2.SU2Chain` und in
-   den $U(1)$-Sektoren;
-5. die Sektoren der regulären Darstellung von $Q_8$, mit `real_structure`.
+1. $`\dim\pi(S_L)'=\binom{d^2+L-1}L`$ für $`d=2`$ und $`L=3,4`$ (die Werte $`20`$ und $`35`$);
+2. $`1\otimes\frac12\cong\frac12\oplus\frac32`$ und $`1\otimes1\cong0\oplus1\oplus2`$, mit `from_generators`;
+3. die Kommutante von $`e^{i\theta\hat N}`$ auf vier Qubits für $`\theta=1`$ (die Ladungen $`0,\dots,4`$ ergeben verschiedene
+   $`e^{iq}`$, da $`0<|q-q'|\le4<2\pi`$) und für $`\theta=\pi`$;
+4. die Zeeman-Aufspaltung: das Spektrum von $`H+hS_z`$ für den Heisenberg-Ring aus acht Spins, mit `su2.SU2Chain` und in
+   den $`U(1)`$-Sektoren;
+5. die Sektoren der regulären Darstellung von $`Q_8`$, mit `real_structure`.
 
 <details>
 <summary>Lösungen</summary>

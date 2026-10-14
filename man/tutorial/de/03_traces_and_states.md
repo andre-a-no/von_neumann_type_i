@@ -3,23 +3,23 @@
 # Tutorial 3. Spuren, Zustände und Entropie
 
 Dieses Tutorial begleitet [Kapitel 3](../../lecture_notes/de/03_traces_and_states.md) der Vorlesungsnotizen, das die Spuren
-auf $\mathcal M=\bigoplus_cM_{k_c}$ klassifiziert ([Satz 3.1](../../lecture_notes/de/03_traces_and_states.md#r-3-1)), Zustände durch Dichten darstellt
+auf $`\mathcal M=\bigoplus_cM_{k_c}`$ klassifiziert ([Satz 3.1](../../lecture_notes/de/03_traces_and_states.md#r-3-1)), Zustände durch Dichten darstellt
 ([Satz 3.2](../../lecture_notes/de/03_traces_and_states.md#r-3-2)) und die grundlegenden Entropieungleichungen beweist. Wir verwenden die drei Spuren der
-Bibliothek, rechnen Dichten zwischen ihnen um und überprüfen die Sätze numerisch auf $M_2\oplus M_3\oplus M_5$.
+Bibliothek, rechnen Dichten zwischen ihnen um und überprüfen die Sätze numerisch auf $`M_2\oplus M_3\oplus M_5`$.
 
 <a id="s-3-1"></a>
 
 ## 3.1 Spuren
 
-*Vorlesungsnotizen:* [Abschnitt 3.1](../../lecture_notes/de/03_traces_and_states.md#s-3-1); nach [Satz 3.1](../../lecture_notes/de/03_traces_and_states.md#r-3-1) ist jede Spur von der Form $\mathrm{tr}_w(A)=\sum_cw_c\mathrm{Tr}\,A_c$.
+*Vorlesungsnotizen:* [Abschnitt 3.1](../../lecture_notes/de/03_traces_and_states.md#s-3-1); nach [Satz 3.1](../../lecture_notes/de/03_traces_and_states.md#r-3-1) ist jede Spur von der Form $`\mathrm{tr}_w(A)=\sum_cw_c\mathrm{Tr}\,A_c`$.
 
 Die Bibliothek implementiert drei treue Spuren:
 
-| Name | Gewichte $w_c$ | Wert auf $1$ | Bedeutung |
+| Name | Gewichte $`w_c`$ | Wert auf $`1`$ | Bedeutung |
 |---|---|---|---|
-| `Tr_blunt` | $1$ | $D$ | Spur von $\bigoplus_c\mathbb C^{k_c}$ (Vielfachheiten $m_c=1$) |
-| `Tr_norm` | $1/k_c$ | $C$ | jeder Block normiert |
-| `tau_vN` | $1/(Ck_c)$ | $1$ | der Spurzustand mit gleichen Sektorgewichten $1/C$ |
+| `Tr_blunt` | $`1`$ | $`D`$ | Spur von $`\bigoplus_c\mathbb C^{k_c}`$ (Vielfachheiten $`m_c=1`$) |
+| `Tr_norm` | $`1/k_c`$ | $`C`$ | jeder Block normiert |
+| `tau_vN` | $`1/(Ck_c)`$ | $`1`$ | der Spurzustand mit gleichen Sektorgewichten $`1/C`$ |
 
 ```python
 import math
@@ -43,9 +43,9 @@ assert (A.Tr_norm() - 3 * A.tau_vN()).abs().max() < 1e-12       # Tr_norm = C ta
 
 ## 3.2 Zustände und Dichten
 
-*Vorlesungsnotizen:* [Abschnitt 3.2](../../lecture_notes/de/03_traces_and_states.md#s-3-2); [Satz 3.2](../../lecture_notes/de/03_traces_and_states.md#r-3-2) liefert die Dichte $\rho_w$ eines Zustands für jede treue Spur, mit $w_c(\rho_w)_c=w'_c(\rho_{w'})_c$.
+*Vorlesungsnotizen:* [Abschnitt 3.2](../../lecture_notes/de/03_traces_and_states.md#s-3-2); [Satz 3.2](../../lecture_notes/de/03_traces_and_states.md#r-3-2) liefert die Dichte $`\rho_w`$ eines Zustands für jede treue Spur, mit $`w_c(\rho_w)_c=w'_c(\rho_{w'})_c`$.
 
-Die Bibliothek speichert einen Zustand durch seine Dichte $\rho=\rho_{\mathrm{blunt}}$ bezüglich
+Die Bibliothek speichert einen Zustand durch seine Dichte $`\rho=\rho_{\mathrm{blunt}}`$ bezüglich
 `Tr_blunt` (Klasse `DensityMatrix`); `density(trace)` und `DensityMatrix.from_density`
 rechnen um. Der Wert des Zustands hängt nicht von der Konvention ab:
 
@@ -64,7 +64,7 @@ for trace, tr in (('blunt', lambda X: X.Tr_blunt()), ('norm', lambda X: X.Tr_nor
 
 ## 3.3 Der klassische Teil eines Zustands
 
-*Vorlesungsnotizen:* [Abschnitt 3.3](../../lecture_notes/de/03_traces_and_states.md#s-3-3): die Sektorwahrscheinlichkeiten $p_c=\mathrm{Tr}\,\rho_c$ und die Abbildung $\rho\mapsto\sum_cP_c\rho P_c$, die auf $\mathcal M$ die Identität ist.
+*Vorlesungsnotizen:* [Abschnitt 3.3](../../lecture_notes/de/03_traces_and_states.md#s-3-3): die Sektorwahrscheinlichkeiten $`p_c=\mathrm{Tr}\,\rho_c`$ und die Abbildung $`\rho\mapsto\sum_cP_c\rho P_c`$, die auf $`\mathcal M`$ die Identität ist.
 
 ```python
 p = rho.sector_probabilities()                                   # shape (batch, C)
@@ -78,7 +78,7 @@ assert (measure_sector(rho).matrix - rho.matrix).abs().max() < 1e-12   # no dist
 
 ## 3.4 Entropie
 
-*Vorlesungsnotizen:* [Abschnitt 3.4](../../lecture_notes/de/03_traces_and_states.md#s-3-4); [Satz 3.3](../../lecture_notes/de/03_traces_and_states.md#r-3-3) liefert $S(\rho)=H(p)+\sum_cp_cS(\sigma_c)$, und die Entropie bezüglich $\mathrm{tr}_w$ ist $S_w(\rho)=S(\rho)+\sum_cp_c\log w_c$.
+*Vorlesungsnotizen:* [Abschnitt 3.4](../../lecture_notes/de/03_traces_and_states.md#s-3-4); [Satz 3.3](../../lecture_notes/de/03_traces_and_states.md#r-3-3) liefert $`S(\rho)=H(p)+\sum_cp_cS(\sigma_c)`$, und die Entropie bezüglich $`\mathrm{tr}_w`$ ist $`S_w(\rho)=S(\rho)+\sum_cp_c\log w_c`$.
 
 ```python
 S = rho.von_neumann_entropy()
@@ -97,7 +97,7 @@ assert torch.allclose(S_tau, S + (p * torch.log(w_tau)).sum(-1))
 
 ## 3.5 Relative Entropie und die Kleinsche Ungleichung
 
-*Vorlesungsnotizen:* [Abschnitt 3.5](../../lecture_notes/de/03_traces_and_states.md#s-3-5); [Korollar 3.6](../../lecture_notes/de/03_traces_and_states.md#r-3-6) ($S(\rho)\le\log D$, mit Gleichheit für $\rho=1/D$) und [Satz 3.7](../../lecture_notes/de/03_traces_and_states.md#r-3-7) ($S(\rho\|\sigma)\ge S(E\rho\|E\sigma)=\sum_cp_c\log(p_c/q_c)$ für die bedingte Erwartung $E$ auf das Zentrum).
+*Vorlesungsnotizen:* [Abschnitt 3.5](../../lecture_notes/de/03_traces_and_states.md#s-3-5); [Korollar 3.6](../../lecture_notes/de/03_traces_and_states.md#r-3-6) ($`S(\rho)\le\log D`$, mit Gleichheit für $`\rho=1/D`$) und [Satz 3.7](../../lecture_notes/de/03_traces_and_states.md#r-3-7) ($`S(\rho\|\sigma)\ge S(E\rho\|E\sigma)=\sum_cp_c\log(p_c/q_c)`$ für die bedingte Erwartung $`E`$ auf das Zentrum).
 
 ```python
 sigma_state = states.random_density_matrix(alg, batch_size=4)
@@ -128,15 +128,15 @@ assert (E(A_pos).michelson_contrast <= A_pos.michelson_contrast + 1e-12).all()
 
 ## 3.7 Eine plausible Ungleichung, die falsch ist
 
-*Vorlesungsnotizen:* [Abschnitt 3.7](../../lecture_notes/de/03_traces_and_states.md#s-3-7); nach [Proposition 3.9](../../lecture_notes/de/03_traces_and_states.md#r-3-9) gilt für $X,Y\ge0$ in $M_k$ $\max_U|\mathrm{Tr}(XUY)|=\|YX\|_1\ge\mathrm{Tr}(XY)$, mit Gleichheit genau dann, wenn $XY=YX$.
+*Vorlesungsnotizen:* [Abschnitt 3.7](../../lecture_notes/de/03_traces_and_states.md#s-3-7); nach [Proposition 3.9](../../lecture_notes/de/03_traces_and_states.md#r-3-9) gilt für $`X,Y\ge0`$ in $`M_k`$ $`\max_U|\mathrm{Tr}(XUY)|=\|YX\|_1\ge\mathrm{Tr}(XY)`$, mit Gleichheit genau dann, wenn $`XY=YX`$.
 
-Die Bibliothek findet die Maximalstelle mithilfe der Polarzerlegung: Für $YX=W|YX|$ erreicht das unitäre $U=W^*$
-den Wert $\|YX\|_1$ ([Vorlesungsnotizen, Satz 1.9](../../lecture_notes/de/01_matrix_algebras.md#r-1-9)). Zufällige Suche über
-Haar-verteilte unitäre Matrizen (die Bibliothek zieht $U$ auf diese Weise) ist im Mittel schlechter
-([Vorlesungsnotizen, Abschnitt 3.7](../../lecture_notes/de/03_traces_and_states.md#s-3-7)); die dort angegebene Wahrscheinlichkeitsschranke $b^4/(a^4k^2)$ sagt
-im folgenden Lauf nichts, da $b/a=6$ und $k=6$. Der Code berechnet das exakte Supremum für ein nicht
-kommutierendes Paar mit $k=6$ und das Beste aus $20000$ Haar-Stichproben, jeweils abzüglich
-$\mathrm{Tr}(XY)$. Nach Proposition 3.9 kann keine Stichprobe das Supremum übertreffen; wie
+Die Bibliothek findet die Maximalstelle mithilfe der Polarzerlegung: Für $`YX=W|YX|`$ erreicht das unitäre $`U=W^*`$
+den Wert $`\|YX\|_1`$ ([Vorlesungsnotizen, Satz 1.9](../../lecture_notes/de/01_matrix_algebras.md#r-1-9)). Zufällige Suche über
+Haar-verteilte unitäre Matrizen (die Bibliothek zieht $`U`$ auf diese Weise) ist im Mittel schlechter
+([Vorlesungsnotizen, Abschnitt 3.7](../../lecture_notes/de/03_traces_and_states.md#s-3-7)); die dort angegebene Wahrscheinlichkeitsschranke $`b^4/(a^4k^2)`$ sagt
+im folgenden Lauf nichts, da $`b/a=6`$ und $`k=6`$. Der Code berechnet das exakte Supremum für ein nicht
+kommutierendes Paar mit $`k=6`$ und das Beste aus $`20000`$ Haar-Stichproben, jeweils abzüglich
+$`\mathrm{Tr}(XY)`$. Nach Proposition 3.9 kann keine Stichprobe das Supremum übertreffen; wie
 weit die beste Stichprobe darunter bleibt, ist eine numerische Beobachtung dieses Laufs, kein
 Satz.
 
@@ -163,7 +163,7 @@ assert best.item() <= gap.item() + 1e-10               # Proposition 3.9: no sam
 
 QuTiP (`entropy_vn`, `entropy_relative`) und andere Pakete für Quanteninformation (z. B.
 `toqito`) berechnen Entropien und relative Entropien von Dichtematrizen auf einem
-einzelnen Hilbertraum, mit der Spur dieses Raumes; auf $\bigoplus_c\mathbb C^{k_c}$ ist das die
+einzelnen Hilbertraum, mit der Spur dieses Raumes; auf $`\bigoplus_c\mathbb C^{k_c}`$ ist das die
 hiesige ungewichtete Spur (bis auf die Basis des Logarithmus, die sich zwischen den Paketen
 unterscheidet). Was sie nicht bereitstellen, ist die Familie
 von Spuren aus Satz 3.1 und die Umrechnungen aus Satz 3.2, die notwendig werden, sobald
@@ -174,9 +174,9 @@ müssen.
 
 ## Aufgaben
 
-[Aufgabe 1](../../lecture_notes/de/03_traces_and_states.md#x-3) der Vorlesungsnotizen: Die Dichte des Spurzustands $\tau_{\mathrm{vN}}$
-(`states.tracial_state`) bezüglich $\tau_{\mathrm{vN}}$ ist $1$, und seine Entropie ist
-$S=\log C+\frac1C\sum_c\log k_c$. Man überprüfe beides für $M_2\oplus M_3\oplus M_5$.
+[Aufgabe 1](../../lecture_notes/de/03_traces_and_states.md#x-3) der Vorlesungsnotizen: Die Dichte des Spurzustands $`\tau_{\mathrm{vN}}`$
+(`states.tracial_state`) bezüglich $`\tau_{\mathrm{vN}}`$ ist $`1`$, und seine Entropie ist
+$`S=\log C+\frac1C\sum_c\log k_c`$. Man überprüfe beides für $`M_2\oplus M_3\oplus M_5`$.
 
 <details>
 <summary>Lösungen</summary>

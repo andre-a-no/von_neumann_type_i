@@ -12,9 +12,9 @@
 
 *講義ノート：* [E.3節](../../lecture_notes/ja/E_jordan_classification.md#s-E-3)；[補題 E.1](../../lecture_notes/ja/E_jordan_classification.md#r-E-1)、[補題 E.3](../../lecture_notes/ja/E_jordan_classification.md#r-E-3)、[命題 E.4](../../lecture_notes/ja/E_jordan_classification.md#r-E-4)、[定理 E.5](../../lecture_notes/ja/E_jordan_classification.md#r-E-5)。
 
-形式的実ジョルダン代数では、トレース形式 $\tau(x,y)=\mathrm{Tr}\,L(x\circ y)$ は結合的かつ正定値である
-（[講義ノート、定理 E.5](../../lecture_notes/ja/E_jordan_classification.md#r-E-5)）。以下のコードは、構造定数で与えた $\mathrm{Herm}_3(\mathbb C)$（[E.7節](../../lecture_notes/ja/E_jordan_classification.md#s-E-7)の代数 $\mathrm{Herm}_n(D)$ の一つ）において、
-[補題 E.1(4)](../../lecture_notes/ja/E_jordan_classification.md#r-E-1)、[補題 E.3](../../lecture_notes/ja/E_jordan_classification.md#r-E-3)（冪等元 $p_i(x)$ はジョルダン冪だけで計算する）、[命題 E.4](../../lecture_notes/ja/E_jordan_classification.md#r-E-4)、定理 E.5 を検証する；
+形式的実ジョルダン代数では、トレース形式 $`\tau(x,y)=\mathrm{Tr}\,L(x\circ y)`$ は結合的かつ正定値である
+（[講義ノート、定理 E.5](../../lecture_notes/ja/E_jordan_classification.md#r-E-5)）。以下のコードは、構造定数で与えた $`\mathrm{Herm}_3(\mathbb C)`$（[E.7節](../../lecture_notes/ja/E_jordan_classification.md#s-E-7)の代数 $`\mathrm{Herm}_n(D)`$ の一つ）において、
+[補題 E.1(4)](../../lecture_notes/ja/E_jordan_classification.md#r-E-1)、[補題 E.3](../../lecture_notes/ja/E_jordan_classification.md#r-E-3)（冪等元 $`p_i(x)`$ はジョルダン冪だけで計算する）、[命題 E.4](../../lecture_notes/ja/E_jordan_classification.md#r-E-4)、定理 E.5 を検証する；
 それを構成するのに用いるケーリー–ディクソン積 `cd` は[E.6節](../../lecture_notes/ja/E_jordan_classification.md#s-E-6)のものである。
 
 ```python
@@ -118,8 +118,8 @@ assert torch.allclose(mul(C3, x, y) @ T3 @ w, x @ T3 @ mul(C3, y, w))         # 
 
 *講義ノート：* [E.6節](../../lecture_notes/ja/E_jordan_classification.md#s-E-6)；[補題 E.14](../../lecture_notes/ja/E_jordan_classification.md#r-E-14)、[補題 E.15](../../lecture_notes/ja/E_jordan_classification.md#r-E-15)、[補題 E.18](../../lecture_notes/ja/E_jordan_classification.md#r-E-18)。
 
-以下のコードは、ケーリー–ディクソンの倍化により $\mathbb O$ を構成し、ランダムな八元数について補題 E.14 の恒等式、補題 E.18 のムーファン恒等式、
-補題 E.15 の非結合性を検証し、さらに準同型 $M$ を検証する：
+以下のコードは、ケーリー–ディクソンの倍化により $`\mathbb O`$ を構成し、ランダムな八元数について補題 E.14 の恒等式、補題 E.18 のムーファン恒等式、
+補題 E.15 の非結合性を検証し、さらに準同型 $`M`$ を検証する：
 
 ```python
 o = torch.randn(4, 1000, 8, dtype=dt)             # random octonions
@@ -150,9 +150,9 @@ assert torch.allclose(M(cd(p4, q4)), M(p4) @ M(q4)) and torch.allclose(M(conj(p4
 
 *講義ノート：* [E.8節](../../lecture_notes/ja/E_jordan_classification.md#s-E-8)；[補題 E.20](../../lecture_notes/ja/E_jordan_classification.md#r-E-20)、[補題 E.23](../../lecture_notes/ja/E_jordan_classification.md#r-E-23)、[定理 E.24](../../lecture_notes/ja/E_jordan_classification.md#r-E-24)、[系 E.25](../../lecture_notes/ja/E_jordan_classification.md#r-E-25)。
 
-以下のコードは、ランダムな元について、アルバート代数 $\mathrm{Herm}_3(\mathbb O)$ のジョルダン恒等式
+以下のコードは、ランダムな元について、アルバート代数 $`\mathrm{Herm}_3(\mathbb O)`$ のジョルダン恒等式
 （[講義ノート、定理 E.24(2)](../../lecture_notes/ja/E_jordan_classification.md#r-E-24)）と、そのトレース形式の結合性および正値性（[補題 E.20](../../lecture_notes/ja/E_jordan_classification.md#r-E-20)）を検証し、
-$\mathrm{Herm}_4(\mathbb O)$ ではジョルダン恒等式が成り立たないことを数値的に示し（[系 E.25](../../lecture_notes/ja/E_jordan_classification.md#r-E-25)）、
+$`\mathrm{Herm}_4(\mathbb O)`$ ではジョルダン恒等式が成り立たないことを数値的に示し（[系 E.25](../../lecture_notes/ja/E_jordan_classification.md#r-E-25)）、
 [補題 E.23](../../lecture_notes/ja/E_jordan_classification.md#r-E-23) の自己同型を検証し、さらにランダムな元に対して定理 E.24(2) の証明の三つのステップ (a)–(c) を実行する：
 
 ```python
@@ -199,9 +199,9 @@ assert abs(abs(x3[11].item()) - s.norm().item()) < 1e-12
 
 *講義ノート：* [E.9節](../../lecture_notes/ja/E_jordan_classification.md#s-E-9)；[定理 E.5](../../lecture_notes/ja/E_jordan_classification.md#r-E-5)、[定理 E.8](../../lecture_notes/ja/E_jordan_classification.md#r-E-8)、[命題 E.11](../../lecture_notes/ja/E_jordan_classification.md#r-E-11)、[定理 E.27](../../lecture_notes/ja/E_jordan_classification.md#r-E-27)。
 
-以下のコードは、各型について、ジョルダン枠 $(E_{ii})$ または $(c_w,c_{-w})$、$L(c_i)$ たちの共通固有空間としての
+以下のコードは、各型について、ジョルダン枠 $`(E_{ii})`$ または $`(c_w,c_{-w})`$、$`L(c_i)`$ たちの共通固有空間としての
 ピアス空間の次元（定理 E.8）、命題 E.11(2) の次元公式、そしてトレース
-形式 $\tau$ の正値性（定理 E.5）を計算する：
+形式 $`\tau`$ の正値性（定理 E.5）を計算する：
 
 ```python
 def peirce(C, frame):

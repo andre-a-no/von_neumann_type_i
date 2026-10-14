@@ -3,7 +3,7 @@
 # Tutorial 13. Jordan algebras: why quantum mechanics uses *-algebras
 
 This tutorial accompanies [Chapter 13](../lecture_notes/13_jordan_algebras.md) of the lecture notes, which studies the Jordan product
-$x\circ y=\frac12(xy+yx)$ and the quadratic representation $P(y)x=yxy$, the spin factors $V_m$ and the Lorentz cone,
+$`x\circ y=\frac12(xy+yx)`$ and the quadratic representation $`P(y)x=yxy`$, the spin factors $`V_m`$ and the Lorentz cone,
 and shows that the Jordan structure determines the commutator only up to sign, which composite systems detect
 ([Proposition 13.12](../lecture_notes/13_jordan_algebras.md#r-13-12)). Here we use the module `torch_vn_algebra.jordan` and the class `SpinFactor` to check
 these results numerically.
@@ -14,9 +14,9 @@ these results numerically.
 
 *Lecture notes:* [Section 13.1](../lecture_notes/13_jordan_algebras.md#s-13-1): [Lemma 13.1](../lecture_notes/13_jordan_algebras.md#r-13-1) (the Jordan identity) and [Proposition 13.2](../lecture_notes/13_jordan_algebras.md#r-13-2) (the quadratic representation).
 
-The module `torch_vn_algebra.jordan` implements the Jordan product $x\circ y$, the Jordan powers and the quadratic
-representation $P(y)=2L(y)^2-L(y^2)$ on operators of a `TypeIAlgebra`, lazily and batched over all sectors.
-The code checks [Lemma 13.1](../lecture_notes/13_jordan_algebras.md#r-13-1) and [Proposition 13.2](../lecture_notes/13_jordan_algebras.md#r-13-2) on random self-adjoint elements of $M_2\oplus M_3$:
+The module `torch_vn_algebra.jordan` implements the Jordan product $`x\circ y`$, the Jordan powers and the quadratic
+representation $`P(y)=2L(y)^2-L(y^2)`$ on operators of a `TypeIAlgebra`, lazily and batched over all sectors.
+The code checks [Lemma 13.1](../lecture_notes/13_jordan_algebras.md#r-13-1) and [Proposition 13.2](../lecture_notes/13_jordan_algebras.md#r-13-2) on random self-adjoint elements of $`M_2\oplus M_3`$:
 
 ```python
 import math
@@ -57,13 +57,13 @@ assert abs(torch.linalg.det(jp(p, q).matrix[0, 0]).real.item() + 1 / 16) < 1e-14
 
 ## 13.2 Spin factors and the Lorentz cone
 
-*Lecture notes:* [Section 13.2](../lecture_notes/13_jordan_algebras.md#s-13-2): [Lemma 13.3](../lecture_notes/13_jordan_algebras.md#r-13-3) (anticommuting symmetries), [Theorem 13.4](../lecture_notes/13_jordan_algebras.md#r-13-4) (spectral theory of $V_m$) and [Proposition 13.5](../lecture_notes/13_jordan_algebras.md#r-13-5).
+*Lecture notes:* [Section 13.2](../lecture_notes/13_jordan_algebras.md#s-13-2): [Lemma 13.3](../lecture_notes/13_jordan_algebras.md#r-13-3) (anticommuting symmetries), [Theorem 13.4](../lecture_notes/13_jordan_algebras.md#r-13-4) (spectral theory of $`V_m`$) and [Proposition 13.5](../lecture_notes/13_jordan_algebras.md#r-13-5).
 
-The class `SpinFactor(m)` stores elements $x=(a,u)$ of $V_m$ as tensors of shape `(batch, m+1)`, with the product,
-the spectral decomposition and the functional calculus of [Theorem 13.4](../lecture_notes/13_jordan_algebras.md#r-13-4); `to_matrix` is the map $\phi$ of
-[Lemma 13.3](../lecture_notes/13_jordan_algebras.md#r-13-3), built from the $s_i$ of `jordan.anticommuting_symmetries(m)`. The code checks the Jordan identity
-and Theorem 13.4 in $V_5$, [Proposition 13.5](../lecture_notes/13_jordan_algebras.md#r-13-5)(b) for a random orthogonal $O$ and (c) for $m\le6$, and the
-Majorana operators of Section 9.4 for $p=3$ ([lecture notes, Section 13.2](../lecture_notes/13_jordan_algebras.md#s-13-2)):
+The class `SpinFactor(m)` stores elements $`x=(a,u)`$ of $`V_m`$ as tensors of shape `(batch, m+1)`, with the product,
+the spectral decomposition and the functional calculus of [Theorem 13.4](../lecture_notes/13_jordan_algebras.md#r-13-4); `to_matrix` is the map $`\phi`$ of
+[Lemma 13.3](../lecture_notes/13_jordan_algebras.md#r-13-3), built from the $`s_i`$ of `jordan.anticommuting_symmetries(m)`. The code checks the Jordan identity
+and Theorem 13.4 in $`V_5`$, [Proposition 13.5](../lecture_notes/13_jordan_algebras.md#r-13-5)(b) for a random orthogonal $`O`$ and (c) for $`m\le6`$, and the
+Majorana operators of Section 9.4 for $`p=3`$ ([lecture notes, Section 13.2](../lecture_notes/13_jordan_algebras.md#s-13-2)):
 
 ```python
 V = SpinFactor(5)
@@ -104,8 +104,8 @@ for j in range(1, pq + 1):
     assert close(s6[2 * j - 2], sign * (c + c.mH)) and close(s6[2 * j - 1], sign * 1j * (c - c.mH))
 ```
 
-For $m=1$, $s_1=Z$ generates the diagonal matrices, of dimension $2=m+1$, and $V_1\cong\mathbb R\oplus\mathbb R$ is not
-simple. The printed dimensions are $3,4$ for $m=2$; $5,16$ for $m=4$; $7,64$ for $m=6$.
+For $`m=1`$, $`s_1=Z`$ generates the diagonal matrices, of dimension $`2=m+1`$, and $`V_1\cong\mathbb R\oplus\mathbb R`$ is not
+simple. The printed dimensions are $`3,4`$ for $`m=2`$; $`5,16`$ for $`m=4`$; $`7,64`$ for $`m=6`$.
 
 <a id="s-13-3"></a>
 
@@ -114,9 +114,9 @@ simple. The printed dimensions are $3,4$ for $m=2$; $5,16$ for $m=4$; $7,64$ for
 *Lecture notes:* [Section 13.3](../lecture_notes/13_jordan_algebras.md#s-13-3): [Proposition 13.6](../lecture_notes/13_jordan_algebras.md#r-13-6).
 
 `jordan.compare_with_star_algebra` computes the dimensions of the Jordan algebra generated by given Hermitian
-matrices and $1$, and of the self-adjoint part of the $*$-algebra they generate. The code checks
-[Proposition 13.6](../lecture_notes/13_jordan_algebras.md#r-13-6)(a) for a random pair of real symmetric matrices, $n=2,\dots,5$, and (b): for two random
-Hermitian $2\times2$ matrices the dimensions are $3$ and $4$, and the unitary $U$ of the proof makes both real.
+matrices and $`1`$, and of the self-adjoint part of the $`*`$-algebra they generate. The code checks
+[Proposition 13.6](../lecture_notes/13_jordan_algebras.md#r-13-6)(a) for a random pair of real symmetric matrices, $`n=2,\dots,5`$, and (b): for two random
+Hermitian $`2\times2`$ matrices the dimensions are $`3`$ and $`4`$, and the unitary $`U`$ of the proof makes both real.
 
 ```python
 for n in range(2, 6):                                            # Proposition 13.6(a), a random real pair
@@ -140,8 +140,8 @@ Um = W2 @ W1.mH                                                  # U (n . sigma)
 assert all((Um @ A @ Um.mH).imag.abs().max() < 1e-12 for A in H[:2])
 ```
 
-Three generic Hermitian $2\times2$ matrices generate all of $\mathrm{Herm}_2(\mathbb C)$: dimension $4$ in both
-columns. In a block $M_2$ of $\mathcal M$, therefore, two observables never reveal the complex structure; a third one
+Three generic Hermitian $`2\times2`$ matrices generate all of $`\mathrm{Herm}_2(\mathbb C)`$: dimension $`4`$ in both
+columns. In a block $`M_2`$ of $`\mathcal M`$, therefore, two observables never reveal the complex structure; a third one
 can.
 
 <a id="s-13-5"></a>
@@ -150,9 +150,9 @@ can.
 
 *Lecture notes:* [Section 13.5](../lecture_notes/13_jordan_algebras.md#s-13-5): [Proposition 13.9](../lecture_notes/13_jordan_algebras.md#r-13-9) (the transpose), [Proposition 13.11](../lecture_notes/13_jordan_algebras.md#r-13-11), [Proposition 13.12](../lecture_notes/13_jordan_algebras.md#r-13-12) (composite systems) and [Proposition 13.13](../lecture_notes/13_jordan_algebras.md#r-13-13) (dynamics).
 
-`jordan.transpose_map` is the transpose $T$, applied blockwise. The code checks [Proposition 13.9](../lecture_notes/13_jordan_algebras.md#r-13-9) (with the
-Choi matrix of $T$ on $M_3$), the matrix $O_T=\mathrm{diag}(1,-1,1)$ of the transpose on Bloch vectors from the
-proof of [Proposition 13.11](../lecture_notes/13_jordan_algebras.md#r-13-11), the product formula and $\circ_\theta$ of [Proposition 13.12](../lecture_notes/13_jordan_algebras.md#r-13-12) with the
+`jordan.transpose_map` is the transpose $`T`$, applied blockwise. The code checks [Proposition 13.9](../lecture_notes/13_jordan_algebras.md#r-13-9) (with the
+Choi matrix of $`T`$ on $`M_3`$), the matrix $`O_T=\mathrm{diag}(1,-1,1)`$ of the transpose on Bloch vectors from the
+proof of [Proposition 13.11](../lecture_notes/13_jordan_algebras.md#r-13-11), the product formula and $`\circ_\theta`$ of [Proposition 13.12](../lecture_notes/13_jordan_algebras.md#r-13-12) with the
 spectrum of the partial transpose of the Bell state, and [Proposition 13.13](../lecture_notes/13_jordan_algebras.md#r-13-13)(a), (b):
 
 ```python
@@ -204,10 +204,10 @@ assert close(jm(z1, jm(z2, Hm)) - jm(z2, jm(z1, Hm)), 0.25 * cm(cm(z1, z2), Hm))
 
 *Lecture notes:* [Section 13.6](../lecture_notes/13_jordan_algebras.md#s-13-6): [Proposition 13.14](../lecture_notes/13_jordan_algebras.md#r-13-14).
 
-By [lecture notes, Proposition 13.14](../lecture_notes/13_jordan_algebras.md#r-13-14), $\mathrm{tr}|P(y)x|\le\mathrm{tr}\,P(y)|x|$ in $V_m$, with equality if $x\in Q$ or
-$-x\in Q$. Through $\phi$, which satisfies $\phi(P(y)x)=\phi(y)\phi(x)\phi(y)$ and $\phi(|x|)=|\phi(x)|$, it is also the
-inequality $\mathrm{Tr}|YXY|\le\mathrm{Tr}(Y|X|Y)$ of Proposition 11.9 for $Y=Y^*$ ([lecture notes, Section 13.6](../lecture_notes/13_jordan_algebras.md#s-13-6)).
-The code checks both for $m=2,4,7$:
+By [lecture notes, Proposition 13.14](../lecture_notes/13_jordan_algebras.md#r-13-14), $`\mathrm{tr}|P(y)x|\le\mathrm{tr}\,P(y)|x|`$ in $`V_m`$, with equality if $`x\in Q`$ or
+$`-x\in Q`$. Through $`\phi`$, which satisfies $`\phi(P(y)x)=\phi(y)\phi(x)\phi(y)`$ and $`\phi(|x|)=|\phi(x)|`$, it is also the
+inequality $`\mathrm{Tr}|YXY|\le\mathrm{Tr}(Y|X|Y)`$ of Proposition 11.9 for $`Y=Y^*`$ ([lecture notes, Section 13.6](../lecture_notes/13_jordan_algebras.md#s-13-6)).
+The code checks both for $`m=2,4,7`$:
 
 ```python
 for m in (2, 4, 7):
@@ -230,9 +230,9 @@ for m in (2, 4, 7):
     assert (tr_rhs - tn >= -1e-10 * tr_rhs).all()                       # Proposition 11.9 for Y = Y*
 ```
 
-The gap $\mathrm{tr}\,P(y)|x|-\mathrm{tr}|P(y)x|$ vanishes for definite $x$ (Proposition 13.14). Numerical
-observation (not a theorem): for these Gaussian samples the printed maximal gaps are of order $10^1$–$10^2$, so the
-inequality is far from an equality for indefinite $x$.
+The gap $`\mathrm{tr}\,P(y)|x|-\mathrm{tr}|P(y)x|`$ vanishes for definite $`x`$ (Proposition 13.14). Numerical
+observation (not a theorem): for these Gaussian samples the printed maximal gaps are of order $`10^1`$–$`10^2`$, so the
+inequality is far from an equality for indefinite $`x`$.
 
 <a id="s-13-7"></a>
 
@@ -244,11 +244,11 @@ special Jordan algebras, Jordan algebras of symmetric bilinear forms (which incl
 octonion algebra, the 27-dimensional exceptional Jordan algebra; Magma also has constructors for Jordan algebras,
 including the exceptional one. These are exact algebraic tools rather than batched numerical ones. The Lorentz cones are standard in
 optimisation: SOCP solvers (ECOS, SCS, Clarabel, MOSEK, accessible through cvxpy's `SOC` constraint) use the spectral
-decomposition of $V_m$ (to project onto the cone) or its quadratic representation (for the Nesterov–Todd scaling of
-interior-point methods), and semidefinite solvers do the same for $\mathrm{Herm}_n$. The library adds Jordan products, the quadratic
-representation and the transpose as batched, differentiable operators on $\bigoplus_cM_{k_c}$; spin factors with their
+decomposition of $`V_m`$ (to project onto the cone) or its quadratic representation (for the Nesterov–Todd scaling of
+interior-point methods), and semidefinite solvers do the same for $`\mathrm{Herm}_n`$. The library adds Jordan products, the quadratic
+representation and the transpose as batched, differentiable operators on $`\bigoplus_cM_{k_c}`$; spin factors with their
 functional calculus and matrix representation; and a randomised computation of the Jordan algebra generated by given
-matrices, compared with the $*$-algebra they generate.
+matrices, compared with the $`*`$-algebra they generate.
 
 <a id="x-13"></a>
 
@@ -256,11 +256,11 @@ matrices, compared with the $*$-algebra they generate.
 
 [Exercises](../lecture_notes/13_jordan_algebras.md#x-13) 1–3 of the lecture notes, numerically:
 
-- *Exercise 1* (homogeneity of the Lorentz cone): $P(x^{1/2})1=x$, $P(y^{-1})P(y)=\mathrm{id}$ and $P(y)Q\subseteq Q$
-  in $V_4$.
-- *Exercise 2* (isotropic states): the smallest eigenvalue of $\theta(\rho_p)$ is $\frac{1-3p}4$.
-- *Exercise 3* (products of boundary points): $(1,w)\circ(1,w')\notin Q$ for random unit vectors $w,w'$, and
-  $(1,w)\circ(1,w)\in Q$.
+- *Exercise 1* (homogeneity of the Lorentz cone): $`P(x^{1/2})1=x`$, $`P(y^{-1})P(y)=\mathrm{id}`$ and $`P(y)Q\subseteq Q`$
+  in $`V_4`$.
+- *Exercise 2* (isotropic states): the smallest eigenvalue of $`\theta(\rho_p)`$ is $`\frac{1-3p}4`$.
+- *Exercise 3* (products of boundary points): $`(1,w)\circ(1,w')\notin Q`$ for random unit vectors $`w,w'`$, and
+  $`(1,w)\circ(1,w)\in Q`$.
 
 <details>
 <summary>Solutions</summary>

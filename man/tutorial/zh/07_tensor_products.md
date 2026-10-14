@@ -6,24 +6,24 @@
 把偏迹定义为一个嵌入的对偶，并研究纠缠与随机态。这里我们用本库构造这些积，计算偏迹和纠缠熵，
 并数值地检验这些定理。
 
-在本章中，$\mathcal M_1=\bigoplus_{c=1}^{C_1}M_{k_c}(\mathbb C)$ 作用在
-$H_1=\bigoplus_c\mathbb C^{k_c}$ 上，极小中心投影为 $P_c$；
-$\mathcal M_2=\bigoplus_{d=1}^{C_2}M_{l_d}(\mathbb C)$ 作用在 $H_2=\bigoplus_d\mathbb C^{l_d}$ 上，
-极小中心投影为 $Q_d$。$\mathrm{Tr}$ 是算子所作用的空间上的迹；在 $\mathcal M_i$ 上它就是第 3 章的
-blunt 迹。对 $\mathbb C^k\otimes\mathbb C^l$ 上的 $X$，记
-$X_{(a,b),(a',b')}=\langle e_a\otimes e_b,X\,e_{a'}\otimes e_{b'}\rangle$，
-并通过 $e_a\otimes e_b\mapsto e_{(a-1)l+b}$ 把 $\mathbb C^k\otimes\mathbb C^l$ 与 $\mathbb C^{kl}$ 等同
-（Kronecker 约定），从而 $(A\otimes B)_{(a,b),(a',b')}=A_{aa'}B_{bb'}$。
+在本章中，$`\mathcal M_1=\bigoplus_{c=1}^{C_1}M_{k_c}(\mathbb C)`$ 作用在
+$`H_1=\bigoplus_c\mathbb C^{k_c}`$ 上，极小中心投影为 $`P_c`$；
+$`\mathcal M_2=\bigoplus_{d=1}^{C_2}M_{l_d}(\mathbb C)`$ 作用在 $`H_2=\bigoplus_d\mathbb C^{l_d}`$ 上，
+极小中心投影为 $`Q_d`$。$`\mathrm{Tr}`$ 是算子所作用的空间上的迹；在 $`\mathcal M_i`$ 上它就是第 3 章的
+blunt 迹。对 $`\mathbb C^k\otimes\mathbb C^l`$ 上的 $`X`$，记
+$`X_{(a,b),(a',b')}=\langle e_a\otimes e_b,X\,e_{a'}\otimes e_{b'}\rangle`$，
+并通过 $`e_a\otimes e_b\mapsto e_{(a-1)l+b}`$ 把 $`\mathbb C^k\otimes\mathbb C^l`$ 与 $`\mathbb C^{kl}`$ 等同
+（Kronecker 约定），从而 $`(A\otimes B)_{(a,b),(a',b')}=A_{aa'}B_{bb'}`$。
 
 <a id="s-7-1"></a>
 
 ## 7.1 两个代数的张量积
 
-*讲义：* [7.1 节](../../lecture_notes/zh/07_tensor_products.md#s-7-1)：[定理 7.1](../../lecture_notes/zh/07_tensor_products.md#r-7-1)（$\mathcal M_1\otimes\mathcal M_2$ 的结构）。
+*讲义：* [7.1 节](../../lecture_notes/zh/07_tensor_products.md#s-7-1)：[定理 7.1](../../lecture_notes/zh/07_tensor_products.md#r-7-1)（$`\mathcal M_1\otimes\mathcal M_2`$ 的结构）。
 
-`tensor_product(alg1, alg2)` 构造这个代数。扇区 $(c,d)$ 的编号为 $s=cC_2+d$（代码中编号
-从 $0$ 开始），荷为 $(q_c,r_d)$，在扇区内部 $e_a\otimes e_b$ 的编号为 $a\,l_d+b$。
-`kron(A, B, alg12)` 计算 $A\otimes B$。扇区顺序与 $H_1\otimes H_2$ 的 Kronecker 顺序相差一个基的置换，
+`tensor_product(alg1, alg2)` 构造这个代数。扇区 $`(c,d)`$ 的编号为 $`s=cC_2+d`$（代码中编号
+从 $`0`$ 开始），荷为 $`(q_c,r_d)`$，在扇区内部 $`e_a\otimes e_b`$ 的编号为 $`a\,l_d+b`$。
+`kron(A, B, alg12)` 计算 $`A\otimes B`$。扇区顺序与 $`H_1\otimes H_2`$ 的 Kronecker 顺序相差一个基的置换，
 下面的 `kron_rows` 显式地构造这个置换；借助它，我们与全矩阵的 Kronecker 积进行比较。
 
 ```python
@@ -83,11 +83,11 @@ for tr in ('Tr_blunt', 'Tr_norm', 'tau_vN'):                                   #
 
 ## 7.2 偏迹
 
-*讲义：* [7.2 节](../../lecture_notes/zh/07_tensor_products.md#s-7-2)：$\mathrm{Tr}_2$ 的定义、[命题 7.2](../../lecture_notes/zh/07_tensor_products.md#r-7-2)、[定理 7.3](../../lecture_notes/zh/07_tensor_products.md#r-7-3)（偏迹是一个信道）和[命题 7.4](../../lecture_notes/zh/07_tensor_products.md#r-7-4)（指标为 $m^2$ 的条件期望）。
+*讲义：* [7.2 节](../../lecture_notes/zh/07_tensor_products.md#s-7-2)：$`\mathrm{Tr}_2`$ 的定义、[命题 7.2](../../lecture_notes/zh/07_tensor_products.md#r-7-2)、[定理 7.3](../../lecture_notes/zh/07_tensor_products.md#r-7-3)（偏迹是一个信道）和[命题 7.4](../../lecture_notes/zh/07_tensor_products.md#r-7-4)（指标为 $`m^2`$ 的条件期望）。
 
-`partial_trace(X, keep=1)` 把每个块 $\rho_{cd}$ 重排为形状 $(k_c,l_d,k_c,l_d)$ 再求迹；
-`composite.partial_trace_channel(alg12, keep=1)` 是定理 7.3 中的信道，其 Kraus 算子为从扇区 $(c,d)$
-到扇区 $c$ 的 $1_{k_c}\otimes\langle j|$。我们把两者与定义、一个独立的 `numpy.einsum` 以及对偶关系进行核对：
+`partial_trace(X, keep=1)` 把每个块 $`\rho_{cd}`$ 重排为形状 $`(k_c,l_d,k_c,l_d)`$ 再求迹；
+`composite.partial_trace_channel(alg12, keep=1)` 是定理 7.3 中的信道，其 Kraus 算子为从扇区 $`(c,d)`$
+到扇区 $`c`$ 的 $`1_{k_c}\otimes\langle j|`$。我们把两者与定义、一个独立的 `numpy.einsum` 以及对偶关系进行核对：
 
 ```python
 rho = states.random_density_matrix(alg12, batch_size=3)
@@ -108,8 +108,8 @@ assert close(Ptr.adjoint('blunt')(A), kron(A, one2, alg12))                 # Th
 ```
 
 模块 `torch_vn_algebra.inclusions` 实现了包含、它们的条件期望和指标；
-`from_tensor_product(alg1, m)` 构造[命题 7.4](../../lecture_notes/zh/07_tensor_products.md#r-7-4) 中的包含 $\mathcal M_1\otimes1\subset\mathcal M_1\otimes M_m$，
-其包含矩阵为 $\Lambda=m1_{C_1}$，指标为 $m^2$（[讲义，7.2 节](../../lecture_notes/zh/07_tensor_products.md#s-7-2)）：
+`from_tensor_product(alg1, m)` 构造[命题 7.4](../../lecture_notes/zh/07_tensor_products.md#r-7-4) 中的包含 $`\mathcal M_1\otimes1\subset\mathcal M_1\otimes M_m`$，
+其包含矩阵为 $`\Lambda=m1_{C_1}`$，指标为 $`m^2`$（[讲义，7.2 节](../../lecture_notes/zh/07_tensor_products.md#s-7-2)）：
 
 ```python
 from torch_vn_algebra import inclusions
@@ -140,10 +140,10 @@ print(inc.matrix.tolist(), inc.component_indices())           # Lambda = 3 * 1_2
 *讲义：* [7.3 节](../../lecture_notes/zh/07_tensor_products.md#s-7-3)：[命题 7.5](../../lecture_notes/zh/07_tensor_products.md#r-7-5)（融合积）和[定理 7.6](../../lecture_notes/zh/07_tensor_products.md#r-7-6)（融合积的约化态）。
 
 `fused_tensor_product(alg1, alg2, fuse)`（默认的 `fuse` 为加法）按融合后的荷对扇区排序，扇区内部的
-对 $(c,d)$ 按字典序排列，每个对都采用基 $e_a\otimes e_b$。
-例子：硬核玻色子（[讲义，7.3 节](../../lecture_notes/zh/07_tensor_products.md#s-7-3)）。两个格点上保持粒子数的算子构成 $M_1\oplus M_2\oplus M_1$（荷 $0,1,2$），
-三个格点上构成 $M_1\oplus M_3\oplus M_3\oplus M_1$；由[命题 7.5(c)](../../lecture_notes/zh/07_tensor_products.md#r-7-5)，它们的融合积就是五个格点的总占据数所对应的
-$\{N\}'$，且 $n_q=\binom5q$。
+对 $`(c,d)`$ 按字典序排列，每个对都采用基 $`e_a\otimes e_b`$。
+例子：硬核玻色子（[讲义，7.3 节](../../lecture_notes/zh/07_tensor_products.md#s-7-3)）。两个格点上保持粒子数的算子构成 $`M_1\oplus M_2\oplus M_1`$（荷 $`0,1,2`$），
+三个格点上构成 $`M_1\oplus M_3\oplus M_3\oplus M_1`$；由[命题 7.5(c)](../../lecture_notes/zh/07_tensor_products.md#r-7-5)，它们的融合积就是五个格点的总占据数所对应的
+$`\{N\}'`$，且 $`n_q=\binom5q`$。
 
 ```python
 bos1 = TypeIAlgebra([1, 2, 1], [1, 2, 1], precision='double', charges=[0, 1, 2])
@@ -162,17 +162,17 @@ A, B = random_operator(bos1), random_operator(bos2)
 assert close(full12(kron(A, B, F)), full12(kron(A, B, P)))   # Proposition 7.5(b)
 ```
 
-融合代数的维数是 $\sum_q\binom5q^2=\binom{10}5=252$（又是 Vandermonde 恒等式），普通积的维数是
-$(1+4+1)(1+9+9+1)=120$（定理 7.1(b)）。由定理 7.1(a) 和命题 7.5(b)，普通积由融合积中关于对 $(c,d)$
-块对角的元素组成；其余 $132$ 维由这样的算子张成：它们把一个对块 $(c,d)$ 映到同一个 $H_q$ 中另一个对块
-$(c',d')$，$c'\ne c$（因而 $d'\ne d$）。它们在保持总荷守恒的同时改变每个部分的荷，即在这里把粒子在两部分之间移动。
+融合代数的维数是 $`\sum_q\binom5q^2=\binom{10}5=252`$（又是 Vandermonde 恒等式），普通积的维数是
+$`(1+4+1)(1+9+9+1)=120`$（定理 7.1(b)）。由定理 7.1(a) 和命题 7.5(b)，普通积由融合积中关于对 $`(c,d)`$
+块对角的元素组成；其余 $`132`$ 维由这样的算子张成：它们把一个对块 $`(c,d)`$ 映到同一个 $`H_q`$ 中另一个对块
+$`(c',d')`$，$`c'\ne c`$（因而 $`d'\ne d`$）。它们在保持总荷守恒的同时改变每个部分的荷，即在这里把粒子在两部分之间移动。
 
-由定理 7.6 的块公式，$(\rho_1)_c=\sum_d\mathrm{tr}_{l_d}\,\rho_{(c,d),(c,d)}$。本库的两种实现都被设计为
-对任意融合规则计算这个映射：`partial_trace` 只对对角的对块 $\rho_{(c,d),(c,d)}$ 求迹，
-而 `partial_trace_channel` 对同一扇区中 $c$ 相同的对使用各自独立的 Kraus 指标，使得它的对偶仍然是
-$A\mapsto A\otimes1$。代码对下面两种融合规则以及保留因子的两种选择，把两者与用 `einsum` 独立计算的
-$E_1(\mathrm{Tr}_{H_2}\,\rho)$ 进行核对，并把对偶与 $A\otimes1$ 进行核对。在我们的例子中，取加法时 $E_1$ 什么也不做；取宇称规则 $f(q,r)=q+r\bmod2$ 时，
-`bos1` 的荷 $0$ 和 $2$ 与每个 $r$ 的融合结果都相同，于是 $E_1$ 去掉了真正的相干性：
+由定理 7.6 的块公式，$`(\rho_1)_c=\sum_d\mathrm{tr}_{l_d}\,\rho_{(c,d),(c,d)}`$。本库的两种实现都被设计为
+对任意融合规则计算这个映射：`partial_trace` 只对对角的对块 $`\rho_{(c,d),(c,d)}`$ 求迹，
+而 `partial_trace_channel` 对同一扇区中 $`c`$ 相同的对使用各自独立的 Kraus 指标，使得它的对偶仍然是
+$`A\mapsto A\otimes1`$。代码对下面两种融合规则以及保留因子的两种选择，把两者与用 `einsum` 独立计算的
+$`E_1(\mathrm{Tr}_{H_2}\,\rho)`$ 进行核对，并把对偶与 $`A\otimes1`$ 进行核对。在我们的例子中，取加法时 $`E_1`$ 什么也不做；取宇称规则 $`f(q,r)=q+r\bmod2`$ 时，
+`bos1` 的荷 $`0`$ 和 $`2`$ 与每个 $`r`$ 的融合结果都相同，于是 $`E_1`$ 去掉了真正的相干性：
 
 ```python
 G = fused_tensor_product(bos1, bos2, fuse=lambda q, r: (q + r) % 2)       # only the parity is conserved
@@ -199,10 +199,10 @@ for alg, coherent in ((F, False), (G, True)):
 
 ## 7.4 纯态的纠缠
 
-*讲义：* [7.4 节](../../lecture_notes/zh/07_tensor_products.md#s-7-4)：[引理 7.7](../../lecture_notes/zh/07_tensor_products.md#r-7-7)（Schmidt 分解）和[命题 7.8](../../lecture_notes/zh/07_tensor_products.md#r-7-8)（对称性分辨纠缠）：$E(\psi)=H(p)+\sum_cp_cE(\hat\psi_c)$，其中 $p_c$ 是第一部分的扇区 $c$ 的概率。
+*讲义：* [7.4 节](../../lecture_notes/zh/07_tensor_products.md#s-7-4)：[引理 7.7](../../lecture_notes/zh/07_tensor_products.md#r-7-7)（Schmidt 分解）和[命题 7.8](../../lecture_notes/zh/07_tensor_products.md#r-7-8)（对称性分辨纠缠）：$`E(\psi)=H(p)+\sum_cp_cE(\hat\psi_c)`$，其中 $`p_c`$ 是第一部分的扇区 $`c`$ 的概率。
 
-$H(p)$ 称为**数纠缠**，$\sum_cp_cE(\hat\psi_c)$ 称为**构型纠缠**。对五个格点上 $2$ 个粒子的随机态，
-我们分别由两侧的偏迹以及 $4\times8$ 矩阵 $\Psi$ 的奇异值计算 $E(\psi)$：
+$`H(p)`$ 称为**数纠缠**，$`\sum_cp_cE(\hat\psi_c)`$ 称为**构型纠缠**。对五个格点上 $`2`$ 个粒子的随机态，
+我们分别由两侧的偏迹以及 $`4\times8`$ 矩阵 $`\Psi`$ 的奇异值计算 $`E(\psi)`$：
 
 ```python
 s = F.charges.index(2)                                      # the sector of two particles, n_q = 10
@@ -240,8 +240,8 @@ assert abs(E_psi - H_num - S_conf) < 1e-10                  # Proposition 7.8
 
 *讲义：* [7.5 节](../../lecture_notes/zh/07_tensor_products.md#s-7-5)：[定理 7.11](../../lecture_notes/zh/07_tensor_products.md#r-7-11)（Lubkin）、[推论 7.12](../../lecture_notes/zh/07_tensor_products.md#r-7-12)、[定理 7.13](../../lecture_notes/zh/07_tensor_products.md#r-7-13)（Page 公式）和[命题 7.14](../../lecture_notes/zh/07_tensor_products.md#r-7-14)（诱导测度）。
 
-我们在 $\mathbb C^3\otimes\mathbb C^6$ 的 $10^4$ 个经 `partial_trace` 约化的纯态上以及诱导测度上检验定理 7.11
-和 7.13，并对 $M_1\oplus M_2\oplus M_3$、$r=2$ 检验命题 7.14：
+我们在 $`\mathbb C^3\otimes\mathbb C^6`$ 的 $`10^4`$ 个经 `partial_trace` 约化的纯态上以及诱导测度上检验定理 7.11
+和 7.13，并对 $`M_1\oplus M_2\oplus M_3`$、$`r=2`$ 检验命题 7.14：
 
 ```python
 a, b, n_samples = 3, 6, 10_000
@@ -284,8 +284,8 @@ assert abs(m_p - 26 / 78) < 5 * e_p                                          # P
 融合扇区，并给出对称性分辨纠缠。本库增加的是代数层面：积是带有扇区和迹的冯·诺依曼代数，
 融合规则可以是标签的任意映射，偏迹是一个信道，对每种迹都有其对偶，并且对融合积给出正确的
 限制（定理 7.3、7.6），而且这一切都是批量化的。本库没有张量网络，并且 `fused_tensor_product`
-接受的规则对每一对荷只给出一个结果，正如阿贝尔对称性那样；非阿贝尔规则，例如 $SU(2)$ 的规则（一对自旋 $j_1,j_2$
-组合成若干个总自旋 $|j_1-j_2|,\dots,j_1+j_2$，第 4 章习题 2），在这里不是融合积（本库对自旋 $\frac12$ 链上的 $SU(2)$
+接受的规则对每一对荷只给出一个结果，正如阿贝尔对称性那样；非阿贝尔规则，例如 $`SU(2)`$ 的规则（一对自旋 $`j_1,j_2`$
+组合成若干个总自旋 $`|j_1-j_2|,\dots,j_1+j_2`$，第 4 章习题 2），在这里不是融合积（本库对自旋 $`\frac12`$ 链上的 $`SU(2)`$
 另行处理，见第 4 章）。
 
 <a id="x-7"></a>
@@ -294,12 +294,12 @@ assert abs(m_p - 26 / 78) < 5 * e_p                                          # P
 
 讲义中[习题](../../lecture_notes/zh/07_tensor_products.md#x-7)的数值检验：
 
-1. 检验 $\mathrm{Tr}_2$ 关于 $\tau_{\mathrm{vN}}$ 的对偶
-   `partial_trace_channel(alg12).adjoint('tau_vN')` 是 $A\mapsto A\otimes Z$，其中 $Z=\bigoplus_dC_2l_d1_{l_d}$。
+1. 检验 $`\mathrm{Tr}_2`$ 关于 $`\tau_{\mathrm{vN}}`$ 的对偶
+   `partial_trace_channel(alg12).adjoint('tau_vN')` 是 $`A\mapsto A\otimes Z`$，其中 $`Z=\bigoplus_dC_2l_d1_{l_d}`$。
 2. （次可加性。）在 `alg12` 的随机态上检验互信息
-   $S(\rho_1)+S(\rho_2)-S(\rho)$ 是正的，并且等于 $S(\rho\|\rho_1\otimes\rho_2)$。
-3. 对两个格点共享的一个粒子 $\psi=(|01\rangle+|10\rangle)/\sqrt2$，检验
-   $E(\psi)=H(p)=\log2$。
+   $`S(\rho_1)+S(\rho_2)-S(\rho)`$ 是正的，并且等于 $`S(\rho\|\rho_1\otimes\rho_2)`$。
+3. 对两个格点共享的一个粒子 $`\psi=(|01\rangle+|10\rangle)/\sqrt2`$，检验
+   $`E(\psi)=H(p)=\log2`$。
 
 <details>
 <summary>解答</summary>

@@ -3,20 +3,20 @@
 # Tutoriel 5. Matrices aléatoires dans une algèbre
 
 Ce tutoriel accompagne le [chapitre 5](../../lecture_notes/fr/05_random_matrices.md) des notes de cours, qui construit la mesure de Haar
-sur le groupe unitaire de $\mathcal M=\bigoplus_cM_{k_c}$ ([corollaire 5.4](../../lecture_notes/fr/05_random_matrices.md#r-5-4)), calcule ses moments d'ordre un et
+sur le groupe unitaire de $`\mathcal M=\bigoplus_cM_{k_c}`$ ([corollaire 5.4](../../lecture_notes/fr/05_random_matrices.md#r-5-4)), calcule ses moments d'ordre un et
 deux ([proposition 5.7](../../lecture_notes/fr/05_random_matrices.md#r-5-7), [théorème 5.10](../../lecture_notes/fr/05_random_matrices.md#r-5-10)) et montre pourquoi les statistiques de niveaux doivent être
 calculées secteur par secteur ([théorème 5.15](../../lecture_notes/fr/05_random_matrices.md#r-5-15)). Nous tirons des unitaires de Haar et des ensembles gaussiens avec
-la bibliothèque et vérifions ces résultats par Monte-Carlo : une moyenne doit coïncider avec la valeur exacte à $5$
+la bibliothèque et vérifions ces résultats par Monte-Carlo : une moyenne doit coïncider avec la valeur exacte à $`5`$
 erreurs types près. Les résultats qui ne reposent sur aucun théorème sont signalés comme observations numériques.
 
-Dans tout ce chapitre, $\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)$ avec $D=\sum_ck_c$, les
-$P_c$ sont les projecteurs centraux minimaux, et $E$ est l'espérance conditionnelle sur le centre
-de la proposition 2.8. $U(k)$ désigne le groupe des matrices unitaires $k\times k$ et
-$U(\mathcal M)=\{U\in\mathcal M:U^*U=1\}$ le groupe unitaire de $\mathcal M$. Les variables
-aléatoires sont définies sur un espace probabilisé d'espérance $\mathbb E$ ; l'espérance d'une
+Dans tout ce chapitre, $`\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)`$ avec $`D=\sum_ck_c`$, les
+$`P_c`$ sont les projecteurs centraux minimaux, et $`E`$ est l'espérance conditionnelle sur le centre
+de la proposition 2.8. $`U(k)`$ désigne le groupe des matrices unitaires $`k\times k`$ et
+$`U(\mathcal M)=\{U\in\mathcal M:U^*U=1\}`$ le groupe unitaire de $`\mathcal M`$. Les variables
+aléatoires sont définies sur un espace probabilisé d'espérance $`\mathbb E`$ ; l'espérance d'une
 matrice aléatoire se prend coefficient par coefficient. Une variable *gaussienne complexe
-standard* a des parties réelle et imaginaire indépendantes de loi $\sim N(0,\tfrac12)$, de sorte
-que $\mathbb E|z|^2=1$ (c'est ce que tire `torch.randn` pour un dtype complexe, d'après sa
+standard* a des parties réelle et imaginaire indépendantes de loi $`\sim N(0,\tfrac12)`$, de sorte
+que $`\mathbb E|z|^2=1`$ (c'est ce que tire `torch.randn` pour un dtype complexe, d'après sa
 documentation ; le premier bloc de code vérifie les moments d'ordre deux) ; une *matrice de
 Ginibre* a des coefficients indépendants gaussiens complexes standard.
 
@@ -24,21 +24,21 @@ Ginibre* a des coefficients indépendants gaussiens complexes standard.
 
 ## 5.1 Mesure de Haar
 
-*Notes de cours :* [section 5.1](../../lecture_notes/fr/05_random_matrices.md#s-5-1) ; [théorème 5.3](../../lecture_notes/fr/05_random_matrices.md#r-5-3) (le facteur unitaire de la décomposition QR d'une matrice de Ginibre, avec les phases fixées par $\Lambda=\mathrm{diag}(R'_{ii}/|R'_{ii}|)$, est distribué selon la loi de Haar), [corollaire 5.4](../../lecture_notes/fr/05_random_matrices.md#r-5-4) (les blocs d'un unitaire de Haar de $U(\mathcal M)$ sont indépendants et distribués selon la loi de Haar) et [corollaire 5.5](../../lecture_notes/fr/05_random_matrices.md#r-5-5) ($\mathbb EU_{ij}=0$, $\mathbb E|U_{ij}|^2=1/k$). La mesure de Haar de $SU(k)$ est la loi de $e^{-i\theta/k}U$, $\theta=\arg\det U$.
+*Notes de cours :* [section 5.1](../../lecture_notes/fr/05_random_matrices.md#s-5-1) ; [théorème 5.3](../../lecture_notes/fr/05_random_matrices.md#r-5-3) (le facteur unitaire de la décomposition QR d'une matrice de Ginibre, avec les phases fixées par $`\Lambda=\mathrm{diag}(R'_{ii}/|R'_{ii}|)`$, est distribué selon la loi de Haar), [corollaire 5.4](../../lecture_notes/fr/05_random_matrices.md#r-5-4) (les blocs d'un unitaire de Haar de $`U(\mathcal M)`$ sont indépendants et distribués selon la loi de Haar) et [corollaire 5.5](../../lecture_notes/fr/05_random_matrices.md#r-5-5) ($`\mathbb EU_{ij}=0`$, $`\mathbb E|U_{ij}|^2=1/k`$). La mesure de Haar de $`SU(k)`$ est la loi de $`e^{-i\theta/k}U`$, $`\theta=\arg\det U`$.
 
-Sans la correction $\Lambda$ du [théorème 5.3](../../lecture_notes/fr/05_random_matrices.md#r-5-3), la loi de $Q'$ dépend de la convention
+Sans la correction $`\Lambda`$ du [théorème 5.3](../../lecture_notes/fr/05_random_matrices.md#r-5-3), la loi de $`Q'`$ dépend de la convention
 de signe de la routine QR. Pour la routine qu'appelle `torch.linalg.qr` (LAPACK), le code
-ci-dessous trouve $\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'$ éloignée de $0$ de nombreuses
-erreurs types, alors qu'un unitaire de Haar vérifie $\mathbb EU=0$ (corollaire 5.5) : ce $Q'$
+ci-dessous trouve $`\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'`$ éloignée de $`0`$ de nombreuses
+erreurs types, alors qu'un unitaire de Haar vérifie $`\mathbb EU=0`$ (corollaire 5.5) : ce $`Q'`$
 n'est donc pas distribué selon la loi de Haar. C'est un énoncé sur cette routine, vérifié par le
 code, et non un théorème.
 
-La bibliothèque tire des unitaires de Haar de $U(\mathcal M)$ avec `random_unitary_operator`, au
+La bibliothèque tire des unitaires de Haar de $`U(\mathcal M)`$ avec `random_unitary_operator`, au
 moyen d'une seule décomposition QR par lots par taille de bloc, pour tous les secteurs et tous les
-échantillons à la fois (sur GPU, par Gram–Schmidt, qui donne le même $Q$ grâce à l'unicité du
+échantillons à la fois (sur GPU, par Gram–Schmidt, qui donne le même $`Q`$ grâce à l'unicité du
 lemme 5.2). La mesure `'haar'` correspond au théorème 5.3 dans chaque bloc ; pour une algèbre
-complexe, `'haar_su'` multiplie par $e^{-i\theta/k}$ comme ci-dessus ; `'coe'` est l'ensemble
-$S=W^TW$ de l'exercice 3 (les autres mesures de la bibliothèque ne sont pas utilisées dans ce
+complexe, `'haar_su'` multiplie par $`e^{-i\theta/k}`$ comme ci-dessus ; `'coe'` est l'ensemble
+$`S=W^TW`$ de l'exercice 3 (les autres mesures de la bibliothèque ne sont pas utilisées dans ce
 cours). Nous vérifions les corollaires 5.4 et 5.5, et que l'échantillonneur de la bibliothèque est
 exactement la QR corrigée du théorème 5.3 :
 
@@ -93,20 +93,20 @@ assert abs(raw.mean()) > 20 * raw.std() / math.sqrt(B)               # far from 
 ```
 
 *Observation numérique.* Sans la correction, le code trouve
-$\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'\approx-0.84$ pour $k=2$, alors qu'un unitaire de Haar
-vérifie $\mathbb EU=0$.
+$`\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'\approx-0.84`$ pour $`k=2`$, alors qu'un unitaire de Haar
+vérifie $`\mathbb EU=0`$.
 
 <a id="s-5-2"></a>
 
 ## 5.2 Moments et calcul de Weingarten
 
-*Notes de cours :* [section 5.2](../../lecture_notes/fr/05_random_matrices.md#s-5-2) ; [proposition 5.7](../../lecture_notes/fr/05_random_matrices.md#r-5-7) ($\mathbb E[UXU^*]=E(X)$), [lemme 5.8](../../lecture_notes/fr/05_random_matrices.md#r-5-8) (le commutant de tous les $V\otimes V$ est $\mathrm{span}\{1,F\}$, où $F$ est l'échange), [théorème 5.10](../../lecture_notes/fr/05_random_matrices.md#r-5-10) (la formule de Weingarten d'ordre deux) et [corollaire 5.11](../../lecture_notes/fr/05_random_matrices.md#r-5-11).
+*Notes de cours :* [section 5.2](../../lecture_notes/fr/05_random_matrices.md#s-5-2) ; [proposition 5.7](../../lecture_notes/fr/05_random_matrices.md#r-5-7) ($`\mathbb E[UXU^*]=E(X)`$), [lemme 5.8](../../lecture_notes/fr/05_random_matrices.md#r-5-8) (le commutant de tous les $`V\otimes V`$ est $`\mathrm{span}\{1,F\}`$, où $`F`$ est l'échange), [théorème 5.10](../../lecture_notes/fr/05_random_matrices.md#r-5-10) (la formule de Weingarten d'ordre deux) et [corollaire 5.11](../../lecture_notes/fr/05_random_matrices.md#r-5-11).
 
 Nous vérifions la proposition 5.7 par rapport à `channels.center_expectation`, le lemme 5.8 par
-algèbre linéaire (le commutant de trois $V\otimes V$ tirés au hasard, calculé comme un noyau,
-contient $F$ et est de dimension $2$, donc, d'après le lemme 5.8, c'est déjà
-$\mathrm{span}\{1,F\}$), et le théorème 5.10 et le corollaire 5.11 par Monte-Carlo avec le
-bloc $U(3)$ des échantillons précédents :
+algèbre linéaire (le commutant de trois $`V\otimes V`$ tirés au hasard, calculé comme un noyau,
+contient $`F`$ et est de dimension $`2`$, donc, d'après le lemme 5.8, c'est déjà
+$`\mathrm{span}\{1,F\}`$), et le théorème 5.10 et le corollaire 5.11 par Monte-Carlo avec le
+bloc $`U(3)`$ des échantillons précédents :
 
 ```python
 X = alg.from_blocks([torch.randn(k, k, dtype=dt) for k in alg.k_factors])      # a fixed element
@@ -155,11 +155,11 @@ assert ((mean - alpha * torch.eye(k * k, dtype=dt) - beta * F).abs() <= 5 * err)
 
 ## 5.3 Statistiques de niveaux
 
-*Notes de cours :* [section 5.3](../../lecture_notes/fr/05_random_matrices.md#s-5-3) : le GOE $H=(G+G^T)/2$, le GUE $H=(G+G^*)/\sqrt2$, et le rapport d'espacements $r_i=\min(s_i,s_{i+1})/\max(s_i,s_{i+1})$ des espacements $s_i=\lambda_{i+1}-\lambda_i$ ; [proposition 5.13](../../lecture_notes/fr/05_random_matrices.md#r-5-13) (la surmise de Wigner pour les matrices $2\times2$) et [proposition 5.14](../../lecture_notes/fr/05_random_matrices.md#r-5-14) (le rapport moyen vaut $2\ln2-1$ pour des niveaux indépendants, $4-2\sqrt3$ et $\frac{2\sqrt3}\pi-\frac12$ pour le GOE et le GUE $3\times3$, où $\mathbb Er=I_1/I_0$ avec $I_j=\int_0^1x^jf_\beta(x)\,dx$).
+*Notes de cours :* [section 5.3](../../lecture_notes/fr/05_random_matrices.md#s-5-3) : le GOE $`H=(G+G^T)/2`$, le GUE $`H=(G+G^*)/\sqrt2`$, et le rapport d'espacements $`r_i=\min(s_i,s_{i+1})/\max(s_i,s_{i+1})`$ des espacements $`s_i=\lambda_{i+1}-\lambda_i`$ ; [proposition 5.13](../../lecture_notes/fr/05_random_matrices.md#r-5-13) (la surmise de Wigner pour les matrices $`2\times2`$) et [proposition 5.14](../../lecture_notes/fr/05_random_matrices.md#r-5-14) (le rapport moyen vaut $`2\ln2-1`$ pour des niveaux indépendants, $`4-2\sqrt3`$ et $`\frac{2\sqrt3}\pi-\frac12`$ pour le GOE et le GUE $`3\times3`$, où $`\mathbb Er=I_1/I_0`$ avec $`I_j=\int_0^1x^jf_\beta(x)\,dx`$).
 
 La fonction `SpinChain.level_spacing_ratio` (dans `chains`) renvoie le rapport moyen de chaque
 ligne de niveaux. Nous vérifions les propositions 5.13 et 5.14 et relevons la valeur du GOE pour
-$n=64$ :
+$`n=64`$ :
 
 ```python
 ratio = SpinChain.level_spacing_ratio
@@ -210,24 +210,24 @@ def same_mean(a, b, name):
     assert abs(a.mean().item() - b.mean().item()) <= 5 * math.hypot(ea, eb)
 ```
 
-*Observation numérique.* Le code trouve $\langle r\rangle\approx0.53$ pour la moitié centrale du
-spectre du GOE avec $n=64$, en dessous de la valeur exacte $3\times3$, $4-2\sqrt3\approx0.536$, et
-bien au-dessus de la valeur $2\ln2-1\approx0.386$ des niveaux indépendants. Ce nombre est un
+*Observation numérique.* Le code trouve $`\langle r\rangle\approx0.53`$ pour la moitié centrale du
+spectre du GOE avec $`n=64`$, en dessous de la valeur exacte $`3\times3`$, $`4-2\sqrt3\approx0.536`$, et
+bien au-dessus de la valeur $`2\ln2-1\approx0.386`$ des niveaux indépendants. Ce nombre est un
 résultat du calcul, non un théorème ; plus bas, il sert de référence pour des blocs GOE de même
-taille $64$, dont les rapports d'espacements ont exactement la même loi.
+taille $`64`$, dont les rapports d'espacements ont exactement la même loi.
 
 <a id="s-5-4"></a>
 
 ## 5.4 Pourquoi il ne faut pas mélanger les secteurs
 
-*Notes de cours :* [section 5.4](../../lecture_notes/fr/05_random_matrices.md#s-5-4) ; d'après le [théorème 5.15](../../lecture_notes/fr/05_random_matrices.md#r-5-15), les niveaux de blocs indépendants différents ne se repoussent pas : pour deux blocs GOE, le plus petit espacement $\delta$ du spectre fusionné vérifie $P(\delta<\varepsilon)$ au moins d'ordre $\varepsilon$, alors qu'à l'intérieur d'un bloc GOE cette probabilité est au plus d'ordre $\varepsilon^2$.
+*Notes de cours :* [section 5.4](../../lecture_notes/fr/05_random_matrices.md#s-5-4) ; d'après le [théorème 5.15](../../lecture_notes/fr/05_random_matrices.md#r-5-15), les niveaux de blocs indépendants différents ne se repoussent pas : pour deux blocs GOE, le plus petit espacement $`\delta`$ du spectre fusionné vérifie $`P(\delta<\varepsilon)`$ au moins d'ordre $`\varepsilon`$, alors qu'à l'intérieur d'un bloc GOE cette probabilité est au plus d'ordre $`\varepsilon^2`$.
 
 Avec davantage de secteurs, l'effet est plus marqué. Nous ne démontrons pas de théorème limite pour
 de nombreux secteurs ; l'expérience qui suit est une observation numérique. Dans la bibliothèque,
 les blocs sont séparés dès le départ : `eigenvalues()` renvoie un spectre par secteur, et les
-mélanger exige un `torch.cat` explicite. Nous plaçons $C$ blocs GOE indépendants de taille $64$
+mélanger exige un `torch.cat` explicite. Nous plaçons $`C`$ blocs GOE indépendants de taille $`64`$
 dans une même algèbre et comparons le rapport moyen par secteur à celui du spectre fusionné. Chaque
-secteur est une matrice GOE de taille $64$, donc ses rapports ont exactement la loi de `r_goe`
+secteur est une matrice GOE de taille $`64`$, donc ses rapports ont exactement la loi de `r_goe`
 ci-dessus, et le code le vérifie ; le comportement du spectre fusionné est seulement observé :
 
 ```python
@@ -247,16 +247,16 @@ assert merged_r[1] > merged_r[2] > merged_r[4] > merged_r[16]       # numerical 
 assert abs(merged_r[16] - (2 * math.log(2) - 1)) < 0.01              # numerical observation
 ```
 
-*Observation numérique.* Chaque secteur a $\langle r\rangle\approx0.53$, la valeur GOE(64) de la
+*Observation numérique.* Chaque secteur a $`\langle r\rangle\approx0.53`$, la valeur GOE(64) de la
 section 5.3 (cet accord est le test d'un fait : les secteurs sont des matrices GOE(64)). Le spectre
-fusionné tombe à $0.42$ pour deux secteurs et à environ $0.39$, à moins de $0.01$ de la valeur
-$2\ln2-1$ des niveaux indépendants (proposition 5.14(a)), pour $8$ et $16$ secteurs. Que le
-spectre fusionné s'approche de niveaux indépendants quand $C$ croît, c'est ce qu'observe le code ;
+fusionné tombe à $`0.42`$ pour deux secteurs et à environ $`0.39`$, à moins de $`0.01`$ de la valeur
+$`2\ln2-1`$ des niveaux indépendants (proposition 5.14(a)), pour $`8`$ et $`16`$ secteurs. Que le
+spectre fusionné s'approche de niveaux indépendants quand $`C`$ croît, c'est ce qu'observe le code ;
 ce n'est pas démontré dans ce cours.
 
 Il en va de même dans un modèle physique. La chaîne de Heisenberg en champs aléatoires
 (chapitre 9) conserve l'aimantation, de sorte que son hamiltonien appartient à
-$\bigoplus_{N=0}^LM_{\binom LN}$ (proposition 9.1). Ses blocs ne sont *pas* indépendants — ils
+$`\bigoplus_{N=0}^LM_{\binom LN}`$ (proposition 9.1). Ses blocs ne sont *pas* indépendants — ils
 dépendent tous des mêmes champs aléatoires —, si bien que le théorème 5.15 ne s'applique pas tel
 quel ; l'expérience ci-dessous montre le même effet, à titre d'observation numérique.
 
@@ -271,9 +271,9 @@ print(f"Heisenberg chain, L = 10: <r> in sector N = 5: {r_sector:.4f}, all secto
 assert r_sector > 0.49 and r_all < 0.42                             # numerical observation
 ```
 
-*Observation numérique.* Dans le secteur $N=5$, le code trouve $\langle r\rangle\approx0.53$,
+*Observation numérique.* Dans le secteur $`N=5`$, le code trouve $`\langle r\rangle\approx0.53`$,
 proche de la valeur GOE(64) ci-dessus, et le spectre où tous les secteurs sont mélangés donne
-$0.39$, proche de $2\ln2-1$.
+$`0.39`$, proche de $`2\ln2-1`$.
 
 <a id="s-5-5"></a>
 
@@ -297,14 +297,14 @@ sorte que mélanger les secteurs n'est jamais le comportement par défaut.
 ## Exercices
 
 Les parties numériques des [exercices](../../lecture_notes/fr/05_random_matrices.md#x-5) des notes de cours :
-1. Pour $U$ distribué selon la loi de Haar sur $U(\mathcal M)$, $\mathcal M=M_1\oplus M_2\oplus M_3$, vérifier que
-   $\mathbb E|\mathrm{Tr}\,U|^2=C=3$ et $\mathbb E|\mathrm{Tr}\,U|^4=17$.
-2. Calculer numériquement la matrice de Weingarten d'ordre $3$ pour $k=3$ ([théorème 5.12](../../lecture_notes/fr/05_random_matrices.md#r-5-12)) et vérifier que
-   $\mathbb E|U_{11}|^6=\frac1{10}$.
-3. L'**ensemble orthogonal circulaire** (`measure='coe'`) est $S=W^TW$ avec $W$ distribué selon la loi de Haar sur
-   $U(k)$. Vérifier que le COE de la bibliothèque est $W^TW$, que $S$ est unitaire et symétrique, que
-   $\mathbb E\mathrm{Tr}\,S^m=0$ pour $m=1,2,3$ et que la densité moyenne des phases propres est uniforme.
-   Calculer $\langle r\rangle$ pour les phases propres du COE avec $k=32$ et le comparer à la valeur du GOE de la
+1. Pour $`U`$ distribué selon la loi de Haar sur $`U(\mathcal M)`$, $`\mathcal M=M_1\oplus M_2\oplus M_3`$, vérifier que
+   $`\mathbb E|\mathrm{Tr}\,U|^2=C=3`$ et $`\mathbb E|\mathrm{Tr}\,U|^4=17`$.
+2. Calculer numériquement la matrice de Weingarten d'ordre $`3`$ pour $`k=3`$ ([théorème 5.12](../../lecture_notes/fr/05_random_matrices.md#r-5-12)) et vérifier que
+   $`\mathbb E|U_{11}|^6=\frac1{10}`$.
+3. L'**ensemble orthogonal circulaire** (`measure='coe'`) est $`S=W^TW`$ avec $`W`$ distribué selon la loi de Haar sur
+   $`U(k)`$. Vérifier que le COE de la bibliothèque est $`W^TW`$, que $`S`$ est unitaire et symétrique, que
+   $`\mathbb E\mathrm{Tr}\,S^m=0`$ pour $`m=1,2,3`$ et que la densité moyenne des phases propres est uniforme.
+   Calculer $`\langle r\rangle`$ pour les phases propres du COE avec $`k=32`$ et le comparer à la valeur du GOE de la
    section 5.3 (une observation numérique).
 
 <details>
@@ -342,8 +342,8 @@ mc(u3[:, 0, 0].abs() ** 6, 0.1, "E|U_11|^6")
 
 *Exercice 3.*
 
-   *Observation numérique.* Le code trouve $\langle r\rangle\approx0.53$ pour le COE avec $k=32$,
-   à moins de $0.015$ de la valeur GOE(64) de la section 5.3. Cet accord est un résultat du calcul ;
+   *Observation numérique.* Le code trouve $`\langle r\rangle\approx0.53`$ pour le COE avec $`k=32`$,
+   à moins de $`0.015`$ de la valeur GOE(64) de la section 5.3. Cet accord est un résultat du calcul ;
    aucun théorème de ce cours ne relie les statistiques d'espacements du COE à celles du GOE (pour
    les ensembles circulaires, voir F. J. Dyson, J. Math. Phys. 3 (1962), 140–156).
 

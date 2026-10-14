@@ -3,7 +3,7 @@
 # 教程，附录 B. Schur–Weyl 对偶与 Weingarten 演算
 
 本教程配合讲义的[附录 B](../../lecture_notes/zh/B_schur_weyl.md)，该附录证明了 Schur–Weyl 对偶（[定理 B.6](../../lecture_notes/zh/B_schur_weyl.md#r-B-6)）和任意阶的
-Weingarten 公式（[定理 B.13](../../lecture_notes/zh/B_schur_weyl.md#r-B-13)）。我们检验对偶中的维数、本库计算出的 $(\mathbb C^d)^{\otimes n}$ 的分解、
+Weingarten 公式（[定理 B.13](../../lecture_notes/zh/B_schur_weyl.md#r-B-13)）。我们检验对偶中的维数、本库计算出的 $`(\mathbb C^d)^{\otimes n}`$ 的分解、
 Weingarten 函数与 Haar 酉矩阵上蒙特卡罗平均的比较、Wigner–Eckart 定理，以及正交群的 Haar 测度。
 
 <a id="s-B-3"></a>
@@ -12,10 +12,10 @@ Weingarten 函数与 Haar 酉矩阵上蒙特卡罗平均的比较、Wigner–Eck
 
 *讲义：* [B.3 节](../../lecture_notes/zh/B_schur_weyl.md#s-B-3)；[引理 B.1](../../lecture_notes/zh/B_schur_weyl.md#r-B-1)、[引理 B.2](../../lecture_notes/zh/B_schur_weyl.md#r-B-2)、[命题 B.3](../../lecture_notes/zh/B_schur_weyl.md#r-B-3)、[引理 B.5](../../lecture_notes/zh/B_schur_weyl.md#r-B-5)、[定理 B.6](../../lecture_notes/zh/B_schur_weyl.md#r-B-6)。
 
-代码对较小的 $d$ 和 $n$ 比较四个维数：$\mathrm{span}\,\pi(S_n)$ 的维数、两个随机的 $V^{\otimes n}$ 的交换子的维数
-（它包含 $\{V^{\otimes n}\}'=\mathrm{span}\,\pi(S_n)$，并且在所有打印出的情形中与之相等），以及许多随机的
-$A^{\otimes n}$ 和 $V^{\otimes n}$ 的张成的维数，并与 $\binom{d^2+n-1}n$ 比较（[命题 B.3](../../lecture_notes/zh/B_schur_weyl.md#r-B-3)，[定理 B.6](../../lecture_notes/zh/B_schur_weyl.md#r-B-6)）。
-算子 $\pi(\sigma)$ 由 `decompose.permutation_representation(n, d)` 构造；代码检验它遵循[引理 B.1(a)](../../lecture_notes/zh/B_schur_weyl.md#r-B-1) 的约定，
+代码对较小的 $`d`$ 和 $`n`$ 比较四个维数：$`\mathrm{span}\,\pi(S_n)`$ 的维数、两个随机的 $`V^{\otimes n}`$ 的交换子的维数
+（它包含 $`\{V^{\otimes n}\}'=\mathrm{span}\,\pi(S_n)`$，并且在所有打印出的情形中与之相等），以及许多随机的
+$`A^{\otimes n}`$ 和 $`V^{\otimes n}`$ 的张成的维数，并与 $`\binom{d^2+n-1}n`$ 比较（[命题 B.3](../../lecture_notes/zh/B_schur_weyl.md#r-B-3)，[定理 B.6](../../lecture_notes/zh/B_schur_weyl.md#r-B-6)）。
+算子 $`\pi(\sigma)`$ 由 `decompose.permutation_representation(n, d)` 构造；代码检验它遵循[引理 B.1(a)](../../lecture_notes/zh/B_schur_weyl.md#r-B-1) 的约定，
 并检验[引理 B.2](../../lecture_notes/zh/B_schur_weyl.md#r-B-2) 以及[引理 B.5](../../lecture_notes/zh/B_schur_weyl.md#r-B-5) 的 Newton 递推，后者用于定理 B.6(b) 的证明。
 
 ```python
@@ -87,14 +87,14 @@ assert close(e[n], functools.reduce(torch.kron, [A] * n), 1e-8)
 
 <a id="s-B-4"></a>
 
-## B.4 $(\mathbb C^d)^{\otimes n}$ 的分解
+## B.4 $`(\mathbb C^d)^{\otimes n}`$ 的分解
 
 *讲义：* [B.4 节](../../lecture_notes/zh/B_schur_weyl.md#s-B-4)；[定理 B.8](../../lecture_notes/zh/B_schur_weyl.md#r-B-8)、[推论 B.9](../../lecture_notes/zh/B_schur_weyl.md#r-B-9)、[推论 B.10](../../lecture_notes/zh/B_schur_weyl.md#r-B-10)。
 
-代码用 `decompose.from_group` 分解 $(\mathbb C^3)^{\otimes3}$ 上的 $\pi(S_3)$，其 `k_factors` 与
-`multiplicities` 就是 $k_c$ 与 $m_c$，并检验[定理 B.8](../../lecture_notes/zh/B_schur_weyl.md#r-B-8) 的维数；然后对 $L=5,6$ 分解
-$(\mathbb C^2)^{\otimes L}$ 上的 $\pi(S_L)$，把数对 $(k_c,m_c)$ 与[推论 B.9](../../lecture_notes/zh/B_schur_weyl.md#r-B-9) 的 $(m_S,2S+1)$ 比较，并把
-$\sum_ck_c^2$ 与[推论 B.10](../../lecture_notes/zh/B_schur_weyl.md#r-B-10) 的 Catalan 数比较。`from_group` 背后的算法在[教程 4，4.3 节](04_symmetries.md#s-4-3)
+代码用 `decompose.from_group` 分解 $`(\mathbb C^3)^{\otimes3}`$ 上的 $`\pi(S_3)`$，其 `k_factors` 与
+`multiplicities` 就是 $`k_c`$ 与 $`m_c`$，并检验[定理 B.8](../../lecture_notes/zh/B_schur_weyl.md#r-B-8) 的维数；然后对 $`L=5,6`$ 分解
+$`(\mathbb C^2)^{\otimes L}`$ 上的 $`\pi(S_L)`$，把数对 $`(k_c,m_c)`$ 与[推论 B.9](../../lecture_notes/zh/B_schur_weyl.md#r-B-9) 的 $`(m_S,2S+1)`$ 比较，并把
+$`\sum_ck_c^2`$ 与[推论 B.10](../../lecture_notes/zh/B_schur_weyl.md#r-B-10) 的 Catalan 数比较。`from_group` 背后的算法在[教程 4，4.3 节](04_symmetries.md#s-4-3)
 中解释。
 
 ```python
@@ -120,10 +120,10 @@ for L in (5, 6):
 
 *讲义：* [B.5 节](../../lecture_notes/zh/B_schur_weyl.md#s-B-5)；[引理 B.11](../../lecture_notes/zh/B_schur_weyl.md#r-B-11)、[定理 B.13](../../lecture_notes/zh/B_schur_weyl.md#r-B-13)、[推论 B.14](../../lecture_notes/zh/B_schur_weyl.md#r-B-14)。
 
-代码由伪逆计算 $\mathrm{Wg}$，检验[定理 B.13(a)、(b)](../../lecture_notes/zh/B_schur_weyl.md#r-B-13) 和
-[定理 5.10](../../lecture_notes/zh/05_random_matrices.md#r-5-10)，并把 $d=2$ 时 $n=3$ 阶的整个矩张量（一个 $G$ 奇异的情形）以及
-随机 $X$ 的 twirl（[引理 B.11](../../lecture_notes/zh/B_schur_weyl.md#r-B-11)）与 Haar 酉矩阵上的蒙特卡罗平均进行比较；其中的元素
-$\mathbb E|U_{11}|^6=\frac{3!}{2\cdot3\cdot4}$ 就是[推论 B.14](../../lecture_notes/zh/B_schur_weyl.md#r-B-14)。
+代码由伪逆计算 $`\mathrm{Wg}`$，检验[定理 B.13(a)、(b)](../../lecture_notes/zh/B_schur_weyl.md#r-B-13) 和
+[定理 5.10](../../lecture_notes/zh/05_random_matrices.md#r-5-10)，并把 $`d=2`$ 时 $`n=3`$ 阶的整个矩张量（一个 $`G`$ 奇异的情形）以及
+随机 $`X`$ 的 twirl（[引理 B.11](../../lecture_notes/zh/B_schur_weyl.md#r-B-11)）与 Haar 酉矩阵上的蒙特卡罗平均进行比较；其中的元素
+$`\mathbb E|U_{11}|^6=\frac{3!}{2\cdot3\cdot4}`$ 就是[推论 B.14](../../lecture_notes/zh/B_schur_weyl.md#r-B-14)。
 
 ```python
 def n_cycles(p):                                        # number of cycles of a permutation in one-line form
@@ -189,14 +189,14 @@ assert ((Y.mean(0) - T).abs() <= 5 * Y.std(0) / math.sqrt(B) + 1e-12).all()   # 
 
 <a id="s-B-6"></a>
 
-## B.6 张量算子与 $SU(2)$ 的 Wigner–Eckart 定理
+## B.6 张量算子与 $`SU(2)`$ 的 Wigner–Eckart 定理
 
 *讲义：* [B.6 节](../../lecture_notes/zh/B_schur_weyl.md#s-B-6)；[引理 B.15](../../lecture_notes/zh/B_schur_weyl.md#r-B-15)、[定理 B.16](../../lecture_notes/zh/B_schur_weyl.md#r-B-16)。
 
-代码对六个自旋 $\frac12$ 的格点自旋检验[引理 B.15](../../lecture_notes/zh/B_schur_weyl.md#r-B-15)（`decompose.total_spin`、
+代码对六个自旋 $`\frac12`$ 的格点自旋检验[引理 B.15](../../lecture_notes/zh/B_schur_weyl.md#r-B-15)（`decompose.total_spin`、
 `decompose.spin_matrices`），并以不依赖基的形式检验[定理 B.16](../../lecture_notes/zh/B_schur_weyl.md#r-B-16)：在 `decompose.from_generators`
-计算出的分解中（其扇区基，即 `V` 的列块，不必是 $|S,M\rangle$），把 $(T_q)_q$ 在两个多重态之间的块看作行为
-$(M',M,q)$、列为 $(a,b)$ 的矩阵，它的秩至多为一，并且在 (a) 的范围之外为零。该定理是 `su2.spin_correlation`
+计算出的分解中（其扇区基，即 `V` 的列块，不必是 $`|S,M\rangle`$），把 $`(T_q)_q`$ 在两个多重态之间的块看作行为
+$`(M',M,q)`$、列为 $`(a,b)`$ 的矩阵，它的秩至多为一，并且在 (a) 的范围之外为零。该定理是 `su2.spin_correlation`
 背后的原理，[教程 9，9.3 节](09_spin_chains.md#s-9-3)把它与 `'direct'` 方法进行比较检验。
 
 ```python
@@ -240,13 +240,13 @@ assert close(X @ X2 + Y @ Y2 + Z @ Z2, sum((-1) ** q * T[q] @ T2[-q] for q in (-
 
 *讲义：* [B.7 节](../../lecture_notes/zh/B_schur_weyl.md#s-B-7)；[定理 B.17](../../lecture_notes/zh/B_schur_weyl.md#r-B-17)。
 
-由[定理 B.17](../../lecture_notes/zh/B_schur_weyl.md#r-B-17)，实高斯矩阵的 QR 分解 $Z=OR$ 在 $R_{ii}>0$ 的归一化下，其正交因子 $O$ 在 $O(k)$ 上服从
-Haar 分布，且 $\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k$；对任何其他 QR 分解 $Z=O'R'$，
-$O=O'\mathrm{diag}(\mathrm{sgn}\,R'_{ii})$。
+由[定理 B.17](../../lecture_notes/zh/B_schur_weyl.md#r-B-17)，实高斯矩阵的 QR 分解 $`Z=OR`$ 在 $`R_{ii}>0`$ 的归一化下，其正交因子 $`O`$ 在 $`O(k)`$ 上服从
+Haar 分布，且 $`\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k`$；对任何其他 QR 分解 $`Z=O'R'`$，
+$`O=O'\mathrm{diag}(\mathrm{sgn}\,R'_{ii})`$。
 
-代码用蒙特卡罗方法检验二阶矩、$\mathbb E\mathrm{Tr}\,O=0$ 以及 $\mathbb E(\mathrm{Tr}\,O)^2=\sum_{i,l}\mathbb E[O_{ii}O_{ll}]=1$。
+代码用蒙特卡罗方法检验二阶矩、$`\mathbb E\mathrm{Tr}\,O=0`$ 以及 $`\mathbb E(\mathrm{Tr}\,O)^2=\sum_{i,l}\mathbb E[O_{ii}O_{ll}]=1`$。
 它还记录了关于 `torch.linalg.qr` 的 QR 例程的一个*数值观察*（这是关于该例程的陈述，而不是定理）：不作符号修正时，
-其因子 $Q'$ 的 $\mathbb E\mathrm{Tr}\,Q'$ 与 $0$ 相差许多个标准误差，所以它不服从 Haar 分布。
+其因子 $`Q'`$ 的 $`\mathbb E\mathrm{Tr}\,Q'`$ 与 $`0`$ 相差许多个标准误差，所以它不服从 Haar 分布。
 
 ```python
 k, B = 3, 100_000

@@ -3,8 +3,8 @@
 # Tutorial 2. Endlichdimensionale von-Neumann-Algebren
 
 Dieses Tutorial begleitet [Kapitel 2](../../lecture_notes/de/02_von_neumann_algebras.md) der Vorlesungsnotizen, das beweist,
-dass jede von-Neumann-Algebra auf $\mathbb C^n$ bis auf einen unitären Basiswechsel gleich
-$\bigoplus_cM_{k_c}(\mathbb C)\otimes1_{m_c}$ ist ([Satz 2.6](../../lecture_notes/de/02_von_neumann_algebras.md#r-2-6)).
+dass jede von-Neumann-Algebra auf $`\mathbb C^n`$ bis auf einen unitären Basiswechsel gleich
+$`\bigoplus_cM_{k_c}(\mathbb C)\otimes1_{m_c}`$ ist ([Satz 2.6](../../lecture_notes/de/02_von_neumann_algebras.md#r-2-6)).
 Wir berechnen Kommutanten numerisch am Beispiel einer Symmetriegruppe und sehen, wie die Bibliothek
 eine solche Algebra, ihr Zentrum und die bedingte Erwartung auf das Zentrum speichert.
 
@@ -14,12 +14,12 @@ eine solche Algebra, ihr Zentrum und die bedingte Erwartung auf das Zentrum spei
 
 *Vorlesungsnotizen:* [Abschnitt 2.4](../../lecture_notes/de/02_von_neumann_algebras.md#s-2-4); [Satz 2.2](../../lecture_notes/de/02_von_neumann_algebras.md#r-2-2), [Satz 2.6](../../lecture_notes/de/02_von_neumann_algebras.md#r-2-6), [Proposition 2.7](../../lecture_notes/de/02_von_neumann_algebras.md#r-2-7).
 
-[Abschnitt 2.4](../../lecture_notes/de/02_von_neumann_algebras.md#s-2-4) der Vorlesungsnotizen zerlegt die Darstellung $\pi$ von
-$S_3$, die die drei Faktoren von $(\mathbb C^2)^{\otimes3}$ permutiert: $\pi(S_3)'\cong M_4\oplus M_2$ hat die Dimension
-$20$ und $\pi(S_3)''\cong M_1\oplus M_2$ die Dimension $5$. Der Code unten bestätigt die beiden Dimensionen numerisch
-sowie, dass die Kommutante von $\pi(S_3)'$ wieder $\pi(S_3)''$ ist
-([Satz 2.2](../../lecture_notes/de/02_von_neumann_algebras.md#r-2-2)): Die Kommutante einer Menge $S$ ist der
-Kern der linearen Abbildung $X\mapsto(AX-XA)_{A\in S}$, dessen Dimension hier in Gleitkommaarithmetik
+[Abschnitt 2.4](../../lecture_notes/de/02_von_neumann_algebras.md#s-2-4) der Vorlesungsnotizen zerlegt die Darstellung $`\pi`$ von
+$`S_3`$, die die drei Faktoren von $`(\mathbb C^2)^{\otimes3}`$ permutiert: $`\pi(S_3)'\cong M_4\oplus M_2`$ hat die Dimension
+$`20`$ und $`\pi(S_3)''\cong M_1\oplus M_2`$ die Dimension $`5`$. Der Code unten bestätigt die beiden Dimensionen numerisch
+sowie, dass die Kommutante von $`\pi(S_3)'`$ wieder $`\pi(S_3)''`$ ist
+([Satz 2.2](../../lecture_notes/de/02_von_neumann_algebras.md#r-2-2)): Die Kommutante einer Menge $`S`$ ist der
+Kern der linearen Abbildung $`X\mapsto(AX-XA)_{A\in S}`$, dessen Dimension hier in Gleitkommaarithmetik
 berechnet wird, indem die Singulärwerte oberhalb einer Toleranz gezählt werden.
 
 ```python
@@ -63,11 +63,11 @@ assert len(commutant_basis(comm)) == 5                   # double commutant theo
 
 Die Vielfachheiten sind im Spektrum sichtbar ([Vorlesungsnotizen, Abschnitt 2.4](../../lecture_notes/de/02_von_neumann_algebras.md#s-2-4), nach
 [Satz 2.6](../../lecture_notes/de/02_von_neumann_algebras.md#r-2-6)):
-Jedes selbstadjungierte $K\in\pi(S_3)'$ hat auf dem Komplement des symmetrischen Unterraums $F$ Eigenwerte
-gerader Vielfachheit, und für $K=E(Z+Z^*)$, mit einer Ginibre-Matrix $Z$ und der Gruppenmittelung $E$, hat $K$ mit
-Wahrscheinlichkeit eins $4$ einfache Eigenwerte auf $F$ und $2$ zweifach entartete auf dessen Komplement. Der Code überprüft die
-entarteten Paare (die für jedes $K$ gelten) und, für das gezogene $K$, dass die beiden Paare und die vier
-Eigenwerte auf $F$ verschieden sind; dabei verwendet er die Orthogonalprojektion $P_F=\frac1{|G|}\sum_g\pi(g)$ auf $F$.
+Jedes selbstadjungierte $`K\in\pi(S_3)'`$ hat auf dem Komplement des symmetrischen Unterraums $`F`$ Eigenwerte
+gerader Vielfachheit, und für $`K=E(Z+Z^*)`$, mit einer Ginibre-Matrix $`Z`$ und der Gruppenmittelung $`E`$, hat $`K`$ mit
+Wahrscheinlichkeit eins $`4`$ einfache Eigenwerte auf $`F`$ und $`2`$ zweifach entartete auf dessen Komplement. Der Code überprüft die
+entarteten Paare (die für jedes $`K`$ gelten) und, für das gezogene $`K`$, dass die beiden Paare und die vier
+Eigenwerte auf $`F`$ verschieden sind; dabei verwendet er die Orthogonalprojektion $`P_F=\frac1{|G|}\sum_g\pi(g)`$ auf $`F`$.
 
 ```python
 def group_average(X):
@@ -96,9 +96,9 @@ assert (e_sym[:, None] - e_rest[None, :]).abs().min() > 1e-6                    
 
 *Vorlesungsnotizen:* [Abschnitt 2.3](../../lecture_notes/de/02_von_neumann_algebras.md#s-2-3), [Satz 2.6](../../lecture_notes/de/02_von_neumann_algebras.md#r-2-6); das Zentrum: [Abschnitt 2.2](../../lecture_notes/de/02_von_neumann_algebras.md#s-2-2), [Lemma 2.3](../../lecture_notes/de/02_von_neumann_algebras.md#r-2-3).
 
-Die Bibliothek speichert die abstrakte Algebra $\bigoplus_cM_{k_c}(\mathbb C)$ aus Satz 2.6
-auf $\bigoplus_c\mathbb C^{k_c}$, ohne die Vielfachheiten: Ein Operator ist die Liste seiner
-Blöcke $A_c$, aufgefüllt auf eine gemeinsame Größe. Die Kommutante aus dem Beispiel ist
+Die Bibliothek speichert die abstrakte Algebra $`\bigoplus_cM_{k_c}(\mathbb C)`$ aus Satz 2.6
+auf $`\bigoplus_c\mathbb C^{k_c}`$, ohne die Vielfachheiten: Ein Operator ist die Liste seiner
+Blöcke $`A_c`$, aufgefüllt auf eine gemeinsame Größe. Die Kommutante aus dem Beispiel ist
 `TypeIAlgebra([4, 2], [4, 2])`.
 
 ```python
@@ -112,7 +112,7 @@ print(A.matrix.shape)              # (1, 2, 4, 4): block 1 occupies the top-left
 assert A.matrix[0, 1, 2:, :].abs().max() == 0 and A.matrix[0, 1, :, 2:].abs().max() == 0
 ```
 
-Das Zentrum besteht aus den Elementen $\sum_cz_cP_c$; `alg.central` konstruiert sie, und
+Das Zentrum besteht aus den Elementen $`\sum_cz_cP_c`$; `alg.central` konstruiert sie, und
 sie kommutieren mit allem:
 
 ```python
@@ -135,9 +135,9 @@ assert close(A @ P0 + A @ P1, A)                         # A = sum_c A P_c
 
 *Vorlesungsnotizen:* [Abschnitt 2.6](../../lecture_notes/de/02_von_neumann_algebras.md#s-2-6).
 
-Nach [Vorlesungsnotizen, Proposition 2.8](../../lecture_notes/de/02_von_neumann_algebras.md#r-2-8) ist $E(A)=\sum_c\frac{\mathrm{Tr}\,A_c}{k_c}\,P_c$
-eine bedingte Erwartung von $\bigoplus_cM_{k_c}$ auf sein Zentrum: Sie ist positiv, auf dem Zentrum die Identität,
-ein Bimodulhomomorphismus über dem Zentrum, und sie erhält jede Spur $\sum_cw_c\mathrm{Tr}\,A_c$.
+Nach [Vorlesungsnotizen, Proposition 2.8](../../lecture_notes/de/02_von_neumann_algebras.md#r-2-8) ist $`E(A)=\sum_c\frac{\mathrm{Tr}\,A_c}{k_c}\,P_c`$
+eine bedingte Erwartung von $`\bigoplus_cM_{k_c}`$ auf sein Zentrum: Sie ist positiv, auf dem Zentrum die Identität,
+ein Bimodulhomomorphismus über dem Zentrum, und sie erhält jede Spur $`\sum_cw_c\mathrm{Tr}\,A_c`$.
 
 In der Bibliothek ist diese Abbildung der Kanal `channels.center_expectation(alg)`. Wendet
 man ihn auf Operatoren an, erhält man den klassischen (über die Sektoren gemittelten) Teil:
@@ -161,7 +161,7 @@ for c, k in enumerate(alg.k_factors):                    # E(A)_c = (Tr A_c / k_
 
 Die Beispiele aus Abschnitt 2.4 lassen sich mit jedem Paket für lineare Algebra
 überprüfen; Software für Darstellungstheorie (GAP, SageMath) liefert die Zerlegung
-$\pi\cong\bigoplus\rho_\lambda\otimes1_{m_\lambda}$ symbolisch. Programme zur exakten
+$`\pi\cong\bigoplus\rho_\lambda\otimes1_{m_\lambda}`$ symbolisch. Programme zur exakten
 Diagonalisierung in der Physik (QuSpin, die Symmetriemodule von QuTiP) nutzen dieselbe
 Blockstruktur, um Hamilton-Operatoren Sektor für Sektor zu diagonalisieren. Die Bibliothek
 nimmt die Struktur als Ausgangspunkt: Sind die Blöcke einmal bekannt, so bleiben alle
@@ -171,8 +171,8 @@ weiteren Rechnungen – Funktionen, Spuren, Zustände, Kanäle, Dynamik – inne
 
 ## Aufgaben
 
-[Aufgabe 2](../../lecture_notes/de/02_von_neumann_algebras.md#x-2) der Vorlesungsnotizen: Für die zyklische Verschiebung $S$ auf $\mathbb C^3$,
-$Se_i=e_{i+1\bmod3}$, sind $\{S\}'$ und $\{S\}''$ beide gleich $\mathrm{span}\{1,S,S^2\}$, den zirkulanten
+[Aufgabe 2](../../lecture_notes/de/02_von_neumann_algebras.md#x-2) der Vorlesungsnotizen: Für die zyklische Verschiebung $`S`$ auf $`\mathbb C^3`$,
+$`Se_i=e_{i+1\bmod3}`$, sind $`\{S\}'`$ und $`\{S\}''`$ beide gleich $`\mathrm{span}\{1,S,S^2\}`$, den zirkulanten
 Matrizen. Man überprüfe die Dimensionen numerisch.
 
 <details>

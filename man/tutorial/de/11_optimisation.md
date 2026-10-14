@@ -5,18 +5,18 @@
 Dieses Tutorial begleitet [Kapitel 11](../../lecture_notes/de/11_optimisation.md) der Vorlesungsnotizen, das die Extrema dreier Spurfunktionale beweist
 und erklärt, warum Stichproben unitärer Matrizen sie nicht finden. Hier werden die Parametrisierungen von
 Nebenbedingungsmengen (`optimize.PositiveParam`, `UnitaryParam`, `SelfAdjointParam`) und der Multistart-Optimierer
-(`optimize.extremize`) der Bibliothek an diesen Sätzen geprüft. Mit dem Michelson-Kontrast $\Delta$ und
-$\ell(\delta)=(1-\delta)/(1+\delta)$ lauten die drei Funktionale:
+(`optimize.extremize`) der Bibliothek an diesen Sätzen geprüft. Mit dem Michelson-Kontrast $`\Delta`$ und
+$`\ell(\delta)=(1-\delta)/(1+\delta)`$ lauten die drei Funktionale:
 
 | | Funktional | Variablen |
 |---|---|---|
-| Exp. 1 | $z=\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)$ | $X,Y\ge0$, $U\in\mathcal M$ unitär |
-| Exp. 2 | $z=\mathrm{Tr}\lvert XY\rvert-\mathrm{Tr}(\lvert X\rvert\,\lvert Y\rvert)$ | $X=UX_0$, $Y=VY_0$, $X_0,Y_0\ge0$, $U,V$ unitär |
-| Exp. 3 | $z=\mathrm{Tr}(Y\lvert X\rvert Y)-\mathrm{Tr}\lvert YXY\rvert$ | $X=X^*$, $Y\ge0$ |
+| Exp. 1 | $`z=\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)`$ | $`X,Y\ge0`$, $`U\in\mathcal M`$ unitär |
+| Exp. 2 | $`z=\mathrm{Tr}\lvert XY\rvert-\mathrm{Tr}(\lvert X\rvert\,\lvert Y\rvert)`$ | $`X=UX_0`$, $`Y=VY_0`$, $`X_0,Y_0\ge0`$, $`U,V`$ unitär |
+| Exp. 3 | $`z=\mathrm{Tr}(Y\lvert X\rvert Y)-\mathrm{Tr}\lvert YXY\rvert`$ | $`X=X^*`$, $`Y\ge0`$ |
 
-wobei $|X|$, $|Y|$ auf $\lambda_{\max}=1$ normiert sind und ihre Kontraste als Parameter dienen. Die
-**Einhüllenden** sind $\overline z(\delta)=\sup\{z:\Delta(|X|)=\delta\}$ und
-$\underline z(\delta)=\inf\{z:\Delta(|X|)=\delta\}$, wobei alle übrigen Variablen frei sind.
+wobei $`|X|`$, $`|Y|`$ auf $`\lambda_{\max}=1`$ normiert sind und ihre Kontraste als Parameter dienen. Die
+**Einhüllenden** sind $`\overline z(\delta)=\sup\{z:\Delta(|X|)=\delta\}`$ und
+$`\underline z(\delta)=\inf\{z:\Delta(|X|)=\delta\}`$, wobei alle übrigen Variablen frei sind.
 
 <a id="s-11-1"></a>
 
@@ -24,19 +24,19 @@ $\underline z(\delta)=\inf\{z:\Delta(|X|)=\delta\}$, wobei alle übrigen Variabl
 
 *Vorlesungsnotizen:* [Abschnitt 11.1](../../lecture_notes/de/11_optimisation.md#s-11-1); [Lemma 11.1](../../lecture_notes/de/11_optimisation.md#r-11-1), [Proposition 11.2](../../lecture_notes/de/11_optimisation.md#r-11-2).
 
-`optimize.PositiveParam` mit vorgegebenem Kontrast $\delta$ implementiert die Parametrisierung aus
-[Abschnitt 11.1](../../lecture_notes/de/11_optimisation.md#s-11-1) der Vorlesungsnotizen: Pro Start zieht es zwei verschiedene Plätze $s_\pm$ (`spectrum.pin_max`,
-`spectrum.pin_min`; jedes geordnete Paar hat die Wahrscheinlichkeit $1/(D(D-1))$) und eine Haar-verteilte unitäre Matrix
-$U_0$ (`unitary.base`, gezogen von `random_unitary_operator`, [Lemma 11.10](../../lecture_notes/de/11_optimisation.md#r-11-10)) und bildet die Parameter $\theta$
-(`spectrum.theta`) und $G$ (`unitary.G`) ab auf
-$$
+`optimize.PositiveParam` mit vorgegebenem Kontrast $`\delta`$ implementiert die Parametrisierung aus
+[Abschnitt 11.1](../../lecture_notes/de/11_optimisation.md#s-11-1) der Vorlesungsnotizen: Pro Start zieht es zwei verschiedene Plätze $`s_\pm`$ (`spectrum.pin_max`,
+`spectrum.pin_min`; jedes geordnete Paar hat die Wahrscheinlichkeit $`1/(D(D-1))`$) und eine Haar-verteilte unitäre Matrix
+$`U_0`$ (`unitary.base`, gezogen von `random_unitary_operator`, [Lemma 11.10](../../lecture_notes/de/11_optimisation.md#r-11-10)) und bildet die Parameter $`\theta`$
+(`spectrum.theta`) und $`G`$ (`unitary.G`) ab auf
+```math
 X(\theta,G)=U\mathrm{diag}(\lambda)U^*,\qquad U=U_0\,e^{G-G^*},\qquad
 \lambda_{s_+}=1,\quad\lambda_{s_-}=\ell(\delta),\quad\lambda_s=\ell+(1-\ell)\tfrac{1+\sin\theta_s}2\ \text{otherwise}.
-$$
-`UnitaryParam` ist die Abbildung $G\mapsto U_0e^{G-G^*}$ allein, und `SelfAdjointParam` fügt Vorzeichen hinzu,
-$X=U\mathrm{diag}(\sigma\lambda)U^*$. Nach [Proposition 11.2](../../lecture_notes/de/11_optimisation.md#r-11-2) ist das Bild die Menge der Operatoren der
-Kontrastschale $\mathcal P_\delta$ mit $1$ und $\ell(\delta)$ auf den gezogenen Plätzen. Ein freier Kontrast in $[a,b]$ ist ein
-weiterer Parameter; die Voreinstellung der Bibliothek ist $[a,b]=[0,0.999]$, und der Code unten behält sie bei.
+```
+`UnitaryParam` ist die Abbildung $`G\mapsto U_0e^{G-G^*}`$ allein, und `SelfAdjointParam` fügt Vorzeichen hinzu,
+$`X=U\mathrm{diag}(\sigma\lambda)U^*`$. Nach [Proposition 11.2](../../lecture_notes/de/11_optimisation.md#r-11-2) ist das Bild die Menge der Operatoren der
+Kontrastschale $`\mathcal P_\delta`$ mit $`1`$ und $`\ell(\delta)`$ auf den gezogenen Plätzen. Ein freier Kontrast in $`[a,b]`$ ist ein
+weiterer Parameter; die Voreinstellung der Bibliothek ist $`[a,b]=[0,0.999]`$, und der Code unten behält sie bei.
 
 Der Code prüft die Nebenbedingung und, konstruktiv, Proposition 11.2: Die Parameter aus dem Beweis reproduzieren
 eine Zielmatrix.
@@ -79,14 +79,14 @@ assert err < 1e-10
 *Vorlesungsnotizen:* [Abschnitt 11.2](../../lecture_notes/de/11_optimisation.md#s-11-2); [Satz 11.4](../../lecture_notes/de/11_optimisation.md#r-11-4), [Korollar 11.5](../../lecture_notes/de/11_optimisation.md#r-11-5), [Proposition 11.6](../../lecture_notes/de/11_optimisation.md#r-11-6), [Korollar 11.7](../../lecture_notes/de/11_optimisation.md#r-11-7).
 
 Nach [Vorlesungsnotizen, Satz 11.4](../../lecture_notes/de/11_optimisation.md#r-11-4) (von Neumannsche Spurungleichung) ist
-$|\mathrm{Tr}(AB)|\le\sum_is_i(A)s_i(B)$, und nach [Korollar 11.5](../../lecture_notes/de/11_optimisation.md#r-11-5) gilt $\sum_ip^\downarrow_iq^\uparrow_i\le\mathrm{Tr}(PQ)\le\sum_ip^\downarrow_iq^\downarrow_i$ für selbstadjungierte $P,Q$ mit
-Eigenwerten $p,q$ sowie $\mathrm{Tr}(PQ)\le\|PQ\|_1\le\sum_ip^\downarrow_iq^\downarrow_i$ für $P,Q\ge0$. Für Exp. 2 bei festen Spektren liefert
-[Proposition 11.6](../../lecture_notes/de/11_optimisation.md#r-11-6) $\sup z=-\inf z=\sum_c\sum_ix^\downarrow_{c,i}(y^\downarrow_{c,i}-y^\uparrow_{c,i})$, angenommen für $X_0=\mathrm{diag}(x^\downarrow)$, $V=J$ die umkehrende Permutation und $Y_0=\mathrm{diag}(y^\uparrow)$
-(bzw. $\mathrm{diag}(y^\downarrow)$), und [Korollar 11.7](../../lecture_notes/de/11_optimisation.md#r-11-7) liefert die Einhüllende $\sup z=-\inf z=\sum_c\lfloor k_c/2\rfloor(1-\ell_X)(1-\ell_Y)$.
+$`|\mathrm{Tr}(AB)|\le\sum_is_i(A)s_i(B)`$, und nach [Korollar 11.5](../../lecture_notes/de/11_optimisation.md#r-11-5) gilt $`\sum_ip^\downarrow_iq^\uparrow_i\le\mathrm{Tr}(PQ)\le\sum_ip^\downarrow_iq^\downarrow_i`$ für selbstadjungierte $`P,Q`$ mit
+Eigenwerten $`p,q`$ sowie $`\mathrm{Tr}(PQ)\le\|PQ\|_1\le\sum_ip^\downarrow_iq^\downarrow_i`$ für $`P,Q\ge0`$. Für Exp. 2 bei festen Spektren liefert
+[Proposition 11.6](../../lecture_notes/de/11_optimisation.md#r-11-6) $`\sup z=-\inf z=\sum_c\sum_ix^\downarrow_{c,i}(y^\downarrow_{c,i}-y^\uparrow_{c,i})`$, angenommen für $`X_0=\mathrm{diag}(x^\downarrow)`$, $`V=J`$ die umkehrende Permutation und $`Y_0=\mathrm{diag}(y^\uparrow)`$
+(bzw. $`\mathrm{diag}(y^\downarrow)`$), und [Korollar 11.7](../../lecture_notes/de/11_optimisation.md#r-11-7) liefert die Einhüllende $`\sup z=-\inf z=\sum_c\lfloor k_c/2\rfloor(1-\ell_X)(1-\ell_Y)`$.
 
-Hier ist $1-\ell_X=2\delta/(1+\delta)$ für $\Delta(|X|)=\delta$; für ungerades $k_c$ spielt der mittlere Eigenwert keine
-Rolle. Der Code prüft Satz 11.4, Korollar 11.5 und die extremalen Konfigurationen aus Proposition 11.6 für $k=3$,
-$C=2$.
+Hier ist $`1-\ell_X=2\delta/(1+\delta)`$ für $`\Delta(|X|)=\delta`$; für ungerades $`k_c`$ spielt der mittlere Eigenwert keine
+Rolle. Der Code prüft Satz 11.4, Korollar 11.5 und die extremalen Konfigurationen aus Proposition 11.6 für $`k=3`$,
+$`C=2`$.
 
 ```python
 M5 = TypeIAlgebra([5], [5], precision='double')
@@ -128,10 +128,10 @@ assert abs(z_max - exact) < 1e-12 and abs(z_min + exact) < 1e-12 and abs(exact -
 
 *Vorlesungsnotizen:* [Abschnitt 11.3](../../lecture_notes/de/11_optimisation.md#s-11-3); [Lemma 11.8](../../lecture_notes/de/11_optimisation.md#r-11-8), [Proposition 11.9](../../lecture_notes/de/11_optimisation.md#r-11-9).
 
-Nach [Vorlesungsnotizen, Proposition 11.9](../../lecture_notes/de/11_optimisation.md#r-11-9) ist $z=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ge0$ in Exp. 3, mit Gleichheit genau dann,
-wenn $YX_+Y^2X_-Y=0$, insbesondere wenn $XY=YX$. Für $X=\mathrm{diag}(1,-1,0)$ und $Y$ mit den Zeilen $(1,0,a)$, $(0,1,0)$, $(a,0,1)$, $|a|<1$, gilt Gleichheit,
-obwohl $XY\ne YX$ für $a\ne0$. Der Code prüft beides (mit $a=0.5$); `X.abs()` ist $|X|$, und `trace_norm()` ist
-$\|\cdot\|_1$.
+Nach [Vorlesungsnotizen, Proposition 11.9](../../lecture_notes/de/11_optimisation.md#r-11-9) ist $`z=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ge0`$ in Exp. 3, mit Gleichheit genau dann,
+wenn $`YX_+Y^2X_-Y=0`$, insbesondere wenn $`XY=YX`$. Für $`X=\mathrm{diag}(1,-1,0)`$ und $`Y`$ mit den Zeilen $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`|a|<1`$, gilt Gleichheit,
+obwohl $`XY\ne YX`$ für $`a\ne0`$. Der Code prüft beides (mit $`a=0.5`$); `X.abs()` ist $`|X|`$, und `trace_norm()` ist
+$`\|\cdot\|_1`$.
 
 ```python
 def z_exp3(X, Y):
@@ -155,22 +155,22 @@ assert abs(z_exp3(Xe, Ye).item()) < 1e-12 and (Xe @ Ye - Ye @ Xe).operator_norm(
 
 *Vorlesungsnotizen:* [Abschnitt 11.4](../../lecture_notes/de/11_optimisation.md#s-11-4); [Lemma 11.10](../../lecture_notes/de/11_optimisation.md#r-11-10), [Proposition 11.11](../../lecture_notes/de/11_optimisation.md#r-11-11), [Korollar 11.12](../../lecture_notes/de/11_optimisation.md#r-11-12), [Lemma 11.13](../../lecture_notes/de/11_optimisation.md#r-11-13).
 
-Wie groß ist $|\mathrm{Tr}(AU)|$ typischerweise, verglichen mit seinem Maximum $\|A\|_1$? Die Bibliothek zieht $U$
-als den Faktor $Q$ der QR-Zerlegung $Z=QR$, $R_{ii}>0$, einer **Ginibre-Matrix** $Z$ (unabhängige Einträge mit der
-Dichte $\pi^{-1}e^{-|z|^2}$; Mezzadris Rezept), und zwar in jedem Block unabhängig.
+Wie groß ist $`|\mathrm{Tr}(AU)|`$ typischerweise, verglichen mit seinem Maximum $`\|A\|_1`$? Die Bibliothek zieht $`U`$
+als den Faktor $`Q`$ der QR-Zerlegung $`Z=QR`$, $`R_{ii}>0`$, einer **Ginibre-Matrix** $`Z`$ (unabhängige Einträge mit der
+Dichte $`\pi^{-1}e^{-|z|^2}`$; Mezzadris Rezept), und zwar in jedem Block unabhängig.
 
-Nach [Vorlesungsnotizen, Proposition 11.11](../../lecture_notes/de/11_optimisation.md#r-11-11) ist $\mathbb E|\mathrm{Tr}(AU)|^2=\|A\|_2^2/k$ für Haar-verteiltes $U\in U(k)$, und nach
-[Korollar 11.12](../../lecture_notes/de/11_optimisation.md#r-11-12) ist für $X,Y\ge0$ mit Spektren in $[a,b]$, $a>0$, das quadratische Mittel von $|\mathrm{Tr}(XUY)|$
-höchstens das $\min(1/\sqrt k,b^2/(a^2k))$-Fache seines Maximums über $U$, und $\mathbb P\big(|\mathrm{Tr}(XUY)|\ge\mathrm{Tr}(XY)\big)\le b^4/(a^4k^2)$.
+Nach [Vorlesungsnotizen, Proposition 11.11](../../lecture_notes/de/11_optimisation.md#r-11-11) ist $`\mathbb E|\mathrm{Tr}(AU)|^2=\|A\|_2^2/k`$ für Haar-verteiltes $`U\in U(k)`$, und nach
+[Korollar 11.12](../../lecture_notes/de/11_optimisation.md#r-11-12) ist für $`X,Y\ge0`$ mit Spektren in $`[a,b]`$, $`a>0`$, das quadratische Mittel von $`|\mathrm{Tr}(XUY)|`$
+höchstens das $`\min(1/\sqrt k,b^2/(a^2k))`$-Fache seines Maximums über $`U`$, und $`\mathbb P\big(|\mathrm{Tr}(XUY)|\ge\mathrm{Tr}(XY)\big)\le b^4/(a^4k^2)`$.
 
-$N$ Haar-Stichproben finden eine Verletzung von $|\mathrm{Tr}(XUY)|\le\mathrm{Tr}(XY)$ also höchstens mit
-Wahrscheinlichkeit $Nb^4/(a^4k^2)$ (eine Vereinigung von $N$ Ereignissen), obwohl es für jedes nichtkommutierende
-Paar eine gibt (Proposition 3.9). Die Schranke ist erst für $k>\sqrt N\,b^2/a^2$ aussagekräftig (für $b/a=6$ und
-$N=2000$: $k>1609$); numerisch übersehen die Stichproben die Verletzung schon für viel kleinere $k$ (siehe unten).
+$`N`$ Haar-Stichproben finden eine Verletzung von $`|\mathrm{Tr}(XUY)|\le\mathrm{Tr}(XY)`$ also höchstens mit
+Wahrscheinlichkeit $`Nb^4/(a^4k^2)`$ (eine Vereinigung von $`N`$ Ereignissen), obwohl es für jedes nichtkommutierende
+Paar eine gibt (Proposition 3.9). Die Schranke ist erst für $`k>\sqrt N\,b^2/a^2`$ aussagekräftig (für $`b/a=6`$ und
+$`N=2000`$: $`k>1609`$); numerisch übersehen die Stichproben die Verletzung schon für viel kleinere $`k`$ (siehe unten).
 Der Code prüft Proposition 11.11 per Monte-Carlo (der Stichprobenmittelwert liegt bei diesem Lauf mit festem Seed
-innerhalb von fünf Standardfehlern vom exakten Wert) und gibt für in $[0.2,1.2]$ gleichverteilte Spektren ($b/a=6$) den
-Quotienten aus Korollar 11.12, $\sup z$ und das beste $z$ aus $2000$ Stichproben aus, beide relativ zu
-$\mathrm{Tr}(XY)$.
+innerhalb von fünf Standardfehlern vom exakten Wert) und gibt für in $`[0.2,1.2]`$ gleichverteilte Spektren ($`b/a=6`$) den
+Quotienten aus Korollar 11.12, $`\sup z`$ und das beste $`z`$ aus $`2000`$ Stichproben aus, beide relativ zu
+$`\mathrm{Tr}(XY)`$.
 
 ```python
 def random_pair(alg_k):
@@ -198,22 +198,22 @@ for k in (2, 4, 8, 16, 32):
 ```
 
 *Numerische Beobachtung* (die ausgegebene Tabelle; nur für diesen Lauf mit festem Seed geprüft): Der Quotient bleibt
-unter der bewiesenen Schranke $\min(1/\sqrt k,b^2/(a^2k))$ und halbiert sich ungefähr, wann immer sich $k$ verdoppelt,
-d. h. er fällt wie $1/k$, und ab $k=4$ erreicht die beste von $2000$ Stichproben nicht einmal $z=0$. Eine
+unter der bewiesenen Schranke $`\min(1/\sqrt k,b^2/(a^2k))`$ und halbiert sich ungefähr, wann immer sich $`k`$ verdoppelt,
+d. h. er fällt wie $`1/k`$, und ab $`k=4`$ erreicht die beste von $`2000`$ Stichproben nicht einmal $`z=0`$. Eine
 Gradientensuche kommt dagegen im Lauf unten beiden Extrema nahe (wiederum eine numerische Beobachtung). Für das Paar
-`Xf, Yf` sind beide Extrema über $U$ bekannt:
+`Xf, Yf` sind beide Extrema über $`U`$ bekannt:
 
-Nach [Vorlesungsnotizen, Lemma 11.13](../../lecture_notes/de/11_optimisation.md#r-11-13) ist $\min_U|\mathrm{Tr}(AU)|=0$ für jedes $A\in M_k(\mathbb C)$, $k\ge2$.
+Nach [Vorlesungsnotizen, Lemma 11.13](../../lecture_notes/de/11_optimisation.md#r-11-13) ist $`\min_U|\mathrm{Tr}(AU)|=0`$ für jedes $`A\in M_k(\mathbb C)`$, $`k\ge2`$.
 
-Also ist $\inf_Uz=-\mathrm{Tr}(XY)$ und $\sup_Uz=\|YX\|_1-\mathrm{Tr}(XY)$ (Proposition 3.9). Ein einziger
-Aufruf von `extremize` nähert beide an, mit $12$ Starts, die $z$ maximieren, und $12$, die $-z$ maximieren (in diesem
-Lauf bis auf eine relative Genauigkeit von $10^{-3}$, unten geprüft). Nach Proposition 11.11 ist das quadratische
-Mittel von $|\mathrm{Tr}(XUY)|$ gleich $\|YX\|_2/\sqrt k$; mit den Schranken aus dem Beweis von Korollar 11.12
-(Spektren in $[a,b]$) ist $\mathbb E|\mathrm{Tr}(XUY)|^2\le b^4$ und $\mathrm{Tr}(XY)\ge ka^2$, sodass die
-Markov-Ungleichung $\mathbb P\big(z\ge-(1-\varepsilon)\mathrm{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)$ für
-$\varepsilon>0$ liefert: Für großes $k$ liegt $z$ mit hoher Wahrscheinlichkeit nahe bei seinem Infimum.
-*Numerische Beobachtung* (für diesen Lauf mit festem Seed geprüft): Stichproben kommen dem Infimum bis auf $1\,\%$
-nahe, erreichen aber nicht einmal $z=0$, während das Supremum positiv ist:
+Also ist $`\inf_Uz=-\mathrm{Tr}(XY)`$ und $`\sup_Uz=\|YX\|_1-\mathrm{Tr}(XY)`$ (Proposition 3.9). Ein einziger
+Aufruf von `extremize` nähert beide an, mit $`12`$ Starts, die $`z`$ maximieren, und $`12`$, die $`-z`$ maximieren (in diesem
+Lauf bis auf eine relative Genauigkeit von $`10^{-3}`$, unten geprüft). Nach Proposition 11.11 ist das quadratische
+Mittel von $`|\mathrm{Tr}(XUY)|`$ gleich $`\|YX\|_2/\sqrt k`$; mit den Schranken aus dem Beweis von Korollar 11.12
+(Spektren in $`[a,b]`$) ist $`\mathbb E|\mathrm{Tr}(XUY)|^2\le b^4`$ und $`\mathrm{Tr}(XY)\ge ka^2`$, sodass die
+Markov-Ungleichung $`\mathbb P\big(z\ge-(1-\varepsilon)\mathrm{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)`$ für
+$`\varepsilon>0`$ liefert: Für großes $`k`$ liegt $`z`$ mit hoher Wahrscheinlichkeit nahe bei seinem Infimum.
+*Numerische Beobachtung* (für diesen Lauf mit festem Seed geprüft): Stichproben kommen dem Infimum bis auf $`1\,\%`$
+nahe, erreichen aber nicht einmal $`z=0`$, während das Supremum positiv ist:
 
 ```python
 trXY = (Xf @ Yf).trace.real
@@ -239,18 +239,18 @@ assert z_mc.max().item() < 0                                               # ...
 *Vorlesungsnotizen:* [Abschnitt 11.5](../../lecture_notes/de/11_optimisation.md#s-11-5); [Proposition 11.14](../../lecture_notes/de/11_optimisation.md#r-11-14), [Korollar 11.7](../../lecture_notes/de/11_optimisation.md#r-11-7), [Proposition 11.9](../../lecture_notes/de/11_optimisation.md#r-11-9).
 
 `optimize.extremize(objective, params, maximize)` führt Adam in `rounds` Runden zu je `steps` Schritten aus
-(Lernrate `lr * decay**round`) auf dem Verlust $\mp\sum_b\text{objective}_b$ aus, zentriert die unitären Karten nach
+(Lernrate `lr * decay**round`) auf dem Verlust $`\mp\sum_b\text{objective}_b`$ aus, zentriert die unitären Karten nach
 jeder Runde neu und gibt **pro Start** den größten (für `maximize=False` den kleinsten) Wert der Zielfunktion unter
 denen zurück, die an den Gradienteniterierten und einmal am Endpunkt berechnet wurden. Jedes Batch-Element ist ein
-unabhängiger Start mit eigenen Plätzen, Vorzeichen, $U_0$ und eigenem Kontrast: Adam arbeitet koordinatenweise; hängt
-also der $b$-te Eintrag der Zielfunktion nur von den $b$-ten Parametern ab (wie bei allen Zielfunktionen unten), so
+unabhängiger Start mit eigenen Plätzen, Vorzeichen, $`U_0`$ und eigenem Kontrast: Adam arbeitet koordinatenweise; hängt
+also der $`b`$-te Eintrag der Zielfunktion nur von den $`b`$-ten Parametern ab (wie bei allen Zielfunktionen unten), so
 beeinflussen sich die Starts nicht. Die Vorzeichen von `SelfAdjointParam` sind diskret: Zwischen den Runden probiert
 `discrete_step` pro Start acht einzelne Vorzeichenwechsel (jeweils an einem gleichverteilt zufälligen Platz)
 nacheinander aus und behält jeden Wechsel, der die Zielfunktion verbessert.
 
 In exakter Arithmetik ist jede Iterierte zulässig (Proposition 11.2 und die Bemerkungen danach), also ist jeder
-zurückgegebene Wert der Wert von $z$ an einem zulässigen Punkt; in Gleitkommaarithmetik ist er dieser Wert bis auf
-Rundungsfehler (die Prüfungen unten erlauben $10^{-12}$). Daher liefert eine Maximierung eine **untere Schranke** für
+zurückgegebene Wert der Wert von $`z`$ an einem zulässigen Punkt; in Gleitkommaarithmetik ist er dieser Wert bis auf
+Rundungsfehler (die Prüfungen unten erlauben $`10^{-12}`$). Daher liefert eine Maximierung eine **untere Schranke** für
 das Supremum, eine Minimierung eine obere Schranke für das Infimum, und nicht mehr – eine lokale Suche kann in einem
 lokalen Extremum stehen bleiben. Die andere Richtung erfordert einen Beweis, wie Korollar 11.7 und
 Proposition 11.9, oder eine konvexe Relaxierung (Abschnitt 11.6). Eine berechnete Einhüllende wird geprüft (i) an
@@ -258,22 +258,22 @@ geschlossenen Formeln; (ii) an von Hand gebauten Konfigurationen, etwa direkten 
 sie nicht fallen darf; (iii) an strukturierten Stichproben (Zwei-Niveau-Spektren, Permutationsbasen), deren Werte
 weitere angenommene Werte sind.
 
-Nach [Vorlesungsnotizen, Proposition 11.14](../../lecture_notes/de/11_optimisation.md#r-11-14) ist, wenn alle $k_c\ge2$ sind, die untere Einhüllende von Exp. 1 gleich $\underline z(\delta)=-\big(D-2\delta/(1+\delta)\big)$.
+Nach [Vorlesungsnotizen, Proposition 11.14](../../lecture_notes/de/11_optimisation.md#r-11-14) ist, wenn alle $`k_c\ge2`$ sind, die untere Einhüllende von Exp. 1 gleich $`\underline z(\delta)=-\big(D-2\delta/(1+\delta)\big)`$.
 
-Der Code prüft Proposition 11.14 auf $M_2\oplus M_2$, Korollar 11.7 auf $M_3\oplus M_3$ (beide Kontraste
-vorgegeben, $k=3$ ungerade) und Proposition 11.9; Suprema und Infima teilen sich wie oben einen Aufruf. Die
+Der Code prüft Proposition 11.14 auf $`M_2\oplus M_2`$, Korollar 11.7 auf $`M_3\oplus M_3`$ (beide Kontraste
+vorgegeben, $`k=3`$ ungerade) und Proposition 11.9; Suprema und Infima teilen sich wie oben einen Aufruf. Die
 einseitigen Prüfungen (kein zurückgegebener Wert jenseits eines bewiesenen Extremums) sind Folgerungen aus diesen
 Sätzen; die Prüfungen, dass die Suche dem Extremum bis auf die angegebene Toleranz nahekommt, sind numerische
 Beobachtungen dieses Laufs mit festem Seed. Das Schlüsselwort `is_self_adjoint` wählt den Algorithmus für die
-Spurnorm (Singulärwerte oder, für $YXY$, Eigenwerte), ohne in jedem Schritt zu testen. Die letzte Prüfung ist vom
-Typ (ii): $z$ aus Exp. 3 ist additiv über direkte Summen, und der Kontrast einer direkten Summe ist der größte
-Kontrast ihrer Summanden (Aufgabe 3), also gilt für die Einhüllenden von Exp. 3 mit $\Delta(Y)$ frei in $[0,0.999]$
+Spurnorm (Singulärwerte oder, für $`YXY`$, Eigenwerte), ohne in jedem Schritt zu testen. Die letzte Prüfung ist vom
+Typ (ii): $`z`$ aus Exp. 3 ist additiv über direkte Summen, und der Kontrast einer direkten Summe ist der größte
+Kontrast ihrer Summanden (Aufgabe 3), also gilt für die Einhüllenden von Exp. 3 mit $`\Delta(Y)`$ frei in $`[0,0.999]`$
 wie im Code
-$$
+```math
 \overline z_{M_2\oplus M_2}(\delta)\ \ge\ \overline z_{M_2}(\delta)+\sup_{\delta'\le\delta}\overline z_{M_2}(\delta');
-$$
-insbesondere ist die Summe zweier auf $M_2$ bei den Kontrasten $\delta$ und $\delta'\le\delta$ angenommener Werte ein
-auf $M_2\oplus M_2$ beim Kontrast $\delta$ angenommener Wert.
+```
+insbesondere ist die Summe zweier auf $`M_2`$ bei den Kontrasten $`\delta`$ und $`\delta'\le\delta`$ angenommener Werte ein
+auf $`M_2\oplus M_2`$ beim Kontrast $`\delta`$ angenommener Wert.
 
 ```python
 torch.manual_seed(1)
@@ -329,11 +329,11 @@ assert inf3 >= -1e-12 and inf3 < 1e-6                                       # Pr
 assert sup_M22 >= direct_sum - 5e-3 * direct_sum                           # (ii), up to 0.5 %
 ```
 
-*Numerische Beobachtungen* (die ausgegebenen Werte dieses Laufs). Die Suche auf $M_2\oplus M_2$ bleibt um etwa
-$0.2\,\%$ hinter der direkten Summe zurück: Sie ist nicht vollständig konvergiert, und die beste untere Schranke für
-$\overline z_{M_2\oplus M_2}(0.5)$ ist die größere Zahl – dies zu erkennen ist der Zweck von Prüfung (ii). Die Werte
-für $M_2$ stimmen bis auf $10^{-4}$ mit $(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2$ überein, wobei
-$d=0.999$ der größte zugelassene Kontrast von $Y$ ist. Diese geschlossene Form ist **kein** Satz dieses Kurses: Die
+*Numerische Beobachtungen* (die ausgegebenen Werte dieses Laufs). Die Suche auf $`M_2\oplus M_2`$ bleibt um etwa
+$`0.2\,\%`$ hinter der direkten Summe zurück: Sie ist nicht vollständig konvergiert, und die beste untere Schranke für
+$`\overline z_{M_2\oplus M_2}(0.5)`$ ist die größere Zahl – dies zu erkennen ist der Zweck von Prüfung (ii). Die Werte
+für $`M_2`$ stimmen bis auf $`10^{-4}`$ mit $`(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2`$ überein, wobei
+$`d=0.999`$ der größte zugelassene Kontrast von $`Y`$ ist. Diese geschlossene Form ist **kein** Satz dieses Kurses: Die
 Begleitarbeit hat sie numerisch beobachtet (in reellen Algebren), aber nicht bewiesen, und der Code gibt sie aus, ohne
 etwas über sie zu prüfen. Für größere Blöcke kennen wir keine geschlossene Form der oberen Einhüllenden von Exp. 1
 und Exp. 3; berechnete Kurven sind dann untere Schranken (angenommene Werte), nicht mehr.
@@ -350,7 +350,7 @@ die ein Optimum zusammen mit einem dualen Zertifikat liefern, beides bis auf die
 konvexes Problem über einer größeren zulässigen Menge – beschränkt das Supremum nach oben, in der Richtung, die eine
 lokale Suche nicht liefern kann. **NCTSSOS**, **ncpol2sdpa** und **NCSOStools** beschränken Eigenwerte und
 Spuren nichtkommutativer Polynome in allen Dimensionen zugleich (Abschnitt 0.3). Die Bibliothek ergänzt exakte
-Parametrisierungen der Spektral- und Kontrastnebenbedingungen von $\bigoplus_cM_{k_c}$ (die Extrema können in jedem
+Parametrisierungen der Spektral- und Kontrastnebenbedingungen von $`\bigoplus_cM_{k_c}`$ (die Extrema können in jedem
 Sektor liegen), unitäre Matrizen, die die Blöcke respektieren, und eine einzige gebündelte Rechnung für viele Starts
 und Werte der Nebenbedingung, auf CPU oder GPU. Sie liefert Kandidaten für Extremalstellen und untere Schranken für
 Suprema; den Rest müssen Beweise oder Relaxierungen beisteuern.
@@ -359,10 +359,10 @@ Suprema; den Rest müssen Beweise oder Relaxierungen beisteuern.
 
 ## Aufgaben
 
-[Aufgaben 1 und 2](../../lecture_notes/de/11_optimisation.md#x-11) der Vorlesungsnotizen, numerisch: Die Cayley-Transformation $C(S)=(1-S)(1+S)^{-1}$ eines
-schiefadjungierten $S$ ist unitär, hat keinen Eigenwert $-1$, und es gilt $S=(1-C)(1+C)^{-1}$ (Aufgabe 1); für Haar-verteiltes $O$
-auf $O(k)$, gezogen mit `random_unitary_operator` einer reellen Algebra (`complex_valued=False`), gilt
-$\mathbb E\mathrm{Tr}(AO)^2=\|A\|_2^2/k$ (Aufgabe 2).
+[Aufgaben 1 und 2](../../lecture_notes/de/11_optimisation.md#x-11) der Vorlesungsnotizen, numerisch: Die Cayley-Transformation $`C(S)=(1-S)(1+S)^{-1}`$ eines
+schiefadjungierten $`S`$ ist unitär, hat keinen Eigenwert $`-1`$, und es gilt $`S=(1-C)(1+C)^{-1}`$ (Aufgabe 1); für Haar-verteiltes $`O`$
+auf $`O(k)`$, gezogen mit `random_unitary_operator` einer reellen Algebra (`complex_valued=False`), gilt
+$`\mathbb E\mathrm{Tr}(AO)^2=\|A\|_2^2/k`$ (Aufgabe 2).
 
 <details>
 <summary>Lösungen</summary>

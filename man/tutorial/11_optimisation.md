@@ -5,17 +5,17 @@
 This tutorial accompanies [Chapter 11](../lecture_notes/11_optimisation.md) of the lecture notes, which proves the extremes of three
 trace functionals and explains why sampling unitaries fails to find them. Here the parametrisations of
 constraint sets (`optimize.PositiveParam`, `UnitaryParam`, `SelfAdjointParam`) and the multistart optimiser
-(`optimize.extremize`) of the library are checked against those theorems. With $\Delta$ the Michelson contrast
-and $\ell(\delta)=(1-\delta)/(1+\delta)$, the three functionals are:
+(`optimize.extremize`) of the library are checked against those theorems. With $`\Delta`$ the Michelson contrast
+and $`\ell(\delta)=(1-\delta)/(1+\delta)`$, the three functionals are:
 
 | | functional | variables |
 |---|---|---|
-| Exp. 1 | $z=\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)$ | $X,Y\ge0$, $U\in\mathcal M$ unitary |
-| Exp. 2 | $z=\mathrm{Tr}\lvert XY\rvert-\mathrm{Tr}(\lvert X\rvert\,\lvert Y\rvert)$ | $X=UX_0$, $Y=VY_0$, $X_0,Y_0\ge0$, $U,V$ unitary |
-| Exp. 3 | $z=\mathrm{Tr}(Y\lvert X\rvert Y)-\mathrm{Tr}\lvert YXY\rvert$ | $X=X^*$, $Y\ge0$ |
+| Exp. 1 | $`z=\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)`$ | $`X,Y\ge0`$, $`U\in\mathcal M`$ unitary |
+| Exp. 2 | $`z=\mathrm{Tr}\lvert XY\rvert-\mathrm{Tr}(\lvert X\rvert\,\lvert Y\rvert)`$ | $`X=UX_0`$, $`Y=VY_0`$, $`X_0,Y_0\ge0`$, $`U,V`$ unitary |
+| Exp. 3 | $`z=\mathrm{Tr}(Y\lvert X\rvert Y)-\mathrm{Tr}\lvert YXY\rvert`$ | $`X=X^*`$, $`Y\ge0`$ |
 
-with $|X|$, $|Y|$ normalised to $\lambda_{\max}=1$ and their contrasts as parameters. The **envelopes** are
-$\overline z(\delta)=\sup\{z:\Delta(|X|)=\delta\}$ and $\underline z(\delta)=\inf\{z:\Delta(|X|)=\delta\}$, all other
+with $`|X|`$, $`|Y|`$ normalised to $`\lambda_{\max}=1`$ and their contrasts as parameters. The **envelopes** are
+$`\overline z(\delta)=\sup\{z:\Delta(|X|)=\delta\}`$ and $`\underline z(\delta)=\inf\{z:\Delta(|X|)=\delta\}`$, all other
 variables being free.
 
 <a id="s-11-1"></a>
@@ -24,19 +24,19 @@ variables being free.
 
 *Lecture notes:* [Section 11.1](../lecture_notes/11_optimisation.md#s-11-1); [Lemma 11.1](../lecture_notes/11_optimisation.md#r-11-1), [Proposition 11.2](../lecture_notes/11_optimisation.md#r-11-2).
 
-`optimize.PositiveParam` with prescribed contrast $\delta$ implements the parametrisation of
-[lecture notes, Section 11.1](../lecture_notes/11_optimisation.md#s-11-1): per start it draws two distinct slots $s_\pm$ (`spectrum.pin_max`,
-`spectrum.pin_min`; every ordered pair has probability $1/(D(D-1))$) and a Haar-random unitary $U_0$
-(`unitary.base`, drawn by `random_unitary_operator`, [Lemma 11.10](../lecture_notes/11_optimisation.md#r-11-10)), and maps the parameters $\theta$
-(`spectrum.theta`) and $G$ (`unitary.G`) to
-$$
+`optimize.PositiveParam` with prescribed contrast $`\delta`$ implements the parametrisation of
+[lecture notes, Section 11.1](../lecture_notes/11_optimisation.md#s-11-1): per start it draws two distinct slots $`s_\pm`$ (`spectrum.pin_max`,
+`spectrum.pin_min`; every ordered pair has probability $`1/(D(D-1))`$) and a Haar-random unitary $`U_0`$
+(`unitary.base`, drawn by `random_unitary_operator`, [Lemma 11.10](../lecture_notes/11_optimisation.md#r-11-10)), and maps the parameters $`\theta`$
+(`spectrum.theta`) and $`G`$ (`unitary.G`) to
+```math
 X(\theta,G)=U\mathrm{diag}(\lambda)U^*,\qquad U=U_0\,e^{G-G^*},\qquad
 \lambda_{s_+}=1,\quad\lambda_{s_-}=\ell(\delta),\quad\lambda_s=\ell+(1-\ell)\tfrac{1+\sin\theta_s}2\ \text{otherwise}.
-$$
-`UnitaryParam` is the map $G\mapsto U_0e^{G-G^*}$ alone, and `SelfAdjointParam` adds signs,
-$X=U\mathrm{diag}(\sigma\lambda)U^*$. By [Proposition 11.2](../lecture_notes/11_optimisation.md#r-11-2) the image is the set of operators of
-the contrast shell $\mathcal P_\delta$ with $1$ and $\ell(\delta)$ in the drawn slots. A free contrast in $[a,b]$ is one more
-parameter; the library's default is $[a,b]=[0,0.999]$, and the code below keeps it.
+```
+`UnitaryParam` is the map $`G\mapsto U_0e^{G-G^*}`$ alone, and `SelfAdjointParam` adds signs,
+$`X=U\mathrm{diag}(\sigma\lambda)U^*`$. By [Proposition 11.2](../lecture_notes/11_optimisation.md#r-11-2) the image is the set of operators of
+the contrast shell $`\mathcal P_\delta`$ with $`1`$ and $`\ell(\delta)`$ in the drawn slots. A free contrast in $`[a,b]`$ is one more
+parameter; the library's default is $`[a,b]=[0,0.999]`$, and the code below keeps it.
 
 The code checks the constraint, and Proposition 11.2 constructively: the parameters of the proof reproduce a target.
 
@@ -78,17 +78,17 @@ assert err < 1e-10
 *Lecture notes:* [Section 11.2](../lecture_notes/11_optimisation.md#s-11-2); [Theorem 11.4](../lecture_notes/11_optimisation.md#r-11-4), [Corollary 11.5](../lecture_notes/11_optimisation.md#r-11-5), [Proposition 11.6](../lecture_notes/11_optimisation.md#r-11-6), [Corollary 11.7](../lecture_notes/11_optimisation.md#r-11-7).
 
 By [lecture notes, Theorem 11.4](../lecture_notes/11_optimisation.md#r-11-4) (von Neumann's trace inequality),
-$|\mathrm{Tr}(AB)|\le\sum_is_i(A)s_i(B)$, and by [Corollary 11.5](../lecture_notes/11_optimisation.md#r-11-5),
-$\sum_ip^\downarrow_iq^\uparrow_i\le\mathrm{Tr}(PQ)\le\sum_ip^\downarrow_iq^\downarrow_i$ for self-adjoint $P,Q$ with
-eigenvalues $p,q$, and $\mathrm{Tr}(PQ)\le\|PQ\|_1\le\sum_ip^\downarrow_iq^\downarrow_i$ for $P,Q\ge0$. For Exp. 2 with
+$`|\mathrm{Tr}(AB)|\le\sum_is_i(A)s_i(B)`$, and by [Corollary 11.5](../lecture_notes/11_optimisation.md#r-11-5),
+$`\sum_ip^\downarrow_iq^\uparrow_i\le\mathrm{Tr}(PQ)\le\sum_ip^\downarrow_iq^\downarrow_i`$ for self-adjoint $`P,Q`$ with
+eigenvalues $`p,q`$, and $`\mathrm{Tr}(PQ)\le\|PQ\|_1\le\sum_ip^\downarrow_iq^\downarrow_i`$ for $`P,Q\ge0`$. For Exp. 2 with
 fixed spectra, [Proposition 11.6](../lecture_notes/11_optimisation.md#r-11-6) gives
-$\sup z=-\inf z=\sum_c\sum_ix^\downarrow_{c,i}(y^\downarrow_{c,i}-y^\uparrow_{c,i})$, attained for
-$X_0=\mathrm{diag}(x^\downarrow)$, $V=J$ the reversal permutation and $Y_0=\mathrm{diag}(y^\uparrow)$ (resp.
-$\mathrm{diag}(y^\downarrow)$), and [Corollary 11.7](../lecture_notes/11_optimisation.md#r-11-7) gives the envelope
-$\sup z=-\inf z=\sum_c\lfloor k_c/2\rfloor(1-\ell_X)(1-\ell_Y)$.
+$`\sup z=-\inf z=\sum_c\sum_ix^\downarrow_{c,i}(y^\downarrow_{c,i}-y^\uparrow_{c,i})`$, attained for
+$`X_0=\mathrm{diag}(x^\downarrow)`$, $`V=J`$ the reversal permutation and $`Y_0=\mathrm{diag}(y^\uparrow)`$ (resp.
+$`\mathrm{diag}(y^\downarrow)`$), and [Corollary 11.7](../lecture_notes/11_optimisation.md#r-11-7) gives the envelope
+$`\sup z=-\inf z=\sum_c\lfloor k_c/2\rfloor(1-\ell_X)(1-\ell_Y)`$.
 
-Here $1-\ell_X=2\delta/(1+\delta)$ for $\Delta(|X|)=\delta$; for odd $k_c$ the middle eigenvalue is irrelevant. The code
-checks Theorem 11.4, Corollary 11.5 and the extremal configurations of Proposition 11.6 for $k=3$, $C=2$.
+Here $`1-\ell_X=2\delta/(1+\delta)`$ for $`\Delta(|X|)=\delta`$; for odd $`k_c`$ the middle eigenvalue is irrelevant. The code
+checks Theorem 11.4, Corollary 11.5 and the extremal configurations of Proposition 11.6 for $`k=3`$, $`C=2`$.
 
 ```python
 M5 = TypeIAlgebra([5], [5], precision='double')
@@ -130,10 +130,10 @@ assert abs(z_max - exact) < 1e-12 and abs(z_min + exact) < 1e-12 and abs(exact -
 
 *Lecture notes:* [Section 11.3](../lecture_notes/11_optimisation.md#s-11-3); [Lemma 11.8](../lecture_notes/11_optimisation.md#r-11-8), [Proposition 11.9](../lecture_notes/11_optimisation.md#r-11-9).
 
-By [lecture notes, Proposition 11.9](../lecture_notes/11_optimisation.md#r-11-9), $z=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ge0$ in Exp. 3,
-with equality iff $YX_+Y^2X_-Y=0$, in particular if $XY=YX$. For $X=\mathrm{diag}(1,-1,0)$ and $Y$ with rows
-$(1,0,a)$, $(0,1,0)$, $(a,0,1)$, $|a|<1$, equality holds although $XY\ne YX$ for $a\ne0$. The code checks both
-(with $a=0.5$); `X.abs()` is $|X|$ and `trace_norm()` is $\|\cdot\|_1$.
+By [lecture notes, Proposition 11.9](../lecture_notes/11_optimisation.md#r-11-9), $`z=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ge0`$ in Exp. 3,
+with equality iff $`YX_+Y^2X_-Y=0`$, in particular if $`XY=YX`$. For $`X=\mathrm{diag}(1,-1,0)`$ and $`Y`$ with rows
+$`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`|a|<1`$, equality holds although $`XY\ne YX`$ for $`a\ne0`$. The code checks both
+(with $`a=0.5`$); `X.abs()` is $`|X|`$ and `trace_norm()` is $`\|\cdot\|_1`$.
 
 ```python
 def z_exp3(X, Y):
@@ -157,22 +157,22 @@ assert abs(z_exp3(Xe, Ye).item()) < 1e-12 and (Xe @ Ye - Ye @ Xe).operator_norm(
 
 *Lecture notes:* [Section 11.4](../lecture_notes/11_optimisation.md#s-11-4); [Lemma 11.10](../lecture_notes/11_optimisation.md#r-11-10), [Proposition 11.11](../lecture_notes/11_optimisation.md#r-11-11), [Corollary 11.12](../lecture_notes/11_optimisation.md#r-11-12), [Lemma 11.13](../lecture_notes/11_optimisation.md#r-11-13).
 
-How large is $|\mathrm{Tr}(AU)|$ typically, compared with its maximum $\|A\|_1$? The library samples $U$ as
-the factor $Q$ of the QR decomposition $Z=QR$, $R_{ii}>0$, of a **Ginibre matrix** $Z$ (independent entries with
-density $\pi^{-1}e^{-|z|^2}$; Mezzadri's recipe), independently in every block.
+How large is $`|\mathrm{Tr}(AU)|`$ typically, compared with its maximum $`\|A\|_1`$? The library samples $`U`$ as
+the factor $`Q`$ of the QR decomposition $`Z=QR`$, $`R_{ii}>0`$, of a **Ginibre matrix** $`Z`$ (independent entries with
+density $`\pi^{-1}e^{-|z|^2}`$; Mezzadri's recipe), independently in every block.
 
-By [lecture notes, Proposition 11.11](../lecture_notes/11_optimisation.md#r-11-11), $\mathbb E|\mathrm{Tr}(AU)|^2=\|A\|_2^2/k$ for Haar
-$U\in U(k)$, and by [Corollary 11.12](../lecture_notes/11_optimisation.md#r-11-12), for $X,Y\ge0$ with spectra in $[a,b]$, $a>0$, the root mean square of
-$|\mathrm{Tr}(XUY)|$ is at most $\min(1/\sqrt k,b^2/(a^2k))$ times its maximum over $U$, and
-$\mathbb P\big(|\mathrm{Tr}(XUY)|\ge\mathrm{Tr}(XY)\big)\le b^4/(a^4k^2)$.
+By [lecture notes, Proposition 11.11](../lecture_notes/11_optimisation.md#r-11-11), $`\mathbb E|\mathrm{Tr}(AU)|^2=\|A\|_2^2/k`$ for Haar
+$`U\in U(k)`$, and by [Corollary 11.12](../lecture_notes/11_optimisation.md#r-11-12), for $`X,Y\ge0`$ with spectra in $`[a,b]`$, $`a>0`$, the root mean square of
+$`|\mathrm{Tr}(XUY)|`$ is at most $`\min(1/\sqrt k,b^2/(a^2k))`$ times its maximum over $`U`$, and
+$`\mathbb P\big(|\mathrm{Tr}(XUY)|\ge\mathrm{Tr}(XY)\big)\le b^4/(a^4k^2)`$.
 
-So $N$ Haar samples find a violation of $|\mathrm{Tr}(XUY)|\le\mathrm{Tr}(XY)$ with probability at most
-$Nb^4/(a^4k^2)$ (a union of $N$ events), although one exists for every non-commuting pair (Proposition 3.9). The bound
-is informative only for $k>\sqrt N\,b^2/a^2$ (for $b/a=6$ and $N=2000$: $k>1609$); numerically, samples miss the
-violation already for much smaller $k$ (below). The code checks Proposition 11.11 by Monte Carlo (the sample mean
+So $`N`$ Haar samples find a violation of $`|\mathrm{Tr}(XUY)|\le\mathrm{Tr}(XY)`$ with probability at most
+$`Nb^4/(a^4k^2)`$ (a union of $`N`$ events), although one exists for every non-commuting pair (Proposition 3.9). The bound
+is informative only for $`k>\sqrt N\,b^2/a^2`$ (for $`b/a=6`$ and $`N=2000`$: $`k>1609`$); numerically, samples miss the
+violation already for much smaller $`k`$ (below). The code checks Proposition 11.11 by Monte Carlo (the sample mean
 lies within five standard errors of the exact value, for this seeded run) and prints, for spectra uniform in
-$[0.2,1.2]$ ($b/a=6$), the ratio of Corollary 11.12, $\sup z$ and the best $z$ of $2000$ samples, both relative to
-$\mathrm{Tr}(XY)$.
+$`[0.2,1.2]`$ ($`b/a=6`$), the ratio of Corollary 11.12, $`\sup z`$ and the best $`z`$ of $`2000`$ samples, both relative to
+$`\mathrm{Tr}(XY)`$.
 
 ```python
 def random_pair(alg_k):
@@ -200,21 +200,21 @@ for k in (2, 4, 8, 16, 32):
 ```
 
 *Numerical observation* (the printed table; asserted only for this seeded run): the ratio stays below the proved bound
-$\min(1/\sqrt k,b^2/(a^2k))$ and roughly halves whenever $k$ doubles, i.e. it falls like $1/k$, and from $k=4$ on the
-best of $2000$ samples does not even reach $z=0$. A gradient search, in contrast, comes close to both extremes in the
-run below (again a numerical observation). For the pair `Xf, Yf` both extremes over $U$ are known:
+$`\min(1/\sqrt k,b^2/(a^2k))`$ and roughly halves whenever $`k`$ doubles, i.e. it falls like $`1/k`$, and from $`k=4`$ on the
+best of $`2000`$ samples does not even reach $`z=0`$. A gradient search, in contrast, comes close to both extremes in the
+run below (again a numerical observation). For the pair `Xf, Yf` both extremes over $`U`$ are known:
 
-By [lecture notes, Lemma 11.13](../lecture_notes/11_optimisation.md#r-11-13), $\min_U|\mathrm{Tr}(AU)|=0$ for every $A\in M_k(\mathbb C)$, $k\ge2$.
+By [lecture notes, Lemma 11.13](../lecture_notes/11_optimisation.md#r-11-13), $`\min_U|\mathrm{Tr}(AU)|=0`$ for every $`A\in M_k(\mathbb C)`$, $`k\ge2`$.
 
-So $\inf_Uz=-\mathrm{Tr}(XY)$ and $\sup_Uz=\|YX\|_1-\mathrm{Tr}(XY)$ (Proposition 3.9). One call of `extremize`
-approximates both, with $12$ starts maximising $z$ and $12$ maximising $-z$ (to relative accuracy $10^{-3}$ in this
+So $`\inf_Uz=-\mathrm{Tr}(XY)`$ and $`\sup_Uz=\|YX\|_1-\mathrm{Tr}(XY)`$ (Proposition 3.9). One call of `extremize`
+approximates both, with $`12`$ starts maximising $`z`$ and $`12`$ maximising $`-z`$ (to relative accuracy $`10^{-3}`$ in this
 run, asserted below). By Proposition 11.11 the root mean square of
-$|\mathrm{Tr}(XUY)|$ is $\|YX\|_2/\sqrt k$; with the bounds in the proof of Corollary 11.12 (spectra in $[a,b]$),
-$\mathbb E|\mathrm{Tr}(XUY)|^2\le b^4$ and $\mathrm{Tr}(XY)\ge ka^2$, so Markov's inequality gives
-$\mathbb P\big(z\ge-(1-\varepsilon)\mathrm{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)$ for $\varepsilon>0$: for large $k$,
-$z$ is close to its infimum with high probability.
-*Numerical observation* (asserted for this seeded run): sampling comes within $1\,\%$ of the infimum, but does not
-even reach $z=0$, while the supremum is positive:
+$`|\mathrm{Tr}(XUY)|`$ is $`\|YX\|_2/\sqrt k`$; with the bounds in the proof of Corollary 11.12 (spectra in $`[a,b]`$),
+$`\mathbb E|\mathrm{Tr}(XUY)|^2\le b^4`$ and $`\mathrm{Tr}(XY)\ge ka^2`$, so Markov's inequality gives
+$`\mathbb P\big(z\ge-(1-\varepsilon)\mathrm{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)`$ for $`\varepsilon>0`$: for large $`k`$,
+$`z`$ is close to its infimum with high probability.
+*Numerical observation* (asserted for this seeded run): sampling comes within $`1\,\%`$ of the infimum, but does not
+even reach $`z=0`$, while the supremum is positive:
 
 ```python
 trXY = (Xf @ Yf).trace.real
@@ -240,39 +240,39 @@ assert z_mc.max().item() < 0                                               # ...
 *Lecture notes:* [Section 11.5](../lecture_notes/11_optimisation.md#s-11-5); [Proposition 11.14](../lecture_notes/11_optimisation.md#r-11-14), [Corollary 11.7](../lecture_notes/11_optimisation.md#r-11-7), [Proposition 11.9](../lecture_notes/11_optimisation.md#r-11-9).
 
 `optimize.extremize(objective, params, maximize)` runs Adam in `rounds` rounds of `steps` steps (learning rate
-`lr * decay**round`) on the loss $\mp\sum_b\text{objective}_b$, re-centres the unitary charts after every round,
+`lr * decay**round`) on the loss $`\mp\sum_b\text{objective}_b`$, re-centres the unitary charts after every round,
 and returns **per start** the largest (smallest, for `maximize=False`) value of the objective among those computed at
 the gradient iterates and once at the final point. Every batch element is an independent start with its own slots,
-signs, $U_0$ and contrast: Adam acts coordinatewise, so if the $b$-th entry of the objective depends only on the
-$b$-th parameters (as in all objectives below), the starts do not interact. The signs of `SelfAdjointParam` are
+signs, $`U_0`$ and contrast: Adam acts coordinatewise, so if the $`b`$-th entry of the objective depends only on the
+$`b`$-th parameters (as in all objectives below), the starts do not interact. The signs of `SelfAdjointParam` are
 discrete: between rounds, `discrete_step` tries eight single sign flips per start (each at a uniformly random slot),
 one after the other, and keeps each flip that improves the objective.
 
 In exact arithmetic every iterate is admissible (Proposition 11.2 and the remarks after it), so every returned value
-is the value of $z$ at an admissible point; in floating point it is that value up to rounding (the asserts below
-allow $10^{-12}$). Hence a maximisation gives a **lower bound** for the supremum, a minimisation an upper bound for
+is the value of $`z`$ at an admissible point; in floating point it is that value up to rounding (the asserts below
+allow $`10^{-12}`$). Hence a maximisation gives a **lower bound** for the supremum, a minimisation an upper bound for
 the infimum, and nothing more — a local search can stop at a local extremum. The other direction needs a proof,
 like Corollary 11.7 and Proposition 11.9, or a convex relaxation (Section 11.6). A computed envelope is checked
 (i) against closed forms; (ii) against configurations built by hand, such as direct sums of smaller solutions, which
 it must not fall below; (iii) against structured samples (two-level spectra, permutation bases), whose values are
 further attained values.
 
-By [lecture notes, Proposition 11.14](../lecture_notes/11_optimisation.md#r-11-14), if all $k_c\ge2$, the lower envelope of Exp. 1 is
-$\underline z(\delta)=-\big(D-2\delta/(1+\delta)\big)$.
+By [lecture notes, Proposition 11.14](../lecture_notes/11_optimisation.md#r-11-14), if all $`k_c\ge2`$, the lower envelope of Exp. 1 is
+$`\underline z(\delta)=-\big(D-2\delta/(1+\delta)\big)`$.
 
-The code checks Proposition 11.14 on $M_2\oplus M_2$, Corollary 11.7 on $M_3\oplus M_3$ (both contrasts prescribed,
-$k=3$ odd) and Proposition 11.9; suprema and infima share one call, as above. The one-sided asserts (no returned
+The code checks Proposition 11.14 on $`M_2\oplus M_2`$, Corollary 11.7 on $`M_3\oplus M_3`$ (both contrasts prescribed,
+$`k=3`$ odd) and Proposition 11.9; suprema and infima share one call, as above. The one-sided asserts (no returned
 value beyond a proved extreme) are consequences of these theorems; the asserts that the search comes within the
 stated tolerance of the extreme are numerical observations of this seeded run. The keyword `is_self_adjoint` selects
-the algorithm for the trace norm (singular values, or eigenvalues for $YXY$) without a test at every step. The last
-check is of type (ii): $z$ of Exp. 3 is additive over direct sums, and the contrast of a direct sum is the largest
-contrast of its summands (Exercise 3), so, for the envelopes of Exp. 3 with $\Delta(Y)$ free in $[0,0.999]$ as in
+the algorithm for the trace norm (singular values, or eigenvalues for $`YXY`$) without a test at every step. The last
+check is of type (ii): $`z`$ of Exp. 3 is additive over direct sums, and the contrast of a direct sum is the largest
+contrast of its summands (Exercise 3), so, for the envelopes of Exp. 3 with $`\Delta(Y)`$ free in $`[0,0.999]`$ as in
 the code,
-$$
+```math
 \overline z_{M_2\oplus M_2}(\delta)\ \ge\ \overline z_{M_2}(\delta)+\sup_{\delta'\le\delta}\overline z_{M_2}(\delta');
-$$
-in particular the sum of two values attained on $M_2$ at contrasts $\delta$ and $\delta'\le\delta$ is a value
-attained on $M_2\oplus M_2$ at contrast $\delta$.
+```
+in particular the sum of two values attained on $`M_2`$ at contrasts $`\delta`$ and $`\delta'\le\delta`$ is a value
+attained on $`M_2\oplus M_2`$ at contrast $`\delta`$.
 
 ```python
 torch.manual_seed(1)
@@ -328,10 +328,10 @@ assert inf3 >= -1e-12 and inf3 < 1e-6                                       # Pr
 assert sup_M22 >= direct_sum - 5e-3 * direct_sum                           # (ii), up to 0.5 %
 ```
 
-*Numerical observations* (the printed values of this run). The search on $M_2\oplus M_2$ falls short of the direct
-sum by about $0.2\,\%$: it has not fully converged, and the best lower bound for $\overline z_{M_2\oplus M_2}(0.5)$ is
-the larger number — detecting this is the purpose of check (ii). The values for $M_2$ agree to $10^{-4}$ with
-$(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2$, where $d=0.999$ is the largest admitted contrast of $Y$. This
+*Numerical observations* (the printed values of this run). The search on $`M_2\oplus M_2`$ falls short of the direct
+sum by about $`0.2\,\%`$: it has not fully converged, and the best lower bound for $`\overline z_{M_2\oplus M_2}(0.5)`$ is
+the larger number — detecting this is the purpose of check (ii). The values for $`M_2`$ agree to $`10^{-4}`$ with
+$`(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2`$, where $`d=0.999`$ is the largest admitted contrast of $`Y`$. This
 closed form is **not** a theorem of this course: the companion paper observed it numerically (in real algebras) and
 did not prove it, and the code prints it without asserting anything about it. For larger blocks we know no closed
 form for the upper envelopes of Exp. 1 and Exp. 3; computed curves are then lower bounds (attained values), nothing
@@ -348,7 +348,7 @@ convex problems in operator variables to SDP solvers, which return an optimum to
 both up to the solver tolerance; a relaxation — a convex problem over a larger feasible set — bounds the supremum
 from above, the direction a local search cannot give. **NCTSSOS**, **ncpol2sdpa** and **NCSOStools** bound eigenvalues and traces of noncommutative
 polynomials in all dimensions at once (Section 0.3). The library adds exact parametrisations of the spectral and
-contrast constraints of $\bigoplus_cM_{k_c}$ (the extremes may sit in any sector), unitaries that respect the
+contrast constraints of $`\bigoplus_cM_{k_c}`$ (the extremes may sit in any sector), unitaries that respect the
 blocks, and one batched computation for many starts and constraint values, on a CPU or a GPU. It produces candidate
 extremisers and lower bounds for suprema; proofs or relaxations must supply the rest.
 
@@ -357,9 +357,9 @@ extremisers and lower bounds for suprema; proofs or relaxations must supply the 
 ## Exercises
 
 [Exercises 1 and 2](../lecture_notes/11_optimisation.md#x-11) of the lecture notes, numerically: the Cayley transform
-$C(S)=(1-S)(1+S)^{-1}$ of a skew-adjoint $S$ is unitary, has no eigenvalue $-1$, and $S=(1-C)(1+C)^{-1}$
-(Exercise 1); for $O$ Haar-distributed on $O(k)$, sampled by `random_unitary_operator` of a real algebra
-(`complex_valued=False`), $\mathbb E\mathrm{Tr}(AO)^2=\|A\|_2^2/k$ (Exercise 2).
+$`C(S)=(1-S)(1+S)^{-1}`$ of a skew-adjoint $`S`$ is unitary, has no eigenvalue $`-1`$, and $`S=(1-C)(1+C)^{-1}`$
+(Exercise 1); for $`O`$ Haar-distributed on $`O(k)`$, sampled by `random_unitary_operator` of a real algebra
+(`complex_valued=False`), $`\mathbb E\mathrm{Tr}(AO)^2=\|A\|_2^2/k`$ (Exercise 2).
 
 <details>
 <summary>Solutions</summary>

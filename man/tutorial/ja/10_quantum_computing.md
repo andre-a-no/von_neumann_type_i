@@ -3,9 +3,9 @@
 # チュートリアル 10. 量子計算
 
 このチュートリアルは講義ノートの[第10章](../../lecture_notes/ja/10_quantum_computing.md)に対応する。同章は、量子計算機上のノイズを、そのクラウス作用素の
-$*$-環によって記述する。ここでは不動点環とノイズレス部分系を計算し（[定理 10.2](../../lecture_notes/ja/10_quantum_computing.md#r-10-2)）、繰り返し符号でクニル–ラフラムの定理
+$`*`$-環によって記述する。ここでは不動点環とノイズレス部分系を計算し（[定理 10.2](../../lecture_notes/ja/10_quantum_computing.md#r-10-2)）、繰り返し符号でクニル–ラフラムの定理
 （[定理 10.5](../../lecture_notes/ja/10_quantum_computing.md#r-10-5)）とセクターのラベルの訂正（[命題 10.6](../../lecture_notes/ja/10_quantum_computing.md#r-10-6)）を検証し、ハミング重みのセクターの環
-$\bigoplus_wM_{\binom nw}$ の中で、振幅減衰と事後選択を伴う XY ミキサーのアンザッツをシミュレートする
+$`\bigoplus_wM_{\binom nw}`$ の中で、振幅減衰と事後選択を伴う XY ミキサーのアンザッツをシミュレートする
 （[命題 10.8](../../lecture_notes/ja/10_quantum_computing.md#r-10-8)–[10.10](../../lecture_notes/ja/10_quantum_computing.md#r-10-10)）。
 
 <a id="s-10-1"></a>
@@ -14,13 +14,13 @@ $\bigoplus_wM_{\binom nw}$ の中で、振幅減衰と事後選択を伴う XY �
 
 *講義ノート：* [10.1節](../../lecture_notes/ja/10_quantum_computing.md#s-10-1)；[定理 10.2](../../lecture_notes/ja/10_quantum_computing.md#r-10-2)、[系 10.3](../../lecture_notes/ja/10_quantum_computing.md#r-10-3)、[命題 10.4](../../lecture_notes/ja/10_quantum_computing.md#r-10-4)。
 
-[講義ノート、系 10.3](../../lecture_notes/ja/10_quantum_computing.md#r-10-3) により、$n$ 量子ビット上の集団的位相緩和 $\Phi(\rho)=\tfrac12(U\rho U^*+U^*\rho U)$、
-$U=e^{-i\theta Z_{\mathrm{tot}}}$ の相互作用環は $\mathcal A=\mathrm{span}\{P_0,\dots,P_n\}$ であり（$P_w$ はハミング重み $w$ の
-基底ベクトルが張る部分空間 $H_w$ への射影）、$\mathrm{Fix}(\Phi)=\mathcal A'=\bigoplus_wB(H_w)$ である（[定理 10.2](../../lecture_notes/ja/10_quantum_computing.md#r-10-2)）。
+[講義ノート、系 10.3](../../lecture_notes/ja/10_quantum_computing.md#r-10-3) により、$`n`$ 量子ビット上の集団的位相緩和 $`\Phi(\rho)=\tfrac12(U\rho U^*+U^*\rho U)`$、
+$`U=e^{-i\theta Z_{\mathrm{tot}}}`$ の相互作用環は $`\mathcal A=\mathrm{span}\{P_0,\dots,P_n\}`$ であり（$`P_w`$ はハミング重み $`w`$ の
+基底ベクトルが張る部分空間 $`H_w`$ への射影）、$`\mathrm{Fix}(\Phi)=\mathcal A'=\bigoplus_wB(H_w)`$ である（[定理 10.2](../../lecture_notes/ja/10_quantum_computing.md#r-10-2)）。
 
-可換子環は $T\mapsto(AT-TA)_A$ の零空間であり（第2章）、不動点は
-$\sum_iE_i\otimes\bar E_i-1$（行優先でベクトル化した行列に対する $\Phi-\mathrm{id}$ の行列）の零空間である。$n=4$ に対し、
-系の三つの空間の次元はそれぞれ $5$、$70=1+16+36+16+1$、$70$ である：
+可換子環は $`T\mapsto(AT-TA)_A`$ の零空間であり（第2章）、不動点は
+$`\sum_iE_i\otimes\bar E_i-1`$（行優先でベクトル化した行列に対する $`\Phi-\mathrm{id}`$ の行列）の零空間である。$`n=4`$ に対し、
+系の三つの空間の次元はそれぞれ $`5`$、$`70=1+16+36+16+1`$、$`70`$ である：
 
 ```python
 import itertools
@@ -64,9 +64,9 @@ span = torch.linalg.svdvals(torch.stack([F.reshape(-1) for F in comm + fix]))
 assert int((span > 1e-9).sum()) == 70                             # Fix(Phi) = A' (Theorem 10.2)
 ```
 
-$\bigoplus_wM_{\binom nw}$ は `SpinChain`（第9章）の環であり、そのセクターは上向きスピンの
+$`\bigoplus_wM_{\binom nw}`$ は `SpinChain`（第9章）の環であり、そのセクターは上向きスピンの
 個数、すなわちハミング重みである。そこではクラウス作用素は中心に属し、
-$U=\sum_we^{-i\theta(n-2w)}P_w$ となり、チャネルは恒等写像である：ライブラリはノイズのない部分を格納している。
+$`U=\sum_we^{-i\theta(n-2w)}P_w`$ となり、チャネルは恒等写像である：ライブラリはノイズのない部分を格納している。
 
 ```python
 from torch_vn_algebra import SpinChain, TypeIAlgebra, DensityMatrix, channels, states, dynamics
@@ -81,10 +81,10 @@ rho = states.random_density_matrix(M, batch_size=3)
 assert (Phi_M(rho).matrix - rho.matrix).abs().max() < 1e-12      # no state of M is disturbed
 ```
 
-集団回転 $e^{-i\theta\,\mathbf n\cdot\mathbf S}$（$S_\alpha=\tfrac12\sum_j\sigma_{\alpha,j}$）は、$1,S_x,S_y,S_z$ が生成する $*$-環
-$\mathcal B$ に属する。$n=4$ に対し、講義ノートの[10.1節](../../lecture_notes/ja/10_quantum_computing.md#s-10-1)は $\dim\mathcal B=35$、$\dim\mathcal B'=14$、および
-$K=\ker S_x\cap\ker S_y\cap\ker S_z$ について $\dim K=2$ を示す。コードは同じ値を見いだし、[命題 10.4](../../lecture_notes/ja/10_quantum_computing.md#r-10-4) を検証する：
-ランダムな集団回転をクラウス作用素とするチャネルは、$K$ に台をもつ状態を固定し、一般の状態は動かす。
+集団回転 $`e^{-i\theta\,\mathbf n\cdot\mathbf S}`$（$`S_\alpha=\tfrac12\sum_j\sigma_{\alpha,j}`$）は、$`1,S_x,S_y,S_z`$ が生成する $`*`$-環
+$`\mathcal B`$ に属する。$`n=4`$ に対し、講義ノートの[10.1節](../../lecture_notes/ja/10_quantum_computing.md#s-10-1)は $`\dim\mathcal B=35`$、$`\dim\mathcal B'=14`$、および
+$`K=\ker S_x\cap\ker S_y\cap\ker S_z`$ について $`\dim K=2`$ を示す。コードは同じ値を見いだし、[命題 10.4](../../lecture_notes/ja/10_quantum_computing.md#r-10-4) を検証する：
+ランダムな集団回転をクラウス作用素とするチャネルは、$`K`$ に台をもつ状態を固定し、一般の状態は動かす。
 
 ```python
 S = [sum(on(P, j, n) for j in range(n)) / 2 for P in (X, Y, Z)]
@@ -108,12 +108,12 @@ for G in (K @ torch.randn(2, 2, dtype=dt), torch.randn(16, 16, dtype=dt)):  # su
 
 *講義ノート：* [10.2節](../../lecture_notes/ja/10_quantum_computing.md#s-10-2)；[定理 10.5](../../lecture_notes/ja/10_quantum_computing.md#r-10-5)。
 
-講義ノートの[10.2節](../../lecture_notes/ja/10_quantum_computing.md#s-10-2)のビット反転の例：$\mathcal C=\mathrm{span}\{|000\rangle,|111\rangle\}$ と
-「高々一つのビット反転」に対し、[定理 10.5](../../lecture_notes/ja/10_quantum_computing.md#r-10-5) のクニル–ラフラム条件が $\Lambda=\mathrm{diag}(p_0,\dots,p_3)$ で成り立ち、
-回復 $\mathcal R(\sigma)=\sum_{k=0}^3PX_k\sigma X_kP$ は符号のすべての状態を復元する。各量子ビットが確率 $p$ で独立に
-反転する場合には条件は成り立たず、回復後の $|0_L\rangle$ の忠実度は $p=0.1$ に対して $1-3p^2+2p^3=0.972$ である。補助関数
-`kl_matrix` は $\Lambda$ を返し、条件が成り立たなければ `None` を返す。ライブラリでは $M_8$ はブロックが一つの環であり、
-`R @ Phi` は合成 $\mathcal R\circ\Phi$ である：
+講義ノートの[10.2節](../../lecture_notes/ja/10_quantum_computing.md#s-10-2)のビット反転の例：$`\mathcal C=\mathrm{span}\{|000\rangle,|111\rangle\}`$ と
+「高々一つのビット反転」に対し、[定理 10.5](../../lecture_notes/ja/10_quantum_computing.md#r-10-5) のクニル–ラフラム条件が $`\Lambda=\mathrm{diag}(p_0,\dots,p_3)`$ で成り立ち、
+回復 $`\mathcal R(\sigma)=\sum_{k=0}^3PX_k\sigma X_kP`$ は符号のすべての状態を復元する。各量子ビットが確率 $`p`$ で独立に
+反転する場合には条件は成り立たず、回復後の $`|0_L\rangle`$ の忠実度は $`p=0.1`$ に対して $`1-3p^2+2p^3=0.972`$ である。補助関数
+`kl_matrix` は $`\Lambda`$ を返し、条件が成り立たなければ `None` を返す。ライブラリでは $`M_8`$ はブロックが一つの環であり、
+`R @ Phi` は合成 $`\mathcal R\circ\Phi`$ である：
 
 ```python
 M8 = TypeIAlgebra([8], [8], precision='double')
@@ -156,11 +156,11 @@ assert abs(F - (1 - 3 * p**2 + 2 * p**3)) < 1e-12
 
 *講義ノート：* [10.3節](../../lecture_notes/ja/10_quantum_computing.md#s-10-3)；[命題 10.6](../../lecture_notes/ja/10_quantum_computing.md#r-10-6)。
 
-講義ノートの[10.3節](../../lecture_notes/ja/10_quantum_computing.md#s-10-3)の例：独立な位相反転（量子ビットごとの確率 $q$）を受け、その後に高々一つのビット反転を受ける
+講義ノートの[10.3節](../../lecture_notes/ja/10_quantum_computing.md#s-10-3)の例：独立な位相反転（量子ビットごとの確率 $`q`$）を受け、その後に高々一つのビット反転を受ける
 繰り返し符号。量子ビットは保護されない（クニル–ラフラム条件は成り立たない）が、古典ビットは保護される：
-[命題 10.6](../../lecture_notes/ja/10_quantum_computing.md#r-10-6) の条件 2 が $P_0=|000\rangle\langle000|$、$P_1=|111\rangle\langle111|$ について成り立ち、多数決
-$N_0=\sum_{|b|\le1}|b\rangle\langle b|$、$N_1=1-N_0$ がビットを読み出す。10.2節の回復の後、$|{+_L}\rangle$ の忠実度は
-$q=0.05$ に対して $(1+(1-2q)^3)/2=0.8645$ である。
+[命題 10.6](../../lecture_notes/ja/10_quantum_computing.md#r-10-6) の条件 2 が $`P_0=|000\rangle\langle000|`$、$`P_1=|111\rangle\langle111|`$ について成り立ち、多数決
+$`N_0=\sum_{|b|\le1}|b\rangle\langle b|`$、$`N_1=1-N_0`$ がビットを読み出す。10.2節の回復の後、$`|{+_L}\rangle`$ の忠実度は
+$`q=0.05`$ に対して $`(1+(1-2q)^3)/2=0.8645`$ である。
 
 ```python
 q = 0.05
@@ -186,19 +186,19 @@ assert abs(F_plus - (1 + (1 - 2 * q) ** 3) / 2) < 1e-12
 
 *講義ノート：* [10.4節](../../lecture_notes/ja/10_quantum_computing.md#s-10-4)；[命題 10.8](../../lecture_notes/ja/10_quantum_computing.md#r-10-8)、[命題 10.9](../../lecture_notes/ja/10_quantum_computing.md#r-10-9)、[命題 10.10](../../lecture_notes/ja/10_quantum_computing.md#r-10-10)。
 
-量子交互作用素アンザッツは $e^{-i\gamma H_C}$（$H_C$ は対角なコスト・ハミルトニアン）と $e^{-i\beta H_M}$
-（$H_M=\tfrac14\sum_{(i,j)}(X_iX_j+Y_iY_j)$ はリング上の XY ミキサー）を交互に作用させる。[講義ノート、命題 10.8](../../lecture_notes/ja/10_quantum_computing.md#r-10-8) により、
-これらはすべて $\mathcal M=\{P_0,\dots,P_n\}'\cong\bigoplus_wM_{\binom nw}$ に属するので、アンザッツが初期状態のハミング重みの
+量子交互作用素アンザッツは $`e^{-i\gamma H_C}`$（$`H_C`$ は対角なコスト・ハミルトニアン）と $`e^{-i\beta H_M}`$
+（$`H_M=\tfrac14\sum_{(i,j)}(X_iX_j+Y_iY_j)`$ はリング上の XY ミキサー）を交互に作用させる。[講義ノート、命題 10.8](../../lecture_notes/ja/10_quantum_computing.md#r-10-8) により、
+これらはすべて $`\mathcal M=\{P_0,\dots,P_n\}'\cong\bigoplus_wM_{\binom nw}`$ に属するので、アンザッツが初期状態のハミング重みの
 セクターを離れることはない。
 
-ライブラリでは $\mathcal M$ は `SpinChain(n).algebra` である（ビット $1$ = 上向きスピンなので $S^z_i=-\tfrac12Z_i$）。$H_M$
-はその XXZ ハミルトニアン $J\sum_{(i,j)}\big(\tfrac12(S^+_iS^-_j+S^-_iS^+_j)+\Delta S^z_iS^z_j\big)$ で $J=1$、
-$\Delta=0$ としたものである。実際 $S^+_iS^-_j+S^-_iS^+_j=\tfrac12(X_iX_j+Y_iY_j)$ である。これを稠密な
-$64\times64$ 行列と照合する。$H_C$ としては、辺 $(2,3)$、$(5,0)$ で結ばれた三角形 $\{0,1,2\}$、$\{3,4,5\}$
-上のグラフ二分割をとる：$H_C=\sum_{(i,j)\in E}\tfrac12(1-Z_iZ_j)$（$Z_iZ_j=4S^z_iS^z_j$）はカットされる
-辺の数を数える。最良の二分割は $2$ 本の辺をカットする（二つの三角形に分けるもの。三つの頂点からなる他のどの集合も両方の三角形を
-分割し、分割された三角形は二本のカットされる辺をもつ）。我々は $6$ 本をカットする $|101010\rangle$ から出発する。最後に、
-アンザッツ全体を稠密な $64\times64$ 行列で、ライブラリとは独立に計算し直す。
+ライブラリでは $`\mathcal M`$ は `SpinChain(n).algebra` である（ビット $`1`$ = 上向きスピンなので $`S^z_i=-\tfrac12Z_i`$）。$`H_M`$
+はその XXZ ハミルトニアン $`J\sum_{(i,j)}\big(\tfrac12(S^+_iS^-_j+S^-_iS^+_j)+\Delta S^z_iS^z_j\big)`$ で $`J=1`$、
+$`\Delta=0`$ としたものである。実際 $`S^+_iS^-_j+S^-_iS^+_j=\tfrac12(X_iX_j+Y_iY_j)`$ である。これを稠密な
+$`64\times64`$ 行列と照合する。$`H_C`$ としては、辺 $`(2,3)`$、$`(5,0)`$ で結ばれた三角形 $`\{0,1,2\}`$、$`\{3,4,5\}`$
+上のグラフ二分割をとる：$`H_C=\sum_{(i,j)\in E}\tfrac12(1-Z_iZ_j)`$（$`Z_iZ_j=4S^z_iS^z_j`$）はカットされる
+辺の数を数える。最良の二分割は $`2`$ 本の辺をカットする（二つの三角形に分けるもの。三つの頂点からなる他のどの集合も両方の三角形を
+分割し、分割された三角形は二本のカットされる辺をもつ）。我々は $`6`$ 本をカットする $`|101010\rangle`$ から出発する。最後に、
+アンザッツ全体を稠密な $`64\times64`$ 行列で、ライブラリとは独立に計算し直す。
 
 ```python
 n, w = 6, 3
@@ -228,15 +228,15 @@ assert abs(psi[weight == w].norm().item() - 1) < 1e-12           # Proposition 1
 assert abs((psi.conj() @ HC_dense @ psi).real.item() - states.expectation(ideal, H_C).real.item()) < 1e-10
 ```
 
-量子ビット $i$ の **振幅減衰**（確率 $g$ で $|1\rangle\to|0\rangle$）はクラウス作用素
-$K_0^{(i)}=|0\rangle\langle0|_i+\sqrt{1-g}\,|1\rangle\langle1|_i$ と $K_1^{(i)}=\sqrt g\,|0\rangle\langle1|_i$ をもち、後者は
+量子ビット $`i`$ の **振幅減衰**（確率 $`g`$ で $`|1\rangle\to|0\rangle`$）はクラウス作用素
+$`K_0^{(i)}=|0\rangle\langle0|_i+\sqrt{1-g}\,|1\rangle\langle1|_i`$ と $`K_1^{(i)}=\sqrt g\,|0\rangle\langle1|_i`$ をもち、後者は
 重みを下げる：これはセクター間の写像 `chain.site_amplitude_damping(i, g)`（`InterSectorChannel`）である。
 
-[講義ノート、命題 10.9](../../lecture_notes/ja/10_quantum_computing.md#r-10-9) により、回路の各層の後にすべての量子ビットの減衰が続く場合、$p$ 層の後でも
-初期状態の重み $w$ は確率 $(1-g)^{wp}$ で見いだされ、事後選択された状態はノイズのない状態である。
+[講義ノート、命題 10.9](../../lecture_notes/ja/10_quantum_computing.md#r-10-9) により、回路の各層の後にすべての量子ビットの減衰が続く場合、$`p`$ 層の後でも
+初期状態の重み $`w`$ は確率 $`(1-g)^{wp}`$ で見いだされ、事後選択された状態はノイズのない状態である。
 
-`InterSectorChannel` は出力の対角ブロックだけを保持する。ここではそれ以外のブロックはない（命題 10.9 の証明は、$s\in\{0,1\}$ として一つの量子ビットの減衰に
-そのまま適用できる）ので、何も失われない。$g=0.05$、$p=2$ のとき受理確率は $0.95^6=0.7351$ である：
+`InterSectorChannel` は出力の対角ブロックだけを保持する。ここではそれ以外のブロックはない（命題 10.9 の証明は、$`s\in\{0,1\}`$ として一つの量子ビットの減衰に
+そのまま適用できる）ので、何も失われない。$`g=0.05`$、$`p=2`$ のとき受理確率は $`0.95^6=0.7351`$ である：
 
 ```python
 g = 0.05
@@ -257,15 +257,15 @@ assert abs(accept.item() - (1 - g) ** (w * len(layers))) < 1e-12              # 
 assert abs(post.fidelity(ideal).item() - 1) < 1e-10 and abs(cut(post) - cut(ideal)) < 1e-10
 ```
 
-*数値的観察*（出力される値）：実行不可能な部分は期待カット数を $4.3789$ から $4.3123$ に下げる。これは見かけ上の改善であり、
+*数値的観察*（出力される値）：実行不可能な部分は期待カット数を $`4.3789`$ から $`4.3123`$ に下げる。これは見かけ上の改善であり、
 角度の最適化器を誤らせるであろう。事後選択の後では値は厳密である（命題 10.9）。
 
-[講義ノート、命題 10.10](../../lecture_notes/ja/10_quantum_computing.md#r-10-10) により、振幅減衰（レート $\gamma_1$）と位相緩和 $L_k=S^z_k$（レート $\gamma_2$）を
-もつリンドブラッド方程式のもとで、$H_w$ から出発した状態は確率 $e^{-\gamma_1wt}$ で重み $w$ を保ち、事後選択された状態は
-$\gamma_1$ に依存しない。$\gamma_2=0$ ならば事後選択は完全である。解説論文
-（`examples/paper/ex9_qaoa_xy_mixer.py`）は $|111000\rangle$ を $H_M$ のもとで $T=2$ まで時間発展させる。我々はその
-$\gamma_1=\gamma_2=0.1$ の行を再現する：$P(w=3)=e^{-0.6}=0.5488$（命題 10.10）であり、下のコードの *数値的観察* として、忠実度は $0.4805$、
-事後選択後の忠実度は $0.8755$ である。命題 10.10 により、後者は $\gamma_1=0$ の場合と同じである。
+[講義ノート、命題 10.10](../../lecture_notes/ja/10_quantum_computing.md#r-10-10) により、振幅減衰（レート $`\gamma_1`$）と位相緩和 $`L_k=S^z_k`$（レート $`\gamma_2`$）を
+もつリンドブラッド方程式のもとで、$`H_w`$ から出発した状態は確率 $`e^{-\gamma_1wt}`$ で重み $`w`$ を保ち、事後選択された状態は
+$`\gamma_1`$ に依存しない。$`\gamma_2=0`$ ならば事後選択は完全である。解説論文
+（`examples/paper/ex9_qaoa_xy_mixer.py`）は $`|111000\rangle`$ を $`H_M`$ のもとで $`T=2`$ まで時間発展させる。我々はその
+$`\gamma_1=\gamma_2=0.1`$ の行を再現する：$`P(w=3)=e^{-0.6}=0.5488`$（命題 10.10）であり、下のコードの *数値的観察* として、忠実度は $`0.4805`$、
+事後選択後の忠実度は $`0.8755`$ である。命題 10.10 により、後者は $`\gamma_1=0`$ の場合と同じである。
 
 ```python
 T = 2.0
@@ -288,25 +288,25 @@ assert post_T[0.1, 0.1].trace_distance(post_T[0.0, 0.1]).item() < 1e-6       # i
 ## 10.5 比較の対象
 
 Qiskit（`qiskit.quantum_info`、Aer のノイズモデル、カスタム・ミキサー付きの `QAOAAnsatz`）、Cirq、PennyLane
-（`qml.qaoa.xy_mixer`、`default.mixed`）、および QuTiP/`qutip-qip` は、これらすべてを $n$ 個の完全な量子ビット上でシミュレートし、
+（`qml.qaoa.xy_mixer`、`default.mixed`）、および QuTiP/`qutip-qip` は、これらすべてを $`n`$ 個の完全な量子ビット上でシミュレートし、
 回路のための適切な道具である。stim はパウリ型ノイズをもつクリフォード回路を数千
 量子ビットでサンプリングする（振幅減衰はパウリ・チャネルではない：パウリ・チャネルは単位的であるが、振幅減衰はそうではない）。我々の知る限り、これらのパッケージには、
 チャネルの相互作用環、その可換子環、あるいはその不動点環全体を計算する関数はない（QuTiP の
-`steadystate` はリンドブラッド生成子の定常状態を一つ返す）。行列 $*$-環の数値的なブロック分解については
+`steadystate` はリンドブラッド生成子の定常状態を一つ返す）。行列 $`*`$-環の数値的なブロック分解については
 Murota et al., *Japan J. Indust. Appl. Math.* 27 (2010) を参照。ライブラリが付け加えるのは、
-$\bigoplus_wM_{\binom nw}$ での格納、セクター間の写像、中心射影としての事後選択であり、いずれもバッチ化されている。
-一つのセクターは $4^n$ 個ではなく $\binom nw^2$ 個の成分を必要とする（$n=16$、
-$w=8$ で $1.7\cdot10^8$ 対 $4.3\cdot10^9$）が、環全体は $(n+1)\binom n{\lfloor n/2\rfloor}^2$ 成分（$2.8\cdot10^9$）にパディングされるので、
+$`\bigoplus_wM_{\binom nw}`$ での格納、セクター間の写像、中心射影としての事後選択であり、いずれもバッチ化されている。
+一つのセクターは $`4^n`$ 個ではなく $`\binom nw^2`$ 個の成分を必要とする（$`n=16`$、
+$`w=8`$ で $`1.7\cdot10^8`$ 対 $`4.3\cdot10^9`$）が、環全体は $`(n+1)\binom n{\lfloor n/2\rfloor}^2`$ 成分（$`2.8\cdot10^9`$）にパディングされるので、
 節約は控えめである。ライブラリは回路シミュレータではなく、スタビライザー形式ももたない。
 
 <a id="x-10"></a>
 
 ## 演習問題
 
-講義ノートの[演習問題 1–3](../../lecture_notes/ja/10_quantum_computing.md#x-10)の数値的検証：一つの量子ビット上の振幅減衰について、$\mathcal A'$、
-$\mathrm{Fix}(\Phi)$、$\mathrm{Fix}(\Phi^*)$ は一次元である（演習 1）。[系 10.3](../../lecture_notes/ja/10_quantum_computing.md#r-10-3) のチャネルで $\theta=\pi/2$、
-$n=4$ としたものについて $\dim\mathrm{Fix}(\Phi)=128$ である（演習 2）。ビット反転符号の回復 $\mathcal R$ はコヒーレントな誤り
-$e^{-i\phi X_1}$ を訂正する（演習 3）。
+講義ノートの[演習問題 1–3](../../lecture_notes/ja/10_quantum_computing.md#x-10)の数値的検証：一つの量子ビット上の振幅減衰について、$`\mathcal A'`$、
+$`\mathrm{Fix}(\Phi)`$、$`\mathrm{Fix}(\Phi^*)`$ は一次元である（演習 1）。[系 10.3](../../lecture_notes/ja/10_quantum_computing.md#r-10-3) のチャネルで $`\theta=\pi/2`$、
+$`n=4`$ としたものについて $`\dim\mathrm{Fix}(\Phi)=128`$ である（演習 2）。ビット反転符号の回復 $`\mathcal R`$ はコヒーレントな誤り
+$`e^{-i\phi X_1}`$ を訂正する（演習 3）。
 
 <details>
 <summary>解答</summary>

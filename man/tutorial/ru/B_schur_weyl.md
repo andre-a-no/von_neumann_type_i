@@ -4,7 +4,7 @@
 
 Это руководство сопровождает [приложение B](../../lecture_notes/ru/B_schur_weyl.md) конспекта лекций, в котором доказываются двойственность
 Шура–Вейля ([теорема B.6](../../lecture_notes/ru/B_schur_weyl.md#r-B-6)) и формула Вайнгартена любого порядка ([теорема B.13](../../lecture_notes/ru/B_schur_weyl.md#r-B-13)). Мы проверяем
-размерности в двойственности, вычисленное библиотекой разложение $(\mathbb C^d)^{\otimes n}$, функцию Вайнгартена в
+размерности в двойственности, вычисленное библиотекой разложение $`(\mathbb C^d)^{\otimes n}`$, функцию Вайнгартена в
 сравнении со средними по методу Монте-Карло по унитарным матрицам Хаара, теорему Вигнера–Эккарта и меру Хаара
 ортогональной группы.
 
@@ -14,10 +14,10 @@
 
 *Конспект:* [раздел B.3](../../lecture_notes/ru/B_schur_weyl.md#s-B-3); [лемма B.1](../../lecture_notes/ru/B_schur_weyl.md#r-B-1), [лемма B.2](../../lecture_notes/ru/B_schur_weyl.md#r-B-2), [предложение B.3](../../lecture_notes/ru/B_schur_weyl.md#r-B-3), [лемма B.5](../../lecture_notes/ru/B_schur_weyl.md#r-B-5), [теорема B.6](../../lecture_notes/ru/B_schur_weyl.md#r-B-6).
 
-Код сравнивает для малых $d$ и $n$ четыре размерности: $\mathrm{span}\,\pi(S_n)$, коммутанта двух случайных
-$V^{\otimes n}$ (он содержит $\{V^{\otimes n}\}'=\mathrm{span}\,\pi(S_n)$ и совпадает с ним во всех напечатанных случаях) и
-линейных оболочек множества случайных $A^{\otimes n}$ и $V^{\otimes n}$ — с $\binom{d^2+n-1}n$
-([предложение B.3](../../lecture_notes/ru/B_schur_weyl.md#r-B-3), [теорема B.6](../../lecture_notes/ru/B_schur_weyl.md#r-B-6)). Операторы $\pi(\sigma)$ строит
+Код сравнивает для малых $`d`$ и $`n`$ четыре размерности: $`\mathrm{span}\,\pi(S_n)`$, коммутанта двух случайных
+$`V^{\otimes n}`$ (он содержит $`\{V^{\otimes n}\}'=\mathrm{span}\,\pi(S_n)`$ и совпадает с ним во всех напечатанных случаях) и
+линейных оболочек множества случайных $`A^{\otimes n}`$ и $`V^{\otimes n}`$ — с $`\binom{d^2+n-1}n`$
+([предложение B.3](../../lecture_notes/ru/B_schur_weyl.md#r-B-3), [теорема B.6](../../lecture_notes/ru/B_schur_weyl.md#r-B-6)). Операторы $`\pi(\sigma)`$ строит
 `decompose.permutation_representation(n, d)`; код проверяет, что она следует соглашению [леммы B.1(a)](../../lecture_notes/ru/B_schur_weyl.md#r-B-1), а также
 проверяет [лемму B.2](../../lecture_notes/ru/B_schur_weyl.md#r-B-2) и рекурсию Ньютона из [леммы B.5](../../lecture_notes/ru/B_schur_weyl.md#r-B-5), используемую в доказательстве теоремы B.6(b).
 
@@ -90,14 +90,14 @@ assert close(e[n], functools.reduce(torch.kron, [A] * n), 1e-8)
 
 <a id="s-B-4"></a>
 
-## B.4 Разложение $(\mathbb C^d)^{\otimes n}$
+## B.4 Разложение $`(\mathbb C^d)^{\otimes n}`$
 
 *Конспект:* [раздел B.4](../../lecture_notes/ru/B_schur_weyl.md#s-B-4); [теорема B.8](../../lecture_notes/ru/B_schur_weyl.md#r-B-8), [следствие B.9](../../lecture_notes/ru/B_schur_weyl.md#r-B-9), [следствие B.10](../../lecture_notes/ru/B_schur_weyl.md#r-B-10).
 
-Код раскладывает $\pi(S_3)$ на $(\mathbb C^3)^{\otimes3}$ с помощью `decompose.from_group`, у которой `k_factors` и
-`multiplicities` — это $k_c$ и $m_c$, и проверяет размерности [теоремы B.8](../../lecture_notes/ru/B_schur_weyl.md#r-B-8), затем раскладывает
-$\pi(S_L)$ на $(\mathbb C^2)^{\otimes L}$ при $L=5,6$ и сравнивает пары $(k_c,m_c)$ с $(m_S,2S+1)$ из
-[следствия B.9](../../lecture_notes/ru/B_schur_weyl.md#r-B-9), а $\sum_ck_c^2$ — с числом Каталана из [следствия B.10](../../lecture_notes/ru/B_schur_weyl.md#r-B-10). Алгоритм, на котором основана
+Код раскладывает $`\pi(S_3)`$ на $`(\mathbb C^3)^{\otimes3}`$ с помощью `decompose.from_group`, у которой `k_factors` и
+`multiplicities` — это $`k_c`$ и $`m_c`$, и проверяет размерности [теоремы B.8](../../lecture_notes/ru/B_schur_weyl.md#r-B-8), затем раскладывает
+$`\pi(S_L)`$ на $`(\mathbb C^2)^{\otimes L}`$ при $`L=5,6`$ и сравнивает пары $`(k_c,m_c)`$ с $`(m_S,2S+1)`$ из
+[следствия B.9](../../lecture_notes/ru/B_schur_weyl.md#r-B-9), а $`\sum_ck_c^2`$ — с числом Каталана из [следствия B.10](../../lecture_notes/ru/B_schur_weyl.md#r-B-10). Алгоритм, на котором основана
 `from_group`, описан в [руководстве 4, раздел 4.3](04_symmetries.md#s-4-3).
 
 ```python
@@ -123,10 +123,10 @@ for L in (5, 6):
 
 *Конспект:* [раздел B.5](../../lecture_notes/ru/B_schur_weyl.md#s-B-5); [лемма B.11](../../lecture_notes/ru/B_schur_weyl.md#r-B-11), [теорема B.13](../../lecture_notes/ru/B_schur_weyl.md#r-B-13), [следствие B.14](../../lecture_notes/ru/B_schur_weyl.md#r-B-14).
 
-Код вычисляет $\mathrm{Wg}$ через псевдообратную, проверяет [теорему B.13(a), (b)](../../lecture_notes/ru/B_schur_weyl.md#r-B-13) и
-[теорему 5.10](../../lecture_notes/ru/05_random_matrices.md#r-5-10) и сравнивает весь тензор моментов порядка $n=3$ при $d=2$ — случай
-с вырожденной $G$ — и твирлинг случайной $X$ ([лемма B.11](../../lecture_notes/ru/B_schur_weyl.md#r-B-11)) со средними по методу Монте-Карло по унитарным
-матрицам Хаара; элемент $\mathbb E|U_{11}|^6=\frac{3!}{2\cdot3\cdot4}$ — это [следствие B.14](../../lecture_notes/ru/B_schur_weyl.md#r-B-14).
+Код вычисляет $`\mathrm{Wg}`$ через псевдообратную, проверяет [теорему B.13(a), (b)](../../lecture_notes/ru/B_schur_weyl.md#r-B-13) и
+[теорему 5.10](../../lecture_notes/ru/05_random_matrices.md#r-5-10) и сравнивает весь тензор моментов порядка $`n=3`$ при $`d=2`$ — случай
+с вырожденной $`G`$ — и твирлинг случайной $`X`$ ([лемма B.11](../../lecture_notes/ru/B_schur_weyl.md#r-B-11)) со средними по методу Монте-Карло по унитарным
+матрицам Хаара; элемент $`\mathbb E|U_{11}|^6=\frac{3!}{2\cdot3\cdot4}`$ — это [следствие B.14](../../lecture_notes/ru/B_schur_weyl.md#r-B-14).
 
 ```python
 def n_cycles(p):                                        # number of cycles of a permutation in one-line form
@@ -192,14 +192,14 @@ assert ((Y.mean(0) - T).abs() <= 5 * Y.std(0) / math.sqrt(B) + 1e-12).all()   # 
 
 <a id="s-B-6"></a>
 
-## B.6 Тензорные операторы и теорема Вигнера–Эккарта для $SU(2)$
+## B.6 Тензорные операторы и теорема Вигнера–Эккарта для $`SU(2)`$
 
 *Конспект:* [раздел B.6](../../lecture_notes/ru/B_schur_weyl.md#s-B-6); [лемма B.15](../../lecture_notes/ru/B_schur_weyl.md#r-B-15), [теорема B.16](../../lecture_notes/ru/B_schur_weyl.md#r-B-16).
 
-Код проверяет [лемму B.15](../../lecture_notes/ru/B_schur_weyl.md#r-B-15) для спинов узлов шести спинов $\frac12$ (`decompose.total_spin`,
+Код проверяет [лемму B.15](../../lecture_notes/ru/B_schur_weyl.md#r-B-15) для спинов узлов шести спинов $`\frac12`$ (`decompose.total_spin`,
 `decompose.spin_matrices`) и [теорему B.16](../../lecture_notes/ru/B_schur_weyl.md#r-B-16) в бескоординатной форме: в разложении, вычисленном
-`decompose.from_generators` (базисы секторов которого, блоки столбцов `V`, не обязаны быть $|S,M\rangle$), блок
-$(T_q)_q$ между двумя мультиплетами, как матрица со строками $(M',M,q)$ и столбцами $(a,b)$, имеет ранг не больше единицы
+`decompose.from_generators` (базисы секторов которого, блоки столбцов `V`, не обязаны быть $`|S,M\rangle`$), блок
+$`(T_q)_q`$ между двумя мультиплетами, как матрица со строками $`(M',M,q)`$ и столбцами $`(a,b)`$, имеет ранг не больше единицы
 и равен нулю вне диапазона из (a). Теорема — это принцип, на котором основана `su2.spin_correlation`; её
 [руководство 9, раздел 9.3](09_spin_chains.md#s-9-3) проверяет, сравнивая с методом `'direct'`.
 
@@ -244,13 +244,13 @@ assert close(X @ X2 + Y @ Y2 + Z @ Z2, sum((-1) ** q * T[q] @ T2[-q] for q in (-
 
 *Конспект:* [раздел B.7](../../lecture_notes/ru/B_schur_weyl.md#s-B-7); [теорема B.17](../../lecture_notes/ru/B_schur_weyl.md#r-B-17).
 
-По [теореме B.17](../../lecture_notes/ru/B_schur_weyl.md#r-B-17) ортогональный множитель $O$ QR-разложения $Z=OR$ вещественной гауссовой матрицы,
-нормированного условием $R_{ii}>0$, распределён по Хаару на $O(k)$, причём $\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k$;
-для любого другого QR-разложения $Z=O'R'$ имеем $O=O'\mathrm{diag}(\mathrm{sgn}\,R'_{ii})$.
+По [теореме B.17](../../lecture_notes/ru/B_schur_weyl.md#r-B-17) ортогональный множитель $`O`$ QR-разложения $`Z=OR`$ вещественной гауссовой матрицы,
+нормированного условием $`R_{ii}>0`$, распределён по Хаару на $`O(k)`$, причём $`\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k`$;
+для любого другого QR-разложения $`Z=O'R'`$ имеем $`O=O'\mathrm{diag}(\mathrm{sgn}\,R'_{ii})`$.
 
-Код проверяет методом Монте-Карло вторые моменты, $\mathbb E\mathrm{Tr}\,O=0$ и $\mathbb E(\mathrm{Tr}\,O)^2=\sum_{i,l}\mathbb E[O_{ii}O_{ll}]=1$.
+Код проверяет методом Монте-Карло вторые моменты, $`\mathbb E\mathrm{Tr}\,O=0`$ и $`\mathbb E(\mathrm{Tr}\,O)^2=\sum_{i,l}\mathbb E[O_{ii}O_{ll}]=1`$.
 Он также фиксирует *численное наблюдение* о процедуре QR в `torch.linalg.qr` (утверждение об этой процедуре, а не
-теорема): без поправки знаков у её множителя $Q'$ величина $\mathbb E\mathrm{Tr}\,Q'$ отстоит от $0$ на много
+теорема): без поправки знаков у её множителя $`Q'`$ величина $`\mathbb E\mathrm{Tr}\,Q'`$ отстоит от $`0`$ на много
 стандартных ошибок, так что он не распределён по Хаару.
 
 ```python

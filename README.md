@@ -6,10 +6,12 @@
 Batched operators, states, channels and constrained optimisation in finite-dimensional Type I von Neumann
 algebras, on CPUs and GPUs:
 
-$$\mathcal M = \bigoplus_{c=1}^{C} M_{k_c}(\mathbb C)\quad\text{acting on}\quad \mathcal H=\bigoplus_{c=1}^{C}\mathbb C^{k_c}.$$
+```math
+\mathcal M = \bigoplus_{c=1}^{C} M_{k_c}(\mathbb C)\quad\text{acting on}\quad \mathcal H=\bigoplus_{c=1}^{C}\mathbb C^{k_c}.
+```
 
-(Nominal factor sizes `n_factors` $n_c\ge k_c$ describe computations in the corner $p\mathcal M_0p$ of a larger
-algebra $\mathcal M_0=\bigoplus_c M_{n_c}$ with rank-$k_c$ projections $p_c$; everything refers to the corner.)
+(Nominal factor sizes `n_factors` $`n_c\ge k_c`$ describe computations in the corner $`p\mathcal M_0p`$ of a larger
+algebra $`\mathcal M_0=\bigoplus_c M_{n_c}`$ with rank-$`k_c`$ projections $`p_c`$; everything refers to the corner.)
 
 Operators are stored as one tensor of shape `(batch, C, k_max, k_max)`: the batch axis holds
 samples (or optimisation starts), the sector axis holds the direct summands, and block `c` occupies the

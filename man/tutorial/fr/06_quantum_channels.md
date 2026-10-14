@@ -8,12 +8,12 @@ opérateurs de Kraus, dilatation de Stinespring — et étudie les duales, les p
 transition et les canaux aléatoires. Nous voyons ici comment la bibliothèque stocke les canaux et
 vérifions numériquement ces résultats.
 
-Dans tout ce chapitre, $\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)$ et
-$\mathcal N=\bigoplus_{d=1}^{C'}M_{k'_d}(\mathbb C)$, de projecteurs centraux minimaux $P_c$ et
-$Q_d$ ; $A=\bigoplus_cA_c$ ; $M_{k'\times k}$ est l'espace des matrices complexes $k'\times k$ ;
-les $E_{ij}=|i\rangle\langle j|$ sont les unités matricielles ; $\mathrm{Tr}$ est la trace brute
-$\sum_c\mathrm{Tr}\,A_c$, et $\mathrm{tr}_w=\sum_cw_c\mathrm{Tr}\,A_c$ une trace fidèle
-(théorème 3.1). Les matrices par blocs agissent sur $\mathbb C^n\otimes\mathbb C^k$, l'indice de
+Dans tout ce chapitre, $`\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)`$ et
+$`\mathcal N=\bigoplus_{d=1}^{C'}M_{k'_d}(\mathbb C)`$, de projecteurs centraux minimaux $`P_c`$ et
+$`Q_d`$ ; $`A=\bigoplus_cA_c`$ ; $`M_{k'\times k}`$ est l'espace des matrices complexes $`k'\times k`$ ;
+les $`E_{ij}=|i\rangle\langle j|`$ sont les unités matricielles ; $`\mathrm{Tr}`$ est la trace brute
+$`\sum_c\mathrm{Tr}\,A_c`$, et $`\mathrm{tr}_w=\sum_cw_c\mathrm{Tr}\,A_c`$ une trace fidèle
+(théorème 3.1). Les matrices par blocs agissent sur $`\mathbb C^n\otimes\mathbb C^k`$, l'indice de
 bloc venant en premier.
 
 <a id="s-6-1"></a>
@@ -23,21 +23,21 @@ bloc venant en premier.
 *Notes de cours :* [section 6.1](../../lecture_notes/fr/06_quantum_channels.md#s-6-1) : [proposition 6.1](../../lecture_notes/fr/06_quantum_channels.md#r-6-1) (la transposition), [théorème 6.2](../../lecture_notes/fr/06_quantum_channels.md#r-6-2) (Choi), [corollaire 6.3](../../lecture_notes/fr/06_quantum_channels.md#r-6-3) (rang de Kraus) et [proposition 6.4](../../lecture_notes/fr/06_quantum_channels.md#r-6-4) (applications entre sommes directes).
 
 La bibliothèque comporte deux classes. `Channel` stocke les applications **qui préservent les
-secteurs** ($C'=C$, $k'=k$, $\Phi_{dc}=0$ pour $d\ne c$), dont les opérateurs de Kraus
-$K_l=\bigoplus_cK^{cc}_l$ appartiennent à $\mathcal M$, sous la forme d'un tenseur de forme
+secteurs** ($`C'=C`$, $`k'=k`$, $`\Phi_{dc}=0`$ pour $`d\ne c`$), dont les opérateurs de Kraus
+$`K_l=\bigoplus_cK^{cc}_l`$ appartiennent à $`\mathcal M`$, sous la forme d'un tenseur de forme
 `(batch, r, C, k_max, k_max)` ; `InterSectorChannel` stocke l'application générale de la
 [proposition 6.4](../../lecture_notes/fr/06_quantum_channels.md#r-6-4), de forme `(batch, r, C', C, k'_max, k_max)`. `Channel.choi()` renvoie
-$J(\Phi_{cc})$ pour chaque secteur et `Channel.superoperator()` la matrice $S_c$ de $\Phi_{cc}$ sur
-les vecteurs rangés ligne par ligne, $\mathrm{vec}(X)_{(a,b)}=X_{ab}$. Toutes deux contiennent
-les nombres $\Phi(E_{ij})_{ab}=J_{(i,a),(j,b)}=S_{(a,b),(i,j)}$, dans un ordre différent.
+$`J(\Phi_{cc})`$ pour chaque secteur et `Channel.superoperator()` la matrice $`S_c`$ de $`\Phi_{cc}`$ sur
+les vecteurs rangés ligne par ligne, $`\mathrm{vec}(X)_{(a,b)}=X_{ab}`$. Toutes deux contiennent
+les nombres $`\Phi(E_{ij})_{ab}=J_{(i,a),(j,b)}=S_{(a,b),(i,j)}`$, dans un ordre différent.
 `Channel.from_superoperator` lève `ValueError` si une matrice de Choi n'est pas hermitienne,
-$\|J-J^*\|>2\cdot10^{-10}s$ (en double précision), où $s=\max(1,\|J\|)$ avec la norme spectrale ;
-sinon, elle remplace $J$ par sa partie hermitienne $(J+J^*)/2$, la diagonalise comme dans la
-démonstration du [théorème 6.2](../../lecture_notes/fr/06_quantum_channels.md#r-6-2), lève `ValueError` si une valeur propre est inférieure à $-10^{-10}s$,
-et met à $0$ les valeurs propres négatives restantes. Comme $J^*=J$ si et seulement si
-$\Phi(X^*)=\Phi(X)^*$ pour tout $X$ ([notes de cours, section 6.1](../../lecture_notes/fr/06_quantum_channels.md#s-6-1)), aux tolérances d'arrondi près,
+$`\|J-J^*\|>2\cdot10^{-10}s`$ (en double précision), où $`s=\max(1,\|J\|)`$ avec la norme spectrale ;
+sinon, elle remplace $`J`$ par sa partie hermitienne $`(J+J^*)/2`$, la diagonalise comme dans la
+démonstration du [théorème 6.2](../../lecture_notes/fr/06_quantum_channels.md#r-6-2), lève `ValueError` si une valeur propre est inférieure à $`-10^{-10}s`$,
+et met à $`0`$ les valeurs propres négatives restantes. Comme $`J^*=J`$ si et seulement si
+$`\Phi(X^*)=\Phi(X)^*`$ pour tout $`X`$ ([notes de cours, section 6.1](../../lecture_notes/fr/06_quantum_channels.md#s-6-1)), aux tolérances d'arrondi près,
 elle refuse exactement les applications qui ne préservent pas les adjoints et, parmi les autres,
-exactement celles qui ne sont pas CP ; par exemple, $X\mapsto iX$ et la transposition sont refusées.
+exactement celles qui ne sont pas CP ; par exemple, $`X\mapsto iX`$ et la transposition sont refusées.
 
 ```python
 import math
@@ -109,9 +109,9 @@ except ValueError as e:
 
 ## 6.2 Dilatation de Stinespring et liberté dans le choix des opérateurs de Kraus
 
-*Notes de cours :* [section 6.2](../../lecture_notes/fr/06_quantum_channels.md#s-6-2) : [théorème 6.5](../../lecture_notes/fr/06_quantum_channels.md#r-6-5) (Stinespring) et [théorème 6.7](../../lecture_notes/fr/06_quantum_channels.md#r-6-7) (liberté unitaire). Pour le bloc $c=1$ du canal de la section 6.1, le code vérifie que $V$ est une isométrie, que $\Phi(\rho)=\mathrm{Tr}_E(V\rho V^*)$ et $\Phi^*(B)=V^*(1\otimes B)V$, et que les opérateurs de Kraus $\sum_lu_{jl}K_l$ donnent le même canal.
+*Notes de cours :* [section 6.2](../../lecture_notes/fr/06_quantum_channels.md#s-6-2) : [théorème 6.5](../../lecture_notes/fr/06_quantum_channels.md#r-6-5) (Stinespring) et [théorème 6.7](../../lecture_notes/fr/06_quantum_channels.md#r-6-7) (liberté unitaire). Pour le bloc $`c=1`$ du canal de la section 6.1, le code vérifie que $`V`$ est une isométrie, que $`\Phi(\rho)=\mathrm{Tr}_E(V\rho V^*)`$ et $`\Phi^*(B)=V^*(1\otimes B)V`$, et que les opérateurs de Kraus $`\sum_lu_{jl}K_l`$ donnent le même canal.
 
-Dans le code, l'indice d'environnement de $V$ est le premier indice du tenseur de Kraus :
+Dans le code, l'indice d'environnement de $`V`$ est le premier indice du tenseur de Kraus :
 
 ```python
 K = Phi.kraus[0, :, 1, :3, :3]                            # the two Kraus operators of block c = 1
@@ -135,14 +135,14 @@ assert close(PhiL(rho), out) and all(close(a, b) for a, b in zip(PhiL.choi(), J)
 
 ## 6.3 Applications duales relativement à une trace
 
-*Notes de cours :* [section 6.3](../../lecture_notes/fr/06_quantum_channels.md#s-6-3) : l'application duale $\Phi^\sharp$ relativement à $(w,v)$, [proposition 6.8](../../lecture_notes/fr/06_quantum_channels.md#r-6-8) et [corollaire 6.9](../../lecture_notes/fr/06_quantum_channels.md#r-6-9).
+*Notes de cours :* [section 6.3](../../lecture_notes/fr/06_quantum_channels.md#s-6-3) : l'application duale $`\Phi^\sharp`$ relativement à $`(w,v)`$, [proposition 6.8](../../lecture_notes/fr/06_quantum_channels.md#r-6-8) et [corollaire 6.9](../../lecture_notes/fr/06_quantum_channels.md#r-6-9).
 
-Dans la bibliothèque, `Channel.adjoint()` est $\Phi^*$, et `InterSectorChannel.adjoint(trace=...)` est
-$\Phi^\sharp$ pour la même trace nommée sur les deux algèbres (`'blunt'`, `'norm'`, `'tau_vN'` ; les
-poids $1/(Ck_c)$ et $1/(C'k'_d)$ de `tau_vN` tiennent aussi compte du nombre de secteurs). Vérifions
-la [proposition 6.8](../../lecture_notes/fr/06_quantum_channels.md#r-6-8) pour une application aléatoire $M_2\oplus M_3\to M_1\oplus M_2\oplus M_2$ et les
-trois traces, et le [corollaire 6.9(a)](../../lecture_notes/fr/06_quantum_channels.md#r-6-9) pour la perte de particule $\Phi(x)=(x_0+\mathrm{Tr}\,x_1)\oplus0$
-sur $M_1\oplus M_2$, qui est TP pour les traces brutes mais pas pour `Tr_norm`
+Dans la bibliothèque, `Channel.adjoint()` est $`\Phi^*`$, et `InterSectorChannel.adjoint(trace=...)` est
+$`\Phi^\sharp`$ pour la même trace nommée sur les deux algèbres (`'blunt'`, `'norm'`, `'tau_vN'` ; les
+poids $`1/(Ck_c)`$ et $`1/(C'k'_d)`$ de `tau_vN` tiennent aussi compte du nombre de secteurs). Vérifions
+la [proposition 6.8](../../lecture_notes/fr/06_quantum_channels.md#r-6-8) pour une application aléatoire $`M_2\oplus M_3\to M_1\oplus M_2\oplus M_2`$ et les
+trois traces, et le [corollaire 6.9(a)](../../lecture_notes/fr/06_quantum_channels.md#r-6-9) pour la perte de particule $`\Phi(x)=(x_0+\mathrm{Tr}\,x_1)\oplus0`$
+sur $`M_1\oplus M_2`$, qui est TP pour les traces brutes mais pas pour `Tr_norm`
 ([notes de cours, section 6.3](../../lecture_notes/fr/06_quantum_channels.md#s-6-3)) :
 
 ```python
@@ -180,20 +180,20 @@ print(s.Tr_norm().real.item(), loss(s).Tr_norm().real.item())      # Tr_norm is 
 
 *Notes de cours :* [section 6.4](../../lecture_notes/fr/06_quantum_channels.md#s-6-4) : [théorème 6.10](../../lecture_notes/fr/06_quantum_channels.md#r-6-10) (points fixes des canaux unifères), [théorème 6.11](../../lecture_notes/fr/06_quantum_channels.md#r-6-11) (les canaux unifères augmentent l'entropie) et [proposition 6.12](../../lecture_notes/fr/06_quantum_channels.md#r-6-12) (la matrice de transition).
 
-Les canaux standard de la bibliothèque agissent à l'intérieur de chaque bloc ($p,\gamma\in[0,1]$) :
+Les canaux standard de la bibliothèque agissent à l'intérieur de chaque bloc ($`p,\gamma\in[0,1]`$) :
 
-| canal | $\Phi(\rho)_c$ | opérateurs de Kraus dans le bloc $c$ |
+| canal | $`\Phi(\rho)_c`$ | opérateurs de Kraus dans le bloc $`c`$ |
 |---|---|---|
-| `dephasing_channel` | $(1-p)\rho_c+p\mathrm{diag}\,\rho_c$ | $\sqrt{1-p}\,1$, $\sqrt p\,E_{ii}$ |
-| `depolarizing_channel` | $(1-p)\rho_c+p\mathrm{Tr}(\rho_c)\,1/k_c$ | $\sqrt{1-p}\,1$, $\sqrt{p/k_c}\,E_{ij}$ |
-| `center_expectation` | $\mathrm{Tr}(\rho_c)\,1/k_c$ | $\sqrt{1/k_c}\,E_{ij}$ |
-| `amplitude_damping_channel` | les niveaux $i>0$ se désexcitent vers $0$ | $E_{00}+\sqrt{1-\gamma}\sum_{i>0}E_{ii}$, $\sqrt\gamma\,E_{0i}$ |
-| `random_mixed_unitary_channel` | $\sum_jp_jU_j\rho U_j^*$ | $\sqrt{p_j}\,U_j$ |
+| `dephasing_channel` | $`(1-p)\rho_c+p\mathrm{diag}\,\rho_c`$ | $`\sqrt{1-p}\,1`$, $`\sqrt p\,E_{ii}`$ |
+| `depolarizing_channel` | $`(1-p)\rho_c+p\mathrm{Tr}(\rho_c)\,1/k_c`$ | $`\sqrt{1-p}\,1`$, $`\sqrt{p/k_c}\,E_{ij}`$ |
+| `center_expectation` | $`\mathrm{Tr}(\rho_c)\,1/k_c`$ | $`\sqrt{1/k_c}\,E_{ij}`$ |
+| `amplitude_damping_channel` | les niveaux $`i>0`$ se désexcitent vers $`0`$ | $`E_{00}+\sqrt{1-\gamma}\sum_{i>0}E_{ii}`$, $`\sqrt\gamma\,E_{0i}`$ |
+| `random_mixed_unitary_channel` | $`\sum_jp_jU_j\rho U_j^*`$ | $`\sqrt{p_j}\,U_j`$ |
 
-Pour chaque canal du tableau sur $M_2\oplus M_3$, le code calcule la dimension de ses points fixes (le
-noyau de $S_c-1$) et celle du commutant de ses opérateurs de Kraus : elles coïncident pour les canaux
+Pour chaque canal du tableau sur $`M_2\oplus M_3`$, le code calcule la dimension de ses points fixes (le
+noyau de $`S_c-1`$) et celle du commutant de ses opérateurs de Kraus : elles coïncident pour les canaux
 unifères ([théorème 6.10](../../lecture_notes/fr/06_quantum_channels.md#r-6-10)), et pour l'amortissement d'amplitude les dimensions sont égales mais les
-espaces différents. Il vérifie ensuite le [théorème 6.11](../../lecture_notes/fr/06_quantum_channels.md#r-6-11) sur $100$ états aléatoires, et la
+espaces différents. Il vérifie ensuite le [théorème 6.11](../../lecture_notes/fr/06_quantum_channels.md#r-6-11) sur $`100`$ états aléatoires, et la
 [proposition 6.12](../../lecture_notes/fr/06_quantum_channels.md#r-6-12) pour l'application `Psi` de la section 6.3 et pour la perte de particule.
 
 ```python
@@ -248,13 +248,13 @@ assert torch.allclose(loss.transition_matrix()[0], torch.tensor([[1.0, 1.0], [0.
 ```
 
 Sous l'amortissement d'amplitude complet, l'entropie de l'état maximalement mélangé de
-$M_2\oplus M_3$ tombe de $\log5\approx1.609$ à $H(\tfrac25,\tfrac35)\approx0.673$ : un canal non
+$`M_2\oplus M_3`$ tombe de $`\log5\approx1.609`$ à $`H(\tfrac25,\tfrac35)\approx0.673`$ : un canal non
 unifère peut purifier.
 
-Sur $M_2$, le déphasage $D_p$ et l'amortissement d'amplitude $A_\gamma$ commutent, et leur composée
-multiplie les cohérences par $(1-p)\sqrt{1-\gamma}$ ; avec $1-p=e^{-t/T_\varphi}$ et $1-\gamma=e^{-t/T_1}$, cela
-donne $1/T_2=1/(2T_1)+1/T_\varphi$ ([notes de cours, section 6.4](../../lecture_notes/fr/06_quantum_channels.md#s-6-4), *Cohérences d'un qubit*). Le code
-vérifie ces identités et les lois de composition $D_{p(t)}D_{p(s)}=D_{p(t+s)}$, $A_{\gamma(t)}A_{\gamma(s)}=A_{\gamma(t+s)}$ :
+Sur $`M_2`$, le déphasage $`D_p`$ et l'amortissement d'amplitude $`A_\gamma`$ commutent, et leur composée
+multiplie les cohérences par $`(1-p)\sqrt{1-\gamma}`$ ; avec $`1-p=e^{-t/T_\varphi}`$ et $`1-\gamma=e^{-t/T_1}`$, cela
+donne $`1/T_2=1/(2T_1)+1/T_\varphi`$ ([notes de cours, section 6.4](../../lecture_notes/fr/06_quantum_channels.md#s-6-4), *Cohérences d'un qubit*). Le code
+vérifie ces identités et les lois de composition $`D_{p(t)}D_{p(s)}=D_{p(t+s)}`$, $`A_{\gamma(t)}A_{\gamma(s)}=A_{\gamma(t+s)}`$ :
 
 ```python
 q2 = TypeIAlgebra([2], [2], precision='double')
@@ -282,21 +282,21 @@ assert abs(coh_t - math.exp(-t1 * (1 / (2 * T1) + 1 / Tphi))) < 1e-12       # 1/
 
 *Notes de cours :* [section 6.5](../../lecture_notes/fr/06_quantum_channels.md#s-6-5) : [lemme 6.13](../../lecture_notes/fr/06_quantum_channels.md#r-6-13) et [théorème 6.15](../../lecture_notes/fr/06_quantum_channels.md#r-6-15) (pureté de sortie d'un canal aléatoire).
 
-Une **isométrie aléatoire de Haar** $V:\mathbb C^k\to\mathbb C^N$ est, comme dans la bibliothèque
-(`random_isometry`), le facteur $Q$ de $G=QR$, où $G$ est une matrice de Ginibre $N\times k$
-(coefficients indépendants de densité $\pi^{-1}e^{-|z|^2}$), $Q^*Q=1$, et $R$ est triangulaire
+Une **isométrie aléatoire de Haar** $`V:\mathbb C^k\to\mathbb C^N`$ est, comme dans la bibliothèque
+(`random_isometry`), le facteur $`Q`$ de $`G=QR`$, où $`G`$ est une matrice de Ginibre $`N\times k`$
+(coefficients indépendants de densité $`\pi^{-1}e^{-|z|^2}`$), $`Q^*Q=1`$, et $`R`$ est triangulaire
 supérieure à diagonale positive (sur le CPU, la bibliothèque prend une factorisation LAPACK
-$G=Q'R'$ et multiplie la $i$-ième colonne de $Q'$ par $R'_{ii}/|R'_{ii}|$, ce qui donne cette
-factorisation, comme dans le théorème 5.3, dès que tous les $R'_{ii}\ne0$, c'est-à-dire dès que $G$
-est de rang $k$, ce qui a lieu presque sûrement d'après la démonstration du lemme 6.13 ; pour de
+$`G=Q'R'`$ et multiplie la $`i`$-ième colonne de $`Q'`$ par $`R'_{ii}/|R'_{ii}|`$, ce qui donne cette
+factorisation, comme dans le théorème 5.3, dès que tous les $`R'_{ii}\ne0`$, c'est-à-dire dès que $`G`$
+est de rang $`k`$, ce qui a lieu presque sûrement d'après la démonstration du lemme 6.13 ; pour de
 grands lots sur un GPU, elle utilise Gram–Schmidt, qui la donne directement).
 `random_channel(alg, r)` tire de telles
-$V_c:\mathbb C^{k_c}\to\mathbb C^r\otimes\mathbb C^{k_c}$ indépendamment dans chaque bloc et utilise
+$`V_c:\mathbb C^{k_c}\to\mathbb C^r\otimes\mathbb C^{k_c}`$ indépendamment dans chaque bloc et utilise
 les opérateurs de Kraus du théorème 6.5.
 
-D'après le [théorème 6.15 des notes de cours](../../lecture_notes/fr/06_quantum_channels.md#r-6-15), pour un état pur $\psi$ dans un secteur de taille $k$ et $\Phi$
-tiré par `random_channel` avec un rang de Kraus $r$, $\mathbb E\mathrm{Tr}\,\Phi(\psi)^2=(k+r)/(kr+1)$ et
-$\mathbb E\,\Phi(\psi)=1_k/k$. Nous estimons ces deux quantités sur $20\,000$ échantillons, avec l'erreur type de la moyenne :
+D'après le [théorème 6.15 des notes de cours](../../lecture_notes/fr/06_quantum_channels.md#r-6-15), pour un état pur $`\psi`$ dans un secteur de taille $`k`$ et $`\Phi`$
+tiré par `random_channel` avec un rang de Kraus $`r`$, $`\mathbb E\mathrm{Tr}\,\Phi(\psi)^2=(k+r)/(kr+1)`$ et
+$`\mathbb E\,\Phi(\psi)=1_k/k`$. Nous estimons ces deux quantités sur $`20\,000`$ échantillons, avec l'erreur type de la moyenne :
 
 ```python
 B = 20_000
@@ -326,11 +326,11 @@ comme `amplitude_damping_error` dans Qiskit Aer), toqito (`toqito.channel_ops`,
 `toqito.channel_props`) et QETLAB (`ChoiMatrix`, `KrausOperators`, `ApplyMap`,
 `RandomSuperoperator`) convertissent entre les représentations des sections 6.1–6.2, testent la
 complète positivité et (pour la plupart) tirent des canaux aléatoires, pour des applications
-$M_n\to M_m$ entre algèbres de matrices pleines.
+$`M_n\to M_m`$ entre algèbres de matrices pleines.
 Leurs conventions diffèrent (empilement par colonnes ou par lignes, ordre des facteurs de la matrice de
 Choi) : comparez donc les conventions avant de comparer les nombres. Un canal qui préserve les
-secteurs sur $\mathcal M$ peut y être traité comme un canal sur $M_D$, $D=\sum_ck_c$, avec des
-superopérateurs de taille $D^2\times D^2$ au lieu de $k_c^2\times k_c^2$ par secteur. La bibliothèque
+secteurs sur $`\mathcal M`$ peut y être traité comme un canal sur $`M_D`$, $`D=\sum_ck_c`$, avec des
+superopérateurs de taille $`D^2\times D^2`$ au lieu de $`k_c^2\times k_c^2`$ par secteur. La bibliothèque
 ajoute la structure par blocs elle-même : opérateurs de Kraus stockés par secteur et par lots,
 applications entre algèbres différentes (`InterSectorChannel`), duales pour chacune des traces du
 chapitre 3, et matrice de transition entre secteurs.
@@ -341,12 +341,12 @@ chapitre 3, et matrice de transition entre secteurs.
 
 [Exercices](../../lecture_notes/fr/06_quantum_channels.md#x-6) des notes de cours, numériquement :
 
-1. (Werner–Holevo) Vérifier avec `Channel.from_superoperator` que $\Phi(\rho)=\big(\mathrm{Tr}(\rho)1-\rho^T\big)/(k-1)$
-   sur $M_3$ est un canal unifère de rang de Kraus $3$.
-2. Vérifier que le canal de déphasage sur $M_2\oplus M_3$ a pour rang de Kraus $k_c$ dans le bloc $c$, alors que la
-   bibliothèque stocke $1+k_{\max}$ opérateurs de Kraus.
-3. Vérifier que le canal unitaire mixte d'opérateurs de Kraus $X^aZ^b/k$ est `center_expectation` sur $M_3$.
-4. Vérifier $(\Psi\circ\Phi)^\sharp=\Phi^\sharp\circ\Psi^\sharp$ pour les trois traces de la bibliothèque.
+1. (Werner–Holevo) Vérifier avec `Channel.from_superoperator` que $`\Phi(\rho)=\big(\mathrm{Tr}(\rho)1-\rho^T\big)/(k-1)`$
+   sur $`M_3`$ est un canal unifère de rang de Kraus $`3`$.
+2. Vérifier que le canal de déphasage sur $`M_2\oplus M_3`$ a pour rang de Kraus $`k_c`$ dans le bloc $`c`$, alors que la
+   bibliothèque stocke $`1+k_{\max}`$ opérateurs de Kraus.
+3. Vérifier que le canal unitaire mixte d'opérateurs de Kraus $`X^aZ^b/k`$ est `center_expectation` sur $`M_3`$.
+4. Vérifier $`(\Psi\circ\Phi)^\sharp=\Phi^\sharp\circ\Psi^\sharp`$ pour les trois traces de la bibliothèque.
 
 <details>
 <summary>Solutions</summary>

@@ -4,16 +4,16 @@
 
 本教程配合讲义的[第 11 章](../../lecture_notes/zh/11_optimisation.md)，该章证明了三个迹泛函的极值，并解释了为什么对酉算子采样找不到这些极值。
 这里用这些定理来检验本库中约束集的参数化（`optimize.PositiveParam`、`UnitaryParam`、`SelfAdjointParam`）与
-多起点优化器（`optimize.extremize`）。记 $\Delta$ 为 Michelson 对比度，$\ell(\delta)=(1-\delta)/(1+\delta)$，三个泛函为：
+多起点优化器（`optimize.extremize`）。记 $`\Delta`$ 为 Michelson 对比度，$`\ell(\delta)=(1-\delta)/(1+\delta)`$，三个泛函为：
 
 | | 泛函 | 变量 |
 |---|---|---|
-| 实验 1 | $z=\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)$ | $X,Y\ge0$，$U\in\mathcal M$ 为酉算子 |
-| 实验 2 | $z=\mathrm{Tr}\lvert XY\rvert-\mathrm{Tr}(\lvert X\rvert\,\lvert Y\rvert)$ | $X=UX_0$，$Y=VY_0$，$X_0,Y_0\ge0$，$U,V$ 为酉算子 |
-| 实验 3 | $z=\mathrm{Tr}(Y\lvert X\rvert Y)-\mathrm{Tr}\lvert YXY\rvert$ | $X=X^*$，$Y\ge0$ |
+| 实验 1 | $`z=\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)`$ | $`X,Y\ge0`$，$`U\in\mathcal M`$ 为酉算子 |
+| 实验 2 | $`z=\mathrm{Tr}\lvert XY\rvert-\mathrm{Tr}(\lvert X\rvert\,\lvert Y\rvert)`$ | $`X=UX_0`$，$`Y=VY_0`$，$`X_0,Y_0\ge0`$，$`U,V`$ 为酉算子 |
+| 实验 3 | $`z=\mathrm{Tr}(Y\lvert X\rvert Y)-\mathrm{Tr}\lvert YXY\rvert`$ | $`X=X^*`$，$`Y\ge0`$ |
 
-其中 $|X|$、$|Y|$ 归一化为 $\lambda_{\max}=1$，它们的对比度作为参数。**包络**为
-$\overline z(\delta)=\sup\{z:\Delta(|X|)=\delta\}$ 与 $\underline z(\delta)=\inf\{z:\Delta(|X|)=\delta\}$，其余
+其中 $`|X|`$、$`|Y|`$ 归一化为 $`\lambda_{\max}=1`$，它们的对比度作为参数。**包络**为
+$`\overline z(\delta)=\sup\{z:\Delta(|X|)=\delta\}`$ 与 $`\underline z(\delta)=\inf\{z:\Delta(|X|)=\delta\}`$，其余
 变量均自由变化。
 
 <a id="s-11-1"></a>
@@ -22,17 +22,17 @@ $\overline z(\delta)=\sup\{z:\Delta(|X|)=\delta\}$ 与 $\underline z(\delta)=\in
 
 *讲义：* [11.1 节](../../lecture_notes/zh/11_optimisation.md#s-11-1)；[引理 11.1](../../lecture_notes/zh/11_optimisation.md#r-11-1)、[命题 11.2](../../lecture_notes/zh/11_optimisation.md#r-11-2)。
 
-具有给定对比度 $\delta$ 的 `optimize.PositiveParam` 实现了讲义[11.1 节](../../lecture_notes/zh/11_optimisation.md#s-11-1)中的参数化：它对每个起点
-抽取两个不同的槽位 $s_\pm$（`spectrum.pin_max`、`spectrum.pin_min`；每个有序对的概率都是 $1/(D(D-1))$）和一个
-Haar 随机酉算子 $U_0$（`unitary.base`，由 `random_unitary_operator` 抽取，[引理 11.10](../../lecture_notes/zh/11_optimisation.md#r-11-10)），并把参数 $\theta$
-（`spectrum.theta`）与 $G$（`unitary.G`）映为
-$$
+具有给定对比度 $`\delta`$ 的 `optimize.PositiveParam` 实现了讲义[11.1 节](../../lecture_notes/zh/11_optimisation.md#s-11-1)中的参数化：它对每个起点
+抽取两个不同的槽位 $`s_\pm`$（`spectrum.pin_max`、`spectrum.pin_min`；每个有序对的概率都是 $`1/(D(D-1))`$）和一个
+Haar 随机酉算子 $`U_0`$（`unitary.base`，由 `random_unitary_operator` 抽取，[引理 11.10](../../lecture_notes/zh/11_optimisation.md#r-11-10)），并把参数 $`\theta`$
+（`spectrum.theta`）与 $`G`$（`unitary.G`）映为
+```math
 X(\theta,G)=U\mathrm{diag}(\lambda)U^*,\qquad U=U_0\,e^{G-G^*},\qquad
 \lambda_{s_+}=1,\quad\lambda_{s_-}=\ell(\delta),\quad\lambda_s=\ell+(1-\ell)\tfrac{1+\sin\theta_s}2\ \text{otherwise}.
-$$
-`UnitaryParam` 就是单独的映射 $G\mapsto U_0e^{G-G^*}$，而 `SelfAdjointParam` 再加上符号，$X=U\mathrm{diag}(\sigma\lambda)U^*$。
-由[命题 11.2](../../lecture_notes/zh/11_optimisation.md#r-11-2)，其像是对比度壳层 $\mathcal P_\delta$ 中在所抽槽位上取值 $1$ 与 $\ell(\delta)$ 的算子全体。
-$[a,b]$ 中的自由对比度只是多一个参数；本库的默认值是 $[a,b]=[0,0.999]$，下面的代码保留这一默认值。
+```
+`UnitaryParam` 就是单独的映射 $`G\mapsto U_0e^{G-G^*}`$，而 `SelfAdjointParam` 再加上符号，$`X=U\mathrm{diag}(\sigma\lambda)U^*`$。
+由[命题 11.2](../../lecture_notes/zh/11_optimisation.md#r-11-2)，其像是对比度壳层 $`\mathcal P_\delta`$ 中在所抽槽位上取值 $`1`$ 与 $`\ell(\delta)`$ 的算子全体。
+$`[a,b]`$ 中的自由对比度只是多一个参数；本库的默认值是 $`[a,b]=[0,0.999]`$，下面的代码保留这一默认值。
 
 代码检验约束，并以构造的方式检验命题 11.2：证明中的参数重现了一个目标算子。
 
@@ -73,13 +73,13 @@ assert err < 1e-10
 
 *讲义：* [11.2 节](../../lecture_notes/zh/11_optimisation.md#s-11-2)；[定理 11.4](../../lecture_notes/zh/11_optimisation.md#r-11-4)、[推论 11.5](../../lecture_notes/zh/11_optimisation.md#r-11-5)、[命题 11.6](../../lecture_notes/zh/11_optimisation.md#r-11-6)、[推论 11.7](../../lecture_notes/zh/11_optimisation.md#r-11-7)。
 
-由[讲义，定理 11.4](../../lecture_notes/zh/11_optimisation.md#r-11-4)（冯·诺依曼迹不等式），$|\mathrm{Tr}(AB)|\le\sum_is_i(A)s_i(B)$；由[推论 11.5](../../lecture_notes/zh/11_optimisation.md#r-11-5)，
-对特征值为 $p,q$ 的自伴矩阵 $P,Q$ 有 $\sum_ip^\downarrow_iq^\uparrow_i\le\mathrm{Tr}(PQ)\le\sum_ip^\downarrow_iq^\downarrow_i$，对 $P,Q\ge0$ 有 $\mathrm{Tr}(PQ)\le\|PQ\|_1\le\sum_ip^\downarrow_iq^\downarrow_i$。
-对固定谱时的实验 2，[命题 11.6](../../lecture_notes/zh/11_optimisation.md#r-11-6) 给出 $\sup z=-\inf z=\sum_c\sum_ix^\downarrow_{c,i}(y^\downarrow_{c,i}-y^\uparrow_{c,i})$，它在 $X_0=\mathrm{diag}(x^\downarrow)$、$V=J$（逆序置换）以及 $Y_0=\mathrm{diag}(y^\uparrow)$
-（相应地 $\mathrm{diag}(y^\downarrow)$）处取到；[推论 11.7](../../lecture_notes/zh/11_optimisation.md#r-11-7) 给出包络 $\sup z=-\inf z=\sum_c\lfloor k_c/2\rfloor(1-\ell_X)(1-\ell_Y)$。
+由[讲义，定理 11.4](../../lecture_notes/zh/11_optimisation.md#r-11-4)（冯·诺依曼迹不等式），$`|\mathrm{Tr}(AB)|\le\sum_is_i(A)s_i(B)`$；由[推论 11.5](../../lecture_notes/zh/11_optimisation.md#r-11-5)，
+对特征值为 $`p,q`$ 的自伴矩阵 $`P,Q`$ 有 $`\sum_ip^\downarrow_iq^\uparrow_i\le\mathrm{Tr}(PQ)\le\sum_ip^\downarrow_iq^\downarrow_i`$，对 $`P,Q\ge0`$ 有 $`\mathrm{Tr}(PQ)\le\|PQ\|_1\le\sum_ip^\downarrow_iq^\downarrow_i`$。
+对固定谱时的实验 2，[命题 11.6](../../lecture_notes/zh/11_optimisation.md#r-11-6) 给出 $`\sup z=-\inf z=\sum_c\sum_ix^\downarrow_{c,i}(y^\downarrow_{c,i}-y^\uparrow_{c,i})`$，它在 $`X_0=\mathrm{diag}(x^\downarrow)`$、$`V=J`$（逆序置换）以及 $`Y_0=\mathrm{diag}(y^\uparrow)`$
+（相应地 $`\mathrm{diag}(y^\downarrow)`$）处取到；[推论 11.7](../../lecture_notes/zh/11_optimisation.md#r-11-7) 给出包络 $`\sup z=-\inf z=\sum_c\lfloor k_c/2\rfloor(1-\ell_X)(1-\ell_Y)`$。
 
-这里对 $\Delta(|X|)=\delta$ 有 $1-\ell_X=2\delta/(1+\delta)$；当 $k_c$ 为奇数时，中间的特征值无关紧要。代码
-对 $k=3$、$C=2$ 检验定理 11.4、推论 11.5 以及命题 11.6 的极值构型。
+这里对 $`\Delta(|X|)=\delta`$ 有 $`1-\ell_X=2\delta/(1+\delta)`$；当 $`k_c`$ 为奇数时，中间的特征值无关紧要。代码
+对 $`k=3`$、$`C=2`$ 检验定理 11.4、推论 11.5 以及命题 11.6 的极值构型。
 
 ```python
 M5 = TypeIAlgebra([5], [5], precision='double')
@@ -121,9 +121,9 @@ assert abs(z_max - exact) < 1e-12 and abs(z_min + exact) < 1e-12 and abs(exact -
 
 *讲义：* [11.3 节](../../lecture_notes/zh/11_optimisation.md#s-11-3)；[引理 11.8](../../lecture_notes/zh/11_optimisation.md#r-11-8)、[命题 11.9](../../lecture_notes/zh/11_optimisation.md#r-11-9)。
 
-由[讲义，命题 11.9](../../lecture_notes/zh/11_optimisation.md#r-11-9)，在实验 3 中 $z=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ge0$，等号成立当且仅当 $YX_+Y^2X_-Y=0$，特别地，当 $XY=YX$ 时成立。
-对 $X=\mathrm{diag}(1,-1,0)$ 以及行为 $(1,0,a)$, $(0,1,0)$, $(a,0,1)$, $|a|<1$ 的 $Y$，虽然当 $a\ne0$ 时 $XY\ne YX$，等号仍然成立。代码对两者都作了检验
-（取 $a=0.5$）；`X.abs()` 即 $|X|$，`trace_norm()` 即 $\|\cdot\|_1$。
+由[讲义，命题 11.9](../../lecture_notes/zh/11_optimisation.md#r-11-9)，在实验 3 中 $`z=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ge0`$，等号成立当且仅当 $`YX_+Y^2X_-Y=0`$，特别地，当 $`XY=YX`$ 时成立。
+对 $`X=\mathrm{diag}(1,-1,0)`$ 以及行为 $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`|a|<1`$ 的 $`Y`$，虽然当 $`a\ne0`$ 时 $`XY\ne YX`$，等号仍然成立。代码对两者都作了检验
+（取 $`a=0.5`$）；`X.abs()` 即 $`|X|`$，`trace_norm()` 即 $`\|\cdot\|_1`$。
 
 ```python
 def z_exp3(X, Y):
@@ -147,19 +147,19 @@ assert abs(z_exp3(Xe, Ye).item()) < 1e-12 and (Xe @ Ye - Ye @ Xe).operator_norm(
 
 *讲义：* [11.4 节](../../lecture_notes/zh/11_optimisation.md#s-11-4)；[引理 11.10](../../lecture_notes/zh/11_optimisation.md#r-11-10)、[命题 11.11](../../lecture_notes/zh/11_optimisation.md#r-11-11)、[推论 11.12](../../lecture_notes/zh/11_optimisation.md#r-11-12)、[引理 11.13](../../lecture_notes/zh/11_optimisation.md#r-11-13)。
 
-与其最大值 $\|A\|_1$ 相比，$|\mathrm{Tr}(AU)|$ 的典型大小是多少？本库把 $U$ 取为
-**Ginibre 矩阵** $Z$（元素相互独立，密度为
-$\pi^{-1}e^{-|z|^2}$；Mezzadri 的方法）的 QR 分解 $Z=QR$（$R_{ii}>0$）中的因子 $Q$，在每个块中独立抽取。
+与其最大值 $`\|A\|_1`$ 相比，$`|\mathrm{Tr}(AU)|`$ 的典型大小是多少？本库把 $`U`$ 取为
+**Ginibre 矩阵** $`Z`$（元素相互独立，密度为
+$`\pi^{-1}e^{-|z|^2}`$；Mezzadri 的方法）的 QR 分解 $`Z=QR`$（$`R_{ii}>0`$）中的因子 $`Q`$，在每个块中独立抽取。
 
-由[讲义，命题 11.11](../../lecture_notes/zh/11_optimisation.md#r-11-11)，对 Haar 分布的 $U\in U(k)$ 有 $\mathbb E|\mathrm{Tr}(AU)|^2=\|A\|_2^2/k$；由[推论 11.12](../../lecture_notes/zh/11_optimisation.md#r-11-12)，
-对谱含于 $[a,b]$、$a>0$ 的 $X,Y\ge0$，$|\mathrm{Tr}(XUY)|$ 的均方根至多为它关于 $U$ 的最大值的 $\min(1/\sqrt k,b^2/(a^2k))$ 倍，并且 $\mathbb P\big(|\mathrm{Tr}(XUY)|\ge\mathrm{Tr}(XY)\big)\le b^4/(a^4k^2)$。
+由[讲义，命题 11.11](../../lecture_notes/zh/11_optimisation.md#r-11-11)，对 Haar 分布的 $`U\in U(k)`$ 有 $`\mathbb E|\mathrm{Tr}(AU)|^2=\|A\|_2^2/k`$；由[推论 11.12](../../lecture_notes/zh/11_optimisation.md#r-11-12)，
+对谱含于 $`[a,b]`$、$`a>0`$ 的 $`X,Y\ge0`$，$`|\mathrm{Tr}(XUY)|`$ 的均方根至多为它关于 $`U`$ 的最大值的 $`\min(1/\sqrt k,b^2/(a^2k))`$ 倍，并且 $`\mathbb P\big(|\mathrm{Tr}(XUY)|\ge\mathrm{Tr}(XY)\big)\le b^4/(a^4k^2)`$。
 
-因此，$N$ 个 Haar 样本找到 $|\mathrm{Tr}(XUY)|\le\mathrm{Tr}(XY)$ 的反例的概率至多为
-$Nb^4/(a^4k^2)$（$N$ 个事件的并），尽管对每一对不可交换的矩阵这样的反例都存在（命题 3.9）。这个界
-只有在 $k>\sqrt N\,b^2/a^2$ 时才有信息量（对 $b/a=6$ 与 $N=2000$：$k>1609$）；在数值上，样本在小得多的 $k$
+因此，$`N`$ 个 Haar 样本找到 $`|\mathrm{Tr}(XUY)|\le\mathrm{Tr}(XY)`$ 的反例的概率至多为
+$`Nb^4/(a^4k^2)`$（$`N`$ 个事件的并），尽管对每一对不可交换的矩阵这样的反例都存在（命题 3.9）。这个界
+只有在 $`k>\sqrt N\,b^2/a^2`$ 时才有信息量（对 $`b/a=6`$ 与 $`N=2000`$：$`k>1609`$）；在数值上，样本在小得多的 $`k`$
 下就已经漏掉了反例（见下文）。代码用 Monte Carlo 检验命题 11.11（对这次固定种子的运行，样本均值与精确值
-之差在五个标准误之内），并对在 $[0.2,1.2]$ 中均匀分布的谱（$b/a=6$）打印
-推论 11.12 中的比值、$\sup z$ 以及 $2000$ 个样本中最好的 $z$，后两者都相对于 $\mathrm{Tr}(XY)$。
+之差在五个标准误之内），并对在 $`[0.2,1.2]`$ 中均匀分布的谱（$`b/a=6`$）打印
+推论 11.12 中的比值、$`\sup z`$ 以及 $`2000`$ 个样本中最好的 $`z`$，后两者都相对于 $`\mathrm{Tr}(XY)`$。
 
 ```python
 def random_pair(alg_k):
@@ -187,19 +187,19 @@ for k in (2, 4, 8, 16, 32):
 ```
 
 *数值观察*（打印出的表格；只对这次固定种子的运行作断言）：该比值始终低于已证明的界
-$\min(1/\sqrt k,b^2/(a^2k))$，并且 $k$ 每翻一倍它大约减半，即按 $1/k$ 下降；而从 $k=4$ 起，$2000$ 个样本中
-最好的那个甚至达不到 $z=0$。与此相反，在下面的运行中梯度搜索接近了两个极值（这同样是数值观察）。
-对于矩阵对 `Xf, Yf`，关于 $U$ 的两个极值都是已知的：
+$`\min(1/\sqrt k,b^2/(a^2k))`$，并且 $`k`$ 每翻一倍它大约减半，即按 $`1/k`$ 下降；而从 $`k=4`$ 起，$`2000`$ 个样本中
+最好的那个甚至达不到 $`z=0`$。与此相反，在下面的运行中梯度搜索接近了两个极值（这同样是数值观察）。
+对于矩阵对 `Xf, Yf`，关于 $`U`$ 的两个极值都是已知的：
 
-由[讲义，引理 11.13](../../lecture_notes/zh/11_optimisation.md#r-11-13)，对每个 $A\in M_k(\mathbb C)$、$k\ge2$ 有 $\min_U|\mathrm{Tr}(AU)|=0$。
+由[讲义，引理 11.13](../../lecture_notes/zh/11_optimisation.md#r-11-13)，对每个 $`A\in M_k(\mathbb C)`$、$`k\ge2`$ 有 $`\min_U|\mathrm{Tr}(AU)|=0`$。
 
-所以 $\inf_Uz=-\mathrm{Tr}(XY)$，$\sup_Uz=\|YX\|_1-\mathrm{Tr}(XY)$（命题 3.9）。调用一次 `extremize`
-就能同时逼近二者：$12$ 个起点最大化 $z$，$12$ 个起点最大化 $-z$（在这次运行中相对精度达到 $10^{-3}$，
-下面有断言）。由命题 11.11，$|\mathrm{Tr}(XUY)|$ 的均方根为 $\|YX\|_2/\sqrt k$；利用推论 11.12 的证明中的
-界（谱含于 $[a,b]$），$\mathbb E|\mathrm{Tr}(XUY)|^2\le b^4$ 且 $\mathrm{Tr}(XY)\ge ka^2$，所以 Markov 不等式给出
-$\mathbb P\big(z\ge-(1-\varepsilon)\mathrm{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)$（$\varepsilon>0$）：对大的 $k$，
-$z$ 以高概率接近其下确界。
-*数值观察*（对这次固定种子的运行作断言）：采样到达了下确界的 $1\,\%$ 以内，却连 $z=0$ 都达不到，
+所以 $`\inf_Uz=-\mathrm{Tr}(XY)`$，$`\sup_Uz=\|YX\|_1-\mathrm{Tr}(XY)`$（命题 3.9）。调用一次 `extremize`
+就能同时逼近二者：$`12`$ 个起点最大化 $`z`$，$`12`$ 个起点最大化 $`-z`$（在这次运行中相对精度达到 $`10^{-3}`$，
+下面有断言）。由命题 11.11，$`|\mathrm{Tr}(XUY)|`$ 的均方根为 $`\|YX\|_2/\sqrt k`$；利用推论 11.12 的证明中的
+界（谱含于 $`[a,b]`$），$`\mathbb E|\mathrm{Tr}(XUY)|^2\le b^4`$ 且 $`\mathrm{Tr}(XY)\ge ka^2`$，所以 Markov 不等式给出
+$`\mathbb P\big(z\ge-(1-\varepsilon)\mathrm{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)`$（$`\varepsilon>0`$）：对大的 $`k`$，
+$`z`$ 以高概率接近其下确界。
+*数值观察*（对这次固定种子的运行作断言）：采样到达了下确界的 $`1\,\%`$ 以内，却连 $`z=0`$ 都达不到，
 而上确界是正的：
 
 ```python
@@ -226,34 +226,34 @@ assert z_mc.max().item() < 0                                               # ...
 *讲义：* [11.5 节](../../lecture_notes/zh/11_optimisation.md#s-11-5)；[命题 11.14](../../lecture_notes/zh/11_optimisation.md#r-11-14)、[推论 11.7](../../lecture_notes/zh/11_optimisation.md#r-11-7)、[命题 11.9](../../lecture_notes/zh/11_optimisation.md#r-11-9)。
 
 `optimize.extremize(objective, params, maximize)` 运行 Adam，共 `rounds` 轮，每轮 `steps` 步（学习率为
-`lr * decay**round`），损失函数为 $\mp\sum_b\text{objective}_b$，每轮之后对酉坐标卡重新居中，并**对每个起点**
+`lr * decay**round`），损失函数为 $`\mp\sum_b\text{objective}_b`$，每轮之后对酉坐标卡重新居中，并**对每个起点**
 返回目标函数在梯度迭代点处以及在最终点处（计算一次）所取各值中的最大值（`maximize=False` 时为最小值）。
-批中的每个元素都是一个独立的起点，有自己的槽位、符号、$U_0$ 与对比度：Adam 按坐标逐个作用，所以如果
-目标函数的第 $b$ 个分量只依赖于第 $b$ 组参数（下面所有的目标函数都是如此），各起点之间互不影响。
+批中的每个元素都是一个独立的起点，有自己的槽位、符号、$`U_0`$ 与对比度：Adam 按坐标逐个作用，所以如果
+目标函数的第 $`b`$ 个分量只依赖于第 $`b`$ 组参数（下面所有的目标函数都是如此），各起点之间互不影响。
 `SelfAdjointParam` 的符号是离散的：在两轮之间，`discrete_step` 对每个起点依次尝试八次单个符号的
 翻转（每次都在一个均匀随机的槽位上），并保留每一次使目标函数改进的翻转。
 
-在精确算术中，每一步迭代都是容许的（命题 11.2 及其后的说明），所以返回的每个值都是 $z$ 在某个容许点处的值；
-在浮点运算中，它在舍入误差范围内等于该值（下面的断言允许 $10^{-12}$）。因此最大化给出上确界的
+在精确算术中，每一步迭代都是容许的（命题 11.2 及其后的说明），所以返回的每个值都是 $`z`$ 在某个容许点处的值；
+在浮点运算中，它在舍入误差范围内等于该值（下面的断言允许 $`10^{-12}`$）。因此最大化给出上确界的
 **下界**，最小化给出下确界的上界，仅此而已——局部搜索可能停在局部极值处。另一个方向需要证明，
 如推论 11.7 与命题 11.9，或者凸松弛（11.6 节）。计算得到的包络要接受以下检验：(i) 与闭式表达比较；(ii) 与
 手工构造的构型比较，例如较小解的直和，包络不得低于它们；(iii) 与
 结构化样本（两能级谱、置换基）比较，它们的值是另外一些可取到的值。
 
-由[讲义，命题 11.14](../../lecture_notes/zh/11_optimisation.md#r-11-14)，若所有 $k_c\ge2$，则实验 1 的下包络为 $\underline z(\delta)=-\big(D-2\delta/(1+\delta)\big)$。
+由[讲义，命题 11.14](../../lecture_notes/zh/11_optimisation.md#r-11-14)，若所有 $`k_c\ge2`$，则实验 1 的下包络为 $`\underline z(\delta)=-\big(D-2\delta/(1+\delta)\big)`$。
 
-代码在 $M_2\oplus M_2$ 上检验命题 11.14，在 $M_3\oplus M_3$ 上检验推论 11.7（两个对比度都给定，
-$k=3$ 为奇数），并检验命题 11.9；与上面一样，上确界和下确界在同一次调用中求出。单侧断言（没有任何返回值
+代码在 $`M_2\oplus M_2`$ 上检验命题 11.14，在 $`M_3\oplus M_3`$ 上检验推论 11.7（两个对比度都给定，
+$`k=3`$ 为奇数），并检验命题 11.9；与上面一样，上确界和下确界在同一次调用中求出。单侧断言（没有任何返回值
 越过已证明的极值）是这些定理的推论；而断言搜索到达极值的给定容差以内，则是这次固定种子运行的数值观察。
 关键字 `is_self_adjoint` 选择
-迹范数的算法（奇异值，或对 $YXY$ 用特征值），而无需在每一步都做检验。最后一项
-检验属于类型 (ii)：实验 3 的 $z$ 对直和是可加的，而直和的对比度是各直和项对比度中
-最大者（习题 3），所以对于实验 3 的包络（如代码中那样，$\Delta(Y)$ 在 $[0,0.999]$ 中自由变化），
-$$
+迹范数的算法（奇异值，或对 $`YXY`$ 用特征值），而无需在每一步都做检验。最后一项
+检验属于类型 (ii)：实验 3 的 $`z`$ 对直和是可加的，而直和的对比度是各直和项对比度中
+最大者（习题 3），所以对于实验 3 的包络（如代码中那样，$`\Delta(Y)`$ 在 $`[0,0.999]`$ 中自由变化），
+```math
 \overline z_{M_2\oplus M_2}(\delta)\ \ge\ \overline z_{M_2}(\delta)+\sup_{\delta'\le\delta}\overline z_{M_2}(\delta');
-$$
-特别地，在 $M_2$ 上于对比度 $\delta$ 与 $\delta'\le\delta$ 处取到的两个值之和，是在 $M_2\oplus M_2$ 上于对比度
-$\delta$ 处取到的值。
+```
+特别地，在 $`M_2`$ 上于对比度 $`\delta`$ 与 $`\delta'\le\delta`$ 处取到的两个值之和，是在 $`M_2\oplus M_2`$ 上于对比度
+$`\delta`$ 处取到的值。
 
 ```python
 torch.manual_seed(1)
@@ -309,10 +309,10 @@ assert inf3 >= -1e-12 and inf3 < 1e-6                                       # Pr
 assert sup_M22 >= direct_sum - 5e-3 * direct_sum                           # (ii), up to 0.5 %
 ```
 
-*数值观察*（这次运行打印出的值）。在 $M_2\oplus M_2$ 上的搜索比直和低约 $0.2\,\%$：它尚未完全收敛，而
-$\overline z_{M_2\oplus M_2}(0.5)$ 的最佳下界是较大的那个数——发现这类情况正是检验 (ii)
-的目的。$M_2$ 的值与 $(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2$ 吻合到 $10^{-4}$，其中
-$d=0.999$ 是 $Y$ 所允许的最大对比度。这个闭式**不是**本课程的定理：配套论文在数值上观察到了它（在实代数中），
+*数值观察*（这次运行打印出的值）。在 $`M_2\oplus M_2`$ 上的搜索比直和低约 $`0.2\,\%`$：它尚未完全收敛，而
+$`\overline z_{M_2\oplus M_2}(0.5)`$ 的最佳下界是较大的那个数——发现这类情况正是检验 (ii)
+的目的。$`M_2`$ 的值与 $`(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2`$ 吻合到 $`10^{-4}`$，其中
+$`d=0.999`$ 是 $`Y`$ 所允许的最大对比度。这个闭式**不是**本课程的定理：配套论文在数值上观察到了它（在实代数中），
 但没有证明它；代码只打印它，而不对它作任何断言。对更大的块，我们不知道实验 1 与
 实验 3 的上包络的闭式；此时计算得到的曲线只是下界（可取到的值），仅此而已。
 
@@ -325,7 +325,7 @@ $d=0.999$ 是 $Y$ 所允许的最大对比度。这个闭式**不是**本课程�
 Adam），可替代在重新居中的坐标卡中运行的 Adam（这里不作性能比较）。**cvxpy** 把算子变量的凸问题
 交给 SDP 求解器，后者返回一个最优值以及一个对偶证书，二者都只在求解器容差范围内成立；
 松弛——在更大的可行集上的凸问题——从上方界定上确界，这是局部搜索无法给出的方向。**NCTSSOS**、**ncpol2sdpa** 与 **NCSOStools** 在所有维数上同时界定非交换
-多项式的特征值和迹（0.3 节）。本库补充的是：$\bigoplus_cM_{k_c}$ 的谱约束与
+多项式的特征值和迹（0.3 节）。本库补充的是：$`\bigoplus_cM_{k_c}`$ 的谱约束与
 对比度约束的精确参数化（极值可以位于任何扇区）、遵从
 块结构的酉算子，以及在 CPU 或 GPU 上对许多起点和约束值进行的一次批量计算。它给出候选的
 极值点以及上确界的下界；其余部分必须由证明或松弛来补足。
@@ -334,9 +334,9 @@ Adam），可替代在重新居中的坐标卡中运行的 Adam（这里不作�
 
 ## 习题
 
-讲义[习题 1 与 2](../../lecture_notes/zh/11_optimisation.md#x-11) 的数值验证：反自伴 $S$ 的 Cayley 变换 $C(S)=(1-S)(1+S)^{-1}$ 是酉的，没有特征值 $-1$，
-并且 $S=(1-C)(1+C)^{-1}$（习题 1）；对在 $O(k)$ 上服从 Haar 分布的 $O$（用实代数的 `random_unitary_operator` 抽取，
-`complex_valued=False`），$\mathbb E\mathrm{Tr}(AO)^2=\|A\|_2^2/k$（习题 2）。
+讲义[习题 1 与 2](../../lecture_notes/zh/11_optimisation.md#x-11) 的数值验证：反自伴 $`S`$ 的 Cayley 变换 $`C(S)=(1-S)(1+S)^{-1}`$ 是酉的，没有特征值 $`-1`$，
+并且 $`S=(1-C)(1+C)^{-1}`$（习题 1）；对在 $`O(k)`$ 上服从 Haar 分布的 $`O`$（用实代数的 `random_unitary_operator` 抽取，
+`complex_valued=False`），$`\mathbb E\mathrm{Tr}(AO)^2=\|A\|_2^2/k`$（习题 2）。
 
 <details>
 <summary>解答</summary>

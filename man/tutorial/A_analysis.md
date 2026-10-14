@@ -6,7 +6,7 @@ This tutorial accompanies [Appendix A](../lecture_notes/A_analysis.md) of the le
 and probability that the chapters cite by number: zero sets of polynomials, eigenvalue inequalities, Gaussian
 vectors and their directions, Gaussian moments and uniform spacings. The checks use NumPy only, not the
 library: each block samples random vectors or matrices and compares them with the exact statement. The
-helper `mc`, defined in the first block, asserts that a Monte Carlo mean lies within $5$ standard errors of
+helper `mc`, defined in the first block, asserts that a Monte Carlo mean lies within $`5`$ standard errors of
 the exact value.
 
 <a id="s-A-2"></a>
@@ -15,9 +15,9 @@ the exact value.
 
 *Lecture notes:* [Section A.2](../lecture_notes/A_analysis.md#s-A-2); [Corollary A.7](../lecture_notes/A_analysis.md#r-A-7).
 
-By [Corollary A.7](../lecture_notes/A_analysis.md#r-A-7), a polynomial that is not identically zero vanishes with probability $0$ at a
-random vector with a density. For $\det Z$, with $Z$ a real $3\times3$ matrix with independent $N(0,1)$
-entries, this gives $\mathbb P(|\det Z|<\varepsilon)\to0$ as $\varepsilon\to0$.
+By [Corollary A.7](../lecture_notes/A_analysis.md#r-A-7), a polynomial that is not identically zero vanishes with probability $`0`$ at a
+random vector with a density. For $`\det Z`$, with $`Z`$ a real $`3\times3`$ matrix with independent $`N(0,1)`$
+entries, this gives $`\mathbb P(|\det Z|<\varepsilon)\to0`$ as $`\varepsilon\to0`$.
 
 ```python
 import math
@@ -50,9 +50,9 @@ assert fractions[1] < 0.2 * fractions[0] and fractions[2] < 0.2 * fractions[1]
 *Lecture notes:* [Section A.3](../lecture_notes/A_analysis.md#s-A-3); [Theorem A.8](../lecture_notes/A_analysis.md#r-A-8), [Corollary A.9](../lecture_notes/A_analysis.md#r-A-9), [Theorem A.10](../lecture_notes/A_analysis.md#r-A-10), [Lemma A.12](../lecture_notes/A_analysis.md#r-A-12).
 
 The block checks, on random Hermitian matrices, Weyl's inequalities
-$\lambda_j(A)+\lambda_1(E)\le\lambda_j(A+E)\le\lambda_j(A)+\lambda_n(E)$ ([Theorem A.10](../lecture_notes/A_analysis.md#r-A-10)), the
-Courant–Fischer bound $\max_{x\in U,|x|=1}\langle x,Ax\rangle\ge\lambda_j(A)$ for $j$-dimensional $U$
-([Theorem A.8](../lecture_notes/A_analysis.md#r-A-8)), the interlacing $\lambda_j(A)\le\lambda_j(Q^*AQ)\le\lambda_{j+n-m}(A)$
+$`\lambda_j(A)+\lambda_1(E)\le\lambda_j(A+E)\le\lambda_j(A)+\lambda_n(E)`$ ([Theorem A.10](../lecture_notes/A_analysis.md#r-A-10)), the
+Courant–Fischer bound $`\max_{x\in U,|x|=1}\langle x,Ax\rangle\ge\lambda_j(A)`$ for $`j`$-dimensional $`U`$
+([Theorem A.8](../lecture_notes/A_analysis.md#r-A-8)), the interlacing $`\lambda_j(A)\le\lambda_j(Q^*AQ)\le\lambda_{j+n-m}(A)`$
 ([Corollary A.9](../lecture_notes/A_analysis.md#r-A-9)), and the Lagrange formula for the spectral projections ([Lemma A.12](../lecture_notes/A_analysis.md#r-A-12)).
 
 ```python
@@ -96,10 +96,10 @@ for i, m_i in enumerate(mult):
 
 *Lecture notes:* [Section A.4](../lecture_notes/A_analysis.md#s-A-4); [Theorem A.15](../lecture_notes/A_analysis.md#r-A-15), [Proposition A.17](../lecture_notes/A_analysis.md#r-A-17).
 
-[Theorem A.15](../lecture_notes/A_analysis.md#r-A-15) gives the density $f_X$ of a non-degenerate centred Gaussian vector $X$; the block
-compares $\mathbb P(X\in[0,1]^2)$ with the integral of $f_X$ computed by the midpoint rule. By
-[Proposition A.17](../lecture_notes/A_analysis.md#r-A-17), $\mathbb E\mathrm{Tr}\,H^2$ is $n(n+1)/2$ for the GOE and $n^2$ for the GUE,
-and $OHO^T$ has the law of the GOE matrix $H$; the block checks two moments of its entries.
+[Theorem A.15](../lecture_notes/A_analysis.md#r-A-15) gives the density $`f_X`$ of a non-degenerate centred Gaussian vector $`X`$; the block
+compares $`\mathbb P(X\in[0,1]^2)`$ with the integral of $`f_X`$ computed by the midpoint rule. By
+[Proposition A.17](../lecture_notes/A_analysis.md#r-A-17), $`\mathbb E\mathrm{Tr}\,H^2`$ is $`n(n+1)/2`$ for the GOE and $`n^2`$ for the GUE,
+and $`OHO^T`$ has the law of the GOE matrix $`H`$; the block checks two moments of its entries.
 
 ```python
 Amat = rng.standard_normal((2, 4))                       # Theorem A.15: X = A g in R^2, A of rank 2
@@ -131,10 +131,10 @@ mc(rot[:, 0, 1] ** 2, 0.5, "E (O H O^T)_12^2")
 
 *Lecture notes:* [Section A.5](../lecture_notes/A_analysis.md#s-A-5); [Corollary A.19](../lecture_notes/A_analysis.md#r-A-19), [Theorem A.20](../lecture_notes/A_analysis.md#r-A-20), [Corollary A.21](../lecture_notes/A_analysis.md#r-A-21).
 
-For a standard complex Gaussian vector $z\in\mathbb C^3$, [Theorem A.20](../lecture_notes/A_analysis.md#r-A-20)(b) says that $|z|^2$ has the
-density $t^{N-1}e^{-t}/(N-1)!$ and that $z/|z|$ is uniform on the sphere and independent of $|z|$;
+For a standard complex Gaussian vector $`z\in\mathbb C^3`$, [Theorem A.20](../lecture_notes/A_analysis.md#r-A-20)(b) says that $`|z|^2`$ has the
+density $`t^{N-1}e^{-t}/(N-1)!`$ and that $`z/|z|`$ is uniform on the sphere and independent of $`|z|`$;
 [Corollary A.21](../lecture_notes/A_analysis.md#r-A-21) gives the moments of a uniform unit vector. The block checks these, the volume
-$V_3=4\pi/3$ of the unit ball ([Corollary A.19](../lecture_notes/A_analysis.md#r-A-19)), and that the phase of $z_1$ is uniform
+$`V_3=4\pi/3`$ of the unit ball ([Corollary A.19](../lecture_notes/A_analysis.md#r-A-19)), and that the phase of $`z_1`$ is uniform
 ([Section A.5](../lecture_notes/A_analysis.md#s-A-5), after Theorem A.20).
 
 ```python
@@ -167,9 +167,9 @@ mc((phase >= 0) & (phase < 1), 1 / (2 * math.pi), "P(arg z_1 in [0, 1))")
 *Lecture notes:* [Section A.6](../lecture_notes/A_analysis.md#s-A-6); [Theorem A.24](../lecture_notes/A_analysis.md#r-A-24).
 
 The Isserlis–Wick formula ([Theorem A.24](../lecture_notes/A_analysis.md#r-A-24)) writes a moment of a centred Gaussian vector as a sum
-over the $(2p-1)!!$ pairings of products of covariances. The block enumerates the pairings, compares the
-formula with Monte Carlo moments of a Gaussian vector in $\mathbb R^3$, and recovers $\mathbb E|z|^4=2$ for a
-standard complex Gaussian $z$ from the complex form of the theorem.
+over the $`(2p-1)!!`$ pairings of products of covariances. The block enumerates the pairings, compares the
+formula with Monte Carlo moments of a Gaussian vector in $`\mathbb R^3`$, and recovers $`\mathbb E|z|^4=2`$ for a
+standard complex Gaussian $`z`$ from the complex form of the theorem.
 
 ```python
 def pairings(idx):
@@ -204,11 +204,11 @@ assert abs(wick(cz, (0, 1, 0, 1)) - 2) < 1e-12                           # E|z|^
 
 *Lecture notes:* [Section A.7](../lecture_notes/A_analysis.md#s-A-7); [Theorem A.25](../lecture_notes/A_analysis.md#r-A-25), [Corollary A.26](../lecture_notes/A_analysis.md#r-A-26).
 
-By [Corollary A.26](../lecture_notes/A_analysis.md#r-A-26), the $n+1$ spacings of $n$ sorted uniform points have the law of the normalised
-exponential variables $(e_0,\dots,e_n)/T$, with the moments of part (c), $\mathbb P(s_i/s_j\le t)=t/(1+t)$,
-and mean spacing ratio $2\ln2-1$. The block checks these for both families with $n=5$, and the
-independence of $(e_0,\dots,e_n)/T$ and $T$ ([Theorem A.25](../lecture_notes/A_analysis.md#r-A-25)) through
-$\mathbb E[w_0T^2]=\mathbb Ew_0\,\mathbb ET^2=n+2$.
+By [Corollary A.26](../lecture_notes/A_analysis.md#r-A-26), the $`n+1`$ spacings of $`n`$ sorted uniform points have the law of the normalised
+exponential variables $`(e_0,\dots,e_n)/T`$, with the moments of part (c), $`\mathbb P(s_i/s_j\le t)=t/(1+t)`$,
+and mean spacing ratio $`2\ln2-1`$. The block checks these for both families with $`n=5`$, and the
+independence of $`(e_0,\dots,e_n)/T`$ and $`T`$ ([Theorem A.25](../lecture_notes/A_analysis.md#r-A-25)) through
+$`\mathbb E[w_0T^2]=\mathbb Ew_0\,\mathbb ET^2=n+2`$.
 
 ```python
 n, B = 5, 200_000                                       # Corollary A.26
