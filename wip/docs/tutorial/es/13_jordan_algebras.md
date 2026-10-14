@@ -19,7 +19,9 @@ qué la traspuesta es un automorfismo de Jordan y no un $*$-automorfismo, y qué
 desigualdad de trazas del capítulo 11 escrita en lenguaje de Jordan y demostrada en un factor de espín.
 
 En todo el capítulo, $\operatorname{Herm}_n(\mathbb K)$ es el espacio vectorial real de las matrices hermíticas
-$n\times n$ sobre $\mathbb K=\mathbb R$ o $\mathbb C$, $M_{sa}$ es la parte autoadjunta de
+$n\times n$ sobre $\mathbb K=\mathbb R$ o $\mathbb C$ (la sección 13.4 usa también los cuaterniones $\mathbb H$ y los
+octoniones $\mathbb O$, construidos en la sección E.6, y $\operatorname{Herm}_n$ sobre ellos, sección E.7), $M_{sa}$ es
+la parte autoadjunta de
 $\mathcal M=\bigoplus_cM_{k_c}(\mathbb C)$, $X,Y,Z$ son las matrices de Pauli y $\sigma=(X,Y,Z)$, de modo que
 $u\cdot\sigma=u_1X+u_2Y+u_3Z$ para $u\in\mathbb R^3$. $[a,b]=ab-ba$, y $|u|$ es la norma euclídea de $u\in\mathbb R^m$.
 
@@ -54,10 +56,17 @@ $P(P(y)x)z=yxy\,z\,yxy=P(y)P(x)P(y)z$ por asociatividad. (2) Ciclicidad de la tr
 $yxy=(x^{1/2}y)^*(x^{1/2}y)\ge0$ (corolario 1.7), y $P(y)P(y^{-1})=P(y^{-1})P(y)=\mathrm{id}$. (4)
 $p\circ q=\frac14\begin{pmatrix}2&1\\1&0\end{pmatrix}$. $\square$
 
-Escribiendo $P(y)$ como $2L(y)^2-L(y^2)$, cada identidad de (1) se expresa solo con $\circ$, así que vale en toda álgebra de Jordan especial; la fórmula
-fundamental vale en toda álgebra de Jordan (K. McCrimmon, *A Taste of Jordan Algebras*, Springer 2004, que no
-reproducimos). El módulo `torch_vn_algebra.jordan` implementa estas aplicaciones sobre operadores de un `TypeIAlgebra`,
-de forma perezosa y en lotes sobre todos los sectores:
+Escribiendo $P(y)$ como $2L(y)^2-L(y^2)$, cada identidad de (1) se expresa solo con $\circ$. La demostración de (1)
+usa solo la asociatividad del producto matricial, así que en toda álgebra de Jordan especial $J\subseteq\mathcal A$
+($\mathcal A$ asociativa) da $P(y)x=yxy$ y la fórmula fundamental $P(P(y)x)=P(y)P(x)P(y)$ sobre $J$. (Esto cubre todas
+las álgebras en las que el curso la usa; la fórmula fundamental no se usa para álgebras no especiales.)
+
+Entre los productos $\alpha xy+\beta yx$ ($\alpha,\beta\in\mathbb R$) sobre $\operatorname{Herm}_n(\mathbb C)$, $n\ge2$,
+$\frac12(xy+yx)$ es el único que es simétrico en $x,y$ e igual a $x^2$ para $y=x$: la simetría significa
+$(\alpha-\beta)(xy-yx)=0$ para todos los $x,y$, y $XZ\ne ZX$ (en el bloque $2\times2$ superior izquierdo) obliga a
+$\alpha=\beta$; entonces $(\alpha+\beta)1=1$ para $x=y=1$ da $\alpha=\beta=\frac12$. El módulo `torch_vn_algebra.jordan`
+implementa estas aplicaciones sobre operadores de un `TypeIAlgebra`, de forma perezosa y en lotes sobre todos los
+sectores:
 
 ```python
 import math
@@ -94,8 +103,8 @@ print(jp(p, q).eigenvalues()[0])                                  # (1 -+ sqrt 2
 assert abs(torch.linalg.det(jp(p, q).matrix[0, 0]).real.item() + 1 / 16) < 1e-14
 ```
 
-> **Significado físico.** $x\circ y$ es el producto simetrizado de observables: la única combinación
-> $\alpha xy+\beta yx$ que es simétrica en $x,y$ y se reduce a $x^2$ para $y=x$, y es de nuevo un observable. La
+> **Significado físico** (interpretación física, no un teorema de este curso). $x\circ y$ es el producto simetrizado
+> de observables (la única combinación de este tipo, como se ha visto arriba), y es de nuevo un observable. La
 > representación cuadrática es la **regla de Lüders**: medir una pregunta de sí o no $p$ y quedarse con el resultado "sí"
 > transforma una densidad $\rho$ en $P(p)\rho/\operatorname{Tr}P(p)\rho=p\rho p/\operatorname{Tr}(p\rho)$. La
 > proposición 13.2(4) dice que $\circ$ por sí solo no tiene tal significado operacional para elementos positivos.
@@ -128,7 +137,12 @@ $*$-álgebra generada contiene $Z_j$, luego $X_j=Z_1\cdots Z_{j-1}s_{2j-1}$ e $Y
 tensoriales de matrices de Pauli, una base de $M_D(\mathbb C)$. $\square$
 
 Salvo signos, $s_{2j-1}$ y $s_{2j}$ son los operadores de Majorana $c_j+c_j^*$ e $i(c_j-c_j^*)$ de los fermiones de
-Jordan–Wigner $c_j$ de la sección 9.4.
+Jordan–Wigner $c_j$ de la sección 9.4, con el sitio $j-1$ del capítulo 9 como $j$-ésimo factor tensorial: allí
+$s^a=\frac12\sigma_a$, $n=s^z+\frac12$ y $s^\pm=s^x\pm is^y$, de modo que $(-1)^n=1-2n=-Z$ y $s^-=\frac12(X-iY)$, y
+por tanto $c_j=(-1)^{j-1}Z^{\otimes(j-1)}\otimes s^-\otimes1$. Como $s^-+s^+=X$ e $i(s^--s^+)=i(-iY)=Y$,
+$$
+s_{2j-1}=(-1)^{j-1}(c_j+c_j^*),\qquad s_{2j}=(-1)^{j-1}\,i(c_j-c_j^*).
+$$
 
 **Teorema 13.4 (teoría espectral de $V_m$).** Sean $x=(a,u)\in V_m$ y $\lambda_\pm=a\pm|u|$.
 
@@ -199,16 +213,24 @@ for m in range(1, 7):                                            # Proposition 1
 Para $m=1$, $s_1=Z$ genera las matrices diagonales, de dimensión $2=m+1$, y $V_1\cong\mathbb R\oplus\mathbb R$ no es
 simple. Las dimensiones impresas son $3,4$ para $m=2$; $5,16$ para $m=4$; $7,64$ para $m=6$.
 
-> **Significado físico.** Un estado de $V_m$ (una forma lineal positiva y normalizada) es, por autodualidad,
-> $x\mapsto\operatorname{tr}(\rho\circ x)$ con $\rho=\frac12(1,r)\in Q$, $|r|\le1$: el espacio de estados es una bola
-> de dimensión $m$. Para $m=3$ es la bola de Bloch de un qubit (proposición 13.5(a)). El cono de Lorentz es el cono de
+**Estados de $V_m$.** Un **estado** de $V_m$ es una forma lineal $\omega$ con $\omega(Q)\ge0$ y $\omega(1)=1$. Los
+estados son exactamente las aplicaciones $x\mapsto\operatorname{tr}(\rho\circ x)$ con $\rho=\frac12(1,r)$, $|r|\le1$;
+así, el espacio de estados es una bola de dimensión $m$. *Demostración.*
+$\langle x,y\rangle=\operatorname{tr}(x\circ y)=2(ab+u\cdot v)$ es un producto escalar sobre $V_m$, de modo que toda
+$\omega$ lineal es $\operatorname{tr}(\rho\circ\cdot)$ para exactamente un $\rho=(b,v)$ (representación de Riesz en
+dimensión finita: en una base ortonormal, $\rho=\sum_k\omega(e_k)e_k$). Por la autodualidad del teorema 13.4(4),
+$\omega(Q)\ge0$ si y solo si $\rho\in Q$, es decir, $b\ge|v|$; y $\omega(1)=\operatorname{tr}\rho=2b=1$. Así,
+$\rho=\frac12(1,r)$ con $r=2v$, $|r|\le1$; recíprocamente, todo $\rho$ de este tipo da un estado. $\square$
+
+> **Significado físico** (interpretación física, no un teorema de este curso). Para $m=3$ el espacio de estados de
+> $V_m$ es la bola de Bloch de un qubit (proposición 13.5(a)). El cono de Lorentz es el cono de
 > luz futuro de la relatividad especial en $1+m$ dimensiones, y la proposición 13.5(b) dice que los automorfismos de
 > Jordan son las aplicaciones ortogonales del espacio que fijan el eje temporal.
 
 Los conos $Q$ son los conjuntos de restricciones de la **programación cónica de segundo orden** (SOCP): optimización
-lineal sobre productos de conos de Lorentz. Los métodos de punto interior para SOCP usan exactamente el teorema 13.4:
-valores propios, $\det$ y $P(y)$ para el escalado (F. Alizadeh, D. Goldfarb, *Second-order cone programming*, Math.
-Program. 95 (2003) 3–51).
+lineal sobre productos de conos de Lorentz. Las magnitudes del teorema 13.4 (valores propios, $\det$ y $P(y)$) son
+aquellas en las que suelen formularse los métodos de punto interior para SOCP; estos algoritmos no se tratan en este
+curso (lectura adicional: F. Alizadeh, D. Goldfarb, *Second-order cone programming*, Math. Program. 95 (2003) 3–51).
 
 ## 13.3 Subálgebras de Jordan que no son *-subálgebras
 
@@ -220,7 +242,7 @@ $\operatorname{Herm}_n(\mathbb C)$ de dimensión $n(n+1)/2$; la $*$-álgebra que
 autoadjunta de dimensión $n^2$. (b) Para $x,y\in\operatorname{Herm}_2(\mathbb C)$ existe una unitaria $U$ tal que
 $UxU^*$ y $UyU^*$ son simétricas reales. El álgebra de Jordan generada por $1,x,y$ es $\operatorname{span}\{1,x,y\}$; si
 $x,y,1$ son linealmente independientes, es $U^*\operatorname{Herm}_2(\mathbb R)U\cong V_2$, de dimensión $3$, mientras
-que la $*$-álgebra generada por $x,y$ es $M_2(\mathbb C)$, de dimensión $4$.
+que la $*$-álgebra generada por $1,x,y$ es $M_2(\mathbb C)$, de dimensión $4$.
 
 *Demostración.* (a) Lema 13.1. Para $i\ne j$, $E_{ij}=E_{ii}(E_{ij}+E_{ji})$ es un producto de matrices simétricas
 reales, así que el álgebra generada contiene todas las unidades matriciales. (b) Escribamos $x=a1+u\cdot\sigma$,
@@ -232,8 +254,9 @@ $Ru\cdot Rv=\frac12\operatorname{Tr}\big((Ru\cdot\sigma)(Rv\cdot\sigma)\big)=u\c
 tanto, $Ru,Rv\perp e_2$, y $UxU^*=a1+(Ru)_1X+(Ru)_3Z$ es real, ya que $X,Z$ lo son; análogamente $UyU^*$. Además,
 $x\circ y=(ab+u\cdot v)1+av\cdot\sigma+bu\cdot\sigma\in\operatorname{span}\{1,x,y\}$, y lo mismo $x^2,y^2$, de modo que
 el subespacio generado es cerrado. Si tiene dimensión $3$, su conjugado por $U$ es todo
-$\operatorname{Herm}_2(\mathbb R)=\operatorname{span}\{1,X,Z\}$, que es $\cong V_2$ por el lema 13.3 ($X,Z$
-anticonmutan), y genera $M_2(\mathbb C)$ por (a). $\square$
+$\operatorname{Herm}_2(\mathbb R)=\operatorname{span}\{1,X,Z\}$, que es $\cong V_2$ vía $(a,u)\mapsto a1+u_1X+u_2Z$
+(la demostración del lema 13.3 usa solo que las $s_i$ son simetrías hermíticas que anticonmutan, y $X,Z$ lo son), y
+genera $M_2(\mathbb C)$ por (a). $\square$
 
 ```python
 for n in range(2, 6):                                            # Proposition 13.6(a), a random real pair
