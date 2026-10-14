@@ -32,9 +32,10 @@ $\tau$,
 $\tau(E^c_{ij})=\tau(E^c_{i1}E^c_{1j})=\tau(E^c_{1j}E^c_{i1})=\delta_{ij}\tau(E^c_{11})$.
 Posons $w_c=\tau(E^c_{11})$ ; par linéarité, $\tau(A)=\sum_c\sum_i(A_c)_{ii}w_c$.
 Réciproquement, toute $\operatorname{tr}_w$ est une trace. Positivité :
-$E^c_{11}=(E^c_{11})^*E^c_{11}$, donc la condition $w_c\ge0$ est nécessaire, et
-$\operatorname{tr}_w(A^*A)=\sum_cw_c\|A_c\|_2^2$ montre qu'elle est suffisante, ainsi que le
-critère de fidélité. $\square$
+$E^c_{11}=(E^c_{11})^*E^c_{11}$, donc la condition $w_c=\tau\big((E^c_{11})^*E^c_{11}\big)\ge0$ est
+nécessaire, et $w_c>0$ est nécessaire pour la fidélité, puisque $E^c_{11}\neq0$. Réciproquement,
+$\operatorname{tr}_w(A^*A)=\sum_cw_c\|A_c\|_2^2$, qui est $\ge0$ si tous les $w_c\ge0$, et ne
+s'annule que pour $A=0$ si tous les $w_c>0$. $\square$
 
 La bibliothèque implémente trois traces fidèles :
 
@@ -44,7 +45,7 @@ La bibliothèque implémente trois traces fidèles :
 | `Tr_norm` | $1/k_c$ | $C$ | chaque bloc normalisé |
 | `tau_vN` | $1/(Ck_c)$ | $1$ | l'état tracial de poids égaux $1/C$ sur les secteurs |
 
-D'après le chapitre 2, la trace d'un espace sur lequel $\mathcal M$ agit avec les
+D'après la section 2.3, la trace d'un espace sur lequel $\mathcal M$ agit avec les
 multiplicités $m_c$ est $\operatorname{tr}_w$ avec $w_c=m_c$. Choisir une trace fidèle, c'est
 donc choisir « combien compte chaque secteur ».
 
@@ -86,14 +87,16 @@ $\mathcal M$ (théorème 3.1). D'après le théorème de représentation de Ries
 de dimension finie $\mathcal M$, il existe un unique $R$ tel que
 $\omega(A)=\langle R,A\rangle_w=\operatorname{tr}_w(R^*A)$ ; on pose $\rho_w=R^*$. Si
 $\rho_w\ge0$, alors $\omega(A^*A)=\sum_cw_c\operatorname{Tr}(A_c\,(\rho_w)_c\,A_c^*)\ge0$,
-puisque $A_c(\rho_w)_cA_c^*\ge0$ (corollaire 1.7 avec $T=(\rho_w)_c^{1/2}A_c^*$).
-Réciproquement, si $\omega$ est positive, prenons $x\in\mathbb C^{k_c}$ et pour $A$
-l'opérateur de rang un $|x\rangle\langle x|$ dans le bloc $c$ ; alors $A=A^*A/\|x\|^2$ et
+puisque $A_c(\rho_w)_cA_c^*\ge0$ (corollaire 1.7 avec $T=(\rho_w)_c^{1/2}A_c^*$), qu'une
+matrice positive a une trace $\ge0$ (ses valeurs propres sont $\ge0$, corollaire 1.4(3)) et que
+$w_c>0$. Réciproquement, si $\omega$ est positive, prenons $x\in\mathbb C^{k_c}$ et pour $A$
+l'opérateur de rang un $|x\rangle\langle x|$ dans le bloc $c$ ($x\neq0$) ; alors $A=A^*A/\|x\|^2$ et
 $0\le\omega(A)=w_c\langle x,(\rho_w)_cx\rangle$, donc $(\rho_w)_c\ge0$. La normalisation
 s'écrit $\omega(1)=\operatorname{tr}_w(\rho_w)$. Enfin,
 $\sum_cw_c\operatorname{Tr}((\rho_w)_cA_c)$ et $\sum_cw'_c\operatorname{Tr}((\rho_{w'})_cA_c)$
-sont tous deux égaux à $\omega(A)$ pour tout $A$, et par unicité
-$w_c(\rho_w)_c=w'_c(\rho_{w'})_c$. $\square$
+sont tous deux égaux à $\omega(A)$ pour tout $A$, donc $\bigoplus_cw_c(\rho_w)_c$ et
+$\bigoplus_cw'_c(\rho_{w'})_c$ sont toutes deux des densités de $\omega$ relativement à la trace brute
+($w_c=1$), et par unicité $w_c(\rho_w)_c=w'_c(\rho_{w'})_c$. $\square$
 
 La bibliothèque stocke un état par sa densité $\rho=\rho_{\mathrm{blunt}}$ relativement à
 la trace brute `Tr_blunt` (classe `DensityMatrix`) ; `density(trace)` et
@@ -111,7 +114,7 @@ for trace, tr in (('blunt', lambda X: X.Tr_blunt()), ('norm', lambda X: X.Tr_nor
     assert (back.matrix - rho.matrix).abs().max() < 1e-12
 ```
 
-> **Interprétation physique.** $\omega(A)$ est la valeur moyenne de l'observable $A$. La
+> **Interprétation physique** (interprétation physique, pas un théorème de ce cours). $\omega(A)$ est la valeur moyenne de l'observable $A$. La
 > densité $\rho$ relative à la trace brute est la matrice densité usuelle de la mécanique
 > quantique sur $\bigoplus_c\mathbb C^{k_c}$. Les densités relatives à d'autres traces
 > apparaissent lorsque la même algèbre agit avec des multiplicités (chapitre 2), par
@@ -125,13 +128,17 @@ secteur $c$ a pour densité $\sigma_c=\rho_c/p_c$ sur $\mathbb C^{k_c}$, et
 $$
 \rho=\bigoplus_cp_c\,\sigma_c
 $$
-(si $p_c=0$, alors $\rho_c=0$, puisque $\rho_c\ge0$ et $\operatorname{Tr}\rho_c=0$, et le
-terme est omis).
-Un état sur $\mathcal M$ est un mélange classique d'états quantiques dans les secteurs.
-Mesurer « quel secteur » ne le perturbe pas : le canal de mesure
-$\rho\mapsto\sum_cP_c\rho P_c$ est l'identité sur $\mathcal M$, car tout élément de
-$\mathcal M$ est diagonal par blocs. C'est là le contenu opérationnel d'une règle de
-supersélection.
+(si $p_c=0$, alors $\rho_c=0$, puisque les valeurs propres de $\rho_c\ge0$ sont $\ge0$ et de
+somme $\operatorname{Tr}\rho_c=0$, corollaire 1.4(3), donc toutes nulles, et que $\rho_c$ est
+unitairement diagonalisable, théorème 1.3 ; le terme est omis).
+Ainsi, tout état sur $\mathcal M$ est une combinaison convexe d'états des secteurs.
+L'application $\rho\mapsto\sum_cP_c\rho P_c$ est l'identité sur $\mathcal M$, car tout élément de
+$\mathcal M$ est diagonal par blocs.
+
+> **Interprétation physique** (interprétation physique, pas un théorème de ce cours). Un état
+> sur $\mathcal M$ est un mélange classique d'états quantiques dans les secteurs. L'application
+> $\rho\mapsto\sum_cP_c\rho P_c$ est la mesure de « quel secteur », et elle ne perturbe aucun
+> état de $\mathcal M$. C'est là le contenu opérationnel d'une règle de supersélection.
 
 ```python
 p = rho.sector_probabilities()                                   # shape (batch, C)
@@ -145,7 +152,10 @@ assert (measure_sector(rho).matrix - rho.matrix).abs().max() < 1e-12   # no dist
 
 L'**entropie de von Neumann** d'un état de densité (brute) $\rho$ est
 $S(\rho)=-\operatorname{Tr}\rho\log\rho=-\sum_i\lambda_i\log\lambda_i$, la somme portant sur
-les valeurs propres de $\rho$, avec la convention $0\log0=0$.
+les valeurs propres de $\rho$, avec la convention $0\log0=0$ ; autrement dit,
+$\rho\log\rho:=f(\rho)$ pour $f(t)=t\log t$, $f(0)=0$, et
+$\operatorname{Tr}f(\rho)=\sum_if(\lambda_i)$ par définition de $f(\rho)=U\,\mathrm{diag}(f(\lambda_i))\,U^*$
+(section 1.3).
 
 **Théorème 3.3 (entropie d'un mélange de secteurs).** Avec $p_c$ et $\sigma_c$ comme
 ci-dessus (les secteurs tels que $p_c=0$ étant omis),
@@ -153,20 +163,20 @@ $$
 S(\rho)=H(p)+\sum_cp_c\,S(\sigma_c),\qquad H(p)=-\sum_cp_c\log p_c .
 $$
 
-*Démonstration.* Les valeurs propres non nulles de $\rho$ sont les nombres $p_c\mu$, où
+*Démonstration.* Les valeurs propres non nulles de $\rho$ (avec multiplicité) sont les nombres $p_c\mu$, où
 $\mu$ parcourt les valeurs propres non nulles des $\sigma_c$ (secteurs tels que $p_c>0$) ;
 les valeurs propres nulles contribuent pour $0$ aux deux membres. Par conséquent
 $-\sum_c\sum_{\mu>0}p_c\mu\log(p_c\mu)=-\sum_cp_c\log p_c\sum_{\mu>0}\mu-\sum_cp_c\sum_{\mu>0}\mu\log\mu$,
 et $\sum_{\mu>0}\mu=\operatorname{Tr}\sigma_c=1$. $\square$
 
-> **Interprétation physique.** La formule sépare l'incertitude sur le système en deux parts :
+> **Interprétation physique** (interprétation physique, pas un théorème de ce cours). La formule sépare l'incertitude sur le système en deux parts :
 > $H(p)$, l'incertitude classique sur la charge (le secteur où se trouve le système), et
 > $\sum_cp_cS(\sigma_c)$, l'incertitude quantique moyenne à l'intérieur des secteurs. Sous une règle
 > de supersélection, la première part est l'entropie d'une variable aléatoire classique : la
 > charge.
 
-L'entropie relativement à une autre trace est $S_w(\rho)=-\operatorname{tr}_w(\rho_w\log\rho_w)$.
-D'après le théorème 3.2, $(\rho_w)_c=\rho_c/w_c$, donc
+L'entropie relativement à une autre trace est $S_w(\rho)=-\operatorname{tr}_w(\rho_w\log\rho_w)$,
+avec la même convention $\rho_w\log\rho_w:=f(\rho_w)$. D'après le théorème 3.2, $(\rho_w)_c=\rho_c/w_c$, donc
 $$
 S_w(\rho)=-\sum_cw_c\operatorname{Tr}\Big(\frac{\rho_c}{w_c}\log\frac{\rho_c}{w_c}\Big)
 =S(\rho)+\sum_cp_c\log w_c .
@@ -194,26 +204,36 @@ $S(\rho\|\sigma)=\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\rho\log\sigma$,
 $\operatorname{Tr}\rho\log\rho:=\sum_i\lambda_i\log\lambda_i$, la somme portant sur les
 valeurs propres de $\rho$, avec $0\log0=0$ (et de même dans chaque bloc). Elle ne dépend
 pas de la trace : d'après le théorème 3.2, $(\rho_w)_c=\rho_c/w_c$ et $(\sigma_w)_c=\sigma_c/w_c$, donc
-les valeurs propres de $(\rho_w)_c$ sont celles de $\rho_c$ divisées par $w_c$, et
+les valeurs propres de $(\rho_w)_c$ sont celles de $\rho_c$ divisées par $w_c$,
+$\log(\sigma_c/w_c)=\log\sigma_c-(\log w_c)1$ (si $\sigma_c=U\,\mathrm{diag}(s_i)\,U^*$, alors
+$\sigma_c/w_c=U\,\mathrm{diag}(s_i/w_c)\,U^*$, et théorème 1.5(a)), et
 $\operatorname{tr}_w(\rho_w\log\rho_w)$ comme $\operatorname{tr}_w(\rho_w\log\sigma_w)$ diffèrent de
 $\operatorname{Tr}\rho\log\rho$ et de $\operatorname{Tr}\rho\log\sigma$ de la même quantité
 $-\sum_cp_c\log w_c$ (le logarithme de $\rho$ n'intervient que sur son support, par la convention
 $0\log0=0$). La différence est donc inchangée.
 
 **Lemme 3.4 (inégalité de la tangente).** Soit $f:I\to\mathbb R$ convexe sur un intervalle $I$
-et dérivable en $b\in I$. Alors $f(a)\ge f(b)+(a-b)f'(b)$ pour tout $a\in I$, avec
-inégalité stricte pour $a\neq b$ si $f$ est strictement convexe.
+et dérivable en $b\in I$ (à droite ou à gauche si $b$ est une extrémité de $I$). Alors
+$f(a)\ge f(b)+(a-b)f'(b)$ pour tout $a\in I$, avec inégalité stricte pour $a\neq b$ si $f$ est
+strictement convexe, c'est-à-dire si $f((1-t)x+ty)<(1-t)f(x)+tf(y)$ pour $x\neq y$ dans $I$ et
+$t\in(0,1)$. De plus, si $f$ est continue sur $I$ et deux fois dérivable avec $f''>0$ sur
+l'intérieur de $I$, alors $f$ est strictement convexe.
 
 *Démonstration.* Pour $t\in(0,1]$, la convexité donne $f(b+t(a-b))\le(1-t)f(b)+tf(a)$,
 c'est-à-dire $\big(f(b+t(a-b))-f(b)\big)/t\le f(a)-f(b)$ ; en faisant tendre $t$ vers $0$,
 on obtient l'inégalité. Si $f$ est strictement convexe et $a\neq b$, posons $m=(a+b)/2$ ;
 alors $f(a)-f(b)>2\big(f(m)-f(b)\big)\ge2(m-b)f'(b)=(a-b)f'(b)$, la première étape par
 stricte convexité en $m$, la seconde par l'inégalité qui vient d'être démontrée, appliquée
-à $m$. $\square$
+à $m$. Pour la dernière assertion, soient $x<y$ dans $I$, $t\in(0,1)$ et $z=(1-t)x+ty$. D'après
+le théorème des accroissements finis, il existe $\xi_1\in(x,z)$ et $\xi_2\in(z,y)$ tels que
+$f(z)-f(x)=t(y-x)f'(\xi_1)$ et $f(y)-f(z)=(1-t)(y-x)f'(\xi_2)$, et $f'(\xi_1)<f'(\xi_2)$ d'après
+le théorème des accroissements finis appliqué à $f'$ sur $[\xi_1,\xi_2]$, puisque $f''>0$ sur cet
+intervalle. En multipliant par $t(1-t)(y-x)>0$, on obtient
+$(1-t)\big(f(z)-f(x)\big)<t\big(f(y)-f(z)\big)$, c'est-à-dire $f(z)<(1-t)f(x)+tf(y)$. $\square$
 
 **Théorème 3.5 (inégalité de Klein).** Soit $f:I\to\mathbb R$ convexe sur un intervalle
 $I$, et $X,Y$ autoadjoints de spectres contenus dans $I$, $f$ étant dérivable en chaque
-valeur propre de $Y$. Alors $\operatorname{Tr}[f(X)-f(Y)-(X-Y)f'(Y)]\ge0$. Si $f$ est
+valeur propre de $Y$ (à droite ou à gauche en une extrémité de $I$). Alors $\operatorname{Tr}[f(X)-f(Y)-(X-Y)f'(Y)]\ge0$. Si $f$ est
 strictement convexe, l'égalité n'a lieu que pour $X=Y$.
 
 *Démonstration.* Écrivons $X=\sum_ia_i|u_i\rangle\langle u_i|$ et
@@ -230,8 +250,8 @@ $Xv_j=\sum_ia_i\langle u_i,v_j\rangle u_i=b_jv_j$ pour tout $j$, et $X=Y$. $\squ
 En particulier $S(\rho)\le\log D$, avec égalité si et seulement si $\rho=1/D$.
 
 *Démonstration.* On applique le théorème 3.5 à $f(t)=t\log t$, $f(0)=0$, qui est
-strictement convexe sur $I=[0,\infty)$ ($f''(t)=1/t>0$ sur $(0,\infty)$, et $f$ est
-continue en $0$) et dérivable sur $(0,\infty)\supseteq\operatorname{spec}\sigma$ avec
+strictement convexe sur $I=[0,\infty)$ d'après le lemme 3.4 ($f$ est continue en $0$, car
+$t\log t\to0$ quand $t\to0^+$, et $f''(t)=1/t>0$ sur $(0,\infty)$) et dérivable sur $(0,\infty)\supseteq\operatorname{spec}\sigma$ avec
 $f'(t)=\log t+1$, et à $X=\rho$, $Y=\sigma$ : le membre de gauche vaut
 $\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\sigma\log\sigma-\operatorname{Tr}(\rho-\sigma)(\log\sigma+1)
 =S(\rho\|\sigma)$, puisque $\operatorname{Tr}\rho=\operatorname{Tr}\sigma=1$. Pour la seconde
@@ -251,17 +271,28 @@ où $E$ est l'espérance conditionnelle sur le centre (proposition 2.8).
 *Démonstration.* Pour $p_c>0$,
 $\operatorname{Tr}\rho_c\log\rho_c=p_c\log p_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\rho_c$
 (valeurs propres $p_c\mu$, comme dans le théorème 3.3) et
-$\log\sigma_c=(\log q_c)1+\log\hat\sigma_c$, donc
+$\log\sigma_c=(\log q_c)1+\log\hat\sigma_c$ (on diagonalise $\hat\sigma_c=U\,\mathrm{diag}(s_i)\,U^*$, de
+sorte que $\sigma_c=U\,\mathrm{diag}(q_cs_i)\,U^*$, et on utilise le théorème 1.5(a)), donc
 $\operatorname{Tr}\rho_c\log\sigma_c=p_c\log q_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\sigma_c$ et
 $\operatorname{Tr}\rho_c\log\rho_c-\operatorname{Tr}\rho_c\log\sigma_c=p_c\log(p_c/q_c)+p_cS(\hat\rho_c\|\hat\sigma_c)$.
 Si $p_c=0$, alors $\rho_c=0$ et le secteur contribue pour $0$.
-On somme sur $c$ ; la seconde somme est $\ge0$ d'après le corollaire 3.6 appliqué dans
-chaque bloc. Enfin $E\rho=\bigoplus_c(p_c/k_c)1_{k_c}$, $E\sigma=\bigoplus_c(q_c/k_c)1_{k_c}$,
-et $\operatorname{Tr}E\rho(\log E\rho-\log E\sigma)=\sum_ck_c\frac{p_c}{k_c}\log\frac{p_c}{q_c}$. $\square$
+On somme sur $c$ ; la seconde somme est $\ge0$ d'après le corollaire 3.6, appliqué dans
+$M_{k_c}$ aux états $\hat\rho_c$ et $\hat\sigma_c>0$. Enfin
+$E\rho=\bigoplus_c(p_c/k_c)1_{k_c}$ et $E\sigma=\bigoplus_c(q_c/k_c)1_{k_c}>0$ sont des états ; $E\rho$ est
+la densité de l'état $\omega\circ E$ (où $\omega(A)=\operatorname{Tr}\rho A$), puisque
+$\operatorname{Tr}(\rho E(A))=\sum_cp_c\operatorname{Tr}(A_c)/k_c=\operatorname{Tr}(E(\rho)A)$. Et
+$S(E\rho\|E\sigma)=\sum_ck_c\frac{p_c}{k_c}\big(\log\frac{p_c}{k_c}-\log\frac{q_c}{k_c}\big)=\sum_cp_c\log\frac{p_c}{q_c}$,
+car les valeurs propres de $E\rho$ dans le bloc $c$ sont $p_c/k_c$ ($k_c$ fois) et les secteurs
+tels que $p_c=0$ contribuent pour $0$. $\square$
 
-Ainsi, oublier l'information quantique contenue dans les secteurs ne peut que diminuer la
-discernabilité de deux états ; ce qui subsiste est la divergence de Kullback–Leibler
-classique entre les lois des secteurs.
+Ainsi, remplacer les deux états par leurs images par $E$ ne peut que diminuer l'entropie
+relative ; ce qui subsiste est la divergence de Kullback–Leibler $\sum_cp_c\log(p_c/q_c)$ entre
+les lois des secteurs.
+
+> **Interprétation physique** (interprétation physique, pas un théorème de ce cours).
+> L'entropie relative mesure à quel point deux états peuvent être distingués. Oublier
+> l'information quantique contenue dans les secteurs ne peut que rendre deux états plus
+> difficiles à distinguer ; ce qui subsiste est la discernabilité classique des lois de la charge.
 
 ```python
 sigma_state = states.random_density_matrix(alg, batch_size=4)
@@ -286,10 +317,14 @@ $A=\lambda1$.
 **Proposition 3.8.** Si $\Phi:\mathcal M\to\mathcal M$ est linéaire, positive et unifère
 ($\Phi(1)=1$), alors $\Delta(\Phi(A))\le\Delta(A)$ pour tout $A\ge0$.
 
-*Démonstration.* $\lambda_{\min}1\le A\le\lambda_{\max}1$, et la positivité ainsi que
-$\Phi(1)=1$ donnent $\lambda_{\min}1\le\Phi(A)\le\lambda_{\max}1$. Par conséquent
-$\lambda_{\min}(\Phi(A))\ge\lambda_{\min}$ et $\lambda_{\max}(\Phi(A))\le\lambda_{\max}$. Si
-$\Phi(A)=0$, l'assertion est triviale. Sinon, en posant $r=\lambda_{\min}/\lambda_{\max}$,
+*Démonstration.* $\lambda_{\min}1\le A\le\lambda_{\max}1$ (corollaire 1.4(3) pour
+$A-\lambda_{\min}1$ et $\lambda_{\max}1-A$), et la positivité, la linéarité ainsi que
+$\Phi(1)=1$ donnent $\lambda_{\min}1\le\Phi(A)\le\lambda_{\max}1$. Par conséquent $\Phi(A)$ est
+autoadjoint (une matrice positive l'est, corollaire 1.4(3)), $\Phi(A)\ge0$ (car
+$\lambda_{\min}\ge0$), et d'après le corollaire 1.4(3) $\lambda_{\min}(\Phi(A))\ge\lambda_{\min}$ et
+$\lambda_{\max}(\Phi(A))\le\lambda_{\max}$. Si $\Phi(A)=0$, l'assertion est triviale. Sinon $A\neq0$,
+$\lambda_{\max}$ et $\lambda_{\max}(\Phi(A))$ sont tous deux $>0$, et en posant
+$r=\lambda_{\min}/\lambda_{\max}\in[0,1]$,
 $\Delta=(1-r)/(1+r)$ est une fonction décroissante de $r$, et $r(\Phi(A))\ge r(A)$. $\square$
 
 ```python
@@ -315,41 +350,52 @@ $X^{1/2}YX^{1/2}=(Y^{1/2}X^{1/2})^*(Y^{1/2}X^{1/2})\ge0$ (corollaire 1.7). Si $X
 $X^{1/2}$ commute avec $Y$ (théorème 1.5(d)), donc $YX=X^{1/2}YX^{1/2}\ge0$ et
 $\|YX\|_1=\operatorname{Tr}(YX)$ (pour $P\ge0$, $\|P\|_1=\operatorname{Tr}P$, section 1.4).
 Réciproquement, supposons $\|YX\|_1=\operatorname{Tr}(YX)$. Si $|YX|=0$, alors
-$YX=0=(YX)^*=XY$. Sinon, écrivons $YX=W|YX|$. D'après le théorème 1.9, l'égalité
-$\operatorname{Tr}(YX\cdot1)=\|YX\|_1$ signifie qu'il y a égalité dans l'étape de
-Cauchy–Schwarz pour $U=1$ : $|YX|^{1/2}$ et $W|YX|^{1/2}$ sont proportionnels avec un
-facteur positif, qui vaut $1$ par comparaison des normes, donc $W|YX|^{1/2}=|YX|^{1/2}$ et
-$YX=W|YX|=|YX|\ge0$. Une matrice positive est autoadjointe, donc $YX=(YX)^*=XY$. $\square$
+$YX=0=(YX)^*=XY$. Sinon, écrivons $YX=W|YX|$ (théorème 1.8) et $R=|YX|^{1/2}\neq0$. Par
+cyclicité, $\operatorname{Tr}(YX)=\operatorname{Tr}(RWR)=\langle R,WR\rangle_{HS}$, tandis que
+$\|R\|_2^2=\|WR\|_2^2=\operatorname{Tr}|YX|=\|YX\|_1$. Donc $\langle R,WR\rangle_{HS}=\|R\|_2\|WR\|_2$ :
+il y a égalité dans l'inégalité de Cauchy–Schwarz, donc $WR=\lambda R$ pour un scalaire
+$\lambda$, et $\lambda\|R\|_2^2=\langle R,WR\rangle_{HS}=\|R\|_2^2$ donne $\lambda=1$. Ainsi
+$W|YX|^{1/2}=|YX|^{1/2}$ et $YX=W|YX|=|YX|\ge0$. Une matrice positive est autoadjointe, donc
+$YX=(YX)^*=XY$. $\square$
 
-La bibliothèque trouve le point où le maximum est atteint grâce à la décomposition polaire.
-L'article qui accompagne la bibliothèque montre numériquement qu'un échantillonnage de
-Monte-Carlo de $U$ n'y parvient pas, et ce d'autant moins que $k$ est grand — c'est l'un de
-ses thèmes centraux ; le code ci-dessous l'illustre pour un couple. La raison en est que $U=1$ est déjà proche de
-l'optimum, tandis que pour un $U$ tiré selon la loi de Haar en grande dimension,
-$|\operatorname{Tr}(XUY)|$ est typiquement bien plus petit que $\operatorname{Tr}(XY)$ (un unitaire
-aléatoire brouille les phases) : tous les échantillons restent loin en dessous du supremum exact.
+La bibliothèque trouve le point où le maximum est atteint grâce à la décomposition polaire :
+d'après le théorème 1.9, pour $YX=W|YX|$, l'unitaire $U=W^*$ atteint $\|YX\|_1$. Une recherche
+aléatoire fait moins bien en moyenne : pour un $U$ distribué selon la loi de Haar
+(théorème 5.3 ; c'est ainsi que la bibliothèque tire $U$), la proposition 11.11 avec $A=YX$ donne
+$\big(\mathbb E|\operatorname{Tr}(XUY)|^2\big)^{1/2}=\|YX\|_2/\sqrt k\le\|YX\|_1/\sqrt k=\max_V|\operatorname{Tr}(XVY)|/\sqrt k$
+(car $\sum_is_i^2\le(\sum_is_i)^2$), et le corollaire 11.12 montre que, pour $X,Y$ de spectres
+contenus dans $[a,b]$, $a>0$, un seul tirage atteint $\operatorname{Tr}(XY)$ avec une probabilité au
+plus égale à $b^4/(a^4k^2)$ (ce qui n'est informatif que pour $k>b^2/a^2$ ; dans l'exécution
+ci-dessous, $b/a=6$ et $k=6$, de sorte que cela ne dit rien). Le code calcule le supremum exact
+pour un couple qui ne commute pas avec $k=6$ ainsi que le meilleur de $20000$ tirages de Haar,
+tous deux diminués de $\operatorname{Tr}(XY)$. D'après la proposition 3.9, aucun tirage ne peut
+dépasser le supremum ; l'écart entre le meilleur tirage et le supremum est une observation
+numérique de cette exécution, pas un théorème.
 
 ```python
 Mk = TypeIAlgebra([6], [6], precision='double')
 X = Mk.operator_from_eigenvalues(lambda d: 0.2 + torch.rand(1, d), force_positive=True)
 Y = Mk.operator_from_eigenvalues(lambda d: 0.2 + torch.rand(1, d), force_positive=True)
+assert (X @ Y - Y @ X).matrix.abs().max().item() > 1e-6             # X and Y do not commute
 YX = Y @ X
 W = YX @ YX.abs().inverse()                                          # polar part of YX
 gap = (X @ W.adjoint() @ Y).trace.abs() - (X @ Y).trace.real
-assert abs(gap.item() - (YX.trace_norm() - (X @ Y).trace.real).item()) < 1e-10
-assert gap.item() > 0                                                # the inequality fails
+assert abs(gap.item() - (YX.trace_norm() - (X @ Y).trace.real).item()) < 1e-10   # Theorem 1.9
+assert gap.item() > 0                                  # Proposition 3.9: the inequality fails
 samples = Mk.random_unitary_operator(20_000)
 best = (X @ samples @ Y).trace.abs().max() - (X @ Y).trace.real
-print(f"exact sup {gap.item():.4f}, best of 20000 Haar samples {best.item():.4f}")
-assert best.item() < gap.item()
+print(f"sup - Tr(XY) = {gap.item():.4f}; numerical observation: best of 20000 Haar samples "
+      f"- Tr(XY) = {best.item():.4f}")
+assert best.item() <= gap.item() + 1e-10               # Proposition 3.9: no sample beats the sup
 ```
 
 ## 3.8 Points de comparaison
 
-QuTiP (`entropy_vn`, `entropy_relative`) et les bibliothèques d'information quantique (par
-exemple `qutip`, `toqito`) calculent les entropies et entropies relatives de matrices
-densité sur un seul espace de Hilbert ; sur $\bigoplus_c\mathbb C^{k_c}$, elles coïncident
-avec les conventions de la trace brute adoptées ici. Ce qu'elles ne fournissent pas, c'est
+QuTiP (`entropy_vn`, `entropy_relative`) et d'autres bibliothèques d'information quantique
+(par exemple `toqito`) calculent les entropies et entropies relatives de matrices densité sur
+un seul espace de Hilbert, avec la trace de cet espace ; sur $\bigoplus_c\mathbb C^{k_c}$, c'est
+la trace brute d'ici (à la base du logarithme près, qui varie d'une bibliothèque à l'autre).
+Ce qu'elles ne fournissent pas, c'est
 la famille de traces du théorème 3.1 et les conversions du théorème 3.2, qui deviennent
 nécessaires dès qu'une algèbre agit avec des multiplicités ou que les secteurs doivent être
 pondérés différemment.
@@ -382,11 +428,18 @@ assert abs(tau.von_neumann_entropy().item() - (math.log(3) + sum(math.log(k) for
 2. Les sommes portent sur les $c$ tels que $p_c>0$. Alors
    $S_w(\rho)=S(\rho)+\sum_cp_c\log w_c=-\sum_cp_c\log p_c+\sum_cp_cS(\sigma_c)+\sum_cp_c\log w_c
    \le\sum_cp_c\log\frac{k_cw_c}{p_c}\le\log\sum_{p_c>0}k_cw_c\le\log\operatorname{tr}_w(1)$, en
-   utilisant $S(\sigma_c)\le\log k_c$ (corollaire 3.6) et l'inégalité de Jensen finie
-   $\sum_cp_c\log x_c\le\log\sum_cp_cx_c$ pour la fonction concave $\log$ (qui découle de la
-   définition de la concavité par récurrence sur le nombre de termes), avec
-   $x_c=k_cw_c/p_c$ ; elle est stricte sauf si tous les $x_c$ sont égaux, puisque $\log$ est
-   strictement concave. L'égalité partout impose que tous les $p_c$ soient $>0$, que
+   utilisant $S(\sigma_c)\le\log k_c$ (corollaire 3.6 dans $M_{k_c}$) et l'inégalité de Jensen finie
+   $\sum_{c=1}^mp_c\log x_c\le\log\sum_{c=1}^mp_cx_c$ ($p_c>0$, $\sum_cp_c=1$, $x_c>0$), avec
+   égalité seulement si tous les $x_c$ sont égaux, appliquée à $x_c=k_cw_c/p_c$. Preuve par
+   récurrence sur $m$ : pour $m=1$, il n'y a rien à démontrer. Pour $m\ge2$, posons
+   $q=1-p_m\in(0,1)$ et $\bar x=\sum_{c<m}(p_c/q)x_c$ ; par l'hypothèse de récurrence,
+   $\sum_{c<m}(p_c/q)\log x_c\le\log\bar x$, avec égalité seulement si $x_1=\dots=x_{m-1}$, et par
+   stricte concavité de $\log$ (lemme 3.4 pour $-\log$, dont la dérivée seconde est $1/t^2>0$)
+   $q\log\bar x+p_m\log x_m\le\log(q\bar x+p_mx_m)$,
+   avec égalité seulement si $\bar x=x_m$. En multipliant la première inégalité par $q$ et en
+   additionnant, $\sum_cp_c\log x_c\le\log\sum_cp_cx_c$, et l'égalité impose
+   $x_1=\dots=x_{m-1}=\bar x=x_m$. L'égalité partout impose que tous les $p_c$ soient $>0$ (car
+   tous les $k_cw_c>0$), que
    $\sigma_c=1/k_c$ et que $k_cw_c/p_c$ soit constant, c'est-à-dire
    $p_c=k_cw_c/\operatorname{tr}_w(1)$, soit encore $(\rho_w)_c=\rho_c/w_c=1_{k_c}/\operatorname{tr}_w(1)$.
    Réciproquement, pour $\rho_w=1/\operatorname{tr}_w(1)$,
@@ -398,8 +451,8 @@ assert abs(tau.von_neumann_entropy().item() - (math.log(3) + sum(math.log(k) for
    $S=\log2$. Restreint à $\mathcal M$, en revanche, l'état vectoriel associé à $\psi$
    coïncide avec le mélange :
    $\langle\psi,A\psi\rangle=\tfrac12\langle\psi_1,A_1\psi_1\rangle+\tfrac12\langle\psi_2,A_2\psi_2\rangle$
-   pour tout $A\in\mathcal M$. Aucune observable de $\mathcal M$ ne détecte la cohérence :
-   c'est le contenu d'une règle de supersélection.
+   pour tout $A\in\mathcal M$. Aucun élément de $\mathcal M$ ne détecte la cohérence
+   (physiquement, c'est le contenu d'une règle de supersélection).
 
 </details>
 
