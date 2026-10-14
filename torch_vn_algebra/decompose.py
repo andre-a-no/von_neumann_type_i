@@ -74,7 +74,10 @@ basis vector :math:`i`, becomes column :math:`\text{off}_c+i\,m_c+j` of :math:`V
   :math:`(Jn^2)\times N` system is computed by an incremental QR factorisation and an SVD of the
   :math:`N\times N` triangular factor: :math:`O(n^3+Jn^2N^2)` time, :math:`O(n^2N)` memory.
   Clusters are formed with a generous tolerance; merging distinct eigenvalues only enlarges
-  :math:`N` and is always safe, because all constraints are imposed afterwards.
+  :math:`N` and is always safe, because all constraints are imposed afterwards. Gaps below
+  :math:`10\,\mathrm{tol}\,\max|\lambda|` never separate clusters: an :math:`X` coupling such
+  eigenvalues can commute with the generators up to ``tol``, and only the rank decision below may
+  exclude it (otherwise e.g. :math:`\mathrm{diag}(1,1+10^{-12})` would lose its commutant :math:`M_2`).
 * for a **finite group** (``wedderburn(..., group=True)``, all elements :math:`\pi(g)` given): the
   twirl :math:`P(X)=|G|^{-1}\sum_g\pi(g)X\pi(g)^*` is the orthogonal projection of :math:`M_n` onto
   :math:`\pi(G)'`, so a random element of :math:`\mathcal A'` costs :math:`O(|G|n^3)` and no basis of
@@ -402,7 +405,7 @@ def _nullspace_commutant(Hs: torch.Tensor, tol: float, gen: torch.Generator, n: 
         return basis, dict(method='nullspace', unknowns=n * n, threshold=0.0, sigma=None)
     R = _probe(Hs, gen)
     w, U = torch.linalg.eigh(R)
-    bounds = _gap_clusters(w, eps ** 0.25, 1e3 * n * eps)
+    bounds = _gap_clusters(w, eps ** 0.25, max(1e3 * n * eps, 10 * tol))   # gaps ~ tol: decided by the SVD
     lab = torch.empty(n, dtype=torch.long, device=device)
     for c, (s, e) in enumerate(bounds):
         lab[s:e] = c
@@ -470,7 +473,7 @@ def commutant_basis(generators: MatrixLike, tol: Optional[float] = None, *, grou
     method: 'nullspace' (null space of X -> ([H_j, X])_j after the reduction by a random element of
         the algebra; O(n^3 + J n^2 N^2) with N = sum_c k_c m_c^2 for a generic probe, n^6 at worst),
         'twirl' (group only: range of the twirl of d + 8 random matrices, d from the characters;
-        O(d |G| n^3)), or 'auto': the twirl for a group when d |G| <= n^2, otherwise the null space;
+        O(d |G| n^3)), or 'auto': the twirl for a group when (d + 8) |G| <= n^2, otherwise the null space;
         for a group the null space uses three random elements of span pi(G) = A as generators and
         its dimension is checked against the characters (falling back to the twirl).
     seed: seed of the random probe (the span does not depend on it); None for fresh entropy.

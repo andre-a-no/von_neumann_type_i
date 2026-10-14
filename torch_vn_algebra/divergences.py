@@ -44,6 +44,11 @@ supp_tol = 100 N eps). Then
     alpha > 1 (both families), D (Umegaki) and D_max:  the divergence is +inf;
     alpha < 1:  the divergence is finite unless Q_alpha = 0 (rho and sigma with orthogonal supports): +inf.
 
+The dual test decides orthogonality: a sector in which the weight of rho inside supp sigma, Tr rho_c Pi_sigma_c
+(computed from the eigenpairs, accurate also for orthogonal supports), is at most supp_tol * Tr rho_c contributes
+Q_c = 0 (otherwise rounding-level overlaps of orthogonal eigenvectors, ~ eps^2, would give finite values ~ -log eps^2
+/ (1 - alpha)); for D_0 a sector with Tr(Pi_rho_c sigma_c) <= supp_tol * Tr sigma_c contributes 0.
+
 These are the standard conventions (Tomamichel 2016, Ch. 4); they are the limits eps -> 0 of the divergences of rho
 and sigma + eps 1. The thresholds are relative, so all results are invariant under rescaling of the inputs.
 
@@ -329,7 +334,7 @@ def _logsumexp(L: torch.Tensor, dims) -> torch.Tensor:
 
 
 def _terms(rho: Operator, sigma: Operator, alpha: Optional[Alpha], kind: str, trace: str,
-           rtol: Optional[float]) -> _Terms:
+           rtol: Optional[float], supp_tol: Optional[float] = None) -> _Terms:
     """
     Per-sector Renyi / Umegaki quantities; one batched eigendecomposition per block size of rho and of sigma (from
     the spectral cache if there is one). The Renyi quantities are returned as logarithms log Q_c, so that large alpha
@@ -342,6 +347,7 @@ def _terms(rho: Operator, sigma: Operator, alpha: Optional[Alpha], kind: str, tr
         factor is <= 1), which carries no gradient where it is not resolved in floating point (a scaled trace below
         sqrt(eps): very large alpha with nearly commuting states).
     sandwiched: from the singular values s of (sigma_c/b)^g (rho_c/a)^{1/2} as (s/m)^{2 alpha}, m = s_max of the block.
+    Both: log Q_c = -inf where the supports are orthogonal (Tr rho_c Pi_sigma_c <= supp_tol Tr rho_c, module docstring).
     """
     rho = _as_blunt(rho, trace, "rho")
     sigma = _as_blunt(sigma, trace, "sigma")
@@ -354,7 +360,7 @@ def _terms(rho: Operator, sigma: Operator, alpha: Optional[Alpha], kind: str, tr
         a, _ = _alpha(alpha, rdt, dev)
     B = _batch(rho.matrix.shape[0], sigma.matrix.shape[0], a.shape[0])
     a = a.expand(B)
-    rt = _rtol(alg, rtol)
+    rt, st = _rtol(alg, rtol), _supp_tol(alg, supp_tol)
     ds = _decomposed(sigma, B)
     thr_s = rt * _global_max([w for *_, w, _ in ds], B)
     dr = _decomposed(rho, B)
@@ -369,6 +375,13 @@ def _terms(rho: Operator, sigma: Operator, alpha: Optional[Alpha], kind: str, tr
             ent = _tr(_apply(xr, wr, Vr, lambda lam, t=tr_: torch.where(lam > t, torch.special.xlogy(lam, lam),
                                                                         torch.zeros_like(lam))))
             uparts.append((idx, ent - _tr_prod(xr, _apply(xs, ws, Vs, _support_log(ts)))))
+        if kind != 'umegaki':
+            with torch.no_grad():                # |<v_i|u_j>|^2 and the weight of rho_c inside supp sigma_c
+                W = Vr.conj().transpose(-2, -1) @ Vs.to(Vr.dtype)
+                O = (W.real ** 2 + W.imag ** 2) if torch.is_complex(W) else W ** 2
+                inside = ((torch.where(wr > tr_, wr, torch.zeros_like(wr)).unsqueeze(-1) * O)
+                          * (ws > ts).to(O.dtype).unsqueeze(-2)).sum(dim=(-2, -1))
+                orth = inside <= st * _tr(xr.detach())
         if kind == 'petz':
             ar = _block_scale(wr, tr_, torch.zeros_like(an, dtype=torch.bool))
             bs = _block_scale(ws, ts, an > 1)
@@ -382,11 +395,10 @@ def _terms(rho: Operator, sigma: Operator, alpha: Optional[Alpha], kind: str, tr
                                  torch.full_like(wr, -math.inf))
                 lg = torch.where(ws > ts, (1 - an) * torch.log(torch.where(ws > ts, ws, torch.ones_like(ws))),
                                  torch.full_like(ws, -math.inf))
-                W = Vr.conj().transpose(-2, -1) @ Vs.to(Vr.dtype)
-                O = (W.real ** 2 + W.imag ** 2) if torch.is_complex(W) else W ** 2
                 L_pair = _logsumexp(lf.unsqueeze(-1) + lg.unsqueeze(-2) + torch.log(O), (-2, -1))
             # value of the pair sum, gradient of the matrix form (where it is resolved)
-            parts.append((idx, L_pair + torch.where(ok, L_mat - L_mat.detach(), torch.zeros_like(L_mat))))
+            L = L_pair + torch.where(ok, L_mat - L_mat.detach(), torch.zeros_like(L_mat))
+            parts.append((idx, torch.where(orth, torch.full_like(L, -math.inf), L)))
         elif kind == 'sandwiched':
             # the nonzero spectrum of S R S (S = (sigma/b)^g, R = rho/a) is that of M M^* with M = S R^{1/2}: the
             # squared singular values of M, which the SVD resolves down to (eps ||S|| ||R^{1/2}||)^2 instead of
@@ -405,7 +417,8 @@ def _terms(rho: Operator, sigma: Operator, alpha: Optional[Alpha], kind: str, tr
                 thr_sv = rt * torch.maximum(m, f(ws).amax(-1, keepdim=True) * hmax)
             terms = _support_power(2 * an, thr_sv, m)(sv).sum(-1)
             log_ab = (an * torch.log(ar) + (1 - an) * torch.log(bs) + 2 * an * torch.log(m)).squeeze(-1)
-            parts.append((idx, log_ab + _log_or_ninf(terms, terms > 0)))
+            L = log_ab + _log_or_ninf(terms, terms > 0)
+            parts.append((idx, torch.where(orth, torch.full_like(L, -math.inf), L)))
         elif kind != 'umegaki':
             raise ValueError(f"unknown kind {kind!r}")
         xd = xr.detach()
@@ -456,7 +469,7 @@ def petz_renyi_divergence(rho: Operator, sigma: Operator, alpha: Alpha, trace: s
         for alpha < 1 if the supports are orthogonal.
     Differentiable in rho, sigma (and alpha) at points where the supports are stable.
     """
-    t = _terms(rho, sigma, alpha, 'petz', trace, rtol)
+    t = _terms(rho, sigma, alpha, 'petz', trace, rtol, supp_tol)
     return _from_terms(t, _supp_tol(rho.algebra, supp_tol))
 
 
@@ -466,7 +479,7 @@ def sandwiched_renyi_divergence(rho: Operator, sigma: Operator, alpha: Alpha, tr
     Sandwiched Renyi divergence ~D_alpha(rho||sigma) = (alpha-1)^{-1} log(Tr (sigma^g rho sigma^g)^alpha / Tr rho),
     g = (1-alpha)/(2 alpha), shape (batch,). Arguments as for petz_renyi_divergence; ~D_{1/2} = -log F (fidelity).
     """
-    t = _terms(rho, sigma, alpha, 'sandwiched', trace, rtol)
+    t = _terms(rho, sigma, alpha, 'sandwiched', trace, rtol, supp_tol)
     return _from_terms(t, _supp_tol(rho.algebra, supp_tol))
 
 
@@ -515,11 +528,12 @@ def max_relative_entropy(rho: Operator, sigma: Operator, trace: str = 'blunt', r
 
 
 def min_relative_entropy(rho: Operator, sigma: Operator, trace: str = 'blunt',
-                         rtol: Optional[float] = None) -> torch.Tensor:
+                         rtol: Optional[float] = None, supp_tol: Optional[float] = None) -> torch.Tensor:
     """
     D_0(rho||sigma) = -log(Tr(Pi_rho sigma) / Tr rho), the limit alpha -> 0 of the Petz divergences (Datta's
-    min-relative entropy), +inf if the supports are orthogonal. Shape (batch,). Differentiable in sigma only (the
-    support projection Pi_rho is piecewise constant in rho).
+    min-relative entropy), +inf if the supports are orthogonal (a sector with Tr(Pi_rho_c sigma_c) <= supp_tol *
+    Tr sigma_c, default 100 N eps, contributes 0). Shape (batch,). Differentiable in sigma only (the support
+    projection Pi_rho is piecewise constant in rho).
     """
     rho = _as_blunt(rho, trace, "rho")
     sigma = _as_blunt(sigma, trace, "sigma")
@@ -529,9 +543,11 @@ def min_relative_entropy(rho: Operator, sigma: Operator, trace: str = 'blunt',
     B = _batch(rho.matrix.shape[0], sigma.matrix.shape[0])
     dr = _decomposed(rho, B)
     thr_r = _rtol(alg, rtol) * _global_max([w for *_, w, _ in dr], B)
+    st = _supp_tol(alg, supp_tol)
     parts, ps = [], []
     for (k, idx, xr, wr, Vr), (_, _, xs) in zip(dr, _blocks(sigma, B)):
-        parts.append((idx, _tr_prod(_projection(wr, Vr, _rep(thr_r, len(idx))), xs)))
+        q = _tr_prod(_projection(wr, Vr, _rep(thr_r, len(idx))), xs)
+        parts.append((idx, torch.where(q > st * _tr(xs.detach()), q, torch.zeros_like(q))))   # rounding: orthogonal
         ps.append((idx, _tr(xr.detach())))
     Q = _scatter(alg, parts, B, rdt).sum(-1)
     tr = _scatter(alg, ps, B, rdt).sum(-1)
@@ -555,7 +571,6 @@ def renyi_divergence(rho: Operator, sigma: Operator, alpha: Alpha, kind: str = '
         if a == math.inf and kind == 'sandwiched':
             return max_relative_entropy(rho, sigma, **kwargs)
         if a == 0.0 and kind == 'petz':
-            kwargs.pop('supp_tol', None)
             return min_relative_entropy(rho, sigma, **kwargs)
     f = petz_renyi_divergence if kind == 'petz' else sandwiched_renyi_divergence
     return f(rho, sigma, alpha, **kwargs)
@@ -597,7 +612,7 @@ def sector_contributions(rho: Operator, sigma: Operator, alpha: Optional[Alpha] 
         raise ValueError("kind must be 'petz', 'sandwiched' or 'umegaki'")
     if kind != 'umegaki' and alpha is None:
         raise ValueError(f"kind={kind!r} needs alpha (kind='umegaki' for the relative entropy)")
-    t = _terms(rho, sigma, alpha, kind, trace, rtol)
+    t = _terms(rho, sigma, alpha, kind, trace, rtol, supp_tol)
     alg = rho.algebra
     rt, st = _rtol(alg, rtol), _supp_tol(alg, supp_tol)
     p, q, a = t.p, t.q, t.alpha[:, None]
