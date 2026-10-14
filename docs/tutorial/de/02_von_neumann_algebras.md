@@ -35,9 +35,9 @@ $\mathcal M$ mit $\mathcal M=\mathcal M''$. Ihr **Zentrum** ist
 $Z(\mathcal M)=\mathcal M\cap\mathcal M'$. Ein **Faktor** ist eine von-Neumann-Algebra mit
 $Z(\mathcal M)=\mathbb C1$.
 
-In unendlicher Dimension ist $\mathcal M=\mathcal M''$ eine topologische Bedingung
-(Abgeschlossenheit in der schwachen Operatortopologie). In endlicher Dimension ist sie
-automatisch erfüllt:
+Die Definition ist für Operatoren auf unendlichdimensionalen Hilberträumen gemacht, die dieser Kurs
+nicht behandelt. In endlicher Dimension ist die Bedingung $\mathcal M=\mathcal M''$ automatisch
+erfüllt:
 
 **Lemma 2.1.** Sei $\mathcal M$ eine $*$-Algebra auf $\mathbb C^n$ und $K\subseteq\mathbb C^n$
 ein Unterraum mit $\mathcal MK\subseteq K$. Dann liegt die Orthogonalprojektion $P$ auf $K$
@@ -123,11 +123,14 @@ Projektionen (z. B. $1$). Sei $e\in\mathcal N$ eine von null verschiedene Projek
 Rangs. Wir behaupten $e\mathcal Ne=\mathbb Ce$. Sei $x=x^*\in e\mathcal Ne$. Jede
 Spektralprojektion $q$ von $x$ zu einem von null verschiedenen Eigenwert $\lambda$ ist
 $q=p(x)$, wobei $p$ das Lagrange-Polynom mit $p(\lambda)=1$ und $p(\mu)=0$ für
-$\mu\in(\operatorname{spec}x\cup\{0\})\setminus\{\lambda\}$ ist (Beweis von Satz 1.5(a)). Wegen
-$p(0)=0$ und $x=ex=xe$ ist $q\in\mathcal N$ und $q=eqe$, also liegt das Bild von $q$ im Bild
-von $e$. Wegen der Minimalität ist $q=e$ oder $q=0$; daher hat $x$ höchstens einen von null
-verschiedenen Eigenwert, und dessen Eigenraum ist das Bild von $e$, also
-$x=\lambda e$. Ein allgemeines Element von $e\mathcal Ne$ ist $x_1+ix_2$ mit
+$\mu\in(\operatorname{spec}x\cup\{0\})\setminus\{\lambda\}$ ist (Satz 1.5(a),(b): $p$ stimmt auf
+$\operatorname{spec}x$ mit der Indikatorfunktion von $\{\lambda\}$ überein). Wegen $p(0)=0$ ist
+$p(t)=t\,r(t)$ mit einem Polynom $r$, also $q=x\,r(x)=r(x)\,x\in\mathcal N$, und aus $x=ex=xe$ folgt
+$q=eq=qe$; also liegt das Bild von $q$ im Bild von $e$. Ist $q\neq0$, so liefert die Minimalität
+$\operatorname{rank}q\ge\operatorname{rank}e$, also stimmen die beiden Bilder überein und $q=e$. Da die
+Spektralprojektionen zu verschiedenen Eigenwerten orthogonal sind, hat $x$ höchstens einen von null
+verschiedenen Eigenwert $\lambda$, mit Spektralprojektion $e$, also $x=\lambda e$ (und $x=0=0\cdot e$, falls
+es keinen gibt). Ein allgemeines Element von $e\mathcal Ne$ ist $x_1+ix_2$ mit
 $x_{1,2}=x_{1,2}^*\in e\mathcal Ne$.
 
 *Schritt 2: $e$ erzeugt $E$.* Sei $F=\operatorname{span}\mathcal Ne E$. Dieser Raum ist
@@ -185,9 +188,10 @@ V^*\mathcal M'V=\bigoplus_{c=1}^C1_{k_c}\otimes M_{m_c}(\mathbb C),
 $$
 und $V^*Z(\mathcal M)V=\operatorname{span}\{V^*P_1V,\dots,V^*P_CV\}$, wobei $P_1,\dots,P_C$ die
 minimalen zentralen Projektionen von $\mathcal M$ sind (Lemma 2.3) und $V^*P_cV$ die Projektion
-auf den $c$-ten Summanden ist. Die Paare $(k_c,m_c)$ sind bis auf die Reihenfolge eindeutig: Die
-$P_c$ sind eindeutig (Lemma 2.3), $k_c^2=\dim\mathcal MP_c$ und
-$m_c=\operatorname{rank}P_c/k_c$. Insbesondere ist $\mathcal M\cong\bigoplus_cM_{k_c}(\mathbb C)$ als $*$-Algebren, und
+auf den $c$-ten Summanden ist. Die Paare $(k_c,m_c)$ sind bis auf die Reihenfolge eindeutig: Für
+*jede* unitäre Abbildung $V$ mit der ersten Eigenschaft bildet $V(\cdot)V^*$ die Projektionen auf die
+Summanden auf die $P_c$ ab (siehe den Beweis), also sind $k_c^2=\dim\mathcal MP_c$ und
+$m_c=\operatorname{rank}P_c/k_c$ durch $\mathcal M$ bestimmt. Insbesondere ist $\mathcal M\cong\bigoplus_cM_{k_c}(\mathbb C)$ als $*$-Algebren, und
 $\dim\mathcal M=\sum_ck_c^2$, $\dim\mathcal M'=\sum_cm_c^2$.
 
 *Beweis.* Nach Lemma 2.3 und der anschließenden Bemerkung ist $\mathcal M=\bigoplus_c\mathcal M_c$,
@@ -195,7 +199,18 @@ wobei $\mathcal M_c$ auf $E_c$ wirkt, und jedes $\mathcal M_c$ ist ein Faktor (L
 Lemma 2.5 liefert unitäre Abbildungen $V_c$ mit $V_c^*\mathcal M_cV_c=M_{k_c}\otimes1_{m_c}$;
 man setze $V=\bigoplus_cV_c$. Zur Kommutante: Jedes $X\in\mathcal M'$ kommutiert mit jedem
 $P_c$, also ist $X=\sum_cP_cXP_c$, und $P_cXP_c$ kommutiert mit $\mathcal M_c$; umgekehrt
-kommutiert jede solche Summe mit $\mathcal M$. Lemma 2.5 bestimmt $\mathcal M_c'$ auf $E_c$. $\square$
+kommutiert jede solche Summe mit $\mathcal M$. Lemma 2.5 bestimmt $\mathcal M_c'$ auf $E_c$, und Konjugation
+mit $V$ liefert die Formel für $V^*\mathcal M'V$.
+
+*Eindeutigkeit.* Sei $V$ eine beliebige unitäre Abbildung mit $V^*\mathcal MV=\mathcal B:=\bigoplus_{c=1}^{C'}M_{k_c}\otimes1_{m_c}$,
+und sei $Q_c$ die Projektion auf den $c$-ten Summanden. Ein Element $\bigoplus_cX_c$ von $\mathcal B$ ($X_c\in M_{k_c}\otimes1_{m_c}$)
+ist genau dann zentral, wenn jedes $X_c$ mit $M_{k_c}\otimes1_{m_c}$ kommutiert, d. h. (Lemma 2.5, Schritt 5) $X_c\in(M_{k_c}\otimes1_{m_c})\cap(1_{k_c}\otimes M_{m_c})=\mathbb C1$
+(ein Element $a\otimes1=1\otimes b$ hat lauter Diagonalblöcke gleich $b$ und lauter Nebendiagonalblöcke $0$, also ist $a$ ein Skalar).
+Daher ist $Z(\mathcal B)=\operatorname{span}\{Q_1,\dots,Q_{C'}\}$, und $Z(\mathcal M)=VZ(\mathcal B)V^*$ wird von den von null verschiedenen,
+paarweise orthogonalen Projektionen $VQ_cV^*$ mit Summe $1$ aufgespannt. Jede von ihnen ist eine von null verschiedene Projektion von $Z(\mathcal M)$, also (Lemma 2.3)
+die Summe über eine nichtleere Menge $S_c$ der $P_d$; die $S_c$ sind disjunkt (Orthogonalität) und überdecken alle $d$ (Summe $1$), und wegen
+$C'=\dim Z(\mathcal M)=C$ ist jedes $S_c$ einelementig. Nach Umnummerierung ist also $VQ_cV^*=P_c$, woraus
+$\dim\mathcal MP_c=\dim(M_{k_c}\otimes1_{m_c})=k_c^2$ und $\operatorname{rank}P_c=k_cm_c$ folgen. $\square$
 
 Die Zahlen $k_c$ beschreiben die Algebra selbst. Die **Vielfachheiten** $m_c$ beschreiben,
 wie sie in $M_n(\mathbb C)$ liegt: Sie sind für die algebraische Struktur unsichtbar,
@@ -203,13 +218,14 @@ bestimmen aber die Einschränkung der Spur von $\mathbb C^n$ auf $\mathcal M$,
 $$
 \operatorname{Tr}_{\mathbb C^n}(A)=\sum_cm_c\operatorname{Tr}(A_c),\qquad A=V\Big(\bigoplus_cA_c\otimes1_{m_c}\Big)V^*.
 $$
-Deshalb arbeitet die Bibliothek mit einer Familie von Spuren (Kapitel 3).
+Deshalb arbeitet die Bibliothek mit einer Familie von Spuren (Kapitel 3). Ebenso hat für selbstadjungiertes
+$A$ die Einschränkung von $A$ auf $V(\mathbb C^{k_c}\otimes\mathbb C^{m_c})$ die Eigenwerte des Blocks $A_c$, jeden mit
+dem $m_c$-Fachen seiner Vielfachheit in $A_c$, da $A_c\otimes1_{m_c}$ aus $m_c$ Kopien von $A_c$ besteht.
 
-> **Physikalische Bedeutung.** Die $P_c$ sind **Superauswahlsektoren** oder
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Die $P_c$ sind **Superauswahlsektoren** oder
 > **Symmetriesektoren**: Keine Observable in $\mathcal M$ verbindet verschiedene Sektoren,
 > daher ist eine Messung von „welcher Sektor“ mit jeder anderen Messung verträglich. Das
-> Zentrum ist der *klassische* Teil des Systems. Die Vielfachheit $m_c$ ist eine Entartung:
-> Jeder Eigenwert des Blocks $A_c$ tritt in $\mathbb C^n$ mit dem $m_c$-Fachen seiner Vielfachheit in $A_c$ auf.
+> Zentrum ist der *klassische* Teil des Systems. Die Vielfachheit $m_c$ ist eine Entartung jeder Observablen in $\mathcal M$.
 
 ## 2.4 Beispiel: eine Symmetriegruppe und ihre Kommutante
 
@@ -250,40 +266,79 @@ $T$ ein Verflechtungsoperator, $T\rho(g)=\rho'(g)T$ für alle $g$. Kern und Bild
 invariant, also ist $T=0$ oder $T$ invertierbar (Lemma von Schur); ist $\rho'=\rho$, so gilt
 dasselbe für $T-\lambda1$ mit einem Eigenwert $\lambda$ von $T$, also $T=\lambda1$. Daher bilden
 die Verflechtungsoperatoren von $\rho$ nach $\rho'$ einen Raum der Dimension $1$, falls
-$\rho\cong\rho'$, und $0$ sonst. Ist $\pi\cong\bigoplus_j\sigma_j$ mit irreduziblen $\sigma_j$
-(Wiederholungen erlaubt), so bilden die Verflechtungsoperatoren von einer irreduziblen $\rho$ nach
-$\pi$ folglich einen Raum der Dimension $\#\{j:\sigma_j\cong\rho\}$, eine Zahl, die nur von $\pi$
+$\rho\cong\rho'$ (für einen invertierbaren Verflechtungsoperator $S$ identifiziert $T\mapsto S^{-1}T$ sie mit
+den Verflechtungsoperatoren von $\rho$ nach sich selbst, und diese sind $\mathbb C1$), und $0$ sonst (ein von null
+verschiedener wäre invertierbar, also eine Äquivalenz). Ist $\pi\cong\bigoplus_j\sigma_j$ mit irreduziblen $\sigma_j$
+(Wiederholungen erlaubt), so ist ein Verflechtungsoperator von einer irreduziblen $\rho$ nach
+$\bigoplus_j\sigma_j$ ein Tupel $(T_j)_j$ von Verflechtungsoperatoren von $\rho$ nach $\sigma_j$, und die Komposition
+mit der Äquivalenz ändert keine Dimensionen; also bilden die Verflechtungsoperatoren von $\rho$ nach
+$\pi$ einen Raum der Dimension $\#\{j:\sigma_j\cong\rho\}$, eine Zahl, die nur von $\pi$
 und $\rho$ abhängt. Für die Zerlegung aus Proposition 2.7, deren $\rho_c$ paarweise inäquivalent
 sind, ist sie $m_c$ für $\rho\cong\rho_c$ und $0$, wenn $\rho$ zu keinem $\rho_c$ äquivalent ist.
 $\square$
 
 Wir nehmen $G=S_3$, das die drei Faktoren von $(\mathbb C^2)^{\otimes3}$ permutiert, also
-drei Qubits oder drei Spins $\tfrac12$. Die Zerlegung lautet: Der symmetrische Unterraum
-(Gesamtspin $\tfrac32$, Dimension $4$) trägt die triviale Darstellung mit Vielfachheit $4$; sein
-Komplement (Dimension $4$) trägt die zweidimensionale Standarddarstellung mit Vielfachheit
-$2$; die Signumsdarstellung tritt nicht auf. Also gilt $\pi(S_3)''\cong M_1\oplus M_2$
+drei Qubits oder drei Spins $\tfrac12$: $\pi(\sigma)|x\rangle=|\sigma\cdot x\rangle$ für $x\in\{0,1\}^3$, wobei
+$(\sigma\cdot x)_{\sigma(i)}=x_i$. Sei $F=\{v:\pi(g)v=v\text{ für alle }g\}$ der **symmetrische Unterraum**. Die
+Zerlegung lautet: $F$ (Dimension $4$) trägt die triviale Darstellung mit Vielfachheit $4$; sein
+orthogonales Komplement (Dimension $4$) trägt die zweidimensionale **Standarddarstellung** (die
+Permutationsdarstellung von $S_3$ auf den Vektoren von $\mathbb C^3$ mit Koordinatensumme $0$) mit
+Vielfachheit $2$; die Signumsdarstellung tritt nicht auf. Also gilt $\pi(S_3)''\cong M_1\oplus M_2$
 (Dimension $5$) und $\pi(S_3)'\cong M_4\oplus M_2$ (Dimension $20$).
 
-*Beweis.* Man schreibe $\pi(S_3)''\cong\bigoplus_cM_{k_c}\otimes1_{m_c}$ (Satz 2.6). Dann gilt
-$\sum_ck_cm_c=8$, $\sum_ck_c^2=\dim\pi(S_3)''=5$ und $\sum_cm_c^2=\dim\pi(S_3)'=20$; beide
-Dimensionen berechnet der Code unten mit exakter linearer Algebra (die Kommutante einer Menge $S$
-ist der Kern der linearen Abbildung $X\mapsto(AX-XA)_{A\in S}$). Die Zahl $20$ lässt sich auch von
-Hand abzählen: $X$ vertauscht genau dann mit allen $\pi(g)$, wenn seine Einträge $X_{xy}$,
-$x,y\in\{0,1\}^3$, auf den Bahnen von $S_3$ auf den Paaren $(x,y)$ konstant sind, d. h. auf
-Tripeln von Elementen von $\{0,1\}^2$, und es gibt $\binom63=20$ solche Bahnen (Multimengen der
-Größe $3$ aus $4$ Elementen). Aus $\sum_ck_c^2=5$ folgt $k=(1,2)$ oder $k=(1,1,1,1,1)$. Im ersten
-Fall ergeben $m_1+2m_2=8$ und $m_1^2+m_2^2=20$ die Lösung $m=(4,2)$. Im zweiten Fall müssen fünf
-positive ganze Zahlen mit Summe $8$ und Quadratsumme $20$ gleich $m=(4,1,1,1,1)$ sein; dann wäre
-aber $\pi(S_3)''$ kommutativ, während die Transpositionen $(12)$ und $(23)$ nicht vertauschen:
-$\pi((12))\pi((23))|001\rangle=|100\rangle$, aber $\pi((23))\pi((12))|001\rangle=|010\rangle$.
-Also ist $k=(1,2)$ und $m=(4,2)$. Die eindimensionale Darstellung $\rho_1$ ist die triviale oder
-die Signumsdarstellung. Sie ist nicht das Signum: Jeder Basisvektor $|b_1b_2b_3\rangle$ hat zwei
-gleiche Bits und wird daher von einer Transposition $t$ festgehalten, und
-$A=\sum_g\operatorname{sgn}(g)\pi(g)$, das $A\pi(t)=-A$ erfüllt, liefert
-$A|b_1b_2b_3\rangle=A\pi(t)|b_1b_2b_3\rangle=-A|b_1b_2b_3\rangle$; also ist $A=0$, und die
-Signumsdarstellung tritt nicht auf. Somit ist $\rho_1$ trivial, ihre $4$ Kopien spannen den
-symmetrischen Unterraum auf, und $\rho_2$ ist eine irreduzible zweidimensionale Darstellung
-(Proposition 2.7): die Standarddarstellung. $\square$
+*Beweis.* Man schreibe $V^*\pi(S_3)''V=\bigoplus_cM_{k_c}\otimes1_{m_c}$ (Satz 2.6), sodass
+$\sum_ck_cm_c=8$ und $\sum_cm_c^2=\dim\pi(S_3)'$.
+
+*Schritt 1: $\dim\pi(S_3)'=20$.* Wegen $\pi(g)^*|g\cdot x\rangle=|x\rangle$ hat die Matrix
+$\pi(g)X\pi(g)^*$ den Eintrag $X_{xy}$ an der Position $(g\cdot x,g\cdot y)$. Daher ist $X\in\pi(S_3)'$, d. h.
+$\pi(g)X\pi(g)^*=X$ für alle $g$, genau dann, wenn $(x,y)\mapsto X_{xy}$ konstant auf den Bahnen von $S_3$ ist, das
+auf Paaren $(x,y)$ durch $g\cdot(x,y)=(g\cdot x,g\cdot y)$ wirkt; die Indikatormatrizen der Bahnen bilden eine Basis von
+$\pi(S_3)'$, dessen Dimension also die Anzahl der Bahnen ist. Ein Paar $(x,y)$ ist ein Tripel
+$\big((x_1,y_1),(x_2,y_2),(x_3,y_3)\big)$ von Elementen der vierelementigen Menge $\{0,1\}^2$, und $S_3$
+permutiert die drei Komponenten; eine Bahn ist also eine Multimenge der Größe $3$ aus vier Elementen: $4$ der Form
+$\{a,a,a\}$, $4\cdot3=12$ der Form $\{a,a,b\}$ mit $b\neq a$ und $4$ der Form $\{a,b,c\}$ mit
+paarweise verschiedenen Elementen, insgesamt $20$.
+
+*Schritt 2: $k=(1,2)$, $m=(4,2)$.* Wegen $k_c\ge1$ ist $\sum_cm_c\le\sum_ck_cm_c=8$. Sei $M=\max_cm_c$.
+Dann gilt $20=\sum_cm_c^2\le M\sum_cm_c\le8M$ und $M^2\le20$, also $M\in\{3,4\}$. Ist $M=4$, so haben die übrigen
+$m_c$ die Quadratsumme $4$, sind also $(2)$ oder $(1,1,1,1)$. Ist $M=3$, so haben die übrigen $m_c$ die
+Quadratsumme $11$ und eine Summe von höchstens $5$; wären alle $\le2$, so wäre ihre Quadratsumme höchstens
+$2\cdot5=10$, also ist eines von ihnen gleich $3$, und die restlichen haben die Quadratsumme $2$: Sie sind $(1,1)$.
+Folglich ist $m$ bis auf die Reihenfolge $(4,2)$, $(4,1,1,1,1)$ oder $(3,3,1,1)$. In den letzten beiden Fällen
+erzwingt $\sum_cm_c=8=\sum_ck_cm_c$, dass alle $k_c=1$ sind, und dann wäre $\pi(S_3)''\cong\bigoplus_cM_1$
+kommutativ, während die Transpositionen $(12)$ und $(23)$ nicht vertauschen:
+$\pi((12))\pi((23))|001\rangle=|100\rangle$, aber $\pi((23))\pi((12))|001\rangle=|010\rangle$. Also ist
+$m=(4,2)$ (wobei die Summanden so nummeriert sind, dass $m_1=4$), und $4k_1+2k_2=8$ mit $k_1,k_2\ge1$ ergibt $k=(1,2)$. Insbesondere ist
+$\dim\pi(S_3)''=\sum_ck_c^2=5$.
+
+*Schritt 3: die triviale und die Signumsdarstellung.* $\rho_2$ hält keinen von null verschiedenen Vektor $u$ fest: Die Gerade
+$\mathbb Cu$ wäre ein invarianter Unterraum von $\mathbb C^2$, im Widerspruch zur Irreduzibilität
+(Proposition 2.7). Man schreibe $V^*v=v_1\oplus v_2$ mit $v_1\in\mathbb C^1\otimes\mathbb C^4$ und
+$v_2=\sum_{r=1}^2u_r\otimes f_r\in\mathbb C^2\otimes\mathbb C^2$ ($f_1,f_2$ die Standardbasis). Dann ist
+$v\in F$ genau dann, wenn $\rho_1(g)v_1=v_1$ und $\rho_2(g)u_r=u_r$ für alle $g$ und $r$; also hat jedes $v\in F$
+die Komponente $v_2=0$. Der von null verschiedene Vektor $|000\rangle$ liegt in $F$, also hält der Skalar $\rho_1(g)$ einen von null verschiedenen Vektor fest:
+$\rho_1$ ist trivial, $F=V(\mathbb C^1\otimes\mathbb C^4)$ hat die Dimension $4$, und sein orthogonales
+Komplement ist $V(\mathbb C^2\otimes\mathbb C^2)$. Die Signumsdarstellung ist weder zu
+$\rho_1$ äquivalent (da $\operatorname{sgn}(12)=-1$) noch zu $\rho_2$ (die Dimensionen sind verschieden); nach der oben gezeigten
+Eindeutigkeit der Vielfachheiten tritt sie also $0$-mal auf.
+
+*Schritt 4: $\rho_2$ ist die Standarddarstellung.* Die Vektoren $e_1=|100\rangle$, $e_2=|010\rangle$,
+$e_3=|001\rangle$ werden von den $\pi(\sigma)$ so permutiert, wie $\sigma$ die Positionen permutiert; also ist
+$W=\{\sum_ix_ie_i:\sum_ix_i=0\}$ invariant, und $\pi$ wirkt darauf durch die Standarddarstellung.
+$W\perp F$: Für $v\in F$ und $w=\sum_ix_ie_i\in W$ ist $\langle v,w\rangle=\langle\pi(g)v,w\rangle=\langle v,\pi(g)^{-1}w\rangle$
+für jedes $g$, also $\langle v,w\rangle=\langle v,\frac16\sum_g\pi(g)w\rangle$, und
+$\frac16\sum_g\pi(g)w=\frac13\big(\sum_ix_i\big)(e_1+e_2+e_3)=0$ (jedes $e_i$ wird von
+genau zwei der sechs Permutationen auf jedes $e_j$ abgebildet). Daher ist $V^*W\subseteq\mathbb C^2\otimes\mathbb C^2$. Die Abbildungen
+$T_r:\mathbb C^2\otimes\mathbb C^2\to\mathbb C^2$, $u\otimes f\mapsto\langle f_r,f\rangle u$, erfüllen
+$T_r(\rho_2(g)\otimes1)=\rho_2(g)T_r$. Man wähle $r$ mit $T_rV^*|_W\neq0$ (verschwänden beide, so wäre $V^*W$
+gleich $0$). Dann ist $T_rV^*|_W$ ein von null verschiedener Verflechtungsoperator von $\pi|_W$ nach $\rho_2$; sein Bild ist ein von null
+verschiedener invarianter Unterraum von $\mathbb C^2$, also $\mathbb C^2$, und wegen $\dim W=2$ ist er bijektiv. Also ist $\rho_2$
+äquivalent zur Standarddarstellung (die nebenbei irreduzibel ist). $\square$
+
+Der Code unten bestätigt die beiden Dimensionen numerisch: Die Kommutante einer Menge $S$ ist der
+Kern der linearen Abbildung $X\mapsto(AX-XA)_{A\in S}$, dessen Dimension hier in Gleitkommaarithmetik
+berechnet wird, indem die Singulärwerte oberhalb einer Toleranz gezählt werden. Das ist eine Kontrolle der eben
+bewiesenen Werte, nicht Teil des Beweises.
 
 ```python
 import itertools
@@ -319,33 +374,46 @@ def span_dim(ops, tol=1e-10):
 
 comm = commutant_basis(group)
 print(len(comm), span_dim(group), len(commutant_basis(comm)))
-assert len(comm) == 20                                   # pi(S3)'  = M_4 (+) M_2
-assert span_dim(group) == 5                              # pi(S3)'' = M_1 (+) M_2
+assert len(comm) == 20                                   # Step 1: pi(S3)'  = M_4 (+) M_2
+assert span_dim(group) == 5                              # Step 2: pi(S3)'' = M_1 (+) M_2
 assert len(commutant_basis(comm)) == 5                   # double commutant theorem
 ```
 
-Die Vielfachheiten sind im Spektrum sichtbar. Die Mittelung über die Gruppe,
-$X\mapsto\frac1{|G|}\sum_g\pi(g)X\pi(g)^*$, bildet jeden Operator in die Kommutante ab
-(Aufgabe 3). Ein zufälliges selbstadjungiertes Element von $\pi(S_3)'$ hat daher (fast
-sicher) $4$ einfache Eigenwerte auf dem symmetrischen Unterraum und $2$ zweifach entartete
-auf dessen Komplement, weil der Block von $\pi(S_3)'$ dort $1_2\otimes M_2$ ist; der Code
-überprüft die entarteten Paare.
+Die Vielfachheiten sind im Spektrum sichtbar. Jedes selbstadjungierte $K\in\pi(S_3)'$ hat die Form
+$V^*KV=(1_1\otimes\kappa_1)\oplus(1_2\otimes\kappa_2)$ mit selbstadjungierten $\kappa_1\in M_4$, $\kappa_2\in M_2$
+(Satz 2.6). Auf $F$ sind seine Eigenwerte die von $\kappa_1$; auf dem Komplement von $F$ sind es die
+von $\kappa_2$, jeder doppelt, da $1_2\otimes\kappa_2$ aus zwei Kopien von $\kappa_2$ besteht. Also hat *jeder* Eigenwert von
+$K$ auf dem Komplement von $F$ gerade Vielfachheit. Für ein zufälliges $K$ gilt mehr. Die Mittelung über die
+Gruppe, $E(X)=\frac1{|G|}\sum_g\pi(g)X\pi(g)^*$, bildet $M_8(\mathbb C)$ auf die Kommutante ab und ist dort
+die Identität (Aufgabe 3); für eine Ginibre-Matrix $Z$ (unabhängige komplexe Standard-Gauß-Einträge)
+hat $K=E(Z+Z^*)$ daher eine Dichte auf dem reellen Vektorraum $\pi(S_3)'_h$ der selbstadjungierten Elemente
+(Satz A.15 und die anschließende Bemerkung). Nach Proposition 4.7(a) (ein Vorgriff; ihr Beweis verwendet
+Satz 2.6 und Anhang A, nicht diesen Absatz) sind mit Wahrscheinlichkeit eins die sechs
+Eigenwerte von $\kappa_1$ und $\kappa_2$ paarweise verschieden: $K$ hat dann $4$ einfache Eigenwerte auf $F$ und
+$2$ zweifach entartete auf dessen Komplement. Der Code überprüft die entarteten Paare (die für jedes $K$ gelten)
+und, für das gezogene $K$, dass die beiden Paare und die vier Eigenwerte auf $F$ verschieden sind; dabei wird verwendet, dass
+$P_F=\frac1{|G|}\sum_g\pi(g)$ die Orthogonalprojektion auf $F$ ist ($\pi(h)P_F=P_F$ für alle $h$, also liegt ihr
+Bild in $F$; $P_Fv=v$ für $v\in F$; und $P_F^*=P_F$ durch die Substitution $g\to g^{-1}$).
 
 ```python
 def group_average(X):
     return sum(g @ X @ g.conj().T for g in group) / len(group)
 
-H0 = torch.randn(8, 8, dtype=dt)
-Hsym = group_average(H0 + H0.conj().T)                  # a random symmetric Hamiltonian
+H0 = torch.randn(8, 8, dtype=dt)                        # Ginibre: Re, Im independent N(0, 1/2)
+Hsym = group_average(H0 + H0.conj().T)                  # K = E(Z + Z^*), a random symmetric Hamiltonian
 assert all(torch.allclose(g @ Hsym, Hsym @ g) for g in group)
 
-P_sym = sum(group) / len(group)                         # projection onto the symmetric subspace
+P_sym = sum(group) / len(group)                         # P_F, the projection onto the symmetric subspace
 w, Q = torch.linalg.eigh(P_sym)
 Q_rest = Q[:, w.real < 0.5]                             # orthonormal basis of the complement (dim 4)
 e_rest = torch.linalg.eigvalsh(Q_rest.conj().T @ Hsym @ Q_rest)
 print(e_rest)
 assert Q_rest.shape[1] == 4
-assert torch.allclose(e_rest[0], e_rest[1]) and torch.allclose(e_rest[2], e_rest[3])
+assert torch.allclose(e_rest[0], e_rest[1]) and torch.allclose(e_rest[2], e_rest[3])   # even multiplicities
+e_sym = torch.linalg.eigvalsh(Q[:, w.real > 0.5].conj().T @ Hsym @ Q[:, w.real > 0.5])   # eigenvalues on F
+assert e_sym.shape[0] == 4 and e_rest[2] - e_rest[1] > 1e-6                           # this sample: generic
+assert (e_sym[1:] - e_sym[:-1]).min() > 1e-6                                           # 4 simple eigenvalues on F
+assert (e_sym[:, None] - e_rest[None, :]).abs().min() > 1e-6                           # all six distinct
 ```
 
 ## 2.5 Die Algebra in der Bibliothek
@@ -386,19 +454,20 @@ assert close(A @ P0 + A @ P1, A)                         # A = sum_c A P_c
 ## 2.6 Bedingte Erwartungen
 
 Eine **bedingte Erwartung** von $\mathcal M$ auf eine von-Neumann-Unteralgebra
-$\mathcal N\subseteq\mathcal M$ ist eine lineare Abbildung $E:\mathcal M\to\mathcal N$, die
-positiv ist ($A\ge0\Rightarrow E(A)\ge0$), $E(B)=B$ für $B\in\mathcal N$ erfüllt und eine
+$\mathcal N\subseteq\mathcal M$ (eine in $\mathcal M$ enthaltene $*$-Algebra mit demselben Einselement) ist eine
+lineare Abbildung $E:\mathcal M\to\mathcal N$, die positiv ist ($A\ge0\Rightarrow E(A)\ge0$), $E(B)=B$ für $B\in\mathcal N$ erfüllt und eine
 $\mathcal N$-Bimodulabbildung ist: $E(B_1AB_2)=B_1E(A)B_2$ für $B_1,B_2\in\mathcal N$.
 
-**Proposition 2.8.** Für $\mathcal M=\bigoplus_cM_{k_c}$ und $\mathcal N=Z(\mathcal M)$ ist
+**Proposition 2.8.** Für $\mathcal M=\bigoplus_cM_{k_c}$ auf $\bigoplus_c\mathbb C^{k_c}$, mit $P_c$ der Projektion auf
+den $c$-ten Block, und $\mathcal N=Z(\mathcal M)=\operatorname{span}\{P_1,\dots,P_C\}$ (Aufgabe 1) ist
 $$
 E(A)=\sum_c\frac{\operatorname{Tr}A_c}{k_c}\,P_c
 $$
 eine bedingte Erwartung. Sie erhält jede Spur der Form
 $\sum_cw_c\operatorname{Tr}A_c$.
 
-*Beweis.* Die Linearität ist klar; aus $A\ge0$ folgt $\operatorname{Tr}A_c\ge0$, also
-$E(A)\ge0$. Für $B=\sum_cb_cP_c$ ist $E(B)=\sum_cb_ck_cP_c/k_c=B$. Für $B_i=\sum_cb^{(i)}_cP_c$ ist
+*Beweis.* Die Linearität ist klar; aus $A\ge0$ folgt $\operatorname{Tr}A_c=\sum_i\langle e_i,Ae_i\rangle\ge0$
+(Summe über die Standardbasisvektoren $e_i$ des $c$-ten Blocks), also $E(A)\ge0$. Für $B=\sum_cb_cP_c$ ist $E(B)=\sum_cb_ck_cP_c/k_c=B$. Für $B_i=\sum_cb^{(i)}_cP_c$ ist
 $\operatorname{Tr}(B_1AB_2)_c=b^{(1)}_cb^{(2)}_c\operatorname{Tr}A_c$, woraus die
 Bimoduleigenschaft folgt. Schließlich ist $\operatorname{Tr}(E(A)_c)=\operatorname{Tr}A_c$ für jedes $c$. $\square$
 
@@ -412,23 +481,35 @@ assert close(E(EA), EA)                                  # idempotent
 assert close(E(Z @ A @ P1), Z @ EA @ P1)                 # bimodule property
 A2 = alg.from_blocks([torch.randn(4, 4, dtype=dt), torch.randn(2, 2, dtype=dt)])
 assert close(EA @ A2, A2 @ EA)                           # E(A) commutes with a fresh element
-for c in range(alg.C):                                   # Tr E(A)_c = Tr A_c
-    assert abs(EA.matrix[0, c].diagonal().sum() - A.matrix[0, c].diagonal().sum()) < 1e-10
+for c, k in enumerate(alg.k_factors):                    # E(A)_c = (Tr A_c / k_c) 1, so Tr E(A)_c = Tr A_c
+    trA = A.matrix[0, c].diagonal().sum()
+    assert close(EA.matrix[0, c, :k, :k], trA / k * torch.eye(k, dtype=dt))
+    assert abs(EA.matrix[0, c].diagonal().sum() - trA) < 1e-10
 ```
 
 Die Gruppenmittelung aus Abschnitt 2.4 ist eine bedingte Erwartung auf die Kommutante
-$\pi(G)'$ innerhalb von $M_n(\mathbb C)$, und sie erhält $\operatorname{Tr}$ (Aufgabe 3).
-(Bedingte Erwartungen sind im Allgemeinen nicht eindeutig: Auf $\mathbb C1$ liefert jeder
-Zustand $\varphi$ eine, nämlich $A\mapsto\varphi(A)1$.) Beides sind Beispiele derselben Idee:
+$\pi(G)'$ innerhalb von $M_n(\mathbb C)$, und sie erhält $\operatorname{Tr}$ (Aufgabe 3). Ebenso ist auf der
+vollen Matrixalgebra $M_D(\mathbb C)$, $D=\sum_ck_c$, die $\mathcal M=\bigoplus_cM_{k_c}$ als ihre
+Blockdiagonalmatrizen enthält, die Abbildung $E_{\mathcal M}(X)=\sum_cP_cXP_c$ eine bedingte Erwartung auf
+$\mathcal M$, die $\operatorname{Tr}$ erhält. *Beweis.* $P_cXP_c$ verschwindet außerhalb des $c$-ten Diagonalblocks,
+also ist $E_{\mathcal M}(X)\in\mathcal M$. Für $X\ge0$ ist $\langle v,P_cXP_cv\rangle=\langle P_cv,XP_cv\rangle\ge0$. Ein Element
+$B\in\mathcal M$ ist blockdiagonal, also $BP_c=P_cB$ und $B=\sum_cP_cBP_c$; daher ist $E_{\mathcal M}(B)=B$ und
+$E_{\mathcal M}(B_1XB_2)=\sum_cB_1P_cXP_cB_2=B_1E_{\mathcal M}(X)B_2$ für $B_1,B_2\in\mathcal M$. Schließlich ist
+$\sum_c\operatorname{Tr}(P_cXP_c)=\sum_c\operatorname{Tr}(P_cX)=\operatorname{Tr}X$. $\square$
+
+Für einen **Zustand** $\omega$ auf $\mathcal M$ (ein lineares Funktional mit $\omega(A^*A)\ge0$ für alle $A$ und $\omega(1)=1$;
+Zustände werden in Kapitel 3 untersucht) liefern Proposition 2.8 und die Linearität
+$\omega(E(A))=\sum_c\omega(P_c)\operatorname{Tr}(A_c)/k_c$, und $\omega\circ E=\omega$ auf dem Zentrum, da dort
+$E(z)=z$ gilt. (Bedingte Erwartungen sind im Allgemeinen nicht eindeutig: Auf $\mathbb C1$ liefert jeder
+Zustand $\varphi$ eine, nämlich $A\mapsto\varphi(A)1$; auf $M_2(\mathbb C)$ liefern die Zustände $A\mapsto A_{11}$ und
+$A\mapsto A_{22}$ zwei verschiedene.) All dies sind Beispiele derselben Idee:
 die Projektion auf diejenigen Operatoren, die eine gewisse Struktur „nicht sehen“.
 
-> **Physikalische Bedeutung.** Auf der vollen Matrixalgebra $M_D(\mathbb C)$, $D=\sum_ck_c$, ist
-> die Abbildung $X\mapsto\sum_cP_cXP_c$ die bedingte Erwartung auf $\mathcal M$: Sie löscht die
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Die Abbildung $E_{\mathcal M}$ löscht die
 > Kohärenzen zwischen Superauswahlsektoren, und genau das geschieht, wenn man die Ladung (den
 > Sektor) misst, ohne das Ergebnis zu notieren. Die bedingte Erwartung $E$ auf das Zentrum geht
-> weiter: Sie behält nur die klassische Information, das Gewicht $p_c$ jedes Sektors, und ersetzt
-> den Zustand innerhalb jedes Sektors durch den maximal gemischten. Ein Zustand $\omega$ und der
-> Zustand $\omega\circ E$ stimmen auf jeder Observablen überein, die nur fragt: „Welcher Sektor?“
+> weiter: Sie behält nur die klassische Information, das Gewicht $\omega(P_c)$ jedes Sektors, und ersetzt
+> den Zustand innerhalb jedes Sektors durch den maximal gemischten (die normierte Spur $\operatorname{Tr}(A_c)/k_c$).
 
 ## 2.7 Womit man vergleichen sollte
 
@@ -459,13 +540,16 @@ weiteren Rechnungen – Funktionen, Spuren, Zustände, Kanäle, Dynamik – inne
    direkten Summe ist ein Element $\bigoplus X_c$ genau dann zentral, wenn jedes $X_c$ es
    ist; das Zentrum ist also $\{\bigoplus_cz_c1_{k_c}\}$ und hat die Dimension $C$.
 
-2. $S$ ist unitär mit den Eigenwerten $1,\omega,\omega^2$, $\omega=e^{2\pi i/3}$, jeder einfach.
+2. $S$ ist unitär mit den Eigenwerten $1,\omega,\omega^2$, $\omega=e^{2\pi i/3}$, jeder einfach: Die
+   Vektoren $u_j=\sum_i\omega^{-ij}e_i$ ($j=0,1,2$) erfüllen $Su_j=\omega^ju_j$ und sind orthogonal.
    Ein mit $S$ vertauschbarer Operator erhält dessen Eigenräume, ist also in der
-   Eigenbasis diagonal: $\{S\}'\cong\mathbb C^3$, die zirkulanten Matrizen. Dann ist auch
-   $\{S\}''\cong\mathbb C^3$, denn in der Eigenbasis von $S$ ist eine Matrix, die mit allen
+   Eigenbasis diagonal, und jede Diagonalmatrix kommutiert mit $S$: $\{S\}'\cong\mathbb C^3$. Sie enthält
+   $1,S,S^2$, die in der Eigenbasis $\operatorname{diag}(\lambda^0)$, $\operatorname{diag}(\lambda)$,
+   $\operatorname{diag}(\lambda^2)$ für $\lambda=(1,\omega,\omega^2)$ sind, linear unabhängig (Vandermonde: Die Eigenwerte
+   sind paarweise verschieden); also ist $\{S\}'=\operatorname{span}\{1,S,S^2\}$, die zirkulanten Matrizen. Dann ist auch
+   $\{S\}''=\{S\}'$, denn in der Eigenbasis von $S$ ist eine Matrix, die mit allen
    Diagonalmatrizen kommutiert, diagonal (man vergleiche die Einträge von $XD$ und $DX$
-   für ein $D$ mit paarweise verschiedenen Diagonaleinträgen); sie wird von $1,S,S^2$
-   aufgespannt (Vandermonde: Die Eigenwerte sind paarweise verschieden).
+   für ein $D$ mit paarweise verschiedenen Diagonaleinträgen).
 
 ```python
 S = torch.roll(torch.eye(3, dtype=dt), 1, dims=0)
