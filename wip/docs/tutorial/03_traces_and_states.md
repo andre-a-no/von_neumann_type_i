@@ -81,9 +81,10 @@ $$
 $\mathcal M$, there is a unique $R$ with $\omega(A)=\langle R,A\rangle_w=\operatorname{tr}_w(R^*A)$; set
 $\rho_w=R^*$. If $\rho_w\ge0$, then
 $\omega(A^*A)=\sum_cw_c\operatorname{Tr}(A_c\,(\rho_w)_c\,A_c^*)\ge0$, since
-$A_c(\rho_w)_cA_c^*\ge0$ (Corollary 1.7 with $T=(\rho_w)_c^{1/2}A_c^*$). Conversely, if
+$A_c(\rho_w)_cA_c^*\ge0$ (Corollary 1.7 with $T=(\rho_w)_c^{1/2}A_c^*$), a positive matrix has trace
+$\ge0$ (its eigenvalues are $\ge0$, Corollary 1.4(3)) and $w_c>0$. Conversely, if
 $\omega$ is positive, take $x\in\mathbb C^{k_c}$ and $A$ the rank-one operator
-$|x\rangle\langle x|$ in block $c$; then $A=A^*A/\|x\|^2$ and
+$|x\rangle\langle x|$ in block $c$ ($x\neq0$); then $A=A^*A/\|x\|^2$ and
 $0\le\omega(A)=w_c\langle x,(\rho_w)_cx\rangle$, so $(\rho_w)_c\ge0$. The normalisation is
 $\omega(1)=\operatorname{tr}_w(\rho_w)$. Finally both $\sum_cw_c\operatorname{Tr}((\rho_w)_cA_c)$ and
 $\sum_cw'_c\operatorname{Tr}((\rho_{w'})_cA_c)$ equal $\omega(A)$ for all $A$, so $\bigoplus_cw_c(\rho_w)_c$ and
@@ -120,11 +121,16 @@ $$
 \rho=\bigoplus_cp_c\,\sigma_c
 $$
 (if $p_c=0$ then $\rho_c=0$, since the eigenvalues of $\rho_c\ge0$ are $\ge0$ with sum
-$\operatorname{Tr}\rho_c=0$, Corollary 1.4(3); the term is omitted).
-A state on $\mathcal M$ is a classical mixture of quantum states in the sectors. Measuring
-"which sector" does not disturb it: the measurement channel
+$\operatorname{Tr}\rho_c=0$, Corollary 1.4(3), hence all $0$, and $\rho_c$ is unitarily diagonalisable,
+Theorem 1.3; the term is omitted).
+So every state on $\mathcal M$ is a convex combination of states of the sectors. The map
 $\rho\mapsto\sum_cP_c\rho P_c$ is the identity on $\mathcal M$, because every element of
-$\mathcal M$ is block diagonal. This is the operational content of a superselection rule.
+$\mathcal M$ is block diagonal.
+
+> **Physical meaning** (physical interpretation, not a theorem of this course). A state on
+> $\mathcal M$ is a classical mixture of quantum states in the sectors. The map
+> $\rho\mapsto\sum_cP_c\rho P_c$ is the measurement of "which sector", and it does not disturb
+> any state of $\mathcal M$. This is the operational content of a superselection rule.
 
 ```python
 p = rho.sector_probabilities()                                   # shape (batch, C)
@@ -139,7 +145,8 @@ assert (measure_sector(rho).matrix - rho.matrix).abs().max() < 1e-12   # no dist
 The **von Neumann entropy** of a state with (blunt) density $\rho$ is
 $S(\rho)=-\operatorname{Tr}\rho\log\rho=-\sum_i\lambda_i\log\lambda_i$ over the eigenvalues of
 $\rho$, with $0\log0=0$; that is, $\rho\log\rho:=f(\rho)$ for $f(t)=t\log t$, $f(0)=0$, and
-$\operatorname{Tr}f(\rho)=\sum_if(\lambda_i)$ by Theorem 1.5(c).
+$\operatorname{Tr}f(\rho)=\sum_if(\lambda_i)$ by the definition of $f(\rho)=U\,\mathrm{diag}(f(\lambda_i))\,U^*$
+(Section 1.3).
 
 **Theorem 3.3 (entropy of a mixture of sectors).** With $p_c$ and $\sigma_c$ as above
 (sectors with $p_c=0$ omitted),
@@ -188,7 +195,8 @@ $S(\rho\|\sigma)=\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\rho\log\sigma$,
 $\operatorname{Tr}\rho\log\rho:=\sum_i\lambda_i\log\lambda_i$ over the eigenvalues of $\rho$, with
 $0\log0=0$ (and likewise in each block). It does not depend on the trace: by Theorem 3.2,
 $(\rho_w)_c=\rho_c/w_c$ and $(\sigma_w)_c=\sigma_c/w_c$, so the eigenvalues of $(\rho_w)_c$ are those of
-$\rho_c$ divided by $w_c$, $\log(\sigma_c/w_c)=\log\sigma_c-(\log w_c)1$ (Theorem 1.5(c)), and both $\operatorname{tr}_w(\rho_w\log\rho_w)$ and
+$\rho_c$ divided by $w_c$, $\log(\sigma_c/w_c)=\log\sigma_c-(\log w_c)1$ (if $\sigma_c=U\,\mathrm{diag}(s_i)\,U^*$, then
+$\sigma_c/w_c=U\,\mathrm{diag}(s_i/w_c)\,U^*$, and Theorem 1.5(a)), and both $\operatorname{tr}_w(\rho_w\log\rho_w)$ and
 $\operatorname{tr}_w(\rho_w\log\sigma_w)$ differ from $\operatorname{Tr}\rho\log\rho$ and
 $\operatorname{Tr}\rho\log\sigma$ by the same amount $-\sum_cp_c\log w_c$ (the logarithm of $\rho$
 is only needed on its support, by the convention $0\log0=0$). The difference is unchanged.
@@ -211,7 +219,8 @@ $[\xi_1,\xi_2]$, as $f''>0$ there. Multiplying by $t(1-t)(y-x)>0$ gives
 $(1-t)\big(f(z)-f(x)\big)<t\big(f(y)-f(z)\big)$, i.e. $f(z)<(1-t)f(x)+tf(y)$. $\square$
 
 **Theorem 3.5 (Klein's inequality).** Let $f:I\to\mathbb R$ be convex on an interval $I$,
-and $X,Y$ self-adjoint with spectra in $I$, with $f$ differentiable at every eigenvalue of $Y$.
+and $X,Y$ self-adjoint with spectra in $I$, with $f$ differentiable at every eigenvalue of $Y$
+(one-sided at an endpoint of $I$).
 Then $\operatorname{Tr}[f(X)-f(Y)-(X-Y)f'(Y)]\ge0$. If $f$ is strictly convex, equality holds
 only for $X=Y$.
 
@@ -247,7 +256,8 @@ $$
 where $E$ is the conditional expectation onto the centre (Proposition 2.8).
 
 *Proof.* For $p_c>0$, $\operatorname{Tr}\rho_c\log\rho_c=p_c\log p_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\rho_c$
-(eigenvalues $p_c\mu$, as in Theorem 3.3) and $\log\sigma_c=(\log q_c)1+\log\hat\sigma_c$ (Theorem 1.5(c)), so
+(eigenvalues $p_c\mu$, as in Theorem 3.3) and $\log\sigma_c=(\log q_c)1+\log\hat\sigma_c$ (diagonalise
+$\hat\sigma_c=U\,\mathrm{diag}(s_i)\,U^*$, so $\sigma_c=U\,\mathrm{diag}(q_cs_i)\,U^*$, and use Theorem 1.5(a)), so
 $\operatorname{Tr}\rho_c\log\sigma_c=p_c\log q_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\sigma_c$ and
 $\operatorname{Tr}\rho_c\log\rho_c-\operatorname{Tr}\rho_c\log\sigma_c=p_c\log(p_c/q_c)+p_cS(\hat\rho_c\|\hat\sigma_c)$.
 If $p_c=0$, then $\rho_c=0$ and the sector contributes $0$.
@@ -256,11 +266,16 @@ $\hat\rho_c$ and $\hat\sigma_c>0$. Finally
 $E\rho=\bigoplus_c(p_c/k_c)1_{k_c}$ and $E\sigma=\bigoplus_c(q_c/k_c)1_{k_c}>0$ are states; $E\rho$ is the density of
 the state $\omega\circ E$ (where $\omega(A)=\operatorname{Tr}\rho A$), since
 $\operatorname{Tr}(\rho E(A))=\sum_cp_c\operatorname{Tr}(A_c)/k_c=\operatorname{Tr}(E(\rho)A)$. And
-$\operatorname{Tr}E\rho(\log E\rho-\log E\sigma)=\sum_ck_c\frac{p_c}{k_c}\log\frac{p_c}{q_c}$. $\square$
+$S(E\rho\|E\sigma)=\sum_ck_c\frac{p_c}{k_c}\big(\log\frac{p_c}{k_c}-\log\frac{q_c}{k_c}\big)=\sum_cp_c\log\frac{p_c}{q_c}$, the eigenvalues of
+$E\rho$ in block $c$ being $p_c/k_c$ ($k_c$ times) and sectors with $p_c=0$ contributing $0$. $\square$
 
-So forgetting the quantum information inside the sectors can only decrease the
-distinguishability of two states; what remains is the classical Kullback–Leibler
-divergence of the sector distributions.
+So replacing both states by their images under $E$ can only decrease the relative entropy; what
+remains is the Kullback–Leibler divergence $\sum_cp_c\log(p_c/q_c)$ of the sector distributions.
+
+> **Physical meaning** (physical interpretation, not a theorem of this course). Relative entropy
+> measures how well two states can be distinguished. Forgetting the quantum information inside the
+> sectors can only make two states harder to distinguish; what remains is the classical
+> distinguishability of the charge distributions.
 
 ```python
 sigma_state = states.random_density_matrix(alg, batch_size=4)
@@ -284,9 +299,11 @@ from a multiple of the identity: $\Delta(A)=0$ iff $A=\lambda1$.
 **Proposition 3.8.** If $\Phi:\mathcal M\to\mathcal M$ is linear, positive and unital
 ($\Phi(1)=1$), then $\Delta(\Phi(A))\le\Delta(A)$ for all $A\ge0$.
 
-*Proof.* $\lambda_{\min}1\le A\le\lambda_{\max}1$, and positivity and unitality give
-$\lambda_{\min}1\le\Phi(A)\le\lambda_{\max}1$. Hence
-$\Phi(A)\ge0$ (as $\lambda_{\min}\ge0$), $\lambda_{\min}(\Phi(A))\ge\lambda_{\min}$ and
+*Proof.* $\lambda_{\min}1\le A\le\lambda_{\max}1$ (Corollary 1.4(3) for $A-\lambda_{\min}1$ and
+$\lambda_{\max}1-A$), and positivity, linearity and unitality give
+$\lambda_{\min}1\le\Phi(A)\le\lambda_{\max}1$. Hence $\Phi(A)$ is self-adjoint (a positive matrix is,
+Corollary 1.4(3)),
+$\Phi(A)\ge0$ (as $\lambda_{\min}\ge0$), and by Corollary 1.4(3) $\lambda_{\min}(\Phi(A))\ge\lambda_{\min}$ and
 $\lambda_{\max}(\Phi(A))\le\lambda_{\max}$. If $\Phi(A)=0$ the claim is trivial. Otherwise $A\neq0$, both
 $\lambda_{\max}$ and $\lambda_{\max}(\Phi(A))$ are $>0$, and with $r=\lambda_{\min}/\lambda_{\max}\in[0,1]$,
 $\Delta=(1-r)/(1+r)$ is decreasing in $r$, and $r(\Phi(A))\ge r(A)$. $\square$
@@ -322,7 +339,7 @@ $\lambda\|R\|_2^2=\langle R,WR\rangle_{HS}=\|R\|_2^2$ gives $\lambda=1$. So $W|Y
 matrix is self-adjoint, so $YX=(YX)^*=XY$. $\square$
 
 The library finds the maximiser with the polar decomposition: by Theorem 1.9, for $YX=W|YX|$ the
-unitary $U=W^*$ attains $\|YX\|_1$. Random search does much worse. For a Haar-distributed $U$
+unitary $U=W^*$ attains $\|YX\|_1$. Random search is worse on average: for a Haar-distributed $U$
 (Theorem 5.3; the library samples $U$ in this way), Proposition 11.11 with $A=YX$ gives
 $\big(\mathbb E|\operatorname{Tr}(XUY)|^2\big)^{1/2}=\|YX\|_2/\sqrt k\le\|YX\|_1/\sqrt k=\max_V|\operatorname{Tr}(XVY)|/\sqrt k$
 (as $\sum_is_i^2\le(\sum_is_i)^2$), and Corollary 11.12 shows that for $X,Y$ with spectra in
@@ -405,8 +422,8 @@ assert abs(tau.von_neumann_entropy().item() - (math.log(3) + sum(math.log(k) for
    $\frac12|\psi_1\rangle\langle\psi_1|\oplus\frac12|\psi_2\rangle\langle\psi_2|$ with $S=\log2$. Restricted to
    $\mathcal M$, however, the vector state of $\psi$ coincides with the mixture:
    $\langle\psi,A\psi\rangle=\tfrac12\langle\psi_1,A_1\psi_1\rangle+\tfrac12\langle\psi_2,A_2\psi_2\rangle$
-   for all $A\in\mathcal M$. No observable in $\mathcal M$ detects the coherence, which is the
-   content of a superselection rule.
+   for all $A\in\mathcal M$. No element of $\mathcal M$ detects the coherence (physically, this is
+   the content of a superselection rule).
 
 </details>
 

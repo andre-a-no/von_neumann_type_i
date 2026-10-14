@@ -119,10 +119,12 @@ Let $e\in\mathcal N$ be a nonzero projection of minimal rank. We claim
 $e\mathcal Ne=\mathbb Ce$. Let $x=x^*\in e\mathcal Ne$. Each spectral projection $q$ of $x$
 for a nonzero eigenvalue $\lambda$ is $q=p(x)$, where $p$ is the Lagrange polynomial with
 $p(\lambda)=1$ and $p(\mu)=0$ for $\mu\in(\operatorname{spec}x\cup\{0\})\setminus\{\lambda\}$
-(proof of Theorem 1.5(a)). As $p(0)=0$ and $x=ex=xe$, $q\in\mathcal N$ and $q=eqe$, so the
-range of $q$ lies in the range of $e$. By minimality $q=e$ or $q=0$; hence $x$ has at
-most one nonzero eigenvalue and its eigenvector space is the range of $e$, so
-$x=\lambda e$. A general element of $e\mathcal Ne$ is $x_1+ix_2$ with
+(Theorem 1.5(a),(b): $p$ agrees on $\operatorname{spec}x$ with the indicator function of $\{\lambda\}$).
+As $p(0)=0$, $p(t)=t\,r(t)$ for a polynomial $r$, so $q=x\,r(x)=r(x)\,x\in\mathcal N$, and $x=ex=xe$ gives
+$q=eq=qe$; so the range of $q$ lies in the range of $e$. If $q\neq0$, minimality gives
+$\operatorname{rank}q\ge\operatorname{rank}e$, so the two ranges coincide and $q=e$. Since the spectral
+projections for distinct eigenvalues are orthogonal, $x$ has at most one nonzero eigenvalue
+$\lambda$, with spectral projection $e$, so $x=\lambda e$ (and $x=0=0\cdot e$ if there is none). A general element of $e\mathcal Ne$ is $x_1+ix_2$ with
 $x_{1,2}=x_{1,2}^*\in e\mathcal Ne$.
 
 *Step 2: $e$ generates $E$.* Let $F=\operatorname{span}\mathcal Ne E$. It is invariant under
@@ -176,8 +178,9 @@ V^*\mathcal M'V=\bigoplus_{c=1}^C1_{k_c}\otimes M_{m_c}(\mathbb C),
 $$
 and $V^*Z(\mathcal M)V=\operatorname{span}\{V^*P_1V,\dots,V^*P_CV\}$, where $P_1,\dots,P_C$ are the
 minimal central projections of $\mathcal M$ (Lemma 2.3) and $V^*P_cV$ is the projection onto the
-$c$-th summand. The pairs $(k_c,m_c)$ are unique up to order: the $P_c$ are unique (Lemma 2.3),
-$k_c^2=\dim\mathcal MP_c$ and $m_c=\operatorname{rank}P_c/k_c$. In particular $\mathcal M\cong\bigoplus_cM_{k_c}(\mathbb C)$ as $*$-algebras, and
+$c$-th summand. The pairs $(k_c,m_c)$ are unique up to order: for *any* unitary $V$ with the
+first property, $V(\cdot)V^*$ maps the projections onto the summands to the $P_c$ (see the proof),
+so $k_c^2=\dim\mathcal MP_c$ and $m_c=\operatorname{rank}P_c/k_c$ are determined by $\mathcal M$. In particular $\mathcal M\cong\bigoplus_cM_{k_c}(\mathbb C)$ as $*$-algebras, and
 $\dim\mathcal M=\sum_ck_c^2$, $\dim\mathcal M'=\sum_cm_c^2$.
 
 *Proof.* By Lemma 2.3 and the remark after it, $\mathcal M=\bigoplus_c\mathcal M_c$ with
@@ -185,7 +188,18 @@ $\mathcal M_c$ acting on $E_c$, and each $\mathcal M_c$ is a factor (Lemma 2.4).
 gives unitaries $V_c$ with $V_c^*\mathcal M_cV_c=M_{k_c}\otimes1_{m_c}$; put
 $V=\bigoplus_cV_c$. For the commutant: $X\in\mathcal M'$ commutes with each $P_c$, so
 $X=\sum_cP_cXP_c$, and $P_cXP_c$ commutes with $\mathcal M_c$; conversely any such sum
-commutes with $\mathcal M$. Lemma 2.5 identifies $\mathcal M_c'$ on $E_c$. $\square$
+commutes with $\mathcal M$. Lemma 2.5 identifies $\mathcal M_c'$ on $E_c$, and conjugating by $V$ gives
+the formula for $V^*\mathcal M'V$.
+
+*Uniqueness.* Let $V$ be any unitary with $V^*\mathcal MV=\mathcal B:=\bigoplus_{c=1}^{C'}M_{k_c}\otimes1_{m_c}$ and
+let $Q_c$ be the projection onto the $c$-th summand. An element $\bigoplus_cX_c$ of $\mathcal B$ ($X_c\in M_{k_c}\otimes1_{m_c}$)
+is central iff each $X_c$ commutes with $M_{k_c}\otimes1_{m_c}$, i.e. (Lemma 2.5, Step 5) $X_c\in(M_{k_c}\otimes1_{m_c})\cap(1_{k_c}\otimes M_{m_c})=\mathbb C1$
+(an element $a\otimes1=1\otimes b$ has all diagonal blocks equal to $b$ and all off-diagonal blocks $0$, so $a$ is a scalar).
+Hence $Z(\mathcal B)=\operatorname{span}\{Q_1,\dots,Q_{C'}\}$, and $Z(\mathcal M)=VZ(\mathcal B)V^*$ is spanned by the nonzero,
+pairwise orthogonal projections $VQ_cV^*$ with sum $1$. Each of them is a nonzero projection of $Z(\mathcal M)$, hence (Lemma 2.3)
+a sum of a nonempty set $S_c$ of the $P_d$; the $S_c$ are disjoint (orthogonality) and cover all $d$ (sum $1$), and as
+$C'=\dim Z(\mathcal M)=C$ each $S_c$ is a single element. So, after renumbering, $VQ_cV^*=P_c$, whence
+$\dim\mathcal MP_c=\dim(M_{k_c}\otimes1_{m_c})=k_c^2$ and $\operatorname{rank}P_c=k_cm_c$. $\square$
 
 The numbers $k_c$ describe the algebra itself. The **multiplicities** $m_c$ describe how
 it sits in $M_n(\mathbb C)$: they are invisible to the algebraic structure but determine
@@ -197,7 +211,7 @@ This is why the library works with a family of traces (Chapter 3). Likewise, for
 the restriction of $A$ to $V(\mathbb C^{k_c}\otimes\mathbb C^{m_c})$ has the eigenvalues of the block $A_c$, each with
 $m_c$ times its multiplicity in $A_c$, since $A_c\otimes1_{m_c}$ is $m_c$ copies of $A_c$.
 
-> **Physical meaning.** The $P_c$ are **superselection sectors** or **symmetry
+> **Physical meaning** (physical interpretation, not a theorem of this course). The $P_c$ are **superselection sectors** or **symmetry
 > sectors**: no observable in $\mathcal M$ connects different sectors, so a measurement
 > of "which sector" is compatible with every other measurement. The centre is the
 > *classical* part of the system. The multiplicity $m_c$ is a degeneracy of every observable in $\mathcal M$.
@@ -239,9 +253,13 @@ the $m_c$ are *the* multiplicities in any decomposition. *Proof.* Let $\rho,\rho
 and $T$ an intertwiner, $T\rho(g)=\rho'(g)T$ for all $g$. Kernel and range of $T$ are invariant,
 so $T=0$ or $T$ is invertible (Schur's lemma); if $\rho'=\rho$, the same applies to $T-\lambda1$
 for an eigenvalue $\lambda$ of $T$, so $T=\lambda1$. Hence the intertwiners from $\rho$ to $\rho'$
-form a space of dimension $1$ if $\rho\cong\rho'$ and $0$ otherwise. If $\pi\cong\bigoplus_j\sigma_j$
-with irreducible $\sigma_j$ (repetitions allowed), the intertwiners from an irreducible $\rho$ to
-$\pi$ therefore form a space of dimension $\#\{j:\sigma_j\cong\rho\}$, a number that depends only
+form a space of dimension $1$ if $\rho\cong\rho'$ (for an invertible intertwiner $S$, $T\mapsto S^{-1}T$
+identifies them with the intertwiners from $\rho$ to itself, which are $\mathbb C1$) and $0$ otherwise (a nonzero
+one would be invertible, an equivalence). If $\pi\cong\bigoplus_j\sigma_j$
+with irreducible $\sigma_j$ (repetitions allowed), an intertwiner from an irreducible $\rho$ to
+$\bigoplus_j\sigma_j$ is a tuple $(T_j)_j$ of intertwiners from $\rho$ to $\sigma_j$, and composing with the equivalence
+does not change dimensions; so the intertwiners from $\rho$ to
+$\pi$ form a space of dimension $\#\{j:\sigma_j\cong\rho\}$, a number that depends only
 on $\pi$ and $\rho$. For the decomposition of Proposition 2.7, whose $\rho_c$ are pairwise
 inequivalent, it is $m_c$ if $\rho\cong\rho_c$ and $0$ if $\rho$ is equivalent to no $\rho_c$. $\square$
 
@@ -356,9 +374,11 @@ $K$ on the complement of $F$ has even multiplicity. For a random $K$ more is tru
 group, $E(X)=\frac1{|G|}\sum_g\pi(g)X\pi(g)^*$, maps $M_8(\mathbb C)$ onto the commutant and is the
 identity there (Exercise 3), so for a Ginibre matrix $Z$ (independent standard complex Gaussian
 entries) $K=E(Z+Z^*)$ has a density on the real vector space $\pi(S_3)'_h$ of self-adjoint elements
-(Theorem A.15 and the remark after it). By Proposition 4.7(a), with probability one the six
+(Theorem A.15 and the remark after it). By Proposition 4.7(a) (a forward reference; its proof uses
+Theorem 2.6 and Appendix A, not this paragraph), with probability one the six
 eigenvalues of $\kappa_1$ and $\kappa_2$ are pairwise distinct: $K$ then has $4$ simple eigenvalues on $F$ and
-$2$ doubly degenerate ones on its complement. The code checks the degenerate pairs, using that
+$2$ doubly degenerate ones on its complement. The code checks the degenerate pairs (which hold for every $K$)
+and, for the sampled $K$, that the two pairs and the four eigenvalues on $F$ are distinct, using that
 $P_F=\frac1{|G|}\sum_g\pi(g)$ is the orthogonal projection onto $F$ ($\pi(h)P_F=P_F$ for all $h$, so its
 range lies in $F$; $P_Fv=v$ for $v\in F$; and $P_F^*=P_F$, by the substitution $g\to g^{-1}$).
 
@@ -377,6 +397,10 @@ e_rest = torch.linalg.eigvalsh(Q_rest.conj().T @ Hsym @ Q_rest)
 print(e_rest)
 assert Q_rest.shape[1] == 4
 assert torch.allclose(e_rest[0], e_rest[1]) and torch.allclose(e_rest[2], e_rest[3])   # even multiplicities
+e_sym = torch.linalg.eigvalsh(Q[:, w.real > 0.5].conj().T @ Hsym @ Q[:, w.real > 0.5])   # eigenvalues on F
+assert e_sym.shape[0] == 4 and e_rest[2] - e_rest[1] > 1e-6                           # this sample: generic
+assert (e_sym[1:] - e_sym[:-1]).min() > 1e-6                                           # 4 simple eigenvalues on F
+assert (e_sym[:, None] - e_rest[None, :]).abs().min() > 1e-6                           # all six distinct
 ```
 
 ## 2.5 The algebra in the library
@@ -417,18 +441,20 @@ assert close(A @ P0 + A @ P1, A)                         # A = sum_c A P_c
 ## 2.6 Conditional expectations
 
 A **conditional expectation** from $\mathcal M$ onto a von Neumann subalgebra
-$\mathcal N\subseteq\mathcal M$ is a linear map $E:\mathcal M\to\mathcal N$ that is positive
+$\mathcal N\subseteq\mathcal M$ (a $*$-algebra contained in $\mathcal M$, with the same unit) is a linear map $E:\mathcal M\to\mathcal N$ that is positive
 ($A\ge0\Rightarrow E(A)\ge0$), satisfies $E(B)=B$ for $B\in\mathcal N$, and is an
 $\mathcal N$-bimodule map: $E(B_1AB_2)=B_1E(A)B_2$ for $B_1,B_2\in\mathcal N$.
 
-**Proposition 2.8.** For $\mathcal M=\bigoplus_cM_{k_c}$ and $\mathcal N=Z(\mathcal M)$,
+**Proposition 2.8.** For $\mathcal M=\bigoplus_cM_{k_c}$ on $\bigoplus_c\mathbb C^{k_c}$, with $P_c$ the projection onto
+the $c$-th block, and $\mathcal N=Z(\mathcal M)=\operatorname{span}\{P_1,\dots,P_C\}$ (Exercise 1),
 $$
 E(A)=\sum_c\frac{\operatorname{Tr}A_c}{k_c}\,P_c
 $$
 is a conditional expectation. It preserves every trace of the form
 $\sum_cw_c\operatorname{Tr}A_c$.
 
-*Proof.* Linearity is clear; $A\ge0$ implies $\operatorname{Tr}A_c\ge0$, so $E(A)\ge0$. For
+*Proof.* Linearity is clear; $A\ge0$ implies $\operatorname{Tr}A_c=\sum_i\langle e_i,Ae_i\rangle\ge0$ (sum over the
+standard basis vectors $e_i$ of the $c$-th block), so $E(A)\ge0$. For
 $B=\sum_cb_cP_c$, $E(B)=\sum_cb_ck_cP_c/k_c=B$. For $B_i=\sum_cb^{(i)}_cP_c$,
 $\operatorname{Tr}(B_1AB_2)_c=b^{(1)}_cb^{(2)}_c\operatorname{Tr}A_c$, giving the bimodule
 property. Finally $\operatorname{Tr}(E(A)_c)=\operatorname{Tr}A_c$ for every $c$. $\square$
@@ -443,8 +469,10 @@ assert close(E(EA), EA)                                  # idempotent
 assert close(E(Z @ A @ P1), Z @ EA @ P1)                 # bimodule property
 A2 = alg.from_blocks([torch.randn(4, 4, dtype=dt), torch.randn(2, 2, dtype=dt)])
 assert close(EA @ A2, A2 @ EA)                           # E(A) commutes with a fresh element
-for c in range(alg.C):                                   # Tr E(A)_c = Tr A_c
-    assert abs(EA.matrix[0, c].diagonal().sum() - A.matrix[0, c].diagonal().sum()) < 1e-10
+for c, k in enumerate(alg.k_factors):                    # E(A)_c = (Tr A_c / k_c) 1, so Tr E(A)_c = Tr A_c
+    trA = A.matrix[0, c].diagonal().sum()
+    assert close(EA.matrix[0, c, :k, :k], trA / k * torch.eye(k, dtype=dt))
+    assert abs(EA.matrix[0, c].diagonal().sum() - trA) < 1e-10
 ```
 
 The group average of Section 2.4 is a conditional expectation onto the commutant
@@ -456,14 +484,16 @@ so $E_{\mathcal M}(X)\in\mathcal M$. For $X\ge0$, $\langle v,P_cXP_cv\rangle=\la
 $B\in\mathcal M$ is block diagonal, so $BP_c=P_cB$ and $B=\sum_cP_cBP_c$; hence $E_{\mathcal M}(B)=B$ and
 $E_{\mathcal M}(B_1XB_2)=\sum_cB_1P_cXP_cB_2=B_1E_{\mathcal M}(X)B_2$ for $B_1,B_2\in\mathcal M$. Finally
 $\sum_c\operatorname{Tr}(P_cXP_c)=\sum_c\operatorname{Tr}(P_cX)=\operatorname{Tr}X$. $\square$
-For a state $\omega$ on $\mathcal M$, Proposition 2.8 gives
+
+For a **state** $\omega$ on $\mathcal M$ (a linear functional with $\omega(A^*A)\ge0$ for all $A$ and $\omega(1)=1$;
+states are studied in Chapter 3), Proposition 2.8 and linearity give
 $\omega(E(A))=\sum_c\omega(P_c)\operatorname{Tr}(A_c)/k_c$, and $\omega\circ E=\omega$ on the centre, since $E(z)=z$
 there. (Conditional expectations are not unique in general: onto $\mathbb C1$, every state
 $\varphi$ gives one, $A\mapsto\varphi(A)1$; on $M_2(\mathbb C)$ the states $A\mapsto A_{11}$ and $A\mapsto A_{22}$
 give two different ones.) All are instances of the same idea:
 projecting onto the operators that "do not see" some structure.
 
-> **Physical meaning.** The map $E_{\mathcal M}$ erases the coherences between superselection
+> **Physical meaning** (physical interpretation, not a theorem of this course). The map $E_{\mathcal M}$ erases the coherences between superselection
 > sectors, which is what happens when the charge (the sector) is measured and the result is not
 > recorded. The conditional expectation $E$ onto the centre goes further: it keeps only the
 > classical information, the weight $\omega(P_c)$ of each sector, and replaces the state inside each
