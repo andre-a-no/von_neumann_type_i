@@ -182,8 +182,10 @@ converge to the integral (Lemma A.4(a)); apply (b). $\square$
 **Definition.** A **quantum dynamical semigroup** on $\mathcal M$ is a family $(T_t)_{t\ge0}$ of
 channels $\mathcal M\to\mathcal M$ with $T_0=\mathrm{id}$, $T_{s+t}=T_sT_t$ and $t\mapsto T_t$ continuous.
 
-**Lemma 8.5.** Every continuous semigroup of superoperators ($T_0=\mathrm{id}$, $T_{s+t}=T_sT_t$) is $T_t=e^{t\mathcal L}$
-for exactly one superoperator $\mathcal L$, its **generator**, and $\mathcal L=\lim_{t\to0}(T_t-\mathrm{id})/t$.
+**Lemma 8.5.** Every continuous semigroup $(T_t)_{t\ge0}$ of superoperators ($T_0=\mathrm{id}$, $T_{s+t}=T_sT_t$) is
+$T_t=e^{t\mathcal L}$ for exactly one superoperator $\mathcal L$, its **generator**, and
+$\mathcal L=\lim_{t\to0}(T_t-\mathrm{id})/t$. The same holds, with the same proof, for continuous semigroups of
+linear maps on any finite-dimensional space (for example of matrices).
 
 *Proof.* (Integrals of continuous superoperator-valued functions are those of Lemma A.4.)
 $\|V_h-\mathrm{id}\|\le\max_{0\le s\le h}\|T_s-\mathrm{id}\|\to0$ for $V_h=\frac1h\int_0^hT_s\,ds$ (Lemma A.4(c)), so
@@ -245,8 +247,8 @@ the orthogonal complement of the maximally entangled vector; the semigroup prope
 maps $T_t$, would not suffice (the example after Theorem D.3). For (2) the maps $T_t\circ E$ with the
 conditional expectation $E(X)=\sum_cP_cXP_c$ are CP on $M_D$; the Choi matrix of the derivative
 $\mathcal L\circ E$ at $t=0$ is positive on the orthogonal complement of the vectors $(1\otimes P_c)\Omega$, which
-gives a decomposition of $\mathcal L\circ E$ (Lemma D.2), and this is compressed back to $\mathcal M$ by $E$. In the Heisenberg picture (Corollary D.8) the generator of a continuous semigroup of unital CP
-maps on $\mathcal M$ is $A\mapsto\Psi(A)+K^*A+AK$ with $\Psi$ CP and $K\in\mathcal M$. Historically, (1) is
+gives a decomposition of $\mathcal L\circ E$ (Lemma D.2), and this is compressed back to $\mathcal M$ by $E$.
+In the Heisenberg picture (Corollary D.8) the generator of a continuous semigroup of unital CP maps on $\mathcal M$ is $A\mapsto\Psi(A)+K^*A+AK$ with $\Psi$ CP and $K\in\mathcal M$. Historically, (1) is
 due to V. Gorini, A. Kossakowski, E. C. G. Sudarshan [*J. Math. Phys.* 17, 821 (1976)] and G. Lindblad
 [*Commun. Math. Phys.* 48, 119 (1976)], and the Heisenberg-picture form, for norm-continuous semigroups on
 general von Neumann algebras, to E. Christensen and D. E. Evans [*J. London Math. Soc.* 20, 358 (1979)].
@@ -422,7 +424,7 @@ $\operatorname{diag}(a,b)$ to $\gamma b\operatorname{diag}(1,-1)$, so one step w
 $\operatorname{diag}(1-T(-3),T(-3))=\operatorname{diag}(-\frac38,\frac{11}8)$. Numerical observation: in this run the smallest eigenvalue of
 $\rho(t)$ is $\approx-2\cdot10^{-8}$ (the printed value, with steps up to $0.02$). `lindblad_channel` is exact
 but treats only jumps inside the sectors. Finally we check Proposition 8.8(2) for a random map between the
-sectors, against the GKSL generator on $M_6$ built with numpy:
+sectors and Proposition 8.8(3) for the particle loss, against GKSL generators on $M_6$ built with numpy:
 
 ```python
 Phi = channels.random_inter_sector_channel(fock, fock, kraus_rank=2)
@@ -437,6 +439,13 @@ full = sum(L @ X @ L.conj().T - 0.5 * (L.conj().T @ L @ X + X @ L.conj().T @ L) 
 E_full = full * embed(np.ones((3, 3, 3)))                          # E(X) = sum_d P_d X P_d
 assert np.abs(E_full - embed(on_M)).max() < 1e-12                  # Proposition 8.8(2)
 print(f"coherences between sectors created on M_6: {np.abs(full - E_full).max():.2f}")
+
+zero = lambda d, c: np.zeros((ks[d], ks[c]))
+L_loss = [np.block([[blocks(a)[(d, c)].numpy() if (d, c) in a else zero(d, c) for c in range(3)] for d in range(3)])
+          for a in (a1, a2)]                                       # a_1, a_2 on M_6: one block per block row and column
+full_loss = sum(L @ X @ L.T - 0.5 * (L.T @ L @ X + X @ L.T @ L) for L in L_loss)
+loss_on_M = dynamics.lindblad_rhs(None, [loss], algebra=fock)(0.0, rho.matrix)[0].numpy()
+assert np.abs(full_loss - embed(loss_on_M)).max() < 1e-12         # Proposition 8.8(3): no compression needed
 ```
 
 ## 8.4 Post-selection and the no-jump evolution
@@ -461,8 +470,9 @@ $X=S_0(t)\rho\ge0$, $w_0'=\operatorname{Tr}(-iH_{\mathrm{eff}}X+iXH_{\mathrm{eff
 and $\operatorname{Tr}(AX)=\operatorname{Tr}(X^{1/2}AX^{1/2})\ge0$. The last claim is
 $\operatorname{Tr}|\phi\rangle\langle\phi|=\|\phi\|^2$. $\square$
 
-> **Physical meaning** (physical interpretation, not a theorem of this course). Let a detector record every jump — every emitted photon, every lost atom.
-> Then $w_n(t)$ is the probability of exactly $n$ clicks up to time $t$, $S_n(t)\rho/w_n(t)$ the state
+> **Physical meaning** (physical interpretation, not a theorem of this course). Let a detector record
+> every jump — every emitted photon, every lost atom. Then $w_n(t)$ is the probability of exactly $n$ clicks
+> up to time $t$, $S_n(t)\rho/w_n(t)$ the state
 > given $n$ clicks, and $S_0(t)\rho/w_0(t)$ the state given **no click**: a null result also changes the
 > state, through the non-Hermitian $H_{\mathrm{eff}}$. This counting-process interpretation [E. B. Davies,
 > *Quantum Theory of Open Systems*, 1976; M. D. Srinivas and E. B. Davies, *Optica Acta* 28, 981 (1981)]
@@ -532,11 +542,11 @@ S1 = scipy.integrate.simpson(S0(2.0 - s_grid, 1, jump(S0(s_grid, 2, rho_20))), x
 assert np.abs(S1 - traj[-1].matrix[0, 1, :2, :2].numpy()).max() < 1e-8     # Proposition 8.11, n = 1
 ```
 
-Numerical observation: at $t=2$ the probability of no loss is $0.230$ (printed above). Without hopping
-($J=0$) it would be exactly $e^{-2\gamma_1t}=e^{-2.4}=0.091$, since then $|20\rangle$ is an eigenvector of
+Numerical observation: at $t=2$ the weight $p_2(2)=w_0(2)$ of the sector $N=2$ ("no loss") is $0.230$ (printed
+above). Without hopping ($J=0$) it would be exactly $e^{-2\gamma_1t}=e^{-2.4}=0.091$, since then $|20\rangle$ is an eigenvector of
 $H_{\mathrm{eff}}$ with eigenvalue $U-i\gamma_1$ and $w_0(t)=|e^{-it(U-i\gamma_1)}|^2$ (Proposition 8.10); so
 here the sector weights do depend on the Hamiltonian. The post-selected state is at trace distance
-$0.135$ (printed above) from the state of the closed system: not losing a particle is information.
+$0.135$ (printed above) from the state of the closed system: conditioning on $N=2$ changes the state, beyond the unitary evolution.
 
 ## 8.5 Stationary states and relaxation
 
@@ -552,12 +562,14 @@ at most $2t/\tau$ by Lemma A.4(c), as $\|T_s\rho\|_1=1$. The states form a bound
 space, so some sequence $\sigma_{\tau_m}$, $\tau_m\to\infty$, converges to a state $\sigma$
 (Bolzano–Weierstrass), and $T_t\sigma-\sigma=\lim_m(T_t\sigma_{\tau_m}-\sigma_{\tau_m})=0$. $\square$
 
-**Corollary 8.13.** If there are no jumps between sectors, the stationary states span a space of
+**Corollary 8.13.** If there are no jumps between sectors (as in Proposition 8.9(1)), the stationary states span a space of
 dimension at least $C$: every sector carries its own stationary state.
 
-*Proof.* $\mathcal L$ maps $P_c\mathcal MP_c\cong M_{k_c}$ into itself (all of $H$, $L_j$ are block diagonal),
-so the restriction of $e^{t\mathcal L}$ is a quantum dynamical semigroup on $M_{k_c}$ (Lemma 8.4(a)) with
-a stationary state $\sigma_c$ by Proposition 8.12. The $\sigma_c$ have disjoint supports. $\square$
+*Proof.* $\mathcal L$ maps $P_c\mathcal MP_c\cong M_{k_c}$ into itself ($H$ and the $L_j$ lie in $\mathcal M$, and
+$\Phi_m(X)=\sum_lK^{cc}_{m,l}X_cK^{cc*}_{m,l}$ and $\Phi_m^*(1)$ are block diagonal), hence so does every $e^{t\mathcal L}$.
+Its restriction is CP (Lemma 8.4(a)) and TP, so it is a quantum dynamical semigroup on $M_{k_c}$, with
+a stationary state $\sigma_c$ by Proposition 8.12; as an element of $\mathcal M$, $\sigma_c$ is a stationary state of
+$e^{t\mathcal L}$. The $\sigma_c$ lie in the different blocks, hence are linearly independent. $\square$
 
 **Proposition 8.14 (spontaneous emission).** On $M_2$ with basis $|g\rangle,|e\rangle$ let
 $H=\omega|e\rangle\langle e|$, one jump $L=|g\rangle\langle e|$ and rate $\gamma>0$. Then
@@ -580,9 +592,10 @@ $\sqrt p\,|g\rangle\langle e|$), and $\mathcal U_t$ multiplies $\rho_{ge}$ by $e
 fixes $\rho_{gg}$. Finally $\rho(t)-|g\rangle\langle g|$ is traceless and self-adjoint with diagonal
 $(-\rho_{ee}(t),\rho_{ee}(t))$, so its eigenvalues are $\pm(\rho_{ee}(t)^2+|\rho_{ge}(t)|^2)^{1/2}$. $\square$
 
-The coherence decays at half the rate of the population, the relation $T_2=2T_1$ of Section 6.4 without
-pure dephasing; the
-slowest nonzero rate, the **spectral gap** $\gamma/2$, controls the relaxation: by the last formula the
+The coherence decays at half the rate of the population: with $T_1=1/\gamma$ and $T_2=2/\gamma$ this is the relation
+$\frac1{T_2}=\frac1{2T_1}+\frac1{T_\varphi}$ of Section 6.4 without the dephasing term. The slowest nonzero decay rate,
+the **spectral gap** $\min\{-\operatorname{Re}\mu:\mu\ne0\text{ an eigenvalue of }\mathcal L\}=\gamma/2$, is the rate of
+relaxation here: by the last formula the
 distance to $|g\rangle\langle g|$ is at most $e^{-\gamma t/2}$ (as $|\rho_{ge}|^2\le\rho_{gg}\rho_{ee}$ by positivity,
 $\rho_{ee}^2+|\rho_{ge}|^2\le\rho_{ee}\le1$), and $e^{\gamma t/2}$ times it tends to $|\rho_{ge}(0)|$ as $t\to\infty$. We check the spectrum
 with `lindblad_superoperator`, the channel and the trace distance with `lindblad_channel`, and
@@ -626,8 +639,9 @@ Theorem D.6 (the finite-dimensional case of a criterion of A. Frigerio) gives a 
 GKSL generator on $M_k$ with data $(H;L_1,\dots,L_r)$ has a faithful stationary state $\sigma>0$ and the only
 matrices commuting with $H$ and all $L_j$, $L_j^*$ are the multiples of $1$, then $\sigma$ is the only
 stationary state. Without jumps between sectors the restriction of $\mathcal L$ to $P_c\mathcal MP_c\cong M_{k_c}$
-is the GKSL generator with data $(H_c;L_{1,c},\dots)$, so the theorem applies sector by sector; the code
-checks its two hypotheses (in floating point) for the generator above. Exercise 4 shows that
+is the GKSL generator with data $(H_c;\sqrt{g_1}L_{1,c},\sqrt{g_2}L_{2,c},\dots)$, so the theorem applies sector by
+sector; the code checks its two hypotheses (in floating point, for the rates $g_j=1$ used above) and then
+asserts its conclusion. Exercise 4 shows that
 uniqueness can fail even in a factor: there the second hypothesis fails.
 
 ```python
@@ -642,6 +656,7 @@ for c, k in enumerate(two.k_factors):                              # Theorem D.6
     ops += [A.conj().T for A in ops[1:]]
     comm = np.concatenate([np.kron(A, np.eye(k)) - np.kron(np.eye(k), A.T) for A in ops])   # X -> [A, X]
     assert int((np.linalg.svd(comm, compute_uv=False) < 1e-9).sum()) == 1   # commutant = C 1
+assert kernel == [1, 1]                                            # the conclusion of Theorem D.6
 ```
 
 ## 8.6 What to compare with
@@ -714,9 +729,10 @@ assert np.abs(Y @ Y).max() < 1e-15 and np.linalg.matrix_rank(Y) == 1   # one Jor
 
 4. $L\rho L^*-\frac12\{L^*L,\rho\}=\sigma_z\rho\sigma_z-\rho$ multiplies the off-diagonal entries by $-2$ and
    kills the diagonal, and $-i[H,\rho]_{ge}=i\omega\rho_{ge}$. So $\mathcal L(\sigma)=0$ iff $\sigma_{ge}=0$ (for
-   $\gamma>0$), and the spectrum is $\{0,0,-2\gamma\pm i\omega\}$. Since $H$ and $\sigma_z$ commute and
-   $X\mapsto\sigma_zX\sigma_z$ is an involution, $e^{t\mathcal L}(\rho)=\frac{1+e^{-2\gamma t}}2U_t\rho U_t^*
-   +\frac{1-e^{-2\gamma t}}2U_t\sigma_z\rho\sigma_zU_t^*$ with $U_t=e^{-itH}$: a unital channel whose fixed
+   $\gamma>0$), and the spectrum is $\{0,0,-2\gamma\pm i\omega\}$. With $U_t=e^{-itH}$,
+   $e^{t\mathcal L}(\rho)=\frac{1+e^{-2\gamma t}}2U_t\rho U_t^*+\frac{1-e^{-2\gamma t}}2U_t\sigma_z\rho\sigma_zU_t^*$: since
+   $\sigma_z$ commutes with $U_t$ and $\sigma_z^2=1$, differentiation shows that the right side $R(t)$ satisfies
+   $R'=-i[H,R]+\gamma(\sigma_zR\sigma_z-R)=\mathcal L(R)$ and $R(0)=\rho$, so Lemma 8.1 applies. For $t>0$ this is a unital channel whose fixed
    points are the matrices commuting with its Kraus operators (Theorem 6.10), the diagonal ones.
 
 ```python
