@@ -44,15 +44,19 @@ $\mathcal M$ の **スロット** とは $D$ 個の組 $(c,i)$（$i\le k_c$）�
 $\operatorname{diag}(\lambda)=\bigoplus_c\operatorname{diag}(\lambda_{c,1},\dots,\lambda_{c,k_c})$ とおく。
 
 コントラスト $\delta$ を指定した `optimize.PositiveParam` は、各スタートごとに二つの異なるスロット
-$s_\pm=(c_\pm,i_\pm)$ とハール分布に従うランダムなユニタリ $U_0\in\mathcal M$ を抽出し、$\theta\in\mathbb R^D$ と
+$s_\pm=(c_\pm,i_\pm)$（まず $s_+$ を $D$ 個のスロットから一様に、次に $s_-$ を残りの $D-1$ 個から一様に選ぶので、
+相異なるスロットの順序対はどれも確率 $1/(D(D-1))$ をもつ）とハール分布に従うランダムなユニタリ $U_0\in\mathcal M$
+（`random_unitary_operator`、補題 11.10）を抽出し、$\theta\in\mathbb R^D$ と
 $G=\bigoplus_cG_c$ を次のように写す。
 $$
 X(\theta,G)=U\operatorname{diag}(\lambda)U^*,\qquad U=U_0\,e^{G-G^*},\qquad
 \lambda_{s_+}=1,\quad\lambda_{s_-}=\ell,\quad\lambda_s=\ell+(1-\ell)\tfrac{1+\sin\theta_s}2\ \text{otherwise}.
 $$
 `UnitaryParam` は写像 $G\mapsto U_0e^{G-G^*}$ 単独である。シグモイドとは異なり、$(1+\sin\theta)/2$ は有限の $\theta$ で $0$ と $1$
-に到達する。極値をとるスペクトルはしばしば $\ell$ と $1$ にあるので、これは重要である。$[a,b]$ 内の自由なコントラスト
-はパラメータが一つ増えるだけであり、$\delta=a+(b-a)(1+\sin\eta)/2$ とすればよい。
+に到達する。本章の極値をとるスペクトル（系 11.7、命題 11.14）は $\ell$ と $1$ にあるので、これは都合がよい。
+$[a,b]$ 内の自由なコントラストはパラメータが一つ増えるだけであり、$\delta=a+(b-a)(1+\sin\eta)/2$ とすればよい。
+ライブラリの既定値は $[a,b]=[0,0.999]$ であり、以下のコードもこれを用いる。この制限のもとで達成される値は制限なしでも
+達成されるから、それは依然として制限なしの上限の下界（制限なしの下限の上界）である。
 
 **補題 11.1.** 任意のユニタリ $U_0\in\mathcal M$ に対し、$G\mapsto U_0e^{G-G^*}$ は $\mathcal M$ のユニタリ群の上への
 写像である。
@@ -76,16 +80,37 @@ $\lambda=\mu$ となる（$\ell=1$ ならば $\theta$ は任意）。補題 11.1
 $c_+=c_-$ かつ $\delta>0$ ならば、そのブロックは二つの異なる固有値をもつから $k_{c_+}\ge2$ である。$\delta=0$ ならば $X=1$ であり、
 任意の二つのスロットでよい。$\square$
 
-したがって、ランダムなスロットによってマルチスタート探索は殻全体を覆うことができ、制約はすべての反復で厳密に成り立つ。
+スロットのどの組も正の確率で抽出されるから、殻のすべての点は正の確率であるスタートの像に含まれ、
+（厳密な算術では）制約はすべての反復で成り立つ。
 `SelfAdjointParam` は $X=U\operatorname{diag}(\sigma\lambda)U^*$ を用いる。ここで符号 $\sigma\in\{\pm1\}^D$ はスタートごとに抽出され
-（11.5節の符号反転によってのみ変更される）、したがって $|X|=U\operatorname{diag}(\lambda)U^*$ であり、（同じ証明により）
-符号とスロットにわたる和集合は $\{X=X^*:|X|\in\mathcal P_\delta\}$ である。意味をもつのは $S=G-G^*$ だけである。歪自己共役な $S$ 上の写像
-$S\mapsto U_0e^S$ の $S=0$ における微分は $S\mapsto U_0S$ であり、これはユニタリ群の接空間
-$U_0\cdot\{S^*=-S\}$ への全単射であるから、この写像は $S=0$ の近くで局所微分同相である。$0$ から遠いところでは単射ではなく、
-$S$ の二つの固有値が $2\pi i$ の零でない整数倍だけ異なるところで微分は退化する。そのため `extremize`
-は各ラウンドの後に **再中心化** を行う（$U_0\leftarrow U_0e^{G-G^*}$、$G\leftarrow0$）。ケーリー・チャート
-$S\mapsto U_0C(-S/2)$（演習 1）と極分解レトラクション（$S$ を $U_0(1+S)$ のユニタリ因子に写す。定理 1.8）は、
-$0$ において同じ微分をもつ。
+（各ブロックで、負号の個数は $\{0,\dots,k_c\}$ 上で一様であり、その位置は一様にランダムであるから、どの符号パターンも
+正の確率をもつ）、11.5節の符号反転によってのみ変更される。このとき
+$|X|=U\operatorname{diag}(\lambda)U^*$ であり（定理 1.5(e)、$\lambda>0$ であるから）、符号とスロットにわたる和集合は
+$\{X=X^*:|X|\in\mathcal P_\delta\}$ である：そのような $X$ に対し $X_c=W_c\operatorname{diag}(\nu_c)W_c^*$ と対角化すると、
+$|\nu_{c,i}|\ge\ell>0$ として $|X|_c=W_c\operatorname{diag}(|\nu_c|)W_c^*$ となるので、$\mu=|\nu|$ と
+$\sigma_s=\nu_s/|\nu_s|$ に命題 11.2 の証明を適用すればよい。意味をもつのは $S=G-G^*$ だけである。
+
+チャート $S\mapsto U_0e^S$ が良い振る舞いをするのは $S=0$ の近くだけである。$\mathfrak u=\{S\in\mathcal M:S^*=-S\}$、
+$\mathcal M_h=\{H\in\mathcal M:H^*=H\}$ とおく。これらは実部分空間であり、$\mathcal M=\mathfrak u\oplus\mathcal M_h$ である
+（$X=\frac{X-X^*}2+\frac{X+X^*}2$）。*$0$ の近くで、$S\mapsto U_0e^S$ は $\mathfrak u$ の開球 $N\ni0$ からユニタリ群における
+$U_0$ の近傍の上への同相写像である。* 実際、$\Psi(S,H)=U_0e^Se^H$ は $C^1$ 写像
+$\mathfrak u\times\mathcal M_h\to\mathcal M$ であり（級数 $\sum_{m,n\ge0}U_0S^mH^n/(m!\,n!)$ と、その各項の実座標に関する
+偏導関数の級数は有界集合上で一様収束する）、
+$e^{tS}e^{tH}=1+t(S+H)+O(t^2)$ により、その $0$ における微分は $(S,H)\mapsto U_0(S+H)$ であって、これは
+$\mathcal M$ の上への全単射である。逆関数定理により、$\mathfrak u$ の開球 $N\ni0$ と $\mathcal M_h$ の開球 $N_h\ni0$ が存在して、
+$\Psi$ は $N\times N_h$ から開集合 $O\subseteq\mathcal M$ の上への同相写像となる。
+$\Psi(S,H)$ がユニタリならば $e^H=e^{-S}U_0^*\Psi(S,H)$ もユニタリである（固有値が純虚数である正規行列 $S$ の固有基底では、
+$e^{\pm S}$ は絶対値 $1$ の成分をもつ対角行列であり、互いに逆である）。しかし $e^H$ は正の固有値 $e^{h_i}$（$h_i$ は $H$ の
+固有値）をもつから、$e^{h_i}=1$（系 1.4(2)）であり $H=0$ である。
+したがって $O\cap U(\mathcal M)=U_0e^N$ である。ここで $U(\mathcal M)$ は $\mathcal M$ のユニタリ群である。これは
+$U(\mathcal M)$ における $U_0$ の近傍であり、$S\mapsto U_0e^S$ は連続な全単射 $N\to U_0e^N$ で、その逆写像、すなわち
+$\Psi^{-1}$ の第一成分は連続である。$0$ から遠いところではチャートは単射でない：任意の射影 $P\in\mathcal M$ に対し
+$e^{2\pi iP}=1=e^0$ である。そのため `extremize` は各ラウンドの後に **再中心化** を行う（$U_0\leftarrow U_0e^{G-G^*}$、
+$G\leftarrow0$）。他の二つのチャートも $0$ において同じ微分 $S\mapsto U_0S$ をもつ。ケーリー・チャート
+$S\mapsto U_0C(-S/2)$（演習 1）：$(1+tS/2)(1-tS/2)^{-1}=(1+tS/2)(1+tS/2+O(t^2))=1+tS+O(t^2)$。極分解レトラクション、
+すなわち $S$ を $A=U_0(1+S)$ のユニタリ因子に写す写像（定理 1.8）：$A^*A=(1-S)(1+S)=1+S^*S\ge1$ は可逆であるから $|A|$ も
+可逆であり、ユニタリ因子は $A|A|^{-1}$ である。$S$ の代わりに $tS$ をとると $|A|^{-1}=(1+t^2S^*S)^{-1/2}=1+O(t^2)$
+（$S^*S$ の固有基底で計算する）であるから、この因子は $U_0(1+tS)+O(t^2)$ である。
 
 コードは制約を検証し、さらに命題 11.2 を構成的に検証する：証明のパラメータが目標の作用素を再現する。
 
@@ -120,7 +145,7 @@ print(f"slots of 1 and lo: {(cp, ip)}, {(cm, im)};  reconstruction error {err:.1
 assert err < 1e-10
 ```
 
-> **物理的意味.** マイケルソン・コントラストは干渉縞の可視度 $(I_{\max}-I_{\min})/(I_{\max}+I_{\min})$ である。
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. マイケルソン・コントラストは干渉縞の可視度 $(I_{\max}-I_{\min})/(I_{\max}+I_{\min})$ である。
 > $\lambda_{\max}=1$ をもつ $0\le X\le1$（フィルター、減衰器、検出器の効率）に対しては、
 > それはダイナミックレンジ $\lambda_{\min}/\lambda_{\max}$、すなわち条件数の逆数を定める。
 
@@ -170,8 +195,9 @@ $\sum_ip^\downarrow_iq^\downarrow_{k+1-i}=\sum_ip^\downarrow_iq^\uparrow_i$ で�
 定理 1.9 である。定理 1.9 と定理 11.4 により $\|PQ\|_1=\max_U|\operatorname{Tr}(P\,QU)|\le\sum_is_i(P)s_i(QU)$ であり、
 $|QU|=(U^*Q^2U)^{1/2}=U^*QU$（定理 1.6）であるから $s_i(QU)=q^\downarrow_i$ である。$\square$
 
-したがって命題 3.9 における破れは高々 $\sum_ix^\downarrow_i(y^\downarrow_i-y^\uparrow_i)$ である。実験 2 については、この
-数がちょうど厳密な答えである。
+したがって、スペクトル $x,y$ をもつ $M_k(\mathbb C)$ の $X,Y\ge0$ に対し、命題 3.9 の破れ $\|YX\|_1-\operatorname{Tr}(XY)$ は
+高々 $\sum_ix^\downarrow_i(y^\downarrow_i-y^\uparrow_i)$ である（$(Y,X)$ に対する系 11.5(b) と (a) の下界による）。
+実験 2 については、この数がちょうど厳密な答えである。
 
 **命題 11.6（スペクトルを固定した実験 2）.** 実験 2 では $|X|=X_0$、$|Y|=Y_0$ であり、
 $z=\|X_0VY_0\|_1-\operatorname{Tr}(X_0Y_0)$ である。$(X_0)_c$ のスペクトル $x_c$ と $(Y_0)_c$ のスペクトル $y_c$ を固定し、
@@ -207,9 +233,10 @@ $k$ が奇数のとき中央の添字は $x_i(y_i-y_i)=0$ を寄与する。し�
 $$
 \sum_ix_i(y_i-y_{k+1-i})=\sum_{i\le\lfloor k/2\rfloor}(x_i-x_{k+1-i})(y_i-y_{k+1-i})\le\Big\lfloor\frac k2\Big\rfloor(1-\ell_X)(1-\ell_Y),
 $$
-である。$x_i\in[\ell_X,1]$、$y_i\in[\ell_Y,1]$ だからである。すべてのブロックにおいて、大きい方から $\lfloor k_c/2\rfloor$ 個の
-固有値が $1$ で、小さい方から $\lfloor k_c/2\rfloor$ 個が $\ell_X$（それぞれ $\ell_Y$）であり、中央のものは
-任意であるとき、等号が成り立つ。ある $k_c\ge2$ であるから、これらのスペクトルの全体での極値は $1$ と $\ell_X$（$\ell_Y$）である。命題 11.6
+である。$x_i\in[\ell_X,1]$、$y_i\in[\ell_Y,1]$ は減少列であるから、二つの因子はそれぞれ $[0,1-\ell_X]$ と $[0,1-\ell_Y]$ に
+含まれるからである。すべてのブロックにおいて、大きい方から $\lfloor k_c/2\rfloor$ 個の
+固有値が $1$ で、小さい方から $\lfloor k_c/2\rfloor$ 個が $\ell_X$（それぞれ $\ell_Y$）であり、中央のもの（$k_c$ が奇数のとき）は
+$[\ell_X,1]$（それぞれ $[\ell_Y,1]$）内で任意であるとき、等号が成り立つ。ある $k_c\ge2$ であるから、これらのスペクトルの全体での極値は $1$ と $\ell_X$（$\ell_Y$）である。命題 11.6
 により結論を得る。$\square$
 
 ここで $\Delta(|X|)=\delta$ に対し $1-\ell_X=2\delta/(1+\delta)$ である。$k_c$ が奇数のとき中央の固有値は関係しない。コードは
@@ -252,12 +279,15 @@ assert abs(z_max - exact) < 1e-12 and abs(z_min + exact) < 1e-12 and abs(exact -
 ## 11.3 等号条件つきのトレース不等式
 
 $X=X^*$ に対し、$f_+(t)=\max(t,0)$、$f_-(t)=\max(-t,0)$ として $X_\pm=f_\pm(X)$ とおく。このとき $X_\pm\ge0$、$X=X_+-X_-$、
-$|X|=X_++X_-$、$X_+X_-=0$ である（定理 1.5(c)）。
+$|X|=X_++X_-$、$X_+X_-=0$ である（定理 1.5(c)。$|X|=(X^2)^{1/2}=h(X)$、
+$h(t)=\sqrt{t^2}=|t|=f_+(t)+f_-(t)$ については 1.5(e)。正値性は系 1.4(3)）。
 
 **補題 11.8.** $M_n(\mathbb C)$ の $A,B\ge0$ に対し $\|A-B\|_1\le\operatorname{Tr}A+\operatorname{Tr}B$ であり、等号は
 $AB=0$ のときかつそのときに限り成り立つ。
 
-*証明.* $H=A-B$ とし、$(0,\infty)$ 上で $g=1$、それ以外で $g=0$ として $Q=g(H)$ とおく。$|t|=t(2g(t)-1)$ であるから $|H|=H(2Q-1)$ であり、
+*証明.* $H=A-B$ とし、$(0,\infty)$ 上で $g=1$、それ以外で $g=0$ として $Q=g(H)$ とおく。$g=\bar g=g^2$ であるから $Q$ は射影である（定理 1.5(c)）。$|t|=t(2g(t)-1)$ であるから
+$|H|=H(2Q-1)$ であり（定理 1.5(c),(e)）、射影 $R=Q,1-Q$ に対して $\operatorname{Tr}(AR)=\operatorname{Tr}(RAR)$（巡回性）を
+用いると、
 $$
 \|H\|_1=\operatorname{Tr}\big(A(2Q-1)\big)-\operatorname{Tr}\big(B(2Q-1)\big)
 =\operatorname{Tr}A+\operatorname{Tr}B-2\operatorname{Tr}\big((1-Q)A(1-Q)\big)-2\operatorname{Tr}(QBQ).
@@ -302,10 +332,8 @@ $\pi^{-1}e^{-|z|^2}$ をもつ。Mezzadri の処方）の QR 分解 $Z=QR$（$R_
 **補題 11.10.** $Q$ は $U(k)$ 上でハール分布に従う。特に、任意の固定されたユニタリ $V\in M_k(\mathbb C)$ に対し、$VQ$ は
 $Q$ と同じ分布をもつ。独立なブロックをもつユニタリ $\bigoplus_cQ_c$ は、$\mathcal M$ のユニタリ群上でハール分布に従う。
 
-*証明.* これは定理 5.3（左不変性はその証明の同変性の段階である）と系 5.4 である。$\square$
-
-（測度の集中とこれらの群についてさらに詳しくは、E. Meckes, *The Random Matrix Theory of the Classical
-Compact Groups*, Cambridge 2019 を参照。）
+*証明.* これは定理 5.3（左不変性はその証明の同変性の段階である。分布は一意性の補題 5.1 によってハール測度と
+同定され、その測度論的な段階は系 A.2 である）と系 5.4 である。$\square$
 
 **命題 11.11.** ハール分布に従う $U\in U(k)$ と $A\in M_k(\mathbb C)$ に対し、$\mathbb E\operatorname{Tr}(AU)=0$ かつ
 $\mathbb E|\operatorname{Tr}(AU)|^2=\|A\|_2^2/k$ である。
@@ -324,8 +352,11 @@ $$
 \mathbb P\big(|\operatorname{Tr}(XUY)|\ge\operatorname{Tr}(XY)\big)\le\frac{b^4}{a^4k^2}.
 $$
 
-*証明.* 等式は $A=YX$ に対する命題 11.11 と命題 3.9 である。$\sum_is_i^2\le(\sum_is_i)^2$ から
-$1/\sqrt k$ を得る。$s_1(A)\le\|Y\|\|X\|\le b^2$ かつ $s_k(A)=\min_{\|v\|=1}\|YXv\|\ge a^2$ であるから、$\|A\|_2^2\le kb^4$ かつ
+*証明.* 等式は $A=YX$ に対する命題 11.11（$\operatorname{Tr}(XUY)=\operatorname{Tr}(AU)$ であるから）と命題 3.9 である。
+$\|A\|_2^2=\sum_is_i^2\le(\sum_is_i)^2=\|A\|_1^2$（1.4節）であるから、比は $\le1/\sqrt k$ である。
+$\|Av\|=\||A|v\|$（1.4節）であるから、$|A|$ を対角化すると $s_k(A)=\min_{\|v\|=1}\|Av\|$ および
+$s_1(A)=\max_{\|v\|=1}\|Av\|$ を得る。また単位ベクトル $v$ に対し $\|Xv\|^2=\langle v,X^2v\rangle\in[a^2,b^2]$ であり
+（$X^2-a^2$ と $b^2-X^2$ に対する系 1.4(3)）、$Y$ についても同様である。よって $a^2\le s_k(A)\le s_1(A)\le b^2$、$\|A\|_2^2\le kb^4$、
 $\|A\|_1\ge ka^2$ である。最後に $\operatorname{Tr}(XY)=\operatorname{Tr}(X^{1/2}YX^{1/2})\ge a\operatorname{Tr}X\ge ka^2$ であり、
 $|\operatorname{Tr}(XUY)|^2$ に対するマルコフの不等式により、確率は $(kb^4/k)/(ka^2)^2$ で抑えられる。$\square$
 
