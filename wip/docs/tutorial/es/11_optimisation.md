@@ -460,18 +460,23 @@ assert z_mc.max().item() < 0                                               # ...
 ## 11.5 Búsqueda multiarranque de envolventes
 
 `optimize.extremize(objective, params, maximize)` ejecuta Adam en `rounds` rondas de `steps` pasos (tasa de
-aprendizaje `lr * decay**round`), recentra las cartas unitarias tras cada ronda y devuelve, **para cada
-arranque**, el mejor valor alcanzado. Cada elemento del lote es un arranque independiente con sus propias casillas,
-signos, $U_0$ y contraste. Los signos de `SelfAdjointParam` son discretos: entre rondas, `discrete_step` prueba
-ocho cambios de signo individuales por arranque, uno tras otro, y conserva cada cambio que mejora el objetivo.
+aprendizaje `lr * decay**round`) sobre la pérdida $\mp\sum_b\text{objective}_b$, recentra las cartas unitarias tras
+cada ronda y devuelve, **para cada arranque**, el mayor (el menor, para `maximize=False`) valor del objetivo entre los
+calculados en los iterados del gradiente y una vez en el punto final. Cada elemento del lote es un arranque
+independiente con sus propias casillas, signos, $U_0$ y contraste: Adam actúa coordenada a coordenada, así que, si la
+$b$-ésima entrada del objetivo depende solo de los $b$-ésimos parámetros (como en todos los objetivos de abajo), los
+arranques no interactúan. Los signos de `SelfAdjointParam` son discretos: entre rondas, `discrete_step` prueba ocho
+cambios de signo individuales por arranque (cada uno en una casilla uniformemente aleatoria), uno tras otro, y
+conserva cada cambio que mejora el objetivo.
 
-Como todo iterado es admisible (proposición 11.2), todo valor devuelto se alcanza: una maximización da una **cota
-inferior** del supremo, una minimización una cota superior del ínfimo, y nada más: una búsqueda local puede
-detenerse en un extremo local. La otra dirección requiere una demostración, como el corolario 11.7 y la
-proposición 11.9, o una relajación convexa (sección 11.6). Una envolvente calculada se contrasta (i) con formas
-cerradas; (ii) con configuraciones construidas a mano, como sumas directas de soluciones más pequeñas, por debajo
-de las cuales no debe quedar; (iii) con muestras estructuradas (espectros de dos niveles, bases de permutación) que
-se acercan a los extremos en toda dimensión, a diferencia de las muestras de Haar (`scripts/bounds_checks.py`).
+En aritmética exacta todo iterado es admisible (la proposición 11.2 y las observaciones que la siguen), así que todo
+valor devuelto es el valor de $z$ en un punto admisible; en coma flotante es ese valor salvo errores de redondeo (las
+aserciones de abajo admiten $10^{-12}$). Por tanto, una maximización da una **cota inferior** del supremo, una
+minimización una cota superior del ínfimo, y nada más: una búsqueda local puede detenerse en un extremo local. La
+otra dirección requiere una demostración, como el corolario 11.7 y la proposición 11.9, o una relajación convexa
+(sección 11.6). Una envolvente calculada se contrasta (i) con formas cerradas; (ii) con configuraciones construidas a
+mano, como sumas directas de soluciones más pequeñas, por debajo de las cuales no debe quedar; (iii) con muestras
+estructuradas (espectros de dos niveles, bases de permutación), cuyos valores son otros valores alcanzados.
 
 **Proposición 11.14 (envolvente inferior de Exp. 1).** Supongamos que todos los $k_c\ge2$. Sobre
 $X\in\mathcal P_\delta$, $Y\ge0$ con $\lambda_{\max}(Y)=1$ y unitarias $U\in\mathcal M$,
@@ -483,14 +488,19 @@ $z\ge-\operatorname{Tr}(XY)\ge-(D-2\delta/(1+\delta))$. La igualdad se da para $
 una vez y $1$ en el resto, $Y=1$, y $U=\bigoplus_cU_c$ con $\operatorname{Tr}(X_cU_c)=0$ (lema 11.13). $\square$
 
 El código comprueba la proposición 11.14 en $M_2\oplus M_2$, el corolario 11.7 en $M_3\oplus M_3$ (ambos contrastes
-prescritos, $k=3$ impar) y la proposición 11.9; supremos e ínfimos comparten una llamada, como antes. La palabra
-clave `is_self_adjoint` selecciona el algoritmo para la norma traza (valores singulares, o valores propios para
-$YXY$) sin una comprobación en cada paso. La última comprobación es del tipo (ii): el $z$ de Exp. 3 es aditivo
-respecto de las sumas directas, y el contraste de una suma directa es el mayor contraste de sus sumandos
-(ejercicio 3), luego
+prescritos, $k=3$ impar) y la proposición 11.9; supremos e ínfimos comparten una llamada, como antes. Las aserciones
+unilaterales (ningún valor devuelto más allá de un extremo demostrado) son consecuencias de estos teoremas; las
+aserciones de que la búsqueda llega a la tolerancia indicada del extremo son observaciones numéricas de esta
+ejecución con semilla fija. La palabra clave `is_self_adjoint` selecciona el algoritmo para la norma traza (valores
+singulares, o valores propios para $YXY$) sin una comprobación en cada paso. La última comprobación es del tipo (ii):
+el $z$ de Exp. 3 es aditivo respecto de las sumas directas, y el contraste de una suma directa es el mayor contraste
+de sus sumandos (ejercicio 3), luego, para las envolventes de Exp. 3 con $\Delta(Y)$ libre en $[0,0.999]$ como en el
+código,
 $$
-\overline z_{M_2\oplus M_2}(\delta)\ \ge\ \overline z_{M_2}(\delta)+\max_{\delta'\le\delta}\overline z_{M_2}(\delta').
+\overline z_{M_2\oplus M_2}(\delta)\ \ge\ \overline z_{M_2}(\delta)+\sup_{\delta'\le\delta}\overline z_{M_2}(\delta');
 $$
+en particular, la suma de dos valores alcanzados en $M_2$ con contrastes $\delta$ y $\delta'\le\delta$ es un valor
+alcanzado en $M_2\oplus M_2$ con contraste $\delta$.
 
 ```python
 torch.manual_seed(1)
@@ -546,23 +556,24 @@ assert inf3 >= -1e-12 and inf3 < 1e-6                                       # Pr
 assert sup_M22 >= direct_sum - 5e-3 * direct_sum                           # (ii), up to 0.5 %
 ```
 
-La búsqueda en $M_2\oplus M_2$ se queda alrededor de un $0.2\,\%$ por debajo de la suma directa: no ha convergido
-del todo, y la mejor cota inferior de $\overline z_{M_2\oplus M_2}(0.5)$ es el número mayor; detectar esto es el
-propósito de la comprobación (ii). Los valores para $M_2$ coinciden hasta $10^{-4}$ con
-$(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2$, donde $d=0.999$ es el mayor contraste admitido de $Y$:
-una forma cerrada que el artículo que acompaña a la biblioteca observó numéricamente (en álgebras reales) y no pudo
-demostrar; el código no la afirma. Para bloques mayores, las envolventes superiores de Exp. 1 y Exp. 3 no se
-conocen en forma cerrada, hasta donde sabemos; las curvas calculadas son entonces cotas inferiores y conjeturas,
-nada más.
+*Observaciones numéricas* (los valores impresos de esta ejecución). La búsqueda en $M_2\oplus M_2$ se queda
+alrededor de un $0.2\,\%$ por debajo de la suma directa: no ha convergido del todo, y la mejor cota inferior de
+$\overline z_{M_2\oplus M_2}(0.5)$ es el número mayor; detectar esto es el propósito de la comprobación (ii). Los
+valores para $M_2$ coinciden hasta $10^{-4}$ con $(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2$, donde
+$d=0.999$ es el mayor contraste admitido de $Y$. Esta forma cerrada **no** es un teorema de este curso: el artículo
+que acompaña a la biblioteca la observó numéricamente (en álgebras reales) y no la demostró, y el código la imprime
+sin afirmar nada sobre ella. Para bloques mayores no conocemos ninguna forma cerrada de las envolventes superiores
+de Exp. 1 y Exp. 3; las curvas calculadas son entonces cotas inferiores (valores alcanzados), nada más.
 
 ## 11.6 Con qué comparar
 
 **Manopt**, **pymanopt** y **geoopt** proporcionan variedades matriciales (variedades de Stiefel, grupos
 ortogonales y unitarios) con retracciones como la QR, la polar o la de Cayley, y resolvedores riemannianos
-(gradientes conjugados, regiones de confianza, Adam riemanniano) que suelen ser más eficientes que Adam en una carta
-recentrada. **cvxpy** con un resolvedor SDP resuelve problemas convexos en variables operador hasta la
-optimalidad global, con un certificado dual salvo la tolerancia del resolvedor, y las relajaciones semidefinidas
-dan cotas rigurosas en la dirección que una búsqueda local no puede dar. **NCTSSOS**, **ncpol2sdpa** y
+(gradientes conjugados, regiones de confianza, Adam riemanniano), una alternativa a Adam en una carta recentrada (no
+hacemos aquí ninguna comparación de rendimiento). **cvxpy** pasa problemas convexos en variables operador a
+resolvedores SDP, que devuelven un óptimo junto con un certificado dual, ambos salvo la tolerancia del resolvedor;
+una relajación —un problema convexo sobre un conjunto factible mayor— acota el supremo por arriba, la dirección que
+una búsqueda local no puede dar. **NCTSSOS**, **ncpol2sdpa** y
 **NCSOStools** acotan valores propios y trazas de polinomios no conmutativos en todas las dimensiones a la vez
 (sección 0.3). La biblioteca añade parametrizaciones exactas de las restricciones espectrales y de contraste de
 $\bigoplus_cM_{k_c}$ (los extremos pueden estar en cualquier sector), unitarias que respetan los bloques, y un único
@@ -583,11 +594,13 @@ extremizadores y cotas inferiores de supremos; el resto deben aportarlo demostra
 <details>
 <summary>Soluciones</summary>
 
-1. $S$ tiene valores propios imaginarios puros, luego $1\pm S$ son invertibles; conmutan, y $(1+S)^*=1-S$. Por
-   tanto $C^*C=(1-S)^{-1}(1+S)(1-S)(1+S)^{-1}=1$, y $1+C=2(1+S)^{-1}$ es invertible, luego
-   $-1\notin\operatorname{spec}C$. Recíprocamente, para una unitaria $U$ con $1+U$ invertible,
-   $S=(1-U)(1+U)^{-1}$ es antiautoadjunta: $S^*=(1+U^*)^{-1}(1-U^*)=(U+1)^{-1}U\,U^*(U-1)=-S$. Como $C$ conmuta
-   con $S$, $C(1+S)=1-S$ equivale a $S(1+C)=1-C$, es decir, $S=(1-C)(1+C)^{-1}$: las dos aplicaciones son
+1. $S$ es normal e $iS$ es autoadjunta, luego $S$ tiene valores propios imaginarios puros (corolario 1.4(2)) y
+   $1\pm S$ son invertibles; conmutan, y $(1+S)^*=1-S$. Por tanto $C^*C=(1-S)^{-1}(1+S)(1-S)(1+S)^{-1}=1$, y
+   $1+C=2(1+S)^{-1}$ es invertible, luego $-1\notin\operatorname{spec}C$. Recíprocamente, para una unitaria $U$ con
+   $1+U$ invertible, $S=(1-U)(1+U)^{-1}$ es antiautoadjunta:
+   $S^*=(1+U^*)^{-1}(1-U^*)=(U+1)^{-1}U\,U^*(U-1)=(U+1)^{-1}(U-1)=-S$, ya que $U\pm1$ conmutan. Para $C$ y $S$ que
+   conmutan, $C(1+S)=1-S$ equivale a $S(1+C)=1-C$ (ambas dicen $C+CS+S=1$). Ahora bien, $C(S)$ conmuta con $S$, y
+   $S=(1-U)(1+U)^{-1}$ conmuta con $U$; así, $U=C(S)$ si y solo si $S=(1-U)(1+U)^{-1}$: las dos aplicaciones son
    inversas una de la otra.
 
 ```python
@@ -600,8 +613,9 @@ assert torch.allclose((I4 - Cay) @ torch.linalg.inv(I4 + Cay), Sk, atol=1e-10)
 assert torch.linalg.eigvals(Cay).add(1).abs().min() > 1e-6        # -1 is never an eigenvalue
 ```
 
-2. El teorema 5.3 y su demostración valen para una matriz gaussiana real (densidad $\propto e^{-\|Z\|_2^2/2}$), el
-   grupo ortogonal y $V$ ortogonal (la observación que sigue al teorema 5.3), luego $VO$ tiene la ley de $O$.
+2. Por el teorema B.17 (también el lema C.2), el factor QR con signos corregidos $O$ de una matriz gaussiana real,
+   que la biblioteca muestrea para un álgebra real, está distribuido según la medida de Haar en $O(k)$, luego $VO$
+   tiene la ley de $O$ para $V\in O(k)$.
    La multiplicación por la izquierda por $\operatorname{diag}(\pm1)$ da $\mathbb E[O_{ij}O_{lm}]=0$ para $i\ne l$,
    las permutaciones muestran que $\mathbb E[O_{ij}O_{im}]$ no depende de $i$, y $\sum_iO_{ij}O_{im}=\delta_{jm}$;
    luego $\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k$ y $\mathbb E\operatorname{Tr}(AO)^2=\sum_{ij}A_{ji}^2/k$.
