@@ -47,15 +47,20 @@ Las **casillas** de $\mathcal M$ son los $D$ pares $(c,i)$, $i\le k_c$; para $\l
 $\operatorname{diag}(\lambda)=\bigoplus_c\operatorname{diag}(\lambda_{c,1},\dots,\lambda_{c,k_c})$.
 
 `optimize.PositiveParam` con contraste prescrito $\delta$ sortea, en cada arranque, dos casillas distintas
-$s_\pm=(c_\pm,i_\pm)$ y una unitaria aleatoria de Haar $U_0\in\mathcal M$, y envía $\theta\in\mathbb R^D$ y
+$s_\pm=(c_\pm,i_\pm)$ ($s_+$ uniformemente entre las $D$ casillas y luego $s_-$ uniformemente entre las $D-1$
+restantes, de modo que todo par ordenado de casillas distintas tiene probabilidad $1/(D(D-1))$) y una unitaria
+aleatoria de Haar $U_0\in\mathcal M$ (`random_unitary_operator`, lema 11.10), y envía $\theta\in\mathbb R^D$ y
 $G=\bigoplus_cG_c$ a
 $$
 X(\theta,G)=U\operatorname{diag}(\lambda)U^*,\qquad U=U_0\,e^{G-G^*},\qquad
 \lambda_{s_+}=1,\quad\lambda_{s_-}=\ell,\quad\lambda_s=\ell+(1-\ell)\tfrac{1+\sin\theta_s}2\ \text{otherwise}.
 $$
 `UnitaryParam` es la aplicación $G\mapsto U_0e^{G-G^*}$ sola. A diferencia de una sigmoide, $(1+\sin\theta)/2$
-alcanza $0$ y $1$ para $\theta$ finito, lo cual importa porque los espectros extremales suelen estar en $\ell$ y $1$.
-Un contraste libre en $[a,b]$ es un parámetro más, $\delta=a+(b-a)(1+\sin\eta)/2$.
+alcanza $0$ y $1$ para $\theta$ finito, lo cual es conveniente porque los espectros extremales de este capítulo
+(corolario 11.7, proposición 11.14) están en $\ell$ y $1$. Un contraste libre en $[a,b]$ es un parámetro más,
+$\delta=a+(b-a)(1+\sin\eta)/2$; el valor por defecto de la biblioteca es $[a,b]=[0,0.999]$, y el código de abajo lo
+mantiene. Un valor alcanzado con esta restricción también se alcanza sin ella, de modo que sigue siendo una cota
+inferior de un supremo sin restringir (una cota superior de un ínfimo sin restringir).
 
 **Lema 11.1.** Para toda unitaria $U_0\in\mathcal M$, $G\mapsto U_0e^{G-G^*}$ es sobreyectiva sobre el grupo
 unitario de $\mathcal M$.
@@ -80,17 +85,39 @@ $\lambda=\mu$ (si $\ell=1$, cualquier $\theta$ sirve). El lema 11.1 da $G$ con $
 casillas distintas en ellos; si $c_+=c_-$ y $\delta>0$, el bloque tiene dos valores propios diferentes, luego
 $k_{c_+}\ge2$; si $\delta=0$, $X=1$ y sirven dos casillas cualesquiera. $\square$
 
-Así, las casillas aleatorias permiten que una búsqueda multiarranque cubra toda la capa, y la restricción se cumple
-exactamente en cada iterado. `SelfAdjointParam` usa $X=U\operatorname{diag}(\sigma\lambda)U^*$ con signos
-$\sigma\in\{\pm1\}^D$ sorteados en cada arranque (y modificados solo por los cambios de signo de la sección 11.5),
-de modo que $|X|=U\operatorname{diag}(\lambda)U^*$, y (por la misma demostración) la unión sobre signos y casillas es
-$\{X=X^*:|X|\in\mathcal P_\delta\}$. Solo importa $S=G-G^*$. La aplicación $S\mapsto U_0e^S$ sobre los $S$
-antiautoadjuntos tiene diferencial $S\mapsto U_0S$ en $S=0$, una biyección sobre el espacio tangente
-$U_0\cdot\{S^*=-S\}$ del grupo unitario, luego es un difeomorfismo local cerca de $S=0$; lejos de $0$ no es
-inyectiva, y su diferencial es singular donde dos valores propios de $S$ difieren en un múltiplo no nulo de
-$2\pi i$. Por eso `extremize` **recentra** tras cada ronda ($U_0\leftarrow U_0e^{G-G^*}$, $G\leftarrow0$). La carta
-de Cayley $S\mapsto U_0C(-S/2)$ (ejercicio 1) y la retracción polar $S\mapsto$ factor unitario de $U_0(1+S)$
-(teorema 1.8) tienen la misma diferencial en $0$.
+Como todo par de casillas se sortea con probabilidad positiva, todo punto de la capa está, con probabilidad
+positiva, en la imagen de un arranque, y (en aritmética exacta) la restricción se cumple en cada iterado.
+`SelfAdjointParam` usa $X=U\operatorname{diag}(\sigma\lambda)U^*$ con signos $\sigma\in\{\pm1\}^D$ sorteados en cada
+arranque (en cada bloque, el número de signos menos es uniforme en $\{0,\dots,k_c\}$ y sus posiciones son
+uniformemente aleatorias, de modo que todo patrón de signos tiene probabilidad positiva) y modificados solo por los
+cambios de signo de la sección 11.5. Entonces $|X|=U\operatorname{diag}(\lambda)U^*$ (teorema 1.5(e), ya que
+$\lambda>0$), y la unión sobre signos y casillas es $\{X=X^*:|X|\in\mathcal P_\delta\}$: para un tal $X$,
+diagonalícese $X_c=W_c\operatorname{diag}(\nu_c)W_c^*$, de modo que $|X|_c=W_c\operatorname{diag}(|\nu_c|)W_c^*$ con
+$|\nu_{c,i}|\ge\ell>0$, y aplíquese la demostración de la proposición 11.2 a $\mu=|\nu|$ con $\sigma_s=\nu_s/|\nu_s|$.
+Solo importa $S=G-G^*$.
+
+La carta $S\mapsto U_0e^S$ solo se comporta bien cerca de $S=0$. Sean $\mathfrak u=\{S\in\mathcal M:S^*=-S\}$ y
+$\mathcal M_h=\{H\in\mathcal M:H^*=H\}$, subespacios reales con $\mathcal M=\mathfrak u\oplus\mathcal M_h$
+($X=\frac{X-X^*}2+\frac{X+X^*}2$). *Cerca de $0$, $S\mapsto U_0e^S$ es un homeomorfismo de una bola abierta $N\ni0$
+de $\mathfrak u$ sobre un entorno de $U_0$ en el grupo unitario.* En efecto, $\Psi(S,H)=U_0e^Se^H$ es una aplicación
+$C^1$ $\mathfrak u\times\mathcal M_h\to\mathcal M$ (la serie $\sum_{m,n\ge0}U_0S^mH^n/(m!\,n!)$ y la serie de las
+derivadas parciales de sus términos respecto de las coordenadas reales convergen uniformemente en los conjuntos
+acotados), y $e^{tS}e^{tH}=1+t(S+H)+O(t^2)$ muestra que su diferencial en $0$ es $(S,H)\mapsto U_0(S+H)$, una
+biyección sobre $\mathcal M$. Por el teorema de la función inversa existen bolas abiertas $N\ni0$ en $\mathfrak u$ y
+$N_h\ni0$ en $\mathcal M_h$ tales que $\Psi$ es un homeomorfismo de $N\times N_h$ sobre un abierto
+$O\subseteq\mathcal M$. Si $\Psi(S,H)$ es unitaria, también lo es $e^H=e^{-S}U_0^*\Psi(S,H)$ (en una base propia de la
+matriz normal $S$, cuyos valores propios son imaginarios, $e^{\pm S}$ son diagonales con entradas de módulo $1$ e
+inversas una de la otra); pero $e^H$ tiene los valores propios positivos $e^{h_i}$, siendo $h_i$ los valores propios
+de $H$, luego $e^{h_i}=1$ (corolario 1.4(2)) y $H=0$. Por tanto $O\cap U(\mathcal M)=U_0e^N$, donde $U(\mathcal M)$ es
+el grupo unitario de $\mathcal M$: un entorno de $U_0$ en $U(\mathcal M)$, y $S\mapsto U_0e^S$ es una biyección
+continua $N\to U_0e^N$ cuya inversa, la primera componente de $\Psi^{-1}$, es continua. Lejos de $0$ la carta no es
+inyectiva: $e^{2\pi iP}=1=e^0$ para toda proyección $P\in\mathcal M$. Por eso `extremize` **recentra** tras cada
+ronda ($U_0\leftarrow U_0e^{G-G^*}$, $G\leftarrow0$). Otras dos cartas tienen la misma diferencial $S\mapsto U_0S$ en
+$0$. La carta de Cayley $S\mapsto U_0C(-S/2)$ (ejercicio 1):
+$(1+tS/2)(1-tS/2)^{-1}=(1+tS/2)(1+tS/2+O(t^2))=1+tS+O(t^2)$. La retracción polar, $S\mapsto$ el factor unitario de
+$A=U_0(1+S)$ (teorema 1.8): $A^*A=(1-S)(1+S)=1+S^*S\ge1$ es invertible, luego $|A|$ es invertible y el factor
+unitario es $A|A|^{-1}$; con $tS$ en lugar de $S$, $|A|^{-1}=(1+t^2S^*S)^{-1/2}=1+O(t^2)$ (en una base propia de
+$S^*S$), luego el factor es $U_0(1+tS)+O(t^2)$.
 
 El código comprueba la restricción, y la proposición 11.2 de forma constructiva: los parámetros de la demostración
 reproducen un objetivo.
@@ -126,9 +153,10 @@ print(f"slots of 1 and lo: {(cp, ip)}, {(cm, im)};  reconstruction error {err:.1
 assert err < 1e-10
 ```
 
-> **Significado físico.** El contraste de Michelson es la visibilidad $(I_{\max}-I_{\min})/(I_{\max}+I_{\min})$ de
-> las franjas de interferencia. Para $0\le X\le1$ con $\lambda_{\max}=1$ —un filtro, un atenuador, la eficiencia de
-> un detector— fija el rango dinámico $\lambda_{\min}/\lambda_{\max}$, el inverso de un número de condición.
+> **Significado físico** (interpretación física, no un teorema de este curso). El contraste de Michelson es la
+> visibilidad $(I_{\max}-I_{\min})/(I_{\max}+I_{\min})$ de las franjas de interferencia. Para $0\le X\le1$ con
+> $\lambda_{\max}=1$ —un filtro, un atenuador, la eficiencia de un detector— fija el rango dinámico
+> $\lambda_{\min}/\lambda_{\max}$, el inverso de un número de condición.
 
 ## 11.2 La desigualdad de trazas de von Neumann
 
@@ -179,8 +207,9 @@ aplíquese el lema 11.3 (su cota inferior es $\sum_ip^\downarrow_iq^\downarrow_{
 $\|PQ\|_1=\max_U|\operatorname{Tr}(P\,QU)|\le\sum_is_i(P)s_i(QU)$, y $s_i(QU)=q^\downarrow_i$ porque
 $|QU|=(U^*Q^2U)^{1/2}=U^*QU$ (teorema 1.6). $\square$
 
-Así, la violación de la proposición 3.9 es a lo sumo $\sum_ix^\downarrow_i(y^\downarrow_i-y^\uparrow_i)$. Para Exp. 2,
-este número es la respuesta exacta:
+Así, para $X,Y\ge0$ en $M_k(\mathbb C)$ con espectros $x,y$, la violación $\|YX\|_1-\operatorname{Tr}(XY)$ de la
+proposición 3.9 es a lo sumo $\sum_ix^\downarrow_i(y^\downarrow_i-y^\uparrow_i)$ (corolario 11.5(b) para $(Y,X)$ y la
+cota inferior de (a)). Para Exp. 2, este número es la respuesta exacta:
 
 **Proposición 11.6 (Exp. 2 con espectros fijos).** En Exp. 2, $|X|=X_0$, $|Y|=Y_0$ y
 $z=\|X_0VY_0\|_1-\operatorname{Tr}(X_0Y_0)$. Si los espectros $x_c$ de $(X_0)_c$ e $y_c$ de $(Y_0)_c$ están fijos y
@@ -218,9 +247,10 @@ aporta $x_i(y_i-y_i)=0$. Por tanto
 $$
 \sum_ix_i(y_i-y_{k+1-i})=\sum_{i\le\lfloor k/2\rfloor}(x_i-x_{k+1-i})(y_i-y_{k+1-i})\le\Big\lfloor\frac k2\Big\rfloor(1-\ell_X)(1-\ell_Y),
 $$
-ya que $x_i\in[\ell_X,1]$, $y_i\in[\ell_Y,1]$. La igualdad se da si en cada bloque los $\lfloor k_c/2\rfloor$ valores
-propios mayores valen $1$ y los $\lfloor k_c/2\rfloor$ menores valen $\ell_X$ (resp. $\ell_Y$), siendo arbitrario el
-central; estos espectros tienen extremos globales $1$ y $\ell_X$ ($\ell_Y$) porque $k_c\ge2$ para algún $c$. La
+ya que $x_i\in[\ell_X,1]$, $y_i\in[\ell_Y,1]$ son decrecientes, de modo que ambos factores están en $[0,1-\ell_X]$ y
+$[0,1-\ell_Y]$. La igualdad se da si en cada bloque los $\lfloor k_c/2\rfloor$ valores propios mayores valen $1$ y los
+$\lfloor k_c/2\rfloor$ menores valen $\ell_X$ (resp. $\ell_Y$), siendo el central ($k_c$ impar) arbitrario en
+$[\ell_X,1]$ (resp. $[\ell_Y,1]$); estos espectros tienen extremos globales $1$ y $\ell_X$ ($\ell_Y$) porque $k_c\ge2$ para algún $c$. La
 proposición 11.6 permite concluir. $\square$
 
 Aquí $1-\ell_X=2\delta/(1+\delta)$ para $\Delta(|X|)=\delta$; para $k_c$ impar, el valor propio central es irrelevante.
@@ -264,13 +294,15 @@ assert abs(z_max - exact) < 1e-12 and abs(z_min + exact) < 1e-12 and abs(exact -
 ## 11.3 Una desigualdad de trazas con condición de igualdad
 
 Para $X=X^*$, sea $X_\pm=f_\pm(X)$ con $f_+(t)=\max(t,0)$, $f_-(t)=\max(-t,0)$. Entonces $X_\pm\ge0$, $X=X_+-X_-$,
-$|X|=X_++X_-$ y $X_+X_-=0$ (teorema 1.5(c)).
+$|X|=X_++X_-$ y $X_+X_-=0$ (teorema 1.5(c), y 1.5(e) para $|X|=(X^2)^{1/2}=h(X)$ con
+$h(t)=\sqrt{t^2}=|t|=f_+(t)+f_-(t)$; corolario 1.4(3) para la positividad).
 
 **Lema 11.8.** Para $A,B\ge0$ en $M_n(\mathbb C)$, $\|A-B\|_1\le\operatorname{Tr}A+\operatorname{Tr}B$, con igualdad si y
 solo si $AB=0$.
 
-*Demostración.* Sean $H=A-B$ y $Q=g(H)$ con $g=1$ en $(0,\infty)$ y $g=0$ en el resto. Como $|t|=t(2g(t)-1)$, se
-tiene $|H|=H(2Q-1)$ y
+*Demostración.* Sean $H=A-B$ y $Q=g(H)$ con $g=1$ en $(0,\infty)$ y $g=0$ en el resto; $Q$ es una proyección, ya que
+$g=\bar g=g^2$ (teorema 1.5(c)). Como $|t|=t(2g(t)-1)$, se tiene $|H|=H(2Q-1)$ (teorema 1.5(c),(e)), y, usando
+$\operatorname{Tr}(AR)=\operatorname{Tr}(RAR)$ para las proyecciones $R=Q,1-Q$ (ciclicidad),
 $$
 \|H\|_1=\operatorname{Tr}\big(A(2Q-1)\big)-\operatorname{Tr}\big(B(2Q-1)\big)
 =\operatorname{Tr}A+\operatorname{Tr}B-2\operatorname{Tr}\big((1-Q)A(1-Q)\big)-2\operatorname{Tr}(QBQ).
@@ -317,11 +349,9 @@ independientes con densidad $\pi^{-1}e^{-|z|^2}$; la receta de Mezzadri), de for
 $V\in M_k(\mathbb C)$, $VQ$ tiene la ley de $Q$. La unitaria $\bigoplus_cQ_c$ con bloques independientes está
 distribuida según la medida de Haar en el grupo unitario de $\mathcal M$.
 
-*Demostración.* Es el teorema 5.3 (la invariancia por la izquierda es el paso de equivariancia de su demostración)
-y el corolario 5.4. $\square$
-
-(Para la concentración de la medida y más sobre estos grupos, véase E. Meckes, *The Random Matrix Theory of the
-Classical Compact Groups*, Cambridge 2019.)
+*Demostración.* Es el teorema 5.3 (la invariancia por la izquierda es el paso de equivariancia de su demostración;
+la ley se identifica con la medida de Haar mediante el lema de unicidad 5.1, cuyo paso de teoría de la medida es el
+corolario A.2) y el corolario 5.4. $\square$
 
 **Proposición 11.11.** Para $U\in U(k)$ de Haar y $A\in M_k(\mathbb C)$: $\mathbb E\operatorname{Tr}(AU)=0$ y
 $\mathbb E|\operatorname{Tr}(AU)|^2=\|A\|_2^2/k$.
@@ -340,18 +370,22 @@ $$
 \mathbb P\big(|\operatorname{Tr}(XUY)|\ge\operatorname{Tr}(XY)\big)\le\frac{b^4}{a^4k^2}.
 $$
 
-*Demostración.* La igualdad es la proposición 11.11 para $A=YX$ junto con la proposición 3.9.
-$\sum_is_i^2\le(\sum_is_i)^2$ da $1/\sqrt k$. Como $s_1(A)\le\|Y\|\|X\|\le b^2$ y
-$s_k(A)=\min_{\|v\|=1}\|YXv\|\ge a^2$, se tiene $\|A\|_2^2\le kb^4$ y $\|A\|_1\ge ka^2$. Por último,
+*Demostración.* La igualdad es la proposición 11.11 para $A=YX$ (pues
+$\operatorname{Tr}(XUY)=\operatorname{Tr}(AU)$) junto con la proposición 3.9. Como
+$\|A\|_2^2=\sum_is_i^2\le(\sum_is_i)^2=\|A\|_1^2$ (sección 1.4), el cociente es $\le1/\sqrt k$. Como
+$\|Av\|=\||A|v\|$ (sección 1.4), diagonalizando $|A|$ se obtiene $s_k(A)=\min_{\|v\|=1}\|Av\|$ y
+$s_1(A)=\max_{\|v\|=1}\|Av\|$; y $\|Xv\|^2=\langle v,X^2v\rangle\in[a^2,b^2]$ para $v$ unitario (corolario 1.4(3)
+para $X^2-a^2$ y $b^2-X^2$), y lo mismo para $Y$. Por tanto $a^2\le s_k(A)\le s_1(A)\le b^2$, $\|A\|_2^2\le kb^4$ y
+$\|A\|_1\ge ka^2$. Por último,
 $\operatorname{Tr}(XY)=\operatorname{Tr}(X^{1/2}YX^{1/2})\ge a\operatorname{Tr}X\ge ka^2$, y la desigualdad de Markov para
 $|\operatorname{Tr}(XUY)|^2$ acota la probabilidad por $(kb^4/k)/(ka^2)^2$. $\square$
 
 Así, $N$ muestras de Haar encuentran una violación de $|\operatorname{Tr}(XUY)|\le\operatorname{Tr}(XY)$ con probabilidad
-a lo sumo $Nb^4/(a^4k^2)$, aunque existe una para todo par que no conmuta. La realidad es aún más drástica:
-$f(U)=|\operatorname{Tr}(AU)|$ es lipschitziana con constante $L=\|A\|_2$ respecto de $\|U-V\|_2$, luego
-$\mathbb P(f\ge\mathbb Ef+t)\le e^{-ckt^2/L^2}$ con una constante absoluta $c>0$ (concentración de la medida,
-enunciada sin demostración; Meckes, *loc. cit.*, cap. 5): aquí, un exponente del orden de $k^2a^4/b^4$. El código
-comprueba la proposición 11.11 e imprime, para espectros uniformes en $[0.2,1.2]$ ($b/a=6$), el cociente del
+a lo sumo $Nb^4/(a^4k^2)$ (una unión de $N$ sucesos), aunque existe una para todo par que no conmuta
+(proposición 3.9). La cota solo es informativa para $k>\sqrt N\,b^2/a^2$ (para $b/a=6$ y $N=2000$: $k>1609$);
+numéricamente, las muestras pasan por alto la violación ya para $k$ mucho menores (véase abajo). El código comprueba
+la proposición 11.11 por Monte Carlo (la media muestral está a menos de cinco errores estándar del valor exacto, en
+esta ejecución con semilla fija) e imprime, para espectros uniformes en $[0.2,1.2]$ ($b/a=6$), el cociente del
 corolario 11.12, $\sup z$ y el mejor $z$ de $2000$ muestras, ambos relativos a $\operatorname{Tr}(XY)$.
 
 ```python
@@ -379,19 +413,26 @@ for k in (2, 4, 8, 16, 32):
     assert nuc > trXY and best < nuc and (k < 4 or best < trXY)            # from k = 4 on: no violation found
 ```
 
-El cociente decrece como $1/k$, y a partir de $k=4$ la mejor muestra ni siquiera alcanza $z=0$. Los extremos son
-conjuntos de medida de Haar diminuta, a los que un método de gradiente llega directamente. Para el par `Xf, Yf` se
-conocen ambos extremos sobre $U$:
+*Observación numérica* (la tabla impresa; afirmada solo para esta ejecución con semilla fija): el cociente se
+mantiene por debajo de la cota demostrada $\min(1/\sqrt k,b^2/(a^2k))$ y se reduce aproximadamente a la mitad cada
+vez que $k$ se duplica, es decir, decrece como $1/k$, y a partir de $k=4$ la mejor de $2000$ muestras ni siquiera
+alcanza $z=0$. Una búsqueda por gradiente, en cambio, se acerca a ambos extremos en la ejecución de abajo (de nuevo,
+una observación numérica). Para el par `Xf, Yf` se conocen ambos extremos sobre $U$:
 
 **Lema 11.13.** Si $k\ge2$, entonces $\min_U|\operatorname{Tr}(AU)|=0$ para toda $A\in M_k(\mathbb C)$.
 
 *Demostración.* Sean $A=W\Sigma V^*$ y $P$ el desplazamiento cíclico, $Pe_i=e_{(i\bmod k)+1}$, cuya diagonal se anula
 para $k\ge2$. Para $U=VPW^*$, $\operatorname{Tr}(AU)=\operatorname{Tr}(\Sigma P)=0$. $\square$
 
-Así, $\inf_Uz=-\operatorname{Tr}(XY)$ y $\sup_Uz=\|YX\|_1-\operatorname{Tr}(XY)$. Una sola llamada a `extremize`
-encuentra ambos, con $12$ arranques que maximizan $z$ y $12$ que maximizan $-z$. El muestreo se acerca al ínfimo,
-que está junto a los valores típicos ($|\operatorname{Tr}(XUY)|$ es típicamente del orden de $\|YX\|_2/\sqrt k$), pero
-no al supremo:
+Así, $\inf_Uz=-\operatorname{Tr}(XY)$ y $\sup_Uz=\|YX\|_1-\operatorname{Tr}(XY)$ (proposición 3.9). Una sola llamada a
+`extremize` aproxima ambos, con $12$ arranques que maximizan $z$ y $12$ que maximizan $-z$ (con una precisión relativa
+de $10^{-3}$ en esta ejecución, afirmada abajo). Por la proposición 11.11, la media cuadrática de
+$|\operatorname{Tr}(XUY)|$ es $\|YX\|_2/\sqrt k$; con las cotas de la demostración del corolario 11.12 (espectros en
+$[a,b]$), $\mathbb E|\operatorname{Tr}(XUY)|^2\le b^4$ y $\operatorname{Tr}(XY)\ge ka^2$, de modo que la desigualdad de
+Markov da $\mathbb P\big(z\ge-(1-\varepsilon)\operatorname{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)$ para
+$\varepsilon>0$: para $k$ grande, $z$ está cerca de su ínfimo con probabilidad alta.
+*Observación numérica* (afirmada para esta ejecución con semilla fija): el muestreo llega a menos de un $1\,\%$ del
+ínfimo, pero ni siquiera alcanza $z=0$, mientras que el supremo es positivo:
 
 ```python
 trXY = (Xf @ Yf).trace.real
@@ -410,11 +451,11 @@ assert z_mc.min().item() - inf_exact < 1e-2 * abs(inf_exact)               # sam
 assert z_mc.max().item() < 0                                               # ... but misses the violation
 ```
 
-> **Significado físico.** La concentración de la medida es la forma matemática de la **tipicidad** en mecánica
-> estadística: en dimensión alta, casi todo estado o toda evolución da el mismo valor de una magnitud macroscópica.
-> Una desigualdad óptima se decide en configuraciones finamente ajustadas —bases propias alineadas, espectros de
-> dos niveles— que una unitaria aleatoria (un circuito aleatorio, una matriz de dispersión aleatoria) prácticamente
-> nunca produce.
+> **Significado físico** (interpretación física, no un teorema de este curso). El corolario 11.12 es un ejemplo
+> débil y demostrable de lo que la mecánica estadística llama **tipicidad**: en dimensión alta se espera que casi
+> todo estado o toda evolución dé aproximadamente el mismo valor de una magnitud macroscópica. Una desigualdad
+> óptima se decide en configuraciones finamente ajustadas —bases propias alineadas, espectros de dos niveles— que
+> una unitaria aleatoria (un circuito aleatorio, una matriz de dispersión aleatoria) rara vez produce.
 
 ## 11.5 Búsqueda multiarranque de envolventes
 

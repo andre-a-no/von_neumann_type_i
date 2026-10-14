@@ -326,21 +326,42 @@ for n in (6, 8, 10, 12):
     s = SU2Chain(n, 'periodic', complex_valued=False)
     e = [torch.linalg.eigvalsh(s.heisenberg(spin=S).matrix[0, 0])[0].item() for S in (0, 1)]
     gap[n] = n * (e[1] - e[0])
-print({n: round(g, 4) for n, g in gap.items()}, round(math.pi ** 2 / 2, 4))
-assert 0 < gap[6] < gap[8] < gap[10] < gap[12] < math.pi ** 2 / 2
+print({n: round(g, 4) for n, g in gap.items()})
+assert 0 < gap[6] < gap[8] < gap[10] < gap[12]                      # > 0: Theorem 9.9; increase: numerical
+n8, A_set = 8, (0, 1, 2, 3, 4)                                      # A = {0, ..., 4}, B = {5, 6, 7}
+edges = [(0, 5), (1, 5), (1, 6), (2, 6), (3, 6), (4, 7), (0, 7), (0, 1), (2, 3), (5, 6)]   # connected
+g8 = torch.Generator().manual_seed(2)
+J8 = [(1 if (i in A_set) != (j in A_set) else -1) * (0.5 + torch.rand(1, generator=g8).item()) for i, j in edges]
+dot = lambda i, j: 0.5 * (op(n8, {i: sp, j: sm}) + op(n8, {i: sm, j: sp})) + op(n8, {i: sz, j: sz})
+H8 = sum(Jij * dot(i, j) for Jij, (i, j) in zip(J8, edges))          # J_ij > 0 between, < 0 within A, B
+Sp8, Sz8 = sum(op(n8, {i: sp}) for i in range(n8)), sum(op(n8, {i: sz}) for i in range(n8))
+S2 = Sp8.T @ Sp8 + Sz8 @ Sz8 + Sz8                                  # S^2 = S^- S^+ + (S^z)^2 + S^z
+n_up = torch.tensor([bin(b).count('1') for b in range(2 ** n8)])
+n_B = torch.tensor([bin(b >> 5).count('1') for b in range(2 ** n8)])  # up spins on B
+for N in range(4, 9):                                               # sectors S^z = M = N - 4 >= 0
+    idx = torch.nonzero(n_up == N).flatten()
+    w, U = torch.linalg.eigh(H8[idx][:, idx])
+    x, spin = (-1.0) ** n_B[idx] * U[:, 0], max(N - 4, 1)            # expected spin max(M, S_*)
+    assert (x * x.sum().sign()).min() > 0 and (len(w) == 1 or w[1] - w[0] > 1e-8)          # Theorem 9.7
+    assert abs(U[:, 0] @ S2[idx][:, idx] @ U[:, 0] - spin * (spin + 1)) < 1e-10           # Theorem 9.9(a)
+w8 = torch.linalg.eigvalsh(H8)
+assert w8[2] - w8[0] < 1e-10 and w8[3] - w8[0] > 1e-8                # ground space: one triplet, S_* = 1
 ```
 
 Die $SU(2)$-Blöcke haben die Größen $m_S=132,297,275,154,54,11,1$ gegenüber $924$ für den größten $U(1)$-Block, und
-der Aufwand $\sum k^3$ der Diagonalisierung sinkt von $2.0\cdot10^9$ auf $5.3\cdot10^7$. $L$ mal die Lücke wächst
-langsam, $4.108,4.181,4.232,4.270$ für $L=6,\dots,12$, gegen $\pi^2/2\approx4.935$.
+der Aufwand $\sum k^3$ der Diagonalisierung sinkt von $2.0\cdot10^9$ auf $5.3\cdot10^7$. *Numerische Beobachtung:*
+$L$ mal die Lücke wächst langsam, $4.108,4.181,4.232,4.270$ für $L=6,\dots,12$; über ihr Verhalten für $L\to\infty$
+beweisen wir nichts.
 
-**Korrelationen.** Die Spins der Plätze bilden einen Tensoroperator vom Rang eins, und nach dem
-**Wigner-Eckart-Theorem** sind ihre Matrixelemente zwischen Multipletts ein Clebsch-Gordan-Koeffizient mal ein
-**reduziertes Matrixelement** $\langle S',a\|\mathbf s_i\|S,b\rangle$, das nicht von den magnetischen Quantenzahlen
-abhängt (A. R. Edmonds, *Angular Momentum in Quantum Mechanics*, Princeton 1957, Kap. 5; ohne Beweis).
-`spin_correlation` nutzt dies, um $\mathbf s_i\cdot\mathbf s_j$ auf jedem $H_S$ allein aus Vektoren höchsten
-Gewichts zu bauen; die Methode `'direct'` projiziert stattdessen den Bindungsoperator. Wir vergleichen beide mit dem
-im $U(1)$-Sektor ausgeschriebenen Grundzustand:
+**Korrelationen.** Die Spins der Plätze bilden Vektoroperatoren und ihre sphärischen Komponenten Tensoroperatoren
+vom Rang eins (Lemma B.15(a),(b)). Nach dem **Wigner-Eckart-Theorem** (Satz B.16) sind ihre Matrixelemente zwischen
+zwei Multipletts ein Clebsch-Gordan-Koeffizient mal ein **reduziertes Matrixelement**, das nicht von den
+magnetischen Quantenzahlen abhängt, und $\mathbf s_i\cdot\mathbf s_j=\sum_q(-1)^qs^{(i)}_qs^{(j)}_{-q}$ (Lemma B.15(a)).
+`spin_correlation` nutzt dies, um $\mathbf s_i\cdot\mathbf s_j$ auf jedem $H_S$ allein aus Vektoren höchsten Gewichts
+zu bauen; die Methode `'direct'` komprimiert stattdessen den Bindungsoperator auf die Vektoren höchsten Gewichts,
+was nach Proposition 4.15(b) korrekt ist, da $\mathbf s_i\cdot\mathbf s_j\in\{S_a\}'$. Dass die Implementierung der ersten
+Methode korrekt ist, wird hier nicht bewiesen; der Code prüft, dass beide untereinander und mit der Definition
+übereinstimmen, ausgewertet auf dem im $U(1)$-Sektor ausgeschriebenen Grundzustand:
 
 ```python
 gs = sym.ground_state(H_su2)
@@ -363,13 +384,21 @@ print([round(x, 4) for x in corr_we.tolist()])
 ```
 
 Die Korrelationen $\langle\mathbf s_0\cdot\mathbf s_r\rangle=0.75,-0.4489,0.1878,-0.1658,0.1209,-0.1224,0.1070,\dots$
-wechseln das Vorzeichen, wie es die Sätze 9.7 und 9.9 erzwingen: Das Singulett ist invariant unter Drehungen, die
-die Achsen permutieren, und $\langle s^+_0s^+_r\rangle=0$ im Sektor $S^z=0$, also
-$\langle\mathbf s_0\cdot\mathbf s_r\rangle=3\langle s^x_0s^x_r\rangle=
-\frac34\langle s^+_0s^-_r+s^-_0s^+_r\rangle=\frac34\sum_{b_0\ne b_r}\psi(b)\psi(b')$, wobei $b'$ aus $b$ durch Vertauschen
-der Spins auf den Plätzen $0$ und $r$ entsteht; da $N_B(b')-N_B(b)$ für ungerades $r$ gleich $\pm1$ und für gerades
-$r$ gleich $0$ ist, hat jeder Term das Vorzeichen $(-1)^r$. Der Abfall ist langsam, wie $(-1)^r\sqrt{\log r}/r$ für
-$L\to\infty$ (Affleck et al., *loc. cit.*; ohne Beweis).
+wechseln das Vorzeichen, und die Sätze 9.7 und 9.9 erzwingen dies für jeden geraden Ring. Sei $\psi$ der reelle
+normierte Grundzustand, ein Singulett (Satz 9.9) und daher der Grundzustand des Sektors $S^z=0$. Aus
+$\mathbf S^2\psi=0$ folgt $\|S^\pm\psi\|^2=\langle\psi,S^\mp S^\pm\psi\rangle=\langle\psi,(\mathbf S^2-(S^z)^2\mp S^z)\psi\rangle=0$, also
+$S^\pm\psi=0$ und $\langle\psi,[S^+,[S^-,X]]\psi\rangle=0$ für jedes $X$ (jeder der vier Terme hat $S^\pm$ neben $\psi$). Für
+$X=s^z_0s^z_r$, $r\ne0$, liefern die Relationen $[s^\pm,s^z]=\mp s^\pm$, $[s^+,s^-]=2s^z$ die Identitäten
+$[S^-,X]=s^-_0s^z_r+s^z_0s^-_r$ und $[S^+,[S^-,X]]=4s^z_0s^z_r-s^+_0s^-_r-s^-_0s^+_r$. Daher ist
+$\langle s^z_0s^z_r\rangle=\frac14\langle s^+_0s^-_r+s^-_0s^+_r\rangle$ und
+$$
+\langle\mathbf s_0\cdot\mathbf s_r\rangle=\langle s^z_0s^z_r\rangle+\tfrac12\langle s^+_0s^-_r+s^-_0s^+_r\rangle
+=\tfrac34\sum_{b_0\ne b_r}\psi(b)\psi(b') ,
+$$
+wobei $b'$ aus $b$ durch Vertauschen der Spins auf den Plätzen $0$ und $r$ entsteht. Nach Satz 9.7 hat
+$\psi(b)\psi(b')$ das Vorzeichen von $(-1)^{N_B(b)+N_B(b')}$, und $N_B(b')-N_B(b)$ ist für ungerades $r$ gleich $\pm1$ und
+für gerades $r$ gleich $0$; die Summe ist nicht leer, also ist $\langle\mathbf s_0\cdot\mathbf s_r\rangle$ für $0<r<L$ von
+null verschieden mit dem Vorzeichen $(-1)^r$.
 
 ## 9.4 Exakte Prüfungen: freie Fermionen und der Bethe-Ansatz
 
@@ -385,7 +414,8 @@ Eigenbasis des Sektors $N$, mit Energien $\sum_{k\in K}\varepsilon_k$.
 *Beweis.* (a) Operatoren auf verschiedenen Plätzen kommutieren, und auf einem Platz antikommutiert $(-1)^n$ mit
 $s^\pm$. Für $i<j$ treffen $c_i$ und $c_j^*$ (oder $c_j$) auf Platz $i$ als $s^-_i$ und $(-1)^{n_i}$ aufeinander –
 eine Antivertauschung – und kommutieren ansonsten, also antikommutieren sie. Für $i=j$ quadrieren sich die Strings
-zu $1$, und $c_jc_j^*+c_j^*c_j=s^-_js^+_j+s^+_js^-_j=1$, $c_j^*c_j=s^+_js^-_j=n_j$. (b)
+zu $1$, und $c_jc_j^*+c_j^*c_j=s^-_js^+_j+s^+_js^-_j=1$, $c_j^*c_j=s^+_js^-_j=n_j$, $c_j^2=(s^-_j)^2=0$; der Fall $i>j$
+folgt durch Vertauschen der Rollen von $i,j$ (und Übergang zu den Adjungierten). (b)
 $c_j^*c_{j+1}=s^+_j(-1)^{n_j}s^-_{j+1}=s^+_js^-_{j+1}$, da $s^+_j\neq0$ nur auf $n_j=0$; dann geht man zu den
 Adjungierten über. (c) $\{b_k,b_l^*\}=\sum_ju_k(j)u_l(j)=\delta_{kl}$ und $\{b_k,b_l\}=0$, und
 $H=\sum_k\varepsilon_kb_k^*b_k$ nach der Spektralzerlegung von $h$. Aus den CAR folgt $[b_l^*b_l,b_k^*]=\delta_{lk}b_k^*$,
@@ -446,7 +476,8 @@ Ist $x_2=x_1+L-1$, so verwende man den Repräsentanten $(x_2,x_1+L)$, der vom vo
 Proposition 9.12 sagt nur, dass Lösungen Eigenvektoren liefern; sie sagt nicht, dass alle Eigenvektoren so
 entstehen. Wir schreiben $k_{1,2}=K/2\pm q$ und $c=\cos\frac K2$. Dann ist
 $1+e^{iK}-2\Delta e^{ik_{1,2}}=2e^{iK/2}(c-\Delta e^{\pm iq})$, also lösen $A_{12}=c-\Delta e^{iq}$,
-$A_{21}=-(c-\Delta e^{-iq})$ die Gleichung (i). Multiplikation der beiden Gleichungen (ii) ergibt $e^{iKL}=1$,
+$A_{21}=-(c-\Delta e^{-iq})$ die Gleichung (i). Nach (ii) und $(A_{12},A_{21})\ne0$ sind beide Koeffizienten von null
+verschieden, also ergibt Multiplikation der beiden Gleichungen (ii) $e^{iKL}=1$,
 $K=2\pi n/L$, und dann ist (ii) äquivalent zu $F(q)=(-1)^ne^{iqL}(c-\Delta e^{-iq})+c-\Delta e^{iq}=0$, einer Gleichung
 in einer Variablen. Wir suchen ihre Nullstellen $q\in(0,\pi)$, wo $e^{-iqL/2}F(q)$ reell oder rein imaginär ist,
 weil $c-\Delta e^{\pm iq}$ zueinander komplex konjugiert sind (Streuzustände), und auf den Geraden $q=i\kappa$,
@@ -488,22 +519,22 @@ for x in range(8):
 assert close(ring8.xxz(1.0, Delta, sector=2).matrix[0, 0] @ Phi, (8 * Delta / 4 - Delta) * Phi)   # E_F - J Delta
 ```
 
-Für $L=9$ stammen alle $36$ Eigenzustände aus den Bethe-Gleichungen: $34$ Streuzustände und $2$ gebundene
-Zustände. Die Vollständigkeit wird hier überprüft, nicht bewiesen, und für gerades $L$ ist sie verletzt. Ist
-$\Delta\ne0$, so erfüllt $\Phi=\sum_x(-1)^x|x,x+1\rangle$ die Gleichungen $T\Phi=-\Phi$ und $H\Phi=(E_F-J\Delta)\Phi$ (die
-Sprünge nach $|x-1,x+1\rangle$ und $|x,x+2\rangle$ heben sich paarweise auf). Ein Bethe-Vektor erfüllt
-$T\Psi=e^{-iK}\Psi$, da $\psi(x_1-1,x_2-1)=e^{-iK}\psi(x_1,x_2)$; ist $e^{iK}=-1$, so gilt
-$\cos k_1+\cos k_2=2\cos\frac K2\cos\frac{k_1-k_2}2=0$, und seine Energie ist $E_F-2J\Delta$. Also ist $\Phi$ zu allen
-Bethe-Vektoren orthogonal (die letzten Zeilen des Codes prüfen $H\Phi$ für $L=8$). Mit $\Delta=0.6$ und $4\le L\le13$
-findet die obige Suche für ungerades $L$ alle Zustände und für gerades $L$ alle außer $\Phi$. Für $N>2$ Magnonen hat
-der Ansatz $N!$ Terme und $N$ gekoppelte Bethe-Gleichungen (H. Bethe, *Z. Phys.* 71 (1931) 205; M. Karbach,
-G. Müller, *Computers in Physics* 11 (1997) 36).
+*Numerische Beobachtung:* Für $L=9$ und $\Delta=0.6$ findet die Suche $36$ Nullstellen, $34$ Streuzustände und $2$
+gebundene Zustände, deren Vektoren linear unabhängige Eigenvektoren sind (bis auf Rundung): Alle $36$ Eigenzustände
+stammen aus den Bethe-Gleichungen. Die Vollständigkeit für andere $L$ beweisen wir nicht, und für gerades $L$ und
+$\Delta\ne0$ ist sie verletzt, wie wir nun zeigen. Ist $\Delta\ne0$, so erfüllt $\Phi=\sum_x(-1)^x|x,x+1\rangle$ die
+Gleichungen $T\Phi=-\Phi$ und $H\Phi=(E_F-J\Delta)\Phi$ (die Sprünge nach $|x-1,x+1\rangle$ und $|x,x+2\rangle$ heben sich
+paarweise auf). Ein Bethe-Vektor erfüllt $T\Psi=e^{-iK}\Psi$, da $\psi(x_1-1,x_2-1)=e^{-iK}\psi(x_1,x_2)$. Ist
+$e^{-iK}\ne-1$, so ist $\Psi\perp\Phi$, weil beide Eigenvektoren des unitären $T$ zu verschiedenen Eigenwerten sind;
+ist $e^{iK}=-1$, so gilt $\cos k_1+\cos k_2=2\cos\frac K2\cos\frac{k_1-k_2}2=0$, die Energie von $\Psi$ ist
+$E_F-2J\Delta\ne E_F-J\Delta$, und $\Psi\perp\Phi$ als Eigenvektoren von $H$ zu verschiedenen Eigenwerten. Also ist $\Phi$
+zu allen Bethe-Vektoren aus Proposition 9.12 orthogonal, die daher den Sektor $N=2$ eines geraden Rings nie
+aufspannen (die letzten Zeilen des Codes prüfen $H\Phi$ für $L=8$). Die Zwei-Magnonen-Rechnung ist der Fall $N=2$
+des Ansatzes von H. Bethe (*Z. Phys.* 71 (1931) 205); keinen anderen Fall verwenden wir.
 
-> **Physikalische Bedeutung.** Ein Magnon ist eine Spinwelle: ein umgeklappter Spin, delokalisiert über den Ring,
-> mit Impuls $k$. Zwei Magnonen streuen mit einer Phasenverschiebung (reelles $q$) oder binden aneinander
-> (komplexes $q$). Bethes Einsicht war, dass für $N$ Magnonen die Streuung in Zweikörperphasen faktorisiert; seine
-> Gleichungen liefern zum Beispiel die Grundzustandsenergie pro Platz $\frac14-\log2$ der unendlichen
-> Heisenberg-Kette (L. Hulthén, *Ark. Mat. Astron. Fys.* 26A (1938) Nr. 11; ohne Beweis).
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Ein Magnon ist eine Spinwelle:
+> ein umgeklappter Spin, delokalisiert über den Ring, mit Impuls $k$. Zwei Magnonen streuen mit einer
+> Phasenverschiebung (reelles $q$) oder binden aneinander (komplexes $q$).
 
 ## 9.5 Lanczos- und Krylov-Verfahren
 
@@ -536,20 +567,20 @@ $\dim\mathcal K_m=m$. Dann gilt $\theta^{(m)}_j\ge\lambda_j$, und $\theta^{(m)}_
 $\dim\mathcal K_{m+1}=m+1$ ($j\le m$). Hat $v$ eine von null verschiedene Komponente im Eigenraum von $\lambda_1$ und
 ist $\mathcal K_{m+1}=\mathcal K_m$, so ist $\theta^{(m)}_1=\lambda_1$.
 
-*Beweis.* Nach Courant-Fischer (Standard der linearen Algebra) ist
-$\theta^{(m)}_j=\min_{U}\max_{x\in U,\|x\|=1}\langle x,Hx\rangle$ über die $j$-dimensionalen $U\subseteq\mathcal K_m$, da
-$Q_m$ eine Isometrie auf $\mathcal K_m$ ist und $\langle y,T_my\rangle=\langle Q_my,HQ_my\rangle$. Dieselbe Formel über
-$U\subseteq\mathcal K_{m+1}$ liefert $\theta^{(m+1)}_j$ und über $U\subseteq\mathbb C^n$ liefert $\lambda_j$; Minimieren über
+*Beweis.* Nach Korollar A.9 (Courant–Fischer für Kompressionen, Satz A.8), angewandt auf $Q=Q_m$, ist
+$\theta^{(m)}_j=\min_{U}\max_{x\in U,\|x\|=1}\langle x,Hx\rangle$ über die $j$-dimensionalen $U\subseteq\mathcal K_m=\operatorname{ran}Q_m$.
+Dieselbe Formel über $U\subseteq\mathcal K_{m+1}$ liefert $\theta^{(m+1)}_j$ und über $U\subseteq\mathbb C^n$ liefert
+$\lambda_j$ (Satz A.8); Minimieren über
 mehr Unterräume ergibt einen kleineren Wert. Ist $\mathcal K_{m+1}=\mathcal K_m$, so ist $\mathcal K_m$ $H$-invariant und
 enthält $p(H)v$ für jedes Polynom $p$, insbesondere $P_1v\ne0$ ($P_1$ die Spektralprojektion zu $\lambda_1$, nach
 Lagrange-Interpolation ein Polynom in $H$, wie in Satz 1.5); also ist $\theta^{(m)}_1\le\langle x,Hx\rangle=\lambda_1$ bei
 $x=P_1v/\|P_1v\|\in\mathcal K_m$. $\square$
 
-Wie schnell $\theta^{(m)}_1\to\lambda_1$ konvergiert, hängt von der Lücke $\lambda_2-\lambda_1$ im Verhältnis zur Breite des
-Spektrums ab (Kaniel-Paige-Saad-Schranken über Tschebyschow-Polynome; Y. Saad, *Numerical Methods for Large
-Eigenvalue Problems*, SIAM 2011, Kap. 6; ohne Beweis). In Gleitkommaarithmetik verlieren die $q_j$ ihre
-Orthogonalität; `krylov.lanczos` reorthogonalisiert vollständig. Für die XX-Kette ist die exakte
-Grundzustandsenergie bekannt (Satz 9.10):
+Satz 9.14 sagt nichts darüber, wie schnell sich $\theta^{(m)}_1$ an $\lambda_1$ annähert; wir beobachten es unten nur.
+In Gleitkommaarithmetik verlieren die $q_j$ ihre Orthogonalität; `krylov.lanczos` reorthogonalisiert vollständig,
+und der Code prüft, dass die berechneten $q_j$ orthonormal sind und $Q_m^*HQ_m=T_m$ bis auf Rundung gilt. Für die
+offene XX-Kette ist die exakte Grundzustandsenergie des Sektors $N$ die Summe der $N$ kleinsten $\varepsilon_k$
+(Satz 9.10(c)):
 
 ```python
 L, N = 12, 6
@@ -564,30 +595,41 @@ assert (ritz[1:] <= ritz[:-1] + 1e-12).all() and (ritz >= E_xx - 1e-12).all()   
 print([f"{(ritz[m - 1] - E_xx).item():.1e}" for m in (5, 10, 20, 40)])
 ```
 
-Der Fehler des kleinsten Ritz-Werts fällt monoton, $0.42$, $3.1\cdot10^{-3}$ und $3.1\cdot10^{-6}$ nach $5$, $10$ und
-$20$ Schritten, und erreicht nach $40$ Schritten das Rundungsniveau, in Dimension $924$. `krylov.ground_state`
-startet Lanczos neu, bis das Residuum $\|H\psi-E\psi\|$ unter $10^{-10}$ liegt. Wir prüfen es an den
-Heisenberg-Ring-Energien, die in `scripts/chains.py` auf neun Stellen tabelliert sind (die Referenzwerte des
-Begleitartikels), dicht bis $L=12$ und mit Lanczos für $L=16$:
+*Numerische Beobachtung:* Der Fehler des kleinsten Ritz-Werts fällt monoton (wie er nach Satz 9.14 muss), $0.42$,
+$3.1\cdot10^{-3}$ und $3.1\cdot10^{-6}$ nach $5$, $10$ und $20$ Schritten, und erreicht nach $40$ Schritten das
+Rundungsniveau, in Dimension $924$. `krylov.ground_state` startet Lanczos neu (von einem gaußschen Zufallsvektor,
+sofern kein `v0` angegeben ist), bis das Residuum $\|H\psi-E\psi\|$ seines normierten Ritz-Paares $(E,\psi)$ unter
+$10^{-10}\max(1,|E|)$ liegt (höchstens $20$ Neustarts, sonst mit einer Warnung), und gibt das Residuum zurück. Ein
+kleines Residuum garantiert einen nahen Eigenwert: Für hermitesches $H$ und $\|\psi\|=1$ ist
+$\|H\psi-E\psi\|^2=\sum_i|\lambda_i-E|^2|\langle u_i,\psi\rangle|^2\ge\min_i|\lambda_i-E|^2$ ($u_i$ eine Orthonormalbasis aus
+Eigenvektoren). Es garantiert nicht, dass dieser Eigenwert der kleinste ist; daher vergleichen wir mit dichter
+Diagonalisierung, unserer einzigen Referenz (hier berechnet, die Werte sind also numerisch): der Sektor $N=L/2$ bis
+$L=12$ und für $L=16$ der Impulsblock $k=0$ der Dimension $810$, der nach Korollar 9.8 den Grundzustand des Sektors
+$N=8$ enthält. Für $L=4$ ist der Wert exakt: Mit $\mathbf S_A=\mathbf s_0+\mathbf s_2$, $\mathbf S_B=\mathbf s_1+\mathbf s_3$ ist der
+Ring $H=J\,\mathbf S_A\cdot\mathbf S_B=\frac J2(\mathbf S^2-\mathbf S_A^2-\mathbf S_B^2)\ge\frac J2(0-2-2)=-2J$, da $\mathbf S^2\ge0$ und
+$\mathbf S_A^2,\mathbf S_B^2$ die Eigenwerte $0,2$ haben (Proposition 4.13 mit $L=2$); Gleichheit gilt auf einem Vektor vom
+Spin $0$ im Produkt der beiden Tripletts, der nach Kapitel 4, Aufgabe 2 existiert ($1\otimes1\cong2\oplus1\oplus0$).
 
 ```python
-RING = {4: -2.0, 6: -2.802775638, 8: -3.651093409, 10: -4.515446354, 12: -5.387390917,
-        14: -6.263549534, 16: -7.142296361}
+E_dense = {}                                                         # numerical references, dense
 for n in (4, 6, 8, 10, 12):
-    e0 = torch.linalg.eigvalsh(SpinChain(n, 'periodic').heisenberg(sector=n // 2).matrix[0, 0])[0].item()
-    assert abs(e0 - RING[n]) < 5e-10
-    print(n, round(e0 / n, 6))
+    E_dense[n] = torch.linalg.eigvalsh(SpinChain(n, 'periodic').heisenberg(sector=n // 2).matrix[0, 0])[0].item()
+    print(n, round(E_dense[n] / n, 6))
+assert abs(E_dense[4] + 2) < 1e-12                                   # exact value for L = 4
+ring16 = SpinChain(16, 'periodic')
+k0 = ring16.momentum_dims(8)[0]                                      # dimension of the block k = 0
+H16 = ring16.xxz_momentum(J=1.0, Delta=1.0, sector=8).matrix[0, 0, :k0, :k0]
+E_dense[16] = torch.linalg.eigvalsh(H16)[0].item()                   # ground state of N = 8 (Corollary 9.8)
 t0 = time.time()
 E16, psi16, res = krylov.ground_state(SpinChain(16, 'periodic', complex_valued=False).xxz_sparse(sector=8),
                                       generator=torch.Generator().manual_seed(0))
-print(f"L = 16: E0 = {E16.item():.10f}, residual {res.item():.1e}, {time.time() - t0:.2f} s; "
-      f"infinite chain: {0.25 - math.log(2):.6f}")
-assert abs(E16.item() - RING[16]) < 5e-10 and res.item() < 1e-9
+print(f"L = 16: E0 = {E16.item():.10f}, residual {res.item():.1e}, {time.time() - t0:.2f} s; k = 0 block: {k0}")
+assert abs(E16.item() - E_dense[16]) < 1e-9 and res.item() < 1e-9
 ```
 
-Für $L=16$ (Dimension $12870$) braucht Lanczos auf einem CPU-Thread deutlich weniger als eine Sekunde. Die Energie
-pro Platz, $-0.5,-0.467129,-0.456387,-0.451545,-0.448949$ für $L=4,\dots,12$, nähert sich von unten dem Wert
-$\frac14-\log2=-0.443147$ der unendlichen Kette.
+Für $L=16$ (Dimension $12870$) braucht Lanczos auf einem CPU-Thread deutlich weniger als eine Sekunde. *Numerische
+Beobachtung:* Die Energie pro Platz, $-0.5,-0.467129,-0.456387,-0.451545,-0.448949$ für $L=4,\dots,12$, wächst mit $L$;
+über ihren Grenzwert beweisen wir nichts.
 
 **Zeitentwicklung.** Für $e^{-i\tau H}v$ projiziert man auf $\mathcal K_m$: $w_\tau=\|v\|\,Q_me^{-i\tau T_m}e_1$.
 
@@ -597,12 +639,14 @@ $\langle w_\tau,Hw_\tau\rangle=\langle v,Hv\rangle$. Ist $\mathcal K_m$ $H$-inva
 *Beweis.* $Q_m$ ist eine Isometrie und $e^{-i\tau T_m}$ unitär ($T_m$ ist reell symmetrisch), das liefert die Norm. Da
 $Q_m^*HQ_m=T_m$ mit $e^{-i\tau T_m}$ kommutiert, ist
 $\langle w_\tau,Hw_\tau\rangle=\|v\|^2\langle e^{-i\tau T_m}e_1,T_me^{-i\tau T_m}e_1\rangle=\|v\|^2\langle e_1,T_me_1\rangle=\langle v,Hv\rangle$. Ist
-$\mathcal K_m$ invariant, so gilt $HQ_m=Q_mT_m$ (Proposition 9.13, $r_m=0$), also $H^jQ_m=Q_mT_m^j$ und
-$e^{-i\tau H}Q_m=Q_me^{-i\tau T_m}$; man wende dies auf $e_1$ an, mit $Q_me_1=v/\|v\|$. $\square$
+$\mathcal K_m$ invariant, so gilt $HQ_m=Q_mT_m$ (Proposition 9.13, $r_m=0$), also $H^jQ_m=Q_mT_m^j$ und, durch
+Summation der Exponentialreihe (Proposition 8.2(1)), $e^{-i\tau H}Q_m=Q_me^{-i\tau T_m}$; man wende dies auf $e_1$ an, mit $Q_me_1=v/\|v\|$. $\square$
 
-Jeder Krylov-Schritt erhält also Norm und Energie, ob er genau ist oder nicht; Genauigkeit erfordert ein im
-Vergleich zu $\tau\|H\|$ großes $m$, und `krylov.evolve` unterteilt das Zeitintervall und schätzt den Fehler a
-posteriori (M. Hochbruck, C. Lubich, *SIAM J. Numer. Anal.* 34 (1997) 1911; ohne Beweis). Wir führen einen
+Jeder Krylov-Schritt erhält also Norm und Energie, ob er genau ist oder nicht; Proposition 9.15 sagt nichts
+über die Genauigkeit, außer wenn $\mathcal K_m$ invariant ist. `krylov.evolve` unterteilt das Zeitintervall in kurze
+Schritte, jeden in einem Krylov-Raum mit $m=30$, und warnt, wenn ein heuristischer Fehlerindikator groß ist; wir
+beweisen dafür keine Fehlerschranke und vergleichen stattdessen mit $e^{-itH}$, berechnet aus einer dichten
+Eigenzerlegung (Satz 1.5). Wir führen einen
 Quench aus dem Néel-Zustand $|{\uparrow\downarrow\uparrow\downarrow}\cdots\rangle$ auf dem Heisenberg-Ring durch und
 verfolgen die alternierende Magnetisierung $m_s=\frac2L\sum_i(-1)^i\langle s^z_i\rangle$, im Vergleich mit dem dichten
 Propagator für $L=12$:
@@ -627,20 +671,21 @@ for n in (12, 16):
 print(f"{max(abs(a - b) for a, b in zip(m_s[12][:4], m_s[16][:4])):.1e}")   # L = 12 vs 16 up to t = 2
 ```
 
-$m_s$ fällt von $1$ über $0.770$ und $0.279$ auf $-0.183$ bei $t=2$, für beide Größen bis auf $1.7\cdot10^{-5}$
-übereinstimmend; bei $t=4$ unterscheiden sie sich ($0.026$ gegenüber $0.035$): Die endliche Größe des kleineren
-Rings wird sichtbar.
+*Numerische Beobachtung:* $m_s$ fällt von $1$ über $0.770$ und $0.279$ auf $-0.183$ bei $t=2$, für beide Größen bis
+auf $1.7\cdot10^{-5}$ übereinstimmend; bei $t=4$ unterscheiden sie sich ($0.026$ gegenüber $0.035$).
 
 ## 9.6 Unordnung: Niveaustatistik und Verschränkung
 
 Die **Heisenberg-Kette im Zufallsfeld** hat unabhängige, auf $[-W,W]$ gleichverteilte Felder $h_i$. Sie erhält
-$S^z$ (Proposition 9.1) und generisch nichts weiter: Die Felder brechen die Translationen, die Spiegelungen, die
-Spinumkehr und $SU(2)$. Daher wird die Niveaustatistik pro Sektor $N$ berechnet (Satz 5.15 und Abschnitt 5.4: Das
-Mischen von Sektoren täuscht unabhängige Niveaus vor). Bei schwacher Unordnung stoßen sich die Niveaus wie im GOE
-ab, $\langle r\rangle\approx0.5307$ (Abschnitt 5.3); bei starker Unordnung lokalisieren die Eigenzustände
-(**Vielteilchenlokalisierung**), und die Niveaus werden unabhängig, $\langle r\rangle=2\log2-1\approx0.3863$
-(Proposition 5.14). Wir berechnen $\langle r\rangle$ in der mittleren Hälfte des Sektors $N=L/2$, mit einem
-Standardfehler über die unabhängigen Realisierungen (jede liefert ein mittleres Verhältnis):
+$S^z$ (Proposition 9.1), daher wird die Niveaustatistik pro Sektor $N$ berechnet (Satz 5.15 und Abschnitt 5.4: Das
+Mischen von Sektoren täuscht unabhängige Niveaus vor). Unterscheiden sich zwei Felder, so ist
+$THT^*-H=\sum_i(h_{i-1}-h_i)s^z_i\ne0$, Translationen sind also keine Symmetrie mehr. Wir berechnen $\langle r\rangle$ in
+der mittleren Hälfte des Sektors $N=L/2$, mit einem Standardfehler über die unabhängigen Realisierungen (jede
+liefert ein mittleres Verhältnis), und vergleichen mit zwei Referenzen: $2\log2-1\approx0.3863$, dem exakten
+mittleren Verhältnis unabhängiger exponentialverteilter Abstände (Proposition 5.14(a)), und dem mittleren
+Verhältnis von GOE-Matrizen (wie in Abschnitt 5.3 definiert; der Code zieht $G+G^T$, das Doppelte einer
+GOE-Matrix, was kein Verhältnis ändert) derselben Größe $252$ wie der Sektor für $L=10$, hier gezogen. Die Vergleiche
+sind numerische Beobachtungen, keine Sätze: Über das Spektrum der zufälligen Kette beweisen wir nichts.
 
 ```python
 gen = torch.Generator().manual_seed(1)
@@ -653,17 +698,28 @@ for n, R in ((8, 200), (10, 100)):
         r = SpinChain.level_spacing_ratio(E[:, k // 4: 3 * k // 4])     # one value per realisation
         r_mean[n, W] = (r.mean().item(), (r.std() / math.sqrt(R)).item())
     print(n, '  '.join(f"W={W}: {m:.3f}+-{s:.3f}" for (n_, W), (m, s) in r_mean.items() if n_ == n))
-assert abs(r_mean[10, 0.5][0] - 0.5307) < 0.015 and abs(r_mean[10, 16][0] - 0.3863) < 0.015
+X = torch.randn(100, k, k, dtype=f64, generator=gen)                  # 100 GOE matrices of size k = 252
+r_goe = SpinChain.level_spacing_ratio(torch.linalg.eigvalsh(X + X.mT)[:, k // 4: 3 * k // 4])
+print(f"GOE({k}): {r_goe.mean().item():.3f}+-{(r_goe.std() / 10).item():.3f}, Poisson: {2 * math.log(2) - 1:.4f}")
+assert abs(r_mean[10, 0.5][0] - r_goe.mean().item()) < 0.015               # numerical observation
+assert abs(r_mean[10, 16][0] - (2 * math.log(2) - 1)) < 0.015               # numerical observation
 assert r_mean[10, 1][0] > r_mean[10, 2][0] > r_mean[10, 4][0] > r_mean[10, 8][0]
 ```
 
-Für $L=10$ geht das mittlere Verhältnis von $0.530$ ($W=0.5$) über $0.484$ ($W=2$) und $0.410$ ($W=4$) bis $0.384$
-($W=16$), mit Standardfehlern von $0.003$–$0.004$. Für $L=8$ liegt der Wert bei $W=0.5$ ($0.507$) unter dem bei
-$W=1$ ($0.525$): Bei $W=0$ ist die Kette integrabel und besitzt alle obigen Symmetrien, und ein GOE-Wert erfordert
-eine Unordnung, die groß gegenüber dem Niveauabstand ist. Der Übergangsbereich ist breit und driftet mit $L$; eine
-Finite-Size-Skalierung verortet ihn bei $W\approx3.7$ (D. Luitz, N. Laflorencie, F. Alet, *Phys. Rev. B* 91 (2015)
-081103), und ob eine lokalisierte Phase für $L\to\infty$ überlebt, ist umstritten (J. Šuntajs, J. Bonča, T. Prosen,
-L. Vidmar, *Phys. Rev. E* 102 (2020) 062144).
+*Numerische Beobachtung:* Für $L=10$ geht das mittlere Verhältnis von $0.530$ ($W=0.5$), nahe am gezogenen GOE-Wert
+$0.533$, über $0.484$ ($W=2$) und $0.410$ ($W=4$) bis $0.384$ ($W=16$), nahe an $2\log2-1$, mit Standardfehlern von
+$0.003$–$0.004$. Für $L=8$ liegt der Wert bei $W=0.5$ ($0.507$) unter dem bei $W=1$ ($0.525$). Bei $W=0$ kommutiert
+der Ring mit $T$ (Abschnitt 9.2) und mit dem Gesamtspin (Abschnitt 9.3), also zerfällt sein Sektor $N=L/2$ in
+Blöcke; die Felder koppeln diese Blöcke nur über $\sum_ih_is^z_i$, mit Operatornorm höchstens $\frac{WL}2$.
+
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Physiker deuten die Änderung von
+> $\langle r\rangle$ als Übergang von Niveaus, die sich wie die des GOE abstoßen (schwache Unordnung), zu Niveaus, die
+> sich wie unabhängige verhalten, zurückgeführt auf eine **Vielteilchenlokalisierung** der Eigenzustände (starke
+> Unordnung). Der Übergangsbereich driftet mit $L$; wo er für $L\to\infty$ liegt und ob es eine lokalisierte Phase
+> überhaupt gibt, sind offene Fragen in der physikalischen Literatur (D. Luitz, N. Laflorencie, F. Alet,
+> *Phys. Rev. B* 91 (2015) 081103; J. Šuntajs, J. Bonča, T. Prosen, L. Vidmar, *Phys. Rev. E* 102 (2020) 062144). Die
+> Delle bei $L=8$, $W=0.5$ wird als Überrest der zusätzlichen Blockstruktur bei $W=0$ gedeutet (vergleiche
+> Abschnitt 5.4).
 
 **Verschränkung freier Fermionen.** Für die Eigenzustände der offenen XX-Kette ist die Verschränkungsentropie der
 ersten $n$ Plätze durch eine $n\times n$-Matrix bestimmt.
@@ -680,7 +736,7 @@ $$
 $\{b(x),b(y)^*\}=\langle x,y\rangle$. Sei $U\subseteq\mathbb R^L$ der Spann der $u_{k_a}$, und seien $P_A$, $P_B=1-P_A$ die
 Koordinatenprojektionen auf $\{0,\dots,n-1\}$ und dessen Komplement. Diagonalisieren der Form $\langle P_Ax,P_Ay\rangle$
 auf $U$ liefert eine Orthonormalbasis $\phi_1,\dots,\phi_N$ von $U$ mit $\langle P_A\phi_a,P_A\phi_b\rangle=\nu_a\delta_{ab}$,
-also $\langle P_B\phi_a,P_B\phi_b\rangle=(1-\nu_a)\delta_{ab}$. Da $(x_1,\dots,x_N)\mapsto b(x_1)^*\cdots b(x_N)^*|0\rangle$
+wobei $\nu_a=\|P_A\phi_a\|^2\in[0,1]$, also $\langle P_B\phi_a,P_B\phi_b\rangle=(1-\nu_a)\delta_{ab}$. Da $(x_1,\dots,x_N)\mapsto b(x_1)^*\cdots b(x_N)^*|0\rangle$
 multilinear und alternierend ist, gilt $\Phi=\pm\prod_a\big(\sqrt{\nu_a}f_a^*+\sqrt{1-\nu_a}\,g_a^*\big)|0\rangle$ mit
 $f_a=b(P_A\phi_a/\sqrt{\nu_a})$, $g_a=b(P_B\phi_a/\sqrt{1-\nu_a})$ (Terme mit Koeffizient null weggelassen).
 Ausmultiplizieren ergibt $\Phi=\sum_I\pm\prod_{a\in I}\sqrt{\nu_a}\prod_{a\notin I}\sqrt{1-\nu_a}\,F_I^*G_{I^c}^*|0\rangle$,
@@ -689,8 +745,9 @@ von $c_j^*$ ganz $A$: $c_j^*=(-1)^{N_A}\otimes\tilde c_j^*$ mit Jordan-Wigner-Op
 während für $i<n$ gilt $c_i^*=\hat c_i^*\otimes1$. Da $(-1)^{N_A}$ auf $|0_A\rangle$ gleich $1$ ist, folgt
 $F_I^*G_{I^c}^*|0\rangle=\xi_I\otimes\chi_{I^c}$ mit $\xi_I=\hat F_I^*|0_A\rangle$, $\chi_{I^c}=\tilde G_{I^c}^*|0_B\rangle$, und
 diese bilden nach der CAR-Rechnung aus Satz 9.10 Orthonormalsysteme. Das ist eine Schmidt-Zerlegung (Lemma 7.7) mit
-Gewichten $p_I=\prod_{a\in I}\nu_a\prod_{a\notin I}(1-\nu_a)$, der Verteilung unabhängiger Bernoulli-Variablen, also
-$S_A=-\sum_Ip_I\log p_I=\sum_a\eta(\nu_a)$. Schließlich ist $C_{ij}=\sum_a\phi_a(i)\phi_a(j)$ (man entwickle $c_i^*c_j$
+Gewichten $p_I=\prod_{a\in I}\nu_a\prod_{a\notin I}(1-\nu_a)$ (die Vorzeichen gehen in $\xi_I$ ein), der Verteilung
+unabhängiger Bernoulli-Variablen, also, wegen $\log p_I=\sum_{a\in I}\log\nu_a+\sum_{a\notin I}\log(1-\nu_a)$ und
+$\sum_{I\ni a}p_I=\nu_a$, $S_A=-\sum_Ip_I\log p_I=\sum_a\eta(\nu_a)$. Schließlich ist $C_{ij}=\sum_a\phi_a(i)\phi_a(j)$ (man entwickle $c_i^*c_j$
 nach den $b(\phi_a)$), also hat $C_A=\sum_a(P_A\phi_a)(P_A\phi_a)^T$ die Eigenwerte $\nu_a$ auf den orthogonalen Vektoren
 $P_A\phi_a$ und sonst $0$, und $\eta(0)=0$. $\square$
 
@@ -712,9 +769,8 @@ assert np.allclose(S_lib, S_peschel, atol=1e-9)                       # Theorem 
 print([round(s, 4) for s in S_lib[:6]])
 ```
 
-Die Entropien $0.6931,0.5199,0.7456,0.6283,0.7719,0.6560$ für $n=1,\dots,6$ oszillieren mit der Parität von $n$ und
-wachsen bei festem $n/L$ wie $\frac16\log L$, das Gesetz der konformen Feldtheorie für eine offene Kette
-(I. Peschel, *J. Phys. A* 36 (2003) L205; P. Calabrese, J. Cardy, *J. Stat. Mech.* (2004) P06002; ohne Beweis).
+*Numerische Beobachtung:* Die Entropien $0.6931,0.5199,0.7456,0.6283,0.7719,0.6560$ für $n=1,\dots,6$ oszillieren
+mit der Parität von $n$. Satz 9.16 stammt von I. Peschel (*J. Phys. A* 36 (2003) L205).
 
 ## 9.7 Womit man vergleichen sollte
 
@@ -768,13 +824,18 @@ assert abs(12 * corr_we[1].item() - gs.energy.item()) < 1e-10 and abs(corr_we.su
    $|{\uparrow\cdots\uparrow}\rangle$ hat alle $L$ Bindungen parallel, Energie $JL/4$, und $S^-$ kommutiert mit $H$,
    also ist der Vektor ein Eigenvektor zur selben Energie. Ist $W$ invariant und $v\in W$, so ist $H^jv\in W$ für
    alle $j$. Hier ist $\mathcal K_m=\mathbb Cv$ für alle $m$, und `ground_state` liefert $E=JL/4$, das obere Ende des
-   Spektrums (jedes $\mathbf s_i\cdot\mathbf s_j\le\frac14$); ein zufälliger Startvektor vermeidet dies mit
-   Wahrscheinlichkeit eins.
+   Spektrums (jedes $\mathbf s_i\cdot\mathbf s_j=\frac12F_{ij}-\frac14\le\frac14$ nach Proposition 4.15(a), da $F_{ij}$ eine
+   symmetrische Permutationsmatrix mit Eigenwerten $\pm1$ ist). Ein zufälliger Startvektor vermeidet diese Falle: Ein
+   gaußsches $v$ hat eine Dichte, also hat es fast sicher eine von null verschiedene Komponente $P_1v$ im Eigenraum
+   von $\lambda_1$ (Korollar A.7(c); für ein reelles $v$ wende man es in $W=\mathbb R^n$ auf den echten Unterraum
+   $\{v:P_1v=0\}$ an, echt, weil die reelle Matrix $P_1\ne0$ eine von null verschiedene Spalte hat), und dann hat nach
+   Satz 9.14 ein $H$-invarianter Krylov-Raum $\mathcal K_m(H,v)$ den kleinsten Ritz-Wert $\lambda_1$, während hier der
+   invariante Raum $\mathcal K_1=\mathbb Cv$ den Ritz-Wert $JL/4$ hat.
 
 ```python
 c10 = SpinChain(10, 'periodic', complex_valued=False)
 E_sym, _, _ = krylov.ground_state(c10.xxz_sparse(1.0, 1.0, sector=5), v0=torch.ones(1, 252, dtype=f64))
-assert abs(E_sym.item() - 2.5) < 1e-10 and E_sym.item() > RING[10] + 7     # far from E_0
+assert abs(E_sym.item() - 2.5) < 1e-10 and E_sym.item() > E_dense[10] + 7  # far from E_0
 ```
 
 </details>
