@@ -474,7 +474,7 @@ t\,(S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha)=K\Psi(S_\alpha\otimes1+1\oti
 ```
 donc $`t`$ est un opérateur d'entrelacement de $`\rho=`$ spin $`S\otimes`$ spin $`k`$ (la représentation de spin
 $`S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha`$, section 4.5) vers $`\sigma=`$ spin $`S'`$. Le passage à l'adjoint est une
-bijection linéaire entre $`\mathrm{Hom}(\rho,\sigma)`$ et $`\mathrm{Hom}(\sigma,\rho)`$ (l'adjoint de
+bijection antilinéaire entre $`\mathrm{Hom}(\rho,\sigma)`$ et $`\mathrm{Hom}(\sigma,\rho)`$ (l'adjoint de
 $`t\rho(\alpha)=\sigma(\alpha)t`$ est $`\rho(\alpha)t^*=t^*\sigma(\alpha)`$, puisque toutes les matrices en jeu sont
 hermitiennes). D'après le corollaire 4.12 et l'exercice 2 du chapitre 4 (démontré dans sa solution à partir du seul
 corollaire 4.12), $`\rho`$ est unitairement équivalente à $`\bigoplus_j(\text{spin }j)`$, une copie de chaque

@@ -440,7 +440,7 @@ t\,(S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha)=K\Psi(S_\alpha\otimes1+1\oti
 ```
 であるから、$`t`$ は $`\rho=`$ スピン $`S\otimes`$ スピン $`k`$（スピン表現
 $`S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha`$、4.5節）から $`\sigma=`$ スピン $`S'`$ への絡作用素である。随伴をとる操作は
-$`\mathrm{Hom}(\rho,\sigma)`$ と $`\mathrm{Hom}(\sigma,\rho)`$ の間の線形全単射である（$`t\rho(\alpha)=\sigma(\alpha)t`$ の随伴は
+$`\mathrm{Hom}(\rho,\sigma)`$ と $`\mathrm{Hom}(\sigma,\rho)`$ の間の共役線形な全単射である（$`t\rho(\alpha)=\sigma(\alpha)t`$ の随伴は
 $`\rho(\alpha)t^*=t^*\sigma(\alpha)`$ であり、関係する行列はすべてエルミートである）。系 4.12 と第4章の演習問題 2（その解答では
 系 4.12 のみから証明される）により、$`\rho`$ は $`\bigoplus_j(\text{spin }j)`$ にユニタリ同値であり、各
 $`j\in\{|S-k|,|S-k|+1,\dots,S+k\}`$ がちょうど一つずつ現れる。これらのスピンは既約で互いに同値でない（定理 4.11）から、これは

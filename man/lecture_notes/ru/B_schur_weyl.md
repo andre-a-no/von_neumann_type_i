@@ -456,7 +456,7 @@ $`\alpha\in\{x,y,z\}`$ индекс компоненты. Из вида $`V^*S_\
 t\,(S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha)=K\Psi(S_\alpha\otimes1+1\otimes S^{(k)}_\alpha)(J\otimes1)=KS_\alpha\Psi(J\otimes1)=S^{(S')}_\alpha\,t,
 ```
 так что $`t`$ — сплетающий оператор из $`\rho=`$ спин $`S\otimes`$ спин $`k`$ (спиновое представление
-$`S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha`$, раздел 4.5) в $`\sigma=`$ спин $`S'`$. Переход к сопряжённым — линейная биекция между
+$`S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha`$, раздел 4.5) в $`\sigma=`$ спин $`S'`$. Переход к сопряжённым — антилинейная биекция между
 $`\mathrm{Hom}(\rho,\sigma)`$ и $`\mathrm{Hom}(\sigma,\rho)`$ (сопряжённое к $`t\rho(\alpha)=\sigma(\alpha)t`$ есть
 $`\rho(\alpha)t^*=t^*\sigma(\alpha)`$, так как все участвующие матрицы эрмитовы). По следствию 4.12 и упражнению 2 главы 4
 (доказанному в его решении только с помощью следствия 4.12) $`\rho`$ унитарно эквивалентно $`\bigoplus_j(\text{spin }j)`$, по одной

@@ -442,7 +442,7 @@ elements are $`\langle S',M'|t(|S,M\rangle\otimes|k,q\rangle)\rangle=\langle S',
 t\,(S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha)=K\Psi(S_\alpha\otimes1+1\otimes S^{(k)}_\alpha)(J\otimes1)=KS_\alpha\Psi(J\otimes1)=S^{(S')}_\alpha\,t,
 ```
 so $`t`$ is an intertwiner from $`\rho=`$ spin $`S\otimes`$ spin $`k`$ (the spin representation
-$`S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha`$, Section 4.5) to $`\sigma=`$ spin $`S'`$. Taking adjoints is a linear bijection between
+$`S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha`$, Section 4.5) to $`\sigma=`$ spin $`S'`$. Taking adjoints is a conjugate-linear bijection between
 $`\mathrm{Hom}(\rho,\sigma)`$ and $`\mathrm{Hom}(\sigma,\rho)`$ (the adjoint of $`t\rho(\alpha)=\sigma(\alpha)t`$ is
 $`\rho(\alpha)t^*=t^*\sigma(\alpha)`$, as all matrices involved are Hermitian). By Corollary 4.12 and Chapter 4, Exercise 2 (proved
 in its solution from Corollary 4.12 alone), $`\rho`$ is unitarily equivalent to $`\bigoplus_j(\text{spin }j)`$, one copy of each

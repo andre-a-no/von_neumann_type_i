@@ -469,7 +469,7 @@ $`\langle S',M'|t(|S,M\rangle\otimes|k,q\rangle)\rangle=\langle S',M';a|T_q|S,M;
 t\,(S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha)=K\Psi(S_\alpha\otimes1+1\otimes S^{(k)}_\alpha)(J\otimes1)=KS_\alpha\Psi(J\otimes1)=S^{(S')}_\alpha\,t,
 ```
 así que $`t`$ es un operador de entrelazamiento de $`\rho=`$ espín $`S\otimes`$ espín $`k`$ (la representación de espín
-$`S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha`$, sección 4.5) en $`\sigma=`$ espín $`S'`$. Tomar adjuntos es una biyección lineal
+$`S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha`$, sección 4.5) en $`\sigma=`$ espín $`S'`$. Tomar adjuntos es una biyección antilineal
 entre $`\mathrm{Hom}(\rho,\sigma)`$ y $`\mathrm{Hom}(\sigma,\rho)`$ (el adjunto de $`t\rho(\alpha)=\sigma(\alpha)t`$ es
 $`\rho(\alpha)t^*=t^*\sigma(\alpha)`$, pues todas las matrices involucradas son hermíticas). Por el corolario 4.12 y el
 ejercicio 2 del capítulo 4 (demostrado en su solución a partir del corolario 4.12 únicamente), $`\rho`$ es

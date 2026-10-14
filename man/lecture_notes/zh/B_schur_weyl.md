@@ -432,7 +432,7 @@ t\,(S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha)=K\Psi(S_\alpha\otimes1+1\oti
 ```
 所以 $`t`$ 是从 $`\rho=`$ 自旋 $`S\otimes`$ 自旋 $`k`$（自旋表示
 $`S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha`$，4.5 节）到 $`\sigma=`$ 自旋 $`S'`$ 的缠结算子。取伴随是
-$`\mathrm{Hom}(\rho,\sigma)`$ 与 $`\mathrm{Hom}(\sigma,\rho)`$ 之间的线性双射（$`t\rho(\alpha)=\sigma(\alpha)t`$ 的伴随是
+$`\mathrm{Hom}(\rho,\sigma)`$ 与 $`\mathrm{Hom}(\sigma,\rho)`$ 之间的共轭线性双射（$`t\rho(\alpha)=\sigma(\alpha)t`$ 的伴随是
 $`\rho(\alpha)t^*=t^*\sigma(\alpha)`$，因为所涉及的矩阵都是厄米的）。由推论 4.12 和第 4 章习题 2（其解答仅由推论 4.12
 证明），$`\rho`$ 酉等价于 $`\bigoplus_j(\text{spin }j)`$，其中每个
 $`j\in\{|S-k|,|S-k|+1,\dots,S+k\}`$ 各出现一次。这些自旋表示是不可约的且两两不等价（定理 4.11），所以这是定理 4.3

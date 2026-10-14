@@ -471,7 +471,7 @@ $`\langle S',M'|t(|S,M\rangle\otimes|k,q\rangle)\rangle=\langle S',M';a|T_q|S,M;
 t\,(S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha)=K\Psi(S_\alpha\otimes1+1\otimes S^{(k)}_\alpha)(J\otimes1)=KS_\alpha\Psi(J\otimes1)=S^{(S')}_\alpha\,t,
 ```
 also ist $`t`$ ein Verflechtungsoperator von $`\rho=`$ Spin $`S\otimes`$ Spin $`k`$ (der Spindarstellung
-$`S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha`$, Abschnitt 4.5) nach $`\sigma=`$ Spin $`S'`$. Adjungieren ist eine lineare
+$`S^{(S)}_\alpha\otimes1+1\otimes S^{(k)}_\alpha`$, Abschnitt 4.5) nach $`\sigma=`$ Spin $`S'`$. Adjungieren ist eine antilineare
 Bijektion zwischen $`\mathrm{Hom}(\rho,\sigma)`$ und $`\mathrm{Hom}(\sigma,\rho)`$ (die Adjungierte von
 $`t\rho(\alpha)=\sigma(\alpha)t`$ ist $`\rho(\alpha)t^*=t^*\sigma(\alpha)`$, da alle beteiligten Matrizen hermitesch sind). Nach
 Korollar 4.12 und Kapitel 4, Aufgabe 2 (in deren Lösung allein aus Korollar 4.12 bewiesen), ist $`\rho`$ unitär
