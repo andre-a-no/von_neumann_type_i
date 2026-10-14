@@ -337,19 +337,27 @@ $X^{1/2}YX^{1/2}=(Y^{1/2}X^{1/2})^*(Y^{1/2}X^{1/2})\ge0$ (Korollar 1.7). Ist $XY
 kommutiert $X^{1/2}$ mit $Y$ (Satz 1.5(d)), also ist $YX=X^{1/2}YX^{1/2}\ge0$ und
 $\|YX\|_1=\operatorname{Tr}(YX)$ (für $P\ge0$ ist $\|P\|_1=\operatorname{Tr}P$, Abschnitt 1.4).
 Umgekehrt gelte $\|YX\|_1=\operatorname{Tr}(YX)$. Ist $|YX|=0$, so ist $YX=0=(YX)^*=XY$.
-Andernfalls schreibe man $YX=W|YX|$. Nach Satz 1.9 bedeutet $\operatorname{Tr}(YX\cdot1)=\|YX\|_1$
-Gleichheit im Cauchy-Schwarz-Schritt für $U=1$:
-$|YX|^{1/2}$ und $W|YX|^{1/2}$ sind proportional mit einem nichtnegativen Faktor, der nach
-Vergleich der Normen gleich $1$ ist; also ist $W|YX|^{1/2}=|YX|^{1/2}$ und $YX=W|YX|=|YX|\ge0$.
-Eine positive Matrix ist selbstadjungiert, also $YX=(YX)^*=XY$. $\square$
+Andernfalls schreibe man $YX=W|YX|$ (Satz 1.8) und $R=|YX|^{1/2}\neq0$. Wegen der Zyklizität ist
+$\operatorname{Tr}(YX)=\operatorname{Tr}(RWR)=\langle R,WR\rangle_{HS}$, während
+$\|R\|_2^2=\|WR\|_2^2=\operatorname{Tr}|YX|=\|YX\|_1$. Also ist $\langle R,WR\rangle_{HS}=\|R\|_2\|WR\|_2$:
+In der Cauchy-Schwarz-Ungleichung gilt Gleichheit, folglich ist $WR=\lambda R$ für einen Skalar
+$\lambda$, und $\lambda\|R\|_2^2=\langle R,WR\rangle_{HS}=\|R\|_2^2$ ergibt $\lambda=1$. Also ist
+$W|YX|^{1/2}=|YX|^{1/2}$ und $YX=W|YX|=|YX|\ge0$. Eine positive Matrix ist selbstadjungiert, also
+$YX=(YX)^*=XY$. $\square$
 
-Die Bibliothek findet die Maximalstelle mithilfe der Polarzerlegung. Die Begleitarbeit zeigt
-numerisch, dass Monte-Carlo-Stichproben von $U$ dahinter zurückbleiben, und zwar umso
-deutlicher, je größer $k$ wird – eines ihrer zentralen Themen; der folgende Code zeigt dies
-für ein Paar. Der Grund: $U=1$ ist bereits nahezu optimal, während für ein Haar-zufälliges $U$
-in hoher Dimension $|\operatorname{Tr}(XUY)|$ typischerweise viel kleiner als $\operatorname{Tr}(XY)$ ist
-(eine zufällige unitäre Matrix verwürfelt die Phasen); daher bleiben alle Stichproben weit unter
-dem exakten Supremum.
+Die Bibliothek findet die Maximalstelle mithilfe der Polarzerlegung: Nach Satz 1.9 erreicht für
+$YX=W|YX|$ das unitäre $U=W^*$ den Wert $\|YX\|_1$. Zufällige Suche ist im Mittel schlechter: Für
+ein Haar-verteiltes $U$ (Satz 5.3; die Bibliothek zieht $U$ auf diese Weise) liefert
+Proposition 11.11 mit $A=YX$
+$\big(\mathbb E|\operatorname{Tr}(XUY)|^2\big)^{1/2}=\|YX\|_2/\sqrt k\le\|YX\|_1/\sqrt k=\max_V|\operatorname{Tr}(XVY)|/\sqrt k$
+(da $\sum_is_i^2\le(\sum_is_i)^2$), und Korollar 11.12 zeigt, dass für $X,Y$ mit Spektren in
+$[a,b]$, $a>0$, eine einzelne Stichprobe $\operatorname{Tr}(XY)$ höchstens mit Wahrscheinlichkeit
+$b^4/(a^4k^2)$ erreicht (aussagekräftig nur für $k>b^2/a^2$; im folgenden Lauf ist $b/a=6$ und
+$k=6$, die Schranke sagt also nichts). Der Code berechnet das exakte Supremum für ein nicht
+kommutierendes Paar mit $k=6$ und das Beste aus $20000$ Haar-Stichproben, jeweils abzüglich
+$\operatorname{Tr}(XY)$. Nach Proposition 3.9 kann keine Stichprobe das Supremum übertreffen; wie
+weit die beste Stichprobe darunter bleibt, ist eine numerische Beobachtung dieses Laufs, kein
+Satz.
 
 ```python
 Mk = TypeIAlgebra([6], [6], precision='double')
@@ -370,10 +378,11 @@ assert best.item() <= gap.item() + 1e-10               # Proposition 3.9: no sam
 
 ## 3.8 Womit man vergleichen sollte
 
-QuTiP (`entropy_vn`, `entropy_relative`) und die Pakete für Quanteninformation (z. B.
-`qutip`, `toqito`) berechnen Entropien und relative Entropien von Dichtematrizen auf einem
-einzelnen Hilbertraum; auf $\bigoplus_c\mathbb C^{k_c}$ stimmen sie mit den hiesigen
-Konventionen der ungewichteten Spur überein. Was sie nicht bereitstellen, ist die Familie
+QuTiP (`entropy_vn`, `entropy_relative`) und andere Pakete für Quanteninformation (z. B.
+`toqito`) berechnen Entropien und relative Entropien von Dichtematrizen auf einem
+einzelnen Hilbertraum, mit der Spur dieses Raumes; auf $\bigoplus_c\mathbb C^{k_c}$ ist das die
+hiesige ungewichtete Spur (bis auf die Basis des Logarithmus, die sich zwischen den Paketen
+unterscheidet). Was sie nicht bereitstellen, ist die Familie
 von Spuren aus Satz 3.1 und die Umrechnungen aus Satz 3.2, die notwendig werden, sobald
 eine Algebra mit Vielfachheiten wirkt oder die Sektoren unterschiedlich gewichtet werden
 müssen.
@@ -405,11 +414,18 @@ assert abs(tau.von_neumann_entropy().item() - (math.log(3) + sum(math.log(k) for
 2. Summiert wird über die $c$ mit $p_c>0$. Dann gilt
    $S_w(\rho)=S(\rho)+\sum_cp_c\log w_c=-\sum_cp_c\log p_c+\sum_cp_cS(\sigma_c)+\sum_cp_c\log w_c
    \le\sum_cp_c\log\frac{k_cw_c}{p_c}\le\log\sum_{p_c>0}k_cw_c\le\log\operatorname{tr}_w(1)$, wobei
-   $S(\sigma_c)\le\log k_c$ (Korollar 3.6) und die endliche Jensensche Ungleichung
-   $\sum_cp_c\log x_c\le\log\sum_cp_cx_c$ für den konkaven $\log$ (die aus der Definition der
-   Konkavität durch Induktion nach der Anzahl der Terme folgt) mit $x_c=k_cw_c/p_c$
-   verwendet wurden; sie ist strikt, außer wenn alle $x_c$ gleich sind, da $\log$ strikt
-   konkav ist. Gleichheit überall erzwingt, dass jedes $p_c>0$ ist, $\sigma_c=1/k_c$ und
+   $S(\sigma_c)\le\log k_c$ (Korollar 3.6 in $M_{k_c}$) und die endliche Jensensche Ungleichung
+   $\sum_{c=1}^mp_c\log x_c\le\log\sum_{c=1}^mp_cx_c$ ($p_c>0$, $\sum_cp_c=1$, $x_c>0$), mit
+   Gleichheit nur, wenn alle $x_c$ gleich sind, angewandt auf $x_c=k_cw_c/p_c$, verwendet wurden.
+   Beweis durch Induktion nach $m$: Für $m=1$ ist nichts zu zeigen. Für $m\ge2$ setze man
+   $q=1-p_m\in(0,1)$ und $\bar x=\sum_{c<m}(p_c/q)x_c$; nach Induktionsvoraussetzung ist
+   $\sum_{c<m}(p_c/q)\log x_c\le\log\bar x$, mit Gleichheit nur, wenn $x_1=\dots=x_{m-1}$, und wegen
+   der strikten Konkavität von $\log$ (Lemma 3.4 für $-\log$, dessen zweite Ableitung $1/t^2>0$ ist)
+   gilt $q\log\bar x+p_m\log x_m\le\log(q\bar x+p_mx_m)$,
+   mit Gleichheit nur, wenn $\bar x=x_m$. Multipliziert man die erste Ungleichung mit $q$ und
+   addiert, so folgt $\sum_cp_c\log x_c\le\log\sum_cp_cx_c$, und Gleichheit erzwingt
+   $x_1=\dots=x_{m-1}=\bar x=x_m$. Gleichheit überall erzwingt, dass jedes $p_c>0$ ist (da alle
+   $k_cw_c>0$), $\sigma_c=1/k_c$ und
    $k_cw_c/p_c$ konstant, d. h. $p_c=k_cw_c/\operatorname{tr}_w(1)$, d. h.
    $(\rho_w)_c=\rho_c/w_c=1_{k_c}/\operatorname{tr}_w(1)$.
    Umgekehrt gilt für $\rho_w=1/\operatorname{tr}_w(1)$
@@ -421,8 +437,8 @@ assert abs(tau.von_neumann_entropy().item() - (math.log(3) + sum(math.log(k) for
    Eingeschränkt auf $\mathcal M$ stimmt der Vektorzustand von $\psi$ jedoch mit der Mischung
    überein:
    $\langle\psi,A\psi\rangle=\tfrac12\langle\psi_1,A_1\psi_1\rangle+\tfrac12\langle\psi_2,A_2\psi_2\rangle$
-   für alle $A\in\mathcal M$. Keine Observable in $\mathcal M$ erkennt die Kohärenz; genau das
-   ist der Gehalt einer Superauswahlregel.
+   für alle $A\in\mathcal M$. Kein Element von $\mathcal M$ erkennt die Kohärenz (physikalisch
+   ist genau das der Gehalt einer Superauswahlregel).
 
 </details>
 

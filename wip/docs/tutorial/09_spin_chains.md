@@ -35,7 +35,9 @@ block $N$ acting on the span of the configurations with $N$ up spins.
 
 *Proof.* The diagonal terms commute with the diagonal $S^z$. For $i\neq j$, $s^+_is^-_j$ commutes with
 $s^z_l$, $l\ne i,j$, and $[s^z_i+s^z_j,s^+_is^-_j]=[s^z_i,s^+_i]s^-_j+s^+_i[s^z_j,s^-_j]=s^+_is^-_j-s^+_is^-_j=0$ by
-$[s^z,s^\pm]=\pm s^\pm$ (Section 4.5); take adjoints for $s^-_is^+_j$. The rest is Proposition 4.10(2). $\square$
+$[s^z,s^\pm]=\pm s^\pm$ (Section 4.5); take adjoints for $s^-_is^+_j$. Hence $H$ commutes with
+$N=S^z+\frac L2$, which has the integer eigenvalues $0,\dots,L$ with eigenspaces spanned by the configurations
+with $N$ up spins, of dimension $\binom LN$; the rest is Proposition 4.10(2) with $Q=N$. $\square$
 
 `SpinChain(L).xxz` builds the blocks directly from the configurations of each sector (`chain.labels[N]`).
 We compare them with the full $2^L\times2^L$ matrix built from Kronecker products:
@@ -129,7 +131,7 @@ for L_, inc in enumerate(tower):
 On a periodic chain let $T$ be the translation $T|b_0b_1\dots b_{L-1}\rangle=|b_{L-1}b_0\dots b_{L-2}\rangle$,
 which moves site $i$ to site $i+1$. $T$ is a permutation matrix, so unitary, $T^L=1$ and
 $Ts^a_iT^*=s^a_{i+1}$. Hence $TS^zT^*=S^z$ and $THT^*=H$ for a uniform field $h_i=h$: $T$ maps bonds to bonds.
-Its eigenvalues are $e^{ik}$ with **momenta** $k=2\pi m/L$, $m=0,\dots,L-1$.
+Its eigenvalues are therefore of the form $e^{ik}$ with **momenta** $k=2\pi m/L$, $m=0,\dots,L-1$.
 
 **Proposition 9.5 (momentum sectors).** Fix $N$. For a configuration $a$ with $N$ up spins let $R_a$ be the
 size of its orbit $\{T^ja\}$. (a) $R_a$ divides $L$; for $k=2\pi m/L$ with $mR_a\equiv0\pmod L$ the vector
@@ -143,7 +145,9 @@ index, a divisor of $L$; the vectors $T^j|a\rangle$, $0\le j<R_a$, are orthonorm
 $e^{ikR_a}=1$, then $T|a,k\rangle=e^{ik}\sum_{j=1}^{R_a}e^{-ikj}T^j|a\rangle=e^{ik}|a,k\rangle$, since the term $j=R_a$ equals
 the term $j=0$; the coefficient of $|a\rangle$ is $1$. The admissible $m\in\{0,\dots,L-1\}$ are the multiples of
 $L/R_a$, $R_a$ of them, with distinct eigenvalues of the unitary $T$, so the vectors are orthogonal and span the
-$R_a$-dimensional span of the orbit. (b) Sector $N$ is the orthogonal sum of the spans of its orbits. An $X$
+$R_a$-dimensional span of the orbit. (b) Sector $N$ is the orthogonal sum of the spans of its orbits, each
+invariant under $T$, and by (a) the eigenvalue $e^{2\pi im/L}$ occurs once in the span of the orbit of $a$ if
+$mR_a\equiv0\pmod L$ and not at all otherwise. An $X$
 commuting with $S^z$ and $T$ commutes with their spectral projections $P_N$, $Q_m$ (Theorem 1.5(d)), so
 $X=\sum_{N,m}P_NQ_mXP_NQ_m$. $\square$
 
@@ -247,12 +251,12 @@ $\mathbf s_i\cdot\mathbf s_j$ lies in $\{S_a\}'$. Let $E_0(S)$ be the lowest eig
 
 **Theorem 9.9 (Lieb–Mattis).** Let $H=\sum_{i<j}J_{ij}\,\mathbf s_i\cdot\mathbf s_j$ with $A,B,J_{ij}$ as in Theorem 9.7
 (so $K_{ij}=J_{ij}$, $h_i=0$), $n_A=|A|\ge n_B=|B|$, and $S_*=\frac{n_A-n_B}2$.
-(a) For $S\ge S_*$ the ground state of the sector $S^z=S$ has total spin $S$; for $0\le M\le S_*$ (with $M-\frac L2$
-an integer) the ground state of the sector $S^z=M$ has total spin $S_*$.
+(a) For $S_*\le S\le\frac L2$ (with $S-\frac L2$ an integer) the ground state of the sector $S^z=S$ has total spin
+$S$; for $0\le M\le S_*$ (with $M-\frac L2$ an integer) the ground state of the sector $S^z=M$ has total spin $S_*$.
 (b) Hence $E_0(S)$ is a simple eigenvalue of $H_S$ for $S\ge S_*$, $E_0(S_*)<E_0(S_*+1)<\dots<E_0(\frac L2)$, and
 $E_0(S)>E_0(S_*)$ for $S<S_*$: the ground space of $H$ is a single multiplet, of spin $S_*$.
 For the Heisenberg chain with $J>0$, open or periodic with $L$ even, $A$ and $B$ are the even and odd sites,
-$S_*=S_{\min}\in\{0,\frac12\}$, and $E_0(S_{\min})<E_0(S_{\min}+1)<\dots<E_0(\frac L2)$.
+$S_*=0$ for even $L$ and $S_*=\frac12$ for odd $L$ (open chain), and $E_0(S_*)<E_0(S_*+1)<\dots<E_0(\frac L2)$.
 
 *Proof.* (a) Let $M\ge0$ with $M-\frac L2\in\mathbb Z$, $s=\max(M,S_*)$, and let $\psi$ be the ground state of the sector
 $S^z=M$, simple by Theorem 9.7: $\psi=V\varphi$ with $\varphi>0$. $\mathbf S^2$ commutes with $H$ and with $S^z$, so it
@@ -282,7 +286,7 @@ union of the spectra of the $H_{S'}$, $S'\ge M$, with multiplicities. By (a) its
 belongs to spin $s=\max(M,S_*)$: so $E_0(s)$ is simple in $H_s$ and $E_0(s)<E_0(S')$ for all $S'\ge M$, $S'\ne s$.
 For $M=S\ge S_*$ this gives simplicity and $E_0(S)<E_0(S')$ for $S'>S$; for $M=S<S_*$ it gives $E_0(S_*)<E_0(S)$.
 So $E_0(S_*)$ is the lowest eigenvalue of $H$, attained only in $H_{S_*}$, where it is simple. For the chain the
-even sites outnumber the odd ones by $0$ or $1$. $\square$
+even sites outnumber the odd ones by $0$ ($L$ even) or $1$ ($L$ odd). $\square$
 
 Theorem 9.7 goes back to W. Marshall (*Proc. Roy. Soc. A* 232 (1955) 48) and Theorem 9.9 to E. Lieb and
 D. Mattis (*J. Math. Phys.* 3 (1962) 749). The **singlet–triplet gap** $E_0(1)-E_0(0)$ of the even Heisenberg
@@ -391,7 +395,8 @@ $N$, with energies $\sum_{k\in K}\varepsilon_k$.
 *Proof.* (a) Operators on different sites commute, and on one site $(-1)^n$ anticommutes with $s^\pm$. For
 $i<j$, $c_i$ and $c_j^*$ (or $c_j$) meet on site $i$ as $s^-_i$ and $(-1)^{n_i}$ — one anticommutation — and
 otherwise commute, so they anticommute. For $i=j$ the strings square to $1$ and
-$c_jc_j^*+c_j^*c_j=s^-_js^+_j+s^+_js^-_j=1$, $c_j^*c_j=s^+_js^-_j=n_j$. (b) $c_j^*c_{j+1}=s^+_j(-1)^{n_j}s^-_{j+1}=s^+_js^-_{j+1}$,
+$c_jc_j^*+c_j^*c_j=s^-_js^+_j+s^+_js^-_j=1$, $c_j^*c_j=s^+_js^-_j=n_j$, $c_j^2=(s^-_j)^2=0$; the case $i>j$ follows
+by exchanging the roles of $i,j$ (and taking adjoints). (b) $c_j^*c_{j+1}=s^+_j(-1)^{n_j}s^-_{j+1}=s^+_js^-_{j+1}$,
 because $s^+_j\neq0$ only on $n_j=0$; take adjoints. (c) $\{b_k,b_l^*\}=\sum_ju_k(j)u_l(j)=\delta_{kl}$ and
 $\{b_k,b_l\}=0$, and $H=\sum_k\varepsilon_kb_k^*b_k$ by the spectral decomposition of $h$. From the CAR,
 $[b_l^*b_l,b_k^*]=\delta_{lk}b_k^*$, so $[H,b_k^*]=\varepsilon_kb_k^*$; with $H|0\rangle=0$ this gives
