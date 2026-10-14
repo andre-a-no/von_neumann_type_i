@@ -23,6 +23,10 @@ First release, the version described in the paper (arXiv:2606.15882v2) and submi
   finite group (`wedderburn`, `from_group`, `from_generators`, `Decomposition`), after Murota, Kanno, Kojima and
   Kojima (2010), with verification of every result; commutant bases, twirls, permutation representations and total
   spin. Example `examples/example_decompose.py` (Schur–Weyl duality).
+  `Decomposition.real_structure()` and `real_basis()`: for an algebra closed under complex conjugation (real
+  generators), the type of every simple summand of the real algebra — real M_k(R), complex M_k(C) (a pair of
+  conjugate sectors) or quaternionic M_k(H) — from the sign of J conj(J) = ±1, and a real orthogonal basis adapted
+  to it (Takagi factorisation); course Section 4.7.
 - Module `su2`: `SU2Chain`, the SU(2)-invariant algebra ⊕_S M_{m_S} of spin-1/2 chains with highest-weight
   (Yamanouchi) bases in the U(1) sectors of `SpinChain`, Heisenberg Hamiltonians, full spectra with quantum numbers,
   ground states, exact Clebsch–Gordan coefficients, Wigner–Eckart reduced matrix elements and spin correlations.

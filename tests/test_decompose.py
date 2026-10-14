@@ -554,3 +554,207 @@ def test_given_commutant_and_verify_arguments():
     # a matrix outside A is detected
     bad = D.verify(generators=torch.randn(D.n, D.n, dtype=C128, generator=torch.Generator().manual_seed(0)))
     assert not bad['ok'] and bad['algebra'] > 0.1
+
+
+# ----------------------------------------------------------------------------
+# real structure: types R, C, H of the summands of a real algebra (course, Section 4.7)
+# ----------------------------------------------------------------------------
+
+def _quaternion_left(a):
+    """Real 4 x 4 matrix of left multiplication by the quaternion unit a in (1, i, j, k) on H = R^4."""
+    def mul(p, q):
+        a1, b1, c1, d1 = p
+        a2, b2, c2, d2 = q
+        return [a1 * a2 - b1 * b2 - c1 * c2 - d1 * d2, a1 * b2 + b1 * a2 + c1 * d2 - d1 * c2,
+                a1 * c2 - b1 * d2 + c1 * a2 + d1 * b2, a1 * d2 + b1 * c2 - c1 * b2 + d1 * a2]
+    E = torch.eye(4, dtype=torch.float64)
+    return torch.tensor([mul(E[a].tolist(), E[i].tolist()) for i in range(4)], dtype=torch.float64).T
+
+
+def _so3_generators():
+    L = torch.zeros(3, 3, 3, dtype=torch.float64)
+    for a, (b, c) in enumerate([(1, 2), (2, 0), (0, 1)]):
+        L[a, b, c], L[a, c, b] = -1.0, 1.0
+    return L
+
+
+def _realify(X):
+    """Complex p x p -> real 2p x 2p [[Re, -Im], [Im, Re]] (the action of X on C^p = R^{2p})."""
+    return torch.cat([torch.cat([X.real, -X.imag], -1), torch.cat([X.imag, X.real], -1)], -2)
+
+
+def _quaternionic(A, B):
+    """The quaternion matrix A + B j (A, B complex p x p) as the complex 2p x 2p matrix [[A, -conj B], [B, conj A]]."""
+    return torch.cat([torch.cat([A, -B.conj()], -1), torch.cat([B, A.conj()], -1)], -2)
+
+
+def hidden_real_algebra(spec, seed, n_gens=3):
+    """
+    Random real generators of O ((+) blocks) O^T with a random real orthogonal O. spec: list of (type, p, copies):
+    'R': M_p(R) acting on R^p; 'C': M_p(C) realified on R^{2p}; 'H': M_p(H) realified on R^{4p}.
+    Over C these give: R -> (k=p, m=copies); C -> two conjugate sectors (k=p, m=copies); H -> (k=2p, m=2 copies).
+    """
+    g = torch.Generator().manual_seed(seed)
+    gens = []
+    for _ in range(n_gens):
+        blocks = []
+        for t, p, copies in spec:
+            if t == 'R':
+                X = torch.randn(p, p, dtype=torch.float64, generator=g)
+            elif t == 'C':
+                X = _realify(torch.randn(p, p, dtype=C128, generator=g))
+            else:
+                Q = _quaternionic(torch.randn(p, p, dtype=C128, generator=g), torch.randn(p, p, dtype=C128, generator=g))
+                X = _realify(Q)
+            blocks += [X] * copies
+        gens.append(torch.block_diag(*blocks))
+    n = gens[0].shape[0]
+    O = torch.linalg.qr(torch.randn(n, n, dtype=torch.float64, generator=g))[0]
+    return torch.stack([O @ x @ O.T for x in gens])
+
+
+def _expected_real_types(spec):
+    out = []
+    for t, p, copies in spec:
+        if t == 'R':
+            out.append(('R', p, copies))
+        elif t == 'C':
+            out += [('C', p, copies)] * 2
+        else:
+            out.append(('H', 2 * p, 2 * copies))
+    return sorted(out, key=lambda x: (x[1], x[2], x[0]))
+
+
+def _found_real_types(D, rs):
+    return sorted(zip(rs.types, D.k_factors, D.multiplicities), key=lambda x: (x[1], x[2], x[0]))
+
+
+def test_real_structure_examples():
+    R2 = torch.tensor([[0., -1.], [1., 0.]], dtype=torch.float64)
+    D = dc.from_generators(R2)                               # C over R: one complex pair
+    rs = D.real_structure()
+    assert rs.ok and rs.types == ('C', 'C') and rs.partner == (1, 0)
+    D = dc.wedderburn(_so3_generators())                     # spin 1 of SO(3): real type
+    rs = D.real_structure()
+    assert rs.ok and rs.types == ('R',) and D.k_factors == (3,)
+    D = dc.wedderburn(torch.stack([_quaternion_left(a) for a in (1, 2, 3)]))   # SU(2) on R^4 = H: quaternionic
+    rs = D.real_structure()
+    assert rs.ok and rs.types == ('H',) and (D.k_factors, D.multiplicities) == ((2,), (2,))
+    assert torch.allclose(rs.J[0] @ rs.J[0].conj(), -torch.eye(2, dtype=C128), atol=TOL)
+    P = torch.roll(torch.eye(3, dtype=torch.float64), 1, 0)  # Z_3 regular: trivial (R) + a conjugate pair
+    rs = dc.from_group(torch.stack([torch.eye(3, dtype=torch.float64), P, P @ P])).real_structure()
+    assert sorted(rs.types) == ['C', 'C', 'R']
+    rs = dc.from_group(dc.permutation_representation(3, 2)).real_structure()   # S_3: all irreps are real
+    assert set(rs.types) == {'R'}
+
+
+def test_real_structure_quaternion_group():
+    """Regular representation of Q_8: four real characters and the 2-dimensional quaternionic one, twice."""
+    units = []
+    for a in range(4):
+        for s in (1.0, -1.0):
+            units.append(s * _quaternion_left(a))
+    G = torch.stack(units)                                   # Q_8 acting on R^4 by left multiplication
+    idx = {tuple(g.flatten().tolist()): i for i, g in enumerate(units)}
+    reg = torch.zeros(8, 8, 8, dtype=torch.float64)
+    for i, g in enumerate(units):
+        for j, h in enumerate(units):
+            reg[i, idx[tuple((g @ h).flatten().tolist())], j] = 1.0
+    D = dc.from_group(reg)
+    rs = D.real_structure()
+    assert rs.ok and _found_real_types(D, rs) == [('R', 1, 1)] * 4 + [('H', 2, 2)]
+    D4 = dc.from_group(G)
+    assert D4.real_structure().types == ('H',)
+
+
+@pytest.mark.parametrize("spec,seed", [
+    ([('R', 3, 2), ('C', 2, 1), ('H', 1, 3)], 0),
+    ([('R', 1, 1), ('R', 2, 3), ('C', 3, 2)], 1),
+    ([('H', 2, 1), ('C', 1, 3), ('R', 4, 1)], 2),
+])
+def test_hidden_real_algebra_types(spec, seed):
+    S = hidden_real_algebra(spec, seed)
+    D = dc.wedderburn(S)
+    rs = D.real_structure()
+    assert rs.ok, rs.residuals
+    assert _found_real_types(D, rs) == _expected_real_types(spec)
+    for c, d in enumerate(rs.partner):
+        assert rs.partner[d] == c and (rs.types[c] == 'C') == (d != c)
+        assert torch.allclose(rs.J[c] @ rs.J[c].mH, torch.eye(D.k_factors[c], dtype=C128), atol=1e-8)
+
+
+@pytest.mark.parametrize("spec,seed", [([('R', 3, 2), ('C', 2, 1), ('H', 1, 3)], 0), ([('C', 3, 2), ('R', 2, 1)], 3)])
+def test_real_basis(spec, seed):
+    """O is real orthogonal, O^T a O is block diagonal for a in A, real blocks are alpha (x) 1_m with alpha real,
+    and a real symmetric element of A' has a Kramers-degenerate spectrum on each quaternionic sector."""
+    S = hidden_real_algebra(spec, seed)
+    D = dc.wedderburn(S)
+    O, blocks = D.real_basis()
+    n = D.n
+    assert O.dtype == torch.float64 and torch.allclose(O.T @ O, torch.eye(n, dtype=torch.float64), atol=1e-12)
+    mask = torch.zeros(n, n, dtype=torch.bool)
+    for b in blocks:
+        mask[b['columns'], b['columns']] = True
+    rs = D.real_structure()
+    for s in S:
+        G = O.T @ s @ O
+        assert G[~mask].abs().max() < 1e-10
+        for b in blocks:
+            if b['type'] == 'R':
+                c = b['sectors'][0]
+                k, m = D.k_factors[c], D.multiplicities[c]
+                blk = G[b['columns'], b['columns']].reshape(k, m, k, m)
+                alpha = blk[:, 0, :, 0]
+                assert torch.allclose(blk, torch.einsum('ik,jl->ijkl', alpha, torch.eye(m, dtype=alpha.dtype)), atol=1e-10)
+    # a real symmetric element of the commutant
+    g = torch.Generator().manual_seed(7)
+    X = D.from_commutant(torch.randn(1, D.C, max(D.multiplicities), max(D.multiplicities), dtype=C128, generator=g))[0]
+    X = X.real
+    X = (X + X.T) / 2
+    x = D.to_commutant(X).matrix[0]
+    for c, t in enumerate(rs.types):
+        m = D.multiplicities[c]
+        ev = torch.linalg.eigvalsh(x[c, :m, :m])
+        if t == 'H':                                          # Kramers: eigenvalues come in equal pairs
+            assert (ev[0::2] - ev[1::2]).abs().max() < 1e-10
+        if t == 'C':                                          # conjugate sectors carry the same spectrum
+            d = rs.partner[c]
+            assert torch.allclose(ev, torch.linalg.eigvalsh(x[d, :m, :m]), atol=1e-10)
+
+
+def test_real_structure_single_precision():
+    S = hidden_real_algebra([('R', 2, 2), ('C', 2, 1), ('H', 1, 2)], 5).float()
+    D = dc.wedderburn(S)
+    rs = D.real_structure()
+    assert rs.ok and _found_real_types(D, rs) == _expected_real_types([('R', 2, 2), ('C', 2, 1), ('H', 1, 2)])
+
+
+def test_real_structure_requires_conjugation_closed_algebra():
+    g = torch.Generator().manual_seed(0)
+    U = haar(2, g)
+    gens = torch.stack([torch.block_diag(a, U @ a @ U.mH) for a in torch.randn(2, 2, 2, dtype=C128, generator=g)])
+    D = dc.wedderburn(gens)
+    with pytest.raises(ValueError, match="closed under complex conjugation"):
+        D.real_structure()
+    # complex input that is closed under conjugation is accepted
+    rs = dc.wedderburn(torch.tensor([[1, 0], [0, 1j]], dtype=C128)).real_structure()
+    assert rs.types == ('R', 'R')
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs CUDA")
+def test_cuda():
+    S = hidden_real_algebra([('R', 3, 2), ('C', 2, 1), ('H', 1, 3)], 0)
+    D = dc.wedderburn(S, device='cuda')
+    assert D.V.device.type == 'cuda' and D.verify()['ok']
+    Dc = dc.wedderburn(S)
+    assert (D.k_factors, D.multiplicities) == (Dc.k_factors, Dc.multiplicities)
+    rs = D.real_structure()
+    assert rs.ok and _found_real_types(D, rs) == _expected_real_types([('R', 3, 2), ('C', 2, 1), ('H', 1, 3)])
+    O, _ = D.real_basis()
+    assert O.device.type == 'cuda' and torch.allclose(O.T @ O, torch.eye(D.n, dtype=O.dtype, device='cuda'), atol=1e-12)
+    G = dc.permutation_representation(4, 2).to('cuda')
+    Dg = dc.from_group(G)
+    Dh = dc.from_group(G.cpu())
+    assert (Dg.k_factors, Dg.multiplicities) == (Dh.k_factors, Dh.multiplicities)
+    A = Dg.to_algebra(G)
+    assert torch.allclose(Dg.from_algebra(A), G.to(Dg.dtype), atol=1e-10)

@@ -401,7 +401,10 @@ class SpinChain:
     def level_spacing_ratio(energies: torch.Tensor) -> torch.Tensor:
         """
         Mean ratio of consecutive level spacings r = <min(s_n, s_{n+1}) / max(s_n, s_{n+1})> per row of
-        sorted energies (Oganesyan-Huse); Poisson 2 ln 2 - 1 = 0.386, GOE 0.5307 (Atas et al. 2013).
+        sorted energies (Oganesyan-Huse). Exact values proved in the course (Proposition 5.14): 2 ln 2 - 1 = 0.386
+        for independent exponential spacings, 4 - 2 sqrt 3 = 0.536 (GOE) and 2 sqrt 3 / pi - 1/2 = 0.603 (GUE) for
+        3 x 3 matrices. For large GOE matrices the value is about 0.53 (Atas et al. 2013; a numerical result, not
+        an exact one), so for large spectra compare with a sampled reference of the same size.
         """
         e = torch.sort(energies, dim=-1)[0]
         s = torch.diff(e, dim=-1)

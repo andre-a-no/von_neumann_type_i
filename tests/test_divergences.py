@@ -853,3 +853,27 @@ def test_errors():
         dv.kosaki_norm(alg.identity(), rho, 2.0, eta=1.5)
     with pytest.raises(ValueError):
         dv.renyi_divergence(rho, sigma, 0.5, kind='other')
+
+
+def _divergence_cases(dev):
+    """The same divergences, norms and recovery on a given device (data drawn on the CPU, then moved)."""
+    torch.manual_seed(5)
+    cpu = _alg((3, 0, 2, 4))
+    rho, sigma = st.random_density_matrix(cpu, 4), st.random_density_matrix(cpu, 4)
+    kraus = ch.random_channel(cpu, 3, 4).kraus
+    x = torch.randn(4, cpu.C, cpu.k_max, cpu.k_max, dtype=cpu.dtype)
+    alg = TypeIAlgebra(list(cpu.n_factors), list(cpu.k_factors), precision='double', device=dev)
+    r, s = DensityMatrix(alg, matrix=rho.matrix.to(dev)), DensityMatrix(alg, matrix=sigma.matrix.to(dev))
+    Phi = ch.Channel(alg, kraus.to(dev), trace_preserving=True)
+    X = alg.operator(x.to(dev))
+    out = [dv.petz_renyi_divergence(r, s, 1.5), dv.sandwiched_renyi_divergence(r, s, 0.7),
+           dv.umegaki_relative_entropy(r, s), dv.max_relative_entropy(r, s), dv.min_relative_entropy(r, s),
+           dv.sector_contributions(r, s, 0.7, 'sandwiched').conditional, dv.lp_norm(X, 3.0, 'norm'), dv.kosaki_norm(X, r, 2.0),
+           dv.PetzRecovery(s, Phi)(Phi(r)).matrix]
+    return [o.detach().cpu() for o in out]
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs CUDA")
+def test_cuda():
+    for a, b in zip(_divergence_cases('cuda'), _divergence_cases('cpu')):
+        assert torch.allclose(a, b, rtol=1e-9, atol=1e-10, equal_nan=True)

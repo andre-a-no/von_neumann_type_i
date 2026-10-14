@@ -628,3 +628,23 @@ def test_spin_factor_no_host_reads():
     with count_host_reads() as calls:
         run()
     assert not calls, sorted(set(calls))
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs CUDA")
+def test_cuda():
+    """Jordan products, quadratic representation, powers, transpose and spin factors on CUDA agree with the CPU."""
+    def run(dev):
+        torch.manual_seed(3)
+        alg = TypeIAlgebra([3, 2, 4], [3, 2, 4], precision='double', device=dev)
+        A, B, C = (alg.operator(torch.randn(2, alg.C, alg.k_max, alg.k_max, dtype=alg.dtype).to(dev)) for _ in range(3))
+        V = jd.SpinFactor(4, device=dev)
+        x = torch.randn(5, 5, dtype=torch.float64).to(dev)
+        out = [jd.jordan_product(A, B).matrix, jd.quadratic_representation(A, B).matrix,
+               jd.jordan_triple(A, B, C).matrix, jd.jordan_power(A, 3).matrix, jd.transpose_map(A).matrix,
+               V.product(x, x.flip(0))]
+        return [o.cpu() for o in out]
+    for a, b in zip(run('cuda'), run('cpu')):
+        assert torch.allclose(a, b, rtol=1e-9, atol=1e-10)
+    S = dc.permutation_representation(3, 2).to('cuda').to(torch.complex128)
+    a, b = jd.compare_with_star_algebra(S), jd.compare_with_star_algebra(S.cpu())
+    assert (a['jordan_dim'], a['star_dim'], a['equal']) == (b['jordan_dim'], b['star_dim'], b['equal'])
