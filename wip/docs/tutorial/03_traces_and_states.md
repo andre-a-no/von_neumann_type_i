@@ -29,8 +29,9 @@ iff all $w_c\ge0$ and faithful iff all $w_c>0$.
 $\tau(E^c_{ij})=\tau(E^c_{i1}E^c_{1j})=\tau(E^c_{1j}E^c_{i1})=\delta_{ij}\tau(E^c_{11})$.
 Put $w_c=\tau(E^c_{11})$; by linearity $\tau(A)=\sum_c\sum_i(A_c)_{ii}w_c$. Conversely
 every $\operatorname{tr}_w$ is a trace. Positivity: $E^c_{11}=(E^c_{11})^*E^c_{11}$, so
-$w_c\ge0$ is necessary, and $\operatorname{tr}_w(A^*A)=\sum_cw_c\|A_c\|_2^2$ shows sufficiency
-and the faithfulness criterion. $\square$
+$w_c=\tau\big((E^c_{11})^*E^c_{11}\big)\ge0$ is necessary, and $w_c>0$ is necessary for faithfulness, as
+$E^c_{11}\neq0$. Conversely $\operatorname{tr}_w(A^*A)=\sum_cw_c\|A_c\|_2^2$, which is $\ge0$ if all $w_c\ge0$, and
+vanishes only for $A=0$ if all $w_c>0$. $\square$
 
 The library implements three faithful traces:
 
@@ -40,7 +41,7 @@ The library implements three faithful traces:
 | `Tr_norm` | $1/k_c$ | $C$ | every block normalised |
 | `tau_vN` | $1/(Ck_c)$ | $1$ | the tracial state with equal sector weights $1/C$ |
 
-By Chapter 2, the trace of a space on which $\mathcal M$ acts with multiplicities $m_c$
+By Section 2.3, the trace of a space on which $\mathcal M$ acts with multiplicities $m_c$
 is $\operatorname{tr}_w$ with $w_c=m_c$. A faithful trace is thus a choice of "how much each
 sector counts".
 
@@ -85,7 +86,8 @@ $\omega$ is positive, take $x\in\mathbb C^{k_c}$ and $A$ the rank-one operator
 $|x\rangle\langle x|$ in block $c$; then $A=A^*A/\|x\|^2$ and
 $0\le\omega(A)=w_c\langle x,(\rho_w)_cx\rangle$, so $(\rho_w)_c\ge0$. The normalisation is
 $\omega(1)=\operatorname{tr}_w(\rho_w)$. Finally both $\sum_cw_c\operatorname{Tr}((\rho_w)_cA_c)$ and
-$\sum_cw'_c\operatorname{Tr}((\rho_{w'})_cA_c)$ equal $\omega(A)$ for all $A$, and by uniqueness
+$\sum_cw'_c\operatorname{Tr}((\rho_{w'})_cA_c)$ equal $\omega(A)$ for all $A$, so $\bigoplus_cw_c(\rho_w)_c$ and
+$\bigoplus_cw'_c(\rho_{w'})_c$ are both densities of $\omega$ for the blunt trace ($w_c=1$), and by uniqueness
 $w_c(\rho_w)_c=w'_c(\rho_{w'})_c$. $\square$
 
 The library stores a state by its density $\rho=\rho_{\mathrm{blunt}}$ with respect to
@@ -103,7 +105,7 @@ for trace, tr in (('blunt', lambda X: X.Tr_blunt()), ('norm', lambda X: X.Tr_nor
     assert (back.matrix - rho.matrix).abs().max() < 1e-12
 ```
 
-> **Physical meaning.** $\omega(A)$ is the expectation value of the observable $A$.
+> **Physical meaning** (physical interpretation, not a theorem of this course). $\omega(A)$ is the expectation value of the observable $A$.
 > The density $\rho$ of the blunt trace is the usual density matrix of quantum
 > mechanics on $\bigoplus_c\mathbb C^{k_c}$. Densities with respect to other traces appear
 > when the same algebra acts with multiplicities (Chapter 2), for example on the
@@ -117,8 +119,8 @@ has density $\sigma_c=\rho_c/p_c$ on $\mathbb C^{k_c}$, and
 $$
 \rho=\bigoplus_cp_c\,\sigma_c
 $$
-(if $p_c=0$ then $\rho_c=0$, since $\rho_c\ge0$ and $\operatorname{Tr}\rho_c=0$, and the term is
-omitted).
+(if $p_c=0$ then $\rho_c=0$, since the eigenvalues of $\rho_c\ge0$ are $\ge0$ with sum
+$\operatorname{Tr}\rho_c=0$, Corollary 1.4(3); the term is omitted).
 A state on $\mathcal M$ is a classical mixture of quantum states in the sectors. Measuring
 "which sector" does not disturb it: the measurement channel
 $\rho\mapsto\sum_cP_c\rho P_c$ is the identity on $\mathcal M$, because every element of
@@ -136,7 +138,8 @@ assert (measure_sector(rho).matrix - rho.matrix).abs().max() < 1e-12   # no dist
 
 The **von Neumann entropy** of a state with (blunt) density $\rho$ is
 $S(\rho)=-\operatorname{Tr}\rho\log\rho=-\sum_i\lambda_i\log\lambda_i$ over the eigenvalues of
-$\rho$, with $0\log0=0$.
+$\rho$, with $0\log0=0$; that is, $\rho\log\rho:=f(\rho)$ for $f(t)=t\log t$, $f(0)=0$, and
+$\operatorname{Tr}f(\rho)=\sum_if(\lambda_i)$ by Theorem 1.5(c).
 
 **Theorem 3.3 (entropy of a mixture of sectors).** With $p_c$ and $\sigma_c$ as above
 (sectors with $p_c=0$ omitted),
@@ -144,18 +147,19 @@ $$
 S(\rho)=H(p)+\sum_cp_c\,S(\sigma_c),\qquad H(p)=-\sum_cp_c\log p_c .
 $$
 
-*Proof.* The nonzero eigenvalues of $\rho$ are the numbers $p_c\mu$ for the nonzero
+*Proof.* The nonzero eigenvalues of $\rho$ (with multiplicity) are the numbers $p_c\mu$ for the nonzero
 eigenvalues $\mu$ of the $\sigma_c$ (sectors with $p_c>0$); zero eigenvalues contribute $0$
 to both sides. Hence
 $-\sum_c\sum_{\mu>0}p_c\mu\log(p_c\mu)=-\sum_cp_c\log p_c\sum_{\mu>0}\mu-\sum_cp_c\sum_{\mu>0}\mu\log\mu$,
 and $\sum_{\mu>0}\mu=\operatorname{Tr}\sigma_c=1$. $\square$
 
-> **Physical meaning.** The formula splits the uncertainty about the system into two parts:
+> **Physical meaning** (physical interpretation, not a theorem of this course). The formula splits the uncertainty about the system into two parts:
 > $H(p)$, the classical uncertainty about the charge (which sector the system is in), and
 > $\sum_cp_cS(\sigma_c)$, the average quantum uncertainty within the sectors. Under a
 > superselection rule the first part is the entropy of a classical random variable, the charge.
 
-The entropy relative to another trace is $S_w(\rho)=-\operatorname{tr}_w(\rho_w\log\rho_w)$. By
+The entropy relative to another trace is $S_w(\rho)=-\operatorname{tr}_w(\rho_w\log\rho_w)$, with the
+same convention $\rho_w\log\rho_w:=f(\rho_w)$. By
 Theorem 3.2, $(\rho_w)_c=\rho_c/w_c$, so
 $$
 S_w(\rho)=-\sum_cw_c\operatorname{Tr}\Big(\frac{\rho_c}{w_c}\log\frac{\rho_c}{w_c}\Big)
@@ -184,20 +188,27 @@ $S(\rho\|\sigma)=\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\rho\log\sigma$,
 $\operatorname{Tr}\rho\log\rho:=\sum_i\lambda_i\log\lambda_i$ over the eigenvalues of $\rho$, with
 $0\log0=0$ (and likewise in each block). It does not depend on the trace: by Theorem 3.2,
 $(\rho_w)_c=\rho_c/w_c$ and $(\sigma_w)_c=\sigma_c/w_c$, so the eigenvalues of $(\rho_w)_c$ are those of
-$\rho_c$ divided by $w_c$, and both $\operatorname{tr}_w(\rho_w\log\rho_w)$ and
+$\rho_c$ divided by $w_c$, $\log(\sigma_c/w_c)=\log\sigma_c-(\log w_c)1$ (Theorem 1.5(c)), and both $\operatorname{tr}_w(\rho_w\log\rho_w)$ and
 $\operatorname{tr}_w(\rho_w\log\sigma_w)$ differ from $\operatorname{Tr}\rho\log\rho$ and
 $\operatorname{Tr}\rho\log\sigma$ by the same amount $-\sum_cp_c\log w_c$ (the logarithm of $\rho$
 is only needed on its support, by the convention $0\log0=0$). The difference is unchanged.
 
 **Lemma 3.4 (tangent inequality).** Let $f:I\to\mathbb R$ be convex on an interval $I$ and
-differentiable at $b\in I$. Then $f(a)\ge f(b)+(a-b)f'(b)$ for all $a\in I$, strictly for
-$a\neq b$ if $f$ is strictly convex.
+differentiable at $b\in I$ (one-sided if $b$ is an endpoint of $I$). Then $f(a)\ge f(b)+(a-b)f'(b)$ for
+all $a\in I$, strictly for $a\neq b$ if $f$ is strictly convex, i.e. if
+$f((1-t)x+ty)<(1-t)f(x)+tf(y)$ for $x\neq y$ in $I$ and $t\in(0,1)$. Moreover, if $f$ is continuous on
+$I$ and twice differentiable with $f''>0$ on the interior of $I$, then $f$ is strictly convex.
 
 *Proof.* For $t\in(0,1]$, convexity gives $f(b+t(a-b))\le(1-t)f(b)+tf(a)$, i.e.
 $\big(f(b+t(a-b))-f(b)\big)/t\le f(a)-f(b)$; letting $t\to0$ gives the inequality. If $f$
 is strictly convex and $a\neq b$, let $m=(a+b)/2$; then
 $f(a)-f(b)>2\big(f(m)-f(b)\big)\ge2(m-b)f'(b)=(a-b)f'(b)$, the first step by strict
-convexity at $m$ and the second by the inequality just proved, applied to $m$. $\square$
+convexity at $m$ and the second by the inequality just proved, applied to $m$. For the last
+claim let $x<y$ in $I$, $t\in(0,1)$ and $z=(1-t)x+ty$. By the mean value theorem there are
+$\xi_1\in(x,z)$ and $\xi_2\in(z,y)$ with $f(z)-f(x)=t(y-x)f'(\xi_1)$ and
+$f(y)-f(z)=(1-t)(y-x)f'(\xi_2)$, and $f'(\xi_1)<f'(\xi_2)$ by the mean value theorem for $f'$ on
+$[\xi_1,\xi_2]$, as $f''>0$ there. Multiplying by $t(1-t)(y-x)>0$ gives
+$(1-t)\big(f(z)-f(x)\big)<t\big(f(y)-f(z)\big)$, i.e. $f(z)<(1-t)f(x)+tf(y)$. $\square$
 
 **Theorem 3.5 (Klein's inequality).** Let $f:I\to\mathbb R$ be convex on an interval $I$,
 and $X,Y$ self-adjoint with spectra in $I$, with $f$ differentiable at every eigenvalue of $Y$.
@@ -217,7 +228,8 @@ and $X=Y$. $\square$
 $S(\rho)\le\log D$, with equality iff $\rho=1/D$.
 
 *Proof.* Apply Theorem 3.5 to $f(t)=t\log t$, $f(0)=0$, which is strictly convex on
-$I=[0,\infty)$ ($f''(t)=1/t>0$ on $(0,\infty)$, and $f$ is continuous at $0$) and
+$I=[0,\infty)$ by Lemma 3.4 ($f$ is continuous at $0$, as $t\log t\to0$ for $t\to0^+$, and
+$f''(t)=1/t>0$ on $(0,\infty)$) and
 differentiable on $(0,\infty)\supseteq\operatorname{spec}\sigma$ with $f'(t)=\log t+1$, with
 $X=\rho$, $Y=\sigma$: the left side is
 $\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\sigma\log\sigma-\operatorname{Tr}(\rho-\sigma)(\log\sigma+1)
@@ -235,12 +247,15 @@ $$
 where $E$ is the conditional expectation onto the centre (Proposition 2.8).
 
 *Proof.* For $p_c>0$, $\operatorname{Tr}\rho_c\log\rho_c=p_c\log p_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\rho_c$
-(eigenvalues $p_c\mu$, as in Theorem 3.3) and $\log\sigma_c=(\log q_c)1+\log\hat\sigma_c$, so
+(eigenvalues $p_c\mu$, as in Theorem 3.3) and $\log\sigma_c=(\log q_c)1+\log\hat\sigma_c$ (Theorem 1.5(c)), so
 $\operatorname{Tr}\rho_c\log\sigma_c=p_c\log q_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\sigma_c$ and
 $\operatorname{Tr}\rho_c\log\rho_c-\operatorname{Tr}\rho_c\log\sigma_c=p_c\log(p_c/q_c)+p_cS(\hat\rho_c\|\hat\sigma_c)$.
 If $p_c=0$, then $\rho_c=0$ and the sector contributes $0$.
-Sum over $c$; the second sum is $\ge0$ by Corollary 3.6 in each block. Finally
-$E\rho=\bigoplus_c(p_c/k_c)1_{k_c}$, $E\sigma=\bigoplus_c(q_c/k_c)1_{k_c}$, and
+Sum over $c$; the second sum is $\ge0$ by Corollary 3.6, applied in $M_{k_c}$ to the states
+$\hat\rho_c$ and $\hat\sigma_c>0$. Finally
+$E\rho=\bigoplus_c(p_c/k_c)1_{k_c}$ and $E\sigma=\bigoplus_c(q_c/k_c)1_{k_c}>0$ are states; $E\rho$ is the density of
+the state $\omega\circ E$ (where $\omega(A)=\operatorname{Tr}\rho A$), since
+$\operatorname{Tr}(\rho E(A))=\sum_cp_c\operatorname{Tr}(A_c)/k_c=\operatorname{Tr}(E(\rho)A)$. And
 $\operatorname{Tr}E\rho(\log E\rho-\log E\sigma)=\sum_ck_c\frac{p_c}{k_c}\log\frac{p_c}{q_c}$. $\square$
 
 So forgetting the quantum information inside the sectors can only decrease the
@@ -271,8 +286,9 @@ from a multiple of the identity: $\Delta(A)=0$ iff $A=\lambda1$.
 
 *Proof.* $\lambda_{\min}1\le A\le\lambda_{\max}1$, and positivity and unitality give
 $\lambda_{\min}1\le\Phi(A)\le\lambda_{\max}1$. Hence
-$\lambda_{\min}(\Phi(A))\ge\lambda_{\min}$ and $\lambda_{\max}(\Phi(A))\le\lambda_{\max}$. If
-$\Phi(A)=0$ the claim is trivial. Otherwise, with $r=\lambda_{\min}/\lambda_{\max}$,
+$\Phi(A)\ge0$ (as $\lambda_{\min}\ge0$), $\lambda_{\min}(\Phi(A))\ge\lambda_{\min}$ and
+$\lambda_{\max}(\Phi(A))\le\lambda_{\max}$. If $\Phi(A)=0$ the claim is trivial. Otherwise $A\neq0$, both
+$\lambda_{\max}$ and $\lambda_{\max}(\Phi(A))$ are $>0$, and with $r=\lambda_{\min}/\lambda_{\max}\in[0,1]$,
 $\Delta=(1-r)/(1+r)$ is decreasing in $r$, and $r(\Phi(A))\ge r(A)$. $\square$
 
 ```python
@@ -298,17 +314,20 @@ $X^{1/2}YX^{1/2}=(Y^{1/2}X^{1/2})^*(Y^{1/2}X^{1/2})\ge0$ (Corollary 1.7). If $XY
 $X^{1/2}$ commutes with $Y$ (Theorem 1.5(d)), so $YX=X^{1/2}YX^{1/2}\ge0$ and
 $\|YX\|_1=\operatorname{Tr}(YX)$ (for $P\ge0$, $\|P\|_1=\operatorname{Tr}P$, Section 1.4). Conversely
 suppose $\|YX\|_1=\operatorname{Tr}(YX)$. If $|YX|=0$ then $YX=0=(YX)^*=XY$. Otherwise write
-$YX=W|YX|$. By Theorem 1.9, $\operatorname{Tr}(YX\cdot1)=\|YX\|_1$ means equality in the
-Cauchy–Schwarz step for $U=1$:
-$|YX|^{1/2}$ and $W|YX|^{1/2}$ are proportional with a nonnegative factor, which by
-comparing norms is $1$, so $W|YX|^{1/2}=|YX|^{1/2}$ and $YX=W|YX|=|YX|\ge0$. A positive
+$YX=W|YX|$ (Theorem 1.8) and $R=|YX|^{1/2}\neq0$. By cyclicity,
+$\operatorname{Tr}(YX)=\operatorname{Tr}(RWR)=\langle R,WR\rangle_{HS}$, while
+$\|R\|_2^2=\|WR\|_2^2=\operatorname{Tr}|YX|=\|YX\|_1$. So $\langle R,WR\rangle_{HS}=\|R\|_2\|WR\|_2$: equality
+holds in the Cauchy–Schwarz inequality, hence $WR=\lambda R$ for a scalar $\lambda$, and
+$\lambda\|R\|_2^2=\langle R,WR\rangle_{HS}=\|R\|_2^2$ gives $\lambda=1$. So $W|YX|^{1/2}=|YX|^{1/2}$ and $YX=W|YX|=|YX|\ge0$. A positive
 matrix is self-adjoint, so $YX=(YX)^*=XY$. $\square$
 
 The library finds the maximiser with the polar decomposition: by Theorem 1.9, for $YX=W|YX|$ the
 unitary $U=W^*$ attains $\|YX\|_1$. Random search does much worse. For a Haar-distributed $U$
-(Theorem 5.3; the library samples $U$ in this way), Corollary 11.12 shows that
-$\big(\mathbb E|\operatorname{Tr}(XUY)|^2\big)^{1/2}\le\max_V|\operatorname{Tr}(XVY)|/\sqrt k$, and that for $X,Y$ with spectra in
-$[a,b]$, $a>0$, a single sample reaches $\operatorname{Tr}(XY)$ with probability at most $b^4/(a^4k^2)$. The code
+(Theorem 5.3; the library samples $U$ in this way), Proposition 11.11 with $A=YX$ gives
+$\big(\mathbb E|\operatorname{Tr}(XUY)|^2\big)^{1/2}=\|YX\|_2/\sqrt k\le\|YX\|_1/\sqrt k=\max_V|\operatorname{Tr}(XVY)|/\sqrt k$
+(as $\sum_is_i^2\le(\sum_is_i)^2$), and Corollary 11.12 shows that for $X,Y$ with spectra in
+$[a,b]$, $a>0$, a single sample reaches $\operatorname{Tr}(XY)$ with probability at most $b^4/(a^4k^2)$
+(informative only for $k>b^2/a^2$; in the run below $b/a=6$ and $k=6$, so it says nothing). The code
 computes the exact supremum for one non-commuting pair with $k=6$ and the best of $20000$ Haar
 samples, both minus $\operatorname{Tr}(XY)$. By Proposition 3.9 no sample can exceed the supremum; how far
 the best sample stays below it is a numerical observation of this run, not a theorem.
@@ -332,10 +351,10 @@ assert best.item() <= gap.item() + 1e-10               # Proposition 3.9: no sam
 
 ## 3.8 What to compare with
 
-QuTiP (`entropy_vn`, `entropy_relative`) and the quantum-information packages (e.g.
-`qutip`, `toqito`) compute entropies and relative entropies of density matrices on a
-single Hilbert space; on $\bigoplus_c\mathbb C^{k_c}$ they agree with the blunt-trace
-conventions here. What they do not provide is the family of traces of Theorem 3.1 and
+QuTiP (`entropy_vn`, `entropy_relative`) and other quantum-information packages (e.g.
+`toqito`) compute entropies and relative entropies of density matrices on a
+single Hilbert space, with the trace of that space; on $\bigoplus_c\mathbb C^{k_c}$ this is the
+blunt trace here (up to the base of the logarithm, which differs between packages). What they do not provide is the family of traces of Theorem 3.1 and
 the conversions of Theorem 3.2, which become necessary as soon as an algebra acts with
 multiplicities or the sectors must be weighted differently.
 
@@ -365,17 +384,18 @@ assert abs(tau.von_neumann_entropy().item() - (math.log(3) + sum(math.log(k) for
 2. Sums run over the $c$ with $p_c>0$. Then
    $S_w(\rho)=S(\rho)+\sum_cp_c\log w_c=-\sum_cp_c\log p_c+\sum_cp_cS(\sigma_c)+\sum_cp_c\log w_c
    \le\sum_cp_c\log\frac{k_cw_c}{p_c}\le\log\sum_{p_c>0}k_cw_c\le\log\operatorname{tr}_w(1)$, using
-   $S(\sigma_c)\le\log k_c$ (Corollary 3.6) and the finite Jensen inequality
+   $S(\sigma_c)\le\log k_c$ (Corollary 3.6 in $M_{k_c}$) and the finite Jensen inequality
    $\sum_{c=1}^mp_c\log x_c\le\log\sum_{c=1}^mp_cx_c$ ($p_c>0$, $\sum_cp_c=1$, $x_c>0$), with
    equality only if all $x_c$ are equal, applied to $x_c=k_cw_c/p_c$. Proof by induction on $m$:
    for $m=1$ there is nothing to prove. For $m\ge2$ put $q=1-p_m\in(0,1)$ and
    $\bar x=\sum_{c<m}(p_c/q)x_c$; by the induction hypothesis
    $\sum_{c<m}(p_c/q)\log x_c\le\log\bar x$, with equality only if $x_1=\dots=x_{m-1}$, and by
-   strict concavity of $\log$ ($\log''<0$) $q\log\bar x+p_m\log x_m\le\log(q\bar x+p_mx_m)$,
+   strict concavity of $\log$ (Lemma 3.4 for $-\log$, whose second derivative is $1/t^2>0$)
+   $q\log\bar x+p_m\log x_m\le\log(q\bar x+p_mx_m)$,
    with equality only if $\bar x=x_m$. Multiplying the first inequality by $q$ and adding,
    $\sum_cp_c\log x_c\le\log\sum_cp_cx_c$, and equality forces $x_1=\dots=x_{m-1}=\bar x=x_m$.
    Equality throughout
-   forces every $p_c>0$, $\sigma_c=1/k_c$ and $k_cw_c/p_c$ constant, i.e.
+   forces every $p_c>0$ (as all $k_cw_c>0$), $\sigma_c=1/k_c$ and $k_cw_c/p_c$ constant, i.e.
    $p_c=k_cw_c/\operatorname{tr}_w(1)$, i.e. $(\rho_w)_c=\rho_c/w_c=1_{k_c}/\operatorname{tr}_w(1)$.
    Conversely, for $\rho_w=1/\operatorname{tr}_w(1)$,
    $S_w(\rho)=-\operatorname{tr}_w(1)\cdot\frac1{\operatorname{tr}_w(1)}\log\frac1{\operatorname{tr}_w(1)}=\log\operatorname{tr}_w(1)$.
