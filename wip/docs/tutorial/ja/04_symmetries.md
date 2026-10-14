@@ -522,15 +522,107 @@ $L$ 個のスピン $\frac12$ 上の **ハイゼンベルク模型** は、実�
 $H$ はその上に（基底のユニタリな変換を除いて）$H_S$ として作用する。
 
 *証明.* (a) 二つのスピン上では $\mathbf s^{(1)}\cdot\mathbf s^{(2)}=\frac12(\mathbf S^2-\mathbf s^{(1)2}-\mathbf s^{(2)2})=\frac12\mathbf S^2-\frac34$
-である（$s=\frac12$ の定理 4.11）。三重項上では $\mathbf S^2=2$ かつ $F=1$ である（三重項は
-$S_-^j|{\uparrow\uparrow}\rangle$ で張られ、$F$ は $S_-$ と可換で $|{\uparrow\uparrow}\rangle$ を固定する）。一重項上では
-$\mathbf S^2=0$ かつ $F=-1$ である。両辺はこれら四つのベクトル上で一致する。$L$ 個のうちのサイト $i,j$ については恒等作用素とのテンソル積をとる。残りは定理 4.14(a) と定理 4.3 である。(b) 系 4.12 の分解において、
-$S_z=S$ をもつベクトルは $\sum_{S'\ge S}|S',S\rangle\otimes w_{S'}$ であり、定理 4.11 により $S'>S$ に対して $S_+|S',S\rangle\neq0$ である。よって
-$\ker S_+\cap\ker(S_z-S)=|S,S\rangle\otimes\mathbb C^{m_S}$ であり、その上で $1\otimes H_S$ は $H_S$ として作用する。$\square$
+である（$s=\frac12$ の定理 4.11）。三重項のベクトル $S_-^j|{\uparrow\uparrow}\rangle$ は $|{\uparrow\uparrow}\rangle$、
+$|{\downarrow\uparrow}\rangle+|{\uparrow\downarrow}\rangle$、$2|{\downarrow\downarrow}\rangle$ であり、一重項とあわせて $\mathbb C^2\otimes\mathbb C^2$ の直交基底をなす。
+三重項上では $\mathbf S^2=2$ かつ $F=1$ である：$\mathbf S^2=S_-S_++S_z^2+S_z$ は $|{\uparrow\uparrow}\rangle$ 上で $0+1+1=2$ であり、
+$\mathbf S^2$ と $F$ は $S_-$ と可換で、$F$ は $|{\uparrow\uparrow}\rangle$ を固定する。一重項上では
+$\mathbf S^2=0$（$S_+$ と $S_z$ によって零化される）かつ $F=-1$ である。両辺はこれら四つのベクトル上で一致する。$L$ 個のうちのサイト $i,j$ については恒等作用素とのテンソル積をとる。残りは定理 4.14(a) と定理 4.3 である。(b) より多くを証明する：系 4.12 のように分解された任意のスピン表現と任意の $\mu\in\frac12\mathbb Z$ に対し、
+$\ker S_+\cap\ker(S_z-\mu)$ は、$\mu\ge0$ ならば $|\mu,\mu\rangle\otimes\mathbb C^{m_\mu}$（の系 4.12 のユニタリによる像）であり、$\mu<0$ ならば $0$ である。実際、その基底において $S_z=\mu$ をもつベクトルは、
+$S'-\mu\in\mathbb Z$ を満たす $S'\ge|\mu|$ にわたる和 $\sum_{S'}|S',\mu\rangle\otimes w_{S'}$ であり、定理 4.11 により $S_+$ はそれを
+$\sum_{S'}\sqrt{(S'-\mu)(S'+\mu+1)}\,|S',\mu+1\rangle\otimes w_{S'}$ に写す。ここで $S'+\mu+1\ge1$ である。よってそれが消えるのは、
+$S'\neq\mu$ なるすべての $S'$ に対して $w_{S'}=0$ となるときかつそのときに限る。ハイゼンベルクの $H$ に対し、$1\otimes H_S$ は $|S,S\rangle\otimes\mathbb C^{m_S}$ 上に $H_S$ として作用する。$\square$
 
-(b) は、モジュール `su2`（スピン鎖、第9章）が数値的な分解なしに $H_S$ を構成する方法である：
-`SpinChain` の $U(1)$ セクター $\hat N=\frac L2+S$ の内部で、一度に一サイトずつクレブシュ・ゴルダン結合を行うことにより、最高ウェイトベクトルの正規直交基底を構成する。(a) を `D4` を用いて四つのスピンの環で確かめ、
-それから八つのスピンについてブロックの大きさを比較する。
+(b) は、モジュール `su2`（スピン鎖、第9章）が数値的な分解なしに $H_S$ を構成する方法である：それは一度に一サイトずつ加えながら、
+$j\otimes\frac12$ のクレブシュ・ゴルダン係数を用いて最高ウェイトベクトルの正規直交基底を構成する。これらの係数を最高ウェイトからの下降によって導こう。定理 4.11
+と $S_-=S_+^*$ により、スピン $j$ は
+$$
+S_\pm|j,m\rangle=\sqrt{(j\mp m)(j\pm m+1)}\;|j,m\pm1\rangle ,
+$$
+を満たす。$|m|>j$ に対しては $|j,m\rangle=0$ とおく（これは公式と整合的である。その係数は $m=\pm j$ で消える）。
+
+**定理 4.16（$j\otimes\frac12$ のクレブシュ・ゴルダン係数）.** $j\in\{\frac12,1,\frac32,\dots\}$ とし、
+$\mathbb C^{2j+1}\otimes\mathbb C^2$ 上で $S_a=S^{(j)}_a\otimes1+1\otimes s_a$ とする（基底 $|j,m\rangle$ をもつ定理 4.11 のスピン $j$ を、
+$|{\uparrow}\rangle=|\frac12,\frac12\rangle$、$|{\downarrow}\rangle=|\frac12,-\frac12\rangle$ をもつスピン $\frac12$ と結合したもの）。また
+$\alpha_M=\sqrt{(j+M+\frac12)/(2j+1)}$、$\beta_M=\sqrt{(j-M+\frac12)/(2j+1)}$ とおく。$J=j\pm\frac12$ と $M=J,J-1,\dots,-J$ に対し
+$$
+\begin{aligned}
+|j+\tfrac12,M\rangle\!\rangle&=\alpha_M\,|j,M-\tfrac12\rangle\otimes|{\uparrow}\rangle+\beta_M\,|j,M+\tfrac12\rangle\otimes|{\downarrow}\rangle,\\
+|j-\tfrac12,M\rangle\!\rangle&=-\beta_M\,|j,M-\tfrac12\rangle\otimes|{\uparrow}\rangle+\alpha_M\,|j,M+\tfrac12\rangle\otimes|{\downarrow}\rangle .
+\end{aligned}
+$$
+とおく。
+(a) これら $2(2j+1)$ 個のベクトルは $\mathbb C^{2j+1}\otimes\mathbb C^2$ の正規直交基底である。
+(b) $|j+\frac12,j+\frac12\rangle\!\rangle=|j,j\rangle\otimes|{\uparrow}\rangle$ であり、$|j-\frac12,j-\frac12\rangle\!\rangle$ は、絶対値 $1$ の因子を除いて、
+$S_zx=(j-\frac12)x$ かつ $S_+x=0$ を満たす唯一の単位ベクトル $x$ である。この因子は
+$|j,j\rangle\otimes|{\downarrow}\rangle$ の係数が正であることによって定まる（コンドン・ショートレーの規約）。
+(c) $S_z|J,M\rangle\!\rangle=M|J,M\rangle\!\rangle$ かつ $S_-|J,M\rangle\!\rangle=\sqrt{(J+M)(J-M+1)}\,|J,M-1\rangle\!\rangle$ である：状態 $|J,M\rangle\!\rangle$
+は $|J,J\rangle\!\rangle$ から下降と規格化によって得られる。
+(d) したがって $a=x,y,z$ に対し $S_a|J,M\rangle\!\rangle=\sum_{M'}(S^{(J)}_a)_{M'M}|J,M'\rangle\!\rangle$ である：ユニタリ $|J,M\rangle\mapsto|J,M\rangle\!\rangle$ は
+スピン $(j+\frac12)\oplus$ スピン $(j-\frac12)$ を $S_a$ に写すので、$j\otimes\frac12\cong(j+\frac12)\oplus(j-\frac12)$ であり、
+クレブシュ・ゴルダン係数 $\langle j,m;\frac12,\sigma|J,M\rangle$（積基底における $|J,M\rangle\!\rangle$ の座標）は上に示した
+$\pm\alpha_M,\beta_M$ である。
+
+*証明.* (a) 上の式の基底ベクトルが $0$ ならば、その係数も $0$ である：$|j,M-\frac12\rangle=0$ となるのは
+$M=-j-\frac12$ のときだけで、このとき $\alpha_M=0$ であり、$|j,M+\frac12\rangle=0$ となるのは $M=j+\frac12$ のときだけで、このとき $\beta_M=0$ である。よって各ベクトルのノルムの二乗は
+$\alpha_M^2+\beta_M^2=1$ である。$M$ が異なるベクトルは異なる積基底ベクトルを含み、$M$ が等しいときの
+内積は $-\alpha_M\beta_M+\beta_M\alpha_M=0$ である。それらは $(2j+2)+2j=2(2j+1)$ 個ある。
+(b) 第一の主張は $\alpha_{j+1/2}=1$、$\beta_{j+1/2}=0$ である。固有空間 $S_z=j-\frac12$ は
+$|j,j-1\rangle\otimes|{\uparrow}\rangle$ と $|j,j\rangle\otimes|{\downarrow}\rangle$ で張られ、$s_+|{\uparrow}\rangle=0$、$s_+|{\downarrow}\rangle=|{\uparrow}\rangle$ により
+$$
+S_+\big(p\,|j,j-1\rangle\otimes|{\uparrow}\rangle+q\,|j,j\rangle\otimes|{\downarrow}\rangle\big)=(p\sqrt{2j}+q)\,|j,j\rangle\otimes|{\uparrow}\rangle ,
+$$
+である。これが消えるのは $q=-\sqrt{2j}\,p$ のときかつそのときに限る。$|p|^2+|q|^2=1$ と $q>0$（したがって $p<0$）のもとでは、これは $p=-\beta_{j-1/2}=-1/\sqrt{2j+1}$、
+$q=\alpha_{j-1/2}=\sqrt{2j/(2j+1)}$ である。(c) $S_z$：どちらの項も $S_z=(M\mp\frac12)\pm\frac12=M$ をもつ。$S_-$ については、
+$x_M=p\,|j,M-\frac12\rangle\otimes|{\uparrow}\rangle+q\,|j,M+\frac12\rangle\otimes|{\downarrow}\rangle$ とおく。$s_-|{\uparrow}\rangle=|{\downarrow}\rangle$、$s_-|{\downarrow}\rangle=0$ であるから
+$$
+S_-x_M=p\sqrt{(j+M-\tfrac12)(j-M+\tfrac32)}\;|j,M-\tfrac32\rangle\otimes|{\uparrow}\rangle
++\Big(p+q\sqrt{(j+M+\tfrac12)(j-M+\tfrac12)}\Big)|j,M-\tfrac12\rangle\otimes|{\downarrow}\rangle .
+$$
+である。$\beta_M\sqrt{(j+M+\frac12)(j-M+\frac12)}=(j-M+\frac12)\alpha_M$ と $\alpha_M\sqrt{(j+M+\frac12)(j-M+\frac12)}=(j+M+\frac12)\beta_M$ を用いる。
+$J=j+\frac12$ に対しては $(p,q)=(\alpha_M,\beta_M)$、$c=\sqrt{(J+M)(J-M+1)}=\sqrt{(j+M+\frac12)(j-M+\frac32)}$ であり、第一の係数は
+$\sqrt{(j+M+\frac12)(j+M-\frac12)(j-M+\frac32)/(2j+1)}=c\,\alpha_{M-1}$、第二の係数は $\alpha_M(j-M+\frac32)=c\,\beta_{M-1}$ である。
+$J=j-\frac12$ に対しては $(p,q)=(-\beta_M,\alpha_M)$、$c=\sqrt{(j+M-\frac12)(j-M+\frac12)}$ であり、第一の係数は
+$-\sqrt{(j-M+\frac12)(j+M-\frac12)(j-M+\frac32)/(2j+1)}=-c\,\beta_{M-1}$、第二の係数は $\beta_M(j+M-\frac12)=c\,\alpha_{M-1}$ である。
+いずれの場合も $M>-J$ に対して $S_-|J,M\rangle\!\rangle=c\,|J,M-1\rangle\!\rangle$ である。$M=-J$ に対しては両方の係数が消える（$J=j+\frac12$ ならば $p=\alpha_M=0$、
+$J=j-\frac12$ ならば $j+M-\frac12=0$）ので、$S_-|J,-J\rangle\!\rangle=0$ である。(d) (a) と (c) により、正規直交基底
+$|J,M\rangle\!\rangle$ における $S_z$ と $S_-$ の行列はスピン $(j+\frac12)\oplus$ スピン $(j-\frac12)$ のもの（定理 4.11
+と上の公式）である。$S_+=S_-^*$ の行列も同様であり、したがって $S_x=\frac12(S_++S_-)$ と $S_y=\frac1{2i}(S_+-S_-)$ の行列も同様である。$\square$
+
+演習問題 2 はこの分解を（係数は除いて）$j_1\otimes j_2$ に拡張する。ライブラリにとって重要なのは定理 4.16 の二つの
+最高ウェイトベクトルだけであり、それらは既約であるか否かを問わず任意のスピン表現において機能する：
+
+**系 4.17（一度に一サイトずつの最高ウェイトベクトル）.** $(T_a)$ を $E$ 上のスピン表現とし、
+$\mathcal H_\mu(E)=\ker T_+\cap\ker(T_z-\mu)$ とおき、その正規直交基底を $B_\mu$ とする（$\mathcal H_\mu(E)=0$ ならば $B_\mu=\emptyset$）。また
+$E\otimes\mathbb C^2$ 上で $S_a=T_a\otimes1+1\otimes s_a$ とする。任意の $S\in\{0,\frac12,1,\dots\}$ に対し、ベクトル
+$$
+v\otimes|{\uparrow}\rangle\quad(v\in B_{S-1/2}),\qquad
+\sqrt{\tfrac{2S+1}{2S+2}}\;v\otimes|{\downarrow}\rangle-\tfrac1{\sqrt{(2S+1)(2S+2)}}\;T_-v\otimes|{\uparrow}\rangle\quad(v\in B_{S+1/2})
+$$
+は $\ker S_+\cap\ker(S_z-S)$ の正規直交基底をなす（$S=0$ では第一の族は空である）。一つのスピン
+（$E=\mathbb C^2$、$B_{1/2}=\{|{\uparrow}\rangle\}$、他のすべての $B_\mu$ は空）から始めて $L-1$ 個のスピンを加えていくと、
+$L$ 個のスピン $\frac12$ の最高ウェイトベクトルの空間の、次元 $m_S$ の正規直交基底が得られる（命題 4.15(b)）。
+
+*証明.* $a=\sqrt{(2S+1)/(2S+2)}$、$b=-1/\sqrt{(2S+1)(2S+2)}$、$u(v)=a\,v\otimes|{\downarrow}\rangle+b\,T_-v\otimes|{\uparrow}\rangle$ と書く。
+$v\in\mathcal H_{S+1/2}(E)$ に対し $T_+T_-v=(T_-T_++2T_z)v=(2S+1)v$ であり、$a+(2S+1)b=0$ である。*最高ウェイト：* $S_z$ はどちらの族の上でも $S$ である
+（$v$ 上で $T_z=S\mp\frac12$、$T_-v$ 上で $S-\frac12$）。$S_+(v\otimes|{\uparrow}\rangle)=T_+v\otimes|{\uparrow}\rangle=0$ であり、
+$S_+u(v)=a\,T_+v\otimes|{\downarrow}\rangle+a\,v\otimes|{\uparrow}\rangle+b\,T_+T_-v\otimes|{\uparrow}\rangle=(a+(2S+1)b)\,v\otimes|{\uparrow}\rangle=0$ である。
+*正規直交性：* $v\in B_{S-1/2}$ に対し $\langle v\otimes|{\uparrow}\rangle,u(v')\rangle=b\langle v,T_-v'\rangle=b\langle T_+v,v'\rangle=0$ であり、
+$\langle u(v),u(v')\rangle=a^2\langle v,v'\rangle+b^2\langle v,T_+T_-v'\rangle=(a^2+(2S+1)b^2)\langle v,v'\rangle=\langle v,v'\rangle$ である。
+*張ること：* $S_zw=Sw$ かつ $S_+w=0$ とし、$w=x\otimes|{\uparrow}\rangle+y\otimes|{\downarrow}\rangle$ と書く。すると $T_zx=(S-\frac12)x$、
+$T_zy=(S+\frac12)y$ であり、$0=S_+w=(T_+x+y)\otimes|{\uparrow}\rangle+T_+y\otimes|{\downarrow}\rangle$ であるから $T_+y=0$、すなわち $y\in\mathcal H_{S+1/2}(E)$
+で、$T_+x=-y$ である。すると $x'=x+\frac1{2S+1}T_-y$ は $T_+x'=-y+y=0$ を満たすので $x'\in\mathcal H_{S-1/2}(E)$ であり、これは $S=0$ では $0$ である
+（命題 4.15(b) の証明）。$b/a=-1/(2S+1)$ であるから、$w=x'\otimes|{\uparrow}\rangle+a^{-1}u(y)$（$u$ を線形に拡張する）は
+二つの族の張る空間に属する。$L$ 個のスピンについては、$n=2,\dots,L$ に対して $E=(\mathbb C^2)^{\otimes(n-1)}$ とその全スピン $T_a$ にこれを適用する。
+一つのスピン上では $\mathcal H_{1/2}=\mathbb C|{\uparrow}\rangle$ であり、他のすべての $\mathcal H_\mu=0$ である（スピンは $\frac12$ だけである）。$\square$
+
+第二の族は、$j=S+\frac12$ とした定理 4.16 のベクトル $|S,S\rangle\!\rangle$ を、$T_-^kv$ の張るスピン $j$ のコピーの中で書いたものであり
+（定理 4.11 の証明、$|j,j-1\rangle=T_-v/\sqrt{2j}$）、第一の族は $j=S-\frac12$ とした
+$|j+\frac12,j+\frac12\rangle\!\rangle$ である。各基底ベクトルに中間スピンの列
+$S_1=\frac12,S_2,\dots,S_L=S$、$|S_n-S_{n-1}|=\frac12$ でラベルをつけると、`su2.SU2Chain` が構成するヤマノウチ基底が得られる（そのソースは
+まさにこれらの係数を用いる。下のコードは系 4.17 の結論だけを確かめる）。それは `SpinChain` の $U(1)$ セクター $\hat N=\frac L2+S$ の内部にある（`SpinChain` のサイトの順序は
+テンソル因子の付け替えであり、補題 B.1(b) により全スピンと可換である）。コードは定理 4.16 を
+密な行列とライブラリの `su2.clebsch_gordan` に対して確かめ、それから八つのスピンの基底について系 4.17 の結論を確かめる。また命題 4.15(a) を `D4` を用いて四つのスピンの環で確かめ、
+八つのスピンについてブロックの大きさを比較する。
 
 ```python
 def swap(i, j, n):
