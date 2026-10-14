@@ -36,11 +36,15 @@ pytest -q                      # about a minute on a CPU; GPU tests run when CUD
 4. Run `pytest -q` before pushing; CI runs the test suite on Python 3.9–3.12.
 5. Changes visible to users go into `CHANGELOG.md` under "Unreleased".
 
-## Documentation and the course
+## Documentation
 
-The course in `docs/tutorial` exists in seven languages; the English text is authoritative and
-`tests/test_tutorial.py` checks that code blocks, displayed formulas and headings agree across translations.
-A change to an English chapter needs the same change in every translation (or an issue asking for it).
+All documentation lives in `man/`: the lecture notes (`man/lecture_notes`, the theory with complete proofs, no
+code), the tutorial (`man/tutorial`, the library in the context of the theory) and the paper (`man/article`). The
+lecture notes and the tutorial have one file per chapter with the same name and link to each other through explicit
+anchors (`<a id="r-4-20"></a>` before Theorem 4.20, `<a id="s-4-7"></a>` before Section 4.7). Both exist in seven
+languages; the English text is authoritative and `tests/test_man.py` runs every code block of the tutorial and checks
+that code, displayed formulas, headings, anchors and links agree across translations. A change to an English chapter
+needs the same change in every translation (or an issue asking for it). Write `\mathrm{Tr}`, not `\operatorname{Tr}`.
 
 ## Code of conduct
 

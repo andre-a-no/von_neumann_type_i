@@ -1,0 +1,274 @@
+[English](../B_schur_weyl.md) · [Español](../es/B_schur_weyl.md) · [Français](../fr/B_schur_weyl.md) · [Deutsch](../de/B_schur_weyl.md) · [中文](../zh/B_schur_weyl.md) · **日本語** · [Русский](../ru/B_schur_weyl.md)
+
+# チュートリアル、付録 B. シューア・ワイル双対性とワインガルテン計算
+
+このチュートリアルは講義ノートの[付録 B](../../lecture_notes/ja/B_schur_weyl.md)に対応する。付録 B はシューア・ワイル双対性
+（[定理 B.6](../../lecture_notes/ja/B_schur_weyl.md#r-B-6)）と任意の次数のワインガルテン公式（[定理 B.13](../../lecture_notes/ja/B_schur_weyl.md#r-B-13)）を証明する。ここでは、双対性における
+次元、ライブラリが計算する $(\mathbb C^d)^{\otimes n}$ の分解、ハール・ユニタリにわたるモンテカルロ平均と比較した
+ワインガルテン関数、ウィグナー・エッカルトの定理、そして直交群のハール測度を確かめる。
+
+<a id="s-B-3"></a>
+
+## B.3 シューア・ワイル双対性
+
+*講義ノート：* [B.3節](../../lecture_notes/ja/B_schur_weyl.md#s-B-3)；[補題 B.1](../../lecture_notes/ja/B_schur_weyl.md#r-B-1)、[補題 B.2](../../lecture_notes/ja/B_schur_weyl.md#r-B-2)、[命題 B.3](../../lecture_notes/ja/B_schur_weyl.md#r-B-3)、[補題 B.5](../../lecture_notes/ja/B_schur_weyl.md#r-B-5)、[定理 B.6](../../lecture_notes/ja/B_schur_weyl.md#r-B-6)。
+
+コードは小さな $d$ と $n$ について四つの次元を比較する：$\mathrm{span}\,\pi(S_n)$ の次元、二つのランダムな
+$V^{\otimes n}$ の可換子環の次元（これは $\{V^{\otimes n}\}'=\mathrm{span}\,\pi(S_n)$ を含み、出力されるすべての場合でそれと一致する）、
+そして多数のランダムな $A^{\otimes n}$ と $V^{\otimes n}$ の張る空間の次元を $\binom{d^2+n-1}n$ と比較する
+（[命題 B.3](../../lecture_notes/ja/B_schur_weyl.md#r-B-3)、[定理 B.6](../../lecture_notes/ja/B_schur_weyl.md#r-B-6)）。作用素 $\pi(\sigma)$ は `decompose.permutation_representation(n, d)` が
+構成する。コードはそれが[補題 B.1(a)](../../lecture_notes/ja/B_schur_weyl.md#r-B-1) の規約に従うことを確かめ、さらに[補題 B.2](../../lecture_notes/ja/B_schur_weyl.md#r-B-2) と、定理 B.6(b) の
+証明で用いる[補題 B.5](../../lecture_notes/ja/B_schur_weyl.md#r-B-5) のニュートン漸化式を確かめる。
+
+```python
+import functools
+import itertools
+import math
+import torch
+import torch_vn_algebra.decompose as dc
+
+torch.manual_seed(0)
+dt = torch.complex128
+
+def close(X, Y, tol=1e-10):
+    return (torch.as_tensor(X) - torch.as_tensor(Y)).abs().max().item() < tol
+
+def haar(d, B):                                        # Theorem 5.3: QR of Ginibre matrices, phases fixed
+    Q, R = torch.linalg.qr(torch.randn(B, d, d, dtype=dt))
+    r = R.diagonal(dim1=-2, dim2=-1)
+    return (Q * (r / r.abs()).unsqueeze(-2)).contiguous()
+
+def power(A, n):                                       # A^{(x) n} for a batch A of shape (B, d, d)
+    out = A
+    for _ in range(n - 1):
+        out = torch.einsum('bij,bkl->bikjl', out, A).reshape(A.shape[0], out.shape[1] * A.shape[1], -1)
+    return out
+
+def rank(X, tol=1e-9):                                 # dimension of the span of a batch of matrices
+    return torch.linalg.matrix_rank(X.reshape(X.shape[0], -1), atol=tol).item()
+
+def commutant_dim(ops, tol=1e-9):                      # dim {X : XA = AX for all A in ops}
+    eye = torch.eye(ops.shape[-1], dtype=dt)
+    L = torch.cat([torch.kron(A, eye) - torch.kron(eye, A.T.contiguous()) for A in ops])
+    return int((torch.linalg.svdvals(L) < tol).sum())
+
+for d, n in ((2, 2), (2, 3), (2, 4), (3, 2), (3, 3)):
+    P = dc.permutation_representation(n, d)            # the n! operators pi(sigma)
+    N_sym = math.comb(d * d + n - 1, n)                # Proposition B.3
+    span_A = rank(power(torch.randn(N_sym + 5, d, d, dtype=dt), n))
+    span_V = rank(power(haar(d, N_sym + 5), n))
+    comm_V = commutant_dim(power(haar(d, 2), n))       # commutant of two random V^{(x) n}
+    print(d, n, rank(P), comm_V, span_A, span_V, N_sym)
+    assert span_A == span_V == N_sym == commutant_dim(P)                     # Theorem B.6(a)
+    assert comm_V == rank(P)              # numerical observation: two V suffice here (B.6(c) gives >=)
+    assert rank(P) == (math.factorial(n) if n <= d else math.comb(2 * n, n) // (n + 1))   # B.1(d), B.10
+
+A = torch.randn(3, 2, 2, dtype=dt)                     # Lemma B.2 for n = 3
+lhs = sum(functools.reduce(torch.kron, [A[s[0]], A[s[1]], A[s[2]]]) for s in itertools.permutations(range(3)))
+rhs = sum((-1) ** (3 - sum(eps)) * functools.reduce(torch.kron, [sum(e * a for e, a in zip(eps, A))] * 3)
+          for eps in itertools.product((0, 1), repeat=3))
+assert close(lhs, rhs)
+
+xs = torch.randn(3, 2, dtype=dt)                       # Lemma B.1(a): pi(s) x_1 (x) x_2 (x) x_3 = (x) x_{s^-1(p)}
+for s in itertools.permutations(range(3)):
+    inv = [s.index(m) for m in range(3)]
+    Ps = dc.permutation_representation(3, 2, [list(s)])[0]
+    assert close(Ps @ functools.reduce(torch.kron, list(xs)), functools.reduce(torch.kron, [xs[inv[p]] for p in range(3)]))
+
+def d_pi(X, n):                                        # sum_m 1 (x) .. (x) X (x) .. (x) 1
+    eye = torch.eye(X.shape[0], dtype=dt)
+    return sum(functools.reduce(torch.kron, [X if l == m else eye for l in range(n)]) for m in range(n))
+
+n, A = 4, torch.randn(2, 2, dtype=dt)
+e = [torch.eye(2 ** n, dtype=dt)]
+for k in range(1, n + 1):                              # Lemma B.5 with x_m = A^(m), p_j = dPi(A^j)
+    e.append(sum((-1) ** (j - 1) * e[k - j] @ d_pi(torch.linalg.matrix_power(A, j), n)
+                 for j in range(1, k + 1)) / k)
+assert close(e[n], functools.reduce(torch.kron, [A] * n), 1e-8)
+```
+
+<a id="s-B-4"></a>
+
+## B.4 $(\mathbb C^d)^{\otimes n}$ の分解
+
+*講義ノート：* [B.4節](../../lecture_notes/ja/B_schur_weyl.md#s-B-4)；[定理 B.8](../../lecture_notes/ja/B_schur_weyl.md#r-B-8)、[系 B.9](../../lecture_notes/ja/B_schur_weyl.md#r-B-9)、[系 B.10](../../lecture_notes/ja/B_schur_weyl.md#r-B-10)。
+
+コードは `decompose.from_group` で $(\mathbb C^3)^{\otimes3}$ 上の $\pi(S_3)$ を分解し（その `k_factors` と
+`multiplicities` が $k_c$ と $m_c$ である）、[定理 B.8](../../lecture_notes/ja/B_schur_weyl.md#r-B-8) の次元を確かめる。次に $L=5,6$ に対して
+$(\mathbb C^2)^{\otimes L}$ 上の $\pi(S_L)$ を分解し、組 $(k_c,m_c)$ を[系 B.9](../../lecture_notes/ja/B_schur_weyl.md#r-B-9) の $(m_S,2S+1)$ と、
+$\sum_ck_c^2$ を[系 B.10](../../lecture_notes/ja/B_schur_weyl.md#r-B-10) のカタラン数と比較する。`from_group` の背後にあるアルゴリズムは
+[チュートリアル 4、4.3節](04_symmetries.md#s-4-3)で説明する。
+
+```python
+D33 = dc.from_group(dc.permutation_representation(3, 3))          # S_3 on (C^3)^{(x)3}
+print(D33)
+assert D33.verify()['ok']
+assert sum(k * k for k in D33.k_factors) == 6 == math.factorial(3)            # Theorem B.8, n <= d
+assert sum(m * m for m in D33.multiplicities) == math.comb(11, 3)              # 165
+
+for L in (5, 6):
+    DL = dc.from_group(dc.permutation_representation(L, 2))
+    pairs = sorted((math.comb(L, j) - (math.comb(L, j - 1) if j else 0), L - 2 * j + 1)
+                   for j in range(L // 2 + 1))                                 # (m_S, 2S + 1), S = L/2 - j
+    print(L, DL.k_factors, DL.multiplicities)
+    assert sorted(zip(DL.k_factors, DL.multiplicities)) == pairs               # Corollary B.9
+    assert sum(k * k for k in DL.k_factors) == math.comb(2 * L, L) // (L + 1)  # Corollary B.10
+    assert sum(m * m for m in DL.multiplicities) == math.comb(L + 3, 3)
+```
+
+<a id="s-B-5"></a>
+
+## B.5 ワインガルテン計算
+
+*講義ノート：* [B.5節](../../lecture_notes/ja/B_schur_weyl.md#s-B-5)；[補題 B.11](../../lecture_notes/ja/B_schur_weyl.md#r-B-11)、[定理 B.13](../../lecture_notes/ja/B_schur_weyl.md#r-B-13)、[系 B.14](../../lecture_notes/ja/B_schur_weyl.md#r-B-14)。
+
+コードは擬似逆行列から $\mathrm{Wg}$ を計算し、[定理 B.13(a)、(b)](../../lecture_notes/ja/B_schur_weyl.md#r-B-13) と
+[定理 5.10](../../lecture_notes/ja/05_random_matrices.md#r-5-10) を確かめ、さらに $d=2$ での次数 $n=3$ のモーメント・テンソル全体
+（$G$ が特異となる場合）と、ランダムな $X$ のツワール（[補題 B.11](../../lecture_notes/ja/B_schur_weyl.md#r-B-11)）を、ハール・ユニタリにわたるモンテカルロ
+平均と比較する。成分 $\mathbb E|U_{11}|^6=\frac{3!}{2\cdot3\cdot4}$ は[系 B.14](../../lecture_notes/ja/B_schur_weyl.md#r-B-14) である。
+
+```python
+def n_cycles(p):                                        # number of cycles of a permutation in one-line form
+    seen, count = set(), 0
+    for i in range(len(p)):
+        count += i not in seen
+        while i not in seen:
+            seen.add(i)
+            i = p[i]
+    return count
+
+def compose(s, t):                                     # (s t)(m) = s(t(m))
+    return tuple(s[m] for m in t)
+
+def inverse(s):
+    return tuple(sorted(range(len(s)), key=lambda m: s[m]))
+
+def weingarten(n, d):
+    perms = list(itertools.permutations(range(n)))
+    G = torch.tensor([[float(d) ** n_cycles(compose(inverse(s), t)) for t in perms] for s in perms],
+                     dtype=torch.float64)
+    return perms, G, torch.linalg.pinv(G, hermitian=True)
+
+for n, d in ((2, 2), (3, 2), (3, 3), (4, 2), (4, 3)):
+    perms, G, W = weingarten(n, d)
+    pos = {p: a for a, p in enumerate(perms)}
+    Wg = {p: W[0, pos[p]].item() for p in perms}        # perms[0] is the identity
+    assert all(abs(W[a, b] - Wg[compose(inverse(s), t)]) < 1e-12
+               for a, s in enumerate(perms) for b, t in enumerate(perms))       # Theorem B.13(a)
+    assert all(abs(Wg[p] - Wg[compose(compose(inverse(r), p), r)]) < 1e-12 for p in perms for r in perms)
+    assert (torch.linalg.matrix_rank(G).item() == math.factorial(n)) == (n <= d)  # Theorem B.13(b)
+for d in (2, 3, 5):                                     # Theorem 5.10
+    _, _, W = weingarten(2, d)
+    assert close(W[0], torch.tensor([1 / (d * d - 1), -1 / (d * (d * d - 1))], dtype=torch.float64), 1e-12)
+
+n, d, B = 3, 2, 100_000
+perms, G, W = weingarten(n, d)
+P = dc.permutation_representation(n, d, [list(p) for p in perms])        # pi(sigma), same order as W
+Phi = lambda X: torch.einsum('st,tij,ij,skl->kl', W.to(dt), P.conj(), X, P)   # Theorem B.13(c)
+U3 = power(haar(d, B), n)                                                 # B samples of U^{(x)3}
+moments = torch.einsum('bx,by->xy', U3.reshape(B, -1), U3.reshape(B, -1).conj()) / B
+second = torch.einsum('bx,by->xy', U3.reshape(B, -1).abs() ** 2, U3.reshape(B, -1).abs() ** 2) / B
+err = (second - moments.abs() ** 2).clamp(min=0).sqrt() / math.sqrt(B)   # standard errors
+N = d ** n
+exact = torch.stack([Phi(torch.outer(torch.eye(N, dtype=dt)[j], torch.eye(N, dtype=dt)[jp]))
+                     for j in range(N) for jp in range(N)])               # [(j, j'), i, i']
+exact = exact.reshape(N, N, N, N).permute(2, 0, 3, 1).reshape(N * N, N * N)   # [(i, j), (i', j')]
+z = ((moments - exact).abs() / (err + 1e-15)).max().item()
+print(f"{N ** 4} moments of order 3 for d = 2: largest deviation {z:.2f} standard errors")
+assert ((moments - exact).abs() <= 5 * err + 1e-12).all()                 # Theorem B.13(d), singular G
+assert abs(exact[0, 0].item() - 1 / 4) < 1e-12                            # Corollary B.14: 3!/(2*3*4)
+
+X = torch.randn(N, N, dtype=dt)
+T = Phi(X)
+coef = torch.linalg.lstsq(P.reshape(len(perms), -1).T, T.reshape(-1, 1)).solution
+assert close(Phi(T), T) and close(torch.einsum('s,sij->ij', coef[:, 0], P), T)   # a projection into span pi(S_n)
+Vn = power(haar(d, 1), n)[0]
+assert close(Vn @ T, T @ Vn)                                             # = {V^{(x)n}}'
+assert close(Phi(P[3]), P[3])
+Y = U3 @ X @ U3.mH                                                        # samples of U X U*
+assert ((Y.mean(0) - T).abs() <= 5 * Y.std(0) / math.sqrt(B) + 1e-12).all()   # Lemma B.11
+```
+
+<a id="s-B-6"></a>
+
+## B.6 テンソル作用素と $SU(2)$ に対するウィグナー・エッカルトの定理
+
+*講義ノート：* [B.6節](../../lecture_notes/ja/B_schur_weyl.md#s-B-6)；[補題 B.15](../../lecture_notes/ja/B_schur_weyl.md#r-B-15)、[定理 B.16](../../lecture_notes/ja/B_schur_weyl.md#r-B-16)。
+
+コードは六つのスピン $\frac12$ のサイトスピンについて[補題 B.15](../../lecture_notes/ja/B_schur_weyl.md#r-B-15) を確かめ（`decompose.total_spin`、
+`decompose.spin_matrices`）、[定理 B.16](../../lecture_notes/ja/B_schur_weyl.md#r-B-16) を基底によらない形で確かめる：`decompose.from_generators` が
+計算した分解（そのセクター基底、すなわち `V` の列ブロックは $|S,M\rangle$ である必要はない）において、二つの多重項の
+間の $(T_q)_q$ のブロックを行 $(M',M,q)$、列 $(a,b)$ の行列とみなすと、その階数は高々一であり、(a) の範囲外では
+零である。この定理は `su2.spin_correlation` の背後にある原理であり、[チュートリアル 9、9.3節](09_spin_chains.md#s-9-3)で
+`'direct'` 法と比較して確かめる。
+
+```python
+L = 6
+S6 = dc.total_spin(L)
+Sp, Sm = S6[0] + 1j * S6[1], S6[0] - 1j * S6[1]
+D6 = dc.from_generators(S6)
+print(D6)
+off = [0]
+for k, m in zip(D6.k_factors, D6.multiplicities):
+    off.append(off[-1] + k * m)
+sx, sy, sz = dc.spin_matrices(0.5)
+site = lambda x, i: functools.reduce(torch.kron, [x if l == i else torch.eye(2, dtype=dt) for l in range(L)])
+spherical = lambda X, Y, Z: {1: -(X + 1j * Y) / math.sqrt(2), 0: Z, -1: (X - 1j * Y) / math.sqrt(2)}
+for i in (0, 3):
+    T = spherical(site(sx, i), site(sy, i), site(sz, i))
+    zero = torch.zeros_like(T[0])
+    for q in (-1, 0, 1):                                                   # Lemma B.15(a), (b)
+        assert close(S6[2] @ T[q] - T[q] @ S6[2], q * T[q])
+        assert close(Sp @ T[q] - T[q] @ Sp, math.sqrt(2 - q * (q + 1)) * T.get(q + 1, zero))
+        assert close(Sm @ T[q] - T[q] @ Sm, math.sqrt(2 - q * (q - 1)) * T.get(q - 1, zero))
+    for c, (kc, mc) in enumerate(zip(D6.k_factors, D6.multiplicities)):
+        for e, (ke, me) in enumerate(zip(D6.k_factors, D6.multiplicities)):
+            Vc, Ve = D6.V[:, off[c]:off[c + 1]], D6.V[:, off[e]:off[e + 1]]
+            block = torch.stack([(Ve.mH @ T[q] @ Vc).reshape(ke, me, kc, mc) for q in (-1, 0, 1)])
+            sv = torch.linalg.svdvals(block.permute(0, 1, 3, 2, 4).reshape(3 * ke * kc, me * mc))
+            S, S2 = (kc - 1) / 2, (ke - 1) / 2
+            if abs(S - S2) <= 1 and S + S2 >= 1:
+                assert sv.numel() == 1 or sv[1] < 1e-10                        # Theorem B.16(b): rank one
+            else:
+                assert sv[0] < 1e-10                                           # Theorem B.16(a)
+X, Y, Z = (site(s, 0) for s in (sx, sy, sz))
+X2, Y2, Z2 = (site(s, 1) for s in (sx, sy, sz))
+T, T2 = spherical(X, Y, Z), spherical(X2, Y2, Z2)
+assert close(X @ X2 + Y @ Y2 + Z @ Z2, sum((-1) ** q * T[q] @ T2[-q] for q in (-1, 0, 1)))   # Lemma B.15(a)
+```
+
+<a id="s-B-7"></a>
+
+## B.7 本コースで用いるハール測度
+
+*講義ノート：* [B.7節](../../lecture_notes/ja/B_schur_weyl.md#s-B-7)；[定理 B.17](../../lecture_notes/ja/B_schur_weyl.md#r-B-17)。
+
+[定理 B.17](../../lecture_notes/ja/B_schur_weyl.md#r-B-17) により、実ガウス行列の QR 分解 $Z=OR$ を $R_{ii}>0$ で正規化したときの直交因子 $O$ は
+$O(k)$ 上でハール分布に従い、$\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k$ である。他の任意の QR 分解 $Z=O'R'$ に
+対しては $O=O'\mathrm{diag}(\mathrm{sgn}\,R'_{ii})$ である。
+
+コードは二次モーメント、$\mathbb E\mathrm{Tr}\,O=0$、そして $\mathbb E(\mathrm{Tr}\,O)^2=\sum_{i,l}\mathbb E[O_{ii}O_{ll}]=1$ を
+モンテカルロ法で確かめる。また、`torch.linalg.qr` の QR ルーチンについての*数値的観察*（定理ではなく、そのルーチンについての
+主張）も記録する：符号の補正をしなければ、その因子 $Q'$ の $\mathbb E\mathrm{Tr}\,Q'$ は $0$ から標準誤差の何倍も離れており、
+したがってハール分布に従わない。
+
+```python
+k, B = 3, 100_000
+Zr = torch.randn(B, k, k, dtype=torch.float64)
+Q, R = torch.linalg.qr(Zr)                              # LAPACK: diag(R) of either sign
+O = Q * torch.sign(R.diagonal(dim1=-2, dim2=-1)).unsqueeze(-2)     # Theorem B.17
+assert close(O.mT @ O, torch.eye(k, dtype=torch.float64).expand(B, k, k))
+assert (R.diagonal(dim1=-2, dim2=-1) * torch.sign(R.diagonal(dim1=-2, dim2=-1)) > 0).all()
+second = torch.einsum('bij,blm->ijlm', O, O) / B                   # E O_ij O_lm
+expected = torch.einsum('il,jm->ijlm', torch.eye(k, dtype=torch.float64), torch.eye(k, dtype=torch.float64)) / k
+err = (torch.einsum('bij,blm->ijlm', O ** 2, O ** 2) / B - second ** 2).clamp(min=0).sqrt() / math.sqrt(B)
+assert ((second - expected).abs() <= 5 * err).all()
+tr, tr_raw = O.diagonal(dim1=-2, dim2=-1).sum(-1), Q.diagonal(dim1=-2, dim2=-1).sum(-1)
+print(f"E Tr O = {tr.mean():.4f}, E (Tr O)^2 = {(tr ** 2).mean():.4f};  without the sign correction "
+      f"E Tr Q = {tr_raw.mean():.4f}")
+assert abs(tr.mean()) < 5 * tr.std() / math.sqrt(B)                # E Tr O = 0
+assert abs((tr ** 2).mean() - 1) < 5 * (tr ** 2).std() / math.sqrt(B)   # E (Tr O)^2 = sum_i 1/k = 1
+assert abs(tr_raw.mean()) > 20 * tr_raw.std() / math.sqrt(B)       # LAPACK's signs: not Haar
+```
+
+**次へ：** [チュートリアル、付録 C. 固有値密度とペイジの公式](C_eigenvalue_densities.md)。

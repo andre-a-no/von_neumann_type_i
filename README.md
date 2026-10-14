@@ -17,16 +17,17 @@ top-left `k_c × k_c` corner (the rest is zero padding).
 
 Companion paper: I. Nikolaeva, A. Novikov, *Finite-Dimensional Type I von Neumann Algebras in
 PyTorch: A GPU-Accelerated Framework for Random Block-Diagonal Operators*, arXiv:2606.15882
-(source and PDF in [`paper/`](paper)).
+(source and PDF in [`man/article/`](man/article)).
 
 This README is the entry point of the repository:
 
 | you want to | go to |
 |---|---|
 | use the library | [Installation](#installation), [Quick start](#quick-start), [`examples/`](examples) |
-| learn the theory and the library step by step | [the course](docs/tutorial/README.md): finite-dimensional von Neumann algebras with complete proofs, applications and checked examples (7 languages) |
+| learn the theory | [the lecture notes](man/lecture_notes/README.md): finite-dimensional von Neumann algebras, self-contained, with complete proofs (7 languages) |
+| learn the library | [the tutorial](man/tutorial/README.md): the library in the context of the theory, chapter by chapter, with cross-links to the theory (7 languages) |
 | understand the physics behind the models | [Physics background](#physics-background) |
-| read the paper | [`paper/main.pdf`](paper/main.pdf) (source `paper/main.tex`, response to the reviewers `paper/RESPONSE.md`) |
+| read the paper | [`man/article/main.pdf`](man/article/main.pdf) (source `man/article/main.tex`) |
 | reproduce every number of the paper | [Reproducing the paper](#reproducing-the-paper) |
 
 ## Features
@@ -216,21 +217,11 @@ spectral form factor of GUE vs. Poisson Hamiltonians, inclusions and their indic
 Schur–Weyl duality from the symmetries alone (`example_decompose.py`), SU(2) multiplets of the Heisenberg ring
 (`example_su2.py`), and Rényi divergences with data processing and recovery (`example_divergences.py`).
 
-## Physics background
-
-[Physics for mathematicians](docs/physics_for_mathematicians.md) explains the physical models used in the
-library (superselection, open systems, spin chains, quantum circuits, random matrices) in the language of
-the algebra ⊕_c M_{k_c}(C), with pointers to the corresponding functions.
-Translations: [Español](docs/physics_for_mathematicians.es.md) · [Français](docs/physics_for_mathematicians.fr.md) ·
-[Deutsch](docs/physics_for_mathematicians.de.md) · [中文](docs/physics_for_mathematicians.zh.md) ·
-[日本語](docs/physics_for_mathematicians.ja.md) · [Русский](docs/physics_for_mathematicians.ru.md).
-The English version is authoritative.
-
 ## Reproducing the paper
 
-The paper ([`paper/main.tex`](paper/main.tex), compiled [`paper/main.pdf`](paper/main.pdf)) contains no number
+The paper ([`man/article/main.tex`](man/article/main.tex), compiled [`man/article/main.pdf`](man/article/main.pdf)) contains no number
 typed by hand: every table and figure comes from the scripts in [`scripts`](scripts) and the listings in
-[`examples/paper`](examples/paper), run by one driver:
+[`man/article/listings`](man/article/listings), run by one driver:
 
 ```bash
 bash scripts/run_all.sh                    # quick mode, about 4 minutes on a 4-thread CPU
@@ -258,8 +249,8 @@ nohup bash scripts/run_all.sh full cuda > full_run.log 2>&1 &   # the full run (
   about 2 minutes in quick mode on one CPU thread), `chains` (Section 7), `baselines` (Section 9),
   `benchmark_library` (Section 10).
 - The driver first prints the GPU, its memory, CUDA and cuDNN versions (also saved to
-  `paper/generated/logs/environment.txt`) and stops if CUDA is not available.
-- Every script writes its own log to `paper/generated/logs/<script>.log`, including run-time estimates
+  `man/article/generated/logs/environment.txt`) and stops if CUDA is not available.
+- Every script writes its own log to `man/article/generated/logs/<script>.log`, including run-time estimates
   from the `cost` module. A failing script does not stop the others; the run ends with a summary.
 - `ONLY="chains baselines" bash scripts/run_all.sh full cuda` reruns a subset.
 - `scripts/gpu_check.py` (about 10 minutes, most of it the CPU side of the timings) has three parts:
@@ -283,20 +274,13 @@ nohup bash scripts/run_all.sh full cuda > full_run.log 2>&1 &   # the full run (
   in two terminals (the examples run only when `ONLY` is not set).
 - `... full cuda tf32` repeats the run with TF32 tensor-core matrix products (Ampere or newer), to measure
   their effect; the default is true FP32.
-- Results land in `paper/generated/` (tables as `.tex` and `.json`) and `paper/figures/`. Commit those
+- Results land in `man/article/generated/` (tables as `.tex` and `.json`) and `man/article/figures/`. Commit those
   two directories and the logs, then rebuild the PDF; the tables state the device and mode they came from.
 - Memory. The largest single step is the dense diagonalisation of a 12870-dimensional sector in `chains`
   (about 10 GB on the CPU in the `check` run); use a GPU with at least 24 GB, preferably 40-80 GB, and a host with
   at least 16 GB RAM. The `check` run shows the peak GPU memory of every script in its `[resources]` line.
 - Double precision is used throughout the validation and chain scripts; a data-centre GPU (A100, H100) is much
   faster there than a consumer GPU (FP64 at 1/2 versus 1/32-1/64 of the FP32 rate).
-
-### Data of the first version
-
-The Monte Carlo samples of the first version (arXiv:2606.15882v1), with which Section 6 of the paper compares the
-optimisation, are stored in `results/experiments/` and produced by `scripts/experiment.py`; `run_all.sh full`
-regenerates them if they are missing. The text, scripts and benchmark data of the first version itself are kept
-for reference in `archive/v1/` and are not used by the paper.
 
 ## Repository layout
 
@@ -305,12 +289,12 @@ torch_vn_algebra/    library: algebra.py (TypeIAlgebra, Operator), hilbert_space
                      states.py, dynamics.py, composite.py, chains.py, krylov.py, optimize.py, cost.py,
                      functional.py, inclusions.py, decompose.py, su2.py, divergences.py
 tests/               pytest suite (CPU, runs in CI)
-examples/            short usage examples; examples/paper: the code listings of the paper
-docs/                the course (docs/tutorial) and physics for mathematicians, each in 7 languages
-paper/               the paper: main.tex, main.pdf, generated/ (tables), figures/, RESPONSE.md
+examples/            short usage examples of the library
+man/                 the documentation:
+  lecture_notes/     the theory: definitions, theorems, complete proofs (7 languages)
+  tutorial/          the library in the context of the theory, executed by the tests (7 languages)
+  article/           the paper: main.tex, main.pdf, generated/ (tables), figures/, listings/ (its programs)
 scripts/             run_all.sh and the scripts behind every table and figure of the paper
-results/             Monte Carlo samples of the first version (input of scripts/bounds_search.py)
-archive/v1/          first version: text, its scripts and benchmark data (reference only)
 ```
 
 ## Tests
