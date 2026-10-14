@@ -97,12 +97,23 @@ def divided_differences(w: torch.Tensor, fw: torch.Tensor, dfw: torch.Tensor) ->
     Loewner matrix L_ij = (f(w_i) - f(w_j)) / (w_i - w_j), and (f'(w_i) + f'(w_j)) / 2 where w_i and w_j
     coincide up to eps^(1/3) relative to max(|w_i|, |w_j|) (which balances the truncation error of the
     midpoint value against the cancellation error of the quotient). w may be complex. Shape (..., k, k).
+    The midpoint value is also used for eigenvalues that are close on the scale of the block (|w_i - w_j| <=
+    eps^(1/3) max_l |w_l|) when the quotient is dominated by rounding, eps (|f(w_i)| + |f(w_j)|) >
+    eps^(2/3) |w_i - w_j| max(|f'(w_i)|, |f'(w_j)|): e.g. a degenerate eigenvalue 0 computed as +-1e-17 (where
+    (exp(1e-17) - exp(-1e-17)) / 2e-17 = 0 instead of 1).
     """
     dw = w.unsqueeze(-1) - w.unsqueeze(-2)
     df = fw.unsqueeze(-1) - fw.unsqueeze(-2)
     finfo = torch.finfo(w.real.dtype if torch.is_complex(w) else w.dtype)
     scale = torch.maximum(w.abs().unsqueeze(-1), w.abs().unsqueeze(-2)).clamp(min=finfo.tiny)
     close = dw.abs() <= finfo.eps ** (1 / 3) * scale
+    if w.shape[-1] > 1:
+        radius = w.abs().amax(dim=-1, keepdim=True).unsqueeze(-1)              # scale of the block's spectrum
+        fa, da = fw.detach().abs(), dfw.detach().abs()
+        rounding = finfo.eps * (fa.unsqueeze(-1) + fa.unsqueeze(-2))
+        slope = torch.maximum(da.unsqueeze(-1), da.unsqueeze(-2))
+        close = close | ((dw.abs() <= finfo.eps ** (1 / 3) * radius)
+                         & (rounding > finfo.eps ** (2 / 3) * dw.abs() * slope))
     dtype = torch.promote_types(torch.promote_types(df.dtype, dw.dtype), dfw.dtype)
     quotient = df.to(dtype) / torch.where(close, torch.ones_like(dw), dw).to(dtype)
     return torch.where(close, 0.5 * (dfw.unsqueeze(-1) + dfw.unsqueeze(-2)).to(dtype), quotient)

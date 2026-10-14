@@ -201,15 +201,22 @@ def evolve(H, psi0: torch.Tensor, times, m: int = 30, dt: Optional[float] = None
            progress: bool = False) -> torch.Tensor:
     """
     psi(t) = exp(-i t H) psi0 at every time of the increasing grid `times` (starting at times[0]),
-    in Krylov steps of size dt (default 0.1 * m / ||H||, with ||H|| estimated by a short Lanczos run). Warns if the accumulated error
+    in Krylov steps of size dt (default 0.1 * m / w, with w the half-width of the spectrum of H estimated by a short
+    Lanczos run; a constant shift of H does not shorten the step). Warns if the accumulated error
     estimate exceeds tol. Returns (T, batch, k), complex.
     """
     ts = [float(t) for t in torch.as_tensor(times, dtype=torch.float64).reshape(-1).tolist()]   # float64: no float32 rounding of t
     psi = psi0.to(torch.promote_types(psi0.dtype, torch.complex64))
     if dt is None:
-        alpha, beta, _ = lanczos(H.matvec, psi, min(20, H.dim))
-        spread = (torch.linalg.eigvalsh(_tridiag(alpha, beta)).abs().max()).item()
-        dt = max(1e-3, 0.1 * m / max(spread, 1e-12))
+        alpha, beta, Q = lanczos(H.matvec, psi, min(20, H.dim))
+        # after a breakdown the zero vectors leave alpha = 0 on the diagonal, a spurious Ritz value; alpha_0 lies
+        # inside the Ritz range of the live part and does not change its width
+        alive = torch.linalg.vector_norm(Q, dim=-1) > 0
+        ritz = torch.linalg.eigvalsh(_tridiag(torch.where(alive, alpha, alpha[:, :1]), beta))
+        # the Krylov error of exp(-i dt H) depends on dt times the half-width of the spectrum, not on ||H||: the
+        # Krylov space and exp of the tridiagonal matrix are exact under H -> H + c
+        spread = ((ritz.max(-1).values - ritz.min(-1).values) / 2).max().item()
+        dt = 0.1 * m / max(spread, 1e-12)
     n_steps = sum(max(1, math.ceil((b - a) / dt - 1e-9)) for a, b in zip(ts[:-1], ts[1:]))
     timer = cost.StepTimer(n_steps, "krylov.evolve", progress)
     out, err_total = [psi], torch.zeros(psi.shape[0], device=psi.device)

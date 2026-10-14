@@ -1583,7 +1583,7 @@ def test_prop_8_10_8_11_no_jump_evolution(g1, g2):
     Phi_s = superop(lambda R: sum(L @ R @ L.conj().T for L in jumps), D)
     X0 = full(rho0)
     ts = [0.5, 1.0, 2.0]
-    traj = dynamics.lindblad_evolve(rho0, H, loss, [0.0] + ts, rates=[g1, g2], substeps=100)[1:]
+    traj = dynamics.lindblad_evolve(rho0, H, loss, [0.0] + ts, rates=[g1, g2], substeps=400)[1:]   # RK4 error ~2e-11
     w0s = []
     for t, r in zip(ts, traj):
         terms = dyson_terms(G0, Phi_s, t, 3)
@@ -1593,7 +1593,7 @@ def test_prop_8_10_8_11_no_jump_evolution(g1, g2):
             sec = 2 - n
             Pn = np.zeros((D, D))
             Pn[o[sec]:o[sec] + ks[sec], o[sec]:o[sec] + ks[sec]] = np.eye(ks[sec])
-            assert np.abs(Sn - Pn @ rt @ Pn).max() < 1e-8                         # Prop. 8.11
+            assert np.abs(Sn - Pn @ rt @ Pn).max() < 1e-9                         # Prop. 8.11
             assert np.trace(Sn).real > -1e-12
         assert np.abs((terms[3] @ X0.reshape(-1))).max() < 1e-10                   # S_n = 0 for n > N0
         w0 = np.linalg.norm(sla.expm(-1j * t * Heff) @ np.concatenate([[0, 0, 0], psi])) ** 2

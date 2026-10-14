@@ -13,7 +13,7 @@ from typing import Optional, Sequence, Tuple
 
 import torch
 
-from .algebra import TypeIAlgebra
+from .algebra import TypeIAlgebra, _as_tensor
 from . import cost
 
 Operator = TypeIAlgebra.Operator
@@ -133,7 +133,7 @@ class DensityMatrix(Operator):
                 raise ValueError("mix: p must lie in [0, 1] (otherwise the result is not a state)")
             pt = p
         else:
-            pt = torch.as_tensor(p).to(device=self.algebra.hilbert.device, dtype=self.algebra.hilbert.real_dtype)
+            pt = _as_tensor(p).to(device=self.algebra.hilbert.device, dtype=self.algebra.hilbert.real_dtype)
             if bool(((pt < 0) | (pt > 1)).any()):        # one synchronisation (validation)
                 raise ValueError("mix: p must lie in [0, 1] (otherwise the result is not a state)")
             if pt.dim() == 1:

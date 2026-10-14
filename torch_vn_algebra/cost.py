@@ -141,13 +141,24 @@ def kernel_flops(kind: str, k: int, complex_: bool) -> float:
 _probe_cache = {}
 
 
+def _timed(fn: Callable, x: torch.Tensor) -> float:
+    _sync(x.device)
+    t0 = time.perf_counter()
+    fn(x)
+    _sync(x.device)
+    return time.perf_counter() - t0
+
+
 def batched_call(fn: Callable, x: torch.Tensor, what: str, kind: str = 'eigh'):
     """
     fn(x) for a function acting independently on the items x[0], x[1], ... (leading dimension). The first large
-    problem of a kind (same fn, block shape, dtype and device) is timed on a slice (8 items on a CPU, 1/16 of the
-    batch on a GPU, where small slices do not fill the device) and the time per item is remembered; a CostWarning
-    reports the expected time if it exceeds warn_seconds. Later calls cost nothing extra. The result is fn(x),
-    computed in one call.
+    problem of a kind (same fn, block shape, dtype and device) is timed on slices of the batch (from 8 items on a
+    CPU, 1/16 of the batch on a GPU, where small slices do not fill the device) and the cost per item is remembered;
+    a CostWarning reports the expected time if it exceeds warn_seconds. A call has a fixed cost (dispatch, workspace;
+    milliseconds for batched LAPACK kernels) that is not proportional to the number of items: it is measured on one
+    item and subtracted, and the slice is enlarged (x4) until the per-item part dominates or the time it implies
+    for the whole batch is below warn_seconds. Later calls cost nothing extra. The result is fn(x), computed in one
+    call.
     """
     if not _config['enabled'] or x.dim() < 3 or x.shape[0] == 0:
         return _run(fn, x, kind)
@@ -161,16 +172,21 @@ def batched_call(fn: Callable, x: torch.Tensor, what: str, kind: str = 'eigh'):
     if n_items < 4 * probe or flops < _config['probe_flops']:
         return _run(fn, x, kind)
     key = (getattr(fn, '__qualname__', repr(fn)), kind, tuple(x.shape[1:]), x.dtype, str(x.device))
-    t_item = _probe_cache.get(key)
-    if t_item is None:
-        m = probe if x.device.type == 'cpu' else min(n_items, max(probe, n_items // 16))
+    if key not in _probe_cache:
         fn(x[:1])                          # one-off set-up costs (library loading, workspace) are not timed
-        _sync(x.device)
-        t0 = time.perf_counter()
-        fn(x[:m])
-        _sync(x.device)
-        t_item = _probe_cache[key] = (time.perf_counter() - t0) / m
-        eta = t_item * n_items
+        t_fixed = _timed(fn, x[:1])        # cost of a call on one item: (almost) only the fixed part
+        m = probe if x.device.type == 'cpu' else min(n_items, max(probe, n_items // 16))
+        while True:
+            t_m = _timed(fn, x[:m])
+            # t_m / m overestimates the cost per item (it contains the fixed part): if even that is harmless, stop
+            if t_m / m * n_items <= _config['warn_seconds'] or t_m >= 10 * t_fixed or m >= n_items:
+                break
+            m = min(4 * m, n_items)
+        t_item = (t_m - t_fixed) / (m - 1) if m > 1 else t_m
+        if t_item <= 0 or t_m / m * n_items <= _config['warn_seconds']:
+            t_item = t_m / m                                  # timing noise / harmless anyway: the upper bound
+        _probe_cache[key] = t_item
+        eta = t_fixed + t_item * n_items
         if eta > _config['warn_seconds']:
             warnings.warn(f"{what}: about {_fmt_seconds(eta)} expected for {n_items * per_item} blocks of size {k} "
                           f"on {x.device} (measured on {m} items). Consider a smaller batch, double -> single "

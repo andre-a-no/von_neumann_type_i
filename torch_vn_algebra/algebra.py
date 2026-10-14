@@ -19,6 +19,17 @@ from . import functional as _fc
 from .functional import cache_enabled as _fc_cache_enabled
 from .functional import divided_differences as _divided_differences   # noqa: F401 (tests)
 
+def _as_tensor(x) -> torch.Tensor:
+    """torch.as_tensor that keeps Python and NumPy numbers in double precision (torch.as_tensor turns a list of
+    Python floats into float32, which would round data meant for a double-precision algebra)."""
+    if isinstance(x, torch.Tensor):
+        return x
+    try:
+        return torch.as_tensor(np.asarray(x))
+    except (TypeError, ValueError, RuntimeError):       # e.g. a list of tensors that require gradients
+        return torch.as_tensor(x)
+
+
 def _same_device(a, b) -> bool:
     """Device equality that treats 'cpu' and torch.device('cpu'), 'cuda' and 'cuda:<current>' as equal."""
     a, b = torch.device(a), torch.device(b)
@@ -651,6 +662,7 @@ class TypeIAlgebra:
             op._is_self_adjoint = True
             op._is_positive = True
             op._is_normal = True
+            op._batch = self._batch
             return op
 
         def polar(self) -> Tuple['TypeIAlgebra.Operator', 'TypeIAlgebra.Operator']:
@@ -674,6 +686,7 @@ class TypeIAlgebra:
             P = TypeIAlgebra.Operator(self.algebra, generator=lambda: factors()['P'])
             W._is_normal = None
             P._is_self_adjoint = P._is_positive = P._is_normal = True
+            W._batch = P._batch = self._batch
             return W, P
 
         def _require_positive(self, what: str):
@@ -751,7 +764,9 @@ class TypeIAlgebra:
             op = TypeIAlgebra.Operator(self.algebra, generator=generator)
             for name, value in flags.items():
                 setattr(op, f'_is_{name}', value)
-            op._batch = self._batch if other is None or other._batch is None else max(self._batch or 1, other._batch)
+            # known batch of the result: unknown (None) as soon as one operand's batch is unknown
+            op._batch = self._batch if other is None else (
+                None if self._batch is None or other._batch is None else max(self._batch, other._batch))
             return op
 
         def __add__(self, other: 'TypeIAlgebra.Operator') -> 'TypeIAlgebra.Operator':
@@ -791,8 +806,8 @@ class TypeIAlgebra:
                                 self_adjoint=self._is_self_adjoint if real else None,
                                 positive=True if (self._is_positive and nonneg) else None,
                                 invertible=self._is_invertible if nonzero else None)
-            if isinstance(scalar, torch.Tensor) and scalar.dim() > 0:
-                out._batch = scalar.shape[0] if self._batch in (None, 1) else self._batch
+            if isinstance(scalar, torch.Tensor) and scalar.dim() > 0 and self._batch is not None:
+                out._batch = max(self._batch, scalar.shape[0])
             return out
 
         __rmul__ = __mul__
@@ -1134,7 +1149,7 @@ class TypeIAlgebra:
                 all_eig.append(torch.zeros(0, dtype=self.hilbert.dtype, device=self.hilbert.device))
                 continue
             eig = eigenvalue_sampler(k_c)
-            eig = torch.from_numpy(eig) if isinstance(eig, np.ndarray) else torch.as_tensor(eig)
+            eig = _as_tensor(eig)
             if eig.shape[-1:] != (k_c,) or eig.dim() > 2 or (eig.dim() == 2 and eig.shape[0] not in (1, batch_size)):
                 raise ValueError(f"eigenvalue_sampler({k_c}) must return shape ({k_c},) or ({batch_size}, {k_c}), "
                                  f"got {tuple(eig.shape)}")
@@ -1243,7 +1258,7 @@ class TypeIAlgebra:
     def _to_field(self, t: torch.Tensor, what: str) -> torch.Tensor:
         """Convert input data to this algebra's dtype and device; complex data with a non-zero imaginary
         part in a real algebra is an error rather than a silent truncation."""
-        t = torch.as_tensor(t)
+        t = _as_tensor(t)
         if torch.is_complex(t) and not self.hilbert.complex_valued:
             if t.numel() and bool(t.imag.abs().amax() > 1e-6 * torch.clamp(t.abs().amax(), min=1)):
                 raise ValueError(f"{what}: complex values in a real algebra (create it with complex_valued=True)")
@@ -1272,7 +1287,7 @@ class TypeIAlgebra:
         """Operator from a list of C blocks of shape (batch, k_c, k_c) (or (k_c, k_c))."""
         if len(blocks) != self.C:
             raise ValueError(f"from_blocks: need {self.C} blocks, got {len(blocks)}")
-        blocks = [torch.as_tensor(b) for b in blocks]
+        blocks = [_as_tensor(b) for b in blocks]
         blocks = [b if b.dim() == 3 else b.unsqueeze(0) for b in blocks]
         batch = max(b.shape[0] for b in blocks)
         mat = torch.zeros(batch, self.C, self.k_max, self.k_max, dtype=self.hilbert.dtype, device=self.hilbert.device)
