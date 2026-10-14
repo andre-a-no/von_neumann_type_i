@@ -204,18 +204,26 @@ wird nach der Konvention $0\log0=0$ nur auf dessen Träger gebraucht). Die Diffe
 unverändert.
 
 **Lemma 3.4 (Tangentenungleichung).** Sei $f:I\to\mathbb R$ konvex auf einem Intervall $I$ und
-differenzierbar in $b\in I$. Dann gilt $f(a)\ge f(b)+(a-b)f'(b)$ für alle $a\in I$, und zwar
-strikt für $a\neq b$, wenn $f$ strikt konvex ist.
+differenzierbar in $b\in I$ (einseitig, wenn $b$ ein Randpunkt von $I$ ist). Dann gilt
+$f(a)\ge f(b)+(a-b)f'(b)$ für alle $a\in I$, und zwar strikt für $a\neq b$, wenn $f$ strikt
+konvex ist, d. h. wenn $f((1-t)x+ty)<(1-t)f(x)+tf(y)$ für $x\neq y$ in $I$ und $t\in(0,1)$.
+Ist $f$ außerdem stetig auf $I$ und im Inneren von $I$ zweimal differenzierbar mit $f''>0$, so
+ist $f$ strikt konvex.
 
 *Beweis.* Für $t\in(0,1]$ liefert die Konvexität $f(b+t(a-b))\le(1-t)f(b)+tf(a)$, d. h.
 $\big(f(b+t(a-b))-f(b)\big)/t\le f(a)-f(b)$; der Grenzübergang $t\to0$ ergibt die Ungleichung.
 Ist $f$ strikt konvex und $a\neq b$, so sei $m=(a+b)/2$; dann gilt
 $f(a)-f(b)>2\big(f(m)-f(b)\big)\ge2(m-b)f'(b)=(a-b)f'(b)$, der erste Schritt wegen strikter
-Konvexität in $m$, der zweite nach der eben bewiesenen Ungleichung, angewandt auf $m$. $\square$
+Konvexität in $m$, der zweite nach der eben bewiesenen Ungleichung, angewandt auf $m$. Für die
+letzte Behauptung seien $x<y$ in $I$, $t\in(0,1)$ und $z=(1-t)x+ty$. Nach dem Mittelwertsatz gibt
+es $\xi_1\in(x,z)$ und $\xi_2\in(z,y)$ mit $f(z)-f(x)=t(y-x)f'(\xi_1)$ und
+$f(y)-f(z)=(1-t)(y-x)f'(\xi_2)$, und $f'(\xi_1)<f'(\xi_2)$ nach dem Mittelwertsatz für $f'$ auf
+$[\xi_1,\xi_2]$, da dort $f''>0$. Multiplikation mit $t(1-t)(y-x)>0$ ergibt
+$(1-t)\big(f(z)-f(x)\big)<t\big(f(y)-f(z)\big)$, d. h. $f(z)<(1-t)f(x)+tf(y)$. $\square$
 
 **Satz 3.5 (Kleinsche Ungleichung).** Sei $f:I\to\mathbb R$ konvex auf einem Intervall $I$,
 und seien $X,Y$ selbstadjungiert mit Spektren in $I$, wobei $f$ in jedem Eigenwert von $Y$
-differenzierbar ist. Dann gilt $\operatorname{Tr}[f(X)-f(Y)-(X-Y)f'(Y)]\ge0$. Ist $f$ strikt
+differenzierbar ist (einseitig in einem Randpunkt von $I$). Dann gilt $\operatorname{Tr}[f(X)-f(Y)-(X-Y)f'(Y)]\ge0$. Ist $f$ strikt
 konvex, so gilt Gleichheit nur für $X=Y$.
 
 *Beweis.* Seien $X=\sum_ia_i|u_i\rangle\langle u_i|$ und $Y=\sum_jb_j|v_j\rangle\langle v_j|$ mit
@@ -232,7 +240,8 @@ $Xv_j=\sum_ia_i\langle u_i,v_j\rangle u_i=b_jv_j$ für jedes $j$, und $X=Y$. $\s
 Insbesondere ist $S(\rho)\le\log D$, mit Gleichheit genau dann, wenn $\rho=1/D$.
 
 *Beweis.* Man wende Satz 3.5 auf $f(t)=t\log t$, $f(0)=0$, an – eine Funktion, die auf
-$I=[0,\infty)$ strikt konvex ist ($f''(t)=1/t>0$ auf $(0,\infty)$, und $f$ ist stetig in $0$)
+$I=[0,\infty)$ nach Lemma 3.4 strikt konvex ist ($f$ ist stetig in $0$, da $t\log t\to0$ für
+$t\to0^+$, und $f''(t)=1/t>0$ auf $(0,\infty)$)
 und auf $(0,\infty)\supseteq\operatorname{spec}\sigma$ differenzierbar mit $f'(t)=\log t+1$ –,
 mit $X=\rho$, $Y=\sigma$: Die linke Seite ist
 $\operatorname{Tr}\rho\log\rho-\operatorname{Tr}\sigma\log\sigma-\operatorname{Tr}(\rho-\sigma)(\log\sigma+1)
@@ -250,18 +259,29 @@ $$
 wobei $E$ die bedingte Erwartung auf das Zentrum ist (Proposition 2.8).
 
 *Beweis.* Für $p_c>0$ ist $\operatorname{Tr}\rho_c\log\rho_c=p_c\log p_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\rho_c$
-(Eigenwerte $p_c\mu$, wie in Satz 3.3) und $\log\sigma_c=(\log q_c)1+\log\hat\sigma_c$, also
+(Eigenwerte $p_c\mu$, wie in Satz 3.3) und $\log\sigma_c=(\log q_c)1+\log\hat\sigma_c$ (man
+diagonalisiere $\hat\sigma_c=U\,\mathrm{diag}(s_i)\,U^*$, also $\sigma_c=U\,\mathrm{diag}(q_cs_i)\,U^*$, und
+verwende Satz 1.5(a)), also
 $\operatorname{Tr}\rho_c\log\sigma_c=p_c\log q_c+p_c\operatorname{Tr}\hat\rho_c\log\hat\sigma_c$ und
 $\operatorname{Tr}\rho_c\log\rho_c-\operatorname{Tr}\rho_c\log\sigma_c=p_c\log(p_c/q_c)+p_cS(\hat\rho_c\|\hat\sigma_c)$.
 Ist $p_c=0$, so ist $\rho_c=0$, und der Sektor trägt $0$ bei.
-Man summiere über $c$; die zweite Summe ist nach Korollar 3.6, angewandt in jedem Block,
-$\ge0$. Schließlich ist
-$E\rho=\bigoplus_c(p_c/k_c)1_{k_c}$, $E\sigma=\bigoplus_c(q_c/k_c)1_{k_c}$, und
-$\operatorname{Tr}E\rho(\log E\rho-\log E\sigma)=\sum_ck_c\frac{p_c}{k_c}\log\frac{p_c}{q_c}$. $\square$
+Man summiere über $c$; die zweite Summe ist nach Korollar 3.6, angewandt in $M_{k_c}$ auf die
+Zustände $\hat\rho_c$ und $\hat\sigma_c>0$, $\ge0$. Schließlich sind
+$E\rho=\bigoplus_c(p_c/k_c)1_{k_c}$ und $E\sigma=\bigoplus_c(q_c/k_c)1_{k_c}>0$ Zustände; $E\rho$ ist die
+Dichte des Zustands $\omega\circ E$ (mit $\omega(A)=\operatorname{Tr}\rho A$), da
+$\operatorname{Tr}(\rho E(A))=\sum_cp_c\operatorname{Tr}(A_c)/k_c=\operatorname{Tr}(E(\rho)A)$. Und
+$S(E\rho\|E\sigma)=\sum_ck_c\frac{p_c}{k_c}\big(\log\frac{p_c}{k_c}-\log\frac{q_c}{k_c}\big)=\sum_cp_c\log\frac{p_c}{q_c}$,
+da die Eigenwerte von $E\rho$ im Block $c$ gleich $p_c/k_c$ sind ($k_c$-fach) und Sektoren mit
+$p_c=0$ den Wert $0$ beitragen. $\square$
 
-Das Vergessen der Quanteninformation innerhalb der Sektoren kann die Unterscheidbarkeit
-zweier Zustände also nur verringern; was bleibt, ist die klassische
-Kullback-Leibler-Divergenz der Sektorverteilungen.
+Ersetzt man beide Zustände durch ihre Bilder unter $E$, so kann die relative Entropie also nur
+abnehmen; was bleibt, ist die Kullback-Leibler-Divergenz $\sum_cp_c\log(p_c/q_c)$ der
+Sektorverteilungen.
+
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Die relative
+> Entropie misst, wie gut sich zwei Zustände unterscheiden lassen. Das Vergessen der
+> Quanteninformation innerhalb der Sektoren kann zwei Zustände nur schwerer unterscheidbar
+> machen; was bleibt, ist die klassische Unterscheidbarkeit der Ladungsverteilungen.
 
 ```python
 sigma_state = states.random_density_matrix(alg, batch_size=4)
@@ -285,10 +305,13 @@ weit $A$ von einem Vielfachen der Identität entfernt ist: $\Delta(A)=0$ genau d
 **Proposition 3.8.** Ist $\Phi:\mathcal M\to\mathcal M$ linear, positiv und unital
 ($\Phi(1)=1$), so gilt $\Delta(\Phi(A))\le\Delta(A)$ für alle $A\ge0$.
 
-*Beweis.* Es ist $\lambda_{\min}1\le A\le\lambda_{\max}1$, und Positivität und Unitalität
-liefern $\lambda_{\min}1\le\Phi(A)\le\lambda_{\max}1$. Folglich ist
-$\lambda_{\min}(\Phi(A))\ge\lambda_{\min}$ und $\lambda_{\max}(\Phi(A))\le\lambda_{\max}$. Ist
-$\Phi(A)=0$, so ist die Behauptung trivial. Andernfalls ist mit $r=\lambda_{\min}/\lambda_{\max}$
+*Beweis.* Es ist $\lambda_{\min}1\le A\le\lambda_{\max}1$ (Korollar 1.4(3) für $A-\lambda_{\min}1$
+und $\lambda_{\max}1-A$), und Positivität, Linearität und Unitalität liefern
+$\lambda_{\min}1\le\Phi(A)\le\lambda_{\max}1$. Folglich ist $\Phi(A)$ selbstadjungiert (wie jede
+positive Matrix, Korollar 1.4(3)), $\Phi(A)\ge0$ (da $\lambda_{\min}\ge0$), und nach Korollar 1.4(3)
+ist $\lambda_{\min}(\Phi(A))\ge\lambda_{\min}$ und $\lambda_{\max}(\Phi(A))\le\lambda_{\max}$. Ist
+$\Phi(A)=0$, so ist die Behauptung trivial. Andernfalls ist $A\neq0$, sowohl $\lambda_{\max}$ als
+auch $\lambda_{\max}(\Phi(A))$ sind $>0$, und mit $r=\lambda_{\min}/\lambda_{\max}\in[0,1]$ ist
 die Größe $\Delta=(1-r)/(1+r)$ fallend in $r$, und $r(\Phi(A))\ge r(A)$. $\square$
 
 ```python
