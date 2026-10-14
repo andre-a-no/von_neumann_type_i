@@ -32,7 +32,7 @@ $`A\in S`$ entraîne $`X^*A^*=A^*X^*`$ pour tout $`A\in S`$. Tout élément de $
 en passant aux commutants dans $`S\subseteq S''`$ (ce qui renverse les inclusions), on obtient
 $`S'''\subseteq S'`$. Par conséquent $`S'=S'''`$.
 
-*Calcul :* les commutants comme noyaux, numériquement — [tutoriel, section 2.4](../../tutorial/fr/02_von_neumann_algebras.md#s-2-4). *Dans la bibliothèque :* `decompose.commutant_basis`, `decompose.commutant_dimension` — [tutoriel, section 4.2](../../tutorial/fr/04_symmetries.md#s-4-2).
+*Calcul :* les commutants comme noyaux, numériquement — [tutoriel, section 2.4](../../tutorial/fr/02_von_neumann_algebras.md#s-2-4). *Dans la bibliothèque :* `decompose.commutant_dimension` — [tutoriel, section 4.2](../../tutorial/fr/04_symmetries.md#s-4-2) ; `decompose.commutant_basis` — [tutoriel, section 4.3](../../tutorial/fr/04_symmetries.md#s-4-3).
 
 Lorsqu'une algèbre agit sur un sous-espace $`E`$ de $`\mathbb C^n`$, on identifie $`E`$ à
 $`\mathbb C^{\dim E}`$ au moyen d'une base orthonormée, de sorte que tous les résultats

@@ -32,7 +32,7 @@ conmuta con todo elemento de $`S'`$, luego $`S\subseteq S''`$; aplicado a $`S'`$
 $`S'\subseteq S'''`$, y tomando conmutantes en $`S\subseteq S''`$ (lo cual invierte las
 inclusiones) se obtiene $`S'''\subseteq S'`$. Por tanto $`S'=S'''`$.
 
-*Cálculo:* los conmutantes como núcleos, numéricamente — [tutorial, sección 2.4](../../tutorial/es/02_von_neumann_algebras.md#s-2-4). *En la biblioteca:* `decompose.commutant_basis`, `decompose.commutant_dimension` — [tutorial, sección 4.2](../../tutorial/es/04_symmetries.md#s-4-2).
+*Cálculo:* los conmutantes como núcleos, numéricamente — [tutorial, sección 2.4](../../tutorial/es/02_von_neumann_algebras.md#s-2-4). *En la biblioteca:* `decompose.commutant_dimension` — [tutorial, sección 4.2](../../tutorial/es/04_symmetries.md#s-4-2); `decompose.commutant_basis` — [tutorial, sección 4.3](../../tutorial/es/04_symmetries.md#s-4-3).
 
 Cuando un álgebra actúa sobre un subespacio $`E`$ de $`\mathbb C^n`$, identificamos $`E`$ con
 $`\mathbb C^{\dim E}`$ mediante una base ortonormal, de modo que todos los resultados

@@ -49,7 +49,7 @@ Two consequences make this more than bookkeeping.
   the whole $`(B,C,k_{\max},k_{\max})`$ array; Hermitian eigendecompositions, singular values and QR
   decompositions are applied to the stack of all $`B\cdot n_k`$ blocks of each distinct size $`k`$ ($`n_k`$
   the number of sectors of that size) in one batched call — a single call when all sectors have the
-  same size. On a CPU with $`t\ge2`$ PyTorch threads the library splits such a call into $`t`$ chunks run
+  same size. On a CPU with $`t\ge2`$ PyTorch threads the library splits such a call into at most $`t`$ chunks run
   in parallel threads, provided the stack has at least $`2t`$ blocks and (number of blocks)$`\,\cdot k^3\ge2^{18}`$
   (module `cost`, function `_run`); the results are the same LAPACK calls on the same matrices. The
   aim is to keep a GPU, or all cores of a CPU, busy.
@@ -107,7 +107,7 @@ print(f"in the algebra: {t_blocks * 1e3:.1f} ms, as one 1024 x 1024 matrix: {t_b
 
 The results agree to round-off (row 2 of the table), and the storage ratio is $`C`$, as counted
 above. The 64 blocks go to the eigensolver as one batched call on a stack of shape $`(64,16,16)`$;
-with $`2\le t\le32`$ PyTorch threads the library splits it into $`t`$ chunks ($`64\cdot16^3=2^{18}`$ meets
+with $`2\le t\le32`$ PyTorch threads the library splits it into at most $`t`$ chunks ($`64\cdot16^3=2^{18}`$ meets
 the threshold of module `cost` exactly), with one thread it does not. *Numerical observation*
 (timings depend on the hardware; the code prints them): on two 4-core CPUs the algebra version took
 3–10 ms and the large-matrix version 400–760 ms, a factor between several tens and a few hundred

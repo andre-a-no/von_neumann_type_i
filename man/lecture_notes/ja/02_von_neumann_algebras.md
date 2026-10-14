@@ -23,7 +23,7 @@ $`S`$ が随伴について閉じている（$`S^*=S`$）ならば $`S'`$ は $`
 $`S'\subseteq S'''`$ を得て、$`S\subseteq S''`$ の可換子環をとる（包含関係は逆転する）と
 $`S'''\subseteq S'`$ を得る。したがって $`S'=S'''`$ である。
 
-*計算：* 零空間としての可換子環の数値計算 — [チュートリアル、2.4節](../../tutorial/ja/02_von_neumann_algebras.md#s-2-4)。*ライブラリでは：* `decompose.commutant_basis`, `decompose.commutant_dimension` — [チュートリアル、4.2節](../../tutorial/ja/04_symmetries.md#s-4-2)。
+*計算：* 零空間としての可換子環の数値計算 — [チュートリアル、2.4節](../../tutorial/ja/02_von_neumann_algebras.md#s-2-4)。*ライブラリでは：* `decompose.commutant_dimension` — [チュートリアル、4.2節](../../tutorial/ja/04_symmetries.md#s-4-2)；`decompose.commutant_basis` — [チュートリアル、4.3節](../../tutorial/ja/04_symmetries.md#s-4-3)。
 
 環が $`\mathbb C^n`$ の部分空間 $`E`$ に作用するときは、正規直交基底によって $`E`$ を
 $`\mathbb C^{\dim E}`$ と同一視し、$`\mathbb C^n`$ 上で述べたすべての結果がそれに適用できるようにする。

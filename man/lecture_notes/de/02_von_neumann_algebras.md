@@ -31,7 +31,7 @@ kommutiert mit jedem Element von $`S'`$, also gilt $`S\subseteq S''`$; auf $`S'`
 dies $`S'\subseteq S'''`$, und Übergang zu den Kommutanten in $`S\subseteq S''`$ (der Inklusionen
 umkehrt) ergibt $`S'''\subseteq S'`$. Folglich ist $`S'=S'''`$.
 
-*Rechnung:* Kommutanten als Kerne, numerisch — [Tutorial, Abschnitt 2.4](../../tutorial/de/02_von_neumann_algebras.md#s-2-4). *In der Bibliothek:* `decompose.commutant_basis`, `decompose.commutant_dimension` — [Tutorial, Abschnitt 4.2](../../tutorial/de/04_symmetries.md#s-4-2).
+*Rechnung:* Kommutanten als Kerne, numerisch — [Tutorial, Abschnitt 2.4](../../tutorial/de/02_von_neumann_algebras.md#s-2-4). *In der Bibliothek:* `decompose.commutant_dimension` — [Tutorial, Abschnitt 4.2](../../tutorial/de/04_symmetries.md#s-4-2); `decompose.commutant_basis` — [Tutorial, Abschnitt 4.3](../../tutorial/de/04_symmetries.md#s-4-3).
 
 Wirkt eine Algebra auf einem Unterraum $`E`$ von $`\mathbb C^n`$, so identifizieren wir $`E`$
 mittels einer Orthonormalbasis mit $`\mathbb C^{\dim E}`$, sodass alle für $`\mathbb C^n`$

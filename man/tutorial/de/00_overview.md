@@ -52,7 +52,7 @@ Zwei Konsequenzen machen dies zu mehr als bloßer Buchführung.
   auf den Stapel aller $`B\cdot n_k`$ Blöcke jeder vorkommenden Größe $`k`$ ($`n_k`$ die Zahl der Sektoren
   dieser Größe) in einem gestapelten Aufruf angewandt – ein einziger Aufruf, wenn alle Sektoren
   gleich groß sind. Auf einer CPU mit $`t\ge2`$ PyTorch-Threads teilt die Bibliothek einen solchen
-  Aufruf in $`t`$ Teilstücke auf, die in parallelen Threads laufen, sofern der Stapel mindestens
+  Aufruf in höchstens $`t`$ Teilstücke auf, die in parallelen Threads laufen, sofern der Stapel mindestens
   $`2t`$ Blöcke hat und (Zahl der Blöcke)$`\,\cdot k^3\ge2^{18}`$ gilt (Modul `cost`, Funktion `_run`); die
   Ergebnisse sind dieselben LAPACK-Aufrufe auf denselben Matrizen. Ziel ist, eine GPU oder alle
   Kerne einer CPU auszulasten.
@@ -114,7 +114,7 @@ print(f"in the algebra: {t_blocks * 1e3:.1f} ms, as one 1024 x 1024 matrix: {t_b
 Die Ergebnisse stimmen bis auf Rundungsfehler überein (Zeile 2 der Tabelle), und das
 Speicherverhältnis ist $`C`$, wie oben gezählt. Die 64 Blöcke gehen als ein gestapelter Aufruf auf
 einem Stapel der Gestalt $`(64,16,16)`$ an den Eigenwertlöser; mit $`2\le t\le32`$ PyTorch-Threads
-teilt die Bibliothek ihn in $`t`$ Teilstücke auf ($`64\cdot16^3=2^{18}`$ erreicht die Schwelle des
+teilt die Bibliothek ihn in höchstens $`t`$ Teilstücke auf ($`64\cdot16^3=2^{18}`$ erreicht die Schwelle des
 Moduls `cost` genau), mit einem Thread nicht. *Numerische Beobachtung* (die Laufzeiten hängen
 von der Hardware ab; der Code gibt sie aus): Auf zwei 4-Kern-CPUs brauchte die Version in der
 Algebra 3–10 ms und die Version mit der großen Matrix 400–760 ms, ein Faktor zwischen einigen

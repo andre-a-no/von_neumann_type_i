@@ -52,7 +52,7 @@ Deux conséquences en font davantage qu'une simple affaire de comptabilité.
   singulières et les décompositions QR s'appliquent à la pile des $`B\cdot n_k`$ blocs de chaque
   taille distincte $`k`$ ($`n_k`$ étant le nombre de secteurs de cette taille) en un seul appel par
   lots — un seul appel au total lorsque tous les secteurs ont la même taille. Sur un CPU avec
-  $`t\ge2`$ threads PyTorch, la bibliothèque découpe un tel appel en $`t`$ morceaux exécutés dans des
+  $`t\ge2`$ threads PyTorch, la bibliothèque découpe un tel appel en au plus $`t`$ morceaux exécutés dans des
   threads parallèles, pourvu que la pile compte au moins $`2t`$ blocs et que (nombre de blocs)$`\,\cdot k^3\ge2^{18}`$
   (module `cost`, fonction `_run`) ; les résultats sont les mêmes appels LAPACK sur les mêmes
   matrices. Le but est d'occuper pleinement un GPU, ou tous les cœurs d'un CPU.
@@ -113,7 +113,7 @@ print(f"in the algebra: {t_blocks * 1e3:.1f} ms, as one 1024 x 1024 matrix: {t_b
 Les résultats coïncident aux erreurs d'arrondi près (ligne 2 du tableau), et le rapport de
 stockage vaut $`C`$, comme calculé plus haut. Les 64 blocs passent au solveur de valeurs propres en
 un seul appel par lots sur une pile de forme $`(64,16,16)`$ ; avec $`2\le t\le32`$ threads PyTorch, la
-bibliothèque le découpe en $`t`$ morceaux ($`64\cdot16^3=2^{18}`$ atteint exactement le seuil du module
+bibliothèque le découpe en au plus $`t`$ morceaux ($`64\cdot16^3=2^{18}`$ atteint exactement le seuil du module
 `cost`), avec un seul thread elle ne le découpe pas. *Observation numérique* (les durées
 dépendent du matériel ; le code les affiche) : sur deux CPU à 4 cœurs, la version dans l'algèbre
 a pris 3–10 ms et la version en grande matrice 400–760 ms, soit un facteur compris entre

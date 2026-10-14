@@ -52,7 +52,7 @@ Dos consecuencias hacen que esto sea algo más que una cuestión de contabilidad
   valores singulares y las descomposiciones QR se aplican a la pila de los $`B\cdot n_k`$ bloques de
   cada tamaño distinto $`k`$ ($`n_k`$ es el número de sectores de ese tamaño) en una sola llamada por
   lotes (una única llamada cuando todos los sectores tienen el mismo tamaño). En una CPU con
-  $`t\ge2`$ hilos de PyTorch, la biblioteca divide una llamada así en $`t`$ trozos que se ejecutan en
+  $`t\ge2`$ hilos de PyTorch, la biblioteca divide una llamada así en a lo sumo $`t`$ trozos que se ejecutan en
   hilos paralelos, siempre que la pila tenga al menos $`2t`$ bloques y (número de bloques)$`\,\cdot k^3\ge2^{18}`$
   (módulo `cost`, función `_run`); los resultados son las mismas llamadas a LAPACK sobre las mismas
   matrices. El objetivo es mantener ocupada una GPU, o todos los núcleos de una CPU.
@@ -113,7 +113,7 @@ print(f"in the algebra: {t_blocks * 1e3:.1f} ms, as one 1024 x 1024 matrix: {t_b
 Los resultados coinciden salvo errores de redondeo (fila 2 de la tabla), y el cociente de
 almacenamiento es $`C`$, como se contó arriba. Los 64 bloques van al solucionador de valores propios
 en una sola llamada por lotes sobre una pila de forma $`(64,16,16)`$; con $`2\le t\le32`$ hilos de
-PyTorch la biblioteca la divide en $`t`$ trozos ($`64\cdot16^3=2^{18}`$ alcanza exactamente el umbral
+PyTorch la biblioteca la divide en a lo sumo $`t`$ trozos ($`64\cdot16^3=2^{18}`$ alcanza exactamente el umbral
 del módulo `cost`), con un solo hilo no lo hace. *Observación numérica* (los tiempos dependen del
 hardware; el código los imprime): en dos CPU de 4 núcleos, la versión en el álgebra tardó 3–10 ms
 y la versión con la matriz grande 400–760 ms, un factor entre varias decenas y unos pocos cientos

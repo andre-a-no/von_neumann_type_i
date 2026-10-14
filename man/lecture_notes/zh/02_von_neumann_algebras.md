@@ -28,7 +28,7 @@ $`S'=\{X\in M_n(\mathbb C):XA=AX\ \forall A\in S\}`$（即与 $`S`$ 中所有元
 $`S'\subseteq S'''`$，而对 $`S\subseteq S''`$ 取交换子（取交换子使包含关系反向）
 得到 $`S'''\subseteq S'`$。因此 $`S'=S'''`$。
 
-*计算：* 交换子作为零空间的数值计算——[教程，2.4 节](../../tutorial/zh/02_von_neumann_algebras.md#s-2-4)。*库中：* `decompose.commutant_basis`、`decompose.commutant_dimension`——[教程，4.2 节](../../tutorial/zh/04_symmetries.md#s-4-2)。
+*计算：* 交换子作为零空间的数值计算——[教程，2.4 节](../../tutorial/zh/02_von_neumann_algebras.md#s-2-4)。*库中：* `decompose.commutant_dimension`——[教程，4.2 节](../../tutorial/zh/04_symmetries.md#s-4-2)；`decompose.commutant_basis`——[教程，4.3 节](../../tutorial/zh/04_symmetries.md#s-4-3)。
 
 当一个代数作用在 $`\mathbb C^n`$ 的子空间 $`E`$ 上时，我们借助一组规范正交基把 $`E`$ 等同于
 $`\mathbb C^{\dim E}`$，从而在 $`\mathbb C^n`$ 上陈述的所有结果都适用于它。
