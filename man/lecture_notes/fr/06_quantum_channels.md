@@ -306,7 +306,7 @@ Les canaux standard de la bibliothèque agissent à l'intérieur de chaque bloc 
 
 Les formes de Kraus se vérifient par un calcul direct, par exemple
 $`\sum_{ij}\frac1kE_{ij}\rho E_{ji}=\frac1k\sum_{ij}\rho_{jj}E_{ii}`$. Les cinq canaux sont TP, et tous
-sauf l'amortissement d'amplitude avec $`\gamma>0`$ sont unifères (proposition 6.4 : calculer
+sauf l'amortissement d'amplitude avec $`\gamma>0`$ (si un $`k_c\ge2`$) sont unifères (proposition 6.4 : calculer
 $`\sum_lK_l^*K_l`$ et $`\sum_lK_lK_l^*`$ ; pour l'amortissement d'amplitude dans un bloc de taille $`k`$, ils
 valent $`1`$ et $`1+(k-1)\gamma E_{00}-\gamma\sum_{i>0}E_{ii}`$, et $`\sum_jp_j=1`$ pour le canal unitaire
 mixte). Explicitement, l'amortissement d'amplitude envoie

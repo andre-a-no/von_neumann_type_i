@@ -277,7 +277,7 @@ $`\Phi(x)=(x_0+\mathrm{Tr}\,x_1)\oplus0`$，其 Kraus 算子为 $`K^{00}=1`$，$
 
 这些 Kraus 形式可以直接计算验证，例如
 $`\sum_{ij}\frac1kE_{ij}\rho E_{ji}=\frac1k\sum_{ij}\rho_{jj}E_{ii}`$。这五个信道都是 TP 的，并且除
-$`\gamma>0`$ 时的振幅阻尼外都是保单位的（命题 6.4：计算 $`\sum_lK_l^*K_l`$ 和
+$`\gamma>0`$ 时的振幅阻尼（当某个 $`k_c\ge2`$ 时）外都是保单位的（命题 6.4：计算 $`\sum_lK_l^*K_l`$ 和
 $`\sum_lK_lK_l^*`$；对大小为 $`k`$ 的块中的振幅阻尼，它们分别是 $`1`$ 和
 $`1+(k-1)\gamma E_{00}-\gamma\sum_{i>0}E_{ii}`$，而对混合酉信道有 $`\sum_jp_j=1`$）。
 具体地，振幅阻尼的作用为 $`\rho_{00}\mapsto\rho_{00}+\gamma\sum_{i>0}\rho_{ii}`$，

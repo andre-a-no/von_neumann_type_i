@@ -464,7 +464,8 @@ $`|\rho_{ge}|^2\le\rho_{gg}\rho_{ee}`$，有 $`\rho_{ee}^2+|\rho_{ge}|^2\le\rho_
    $`\mathrm{Tr}(\Phi(\rho)A)=\mathrm{Tr}(\rho\Phi^*(A))`$ 就是 $`\Phi^*`$ 的定义
    （6.3 节）。于是 $`\mathcal L^*(1)=\sum_jg_j(L_j^*L_j-L_j^*L_j)+\sum_mg_m(\Phi_m^*(1)-\Phi_m^*(1))=0`$，
    这又一次是保迹性。没有扇区之间的跳跃时，$`P_c`$ 与 $`H`$ 及
-   所有 $`L_j`$ 可交换，所以 $`L_j^*P_cL_j=L_j^*L_jP_c=\frac12\{L_j^*L_j,P_c\}`$，从而 $`\mathcal L^*(P_c)=0`$；于是
+   所有 $`L_j`$ 可交换，所以 $`L_j^*P_cL_j=L_j^*L_jP_c=\frac12\{L_j^*L_j,P_c\}`$；每个 $`\Phi_m`$ 只有块 $`K^{cc}_{m,l}`$，所以
+   $`\Phi_m^*(P_c)=\Phi_m^*(1)P_c=\frac12\{\Phi_m^*(1),P_c\}`$，从而 $`\mathcal L^*(P_c)=0`$；于是
    $`p_c'=\mathrm{Tr}(\rho\mathcal L^*(P_c))=0`$，这是命题 8.9(1) 的第二个证明。
 
 2. $`H_{\mathrm{eff}}=-\frac i4(\gamma_1+\gamma_2)1+\begin{pmatrix}-i\delta&J\\J&i\delta\end{pmatrix}`$，其中

@@ -560,7 +560,8 @@ $`t\to\infty`$ gegen $`|\rho_{ge}(0)|`$.
    (Abschnitt 6.3). Dann ist
    $`\mathcal L^*(1)=\sum_jg_j(L_j^*L_j-L_j^*L_j)+\sum_mg_m(\Phi_m^*(1)-\Phi_m^*(1))=0`$, was noch
    einmal die Spurerhaltung ist. Ohne Sprünge zwischen Sektoren kommutiert $`P_c`$ mit $`H`$ und allen
-   $`L_j`$, also ist $`L_j^*P_cL_j=L_j^*L_jP_c=\frac12\{L_j^*L_j,P_c\}`$ und $`\mathcal L^*(P_c)=0`$; dann
+   $`L_j`$, also ist $`L_j^*P_cL_j=L_j^*L_jP_c=\frac12\{L_j^*L_j,P_c\}`$, jedes $`\Phi_m`$ hat nur die Blöcke $`K^{cc}_{m,l}`$, also ist
+   $`\Phi_m^*(P_c)=\Phi_m^*(1)P_c=\frac12\{\Phi_m^*(1),P_c\}`$, und $`\mathcal L^*(P_c)=0`$; dann
    ist $`p_c'=\mathrm{Tr}(\rho\mathcal L^*(P_c))=0`$, ein zweiter Beweis von Proposition 8.9(1).
 
 2. $`H_{\mathrm{eff}}=-\frac i4(\gamma_1+\gamma_2)1+\begin{pmatrix}-i\delta&J\\J&i\delta\end{pmatrix}`$

@@ -477,7 +477,8 @@ $`\rho_{ee}^2+|\rho_{ge}|^2\le\rho_{ee}\le1`$), а произведение $`e^
    $`\mathrm{Tr}(\Phi(\rho)A)=\mathrm{Tr}(\rho\Phi^*(A))`$ — это определение $`\Phi^*`$
    (раздел 6.3). Тогда $`\mathcal L^*(1)=\sum_jg_j(L_j^*L_j-L_j^*L_j)+\sum_mg_m(\Phi_m^*(1)-\Phi_m^*(1))=0`$,
    что ещё раз выражает сохранение следа. Без скачков между секторами $`P_c`$ коммутирует с $`H`$ и
-   всеми $`L_j`$, поэтому $`L_j^*P_cL_j=L_j^*L_jP_c=\frac12\{L_j^*L_j,P_c\}`$ и $`\mathcal L^*(P_c)=0`$; тогда
+   всеми $`L_j`$, поэтому $`L_j^*P_cL_j=L_j^*L_jP_c=\frac12\{L_j^*L_j,P_c\}`$, каждое $`\Phi_m`$ имеет только блоки $`K^{cc}_{m,l}`$, поэтому
+   $`\Phi_m^*(P_c)=\Phi_m^*(1)P_c=\frac12\{\Phi_m^*(1),P_c\}`$, и $`\mathcal L^*(P_c)=0`$; тогда
    $`p_c'=\mathrm{Tr}(\rho\mathcal L^*(P_c))=0`$ — второе доказательство предложения 8.9(1).
 
 2. $`H_{\mathrm{eff}}=-\frac i4(\gamma_1+\gamma_2)1+\begin{pmatrix}-i\delta&J\\J&i\delta\end{pmatrix}`$ с

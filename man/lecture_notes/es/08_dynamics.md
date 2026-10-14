@@ -541,7 +541,8 @@ cuando $`t\to\infty`$.
    (sección 6.3). Entonces
    $`\mathcal L^*(1)=\sum_jg_j(L_j^*L_j-L_j^*L_j)+\sum_mg_m(\Phi_m^*(1)-\Phi_m^*(1))=0`$, que es una
    vez más la preservación de la traza. Sin saltos entre sectores, $`P_c`$ conmuta con $`H`$ y con todos
-   los $`L_j`$, luego $`L_j^*P_cL_j=L_j^*L_jP_c=\frac12\{L_j^*L_j,P_c\}`$ y $`\mathcal L^*(P_c)=0`$;
+   los $`L_j`$, luego $`L_j^*P_cL_j=L_j^*L_jP_c=\frac12\{L_j^*L_j,P_c\}`$, cada $`\Phi_m`$ tiene solo los bloques $`K^{cc}_{m,l}`$, luego
+   $`\Phi_m^*(P_c)=\Phi_m^*(1)P_c=\frac12\{\Phi_m^*(1),P_c\}`$, y $`\mathcal L^*(P_c)=0`$;
    entonces $`p_c'=\mathrm{Tr}(\rho\mathcal L^*(P_c))=0`$, una segunda demostración de la
    proposición 8.9(1).
 

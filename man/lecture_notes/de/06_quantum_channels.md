@@ -301,7 +301,7 @@ Die Standardkanäle der Bibliothek wirken innerhalb jedes Blocks ($`p,\gamma\in[
 
 Die Kraus-Formen prüft man durch direkte Rechnung, z. B.
 $`\sum_{ij}\frac1kE_{ij}\rho E_{ji}=\frac1k\sum_{ij}\rho_{jj}E_{ii}`$. Alle fünf sind TP, und alle außer
-der Amplitudendämpfung mit $`\gamma>0`$ sind unital (Proposition 6.4: man berechne $`\sum_lK_l^*K_l`$ und
+der Amplitudendämpfung mit $`\gamma>0`$ (wenn ein $`k_c\ge2`$ ist) sind unital (Proposition 6.4: man berechne $`\sum_lK_l^*K_l`$ und
 $`\sum_lK_lK_l^*`$; für die Amplitudendämpfung in einem Block der Größe $`k`$ sind sie $`1`$ und
 $`1+(k-1)\gamma E_{00}-\gamma\sum_{i>0}E_{ii}`$, und $`\sum_jp_j=1`$ für den gemischt-unitären Kanal).
 Explizit bildet die Amplitudendämpfung $`\rho_{00}\mapsto\rho_{00}+\gamma\sum_{i>0}\rho_{ii}`$,

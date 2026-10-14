@@ -477,7 +477,8 @@ $`\rho_{ee}^2+|\rho_{ge}|^2\le\rho_{ee}\le1`$), and $`e^{\gamma t/2}`$ times it 
    $`\mathrm{Tr}(\Phi(\rho)A)=\mathrm{Tr}(\rho\Phi^*(A))`$ is the definition of $`\Phi^*`$
    (Section 6.3). Then $`\mathcal L^*(1)=\sum_jg_j(L_j^*L_j-L_j^*L_j)+\sum_mg_m(\Phi_m^*(1)-\Phi_m^*(1))=0`$,
    which is trace preservation once more. Without jumps between sectors, $`P_c`$ commutes with $`H`$ and
-   all $`L_j`$, so $`L_j^*P_cL_j=L_j^*L_jP_c=\frac12\{L_j^*L_j,P_c\}`$ and $`\mathcal L^*(P_c)=0`$; then
+   all $`L_j`$, so $`L_j^*P_cL_j=L_j^*L_jP_c=\frac12\{L_j^*L_j,P_c\}`$, every $`\Phi_m`$ has only the
+   blocks $`K^{cc}_{m,l}`$, so $`\Phi_m^*(P_c)=\Phi_m^*(1)P_c=\frac12\{\Phi_m^*(1),P_c\}`$, and $`\mathcal L^*(P_c)=0`$; then
    $`p_c'=\mathrm{Tr}(\rho\mathcal L^*(P_c))=0`$, a second proof of Proposition 8.9(1).
 
 2. $`H_{\mathrm{eff}}=-\frac i4(\gamma_1+\gamma_2)1+\begin{pmatrix}-i\delta&J\\J&i\delta\end{pmatrix}`$ with

@@ -549,8 +549,8 @@ $`|\rho_{ge}(0)|`$ quand $`t\to\infty`$.
    (section 6.3). Alors
    $`\mathcal L^*(1)=\sum_jg_j(L_j^*L_j-L_j^*L_j)+\sum_mg_m(\Phi_m^*(1)-\Phi_m^*(1))=0`$, ce qui est
    encore une fois la préservation de la trace. Sans sauts entre secteurs, $`P_c`$ commute avec $`H`$ et
-   avec tous les $`L_j`$, donc $`L_j^*P_cL_j=L_j^*L_jP_c=\frac12\{L_j^*L_j,P_c\}`$ et
-   $`\mathcal L^*(P_c)=0`$ ; alors $`p_c'=\mathrm{Tr}(\rho\mathcal L^*(P_c))=0`$, ce qui fournit
+   avec tous les $`L_j`$, donc $`L_j^*P_cL_j=L_j^*L_jP_c=\frac12\{L_j^*L_j,P_c\}`$, chaque $`\Phi_m`$ n'a que les blocs $`K^{cc}_{m,l}`$, donc
+   $`\Phi_m^*(P_c)=\Phi_m^*(1)P_c=\frac12\{\Phi_m^*(1),P_c\}`$, et $`\mathcal L^*(P_c)=0`$ ; alors $`p_c'=\mathrm{Tr}(\rho\mathcal L^*(P_c))=0`$, ce qui fournit
    une seconde démonstration de la proposition 8.9(1).
 
 2. $`H_{\mathrm{eff}}=-\frac i4(\gamma_1+\gamma_2)1+\begin{pmatrix}-i\delta&J\\J&i\delta\end{pmatrix}`$

@@ -471,7 +471,8 @@ $`t\to\infty`$ のとき $`|\rho_{ge}(0)|`$ に収束する。
    $`\mathrm{Tr}(\Phi(\rho)A)=\mathrm{Tr}(\rho\Phi^*(A))`$ が $`\Phi^*`$ の定義である
    （6.3節）。すると $`\mathcal L^*(1)=\sum_jg_j(L_j^*L_j-L_j^*L_j)+\sum_mg_m(\Phi_m^*(1)-\Phi_m^*(1))=0`$ であり、
    これは再びトレース保存にほかならない。セクター間のジャンプがなければ、$`P_c`$ は $`H`$ および
-   すべての $`L_j`$ と可換であるから、$`L_j^*P_cL_j=L_j^*L_jP_c=\frac12\{L_j^*L_j,P_c\}`$ となり $`\mathcal L^*(P_c)=0`$ である。したがって
+   すべての $`L_j`$ と可換であるから、$`L_j^*P_cL_j=L_j^*L_jP_c=\frac12\{L_j^*L_j,P_c\}`$ となり、各 $`\Phi_m`$ はブロック $`K^{cc}_{m,l}`$ しか持たないから
+   $`\Phi_m^*(P_c)=\Phi_m^*(1)P_c=\frac12\{\Phi_m^*(1),P_c\}`$ となって、$`\mathcal L^*(P_c)=0`$ である。したがって
    $`p_c'=\mathrm{Tr}(\rho\mathcal L^*(P_c))=0`$ であり、これは命題 8.9(1) の第二の証明である。
 
 2. $`\delta=(\gamma_1-\gamma_2)/4`$ として

@@ -298,7 +298,7 @@ Los canales estándar de la biblioteca actúan dentro de cada bloque ($`p,\gamma
 
 Las formas de Kraus se comprueban por cálculo directo, p. ej.
 $`\sum_{ij}\frac1kE_{ij}\rho E_{ji}=\frac1k\sum_{ij}\rho_{jj}E_{ii}`$. Los cinco son TP, y todos salvo
-el amortiguamiento de amplitud con $`\gamma>0`$ son unitales (proposición 6.4: calcúlense
+el amortiguamiento de amplitud con $`\gamma>0`$ (si algún $`k_c\ge2`$) son unitales (proposición 6.4: calcúlense
 $`\sum_lK_l^*K_l`$ y $`\sum_lK_lK_l^*`$; para el amortiguamiento de amplitud en un bloque de tamaño $`k`$
 valen $`1`$ y $`1+(k-1)\gamma E_{00}-\gamma\sum_{i>0}E_{ii}`$, y $`\sum_jp_j=1`$ para el canal unitario
 mixto). Explícitamente, el amortiguamiento de amplitud lleva

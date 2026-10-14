@@ -287,7 +287,7 @@ The library's standard channels act inside each block ($`p,\gamma\in[0,1]`$):
 
 The Kraus forms are checked by direct computation, e.g.
 $`\sum_{ij}\frac1kE_{ij}\rho E_{ji}=\frac1k\sum_{ij}\rho_{jj}E_{ii}`$. All five are TP, and all but
-amplitude damping with $`\gamma>0`$ are unital (Proposition 6.4: compute $`\sum_lK_l^*K_l`$ and
+amplitude damping with $`\gamma>0`$ (when some $`k_c\ge2`$) are unital (Proposition 6.4: compute $`\sum_lK_l^*K_l`$ and
 $`\sum_lK_lK_l^*`$; for amplitude damping in a block of size $`k`$ they are $`1`$ and
 $`1+(k-1)\gamma E_{00}-\gamma\sum_{i>0}E_{ii}`$, and $`\sum_jp_j=1`$ for the mixed unitary channel).
 Explicitly, amplitude damping maps $`\rho_{00}\mapsto\rho_{00}+\gamma\sum_{i>0}\rho_{ii}`$,
