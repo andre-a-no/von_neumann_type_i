@@ -2,8 +2,8 @@
 
 # 8. Dinámica
 
-Un sistema cuántico cerrado evoluciona según un grupo uniparamétrico de unitarias; uno abierto —un
-sistema acoplado a un entorno que no se observa—, según un semigrupo de canales. En un álgebra con
+En mecánica cuántica, un sistema cerrado se modeliza mediante un grupo uniparamétrico de unitarias; uno
+abierto —un sistema acoplado a un entorno que no se observa—, mediante un semigrupo de canales. En un álgebra con
 sectores ambos tienen un rasgo invisible en una sola álgebra de matrices: un hamiltoniano de
 $\mathcal M$ nunca puede cambiar el sector, de modo que las cargas se conservan, mientras que un
 sistema abierto puede saltar entre sectores, por ejemplo al perder una partícula. Este capítulo
@@ -84,14 +84,13 @@ pues $P_c$ es central. (2)
 $\frac d{dt}\operatorname{Tr}(Z\rho)=-i\operatorname{Tr}(Z[H,\rho])=-i\operatorname{Tr}([Z,H]\rho)=0$
 por ciclicidad. (3) El mismo cálculo con $A$. $\square$
 
-> **Significado físico.** Un hamiltoniano de $\mathcal M$ conmuta con las cargas (número de
-> partículas, magnetización, un número cuántico de simetría), de modo que la probabilidad de cada
-> carga es una constante del movimiento, incluso para hamiltonianos forzados y dependientes del
-> tiempo. Desde el punto de vista computacional, la evolución se separa en $C$ problemas
-> independientes: una diagonalización cuesta del orden de $\sum_ck_c^3$ operaciones en lugar de
-> $D^3$.
+> **Significado físico** (interpretación física, no un teorema de este curso). Un hamiltoniano de
+> $\mathcal M$ conmuta con las cargas (número de partículas, magnetización, un número cuántico de
+> simetría), de modo que la probabilidad de cada carga es una constante del movimiento, incluso para
+> hamiltonianos forzados y dependientes del tiempo.
 
-La biblioteca calcula $U(t)$ con una descomposición espectral por cada tamaño de bloque
+Por la proposición 8.2(1), la evolución se separa en $C$ problemas independientes de tamaños $k_c$, uno
+por bloque. La biblioteca calcula $U(t)$ con una descomposición espectral por cada tamaño de bloque
 (`dynamics.propagator`), y `dynamics.von_neumann` hace evolucionar una densidad hasta muchos
 instantes a la vez en la base propia, donde $\rho(t)_{ij}=e^{-it(\lambda_i-\lambda_j)}\rho_{ij}$.
 Comprobamos frente a `scipy.linalg.expm`:
@@ -127,13 +126,21 @@ A_t = U.adjoint() @ A @ U                                          # Heisenberg 
 assert abs(rho0.expectation(A_t) - dynamics.von_neumann(rho0, H, [t])[0].expectation(A)) < 1e-12
 ```
 
-Sobre $\mathcal M$, un vector $\psi=\bigoplus_c\psi_c$ define el estado de la mezcla
-$\bigoplus_c|\psi_c\rangle\langle\psi_c|$ (capítulo 3, ejercicio 3), así que `dynamics.schrodinger`
-(vectores con la disposición por bloques `(batch, C, k_max)`) y `von_neumann` deben coincidir sobre
-él. Para un $H(t)$ dependiente del tiempo, la biblioteca usa el método de Runge–Kutta clásico de
-paso fijo (`dynamics.rk4`, `schrodinger_rk4`): un paso multiplica $\psi$ por un polinomio en valores
-de $H(t)\in\mathcal M$, por lo que nunca traslada amplitud entre sectores, pero no es exactamente
-unitario, y los pesos de los sectores derivan al nivel del error de discretización. (Para un único
+Sobre $\mathcal M$, un vector unitario $\psi=\bigoplus_c\psi_c$ define el estado de la mezcla
+$\bigoplus_c|\psi_c\rangle\langle\psi_c|$: todo $A\in\mathcal M$ es diagonal por bloques, así que
+$\langle\psi,A\psi\rangle=\sum_c\langle\psi_c,A_c\psi_c\rangle=\operatorname{Tr}\big(A\bigoplus_c|\psi_c\rangle\langle\psi_c|\big)$
+(como en el capítulo 3, ejercicio 3). Si $\psi(t)$ resuelve $i\psi'=H\psi$, entonces
+$\bigoplus_c|\psi_c(t)\rangle\langle\psi_c(t)|=U(t)\big(\bigoplus_c|\psi_c(0)\rangle\langle\psi_c(0)|\big)U(t)^*$, ya que $U(t)$ es
+diagonal por bloques, así que `dynamics.schrodinger` (vectores con la disposición por bloques
+`(batch, C, k_max)`) y `von_neumann` deben coincidir sobre él. Para un $H(t)$ dependiente del tiempo, la
+biblioteca usa el método de Runge–Kutta clásico de paso fijo (`dynamics.rk4`, `schrodinger_rk4`): un
+paso multiplica $\psi$ por un polinomio en valores de $H(t)\in\mathcal M$, por lo que nunca traslada
+amplitud entre sectores, pero no es unitario: para $H$ constante, un paso de tamaño $h$ multiplica un
+vector propio de $H$ con valor propio $\lambda$ por $T(-ih\lambda)$, $T(z)=\sum_{k=0}^4z^k/k!$, y
+$|T(ix)|^2=1-\frac{x^6}{72}+\frac{x^8}{576}<1$ para $0<|x|<2\sqrt2$ (desarróllese). Así pues, RK4 no
+conserva exactamente los pesos de los sectores: para $H$ constante, una componente de sector con un
+coeficiente no nulo sobre un vector propio con $0<|h\lambda|<2\sqrt2$ pierde peso en cada paso. Cuánto
+cambian en una ejecución es una observación numérica (véase más abajo). (Para un único
 sector grande, `krylov.evolve` solo necesita productos matriz–vector; véase el capítulo 9.)
 
 ```python
@@ -156,8 +163,9 @@ assert drift < 1e-8 and (dynamics.schrodinger_rk4(psi0, H, times, substeps=50) -
 
 ```
 
-Los pesos de los sectores cambian en $1.1\cdot10^{-9}$ con RK4 y en nada más allá del redondeo con
-los métodos exactos.
+Observación numérica: en esta ejecución, los pesos de los sectores cambian en $1.1\cdot10^{-9}$ con RK4
+(el valor impreso) y en menos que la tolerancia $10^{-12}$ de los `assert` con los métodos exactos, para
+los que el teorema 8.3 da conservación exacta.
 
 ## 8.2 Semigrupos dinámicos cuánticos
 
@@ -166,30 +174,39 @@ Las aplicaciones CP y TP y los canales se definen en la sección 6.1 ([capítulo
 $A\mapsto\sum_lK_lAK_l^*$, también entre sectores, es CP), necesitamos tres propiedades de clausura.
 
 **Lema 8.4.** (a) Las sumas, los múltiplos no negativos y las composiciones de aplicaciones CP son
-CP. Si $\Phi$ es CP sobre $M_D$ y lleva una $*$-subálgebra $\mathcal N\subseteq M_D$ (como
-$\mathcal M$, o $P_c\mathcal MP_c\cong M_{k_c}$ con unidad $P_c$) en sí misma, entonces
+CP. Sea $\Phi$ CP sobre $\mathcal A=M_D$ o sobre $\mathcal A=\mathcal M$, y sea
+$\mathcal N\subseteq\mathcal A$ igual a $\mathcal M$ (si $\mathcal A=M_D$) o a una de las esquinas
+$P_c\mathcal MP_c\cong M_{k_c}$ (con unidad $P_c$). Si $\Phi$ lleva $\mathcal N$ en sí misma, entonces
 $\Phi|_{\mathcal N}$ es CP. (b) Si unas aplicaciones CP $\Phi_m$ convergen a $\Phi$ (es decir,
 $\Phi_m(A)\to\Phi(A)$ para todo $A$), entonces $\Phi$ es CP. (c) Si $s\mapsto\Psi(s)$ es una
 aplicación continua de $[a,b]$ en las aplicaciones CP, entonces $\int_a^b\Psi(s)\,ds$ es CP.
 
 *Demostración.* (a) $\Phi\mapsto\Phi_n$ es lineal y $(\Phi\Psi)_n=\Phi_n\Psi_n$; las sumas de
-matrices positivas son positivas. Para la restricción: $M_n(\mathcal N)\subseteq M_n(M_D)$, y la
-positividad es la misma condición en ambos (tras una permutación de la base, un elemento de
-$M_n(\mathcal N)$ es una suma directa de los bloques $[(A_{ij})_c]$ y de ceros). (b) Las matrices
-positivas forman un conjunto cerrado ($\langle x,Xx\rangle\ge0$ para cada $x$ es una condición
-cerrada), y $(\Phi_m)_n(X)\to\Phi_n(X)$. (c) Las sumas de Riemann son CP por (a) y convergen a la
-integral, ya que $\Psi$ es uniformemente continua; se aplica (b). $\square$
+matrices positivas son positivas. Para la restricción: $M_n(\mathcal N)\subseteq M_n(\mathcal A)$, y
+la positividad es la misma condición en ambos. En efecto, por la sección 6.1, un elemento $[A_{ij}]$ de
+$M_n(\mathcal M)$ es positivo si y solo si lo es cada matriz por bloques $[(A_{ij})_c]$; para
+$\mathcal A=M_D$ esto es la positividad de $[A_{ij}]\in M_{nD}$, porque tras una permutación de la base
+$[A_{ij}]$ es la suma directa de estos bloques (todos los $A_{ij}$ son diagonales por bloques); y un
+elemento de $M_n(P_c\mathcal MP_c)$ tiene el único bloque no nulo $[(A_{ij})_c]$, cuya positividad es
+la positividad en $M_n(M_{k_c})$. (b) Las matrices positivas forman un conjunto cerrado
+($\langle x,Xx\rangle\ge0$ para cada $x$ es una condición cerrada), y $(\Phi_m)_n(X)\to\Phi_n(X)$. (c)
+Las sumas de Riemann son CP por (a) y convergen a la integral (lema A.4(a)); se aplica (b). $\square$
 
 **Definición.** Un **semigrupo dinámico cuántico** sobre $\mathcal M$ es una familia $(T_t)_{t\ge0}$
 de canales $\mathcal M\to\mathcal M$ con $T_0=\mathrm{id}$, $T_{s+t}=T_sT_t$ y $t\mapsto T_t$
 continua.
 
-**Lema 8.5.** Todo semigrupo continuo de superoperadores ($T_0=\mathrm{id}$, $T_{s+t}=T_sT_t$) es de
-la forma $T_t=e^{t\mathcal L}$ para exactamente un superoperador $\mathcal L$, su **generador**, y
-$\mathcal L=\lim_{t\to0}(T_t-\mathrm{id})/t$.
+**Lema 8.5.** Todo semigrupo continuo $(T_t)_{t\ge0}$ de superoperadores ($T_0=\mathrm{id}$,
+$T_{s+t}=T_sT_t$) es de la forma $T_t=e^{t\mathcal L}$ para exactamente un superoperador $\mathcal L$, su
+**generador**, y $\mathcal L=\lim_{t\to0}(T_t-\mathrm{id})/t$. Lo mismo vale, con la misma
+demostración, para los semigrupos continuos de aplicaciones lineales sobre cualquier espacio de
+dimensión finita (por ejemplo, de matrices).
 
-*Demostración.* $V_h=\frac1h\int_0^hT_s\,ds\to\mathrm{id}$ cuando $h\to0$, luego $V_h$ es invertible
-para algún $h$ pequeño fijo. Ahora bien, $T_tV_h=\frac1h\int_t^{t+h}T_s\,ds$ es derivable en $t$ con
+*Demostración.* (Las integrales de funciones continuas con valores superoperadores son las del lema
+A.4.) $\|V_h-\mathrm{id}\|\le\max_{0\le s\le h}\|T_s-\mathrm{id}\|\to0$ para
+$V_h=\frac1h\int_0^hT_s\,ds$ (lema A.4(c)), luego $\det V_h\neq0$ para algún $h$ pequeño fijo, por la
+continuidad del determinante. Ahora bien,
+$T_tV_h=\frac1h\int_0^hT_{t+s}\,ds=\frac1h\int_t^{t+h}T_s\,ds$ (lema A.4(b),(e)) es derivable en $t$ con
 derivada $\frac1h(T_{t+h}-T_t)=T_t\frac{T_h-\mathrm{id}}h$. Por tanto $T_t$ es derivable y
 $T_t'=T_t\mathcal L$ con $\mathcal L=\frac{T_h-\mathrm{id}}hV_h^{-1}$, y $T_t=e^{t\mathcal L}$ por
 el lema 8.1 (con $B$ la composición por la derecha con $\mathcal L$). Unicidad: $\mathcal L=T'(0)$.
@@ -217,7 +234,7 @@ $b=\|\Phi\|$. Por inducción, las $S_n$ son continuas y
 $\|S_n(t)\|\le\int_0^te^{(t-s)a}\,b\,e^{sa}\frac{(bs)^{n-1}}{(n-1)!}ds=e^{ta}\frac{(bt)^n}{n!}$, de
 modo que la serie converge uniformemente en todo $[0,T]$. *Paso 3.* Como
 $S_n(t)=S_0(t)\int_0^te^{-s\mathcal L_0}\Phi S_{n-1}(s)\,ds$, la regla del producto y el teorema
-fundamental del cálculo dan $S_n'=\mathcal L_0S_n+\Phi S_{n-1}$ ($n\ge1$) y $S_0'=\mathcal L_0S_0$.
+fundamental del cálculo (lema A.4(e)) dan $S_n'=\mathcal L_0S_n+\Phi S_{n-1}$ ($n\ge1$) y $S_0'=\mathcal L_0S_0$.
 Por las cotas, la serie de las derivadas converge uniformemente en $[0,T]$, luego
 $Y(t)=\sum_nS_n(t)$ es derivable con $Y'=\mathcal L_0Y+\Phi Y=\mathcal LY$, $Y(0)=\mathrm{id}$, e
 $Y(t)=e^{t\mathcal L}$ por el lema 8.1. *Paso 4.* $\Phi$ es CP (teorema 6.2), así que, por
@@ -229,29 +246,44 @@ luego
 $\frac d{dt}\operatorname{Tr}e^{t\mathcal L}\rho=\operatorname{Tr}\mathcal L(e^{t\mathcal L}\rho)=0$:
 cada $e^{t\mathcal L}$ es TP. La ley de semigrupo y la continuidad son el lema 8.1. $\square$
 
-**Teorema 8.7 (Gorini–Kossakowski–Sudarshan; Lindblad; enunciado sin demostración).**
-Recíprocamente, el generador de todo semigrupo dinámico cuántico sobre $M_D$ tiene la forma del
-teorema 8.6. [V. Gorini, A. Kossakowski, E. C. G. Sudarshan, *J. Math. Phys.* 17, 821 (1976); G.
-Lindblad, *Commun. Math. Phys.* 48, 119 (1976).] Para un semigrupo continuo en norma de aplicaciones
-CP unitales sobre un álgebra de von Neumann general $\mathcal M$, Christensen y Evans [*J. London
-Math. Soc.* 20, 358 (1979)] demostraron que el generador es $A\mapsto\Psi(A)+K^*A+AK$ con $\Psi$ CP
-y $K\in\mathcal M$.
+**Teorema 8.7 (Gorini–Kossakowski–Sudarshan; Lindblad).** (1) Recíprocamente, el generador de todo
+semigrupo dinámico cuántico sobre $M_D$ tiene la forma del teorema 8.6, con $J\le D^2-1$ saltos. Se
+puede elegir $\operatorname{Tr}H=0$, $\operatorname{Tr}L_j=0$ y $\operatorname{Tr}(L_j^*L_k)=0$ para
+$j\neq k$; con estas normalizaciones, $H$ y $\Phi=\sum_jL_j\cdot L_j^*$ están determinados por
+$\mathcal L$, y los $L_j$ lo están salvo $L'_j=\sum_ku_{jk}L_k$ con una unitaria $u$ (tras completar con
+ceros la familia más corta).
 
-Sobre $\mathcal M=\bigoplus_cM_{k_c}$, apliquemos esto al semigrupo $(T_t^*)$ de la imagen de
-Heisenberg, cuyas aplicaciones son CP y unitales (proposición 6.8, corolario 6.9(b)) y cuyo
-generador es $\mathcal L^*$. Volviendo a los duales `blunt`,
-$\mathcal L(\rho)=\Phi(\rho)+G\rho+\rho G^*$ con $\Phi=\Psi^*$ CP sobre $\mathcal M$ (operadores de
-Kraus entre sectores, proposición 6.4) y $G=K$. La preservación de la traza,
-$\operatorname{Tr}\big((\Phi^*(1)+G+G^*)\rho\big)=0$ para todo $\rho\in\mathcal M$, obliga a que
-$G+G^*=-\Phi^*(1)$, es decir, $G=-iH-\frac12\Phi^*(1)$ con $H=H^*\in\mathcal M$: exactamente los
-generadores de la sección siguiente.
+(2) El generador de todo semigrupo dinámico cuántico sobre $\mathcal M=\bigoplus_cM_{k_c}$ es
+$$
+\mathcal L(\rho)=\Phi(\rho)-\tfrac12\{\Phi^*(1),\rho\}-i[H,\rho]
+$$
+con una aplicación CP $\Phi:\mathcal M\to\mathcal M$ (operadores de Kraus entre los sectores,
+proposición 6.4) y $H=H^*\in\mathcal M$: la forma de la sección 8.3, con un único salto $\Phi_1=\Phi$
+entre sectores y tasa $1$.
 
-> **Significado físico.** Un sistema que interactúa débilmente con un entorno grande cuyas
-> correlaciones decaen rápidamente (la aproximación de Born–Markov) pierde la memoria de su pasado:
-> su estado en el instante $s+t$ se obtiene del estado en el instante $s$ mediante un canal que solo
-> depende de $t$. El teorema 8.7 dice que una dinámica así es siempre una parte hamiltoniana más
-> unos "saltos" $L_j$ (emisión de fotones, pérdida de partículas, desfase) con tasas fijadas por la
-> normalización de los $L_j$.
+*Demostración.* (1) es el teorema D.4 junto con las afirmaciones de unicidad del teorema D.5(b),(c), y
+(2) es el teorema D.7, ambos demostrados en el [apéndice D](D_gksl.md). $\square$
+
+El paso clave (teorema D.3) es que la matriz de Choi del generador de un semigrupo de aplicaciones CP
+es positiva sobre el complemento ortogonal del vector máximamente entrelazado; la propiedad de
+semigrupo por sí sola, con aplicaciones $T_t$ positivas, no bastaría (el ejemplo que sigue al teorema
+D.3). Para (2), las aplicaciones $T_t\circ E$ con la esperanza condicional $E(X)=\sum_cP_cXP_c$ son CP
+sobre $M_D$; la matriz de Choi de la derivada $\mathcal L\circ E$ en $t=0$ es positiva sobre el
+complemento ortogonal de los vectores $(1\otimes P_c)\Omega$, lo que da una descomposición de
+$\mathcal L\circ E$ (lema D.2), que $E$ comprime de vuelta a $\mathcal M$. En la imagen de Heisenberg
+(corolario D.8), el generador de un semigrupo continuo de aplicaciones CP unitales sobre $\mathcal M$ es
+$A\mapsto\Psi(A)+K^*A+AK$ con $\Psi$ CP y $K\in\mathcal M$. Históricamente, (1) se debe a V. Gorini,
+A. Kossakowski, E. C. G. Sudarshan [*J. Math. Phys.* 17, 821 (1976)] y G. Lindblad [*Commun. Math.
+Phys.* 48, 119 (1976)], y la forma en la imagen de Heisenberg, para semigrupos continuos en norma sobre
+álgebras de von Neumann generales, a E. Christensen y D. E. Evans [*J. London Math. Soc.* 20, 358
+(1979)].
+
+> **Significado físico** (interpretación física, no un teorema de este curso). Se espera que un
+> sistema que interactúa débilmente con un entorno grande cuyas correlaciones decaen rápidamente (la
+> aproximación de Born–Markov) pierda la memoria de su pasado: su estado en el instante $s+t$ se
+> obtiene entonces del estado en el instante $s$ mediante un canal que solo depende de $t$. *Si* es
+> así, el teorema 8.7 dice que la dinámica es una parte hamiltoniana más unos "saltos" $L_j$ (emisión
+> de fotones, pérdida de partículas, desfase) con tasas fijadas por la normalización de los $L_j$.
 
 La biblioteca tiene cuatro rutinas de Lindblad: `lindblad_rhs` devuelve el segundo miembro como
 función para `rk4`; `lindblad_evolve` integra con RK4; `lindblad_superoperator` devuelve, para cada
@@ -298,6 +330,9 @@ $$
 \mathcal L(\rho)=-i[H,\rho]+\sum_jg_j\Big(L_j\rho L_j^*-\tfrac12\{L_j^*L_j,\rho\}\Big)
 +\sum_mg_m\Big(\Phi_m(\rho)-\tfrac12\{\Phi_m^*(1),\rho\}\Big).
 $$
+Por la proposición 8.8(1) siguiente, genera un semigrupo dinámico cuántico sobre $\mathcal M$;
+recíprocamente, por el teorema 8.7(2) (teorema D.7), todo semigrupo dinámico cuántico sobre $\mathcal M$
+tiene un generador de esta forma.
 
 **Proposición 8.8.** Sea $J^{dc}_l\in M_D$ la matriz con el bloque $K^{dc}_l$ en la posición $(d,c)$
 y ceros en el resto.
@@ -307,10 +342,15 @@ y ceros en el resto.
    los $m,l,d,c$). Por tanto, $(e^{t\mathcal L})_{t\ge0}$ es un semigrupo dinámico cuántico sobre
    $\mathcal M$.
 2. Sea en cambio $\tilde{\mathcal L}$ el generador GKSL sobre $M_D$ en el que los bloques de un
-   mismo índice de Kraus se suman en un único salto, $L_{m,l}=\sum_{d,c}J^{dc}_{m,l}$. Entonces
+   mismo índice de Kraus se suman en un único salto, $L_{m,l}=\sum_{d,c}J^{dc}_{m,l}$ (con el mismo
+   hamiltoniano, los mismos saltos $\sqrt{g_j}L_j$ y los saltos $\sqrt{g_m}L_{m,l}$). Entonces
    $\mathcal L(\rho)=E\big(\tilde{\mathcal L}(\rho)\big)$ para $\rho\in\mathcal M$, donde
    $E(X)=\sum_dP_dXP_d$ es la esperanza condicional de $M_D$ sobre $\mathcal M$; en general,
    $\tilde{\mathcal L}(\rho)\notin\mathcal M$.
+3. Si cada $L_{m,l}$ tiene a lo sumo un bloque no nulo en cada fila de bloques y en cada columna de
+   bloques (por ejemplo, si solo lleva el sector $c$ al sector $c-1$, como los operadores de
+   aniquilación del ejemplo siguiente), entonces $\tilde{\mathcal L}(\rho)=\mathcal L(\rho)$ para
+   $\rho\in\mathcal M$.
 
 *Demostración.* Como $\rho=\sum_cP_c\rho P_c$ y $J^{dc}P_{c'}=\delta_{cc'}J^{dc}$,
 $J^{dc}\rho J^{dc*}$ es el bloque $K^{dc}\rho_cK^{dc*}$ en la posición $(d,d)$, y $J^{dc*}J^{dc}$ es
@@ -322,25 +362,31 @@ teorema 8.6 y el lema 8.4(a). (2) $L\rho L^*=\sum_{d,d',c}J^{dc}\rho J^{d'c*}$ p
 $L=\sum_{d,c}J^{dc}$, y $E$ conserva los términos con $d=d'$. Para $B\in\mathcal M$,
 $P_dXBP_d=P_dXP_dB$, luego $E(XB)=E(X)B$ y $E(BX)=BE(X)$; así $E\{L^*L,\rho\}=\{E(L^*L),\rho\}$, y
 $E(L^*L)=\sum_cP_cL^*LP_c=\sum_{c,d}J^{dc*}J^{dc}$ porque $J^{dc*}J^{d'c}=0$ para $d\ne d'$. Por
-último, $E(-i[H,\rho])=-i[H,\rho]$. $\square$
+último, $E(-i[H,\rho])=-i[H,\rho]$, y los términos de los saltos $\sqrt{g_j}L_j\in\mathcal M$ están
+en $\mathcal M$. (3) Sea $L=\sum_{(d,c)\in S}J^{dc}$, donde el conjunto $S$ de pares contiene a lo sumo
+un par con un $d$ dado y a lo sumo uno con un $c$ dado. Para $\rho\in\mathcal M$,
+$J^{dc}\rho J^{d'c'*}=J^{dc}P_c\rho P_{c'}J^{d'c'*}$ se anula salvo si $c=c'$, y entonces $d=d'$; y
+$J^{dc*}J^{d'c'}$ se anula salvo si $d=d'$, y entonces $c=c'$. Así, $L\rho L^*$ y $L^*L$ son diagonales
+por bloques, todos los términos de $\tilde{\mathcal L}(\rho)$ están en $\mathcal M$, y
+$\tilde{\mathcal L}(\rho)=E(\tilde{\mathcal L}(\rho))=\mathcal L(\rho)$ por (2). $\square$
 
-> **Significado físico.** La parte (2) dice que la ecuación de Lindblad sobre $\mathcal M$ es lo que
-> queda de una ecuación sobre $M_D$ cuando las coherencias entre sectores que crean los saltos se
-> borran de inmediato: el contenido de una regla de superselección. En la pérdida de partículas no
-> se borra nada: el operador de aniquilación $a_j$ reduce el número de partículas exactamente en
-> uno, de modo que $a_j\rho a_j^*$ y $a_j^*a_j=n_j$ son diagonales por bloques, y la ecuación sobre
-> $\mathcal M$ es la usual.
+> **Significado físico** (interpretación física, no un teorema de este curso). La parte (2) dice que
+> la ecuación de Lindblad sobre $\mathcal M$ es lo que queda de una ecuación sobre $M_D$ cuando las
+> coherencias entre sectores que crean los saltos se borran de inmediato: el contenido de una regla de
+> superselección. En la pérdida de partículas no se borra nada (parte (3)): la ecuación de Lindblad
+> usual con los operadores de aniquilación como saltos ya es una ecuación sobre $\mathcal M$.
 
 **Proposición 8.9 (pesos de los sectores).** Sea $\rho(t)=e^{t\mathcal L}\rho_0$ y $p(t)$ sus pesos
 de los sectores.
 
-1. Si no hay saltos entre sectores, cada $p_c(t)$ es constante.
+1. Si no hay saltos entre sectores ($K^{dc}_{m,l}=0$ para todos $m,l$ y $d\ne c$), cada $p_c(t)$ es
+   constante.
 2. Si para todo $m$ y todo par $d\ne c$ se tiene $\sum_lK^{dc*}_{m,l}K^{dc}_{m,l}=r_{m,dc}1_{k_c}$
    con números $r_{m,dc}$, entonces $p'=Qp$ con $Q_{dc}=\sum_mg_mr_{m,dc}$ para $d\ne c$ y
    $Q_{cc}=-\sum_{d\ne c}Q_{dc}$. Por tanto, $p(t)=e^{tQ}p(0)$ no depende de $H$, ni de los $L_j$,
    ni de los estados dentro de los sectores.
 
-*Demostración.* $p_d'=\operatorname{Tr}(P_d\mathcal L(\rho))$. El término hamiltoniano se anula como
+*Demostración.* $p_d'=\operatorname{Tr}(P_d\mathcal L(\rho))$ por el lema 8.1. El término hamiltoniano se anula como
 en el teorema 8.3. Para $L_j\in\mathcal M$,
 $\operatorname{Tr}(P_dL_j\rho L_j^*)-\operatorname{Tr}(P_dL_j^*L_j\rho) =\operatorname{Tr}(L_j^*P_dL_j\rho)-\operatorname{Tr}(L_j^*L_jP_d\rho)=0$,
 pues $P_d$ es central. Para un salto $\Phi$ entre sectores,
@@ -351,8 +397,10 @@ restantes son $\sum_{c\ne d}r_{dc}p_c-\sum_{d'\ne d}r_{d'd}p_d$. El lema 8.1 da 
 $\square$
 
 Bajo la hipótesis de (2), para $d\ne c$, $r_{m,dc}$ es la entrada $T_{dc}(\rho)$ de la matriz de
-transición de $\Phi_m$ (definida antes de la proposición 6.12) para todo estado $\rho$. Así, para un
-único salto con tasa $1$, $Q=R-\operatorname{diag}(\sum_dR_{dc})_c$ con $R$ = `transition_matrix()`
+transición de $\Phi_m$ (definida antes de la proposición 6.12) para todo estado $\rho$ con $p_c>0$, ya
+que
+$\operatorname{Tr}\Phi_{m,dc}(\rho_c)=\operatorname{Tr}\big(\sum_lK^{dc*}_{m,l}K^{dc}_{m,l}\rho_c\big)=r_{m,dc}p_c$.
+Así, para un único salto con tasa $1$, $Q=R-\operatorname{diag}(\sum_dR_{dc})_c$ con $R$ = `transition_matrix()`
 (la diagonal de $R$ se cancela).
 
 **Ejemplo: pérdida de partículas.** Dos modos bosónicos con a lo sumo dos partículas; los sectores
@@ -365,9 +413,11 @@ $N=2$,
 $$
 p_2(t)=q^2,\qquad p_1(t)=2q(1-q),\qquad p_0(t)=(1-q)^2,\qquad q=e^{-\gamma t},
 $$
-una ley binomial: cada partícula sobrevive independientemente con probabilidad $e^{-\gamma t}$,
-hagan lo que hagan el efecto túnel entre modos (hopping) y la interacción (compruébese $p'=Qp$
-derivando).
+la ley binomial de parámetros $2$ y $q$ (la ley del número de supervivientes si cada partícula
+sobrevive independientemente con probabilidad $q$), hagan lo que hagan el efecto túnel entre modos
+(hopping) y la interacción: ambos miembros resuelven $p'=Qp$ (derívese) con $p(0)=(0,0,1)$, así que
+coinciden por el lema 8.1. El código comprueba $\Phi^*(1)=0\oplus1\oplus2$, es decir,
+$a_1^*a_1+a_2^*a_2=N$ sobre los bloques usados, y $p(t)$ frente a ambas fórmulas.
 
 ```python
 fock = TypeIAlgebra([1, 2, 3], [1, 2, 3], precision='double', charges=[0, 1, 2])   # N = 0, 1, 2
@@ -400,13 +450,25 @@ for s, rho_s in zip(ts, traj):
 neg = min(w.min().item() for rho_s in traj for w in rho_s.eigenvalues())
 print(f"smallest eigenvalue of rho(t) under RK4: {neg:.1e}")
 assert neg > -1e-7                                                 # positive up to the RK4 error
+
+sm = torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=c128)           # |g><e|; H = 0, rate 3, one step h = 1
+decay = lambda s, X: 3.0 * (sm @ X @ sm.mH - 0.5 * (sm.mH @ sm @ X + X @ sm.mH @ sm))
+step = dynamics.rk4(decay, torch.diag(torch.tensor([0.0, 1.0], dtype=c128)), [0.0, 1.0], substeps=1)[-1]
+assert (step - torch.diag(torch.tensor([-3 / 8, 11 / 8], dtype=c128))).abs().max() < 1e-14   # not positive
 ```
 
-RK4 no es exactamente completamente positivo: los valores propios de $\rho(t)$ pueden ser negativos
-al nivel del error de discretización (aquí $\approx-2\cdot10^{-8}$, con pasos de hasta $0.02$);
-`lindblad_channel` es exacto, pero solo trata saltos dentro de los sectores. Por último, comprobamos
-la proposición 8.8(2) para una aplicación aleatoria entre los sectores, frente al generador GKSL
-sobre $M_6$ construido con numpy:
+No está garantizado que RK4 preserve la positividad: para $\rho'=\mathcal L\rho$, un paso de tamaño
+$h$ es $\rho\mapsto T(h\mathcal L)\rho$ con el polinomio $T$ de la sección 8.1 (insértense las cuatro
+etapas), que preserva la traza (pues $\operatorname{Tr}\mathcal L(X)=0$ para todo $X$) pero no tiene
+por qué ser positivo. Por ejemplo, sobre $M_2$ con base $|g\rangle,|e\rangle$, $H=0$ y un salto
+$|g\rangle\langle e|$ con tasa $\gamma$, $\mathcal L$ lleva $\operatorname{diag}(a,b)$ a
+$\gamma b\operatorname{diag}(1,-1)$, así que un paso con $h\gamma=3$ lleva $\operatorname{diag}(0,1)$ a
+$\operatorname{diag}(1-T(-3),T(-3))=\operatorname{diag}(-\frac38,\frac{11}8)$. Observación numérica: en
+esta ejecución, el menor valor propio de $\rho(t)$ es $\approx-2\cdot10^{-8}$ (el valor impreso, con
+pasos de hasta $0.02$). `lindblad_channel` es exacto, pero solo trata saltos dentro de los sectores. Por
+último, comprobamos la proposición 8.8(2) para una aplicación aleatoria entre los sectores y la
+proposición 8.8(3) para la pérdida de partículas, frente a generadores GKSL sobre $M_6$ construidos
+con numpy:
 
 ```python
 Phi = channels.random_inter_sector_channel(fock, fock, kraus_rank=2)
@@ -421,6 +483,13 @@ full = sum(L @ X @ L.conj().T - 0.5 * (L.conj().T @ L @ X + X @ L.conj().T @ L) 
 E_full = full * embed(np.ones((3, 3, 3)))                          # E(X) = sum_d P_d X P_d
 assert np.abs(E_full - embed(on_M)).max() < 1e-12                  # Proposition 8.8(2)
 print(f"coherences between sectors created on M_6: {np.abs(full - E_full).max():.2f}")
+
+zero = lambda d, c: np.zeros((ks[d], ks[c]))
+L_loss = [np.block([[blocks(a)[(d, c)].numpy() if (d, c) in a else zero(d, c) for c in range(3)] for d in range(3)])
+          for a in (a1, a2)]                                       # a_1, a_2 on M_6: one block per block row and column
+full_loss = sum(L @ X @ L.T - 0.5 * (L.T @ L @ X + X @ L.T @ L) for L in L_loss)
+loss_on_M = dynamics.lindblad_rhs(None, [loss], algebra=fock)(0.0, rho.matrix)[0].numpy()
+assert np.abs(full_loss - embed(loss_on_M)).max() < 1e-12         # Proposition 8.8(3): no compression needed
 ```
 
 ## 8.4 Postselección y evolución sin saltos
@@ -428,8 +497,11 @@ print(f"coherences between sectors created on M_6: {np.abs(full - E_full).max():
 Reunamos los saltos del generador de la sección 8.3 en
 $\Phi_{\mathrm{tot}}(\rho)=\sum_jg_jL_j\rho L_j^*+\sum_mg_m\Phi_m(\rho)$, con
 $A=\Phi_{\mathrm{tot}}^*(1)=\sum_jg_jL_j^*L_j+\sum_mg_m\Phi_m^*(1)\ge0$ en $\mathcal M$, y
-$H_{\mathrm{eff}}=H-\frac i2A$. Por la proposición 8.8(1) y el teorema 8.6 (cuyos $S_n$ llevan
-$\mathcal M$ en $\mathcal M$, porque $H_{\mathrm{eff}}\in\mathcal M$),
+$H_{\mathrm{eff}}=H-\frac i2A$. Apliquemos el teorema 8.6 al generador $\hat{\mathcal L}$ sobre $M_D$
+de la proposición 8.8(1): por la demostración de la proposición 8.8, su parte de saltos lleva
+$\mathcal M$ en $\mathcal M$, donde coincide con $\Phi_{\mathrm{tot}}$, y su suma $\sum\hat L^*\hat L$
+sobre los saltos es $A$, así que su $H_{\mathrm{eff}}$ es $H-\frac i2A\in\mathcal M$. Por tanto, sus
+$S_n(t)$ llevan $\mathcal M$ en $\mathcal M$ (por inducción sobre $n$), y para $\rho\in\mathcal M$
 $$
 \rho(t)=\sum_{n\ge0}S_n(t)\rho,\qquad S_0(t)\rho=e^{-itH_{\mathrm{eff}}}\rho\,e^{itH_{\mathrm{eff}}^*},
 \qquad S_n(t)=\int_0^tS_0(t-s)\,\Phi_{\mathrm{tot}}\,S_{n-1}(s)\,ds .
@@ -446,7 +518,7 @@ $w_0'=\operatorname{Tr}(-iH_{\mathrm{eff}}X+iXH_{\mathrm{eff}}^*)=-\operatorname
 $\operatorname{Tr}(AX)=\operatorname{Tr}(X^{1/2}AX^{1/2})\ge0$. La última afirmación es
 $\operatorname{Tr}|\phi\rangle\langle\phi|=\|\phi\|^2$. $\square$
 
-> **Significado físico.** Supongamos que un detector registra cada salto: cada fotón emitido, cada
+> **Significado físico** (interpretación física, no un teorema de este curso). Supongamos que un detector registra cada salto: cada fotón emitido, cada
 > átomo perdido. Entonces $w_n(t)$ es la probabilidad de exactamente $n$ clics hasta el instante
 > $t$, $S_n(t)\rho/w_n(t)$ el estado condicionado a $n$ clics, y $S_0(t)\rho/w_0(t)$ el estado
 > condicionado a **ningún clic**: un resultado nulo también cambia el estado, a través del
@@ -456,12 +528,16 @@ $\operatorname{Tr}|\phi\rangle\langle\phi|=\|\phi\|^2$. $\square$
 > Dalibard, Y. Castin, K. Mølmer, *Phys. Rev. Lett.* 68, 580 (1992)]; aquí solo usamos su parte
 > matemática.
 
-En el caso de las pérdidas, contar los clics es lo mismo que medir la carga:
+En el caso de las pérdidas, los términos de Dyson son las componentes de sector de $\rho(t)$ (en el
+lenguaje del recuadro: contar los clics es lo mismo que medir la carga). La **actualización de
+Lüders** de un estado $\rho$ por una proyección $P$ con $\operatorname{Tr}(P\rho)>0$ es el estado
+$P\rho P/\operatorname{Tr}(P\rho P)$ (nótese que $\operatorname{Tr}(P\rho P)=\operatorname{Tr}(P\rho)$).
 
 **Proposición 8.11.** Etiquetemos los sectores por $N=0,\dots,C-1$, supongamos que no hay saltos
 dentro de los sectores, que todo salto reduce la carga en uno ($K^{dc}_{m,l}=0$ salvo si $d=c-1$) y
 que $\rho=P_{N_0}\rho P_{N_0}$. Entonces $S_n(t)\rho=P_{N_0-n}\,\rho(t)\,P_{N_0-n}$ para
-$0\le n\le N_0$ y $S_n(t)\rho=0$ para $n>N_0$. En particular, la actualización de Lüders de
+$0\le n\le N_0$ y $S_n(t)\rho=0$ para $n>N_0$. En particular, $p_{N_0}(t)=w_0(t)>0$, y la
+actualización de Lüders de
 $\rho(t)$ por $P_{N_0}$ ("no se perdió ninguna partícula") es el estado sin saltos:
 $$
 \frac{P_{N_0}\rho(t)P_{N_0}}{p_{N_0}(t)}=\frac{e^{-itH_{\mathrm{eff}}}\rho\,e^{itH_{\mathrm{eff}}^*}}{w_0(t)},
@@ -472,13 +548,17 @@ $$
 el sector $N$, ya que $H_{\mathrm{eff}}\in\mathcal M$; $\Phi_{\mathrm{tot}}$ lleva el sector $N\ge1$
 al sector $N-1$ y anula el sector $0$. Por inducción, $S_n(s)\rho$ tiene soporte en el sector
 $N_0-n$ para todo $s$, y es $0$ para $n>N_0$. Comprimir $\rho(t)=\sum_nS_n(t)\rho$ con $P_{N_0-n}$
-conserva exactamente el $n$-ésimo término. $\square$
+conserva exactamente el $n$-ésimo término. Por último, $w_0(t)>0$, porque $e^{-itH_{\mathrm{eff}}}$
+es invertible (lema 8.1), así que $S_0(t)\rho$ es una matriz positiva no nula. $\square$
 
 La función `states.lueders_update(rho, P)` de la biblioteca devuelve
 $P\rho P/\operatorname{Tr}(P\rho P)$ y $\operatorname{Tr}(\rho P)$. Supongamos ahora que los dos
 modos pierden partículas con tasas distintas $\gamma_1>\gamma_2$; entonces
-$A=\gamma_1n_1+\gamma_2n_2$ no es central, la proposición 8.9(2) no se aplica, y la postselección en
-$N=2$ da una evolución genuinamente no hermítica. Comprobamos la proposición 8.11 para $n=0$ y,
+$A=\gamma_1n_1+\gamma_2n_2$ no es central (en el sector $N=2$ es
+$\operatorname{diag}(2\gamma_1,\gamma_1+\gamma_2,2\gamma_2)$ en la base
+$|20\rangle,|11\rangle,|02\rangle$), la proposición 8.9(2) no se aplica, y el estado postseleccionado en
+$N=2$ es la evolución normalizada por $H_{\mathrm{eff}}$, cuya parte antihermítica $-\frac i2A$ no es
+múltiplo de $1$ en ese sector. Comprobamos la proposición 8.11 para $n=0$ y,
 calculando la integral de $S_1$ con la regla de Simpson, para $n=1$:
 
 ```python
@@ -517,10 +597,13 @@ S1 = scipy.integrate.simpson(S0(2.0 - s_grid, 1, jump(S0(s_grid, 2, rho_20))), x
 assert np.abs(S1 - traj[-1].matrix[0, 1, :2, :2].numpy()).max() < 1e-8     # Proposition 8.11, n = 1
 ```
 
-En $t=2$ la probabilidad de no perder ninguna partícula es $0.230$; sin efecto túnel sería
-$e^{-2\gamma_1t}=0.091$, así que aquí los pesos de los sectores sí dependen del hamiltoniano. El
-estado postseleccionado está a distancia de traza $0.135$ del estado del sistema cerrado: no perder
-ninguna partícula es información.
+Observación numérica: en $t=2$, el peso $p_2(2)=w_0(2)$ del sector $N=2$ ("ninguna pérdida") es
+$0.230$ (impreso arriba). Sin efecto túnel ($J=0$) sería exactamente
+$e^{-2\gamma_1t}=e^{-2.4}=0.091$, ya que entonces $|20\rangle$ es un vector propio de $H_{\mathrm{eff}}$
+con valor propio $U-i\gamma_1$ y $w_0(t)=|e^{-it(U-i\gamma_1)}|^2$ (proposición 8.10); así que aquí los
+pesos de los sectores sí dependen del hamiltoniano. El estado postseleccionado está a distancia de
+traza $0.135$ (impresa arriba) del estado del sistema cerrado: condicionar a $N=2$ cambia el estado,
+más allá de la evolución unitaria.
 
 ## 8.5 Estados estacionarios y relajación
 
@@ -531,21 +614,25 @@ equivalentemente, si $\mathcal L(\sigma)=0$ (derívese en $t=0$; recíprocamente
 estacionario.
 
 *Demostración.* Fijemos un estado $\rho$ y sea $\sigma_\tau=\frac1\tau\int_0^\tau T_s\rho\,ds$. Es
-un estado (un límite de combinaciones convexas de estados; los estados forman un conjunto cerrado).
-Por linealidad,
+un estado por el lema A.4(d) (los estados forman un conjunto convexo cerrado). Por el lema
+A.4(b),(e),
 $T_t\sigma_\tau-\sigma_\tau=\frac1\tau\big(\int_\tau^{\tau+t}-\int_0^t\big)T_s\rho\,ds$, cuya norma
-traza es a lo sumo $2t/\tau$, ya que $\|T_s\rho\|_1=1$. Los estados forman un conjunto cerrado y
+traza es a lo sumo $2t/\tau$ por el lema A.4(c), ya que $\|T_s\rho\|_1=1$. Los estados forman un conjunto cerrado y
 acotado en un espacio de dimensión finita, así que alguna sucesión $\sigma_{\tau_m}$,
 $\tau_m\to\infty$, converge a un estado $\sigma$ (Bolzano–Weierstrass), y
 $T_t\sigma-\sigma=\lim_m(T_t\sigma_{\tau_m}-\sigma_{\tau_m})=0$. $\square$
 
-**Corolario 8.13.** Si no hay saltos entre sectores, los estados estacionarios generan un espacio de
-dimensión al menos $C$: cada sector tiene su propio estado estacionario.
+**Corolario 8.13.** Si no hay saltos entre sectores (como en la proposición 8.9(1)), los estados
+estacionarios generan un espacio de dimensión al menos $C$: cada sector tiene su propio estado
+estacionario.
 
-*Demostración.* $\mathcal L$ lleva $P_c\mathcal MP_c\cong M_{k_c}$ en sí mismo ($H$ y todos los
-$L_j$ son diagonales por bloques), así que la restricción de $e^{t\mathcal L}$ es un semigrupo
-dinámico cuántico sobre $M_{k_c}$ (lema 8.4(a)) con un estado estacionario $\sigma_c$ por la
-proposición 8.12. Los $\sigma_c$ tienen soportes disjuntos. $\square$
+*Demostración.* $\mathcal L$ lleva $P_c\mathcal MP_c\cong M_{k_c}$ en sí mismo ($H$ y los $L_j$ están
+en $\mathcal M$, y $\Phi_m(X)=\sum_lK^{cc}_{m,l}X_cK^{cc*}_{m,l}$ y $\Phi_m^*(1)$ son diagonales por
+bloques), luego también lo hace cada $e^{t\mathcal L}$. Su restricción es CP (lema 8.4(a)) y TP, así
+que es un semigrupo dinámico cuántico sobre $M_{k_c}$, con un estado estacionario $\sigma_c$ por la
+proposición 8.12; como elemento de $\mathcal M$, $\sigma_c$ es un estado estacionario de
+$e^{t\mathcal L}$. Los $\sigma_c$ están en bloques distintos, luego son linealmente independientes.
+$\square$
 
 **Proposición 8.14 (emisión espontánea).** Sobre $M_2$ con base $|g\rangle,|e\rangle$, sean
 $H=\omega|e\rangle\langle e|$, un salto $L=|g\rangle\langle e|$ y una tasa $\gamma>0$. Entonces
@@ -571,9 +658,14 @@ Por último, $\rho(t)-|g\rangle\langle g|$ es autoadjunta, de traza nula y con d
 $(-\rho_{ee}(t),\rho_{ee}(t))$, así que sus valores propios son
 $\pm(\rho_{ee}(t)^2+|\rho_{ge}(t)|^2)^{1/2}$. $\square$
 
-La coherencia decae a la mitad de la tasa de la población, la relación $T_2=2T_1$ de la sección 6.4
-sin desfase puro; la tasa no nula más lenta, la **brecha espectral** $\gamma/2$, controla la
-relajación. Comprobamos el espectro con `lindblad_superoperator`, el canal y la distancia de traza
+La coherencia decae a la mitad de la tasa de la población: con $T_1=1/\gamma$ y $T_2=2/\gamma$, esta es
+la relación $\frac1{T_2}=\frac1{2T_1}+\frac1{T_\varphi}$ de la sección 6.4 sin el término de desfase. La
+tasa de decaimiento no nula más lenta, la **brecha espectral**
+$\min\{-\operatorname{Re}\mu:\mu\ne0\text{ un valor propio de }\mathcal L\}=\gamma/2$, es aquí la tasa
+de relajación: por la última fórmula, la distancia a $|g\rangle\langle g|$ es a lo sumo
+$e^{-\gamma t/2}$ (pues $|\rho_{ge}|^2\le\rho_{gg}\rho_{ee}$ por positividad,
+$\rho_{ee}^2+|\rho_{ge}|^2\le\rho_{ee}\le1$), y $e^{\gamma t/2}$ veces ella tiende a $|\rho_{ge}(0)|$
+cuando $t\to\infty$. Comprobamos el espectro con `lindblad_superoperator`, el canal y la distancia de traza
 con `lindblad_channel`, y el corolario 8.13 para saltos aleatorios dentro de los sectores de
 $M_2\oplus M_3$:
 
@@ -610,10 +702,31 @@ print("stationary states per sector:", kernel)
 assert all(dim >= 1 for dim in kernel)                             # Corollary 8.13
 ```
 
-Para estos saltos aleatorios, el código encuentra exactamente un estado estacionario por sector. Los
-criterios de unicidad —por ejemplo, un estado estacionario fiel junto con
-$\{H,L_j,L_j^*\}'=\mathbb C1$ [A. Frigerio, *Commun. Math. Phys.* 63, 269 (1978)]— no se demuestran
-aquí; el ejercicio 4 muestra que la unicidad puede fallar incluso en un factor.
+Observación numérica: para estos saltos aleatorios, el código encuentra exactamente un estado
+estacionario por sector. El teorema D.6 (el caso de dimensión finita de un criterio de A. Frigerio) da
+una condición suficiente: si un generador GKSL sobre $M_k$ con datos $(H;L_1,\dots,L_r)$ tiene un
+estado estacionario fiel $\sigma>0$ y las únicas matrices que conmutan con $H$ y con todos los $L_j$,
+$L_j^*$ son los múltiplos de $1$, entonces $\sigma$ es el único estado estacionario. Sin saltos entre
+sectores, la restricción de $\mathcal L$ a $P_c\mathcal MP_c\cong M_{k_c}$ es el generador GKSL con
+datos $(H_c;\sqrt{g_1}L_{1,c},\sqrt{g_2}L_{2,c},\dots)$, así que el teorema se aplica sector a sector;
+el código comprueba sus dos hipótesis (en coma flotante, para las tasas $g_j=1$ usadas arriba) y
+después verifica su conclusión. El ejercicio 4 muestra que la unicidad puede fallar incluso en un
+factor: allí falla la segunda hipótesis.
+
+```python
+for c, k in enumerate(two.k_factors):                              # Theorem D.6 in every sector
+    G_c = dynamics.lindblad_superoperator(two, H_two, L_two)[c][0].numpy()   # on row-major vec(rho_c)
+    w_c, V_c = np.linalg.eig(G_c)
+    sigma_c = V_c[:, np.argmin(abs(w_c))].reshape(k, k)
+    sigma_c = sigma_c / np.trace(sigma_c)
+    assert np.abs(G_c @ sigma_c.reshape(-1)).max() < 1e-12            # stationary
+    assert np.abs(sigma_c - sigma_c.conj().T).max() < 1e-10 and np.linalg.eigvalsh(sigma_c).min() > 1e-3   # faithful
+    ops = [H_two.matrix[0, c, :k, :k].numpy()] + [L.matrix[0, c, :k, :k].numpy() for L in L_two]
+    ops += [A.conj().T for A in ops[1:]]
+    comm = np.concatenate([np.kron(A, np.eye(k)) - np.kron(np.eye(k), A.T) for A in ops])   # X -> [A, X]
+    assert int((np.linalg.svd(comm, compute_uv=False) < 1e-9).sum()) == 1   # commutant = C 1
+assert kernel == [1, 1]                                            # the conclusion of Theorem D.6
+```
 
 ## 8.6 Con qué comparar
 
@@ -692,10 +805,11 @@ assert np.abs(Y @ Y).max() < 1e-15 and np.linalg.matrix_rank(Y) == 1   # one Jor
 4. $L\rho L^*-\frac12\{L^*L,\rho\}=\sigma_z\rho\sigma_z-\rho$ multiplica las entradas fuera de la
    diagonal por $-2$ y anula la diagonal, y $-i[H,\rho]_{ge}=i\omega\rho_{ge}$. Así,
    $\mathcal L(\sigma)=0$ si y solo si $\sigma_{ge}=0$ (para $\gamma>0$), y el espectro es
-   $\{0,0,-2\gamma\pm i\omega\}$. Como $H$ y $\sigma_z$ conmutan y $X\mapsto\sigma_zX\sigma_z$ es
-   una involución,
-   $e^{t\mathcal L}(\rho)=\frac{1+e^{-2\gamma t}}2U_t\rho U_t^* +\frac{1-e^{-2\gamma t}}2U_t\sigma_z\rho\sigma_zU_t^*$
-   con $U_t=e^{-itH}$: un canal unital cuyos puntos fijos son las matrices que conmutan con sus
+   $\{0,0,-2\gamma\pm i\omega\}$. Con $U_t=e^{-itH}$,
+   $e^{t\mathcal L}(\rho)=\frac{1+e^{-2\gamma t}}2U_t\rho U_t^*+\frac{1-e^{-2\gamma t}}2U_t\sigma_z\rho\sigma_zU_t^*$:
+   como $\sigma_z$ conmuta con $U_t$ y $\sigma_z^2=1$, derivando se ve que el segundo miembro $R(t)$
+   cumple $R'=-i[H,R]+\gamma(\sigma_zR\sigma_z-R)=\mathcal L(R)$ y $R(0)=\rho$, así que se aplica el
+   lema 8.1. Para $t>0$ es un canal unital cuyos puntos fijos son las matrices que conmutan con sus
    operadores de Kraus (teorema 6.10), es decir, las diagonales.
 
 ```python

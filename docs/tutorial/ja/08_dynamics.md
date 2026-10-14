@@ -2,8 +2,8 @@
 
 # 8. ダイナミクス
 
-閉じた量子系はユニタリの一径数群によって時間発展し、開いた量子系——観測されない環境と
-結合した系——はチャネルの半群によって時間発展する。セクターをもつ環では、どちらの発展にも
+量子力学では、閉じた系はユニタリの一径数群によって、開いた系——観測されない環境と
+結合した系——はチャネルの半群によってモデル化される。セクターをもつ環では、どちらの発展にも
 単一の行列環の上では見えない特徴がある：$\mathcal M$ に属するハミルトニアンは決してセクターを変えられず、
 したがって電荷は保存されるが、開いた系は、たとえば粒子を失うことによって、セクター間をジャンプしうる。
 本章では両種の時間発展についての基本的事実を証明し、セクター間のジャンプを含むリンドブラッド方程式を書き下し、
@@ -75,11 +75,11 @@ $\frac d{dt}\langle\psi,P_c\psi\rangle=\langle-iH\psi,P_c\psi\rangle+\langle\psi
 巡回性により $\frac d{dt}\operatorname{Tr}(Z\rho)=-i\operatorname{Tr}(Z[H,\rho])=-i\operatorname{Tr}([Z,H]\rho)=0$ である。
 (3) $A$ について同じ計算をすればよい。$\square$
 
-> **物理的意味.** $\mathcal M$ に属するハミルトニアンは電荷（粒子数、
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. $\mathcal M$ に属するハミルトニアンは電荷（粒子数、
 > 磁化、対称性の量子数）と可換であるから、各電荷の確率は運動の
-> 定数である。これは駆動された時間依存のハミルトニアンに対しても成り立つ。計算の上では、時間発展は
-> $C$ 個の独立な問題に分かれる：一回の対角化のコストは $D^3$ ではなく $\sum_ck_c^3$ 程度の演算数である。
+> 定数である。これは駆動された時間依存のハミルトニアンに対しても成り立つ。
 
+命題 8.2(1) により、時間発展はブロックごとに一つずつ、サイズ $k_c$ の $C$ 個の独立な問題に分かれる。
 ライブラリはブロックサイズごとに一回の固有値分解で $U(t)$ を計算し（`dynamics.propagator`）、
 `dynamics.von_neumann` は固有基底において密度を多数の時刻へ一度に発展させる。固有基底では
 $\rho(t)_{ij}=e^{-it(\lambda_i-\lambda_j)}\rho_{ij}$ である。`scipy.linalg.expm` と照合する：
@@ -115,12 +115,20 @@ A_t = U.adjoint() @ A @ U                                          # Heisenberg 
 assert abs(rho0.expectation(A_t) - dynamics.von_neumann(rho0, H, [t])[0].expectation(A)) < 1e-12
 ```
 
-$\mathcal M$ 上では、ベクトル $\psi=\bigoplus_c\psi_c$ は混合
-$\bigoplus_c|\psi_c\rangle\langle\psi_c|$ の状態を定める（第3章の演習問題 3）。したがって `dynamics.schrodinger`（ブロック配置
-`(batch, C, k_max)` のベクトル）と `von_neumann` はその上で一致しなければならない。時間依存の $H(t)$ に対しては、
+$\mathcal M$ 上では、単位ベクトル $\psi=\bigoplus_c\psi_c$ は混合
+$\bigoplus_c|\psi_c\rangle\langle\psi_c|$ の状態を定める：すべての $A\in\mathcal M$ はブロック対角であるから
+$\langle\psi,A\psi\rangle=\sum_c\langle\psi_c,A_c\psi_c\rangle=\operatorname{Tr}\big(A\bigoplus_c|\psi_c\rangle\langle\psi_c|\big)$
+である（第3章の演習問題 3 と同様）。$\psi(t)$ が $i\psi'=H\psi$ の解ならば、$U(t)$ はブロック対角であるから
+$\bigoplus_c|\psi_c(t)\rangle\langle\psi_c(t)|=U(t)\big(\bigoplus_c|\psi_c(0)\rangle\langle\psi_c(0)|\big)U(t)^*$ であり、
+したがって `dynamics.schrodinger`（ブロック配置 `(batch, C, k_max)` のベクトル）と `von_neumann`
+はその上で一致しなければならない。時間依存の $H(t)$ に対しては、
 ライブラリは固定刻みの古典的ルンゲ–クッタ法（`dynamics.rk4`、`schrodinger_rk4`）を用いる：一つのステップは
 $\psi$ に $H(t)\in\mathcal M$ のいくつかの値の多項式を掛けるので、セクター間で振幅を移すことは決してないが、
-厳密にはユニタリでなく、セクターの重みは離散化誤差の程度でドリフトする。
+ユニタリではない：定数の $H$ に対し、刻み幅 $h$ の一ステップは固有値 $\lambda$ に属する $H$ の固有ベクトルに
+$T(-ih\lambda)$ を掛ける。ここで $T(z)=\sum_{k=0}^4z^k/k!$ であり、$0<|x|<2\sqrt2$ に対し
+$|T(ix)|^2=1-\frac{x^6}{72}+\frac{x^8}{576}<1$ である（展開せよ）。したがって RK4 はセクターの重みを厳密には
+保存しない：定数の $H$ に対し、$0<|h\lambda|<2\sqrt2$ を満たす固有ベクトル上に零でない係数をもつセクター成分は、
+各ステップで重みを失う。一回の実行でそれらがどれだけ変化するかは数値的観察である（下記）。
 （一つの大きなセクターに対しては、`krylov.evolve` は行列–ベクトル積しか必要としない。第9章を参照。）
 
 ```python
@@ -143,8 +151,9 @@ assert drift < 1e-8 and (dynamics.schrodinger_rk4(psi0, H, times, substeps=50) -
 
 ```
 
-セクターの重みは RK4 のもとでは $1.1\cdot10^{-9}$ だけ変化し、厳密なソルバーのもとでは
-丸め誤差を超える変化はない。
+*数値的観察*：この実行では、セクターの重みは RK4 のもとでは $1.1\cdot10^{-9}$（出力される値）だけ変化し、
+厳密なソルバーのもとでは assert の許容誤差 $10^{-12}$ 未満しか変化しない。厳密なソルバーについては、
+定理 8.3 が厳密な保存を与える。
 
 ## 8.2 量子動力学的半群
 
@@ -152,27 +161,34 @@ CP 写像、TP 写像およびチャネルは 6.1節（[第6章](06_quantum_chan
 定理 6.2 と命題 6.4（写像 $A\mapsto\sum_lK_lAK_l^*$ は、セクター間のものも含めて CP である）のほかに、
 三つの閉性が必要である。
 
-**補題 8.4.** (a) CP 写像の和、非負の定数倍、合成は CP である。
-$\Phi$ が $M_D$ 上の CP 写像で、$*$-部分環 $\mathcal N\subseteq M_D$（たとえば $\mathcal M$、あるいは
-単位元 $P_c$ をもつ $P_c\mathcal MP_c\cong M_{k_c}$）をそれ自身に写すならば、$\Phi|_{\mathcal N}$ は CP である。
+**補題 8.4.** (a) CP 写像の和、非負の定数倍、合成は CP である。$\Phi$ を
+$\mathcal A=M_D$ または $\mathcal A=\mathcal M$ 上の CP 写像とし、$\mathcal N\subseteq\mathcal A$ を（$\mathcal A=M_D$
+のときは）$\mathcal M$、あるいはコーナー $P_c\mathcal MP_c\cong M_{k_c}$（単位元 $P_c$ をもつ）の一つとする。$\Phi$ が
+$\mathcal N$ をそれ自身に写すならば、$\Phi|_{\mathcal N}$ は CP である。
 (b) CP 写像 $\Phi_m$ が $\Phi$ に収束する（すなわちすべての $A$ に対し $\Phi_m(A)\to\Phi(A)$）ならば、$\Phi$ は CP である。
 (c) $s\mapsto\Psi(s)$ が $[a,b]$ から CP 写像への連続写像ならば、$\int_a^b\Psi(s)\,ds$ は CP である。
 
 *証明.* (a) $\Phi\mapsto\Phi_n$ は線形であり、$(\Phi\Psi)_n=\Phi_n\Psi_n$ である。正の行列の和は
-正である。制限について：$M_n(\mathcal N)\subseteq M_n(M_D)$ であり、正値性は両者で同じ
-条件である（基底を並べ替えると、$M_n(\mathcal N)$ の元は
-ブロック $[(A_{ij})_c]$ と零の直和になる）。(b) 正の行列全体は閉集合をなし（各
+正である。制限について：$M_n(\mathcal N)\subseteq M_n(\mathcal A)$ であり、正値性は両者で同じ
+条件である。実際、6.1節により $M_n(\mathcal M)$ の元 $[A_{ij}]$ が正であるのは、すべての
+ブロック行列 $[(A_{ij})_c]$ が正であるときかつそのときに限る。$\mathcal A=M_D$ に対しては、これは $[A_{ij}]\in M_{nD}$ の
+正値性である。基底を並べ替えると $[A_{ij}]$ はこれらのブロックの直和になるからである（すべての $A_{ij}$ はブロック対角である）。
+また $M_n(P_c\mathcal MP_c)$ の元はただ一つの零でないブロック $[(A_{ij})_c]$ をもち、その正値性は
+$M_n(M_{k_c})$ における正値性である。(b) 正の行列全体は閉集合をなし（各
 $x$ に対する $\langle x,Xx\rangle\ge0$ は閉条件である）、$(\Phi_m)_n(X)\to\Phi_n(X)$ である。(c) リーマン和は (a) により CP であり、
-$\Psi$ は一様連続であるから積分に収束する。(b) を適用すればよい。$\square$
+積分に収束する（補題 A.4(a)）。(b) を適用すればよい。$\square$
 
 **定義.** $\mathcal M$ 上の **量子動力学的半群** とは、
 $T_0=\mathrm{id}$、$T_{s+t}=T_sT_t$ を満たし、$t\mapsto T_t$ が連続であるようなチャネル $\mathcal M\to\mathcal M$ の族 $(T_t)_{t\ge0}$ のことである。
 
-**補題 8.5.** 超演算子の任意の連続な半群（$T_0=\mathrm{id}$、$T_{s+t}=T_sT_t$）は、ただ一つの超演算子 $\mathcal L$ により
+**補題 8.5.** 超演算子の任意の連続な半群 $(T_t)_{t\ge0}$（$T_0=\mathrm{id}$、$T_{s+t}=T_sT_t$）は、ただ一つの超演算子 $\mathcal L$ により
 $T_t=e^{t\mathcal L}$ と書ける。$\mathcal L$ をその **生成子** といい、$\mathcal L=\lim_{t\to0}(T_t-\mathrm{id})/t$ である。
+任意の有限次元空間上の線形写像（たとえば行列）からなる連続な半群についても、同じ証明で同じことが成り立つ。
 
-*証明.* $h\to0$ のとき $V_h=\frac1h\int_0^hT_s\,ds\to\mathrm{id}$ であるから、ある固定した
-小さな $h$ に対し $V_h$ は可逆である。ここで $T_tV_h=\frac1h\int_t^{t+h}T_s\,ds$ は $t$ について微分可能で、導関数は
+*証明.*（超演算子値の連続関数の積分は補題 A.4 のものである。）
+$V_h=\frac1h\int_0^hT_s\,ds$ に対し $\|V_h-\mathrm{id}\|\le\max_{0\le s\le h}\|T_s-\mathrm{id}\|\to0$ であるから（補題 A.4(c)）、
+行列式の連続性により、ある固定した小さな $h$ に対し $\det V_h\neq0$ である。ここで
+$T_tV_h=\frac1h\int_0^hT_{t+s}\,ds=\frac1h\int_t^{t+h}T_s\,ds$（補題 A.4(b),(e)）は $t$ について微分可能で、導関数は
 $\frac1h(T_{t+h}-T_t)=T_t\frac{T_h-\mathrm{id}}h$ である。したがって $T_t$ は微分可能で、
 $\mathcal L=\frac{T_h-\mathrm{id}}hV_h^{-1}$ として $T_t'=T_t\mathcal L$ であり、補題 8.1（$B$ は
 $\mathcal L$ を右から合成する写像）により $T_t=e^{t\mathcal L}$ である。一意性：$\mathcal L=T'(0)$。$\square$
@@ -198,7 +214,7 @@ $e^{-itH_{\mathrm{eff}}}$ をもつ CP 写像である。*ステップ 2.* $a=\|
 $\|S_n(t)\|\le\int_0^te^{(t-s)a}\,b\,e^{sa}\frac{(bs)^{n-1}}{(n-1)!}ds=e^{ta}\frac{(bt)^n}{n!}$ であるから、
 級数は任意の $[0,T]$ 上で一様収束する。*ステップ 3.*
 $S_n(t)=S_0(t)\int_0^te^{-s\mathcal L_0}\Phi S_{n-1}(s)\,ds$ であるから、積の微分法則と微積分学の基本
-定理により $S_n'=\mathcal L_0S_n+\Phi S_{n-1}$（$n\ge1$）および $S_0'=\mathcal L_0S_0$ を得る。上の
+定理（補題 A.4(e)）により $S_n'=\mathcal L_0S_n+\Phi S_{n-1}$（$n\ge1$）および $S_0'=\mathcal L_0S_0$ を得る。上の
 評価により導関数の級数は $[0,T]$ 上で一様収束するので、$Y(t)=\sum_nS_n(t)$ は
 微分可能で $Y'=\mathcal L_0Y+\Phi Y=\mathcal LY$、$Y(0)=\mathrm{id}$ であり、補題 8.1 により $Y(t)=e^{t\mathcal L}$ である。
 *ステップ 4.* $\Phi$ は CP であるから（定理 6.2）、帰納法により被積分関数
@@ -208,24 +224,36 @@ $\operatorname{Tr}\mathcal L(\rho)=\sum_j\big(\operatorname{Tr}(L_j\rho L_j^*)-\
 したがって $\frac d{dt}\operatorname{Tr}e^{t\mathcal L}\rho=\operatorname{Tr}\mathcal L(e^{t\mathcal L}\rho)=0$ である：すべての
 $e^{t\mathcal L}$ は TP である。半群法則と連続性は補題 8.1 による。$\square$
 
-**定理 8.7（ゴリーニ–コサコフスキー–スダルシャン；リンドブラッド；証明なしで述べる）.** 逆に、$M_D$ 上の任意の量子
-動力学的半群の生成子は定理 8.6 の形をもつ。[V. Gorini, A. Kossakowski,
-E. C. G. Sudarshan, *J. Math. Phys.* 17, 821 (1976); G. Lindblad, *Commun. Math. Phys.* 48, 119
-(1976).] 一般のフォン・ノイマン環 $\mathcal M$ 上の単位的 CP 写像からなるノルム連続な半群については、
-クリステンセンとエヴァンス [*J. London Math. Soc.* 20, 358 (1979)] が、生成子が
-$\Psi$ を CP、$K\in\mathcal M$ として $A\mapsto\Psi(A)+K^*A+AK$ の形であることを示した。
+**定理 8.7（ゴリーニ–コサコフスキー–スダルシャン；リンドブラッド）.** (1) 逆に、$M_D$ 上の任意の量子
+動力学的半群の生成子は、$J\le D^2-1$ 個のジャンプをもつ定理 8.6 の形をもつ。
+$\operatorname{Tr}H=0$、$\operatorname{Tr}L_j=0$、および $j\neq k$ に対し $\operatorname{Tr}(L_j^*L_k)=0$ となるように選ぶことができる。
+これらの規格化のもとで、$H$ と $\Phi=\sum_jL_j\cdot L_j^*$ は $\mathcal L$ によって定まり、$L_j$ はユニタリ $u$ による
+$L'_j=\sum_ku_{jk}L_k$ を除いて定まる（短い方の族を零で補った後で）。
 
-$\mathcal M=\bigoplus_cM_{k_c}$ 上では、これをハイゼンベルク描像の半群 $(T_t^*)$ に適用する。その
-写像は CP かつ単位的であり（命題 6.8、系 6.9(b)）、生成子は $\mathcal L^*$ である。
-blunt 双対をとって戻ると、$\mathcal L(\rho)=\Phi(\rho)+G\rho+\rho G^*$ となる。ここで $\Phi=\Psi^*$ は
-$\mathcal M$ 上の CP 写像（セクター間のクラウス作用素、命題 6.4）であり、$G=K$ である。トレース保存、すなわちすべての $\rho\in\mathcal M$ に対する $\operatorname{Tr}\big((\Phi^*(1)+G+G^*)\rho\big)=0$ から
-$G+G^*=-\Phi^*(1)$、すなわち $H=H^*\in\mathcal M$ により $G=-iH-\frac12\Phi^*(1)$ となる：これはちょうど
-次節の生成子である。
+(2) $\mathcal M=\bigoplus_cM_{k_c}$ 上の任意の量子動力学的半群の生成子は
+$$
+\mathcal L(\rho)=\Phi(\rho)-\tfrac12\{\Phi^*(1),\rho\}-i[H,\rho]
+$$
+である。ここで $\Phi:\mathcal M\to\mathcal M$ は CP 写像（セクター間のクラウス作用素、命題 6.4）、
+$H=H^*\in\mathcal M$ である：これは 8.3節の形であり、セクター間のジャンプは一つ $\Phi_1=\Phi$、レートは $1$ である。
 
-> **物理的意味.** 相関が速く減衰する大きな環境と弱く相互作用する系
-> （ボルン–マルコフ近似）は、過去の記憶を失う：時刻 $s+t$ における状態は、
-> 時刻 $s$ における状態から $t$ だけに依存するチャネルによって得られる。定理 8.7 は、
-> そのようなダイナミクスが常にハミルトニアン部分と「ジャンプ」$L_j$（光子放出、粒子損失、
+*証明.* (1) は定理 D.4 に定理 D.5(b),(c) の一意性の主張を合わせたものであり、(2) は定理 D.7 である。
+どちらも[付録 D](D_gksl.md)で証明される。$\square$
+
+鍵となるステップ（定理 D.3）は、CP 写像の半群の生成子のチョイ行列が最大エンタングルベクトルの直交補空間上で
+正であることである。正値写像 $T_t$ についての半群の性質だけでは十分ではない（定理 D.3 の後の例）。
+(2) については、条件付き期待値 $E(X)=\sum_cP_cXP_c$ との合成 $T_t\circ E$ が $M_D$ 上の CP 写像である。$t=0$ における
+その導関数 $\mathcal L\circ E$ のチョイ行列はベクトル $(1\otimes P_c)\Omega$ たちの直交補空間上で正であり、これが
+$\mathcal L\circ E$ の分解（補題 D.2）を与え、それを $E$ によって $\mathcal M$ に圧縮して戻す。
+ハイゼンベルク描像では（系 D.8）、$\mathcal M$ 上の単位的 CP 写像の連続な半群の生成子は、$\Psi$ を CP、$K\in\mathcal M$ として $A\mapsto\Psi(A)+K^*A+AK$ である。歴史的には、(1) は
+V. Gorini, A. Kossakowski, E. C. G. Sudarshan [*J. Math. Phys.* 17, 821 (1976)] と G. Lindblad
+[*Commun. Math. Phys.* 48, 119 (1976)] により、ハイゼンベルク描像の形は、一般のフォン・ノイマン環上のノルム連続な
+半群について、E. Christensen と D. E. Evans [*J. London Math. Soc.* 20, 358 (1979)] による。
+
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. 相関が速く減衰する大きな環境と弱く相互作用する系
+> （ボルン–マルコフ近似）は、過去の記憶を失うと期待される：そのとき時刻 $s+t$ における状態は、
+> 時刻 $s$ における状態から $t$ だけに依存するチャネルによって得られる。*もし* そうであれば、定理 8.7 は、
+> そのダイナミクスがハミルトニアン部分と「ジャンプ」$L_j$（光子放出、粒子損失、
 > 位相緩和）の和であり、そのレートは $L_j$ の規格化によって決まることを述べている。
 
 ライブラリには四つのリンドブラッド・ルーチンがある：`lindblad_rhs` は右辺を
@@ -272,7 +300,8 @@ $$
 \mathcal L(\rho)=-i[H,\rho]+\sum_jg_j\Big(L_j\rho L_j^*-\tfrac12\{L_j^*L_j,\rho\}\Big)
 +\sum_mg_m\Big(\Phi_m(\rho)-\tfrac12\{\Phi_m^*(1),\rho\}\Big).
 $$
-である。
+である。下の命題 8.8(1) により、これは $\mathcal M$ 上の量子動力学的半群を生成する。逆に、
+定理 8.7(2)（定理 D.7）により、$\mathcal M$ 上の任意の量子動力学的半群はこの形の生成子をもつ。
 
 **命題 8.8.** $J^{dc}_l\in M_D$ を、位置 $(d,c)$ にブロック $K^{dc}_l$ をもち、
 それ以外は零である行列とする。
@@ -281,9 +310,13 @@ $$
    $\hat{\mathcal L}$ の $\mathcal M$ への制限である。したがって
    $(e^{t\mathcal L})_{t\ge0}$ は $\mathcal M$ 上の量子動力学的半群である。
 2. 代わりに $\tilde{\mathcal L}$ を、一つのクラウス
-   添字のブロックを足し合わせて一つのジャンプ $L_{m,l}=\sum_{d,c}J^{dc}_{m,l}$ とした $M_D$ 上の GKSL 生成子とする。このとき
+   添字のブロックを足し合わせて一つのジャンプ $L_{m,l}=\sum_{d,c}J^{dc}_{m,l}$ とした $M_D$ 上の GKSL 生成子とする
+   （同じハミルトニアン、同じジャンプ $\sqrt{g_j}L_j$、およびジャンプ $\sqrt{g_m}L_{m,l}$ をもつ）。このとき
    $\rho\in\mathcal M$ に対し $\mathcal L(\rho)=E\big(\tilde{\mathcal L}(\rho)\big)$ である。ここで $E(X)=\sum_dP_dXP_d$ は
    $M_D$ から $\mathcal M$ の上への条件付き期待値である。一般には $\tilde{\mathcal L}(\rho)\notin\mathcal M$ である。
+3. すべての $L_{m,l}$ が各ブロック行および各ブロック列に高々一つの零でないブロックしかもたないならば（たとえば、
+   下の例の消滅作用素のように、セクター $c$ をセクター $c-1$ にのみ写す場合）、
+   $\rho\in\mathcal M$ に対し $\tilde{\mathcal L}(\rho)=\mathcal L(\rho)$ である。
 
 *証明.* $\rho=\sum_cP_c\rho P_c$ かつ $J^{dc}P_{c'}=\delta_{cc'}J^{dc}$ であるから、
 $J^{dc}\rho J^{dc*}$ は位置 $(d,d)$ にあるブロック $K^{dc}\rho_cK^{dc*}$ であり、$J^{dc*}J^{dc}$ は位置 $(c,c)$ にある
@@ -293,22 +326,27 @@ $K^{dc*}K^{dc}$ である。$d,l$ について和をとると $\Phi(\rho)$ と $
 定理 8.6 と補題 8.4(a) により $\mathcal M$ のチャネルである。(2) $L=\sum_{d,c}J^{dc}$ に対し $L\rho L^*=\sum_{d,d',c}J^{dc}\rho J^{d'c*}$ であり、
 $E$ は $d=d'$ の項を残す。$B\in\mathcal M$ に対し $P_dXBP_d=P_dXP_dB$ であるから $E(XB)=E(X)B$ かつ
 $E(BX)=BE(X)$ である。よって $E\{L^*L,\rho\}=\{E(L^*L),\rho\}$ であり、$d\ne d'$ に対し $J^{dc*}J^{d'c}=0$ であるから
-$E(L^*L)=\sum_cP_cL^*LP_c=\sum_{c,d}J^{dc*}J^{dc}$ である。最後に $E(-i[H,\rho])=-i[H,\rho]$ である。$\square$
+$E(L^*L)=\sum_cP_cL^*LP_c=\sum_{c,d}J^{dc*}J^{dc}$ である。最後に $E(-i[H,\rho])=-i[H,\rho]$ であり、ジャンプ
+$\sqrt{g_j}L_j\in\mathcal M$ の項は $\mathcal M$ に属する。(3) $L=\sum_{(d,c)\in S}J^{dc}$ とする。ここで組の集合 $S$ は、
+与えられた $d$ をもつ組を高々一つ、与えられた $c$ をもつ組を高々一つしか含まない。$\rho\in\mathcal M$ に対し、
+$J^{dc}\rho J^{d'c'*}=J^{dc}P_c\rho P_{c'}J^{d'c'*}$ は $c=c'$ でない限り消え、$c=c'$ ならば $d=d'$ である。また
+$J^{dc*}J^{d'c'}$ は $d=d'$ でない限り消え、$d=d'$ ならば $c=c'$ である。したがって $L\rho L^*$ と $L^*L$ はブロック対角であり、
+$\tilde{\mathcal L}(\rho)$ のすべての項は $\mathcal M$ に属し、(2) により $\tilde{\mathcal L}(\rho)=E(\tilde{\mathcal L}(\rho))=\mathcal L(\rho)$
+である。$\square$
 
-> **物理的意味.** (2) は、$\mathcal M$ 上のリンドブラッド方程式が、ジャンプによって生じるセクター間の
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. (2) は、$\mathcal M$ 上のリンドブラッド方程式が、ジャンプによって生じるセクター間の
 > コヒーレンスを直ちに消去したときに $M_D$ 上の方程式から残るものであることを述べている——
-> これが超選択則の内容である。粒子損失の場合には何も消去されない：消滅
-> 作用素 $a_j$ は粒子数をちょうど一つ下げるので、$a_j\rho a_j^*$ と $a_j^*a_j=n_j$ は
-> ブロック対角であり、$\mathcal M$ 上の方程式は通常のものである。
+> これが超選択則の内容である。粒子損失の場合には何も消去されない（(3)）：消滅作用素をジャンプとする
+> 通常のリンドブラッド方程式は、すでに $\mathcal M$ 上の方程式である。
 
 **命題 8.9（セクターの重み）.** $\rho(t)=e^{t\mathcal L}\rho_0$ とし、$p(t)$ をそのセクターの重みとする。
 
-1. セクター間のジャンプがなければ、すべての $p_c(t)$ は一定である。
+1. セクター間のジャンプがなければ（すべての $m,l$ と $d\ne c$ に対し $K^{dc}_{m,l}=0$）、すべての $p_c(t)$ は一定である。
 2. すべての $m$ とすべての組 $d\ne c$ に対し、数
    $r_{m,dc}$ により $\sum_lK^{dc*}_{m,l}K^{dc}_{m,l}=r_{m,dc}1_{k_c}$ となるならば、$d\ne c$ に対し $Q_{dc}=\sum_mg_mr_{m,dc}$、$Q_{cc}=-\sum_{d\ne c}Q_{dc}$ として $p'=Qp$ である。
    したがって $p(t)=e^{tQ}p(0)$ は $H$ にも、$L_j$ にも、セクター内の状態にもよらない。
 
-*証明.* $p_d'=\operatorname{Tr}(P_d\mathcal L(\rho))$ である。ハミルトニアンの項は定理 8.3 と同様に消える。
+*証明.* 補題 8.1 により $p_d'=\operatorname{Tr}(P_d\mathcal L(\rho))$ である。ハミルトニアンの項は定理 8.3 と同様に消える。
 $L_j\in\mathcal M$ に対しては、$P_d$ が中心に属するので $\operatorname{Tr}(P_dL_j\rho L_j^*)-\operatorname{Tr}(P_dL_j^*L_j\rho)
 =\operatorname{Tr}(L_j^*P_dL_j\rho)-\operatorname{Tr}(L_j^*L_jP_d\rho)=0$ である。セクター間の
 ジャンプ $\Phi$ に対しては $\operatorname{Tr}(P_d\Phi(\rho))=\sum_c\operatorname{Tr}\big(\sum_lK^{dc*}_lK^{dc}_l\rho_c\big)$
@@ -316,8 +354,9 @@ $L_j\in\mathcal M$ に対しては、$P_d$ が中心に属するので $\operato
 $c=d$ の項と $d'=d$ の項は打ち消し合う。これで (1) が示され、(2) の仮定のもとでは残りの項は
 $\sum_{c\ne d}r_{dc}p_c-\sum_{d'\ne d}r_{d'd}p_d$ である。補題 8.1 により $p(t)=e^{tQ}p(0)$ である。$\square$
 
-(2) の仮定のもとでは、$d\ne c$ に対し、$r_{m,dc}$ は任意の状態 $\rho$ について $\Phi_m$ の遷移
-行列（命題 6.12 の前で定義した）の成分 $T_{dc}(\rho)$ に等しい。したがって、レート
+(2) の仮定のもとでは、$d\ne c$ に対し、$r_{m,dc}$ は $p_c>0$ を満たす任意の状態 $\rho$ について $\Phi_m$ の遷移
+行列（命題 6.12 の前で定義した）の成分 $T_{dc}(\rho)$ に等しい。
+$\operatorname{Tr}\Phi_{m,dc}(\rho_c)=\operatorname{Tr}\big(\sum_lK^{dc*}_{m,l}K^{dc}_{m,l}\rho_c\big)=r_{m,dc}p_c$ だからである。したがって、レート
 $1$ の一つのジャンプに対しては、$R$ = `transition_matrix()` として $Q=R-\operatorname{diag}(\sum_dR_{dc})_c$ である（$R$ の対角成分は打ち消し合う）。
 
 **例：粒子損失.** 粒子数が高々二の二つのボース・モードを考える。セクターは
@@ -329,8 +368,10 @@ $a_1^*a_1+a_2^*a_2=N$ であるから、命題 8.9(2) が $Q_{N-1,N}=\gamma N$ �
 $$
 p_2(t)=q^2,\qquad p_1(t)=2q(1-q),\qquad p_0(t)=(1-q)^2,\qquad q=e^{-\gamma t},
 $$
-となる。これは二項分布である：ホッピングと相互作用が何をしようとも、各粒子は独立に確率 $e^{-\gamma t}$ で生き残る
-（$p'=Qp$ は微分して確かめよ）。
+となる。これはパラメータ $2$ と $q$ の二項分布（各粒子が独立に確率 $q$ で生き残るときの生存粒子数の分布）であり、
+ホッピングと相互作用が何をしようとも成り立つ：両辺はともに $p(0)=(0,0,1)$ を満たす $p'=Qp$ の解である
+（微分せよ）から、補題 8.1 により一致する。コードは $\Phi^*(1)=0\oplus1\oplus2$、すなわち用いるブロック上で
+$a_1^*a_1+a_2^*a_2=N$ であることを確かめ、$p(t)$ を両方の公式と照合する。
 
 ```python
 fock = TypeIAlgebra([1, 2, 3], [1, 2, 3], precision='double', charges=[0, 1, 2])   # N = 0, 1, 2
@@ -363,12 +404,22 @@ for s, rho_s in zip(ts, traj):
 neg = min(w.min().item() for rho_s in traj for w in rho_s.eigenvalues())
 print(f"smallest eigenvalue of rho(t) under RK4: {neg:.1e}")
 assert neg > -1e-7                                                 # positive up to the RK4 error
+
+sm = torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=c128)           # |g><e|; H = 0, rate 3, one step h = 1
+decay = lambda s, X: 3.0 * (sm @ X @ sm.mH - 0.5 * (sm.mH @ sm @ X + X @ sm.mH @ sm))
+step = dynamics.rk4(decay, torch.diag(torch.tensor([0.0, 1.0], dtype=c128)), [0.0, 1.0], substeps=1)[-1]
+assert (step - torch.diag(torch.tensor([-3 / 8, 11 / 8], dtype=c128))).abs().max() < 1e-14   # not positive
 ```
 
-RK4 は厳密には完全正値でない：$\rho(t)$ の固有値は離散化誤差の程度で
-負になりうる（ここでは刻み幅が高々 $0.02$ で $\approx-2\cdot10^{-8}$）。`lindblad_channel` は厳密であるが、
+RK4 は正値性を保つことが保証されていない：$\rho'=\mathcal L\rho$ に対し、刻み幅 $h$ の一ステップは
+8.1節の多項式 $T$ による $\rho\mapsto T(h\mathcal L)\rho$ である（四つの段を代入せよ）。これはトレースを保存する
+（すべての $X$ に対し $\operatorname{Tr}\mathcal L(X)=0$ であるから）が、正値である必要はない。たとえば、基底
+$|g\rangle,|e\rangle$ をもつ $M_2$ 上で、$H=0$、レート $\gamma$ の一つのジャンプ $|g\rangle\langle e|$ とすると、$\mathcal L$ は
+$\operatorname{diag}(a,b)$ を $\gamma b\operatorname{diag}(1,-1)$ に写すので、$h\gamma=3$ の一ステップは $\operatorname{diag}(0,1)$ を
+$\operatorname{diag}(1-T(-3),T(-3))=\operatorname{diag}(-\frac38,\frac{11}8)$ に写す。*数値的観察*：この実行では
+$\rho(t)$ の最小固有値は $\approx-2\cdot10^{-8}$ である（出力される値。刻み幅は高々 $0.02$）。`lindblad_channel` は厳密であるが、
 セクター内のジャンプしか扱わない。最後に、セクター間のランダムな写像について命題 8.8(2) を、
-numpy で組み立てた $M_6$ 上の GKSL 生成子と照合して確かめる：
+粒子損失について命題 8.8(3) を、numpy で組み立てた $M_6$ 上の GKSL 生成子と照合して確かめる：
 
 ```python
 Phi = channels.random_inter_sector_channel(fock, fock, kraus_rank=2)
@@ -383,14 +434,23 @@ full = sum(L @ X @ L.conj().T - 0.5 * (L.conj().T @ L @ X + X @ L.conj().T @ L) 
 E_full = full * embed(np.ones((3, 3, 3)))                          # E(X) = sum_d P_d X P_d
 assert np.abs(E_full - embed(on_M)).max() < 1e-12                  # Proposition 8.8(2)
 print(f"coherences between sectors created on M_6: {np.abs(full - E_full).max():.2f}")
+
+zero = lambda d, c: np.zeros((ks[d], ks[c]))
+L_loss = [np.block([[blocks(a)[(d, c)].numpy() if (d, c) in a else zero(d, c) for c in range(3)] for d in range(3)])
+          for a in (a1, a2)]                                       # a_1, a_2 on M_6: one block per block row and column
+full_loss = sum(L @ X @ L.T - 0.5 * (L.T @ L @ X + X @ L.T @ L) for L in L_loss)
+loss_on_M = dynamics.lindblad_rhs(None, [loss], algebra=fock)(0.0, rho.matrix)[0].numpy()
+assert np.abs(full_loss - embed(loss_on_M)).max() < 1e-12         # Proposition 8.8(3): no compression needed
 ```
 
 ## 8.4 事後選択とジャンプなしの時間発展
 
 8.3節の生成子のジャンプをまとめて $\Phi_{\mathrm{tot}}(\rho)=\sum_jg_jL_j\rho L_j^*+\sum_mg_m\Phi_m(\rho)$ とし、
 $\mathcal M$ の元 $A=\Phi_{\mathrm{tot}}^*(1)=\sum_jg_jL_j^*L_j+\sum_mg_m\Phi_m^*(1)\ge0$ と
-$H_{\mathrm{eff}}=H-\frac i2A$ をとる。命題 8.8(1) と定理 8.6（その $S_n$ は、$H_{\mathrm{eff}}\in\mathcal M$ であるから
-$\mathcal M$ を $\mathcal M$ に写す）により、
+$H_{\mathrm{eff}}=H-\frac i2A$ をとる。定理 8.6 を命題 8.8(1) の $M_D$ 上の生成子 $\hat{\mathcal L}$ に適用する：
+命題 8.8 の証明により、そのジャンプ部分は $\mathcal M$ を $\mathcal M$ に写し、そこで $\Phi_{\mathrm{tot}}$ に等しく、
+ジャンプにわたる和 $\sum\hat L^*\hat L$ は $A$ であるから、その $H_{\mathrm{eff}}$ は $H-\frac i2A\in\mathcal M$ である。
+したがってその $S_n(t)$ は $\mathcal M$ を $\mathcal M$ に写し（$n$ についての帰納法）、$\rho\in\mathcal M$ に対し
 $$
 \rho(t)=\sum_{n\ge0}S_n(t)\rho,\qquad S_0(t)\rho=e^{-itH_{\mathrm{eff}}}\rho\,e^{itH_{\mathrm{eff}}^*},
 \qquad S_n(t)=\int_0^tS_0(t-s)\,\Phi_{\mathrm{tot}}\,S_{n-1}(s)\,ds .
@@ -406,7 +466,7 @@ $X=S_0(t)\rho\ge0$ とおくと $w_0'=\operatorname{Tr}(-iH_{\mathrm{eff}}X+iXH_
 であり、$\operatorname{Tr}(AX)=\operatorname{Tr}(X^{1/2}AX^{1/2})\ge0$ である。最後の主張は
 $\operatorname{Tr}|\phi\rangle\langle\phi|=\|\phi\|^2$ にほかならない。$\square$
 
-> **物理的意味.** 検出器があらゆるジャンプ——放出されたすべての光子、失われたすべての原子——を記録するとしよう。
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. 検出器があらゆるジャンプ——放出されたすべての光子、失われたすべての原子——を記録するとしよう。
 > このとき $w_n(t)$ は時刻 $t$ までにちょうど $n$ 回のクリックが起こる確率であり、$S_n(t)\rho/w_n(t)$ は
 > $n$ 回のクリックが起きたという条件のもとでの状態、$S_0(t)\rho/w_0(t)$ は **クリックがない** という条件のもとでの状態である：
 > 何も起こらなかったという結果も、非エルミートな $H_{\mathrm{eff}}$ を通じて状態を変える。この計数過程による解釈 [E. B. Davies,
@@ -414,12 +474,14 @@ $\operatorname{Tr}|\phi\rangle\langle\phi|=\|\phi\|^2$ にほかならない。$
 > は量子軌跡法（モンテカルロ波動関数法）の基礎である [J. Dalibard, Y. Castin,
 > K. Mølmer, *Phys. Rev. Lett.* 68, 580 (1992)]。ここではその数学的な部分だけを用いる。
 
-損失の場合、クリックを数えることは電荷を測定することと同じである：
+損失の場合、ダイソン項は $\rho(t)$ のセクター成分である（囲みの言葉でいえば、クリックを数えることは
+電荷を測定することと同じである）。$\operatorname{Tr}(P\rho)>0$ を満たす射影 $P$ による状態 $\rho$ の
+**リューダース更新** とは、状態 $P\rho P/\operatorname{Tr}(P\rho P)$ のことである（$\operatorname{Tr}(P\rho P)=\operatorname{Tr}(P\rho)$ に注意）。
 
 **命題 8.11.** セクターに $N=0,\dots,C-1$ とラベルをつけ、セクター内の
 ジャンプはなく、すべてのジャンプが電荷を一つ下げ（$d=c-1$ でない限り $K^{dc}_{m,l}=0$）、
 $\rho=P_{N_0}\rho P_{N_0}$ であるとする。このとき $0\le n\le N_0$ に対し $S_n(t)\rho=P_{N_0-n}\,\rho(t)\,P_{N_0-n}$ であり、
-$n>N_0$ に対し $S_n(t)\rho=0$ である。特に、$\rho(t)$ の $P_{N_0}$ によるリューダース更新（「粒子が一つも失われなかった」）
+$n>N_0$ に対し $S_n(t)\rho=0$ である。特に $p_{N_0}(t)=w_0(t)>0$ であり、$\rho(t)$ の $P_{N_0}$ によるリューダース更新（「粒子が一つも失われなかった」）
 はジャンプなしの状態である：
 $$
 \frac{P_{N_0}\rho(t)P_{N_0}}{p_{N_0}(t)}=\frac{e^{-itH_{\mathrm{eff}}}\rho\,e^{itH_{\mathrm{eff}}^*}}{w_0(t)},
@@ -429,12 +491,14 @@ $$
 *証明.* $H_{\mathrm{eff}}\in\mathcal M$ であるから、$S_0(s)$ はセクター $N$ に台をもつ作用素をセクター $N$ に台をもつ作用素に写す。
 $\Phi_{\mathrm{tot}}$ はセクター $N\ge1$ をセクター $N-1$ に写し、セクター $0$ を零にする。
 帰納法により、すべての $s$ に対し $S_n(s)\rho$ はセクター $N_0-n$ に台をもち、$n>N_0$ ならば $0$ である。
-$\rho(t)=\sum_nS_n(t)\rho$ を $P_{N_0-n}$ で圧縮すると、ちょうど第 $n$ 項が残る。$\square$
+$\rho(t)=\sum_nS_n(t)\rho$ を $P_{N_0-n}$ で圧縮すると、ちょうど第 $n$ 項が残る。最後に、
+$e^{-itH_{\mathrm{eff}}}$ は可逆であるから（補題 8.1）$S_0(t)\rho$ は零でない正の行列であり、$w_0(t)>0$ である。$\square$
 
 ライブラリの `states.lueders_update(rho, P)` は $P\rho P/\operatorname{Tr}(P\rho P)$ と
 $\operatorname{Tr}(\rho P)$ を返す。今度は二つのモードが異なるレート $\gamma_1>\gamma_2$ で漏れ出すとする。すると
-$A=\gamma_1n_1+\gamma_2n_2$ は中心に属さず、命題 8.9(2) は適用できず、
-$N=2$ への事後選択は真に非エルミートな時間発展を与える。命題 8.11 を $n=0$ について確かめ、さらに
+$A=\gamma_1n_1+\gamma_2n_2$ は中心に属さず（セクター $N=2$ では、基底 $|20\rangle,|11\rangle,|02\rangle$ において
+$\operatorname{diag}(2\gamma_1,\gamma_1+\gamma_2,2\gamma_2)$ である）、命題 8.9(2) は適用できず、$N=2$ に事後選択された状態は、
+反エルミート部分 $-\frac i2A$ がそのセクターで $1$ の定数倍でない $H_{\mathrm{eff}}$ による規格化された時間発展である。命題 8.11 を $n=0$ について確かめ、さらに
 $S_1$ の積分をシンプソン則で計算して $n=1$ についても確かめる：
 
 ```python
@@ -473,9 +537,11 @@ S1 = scipy.integrate.simpson(S0(2.0 - s_grid, 1, jump(S0(s_grid, 2, rho_20))), x
 assert np.abs(S1 - traj[-1].matrix[0, 1, :2, :2].numpy()).max() < 1e-8     # Proposition 8.11, n = 1
 ```
 
-$t=2$ において損失のない確率は $0.230$ である。ホッピングがなければ $e^{-2\gamma_1t}=0.091$ となるはずであるから、
+*数値的観察*：$t=2$ において、セクター $N=2$ の重み $p_2(2)=w_0(2)$（「損失なし」）は $0.230$ である（上で出力）。
+ホッピングがなければ（$J=0$）、それはちょうど $e^{-2\gamma_1t}=e^{-2.4}=0.091$ となるはずである。そのとき $|20\rangle$ は
+固有値 $U-i\gamma_1$ をもつ $H_{\mathrm{eff}}$ の固有ベクトルであり、$w_0(t)=|e^{-it(U-i\gamma_1)}|^2$ だからである（命題 8.10）。したがって
 ここではセクターの重みがハミルトニアンに依存している。事後選択された状態は、閉じた系の状態から
-トレース距離 $0.135$ だけ離れている：粒子を失わなかったことは情報である。
+トレース距離 $0.135$（上で出力）だけ離れている：$N=2$ という条件づけは、ユニタリな時間発展を超えて状態を変える。
 
 ## 8.5 定常状態と緩和
 
@@ -484,19 +550,21 @@ $\mathcal L(\sigma)=0$ と同値である（$t=0$ で微分すればよく、逆
 
 **命題 8.12.** $\mathcal M$ 上の任意の量子動力学的半群は定常状態をもつ。
 
-*証明.* 状態 $\rho$ を固定し、$\sigma_\tau=\frac1\tau\int_0^\tau T_s\rho\,ds$ とおく。これは状態である（状態の
-凸結合の極限であり、状態全体は閉集合をなす）。線形性により
-$T_t\sigma_\tau-\sigma_\tau=\frac1\tau\big(\int_\tau^{\tau+t}-\int_0^t\big)T_s\rho\,ds$ であり、$\|T_s\rho\|_1=1$ であるから
+*証明.* 状態 $\rho$ を固定し、$\sigma_\tau=\frac1\tau\int_0^\tau T_s\rho\,ds$ とおく。補題 A.4(d) により、これは状態である
+（状態全体は閉凸集合をなす）。補題 A.4(b),(e) により
+$T_t\sigma_\tau-\sigma_\tau=\frac1\tau\big(\int_\tau^{\tau+t}-\int_0^t\big)T_s\rho\,ds$ であり、$\|T_s\rho\|_1=1$ であるから、補題 A.4(c) により
 そのトレースノルムは高々 $2t/\tau$ である。状態全体は有限次元空間の有界閉集合であるから、
 ある列 $\sigma_{\tau_m}$（$\tau_m\to\infty$）は状態 $\sigma$ に収束し
 （ボルツァーノ–ワイエルシュトラス）、$T_t\sigma-\sigma=\lim_m(T_t\sigma_{\tau_m}-\sigma_{\tau_m})=0$ である。$\square$
 
-**系 8.13.** セクター間のジャンプがなければ、定常状態の張る空間の
+**系 8.13.** セクター間のジャンプがなければ（命題 8.9(1) のように）、定常状態の張る空間の
 次元は少なくとも $C$ である：各セクターがそれ自身の定常状態をもつ。
 
-*証明.* $\mathcal L$ は $P_c\mathcal MP_c\cong M_{k_c}$ をそれ自身に写す（$H$、$L_j$ はすべてブロック対角である）から、
-$e^{t\mathcal L}$ の制限は $M_{k_c}$ 上の量子動力学的半群であり（補題 8.4(a)）、命題 8.12 により
-定常状態 $\sigma_c$ をもつ。$\sigma_c$ たちの台は互いに交わらない。$\square$
+*証明.* $\mathcal L$ は $P_c\mathcal MP_c\cong M_{k_c}$ をそれ自身に写す（$H$ と $L_j$ は $\mathcal M$ に属し、
+$\Phi_m(X)=\sum_lK^{cc}_{m,l}X_cK^{cc*}_{m,l}$ と $\Phi_m^*(1)$ はブロック対角である）から、すべての $e^{t\mathcal L}$ も同様である。
+その制限は CP（補題 8.4(a)）かつ TP であるから、$M_{k_c}$ 上の量子動力学的半群であり、命題 8.12 により
+定常状態 $\sigma_c$ をもつ。$\mathcal M$ の元として、$\sigma_c$ は $e^{t\mathcal L}$ の定常状態である。
+$\sigma_c$ たちは異なるブロックにあるから、一次独立である。$\square$
 
 **命題 8.14（自然放出）.** 基底 $|g\rangle,|e\rangle$ をもつ $M_2$ 上で、
 $H=\omega|e\rangle\langle e|$、一つのジャンプ $L=|g\rangle\langle e|$、レート $\gamma>0$ とする。このとき
@@ -519,9 +587,12 @@ $\sqrt p\,|g\rangle\langle e|$）、$\mathcal U_t$ は $\rho_{ge}$ に $e^{i\ome
 $\rho_{gg}$ も決まる。最後に、$\rho(t)-|g\rangle\langle g|$ はトレース零の自己共役作用素で、対角成分は
 $(-\rho_{ee}(t),\rho_{ee}(t))$ であるから、その固有値は $\pm(\rho_{ee}(t)^2+|\rho_{ge}(t)|^2)^{1/2}$ である。$\square$
 
-コヒーレンスは占有数の半分のレートで減衰する。これは純粋位相緩和がない場合の 6.4節の関係
-$T_2=2T_1$ である。
-最も遅い非零のレート、すなわち **スペクトルギャップ** $\gamma/2$ が緩和を支配する。スペクトルを
+コヒーレンスは占有数の半分のレートで減衰する：$T_1=1/\gamma$、$T_2=2/\gamma$ とすると、これは 6.4節の関係
+$\frac1{T_2}=\frac1{2T_1}+\frac1{T_\varphi}$ から位相緩和の項を除いたものである。最も遅い非零の減衰レート、
+すなわち **スペクトルギャップ** $\min\{-\operatorname{Re}\mu:\mu\ne0\text{ は }\mathcal L\text{ の固有値}\}=\gamma/2$ が、
+ここでの緩和のレートである：最後の公式により、$|g\rangle\langle g|$ までの距離は高々 $e^{-\gamma t/2}$ であり
+（正値性により $|\rho_{ge}|^2\le\rho_{gg}\rho_{ee}$ であるから $\rho_{ee}^2+|\rho_{ge}|^2\le\rho_{ee}\le1$）、その $e^{\gamma t/2}$ 倍は
+$t\to\infty$ のとき $|\rho_{ge}(0)|$ に収束する。スペクトルを
 `lindblad_superoperator` で、チャネルとトレース距離を `lindblad_channel` で確かめ、さらに
 $M_2\oplus M_3$ のセクター内のランダムなジャンプについて系 8.13 を確かめる：
 
@@ -558,10 +629,29 @@ print("stationary states per sector:", kernel)
 assert all(dim >= 1 for dim in kernel)                             # Corollary 8.13
 ```
 
-これらのランダムなジャンプについて、コードはセクターごとにちょうど一つの定常状態を見つける。
-一意性の判定条件——たとえば、忠実な定常状態が存在し、かつ $\{H,L_j,L_j^*\}'=\mathbb C1$ であること
-[A. Frigerio, *Commun. Math. Phys.* 63, 269 (1978)]——はここでは証明しない。演習問題 4 は、
-因子環においてさえ一意性が成り立たないことがあることを示す。
+*数値的観察*：これらのランダムなジャンプについて、コードはセクターごとにちょうど一つの定常状態を見つける。
+定理 D.6（A. Frigerio の判定条件の有限次元の場合）は十分条件を与える：データ $(H;L_1,\dots,L_r)$ をもつ
+$M_k$ 上の GKSL 生成子が忠実な定常状態 $\sigma>0$ をもち、$H$ およびすべての $L_j$、$L_j^*$ と可換な行列が
+$1$ の定数倍だけならば、$\sigma$ はただ一つの定常状態である。セクター間のジャンプがなければ、$\mathcal L$ の
+$P_c\mathcal MP_c\cong M_{k_c}$ への制限はデータ $(H_c;\sqrt{g_1}L_{1,c},\sqrt{g_2}L_{2,c},\dots)$ をもつ GKSL 生成子であるから、
+定理はセクターごとに適用できる。コードはその二つの仮定を（浮動小数点で、上で用いたレート $g_j=1$ について）
+確かめ、それから結論を assert する。演習問題 4 は、
+因子環においてさえ一意性が成り立たないことがあることを示す：そこでは第二の仮定が成り立たない。
+
+```python
+for c, k in enumerate(two.k_factors):                              # Theorem D.6 in every sector
+    G_c = dynamics.lindblad_superoperator(two, H_two, L_two)[c][0].numpy()   # on row-major vec(rho_c)
+    w_c, V_c = np.linalg.eig(G_c)
+    sigma_c = V_c[:, np.argmin(abs(w_c))].reshape(k, k)
+    sigma_c = sigma_c / np.trace(sigma_c)
+    assert np.abs(G_c @ sigma_c.reshape(-1)).max() < 1e-12            # stationary
+    assert np.abs(sigma_c - sigma_c.conj().T).max() < 1e-10 and np.linalg.eigvalsh(sigma_c).min() > 1e-3   # faithful
+    ops = [H_two.matrix[0, c, :k, :k].numpy()] + [L.matrix[0, c, :k, :k].numpy() for L in L_two]
+    ops += [A.conj().T for A in ops[1:]]
+    comm = np.concatenate([np.kron(A, np.eye(k)) - np.kron(np.eye(k), A.T) for A in ops])   # X -> [A, X]
+    assert int((np.linalg.svd(comm, compute_uv=False) < 1e-9).sum()) == 1   # commutant = C 1
+assert kernel == [1, 1]                                            # the conclusion of Theorem D.6
+```
 
 ## 8.6 比較の対象
 
@@ -633,9 +723,10 @@ assert np.abs(Y @ Y).max() < 1e-15 and np.linalg.matrix_rank(Y) == 1   # one Jor
 
 4. $L\rho L^*-\frac12\{L^*L,\rho\}=\sigma_z\rho\sigma_z-\rho$ は非対角成分に $-2$ を掛け、
    対角成分を消す。また $-i[H,\rho]_{ge}=i\omega\rho_{ge}$ である。したがって
-   （$\gamma>0$ のとき）$\mathcal L(\sigma)=0$ であるための必要十分条件は $\sigma_{ge}=0$ であり、スペクトルは $\{0,0,-2\gamma\pm i\omega\}$ である。$H$ と $\sigma_z$ は可換で、
-   $X\mapsto\sigma_zX\sigma_z$ は対合であるから、$U_t=e^{-itH}$ として $e^{t\mathcal L}(\rho)=\frac{1+e^{-2\gamma t}}2U_t\rho U_t^*
-   +\frac{1-e^{-2\gamma t}}2U_t\sigma_z\rho\sigma_zU_t^*$ である：これは単位的チャネルであり、その不動点は
+   （$\gamma>0$ のとき）$\mathcal L(\sigma)=0$ であるための必要十分条件は $\sigma_{ge}=0$ であり、スペクトルは $\{0,0,-2\gamma\pm i\omega\}$ である。$U_t=e^{-itH}$ とすると
+   $e^{t\mathcal L}(\rho)=\frac{1+e^{-2\gamma t}}2U_t\rho U_t^*+\frac{1-e^{-2\gamma t}}2U_t\sigma_z\rho\sigma_zU_t^*$ である：
+   $\sigma_z$ は $U_t$ と可換で $\sigma_z^2=1$ であるから、微分すると右辺 $R(t)$ が
+   $R'=-i[H,R]+\gamma(\sigma_zR\sigma_z-R)=\mathcal L(R)$ と $R(0)=\rho$ を満たすことがわかり、補題 8.1 が適用できる。$t>0$ に対し、これは単位的チャネルであり、その不動点は
    クラウス作用素と可換な行列（定理 6.10）、すなわち対角行列である。
 
 ```python
