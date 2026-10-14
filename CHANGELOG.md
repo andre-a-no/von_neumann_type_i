@@ -57,6 +57,9 @@ First release, the version described in the paper (arXiv:2606.15882v2) and submi
 - `gibbs_state` with negative beta (overflow); `random_mixed_unitary_channel` with invalid weights;
   `Channel.from_superoperator` tolerance in double precision; `random_density_matrix(measure='bures')` is rejected
   for real algebras (1 + O is singular for det O = -1).
+- `Channel.from_superoperator` silently replaced a map that does not preserve Hermiticity by the Hermitian part of
+  its Choi matrix (e.g. X ↦ iX became the zero map); it now raises. The complete-positivity tolerance is relative to
+  each Choi matrix, not to the largest one of the same block size in the call.
 - `HilbertSpace.norm/normalize` for flat vectors; `optimize.extremize` returns NaN (not ±inf) for starts without a
   finite value.
 

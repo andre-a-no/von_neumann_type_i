@@ -239,3 +239,20 @@ def test_operator_validate_option():
 def test_central_python_numbers_in_double():
     A = TypeIAlgebra([2, 3], [2, 3], precision='double')
     assert abs(A.central([1 / 3, 2.0]).matrix[0, 0, 0, 0].real.item() - 1 / 3) < 1e-16
+
+
+def test_from_superoperator_rejects_non_hermiticity_preserving():
+    """X -> iX has an anti-Hermitian Choi matrix; it used to be projected silently to the zero map."""
+    alg = TypeIAlgebra([2, 3], [2, 3], precision='double')
+    with pytest.raises(ValueError, match="Hermiticity"):
+        ch.Channel.from_superoperator(alg, [1j * torch.eye(k * k, dtype=torch.complex128)[None] for k in (2, 3)])
+    # the tolerance is per Choi matrix: a large CP block does not hide a small non-CP block of the same size
+    alg = TypeIAlgebra([2, 2], [2, 2], precision="double")
+    k = 2
+    T = torch.zeros(k * k, k * k, dtype=torch.complex128)
+    for i in range(k):
+        for j in range(k):
+            T[i * k + j, j * k + i] = 1
+    big, small = 1e6 * torch.eye(k * k, dtype=torch.complex128), 1e-5 * T     # 1e-5 * transpose is not CP
+    with pytest.raises(ValueError, match="completely positive"):
+        ch.Channel.from_superoperator(alg, [big[None], small[None]])
