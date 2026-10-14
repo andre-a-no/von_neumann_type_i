@@ -528,12 +528,16 @@ traces, states, channels, dynamics — stay inside the algebra.
    $\bigoplus X_c$ is central iff every $X_c$ is, so the centre is
    $\{\bigoplus_cz_c1_{k_c}\}$, of dimension $C$.
 
-2. $S$ is unitary with eigenvalues $1,\omega,\omega^2$, $\omega=e^{2\pi i/3}$, each simple.
+2. $S$ is unitary with eigenvalues $1,\omega,\omega^2$, $\omega=e^{2\pi i/3}$, each simple: the
+   vectors $u_j=\sum_i\omega^{-ij}e_i$ ($j=0,1,2$) satisfy $Su_j=\omega^ju_j$ and are orthogonal.
    An operator commuting with $S$ preserves its eigenspaces, so in the eigenbasis it is
-   diagonal: $\{S\}'\cong\mathbb C^3$, the circulant matrices. $\{S\}''$ is then also
-   $\cong\mathbb C^3$, because in the eigenbasis of $S$ a matrix that commutes with all
+   diagonal, and every diagonal matrix commutes with $S$: $\{S\}'\cong\mathbb C^3$. It contains
+   $1,S,S^2$, which in the eigenbasis are $\operatorname{diag}(\lambda^0)$, $\operatorname{diag}(\lambda)$,
+   $\operatorname{diag}(\lambda^2)$ for $\lambda=(1,\omega,\omega^2)$, linearly independent (Vandermonde: the eigenvalues
+   are distinct); so $\{S\}'=\operatorname{span}\{1,S,S^2\}$, the circulant matrices. $\{S\}''$ is then also
+   $\{S\}'$, because in the eigenbasis of $S$ a matrix that commutes with all
    diagonal matrices is diagonal (compare entries of $XD$ and $DX$ for $D$ with distinct
-   diagonal entries); it is spanned by $1,S,S^2$ (Vandermonde: the eigenvalues are distinct).
+   diagonal entries).
 
 ```python
 S = torch.roll(torch.eye(3, dtype=dt), 1, dims=0)
