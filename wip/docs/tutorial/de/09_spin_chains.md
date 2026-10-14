@@ -257,34 +257,60 @@ for N in range(1, L):
 
 Für $\Delta=1$ und $h=0$ kommutiert $H=J\sum\mathbf s_i\cdot\mathbf s_j$ mit $S^x,S^y,S^z$ (Proposition 4.15), also
 ist $H\cong\bigoplus_S1_{2S+1}\otimes H_S$ mit Blöcken $H_S\in M_{m_S}$, $m_S=\binom L{L/2-S}-\binom L{L/2-S-1}$
-(Proposition 4.13), und das Modul `su2` baut $H_S$ auf den Vektoren höchsten Gewichts (Proposition 4.15(b)). Sei
-$E_0(S)$ der kleinste Eigenwert von $H_S$.
+(Proposition 4.13), und das Modul `su2` baut $H_S$ auf den Vektoren höchsten Gewichts (Proposition 4.15(b)).
+Dasselbe gilt für jedes $H=\sum_{i<j}J_{ij}\,\mathbf s_i\cdot\mathbf s_j$ mit reellen $J_{ij}$: Nach Proposition 4.15(a) liegt
+jedes $\mathbf s_i\cdot\mathbf s_j$ in $\{S_a\}'$. Sei $E_0(S)$ der kleinste Eigenwert von $H_S$, für die auftretenden Spins $S$.
 
-**Satz 9.9 (Lieb-Mattis-Ordnung für Ketten).** Die Kette sei wie in Satz 9.7, $\Delta=1$, $h_i=0$, $J>0$. Für jeden
-Gesamtspin $S$ von $L$ Spins hat der Grundzustand des Sektors $S^z=S$ den Gesamtspin $S$. Folglich ist $E_0(S)$ ein
-einfacher Eigenwert von $H_S$, und $E_0(S_{\min})<E_0(S_{\min}+1)<\dots<E_0(\frac L2)$ mit $S_{\min}\in\{0,\frac12\}$:
-Der Grundzustand ist ein einziges Multiplett zum kleinsten Spin.
+**Satz 9.9 (Lieb-Mattis).** Sei $H=\sum_{i<j}J_{ij}\,\mathbf s_i\cdot\mathbf s_j$ mit $A,B,J_{ij}$ wie in Satz 9.7 (also
+$K_{ij}=J_{ij}$, $h_i=0$), $n_A=|A|\ge n_B=|B|$ und $S_*=\frac{n_A-n_B}2$.
+(a) Für $S_*\le S\le\frac L2$ (mit ganzzahligem $S-\frac L2$) hat der Grundzustand des Sektors $S^z=S$ den Gesamtspin
+$S$; für $0\le M\le S_*$ (mit ganzzahligem $M-\frac L2$) hat der Grundzustand des Sektors $S^z=M$ den Gesamtspin $S_*$.
+(b) Folglich ist $E_0(S)$ für $S\ge S_*$ ein einfacher Eigenwert von $H_S$, $E_0(S_*)<E_0(S_*+1)<\dots<E_0(\frac L2)$,
+und $E_0(S)>E_0(S_*)$ für $S<S_*$: Der Grundraum von $H$ ist ein einziges Multiplett, vom Spin $S_*$.
+Für die Heisenberg-Kette mit $J>0$, offen oder periodisch mit geradem $L$, sind $A$ und $B$ die geraden und
+ungeraden Plätze, $S_*=0$ für gerades $L$ und $S_*=\frac12$ für ungerades $L$ (offene Kette), und
+$E_0(S_*)<E_0(S_*+1)<\dots<E_0(\frac L2)$.
 
-*Beweis.* Sei $\psi$ der Grundzustand des Sektors $S^z=S$, einfach nach Satz 9.7. $\mathbf S^2$ kommutiert mit $H$
-und erhält den Sektor, also liegt $\mathbf S^2\psi$ im eindimensionalen Grundraum: $\psi$ hat einen Gesamtspin $S'$.
-Sei $\chi$ das Produkt der Singuletts $\frac1{\sqrt2}(|{\uparrow\downarrow}\rangle-|{\downarrow\uparrow}\rangle)$ auf den Paaren
-$(0,1),(2,3),\dots,(L-2S-2,L-2S-1)$, wobei die übrigen $2S$ Plätze nach oben zeigen. $S^+$ annihiliert jeden Faktor,
-und $S^z\chi=S\chi$, also $\mathbf S^2\chi=(S^-S^++(S^z)^2+S^z)\chi=S(S+1)\chi$ (Abschnitt 4.5). Auf jedem Paar sitzt
-der Spin nach oben auf dem geraden Platz (Koeffizient $+$) oder auf dem ungeraden ($-$), also hat
-$(-1)^{N_B(b)}\chi(b)$ für alle $b$ in seinem Träger dasselbe Vorzeichen; mit $V,\varphi$ wie in Satz 9.7 ist
-$\langle\psi,\chi\rangle=\langle\varphi,V\chi\rangle\neq0$. Eigenvektoren von $\mathbf S^2$ zu verschiedenen Eigenwerten sind
-orthogonal, also $S'=S$. Nach Proposition 4.15(a) und Korollar 4.12 trifft jedes Multiplett vom Spin $S'\ge S$ den
-Sektor $S^z=S$ in einem Vektor, also ist das Spektrum von $H$ dort die Vereinigung der Spektren der $H_{S'}$,
-$S'\ge S$, mit Vielfachheiten. Sein kleinster Eigenwert ist einfach, und sein Eigenvektor hat Spin $S$; also ist er
-$E_0(S)$, einfach in $H_S$, und kein Eigenwert von $H_{S'}$, $S'>S$: $E_0(S)<E_0(S')$. $\square$
+*Beweis.* (a) Sei $M\ge0$ mit $M-\frac L2\in\mathbb Z$, $s=\max(M,S_*)$, und sei $\psi$ der Grundzustand des Sektors
+$S^z=M$, einfach nach Satz 9.7: $\psi=V\varphi$ mit $\varphi>0$. $\mathbf S^2$ kommutiert mit $H$ und mit $S^z$, erhält also
+den eindimensionalen Grundraum des Sektors: $\psi$ hat einen Gesamtspin $S'$. Wir konstruieren einen Vektor $\chi$
+des Sektors mit $\mathbf S^2\chi=s(s+1)\chi$ und $\langle\psi,\chi\rangle\ne0$; da Eigenvektoren von $\mathbf S^2$ zu
+verschiedenen Eigenwerten orthogonal sind, folgt $S'=s$. Man setze $p=\frac L2-s$; dann ist $0\le p\le n_B$, denn
+$s\ge S_*$ bedeutet $p\le\frac{n_A+n_B}2-\frac{n_A-n_B}2$. Man wähle verschiedene $a_1,\dots,a_p\in A$ und verschiedene
+$b_1,\dots,b_p\in B$, sei $R$ die Menge der übrigen $2s$ Plätze, und sei
+$$
+\chi_0=\bigotimes_{l=1}^p\tfrac1{\sqrt2}\big(|{\uparrow}_{a_l}{\downarrow}_{b_l}\rangle-|{\downarrow}_{a_l}{\uparrow}_{b_l}\rangle\big)\otimes|{\uparrow\cdots\uparrow}\rangle_R ,
+\qquad \chi=(S^-)^{s-M}\chi_0 .
+$$
+Jedes Singulett wird von $s^\pm_{a_l}+s^\pm_{b_l}$ annihiliert und die Spins nach oben auf $R$ von $s^+_i$, also ist
+$S^+\chi_0=0$; mit $S^z\chi_0=s\chi_0$ ergibt das $\mathbf S^2\chi_0=(S^-S^++(S^z)^2+S^z)\chi_0=s(s+1)\chi_0$
+(Abschnitt 4.5), und $\mathbf S^2\chi=s(s+1)\chi$, da $\mathbf S^2$ mit $S^-$ kommutiert. Schreibt man
+$S^-=\sum_l(s^-_{a_l}+s^-_{b_l})+S^-_R$, so kommutieren die Summanden, und die ersten annihilieren die Singuletts;
+also ist $\chi$ das Produkt der Singuletts mit $(S^-_R)^{s-M}|{\uparrow\cdots\uparrow}\rangle_R=(s-M)!\sum_D|D\rangle$, der
+Summe über die Konfigurationen von $R$ mit genau $s-M$ Spins nach unten (diese existieren, da $s-M\le2s=|R|$);
+somit ist $\chi\ne0$, $S^z\chi=M\chi$, und die Koeffizienten von $\chi$ sind reell. Sein Vorzeichen: Ein Singulett
+trägt $+$ bei, wenn sein Spin nach oben auf $A$ sitzt, und $-$, wenn er auf $B$ sitzt, und der $R$-Anteil ist
+positiv. Ist $M=s$, so zeigen alle Plätze von $R$ nach oben; ist $M<s$, so ist $s=S_*$, $p=n_B$ und $R\subseteq A$. In
+beiden Fällen ist $N_B(b)$ die Anzahl der Singuletts mit dem Spin nach oben auf $B$ plus eine Konstante, $|R\cap B|$
+(falls $M=s$) bzw. $0$, also hat $(-1)^{N_B(b)}\chi(b)$ für alle $b$ mit $\chi(b)\ne0$ dasselbe Vorzeichen. Daher ist
+$\langle\psi,\chi\rangle=\langle\varphi,V\chi\rangle=\pm\sum_b\varphi(b)|\chi(b)|\ne0$.
 
-Lieb und Mattis bewiesen mehr: Für ein zusammenhängendes bipartites Gitter mit Untergitterspins $S_A,S_B$ und
-Kopplungen, die zwischen den Untergittern antiferromagnetisch und innerhalb ferromagnetisch sind, wächst $E_0(S)$
-für $S\ge|S_A-S_B|$, und der Grundzustand hat den Spin $|S_A-S_B|$ (E. Lieb, D. Mattis, *J. Math. Phys.* 3 (1962)
-749; ohne Beweis). Die **Singulett-Triplett-Lücke** $E_0(1)-E_0(0)$ ist nach Satz 9.9 positiv; auf dem Ring gilt
-$L(E_0(1)-E_0(0))\to\pi^2/2$ mit logarithmischen Korrekturen (J. des Cloizeaux, J. Pearson, *Phys. Rev.* 128 (1962)
-2131; I. Affleck, D. Gepner, H. Schulz, T. Ziman, *J. Phys. A* 22 (1989) 511; ohne Beweis). Wir vergleichen die
-Blockgrößen für zwölf Spins, prüfen Satz 9.9 an den $U(1)$-Sektoren und berechnen die Lücke:
+(b) Nach Proposition 4.15(a), Korollar 4.12 und Satz 4.11 trifft ein Multiplett vom Spin $S'$ den Sektor $S^z=M$ in
+einem Vektor, wenn $S'\ge|M|$, und sonst gar nicht; also ist das Spektrum von $H$ auf dem Sektor $S^z=M\ge0$ die
+Vereinigung der Spektren der $H_{S'}$, $S'\ge M$, mit Vielfachheiten. Nach (a) ist sein kleinster Eigenwert einfach
+und gehört zum Spin $s=\max(M,S_*)$: Also ist $E_0(s)$ einfach in $H_s$, und $E_0(s)<E_0(S')$ für alle $S'\ge M$,
+$S'\ne s$. Für $M=S\ge S_*$ ergibt das die Einfachheit und $E_0(S)<E_0(S')$ für $S'>S$; für $M=S<S_*$ ergibt es
+$E_0(S_*)<E_0(S)$. Also ist $E_0(S_*)$ der kleinste Eigenwert von $H$, angenommen nur in $H_{S_*}$, wo er einfach ist.
+Bei der Kette übertrifft die Anzahl der geraden Plätze die der ungeraden um $0$ ($L$ gerade) oder $1$ ($L$
+ungerade). $\square$
+
+Satz 9.7 geht auf W. Marshall (*Proc. Roy. Soc. A* 232 (1955) 48) zurück und Satz 9.9 auf E. Lieb und D. Mattis
+(*J. Math. Phys.* 3 (1962) 749). Die **Singulett-Triplett-Lücke** $E_0(1)-E_0(0)$ des geraden Heisenberg-Rings ist
+nach Satz 9.9 positiv.
+
+Wir vergleichen die Blockgrößen für zwölf Spins, prüfen Satz 9.9 an den $U(1)$-Sektoren, berechnen die Lücke und
+prüfen die Sätze 9.7 und 9.9 auf einem bipartiten Graphen, der keine Kette ist ($n_A=5$, $n_B=3$, $S_*=1$, zufällige
+Kopplungen):
 
 ```python
 sym = SU2Chain(12, boundary='periodic', complex_valued=False)
