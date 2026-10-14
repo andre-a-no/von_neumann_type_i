@@ -3,13 +3,15 @@
 # 11. Optimisation and trace inequalities
 
 A trace inequality is a statement about the extreme values of a functional of operators. Section 3.7 showed one
-that is plausible and false, and a sampling test that misses the violation. This chapter explains why sampling
-fails in high dimension and replaces it by optimisation over exactly parametrised constraint sets; where the
-extremes are known in closed form, we prove them, so that the optimiser is checked against a theorem.
+that is plausible and false (Proposition 3.9), and a sampling run that, numerically, did not find the violation.
+This chapter explains why sampling fails in high dimension and replaces it by optimisation over exactly
+parametrised constraint sets; where the extremes are known in closed form, we prove them, so that the optimiser is
+checked against a theorem.
 
 **You will learn** how the library parametrises unitaries and spectra with a prescribed contrast, and why every
 admissible operator is reached; von Neumann's trace inequality and the exact extremes it gives; a trace inequality
-with its equality condition; why Haar samples stay far from the extremes; and what a multistart search proves.
+with its equality condition; why Haar samples are, in mean square, far from the extremes; and what a multistart
+search proves.
 
 Throughout, $\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)$ with $D=\sum_ck_c\ge2$, $\operatorname{Tr}$ is the
 blunt trace (Section 3.1) and $\|A\|_1=\sum_c\|A_c\|_1$, the trace norm of $A$ as a block-diagonal matrix in
@@ -44,15 +46,20 @@ The **slots** of $\mathcal M$ are the $D$ pairs $(c,i)$, $i\le k_c$; for $\lambd
 $\operatorname{diag}(\lambda)=\bigoplus_c\operatorname{diag}(\lambda_{c,1},\dots,\lambda_{c,k_c})$.
 
 `optimize.PositiveParam` with prescribed contrast $\delta$ draws, per start, two distinct slots
-$s_\pm=(c_\pm,i_\pm)$ and a Haar-random unitary $U_0\in\mathcal M$, and maps $\theta\in\mathbb R^D$ and
+$s_\pm=(c_\pm,i_\pm)$ ($s_+$ uniformly among the $D$ slots, then $s_-$ uniformly among the $D-1$ others, so every
+ordered pair of distinct slots has probability $1/(D(D-1))$) and a Haar-random unitary $U_0\in\mathcal M$
+(`random_unitary_operator`, Lemma 11.10), and maps $\theta\in\mathbb R^D$ and
 $G=\bigoplus_cG_c$ to
 $$
 X(\theta,G)=U\operatorname{diag}(\lambda)U^*,\qquad U=U_0\,e^{G-G^*},\qquad
 \lambda_{s_+}=1,\quad\lambda_{s_-}=\ell,\quad\lambda_s=\ell+(1-\ell)\tfrac{1+\sin\theta_s}2\ \text{otherwise}.
 $$
 `UnitaryParam` is the map $G\mapsto U_0e^{G-G^*}$ alone. Unlike a sigmoid, $(1+\sin\theta)/2$ reaches $0$ and $1$
-at finite $\theta$, which matters because extremal spectra often sit at $\ell$ and $1$. A free contrast in $[a,b]$
-is one more parameter, $\delta=a+(b-a)(1+\sin\eta)/2$.
+at finite $\theta$, which is convenient because the extremal spectra of this chapter (Corollary 11.7,
+Proposition 11.14) sit at $\ell$ and $1$. A free contrast in $[a,b]$ is one more parameter,
+$\delta=a+(b-a)(1+\sin\eta)/2$; the library's default is $[a,b]=[0,0.999]$, and the code below keeps it. A value
+attained with this restriction is also attained without it, so it is still a lower bound for an unrestricted
+supremum (an upper bound for an unrestricted infimum).
 
 **Lemma 11.1.** For every unitary $U_0\in\mathcal M$, $G\mapsto U_0e^{G-G^*}$ maps onto the unitary group of
 $\mathcal M$.
@@ -76,16 +83,37 @@ so that $\lambda=\mu$ (if $\ell=1$, any $\theta$). Lemma 11.1 gives $G$ with $U_
 in them; if $c_+=c_-$ and $\delta>0$ the block has two different eigenvalues, so $k_{c_+}\ge2$; if $\delta=0$, $X=1$
 and any two slots will do. $\square$
 
-So random slots let a multistart search cover the whole shell, and the constraint holds exactly at every iterate.
+Since every pair of slots is drawn with positive probability, every point of the shell lies in the image of a
+start with positive probability, and (in exact arithmetic) the constraint holds at every iterate.
 `SelfAdjointParam` uses $X=U\operatorname{diag}(\sigma\lambda)U^*$ with signs $\sigma\in\{\pm1\}^D$ drawn per start
-(and changed only by the sign flips of Section 11.5), so $|X|=U\operatorname{diag}(\lambda)U^*$, and (by the same proof)
-the union over signs and slots is $\{X=X^*:|X|\in\mathcal P_\delta\}$. Only $S=G-G^*$ matters. The map
-$S\mapsto U_0e^S$ on skew-adjoint $S$ has differential $S\mapsto U_0S$ at $S=0$, a bijection onto the tangent space
-$U_0\cdot\{S^*=-S\}$ of the unitary group, so it is a local diffeomorphism near $S=0$; far from $0$ it is not injective,
-and its differential is singular where two eigenvalues of $S$ differ by a nonzero multiple of $2\pi i$. `extremize`
-therefore **re-centres** after every round ($U_0\leftarrow U_0e^{G-G^*}$, $G\leftarrow0$). The Cayley chart
-$S\mapsto U_0C(-S/2)$ (Exercise 1) and the polar retraction $S\mapsto$ unitary factor of $U_0(1+S)$ (Theorem 1.8) have
-the same differential at $0$.
+(per block, the number of minus signs is uniform in $\{0,\dots,k_c\}$ and their positions are uniformly random, so
+every sign pattern has positive probability) and changed only by the sign flips of Section 11.5. Then
+$|X|=U\operatorname{diag}(\lambda)U^*$ (Theorem 1.5(e), as $\lambda>0$), and the union over signs and slots is
+$\{X=X^*:|X|\in\mathcal P_\delta\}$: for such $X$, diagonalise $X_c=W_c\operatorname{diag}(\nu_c)W_c^*$, so that
+$|X|_c=W_c\operatorname{diag}(|\nu_c|)W_c^*$ with $|\nu_{c,i}|\ge\ell>0$, and apply the proof of Proposition 11.2 to
+$\mu=|\nu|$ with $\sigma_s=\nu_s/|\nu_s|$. Only $S=G-G^*$ matters.
+
+The chart $S\mapsto U_0e^S$ is well behaved near $S=0$ only. Let $\mathfrak u=\{S\in\mathcal M:S^*=-S\}$ and
+$\mathcal M_h=\{H\in\mathcal M:H^*=H\}$, real subspaces with $\mathcal M=\mathfrak u\oplus\mathcal M_h$
+($X=\frac{X-X^*}2+\frac{X+X^*}2$). *Near $0$, $S\mapsto U_0e^S$ is a homeomorphism of an open ball $N\ni0$ of
+$\mathfrak u$ onto a neighbourhood of $U_0$ in the unitary group.* Indeed, $\Psi(S,H)=U_0e^Se^H$ is a $C^1$ map
+$\mathfrak u\times\mathcal M_h\to\mathcal M$ (the series $\sum_{m,n\ge0}U_0S^mH^n/(m!\,n!)$ and the series of the
+partial derivatives of its terms with respect to the real coordinates converge uniformly on bounded sets), and
+$e^{tS}e^{tH}=1+t(S+H)+O(t^2)$ shows that its differential at $0$ is $(S,H)\mapsto U_0(S+H)$, a bijection onto
+$\mathcal M$. By the inverse function theorem there are open balls $N\ni0$ in $\mathfrak u$ and $N_h\ni0$ in
+$\mathcal M_h$ such that $\Psi$ is a homeomorphism of $N\times N_h$ onto an open set $O\subseteq\mathcal M$. If
+$\Psi(S,H)$ is unitary, then so is $e^H=e^{-S}U_0^*\Psi(S,H)$ (in an eigenbasis of the normal matrix $S$, whose
+eigenvalues are imaginary, $e^{\pm S}$ are diagonal with entries of modulus $1$ and inverse to each other); but $e^H$
+has the positive eigenvalues $e^{h_i}$, $h_i$ the eigenvalues of $H$, so $e^{h_i}=1$ (Corollary 1.4(2)) and $H=0$.
+Hence $O\cap U(\mathcal M)=U_0e^N$, where $U(\mathcal M)$ is the unitary group of $\mathcal M$: a neighbourhood of
+$U_0$ in $U(\mathcal M)$, and $S\mapsto U_0e^S$ is a continuous bijection $N\to U_0e^N$ whose inverse, the first
+component of $\Psi^{-1}$, is continuous. Far from $0$ the chart is not injective: $e^{2\pi iP}=1=e^0$ for every
+projection $P\in\mathcal M$. `extremize` therefore **re-centres** after every round ($U_0\leftarrow U_0e^{G-G^*}$,
+$G\leftarrow0$). Two other charts have the same differential $S\mapsto U_0S$ at $0$. The Cayley chart
+$S\mapsto U_0C(-S/2)$ (Exercise 1): $(1+tS/2)(1-tS/2)^{-1}=(1+tS/2)(1+tS/2+O(t^2))=1+tS+O(t^2)$. The polar retraction,
+$S\mapsto$ the unitary factor of $A=U_0(1+S)$ (Theorem 1.8): $A^*A=(1-S)(1+S)=1+S^*S\ge1$ is invertible, so $|A|$ is
+invertible and the unitary factor is $A|A|^{-1}$; for $tS$ in place of $S$, $|A|^{-1}=(1+t^2S^*S)^{-1/2}=1+O(t^2)$
+(in an eigenbasis of $S^*S$), so the factor is $U_0(1+tS)+O(t^2)$.
 
 The code checks the constraint, and Proposition 11.2 constructively: the parameters of the proof reproduce a target.
 
@@ -120,9 +148,10 @@ print(f"slots of 1 and lo: {(cp, ip)}, {(cm, im)};  reconstruction error {err:.1
 assert err < 1e-10
 ```
 
-> **Physical meaning.** The Michelson contrast is the visibility $(I_{\max}-I_{\min})/(I_{\max}+I_{\min})$ of
-> interference fringes. For $0\le X\le1$ with $\lambda_{\max}=1$ — a filter, an attenuator, a detector efficiency —
-> it fixes the dynamic range $\lambda_{\min}/\lambda_{\max}$, the inverse of a condition number.
+> **Physical meaning** (physical interpretation, not a theorem of this course). The Michelson contrast is the
+> visibility $(I_{\max}-I_{\min})/(I_{\max}+I_{\min})$ of interference fringes. For $0\le X\le1$ with
+> $\lambda_{\max}=1$ — a filter, an attenuator, a detector efficiency — it fixes the dynamic range
+> $\lambda_{\min}/\lambda_{\max}$, the inverse of a condition number.
 
 ## 11.2 Von Neumann's trace inequality
 
@@ -170,8 +199,9 @@ $\sum_ip^\downarrow_iq^\downarrow_{k+1-i}=\sum_ip^\downarrow_iq^\uparrow_i$). (b
 Theorem 1.9. By Theorem 1.9 and Theorem 11.4, $\|PQ\|_1=\max_U|\operatorname{Tr}(P\,QU)|\le\sum_is_i(P)s_i(QU)$, and
 $s_i(QU)=q^\downarrow_i$ because $|QU|=(U^*Q^2U)^{1/2}=U^*QU$ (Theorem 1.6). $\square$
 
-So the violation in Proposition 3.9 is at most $\sum_ix^\downarrow_i(y^\downarrow_i-y^\uparrow_i)$. For Exp. 2 this
-number is the exact answer:
+So for $X,Y\ge0$ in $M_k(\mathbb C)$ with spectra $x,y$, the violation $\|YX\|_1-\operatorname{Tr}(XY)$ of
+Proposition 3.9 is at most $\sum_ix^\downarrow_i(y^\downarrow_i-y^\uparrow_i)$ (Corollary 11.5(b) for $(Y,X)$ and
+the lower bound of (a)). For Exp. 2 this number is the exact answer:
 
 **Proposition 11.6 (Exp. 2 for fixed spectra).** In Exp. 2, $|X|=X_0$, $|Y|=Y_0$ and
 $z=\|X_0VY_0\|_1-\operatorname{Tr}(X_0Y_0)$. If the spectra $x_c$ of $(X_0)_c$ and $y_c$ of $(Y_0)_c$ are fixed and the
@@ -207,9 +237,10 @@ $k$ the middle index contributes $x_i(y_i-y_i)=0$. Hence
 $$
 \sum_ix_i(y_i-y_{k+1-i})=\sum_{i\le\lfloor k/2\rfloor}(x_i-x_{k+1-i})(y_i-y_{k+1-i})\le\Big\lfloor\frac k2\Big\rfloor(1-\ell_X)(1-\ell_Y),
 $$
-as $x_i\in[\ell_X,1]$, $y_i\in[\ell_Y,1]$. Equality holds if in every block the $\lfloor k_c/2\rfloor$ largest
-eigenvalues are $1$ and the $\lfloor k_c/2\rfloor$ smallest are $\ell_X$ (resp. $\ell_Y$), the middle one being
-arbitrary; these spectra have global extremes $1$ and $\ell_X$ ($\ell_Y$) because some $k_c\ge2$. Proposition 11.6
+as $x_i\in[\ell_X,1]$, $y_i\in[\ell_Y,1]$ are decreasing, so both factors lie in $[0,1-\ell_X]$ and $[0,1-\ell_Y]$.
+Equality holds if in every block the $\lfloor k_c/2\rfloor$ largest eigenvalues are $1$ and the $\lfloor k_c/2\rfloor$
+smallest are $\ell_X$ (resp. $\ell_Y$), the middle one (odd $k_c$) being arbitrary in $[\ell_X,1]$ (resp.
+$[\ell_Y,1]$); these spectra have global extremes $1$ and $\ell_X$ ($\ell_Y$) because some $k_c\ge2$. Proposition 11.6
 concludes. $\square$
 
 Here $1-\ell_X=2\delta/(1+\delta)$ for $\Delta(|X|)=\delta$; for odd $k_c$ the middle eigenvalue is irrelevant. The code
@@ -252,13 +283,15 @@ assert abs(z_max - exact) < 1e-12 and abs(z_min + exact) < 1e-12 and abs(exact -
 ## 11.3 A trace inequality with an equality condition
 
 For $X=X^*$ let $X_\pm=f_\pm(X)$ with $f_+(t)=\max(t,0)$, $f_-(t)=\max(-t,0)$. Then $X_\pm\ge0$, $X=X_+-X_-$,
-$|X|=X_++X_-$ and $X_+X_-=0$ (Theorem 1.5(c)).
+$|X|=X_++X_-$ and $X_+X_-=0$ (Theorem 1.5(c), and 1.5(e) for $|X|=(X^2)^{1/2}=h(X)$ with
+$h(t)=\sqrt{t^2}=|t|=f_+(t)+f_-(t)$; Corollary 1.4(3) for positivity).
 
 **Lemma 11.8.** For $A,B\ge0$ in $M_n(\mathbb C)$, $\|A-B\|_1\le\operatorname{Tr}A+\operatorname{Tr}B$, with equality iff
 $AB=0$.
 
-*Proof.* Let $H=A-B$ and $Q=g(H)$ with $g=1$ on $(0,\infty)$, $g=0$ elsewhere. As $|t|=t(2g(t)-1)$, $|H|=H(2Q-1)$
-and
+*Proof.* Let $H=A-B$ and $Q=g(H)$ with $g=1$ on $(0,\infty)$, $g=0$ elsewhere; $Q$ is a projection, as $g=\bar g=g^2$
+(Theorem 1.5(c)). As $|t|=t(2g(t)-1)$, $|H|=H(2Q-1)$ (Theorem 1.5(c),(e)), and, using
+$\operatorname{Tr}(AR)=\operatorname{Tr}(RAR)$ for the projections $R=Q,1-Q$ (cyclicity),
 $$
 \|H\|_1=\operatorname{Tr}\big(A(2Q-1)\big)-\operatorname{Tr}\big(B(2Q-1)\big)
 =\operatorname{Tr}A+\operatorname{Tr}B-2\operatorname{Tr}\big((1-Q)A(1-Q)\big)-2\operatorname{Tr}(QBQ).
@@ -304,10 +337,9 @@ density $\pi^{-1}e^{-|z|^2}$; Mezzadri's recipe), independently in every block.
 the law of $Q$. The unitary $\bigoplus_cQ_c$ with independent blocks is Haar distributed on the unitary group of
 $\mathcal M$.
 
-*Proof.* This is Theorem 5.3 (the left invariance is the equivariance step of its proof) and Corollary 5.4. $\square$
-
-(For concentration of measure and more on these groups see E. Meckes, *The Random Matrix Theory of the Classical
-Compact Groups*, Cambridge 2019.)
+*Proof.* This is Theorem 5.3 (the left invariance is the equivariance step of its proof; the law is identified
+with the Haar measure by the uniqueness Lemma 5.1, whose measure-theoretic step is Corollary A.2) and
+Corollary 5.4. $\square$
 
 **Proposition 11.11.** For Haar $U\in U(k)$ and $A\in M_k(\mathbb C)$: $\mathbb E\operatorname{Tr}(AU)=0$ and
 $\mathbb E|\operatorname{Tr}(AU)|^2=\|A\|_2^2/k$.
@@ -326,17 +358,21 @@ $$
 \mathbb P\big(|\operatorname{Tr}(XUY)|\ge\operatorname{Tr}(XY)\big)\le\frac{b^4}{a^4k^2}.
 $$
 
-*Proof.* The equality is Proposition 11.11 for $A=YX$ and Proposition 3.9. $\sum_is_i^2\le(\sum_is_i)^2$ gives
-$1/\sqrt k$. As $s_1(A)\le\|Y\|\|X\|\le b^2$ and $s_k(A)=\min_{\|v\|=1}\|YXv\|\ge a^2$, $\|A\|_2^2\le kb^4$ and
+*Proof.* The equality is Proposition 11.11 for $A=YX$ (as $\operatorname{Tr}(XUY)=\operatorname{Tr}(AU)$) and
+Proposition 3.9. As $\|A\|_2^2=\sum_is_i^2\le(\sum_is_i)^2=\|A\|_1^2$ (Section 1.4), the ratio is $\le1/\sqrt k$.
+Since $\|Av\|=\||A|v\|$ (Section 1.4), diagonalising $|A|$ gives $s_k(A)=\min_{\|v\|=1}\|Av\|$ and
+$s_1(A)=\max_{\|v\|=1}\|Av\|$; and $\|Xv\|^2=\langle v,X^2v\rangle\in[a^2,b^2]$ for unit $v$ (Corollary 1.4(3)
+for $X^2-a^2$ and $b^2-X^2$), likewise for $Y$. Hence $a^2\le s_k(A)\le s_1(A)\le b^2$, $\|A\|_2^2\le kb^4$ and
 $\|A\|_1\ge ka^2$. Finally $\operatorname{Tr}(XY)=\operatorname{Tr}(X^{1/2}YX^{1/2})\ge a\operatorname{Tr}X\ge ka^2$, and
 Markov's inequality for $|\operatorname{Tr}(XUY)|^2$ bounds the probability by $(kb^4/k)/(ka^2)^2$. $\square$
 
 So $N$ Haar samples find a violation of $|\operatorname{Tr}(XUY)|\le\operatorname{Tr}(XY)$ with probability at most
-$Nb^4/(a^4k^2)$, although one exists for every non-commuting pair. The truth is more drastic: $f(U)=|\operatorname{Tr}(AU)|$
-is Lipschitz with constant $L=\|A\|_2$ for $\|U-V\|_2$, so $\mathbb P(f\ge\mathbb Ef+t)\le e^{-ckt^2/L^2}$ with an
-absolute $c>0$ (concentration of measure, stated without proof; Meckes, *loc. cit.*, Ch. 5): an exponent of order
-$k^2a^4/b^4$ here. The code checks Proposition 11.11 and prints, for spectra uniform in $[0.2,1.2]$ ($b/a=6$), the
-ratio of Corollary 11.12, $\sup z$ and the best $z$ of $2000$ samples, both relative to $\operatorname{Tr}(XY)$.
+$Nb^4/(a^4k^2)$ (a union of $N$ events), although one exists for every non-commuting pair (Proposition 3.9). The bound
+is informative only for $k>\sqrt N\,b^2/a^2$ (for $b/a=6$ and $N=2000$: $k>1609$); numerically, samples miss the
+violation already for much smaller $k$ (below). The code checks Proposition 11.11 by Monte Carlo (the sample mean
+lies within five standard errors of the exact value, for this seeded run) and prints, for spectra uniform in
+$[0.2,1.2]$ ($b/a=6$), the ratio of Corollary 11.12, $\sup z$ and the best $z$ of $2000$ samples, both relative to
+$\operatorname{Tr}(XY)$.
 
 ```python
 def random_pair(alg_k):
@@ -363,17 +399,25 @@ for k in (2, 4, 8, 16, 32):
     assert nuc > trXY and best < nuc and (k < 4 or best < trXY)            # from k = 4 on: no violation found
 ```
 
-The ratio falls like $1/k$, and from $k=4$ on the best sample does not even reach $z=0$. The extremes are sets of
-tiny Haar measure, which a gradient method reaches directly. For the pair `Xf, Yf` both extremes over $U$ are known:
+*Numerical observation* (the printed table; asserted only for this seeded run): the ratio stays below the proved bound
+$\min(1/\sqrt k,b^2/(a^2k))$ and roughly halves whenever $k$ doubles, i.e. it falls like $1/k$, and from $k=4$ on the
+best of $2000$ samples does not even reach $z=0$. A gradient search, in contrast, comes close to both extremes in the
+run below (again a numerical observation). For the pair `Xf, Yf` both extremes over $U$ are known:
 
 **Lemma 11.13.** If $k\ge2$, then $\min_U|\operatorname{Tr}(AU)|=0$ for every $A\in M_k(\mathbb C)$.
 
 *Proof.* Let $A=W\Sigma V^*$ and $P$ the cyclic shift, $Pe_i=e_{(i\bmod k)+1}$, whose diagonal vanishes for $k\ge2$. For
 $U=VPW^*$, $\operatorname{Tr}(AU)=\operatorname{Tr}(\Sigma P)=0$. $\square$
 
-So $\inf_Uz=-\operatorname{Tr}(XY)$ and $\sup_Uz=\|YX\|_1-\operatorname{Tr}(XY)$. One call of `extremize` finds both, with
-$12$ starts maximising $z$ and $12$ maximising $-z$. Sampling comes close to the infimum, which lies next to the
-typical values ($|\operatorname{Tr}(XUY)|$ is typically of order $\|YX\|_2/\sqrt k$), but not to the supremum:
+So $\inf_Uz=-\operatorname{Tr}(XY)$ and $\sup_Uz=\|YX\|_1-\operatorname{Tr}(XY)$ (Proposition 3.9). One call of `extremize`
+approximates both, with $12$ starts maximising $z$ and $12$ maximising $-z$ (to relative accuracy $10^{-3}$ in this
+run, asserted below). By Proposition 11.11 the root mean square of
+$|\operatorname{Tr}(XUY)|$ is $\|YX\|_2/\sqrt k$; with the bounds in the proof of Corollary 11.12 (spectra in $[a,b]$),
+$\mathbb E|\operatorname{Tr}(XUY)|^2\le b^4$ and $\operatorname{Tr}(XY)\ge ka^2$, so Markov's inequality gives
+$\mathbb P\big(z\ge-(1-\varepsilon)\operatorname{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)$ for $\varepsilon>0$: for large $k$,
+$z$ is close to its infimum with high probability.
+*Numerical observation* (asserted for this seeded run): sampling comes within $1\,\%$ of the infimum, but does not
+even reach $z=0$, while the supremum is positive:
 
 ```python
 trXY = (Xf @ Yf).trace.real
@@ -392,26 +436,31 @@ assert z_mc.min().item() - inf_exact < 1e-2 * abs(inf_exact)               # sam
 assert z_mc.max().item() < 0                                               # ... but misses the violation
 ```
 
-> **Physical meaning.** Concentration of measure is the mathematical form of **typicality** in statistical
-> mechanics: in high dimension almost every state or evolution gives the same value of a macroscopic quantity. A
-> sharp inequality is decided by fine-tuned configurations — aligned eigenbases, two-level spectra — that a random
-> unitary (a random circuit, a random scattering matrix) essentially never produces.
+> **Physical meaning** (physical interpretation, not a theorem of this course). Corollary 11.12 is a weak, provable
+> instance of what statistical mechanics calls **typicality**: in high dimension almost every state or evolution is
+> expected to give nearly the same value of a macroscopic quantity. A sharp inequality is decided by fine-tuned
+> configurations — aligned eigenbases, two-level spectra — that a random unitary (a random circuit, a random
+> scattering matrix) rarely produces.
 
 ## 11.5 Multistart search for envelopes
 
 `optimize.extremize(objective, params, maximize)` runs Adam in `rounds` rounds of `steps` steps (learning rate
-`lr * decay**round`), re-centres the unitary charts after every round, and returns **per start** the best value
-attained. Every batch element is an independent start with its own slots, signs, $U_0$ and contrast. The signs of
-`SelfAdjointParam` are discrete: between rounds, `discrete_step` tries eight single sign flips per start, one after
-the other, and keeps each flip that improves the objective.
+`lr * decay**round`) on the loss $\mp\sum_b\text{objective}_b$, re-centres the unitary charts after every round,
+and returns **per start** the largest (smallest, for `maximize=False`) value of the objective among those computed at
+the gradient iterates and once at the final point. Every batch element is an independent start with its own slots,
+signs, $U_0$ and contrast: Adam acts coordinatewise, so if the $b$-th entry of the objective depends only on the
+$b$-th parameters (as in all objectives below), the starts do not interact. The signs of `SelfAdjointParam` are
+discrete: between rounds, `discrete_step` tries eight single sign flips per start (each at a uniformly random slot),
+one after the other, and keeps each flip that improves the objective.
 
-Since every iterate is admissible (Proposition 11.2), every returned value is attained: a maximisation gives a
-**lower bound** for the supremum, a minimisation an upper bound for the infimum, and nothing more — a local search
-can stop at a local extremum. The other direction needs a proof, like Corollary 11.7 and Proposition 11.9, or a
-convex relaxation (Section 11.6). A computed envelope is checked (i) against closed forms; (ii) against
-configurations built by hand, such as direct sums of smaller solutions, which it must not fall below; (iii) against
-structured samples (two-level spectra, permutation bases) that come close to the extremes in every dimension,
-unlike Haar samples (`scripts/bounds_checks.py`).
+In exact arithmetic every iterate is admissible (Proposition 11.2 and the remarks after it), so every returned value
+is the value of $z$ at an admissible point; in floating point it is that value up to rounding (the asserts below
+allow $10^{-12}$). Hence a maximisation gives a **lower bound** for the supremum, a minimisation an upper bound for
+the infimum, and nothing more — a local search can stop at a local extremum. The other direction needs a proof,
+like Corollary 11.7 and Proposition 11.9, or a convex relaxation (Section 11.6). A computed envelope is checked
+(i) against closed forms; (ii) against configurations built by hand, such as direct sums of smaller solutions, which
+it must not fall below; (iii) against structured samples (two-level spectra, permutation bases), whose values are
+further attained values.
 
 **Proposition 11.14 (lower envelope of Exp. 1).** Let all $k_c\ge2$. Over $X\in\mathcal P_\delta$, $Y\ge0$ with
 $\lambda_{\max}(Y)=1$ and unitaries $U\in\mathcal M$, $\ \min z=-\big(D-2\delta/(1+\delta)\big)$.
@@ -422,13 +471,18 @@ Equality holds for $X$ with eigenvalues $\ell(\delta)$ once and $1$ otherwise, $
 $\operatorname{Tr}(X_cU_c)=0$ (Lemma 11.13). $\square$
 
 The code checks Proposition 11.14 on $M_2\oplus M_2$, Corollary 11.7 on $M_3\oplus M_3$ (both contrasts prescribed,
-$k=3$ odd) and Proposition 11.9; suprema and infima share one call, as above. The keyword `is_self_adjoint` selects
+$k=3$ odd) and Proposition 11.9; suprema and infima share one call, as above. The one-sided asserts (no returned
+value beyond a proved extreme) are consequences of these theorems; the asserts that the search comes within the
+stated tolerance of the extreme are numerical observations of this seeded run. The keyword `is_self_adjoint` selects
 the algorithm for the trace norm (singular values, or eigenvalues for $YXY$) without a test at every step. The last
 check is of type (ii): $z$ of Exp. 3 is additive over direct sums, and the contrast of a direct sum is the largest
-contrast of its summands (Exercise 3), so
+contrast of its summands (Exercise 3), so, for the envelopes of Exp. 3 with $\Delta(Y)$ free in $[0,0.999]$ as in
+the code,
 $$
-\overline z_{M_2\oplus M_2}(\delta)\ \ge\ \overline z_{M_2}(\delta)+\max_{\delta'\le\delta}\overline z_{M_2}(\delta').
+\overline z_{M_2\oplus M_2}(\delta)\ \ge\ \overline z_{M_2}(\delta)+\sup_{\delta'\le\delta}\overline z_{M_2}(\delta');
 $$
+in particular the sum of two values attained on $M_2$ at contrasts $\delta$ and $\delta'\le\delta$ is a value
+attained on $M_2\oplus M_2$ at contrast $\delta$.
 
 ```python
 torch.manual_seed(1)
@@ -484,21 +538,23 @@ assert inf3 >= -1e-12 and inf3 < 1e-6                                       # Pr
 assert sup_M22 >= direct_sum - 5e-3 * direct_sum                           # (ii), up to 0.5 %
 ```
 
-The search on $M_2\oplus M_2$ falls short of the direct sum by about $0.2\,\%$: it has not fully converged, and the
-best lower bound for $\overline z_{M_2\oplus M_2}(0.5)$ is the larger number — detecting this is the purpose of check
-(ii). The values for $M_2$ agree to $10^{-4}$ with $(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2$, where
-$d=0.999$ is the largest admitted contrast of $Y$: a closed form that the companion paper observed numerically (in
-real algebras) and could not prove; the code does not assert it. For larger blocks the upper envelopes of Exp. 1 and
-Exp. 3 are, to our knowledge, not known in closed form; computed curves are then lower bounds and conjectures,
-nothing more.
+*Numerical observations* (the printed values of this run). The search on $M_2\oplus M_2$ falls short of the direct
+sum by about $0.2\,\%$: it has not fully converged, and the best lower bound for $\overline z_{M_2\oplus M_2}(0.5)$ is
+the larger number — detecting this is the purpose of check (ii). The values for $M_2$ agree to $10^{-4}$ with
+$(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2$, where $d=0.999$ is the largest admitted contrast of $Y$. This
+closed form is **not** a theorem of this course: the companion paper observed it numerically (in real algebras) and
+did not prove it, and the code prints it without asserting anything about it. For larger blocks we know no closed
+form for the upper envelopes of Exp. 1 and Exp. 3; computed curves are then lower bounds (attained values), nothing
+more.
 
 ## 11.6 What to compare with
 
 **Manopt**, **pymanopt** and **geoopt** provide matrix manifolds (Stiefel manifolds, orthogonal and unitary groups)
 with retractions such as QR, polar or Cayley, and Riemannian solvers (conjugate gradients, trust regions, Riemannian
-Adam) that are often more efficient than Adam in a re-centred chart. **cvxpy** with an SDP solver solves convex
-problems in operator variables to global optimality, with a dual certificate up to the solver tolerance, and
-semidefinite relaxations give rigorous bounds in the direction a local search cannot. **NCTSSOS**, **ncpol2sdpa** and **NCSOStools** bound eigenvalues and traces of noncommutative
+Adam), an alternative to Adam in a re-centred chart (we make no performance comparison here). **cvxpy** passes
+convex problems in operator variables to SDP solvers, which return an optimum together with a dual certificate,
+both up to the solver tolerance; a relaxation — a convex problem over a larger feasible set — bounds the supremum
+from above, the direction a local search cannot give. **NCTSSOS**, **ncpol2sdpa** and **NCSOStools** bound eigenvalues and traces of noncommutative
 polynomials in all dimensions at once (Section 0.3). The library adds exact parametrisations of the spectral and
 contrast constraints of $\bigoplus_cM_{k_c}$ (the extremes may sit in any sector), unitaries that respect the
 blocks, and one batched computation for many starts and constraint values, on a CPU or a GPU. It produces candidate
@@ -518,11 +574,13 @@ extremisers and lower bounds for suprema; proofs or relaxations must supply the 
 <details>
 <summary>Solutions</summary>
 
-1. $S$ has imaginary eigenvalues, so $1\pm S$ are invertible; they commute, and $(1+S)^*=1-S$. Hence
+1. $S$ is normal and $iS$ is self-adjoint, so $S$ has imaginary eigenvalues (Corollary 1.4(2)) and $1\pm S$ are
+   invertible; they commute, and $(1+S)^*=1-S$. Hence
    $C^*C=(1-S)^{-1}(1+S)(1-S)(1+S)^{-1}=1$, and $1+C=2(1+S)^{-1}$ is invertible, so $-1\notin\operatorname{spec}C$.
    Conversely, for a unitary $U$ with $1+U$ invertible, $S=(1-U)(1+U)^{-1}$ is skew-adjoint:
-   $S^*=(1+U^*)^{-1}(1-U^*)=(U+1)^{-1}U\,U^*(U-1)=-S$. Since $C$ commutes with $S$, $C(1+S)=1-S$ is equivalent to
-   $S(1+C)=1-C$, i.e. $S=(1-C)(1+C)^{-1}$: the two maps are inverse to each other.
+   $S^*=(1+U^*)^{-1}(1-U^*)=(U+1)^{-1}U\,U^*(U-1)=(U+1)^{-1}(U-1)=-S$, as $U\pm1$ commute. For commuting $C$ and $S$,
+   $C(1+S)=1-S$ is equivalent to $S(1+C)=1-C$ (both say $C+CS+S=1$). Now $C(S)$ commutes with $S$, and
+   $S=(1-U)(1+U)^{-1}$ commutes with $U$; so $U=C(S)$ iff $S=(1-U)(1+U)^{-1}$: the two maps are inverse to each other.
 
 ```python
 Sk = torch.randn(4, 4, dtype=torch.complex128)
@@ -534,8 +592,8 @@ assert torch.allclose((I4 - Cay) @ torch.linalg.inv(I4 + Cay), Sk, atol=1e-10)
 assert torch.linalg.eigvals(Cay).add(1).abs().min() > 1e-6        # -1 is never an eigenvalue
 ```
 
-2. Theorem 5.3 and its proof hold for a real Gaussian matrix (density $\propto e^{-\|Z\|_2^2/2}$), the orthogonal
-   group and orthogonal $V$ (the remark after Theorem 5.3), so $VO$ has the law of $O$.
+2. By Theorem B.17 (also Lemma C.2) the sign-corrected QR factor $O$ of a real Gaussian matrix, which the library
+   samples for a real algebra, is Haar distributed on $O(k)$, so $VO$ has the law of $O$ for $V\in O(k)$.
    Left multiplication by $\operatorname{diag}(\pm1)$ gives $\mathbb E[O_{ij}O_{lm}]=0$ for $i\ne l$, permutations show
    that $\mathbb E[O_{ij}O_{im}]$ does not depend on $i$, and $\sum_iO_{ij}O_{im}=\delta_{jm}$; so
    $\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k$ and $\mathbb E\operatorname{Tr}(AO)^2=\sum_{ij}A_{ji}^2/k$.

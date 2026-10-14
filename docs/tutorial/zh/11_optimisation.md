@@ -2,13 +2,13 @@
 
 # 11. 优化与迹不等式
 
-迹不等式是关于算子泛函极值的命题。3.7 节给出了一个看似合理却不成立的迹不等式，以及一个漏掉了反例的
-采样检验。本章解释为什么采样在高维中会失败，并以在精确参数化的约束集上的优化取而代之；在极值有闭式
-表达的情形，我们给出证明，使优化器的结果能与定理相对照。
+迹不等式是关于算子泛函极值的命题。3.7 节给出了一个看似合理却不成立的迹不等式（命题 3.9），以及一次
+采样运行——在数值上，它没有找到反例。本章解释为什么采样在高维中会失败，并以在精确参数化的约束集上的优化
+取而代之；在极值有闭式表达的情形，我们给出证明，使优化器的结果能与定理相对照。
 
 **你将学到**本库如何对酉算子以及具有给定对比度的谱进行参数化，以及为什么每个容许算子都能被取到；
-冯·诺依曼迹不等式及由它给出的精确极值；一个带有取等条件的迹不等式；为什么 Haar 样本始终远离极值；
-以及多起点搜索究竟证明了什么。
+冯·诺依曼迹不等式及由它给出的精确极值；一个带有取等条件的迹不等式；为什么 Haar 样本在均方意义下远离
+极值；以及多起点搜索究竟证明了什么。
 
 在本章中，$\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)$，$D=\sum_ck_c\ge2$，$\operatorname{Tr}$ 是
 blunt 迹（3.1 节），$\|A\|_1=\sum_c\|A_c\|_1$ 是把 $A$ 看作
@@ -43,15 +43,19 @@ $\mathcal M$ 的**槽位**是 $D$ 个数对 $(c,i)$，$i\le k_c$；对 $\lambda\
 $\operatorname{diag}(\lambda)=\bigoplus_c\operatorname{diag}(\lambda_{c,1},\dots,\lambda_{c,k_c})$。
 
 具有给定对比度 $\delta$ 的 `optimize.PositiveParam` 对每个起点抽取两个不同的槽位
-$s_\pm=(c_\pm,i_\pm)$ 和一个 Haar 随机酉算子 $U_0\in\mathcal M$，并把 $\theta\in\mathbb R^D$ 与
+$s_\pm=(c_\pm,i_\pm)$（先在 $D$ 个槽位中均匀地抽取 $s_+$，再在其余 $D-1$ 个槽位中均匀地抽取 $s_-$，因此
+每个由不同槽位构成的有序对的概率都是 $1/(D(D-1))$）和一个 Haar 随机酉算子 $U_0\in\mathcal M$
+（`random_unitary_operator`，引理 11.10），并把 $\theta\in\mathbb R^D$ 与
 $G=\bigoplus_cG_c$ 映为
 $$
 X(\theta,G)=U\operatorname{diag}(\lambda)U^*,\qquad U=U_0\,e^{G-G^*},\qquad
 \lambda_{s_+}=1,\quad\lambda_{s_-}=\ell,\quad\lambda_s=\ell+(1-\ell)\tfrac{1+\sin\theta_s}2\ \text{otherwise}.
 $$
 `UnitaryParam` 就是单独的映射 $G\mapsto U_0e^{G-G^*}$。与 sigmoid 不同，$(1+\sin\theta)/2$ 在有限的 $\theta$ 处
-就能取到 $0$ 和 $1$，这一点很重要，因为极值谱常常位于 $\ell$ 和 $1$。$[a,b]$ 中的自由对比度
-只是多一个参数，$\delta=a+(b-a)(1+\sin\eta)/2$。
+就能取到 $0$ 和 $1$，这一点很方便，因为本章的极值谱（推论 11.7、命题 11.14）位于 $\ell$ 和 $1$。
+$[a,b]$ 中的自由对比度只是多一个参数，$\delta=a+(b-a)(1+\sin\eta)/2$；本库的默认值是 $[a,b]=[0,0.999]$，
+下面的代码保留这一默认值。在这一限制下取到的值在没有限制时也能取到，因此它仍然是无限制上确界的下界
+（无限制下确界的上界）。
 
 **引理 11.1.** 对每个酉算子 $U_0\in\mathcal M$，$G\mapsto U_0e^{G-G^*}$ 映满 $\mathcal M$ 的
 酉群。
@@ -75,16 +79,37 @@ $W_c\Pi_c$，$\Pi_c$ 为置换矩阵），使 $\mu_{s_+}=1$ 且 $\mu_{s_-}=\ell$
 若 $c_+=c_-$ 且 $\delta>0$，该块有两个不同的特征值，所以 $k_{c_+}\ge2$；若 $\delta=0$，则 $X=1$，
 任取两个槽位即可。$\square$
 
-因此随机槽位使多起点搜索能覆盖整个壳层，并且约束在每一步迭代中都精确成立。
+由于每一对槽位都以正概率被抽到，壳层中的每一点都以正概率位于某个起点的像中，并且（在精确算术中）
+约束在每一步迭代中都成立。
 `SelfAdjointParam` 使用 $X=U\operatorname{diag}(\sigma\lambda)U^*$，其中符号 $\sigma\in\{\pm1\}^D$ 对每个起点抽取
-（只通过 11.5 节中的符号翻转改变），因此 $|X|=U\operatorname{diag}(\lambda)U^*$，并且（由同样的证明）
-对所有符号与槽位取并得到 $\{X=X^*:|X|\in\mathcal P_\delta\}$。只有 $S=G-G^*$ 起作用。反自伴 $S$ 上的映射
-$S\mapsto U_0e^S$ 在 $S=0$ 处的微分为 $S\mapsto U_0S$，它是到酉群切空间
-$U_0\cdot\{S^*=-S\}$ 的双射，所以该映射在 $S=0$ 附近是局部微分同胚；远离 $0$ 时它不是单射，
-并且在 $S$ 的两个特征值相差 $2\pi i$ 的非零整数倍处其微分退化。因此 `extremize`
-在每一轮之后都**重新居中**（$U_0\leftarrow U_0e^{G-G^*}$，$G\leftarrow0$）。Cayley 坐标卡
-$S\mapsto U_0C(-S/2)$（习题 1）与极分解回缩（把 $S$ 映为 $U_0(1+S)$ 的酉因子，定理 1.8）在 $0$ 处
-具有相同的微分。
+（在每个块中，负号的个数在 $\{0,\dots,k_c\}$ 中均匀分布，其位置均匀随机，因此每种符号模式都有正概率），
+并且只通过 11.5 节中的符号翻转改变。于是
+$|X|=U\operatorname{diag}(\lambda)U^*$（定理 1.5(e)，因为 $\lambda>0$），并且对所有符号与槽位取并得到
+$\{X=X^*:|X|\in\mathcal P_\delta\}$：对这样的 $X$，对角化 $X_c=W_c\operatorname{diag}(\nu_c)W_c^*$，于是
+$|X|_c=W_c\operatorname{diag}(|\nu_c|)W_c^*$，其中 $|\nu_{c,i}|\ge\ell>0$，再对 $\mu=|\nu|$ 与
+$\sigma_s=\nu_s/|\nu_s|$ 应用命题 11.2 的证明。只有 $S=G-G^*$ 起作用。
+
+坐标卡 $S\mapsto U_0e^S$ 只在 $S=0$ 附近性质良好。令 $\mathfrak u=\{S\in\mathcal M:S^*=-S\}$，
+$\mathcal M_h=\{H\in\mathcal M:H^*=H\}$，它们是实子空间，且 $\mathcal M=\mathfrak u\oplus\mathcal M_h$
+（$X=\frac{X-X^*}2+\frac{X+X^*}2$）。*在 $0$ 附近，$S\mapsto U_0e^S$ 是 $\mathfrak u$ 的一个开球 $N\ni0$ 到
+酉群中 $U_0$ 的一个邻域上的同胚。* 事实上，$\Psi(S,H)=U_0e^Se^H$ 是 $C^1$ 映射
+$\mathfrak u\times\mathcal M_h\to\mathcal M$（级数 $\sum_{m,n\ge0}U_0S^mH^n/(m!\,n!)$ 以及其各项关于实坐标的
+偏导数构成的级数在有界集上一致收敛），而
+$e^{tS}e^{tH}=1+t(S+H)+O(t^2)$ 表明它在 $0$ 处的微分为 $(S,H)\mapsto U_0(S+H)$，这是到
+$\mathcal M$ 上的双射。由反函数定理，存在 $\mathfrak u$ 中的开球 $N\ni0$ 与 $\mathcal M_h$ 中的开球 $N_h\ni0$，
+使得 $\Psi$ 是 $N\times N_h$ 到开集 $O\subseteq\mathcal M$ 上的同胚。若
+$\Psi(S,H)$ 是酉的，则 $e^H=e^{-S}U_0^*\Psi(S,H)$ 也是酉的（在正规矩阵 $S$ 的特征基中——其特征值为纯虚数——
+$e^{\pm S}$ 是对角的，对角元的模为 $1$，并且二者互逆）；但 $e^H$ 具有正特征值 $e^{h_i}$，$h_i$ 为 $H$ 的特征值，
+所以 $e^{h_i}=1$（推论 1.4(2)），从而 $H=0$。
+因此 $O\cap U(\mathcal M)=U_0e^N$，其中 $U(\mathcal M)$ 是 $\mathcal M$ 的酉群：这是 $U_0$ 在
+$U(\mathcal M)$ 中的一个邻域，而 $S\mapsto U_0e^S$ 是连续双射 $N\to U_0e^N$，其逆映射，即 $\Psi^{-1}$ 的
+第一个分量，是连续的。远离 $0$ 时该坐标卡不是单射：对每个投影 $P\in\mathcal M$ 有 $e^{2\pi iP}=1=e^0$。
+因此 `extremize` 在每一轮之后都**重新居中**（$U_0\leftarrow U_0e^{G-G^*}$，$G\leftarrow0$）。另外两个坐标卡
+在 $0$ 处具有相同的微分 $S\mapsto U_0S$。Cayley 坐标卡
+$S\mapsto U_0C(-S/2)$（习题 1）：$(1+tS/2)(1-tS/2)^{-1}=(1+tS/2)(1+tS/2+O(t^2))=1+tS+O(t^2)$。极分解回缩，
+即把 $S$ 映为 $A=U_0(1+S)$ 的酉因子（定理 1.8）：$A^*A=(1-S)(1+S)=1+S^*S\ge1$ 可逆，所以 $|A|$
+可逆，且酉因子为 $A|A|^{-1}$；把 $S$ 换成 $tS$，有 $|A|^{-1}=(1+t^2S^*S)^{-1/2}=1+O(t^2)$
+（在 $S^*S$ 的特征基中计算），所以该酉因子为 $U_0(1+tS)+O(t^2)$。
 
 代码检验约束，并以构造的方式检验命题 11.2：证明中的参数重现了一个目标算子。
 
@@ -119,7 +144,7 @@ print(f"slots of 1 and lo: {(cp, ip)}, {(cm, im)};  reconstruction error {err:.1
 assert err < 1e-10
 ```
 
-> **物理意义。** Michelson 对比度就是干涉条纹的可见度 $(I_{\max}-I_{\min})/(I_{\max}+I_{\min})$。
+> **物理意义**（物理解释，而非本课程的定理）。Michelson 对比度就是干涉条纹的可见度 $(I_{\max}-I_{\min})/(I_{\max}+I_{\min})$。
 > 对 $\lambda_{\max}=1$ 的 $0\le X\le1$——滤光片、衰减器、探测器效率——
 > 它确定了动态范围 $\lambda_{\min}/\lambda_{\max}$，即条件数的倒数。
 
@@ -169,8 +194,9 @@ $\sum_ip^\downarrow_iq^\downarrow_{k+1-i}=\sum_ip^\downarrow_iq^\uparrow_i$）�
 定理 1.9。由定理 1.9 与定理 11.4，$\|PQ\|_1=\max_U|\operatorname{Tr}(P\,QU)|\le\sum_is_i(P)s_i(QU)$，而
 $s_i(QU)=q^\downarrow_i$，因为 $|QU|=(U^*Q^2U)^{1/2}=U^*QU$（定理 1.6）。$\square$
 
-因此命题 3.9 中的违背量至多为 $\sum_ix^\downarrow_i(y^\downarrow_i-y^\uparrow_i)$。对实验 2，这个
-数恰好就是精确答案：
+因此对 $M_k(\mathbb C)$ 中谱为 $x,y$ 的 $X,Y\ge0$，命题 3.9 中的违背量 $\|YX\|_1-\operatorname{Tr}(XY)$
+至多为 $\sum_ix^\downarrow_i(y^\downarrow_i-y^\uparrow_i)$（对 $(Y,X)$ 应用推论 11.5(b)，再用 (a) 的下界）。
+对实验 2，这个数恰好就是精确答案：
 
 **命题 11.6（固定谱时的实验 2）。** 在实验 2 中，$|X|=X_0$，$|Y|=Y_0$，且
 $z=\|X_0VY_0\|_1-\operatorname{Tr}(X_0Y_0)$。若 $(X_0)_c$ 的谱 $x_c$ 与 $(Y_0)_c$ 的谱 $y_c$ 固定，而
@@ -206,9 +232,9 @@ $k$ 为奇数时，中间的指标贡献 $x_i(y_i-y_i)=0$。因此
 $$
 \sum_ix_i(y_i-y_{k+1-i})=\sum_{i\le\lfloor k/2\rfloor}(x_i-x_{k+1-i})(y_i-y_{k+1-i})\le\Big\lfloor\frac k2\Big\rfloor(1-\ell_X)(1-\ell_Y),
 $$
-因为 $x_i\in[\ell_X,1]$，$y_i\in[\ell_Y,1]$。若在每个块中，最大的 $\lfloor k_c/2\rfloor$ 个
-特征值为 $1$，最小的 $\lfloor k_c/2\rfloor$ 个为 $\ell_X$（相应地为 $\ell_Y$），中间那个
-任意，则等号成立；由于某个 $k_c\ge2$，这些谱的全局极值为 $1$ 和 $\ell_X$（$\ell_Y$）。由命题 11.6
+因为 $x_i\in[\ell_X,1]$，$y_i\in[\ell_Y,1]$ 都是递减的，所以两个因子分别位于 $[0,1-\ell_X]$ 与 $[0,1-\ell_Y]$ 中。
+若在每个块中，最大的 $\lfloor k_c/2\rfloor$ 个特征值为 $1$，最小的 $\lfloor k_c/2\rfloor$ 个为 $\ell_X$（相应地为
+$\ell_Y$），中间那个（$k_c$ 为奇数时）在 $[\ell_X,1]$（相应地 $[\ell_Y,1]$）中任意，则等号成立；由于某个 $k_c\ge2$，这些谱的全局极值为 $1$ 和 $\ell_X$（$\ell_Y$）。由命题 11.6
 即得结论。$\square$
 
 这里对 $\Delta(|X|)=\delta$ 有 $1-\ell_X=2\delta/(1+\delta)$；当 $k_c$ 为奇数时，中间的特征值无关紧要。代码
@@ -251,13 +277,15 @@ assert abs(z_max - exact) < 1e-12 and abs(z_min + exact) < 1e-12 and abs(exact -
 ## 11.3 一个带有取等条件的迹不等式
 
 对 $X=X^*$，令 $X_\pm=f_\pm(X)$，其中 $f_+(t)=\max(t,0)$，$f_-(t)=\max(-t,0)$。则 $X_\pm\ge0$，$X=X_+-X_-$，
-$|X|=X_++X_-$，且 $X_+X_-=0$（定理 1.5(c)）。
+$|X|=X_++X_-$，且 $X_+X_-=0$（定理 1.5(c)；对 $|X|=(X^2)^{1/2}=h(X)$，其中
+$h(t)=\sqrt{t^2}=|t|=f_+(t)+f_-(t)$，用定理 1.5(e)；正性由推论 1.4(3) 得到）。
 
 **引理 11.8.** 对 $M_n(\mathbb C)$ 中的 $A,B\ge0$，$\|A-B\|_1\le\operatorname{Tr}A+\operatorname{Tr}B$，等号成立当且仅当
 $AB=0$。
 
-*证明。* 令 $H=A-B$，$Q=g(H)$，其中 $g$ 在 $(0,\infty)$ 上为 $1$，在其他地方为 $0$。由于 $|t|=t(2g(t)-1)$，有 $|H|=H(2Q-1)$，
-并且
+*证明。* 令 $H=A-B$，$Q=g(H)$，其中 $g$ 在 $(0,\infty)$ 上为 $1$，在其他地方为 $0$；$Q$ 是投影，因为 $g=\bar g=g^2$
+（定理 1.5(c)）。由于 $|t|=t(2g(t)-1)$，有 $|H|=H(2Q-1)$（定理 1.5(c)、(e)），再对投影 $R=Q,1-Q$ 利用
+$\operatorname{Tr}(AR)=\operatorname{Tr}(RAR)$（循环性），得到
 $$
 \|H\|_1=\operatorname{Tr}\big(A(2Q-1)\big)-\operatorname{Tr}\big(B(2Q-1)\big)
 =\operatorname{Tr}A+\operatorname{Tr}B-2\operatorname{Tr}\big((1-Q)A(1-Q)\big)-2\operatorname{Tr}(QBQ).
@@ -302,10 +330,8 @@ $\pi^{-1}e^{-|z|^2}$；Mezzadri 的方法）的 QR 分解 $Z=QR$（$R_{ii}>0$）
 **引理 11.10.** $Q$ 在 $U(k)$ 上服从 Haar 分布；特别地，对每个固定的酉矩阵 $V\in M_k(\mathbb C)$，$VQ$ 与
 $Q$ 同分布。各块相互独立的酉算子 $\bigoplus_cQ_c$ 在 $\mathcal M$ 的酉群上服从 Haar 分布。
 
-*证明。* 这就是定理 5.3（左不变性是其证明中的等变性步骤）与推论 5.4。$\square$
-
-（关于测度集中以及这些群的更多内容，见 E. Meckes, *The Random Matrix Theory of the Classical
-Compact Groups*, Cambridge 2019。）
+*证明。* 这就是定理 5.3（左不变性是其证明中的等变性步骤；该分布由唯一性引理 5.1 认定为 Haar 测度，
+其测度论步骤是推论 A.2）与推论 5.4。$\square$
 
 **命题 11.11.** 对 Haar 分布的 $U\in U(k)$ 与 $A\in M_k(\mathbb C)$：$\mathbb E\operatorname{Tr}(AU)=0$，且
 $\mathbb E|\operatorname{Tr}(AU)|^2=\|A\|_2^2/k$。
@@ -324,16 +350,19 @@ $$
 \mathbb P\big(|\operatorname{Tr}(XUY)|\ge\operatorname{Tr}(XY)\big)\le\frac{b^4}{a^4k^2}.
 $$
 
-*证明。* 其中的等式由命题 11.11（取 $A=YX$）与命题 3.9 得到。$\sum_is_i^2\le(\sum_is_i)^2$ 给出
-$1/\sqrt k$。由于 $s_1(A)\le\|Y\|\|X\|\le b^2$ 且 $s_k(A)=\min_{\|v\|=1}\|YXv\|\ge a^2$，有 $\|A\|_2^2\le kb^4$ 与
+*证明。* 其中的等式由命题 11.11（取 $A=YX$，因为 $\operatorname{Tr}(XUY)=\operatorname{Tr}(AU)$）与命题 3.9 得到。
+由于 $\|A\|_2^2=\sum_is_i^2\le(\sum_is_i)^2=\|A\|_1^2$（1.4 节），该比值 $\le1/\sqrt k$。
+由于 $\|Av\|=\||A|v\|$（1.4 节），对角化 $|A|$ 给出 $s_k(A)=\min_{\|v\|=1}\|Av\|$ 与
+$s_1(A)=\max_{\|v\|=1}\|Av\|$；而对单位向量 $v$ 有 $\|Xv\|^2=\langle v,X^2v\rangle\in[a^2,b^2]$（对 $X^2-a^2$ 与
+$b^2-X^2$ 应用推论 1.4(3)），对 $Y$ 同理。因此 $a^2\le s_k(A)\le s_1(A)\le b^2$，$\|A\|_2^2\le kb^4$，且
 $\|A\|_1\ge ka^2$。最后 $\operatorname{Tr}(XY)=\operatorname{Tr}(X^{1/2}YX^{1/2})\ge a\operatorname{Tr}X\ge ka^2$，而对
 $|\operatorname{Tr}(XUY)|^2$ 应用 Markov 不等式，可把该概率界定为 $(kb^4/k)/(ka^2)^2$。$\square$
 
 因此，$N$ 个 Haar 样本找到 $|\operatorname{Tr}(XUY)|\le\operatorname{Tr}(XY)$ 的反例的概率至多为
-$Nb^4/(a^4k^2)$，尽管对每一对不可交换的矩阵这样的反例都存在。实际情况还要极端得多：$f(U)=|\operatorname{Tr}(AU)|$
-关于 $\|U-V\|_2$ 是 Lipschitz 常数为 $L=\|A\|_2$ 的 Lipschitz 函数，所以 $\mathbb P(f\ge\mathbb Ef+t)\le e^{-ckt^2/L^2}$，其中
-$c>0$ 是绝对常数（测度集中，此处不加证明地引用；Meckes，前引书，第 5 章）：这里的指数量级为
-$k^2a^4/b^4$。代码检验命题 11.11，并对在 $[0.2,1.2]$ 中均匀分布的谱（$b/a=6$）打印
+$Nb^4/(a^4k^2)$（$N$ 个事件的并），尽管对每一对不可交换的矩阵这样的反例都存在（命题 3.9）。这个界
+只有在 $k>\sqrt N\,b^2/a^2$ 时才有信息量（对 $b/a=6$ 与 $N=2000$：$k>1609$）；在数值上，样本在小得多的 $k$
+下就已经漏掉了反例（见下文）。代码用 Monte Carlo 检验命题 11.11（对这次固定种子的运行，样本均值与精确值
+之差在五个标准误之内），并对在 $[0.2,1.2]$ 中均匀分布的谱（$b/a=6$）打印
 推论 11.12 中的比值、$\sup z$ 以及 $2000$ 个样本中最好的 $z$，后两者都相对于 $\operatorname{Tr}(XY)$。
 
 ```python
@@ -361,17 +390,24 @@ for k in (2, 4, 8, 16, 32):
     assert nuc > trXY and best < nuc and (k < 4 or best < trXY)            # from k = 4 on: no violation found
 ```
 
-该比值按 $1/k$ 下降，而从 $k=4$ 起，最好的样本甚至达不到 $z=0$。极值点构成 Haar 测度
-极小的集合，而梯度方法可以直接到达它们。对于矩阵对 `Xf, Yf`，关于 $U$ 的两个极值都是已知的：
+*数值观察*（打印出的表格；只对这次固定种子的运行作断言）：该比值始终低于已证明的界
+$\min(1/\sqrt k,b^2/(a^2k))$，并且 $k$ 每翻一倍它大约减半，即按 $1/k$ 下降；而从 $k=4$ 起，$2000$ 个样本中
+最好的那个甚至达不到 $z=0$。与此相反，在下面的运行中梯度搜索接近了两个极值（这同样是数值观察）。
+对于矩阵对 `Xf, Yf`，关于 $U$ 的两个极值都是已知的：
 
 **引理 11.13.** 若 $k\ge2$，则对每个 $A\in M_k(\mathbb C)$ 有 $\min_U|\operatorname{Tr}(AU)|=0$。
 
 *证明。* 设 $A=W\Sigma V^*$，$P$ 为循环移位 $Pe_i=e_{(i\bmod k)+1}$，当 $k\ge2$ 时其对角线为零。对
 $U=VPW^*$，$\operatorname{Tr}(AU)=\operatorname{Tr}(\Sigma P)=0$。$\square$
 
-所以 $\inf_Uz=-\operatorname{Tr}(XY)$，$\sup_Uz=\|YX\|_1-\operatorname{Tr}(XY)$。调用一次 `extremize` 就能同时求出二者：
-$12$ 个起点最大化 $z$，$12$ 个起点最大化 $-z$。采样能接近下确界，因为它紧挨着
-典型值（$|\operatorname{Tr}(XUY)|$ 的典型量级为 $\|YX\|_2/\sqrt k$），却接近不了上确界：
+所以 $\inf_Uz=-\operatorname{Tr}(XY)$，$\sup_Uz=\|YX\|_1-\operatorname{Tr}(XY)$（命题 3.9）。调用一次 `extremize`
+就能同时逼近二者：$12$ 个起点最大化 $z$，$12$ 个起点最大化 $-z$（在这次运行中相对精度达到 $10^{-3}$，
+下面有断言）。由命题 11.11，$|\operatorname{Tr}(XUY)|$ 的均方根为 $\|YX\|_2/\sqrt k$；利用推论 11.12 的证明中的
+界（谱含于 $[a,b]$），$\mathbb E|\operatorname{Tr}(XUY)|^2\le b^4$ 且 $\operatorname{Tr}(XY)\ge ka^2$，所以 Markov 不等式给出
+$\mathbb P\big(z\ge-(1-\varepsilon)\operatorname{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)$（$\varepsilon>0$）：对大的 $k$，
+$z$ 以高概率接近其下确界。
+*数值观察*（对这次固定种子的运行作断言）：采样到达了下确界的 $1\,\%$ 以内，却连 $z=0$ 都达不到，
+而上确界是正的：
 
 ```python
 trXY = (Xf @ Yf).trace.real
@@ -390,24 +426,26 @@ assert z_mc.min().item() - inf_exact < 1e-2 * abs(inf_exact)               # sam
 assert z_mc.max().item() < 0                                               # ... but misses the violation
 ```
 
-> **物理意义。** 测度集中是统计力学中**典型性**的数学形式：在高维中，几乎每个态或演化
-> 都给出宏观量的同一个值。一个精确（最优）的不等式由精细调节的构型决定——对齐的特征基、两能级的谱——
-> 而随机酉算子（随机线路、随机散射矩阵）几乎从不产生这样的构型。
+> **物理意义**（物理解释，而非本课程的定理）。推论 11.12 是统计力学所称的**典型性**的一个较弱但可证明的
+> 实例：在高维中，人们预期几乎每个态或演化都给出宏观量几乎相同的值。一个精确（最优）的不等式由精细调节的
+> 构型决定——对齐的特征基、两能级的谱——而随机酉算子（随机线路、随机散射矩阵）很少产生这样的构型。
 
 ## 11.5 包络的多起点搜索
 
 `optimize.extremize(objective, params, maximize)` 运行 Adam，共 `rounds` 轮，每轮 `steps` 步（学习率为
-`lr * decay**round`），每轮之后对酉坐标卡重新居中，并**对每个起点**返回所取得的
-最佳值。批中的每个元素都是一个独立的起点，有自己的槽位、符号、$U_0$ 与对比度。
+`lr * decay**round`），损失函数为 $\mp\sum_b\text{objective}_b$，每轮之后对酉坐标卡重新居中，并**对每个起点**
+返回目标函数在梯度迭代点处以及在最终点处（计算一次）所取各值中的最大值（`maximize=False` 时为最小值）。
+批中的每个元素都是一个独立的起点，有自己的槽位、符号、$U_0$ 与对比度：Adam 按坐标逐个作用，所以如果
+目标函数的第 $b$ 个分量只依赖于第 $b$ 组参数（下面所有的目标函数都是如此），各起点之间互不影响。
 `SelfAdjointParam` 的符号是离散的：在两轮之间，`discrete_step` 对每个起点依次尝试八次单个符号的
-翻转，并保留每一次使目标函数改进的翻转。
+翻转（每次都在一个均匀随机的槽位上），并保留每一次使目标函数改进的翻转。
 
-由于每一步迭代都是容许的（命题 11.2），返回的每个值都是能取到的：最大化给出上确界的
+在精确算术中，每一步迭代都是容许的（命题 11.2 及其后的说明），所以返回的每个值都是 $z$ 在某个容许点处的值；
+在浮点运算中，它在舍入误差范围内等于该值（下面的断言允许 $10^{-12}$）。因此最大化给出上确界的
 **下界**，最小化给出下确界的上界，仅此而已——局部搜索可能停在局部极值处。另一个方向需要证明，
 如推论 11.7 与命题 11.9，或者凸松弛（11.6 节）。计算得到的包络要接受以下检验：(i) 与闭式表达比较；(ii) 与
 手工构造的构型比较，例如较小解的直和，包络不得低于它们；(iii) 与
-结构化样本（两能级谱、置换基）比较，这些样本在任何维数下都能接近极值，
-不像 Haar 样本那样（`scripts/bounds_checks.py`）。
+结构化样本（两能级谱、置换基）比较，它们的值是另外一些可取到的值。
 
 **命题 11.14（实验 1 的下包络）。** 设所有 $k_c\ge2$。在 $X\in\mathcal P_\delta$、满足
 $\lambda_{\max}(Y)=1$ 的 $Y\ge0$ 以及酉算子 $U\in\mathcal M$ 上，$\ \min z=-\big(D-2\delta/(1+\delta)\big)$。
@@ -418,13 +456,17 @@ $X$ 的一个特征值为 $\ell(\delta)$，其余都 $\le1$；因此 $z\ge-\oper
 $\operatorname{Tr}(X_cU_c)=0$（引理 11.13）时，等号成立。$\square$
 
 代码在 $M_2\oplus M_2$ 上检验命题 11.14，在 $M_3\oplus M_3$ 上检验推论 11.7（两个对比度都给定，
-$k=3$ 为奇数），并检验命题 11.9；与上面一样，上确界和下确界在同一次调用中求出。关键字 `is_self_adjoint` 选择
+$k=3$ 为奇数），并检验命题 11.9；与上面一样，上确界和下确界在同一次调用中求出。单侧断言（没有任何返回值
+越过已证明的极值）是这些定理的推论；而断言搜索到达极值的给定容差以内，则是这次固定种子运行的数值观察。
+关键字 `is_self_adjoint` 选择
 迹范数的算法（奇异值，或对 $YXY$ 用特征值），而无需在每一步都做检验。最后一项
 检验属于类型 (ii)：实验 3 的 $z$ 对直和是可加的，而直和的对比度是各直和项对比度中
-最大者（习题 3），所以
+最大者（习题 3），所以对于实验 3 的包络（如代码中那样，$\Delta(Y)$ 在 $[0,0.999]$ 中自由变化），
 $$
-\overline z_{M_2\oplus M_2}(\delta)\ \ge\ \overline z_{M_2}(\delta)+\max_{\delta'\le\delta}\overline z_{M_2}(\delta').
+\overline z_{M_2\oplus M_2}(\delta)\ \ge\ \overline z_{M_2}(\delta)+\sup_{\delta'\le\delta}\overline z_{M_2}(\delta');
 $$
+特别地，在 $M_2$ 上于对比度 $\delta$ 与 $\delta'\le\delta$ 处取到的两个值之和，是在 $M_2\oplus M_2$ 上于对比度
+$\delta$ 处取到的值。
 
 ```python
 torch.manual_seed(1)
@@ -480,21 +522,20 @@ assert inf3 >= -1e-12 and inf3 < 1e-6                                       # Pr
 assert sup_M22 >= direct_sum - 5e-3 * direct_sum                           # (ii), up to 0.5 %
 ```
 
-在 $M_2\oplus M_2$ 上的搜索比直和低约 $0.2\,\%$：它尚未完全收敛，而
+*数值观察*（这次运行打印出的值）。在 $M_2\oplus M_2$ 上的搜索比直和低约 $0.2\,\%$：它尚未完全收敛，而
 $\overline z_{M_2\oplus M_2}(0.5)$ 的最佳下界是较大的那个数——发现这类情况正是检验 (ii)
 的目的。$M_2$ 的值与 $(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2$ 吻合到 $10^{-4}$，其中
-$d=0.999$ 是 $Y$ 所允许的最大对比度：这是配套论文在数值上观察到（在实代数中）却
-未能证明的闭式；代码并不断言它。对更大的块，据我们所知，实验 1 与
-实验 3 的上包络没有已知的闭式；此时计算得到的曲线只是下界和猜想，
-仅此而已。
+$d=0.999$ 是 $Y$ 所允许的最大对比度。这个闭式**不是**本课程的定理：配套论文在数值上观察到了它（在实代数中），
+但没有证明它；代码只打印它，而不对它作任何断言。对更大的块，我们不知道实验 1 与
+实验 3 的上包络的闭式；此时计算得到的曲线只是下界（可取到的值），仅此而已。
 
 ## 11.6 可与之比较的工具
 
 **Manopt**、**pymanopt** 与 **geoopt** 提供矩阵流形（Stiefel 流形、正交群与酉群），
 带有 QR、极分解或 Cayley 等回缩，以及黎曼求解器（共轭梯度、信赖域、黎曼
-Adam），它们往往比在重新居中的坐标卡中运行 Adam 更高效。**cvxpy** 配合 SDP 求解器可以把算子变量的凸
-问题求解到全局最优，并在求解器容差范围内给出对偶证书；
-半定松弛则在局部搜索无法覆盖的方向上给出严格的界。**NCTSSOS**、**ncpol2sdpa** 与 **NCSOStools** 在所有维数上同时界定非交换
+Adam），可替代在重新居中的坐标卡中运行的 Adam（这里不作性能比较）。**cvxpy** 把算子变量的凸问题
+交给 SDP 求解器，后者返回一个最优值以及一个对偶证书，二者都只在求解器容差范围内成立；
+松弛——在更大的可行集上的凸问题——从上方界定上确界，这是局部搜索无法给出的方向。**NCTSSOS**、**ncpol2sdpa** 与 **NCSOStools** 在所有维数上同时界定非交换
 多项式的特征值和迹（0.3 节）。本库补充的是：$\bigoplus_cM_{k_c}$ 的谱约束与
 对比度约束的精确参数化（极值可以位于任何扇区）、遵从
 块结构的酉算子，以及在 CPU 或 GPU 上对许多起点和约束值进行的一次批量计算。它给出候选的
@@ -514,11 +555,13 @@ Adam），它们往往比在重新居中的坐标卡中运行 Adam 更高效。*
 <details>
 <summary>解答</summary>
 
-1. $S$ 的特征值是纯虚数，所以 $1\pm S$ 可逆；它们可交换，且 $(1+S)^*=1-S$。因此
+1. $S$ 是正规的，且 $iS$ 是自伴的，所以 $S$ 的特征值是纯虚数（推论 1.4(2)），从而 $1\pm S$ 可逆；
+   它们可交换，且 $(1+S)^*=1-S$。因此
    $C^*C=(1-S)^{-1}(1+S)(1-S)(1+S)^{-1}=1$，而 $1+C=2(1+S)^{-1}$ 可逆，所以 $-1\notin\operatorname{spec}C$。
    反之，对满足 $1+U$ 可逆的酉矩阵 $U$，$S=(1-U)(1+U)^{-1}$ 是反自伴的：
-   $S^*=(1+U^*)^{-1}(1-U^*)=(U+1)^{-1}U\,U^*(U-1)=-S$。由于 $C$ 与 $S$ 可交换，$C(1+S)=1-S$ 等价于
-   $S(1+C)=1-C$，即 $S=(1-C)(1+C)^{-1}$：这两个映射互为逆映射。
+   $S^*=(1+U^*)^{-1}(1-U^*)=(U+1)^{-1}U\,U^*(U-1)=(U+1)^{-1}(U-1)=-S$，因为 $U\pm1$ 可交换。对可交换的 $C$ 与
+   $S$，$C(1+S)=1-S$ 等价于 $S(1+C)=1-C$（二者都是说 $C+CS+S=1$）。而 $C(S)$ 与 $S$ 可交换，
+   $S=(1-U)(1+U)^{-1}$ 与 $U$ 可交换；所以 $U=C(S)$ 当且仅当 $S=(1-U)(1+U)^{-1}$：这两个映射互为逆映射。
 
 ```python
 Sk = torch.randn(4, 4, dtype=torch.complex128)
@@ -530,8 +573,8 @@ assert torch.allclose((I4 - Cay) @ torch.linalg.inv(I4 + Cay), Sk, atol=1e-10)
 assert torch.linalg.eigvals(Cay).add(1).abs().min() > 1e-6        # -1 is never an eigenvalue
 ```
 
-2. 定理 5.3 及其证明对实高斯矩阵（密度 $\propto e^{-\|Z\|_2^2/2}$）、正交
-   群和正交矩阵 $V$ 同样成立（定理 5.3 之后的注记），所以 $VO$ 与 $O$ 同分布。
+2. 由定理 B.17（另见引理 C.2），实高斯矩阵经符号修正的 QR 因子 $O$——本库对实代数正是这样抽样的——
+   在 $O(k)$ 上服从 Haar 分布，所以对 $V\in O(k)$，$VO$ 与 $O$ 同分布。
    左乘 $\operatorname{diag}(\pm1)$ 给出当 $i\ne l$ 时 $\mathbb E[O_{ij}O_{lm}]=0$，置换表明
    $\mathbb E[O_{ij}O_{im}]$ 与 $i$ 无关，而 $\sum_iO_{ij}O_{im}=\delta_{jm}$；所以
    $\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k$，$\mathbb E\operatorname{Tr}(AO)^2=\sum_{ij}A_{ji}^2/k$。

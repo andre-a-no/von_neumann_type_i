@@ -3,15 +3,16 @@
 # 11. Optimierung und Spurungleichungen
 
 Eine Spurungleichung ist eine Aussage über die Extremwerte eines Funktionals von Operatoren. Abschnitt 3.7 zeigte
-eine, die plausibel und falsch ist, und einen Stichprobentest, der die Verletzung übersieht. Dieses Kapitel erklärt,
+eine, die plausibel und falsch ist (Proposition 3.9), und einen Stichprobenlauf, der die Verletzung numerisch nicht
+gefunden hat. Dieses Kapitel erklärt,
 warum Stichproben in hoher Dimension versagen, und ersetzt sie durch Optimierung über exakt parametrisierte
 Nebenbedingungsmengen; wo die Extrema in geschlossener Form bekannt sind, beweisen wir sie, sodass der Optimierer an
 einem Satz geprüft wird.
 
 **Sie lernen**, wie die Bibliothek unitäre Matrizen und Spektren mit vorgegebenem Kontrast parametrisiert und warum
 jeder zulässige Operator erreicht wird; die von Neumannsche Spurungleichung und die exakten Extrema, die sie liefert;
-eine Spurungleichung mit ihrer Gleichheitsbedingung; warum Haar-Stichproben weit von den Extrema entfernt bleiben;
-und was eine Multistart-Suche beweist.
+eine Spurungleichung mit ihrer Gleichheitsbedingung; warum Haar-Stichproben im quadratischen Mittel weit von den
+Extrema entfernt sind; und was eine Multistart-Suche beweist.
 
 Im Folgenden sei $\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)$ mit $D=\sum_ck_c\ge2$, $\operatorname{Tr}$ die
 ungewichtete Spur (Abschnitt 3.1) und $\|A\|_1=\sum_c\|A_c\|_1$ die Spurnorm von $A$ als blockdiagonale Matrix in
@@ -46,15 +47,21 @@ Die **Plätze** von $\mathcal M$ sind die $D$ Paare $(c,i)$, $i\le k_c$; für $\
 $\operatorname{diag}(\lambda)=\bigoplus_c\operatorname{diag}(\lambda_{c,1},\dots,\lambda_{c,k_c})$.
 
 `optimize.PositiveParam` mit vorgegebenem Kontrast $\delta$ zieht pro Start zwei verschiedene Plätze
-$s_\pm=(c_\pm,i_\pm)$ und eine Haar-verteilte unitäre Matrix $U_0\in\mathcal M$ und bildet $\theta\in\mathbb R^D$ und
+$s_\pm=(c_\pm,i_\pm)$ ($s_+$ gleichverteilt unter den $D$ Plätzen, dann $s_-$ gleichverteilt unter den $D-1$ übrigen,
+sodass jedes geordnete Paar verschiedener Plätze die Wahrscheinlichkeit $1/(D(D-1))$ hat) und eine Haar-verteilte
+unitäre Matrix $U_0\in\mathcal M$ (`random_unitary_operator`, Lemma 11.10) und bildet $\theta\in\mathbb R^D$ und
 $G=\bigoplus_cG_c$ ab auf
 $$
 X(\theta,G)=U\operatorname{diag}(\lambda)U^*,\qquad U=U_0\,e^{G-G^*},\qquad
 \lambda_{s_+}=1,\quad\lambda_{s_-}=\ell,\quad\lambda_s=\ell+(1-\ell)\tfrac{1+\sin\theta_s}2\ \text{otherwise}.
 $$
 `UnitaryParam` ist die Abbildung $G\mapsto U_0e^{G-G^*}$ allein. Anders als eine Sigmoidfunktion erreicht
-$(1+\sin\theta)/2$ die Werte $0$ und $1$ bei endlichem $\theta$; das ist wichtig, weil extremale Spektren oft bei
-$\ell$ und $1$ liegen. Ein freier Kontrast in $[a,b]$ ist ein weiterer Parameter, $\delta=a+(b-a)(1+\sin\eta)/2$.
+$(1+\sin\theta)/2$ die Werte $0$ und $1$ bei endlichem $\theta$; das ist bequem, weil die extremalen Spektren dieses
+Kapitels (Korollar 11.7, Proposition 11.14) bei $\ell$ und $1$ liegen. Ein freier Kontrast in $[a,b]$ ist ein weiterer
+Parameter, $\delta=a+(b-a)(1+\sin\eta)/2$; die Voreinstellung der Bibliothek ist $[a,b]=[0,0.999]$, und der Code
+unten behält sie bei. Ein Wert, der mit dieser Einschränkung angenommen wird, wird auch ohne sie angenommen und ist
+daher weiterhin eine untere Schranke für ein uneingeschränktes Supremum (eine obere Schranke für ein
+uneingeschränktes Infimum).
 
 **Lemma 11.1.** Für jedes unitäre $U_0\in\mathcal M$ bildet $G\mapsto U_0e^{G-G^*}$ surjektiv auf die unitäre Gruppe
 von $\mathcal M$ ab.
@@ -79,17 +86,39 @@ wähle man Blöcke $c_\pm$, die die Eigenwerte $1$ bzw. $\ell$ enthalten, und da
 und $\delta>0$, so hat der Block zwei verschiedene Eigenwerte, also $k_{c_+}\ge2$; ist $\delta=0$, so ist $X=1$, und
 zwei beliebige Plätze genügen. $\square$
 
-Zufällige Plätze erlauben es einer Multistart-Suche also, die ganze Schale abzudecken, und die Nebenbedingung gilt in
-jeder Iteration exakt. `SelfAdjointParam` verwendet $X=U\operatorname{diag}(\sigma\lambda)U^*$ mit pro Start gezogenen
-Vorzeichen $\sigma\in\{\pm1\}^D$ (die nur durch die Vorzeichenwechsel aus Abschnitt 11.5 verändert werden), sodass
-$|X|=U\operatorname{diag}(\lambda)U^*$, und (mit demselben Beweis) ist die Vereinigung über Vorzeichen und Plätze gleich
-$\{X=X^*:|X|\in\mathcal P_\delta\}$. Es kommt nur auf $S=G-G^*$ an. Die Abbildung $S\mapsto U_0e^S$ auf
-schiefadjungierten $S$ hat in $S=0$ das Differential $S\mapsto U_0S$, eine Bijektion auf den Tangentialraum
-$U_0\cdot\{S^*=-S\}$ der unitären Gruppe; sie ist daher nahe $S=0$ ein lokaler Diffeomorphismus. Fern von $0$ ist sie
-nicht injektiv, und ihr Differential ist singulär, wo sich zwei Eigenwerte von $S$ um ein von null verschiedenes
-Vielfaches von $2\pi i$ unterscheiden. Deshalb **zentriert** `extremize` nach jeder Runde **neu**
-($U_0\leftarrow U_0e^{G-G^*}$, $G\leftarrow0$). Die Cayley-Karte $S\mapsto U_0C(-S/2)$ (Aufgabe 1) und die polare
-Retraktion $S\mapsto$ unitärer Faktor von $U_0(1+S)$ (Satz 1.8) haben in $0$ dasselbe Differential.
+Da jedes Paar von Plätzen mit positiver Wahrscheinlichkeit gezogen wird, liegt jeder Punkt der Schale mit positiver
+Wahrscheinlichkeit im Bild eines Starts, und (in exakter Arithmetik) gilt die Nebenbedingung in jeder Iteration.
+`SelfAdjointParam` verwendet $X=U\operatorname{diag}(\sigma\lambda)U^*$ mit pro Start gezogenen Vorzeichen
+$\sigma\in\{\pm1\}^D$ (pro Block ist die Anzahl der Minuszeichen gleichverteilt auf $\{0,\dots,k_c\}$ und ihre
+Positionen sind gleichverteilt zufällig, sodass jedes Vorzeichenmuster positive Wahrscheinlichkeit hat), die nur durch
+die Vorzeichenwechsel aus Abschnitt 11.5 verändert werden. Dann ist $|X|=U\operatorname{diag}(\lambda)U^*$
+(Satz 1.5(e), da $\lambda>0$), und die Vereinigung über Vorzeichen und Plätze ist $\{X=X^*:|X|\in\mathcal P_\delta\}$:
+Für ein solches $X$ diagonalisiere man $X_c=W_c\operatorname{diag}(\nu_c)W_c^*$, sodass
+$|X|_c=W_c\operatorname{diag}(|\nu_c|)W_c^*$ mit $|\nu_{c,i}|\ge\ell>0$, und wende den Beweis von Proposition 11.2 auf
+$\mu=|\nu|$ mit $\sigma_s=\nu_s/|\nu_s|$ an. Es kommt nur auf $S=G-G^*$ an.
+
+Die Karte $S\mapsto U_0e^S$ verhält sich nur nahe $S=0$ gutartig. Seien $\mathfrak u=\{S\in\mathcal M:S^*=-S\}$ und
+$\mathcal M_h=\{H\in\mathcal M:H^*=H\}$, reelle Unterräume mit $\mathcal M=\mathfrak u\oplus\mathcal M_h$
+($X=\frac{X-X^*}2+\frac{X+X^*}2$). *Nahe $0$ ist $S\mapsto U_0e^S$ ein Homöomorphismus einer offenen Kugel $N\ni0$ in
+$\mathfrak u$ auf eine Umgebung von $U_0$ in der unitären Gruppe.* Denn $\Psi(S,H)=U_0e^Se^H$ ist eine $C^1$-Abbildung
+$\mathfrak u\times\mathcal M_h\to\mathcal M$ (die Reihe $\sum_{m,n\ge0}U_0S^mH^n/(m!\,n!)$ und die Reihe der partiellen
+Ableitungen ihrer Glieder nach den reellen Koordinaten konvergieren gleichmäßig auf beschränkten Mengen), und
+$e^{tS}e^{tH}=1+t(S+H)+O(t^2)$ zeigt, dass ihr Differential in $0$ die Abbildung $(S,H)\mapsto U_0(S+H)$ ist, eine
+Bijektion auf $\mathcal M$. Nach dem Satz über die Umkehrfunktion gibt es offene Kugeln $N\ni0$ in $\mathfrak u$ und
+$N_h\ni0$ in $\mathcal M_h$, sodass $\Psi$ ein Homöomorphismus von $N\times N_h$ auf eine offene Menge
+$O\subseteq\mathcal M$ ist. Ist $\Psi(S,H)$ unitär, so auch $e^H=e^{-S}U_0^*\Psi(S,H)$ (in einer Eigenbasis der
+normalen Matrix $S$, deren Eigenwerte imaginär sind, sind $e^{\pm S}$ diagonal mit Einträgen vom Betrag $1$ und
+zueinander invers); aber $e^H$ hat die positiven Eigenwerte $e^{h_i}$, wobei $h_i$ die Eigenwerte von $H$ sind, also
+ist $e^{h_i}=1$ (Korollar 1.4(2)) und $H=0$. Folglich ist $O\cap U(\mathcal M)=U_0e^N$, wobei $U(\mathcal M)$ die
+unitäre Gruppe von $\mathcal M$ bezeichnet: eine Umgebung von $U_0$ in $U(\mathcal M)$, und $S\mapsto U_0e^S$ ist eine
+stetige Bijektion $N\to U_0e^N$, deren Umkehrung, die erste Komponente von $\Psi^{-1}$, stetig ist. Fern von $0$ ist
+die Karte nicht injektiv: $e^{2\pi iP}=1=e^0$ für jede Projektion $P\in\mathcal M$. Deshalb **zentriert** `extremize`
+nach jeder Runde **neu** ($U_0\leftarrow U_0e^{G-G^*}$, $G\leftarrow0$). Zwei weitere Karten haben in $0$ dasselbe
+Differential $S\mapsto U_0S$. Die Cayley-Karte $S\mapsto U_0C(-S/2)$ (Aufgabe 1):
+$(1+tS/2)(1-tS/2)^{-1}=(1+tS/2)(1+tS/2+O(t^2))=1+tS+O(t^2)$. Die polare Retraktion, $S\mapsto$ der unitäre Faktor von
+$A=U_0(1+S)$ (Satz 1.8): $A^*A=(1-S)(1+S)=1+S^*S\ge1$ ist invertierbar, also ist $|A|$ invertierbar und der unitäre
+Faktor ist $A|A|^{-1}$; für $tS$ statt $S$ ist $|A|^{-1}=(1+t^2S^*S)^{-1/2}=1+O(t^2)$ (in einer Eigenbasis von
+$S^*S$), also ist der Faktor $U_0(1+tS)+O(t^2)$.
 
 Der Code prüft die Nebenbedingung und, konstruktiv, Proposition 11.2: Die Parameter aus dem Beweis reproduzieren
 eine Zielmatrix.
@@ -125,9 +154,10 @@ print(f"slots of 1 and lo: {(cp, ip)}, {(cm, im)};  reconstruction error {err:.1
 assert err < 1e-10
 ```
 
-> **Physikalische Bedeutung.** Der Michelson-Kontrast ist die Sichtbarkeit $(I_{\max}-I_{\min})/(I_{\max}+I_{\min})$
-> von Interferenzstreifen. Für $0\le X\le1$ mit $\lambda_{\max}=1$ – ein Filter, ein Abschwächer, eine
-> Detektoreffizienz – legt er den Dynamikbereich $\lambda_{\min}/\lambda_{\max}$ fest, den Kehrwert einer Konditionszahl.
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Der Michelson-Kontrast ist die
+> Sichtbarkeit $(I_{\max}-I_{\min})/(I_{\max}+I_{\min})$ von Interferenzstreifen. Für $0\le X\le1$ mit
+> $\lambda_{\max}=1$ – ein Filter, ein Abschwächer, eine Detektoreffizienz – legt er den Dynamikbereich
+> $\lambda_{\min}/\lambda_{\max}$ fest, den Kehrwert einer Konditionszahl.
 
 ## 11.2 Die von Neumannsche Spurungleichung
 
@@ -180,8 +210,9 @@ Ungleichung ist Satz 1.9. Nach Satz 1.9 und Satz 11.4 ist
 $\|PQ\|_1=\max_U|\operatorname{Tr}(P\,QU)|\le\sum_is_i(P)s_i(QU)$, und $s_i(QU)=q^\downarrow_i$, weil
 $|QU|=(U^*Q^2U)^{1/2}=U^*QU$ (Satz 1.6). $\square$
 
-Die Verletzung in Proposition 3.9 beträgt also höchstens $\sum_ix^\downarrow_i(y^\downarrow_i-y^\uparrow_i)$. Für Exp. 2
-ist diese Zahl die exakte Antwort:
+Für $X,Y\ge0$ in $M_k(\mathbb C)$ mit Spektren $x,y$ beträgt die Verletzung $\|YX\|_1-\operatorname{Tr}(XY)$ in
+Proposition 3.9 also höchstens $\sum_ix^\downarrow_i(y^\downarrow_i-y^\uparrow_i)$ (Korollar 11.5(b) für $(Y,X)$ und die
+untere Schranke aus (a)). Für Exp. 2 ist diese Zahl die exakte Antwort:
 
 **Proposition 11.6 (Exp. 2 bei festen Spektren).** In Exp. 2 ist $|X|=X_0$, $|Y|=Y_0$ und
 $z=\|X_0VY_0\|_1-\operatorname{Tr}(X_0Y_0)$. Sind die Spektren $x_c$ von $(X_0)_c$ und $y_c$ von $(Y_0)_c$ fest und
@@ -220,9 +251,10 @@ Index $x_i(y_i-y_i)=0$ bei. Folglich gilt
 $$
 \sum_ix_i(y_i-y_{k+1-i})=\sum_{i\le\lfloor k/2\rfloor}(x_i-x_{k+1-i})(y_i-y_{k+1-i})\le\Big\lfloor\frac k2\Big\rfloor(1-\ell_X)(1-\ell_Y),
 $$
-da $x_i\in[\ell_X,1]$, $y_i\in[\ell_Y,1]$. Gleichheit gilt, wenn in jedem Block die $\lfloor k_c/2\rfloor$ größten
-Eigenwerte gleich $1$ und die $\lfloor k_c/2\rfloor$ kleinsten gleich $\ell_X$ (bzw. $\ell_Y$) sind, während der
-mittlere beliebig ist; diese Spektren haben die globalen Extrema $1$ und $\ell_X$ ($\ell_Y$), weil $k_c\ge2$ für mindestens ein $c$ gilt.
+da $x_i\in[\ell_X,1]$, $y_i\in[\ell_Y,1]$ fallend sind, sodass beide Faktoren in $[0,1-\ell_X]$ bzw. $[0,1-\ell_Y]$
+liegen. Gleichheit gilt, wenn in jedem Block die $\lfloor k_c/2\rfloor$ größten Eigenwerte gleich $1$ und die
+$\lfloor k_c/2\rfloor$ kleinsten gleich $\ell_X$ (bzw. $\ell_Y$) sind, während der mittlere (bei ungeradem $k_c$)
+beliebig in $[\ell_X,1]$ (bzw. $[\ell_Y,1]$) ist; diese Spektren haben die globalen Extrema $1$ und $\ell_X$ ($\ell_Y$), weil $k_c\ge2$ für mindestens ein $c$ gilt.
 Proposition 11.6 schließt den Beweis ab. $\square$
 
 Hier ist $1-\ell_X=2\delta/(1+\delta)$ für $\Delta(|X|)=\delta$; für ungerades $k_c$ spielt der mittlere Eigenwert keine
@@ -266,13 +298,15 @@ assert abs(z_max - exact) < 1e-12 and abs(z_min + exact) < 1e-12 and abs(exact -
 ## 11.3 Eine Spurungleichung mit Gleichheitsbedingung
 
 Für $X=X^*$ sei $X_\pm=f_\pm(X)$ mit $f_+(t)=\max(t,0)$, $f_-(t)=\max(-t,0)$. Dann gilt $X_\pm\ge0$, $X=X_+-X_-$,
-$|X|=X_++X_-$ und $X_+X_-=0$ (Satz 1.5(c)).
+$|X|=X_++X_-$ und $X_+X_-=0$ (Satz 1.5(c), und 1.5(e) für $|X|=(X^2)^{1/2}=h(X)$ mit
+$h(t)=\sqrt{t^2}=|t|=f_+(t)+f_-(t)$; Korollar 1.4(3) für die Positivität).
 
 **Lemma 11.8.** Für $A,B\ge0$ in $M_n(\mathbb C)$ gilt $\|A-B\|_1\le\operatorname{Tr}A+\operatorname{Tr}B$, mit Gleichheit
 genau dann, wenn $AB=0$.
 
-*Beweis.* Sei $H=A-B$ und $Q=g(H)$ mit $g=1$ auf $(0,\infty)$ und $g=0$ sonst. Wegen $|t|=t(2g(t)-1)$ ist
-$|H|=H(2Q-1)$ und
+*Beweis.* Sei $H=A-B$ und $Q=g(H)$ mit $g=1$ auf $(0,\infty)$ und $g=0$ sonst; $Q$ ist eine Projektion, da
+$g=\bar g=g^2$ (Satz 1.5(c)). Wegen $|t|=t(2g(t)-1)$ ist $|H|=H(2Q-1)$ (Satz 1.5(c),(e)), und mit
+$\operatorname{Tr}(AR)=\operatorname{Tr}(RAR)$ für die Projektionen $R=Q,1-Q$ (Zyklizität) folgt
 $$
 \|H\|_1=\operatorname{Tr}\big(A(2Q-1)\big)-\operatorname{Tr}\big(B(2Q-1)\big)
 =\operatorname{Tr}A+\operatorname{Tr}B-2\operatorname{Tr}\big((1-Q)A(1-Q)\big)-2\operatorname{Tr}(QBQ).
@@ -319,11 +353,9 @@ Dichte $\pi^{-1}e^{-|z|^2}$; Mezzadris Rezept), und zwar in jedem Block unabhän
 $V\in M_k(\mathbb C)$ dieselbe Verteilung wie $Q$. Die unitäre Matrix $\bigoplus_cQ_c$ mit unabhängigen Blöcken ist
 Haar-verteilt auf der unitären Gruppe von $\mathcal M$.
 
-*Beweis.* Das ist Satz 5.3 (die Linksinvarianz ist der Äquivarianzschritt seines Beweises) zusammen mit
-Korollar 5.4. $\square$
-
-(Zur Maßkonzentration und mehr über diese Gruppen siehe E. Meckes, *The Random Matrix Theory of the Classical
-Compact Groups*, Cambridge 2019.)
+*Beweis.* Das ist Satz 5.3 (die Linksinvarianz ist der Äquivarianzschritt seines Beweises; die Verteilung wird
+durch das Eindeutigkeitslemma 5.1, dessen maßtheoretischer Schritt Korollar A.2 ist, als Haar-Maß identifiziert)
+zusammen mit Korollar 5.4. $\square$
 
 **Proposition 11.11.** Für Haar-verteiltes $U\in U(k)$ und $A\in M_k(\mathbb C)$ gilt $\mathbb E\operatorname{Tr}(AU)=0$
 und $\mathbb E|\operatorname{Tr}(AU)|^2=\|A\|_2^2/k$.
@@ -343,18 +375,21 @@ $$
 \mathbb P\big(|\operatorname{Tr}(XUY)|\ge\operatorname{Tr}(XY)\big)\le\frac{b^4}{a^4k^2}.
 $$
 
-*Beweis.* Die Gleichung ist Proposition 11.11 für $A=YX$ zusammen mit Proposition 3.9.
-$\sum_is_i^2\le(\sum_is_i)^2$ liefert $1/\sqrt k$. Da $s_1(A)\le\|Y\|\|X\|\le b^2$ und
-$s_k(A)=\min_{\|v\|=1}\|YXv\|\ge a^2$, ist $\|A\|_2^2\le kb^4$ und $\|A\|_1\ge ka^2$. Schließlich ist
+*Beweis.* Die Gleichung ist Proposition 11.11 für $A=YX$ (denn $\operatorname{Tr}(XUY)=\operatorname{Tr}(AU)$)
+zusammen mit Proposition 3.9. Da $\|A\|_2^2=\sum_is_i^2\le(\sum_is_i)^2=\|A\|_1^2$ (Abschnitt 1.4), ist der Quotient
+$\le1/\sqrt k$. Wegen $\|Av\|=\||A|v\|$ (Abschnitt 1.4) liefert Diagonalisieren von $|A|$
+$s_k(A)=\min_{\|v\|=1}\|Av\|$ und $s_1(A)=\max_{\|v\|=1}\|Av\|$; und $\|Xv\|^2=\langle v,X^2v\rangle\in[a^2,b^2]$ für
+Einheitsvektoren $v$ (Korollar 1.4(3) für $X^2-a^2$ und $b^2-X^2$), ebenso für $Y$. Also ist
+$a^2\le s_k(A)\le s_1(A)\le b^2$, $\|A\|_2^2\le kb^4$ und $\|A\|_1\ge ka^2$. Schließlich ist
 $\operatorname{Tr}(XY)=\operatorname{Tr}(X^{1/2}YX^{1/2})\ge a\operatorname{Tr}X\ge ka^2$, und die Markov-Ungleichung für
 $|\operatorname{Tr}(XUY)|^2$ beschränkt die Wahrscheinlichkeit durch $(kb^4/k)/(ka^2)^2$. $\square$
 
 $N$ Haar-Stichproben finden eine Verletzung von $|\operatorname{Tr}(XUY)|\le\operatorname{Tr}(XY)$ also höchstens mit
-Wahrscheinlichkeit $Nb^4/(a^4k^2)$, obwohl es für jedes nichtkommutierende Paar eine gibt. Tatsächlich ist es noch
-drastischer: $f(U)=|\operatorname{Tr}(AU)|$ ist Lipschitz-stetig mit der Konstanten $L=\|A\|_2$ bezüglich
-$\|U-V\|_2$, also gilt $\mathbb P(f\ge\mathbb Ef+t)\le e^{-ckt^2/L^2}$ mit einer absoluten Konstanten $c>0$
-(Maßkonzentration, ohne Beweis zitiert; Meckes, *loc. cit.*, Kap. 5): hier ein Exponent der Größenordnung
-$k^2a^4/b^4$. Der Code prüft Proposition 11.11 und gibt für in $[0.2,1.2]$ gleichverteilte Spektren ($b/a=6$) den
+Wahrscheinlichkeit $Nb^4/(a^4k^2)$ (eine Vereinigung von $N$ Ereignissen), obwohl es für jedes nichtkommutierende
+Paar eine gibt (Proposition 3.9). Die Schranke ist erst für $k>\sqrt N\,b^2/a^2$ aussagekräftig (für $b/a=6$ und
+$N=2000$: $k>1609$); numerisch übersehen die Stichproben die Verletzung schon für viel kleinere $k$ (siehe unten).
+Der Code prüft Proposition 11.11 per Monte-Carlo (der Stichprobenmittelwert liegt bei diesem Lauf mit festem Seed
+innerhalb von fünf Standardfehlern vom exakten Wert) und gibt für in $[0.2,1.2]$ gleichverteilte Spektren ($b/a=6$) den
 Quotienten aus Korollar 11.12, $\sup z$ und das beste $z$ aus $2000$ Stichproben aus, beide relativ zu
 $\operatorname{Tr}(XY)$.
 
@@ -383,19 +418,26 @@ for k in (2, 4, 8, 16, 32):
     assert nuc > trXY and best < nuc and (k < 4 or best < trXY)            # from k = 4 on: no violation found
 ```
 
-Der Quotient fällt wie $1/k$, und ab $k=4$ erreicht die beste Stichprobe nicht einmal $z=0$. Die Extrema sind Mengen
-von winzigem Haar-Maß, die ein Gradientenverfahren direkt ansteuert. Für das Paar `Xf, Yf` sind beide Extrema über
-$U$ bekannt:
+*Numerische Beobachtung* (die ausgegebene Tabelle; nur für diesen Lauf mit festem Seed geprüft): Der Quotient bleibt
+unter der bewiesenen Schranke $\min(1/\sqrt k,b^2/(a^2k))$ und halbiert sich ungefähr, wann immer sich $k$ verdoppelt,
+d. h. er fällt wie $1/k$, und ab $k=4$ erreicht die beste von $2000$ Stichproben nicht einmal $z=0$. Eine
+Gradientensuche kommt dagegen im Lauf unten beiden Extrema nahe (wiederum eine numerische Beobachtung). Für das Paar
+`Xf, Yf` sind beide Extrema über $U$ bekannt:
 
 **Lemma 11.13.** Ist $k\ge2$, so gilt $\min_U|\operatorname{Tr}(AU)|=0$ für jedes $A\in M_k(\mathbb C)$.
 
 *Beweis.* Sei $A=W\Sigma V^*$ und $P$ die zyklische Verschiebung, $Pe_i=e_{(i\bmod k)+1}$, deren Diagonale für $k\ge2$
 verschwindet. Für $U=VPW^*$ ist $\operatorname{Tr}(AU)=\operatorname{Tr}(\Sigma P)=0$. $\square$
 
-Also ist $\inf_Uz=-\operatorname{Tr}(XY)$ und $\sup_Uz=\|YX\|_1-\operatorname{Tr}(XY)$. Ein einziger Aufruf von `extremize`
-findet beide, mit $12$ Starts, die $z$ maximieren, und $12$, die $-z$ maximieren. Stichproben kommen dem Infimum
-nahe, das neben den typischen Werten liegt ($|\operatorname{Tr}(XUY)|$ ist typischerweise von der Größenordnung
-$\|YX\|_2/\sqrt k$), nicht aber dem Supremum:
+Also ist $\inf_Uz=-\operatorname{Tr}(XY)$ und $\sup_Uz=\|YX\|_1-\operatorname{Tr}(XY)$ (Proposition 3.9). Ein einziger
+Aufruf von `extremize` nähert beide an, mit $12$ Starts, die $z$ maximieren, und $12$, die $-z$ maximieren (in diesem
+Lauf bis auf eine relative Genauigkeit von $10^{-3}$, unten geprüft). Nach Proposition 11.11 ist das quadratische
+Mittel von $|\operatorname{Tr}(XUY)|$ gleich $\|YX\|_2/\sqrt k$; mit den Schranken aus dem Beweis von Korollar 11.12
+(Spektren in $[a,b]$) ist $\mathbb E|\operatorname{Tr}(XUY)|^2\le b^4$ und $\operatorname{Tr}(XY)\ge ka^2$, sodass die
+Markov-Ungleichung $\mathbb P\big(z\ge-(1-\varepsilon)\operatorname{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)$ für
+$\varepsilon>0$ liefert: Für großes $k$ liegt $z$ mit hoher Wahrscheinlichkeit nahe bei seinem Infimum.
+*Numerische Beobachtung* (für diesen Lauf mit festem Seed geprüft): Stichproben kommen dem Infimum bis auf $1\,\%$
+nahe, erreichen aber nicht einmal $z=0$, während das Supremum positiv ist:
 
 ```python
 trXY = (Xf @ Yf).trace.real
@@ -414,28 +456,34 @@ assert z_mc.min().item() - inf_exact < 1e-2 * abs(inf_exact)               # sam
 assert z_mc.max().item() < 0                                               # ... but misses the violation
 ```
 
-> **Physikalische Bedeutung.** Maßkonzentration ist die mathematische Gestalt der **Typizität** in der
-> statistischen Mechanik: In hoher Dimension liefert fast jeder Zustand und fast jede Zeitentwicklung denselben Wert
-> einer makroskopischen Größe. Über eine scharfe Ungleichung entscheiden fein abgestimmte Konfigurationen –
-> ausgerichtete Eigenbasen, Zwei-Niveau-Spektren –, die eine zufällige unitäre Matrix (ein Zufallsschaltkreis, eine
-> zufällige Streumatrix) praktisch nie hervorbringt.
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Korollar 11.12 ist eine schwache,
+> beweisbare Instanz dessen, was die statistische Mechanik **Typizität** nennt: In hoher Dimension erwartet man, dass
+> fast jeder Zustand und fast jede Zeitentwicklung nahezu denselben Wert einer makroskopischen Größe liefert. Über
+> eine scharfe Ungleichung entscheiden fein abgestimmte Konfigurationen – ausgerichtete Eigenbasen,
+> Zwei-Niveau-Spektren –, die eine zufällige unitäre Matrix (ein Zufallsschaltkreis, eine zufällige Streumatrix)
+> selten hervorbringt.
 
 ## 11.5 Multistart-Suche nach Einhüllenden
 
 `optimize.extremize(objective, params, maximize)` führt Adam in `rounds` Runden zu je `steps` Schritten aus
-(Lernrate `lr * decay**round`), zentriert die unitären Karten nach jeder Runde neu und gibt **pro Start** den besten
-erreichten Wert zurück. Jedes Batch-Element ist ein unabhängiger Start mit eigenen Plätzen, Vorzeichen, $U_0$ und
-eigenem Kontrast. Die Vorzeichen von `SelfAdjointParam` sind diskret: Zwischen den Runden probiert `discrete_step`
-pro Start acht einzelne Vorzeichenwechsel nacheinander aus und behält jeden Wechsel, der die Zielfunktion verbessert.
+(Lernrate `lr * decay**round`) auf dem Verlust $\mp\sum_b\text{objective}_b$ aus, zentriert die unitären Karten nach
+jeder Runde neu und gibt **pro Start** den größten (für `maximize=False` den kleinsten) Wert der Zielfunktion unter
+denen zurück, die an den Gradienteniterierten und einmal am Endpunkt berechnet wurden. Jedes Batch-Element ist ein
+unabhängiger Start mit eigenen Plätzen, Vorzeichen, $U_0$ und eigenem Kontrast: Adam arbeitet koordinatenweise; hängt
+also der $b$-te Eintrag der Zielfunktion nur von den $b$-ten Parametern ab (wie bei allen Zielfunktionen unten), so
+beeinflussen sich die Starts nicht. Die Vorzeichen von `SelfAdjointParam` sind diskret: Zwischen den Runden probiert
+`discrete_step` pro Start acht einzelne Vorzeichenwechsel (jeweils an einem gleichverteilt zufälligen Platz)
+nacheinander aus und behält jeden Wechsel, der die Zielfunktion verbessert.
 
-Da jede Iterierte zulässig ist (Proposition 11.2), wird jeder zurückgegebene Wert angenommen: Eine Maximierung
-liefert eine **untere Schranke** für das Supremum, eine Minimierung eine obere Schranke für das Infimum, und nicht
-mehr – eine lokale Suche kann in einem lokalen Extremum stehen bleiben. Die andere Richtung erfordert einen Beweis,
-wie Korollar 11.7 und Proposition 11.9, oder eine konvexe Relaxierung (Abschnitt 11.6). Eine berechnete Einhüllende
-wird geprüft (i) an geschlossenen Formeln; (ii) an von Hand gebauten Konfigurationen, etwa direkten Summen kleinerer
-Lösungen, unter die sie nicht fallen darf; (iii) an strukturierten Stichproben (Zwei-Niveau-Spektren,
-Permutationsbasen), die den Extrema in jeder Dimension nahekommen, anders als Haar-Stichproben
-(`scripts/bounds_checks.py`).
+In exakter Arithmetik ist jede Iterierte zulässig (Proposition 11.2 und die Bemerkungen danach), also ist jeder
+zurückgegebene Wert der Wert von $z$ an einem zulässigen Punkt; in Gleitkommaarithmetik ist er dieser Wert bis auf
+Rundungsfehler (die Prüfungen unten erlauben $10^{-12}$). Daher liefert eine Maximierung eine **untere Schranke** für
+das Supremum, eine Minimierung eine obere Schranke für das Infimum, und nicht mehr – eine lokale Suche kann in einem
+lokalen Extremum stehen bleiben. Die andere Richtung erfordert einen Beweis, wie Korollar 11.7 und
+Proposition 11.9, oder eine konvexe Relaxierung (Abschnitt 11.6). Eine berechnete Einhüllende wird geprüft (i) an
+geschlossenen Formeln; (ii) an von Hand gebauten Konfigurationen, etwa direkten Summen kleinerer Lösungen, unter die
+sie nicht fallen darf; (iii) an strukturierten Stichproben (Zwei-Niveau-Spektren, Permutationsbasen), deren Werte
+weitere angenommene Werte sind.
 
 **Proposition 11.14 (untere Einhüllende von Exp. 1).** Seien alle $k_c\ge2$. Über $X\in\mathcal P_\delta$, $Y\ge0$
 mit $\lambda_{\max}(Y)=1$ und unitäre $U\in\mathcal M$ gilt $\ \min z=-\big(D-2\delta/(1+\delta)\big)$.
@@ -446,13 +494,19 @@ $z\ge-\operatorname{Tr}(XY)\ge-(D-2\delta/(1+\delta))$. Gleichheit gilt für $X$
 und $1$ sonst, $Y=1$ und $U=\bigoplus_cU_c$ mit $\operatorname{Tr}(X_cU_c)=0$ (Lemma 11.13). $\square$
 
 Der Code prüft Proposition 11.14 auf $M_2\oplus M_2$, Korollar 11.7 auf $M_3\oplus M_3$ (beide Kontraste
-vorgegeben, $k=3$ ungerade) und Proposition 11.9; Suprema und Infima teilen sich wie oben einen Aufruf. Das
-Schlüsselwort `is_self_adjoint` wählt den Algorithmus für die Spurnorm (Singulärwerte oder, für $YXY$, Eigenwerte),
-ohne in jedem Schritt zu testen. Die letzte Prüfung ist vom Typ (ii): $z$ aus Exp. 3 ist additiv über direkte
-Summen, und der Kontrast einer direkten Summe ist der größte Kontrast ihrer Summanden (Aufgabe 3), also
+vorgegeben, $k=3$ ungerade) und Proposition 11.9; Suprema und Infima teilen sich wie oben einen Aufruf. Die
+einseitigen Prüfungen (kein zurückgegebener Wert jenseits eines bewiesenen Extremums) sind Folgerungen aus diesen
+Sätzen; die Prüfungen, dass die Suche dem Extremum bis auf die angegebene Toleranz nahekommt, sind numerische
+Beobachtungen dieses Laufs mit festem Seed. Das Schlüsselwort `is_self_adjoint` wählt den Algorithmus für die
+Spurnorm (Singulärwerte oder, für $YXY$, Eigenwerte), ohne in jedem Schritt zu testen. Die letzte Prüfung ist vom
+Typ (ii): $z$ aus Exp. 3 ist additiv über direkte Summen, und der Kontrast einer direkten Summe ist der größte
+Kontrast ihrer Summanden (Aufgabe 3), also gilt für die Einhüllenden von Exp. 3 mit $\Delta(Y)$ frei in $[0,0.999]$
+wie im Code
 $$
-\overline z_{M_2\oplus M_2}(\delta)\ \ge\ \overline z_{M_2}(\delta)+\max_{\delta'\le\delta}\overline z_{M_2}(\delta').
+\overline z_{M_2\oplus M_2}(\delta)\ \ge\ \overline z_{M_2}(\delta)+\sup_{\delta'\le\delta}\overline z_{M_2}(\delta');
 $$
+insbesondere ist die Summe zweier auf $M_2$ bei den Kontrasten $\delta$ und $\delta'\le\delta$ angenommener Werte ein
+auf $M_2\oplus M_2$ beim Kontrast $\delta$ angenommener Wert.
 
 ```python
 torch.manual_seed(1)
@@ -508,23 +562,24 @@ assert inf3 >= -1e-12 and inf3 < 1e-6                                       # Pr
 assert sup_M22 >= direct_sum - 5e-3 * direct_sum                           # (ii), up to 0.5 %
 ```
 
-Die Suche auf $M_2\oplus M_2$ bleibt um etwa $0.2\,\%$ hinter der direkten Summe zurück: Sie ist nicht vollständig
-konvergiert, und die beste untere Schranke für $\overline z_{M_2\oplus M_2}(0.5)$ ist die größere Zahl – dies zu
-erkennen ist der Zweck von Prüfung (ii). Die Werte für $M_2$ stimmen bis auf $10^{-4}$ mit
-$(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2$ überein, wobei $d=0.999$ der größte zugelassene Kontrast von
-$Y$ ist: eine geschlossene Form, die die Begleitarbeit numerisch beobachtet (in reellen Algebren), aber nicht
-bewiesen hat; der Code behauptet sie nicht. Für größere Blöcke sind die oberen Einhüllenden von Exp. 1 und Exp. 3
-unseres Wissens nicht in geschlossener Form bekannt; berechnete Kurven sind dann untere Schranken und Vermutungen,
-nicht mehr.
+*Numerische Beobachtungen* (die ausgegebenen Werte dieses Laufs). Die Suche auf $M_2\oplus M_2$ bleibt um etwa
+$0.2\,\%$ hinter der direkten Summe zurück: Sie ist nicht vollständig konvergiert, und die beste untere Schranke für
+$\overline z_{M_2\oplus M_2}(0.5)$ ist die größere Zahl – dies zu erkennen ist der Zweck von Prüfung (ii). Die Werte
+für $M_2$ stimmen bis auf $10^{-4}$ mit $(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2$ überein, wobei
+$d=0.999$ der größte zugelassene Kontrast von $Y$ ist. Diese geschlossene Form ist **kein** Satz dieses Kurses: Die
+Begleitarbeit hat sie numerisch beobachtet (in reellen Algebren), aber nicht bewiesen, und der Code gibt sie aus, ohne
+etwas über sie zu prüfen. Für größere Blöcke kennen wir keine geschlossene Form der oberen Einhüllenden von Exp. 1
+und Exp. 3; berechnete Kurven sind dann untere Schranken (angenommene Werte), nicht mehr.
 
 ## 11.6 Womit man vergleichen sollte
 
 **Manopt**, **pymanopt** und **geoopt** stellen Matrixmannigfaltigkeiten (Stiefel-Mannigfaltigkeiten, orthogonale
 und unitäre Gruppen) mit Retraktionen wie QR, polar oder Cayley bereit sowie Riemannsche Löser (konjugierte
-Gradienten, Trust-Region-Verfahren, Riemannsches Adam), die oft effizienter sind als Adam in einer neu zentrierten
-Karte. **cvxpy** mit einem SDP-Löser löst konvexe Probleme in Operatorvariablen global optimal, mit einem dualen
-Zertifikat bis auf die Lösertoleranz, und semidefinite Relaxierungen liefern rigorose Schranken in der Richtung, die
-eine lokale Suche nicht erreichen kann. **NCTSSOS**, **ncpol2sdpa** und **NCSOStools** beschränken Eigenwerte und
+Gradienten, Trust-Region-Verfahren, Riemannsches Adam), eine Alternative zu Adam in einer neu zentrierten Karte (einen
+Leistungsvergleich stellen wir hier nicht an). **cvxpy** übergibt konvexe Probleme in Operatorvariablen an SDP-Löser,
+die ein Optimum zusammen mit einem dualen Zertifikat liefern, beides bis auf die Lösertoleranz; eine Relaxierung – ein
+konvexes Problem über einer größeren zulässigen Menge – beschränkt das Supremum nach oben, in der Richtung, die eine
+lokale Suche nicht liefern kann. **NCTSSOS**, **ncpol2sdpa** und **NCSOStools** beschränken Eigenwerte und
 Spuren nichtkommutativer Polynome in allen Dimensionen zugleich (Abschnitt 0.3). Die Bibliothek ergänzt exakte
 Parametrisierungen der Spektral- und Kontrastnebenbedingungen von $\bigoplus_cM_{k_c}$ (die Extrema können in jedem
 Sektor liegen), unitäre Matrizen, die die Blöcke respektieren, und eine einzige gebündelte Rechnung für viele Starts
@@ -545,12 +600,14 @@ Suprema; den Rest müssen Beweise oder Relaxierungen beisteuern.
 <details>
 <summary>Lösungen</summary>
 
-1. $S$ hat rein imaginäre Eigenwerte, also sind $1\pm S$ invertierbar; sie kommutieren, und $(1+S)^*=1-S$. Daher
-   ist $C^*C=(1-S)^{-1}(1+S)(1-S)(1+S)^{-1}=1$, und $1+C=2(1+S)^{-1}$ ist invertierbar, also
-   $-1\notin\operatorname{spec}C$. Umgekehrt ist für eine unitäre Matrix $U$ mit invertierbarem $1+U$ die Matrix
-   $S=(1-U)(1+U)^{-1}$ schiefadjungiert: $S^*=(1+U^*)^{-1}(1-U^*)=(U+1)^{-1}U\,U^*(U-1)=-S$. Da $C$ mit $S$
-   kommutiert, ist $C(1+S)=1-S$ äquivalent zu $S(1+C)=1-C$, d. h. $S=(1-C)(1+C)^{-1}$: Die beiden Abbildungen sind
-   zueinander invers.
+1. $S$ ist normal und $iS$ selbstadjungiert, also hat $S$ rein imaginäre Eigenwerte (Korollar 1.4(2)), und $1\pm S$
+   sind invertierbar; sie kommutieren, und $(1+S)^*=1-S$. Daher ist $C^*C=(1-S)^{-1}(1+S)(1-S)(1+S)^{-1}=1$, und
+   $1+C=2(1+S)^{-1}$ ist invertierbar, also $-1\notin\operatorname{spec}C$. Umgekehrt ist für eine unitäre Matrix $U$
+   mit invertierbarem $1+U$ die Matrix $S=(1-U)(1+U)^{-1}$ schiefadjungiert:
+   $S^*=(1+U^*)^{-1}(1-U^*)=(U+1)^{-1}U\,U^*(U-1)=(U+1)^{-1}(U-1)=-S$, da $U\pm1$ kommutieren. Für kommutierende $C$
+   und $S$ ist $C(1+S)=1-S$ äquivalent zu $S(1+C)=1-C$ (beides besagt $C+CS+S=1$). Nun kommutiert $C(S)$ mit $S$, und
+   $S=(1-U)(1+U)^{-1}$ kommutiert mit $U$; also ist $U=C(S)$ genau dann, wenn $S=(1-U)(1+U)^{-1}$: Die beiden
+   Abbildungen sind zueinander invers.
 
 ```python
 Sk = torch.randn(4, 4, dtype=torch.complex128)
@@ -562,8 +619,9 @@ assert torch.allclose((I4 - Cay) @ torch.linalg.inv(I4 + Cay), Sk, atol=1e-10)
 assert torch.linalg.eigvals(Cay).add(1).abs().min() > 1e-6        # -1 is never an eigenvalue
 ```
 
-2. Satz 5.3 und sein Beweis gelten für eine reelle Gaußsche Matrix (Dichte $\propto e^{-\|Z\|_2^2/2}$), die
-   orthogonale Gruppe und orthogonales $V$ (die Bemerkung nach Satz 5.3), also hat $VO$ dieselbe Verteilung wie $O$.
+2. Nach Satz B.17 (auch Lemma C.2) ist der vorzeichenkorrigierte QR-Faktor $O$ einer reellen Gaußschen Matrix, den
+   die Bibliothek für eine reelle Algebra zieht, Haar-verteilt auf $O(k)$; also hat $VO$ für $V\in O(k)$ dieselbe
+   Verteilung wie $O$.
    Linksmultiplikation mit $\operatorname{diag}(\pm1)$ liefert $\mathbb E[O_{ij}O_{lm}]=0$ für $i\ne l$, Permutationen
    zeigen, dass $\mathbb E[O_{ij}O_{im}]$ nicht von $i$ abhängt, und $\sum_iO_{ij}O_{im}=\delta_{jm}$; also ist
    $\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k$ und $\mathbb E\operatorname{Tr}(AO)^2=\sum_{ij}A_{ji}^2/k$.
