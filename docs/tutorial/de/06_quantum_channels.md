@@ -2,10 +2,12 @@
 
 # 6. Quantenkanäle
 
-Ein Quantenkanal ist die allgemeinste Art, wie sich ein Zustand ändern kann: eine unitäre
-Zeitentwicklung, eine Messung, deren Ergebnis vergessen wird, die Wechselwirkung mit einer Umgebung,
-der Verlust eines Teilchens. Mathematisch ist er eine vollständig positive, spurerhaltende lineare
-Abbildung. Dieses Kapitel beweist die Standardbeschreibungen solcher Abbildungen – Choi-Matrizen,
+Ein Quantenkanal ist eine vollständig positive, spurerhaltende lineare Abbildung. Die Konjugation
+mit einer unitären Matrix, die bedingte Erwartung auf das Zentrum, die durch eine Isometrie $V$
+gegebene Abbildung $\rho\mapsto\operatorname{Tr}_E(V\rho V^*)$ und Abbildungen, die Gewicht von einem
+Sektor in einen anderen verschieben, sind Beispiele; ihre physikalische Lesart (eine Zeitentwicklung,
+eine Messung, deren Ergebnis vergessen wird, eine Umgebung, der Verlust eines Teilchens) wird nur in
+den Kästen *Physikalische Bedeutung* besprochen. Dieses Kapitel beweist die Standardbeschreibungen solcher Abbildungen – Choi-Matrizen,
 Kraus-Operatoren, die Stinespring-Dilatation – für Abbildungen zwischen endlichdimensionalen
 von-Neumann-Algebren und untersucht dann, was an direkten Summen besonders ist: Abbildungen
 zwischen Sektoren, duale Abbildungen bezüglich der Spuren aus Kapitel 3 und den klassischen Teil
@@ -14,7 +16,7 @@ Theorie.
 
 **Sie lernen**, warum Positivität nicht genügt, wie man zwischen Choi-Matrizen, Kraus-Operatoren,
 Superoperatoren und Isometrien umrechnet, warum „spurerhaltend“ von der Spur abhängt, sobald eine
-Abbildung den Sektor wechselt, welche Observablen die Dekohärenz überleben und was ein zufälliger
+Abbildung den Sektor wechselt, welche Operatoren ein unitaler Kanal festlässt und was ein zufälliger
 Kanal im Mittel mit einem reinen Zustand macht.
 
 Im Folgenden seien $\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)$ und
@@ -101,8 +103,16 @@ Abbildung aus Proposition 6.4 mit der Form `(batch, r, C', C, k'_max, k_max)`. `
 $J(\Phi_{cc})$ für jeden Sektor und `Channel.superoperator()` die Matrix $S_c$ von $\Phi_{cc}$ auf
 zeilenweise angeordneten Vektoren, $\operatorname{vec}(X)_{(a,b)}=X_{ab}$. Beide enthalten die Zahlen
 $\Phi(E_{ij})_{ab}=J_{(i,a),(j,b)}=S_{(a,b),(i,j)}$ in unterschiedlicher Anordnung.
-`Channel.from_superoperator` diagonalisiert die Choi-Matrizen wie im Beweis von Satz 6.2 und weist
-Abbildungen zurück, die nicht CP sind.
+`Channel.from_superoperator` löst `ValueError` aus, wenn eine Choi-Matrix nicht hermitesch ist,
+$\|J-J^*\|>2\cdot10^{-10}s$ (in doppelter Genauigkeit), wobei $s=\max(1,\|J\|)$ mit der Spektralnorm;
+andernfalls ersetzt es $J$ durch seinen hermiteschen Teil $(J+J^*)/2$, diagonalisiert diesen wie im
+Beweis von Satz 6.2, löst `ValueError` aus, wenn ein Eigenwert kleiner als $-10^{-10}s$ ist, und setzt
+die übrigen negativen Eigenwerte auf $0$. Ist $\Phi(X^*)=\Phi(X)^*$ für alle $X$, so ist $J^*=J$ (der
+$(i,j)$-Block von $J^*$ ist $\Phi(E_{ji})^*=\Phi(E_{ij})$); umgekehrt liefert $J^*=J$
+$\Phi(E_{ji})^*=\Phi(E_{ij})$, also $\Phi(X^*)=\Phi(X)^*$ wegen der Linearität. Bis auf diese
+Rundungstoleranzen weist es also genau die Abbildungen zurück, die Adjungierte nicht erhalten, und nach
+Satz 6.2 unter den übrigen genau die, die nicht CP sind; zum Beispiel wird $X\mapsto iX$
+zurückgewiesen.
 
 ```python
 import math
@@ -163,9 +173,14 @@ try:
     raise AssertionError("the transpose was accepted")
 except ValueError as e:
     print(e)                                              # superoperator is not completely positive
+try:
+    Channel.from_superoperator(alg, [1j * torch.eye(k * k, dtype=dt)[None] for k in (2, 3)])
+    raise AssertionError("X -> iX was accepted")
+except ValueError as e:
+    print(e)                                              # superoperator does not preserve Hermiticity
 ```
 
-> **Physikalische Bedeutung.** Ein System ist nie allein: Es kann mit einer unberührten Ancilla mit
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Ein System ist nie allein: Es kann mit einer unberührten Ancilla mit
 > $n$ Niveaus korreliert sein. Ein physikalischer Prozess wirkt auf das Paar als
 > $\Phi_n=\mathrm{id}_n\otimes\Phi$ und muss Zustände auf Zustände abbilden; also muss $\Phi$
 > vollständig positiv sein. Die Transposition ist positiv, bildet aber den verschränkten Zustand
@@ -177,7 +192,8 @@ except ValueError as e:
 
 Für $\Phi(A)=\sum_{l=1}^rK_lAK_l^*$ von $M_k$ nach $M_{k'}$ setze man $\Phi^*(B)=\sum_lK_l^*BK_l$; wegen
 der Zyklizität ist $\operatorname{Tr}(\Phi(A)B)=\operatorname{Tr}(A\Phi^*(B))$, also ist $\Phi^*$ die
-duale Abbildung zu $\Phi$ bezüglich der Spur (Abschnitt 6.3) und hängt nicht von der Wahl der $K_l$ ab.
+duale Abbildung zu $\Phi$ bezüglich der Spur (Abschnitt 6.3) und hängt nicht von der Wahl der $K_l$ ab
+(ist $\operatorname{Tr}(AX)=\operatorname{Tr}(AX')$ für alle $A$, so ist $X=X'$: man nehme $A=E_{ji}$).
 Auf $\mathbb C^r\otimes\mathbb C^{k'}$ (die **Umgebung** $\mathbb C^r$ zuerst) sei
 $\operatorname{Tr}_EX=\sum_l(e_l^*\otimes1)X(e_l\otimes1)$.
 
@@ -194,16 +210,24 @@ $\operatorname{Tr}_E(VAV^*)$ eine Kraus-Form mit $K_l=(e_l^*\otimes1)V$. Ferner 
 $V^*(1\otimes B)V=\sum_{l,l'}\langle e_l,e_{l'}\rangle K_l^*BK_{l'}=\Phi^*(B)$ und
 $V^*V=\sum_lK_l^*K_l$, was genau dann $1$ ist, wenn $\Phi$ TP ist (Proposition 6.4). $\square$
 
-Allgemein (hier ohne Beweis) ist eine CP-Abbildung $\Psi$ von einer unitalen C\*-Algebra
-$\mathcal A$ in die beschränkten Operatoren auf einem Hilbertraum $H$ von der Form
-$\Psi(a)=V^*\pi(a)V$ mit einer Darstellung $\pi$ von $\mathcal A$ auf einem Hilbertraum $K$ und einem
-beschränkten $V:H\to K$ (W. F. Stinespring, Proc. AMS 6 (1955) 211; V. Paulsen, *Completely Bounded
-Maps and Operator Algebras*, Cambridge 2002, Thm. 4.1); oben ist $\pi(B)=1_r\otimes B$. Für eine
-Abbildung zwischen direkten Summen macht
-$V_c=\sum_{d,l}e_l\otimes\iota'_dK^{dc}_l:\mathbb C^{k_c}\to\mathbb C^r\otimes\bigoplus_d\mathbb C^{k'_d}$
-($\iota'_d$ die Inklusion des $d$-ten Summanden) $\Phi(A)_d$ zum $(d,d)$-Block von
-$\sum_c\operatorname{Tr}_E(V_cA_cV_c^*)$, und $\Phi$ ist genau dann TP, wenn jedes $V_c$ eine
-Isometrie ist; so ziehen `random_channel` und `random_inter_sector_channel` Kanäle (Abschnitt 6.5).
+Also ist das kleinste $r$, für das $\Phi(A)=\operatorname{Tr}_E(VAV^*)$ mit einem
+$V:\mathbb C^k\to\mathbb C^r\otimes\mathbb C^{k'}$ gilt, der Kraus-Rang $\operatorname{rank}J(\Phi)$: Jedes
+solche $V$ liefert eine Kraus-Form mit $r$ Operatoren, also ist $r\ge\operatorname{rank}J(\Phi)$
+(Korollar 6.3), und $r=\operatorname{rank}J(\Phi)$ wird nach Satz 6.2(d) erreicht.
+
+Die Formel $\Phi^*(B)=V^*\pi(B)V$ mit der Darstellung $\pi(B)=1_r\otimes B$ ist die Form, in der
+W. F. Stinespring (Proc. AMS 6 (1955) 211) den Satz formuliert hat, in einem weit allgemeineren
+Rahmen als dem hier bewiesenen endlichdimensionalen (historische Zuordnung; weiterführende Literatur:
+V. Paulsen, *Completely Bounded Maps and Operator Algebras*, Cambridge 2002, Kap. 4). Für eine
+Abbildung zwischen direkten Summen sei $\iota'_d$ die Inklusion des $d$-ten Summanden von
+$\bigoplus_d\mathbb C^{k'_d}$ und
+$V_c=\sum_{d,l}e_l\otimes\iota'_dK^{dc}_l:\mathbb C^{k_c}\to\mathbb C^r\otimes\bigoplus_d\mathbb C^{k'_d}$.
+Dann ist $(e_l^*\otimes1)V_c=\sum_d\iota'_dK^{dc}_l$, also ist der $(d,d)$-Block von
+$\sum_c\operatorname{Tr}_E(V_cA_cV_c^*)=\sum_{c,l}\big(\sum_d\iota'_dK^{dc}_l\big)A_c\big(\sum_{d'}\iota'_{d'}K^{d'c}_l\big)^*$
+gleich $\sum_{c,l}K^{dc}_lA_cK^{dc*}_l=\Phi(A)_d$; und wegen $\iota'^*_d\iota'_{d'}=\delta_{dd'}1$ ist
+$V_c^*V_c=\sum_{d,l}K^{dc*}_lK^{dc}_l$, also ist $\Phi$ genau dann TP, wenn jedes $V_c$ eine Isometrie
+ist (Proposition 6.4). So ziehen `random_channel` und `random_inter_sector_channel` Kanäle
+(Abschnitt 6.5).
 
 **Lemma 6.6.** Sind $X,Y\in M_{p\times n}$ mit $XX^*=YY^*$, so ist $Y=XW$ mit einem unitären
 $W\in M_n$.
@@ -243,12 +267,12 @@ PhiL = Channel(alg, torch.einsum('jl,blcxy->bjcxy', u, Kpad))
 assert close(PhiL(rho), out) and all(close(a, b) for a, b in zip(PhiL.choi(), J))
 ```
 
-> **Physikalische Bedeutung.** Jeder Kanal ist eine isometrische Wechselwirkung des Systems mit einer
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Jeder Kanal ist eine isometrische Wechselwirkung des Systems mit einer
 > Umgebung in einem festen Zustand, gefolgt vom Ignorieren der Umgebung. Eine Messung der Umgebung in
 > der Basis $e_l$ liefert das Ergebnis $l$ mit Wahrscheinlichkeit $\operatorname{Tr}K_l\rho K_l^*$ und
 > hinterlässt den Zustand $K_l\rho K_l^*/\operatorname{Tr}(K_l\rho K_l^*)$: Die Kraus-Operatoren sind
 > die möglichen „Quantensprünge“. Eine andere Basis ergibt andere Sprünge, aber denselben Kanal
-> (Satz 6.7); die kleinste Umgebung hat die Dimension $\operatorname{rank}J$.
+> (Satz 6.7), und die kleinste Umgebung hat als Dimension den Kraus-Rang, wie nach Satz 6.5 gezeigt.
 
 ## 6.3 Duale Abbildungen bezüglich einer Spur
 
@@ -296,10 +320,18 @@ $\operatorname{tr}_v(y)$, wenn $\Phi(1)=1$. (c) $\operatorname{tr}_w(\Phi^\sharp
 wegen der Spureigenschaft; man verwende die Eindeutigkeit. (d) Es kommen nur die Paare $d=c$ vor, für
 die $v_d/w_c=1$ ist. $\square$
 
-Für Abbildungen, die den Sektor wechseln, gilt (d) nicht. Sei $\mathcal M=\mathcal N=M_1\oplus M_2$
-(Sektor $0$: kein Teilchen; Sektor $1$: ein Teilchen auf zwei Plätzen) und $\Phi$ der
-**Teilchenverlust**, $\Phi(x)=(x_0+\operatorname{Tr}x_1)\oplus0$, mit den Kraus-Operatoren
-$K^{00}=1$, $K^{01}_l=\langle l|$. Er ist TP für die ungewichteten Spuren. Für `Tr_norm` ist
+**Dichten im Heisenberg-Bild.** Sei $\Psi:\mathcal N\to\mathcal M$ linear, $\omega$ ein lineares
+Funktional auf $\mathcal M$ mit der Dichte $\rho$ bezüglich $\operatorname{tr}_w$ (Satz 3.2) und
+$\Psi^\sharp:\mathcal M\to\mathcal N$ die duale Abbildung zu $\Psi$ bezüglich $(v,w)$. Dann ist
+$\omega(\Psi(y))=\operatorname{tr}_w(\Psi(y)\rho)=\operatorname{tr}_v(y\Psi^\sharp(\rho))=\operatorname{tr}_v(\Psi^\sharp(\rho)y)$,
+also hat $\omega\circ\Psi$ die Dichte $\Psi^\sharp(\rho)$ bezüglich $\operatorname{tr}_v$; ist $\Psi$
+unital, so ist $\Psi^\sharp$ nach Korollar 6.9(b) TP bezüglich $(w,v)$ (mit vertauschten Rollen von
+$\mathcal M$ und $\mathcal N$).
+
+Für Abbildungen, die den Sektor wechseln, gilt Korollar 6.9(d) nicht. Sei
+$\mathcal M=\mathcal N=M_1\oplus M_2$ (Sektoren $0$ und $1$) und $\Phi$ die als **Teilchenverlust**
+bezeichnete Abbildung (siehe den Kasten unten), $\Phi(x)=(x_0+\operatorname{Tr}x_1)\oplus0$, mit den Kraus-Operatoren
+$K^{00}=1$, $K^{01}_l=\langle l|$. Sie ist TP für die ungewichteten Spuren. Für `Tr_norm` ist
 $w=v=(1,\tfrac12)$, $\Phi^\sharp(1)=1\oplus2\cdot1_2$ und
 $\operatorname{tr}_v\Phi(x)=x_0+\operatorname{Tr}x_1\ne x_0+\tfrac12\operatorname{Tr}x_1=\operatorname{tr}_w(x)$.
 In der Bibliothek ist `Channel.adjoint()` gleich $\Phi^*$ und `InterSectorChannel.adjoint(trace=...)`
@@ -337,15 +369,15 @@ assert abs(loss(s).Tr_norm() - (s @ alg01.central([1.0, 2.0])).Tr_norm()) < 1e-1
 print(s.Tr_norm().real.item(), loss(s).Tr_norm().real.item())      # Tr_norm is not conserved
 ```
 
-> **Physikalische Bedeutung.** Das spurunabhängige Objekt ist die Heisenberg-Abbildung
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Das spurunabhängige Objekt ist die Heisenberg-Abbildung
 > $\Psi:\mathcal N\to\mathcal M$ auf den Observablen: Ein Zustand $\omega$ vor dem Prozess wird danach
-> zu $\omega\circ\Psi$, und $\Psi$ ist CP und unital. Dichten hängen von der Spur ab (Satz 3.2); die
-> Abbildung, die die Dichte von $\omega$ auf die von $\omega\circ\Psi$ abbildet, ist die duale
-> Abbildung zu $\Psi$ bezüglich der gewählten Spuren, und sie ist nach Korollar 6.9(b) TP bezüglich
-> dieser Spuren. Wirken die Algebren mit Vielfachheiten, so hat die physikalische Spur die Gewichte
-> $w_c=m_c$ (Kapitel 2). Der Teilchenverlust oben erhält die Wahrscheinlichkeit bezüglich der
-> ungewichteten Spur, die Zustände zählt, nicht aber bezüglich `Tr_norm`, das die Sektoren gleich
-> gewichtet.
+> zu $\omega\circ\Psi$, und $\Psi$ ist CP und unital. Dichten hängen von der Spur ab (Satz 3.2), und die
+> Dichten transformieren sich mit der dualen Abbildung zu $\Psi$ bezüglich der gewählten Spuren (der
+> Absatz nach Korollar 6.9). Wirken die Algebren mit Vielfachheiten, so hat die physikalische Spur die
+> Gewichte $w_c=m_c$ (Abschnitt 2.3). Im Beispiel wird Sektor $0$ als „kein Teilchen“ und Sektor $1$
+> als „ein Teilchen auf zwei Plätzen“ gelesen; die Abbildung entfernt dann das Teilchen. Sie erhält
+> die Wahrscheinlichkeit bezüglich der ungewichteten Spur, die Zustände zählt, nicht aber bezüglich
+> `Tr_norm`, das die Sektoren gleich gewichtet.
 
 ## 6.4 Dekohärenz
 
@@ -361,8 +393,13 @@ Die Standardkanäle der Bibliothek wirken innerhalb jedes Blocks ($p,\gamma\in[0
 
 Die Kraus-Formen prüft man durch direkte Rechnung, z. B.
 $\sum_{ij}\frac1kE_{ij}\rho E_{ji}=\frac1k\sum_{ij}\rho_{jj}E_{ii}$. Alle fünf sind TP, und alle außer
-der Amplitudendämpfung mit $\gamma>0$ sind unital. Die bedingte Erwartung $E$ auf das Zentrum
-(Proposition 2.8) ist die Depolarisierung mit $p=1$. Anders als die Messung des Sektors,
+der Amplitudendämpfung mit $\gamma>0$ sind unital (Proposition 6.4: man berechne $\sum_lK_l^*K_l$ und
+$\sum_lK_lK_l^*$; für die Amplitudendämpfung in einem Block der Größe $k$ sind sie $1$ und
+$1+(k-1)\gamma E_{00}-\gamma\sum_{i>0}E_{ii}$, und $\sum_jp_j=1$ für den gemischt-unitären Kanal).
+Explizit bildet die Amplitudendämpfung $\rho_{00}\mapsto\rho_{00}+\gamma\sum_{i>0}\rho_{ii}$,
+$\rho_{ii}\mapsto(1-\gamma)\rho_{ii}$ und $\rho_{ij}\mapsto(1-\gamma)\rho_{ij}$ für $i\ne j$, beide
+positiv, sowie $\rho_{0j}\mapsto\sqrt{1-\gamma}\,\rho_{0j}$, $\rho_{j0}\mapsto\sqrt{1-\gamma}\,\rho_{j0}$
+für $j>0$ ab. Die bedingte Erwartung $E$ auf das Zentrum (Proposition 2.8) ist die Depolarisierung mit $p=1$. Anders als die Messung des Sektors,
 $X\mapsto\sum_cP_cXP_c$, die auf $\mathcal M$ die Identität ist (Abschnitt 3.3), behält sie nur die
 $p_c$.
 
@@ -374,18 +411,25 @@ kommutiert. Insbesondere bilden die Fixpunkte eine von-Neumann-Unteralgebra von 
 $\Phi(X^*)=\Phi(X)^*$, sodass die selbstadjungierten Teile $(X+X^*)/2$ und $(X-X^*)/2i$ eines
 Fixpunkts Fixpunkte sind; sei also $X=X^*$. Mit $Y_l=K_lX-XK_l$ ist
 $$
-\sum_lY_lY_l^*=\sum_l\big(K_lX^2K_l^*-K_lXK_l^*X-XK_lXK_l^*+XK_lK_l^*X\big)=\Phi(X^2)-X^2,
+\sum_lY_lY_l^*=\sum_l\big(K_lX^2K_l^*-K_lXK_l^*X-XK_lXK_l^*+XK_lK_l^*X\big)
+=\Phi(X^2)-\Phi(X)X-X\Phi(X)+X\Phi(1)X=\Phi(X^2)-X^2,
 $$
-und die Spur davon ist $0$, weil $\Phi$ TP ist. Da $\operatorname{Tr}Y_lY_l^*=\|Y_l\|_2^2\ge0$, ist
+wobei $Y_l^*=XK_l^*-K_l^*X$, $\Phi(X)=X$ und $\Phi(1)=1$ benutzt wurden. Die Spur davon ist $0$, weil
+$\Phi$ TP ist. Da $\operatorname{Tr}Y_lY_l^*=\|Y_l\|_2^2\ge0$, ist
 jedes $Y_l=0$; durch Übergang zu den Adjungierten kommutiert $X$ auch mit $K_l^*$. Diese $X$ bilden
 den Kommutanten einer selbstadjungierten Menge, geschnitten mit $\mathcal M$: eine $*$-Algebra, die
 $1$ enthält, also eine von-Neumann-Algebra (Satz 2.2). $\square$
 
 Also erhält die Dephasierung ($p>0$) genau die Diagonale jedes Blocks, und die Depolarisierung
 ($p>0$) und $E$ erhalten genau das Zentrum. Ohne Unitalität gilt der Satz nicht: Die
-Amplitudendämpfung lässt $E_{00}$ fest, das nicht mit dem Sprung $E_{01}$ kommutiert (unten haben ihre
-Fixpunkte und der Kommutant beide die Dimension $1$ pro Block, aber es sind $\mathbb CE_{00}$ und
-$\mathbb C1$).
+Amplitudendämpfung lässt $E_{00}$ fest, das nicht mit dem Sprung $E_{01}$ kommutiert. Für $0<\gamma\le1$
+und $k\ge2$ haben ihre Fixpunkte in einem Block und der Kommutant ihrer Kraus-Operatoren beide die
+Dimension $1$, aber es sind $\mathbb CE_{00}$ und $\mathbb C1$: Nach der expliziten Form oben hat ein
+Fixpunkt $\rho_{ij}=0$ für $i\ne j$ und $\rho_{ii}=0$ für $i>0$ (diese Einträge werden mit
+$\sqrt{1-\gamma}\ne1$ bzw. $1-\gamma\ne1$ multipliziert), und jedes Vielfache von $E_{00}$ ist fest;
+und was mit allen $E_{0i}$, $E_{i0}$ ($i>0$) kommutiert, kommutiert mit ihren Produkten
+$E_{ij}=E_{i0}E_{0j}$ und $E_{00}=E_{01}E_{10}$, also mit $M_k$, und ist daher ein Vielfaches von $1$
+(Kapitel 2, Aufgabe 1).
 
 **Satz 6.11 (unitale Kanäle erhöhen die Entropie).** Sei $\Phi:\mathcal M\to\mathcal N$ positiv,
 spurerhaltend und unital, und seien $\rho$ und $\Phi(\rho)$ Zustände mit den Eigenwerten $\lambda_i$
@@ -404,7 +448,8 @@ Einträge). Nach der endlichen Jensenschen Ungleichung $f(\sum_i\Delta_{ji}\lamb
 (durch Induktion nach der Anzahl der Terme aus der Definition der Konkavität, wie in der Lösung von
 Aufgabe 2 in Kapitel 3) folgt
 $\sum_jf(\mu_j)\ge\sum_j\sum_i\Delta_{ji}f(\lambda_i)=\sum_if(\lambda_i)$. Man wähle $f(t)=-t\log t$
-und $f(t)=-t^2$. $\square$
+($f(0)=0$) und $f(t)=-t^2$, die nach Lemma 3.4 auf $[0,1]$ konkav sind: $t\log t$ und $t^2$ sind
+stetig auf $[0,1]$ mit den zweiten Ableitungen $1/t>0$ und $2>0$ auf $(0,1)$. $\square$
 
 Der klassische Teil einer Abbildung zwischen Sektoren ist ihre **Übergangsmatrix**
 $T_{dc}(\rho)=\operatorname{Tr}\Phi_{dc}(\rho_c)/\operatorname{Tr}\rho_c$ ($\rho_c\ne0$); die Methode
@@ -414,7 +459,7 @@ Eingangssektors.
 **Proposition 6.12.** Sei $\Phi:\mathcal M\to\mathcal N$ positiv und TP, $\rho$ ein Zustand mit
 $p_c=\operatorname{Tr}\rho_c>0$ und $q_d=\operatorname{Tr}\Phi(\rho)_d$. Dann ist $T(\rho)$
 spaltenstochastisch und $q=T(\rho)p$. Mit den bedingten Erwartungen $E_{\mathcal M}$, $E_{\mathcal N}$
-auf die Zentren gilt
+auf die Zentren (Proposition 2.8) gilt
 $$
 E_{\mathcal N}\Phi E_{\mathcal M}(\rho)=\bigoplus_d\frac{(Tp)_d}{k'_d}\,1_{k'_d},\qquad T=T(1).
 $$
@@ -456,6 +501,7 @@ assert fixed_dims(zoo['dephasing']) == [2, 3] and fixed_dims(zoo['depolarizing']
 E00 = alg.from_blocks([unit(0, 0, 2), unit(0, 0, 3)])
 E01 = alg.from_blocks([unit(0, 1, 2), unit(0, 1, 3)])
 assert close(zoo['amplitude damping'](E00), E00) and not close(E00 @ E01, E01 @ E00)   # equal dims, different spaces
+assert fixed_dims(zoo['amplitude damping']) == commutant_dims(zoo['amplitude damping']) == [1, 1]
 
 rhos = states.random_density_matrix(alg, batch_size=100)
 for name in ('dephasing', 'depolarizing', 'centre', 'mixed unitary'):                 # Theorem 6.11
@@ -480,10 +526,46 @@ Unter vollständiger Amplitudendämpfung sinkt die Entropie des maximal gemischt
 $M_2\oplus M_3$ von $\log5\approx1.609$ auf $H(\tfrac25,\tfrac35)\approx0.673$: Ein nicht unitaler
 Kanal kann reinigen.
 
-> **Physikalische Bedeutung.** Für ein Qubit multipliziert die Dephasierung die Kohärenz $\rho_{01}$
-> mit $1-p$ und lässt die Besetzungen unverändert (reine Dephasierung, Zeit $T_\varphi$); die
-> Amplitudendämpfung mit $1-\gamma=e^{-t/T_1}$ lässt das angeregte Niveau zerfallen und multipliziert
-> die Kohärenz mit $\sqrt{1-\gamma}=e^{-t/2T_1}$, woraus $1/T_2=1/(2T_1)+1/T_\varphi$ folgt. Satz 6.10
+**Kohärenzen eines Qubits.** Auf $M_2$ sei $D_p$ die Dephasierung und $A_\gamma$ die
+Amplitudendämpfung. Nach der Tabelle und der expliziten Form oben multipliziert $D_p$ die Einträge
+$\rho_{01}$ und $\rho_{10}$ mit $1-p$ und lässt die Diagonale fest, während $A_\gamma$ die Einträge
+$\rho_{01}$ und $\rho_{10}$ mit $\sqrt{1-\gamma}$ multipliziert und die Diagonale auf
+$(\rho_{00}+\gamma\rho_{11},(1-\gamma)\rho_{11})$ abbildet, unabhängig von den Kohärenzen. Daher ist
+$D_pA_\gamma=A_\gamma D_p$: Beide multiplizieren die Kohärenzen mit $(1-p)\sqrt{1-\gamma}$ und wirken auf
+der Diagonale wie $A_\gamma$. Insbesondere multipliziert die Hintereinanderausführung für
+$T_1,T_\varphi>0$, $t\ge0$, $1-p=e^{-t/T_\varphi}$ und $1-\gamma=e^{-t/T_1}$ die Kohärenzen mit
+$e^{-t/T_2}$, wobei
+$$
+\frac1{T_2}=\frac1{2T_1}+\frac1{T_\varphi},
+$$
+und diese Familien setzen sich additiv in $t$ zusammen: $D_{p(t)}D_{p(s)}=D_{p(t+s)}$ und
+$A_{\gamma(t)}A_{\gamma(s)}=A_{\gamma(t+s)}$, da sich die Faktoren $e^{-t/T}$ multiplizieren und die Spur
+erhalten bleibt.
+
+```python
+q2 = TypeIAlgebra([2], [2], precision='double')
+p_, g_ = 0.3, 0.4
+Dp, Ag = channels.dephasing_channel(q2, p_), channels.amplitude_damping_channel(q2, g_)
+r2 = states.random_density_matrix(q2)
+assert close(Dp(Ag(r2)), Ag(Dp(r2)))                                         # D_p A_gamma = A_gamma D_p
+coh = Dp(Ag(r2)).matrix[0, 0, 0, 1] / r2.matrix[0, 0, 0, 1]
+assert abs(coh - (1 - p_) * math.sqrt(1 - g_)) < 1e-12                       # coherence factor
+T1, Tphi, t1, t2 = 2.0, 3.0, 0.7, 1.1
+gam = lambda t: 1 - math.exp(-t / T1)
+assert close(channels.amplitude_damping_channel(q2, gam(t1))(channels.amplitude_damping_channel(q2, gam(t2))(r2)),
+             channels.amplitude_damping_channel(q2, gam(t1 + t2))(r2))       # A_gamma(t) A_gamma(s) = A_gamma(t+s)
+pdeph = lambda t: 1 - math.exp(-t / Tphi)
+assert close(channels.dephasing_channel(q2, pdeph(t1))(channels.dephasing_channel(q2, pdeph(t2))(r2)),
+             channels.dephasing_channel(q2, pdeph(t1 + t2))(r2))           # D_p(t) D_p(s) = D_p(t+s)
+both = channels.dephasing_channel(q2, pdeph(t1))(channels.amplitude_damping_channel(q2, gam(t1))(r2))
+coh_t = (both.matrix[0, 0, 0, 1] / r2.matrix[0, 0, 0, 1]).item()
+assert abs(coh_t - math.exp(-t1 * (1 / (2 * T1) + 1 / Tphi))) < 1e-12       # 1/T_2 = 1/(2T_1) + 1/T_phi
+```
+
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Für ein Qubit
+> modelliert die Dephasierung die reine Dephasierung mit der Zeit $T_\varphi$ und die
+> Amplitudendämpfung den Zerfall des angeregten Niveaus mit der Zeit $T_1$; die obige Rechnung liefert
+> dann die Kohärenzzeit $T_2$ eines Qubits, das beidem ausgesetzt ist. Satz 6.10
 > ist die algebraische Form dekohärenzfreier Information: Was mit allen Sprungoperatoren kommutiert,
 > überlebt (Kapitel 10). Proposition 6.12 besagt, dass eine Abbildung zwischen Sektoren, durch das
 > Zentrum betrachtet, eine klassische Markow-Matrix auf den Ladungen ist.
@@ -493,7 +575,11 @@ Kanal kann reinigen.
 Eine **Haar-zufällige Isometrie** $V:\mathbb C^k\to\mathbb C^N$ ist, wie in der Bibliothek
 (`random_isometry`), der Faktor $Q$ von $G=QR$, wobei $G$ eine $N\times k$-Ginibre-Matrix ist
 (unabhängige Einträge mit der Dichte $\pi^{-1}e^{-|z|^2}$), $Q^*Q=1$ und $R$ eine obere
-Dreiecksmatrix mit positiver Diagonale. `random_channel(alg, r)` zieht solche
+Dreiecksmatrix mit positiver Diagonale (auf der CPU nimmt die Bibliothek eine LAPACK-Zerlegung
+$G=Q'R'$ und multipliziert die $i$-te Spalte von $Q'$ mit $R'_{ii}/|R'_{ii}|$; das ergibt diese
+Zerlegung, wie in Satz 5.3, sobald alle $R'_{ii}\ne0$ sind, d. h. sobald $G$ Rang $k$ hat, was nach
+dem Beweis von Lemma 6.13 fast sicher gilt; für große Stapel auf einer GPU verwendet sie
+Gram–Schmidt, das sie direkt liefert). `random_channel(alg, r)` zieht solche
 $V_c:\mathbb C^{k_c}\to\mathbb C^r\otimes\mathbb C^{k_c}$ unabhängig in jedem Block und verwendet die
 Kraus-Operatoren aus Satz 6.5.
 
@@ -544,9 +630,10 @@ ist der Mittelwert $(kr^2+k^2r)/(kr(kr+1))$. $\square$
 Für $r=1$ ist der Kanal unitär und die Reinheit gleich $1$; für $r\to\infty$ strebt sie gegen $1/k$,
 die Reinheit des maximal gemischten Zustands. Der Beweis hat nur die unitäre Invarianz der
 Verteilung von $u$ benutzt; er liefert daher auch Lubkins mittlere Reinheit des reduzierten Zustands
-eines zufälligen reinen Zustands $u=g/\|g\|$ mit Gaußschem $g$, die Kapitel 7, Satz 7.11, mit
-Gaußschen Integralen beweist; die Zahlen $\alpha,\beta$ aus Lemma 6.14 sind die aus Korollar 5.11
-für die Einträge einer Haar-verteilten unitären Matrix.
+eines zufälligen reinen Zustands $u=g/\|g\|$ mit Gaußschem $g$ (dessen Verteilung nach
+Satz A.20(b) unitär invariant ist), die Kapitel 7, Satz 7.11, mit Gaußschen Integralen beweist; die
+Zahlen $\alpha,\beta$ aus Lemma 6.14 sind die aus Korollar 5.11 für die Einträge einer
+Haar-verteilten unitären Matrix, und Korollar A.21 berechnet sie für $u=g/\|g\|$ erneut.
 
 ```python
 B = 20_000
@@ -566,9 +653,10 @@ for r in (1, 2, 4):
         assert (avg - torch.eye(k, dtype=dt) / k).abs().max() < 0.02          # E Phi(psi) = 1/k
 ```
 
-> **Physikalische Bedeutung.** Ein zufälliger Kanal modelliert generisches, unstrukturiertes Rauschen
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Ein zufälliger Kanal modelliert generisches, unstrukturiertes Rauschen
 > aus einer Umgebung der Dimension $r$. Schon $r=4$ drückt die Reinheit eines reinen Qutrit-Zustands
-> im Mittel auf $7/13\approx0.54$, verglichen mit $1$ ohne Rauschen und dem Minimum $1/3$. In einem
+> im Mittel auf $7/13\approx0.54$ (Satz 6.15), verglichen mit $1$ ohne Rauschen und dem Minimum $1/3$
+> (nach Cauchy–Schwarz ist $\operatorname{Tr}\rho^2\ge(\operatorname{Tr}\rho)^2/k$). In einem
 > System mit Superauswahl wirkt das Rauschen in jedem Sektor getrennt, und maßgeblich ist die
 > Dimension des Sektors, nicht die des ganzen Raumes.
 
@@ -606,7 +694,8 @@ Abbildungen für jede der Spuren aus Kapitel 3 und die Übergangsmatrix zwischen
 
 1. Mit dem Swap-Operator $F$ ist $J(\theta)=\sum_{ij}E_{ij}\otimes E_{ji}=F$ und $J(\rho\mapsto\operatorname{Tr}(\rho)1)=1\otimes1$,
    also $J(\Phi)=(1-F)/(k-1)=2P_-/(k-1)$, wobei $P_-=(1-F)/2$ die Projektion auf die
-   antisymmetrischen Vektoren ist ($F=F^*$, $F^2=1$). Also ist $J\ge0$ mit Rang $k(k-1)/2$ (Satz 6.2,
+   antisymmetrischen Vektoren ist ($F=F^*$, $F^2=1$), vom Rang $\operatorname{Tr}P_-=(k^2-\operatorname{Tr}F)/2$
+   mit $\operatorname{Tr}F=\sum_{ij}\langle e_i\otimes e_j,e_j\otimes e_i\rangle=k$. Also ist $J\ge0$ mit Rang $k(k-1)/2$ (Satz 6.2,
    Korollar 6.3), und $\operatorname{Tr}\Phi(\rho)=\operatorname{Tr}\rho$, $\Phi(1)=1$ sieht man direkt.
 
 ```python
@@ -630,7 +719,7 @@ assert close(WH(M3.operator(r3[None, None])).matrix[0, 0], (torch.eye(k, dtype=d
 ```python
 ranks = [int((torch.linalg.eigvalsh(J_c[0]) > 1e-10).sum()) for J_c in zoo['dephasing'].choi()]
 print(ranks, zoo['dephasing'].kraus_rank)                 # [2, 3] versus 4 stored operators
-assert ranks == alg.k_factors
+assert ranks == alg.k_factors and zoo['dephasing'].kraus_rank == 1 + max(alg.k_factors)
 ```
 
 3. $\operatorname{Tr}((X^aZ^b)^*X^{a'}Z^{b'})=k\,\delta_{aa'}\delta_{bb'}$: $Z^{-b}X^{a'-a}Z^{b'}$ hat

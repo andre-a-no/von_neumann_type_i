@@ -2,9 +2,11 @@
 
 # 6. Quantum channels
 
-A quantum channel is the most general way in which a state can change: a unitary evolution,
-a measurement whose result is forgotten, the interaction with an environment, the loss of a
-particle. Mathematically it is a completely positive, trace-preserving linear map. This chapter
+A quantum channel is a completely positive, trace-preserving linear map. Conjugation by a unitary,
+the conditional expectation onto the centre, the map $\rho\mapsto\operatorname{Tr}_E(V\rho V^*)$ given by an
+isometry $V$, and maps that move weight from one sector to another are examples; their physical
+reading (an evolution, a measurement whose result is forgotten, an environment, the loss of a
+particle) is discussed only in the *Physical meaning* boxes. This chapter
 proves the standard descriptions of such maps — Choi matrices, Kraus operators, the Stinespring
 dilation — for maps between finite-dimensional von Neumann algebras, and then studies what is
 special about direct sums: maps between sectors, duals with respect to the traces of Chapter 3,
@@ -13,8 +15,8 @@ is their theory.
 
 **You will learn** why positivity is not enough, how to pass between Choi matrices, Kraus
 operators, superoperators and isometries, why "trace preserving" depends on the trace once a map
-changes the sector, which observables survive decoherence, and what a random channel does to a
-pure state on average.
+changes the sector, which operators a unital channel leaves fixed, and what a random channel does
+to a pure state on average.
 
 Throughout, $\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)$ and
 $\mathcal N=\bigoplus_{d=1}^{C'}M_{k'_d}(\mathbb C)$ with minimal central projections $P_c$ and
@@ -96,7 +98,14 @@ Proposition 6.4 with shape `(batch, r, C', C, k'_max, k_max)`. `Channel.choi()` 
 $J(\Phi_{cc})$ for every sector and `Channel.superoperator()` the matrix $S_c$ of $\Phi_{cc}$ on
 row-major vectors, $\operatorname{vec}(X)_{(a,b)}=X_{ab}$. Both contain the numbers
 $\Phi(E_{ij})_{ab}=J_{(i,a),(j,b)}=S_{(a,b),(i,j)}$ in a different order. `Channel.from_superoperator`
-diagonalises the Choi matrices as in the proof of Theorem 6.2 and refuses maps that are not CP.
+raises `ValueError` if a Choi matrix is not Hermitian, $\|J-J^*\|>2\cdot10^{-10}s$ (in double precision), where
+$s=\max(1,\|J\|)$ with the spectral norm; otherwise it replaces $J$ by its Hermitian part $(J+J^*)/2$,
+diagonalises it as in the proof of Theorem 6.2, raises `ValueError` if an eigenvalue is below $-10^{-10}s$,
+and sets the remaining negative eigenvalues to $0$. If $\Phi(X^*)=\Phi(X)^*$ for all $X$, then $J^*=J$ (the
+$(i,j)$ block of $J^*$ is $\Phi(E_{ji})^*=\Phi(E_{ij})$); conversely $J^*=J$ gives $\Phi(E_{ji})^*=\Phi(E_{ij})$,
+hence $\Phi(X^*)=\Phi(X)^*$ by linearity. So, up to these rounding tolerances, it refuses exactly the maps
+that do not preserve adjoints and, by Theorem 6.2, among the others exactly those that are not CP; for
+example $X\mapsto iX$ is refused.
 
 ```python
 import math
@@ -157,9 +166,14 @@ try:
     raise AssertionError("the transpose was accepted")
 except ValueError as e:
     print(e)                                              # superoperator is not completely positive
+try:
+    Channel.from_superoperator(alg, [1j * torch.eye(k * k, dtype=dt)[None] for k in (2, 3)])
+    raise AssertionError("X -> iX was accepted")
+except ValueError as e:
+    print(e)                                              # superoperator does not preserve Hermiticity
 ```
 
-> **Physical meaning.** A system is never alone: it may be correlated with an untouched ancilla
+> **Physical meaning** (physical interpretation, not a theorem of this course). A system is never alone: it may be correlated with an untouched ancilla
 > with $n$ levels. A physical process acts as $\Phi_n=\mathrm{id}_n\otimes\Phi$ on the pair and must
 > map states to states, so $\Phi$ must be completely positive. The transpose is positive, but it maps
 > the entangled state $|\Omega\rangle\langle\Omega|/2$ to an operator with eigenvalue $-1/2$. The
@@ -169,7 +183,8 @@ except ValueError as e:
 
 For $\Phi(A)=\sum_{l=1}^rK_lAK_l^*$ from $M_k$ to $M_{k'}$ put $\Phi^*(B)=\sum_lK_l^*BK_l$; by
 cyclicity $\operatorname{Tr}(\Phi(A)B)=\operatorname{Tr}(A\Phi^*(B))$, so $\Phi^*$ is the dual of
-$\Phi$ for the trace (Section 6.3) and does not depend on the choice of the $K_l$. On
+$\Phi$ for the trace (Section 6.3) and does not depend on the choice of the $K_l$ (if
+$\operatorname{Tr}(AX)=\operatorname{Tr}(AX')$ for all $A$, then $X=X'$: take $A=E_{ji}$). On
 $\mathbb C^r\otimes\mathbb C^{k'}$ (the **environment** $\mathbb C^r$ first) let
 $\operatorname{Tr}_EX=\sum_l(e_l^*\otimes1)X(e_l\otimes1)$.
 
@@ -185,15 +200,23 @@ $\operatorname{Tr}_E(VAV^*)$ is a Kraus form with $K_l=(e_l^*\otimes1)V$. Next
 $V^*(1\otimes B)V=\sum_{l,l'}\langle e_l,e_{l'}\rangle K_l^*BK_{l'}=\Phi^*(B)$, and
 $V^*V=\sum_lK_l^*K_l$, which is $1$ iff $\Phi$ is TP (Proposition 6.4). $\square$
 
-In general (stated without proof), a CP map $\Psi$ from a unital C\*-algebra $\mathcal A$ to the
-bounded operators on a Hilbert space $H$ is $\Psi(a)=V^*\pi(a)V$ with a representation $\pi$ of
-$\mathcal A$ on a Hilbert space $K$ and a bounded $V:H\to K$ (W. F. Stinespring, Proc. AMS 6 (1955)
-211; V. Paulsen, *Completely Bounded Maps and Operator Algebras*, Cambridge 2002, Thm. 4.1); above,
-$\pi(B)=1_r\otimes B$. For a map between direct sums,
-$V_c=\sum_{d,l}e_l\otimes\iota'_dK^{dc}_l:\mathbb C^{k_c}\to\mathbb C^r\otimes\bigoplus_d\mathbb C^{k'_d}$
-($\iota'_d$ the inclusion of the $d$-th summand) makes $\Phi(A)_d$ the $(d,d)$ block of
-$\sum_c\operatorname{Tr}_E(V_cA_cV_c^*)$, and $\Phi$ is TP iff every $V_c$ is an isometry; this is how
-`random_channel` and `random_inter_sector_channel` draw channels (Section 6.5).
+So the smallest $r$ for which $\Phi(A)=\operatorname{Tr}_E(VAV^*)$ with some
+$V:\mathbb C^k\to\mathbb C^r\otimes\mathbb C^{k'}$ is the Kraus rank $\operatorname{rank}J(\Phi)$: every
+such $V$ gives a Kraus form with $r$ operators, so $r\ge\operatorname{rank}J(\Phi)$ (Corollary 6.3), and
+$r=\operatorname{rank}J(\Phi)$ is attained by Theorem 6.2(d).
+
+The formula $\Phi^*(B)=V^*\pi(B)V$ with the representation $\pi(B)=1_r\otimes B$ is the form in
+which W. F. Stinespring (Proc. AMS 6 (1955) 211) stated the theorem, in a far more general setting
+than the finite-dimensional one proved here (historical attribution; further reading: V. Paulsen,
+*Completely Bounded Maps and Operator Algebras*, Cambridge 2002, Ch. 4). For a map between direct
+sums, let $\iota'_d$ be the inclusion of the $d$-th summand of $\bigoplus_d\mathbb C^{k'_d}$ and
+$V_c=\sum_{d,l}e_l\otimes\iota'_dK^{dc}_l:\mathbb C^{k_c}\to\mathbb C^r\otimes\bigoplus_d\mathbb C^{k'_d}$.
+Then $(e_l^*\otimes1)V_c=\sum_d\iota'_dK^{dc}_l$, so the $(d,d)$ block of
+$\sum_c\operatorname{Tr}_E(V_cA_cV_c^*)=\sum_{c,l}\big(\sum_d\iota'_dK^{dc}_l\big)A_c\big(\sum_{d'}\iota'_{d'}K^{d'c}_l\big)^*$
+is $\sum_{c,l}K^{dc}_lA_cK^{dc*}_l=\Phi(A)_d$; and, as $\iota'^*_d\iota'_{d'}=\delta_{dd'}1$,
+$V_c^*V_c=\sum_{d,l}K^{dc*}_lK^{dc}_l$, so $\Phi$ is TP iff every $V_c$ is an isometry
+(Proposition 6.4). This is how `random_channel` and `random_inter_sector_channel` draw channels
+(Section 6.5).
 
 **Lemma 6.6.** If $X,Y\in M_{p\times n}$ and $XX^*=YY^*$, then $Y=XW$ for a unitary $W\in M_n$.
 
@@ -232,12 +255,13 @@ PhiL = Channel(alg, torch.einsum('jl,blcxy->bjcxy', u, Kpad))
 assert close(PhiL(rho), out) and all(close(a, b) for a, b in zip(PhiL.choi(), J))
 ```
 
-> **Physical meaning.** Every channel is an isometric interaction of the system with an environment
+> **Physical meaning** (physical interpretation, not a theorem of this course). Every channel is an
+> isometric interaction of the system with an environment
 > in a fixed state, followed by ignoring the environment. Measuring the environment in the basis
 > $e_l$ gives outcome $l$ with probability $\operatorname{Tr}K_l\rho K_l^*$ and leaves the state
 > $K_l\rho K_l^*/\operatorname{Tr}(K_l\rho K_l^*)$: the Kraus operators are the possible "quantum jumps".
-> Another basis gives other jumps but the same channel (Theorem 6.7); the smallest environment has
-> dimension $\operatorname{rank}J$.
+> Another basis gives other jumps but the same channel (Theorem 6.7), and the smallest environment
+> has dimension equal to the Kraus rank, as shown after Theorem 6.5.
 
 ## 6.3 Duals with respect to a trace
 
@@ -282,8 +306,16 @@ $\operatorname{tr}_w\Phi^\sharp(y)=\operatorname{tr}_v(\Phi(1)y)$ equals $\opera
 $y$ iff $\Phi(1)=1$. (c) $\operatorname{tr}_w(\Phi^\sharp(y)x)=\operatorname{tr}_v(y\Phi(x))$ by the trace
 property; use uniqueness. (d) Only the pairs $d=c$ occur, where $v_d/w_c=1$. $\square$
 
-For maps that change the sector, (d) fails. Let $\mathcal M=\mathcal N=M_1\oplus M_2$ (sector $0$: no
-particle; sector $1$: one particle on two sites) and let $\Phi$ be **particle loss**,
+**Densities in the Heisenberg picture.** Let $\Psi:\mathcal N\to\mathcal M$ be linear, $\omega$ a linear
+functional on $\mathcal M$ with density $\rho$ for $\operatorname{tr}_w$ (Theorem 3.2), and
+$\Psi^\sharp:\mathcal M\to\mathcal N$ the dual of $\Psi$ with respect to $(v,w)$. Then
+$\omega(\Psi(y))=\operatorname{tr}_w(\Psi(y)\rho)=\operatorname{tr}_v(y\Psi^\sharp(\rho))=\operatorname{tr}_v(\Psi^\sharp(\rho)y)$,
+so $\omega\circ\Psi$ has density $\Psi^\sharp(\rho)$ for $\operatorname{tr}_v$; if $\Psi$ is unital, $\Psi^\sharp$
+is TP with respect to $(w,v)$ by Corollary 6.9(b) (with the roles of $\mathcal M$ and $\mathcal N$
+exchanged).
+
+For maps that change the sector, Corollary 6.9(d) fails. Let $\mathcal M=\mathcal N=M_1\oplus M_2$ (sectors $0$ and $1$) and let $\Phi$ be
+the map called **particle loss** (see the box below),
 $\Phi(x)=(x_0+\operatorname{Tr}x_1)\oplus0$, with Kraus operators $K^{00}=1$, $K^{01}_l=\langle l|$.
 It is TP for the blunt traces. For `Tr_norm`, $w=v=(1,\tfrac12)$, $\Phi^\sharp(1)=1\oplus2\cdot1_2$
 and $\operatorname{tr}_v\Phi(x)=x_0+\operatorname{Tr}x_1\ne x_0+\tfrac12\operatorname{Tr}x_1=\operatorname{tr}_w(x)$.
@@ -321,13 +353,14 @@ assert abs(loss(s).Tr_norm() - (s @ alg01.central([1.0, 2.0])).Tr_norm()) < 1e-1
 print(s.Tr_norm().real.item(), loss(s).Tr_norm().real.item())      # Tr_norm is not conserved
 ```
 
-> **Physical meaning.** The trace-independent object is the Heisenberg map
+> **Physical meaning** (physical interpretation, not a theorem of this course). The trace-independent object is the Heisenberg map
 > $\Psi:\mathcal N\to\mathcal M$ on observables: a state $\omega$ before the process becomes
 > $\omega\circ\Psi$ after it, and $\Psi$ is CP and unital. Densities depend on the trace
-> (Theorem 3.2); the map sending the density of $\omega$ to that of $\omega\circ\Psi$ is the dual of
-> $\Psi$ for the chosen traces, which is TP for them by Corollary 6.9(b). If the algebras act with
-> multiplicities, the physical trace has weights $w_c=m_c$ (Chapter 2). Particle loss above conserves
-> probability for the blunt trace, which counts states, not for `Tr_norm`, which weighs sectors equally.
+> (Theorem 3.2), and the densities transform by the dual of $\Psi$ for the chosen traces (the
+> paragraph after Corollary 6.9). If the algebras act with multiplicities, the physical trace has
+> weights $w_c=m_c$ (Section 2.3). In the example, sector $0$ is read as "no particle" and sector $1$ as
+> "one particle on two sites"; the map then removes the particle. It conserves probability for the
+> blunt trace, which counts states, not for `Tr_norm`, which weighs sectors equally.
 
 ## 6.4 Decoherence
 
@@ -343,7 +376,12 @@ The library's standard channels act inside each block ($p,\gamma\in[0,1]$):
 
 The Kraus forms are checked by direct computation, e.g.
 $\sum_{ij}\frac1kE_{ij}\rho E_{ji}=\frac1k\sum_{ij}\rho_{jj}E_{ii}$. All five are TP, and all but
-amplitude damping with $\gamma>0$ are unital. The conditional expectation $E$ onto the centre
+amplitude damping with $\gamma>0$ are unital (Proposition 6.4: compute $\sum_lK_l^*K_l$ and
+$\sum_lK_lK_l^*$; for amplitude damping in a block of size $k$ they are $1$ and
+$1+(k-1)\gamma E_{00}-\gamma\sum_{i>0}E_{ii}$, and $\sum_jp_j=1$ for the mixed unitary channel).
+Explicitly, amplitude damping maps $\rho_{00}\mapsto\rho_{00}+\gamma\sum_{i>0}\rho_{ii}$,
+$\rho_{ii}\mapsto(1-\gamma)\rho_{ii}$ and $\rho_{ij}\mapsto(1-\gamma)\rho_{ij}$ for $i\ne j$ both
+positive, and $\rho_{0j}\mapsto\sqrt{1-\gamma}\,\rho_{0j}$, $\rho_{j0}\mapsto\sqrt{1-\gamma}\,\rho_{j0}$ for $j>0$. The conditional expectation $E$ onto the centre
 (Proposition 2.8) is depolarization with $p=1$. Unlike the measurement of the sector,
 $X\mapsto\sum_cP_cXP_c$, which is the identity on $\mathcal M$ (Section 3.3), it keeps only $p_c$.
 
@@ -355,17 +393,23 @@ fixed points form a von Neumann subalgebra of $\mathcal M$.
 so the self-adjoint parts $(X+X^*)/2$ and $(X-X^*)/2i$ of a fixed point are fixed points; let
 $X=X^*$. With $Y_l=K_lX-XK_l$,
 $$
-\sum_lY_lY_l^*=\sum_l\big(K_lX^2K_l^*-K_lXK_l^*X-XK_lXK_l^*+XK_lK_l^*X\big)=\Phi(X^2)-X^2,
+\sum_lY_lY_l^*=\sum_l\big(K_lX^2K_l^*-K_lXK_l^*X-XK_lXK_l^*+XK_lK_l^*X\big)
+=\Phi(X^2)-\Phi(X)X-X\Phi(X)+X\Phi(1)X=\Phi(X^2)-X^2,
 $$
-whose trace is $0$ because $\Phi$ is TP. As $\operatorname{Tr}Y_lY_l^*=\|Y_l\|_2^2\ge0$, every $Y_l=0$;
-taking adjoints, $X$ commutes with $K_l^*$ too. These $X$ form the commutant of a self-adjoint set,
+using $Y_l^*=XK_l^*-K_l^*X$, $\Phi(X)=X$ and $\Phi(1)=1$. Its trace is $0$ because $\Phi$ is TP. As
+$\operatorname{Tr}Y_lY_l^*=\|Y_l\|_2^2\ge0$, every $Y_l=0$; taking adjoints, $X$ commutes with $K_l^*$ too. These $X$ form the commutant of a self-adjoint set,
 intersected with $\mathcal M$: a $*$-algebra containing $1$, hence a von Neumann algebra
 (Theorem 2.2). $\square$
 
 So dephasing ($p>0$) keeps exactly the diagonal of every block, and depolarization ($p>0$) and $E$
 keep exactly the centre. Without unitality the theorem fails: amplitude damping fixes $E_{00}$,
-which does not commute with the jump $E_{01}$ (below, its fixed points and the commutant both have
-dimension $1$ per block, but they are $\mathbb CE_{00}$ and $\mathbb C1$).
+which does not commute with the jump $E_{01}$. For $0<\gamma\le1$ and $k\ge2$ its fixed points in a block
+and the commutant of its Kraus operators both have dimension $1$, but they are $\mathbb CE_{00}$ and
+$\mathbb C1$: by the explicit form above, a fixed point has $\rho_{ij}=0$ for $i\ne j$ and
+$\rho_{ii}=0$ for $i>0$ (these entries are multiplied by $\sqrt{1-\gamma}\ne1$ or $1-\gamma\ne1$), and every
+multiple of $E_{00}$ is fixed; and anything commuting with all $E_{0i}$, $E_{i0}$ ($i>0$) commutes
+with their products $E_{ij}=E_{i0}E_{0j}$ and $E_{00}=E_{01}E_{10}$, hence with $M_k$, so it is a multiple
+of $1$ (Chapter 2, Exercise 1).
 
 **Theorem 6.11 (unital channels increase entropy).** Let $\Phi:\mathcal M\to\mathcal N$ be positive,
 TP and unital, and let $\rho$ and $\Phi(\rho)$ be states with eigenvalues $\lambda_i$ and $\mu_j$.
@@ -382,8 +426,9 @@ $\sum_j\Delta_{ji}=\operatorname{Tr}\Phi(|e_i\rangle\langle e_i|)=1$ and
 $\sum_i\Delta_{ji}=\langle f_j,\Phi(1)f_j\rangle=1$ (so $\Delta$ is square: sum all entries). By the
 finite Jensen inequality $f(\sum_i\Delta_{ji}\lambda_i)\ge\sum_i\Delta_{ji}f(\lambda_i)$ (induction on
 the number of terms from the definition of concavity, as in the solution of Exercise 2 in Chapter 3),
-$\sum_jf(\mu_j)\ge\sum_j\sum_i\Delta_{ji}f(\lambda_i)=\sum_if(\lambda_i)$. Take $f(t)=-t\log t$ and
-$f(t)=-t^2$. $\square$
+$\sum_jf(\mu_j)\ge\sum_j\sum_i\Delta_{ji}f(\lambda_i)=\sum_if(\lambda_i)$. Take $f(t)=-t\log t$
+($f(0)=0$) and $f(t)=-t^2$, which are concave on $[0,1]$ by Lemma 3.4: $t\log t$ and $t^2$ are
+continuous on $[0,1]$ with second derivatives $1/t>0$ and $2>0$ on $(0,1)$. $\square$
 
 The classical part of a map between sectors is its **transition matrix**
 $T_{dc}(\rho)=\operatorname{Tr}\Phi_{dc}(\rho_c)/\operatorname{Tr}\rho_c$ ($\rho_c\ne0$); the library's
@@ -392,7 +437,7 @@ $T_{dc}(\rho)=\operatorname{Tr}\Phi_{dc}(\rho_c)/\operatorname{Tr}\rho_c$ ($\rho
 **Proposition 6.12.** Let $\Phi:\mathcal M\to\mathcal N$ be positive and TP, $\rho$ a state with
 $p_c=\operatorname{Tr}\rho_c>0$, and $q_d=\operatorname{Tr}\Phi(\rho)_d$. Then $T(\rho)$ is column
 stochastic and $q=T(\rho)p$. With the conditional expectations $E_{\mathcal M}$, $E_{\mathcal N}$ onto
-the centres,
+the centres (Proposition 2.8),
 $$
 E_{\mathcal N}\Phi E_{\mathcal M}(\rho)=\bigoplus_d\frac{(Tp)_d}{k'_d}\,1_{k'_d},\qquad T=T(1).
 $$
@@ -434,6 +479,7 @@ assert fixed_dims(zoo['dephasing']) == [2, 3] and fixed_dims(zoo['depolarizing']
 E00 = alg.from_blocks([unit(0, 0, 2), unit(0, 0, 3)])
 E01 = alg.from_blocks([unit(0, 1, 2), unit(0, 1, 3)])
 assert close(zoo['amplitude damping'](E00), E00) and not close(E00 @ E01, E01 @ E00)   # equal dims, different spaces
+assert fixed_dims(zoo['amplitude damping']) == commutant_dims(zoo['amplitude damping']) == [1, 1]
 
 rhos = states.random_density_matrix(alg, batch_size=100)
 for name in ('dephasing', 'depolarizing', 'centre', 'mixed unitary'):                 # Theorem 6.11
@@ -457,10 +503,43 @@ assert torch.allclose(loss.transition_matrix()[0], torch.tensor([[1.0, 1.0], [0.
 Under complete amplitude damping the entropy of the maximally mixed state of $M_2\oplus M_3$ drops
 from $\log5\approx1.609$ to $H(\tfrac25,\tfrac35)\approx0.673$: a non-unital channel can purify.
 
-> **Physical meaning.** For a qubit, dephasing multiplies the coherence $\rho_{01}$ by $1-p$ and
-> leaves the populations alone (pure dephasing, time $T_\varphi$); amplitude damping with
-> $1-\gamma=e^{-t/T_1}$ lets the excited level decay and multiplies the coherence by
-> $\sqrt{1-\gamma}=e^{-t/2T_1}$, whence $1/T_2=1/(2T_1)+1/T_\varphi$. Theorem 6.10 is the algebraic
+**Qubit coherences.** On $M_2$ let $D_p$ be dephasing and $A_\gamma$ amplitude damping. By the table
+and the explicit form above, $D_p$ multiplies $\rho_{01}$ and $\rho_{10}$ by $1-p$ and fixes the
+diagonal, while $A_\gamma$ multiplies $\rho_{01}$ and $\rho_{10}$ by $\sqrt{1-\gamma}$ and maps the
+diagonal to $(\rho_{00}+\gamma\rho_{11},(1-\gamma)\rho_{11})$, independently of the coherences. Hence
+$D_pA_\gamma=A_\gamma D_p$: both multiply the coherences by $(1-p)\sqrt{1-\gamma}$ and act on the diagonal
+as $A_\gamma$. In particular, for $T_1,T_\varphi>0$, $t\ge0$, $1-p=e^{-t/T_\varphi}$ and $1-\gamma=e^{-t/T_1}$,
+the composition multiplies the coherences by $e^{-t/T_2}$ with
+$$
+\frac1{T_2}=\frac1{2T_1}+\frac1{T_\varphi},
+$$
+and these families compose additively in $t$: $D_{p(t)}D_{p(s)}=D_{p(t+s)}$ and
+$A_{\gamma(t)}A_{\gamma(s)}=A_{\gamma(t+s)}$, since the factors $e^{-t/T}$ multiply and the trace is preserved.
+
+```python
+q2 = TypeIAlgebra([2], [2], precision='double')
+p_, g_ = 0.3, 0.4
+Dp, Ag = channels.dephasing_channel(q2, p_), channels.amplitude_damping_channel(q2, g_)
+r2 = states.random_density_matrix(q2)
+assert close(Dp(Ag(r2)), Ag(Dp(r2)))                                         # D_p A_gamma = A_gamma D_p
+coh = Dp(Ag(r2)).matrix[0, 0, 0, 1] / r2.matrix[0, 0, 0, 1]
+assert abs(coh - (1 - p_) * math.sqrt(1 - g_)) < 1e-12                       # coherence factor
+T1, Tphi, t1, t2 = 2.0, 3.0, 0.7, 1.1
+gam = lambda t: 1 - math.exp(-t / T1)
+assert close(channels.amplitude_damping_channel(q2, gam(t1))(channels.amplitude_damping_channel(q2, gam(t2))(r2)),
+             channels.amplitude_damping_channel(q2, gam(t1 + t2))(r2))       # A_gamma(t) A_gamma(s) = A_gamma(t+s)
+pdeph = lambda t: 1 - math.exp(-t / Tphi)
+assert close(channels.dephasing_channel(q2, pdeph(t1))(channels.dephasing_channel(q2, pdeph(t2))(r2)),
+             channels.dephasing_channel(q2, pdeph(t1 + t2))(r2))           # D_p(t) D_p(s) = D_p(t+s)
+both = channels.dephasing_channel(q2, pdeph(t1))(channels.amplitude_damping_channel(q2, gam(t1))(r2))
+coh_t = (both.matrix[0, 0, 0, 1] / r2.matrix[0, 0, 0, 1]).item()
+assert abs(coh_t - math.exp(-t1 * (1 / (2 * T1) + 1 / Tphi))) < 1e-12       # 1/T_2 = 1/(2T_1) + 1/T_phi
+```
+
+> **Physical meaning** (physical interpretation, not a theorem of this course). For a qubit,
+> dephasing models pure dephasing with time $T_\varphi$ and amplitude damping the decay of the
+> excited level with time $T_1$; the computation above then gives the coherence time $T_2$ of a qubit
+> subject to both. Theorem 6.10 is the algebraic
 > form of decoherence-free information: what commutes with all jump operators survives (Chapter 10).
 > Proposition 6.12 says that, seen through the centre, a map between sectors is a classical Markov
 > matrix on the charges.
@@ -469,7 +548,11 @@ from $\log5\approx1.609$ to $H(\tfrac25,\tfrac35)\approx0.673$: a non-unital cha
 
 A **Haar-random isometry** $V:\mathbb C^k\to\mathbb C^N$ is, as in the library (`random_isometry`),
 the factor $Q$ of $G=QR$, where $G$ is an $N\times k$ Ginibre matrix (independent entries with
-density $\pi^{-1}e^{-|z|^2}$), $Q^*Q=1$, and $R$ is upper triangular with positive diagonal.
+density $\pi^{-1}e^{-|z|^2}$), $Q^*Q=1$, and $R$ is upper triangular with positive diagonal (on the
+CPU the library takes a LAPACK factorisation $G=Q'R'$ and multiplies the $i$-th column of $Q'$ by
+$R'_{ii}/|R'_{ii}|$, which gives this factorisation, as in Theorem 5.3, whenever all $R'_{ii}\ne0$, i.e.
+whenever $G$ has rank $k$, which holds almost surely by the proof of Lemma 6.13; for large batches on a
+GPU it uses Gram–Schmidt, which gives it directly).
 `random_channel(alg, r)` draws such $V_c:\mathbb C^{k_c}\to\mathbb C^r\otimes\mathbb C^{k_c}$
 independently in every block and uses the Kraus operators of Theorem 6.5.
 
@@ -517,8 +600,9 @@ the mean is $(kr^2+k^2r)/(kr(kr+1))$. $\square$
 For $r=1$ the channel is unitary and the purity is $1$; as $r\to\infty$ it tends to $1/k$, the
 purity of the maximally mixed state. The proof used only the unitary invariance of the law of $u$,
 so it also gives Lubkin's mean purity of the reduced state of a random pure state $u=g/\|g\|$,
-$g$ Gaussian, which Chapter 7, Theorem 7.11 proves with Gaussian integrals; the numbers
-$\alpha,\beta$ of Lemma 6.14 are those of Corollary 5.11 for the entries of a Haar unitary.
+$g$ Gaussian (whose law is unitarily invariant by Theorem A.20(b)), which Chapter 7, Theorem 7.11
+proves with Gaussian integrals; the numbers $\alpha,\beta$ of Lemma 6.14 are those of Corollary 5.11
+for the entries of a Haar unitary, and Corollary A.21 recomputes them for $u=g/\|g\|$.
 
 ```python
 B = 20_000
@@ -538,9 +622,11 @@ for r in (1, 2, 4):
         assert (avg - torch.eye(k, dtype=dt) / k).abs().max() < 0.02          # E Phi(psi) = 1/k
 ```
 
-> **Physical meaning.** A random channel models generic, unstructured noise from an environment of
+> **Physical meaning** (physical interpretation, not a theorem of this course). A random channel
+> models generic, unstructured noise from an environment of
 > dimension $r$. Already $r=4$ brings the purity of a pure qutrit state to $7/13\approx0.54$ on
-> average, against $1$ without noise and the minimum $1/3$. In a superselected system the noise acts in each sector
+> average (Theorem 6.15), against $1$ without noise and the minimum $1/3$ (by Cauchy–Schwarz,
+> $\operatorname{Tr}\rho^2\ge(\operatorname{Tr}\rho)^2/k$). In a superselected system the noise acts in each sector
 > separately, and the relevant dimension is that of the sector, not of the whole space.
 
 ## 6.6 What to compare with
@@ -576,7 +662,8 @@ the duals for each of the traces of Chapter 3, and the transition matrix between
 
 1. With $F$ the swap, $J(\theta)=\sum_{ij}E_{ij}\otimes E_{ji}=F$ and $J(\rho\mapsto\operatorname{Tr}(\rho)1)=1\otimes1$,
    so $J(\Phi)=(1-F)/(k-1)=2P_-/(k-1)$, where $P_-=(1-F)/2$ is the projection onto the
-   antisymmetric vectors ($F=F^*$, $F^2=1$). So $J\ge0$ with rank $k(k-1)/2$ (Theorem 6.2,
+   antisymmetric vectors ($F=F^*$, $F^2=1$), of rank $\operatorname{Tr}P_-=(k^2-\operatorname{Tr}F)/2$ with
+   $\operatorname{Tr}F=\sum_{ij}\langle e_i\otimes e_j,e_j\otimes e_i\rangle=k$. So $J\ge0$ with rank $k(k-1)/2$ (Theorem 6.2,
    Corollary 6.3), and $\operatorname{Tr}\Phi(\rho)=\operatorname{Tr}\rho$, $\Phi(1)=1$ directly.
 
 ```python
@@ -599,7 +686,7 @@ assert close(WH(M3.operator(r3[None, None])).matrix[0, 0], (torch.eye(k, dtype=d
 ```python
 ranks = [int((torch.linalg.eigvalsh(J_c[0]) > 1e-10).sum()) for J_c in zoo['dephasing'].choi()]
 print(ranks, zoo['dephasing'].kraus_rank)                 # [2, 3] versus 4 stored operators
-assert ranks == alg.k_factors
+assert ranks == alg.k_factors and zoo['dephasing'].kraus_rank == 1 + max(alg.k_factors)
 ```
 
 3. $\operatorname{Tr}((X^aZ^b)^*X^{a'}Z^{b'})=k\,\delta_{aa'}\delta_{bb'}$: $Z^{-b}X^{a'-a}Z^{b'}$ has zero

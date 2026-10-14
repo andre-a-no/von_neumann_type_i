@@ -2,14 +2,15 @@
 
 # 6. 量子信道
 
-量子信道是态发生变化的最一般方式：酉演化、结果被遗忘的测量、与环境的相互作用、
-一个粒子的丢失。在数学上，它是一个完全正且保迹的线性映射。本章对有限维冯·诺依曼代数之间的
+量子信道是一个完全正且保迹的线性映射。酉矩阵的共轭作用、到中心上的条件期望、由等距算子 $V$
+给出的映射 $\rho\mapsto\operatorname{Tr}_E(V\rho V^*)$，以及把权重从一个扇区移到另一个扇区的映射都是
+例子；它们的物理解读（演化、结果被遗忘的测量、环境、粒子的丢失）只在*物理意义*框中讨论。本章对有限维冯·诺依曼代数之间的
 这类映射证明其标准描述——Choi 矩阵、Kraus 算子、Stinespring 扩张，然后研究直和情形的特殊之处：
 扇区之间的映射、关于第 3 章中各种迹的对偶，以及信道的经典部分。第 2 章和第 3 章已经用到了本库的
 信道；这里给出它们的理论。
 
 **你将学到**为什么正性是不够的，如何在 Choi 矩阵、Kraus 算子、超算子与等距算子之间相互转换，
-为什么一旦映射改变扇区，"保迹"就依赖于迹的选取，哪些可观测量能在退相干中幸存，以及随机信道
+为什么一旦映射改变扇区，"保迹"就依赖于迹的选取，保单位信道使哪些算子保持不变，以及随机信道
 平均而言对纯态有什么作用。
 
 在本章中，$\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)$，
@@ -92,7 +93,13 @@ $\operatorname{Tr}(E_{ij}X)=X_{ji}$）。$\square$
 $J(\Phi_{cc})$，而 `Channel.superoperator()` 返回 $\Phi_{cc}$ 作用在按行展开的向量上的矩阵 $S_c$，
 $\operatorname{vec}(X)_{(a,b)}=X_{ab}$。二者以不同的顺序包含同样的数
 $\Phi(E_{ij})_{ab}=J_{(i,a),(j,b)}=S_{(a,b),(i,j)}$。`Channel.from_superoperator`
-像定理 6.2 的证明那样对 Choi 矩阵进行对角化，并拒绝不是 CP 的映射。
+在某个 Choi 矩阵不是厄米矩阵，即 $\|J-J^*\|>2\cdot10^{-10}s$（双精度下）时抛出 `ValueError`，其中
+$s=\max(1,\|J\|)$，范数取谱范数；否则它把 $J$ 替换为其厄米部分 $(J+J^*)/2$，
+像定理 6.2 的证明那样将其对角化，若某个特征值小于 $-10^{-10}s$ 则抛出 `ValueError`，
+并把其余的负特征值置为 $0$。若对所有 $X$ 有 $\Phi(X^*)=\Phi(X)^*$，则 $J^*=J$（$J^*$ 的
+$(i,j)$ 块是 $\Phi(E_{ji})^*=\Phi(E_{ij})$）；反之，由 $J^*=J$ 得 $\Phi(E_{ji})^*=\Phi(E_{ij})$，
+再由线性性得 $\Phi(X^*)=\Phi(X)^*$。所以，在这些舍入容差的范围内，它拒绝的恰好是不保持伴随的映射，
+以及（由定理 6.2）其余映射中恰好那些不是 CP 的映射；例如 $X\mapsto iX$ 会被拒绝。
 
 ```python
 import math
@@ -153,9 +160,14 @@ try:
     raise AssertionError("the transpose was accepted")
 except ValueError as e:
     print(e)                                              # superoperator is not completely positive
+try:
+    Channel.from_superoperator(alg, [1j * torch.eye(k * k, dtype=dt)[None] for k in (2, 3)])
+    raise AssertionError("X -> iX was accepted")
+except ValueError as e:
+    print(e)                                              # superoperator does not preserve Hermiticity
 ```
 
-> **物理意义。** 系统从来不是孤立的：它可能与一个未被触及的、具有 $n$ 个能级的辅助系统
+> **物理意义**（物理解释，而非本课程的定理）。系统从来不是孤立的：它可能与一个未被触及的、具有 $n$ 个能级的辅助系统
 > 相关联。物理过程在这一对系统上作用为 $\Phi_n=\mathrm{id}_n\otimes\Phi$，并且必须把态映为态，
 > 所以 $\Phi$ 必须是完全正的。转置是正的，但它把纠缠态 $|\Omega\rangle\langle\Omega|/2$ 映为
 > 一个具有特征值 $-1/2$ 的算子。Choi 矩阵是最大纠缠态的像：单单一个态就决定了完全正性。
@@ -164,7 +176,8 @@ except ValueError as e:
 
 对从 $M_k$ 到 $M_{k'}$ 的 $\Phi(A)=\sum_{l=1}^rK_lAK_l^*$，令 $\Phi^*(B)=\sum_lK_l^*BK_l$；由
 循环性 $\operatorname{Tr}(\Phi(A)B)=\operatorname{Tr}(A\Phi^*(B))$，所以 $\Phi^*$ 是 $\Phi$
-关于迹的对偶（6.3 节），并且不依赖于 $K_l$ 的选取。在
+关于迹的对偶（6.3 节），并且不依赖于 $K_l$ 的选取（若对所有 $A$ 有
+$\operatorname{Tr}(AX)=\operatorname{Tr}(AX')$，则 $X=X'$：取 $A=E_{ji}$）。在
 $\mathbb C^r\otimes\mathbb C^{k'}$（**环境** $\mathbb C^r$ 在前）上令
 $\operatorname{Tr}_EX=\sum_l(e_l^*\otimes1)X(e_l\otimes1)$。
 
@@ -180,15 +193,22 @@ $\operatorname{Tr}_E(VAV^*)$ 是以 $K_l=(e_l^*\otimes1)V$ 为算子的 Kraus �
 $V^*(1\otimes B)V=\sum_{l,l'}\langle e_l,e_{l'}\rangle K_l^*BK_{l'}=\Phi^*(B)$，并且
 $V^*V=\sum_lK_l^*K_l$，它等于 $1$ 当且仅当 $\Phi$ 是 TP 的（命题 6.4）。$\square$
 
-一般地（此处不加证明地陈述），从有单位元的 C\*-代数 $\mathcal A$ 到 Hilbert 空间 $H$ 上有界算子的
-CP 映射 $\Psi$ 具有形式 $\Psi(a)=V^*\pi(a)V$，其中 $\pi$ 是 $\mathcal A$ 在某个 Hilbert 空间 $K$ 上的
-表示，$V:H\to K$ 有界（W. F. Stinespring, Proc. AMS 6 (1955)
-211；V. Paulsen, *Completely Bounded Maps and Operator Algebras*, Cambridge 2002, Thm. 4.1）；在上面的
-情形中 $\pi(B)=1_r\otimes B$。对于直和之间的映射，
-$V_c=\sum_{d,l}e_l\otimes\iota'_dK^{dc}_l:\mathbb C^{k_c}\to\mathbb C^r\otimes\bigoplus_d\mathbb C^{k'_d}$
-（$\iota'_d$ 为第 $d$ 个直和项的嵌入）使得 $\Phi(A)_d$ 是
-$\sum_c\operatorname{Tr}_E(V_cA_cV_c^*)$ 的 $(d,d)$ 块，并且 $\Phi$ 是 TP 的当且仅当每个 $V_c$ 都是
-等距算子；`random_channel` 和 `random_inter_sector_channel` 正是这样抽取信道的（6.5 节）。
+因此，使得对某个 $V:\mathbb C^k\to\mathbb C^r\otimes\mathbb C^{k'}$ 有
+$\Phi(A)=\operatorname{Tr}_E(VAV^*)$ 的最小 $r$ 就是 Kraus 秩 $\operatorname{rank}J(\Phi)$：每个这样的
+$V$ 都给出一个含 $r$ 个算子的 Kraus 形式，所以 $r\ge\operatorname{rank}J(\Phi)$（推论 6.3），而由
+定理 6.2(d)，$r=\operatorname{rank}J(\Phi)$ 是可以达到的。
+
+带表示 $\pi(B)=1_r\otimes B$ 的公式 $\Phi^*(B)=V^*\pi(B)V$，正是 W. F. Stinespring（Proc. AMS 6 (1955) 211）
+陈述该定理时所用的形式，他的设定比这里证明的有限维情形要一般得多（历史归属；延伸阅读：V. Paulsen,
+*Completely Bounded Maps and Operator Algebras*, Cambridge 2002, Ch. 4）。对于直和之间的映射，设
+$\iota'_d$ 为 $\bigoplus_d\mathbb C^{k'_d}$ 的第 $d$ 个直和项的嵌入，并令
+$V_c=\sum_{d,l}e_l\otimes\iota'_dK^{dc}_l:\mathbb C^{k_c}\to\mathbb C^r\otimes\bigoplus_d\mathbb C^{k'_d}$。
+则 $(e_l^*\otimes1)V_c=\sum_d\iota'_dK^{dc}_l$，所以
+$\sum_c\operatorname{Tr}_E(V_cA_cV_c^*)=\sum_{c,l}\big(\sum_d\iota'_dK^{dc}_l\big)A_c\big(\sum_{d'}\iota'_{d'}K^{d'c}_l\big)^*$
+的 $(d,d)$ 块是 $\sum_{c,l}K^{dc}_lA_cK^{dc*}_l=\Phi(A)_d$；又因为 $\iota'^*_d\iota'_{d'}=\delta_{dd'}1$，
+$V_c^*V_c=\sum_{d,l}K^{dc*}_lK^{dc}_l$，所以 $\Phi$ 是 TP 的当且仅当每个 $V_c$ 都是等距算子
+（命题 6.4）。`random_channel` 和 `random_inter_sector_channel` 正是这样抽取信道的
+（6.5 节）。
 
 **引理 6.6.** 若 $X,Y\in M_{p\times n}$ 且 $XX^*=YY^*$，则对某个酉矩阵 $W\in M_n$ 有 $Y=XW$。
 
@@ -227,11 +247,12 @@ PhiL = Channel(alg, torch.einsum('jl,blcxy->bjcxy', u, Kpad))
 assert close(PhiL(rho), out) and all(close(a, b) for a, b in zip(PhiL.choi(), J))
 ```
 
-> **物理意义。** 每个信道都是系统与处于固定态的环境之间的一次等距相互作用，随后忽略环境。
+> **物理意义**（物理解释，而非本课程的定理）。每个信道都是系统与处于固定态的环境之间的
+> 一次等距相互作用，随后忽略环境。
 > 在基 $e_l$ 下测量环境，以概率 $\operatorname{Tr}K_l\rho K_l^*$ 得到结果 $l$，并留下态
 > $K_l\rho K_l^*/\operatorname{Tr}(K_l\rho K_l^*)$：Kraus 算子就是可能发生的"量子跳跃"。
-> 换一组基会得到别的跳跃，但信道相同（定理 6.7）；最小的环境的维数为
-> $\operatorname{rank}J$。
+> 换一组基会得到别的跳跃，但信道相同（定理 6.7），而最小的环境的维数
+> 等于 Kraus 秩，这已在定理 6.5 之后证明。
 
 ## 6.3 关于迹的对偶
 
@@ -276,8 +297,15 @@ $\operatorname{tr}_w\Phi^\sharp(y)=\operatorname{tr}_v(\Phi(1)y)$ 对所有 $y$ 
 当且仅当 $\Phi(1)=1$。(c) 由迹的性质，$\operatorname{tr}_w(\Phi^\sharp(y)x)=\operatorname{tr}_v(y\Phi(x))$；
 应用唯一性。(d) 只出现 $d=c$ 的对，此时 $v_d/w_c=1$。$\square$
 
-对于改变扇区的映射，(d) 不成立。设 $\mathcal M=\mathcal N=M_1\oplus M_2$（扇区 $0$：没有
-粒子；扇区 $1$：两个格点上的一个粒子），并设 $\Phi$ 是**粒子丢失**，
+**Heisenberg 绘景中的密度。** 设 $\Psi:\mathcal N\to\mathcal M$ 是线性映射，$\omega$ 是
+$\mathcal M$ 上关于 $\operatorname{tr}_w$ 具有密度 $\rho$ 的线性泛函（定理 3.2），
+$\Psi^\sharp:\mathcal M\to\mathcal N$ 是 $\Psi$ 关于 $(v,w)$ 的对偶。则
+$\omega(\Psi(y))=\operatorname{tr}_w(\Psi(y)\rho)=\operatorname{tr}_v(y\Psi^\sharp(\rho))=\operatorname{tr}_v(\Psi^\sharp(\rho)y)$，
+所以 $\omega\circ\Psi$ 关于 $\operatorname{tr}_v$ 的密度为 $\Psi^\sharp(\rho)$；若 $\Psi$ 是保单位的，则由
+推论 6.9(b)（交换 $\mathcal M$ 与 $\mathcal N$ 的角色），$\Psi^\sharp$ 关于 $(w,v)$ 保迹。
+
+对于改变扇区的映射，推论 6.9(d) 不成立。设 $\mathcal M=\mathcal N=M_1\oplus M_2$（扇区 $0$ 和 $1$），
+并设 $\Phi$ 是称为**粒子丢失**的映射（见下面的框），
 $\Phi(x)=(x_0+\operatorname{Tr}x_1)\oplus0$，其 Kraus 算子为 $K^{00}=1$，$K^{01}_l=\langle l|$。
 它对 blunt 迹是保迹的。对 `Tr_norm`，$w=v=(1,\tfrac12)$，$\Phi^\sharp(1)=1\oplus2\cdot1_2$，
 且 $\operatorname{tr}_v\Phi(x)=x_0+\operatorname{Tr}x_1\ne x_0+\tfrac12\operatorname{Tr}x_1=\operatorname{tr}_w(x)$。
@@ -315,13 +343,13 @@ assert abs(loss(s).Tr_norm() - (s @ alg01.central([1.0, 2.0])).Tr_norm()) < 1e-1
 print(s.Tr_norm().real.item(), loss(s).Tr_norm().real.item())      # Tr_norm is not conserved
 ```
 
-> **物理意义。** 与迹无关的对象是作用在可观测量上的 Heisenberg 映射
+> **物理意义**（物理解释，而非本课程的定理）。与迹无关的对象是作用在可观测量上的 Heisenberg 映射
 > $\Psi:\mathcal N\to\mathcal M$：过程之前的态 $\omega$ 在过程之后变为
 > $\omega\circ\Psi$，而 $\Psi$ 是 CP 且保单位的。密度依赖于迹
-> （定理 3.2）；把 $\omega$ 的密度映为 $\omega\circ\Psi$ 的密度的映射是 $\Psi$ 关于所选迹的对偶，
-> 由推论 6.9(b)，它对这些迹是保迹的。如果代数以一定重数作用，物理的迹的权重为
-> $w_c=m_c$（第 2 章）。上面的粒子丢失对数态个数的 blunt 迹保持概率守恒，而对平等地看待各扇区的
-> `Tr_norm` 则不然。
+> （定理 3.2），而密度按 $\Psi$ 关于所选迹的对偶变换（推论 6.9 之后的段落）。如果代数以一定
+> 重数作用，物理的迹的权重为 $w_c=m_c$（2.3 节）。在上面的例子中，扇区 $0$ 被解读为"没有粒子"，
+> 扇区 $1$ 被解读为"两个格点上的一个粒子"；于是该映射移走了这个粒子。它对数态个数的 blunt 迹
+> 保持概率守恒，而对平等地看待各扇区的 `Tr_norm` 则不然。
 
 ## 6.4 退相干
 
@@ -337,7 +365,12 @@ print(s.Tr_norm().real.item(), loss(s).Tr_norm().real.item())      # Tr_norm is 
 
 这些 Kraus 形式可以直接计算验证，例如
 $\sum_{ij}\frac1kE_{ij}\rho E_{ji}=\frac1k\sum_{ij}\rho_{jj}E_{ii}$。这五个信道都是 TP 的，并且除
-$\gamma>0$ 时的振幅阻尼外都是保单位的。到中心上的条件期望 $E$
+$\gamma>0$ 时的振幅阻尼外都是保单位的（命题 6.4：计算 $\sum_lK_l^*K_l$ 和
+$\sum_lK_lK_l^*$；对大小为 $k$ 的块中的振幅阻尼，它们分别是 $1$ 和
+$1+(k-1)\gamma E_{00}-\gamma\sum_{i>0}E_{ii}$，而对混合酉信道有 $\sum_jp_j=1$）。
+具体地，振幅阻尼的作用为 $\rho_{00}\mapsto\rho_{00}+\gamma\sum_{i>0}\rho_{ii}$，
+$\rho_{ii}\mapsto(1-\gamma)\rho_{ii}$，对两个都为正的 $i\ne j$ 有 $\rho_{ij}\mapsto(1-\gamma)\rho_{ij}$，
+对 $j>0$ 有 $\rho_{0j}\mapsto\sqrt{1-\gamma}\,\rho_{0j}$，$\rho_{j0}\mapsto\sqrt{1-\gamma}\,\rho_{j0}$。到中心上的条件期望 $E$
 （命题 2.8）就是 $p=1$ 的退极化。与扇区的测量
 $X\mapsto\sum_cP_cXP_c$（它在 $\mathcal M$ 上是恒等映射，见 3.3 节）不同，$E$ 只保留 $p_c$。
 
@@ -349,17 +382,23 @@ $X\mapsto\sum_cP_cXP_c$（它在 $\mathcal M$ 上是恒等映射，见 3.3 节�
 所以不动点的自伴部分 $(X+X^*)/2$ 和 $(X-X^*)/2i$ 也是不动点；不妨设
 $X=X^*$。令 $Y_l=K_lX-XK_l$，则
 $$
-\sum_lY_lY_l^*=\sum_l\big(K_lX^2K_l^*-K_lXK_l^*X-XK_lXK_l^*+XK_lK_l^*X\big)=\Phi(X^2)-X^2,
+\sum_lY_lY_l^*=\sum_l\big(K_lX^2K_l^*-K_lXK_l^*X-XK_lXK_l^*+XK_lK_l^*X\big)
+=\Phi(X^2)-\Phi(X)X-X\Phi(X)+X\Phi(1)X=\Phi(X^2)-X^2,
 $$
-由于 $\Phi$ 是 TP 的，它的迹为 $0$。因为 $\operatorname{Tr}Y_lY_l^*=\|Y_l\|_2^2\ge0$，每个 $Y_l=0$；
-取伴随可知 $X$ 也与 $K_l^*$ 可交换。这些 $X$ 构成一个自伴集合的交换子与 $\mathcal M$
+这里用到了 $Y_l^*=XK_l^*-K_l^*X$、$\Phi(X)=X$ 和 $\Phi(1)=1$。由于 $\Phi$ 是 TP 的，它的迹为 $0$。因为
+$\operatorname{Tr}Y_lY_l^*=\|Y_l\|_2^2\ge0$，每个 $Y_l=0$；取伴随可知 $X$ 也与 $K_l^*$ 可交换。这些 $X$ 构成一个自伴集合的交换子与 $\mathcal M$
 的交：这是一个包含 $1$ 的 $*$-代数，因而是冯·诺依曼代数
 （定理 2.2）。$\square$
 
 因此，退相位（$p>0$）恰好保留每个块的对角部分，而退极化（$p>0$）和 $E$
 恰好保留中心。没有保单位性，该定理就不成立：振幅阻尼固定 $E_{00}$，
-而 $E_{00}$ 与跳跃算子 $E_{01}$ 不可交换（在下面的例子中，它的不动点空间与交换子在每个块中
-维数都是 $1$，但它们分别是 $\mathbb CE_{00}$ 和 $\mathbb C1$）。
+而 $E_{00}$ 与跳跃算子 $E_{01}$ 不可交换。对 $0<\gamma\le1$ 和 $k\ge2$，它在一个块中的不动点空间
+与其 Kraus 算子的交换子维数都是 $1$，但它们分别是 $\mathbb CE_{00}$ 和
+$\mathbb C1$：由上面的显式形式，不动点满足对 $i\ne j$ 有 $\rho_{ij}=0$，对 $i>0$ 有
+$\rho_{ii}=0$（这些元素被乘以 $\sqrt{1-\gamma}\ne1$ 或 $1-\gamma\ne1$），而 $E_{00}$ 的每个倍数都是
+不动点；另一方面，与所有 $E_{0i}$、$E_{i0}$（$i>0$）可交换的元素也与它们的乘积 $E_{ij}=E_{i0}E_{0j}$
+和 $E_{00}=E_{01}E_{10}$ 可交换，从而与 $M_k$ 可交换，所以它是 $1$ 的倍数
+（第 2 章习题 1）。
 
 **定理 6.11（保单位信道使熵增加）。** 设 $\Phi:\mathcal M\to\mathcal N$ 是正的、
 TP 且保单位的，$\rho$ 和 $\Phi(\rho)$ 是态，其特征值分别为 $\lambda_i$ 和 $\mu_j$。
@@ -376,8 +415,9 @@ $\sum_j\Delta_{ji}=\operatorname{Tr}\Phi(|e_i\rangle\langle e_i|)=1$，且
 $\sum_i\Delta_{ji}=\langle f_j,\Phi(1)f_j\rangle=1$（所以 $\Delta$ 是方阵：对所有元素求和即知）。由
 有限 Jensen 不等式 $f(\sum_i\Delta_{ji}\lambda_i)\ge\sum_i\Delta_{ji}f(\lambda_i)$（它可由凹性的定义
 对项数归纳得到，同第 3 章习题 2 的解答），
-$\sum_jf(\mu_j)\ge\sum_j\sum_i\Delta_{ji}f(\lambda_i)=\sum_if(\lambda_i)$。取 $f(t)=-t\log t$ 和
-$f(t)=-t^2$。$\square$
+$\sum_jf(\mu_j)\ge\sum_j\sum_i\Delta_{ji}f(\lambda_i)=\sum_if(\lambda_i)$。取 $f(t)=-t\log t$
+（$f(0)=0$）和 $f(t)=-t^2$；由引理 3.4，它们在 $[0,1]$ 上是凹的：$t\log t$ 和 $t^2$ 在 $[0,1]$ 上
+连续，且在 $(0,1)$ 上的二阶导数分别为 $1/t>0$ 和 $2>0$。$\square$
 
 扇区之间映射的经典部分是它的**转移矩阵**
 $T_{dc}(\rho)=\operatorname{Tr}\Phi_{dc}(\rho_c)/\operatorname{Tr}\rho_c$（$\rho_c\ne0$）；本库的
@@ -385,7 +425,7 @@ $T_{dc}(\rho)=\operatorname{Tr}\Phi_{dc}(\rho_c)/\operatorname{Tr}\rho_c$（$\rh
 
 **命题 6.12.** 设 $\Phi:\mathcal M\to\mathcal N$ 是正的且 TP 的，$\rho$ 是满足
 $p_c=\operatorname{Tr}\rho_c>0$ 的态，$q_d=\operatorname{Tr}\Phi(\rho)_d$。则 $T(\rho)$ 是列随机矩阵，
-且 $q=T(\rho)p$。记 $E_{\mathcal M}$、$E_{\mathcal N}$ 为到各自中心上的条件期望，则
+且 $q=T(\rho)p$。记 $E_{\mathcal M}$、$E_{\mathcal N}$ 为到各自中心上的条件期望（命题 2.8），则
 $$
 E_{\mathcal N}\Phi E_{\mathcal M}(\rho)=\bigoplus_d\frac{(Tp)_d}{k'_d}\,1_{k'_d},\qquad T=T(1).
 $$
@@ -427,6 +467,7 @@ assert fixed_dims(zoo['dephasing']) == [2, 3] and fixed_dims(zoo['depolarizing']
 E00 = alg.from_blocks([unit(0, 0, 2), unit(0, 0, 3)])
 E01 = alg.from_blocks([unit(0, 1, 2), unit(0, 1, 3)])
 assert close(zoo['amplitude damping'](E00), E00) and not close(E00 @ E01, E01 @ E00)   # equal dims, different spaces
+assert fixed_dims(zoo['amplitude damping']) == commutant_dims(zoo['amplitude damping']) == [1, 1]
 
 rhos = states.random_density_matrix(alg, batch_size=100)
 for name in ('dephasing', 'depolarizing', 'centre', 'mixed unitary'):                 # Theorem 6.11
@@ -450,10 +491,42 @@ assert torch.allclose(loss.transition_matrix()[0], torch.tensor([[1.0, 1.0], [0.
 在完全振幅阻尼下，$M_2\oplus M_3$ 的最大混合态的熵从
 $\log5\approx1.609$ 降到 $H(\tfrac25,\tfrac35)\approx0.673$：非保单位的信道可以起到纯化作用。
 
-> **物理意义。** 对一个量子比特，退相位把相干项 $\rho_{01}$ 乘以 $1-p$，而
-> 布居数保持不变（纯退相位，时间常数 $T_\varphi$）；$1-\gamma=e^{-t/T_1}$ 的振幅阻尼
-> 使激发能级衰减，并把相干项乘以
-> $\sqrt{1-\gamma}=e^{-t/2T_1}$，由此得 $1/T_2=1/(2T_1)+1/T_\varphi$。定理 6.10 是无退相干信息的
+**量子比特的相干项。** 在 $M_2$ 上，设 $D_p$ 为退相位，$A_\gamma$ 为振幅阻尼。由上表和上面的
+显式形式，$D_p$ 把 $\rho_{01}$ 和 $\rho_{10}$ 乘以 $1-p$ 并保持对角部分不变，而 $A_\gamma$ 把
+$\rho_{01}$ 和 $\rho_{10}$ 乘以 $\sqrt{1-\gamma}$，并把对角部分映为
+$(\rho_{00}+\gamma\rho_{11},(1-\gamma)\rho_{11})$，与相干项无关。因此
+$D_pA_\gamma=A_\gamma D_p$：二者都把相干项乘以 $(1-p)\sqrt{1-\gamma}$，并在对角部分上
+像 $A_\gamma$ 一样作用。特别地，对 $T_1,T_\varphi>0$，$t\ge0$，$1-p=e^{-t/T_\varphi}$ 和 $1-\gamma=e^{-t/T_1}$，
+该复合映射把相干项乘以 $e^{-t/T_2}$，其中
+$$
+\frac1{T_2}=\frac1{2T_1}+\frac1{T_\varphi},
+$$
+并且这两族映射关于 $t$ 可加地复合：$D_{p(t)}D_{p(s)}=D_{p(t+s)}$，
+$A_{\gamma(t)}A_{\gamma(s)}=A_{\gamma(t+s)}$，因为因子 $e^{-t/T}$ 相乘，且迹保持不变。
+
+```python
+q2 = TypeIAlgebra([2], [2], precision='double')
+p_, g_ = 0.3, 0.4
+Dp, Ag = channels.dephasing_channel(q2, p_), channels.amplitude_damping_channel(q2, g_)
+r2 = states.random_density_matrix(q2)
+assert close(Dp(Ag(r2)), Ag(Dp(r2)))                                         # D_p A_gamma = A_gamma D_p
+coh = Dp(Ag(r2)).matrix[0, 0, 0, 1] / r2.matrix[0, 0, 0, 1]
+assert abs(coh - (1 - p_) * math.sqrt(1 - g_)) < 1e-12                       # coherence factor
+T1, Tphi, t1, t2 = 2.0, 3.0, 0.7, 1.1
+gam = lambda t: 1 - math.exp(-t / T1)
+assert close(channels.amplitude_damping_channel(q2, gam(t1))(channels.amplitude_damping_channel(q2, gam(t2))(r2)),
+             channels.amplitude_damping_channel(q2, gam(t1 + t2))(r2))       # A_gamma(t) A_gamma(s) = A_gamma(t+s)
+pdeph = lambda t: 1 - math.exp(-t / Tphi)
+assert close(channels.dephasing_channel(q2, pdeph(t1))(channels.dephasing_channel(q2, pdeph(t2))(r2)),
+             channels.dephasing_channel(q2, pdeph(t1 + t2))(r2))           # D_p(t) D_p(s) = D_p(t+s)
+both = channels.dephasing_channel(q2, pdeph(t1))(channels.amplitude_damping_channel(q2, gam(t1))(r2))
+coh_t = (both.matrix[0, 0, 0, 1] / r2.matrix[0, 0, 0, 1]).item()
+assert abs(coh_t - math.exp(-t1 * (1 / (2 * T1) + 1 / Tphi))) < 1e-12       # 1/T_2 = 1/(2T_1) + 1/T_phi
+```
+
+> **物理意义**（物理解释，而非本课程的定理）。对一个量子比特，
+> 退相位模拟时间常数为 $T_\varphi$ 的纯退相位，振幅阻尼模拟激发能级以时间常数 $T_1$ 的衰减；
+> 于是上面的计算给出同时受这两者作用的量子比特的相干时间 $T_2$。定理 6.10 是无退相干信息的
 > 代数形式：与所有跳跃算子可交换的东西得以幸存（第 10 章）。
 > 命题 6.12 表明，透过中心来看，扇区之间的映射是荷上的一个经典 Markov
 > 矩阵。
@@ -462,7 +535,10 @@ $\log5\approx1.609$ 降到 $H(\tfrac25,\tfrac35)\approx0.673$：非保单位的�
 
 与本库（`random_isometry`）一样，**Haar 随机等距** $V:\mathbb C^k\to\mathbb C^N$ 定义为
 $G=QR$ 中的因子 $Q$，其中 $G$ 是 $N\times k$ 的 Ginibre 矩阵（各元素独立，密度为
-$\pi^{-1}e^{-|z|^2}$），$Q^*Q=1$，$R$ 是对角元为正的上三角矩阵。
+$\pi^{-1}e^{-|z|^2}$），$Q^*Q=1$，$R$ 是对角元为正的上三角矩阵（在 CPU 上，本库先取 LAPACK
+分解 $G=Q'R'$，再把 $Q'$ 的第 $i$ 列乘以 $R'_{ii}/|R'_{ii}|$；与定理 5.3 中一样，只要所有
+$R'_{ii}\ne0$，即只要 $G$ 的秩为 $k$，这就给出上述分解，而由引理 6.13 的证明，这几乎必然成立；
+对 GPU 上的大批量，本库使用 Gram–Schmidt 正交化，它直接给出该分解）。
 `random_channel(alg, r)` 在每个块中独立地抽取这样的 $V_c:\mathbb C^{k_c}\to\mathbb C^r\otimes\mathbb C^{k_c}$，
 并使用定理 6.5 中的 Kraus 算子。
 
@@ -509,9 +585,10 @@ $N=kr$），第一项迫使 $x=y$（$kr^2$ 个指标组），第二项迫使 $e=
 
 对 $r=1$，信道是酉的，纯度为 $1$；当 $r\to\infty$ 时，纯度趋于 $1/k$，即
 最大混合态的纯度。证明只用到了 $u$ 的分布的酉不变性，
-因此它也给出了 Lubkin 关于随机纯态 $u=g/\|g\|$（$g$ 为高斯向量）的约化态的平均纯度，
-第 7 章定理 7.11 用高斯积分证明了这一结果；引理 6.14 中的数
-$\alpha,\beta$ 就是推论 5.11 中关于 Haar 酉矩阵元素的那些数。
+因此它也给出了 Lubkin 关于随机纯态 $u=g/\|g\|$（$g$ 为高斯向量，由定理 A.20(b)，其分布是酉不变的）
+的约化态的平均纯度，第 7 章定理 7.11 用高斯积分证明了这一结果；引理 6.14 中的数
+$\alpha,\beta$ 就是推论 5.11 中关于 Haar 酉矩阵元素的那些数，而推论 A.21 对 $u=g/\|g\|$
+重新计算了它们。
 
 ```python
 B = 20_000
@@ -531,9 +608,10 @@ for r in (1, 2, 4):
         assert (avg - torch.eye(k, dtype=dt) / k).abs().max() < 0.02          # E Phi(psi) = 1/k
 ```
 
-> **物理意义。** 随机信道模拟来自维数为 $r$ 的环境的一般的、无结构的噪声。
-> 仅 $r=4$ 就使一个纯的 qutrit 态的纯度平均降到 $7/13\approx0.54$，
-> 而无噪声时为 $1$，最小值为 $1/3$。在超选择系统中，噪声在每个扇区中
+> **物理意义**（物理解释，而非本课程的定理）。随机信道模拟来自维数为 $r$ 的环境的一般的、
+> 无结构的噪声。仅 $r=4$ 就使一个纯的 qutrit 态的纯度平均降到 $7/13\approx0.54$（定理 6.15），
+> 而无噪声时为 $1$，最小值为 $1/3$（由 Cauchy–Schwarz 不等式，
+> $\operatorname{Tr}\rho^2\ge(\operatorname{Tr}\rho)^2/k$）。在超选择系统中，噪声在每个扇区中
 > 分别作用，相关的维数是扇区的维数，而不是整个空间的维数。
 
 ## 6.6 可与之比较的工具
@@ -569,7 +647,8 @@ Kraus 算子、不同代数之间的映射（`InterSectorChannel`）、
 
 1. 记 $F$ 为交换算子，则 $J(\theta)=\sum_{ij}E_{ij}\otimes E_{ji}=F$，$J(\rho\mapsto\operatorname{Tr}(\rho)1)=1\otimes1$，
    所以 $J(\Phi)=(1-F)/(k-1)=2P_-/(k-1)$，其中 $P_-=(1-F)/2$ 是到
-   反对称向量上的投影（$F=F^*$，$F^2=1$）。所以 $J\ge0$，秩为 $k(k-1)/2$（定理 6.2、
+   反对称向量上的投影（$F=F^*$，$F^2=1$），其秩为 $\operatorname{Tr}P_-=(k^2-\operatorname{Tr}F)/2$，
+   其中 $\operatorname{Tr}F=\sum_{ij}\langle e_i\otimes e_j,e_j\otimes e_i\rangle=k$。所以 $J\ge0$，秩为 $k(k-1)/2$（定理 6.2、
    推论 6.3），并且可直接验证 $\operatorname{Tr}\Phi(\rho)=\operatorname{Tr}\rho$，$\Phi(1)=1$。
 
 ```python
@@ -592,7 +671,7 @@ assert close(WH(M3.operator(r3[None, None])).matrix[0, 0], (torch.eye(k, dtype=d
 ```python
 ranks = [int((torch.linalg.eigvalsh(J_c[0]) > 1e-10).sum()) for J_c in zoo['dephasing'].choi()]
 print(ranks, zoo['dephasing'].kraus_rank)                 # [2, 3] versus 4 stored operators
-assert ranks == alg.k_factors
+assert ranks == alg.k_factors and zoo['dephasing'].kraus_rank == 1 + max(alg.k_factors)
 ```
 
 3. $\operatorname{Tr}((X^aZ^b)^*X^{a'}Z^{b'})=k\,\delta_{aa'}\delta_{bb'}$：除非 $a=a'$，

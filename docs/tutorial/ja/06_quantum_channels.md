@@ -2,15 +2,17 @@
 
 # 6. 量子チャネル
 
-量子チャネルとは、状態が変化しうる最も一般的な仕方である：ユニタリ発展、結果が忘れられる測定、
-環境との相互作用、粒子の損失などがその例である。数学的には、それは完全正値かつトレース保存の線形写像である。本章では、
+量子チャネルとは、完全正値かつトレース保存の線形写像である。ユニタリによる共役、中心の上への条件付き期待値、
+等長作用素 $V$ により与えられる写像 $\rho\mapsto\operatorname{Tr}_E(V\rho V^*)$、そしてあるセクターから別のセクターへ
+重みを移す写像などがその例である。それらの物理的な読み方（発展、結果が忘れられる測定、環境、粒子の損失）は
+*物理的意味* の囲みの中でのみ論じる。本章では、
 有限次元フォン・ノイマン環の間のそのような写像について標準的な記述——チョイ行列、クラウス作用素、
 スタインスプリング拡張——を証明し、続いて直和に特有の事柄を調べる：セクター間の写像、第3章のトレースに関する双対、
 そしてチャネルの古典的部分である。第2章と第3章ではすでにライブラリのチャネルを用いた。ここではその理論を述べる。
 
 **本章で学ぶこと**：正値性だけでは不十分である理由、チョイ行列・クラウス作用素・超演算子・等長作用素の間を
-行き来する方法、写像がセクターを変えるとき「トレース保存」がトレースに依存する理由、デコヒーレンスを生き延びる
-オブザーバブルは何か、そしてランダムなチャネルが純粋状態に平均として何をするか。
+行き来する方法、写像がセクターを変えるとき「トレース保存」がトレースに依存する理由、単位的チャネルが
+どの作用素を固定するか、そしてランダムなチャネルが純粋状態に平均として何をするか。
 
 本章を通じて、$\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)$ および
 $\mathcal N=\bigoplus_{d=1}^{C'}M_{k'_d}(\mathbb C)$ とし、それぞれの極小中心射影を $P_c$ と
@@ -92,7 +94,14 @@ $d\ne c$ に対し $\Phi_{dc}=0$）を格納する。そのクラウス作用素
 $J(\Phi_{cc})$ を返し、`Channel.superoperator()` は行優先のベクトル
 $\operatorname{vec}(X)_{(a,b)}=X_{ab}$ に作用する $\Phi_{cc}$ の行列 $S_c$ を返す。どちらも同じ数
 $\Phi(E_{ij})_{ab}=J_{(i,a),(j,b)}=S_{(a,b),(i,j)}$ を異なる順序で含んでいる。`Channel.from_superoperator`
-は定理 6.2 の証明のようにチョイ行列を対角化し、CP でない写像を拒否する。
+は、チョイ行列がエルミートでないとき、すなわち $\|J-J^*\|>2\cdot10^{-10}s$（倍精度の場合）のとき `ValueError` を送出する。
+ここで $s=\max(1,\|J\|)$ であり、ノルムはスペクトルノルムである。そうでなければ $J$ をそのエルミート部分 $(J+J^*)/2$ で置き換え、
+定理 6.2 の証明のようにこれを対角化し、ある固有値が $-10^{-10}s$ より小さければ `ValueError` を送出し、
+残りの負の固有値を $0$ にする。すべての $X$ に対し $\Phi(X^*)=\Phi(X)^*$ ならば $J^*=J$ である（$J^*$ の
+$(i,j)$ ブロックは $\Phi(E_{ji})^*=\Phi(E_{ij})$ である）。逆に $J^*=J$ からは $\Phi(E_{ji})^*=\Phi(E_{ij})$ が従い、
+線形性により $\Phi(X^*)=\Phi(X)^*$ となる。したがって、これらの丸め誤差の許容範囲を除いて、このメソッドが拒否するのは
+随伴を保たない写像と、定理 6.2 により、それ以外の写像のうち CP でないものにちょうど一致する。
+例えば $X\mapsto iX$ は拒否される。
 
 ```python
 import math
@@ -153,9 +162,14 @@ try:
     raise AssertionError("the transpose was accepted")
 except ValueError as e:
     print(e)                                              # superoperator is not completely positive
+try:
+    Channel.from_superoperator(alg, [1j * torch.eye(k * k, dtype=dt)[None] for k in (2, 3)])
+    raise AssertionError("X -> iX was accepted")
+except ValueError as e:
+    print(e)                                              # superoperator does not preserve Hermiticity
 ```
 
-> **物理的意味.** 系は決して孤立していない：$n$ 準位の、手を触れられていない補助系と
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. 系は決して孤立していない：$n$ 準位の、手を触れられていない補助系と
 > 相関しているかもしれない。物理的過程はこの組に $\Phi_n=\mathrm{id}_n\otimes\Phi$ として作用し、
 > 状態を状態に写さなければならないので、$\Phi$ は完全正値でなければならない。転置は正値であるが、
 > エンタングルした状態 $|\Omega\rangle\langle\Omega|/2$ を固有値 $-1/2$ をもつ作用素に写す。
@@ -165,7 +179,8 @@ except ValueError as e:
 
 $M_k$ から $M_{k'}$ への $\Phi(A)=\sum_{l=1}^rK_lAK_l^*$ に対し $\Phi^*(B)=\sum_lK_l^*BK_l$ とおく。
 巡回性により $\operatorname{Tr}(\Phi(A)B)=\operatorname{Tr}(A\Phi^*(B))$ であるから、$\Phi^*$ はトレースに関する
-$\Phi$ の双対であり（6.3節）、$K_l$ の選び方に依存しない。
+$\Phi$ の双対であり（6.3節）、$K_l$ の選び方に依存しない（すべての $A$ に対し
+$\operatorname{Tr}(AX)=\operatorname{Tr}(AX')$ ならば $X=X'$ である：$A=E_{ji}$ とおけばよい）。
 $\mathbb C^r\otimes\mathbb C^{k'}$（**環境** $\mathbb C^r$ が先）上で
 $\operatorname{Tr}_EX=\sum_l(e_l^*\otimes1)X(e_l\otimes1)$ とおく。
 
@@ -181,15 +196,22 @@ $\operatorname{Tr}_E(VAV^*)$ は $K_l=(e_l^*\otimes1)V$ をもつクラウス形
 $V^*(1\otimes B)V=\sum_{l,l'}\langle e_l,e_{l'}\rangle K_l^*BK_{l'}=\Phi^*(B)$ であり、
 $V^*V=\sum_lK_l^*K_l$ は $\Phi$ が TP であるときかつそのときに限り $1$ である（命題 6.4）。$\square$
 
-一般には（証明なしに述べるが）、単位的 C\*-環 $\mathcal A$ からヒルベルト空間 $H$ 上の有界作用素への
-CP 写像 $\Psi$ は、$\mathcal A$ のヒルベルト空間 $K$ 上の表現 $\pi$ と有界な $V:H\to K$ により
-$\Psi(a)=V^*\pi(a)V$ と書ける（W. F. Stinespring, Proc. AMS 6 (1955)
-211; V. Paulsen, *Completely Bounded Maps and Operator Algebras*, Cambridge 2002, Thm. 4.1）。上では
-$\pi(B)=1_r\otimes B$ である。直和の間の写像に対しては、
-$V_c=\sum_{d,l}e_l\otimes\iota'_dK^{dc}_l:\mathbb C^{k_c}\to\mathbb C^r\otimes\bigoplus_d\mathbb C^{k'_d}$
-（$\iota'_d$ は第 $d$ 直和成分の埋め込み）とおくと、$\Phi(A)_d$ は
-$\sum_c\operatorname{Tr}_E(V_cA_cV_c^*)$ の $(d,d)$ ブロックとなり、$\Phi$ が TP であるのはすべての $V_c$ が
-等長作用素であるときかつそのときに限る。`random_channel` と `random_inter_sector_channel` はこのようにしてチャネルを生成する（6.5節）。
+したがって、ある $V:\mathbb C^k\to\mathbb C^r\otimes\mathbb C^{k'}$ により $\Phi(A)=\operatorname{Tr}_E(VAV^*)$ と
+書けるような最小の $r$ はクラウス階数 $\operatorname{rank}J(\Phi)$ である：そのような $V$ はどれも $r$ 個の作用素をもつ
+クラウス形を与えるから $r\ge\operatorname{rank}J(\Phi)$ であり（系 6.3）、$r=\operatorname{rank}J(\Phi)$ は
+定理 6.2(d) により実現される。
+
+表現 $\pi(B)=1_r\otimes B$ を用いた式 $\Phi^*(B)=V^*\pi(B)V$ は、W. F. Stinespring（Proc. AMS 6 (1955) 211）が
+この定理を述べた形であり、そこではここで証明した有限次元の場合よりはるかに一般的な設定が扱われている（歴史的な帰属；
+さらに読むには：V. Paulsen, *Completely Bounded Maps and Operator Algebras*, Cambridge 2002, Ch. 4）。直和の間の
+写像に対しては、$\iota'_d$ を $\bigoplus_d\mathbb C^{k'_d}$ の第 $d$ 直和成分の埋め込みとし、
+$V_c=\sum_{d,l}e_l\otimes\iota'_dK^{dc}_l:\mathbb C^{k_c}\to\mathbb C^r\otimes\bigoplus_d\mathbb C^{k'_d}$ とおく。
+すると $(e_l^*\otimes1)V_c=\sum_d\iota'_dK^{dc}_l$ であるから、
+$\sum_c\operatorname{Tr}_E(V_cA_cV_c^*)=\sum_{c,l}\big(\sum_d\iota'_dK^{dc}_l\big)A_c\big(\sum_{d'}\iota'_{d'}K^{d'c}_l\big)^*$
+の $(d,d)$ ブロックは $\sum_{c,l}K^{dc}_lA_cK^{dc*}_l=\Phi(A)_d$ である。また $\iota'^*_d\iota'_{d'}=\delta_{dd'}1$ であるから
+$V_c^*V_c=\sum_{d,l}K^{dc*}_lK^{dc}_l$ となり、$\Phi$ が TP であるのはすべての $V_c$ が等長作用素であるときかつ
+そのときに限る（命題 6.4）。`random_channel` と `random_inter_sector_channel` はこのようにしてチャネルを生成する
+（6.5節）。
 
 **補題 6.6.** $X,Y\in M_{p\times n}$ かつ $XX^*=YY^*$ ならば、あるユニタリ $W\in M_n$ により $Y=XW$ である。
 
@@ -228,11 +250,11 @@ PhiL = Channel(alg, torch.einsum('jl,blcxy->bjcxy', u, Kpad))
 assert close(PhiL(rho), out) and all(close(a, b) for a, b in zip(PhiL.choi(), J))
 ```
 
-> **物理的意味.** あらゆるチャネルは、系と固定された状態にある環境との等長的な相互作用の後に
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. あらゆるチャネルは、系と固定された状態にある環境との等長的な相互作用の後に
 > 環境を無視することとして得られる。環境を基底 $e_l$ で測定すると、確率 $\operatorname{Tr}K_l\rho K_l^*$ で
 > 結果 $l$ が得られ、状態は $K_l\rho K_l^*/\operatorname{Tr}(K_l\rho K_l^*)$ となる：クラウス作用素は起こりうる「量子ジャンプ」である。
-> 別の基底をとれば別のジャンプが得られるが、チャネルは同じである（定理 6.7）。最小の環境の次元は
-> $\operatorname{rank}J$ である。
+> 別の基底をとれば別のジャンプが得られるが、チャネルは同じである（定理 6.7）。また最小の環境の次元は、
+> 定理 6.5 の後で示したとおり、クラウス階数に等しい。
 
 ## 6.3 トレースに関する双対
 
@@ -277,8 +299,15 @@ $\operatorname{tr}_w\Phi^\sharp(y)=\operatorname{tr}_v(\Phi(1)y)$ がすべて�
 $y$ に対し $\operatorname{tr}_v(y)$ に等しいのは $\Phi(1)=1$ のときかつそのときに限る。(c) トレースの性質により
 $\operatorname{tr}_w(\Phi^\sharp(y)x)=\operatorname{tr}_v(y\Phi(x))$ である。一意性を用いる。(d) 現れるのは $d=c$ の組のみであり、そこでは $v_d/w_c=1$ である。$\square$
 
-セクターを変える写像に対しては (d) は成り立たない。$\mathcal M=\mathcal N=M_1\oplus M_2$（セクター $0$：
-粒子なし、セクター $1$：二つのサイト上の一つの粒子）とし、$\Phi$ を **粒子損失**
+**ハイゼンベルク描像における密度.** $\Psi:\mathcal N\to\mathcal M$ を線形写像、$\omega$ を $\operatorname{tr}_w$ に関する
+密度 $\rho$ をもつ $\mathcal M$ 上の線形汎関数（定理 3.2）、$\Psi^\sharp:\mathcal M\to\mathcal N$ を $(v,w)$ に関する
+$\Psi$ の双対とする。このとき
+$\omega(\Psi(y))=\operatorname{tr}_w(\Psi(y)\rho)=\operatorname{tr}_v(y\Psi^\sharp(\rho))=\operatorname{tr}_v(\Psi^\sharp(\rho)y)$
+であるから、$\omega\circ\Psi$ は $\operatorname{tr}_v$ に関して密度 $\Psi^\sharp(\rho)$ をもつ。$\Psi$ が単位的ならば、
+系 6.9(b)（$\mathcal M$ と $\mathcal N$ の役割を入れ替えたもの）により、$\Psi^\sharp$ は $(w,v)$ に関して TP である。
+
+セクターを変える写像に対しては系 6.9(d) は成り立たない。$\mathcal M=\mathcal N=M_1\oplus M_2$（セクター $0$ と $1$）とし、
+$\Phi$ を **粒子損失** と呼ばれる写像（下の囲みを参照）
 $\Phi(x)=(x_0+\operatorname{Tr}x_1)\oplus0$ とする。そのクラウス作用素は $K^{00}=1$、$K^{01}_l=\langle l|$ である。
 これは blunt トレースに関して TP である。`Tr_norm` に対しては $w=v=(1,\tfrac12)$、$\Phi^\sharp(1)=1\oplus2\cdot1_2$
 であり、$\operatorname{tr}_v\Phi(x)=x_0+\operatorname{Tr}x_1\ne x_0+\tfrac12\operatorname{Tr}x_1=\operatorname{tr}_w(x)$ である。
@@ -316,12 +345,12 @@ assert abs(loss(s).Tr_norm() - (s @ alg01.central([1.0, 2.0])).Tr_norm()) < 1e-1
 print(s.Tr_norm().real.item(), loss(s).Tr_norm().real.item())      # Tr_norm is not conserved
 ```
 
-> **物理的意味.** トレースに依存しない対象は、オブザーバブルに作用するハイゼンベルク写像
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. トレースに依存しない対象は、オブザーバブルに作用するハイゼンベルク写像
 > $\Psi:\mathcal N\to\mathcal M$ である：過程の前の状態 $\omega$ は過程の後には
-> $\omega\circ\Psi$ となり、$\Psi$ は CP かつ単位的である。密度はトレースに依存する
-> （定理 3.2）。$\omega$ の密度を $\omega\circ\Psi$ の密度に写す写像は、選んだトレースに関する
-> $\Psi$ の双対であり、系 6.9(b) によりそれらのトレースに関して TP である。環が
-> 重複度をもって作用する場合、物理的なトレースの重みは $w_c=m_c$ である（第2章）。上の粒子損失は、状態を数える
+> $\omega\circ\Psi$ となり、$\Psi$ は CP かつ単位的である。密度はトレースに依存し
+> （定理 3.2）、密度は選んだトレースに関する $\Psi$ の双対によって変換される（系 6.9 の後の段落）。環が
+> 重複度をもって作用する場合、物理的なトレースの重みは $w_c=m_c$ である（2.3節）。上の例では、セクター $0$ を
+> 「粒子なし」、セクター $1$ を「二つのサイト上の一つの粒子」と読む。すると写像は粒子を取り除く。これは状態を数える
 > blunt トレースに関しては確率を保存するが、セクターを等しく重みづける `Tr_norm` に関しては保存しない。
 
 ## 6.4 デコヒーレンス
@@ -338,7 +367,12 @@ print(s.Tr_norm().real.item(), loss(s).Tr_norm().real.item())      # Tr_norm is 
 
 クラウス形は直接計算で確かめられる。例えば
 $\sum_{ij}\frac1kE_{ij}\rho E_{ji}=\frac1k\sum_{ij}\rho_{jj}E_{ii}$ である。五つとも TP であり、
-$\gamma>0$ の振幅減衰を除いてすべて単位的である。中心の上への条件付き期待値 $E$
+$\gamma>0$ の振幅減衰を除いてすべて単位的である（命題 6.4：$\sum_lK_l^*K_l$ と
+$\sum_lK_lK_l^*$ を計算する。サイズ $k$ のブロックにおける振幅減衰では、それらは $1$ と
+$1+(k-1)\gamma E_{00}-\gamma\sum_{i>0}E_{ii}$ であり、混合ユニタリ・チャネルでは $\sum_jp_j=1$ である）。
+具体的には、振幅減衰は $\rho_{00}\mapsto\rho_{00}+\gamma\sum_{i>0}\rho_{ii}$、
+$\rho_{ii}\mapsto(1-\gamma)\rho_{ii}$、$i\ne j$ がともに正のとき $\rho_{ij}\mapsto(1-\gamma)\rho_{ij}$、
+$j>0$ に対し $\rho_{0j}\mapsto\sqrt{1-\gamma}\,\rho_{0j}$、$\rho_{j0}\mapsto\sqrt{1-\gamma}\,\rho_{j0}$ と写す。中心の上への条件付き期待値 $E$
 （命題 2.8）は $p=1$ の脱分極である。セクターの測定
 $X\mapsto\sum_cP_cXP_c$ は $\mathcal M$ 上で恒等写像である（3.3節）のと異なり、$E$ は $p_c$ だけを残す。
 
@@ -350,17 +384,24 @@ $X\mapsto\sum_cP_cXP_c$ は $\mathcal M$ 上で恒等写像である（3.3節）
 であるから、不動点の自己共役部分 $(X+X^*)/2$ と $(X-X^*)/2i$ も不動点である。そこで
 $X=X^*$ とする。$Y_l=K_lX-XK_l$ とおくと
 $$
-\sum_lY_lY_l^*=\sum_l\big(K_lX^2K_l^*-K_lXK_l^*X-XK_lXK_l^*+XK_lK_l^*X\big)=\Phi(X^2)-X^2,
+\sum_lY_lY_l^*=\sum_l\big(K_lX^2K_l^*-K_lXK_l^*X-XK_lXK_l^*+XK_lK_l^*X\big)
+=\Phi(X^2)-\Phi(X)X-X\Phi(X)+X\Phi(1)X=\Phi(X^2)-X^2,
 $$
-であり、$\Phi$ が TP であるからそのトレースは $0$ である。$\operatorname{Tr}Y_lY_l^*=\|Y_l\|_2^2\ge0$ であるから、すべての $Y_l=0$ である。
+となる。ここで $Y_l^*=XK_l^*-K_l^*X$、$\Phi(X)=X$、$\Phi(1)=1$ を用いた。$\Phi$ が TP であるからそのトレースは $0$ である。
+$\operatorname{Tr}Y_lY_l^*=\|Y_l\|_2^2\ge0$ であるから、すべての $Y_l=0$ である。
 共役をとれば、$X$ は $K_l^*$ とも可換である。このような $X$ は自己共役な集合の可換子環と $\mathcal M$ との共通部分をなす：
 これは $1$ を含む $*$-環であり、したがってフォン・ノイマン環である
 （定理 2.2）。$\square$
 
 したがって、位相緩和（$p>0$）は各ブロックの対角部分をちょうど保ち、脱分極（$p>0$）と $E$ は
 ちょうど中心を保つ。単位性がなければ定理は成り立たない：振幅減衰は $E_{00}$ を固定するが、
-$E_{00}$ はジャンプ $E_{01}$ と可換でない（下では、その不動点の空間と可換子環はいずれもブロックごとに
-次元 $1$ であるが、それぞれ $\mathbb CE_{00}$ と $\mathbb C1$ である）。
+$E_{00}$ はジャンプ $E_{01}$ と可換でない。$0<\gamma\le1$ かつ $k\ge2$ のとき、ブロックにおけるその不動点の空間と
+クラウス作用素の可換子環はいずれも次元 $1$ であるが、それぞれ $\mathbb CE_{00}$ と
+$\mathbb C1$ である：上の具体形により、不動点は $i\ne j$ に対し $\rho_{ij}=0$、$i>0$ に対し
+$\rho_{ii}=0$ をみたし（これらの成分には $\sqrt{1-\gamma}\ne1$ または $1-\gamma\ne1$ が掛かる）、$E_{00}$ の
+任意のスカラー倍は不動点である。また、すべての $E_{0i}$、$E_{i0}$（$i>0$）と可換なものは、それらの積
+$E_{ij}=E_{i0}E_{0j}$ および $E_{00}=E_{01}E_{10}$ とも可換であり、したがって $M_k$ と可換であるから、$1$ のスカラー倍である
+（第2章の演習問題 1）。
 
 **定理 6.11（単位的チャネルはエントロピーを増加させる）.** $\Phi:\mathcal M\to\mathcal N$ を正値、
 TP かつ単位的とし、$\rho$ と $\Phi(\rho)$ を固有値 $\lambda_i$ と $\mu_j$ をもつ状態とする。
@@ -377,8 +418,9 @@ $\sum_j\Delta_{ji}=\operatorname{Tr}\Phi(|e_i\rangle\langle e_i|)=1$、
 $\sum_i\Delta_{ji}=\langle f_j,\Phi(1)f_j\rangle=1$ である（したがって $\Delta$ は正方行列である：全成分の和をとればわかる）。
 有限形のイェンセンの不等式 $f(\sum_i\Delta_{ji}\lambda_i)\ge\sum_i\Delta_{ji}f(\lambda_i)$（第3章の演習問題 2 の解答と同様に、
 凹性の定義から項数に関する帰納法で従う）により、
-$\sum_jf(\mu_j)\ge\sum_j\sum_i\Delta_{ji}f(\lambda_i)=\sum_if(\lambda_i)$ である。$f(t)=-t\log t$ と
-$f(t)=-t^2$ をとればよい。$\square$
+$\sum_jf(\mu_j)\ge\sum_j\sum_i\Delta_{ji}f(\lambda_i)=\sum_if(\lambda_i)$ である。$f(t)=-t\log t$
+（$f(0)=0$）と $f(t)=-t^2$ をとればよい。これらは補題 3.4 により $[0,1]$ 上で凹である：$t\log t$ と $t^2$ は
+$[0,1]$ 上で連続であり、$(0,1)$ 上での二階導関数はそれぞれ $1/t>0$ と $2>0$ である。$\square$
 
 セクター間の写像の古典的部分はその **遷移行列**
 $T_{dc}(\rho)=\operatorname{Tr}\Phi_{dc}(\rho_c)/\operatorname{Tr}\rho_c$（$\rho_c\ne0$）である。ライブラリの
@@ -386,7 +428,7 @@ $T_{dc}(\rho)=\operatorname{Tr}\Phi_{dc}(\rho_c)/\operatorname{Tr}\rho_c$（$\rh
 
 **命題 6.12.** $\Phi:\mathcal M\to\mathcal N$ を正値かつ TP とし、$\rho$ を
 $p_c=\operatorname{Tr}\rho_c>0$ なる状態、$q_d=\operatorname{Tr}\Phi(\rho)_d$ とする。このとき $T(\rho)$ は列
-確率行列であり、$q=T(\rho)p$ である。中心の上への条件付き期待値 $E_{\mathcal M}$、$E_{\mathcal N}$ を用いると
+確率行列であり、$q=T(\rho)p$ である。中心の上への条件付き期待値 $E_{\mathcal M}$、$E_{\mathcal N}$（命題 2.8）を用いると
 $$
 E_{\mathcal N}\Phi E_{\mathcal M}(\rho)=\bigoplus_d\frac{(Tp)_d}{k'_d}\,1_{k'_d},\qquad T=T(1).
 $$
@@ -428,6 +470,7 @@ assert fixed_dims(zoo['dephasing']) == [2, 3] and fixed_dims(zoo['depolarizing']
 E00 = alg.from_blocks([unit(0, 0, 2), unit(0, 0, 3)])
 E01 = alg.from_blocks([unit(0, 1, 2), unit(0, 1, 3)])
 assert close(zoo['amplitude damping'](E00), E00) and not close(E00 @ E01, E01 @ E00)   # equal dims, different spaces
+assert fixed_dims(zoo['amplitude damping']) == commutant_dims(zoo['amplitude damping']) == [1, 1]
 
 rhos = states.random_density_matrix(alg, batch_size=100)
 for name in ('dephasing', 'depolarizing', 'centre', 'mixed unitary'):                 # Theorem 6.11
@@ -451,10 +494,41 @@ assert torch.allclose(loss.transition_matrix()[0], torch.tensor([[1.0, 1.0], [0.
 完全な振幅減衰のもとで、$M_2\oplus M_3$ の最大混合状態のエントロピーは
 $\log5\approx1.609$ から $H(\tfrac25,\tfrac35)\approx0.673$ へ下がる：単位的でないチャネルは状態を純粋化しうる。
 
-> **物理的意味.** 量子ビットに対し、位相緩和はコヒーレンス $\rho_{01}$ に $1-p$ を掛け、
-> 占有数は変えない（純粋位相緩和、時定数 $T_\varphi$）。
-> $1-\gamma=e^{-t/T_1}$ の振幅減衰は励起準位を減衰させ、コヒーレンスに
-> $\sqrt{1-\gamma}=e^{-t/2T_1}$ を掛ける。ここから $1/T_2=1/(2T_1)+1/T_\varphi$ が従う。定理 6.10 は
+**量子ビットのコヒーレンス.** $M_2$ 上で $D_p$ を位相緩和、$A_\gamma$ を振幅減衰とする。表と上の具体形により、
+$D_p$ は $\rho_{01}$ と $\rho_{10}$ に $1-p$ を掛けて対角部分を固定し、$A_\gamma$ は $\rho_{01}$ と $\rho_{10}$ に
+$\sqrt{1-\gamma}$ を掛けて、対角部分をコヒーレンスとは無関係に $(\rho_{00}+\gamma\rho_{11},(1-\gamma)\rho_{11})$ に写す。
+したがって $D_pA_\gamma=A_\gamma D_p$ である：どちらもコヒーレンスに $(1-p)\sqrt{1-\gamma}$ を掛け、対角部分には
+$A_\gamma$ として作用する。特に、$T_1,T_\varphi>0$、$t\ge0$、$1-p=e^{-t/T_\varphi}$、$1-\gamma=e^{-t/T_1}$ のとき、
+合成はコヒーレンスに $e^{-t/T_2}$ を掛ける。ここで
+$$
+\frac1{T_2}=\frac1{2T_1}+\frac1{T_\varphi},
+$$
+である。またこれらの族は $t$ について加法的に合成される：$D_{p(t)}D_{p(s)}=D_{p(t+s)}$、
+$A_{\gamma(t)}A_{\gamma(s)}=A_{\gamma(t+s)}$。因子 $e^{-t/T}$ は掛け合わされ、トレースは保存されるからである。
+
+```python
+q2 = TypeIAlgebra([2], [2], precision='double')
+p_, g_ = 0.3, 0.4
+Dp, Ag = channels.dephasing_channel(q2, p_), channels.amplitude_damping_channel(q2, g_)
+r2 = states.random_density_matrix(q2)
+assert close(Dp(Ag(r2)), Ag(Dp(r2)))                                         # D_p A_gamma = A_gamma D_p
+coh = Dp(Ag(r2)).matrix[0, 0, 0, 1] / r2.matrix[0, 0, 0, 1]
+assert abs(coh - (1 - p_) * math.sqrt(1 - g_)) < 1e-12                       # coherence factor
+T1, Tphi, t1, t2 = 2.0, 3.0, 0.7, 1.1
+gam = lambda t: 1 - math.exp(-t / T1)
+assert close(channels.amplitude_damping_channel(q2, gam(t1))(channels.amplitude_damping_channel(q2, gam(t2))(r2)),
+             channels.amplitude_damping_channel(q2, gam(t1 + t2))(r2))       # A_gamma(t) A_gamma(s) = A_gamma(t+s)
+pdeph = lambda t: 1 - math.exp(-t / Tphi)
+assert close(channels.dephasing_channel(q2, pdeph(t1))(channels.dephasing_channel(q2, pdeph(t2))(r2)),
+             channels.dephasing_channel(q2, pdeph(t1 + t2))(r2))           # D_p(t) D_p(s) = D_p(t+s)
+both = channels.dephasing_channel(q2, pdeph(t1))(channels.amplitude_damping_channel(q2, gam(t1))(r2))
+coh_t = (both.matrix[0, 0, 0, 1] / r2.matrix[0, 0, 0, 1]).item()
+assert abs(coh_t - math.exp(-t1 * (1 / (2 * T1) + 1 / Tphi))) < 1e-12       # 1/T_2 = 1/(2T_1) + 1/T_phi
+```
+
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. 量子ビットに対し、
+> 位相緩和は時定数 $T_\varphi$ の純粋位相緩和を、振幅減衰は時定数 $T_1$ での励起準位の減衰をモデル化する。
+> すると上の計算は、その両方を受ける量子ビットのコヒーレンス時間 $T_2$ を与える。定理 6.10 は
 > デコヒーレンスのない情報の代数的な形である：すべてのジャンプ作用素と可換なものは生き残る（第10章）。
 > 命題 6.12 によれば、中心を通して見ると、セクター間の写像は電荷の上の古典的なマルコフ
 > 行列である。
@@ -463,7 +537,10 @@ $\log5\approx1.609$ から $H(\tfrac25,\tfrac35)\approx0.673$ へ下がる：単
 
 **ハール・ランダムな等長作用素** $V:\mathbb C^k\to\mathbb C^N$ とは、ライブラリ（`random_isometry`）と同様に、
 $G=QR$ の因子 $Q$ のことである。ここで $G$ は $N\times k$ のジニブル行列（成分は独立で、密度
-$\pi^{-1}e^{-|z|^2}$ をもつ）、$Q^*Q=1$、$R$ は対角成分が正の上三角行列である。
+$\pi^{-1}e^{-|z|^2}$ をもつ）、$Q^*Q=1$、$R$ は対角成分が正の上三角行列である（CPU 上では、ライブラリは LAPACK の分解 $G=Q'R'$ をとり、$Q'$ の第 $i$ 列に
+$R'_{ii}/|R'_{ii}|$ を掛ける。定理 5.3 と同様に、これはすべての $R'_{ii}\ne0$ のとき、すなわち $G$ の階数が $k$ のとき
+この分解を与え、補題 6.13 の証明によりこれはほとんど確実に成り立つ。GPU 上の大きなバッチに対してはグラム・シュミットの
+直交化を用い、これは直接この分解を与える）。
 `random_channel(alg, r)` はこのような $V_c:\mathbb C^{k_c}\to\mathbb C^r\otimes\mathbb C^{k_c}$ を
 各ブロックで独立に生成し、定理 6.5 のクラウス作用素を用いる。
 
@@ -510,9 +587,10 @@ $N=kr$ として用いると、第一項は $x=y$（添字の組は $kr^2$ 個�
 
 $r=1$ のときチャネルはユニタリであり、純度は $1$ である。$r\to\infty$ のとき純度は
 最大混合状態の純度 $1/k$ に近づく。証明は $u$ の分布のユニタリ不変性しか用いていないので、
-ランダムな純粋状態 $u=g/\|g\|$（$g$ はガウス的）の縮約状態の平均純度に関するルブキンの結果も与える。
-これは第7章の定理 7.11 でガウス積分を用いて証明される。補題 6.14 の数
-$\alpha,\beta$ は、ハール・ユニタリの成分に関する系 5.11 の数と同じである。
+ランダムな純粋状態 $u=g/\|g\|$（$g$ はガウス的であり、その分布は定理 A.20(b) によりユニタリ不変である）の
+縮約状態の平均純度に関するルブキンの結果も与える。これは第7章の定理 7.11 でガウス積分を用いて証明される。補題 6.14 の数
+$\alpha,\beta$ は、ハール・ユニタリの成分に関する系 5.11 の数と同じであり、系 A.21 は $u=g/\|g\|$ に対して
+それらを計算し直す。
 
 ```python
 B = 20_000
@@ -532,9 +610,10 @@ for r in (1, 2, 4):
         assert (avg - torch.eye(k, dtype=dt) / k).abs().max() < 0.02          # E Phi(psi) = 1/k
 ```
 
-> **物理的意味.** ランダムなチャネルは、次元 $r$ の環境に由来する一般的で構造のない雑音のモデルである。
-> すでに $r=4$ で、純粋なクトリット状態の純度は平均して $7/13\approx0.54$ まで下がる。
-> 雑音がなければ $1$、最小値は $1/3$ である。超選択された系では、雑音は各セクターで
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. ランダムなチャネルは、次元 $r$ の環境に由来する
+> 一般的で構造のない雑音のモデルである。すでに $r=4$ で、純粋なクトリット状態の純度は平均して
+> $7/13\approx0.54$ まで下がる（定理 6.15）。雑音がなければ $1$、最小値は $1/3$ である（コーシー・シュワルツの不等式により
+> $\operatorname{Tr}\rho^2\ge(\operatorname{Tr}\rho)^2/k$）。超選択された系では、雑音は各セクターで
 > 別々に作用し、問題となる次元は全空間の次元ではなくセクターの次元である。
 
 ## 6.6 比較の対象
@@ -570,7 +649,8 @@ $M_D$（$D=\sum_ck_c$）上のチャネルとして扱え、その超演算子�
 
 1. $F$ を入れ替え作用素とすると、$J(\theta)=\sum_{ij}E_{ij}\otimes E_{ji}=F$、$J(\rho\mapsto\operatorname{Tr}(\rho)1)=1\otimes1$
    であるから、$J(\Phi)=(1-F)/(k-1)=2P_-/(k-1)$ である。ここで $P_-=(1-F)/2$ は
-   反対称ベクトルの上への射影である（$F=F^*$、$F^2=1$）。よって $J\ge0$ で階数は $k(k-1)/2$ であり（定理 6.2、
+   反対称ベクトルの上への射影であり（$F=F^*$、$F^2=1$）、その階数は $\operatorname{Tr}P_-=(k^2-\operatorname{Tr}F)/2$、
+   ただし $\operatorname{Tr}F=\sum_{ij}\langle e_i\otimes e_j,e_j\otimes e_i\rangle=k$ である。よって $J\ge0$ で階数は $k(k-1)/2$ であり（定理 6.2、
    系 6.3）、$\operatorname{Tr}\Phi(\rho)=\operatorname{Tr}\rho$、$\Phi(1)=1$ は直接確かめられる。
 
 ```python
@@ -593,7 +673,7 @@ assert close(WH(M3.operator(r3[None, None])).matrix[0, 0], (torch.eye(k, dtype=d
 ```python
 ranks = [int((torch.linalg.eigvalsh(J_c[0]) > 1e-10).sum()) for J_c in zoo['dephasing'].choi()]
 print(ranks, zoo['dephasing'].kraus_rank)                 # [2, 3] versus 4 stored operators
-assert ranks == alg.k_factors
+assert ranks == alg.k_factors and zoo['dephasing'].kraus_rank == 1 + max(alg.k_factors)
 ```
 
 3. $\operatorname{Tr}((X^aZ^b)^*X^{a'}Z^{b'})=k\,\delta_{aa'}\delta_{bb'}$ である：$a=a'$ でなければ
