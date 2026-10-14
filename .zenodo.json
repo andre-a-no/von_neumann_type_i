@@ -1,0 +1,15 @@
+{
+  "title": "torch_vn_algebra: finite-dimensional Type I von Neumann algebras in PyTorch",
+  "upload_type": "software",
+  "description": "Batched operators, states, channels and constrained optimisation in finite-dimensional Type I von Neumann algebras (direct sums of matrix algebras), on CPUs and GPUs. Companion paper: arXiv:2606.15882.",
+  "creators": [
+    {"name": "Nikolaeva, Irina"},
+    {"name": "Novikov, Andrej"}
+  ],
+  "license": "MIT",
+  "keywords": ["von Neumann algebra", "operator algebra", "quantum information", "quantum channels",
+               "random matrices", "superselection sectors", "spin chains", "PyTorch", "GPU"],
+  "related_identifiers": [
+    {"identifier": "arXiv:2606.15882", "relation": "isDocumentedBy", "scheme": "arxiv"}
+  ]
+}

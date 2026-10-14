@@ -1,23 +1,46 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "torch_vn_algebra"
-version = "0.5.0"
+dynamic = ["version"]
 description = "Batched operators, states, channels and constrained optimisation in finite-dimensional Type I von Neumann algebras (PyTorch, CPU/GPU)"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "Irina Nikolaeva" }, { name = "Andrej Novikov" }]
 requires-python = ">=3.9"
 dependencies = ["torch>=2.0", "numpy"]
+keywords = ["von Neumann algebra", "operator algebra", "quantum information", "quantum channels",
+            "random matrices", "superselection sectors", "spin chains", "pytorch", "gpu"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+
+[project.urls]
+Homepage = "https://github.com/andre-a-no/von_neumann_type_i"
+Documentation = "https://github.com/andre-a-no/von_neumann_type_i/blob/main/docs/tutorial/README.md"
+Repository = "https://github.com/andre-a-no/von_neumann_type_i"
+Issues = "https://github.com/andre-a-no/von_neumann_type_i/issues"
+Changelog = "https://github.com/andre-a-no/von_neumann_type_i/blob/main/CHANGELOG.md"
+Paper = "https://arxiv.org/abs/2606.15882"
 
 [project.optional-dependencies]
-scripts = ["scipy", "pandas", "tqdm", "matplotlib", "seaborn"]
-test = ["pytest"]
+scripts = ["scipy", "pandas", "tqdm", "matplotlib", "seaborn", "mpmath"]
+test = ["pytest", "scipy"]
 
 [tool.setuptools]
 packages = ["torch_vn_algebra"]
+
+[tool.setuptools.dynamic]
+version = { attr = "torch_vn_algebra.__version__" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

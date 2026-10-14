@@ -139,7 +139,7 @@ class Channel:
         G = torch.zeros(B, r, C, C, k, k, dtype=K.dtype, device=K.device)
         idx = torch.arange(C, device=K.device)
         G[:, :, idx, idx] = K
-        return InterSectorChannel(self.algebra, self.algebra, G)
+        return InterSectorChannel(self.algebra, self.algebra, G, trace_preserving=self._trace_preserving)
 
     def mix(self, other: 'Channel', p: float) -> 'Channel':
         """Convex combination (1 - p) self + p other."""
@@ -220,7 +220,10 @@ class Channel:
         """
         Channel from per-channel superoperators S_c of shape (batch, k_c^2, k_c^2) acting on row-major
         vec(rho). Kraus operators are obtained from the eigendecomposition of the Choi matrix; S_c must
-        describe a completely positive map (eigenvalues of the Choi matrix below -tol raise).
+        describe a completely positive map. A Choi matrix J with ||J - J^*|| > 2 tol ||J|| (the map does not
+        preserve Hermiticity) or with an eigenvalue below -tol ||J|| raises, where ||.|| is the spectral norm
+        (taken at least 1); by default tol = 1e-10 for double and 1e-4 for single-precision input. Small
+        negative eigenvalues within the tolerance are clamped to zero.
         """
         if len(blocks) != algebra.C:
             raise ValueError(f"from_superoperator: need {algebra.C} blocks, got {len(blocks)}")
@@ -237,10 +240,16 @@ class Channel:
             # J[(i,a),(j,b)] = S[(a,b),(i,j)]
             J = S.reshape(batch, n, k_c, k_c, k_c, k_c).permute(0, 1, 4, 2, 5, 3).reshape(batch * n, k_c * k_c,
                                                                                        k_c * k_c)
+            default_tol = tol if tol is not None else (1e-10 if J.real.dtype == torch.float64 else 1e-4)
+            # per-matrix scale (norm of J, at least 1 so that the zero map passes)
+            scale = torch.clamp(torch.linalg.matrix_norm(J, ord=2), min=1.0)
+            skew = torch.linalg.matrix_norm(J - J.conj().transpose(-2, -1), ord=2)
+            checks.append(("superoperator does not preserve Hermiticity (Choi matrix not Hermitian)",
+                           (skew > 2 * default_tol * scale).any()))
             J = 0.5 * (J + J.conj().transpose(-2, -1))
             w, V = cost.batched_call(torch.linalg.eigh, J, f"Choi eigendecomposition (blocks of size {k_c})")
-            scale = torch.clamp(w.abs().amax(), min=1.0)
-            checks.append(("superoperator is not completely positive", w.amin() < -(1e-4 if tol is None else tol) * scale))
+            checks.append(("superoperator is not completely positive",
+                           (w.amin(dim=-1) < -default_tol * scale).any()))
             w = torch.clamp(w, min=0.0)
             # K_m[a, i] = sqrt(w_m) V[(i, a), m]
             Km = (V * w.sqrt().unsqueeze(-2).to(V.dtype)).transpose(-2, -1)
@@ -346,7 +355,7 @@ def measurement_channel(projections: Sequence[Operator]) -> Channel:
 def random_channel(alg: TypeIAlgebra, kraus_rank: int, batch_size: int = 1) -> Channel:
     """
     Random trace-preserving channel from a Haar-random Stinespring isometry
-    V_c: C^{k_c} -> C^{k_c} (x) C^r in every block, K_{i,c} = (<i| (x) 1) V_c.
+    V_c: C^{k_c} -> C^r (x) C^{k_c} in every block (environment first), K_{i,c} = (<i| (x) 1) V_c.
     """
     K = _empty_kraus(alg, kraus_rank, batch_size)
     for k, idx in alg._size_groups():                  # one draw for all sectors of the same size
@@ -362,8 +371,15 @@ def random_mixed_unitary_channel(alg: TypeIAlgebra, n_unitaries: int, batch_size
     rdt = alg.hilbert.real_dtype
     if weights is None:                       # in the algebra's precision, so that the channel is TP to round-off
         weights = torch.distributions.Dirichlet(torch.ones(n_unitaries, dtype=rdt)).sample((batch_size,))
-    weights = torch.as_tensor(weights).to(device=alg.hilbert.device, dtype=rdt)
-    weights = weights.expand(batch_size, n_unitaries) if weights.dim() == 1 else weights
+    else:
+        weights = torch.as_tensor(weights)
+        if weights.shape[-1] != n_unitaries or weights.dim() > 2 or (weights.dim() == 2
+                                                                    and weights.shape[0] not in (1, batch_size)):
+            raise ValueError(f"weights must have shape ({n_unitaries},) or (batch_size, {n_unitaries})")
+        if bool((weights < 0).any()) or bool((weights.sum(dim=-1) <= 0).any()):
+            raise ValueError("weights must be non-negative with a positive sum")
+    weights = weights.to(device=alg.hilbert.device, dtype=rdt)
+    weights = weights.expand(batch_size, n_unitaries) if weights.dim() == 1 or weights.shape[0] == 1 else weights
     weights = weights / weights.sum(dim=-1, keepdim=True)
     # all unitaries in one draw
     Us = alg.random_unitary_operator(batch_size * n_unitaries).matrix.reshape(batch_size, n_unitaries, alg.C,

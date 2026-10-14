@@ -56,6 +56,10 @@ class DensityMatrix(Operator):
 
     def __init__(self, algebra: TypeIAlgebra, generator=None, matrix: Optional[torch.Tensor] = None,
                  validate: bool = True):
+        if matrix is not None and validate:      # user data: the algebra's field, zero padding (as alg.operator)
+            matrix = algebra._to_field(matrix, "DensityMatrix")
+            if any(k_c < algebra.k_max for k_c in algebra.k_factors):
+                matrix = matrix * algebra._const('block_mask', torch.bool)
         super().__init__(algebra, generator=generator, matrix=matrix,
                          is_self_adjoint=True, is_positive=True)
         self._validate = validate
@@ -70,7 +74,7 @@ class DensityMatrix(Operator):
             return
         super()._validate_properties()
         tr = torch.diagonal(self._matrix, dim1=-2, dim2=-1).sum(dim=(-2, -1)).real
-        if bool(((tr - 1).abs() > 100 * self._tol_t()).any()):
+        if bool(((tr - 1).abs() > 100 * self._eps()).any()):        # the trace is 1: an absolute tolerance
             raise ValueError("DensityMatrix must have unit trace (Tr_blunt)")
 
     def __repr__(self) -> str:
@@ -86,6 +90,9 @@ class DensityMatrix(Operator):
     def from_density(cls, algebra: TypeIAlgebra, d: torch.Tensor, trace: str = 'blunt',
                      normalize: bool = False) -> 'DensityMatrix':
         """State whose density with respect to `trace` is d (shape (batch, C, k_max, k_max))."""
+        d = algebra._to_field(d, "density")
+        if any(k_c < algebra.k_max for k_c in algebra.k_factors):    # zero padding before normalising
+            d = d * algebra._const('block_mask', torch.bool)
         w = _trace_weights(algebra, trace).to(d.device)
         mat = d * w[None, :, None, None].to(d.dtype)
         if normalize:
@@ -180,11 +187,16 @@ def random_density_matrix(alg: TypeIAlgebra, batch_size: int = 1, rank: Optional
                      (by default k_c x k_c, and k_c x (k_c + 1) in a real algebra: the Hilbert-Schmidt
                      measure within each block; an explicit rank r gives the induced measure with an ancilla
                      of dimension r).
-    measure='bures': rho ~ (1 + U) G G^* (1 + U)^* with U Haar unitary in M (Bures-type measure).
+    measure='bures': rho ~ (1 + U) G G^* (1 + U)^* with U Haar unitary in M (the Bures measure; complex
+                     algebras only: with a Haar orthogonal U, 1 + U is singular whenever det U = -1).
 
     The sector weights p_c = Tr rho_c are then random as well (proportional to the squared
     Frobenius norms of the blocks).
     """
+    if measure not in ('hs', 'bures'):
+        raise ValueError("measure must be 'hs' or 'bures'")
+    if measure == 'bures' and not alg.hilbert.complex_valued:
+        raise ValueError("measure='bures' is defined for complex algebras only")
     if rank is not None and rank < 1:
         raise ValueError("rank must be a positive integer (or None for the Hilbert-Schmidt measure)")
     r = rank or alg.k_max
@@ -195,8 +207,6 @@ def random_density_matrix(alg: TypeIAlgebra, batch_size: int = 1, rank: Optional
     if measure == 'bures':
         U = alg.random_unitary_operator(batch_size).matrix
         G = G + U @ G                                            # (1 + U) G
-    elif measure != 'hs':
-        raise ValueError("measure must be 'hs' or 'bures'")
     return _density(alg, G @ G.conj().transpose(-2, -1))
 
 
@@ -216,17 +226,16 @@ def _tracial_matrix(alg: TypeIAlgebra, batch_size: int) -> torch.Tensor:
 
 
 def gibbs_state(H: Operator, beta: float) -> DensityMatrix:
-    """rho = exp(-beta H) / Z for self-adjoint H (eigenvalues shifted for numerical stability)."""
+    """rho = exp(-beta H) / Z for self-adjoint H (exponents shifted by their maximum, for any sign of beta)."""
     if not H.is_self_adjoint:
         raise RuntimeError("gibbs_state requires a self-adjoint Hamiltonian")
     alg = H.algebra
     B = H.matrix.shape[0]
     dec = H._decompositions('hermitian')                     # one eigendecomposition per block size
-    w_min = torch.stack([w.reshape(B, -1).amin(-1) for _, _, _, (w, _) in dec], dim=-1).amin(-1)     # (B,)
+    x_max = torch.stack([(-beta * w).reshape(B, -1).amax(-1) for _, _, _, (w, _) in dec], dim=-1).amax(-1)  # (B,)
     mat = torch.zeros_like(H.matrix)
     for k, idx, _, (w, V) in dec:
-        shift = w_min.repeat_interleave(len(idx))[:, None]
-        e = torch.exp(-beta * (w - shift)).to(V.dtype)
+        e = torch.exp(-beta * w - x_max.repeat_interleave(len(idx))[:, None]).to(V.dtype)
         mat[:, alg._sel(idx), :k, :k] = ((V * e.unsqueeze(-2)) @ V.conj().transpose(-2, -1)).reshape(B, len(idx), k, k)
     return _density(alg, mat)
 

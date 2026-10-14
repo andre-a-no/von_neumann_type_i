@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 TUTORIAL = Path(__file__).resolve().parents[1] / 'docs' / 'tutorial'
-CHAPTERS = sorted(TUTORIAL.glob('[0-9][0-9]_*.md'))
+CHAPTERS = sorted(TUTORIAL.glob('[0-9][0-9]_*.md')) + sorted(TUTORIAL.glob('[A-Z]_*.md'))   # chapters, then appendices
 
 
 def _blocks(text):

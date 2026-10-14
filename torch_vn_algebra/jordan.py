@@ -1,0 +1,1051 @@
+r"""
+Jordan structure of finite-dimensional von Neumann algebras: Jordan products, the quadratic representation,
+Jordan subalgebras of Hermitian matrices and spin factors.
+
+Definitions
+-----------
+A **Jordan algebra** is a real vector space :math:`J` with a commutative bilinear product :math:`x\circ y` that
+satisfies the **Jordan identity** :math:`(x^2\circ y)\circ x=x^2\circ(y\circ x)`. The self-adjoint part
+:math:`M_{sa}` of :math:`M=\bigoplus_c M_{k_c}` (and every :math:`\operatorname{Herm}_n`) is a Jordan algebra with
+
+.. math:: x\circ y=\tfrac12(xy+yx).
+
+A Jordan algebra isomorphic to a Jordan subalgebra of :math:`(A,\circ)` for an associative algebra :math:`A` is
+**special**; every Jordan subalgebra of :math:`\operatorname{Herm}_n` is special by definition. On :math:`M_{sa}`:
+
+* the multiplication operator :math:`L(y)x=y\circ x`;
+* the **quadratic representation** :math:`P(y)=2L(y)^2-L(y^2)`, i.e. :math:`P(y)x=yxy` (expand
+  :math:`2y\circ(y\circ x)-y^2\circ x`);
+* the **Jordan triple product**
+  :math:`\{x,y,z\}=\tfrac12(xyz+zyx)=(x\circ y)\circ z+(y\circ z)\circ x-(x\circ z)\circ y`, with
+  :math:`\{x,y,x\}=P(x)y`;
+* Jordan powers :math:`x^{\circ1}=x`, :math:`x^{\circ(k+1)}=x\circ x^{\circ k}`. They coincide with the associative
+  powers, because :math:`x` commutes with :math:`x^k` (power associativity), so :func:`jordan_power` is a matrix power.
+
+Identities checked in ``tests/test_jordan.py`` (they hold in every Jordan algebra; in a special one they reduce
+to associativity): the Jordan identity; :math:`P(y)=2L(y)^2-L(y^2)`; the **fundamental formula**
+:math:`P(P(y)x)=P(y)P(x)P(y)`; :math:`\operatorname{Tr}(P(y)x)=\operatorname{Tr}(y^2x)`; :math:`P(y)` is invertible
+(as a linear map of :math:`M_{sa}`) iff :math:`y` is invertible, and then :math:`P(y)^{-1}=P(y^{-1})`
+(on a block :math:`M_k` of rank-:math:`r` :math:`y`, :math:`P(y)` has rank :math:`r^2` on
+:math:`\operatorname{Herm}_k(\mathbb C)` and :math:`r(r+1)/2` on :math:`\operatorname{Herm}_k(\mathbb R)`).
+
+The **positive cone** of a Jordan algebra is the cone of squares :math:`\{x^2\}`; in :math:`M_{sa}` it is the cone of
+positive semidefinite operators. :math:`P(y)` preserves it, but the Jordan product of two positive elements need not be
+positive (:math:`p=\mathrm{diag}(1,0)`, :math:`q=\tfrac12\begin{pmatrix}1&1\\1&1\end{pmatrix}`:
+:math:`\det(p\circ q)=-1/16`).
+
+Theorems (stated for orientation; the code does not depend on them)
+--------------------------------------------------------------------
+* **Jordan-von Neumann-Wigner classification** [JvNW34]. A finite-dimensional *formally real* Jordan algebra
+  (:math:`\sum_ix_i^2=0\Rightarrow` all :math:`x_i=0`; equivalently *Euclidean*: it carries an inner product with
+  :math:`\langle x\circ y,z\rangle=\langle y,x\circ z\rangle`) is a direct sum of simple ones, and every simple one is
+  isomorphic to exactly one of
+  :math:`\mathbb R`; the spin factor :math:`V_m=\mathbb R\oplus\mathbb R^m` (:math:`m\ge2`, see :class:`SpinFactor`);
+  :math:`\operatorname{Herm}_r(\mathbb K)` for :math:`\mathbb K\in\{\mathbb R,\mathbb C,\mathbb H\}`, :math:`r\ge3`;
+  the Albert algebra :math:`\operatorname{Herm}_3(\mathbb O)` (27-dimensional). Rank 2 gives no new algebras:
+  :math:`\operatorname{Herm}_2(\mathbb R)\cong V_2`, :math:`\operatorname{Herm}_2(\mathbb C)\cong V_3`,
+  :math:`\operatorname{Herm}_2(\mathbb H)\cong V_5`, :math:`\operatorname{Herm}_2(\mathbb O)\cong V_9`.
+  All of them are special except the Albert algebra [Alb34].
+* **Koecher-Vinberg theorem** [FK94]. The interiors of the cones of squares of Euclidean Jordan algebras are exactly
+  the *symmetric cones*: open convex cones in a Euclidean space that are self-dual and homogeneous (their linear
+  automorphism group acts transitively). For :math:`M_{sa}` this is the cone of positive definite operators, for
+  :math:`V_m` the (open) Lorentz cone :math:`a>|u|`.
+* **Jordan isomorphisms** [Kad51]. A Jordan :math:`*`-isomorphism of von Neumann algebras is the sum of a
+  :math:`*`-isomorphism and a :math:`*`-anti-isomorphism (on complementary central summands). For
+  :math:`M=\bigoplus_cM_{k_c}` this means: every Jordan automorphism of :math:`M_{sa}` permutes sectors of equal size
+  and acts on each block as :math:`x\mapsto uxu^*` or as :math:`x\mapsto ux^{T}u^*` with a unitary :math:`u`. The
+  transpose (:func:`transpose_map`) preserves :math:`\circ` and :math:`P` but reverses products; it is positive but
+  not completely positive (its Choi matrix on :math:`M_k`, :math:`k\ge2`, is the swap, with eigenvalue :math:`-1`)
+  [Cho75].
+
+Jordan subalgebras of Hermitian matrices
+----------------------------------------
+:func:`jordan_algebra_generated` computes the smallest real subspace :math:`J\subseteq\operatorname{Herm}_n` that
+contains the generators (and :math:`1` if ``unital``) and is closed under :math:`\circ`. Given the complex
+:math:`*`-algebra :math:`A\subseteq M_n(\mathbb C)` generated by the same set (as in
+:mod:`~torch_vn_algebra.decompose`), always :math:`J\subseteq A_{sa}` and
+:math:`\dim_{\mathbb R}A_{sa}=\dim_{\mathbb C}A`; equality :math:`J=A_{sa}` holds iff :math:`J` is closed under
+:math:`(x,y)\mapsto\frac i2[x,y]` (then :math:`J+iJ` is a :math:`*`-algebra, since
+:math:`xy=x\circ y-i\cdot\frac i2[x,y]`). :func:`star_algebra_self_adjoint_part` computes :math:`A_{sa}` as the closure
+under both products. Examples (``tests/test_jordan.py``):
+
+* real symmetric generators: :math:`J=\operatorname{Herm}_n(\mathbb R)` (generic pair), :math:`\dim J=n(n+1)/2`, but
+  :math:`A=M_n(\mathbb C)`, :math:`\dim A_{sa}=n^2`. (The *real* :math:`*`-algebra they generate is
+  :math:`M_n(\mathbb R)`, whose self-adjoint part is :math:`J`; the comparison here is always with the complex one.)
+* anticommuting symmetries :math:`s_1,\dots,s_m` (:func:`anticommuting_symmetries`): :math:`s_i\circ s_j=\delta_{ij}1`,
+  so :math:`J=\operatorname{span}\{1,s_1,\dots,s_m\}\cong V_m`, :math:`\dim J=m+1`. In the representation on
+  :math:`\mathbb C^{2^{\lfloor m/2\rfloor}}` used here, :math:`A` is the full matrix algebra (:math:`m\ge2`), so
+  :math:`J=A_{sa}` only for :math:`m=3` (:math:`V_3=\operatorname{Herm}_2(\mathbb C)`, the Pauli matrices) and
+  :math:`m=1`.
+* the self-adjoint part of a :math:`*`-algebra :math:`A=U(\bigoplus_cM_{k_c}\otimes1_{m_c})U^*`: three generic
+  Hermitian elements of A generate :math:`J=A_{sa}`, and so do two if no :math:`k_c=2`. Two Hermitian
+  :math:`2\times2` matrices are simultaneously unitarily similar to real symmetric ones (their Pauli vectors span a
+  plane), so in a block :math:`M_2` two elements generate only :math:`\operatorname{Herm}_2(\mathbb R)\cong V_2`
+  (dimension 3) as a Jordan algebra, although they generate :math:`M_2(\mathbb C)` as a :math:`*`-algebra.
+* one Hermitian generator :math:`x`: :math:`J` = real polynomials in :math:`x` = span of its spectral projections;
+  :math:`\dim J` = number of distinct eigenvalues (``unital=True``) or of distinct non-zero eigenvalues
+  (``unital=False``: polynomials without constant term; if :math:`0\notin\operatorname{spec}x` they contain
+  :math:`1` anyway).
+
+*Algorithm* (randomised closure, in the spirit of the randomised algorithm of decompose). Hermitian matrices are
+identified isometrically with :math:`\mathbb R^N`, :math:`N=n^2` (:math:`n(n+1)/2` for real symmetric ones), by the
+diagonal and :math:`\sqrt2` times the real and imaginary parts of the upper triangle, so that the Euclidean inner
+product is :math:`\operatorname{Tr}(ab)` (Hilbert-Schmidt). Starting from an orthonormal basis :math:`Q` of the span
+of the generators (and :math:`1`), every round draws a random unit element :math:`r` of the current span :math:`V`
+and adds the part of :math:`L(r)V=\{r\circ v_j\}` orthogonal to :math:`V` (projection twice, then an SVD as rank
+decision). If :math:`V` is not closed, :math:`\{r\in V: L(r)V\subseteq V\}` is a proper linear subspace of :math:`V`
+(it misses some :math:`a` with :math:`a\circ b\notin V`), so a random :math:`r` enlarges :math:`V` with probability 1;
+a round that adds nothing is therefore a closure certificate, which is confirmed with fresh random pairs
+:math:`r_k\circ s_k` (``diagnostics['closure_defect']``). Typically :math:`\dim V` doubles per round (for one
+generator, :math:`r` of degree :math:`d` gives degree :math:`2d`), so there are :math:`O(\log N)` rounds; in any
+case every productive round adds a dimension, so there are at most :math:`N` of them.
+
+*Cost.* A round costs :math:`d` products of :math:`n\times n` matrices, :math:`O(dn^3)`, and the orthogonalisation,
+:math:`O(Nd\,k)` for :math:`k` candidates; the SVD runs on the candidates whose residual is not negligible, at most
+:math:`O(Nk^2)`. With :math:`d,k\le N\le n^2` a round costs at most :math:`O(n^6)`, and as :math:`\dim V` grows
+geometrically the last rounds dominate: :math:`O(n^6)` in total for a generic generating set, memory
+:math:`O(n^4)` (the basis); :math:`J=\operatorname{Herm}_{64}(\mathbb C)` (:math:`d=4096`) takes seconds to a minute
+on a CPU and about 0.3 GB.
+
+Tolerances
+----------
+As in :mod:`~torch_vn_algebra.decompose`, with :math:`\varepsilon` the machine epsilon of the working precision
+(double by default; single for float32/complex64 input) and ``tol`` defaulting to :math:`\varepsilon^{1/2}`:
+
+* generators are normalised to unit Frobenius norm; Hermitian and anti-Hermitian parts (the latter enter as
+  :math:`(S-S^*)/2i`, so that a non-Hermitian generator :math:`S=H_1+iH_2` contributes :math:`H_1,H_2`, the same
+  convention as decompose) of relative size below ``tol`` are dropped as rounding noise;
+* rank decision: residuals (after projection onto :math:`V`) of unit-norm candidates with singular values above
+  :math:`\theta=\max(\mathrm{tol},10^3n\varepsilon)` are new directions. The candidates :math:`r\circ v_j` have
+  :math:`\|r\|_F=\|v_j\|_F=1`, hence norm at most 1 and rounding errors of order :math:`n\varepsilon`; features of
+  relative size below :math:`\theta` (e.g. eigenvalues of a single generator closer than about :math:`\theta`) are
+  merged. A direction added with singular value :math:`\sigma` is accurate to about :math:`n\varepsilon/\sigma`
+  (Wedin's theorem), and its products with the basis have components of that size outside the true algebra;
+  :math:`\theta` is therefore raised to :math:`10\,n\varepsilon/\sigma_{\min}` when this is larger (without it, a
+  nearly degenerate input, e.g. eigenvalues :math:`1` and :math:`1+10^{-7}`, would cascade to spurious dimensions).
+  This does not model the compounding of errors over rounds, a worst case not observed in practice; the closure
+  certificate below checks the result. Singular values within a factor :math:`\varepsilon^{\mp1/8}` of the
+  current :math:`\theta` trigger a :class:`ClosureWarning` (the dimension is ill-determined);
+* closure: :meth:`JordanAlgebra.closure_defect` is :math:`\max\|P_{V^\perp}(a\circ b)\|_F` over pairs of orthonormal
+  basis elements (exhaustive) or over random unit pairs (a randomised lower bound that is non-zero almost surely if
+  :math:`V` is not closed); a subspace counts as closed if the defect is at most :math:`\theta`.
+
+Operator-level functions
+------------------------
+:func:`jordan_product`, :func:`quadratic_representation`, :func:`jordan_triple`, :func:`jordan_power`,
+:func:`jordan_multiplication` and :func:`transpose_map` act on operators of a :class:`~torch_vn_algebra.TypeIAlgebra`
+(tensors ``(batch, C, k_max, k_max)``, batch 1 broadcasting against batch B). They are lazy like the library's other
+derived operators, differentiable, run as batched matrix products over all sectors at once (the zero padding stays
+zero) and read nothing back to the host. Property flags are set only where they are mathematically guaranteed.
+
+References
+----------
+* [JvNW34] P. Jordan, J. von Neumann, E. Wigner, *On an algebraic generalization of the quantum mechanical
+  formalism*, Ann. of Math. 35 (1934) 29-64.
+* [Alb34] A. A. Albert, *On a certain algebra of quantum mechanics*, Ann. of Math. 35 (1934) 65-73.
+* [Kad51] R. V. Kadison, *Isometries of operator algebras*, Ann. of Math. 54 (1951) 325-338.
+* [Cho75] M.-D. Choi, *Completely positive linear maps on complex matrices*, Linear Algebra Appl. 10 (1975) 285-290.
+* [FK94] J. Faraut, A. Korányi, *Analysis on Symmetric Cones*, Oxford University Press, 1994.
+* K. McCrimmon, *A Taste of Jordan Algebras*, Springer, 2004 (quadratic representation, fundamental formula).
+* P.-Å. Wedin, *Perturbation bounds in connection with singular value decomposition*, BIT 12 (1972) 99-111.
+"""
+import math
+import operator
+import warnings
+from typing import Callable, Dict, Optional, Sequence, Tuple, Union
+
+import torch
+
+from . import cost
+from .algebra import TypeIAlgebra
+from .functional import values_and_derivative
+from .decompose import _stack, _rng
+
+Operator = TypeIAlgebra.Operator
+MatrixLike = Union[torch.Tensor, Sequence]
+
+__all__ = ["jordan_product", "jordan_multiplication", "quadratic_representation", "jordan_triple", "jordan_power",
+           "transpose_map", "JordanAlgebra", "ClosureWarning", "jordan_algebra_generated",
+           "star_algebra_self_adjoint_part", "is_jordan_subalgebra", "compare_with_star_algebra",
+           "anticommuting_symmetries", "SpinFactor"]
+
+
+class ClosureWarning(UserWarning):
+    """A rank decision of the subalgebra closure was close to its threshold (ill-conditioned input)."""
+
+
+# ============================================================================
+# Operator level: Jordan product, quadratic representation, triple product, powers, transpose
+# ============================================================================
+
+def _batch_of(*ops: Operator) -> Optional[int]:
+    """Known batch size of the (broadcast) result of lazy operators, None if one of them is unknown."""
+    bs = [op._batch for op in ops]
+    return None if any(b is None for b in bs) else max(bs)
+
+
+def _true_if(cond) -> Optional[bool]:
+    return True if cond else None
+
+
+def jordan_product(A: Operator, B: Operator) -> Operator:
+    r"""
+    Jordan product :math:`A\circ B=\frac12(AB+BA)` (lazy), batch by batch and sector by sector.
+
+    A, B: operators of the same algebra, matrices (batch, C, k_max, k_max) (batch 1 broadcasts).
+    Returns an operator of the same shape. Flags: self-adjoint (and normal) if A and B are; A∘A = A² is positive if A
+    is self-adjoint. The product of two positive operators is *not* positive in general (module docstring), so no
+    positivity flag is set otherwise.
+    """
+    A._compatible(B, 'jordan_product')
+    same = A is B
+
+    def gen():
+        a, b = A.matrix, B.matrix
+        if same:
+            return a @ a
+        return 0.5 * (a @ b + b @ a)
+    sa = bool(A._is_self_adjoint and B._is_self_adjoint)
+    return A._derived(gen, B, self_adjoint=_true_if(sa), normal=_true_if(sa),
+                      positive=_true_if(same and A._is_self_adjoint))
+
+
+def jordan_multiplication(Y: Operator) -> Callable[[Operator], Operator]:
+    r"""The multiplication operator :math:`L(Y):X\mapsto Y\circ X` as a callable (lazy results, see jordan_product)."""
+    return lambda X: jordan_product(Y, X)
+
+
+def quadratic_representation(Y: Operator, X: Optional[Operator] = None) -> Union[Operator, Callable]:
+    r"""
+    Quadratic representation :math:`P(Y)X=YXY^*` (lazy); for self-adjoint Y this is the Jordan-algebra map
+    :math:`P(Y)X=YXY=2Y\circ(Y\circ X)-Y^2\circ X`. For a non-self-adjoint Y it is the congruence
+    :math:`X\mapsto YXY^*` (not the quadratic representation of the complex Jordan algebra :math:`(M,\circ)`, which is
+    :math:`X\mapsto YXY=` ``jordan_triple(Y, X, Y)``).
+
+    Y, X: operators of the same algebra, (batch, C, k_max, k_max). Without X, returns the map :math:`X\mapsto P(Y)X`.
+
+    Flags: self-adjoint if X is (for every Y: :math:`(YXY^*)^*=YX^*Y^*`); **positive if X is positive** (for every Y):
+    :math:`X=X^{1/2}X^{1/2}` with self-adjoint :math:`X^{1/2}`, hence
+    :math:`YXY^*=(YX^{1/2})(YX^{1/2})^*\ge0`, and for a vector :math:`\xi`,
+    :math:`\langle\xi,YXY^*\xi\rangle=\|X^{1/2}Y^*\xi\|^2\ge0`. So P(Y) maps the positive cone into itself;
+    invertible if X and Y are (and P(Y) is a bijection of the cone for invertible Y, with inverse
+    :math:`P(Y^{-1})`).
+    """
+    if X is None:
+        return lambda Z: quadratic_representation(Y, Z)
+    Y._compatible(X, 'quadratic_representation')
+
+    def gen():
+        y = Y.matrix
+        return y @ X.matrix @ y.conj().transpose(-2, -1)
+    sa = bool(X._is_self_adjoint)
+    op = Y._derived(gen, X, self_adjoint=_true_if(sa), normal=_true_if(sa), positive=_true_if(X._is_positive),
+                    invertible=_true_if(X._is_invertible and Y._is_invertible))
+    return op
+
+
+def jordan_triple(X: Operator, Y: Operator, Z: Operator) -> Operator:
+    r"""
+    Jordan triple product :math:`\{X,Y,Z\}=\frac12(XYZ+ZYX)` (lazy). For self-adjoint arguments
+    :math:`\{x,y,z\}=(x\circ y)\circ z+(y\circ z)\circ x-(x\circ z)\circ y` and :math:`\{x,y,x\}=P(x)y`. (The
+    :math:`JB^*`-triple product of :math:`M` is :math:`\frac12(XY^*Z+ZY^*X)`; it agrees for self-adjoint Y.)
+
+    X, Y, Z: operators of the same algebra, (batch, C, k_max, k_max). Flags: self-adjoint if all three are;
+    positive if X is Z, X is self-adjoint and Y positive (then :math:`\{X,Y,X\}=P(X)Y`).
+    """
+    X._compatible(Y, 'jordan_triple')
+    X._compatible(Z, 'jordan_triple')
+    same = X is Z
+
+    def gen():
+        x, y, z = X.matrix, Y.matrix, Z.matrix
+        if same:
+            return x @ y @ x
+        return 0.5 * (x @ y @ z + z @ y @ x)
+    sa = bool(X._is_self_adjoint and Y._is_self_adjoint and Z._is_self_adjoint)
+    op = X._derived(gen, self_adjoint=_true_if(sa), normal=_true_if(sa),
+                    positive=_true_if(same and X._is_self_adjoint and Y._is_positive))
+    op._batch = _batch_of(X, Y, Z)
+    return op
+
+
+def jordan_power(A: Operator, p: int) -> Operator:
+    r"""
+    Jordan power :math:`A^{\circ p}` (:math:`A^{\circ0}=1`, :math:`A^{\circ(k+1)}=A\circ A^{\circ k}`) for an integer
+    :math:`p\ge0`, lazy. By power associativity (A commutes with :math:`A^k`) it equals the associative power
+    :math:`A^p`, computed by repeated squaring (:math:`O(\log p)` batched products). Shape (batch, C, k_max, k_max).
+    Negative powers: ``A.inverse()`` (the Jordan inverse of an invertible self-adjoint element is its inverse) or
+    ``A.power(p)`` for positive A.
+
+    Flags: self-adjoint, normal, invertible and projection are inherited; positive if A is positive, or if A is
+    self-adjoint and p even.
+    """
+    try:
+        p = operator.index(p)
+    except TypeError:
+        raise ValueError(f"jordan_power: p must be an integer >= 0, got {p!r}") from None
+    if isinstance(p, bool) or p < 0:
+        raise ValueError(f"jordan_power: p must be an integer >= 0, got {p!r} (negative powers: A.inverse(), A.power)")
+    alg = A.algebra
+    if p == 0:
+        def gen0():
+            B = A._batch if A._batch is not None else A.matrix.shape[0]
+            return alg._const('eye').unsqueeze(0).expand(B, -1, -1, -1)
+        return A._derived(gen0, self_adjoint=True, normal=True, positive=True, invertible=True, projection=True)
+
+    def gen():
+        base, out, q = A.matrix, None, p
+        while q:
+            if q & 1:
+                out = base if out is None else out @ base
+            q >>= 1
+            if q:
+                base = base @ base
+        return out
+    return A._derived(gen, self_adjoint=_true_if(A._is_self_adjoint), normal=_true_if(A._is_normal),
+                      positive=_true_if(A._is_positive or (A._is_self_adjoint and p % 2 == 0)),
+                      invertible=_true_if(A._is_invertible), projection=_true_if(A._is_projection))
+
+
+def transpose_map(A: Operator) -> Operator:
+    r"""
+    Blockwise transpose :math:`A=\bigoplus_cA_c\mapsto\bigoplus_cA_c^T` (lazy; transpose in the standard basis of every
+    block, not the adjoint). Shape (batch, C, k_max, k_max).
+
+    It is complex linear, unital and preserves adjoints, Jordan products, the quadratic representation and spectra
+    (hence positivity), but reverses products: :math:`(AB)^T=B^TA^T`. So it is a Jordan :math:`*`-automorphism and a
+    :math:`*`-anti-automorphism, not a :math:`*`-automorphism (for blocks of size :math:`\ge2`). It is positive but
+    not completely positive: its Choi matrix :math:`\sum_{ij}E_{ij}\otimes E_{ji}` on :math:`M_k` is the swap, with
+    eigenvalue :math:`-1` for :math:`k\ge2` [Cho75]. In a real algebra the transpose is the adjoint, so it is the
+    identity on self-adjoint operators.
+
+    Flags: all property flags (and a known spectrum) are inherited.
+    """
+    op = A._derived(lambda: A.matrix.transpose(-2, -1), self_adjoint=A._is_self_adjoint, normal=A._is_normal,
+                    positive=A._is_positive, invertible=A._is_invertible, projection=A._is_projection)
+    if A._eigenvalues is not None:
+        op._eigenvalues = A._eigenvalues
+    return op
+
+
+# ============================================================================
+# Hermitian matrices as a real Euclidean space
+# ============================================================================
+
+_SQRT2 = math.sqrt(2.0)
+
+
+def _complex_of(real_dtype: torch.dtype) -> torch.dtype:
+    return torch.complex128 if real_dtype == torch.float64 else torch.complex64
+
+
+class _HermCoords:
+    """
+    Isometry Herm_n(K) -> R^N (K = R: N = n(n+1)/2; K = C: N = n^2): the diagonal, then sqrt(2) Re of the strict
+    upper triangle (row-major), then sqrt(2) Im of it (complex only). <vec(a), vec(b)> = Re Tr(a b) = Tr(ab).
+    vec reads the diagonal and upper triangle only (it returns the coordinates of the Hermitian part of a matrix
+    that is Hermitian up to rounding).
+    """
+
+    def __init__(self, n: int, field: str, real_dtype: torch.dtype, device):
+        self.n, self.field, self.real_dtype = n, field, real_dtype
+        self.dtype = real_dtype if field == 'real' else _complex_of(real_dtype)
+        iu = torch.triu_indices(n, n, offset=1, device=device)
+        self.i, self.j = iu[0], iu[1]
+        self.m = iu.shape[1]
+        self.N = n + self.m * (1 if field == 'real' else 2)
+        self.diag = torch.arange(n, device=device)
+
+    def vec(self, X: torch.Tensor) -> torch.Tensor:
+        d = torch.diagonal(X, dim1=-2, dim2=-1)
+        d = d.real if torch.is_complex(d) else d
+        up = X[..., self.i, self.j] * _SQRT2
+        if self.field == 'real':
+            parts = [d, up.real if torch.is_complex(up) else up]
+        else:
+            parts = [d, up.real, up.imag] if torch.is_complex(up) else [d, up, torch.zeros_like(up)]
+        return torch.cat(parts, dim=-1).to(self.real_dtype)
+
+    def mat(self, v: torch.Tensor) -> torch.Tensor:
+        n, m = self.n, self.m
+        X = torch.zeros(*v.shape[:-1], n, n, dtype=self.dtype, device=v.device)
+        X[..., self.diag, self.diag] = v[..., :n].to(self.dtype)
+        if self.field == 'real':
+            z = v[..., n:] / _SQRT2
+        else:
+            z = torch.complex(v[..., n:n + m], v[..., n + m:]) / _SQRT2
+        X[..., self.i, self.j] = z
+        X[..., self.j, self.i] = z.conj()
+        return X
+
+
+def _hermitian_generators(S: torch.Tensor, tol: float) -> torch.Tensor:
+    """(S + S^*)/2 and (S - S^*)/(2i) of every generator, unit Frobenius norm, parts of relative size <= tol dropped
+    (the convention of decompose._hermitian_parts; here zero generators are allowed). Returns (J', n, n)."""
+    cplx = S if torch.is_complex(S) else S.to(_complex_of(S.dtype))
+    H = torch.cat([(cplx + cplx.mH) / 2, (cplx - cplx.mH) / 2j])
+    scale = torch.linalg.vector_norm(cplx, dim=(-2, -1)).repeat(2)
+    nrm = torch.linalg.vector_norm(H, dim=(-2, -1))
+    keep = ((nrm > tol * scale) & (nrm > 0)).tolist()
+    idx = [i for i, k in enumerate(keep) if k]
+    H, nrm = H[idx], nrm[idx]
+    return H / nrm[:, None, None]
+
+
+def _thresholds(eps: float, n: int, tol: float) -> Dict[str, float]:
+    th = dict(eps=eps, noise=n * eps)
+    _set_theta(th, max(tol, 1e3 * n * eps))
+    return th
+
+
+def _set_theta(th: Dict[str, float], theta: float):
+    th.update(theta=theta, gray_low=theta * th['eps'] ** 0.125, gray_high=theta * th['eps'] ** -0.125)
+
+
+def _raise_threshold(th: Dict[str, float], smin: float, stats: Dict):
+    """A direction added with singular value smin is accurate to about noise / smin (Wedin's theorem); products with
+    it then have components of that size outside J, which must stay below the threshold (otherwise a nearly
+    degenerate input cascades to spurious dimensions)."""
+    theta = 10 * th['noise'] / max(smin, th['noise'])
+    if theta > th['theta']:
+        _set_theta(th, theta)
+        stats['threshold_raised'] = theta
+
+
+def _extend(Q: torch.Tensor, W: torch.Tensor, th: Dict[str, float], stats: Dict) -> Tuple[torch.Tensor, int]:
+    """
+    Q (N, d) orthonormal columns, W (N, k) candidates of norm <= ~1. Adds an orthonormal basis of the part of span W
+    orthogonal to span Q, keeping singular directions of the projected candidates above theta, and raises theta for
+    later decisions according to the accuracy of the added directions. Returns (Q', added).
+    """
+    if W.shape[1] == 0:
+        return Q, 0
+    if Q.shape[1]:
+        W = W - Q @ (Q.mT @ W)
+        W = W - Q @ (Q.mT @ W)                                 # twice is enough
+    theta = th['theta']
+    # candidates whose residual is negligible cannot carry a singular value above theta together: dropping columns
+    # of total Frobenius norm <= theta / 2 changes every singular value by at most theta / 2
+    nrm = torch.linalg.vector_norm(W, dim=0)
+    small = nrm <= 0.5 * theta / math.sqrt(W.shape[1])
+    W = W[:, ~small]
+    res_max = float(nrm.max()) if nrm.numel() else 0.0
+    stats['max_residual'] = max(stats.get('max_residual', 0.0), res_max)
+    if W.shape[1] == 0:
+        return Q, 0
+    U, s, _ = torch.linalg.svd(W, full_matrices=False)
+    s_list = s.tolist()
+    added = sum(1 for x in s_list if x > theta)
+    kept = [x for x in s_list if x > theta]
+    dropped = [x for x in s_list if x <= theta]
+    if kept:
+        stats['min_kept'] = min(stats.get('min_kept', float('inf')), min(kept))
+        _raise_threshold(th, min(kept), stats)
+    if dropped:
+        stats['max_dropped'] = max(stats.get('max_dropped', 0.0), max(dropped))
+    if any(th['gray_low'] <= x <= th['gray_high'] for x in s_list):
+        stats['gray'] = stats.get('gray', 0) + 1
+    if not added:
+        return Q, 0
+    new = U[:, :added]
+    if Q.shape[1]:
+        new = new - Q @ (Q.mT @ new)
+    new, _ = torch.linalg.qr(new)
+    return torch.cat([Q, new], dim=1), added
+
+
+def _bilinear(R: torch.Tensor, B: torch.Tensor, kind: str) -> torch.Tensor:
+    """r∘b = (rb + br)/2 ('jordan') or (i/2)[r, b] ('lie'), broadcasting over leading dimensions."""
+    rb, br = R @ B, B @ R
+    if kind == 'jordan':
+        return 0.5 * (rb + br)
+    return 0.5j * (rb - br)
+
+
+def _chunk_size(n: int, itemsize: int) -> int:
+    return max(1, (32 * 2 ** 20) // max(1, 4 * n * n * itemsize))
+
+
+def _candidates(coords: _HermCoords, Q: torch.Tensor, R: torch.Tensor, kinds) -> torch.Tensor:
+    """Coordinates (N, k) of r∘v_j (and (i/2)[r, v_j]) for all columns v_j of Q, in chunks of matrices."""
+    cdt = _complex_of(coords.real_dtype)
+    out = []
+    step = _chunk_size(coords.n, cdt.itemsize)
+    for s in range(0, Q.shape[1], step):
+        Bm = coords.mat(Q[:, s:s + step].mT)
+        for kind in kinds:
+            Pm = _bilinear(R.to(cdt), Bm.to(cdt), kind) if kind == 'lie' else _bilinear(R, Bm, kind)
+            out.append(coords.vec(Pm).mT)
+    return torch.cat(out, dim=1)
+
+
+def _random_unit(Q: torch.Tensor, k: int, gen: torch.Generator) -> torch.Tensor:
+    """k random unit vectors (columns, (N, k)) of span Q (Gaussian coefficients in the orthonormal basis)."""
+    c = torch.randn(Q.shape[1], k, dtype=Q.dtype, device=Q.device, generator=gen)
+    c = c / torch.linalg.vector_norm(c, dim=0, keepdim=True)
+    return Q @ c
+
+
+def _closure(H: torch.Tensor, coords: _HermCoords, unital: bool, kinds, th: Dict[str, float],
+             gen: torch.Generator, max_rounds: Optional[int], samples: int) -> Tuple[torch.Tensor, Dict]:
+    """Orthonormal coordinates (N, d) of the closure of span(H (+ 1)) under the products in kinds."""
+    n, N = coords.n, coords.N
+    dev, rdt = H.device, coords.real_dtype
+    cost.check_memory(3 * N * N * rdt.itemsize, dev, f"closure of a subspace of Herm_{n} (N = {N})")
+    stats: Dict = {}
+    cols = [coords.vec(H).mT] if H.shape[0] else []
+    if unital:
+        cols.append(coords.vec(torch.eye(n, dtype=rdt, device=dev) / math.sqrt(n)).unsqueeze(1))
+    Q = torch.zeros(N, 0, dtype=rdt, device=dev)
+    if cols:
+        Q, _ = _extend(Q, torch.cat(cols, dim=1), th, stats)
+    max_rounds = 2 * N + 2 if max_rounds is None else int(max_rounds)
+    rounds = verifications = 0
+    defect = 0.0
+    while Q.shape[1]:
+        if rounds >= max_rounds:
+            raise RuntimeError(f"subalgebra closure: no closure after {rounds} rounds (dim {Q.shape[1]} of {N}); "
+                               "increase max_rounds")
+        rounds += 1
+        r = _random_unit(Q, 1, gen)[:, 0]
+        W = _candidates(coords, Q, coords.mat(r), kinds)
+        Q, added = _extend(Q, W, th, stats)
+        if added:
+            continue
+        # certificate: fresh random pairs r_k * s_k (and (i/2)[r_k, s_k]) must lie in span Q
+        verifications += 1
+        Rk, Sk = coords.mat(_random_unit(Q, samples, gen).mT), coords.mat(_random_unit(Q, samples, gen).mT)
+        cdt = _complex_of(rdt)
+        W = torch.cat([coords.vec(_bilinear(Rk.to(cdt), Sk.to(cdt), k) if k == 'lie' else _bilinear(Rk, Sk, k)).mT
+                       for k in kinds], dim=1)
+        P = W - Q @ (Q.mT @ W)
+        P = P - Q @ (Q.mT @ P)
+        defect = float(torch.linalg.vector_norm(P, dim=0).max())
+        Q, added = _extend(Q, W, th, stats)
+        if not added:
+            break
+    stats.update(rounds=rounds, verifications=verifications, closure_defect=defect)
+    return Q, stats
+
+
+def _setup(generators: MatrixLike, field: Optional[str], tol: Optional[float], precision: Optional[str], device):
+    S = _stack(generators)
+    if precision is None:
+        precision = 'single' if S.dtype in (torch.float32, torch.complex64, torch.float16, torch.bfloat16) \
+            else 'double'
+    if precision not in ('single', 'double'):
+        raise ValueError("precision must be 'single' or 'double'")
+    rdt = torch.float32 if precision == 'single' else torch.float64
+    device = S.device if device is None else torch.device(device)
+    S = S.to(device=device, dtype=_complex_of(rdt) if torch.is_complex(S) else rdt)
+    eps = torch.finfo(rdt).eps
+    tol = eps ** 0.5 if tol is None else float(tol)
+    H = _hermitian_generators(S, tol)
+    real_input = H.shape[0] == 0 or bool(H.imag.abs().amax() <= tol)
+    if field is None:
+        field = 'real' if real_input else 'complex'
+    if field not in ('real', 'complex'):
+        raise ValueError("field must be 'real', 'complex' or None")
+    if field == 'real' and not real_input:
+        raise ValueError("field='real' needs real symmetric generators (the Hermitian parts have imaginary entries; "
+                         "a real non-symmetric S contributes the imaginary Hermitian matrix (S - S^T)/2i)")
+    H = H.real.to(rdt) if field == 'real' else H
+    return S, H, field, precision, rdt, device, eps, tol
+
+
+class JordanAlgebra:
+    r"""
+    A Jordan subalgebra :math:`J\subseteq\operatorname{Herm}_n(\mathbb K)` (:math:`\mathbb K=\mathbb R` or
+    :math:`\mathbb C`), as returned by :func:`jordan_algebra_generated` and :func:`star_algebra_self_adjoint_part`.
+
+    Attributes
+    ----------
+    basis : (d, n, n) Hermitian matrices (real symmetric for field 'real'), orthonormal for
+        :math:`\langle a,b\rangle=\operatorname{Tr}(ab)`.
+    dim : d = :math:`\dim_{\mathbb R}J`.   n : matrix size.   field : 'real' or 'complex'.
+    unital : whether :math:`1` was adjoined.   kind : 'jordan' (closure under ∘) or 'star' (closure under ∘ and
+        :math:`\frac i2[\cdot,\cdot]`: the self-adjoint part of a complex :math:`*`-algebra).
+    threshold : the final rank threshold :math:`\theta` (module docstring, 'Tolerances'); closure checks compare
+        with it.
+    diagnostics : dict (rounds, verifications, closure_defect, max_residual, min_kept, max_dropped, ...).
+    """
+
+    def __init__(self, basis: torch.Tensor, field: str, unital: bool, kind: str, threshold: float,
+                 diagnostics: Optional[Dict] = None, seed: Optional[int] = 0):
+        self.basis = basis
+        self.n = basis.shape[-1]
+        self.dim = basis.shape[0]
+        self.field = field
+        self.unital = unital
+        self.kind = kind
+        self.threshold = threshold
+        self.diagnostics = dict(diagnostics or {})
+        self._seed = seed
+
+    def __repr__(self) -> str:
+        return (f"JordanAlgebra(n={self.n}, dim={self.dim}, field={self.field!r}, kind={self.kind!r}, "
+                f"unital={self.unital})")
+
+    def _flat(self, dtype) -> torch.Tensor:
+        return self.basis.to(dtype).reshape(self.dim, -1)
+
+    def coordinates(self, x: torch.Tensor) -> torch.Tensor:
+        r"""Real coefficients :math:`\operatorname{Re}\operatorname{Tr}(b_i^*x)`: x (..., n, n) -> (..., d)."""
+        x = torch.as_tensor(x).to(self.basis.device)
+        dt = torch.promote_types(x.dtype, self.basis.dtype)
+        c = x.to(dt).reshape(*x.shape[:-2], -1) @ self._flat(dt).conj().mT
+        return c.real if torch.is_complex(c) else c
+
+    def project(self, x: torch.Tensor) -> torch.Tensor:
+        r"""Orthogonal projection (real Hilbert-Schmidt inner product) of x (..., n, n) onto J."""
+        x = torch.as_tensor(x).to(self.basis.device)
+        c = self.coordinates(x)
+        dt = torch.promote_types(x.dtype, self.basis.dtype)
+        return (c.to(dt) @ self._flat(dt)).reshape(x.shape)
+
+    def residual(self, x: torch.Tensor) -> torch.Tensor:
+        r""":math:`\|x-\mathrm{proj}_J(x)\|_F/\|x\|_F` (0 for x = 0), shape (...)."""
+        x = torch.as_tensor(x).to(self.basis.device)
+        r = x - self.project(x)
+        r = r - self.project(r)
+        nx = torch.linalg.vector_norm(x, dim=(-2, -1))
+        return torch.linalg.vector_norm(r, dim=(-2, -1)) / torch.where(nx > 0, nx, torch.ones_like(nx))
+
+    def contains(self, x: torch.Tensor, tol: Optional[float] = None) -> torch.Tensor:
+        """x in J up to the relative tolerance (default: the threshold of J). Bool tensor of shape (...)."""
+        return self.residual(x) <= (self.threshold if tol is None else tol)
+
+    def closure_defect(self, product: str = 'jordan', exhaustive: Optional[bool] = None, samples: int = 32,
+                       seed: Optional[int] = None) -> float:
+        r"""
+        :math:`\max\|P_{J^\perp}(a\cdot b)\|_F` for the product 'jordan' (:math:`a\circ b`) or 'lie'
+        (:math:`\frac i2[a,b]`), over all pairs of basis elements (exhaustive, :math:`d(d+1)/2` products) or over
+        ``samples`` random unit pairs of J (a randomised lower bound of the sup over unit pairs, non-zero almost
+        surely if J is not closed). Default: exhaustive when :math:`d(d+1)n^3/2\le10^{10}`.
+        """
+        d, n = self.dim, self.n
+        if d == 0:
+            return 0.0
+        if product not in ('jordan', 'lie'):
+            raise ValueError("product must be 'jordan' or 'lie'")
+        if exhaustive is None:
+            exhaustive = d * (d + 1) / 2 * n ** 3 <= 1e10
+        cdt = _complex_of(self.basis.real.dtype if torch.is_complex(self.basis) else self.basis.dtype)
+        B = self.basis.to(cdt) if product == 'lie' else self.basis
+        worst = torch.zeros((), dtype=self.basis.real.dtype, device=self.basis.device)
+
+        def defect(X):
+            r = X - self.project(X)
+            r = r - self.project(r)
+            return torch.linalg.vector_norm(r, dim=(-2, -1)).amax()
+        if exhaustive:
+            step = max(1, _chunk_size(n, cdt.itemsize) // max(1, d))
+            for s in range(0, d, step):
+                Bi = B[s:s + step]                                          # (k, n, n)
+                X = _bilinear(Bi[:, None], B[None], product)                # (k, d, n, n)
+                mask = torch.arange(d, device=B.device)[None, :] >= torch.arange(s, s + Bi.shape[0],
+                                                                                 device=B.device)[:, None]
+                X = X[mask]
+                if X.numel():
+                    worst = torch.maximum(worst, defect(X))
+        else:
+            gen = _rng(self._seed if seed is None else seed, self.basis.device)
+            rdt = self.basis.real.dtype if torch.is_complex(self.basis) else self.basis.dtype
+            for _ in range(2):
+                c1 = torch.randn(samples, d, dtype=rdt, device=B.device, generator=gen)
+                c2 = torch.randn(samples, d, dtype=rdt, device=B.device, generator=gen)
+                c1, c2 = (c / torch.linalg.vector_norm(c, dim=-1, keepdim=True) for c in (c1, c2))
+                R = torch.einsum('kd,dij->kij', c1.to(B.dtype), B)
+                S = torch.einsum('kd,dij->kij', c2.to(B.dtype), B)
+                worst = torch.maximum(worst, defect(_bilinear(R, S, product)))
+        return float(worst)
+
+    def is_closed(self, exhaustive: Optional[bool] = None) -> bool:
+        """J ∘ J ⊆ J up to the threshold (closure_defect('jordan') <= threshold)."""
+        return self.closure_defect('jordan', exhaustive) <= self.threshold
+
+    def is_self_adjoint_part(self, exhaustive: Optional[bool] = None) -> bool:
+        r"""
+        Whether :math:`J=A_{sa}` for the complex :math:`*`-algebra :math:`A` generated by J, i.e. whether J is closed
+        under :math:`\frac i2[x,y]` (module docstring). False e.g. for :math:`\operatorname{Herm}_n(\mathbb R)`,
+        :math:`n\ge2`, and for spin factors :math:`V_m`, :math:`m\notin\{1,3\}`.
+        """
+        return self.closure_defect('lie', exhaustive) <= self.threshold
+
+    def star_algebra(self, **kwargs) -> 'JordanAlgebra':
+        """The self-adjoint part of the complex *-algebra generated by J (star_algebra_self_adjoint_part)."""
+        kwargs.setdefault('unital', self.unital)
+        return star_algebra_self_adjoint_part(self.basis, **kwargs)
+
+
+def jordan_algebra_generated(generators: MatrixLike, *, unital: bool = True, field: Optional[str] = None,
+                             tol: Optional[float] = None, seed: Optional[int] = 0, precision: Optional[str] = None,
+                             device=None, max_rounds: Optional[int] = None, samples: int = 8) -> JordanAlgebra:
+    r"""
+    The Jordan algebra generated by matrices: the smallest real subspace :math:`J\subseteq\operatorname{Herm}_n`
+    containing the Hermitian generators (and :math:`1` if ``unital``) with :math:`J\circ J\subseteq J`.
+
+    generators: (J, n, n) tensor or list of (n, n) matrices; a non-Hermitian :math:`S=H_1+iH_2` contributes
+        :math:`H_1` and :math:`H_2` (module docstring). Zero generators are allowed.
+    unital: adjoin the identity (default). Without it, e.g. one generator gives the polynomials without constant term.
+    field: 'real' (coordinates of real symmetric matrices, :math:`N=n(n+1)/2`; needs real symmetric generators),
+        'complex' (:math:`N=n^2`) or None (real iff the generators are real symmetric). J does not depend on it
+        (products of real symmetric matrices are real symmetric); only the cost and the dtype of the basis do.
+    tol: relative tolerance (default :math:`\sqrt\varepsilon`), seed: random elements (default 0: reproducible;
+        the result does not depend on it except for rounding), precision: 'double' (default) or 'single' (default for
+        float32/complex64 input), device: of the computation (default: of the input), max_rounds: bound on the
+        closure rounds (default :math:`2N+2`), samples: random pairs of the closure certificate.
+
+    Returns a :class:`JordanAlgebra` with an orthonormal basis (d, n, n). Algorithm, cost and tolerances: module
+    docstring. Issues a :class:`ClosureWarning` if a rank decision was close to the threshold.
+    """
+    S, H, field, precision, rdt, device, eps, tol = _setup(generators, field, tol, precision, device)
+    n = S.shape[-1]
+    coords = _HermCoords(n, field, rdt, device)
+    th = _thresholds(eps, n, tol)
+    gen = _rng(seed, device)
+    Q, stats = _closure(H, coords, unital, ('jordan',), th, gen, max_rounds, samples)
+    return _result(Q, coords, field, unital, 'jordan', th, stats, seed, precision)
+
+
+def star_algebra_self_adjoint_part(generators: MatrixLike, *, unital: bool = True, tol: Optional[float] = None,
+                                   seed: Optional[int] = 0, precision: Optional[str] = None, device=None,
+                                   max_rounds: Optional[int] = None, samples: int = 8) -> JordanAlgebra:
+    r"""
+    The self-adjoint part :math:`A_{sa}` of the complex :math:`*`-algebra :math:`A` generated by matrices (with
+    :math:`1` if ``unital``: then :math:`A` is the algebra of :func:`~torch_vn_algebra.decompose.wedderburn` and
+    :math:`\dim_{\mathbb R}A_{sa}=\dim_{\mathbb C}A=\sum_ck_c^2`). Computed as the closure of the Hermitian generators
+    under :math:`\circ` and :math:`\frac i2[\cdot,\cdot]` (Lie-Jordan closure), always in complex coordinates. Proof
+    that this is :math:`A_{sa}`: the closure K lies in :math:`A_{sa}`; :math:`K+iK` is closed under products
+    (:math:`xy=x\circ y-i\cdot\frac i2[x,y]`) and adjoints, contains the generators, hence contains A, and its
+    self-adjoint part is K. Arguments as in :func:`jordan_algebra_generated`; returns a :class:`JordanAlgebra` with
+    kind 'star' and field 'complex'.
+    """
+    S, H, _, precision, rdt, device, eps, tol = _setup(generators, None, tol, precision, device)
+    n = S.shape[-1]
+    H = H.to(_complex_of(rdt))
+    coords = _HermCoords(n, 'complex', rdt, device)
+    th = _thresholds(eps, n, tol)
+    gen = _rng(seed, device)
+    Q, stats = _closure(H, coords, unital, ('jordan', 'lie'), th, gen, max_rounds, samples)
+    return _result(Q, coords, 'complex', unital, 'star', th, stats, seed, precision)
+
+
+def _result(Q, coords, field, unital, kind, th, stats, seed, precision) -> JordanAlgebra:
+    basis = coords.mat(Q.mT)
+    stats = dict(stats)
+    stats.update(threshold=th['theta'], precision=precision, seed=seed, N=coords.N)
+    if stats.get('gray'):
+        warnings.warn(f"subalgebra closure: {stats['gray']} rank decision(s) within a factor eps^(1/8) of the "
+                      f"threshold {th['theta']:.1e} (smallest kept singular value {stats.get('min_kept', 0):.1e}, "
+                      f"largest dropped {stats.get('max_dropped', 0):.1e}); the dimension {Q.shape[1]} is "
+                      "ill-determined. Pass an explicit tol.", ClosureWarning, stacklevel=3)
+    return JordanAlgebra(basis, field, unital, kind, th['theta'], stats, seed)
+
+
+def is_jordan_subalgebra(basis: MatrixLike, *, tol: Optional[float] = None, exhaustive: Optional[bool] = None,
+                         precision: Optional[str] = None) -> bool:
+    r"""
+    Whether the real span of Hermitian matrices (d, n, n) (any spanning set) is closed under :math:`\circ`. The span is
+    orthonormalised (rank threshold :math:`\theta` as in the module docstring) and
+    :meth:`JordanAlgebra.closure_defect` is compared with :math:`\theta` (exhaustive over basis pairs when
+    :math:`d(d+1)n^3/2\le10^{10}`, else randomised). Raises ValueError for non-Hermitian input.
+    """
+    S = _stack(basis, "basis")
+    if precision is None:
+        precision = 'single' if S.dtype in (torch.float32, torch.complex64) else 'double'
+    rdt = torch.float32 if precision == 'single' else torch.float64
+    S = S.to(dtype=_complex_of(rdt) if torch.is_complex(S) else rdt)
+    eps = torch.finfo(rdt).eps
+    tol = eps ** 0.5 if tol is None else float(tol)
+    scale = torch.linalg.vector_norm(S, dim=(-2, -1)).clamp(min=torch.finfo(rdt).tiny)
+    if bool((torch.linalg.vector_norm(S - S.mH, dim=(-2, -1)) > tol * scale).any()):
+        raise ValueError("is_jordan_subalgebra: the matrices must be Hermitian")
+    S = S / scale[:, None, None]
+    field = 'real' if (not torch.is_complex(S) or bool(S.imag.abs().amax() <= tol)) else 'complex'
+    if field == 'real':
+        S = S.real if torch.is_complex(S) else S
+    n = S.shape[-1]
+    coords = _HermCoords(n, field, rdt, S.device)
+    th = _thresholds(eps, n, tol)
+    Q, _ = _extend(torch.zeros(coords.N, 0, dtype=rdt, device=S.device), coords.vec(S).mT, th, {})
+    J = JordanAlgebra(coords.mat(Q.mT), field, False, 'jordan', th['theta'])
+    return J.closure_defect('jordan', exhaustive) <= th['theta']
+
+
+def compare_with_star_algebra(generators: MatrixLike, *, unital: bool = True, **kwargs) -> Dict:
+    r"""
+    The Jordan algebra J and the self-adjoint part :math:`A_{sa}` of the complex :math:`*`-algebra generated by the
+    same matrices: ``{'jordan_dim', 'star_dim', 'equal', 'jordan', 'star'}``. Always :math:`J\subseteq A_{sa}`, so
+    'equal' (``jordan_dim == star_dim``) means :math:`J=A_{sa}`; otherwise :math:`J\subsetneq A_{sa}`. (Every Jordan
+    subalgebra of :math:`\operatorname{Herm}_n` is special; :math:`J\ne A_{sa}` is a statement about this embedding.)
+    """
+    J = jordan_algebra_generated(generators, unital=unital, **kwargs)
+    kwargs.pop('field', None)
+    A = star_algebra_self_adjoint_part(generators, unital=unital, **kwargs)
+    return dict(jordan_dim=J.dim, star_dim=A.dim, equal=J.dim == A.dim, jordan=J, star=A)
+
+
+# ============================================================================
+# Anticommuting symmetries and spin factors
+# ============================================================================
+
+def anticommuting_symmetries(m: int, dtype: torch.dtype = torch.complex128, device=None) -> torch.Tensor:
+    r"""
+    Hermitian :math:`s_1,\dots,s_m` with :math:`s_is_j+s_js_i=2\delta_{ij}1`, shape (m, D, D) with
+    :math:`D=2^{\lfloor m/2\rfloor}` (:math:`D=2` for :math:`m=1`): with :math:`p=\lfloor m/2\rfloor` qubits, the
+    Jordan-Wigner strings :math:`s_{2j-1}=Z^{\otimes(j-1)}\otimes X\otimes1`,
+    :math:`s_{2j}=Z^{\otimes(j-1)}\otimes Y\otimes1` (:math:`j\le p`) and, for odd m, :math:`s_m=Z^{\otimes p}`; for
+    :math:`m=1`, :math:`s_1=Z`. Examples: m = 3 gives the
+    Pauli matrices X, Y, Z on :math:`\mathbb C^2`; m = 5 acts on :math:`\mathbb C^4`. :math:`\operatorname{Tr}s_i=0` and
+    :math:`\operatorname{Tr}(s_is_j)=D\delta_{ij}`, so :math:`1,s_1,\dots,s_m` are linearly independent. For
+    :math:`m\ge2` the :math:`s_i` generate the full matrix algebra :math:`M_D(\mathbb C)` (the first :math:`2p` already
+    do; for odd m, :math:`s_m` is a multiple of their product).
+    """
+    if m < 1:
+        raise ValueError("m must be >= 1")
+    I = torch.eye(2, dtype=dtype, device=device)
+    X = torch.tensor([[0, 1], [1, 0]], dtype=dtype, device=device)
+    Z = torch.tensor([[1, 0], [0, -1]], dtype=dtype, device=device)
+    if m == 1:
+        return Z.unsqueeze(0)
+    if not dtype.is_complex:
+        raise ValueError("anticommuting_symmetries: m >= 2 needs a complex dtype (Y is imaginary)")
+    Y = torch.tensor([[0, -1j], [1j, 0]], dtype=dtype, device=device)
+    p = m // 2
+
+    def kron_all(fs):
+        out = torch.ones(1, 1, dtype=dtype, device=device)
+        for f in fs:
+            out = torch.kron(out, f)
+        return out
+    out = []
+    for j in range(p):
+        for P in (X, Y):
+            out.append(kron_all([Z] * j + [P] + [I] * (p - j - 1)))
+    if m % 2:
+        out.append(kron_all([Z] * p))
+    return torch.stack(out)
+
+
+class SpinFactor:
+    r"""
+    The spin factor :math:`V_m=\mathbb R\oplus\mathbb R^m` (:math:`m\ge1`), a Euclidean Jordan algebra of rank 2 and
+    dimension :math:`m+1` (simple for :math:`m\ge2`; :math:`V_1\cong\mathbb R\oplus\mathbb R`). Elements
+    :math:`x=(a,u)` are real tensors of shape (..., m+1) (any leading batch shape; everything is batched and
+    differentiable), with
+
+    * product :math:`(a,u)\circ(b,v)=(ab+u\cdot v,\;av+bu)`, unit :math:`(1,0)`;
+    * spectral decomposition :math:`x=\lambda_+e_++\lambda_-e_-` with :math:`\lambda_\pm=a\pm|u|` and the orthogonal
+      idempotents :math:`e_\pm=\frac12(1,\pm u/|u|)` (:math:`e_\pm^2=e_\pm`, :math:`e_+\circ e_-=0`,
+      :math:`e_++e_-=1`); for :math:`u=0` any unit vector replaces :math:`u/|u|` (here the first basis vector);
+    * functional calculus :math:`f(x)=f(\lambda_+)e_++f(\lambda_-)e_-=\big(\frac{f(\lambda_+)+f(\lambda_-)}2,\;
+      f[\lambda_+,\lambda_-]\,u\big)` with the divided difference :math:`f[\lambda_+,\lambda_-]=
+      (f(\lambda_+)-f(\lambda_-))/(2|u|)` (:math:`f'(a)` at :math:`u=0`): smooth in x for smooth f, also at u = 0;
+    * trace :math:`\operatorname{tr}x=\lambda_++\lambda_-=2a` (the canonical trace), determinant
+      :math:`\det x=\lambda_+\lambda_-=a^2-|u|^2`, inner product :math:`\operatorname{tr}(x\circ y)=2(ab+u\cdot v)`;
+    * inverse :math:`x^{-1}=(a,-u)/\det x` for :math:`\det x\ne0`;
+    * quadratic representation :math:`P(x)y=2x\circ(x\circ y)-x^2\circ y`;
+    * positive cone (cone of squares) = Lorentz (second-order) cone :math:`\{a\ge|u|\}`, i.e. :math:`\lambda_-\ge0`.
+
+    Representation (:meth:`to_matrix`): :math:`\phi(a,u)=a1+\sum_iu_is_i` with the anticommuting symmetries of
+    :func:`anticommuting_symmetries` on :math:`\mathbb C^D`. Since :math:`s_i\circ s_j=\delta_{ij}1`, :math:`\phi` is an
+    injective Jordan homomorphism; :math:`(u\cdot s)^2=|u|^21` and :math:`\operatorname{Tr}(u\cdot s)=0` give the
+    eigenvalues :math:`\lambda_\pm` of :math:`\phi(x)`, each with multiplicity :math:`D/2`; so
+    :math:`\phi(x)\ge0\iff a\ge|u|` and :math:`\operatorname{Tr}\phi(x)=\frac D2\operatorname{tr}x`. For m = 3,
+    :math:`\phi` is onto :math:`\operatorname{Herm}_2(\mathbb C)` (:math:`V_3\cong\operatorname{Herm}_2(\mathbb C)`).
+    """
+
+    def __init__(self, m: int, dtype: torch.dtype = torch.float64, device=None):
+        if int(m) < 1:
+            raise ValueError("m must be >= 1")
+        if dtype not in (torch.float32, torch.float64):
+            raise ValueError("SpinFactor: dtype must be float32 or float64 (the algebra is real)")
+        self.m = int(m)
+        self.dim = self.m + 1
+        self.rank = 2
+        self.dtype = dtype
+        self.device = torch.device('cpu') if device is None else torch.device(device)
+        self._sym = None
+
+    def __repr__(self) -> str:
+        return f"SpinFactor(m={self.m}, dtype={self.dtype})"
+
+    # ----- construction -----
+    def element(self, a, u) -> torch.Tensor:
+        """(a, u) with a (...) and u (..., m) -> x (..., m+1)."""
+        a = torch.as_tensor(a, dtype=self.dtype, device=self.device)
+        u = torch.as_tensor(u, dtype=self.dtype, device=self.device)
+        if u.shape[-1:] != (self.m,):
+            raise ValueError(f"u must have shape (..., {self.m}), got {tuple(u.shape)}")
+        shape = torch.broadcast_shapes(a.shape, u.shape[:-1])
+        return torch.cat([a.expand(shape).unsqueeze(-1), u.expand(*shape, self.m)], dim=-1)
+
+    def split(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """x (..., m+1) -> (a (...), u (..., m))."""
+        self._check(x)
+        return x[..., 0], x[..., 1:]
+
+    def _check(self, x: torch.Tensor):
+        if x.shape[-1] != self.dim:
+            raise ValueError(f"elements of V_{self.m} have shape (..., {self.dim}), got {tuple(x.shape)}")
+
+    def unit(self, batch_shape: Tuple[int, ...] = ()) -> torch.Tensor:
+        e = torch.zeros(*batch_shape, self.dim, dtype=self.dtype, device=self.device)
+        e[..., 0] = 1
+        return e
+
+    def random(self, batch_size: Optional[int] = None, generator: Optional[torch.Generator] = None,
+               cone: bool = False) -> torch.Tensor:
+        """Gaussian element(s) (batch_size, m+1) (or (m+1,)); cone=True: a square x², an element of the cone."""
+        shape = (self.dim,) if batch_size is None else (batch_size, self.dim)
+        x = torch.randn(*shape, dtype=self.dtype, device=self.device, generator=generator)
+        return self.square(x) if cone else x
+
+    # ----- algebra -----
+    def product(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        """x∘y = (ab + u·v, a v + b u); (..., m+1) x (..., m+1) -> (..., m+1) (leading shapes broadcast)."""
+        a, u = self.split(x)
+        b, v = self.split(y)
+        return torch.cat([(a * b + (u * v).sum(-1)).unsqueeze(-1), a.unsqueeze(-1) * v + b.unsqueeze(-1) * u], dim=-1)
+
+    def square(self, x: torch.Tensor) -> torch.Tensor:
+        return self.product(x, x)
+
+    def power(self, x: torch.Tensor, p: int) -> torch.Tensor:
+        """Jordan power x^p for an integer p >= 0 (power associative: repeated squaring)."""
+        if not isinstance(p, int) or p < 0:
+            raise ValueError("p must be an integer >= 0 (other powers: apply_function)")
+        out, base = self.unit(x.shape[:-1]), x
+        while p:
+            if p & 1:
+                out = self.product(out, base)
+            p >>= 1
+            if p:
+                base = self.square(base)
+        return out
+
+    def trace(self, x: torch.Tensor) -> torch.Tensor:
+        """tr x = λ+ + λ- = 2a, shape (...)."""
+        return 2 * self.split(x)[0]
+
+    def determinant(self, x: torch.Tensor) -> torch.Tensor:
+        """det x = λ+ λ- = a² - |u|², shape (...)."""
+        a, u = self.split(x)
+        return a * a - (u * u).sum(-1)
+
+    def inner(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        """tr(x∘y) = 2(ab + u·v), shape (...): the trace inner product (associative: <x∘y, z> = <y, x∘z>)."""
+        return 2 * (x * y).sum(-1)
+
+    def inverse(self, x: torch.Tensor) -> torch.Tensor:
+        """x^{-1} = (a, -u) / det x (inf/nan where det x = 0)."""
+        a, u = self.split(x)
+        return torch.cat([a.unsqueeze(-1), -u], dim=-1) / self.determinant(x).unsqueeze(-1)
+
+    def quadratic_representation(self, x: torch.Tensor, y: Optional[torch.Tensor] = None):
+        """P(x)y = 2x∘(x∘y) - x²∘y; without y, the map y -> P(x)y."""
+        if y is None:
+            return lambda z: self.quadratic_representation(x, z)
+        return 2 * self.product(x, self.product(x, y)) - self.product(self.square(x), y)
+
+    def triple(self, x: torch.Tensor, y: torch.Tensor, z: torch.Tensor) -> torch.Tensor:
+        """Jordan triple product {x,y,z} = (x∘y)∘z + (y∘z)∘x - (x∘z)∘y ({x,y,x} = P(x)y)."""
+        return (self.product(self.product(x, y), z) + self.product(self.product(y, z), x)
+                - self.product(self.product(x, z), y))
+
+    # ----- spectral theory -----
+    def _norm_u(self, u: torch.Tensor) -> torch.Tensor:
+        return torch.linalg.vector_norm(u, dim=-1)
+
+    def eigenvalues(self, x: torch.Tensor) -> torch.Tensor:
+        """(λ-, λ+) = (a - |u|, a + |u|), ascending, shape (..., 2)."""
+        a, u = self.split(x)
+        r = self._norm_u(u)
+        return torch.stack([a - r, a + r], dim=-1)
+
+    def idempotents(self, x: torch.Tensor) -> torch.Tensor:
+        """Jordan frame (e-, e+) = (½(1, -w), ½(1, w)), w = u/|u| (first basis vector if u = 0); (..., 2, m+1)."""
+        a, u = self.split(x)
+        r = self._norm_u(u).unsqueeze(-1)
+        e1 = torch.zeros_like(u)
+        e1[..., 0] = 1
+        pos = r > 0
+        w = torch.where(pos, u / torch.where(pos, r, torch.ones_like(r)), e1)
+        half = torch.full_like(r, 0.5)
+        return torch.stack([torch.cat([half, -0.5 * w], -1), torch.cat([half, 0.5 * w], -1)], dim=-2)
+
+    def spectral_decomposition(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """(eigenvalues (..., 2), idempotents (..., 2, m+1)) with x = Σ λ_i e_i."""
+        return self.eigenvalues(x), self.idempotents(x)
+
+    def apply_function(self, x: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor]) -> torch.Tensor:
+        """
+        f(x) = f(λ+) e+ + f(λ-) e- for an elementwise real f (called once on the eigenvalues (..., 2)), as
+        ((f(λ+) + f(λ-))/2, f[λ+, λ-] u) with the divided difference, which is f' at (nearly) coincident eigenvalues
+        (|λ+ - λ-| <= eps^(1/3) max|λ±|, the convention of functional.divided_differences). Differentiable in x and
+        in parameters of f.
+        """
+        a, u = self.split(x)
+        lam = self.eigenvalues(x)
+        need_graph = torch.is_grad_enabled() and lam.requires_grad
+        fl, dfl = values_and_derivative(f, lam, create_graph=need_graph)
+        fm, fp = fl[..., 0], fl[..., 1]
+        gap = lam[..., 1] - lam[..., 0]
+        eps = torch.finfo(lam.dtype).eps
+        close = gap <= eps ** (1 / 3) * lam.abs().amax(-1).clamp(min=torch.finfo(lam.dtype).tiny)
+        dd = torch.where(close, 0.5 * (dfl[..., 0] + dfl[..., 1]), (fp - fm) / torch.where(close, torch.ones_like(gap),
+                                                                                             gap))
+        return torch.cat([(0.5 * (fp + fm)).unsqueeze(-1), dd.unsqueeze(-1) * u], dim=-1)
+
+    def sqrt(self, x: torch.Tensor) -> torch.Tensor:
+        """The square root in the cone (eigenvalues clamped at 0): the unique y >= 0 with y² = x for x >= 0."""
+        return self.apply_function(x, lambda w: torch.sqrt(torch.clamp(w, min=0)))
+
+    def exp(self, x: torch.Tensor) -> torch.Tensor:
+        return self.apply_function(x, torch.exp)
+
+    def log(self, x: torch.Tensor) -> torch.Tensor:
+        """log of an element of the interior of the cone (λ- > 0)."""
+        return self.apply_function(x, torch.log)
+
+    def in_cone(self, x: torch.Tensor, tol: Optional[float] = None, interior: bool = False) -> torch.Tensor:
+        """
+        Membership in the Lorentz cone a >= |u| (interior: a > |u|), up to tol (default 8 eps) relative to |a| + |u|.
+        Bool tensor of shape (...); no host synchronisation.
+        """
+        a, u = self.split(x)
+        r = self._norm_u(u)
+        t = (8 * torch.finfo(x.dtype).eps if tol is None else tol) * (a.abs() + r)
+        return (a - r > t) if interior else (a - r >= -t)
+
+    is_positive = in_cone
+
+    # ----- representation by anticommuting symmetries -----
+    def symmetries(self, dtype: Optional[torch.dtype] = None) -> torch.Tensor:
+        """(m, D, D) anticommuting symmetries of anticommuting_symmetries(m) (complex)."""
+        dtype = dtype or _complex_of(self.dtype)
+        if self._sym is None or self._sym.dtype != dtype:
+            self._sym = anticommuting_symmetries(self.m, dtype=dtype, device=self.device)
+        return self._sym
+
+    @property
+    def representation_dim(self) -> int:
+        return self.symmetries().shape[-1]
+
+    def to_matrix(self, x: torch.Tensor) -> torch.Tensor:
+        """φ(a, u) = a 1 + Σ u_i s_i: (..., m+1) -> Hermitian (..., D, D) (complex)."""
+        a, u = self.split(x)
+        S = self.symmetries()
+        D = S.shape[-1]
+        eye = torch.eye(D, dtype=S.dtype, device=S.device)
+        return a[..., None, None].to(S.dtype) * eye + torch.einsum('...i,ijk->...jk', u.to(S.dtype), S)
+
+    def from_matrix(self, X: torch.Tensor) -> torch.Tensor:
+        """Coefficients of the orthogonal projection onto φ(V_m): a = Tr X / D, u_i = Re Tr(s_i X) / D; (..., m+1)."""
+        S = self.symmetries()
+        D = S.shape[-1]
+        X = X.to(S.dtype)
+        a = torch.diagonal(X, dim1=-2, dim2=-1).sum(-1).real / D
+        u = torch.einsum('ijk,...kj->...i', S, X).real / D
+        return torch.cat([a.unsqueeze(-1), u], dim=-1).to(self.dtype)

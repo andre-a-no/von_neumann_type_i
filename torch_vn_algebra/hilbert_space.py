@@ -124,7 +124,9 @@ class HilbertSpace:
         Global norm: sqrt( sum_c sum_i |ψ_{c,i}|^2 ).
         Returns (batch, 1, 1, 1).
         """
-        # ket shape: (batch, n_channels, n, 1)
+        # ket shape: (batch, n_channels, n, 1), or flat (batch, n_channels, n) as accepted by inner_product
+        if ket.dim() == 3:
+            ket = ket.unsqueeze(-1)
         norm_sq = (ket.conj() * ket).real.sum(dim=(-2, -3), keepdim=True)  # (batch, 1, 1, 1)
         norm_sq = torch.clamp(norm_sq, min=0.0)
         return torch.sqrt(norm_sq)
@@ -132,6 +134,8 @@ class HilbertSpace:
     def normalize(self, ket: torch.Tensor, eps: float = 1e-12) -> torch.Tensor:
         """Normalize ket to unit global norm."""
         norm = self.norm(ket)
+        if ket.dim() == 3:
+            norm = norm.squeeze(-1)
         # Replace zero norms with 1 to avoid division by zero
         norm = torch.where(norm < eps, torch.ones_like(norm), norm)
         return ket / norm

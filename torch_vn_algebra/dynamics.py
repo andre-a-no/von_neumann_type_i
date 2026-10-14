@@ -25,8 +25,20 @@ Operator = TypeIAlgebra.Operator
 OperatorLike = Union[Operator, torch.Tensor]
 
 
-def _mat(x: OperatorLike) -> torch.Tensor:
-    return x.matrix if isinstance(x, Operator) else x
+def _mat(x: OperatorLike, alg: Optional[TypeIAlgebra] = None) -> torch.Tensor:
+    """Matrix of an operator; a raw tensor is masked to the blocks of `alg` (its padding may hold garbage)."""
+    if isinstance(x, Operator):
+        return x.matrix
+    if alg is not None and min(alg.k_factors) != alg.k_max:
+        return x * alg._const('block_mask').to(x.device)
+    return x
+
+
+def _algebra_of(*xs) -> Optional[TypeIAlgebra]:
+    for x in xs:
+        if isinstance(x, Operator):
+            return x.algebra
+    return None
 
 
 def _require_complex(alg: TypeIAlgebra):
@@ -153,18 +165,25 @@ def solve_operator_ode(f: Callable[[float, torch.Tensor], torch.Tensor], X0: Ope
 
 
 def schrodinger_rk4(psi0: torch.Tensor, H_of_t: Callable[[float], OperatorLike], times,
-                    substeps: int = 10, progress: bool = False) -> torch.Tensor:
-    """i dpsi/dt = H(t) psi for a (possibly time-dependent) Hamiltonian; shape (T, batch, C, k_max)."""
+                    substeps: int = 10, progress: bool = False,
+                    algebra: Optional[TypeIAlgebra] = None) -> torch.Tensor:
+    """i dpsi/dt = H(t) psi for a (possibly time-dependent) Hamiltonian; shape (T, batch, C, k_max).
+    Raw tensors (psi0, or H given as a tensor) are restricted to the blocks of `algebra` (taken from H when
+    it is an Operator); without an algebra their padding must be zero."""
     if psi0.dim() == 4:
         psi0 = psi0.squeeze(-1)
-    const = None if callable(H_of_t) and not isinstance(H_of_t, Operator) else _mat(H_of_t)
+    if algebra is None:
+        algebra = _algebra_of(H_of_t)
+    const = None if callable(H_of_t) and not isinstance(H_of_t, Operator) else _mat(H_of_t, algebra)
     if const is not None:
         psi0 = psi0.to(const.device)
+    if algebra is not None and min(algebra.k_factors) != algebra.k_max:
+        psi0 = psi0 * algebra._const('rows').to(psi0.device)        # entries in the padding are not part of psi
     y0 = psi0.to(torch.promote_types(psi0.dtype, torch.complex64))
     Hc = None if const is None else (-1j * const.to(y0.dtype))      # hoisted: constant H is cast once
 
     def f(t, psi):
-        A = Hc if Hc is not None else -1j * _mat(H_of_t(t)).to(psi.dtype)
+        A = Hc if Hc is not None else -1j * _mat(H_of_t(t), algebra).to(psi.dtype)
         return (A @ psi.unsqueeze(-1)).squeeze(-1)
     return rk4(f, y0, times, substeps, progress)
 
@@ -180,7 +199,8 @@ def _rates(jumps, rates):
 
 
 def lindblad_rhs(H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
-                 rates: Optional[Sequence[float]] = None) -> Callable[[float, torch.Tensor], torch.Tensor]:
+                 rates: Optional[Sequence[float]] = None,
+                 algebra: Optional[TypeIAlgebra] = None) -> Callable[[float, torch.Tensor], torch.Tensor]:
     """
     Right-hand side of the GKSL equation
         drho/dt = -i[H, rho] + sum_j g_j (L_j rho L_j^* - 1/2 {L_j^* L_j, rho})
@@ -190,8 +210,9 @@ def lindblad_rhs(H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
     InterSectorChannel Phi of the algebra into itself; it contributes Phi(rho) - 1/2 {Phi^*(1), rho}, where
     Phi^*(1)_c = sum_{d,i} K_i^{dc*} K_i^{dc} is block diagonal. This is the GKSL generator of the jumps
     K_i^{dc} compressed to M (the conditional expectation onto M applied to the generator on B(H)); it maps M
-    into M and conserves the total trace. Constant H and jumps are combined once (H_eff = H - i/2 sum g L^* L);
-    callables of t are evaluated at every step.
+    into M and conserves the total trace. For constant H and jumps, A = sum g L^* L and the stacked jumps are
+    prepared once; callables of t are evaluated at every step. Raw tensors are restricted to the blocks of
+    `algebra` (taken from H or the jumps when they are Operators); without an algebra their padding must be zero.
     """
     rates = _rates(jumps, rates)
     for L in jumps:
@@ -206,16 +227,19 @@ def lindblad_rhs(H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
     timedep = (callable(H) and not isinstance(H, Operator)) or any(callable(L) and not isinstance(L, Operator)
                                                                      for _, L in plain)
 
+    if algebra is None:
+        algebra = _algebra_of(H, *[L for _, L in plain])
+
     def get(x, t):
-        return _mat(x(t) if callable(x) and not isinstance(x, Operator) else x)
+        return _mat(x(t) if callable(x) and not isinstance(x, Operator) else x, algebra)
 
     def parts(t, dtype, device):
-        """(H_eff, stacked jumps (B, J, C, k, k) with their rates, inter-sector Kraus tensors): with
-        A = sum_j g_j L_j^* L_j, drho/dt = -i (H_eff rho - rho H_eff^*) + sum_j g_j L_j rho L_j^* + (between
-        sectors) with H_eff = H - (i/2) A."""
-        Heff = None
+        """(H, A, stacked jumps (B, J, C, k, k) with their rates, inter-sector Kraus tensors): with
+        A = sum_j g_j L_j^* L_j, drho/dt = -i (H rho - rho H^*) - 1/2 (A rho + rho A) + sum_j g_j L_j rho L_j^*
+        + (between sectors). A is kept apart from H so that a real algebra with real jumps stays real."""
+        Hm = None
         if H is not None:
-            Heff = get(H, t).to(device=device, dtype=dtype)
+            Hm = get(H, t).to(device=device, dtype=dtype)
         A = None
         Ls, gs = None, None
         if plain:
@@ -229,9 +253,7 @@ def lindblad_rhs(H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
             KdK = (K.conj().transpose(-2, -1) @ K).sum(dim=(1, 2))            # (B, C, k, k), block diagonal
             A = g * KdK if A is None else A + g * KdK
             Ks.append((g, K))
-        if A is not None:
-            Heff = -0.5j * A if Heff is None else Heff - 0.5j * A
-        return Heff, Ls, gs, Ks
+        return Hm, A, Ls, gs, Ks
 
     cache = {}
 
@@ -239,8 +261,10 @@ def lindblad_rhs(H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
         key = (rho.dtype, rho.device)
         if timedep or key not in cache:
             cache[key] = parts(t, rho.dtype, rho.device)
-        Heff, Ls, gs, Ks = cache[key]
-        out = torch.zeros_like(rho) if Heff is None else -1j * (Heff @ rho - rho @ Heff.conj().transpose(-2, -1))
+        Hm, A, Ls, gs, Ks = cache[key]
+        out = torch.zeros_like(rho) if Hm is None else -1j * (Hm @ rho - rho @ Hm.conj().transpose(-2, -1))
+        if A is not None:
+            out = out - 0.5 * (A @ rho + rho @ A)
         if Ls is not None:                     # sum_j g_j L_j rho L_j^*: one product over the merged (j, column) index
             X = (Ls @ rho.unsqueeze(1)) * gs[:, None, None, None].to(rho.dtype)          # (B, J, C, k, k)
             Bx, J, C, k = X.shape[0], X.shape[1], X.shape[2], X.shape[-1]
@@ -277,7 +301,7 @@ def lindblad_evolve(rho0: Operator, H: Optional[OperatorLike], jumps: Sequence[O
     batches = [rho0.matrix.shape[0]] + [_batch(X) for X in ([H] if H is not None else []) + list(jumps)]
     y0 = rho0.matrix.to(dtype)
     y0 = y0.expand(max(batches), *y0.shape[1:]).clone()
-    ys = rk4(lindblad_rhs(H, jumps, rates), y0, times, substeps, progress)
+    ys = rk4(lindblad_rhs(H, jumps, rates, algebra=rho0.algebra), y0, times, substeps, progress)
     alg = rho0.algebra
     ys = 0.5 * (ys + ys.conj().transpose(-2, -1))          # once for the whole trajectory
     if isinstance(rho0, DensityMatrix):

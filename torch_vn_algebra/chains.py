@@ -99,6 +99,8 @@ class SpinChain:
     # ------------------------------------------------------------------
     @property
     def bonds(self) -> List[tuple]:
+        """Nearest-neighbour bonds (i, i+1); a periodic chain adds (L-1, 0) for L > 2. For L = 2 the two sites
+        share a single bond, so the periodic and the open chain coincide (the bond is not counted twice)."""
         b = [(i, i + 1) for i in range(self.L - 1)]
         if self.boundary == 'periodic' and self.L > 2:
             b.append((self.L - 1, 0))
@@ -162,7 +164,8 @@ class SpinChain:
 
     def xxz(self, J: float = 1.0, Delta: float = 1.0, h=None, sector: Optional[int] = None) -> Operator:
         """
-        XXZ Hamiltonian with fields h (scalar, (L,) or (batch, L): one Hamiltonian per row).
+        XXZ Hamiltonian H = sum_bonds J [ (S+_i S-_j + h.c.)/2 + Delta Sz_i Sz_j ] + sum_i h_i Sz_i with fields h
+        (scalar, (L,) or (batch, L): one Hamiltonian per row); bonds as in `bonds` (periodic L = 2: one bond).
         sector=None: operator in the full algebra (all sectors, padded); sector=N: operator in
         sector_algebra(N) only.
         """
@@ -398,7 +401,10 @@ class SpinChain:
     def level_spacing_ratio(energies: torch.Tensor) -> torch.Tensor:
         """
         Mean ratio of consecutive level spacings r = <min(s_n, s_{n+1}) / max(s_n, s_{n+1})> per row of
-        sorted energies (Oganesyan-Huse); Poisson 2 ln 2 - 1 = 0.386, GOE 0.5307 (Atas et al. 2013).
+        sorted energies (Oganesyan-Huse). Exact values proved in the course (Proposition 5.14): 2 ln 2 - 1 = 0.386
+        for independent exponential spacings, 4 - 2 sqrt 3 = 0.536 (GOE) and 2 sqrt 3 / pi - 1/2 = 0.603 (GUE) for
+        3 x 3 matrices. For large GOE matrices the value is about 0.53 (Atas et al. 2013; a numerical result, not
+        an exact one), so for large spectra compare with a sampled reference of the same size.
         """
         e = torch.sort(energies, dim=-1)[0]
         s = torch.diff(e, dim=-1)

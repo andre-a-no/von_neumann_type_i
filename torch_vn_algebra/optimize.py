@@ -265,4 +265,5 @@ def extremize(objective: Callable[[], torch.Tensor], params: Sequence[Param], ma
     timer.close()
     with torch.no_grad():
         keep(objective())
-    return best
+    # a start whose objective was never finite has no attained value: NaN rather than -inf / +inf
+    return torch.where(torch.isinf(best), torch.full_like(best, float('nan')), best)

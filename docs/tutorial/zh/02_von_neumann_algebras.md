@@ -16,7 +16,7 @@ $\mathcal M\subseteq M_n(\mathbb C)$，它在乘积和伴随运算下封闭，�
 ## 2.1 交换子与双交换子定理
 
 对集合 $S\subseteq M_n(\mathbb C)$，其**交换子**为
-$S'=\{X\in M_n(\mathbb C):XA=AX\text{ for all }A\in S\}$（即与 $S$ 中所有元素可交换的矩阵之集）。
+$S'=\{X\in M_n(\mathbb C):XA=AX\ \forall A\in S\}$（即与 $S$ 中所有元素可交换的矩阵之集）。
 它总是一个含单位元的代数；若 $S$ 在伴随运算下封闭（$S^*=S$），则 $S'$ 是一个 $*$-代数，因为
 对所有 $A\in S$ 有 $XA=AX$ 蕴含对所有 $A\in S$ 有 $X^*A^*=A^*X^*$。$S$ 的每个元素都与 $S'$
 的每个元素可交换，所以 $S\subseteq S''$；把这一点应用于 $S'$ 得到
@@ -31,8 +31,8 @@ $*$-代数 $\mathcal M$。它的**中心**是
 $Z(\mathcal M)=\mathcal M\cap\mathcal M'$。**因子**是满足
 $Z(\mathcal M)=\mathbb C1$ 的冯·诺依曼代数。
 
-在无穷维情形，$\mathcal M=\mathcal M''$ 是一个拓扑条件（在弱算子拓扑下闭）。在有限维情形
-它是自动成立的：
+这一定义是为无穷维希尔伯特空间上的算子而设的，而本课程不讨论无穷维情形。在有限维情形，
+条件 $\mathcal M=\mathcal M''$ 是自动成立的：
 
 **引理 2.1.** 设 $\mathcal M$ 是 $\mathbb C^n$ 上的 $*$-代数，$K\subseteq\mathbb C^n$
 是满足 $\mathcal MK\subseteq K$ 的子空间。则到 $K$ 上的正交投影 $P$ 属于
@@ -86,7 +86,7 @@ $P_c$ 为到 $E_c$ 上的投影。则对每个 $z\in\mathcal Z$ 有 $z=\sum_c\ch
 $\chi_c(z_{cd})\neq\chi_d(z_{cd})$。乘积
 $\prod_{d\neq c}\big(z_{cd}-\chi_d(z_{cd})1\big)/\big(\chi_c(z_{cd})-\chi_d(z_{cd})\big)$
 属于 $\mathcal Z$，在 $E_c$ 上作用为 $1$，在每个 $E_d$（$d\neq c$）上作用为 $0$；因此它就是
-$P_c$。极小性与唯一性：投影 $\sum_c a_cP_c$ 满足 $a_c\in\{0,1\}$，所以
+$P_c$（当 $C=1$ 时 $P_1=1$：空积等于 $1$）。极小性与唯一性：投影 $\sum_c a_cP_c$ 满足 $a_c\in\{0,1\}$，所以
 $\mathcal Z$ 的非零投影恰好是若干个（非空集合的）$P_c$ 之和。$\square$
 
 将此引理应用于 $\mathcal Z=Z(\mathcal M)$，投影 $P_c$ 称为 $\mathcal M$ 的**极小中心
@@ -113,10 +113,12 @@ $V^*\mathcal NV=M_k(\mathbb C)\otimes1_m$。此外 $V^*\mathcal N'V=1_k\otimes M
 $e\mathcal Ne=\mathbb Ce$。设 $x=x^*\in e\mathcal Ne$。$x$ 对应于非零特征值 $\lambda$ 的每个
 谱投影 $q$ 都可写成 $q=p(x)$，其中 $p$ 是满足
 $p(\lambda)=1$ 且对 $\mu\in(\operatorname{spec}x\cup\{0\})\setminus\{\lambda\}$ 有 $p(\mu)=0$
-的 Lagrange 多项式（见定理 1.5(a) 的证明）。由于 $p(0)=0$ 且 $x=ex=xe$，有 $q\in\mathcal N$
-且 $q=eqe$，所以 $q$ 的值域包含在 $e$ 的值域中。由极小性，$q=e$ 或 $q=0$；因此 $x$
-至多有一个非零特征值，且其特征子空间就是 $e$ 的值域，所以
-$x=\lambda e$。$e\mathcal Ne$ 的一般元素为 $x_1+ix_2$，其中
+的 Lagrange 多项式（定理 1.5(a),(b)：$p$ 在 $\operatorname{spec}x$ 上与 $\{\lambda\}$ 的示性函数一致）。
+由于 $p(0)=0$，对某个多项式 $r$ 有 $p(t)=t\,r(t)$，所以 $q=x\,r(x)=r(x)\,x\in\mathcal N$，而 $x=ex=xe$ 给出
+$q=eq=qe$；所以 $q$ 的值域包含在 $e$ 的值域中。若 $q\neq0$，由极小性得
+$\operatorname{rank}q\ge\operatorname{rank}e$，所以两个值域重合，$q=e$。由于对应于不同特征值的谱投影
+相互正交，$x$ 至多有一个非零特征值 $\lambda$，其谱投影为 $e$，所以 $x=\lambda e$（若没有非零特征值，
+则 $x=0=0\cdot e$）。$e\mathcal Ne$ 的一般元素为 $x_1+ix_2$，其中
 $x_{1,2}=x_{1,2}^*\in e\mathcal Ne$。
 
 *第 2 步：$e$ 生成 $E$。* 令 $F=\operatorname{span}\mathcal Ne E$。它在 $\mathcal N$ 下
@@ -168,9 +170,10 @@ $$
 V^*\mathcal MV=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)\otimes1_{m_c},\qquad
 V^*\mathcal M'V=\bigoplus_{c=1}^C1_{k_c}\otimes M_{m_c}(\mathbb C),
 $$
-并且 $V^*Z(\mathcal M)V=\operatorname{span}\{P_1,\dots,P_C\}$，其中 $P_c$ 是到第 $c$ 个
-直和项上的投影。数对 $(k_c,m_c)$ 在不计顺序的意义下唯一：$P_c$ 是唯一的（引理 2.3），
-$k_c^2=\dim\mathcal MP_c$，且 $m_c=\operatorname{rank}P_c/k_c$。特别地，作为 $*$-代数有 $\mathcal M\cong\bigoplus_cM_{k_c}(\mathbb C)$，并且
+并且 $V^*Z(\mathcal M)V=\operatorname{span}\{V^*P_1V,\dots,V^*P_CV\}$，其中 $P_1,\dots,P_C$ 是
+$\mathcal M$ 的极小中心投影（引理 2.3），而 $V^*P_cV$ 是到第 $c$ 个直和项上的投影。数对 $(k_c,m_c)$ 在不计顺序的意义下唯一：对*任何*具有第一条性质的酉映射 $V$，
+$V(\cdot)V^*$ 都把到各直和项上的投影映为诸 $P_c$（见证明），
+所以 $k_c^2=\dim\mathcal MP_c$ 与 $m_c=\operatorname{rank}P_c/k_c$ 由 $\mathcal M$ 决定。特别地，作为 $*$-代数有 $\mathcal M\cong\bigoplus_cM_{k_c}(\mathbb C)$，并且
 $\dim\mathcal M=\sum_ck_c^2$，$\dim\mathcal M'=\sum_cm_c^2$。
 
 *证明。* 由引理 2.3 及其后的注记，$\mathcal M=\bigoplus_c\mathcal M_c$，其中
@@ -178,19 +181,31 @@ $\mathcal M_c$ 作用在 $E_c$ 上，且每个 $\mathcal M_c$ 都是因子（引
 给出酉映射 $V_c$，使得 $V_c^*\mathcal M_cV_c=M_{k_c}\otimes1_{m_c}$；令
 $V=\bigoplus_cV_c$。关于交换子：$X\in\mathcal M'$ 与每个 $P_c$ 可交换，所以
 $X=\sum_cP_cXP_c$，且 $P_cXP_c$ 与 $\mathcal M_c$ 可交换；反之，任何这样的和都与
-$\mathcal M$ 可交换。引理 2.5 确定了 $E_c$ 上的 $\mathcal M_c'$。$\square$
+$\mathcal M$ 可交换。引理 2.5 确定了 $E_c$ 上的 $\mathcal M_c'$，再用 $V$ 共轭即得
+$V^*\mathcal M'V$ 的公式。
+
+*唯一性。* 设 $V$ 是任一满足 $V^*\mathcal MV=\mathcal B:=\bigoplus_{c=1}^{C'}M_{k_c}\otimes1_{m_c}$ 的酉映射，
+$Q_c$ 是到第 $c$ 个直和项上的投影。$\mathcal B$ 的元素 $\bigoplus_cX_c$（$X_c\in M_{k_c}\otimes1_{m_c}$）
+是中心元当且仅当每个 $X_c$ 都与 $M_{k_c}\otimes1_{m_c}$ 可交换，即（引理 2.5，第 5 步）$X_c\in(M_{k_c}\otimes1_{m_c})\cap(1_{k_c}\otimes M_{m_c})=\mathbb C1$
+（元素 $a\otimes1=1\otimes b$ 的所有对角块都等于 $b$，所有非对角块都为 $0$，所以 $a$ 是数量）。
+因此 $Z(\mathcal B)=\operatorname{span}\{Q_1,\dots,Q_{C'}\}$，而 $Z(\mathcal M)=VZ(\mathcal B)V^*$ 由非零、
+两两正交且和为 $1$ 的投影 $VQ_cV^*$ 张成。它们每一个都是 $Z(\mathcal M)$ 的非零投影，因此（引理 2.3）
+是诸 $P_d$ 中某个非空集合 $S_c$ 之和；诸 $S_c$ 两两不交（正交性）且覆盖所有 $d$（和为 $1$），又由于
+$C'=\dim Z(\mathcal M)=C$，每个 $S_c$ 都是单元素集。所以在重新编号后 $VQ_cV^*=P_c$，从而
+$\dim\mathcal MP_c=\dim(M_{k_c}\otimes1_{m_c})=k_c^2$，$\operatorname{rank}P_c=k_cm_c$。$\square$
 
 数 $k_c$ 描述代数本身。**重数** $m_c$ 描述代数如何嵌入 $M_n(\mathbb C)$：它们在代数结构中
 不可见，但决定了 $\mathbb C^n$ 的迹在 $\mathcal M$ 上的限制，
 $$
 \operatorname{Tr}_{\mathbb C^n}(A)=\sum_cm_c\operatorname{Tr}(A_c),\qquad A=V\Big(\bigoplus_cA_c\otimes1_{m_c}\Big)V^*.
 $$
-这就是本库使用一族迹的原因（第 3 章）。
+这就是本库使用一族迹的原因（第 3 章）。同样，对自伴的 $A$，
+$A$ 在 $V(\mathbb C^{k_c}\otimes\mathbb C^{m_c})$ 上的限制具有块 $A_c$ 的特征值，每个特征值的重数是它在
+$A_c$ 中重数的 $m_c$ 倍，因为 $A_c\otimes1_{m_c}$ 就是 $A_c$ 的 $m_c$ 个拷贝。
 
-> **物理意义。** $P_c$ 是**超选择扇区**或**对称扇区**：$\mathcal M$ 中没有可观测量连接不同的
+> **物理意义**（物理解释，而非本课程的定理）。$P_c$ 是**超选择扇区**或**对称扇区**：$\mathcal M$ 中没有可观测量连接不同的
 > 扇区，因此"处于哪个扇区"的测量与其他任何测量都是相容的。中心是系统的*经典*部分。
-> 重数 $m_c$ 是一种简并度：块 $A_c$ 的每个特征值在 $\mathbb C^n$ 中出现的重数是它在 $A_c$
-> 中重数的 $m_c$ 倍。
+> 重数 $m_c$ 是 $\mathcal M$ 中每个可观测量的一种简并度。
 
 ## 2.4 例子：对称群及其交换子
 
@@ -199,7 +214,7 @@ $\pi(G)'$，这是一个冯·诺依曼代数；它的交换子 $\pi(G)''$ 是诸
 张成应用定理 2.2，它是一个 $*$-代数：包含 $\pi(e)=1$，对乘积 $\pi(g)\pi(h)=\pi(gh)$ 和伴随
 $\pi(g)^*=\pi(g^{-1})$ 封闭）。
 
-**命题 2.8.** 对 $\mathcal M=\pi(G)''$ 应用定理 2.6。则
+**命题 2.7.** 对 $\mathcal M=\pi(G)''$ 应用定理 2.6。则
 $V^*\pi(g)V=\bigoplus_c\rho_c(g)\otimes1_{m_c}$，其中每个 $\rho_c$ 是 $G$ 在 $\mathbb C^{k_c}$
 上的不可约酉表示，且当 $c\neq d$ 时 $\rho_c,\rho_d$ 不等价。因此
 $$
@@ -222,17 +237,79 @@ $(x_{c'})_{c'}$ 都满足 $x_d=Tx_cT^{-1}$，这就排除了满足
 $x_c=1$、$x_d=0$ 的元素——与满射性矛盾。最后两个同构即
 定理 2.6。$\square$
 
-表示分解为不可约表示的方式在等价意义下唯一——从而 $m_c$ 是任何分解中*唯一确定的*
-重数——这一点将在第 4 章证明。
+表示分解为不可约表示的方式在等价意义下唯一，从而 $m_c$ 是任何分解中*唯一确定的*重数。
+*证明。* 设 $\rho,\rho'$ 不可约，$T$ 是一个缠结算子，即对所有 $g$ 有 $T\rho(g)=\rho'(g)T$。$T$ 的核与
+像都是不变子空间，所以 $T=0$ 或 $T$ 可逆（Schur 引理）；若 $\rho'=\rho$，对 $T$ 的一个特征值
+$\lambda$，同样的结论适用于 $T-\lambda1$，故 $T=\lambda1$。因此从 $\rho$ 到 $\rho'$ 的缠结算子构成的
+空间，当 $\rho\cong\rho'$ 时维数为 $1$（对一个可逆缠结算子 $S$，$T\mapsto S^{-1}T$
+把它们与从 $\rho$ 到自身的缠结算子等同起来，而后者是 $\mathbb C1$），否则为 $0$（非零的缠结算子
+会是可逆的，即一个等价）。若 $\pi\cong\bigoplus_j\sigma_j$，其中 $\sigma_j$
+不可约（允许重复），则从不可约表示 $\rho$ 到 $\bigoplus_j\sigma_j$ 的缠结算子是由从 $\rho$ 到 $\sigma_j$ 的
+缠结算子组成的组 $(T_j)_j$，而与该等价复合不改变维数；所以从 $\rho$ 到 $\pi$ 的缠结算子构成维数为 $\#\{j:\sigma_j\cong\rho\}$
+的空间，这个数只依赖于 $\pi$ 和 $\rho$。对于命题 2.7 的分解，其中各 $\rho_c$ 两两不等价，这个数在
+$\rho\cong\rho_c$ 时为 $m_c$，在 $\rho$ 不与任何 $\rho_c$ 等价时为 $0$。$\square$
 
 我们取 $G=S_3$，它置换 $(\mathbb C^2)^{\otimes3}$ 的三个张量因子，即三个
-量子比特或三个自旋 $\tfrac12$。表示论（一个特征标计算，第 4 章）
-预言：对称子空间
-（总自旋 $\tfrac32$，维数 $4$）承载重数为 $4$ 的平凡表示；它的补空间（维数 $4$）承载重数为
-$2$ 的二维标准表示；符号表示不出现。所以
+量子比特或三个自旋 $\tfrac12$：对 $x\in\{0,1\}^3$，$\pi(\sigma)|x\rangle=|\sigma\cdot x\rangle$，其中
+$(\sigma\cdot x)_{\sigma(i)}=x_i$。令 $F=\{v:\pi(g)v=v\ \forall g\}$ 为**对称子空间**。其
+分解为：$F$（维数 $4$）承载重数为 $4$ 的平凡表示；它的
+正交补（维数 $4$）承载重数为 $2$ 的二维**标准表示**（$S_3$ 在 $\mathbb C^3$ 中坐标和为 $0$ 的向量上的
+置换表示）；符号表示不出现。所以
 $\pi(S_3)''\cong M_1\oplus M_2$（维数 $5$），$\pi(S_3)'\cong M_4\oplus M_2$
-（维数 $20$）。我们用线性代数检验这些维数：集合 $S$ 的交换子是
-线性映射 $X\mapsto(AX-XA)_{A\in S}$ 的零空间。
+（维数 $20$）。
+
+*证明。* 写 $V^*\pi(S_3)''V=\bigoplus_cM_{k_c}\otimes1_{m_c}$（定理 2.6），于是
+$\sum_ck_cm_c=8$，$\sum_cm_c^2=\dim\pi(S_3)'$。
+
+*第 1 步：$\dim\pi(S_3)'=20$。* 由于 $\pi(g)^*|g\cdot x\rangle=|x\rangle$，矩阵
+$\pi(g)X\pi(g)^*$ 在位置 $(g\cdot x,g\cdot y)$ 上的元素为 $X_{xy}$。因此 $X\in\pi(S_3)'$，即对所有 $g$ 有
+$\pi(g)X\pi(g)^*=X$，当且仅当 $(x,y)\mapsto X_{xy}$ 在 $S_3$ 通过 $g\cdot(x,y)=(g\cdot x,g\cdot y)$ 作用于
+数对 $(x,y)$ 的轨道上为常数；各轨道的示性矩阵构成
+$\pi(S_3)'$ 的一组基，所以它的维数等于轨道的个数。数对 $(x,y)$ 就是四元集合 $\{0,1\}^2$ 中元素的三元组
+$\big((x_1,y_1),(x_2,y_2),(x_3,y_3)\big)$，而 $S_3$ 置换这三个分量，所以一个轨道就是从四个元素中取
+大小为 $3$ 的多重集：形如 $\{a,a,a\}$ 的有 $4$ 个，形如 $\{a,a,b\}$（$b\neq a$）的有 $4\cdot3=12$ 个，
+形如 $\{a,b,c\}$（元素互不相同）的有 $4$ 个，共 $20$ 个。
+
+*第 2 步：$k=(1,2)$，$m=(4,2)$。* 由于 $k_c\ge1$，$\sum_cm_c\le\sum_ck_cm_c=8$。令 $M=\max_cm_c$。
+则 $20=\sum_cm_c^2\le M\sum_cm_c\le8M$ 且 $M^2\le20$，所以 $M\in\{3,4\}$。若 $M=4$，其余
+$m_c$ 的平方和为 $4$，所以它们是 $(2)$ 或 $(1,1,1,1)$。若 $M=3$，其余 $m_c$ 的平方和为 $11$，
+和至多为 $5$；若它们都 $\le2$，则其平方和至多为 $2\cdot5=10$，所以其中有一个等于 $3$，而剩下的
+平方和为 $2$：它们是 $(1,1)$。
+因此在不计顺序的意义下，$m$ 是 $(4,2)$、$(4,1,1,1,1)$ 或 $(3,3,1,1)$。在后两种情形，
+$\sum_cm_c=8=\sum_ck_cm_c$ 迫使所有 $k_c=1$，于是 $\pi(S_3)''\cong\bigoplus_cM_1$ 将是
+交换的，而对换 $(12)$ 与 $(23)$ 并不交换：
+$\pi((12))\pi((23))|001\rangle=|100\rangle$，而 $\pi((23))\pi((12))|001\rangle=|010\rangle$。所以
+$m=(4,2)$（把直和项编号使得 $m_1=4$），而由 $4k_1+2k_2=8$ 及 $k_1,k_2\ge1$ 得 $k=(1,2)$。特别地，
+$\dim\pi(S_3)''=\sum_ck_c^2=5$。
+
+*第 3 步：平凡表示与符号表示。* $\rho_2$ 不固定任何非零向量 $u$：否则直线
+$\mathbb Cu$ 将是 $\mathbb C^2$ 的不变子空间，与不可约性矛盾
+（命题 2.7）。写 $V^*v=v_1\oplus v_2$，其中 $v_1\in\mathbb C^1\otimes\mathbb C^4$，
+$v_2=\sum_{r=1}^2u_r\otimes f_r\in\mathbb C^2\otimes\mathbb C^2$（$f_1,f_2$ 为标准基）。则
+$v\in F$ 当且仅当对所有 $g$ 和 $r$ 有 $\rho_1(g)v_1=v_1$ 且 $\rho_2(g)u_r=u_r$，所以每个 $v\in F$ 都有
+$v_2=0$。非零向量 $|000\rangle$ 属于 $F$，所以数量 $\rho_1(g)$ 固定一个非零向量：
+$\rho_1$ 是平凡表示，$F=V(\mathbb C^1\otimes\mathbb C^4)$ 的维数为 $4$，而它的正交
+补是 $V(\mathbb C^2\otimes\mathbb C^2)$。符号表示既不与
+$\rho_1$ 等价（因为 $\operatorname{sgn}(12)=-1$），也不与 $\rho_2$ 等价（维数不同），所以由上面证明的
+重数唯一性，它出现 $0$ 次。
+
+*第 4 步：$\rho_2$ 是标准表示。* 向量 $e_1=|100\rangle$、$e_2=|010\rangle$、
+$e_3=|001\rangle$ 在诸 $\pi(\sigma)$ 下按 $\sigma$ 置换位置的方式被置换，所以
+$W=\{\sum_ix_ie_i:\sum_ix_i=0\}$ 是不变的，且 $\pi$ 在其上的作用就是标准表示。
+$W\perp F$：对 $v\in F$ 和 $w=\sum_ix_ie_i\in W$，对每个 $g$ 有
+$\langle v,w\rangle=\langle\pi(g)v,w\rangle=\langle v,\pi(g)^{-1}w\rangle$，
+所以 $\langle v,w\rangle=\langle v,\frac16\sum_g\pi(g)w\rangle$，而
+$\frac16\sum_g\pi(g)w=\frac13\big(\sum_ix_i\big)(e_1+e_2+e_3)=0$（六个置换中恰有两个把每个 $e_i$ 映到
+每个 $e_j$）。因此 $V^*W\subseteq\mathbb C^2\otimes\mathbb C^2$。映射
+$T_r:\mathbb C^2\otimes\mathbb C^2\to\mathbb C^2$，$u\otimes f\mapsto\langle f_r,f\rangle u$，满足
+$T_r(\rho_2(g)\otimes1)=\rho_2(g)T_r$。选取 $r$ 使 $T_rV^*|_W\neq0$（若两者都为零，则 $V^*W$
+将为 $0$）。于是 $T_rV^*|_W$ 是从 $\pi|_W$ 到 $\rho_2$ 的非零缠结算子；它的像是 $\mathbb C^2$ 的非零
+不变子空间，因而是 $\mathbb C^2$，又由于 $\dim W=2$，它是双射。所以 $\rho_2$
+等价于标准表示（顺便可知标准表示是不可约的）。$\square$
+
+下面的代码对这两个维数做数值上的确认：集合 $S$ 的交换子是线性映射
+$X\mapsto(AX-XA)_{A\in S}$ 的零空间，这里在浮点运算中通过计数大于某个容差的奇异值来计算其维数。
+这是对刚刚证明的数值的检验，而不是证明的一部分。
 
 ```python
 import itertools
@@ -268,33 +345,46 @@ def span_dim(ops, tol=1e-10):
 
 comm = commutant_basis(group)
 print(len(comm), span_dim(group), len(commutant_basis(comm)))
-assert len(comm) == 20                                   # pi(S3)'  = M_4 (+) M_2
-assert span_dim(group) == 5                              # pi(S3)'' = M_1 (+) M_2
+assert len(comm) == 20                                   # Step 1: pi(S3)'  = M_4 (+) M_2
+assert span_dim(group) == 5                              # Step 2: pi(S3)'' = M_1 (+) M_2
 assert len(commutant_basis(comm)) == 5                   # double commutant theorem
 ```
 
-重数在谱中是可见的。对群取平均，
-$X\mapsto\frac1{|G|}\sum_g\pi(g)X\pi(g)^*$，把任意算子映入交换子
-（习题 3）。因此 $\pi(S_3)'$ 的一个随机自伴元素（几乎必然）在对称子空间上有 $4$ 个单重
-特征值，在其补空间上有 $2$ 个二重简并特征值；
-代码检验了这些简并对：
-它们来自 $M_2\otimes1_2$ 中的因子 $1_2$。
+重数在谱中是可见的。每个自伴的 $K\in\pi(S_3)'$ 都具有形式
+$V^*KV=(1_1\otimes\kappa_1)\oplus(1_2\otimes\kappa_2)$，其中 $\kappa_1\in M_4$、$\kappa_2\in M_2$ 自伴
+（定理 2.6）。在 $F$ 上，它的特征值就是 $\kappa_1$ 的特征值；在 $F$ 的补空间上，它们是 $\kappa_2$ 的
+特征值，每个重复两次，因为 $1_2\otimes\kappa_2$ 就是 $\kappa_2$ 的两个拷贝。所以 $K$ 在 $F$ 的补空间上的
+*每个*特征值都具有偶数重数。对随机的 $K$，结论更强。对群取平均，
+$E(X)=\frac1{|G|}\sum_g\pi(g)X\pi(g)^*$，把 $M_8(\mathbb C)$ 映满交换子，并且在交换子上是
+恒等映射（习题 3），所以对 Ginibre 矩阵 $Z$（元素为相互独立的标准复高斯变量），
+$K=E(Z+Z^*)$ 在自伴元素构成的实向量空间 $\pi(S_3)'_h$ 上有密度
+（定理 A.15 及其后的注记）。由命题 4.7(a)（这是向后文的引用；其证明用到
+定理 2.6 和附录 A，而不用本段），以概率一，$\kappa_1$ 与 $\kappa_2$ 的六个
+特征值两两不同：此时 $K$ 在 $F$ 上有 $4$ 个单重特征值，在其补空间上有
+$2$ 个二重简并特征值。代码检验了这些简并对（它们对每个 $K$ 都成立），
+并对所抽取的 $K$ 检验两对特征值与 $F$ 上的四个特征值互不相同；这里用到
+$P_F=\frac1{|G|}\sum_g\pi(g)$ 是到 $F$ 上的正交投影（对所有 $h$ 有 $\pi(h)P_F=P_F$，所以它的
+值域含于 $F$；对 $v\in F$ 有 $P_Fv=v$；并且通过代换 $g\to g^{-1}$ 得 $P_F^*=P_F$）。
 
 ```python
 def group_average(X):
     return sum(g @ X @ g.conj().T for g in group) / len(group)
 
-H0 = torch.randn(8, 8, dtype=dt)
-Hsym = group_average(H0 + H0.conj().T)                  # a random symmetric Hamiltonian
+H0 = torch.randn(8, 8, dtype=dt)                        # Ginibre: Re, Im independent N(0, 1/2)
+Hsym = group_average(H0 + H0.conj().T)                  # K = E(Z + Z^*), a random symmetric Hamiltonian
 assert all(torch.allclose(g @ Hsym, Hsym @ g) for g in group)
 
-P_sym = sum(group) / len(group)                         # projection onto the symmetric subspace
+P_sym = sum(group) / len(group)                         # P_F, the projection onto the symmetric subspace
 w, Q = torch.linalg.eigh(P_sym)
 Q_rest = Q[:, w.real < 0.5]                             # orthonormal basis of the complement (dim 4)
 e_rest = torch.linalg.eigvalsh(Q_rest.conj().T @ Hsym @ Q_rest)
 print(e_rest)
 assert Q_rest.shape[1] == 4
-assert torch.allclose(e_rest[0], e_rest[1]) and torch.allclose(e_rest[2], e_rest[3])
+assert torch.allclose(e_rest[0], e_rest[1]) and torch.allclose(e_rest[2], e_rest[3])   # even multiplicities
+e_sym = torch.linalg.eigvalsh(Q[:, w.real > 0.5].conj().T @ Hsym @ Q[:, w.real > 0.5])   # eigenvalues on F
+assert e_sym.shape[0] == 4 and e_rest[2] - e_rest[1] > 1e-6                           # this sample: generic
+assert (e_sym[1:] - e_sym[:-1]).min() > 1e-6                                           # 4 simple eigenvalues on F
+assert (e_sym[:, None] - e_rest[None, :]).abs().min() > 1e-6                           # all six distinct
 ```
 
 ## 2.5 库中的代数
@@ -333,18 +423,20 @@ assert close(A @ P0 + A @ P1, A)                         # A = sum_c A P_c
 ## 2.6 条件期望
 
 从 $\mathcal M$ 到冯·诺依曼子代数
-$\mathcal N\subseteq\mathcal M$ 上的**条件期望**是一个线性映射 $E:\mathcal M\to\mathcal N$，
+$\mathcal N\subseteq\mathcal M$（包含于 $\mathcal M$ 且具有相同单位元的 $*$-代数）上的**条件期望**是一个线性映射 $E:\mathcal M\to\mathcal N$，
 它是正的（$A\ge0\Rightarrow E(A)\ge0$），对 $B\in\mathcal N$ 满足 $E(B)=B$，并且是
 $\mathcal N$-双模映射：对 $B_1,B_2\in\mathcal N$ 有 $E(B_1AB_2)=B_1E(A)B_2$。
 
-**命题 2.7.** 对 $\mathcal M=\bigoplus_cM_{k_c}$ 和 $\mathcal N=Z(\mathcal M)$，
+**命题 2.8.** 对 $\bigoplus_c\mathbb C^{k_c}$ 上的 $\mathcal M=\bigoplus_cM_{k_c}$（$P_c$ 为到第 $c$ 个块上的投影）
+和 $\mathcal N=Z(\mathcal M)=\operatorname{span}\{P_1,\dots,P_C\}$（习题 1），
 $$
 E(A)=\sum_c\frac{\operatorname{Tr}A_c}{k_c}\,P_c
 $$
 是一个条件期望。它保持每个形如
 $\sum_cw_c\operatorname{Tr}A_c$ 的迹。
 
-*证明。* 线性是显然的；$A\ge0$ 蕴含 $\operatorname{Tr}A_c\ge0$，所以 $E(A)\ge0$。对
+*证明。* 线性是显然的；$A\ge0$ 蕴含 $\operatorname{Tr}A_c=\sum_i\langle e_i,Ae_i\rangle\ge0$（对第 $c$ 个块的
+标准基向量 $e_i$ 求和），所以 $E(A)\ge0$。对
 $B=\sum_cb_cP_c$，$E(B)=\sum_cb_ck_cP_c/k_c=B$。对 $B_i=\sum_cb^{(i)}_cP_c$，
 $\operatorname{Tr}(B_1AB_2)_c=b^{(1)}_cb^{(2)}_c\operatorname{Tr}A_c$，由此得双模
 性质。最后，对每个 $c$ 有 $\operatorname{Tr}(E(A)_c)=\operatorname{Tr}A_c$。$\square$
@@ -359,15 +451,34 @@ assert close(E(EA), EA)                                  # idempotent
 assert close(E(Z @ A @ P1), Z @ EA @ P1)                 # bimodule property
 A2 = alg.from_blocks([torch.randn(4, 4, dtype=dt), torch.randn(2, 2, dtype=dt)])
 assert close(EA @ A2, A2 @ EA)                           # E(A) commutes with a fresh element
-for c in range(alg.C):                                   # Tr E(A)_c = Tr A_c
-    assert abs(EA.matrix[0, c].diagonal().sum() - A.matrix[0, c].diagonal().sum()) < 1e-10
+for c, k in enumerate(alg.k_factors):                    # E(A)_c = (Tr A_c / k_c) 1, so Tr E(A)_c = Tr A_c
+    trA = A.matrix[0, c].diagonal().sum()
+    assert close(EA.matrix[0, c, :k, :k], trA / k * torch.eye(k, dtype=dt))
+    assert abs(EA.matrix[0, c].diagonal().sum() - trA) < 1e-10
 ```
 
 2.4 节中的群平均是 $M_n(\mathbb C)$ 中到交换子
-$\pi(G)'$ 上的条件期望，并且保持 $\operatorname{Tr}$（习题 3）。
-（条件期望一般不唯一：到 $\mathbb C1$ 上，每个态
-$\varphi$ 都给出一个条件期望 $A\mapsto\varphi(A)1$。）两者都是同一思想的实例：
+$\pi(G)'$ 上的条件期望，并且保持 $\operatorname{Tr}$（习题 3）。类似地，在完整的
+矩阵代数 $M_D(\mathbb C)$, $D=\sum_ck_c$ 上（它以其分块对角矩阵的形式包含 $\mathcal M=\bigoplus_cM_{k_c}$），
+映射 $E_{\mathcal M}(X)=\sum_cP_cXP_c$ 是到 $\mathcal M$ 上保持 $\operatorname{Tr}$ 的条件期望。
+*证明。* $P_cXP_c$ 在第 $c$ 个对角块之外为零，所以 $E_{\mathcal M}(X)\in\mathcal M$。对 $X\ge0$，
+$\langle v,P_cXP_cv\rangle=\langle P_cv,XP_cv\rangle\ge0$。元素
+$B\in\mathcal M$ 是分块对角的，所以 $BP_c=P_cB$ 且 $B=\sum_cP_cBP_c$；因此 $E_{\mathcal M}(B)=B$，并且对
+$B_1,B_2\in\mathcal M$ 有 $E_{\mathcal M}(B_1XB_2)=\sum_cB_1P_cXP_cB_2=B_1E_{\mathcal M}(X)B_2$。最后
+$\sum_c\operatorname{Tr}(P_cXP_c)=\sum_c\operatorname{Tr}(P_cX)=\operatorname{Tr}X$。$\square$
+
+对 $\mathcal M$ 上的**态** $\omega$（满足对所有 $A$ 有 $\omega(A^*A)\ge0$ 且 $\omega(1)=1$ 的线性泛函；
+态在第 3 章中研究），由命题 2.8 和线性性得
+$\omega(E(A))=\sum_c\omega(P_c)\operatorname{Tr}(A_c)/k_c$，并且在中心上 $\omega\circ E=\omega$，因为在那里
+$E(z)=z$。（条件期望一般不唯一：到 $\mathbb C1$ 上，每个态
+$\varphi$ 都给出一个条件期望 $A\mapsto\varphi(A)1$；在 $M_2(\mathbb C)$ 上，态 $A\mapsto A_{11}$ 与 $A\mapsto A_{22}$
+给出两个不同的条件期望。）它们都是同一思想的实例：
 投影到"看不见"某种结构的算子上。
+
+> **物理意义**（物理解释，而非本课程的定理）。映射 $E_{\mathcal M}$ 抹去超选择扇区之间的相干性，
+> 这正是测量荷（扇区）而不记录结果时发生的事情。到中心上的条件期望 $E$ 走得更远：它只保留
+> 经典信息，即每个扇区的权重 $\omega(P_c)$，并把每个扇区内部的态换成最大混合态（归一化的迹
+> $\operatorname{Tr}(A_c)/k_c$）。
 
 ## 2.7 可与之比较的工具
 
@@ -396,11 +507,15 @@ $\pi\cong\bigoplus\rho_\lambda\otimes1_{m_\lambda}$。物理中的严格对角�
    $\bigoplus X_c$ 是中心元当且仅当每个 $X_c$ 都是，所以中心为
    $\{\bigoplus_cz_c1_{k_c}\}$，维数为 $C$。
 
-2. $S$ 是酉矩阵，特征值为 $1,\omega,\omega^2$，$\omega=e^{2\pi i/3}$，均为单重。
+2. $S$ 是酉矩阵，特征值为 $1,\omega,\omega^2$，$\omega=e^{2\pi i/3}$，均为单重：
+   向量 $u_j=\sum_i\omega^{-ij}e_i$（$j=0,1,2$）满足 $Su_j=\omega^ju_j$，且相互正交。
    与 $S$ 可交换的算子保持 $S$ 的特征子空间，所以在特征基下它是
-   对角的：$\{S\}'\cong\mathbb C^3$，即循环矩阵全体。于是 $\{S\}''$ 也
-   $\cong\mathbb C^3$，因为在 $S$ 的特征基下，与所有对角矩阵可交换的矩阵是对角的（对对角元
-   互不相同的 $D$，比较 $XD$ 与 $DX$ 的元素）；它由 $1,S,S^2$ 张成（Vandermonde：特征值互不相同）。
+   对角的，而每个对角矩阵都与 $S$ 可交换：$\{S\}'\cong\mathbb C^3$。它包含
+   $1,S,S^2$，在特征基下它们是 $\operatorname{diag}(\lambda^0)$、$\operatorname{diag}(\lambda)$、
+   $\operatorname{diag}(\lambda^2)$，$\lambda=(1,\omega,\omega^2)$，它们线性无关（Vandermonde：特征值
+   互不相同）；所以 $\{S\}'=\operatorname{span}\{1,S,S^2\}$，即循环矩阵全体。于是 $\{S\}''$ 也是
+   $\{S\}'$，因为在 $S$ 的特征基下，与所有对角矩阵可交换的矩阵是对角的（对对角元
+   互不相同的 $D$，比较 $XD$ 与 $DX$ 的元素）。
 
 ```python
 S = torch.roll(torch.eye(3, dtype=dt), 1, dims=0)

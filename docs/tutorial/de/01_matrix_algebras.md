@@ -37,10 +37,10 @@ Wir schreiben $A\le B$, falls $B-A\ge0$, und $A>0$, falls $A\ge0$ und $A$ invert
 also $\|A\|=\sup_{\|x\|=\|y\|=1}|\langle A^*y,x\rangle|=\|A^*\|$. Ferner ist
 $\|Ax\|^2=\langle x,A^*Ax\rangle\le\|A^*A\|$ für $\|x\|=1$, folglich $\|A\|^2\le\|A^*A\|\le\|A^*\|\,\|A\|=\|A\|^2$. $\square$
 
-> **Physikalische Bedeutung.** In der Quantenmechanik wird ein System mit $n$
-> unterscheidbaren Konfigurationen durch $\mathbb C^n$ beschrieben. Selbstadjungierte
-> Matrizen sind *Observablen* (Energie, Spin, Ort auf einem Gitter); ihre Eigenwerte sind
-> die möglichen Messergebnisse. Projektionen sind Ja/Nein-Fragen. Unitäre Matrizen sind
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). In der
+> Quantenmechanik wird ein System mit $n$ unterscheidbaren Konfigurationen durch $\mathbb C^n$
+> beschrieben. Selbstadjungierte Matrizen sind *Observablen* (Energie, Spin, Ort auf einem
+> Gitter); ihre Eigenwerte sind die möglichen Messergebnisse. Projektionen sind Ja/Nein-Fragen. Unitäre Matrizen sind
 > Symmetrien und Zeitentwicklungen, $e^{-itH}$ zu einem Hamilton-Operator $H$. Positive
 > Matrizen mit Spur eins sind *Zustände* (Dichtematrizen, Kapitel 3).
 
@@ -74,7 +74,9 @@ $U^*AU$ besteht aus den Nullstellen von $\det(A-\lambda)=\det(T-\lambda)$. $\squ
 1. $\|A\|=\max_i|\lambda_i|$;
 2. $A$ ist genau dann selbstadjungiert, wenn alle $\lambda_i\in\mathbb R$; genau dann unitär, wenn alle $|\lambda_i|=1$;
    genau dann eine Projektion, wenn alle $\lambda_i\in\{0,1\}$;
-3. $A\ge0$ genau dann, wenn $A$ selbstadjungiert ist und alle $\lambda_i\ge0$ sind.
+3. $A\ge0$ genau dann, wenn $A$ selbstadjungiert ist und alle $\lambda_i\ge0$ sind. Außerdem ist jede
+   positive Matrix selbstadjungiert, also normal; daher charakterisiert (3) die Positivität unter
+   *allen* Matrizen, und der folgende Funktionalkalkül ist auf jedes $A\ge0$ anwendbar.
 
 *Beweis.* Mit $y=U^*x$ ist $\|Ax\|^2=\sum_i|\lambda_i|^2|y_i|^2$ und $\|y\|=\|x\|$,
 woraus (1) folgt, mit Gleichheit für $x=Ue_i$, $|\lambda_i|$ maximal. In (2) ist $A^*=U\bar\Lambda U^*$,
@@ -101,7 +103,8 @@ $f(\operatorname{spec}A)$ definiert, so gilt $g(f(A))=(g\circ f)(A)$.
 
 *Beweis.* (b) $A^k=U\Lambda^kU^*$, also $p(A)=Up(\Lambda)U^*$ wegen der Linearität. (a) Das
 Spektrum ist endlich, daher liefert Lagrange-Interpolation ein Polynom $p$ mit $p=f$ auf
-$\operatorname{spec}A$. Dann ist $U\,f(\Lambda)\,U^*=U\,p(\Lambda)\,U^*=p(A)$ für *jedes*
+$\operatorname{spec}A$: Sind $\mu_1,\dots,\mu_r$ die verschiedenen Eigenwerte, so nehme man
+$p(t)=\sum_if(\mu_i)\prod_{j\neq i}(t-\mu_j)/(\mu_i-\mu_j)$. Dann ist $U\,f(\Lambda)\,U^*=U\,p(\Lambda)\,U^*=p(A)$ für *jedes*
 unitäre $U$, das $A$ diagonalisiert, und $p(A)$ ist ohne Bezug auf $U$ definiert. (c) gilt
 für die Diagonalmatrizen $f(\Lambda)$ und bleibt unter Konjugation mit $U$ erhalten; das
 Spektrum von $Uf(\Lambda)U^*$ ist die Diagonale von $f(\Lambda)$. (d) $B$ kommutiert mit jedem
@@ -117,8 +120,8 @@ $A=V\,\mathrm{diag}(\mu_j^2)\,V^*$, also $\operatorname{spec}A=\{\mu_j^2\}$. Sei
 Polynom mit $p(t)=\sqrt t$ auf $\operatorname{spec}A$. Dann gilt
 $p(A)=\sqrt A$ und $p(A)=p(B^2)=V\,\mathrm{diag}(p(\mu_j^2))\,V^*=V\,\mathrm{diag}(\mu_j)\,V^*=B$. $\square$
 
-**Korollar 1.7.** $A\ge0$ genau dann, wenn $A=C^*C$ für ein $C$ gilt. (Ist $A\ge0$, so nehme man $C=\sqrt A$;
-umgekehrt ist $\langle x,C^*Cx\rangle=\|Cx\|^2\ge0$.)
+**Korollar 1.7.** $A\ge0$ genau dann, wenn $A=T^*T$ für ein $T$ gilt. (Ist $A\ge0$, so nehme man $T=\sqrt A$;
+umgekehrt ist $\langle x,T^*Tx\rangle=\|Tx\|^2\ge0$.)
 
 ## 1.4 Polarzerlegung und Singulärwerte
 
@@ -133,8 +136,12 @@ Daher ist $W_0:|A|x\mapsto Ax$ eine wohldefinierte lineare Isometrie vom Bild
 $R_1$ von $|A|$ auf das Bild $R_2$ von $A$: Aus $|A|x=|A|x'$ folgt
 $\|A(x-x')\|=\||A|(x-x')\|=0$. Insbesondere ist $\dim R_1=\dim R_2$, also haben auch die
 orthogonalen Komplemente gleiche Dimension; sei $W_1:R_1^\perp\to R_2^\perp$ eine beliebige
-Isometrie zwischen ihnen (man bilde eine Orthonormalbasis auf eine Orthonormalbasis ab). Dann
-ist $W=W_0\oplus W_1$ unitär und $W|A|x=W_0|A|x=Ax$. $\square$
+Isometrie zwischen ihnen (man bilde eine Orthonormalbasis auf eine Orthonormalbasis ab). Sei
+$W=W_0\oplus W_1$, d. h. $W(u_1+u_2)=W_0u_1+W_1u_2$ für $u_1\in R_1$, $u_2\in R_1^\perp$. Wegen
+$W_0u_1\in R_2\perp R_2^\perp\ni W_1u_2$ liefert der Satz des Pythagoras $\|Wu\|^2=\|u_1\|^2+\|u_2\|^2=\|u\|^2$
+für alle $u$. Also ist $\langle u,(W^*W-1)u\rangle=0$ für alle $u$ und damit $W^*W=1$ durch Polarisation
+(Beweis von Korollar 1.4(3)); folglich ist $W$ invertierbar mit $W^{-1}=W^*$, also auch $WW^*=1$: $W$ ist
+unitär, und $W|A|x=W_0|A|x=Ax$. $\square$
 
 Die Eigenwerte $s_1\ge\dots\ge s_n\ge0$ von $|A|$ heißen die **Singulärwerte** von
 $A$. Durchgehend werden drei Normen verwendet:
@@ -147,7 +154,7 @@ $\|A\|=\||A|\|=s_1$ nach Korollar 1.4(1); die zweite, weil
 $\operatorname{Tr}A^*A=\operatorname{Tr}|A|^2=\sum_is_i^2$.
 
 **Satz 1.9 (Dualität der Spurnorm).**
-$\|A\|_1=\max_{U\text{ unitary}}|\operatorname{Tr}(AU)|$, und das Maximum wird bei
+$\|A\|_1=\max_{U\text{ unitär}}|\operatorname{Tr}(AU)|$, und das Maximum wird bei
 $U=W^*$ angenommen, wobei $A=W|A|$. Insbesondere ist $|\operatorname{Tr}A|\le\|A\|_1$.
 
 *Beweis.* $\operatorname{Tr}(AW^*)=\operatorname{Tr}(W|A|W^*)=\operatorname{Tr}|A|$. Für jedes unitäre $U$
@@ -162,7 +169,8 @@ da $\|UW X\|_2=\|X\|_2$ für unitäres $UW$ und $\||A|^{1/2}\|_2^2=\operatorname
 Insbesondere sind die drei obigen Größen Normen. $\|\cdot\|$ ist eine Operatornorm;
 $\|\cdot\|_2$ ist die Norm des Skalarprodukts $\langle X,Y\rangle_{HS}$; und für
 $\|\cdot\|_1$ liefert Satz 1.9
-$\|A+B\|_1=\max_U|\operatorname{Tr}(AU)+\operatorname{Tr}(BU)|\le\|A\|_1+\|B\|_1$, während
+$\|A+B\|_1=\max_U|\operatorname{Tr}(AU)+\operatorname{Tr}(BU)|\le\|A\|_1+\|B\|_1$ und
+$\|cA\|_1=\max_U|c\operatorname{Tr}(AU)|=|c|\,\|A\|_1$, während
 aus $\|A\|_1=0$ zwingend $|A|=0$ und $A=W|A|=0$ folgt. Für $P\ge0$ ist $|P|=(P^2)^{1/2}=P$ nach Satz 1.6,
 also $\|P\|_1=\operatorname{Tr}P$.
 
@@ -190,12 +198,21 @@ print(A.eigenvalues()[0])      # one tensor per block, eigenvalues in ascending 
 Jeder Operator wird als ein Tensor der Gestalt `(batch, C, k_max, k_max)` gespeichert: ein
 Stapel von Operatoren, jeder eine Liste von `C` Blöcken. Hier ist `batch = C = 1`. Die
 Konstruktion ist genau Satz 1.3, rückwärts gelesen: $A=U\Lambda U^*$ mit Haar-verteiltem
-$U$. Das Flag `force_positive=True` wird an den Eigenwerten überprüft (Korollar 1.4(3)),
-sodass die Bibliothek weiß, dass `A` positiv ist, ohne dies erneut zu testen.
+$U$ (die Bibliothek erzeugt $U$ mit der QR-Konstruktion aus Satz 5.3). Das Flag
+`force_positive=True` wird an den vorgegebenen Eigenwerten überprüft (die Bibliothek meldet einen
+Fehler, wenn einer von ihnen kleiner als $-10^{-12}$ ist); nach Korollar 1.4(3) ist das Ergebnis
+dann positiv (exakt, wenn die vorgegebenen Eigenwerte $\ge0$ sind, wie hier; im Allgemeinen bis auf
+diese Toleranz), und die Bibliothek vermerkt dies, statt es erneut zu testen. Aus demselben Grund
+gibt `A.eigenvalues()` oben das vorgegebene Spektrum sortiert zurück, ohne etwas zu berechnen; das
+ist keine Überprüfung. Die Überprüfung von $\operatorname{spec}f(A)=f(\operatorname{spec}A)$ weiter
+unten rechnet dagegen tatsächlich: `apply_function` diagonalisiert die Matrix von $A$, und die
+Eigenwerte der resultierenden Matrix $e^A$ werden von Grund auf neu berechnet.
 
 Der Funktionalkalkül für selbstadjungierte Operatoren ist `apply_function` (die Methode
-diagonalisiert jeden Block mit `eigh`); die gebräuchlichen Funktionen haben eigene
-Methoden. Wir überprüfen die Sätze 1.5 und 1.6:
+diagonalisiert jeden Block mit `eigh`). Die Funktion $f$ muss elementweise wirken: Sie erhält die
+Eigenwerte aller Sektoren einer Größe $k$ als einen Tensor der Form `(batch, n·k)`, wobei $n$ die
+Zahl dieser Sektoren ist, und gibt einen Tensor derselben Form zurück. Die gebräuchlichen
+Funktionen haben eigene Methoden. Wir überprüfen die Sätze 1.5 und 1.6:
 
 ```python
 def close(X, Y, tol=1e-10):
@@ -232,17 +249,24 @@ assert abs(X.frobenius_norm().item() - s.norm().item()) < 1e-12
 assert abs(X.trace_norm().item() - s.sum().item()) < 1e-12
 
 absX = X.abs()
-W = X @ absX.inverse()                                  # |X| is invertible (almost surely, for Ginibre)
+W = X @ absX.inverse()                                  # |X| is invertible almost surely, see below
 assert close(W.adjoint() @ W, M3.identity())            # W is unitary
 assert abs((X @ W.adjoint()).trace.item() - s.sum().item()) < 1e-10    # Tr(X W*) = ||X||_1
 assert abs(X.trace.item()) <= X.trace_norm().item()     # |Tr X| <= ||X||_1
 ```
 
+`torch.randn` mit komplexem dtype erzeugt unabhängige Einträge mit unabhängigen Real- und
+Imaginärteilen $\sim N(0,\tfrac12)$; `G` ist also eine Ginibre-Matrix, und diese hat eine Dichte
+(Proposition A.16(b)). $|X|$ ist fast sicher invertierbar:
+$(\det|X|)^2=\det(|X|^2)=\det(X^*X)=|\det X|^2$, und $|\det X|^2$ ist ein Polynom in den Real- und
+Imaginärteilen der Einträge, das bei $X=1$ den Wert $1$ hat; also verschwindet es mit
+Wahrscheinlichkeit null (Korollar A.7(b); dies ist auch der erste Schritt von Satz 5.3).
+
 ## 1.7 Stapel: viele Operatoren auf einmal
 
 Die Stapelachse ist der Grund, weshalb es die Bibliothek gibt: Zufallsmatrixtheorie,
 Monte-Carlo-Verfahren und Optimierung mit mehreren Startpunkten benötigen Tausende von
-Operatoren, und ein einziger gestapelter Aufruf ist viel schneller als eine Python-Schleife.
+Operatoren, und ein einziger gestapelter Aufruf ersetzt eine Python-Schleife über sie.
 Als Beispiel überprüfen wir ein exaktes Moment des **Gaußschen unitären Ensembles** (GUE).
 
 Die Einträge von $G$ seien unabhängig mit unabhängigen Real- und Imaginärteilen
@@ -251,29 +275,32 @@ $\sim N(0,\tfrac12)$, also $\mathbb E|G_{ij}|^2=1$, und sei $H=(G+G^*)/\sqrt2$.
 **Proposition 1.10.** $\mathbb E\,\operatorname{Tr}H^4=2n^3+n$. Folglich gilt für
 $X=H/\sqrt n$: $\ \mathbb E\,\tfrac1n\operatorname{Tr}X^4=2+\tfrac1{n^2}$.
 
-*Beweis.* *Formel von Isserlis (Wick).* Seien $Y_1,\dots,Y_4$ gemeinsam normalverteilte,
-zentrierte reelle Zufallsvariablen (Wiederholungen erlaubt) mit $c_{ij}=\mathbb E[Y_iY_j]$.
-Ihre gemeinsame momenterzeugende Funktion ist $\mathbb E\,e^{\sum_it_iY_i}=e^{q(t)/2}$ mit
-$q(t)=\sum_{ij}c_{ij}t_it_j$ (die momenterzeugende Funktion der Normalverteilung, eine
-Standardtatsache der Wahrscheinlichkeitstheorie). Man wende $\partial^4/\partial t_1\cdots\partial t_4$
-bei $t=0$ an: Links ergibt dies $\mathbb E[Y_1Y_2Y_3Y_4]$; rechts enthält nur der Term
-$q^2/8$ der Exponentialreihe das Monom $t_1t_2t_3t_4$, und zwar mit dem Koeffizienten
-$c_{12}c_{34}+c_{13}c_{24}+c_{14}c_{23}$. Also ist $\mathbb E[Y_1Y_2Y_3Y_4]$ die Summe über
-die drei Paarungen der Produkte der Paarerwartungswerte. Wegen der Multilinearität gilt
-dasselbe für komplexe Zufallsvariablen, die komplexe Linearkombinationen gemeinsam
-normalverteilter reeller Zufallsvariablen sind, etwa die Einträge von $H$.
+*Beweis.* *Formel von Isserlis (Wick)* (Satz A.24, Fall $m=4$). Die Real- und Imaginärteile
+der Einträge von $G$ sind unabhängige zentrierte Gaußsche Zufallsvariablen, also die Koordinaten
+eines einzigen zentrierten Gauß-Vektors, und die Einträge von $H$ und von $\bar H$ sind komplexe
+Linearkombinationen davon. Satz A.24 liefert dann für je vier solche Zufallsvariablen
+$Z_1,\dots,Z_4$ (Wiederholungen erlaubt)
+$$
+\mathbb E[Z_1Z_2Z_3Z_4]=\mathbb E[Z_1Z_2]\,\mathbb E[Z_3Z_4]+\mathbb E[Z_1Z_3]\,\mathbb E[Z_2Z_4]+\mathbb E[Z_1Z_4]\,\mathbb E[Z_2Z_3],
+$$
+die Summe über die drei Paarungen von $\{1,2,3,4\}$ der Produkte der Paarerwartungswerte (ohne
+komplexe Konjugation). Der Beweis in Anhang A vergleicht die Potenzreihe der momenterzeugenden
+Funktion mit den Gaußschen Momenten und differenziert nicht unter dem Erwartungswert.
 
 *Das Moment.* Die Paarerwartungswerte sind
 $\mathbb E[H_{ij}H_{kl}]=\tfrac12\mathbb E[(G_{ij}+\bar G_{ji})(G_{kl}+\bar G_{lk})]=\delta_{il}\delta_{jk}$,
-denn $\mathbb E[G_{ij}G_{kl}]=0$ und $\mathbb E[G_{ij}\bar G_{kl}]=\delta_{ik}\delta_{jl}$.
+denn $\mathbb E[G_{ij}G_{kl}]=0$ und $\mathbb E[G_{ij}\bar G_{kl}]=\delta_{ik}\delta_{jl}$ (Proposition A.16(a);
+für $(i,j)\neq(k,l)$ sind die Einträge unabhängig und zentriert, und für $G_{ij}=x+iy$ ist
+$\mathbb E[G_{ij}^2]=\mathbb E[x^2-y^2]+2i\,\mathbb E[xy]=0$ und $\mathbb E|G_{ij}|^2=\tfrac12+\tfrac12=1$).
 In $\operatorname{Tr}H^4=\sum_{ijkl}H_{ij}H_{jk}H_{kl}H_{li}$ liefern die Paarungen:
 $\{12\}\{34\}$: $\delta_{ik}\delta_{ki}$, mit Summe $n^3$ (freie Indizes $i=k$, $j$, $l$);
 $\{14\}\{23\}$: $\delta_{jl}\delta_{jl}$, mit Summe $n^3$;
 $\{13\}\{24\}$: $\delta_{il}\delta_{jk}\delta_{ji}\delta_{kl}$, was $i=j=k=l$ erzwingt, mit Summe $n$.
 Division durch $n\cdot n^2$ ergibt die zweite Aussage. $\square$
 
-Die beiden *planaren* Paarungen liefern die Catalan-Zahl $2$ des Halbkreisgesetzes; die
-kreuzende Paarung liefert die Korrektur $1/n^2$.
+Die beiden *nichtkreuzenden* Paarungen $\{12\}\{34\}$ und $\{14\}\{23\}$ (die Paare lassen sich als
+sich nicht schneidende Bögen über den Punkten $1,2,3,4$ zeichnen) liefern den führenden Term $2$, für
+jedes $n$; die kreuzende Paarung $\{13\}\{24\}$ liefert die Korrektur $1/n^2$.
 
 ```python
 n, B = 4, 200_000
@@ -289,9 +316,15 @@ assert abs(mean - (2 + 1 / n**2)) < 5 * err
 ```
 
 Eine Monte-Carlo-Überprüfung ist ein statistischer Test: Der Schätzwert muss mit dem
-exakten Wert bis auf wenige Standardfehler übereinstimmen. Nach diesem Muster verläuft in
-diesem Kurs jede Überprüfung an bekannten Ergebnissen: eine exakte Aussage, ein
-numerischer Schätzwert und eine explizite Toleranz.
+exakten Wert bis auf wenige Standardfehler übereinstimmen. Die Zufallsvariable
+$\tfrac1n\operatorname{Tr}X^4$ ist ein Polynom in Gaußschen Zufallsvariablen und hat daher endliche
+Varianz $\sigma^2$ (Lemma A.23: alle Gaußschen Momente sind endlich; Produkte behandelt man mit
+$|y_1\cdots y_r|\le\sum_i|y_i|^r$), und nach der Tschebyschow-Ungleichung weicht der Mittelwert von $B$
+unabhängigen Stichproben mit Wahrscheinlichkeit höchstens $1/25$ um mehr als $5\sigma/\sqrt B$ vom
+exakten Wert ab. Der Code verwendet die Stichprobenstandardabweichung anstelle von $\sigma$, und der
+feste Seed macht die Überprüfung reproduzierbar. Nach diesem Muster verläuft in diesem Kurs jede
+Überprüfung an bewiesenen Ergebnissen: eine exakte Aussage, ein numerischer Schätzwert und eine
+explizite Toleranz.
 
 ## 1.8 Womit man vergleichen sollte
 
@@ -299,7 +332,7 @@ Für einzelne Matrizen sind `numpy.linalg` und `scipy.linalg` (`sqrtm`, `expm`, 
 `polar`) die Referenzimplementierungen, und die obigen Überprüfungen lassen sich mit ihnen
 wiederholen. Die Bibliothek fügt drei Dinge hinzu, die später wichtig werden: Stapelverarbeitung
 (Abschnitt 1.7), Operatoren, die eine Blockstruktur tragen (Kapitel 2), und automatisches
-Differenzieren durch jede Operation hindurch.
+Differenzieren (PyTorchs Autograd) durch ihre Operationen hindurch.
 
 ## Aufgaben
 
@@ -330,7 +363,10 @@ assert close(Hs.apply_function(lambda w: torch.sin(w) * torch.exp(w)),
 
 3. Man setze $T=A^{-1/2}XA^{-1/2}$. Dann gilt $XA^{-1}X=B$ genau dann, wenn $T^2=A^{-1/2}BA^{-1/2}$, und
    $X\ge0$ genau dann, wenn $T\ge0$, da $\langle x,Xx\rangle=\langle A^{1/2}x,TA^{1/2}x\rangle$ und
-   $A^{1/2}$ invertierbar ist. Nach Satz 1.6 ist $T=(A^{-1/2}BA^{-1/2})^{1/2}$ die eindeutige
+   $A^{1/2}$ invertierbar ist (hier sind $A^{\pm1/2}$ durch den Funktionalkalkül mit $t^{\pm1/2}$ auf
+   $\operatorname{spec}A\subset(0,\infty)$ gegeben, also $A^{-1/2}A^{1/2}=1$ nach Satz 1.5(c)). Außerdem
+   ist $A^{-1/2}BA^{-1/2}\ge0$, da $\langle x,A^{-1/2}BA^{-1/2}x\rangle=\langle A^{-1/2}x,BA^{-1/2}x\rangle\ge0$.
+   Nach Satz 1.6 ist $T=(A^{-1/2}BA^{-1/2})^{1/2}$ die eindeutige
    positive Lösung, d. h. $X=A\#B$. Jede Lösung $X$ von $XA^{-1}X=B$ ist invertierbar,
    denn $\det(X)^2\det(A)^{-1}=\det B\neq0$. Daher ist $XA^{-1}X=B$ äquivalent zu
    $XB^{-1}X=A$ (aus $A^{-1}=X^{-1}BX^{-1}$ durch Invertieren beider Seiten), und die
