@@ -10,15 +10,17 @@ rechnet.
 
 Er richtet sich zugleich an zwei Arten von Lesern:
 
-- **Mathematiker** finden vollständige Beweise aller verwendeten
-  Ergebnisse. Ohne Beweis zitiert werden nur Standardtatsachen der linearen Algebra, der
-  Fundamentalsatz der Algebra und elementare Tatsachen aus Analysis und
-  Wahrscheinlichkeitstheorie (Grenzwerte, Konvexität, die momenterzeugende Funktion der
-  Normalverteilung); wird ein Ergebnis formuliert, bevor es bewiesen ist, oder nur
-  angewandt, so wird dies ausdrücklich gesagt.
+- **Mathematiker** finden einen in sich geschlossenen Text: Jeder Satz, jede Formel, jede
+  Konstante und jede Ungleichung, die formuliert wird, wird im Kurs aus den unten
+  aufgeführten Voraussetzungen bewiesen — im Kapitel selbst oder in einem der Anhänge A–F,
+  die mit Nummer zitiert werden. Zahlen, die nur berechnet werden (etwa die Niveaustatistik
+  für großes $n$), sind als *numerische Beobachtung* gekennzeichnet und werden nie als
+  Prämissen oder Testziele verwendet. Literaturangaben dienen der historischen Zuordnung
+  oder als weiterführende Lektüre, nie als Ersatz für einen Beweis.
 - **Physiker und Ingenieure** finden die physikalische Bedeutung jedes Begriffs
   in Kästen mit der Überschrift *Physikalische Bedeutung* sowie lauffähigen Code,
-  den sie anpassen können.
+  den sie anpassen können. Diese Kästen sind physikalische Deutung, keine Sätze des Kurses:
+  Nichts, was anderswo bewiesen wird, hängt von ihnen ab.
 
 Die Kapitel 1–13 sind gleich aufgebaut: Theorie mit Beweisen; der Bibliothekscode zu jedem
 Ergebnis; eine Überprüfung des Codes an einem exakten Ergebnis (einem Satz, einer
@@ -47,12 +49,30 @@ jedes Beispiel funktioniert also mit der aktuellen Version der Bibliothek.
 | 11 | [Optimierung und Spurungleichungen](11_optimisation.md) | Parametrisierungen mit Nebenbedingungen, Stichprobenziehung versus Optimierung |
 | 12 | [Äquivariantes maschinelles Lernen](12_equivariant_learning.md) | äquivariante Schichten als Kommutanten |
 | 13 | [Jordan-Algebren: warum die Quantenmechanik *-Algebren verwendet](13_jordan_algebras.md) | Jordan-Produkt und quadratische Darstellung, Spinfaktoren und Lorentz-Kegel, die Klassifikation von Jordan–von Neumann–Wigner, Transposition und partielle Transposition, eine Spurungleichung in Jordan-Form |
+| A | [Tatsachen aus Analysis und Wahrscheinlichkeitstheorie](A_analysis.md) | Potenzreihen und Nullmengen, Gaußsche Vektoren, sphärische Maße, Eigenwertungleichungen, Isserlis–Wick |
+| B | [Schur-Weyl-Dualität und der Weingarten-Kalkül](B_schur_weyl.md) | Schur-Weyl-Dualität, Weingarten-Funktionen, Satz von Wigner–Eckart, Haar-Maß auf $O(k)$ |
+| C | [Eigenwertdichten und die Pagesche Formel](C_eigenvalue_densities.md) | Weylsche Integrationsformel, GOE/GUE, Wishart- und induzierte Dichten, Pagesche Formel |
+| D | [Generatoren quantendynamischer Halbgruppen](D_gksl.md) | der GKSL-Satz, Generatoren auf direkten Summen, Satz von Frigerio, Bény–Kempf–Kribs |
+| E | [Klassifikation der euklidischen Jordan-Algebren](E_jordan_classification.md) | Peirce-Zerlegung, Sätze von Hurwitz und Frobenius, Koordinatisierung, die Albert-Algebra, der Satz von Jordan–von Neumann–Wigner |
+| F | [Symmetrische Kegel, Ordnungsisomorphismen und Jordan-Abbildungen](F_cones_and_order.md) | Kegel der Quadrate, der Satz von Koecher–Vinberg, der Satz von Kadison, Jordan-Automorphismen von $\bigoplus_cM_{k_c}$ |
 
 ## Voraussetzungen
 
-Lineare Algebra über $\mathbb C$ (Eigenwerte, Skalarprodukte, unitäre Matrizen),
-Grundlagen der Wahrscheinlichkeitstheorie und Python. Physik und Funktionalanalysis
-werden nicht vorausgesetzt.
+Der Kurs setzt nur das Folgende voraus und beweist alles Übrige.
+
+- Lineare Algebra über $\mathbb R$ und $\mathbb C$ (endlichdimensional) und der
+  Fundamentalsatz der Algebra.
+- Standardstoff der reellen Analysis und der Differentialrechnung in mehreren Variablen:
+  Grenzwerte, Stetigkeit, Kompaktheit im $\mathbb R^n$, Differentiation, der
+  Mittelwertsatz, die Taylorsche Formel, der Satz über die Umkehrfunktion und der Satz über
+  implizite Funktionen.
+- Standardstoff der Maß- und Integrationstheorie: Lebesgue-Maß, Produktmaße und
+  Fubini–Tonelli, majorisierte und monotone Konvergenz, Variablentransformation im
+  $\mathbb R^n$, Bildmaße, Dichten, Unabhängigkeit.
+- Elementare Wahrscheinlichkeitstheorie: Erwartungswert, Varianz, Unabhängigkeit, die
+  Normalverteilung und ihre momenterzeugende Funktion, die Markow- und die
+  Tschebyschow-Ungleichung, das Gesetz der großen Zahlen.
+- Python für den Code. Physik und Funktionalanalysis werden nicht vorausgesetzt.
 
 ## Wie man den Code ausführt
 

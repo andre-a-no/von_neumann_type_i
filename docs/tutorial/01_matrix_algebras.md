@@ -37,10 +37,10 @@ We write $A\le B$ if $B-A\ge0$, and $A>0$ if $A\ge0$ and $A$ is invertible.
 so $\|A\|=\sup_{\|x\|=\|y\|=1}|\langle A^*y,x\rangle|=\|A^*\|$. Next,
 $\|Ax\|^2=\langle x,A^*Ax\rangle\le\|A^*A\|$ for $\|x\|=1$, hence $\|A\|^2\le\|A^*A\|\le\|A^*\|\,\|A\|=\|A\|^2$. $\square$
 
-> **Physical meaning.** In quantum mechanics a system with $n$ distinguishable
-> configurations is described by $\mathbb C^n$. Self-adjoint matrices are
-> *observables* (energy, spin, position on a lattice); their eigenvalues are the
-> possible results of a measurement. Projections are yes/no questions. Unitary
+> **Physical meaning** (physical interpretation, not a theorem of this course). In quantum
+> mechanics a system with $n$ distinguishable configurations is described by $\mathbb C^n$.
+> Self-adjoint matrices are *observables* (energy, spin, position on a lattice); their
+> eigenvalues are the possible results of a measurement. Projections are yes/no questions. Unitary
 > matrices are symmetries and time evolutions, $e^{-itH}$ for a Hamiltonian $H$.
 > Positive matrices of trace one are *states* (density matrices, Chapter 3).
 
@@ -74,7 +74,9 @@ consists of the roots of $\det(A-\lambda)=\det(T-\lambda)$. $\square$
 1. $\|A\|=\max_i|\lambda_i|$;
 2. $A$ is self-adjoint iff all $\lambda_i\in\mathbb R$; unitary iff all $|\lambda_i|=1$;
    a projection iff all $\lambda_i\in\{0,1\}$;
-3. $A\ge0$ iff $A$ is self-adjoint and all $\lambda_i\ge0$.
+3. $A\ge0$ iff $A$ is self-adjoint and all $\lambda_i\ge0$. Moreover every positive matrix is
+   self-adjoint, hence normal, so (3) characterises positivity among *all* matrices and the
+   functional calculus below applies to every $A\ge0$.
 
 *Proof.* With $y=U^*x$, $\|Ax\|^2=\sum_i|\lambda_i|^2|y_i|^2$ and $\|y\|=\|x\|$,
 which gives (1), with equality for $x=Ue_i$, $|\lambda_i|$ maximal. In (2), $A^*=U\bar\Lambda U^*$,
@@ -100,7 +102,8 @@ $f(\operatorname{spec}A)$, then $g(f(A))=(g\circ f)(A)$.
 
 *Proof.* (b) $A^k=U\Lambda^kU^*$, so $p(A)=Up(\Lambda)U^*$ by linearity. (a) The
 spectrum is finite, so Lagrange interpolation gives a polynomial $p$ with $p=f$ on
-$\operatorname{spec}A$. Then $U\,f(\Lambda)\,U^*=U\,p(\Lambda)\,U^*=p(A)$ for *every*
+$\operatorname{spec}A$: if $\mu_1,\dots,\mu_r$ are the distinct eigenvalues, take
+$p(t)=\sum_if(\mu_i)\prod_{j\neq i}(t-\mu_j)/(\mu_i-\mu_j)$. Then $U\,f(\Lambda)\,U^*=U\,p(\Lambda)\,U^*=p(A)$ for *every*
 unitary $U$ diagonalising $A$, and $p(A)$ is defined without $U$. (c) holds for the
 diagonal matrices $f(\Lambda)$ and is preserved by conjugation with $U$; the spectrum
 of $Uf(\Lambda)U^*$ is the diagonal of $f(\Lambda)$. (d) $B$ commutes with every
@@ -132,8 +135,12 @@ Hence $W_0:|A|x\mapsto Ax$ is a well-defined linear isometry from the range
 $R_1$ of $|A|$ onto the range $R_2$ of $A$: if $|A|x=|A|x'$ then
 $\|A(x-x')\|=\||A|(x-x')\|=0$. In particular $\dim R_1=\dim R_2$, so the orthogonal
 complements also have equal dimension; let $W_1:R_1^\perp\to R_2^\perp$ be any
-isometry between them (map an orthonormal basis to an orthonormal basis). Then
-$W=W_0\oplus W_1$ is unitary and $W|A|x=W_0|A|x=Ax$. $\square$
+isometry between them (map an orthonormal basis to an orthonormal basis). Let
+$W=W_0\oplus W_1$, i.e. $W(u_1+u_2)=W_0u_1+W_1u_2$ for $u_1\in R_1$, $u_2\in R_1^\perp$. As
+$W_0u_1\in R_2\perp R_2^\perp\ni W_1u_2$, Pythagoras gives $\|Wu\|^2=\|u_1\|^2+\|u_2\|^2=\|u\|^2$
+for all $u$. Hence $\langle u,(W^*W-1)u\rangle=0$ for all $u$, so $W^*W=1$ by polarisation (proof of
+Corollary 1.4(3)); then $W$ is invertible with $W^{-1}=W^*$, so also $WW^*=1$: $W$ is unitary, and
+$W|A|x=W_0|A|x=Ax$. $\square$
 
 The eigenvalues $s_1\ge\dots\ge s_n\ge0$ of $|A|$ are the **singular values** of
 $A$. Three norms are used throughout:
@@ -161,7 +168,8 @@ since $\|UW X\|_2=\|X\|_2$ for unitary $UW$ and $\||A|^{1/2}\|_2^2=\operatorname
 In particular the three quantities above are norms. $\|\cdot\|$ is an operator norm;
 $\|\cdot\|_2$ is the norm of the inner product $\langle X,Y\rangle_{HS}$; and for
 $\|\cdot\|_1$, Theorem 1.9 gives
-$\|A+B\|_1=\max_U|\operatorname{Tr}(AU)+\operatorname{Tr}(BU)|\le\|A\|_1+\|B\|_1$, while
+$\|A+B\|_1=\max_U|\operatorname{Tr}(AU)+\operatorname{Tr}(BU)|\le\|A\|_1+\|B\|_1$ and
+$\|cA\|_1=\max_U|c\operatorname{Tr}(AU)|=|c|\,\|A\|_1$, while
 $\|A\|_1=0$ forces $|A|=0$ and $A=W|A|=0$. For $P\ge0$, $|P|=(P^2)^{1/2}=P$ by Theorem 1.6,
 so $\|P\|_1=\operatorname{Tr}P$.
 
@@ -188,9 +196,15 @@ print(A.eigenvalues()[0])      # one tensor per block, eigenvalues in ascending 
 
 Every operator is stored as one tensor of shape `(batch, C, k_max, k_max)`: a batch
 of operators, each a list of `C` blocks. Here `batch = C = 1`. The construction is
-exactly Theorem 1.3 read backwards: $A=U\Lambda U^*$ with $U$ Haar-distributed. The
-flag `force_positive=True` is checked against the eigenvalues (Corollary 1.4(3)), so
-the library knows that `A` is positive without testing it again.
+exactly Theorem 1.3 read backwards: $A=U\Lambda U^*$ with $U$ Haar-distributed (the library
+draws $U$ by the QR construction of Theorem 5.3). The flag `force_positive=True` is checked
+against the prescribed eigenvalues (the library raises an error if one of them is below
+$-10^{-12}$); by Corollary 1.4(3) the result is then positive (exactly so when the prescribed
+eigenvalues are $\ge0$, as here; up to this tolerance in general), and the library records this
+instead of testing it again. For the same reason `A.eigenvalues()` above returns the prescribed
+spectrum, sorted, without computing anything; it is not a check. The check of
+$\operatorname{spec}f(A)=f(\operatorname{spec}A)$ below does compute: `apply_function` diagonalises the
+matrix of $A$, and the eigenvalues of the resulting matrix $e^A$ are computed from scratch.
 
 The functional calculus for self-adjoint operators is `apply_function` (it diagonalises each
 block with `eigh`). The function $f$ must act elementwise: it receives the eigenvalues of all
@@ -233,17 +247,23 @@ assert abs(X.frobenius_norm().item() - s.norm().item()) < 1e-12
 assert abs(X.trace_norm().item() - s.sum().item()) < 1e-12
 
 absX = X.abs()
-W = X @ absX.inverse()                                  # |X| is invertible (almost surely, for Ginibre)
+W = X @ absX.inverse()                                  # |X| is invertible almost surely, see below
 assert close(W.adjoint() @ W, M3.identity())            # W is unitary
 assert abs((X @ W.adjoint()).trace.item() - s.sum().item()) < 1e-10    # Tr(X W*) = ||X||_1
 assert abs(X.trace.item()) <= X.trace_norm().item()     # |Tr X| <= ||X||_1
 ```
 
+`torch.randn` with a complex dtype draws independent entries with independent real and imaginary
+parts $\sim N(0,\tfrac12)$, so `G` is a Ginibre matrix, which has a density (Proposition A.16(b)).
+$|X|$ is invertible almost surely: $(\det|X|)^2=\det(|X|^2)=\det(X^*X)=|\det X|^2$, and $|\det X|^2$ is a polynomial
+in the real and imaginary parts of the entries that equals $1$ at $X=1$, so it vanishes with
+probability zero (Corollary A.7(b); this is also the first step of Theorem 5.3).
+
 ## 1.7 Batches: many operators at once
 
 The batch axis is the reason the library exists: random matrix theory, Monte Carlo
-and multistart optimisation need thousands of operators, and one batched call is much
-faster than a Python loop. As an example we check an exact moment of the **Gaussian
+and multistart optimisation need thousands of operators, and one batched call replaces a
+Python loop over them. As an example we check an exact moment of the **Gaussian
 unitary ensemble** (GUE).
 
 Let $G$ have independent entries with independent real and imaginary parts
@@ -252,31 +272,31 @@ $\sim N(0,\tfrac12)$, so $\mathbb E|G_{ij}|^2=1$, and let $H=(G+G^*)/\sqrt2$.
 **Proposition 1.10.** $\mathbb E\,\operatorname{Tr}H^4=2n^3+n$. Hence for
 $X=H/\sqrt n$, $\ \mathbb E\,\tfrac1n\operatorname{Tr}X^4=2+\tfrac1{n^2}$.
 
-*Proof.* *Isserlis' (Wick's) formula.* Let $Y_1,\dots,Y_4$ be jointly Gaussian centred
-real random variables (repetitions allowed) with $c_{ij}=\mathbb E[Y_iY_j]$. Their joint
-moment generating function is $\mathbb E\,e^{\sum_it_iY_i}=e^{q(t)/2}$ with
-$q(t)=\sum_{ij}c_{ij}t_it_j$ (the Gaussian moment generating function, a standard fact of
-probability). Differentiating under the expectation is allowed: the moment generating function
-is finite for every $t$, and for $|t_i|\le1$ all partial derivatives of $e^{\sum_it_iY_i}$ up to
-order $4$ are bounded by $(1+\sum_i|Y_i|)^4e^{\sum_i|Y_i|}$, which is integrable because
-$e^{\sum_i|Y_i|}\le\sum_{s\in\{\pm1\}^4}e^{\sum_is_iY_i}$; so dominated convergence applies. Apply $\partial^4/\partial t_1\cdots\partial t_4$ at $t=0$: on the left this
-gives $\mathbb E[Y_1Y_2Y_3Y_4]$; on the right only the term $q^2/8$ of the exponential
-series contains $t_1t_2t_3t_4$, with coefficient $c_{12}c_{34}+c_{13}c_{24}+c_{14}c_{23}$.
-Hence $\mathbb E[Y_1Y_2Y_3Y_4]$ is the sum over the three pairings of products of pair
-expectations. By multilinearity the same holds for complex variables that are complex
-linear combinations of jointly Gaussian real ones, such as the entries of $H$.
+*Proof.* *Isserlis' (Wick's) formula* (Theorem A.24, case $m=4$). The real and imaginary parts
+of the entries of $G$ are independent centred Gaussian variables, so they are the coordinates of
+one centred Gaussian vector, and the entries of $H$ and of $\bar H$ are complex linear combinations
+of them. Theorem A.24 then gives, for any four such variables $Z_1,\dots,Z_4$ (repetitions allowed),
+$$
+\mathbb E[Z_1Z_2Z_3Z_4]=\mathbb E[Z_1Z_2]\,\mathbb E[Z_3Z_4]+\mathbb E[Z_1Z_3]\,\mathbb E[Z_2Z_4]+\mathbb E[Z_1Z_4]\,\mathbb E[Z_2Z_3],
+$$
+the sum over the three pairings of $\{1,2,3,4\}$ of products of pair expectations (without
+complex conjugation). The proof in Appendix A compares the power series of the moment generating
+function with the Gaussian moments and does not differentiate under the expectation.
 
 *The moment.* The pair expectations are
 $\mathbb E[H_{ij}H_{kl}]=\tfrac12\mathbb E[(G_{ij}+\bar G_{ji})(G_{kl}+\bar G_{lk})]=\delta_{il}\delta_{jk}$,
-because $\mathbb E[G_{ij}G_{kl}]=0$ and $\mathbb E[G_{ij}\bar G_{kl}]=\delta_{ik}\delta_{jl}$.
+because $\mathbb E[G_{ij}G_{kl}]=0$ and $\mathbb E[G_{ij}\bar G_{kl}]=\delta_{ik}\delta_{jl}$ (Proposition A.16(a);
+for $(i,j)\neq(k,l)$ the entries are independent and centred, and for $G_{ij}=x+iy$ one has
+$\mathbb E[G_{ij}^2]=\mathbb E[x^2-y^2]+2i\,\mathbb E[xy]=0$ and $\mathbb E|G_{ij}|^2=\tfrac12+\tfrac12=1$).
 In $\operatorname{Tr}H^4=\sum_{ijkl}H_{ij}H_{jk}H_{kl}H_{li}$ the pairings give:
 $\{12\}\{34\}$: $\delta_{ik}\delta_{ki}$, summing to $n^3$ (free indices $i=k$, $j$, $l$);
 $\{14\}\{23\}$: $\delta_{jl}\delta_{jl}$, summing to $n^3$;
 $\{13\}\{24\}$: $\delta_{il}\delta_{jk}\delta_{ji}\delta_{kl}$, forcing $i=j=k=l$, summing to $n$.
 Dividing by $n\cdot n^2$ gives the second statement. $\square$
 
-The two *planar* pairings give the Catalan number $2$ of the semicircle law; the
-crossing pairing gives the $1/n^2$ correction.
+The two *non-crossing* pairings $\{12\}\{34\}$ and $\{14\}\{23\}$ (the pairs can be drawn as
+non-intersecting arcs above the points $1,2,3,4$) give the leading term $2$, for every $n$; the
+crossing pairing $\{13\}\{24\}$ gives the $1/n^2$ correction.
 
 ```python
 n, B = 4, 200_000
@@ -292,9 +312,14 @@ assert abs(mean - (2 + 1 / n**2)) < 5 * err
 ```
 
 A Monte Carlo check is a statistical test: the estimate must agree with the exact
-value to within a few standard errors. This is the pattern for every check against
-known results in this tutorial: an exact statement, a numerical estimate, and an
-explicit tolerance.
+value to within a few standard errors. The variable $\tfrac1n\operatorname{Tr}X^4$ is a polynomial in
+Gaussian variables, so it has finite variance $\sigma^2$ (Lemma A.23: all Gaussian moments are finite;
+products are handled by $|y_1\cdots y_r|\le\sum_i|y_i|^r$),
+and by Chebyshev's inequality the mean of $B$ independent samples deviates from the exact value
+by more than $5\sigma/\sqrt B$ with probability at most $1/25$. The code uses the sample standard
+deviation in place of $\sigma$, and the fixed seed makes the check reproducible. This is the
+pattern for every check against proved results in this tutorial: an exact statement, a numerical
+estimate, and an explicit tolerance.
 
 ## 1.8 What to compare with
 
@@ -302,7 +327,7 @@ On single matrices, `numpy.linalg` and `scipy.linalg` (`sqrtm`, `expm`, `logm`,
 `polar`) are the reference implementations, and the checks above can be repeated
 with them. The library adds three things that matter later: batching (Section 1.7),
 operators that carry a block structure (Chapter 2), and automatic differentiation
-through every operation.
+(PyTorch's autograd) through its operations.
 
 ## Exercises
 
@@ -333,7 +358,10 @@ assert close(Hs.apply_function(lambda w: torch.sin(w) * torch.exp(w)),
 
 3. Write $T=A^{-1/2}XA^{-1/2}$. Then $XA^{-1}X=B$ iff $T^2=A^{-1/2}BA^{-1/2}$, and
    $X\ge0$ iff $T\ge0$, since $\langle x,Xx\rangle=\langle A^{1/2}x,TA^{1/2}x\rangle$ and
-   $A^{1/2}$ is invertible. By Theorem 1.6, $T=(A^{-1/2}BA^{-1/2})^{1/2}$ is the unique
+   $A^{1/2}$ is invertible (here $A^{\pm1/2}$ are given by the functional calculus with $t^{\pm1/2}$ on
+   $\operatorname{spec}A\subset(0,\infty)$, so $A^{-1/2}A^{1/2}=1$ by Theorem 1.5(c)). Also
+   $A^{-1/2}BA^{-1/2}\ge0$, since $\langle x,A^{-1/2}BA^{-1/2}x\rangle=\langle A^{-1/2}x,BA^{-1/2}x\rangle\ge0$.
+   By Theorem 1.6, $T=(A^{-1/2}BA^{-1/2})^{1/2}$ is the unique
    positive solution, i.e. $X=A\#B$. Every solution $X$ of $XA^{-1}X=B$ is invertible,
    because $\det(X)^2\det(A)^{-1}=\det B\neq0$. So $XA^{-1}X=B$ is equivalent to
    $XB^{-1}X=A$ (from $A^{-1}=X^{-1}BX^{-1}$, invert both sides), and uniqueness gives

@@ -9,13 +9,17 @@ calcular con ellas en `torch_vn_algebra`.
 
 Está escrito a la vez para dos tipos de lectores:
 
-- **Los matemáticos** encontrarán demostraciones completas de todos los resultados que se
-  utilizan. No se cita nada sin demostración, salvo el álgebra lineal estándar, el teorema
-  fundamental del álgebra y hechos elementales de análisis y de probabilidad (límites,
-  convexidad, la función generatriz de momentos gaussiana); cuando un resultado se enuncia
-  antes de demostrarse, o solo se aplica, se indica explícitamente.
+- **Los matemáticos** encontrarán un texto autocontenido: todo teorema, fórmula, constante y
+  desigualdad que se enuncia se demuestra en el curso —en el propio capítulo o en uno de los
+  apéndices A–F, citado por su número— a partir de los requisitos previos enumerados más
+  abajo. Los números que solo se calculan (por ejemplo, la estadística de niveles para $n$
+  grande) se señalan como *observación numérica* y nunca se usan como premisas ni como
+  objetivos de las pruebas. Las referencias son atribución histórica o lectura complementaria,
+  nunca un sustituto de una demostración.
 - **Los físicos y los ingenieros** encontrarán el significado físico de cada noción en
-  recuadros titulados *Significado físico*, y código operativo que pueden adaptar.
+  recuadros titulados *Significado físico*, y código operativo que pueden adaptar. Estos
+  recuadros son interpretación física, no teoremas del curso: nada de lo que se demuestra en
+  otras partes depende de ellos.
 
 Los capítulos 1–13 tienen la misma estructura: teoría con demostraciones; el código de la
 biblioteca para cada resultado; una comprobación del código frente a un resultado exacto (un
@@ -43,12 +47,30 @@ modo que cada ejemplo funciona con la versión actual de la biblioteca.
 | 11 | [Optimización y desigualdades de trazas](11_optimisation.md) | parametrizaciones con restricciones, muestreo frente a optimización |
 | 12 | [Aprendizaje automático equivariante](12_equivariant_learning.md) | capas equivariantes como conmutantes |
 | 13 | [Álgebras de Jordan: por qué la mecánica cuántica usa *-álgebras](13_jordan_algebras.md) | producto de Jordan y representación cuadrática, factores de espín y el cono de Lorentz, la clasificación de Jordan–von Neumann–Wigner, la traspuesta y la traspuesta parcial, una desigualdad de trazas en forma de Jordan |
+| A | [Hechos de análisis y de probabilidad](A_analysis.md) | series de potencias y conjuntos nulos, vectores gaussianos, medidas esféricas, desigualdades de valores propios, Isserlis–Wick |
+| B | [Dualidad de Schur–Weyl y cálculo de Weingarten](B_schur_weyl.md) | dualidad de Schur–Weyl, funciones de Weingarten, teorema de Wigner–Eckart, medida de Haar en $O(k)$ |
+| C | [Densidades de valores propios y la fórmula de Page](C_eigenvalue_densities.md) | fórmula de integración de Weyl, GOE/GUE, densidades de Wishart e inducidas, fórmula de Page |
+| D | [Generadores de semigrupos dinámicos cuánticos](D_gksl.md) | el teorema GKSL, generadores en sumas directas, teorema de Frigerio, Bény–Kempf–Kribs |
+| E | [Clasificación de las álgebras de Jordan euclídeas](E_jordan_classification.md) | descomposición de Peirce, teoremas de Hurwitz y de Frobenius, coordinatización, el álgebra de Albert, el teorema de Jordan–von Neumann–Wigner |
+| F | [Conos simétricos, isomorfismos de orden y aplicaciones de Jordan](F_cones_and_order.md) | conos de cuadrados, el teorema de Koecher–Vinberg, el teorema de Kadison, automorfismos de Jordan de $\bigoplus_cM_{k_c}$ |
 
 ## Requisitos previos
 
-Álgebra lineal sobre $\mathbb C$ (valores propios, productos escalares, matrices unitarias),
-probabilidad básica y Python. No se presupone ningún conocimiento de física ni de análisis
-funcional.
+El curso presupone únicamente lo siguiente y demuestra todo lo demás.
+
+- Álgebra lineal sobre $\mathbb R$ y $\mathbb C$ (de dimensión finita) y el teorema
+  fundamental del álgebra.
+- Análisis real y cálculo en varias variables estándar: límites, continuidad, compacidad en
+  $\mathbb R^n$, diferenciación, el teorema del valor medio, la fórmula de Taylor, los
+  teoremas de la función inversa y de la función implícita.
+- Teoría estándar de la medida y de la integración: medida de Lebesgue, medidas producto y
+  Fubini–Tonelli, convergencia dominada y monótona, cambio de variables en $\mathbb R^n$,
+  medidas imagen, densidades, independencia.
+- Probabilidad elemental: esperanza, varianza, independencia, la distribución gaussiana y su
+  función generatriz de momentos, las desigualdades de Markov y de Chebyshov, la ley de los
+  grandes números.
+- Python, para el código. No se presupone ningún conocimiento de física ni de análisis
+  funcional.
 
 ## Cómo ejecutar el código
 

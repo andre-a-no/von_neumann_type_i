@@ -4,9 +4,11 @@
 
 两个可观测量的乘积 $xy$ 不是可观测量，除非 $x$ 与 $y$ 对易；但对称化乘积
 $x\circ y=\frac12(xy+yx)$ 总是可观测量。1933 年 P. Jordan 提议把带有这一乘积的可观测量作为量子力学的
-基本结构，随后 Jordan、von Neumann 与 Wigner 对由此产生的有限维代数进行了分类。本章在证明简短之处给出
-完整证明，发展有限维理论，并追问若尔当结构遗漏了什么。答案是对易子的符号：单个系统的若尔当代数只在
-相差一个符号的意义下决定对易子（13.5 节），但复合系统需要这个符号，而且它决定一个态是否纠缠。
+基本结构，随后 Jordan、von Neumann 与 Wigner 对由此产生的有限维代数进行了分类。本章发展有限维理论并给出
+完整证明——或者就在本章中给出，或者对于四个较长的证明（分类定理、Koecher–Vinberg 定理、Kadison 定理以及
+$\bigoplus_cM_{k_c}$ 的若尔当自同构）在附录 E 与 F 中给出——并追问若尔当结构遗漏了什么。答案是对易子的
+符号：单个系统的若尔当代数只在相差一个符号的意义下决定对易子（13.5 节），但复合系统需要这个符号：它决定
+哪些联合算子是正的，而由它构造的 PPT 检验能够探测纠缠（命题 13.12）。
 
 **你将学到**若尔当积与二次表示 $P(y)x=yxy$（它与 $\circ$ 不同，保持正性）；自旋因子、它们的谱理论以及
 洛伦兹锥；不是 $*$-代数自伴部分的厄米矩阵若尔当子代数；Jordan–von Neumann–Wigner 分类；为什么转置是
@@ -14,7 +16,8 @@ $x\circ y=\frac12(xy+yx)$ 总是可观测量。1933 年 P. Jordan 提议把带�
 写出并在自旋因子中加以证明。
 
 在本章中，$\operatorname{Herm}_n(\mathbb K)$ 是 $\mathbb K=\mathbb R$ 或 $\mathbb C$ 上 $n\times n$ 厄米矩阵构成的
-实向量空间，$M_{sa}$ 是 $\mathcal M=\bigoplus_cM_{k_c}(\mathbb C)$ 的自伴部分，
+实向量空间（13.4 节还用到在 E.6 节中构造的四元数 $\mathbb H$ 与八元数 $\mathbb O$，以及它们上的
+$\operatorname{Herm}_n$，见 E.7 节），$M_{sa}$ 是 $\mathcal M=\bigoplus_cM_{k_c}(\mathbb C)$ 的自伴部分，
 $X,Y,Z$ 是 Pauli 矩阵，$\sigma=(X,Y,Z)$，于是对 $u\in\mathbb R^3$ 有 $u\cdot\sigma=u_1X+u_2Y+u_3Z$。
 $[a,b]=ab-ba$，$|u|$ 是 $u\in\mathbb R^m$ 的欧几里得范数。
 
@@ -49,9 +52,15 @@ $P(P(y)x)z=yxy\,z\,yxy=P(y)P(x)P(y)z$。(2) 迹的循环性。(3)
 $yxy=(x^{1/2}y)^*(x^{1/2}y)\ge0$（推论 1.7），且 $P(y)P(y^{-1})=P(y^{-1})P(y)=\mathrm{id}$。(4)
 $p\circ q=\frac14\begin{pmatrix}2&1\\1&0\end{pmatrix}$。$\square$
 
-将 $P(y)$ 写成 $2L(y)^2-L(y^2)$ 后，(1) 中的每个恒等式都只用 $\circ$ 表达，所以它们在每个特殊若尔当代数中成立；基本公式在每个若尔当代数中
-都成立（K. McCrimmon, *A Taste of Jordan Algebras*, Springer 2004，我们不在此
-重复其证明）。模块 `torch_vn_algebra.jordan` 在 `TypeIAlgebra` 的算子上实现这些映射，惰性求值，
+将 $P(y)$ 写成 $2L(y)^2-L(y^2)$ 后，(1) 中的每个恒等式都只用 $\circ$ 表达。(1) 的证明只用到矩阵乘积的
+结合律，所以在每个特殊若尔当代数 $J\subseteq\mathcal A$（$\mathcal A$ 是结合代数）中，它在 $J$ 上给出
+$P(y)x=yxy$ 与基本公式 $P(P(y)x)=P(y)P(x)P(y)$。（这涵盖了本课程用到它的所有代数；对非特殊代数不使用
+基本公式。）
+
+在 $\operatorname{Herm}_n(\mathbb C)$（$n\ge2$）上的乘积 $\alpha xy+\beta yx$（$\alpha,\beta\in\mathbb R$）之中，
+$\frac12(xy+yx)$ 是唯一一个对 $x,y$ 对称、且在 $y=x$ 时等于 $x^2$ 的乘积：对称性意味着对所有 $x,y$ 有
+$(\alpha-\beta)(xy-yx)=0$，而 $XZ\ne ZX$（在左上角的 $2\times2$ 块中）迫使 $\alpha=\beta$；再由 $x=y=1$ 时
+$(\alpha+\beta)1=1$ 得 $\alpha=\beta=\frac12$。模块 `torch_vn_algebra.jordan` 在 `TypeIAlgebra` 的算子上实现这些映射，惰性求值，
 并在所有扇区上批量进行：
 
 ```python
@@ -89,8 +98,8 @@ print(jp(p, q).eigenvalues()[0])                                  # (1 -+ sqrt 2
 assert abs(torch.linalg.det(jp(p, q).matrix[0, 0]).real.item() + 1 / 16) < 1e-14
 ```
 
-> **物理意义。** $x\circ y$ 是可观测量的对称化乘积：它是唯一一个对 $x,y$ 对称、且在 $y=x$ 时化为 $x^2$ 的
-> 组合 $\alpha xy+\beta yx$，并且它仍是可观测量。二次表示就是 **Lüders 规则**：测量一个是/否问题 $p$ 并保留
+> **物理意义**（物理解释，而非本课程的定理）。$x\circ y$ 是可观测量的对称化乘积（如上所示，它是唯一这样的
+> 组合），并且它仍是可观测量。二次表示就是 **Lüders 规则**：测量一个是/否问题 $p$ 并保留
 > 结果"是"，会把密度 $\rho$ 变为 $P(p)\rho/\operatorname{Tr}P(p)\rho=p\rho p/\operatorname{Tr}(p\rho)$。命题 13.2(4)
 > 表明，$\circ$ 本身对正元素没有这样的操作含义。
 
@@ -121,7 +130,12 @@ $j$），所以生成的 $*$-代数包含 $Z_j$，进而包含 $X_j=Z_1\cdots Z_
 张量积，它们构成 $M_D(\mathbb C)$ 的一组基。$\square$
 
 在相差符号的意义下，$s_{2j-1}$ 与 $s_{2j}$ 就是 9.4 节中 Jordan–Wigner 费米子 $c_j$ 的
-Majorana 算子 $c_j+c_j^*$ 与 $i(c_j-c_j^*)$。
+Majorana 算子 $c_j+c_j^*$ 与 $i(c_j-c_j^*)$，其中第 9 章的格点 $j-1$ 作为第 $j$ 个张量因子：在那里
+$s^a=\frac12\sigma_a$，$n=s^z+\frac12$，$s^\pm=s^x\pm is^y$，所以 $(-1)^n=1-2n=-Z$，$s^-=\frac12(X-iY)$，从而
+$c_j=(-1)^{j-1}Z^{\otimes(j-1)}\otimes s^-\otimes1$。由于 $s^-+s^+=X$ 且 $i(s^--s^+)=i(-iY)=Y$，
+$$
+s_{2j-1}=(-1)^{j-1}(c_j+c_j^*),\qquad s_{2j}=(-1)^{j-1}\,i(c_j-c_j^*).
+$$
 
 **定理 13.4（$V_m$ 的谱理论）。** 设 $x=(a,u)\in V_m$，$\lambda_\pm=a\pm|u|$。
 
@@ -184,19 +198,41 @@ for m in range(1, 7):                                            # Proposition 1
     r = jd.compare_with_star_algebra(jd.anticommuting_symmetries(m))
     print(f"m = {m}: dim V_m = {r['jordan_dim']}, dim of the self-adjoint part of the *-algebra = {r['star_dim']}")
     assert r['jordan_dim'] == m + 1 and r['equal'] == (m in (1, 3))
+
+pq = 3                                                           # Majorana operators of Section 9.4, p = 3 sites
+Xp, Yp, Zp = jd.anticommuting_symmetries(3)
+sminus, I2 = 0.5 * (Xp - 1j * Yp), torch.eye(2, dtype=dt)
+parity = I2 - 2 * (0.5 * Zp + 0.5 * I2)                          # (-1)^n with n = s^z + 1/2
+def kron_all(fs):
+    out = torch.ones(1, 1, dtype=dt)
+    for f_ in fs:
+        out = torch.kron(out, f_)
+    return out
+s6 = jd.anticommuting_symmetries(2 * pq)
+for j in range(1, pq + 1):
+    c = kron_all([parity] * (j - 1) + [sminus] + [I2] * (pq - j))
+    sign = (-1) ** (j - 1)
+    assert close(s6[2 * j - 2], sign * (c + c.mH)) and close(s6[2 * j - 1], sign * 1j * (c - c.mH))
 ```
 
 对 $m=1$，$s_1=Z$ 生成对角矩阵，维数为 $2=m+1$，而 $V_1\cong\mathbb R\oplus\mathbb R$ 不是
 单的。打印出的维数是：$m=2$ 时为 $3,4$；$m=4$ 时为 $5,16$；$m=6$ 时为 $7,64$。
 
-> **物理意义。** 由自对偶性，$V_m$ 的态（正的、归一化的线性泛函）是
-> $x\mapsto\operatorname{tr}(\rho\circ x)$，其中 $\rho=\frac12(1,r)\in Q$，$|r|\le1$：态空间是一个
-> $m$ 维的球。对 $m=3$，它就是一个量子比特的 Bloch 球（命题 13.5(a)）。洛伦兹锥是 $1+m$ 维狭义相对论中的
+**$V_m$ 的态。** $V_m$ 的**态**是满足 $\omega(Q)\ge0$ 与 $\omega(1)=1$ 的线性泛函 $\omega$。态恰好是映射
+$x\mapsto\operatorname{tr}(\rho\circ x)$，其中 $\rho=\frac12(1,r)$，$|r|\le1$；所以态空间是一个 $m$ 维的球。
+*证明。* $\langle x,y\rangle=\operatorname{tr}(x\circ y)=2(ab+u\cdot v)$ 是 $V_m$ 上的内积，所以每个线性的 $\omega$
+都对恰好一个 $\rho=(b,v)$ 等于 $\operatorname{tr}(\rho\circ\cdot)$（有限维的 Riesz 表示：在一组标准正交基中，
+$\rho=\sum_k\omega(e_k)e_k$）。由定理 13.4(4) 中的自对偶性，$\omega(Q)\ge0$ 当且仅当 $\rho\in Q$，即 $b\ge|v|$；
+而 $\omega(1)=\operatorname{tr}\rho=2b=1$。所以 $\rho=\frac12(1,r)$，其中 $r=2v$，$|r|\le1$；反之，每个这样的
+$\rho$ 都给出一个态。$\square$
+
+> **物理意义**（物理解释，而非本课程的定理）。对 $m=3$，$V_m$ 的态空间就是一个量子比特的 Bloch 球
+> （命题 13.5(a)）。洛伦兹锥是 $1+m$ 维狭义相对论中的
 > 未来光锥，而命题 13.5(b) 说，若尔当自同构就是固定时间轴的空间正交变换。
 
-锥 $Q$ 是**二阶锥规划**（SOCP）的约束集：在若干洛伦兹锥的乘积上的线性优化。SOCP 的
-内点法用到的恰恰是定理 13.4：特征值、$\det$，以及用于缩放的 $P(y)$
-（F. Alizadeh, D. Goldfarb, *Second-order cone programming*, Math. Program. 95 (2003) 3–51）。
+锥 $Q$ 是**二阶锥规划**（SOCP）的约束集：在若干洛伦兹锥的乘积上的线性优化。SOCP 的内点法通常正是用
+定理 13.4 中的量（特征值、$\det$ 与 $P(y)$）来表述的；本课程不讨论这些算法（延伸阅读：
+F. Alizadeh, D. Goldfarb, *Second-order cone programming*, Math. Program. 95 (2003) 3–51）。
 
 ## 13.3 不是 *-子代数的若尔当子代数
 
@@ -208,7 +244,7 @@ $J\subseteq\mathcal A_{sa}$。命题 13.5(c) 给出了 $J\ne\mathcal A_{sa}$ 的
 (b) 对 $x,y\in\operatorname{Herm}_2(\mathbb C)$，存在酉矩阵 $U$ 使得 $UxU^*$ 与 $UyU^*$ 都是实
 对称的。由 $1,x,y$ 生成的若尔当代数是 $\operatorname{span}\{1,x,y\}$；若 $x,y,1$ 线性
 无关，则它是 $U^*\operatorname{Herm}_2(\mathbb R)U\cong V_2$，维数为 $3$，而由
-$x,y$ 生成的 $*$-代数是 $M_2(\mathbb C)$，维数为 $4$。
+$1,x,y$ 生成的 $*$-代数是 $M_2(\mathbb C)$，维数为 $4$。
 
 *证明。* (a) 引理 13.1。对 $i\ne j$，$E_{ij}=E_{ii}(E_{ij}+E_{ji})$ 是实对称矩阵的乘积，所以
 生成的代数包含所有矩阵单位。(b) 写 $x=a1+u\cdot\sigma$，$y=b1+v\cdot\sigma$，并取单位向量
@@ -219,7 +255,8 @@ $Ru\cdot Rv=\frac12\operatorname{Tr}\big((Ru\cdot\sigma)(Rv\cdot\sigma)\big)=u\c
 因此 $Ru,Rv\perp e_2$，而 $UxU^*=a1+(Ru)_1X+(Ru)_3Z$ 是实的，因为 $X,Z$ 是实的；$UyU^*$ 同理。其次，
 $x\circ y=(ab+u\cdot v)1+av\cdot\sigma+bu\cdot\sigma\in\operatorname{span}\{1,x,y\}$，$x^2,y^2$ 也类似，所以该张成空间
 是封闭的。若它的维数为 $3$，则它在 $U$ 下的共轭就是整个 $\operatorname{Herm}_2(\mathbb R)=\operatorname{span}\{1,X,Z\}$，
-由引理 13.3（$X,Z$ 反对易）它 $\cong V_2$，且由 (a) 它生成 $M_2(\mathbb C)$。$\square$
+经由 $(a,u)\mapsto a1+u_1X+u_2Z$ 它 $\cong V_2$（引理 13.3 的证明只用到诸 $s_i$ 是两两反对易的厄米
+对称元，而 $X,Z$ 正是如此），且由 (a) 它生成 $M_2(\mathbb C)$。$\square$
 
 ```python
 for n in range(2, 6):                                            # Proposition 13.6(a), a random real pair
@@ -249,39 +286,55 @@ assert all((Um @ A @ Um.mH).imag.abs().max() < 1e-12 for A in H[:2])
 
 ## 13.4 分类
 
-若尔当代数称为**形式实的**，如果 $\sum_ix_i^2=0$ 蕴含所有 $x_i=0$；在有限维中，这
-等价于它是**欧几里得的**，即具有满足 $\langle x\circ y,z\rangle=\langle y,x\circ z\rangle$ 的内积
-[FK94]。$M_{sa}$（取 $\operatorname{Tr}(xy)$）与 $V_m$（取 $\operatorname{tr}(x\circ y)$）都是
-欧几里得的。
+有限维若尔当代数称为**形式实的**，如果 $\sum_ix_i^2=0$ 蕴含所有 $x_i=0$；称为**欧几里得的**，如果它有单位
+$1$，并有满足 $\langle x\circ y,z\rangle=\langle y,x\circ z\rangle$ 的内积。这两个概念是一致的（定理 E.5(4)；
+"欧几里得 $\Rightarrow$ 形式实"这一方向只需一行：$0=\sum_i\langle x_i^2,1\rangle=\sum_i\langle x_i,x_i\rangle$）。
+取 $\langle x,y\rangle=\operatorname{Tr}(xy)$ 时 $M_{sa}$ 是欧几里得的：$\operatorname{Tr}(x^2)=\sum_{ij}|x_{ij}|^2$，并且由
+循环性，$\operatorname{Tr}((x\circ y)z)=\frac12\operatorname{Tr}(xyz+yxz)=\operatorname{Tr}(y(x\circ z))$。取
+$\langle x,y\rangle=\operatorname{tr}(x\circ y)=2(ab+u\cdot v)$ 时 $V_m$ 也是欧几里得的：对 $z=(c,w)$，
+$\operatorname{tr}((x\circ y)\circ z)=2(abc+c\,u\cdot v+a\,v\cdot w+b\,u\cdot w)$ 关于 $x,y,z$ 是对称的。
 
-**定理 13.7（Jordan–von Neumann–Wigner；不加证明地引用）。** 每个有限维形式实若尔当
-代数都是单若尔当代数的直和，而每个单的若尔当代数恰好同构于下列之一：$\mathbb R$；
+**定理 13.7（Jordan–von Neumann–Wigner）。** 每个有限维形式实若尔当
+代数都是单理想的直和，而每个单的若尔当代数恰好同构于下列之一：$\mathbb R$；
 $\mathbb K=\mathbb R,\mathbb C,\mathbb H$ 且 $r\ge3$ 时的 $\operatorname{Herm}_r(\mathbb K)$；自旋因子
 $V_m$，$m\ge2$；**Albert 代数** $\operatorname{Herm}_3(\mathbb O)$，即八元数上 $3\times3$ 厄米矩阵构成的代数
-（维数为 $27$）。在秩 $2$ 的情形，对
-$\mathbb K=\mathbb R,\mathbb C,\mathbb H,\mathbb O$ 有 $\operatorname{Herm}_2(\mathbb K)\cong V_{\dim\mathbb K+1}$。（P. Jordan, J. von Neumann, E. Wigner, *On an algebraic
-generalization of the quantum mechanical formalism*, Ann. of Math. 35 (1934) 29–64；现代的证明见 [FK94,
-Chapter V]。）
+（维数为 $27$）。此外，对 $\mathbb K=\mathbb R,\mathbb C,\mathbb H,\mathbb O$ 有
+$\operatorname{Herm}_1(\mathbb K)\cong\mathbb R$ 与 $\operatorname{Herm}_2(\mathbb K)\cong V_{\dim\mathbb K+1}$。
 
-除 Albert 代数外，以上所有代数都是特殊的：把四元数写成 $2\times2$ 复矩阵，$\operatorname{Herm}_r(\mathbb H)$ 就嵌入
-$\operatorname{Herm}_{2r}(\mathbb C)$；$V_m$ 则由引理 13.3 嵌入。
-Albert 代数是**例外的**：它不同构于任何结合代数的若尔当子代数
-（A. A. Albert, *On a certain algebra of quantum mechanics*, Ann. of Math. 35 (1934) 65–73）。一个可以
-简短陈述的理由是：C. M. Glennie 找到了一些多项式恒等式，它们在每个特殊若尔当代数中成立，但在
-$\operatorname{Herm}_3(\mathbb O)$ 中不成立（*Some identities valid in special Jordan algebras but not valid in all Jordan
-algebras*, Pacific J. Math. 16 (1966) 47–59；参见 McCrimmon, *A Taste of Jordan Algebras*）。八元数不满足
-结合律，而 $\operatorname{Herm}_r(\mathbb O)$ 仅在 $r\le3$ 时满足若尔当恒等式，这就是
-列表止于此处的原因。所以 $\operatorname{Herm}_3(\mathbb O)$ 不能用实或复矩阵（也不能在任何结合代数中）
-以乘积 $\frac12(xy+yx)$ 忠实地表示；软件必须直接处理八元数矩阵元。
+*证明。* 附录 E 给出了完整的证明：分解是定理 E.9，列表与"恰好之一"是定理 E.27(1),(2)，秩一与秩二中的
+同构是定理 E.24(3)。$\square$
 
-**定理 13.8（Koecher–Vinberg；不加证明地引用）。** 欧几里得若尔当代数平方锥的内部
-恰好就是**对称锥**：欧几里得空间中自对偶且
-齐性（其线性自同构群可迁地作用）的开凸锥。[FK94, Chapter III.]
+（P. Jordan, J. von Neumann, E. Wigner, *On an algebraic generalization of the quantum mechanical formalism*, Ann. of
+Math. 35 (1934) 29–64；附录 E 中的证明遵循 [FK94, Chapters II–V]。）
 
-定理 13.4(4) 与习题 1 对洛伦兹锥证明了这两条性质。因此半定规划的锥
-（$\operatorname{Herm}_n(\mathbb R)^+$ 或 $\operatorname{Herm}_n(\mathbb C)^+$ 的乘积）、SOCP 的锥以及线性
-规划的锥（$\mathbb R_+^n$，即 $\mathbb R^n=\mathbb R\oplus\dots\oplus\mathbb R$ 的锥）都具有这种形式，而
-内点法可以对所有欧几里得若尔当代数一次性地写出。
+除 Albert 代数外，以上所有代数都是特殊的：$\mathbb R=\operatorname{Herm}_1(\mathbb R)$ 与
+$\operatorname{Herm}_r(\mathbb K)$（$\mathbb K=\mathbb R,\mathbb C$）由引理 13.1 是特殊的；把四元数写成 $2\times2$ 复矩阵，
+就把 $\operatorname{Herm}_r(\mathbb H)$ 嵌入 $\operatorname{Herm}_{2r}(\mathbb C)$（定理 E.24(1)）；$V_m$ 则由引理 13.3。
+Albert 代数是若尔当代数（定理 E.24(2)），并且是**例外的**：它不同构于任何实或复结合代数的若尔当子代数
+（定理 E.26，这是 A. A. Albert 所用的那一类论证，*On a certain algebra of quantum mechanics*, Ann. of Math. 35 (1934)
+65–73：到结合代数中的若尔当嵌入会使八元数乘积满足结合律，而它并不满足，引理 E.15(2)）。对 $r\ge4$，
+$\operatorname{Herm}_r(\mathbb O)$ 不满足若尔当恒等式（推论 E.25），而具有 $r\ge4$ 个元素的若尔当标架的单代数是
+$\operatorname{Herm}_r(D)$，其中 $D\ne\mathbb O$ 是结合的合成代数（定理 E.22），这就是八元数只在 $r\le3$ 时出现的
+原因。所以 $\operatorname{Herm}_3(\mathbb O)$ 不能用实或复矩阵（也不能在任何结合代数中）
+以乘积 $\frac12(xy+yx)$ 忠实地表示；在其中进行计算必须使用八元数乘积（或其结构常数），而不是矩阵乘积。
+
+设 $\Omega$ 是欧几里得空间 $V$（$\ne\{0\}$ 的有限维实内积空间）中的非空开凸锥。它的**对偶锥**是
+$\Omega^*=\{y:\langle x,y\rangle>0\text{ 对所有 }x\in\bar\Omega\setminus\{0\}\}$；若 $\Omega^*=\Omega$，则称 $\Omega$ 是
+**自对偶的**；若满足 $g\Omega=\Omega$ 的线性映射 $g$ 在 $\Omega$ 上可迁地作用，则称它是**齐性的**；若两者兼备，则称它是
+**对称的**。
+
+**定理 13.8（Koecher–Vinberg）。** 欧几里得空间 $V$ 中的非空开凸锥 $\Omega$ 是对称的，当且仅当 $V$ 上存在乘积
+$\circ$，使得 $(V,\circ,\langle\cdot,\cdot\rangle)$ 是欧几里得若尔当代数，且 $\Omega$ 是其平方锥的内部。
+
+*证明。* 定理 F.12（"当"的方向：定理 F.5(2) 与 F.6(2)）。$\square$
+
+（M. Koecher, 1957；E. B. Vinberg, 1960；附录 F 中的证明遵循 [FK94, Chapters I–III]。）定理 13.4(4)
+对洛伦兹锥证明了自对偶性的闭形式（$y\in Q$ 当且仅当对所有 $x\in Q$ 有 $\operatorname{tr}(x\circ y)\ge0$），习题 1
+证明了它的齐性。欧几里得若尔当代数直和（取各内积的正交和）的平方锥是它们各自平方锥的乘积，因为
+$(x_1,\dots,x_k)^2=(x_1^2,\dots,x_k^2)$。因此，由"当"的方向，半定规划的锥（$\operatorname{Herm}_n(\mathbb R)^+$ 或
+$\operatorname{Herm}_n(\mathbb C)^+$ 的乘积；由定理 1.6 它们是平方锥；对实的 $x\ge0$，平方根是实的，因为它的复共轭
+也是 $x$ 的正平方根）、SOCP 的锥（洛伦兹锥的乘积）以及线性规划的锥（$\mathbb R_+^n$，即
+$\mathbb R^n=\mathbb R\oplus\dots\oplus\mathbb R$ 的平方锥）的内部都是对称锥。
 
 [FK94]: J. Faraut, A. Korányi, *Analysis on Symmetric Cones*, Oxford University Press, 1994.
 
@@ -289,7 +342,9 @@ algebras*, Pacific J. Math. 16 (1966) 47–59；参见 McCrimmon, *A Taste of Jo
 
 冯·诺依曼代数之间的**若尔当 $*$-同态**是满足 $\Phi(x^*)=\Phi(x)^*$ 与
 $\Phi(x\circ y)=\Phi(x)\circ\Phi(y)$ 的复线性映射 $\Phi$；在自伴部分上它是若尔当同态，而自伴部分之间的每个若尔当
-同态都可以由 $\Phi(x+iy)=\Phi(x)+i\Phi(y)$ 延拓为若尔当 $*$-同态。
+同态都可以由 $\Phi(x+iy)=\Phi(x)+i\Phi(y)$（$x,y$ 自伴）延拓为若尔当 $*$-同态。（这个 $\Phi$ 是复线性的，
+并满足 $\Phi(x-iy)=\Phi(x+iy)^*$；又因为 $\circ$ 是复双线性的，并把自伴元对映为自伴元，
+$(x+iy)\circ(x'+iy')=(x\circ x'-y\circ y')+i(x\circ y'+y\circ x')$ 被映为 $\Phi(x+iy)\circ\Phi(x'+iy')$。）
 
 **命题 13.9（转置）。** 在 $\mathcal M$ 上令 $T(A)=\bigoplus_cA_c^T$。(a) $T$ 是保单位的若尔当
 $*$-自同构，且 $T(AB)=T(B)T(A)$；它保持谱，所以 $T$ 与 $T^{-1}=T$ 都是正的。(b) 在 $M_k$ 上，
@@ -304,17 +359,25 @@ CP 的。$\square$
 所以若尔当自同构不一定是 $*$-自同构。除这一现象之外，正性决定了若尔当
 结构：
 
-**定理 13.10（Kadison；不加证明地引用）。** 设 $\Phi$ 是有单位的 C\*-代数之间的线性双射，
-$\Phi(1)=1$，且 $\Phi$ 与 $\Phi^{-1}$ 都是正的。则 $\Phi$ 是若尔当 $*$-同构。（R. V. Kadison,
-*A generalized Schwarz inequality and algebraic invariants for operator algebras*, Ann. of Math. 56 (1952) 494–503,
-Corollary 5。在 *Isometries of operator algebras*, Ann. of Math. 54 (1951) 325–338 中，他已证明从一个有单位的
-C\*-代数到另一个的满线性等距 $\Phi$ 等于酉元 $\Phi(1)$ 乘以一个若尔当 $*$-同构。）
+**定理 13.10（Kadison，有限维情形）。** 设 $\mathcal M=\bigoplus_cM_{k_c}(\mathbb C)$，
+$\mathcal N=\bigoplus_dM_{k'_d}(\mathbb C)$，$\Phi:\mathcal M\to\mathcal N$ 是线性双射，
+$\Phi(1)=1$，且 $\Phi$ 与 $\Phi^{-1}$ 都是正的。则 $\Phi$ 是若尔当 $*$-同构。反之，每个若尔当 $*$-同构
+$\mathcal M\to\mathcal N$ 都是保单位的，且它与它的逆都是正的。
 
-逆命题是显然的：若尔当 $*$-同构把自伴元的平方 $h^2=h\circ h$ 映为平方，
-从而把正锥映到正锥上。对于因子 $M_n$，若尔当自同构已被完全确定：
+*证明。* 定理 F.15。（思路：$\Phi$ 把凸集 $\{0\le a\le1\}$ 映到 $\mathcal N$ 中相应的集合上，因此把端点——即
+投影——映为投影；它保持 $p+q\le1$，而对投影而言这意味着 $pq=0$；所以它把谱分解映为谱分解，并且
+$\Phi(x^2)=\Phi(x)^2$。）$\square$
+
+R. V. Kadison 对所有有单位的 C\*-代数证明了这个定理（*A generalized Schwarz inequality and algebraic
+invariants for operator algebras*, Ann. of Math. 56 (1952) 494–503）；本课程只证明并使用有限维情形。
+对于因子 $M_n$，若尔当自同构已被完全确定：
 $M_n(\mathbb C)$ 的每个若尔当 $*$-自同构都是 $A\mapsto UAU^*$ 或 $A\mapsto UA^TU^*$，其中 $U$ 为酉矩阵
-（N. Jacobson, C. E. Rickart, *Jordan homomorphisms of rings*, Trans. Amer. Math. Soc. 69 (1950) 479–502；I. N.
-Herstein, *Jordan homomorphisms*, Trans. Amer. Math. Soc. 81 (1956) 331–341）。我们证明 $n=2$ 的情形。
+（定理 F.17，对所有 $n$；这一结果属于 N. Jacobson, C. E. Rickart, Trans. Amer. Math. Soc. 69 (1950) 479–502，
+以及 I. N. Herstein, Trans. Amer. Math. Soc. 81 (1956) 331–341）。前一类映射是乘性的，后一类是反乘性的，所以
+$M_n$ 的若尔当 $*$-自同构要么保持所有对易子，要么把所有对易子反号：$\Phi([x,y])=\pm[\Phi(x),\Phi(y)]$。在
+$\bigoplus_cM_{k_c}$ 上，若尔当 $*$-同构置换大小相同的块，并在每个块上以这两种方式之一作用（定理 F.18）；
+它是保单位的，并且在两个方向上都是正的（定理 13.10），而由推论 F.19，它是完全正的当且仅当它不转置任何大小
+$\ge2$ 的块，又当且仅当它是 $*$-同构。下面用自旋因子的语言直接证明 $n=2$ 的情形。
 
 **命题 13.11.** $\operatorname{Herm}_2(\mathbb C)$ 的每个若尔当自同构都是 $A\mapsto UAU^*$ 或
 $A\mapsto UA^TU^*$，其中 $U\in U(2)$。
@@ -363,13 +426,14 @@ $A\circ_\theta A=\theta(\theta(A)^2)$，又因 $\theta^2=\mathrm{id}$，$\omega$
 对易子项的符号，而这个符号由 $*$-代数 $M_n\otimes M_m$ 确定，而不是由各因子的若尔当代数确定。（$\circ_\theta$ 是
 结合乘积 $A\star B=\theta(\theta(A)\theta(B))$ 的若尔当积，对于该乘积有 $(x\otimes y)\star(x'\otimes y')=xx'\otimes y'y$：
 即代数 $M_n\otimes M_m^{\rm op}$。）锥 $\theta(\operatorname{Herm}_{nm}^+)$
-给出了 **PPT 判据**（A. Peres, Phys. Rev. Lett. 77 (1996) 1413）：可分态
-$\rho=\sum_kp_ka_k\otimes b_k$（$p_k\ge0$，$a_k,b_k\ge0$）同时属于两个锥，因为
+给出了 **PPT 判据**（A. Peres, Phys. Rev. Lett. 77 (1996) 1413）。若 $M_n\otimes M_m$ 的态 $\rho$ 可写成
+$\rho=\sum_kp_ka_k\otimes b_k$（有限和），其中 $p_k\ge0$，$a_k,b_k\ge0$，则称它是**可分的**，否则称它是
+**纠缠的**。可分态同时属于两个锥，因为
 $\theta(\rho)=\sum_kp_ka_k\otimes b_k^T$，其中 $b_k^T\ge0$（命题 13.9(a)），且
 $a\otimes b=(a^{1/2}\otimes b^{1/2})^2\ge0$。所以不属于 $\theta(\operatorname{Herm}_4^+)$ 的 $\omega$ 是
-纠缠的。关于哪些若尔当代数的复合存在的结果，参见 H. Hanche-Olsen, *On the structure and tensor
-products of JC-algebras*, Canad. J. Math. 35 (1983) 1059–1074，以及 H. Barnum, M. Graydon, A. Wilce,
-*Composites and categories of Euclidean Jordan algebras*, Quantum 4 (2020) 359。
+纠缠的。（关于若尔当代数复合的延伸阅读，此处不使用：H. Hanche-Olsen, *On the structure and tensor
+products of JC-algebras*, Canad. J. Math. 35 (1983) 1059–1074；H. Barnum, M. Graydon, A. Wilce,
+*Composites and categories of Euclidean Jordan algebras*, Quantum 4 (2020) 359。）
 
 **动力学。** 人们或许希望时间演化会迫使出现结合乘积。事实并非如此：
 
@@ -379,6 +443,8 @@ $\operatorname{Herm}_n$ 映到自身，并且是 $\circ$ 的导子；$e^{t\delta
 $\delta=4\sum_k[L(x_k),L(y_k)]$：哈密顿动力学仅由若尔当积生成。
 
 *证明。* (a) $(i[H,z])^*=-i[z,H]=i[H,z]$；$[H,\cdot]$ 是结合乘积的导子，从而也是 $\circ$ 的导子。
+$z(t)=e^{itH}ze^{-itH}$ 满足 $z'=i[H,z]$ 与 $z(0)=z$（命题 8.2(3)，取 $\mathcal M=M_n$），所以由引理 8.1 中的
+唯一性，$z(t)=e^{t\delta}(z)$；用酉元 $e^{itH}$ 共轭保持乘积与伴随，因而保持 $\circ$ 与 $\operatorname{Herm}_n$。
 (b) $4x\circ(y\circ z)=xyz+xzy+yzx+zyx$；减去交换 $x,y$ 后的同一表达式。(c) 由 (b)，只需把
 $iH-\frac{\operatorname{Tr}H}n i1$（它与 $iH$ 有相同的对易子）写成若干 $[x_k,y_k]$ 之和。对 $i\ne j$ 以及
 $a=E_{ij}+E_{ji}$，$b=i(E_{ij}-E_{ji})$：$[a,E_{ii}]=E_{ji}-E_{ij}$，$[b,E_{ii}]=-i(E_{ij}+E_{ji})$，
@@ -387,13 +453,11 @@ $[a,b]=2i(E_{jj}-E_{ii})$；它们在 $\mathbb R$ 上张成无迹反厄米矩阵
 若尔当代数所不包含的，是可观测量与它所生成的动力学之间的**对应** $H\mapsto i[H,\cdot]$。
 例如在 $\operatorname{Herm}_n(\mathbb R)$ 中，导子
 $[L(x),L(y)]=\frac14[[x,y],\cdot]$ 来自实反对称矩阵 $[x,y]$，而它不是 $i$ 乘以一个实对称
-矩阵。E. M. Alfsen 与 F. W. Shultz 证明了：JBW-代数（形式实若尔当代数的一种无穷维推广；在有限维中
-两个概念一致）是某个冯·诺依曼代数的自伴部分，当且仅当
-它允许这样一个"动力学对应"；他们还对 C\*-代数的态空间给出了几何刻画
-（*Geometry of State Spaces of Operator Algebras*, Birkhäuser, 2003；不加证明地引用）。这样的对应不是
-唯一的：在 $\operatorname{Herm}_n(\mathbb C)$ 上，$H\mapsto i[H,\cdot]$ 与 $H\mapsto-i[H,\cdot]$ 都满足要求；
-转置交换这两者，因为 $T(i[H,T(z)])=-i[H^T,z]$，而它们分别属于 $M_n$ 与它的反代数——这正是命题 13.12 的
-两个符号。
+矩阵（习题 4）。这一对应不由 $\circ$ 决定：在 $\operatorname{Herm}_n(\mathbb C)$ 上，$H\mapsto i[H,\cdot]$ 与
+$H\mapsto-i[H,\cdot]$ 都把每个可观测量映为 $\circ$ 的导子（命题 13.13(a)），而转置这一若尔当自同构交换这两者，
+因为 $T(i[H,T(z)])=-i[H^T,z]$。第二个是反代数（$a\cdot_{\rm op}b=ba$）的对易子的 $i$ 倍：
+$-i[H,z]=i(H\cdot_{\rm op}z-z\cdot_{\rm op}H)$——这正是命题 13.12 的两个符号。（关于这种"动力学对应"的延伸
+阅读，此处不使用：E. M. Alfsen, F. W. Shultz, *Geometry of State Spaces of Operator Algebras*, Birkhäuser, 2003。）
 
 ```python
 x, y = sa(), sa()
@@ -438,7 +502,7 @@ assert close(delta(jm(z1, z2)), jm(delta(z1), z2) + jm(z1, delta(z2)))         #
 assert close(jm(z1, jm(z2, Hm)) - jm(z2, jm(z1, Hm)), 0.25 * cm(cm(z1, z2), Hm))   # (b)
 ```
 
-> **物理意义。** 对于无自旋粒子，转置（在实基中的复共轭）就是**时间
+> **物理意义**（物理解释，而非本课程的定理）。对于无自旋粒子，转置（在实基中的复共轭）就是**时间
 > 反演**。它是单个系统可观测量的一个对称性，但它是反酉的，若只作用于一个
 > 子系统，则不是物理操作：命题 13.12 表明，它把 Bell 态变成一个具有负特征值的
 > 算子。量子力学使用复 $*$-代数，是因为复合系统需要带符号的对易子，
@@ -453,7 +517,7 @@ $T=X_\pm^{1/2}Y$，则 $YX_\pm Y=T^*T$ 只需要 $Y=Y^*$，而引理 11.8 被应
 $$
 \operatorname{tr}|P(y)x|\le\operatorname{tr}P(y)|x|,
 $$
-它在每个欧几里得若尔当代数中都有意义。我们在 $V_m$ 中用一个只用到三条性质的论证来
+一旦取定一个迹，它在每个欧几里得若尔当代数中都有意义。我们在 $V_m$ 中用一个只用到三条性质的论证来
 证明它。
 
 **命题 13.14（自旋因子中的实验 3）。** 对 $x,y\in V_m$，
@@ -476,17 +540,24 @@ $\square$
 
 证明只用到：(i) 对每个 $y$ 有 $P(y)Q\subseteq Q$；(ii) 谱定理：每个 $z$ 都可写成
 $\sum_i\mu_ic_i$，其中 $c_i$ 是和为 $1$ 的正交幂等元，且 $f(z)=\sum_if(\mu_i)c_i$（因此 $x_\pm$ 与诸
-幂等元都是平方元）；(iii) $\operatorname{tr}$ 是线性的，$\operatorname{tr}(\sum_i\mu_ic_i)=\sum_i\mu_i\operatorname{tr}c_i$，
-其中 $\operatorname{tr}c_i\ge0$，并且对 $a,b\in Q$ 有 $\operatorname{tr}(a\circ b)\ge0$。在秩为 $r$ 的欧几里得若尔当代数中，
-(ii) 对 $r$ 个本原幂等元 $c_i$（一个若尔当标架）成立，迹为
-$\operatorname{tr}z=\sum_i\mu_i$，形式 $\operatorname{tr}(x\circ y)$ 是结合的，即
-$\operatorname{tr}((x\circ y)\circ z)=\operatorname{tr}(x\circ(y\circ z))$，并且 (i) 成立 [FK94, Chapters II–III]；
-我们不证明这些事实。于是 (iii) 的最后一部分可由 (i) 推出：展开 $P(a^{1/2})=2L(a^{1/2})^2-L(a)$
-并利用结合性，得 $\operatorname{tr}(a\circ b)=\operatorname{tr}P(a^{1/2})b$，这是 $Q$ 中一个元素的迹，
-因而 $\ge0$。所以该不等式在每个欧几里得若尔当代数中都成立——包括
-$\operatorname{Herm}_r(\mathbb H)$ 与 Albert 代数，它们不若尔当同构于任何复
-$*$-代数的自伴部分。在 $M_{sa}$ 中，用 $\operatorname{Tr}$ 与 $P(y)x=yxy$ 进行同样的论证，就重新证明了
-命题 11.9。在 $V_m$ 中，该不等式也可以经由 $\phi$ 从命题 11.9 得出，
+幂等元都是平方元）；(iii) $\operatorname{tr}$ 是线性的，$\operatorname{tr}(a\circ1)=\operatorname{tr}a$，并且对 $a,b\in Q$ 有
+$\operatorname{tr}(a\circ b)\ge0$。对于线性形式 $\tau(x)=\langle x,e\rangle$，这三条在每个具有单位 $e$ 的欧几里得若尔当
+代数 $V$ 中都成立，而对这个形式有 $\tau(a\circ b)=\langle b,a\circ e\rangle=\langle a,b\rangle$：(ii) 是定理 F.3，(i) 是
+定理 F.6(4)，而对 $a,b\in Q$ 有 $\langle a,b\rangle\ge0$ 是定理 F.5(1)。推论 F.7 完成了这一论证：在每个欧几里得若尔当
+代数中 $\tau(|P(y)x|)\le\tau(P(y)|x|)$，且当 $x\in Q$ 或 $-x\in Q$ 时等号成立。在取 $\langle x,y\rangle=\operatorname{Tr}(xy)$ 的
+$M_{sa}$ 上，$\tau=\operatorname{Tr}$，$P(y)x=yxy$；$(M_{sa},\circ)$ 的幂等元就是投影（$c\circ c=c^2$），而对投影而言
+$c\circ c'=0$ 当且仅当 $cc'=0$（引理 F.14(2)），所以由定理 F.3 中的唯一性，它对 $x$ 的分解就是按特征投影的谱分解，
+$|x|$ 就是矩阵绝对值。于是这对所有 $Y=Y^*$ 重新证明了命题 11.9。在取 $\langle x,y\rangle=\operatorname{tr}(x\circ y)$ 的
+$V_m$ 上，$\tau=\operatorname{tr}$，定理 F.3 的分解就是定理 13.4(2) 的分解（若 $u=0$ 则 $x=a1$），这就是命题 13.14。
+在秩为 $r$ 的单欧几里得若尔当代数 $J$ 中，推论 E.28 的迹 $\operatorname{tr}x=\frac r{\dim J}\operatorname{Tr}L(x)$ 对每个
+若尔当标架 $(c_i)$ 满足 $\operatorname{tr}(\sum_i\mu_ic_i)=\sum_i\mu_i$（定理 E.7），并且
+$\langle x,y\rangle=\operatorname{tr}(x\circ y)$ 是结合的内积；对它有 $\tau=\operatorname{tr}$，所以该不等式对这个迹成立。
+这适用于 $\operatorname{Herm}_r(\mathbb H)$ 与 Albert 代数，它们都是单欧几里得若尔当代数（定理 E.24）。对 $r\ge3$，
+它们不若尔当同构于任何 $\mathcal M=\bigoplus_cM_{k_c}$ 的 $M_{sa}$：$M_{sa}=\bigoplus_c\operatorname{Herm}_{k_c}(\mathbb C)$
+是理想的直和，所以它只在只有一个块时才是单的，而由定理 13.7 中的唯一性，
+$\operatorname{Herm}_k(\mathbb C)$（$k=1$ 时 $\cong\mathbb R$，$k=2$ 时 $\cong V_3$）不同构于 $\operatorname{Herm}_r(\mathbb H)$
+（$r\ge3$），也不同构于 $\operatorname{Herm}_3(\mathbb O)$。在 $V_m$ 中，该不等式也可以经由 $\phi$ 从命题 11.9（如上
+所述已推广到 $Y=Y^*$）得出，
 因为 $\phi(P(y)x)=\phi(y)\phi(x)\phi(y)$ 且 $\phi(|x|)=|\phi(x)|$；代码对两者都做了检验：
 
 ```python
@@ -503,10 +574,15 @@ for m in (2, 4, 7):
     Xs, Ys = Vm.to_matrix(xs[:200]), Vm.to_matrix(ys[:200])
     tn = torch.linalg.svdvals(Ys @ Xs @ Ys).sum(-1)                     # Tr |phi(y) phi(x) phi(y)|
     assert (tn - Vm.representation_dim / 2 * lhs[:200]).abs().max() < 1e-10 * tn.max()
+    wx, Ux = torch.linalg.eigh(Xs)
+    absX = Ux @ torch.diag_embed(wx.abs().to(dt)) @ Ux.mH                  # |phi(x)|
+    tr_rhs = (Ys @ absX @ Ys).diagonal(dim1=-2, dim2=-1).sum(-1).real    # Tr phi(y) |phi(x)| phi(y)
+    assert (torch.linalg.eigvalsh(Ys)[:, 0] < 0).any()                  # some phi(y) are indefinite
+    assert (tr_rhs - tn >= -1e-10 * tr_rhs).all()                       # Proposition 11.9 for Y = Y*
 ```
 
-差值 $\operatorname{tr}P(y)|x|-\operatorname{tr}|P(y)x|$ 对定号的 $x$ 为零，对典型的
-不定 $x$ 为正（对这些 Gauss 样本，打印出的最大值的量级为 $10^1$–$10^2$）。
+差值 $\operatorname{tr}P(y)|x|-\operatorname{tr}|P(y)x|$ 对定号的 $x$ 为零（命题 13.14）。*数值观察*
+（不是定理）：对这些 Gauss 样本，打印出的最大差值的量级为 $10^1$–$10^2$，所以对不定的 $x$，该不等式远非等式。
 
 ## 13.7 可与之比较的工具
 
@@ -543,7 +619,8 @@ for m in (2, 4, 7):
    $\phi(P(y)P(y^{-1})x)=\phi(x)$；而 $\phi$ 是单射。$P(y)$ 把 $Q$ 映入 $Q$，它的逆 $P(y^{-1})$ 也是如此，所以
    $P(y)Q=Q$；作为线性同胚，它把内部映到内部上。最后
    $P(y)1=2y\circ y-y^2=y^2$，所以 $P(x^{1/2})1=x$，而当 $x$ 是内点时 $P(x^{1/2})$ 可逆
-   （$\det x^{1/2}=\sqrt{\lambda_+\lambda_-}>0$）。任意两个内点都由
+   （$\det x^{1/2}=\sqrt{\lambda_+\lambda_-}>0$；$Q$ 的内部是 $\{a>|u|\}=\{\lambda_->0\}$，因为 $a-|u|$ 连续，且当
+   $a=|u|$ 时 $(a-\varepsilon,u)\notin Q$）。任意两个内点都由
    $P(x'^{1/2})P(x^{1/2})^{-1}$ 联系起来。
 
 ```python
@@ -559,8 +636,7 @@ assert V4.in_cone(V4.quadratic_representation(yv, xi)).all()
 
 2. 由命题 13.12，$\theta(\rho_p)=\frac p2F+\frac{1-p}4$。$F$ 的特征值为 $1$（三重）与 $-1$（一重），所以
    谱为 $\frac{1+p}4$（三重）与 $\frac{1-3p}4$，后者为负当且仅当 $p>\frac13$；此时由 PPT 判据，$\rho_p$ 不是
-   可分的。（对 $2\times2$ 系统，逆命题也成立：M., P. and R. Horodecki, Phys.
-   Lett. A 223 (1996) 1；我们不加证明。）
+   可分的。
 
 ```python
 for pp in (0.2, 1 / 3, 0.5):
@@ -586,7 +662,7 @@ assert V3c.in_cone(V3c.product(V3c.element(1.0, wv[0]), V3c.element(1.0, wv[0]))
 
 </details>
 
-**下一步。** 这是本课程的最后一章。有限维
+**下一步。** 这是本课程的最后一章；附录 E 与 F 补全了它的证明。作为延伸阅读，有限维
 理论的标准参考书是 [FK94]；K. McCrimmon, *A Taste of Jordan Algebras* (Springer 2004) 讲述了代数理论与历史，
 H. Hanche-Olsen and E. Størmer, *Jordan Operator Algebras* (Pitman 1984) 以及 Alfsen–Shultz (2003) 讲述了
 无穷维理论及其与 C\*-代数的关系。关于复合系统在从操作公理重建

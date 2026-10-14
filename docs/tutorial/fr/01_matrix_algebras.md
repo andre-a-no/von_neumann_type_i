@@ -38,10 +38,10 @@ On écrit $A\le B$ si $B-A\ge0$, et $A>0$ si $A\ge0$ et $A$ est inversible.
 donc $\|A\|=\sup_{\|x\|=\|y\|=1}|\langle A^*y,x\rangle|=\|A^*\|$. Ensuite,
 $\|Ax\|^2=\langle x,A^*Ax\rangle\le\|A^*A\|$ pour $\|x\|=1$, d'où $\|A\|^2\le\|A^*A\|\le\|A^*\|\,\|A\|=\|A\|^2$. $\square$
 
-> **Interprétation physique.** En mécanique quantique, un système possédant $n$
-> configurations distinguables est décrit par $\mathbb C^n$. Les matrices autoadjointes
-> sont les *observables* (énergie, spin, position sur un réseau) ; leurs valeurs propres
-> sont les résultats possibles d'une mesure. Les projecteurs sont les questions à réponse
+> **Interprétation physique** (interprétation physique, pas un théorème de ce cours). En
+> mécanique quantique, un système possédant $n$ configurations distinguables est décrit par
+> $\mathbb C^n$. Les matrices autoadjointes sont les *observables* (énergie, spin, position sur
+> un réseau) ; leurs valeurs propres sont les résultats possibles d'une mesure. Les projecteurs sont les questions à réponse
 > oui/non. Les matrices unitaires sont les symétries et les évolutions temporelles,
 > $e^{-itH}$ pour un hamiltonien $H$. Les matrices positives de trace un sont les *états*
 > (matrices densité, chapitre 3).
@@ -77,7 +77,9 @@ formée des racines de $\det(A-\lambda)=\det(T-\lambda)$. $\square$
 2. $A$ est autoadjointe si et seulement si tous les $\lambda_i\in\mathbb R$ ; unitaire si et
    seulement si tous les $|\lambda_i|=1$ ; un projecteur si et seulement si tous les
    $\lambda_i\in\{0,1\}$ ;
-3. $A\ge0$ si et seulement si $A$ est autoadjointe et tous les $\lambda_i\ge0$.
+3. $A\ge0$ si et seulement si $A$ est autoadjointe et tous les $\lambda_i\ge0$. De plus, toute matrice
+   positive est autoadjointe, donc normale, si bien que (3) caractérise la positivité parmi *toutes*
+   les matrices et que le calcul fonctionnel ci-dessous s'applique à toute $A\ge0$.
 
 *Démonstration.* Avec $y=U^*x$, on a $\|Ax\|^2=\sum_i|\lambda_i|^2|y_i|^2$ et $\|y\|=\|x\|$,
 ce qui donne (1), avec égalité pour $x=Ue_i$, $|\lambda_i|$ maximal. Pour (2),
@@ -106,7 +108,8 @@ $f(\operatorname{spec}A)$, alors $g(f(A))=(g\circ f)(A)$.
 
 *Démonstration.* (b) $A^k=U\Lambda^kU^*$, donc $p(A)=Up(\Lambda)U^*$ par linéarité. (a) Le
 spectre est fini, donc l'interpolation de Lagrange fournit un polynôme $p$ égal à $f$ sur
-$\operatorname{spec}A$. Alors $U\,f(\Lambda)\,U^*=U\,p(\Lambda)\,U^*=p(A)$ pour *toute*
+$\operatorname{spec}A$ : si $\mu_1,\dots,\mu_r$ sont les valeurs propres distinctes, on prend
+$p(t)=\sum_if(\mu_i)\prod_{j\neq i}(t-\mu_j)/(\mu_i-\mu_j)$. Alors $U\,f(\Lambda)\,U^*=U\,p(\Lambda)\,U^*=p(A)$ pour *toute*
 matrice unitaire $U$ diagonalisant $A$, et $p(A)$ se définit sans recourir à $U$. (c) est
 vrai pour les matrices diagonales $f(\Lambda)$ et se conserve par conjugaison par $U$ ; le
 spectre de $Uf(\Lambda)U^*$ est la diagonale de $f(\Lambda)$. (d) $B$ commute avec tout
@@ -139,7 +142,12 @@ $R_1$ de $|A|$ sur l'image $R_2$ de $A$ : si $|A|x=|A|x'$, alors
 $\|A(x-x')\|=\||A|(x-x')\|=0$. En particulier $\dim R_1=\dim R_2$, de sorte que les
 supplémentaires orthogonaux ont eux aussi même dimension ; soit $W_1:R_1^\perp\to R_2^\perp$
 une isométrie quelconque entre eux (qui envoie une base orthonormée sur une base
-orthonormée). Alors $W=W_0\oplus W_1$ est unitaire et $W|A|x=W_0|A|x=Ax$. $\square$
+orthonormée). Posons $W=W_0\oplus W_1$, c'est-à-dire $W(u_1+u_2)=W_0u_1+W_1u_2$ pour $u_1\in R_1$,
+$u_2\in R_1^\perp$. Comme $W_0u_1\in R_2\perp R_2^\perp\ni W_1u_2$, le théorème de Pythagore donne
+$\|Wu\|^2=\|u_1\|^2+\|u_2\|^2=\|u\|^2$ pour tout $u$. Par conséquent $\langle u,(W^*W-1)u\rangle=0$
+pour tout $u$, donc $W^*W=1$ par polarisation (démonstration du corollaire 1.4(3)) ; alors $W$ est
+inversible et $W^{-1}=W^*$, donc aussi $WW^*=1$ : $W$ est unitaire, et
+$W|A|x=W_0|A|x=Ax$. $\square$
 
 Les valeurs propres $s_1\ge\dots\ge s_n\ge0$ de $|A|$ sont les **valeurs singulières** de
 $A$. Trois normes seront utilisées tout au long du cours :
@@ -169,7 +177,8 @@ puisque $\|UW X\|_2=\|X\|_2$ pour $UW$ unitaire et $\||A|^{1/2}\|_2^2=\operatorn
 En particulier, les trois quantités ci-dessus sont bien des normes. $\|\cdot\|$ est une
 norme d'opérateur ; $\|\cdot\|_2$ est la norme associée au produit scalaire
 $\langle X,Y\rangle_{HS}$ ; quant à $\|\cdot\|_1$, le théorème 1.9 donne
-$\|A+B\|_1=\max_U|\operatorname{Tr}(AU)+\operatorname{Tr}(BU)|\le\|A\|_1+\|B\|_1$, tandis que
+$\|A+B\|_1=\max_U|\operatorname{Tr}(AU)+\operatorname{Tr}(BU)|\le\|A\|_1+\|B\|_1$ et
+$\|cA\|_1=\max_U|c\operatorname{Tr}(AU)|=|c|\,\|A\|_1$, tandis que
 $\|A\|_1=0$ impose $|A|=0$ et $A=W|A|=0$. Pour $P\ge0$, on a $|P|=(P^2)^{1/2}=P$ d'après le
 théorème 1.6, donc $\|P\|_1=\operatorname{Tr}P$.
 
@@ -198,9 +207,16 @@ print(A.eigenvalues()[0])      # one tensor per block, eigenvalues in ascending 
 Chaque opérateur est stocké sous la forme d'un unique tenseur de forme
 `(batch, C, k_max, k_max)` : un lot d'opérateurs, chacun étant une liste de `C` blocs. Ici
 `batch = C = 1`. La construction n'est autre que le théorème 1.3 lu à l'envers :
-$A=U\Lambda U^*$ avec $U$ distribuée selon la mesure de Haar. L'option
-`force_positive=True` est contrôlée sur les valeurs propres (corollaire 1.4(3)), si bien que
-la bibliothèque sait que `A` est positif sans avoir à le tester de nouveau.
+$A=U\Lambda U^*$ avec $U$ distribuée selon la mesure de Haar (la bibliothèque tire $U$ par la
+construction QR du théorème 5.3). L'option `force_positive=True` est contrôlée sur les valeurs
+propres prescrites (la bibliothèque lève une erreur si l'une d'elles est inférieure à
+$-10^{-12}$) ; d'après le corollaire 1.4(3), le résultat est alors positif (exactement lorsque les
+valeurs propres prescrites sont $\ge0$, comme ici ; à cette tolérance près en général), et la
+bibliothèque l'enregistre au lieu de le tester de nouveau. Pour la même raison,
+`A.eigenvalues()` ci-dessus renvoie le spectre prescrit, trié, sans rien calculer ; ce n'est pas
+une vérification. La vérification de $\operatorname{spec}f(A)=f(\operatorname{spec}A)$ ci-dessous,
+elle, calcule : `apply_function` diagonalise la matrice de $A$, et les valeurs propres de la
+matrice $e^A$ obtenue sont calculées à partir de zéro.
 
 Le calcul fonctionnel pour les opérateurs autoadjoints est assuré par `apply_function` (qui
 diagonalise chaque bloc au moyen de `eigh`). La fonction $f$ doit agir coefficient par
@@ -244,18 +260,25 @@ assert abs(X.frobenius_norm().item() - s.norm().item()) < 1e-12
 assert abs(X.trace_norm().item() - s.sum().item()) < 1e-12
 
 absX = X.abs()
-W = X @ absX.inverse()                                  # |X| is invertible (almost surely, for Ginibre)
+W = X @ absX.inverse()                                  # |X| is invertible almost surely, see below
 assert close(W.adjoint() @ W, M3.identity())            # W is unitary
 assert abs((X @ W.adjoint()).trace.item() - s.sum().item()) < 1e-10    # Tr(X W*) = ||X||_1
 assert abs(X.trace.item()) <= X.trace_norm().item()     # |Tr X| <= ||X||_1
 ```
 
+Avec un dtype complexe, `torch.randn` tire des coefficients indépendants dont les parties réelles
+et imaginaires sont indépendantes et de loi $N(0,\tfrac12)$ ; `G` est donc une matrice de Ginibre,
+qui admet une densité (proposition A.16(b)). $|X|$ est presque sûrement inversible :
+$(\det|X|)^2=\det(|X|^2)=\det(X^*X)=|\det X|^2$, et $|\det X|^2$ est un polynôme en les parties
+réelles et imaginaires des coefficients qui vaut $1$ en $X=1$, donc il s'annule avec probabilité
+nulle (corollaire A.7(b) ; c'est aussi la première étape du théorème 5.3).
+
 ## 1.7 Lots : de nombreux opérateurs à la fois
 
 L'axe des lots est la raison d'être de la bibliothèque : la théorie des matrices
 aléatoires, les méthodes de Monte-Carlo et l'optimisation à départs multiples requièrent
-des milliers d'opérateurs, et un seul appel vectorisé est bien plus rapide qu'une boucle
-Python. À titre d'exemple, vérifions un moment exact de l'**ensemble gaussien unitaire**
+des milliers d'opérateurs, et un seul appel vectorisé remplace une boucle Python sur
+ceux-ci. À titre d'exemple, vérifions un moment exact de l'**ensemble gaussien unitaire**
 (GUE).
 
 Soit $G$ une matrice à coefficients indépendants, dont les parties réelles et imaginaires
@@ -265,34 +288,32 @@ $H=(G+G^*)/\sqrt2$.
 **Proposition 1.10.** $\mathbb E\,\operatorname{Tr}H^4=2n^3+n$. Par conséquent, pour
 $X=H/\sqrt n$, $\ \mathbb E\,\tfrac1n\operatorname{Tr}X^4=2+\tfrac1{n^2}$.
 
-*Démonstration.* *Formule d'Isserlis (ou de Wick).* Soient $Y_1,\dots,Y_4$ des variables
-aléatoires réelles centrées conjointement gaussiennes (les répétitions sont permises), et
-$c_{ij}=\mathbb E[Y_iY_j]$. Leur fonction génératrice des moments conjointe est
-$\mathbb E\,e^{\sum_it_iY_i}=e^{q(t)/2}$ avec $q(t)=\sum_{ij}c_{ij}t_it_j$ (fonction
-génératrice des moments d'une gaussienne, résultat classique de probabilités). La dérivation sous l'espérance est légitime : la fonction
-génératrice des moments est finie pour tout $t$, et pour $|t_i|\le1$ toutes les dérivées partielles
-de $e^{\sum_it_iY_i}$ jusqu'à l'ordre $4$ sont majorées par $(1+\sum_i|Y_i|)^4e^{\sum_i|Y_i|}$, qui est
-intégrable car $e^{\sum_i|Y_i|}\le\sum_{s\in\{\pm1\}^4}e^{\sum_is_iY_i}$ ; le théorème de convergence
-dominée s'applique donc. Appliquons
-$\partial^4/\partial t_1\cdots\partial t_4$ en $t=0$ : à gauche, on obtient
-$\mathbb E[Y_1Y_2Y_3Y_4]$ ; à droite, seul le terme $q^2/8$ de la série exponentielle
-contient $t_1t_2t_3t_4$, avec le coefficient $c_{12}c_{34}+c_{13}c_{24}+c_{14}c_{23}$.
-Ainsi $\mathbb E[Y_1Y_2Y_3Y_4]$ est la somme, sur les trois appariements, des produits des
-espérances des paires. Par multilinéarité, il en va de même pour des variables complexes
-qui sont des combinaisons linéaires complexes de variables réelles conjointement
-gaussiennes, comme les coefficients de $H$.
+*Démonstration.* *Formule d'Isserlis (ou de Wick)* (théorème A.24, cas $m=4$). Les parties réelles
+et imaginaires des coefficients de $G$ sont des variables gaussiennes centrées indépendantes ; ce
+sont donc les coordonnées d'un même vecteur gaussien centré, et les coefficients de $H$ et de
+$\bar H$ en sont des combinaisons linéaires complexes. Le théorème A.24 donne alors, pour quatre
+quelconques de ces variables $Z_1,\dots,Z_4$ (les répétitions sont permises),
+$$
+\mathbb E[Z_1Z_2Z_3Z_4]=\mathbb E[Z_1Z_2]\,\mathbb E[Z_3Z_4]+\mathbb E[Z_1Z_3]\,\mathbb E[Z_2Z_4]+\mathbb E[Z_1Z_4]\,\mathbb E[Z_2Z_3],
+$$
+la somme, sur les trois appariements de $\{1,2,3,4\}$, des produits des espérances des paires
+(sans conjugaison complexe). La démonstration de l'annexe A compare la série entière de la
+fonction génératrice des moments aux moments gaussiens et ne dérive pas sous l'espérance.
 
 *Le moment.* Les espérances des paires valent
 $\mathbb E[H_{ij}H_{kl}]=\tfrac12\mathbb E[(G_{ij}+\bar G_{ji})(G_{kl}+\bar G_{lk})]=\delta_{il}\delta_{jk}$,
-car $\mathbb E[G_{ij}G_{kl}]=0$ et $\mathbb E[G_{ij}\bar G_{kl}]=\delta_{ik}\delta_{jl}$.
+car $\mathbb E[G_{ij}G_{kl}]=0$ et $\mathbb E[G_{ij}\bar G_{kl}]=\delta_{ik}\delta_{jl}$ (proposition A.16(a) ;
+pour $(i,j)\neq(k,l)$ les coefficients sont indépendants et centrés, et pour $G_{ij}=x+iy$ on a
+$\mathbb E[G_{ij}^2]=\mathbb E[x^2-y^2]+2i\,\mathbb E[xy]=0$ et $\mathbb E|G_{ij}|^2=\tfrac12+\tfrac12=1$).
 Dans $\operatorname{Tr}H^4=\sum_{ijkl}H_{ij}H_{jk}H_{kl}H_{li}$, les appariements donnent :
 $\{12\}\{34\}$ : $\delta_{ik}\delta_{ki}$, de somme $n^3$ (indices libres $i=k$, $j$, $l$) ;
 $\{14\}\{23\}$ : $\delta_{jl}\delta_{jl}$, de somme $n^3$ ;
 $\{13\}\{24\}$ : $\delta_{il}\delta_{jk}\delta_{ji}\delta_{kl}$, qui impose $i=j=k=l$, de somme $n$.
 En divisant par $n\cdot n^2$, on obtient le second énoncé. $\square$
 
-Les deux appariements *planaires* donnent le nombre de Catalan $2$ de la loi du demi-cercle ;
-l'appariement croisé donne la correction en $1/n^2$.
+Les deux appariements *non croisés* $\{12\}\{34\}$ et $\{14\}\{23\}$ (les paires peuvent être
+dessinées comme des arcs sans intersection au-dessus des points $1,2,3,4$) donnent le terme
+principal $2$, pour tout $n$ ; l'appariement croisé $\{13\}\{24\}$ donne la correction en $1/n^2$.
 
 ```python
 n, B = 4, 200_000
@@ -308,9 +329,14 @@ assert abs(mean - (2 + 1 / n**2)) < 5 * err
 ```
 
 Une vérification par Monte-Carlo est un test statistique : l'estimation doit coïncider avec
-la valeur exacte à quelques écarts-types près. C'est le schéma de toutes les vérifications
-par rapport à des résultats connus dans ce cours : un énoncé exact, une estimation
-numérique et une tolérance explicite.
+la valeur exacte à quelques écarts-types près. La variable $\tfrac1n\operatorname{Tr}X^4$ est un
+polynôme en des variables gaussiennes ; elle a donc une variance finie $\sigma^2$ (lemme A.23 : tous
+les moments gaussiens sont finis ; les produits se traitent par $|y_1\cdots y_r|\le\sum_i|y_i|^r$), et
+d'après l'inégalité de Bienaymé–Tchebychev la moyenne de $B$ échantillons indépendants s'écarte de
+la valeur exacte de plus de $5\sigma/\sqrt B$ avec une probabilité d'au plus $1/25$. Le code utilise
+l'écart-type empirique à la place de $\sigma$, et la graine fixée rend la vérification
+reproductible. C'est le schéma de toutes les vérifications par rapport à des résultats démontrés
+dans ce cours : un énoncé exact, une estimation numérique et une tolérance explicite.
 
 ## 1.8 Points de comparaison
 
@@ -318,7 +344,8 @@ Pour des matrices isolées, `numpy.linalg` et `scipy.linalg` (`sqrtm`, `expm`, `
 `polar`) sont les implémentations de référence, et les vérifications ci-dessus peuvent être
 refaites avec elles. La bibliothèque apporte trois éléments qui compteront par la suite :
 le traitement par lots (section 1.7), des opérateurs porteurs d'une structure par blocs
-(chapitre 2), et la différentiation automatique à travers toutes les opérations.
+(chapitre 2), et la différentiation automatique (l'autograd de PyTorch) à travers ses
+opérations.
 
 ## Exercices
 
@@ -349,7 +376,11 @@ assert close(Hs.apply_function(lambda w: torch.sin(w) * torch.exp(w)),
 
 3. Posons $T=A^{-1/2}XA^{-1/2}$. Alors $XA^{-1}X=B$ si et seulement si
    $T^2=A^{-1/2}BA^{-1/2}$, et $X\ge0$ si et seulement si $T\ge0$, puisque
-   $\langle x,Xx\rangle=\langle A^{1/2}x,TA^{1/2}x\rangle$ et que $A^{1/2}$ est inversible.
+   $\langle x,Xx\rangle=\langle A^{1/2}x,TA^{1/2}x\rangle$ et que $A^{1/2}$ est inversible (ici
+   $A^{\pm1/2}$ sont données par le calcul fonctionnel avec $t^{\pm1/2}$ sur
+   $\operatorname{spec}A\subset(0,\infty)$, donc $A^{-1/2}A^{1/2}=1$ d'après le théorème 1.5(c)). De
+   plus $A^{-1/2}BA^{-1/2}\ge0$, puisque
+   $\langle x,A^{-1/2}BA^{-1/2}x\rangle=\langle A^{-1/2}x,BA^{-1/2}x\rangle\ge0$.
    D'après le théorème 1.6, $T=(A^{-1/2}BA^{-1/2})^{1/2}$ est l'unique solution positive,
    c'est-à-dire $X=A\#B$. Toute solution $X$ de $XA^{-1}X=B$ est inversible, car
    $\det(X)^2\det(A)^{-1}=\det B\neq0$. Ainsi $XA^{-1}X=B$ équivaut à $XB^{-1}X=A$ (à partir

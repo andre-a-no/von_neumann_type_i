@@ -9,13 +9,15 @@ compute with them in `torch_vn_algebra`.
 
 It is written for two kinds of readers at once:
 
-- **Mathematicians** get complete proofs of every result that is used. Nothing is quoted
-  without proof except standard linear algebra, the fundamental theorem of algebra and
-  elementary facts of analysis and probability (limits, convexity, the Gaussian moment
-  generating function); where a result is stated before it is proved, or only applied, this
-  is said explicitly.
+- **Mathematicians** get a self-contained text: every theorem, formula, constant and
+  inequality that is stated is proved in the course — in the chapter itself or in one of the
+  appendices A–F, cited by number — from the prerequisites listed below. Numbers that are
+  only computed (for instance large-$n$ level statistics) are labelled *numerical
+  observation* and are never used as premises or test targets. References are historical
+  attribution or further reading, never a substitute for a proof.
 - **Physicists and engineers** get the physical meaning of each notion in boxes marked
-  *Physical meaning*, and working code they can adapt.
+  *Physical meaning*, and working code they can adapt. These boxes are physical
+  interpretation, not theorems of the course: nothing proved elsewhere depends on them.
 
 Chapters 1–13 have the same structure: theory with proofs; the library code for each
 result; a check of the code against an exact result (a theorem, a closed formula or an
@@ -43,11 +45,29 @@ example works with the current version of the library.
 | 11 | [Optimisation and trace inequalities](11_optimisation.md) | constrained parametrisations, sampling versus optimisation |
 | 12 | [Equivariant machine learning](12_equivariant_learning.md) | equivariant layers as commutants |
 | 13 | [Jordan algebras: why quantum mechanics uses *-algebras](13_jordan_algebras.md) | Jordan product and quadratic representation, spin factors and the Lorentz cone, the Jordan–von Neumann–Wigner classification, the transpose and the partial transpose, a trace inequality in Jordan form |
+| A | [Facts from analysis and probability](A_analysis.md) | power series and null sets, Gaussian vectors, spherical measures, eigenvalue inequalities, Isserlis–Wick |
+| B | [Schur–Weyl duality and the Weingarten calculus](B_schur_weyl.md) | Schur–Weyl duality, Weingarten functions, Wigner–Eckart theorem, Haar measure on $O(k)$ |
+| C | [Eigenvalue densities and Page's formula](C_eigenvalue_densities.md) | Weyl integration formula, GOE/GUE, Wishart and induced densities, Page's formula |
+| D | [Generators of quantum dynamical semigroups](D_gksl.md) | the GKSL theorem, generators on direct sums, Frigerio's theorem, Bény–Kempf–Kribs |
+| E | [Classification of Euclidean Jordan algebras](E_jordan_classification.md) | Peirce decomposition, Hurwitz and Frobenius theorems, coordinatisation, the Albert algebra, the Jordan–von Neumann–Wigner theorem |
+| F | [Symmetric cones, order isomorphisms and Jordan maps](F_cones_and_order.md) | cones of squares, the Koecher–Vinberg theorem, Kadison's theorem, Jordan automorphisms of $\bigoplus_cM_{k_c}$ |
 
 ## Prerequisites
 
-Linear algebra over $\mathbb C$ (eigenvalues, inner products, unitary matrices), basic
-probability, and Python. No physics and no functional analysis are assumed.
+The course assumes only the following, and proves everything else.
+
+- Linear algebra over $\mathbb R$ and $\mathbb C$ (finite-dimensional), and the fundamental
+  theorem of algebra.
+- Standard real analysis and multivariable calculus: limits, continuity, compactness in
+  $\mathbb R^n$, differentiation, the mean value theorem, Taylor's formula, the inverse and
+  implicit function theorems.
+- Standard measure and integration theory: Lebesgue measure, product measures and
+  Fubini–Tonelli, dominated and monotone convergence, change of variables in $\mathbb R^n$,
+  pushforward measures, densities, independence.
+- Elementary probability: expectation, variance, independence, the Gaussian distribution and
+  its moment generating function, the Markov and Chebyshev inequalities, the law of large
+  numbers.
+- Python, for the code. No physics and no functional analysis are assumed.
 
 ## How to run the code
 

@@ -6,9 +6,12 @@ Das Produkt $xy$ zweier Observablen ist keine Observable, es sei denn, $x$ und $
 Produkt $x\circ y=\frac12(xy+yx)$ dagegen immer. 1933 schlug P. Jordan vor, die Observablen mit diesem Produkt als
 Grundstruktur der Quantenmechanik zu nehmen, und Jordan, von Neumann und Wigner klassifizierten die
 endlichdimensionalen Algebren, die dabei auftreten. Dieses Kapitel entwickelt die endlichdimensionale Theorie, mit
-vollständigen Beweisen, wo diese kurz sind, und fragt, was der Jordan-Struktur entgeht. Die Antwort ist das Vorzeichen
-des Kommutators: Die Jordan-Algebra eines Systems bestimmt den Kommutator nur bis auf das Vorzeichen (Abschnitt 13.5),
-zusammengesetzte Systeme brauchen aber das Vorzeichen, und es entscheidet darüber, ob ein Zustand verschränkt ist.
+vollständigen Beweisen hier oder, für die vier langen (die Klassifikation, den Satz von Koecher–Vinberg, den Satz von
+Kadison und die Jordan-Automorphismen von $\bigoplus_cM_{k_c}$), in den Anhängen E und F, und fragt, was der
+Jordan-Struktur entgeht. Die Antwort ist das Vorzeichen des Kommutators: Die Jordan-Algebra eines Systems bestimmt den
+Kommutator nur bis auf das Vorzeichen (Abschnitt 13.5), zusammengesetzte Systeme brauchen aber das Vorzeichen: Es
+entscheidet, welche gemeinsamen Operatoren positiv sind, und der daraus gebildete PPT-Test weist Verschränkung nach
+(Proposition 13.12).
 
 **Sie lernen** das Jordan-Produkt und die quadratische Darstellung $P(y)x=yxy$ kennen, die im Gegensatz zu $\circ$
 die Positivität erhält; Spinfaktoren, ihre Spektraltheorie und den Lorentz-Kegel; Jordan-Unteralgebren hermitescher
@@ -18,7 +21,9 @@ zusammengesetzten System bewirkt; und eine Spurungleichung aus Kapitel 11, in Jo
 Spinfaktor bewiesen.
 
 Im Folgenden ist $\operatorname{Herm}_n(\mathbb K)$ der reelle Vektorraum der hermiteschen $n\times n$-Matrizen über
-$\mathbb K=\mathbb R$ oder $\mathbb C$, $M_{sa}$ der selbstadjungierte Teil von $\mathcal M=\bigoplus_cM_{k_c}(\mathbb C)$,
+$\mathbb K=\mathbb R$ oder $\mathbb C$ (Abschnitt 13.4 verwendet auch die Quaternionen $\mathbb H$ und die Oktonionen
+$\mathbb O$, konstruiert in Abschnitt E.6, und $\operatorname{Herm}_n$ über ihnen, Abschnitt E.7), $M_{sa}$ der
+selbstadjungierte Teil von $\mathcal M=\bigoplus_cM_{k_c}(\mathbb C)$,
 $X,Y,Z$ sind die Pauli-Matrizen und $\sigma=(X,Y,Z)$, also $u\cdot\sigma=u_1X+u_2Y+u_3Z$ für $u\in\mathbb R^3$.
 $[a,b]=ab-ba$, und $|u|$ ist die euklidische Norm von $u\in\mathbb R^m$.
 
@@ -53,10 +58,18 @@ ist $P(P(y)x)z=yxy\,z\,yxy=P(y)P(x)P(y)z$ wegen der Assoziativität. (2) Zyklizi
 $yxy=(x^{1/2}y)^*(x^{1/2}y)\ge0$ (Korollar 1.7), und $P(y)P(y^{-1})=P(y^{-1})P(y)=\mathrm{id}$. (4)
 $p\circ q=\frac14\begin{pmatrix}2&1\\1&0\end{pmatrix}$. $\square$
 
-Schreibt man $P(y)$ als $2L(y)^2-L(y^2)$, so ist jede Identität in (1) allein mit $\circ$ ausgedrückt und gilt daher in jeder speziellen Jordan-Algebra; die
-Fundamentalformel gilt in jeder Jordan-Algebra (K. McCrimmon, *A Taste of Jordan Algebras*, Springer 2004; wir geben
-den Beweis nicht wieder). Das Modul `torch_vn_algebra.jordan` implementiert diese Abbildungen auf Operatoren einer
-`TypeIAlgebra`, verzögert ausgewertet und gebündelt über alle Sektoren:
+Schreibt man $P(y)$ als $2L(y)^2-L(y^2)$, so ist jede Identität in (1) allein mit $\circ$ ausgedrückt. Der Beweis von
+(1) benutzt nur die Assoziativität des Matrixprodukts; in jeder speziellen Jordan-Algebra $J\subseteq\mathcal A$
+($\mathcal A$ assoziativ) liefert er daher $P(y)x=yxy$ und die Fundamentalformel $P(P(y)x)=P(y)P(x)P(y)$ auf $J$. (Das
+deckt alle Algebren ab, in denen der Kurs sie verwendet; für nicht spezielle Algebren wird die Fundamentalformel nicht
+benutzt.)
+
+Unter den Produkten $\alpha xy+\beta yx$ ($\alpha,\beta\in\mathbb R$) auf $\operatorname{Herm}_n(\mathbb C)$, $n\ge2$,
+ist $\frac12(xy+yx)$ das einzige, das in $x,y$ symmetrisch ist und für $y=x$ gleich $x^2$ ist: Symmetrie bedeutet
+$(\alpha-\beta)(xy-yx)=0$ für alle $x,y$, und $XZ\ne ZX$ (im linken oberen $2\times2$-Block) erzwingt $\alpha=\beta$;
+dann liefert $(\alpha+\beta)1=1$ für $x=y=1$ die Werte $\alpha=\beta=\frac12$. Das Modul `torch_vn_algebra.jordan`
+implementiert diese Abbildungen auf Operatoren einer `TypeIAlgebra`, verzögert ausgewertet und gebündelt über alle
+Sektoren:
 
 ```python
 import math
@@ -93,9 +106,8 @@ print(jp(p, q).eigenvalues()[0])                                  # (1 -+ sqrt 2
 assert abs(torch.linalg.det(jp(p, q).matrix[0, 0]).real.item() + 1 / 16) < 1e-14
 ```
 
-> **Physikalische Bedeutung.** $x\circ y$ ist das symmetrisierte Produkt von Observablen: die einzige Kombination
-> $\alpha xy+\beta yx$, die in $x,y$ symmetrisch ist und sich für $y=x$ auf $x^2$ reduziert, und sie ist wieder eine
-> Observable. Die quadratische Darstellung ist die **Lüders-Regel**: Misst man eine Ja/Nein-Frage $p$ und behält das
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). $x\circ y$ ist das symmetrisierte
+> Produkt von Observablen (die einzige solche Kombination, wie oben gezeigt), und es ist wieder eine Observable. Die quadratische Darstellung ist die **Lüders-Regel**: Misst man eine Ja/Nein-Frage $p$ und behält das
 > Ergebnis „ja“, so geht eine Dichte $\rho$ in $P(p)\rho/\operatorname{Tr}P(p)\rho=p\rho p/\operatorname{Tr}(p\rho)$
 > über. Proposition 13.2(4) besagt, dass $\circ$ selbst für positive Elemente keine solche operationelle Bedeutung hat.
 
@@ -128,7 +140,12 @@ $*$-Algebra $Z_j$, dann $X_j=Z_1\cdots Z_{j-1}s_{2j-1}$ und $Y_j$, also alle Ten
 Basis von $M_D(\mathbb C)$. $\square$
 
 Bis auf Vorzeichen sind $s_{2j-1}$ und $s_{2j}$ die Majorana-Operatoren $c_j+c_j^*$ und $i(c_j-c_j^*)$ der
-Jordan-Wigner-Fermionen $c_j$ aus Abschnitt 9.4.
+Jordan-Wigner-Fermionen $c_j$ aus Abschnitt 9.4, wobei Platz $j-1$ aus Kapitel 9 der $j$-te Tensorfaktor ist: Dort
+ist $s^a=\frac12\sigma_a$, $n=s^z+\frac12$ und $s^\pm=s^x\pm is^y$, also $(-1)^n=1-2n=-Z$ und $s^-=\frac12(X-iY)$,
+folglich $c_j=(-1)^{j-1}Z^{\otimes(j-1)}\otimes s^-\otimes1$. Da $s^-+s^+=X$ und $i(s^--s^+)=i(-iY)=Y$, gilt
+$$
+s_{2j-1}=(-1)^{j-1}(c_j+c_j^*),\qquad s_{2j}=(-1)^{j-1}\,i(c_j-c_j^*).
+$$
 
 **Satz 13.4 (Spektraltheorie von $V_m$).** Seien $x=(a,u)\in V_m$ und $\lambda_\pm=a\pm|u|$.
 
@@ -195,21 +212,45 @@ for m in range(1, 7):                                            # Proposition 1
     r = jd.compare_with_star_algebra(jd.anticommuting_symmetries(m))
     print(f"m = {m}: dim V_m = {r['jordan_dim']}, dim of the self-adjoint part of the *-algebra = {r['star_dim']}")
     assert r['jordan_dim'] == m + 1 and r['equal'] == (m in (1, 3))
+
+pq = 3                                                           # Majorana operators of Section 9.4, p = 3 sites
+Xp, Yp, Zp = jd.anticommuting_symmetries(3)
+sminus, I2 = 0.5 * (Xp - 1j * Yp), torch.eye(2, dtype=dt)
+parity = I2 - 2 * (0.5 * Zp + 0.5 * I2)                          # (-1)^n with n = s^z + 1/2
+def kron_all(fs):
+    out = torch.ones(1, 1, dtype=dt)
+    for f_ in fs:
+        out = torch.kron(out, f_)
+    return out
+s6 = jd.anticommuting_symmetries(2 * pq)
+for j in range(1, pq + 1):
+    c = kron_all([parity] * (j - 1) + [sminus] + [I2] * (pq - j))
+    sign = (-1) ** (j - 1)
+    assert close(s6[2 * j - 2], sign * (c + c.mH)) and close(s6[2 * j - 1], sign * 1j * (c - c.mH))
 ```
 
 Für $m=1$ erzeugt $s_1=Z$ die Diagonalmatrizen, der Dimension $2=m+1$, und $V_1\cong\mathbb R\oplus\mathbb R$ ist
 nicht einfach. Die ausgegebenen Dimensionen sind $3,4$ für $m=2$; $5,16$ für $m=4$; $7,64$ für $m=6$.
 
-> **Physikalische Bedeutung.** Ein Zustand von $V_m$ (ein positives normiertes lineares Funktional) ist wegen der
-> Selbstdualität von der Form $x\mapsto\operatorname{tr}(\rho\circ x)$ mit $\rho=\frac12(1,r)\in Q$, $|r|\le1$: Der
-> Zustandsraum ist eine Kugel der Dimension $m$. Für $m=3$ ist es die Bloch-Kugel eines Qubits (Proposition
-> 13.5(a)). Der Lorentz-Kegel ist der Zukunftslichtkegel der speziellen Relativitätstheorie in $1+m$ Dimensionen, und
+**Zustände von $V_m$.** Ein **Zustand** von $V_m$ ist ein lineares Funktional $\omega$ mit $\omega(Q)\ge0$ und
+$\omega(1)=1$. Die Zustände sind genau die Abbildungen $x\mapsto\operatorname{tr}(\rho\circ x)$ mit
+$\rho=\frac12(1,r)$, $|r|\le1$; der Zustandsraum ist also eine Kugel der Dimension $m$. *Beweis.*
+$\langle x,y\rangle=\operatorname{tr}(x\circ y)=2(ab+u\cdot v)$ ist ein Skalarprodukt auf $V_m$, also ist jedes lineare
+$\omega$ von der Form $\operatorname{tr}(\rho\circ\cdot)$ für genau ein $\rho=(b,v)$ (endlichdimensionale
+Riesz-Darstellung: in einer Orthonormalbasis ist $\rho=\sum_k\omega(e_k)e_k$). Nach der Selbstdualität in Satz
+13.4(4) gilt $\omega(Q)\ge0$ genau dann, wenn $\rho\in Q$, d. h. $b\ge|v|$; und $\omega(1)=\operatorname{tr}\rho=2b=1$.
+Also ist $\rho=\frac12(1,r)$ mit $r=2v$, $|r|\le1$; umgekehrt liefert jedes solche $\rho$ einen Zustand. $\square$
+
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Für $m=3$ ist der Zustandsraum von
+> $V_m$ die Bloch-Kugel eines Qubits (Proposition 13.5(a)). Der Lorentz-Kegel ist der Zukunftslichtkegel der
+> speziellen Relativitätstheorie in $1+m$ Dimensionen, und
 > Proposition 13.5(b) besagt, dass die Jordan-Automorphismen die orthogonalen Abbildungen des Raumes sind, die die
 > Zeitachse festhalten.
 
 Die Kegel $Q$ sind die Nebenbedingungsmengen der **Kegelprogrammierung zweiter Ordnung** (SOCP): lineare
-Optimierung über Produkten von Lorentz-Kegeln. Innere-Punkte-Verfahren für SOCP verwenden genau Satz 13.4:
-Eigenwerte, $\det$ und $P(y)$ für die Skalierung (F. Alizadeh, D. Goldfarb, *Second-order cone programming*, Math.
+Optimierung über Produkten von Lorentz-Kegeln. Die Größen aus Satz 13.4 (Eigenwerte, $\det$ und $P(y)$) sind
+diejenigen, in denen Innere-Punkte-Verfahren für SOCP üblicherweise formuliert werden; diese Algorithmen werden in
+diesem Kurs nicht behandelt (weiterführende Literatur: F. Alizadeh, D. Goldfarb, *Second-order cone programming*, Math.
 Program. 95 (2003) 3–51).
 
 ## 13.3 Jordan-Unteralgebren, die keine *-Unteralgebren sind
@@ -223,7 +264,7 @@ $\operatorname{Herm}_n(\mathbb C)$ der Dimension $n(n+1)/2$; die von ihr erzeugt
 deren selbstadjungierter Teil die Dimension $n^2$ hat. (b) Zu $x,y\in\operatorname{Herm}_2(\mathbb C)$ gibt es eine
 unitäre Matrix $U$, sodass $UxU^*$ und $UyU^*$ reell symmetrisch sind. Die von $1,x,y$ erzeugte Jordan-Algebra ist
 $\operatorname{span}\{1,x,y\}$; sind $x,y,1$ linear unabhängig, so ist sie $U^*\operatorname{Herm}_2(\mathbb R)U\cong V_2$,
-der Dimension $3$, während die von $x,y$ erzeugte $*$-Algebra $M_2(\mathbb C)$ ist, der Dimension $4$.
+der Dimension $3$, während die von $1,x,y$ erzeugte $*$-Algebra $M_2(\mathbb C)$ ist, der Dimension $4$.
 
 *Beweis.* (a) Lemma 13.1. Für $i\ne j$ ist $E_{ij}=E_{ii}(E_{ij}+E_{ji})$ ein Produkt reeller symmetrischer Matrizen,
 also enthält die erzeugte Algebra alle Matrixeinheiten. (b) Man schreibe $x=a1+u\cdot\sigma$, $y=b1+v\cdot\sigma$ und
@@ -234,8 +275,9 @@ und $Ru\cdot Rv=\frac12\operatorname{Tr}\big((Ru\cdot\sigma)(Rv\cdot\sigma)\big)
 Daher ist $Ru,Rv\perp e_2$, und $UxU^*=a1+(Ru)_1X+(Ru)_3Z$ ist reell, da $X,Z$ es sind; ebenso $UyU^*$. Ferner ist
 $x\circ y=(ab+u\cdot v)1+av\cdot\sigma+bu\cdot\sigma\in\operatorname{span}\{1,x,y\}$, und ebenso $x^2,y^2$, also ist der
 Spann abgeschlossen. Hat er die Dimension $3$, so ist sein Konjugiertes unter $U$ ganz
-$\operatorname{Herm}_2(\mathbb R)=\operatorname{span}\{1,X,Z\}$, das nach Lemma 13.3 $\cong V_2$ ist ($X,Z$
-antikommutieren) und nach (a) $M_2(\mathbb C)$ erzeugt. $\square$
+$\operatorname{Herm}_2(\mathbb R)=\operatorname{span}\{1,X,Z\}$, das vermöge $(a,u)\mapsto a1+u_1X+u_2Z$ zu $V_2$
+isomorph ist (der Beweis von Lemma 13.3 benutzt nur, dass die $s_i$ antikommutierende hermitesche Symmetrien sind, und
+$X,Z$ sind solche) und nach (a) $M_2(\mathbb C)$ erzeugt. $\square$
 
 ```python
 for n in range(2, 6):                                            # Proposition 13.6(a), a random real pair
@@ -265,41 +307,64 @@ dritte kann es.
 
 ## 13.4 Die Klassifikation
 
-Eine Jordan-Algebra heißt **formal reell**, wenn aus $\sum_ix_i^2=0$ folgt, dass alle $x_i=0$ sind; in endlicher
-Dimension ist das gleichbedeutend damit, **euklidisch** zu sein, d. h. ein Skalarprodukt mit
-$\langle x\circ y,z\rangle=\langle y,x\circ z\rangle$ zu besitzen [FK94]. $M_{sa}$ (mit $\operatorname{Tr}(xy)$) und
-$V_m$ (mit $\operatorname{tr}(x\circ y)$) sind euklidisch.
+Eine endlichdimensionale Jordan-Algebra heißt **formal reell**, wenn aus $\sum_ix_i^2=0$ folgt, dass alle $x_i=0$ sind,
+und **euklidisch**, wenn sie ein Einselement $1$ und ein Skalarprodukt mit
+$\langle x\circ y,z\rangle=\langle y,x\circ z\rangle$ besitzt. Die beiden Begriffe stimmen überein (Satz E.5(4); die
+Richtung „euklidisch $\Rightarrow$ formal reell“ ist eine Zeile:
+$0=\sum_i\langle x_i^2,1\rangle=\sum_i\langle x_i,x_i\rangle$). $M_{sa}$ mit $\langle x,y\rangle=\operatorname{Tr}(xy)$
+ist euklidisch: $\operatorname{Tr}(x^2)=\sum_{ij}|x_{ij}|^2$, und wegen der Zyklizität ist
+$\operatorname{Tr}((x\circ y)z)=\frac12\operatorname{Tr}(xyz+yxz)=\operatorname{Tr}(y(x\circ z))$. Ebenso $V_m$ mit
+$\langle x,y\rangle=\operatorname{tr}(x\circ y)=2(ab+u\cdot v)$: Für $z=(c,w)$ ist
+$\operatorname{tr}((x\circ y)\circ z)=2(abc+c\,u\cdot v+a\,v\cdot w+b\,u\cdot w)$ symmetrisch in $x,y,z$.
 
-**Satz 13.7 (Jordan–von Neumann–Wigner; ohne Beweis angegeben).** Jede endlichdimensionale formal reelle
-Jordan-Algebra ist eine direkte Summe einfacher Jordan-Algebren, und jede einfache ist zu genau einer der folgenden
-isomorph: $\mathbb R$; $\operatorname{Herm}_r(\mathbb K)$ für $\mathbb K=\mathbb R,\mathbb C,\mathbb H$ und $r\ge3$;
-den Spinfaktoren $V_m$, $m\ge2$; der **Albert-Algebra** $\operatorname{Herm}_3(\mathbb O)$ der hermiteschen
-$3\times3$-Matrizen über den Oktonionen (Dimension $27$). Im Rang $2$ gilt
+**Satz 13.7 (Jordan–von Neumann–Wigner).** Jede endlichdimensionale formal reelle Jordan-Algebra ist eine direkte
+Summe einfacher Ideale, und jede einfache ist zu genau einer der folgenden isomorph: $\mathbb R$;
+$\operatorname{Herm}_r(\mathbb K)$ für $\mathbb K=\mathbb R,\mathbb C,\mathbb H$ und $r\ge3$; den Spinfaktoren $V_m$,
+$m\ge2$; der **Albert-Algebra** $\operatorname{Herm}_3(\mathbb O)$ der hermiteschen $3\times3$-Matrizen über den
+Oktonionen (Dimension $27$). Außerdem gilt $\operatorname{Herm}_1(\mathbb K)\cong\mathbb R$ und
 $\operatorname{Herm}_2(\mathbb K)\cong V_{\dim\mathbb K+1}$ für $\mathbb K=\mathbb R,\mathbb C,\mathbb H,\mathbb O$.
+
+*Beweis.* Anhang E beweist ihn vollständig: Die Zerlegung ist Satz E.9, die Liste und „genau eine“ sind Satz
+E.27(1),(2), und die Isomorphismen in Rang eins und zwei sind Satz E.24(3). $\square$
+
 (P. Jordan, J. von Neumann, E. Wigner, *On an algebraic generalization of the quantum mechanical formalism*, Ann. of
-Math. 35 (1934) 29–64; ein moderner Beweis steht in [FK94, Kapitel V].)
+Math. 35 (1934) 29–64; der Beweis in Anhang E folgt [FK94, Kapitel II–V].)
 
-Alle außer der Albert-Algebra sind speziell: $\operatorname{Herm}_r(\mathbb H)$ bettet sich in
-$\operatorname{Herm}_{2r}(\mathbb C)$ ein, indem man Quaternionen als komplexe $2\times2$-Matrizen schreibt, und $V_m$
-nach Lemma 13.3. Die Albert-Algebra ist **exzeptionell**: Sie ist zu keiner Jordan-Unteralgebra einer assoziativen
-Algebra isomorph (A. A. Albert, *On a certain algebra of quantum mechanics*, Ann. of Math. 35 (1934) 65–73). Ein Grund,
-der sich kurz angeben lässt: C. M. Glennie fand polynomiale Identitäten, die in jeder speziellen Jordan-Algebra
-gelten, in $\operatorname{Herm}_3(\mathbb O)$ aber nicht (*Some identities valid in special Jordan algebras but not
-valid in all Jordan algebras*, Pacific J. Math. 16 (1966) 47–59; siehe McCrimmon, *A Taste of Jordan Algebras*). Die
-Oktonionen sind nicht assoziativ, und $\operatorname{Herm}_r(\mathbb O)$ erfüllt die Jordan-Identität nur für
-$r\le3$, weshalb die Liste dort endet. Daher lässt sich $\operatorname{Herm}_3(\mathbb O)$ nicht treu durch reelle
+Alle außer der Albert-Algebra sind speziell: $\mathbb R=\operatorname{Herm}_1(\mathbb R)$ und
+$\operatorname{Herm}_r(\mathbb K)$, $\mathbb K=\mathbb R,\mathbb C$, nach Lemma 13.1, $\operatorname{Herm}_r(\mathbb H)$,
+weil das Schreiben von Quaternionen als komplexe $2\times2$-Matrizen es in $\operatorname{Herm}_{2r}(\mathbb C)$
+einbettet (Satz E.24(1)), und $V_m$ nach Lemma 13.3. Die Albert-Algebra ist eine Jordan-Algebra (Satz E.24(2)) und ist
+**exzeptionell**: Sie ist zu keiner Jordan-Unteralgebra einer assoziativen reellen oder komplexen Algebra isomorph
+(Satz E.26, ein Argument von der Art, wie es A. A. Albert verwendete, *On a certain algebra of quantum mechanics*, Ann.
+of Math. 35 (1934) 65–73: Eine Jordan-Einbettung in eine assoziative Algebra würde das Oktonionenprodukt assoziativ
+machen, was es nicht ist, Lemma E.15(2)). Für $r\ge4$ erfüllt $\operatorname{Herm}_r(\mathbb O)$ die Jordan-Identität
+nicht (Korollar E.25), und eine einfache Algebra mit einem Jordan-Rahmen aus $r\ge4$ Elementen ist
+$\operatorname{Herm}_r(D)$ mit einer assoziativen Kompositionsalgebra $D\ne\mathbb O$ (Satz E.22), weshalb die
+Oktonionen nur für $r\le3$ auftreten. Daher lässt sich $\operatorname{Herm}_3(\mathbb O)$ nicht treu durch reelle
 oder komplexe Matrizen (oder innerhalb irgendeiner assoziativen Algebra) mit dem Produkt $\frac12(xy+yx)$ darstellen;
-Software muss mit oktonionischen Einträgen arbeiten.
+eine Rechnung in ihr muss statt eines Matrixprodukts das Oktonionenprodukt (oder seine Strukturkonstanten) verwenden.
 
-**Satz 13.8 (Koecher–Vinberg; ohne Beweis angegeben).** Die Inneren der Kegel der Quadrate euklidischer
-Jordan-Algebren sind genau die **symmetrischen Kegel**: offene konvexe Kegel in einem euklidischen Raum, die selbstdual
-und homogen sind (ihre linearen Automorphismen wirken transitiv). [FK94, Kapitel III.]
+Sei $\Omega$ ein nichtleerer offener konvexer Kegel in einem euklidischen Raum $V$ (einem endlichdimensionalen reellen
+Skalarproduktraum $\ne\{0\}$). Sein **dualer Kegel** ist
+$\Omega^*=\{y:\langle x,y\rangle>0\text{ für alle }x\in\bar\Omega\setminus\{0\}\}$; $\Omega$ heißt **selbstdual**,
+wenn $\Omega^*=\Omega$, **homogen**, wenn die linearen Abbildungen $g$ mit $g\Omega=\Omega$ transitiv auf $\Omega$
+wirken, und **symmetrisch**, wenn beides gilt.
 
-Satz 13.4(4) und Aufgabe 1 beweisen beide Eigenschaften für den Lorentz-Kegel. Somit sind die Kegel der
-semidefiniten Programmierung (Produkte von $\operatorname{Herm}_n(\mathbb R)^+$ oder $\operatorname{Herm}_n(\mathbb C)^+$),
-der SOCP und der linearen Programmierung ($\mathbb R_+^n$, der Kegel von $\mathbb R^n=\mathbb R\oplus\dots\oplus\mathbb R$)
-alle von dieser Form, und Innere-Punkte-Verfahren lassen sich ein für alle Mal für alle euklidischen Jordan-Algebren
-formulieren.
+**Satz 13.8 (Koecher–Vinberg).** Ein nichtleerer offener konvexer Kegel $\Omega$ in einem euklidischen Raum $V$ ist
+genau dann symmetrisch, wenn es ein Produkt $\circ$ auf $V$ gibt, sodass $(V,\circ,\langle\cdot,\cdot\rangle)$ eine
+euklidische Jordan-Algebra und $\Omega$ das Innere ihres Kegels der Quadrate ist.
+
+*Beweis.* Satz F.12 („wenn“: Sätze F.5(2) und F.6(2)). $\square$
+
+(M. Koecher, 1957; E. B. Vinberg, 1960; der Beweis in Anhang F folgt [FK94, Kapitel I–III].) Satz 13.4(4) beweist die
+abgeschlossene Form der Selbstdualität für den Lorentz-Kegel ($y\in Q$ genau dann, wenn $\operatorname{tr}(x\circ y)\ge0$
+für alle $x\in Q$), und Aufgabe 1 seine Homogenität. Der Kegel der Quadrate einer direkten Summe euklidischer
+Jordan-Algebren (mit der orthogonalen Summe der Skalarprodukte) ist das Produkt ihrer Kegel der Quadrate, da
+$(x_1,\dots,x_k)^2=(x_1^2,\dots,x_k^2)$. Nach der Richtung „wenn“ sind daher die Inneren der Kegel der semidefiniten
+Programmierung (Produkte von $\operatorname{Herm}_n(\mathbb R)^+$ oder $\operatorname{Herm}_n(\mathbb C)^+$, nach Satz
+1.6 die Kegel der Quadrate; für reelles $x\ge0$ ist die Quadratwurzel reell, da ihre komplex Konjugierte ebenfalls eine
+positive Quadratwurzel von $x$ ist), der SOCP (Produkte von Lorentz-Kegeln) und der linearen Programmierung
+($\mathbb R_+^n$, der Kegel der Quadrate von $\mathbb R^n=\mathbb R\oplus\dots\oplus\mathbb R$) symmetrische Kegel.
 
 [FK94]: J. Faraut, A. Korányi, *Analysis on Symmetric Cones*, Oxford University Press, 1994.
 
@@ -308,7 +373,10 @@ formulieren.
 Ein **Jordan-$*$-Homomorphismus** von von-Neumann-Algebren ist eine komplex-lineare Abbildung $\Phi$ mit
 $\Phi(x^*)=\Phi(x)^*$ und $\Phi(x\circ y)=\Phi(x)\circ\Phi(y)$; auf den selbstadjungierten Teilen ist er ein
 Jordan-Homomorphismus, und jeder Jordan-Homomorphismus selbstadjungierter Teile setzt sich durch
-$\Phi(x+iy)=\Phi(x)+i\Phi(y)$ zu einem solchen fort.
+$\Phi(x+iy)=\Phi(x)+i\Phi(y)$ ($x,y$ selbstadjungiert) zu einem solchen fort. (Dieses $\Phi$ ist komplex-linear und
+erfüllt $\Phi(x-iy)=\Phi(x+iy)^*$; und da $\circ$ komplex-bilinear ist und Paare selbstadjungierter Elemente auf
+selbstadjungierte Elemente abbildet, wird $(x+iy)\circ(x'+iy')=(x\circ x'-y\circ y')+i(x\circ y'+y\circ x')$ auf
+$\Phi(x+iy)\circ\Phi(x'+iy')$ abgebildet.)
 
 **Proposition 13.9 (die Transposition).** Sei $T(A)=\bigoplus_cA_c^T$ auf $\mathcal M$. (a) $T$ ist ein unitaler
 Jordan-$*$-Automorphismus mit $T(AB)=T(B)T(A)$; er erhält Spektren, also sind $T$ und $T^{-1}=T$ positiv. (b) Auf
@@ -324,19 +392,28 @@ auf den symmetrischen und $-1$ auf den antisymmetrischen Tensoren, die zusammen 
 Ein Jordan-Automorphismus muss also kein $*$-Automorphismus sein. Bis auf dieses Phänomen bestimmt die Positivität die
 Jordan-Struktur:
 
-**Satz 13.10 (Kadison; ohne Beweis angegeben).** Sei $\Phi$ eine lineare Bijektion zwischen unitalen C\*-Algebren mit
-$\Phi(1)=1$, sodass $\Phi$ und $\Phi^{-1}$ positiv sind. Dann ist $\Phi$ ein Jordan-$*$-Isomorphismus. (R. V. Kadison,
-*A generalized Schwarz inequality and algebraic invariants for operator algebras*, Ann. of Math. 56 (1952) 494–503,
-Korollar 5. In *Isometries of operator algebras*, Ann. of Math. 54 (1951) 325–338, hatte er gezeigt, dass eine lineare
-Isometrie $\Phi$ einer unitalen C\*-Algebra auf eine andere gleich $\Phi(1)$, einem Unitären, mal einem
-Jordan-$*$-Isomorphismus ist.)
+**Satz 13.10 (Kadison, endliche Dimension).** Seien $\mathcal M=\bigoplus_cM_{k_c}(\mathbb C)$ und
+$\mathcal N=\bigoplus_dM_{k'_d}(\mathbb C)$, und sei $\Phi:\mathcal M\to\mathcal N$ eine lineare Bijektion mit
+$\Phi(1)=1$, sodass $\Phi$ und $\Phi^{-1}$ positiv sind. Dann ist $\Phi$ ein Jordan-$*$-Isomorphismus. Umgekehrt ist
+jeder Jordan-$*$-Isomorphismus $\mathcal M\to\mathcal N$ unital, und er und seine Inverse sind positiv.
 
-Die Umkehrung ist unmittelbar: Ein Jordan-$*$-Isomorphismus bildet Quadrate $h^2=h\circ h$ selbstadjungierter Elemente
-auf Quadrate ab, also den positiven Kegel auf den positiven Kegel. Für die Faktoren $M_n$ sind die
-Jordan-Automorphismen genau bekannt: Jeder Jordan-$*$-Automorphismus von $M_n(\mathbb C)$ ist $A\mapsto UAU^*$ oder
-$A\mapsto UA^TU^*$ mit unitärem $U$ (N. Jacobson, C. E. Rickart, *Jordan homomorphisms of rings*, Trans. Amer. Math.
-Soc. 69 (1950) 479–502; I. N. Herstein, *Jordan homomorphisms*, Trans. Amer. Math. Soc. 81 (1956) 331–341). Wir
-beweisen den Fall $n=2$.
+*Beweis.* Satz F.15. (Die Idee: $\Phi$ bildet die konvexe Menge $\{0\le a\le1\}$ auf die entsprechende Menge von
+$\mathcal N$ ab, also Extrempunkte, und das sind die Projektionen, auf Projektionen; es erhält $p+q\le1$, was für
+Projektionen $pq=0$ bedeutet; also bildet es Spektralzerlegungen auf Spektralzerlegungen ab, und
+$\Phi(x^2)=\Phi(x)^2$.) $\square$
+
+R. V. Kadison bewies den Satz für alle unitalen C\*-Algebren (*A generalized Schwarz inequality and algebraic
+invariants for operator algebras*, Ann. of Math. 56 (1952) 494–503); in diesem Kurs wird nur der endlichdimensionale
+Fall bewiesen und verwendet. Für die Faktoren $M_n$ sind die Jordan-Automorphismen genau bekannt: Jeder
+Jordan-$*$-Automorphismus von $M_n(\mathbb C)$ ist $A\mapsto UAU^*$ oder $A\mapsto UA^TU^*$ mit unitärem $U$ (Satz
+F.17, für alle $n$; das Ergebnis stammt von N. Jacobson, C. E. Rickart, Trans. Amer. Math. Soc. 69 (1950) 479–502,
+und I. N. Herstein, Trans. Amer. Math. Soc. 81 (1956) 331–341). Die ersten Abbildungen sind multiplikativ, die zweiten
+antimultiplikativ; ein Jordan-$*$-Automorphismus von $M_n$ erhält also entweder alle Kommutatoren oder kehrt alle um:
+$\Phi([x,y])=\pm[\Phi(x),\Phi(y)]$. Auf $\bigoplus_cM_{k_c}$ permutiert ein Jordan-$*$-Isomorphismus Blöcke gleicher
+Größe und wirkt auf jedem Block auf eine der beiden Arten (Satz F.18); er ist unital und in beiden Richtungen positiv
+(Satz 13.10), und nach Korollar F.19 ist er genau dann vollständig positiv, wenn er keinen Block der Größe $\ge2$
+transponiert, also genau dann, wenn er ein $*$-Isomorphismus ist. Hier ist ein direkter Beweis des Falls $n=2$ in der
+Sprache der Spinfaktoren.
 
 **Proposition 13.11.** Jeder Jordan-Automorphismus von $\operatorname{Herm}_2(\mathbb C)$ ist $A\mapsto UAU^*$ oder
 $A\mapsto UA^TU^*$ mit $U\in U(2)$.
@@ -392,12 +469,13 @@ und dieses Vorzeichen wird durch die $*$-Algebra $M_n\otimes M_m$ festgelegt und
 Faktoren. ($\circ_\theta$ ist das Jordan-Produkt des assoziativen Produkts $A\star B=\theta(\theta(A)\theta(B))$, für
 das $(x\otimes y)\star(x'\otimes y')=xx'\otimes y'y$ gilt: die Algebra $M_n\otimes M_m^{\rm op}$.) Der Kegel
 $\theta(\operatorname{Herm}_{nm}^+)$ ist es, der das **PPT-Kriterium** liefert (A. Peres, Phys. Rev. Lett. 77 (1996)
-1413): Ein separabler Zustand $\rho=\sum_kp_ka_k\otimes b_k$, $p_k\ge0$, $a_k,b_k\ge0$, liegt in beiden Kegeln, da
+1413). Ein Zustand $\rho$ von $M_n\otimes M_m$ heißt **separabel**, wenn $\rho=\sum_kp_ka_k\otimes b_k$ (eine endliche
+Summe) mit $p_k\ge0$, $a_k,b_k\ge0$, und andernfalls **verschränkt**. Ein separabler Zustand liegt in beiden Kegeln, da
 $\theta(\rho)=\sum_kp_ka_k\otimes b_k^T$ mit $b_k^T\ge0$ (Proposition 13.9(a)) und
 $a\otimes b=(a^{1/2}\otimes b^{1/2})^2\ge0$. Also ist $\omega$, das nicht in $\theta(\operatorname{Herm}_4^+)$ liegt,
-verschränkt. Zu Ergebnissen darüber, welche Zusammensetzungen von Jordan-Algebren existieren, siehe H. Hanche-Olsen,
-*On the structure and tensor products of JC-algebras*, Canad. J. Math. 35 (1983) 1059–1074, und H. Barnum,
-M. Graydon, A. Wilce, *Composites and categories of Euclidean Jordan algebras*, Quantum 4 (2020) 359.
+verschränkt. (Weiterführende Literatur zu Zusammensetzungen von Jordan-Algebren, hier nicht verwendet: H.
+Hanche-Olsen, *On the structure and tensor products of JC-algebras*, Canad. J. Math. 35 (1983) 1059–1074; H. Barnum,
+M. Graydon, A. Wilce, *Composites and categories of Euclidean Jordan algebras*, Quantum 4 (2020) 359.)
 
 **Dynamik.** Man könnte hoffen, dass die Zeitentwicklung das assoziative Produkt erzwingt. Das tut sie nicht:
 
@@ -408,7 +486,10 @@ $\delta=4\sum_k[L(x_k),L(y_k)]$ für gewisse $x_k,y_k\in\operatorname{Herm}_n$: 
 vom Jordan-Produkt erzeugt.
 
 *Beweis.* (a) $(i[H,z])^*=-i[z,H]=i[H,z]$; $[H,\cdot]$ ist eine Derivation des assoziativen Produkts, also auch von
-$\circ$. (b) $4x\circ(y\circ z)=xyz+xzy+yzx+zyx$; man subtrahiere denselben Ausdruck mit vertauschten $x,y$. (c) Nach
+$\circ$. $z(t)=e^{itH}ze^{-itH}$ erfüllt $z'=i[H,z]$ und $z(0)=z$ (Proposition 8.2(3) mit $\mathcal M=M_n$), also
+ist $z(t)=e^{t\delta}(z)$ nach der Eindeutigkeit in Lemma 8.1; Konjugation mit dem Unitären $e^{itH}$ erhält Produkte
+und Adjungierte, also $\circ$ und $\operatorname{Herm}_n$.
+(b) $4x\circ(y\circ z)=xyz+xzy+yzx+zyx$; man subtrahiere denselben Ausdruck mit vertauschten $x,y$. (c) Nach
 (b) genügt es, $iH-\frac{\operatorname{Tr}H}n i1$ (das dieselben Kommutatoren hat wie $iH$) als Summe von $[x_k,y_k]$
 zu schreiben. Für $i\ne j$ und $a=E_{ij}+E_{ji}$, $b=i(E_{ij}-E_{ji})$ gilt $[a,E_{ii}]=E_{ji}-E_{ij}$,
 $[b,E_{ii}]=-i(E_{ij}+E_{ji})$ und $[a,b]=2i(E_{jj}-E_{ii})$; diese spannen über $\mathbb R$ die spurfreien
@@ -417,14 +498,13 @@ antihermiteschen Matrizen auf. $\square$
 Was die Jordan-Algebra nicht enthält, ist die **Zuordnung** $H\mapsto i[H,\cdot]$ zwischen einer Observablen und der
 Dynamik, die sie erzeugt. In $\operatorname{Herm}_n(\mathbb R)$ etwa stammen die Derivationen
 $[L(x),L(y)]=\frac14[[x,y],\cdot]$ von reellen antisymmetrischen $[x,y]$, die nicht $i$ mal eine reelle symmetrische
-Matrix sind. E. M. Alfsen und F. W. Shultz haben gezeigt, dass eine JBW-Algebra (eine unendlichdimensionale Version
-einer formal reellen Jordan-Algebra; in endlicher Dimension stimmen die Begriffe überein) genau dann der
-selbstadjungierte Teil einer von-Neumann-Algebra ist, wenn sie eine solche „dynamische Korrespondenz“ zulässt, und
-haben die Zustandsräume von C\*-Algebren geometrisch charakterisiert (*Geometry of State Spaces of Operator Algebras*,
-Birkhäuser, 2003; ohne Beweis angegeben). Eine solche Korrespondenz ist nicht eindeutig: Auf
-$\operatorname{Herm}_n(\mathbb C)$ kommen sowohl $H\mapsto i[H,\cdot]$ als auch $H\mapsto-i[H,\cdot]$ in Frage; die
-Transposition vertauscht sie, da $T(i[H,T(z)])=-i[H^T,z]$, und sie gehören zu $M_n$ bzw. zu dessen entgegengesetzter
-Algebra – die beiden Vorzeichen aus Proposition 13.12.
+Matrix sind (Aufgabe 4). Die Korrespondenz ist durch $\circ$ nicht bestimmt: Auf $\operatorname{Herm}_n(\mathbb C)$
+schicken sowohl $H\mapsto i[H,\cdot]$ als auch $H\mapsto-i[H,\cdot]$ jede Observable auf eine Derivation von $\circ$
+(Proposition 13.13(a)), und die Transposition, ein Jordan-Automorphismus, vertauscht sie, da
+$T(i[H,T(z)])=-i[H^T,z]$. Die zweite ist $i$ mal der Kommutator der entgegengesetzten Algebra
+($a\cdot_{\rm op}b=ba$): $-i[H,z]=i(H\cdot_{\rm op}z-z\cdot_{\rm op}H)$ – die beiden Vorzeichen aus Proposition 13.12.
+(Weiterführende Literatur zu solchen „dynamischen Korrespondenzen“, hier nicht verwendet: E. M. Alfsen, F. W. Shultz,
+*Geometry of State Spaces of Operator Algebras*, Birkhäuser, 2003.)
 
 ```python
 x, y = sa(), sa()
@@ -469,8 +549,8 @@ assert close(delta(jm(z1, z2)), jm(delta(z1), z2) + jm(z1, delta(z2)))         #
 assert close(jm(z1, jm(z2, Hm)) - jm(z2, jm(z1, Hm)), 0.25 * cm(cm(z1, z2), Hm))   # (b)
 ```
 
-> **Physikalische Bedeutung.** Für ein spinloses Teilchen ist die Transposition (komplexe Konjugation in einer reellen
-> Basis) die **Zeitumkehr**. Sie ist eine Symmetrie der Observablen eines einzelnen Systems, aber sie ist antiunitär,
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Für ein spinloses Teilchen ist die
+> Transposition (komplexe Konjugation in einer reellen Basis) die **Zeitumkehr**. Sie ist eine Symmetrie der Observablen eines einzelnen Systems, aber sie ist antiunitär,
 > und auf nur ein Teilsystem angewandt ist sie keine physikalische Operation: Proposition 13.12 zeigt, dass sie den
 > Bell-Zustand in einen Operator mit einem negativen Eigenwert verwandelt. Die Quantenmechanik verwendet komplexe
 > $*$-Algebren, weil zusammengesetzte Systeme den Kommutator mit seinem Vorzeichen brauchen, nicht nur das
@@ -485,7 +565,7 @@ alle $Y=Y^*$ und lautet in Jordan-Sprache
 $$
 \operatorname{tr}|P(y)x|\le\operatorname{tr}P(y)|x|,
 $$
-was in jeder euklidischen Jordan-Algebra sinnvoll ist. Wir beweisen sie in $V_m$ mit einem Argument, das nur drei
+was in jeder euklidischen Jordan-Algebra sinnvoll ist, sobald eine Spur festgelegt ist. Wir beweisen sie in $V_m$ mit einem Argument, das nur drei
 Eigenschaften verwendet.
 
 **Proposition 13.14 (Exp. 3 in einem Spinfaktor).** Für $x,y\in V_m$ gilt
@@ -509,19 +589,29 @@ $-x\in Q$. $\square$
 
 Der Beweis verwendet nur: (i) $P(y)Q\subseteq Q$ für jedes $y$; (ii) den Spektralsatz: Jedes $z$ ist
 $\sum_i\mu_ic_i$ mit orthogonalen Idempotenten $c_i$ der Summe $1$, und $f(z)=\sum_if(\mu_i)c_i$ (sodass $x_\pm$ und
-die Idempotente Quadrate sind); (iii) $\operatorname{tr}$ ist linear,
-$\operatorname{tr}(\sum_i\mu_ic_i)=\sum_i\mu_i\operatorname{tr}c_i$ mit $\operatorname{tr}c_i\ge0$, und
-$\operatorname{tr}(a\circ b)\ge0$ für $a,b\in Q$. In einer euklidischen Jordan-Algebra vom Rang $r$ gilt (ii) mit $r$
-primitiven Idempotenten $c_i$ (einem Jordan-Rahmen), die Spur ist $\operatorname{tr}z=\sum_i\mu_i$, die Form
-$\operatorname{tr}(x\circ y)$ ist assoziativ, $\operatorname{tr}((x\circ y)\circ z)=\operatorname{tr}(x\circ(y\circ z))$,
-und (i) gilt [FK94, Kapitel II–III]; diese Tatsachen beweisen wir nicht. Der letzte Teil von (iii) folgt dann aus (i):
-Entwickelt man $P(a^{1/2})=2L(a^{1/2})^2-L(a)$ und verwendet die Assoziativität, so ist
-$\operatorname{tr}(a\circ b)=\operatorname{tr}P(a^{1/2})b$, die Spur eines Elements von $Q$, also $\ge0$. Die
-Ungleichung gilt also in jeder euklidischen Jordan-Algebra – einschließlich $\operatorname{Herm}_r(\mathbb H)$ und der
-Albert-Algebra, die nicht Jordan-isomorph zu selbstadjungierten Teilen komplexer $*$-Algebren sind. In $M_{sa}$
-beweist dasselbe Argument, mit $\operatorname{Tr}$ und $P(y)x=yxy$, Proposition 11.9 erneut. In $V_m$ folgt die
-Ungleichung auch aus Proposition 11.9 über $\phi$, da $\phi(P(y)x)=\phi(y)\phi(x)\phi(y)$ und $\phi(|x|)=|\phi(x)|$;
-der Code prüft beides:
+die Idempotente Quadrate sind); (iii) $\operatorname{tr}$ ist linear, $\operatorname{tr}(a\circ1)=\operatorname{tr}a$,
+und $\operatorname{tr}(a\circ b)\ge0$ für $a,b\in Q$. Alle drei gelten in jeder euklidischen Jordan-Algebra $V$ mit Eins
+$e$ für die Linearform $\tau(x)=\langle x,e\rangle$, für die $\tau(a\circ b)=\langle b,a\circ e\rangle=\langle a,b\rangle$
+gilt: (ii) ist Satz F.3, (i) ist Satz F.6(4), und $\langle a,b\rangle\ge0$ für $a,b\in Q$ ist Satz F.5(1). Korollar
+F.7 führt das Argument aus: $\tau(|P(y)x|)\le\tau(P(y)|x|)$ in jeder euklidischen Jordan-Algebra, mit Gleichheit, falls
+$x\in Q$ oder $-x\in Q$. Auf $M_{sa}$ mit $\langle x,y\rangle=\operatorname{Tr}(xy)$ ist $\tau=\operatorname{Tr}$ und
+$P(y)x=yxy$; die Idempotente von $(M_{sa},\circ)$ sind die Projektionen ($c\circ c=c^2$), und für Projektionen gilt
+$c\circ c'=0$ genau dann, wenn $cc'=0$ (Lemma F.14(2)); nach der Eindeutigkeit in Satz F.3 ist seine Zerlegung von $x$
+also die Spektralzerlegung in Eigenprojektionen, und $|x|$ ist der Matrix-Absolutbetrag. Damit ist Proposition 11.9
+für alle $Y=Y^*$ erneut bewiesen. Auf $V_m$ mit $\langle x,y\rangle=\operatorname{tr}(x\circ y)$,
+$\tau=\operatorname{tr}$, ist die Zerlegung aus Satz F.3 die aus Satz 13.4(2) (mit $x=a1$, falls $u=0$), und das ist
+Proposition 13.14. In einer einfachen euklidischen Jordan-Algebra $J$ vom Rang $r$ erfüllt die Spur
+$\operatorname{tr}x=\frac r{\dim J}\operatorname{Tr}L(x)$ aus Korollar E.28 die Gleichung
+$\operatorname{tr}(\sum_i\mu_ic_i)=\sum_i\mu_i$ für jeden Jordan-Rahmen $(c_i)$ (Satz E.7), und
+$\langle x,y\rangle=\operatorname{tr}(x\circ y)$ ist ein assoziatives Skalarprodukt; für dieses ist
+$\tau=\operatorname{tr}$, also gilt die Ungleichung für diese Spur. Das trifft auf $\operatorname{Herm}_r(\mathbb H)$
+und die Albert-Algebra zu, die einfache euklidische Jordan-Algebren sind (Satz E.24). Für $r\ge3$ sind sie für kein
+$\mathcal M=\bigoplus_cM_{k_c}$ zu $M_{sa}$ Jordan-isomorph: $M_{sa}=\bigoplus_c\operatorname{Herm}_{k_c}(\mathbb C)$ ist
+eine direkte Summe von Idealen, also nur bei einem einzigen Block einfach, und $\operatorname{Herm}_k(\mathbb C)$
+($\cong\mathbb R$ für $k=1$, $\cong V_3$ für $k=2$) ist nach der Eindeutigkeit in Satz 13.7 weder zu
+$\operatorname{Herm}_r(\mathbb H)$, $r\ge3$, noch zu $\operatorname{Herm}_3(\mathbb O)$ isomorph. In $V_m$ folgt die
+Ungleichung auch aus Proposition 11.9 (oben auf $Y=Y^*$ erweitert) über $\phi$, da $\phi(P(y)x)=\phi(y)\phi(x)\phi(y)$
+und $\phi(|x|)=|\phi(x)|$; der Code prüft beides:
 
 ```python
 for m in (2, 4, 7):
@@ -537,11 +627,16 @@ for m in (2, 4, 7):
     Xs, Ys = Vm.to_matrix(xs[:200]), Vm.to_matrix(ys[:200])
     tn = torch.linalg.svdvals(Ys @ Xs @ Ys).sum(-1)                     # Tr |phi(y) phi(x) phi(y)|
     assert (tn - Vm.representation_dim / 2 * lhs[:200]).abs().max() < 1e-10 * tn.max()
+    wx, Ux = torch.linalg.eigh(Xs)
+    absX = Ux @ torch.diag_embed(wx.abs().to(dt)) @ Ux.mH                  # |phi(x)|
+    tr_rhs = (Ys @ absX @ Ys).diagonal(dim1=-2, dim2=-1).sum(-1).real    # Tr phi(y) |phi(x)| phi(y)
+    assert (torch.linalg.eigvalsh(Ys)[:, 0] < 0).any()                  # some phi(y) are indefinite
+    assert (tr_rhs - tn >= -1e-10 * tr_rhs).all()                       # Proposition 11.9 for Y = Y*
 ```
 
-Die Lücke $\operatorname{tr}P(y)|x|-\operatorname{tr}|P(y)x|$ verschwindet für definite $x$ und ist für typische
-indefinite $x$ positiv (die ausgegebenen Maxima liegen für diese Gaußschen Stichproben in der Größenordnung
-$10^1$–$10^2$).
+Die Lücke $\operatorname{tr}P(y)|x|-\operatorname{tr}|P(y)x|$ verschwindet für definite $x$ (Proposition 13.14).
+Numerische Beobachtung (kein Satz): Für diese Gaußschen Stichproben liegen die ausgegebenen maximalen Lücken in der
+Größenordnung $10^1$–$10^2$; die Ungleichung ist für indefinite $x$ also weit von einer Gleichheit entfernt.
 
 ## 13.7 Womit man vergleichen sollte
 
@@ -583,7 +678,8 @@ $*$-Algebra.
    Satz 13.4(5) ist $\phi(P(y)P(y^{-1})x)=\phi(x)$; $\phi$ ist injektiv. $P(y)$ bildet $Q$ in $Q$ ab, ebenso seine
    Inverse $P(y^{-1})$, also ist $P(y)Q=Q$; als linearer Homöomorphismus bildet es das Innere auf das Innere ab.
    Schließlich ist $P(y)1=2y\circ y-y^2=y^2$, also $P(x^{1/2})1=x$, und $P(x^{1/2})$ ist invertierbar, wenn $x$ im
-   Inneren liegt ($\det x^{1/2}=\sqrt{\lambda_+\lambda_-}>0$). Je zwei innere Punkte werden durch
+   Inneren liegt ($\det x^{1/2}=\sqrt{\lambda_+\lambda_-}>0$; das Innere von $Q$ ist $\{a>|u|\}=\{\lambda_->0\}$, da
+   $a-|u|$ stetig ist und $(a-\varepsilon,u)\notin Q$ für $a=|u|$). Je zwei innere Punkte werden durch
    $P(x'^{1/2})P(x^{1/2})^{-1}$ ineinander überführt.
 
 ```python
@@ -599,8 +695,7 @@ assert V4.in_cone(V4.quadratic_representation(yv, xi)).all()
 
 2. $\theta(\rho_p)=\frac p2F+\frac{1-p}4$ nach Proposition 13.12. $F$ hat die Eigenwerte $1$ (dreifach) und $-1$
    (einfach), also besteht das Spektrum aus $\frac{1+p}4$ (dreifach) und $\frac{1-3p}4$, das genau dann negativ ist,
-   wenn $p>\frac13$; dann ist $\rho_p$ nach dem PPT-Kriterium nicht separabel. (Für $2\times2$-Systeme gilt auch die
-   Umkehrung: M., P. und R. Horodecki, Phys. Lett. A 223 (1996) 1; wir beweisen sie nicht.)
+   wenn $p>\frac13$; dann ist $\rho_p$ nach dem PPT-Kriterium nicht separabel.
 
 ```python
 for pp in (0.2, 1 / 3, 0.5):
@@ -626,8 +721,8 @@ assert V3c.in_cone(V3c.product(V3c.element(1.0, wv[0]), V3c.element(1.0, wv[0]))
 
 </details>
 
-**Wie es weitergeht.** Dies ist das letzte Kapitel des Kurses. Die Standardreferenz für die endlichdimensionale
-Theorie ist [FK94]; K. McCrimmon, *A Taste of Jordan Algebras* (Springer 2004), behandelt die Algebra und die
+**Wie es weitergeht.** Dies ist das letzte Kapitel des Kurses; die Anhänge E und F vervollständigen seine Beweise. Als
+weiterführende Literatur ist die Standardreferenz für die endlichdimensionale Theorie [FK94]; K. McCrimmon, *A Taste of Jordan Algebras* (Springer 2004), behandelt die Algebra und die
 Geschichte, H. Hanche-Olsen und E. Størmer, *Jordan Operator Algebras* (Pitman 1984), sowie Alfsen–Shultz (2003) die
 unendlichdimensionale Theorie und ihre Beziehung zu C\*-Algebren. Zur Rolle zusammengesetzter Systeme bei
 Rekonstruktionen der Quantentheorie aus operationellen Axiomen siehe die oben zitierten Arbeiten von Barnum und Wilce.

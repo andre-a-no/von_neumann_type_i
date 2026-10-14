@@ -3,11 +3,11 @@
 # 13. ジョルダン代数：量子力学はなぜ *-環を用いるのか
 
 二つのオブザーバブルの積 $xy$ は、$x$ と $y$ が可換でない限りオブザーバブルではないが、対称化された積
-$x\circ y=\frac12(xy+yx)$ は常にオブザーバブルである。1933年にジョルダン（P. Jordan）は、この積を備えたオブザーバブルを量子力学の基本構造とすることを提案し、ジョルダン、フォン・ノイマン、ウィグナーはそこから生じる有限次元の代数を分類した。本章では有限次元の理論を、証明が短い場合には完全な証明とともに展開し、ジョルダン構造が何を見落としているかを問う。答えは交換子の符号である：一つの系のジョルダン代数は交換子を符号を除いてしか決定しない（13.5節）が、複合系はその符号を必要とし、しかもその符号が状態がエンタングルしているかどうかを決める。
+$x\circ y=\frac12(xy+yx)$ は常にオブザーバブルである。1933年にジョルダン（P. Jordan）は、この積を備えたオブザーバブルを量子力学の基本構造とすることを提案し、ジョルダン、フォン・ノイマン、ウィグナーはそこから生じる有限次元の代数を分類した。本章では有限次元の理論を完全な証明とともに展開する。証明は本章で与えるが、四つの長いもの（分類定理、ケッヒャー–ヴィンベルクの定理、カディソンの定理、および $\bigoplus_cM_{k_c}$ のジョルダン自己同型）は付録 E と F で与える。そして、ジョルダン構造が何を見落としているかを問う。答えは交換子の符号である：一つの系のジョルダン代数は交換子を符号を除いてしか決定しない（13.5節）が、複合系はその符号を必要とする：その符号がどの結合作用素が正であるかを決め、それから作られる PPT 判定がエンタングルメントを検出する（命題 13.12）。
 
 **本章で学ぶこと**：ジョルダン積と、$\circ$ とは異なり正値性を保つ二次表現 $P(y)x=yxy$、スピン因子とそのスペクトル理論およびローレンツ錐、$*$-代数の自己共役部分ではないエルミート行列のジョルダン部分代数、Jordan–von Neumann–Wigner の分類、転置がなぜ $*$-自己同型ではなくジョルダン自己同型であるのか、そしてそれが複合系の上で何をするか、さらに第11章のトレース不等式をジョルダンの言葉で書き、スピン因子の中で証明すること。
 
-本章を通じて、$\operatorname{Herm}_n(\mathbb K)$ は $\mathbb K=\mathbb R$ または $\mathbb C$ 上の $n\times n$ エルミート行列のなす実ベクトル空間、$M_{sa}$ は $\mathcal M=\bigoplus_cM_{k_c}(\mathbb C)$ の自己共役部分、
+本章を通じて、$\operatorname{Herm}_n(\mathbb K)$ は $\mathbb K=\mathbb R$ または $\mathbb C$ 上の $n\times n$ エルミート行列のなす実ベクトル空間（13.4節では E.6節で構成される四元数 $\mathbb H$ と八元数 $\mathbb O$、およびそれらの上の $\operatorname{Herm}_n$（E.7節）も用いる）、$M_{sa}$ は $\mathcal M=\bigoplus_cM_{k_c}(\mathbb C)$ の自己共役部分、
 $X,Y,Z$ はパウリ行列で $\sigma=(X,Y,Z)$ とし、したがって $u\in\mathbb R^3$ に対し $u\cdot\sigma=u_1X+u_2Y+u_3Z$ である。
 $[a,b]=ab-ba$ とし、$|u|$ は $u\in\mathbb R^m$ のユークリッドノルムである。
 
@@ -40,7 +40,9 @@ $P(P(y)x)z=yxy\,z\,yxy=P(y)P(x)P(y)z$ である。(2) トレースの巡回性�
 $yxy=(x^{1/2}y)^*(x^{1/2}y)\ge0$（系 1.7）であり、$P(y)P(y^{-1})=P(y^{-1})P(y)=\mathrm{id}$ である。(4)
 $p\circ q=\frac14\begin{pmatrix}2&1\\1&0\end{pmatrix}$。$\square$
 
-$P(y)$ を $2L(y)^2-L(y^2)$ と書けば (1) の恒等式はすべて $\circ$ だけで表されるので、すべての特殊ジョルダン代数で成り立つ。基本公式はすべてのジョルダン代数で成り立つ（K. McCrimmon, *A Taste of Jordan Algebras*, Springer 2004。ここではその証明を再現しない）。モジュール `torch_vn_algebra.jordan` はこれらの写像を `TypeIAlgebra` の作用素の上に、遅延評価で、かつすべてのセクターにわたってバッチ化して実装している：
+$P(y)$ を $2L(y)^2-L(y^2)$ と書けば (1) の恒等式はすべて $\circ$ だけで表される。(1) の証明は行列の積の結合律しか用いないので、すべての特殊ジョルダン代数 $J\subseteq\mathcal A$（$\mathcal A$ は結合的）において、$J$ 上で $P(y)x=yxy$ と基本公式 $P(P(y)x)=P(y)P(x)P(y)$ を与える。（これは本講義でそれを用いるすべての代数を含む。特殊でない代数に対しては基本公式は用いない。）
+
+$\operatorname{Herm}_n(\mathbb C)$（$n\ge2$）上の積 $\alpha xy+\beta yx$（$\alpha,\beta\in\mathbb R$）のうち、$x,y$ について対称で $y=x$ のとき $x^2$ に等しいものは $\frac12(xy+yx)$ だけである：対称性はすべての $x,y$ に対し $(\alpha-\beta)(xy-yx)=0$ を意味し、$XZ\ne ZX$（左上の $2\times2$ ブロックにおいて）により $\alpha=\beta$ となる。さらに $x=y=1$ に対する $(\alpha+\beta)1=1$ から $\alpha=\beta=\frac12$ を得る。モジュール `torch_vn_algebra.jordan` はこれらの写像を `TypeIAlgebra` の作用素の上に、遅延評価で、かつすべてのセクターにわたってバッチ化して実装している：
 
 ```python
 import math
@@ -77,8 +79,8 @@ print(jp(p, q).eigenvalues()[0])                                  # (1 -+ sqrt 2
 assert abs(torch.linalg.det(jp(p, q).matrix[0, 0]).real.item() + 1 / 16) < 1e-14
 ```
 
-> **物理的意味.** $x\circ y$ はオブザーバブルの対称化された積である：それは $x,y$ について対称で $y=x$ のとき $x^2$ に帰着する唯一の組合せ
-> $\alpha xy+\beta yx$ であり、再びオブザーバブルとなる。二次表現は **リューダース則** である：イエス／ノーの問い $p$ を測定し、結果「イエス」を残すと、
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. $x\circ y$ はオブザーバブルの対称化された積であり（上で示したように、そのような組合せは一意である）、
+> 再びオブザーバブルとなる。二次表現は **リューダース則** である：イエス／ノーの問い $p$ を測定し、結果「イエス」を残すと、
 > 密度 $\rho$ は $P(p)\rho/\operatorname{Tr}P(p)\rho=p\rho p/\operatorname{Tr}(p\rho)$ に変わる。命題 13.2(4)
 > は、$\circ$ そのものには正の元に対してこのような操作的意味がないことを述べている。
 
@@ -108,7 +110,13 @@ $j$ にある）であるから、生成される $*$-代数は $Z_j$ を含み�
 テンソル積、すなわち $M_D(\mathbb C)$ の基底を含む。$\square$
 
 符号を除けば、$s_{2j-1}$ と $s_{2j}$ は 9.4節のジョルダン–ウィグナー・フェルミオン $c_j$ の
-マヨラナ演算子 $c_j+c_j^*$ と $i(c_j-c_j^*)$ である。
+マヨラナ演算子 $c_j+c_j^*$ と $i(c_j-c_j^*)$ である。ここで第9章のサイト $j-1$ を第 $j$ テンソル因子とする：そこでは $s^a=\frac12\sigma_a$、
+$n=s^z+\frac12$、$s^\pm=s^x\pm is^y$ であるから、$(-1)^n=1-2n=-Z$、$s^-=\frac12(X-iY)$ であり、したがって
+$c_j=(-1)^{j-1}Z^{\otimes(j-1)}\otimes s^-\otimes1$ である。$s^-+s^+=X$ かつ $i(s^--s^+)=i(-iY)=Y$ であるから
+$$
+s_{2j-1}=(-1)^{j-1}(c_j+c_j^*),\qquad s_{2j}=(-1)^{j-1}\,i(c_j-c_j^*).
+$$
+である。
 
 **定理 13.4（$V_m$ のスペクトル理論）.** $x=(a,u)\in V_m$、$\lambda_\pm=a\pm|u|$ とする。
 
@@ -171,17 +179,32 @@ for m in range(1, 7):                                            # Proposition 1
     r = jd.compare_with_star_algebra(jd.anticommuting_symmetries(m))
     print(f"m = {m}: dim V_m = {r['jordan_dim']}, dim of the self-adjoint part of the *-algebra = {r['star_dim']}")
     assert r['jordan_dim'] == m + 1 and r['equal'] == (m in (1, 3))
+
+pq = 3                                                           # Majorana operators of Section 9.4, p = 3 sites
+Xp, Yp, Zp = jd.anticommuting_symmetries(3)
+sminus, I2 = 0.5 * (Xp - 1j * Yp), torch.eye(2, dtype=dt)
+parity = I2 - 2 * (0.5 * Zp + 0.5 * I2)                          # (-1)^n with n = s^z + 1/2
+def kron_all(fs):
+    out = torch.ones(1, 1, dtype=dt)
+    for f_ in fs:
+        out = torch.kron(out, f_)
+    return out
+s6 = jd.anticommuting_symmetries(2 * pq)
+for j in range(1, pq + 1):
+    c = kron_all([parity] * (j - 1) + [sminus] + [I2] * (pq - j))
+    sign = (-1) ** (j - 1)
+    assert close(s6[2 * j - 2], sign * (c + c.mH)) and close(s6[2 * j - 1], sign * 1j * (c - c.mH))
 ```
 
 $m=1$ のとき、$s_1=Z$ は対角行列を生成し、その次元は $2=m+1$ であり、$V_1\cong\mathbb R\oplus\mathbb R$ は単純ではない。表示される次元は、$m=2$ で $3,4$、$m=4$ で $5,16$、$m=6$ で $7,64$ である。
 
-> **物理的意味.** 自己双対性により、$V_m$ の状態（正で正規化された線形汎関数）は
-> $\rho=\frac12(1,r)\in Q$、$|r|\le1$ を用いて $x\mapsto\operatorname{tr}(\rho\circ x)$ と表される：状態空間は次元
-> $m$ の球体である。$m=3$ のとき、それは量子ビットのブロッホ球である（命題 13.5(a)）。ローレンツ錐は $1+m$ 次元の特殊相対論における未来の
+**$V_m$ の状態.** $V_m$ の **状態** とは、$\omega(Q)\ge0$ かつ $\omega(1)=1$ を満たす線形汎関数 $\omega$ のことである。状態はちょうど、$\rho=\frac12(1,r)$、$|r|\le1$ を用いた写像 $x\mapsto\operatorname{tr}(\rho\circ x)$ である。したがって状態空間は次元 $m$ の球体である。*証明.* $\langle x,y\rangle=\operatorname{tr}(x\circ y)=2(ab+u\cdot v)$ は $V_m$ 上の内積であるから、すべての線形な $\omega$ はちょうど一つの $\rho=(b,v)$ により $\operatorname{tr}(\rho\circ\cdot)$ と表される（有限次元のリース表現：正規直交基底において $\rho=\sum_k\omega(e_k)e_k$）。定理 13.4(4) の自己双対性により、$\omega(Q)\ge0$ は $\rho\in Q$、すなわち $b\ge|v|$ と同値であり、また $\omega(1)=\operatorname{tr}\rho=2b=1$ である。よって $r=2v$、$|r|\le1$ として $\rho=\frac12(1,r)$ である。逆に、そのような $\rho$ はどれも状態を与える。$\square$
+
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. $m=3$ のとき、$V_m$ の状態空間は量子ビットのブロッホ球である（命題 13.5(a)）。ローレンツ錐は $1+m$ 次元の特殊相対論における未来の
 > 光円錐であり、命題 13.5(b) は、ジョルダン自己同型が時間軸を固定する空間の直交変換であることを述べている。
 
-錐 $Q$ は **二次錐計画**（SOCP）の制約集合である：すなわちローレンツ錐の直積上の線形最適化である。SOCP の内点法はまさに定理 13.4 を用いる：固有値、$\det$、そしてスケーリングのための
-$P(y)$ である（F. Alizadeh, D. Goldfarb, *Second-order cone programming*, Math. Program. 95 (2003) 3–51）。
+錐 $Q$ は **二次錐計画**（SOCP）の制約集合である：すなわちローレンツ錐の直積上の線形最適化である。SOCP の内点法は通常、定理 13.4 の量（固有値、$\det$、そして $P(y)$）を用いて定式化される。これらのアルゴリズムは本講義では扱わない（参考文献：
+F. Alizadeh, D. Goldfarb, *Second-order cone programming*, Math. Program. 95 (2003) 3–51）。
 
 ## 13.3 *-部分代数ではないジョルダン部分代数
 
@@ -191,7 +214,7 @@ $J\subseteq\mathcal A_{sa}$ である。命題 13.5(c) は $J\ne\mathcal A_{sa}$
 **命題 13.6.** (a) $\operatorname{Herm}_n(\mathbb R)$ は $\operatorname{Herm}_n(\mathbb C)$ の次元
 $n(n+1)/2$ のジョルダン部分代数である。それが生成する $*$-代数は $M_n(\mathbb C)$ であり、その自己共役部分の次元は $n^2$ である。
 (b) $x,y\in\operatorname{Herm}_2(\mathbb C)$ に対し、$UxU^*$ と $UyU^*$ がともに実対称となるユニタリ $U$ が存在する。$1,x,y$ が生成するジョルダン代数は $\operatorname{span}\{1,x,y\}$ である。$x,y,1$ が線形独立ならば、それは次元 $3$ の $U^*\operatorname{Herm}_2(\mathbb R)U\cong V_2$ であり、一方
-$x,y$ が生成する $*$-代数は次元 $4$ の $M_2(\mathbb C)$ である。
+$1,x,y$ が生成する $*$-代数は次元 $4$ の $M_2(\mathbb C)$ である。
 
 *証明.* (a) 補題 13.1。$i\ne j$ に対し $E_{ij}=E_{ii}(E_{ij}+E_{ji})$ は実対称行列の積であるから、
 生成される代数はすべての行列単位を含む。(b) $x=a1+u\cdot\sigma$、$y=b1+v\cdot\sigma$ と書き、単位ベクトル
@@ -202,7 +225,7 @@ $Ru\cdot Rv=\frac12\operatorname{Tr}\big((Ru\cdot\sigma)(Rv\cdot\sigma)\big)=u\c
 よって $Ru,Rv\perp e_2$ であり、$X,Z$ が実であるから $UxU^*=a1+(Ru)_1X+(Ru)_3Z$ は実である。$UyU^*$ も同様である。次に
 $x\circ y=(ab+u\cdot v)1+av\cdot\sigma+bu\cdot\sigma\in\operatorname{span}\{1,x,y\}$ であり、$x^2,y^2$ も同様であるから、この線形包は
 閉じている。その次元が $3$ ならば、$U$ による共役は $\operatorname{Herm}_2(\mathbb R)=\operatorname{span}\{1,X,Z\}$ 全体であり、
-これは補題 13.3 により $\cong V_2$ であり（$X,Z$ は反可換）、(a) により $M_2(\mathbb C)$ を生成する。$\square$
+これは $(a,u)\mapsto a1+u_1X+u_2Z$ を介して $\cong V_2$ であり（補題 13.3 の証明は $s_i$ たちが互いに反可換なエルミート対称元であることしか用いず、$X,Z$ はそのようなものである）、(a) により $M_2(\mathbb C)$ を生成する。$\square$
 
 ```python
 for n in range(2, 6):                                            # Proposition 13.6(a), a random real pair
@@ -230,31 +253,31 @@ assert all((Um @ A @ Um.mH).imag.abs().max() < 1e-12 for A in H[:2])
 
 ## 13.4 分類
 
-ジョルダン代数は、$\sum_ix_i^2=0$ ならばすべての $x_i=0$ となるとき **形式的実** であるという。有限次元では、これは
-**ユークリッド的** であること、すなわち $\langle x\circ y,z\rangle=\langle y,x\circ z\rangle$ を満たす内積をもつことと同値である
-[FK94]。$M_{sa}$（$\operatorname{Tr}(xy)$ による）と $V_m$（$\operatorname{tr}(x\circ y)$ による）はユークリッド的である。
+有限次元のジョルダン代数は、$\sum_ix_i^2=0$ ならばすべての $x_i=0$ となるとき **形式的実** であるといい、単位元 $1$ と $\langle x\circ y,z\rangle=\langle y,x\circ z\rangle$ を満たす内積をもつとき **ユークリッド的** であるという。二つの概念は一致する（定理 E.5(4)。「ユークリッド的 $\Rightarrow$ 形式的実」の向きは一行で済む：$0=\sum_i\langle x_i^2,1\rangle=\sum_i\langle x_i,x_i\rangle$）。$\langle x,y\rangle=\operatorname{Tr}(xy)$ をもつ $M_{sa}$ はユークリッド的である：$\operatorname{Tr}(x^2)=\sum_{ij}|x_{ij}|^2$ であり、巡回性により
+$\operatorname{Tr}((x\circ y)z)=\frac12\operatorname{Tr}(xyz+yxz)=\operatorname{Tr}(y(x\circ z))$ である。$\langle x,y\rangle=\operatorname{tr}(x\circ y)=2(ab+u\cdot v)$ をもつ $V_m$ も同様である：$z=(c,w)$ に対し
+$\operatorname{tr}((x\circ y)\circ z)=2(abc+c\,u\cdot v+a\,v\cdot w+b\,u\cdot w)$ は $x,y,z$ について対称である。
 
-**定理 13.7（Jordan–von Neumann–Wigner。証明なしに述べる）.** 有限次元の形式的実ジョルダン代数はすべて単純なものの直和であり、単純なものはどれも次のうちちょうど一つと同型である：$\mathbb R$、
+**定理 13.7（Jordan–von Neumann–Wigner）.** 有限次元の形式的実ジョルダン代数はすべて単純イデアルの直和であり、単純なものはどれも次のうちちょうど一つと同型である：$\mathbb R$、
 $\mathbb K=\mathbb R,\mathbb C,\mathbb H$ かつ $r\ge3$ に対する $\operatorname{Herm}_r(\mathbb K)$、スピン因子
-$V_m$（$m\ge2$）、八元数上の $3\times3$ エルミート行列のなす **アルバート代数** $\operatorname{Herm}_3(\mathbb O)$（次元 $27$）。階数 $2$ では、
-$\mathbb K=\mathbb R,\mathbb C,\mathbb H,\mathbb O$ に対し $\operatorname{Herm}_2(\mathbb K)\cong V_{\dim\mathbb K+1}$ である。（P. Jordan, J. von Neumann, E. Wigner, *On an algebraic
-generalization of the quantum mechanical formalism*, Ann. of Math. 35 (1934) 29–64。現代的な証明は [FK94,
-Chapter V] にある。）
+$V_m$（$m\ge2$）、八元数上の $3\times3$ エルミート行列のなす **アルバート代数** $\operatorname{Herm}_3(\mathbb O)$（次元 $27$）。さらに
+$\mathbb K=\mathbb R,\mathbb C,\mathbb H,\mathbb O$ に対し $\operatorname{Herm}_1(\mathbb K)\cong\mathbb R$ かつ $\operatorname{Herm}_2(\mathbb K)\cong V_{\dim\mathbb K+1}$ である。
 
-アルバート代数を除くこれらすべては特殊である：$\operatorname{Herm}_r(\mathbb H)$ は四元数を $2\times2$ 複素行列として書くことで
-$\operatorname{Herm}_{2r}(\mathbb C)$ に埋め込まれ、$V_m$ は補題 13.3 により埋め込まれる。
-アルバート代数は **例外的** である：それはいかなる結合代数のジョルダン部分代数とも同型でない
-（A. A. Albert, *On a certain algebra of quantum mechanics*, Ann. of Math. 35 (1934) 65–73）。短く述べられる理由は次のとおりである：グレニー（C. M. Glennie）は、すべての特殊ジョルダン代数で成り立つが
-$\operatorname{Herm}_3(\mathbb O)$ では成り立たない多項式恒等式を見出した（*Some identities valid in special Jordan algebras but not valid in all Jordan
-algebras*, Pacific J. Math. 16 (1966) 47–59。McCrimmon, *A Taste of Jordan Algebras* も参照）。八元数は結合的でなく、$\operatorname{Herm}_r(\mathbb O)$ がジョルダン恒等式を満たすのは $r\le3$ のときに限る。これがリストがそこで止まる理由である。したがって $\operatorname{Herm}_3(\mathbb O)$ は、積 $\frac12(xy+yx)$ をもつ実または複素行列によって（あるいはいかなる結合代数の中でも）忠実に表現することはできず、ソフトウェアは八元数の成分を直接扱わなければならない。
+*証明.* 付録 E がこれを完全に証明する：分解は定理 E.9、リストと「ちょうど一つ」は定理 E.27(1),(2)、階数 1 と 2 における同型は定理 E.24(3) である。$\square$
 
-**定理 13.8（ケッヒャー–ヴィンベルク。証明なしに述べる）.** ユークリッド的ジョルダン代数の平方の錐の内部は、ちょうど **対称錐**、すなわちユークリッド空間内の開凸錐であって自己双対かつ
-等質である（その線形自己同型が推移的に作用する）もの、に一致する。[FK94, Chapter III.]
+（P. Jordan, J. von Neumann, E. Wigner, *On an algebraic generalization of the quantum mechanical formalism*, Ann. of
+Math. 35 (1934) 29–64。付録 E の証明は [FK94, Chapters II–V] に従う。）
 
-定理 13.4(4) と演習問題 1 は、ローレンツ錐についてこの二つの性質を証明する。したがって半正定値計画の錐
-（$\operatorname{Herm}_n(\mathbb R)^+$ または $\operatorname{Herm}_n(\mathbb C)^+$ の直積）、SOCP の錐、そして線形計画の錐
-（$\mathbb R_+^n$、すなわち $\mathbb R^n=\mathbb R\oplus\dots\oplus\mathbb R$ の錐）はすべてこの形をしており、
-内点法はすべてのユークリッド的ジョルダン代数に対して一度に書くことができる。
+アルバート代数を除くこれらすべては特殊である：$\mathbb R=\operatorname{Herm}_1(\mathbb R)$ と $\operatorname{Herm}_r(\mathbb K)$（$\mathbb K=\mathbb R,\mathbb C$）は補題 13.1 により、$\operatorname{Herm}_r(\mathbb H)$ は四元数を $2\times2$ 複素行列として書くことで $\operatorname{Herm}_{2r}(\mathbb C)$ に埋め込まれるから（定理 E.24(1)）、そして $V_m$ は補題 13.3 による。
+アルバート代数はジョルダン代数であり（定理 E.24(2)）、**例外的** である：それはいかなる実または複素の結合代数のジョルダン部分代数とも同型でない
+（定理 E.26。これはアルバート（A. A. Albert, *On a certain algebra of quantum mechanics*, Ann. of Math. 35 (1934) 65–73）が用いた種類の議論である：結合代数へのジョルダン埋め込みがあれば八元数の積が結合的になってしまうが、実際にはそうではない、補題 E.15(2)）。$r\ge4$ に対し $\operatorname{Herm}_r(\mathbb O)$ はジョルダン恒等式を満たさず（系 E.25）、$r\ge4$ 個の元からなるジョルダン枠をもつ単純代数は結合的な合成代数 $D\ne\mathbb O$ による $\operatorname{Herm}_r(D)$ である（定理 E.22）。これが八元数が $r\le3$ に対してのみ現れる理由である。したがって $\operatorname{Herm}_3(\mathbb O)$ は、積 $\frac12(xy+yx)$ をもつ実または複素行列によって（あるいはいかなる結合代数の中でも）忠実に表現することはできず、その中での計算には行列の積の代わりに八元数の積（またはその構造定数）を用いなければならない。
+
+$\Omega$ をユークリッド空間 $V$（$\ne\{0\}$ である有限次元の実内積空間）内の空でない開凸錐とする。その **双対錐** は $\Omega^*=\{y:\langle x,y\rangle>0\text{ すべての }x\in\bar\Omega\setminus\{0\}\text{ に対し}\}$ である。$\Omega^*=\Omega$ のとき $\Omega$ は **自己双対** であるといい、$g\Omega=\Omega$ を満たす線形写像 $g$ が $\Omega$ 上に推移的に作用するとき **等質** であるといい、その両方を満たすとき **対称** であるという。
+
+**定理 13.8（ケッヒャー–ヴィンベルク）.** ユークリッド空間 $V$ 内の空でない開凸錐 $\Omega$ が対称であるための必要十分条件は、$(V,\circ,\langle\cdot,\cdot\rangle)$ がユークリッド的ジョルダン代数となり、$\Omega$ がその平方の錐の内部となるような積 $\circ$ が $V$ 上に存在することである。
+
+*証明.* 定理 F.12（「ならば」の向き：定理 F.5(2) と F.6(2)）。$\square$
+
+（M. Koecher, 1957; E. B. Vinberg, 1960。付録 F の証明は [FK94, Chapters I–III] に従う。）定理 13.4(4) はローレンツ錐について自己双対性の閉じた形（$y\in Q$ であるための必要十分条件は、すべての $x\in Q$ に対し $\operatorname{tr}(x\circ y)\ge0$ となること）を証明し、演習問題 1 はその等質性を証明する。ユークリッド的ジョルダン代数の直和（内積の直交和をもつ）の平方の錐は、$(x_1,\dots,x_k)^2=(x_1^2,\dots,x_k^2)$ であるから、それぞれの平方の錐の直積である。したがって「ならば」の向きにより、半正定値計画の錐（$\operatorname{Herm}_n(\mathbb R)^+$ または $\operatorname{Herm}_n(\mathbb C)^+$ の直積。定理 1.6 によりこれらは平方の錐である。実の $x\ge0$ に対しては平方根も実である。その複素共役も $x$ の正の平方根だからである）、SOCP の錐（ローレンツ錐の直積）、そして線形計画の錐（$\mathbb R_+^n$、すなわち $\mathbb R^n=\mathbb R\oplus\dots\oplus\mathbb R$ の平方の錐）の内部は対称錐である。
 
 [FK94]: J. Faraut, A. Korányi, *Analysis on Symmetric Cones*, Oxford University Press, 1994.
 
@@ -262,7 +285,7 @@ algebras*, Pacific J. Math. 16 (1966) 47–59。McCrimmon, *A Taste of Jordan Al
 
 フォン・ノイマン環の **ジョルダン $*$-準同型** とは、$\Phi(x^*)=\Phi(x)^*$ と
 $\Phi(x\circ y)=\Phi(x)\circ\Phi(y)$ を満たす複素線形写像 $\Phi$ のことである。自己共役部分の上ではそれはジョルダン準同型であり、自己共役部分の間のすべてのジョルダン
-準同型は $\Phi(x+iy)=\Phi(x)+i\Phi(y)$ によってジョルダン $*$-準同型に拡張される。
+準同型は $\Phi(x+iy)=\Phi(x)+i\Phi(y)$（$x,y$ は自己共役）によってジョルダン $*$-準同型に拡張される。（この $\Phi$ は複素線形で $\Phi(x-iy)=\Phi(x+iy)^*$ を満たす。また $\circ$ は複素双線形で、自己共役元の組を自己共役元に写すから、$(x+iy)\circ(x'+iy')=(x\circ x'-y\circ y')+i(x\circ y'+y\circ x')$ は $\Phi(x+iy)\circ\Phi(x'+iy')$ に写される。）
 
 **命題 13.9（転置）.** $\mathcal M$ 上で $T(A)=\bigoplus_cA_c^T$ とする。(a) $T$ は単位的なジョルダン
 $*$-自己同型であり、$T(AB)=T(B)T(A)$ を満たす。$T$ はスペクトルを保つので、$T$ と $T^{-1}=T$ は正値である。(b) $M_k$
@@ -276,16 +299,17 @@ CP ではない。$\square$
 
 したがってジョルダン自己同型は $*$-自己同型であるとは限らない。この現象を除けば、正値性がジョルダン構造を決定する：
 
-**定理 13.10（カディソン。証明なしに述べる）.** $\Phi$ を単位的 C\*-環の間の線形全単射で、
-$\Phi(1)=1$ を満たし、$\Phi$ と $\Phi^{-1}$ がともに正値であるものとする。このとき $\Phi$ はジョルダン $*$-同型である。（R. V. Kadison,
-*A generalized Schwarz inequality and algebraic invariants for operator algebras*, Ann. of Math. 56 (1952) 494–503,
-Corollary 5。*Isometries of operator algebras*, Ann. of Math. 54 (1951) 325–338 において、彼はすでに、ある単位的 C\*-環から別の単位的 C\*-環の上への線形等距写像 $\Phi$ は、ユニタリ $\Phi(1)$ とジョルダン $*$-同型の積であることを示していた。）
+**定理 13.10（カディソン、有限次元の場合）.** $\mathcal M=\bigoplus_cM_{k_c}(\mathbb C)$、
+$\mathcal N=\bigoplus_dM_{k'_d}(\mathbb C)$ とし、$\Phi:\mathcal M\to\mathcal N$ を
+$\Phi(1)=1$ を満たす線形全単射で、$\Phi$ と $\Phi^{-1}$ がともに正値であるものとする。このとき $\Phi$ はジョルダン $*$-同型である。逆に、ジョルダン $*$-同型 $\mathcal M\to\mathcal N$ はどれも単位的であり、それ自身とその逆はともに正値である。
 
-逆は直ちに従う：ジョルダン $*$-同型は自己共役元の平方 $h^2=h\circ h$ を平方に写し、
-したがって正錐を正錐の上に写す。因子環 $M_n$ については、ジョルダン自己同型は正確に知られている：
+*証明.* 定理 F.15。（考え方：$\Phi$ は凸集合 $\{0\le a\le1\}$ を $\mathcal N$ の対応する集合の上に写し、したがって端点、すなわち射影を射影に写す。$\Phi$ は $p+q\le1$ を保ち、これは射影に対しては $pq=0$ を意味する。ゆえにスペクトル分解をスペクトル分解に写し、$\Phi(x^2)=\Phi(x)^2$ となる。）
+$\square$
+
+カディソン（R. V. Kadison）はこの定理をすべての単位的 C\*-環に対して証明した（*A generalized Schwarz inequality and algebraic
+invariants for operator algebras*, Ann. of Math. 56 (1952) 494–503）。本講義では有限次元の場合だけを証明し、用いる。因子環 $M_n$ については、ジョルダン自己同型は正確に知られている：
 $M_n(\mathbb C)$ のすべてのジョルダン $*$-自己同型は、ユニタリ $U$ により $A\mapsto UAU^*$ または $A\mapsto UA^TU^*$ と表される
-（N. Jacobson, C. E. Rickart, *Jordan homomorphisms of rings*, Trans. Amer. Math. Soc. 69 (1950) 479–502; I. N.
-Herstein, *Jordan homomorphisms*, Trans. Amer. Math. Soc. 81 (1956) 331–341）。ここでは $n=2$ の場合を証明する。
+（定理 F.17、すべての $n$ について。この結果は N. Jacobson, C. E. Rickart, Trans. Amer. Math. Soc. 69 (1950) 479–502、および I. N. Herstein, Trans. Amer. Math. Soc. 81 (1956) 331–341 による）。前者の写像は乗法的、後者は反乗法的であるから、$M_n$ のジョルダン $*$-自己同型はすべての交換子を保つか、すべての交換子を反転させるかのいずれかである：$\Phi([x,y])=\pm[\Phi(x),\Phi(y)]$。$\bigoplus_cM_{k_c}$ 上では、ジョルダン $*$-同型は同じ大きさのブロックを置換し、各ブロック上に二つの仕方のいずれかで作用する（定理 F.18）。それは単位的で、両方向に正値であり（定理 13.10）、系 F.19 により、それが完全正値であるのは大きさ $\ge2$ のブロックをどれも転置しないとき、すなわち $*$-同型であるとき、かつそのときに限る。以下では $n=2$ の場合をスピン因子の言葉で直接証明する。
 
 **命題 13.11.** $\operatorname{Herm}_2(\mathbb C)$ のすべてのジョルダン自己同型は、$U\in U(2)$ により $A\mapsto UAU^*$ または
 $A\mapsto UA^TU^*$ と表される。
@@ -329,13 +353,13 @@ $A\circ_\theta A=\theta(\theta(A)^2)$ であり、$\theta^2=\mathrm{id}$ であ�
 $*$-代数 $M_n\otimes M_m$ によって定まり、因子のジョルダン代数によっては定まらない。（$\circ_\theta$ は
 結合的な積 $A\star B=\theta(\theta(A)\theta(B))$ のジョルダン積であり、この積については $(x\otimes y)\star(x'\otimes y')=xx'\otimes y'y$ である：
 すなわち代数 $M_n\otimes M_m^{\rm op}$ である。）錐 $\theta(\operatorname{Herm}_{nm}^+)$ こそが
-**PPT 判定条件**（A. Peres, Phys. Rev. Lett. 77 (1996) 1413）を与えるものである：分離可能状態
-$\rho=\sum_kp_ka_k\otimes b_k$（$p_k\ge0$、$a_k,b_k\ge0$）は両方の錐に属する。なぜなら
+**PPT 判定条件**（A. Peres, Phys. Rev. Lett. 77 (1996) 1413）を与えるものである。$M_n\otimes M_m$ の状態 $\rho$ は、$p_k\ge0$、$a_k,b_k\ge0$ により
+$\rho=\sum_kp_ka_k\otimes b_k$（有限和）と書けるとき **分離可能** であるといい、そうでないとき **エンタングルしている** という。分離可能状態は両方の錐に属する。なぜなら
 $\theta(\rho)=\sum_kp_ka_k\otimes b_k^T$ で $b_k^T\ge0$（命題 13.9(a)）であり、
 $a\otimes b=(a^{1/2}\otimes b^{1/2})^2\ge0$ だからである。したがって $\theta(\operatorname{Herm}_4^+)$ に属さない $\omega$ は
-エンタングルしている。ジョルダン代数のどのような複合が存在するかについての結果は、H. Hanche-Olsen, *On the structure and tensor
-products of JC-algebras*, Canad. J. Math. 35 (1983) 1059–1074、および H. Barnum, M. Graydon, A. Wilce,
-*Composites and categories of Euclidean Jordan algebras*, Quantum 4 (2020) 359 を参照せよ。
+エンタングルしている。（ジョルダン代数の複合についての参考文献。ここでは用いない：H. Hanche-Olsen, *On the structure and tensor
+products of JC-algebras*, Canad. J. Math. 35 (1983) 1059–1074; H. Barnum, M. Graydon, A. Wilce,
+*Composites and categories of Euclidean Jordan algebras*, Quantum 4 (2020) 359。）
 
 **ダイナミクス.** 時間発展が結合的な積を強制するのではないかと期待するかもしれない。そうはならない：
 
@@ -344,14 +368,15 @@ $\operatorname{Herm}_n$ をそれ自身に写し、$\circ$ の導分である。
 自己同型である。(b) $x,y,z\in\operatorname{Herm}_n$ に対し $[L(x),L(y)]z=\frac14[[x,y],z]$。(c) ある $x_k,y_k\in\operatorname{Herm}_n$ に対し $\delta=4\sum_k[L(x_k),L(y_k)]$ となる：ハミルトン力学はジョルダン積だけによって生成される。
 
 *証明.* (a) $(i[H,z])^*=-i[z,H]=i[H,z]$ である。$[H,\cdot]$ は結合的な積の導分であり、したがって $\circ$ の導分でもある。
+$z(t)=e^{itH}ze^{-itH}$ は $z'=i[H,z]$ と $z(0)=z$ を満たすので（命題 8.2(3)、$\mathcal M=M_n$ として）、補題 8.1 の一意性により $z(t)=e^{t\delta}(z)$ である。ユニタリ $e^{itH}$ による共役は積と随伴を保ち、したがって $\circ$ と $\operatorname{Herm}_n$ を保つ。
 (b) $4x\circ(y\circ z)=xyz+xzy+yzx+zyx$ から、$x,y$ を入れ替えた同じ式を引く。(c) (b) により、
 $iH-\frac{\operatorname{Tr}H}n i1$（これは $iH$ と同じ交換子をもつ）を $[x_k,y_k]$ の和として書けば十分である。$i\ne j$ と
 $a=E_{ij}+E_{ji}$、$b=i(E_{ij}-E_{ji})$ に対し、$[a,E_{ii}]=E_{ji}-E_{ij}$、$[b,E_{ii}]=-i(E_{ij}+E_{ji})$、
 $[a,b]=2i(E_{jj}-E_{ii})$ である。これらは $\mathbb R$ 上でトレース零の反エルミート行列全体を張る。$\square$
 
 ジョルダン代数が含んでいないのは、オブザーバブルとそれが生成するダイナミクスの間の **対応** $H\mapsto i[H,\cdot]$ である。たとえば $\operatorname{Herm}_n(\mathbb R)$ では、導分
-$[L(x),L(y)]=\frac14[[x,y],\cdot]$ は実反対称な $[x,y]$ から来るが、これは実対称行列の $i$ 倍ではない。アルフセン（E. M. Alfsen）とシュルツ（F. W. Shultz）は、JBW-代数（形式的実ジョルダン代数の無限次元版。有限次元では二つの概念は一致する）がフォン・ノイマン環の自己共役部分であるための必要十分条件は、それがそのような「力学的対応」を許すことであることを示し、また C\*-環の状態空間を幾何学的に特徴づけた
-（*Geometry of State Spaces of Operator Algebras*, Birkhäuser, 2003。証明なしに述べる）。対応は一意ではない：$\operatorname{Herm}_n(\mathbb C)$ 上では $H\mapsto i[H,\cdot]$ と $H\mapsto-i[H,\cdot]$ がともに条件を満たす。転置はこの二つを入れ替える。なぜなら $T(i[H,T(z)])=-i[H^T,z]$ だからである。そしてこれらはそれぞれ $M_n$ とその反対代数に属する——命題 13.12 の二つの符号である。
+$[L(x),L(y)]=\frac14[[x,y],\cdot]$ は実反対称な $[x,y]$ から来るが、これは実対称行列の $i$ 倍ではない（演習問題 4）。この対応は $\circ$ によっては決まらない：$\operatorname{Herm}_n(\mathbb C)$ 上では $H\mapsto i[H,\cdot]$ と $H\mapsto-i[H,\cdot]$ がともにすべてのオブザーバブルを $\circ$ の導分に写し（命題 13.13(a)）、ジョルダン自己同型である転置はこの二つを入れ替える。なぜなら $T(i[H,T(z)])=-i[H^T,z]$ だからである。後者は反対代数（$a\cdot_{\rm op}b=ba$）の交換子の $i$ 倍である：$-i[H,z]=i(H\cdot_{\rm op}z-z\cdot_{\rm op}H)$——命題 13.12 の二つの符号である。（このような「力学的対応」についての参考文献。ここでは用いない：E. M. Alfsen, F. W. Shultz, *Geometry of
+State Spaces of Operator Algebras*, Birkhäuser, 2003。）
 
 ```python
 x, y = sa(), sa()
@@ -396,7 +421,7 @@ assert close(delta(jm(z1, z2)), jm(delta(z1), z2) + jm(z1, delta(z2)))         #
 assert close(jm(z1, jm(z2, Hm)) - jm(z2, jm(z1, Hm)), 0.25 * cm(cm(z1, z2), Hm))   # (b)
 ```
 
-> **物理的意味.** スピンをもたない粒子に対しては、転置（実基底における複素共役）は **時間反転** である。
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. スピンをもたない粒子に対しては、転置（実基底における複素共役）は **時間反転** である。
 > それは一つの系のオブザーバブルの対称性であるが、反ユニタリであり、一つの部分系だけに施すと物理的な操作ではない：
 > 命題 13.12 は、それがベル状態を負の固有値をもつ作用素に変えることを示している。量子力学が複素 $*$-代数を用いるのは、
 > 複合系が対称化された積だけでなく、符号つきの交換子を必要とするからである。
@@ -410,7 +435,7 @@ $T=X_\pm^{1/2}Y$ による $YX_\pm Y=T^*T$ は $Y=Y^*$ しか必要とせず、�
 $$
 \operatorname{tr}|P(y)x|\le\operatorname{tr}P(y)|x|,
 $$
-となる。これはすべてのユークリッド的ジョルダン代数で意味をもつ。これを $V_m$ において、三つの性質だけを用いる議論によって証明する。
+となる。これはトレースを一つ固定すれば、すべてのユークリッド的ジョルダン代数で意味をもつ。これを $V_m$ において、三つの性質だけを用いる議論によって証明する。
 
 **命題 13.14（スピン因子における実験 3）.** $x,y\in V_m$ に対し
 $\operatorname{tr}|P(y)x|\le\operatorname{tr}P(y)|x|$ であり、$x\in Q$ または $-x\in Q$ ならば等号が成り立つ。
@@ -431,12 +456,7 @@ $$
 $\square$
 
 証明が用いるのは次のことだけである：(i) すべての $y$ に対し $P(y)Q\subseteq Q$。(ii) スペクトル定理：すべての $z$ は、和が $1$ となる直交冪等元 $c_i$ を用いて
-$\sum_i\mu_ic_i$ と書け、$f(z)=\sum_if(\mu_i)c_i$ である（したがって $x_\pm$ と冪等元は平方である）。(iii) $\operatorname{tr}$ は線形であり、$\operatorname{tr}c_i\ge0$ として $\operatorname{tr}(\sum_i\mu_ic_i)=\sum_i\mu_i\operatorname{tr}c_i$ であり、$a,b\in Q$ に対し $\operatorname{tr}(a\circ b)\ge0$ である。階数 $r$ のユークリッド的ジョルダン代数では、(ii) は $r$ 個の原始冪等元 $c_i$（ジョルダン枠）について成り立ち、トレースは
-$\operatorname{tr}z=\sum_i\mu_i$ であり、形式 $\operatorname{tr}(x\circ y)$ は結合的、すなわち
-$\operatorname{tr}((x\circ y)\circ z)=\operatorname{tr}(x\circ(y\circ z))$ であり、そして (i) が成り立つ [FK94, Chapters II–III]。
-これらの事実はここでは証明しない。すると (iii) の最後の部分は (i) から従う：$P(a^{1/2})=2L(a^{1/2})^2-L(a)$ を展開し、結合性を用いると $\operatorname{tr}(a\circ b)=\operatorname{tr}P(a^{1/2})b$ となり、これは $Q$ の元のトレースであるから
-$\ge0$ である。したがってこの不等式はすべてのユークリッド的ジョルダン代数で成り立つ——複素 $*$-代数の自己共役部分とジョルダン同型でない
-$\operatorname{Herm}_r(\mathbb H)$ やアルバート代数も含めて。$M_{sa}$ では、$\operatorname{Tr}$ と $P(y)x=yxy$ を用いた同じ議論が命題 11.9 を再証明する。$V_m$ では、$\phi(P(y)x)=\phi(y)\phi(x)\phi(y)$ かつ $\phi(|x|)=|\phi(x)|$ であるから、この不等式は $\phi$ を通して命題 11.9 からも従う。コードは両方を確かめる：
+$\sum_i\mu_ic_i$ と書け、$f(z)=\sum_if(\mu_i)c_i$ である（したがって $x_\pm$ と冪等元は平方である）。(iii) $\operatorname{tr}$ は線形であり、$\operatorname{tr}(a\circ1)=\operatorname{tr}a$ であり、$a,b\in Q$ に対し $\operatorname{tr}(a\circ b)\ge0$ である。これら三つは、単位元 $e$ をもつすべてのユークリッド的ジョルダン代数 $V$ において線形形式 $\tau(x)=\langle x,e\rangle$ について成り立ち、この形式については $\tau(a\circ b)=\langle b,a\circ e\rangle=\langle a,b\rangle$ である：(ii) は定理 F.3、(i) は定理 F.6(4)、そして $a,b\in Q$ に対する $\langle a,b\rangle\ge0$ は定理 F.5(1) である。系 F.7 がこの議論を実行する：すべてのユークリッド的ジョルダン代数において $\tau(|P(y)x|)\le\tau(P(y)|x|)$ であり、$x\in Q$ または $-x\in Q$ ならば等号が成り立つ。$\langle x,y\rangle=\operatorname{Tr}(xy)$ をもつ $M_{sa}$ 上では $\tau=\operatorname{Tr}$、$P(y)x=yxy$ である。$(M_{sa},\circ)$ の冪等元は射影であり（$c\circ c=c^2$）、射影に対しては $c\circ c'=0$ と $cc'=0$ は同値である（補題 F.14(2)）から、定理 F.3 の一意性により、$x$ のその分解は固有射影へのスペクトル分解であり、$|x|$ は行列の絶対値である。したがってこれはすべての $Y=Y^*$ に対して命題 11.9 を再証明する。$\langle x,y\rangle=\operatorname{tr}(x\circ y)$ をもつ $V_m$ 上では $\tau=\operatorname{tr}$ であり、定理 F.3 の分解は定理 13.4(2) の分解（$u=0$ のときは $x=a1$）であって、これが命題 13.14 である。階数 $r$ の単純ユークリッド的ジョルダン代数 $J$ において、系 E.28 のトレース $\operatorname{tr}x=\frac r{\dim J}\operatorname{Tr}L(x)$ はすべてのジョルダン枠 $(c_i)$ に対し $\operatorname{tr}(\sum_i\mu_ic_i)=\sum_i\mu_i$ を満たし（定理 E.7）、$\langle x,y\rangle=\operatorname{tr}(x\circ y)$ は結合的な内積である。これについては $\tau=\operatorname{tr}$ であるから、不等式はこのトレースについて成り立つ。これは $\operatorname{Herm}_r(\mathbb H)$ とアルバート代数に適用される。これらは単純ユークリッド的ジョルダン代数である（定理 E.24）。$r\ge3$ のとき、これらはどの $\mathcal M=\bigoplus_cM_{k_c}$ の $M_{sa}$ ともジョルダン同型でない：$M_{sa}=\bigoplus_c\operatorname{Herm}_{k_c}(\mathbb C)$ はイデアルの直和であるから、単純になるのはブロックが一つだけのときに限り、そして $\operatorname{Herm}_k(\mathbb C)$（$k=1$ では $\cong\mathbb R$、$k=2$ では $\cong V_3$）は、定理 13.7 の一意性により、$\operatorname{Herm}_r(\mathbb H)$（$r\ge3$）とも $\operatorname{Herm}_3(\mathbb O)$ とも同型でない。$V_m$ では、$\phi(P(y)x)=\phi(y)\phi(x)\phi(y)$ かつ $\phi(|x|)=|\phi(x)|$ であるから、この不等式は $\phi$ を通して命題 11.9（上で $Y=Y^*$ に拡張したもの）からも従う。コードは両方を確かめる：
 
 ```python
 for m in (2, 4, 7):
@@ -452,9 +472,14 @@ for m in (2, 4, 7):
     Xs, Ys = Vm.to_matrix(xs[:200]), Vm.to_matrix(ys[:200])
     tn = torch.linalg.svdvals(Ys @ Xs @ Ys).sum(-1)                     # Tr |phi(y) phi(x) phi(y)|
     assert (tn - Vm.representation_dim / 2 * lhs[:200]).abs().max() < 1e-10 * tn.max()
+    wx, Ux = torch.linalg.eigh(Xs)
+    absX = Ux @ torch.diag_embed(wx.abs().to(dt)) @ Ux.mH                  # |phi(x)|
+    tr_rhs = (Ys @ absX @ Ys).diagonal(dim1=-2, dim2=-1).sum(-1).real    # Tr phi(y) |phi(x)| phi(y)
+    assert (torch.linalg.eigvalsh(Ys)[:, 0] < 0).any()                  # some phi(y) are indefinite
+    assert (tr_rhs - tn >= -1e-10 * tr_rhs).all()                       # Proposition 11.9 for Y = Y*
 ```
 
-差 $\operatorname{tr}P(y)|x|-\operatorname{tr}|P(y)x|$ は定符号の $x$ に対しては零となり、典型的な不定符号の $x$ に対しては正である（これらのガウス・サンプルについて、表示される最大値は $10^1$–$10^2$ の程度である）。
+差 $\operatorname{tr}P(y)|x|-\operatorname{tr}|P(y)x|$ は定符号の $x$ に対しては零となる（命題 13.14）。*数値的観察*（定理ではない）：これらのガウス・サンプルについて、表示される差の最大値は $10^1$–$10^2$ の程度であり、したがって不定符号の $x$ に対しては、この不等式は等式からほど遠い。
 
 ## 13.7 比較の対象
 
@@ -481,7 +506,7 @@ for m in (2, 4, 7):
    $\phi(P(y)P(y^{-1})x)=\phi(x)$ である。$\phi$ は単射である。$P(y)$ は $Q$ を $Q$ の中に写し、その逆 $P(y^{-1})$ も同様であるから、
    $P(y)Q=Q$ である。線形同相写像であるから、それは内部を内部の上に写す。最後に
    $P(y)1=2y\circ y-y^2=y^2$ であるから $P(x^{1/2})1=x$ であり、$x$ が内部の点ならば $P(x^{1/2})$ は可逆である
-   （$\det x^{1/2}=\sqrt{\lambda_+\lambda_-}>0$）。内部の任意の二点は
+   （$\det x^{1/2}=\sqrt{\lambda_+\lambda_-}>0$。$a-|u|$ は連続であり、$a=|u|$ のとき $(a-\varepsilon,u)\notin Q$ であるから、$Q$ の内部は $\{a>|u|\}=\{\lambda_->0\}$ である）。内部の任意の二点は
    $P(x'^{1/2})P(x^{1/2})^{-1}$ によって結ばれる。
 
 ```python
@@ -496,8 +521,7 @@ assert V4.in_cone(V4.quadratic_representation(yv, xi)).all()
 ```
 
 2. 命題 13.12 により $\theta(\rho_p)=\frac p2F+\frac{1-p}4$ である。$F$ は固有値 $1$（三重）と $-1$（一重）をもつので、
-   スペクトルは $\frac{1+p}4$（三重）と $\frac{1-3p}4$ であり、後者が負となるのは $p>\frac13$ のときかつそのときに限る。そのとき PPT 判定条件により $\rho_p$ は分離可能でない。（$2\times2$ 系に対しては逆も成り立つ：M., P. and R. Horodecki, Phys.
-   Lett. A 223 (1996) 1。ここでは証明しない。）
+   スペクトルは $\frac{1+p}4$（三重）と $\frac{1-3p}4$ であり、後者が負となるのは $p>\frac13$ のときかつそのときに限る。そのとき PPT 判定条件により $\rho_p$ は分離可能でない。
 
 ```python
 for pp in (0.2, 1 / 3, 0.5):
@@ -522,4 +546,4 @@ assert V3c.in_cone(V3c.product(V3c.element(1.0, wv[0]), V3c.element(1.0, wv[0]))
 
 </details>
 
-**この先へ.** 本章は本講義の最終章である。有限次元の理論の標準的な文献は [FK94] である。K. McCrimmon, *A Taste of Jordan Algebras* (Springer 2004) は代数的側面と歴史を扱い、H. Hanche-Olsen and E. Størmer, *Jordan Operator Algebras* (Pitman 1984) と Alfsen–Shultz (2003) は無限次元の理論と C\*-環との関係を扱う。操作的公理からの量子論の再構成における複合系の役割については、上で引用した Barnum と Wilce の論文を参照せよ。第11章を越えるトレース不等式については E. Carlen, *Trace inequalities and quantum entropy* (Contemp. Math. 529, 2010) を参照せよ。二次表現とローレンツ錐は錐最適化に再び現れる：Alizadeh–Goldfarb (2003) と、そこで概観されているジョルダン代数的内点法を参照せよ。
+**この先へ.** 本章は本講義の最終章であり、付録 E と F がその証明を補完する。さらに学ぶために：有限次元の理論の標準的な文献は [FK94] である。K. McCrimmon, *A Taste of Jordan Algebras* (Springer 2004) は代数的側面と歴史を扱い、H. Hanche-Olsen and E. Størmer, *Jordan Operator Algebras* (Pitman 1984) と Alfsen–Shultz (2003) は無限次元の理論と C\*-環との関係を扱う。操作的公理からの量子論の再構成における複合系の役割については、上で引用した Barnum と Wilce の論文を参照せよ。第11章を越えるトレース不等式については E. Carlen, *Trace inequalities and quantum entropy* (Contemp. Math. 529, 2010) を参照せよ。二次表現とローレンツ錐は錐最適化に再び現れる：Alizadeh–Goldfarb (2003) と、そこで概観されているジョルダン代数的内点法を参照せよ。
