@@ -452,7 +452,8 @@ If $x_2=x_1+L-1$, use the representative $(x_2,x_1+L)$, which is of the previous
 
 Proposition 9.12 only says that solutions give eigenvectors; it does not say that all eigenvectors arise
 this way. Write $k_{1,2}=K/2\pm q$ and $c=\cos\frac K2$. Then $1+e^{iK}-2\Delta e^{ik_{1,2}}=2e^{iK/2}(c-\Delta e^{\pm iq})$,
-so $A_{12}=c-\Delta e^{iq}$, $A_{21}=-(c-\Delta e^{-iq})$ solve (i). Multiplying the two equations (ii) gives
+so $A_{12}=c-\Delta e^{iq}$, $A_{21}=-(c-\Delta e^{-iq})$ solve (i). By (ii) and $(A_{12},A_{21})\ne0$ both
+coefficients are nonzero, so multiplying the two equations (ii) gives
 $e^{iKL}=1$, $K=2\pi n/L$, and then (ii) is equivalent to $F(q)=(-1)^ne^{iqL}(c-\Delta e^{-iq})+c-\Delta e^{iq}=0$,
 one equation in one variable. We look for its roots
 $q\in(0,\pi)$, where $e^{-iqL/2}F(q)$ is real or imaginary because $c-\Delta e^{\pm iq}$ are complex conjugate
@@ -496,7 +497,8 @@ assert close(ring8.xxz(1.0, Delta, sector=2).matrix[0, 0] @ Phi, (8 * Delta / 4 
 
 *Numerical observation:* for $L=9$ and $\Delta=0.6$ the search finds $36$ roots, $34$ scattering states and $2$
 bound states, whose vectors are linearly independent eigenvectors (up to rounding): all $36$ eigenstates come
-from the Bethe equations. We do not prove completeness for other $L$, and for even $L$ it fails. If $\Delta\ne0$,
+from the Bethe equations. We do not prove completeness for other $L$, and for even $L$ and $\Delta\ne0$ it fails,
+as we now show. If $\Delta\ne0$,
 $\Phi=\sum_x(-1)^x|x,x+1\rangle$ satisfies $T\Phi=-\Phi$ and $H\Phi=(E_F-J\Delta)\Phi$ (the hops to $|x-1,x+1\rangle$ and
 $|x,x+2\rangle$ cancel in pairs). A Bethe vector has $T\Psi=e^{-iK}\Psi$, as $\psi(x_1-1,x_2-1)=e^{-iK}\psi(x_1,x_2)$. If
 $e^{-iK}\ne-1$, $\Psi\perp\Phi$ because they are eigenvectors of the unitary $T$ for distinct eigenvalues; if
@@ -547,8 +549,8 @@ interpolation, as in Theorem 1.5); so $\theta^{(m)}_1\le\langle x,Hx\rangle=\lam
 
 Theorem 9.14 says nothing about how fast $\theta^{(m)}_1$ approaches $\lambda_1$; we only observe it below. In
 floating point the $q_j$ lose orthogonality; `krylov.lanczos` re-orthogonalises fully, and the code checks that
-the computed $q_j$ are orthonormal and $Q_m^*HQ_m=T_m$ to rounding. For the XX chain the exact ground-state
-energy is known (Theorem 9.10):
+the computed $q_j$ are orthonormal and $Q_m^*HQ_m=T_m$ to rounding. For the open XX chain the exact ground-state
+energy of sector $N$ is the sum of the $N$ lowest $\varepsilon_k$ (Theorem 9.10(c)):
 
 ```python
 L, N = 12, 6
@@ -566,8 +568,8 @@ print([f"{(ritz[m - 1] - E_xx).item():.1e}" for m in (5, 10, 20, 40)])
 *Numerical observation:* the error of the lowest Ritz value falls monotonically (as it must, by Theorem 9.14),
 $0.42$, $3.1\cdot10^{-3}$ and $3.1\cdot10^{-6}$ after $5$, $10$ and $20$ steps, and reaches rounding level after $40$,
 in dimension $924$. `krylov.ground_state` restarts Lanczos (from a Gaussian random vector unless `v0` is given)
-until the residual $\|H\psi-E\psi\|$ of its normalised Ritz pair $(E,\psi)$ is below $10^{-10}\max(1,|E|)$, and
-returns the residual. A small residual certifies an eigenvalue nearby: for Hermitian $H$ and $\|\psi\|=1$,
+until the residual $\|H\psi-E\psi\|$ of its normalised Ritz pair $(E,\psi)$ is below $10^{-10}\max(1,|E|)$ (at
+most $20$ restarts, with a warning otherwise), and returns the residual. A small residual certifies an eigenvalue nearby: for Hermitian $H$ and $\|\psi\|=1$,
 $\|H\psi-E\psi\|^2=\sum_i|\lambda_i-E|^2|\langle u_i,\psi\rangle|^2\ge\min_i|\lambda_i-E|^2$ ($u_i$ an orthonormal eigenbasis). It
 does not certify that this eigenvalue is the lowest one, so we compare with dense diagonalisation, which is
 our only reference (computed here, so the values are numerical): the sector $N=L/2$ up to $L=12$, and for
@@ -606,7 +608,8 @@ $\mathcal K_m$ is $H$-invariant, $w_\tau=e^{-i\tau H}v$.
 *Proof.* $Q_m$ is an isometry and $e^{-i\tau T_m}$ is unitary ($T_m$ is real symmetric), which gives the norm.
 Since $Q_m^*HQ_m=T_m$ commutes with $e^{-i\tau T_m}$,
 $\langle w_\tau,Hw_\tau\rangle=\|v\|^2\langle e^{-i\tau T_m}e_1,T_me^{-i\tau T_m}e_1\rangle=\|v\|^2\langle e_1,T_me_1\rangle=\langle v,Hv\rangle$. If
-$\mathcal K_m$ is invariant, $HQ_m=Q_mT_m$ (Proposition 9.13, $r_m=0$), so $H^jQ_m=Q_mT_m^j$ and $e^{-i\tau H}Q_m=Q_me^{-i\tau T_m}$; apply to
+$\mathcal K_m$ is invariant, $HQ_m=Q_mT_m$ (Proposition 9.13, $r_m=0$), so $H^jQ_m=Q_mT_m^j$ and, summing the exponential series (Proposition 8.2(1)),
+$e^{-i\tau H}Q_m=Q_me^{-i\tau T_m}$; apply to
 $e_1$, with $Q_me_1=v/\|v\|$. $\square$
 
 So every Krylov step conserves norm and energy, accurate or not; Proposition 9.15 says nothing about
@@ -675,7 +678,7 @@ assert r_mean[10, 1][0] > r_mean[10, 2][0] > r_mean[10, 4][0] > r_mean[10, 8][0]
 $0.533$, through $0.484$ ($W=2$) and $0.410$ ($W=4$) to $0.384$ ($W=16$), close to $2\log2-1$, with standard
 errors $0.003$–$0.004$. For $L=8$ the value at $W=0.5$ ($0.507$) is below the one at $W=1$ ($0.525$). At $W=0$ the
 ring commutes with $T$ (Section 9.2) and with the total spin (Section 9.3), so its sector $N=L/2$ splits into
-blocks; weak fields couple these blocks only weakly.
+blocks; the fields couple these blocks only through $\sum_ih_is^z_i$, of operator norm at most $\frac{WL}2$.
 
 > **Physical meaning** (physical interpretation, not a theorem of this course). Physicists read the change of
 > $\langle r\rangle$ as a crossover from levels that repel like those of the GOE (weak disorder) to levels that behave
@@ -698,7 +701,7 @@ $$
 *Proof.* For a real vector $x$ put $b(x)=\sum_jx_jc_j$; then $b(x)^*b(y)^*=-b(y)^*b(x)^*$ and
 $\{b(x),b(y)^*\}=\langle x,y\rangle$. Let $U\subseteq\mathbb R^L$ be the span of the $u_{k_a}$ and $P_A$, $P_B=1-P_A$ the coordinate projections on
 $\{0,\dots,n-1\}$ and its complement. Diagonalising the form $\langle P_Ax,P_Ay\rangle$ on $U$ gives an orthonormal basis
-$\phi_1,\dots,\phi_N$ of $U$ with $\langle P_A\phi_a,P_A\phi_b\rangle=\nu_a\delta_{ab}$, hence
+$\phi_1,\dots,\phi_N$ of $U$ with $\langle P_A\phi_a,P_A\phi_b\rangle=\nu_a\delta_{ab}$, where $\nu_a=\|P_A\phi_a\|^2\in[0,1]$; hence
 $\langle P_B\phi_a,P_B\phi_b\rangle=(1-\nu_a)\delta_{ab}$. Since $(x_1,\dots,x_N)\mapsto b(x_1)^*\cdots b(x_N)^*|0\rangle$ is
 multilinear and alternating, $\Phi=\pm\prod_a\big(\sqrt{\nu_a}f_a^*+\sqrt{1-\nu_a}\,g_a^*\big)|0\rangle$ with
 $f_a=b(P_A\phi_a/\sqrt{\nu_a})$, $g_a=b(P_B\phi_a/\sqrt{1-\nu_a})$ (terms with a zero coefficient omitted).
@@ -708,7 +711,8 @@ $A$: $c_j^*=(-1)^{N_A}\otimes\tilde c_j^*$ with Jordan–Wigner operators $\tild
 $i<n$, $c_i^*=\hat c_i^*\otimes1$. As $(-1)^{N_A}$ is $1$ on $|0_A\rangle$,
 $F_I^*G_{I^c}^*|0\rangle=\xi_I\otimes\chi_{I^c}$ with $\xi_I=\hat F_I^*|0_A\rangle$, $\chi_{I^c}=\tilde G_{I^c}^*|0_B\rangle$, which are
 orthonormal families by the CAR computation of Theorem 9.10. This is a Schmidt decomposition (Lemma 7.7) with
-weights $p_I=\prod_{a\in I}\nu_a\prod_{a\notin I}(1-\nu_a)$, the law of independent Bernoulli variables, so
+weights $p_I=\prod_{a\in I}\nu_a\prod_{a\notin I}(1-\nu_a)$ (the signs go into $\xi_I$), the law of independent
+Bernoulli variables, so, as $\log p_I=\sum_{a\in I}\log\nu_a+\sum_{a\notin I}\log(1-\nu_a)$ and $\sum_{I\ni a}p_I=\nu_a$,
 $S_A=-\sum_Ip_I\log p_I=\sum_a\eta(\nu_a)$. Finally $C_{ij}=\sum_a\phi_a(i)\phi_a(j)$
 (expand $c_i^*c_j$ in the $b(\phi_a)$), so $C_A=\sum_a(P_A\phi_a)(P_A\phi_a)^T$ has the eigenvalues $\nu_a$ on the
 orthogonal vectors $P_A\phi_a$ and $0$ elsewhere, and $\eta(0)=0$. $\square$
