@@ -15,7 +15,7 @@ Symmetriegruppe eine solche Algebra erzeugt, was das Zentrum ist und was eine be
 Erwartung ist. Die numerischen Kontrollen dieses Kapitels stehen im
 [Tutorial 2](../../tutorial/de/02_von_neumann_algebras.md).
 
-Im Folgenden bedeutet *$`*`$-Algebra auf $`\mathbb C^n`$* einen komplexen Untervektorraum
+Im Folgenden bedeutet *$`\ast`$-Algebra auf $`\mathbb C^n`$* einen komplexen Untervektorraum
 $`\mathcal M\subseteq M_n(\mathbb C)`$, der unter Produkten und Adjungierten abgeschlossen ist
 und die Identität $`1`$ enthält.
 

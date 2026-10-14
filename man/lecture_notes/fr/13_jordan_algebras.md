@@ -316,7 +316,7 @@ $`\mathbb R^n=\mathbb R\oplus\dots\oplus\mathbb R`$) sont des cônes symétrique
 
 ## 13.5 Applications de Jordan et *-applications
 
-Un **$`*`$-homomorphisme de Jordan** d'algèbres de von Neumann est une application $`\mathbb C`$-linéaire $`\Phi`$ telle que
+Un **$`\ast`$-homomorphisme de Jordan** d'algèbres de von Neumann est une application $`\mathbb C`$-linéaire $`\Phi`$ telle que
 $`\Phi(x^*)=\Phi(x)^*`$ et $`\Phi(x\circ y)=\Phi(x)\circ\Phi(y)`$ ; sur les parties autoadjointes, c'est un homomorphisme
 de Jordan, et tout homomorphisme de Jordan entre parties autoadjointes s'étend en un tel $`*`$-homomorphisme par
 $`\Phi(x+iy)=\Phi(x)+i\Phi(y)`$ ($`x,y`$ autoadjoints). (Ce $`\Phi`$ est $`\mathbb C`$-linéaire et vérifie

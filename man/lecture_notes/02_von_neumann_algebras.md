@@ -15,7 +15,7 @@ complete proof, how a symmetry group produces such an algebra, what the centre i
 and what a conditional expectation is. The numerical checks of this chapter are in
 [Tutorial 2](../tutorial/02_von_neumann_algebras.md).
 
-Throughout, *$`*`$-algebra on $`\mathbb C^n`$* means a complex linear subspace
+Throughout, *$`\ast`$-algebra on $`\mathbb C^n`$* means a complex linear subspace
 $`\mathcal M\subseteq M_n(\mathbb C)`$ closed under products and adjoints and containing
 the identity $`1`$.
 

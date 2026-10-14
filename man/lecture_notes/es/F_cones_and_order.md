@@ -446,7 +446,7 @@ $`D^3f(e)[u,v,w]=-\kappa^2\kappa^{-3}\mathrm{Tr}(uvw+vuw)=-\frac2\kappa\mathrm{T
 Sean $`\mathcal M=\bigoplus_cM_{k_c}(\mathbb C)`$ y $`\mathcal N=\bigoplus_dM_{k'_d}(\mathbb C)`$, como matrices diagonales por
 bloques; $`x\ge0`$ significa $`x=x^*`$ con valores propios no negativos (de forma equivalente, todo bloque es semidefinido
 positivo), y $`[0,1]=\{a\in\mathcal M_{sa}:0\le a\le1\}`$. Una **proyección** es $`p=p^*=p^2`$. Una aplicación lineal $`\Phi`$ es
-**positiva** si $`x\ge0`$ implica $`\Phi(x)\ge0`$; un **$`*`$-isomorfismo de Jordan** es una biyección lineal con
+**positiva** si $`x\ge0`$ implica $`\Phi(x)\ge0`$; un **$`\ast`$-isomorfismo de Jordan** es una biyección lineal con
 $`\Phi(x^*)=\Phi(x)^*`$ y $`\Phi(x\circ y)=\Phi(x)\circ\Phi(y)`$ (sección 13.5). Un punto $`a`$ de un conjunto convexo $`K`$ es
 **extremo** si no es el punto medio $`\frac12(b+b')`$ de dos puntos distintos $`b,b'\in K`$ (de forma equivalente, no es de la
 forma $`tb+(1-t)b'`$ con $`b\ne b'`$ y $`0<t<1`$: un tal $`a`$ es el punto medio de $`a\pm\varepsilon(b-b')\in K`$ para

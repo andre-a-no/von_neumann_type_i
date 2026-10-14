@@ -15,7 +15,7 @@ démonstration complète, la manière dont un groupe de symétrie engendre une t
 ce qu'est le centre, et ce qu'est une espérance conditionnelle. Les vérifications numériques de ce
 chapitre se trouvent dans le [Tutoriel 2](../../tutorial/fr/02_von_neumann_algebras.md).
 
-Dans tout ce chapitre, une *$`*`$-algèbre sur $`\mathbb C^n`$* désigne un sous-espace
+Dans tout ce chapitre, une *$`\ast`$-algèbre sur $`\mathbb C^n`$* désigne un sous-espace
 vectoriel complexe $`\mathcal M\subseteq M_n(\mathbb C)`$ stable par produit et par passage à
 l'adjoint, et contenant l'identité $`1`$.
 

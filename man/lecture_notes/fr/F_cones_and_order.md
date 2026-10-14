@@ -457,7 +457,7 @@ $`D^3f(e)[u,v,w]=-\kappa^2\kappa^{-3}\mathrm{Tr}(uvw+vuw)=-\frac2\kappa\mathrm{T
 Soient $`\mathcal M=\bigoplus_cM_{k_c}(\mathbb C)`$ et $`\mathcal N=\bigoplus_dM_{k'_d}(\mathbb C)`$, vues comme des matrices
 diagonales par blocs ; $`x\ge0`$ signifie $`x=x^*`$ à valeurs propres positives ou nulles (de façon équivalente, chaque bloc
 est semi-défini positif), et $`[0,1]=\{a\in\mathcal M_{sa}:0\le a\le1\}`$. Un **projecteur** est un $`p=p^*=p^2`$. Une
-application linéaire $`\Phi`$ est **positive** si $`x\ge0`$ entraîne $`\Phi(x)\ge0`$ ; un **$`*`$-isomorphisme de Jordan** est
+application linéaire $`\Phi`$ est **positive** si $`x\ge0`$ entraîne $`\Phi(x)\ge0`$ ; un **$`\ast`$-isomorphisme de Jordan** est
 une bijection linéaire telle que $`\Phi(x^*)=\Phi(x)^*`$ et $`\Phi(x\circ y)=\Phi(x)\circ\Phi(y)`$ (section 13.5). Un point $`a`$
 d'un ensemble convexe $`K`$ est **extrémal** s'il n'est pas le milieu $`\frac12(b+b')`$ de deux points distincts $`b,b'\in K`$
 (de façon équivalente, s'il n'est pas de la forme $`tb+(1-t)b'`$ avec $`b\ne b'`$ et $`0<t<1`$ : un tel $`a`$ est le milieu de
