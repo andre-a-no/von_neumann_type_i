@@ -23,8 +23,10 @@ $\rho_K(x)=Q^*\rho(x)Q$ はふたたび表現である（$\rho$ が準同型な�
 
 *証明.* (a) $y\in K^\perp$ と $z\in K$ に対し、$\rho(x^*)z\in K$ であるから $\langle z,\rho(x)y\rangle=\langle\rho(x^*)z,y\rangle=0$ である。(b) $n$ に関する帰納法。次元が最小の零でない不変部分空間 $K_1$ は既約である。(a) により $K_1^\perp$ は不変であり、$K_1^\perp$ への制限の不変部分空間は $\rho$ の不変部分空間であるから、帰納法の仮定がそれに適用できる。$\square$
 
-有限群ではユニタリ性は何の代償も要しない：$\rho(g)$ が単に可逆であるだけでも、$P=\sum_g\rho(g)^*\rho(g)>0$ は
-$\rho(h)^*P\rho(h)=P$ を満たすので、$P^{1/2}\rho(h)P^{-1/2}$ はユニタリである（ワイルのトリック）。
+有限群ではユニタリ性は何の代償も要しない：$\rho(g)$ が単に可逆であるだけでも、$P=\sum_g\rho(g)^*\rho(g)$ は
+$P\ge\rho(e)^*\rho(e)=1$ を満たすので $P>0$ であり、$\rho(h)^*P\rho(h)=\sum_g\rho(gh)^*\rho(gh)=P$ である（$g\to gh^{-1}$ と置換する）。
+したがって $(P^{1/2}\rho(h)P^{-1/2})^*(P^{1/2}\rho(h)P^{-1/2})=P^{-1/2}\rho(h)^*P\rho(h)P^{-1/2}=1$ であり、
+$h\mapsto P^{1/2}\rho(h)P^{-1/2}$ は $\rho$ と同値なユニタリ表現である（ワイルのトリック）。
 
 **補題 4.2（シューアの補題）.** $\rho,\rho'$ を $\mathbb C^k,\mathbb C^{k'}$ 上の $X$ の既約表現とし、$T\in\operatorname{Hom}(\rho,\rho')$ とする。
 (a) $T=0$ であるか $T$ は可逆である。(b) $\operatorname{Hom}(\rho,\rho)=\mathbb C1$。
@@ -51,7 +53,10 @@ $\operatorname{Hom}(\sigma,\rho)\neq0$ を満たすのは、ちょうど一つ�
 
 *証明.* *存在.* 補題 4.1 により、和が $\mathbb C^n$ で、制限 $\sigma_i(x)=Q_i^*\rho(x)Q_i$ が既約であるような、互いに直交する不変部分空間 $W_1,\dots,W_M$ が得られる。$W_i$ を制限の同値性によって類に分け、各類 $c$ において基準となる $\rho_c=\sigma_{i_0}$ を選ぶ。その類の他の各 $i$ について、補題 4.2(c) により $\sigma_i(x)=U_i\rho_c(x)U_i^*$ を満たすユニタリ $U_i$ が得られる。$Q_i$ を $Q_iU_i$ に置き換えれば $Q_i^*\rho(x)Q_i=\rho_c(x)$ となる。類 $c$ の元に $j=0,\dots,m_c-1$ と番号をつけ、それらの基底を $Q_{c,j}$ と書き、$c$ 番目の直和成分上で $V(e_a\otimes f_j)=Q_{c,j}e_a$ とおく。$W_i$ は不変で互いに直交するから $Q_{c,j}^*\rho(x)Q_{d,l}=\delta_{cd}\delta_{jl}\rho_c(x)$ であり、これが主張された形である。
 
-*可換子環.* $\rho(x)Q_{d,l}=Q_{d,l}\rho_d(x)$ かつ $Q_{c,j}^*\rho(x)=\rho_c(x)Q_{c,j}^*$ である（不変性と、$x^*$ に適用したその随伴）。$V$ はユニタリであるから、$Y\in M_n$ がすべての $\rho(x)$ と可換であることは、各ブロック
+*可換子環.* ここで $V$ を定理の主張にあるような任意の分解とし、$Q_{c,j}$ を（$c$ 番目の直和成分における）$n\times k_c$ 等長写像
+$e_a\mapsto V(e_a\otimes f_j)$ とする。いま構成した $V$ に対しては、これらは上の $Q_{c,j}$ である。恒等式
+$V^*\rho(x)V=\bigoplus_c\rho_c(x)\otimes1_{m_c}$ は $\rho(x)Q_{d,l}=Q_{d,l}\rho_d(x)$ を意味し、その随伴を $x^*$ に適用すると
+$Q_{c,j}^*\rho(x)=\rho_c(x)Q_{c,j}^*$ を得る。$V$ はユニタリであるから、$Y\in M_n$ がすべての $\rho(x)$ と可換であることは、各ブロック
 $Y_{cj,dl}=Q_{c,j}^*YQ_{d,l}$ が $Y_{cj,dl}\rho_d(x)=\rho_c(x)Y_{cj,dl}$ を満たすこと、すなわち
 $\operatorname{Hom}(\rho_d,\rho_c)$ に属することと同値である。これは $c\neq d$ ならば $0$、$c=d$ ならば $\mathbb C1$ である（補題 4.2）。よって
 $Y\in\rho(X)'$ であることと $Y_{cj,dl}=\delta_{cd}(y_c)_{jl}1_{k_c}$、すなわち $V^*YV=\bigoplus_c1_{k_c}\otimes y_c$ であることは同値である。
@@ -66,10 +71,12 @@ $0$ である。また $T=\sum_{c,j}Q_{c,j}Q_{c,j}^*T$ である。$\rho_c$ は�
 $\dim\operatorname{Hom}(\sigma,\rho)=m_c$ である。$\square$
 
 群の場合、$\rho(G)''$ は $\rho(G)$ の張る空間であり（2.4節）、定理 4.3 は命題 2.7 を逆向きに読んだものである：そこでは構造定理が既約表現を生み出し、ここでは既約表現が構造を生み出す。いずれにおいても $\dim\rho(X)'=\sum_cm_c^2$、$\dim\rho(X)''=\sum_ck_c^2$ である。$\rho(X)''$ の極小中心射影 $P_c=\sum_jQ_{c,j}Q_{c,j}^*$ の像が $\rho_c$ の **等型成分** である。
+定理 4.3 により、任意のエルミートな $H\in\rho(X)'$ はエルミートな $h_c\in M_{m_c}$ により $V(\bigoplus_c1_{k_c}\otimes h_c)V^*$ と
+書け、$1_{k_c}\otimes h_c$ は $h_c$ の $k_c$ 個のコピーからなるブロック対角行列である：$H$ のスペクトルは $m_c\times m_c$
+ブロック $h_c$ のスペクトルの和集合であり、$h_c$ の各固有値は $k_c$ 回繰り返される。
 
-> **物理的意味.** $\rho(X)$ が対称性ならば、任意の対称なハミルトニアン $H\in\rho(X)'$ は
-> $V(\bigoplus_c1_{k_c}\otimes h_c)V^*$ の形をもつ：$m_c\times m_c$ ブロック $h_c$ の固有値はそれぞれ $k_c$
-> 回現れる。$k_c$ 重に縮退した準位が対称性の **多重項** であり、対角化しなければならないブロックの大きさは、多重項の大きさではなく重複度 $m_c$ である。
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. $\rho(X)$ が対称性で $H\in\rho(X)'$ がハミルトニアンならば、
+> いま述べた $k_c$ 重に縮退した準位が対称性の **多重項** であり、対角化しなければならないブロックの大きさは、多重項の大きさではなく重複度 $m_c$ である。
 
 有限群では、何も分解することなく重複度を計算できる。
 
@@ -108,7 +115,31 @@ $P(Y)=\frac1{|G|}\sum_g\pi(g)Y\pi(g)^*$ は像が $\pi(G)'$ の冪等写像で�
 $\langle Y,Z\rangle_{HS}=\operatorname{Tr}(Y^*Z)$ に関して自己共役である（$g\to g^{-1}$ と置換する）。したがって $\pi(G)'$ の上への直交射影であり、$\dim\pi(G)'$ はそのトレースである。写像 $Y\mapsto AYB$ のトレースは
 $\operatorname{Tr}A\operatorname{Tr}B$ であり（その対角成分は $A_{ii}B_{jj}$）、これから $\frac1{|G|}\sum_g|\chi_\pi(g)|^2$ が得られる。
 
-2.4節の例を指標を用いてやり直そう。置換行列のトレースはそれが固定する基底ベクトルの個数であり、$\pi(\sigma)$ が $|b_1b_2b_3\rangle$ を固定するのは $b$ が $\sigma$ の各巡回上で一定であるときかつそのときに限るので、$\chi_\pi(\sigma)=2^{\#\text{cycles}(\sigma)}$ である。群 $S_3$ には自明表現、符号表現、標準表現（$\mathbb C^3$ 上の置換表現 $P_\sigma$ から自明表現を除いたもの）があり、その指標はそれぞれ $1$、$\operatorname{sgn}\sigma=(-1)^{3-\#\text{cycles}}$、$\operatorname{Tr}P_\sigma-1$ である。これらは実数値である。コードは $P_\sigma$ を $|100\rangle,|010\rangle,|001\rangle$ の張る空間への $\pi(\sigma)$ の制限として求め、
+2.4節の例を指標を用いてやり直そう。置換行列のトレースはそれが固定する基底ベクトルの個数であり、$\pi(\sigma)$ が $|b_1b_2b_3\rangle$ を固定するのは $b$ が $\sigma$ の各巡回上で一定であるときかつそのときに限るので（補題 B.1(c)）、$\chi_\pi(\sigma)=2^{\#\text{cycles}(\sigma)}$ である。$S_3$ の三つのユニタリ表現が手元にある。$P_\sigma e_i=e_{\sigma(i)}$ を $\mathbb C^3$ 上の置換表現（置換行列への準同型）とする。**自明** 表現は $\sigma\mapsto1$ である。**符号** は
+$\operatorname{sgn}\sigma=\det P_\sigma$ であり、行列式は乗法的で置換行列の行列式は $\pm1$ であるから、これは $\{\pm1\}\subseteq U(1)$ への準同型である。直線 $\mathbb C(1,1,1)$ は不変であり、したがって $E=(1,1,1)^\perp$ も不変である（補題 4.1(a)）。**標準** 表現は $P$ の $E$ への制限である。
+$\mathbb C(1,1,1)\oplus E$ に適合した正規直交基底では $P_\sigma=1\oplus\operatorname{std}(\sigma)$ であるから、
+$\chi_{\rm std}(\sigma)=\operatorname{Tr}P_\sigma-1$、すなわち固定点の個数から $1$ を引いたものである。$S_3$ の六つの元は、
+単位元、三つの互換、二つの $3$-巡回であり、巡回の個数はそれぞれ $3,2,1$、固定点の個数はそれぞれ $3,1,0$ である。互換は
+$1_3$ の二つの列を入れ替えるのでその符号は $-1$ であり、$3$-巡回は二つの互換の積（$(1\,2\,3)=(1\,3)(1\,2)$）であるからその符号は $+1$ である。こうして次の表を得る。
+
+| | 単位元（$1$） | 互換（$3$） | $3$-巡回（$2$） |
+|---|---|---|---|
+| $\chi_{\rm triv}$ | $1$ | $1$ | $1$ |
+| $\operatorname{sgn}$ | $1$ | $-1$ | $1$ |
+| $\chi_{\rm std}$ | $2$ | $0$ | $-1$ |
+| $\chi_\pi$ | $8$ | $4$ | $2$ |
+
+（したがって $\operatorname{sgn}\sigma=(-1)^{3-\#\text{cycles}(\sigma)}$ であり、すべての指標は実数値である。）$\langle\varphi,\psi\rangle_G$ を共役類ごとに和をとって計算すると、
+$\langle\chi_{\rm triv},\chi_{\rm triv}\rangle_G=\frac{1+3+2}6=1$、$\langle\operatorname{sgn},\operatorname{sgn}\rangle_G=\frac{1+3+2}6=1$、
+$\langle\chi_{\rm std},\chi_{\rm std}\rangle_G=\frac{4+0+2}6=1$ であるから、系 4.5(c) によりこれら三つの表現は既約であり、指標が異なるので互いに非同値である。系 4.5(b) により $\pi$ における重複度は
+$$
+m_{\rm triv}=\tfrac{8+3\cdot4+2\cdot2}6=4,\qquad m_{\rm sgn}=\tfrac{8-3\cdot4+2\cdot2}6=0,\qquad
+m_{\rm std}=\tfrac{2\cdot8+0-2\cdot2}6=2 .
+$$
+である。したがって自明表現と標準表現は、$m_c=4$ および $m_c=2$ をもつ $\pi$ の構成成分 $\rho_c$（定理 4.3）と同値である。これらで
+$4\cdot1+2\cdot2=8=\sum_ck_cm_c$ 次元が尽くされるので、他の構成成分はない：$k=(1,2)$、$m=(4,2)$ であり、
+$\dim\pi(S_3)'=4^2+2^2=\frac16(64+3\cdot16+2\cdot4)=20$ である（系 4.5(c)）。コードはこの表を計算し直す：$P_\sigma$ を
+$|100\rangle,|010\rangle,|001\rangle$ の張る不変部分空間への $\pi(\sigma)$ の制限として求め（その上で $\pi(\sigma)$ はただ一つの $1$ の位置を置換する。補題 B.1(a)）、
 $\#\text{cycles}(\sigma)=\dim\ker(P_\sigma-1)$（各巡回上で一定なベクトル）を用いる。
 
 ```python
@@ -137,7 +168,6 @@ assert close(mult, torch.tensor([4.0, 0.0, 2.0], dtype=torch.float64))
 assert dc.commutant_dimension(G) == 20                                # Corollary 4.5(c): M_4 (+) M_2
 ```
 
-自明表現は $4$ 回現れ、符号表現はまったく現れず、標準表現は2回現れる。$4\cdot1+2\cdot2=8$ であるから他には何も現れず、$\dim\pi(S_3)'=\frac16(64+3\cdot16+2\cdot4)=20$ である。
 これは2.4節の分解であり、今度は表現ごとに六つの数からなる表から得られた。
 
 ## 4.3 生成元から環へ：ランダム化アルゴリズム
@@ -156,43 +186,76 @@ $\mathbb C^{k_c}\otimes e_{cj}$ 上で元 $V^*aV=\bigoplus_da_d\otimes1$ は $a_
 $M_{k_c}$ 全体を動く。$M_{k_c}$ は $0$ と $\mathbb C^{k_c}$ 以外に不変部分空間をもたない。$\square$
 
 **命題 4.7（一般性）.** $K$ と $Y$ を、それぞれ $\mathcal A'_h$ と
-$\mathcal A'$ の独立なランダムな元で、その分布がこれらの実ベクトル空間上のルベーグ測度に関して密度をもつものとする。このとき確率 $1$ で：(a) 補題 4.6 の仮定が成り立つ。(b) 像が同じ直和成分に含まれる $K$ の任意の二つのスペクトル射影 $\Pi_i,\Pi_j$ に対し $\Pi_iY\Pi_j\neq0$ である。
+$\mathcal A'$ の独立なランダムな元で、その分布がこれらの実ベクトル空間上のルベーグ測度に関して密度をもつもの（補題 A.3）とする。このとき確率 $1$ で：(a) 補題 4.6 の仮定が成り立つ。(b) 像が同じ直和成分に含まれる $K$ の任意の二つの相異なるスペクトル射影 $\Pi_i,\Pi_j$ に対し $\Pi_iY\Pi_j\neq0$ である。
 
-*証明.* 次の事実を用いる：*$\mathbb R^d$ 上の実多項式 $p\not\equiv0$ はルベーグ測度零の集合の上でしか消えない。*
-$d=1$ ではその根は有限個である。$d>1$ では $x'\in\mathbb R^{d-1}$ により $p=\sum_jp_j(x')t^j$ と書き、ある $p_j\not\equiv0$ をとる。測度零の集合 $\{p_j=0\}$（帰納法）の外では断面 $\{t:p(x',t)=0\}$ は有限であり、トネリの定理により測度は $0$ となる。
-
-(a) エルミート行列 $\kappa=\bigoplus_c\kappa_c\in M_N$ は $K$ に実線形に依存する。$\langle\cdot,\cdot\rangle_{HS}$ に関する $1,\kappa,\dots,\kappa^{N-1}$ のグラム行列式
+*証明.* (a) エルミート行列 $\kappa=\bigoplus_c\kappa_c\in M_N$ は $K$ に実線形に依存する。$\langle\cdot,\cdot\rangle_{HS}$ に関する $1,\kappa,\dots,\kappa^{N-1}$ のグラム行列式
 $\delta(K)=\det[\operatorname{Tr}\kappa^{i+j}]_{i,j=0}^{N-1}$ は $K$ の座標の実多項式であり、これらの冪が線形独立であるときかつそのときに限り零でない。
 $\kappa=U\operatorname{diag}(\lambda)U^*$ に対して $p(\kappa)=U\operatorname{diag}(p(\lambda_l))U^*$ であるから、次数 $<N$ の零でない多項式が $\kappa$ を零化するのは、それが $\operatorname{spec}\kappa$ 上で消えるときかつそのときに限り、それが可能なのは $\kappa$ の相異なる固有値が $N$ 個未満のときかつそのときに限る（それらの上で $\prod_\mu(t-\mu)$ をとる）。よって $\delta(K)\neq0$ は補題 4.6 の仮定であり、
 $\delta\not\equiv0$ である：実際 $V(\bigoplus_c1\otimes\operatorname{diag}(\text{相異なる実数}))V^*\in\mathcal A'_h$ において零でない。したがって
-$\{\delta=0\}$ は測度零の集合である。
+系 A.7(b) により $\mathbb P(\delta(K)=0)=0$ である。
 
-(b) (a) が成り立つ開集合上では、スペクトル射影は $K$ の多項式であり、その係数は固有値の連続関数である（定理 1.5(a) の証明）。そのような $K$ を固定する。補題 4.6 により、
-$V^*\Pi_iV$ と $V^*\Pi_jV$ はそれぞれ $\mathbb C^{k_c}\otimes e_i$ と $\mathbb C^{k_c}\otimes e_j$ の上への射影であり、
-$V^*YV=\bigoplus_d1\otimes y_d$ に対して $\Pi_iY\Pi_j=0$ であることは $\langle e_i,y_ce_j\rangle=0$ と同値である。写像
-$Y\mapsto\langle e_i,y_ce_j\rangle$ は実線形写像 $\mathcal A'\to\mathbb C$ であって零でない（
-$V(1\otimes|e_i\rangle\langle e_j|)V^*$ における値は $1$）ので、その核は測度零の集合である。$Y$ は $K$ と独立であるから、
-トネリの定理により確率は $0$ である。$\square$
+(b) 集合 $O=\{\delta\neq0\}\subseteq\mathcal A'_h$ は開集合である（$\delta$ は連続）。$K\in O$ に対し、$K$ はちょうど $N$ 個の相異なる固有値
+$\mu_1(K)<\dots<\mu_N(K)$ をもつ（$\kappa$ の固有値で、重複度は $k_c$）ので、固有値の昇順に番号をつけたそのスペクトル射影
+$\Pi_1(K),\dots,\Pi_N(K)$ は $O$ 上で連続である（命題 A.13）。$l\neq l'$ を固定し、$\mathcal N_{ll'}$ を、ある $c$ に対して
+$P_c\Pi_l(K)=\Pi_l(K)$ かつ $P_c\Pi_{l'}(K)=\Pi_{l'}(K)$（$P_c$ は中心射影）であり、かつ $\Pi_l(K)Y\Pi_{l'}(K)=0$ であるような
+$(K,Y)\in O\times\mathcal A'$ 全体の集合とする。これはボレル集合 $O\times\mathcal A'$ 上の連続な方程式で定義されるので、ボレル集合である。二つの像が直和成分 $c$ に含まれるような $K\in O$ を固定する。補題 4.6 により、
+$V^*\Pi_lV$ と $V^*\Pi_{l'}V$ は、$\kappa_c$ の正規直交な固有ベクトル $e,e'$ により、それぞれ $\mathbb C^{k_c}\otimes e$ と $\mathbb C^{k_c}\otimes e'$ の上への射影であり、
+$V^*YV=\bigoplus_d1\otimes y_d$ に対して $\Pi_lY\Pi_{l'}=0$ であることは $\langle e,y_ce'\rangle=0$ と同値である。写像
+$Y\mapsto\langle e,y_ce'\rangle$ は実線形写像 $\mathcal A'\to\mathbb C$ であって零でない（
+$V(0\oplus\dots\oplus1\otimes|e\rangle\langle e'|\oplus\dots\oplus0)V^*$ における値は $1$）ので、その核は真部分空間であり、零集合である（系 A.7(c)）。
+よってすべての切り口 $\{Y:(K,Y)\in\mathcal N_{ll'}\}$ は零集合であり（二つの像が異なる直和成分に含まれるならば空集合）、$Y$ は $K$ と独立であるから、
+系 A.7(d) により $\mathbb P((K,Y)\in\mathcal N_{ll'})=0$ である。(b) の事象が成り立たないのは
+$\{\delta(K)=0\}\cup\bigcup_{l\neq l'}\{(K,Y)\in\mathcal N_{ll'}\}$ の上だけであり、これは確率 $0$ の事象の有限個の和集合である。$\square$
 
-**補題 4.8（コピーの整列）.** $W_i,W_j$ を、$\mathcal A$ がその上に既約に作用する不変部分空間とし、その正規直交基底を $Q_i,Q_j$、制限を $\sigma_i(a)=Q_i^*aQ_i$ とする。また $Y\in\mathcal A'$ とする。
+**補題 4.8（圧縮；コピーの整列）.** (a) $W$ を正規直交基底 $Q\in M_{n\times d}$ をもつ $\mathcal A$ 不変部分空間とし、
+$\sigma(a)=Q^*aQ$ をその制限とする。このとき $\sigma(\mathcal A)$ は $*$-環であり、
+$\{Q^*YQ:Y\in\mathcal A'\}=\sigma(\mathcal A)'$ かつ $\{Q^*KQ:K\in\mathcal A'_h\}=\sigma(\mathcal A)'_h$ である。$\mathcal A$ が $W$ 上に既約に作用するのは、
+すべての $Y\in\mathcal A'$ に対して $Q^*YQ\in\mathbb C1$ となるときかつそのときに限る。そうでないとき、$X$ を $\mathcal A'$ または
+$\mathcal A'_h$ の密度をもつランダムな元とすると、確率 $1$ で $Q^*XQ\notin\mathbb C1$ である。
+
+(b) $W_i,W_j$ を、$\mathcal A$ がその上に既約に作用する不変部分空間とし、その正規直交基底を $Q_i,Q_j$、制限を $\sigma_i(a)=Q_i^*aQ_i$ とする。また $Y\in\mathcal A'$ とする。
 このとき $T=Q_i^*YQ_j\in\operatorname{Hom}(\sigma_j,\sigma_i)$ である。$T\neq0$ ならば $\lambda>0$ とユニタリ $U$ により $T=\lambda U$ と書け、$Q_j'=Q_jU^*$ はすべての $a\in\mathcal A$ に対し $Q_j'^*aQ_j'=\sigma_i(a)$ を満たす。$W_i,W_j$ が異なる直和成分に含まれるならば（$W_i\subseteq P_c\mathbb C^n$、$W_j\subseteq P_d\mathbb C^n$、$c\neq d$）、$T=0$ である。
 
-*証明.* 定理 4.3 の証明と同様に $aQ_j=Q_j\sigma_j(a)$ かつ $Q_i^*a=\sigma_i(a)Q_i^*$ であるから、
+*証明.* (a) 定理 4.3 の証明と同様に（$W$ は $a$ と $a^*$ で不変である）、$a\in\mathcal A$ に対し $aQ=Q\sigma(a)$ かつ
+$Q^*a=\sigma(a)Q^*$ である。したがって $\sigma(ab)=Q^*aQ\sigma(b)=\sigma(a)\sigma(b)$、$\sigma(a^*)=\sigma(a)^*$、
+$\sigma(1)=Q^*Q=1_d$ であるから、$\sigma$ は単位的 $*$-準同型であり、$\sigma(\mathcal A)$ は $*$-環である。また $Y\in\mathcal A'$ に対し $Q^*YQ\sigma(a)=Q^*YaQ=Q^*aYQ=\sigma(a)Q^*YQ$ である。
+逆に、$T\in\sigma(\mathcal A)'$ に対し $Y=QTQ^*$ とおくと、$aY=Q\sigma(a)TQ^*=QT\sigma(a)Q^*=Ya$ であるから $Y\in\mathcal A'$ であり、
+$Q^*YQ=T$ で、$T$ がエルミートならば $Y$ もエルミートである。$\sigma$ が既約ならば $\sigma(\mathcal A)'=\operatorname{Hom}(\sigma,\sigma)=\mathbb C1$ である
+（補題 4.2(b)）。$E\subseteq\mathbb C^d$ が $0,\mathbb C^d$ 以外の $\sigma$ 不変部分空間ならば、$E^\perp$ もそうであり（補題
+4.1(a)）、$E$ の上への直交射影は $\sigma(\mathcal A)'_h$ のスカラーでない元である。この場合
+$\mathbb C1\cap\sigma(\mathcal A)'$ と $\mathbb R1\cap\sigma(\mathcal A)'_h$ は真の実部分空間であり、全射な実線形写像 $X\mapsto Q^*XQ$ によるそれらの逆像は
+$\mathcal A'$ と $\mathcal A'_h$ の真部分空間であって、これらは零集合である（系 A.7(c)）。
+
+(b) (a) と同様に $aQ_j=Q_j\sigma_j(a)$ かつ $Q_i^*a=\sigma_i(a)Q_i^*$ であるから、
 $T\sigma_j(a)=Q_i^*YaQ_j=Q_i^*aYQ_j=\sigma_i(a)T$ である。補題 4.2 により $T=\lambda U$ かつ
 $U\sigma_j(a)U^*=\sigma_i(a)$ であり、後者は $Q_j'^*aQ_j'$ である。最後に $P_c\in\mathcal A\cap\mathcal A'$、$Q_i=P_cQ_i$、
 $P_cQ_j=0$ であるから、$T=Q_i^*P_cYQ_j=Q_i^*YP_cQ_j=0$ である。$\square$
 
 以上により、アルゴリズム（`decompose.wedderburn`、フロントエンドは `from_group` と `from_generators`）は次のとおりである：
 
-1. *可換子環からのサンプリング.* 有限群の全元に対しては、ツワール $P$ とガウス行列 $Z$ により $Y=P(Z)$、$K=P(Z+Z^*)$ とする：これらは $\mathcal A'$ と
-   $\mathcal A'_h$ の上への線形全射によるガウス分布の像であり、したがって密度をもつ。生成元に対しては、$Y,K$ は
-   $\mathcal A'=\{X:[S_j,X]=[S_j^*,X]=0\}$（$M_n$ 上の線形写像の核）の基底のガウス係数による線形結合である。
+1. *可換子環からのサンプリング.* 有限群の全元に対しては、ツワール $P$ と独立なジニブル行列 $Z,Z'$ により $Y=P(Z)$、$K=P(Z'+Z'^*)$ とする。
+   $P$ は $M_n$ から $\mathcal A'$ の上への線形射影で $P(Z)^*=P(Z^*)$ を満たすので、$Z\mapsto P(Z)$ と $Z'\mapsto P(Z'+Z'^*)$ は $\mathcal A'$ の上および
+   $\mathcal A'_h$ の上への実線形全射である（$H\in\mathcal A'_h$ に対し $P(\frac H2+\frac H2)=H$）。ジニブル行列は $M_n$ の非退化な
+   中心化ガウスベクトルである（命題 A.16）から、$Y$ と $K$ は $\mathcal A'$ と $\mathcal A'_h$ の非退化な中心化ガウスベクトルであり、
+   密度をもつ（定理 A.15）。生成元に対しては、
+   $\mathcal A'=\{X:[S_j,X]=[S_j^*,X]=0\}$ は $M_n$ 上の線形写像の核である（ライブラリはエルミート部分
+   $\frac12(S_j+S_j^*)$、$\frac1{2i}(S_j-S_j^*)$ を用いる。これらは $S_j,S_j^*$ と同じ複素空間を張るので、同じ可換子環をもつ）。その基底 $(B_r)_{r\le D}$ をとり、
+   $Y=\sum_rc_rB_r$、$K=Y'+Y'^*$ とする。ここで $Y'$ は $Y$ の独立なコピー、$c_r$ は独立な標準複素ガウス変数である：これらは
+   $\mathbb C^D$ の非退化なガウスベクトルの、$\mathcal A'$ の上への実線形全単射 $c\mapsto\sum_rc_rB_r$ による像、および $\mathcal A'_h$ の上への実線形全射
+   $c\mapsto X+X^*$（$X=\sum_rc_rB_r$）による像であり、したがってやはり密度をもつ。どのランダムな元も新たに抽出されたもので、それ以前のものとは独立である。
+   ライブラリはそれらを単位ノルムに規格化するが、これはどの固有空間も、どのブロックが消えるかも変えない。
 2. *分割.* $K$ の固有空間は既約である（補題 4.6、命題 4.7(a)）。それらの次元が $k_c$ である。
-3. *グループ化と整列.* ブロック $Q_i^*YQ_j$ はちょうど同じ直和成分の内部で零でない（命題 4.7(b)、
-   補題 4.8）。類がセクターを与え、その大きさが $m_c$ を与え、極分解の因子がコピーを整列させる。
+3. *グループ化と整列.* 等しい次元の固有空間の間のブロック $Q_i^*YQ_j$ は、ちょうど同じ直和成分の内部で零でない（命題 4.7(b)、
+   補題 4.8(b)）。「零でないブロックで結ばれる」という関係の類がセクターを与え、その大きさが $m_c$ を与え、極分解の因子が各コピーを類ごとに一つの基準コピーに整列させる
+   （補題 4.8(b)。整列されたコピーに整列されたコピーは基準に整列されている）。
 4. クロネッカー順序で $V$ を *組み立て*、$V^*aV=\bigoplus_ca_c\otimes1_{m_c}$ となるようにする。
 
-浮動小数点演算では、異なるコピーの近い固有値はまとめて保持され、可換子環の新しいランダムな元の圧縮によって分割される（`decompose` のモジュール docstring）。いずれにせよ、結果は最後に証明書によって確認される：
+したがって、厳密な算術で $K$ の固有空間が厳密に分離されるならば、アルゴリズムは確率 $1$ で定理 4.3 のような分解を返す：補題 4.6 により直和成分 $c$ は次元 $k_c$ の固有空間を $m_c$ 個含み、
+整列の後の構成は定理 4.3 の証明の存在部分そのものである。浮動小数点演算では、ライブラリは許容誤差より近い固有値を等しいものとして扱うので、計算された「固有空間」$W$ は $K$ のいくつかの
+固有空間の和であるかもしれない。それでも $W$ は $\mathcal A$ 不変であり（補題 4.6）、ライブラリは新しいランダムな
+$X\in\mathcal A'_h$ をそれに圧縮する。補題 4.8(a) により、$\mathcal A$ が $W$ 上に既約に作用するならば $Q^*XQ$ は $1$ の倍数であり、
+そうでなければ確率 $1$ で $1$ の倍数ではない。その場合、その固有空間は $\sigma(\mathcal A)$ で不変であり（$\sigma(\mathcal A)$ に適用した補題 4.6）、
+$W$ をより小さな不変部分空間に分割する。ライブラリはすべての圧縮がスカラーになるまでこれを繰り返す。浮動小数点演算で何が起ころうと、結果は最後に証明書によって確認される：
 
 **命題 4.9（証明書）.** $\mathcal A$ を $S_1,\dots,S_J$ とその随伴が生成する環とし、
 ユニタリ $V$ により $\mathcal B=V(\bigoplus_cM_{k_c}\otimes1_{m_c})V^*$ とする。すべての $S_j\in\mathcal B$ かつ
@@ -225,12 +288,33 @@ assert sorted(W.shape[1] for W in spaces) == [1, 1, 1, 1, 2, 2]      # Lemma 4.6
 assert all(close(G @ W, W @ (W.mH @ G @ W)) for W in spaces)           # invariant subspaces
 Y = dc.twirl(G, torch.randn(8, 8, dtype=dt))
 Wa, Wb = [W for W in spaces if W.shape[1] == 2]
-s = torch.linalg.svdvals(Wa.mH @ Y @ Wb)                               # Lemma 4.8: a multiple of a unitary
+s = torch.linalg.svdvals(Wa.mH @ Y @ Wb)                               # Lemma 4.8(b): a multiple of a unitary
 assert s[1] > 1e-3 and abs(s[0] - s[1]) < 1e-10
 assert all(close(W.mH @ Y @ Wa, 0) for W in spaces if W.shape[1] == 1)   # different summands: zero
 ```
 
-計算量を支配するのは可換子環である：ツワールのサンプル一つあたり $O(|G|n^3)$ である。生成元に対しては、ライブラリは $\mathcal A$ のランダムな元を用いて核の問題を $N=\sum_ck_cm_c^2$ 個の未知数に縮小するが、それでもメモリ $O(n^2N)$ を必要とし、八つのスピン $\frac12$ の全スピン（$n=256$、$N=4900$）では約 $10$ GB になる。そのため4.6節ではスピン鎖に対して、答えをあらかじめ知っているモジュール `su2` を用いる。
+計算量を支配するのは可換子環である：ツワールのサンプル一つに $n\times n$ 行列の積が $|G|$ 回かかる。生成元に対しては、
+ライブラリはまず $\mathcal A$ のエルミートな元 $R=U\operatorname{diag}(\lambda)U^*$（生成元のエルミート部分のランダムな実線形結合に、
+そのような二つの結合の対称化された積の定数倍を加えたもの）を対角化する。任意の $X\in\mathcal A'$ は $R$ と可換であり、したがってそのスペクトル射影とも可換である（定理 1.5(d)）から、
+$U^*XU$ は $R$ の固有空間（次元 $d_\lambda$）に関してブロック対角である。これをあらかじめ課すことにより、核の問題の未知数は $n^2$ 個ではなく
+$N_R=\sum_\lambda d_\lambda^2$ 個になる。いくつかの固有値をまとめてもブロックが大きくなるだけなので、縮小された問題は同じ解集合 $\mathcal A'$ をもつ。
+分解において $V^*RV=\bigoplus_cr_c\otimes1_{m_c}$（エルミートな $r_c\in M_{k_c}$）である。$\lambda$ の $r_c$ における重複度を
+$\mu_c(\lambda)$ とすると $d_\lambda=\sum_c\mu_c(\lambda)m_c$ であり、整数 $\mu\ge0$ に対して $\mu^2\ge\mu$ であるから
+$$
+N_R=\sum_\lambda\Big(\sum_c\mu_c(\lambda)m_c\Big)^2\ge\sum_{\lambda,c}\mu_c(\lambda)^2m_c^2\ge\sum_{\lambda,c}\mu_c(\lambda)m_c^2=\sum_ck_cm_c^2,
+$$
+であり、等号はすべての $r_c$ の固有値が単純かつ互いに相異なるときかつそのときに限り成り立つ。$L=3,4,5$ 個のスピンの全スピンについて、下のコードは等号を見いだす（*数値的観察*）。
+最小値でさえ大きい：八つのスピン $\frac12$（$n=256$）では $\sum_ck_cm_c^2=4900$ であり、縮小された連立方程式は $(n^2+N_R)\times N_R$ 行列で、
+$3.5\cdot10^8$ 個の複素成分をもつ。そのため4.6節ではスピン鎖に対して、答えをあらかじめ知っているモジュール `su2` を用いる。
+
+```python
+for n in (3, 4, 5):
+    Dn = dc.from_generators(dc.total_spin(n))
+    _, info = dc.commutant_basis(dc.total_spin(n), return_info=True)
+    N_min = sum(k * m * m for k, m in zip(Dn.k_factors, Dn.multiplicities))
+    assert info['unknowns'] >= N_min                                  # N_R >= sum_c k_c m_c^2
+    print(n, info['unknowns'], N_min)                                # observed: equality
+```
 
 ## 4.4 $U(1)$ と電荷セクター
 
@@ -247,17 +331,24 @@ $U(1)'=\{U_\theta:\theta\in\mathbb R\}'$ と書き、$U(1)''$ でその可換子
 
 *証明.* (1) $U_\theta=\sum_qe^{iq\theta}P_q$ はユニタリであり、$U_\theta U_{\theta'}=U_{\theta+\theta'}$（定理 1.5(c)）、
 $U_{2\pi}=1$ である。逆に、連続な表現に対して $(U_\theta)_{\theta\ge0}$ は行列の連続半群であるから、補題 8.5（第8章で証明する。その証明は有限次元であることしか用いない）により $\theta\ge0$ に対し $U_\theta=e^{\theta B}$ であり、$\theta<0$ に対しては $U_\theta=U_{-\theta}^{-1}=e^{\theta B}$ である。
-$U_\theta^*U_\theta=1$ を $0$ で微分すると $B^*+B=0$ となるので、エルミートな $Q$ により $B=iQ$ と書け、$U_{2\pi}=1$ からすべての固有値について
+$U_\theta^*U_\theta=1$ を $0$ で微分すると（補題 8.1）$B^*+B=0$ となるので、エルミートな $Q$ により $B=iQ$ と書ける。指数級数
+$e^{i\theta Q}$ は関数計算に等しい（$H=-Q$ とした命題 8.2(1)）から、$U_{2\pi}=\sum_qe^{2\pi iq}P_q=1$ より $Q$ のすべての固有値 $q$ について
 $e^{2\pi iq}=1$、$q\in\mathbb Z$ が従う。(2) (i)$\Rightarrow$(ii)：$\theta=0$ で微分する。
 (ii)$\Rightarrow$(iii)：$X$ は $P_q=f(Q)$ と可換である（定理 1.5(d)）から、$q\neq q'$ に対し $P_qXP_{q'}=XP_qP_{q'}=0$ である。
-(iii)$\Rightarrow$(i)：$XU_\theta=\sum_qe^{iq\theta}P_qXP_q=U_\theta X$。ブロック対角作用素は
-$\bigoplus_qM_{d_q}\otimes1_1$ をなし、その可換子環は $\bigoplus_q1_{d_q}\otimes M_1=\operatorname{span}\{P_q\}$ である（定理 2.6）。
+(iii)$\Rightarrow$(i)：$XU_\theta=\sum_qe^{iq\theta}P_qXP_q=U_\theta X$。ブロック対角作用素は（$P_q$ の像に適合した正規直交基底において）
+$\bigoplus_qM_{d_q}\otimes1_1$ をなし、その可換子環は $\bigoplus_q1_{d_q}\otimes M_1=\operatorname{span}\{P_q\}$ である：それらと可換な作用素はすべての $P_q$ と可換であるから
+ブロック対角であり、各ブロックは $M_{d_q}$ と可換であるからスカラーである（$m=1$ とした補題 2.5 のステップ5）。
 (3) $\frac d{dt}e^{itH}Qe^{-itH}=ie^{itH}[H,Q]e^{-itH}$（命題 8.2）がすべての $t$ で消えることは $[H,Q]=0$ と同値である。
 このとき $e^{itH}$ は $P_q$ と可換であり（定理 1.5(d) を二回）、
 $\operatorname{Tr}(P_q\rho(t))=\operatorname{Tr}(e^{itH}P_qe^{-itH}\rho)=\operatorname{Tr}(P_q\rho)$ である。$\square$
 
-したがって $U(1)$ の既約表現は指標 $\theta\mapsto e^{iq\theta}$、$q\in\mathbb Z$ であり（任意のアーベル群と同様に一次元）、電荷 $q$ の重複度は $d_q$ である。電荷はテンソル積のもとで足し合わされる：$e^{i\theta(Q_1\otimes1+1\otimes Q_2)}=e^{i\theta Q_1}\otimes e^{i\theta Q_2}$ は
-$P_{q_1}\otimes P_{q_2}$ の像の上に電荷 $q_1+q_2$ で作用する。これが第7章の融合テンソル積の融合則 $(q_1,q_2)\mapsto q_1+q_2$ である。
+したがって $U(1)$ の既約表現は指標 $\theta\mapsto e^{iq\theta}$、$q\in\mathbb Z$ であり（任意のアーベル群と同様に一次元）、電荷 $q$ の重複度は $d_q$ である。電荷はテンソル積のもとで足し合わされる：$u_k$ と $w_l$ をそれぞれ固有値 $\alpha_k$ と $\beta_l$ をもつ $Q_1$ と $Q_2$ の正規直交固有基底とすると、
+正規直交基底 $u_k\otimes w_l$ は $Q_1\otimes1+1\otimes Q_2$ の固有ベクトル（固有値 $\alpha_k+\beta_l$）からなり、同時に
+$e^{i\theta Q_1}\otimes e^{i\theta Q_2}$ の固有ベクトル（固有値 $e^{i\theta\alpha_k}e^{i\theta\beta_l}$）からなる。したがって関数計算の定義により
+$$
+e^{i\theta(Q_1\otimes1+1\otimes Q_2)}=e^{i\theta Q_1}\otimes e^{i\theta Q_2},
+$$
+であり、これは $P_{q_1}\otimes P_{q_2}$ の像の上に電荷 $q_1+q_2$ で作用する。これが第7章の融合テンソル積の融合則 $(q_1,q_2)\mapsto q_1+q_2$ である。
 
 $n$ 個の量子ビットに対しては、電荷は **個数作用素** $\hat N=\sum_jn_j$ である。ここで $n_j=|1\rangle\langle1|$ は量子ビット
 $j$ 上に作用する：ハミング重み $|b|$ により $\hat N|b\rangle=|b|\,|b\rangle$ である。そのセクターの次元は
@@ -267,8 +358,9 @@ U(1)'\cong\bigoplus_{w=0}^nM_{\binom nw}(\mathbb C),
 $$
 をなす。これは `chains.SpinChain(n).algebra` であり、電荷 $0,1$ をもつ $M_1\oplus M_1$ の $n$ 個のコピーの融合積である
 （ビット $1$ = 上向きスピン、$\hat N=S^z+\frac n2$。一方 `decompose.total_spin` では上向きスピンは $\mathbb C^2$ の *第一の* 基底ベクトルであり、これは基底の番号を付け替えるがセクターは変えない）。任意の XXZ ハミルトニアン
-$\sum_{\langle ij\rangle}J(s^x_is^x_j+s^y_is^y_j+\Delta s^z_is^z_j)$ は $\hat N$ を保存する。ホッピング項
-$s^x_is^x_j+s^y_is^y_j=\frac12(s^+_is^-_j+s^-_is^+_j)$ は上向きスピンをあるサイトから別のサイトへ移すだけだからである。
+$\sum_{\langle ij\rangle}J(s^x_is^x_j+s^y_is^y_j+\Delta s^z_is^z_j)$ は $\hat N$ を保存する：$s^z_is^z_j$ は基底 $|b\rangle$ において対角であり、ホッピング項
+$s^x_is^x_j+s^y_is^y_j=\frac12(s^+_is^-_j+s^-_is^+_j)$（$s^\pm=s^x\pm is^y$ を展開すると交差項は打ち消し合う）は $|b\rangle$ を $0$ に、あるいは
+上向きスピンがサイト $i,j$ の一方から他方へ移った配置に写すので、$\hat N$ の各固有空間をそれ自身に写すからである。
 
 ```python
 import functools
@@ -297,7 +389,7 @@ E_sec = torch.cat([torch.linalg.eigvalsh(Hc.matrix[0, N, :k, :k]) for N, k in en
 assert close(torch.sort(E_sec).values, torch.linalg.eigvalsh(H))
 ```
 
-> **物理的意味.** $U(1)$ 対称性とは、粒子数、電荷、あるいは磁化の保存である。命題 4.10(3) はこの設定におけるネーターの定理である：電荷が保存されるのはハミルトニアンが対称なときかつそのときに限り、そのときダイナミクスはセクターを決して離れない（定理 8.3）。さらにセクター間のコヒーレンスを測定できるものが何もなければ、セクターは超選択セクターである（第3章）。
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. $U(1)$ 対称性とは、粒子数、電荷、あるいは磁化の保存である。命題 4.10(3) はこの設定におけるネーターの定理である：電荷が保存されるのはハミルトニアンが対称なときかつそのときに限り、そのときダイナミクスはセクターを決して離れない（定理 8.3）。さらにセクター間のコヒーレンスを測定できるものが何もなければ、セクターは超選択セクターである（第3章）。
 
 ## 4.5 $SU(2)$：スピン
 
@@ -308,9 +400,14 @@ $$
 を満たすエルミート行列の三つ組 $S_x,S_y,S_z$ のこと、すなわちこれらの関係をもつラベル $\{x,y,z\}$ の表現（4.1節）のことである。基本的な例は
 $\mathbb C^2$ 上の $s_a=\frac12\sigma_a$（パウリ行列）である。$(S_a)$ と $(T_a)$ がスピン表現ならば
 $S_a\otimes1+1\otimes T_a$ もそうである（交差項は可換）。したがって $L$ 個のスピン $\frac12$ の **全スピン** $S_a=\sum_is_a^{(i)}$
-（`decompose.total_spin(L)`）はスピン表現である。回転 $e^{-i\theta\,\mathbf n\cdot\mathbf S}$ がすべての $\theta,\mathbf n$ について
-$X$ と可換であることは、$X$ が三つの $S_a$ と可換であることと同値であり（$\theta=0$ で微分する。逆は定理 1.5(d)）、したがって「$SU(2)$ 作用」の可換子環は $\{S_x,S_y,S_z\}'$ であって、定理 2.2 により回転と $S_a$ は同じ環を生成する。$L$ 個のスピン $\frac12$ に対し、回転とは $V^{\otimes L}$、$V\in SU(2)$ のことである：そのような $V$ はすべてある $e^{-i\theta\,\mathbf n\cdot\mathbf s}$ であり、
-$e^{-i\theta\,\mathbf n\cdot\mathbf S}=(e^{-i\theta\,\mathbf n\cdot\mathbf s})^{\otimes L}$ である。
+（`decompose.total_spin(L)`）はスピン表現である。回転 $e^{-i\theta\,\mathbf n\cdot\mathbf S}$（$\theta\in\mathbb R$、
+$\mathbf n\in\mathbb R^3$ は単位ベクトル、関数計算）がすべての $\theta,\mathbf n$ について
+$X$ と可換であることは、$X$ が三つの $S_a$ と可換であることと同値であり（$\theta=0$ で微分する、命題 8.2(1)。逆は定理 1.5(d)）、したがって「$SU(2)$ 作用」の可換子環は $\{S_x,S_y,S_z\}'$ であって、定理 2.2 により回転と $S_a$ は同じ環を生成する（どちらの集合も随伴をとる操作で閉じている）。$L$ 個のスピン $\frac12$ に対し、回転とは $V^{\otimes L}$、$V\in SU(2)$ のことである。実際、$h=\mathbf n\cdot\mathbf s$ として $\mathbf n\cdot\mathbf S=\sum_ih^{(i)}$ であり、4.4節の電荷の場合と同様に
+（$L$ に関する帰納法）$e^{-i\theta\,\mathbf n\cdot\mathbf S}=(e^{-i\theta h})^{\otimes L}$ で、$e^{-i\theta h}\in SU(2)$ である（$h$ はトレースが零で $h^2=\frac14$ であるから、その固有値は
+$e^{\mp i\theta/2}$ である）。逆に、$V\in SU(2)$ は絶対値 $1$ で積が $1$ の固有値をもつ正規行列であるから、ユニタリ $W$ により
+$V=W\operatorname{diag}(e^{i\varphi},e^{-i\varphi})W^*$ と書け、トレースが零のエルミート行列 $A=W\operatorname{diag}(\varphi,-\varphi)W^*$ により $V=e^{iA}$ となる。トレースが零のエルミートな $2\times2$ 行列はパウリ行列の実線形結合
+$A=2\,\mathbf c\cdot\mathbf s$ であるから、$\theta=2|\mathbf c|$、$\mathbf n=-\mathbf c/|\mathbf c|$ として $V=e^{-i\theta\,\mathbf n\cdot\mathbf s}$ である
+（$\mathbf c=0$ ならば $\theta=0$）。定理 B.6(a),(c) と系 B.7（$d=2$）は、$V^{\otimes L}$、$V\in SU(2)$ が $S_a$ の生成する環を張ることを直接示す。
 
 $S_\pm=S_x\pm iS_y$ とおくと $S_-=S_+^*$ である。また $\mathbf S^2=S_x^2+S_y^2+S_z^2$ とおく。関係式から
 $$
@@ -361,7 +458,7 @@ $$
 である。したがって $S_x,S_y,S_z$ が生成する環は $\bigoplus_SM_{2S+1}\otimes1_{m_S}$ であり、その可換子環は
 $\bigoplus_S1_{2S+1}\otimes M_{m_S}$ である。
 
-*証明.* $S_z|b\rangle=(|b|-\frac L2)|b\rangle$ であるから、$\frac L2+M\in\{0,\dots,L\}$ ならば $d_M=\binom L{L/2+M}=\binom L{L/2-M}$、そうでなければ $0$ である。系 4.12 と定理 4.3 を適用すればよい。値が正であるのは、
+*証明.* $S_z=\sum_is_z^{(i)}$ は積基底において対角であり、$u$ 個の上向きスピンと $L-u$ 個の下向きスピンの積の上で固有値 $u-\frac L2$ をもつから、$\frac L2+M\in\{0,\dots,L\}$ ならば $d_M=\binom L{L/2+M}=\binom L{L/2-M}$、そうでなければ $0$ である。系 4.12 と定理 4.3 を適用すればよい。値が正であるのは、
 $j<\frac{L-1}2$ に対して $\binom L{j+1}/\binom Lj=\frac{L-j}{j+1}>1$ だからである。$\square$
 
 $L=2$ の場合：$\frac12\otimes\frac12=1\oplus0$（**クレブシュ・ゴルダン**）。三重項 $S_-^j|{\uparrow\uparrow}\rangle$、$j=0,1,2$ は
@@ -389,15 +486,16 @@ for c, k in enumerate(D4.k_factors):
 ```
 
 どの作用素がすべての回転と可換だろうか。サイトの置換はそうである：$\pi(\sigma)$ による共役は
-$s^{(i)}_a$ を $s^{(\sigma(i))}_a$ に写すので、$\sum_is^{(i)}_a$ を固定する。逆は古典的な定理である。
+$s^{(i)}_a$ を $s^{(\sigma(i))}_a$ に写す（補題 B.1(b)）ので、$\sum_is^{(i)}_a$ を固定する。逆に、それ以外には何もない：
 
 **定理 4.14（シューア・ワイル双対性）.** $\pi$ を、$(\mathbb C^2)^{\otimes L}$ のテンソル因子を置換する $S_L$ の表現とする。(a) $\operatorname{span}\pi(S_L)\subseteq\{S_x,S_y,S_z\}'$。(b) 等号が成り立つ。同値なことに（定理 2.2）、全スピンが生成する環は $\pi(S_L)'$ である。
 
-(a) は今証明したところである。(b) は一般の $L$ については証明なしに述べる。これは
-$(\mathbb C^d)^{\otimes L}$ と $U(d)$ の対角作用に対して成り立つ（W. Fulton and J. Harris, *Representation
-Theory*, Springer 1991, Lecture 6; R. Goodman and N. Wallach, *Symmetry, Representations, and Invariants*,
-Springer 2009, Section 9.1）。$L\le5$ についてはこれを確かめる：(a) により、二つの空間の次元が等しければ十分である。$L=2$ の場合は $k=2$ の補題 5.8 である。実際 $\{S_a\}'=\{V\otimes V:V\in SU(2)\}'=\{V\otimes V:V\in U(2)\}'$
-である（位相はスカラーとして作用する）。
+*証明.* (a) は今証明したところである。(b) は系 B.7、すなわち定理 B.6 の $d=2$ の場合である。定理 B.6 はすべての $d$ と $L$ について、
+$(\mathbb C^d)^{\otimes L}$ と $U(d)$ の対角作用に対する双対性を証明している。$\square$
+
+（さらに読むには：W. Fulton and J. Harris, *Representation Theory*, Springer 1991, Lecture 6; R. Goodman and
+N. Wallach, *Symmetry, Representations, and Invariants*, Springer 2009, Section 9.1。）$L\le5$ について、コードは二つの空間を数値的に比較する：
+(a) により、それらの次元が等しければ十分である。
 
 ```python
 for n in range(2, 6):
@@ -411,10 +509,11 @@ print(Dp)
 assert sorted(zip(Dp.multiplicities, Dp.k_factors)) == sorted(zip(D4.k_factors, D4.multiplicities))
 ```
 
-出力される次元は $2,5,14,42$ であり、カタラン数 $\binom{2L}L/(L+1)$ である。最後の行は双対性が働いている様子である：
-$\pi(S_4)''$ はブロック $k=(1,2,3)$ と重複度 $(5,1,3)$ をもつ——全スピンの組 $(k_c,m_c)$ の役割を入れ替えたものである。定理 4.14(b) と命題 2.7 により、スピン $S$ の重複度空間は $S_L$ の既約表現を担い、ここでは $S=2,1,0$ に対してその次元は $1,3,2$ である。
+出力される次元は $2,5,14,42$ であり、カタラン数 $\binom{2L}L/(L+1)$ である。系 B.10 はすべての $L$ について
+$\dim\{S_a\}'=\sum_Sm_S^2=\binom{2L}L/(L+1)$ を証明している。最後の行は双対性が働いている様子である：
+$\pi(S_4)''$ はブロック $k=(1,2,3)$ と重複度 $(5,1,3)$ をもつ——全スピンの組 $(k_c,m_c)$ の役割を入れ替えたものである。一般に（系 B.9）スピン $S$ の重複度空間は次元 $m_S$ の $S_L$ の既約表現を担い、これらは互いに非同値である。ここでは $S=2,1,0$ に対してその次元は $1,3,2$ である。
 
-> **物理的意味.** スピン $S$ の多重項は、任意の回転不変なハミルトニアンに対して等しいエネルギーをもつ $2S+1$ 個の状態からなり、それらは $S^z=M$ によって区別される。二つのスピン $\frac12$ は三重項と一重項をなし、
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. スピン $S$ の多重項は、任意の回転不変なハミルトニアンに対して等しいエネルギーをもつ $2S+1$ 個の状態からなり、それらは $S^z=M$ によって区別される。二つのスピン $\frac12$ は三重項と一重項をなし、
 > 四つのスピンは一つの五重項、三つの三重項、二つの一重項をなす。二つの一重項の重複度空間と三つの三重項の重複度空間が、第10章のデコヒーレンスフリーな量子ビットとノイズレスなクォートリットである。
 
 ## 4.6 スピン系
@@ -428,17 +527,144 @@ $L$ 個のスピン $\frac12$ 上の **ハイゼンベルク模型** は、実�
 $H$ はその上に（基底のユニタリな変換を除いて）$H_S$ として作用する。
 
 *証明.* (a) 二つのスピン上では $\mathbf s^{(1)}\cdot\mathbf s^{(2)}=\frac12(\mathbf S^2-\mathbf s^{(1)2}-\mathbf s^{(2)2})=\frac12\mathbf S^2-\frac34$
-である（$s=\frac12$ の定理 4.11）。三重項上では $\mathbf S^2=2$ かつ $F=1$ である（三重項は
-$S_-^j|{\uparrow\uparrow}\rangle$ で張られ、$F$ は $S_-$ と可換で $|{\uparrow\uparrow}\rangle$ を固定する）。一重項上では
-$\mathbf S^2=0$ かつ $F=-1$ である。両辺はこれら四つのベクトル上で一致する。$L$ 個のうちのサイト $i,j$ については恒等作用素とのテンソル積をとる。残りは定理 4.14(a) と定理 4.3 である。(b) 系 4.12 の分解において、
-$S_z=S$ をもつベクトルは $\sum_{S'\ge S}|S',S\rangle\otimes w_{S'}$ であり、定理 4.11 により $S'>S$ に対して $S_+|S',S\rangle\neq0$ である。よって
-$\ker S_+\cap\ker(S_z-S)=|S,S\rangle\otimes\mathbb C^{m_S}$ であり、その上で $1\otimes H_S$ は $H_S$ として作用する。$\square$
+である（$s=\frac12$ の定理 4.11）。三重項のベクトル $S_-^j|{\uparrow\uparrow}\rangle$ は $|{\uparrow\uparrow}\rangle$、
+$|{\downarrow\uparrow}\rangle+|{\uparrow\downarrow}\rangle$、$2|{\downarrow\downarrow}\rangle$ であり、一重項とあわせて $\mathbb C^2\otimes\mathbb C^2$ の直交基底をなす。
+三重項上では $\mathbf S^2=2$ かつ $F=1$ である：$\mathbf S^2=S_-S_++S_z^2+S_z$ は $|{\uparrow\uparrow}\rangle$ 上で $0+1+1=2$ であり、
+$\mathbf S^2$ と $F$ は $S_-$ と可換で、$F$ は $|{\uparrow\uparrow}\rangle$ を固定する。一重項上では
+$\mathbf S^2=0$（$S_+$ と $S_z$ によって零化される）かつ $F=-1$ である。両辺はこれら四つのベクトル上で一致する。$L$ 個のうちのサイト $i,j$ については恒等作用素とのテンソル積をとる。残りは定理 4.14(a) と定理 4.3 である。(b) より多くを証明する：系 4.12 のように分解された任意のスピン表現と任意の $\mu\in\frac12\mathbb Z$ に対し、
+$\ker S_+\cap\ker(S_z-\mu)$ は、$\mu\ge0$ ならば $|\mu,\mu\rangle\otimes\mathbb C^{m_\mu}$（の系 4.12 のユニタリによる像）であり、$\mu<0$ ならば $0$ である。実際、その基底において $S_z=\mu$ をもつベクトルは、
+$S'-\mu\in\mathbb Z$ を満たす $S'\ge|\mu|$ にわたる和 $\sum_{S'}|S',\mu\rangle\otimes w_{S'}$ であり、定理 4.11 により $S_+$ はそれを
+$\sum_{S'}\sqrt{(S'-\mu)(S'+\mu+1)}\,|S',\mu+1\rangle\otimes w_{S'}$ に写す。ここで $S'+\mu+1\ge1$ である。よってそれが消えるのは、
+$S'\neq\mu$ なるすべての $S'$ に対して $w_{S'}=0$ となるときかつそのときに限る。ハイゼンベルクの $H$ に対し、$1\otimes H_S$ は $|S,S\rangle\otimes\mathbb C^{m_S}$ 上に $H_S$ として作用する。$\square$
 
-(b) は、モジュール `su2`（スピン鎖、第9章）が数値的な分解なしに $H_S$ を構成する方法である：
-`SpinChain` の $U(1)$ セクター $\hat N=\frac L2+S$ の内部で、一度に一サイトずつクレブシュ・ゴルダン結合を行うことにより、最高ウェイトベクトルの正規直交基底を構成する。(a) を `D4` を用いて四つのスピンの環で確かめ、
-それから八つのスピンについてブロックの大きさを比較する。
+(b) は、モジュール `su2`（スピン鎖、第9章）が数値的な分解なしに $H_S$ を構成する方法である：それは一度に一サイトずつ加えながら、
+$j\otimes\frac12$ のクレブシュ・ゴルダン係数を用いて最高ウェイトベクトルの正規直交基底を構成する。これらの係数を最高ウェイトからの下降によって導こう。定理 4.11
+と $S_-=S_+^*$ により、スピン $j$ は
+$$
+S_\pm|j,m\rangle=\sqrt{(j\mp m)(j\pm m+1)}\;|j,m\pm1\rangle ,
+$$
+を満たす。$|m|>j$ に対しては $|j,m\rangle=0$ とおく（これは公式と整合的である。その係数は $m=\pm j$ で消える）。
+
+**定理 4.16（$j\otimes\frac12$ のクレブシュ・ゴルダン係数）.** $j\in\{\frac12,1,\frac32,\dots\}$ とし、
+$\mathbb C^{2j+1}\otimes\mathbb C^2$ 上で $S_a=S^{(j)}_a\otimes1+1\otimes s_a$ とする（基底 $|j,m\rangle$ をもつ定理 4.11 のスピン $j$ を、
+$|{\uparrow}\rangle=|\frac12,\frac12\rangle$、$|{\downarrow}\rangle=|\frac12,-\frac12\rangle$ をもつスピン $\frac12$ と結合したもの）。また
+$\alpha_M=\sqrt{(j+M+\frac12)/(2j+1)}$、$\beta_M=\sqrt{(j-M+\frac12)/(2j+1)}$ とおく。$J=j\pm\frac12$ と $M=J,J-1,\dots,-J$ に対し
+$$
+\begin{aligned}
+|j+\tfrac12,M\rangle\!\rangle&=\alpha_M\,|j,M-\tfrac12\rangle\otimes|{\uparrow}\rangle+\beta_M\,|j,M+\tfrac12\rangle\otimes|{\downarrow}\rangle,\\
+|j-\tfrac12,M\rangle\!\rangle&=-\beta_M\,|j,M-\tfrac12\rangle\otimes|{\uparrow}\rangle+\alpha_M\,|j,M+\tfrac12\rangle\otimes|{\downarrow}\rangle .
+\end{aligned}
+$$
+とおく。
+(a) これら $2(2j+1)$ 個のベクトルは $\mathbb C^{2j+1}\otimes\mathbb C^2$ の正規直交基底である。
+(b) $|j+\frac12,j+\frac12\rangle\!\rangle=|j,j\rangle\otimes|{\uparrow}\rangle$ であり、$|j-\frac12,j-\frac12\rangle\!\rangle$ は、絶対値 $1$ の因子を除いて、
+$S_zx=(j-\frac12)x$ かつ $S_+x=0$ を満たす唯一の単位ベクトル $x$ である。この因子は
+$|j,j\rangle\otimes|{\downarrow}\rangle$ の係数が正であることによって定まる（コンドン・ショートレーの規約）。
+(c) $S_z|J,M\rangle\!\rangle=M|J,M\rangle\!\rangle$ かつ $S_-|J,M\rangle\!\rangle=\sqrt{(J+M)(J-M+1)}\,|J,M-1\rangle\!\rangle$ である：状態 $|J,M\rangle\!\rangle$
+は $|J,J\rangle\!\rangle$ から下降と規格化によって得られる。
+(d) したがって $a=x,y,z$ に対し $S_a|J,M\rangle\!\rangle=\sum_{M'}(S^{(J)}_a)_{M'M}|J,M'\rangle\!\rangle$ である：ユニタリ $|J,M\rangle\mapsto|J,M\rangle\!\rangle$ は
+スピン $(j+\frac12)\oplus$ スピン $(j-\frac12)$ を $S_a$ に写すので、$j\otimes\frac12\cong(j+\frac12)\oplus(j-\frac12)$ であり、
+クレブシュ・ゴルダン係数 $\langle j,m;\frac12,\sigma|J,M\rangle$（積基底における $|J,M\rangle\!\rangle$ の座標）は上に示した
+$\pm\alpha_M,\beta_M$ である。
+
+*証明.* (a) 上の式の基底ベクトルが $0$ ならば、その係数も $0$ である：$|j,M-\frac12\rangle=0$ となるのは
+$M=-j-\frac12$ のときだけで、このとき $\alpha_M=0$ であり、$|j,M+\frac12\rangle=0$ となるのは $M=j+\frac12$ のときだけで、このとき $\beta_M=0$ である。よって各ベクトルのノルムの二乗は
+$\alpha_M^2+\beta_M^2=1$ である。$M$ が異なるベクトルは異なる積基底ベクトルを含み、$M$ が等しいときの
+内積は $-\alpha_M\beta_M+\beta_M\alpha_M=0$ である。それらは $(2j+2)+2j=2(2j+1)$ 個ある。
+(b) 第一の主張は $\alpha_{j+1/2}=1$、$\beta_{j+1/2}=0$ である。固有空間 $S_z=j-\frac12$ は
+$|j,j-1\rangle\otimes|{\uparrow}\rangle$ と $|j,j\rangle\otimes|{\downarrow}\rangle$ で張られ、$s_+|{\uparrow}\rangle=0$、$s_+|{\downarrow}\rangle=|{\uparrow}\rangle$ により
+$$
+S_+\big(p\,|j,j-1\rangle\otimes|{\uparrow}\rangle+q\,|j,j\rangle\otimes|{\downarrow}\rangle\big)=(p\sqrt{2j}+q)\,|j,j\rangle\otimes|{\uparrow}\rangle ,
+$$
+である。これが消えるのは $q=-\sqrt{2j}\,p$ のときかつそのときに限る。$|p|^2+|q|^2=1$ と $q>0$（したがって $p<0$）のもとでは、これは $p=-\beta_{j-1/2}=-1/\sqrt{2j+1}$、
+$q=\alpha_{j-1/2}=\sqrt{2j/(2j+1)}$ である。(c) $S_z$：どちらの項も $S_z=(M\mp\frac12)\pm\frac12=M$ をもつ。$S_-$ については、
+$x_M=p\,|j,M-\frac12\rangle\otimes|{\uparrow}\rangle+q\,|j,M+\frac12\rangle\otimes|{\downarrow}\rangle$ とおく。$s_-|{\uparrow}\rangle=|{\downarrow}\rangle$、$s_-|{\downarrow}\rangle=0$ であるから
+$$
+S_-x_M=p\sqrt{(j+M-\tfrac12)(j-M+\tfrac32)}\;|j,M-\tfrac32\rangle\otimes|{\uparrow}\rangle
++\Big(p+q\sqrt{(j+M+\tfrac12)(j-M+\tfrac12)}\Big)|j,M-\tfrac12\rangle\otimes|{\downarrow}\rangle .
+$$
+である。$\beta_M\sqrt{(j+M+\frac12)(j-M+\frac12)}=(j-M+\frac12)\alpha_M$ と $\alpha_M\sqrt{(j+M+\frac12)(j-M+\frac12)}=(j+M+\frac12)\beta_M$ を用いる。
+$J=j+\frac12$ に対しては $(p,q)=(\alpha_M,\beta_M)$、$c=\sqrt{(J+M)(J-M+1)}=\sqrt{(j+M+\frac12)(j-M+\frac32)}$ であり、第一の係数は
+$\sqrt{(j+M+\frac12)(j+M-\frac12)(j-M+\frac32)/(2j+1)}=c\,\alpha_{M-1}$、第二の係数は $\alpha_M(j-M+\frac32)=c\,\beta_{M-1}$ である。
+$J=j-\frac12$ に対しては $(p,q)=(-\beta_M,\alpha_M)$、$c=\sqrt{(j+M-\frac12)(j-M+\frac12)}$ であり、第一の係数は
+$-\sqrt{(j-M+\frac12)(j+M-\frac12)(j-M+\frac32)/(2j+1)}=-c\,\beta_{M-1}$、第二の係数は $\beta_M(j+M-\frac12)=c\,\alpha_{M-1}$ である。
+いずれの場合も $M>-J$ に対して $S_-|J,M\rangle\!\rangle=c\,|J,M-1\rangle\!\rangle$ である。$M=-J$ に対しては両方の係数が消える（$J=j+\frac12$ ならば $p=\alpha_M=0$、
+$J=j-\frac12$ ならば $j+M-\frac12=0$）ので、$S_-|J,-J\rangle\!\rangle=0$ である。(d) (a) と (c) により、正規直交基底
+$|J,M\rangle\!\rangle$ における $S_z$ と $S_-$ の行列はスピン $(j+\frac12)\oplus$ スピン $(j-\frac12)$ のもの（定理 4.11
+と上の公式）である。$S_+=S_-^*$ の行列も同様であり、したがって $S_x=\frac12(S_++S_-)$ と $S_y=\frac1{2i}(S_+-S_-)$ の行列も同様である。$\square$
+
+演習問題 2 はこの分解を（係数は除いて）$j_1\otimes j_2$ に拡張する。ライブラリにとって重要なのは定理 4.16 の二つの
+最高ウェイトベクトルだけであり、それらは既約であるか否かを問わず任意のスピン表現において機能する：
+
+**系 4.17（一度に一サイトずつの最高ウェイトベクトル）.** $(T_a)$ を $E$ 上のスピン表現とし、
+$\mathcal H_\mu(E)=\ker T_+\cap\ker(T_z-\mu)$ とおき、その正規直交基底を $B_\mu$ とする（$\mathcal H_\mu(E)=0$ ならば $B_\mu=\emptyset$）。また
+$E\otimes\mathbb C^2$ 上で $S_a=T_a\otimes1+1\otimes s_a$ とする。任意の $S\in\{0,\frac12,1,\dots\}$ に対し、ベクトル
+$$
+v\otimes|{\uparrow}\rangle\quad(v\in B_{S-1/2}),\qquad
+\sqrt{\tfrac{2S+1}{2S+2}}\;v\otimes|{\downarrow}\rangle-\tfrac1{\sqrt{(2S+1)(2S+2)}}\;T_-v\otimes|{\uparrow}\rangle\quad(v\in B_{S+1/2})
+$$
+は $\ker S_+\cap\ker(S_z-S)$ の正規直交基底をなす（$S=0$ では第一の族は空である）。一つのスピン
+（$E=\mathbb C^2$、$B_{1/2}=\{|{\uparrow}\rangle\}$、他のすべての $B_\mu$ は空）から始めて $L-1$ 個のスピンを加えていくと、
+$L$ 個のスピン $\frac12$ の最高ウェイトベクトルの空間の、次元 $m_S$ の正規直交基底が得られる（命題 4.15(b)）。
+
+*証明.* $a=\sqrt{(2S+1)/(2S+2)}$、$b=-1/\sqrt{(2S+1)(2S+2)}$、$u(v)=a\,v\otimes|{\downarrow}\rangle+b\,T_-v\otimes|{\uparrow}\rangle$ と書く。
+$v\in\mathcal H_{S+1/2}(E)$ に対し $T_+T_-v=(T_-T_++2T_z)v=(2S+1)v$ であり、$a+(2S+1)b=0$ である。*最高ウェイト：* $S_z$ はどちらの族の上でも $S$ である
+（$v$ 上で $T_z=S\mp\frac12$、$T_-v$ 上で $S-\frac12$）。$S_+(v\otimes|{\uparrow}\rangle)=T_+v\otimes|{\uparrow}\rangle=0$ であり、
+$S_+u(v)=a\,T_+v\otimes|{\downarrow}\rangle+a\,v\otimes|{\uparrow}\rangle+b\,T_+T_-v\otimes|{\uparrow}\rangle=(a+(2S+1)b)\,v\otimes|{\uparrow}\rangle=0$ である。
+*正規直交性：* $v\in B_{S-1/2}$ に対し $\langle v\otimes|{\uparrow}\rangle,u(v')\rangle=b\langle v,T_-v'\rangle=b\langle T_+v,v'\rangle=0$ であり、
+$\langle u(v),u(v')\rangle=a^2\langle v,v'\rangle+b^2\langle v,T_+T_-v'\rangle=(a^2+(2S+1)b^2)\langle v,v'\rangle=\langle v,v'\rangle$ である。
+*張ること：* $S_zw=Sw$ かつ $S_+w=0$ とし、$w=x\otimes|{\uparrow}\rangle+y\otimes|{\downarrow}\rangle$ と書く。すると $T_zx=(S-\frac12)x$、
+$T_zy=(S+\frac12)y$ であり、$0=S_+w=(T_+x+y)\otimes|{\uparrow}\rangle+T_+y\otimes|{\downarrow}\rangle$ であるから $T_+y=0$、すなわち $y\in\mathcal H_{S+1/2}(E)$
+で、$T_+x=-y$ である。すると $x'=x+\frac1{2S+1}T_-y$ は $T_+x'=-y+y=0$ を満たすので $x'\in\mathcal H_{S-1/2}(E)$ であり、これは $S=0$ では $0$ である
+（命題 4.15(b) の証明）。$b/a=-1/(2S+1)$ であるから、$w=x'\otimes|{\uparrow}\rangle+a^{-1}u(y)$（$u$ を線形に拡張する）は
+二つの族の張る空間に属する。$L$ 個のスピンについては、$n=2,\dots,L$ に対して $E=(\mathbb C^2)^{\otimes(n-1)}$ とその全スピン $T_a$ にこれを適用する。
+一つのスピン上では $\mathcal H_{1/2}=\mathbb C|{\uparrow}\rangle$ であり、他のすべての $\mathcal H_\mu=0$ である（スピンは $\frac12$ だけである）。$\square$
+
+第二の族は、$j=S+\frac12$ とした定理 4.16 のベクトル $|S,S\rangle\!\rangle$ を、$T_-^kv$ の張るスピン $j$ のコピーの中で書いたものであり
+（定理 4.11 の証明、$|j,j-1\rangle=T_-v/\sqrt{2j}$）、第一の族は $j=S-\frac12$ とした
+$|j+\frac12,j+\frac12\rangle\!\rangle$ である。各基底ベクトルに中間スピンの列
+$S_1=\frac12,S_2,\dots,S_L=S$、$|S_n-S_{n-1}|=\frac12$ でラベルをつけると、`su2.SU2Chain` が構成するヤマノウチ基底が得られる（そのソースは
+まさにこれらの係数を用いる。下のコードは系 4.17 の結論だけを確かめる）。それは `SpinChain` の $U(1)$ セクター $\hat N=\frac L2+S$ の内部にある（`SpinChain` のサイトの順序は
+テンソル因子の付け替えであり、補題 B.1(b) により全スピンと可換である）。コードは定理 4.16 を
+密な行列とライブラリの `su2.clebsch_gordan` に対して確かめ、それから八つのスピンの基底について系 4.17 の結論を確かめる。また命題 4.15(a) を `D4` を用いて四つのスピンの環で確かめ、
+八つのスピンについてブロックの大きさを比較する。
 
 ```python
+from torch_vn_algebra import su2
+
+def ket(j, m):                                            # |j, m> of Theorem 4.11 (zero if |m| > j)
+    v = torch.zeros(int(2 * j + 1), dtype=dt)
+    if abs(m) <= j:
+        v[int(j - m)] = 1
+    return v
+
+up, dn = ket(0.5, 0.5), ket(0.5, -0.5)
+for j in (0.5, 1.0, 1.5, 2.0):                            # Theorem 4.16
+    Sj = dc.spin_matrices(j)
+    sp_j = [math.sqrt(j * (j + 1) - (j - k) * (j - k + 1)) for k in range(1, int(2 * j) + 1)]
+    assert close(Sj[0] + 1j * Sj[1], torch.diag(torch.tensor(sp_j, dtype=dt), 1))     # S_+ of Theorem 4.11
+    assert close(Sj[2], torch.diag(torch.tensor([j - k for k in range(int(2 * j) + 1)], dtype=dt)))
+    Sc = torch.stack([torch.kron(a, torch.eye(2, dtype=dt)) + torch.kron(torch.eye(len(a), dtype=dt), b)
+                      for a, b in zip(Sj, dc.spin_matrices(0.5))])
+    Sp, Sm = Sc[0] + 1j * Sc[1], Sc[0] - 1j * Sc[1]
+    cols = []
+    for J in (j + 0.5, j - 0.5):
+        for M in [J - k for k in range(int(2 * J + 1))]:
+            al, be = math.sqrt((j + M + 0.5) / (2 * j + 1)), math.sqrt((j - M + 0.5) / (2 * j + 1))
+            p, q = (al, be) if J > j else (-be, al)
+            x = p * torch.kron(ket(j, M - 0.5), up) + q * torch.kron(ket(j, M + 0.5), dn)
+            assert close(Sc[2] @ x, M * x)
+            if M == J:
+                assert close(Sp @ x, 0)                               # highest weight
+            else:
+                assert close(Sm @ cols[-1], math.sqrt((J + M + 1) * (J - M)) * x)   # lowering, (c)
+            for s2, e in ((0.5, up), (-0.5, dn)):                     # the library's Racah formula agrees
+                cg = su2.clebsch_gordan(j, M - s2, 0.5, s2, J, M) if abs(M - s2) <= j else 0.0
+                assert abs(cg - torch.vdot(torch.kron(ket(j, M - s2), e), x).real.item()) < 1e-12
+            cols.append(x)
+    U = torch.stack(cols, 1)
+    assert U.shape == (2 * len(Sj[0]), 2 * len(Sj[0])) and close(U.mH @ U, torch.eye(U.shape[1]))   # (a)
+
 def swap(i, j, n):
     p = list(range(n))
     p[i], p[j] = j, i
@@ -453,8 +679,11 @@ levels = torch.cat([torch.linalg.eigvalsh(h.matrix[0, c, :m, :m]).repeat_interle
                     for c, (k, m) in enumerate(zip(D4.k_factors, D4.multiplicities))])
 assert close(torch.sort(levels).values, torch.linalg.eigvalsh(H4))   # level of H_S repeated 2S+1 times
 
-from torch_vn_algebra import su2
 u1, sym = SpinChain(8, boundary='periodic'), su2.SU2Chain(8, boundary='periodic')
+for S, m in zip(sym.spins, sym.multiplicities):           # Corollary 4.17: orthonormal highest-weight bases
+    B, N = sym.hw_basis(S), int(4 + S)                     # columns in the U(1) sector N = L/2 + S
+    assert B.shape == (math.comb(8, N), m) and close(B.T @ B, torch.eye(m, dtype=B.dtype))
+    assert N == 8 or close(sym.raise_(B, N), 0)            # S_+ B = 0 (S_z = S holds in sector N)
 H_u1, H_su2 = u1.xxz(J=1.0, Delta=1.0), sym.heisenberg(J=1.0)
 E_u1 = torch.sort(torch.cat([torch.linalg.eigvalsh(H_u1.matrix[0, N, :k, :k])
                              for N, k in enumerate(u1.algebra.k_factors)])).values
@@ -462,21 +691,24 @@ E_su2, S_lev, _ = sym.full_spectrum(H_su2, return_quantum_numbers=True)   # leve
 E_su2, S_lev = E_su2[0], S_lev[0]
 assert close(E_u1, E_su2)
 assert S_lev[0] == 0 and (S_lev[1:4] == 1).all() and E_su2[4] - E_su2[3] > 1e-3     # singlet, then triplet
+assert E_su2[1] - E_su2[0] > 1e-3 and close(E_su2[1:4], E_su2[1].expand(3))       # simple singlet (Theorem 9.9)
 assert close(sym.restrict(H_u1).matrix, H_su2.matrix)      # Proposition 4.15(b)
 flops = lambda ks: sum(k ** 3 for k in ks)
 print(u1.algebra.k_factors, sym.multiplicities, flops(u1.algebra.k_factors), flops(sym.multiplicities))
 print(f"ground state energy {E_su2[0].item():.6f}, first excited {E_su2[1].item():.6f} (x3)")
 ```
 
-八つのスピンの環では、$U(1)$ のブロックの大きさは $1,8,28,56,70,56,28,8,1$、$SU(2)$ のブロックの大きさは
-$S=0,\dots,4$ に対して $m_S=14,28,20,7,1$ である。対角化のコスト $\sum k^3$ は $739162$ から $33040$ へ、
-$22$ 分の1に減る。環の次元 $\sum k^2$ は $\binom{16}8=12870$ から $1430$ に減る。基底状態はエネルギー $-3.651093$ の一重項であり、第一励起準位は $-3.128419$ の三重項である。
+八つのスピンの環では、$U(1)$ のブロックの大きさは $\binom8w=1,8,28,56,70,56,28,8,1$（4.4節）、$SU(2)$ のブロックの大きさは
+$S=0,\dots,4$ に対して $m_S=14,28,20,7,1$ である（命題 4.13）。対角化のコスト $\sum k^3$ は $739162$ から $33040$ へ、
+$22$ 分の1に減る。環の次元 $\sum k^2$ は
+$\sum_w\binom8w\binom8{8-w}=\binom{16}8=12870$（$16$ 個の元から $8$ 個を選び、そのうち $w$ 個を最初の $8$ 個から選ぶ）から
+$\sum_Sm_S^2=1430=\binom{16}8/9$ に減る（系 B.10）。定理 9.9 により（環の長さは偶数で $J>0$）、基底状態はただ一つの一重項であり、
+$E_0(0)<E_0(1)$ である。*数値的観察*（上のコードによる計算）：基底エネルギーは $-3.651093$ であり、第一励起準位は $-3.128419$ の三重項である。
 
-> **物理的意味.** ハイゼンベルク模型は、磁性絶縁体における局在電子スピンの交換相互作用を記述する。$J_{ij}>0$ は反平行な隣接スピンを好む。そのスペクトルは
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. ハイゼンベルク模型は、磁性絶縁体における局在電子スピンの交換相互作用を記述する。$J_{ij}>0$ は反平行な隣接スピンを好む。そのスペクトルは
 > 多重項からなり、磁場 $h\,S^z$ は各多重項を $2S+1$ 個の等間隔な準位に分裂させる（演習問題 4）。
-> 二部格子の二つの副格子の間の結合が $J_{ij}>0$、副格子内の結合が $J_{ij}\le0$ で、
-> 副格子の大きさが等しければ、基底状態は一重項である（リーブ・マティスの定理、E. Lieb and D. Mattis,
-> *J. Math. Phys.* 3 (1962) 749。証明なしに述べる）。上の八つのスピンの環はその例である。
+> 定理 9.9（二部的な結合。偶数長の反強磁性の鎖と環では一重項の基底状態）は、E. Lieb と D. Mattis
+> （*J. Math. Phys.* 3 (1962) 749）にさかのぼる。
 
 ## 4.7 比較の対象
 
@@ -484,7 +716,8 @@ $22$ 分の1に減る。環の次元 $\sum k^2$ は $\binom{16}8=12870$ から $
 SymbolicWedderburn.jl（Julia）は半正定値計画の対称性による簡約のためにウェダーバーン分解を計算する。物理では、QuSpin や他の厳密対角化コードが
 $U(1)$ と格子の対称性によってブロック対角化を行い、ITensor と TeNPy はテンソルネットワークにおいてアーベル的な電荷を扱い、
 TensorKit.jl は融合木によって $SU(2)$ を扱う。ライブラリの `decompose` は小さな行列（$n$ は数百程度まで）のための密な手法である。任意の行列のリスト（群の元または生成元）を受け付け、結果を証明書によって確認し（命題 4.9）、環とその可換子環を `to_algebra`、`from_algebra`、`to_commutant`、`from_commutant` をもつ `TypeIAlgebra`
-オブジェクトとして返すので、第3章、第5–8章の内容がただちに適用できる。スピン $\frac12$ の鎖については、`su2.SU2Chain` が $L=16$ までのすべてのスピンの値について $SU(2)$ のブロックを直接与える。
+オブジェクトとして返すので、第3章、第5–8章の内容がただちに適用できる。スピン $\frac12$ の鎖については、`su2.SU2Chain` が $SU(2)$ のブロックを直接与える（系 4.17）。受け付けるスピンの数は
+$L=18$ までであり、この上限は基底のメモリによって決まる。
 
 ## 演習問題
 
@@ -503,21 +736,29 @@ TensorKit.jl は融合木によって $SU(2)$ を扱う。ライブラリの `de
 <details>
 <summary>解答</summary>
 
-1. $d=2$ の場合と同様に、$\pi(\sigma)$ は置換行列であり、$|b_1\dots b_L\rangle$ を固定するのは $b$ が各巡回上で一定であるときかつそのときに限る。そのような $b$ は $d^{\#\text{cycles}}$ 個ある。系 4.5(c) により
+1. 補題 B.1(c) により、$\pi(\sigma)$ は置換行列であり、$|b_1\dots b_L\rangle$ を固定するのは $b$ が $\sigma$ の各巡回上で一定であるときかつそのときに限る。そのような $b$ は $d^{\#\text{cycles}(\sigma)}$ 個ある。系 4.5(c) により
    $\dim\pi(S_L)'=\frac1{L!}\sum_\sigma(d^2)^{\#\text{cycles}(\sigma)}=\frac{x(x+1)\cdots(x+L-1)}{L!}$（$x=d^2$）
-   であり（第5章、演習問題 2）、これは $\binom{d^2+L-1}L$ である：$\binom63=20$、$\binom74=35$。$35$ が
-   $\dim\{S_a\}''$ でもあることは、$L=4$ の定理 4.14 である。
+   であり（恒等式 $\sum_\sigma x^{\#\text{cycles}(\sigma)}=x(x+1)\cdots(x+L-1)$ は第5章、演習問題 2 の解答で証明される）、これは $\binom{d^2+L-1}L$ である
+   （命題 B.3 は多重集合を数えることで同じ次元を証明する）：$\binom63=20$、$\binom74=35$。$35$ が
+   $\dim\{S_a\}''$ でもあることは、$L=4$ の定理 4.14(b) である：$\{S_a\}''=\pi(S_4)'$。
 
 ```python
 for n, value in ((3, 20), (4, 35)):
     assert dc.commutant_dimension(dc.permutation_representation(n, 2)) == math.comb(n + 3, n) == value
 ```
 
-2. $j_1\ge j_2$ とする。$S_z$ は $|m_1\rangle\otimes|m_2\rangle$ 上で固有値 $m_1+m_2$ をもつので、
-   $M\in j_1+j_2+\mathbb Z$ に対し、$d_M$ は $|M-m_2|\le j_1$ を満たす $m_2\in\{-j_2,\dots,j_2\}$ の個数である：
-   $|M|\le j_1-j_2$ ならば $2j_2+1$ 個すべて、$j_1-j_2\le|M|\le j_1+j_2$ ならば $j_1+j_2-|M|+1$ 個（$M\ge0$ に対しては条件は
-   $m_2\ge M-j_1$）、それを超えれば $0$ 個である。系 4.12 により、$m_j=d_j-d_{j+1}$ は $j_1-j_2\le j\le j_1+j_2$ に対して $1$、
-   $j<j_1-j_2$ に対して $(2j_2+1)-(2j_2+1)=0$ である。
+2. $S_a=S^{(j_1)}_a\otimes1+1\otimes S^{(j_2)}_a$ はスピン表現であり（4.5節）、ユニタリ
+   $x\otimes y\mapsto y\otimes x$ はそれを $(j_2,j_1)$ に対するものと絡ませる。よって $j_1\ge j_2$ としてよい。$S_z$ は
+   $|m_1\rangle\otimes|m_2\rangle$ 上で固有値 $m_1+m_2$ をもつので、その固有値は $j_1+j_2+\mathbb Z$ に属し、そのような $M$ に対して $d_M$ は
+   $|M-m_2|\le j_1$ を満たす $m_2\in\{-j_2,\dots,j_2\}$ の個数である（このとき $m_1=M-m_2\in j_1+\mathbb Z$ は自動的に成り立つ）。
+   $M\notin j_1+j_2+\mathbb Z$ に対しては $d_M=0$ である。$M\ge0$ に対しては条件は $M-j_1\le m_2\le M+j_1$ であり、$M+j_1\ge j_2$ であるから、$m_2$ は
+   $\max(-j_2,M-j_1)$ から $j_2$ まで動く：$0\le M\le j_1-j_2$ に対して $d_M=2j_2+1$、
+   $j_1-j_2\le M\le j_1+j_2$ に対して $d_M=j_1+j_2-M+1$、$M>j_1+j_2$ に対して $d_M=0$ である。系 4.12 により、スピン $j\ge0$ の重複度は
+   $m_j=d_j-d_{j+1}$ である。これは $j\notin j_1+j_2+\mathbb Z$ または $j>j_1+j_2$ ならば $0$ であり、$m_{j_1+j_2}=1-0=1$ である。
+   $j_1-j_2\le j<j_1+j_2$（$j\in j_1+j_2+\mathbb Z$ であるから $j+1\le j_1+j_2$）に対しては
+   $m_j=(j_1+j_2-j+1)-(j_1+j_2-j)=1$ であり、$0\le j<j_1-j_2$（したがって $j+1\le j_1-j_2$）に対しては $m_j=(2j_2+1)-(2j_2+1)=0$ である。
+   よって $j_1\otimes j_2\cong\bigoplus_{j=j_1-j_2}^{j_1+j_2}j$ であり、各スピンはちょうど一回現れる。$j_2=\frac12$ に対しては、これは
+   定理 4.16(d) であり、そちらはさらに係数も与える。
 
 ```python
 def coupled(a, b):                                        # S^(a) (x) 1 + 1 (x) S^(b)
@@ -531,12 +772,14 @@ for a, b, ks in ((1.0, 0.5, (2, 4)), (1.0, 1.0, (1, 3, 5))):  # 1 (x) 1/2 = 1/2 
 
 3. $U_\theta=\sum_qe^{iq\theta}P_q$ であり、$e^{iq\theta}=e^{iq'\theta}$ であることは $(q-q')\theta\in2\pi\mathbb Z$ と同値で、
    $\theta/2\pi$ が無理数ならばこれは $q=q'$ を強いる。よって $U_\theta$ の固有空間は $P_q$ の像であり、作用素が
-   正規行列 $U_\theta$ と可換であることは、それが $U_\theta$ の固有空間を保つことと同値である（定理 1.5(d) と、2.2節と同様のラグランジュ補間）。すなわち $X=\sum_qP_qXP_q$ と同値であり、命題 4.10 によりこれは $U(1)'$ である。
+   正規行列 $U_\theta$ と可換であることは、それが $U_\theta$ の固有空間を保つことと同値である（定理 1.5(d) と、2.2節と同様のラグランジュ補間）。すなわち $X=\sum_qP_qXP_q$ と同値であり、命題 4.10 によりこれは $U(1)'$ である。この議論が用いるのは、現れる電荷 $q$ に対する
+   $e^{iq\theta}$ が相異なることだけである。コードは $\theta=1$ と四つの量子ビットの電荷 $0,\dots,4$ をとり、これらについては
+   $0<|q-q'|\le4<2\pi$ で十分である。
    $\theta=\pi$ に対しては、固有値 $(-1)^w$ はハミング重みの偶奇しか見ない：次元
-   $2^{n-1}$ の二つの固有空間があり（$n\ge1$ のとき。偶数個および奇数個の部分集合）、可換子環は $M_{2^{n-1}}\oplus M_{2^{n-1}}$ である。
+   $2^{n-1}$ の二つの固有空間があり（$n\ge1$ のとき。重みが偶数の配置と奇数の配置であり、最初のビットを反転することがそれらの間の全単射を与える）、可換子環は $M_{2^{n-1}}\oplus M_{2^{n-1}}$ である。
 
 ```python
-for theta, m in ((1.0, (1, 1, 4, 4, 6)), (math.pi, (8, 8))):
+for theta, m in ((1.0, (1, 1, 4, 4, 6)), (math.pi, (8, 8))):   # theta = 1: e^{iq}, q = 0..4, distinct as 4 < 2 pi
     D_theta = dc.from_generators(torch.linalg.matrix_exp(1j * theta * N_op))
     assert D_theta.multiplicities == m and set(D_theta.k_factors) == {1}
 ```

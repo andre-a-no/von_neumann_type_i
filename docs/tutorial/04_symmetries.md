@@ -49,8 +49,10 @@ $\rho(x^*)z\in K$. (b) Induction on $n$. A nonzero invariant subspace $K_1$ of m
 irreducible; $K_1^\perp$ is invariant by (a), and the invariant subspaces of the restriction to
 $K_1^\perp$ are invariant subspaces of $\rho$, so the induction hypothesis applies to it. $\square$
 
-For a finite group unitarity costs nothing: if the $\rho(g)$ are merely invertible, $P=\sum_g\rho(g)^*\rho(g)>0$
-satisfies $\rho(h)^*P\rho(h)=P$, so $P^{1/2}\rho(h)P^{-1/2}$ is unitary (Weyl's trick).
+For a finite group unitarity costs nothing: if the $\rho(g)$ are merely invertible, $P=\sum_g\rho(g)^*\rho(g)$
+satisfies $P\ge\rho(e)^*\rho(e)=1$, so $P>0$, and $\rho(h)^*P\rho(h)=\sum_g\rho(gh)^*\rho(gh)=P$ (substitute $g\to gh^{-1}$);
+hence $(P^{1/2}\rho(h)P^{-1/2})^*(P^{1/2}\rho(h)P^{-1/2})=P^{-1/2}\rho(h)^*P\rho(h)P^{-1/2}=1$, and
+$h\mapsto P^{1/2}\rho(h)P^{-1/2}$ is a unitary representation equivalent to $\rho$ (Weyl's trick).
 
 **Lemma 4.2 (Schur's lemma).** Let $\rho,\rho'$ be irreducible representations of $X$ on
 $\mathbb C^k,\mathbb C^{k'}$ and $T\in\operatorname{Hom}(\rho,\rho')$.
@@ -93,8 +95,10 @@ by $Q_iU_i$ makes $Q_i^*\rho(x)Q_i=\rho_c(x)$. Number the members of class $c$ b
 $Q_{c,j}$ for their bases, and let $V(e_a\otimes f_j)=Q_{c,j}e_a$ on the $c$-th summand. As the $W_i$ are
 invariant and orthogonal, $Q_{c,j}^*\rho(x)Q_{d,l}=\delta_{cd}\delta_{jl}\rho_c(x)$, which is the claimed form.
 
-*Commutant.* $\rho(x)Q_{d,l}=Q_{d,l}\rho_d(x)$ and $Q_{c,j}^*\rho(x)=\rho_c(x)Q_{c,j}^*$ (invariance, and its
-adjoint applied to $x^*$). Since $V$ is unitary, $Y\in M_n$ commutes with all $\rho(x)$ iff every block
+*Commutant.* Now let $V$ be any decomposition as in the statement, and let $Q_{c,j}$ be the $n\times k_c$ isometry
+$e_a\mapsto V(e_a\otimes f_j)$ (in the $c$-th summand); for the $V$ just constructed these are the $Q_{c,j}$ above. The
+identity $V^*\rho(x)V=\bigoplus_c\rho_c(x)\otimes1_{m_c}$ says $\rho(x)Q_{d,l}=Q_{d,l}\rho_d(x)$, and its adjoint applied to
+$x^*$ gives $Q_{c,j}^*\rho(x)=\rho_c(x)Q_{c,j}^*$. Since $V$ is unitary, $Y\in M_n$ commutes with all $\rho(x)$ iff every block
 $Y_{cj,dl}=Q_{c,j}^*YQ_{d,l}$ satisfies $Y_{cj,dl}\rho_d(x)=\rho_c(x)Y_{cj,dl}$, i.e. lies in
 $\operatorname{Hom}(\rho_d,\rho_c)$, which is $0$ for $c\neq d$ and $\mathbb C1$ for $c=d$ (Lemma 4.2). So
 $Y\in\rho(X)'$ iff $Y_{cj,dl}=\delta_{cd}(y_c)_{jl}1_{k_c}$, i.e. $V^*YV=\bigoplus_c1_{k_c}\otimes y_c$.
@@ -115,11 +119,14 @@ For a group, $\rho(G)''$ is the span of $\rho(G)$ (Section 2.4), and Theorem 4.3
 the other direction: there the structure theorem produced the irreducible representations, here they
 produce the structure; in both, $\dim\rho(X)'=\sum_cm_c^2$ and $\dim\rho(X)''=\sum_ck_c^2$. The range of
 $P_c=\sum_jQ_{c,j}Q_{c,j}^*$, a minimal central projection of $\rho(X)''$, is the **isotypic component** of $\rho_c$.
+By Theorem 4.3 every Hermitian $H\in\rho(X)'$ is $V(\bigoplus_c1_{k_c}\otimes h_c)V^*$ with Hermitian
+$h_c\in M_{m_c}$, and $1_{k_c}\otimes h_c$ is block diagonal with $k_c$ copies of $h_c$: the spectrum of $H$ is
+the union of the spectra of the $m_c\times m_c$ blocks $h_c$, each eigenvalue of $h_c$ repeated $k_c$ times.
 
-> **Physical meaning.** If $\rho(X)$ is a symmetry, every symmetric Hamiltonian $H\in\rho(X)'$ is
-> $V(\bigoplus_c1_{k_c}\otimes h_c)V^*$: the eigenvalues of the $m_c\times m_c$ block $h_c$ appear $k_c$
-> times each. The $k_c$-fold degenerate levels are the **multiplets** of the symmetry, and the blocks one
-> has to diagonalise have the sizes $m_c$ of the multiplicities, not the sizes of the multiplets.
+> **Physical meaning** (physical interpretation, not a theorem of this course). If $\rho(X)$ is a symmetry
+> and $H\in\rho(X)'$ the Hamiltonian, the $k_c$-fold degenerate levels just described are the **multiplets**
+> of the symmetry, and the blocks one has to diagonalise have the sizes $m_c$ of the multiplicities, not the
+> sizes of the multiplets.
 
 For a finite group the multiplicities can be computed without decomposing anything.
 
@@ -165,10 +172,40 @@ $\operatorname{Tr}A\operatorname{Tr}B$ (its diagonal entries are $A_{ii}B_{jj}$)
 
 We redo the example of Section 2.4 with characters. A permutation matrix has as trace the number of
 basis vectors it fixes, and $\pi(\sigma)$ fixes $|b_1b_2b_3\rangle$ iff $b$ is constant on the cycles of
-$\sigma$, so $\chi_\pi(\sigma)=2^{\#\text{cycles}(\sigma)}$. The group $S_3$ has the trivial, the sign and the
-standard representation (the permutation representation $P_\sigma$ on $\mathbb C^3$ minus the trivial one), with
-characters $1$, $\operatorname{sgn}\sigma=(-1)^{3-\#\text{cycles}}$ and $\operatorname{Tr}P_\sigma-1$; they are real. The code
-finds $P_\sigma$ as the restriction of $\pi(\sigma)$ to the span of $|100\rangle,|010\rangle,|001\rangle$, and
+$\sigma$ (Lemma B.1(c)), so $\chi_\pi(\sigma)=2^{\#\text{cycles}(\sigma)}$. Three unitary representations of $S_3$
+are at hand. Let $P_\sigma e_i=e_{\sigma(i)}$ be the permutation representation on $\mathbb C^3$ (a homomorphism into
+the permutation matrices). The **trivial** representation is $\sigma\mapsto1$. The **sign** is
+$\operatorname{sgn}\sigma=\det P_\sigma$, a homomorphism into $\{\pm1\}\subseteq U(1)$ because the determinant is
+multiplicative and the determinant of a permutation matrix is $\pm1$. The line $\mathbb C(1,1,1)$ is invariant,
+hence so is $E=(1,1,1)^\perp$ (Lemma 4.1(a)); the **standard** representation is the restriction of $P$ to $E$.
+In an orthonormal basis adapted to $\mathbb C(1,1,1)\oplus E$, $P_\sigma=1\oplus\operatorname{std}(\sigma)$, so
+$\chi_{\rm std}(\sigma)=\operatorname{Tr}P_\sigma-1$, the number of fixed points minus one. The six elements of $S_3$ are
+the identity, three transpositions and two $3$-cycles, with $3,2,1$ cycles and $3,1,0$ fixed points; a transposition
+swaps two columns of $1_3$, so its sign is $-1$, and a $3$-cycle is a product of two transpositions
+($(1\,2\,3)=(1\,3)(1\,2)$), so its sign is $+1$. This gives the table
+
+| | identity ($1$) | transpositions ($3$) | $3$-cycles ($2$) |
+|---|---|---|---|
+| $\chi_{\rm triv}$ | $1$ | $1$ | $1$ |
+| $\operatorname{sgn}$ | $1$ | $-1$ | $1$ |
+| $\chi_{\rm std}$ | $2$ | $0$ | $-1$ |
+| $\chi_\pi$ | $8$ | $4$ | $2$ |
+
+(so $\operatorname{sgn}\sigma=(-1)^{3-\#\text{cycles}(\sigma)}$; all characters are real). With $\langle\varphi,\psi\rangle_G$
+summed class by class:
+$\langle\chi_{\rm triv},\chi_{\rm triv}\rangle_G=\frac{1+3+2}6=1$, $\langle\operatorname{sgn},\operatorname{sgn}\rangle_G=\frac{1+3+2}6=1$ and
+$\langle\chi_{\rm std},\chi_{\rm std}\rangle_G=\frac{4+0+2}6=1$, so the three representations are irreducible by
+Corollary 4.5(c), and they are pairwise inequivalent because their characters differ. Corollary 4.5(b) gives the
+multiplicities in $\pi$:
+$$
+m_{\rm triv}=\tfrac{8+3\cdot4+2\cdot2}6=4,\qquad m_{\rm sgn}=\tfrac{8-3\cdot4+2\cdot2}6=0,\qquad
+m_{\rm std}=\tfrac{2\cdot8+0-2\cdot2}6=2 .
+$$
+So the trivial and the standard representation are equivalent to constituents $\rho_c$ of $\pi$ (Theorem 4.3) with
+$m_c=4$ and $m_c=2$; they account for $4\cdot1+2\cdot2=8=\sum_ck_cm_c$ dimensions, so there is no other constituent:
+$k=(1,2)$, $m=(4,2)$, and $\dim\pi(S_3)'=4^2+2^2=\frac16(64+3\cdot16+2\cdot4)=20$ (Corollary 4.5(c)). The code
+recomputes the table: it finds $P_\sigma$ as the restriction of $\pi(\sigma)$ to the invariant span of
+$|100\rangle,|010\rangle,|001\rangle$ (on which $\pi(\sigma)$ permutes the positions of the single $1$, Lemma B.1(a)), and
 $\#\text{cycles}(\sigma)=\dim\ker(P_\sigma-1)$ (the vectors constant on the cycles).
 
 ```python
@@ -197,8 +234,6 @@ assert close(mult, torch.tensor([4.0, 0.0, 2.0], dtype=torch.float64))
 assert dc.commutant_dimension(G) == 20                                # Corollary 4.5(c): M_4 (+) M_2
 ```
 
-The trivial representation occurs $4$ times, the sign representation not at all, the standard one
-twice; since $4\cdot1+2\cdot2=8$, nothing else occurs, and $\dim\pi(S_3)'=\frac16(64+3\cdot16+2\cdot4)=20$.
 This is the decomposition of Section 2.4, now obtained from a table of six numbers per representation.
 
 ## 4.3 From generators to the algebra: a randomised algorithm
@@ -223,58 +258,95 @@ $\mathbb C^{k_c}\otimes e_{cj}$ the element $V^*aV=\bigoplus_da_d\otimes1$ acts 
 $M_{k_c}$, which has no invariant subspaces but $0$ and $\mathbb C^{k_c}$. $\square$
 
 **Proposition 4.7 (genericity).** Let $K$ and $Y$ be independent random elements of $\mathcal A'_h$ and of
-$\mathcal A'$ whose laws have densities with respect to Lebesgue measure on these real vector spaces. With
-probability one: (a) the hypothesis of Lemma 4.6 holds; (b) $\Pi_iY\Pi_j\neq0$ for any two spectral
+$\mathcal A'$ whose laws have densities with respect to Lebesgue measure on these real vector spaces (Lemma A.3). With
+probability one: (a) the hypothesis of Lemma 4.6 holds; (b) $\Pi_iY\Pi_j\neq0$ for any two distinct spectral
 projections $\Pi_i,\Pi_j$ of $K$ whose ranges lie in the same summand.
 
-*Proof.* We use: *a real polynomial $p\not\equiv0$ on $\mathbb R^d$ vanishes only on a Lebesgue null set.*
-For $d=1$ it has finitely many roots. For $d>1$ write $p=\sum_jp_j(x')t^j$ with $x'\in\mathbb R^{d-1}$ and
-some $p_j\not\equiv0$; outside the null set $\{p_j=0\}$ (induction) the section $\{t:p(x',t)=0\}$ is
-finite, and Tonelli's theorem gives measure $0$.
-
-(a) The Hermitian matrix $\kappa=\bigoplus_c\kappa_c\in M_N$ depends real-linearly on $K$. The Gram determinant
+*Proof.* (a) The Hermitian matrix $\kappa=\bigoplus_c\kappa_c\in M_N$ depends real-linearly on $K$. The Gram determinant
 $\delta(K)=\det[\operatorname{Tr}\kappa^{i+j}]_{i,j=0}^{N-1}$ of $1,\kappa,\dots,\kappa^{N-1}$ for $\langle\cdot,\cdot\rangle_{HS}$ is a
 real polynomial in the coordinates of $K$, nonzero iff these powers are linearly independent. As
 $p(\kappa)=U\operatorname{diag}(p(\lambda_l))U^*$ for $\kappa=U\operatorname{diag}(\lambda)U^*$, a nonzero polynomial of degree $<N$
 annihilates $\kappa$ iff it vanishes on $\operatorname{spec}\kappa$, which is possible iff $\kappa$ has fewer than $N$
 distinct eigenvalues (take $\prod_\mu(t-\mu)$ over them). So $\delta(K)\neq0$ is the hypothesis of Lemma 4.6, and
 $\delta\not\equiv0$: it is nonzero at $V(\bigoplus_c1\otimes\operatorname{diag}(\text{distinct reals}))V^*\in\mathcal A'_h$. Hence
-$\{\delta=0\}$ is a null set.
+$\mathbb P(\delta(K)=0)=0$ by Corollary A.7(b).
 
-(b) On the open set where (a) holds, the spectral projections are polynomials in $K$ whose coefficients
-are continuous functions of the eigenvalues (proof of Theorem 1.5(a)). Fix such a $K$. By Lemma 4.6,
-$V^*\Pi_iV$ and $V^*\Pi_jV$ project onto $\mathbb C^{k_c}\otimes e_i$ and $\mathbb C^{k_c}\otimes e_j$, and for
-$V^*YV=\bigoplus_d1\otimes y_d$, $\Pi_iY\Pi_j=0$ iff $\langle e_i,y_ce_j\rangle=0$. The map
-$Y\mapsto\langle e_i,y_ce_j\rangle$ is real-linear $\mathcal A'\to\mathbb C$ and nonzero (its value at
-$V(1\otimes|e_i\rangle\langle e_j|)V^*$ is $1$), so its kernel is a null set. As $Y$ is independent of $K$,
-Tonelli's theorem gives probability $0$. $\square$
+(b) The set $O=\{\delta\neq0\}\subseteq\mathcal A'_h$ is open ($\delta$ is continuous). For $K\in O$, $K$ has exactly $N$
+distinct eigenvalues $\mu_1(K)<\dots<\mu_N(K)$ (those of $\kappa$, of multiplicities $k_c$), so its spectral projections
+$\Pi_1(K),\dots,\Pi_N(K)$, numbered by increasing eigenvalue, are continuous on $O$ (Proposition A.13). Fix $l\neq l'$
+and let $\mathcal N_{ll'}$ be the set of $(K,Y)\in O\times\mathcal A'$ with $P_c\Pi_l(K)=\Pi_l(K)$ and $P_c\Pi_{l'}(K)=\Pi_{l'}(K)$
+for some $c$ ($P_c$ the central projections) and $\Pi_l(K)Y\Pi_{l'}(K)=0$; it is defined by continuous equations on
+the Borel set $O\times\mathcal A'$, hence Borel. Fix $K\in O$ for which the two ranges lie in the summand $c$. By
+Lemma 4.6, $V^*\Pi_lV$ and $V^*\Pi_{l'}V$ project onto $\mathbb C^{k_c}\otimes e$ and $\mathbb C^{k_c}\otimes e'$ with
+orthonormal eigenvectors $e,e'$ of $\kappa_c$, and for $V^*YV=\bigoplus_d1\otimes y_d$, $\Pi_lY\Pi_{l'}=0$ iff
+$\langle e,y_ce'\rangle=0$. The map $Y\mapsto\langle e,y_ce'\rangle$ is real-linear $\mathcal A'\to\mathbb C$ and nonzero (its value
+at $V(0\oplus\dots\oplus1\otimes|e\rangle\langle e'|\oplus\dots\oplus0)V^*$ is $1$), so its kernel is a proper subspace, a null
+set (Corollary A.7(c)). So every section $\{Y:(K,Y)\in\mathcal N_{ll'}\}$ is null (it is empty if the ranges lie in
+different summands), and as $Y$ is independent of $K$, $\mathbb P((K,Y)\in\mathcal N_{ll'})=0$ by Corollary A.7(d). The
+event of (b) fails only on $\{\delta(K)=0\}\cup\bigcup_{l\neq l'}\{(K,Y)\in\mathcal N_{ll'}\}$, a finite union of events of
+probability $0$. $\square$
 
-**Lemma 4.8 (aligning the copies).** Let $W_i,W_j$ be invariant subspaces on which $\mathcal A$ acts
+**Lemma 4.8 (compressions; aligning the copies).** (a) Let $W$ be an $\mathcal A$-invariant subspace with
+orthonormal basis $Q\in M_{n\times d}$ and $\sigma(a)=Q^*aQ$ the restriction. Then $\sigma(\mathcal A)$ is a $*$-algebra,
+$\{Q^*YQ:Y\in\mathcal A'\}=\sigma(\mathcal A)'$ and $\{Q^*KQ:K\in\mathcal A'_h\}=\sigma(\mathcal A)'_h$. $\mathcal A$ acts irreducibly on
+$W$ iff $Q^*YQ\in\mathbb C1$ for every $Y\in\mathcal A'$. If it does not, and $X$ is a random element of $\mathcal A'$ or of
+$\mathcal A'_h$ with a density, then $Q^*XQ\notin\mathbb C1$ with probability one.
+
+(b) Let $W_i,W_j$ be invariant subspaces on which $\mathcal A$ acts
 irreducibly, with orthonormal bases $Q_i,Q_j$ and restrictions $\sigma_i(a)=Q_i^*aQ_i$, and let $Y\in\mathcal A'$.
 Then $T=Q_i^*YQ_j\in\operatorname{Hom}(\sigma_j,\sigma_i)$. If $T\neq0$, then $T=\lambda U$ with $\lambda>0$, $U$
 unitary, and $Q_j'=Q_jU^*$ satisfies $Q_j'^*aQ_j'=\sigma_i(a)$ for all $a\in\mathcal A$. If $W_i,W_j$ lie in
 different summands ($W_i\subseteq P_c\mathbb C^n$, $W_j\subseteq P_d\mathbb C^n$, $c\neq d$), then $T=0$.
 
-*Proof.* As in the proof of Theorem 4.3, $aQ_j=Q_j\sigma_j(a)$ and $Q_i^*a=\sigma_i(a)Q_i^*$, so
+*Proof.* (a) As in the proof of Theorem 4.3 ($W$ is invariant under $a$ and $a^*$), $aQ=Q\sigma(a)$ and
+$Q^*a=\sigma(a)Q^*$ for $a\in\mathcal A$. Hence $\sigma(ab)=Q^*aQ\sigma(b)=\sigma(a)\sigma(b)$, $\sigma(a^*)=\sigma(a)^*$ and
+$\sigma(1)=Q^*Q=1_d$, so $\sigma$ is a unital $*$-homomorphism and $\sigma(\mathcal A)$ is a $*$-algebra; and for $Y\in\mathcal A'$, $Q^*YQ\sigma(a)=Q^*YaQ=Q^*aYQ=\sigma(a)Q^*YQ$.
+Conversely, for $T\in\sigma(\mathcal A)'$ let $Y=QTQ^*$; then $aY=Q\sigma(a)TQ^*=QT\sigma(a)Q^*=Ya$, so $Y\in\mathcal A'$, with
+$Q^*YQ=T$, and $Y$ is Hermitian if $T$ is. If $\sigma$ is irreducible, $\sigma(\mathcal A)'=\operatorname{Hom}(\sigma,\sigma)=\mathbb C1$
+(Lemma 4.2(b)). If $E\subseteq\mathbb C^d$ is a $\sigma$-invariant subspace other than $0,\mathbb C^d$, so is $E^\perp$ (Lemma
+4.1(a)), and the orthogonal projection onto $E$ is a non-scalar element of $\sigma(\mathcal A)'_h$. In that case
+$\mathbb C1\cap\sigma(\mathcal A)'$ and $\mathbb R1\cap\sigma(\mathcal A)'_h$ are proper real subspaces, their preimages under the surjective
+real-linear maps $X\mapsto Q^*XQ$ are proper subspaces of $\mathcal A'$ and $\mathcal A'_h$, and these are null sets
+(Corollary A.7(c)).
+
+(b) As in (a), $aQ_j=Q_j\sigma_j(a)$ and $Q_i^*a=\sigma_i(a)Q_i^*$, so
 $T\sigma_j(a)=Q_i^*YaQ_j=Q_i^*aYQ_j=\sigma_i(a)T$. Lemma 4.2 gives $T=\lambda U$ and
 $U\sigma_j(a)U^*=\sigma_i(a)$, which is $Q_j'^*aQ_j'$. Finally $P_c\in\mathcal A\cap\mathcal A'$, $Q_i=P_cQ_i$ and
 $P_cQ_j=0$, so $T=Q_i^*P_cYQ_j=Q_i^*YP_cQ_j=0$. $\square$
 
 The algorithm (`decompose.wedderburn`, with the front ends `from_group` and `from_generators`) is now:
 
-1. *Sample the commutant.* For all elements of a finite group, $Y=P(Z)$ and $K=P(Z+Z^*)$ with the twirl
-   $P$ and Gaussian matrices $Z$: images of Gaussian laws under linear surjections onto $\mathcal A'$ and
-   $\mathcal A'_h$, hence with densities. For generators, $Y,K$ are Gaussian combinations of a basis of
-   $\mathcal A'=\{X:[S_j,X]=[S_j^*,X]=0\}$, the null space of a linear map of $M_n$.
+1. *Sample the commutant.* For all elements of a finite group, $Y=P(Z)$ and $K=P(Z'+Z'^*)$ with the twirl
+   $P$ and independent Ginibre matrices $Z,Z'$. $P$ is a linear projection of $M_n$ onto $\mathcal A'$ with
+   $P(Z)^*=P(Z^*)$, so $Z\mapsto P(Z)$ and $Z'\mapsto P(Z'+Z'^*)$ are real-linear surjections onto $\mathcal A'$ and
+   onto $\mathcal A'_h$ (for $H\in\mathcal A'_h$, $P(\frac H2+\frac H2)=H$); a Ginibre matrix is a non-degenerate
+   centred Gaussian vector of $M_n$ (Proposition A.16), so $Y$ and $K$ are non-degenerate centred Gaussian vectors
+   of $\mathcal A'$ and $\mathcal A'_h$ and have densities (Theorem A.15). For generators,
+   $\mathcal A'=\{X:[S_j,X]=[S_j^*,X]=0\}$ is the null space of a linear map of $M_n$ (the library uses the
+   Hermitian parts $\frac12(S_j+S_j^*)$, $\frac1{2i}(S_j-S_j^*)$, which span the same complex space as $S_j,S_j^*$ and
+   so have the same commutant); with a basis $(B_r)_{r\le D}$ of it, $Y=\sum_rc_rB_r$ and $K=Y'+Y'^*$ with $Y'$ an
+   independent copy of $Y$ and independent standard complex Gaussian $c_r$: images of a non-degenerate Gaussian
+   vector of $\mathbb C^D$ under the real-linear bijection $c\mapsto\sum_rc_rB_r$ onto $\mathcal A'$ and the real-linear
+   surjection $c\mapsto X+X^*$ ($X=\sum_rc_rB_r$) onto $\mathcal A'_h$, hence again with densities. Every random element
+   is a fresh draw, independent of the earlier ones; the library rescales them to unit norm, which changes no
+   eigenspace and no vanishing of a block.
 2. *Split.* The eigenspaces of $K$ are irreducible (Lemma 4.6, Proposition 4.7(a)); their dimensions
    are the $k_c$.
-3. *Group and align.* The blocks $Q_i^*YQ_j$ are nonzero exactly within a summand (Proposition 4.7(b),
-   Lemma 4.8); the classes give the sectors, their sizes the $m_c$, and the polar factors align the copies.
+3. *Group and align.* The blocks $Q_i^*YQ_j$ between eigenspaces of equal dimension are nonzero exactly
+   within a summand (Proposition 4.7(b), Lemma 4.8(b)); the classes of the relation "linked by a nonzero block" give
+   the sectors, their sizes the $m_c$, and the polar factors align the copies to one reference copy per class
+   (Lemma 4.8(b); a copy aligned to an aligned copy is aligned to the reference).
 4. *Assemble* $V$ in Kronecker order, so that $V^*aV=\bigoplus_ca_c\otimes1_{m_c}$.
 
-In floating point, close eigenvalues of different copies are kept together and split by the compression
-of a fresh random element of the commutant (module docstring of `decompose`). In any case the result is
-certified at the end:
+So, in exact arithmetic, with the eigenspaces of $K$ separated exactly, the algorithm returns with probability
+one a decomposition as in Theorem 4.3: by Lemma 4.6 the summand $c$ contains $m_c$ eigenspaces of dimension $k_c$, and
+after alignment the construction is the existence part of the proof of Theorem 4.3. In floating point the library
+treats eigenvalues closer than a tolerance as equal, so a computed "eigenspace" $W$ may be a sum of several
+eigenspaces of $K$; it is still $\mathcal A$-invariant (Lemma 4.6), and the library compresses a fresh random
+$X\in\mathcal A'_h$ to it. By Lemma 4.8(a), $Q^*XQ$ is a multiple of $1$ whenever $\mathcal A$ acts irreducibly on $W$, and
+otherwise it is not one with probability one; then its eigenspaces, being invariant under $\sigma(\mathcal A)$ (Lemma 4.6
+applied to $\sigma(\mathcal A)$), split $W$ into smaller invariant subspaces, and the library repeats until every
+compression is scalar. Whatever happens in floating point, the result is certified at the end:
 
 **Proposition 4.9 (certificate).** Let $\mathcal A$ be generated by $S_1,\dots,S_J$ and their adjoints, and
 $\mathcal B=V(\bigoplus_cM_{k_c}\otimes1_{m_c})V^*$ with $V$ unitary. If all $S_j\in\mathcal B$ and
@@ -312,15 +384,36 @@ assert sorted(W.shape[1] for W in spaces) == [1, 1, 1, 1, 2, 2]      # Lemma 4.6
 assert all(close(G @ W, W @ (W.mH @ G @ W)) for W in spaces)           # invariant subspaces
 Y = dc.twirl(G, torch.randn(8, 8, dtype=dt))
 Wa, Wb = [W for W in spaces if W.shape[1] == 2]
-s = torch.linalg.svdvals(Wa.mH @ Y @ Wb)                               # Lemma 4.8: a multiple of a unitary
+s = torch.linalg.svdvals(Wa.mH @ Y @ Wb)                               # Lemma 4.8(b): a multiple of a unitary
 assert s[1] > 1e-3 and abs(s[0] - s[1]) < 1e-10
 assert all(close(W.mH @ Y @ Wa, 0) for W in spaces if W.shape[1] == 1)   # different summands: zero
 ```
 
-The commutant dominates the cost: $O(|G|n^3)$ per twirl sample; for generators the library reduces the
-null-space problem with a random element of $\mathcal A$ to $N=\sum_ck_cm_c^2$ unknowns, but still needs
-memory $O(n^2N)$, about $10$ GB for the total spin of eight spins $\frac12$ ($n=256$, $N=4900$). For spin
-chains Section 4.6 therefore uses the module `su2`, which knows the answer in advance.
+The commutant dominates the cost: a twirl sample costs $|G|$ products of $n\times n$ matrices. For generators
+the library first diagonalises a Hermitian element $R=U\operatorname{diag}(\lambda)U^*$ of $\mathcal A$ (a random real
+combination of the Hermitian parts of the generators plus a multiple of a symmetrised product of two such
+combinations). Every $X\in\mathcal A'$ commutes with $R$, hence with its spectral projections (Theorem 1.5(d)), so
+$U^*XU$ is block diagonal with respect to the eigenspaces of $R$, of dimensions $d_\lambda$; this is imposed in
+advance, and the null-space problem has $N_R=\sum_\lambda d_\lambda^2$ unknowns instead of $n^2$. Grouping several
+eigenvalues together only enlarges the blocks, so the reduced problem has the same solution set $\mathcal A'$.
+In the decomposition, $V^*RV=\bigoplus_cr_c\otimes1_{m_c}$ with Hermitian $r_c\in M_{k_c}$; if $\lambda$ has multiplicity
+$\mu_c(\lambda)$ in $r_c$, then $d_\lambda=\sum_c\mu_c(\lambda)m_c$, and since $\mu^2\ge\mu$ for integers $\mu\ge0$,
+$$
+N_R=\sum_\lambda\Big(\sum_c\mu_c(\lambda)m_c\Big)^2\ge\sum_{\lambda,c}\mu_c(\lambda)^2m_c^2\ge\sum_{\lambda,c}\mu_c(\lambda)m_c^2=\sum_ck_cm_c^2,
+$$
+with equality iff the eigenvalues of all the $r_c$ are simple and pairwise distinct. For the total spin of
+$L=3,4,5$ spins the code below finds equality (numerical observation). Even the minimum is large: for eight spins
+$\frac12$ ($n=256$) $\sum_ck_cm_c^2=4900$, and the reduced system, an $(n^2+N_R)\times N_R$ matrix, has $3.5\cdot10^8$
+complex entries. For spin chains Section 4.6 therefore uses the module `su2`, which knows the answer in advance.
+
+```python
+for n in (3, 4, 5):
+    Dn = dc.from_generators(dc.total_spin(n))
+    _, info = dc.commutant_basis(dc.total_spin(n), return_info=True)
+    N_min = sum(k * m * m for k, m in zip(Dn.k_factors, Dn.multiplicities))
+    assert info['unknowns'] >= N_min                                  # N_R >= sum_c k_c m_c^2
+    print(n, info['unknowns'], N_min)                                # observed: equality
+```
 
 ## 4.4 $U(1)$ and charge sectors
 
@@ -340,19 +433,28 @@ $U(1)'=\{U_\theta:\theta\in\mathbb R\}'$ and $U(1)''$ for its commutant.
 $U_{2\pi}=1$. Conversely, for a continuous representation, $(U_\theta)_{\theta\ge0}$ is a continuous semigroup
 of matrices, so $U_\theta=e^{\theta B}$ for $\theta\ge0$ by Lemma 8.5 (proved in Chapter 8; the proof uses
 only finite dimension), and for $\theta<0$, $U_\theta=U_{-\theta}^{-1}=e^{\theta B}$. Differentiating
-$U_\theta^*U_\theta=1$ at $0$ gives $B^*+B=0$, so $B=iQ$ with $Q$ Hermitian, and $U_{2\pi}=1$ forces
-$e^{2\pi iq}=1$, $q\in\mathbb Z$, for every eigenvalue. (2) (i)$\Rightarrow$(ii): differentiate at $\theta=0$.
+$U_\theta^*U_\theta=1$ at $0$ (Lemma 8.1) gives $B^*+B=0$, so $B=iQ$ with $Q$ Hermitian. The exponential series
+$e^{i\theta Q}$ equals the functional calculus (Proposition 8.2(1) with $H=-Q$), so $U_{2\pi}=\sum_qe^{2\pi iq}P_q=1$ forces
+$e^{2\pi iq}=1$, $q\in\mathbb Z$, for every eigenvalue $q$ of $Q$. (2) (i)$\Rightarrow$(ii): differentiate at $\theta=0$.
 (ii)$\Rightarrow$(iii): $X$ commutes with $P_q=f(Q)$ (Theorem 1.5(d)), so $P_qXP_{q'}=XP_qP_{q'}=0$ for
 $q\neq q'$. (iii)$\Rightarrow$(i): $XU_\theta=\sum_qe^{iq\theta}P_qXP_q=U_\theta X$. The block-diagonal operators form
-$\bigoplus_qM_{d_q}\otimes1_1$, whose commutant is $\bigoplus_q1_{d_q}\otimes M_1=\operatorname{span}\{P_q\}$ (Theorem 2.6).
+$\bigoplus_qM_{d_q}\otimes1_1$ (in an orthonormal basis adapted to the ranges of the $P_q$), whose commutant is
+$\bigoplus_q1_{d_q}\otimes M_1=\operatorname{span}\{P_q\}$: an operator commuting with them commutes with every $P_q$,
+so it is block diagonal, and each block commutes with $M_{d_q}$, hence is a scalar (Lemma 2.5, Step 5, with $m=1$).
 (3) $\frac d{dt}e^{itH}Qe^{-itH}=ie^{itH}[H,Q]e^{-itH}$ (Proposition 8.2) vanishes for all $t$ iff $[H,Q]=0$.
 Then $e^{itH}$ commutes with $P_q$ (Theorem 1.5(d), twice), and
 $\operatorname{Tr}(P_q\rho(t))=\operatorname{Tr}(e^{itH}P_qe^{-itH}\rho)=\operatorname{Tr}(P_q\rho)$. $\square$
 
 The irreducible representations of $U(1)$ are thus the characters $\theta\mapsto e^{iq\theta}$, $q\in\mathbb Z$
 (one-dimensional, as for every abelian group), and the multiplicity of the charge $q$ is $d_q$. Charges add
-under tensor products: $e^{i\theta(Q_1\otimes1+1\otimes Q_2)}=e^{i\theta Q_1}\otimes e^{i\theta Q_2}$ acts on the range of
-$P_{q_1}\otimes P_{q_2}$ with charge $q_1+q_2$. This is the fusion rule $(q_1,q_2)\mapsto q_1+q_2$ of the fused
+under tensor products: if $u_k$ and $w_l$ are orthonormal eigenbases of $Q_1$ and $Q_2$ with eigenvalues $\alpha_k$ and
+$\beta_l$, the orthonormal basis $u_k\otimes w_l$ consists of eigenvectors of $Q_1\otimes1+1\otimes Q_2$ (eigenvalue
+$\alpha_k+\beta_l$) and of $e^{i\theta Q_1}\otimes e^{i\theta Q_2}$ (eigenvalue $e^{i\theta\alpha_k}e^{i\theta\beta_l}$), so by the definition
+of the functional calculus
+$$
+e^{i\theta(Q_1\otimes1+1\otimes Q_2)}=e^{i\theta Q_1}\otimes e^{i\theta Q_2},
+$$
+and it acts on the range of $P_{q_1}\otimes P_{q_2}$ with charge $q_1+q_2$. This is the fusion rule $(q_1,q_2)\mapsto q_1+q_2$ of the fused
 tensor products of Chapter 7.
 
 For $n$ qubits the charge is the **number operator** $\hat N=\sum_jn_j$, $n_j=|1\rangle\langle1|$ on qubit
@@ -364,8 +466,10 @@ $$
 which is `chains.SpinChain(n).algebra`, the fused product of $n$ copies of $M_1\oplus M_1$ with charges $0,1$
 (bit $1$ = spin up, $\hat N=S^z+\frac n2$; in `decompose.total_spin` spin up is instead the *first* basis
 vector of $\mathbb C^2$, which relabels the basis but not the sectors). Every XXZ Hamiltonian
-$\sum_{\langle ij\rangle}J(s^x_is^x_j+s^y_is^y_j+\Delta s^z_is^z_j)$ conserves $\hat N$, because the hopping term
-$s^x_is^x_j+s^y_is^y_j=\frac12(s^+_is^-_j+s^-_is^+_j)$ moves an up spin from one site to another.
+$\sum_{\langle ij\rangle}J(s^x_is^x_j+s^y_is^y_j+\Delta s^z_is^z_j)$ conserves $\hat N$: $s^z_is^z_j$ is diagonal in the basis
+$|b\rangle$, and the hopping term $s^x_is^x_j+s^y_is^y_j=\frac12(s^+_is^-_j+s^-_is^+_j)$ (expand
+$s^\pm=s^x\pm is^y$; the cross terms cancel) maps $|b\rangle$ to $0$ or to the configuration in which an up spin has
+moved from one of the sites $i,j$ to the other, so it maps every eigenspace of $\hat N$ into itself.
 
 ```python
 import functools
@@ -394,8 +498,8 @@ E_sec = torch.cat([torch.linalg.eigvalsh(Hc.matrix[0, N, :k, :k]) for N, k in en
 assert close(torch.sort(E_sec).values, torch.linalg.eigvalsh(H))
 ```
 
-> **Physical meaning.** $U(1)$ symmetry is the conservation of a particle number, a charge or a
-> magnetisation. Proposition 4.10(3) is Noether's theorem in this setting: the charge is conserved iff the
+> **Physical meaning** (physical interpretation, not a theorem of this course). $U(1)$ symmetry is the
+> conservation of a particle number, a charge or a magnetisation. Proposition 4.10(3) is Noether's theorem in this setting: the charge is conserved iff the
 > Hamiltonian is symmetric, and then the dynamics never leaves a sector (Theorem 8.3). If in addition
 > nothing can measure coherences between sectors, the sectors are superselection sectors (Chapter 3).
 
@@ -409,12 +513,19 @@ $$
 i.e. a representation of the labels $\{x,y,z\}$ (Section 4.1) with these relations. The basic example is
 $s_a=\frac12\sigma_a$ on $\mathbb C^2$ (Pauli matrices). If $(S_a)$ and $(T_a)$ are spin representations, so is
 $S_a\otimes1+1\otimes T_a$ (the cross terms commute); hence the **total spin** $S_a=\sum_is_a^{(i)}$ of $L$
-spins $\frac12$ (`decompose.total_spin(L)`) is one. The rotations $e^{-i\theta\,\mathbf n\cdot\mathbf S}$ commute
-with $X$ for all $\theta,\mathbf n$ iff $X$ commutes with the three $S_a$ (differentiate at $\theta=0$; conversely
-Theorem 1.5(d)), so the commutant of "the $SU(2)$ action" is $\{S_x,S_y,S_z\}'$, and by Theorem 2.2 the
-rotations and the $S_a$ generate the same algebra. For $L$ spins $\frac12$ the rotations are the $V^{\otimes L}$,
-$V\in SU(2)$: every such $V$ is some $e^{-i\theta\,\mathbf n\cdot\mathbf s}$, and
-$e^{-i\theta\,\mathbf n\cdot\mathbf S}=(e^{-i\theta\,\mathbf n\cdot\mathbf s})^{\otimes L}$.
+spins $\frac12$ (`decompose.total_spin(L)`) is one. The rotations $e^{-i\theta\,\mathbf n\cdot\mathbf S}$ ($\theta\in\mathbb R$,
+$\mathbf n\in\mathbb R^3$ a unit vector, functional calculus) commute with $X$ for all $\theta,\mathbf n$ iff $X$ commutes
+with the three $S_a$ (differentiate at $\theta=0$, Proposition 8.2(1); conversely Theorem 1.5(d)), so the commutant
+of "the $SU(2)$ action" is $\{S_x,S_y,S_z\}'$, and by Theorem 2.2 the rotations and the $S_a$ generate the same
+algebra (both sets are closed under adjoints). For $L$ spins $\frac12$ the rotations are the $V^{\otimes L}$,
+$V\in SU(2)$. Indeed, $\mathbf n\cdot\mathbf S=\sum_ih^{(i)}$ with $h=\mathbf n\cdot\mathbf s$, and as for charges in Section 4.4
+(induction on $L$), $e^{-i\theta\,\mathbf n\cdot\mathbf S}=(e^{-i\theta h})^{\otimes L}$, with $e^{-i\theta h}\in SU(2)$ (its eigenvalues
+are $e^{\mp i\theta/2}$, as $h$ is traceless with $h^2=\frac14$). Conversely, a $V\in SU(2)$ is normal with eigenvalues
+of modulus $1$ and product $1$, so $V=W\operatorname{diag}(e^{i\varphi},e^{-i\varphi})W^*$ with $W$ unitary, and $V=e^{iA}$ for the
+traceless Hermitian $A=W\operatorname{diag}(\varphi,-\varphi)W^*$. A traceless Hermitian $2\times2$ matrix is a real combination
+$A=2\,\mathbf c\cdot\mathbf s$ of the Pauli matrices, so $V=e^{-i\theta\,\mathbf n\cdot\mathbf s}$ with $\theta=2|\mathbf c|$,
+$\mathbf n=-\mathbf c/|\mathbf c|$ (and $\theta=0$ if $\mathbf c=0$). Theorem B.6(a),(c) and Corollary B.7 (with $d=2$) show
+directly that the $V^{\otimes L}$, $V\in SU(2)$, span the algebra generated by the $S_a$.
 
 Put $S_\pm=S_x\pm iS_y$, so $S_-=S_+^*$, and $\mathbf S^2=S_x^2+S_y^2+S_z^2$. The relations give
 $$
@@ -468,7 +579,8 @@ $$
 so the algebra generated by $S_x,S_y,S_z$ is $\bigoplus_SM_{2S+1}\otimes1_{m_S}$ and its commutant
 $\bigoplus_S1_{2S+1}\otimes M_{m_S}$.
 
-*Proof.* $S_z|b\rangle=(|b|-\frac L2)|b\rangle$, so $d_M=\binom L{L/2+M}=\binom L{L/2-M}$ if $\frac L2+M\in\{0,\dots,L\}$ and $0$
+*Proof.* $S_z=\sum_is_z^{(i)}$ is diagonal in the product basis, with eigenvalue $u-\frac L2$ on a product of $u$
+spins up and $L-u$ spins down, so $d_M=\binom L{L/2+M}=\binom L{L/2-M}$ if $\frac L2+M\in\{0,\dots,L\}$ and $0$
 otherwise. Apply Corollary 4.12 and Theorem 4.3. The values are positive because
 $\binom L{j+1}/\binom Lj=\frac{L-j}{j+1}>1$ for $j<\frac{L-1}2$. $\square$
 
@@ -498,18 +610,18 @@ for c, k in enumerate(D4.k_factors):
 ```
 
 Which operators commute with all rotations? The site permutations do: conjugation by $\pi(\sigma)$ maps
-$s^{(i)}_a$ to $s^{(\sigma(i))}_a$, so it fixes $\sum_is^{(i)}_a$. The converse is a classical theorem.
+$s^{(i)}_a$ to $s^{(\sigma(i))}_a$ (Lemma B.1(b)), so it fixes $\sum_is^{(i)}_a$. Conversely, nothing else does:
 
 **Theorem 4.14 (Schur–Weyl duality).** Let $\pi$ be the representation of $S_L$ permuting the factors of
 $(\mathbb C^2)^{\otimes L}$. (a) $\operatorname{span}\pi(S_L)\subseteq\{S_x,S_y,S_z\}'$. (b) Equality holds;
 equivalently (Theorem 2.2), the algebra generated by the total spin is $\pi(S_L)'$.
 
-Part (a) was just proved. Part (b) is stated without proof for general $L$; it holds for
-$(\mathbb C^d)^{\otimes L}$ and the diagonal action of $U(d)$ (W. Fulton and J. Harris, *Representation
-Theory*, Springer 1991, Lecture 6; R. Goodman and N. Wallach, *Symmetry, Representations, and Invariants*,
-Springer 2009, Section 9.1). For $L\le5$ we check it: by (a) it suffices that the two spaces have the same
-dimension. For $L=2$ it is Lemma 5.8 with $k=2$, since $\{S_a\}'=\{V\otimes V:V\in SU(2)\}'=\{V\otimes V:V\in U(2)\}'$
-(a phase acts as a scalar).
+*Proof.* Part (a) was just proved. Part (b) is Corollary B.7, the case $d=2$ of Theorem B.6, which proves the
+duality for $(\mathbb C^d)^{\otimes L}$ and the diagonal action of $U(d)$ for all $d$ and $L$. $\square$
+
+(For further reading: W. Fulton and J. Harris, *Representation Theory*, Springer 1991, Lecture 6; R. Goodman and
+N. Wallach, *Symmetry, Representations, and Invariants*, Springer 2009, Section 9.1.) For $L\le5$ the code compares
+the two spaces numerically: by (a) it suffices that they have the same dimension.
 
 ```python
 for n in range(2, 6):
@@ -523,12 +635,14 @@ print(Dp)
 assert sorted(zip(Dp.multiplicities, Dp.k_factors)) == sorted(zip(D4.k_factors, D4.multiplicities))
 ```
 
-The dimensions printed are $2,5,14,42$, the Catalan numbers $\binom{2L}L/(L+1)$. The last line is duality in
+The dimensions printed are $2,5,14,42$, the Catalan numbers $\binom{2L}L/(L+1)$; Corollary B.10 proves
+$\dim\{S_a\}'=\sum_Sm_S^2=\binom{2L}L/(L+1)$ for every $L$. The last line is duality in
 action: $\pi(S_4)''$ has blocks $k=(1,2,3)$ with multiplicities $(5,1,3)$ — the pairs $(k_c,m_c)$ of the total
-spin with the roles exchanged. By Theorem 4.14(b) and Proposition 2.7, the multiplicity space of spin $S$
-carries an irreducible representation of $S_L$, here of dimensions $1,3,2$ for $S=2,1,0$.
+spin with the roles exchanged. In general (Corollary B.9) the multiplicity space of spin $S$
+carries an irreducible representation of $S_L$, of dimension $m_S$, and these are pairwise inequivalent; here the
+dimensions are $1,3,2$ for $S=2,1,0$.
 
-> **Physical meaning.** A spin-$S$ multiplet consists of $2S+1$ states of equal energy for every
+> **Physical meaning** (physical interpretation, not a theorem of this course). A spin-$S$ multiplet consists of $2S+1$ states of equal energy for every
 > rotation-invariant Hamiltonian, distinguished by $S^z=M$. Two spins $\frac12$ form a triplet and a singlet;
 > four spins form one quintet, three triplets and two singlets. The multiplicity spaces of the two
 > singlets and of the three triplets are the decoherence-free qubit and the noiseless qutrit of Chapter 10.
@@ -546,19 +660,147 @@ Proposition 4.13: each eigenvalue of $H_S$ is a $(2S+1)$-fold degenerate level o
 $H$, and $H$ acts on it as $H_S$ (up to a unitary change of basis).
 
 *Proof.* (a) On two spins, $\mathbf s^{(1)}\cdot\mathbf s^{(2)}=\frac12(\mathbf S^2-\mathbf s^{(1)2}-\mathbf s^{(2)2})=\frac12\mathbf S^2-\frac34$
-(Theorem 4.11 with $s=\frac12$). On the triplet, $\mathbf S^2=2$ and $F=1$ (it is spanned by
-$S_-^j|{\uparrow\uparrow}\rangle$, and $F$ commutes with $S_-$ and fixes $|{\uparrow\uparrow}\rangle$); on the singlet,
-$\mathbf S^2=0$ and $F=-1$. Both sides agree on these four vectors. For sites $i,j$ of $L$ tensor with the
-identity. The rest is Theorem 4.14(a) and Theorem 4.3. (b) In the decomposition of Corollary 4.12, a vector
-with $S_z=S$ is $\sum_{S'\ge S}|S',S\rangle\otimes w_{S'}$, and $S_+|S',S\rangle\neq0$ for $S'>S$ by Theorem 4.11; so
-$\ker S_+\cap\ker(S_z-S)=|S,S\rangle\otimes\mathbb C^{m_S}$, on which $1\otimes H_S$ acts as $H_S$. $\square$
+(Theorem 4.11 with $s=\frac12$). The triplet vectors $S_-^j|{\uparrow\uparrow}\rangle$ are $|{\uparrow\uparrow}\rangle$,
+$|{\downarrow\uparrow}\rangle+|{\uparrow\downarrow}\rangle$, $2|{\downarrow\downarrow}\rangle$, and with the singlet they form an orthogonal basis of
+$\mathbb C^2\otimes\mathbb C^2$. On the triplet, $\mathbf S^2=2$ and $F=1$: $\mathbf S^2=S_-S_++S_z^2+S_z$ is $0+1+1=2$ on
+$|{\uparrow\uparrow}\rangle$, and $\mathbf S^2$ and $F$ commute with $S_-$, while $F$ fixes $|{\uparrow\uparrow}\rangle$. On the singlet,
+$\mathbf S^2=0$ (it is annihilated by $S_+$ and $S_z$) and $F=-1$. Both sides agree on these four vectors. For sites $i,j$ of $L$ tensor with the
+identity. The rest is Theorem 4.14(a) and Theorem 4.3. (b) We prove more: for any spin representation
+decomposed as in Corollary 4.12 and any $\mu\in\frac12\mathbb Z$, $\ker S_+\cap\ker(S_z-\mu)$ is (the image under the
+unitary of Corollary 4.12 of) $|\mu,\mu\rangle\otimes\mathbb C^{m_\mu}$ if $\mu\ge0$, and $0$ if $\mu<0$. Indeed, in that basis a vector with $S_z=\mu$ is $\sum_{S'}|S',\mu\rangle\otimes w_{S'}$ over the
+$S'\ge|\mu|$ with $S'-\mu\in\mathbb Z$, and by Theorem 4.11 $S_+$ maps it to
+$\sum_{S'}\sqrt{(S'-\mu)(S'+\mu+1)}\,|S',\mu+1\rangle\otimes w_{S'}$, where $S'+\mu+1\ge1$; so it vanishes iff $w_{S'}=0$
+for all $S'\neq\mu$. For the Heisenberg $H$, $1\otimes H_S$ acts on $|S,S\rangle\otimes\mathbb C^{m_S}$ as $H_S$. $\square$
 
-Part (b) is how the module `su2` (spin chains, Chapter 9) builds $H_S$ without numerical decomposition: an
-orthonormal basis of the highest-weight vectors is built by Clebsch–Gordan coupling one site at a time,
-inside the $U(1)$ sector $\hat N=\frac L2+S$ of `SpinChain`. We check (a) on a ring of four spins with `D4`,
-then compare the block sizes for eight spins.
+Part (b) is how the module `su2` (spin chains, Chapter 9) builds $H_S$ without numerical decomposition: it
+constructs an orthonormal basis of the highest-weight vectors, adding one site at a time, with the
+Clebsch–Gordan coefficients of $j\otimes\frac12$. We derive them by lowering from the highest weight. By Theorem 4.11
+and $S_-=S_+^*$, spin $j$ satisfies
+$$
+S_\pm|j,m\rangle=\sqrt{(j\mp m)(j\pm m+1)}\;|j,m\pm1\rangle ,
+$$
+and we put $|j,m\rangle=0$ for $|m|>j$ (consistent with the formula, whose coefficient vanishes at $m=\pm j$).
+
+**Theorem 4.16 (Clebsch–Gordan coefficients of $j\otimes\frac12$).** Let $j\in\{\frac12,1,\frac32,\dots\}$, let
+$S_a=S^{(j)}_a\otimes1+1\otimes s_a$ on $\mathbb C^{2j+1}\otimes\mathbb C^2$ (spin $j$ of Theorem 4.11, with basis $|j,m\rangle$,
+coupled to a spin $\frac12$ with $|{\uparrow}\rangle=|\frac12,\frac12\rangle$, $|{\downarrow}\rangle=|\frac12,-\frac12\rangle$), and put
+$\alpha_M=\sqrt{(j+M+\frac12)/(2j+1)}$, $\beta_M=\sqrt{(j-M+\frac12)/(2j+1)}$. For $J=j\pm\frac12$ and $M=J,J-1,\dots,-J$ let
+$$
+\begin{aligned}
+|j+\tfrac12,M\rangle\!\rangle&=\alpha_M\,|j,M-\tfrac12\rangle\otimes|{\uparrow}\rangle+\beta_M\,|j,M+\tfrac12\rangle\otimes|{\downarrow}\rangle,\\
+|j-\tfrac12,M\rangle\!\rangle&=-\beta_M\,|j,M-\tfrac12\rangle\otimes|{\uparrow}\rangle+\alpha_M\,|j,M+\tfrac12\rangle\otimes|{\downarrow}\rangle .
+\end{aligned}
+$$
+(a) These $2(2j+1)$ vectors are an orthonormal basis of $\mathbb C^{2j+1}\otimes\mathbb C^2$.
+(b) $|j+\frac12,j+\frac12\rangle\!\rangle=|j,j\rangle\otimes|{\uparrow}\rangle$, and $|j-\frac12,j-\frac12\rangle\!\rangle$ is, up to a factor of modulus one, the
+only unit vector $x$ with $S_zx=(j-\frac12)x$ and $S_+x=0$; the factor is fixed by a positive coefficient of
+$|j,j\rangle\otimes|{\downarrow}\rangle$ (the Condon–Shortley convention).
+(c) $S_z|J,M\rangle\!\rangle=M|J,M\rangle\!\rangle$ and $S_-|J,M\rangle\!\rangle=\sqrt{(J+M)(J-M+1)}\,|J,M-1\rangle\!\rangle$: the states $|J,M\rangle\!\rangle$
+are obtained from $|J,J\rangle\!\rangle$ by lowering and normalising.
+(d) Hence $S_a|J,M\rangle\!\rangle=\sum_{M'}(S^{(J)}_a)_{M'M}|J,M'\rangle\!\rangle$ for $a=x,y,z$: the unitary $|J,M\rangle\mapsto|J,M\rangle\!\rangle$ maps
+spin $(j+\frac12)\oplus$ spin $(j-\frac12)$ onto $S_a$, so $j\otimes\frac12\cong(j+\frac12)\oplus(j-\frac12)$, and the
+Clebsch–Gordan coefficients $\langle j,m;\frac12,\sigma|J,M\rangle$ (the coordinates of $|J,M\rangle\!\rangle$ in the product basis) are
+$\pm\alpha_M,\beta_M$ as displayed.
+
+*Proof.* (a) If a basis vector in the display is $0$, its coefficient is $0$ too: $|j,M-\frac12\rangle=0$ only for
+$M=-j-\frac12$, where $\alpha_M=0$, and $|j,M+\frac12\rangle=0$ only for $M=j+\frac12$, where $\beta_M=0$. So each vector has norm
+$\alpha_M^2+\beta_M^2=1$. Vectors with different $M$ involve different product basis vectors, and for equal $M$ the
+inner product is $-\alpha_M\beta_M+\beta_M\alpha_M=0$. There are $(2j+2)+2j=2(2j+1)$ of them.
+(b) The first statement is $\alpha_{j+1/2}=1$, $\beta_{j+1/2}=0$. The eigenspace $S_z=j-\frac12$ is spanned by
+$|j,j-1\rangle\otimes|{\uparrow}\rangle$ and $|j,j\rangle\otimes|{\downarrow}\rangle$, and with $s_+|{\uparrow}\rangle=0$, $s_+|{\downarrow}\rangle=|{\uparrow}\rangle$,
+$$
+S_+\big(p\,|j,j-1\rangle\otimes|{\uparrow}\rangle+q\,|j,j\rangle\otimes|{\downarrow}\rangle\big)=(p\sqrt{2j}+q)\,|j,j\rangle\otimes|{\uparrow}\rangle ,
+$$
+which vanishes iff $q=-\sqrt{2j}\,p$; with $|p|^2+|q|^2=1$ and $q>0$ (hence $p<0$) this is $p=-\beta_{j-1/2}=-1/\sqrt{2j+1}$,
+$q=\alpha_{j-1/2}=\sqrt{2j/(2j+1)}$. (c) $S_z$: both terms have $S_z=(M\mp\frac12)\pm\frac12=M$. For $S_-$, let
+$x_M=p\,|j,M-\frac12\rangle\otimes|{\uparrow}\rangle+q\,|j,M+\frac12\rangle\otimes|{\downarrow}\rangle$; since $s_-|{\uparrow}\rangle=|{\downarrow}\rangle$ and $s_-|{\downarrow}\rangle=0$,
+$$
+S_-x_M=p\sqrt{(j+M-\tfrac12)(j-M+\tfrac32)}\;|j,M-\tfrac32\rangle\otimes|{\uparrow}\rangle
++\Big(p+q\sqrt{(j+M+\tfrac12)(j-M+\tfrac12)}\Big)|j,M-\tfrac12\rangle\otimes|{\downarrow}\rangle .
+$$
+We use $\beta_M\sqrt{(j+M+\frac12)(j-M+\frac12)}=(j-M+\frac12)\alpha_M$ and $\alpha_M\sqrt{(j+M+\frac12)(j-M+\frac12)}=(j+M+\frac12)\beta_M$.
+For $J=j+\frac12$, $(p,q)=(\alpha_M,\beta_M)$ and $c=\sqrt{(J+M)(J-M+1)}=\sqrt{(j+M+\frac12)(j-M+\frac32)}$: the first coefficient
+is $\sqrt{(j+M+\frac12)(j+M-\frac12)(j-M+\frac32)/(2j+1)}=c\,\alpha_{M-1}$, the second $\alpha_M(j-M+\frac32)=c\,\beta_{M-1}$.
+For $J=j-\frac12$, $(p,q)=(-\beta_M,\alpha_M)$ and $c=\sqrt{(j+M-\frac12)(j-M+\frac12)}$: the first coefficient is
+$-\sqrt{(j-M+\frac12)(j+M-\frac12)(j-M+\frac32)/(2j+1)}=-c\,\beta_{M-1}$, the second $\beta_M(j+M-\frac12)=c\,\alpha_{M-1}$.
+In both cases $S_-|J,M\rangle\!\rangle=c\,|J,M-1\rangle\!\rangle$ for $M>-J$. For $M=-J$ both coefficients vanish ($p=\alpha_M=0$
+if $J=j+\frac12$; $j+M-\frac12=0$ if $J=j-\frac12$), so $S_-|J,-J\rangle\!\rangle=0$. (d) By (a) and (c), in the orthonormal basis
+$|J,M\rangle\!\rangle$ the matrices of $S_z$ and $S_-$ are those of spin $(j+\frac12)\oplus$ spin $(j-\frac12)$ (Theorem 4.11
+and the formula above); so is the matrix of $S_+=S_-^*$, hence of $S_x=\frac12(S_++S_-)$ and $S_y=\frac1{2i}(S_+-S_-)$. $\square$
+
+Exercise 2 extends the decomposition (but not the coefficients) to $j_1\otimes j_2$. For the library only the two
+highest-weight vectors of Theorem 4.16 matter, and they work in any spin representation, irreducible or not:
+
+**Corollary 4.17 (highest-weight vectors one site at a time).** Let $(T_a)$ be a spin representation on $E$, let
+$\mathcal H_\mu(E)=\ker T_+\cap\ker(T_z-\mu)$, with an orthonormal basis $B_\mu$ ($B_\mu=\emptyset$ if $\mathcal H_\mu(E)=0$), and
+let $S_a=T_a\otimes1+1\otimes s_a$ on $E\otimes\mathbb C^2$. For every $S\in\{0,\frac12,1,\dots\}$ the vectors
+$$
+v\otimes|{\uparrow}\rangle\quad(v\in B_{S-1/2}),\qquad
+\sqrt{\tfrac{2S+1}{2S+2}}\;v\otimes|{\downarrow}\rangle-\tfrac1{\sqrt{(2S+1)(2S+2)}}\;T_-v\otimes|{\uparrow}\rangle\quad(v\in B_{S+1/2})
+$$
+form an orthonormal basis of $\ker S_+\cap\ker(S_z-S)$ (the first family is empty for $S=0$). Starting from one spin
+($E=\mathbb C^2$, $B_{1/2}=\{|{\uparrow}\rangle\}$, all other $B_\mu$ empty) and adding $L-1$ spins, this gives orthonormal bases
+of the spaces of highest-weight vectors of $L$ spins $\frac12$, of dimensions $m_S$ (Proposition 4.15(b)).
+
+*Proof.* Write $a=\sqrt{(2S+1)/(2S+2)}$, $b=-1/\sqrt{(2S+1)(2S+2)}$, $u(v)=a\,v\otimes|{\downarrow}\rangle+b\,T_-v\otimes|{\uparrow}\rangle$. For
+$v\in\mathcal H_{S+1/2}(E)$, $T_+T_-v=(T_-T_++2T_z)v=(2S+1)v$, and $a+(2S+1)b=0$. *Highest weight:* $S_z$ is $S$ on both families
+($T_z=S\mp\frac12$ on $v$ and $S-\frac12$ on $T_-v$); $S_+(v\otimes|{\uparrow}\rangle)=T_+v\otimes|{\uparrow}\rangle=0$, and
+$S_+u(v)=a\,T_+v\otimes|{\downarrow}\rangle+a\,v\otimes|{\uparrow}\rangle+b\,T_+T_-v\otimes|{\uparrow}\rangle=(a+(2S+1)b)\,v\otimes|{\uparrow}\rangle=0$.
+*Orthonormal:* $\langle v\otimes|{\uparrow}\rangle,u(v')\rangle=b\langle v,T_-v'\rangle=b\langle T_+v,v'\rangle=0$ for $v\in B_{S-1/2}$, and
+$\langle u(v),u(v')\rangle=a^2\langle v,v'\rangle+b^2\langle v,T_+T_-v'\rangle=(a^2+(2S+1)b^2)\langle v,v'\rangle=\langle v,v'\rangle$.
+*Spanning:* let $S_zw=Sw$ and $S_+w=0$, and write $w=x\otimes|{\uparrow}\rangle+y\otimes|{\downarrow}\rangle$. Then $T_zx=(S-\frac12)x$,
+$T_zy=(S+\frac12)y$ and $0=S_+w=(T_+x+y)\otimes|{\uparrow}\rangle+T_+y\otimes|{\downarrow}\rangle$, so $T_+y=0$, i.e. $y\in\mathcal H_{S+1/2}(E)$,
+and $T_+x=-y$. Then $x'=x+\frac1{2S+1}T_-y$ satisfies $T_+x'=-y+y=0$, so $x'\in\mathcal H_{S-1/2}(E)$, which is $0$ for $S=0$
+(proof of Proposition 4.15(b)). As $b/a=-1/(2S+1)$, $w=x'\otimes|{\uparrow}\rangle+a^{-1}u(y)$, with $u$ extended linearly, lies in
+the span of the two families. For $L$ spins apply this with $E=(\mathbb C^2)^{\otimes(n-1)}$ and its total spin $T_a$,
+$n=2,\dots,L$; on one spin, $\mathcal H_{1/2}=\mathbb C|{\uparrow}\rangle$ and all other $\mathcal H_\mu=0$ (the only spin is $\frac12$). $\square$
+
+The second family consists of the vectors $|S,S\rangle\!\rangle$ of Theorem 4.16 with $j=S+\frac12$, written inside the copy
+of spin $j$ spanned by the $T_-^kv$ (proof of Theorem 4.11, $|j,j-1\rangle=T_-v/\sqrt{2j}$), and the first family is
+$|j+\frac12,j+\frac12\rangle\!\rangle$ with $j=S-\frac12$. Labelling each basis vector by its sequence of intermediate spins
+$S_1=\frac12,S_2,\dots,S_L=S$, $|S_n-S_{n-1}|=\frac12$, gives the Yamanouchi basis that `su2.SU2Chain` builds (its source uses
+exactly these coefficients; the code below checks only the conclusions of Corollary 4.17), inside the $U(1)$ sector $\hat N=\frac L2+S$ of `SpinChain` (whose ordering of the sites is
+a relabelling of the tensor factors, which commutes with the total spin by Lemma B.1(b)). The code checks Theorem 4.16
+against dense matrices and against the library's `su2.clebsch_gordan`, then the conclusions of Corollary 4.17 for the
+bases of eight spins. We also check Proposition 4.15(a) on a ring of four spins with `D4`, and compare the block sizes
+for eight spins.
 
 ```python
+from torch_vn_algebra import su2
+
+def ket(j, m):                                            # |j, m> of Theorem 4.11 (zero if |m| > j)
+    v = torch.zeros(int(2 * j + 1), dtype=dt)
+    if abs(m) <= j:
+        v[int(j - m)] = 1
+    return v
+
+up, dn = ket(0.5, 0.5), ket(0.5, -0.5)
+for j in (0.5, 1.0, 1.5, 2.0):                            # Theorem 4.16
+    Sj = dc.spin_matrices(j)
+    sp_j = [math.sqrt(j * (j + 1) - (j - k) * (j - k + 1)) for k in range(1, int(2 * j) + 1)]
+    assert close(Sj[0] + 1j * Sj[1], torch.diag(torch.tensor(sp_j, dtype=dt), 1))     # S_+ of Theorem 4.11
+    assert close(Sj[2], torch.diag(torch.tensor([j - k for k in range(int(2 * j) + 1)], dtype=dt)))
+    Sc = torch.stack([torch.kron(a, torch.eye(2, dtype=dt)) + torch.kron(torch.eye(len(a), dtype=dt), b)
+                      for a, b in zip(Sj, dc.spin_matrices(0.5))])
+    Sp, Sm = Sc[0] + 1j * Sc[1], Sc[0] - 1j * Sc[1]
+    cols = []
+    for J in (j + 0.5, j - 0.5):
+        for M in [J - k for k in range(int(2 * J + 1))]:
+            al, be = math.sqrt((j + M + 0.5) / (2 * j + 1)), math.sqrt((j - M + 0.5) / (2 * j + 1))
+            p, q = (al, be) if J > j else (-be, al)
+            x = p * torch.kron(ket(j, M - 0.5), up) + q * torch.kron(ket(j, M + 0.5), dn)
+            assert close(Sc[2] @ x, M * x)
+            if M == J:
+                assert close(Sp @ x, 0)                               # highest weight
+            else:
+                assert close(Sm @ cols[-1], math.sqrt((J + M + 1) * (J - M)) * x)   # lowering, (c)
+            for s2, e in ((0.5, up), (-0.5, dn)):                     # the library's Racah formula agrees
+                cg = su2.clebsch_gordan(j, M - s2, 0.5, s2, J, M) if abs(M - s2) <= j else 0.0
+                assert abs(cg - torch.vdot(torch.kron(ket(j, M - s2), e), x).real.item()) < 1e-12
+            cols.append(x)
+    U = torch.stack(cols, 1)
+    assert U.shape == (2 * len(Sj[0]), 2 * len(Sj[0])) and close(U.mH @ U, torch.eye(U.shape[1]))   # (a)
+
 def swap(i, j, n):
     p = list(range(n))
     p[i], p[j] = j, i
@@ -573,8 +815,11 @@ levels = torch.cat([torch.linalg.eigvalsh(h.matrix[0, c, :m, :m]).repeat_interle
                     for c, (k, m) in enumerate(zip(D4.k_factors, D4.multiplicities))])
 assert close(torch.sort(levels).values, torch.linalg.eigvalsh(H4))   # level of H_S repeated 2S+1 times
 
-from torch_vn_algebra import su2
 u1, sym = SpinChain(8, boundary='periodic'), su2.SU2Chain(8, boundary='periodic')
+for S, m in zip(sym.spins, sym.multiplicities):           # Corollary 4.17: orthonormal highest-weight bases
+    B, N = sym.hw_basis(S), int(4 + S)                     # columns in the U(1) sector N = L/2 + S
+    assert B.shape == (math.comb(8, N), m) and close(B.T @ B, torch.eye(m, dtype=B.dtype))
+    assert N == 8 or close(sym.raise_(B, N), 0)            # S_+ B = 0 (S_z = S holds in sector N)
 H_u1, H_su2 = u1.xxz(J=1.0, Delta=1.0), sym.heisenberg(J=1.0)
 E_u1 = torch.sort(torch.cat([torch.linalg.eigvalsh(H_u1.matrix[0, N, :k, :k])
                              for N, k in enumerate(u1.algebra.k_factors)])).values
@@ -582,23 +827,26 @@ E_su2, S_lev, _ = sym.full_spectrum(H_su2, return_quantum_numbers=True)   # leve
 E_su2, S_lev = E_su2[0], S_lev[0]
 assert close(E_u1, E_su2)
 assert S_lev[0] == 0 and (S_lev[1:4] == 1).all() and E_su2[4] - E_su2[3] > 1e-3     # singlet, then triplet
+assert E_su2[1] - E_su2[0] > 1e-3 and close(E_su2[1:4], E_su2[1].expand(3))       # simple singlet (Theorem 9.9)
 assert close(sym.restrict(H_u1).matrix, H_su2.matrix)      # Proposition 4.15(b)
 flops = lambda ks: sum(k ** 3 for k in ks)
 print(u1.algebra.k_factors, sym.multiplicities, flops(u1.algebra.k_factors), flops(sym.multiplicities))
 print(f"ground state energy {E_su2[0].item():.6f}, first excited {E_su2[1].item():.6f} (x3)")
 ```
 
-For the ring of eight spins the $U(1)$ blocks have sizes $1,8,28,56,70,56,28,8,1$, the $SU(2)$ blocks sizes
-$m_S=14,28,20,7,1$ for $S=0,\dots,4$. The cost of diagonalising, $\sum k^3$, drops from $739162$ to $33040$, by a
-factor of $22$; the dimension of the algebra, $\sum k^2$, from $\binom{16}8=12870$ to $1430$. The ground state is a
-singlet with energy $-3.651093$, the first excited level a triplet at $-3.128419$.
+For the ring of eight spins the $U(1)$ blocks have sizes $\binom8w=1,8,28,56,70,56,28,8,1$ (Section 4.4), the $SU(2)$
+blocks sizes $m_S=14,28,20,7,1$ for $S=0,\dots,4$ (Proposition 4.13). The cost of diagonalising, $\sum k^3$, drops from
+$739162$ to $33040$, by a factor of $22$; the dimension of the algebra, $\sum k^2$, from
+$\sum_w\binom8w\binom8{8-w}=\binom{16}8=12870$ (choose $8$ of $16$ elements, $w$ of them among the first $8$) to
+$\sum_Sm_S^2=1430=\binom{16}8/9$ (Corollary B.10). By Theorem 9.9 (the ring has even length and $J>0$) the ground
+state is a single singlet and $E_0(0)<E_0(1)$. *Numerical observation* (computed by the code above): the ground
+energy is $-3.651093$, and the first excited level is a triplet at $-3.128419$.
 
-> **Physical meaning.** The Heisenberg model describes the exchange interaction of localised electron
-> spins in magnetic insulators; $J_{ij}>0$ favours antiparallel neighbours. Its spectrum consists of
-> multiplets, and a magnetic field $h\,S^z$ splits each multiplet into $2S+1$ equidistant levels (Exercise 4).
-> For couplings $J_{ij}>0$ between the two sublattices of a bipartite lattice, $J_{ij}\le0$ within them,
-> and sublattices of equal size, the ground state is a singlet (Lieb–Mattis theorem, E. Lieb and D. Mattis,
-> *J. Math. Phys.* 3 (1962) 749; stated without proof). The ring of eight spins above is an example.
+> **Physical meaning** (physical interpretation, not a theorem of this course). The Heisenberg model describes
+> the exchange interaction of localised electron spins in magnetic insulators; $J_{ij}>0$ favours antiparallel
+> neighbours. Its spectrum consists of multiplets, and a magnetic field $h\,S^z$ splits each multiplet into $2S+1$
+> equidistant levels (Exercise 4). Theorem 9.9 (bipartite couplings; for even antiferromagnetic chains and rings a
+> singlet ground state) goes back to E. Lieb and D. Mattis (*J. Math. Phys.* 3 (1962) 749).
 
 ## 4.7 What to compare with
 
@@ -612,7 +860,8 @@ TensorKit.jl handles $SU(2)$ with fusion trees. The library's `decompose` is a d
 matrices ($n$ up to a few hundred); it accepts any list of matrices (group elements or generators),
 certifies its result (Proposition 4.9), and returns the algebra and its commutant as `TypeIAlgebra`
 objects with `to_algebra`, `from_algebra`, `to_commutant`, `from_commutant`, so that Chapters 3, 5–8 apply
-at once. For spin-$\frac12$ chains `su2.SU2Chain` gives the $SU(2)$ blocks directly, for all spins up to $L=16$.
+at once. For spin-$\frac12$ chains `su2.SU2Chain` gives the $SU(2)$ blocks directly (Corollary 4.17); it accepts up to
+$L=18$ spins, a limit set by the memory of the bases.
 
 ## Exercises
 
@@ -631,22 +880,31 @@ at once. For spin-$\frac12$ chains `su2.SU2Chain` gives the $SU(2)$ blocks direc
 <details>
 <summary>Solutions</summary>
 
-1. As for $d=2$: $\pi(\sigma)$ is a permutation matrix fixing $|b_1\dots b_L\rangle$ iff $b$ is constant on the
-   cycles, and there are $d^{\#\text{cycles}}$ such $b$. By Corollary 4.5(c),
+1. By Lemma B.1(c), $\pi(\sigma)$ is a permutation matrix fixing $|b_1\dots b_L\rangle$ iff $b$ is constant on the
+   cycles of $\sigma$, and there are $d^{\#\text{cycles}(\sigma)}$ such $b$. By Corollary 4.5(c),
    $\dim\pi(S_L)'=\frac1{L!}\sum_\sigma(d^2)^{\#\text{cycles}(\sigma)}=\frac{x(x+1)\cdots(x+L-1)}{L!}$ with $x=d^2$
-   (Chapter 5, Exercise 2), which is $\binom{d^2+L-1}L$: $\binom63=20$ and $\binom74=35$. That $35$ is also
-   $\dim\{S_a\}''$ is Theorem 4.14 for $L=4$.
+   (the identity $\sum_\sigma x^{\#\text{cycles}(\sigma)}=x(x+1)\cdots(x+L-1)$ is proved in the solution of Chapter 5,
+   Exercise 2), which is $\binom{d^2+L-1}L$ (Proposition B.3 proves the same dimension by counting multisets):
+   $\binom63=20$ and $\binom74=35$. That $35$ is also $\dim\{S_a\}''$ is Theorem 4.14(b) for $L=4$:
+   $\{S_a\}''=\pi(S_4)'$.
 
 ```python
 for n, value in ((3, 20), (4, 35)):
     assert dc.commutant_dimension(dc.permutation_representation(n, 2)) == math.comb(n + 3, n) == value
 ```
 
-2. Let $j_1\ge j_2$. $S_z$ has the eigenvalue $m_1+m_2$ on $|m_1\rangle\otimes|m_2\rangle$, so for
-   $M\in j_1+j_2+\mathbb Z$, $d_M$ is the number of $m_2\in\{-j_2,\dots,j_2\}$ with $|M-m_2|\le j_1$: all $2j_2+1$ if
-   $|M|\le j_1-j_2$, and $j_1+j_2-|M|+1$ if $j_1-j_2\le|M|\le j_1+j_2$ (for $M\ge0$ the condition is
-   $m_2\ge M-j_1$), $0$ beyond. By Corollary 4.12, $m_j=d_j-d_{j+1}$ is $1$ for $j_1-j_2\le j\le j_1+j_2$ and
-   $(2j_2+1)-(2j_2+1)=0$ for $j<j_1-j_2$.
+2. $S_a=S^{(j_1)}_a\otimes1+1\otimes S^{(j_2)}_a$ is a spin representation (Section 4.5), and the unitary
+   $x\otimes y\mapsto y\otimes x$ intertwines it with the one for $(j_2,j_1)$; so let $j_1\ge j_2$. $S_z$ has the eigenvalue
+   $m_1+m_2$ on $|m_1\rangle\otimes|m_2\rangle$, so its eigenvalues lie in $j_1+j_2+\mathbb Z$, and for such $M$, $d_M$ is the
+   number of $m_2\in\{-j_2,\dots,j_2\}$ with $|M-m_2|\le j_1$ (then $m_1=M-m_2\in j_1+\mathbb Z$ automatically); $d_M=0$ for
+   $M\notin j_1+j_2+\mathbb Z$. For $M\ge0$ the condition reads $M-j_1\le m_2\le M+j_1$, and $M+j_1\ge j_2$, so $m_2$ runs
+   from $\max(-j_2,M-j_1)$ to $j_2$: $d_M=2j_2+1$ for $0\le M\le j_1-j_2$, $d_M=j_1+j_2-M+1$ for
+   $j_1-j_2\le M\le j_1+j_2$, and $d_M=0$ for $M>j_1+j_2$. By Corollary 4.12 the multiplicity of spin $j\ge0$ is
+   $m_j=d_j-d_{j+1}$. It is $0$ if $j\notin j_1+j_2+\mathbb Z$ or $j>j_1+j_2$; $m_{j_1+j_2}=1-0=1$; for
+   $j_1-j_2\le j<j_1+j_2$ (with $j\in j_1+j_2+\mathbb Z$, so $j+1\le j_1+j_2$),
+   $m_j=(j_1+j_2-j+1)-(j_1+j_2-j)=1$; and for $0\le j<j_1-j_2$ (so $j+1\le j_1-j_2$), $m_j=(2j_2+1)-(2j_2+1)=0$.
+   Hence $j_1\otimes j_2\cong\bigoplus_{j=j_1-j_2}^{j_1+j_2}j$, each spin once. For $j_2=\frac12$ this is
+   Theorem 4.16(d), which in addition gives the coefficients.
 
 ```python
 def coupled(a, b):                                        # S^(a) (x) 1 + 1 (x) S^(b)
@@ -661,12 +919,15 @@ for a, b, ks in ((1.0, 0.5, (2, 4)), (1.0, 1.0, (1, 3, 5))):  # 1 (x) 1/2 = 1/2 
 3. $U_\theta=\sum_qe^{iq\theta}P_q$, and $e^{iq\theta}=e^{iq'\theta}$ iff $(q-q')\theta\in2\pi\mathbb Z$, which for irrational
    $\theta/2\pi$ forces $q=q'$. So the eigenspaces of $U_\theta$ are the ranges of the $P_q$, and an operator
    commutes with the normal matrix $U_\theta$ iff it preserves its eigenspaces (Theorem 1.5(d) and Lagrange
-   interpolation as in Section 2.2), i.e. iff $X=\sum_qP_qXP_q$; this is $U(1)'$ by Proposition 4.10.
+   interpolation as in Section 2.2), i.e. iff $X=\sum_qP_qXP_q$; this is $U(1)'$ by Proposition 4.10. The argument only uses that the $e^{iq\theta}$ for the
+   charges $q$ that occur are distinct; the code takes $\theta=1$ and the charges $0,\dots,4$ of four qubits, for which
+   $0<|q-q'|\le4<2\pi$ suffices.
    For $\theta=\pi$ the eigenvalue $(-1)^w$ only sees the parity of the Hamming weight: two eigenspaces of
-   dimension $2^{n-1}$ (for $n\ge1$, the even and odd subsets), and the commutant is $M_{2^{n-1}}\oplus M_{2^{n-1}}$.
+   dimension $2^{n-1}$ (for $n\ge1$, the configurations of even and of odd weight; flipping the first bit is a bijection
+   between them), and the commutant is $M_{2^{n-1}}\oplus M_{2^{n-1}}$.
 
 ```python
-for theta, m in ((1.0, (1, 1, 4, 4, 6)), (math.pi, (8, 8))):
+for theta, m in ((1.0, (1, 1, 4, 4, 6)), (math.pi, (8, 8))):   # theta = 1: e^{iq}, q = 0..4, distinct as 4 < 2 pi
     D_theta = dc.from_generators(torch.linalg.matrix_exp(1j * theta * N_op))
     assert D_theta.multiplicities == m and set(D_theta.k_factors) == {1}
 ```
