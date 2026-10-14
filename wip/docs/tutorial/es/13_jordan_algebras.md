@@ -208,6 +208,21 @@ for m in range(1, 7):                                            # Proposition 1
     r = jd.compare_with_star_algebra(jd.anticommuting_symmetries(m))
     print(f"m = {m}: dim V_m = {r['jordan_dim']}, dim of the self-adjoint part of the *-algebra = {r['star_dim']}")
     assert r['jordan_dim'] == m + 1 and r['equal'] == (m in (1, 3))
+
+pq = 3                                                           # Majorana operators of Section 9.4, p = 3 sites
+Xp, Yp, Zp = jd.anticommuting_symmetries(3)
+sminus, I2 = 0.5 * (Xp - 1j * Yp), torch.eye(2, dtype=dt)
+parity = I2 - 2 * (0.5 * Zp + 0.5 * I2)                          # (-1)^n with n = s^z + 1/2
+def kron_all(fs):
+    out = torch.ones(1, 1, dtype=dt)
+    for f_ in fs:
+        out = torch.kron(out, f_)
+    return out
+s6 = jd.anticommuting_symmetries(2 * pq)
+for j in range(1, pq + 1):
+    c = kron_all([parity] * (j - 1) + [sminus] + [I2] * (pq - j))
+    sign = (-1) ** (j - 1)
+    assert close(s6[2 * j - 2], sign * (c + c.mH)) and close(s6[2 * j - 1], sign * 1j * (c - c.mH))
 ```
 
 Para $m=1$, $s_1=Z$ genera las matrices diagonales, de dimensión $2=m+1$, y $V_1\cong\mathbb R\oplus\mathbb R$ no es
@@ -286,41 +301,64 @@ tercero puede hacerlo.
 
 ## 13.4 La clasificación
 
-Un álgebra de Jordan es **formalmente real** si $\sum_ix_i^2=0$ implica que todos los $x_i=0$; en dimensión finita
-esto equivale a ser **euclídea**, es decir, a tener un producto escalar con
-$\langle x\circ y,z\rangle=\langle y,x\circ z\rangle$ [FK94]. $M_{sa}$ (con $\operatorname{Tr}(xy)$) y $V_m$ (con
-$\operatorname{tr}(x\circ y)$) son euclídeas.
+Un álgebra de Jordan de dimensión finita es **formalmente real** si $\sum_ix_i^2=0$ implica que todos los $x_i=0$, y
+**euclídea** si tiene una unidad $1$ y un producto escalar con $\langle x\circ y,z\rangle=\langle y,x\circ z\rangle$.
+Ambas nociones coinciden (teorema E.5(4); la dirección «euclídea $\Rightarrow$ formalmente real» ocupa una línea:
+$0=\sum_i\langle x_i^2,1\rangle=\sum_i\langle x_i,x_i\rangle$). $M_{sa}$ con $\langle x,y\rangle=\operatorname{Tr}(xy)$
+es euclídea: $\operatorname{Tr}(x^2)=\sum_{ij}|x_{ij}|^2$ y, por ciclicidad,
+$\operatorname{Tr}((x\circ y)z)=\frac12\operatorname{Tr}(xyz+yxz)=\operatorname{Tr}(y(x\circ z))$. También lo es $V_m$
+con $\langle x,y\rangle=\operatorname{tr}(x\circ y)=2(ab+u\cdot v)$: para $z=(c,w)$,
+$\operatorname{tr}((x\circ y)\circ z)=2(abc+c\,u\cdot v+a\,v\cdot w+b\,u\cdot w)$ es simétrico en $x,y,z$.
 
-**Teorema 13.7 (Jordan–von Neumann–Wigner; enunciado sin demostración).** Toda álgebra de Jordan formalmente real de
-dimensión finita es suma directa de álgebras simples, y toda álgebra simple es isomorfa exactamente a una de las
-siguientes: $\mathbb R$; $\operatorname{Herm}_r(\mathbb K)$ para $\mathbb K=\mathbb R,\mathbb C,\mathbb H$ y $r\ge3$;
-los factores de espín $V_m$, $m\ge2$; el **álgebra de Albert** $\operatorname{Herm}_3(\mathbb O)$ de las matrices
-hermíticas $3\times3$ sobre los octoniones (dimensión $27$). En rango $2$,
+**Teorema 13.7 (Jordan–von Neumann–Wigner).** Toda álgebra de Jordan formalmente real de dimensión finita es suma
+directa de ideales simples, y toda álgebra simple es isomorfa exactamente a una de las siguientes: $\mathbb R$;
+$\operatorname{Herm}_r(\mathbb K)$ para $\mathbb K=\mathbb R,\mathbb C,\mathbb H$ y $r\ge3$; los factores de espín
+$V_m$, $m\ge2$; el **álgebra de Albert** $\operatorname{Herm}_3(\mathbb O)$ de las matrices hermíticas $3\times3$ sobre
+los octoniones (dimensión $27$). Además, $\operatorname{Herm}_1(\mathbb K)\cong\mathbb R$ y
 $\operatorname{Herm}_2(\mathbb K)\cong V_{\dim\mathbb K+1}$ para $\mathbb K=\mathbb R,\mathbb C,\mathbb H,\mathbb O$.
+
+*Demostración.* El apéndice E lo demuestra por completo: la descomposición es el teorema E.9, la lista y «exactamente
+una» son el teorema E.27(1),(2), y los isomorfismos en rango uno y dos son el teorema E.24(3). $\square$
+
 (P. Jordan, J. von Neumann, E. Wigner, *On an algebraic generalization of the quantum mechanical formalism*, Ann. of
-Math. 35 (1934) 29–64; una demostración moderna está en [FK94, capítulo V].)
+Math. 35 (1934) 29–64; la demostración del apéndice E sigue [FK94, capítulos II–V].)
 
-Todas ellas salvo el álgebra de Albert son especiales: $\operatorname{Herm}_r(\mathbb H)$ se sumerge en
-$\operatorname{Herm}_{2r}(\mathbb C)$ escribiendo los cuaterniones como matrices complejas $2\times2$, y $V_m$ por el
-lema 13.3. El álgebra de Albert es **excepcional**: no es isomorfa a ninguna subálgebra de Jordan de un álgebra
-asociativa (A. A. Albert, *On a certain algebra of quantum mechanics*, Ann. of Math. 35 (1934) 65–73). Una razón que
-puede enunciarse brevemente: C. M. Glennie encontró identidades polinómicas que valen en toda álgebra de Jordan especial
-pero fallan en $\operatorname{Herm}_3(\mathbb O)$ (*Some identities valid in special Jordan algebras but not valid in
-all Jordan algebras*, Pacific J. Math. 16 (1966) 47–59; véase McCrimmon, *A Taste of Jordan Algebras*). Los octoniones
-no son asociativos, y $\operatorname{Herm}_r(\mathbb O)$ satisface la identidad de Jordan solo para $r\le3$, razón por
-la cual la lista se detiene ahí. Así, $\operatorname{Herm}_3(\mathbb O)$ no puede representarse fielmente mediante
-matrices reales o complejas (ni dentro de ninguna álgebra asociativa) con el producto $\frac12(xy+yx)$; el software
-tiene que trabajar con entradas octoniónicas.
+Todas ellas salvo el álgebra de Albert son especiales: $\mathbb R=\operatorname{Herm}_1(\mathbb R)$ y
+$\operatorname{Herm}_r(\mathbb K)$, $\mathbb K=\mathbb R,\mathbb C$, por el lema 13.1, $\operatorname{Herm}_r(\mathbb H)$
+porque escribir los cuaterniones como matrices complejas $2\times2$ la sumerge en $\operatorname{Herm}_{2r}(\mathbb C)$
+(teorema E.24(1)), y $V_m$ por el lema 13.3. El álgebra de Albert es un álgebra de Jordan (teorema E.24(2)) y es
+**excepcional**: no es isomorfa a ninguna subálgebra de Jordan de un álgebra asociativa real o compleja (teorema E.26,
+un argumento del tipo usado por A. A. Albert, *On a certain algebra of quantum mechanics*, Ann. of Math. 35 (1934)
+65–73: una inmersión de Jordan en un álgebra asociativa haría asociativo el producto de los octoniones, que no lo es,
+lema E.15(2)). Para $r\ge4$, $\operatorname{Herm}_r(\mathbb O)$ no satisface la identidad de Jordan (corolario E.25),
+y un álgebra simple con un marco de Jordan de $r\ge4$ elementos es $\operatorname{Herm}_r(D)$ con un álgebra de
+composición asociativa $D\ne\mathbb O$ (teorema E.22), razón por la cual los octoniones solo aparecen para $r\le3$. Así,
+$\operatorname{Herm}_3(\mathbb O)$ no puede representarse fielmente mediante matrices reales o complejas (ni dentro de
+ninguna álgebra asociativa) con el producto $\frac12(xy+yx)$; un cálculo en ella tiene que usar el producto de los
+octoniones (o sus constantes de estructura) en lugar de un producto matricial.
 
-**Teorema 13.8 (Koecher–Vinberg; enunciado sin demostración).** Los interiores de los conos de cuadrados de las
-álgebras de Jordan euclídeas son exactamente los **conos simétricos**: conos convexos abiertos en un espacio euclídeo
-que son autoduales y homogéneos (sus automorfismos lineales actúan transitivamente). [FK94, capítulo III.]
+Sea $\Omega$ un cono convexo abierto no vacío en un espacio euclídeo $V$ (un espacio real con producto escalar de
+dimensión finita $\ne\{0\}$). Su **cono dual** es
+$\Omega^*=\{y:\langle x,y\rangle>0\text{ para todo }x\in\bar\Omega\setminus\{0\}\}$; $\Omega$ es **autodual** si
+$\Omega^*=\Omega$, **homogéneo** si las aplicaciones lineales $g$ con $g\Omega=\Omega$ actúan transitivamente sobre
+$\Omega$, y **simétrico** si es ambas cosas.
 
-El teorema 13.4(4) y el ejercicio 1 demuestran ambas propiedades para el cono de Lorentz. Así, los conos de la
-programación semidefinida (productos de $\operatorname{Herm}_n(\mathbb R)^+$ o $\operatorname{Herm}_n(\mathbb C)^+$), de
-SOCP y de la programación lineal ($\mathbb R_+^n$, el cono de $\mathbb R^n=\mathbb R\oplus\dots\oplus\mathbb R$) son
-todos de esta forma, y los métodos de punto interior pueden escribirse de una vez para todas las álgebras de Jordan
-euclídeas.
+**Teorema 13.8 (Koecher–Vinberg).** Un cono convexo abierto no vacío $\Omega$ en un espacio euclídeo $V$ es simétrico si
+y solo si existe un producto $\circ$ sobre $V$ tal que $(V,\circ,\langle\cdot,\cdot\rangle)$ es un álgebra de Jordan
+euclídea y $\Omega$ es el interior de su cono de cuadrados.
+
+*Demostración.* Teorema F.12 («si»: teoremas F.5(2) y F.6(2)). $\square$
+
+(M. Koecher, 1957; E. B. Vinberg, 1960; la demostración del apéndice F sigue [FK94, capítulos I–III].) El teorema
+13.4(4) demuestra la forma cerrada de la autodualidad para el cono de Lorentz ($y\in Q$ si y solo si
+$\operatorname{tr}(x\circ y)\ge0$ para todo $x\in Q$), y el ejercicio 1 su homogeneidad. El cono de cuadrados de una
+suma directa de álgebras de Jordan euclídeas (con la suma ortogonal de los productos escalares) es el producto de sus
+conos de cuadrados, ya que $(x_1,\dots,x_k)^2=(x_1^2,\dots,x_k^2)$. Así, por la dirección «si», los interiores de los
+conos de la programación semidefinida (productos de $\operatorname{Herm}_n(\mathbb R)^+$ o
+$\operatorname{Herm}_n(\mathbb C)^+$, que son los conos de cuadrados por el teorema 1.6; para $x\ge0$ real la raíz
+cuadrada es real, ya que su conjugada compleja es también una raíz cuadrada positiva de $x$), de SOCP (productos de
+conos de Lorentz) y de la programación lineal ($\mathbb R_+^n$, el cono de cuadrados de
+$\mathbb R^n=\mathbb R\oplus\dots\oplus\mathbb R$) son conos simétricos.
 
 [FK94]: J. Faraut, A. Korányi, *Analysis on Symmetric Cones*, Oxford University Press, 1994.
 
@@ -329,7 +367,10 @@ euclídeas.
 Un **$*$-homomorfismo de Jordan** entre álgebras de von Neumann es una aplicación $\mathbb C$-lineal $\Phi$ con
 $\Phi(x^*)=\Phi(x)^*$ y $\Phi(x\circ y)=\Phi(x)\circ\Phi(y)$; sobre las partes autoadjuntas es un homomorfismo de
 Jordan, y todo homomorfismo de Jordan entre partes autoadjuntas se extiende a uno de ellos mediante
-$\Phi(x+iy)=\Phi(x)+i\Phi(y)$.
+$\Phi(x+iy)=\Phi(x)+i\Phi(y)$ ($x,y$ autoadjuntos). (Esta $\Phi$ es $\mathbb C$-lineal y satisface
+$\Phi(x-iy)=\Phi(x+iy)^*$; y como $\circ$ es $\mathbb C$-bilineal y lleva pares de elementos autoadjuntos a elementos
+autoadjuntos, $(x+iy)\circ(x'+iy')=(x\circ x'-y\circ y')+i(x\circ y'+y\circ x')$ se lleva a
+$\Phi(x+iy)\circ\Phi(x'+iy')$.)
 
 **Proposición 13.9 (la traspuesta).** Sea $T(A)=\bigoplus_cA_c^T$ sobre $\mathcal M$. (a) $T$ es un
 $*$-automorfismo de Jordan unital con $T(AB)=T(B)T(A)$; conserva los espectros, de modo que $T$ y $T^{-1}=T$ son
@@ -345,19 +386,28 @@ proposición 6.1), $T$ no es CP. $\square$
 Así, un automorfismo de Jordan no tiene por qué ser un $*$-automorfismo. Salvo este fenómeno, la positividad determina
 la estructura de Jordan:
 
-**Teorema 13.10 (Kadison; enunciado sin demostración).** Sea $\Phi$ una biyección lineal entre C\*-álgebras unitales
-con $\Phi(1)=1$ tal que $\Phi$ y $\Phi^{-1}$ son positivas. Entonces $\Phi$ es un $*$-isomorfismo de Jordan. (R. V.
-Kadison, *A generalized Schwarz inequality and algebraic invariants for operator algebras*, Ann. of Math. 56 (1952)
-494–503, corolario 5. En *Isometries of operator algebras*, Ann. of Math. 54 (1951) 325–338, había demostrado que una
-isometría lineal $\Phi$ de una C\*-álgebra unital sobre otra es $\Phi(1)$, una unitaria, por un $*$-isomorfismo de
-Jordan.)
+**Teorema 13.10 (Kadison, dimensión finita).** Sean $\mathcal M=\bigoplus_cM_{k_c}(\mathbb C)$ y
+$\mathcal N=\bigoplus_dM_{k'_d}(\mathbb C)$, y sea $\Phi:\mathcal M\to\mathcal N$ una biyección lineal con $\Phi(1)=1$
+tal que $\Phi$ y $\Phi^{-1}$ son positivas. Entonces $\Phi$ es un $*$-isomorfismo de Jordan. Recíprocamente, todo
+$*$-isomorfismo de Jordan $\mathcal M\to\mathcal N$ es unital, y tanto él como su inverso son positivos.
 
-El recíproco es inmediato: un $*$-isomorfismo de Jordan lleva los cuadrados $h^2=h\circ h$ de elementos autoadjuntos
-a cuadrados y, por tanto, el cono positivo sobre el cono positivo. Para los factores $M_n$ se conocen exactamente los
-automorfismos de Jordan: todo $*$-automorfismo de Jordan de $M_n(\mathbb C)$ es $A\mapsto UAU^*$ o $A\mapsto UA^TU^*$
-con $U$ unitaria (N. Jacobson, C. E. Rickart, *Jordan homomorphisms of rings*, Trans. Amer. Math. Soc. 69 (1950)
-479–502; I. N. Herstein, *Jordan homomorphisms*, Trans. Amer. Math. Soc. 81 (1956) 331–341). Demostramos el caso
-$n=2$.
+*Demostración.* Teorema F.15. (La idea: $\Phi$ lleva el conjunto convexo $\{0\le a\le1\}$ sobre el conjunto
+correspondiente de $\mathcal N$ y, por tanto, los puntos extremos, que son las proyecciones, sobre proyecciones;
+conserva $p+q\le1$, lo que para proyecciones significa $pq=0$; así lleva descomposiciones espectrales a
+descomposiciones espectrales y $\Phi(x^2)=\Phi(x)^2$.) $\square$
+
+R. V. Kadison demostró el teorema para todas las C\*-álgebras unitales (*A generalized Schwarz inequality and algebraic
+invariants for operator algebras*, Ann. of Math. 56 (1952) 494–503); en este curso solo se demuestra y se usa el caso
+de dimensión finita. Para los factores $M_n$ se conocen exactamente los automorfismos de Jordan: todo
+$*$-automorfismo de Jordan de $M_n(\mathbb C)$ es $A\mapsto UAU^*$ o $A\mapsto UA^TU^*$ con $U$ unitaria (teorema
+F.17, para todo $n$; el resultado se debe a N. Jacobson, C. E. Rickart, Trans. Amer. Math. Soc. 69 (1950) 479–502, y
+a I. N. Herstein, Trans. Amer. Math. Soc. 81 (1956) 331–341). Las primeras aplicaciones son multiplicativas y las
+segundas antimultiplicativas, de modo que un $*$-automorfismo de Jordan de $M_n$ o bien conserva todos los
+conmutadores o bien los invierte todos: $\Phi([x,y])=\pm[\Phi(x),\Phi(y)]$. Sobre $\bigoplus_cM_{k_c}$, un
+$*$-isomorfismo de Jordan permuta bloques del mismo tamaño y actúa sobre cada bloque de una de las dos maneras
+(teorema F.18); es unital y positivo en ambos sentidos (teorema 13.10) y, por el corolario F.19, es completamente
+positivo si y solo si no traspone ningún bloque de tamaño $\ge2$, si y solo si es un $*$-isomorfismo. He aquí una
+demostración directa del caso $n=2$ en el lenguaje de los factores de espín.
 
 **Proposición 13.11.** Todo automorfismo de Jordan de $\operatorname{Herm}_2(\mathbb C)$ es $A\mapsto UAU^*$ o
 $A\mapsto UA^TU^*$ con $U\in U(2)$.
@@ -411,12 +461,14 @@ compuesto. Lo que los distingue es el signo del término del conmutador, y este 
 $M_n\otimes M_m$ y no las álgebras de Jordan de los factores. ($\circ_\theta$ es el producto de Jordan del producto
 asociativo $A\star B=\theta(\theta(A)\theta(B))$, para el cual $(x\otimes y)\star(x'\otimes y')=xx'\otimes y'y$: el
 álgebra $M_n\otimes M_m^{\rm op}$.) El cono $\theta(\operatorname{Herm}_{nm}^+)$ es lo que da el **criterio PPT**
-(A. Peres, Phys. Rev. Lett. 77 (1996) 1413): un estado separable $\rho=\sum_kp_ka_k\otimes b_k$, $p_k\ge0$,
-$a_k,b_k\ge0$, está en ambos conos, ya que $\theta(\rho)=\sum_kp_ka_k\otimes b_k^T$ con $b_k^T\ge0$ (proposición
+(A. Peres, Phys. Rev. Lett. 77 (1996) 1413). Se dice que un estado $\rho$ de $M_n\otimes M_m$ es **separable** si
+$\rho=\sum_kp_ka_k\otimes b_k$ (una suma finita) con $p_k\ge0$, $a_k,b_k\ge0$, y **entrelazado** en caso contrario. Un
+estado separable está en ambos conos, ya que $\theta(\rho)=\sum_kp_ka_k\otimes b_k^T$ con $b_k^T\ge0$ (proposición
 13.9(a)) y $a\otimes b=(a^{1/2}\otimes b^{1/2})^2\ge0$. Así, $\omega$, que no está en
-$\theta(\operatorname{Herm}_4^+)$, está entrelazado. Para resultados sobre qué compuestos de álgebras de Jordan existen,
-véanse H. Hanche-Olsen, *On the structure and tensor products of JC-algebras*, Canad. J. Math. 35 (1983) 1059–1074, y
-H. Barnum, M. Graydon, A. Wilce, *Composites and categories of Euclidean Jordan algebras*, Quantum 4 (2020) 359.
+$\theta(\operatorname{Herm}_4^+)$, está entrelazado. (Lecturas adicionales sobre compuestos de álgebras de Jordan, que
+no se usan aquí: H. Hanche-Olsen, *On the structure and tensor products of JC-algebras*, Canad. J. Math. 35 (1983)
+1059–1074; H. Barnum, M. Graydon, A. Wilce, *Composites and categories of Euclidean Jordan algebras*, Quantum 4 (2020)
+359.)
 
 **Dinámica.** Cabría esperar que la evolución temporal obligue a usar el producto asociativo. No es así:
 
@@ -427,7 +479,10 @@ $\delta=4\sum_k[L(x_k),L(y_k)]$ para ciertos $x_k,y_k\in\operatorname{Herm}_n$: 
 generada por el producto de Jordan por sí solo.
 
 *Demostración.* (a) $(i[H,z])^*=-i[z,H]=i[H,z]$; $[H,\cdot]$ es una derivación del producto asociativo y, por tanto,
-de $\circ$. (b) $4x\circ(y\circ z)=xyz+xzy+yzx+zyx$; réstese lo mismo con $x,y$ intercambiados. (c) Por (b) basta
+de $\circ$. $z(t)=e^{itH}ze^{-itH}$ satisface $z'=i[H,z]$ y $z(0)=z$ (proposición 8.2(3) con $\mathcal M=M_n$),
+así que $z(t)=e^{t\delta}(z)$ por la unicidad del lema 8.1; la conjugación por la unitaria $e^{itH}$ conserva productos
+y adjuntos y, por tanto, $\circ$ y $\operatorname{Herm}_n$.
+(b) $4x\circ(y\circ z)=xyz+xzy+yzx+zyx$; réstese lo mismo con $x,y$ intercambiados. (c) Por (b) basta
 escribir $iH-\frac{\operatorname{Tr}H}n i1$ (que tiene los mismos conmutadores que $iH$) como suma de $[x_k,y_k]$.
 Para $i\ne j$ y $a=E_{ij}+E_{ji}$, $b=i(E_{ij}-E_{ji})$: $[a,E_{ii}]=E_{ji}-E_{ij}$,
 $[b,E_{ii}]=-i(E_{ij}+E_{ji})$ y $[a,b]=2i(E_{jj}-E_{ii})$; estas generan sobre $\mathbb R$ las matrices
@@ -436,13 +491,13 @@ antihermíticas de traza nula. $\square$
 Lo que el álgebra de Jordan no contiene es la **correspondencia** $H\mapsto i[H,\cdot]$ entre un observable y la
 dinámica que genera. En $\operatorname{Herm}_n(\mathbb R)$, por ejemplo, las derivaciones
 $[L(x),L(y)]=\frac14[[x,y],\cdot]$ provienen de matrices $[x,y]$ reales antisimétricas, que no son $i$ por una matriz
-simétrica real. E. M. Alfsen y F. W. Shultz demostraron que una JBW-álgebra (una versión de dimensión infinita de un
-álgebra de Jordan formalmente real; en dimensión finita ambas nociones coinciden) es la parte autoadjunta de un álgebra
-de von Neumann si y solo si admite tal "correspondencia dinámica", y caracterizaron geométricamente los espacios de
-estados de las C\*-álgebras (*Geometry of State Spaces of Operator Algebras*, Birkhäuser, 2003; enunciado sin
-demostración). Una correspondencia no es única: sobre $\operatorname{Herm}_n(\mathbb C)$, tanto $H\mapsto i[H,\cdot]$
-como $H\mapsto-i[H,\cdot]$ sirven; la traspuesta las intercambia, ya que $T(i[H,T(z)])=-i[H^T,z]$, y pertenecen a $M_n$
-y a su álgebra opuesta: los dos signos de la proposición 13.12.
+simétrica real (ejercicio 4). La correspondencia no está determinada por $\circ$: sobre
+$\operatorname{Herm}_n(\mathbb C)$, tanto $H\mapsto i[H,\cdot]$ como $H\mapsto-i[H,\cdot]$ envían todo observable a una
+derivación de $\circ$ (proposición 13.13(a)), y la traspuesta, un automorfismo de Jordan, las intercambia, ya que
+$T(i[H,T(z)])=-i[H^T,z]$. La segunda es $i$ por el conmutador del álgebra opuesta ($a\cdot_{\rm op}b=ba$):
+$-i[H,z]=i(H\cdot_{\rm op}z-z\cdot_{\rm op}H)$ — los dos signos de la proposición 13.12. (Lecturas adicionales sobre
+tales «correspondencias dinámicas», que no se usan aquí: E. M. Alfsen, F. W. Shultz, *Geometry of State Spaces of
+Operator Algebras*, Birkhäuser, 2003.)
 
 ```python
 x, y = sa(), sa()
@@ -487,8 +542,8 @@ assert close(delta(jm(z1, z2)), jm(delta(z1), z2) + jm(z1, delta(z2)))         #
 assert close(jm(z1, jm(z2, Hm)) - jm(z2, jm(z1, Hm)), 0.25 * cm(cm(z1, z2), Hm))   # (b)
 ```
 
-> **Significado físico.** Para una partícula sin espín, la traspuesta (la conjugación compleja en una base real) es la
-> **inversión temporal**. Es una simetría de los observables de un único sistema, pero es antiunitaria y, aplicada
+> **Significado físico** (interpretación física, no un teorema de este curso). Para una partícula sin espín, la
+> traspuesta (la conjugación compleja en una base real) es la **inversión temporal**. Es una simetría de los observables de un único sistema, pero es antiunitaria y, aplicada
 > solo a un subsistema, no es una operación física: la proposición 13.12 muestra que convierte el estado de Bell en un
 > operador con un valor propio negativo. La mecánica cuántica usa $*$-álgebras complejas porque los sistemas compuestos
 > necesitan el conmutador con su signo, no solo el producto simetrizado.
@@ -502,7 +557,7 @@ y, en lenguaje de Jordan, se lee
 $$
 \operatorname{tr}|P(y)x|\le\operatorname{tr}P(y)|x|,
 $$
-lo que tiene sentido en toda álgebra de Jordan euclídea. La demostramos en $V_m$ con un argumento que usa solo tres
+lo que tiene sentido en toda álgebra de Jordan euclídea una vez fijada una traza. La demostramos en $V_m$ con un argumento que usa solo tres
 propiedades.
 
 **Proposición 13.14 (Exp. 3 en un factor de espín).** Para $x,y\in V_m$,
@@ -526,18 +581,28 @@ para $-x\in Q$. $\square$
 
 La demostración usa solo: (i) $P(y)Q\subseteq Q$ para todo $y$; (ii) el teorema espectral: todo $z$ es
 $\sum_i\mu_ic_i$ con idempotentes ortogonales $c_i$ de suma $1$, y $f(z)=\sum_if(\mu_i)c_i$ (de modo que $x_\pm$ y los
-idempotentes son cuadrados); (iii) $\operatorname{tr}$ es lineal,
-$\operatorname{tr}(\sum_i\mu_ic_i)=\sum_i\mu_i\operatorname{tr}c_i$ con $\operatorname{tr}c_i\ge0$, y
-$\operatorname{tr}(a\circ b)\ge0$ para $a,b\in Q$. En un álgebra de Jordan euclídea de rango $r$, (ii) vale con $r$
-idempotentes primitivos $c_i$ (un marco de Jordan), la traza es $\operatorname{tr}z=\sum_i\mu_i$, la forma
-$\operatorname{tr}(x\circ y)$ es asociativa, $\operatorname{tr}((x\circ y)\circ z)=\operatorname{tr}(x\circ(y\circ z))$, y
-(i) se cumple [FK94, capítulos II–III]; no demostramos estos hechos. La última parte de (iii) se sigue entonces de
-(i): desarrollando $P(a^{1/2})=2L(a^{1/2})^2-L(a)$ y usando la asociatividad,
-$\operatorname{tr}(a\circ b)=\operatorname{tr}P(a^{1/2})b$, la traza de un elemento de $Q$, luego $\ge0$. Así, la
-desigualdad vale en toda álgebra de Jordan euclídea, incluidas $\operatorname{Herm}_r(\mathbb H)$ y el álgebra de
-Albert, que no son isomorfas como álgebras de Jordan a partes autoadjuntas de $*$-álgebras complejas. En $M_{sa}$, el
-mismo argumento, con $\operatorname{Tr}$ y $P(y)x=yxy$, vuelve a demostrar la proposición 11.9. En $V_m$, la
-desigualdad se sigue también de la proposición 11.9 a través de $\phi$, ya que $\phi(P(y)x)=\phi(y)\phi(x)\phi(y)$ y
+idempotentes son cuadrados); (iii) $\operatorname{tr}$ es lineal, $\operatorname{tr}(a\circ1)=\operatorname{tr}a$, y
+$\operatorname{tr}(a\circ b)\ge0$ para $a,b\in Q$. Las tres valen en toda álgebra de Jordan euclídea $V$ con unidad $e$
+para la forma lineal $\tau(x)=\langle x,e\rangle$, para la cual $\tau(a\circ b)=\langle b,a\circ e\rangle=\langle a,b\rangle$:
+(ii) es el teorema F.3, (i) es el teorema F.6(4), y $\langle a,b\rangle\ge0$ para $a,b\in Q$ es el teorema F.5(1). El
+corolario F.7 lleva a cabo el argumento: $\tau(|P(y)x|)\le\tau(P(y)|x|)$ en toda álgebra de Jordan euclídea, con
+igualdad si $x\in Q$ o $-x\in Q$. En $M_{sa}$ con $\langle x,y\rangle=\operatorname{Tr}(xy)$, $\tau=\operatorname{Tr}$ y
+$P(y)x=yxy$; los idempotentes de $(M_{sa},\circ)$ son las proyecciones ($c\circ c=c^2$), y para proyecciones
+$c\circ c'=0$ si y solo si $cc'=0$ (lema F.14(2)), así que, por la unicidad del teorema F.3, su descomposición de $x$ es
+la descomposición espectral en proyecciones propias y $|x|$ es el valor absoluto matricial. Así, esto vuelve a demostrar
+la proposición 11.9 para todo $Y=Y^*$. En $V_m$ con $\langle x,y\rangle=\operatorname{tr}(x\circ y)$,
+$\tau=\operatorname{tr}$, la descomposición del teorema F.3 es la del teorema 13.4(2) (con $x=a1$ si $u=0$), y esto es
+la proposición 13.14. En un álgebra de Jordan euclídea simple $J$ de rango $r$, la traza
+$\operatorname{tr}x=\frac r{\dim J}\operatorname{Tr}L(x)$ del corolario E.28 cumple
+$\operatorname{tr}(\sum_i\mu_ic_i)=\sum_i\mu_i$ para todo marco de Jordan $(c_i)$ (teorema E.7), y
+$\langle x,y\rangle=\operatorname{tr}(x\circ y)$ es un producto escalar asociativo; para él $\tau=\operatorname{tr}$, así
+que la desigualdad vale para esta traza. Esto se aplica a $\operatorname{Herm}_r(\mathbb H)$ y al álgebra de Albert, que
+son álgebras de Jordan euclídeas simples (teorema E.24). Para $r\ge3$ no son isomorfas como álgebras de Jordan a
+$M_{sa}$ para ningún $\mathcal M=\bigoplus_cM_{k_c}$: $M_{sa}=\bigoplus_c\operatorname{Herm}_{k_c}(\mathbb C)$ es una
+suma directa de ideales, así que solo es simple con un único bloque, y $\operatorname{Herm}_k(\mathbb C)$
+($\cong\mathbb R$ para $k=1$, $\cong V_3$ para $k=2$) no es isomorfa a $\operatorname{Herm}_r(\mathbb H)$, $r\ge3$, ni a
+$\operatorname{Herm}_3(\mathbb O)$, por la unicidad del teorema 13.7. En $V_m$, la desigualdad se sigue también de la
+proposición 11.9 (extendida más arriba a $Y=Y^*$) a través de $\phi$, ya que $\phi(P(y)x)=\phi(y)\phi(x)\phi(y)$ y
 $\phi(|x|)=|\phi(x)|$; el código comprueba ambas cosas:
 
 ```python
@@ -554,10 +619,16 @@ for m in (2, 4, 7):
     Xs, Ys = Vm.to_matrix(xs[:200]), Vm.to_matrix(ys[:200])
     tn = torch.linalg.svdvals(Ys @ Xs @ Ys).sum(-1)                     # Tr |phi(y) phi(x) phi(y)|
     assert (tn - Vm.representation_dim / 2 * lhs[:200]).abs().max() < 1e-10 * tn.max()
+    wx, Ux = torch.linalg.eigh(Xs)
+    absX = Ux @ torch.diag_embed(wx.abs().to(dt)) @ Ux.mH                  # |phi(x)|
+    tr_rhs = (Ys @ absX @ Ys).diagonal(dim1=-2, dim2=-1).sum(-1).real    # Tr phi(y) |phi(x)| phi(y)
+    assert (torch.linalg.eigvalsh(Ys)[:, 0] < 0).any()                  # some phi(y) are indefinite
+    assert (tr_rhs - tn >= -1e-10 * tr_rhs).all()                       # Proposition 11.9 for Y = Y*
 ```
 
-La diferencia $\operatorname{tr}P(y)|x|-\operatorname{tr}|P(y)x|$ se anula para $x$ definido y es positiva para un $x$
-indefinido típico (los máximos impresos son del orden de $10^1$–$10^2$ para estas muestras gaussianas).
+La diferencia $\operatorname{tr}P(y)|x|-\operatorname{tr}|P(y)x|$ se anula para $x$ definido (proposición 13.14).
+Observación numérica (no un teorema): para estas muestras gaussianas, las diferencias máximas impresas son del orden de
+$10^1$–$10^2$, así que la desigualdad está lejos de ser una igualdad para $x$ indefinido.
 
 ## 13.7 Con qué comparar
 
@@ -597,7 +668,8 @@ aleatorizado del álgebra de Jordan generada por unas matrices dadas, comparada 
    13.4(5), $\phi(P(y)P(y^{-1})x)=\phi(x)$; $\phi$ es inyectiva. $P(y)$ lleva $Q$ en $Q$, y lo mismo hace su inversa
    $P(y^{-1})$, luego $P(y)Q=Q$; al ser un homeomorfismo lineal, lleva el interior sobre el interior. Por último,
    $P(y)1=2y\circ y-y^2=y^2$, así que $P(x^{1/2})1=x$, y $P(x^{1/2})$ es invertible cuando $x$ es interior
-   ($\det x^{1/2}=\sqrt{\lambda_+\lambda_-}>0$). Dos puntos interiores cualesquiera están unidos por
+   ($\det x^{1/2}=\sqrt{\lambda_+\lambda_-}>0$; el interior de $Q$ es $\{a>|u|\}=\{\lambda_->0\}$, ya que $a-|u|$ es
+   continua y $(a-\varepsilon,u)\notin Q$ cuando $a=|u|$). Dos puntos interiores cualesquiera están unidos por
    $P(x'^{1/2})P(x^{1/2})^{-1}$.
 
 ```python
@@ -613,8 +685,7 @@ assert V4.in_cone(V4.quadratic_representation(yv, xi)).all()
 
 2. $\theta(\rho_p)=\frac p2F+\frac{1-p}4$ por la proposición 13.12. $F$ tiene valores propios $1$ (tres veces) y $-1$
    (una vez), de modo que el espectro es $\frac{1+p}4$ (tres veces) y $\frac{1-3p}4$, que es negativo si y solo si
-   $p>\frac13$; entonces $\rho_p$ no es separable por el criterio PPT. (Para sistemas $2\times2$ también vale el
-   recíproco: M., P. y R. Horodecki, Phys. Lett. A 223 (1996) 1; no lo demostramos.)
+   $p>\frac13$; entonces $\rho_p$ no es separable por el criterio PPT.
 
 ```python
 for pp in (0.2, 1 / 3, 0.5):
@@ -640,8 +711,8 @@ assert V3c.in_cone(V3c.product(V3c.element(1.0, wv[0]), V3c.element(1.0, wv[0]))
 
 </details>
 
-**Cómo seguir.** Este es el último capítulo del curso. La referencia estándar para la teoría en dimensión finita es
-[FK94]; K. McCrimmon, *A Taste of Jordan Algebras* (Springer 2004), cubre el álgebra y la historia, y H. Hanche-Olsen y
+**Cómo seguir.** Este es el último capítulo del curso; los apéndices E y F completan sus demostraciones. Como lectura
+adicional, la referencia estándar para la teoría en dimensión finita es [FK94]; K. McCrimmon, *A Taste of Jordan Algebras* (Springer 2004), cubre el álgebra y la historia, y H. Hanche-Olsen y
 E. Størmer, *Jordan Operator Algebras* (Pitman 1984), y Alfsen–Shultz (2003), la teoría en dimensión infinita y su
 relación con las C\*-álgebras. Para el papel de los sistemas compuestos en las reconstrucciones de la teoría cuántica a
 partir de axiomas operacionales, véanse los artículos de Barnum y Wilce citados más arriba. Para desigualdades de trazas

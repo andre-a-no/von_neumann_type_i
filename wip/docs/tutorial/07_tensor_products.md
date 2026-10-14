@@ -2,10 +2,11 @@
 
 # 7. Tensor products and entanglement
 
-Two quantum systems together are described by the tensor product of their algebras. With
-sectors there are two products: the plain one, in which each part keeps its own charge, and the
-*fused* one, in which only the total charge is conserved. This chapter proves the structure of
-both, defines the partial trace as the dual of an embedding, and studies entanglement.
+This chapter studies the tensor product of two algebras with sectors (physically, the algebra of
+two systems together; see the *Physical meaning* boxes). With sectors there are two products: the
+plain one, in which each part keeps its own charge, and the *fused* one, in which only the total
+charge is conserved. We prove the structure of
+both, define the partial trace as the dual of an embedding, and study entanglement.
 
 **You will learn** how sectors multiply and how the library orders them, why the partial trace is
 a channel and, normalised, a conditional expectation of finite index, what the reduced state of a charge-conserving state is, how entanglement splits into a
@@ -117,7 +118,8 @@ for tr in ('Tr_blunt', 'Tr_norm', 'tau_vN'):                                   #
 
 > **Physical meaning** (physical interpretation, not a theorem of this course). If each of two systems obeys its own superselection rule — two boxes
 > that cannot exchange particles — the joint system has a sector for every *pair* of charges, and
-> no observable connects different pairs. A joint sector counts with the product of the weights.
+> no observable connects different pairs. A joint sector counts with the product of the weights
+> (Theorem 7.1(c)).
 
 ## 7.2 The partial trace
 
@@ -237,9 +239,12 @@ $\sum_{a,b}u_{ab}u_{ab}^*=\sum_k\big(\sum_{a,b}u_{ab}\,\iota(\mathcal E(u_{ab}^*
 
 A family as in (c) is a *quasi-basis* of $\mathcal E$, and $\sum_kv_kv_k^*$, which by (c) does not
 depend on it and by (b) exists, is the **index** $\operatorname{Ind}\mathcal E=m^2$ of $\mathcal E$ (a
-definition; the name follows Y. Watatani, Mem. Amer. Math. Soc. 83, no. 424, 1990). For a factor,
-$M_k\otimes1\subset M_k\otimes M_m$ contains $\mathbb C^k$ with multiplicity $m$ in $\mathbb C^{km}$: its
-inclusion matrix is $\Lambda=(m)$, and $m^2=\|\Lambda\|^2=\dim(M_k\otimes M_m)/\dim M_k$. (Further
+definition; the name follows Y. Watatani, Mem. Amer. Math. Soc. 83, no. 424, 1990). The
+**inclusion matrix** of an inclusion of $\bigoplus_cM_{k_c}$ into $\bigoplus_sM_{n_s}$ has the entries
+$\Lambda_{sc}$, the numbers of copies of the block $c$ of the subalgebra in the block $s$ of the larger one
+(Chapter 9 uses it for towers of algebras). For a factor, $M_k\otimes1\subset M_k\otimes M_m$: ordering
+the basis $e_a\otimes e_b$ of $\mathbb C^{km}$ by $b$ first, $A\otimes1_m=\operatorname{diag}(A,\dots,A)$ with $m$
+copies, so $\Lambda=(m)$, and $m^2=\|\Lambda\|^2=\dim(M_k\otimes M_m)/\dim M_k$. (Further
 reading, not used here: V. F. R. Jones, Invent. Math. 72, 1, 1983, on the index of subfactors, and
 F. M. Goodman, P. de la Harpe and V. F. R. Jones, *Coxeter graphs and towers of algebras*, Springer,
 1989, on inclusion matrices.) For general $\mathcal M_1$ the inclusion is the direct sum of the
@@ -300,11 +305,14 @@ of them, so $X$ commutes with $N$ iff it commutes with every $\Pi_q$. $\square$
 
 `fused_tensor_product(alg1, alg2, fuse)` (default `fuse`: addition) orders its sectors by the fused
 charge and the pairs $(c,d)$ inside a sector lexicographically, each with the basis $e_a\otimes e_b$.
-Example: hard-core bosons. The number-conserving operators of two sites form
-$M_1\oplus M_2\oplus M_1$ (charges $0,1,2$), of three sites $M_1\oplus M_3\oplus M_3\oplus M_1$; the fused
-product is that of five sites, up to the order of the basis: $n_q=\sum_c\binom2c\binom3{q-c}=\binom5q$
-(Vandermonde's identity: a $q$-element subset of five sites consists of $c$ of the first two and
-$q-c$ of the last three).
+Example: hard-core bosons. On $L$ sites, $(\mathbb C^2)^{\otimes L}$ with the occupation number
+$N=\sum_in^{(i)}$, $n=\operatorname{diag}(0,1)$, the eigenspace $N=q$ is spanned by the $\binom Lq$ product
+basis vectors with $q$ occupied sites, so the number-conserving operators $\{N\}'$ form
+$\bigoplus_qM_{\binom Lq}$ (Proposition 4.10(2)): for two sites $M_1\oplus M_2\oplus M_1$ (charges $0,1,2$), for
+three sites $M_1\oplus M_3\oplus M_3\oplus M_1$. By Proposition 7.5(c) the fused product is $\{N\}'$ for
+the total occupation number of five sites, up to the order of the basis, and indeed
+$n_q=\sum_c\binom2c\binom3{q-c}=\binom5q$ (Vandermonde's identity: a $q$-element subset of five sites
+consists of $c$ of the first two and $q-c$ of the last three).
 
 ```python
 bos1 = TypeIAlgebra([1, 2, 1], [1, 2, 1], precision='double', charges=[0, 1, 2])
@@ -327,8 +335,8 @@ The fused algebra has dimension $\sum_q\binom5q^2=\binom{10}5=252$ (Vandermonde 
 product $(1+4+1)(1+9+9+1)=120$ (Theorem 7.1(b)). By Theorem 7.1(a) and Proposition 7.5(b) the plain
 product consists of the elements of the fused one that are block diagonal for the pairs $(c,d)$; the
 remaining $132$ dimensions are spanned by the operators that map a pair block $(c,d)$ into a
-different pair block $(c',d')$ of the same $H_q$, $c'\ne c$: they move particles between the two
-parts, as hopping terms do.
+different pair block $(c',d')$ of the same $H_q$, $c'\ne c$ (so $d'\ne d$): they change the charge
+of each part while conserving the total, i.e. here they move particles between the two parts.
 
 A state of $\mathcal M_1\otimes_f\mathcal M_2$ can have coherences between pair blocks, so Proposition
 7.2 does not apply. Let $E_1(X)=\sum_cP_cXP_c$ on $B(H_1)$ (the conditional expectation of Section
@@ -358,10 +366,11 @@ $|\psi\rangle\langle\psi|\in B(H_q)$, and $\operatorname{Tr}_{H_2}|\psi\rangle\l
 has the nonzero block $\frac12|x\rangle\langle x'|$, which $E_1$ removes. $\square$
 
 By the block formula of Theorem 7.6, $(\rho_1)_c=\sum_d\operatorname{tr}_{l_d}\rho_{(c,d),(c,d)}$. Both library
-implementations compute this map, for any fusion rule: `partial_trace` traces only
+implementations are built to compute this map for any fusion rule: `partial_trace` traces only
 the diagonal pair blocks $\rho_{(c,d),(c,d)}$, and `partial_trace_channel` uses separate Kraus
-indices for pairs of one sector with the same $c$; its dual is again $A\mapsto A\otimes1$. The code
-checks both against $E_1(\operatorname{Tr}_{H_2}\rho)$ computed independently with `einsum`. With
+indices for pairs of one sector with the same $c$, so that its dual is again $A\mapsto A\otimes1$. The
+code checks both, for the two fusion rules below and both choices of the kept factor, against
+$E_1(\operatorname{Tr}_{H_2}\rho)$ computed independently with `einsum`, and the dual against $A\otimes1$. With
 addition $E_1$ does nothing in our example; with the parity rule $f(q,r)=q+r\bmod2$ the charges $0$
 and $2$ of `bos1` fuse identically with every $r$, and $E_1$ removes genuine coherences:
 
@@ -419,8 +428,10 @@ $\psi=u\otimes v$ (then $\Psi=uv^T$ has rank $1$, and $r=\operatorname{rank}\Psi
 $E(\psi)\le\log\min(a,b)$ with equality iff the smaller reduced state is maximally mixed
 (Corollary 3.6, applied to both reduced states).
 
-With charges, a pure state lies in one sector $H_q$ of the fused product; write
-$\psi=\sum_{(c,d)}\psi_{cd}$ with $\psi_{cd}\in\mathbb C^{k_c}\otimes\mathbb C^{l_d}$.
+With charges we take a unit vector $\psi$ with a definite total charge, i.e. in one sector $H_q$ of the
+fused product (a superposition of different $H_q$ gives on $\mathcal M_1\otimes_f\mathcal M_2$ the same
+state as a mixture, Chapter 3, Exercise 3); write $\psi=\sum_{(c,d)}\psi_{cd}$ with
+$\psi_{cd}\in\mathbb C^{k_c}\otimes\mathbb C^{l_d}$.
 
 **Proposition 7.8 (symmetry-resolved entanglement).** Let $f$ be addition and let the $q_c$ be
 pairwise distinct and the $r_d$ pairwise distinct, so that for each $c$ at most one $d=d(c)$ has
@@ -531,8 +542,8 @@ $\operatorname{Tr}(GG^*)^2=\|g\|^4\operatorname{Tr}\rho_A^2$, where $\operatorna
 $\psi$. By Lemma 7.9, $\mathbb E\operatorname{Tr}(GG^*)^2=\mathbb E\|g\|^4\,\mathbb E\operatorname{Tr}\rho_A^2$, and by Lemma 7.10
 $\mathbb E\operatorname{Tr}\rho_A^2=ab(a+b)/(ab(ab+1))$. $\square$
 
-Chapter 6 obtains the same mean from the fourth moments of a Haar vector, as the output purity of a
-random channel.
+Chapter 6 obtains the same mean from the fourth moments of a unitarily invariant unit vector
+(Lemma 6.14), as the output purity of a random channel (Theorem 6.15 and the remark after it).
 
 **Corollary 7.12.** $\log\frac{ab+1}{a+b}\le\mathbb E\,S(\rho_A)\le\log\min(a,b)$.
 
@@ -562,6 +573,16 @@ against the Laguerre level density (Lemmas C.15 and C.16). $\square$
 The formula was conjectured by D. N. Page (Phys. Rev. Lett. 71, 1291, 1993) and proved by S. K.
 Foong and S. Kanno (Phys. Rev. Lett. 72, 1148, 1994), J. Sánchez-Ruiz (Phys. Rev. E 52, 5653, 1995)
 and S. Sen (Phys. Rev. Lett. 77, 1, 1996).
+
+For $a>b$ the roles of $a$ and $b$ are exchanged. Indeed, the unitary $e_\alpha\otimes e_\beta\mapsto e_\beta\otimes e_\alpha$
+of $\mathbb C^a\otimes\mathbb C^b$ onto $\mathbb C^b\otimes\mathbb C^a$ permutes the coordinates of $g$, so it maps a
+Haar-random pure state $\psi$ to a Haar-random pure state $\psi'$ of $\mathbb C^b\otimes\mathbb C^a$; its matrix is
+$\Psi^T$, so $\operatorname{Tr}_2|\psi'\rangle\langle\psi'|=\Psi^T\bar\Psi=\operatorname{Tr}_1|\psi\rangle\langle\psi|$ (Proposition 7.2(a)),
+whose entropy is $S(\rho_A)$ by Lemma 7.7. Hence, with $a'=\min(a,b)$ and $b'=\max(a,b)$, Theorem 7.13 says
+that the mean entanglement entropy falls short of its maximum $\log a'$ by at least $\frac{a'-1}{2b'}$ and
+by at most $\frac{a'-1}{2b'}+\frac{a'-1}{a'b'+1}$, which is less than one nat: it is $0$ for $b'=1$, and
+otherwise $\frac{a'-1}{2b'}\le\frac12$ and $\frac{a'-1}{a'b'+1}<\frac1{b'}\le\frac12$. So for fixed $ab$, as a
+function of $a$, the mean is within one nat of $\log\min(a,b)=\min(\log a,\log(ab)-\log a)$.
 
 The law of $\rho_A$ is the **induced measure** (the name is that of K. Życzkowski and H.-J. Sommers,
 J. Phys. A 34, 7111, 2001; Theorem C.14 gives the density of its eigenvalues).
@@ -622,12 +643,9 @@ print(f"E Tr rho^2 = {m_p:.4f} +- {e_p:.4f} (exact {26 / 78:.4f})")
 assert abs(m_p - 26 / 78) < 5 * e_p                                          # Proposition 7.14
 ```
 
-> **Physical meaning** (physical interpretation, not a theorem of this course). By Theorem 7.13,
-> for $a\le b$ the mean entanglement entropy of a random pure state of $\mathbb C^a\otimes\mathbb C^b$
-> falls short of its maximum $\log a$ by between $\frac{a-1}{2b}$ and $\frac{a-1}{2b}+\frac{a-1}{ab+1}$,
-> less than one nat; for $a>b$ the roles of $a$ and $b$ are exchanged (Lemma 7.7, and exchanging the
-> factors is unitary). Plotted against the size of
-> the part, this mean rises like $\log a$ and falls beyond the middle: the *Page curve*. In physics it
+> **Physical meaning** (physical interpretation, not a theorem of this course). The mean
+> entanglement entropy of a random pure state, plotted against the size of the part at fixed total
+> dimension (the curve described after Theorem 7.13), is called the *Page curve*. In physics it
 > is used to describe how information leaves a black hole in the Hawking radiation, and why the
 > parts of a closed system look thermal; these are interpretations, not results of this course.
 
@@ -644,8 +662,8 @@ library adds the algebraic layer: products are von Neumann algebras with sectors
 fusion rule is any map of the labels, the partial trace is a channel with its dual for each trace
 and the correct restriction for fused products (Theorems 7.3, 7.6), and all of it is batched. It has
 no tensor networks, and `fused_tensor_product` takes a rule with one outcome per pair of charges, as
-for abelian symmetries; a non-abelian rule, as for $SU(2)$, where a pair of spins combines to several
-total spins with Clebsch–Gordan coefficients, is not a fused product here (the library treats $SU(2)$ for spin-$\frac12$
+for abelian symmetries; a non-abelian rule, as for $SU(2)$, where a pair of spins $j_1,j_2$ combines to
+the several total spins $|j_1-j_2|,\dots,j_1+j_2$ (Chapter 4, Exercise 2), is not a fused product here (the library treats $SU(2)$ for spin-$\frac12$
 chains separately, Chapter 4).
 
 ## Exercises
@@ -669,10 +687,11 @@ chains separately, Chapter 4).
    $\tau_{\mathrm{vN}}((\operatorname{Tr}_2X)A)=\sum_c\frac1{C_1k_c}\sum_d\operatorname{Tr}(X_{cd}(A_c\otimes1))
    =\sum_{c,d}\frac1{C_1C_2k_cl_d}\operatorname{Tr}\big(X_{cd}\,C_2l_d(A_c\otimes1)\big)$, so the dual is
    $A\mapsto\bigoplus_{c,d}C_2l_d\,A_c\otimes1_{l_d}=A\otimes Z$ with the central element
-   $Z=\bigoplus_dC_2l_d1_{l_d}$ of $\mathcal M_2$. It is not unital: of the three traces of the
-   library, only the blunt ones make $\operatorname{Tr}_2$ the dual of $A\mapsto A\otimes1$ (in general,
-   $\operatorname{tr}_w$ on $\mathcal M_1$ and the weights $w_{cd}=w_c$ on the product do, by the same
-   computation).
+   $Z=\bigoplus_dC_2l_d1_{l_d}$ of $\mathcal M_2$. It is unital only if $Z=1$, i.e. $\mathcal M_2=\mathbb C$,
+   and not in the example ($Z=4\cdot1_2\oplus6\cdot1_3$). For `Tr_norm` the same computation gives
+   $A\otimes\bigoplus_dl_d1_{l_d}$, unital only if all $l_d=1$. The blunt traces always make
+   $\operatorname{Tr}_2$ the dual of $A\mapsto A\otimes1$; in general, $\operatorname{tr}_w$ on $\mathcal M_1$ and the
+   weights $w_{cd}=w_c$ on the product do, by the same computation.
 
 ```python
 dual_tau = composite.partial_trace_channel(alg12, keep=1).adjoint('tau_vN')
@@ -699,7 +718,7 @@ assert torch.allclose(mutual, states.relative_entropy(rho, kron(rho1, rho2, alg1
 3. The sectors are $N=0,1,2$, of sizes $1,2,1$. $\psi$ lies in $N=1$, with $\psi_0=|01\rangle/\sqrt2$,
    $\psi_1=|10\rangle/\sqrt2$, so $p=(\frac12,\frac12)$ and, the blocks being one-dimensional,
    $E(\hat\psi_c)=0$: by Proposition 7.8, $E(\psi)=H(p)=\log2$ is all number entanglement, and the
-   usable configurational part is $0$. The vector $(|00\rangle+|11\rangle)/\sqrt2$ superposes $N=0$ and
+   configurational part is $0$. The vector $(|00\rangle+|11\rangle)/\sqrt2$ superposes $N=0$ and
    $N=2$; on the block-diagonal fused algebra its vector state is the mixture
    $\frac12|00\rangle\langle00|+\frac12|11\rangle\langle11|$ of product states (Chapter 3, Exercise 3).
 
