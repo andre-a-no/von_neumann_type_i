@@ -14,8 +14,8 @@ couches unitaires, positives et spectrales qui sont équivariantes par construct
 par blocs dont les tailles sont données par les multiplicités ; comment les compter par les orbites ou par les
 caractères (DeepSets et les nombres de Bell des réseaux de graphes) ; pourquoi la moyenne sur le groupe est la
 projection orthogonale sur les applications équivariantes ; comment le calcul fonctionnel et les paramétrages
-unitaires agissent bloc par bloc sur le commutant ; et comment on compte les vecteurs invariants et les formes
-quadratiques invariantes.
+unitaires agissent bloc par bloc sur le commutant ; et comment on compte les vecteurs invariants, les formes
+quadratiques invariantes et les polynômes invariants de tout degré (formule de Molien).
 
 Dans tout ce chapitre, $G$ est un groupe fini, et une **représentation** de $G$ sur $\mathbb C^n$ est un
 homomorphisme $\pi:G\to M_n(\mathbb C)$ à valeurs unitaires (ce n'est pas une restriction : des $\pi(g)$ inversibles
@@ -58,14 +58,18 @@ $\mathbb C^n=\mathbb C\mathbf 1\oplus\mathbf 1^\perp$ est la somme de deux repr�
 équivalentes, la triviale et la représentation **standard**, de dimension $n-1$. (b) (*Réseaux de graphes.*) Les
 applications équivariantes de $\mathbb C^{[n]^p}$ dans $\mathbb C^{[n]^q}$ (tenseurs d'ordre $p$ et $q$ sur $n$
 sommets) sont comptées par les partitions d'un ensemble à $p+q$ éléments en au plus $n$ blocs ; pour $n\ge p+q$, leur
-nombre est le **nombre de Bell** $B_{p+q}$ ($B_2=2$, $B_3=5$, $B_4=15$).
+nombre est le **nombre de Bell** $B_{p+q}$, le nombre de toutes les partitions d'un ensemble à $p+q$ éléments
+($B_2=2$, $B_3=5$, $B_4=15$).
 
 *Démonstration.* (b) Deux uplets $x,y\in[n]^{p+q}$ sont dans la même orbite si et seulement s'ils ont le même
 **motif d'égalités**, la partition des positions $\{1,\dots,p+q\}$ définie par $i\sim j\Leftrightarrow x_i=x_j$. Le
 motif est clairement invariant. Réciproquement, si $x,y$ ont le même motif, $x_i\mapsto y_i$ est une injection bien
 définie de $\{x_i\}$ dans $[n]$, qui se prolonge en une permutation $\sigma$ telle que $\sigma x=y$. Toute partition
 en au plus $n$ blocs est un motif (donner aux blocs des valeurs distinctes). Le lemme 12.1 permet de conclure.
-(a) Pour $p=q=1$, il y a deux orbites sur $[n]^2$, la diagonale et son complémentaire, d'indicatrices $1$ et $J-1$.
+Pour $n\ge p+q$, la borne sur le nombre de blocs est vide. En comptant selon le nombre de blocs : $B_2=1+1$ ;
+$B_3=1+3+1$ (une partition d'un ensemble à $3$ éléments en deux blocs est déterminée par son singleton) ;
+$B_4=1+7+6+1$ (deux blocs : $4$ de tailles $3+1$ et $3$ de tailles $2+2$ ; trois blocs : les $\binom42=6$ choix de
+la paire). (a) Pour $p=q=1$, il y a deux orbites sur $[n]^2$, la diagonale et son complémentaire, d'indicatrices $1$ et $J-1$.
 Donc $\dim\pi(S_n)'=2=\sum_cm_c^2$ (théorème 2.6, proposition 2.7), ce qui impose deux secteurs avec $m_c=1$,
 c'est-à-dire deux facteurs irréductibles non équivalents, et $\pi(S_n)'$ est engendré par leurs projections
 $P_1,P_2$. La projection sur la droite invariante $\mathbb C\mathbf 1$ appartient à $\pi(S_n)'$ (lemme 2.1), donc c'est
@@ -115,9 +119,13 @@ assert (D_node.k_factors, D_node.multiplicities) == ((1, 3), (1, 1))
 assert (D_edge.k_factors, D_edge.multiplicities) == ((1, 2, 3, 3), (2, 1, 1, 3))
 ```
 
-Ainsi $\mathbb C^{16}$ contient la représentation triviale deux fois, une représentation de dimension $2$ une fois, et
-deux représentations de dimension $3$, l'une une fois et l'autre trois fois : $16=1\cdot2+2\cdot1+3\cdot1+3\cdot3$ et
-$15=2^2+1^2+1^2+3^2$. Pour deux représentations, tout se ramène à un seul commutant :
+Ainsi, dans la décomposition calculée par `dc.from_group` (les asserts vérifient son résultat), $\mathbb C^{16}$
+contient une représentation de dimension $1$ deux fois — la triviale, dont la multiplicité est le nombre $2$
+d'orbites sur $[4]^2$ d'après la proposition 12.7(a) et le lemme 12.1 (le code de la section 12.4 identifie ce
+secteur) —, une représentation de dimension $2$ une fois, et deux représentations de dimension $3$, l'une une fois
+et l'autre trois fois : $16=1\cdot2+2\cdot1+3\cdot1+3\cdot3$, et $15=2^2+1^2+1^2+3^2$ concorde avec le décompte des
+orbites du lemme 12.1 et avec $\dim\pi(G)'=\sum_cm_c^2$ (théorème 2.6). Pour deux représentations, tout se ramène à
+un seul commutant :
 
 **Lemme 12.3 (somme directe).** Soit $\pi=\pi_1\oplus\pi_2$ sur $\mathbb C^{n_1}\oplus\mathbb C^{n_2}$, avec les
 inclusions isométriques $Q_i$ et les projections $P_i=Q_iQ_i^*$. Alors $P_1,P_2\in\pi(G)'$,
@@ -149,7 +157,13 @@ $\pi(G)'\cong\bigoplus_cM_{m_c}$ (proposition 2.7), et $\operatorname{Hom}_G(\pi
 représentation irréductible n'apparaît dans les deux.
 
 *Démonstration.* Appliquons le théorème 2.6 et la proposition 2.7 à $\pi=\pi_1\oplus\pi_2$ : il existe un unitaire
-$V$ tel que $V^*\pi(g)V=\bigoplus_c\rho_c(g)\otimes1_{m_c}$ et $V^*\pi(G)'V=\bigoplus_c1_{k_c}\otimes M_{m_c}$. Comme
+$V$ tel que $V^*\pi(g)V=\bigoplus_c\rho_c(g)\otimes1_{m_c}$ et $V^*\pi(G)'V=\bigoplus_c1_{k_c}\otimes M_{m_c}$.
+D'après l'unicité des multiplicités (section 2.4), toute représentation irréductible apparaissant dans $\pi$ est
+équivalente à exactement une $\rho_c$, de sorte que les $\rho_c$ sont des représentants des classes de l'énoncé.
+D'autres représentants quelconques sont $\rho_c'=w_c\rho_cw_c^*$ avec des unitaires $w_c$ (lemme 4.2(c)), et
+remplacer $V$ par $V\bigoplus_c(w_c^*\otimes1)$ transforme la première forme normale en
+$\bigoplus_c\rho'_c(g)\otimes1_{m_c}$ et laisse la seconde inchangée, car $w_c^*\otimes1$ commute avec
+$1\otimes M_{m_c}$ ; on peut donc utiliser les $\rho_c$ de la proposition 2.7. Comme
 $X\mapsto V^*XV$ est un $*$-isomorphisme et que $P_1\in\pi(G)'$ (lemme 12.3), $V^*P_1V=\bigoplus_c1\otimes p_c$ avec
 des projections $p_c$. Choisissons des unitaires $u_c$ tels que $u_c^*p_cu_c=1_{a_c}\oplus0_{b_c}$ (théorème 1.3), où
 désormais $a_c=\operatorname{rank}p_c$, $b_c=m_c-a_c$, et remplaçons $V$ par $V\bigoplus_c(1\otimes u_c)$ ; cela ne
@@ -172,12 +186,14 @@ $Q_2^*V\big(\bigoplus_c1\otimes\kappa_cy_c\iota_c^*\big)V^*Q_1=V_2\big(\bigoplus
 $(y_c)\mapsto T$ est injective puisque $V_1,V_2$ sont unitaires. Une $\rho$ irréductible qui n'apparaît pas dans
 $\pi_1\oplus\pi_2$ vérifie $m_\rho(\pi_1)m_\rho(\pi_2)=0$. $\square$
 
-Pour le corollaire 12.2(b) avec $n=4$ : les caractéristiques de sommets $\pi_1$ ont $a=(1,0,0,1)$ dans les quatre
-secteurs de $\pi_1\oplus\pi_2$ (la triviale, celle de dimension $2$, les deux de dimension $3$), les
-caractéristiques d'arêtes $\pi_2$ ont $b=(2,1,1,3)$, donc $\dim\operatorname{Hom}_G=1\cdot2+1\cdot3=5=B_3$.
+Pour le corollaire 12.2(b) avec $n=4$, dans la décomposition calculée (affichée et vérifiée ci-dessous) : les
+caractéristiques de sommets $\pi_1$ ont $a=(1,0,0,1)$ dans les quatre secteurs de $\pi_1\oplus\pi_2$ (de dimensions
+$1,2,3,3$ ; le premier est le secteur trivial, car d'après le corollaire 12.2(a) le seul constituant de dimension un
+de $\pi_1$ est trivial), les caractéristiques d'arêtes $\pi_2$ ont $b=(2,1,1,3)$, donc
+$\dim\operatorname{Hom}_G=1\cdot2+1\cdot3=5=B_3$, comme le démontre le corollaire 12.2(b).
 
-> **Interprétation physique.** Le théorème 12.4 est le noyau d'algèbre linéaire des **règles de sélection** et le
-> cas scalaire du théorème de Wigner–Eckart : un opérateur qui commute avec la symétrie ne peut relier que des états
+> **Interprétation physique** (interprétation physique, pas un théorème de ce cours). Le théorème 12.4 est le noyau
+> d'algèbre linéaire des **règles de sélection** et le cas scalaire du théorème de Wigner–Eckart : un opérateur qui commute avec la symétrie ne peut relier que des états
 > de même type de symétrie, et à l'intérieur d'un type il agit comme $1_{k_c}\otimes y_c$, c'est-à-dire par un
 > « élément de matrice réduit » $y_c$ aveugle à la position à l'intérieur du multiplet. (Les opérateurs qui se
 > transforment eux-mêmes selon une représentation non triviale, comme les opérateurs vectoriels, requièrent en outre
@@ -187,7 +203,8 @@ caractéristiques d'arêtes $\pi_2$ ont $b=(2,1,1,3)$, donc $\dim\operatorname{H
 ## 12.2 Une couche équivariante avec la bibliothèque
 
 La démonstration du théorème 12.4 est un algorithme, dès que l'on connaît la décomposition du théorème 2.6 ;
-`dc.from_group` la calcule par la méthode randomisée de la section 4.3. Pour $\pi_1=\pi_2$, c'est simplement le
+`dc.from_group` la calcule par la méthode randomisée de la section 4.3 (correcte avec probabilité un en
+arithmétique exacte ; ici, les asserts vérifient le résultat calculé). Pour $\pi_1=\pi_2$, c'est simplement le
 théorème 2.6 : les poids sont des blocs $w_c\in M_{m_c}$, un opérateur du commutant abstrait
 `D.commutant_algebra()` $=\bigoplus_cM_{m_c}$, et la couche est $x\mapsto V\big(\bigoplus_c1_{k_c}\otimes w_c\big)V^*x$,
 calculée par `D.from_commutant`. Le module ci-dessous est du code du chapitre, il ne fait pas partie de la
@@ -260,6 +277,8 @@ err = equivariance_error(node_to_edge, G_node, G_edge)
 print(f"node -> edge: sectors k = {node_to_edge.D.k_factors}, a = {node_to_edge.a}, "
       f"{n_params} parameters, equivariance error {err:.1e}")
 assert n_params == bell[3] and err < 1e-12
+b = tuple(m - a for m, a in zip(node_to_edge.D.multiplicities, node_to_edge.a))
+assert node_to_edge.D.k_factors == (1, 2, 3, 3) and node_to_edge.a == [1, 0, 0, 1] and b == (2, 1, 1, 3)
 corners = node_to_edge.D.basis('commutant')[:, n:, :n].reshape(-1, 16 * n)   # Lemma 12.3: Q_2^* pi(G)' Q_1
 assert torch.linalg.matrix_rank(corners).item() == bell[3]
 ```
@@ -315,7 +334,7 @@ Les couches ci-dessus sont linéaires. Un réseau les alterne avec des non-liné
 puisque $(\pi(g)x)_{gy}=x_y$ ; pour d'autres représentations, elle ne l'est pas, et l'on utilise des non-linéarités
 qui agissent sur des normes ou sur les coefficients dans une base que $G$ permute (exercice 3).
 
-> **Interprétation physique.** Le twirl est l'espérance conditionnelle sur le commutant (exercice 3 du chapitre 2) :
+> **Interprétation physique** (interprétation physique, pas un théorème de ce cours). Le twirl est l'espérance conditionnelle sur le commutant (exercice 3 du chapitre 2) :
 > moyenner un couplage sur toutes les opérations de symétrie en conserve exactement la partie symétrique.
 > « Symétriser » un hamiltonien ou une interaction en sommant sur le groupe de symétrie est la même projection.
 
@@ -347,14 +366,19 @@ les $u_0e^{s-s^*}$ d'après le lemme 11.1. Avec $u_0=1$, (b) donne $\Phi(e^{s-s^
 parcourt les éléments antiautoadjoints de $\pi(G)'$. $\square$
 
 Ainsi une couche équivariante orthogonale (unitaire) est `optimize.UnitaryParam` sur `D.commutant_algebra()` suivi de
-$\Phi$ ; d'après (c), ce paramétrage atteint tout unitaire équivariant, et chaque itéré d'une méthode de gradient est
-exactement unitaire et exactement équivariant. De même, `PositiveParam` fournit des couches équivariantes positives,
+$\Phi$ ; d'après (c), ce paramétrage atteint tout unitaire équivariant, et en arithmétique exacte chaque itéré d'une
+méthode de gradient est unitaire et équivariant (le code vérifie les deux à $10^{-12}$ près après l'entraînement).
+De même, `PositiveParam` fournit des couches équivariantes positives,
 normalisées comme au chapitre 11 (spectre dans $[\ell,1]$ de maximum $1$ ; d'après (a), une couche positive générale
 est $\Phi(t^*t)$), et une couche spectrale $f(L)$ d'un générateur équivariant autoadjoint $L$, comme la diffusion
-$e^{-tL}$, demande des diagonalisations de coût $\sum_cm_c^3$ (ici $37$) au lieu de $n^3=4096$, avec des gradients
-donnés par la formule de Daleckii–Krein (`apply_function`). Le code ajuste un unitaire équivariant à $32$ couples
-entrée–sortie, et confronte (b) et son gradient par rapport à $t$, $\frac d{dt}e^{-tL}=-Le^{-tL}$, aux matrices
-denses.
+$e^{-tL}$, demande des diagonalisations des blocs $w_c$, d'un coût de l'ordre de $\sum_cm_c^3$ (ici $37$) au lieu de
+$n^3=4096$ ; la bibliothèque différencie à travers `apply_function` (nous ne démontrons rien sur sa passe arrière ;
+le code vérifie une dérivée ci-dessous). Le code ajuste un unitaire équivariant à $32$ couples entrée–sortie avec
+Adam — une observation numérique de cette exécution, pas un théorème : la perte diminue d'un facteur supérieur à
+$10^3$, ce que vérifie l'assert, et aucun énoncé de convergence n'est revendiqué — et confronte (b) et le gradient par
+rapport à $t$ aux matrices denses et à la formule $\frac d{dt}e^{-tL}=-Le^{-tL}$ (pour
+$L=U\operatorname{diag}(\lambda)U^*$, $e^{-tL}=U\operatorname{diag}(e^{-t\lambda_i})U^*$ d'après le théorème 1.5, et
+$U$ ne dépend pas de $t$).
 
 ```python
 from torch_vn_algebra import optimize as opt
@@ -392,9 +416,10 @@ assert (E - torch.linalg.matrix_exp(-0.7 * L)).abs().max() < 1e-12          # Pr
 assert abs(t.grad.item() - (Z.conj() * dE).sum().real.item()) < 1e-10
 ```
 
-> **Interprétation physique.** Un hamiltonien symétrique $H\in\pi(G)'$ engendre une évolution temporelle symétrique
-> $e^{-itH}\in\pi(G)'$ (chapitre 8), qui ne mélange jamais les secteurs et n'agit que sur les espaces de
-> multiplicité. Une couche unitaire équivariante est une telle évolution, apprise au lieu d'être donnée.
+> **Interprétation physique** (interprétation physique, pas un théorème de ce cours). Un hamiltonien symétrique
+> $H\in\pi(G)'$ engendre une évolution temporelle symétrique $e^{-itH}\in\pi(G)'$ (chapitre 8), qui ne mélange
+> jamais les secteurs et n'agit que sur les espaces de multiplicité. Une couche unitaire équivariante est une telle
+> évolution, apprise au lieu d'être donnée.
 
 ## 12.4 Invariants
 
@@ -431,7 +456,8 @@ autoadjoints de $\pi(G)'$ sont les $\Phi(w)$ avec des $w_c$ hermitiennes, un esp
 $(g\cdot p)(x)=p(\pi(g)^{-1}x)$ ; alors $g\cdot(h\cdot p)=(gh)\cdot p$, et $g\cdot p$ a pour matrice
 $\sigma(g)(B)=A^TBA$, $A=\pi(g)^{-1}$. La moyenne $M=|G|^{-1}\sum_g\sigma(g)$ vérifie $\sigma(h)M=M$ et $MB=B$ pour $B$
 invariante, donc (comme dans la démonstration du théorème 12.5) elle est idempotente, d'image les polynômes
-invariants, et la dimension de ceux-ci est $\operatorname{Tr}M=|G|^{-1}\sum_g\operatorname{Tr}\sigma(g)$. $A$ est
+invariants, et la dimension de ceux-ci est $\operatorname{Tr}M=|G|^{-1}\sum_g\operatorname{Tr}\sigma(g)$ (un
+idempotent est $1\oplus0$ dans une base adaptée à image $\oplus$ noyau, donc sa trace est son rang). $A$ est
 unitaire, donc $A=R\Lambda R^{-1}$ avec $\Lambda=\operatorname{diag}(\lambda)$ (théorème 1.3). Les matrices symétriques
 $B_{ij}=(R^{-1})^T(e_ie_j^T+e_je_i^T)R^{-1}$, $i\le j$, forment une base, et
 $A^TB_{ij}A=(R^{-1})^T\Lambda(e_ie_j^T+e_je_i^T)\Lambda R^{-1}=\lambda_i\lambda_jB_{ij}$. Donc
@@ -473,16 +499,79 @@ print(f"invariant quadratic polynomials: vertices {degree2(G_node):.4f}, edges {
 assert abs(degree2(G_node) - 2) < 1e-12 and abs(degree2(G_edge) - orbits2) < 1e-12 and orbits2 == 11
 ```
 
-Sur $\mathbb C^4$, ce sont $\sum_ix_i^2$ et $\sum_{i<j}x_ix_j$. Tous les degrés sont comptés par la formule de Molien
-$\sum_d\dim\mathbb C[x]^G_dt^d=|G|^{-1}\sum_g\det(1-t\pi(g))^{-1}$, dont le coefficient de $t^2$ est (c) (énoncée sans
-démonstration ; B. Sturmfels, *Algorithms in Invariant Theory*, Springer 2008, théorème 2.2.1).
+Sur $\mathbb C^4$, ce sont $\sum_ix_i^2$ et $\sum_{i<j}x_ix_j$. La démonstration de (c) fonctionne en tout degré :
 
-> **Interprétation physique.** Dans la théorie de Landau des transitions de phase, l'énergie libre est un polynôme
-> invariant en un paramètre d'ordre réel $x$, sur lequel $G$ agit par des matrices orthogonales réelles. Sa partie
-> quadratique est $x^TBx$ avec $B$ dans le commutant (car $\pi(g)^T=\pi(g)^{-1}$), donc, d'après la
-> proposition 12.6(a), elle est diagonale par blocs selon les secteurs : la phase symétrique devient instable dans le
-> secteur où une valeur propre de $B$ change de signe en premier, et (génériquement) la représentation irréductible de
-> ce secteur détermine la symétrie de la phase ordonnée.
+**Proposition 12.8 (formule de Molien).** Soient $\mathbb C[x]_d$ l'espace des polynômes homogènes de degré $d$ en
+$x_1,\dots,x_n$ et $\mathbb C[x]^G_d$ le sous-espace des polynômes invariants, $p(\pi(g)x)=p(x)$ pour tout $g$. Pour
+$|t|<1$,
+$$
+\sum_{d\ge0}\dim\mathbb C[x]^G_d\,t^d=\frac1{|G|}\sum_{g\in G}\frac1{\det\big(1-t\pi(g)\big)} .
+$$
+Pour une représentation de permutation, $\dim\mathbb C[x]^G_d$ est le nombre d'orbites de $G$ sur les monômes de
+degré $d$ (les multiensembles de $d$ éléments de $\Omega$). Le coefficient de $t^2$ est la proposition 12.7(c).
+
+*Démonstration.* Pour une matrice inversible $M$, posons $\phi_M(p)(x)=p(Mx)$ (substitution). $\phi_M$ est linéaire,
+envoie $\mathbb C[x]_d$ dans lui-même, et $\phi_N\circ\phi_M=\phi_{MN}$, donc $\phi_M$ est bijective d'inverse
+$\phi_{M^{-1}}$. Par conséquent $\sigma(g)=\phi_{\pi(g)^{-1}}$ vérifie $\sigma(g)\sigma(h)=\sigma(gh)$, et $p$ est
+invariant si et seulement si $\sigma(g)p=p$ pour tout $g$. Comme dans la démonstration de la proposition 12.7(c),
+$M_d=|G|^{-1}\sum_g\sigma(g)$ sur $\mathbb C[x]_d$ est idempotente d'image $\mathbb C[x]^G_d$, donc
+$\dim\mathbb C[x]^G_d=\operatorname{Tr}M_d=|G|^{-1}\sum_g\operatorname{Tr}\sigma_d(g)$, où $\sigma_d(g)$ est la restriction
+de $\sigma(g)$ à $\mathbb C[x]_d$. Fixons $g$ et écrivons l'unitaire $A=\pi(g)^{-1}$ sous la forme $A=R\Lambda R^{-1}$,
+$\Lambda=\operatorname{diag}(\lambda_1,\dots,\lambda_n)$, $|\lambda_i|=1$ (théorème 1.3). Avec les formes linéaires
+$\ell_i(x)=(R^{-1}x)_i$, les produits $\ell^\alpha=\prod_i\ell_i^{\alpha_i}=\phi_{R^{-1}}(x^\alpha)$, $|\alpha|=d$, forment
+une base de $\mathbb C[x]_d$ (l'image de la base des monômes par la bijection $\phi_{R^{-1}}$), et comme
+$R^{-1}A=\Lambda R^{-1}$,
+$$
+(\sigma(g)\ell^\alpha)(x)=\prod_i\big((R^{-1}Ax)_i\big)^{\alpha_i}=\prod_i\big(\lambda_i\ell_i(x)\big)^{\alpha_i}=\lambda^\alpha\ell^\alpha(x).
+$$
+Donc $\operatorname{Tr}\sigma_d(g)=\sum_{|\alpha|=d}\lambda^\alpha$. Pour $|t|<1$, le produit des $n$ séries absolument
+convergentes $(1-t\lambda_i)^{-1}=\sum_{a\ge0}t^a\lambda_i^a$ peut être développé et regroupé par degré :
+$$
+\frac1{\det(1-tA)}=\prod_{i=1}^n\frac1{1-t\lambda_i}=\sum_\alpha t^{|\alpha|}\lambda^\alpha=\sum_{d\ge0}t^d\operatorname{Tr}\sigma_d(g).
+$$
+La moyenne sur $g$, en remplaçant $g$ par $g^{-1}$ (de sorte que $A=\pi(g)$), donne la formule ; les deux membres
+convergent, car $\dim\mathbb C[x]^G_d\le\dim\mathbb C[x]_d=\binom{n+d-1}d$. Pour une représentation de permutation,
+$(\pi(g)^{-1}x)_y=x_{gy}$, donc $\sigma(g)$ envoie le monôme $\prod_jx_{y_j}$ sur le monôme $\prod_jx_{gy_j}$ : $G$
+permute les monômes de degré $d$, un polynôme est invariant si et seulement si ses coefficients sont constants sur
+les orbites, et les sommes sur les orbites forment une base de $\mathbb C[x]^G_d$. $\square$
+
+(C'est le théorème de Molien de 1897 ; pour aller plus loin, voir B. Sturmfels, *Algorithms in Invariant Theory*,
+Springer 2008, section 2.2.) Le code développe le membre de droite jusqu'à $t^4$, en multipliant par une série
+géométrique par valeur propre, et le compare aux orbites de monômes ; pour $S_4$ sur $\mathbb C^4$, les nombres
+$1,1,2,3,5$ sont les partitions de $d$ en au plus quatre parts (les orbites de multiensembles sont déterminées par
+leurs multiplicités, triées).
+
+```python
+def molien(G, d_max):
+    """Coefficients of |G|^{-1} sum_g det(1 - t pi(g))^{-1} up to t^d_max: products of geometric series."""
+    lam = torch.linalg.eigvals(G)                                # (|G|, n), |lambda| = 1
+    c = torch.zeros(G.shape[0], d_max + 1, dtype=dt)
+    c[:, 0] = 1
+    for i in range(lam.shape[1]):                                # multiply by 1 / (1 - t lambda_i)
+        for d in range(1, d_max + 1):
+            c[:, d] = c[:, d] + lam[:, i] * c[:, d - 1]
+    return c.mean(0)
+
+def monomial_orbits(G, d):
+    """Orbits of G on the monomials of degree d, i.e. on the multisets of d points of Omega."""
+    act = [g.real.argmax(0).tolist() for g in G]                 # pi(g) e_x = e_{act[x]}
+    mons = itertools.combinations_with_replacement(range(G.shape[-1]), d)
+    return len({min(tuple(sorted(a[x] for x in m)) for a in act) for m in mons})
+
+for G in (G_node, G_edge):
+    series, counts = molien(G, 4), [monomial_orbits(G, d) for d in range(5)]
+    print("Molien series:", [f"{v.real:.4f}" for v in series], " orbits of monomials:", counts)
+    assert (series - torch.tensor(counts, dtype=dt)).abs().max() < 1e-9          # Proposition 12.8
+assert [monomial_orbits(G_node, d) for d in range(5)] == [1, 1, 2, 3, 5] and monomial_orbits(G_edge, 2) == orbits2
+```
+
+> **Interprétation physique** (interprétation physique, pas un théorème de ce cours). Dans la théorie de Landau des
+> transitions de phase, l'énergie libre est un polynôme invariant en un paramètre d'ordre réel $x$, sur lequel $G$
+> agit par des matrices orthogonales réelles. Sa partie quadratique est $x^TBx$ avec $B$ dans le commutant (car
+> $\pi(g)^T=\pi(g)^{-1}$), donc, d'après la proposition 12.6(a), elle est diagonale par blocs selon les secteurs. La
+> théorie de Landau postule alors que la phase symétrique devient instable dans le secteur où une valeur propre de
+> $B$ change de signe en premier, et que, génériquement, la représentation irréductible de ce secteur détermine la
+> symétrie de la phase ordonnée.
 
 ## 12.5 Points de comparaison
 
@@ -493,9 +582,11 @@ Smidt 2022) construit des réseaux $E(3)$-équivariants à partir d'harmoniques 
 Clebsch–Gordan. **EMLP** (Finzi, Welling et Wilson 2021) traite n'importe quel groupe de matrices : il impose
 $\pi_2(g)T=T\pi_1(g)$ pour des générateurs discrets et $d\pi_2(X)T=Td\pi_1(X)$ pour des générateurs de l'algèbre de
 Lie, et calcule une base des solutions comme un noyau numérique — le problème linéaire de `dc.commutant_basis`. Les
-convolutions de groupe (Cohen et Welling 2016) sont le cas de la représentation régulière, et Kondor et Trivedi (2018)
-montrent que, pour des cartes de caractéristiques sur des espaces homogènes d'un groupe compact, les couches
-linéaires équivariantes sont des convolutions généralisées. Pour les permutations, DeepSets (Zaheer et al. 2017) et
+convolutions de groupe (Cohen et Welling 2016) sont le cas $\Omega_1=\Omega_2=G$ du lemme 12.1, $G$ agissant sur
+lui-même par multiplication à gauche : $(y,x)$ et $(y',x')$ sont dans la même orbite si et seulement si
+$x^{-1}y=x'^{-1}y'$ (dans ce cas, $g=x'x^{-1}$ envoie une paire sur l'autre), donc les applications équivariantes sont
+les $(Tv)(y)=\sum_xf(x^{-1}y)v(x)$, les convolutions par des fonctions $f$ sur $G$. Kondor et Trivedi (2018) étudient
+la question analogue pour les espaces homogènes de groupes compacts, que ce cours ne traite pas. Pour les permutations, DeepSets (Zaheer et al. 2017) et
 les bases de Maron et al. (2019) sont le corollaire 12.2.
 
 La bibliothèque ne fournit ni convolutions sur des grilles, ni noyaux orientables sur des espaces continus, ni
@@ -505,8 +596,8 @@ ne vise pas les grands $n$ : $V$ est une matrice dense $n\times n$ et la décomp
 `dc.from_generators` ; section 4.3). Ce qu'elle apporte, c'est la **structure** de l'espace des solutions : une base du
 commutant est une liste de matrices, tandis que la décomposition identifie le commutant à la $*$-algèbre
 $\bigoplus_cM_{m_c}$. Les produits, les adjoints, l'unitarité, la positivité et le calcul fonctionnel agissent alors
-bloc par bloc sur de petites matrices, avec des gradients (proposition 12.6), et `to_commutant`/`from_commutant`
-font la traduction entre les deux points de vue.
+bloc par bloc sur de petites matrices (proposition 12.6), la bibliothèque différencie à travers eux, et
+`to_commutant`/`from_commutant` font la traduction entre les deux points de vue.
 
 ## Exercices
 
@@ -526,10 +617,13 @@ font la traduction entre les deux points de vue.
    $x_1,\dots,x_N\in\mathbb C^n$. Écrivons $V^*x_i$ dans le secteur $c$ sous la forme
    $\sum_{a,j}(X_{i,c})_{aj}e_a\otimes e_j$ avec $X_{i,c}\in M_{k_c\times m_c}$, et soit $S_c\in M_{Nk_c\times m_c}$ la
    matrice obtenue en empilant $X_{1,c},\dots,X_{N,c}$. Montrer que les $T$ équivariantes telles que
-   $Tx_1=\dots=Tx_N=0$ forment un espace de dimension $\sum_cm_c(m_c-\operatorname{rank}S_c)$ ; pour des $x_i$
-   gaussiens, cette dimension est presque sûrement $\sum_cm_c\max(0,m_c-Nk_c)$. Pour la représentation des arêtes,
-   deux échantillons déterminent une couche équivariante, alors qu'une matrice $16\times16$ quelconque en demande
-   seize.
+   $Tx_1=\dots=Tx_N=0$ forment un espace de dimension $\sum_cm_c(m_c-\operatorname{rank}S_c)$ ; pour des vecteurs
+   $x_i$ gaussiens complexes standard indépendants, cette dimension est presque sûrement
+   $\sum_cm_c\max(0,m_c-Nk_c)$. En déduire qu'une $T$ équivariante est déterminée par $Tx_1,\dots,Tx_N$ (parmi les
+   applications équivariantes) si et seulement si cette dimension est $0$, et que, pour la représentation des arêtes,
+   deux échantillons gaussiens déterminent presque sûrement une couche équivariante et qu'un seul échantillon ne le
+   fait jamais, alors qu'une matrice $16\times16$ quelconque n'est jamais déterminée par moins de seize
+   échantillons.
 
 <details>
 <summary>Solutions</summary>
@@ -558,9 +652,9 @@ assert all((T[i, :, j] - (A_ if i == j else 0) - B_).abs().max() < 1e-12 for i i
    $H_{\mathbb R}$ désigne les matrices équivariantes réelles. Une base réelle de $H_{\mathbb R}$ est alors une base
    complexe de $\operatorname{Hom}_G$ : elle l'engendre, et une relation complexe $\sum_j(\alpha_j+i\beta_j)T_j=0$ avec
    des $T_j$ réelles se scinde en parties réelle et imaginaire. Dans le lemme 12.1, les indicatrices des orbites
-   forment une telle base réelle. (Les blocs $y_c$ du théorème 12.4 sont complexes même pour des données réelles :
-   $V$ est complexe en général, et le paramétrage par $\operatorname{Re}T$ utilise deux fois plus de paramètres réels
-   que nécessaire.)
+   forment une telle base réelle. (Les blocs $y_c$ du théorème 12.4 sont complexes même pour des données réelles,
+   car la $V$ calculée par la bibliothèque n'est pas nécessairement réelle ; paramétrer $\operatorname{Re}T$ par des
+   $y_c$ complexes utilise deux fois plus de paramètres réels que nécessaire.)
 
 3. (a) $(\pi(g)f(x))_{gy}=f(x)_y=f(x_y)=f((\pi(g)x)_{gy})$. (b) Pour $R(x_1,x_2)=(-x_2,x_1)$ et $x=(1,-1)$,
    $f(Rx)=f(1,1)=(1,1)$ mais $Rf(x)=R(1,0)=(0,1)$. (c) $\|\pi(g)x\|=\|x\|$, donc
@@ -581,13 +675,22 @@ assert max((gate(g @ x) - g @ gate(x)).abs().max().item() for g in G_edge) < 1e-
    de coefficients $X_{i,c}w_c^T$. Ainsi $Tx_i=0$ pour tout $i$ si et seulement si $S_cw_c^T=0$ pour tout $c$,
    c'est-à-dire si et seulement si chaque colonne de $w_c^T$ appartient à $\ker S_c$, un espace de dimension
    $m_c-\operatorname{rank}S_c$ : les $w_c$ ayant cette propriété forment un espace de dimension
-   $m_c(m_c-\operatorname{rank}S_c)$, et $\Phi$ est injective. Pour des $x_i$ gaussiens, $V^*x_i$ est gaussien ($V$
-   est unitaire), donc $S_c$ a des coefficients gaussiens indépendants et est presque sûrement de rang
-   $\min(Nk_c,m_c)$ : pour la sous-matrice carrée supérieure gauche de cette taille, $|\det|^2$ est un polynôme réel
-   en les parties réelles et imaginaires des coefficients, non identiquement nul (il vaut $1$ lorsque la sous-matrice
-   est l'identité), et un tel polynôme ne s'annule que sur un ensemble de mesure de Lebesgue nulle (démontré à la
-   section 4.3). Pour la représentation des arêtes, $(k,m)=(1,2),(2,1),(3,1),(3,3)$, seul le secteur $(1,2)$
-   contribue : $2\cdot(2-1)=2$ pour $N=1$, et $0$ pour $N=2$.
+   $m_c(m_c-\operatorname{rank}S_c)$, et $\Phi$ est injective. Pour des $x_i$ gaussiens, les coordonnées de $V^*x_i$
+   sont celles de $x_i$ dans la base orthonormée des colonnes de $V$, de nouveau des gaussiennes complexes standard
+   indépendantes (proposition A.16(a)), et indépendantes en $i$ ; donc $S_c$ est une matrice de Ginibre
+   $Nk_c\times m_c$, qui a une densité (proposition A.16(b)). Son rang est au plus $\min(Nk_c,m_c)$, avec égalité sauf
+   si la sous-matrice carrée supérieure gauche de cette taille est singulière ; le $|\det|^2$ de cette sous-matrice est
+   un polynôme réel en les parties réelles et imaginaires des coefficients, non identiquement nul (il vaut $1$ lorsque
+   la sous-matrice est l'identité), donc, d'après le corollaire A.7(b), le rang est presque sûrement
+   $\min(Nk_c,m_c)$. Pour la représentation des arêtes, $(k,m)=(1,2),(2,1),(3,1),(3,3)$ (la décomposition calculée),
+   seul le secteur $(1,2)$ contribue : $2\cdot(2-1)=2$ pour $N=1$, et $0$ pour $N=2$. Une matrice $16\times16$
+   quelconque est le cas du groupe trivial (un secteur, $k=1$, $m=16$) : la dimension est
+   $16(16-\operatorname{rank}S)\ge16(16-N)>0$ pour tout choix de $N<16$ échantillons, car
+   $\operatorname{rank}S\le N$, et presque sûrement $0$ pour $N=16$ échantillons gaussiens. Comme
+   $T\mapsto(Tx_1,\dots,Tx_N)$ est linéaire, deux applications équivariantes coïncident sur les échantillons si et
+   seulement si leur différence appartient à l'espace que l'on vient de calculer, ce qui donne le critère. Pour $N=1$,
+   l'espace est de dimension au moins $2$ pour *tout* $x_1$, car $\operatorname{rank}S_c\le Nk_c=1<m_c=2$ dans le
+   secteur $(1,2)$.
 
 ```python
 basis = D_edge.basis('commutant')                                # (15, 16, 16), Hilbert-Schmidt orthonormal
