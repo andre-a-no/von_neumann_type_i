@@ -273,6 +273,8 @@ err = equivariance_error(node_to_edge, G_node, G_edge)
 print(f"node -> edge: sectors k = {node_to_edge.D.k_factors}, a = {node_to_edge.a}, "
       f"{n_params} parameters, equivariance error {err:.1e}")
 assert n_params == bell[3] and err < 1e-12
+b = tuple(m - a for m, a in zip(node_to_edge.D.multiplicities, node_to_edge.a))
+assert node_to_edge.D.k_factors == (1, 2, 3, 3) and node_to_edge.a == [1, 0, 0, 1] and b == (2, 1, 1, 3)
 corners = node_to_edge.D.basis('commutant')[:, n:, :n].reshape(-1, 16 * n)   # Lemma 12.3: Q_2^* pi(G)' Q_1
 assert torch.linalg.matrix_rank(corners).item() == bell[3]
 ```
@@ -493,16 +495,80 @@ print(f"invariant quadratic polynomials: vertices {degree2(G_node):.4f}, edges {
 assert abs(degree2(G_node) - 2) < 1e-12 and abs(degree2(G_edge) - orbits2) < 1e-12 and orbits2 == 11
 ```
 
-Sobre $\mathbb C^4$ son $\sum_ix_i^2$ y $\sum_{i<j}x_ix_j$. Todos los grados se cuentan mediante la fórmula de Molien
-$\sum_d\dim\mathbb C[x]^G_dt^d=|G|^{-1}\sum_g\det(1-t\pi(g))^{-1}$, cuyo coeficiente de $t^2$ es (c) (la enunciamos
-sin demostración; B. Sturmfels, *Algorithms in Invariant Theory*, Springer 2008, teorema 2.2.1).
+Sobre $\mathbb C^4$ son $\sum_ix_i^2$ y $\sum_{i<j}x_ix_j$. La demostración de (c) funciona en todos los grados:
 
-> **Significado físico.** En la teoría de Landau de las transiciones de fase, la energía libre es un polinomio
-> invariante en un parámetro de orden real $x$, sobre el que $G$ actúa mediante matrices ortogonales reales. Su parte
-> cuadrática es $x^TBx$ con $B$ en el conmutante (pues $\pi(g)^T=\pi(g)^{-1}$), de modo que, por la
-> proposición 12.6(a), es diagonal por bloques sobre los sectores: la fase simétrica se vuelve inestable en el sector
-> en el que un valor propio de $B$ cambia de signo en primer lugar, y (genéricamente) la representación irreducible
-> de ese sector determina la simetría de la fase ordenada.
+**Proposición 12.8 (fórmula de Molien).** Sea $\mathbb C[x]_d$ el espacio de los polinomios homogéneos de grado $d$
+en $x_1,\dots,x_n$ y $\mathbb C[x]^G_d$ el subespacio de los invariantes, $p(\pi(g)x)=p(x)$ para todo $g$. Para
+$|t|<1$,
+$$
+\sum_{d\ge0}\dim\mathbb C[x]^G_d\,t^d=\frac1{|G|}\sum_{g\in G}\frac1{\det\big(1-t\pi(g)\big)} .
+$$
+Para una representación de permutación, $\dim\mathbb C[x]^G_d$ es el número de órbitas de $G$ sobre los monomios de
+grado $d$ (los multiconjuntos de $d$ elementos de $\Omega$). El coeficiente de $t^2$ es la proposición 12.7(c).
+
+*Demostración.* Para una matriz invertible $M$, sea $\phi_M(p)(x)=p(Mx)$ (sustitución). $\phi_M$ es lineal, aplica
+$\mathbb C[x]_d$ en sí mismo, y $\phi_N\circ\phi_M=\phi_{MN}$, luego $\phi_M$ es biyectiva con inversa
+$\phi_{M^{-1}}$. Por tanto, $\sigma(g)=\phi_{\pi(g)^{-1}}$ cumple $\sigma(g)\sigma(h)=\sigma(gh)$, y $p$ es invariante si
+y solo si $\sigma(g)p=p$ para todo $g$. Como en la demostración de la proposición 12.7(c),
+$M_d=|G|^{-1}\sum_g\sigma(g)$ sobre $\mathbb C[x]_d$ es idempotente con imagen $\mathbb C[x]^G_d$, luego
+$\dim\mathbb C[x]^G_d=\operatorname{Tr}M_d=|G|^{-1}\sum_g\operatorname{Tr}\sigma_d(g)$, con $\sigma_d(g)$ la restricción de
+$\sigma(g)$ a $\mathbb C[x]_d$. Fijemos $g$ y escribamos la unitaria $A=\pi(g)^{-1}$ como $A=R\Lambda R^{-1}$,
+$\Lambda=\operatorname{diag}(\lambda_1,\dots,\lambda_n)$, $|\lambda_i|=1$ (teorema 1.3). Con las formas lineales
+$\ell_i(x)=(R^{-1}x)_i$, los productos $\ell^\alpha=\prod_i\ell_i^{\alpha_i}=\phi_{R^{-1}}(x^\alpha)$, $|\alpha|=d$, forman
+una base de $\mathbb C[x]_d$ (la imagen de la base de monomios por la biyección $\phi_{R^{-1}}$), y como
+$R^{-1}A=\Lambda R^{-1}$,
+$$
+(\sigma(g)\ell^\alpha)(x)=\prod_i\big((R^{-1}Ax)_i\big)^{\alpha_i}=\prod_i\big(\lambda_i\ell_i(x)\big)^{\alpha_i}=\lambda^\alpha\ell^\alpha(x).
+$$
+Así, $\operatorname{Tr}\sigma_d(g)=\sum_{|\alpha|=d}\lambda^\alpha$. Para $|t|<1$, el producto de las $n$ series
+absolutamente convergentes $(1-t\lambda_i)^{-1}=\sum_{a\ge0}t^a\lambda_i^a$ puede desarrollarse y reagruparse por
+grados:
+$$
+\frac1{\det(1-tA)}=\prod_{i=1}^n\frac1{1-t\lambda_i}=\sum_\alpha t^{|\alpha|}\lambda^\alpha=\sum_{d\ge0}t^d\operatorname{Tr}\sigma_d(g).
+$$
+Promediar sobre $g$ y sustituir $g$ por $g^{-1}$ (de modo que $A=\pi(g)$) da la fórmula; ambos miembros convergen,
+pues $\dim\mathbb C[x]^G_d\le\dim\mathbb C[x]_d=\binom{n+d-1}d$. Para una representación de permutación,
+$(\pi(g)^{-1}x)_y=x_{gy}$, de modo que $\sigma(g)$ aplica el monomio $\prod_jx_{y_j}$ en el monomio $\prod_jx_{gy_j}$:
+$G$ permuta los monomios de grado $d$, un polinomio es invariante si y solo si sus coeficientes son constantes en las
+órbitas, y las sumas sobre las órbitas forman una base de $\mathbb C[x]^G_d$. $\square$
+
+(Es el teorema de Molien de 1897; para profundizar, véase B. Sturmfels, *Algorithms in Invariant Theory*, Springer
+2008, sección 2.2.) El código desarrolla el miembro derecho hasta $t^4$, multiplicando por una serie geométrica por
+cada valor propio, y lo compara con las órbitas de monomios; para $S_4$ sobre $\mathbb C^4$, los recuentos
+$1,1,2,3,5$ son las particiones de $d$ en a lo sumo cuatro partes (las órbitas de multiconjuntos están determinadas
+por sus multiplicidades, ordenadas).
+
+```python
+def molien(G, d_max):
+    """Coefficients of |G|^{-1} sum_g det(1 - t pi(g))^{-1} up to t^d_max: products of geometric series."""
+    lam = torch.linalg.eigvals(G)                                # (|G|, n), |lambda| = 1
+    c = torch.zeros(G.shape[0], d_max + 1, dtype=dt)
+    c[:, 0] = 1
+    for i in range(lam.shape[1]):                                # multiply by 1 / (1 - t lambda_i)
+        for d in range(1, d_max + 1):
+            c[:, d] = c[:, d] + lam[:, i] * c[:, d - 1]
+    return c.mean(0)
+
+def monomial_orbits(G, d):
+    """Orbits of G on the monomials of degree d, i.e. on the multisets of d points of Omega."""
+    act = [g.real.argmax(0).tolist() for g in G]                 # pi(g) e_x = e_{act[x]}
+    mons = itertools.combinations_with_replacement(range(G.shape[-1]), d)
+    return len({min(tuple(sorted(a[x] for x in m)) for a in act) for m in mons})
+
+for G in (G_node, G_edge):
+    series, counts = molien(G, 4), [monomial_orbits(G, d) for d in range(5)]
+    print("Molien series:", [f"{v.real:.4f}" for v in series], " orbits of monomials:", counts)
+    assert (series - torch.tensor(counts, dtype=dt)).abs().max() < 1e-9          # Proposition 12.8
+assert [monomial_orbits(G_node, d) for d in range(5)] == [1, 1, 2, 3, 5] and monomial_orbits(G_edge, 2) == orbits2
+```
+
+> **Significado físico** (interpretación física, no un teorema de este curso). En la teoría de Landau de las
+> transiciones de fase, la energía libre es un polinomio invariante en un parámetro de orden real $x$, sobre el que
+> $G$ actúa mediante matrices ortogonales reales. Su parte cuadrática es $x^TBx$ con $B$ en el conmutante (pues
+> $\pi(g)^T=\pi(g)^{-1}$), de modo que, por la proposición 12.6(a), es diagonal por bloques sobre los sectores. La
+> teoría de Landau postula entonces que la fase simétrica se vuelve inestable en el sector en el que un valor propio
+> de $B$ cambia de signo en primer lugar, y que, genéricamente, la representación irreducible de ese sector determina
+> la simetría de la fase ordenada.
 
 ## 12.5 Con qué comparar
 
@@ -513,9 +579,11 @@ $E(3)$-equivariantes a partir de armónicos esféricos y de productos tensoriale
 Welling y Wilson 2021) trata cualquier grupo de matrices: impone $\pi_2(g)T=T\pi_1(g)$ para generadores discretos y
 $d\pi_2(X)T=Td\pi_1(X)$ para generadores del álgebra de Lie, y calcula una base de las soluciones como un núcleo
 numérico, que es el problema lineal de `dc.commutant_basis`. Las convoluciones de grupo (Cohen y Welling 2016) son el
-caso de la representación regular, y Kondor y Trivedi (2018) muestran que, para mapas de características sobre
-espacios homogéneos de un grupo compacto, las capas lineales equivariantes son convoluciones generalizadas. Para
-permutaciones, DeepSets (Zaheer et al. 2017) y las bases de Maron et al. (2019) son el corolario 12.2.
+caso $\Omega_1=\Omega_2=G$ del lema 12.1, con $G$ actuando sobre sí mismo por multiplicación a la izquierda: $(y,x)$ e
+$(y',x')$ están en la misma órbita si y solo si $x^{-1}y=x'^{-1}y'$ (en tal caso, $g=x'x^{-1}$ lleva un par al otro),
+de modo que las aplicaciones equivariantes son $(Tv)(y)=\sum_xf(x^{-1}y)v(x)$, las convoluciones con funciones $f$
+sobre $G$. Kondor y Trivedi (2018) estudian la cuestión análoga para espacios homogéneos de grupos compactos, que
+este curso no trata. Para permutaciones, DeepSets (Zaheer et al. 2017) y las bases de Maron et al. (2019) son el corolario 12.2.
 
 La biblioteca no proporciona convoluciones sobre rejillas, núcleos orientables sobre espacios continuos,
 descomposiciones sobre $\mathbb R$ (tipos real, complejo y cuaterniónico; el ejercicio 2 trata las matrices reales)
@@ -524,8 +592,8 @@ un grupo dado por todos sus elementos (los generadores de álgebras de Lie pasan
 sección 4.3). Lo que aporta es la **estructura** del espacio de soluciones: una base del conmutante es una lista de
 matrices, mientras que la descomposición identifica el conmutante con la $*$-álgebra $\bigoplus_cM_{m_c}$. Los
 productos, los adjuntos, la unitariedad, la positividad y el cálculo funcional actúan entonces bloque a bloque sobre
-matrices pequeñas, con gradientes (proposición 12.6), y `to_commutant`/`from_commutant` traducen entre las dos
-imágenes.
+matrices pequeñas (proposición 12.6), la biblioteca diferencia a través de ellos, y
+`to_commutant`/`from_commutant` traducen entre las dos imágenes.
 
 ## Ejercicios
 
@@ -545,8 +613,11 @@ imágenes.
    $V^*x_i$ en el sector $c$ como $\sum_{a,j}(X_{i,c})_{aj}e_a\otimes e_j$ con $X_{i,c}\in M_{k_c\times m_c}$, y sea
    $S_c\in M_{Nk_c\times m_c}$ la matriz formada apilando $X_{1,c},\dots,X_{N,c}$. Demuestre que las $T$
    equivariantes con $Tx_1=\dots=Tx_N=0$ forman un espacio de dimensión $\sum_cm_c(m_c-\operatorname{rank}S_c)$;
-   para $x_i$ gaussianos esto es $\sum_cm_c\max(0,m_c-Nk_c)$ casi seguramente. Para la representación de aristas,
-   dos muestras determinan una capa equivariante, mientras que una matriz $16\times16$ arbitraria necesita dieciséis.
+   para vectores $x_i$ gaussianos complejos estándar independientes esto es $\sum_cm_c\max(0,m_c-Nk_c)$ casi
+   seguramente. Deduzca que una $T$ equivariante está determinada por $Tx_1,\dots,Tx_N$ (entre las aplicaciones
+   equivariantes) si y solo si esta dimensión es $0$, y que para la representación de aristas dos muestras
+   gaussianas determinan una capa equivariante casi seguramente y una sola muestra nunca lo hace, mientras que una
+   matriz $16\times16$ arbitraria nunca está determinada por menos de dieciséis muestras.
 
 <details>
 <summary>Soluciones</summary>
@@ -575,8 +646,9 @@ assert all((T[i, :, j] - (A_ if i == j else 0) - B_).abs().max() < 1e-12 for i i
    las matrices equivariantes reales. Una base real de $H_{\mathbb R}$ es entonces una base compleja de
    $\operatorname{Hom}_G$: lo genera, y una relación compleja $\sum_j(\alpha_j+i\beta_j)T_j=0$ con $T_j$ reales se
    separa en parte real y parte imaginaria. En el lema 12.1, las indicadoras de las órbitas son una base real de este
-   tipo. (Los bloques $y_c$ del teorema 12.4 son complejos incluso para datos reales: $V$ es compleja en general, y la
-   parametrización mediante $\operatorname{Re}T$ usa el doble de parámetros reales de los necesarios.)
+   tipo. (Los bloques $y_c$ del teorema 12.4 son complejos incluso para datos reales, ya que la $V$ calculada por la
+   biblioteca no tiene por qué ser real; parametrizar $\operatorname{Re}T$ mediante $y_c$ complejos usa el doble de
+   parámetros reales de los necesarios.)
 
 3. (a) $(\pi(g)f(x))_{gy}=f(x)_y=f(x_y)=f((\pi(g)x)_{gy})$. (b) Para $R(x_1,x_2)=(-x_2,x_1)$ y $x=(1,-1)$,
    $f(Rx)=f(1,1)=(1,1)$, pero $Rf(x)=R(1,0)=(0,1)$. (c) $\|\pi(g)x\|=\|x\|$, luego
@@ -597,13 +669,20 @@ assert max((gate(g @ x) - g @ gate(x)).abs().max().item() for g in G_edge) < 1e-
    de coeficientes $X_{i,c}w_c^T$. Por tanto, $Tx_i=0$ para todo $i$ si y solo si $S_cw_c^T=0$ para todo $c$, es
    decir, si y solo si cada columna de $w_c^T$ está en $\ker S_c$, un espacio de dimensión
    $m_c-\operatorname{rank}S_c$: las $w_c$ con esta propiedad forman un espacio de dimensión
-   $m_c(m_c-\operatorname{rank}S_c)$, y $\Phi$ es inyectiva. Para $x_i$ gaussianos, $V^*x_i$ es gaussiano ($V$ es
-   unitaria), de modo que $S_c$ tiene entradas gaussianas independientes y rango $\min(Nk_c,m_c)$ casi seguramente:
-   para la submatriz cuadrada superior izquierda de ese tamaño, $|\det|^2$ es un polinomio real en las partes real e
-   imaginaria de las entradas, no idénticamente nulo (vale $1$ cuando la submatriz es la identidad), y un polinomio
-   así solo se anula en un conjunto de medida de Lebesgue nula (demostrado en la sección 4.3). Para la
-   representación de aristas, $(k,m)=(1,2),(2,1),(3,1),(3,3)$, solo contribuye el sector $(1,2)$: $2\cdot(2-1)=2$
-   para $N=1$, y $0$ para $N=2$.
+   $m_c(m_c-\operatorname{rank}S_c)$, y $\Phi$ es inyectiva. Para $x_i$ gaussianos, las coordenadas de $V^*x_i$ son
+   las de $x_i$ en la base ortonormal de las columnas de $V$, de nuevo gaussianas complejas estándar independientes
+   (proposición A.16(a)), e independientes en $i$; así, $S_c$ es una matriz de Ginibre $Nk_c\times m_c$, que tiene
+   densidad (proposición A.16(b)). Su rango es a lo sumo $\min(Nk_c,m_c)$, con igualdad salvo que la submatriz
+   cuadrada superior izquierda de ese tamaño sea singular; $|\det|^2$ de esa submatriz es un polinomio real en las
+   partes real e imaginaria de las entradas, no idénticamente nulo (vale $1$ cuando la submatriz es la identidad), de
+   modo que por el corolario A.7(b) el rango es $\min(Nk_c,m_c)$ casi seguramente. Para la representación de
+   aristas, $(k,m)=(1,2),(2,1),(3,1),(3,3)$ (la descomposición calculada), solo contribuye el sector $(1,2)$:
+   $2\cdot(2-1)=2$ para $N=1$, y $0$ para $N=2$. Una matriz $16\times16$ arbitraria es el caso del grupo trivial
+   (un sector, $k=1$, $m=16$): la dimensión es $16(16-\operatorname{rank}S)\ge16(16-N)>0$ para cualquier elección de
+   $N<16$ muestras, pues $\operatorname{rank}S\le N$, y $0$ casi seguramente para $N=16$ muestras gaussianas. Como
+   $T\mapsto(Tx_1,\dots,Tx_N)$ es lineal, dos aplicaciones equivariantes coinciden en las muestras si y solo si su
+   diferencia está en el espacio que se acaba de calcular, lo que da el criterio. Para $N=1$ el espacio tiene
+   dimensión al menos $2$ para *todo* $x_1$, porque $\operatorname{rank}S_c\le Nk_c=1<m_c=2$ en el sector $(1,2)$.
 
 ```python
 basis = D_edge.basis('commutant')                                # (15, 16, 16), Hilbert-Schmidt orthonormal

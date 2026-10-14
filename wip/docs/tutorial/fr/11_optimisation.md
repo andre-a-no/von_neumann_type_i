@@ -295,13 +295,15 @@ assert abs(z_max - exact) < 1e-12 and abs(z_min + exact) < 1e-12 and abs(exact -
 ## 11.3 Une inégalité de traces avec cas d'égalité
 
 Pour $X=X^*$, soit $X_\pm=f_\pm(X)$ avec $f_+(t)=\max(t,0)$, $f_-(t)=\max(-t,0)$. Alors $X_\pm\ge0$, $X=X_+-X_-$,
-$|X|=X_++X_-$ et $X_+X_-=0$ (théorème 1.5(c)).
+$|X|=X_++X_-$ et $X_+X_-=0$ (théorème 1.5(c), et 1.5(e) pour $|X|=(X^2)^{1/2}=h(X)$ avec
+$h(t)=\sqrt{t^2}=|t|=f_+(t)+f_-(t)$ ; corollaire 1.4(3) pour la positivité).
 
 **Lemme 11.8.** Pour $A,B\ge0$ dans $M_n(\mathbb C)$, $\|A-B\|_1\le\operatorname{Tr}A+\operatorname{Tr}B$, avec égalité si et
 seulement si $AB=0$.
 
-*Démonstration.* Soient $H=A-B$ et $Q=g(H)$ avec $g=1$ sur $(0,\infty)$ et $g=0$ ailleurs. Comme $|t|=t(2g(t)-1)$,
-on a $|H|=H(2Q-1)$ et
+*Démonstration.* Soient $H=A-B$ et $Q=g(H)$ avec $g=1$ sur $(0,\infty)$ et $g=0$ ailleurs ; $Q$ est un projecteur,
+car $g=\bar g=g^2$ (théorème 1.5(c)). Comme $|t|=t(2g(t)-1)$, on a $|H|=H(2Q-1)$ (théorème 1.5(c),(e)) et, en utilisant
+$\operatorname{Tr}(AR)=\operatorname{Tr}(RAR)$ pour les projecteurs $R=Q,1-Q$ (cyclicité),
 $$
 \|H\|_1=\operatorname{Tr}\big(A(2Q-1)\big)-\operatorname{Tr}\big(B(2Q-1)\big)
 =\operatorname{Tr}A+\operatorname{Tr}B-2\operatorname{Tr}\big((1-Q)A(1-Q)\big)-2\operatorname{Tr}(QBQ).
@@ -348,11 +350,9 @@ indépendants de densité $\pi^{-1}e^{-|z|^2}$ ; recette de Mezzadri), indépend
 $V\in M_k(\mathbb C)$, $VQ$ a la même loi que $Q$. L'unitaire $\bigoplus_cQ_c$ à blocs indépendants est distribué
 selon la loi de Haar sur le groupe unitaire de $\mathcal M$.
 
-*Démonstration.* C'est le théorème 5.3 (l'invariance à gauche est l'étape d'équivariance de sa démonstration) et le
-corollaire 5.4. $\square$
-
-(Pour la concentration de la mesure et davantage sur ces groupes, voir E. Meckes, *The Random Matrix Theory of the
-Classical Compact Groups*, Cambridge 2019.)
+*Démonstration.* C'est le théorème 5.3 (l'invariance à gauche est l'étape d'équivariance de sa démonstration ; la
+loi est identifiée à la mesure de Haar par le lemme d'unicité 5.1, dont l'étape de théorie de la mesure est le
+corollaire A.2) et le corollaire 5.4. $\square$
 
 **Proposition 11.11.** Pour $U\in U(k)$ de loi de Haar et $A\in M_k(\mathbb C)$ : $\mathbb E\operatorname{Tr}(AU)=0$ et
 $\mathbb E|\operatorname{Tr}(AU)|^2=\|A\|_2^2/k$.
@@ -372,18 +372,22 @@ $$
 \mathbb P\big(|\operatorname{Tr}(XUY)|\ge\operatorname{Tr}(XY)\big)\le\frac{b^4}{a^4k^2}.
 $$
 
-*Démonstration.* L'égalité résulte de la proposition 11.11 pour $A=YX$ et de la proposition 3.9.
-$\sum_is_i^2\le(\sum_is_i)^2$ donne $1/\sqrt k$. Comme $s_1(A)\le\|Y\|\|X\|\le b^2$ et
-$s_k(A)=\min_{\|v\|=1}\|YXv\|\ge a^2$, on a $\|A\|_2^2\le kb^4$ et $\|A\|_1\ge ka^2$. Enfin
+*Démonstration.* L'égalité résulte de la proposition 11.11 pour $A=YX$ (car
+$\operatorname{Tr}(XUY)=\operatorname{Tr}(AU)$) et de la proposition 3.9. Comme
+$\|A\|_2^2=\sum_is_i^2\le(\sum_is_i)^2=\|A\|_1^2$ (section 1.4), le rapport est $\le1/\sqrt k$. Comme
+$\|Av\|=\||A|v\|$ (section 1.4), en diagonalisant $|A|$ on obtient $s_k(A)=\min_{\|v\|=1}\|Av\|$ et
+$s_1(A)=\max_{\|v\|=1}\|Av\|$ ; et $\|Xv\|^2=\langle v,X^2v\rangle\in[a^2,b^2]$ pour $v$ unitaire (corollaire 1.4(3)
+pour $X^2-a^2$ et $b^2-X^2$), de même pour $Y$. Par conséquent $a^2\le s_k(A)\le s_1(A)\le b^2$, $\|A\|_2^2\le kb^4$ et
+$\|A\|_1\ge ka^2$. Enfin
 $\operatorname{Tr}(XY)=\operatorname{Tr}(X^{1/2}YX^{1/2})\ge a\operatorname{Tr}X\ge ka^2$, et l'inégalité de Markov pour
 $|\operatorname{Tr}(XUY)|^2$ majore la probabilité par $(kb^4/k)/(ka^2)^2$. $\square$
 
 Ainsi, $N$ échantillons de Haar trouvent une violation de $|\operatorname{Tr}(XUY)|\le\operatorname{Tr}(XY)$ avec une
-probabilité d'au plus $Nb^4/(a^4k^2)$, bien qu'il en existe une pour tout couple qui ne commute pas. La réalité est
-plus radicale encore : $f(U)=|\operatorname{Tr}(AU)|$ est lipschitzienne de constante $L=\|A\|_2$ pour $\|U-V\|_2$, donc
-$\mathbb P(f\ge\mathbb Ef+t)\le e^{-ckt^2/L^2}$ avec une constante absolue $c>0$ (concentration de la mesure, énoncée
-sans démonstration ; Meckes, *loc. cit.*, chap. 5) : ici, un exposant de l'ordre de $k^2a^4/b^4$. Le code vérifie la
-proposition 11.11 et affiche, pour des spectres uniformes dans $[0.2,1.2]$ ($b/a=6$), le rapport du
+probabilité d'au plus $Nb^4/(a^4k^2)$ (une réunion de $N$ événements), bien qu'il en existe une pour tout couple qui
+ne commute pas (proposition 3.9). La borne n'est informative que pour $k>\sqrt N\,b^2/a^2$ (pour $b/a=6$ et $N=2000$ :
+$k>1609$) ; numériquement, les échantillons manquent la violation dès des $k$ bien plus petits (ci-dessous). Le code
+vérifie la proposition 11.11 par Monte-Carlo (la moyenne empirique est à moins de cinq erreurs standard de la valeur
+exacte, pour ce calcul à graine fixée) et affiche, pour des spectres uniformes dans $[0.2,1.2]$ ($b/a=6$), le rapport du
 corollaire 11.12, $\sup z$ et le meilleur $z$ parmi $2000$ échantillons, tous deux rapportés à $\operatorname{Tr}(XY)$.
 
 ```python
@@ -411,19 +415,26 @@ for k in (2, 4, 8, 16, 32):
     assert nuc > trXY and best < nuc and (k < 4 or best < trXY)            # from k = 4 on: no violation found
 ```
 
-Le rapport décroît comme $1/k$, et à partir de $k=4$ le meilleur échantillon n'atteint même pas $z=0$. Les extrêmes
-sont des ensembles de mesure de Haar minuscule, qu'une méthode de gradient atteint directement. Pour le couple
-`Xf, Yf`, les deux extrêmes en $U$ sont connus :
+*Observation numérique* (le tableau affiché ; affirmée seulement pour ce calcul à graine fixée) : le rapport reste
+sous la borne démontrée $\min(1/\sqrt k,b^2/(a^2k))$ et est à peu près divisé par deux chaque fois que $k$ double,
+c'est-à-dire qu'il décroît comme $1/k$, et à partir de $k=4$ le meilleur des $2000$ échantillons n'atteint même pas
+$z=0$. Une recherche par gradient, en revanche, s'approche des deux extrêmes dans le calcul ci-dessous (là encore une
+observation numérique). Pour le couple `Xf, Yf`, les deux extrêmes en $U$ sont connus :
 
 **Lemme 11.13.** Si $k\ge2$, alors $\min_U|\operatorname{Tr}(AU)|=0$ pour toute $A\in M_k(\mathbb C)$.
 
 *Démonstration.* Soient $A=W\Sigma V^*$ et $P$ le décalage cyclique, $Pe_i=e_{(i\bmod k)+1}$, dont la diagonale est
 nulle pour $k\ge2$. Pour $U=VPW^*$, $\operatorname{Tr}(AU)=\operatorname{Tr}(\Sigma P)=0$. $\square$
 
-Ainsi $\inf_Uz=-\operatorname{Tr}(XY)$ et $\sup_Uz=\|YX\|_1-\operatorname{Tr}(XY)$. Un seul appel à `extremize` trouve les
-deux, avec $12$ départs qui maximisent $z$ et $12$ qui maximisent $-z$. L'échantillonnage s'approche de l'infimum,
-qui est voisin des valeurs typiques ($|\operatorname{Tr}(XUY)|$ est typiquement de l'ordre de $\|YX\|_2/\sqrt k$), mais
-pas du supremum :
+Ainsi $\inf_Uz=-\operatorname{Tr}(XY)$ et $\sup_Uz=\|YX\|_1-\operatorname{Tr}(XY)$ (proposition 3.9). Un seul appel à
+`extremize` approche les deux, avec $12$ départs qui maximisent $z$ et $12$ qui maximisent $-z$ (à une précision
+relative de $10^{-3}$ dans ce calcul, affirmée ci-dessous). D'après la proposition 11.11, la moyenne quadratique de
+$|\operatorname{Tr}(XUY)|$ vaut $\|YX\|_2/\sqrt k$ ; avec les bornes de la démonstration du corollaire 11.12 (spectres
+dans $[a,b]$), $\mathbb E|\operatorname{Tr}(XUY)|^2\le b^4$ et $\operatorname{Tr}(XY)\ge ka^2$, donc l'inégalité de Markov
+donne $\mathbb P\big(z\ge-(1-\varepsilon)\operatorname{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)$ pour $\varepsilon>0$ :
+pour $k$ grand, $z$ est proche de son infimum avec grande probabilité.
+*Observation numérique* (affirmée pour ce calcul à graine fixée) : l'échantillonnage arrive à moins de $1\,\%$ de
+l'infimum, mais n'atteint même pas $z=0$, alors que le supremum est positif :
 
 ```python
 trXY = (Xf @ Yf).trace.real
@@ -442,29 +453,33 @@ assert z_mc.min().item() - inf_exact < 1e-2 * abs(inf_exact)               # sam
 assert z_mc.max().item() < 0                                               # ... but misses the violation
 ```
 
-> **Interprétation physique.** La concentration de la mesure est la forme mathématique de la **typicité** en
-> mécanique statistique : en grande dimension, presque tout état ou toute évolution donne la même valeur d'une
-> grandeur macroscopique. Une inégalité optimale se joue sur des configurations finement ajustées — bases propres
-> alignées, spectres à deux niveaux — qu'un unitaire aléatoire (un circuit aléatoire, une matrice de diffusion
-> aléatoire) ne produit pour ainsi dire jamais.
+> **Interprétation physique** (interprétation physique, pas un théorème de ce cours). Le corollaire 11.12 est un
+> exemple faible, mais démontrable, de ce que la mécanique statistique appelle **typicité** : en grande dimension,
+> presque tout état ou toute évolution est censé donner à peu près la même valeur d'une grandeur macroscopique. Une
+> inégalité optimale se joue sur des configurations finement ajustées — bases propres alignées, spectres à deux
+> niveaux — qu'un unitaire aléatoire (un circuit aléatoire, une matrice de diffusion aléatoire) produit rarement.
 
 ## 11.5 Recherche multi-départs des enveloppes
 
 `optimize.extremize(objective, params, maximize)` exécute Adam en `rounds` tours de `steps` pas (taux
-d'apprentissage `lr * decay**round`), recentre les cartes unitaires après chaque tour et renvoie, **pour chaque
-départ**, la meilleure valeur atteinte. Chaque élément du lot est un départ indépendant avec ses propres
-emplacements, signes, $U_0$ et contraste. Les signes de `SelfAdjointParam` sont discrets : entre les tours,
-`discrete_step` essaie huit changements de signe individuels par départ, l'un après l'autre, et conserve chaque
-changement qui améliore l'objectif.
+d'apprentissage `lr * decay**round`) sur la perte $\mp\sum_b\text{objective}_b$, recentre les cartes unitaires après
+chaque tour et renvoie, **pour chaque départ**, la plus grande (la plus petite, pour `maximize=False`) valeur de
+l'objectif parmi celles calculées aux itérés du gradient et une fois au point final. Chaque élément du lot est un
+départ indépendant avec ses propres emplacements, signes, $U_0$ et contraste : Adam agit coordonnée par coordonnée,
+donc si la $b$-ième composante de l'objectif ne dépend que des $b$-ièmes paramètres (comme dans tous les objectifs
+ci-dessous), les départs n'interagissent pas. Les signes de `SelfAdjointParam` sont discrets : entre les tours,
+`discrete_step` essaie huit changements de signe individuels par départ (chacun en un emplacement uniformément
+aléatoire), l'un après l'autre, et conserve chaque changement qui améliore l'objectif.
 
-Comme chaque itéré est admissible (proposition 11.2), chaque valeur renvoyée est atteinte : une maximisation donne
-une **borne inférieure** du supremum, une minimisation une borne supérieure de l'infimum, et rien de plus — une
-recherche locale peut s'arrêter en un extremum local. L'autre sens exige une démonstration, comme le
-corollaire 11.7 et la proposition 11.9, ou une relaxation convexe (section 11.6). Une enveloppe calculée est
-confrontée (i) à des formes closes ; (ii) à des configurations construites à la main, telles que des sommes directes
-de solutions plus petites, en dessous desquelles elle ne doit pas tomber ; (iii) à des échantillons structurés
-(spectres à deux niveaux, bases de permutation) qui s'approchent des extrêmes en toute dimension, contrairement aux
-échantillons de Haar (`scripts/bounds_checks.py`).
+En arithmétique exacte, chaque itéré est admissible (la proposition 11.2 et les remarques qui la suivent), donc chaque
+valeur renvoyée est la valeur de $z$ en un point admissible ; en virgule flottante, c'est cette valeur aux erreurs
+d'arrondi près (les assertions ci-dessous tolèrent $10^{-12}$). Par conséquent, une maximisation donne une **borne
+inférieure** du supremum, une minimisation une borne supérieure de l'infimum, et rien de plus — une recherche locale
+peut s'arrêter en un extremum local. L'autre sens exige une démonstration, comme le corollaire 11.7 et la
+proposition 11.9, ou une relaxation convexe (section 11.6). Une enveloppe calculée est confrontée (i) à des formes
+closes ; (ii) à des configurations construites à la main, telles que des sommes directes de solutions plus petites,
+en dessous desquelles elle ne doit pas tomber ; (iii) à des échantillons structurés (spectres à deux niveaux, bases
+de permutation), dont les valeurs sont d'autres valeurs atteintes.
 
 **Proposition 11.14 (enveloppe inférieure d'Exp. 1).** Supposons tous les $k_c\ge2$. Sur $X\in\mathcal P_\delta$,
 $Y\ge0$ avec $\lambda_{\max}(Y)=1$ et les unitaires $U\in\mathcal M$, $\ \min z=-\big(D-2\delta/(1+\delta)\big)$.
@@ -475,13 +490,19 @@ $z\ge-\operatorname{Tr}(XY)\ge-(D-2\delta/(1+\delta))$. L'égalité a lieu pour 
 fois et $1$ sinon, $Y=1$, et $U=\bigoplus_cU_c$ avec $\operatorname{Tr}(X_cU_c)=0$ (lemme 11.13). $\square$
 
 Le code vérifie la proposition 11.14 sur $M_2\oplus M_2$, le corollaire 11.7 sur $M_3\oplus M_3$ (les deux contrastes
-prescrits, $k=3$ impair) et la proposition 11.9 ; suprema et infima partagent un même appel, comme ci-dessus. Le
-mot-clé `is_self_adjoint` choisit l'algorithme de la norme trace (valeurs singulières, ou valeurs propres pour
-$YXY$) sans test à chaque pas. La dernière vérification est de type (ii) : le $z$ d'Exp. 3 est additif sur les
-sommes directes, et le contraste d'une somme directe est le plus grand contraste de ses termes (exercice 3), donc
+prescrits, $k=3$ impair) et la proposition 11.9 ; suprema et infima partagent un même appel, comme ci-dessus. Les
+assertions unilatérales (aucune valeur renvoyée au-delà d'un extrême démontré) sont des conséquences de ces
+théorèmes ; les assertions selon lesquelles la recherche arrive à la tolérance indiquée de l'extrême sont des
+observations numériques de ce calcul à graine fixée. Le mot-clé `is_self_adjoint` choisit l'algorithme de la norme
+trace (valeurs singulières, ou valeurs propres pour $YXY$) sans test à chaque pas. La dernière vérification est de
+type (ii) : le $z$ d'Exp. 3 est additif sur les sommes directes, et le contraste d'une somme directe est le plus grand
+contraste de ses termes (exercice 3), donc, pour les enveloppes d'Exp. 3 avec $\Delta(Y)$ libre dans $[0,0.999]$
+comme dans le code,
 $$
-\overline z_{M_2\oplus M_2}(\delta)\ \ge\ \overline z_{M_2}(\delta)+\max_{\delta'\le\delta}\overline z_{M_2}(\delta').
+\overline z_{M_2\oplus M_2}(\delta)\ \ge\ \overline z_{M_2}(\delta)+\sup_{\delta'\le\delta}\overline z_{M_2}(\delta');
 $$
+en particulier, la somme de deux valeurs atteintes sur $M_2$ aux contrastes $\delta$ et $\delta'\le\delta$ est une
+valeur atteinte sur $M_2\oplus M_2$ au contraste $\delta$.
 
 ```python
 torch.manual_seed(1)
@@ -537,23 +558,25 @@ assert inf3 >= -1e-12 and inf3 < 1e-6                                       # Pr
 assert sup_M22 >= direct_sum - 5e-3 * direct_sum                           # (ii), up to 0.5 %
 ```
 
-La recherche sur $M_2\oplus M_2$ reste en dessous de la somme directe d'environ $0.2\,\%$ : elle n'a pas entièrement
-convergé, et la meilleure borne inférieure de $\overline z_{M_2\oplus M_2}(0.5)$ est le plus grand des deux nombres —
-détecter cela est le but de la vérification (ii). Les valeurs pour $M_2$ coïncident à $10^{-4}$ près avec
-$(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2$, où $d=0.999$ est le plus grand contraste admis pour $Y$ :
-une forme close que l'article qui accompagne la bibliothèque a observée numériquement (dans des algèbres réelles)
-sans pouvoir la démontrer ; le code ne l'affirme pas. Pour des blocs plus grands, les enveloppes supérieures de
-Exp. 1 et Exp. 3 ne sont pas connues sous forme close, à notre connaissance ; les courbes calculées sont alors des
-bornes inférieures et des conjectures, rien de plus.
+*Observations numériques* (les valeurs affichées par ce calcul). La recherche sur $M_2\oplus M_2$ reste en dessous de
+la somme directe d'environ $0.2\,\%$ : elle n'a pas entièrement convergé, et la meilleure borne inférieure de
+$\overline z_{M_2\oplus M_2}(0.5)$ est le plus grand des deux nombres — détecter cela est le but de la
+vérification (ii). Les valeurs pour $M_2$ coïncident à $10^{-4}$ près avec
+$(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2$, où $d=0.999$ est le plus grand contraste admis pour $Y$.
+Cette forme close n'est **pas** un théorème de ce cours : l'article qui accompagne la bibliothèque l'a observée
+numériquement (dans des algèbres réelles) sans la démontrer, et le code l'affiche sans rien affirmer à son sujet.
+Pour des blocs plus grands, nous ne connaissons pas de forme close des enveloppes supérieures d'Exp. 1 et d'Exp. 3 ;
+les courbes calculées sont alors des bornes inférieures (des valeurs atteintes), rien de plus.
 
 ## 11.6 Points de comparaison
 
 **Manopt**, **pymanopt** et **geoopt** fournissent des variétés matricielles (variétés de Stiefel, groupes orthogonaux
 et unitaires) avec des rétractions telles que QR, polaire ou de Cayley, et des solveurs riemanniens (gradients
-conjugués, régions de confiance, Adam riemannien) souvent plus efficaces qu'Adam dans une carte recentrée. **cvxpy**
-avec un solveur SDP résout des problèmes convexes en variables opérateurs jusqu'à l'optimalité globale, avec un
-certificat dual à la tolérance du solveur près, et les relaxations semi-définies donnent des bornes rigoureuses dans
-le sens inaccessible à une recherche locale. **NCTSSOS**, **ncpol2sdpa** et **NCSOStools** bornent les valeurs propres
+conjugués, régions de confiance, Adam riemannien), une alternative à Adam dans une carte recentrée (nous ne faisons
+ici aucune comparaison de performances). **cvxpy** transmet des problèmes convexes en variables opérateurs à des
+solveurs SDP, qui renvoient un optimum accompagné d'un certificat dual, tous deux à la tolérance du solveur près ;
+une relaxation — un problème convexe sur un ensemble admissible plus grand — majore le supremum, ce qui est le sens
+inaccessible à une recherche locale. **NCTSSOS**, **ncpol2sdpa** et **NCSOStools** bornent les valeurs propres
 et les traces de polynômes non commutatifs en toutes dimensions à la fois (section 0.3). La bibliothèque apporte des
 paramétrages exacts des contraintes spectrales et de contraste de $\bigoplus_cM_{k_c}$ (les extrêmes peuvent se
 trouver dans n'importe quel secteur), des unitaires qui respectent les blocs, et un seul calcul par lots pour de
@@ -575,12 +598,14 @@ inférieures pour les suprema ; démonstrations ou relaxations doivent fournir l
 <details>
 <summary>Solutions</summary>
 
-1. $S$ a des valeurs propres imaginaires pures, donc $1\pm S$ sont inversibles ; ils commutent, et $(1+S)^*=1-S$.
-   Par conséquent $C^*C=(1-S)^{-1}(1+S)(1-S)(1+S)^{-1}=1$, et $1+C=2(1+S)^{-1}$ est inversible, donc
-   $-1\notin\operatorname{spec}C$. Réciproquement, pour un unitaire $U$ avec $1+U$ inversible, $S=(1-U)(1+U)^{-1}$ est
-   antiautoadjoint : $S^*=(1+U^*)^{-1}(1-U^*)=(U+1)^{-1}U\,U^*(U-1)=-S$. Comme $C$ commute avec $S$, $C(1+S)=1-S$
-   équivaut à $S(1+C)=1-C$, c'est-à-dire $S=(1-C)(1+C)^{-1}$ : les deux applications sont réciproques l'une de
-   l'autre.
+1. $S$ est normal et $iS$ est autoadjoint, donc $S$ a des valeurs propres imaginaires pures (corollaire 1.4(2)) et
+   $1\pm S$ sont inversibles ; ils commutent, et $(1+S)^*=1-S$. Par conséquent
+   $C^*C=(1-S)^{-1}(1+S)(1-S)(1+S)^{-1}=1$, et $1+C=2(1+S)^{-1}$ est inversible, donc $-1\notin\operatorname{spec}C$.
+   Réciproquement, pour un unitaire $U$ avec $1+U$ inversible, $S=(1-U)(1+U)^{-1}$ est antiautoadjoint :
+   $S^*=(1+U^*)^{-1}(1-U^*)=(U+1)^{-1}U\,U^*(U-1)=(U+1)^{-1}(U-1)=-S$, car $U\pm1$ commutent. Pour $C$ et $S$ qui
+   commutent, $C(1+S)=1-S$ équivaut à $S(1+C)=1-C$ (les deux disent $C+CS+S=1$). Or $C(S)$ commute avec $S$, et
+   $S=(1-U)(1+U)^{-1}$ commute avec $U$ ; donc $U=C(S)$ si et seulement si $S=(1-U)(1+U)^{-1}$ : les deux applications
+   sont réciproques l'une de l'autre.
 
 ```python
 Sk = torch.randn(4, 4, dtype=torch.complex128)
@@ -592,9 +617,9 @@ assert torch.allclose((I4 - Cay) @ torch.linalg.inv(I4 + Cay), Sk, atol=1e-10)
 assert torch.linalg.eigvals(Cay).add(1).abs().min() > 1e-6        # -1 is never an eigenvalue
 ```
 
-2. Le théorème 5.3 et sa démonstration valent pour une matrice gaussienne réelle (densité
-   $\propto e^{-\|Z\|_2^2/2}$), le groupe orthogonal et $V$ orthogonale (la remarque qui suit le théorème 5.3), donc
-   $VO$ a la même loi que $O$. La multiplication à gauche par $\operatorname{diag}(\pm1)$ donne
+2. D'après le théorème B.17 (voir aussi le lemme C.2), le facteur QR à signes corrigés $O$ d'une matrice gaussienne
+   réelle, que la bibliothèque tire pour une algèbre réelle, est distribué selon la loi de Haar sur $O(k)$, donc $VO$
+   a la même loi que $O$ pour $V\in O(k)$. La multiplication à gauche par $\operatorname{diag}(\pm1)$ donne
    $\mathbb E[O_{ij}O_{lm}]=0$ pour $i\ne l$, les permutations montrent que $\mathbb E[O_{ij}O_{im}]$ ne dépend pas de
    $i$, et $\sum_iO_{ij}O_{im}=\delta_{jm}$ ; donc $\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k$ et
    $\mathbb E\operatorname{Tr}(AO)^2=\sum_{ij}A_{ji}^2/k$.
