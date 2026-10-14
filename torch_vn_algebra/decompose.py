@@ -154,7 +154,7 @@ References
   matrices*, SIAM J. Matrix Anal. Appl. 32 (2011) 605-620.
 * W. Fulton, J. Harris, *Representation Theory: A First Course*, Springer GTM 129 (1991): Schur's
   lemma, characters (Sec. 1-2), Schur-Weyl duality (Sec. 6.1).
-* Course, docs/tutorial/02_von_neumann_algebras.md, Theorem 2.6 and Proposition 2.7.
+* Lecture notes, man/lecture_notes/02_von_neumann_algebras.md, Theorem 2.6 and Proposition 2.7.
 """
 import itertools
 import math

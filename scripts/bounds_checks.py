@@ -6,7 +6,7 @@ Independent checks of the envelopes of scripts/bounds_search.py (no optimisation
   structured_samples   NumPy samples with two-level spectra and structured bases, which reach the
                        neighbourhood of the extremes in every dimension (unlike Haar samples)
 
-    python scripts/bounds_checks.py            # checks paper/generated/bounds.json, a few minutes on a CPU
+    python scripts/bounds_checks.py            # checks man/article/generated/bounds.json, a few minutes on a CPU
 """
 import json
 import sys
@@ -139,7 +139,7 @@ def check(results, n_samples=4000, seed=0):
 
 
 if __name__ == '__main__':
-    path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).resolve().parents[1] / 'paper' / 'generated' / 'bounds.json'
+    path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).resolve().parents[1] / 'man' / 'article' / 'generated' / 'bounds.json'
     data = json.load(open(path))
     print(f"{path} ({data.get('mode')} run on {data.get('environment', {}).get('gpu') or 'CPU'})")
     print("shortfall: how far an envelope stays inside a value that is attained, in % of the largest |value| of that\n"

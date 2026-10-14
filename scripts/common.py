@@ -1,4 +1,4 @@
-"""Shared helpers for the scripts that produce the numbers and figures of the paper (paper/main.tex)."""
+"""Shared helpers for the scripts that produce the numbers and figures of the paper (man/article/main.tex)."""
 import argparse
 import atexit
 import json
@@ -14,7 +14,7 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-PAPER = ROOT / 'paper'
+PAPER = ROOT / 'man' / 'article'
 
 
 def parse_args(description):

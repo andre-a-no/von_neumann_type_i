@@ -532,18 +532,18 @@ be changed, and the checks can be switched off locally.
 
 \section{Usage by example}\label{sec:usage}
 
-The listings of this section are complete programs from \texttt{examples/paper}; the test suite runs
+The listings of this section are complete programs from \texttt{man/article/listings}; the test suite runs
 them, so they stay in sync with the code. Each runs on a CPU in under half a minute and uses a GPU when available.
 
 \paragraph{Random operators with a prescribed contrast.} Listing~\ref{lst:ex1} builds $10^4$ positive
 operators in $M_2\oplus M_3\oplus M_4$ whose spectra have contrast $0.6$ and whose eigenvectors are
 Haar-random in every sector, and evaluates traces and spectral functions.
-\lstinputlisting[caption={Random operators (\texttt{ex1\_random\_operators.py}).},label=lst:ex1]{../examples/paper/ex1_random_operators.py}
+\lstinputlisting[caption={Random operators (\texttt{ex1\_random\_operators.py}).},label=lst:ex1]{listings/ex1_random_operators.py}
 
 \paragraph{States, measurement and trace conventions.} Listing~\ref{lst:ex2} conditions random states on
 the outcome of a projective measurement (Lüders rule), which moves all probability into one sector, and
 checks that expectation values do not depend on the trace used to represent the state.
-\lstinputlisting[caption={States and conditioning (\texttt{ex2\_states\_measurement.py}).},label=lst:ex2]{../examples/paper/ex2_states_measurement.py}
+\lstinputlisting[caption={States and conditioning (\texttt{ex2\_states\_measurement.py}).},label=lst:ex2]{listings/ex2_states_measurement.py}
 
 \paragraph{A map between sectors.} Two fermionic modes have sectors $N=0,1,2$ of dimensions $1,2,1$.
 Particle loss with Kraus operators $\sqrt{1-gN}$, $\sqrt g\,a_1$, $\sqrt g\,a_2$ ($0\le g\le\frac12$) maps sector $N$ to
@@ -555,21 +555,21 @@ matrix of a pure death process (columns: from $N=0,1,2$; rows: to $N=0,1,2$),
 which the program prints. The last lines illustrate a simple fact: a unital positive map cannot
 increase the Michelson contrast, since $\lambda_{\min}1\le A\le\lambda_{\max}1$ implies the same bounds
 for $\Phi(A)$; the non-unital loss channel increases it for most samples.
-\lstinputlisting[caption={Particle loss between sectors (\texttt{ex3\_channels.py}).},label=lst:ex3]{../examples/paper/ex3_channels.py}
+\lstinputlisting[caption={Particle loss between sectors (\texttt{ex3\_channels.py}).},label=lst:ex3]{listings/ex3_channels.py}
 
 \paragraph{Open-system dynamics.} Listing~\ref{lst:ex4} integrates spontaneous emission of a two-level
 atom with the RK4 solver and with the exact exponential of the Lindblad generator, and compares both with
 $P_e(t)=P_e(0)e^{-\gamma t}$ and $|\rho_{eg}(t)|=|\rho_{eg}(0)|e^{-\gamma t/2}$.
-\lstinputlisting[caption={Spontaneous emission (\texttt{ex4\_dynamics.py}).},label=lst:ex4]{../examples/paper/ex4_dynamics.py}
+\lstinputlisting[caption={Spontaneous emission (\texttt{ex4\_dynamics.py}).},label=lst:ex4]{listings/ex4_dynamics.py}
 
 \paragraph{Tensor products.} Listing~\ref{lst:ex5} estimates the mean entanglement entropy of random
 pure states on $\C^m\otimes\C^n$ and compares it with Page's formula~\cite{page1993}.
-\lstinputlisting[caption={Page entropy (\texttt{ex5\_page\_entropy.py}).},label=lst:ex5]{../examples/paper/ex5_page_entropy.py}
+\lstinputlisting[caption={Page entropy (\texttt{ex5\_page\_entropy.py}).},label=lst:ex5]{listings/ex5_page_entropy.py}
 
 \paragraph{Searching for a violation.} Listing~\ref{lst:ex6} compares Haar sampling with batched gradient
 ascent for $\sup_U\bigl(|\Tr(XUY)|-\Tr(XY)\bigr)$, whose exact value $\|YX\|_1-\Tr(XY)$ is positive for
 non-commuting $X,Y\ge0$. Section~\ref{sec:optimisation} studies this systematically.
-\lstinputlisting[caption={Sampling versus optimisation (\texttt{ex6\_inequality\_search.py}).},label=lst:ex6]{../examples/paper/ex6_inequality_search.py}
+\lstinputlisting[caption={Sampling versus optimisation (\texttt{ex6\_inequality\_search.py}).},label=lst:ex6]{listings/ex6_inequality_search.py}
 
 \paragraph{Spin chains.} Listing~\ref{lst:ex7} works with a Heisenberg ring of ten spins. A uniform field
 moves the ground state through the sectors until the chain is fully polarised above the saturation
@@ -577,13 +577,13 @@ field $h_s=2J$ (above it the ground state is the all-down state $N=0$ for our si
 crossing is with the one-magnon level at $k=\pi$); 100 realisations of random fields are diagonalised in one batch to compute the mean
 level-spacing ratio; and the entanglement entropy of the ground state is computed from reduced states.
 Section~\ref{sec:chains} checks these tools against exact results.
-\lstinputlisting[caption={Spin chains (\texttt{ex7\_spin\_chain.py}).},label=lst:ex7]{../examples/paper/ex7_spin_chain.py}
+\lstinputlisting[caption={Spin chains (\texttt{ex7\_spin\_chain.py}).},label=lst:ex7]{listings/ex7_spin_chain.py}
 
 \paragraph{Large sectors and open chains.} Dense matrices of a sector of dimension $\binom{L}{L/2}$ stop
 fitting at about $L=16$--$18$. Listing~\ref{lst:ex8} uses the sparse form of the Hamiltonian (a batch of
 diagonals and one shared hopping matrix) with Lanczos and Krylov solvers, splits a ring into momentum
 sectors, and lets particles leak out of the chain through Lindblad jumps between sectors.
-\lstinputlisting[caption={Large sectors and open chains (\texttt{ex8\_large\_and\_open\_chains.py}).},label=lst:ex8]{../examples/paper/ex8_large_and_open_chains.py}
+\lstinputlisting[caption={Large sectors and open chains (\texttt{ex8\_large\_and\_open\_chains.py}).},label=lst:ex8]{listings/ex8_large_and_open_chains.py}
 
 \paragraph{A noisy quantum circuit with a conserved quantity.} The quantum alternating operator ansatz solves
 constrained optimisation problems with ``XY mixers'' (normalised here as $H_M=\frac14\sum_{\langle ij\rangle}(X_iX_j+Y_iY_j)$, the XXZ form with $J=1$, $\Delta=0$) that keep the Hamming weight of the
@@ -609,7 +609,7 @@ $\gamma_1$ & $\gamma_2$ & $P(\text{weight }3)$ & fidelity & after post-selection
 \bottomrule
 \end{tabular}
 \end{center}
-\lstinputlisting[caption={XY mixer with amplitude damping, dephasing and post-selection (\texttt{ex9\_qaoa\_xy\_mixer.py}).},label=lst:ex9]{../examples/paper/ex9_qaoa_xy_mixer.py}
+\lstinputlisting[caption={XY mixer with amplitude damping, dephasing and post-selection (\texttt{ex9\_qaoa\_xy\_mixer.py}).},label=lst:ex9]{listings/ex9_qaoa_xy_mixer.py}
 
 \section{Validation against exact results}\label{sec:validation}
 

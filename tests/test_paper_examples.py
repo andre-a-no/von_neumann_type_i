@@ -1,10 +1,10 @@
-"""The code listings of the paper (examples/paper) must run."""
+"""The code listings of the article (man/article/listings) must run."""
 import pathlib
 import runpy
 
 import pytest
 
-EXAMPLES = sorted((pathlib.Path(__file__).parent.parent / 'examples' / 'paper').glob('ex*.py'))
+EXAMPLES = sorted((pathlib.Path(__file__).parent.parent / 'man' / 'article' / 'listings').glob('ex*.py'))
 
 
 @pytest.mark.parametrize('path', EXAMPLES, ids=[p.stem for p in EXAMPLES])

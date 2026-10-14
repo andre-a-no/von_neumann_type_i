@@ -26,7 +26,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/andre-a-no/von_neumann_type_i"
-Documentation = "https://github.com/andre-a-no/von_neumann_type_i/blob/main/docs/tutorial/README.md"
+Documentation = "https://github.com/andre-a-no/von_neumann_type_i/blob/main/man/lecture_notes/README.md"
 Repository = "https://github.com/andre-a-no/von_neumann_type_i"
 Issues = "https://github.com/andre-a-no/von_neumann_type_i/issues"
 Changelog = "https://github.com/andre-a-no/von_neumann_type_i/blob/main/CHANGELOG.md"

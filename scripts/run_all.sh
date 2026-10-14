@@ -6,7 +6,7 @@
 #   bash scripts/run_all.sh full cuda           # sizes reported in the paper (GPU recommended)
 #   bash scripts/run_all.sh full cuda tf32      # same, with TF32 tensor-core matmuls
 #   ONLY="chains baselines" bash scripts/run_all.sh full cuda   # a subset of the scripts
-# Every script writes its own log to paper/generated/logs/; a failing script does not stop the others,
+# Every script writes its own log to man/article/generated/logs/; a failing script does not stop the others,
 # and the run ends with a summary (exit code 1 if anything failed).
 set -uo pipefail
 MODE=${1:-quick}
@@ -19,12 +19,12 @@ if [ "$DEVICE" = cpu ]; then EXAMPLE_ENV="CUDA_VISIBLE_DEVICES="; fi   # the exa
 # interruption (finished parts are kept in generated/partial/ until the script completes)
 SCRIPTS=${ONLY:-"validate_known_results numerics baselines benchmark_library chains renyi_threshold inequality_search bounds_search"}
 cd "$(dirname "$0")/.."
-OUTDIR=paper/generated                       # only full runs write the paper's tables
+OUTDIR=man/article/generated                     # only full runs write the paper's tables
 OUTARGS=""
 if [ "$MODE" = check ]; then OUTDIR=.check_output/generated; fi
 if [ "$MODE" = quick ]; then OUTDIR=.quick_output/generated; fi
 if [ -n "$TF32" ]; then                      # a TF32 run must not overwrite the FP32 tables of the paper
-  if [ "$MODE" = full ]; then OUTDIR=paper/generated_tf32; else OUTDIR=.${MODE}_output/generated_tf32; fi
+  if [ "$MODE" = full ]; then OUTDIR=man/article/generated_tf32; else OUTDIR=.${MODE}_output/generated_tf32; fi
   OUTARGS="--out $OUTDIR --figdir $OUTDIR/figures"
 fi
 LOGS=$OUTDIR/logs
@@ -60,12 +60,12 @@ for s in $SCRIPTS; do
   fi
 done
 if [ -z "${ONLY:-}" ]; then
-  for ex in examples/paper/ex*.py; do echo "=== $ex"; env $EXAMPLE_ENV python "$ex" || failed+=("$ex"); done > "$OUTDIR/examples_output.txt" 2>&1
+  for ex in man/article/listings/ex*.py; do echo "=== $ex"; env $EXAMPLE_ENV python "$ex" || failed+=("$ex"); done > "$OUTDIR/examples_output.txt" 2>&1
 fi
 
 echo
 if [ ${#failed[@]} -eq 0 ]; then
-  echo "done: all scripts succeeded; outputs in $OUTDIR (compile paper/main.tex)"
+  echo "done: all scripts succeeded; outputs in $OUTDIR (compile man/article/main.tex)"
 else
   echo "done with failures: ${failed[*]} (logs in $LOGS)"; exit 1
 fi
