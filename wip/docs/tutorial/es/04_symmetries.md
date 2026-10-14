@@ -204,6 +204,8 @@ $\langle\chi_{\rm std},\chi_{\rm std}\rangle_G=\frac{4+0+2}6=1$, luego las tres 
 corolario 4.5(c), y son no equivalentes dos a dos porque sus caracteres difieren. El corolario 4.5(b) da las
 multiplicidades en $\pi$:
 $$
+m_{\rm triv}=\tfrac{8+3\cdot4+2\cdot2}6=4,\qquad m_{\rm sgn}=\tfrac{8-3\cdot4+2\cdot2}6=0,\qquad
+m_{\rm std}=\tfrac{2\cdot8+0-2\cdot2}6=2 .
 $$
 Así, la representación trivial y la estándar son equivalentes a constituyentes $\rho_c$ de $\pi$ (teorema 4.3) con
 $m_c=4$ y $m_c=2$; suman $4\cdot1+2\cdot2=8=\sum_ck_cm_c$ dimensiones, luego no hay ningún otro constituyente:
@@ -395,7 +397,7 @@ assert sorted(W.shape[1] for W in spaces) == [1, 1, 1, 1, 2, 2]      # Lemma 4.6
 assert all(close(G @ W, W @ (W.mH @ G @ W)) for W in spaces)           # invariant subspaces
 Y = dc.twirl(G, torch.randn(8, 8, dtype=dt))
 Wa, Wb = [W for W in spaces if W.shape[1] == 2]
-s = torch.linalg.svdvals(Wa.mH @ Y @ Wb)                               # Lemma 4.8: a multiple of a unitary
+s = torch.linalg.svdvals(Wa.mH @ Y @ Wb)                               # Lemma 4.8(b): a multiple of a unitary
 assert s[1] > 1e-3 and abs(s[0] - s[1]) < 1e-10
 assert all(close(W.mH @ Y @ Wa, 0) for W in spaces if W.shape[1] == 1)   # different summands: zero
 ```
@@ -411,6 +413,7 @@ conjunto de soluciones $\mathcal A'$. En la descomposición, $V^*RV=\bigoplus_cr
 hermíticas; si $\lambda$ tiene multiplicidad $\mu_c(\lambda)$ en $r_c$, entonces $d_\lambda=\sum_c\mu_c(\lambda)m_c$ y,
 como $\mu^2\ge\mu$ para enteros $\mu\ge0$,
 $$
+N_R=\sum_\lambda\Big(\sum_c\mu_c(\lambda)m_c\Big)^2\ge\sum_{\lambda,c}\mu_c(\lambda)^2m_c^2\ge\sum_{\lambda,c}\mu_c(\lambda)m_c^2=\sum_ck_cm_c^2,
 $$
 con igualdad si y solo si los valores propios de todas las $r_c$ son simples y distintos dos a dos. Para el espín
 total de $L=3,4,5$ espines, el código de abajo encuentra la igualdad (observación numérica). Incluso el mínimo es
@@ -419,6 +422,12 @@ $(n^2+N_R)\times N_R$, tiene $3.5\cdot10^8$ entradas complejas. Por eso, para ca
 el módulo `su2`, que conoce la respuesta de antemano.
 
 ```python
+for n in (3, 4, 5):
+    Dn = dc.from_generators(dc.total_spin(n))
+    _, info = dc.commutant_basis(dc.total_spin(n), return_info=True)
+    N_min = sum(k * m * m for k, m in zip(Dn.k_factors, Dn.multiplicities))
+    assert info['unknowns'] >= N_min                                  # N_R >= sum_c k_c m_c^2
+    print(n, info['unknowns'], N_min)                                # observed: equality
 ```
 
 ## 4.4 $U(1)$ y sectores de carga
@@ -459,6 +468,7 @@ $\alpha_k$ y $\beta_l$, la base ortonormal $u_k\otimes w_l$ consta de vectores p
 propio $\alpha_k+\beta_l$) y de $e^{i\theta Q_1}\otimes e^{i\theta Q_2}$ (valor propio $e^{i\theta\alpha_k}e^{i\theta\beta_l}$), luego,
 por la definición del cálculo funcional,
 $$
+e^{i\theta(Q_1\otimes1+1\otimes Q_2)}=e^{i\theta Q_1}\otimes e^{i\theta Q_2},
 $$
 y actúa sobre la imagen de $P_{q_1}\otimes P_{q_2}$ con carga $q_1+q_2$. Esta es la regla de fusión $(q_1,q_2)\mapsto q_1+q_2$ de los
 productos tensoriales fusionados del capítulo 7.
@@ -694,6 +704,7 @@ descomposición numérica: construye una base ortonormal de los vectores de peso
 con los coeficientes de Clebsch–Gordan de $j\otimes\frac12$. Los deducimos descendiendo desde el peso máximo. Por el
 teorema 4.11 y $S_-=S_+^*$, el espín $j$ satisface
 $$
+S_\pm|j,m\rangle=\sqrt{(j\mp m)(j\pm m+1)}\;|j,m\pm1\rangle ,
 $$
 y ponemos $|j,m\rangle=0$ para $|m|>j$ (coherente con la fórmula, cuyo coeficiente se anula en $m=\pm j$).
 
@@ -703,6 +714,10 @@ $|j,m\rangle$, acoplado a un espín $\frac12$ con $|{\uparrow}\rangle=|\frac12,\
 $|{\downarrow}\rangle=|\frac12,-\frac12\rangle$), y pongamos $\alpha_M=\sqrt{(j+M+\frac12)/(2j+1)}$,
 $\beta_M=\sqrt{(j-M+\frac12)/(2j+1)}$. Para $J=j\pm\frac12$ y $M=J,J-1,\dots,-J$ sea
 $$
+\begin{aligned}
+|j+\tfrac12,M\rangle\!\rangle&=\alpha_M\,|j,M-\tfrac12\rangle\otimes|{\uparrow}\rangle+\beta_M\,|j,M+\tfrac12\rangle\otimes|{\downarrow}\rangle,\\
+|j-\tfrac12,M\rangle\!\rangle&=-\beta_M\,|j,M-\tfrac12\rangle\otimes|{\uparrow}\rangle+\alpha_M\,|j,M+\tfrac12\rangle\otimes|{\downarrow}\rangle .
+\end{aligned}
 $$
 (a) Estos $2(2j+1)$ vectores forman una base ortonormal de $\mathbb C^{2j+1}\otimes\mathbb C^2$.
 (b) $|j+\frac12,j+\frac12\rangle\!\rangle=|j,j\rangle\otimes|{\uparrow}\rangle$, y $|j-\frac12,j-\frac12\rangle\!\rangle$ es, salvo un factor de
@@ -725,6 +740,7 @@ $(2j+2)+2j=2(2j+1)$ de ellos.
 $|j,j-1\rangle\otimes|{\uparrow}\rangle$ y $|j,j\rangle\otimes|{\downarrow}\rangle$ y, con $s_+|{\uparrow}\rangle=0$,
 $s_+|{\downarrow}\rangle=|{\uparrow}\rangle$,
 $$
+S_+\big(p\,|j,j-1\rangle\otimes|{\uparrow}\rangle+q\,|j,j\rangle\otimes|{\downarrow}\rangle\big)=(p\sqrt{2j}+q)\,|j,j\rangle\otimes|{\uparrow}\rangle ,
 $$
 que se anula si y solo si $q=-\sqrt{2j}\,p$; con $|p|^2+|q|^2=1$ y $q>0$ (luego $p<0$) esto es
 $p=-\beta_{j-1/2}=-1/\sqrt{2j+1}$, $q=\alpha_{j-1/2}=\sqrt{2j/(2j+1)}$. (c) $S_z$: ambos términos tienen
@@ -732,6 +748,8 @@ $S_z=(M\mp\frac12)\pm\frac12=M$. Para $S_-$, sea
 $x_M=p\,|j,M-\frac12\rangle\otimes|{\uparrow}\rangle+q\,|j,M+\frac12\rangle\otimes|{\downarrow}\rangle$; como
 $s_-|{\uparrow}\rangle=|{\downarrow}\rangle$ y $s_-|{\downarrow}\rangle=0$,
 $$
+S_-x_M=p\sqrt{(j+M-\tfrac12)(j-M+\tfrac32)}\;|j,M-\tfrac32\rangle\otimes|{\uparrow}\rangle
++\Big(p+q\sqrt{(j+M+\tfrac12)(j-M+\tfrac12)}\Big)|j,M-\tfrac12\rangle\otimes|{\downarrow}\rangle .
 $$
 Usamos $\beta_M\sqrt{(j+M+\frac12)(j-M+\frac12)}=(j-M+\frac12)\alpha_M$ y
 $\alpha_M\sqrt{(j+M+\frac12)(j-M+\frac12)}=(j+M+\frac12)\beta_M$.
@@ -754,6 +772,8 @@ irreducible o no:
 $\mathcal H_\mu(E)=\ker T_+\cap\ker(T_z-\mu)$, con una base ortonormal $B_\mu$ ($B_\mu=\emptyset$ si $\mathcal H_\mu(E)=0$),
 y sea $S_a=T_a\otimes1+1\otimes s_a$ sobre $E\otimes\mathbb C^2$. Para todo $S\in\{0,\frac12,1,\dots\}$, los vectores
 $$
+v\otimes|{\uparrow}\rangle\quad(v\in B_{S-1/2}),\qquad
+\sqrt{\tfrac{2S+1}{2S+2}}\;v\otimes|{\downarrow}\rangle-\tfrac1{\sqrt{(2S+1)(2S+2)}}\;T_-v\otimes|{\uparrow}\rangle\quad(v\in B_{S+1/2})
 $$
 forman una base ortonormal de $\ker S_+\cap\ker(S_z-S)$ (la primera familia es vacía para $S=0$). Partiendo de un
 espín ($E=\mathbb C^2$, $B_{1/2}=\{|{\uparrow}\rangle\}$, todos los demás $B_\mu$ vacíos) y añadiendo $L-1$ espines, esto da
@@ -789,6 +809,41 @@ conclusiones del corolario 4.17 para las bases de ocho espines. Comprobamos tamb
 anillo de cuatro espines con `D4`, y comparamos los tamaños de los bloques para ocho espines.
 
 ```python
+from torch_vn_algebra import su2
+
+def ket(j, m):                                            # |j, m> of Theorem 4.11 (zero if |m| > j)
+    v = torch.zeros(int(2 * j + 1), dtype=dt)
+    if abs(m) <= j:
+        v[int(j - m)] = 1
+    return v
+
+up, dn = ket(0.5, 0.5), ket(0.5, -0.5)
+for j in (0.5, 1.0, 1.5, 2.0):                            # Theorem 4.16
+    Sj = dc.spin_matrices(j)
+    sp_j = [math.sqrt(j * (j + 1) - (j - k) * (j - k + 1)) for k in range(1, int(2 * j) + 1)]
+    assert close(Sj[0] + 1j * Sj[1], torch.diag(torch.tensor(sp_j, dtype=dt), 1))     # S_+ of Theorem 4.11
+    assert close(Sj[2], torch.diag(torch.tensor([j - k for k in range(int(2 * j) + 1)], dtype=dt)))
+    Sc = torch.stack([torch.kron(a, torch.eye(2, dtype=dt)) + torch.kron(torch.eye(len(a), dtype=dt), b)
+                      for a, b in zip(Sj, dc.spin_matrices(0.5))])
+    Sp, Sm = Sc[0] + 1j * Sc[1], Sc[0] - 1j * Sc[1]
+    cols = []
+    for J in (j + 0.5, j - 0.5):
+        for M in [J - k for k in range(int(2 * J + 1))]:
+            al, be = math.sqrt((j + M + 0.5) / (2 * j + 1)), math.sqrt((j - M + 0.5) / (2 * j + 1))
+            p, q = (al, be) if J > j else (-be, al)
+            x = p * torch.kron(ket(j, M - 0.5), up) + q * torch.kron(ket(j, M + 0.5), dn)
+            assert close(Sc[2] @ x, M * x)
+            if M == J:
+                assert close(Sp @ x, 0)                               # highest weight
+            else:
+                assert close(Sm @ cols[-1], math.sqrt((J + M + 1) * (J - M)) * x)   # lowering, (c)
+            for s2, e in ((0.5, up), (-0.5, dn)):                     # the library's Racah formula agrees
+                cg = su2.clebsch_gordan(j, M - s2, 0.5, s2, J, M) if abs(M - s2) <= j else 0.0
+                assert abs(cg - torch.vdot(torch.kron(ket(j, M - s2), e), x).real.item()) < 1e-12
+            cols.append(x)
+    U = torch.stack(cols, 1)
+    assert U.shape == (2 * len(Sj[0]), 2 * len(Sj[0])) and close(U.mH @ U, torch.eye(U.shape[1]))   # (a)
+
 def swap(i, j, n):
     p = list(range(n))
     p[i], p[j] = j, i
@@ -803,8 +858,11 @@ levels = torch.cat([torch.linalg.eigvalsh(h.matrix[0, c, :m, :m]).repeat_interle
                     for c, (k, m) in enumerate(zip(D4.k_factors, D4.multiplicities))])
 assert close(torch.sort(levels).values, torch.linalg.eigvalsh(H4))   # level of H_S repeated 2S+1 times
 
-from torch_vn_algebra import su2
 u1, sym = SpinChain(8, boundary='periodic'), su2.SU2Chain(8, boundary='periodic')
+for S, m in zip(sym.spins, sym.multiplicities):           # Corollary 4.17: orthonormal highest-weight bases
+    B, N = sym.hw_basis(S), int(4 + S)                     # columns in the U(1) sector N = L/2 + S
+    assert B.shape == (math.comb(8, N), m) and close(B.T @ B, torch.eye(m, dtype=B.dtype))
+    assert N == 8 or close(sym.raise_(B, N), 0)            # S_+ B = 0 (S_z = S holds in sector N)
 H_u1, H_su2 = u1.xxz(J=1.0, Delta=1.0), sym.heisenberg(J=1.0)
 E_u1 = torch.sort(torch.cat([torch.linalg.eigvalsh(H_u1.matrix[0, N, :k, :k])
                              for N, k in enumerate(u1.algebra.k_factors)])).values
@@ -812,6 +870,7 @@ E_su2, S_lev, _ = sym.full_spectrum(H_su2, return_quantum_numbers=True)   # leve
 E_su2, S_lev = E_su2[0], S_lev[0]
 assert close(E_u1, E_su2)
 assert S_lev[0] == 0 and (S_lev[1:4] == 1).all() and E_su2[4] - E_su2[3] > 1e-3     # singlet, then triplet
+assert E_su2[1] - E_su2[0] > 1e-3 and close(E_su2[1:4], E_su2[1].expand(3))       # simple singlet (Theorem 9.9)
 assert close(sym.restrict(H_u1).matrix, H_su2.matrix)      # Proposition 4.15(b)
 flops = lambda ks: sum(k ** 3 for k in ks)
 print(u1.algebra.k_factors, sym.multiplicities, flops(u1.algebra.k_factors), flops(sym.multiplicities))
@@ -823,7 +882,7 @@ los bloques de $SU(2)$ tamaños $m_S=14,28,20,7,1$ para $S=0,\dots,4$ (proposici
 $\sum k^3$, baja de $739162$ a $33040$, en un factor $22$; la dimensión del álgebra, $\sum k^2$, de
 $\sum_w\binom8w\binom8{8-w}=\binom{16}8=12870$ (elegir $8$ de $16$ elementos, $w$ de ellos entre los $8$ primeros) a
 $\sum_Sm_S^2=1430=\binom{16}8/9$ (corolario B.10). Por el teorema 9.9 (el anillo tiene longitud par y $J>0$), el estado
-fundamental es un único singlete y $E_0(0)<E_0(1)$. *Observación numérica (no un teorema)* (calculada por el código de
+fundamental es un único singlete y $E_0(0)<E_0(1)$. *Observación numérica* (calculada por el código de
 arriba): la energía fundamental es $-3.651093$, y el primer nivel excitado es un triplete en $-3.128419$.
 
 > **Significado físico** (interpretación física, no un teorema de este curso). El modelo de Heisenberg describe la
@@ -845,8 +904,8 @@ $U(1)$ y de red, ITensor y TeNPy manejan cargas abelianas en redes tensoriales, 
 unos pocos cientos); acepta cualquier lista de matrices (elementos de un grupo o generadores), certifica su
 resultado (proposición 4.9) y devuelve el álgebra y su conmutante como objetos `TypeIAlgebra` con `to_algebra`,
 `from_algebra`, `to_commutant`, `from_commutant`, de modo que los capítulos 3 y 5–8 se aplican de inmediato. Para
-cadenas de espín $\frac12$, `su2.SU2Chain` da directamente los bloques de $SU(2)$, para todos los espines totales,
-hasta $L=16$.
+cadenas de espín $\frac12$, `su2.SU2Chain` da directamente los bloques de $SU(2)$ (corolario 4.17); acepta hasta
+$L=18$ espines, un límite fijado por la memoria de las bases.
 
 ## Ejercicios
 
@@ -865,22 +924,31 @@ hasta $L=16$.
 <details>
 <summary>Soluciones</summary>
 
-1. Como para $d=2$: $\pi(\sigma)$ es una matriz de permutación que deja fijo $|b_1\dots b_L\rangle$ si y solo si $b$
-   es constante en los ciclos, y hay $d^{\#\text{cycles}}$ tales $b$. Por el corolario 4.5(c),
+1. Por el lema B.1(c), $\pi(\sigma)$ es una matriz de permutación que deja fijo $|b_1\dots b_L\rangle$ si y solo si $b$
+   es constante en los ciclos de $\sigma$, y hay $d^{\#\text{cycles}(\sigma)}$ tales $b$. Por el corolario 4.5(c),
    $\dim\pi(S_L)'=\frac1{L!}\sum_\sigma(d^2)^{\#\text{cycles}(\sigma)}=\frac{x(x+1)\cdots(x+L-1)}{L!}$ con $x=d^2$
-   (capítulo 5, ejercicio 2), que es $\binom{d^2+L-1}L$: $\binom63=20$ y $\binom74=35$. Que $35$ sea también
-   $\dim\{S_a\}''$ es el teorema 4.14 para $L=4$.
+   (la identidad $\sum_\sigma x^{\#\text{cycles}(\sigma)}=x(x+1)\cdots(x+L-1)$ se demuestra en la solución del capítulo 5,
+   ejercicio 2), que es $\binom{d^2+L-1}L$ (la proposición B.3 demuestra la misma dimensión contando multiconjuntos):
+   $\binom63=20$ y $\binom74=35$. Que $35$ sea también $\dim\{S_a\}''$ es el teorema 4.14(b) para $L=4$:
+   $\{S_a\}''=\pi(S_4)'$.
 
 ```python
 for n, value in ((3, 20), (4, 35)):
     assert dc.commutant_dimension(dc.permutation_representation(n, 2)) == math.comb(n + 3, n) == value
 ```
 
-2. Sea $j_1\ge j_2$. $S_z$ tiene el valor propio $m_1+m_2$ sobre $|m_1\rangle\otimes|m_2\rangle$, luego para
-   $M\in j_1+j_2+\mathbb Z$, $d_M$ es el número de $m_2\in\{-j_2,\dots,j_2\}$ con $|M-m_2|\le j_1$: los $2j_2+1$ si
-   $|M|\le j_1-j_2$, y $j_1+j_2-|M|+1$ si $j_1-j_2\le|M|\le j_1+j_2$ (para $M\ge0$ la condición es
-   $m_2\ge M-j_1$), y $0$ más allá. Por el corolario 4.12, $m_j=d_j-d_{j+1}$ vale $1$ para $j_1-j_2\le j\le j_1+j_2$ y
-   $(2j_2+1)-(2j_2+1)=0$ para $j<j_1-j_2$.
+2. $S_a=S^{(j_1)}_a\otimes1+1\otimes S^{(j_2)}_a$ es una representación de espín (sección 4.5), y la unitaria
+   $x\otimes y\mapsto y\otimes x$ la entrelaza con la de $(j_2,j_1)$; así que sea $j_1\ge j_2$. $S_z$ tiene el valor propio
+   $m_1+m_2$ sobre $|m_1\rangle\otimes|m_2\rangle$, luego sus valores propios están en $j_1+j_2+\mathbb Z$, y para tales $M$,
+   $d_M$ es el número de $m_2\in\{-j_2,\dots,j_2\}$ con $|M-m_2|\le j_1$ (entonces $m_1=M-m_2\in j_1+\mathbb Z$
+   automáticamente); $d_M=0$ para $M\notin j_1+j_2+\mathbb Z$. Para $M\ge0$ la condición se lee $M-j_1\le m_2\le M+j_1$, y
+   $M+j_1\ge j_2$, así que $m_2$ va de $\max(-j_2,M-j_1)$ a $j_2$: $d_M=2j_2+1$ para $0\le M\le j_1-j_2$,
+   $d_M=j_1+j_2-M+1$ para $j_1-j_2\le M\le j_1+j_2$, y $d_M=0$ para $M>j_1+j_2$. Por el corolario 4.12, la multiplicidad
+   del espín $j\ge0$ es $m_j=d_j-d_{j+1}$. Vale $0$ si $j\notin j_1+j_2+\mathbb Z$ o $j>j_1+j_2$; $m_{j_1+j_2}=1-0=1$; para
+   $j_1-j_2\le j<j_1+j_2$ (con $j\in j_1+j_2+\mathbb Z$, luego $j+1\le j_1+j_2$),
+   $m_j=(j_1+j_2-j+1)-(j_1+j_2-j)=1$; y para $0\le j<j_1-j_2$ (luego $j+1\le j_1-j_2$), $m_j=(2j_2+1)-(2j_2+1)=0$.
+   Por tanto, $j_1\otimes j_2\cong\bigoplus_{j=j_1-j_2}^{j_1+j_2}j$, cada espín una vez. Para $j_2=\frac12$ esto es el
+   teorema 4.16(d), que además da los coeficientes.
 
 ```python
 def coupled(a, b):                                        # S^(a) (x) 1 + 1 (x) S^(b)
@@ -896,12 +964,14 @@ for a, b, ks in ((1.0, 0.5, (2, 4)), (1.0, 1.0, (1, 3, 5))):  # 1 (x) 1/2 = 1/2 
    $\theta/2\pi$ irracional obliga a $q=q'$. Así, los subespacios propios de $U_\theta$ son las imágenes de los $P_q$, y
    un operador conmuta con la matriz normal $U_\theta$ si y solo si conserva sus subespacios propios (teorema 1.5(d) e
    interpolación de Lagrange como en la sección 2.2), es decir, si y solo si $X=\sum_qP_qXP_q$; esto es $U(1)'$ por la
-   proposición 4.10. Para $\theta=\pi$, el valor propio $(-1)^w$ solo ve la paridad del peso de Hamming: dos
-   subespacios propios de dimensión $2^{n-1}$ (para $n\ge1$, los subconjuntos pares e impares), y el conmutante es
-   $M_{2^{n-1}}\oplus M_{2^{n-1}}$.
+   proposición 4.10. El argumento solo usa que los $e^{iq\theta}$ para las cargas $q$ que aparecen son distintos; el
+   código toma $\theta=1$ y las cargas $0,\dots,4$ de cuatro cúbits, para las que basta $0<|q-q'|\le4<2\pi$.
+   Para $\theta=\pi$, el valor propio $(-1)^w$ solo ve la paridad del peso de Hamming: dos
+   subespacios propios de dimensión $2^{n-1}$ (para $n\ge1$, las configuraciones de peso par y de peso impar; invertir
+   el primer bit es una biyección entre ellas), y el conmutante es $M_{2^{n-1}}\oplus M_{2^{n-1}}$.
 
 ```python
-for theta, m in ((1.0, (1, 1, 4, 4, 6)), (math.pi, (8, 8))):
+for theta, m in ((1.0, (1, 1, 4, 4, 6)), (math.pi, (8, 8))):   # theta = 1: e^{iq}, q = 0..4, distinct as 4 < 2 pi
     D_theta = dc.from_generators(torch.linalg.matrix_exp(1j * theta * N_op))
     assert D_theta.multiplicities == m and set(D_theta.k_factors) == {1}
 ```

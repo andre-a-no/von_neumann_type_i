@@ -175,9 +175,10 @@ $Q_2^*V\big(\bigoplus_c1\otimes\kappa_cy_c\iota_c^*\big)V^*Q_1=V_2\big(\bigoplus
 $(y_c)\mapsto T$ is injective since $V_1,V_2$ are unitary. An irreducible $\rho$ that does not occur in
 $\pi_1\oplus\pi_2$ has $m_\rho(\pi_1)m_\rho(\pi_2)=0$. $\square$
 
-For Corollary 12.2(b) with $n=4$, in the computed decomposition (printed below): vertex features $\pi_1$ have
-$a=(1,0,0,1)$ in the four sectors of $\pi_1\oplus\pi_2$ (trivial, dimension $2$, the two of dimension $3$), edge
-features $\pi_2$ have $b=(2,1,1,3)$, so $\dim\operatorname{Hom}_G=1\cdot2+1\cdot3=5=B_3$, as Corollary 12.2(b) proves.
+For Corollary 12.2(b) with $n=4$, in the computed decomposition (printed and asserted below): vertex features
+$\pi_1$ have $a=(1,0,0,1)$ in the four sectors of $\pi_1\oplus\pi_2$ (dimensions $1,2,3,3$; the first is the trivial
+one, since by Corollary 12.2(a) the only one-dimensional constituent of $\pi_1$ is trivial), edge features $\pi_2$
+have $b=(2,1,1,3)$, so $\dim\operatorname{Hom}_G=1\cdot2+1\cdot3=5=B_3$, as Corollary 12.2(b) proves.
 
 > **Physical meaning** (physical interpretation, not a theorem of this course). Theorem 12.4 is the linear-algebra
 > core of **selection rules** and the scalar case of the Wigner–Eckart theorem: an operator that commutes with the
@@ -348,7 +349,8 @@ the skew-adjoint elements of $\pi(G)'$. $\square$
 
 So an orthogonal (unitary) equivariant layer is `optimize.UnitaryParam` on `D.commutant_algebra()` followed by
 $\Phi$; by (c) this parametrisation reaches every equivariant unitary, and in exact arithmetic every iterate of a
-gradient method is unitary and equivariant (the code checks both to $10^{-12}$ after training). Likewise `PositiveParam` gives positive equivariant layers, normalised as
+gradient method is unitary and equivariant (the code checks both to $10^{-12}$ after training). Likewise
+`PositiveParam` gives positive equivariant layers, normalised as
 in Chapter 11 (spectrum in $[\ell,1]$ with maximum $1$; by (a), a general positive layer is $\Phi(t^*t)$), and a
 spectral layer $f(L)$ of a self-adjoint equivariant generator $L$, such as the diffusion $e^{-tL}$, needs
 eigendecompositions of the blocks $w_c$, of cost of order $\sum_cm_c^3$ ($37$ here) instead of $n^3=4096$; the library

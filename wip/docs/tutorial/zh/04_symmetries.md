@@ -347,7 +347,7 @@ assert sorted(W.shape[1] for W in spaces) == [1, 1, 1, 1, 2, 2]      # Lemma 4.6
 assert all(close(G @ W, W @ (W.mH @ G @ W)) for W in spaces)           # invariant subspaces
 Y = dc.twirl(G, torch.randn(8, 8, dtype=dt))
 Wa, Wb = [W for W in spaces if W.shape[1] == 2]
-s = torch.linalg.svdvals(Wa.mH @ Y @ Wb)                               # Lemma 4.8: a multiple of a unitary
+s = torch.linalg.svdvals(Wa.mH @ Y @ Wb)                               # Lemma 4.8(b): a multiple of a unitary
 assert s[1] > 1e-3 and abs(s[0] - s[1]) < 1e-10
 assert all(close(W.mH @ Y @ Wa, 0) for W in spaces if W.shape[1] == 1)   # different summands: zero
 ```
@@ -368,7 +368,12 @@ $$
 就知道答案。
 
 ```python
-PLACEHOLDER
+for n in (3, 4, 5):
+    Dn = dc.from_generators(dc.total_spin(n))
+    _, info = dc.commutant_basis(dc.total_spin(n), return_info=True)
+    N_min = sum(k * m * m for k, m in zip(Dn.k_factors, Dn.multiplicities))
+    assert info['unknowns'] >= N_min                                  # N_R >= sum_c k_c m_c^2
+    print(n, info['unknowns'], N_min)                                # observed: equality
 ```
 
 ## 4.4 $U(1)$ 与荷扇区
@@ -602,17 +607,146 @@ $(2S+1)$ 重简并能级。
 $H_S$（相差一个酉基变换）。
 
 *证明。* (a) 在两个自旋上，$\mathbf s^{(1)}\cdot\mathbf s^{(2)}=\frac12(\mathbf S^2-\mathbf s^{(1)2}-\mathbf s^{(2)2})=\frac12\mathbf S^2-\frac34$
-（定理 4.11，$s=\frac12$）。在三重态上 $\mathbf S^2=2$ 且 $F=1$（三重态由 $S_-^j|{\uparrow\uparrow}\rangle$ 张成，而 $F$
-与 $S_-$ 可交换并固定 $|{\uparrow\uparrow}\rangle$）；在单态上 $\mathbf S^2=0$ 且 $F=-1$。两边在这四个向量上一致。对
-$L$ 个格点中的格点 $i,j$，与单位算子作张量积即可。其余部分是定理 4.14(a) 与定理 4.3。(b) 在推论 4.12 的分解中，
-满足 $S_z=S$ 的向量为 $\sum_{S'\ge S}|S',S\rangle\otimes w_{S'}$，而由定理 4.11，当 $S'>S$ 时 $S_+|S',S\rangle\neq0$；所以
-$\ker S_+\cap\ker(S_z-S)=|S,S\rangle\otimes\mathbb C^{m_S}$，$1\otimes H_S$ 在其上作用为 $H_S$。$\square$
+（定理 4.11，$s=\frac12$）。三重态向量 $S_-^j|{\uparrow\uparrow}\rangle$ 是 $|{\uparrow\uparrow}\rangle$、
+$|{\downarrow\uparrow}\rangle+|{\uparrow\downarrow}\rangle$、$2|{\downarrow\downarrow}\rangle$，它们与单态一起构成
+$\mathbb C^2\otimes\mathbb C^2$ 的一组正交基。在三重态上 $\mathbf S^2=2$ 且 $F=1$：$\mathbf S^2=S_-S_++S_z^2+S_z$ 在
+$|{\uparrow\uparrow}\rangle$ 上为 $0+1+1=2$，而 $\mathbf S^2$ 和 $F$ 与 $S_-$ 可交换，$F$ 固定 $|{\uparrow\uparrow}\rangle$。在单态上
+$\mathbf S^2=0$（它被 $S_+$ 和 $S_z$ 零化）且 $F=-1$。两边在这四个向量上一致。对 $L$ 个格点中的格点 $i,j$，与单位
+算子作张量积即可。其余部分是定理 4.14(a) 与定理 4.3。(b) 我们证明更多的结论：对按推论 4.12 分解的任意自旋表示
+和任意 $\mu\in\frac12\mathbb Z$，若 $\mu\ge0$，则 $\ker S_+\cap\ker(S_z-\mu)$ 是 $|\mu,\mu\rangle\otimes\mathbb C^{m_\mu}$（在推论
+4.12 的酉算子下的像），若 $\mu<0$，则为 $0$。事实上，在该基下，满足 $S_z=\mu$ 的向量是对满足 $S'-\mu\in\mathbb Z$ 的
+$S'\ge|\mu|$ 求和的 $\sum_{S'}|S',\mu\rangle\otimes w_{S'}$，而由定理 4.11，$S_+$ 把它映为
+$\sum_{S'}\sqrt{(S'-\mu)(S'+\mu+1)}\,|S',\mu+1\rangle\otimes w_{S'}$，其中 $S'+\mu+1\ge1$；所以它为零当且仅当对所有
+$S'\neq\mu$ 有 $w_{S'}=0$。对 Heisenberg 哈密顿量 $H$，$1\otimes H_S$ 在 $|S,S\rangle\otimes\mathbb C^{m_S}$ 上作用为
+$H_S$。$\square$
 
-(b) 部分就是模块 `su2`（自旋链，第 9 章）不经数值分解而构造 $H_S$ 的方式：在 `SpinChain` 的 $U(1)$ 扇区
-$\hat N=\frac L2+S$ 内部，通过逐个格点的 Clebsch–Gordan 耦合构造最高权向量的一组规范正交基。我们用 `D4`
-在四个自旋的环上检验 (a)，然后比较八个自旋时的块大小。
+(b) 部分就是模块 `su2`（自旋链，第 9 章）不经数值分解而构造 $H_S$ 的方式：它逐个格点地添加，用
+$j\otimes\frac12$ 的 Clebsch–Gordan 系数构造最高权向量的一组规范正交基。我们从最高权出发通过下降来推导这些
+系数。由定理 4.11 和 $S_-=S_+^*$，自旋 $j$ 满足
+$$
+S_\pm|j,m\rangle=\sqrt{(j\mp m)(j\pm m+1)}\;|j,m\pm1\rangle ,
+$$
+并且对 $|m|>j$ 我们令 $|j,m\rangle=0$（这与该公式相容，其系数在 $m=\pm j$ 处为零）。
+
+**定理 4.16（$j\otimes\frac12$ 的 Clebsch–Gordan 系数）。** 设 $j\in\{\frac12,1,\frac32,\dots\}$，令
+$S_a=S^{(j)}_a\otimes1+1\otimes s_a$ 作用在 $\mathbb C^{2j+1}\otimes\mathbb C^2$ 上（定理 4.11 的自旋 $j$，基为 $|j,m\rangle$，
+与一个自旋 $\frac12$ 耦合，$|{\uparrow}\rangle=|\frac12,\frac12\rangle$，$|{\downarrow}\rangle=|\frac12,-\frac12\rangle$），并令
+$\alpha_M=\sqrt{(j+M+\frac12)/(2j+1)}$，$\beta_M=\sqrt{(j-M+\frac12)/(2j+1)}$。对 $J=j\pm\frac12$ 和 $M=J,J-1,\dots,-J$，令
+$$
+\begin{aligned}
+|j+\tfrac12,M\rangle\!\rangle&=\alpha_M\,|j,M-\tfrac12\rangle\otimes|{\uparrow}\rangle+\beta_M\,|j,M+\tfrac12\rangle\otimes|{\downarrow}\rangle,\\
+|j-\tfrac12,M\rangle\!\rangle&=-\beta_M\,|j,M-\tfrac12\rangle\otimes|{\uparrow}\rangle+\alpha_M\,|j,M+\tfrac12\rangle\otimes|{\downarrow}\rangle .
+\end{aligned}
+$$
+(a) 这 $2(2j+1)$ 个向量构成 $\mathbb C^{2j+1}\otimes\mathbb C^2$ 的一组规范正交基。
+(b) $|j+\frac12,j+\frac12\rangle\!\rangle=|j,j\rangle\otimes|{\uparrow}\rangle$，而在相差一个模为一的因子的意义下，
+$|j-\frac12,j-\frac12\rangle\!\rangle$ 是满足 $S_zx=(j-\frac12)x$ 和 $S_+x=0$ 的唯一单位向量 $x$；该因子由
+$|j,j\rangle\otimes|{\downarrow}\rangle$ 的系数为正来确定（Condon–Shortley 约定）。
+(c) $S_z|J,M\rangle\!\rangle=M|J,M\rangle\!\rangle$，$S_-|J,M\rangle\!\rangle=\sqrt{(J+M)(J-M+1)}\,|J,M-1\rangle\!\rangle$：态
+$|J,M\rangle\!\rangle$ 由 $|J,J\rangle\!\rangle$ 经下降并归一化得到。
+(d) 因此对 $a=x,y,z$ 有 $S_a|J,M\rangle\!\rangle=\sum_{M'}(S^{(J)}_a)_{M'M}|J,M'\rangle\!\rangle$：酉算子
+$|J,M\rangle\mapsto|J,M\rangle\!\rangle$ 把自旋 $(j+\frac12)\oplus$ 自旋 $(j-\frac12)$ 映为 $S_a$，所以
+$j\otimes\frac12\cong(j+\frac12)\oplus(j-\frac12)$，而 Clebsch–Gordan 系数 $\langle j,m;\frac12,\sigma|J,M\rangle$
+（$|J,M\rangle\!\rangle$ 在乘积基下的坐标）就是上面显示的 $\pm\alpha_M,\beta_M$。
+
+*证明。* (a) 若上式中某个基向量为 $0$，则其系数也为 $0$：$|j,M-\frac12\rangle=0$ 仅当 $M=-j-\frac12$，此时
+$\alpha_M=0$；$|j,M+\frac12\rangle=0$ 仅当 $M=j+\frac12$，此时 $\beta_M=0$。所以每个向量的范数平方为
+$\alpha_M^2+\beta_M^2=1$。$M$ 不同的向量涉及不同的乘积基向量，而对相同的 $M$，内积为
+$-\alpha_M\beta_M+\beta_M\alpha_M=0$。它们共有 $(2j+2)+2j=2(2j+1)$ 个。
+(b) 第一个结论就是 $\alpha_{j+1/2}=1$，$\beta_{j+1/2}=0$。特征子空间 $S_z=j-\frac12$ 由
+$|j,j-1\rangle\otimes|{\uparrow}\rangle$ 和 $|j,j\rangle\otimes|{\downarrow}\rangle$ 张成，而由 $s_+|{\uparrow}\rangle=0$，$s_+|{\downarrow}\rangle=|{\uparrow}\rangle$，
+$$
+S_+\big(p\,|j,j-1\rangle\otimes|{\uparrow}\rangle+q\,|j,j\rangle\otimes|{\downarrow}\rangle\big)=(p\sqrt{2j}+q)\,|j,j\rangle\otimes|{\uparrow}\rangle ,
+$$
+它为零当且仅当 $q=-\sqrt{2j}\,p$；结合 $|p|^2+|q|^2=1$ 和 $q>0$（因而 $p<0$），得 $p=-\beta_{j-1/2}=-1/\sqrt{2j+1}$，
+$q=\alpha_{j-1/2}=\sqrt{2j/(2j+1)}$。(c) $S_z$：两项都有 $S_z=(M\mp\frac12)\pm\frac12=M$。对 $S_-$，令
+$x_M=p\,|j,M-\frac12\rangle\otimes|{\uparrow}\rangle+q\,|j,M+\frac12\rangle\otimes|{\downarrow}\rangle$；由于 $s_-|{\uparrow}\rangle=|{\downarrow}\rangle$，$s_-|{\downarrow}\rangle=0$，
+$$
+S_-x_M=p\sqrt{(j+M-\tfrac12)(j-M+\tfrac32)}\;|j,M-\tfrac32\rangle\otimes|{\uparrow}\rangle
++\Big(p+q\sqrt{(j+M+\tfrac12)(j-M+\tfrac12)}\Big)|j,M-\tfrac12\rangle\otimes|{\downarrow}\rangle .
+$$
+我们利用 $\beta_M\sqrt{(j+M+\frac12)(j-M+\frac12)}=(j-M+\frac12)\alpha_M$ 和 $\alpha_M\sqrt{(j+M+\frac12)(j-M+\frac12)}=(j+M+\frac12)\beta_M$。
+对 $J=j+\frac12$，$(p,q)=(\alpha_M,\beta_M)$，$c=\sqrt{(J+M)(J-M+1)}=\sqrt{(j+M+\frac12)(j-M+\frac32)}$：第一个系数为
+$\sqrt{(j+M+\frac12)(j+M-\frac12)(j-M+\frac32)/(2j+1)}=c\,\alpha_{M-1}$，第二个为 $\alpha_M(j-M+\frac32)=c\,\beta_{M-1}$。
+对 $J=j-\frac12$，$(p,q)=(-\beta_M,\alpha_M)$，$c=\sqrt{(j+M-\frac12)(j-M+\frac12)}$：第一个系数为
+$-\sqrt{(j-M+\frac12)(j+M-\frac12)(j-M+\frac32)/(2j+1)}=-c\,\beta_{M-1}$，第二个为 $\beta_M(j+M-\frac12)=c\,\alpha_{M-1}$。
+在两种情形下，对 $M>-J$ 都有 $S_-|J,M\rangle\!\rangle=c\,|J,M-1\rangle\!\rangle$。对 $M=-J$，两个系数都为零（若 $J=j+\frac12$，
+则 $p=\alpha_M=0$；若 $J=j-\frac12$，则 $j+M-\frac12=0$），所以 $S_-|J,-J\rangle\!\rangle=0$。(d) 由 (a) 和 (c)，在规范正交基
+$|J,M\rangle\!\rangle$ 下，$S_z$ 和 $S_-$ 的矩阵就是自旋 $(j+\frac12)\oplus$ 自旋 $(j-\frac12)$ 的矩阵（定理 4.11 与上面的
+公式）；$S_+=S_-^*$ 的矩阵也是如此，因而 $S_x=\frac12(S_++S_-)$ 和 $S_y=\frac1{2i}(S_+-S_-)$ 的矩阵也是如此。$\square$
+
+习题 2 把这一分解（但不包括系数）推广到 $j_1\otimes j_2$。对本库来说，只有定理 4.16 的两个最高权向量是重要的，
+而它们在任意自旋表示中都适用，无论是否不可约：
+
+**推论 4.17（逐个格点构造最高权向量）。** 设 $(T_a)$ 是 $E$ 上的自旋表示，令
+$\mathcal H_\mu(E)=\ker T_+\cap\ker(T_z-\mu)$，其规范正交基为 $B_\mu$（若 $\mathcal H_\mu(E)=0$，则 $B_\mu=\emptyset$），并令
+$S_a=T_a\otimes1+1\otimes s_a$ 作用在 $E\otimes\mathbb C^2$ 上。对每个 $S\in\{0,\frac12,1,\dots\}$，向量
+$$
+v\otimes|{\uparrow}\rangle\quad(v\in B_{S-1/2}),\qquad
+\sqrt{\tfrac{2S+1}{2S+2}}\;v\otimes|{\downarrow}\rangle-\tfrac1{\sqrt{(2S+1)(2S+2)}}\;T_-v\otimes|{\uparrow}\rangle\quad(v\in B_{S+1/2})
+$$
+构成 $\ker S_+\cap\ker(S_z-S)$ 的一组规范正交基（对 $S=0$，第一族为空）。从一个自旋出发
+（$E=\mathbb C^2$，$B_{1/2}=\{|{\uparrow}\rangle\}$，其余所有 $B_\mu$ 为空）并添加 $L-1$ 个自旋，这就给出 $L$ 个自旋 $\frac12$ 的
+最高权向量空间的规范正交基，其维数为 $m_S$（命题 4.15(b)）。
+
+*证明。* 记 $a=\sqrt{(2S+1)/(2S+2)}$，$b=-1/\sqrt{(2S+1)(2S+2)}$，$u(v)=a\,v\otimes|{\downarrow}\rangle+b\,T_-v\otimes|{\uparrow}\rangle$。对
+$v\in\mathcal H_{S+1/2}(E)$，$T_+T_-v=(T_-T_++2T_z)v=(2S+1)v$，且 $a+(2S+1)b=0$。*最高权：* $S_z$ 在两族上都等于 $S$
+（在 $v$ 上 $T_z=S\mp\frac12$，在 $T_-v$ 上 $T_z=S-\frac12$）；$S_+(v\otimes|{\uparrow}\rangle)=T_+v\otimes|{\uparrow}\rangle=0$，并且
+$S_+u(v)=a\,T_+v\otimes|{\downarrow}\rangle+a\,v\otimes|{\uparrow}\rangle+b\,T_+T_-v\otimes|{\uparrow}\rangle=(a+(2S+1)b)\,v\otimes|{\uparrow}\rangle=0$。
+*规范正交：* 对 $v\in B_{S-1/2}$，$\langle v\otimes|{\uparrow}\rangle,u(v')\rangle=b\langle v,T_-v'\rangle=b\langle T_+v,v'\rangle=0$，并且
+$\langle u(v),u(v')\rangle=a^2\langle v,v'\rangle+b^2\langle v,T_+T_-v'\rangle=(a^2+(2S+1)b^2)\langle v,v'\rangle=\langle v,v'\rangle$。
+*张成：* 设 $S_zw=Sw$，$S_+w=0$，写 $w=x\otimes|{\uparrow}\rangle+y\otimes|{\downarrow}\rangle$。则 $T_zx=(S-\frac12)x$，
+$T_zy=(S+\frac12)y$，且 $0=S_+w=(T_+x+y)\otimes|{\uparrow}\rangle+T_+y\otimes|{\downarrow}\rangle$，所以 $T_+y=0$，即
+$y\in\mathcal H_{S+1/2}(E)$，并且 $T_+x=-y$。于是 $x'=x+\frac1{2S+1}T_-y$ 满足 $T_+x'=-y+y=0$，所以
+$x'\in\mathcal H_{S-1/2}(E)$，而对 $S=0$ 它为 $0$（命题 4.15(b) 的证明）。由于 $b/a=-1/(2S+1)$，
+$w=x'\otimes|{\uparrow}\rangle+a^{-1}u(y)$（$u$ 线性延拓）属于两族的张成。对 $L$ 个自旋，对 $n=2,\dots,L$ 把这一结论应用于
+$E=(\mathbb C^2)^{\otimes(n-1)}$ 及其总自旋 $T_a$；在一个自旋上，$\mathcal H_{1/2}=\mathbb C|{\uparrow}\rangle$，其余所有
+$\mathcal H_\mu=0$（唯一的自旋是 $\frac12$）。$\square$
+
+第二族由定理 4.16 中 $j=S+\frac12$ 时的向量 $|S,S\rangle\!\rangle$ 组成，它们写在由诸 $T_-^kv$ 张成的自旋 $j$ 拷贝之中
+（定理 4.11 的证明，$|j,j-1\rangle=T_-v/\sqrt{2j}$），而第一族是 $j=S-\frac12$ 时的 $|j+\frac12,j+\frac12\rangle\!\rangle$。用中间
+自旋序列 $S_1=\frac12,S_2,\dots,S_L=S$（$|S_n-S_{n-1}|=\frac12$）标记每个基向量，就得到 `su2.SU2Chain` 所构造的
+Yamanouchi 基（其源代码恰好使用这些系数；下面的代码只检验推论 4.17 的结论），它位于 `SpinChain` 的 $U(1)$ 扇区
+$\hat N=\frac L2+S$ 之中（`SpinChain` 的格点顺序是张量因子的重新标记，由引理 B.1(b)，它与总自旋可交换）。代码
+用稠密矩阵以及本库的 `su2.clebsch_gordan` 检验定理 4.16，然后对八个自旋的基检验推论 4.17 的结论。我们还用
+`D4` 在四个自旋的环上检验命题 4.15(a)，并比较八个自旋时的块大小。
 
 ```python
+from torch_vn_algebra import su2
+
+def ket(j, m):                                            # |j, m> of Theorem 4.11 (zero if |m| > j)
+    v = torch.zeros(int(2 * j + 1), dtype=dt)
+    if abs(m) <= j:
+        v[int(j - m)] = 1
+    return v
+
+up, dn = ket(0.5, 0.5), ket(0.5, -0.5)
+for j in (0.5, 1.0, 1.5, 2.0):                            # Theorem 4.16
+    Sj = dc.spin_matrices(j)
+    sp_j = [math.sqrt(j * (j + 1) - (j - k) * (j - k + 1)) for k in range(1, int(2 * j) + 1)]
+    assert close(Sj[0] + 1j * Sj[1], torch.diag(torch.tensor(sp_j, dtype=dt), 1))     # S_+ of Theorem 4.11
+    assert close(Sj[2], torch.diag(torch.tensor([j - k for k in range(int(2 * j) + 1)], dtype=dt)))
+    Sc = torch.stack([torch.kron(a, torch.eye(2, dtype=dt)) + torch.kron(torch.eye(len(a), dtype=dt), b)
+                      for a, b in zip(Sj, dc.spin_matrices(0.5))])
+    Sp, Sm = Sc[0] + 1j * Sc[1], Sc[0] - 1j * Sc[1]
+    cols = []
+    for J in (j + 0.5, j - 0.5):
+        for M in [J - k for k in range(int(2 * J + 1))]:
+            al, be = math.sqrt((j + M + 0.5) / (2 * j + 1)), math.sqrt((j - M + 0.5) / (2 * j + 1))
+            p, q = (al, be) if J > j else (-be, al)
+            x = p * torch.kron(ket(j, M - 0.5), up) + q * torch.kron(ket(j, M + 0.5), dn)
+            assert close(Sc[2] @ x, M * x)
+            if M == J:
+                assert close(Sp @ x, 0)                               # highest weight
+            else:
+                assert close(Sm @ cols[-1], math.sqrt((J + M + 1) * (J - M)) * x)   # lowering, (c)
+            for s2, e in ((0.5, up), (-0.5, dn)):                     # the library's Racah formula agrees
+                cg = su2.clebsch_gordan(j, M - s2, 0.5, s2, J, M) if abs(M - s2) <= j else 0.0
+                assert abs(cg - torch.vdot(torch.kron(ket(j, M - s2), e), x).real.item()) < 1e-12
+            cols.append(x)
+    U = torch.stack(cols, 1)
+    assert U.shape == (2 * len(Sj[0]), 2 * len(Sj[0])) and close(U.mH @ U, torch.eye(U.shape[1]))   # (a)
+
 def swap(i, j, n):
     p = list(range(n))
     p[i], p[j] = j, i
@@ -627,8 +761,11 @@ levels = torch.cat([torch.linalg.eigvalsh(h.matrix[0, c, :m, :m]).repeat_interle
                     for c, (k, m) in enumerate(zip(D4.k_factors, D4.multiplicities))])
 assert close(torch.sort(levels).values, torch.linalg.eigvalsh(H4))   # level of H_S repeated 2S+1 times
 
-from torch_vn_algebra import su2
 u1, sym = SpinChain(8, boundary='periodic'), su2.SU2Chain(8, boundary='periodic')
+for S, m in zip(sym.spins, sym.multiplicities):           # Corollary 4.17: orthonormal highest-weight bases
+    B, N = sym.hw_basis(S), int(4 + S)                     # columns in the U(1) sector N = L/2 + S
+    assert B.shape == (math.comb(8, N), m) and close(B.T @ B, torch.eye(m, dtype=B.dtype))
+    assert N == 8 or close(sym.raise_(B, N), 0)            # S_+ B = 0 (S_z = S holds in sector N)
 H_u1, H_su2 = u1.xxz(J=1.0, Delta=1.0), sym.heisenberg(J=1.0)
 E_u1 = torch.sort(torch.cat([torch.linalg.eigvalsh(H_u1.matrix[0, N, :k, :k])
                              for N, k in enumerate(u1.algebra.k_factors)])).values
@@ -636,21 +773,24 @@ E_su2, S_lev, _ = sym.full_spectrum(H_su2, return_quantum_numbers=True)   # leve
 E_su2, S_lev = E_su2[0], S_lev[0]
 assert close(E_u1, E_su2)
 assert S_lev[0] == 0 and (S_lev[1:4] == 1).all() and E_su2[4] - E_su2[3] > 1e-3     # singlet, then triplet
+assert E_su2[1] - E_su2[0] > 1e-3 and close(E_su2[1:4], E_su2[1].expand(3))       # simple singlet (Theorem 9.9)
 assert close(sym.restrict(H_u1).matrix, H_su2.matrix)      # Proposition 4.15(b)
 flops = lambda ks: sum(k ** 3 for k in ks)
 print(u1.algebra.k_factors, sym.multiplicities, flops(u1.algebra.k_factors), flops(sym.multiplicities))
 print(f"ground state energy {E_su2[0].item():.6f}, first excited {E_su2[1].item():.6f} (x3)")
 ```
 
-对八个自旋的环，$U(1)$ 块的大小为 $1,8,28,56,70,56,28,8,1$，$SU(2)$ 块的大小为 $m_S=14,28,20,7,1$
-（$S=0,\dots,4$）。对角化的开销 $\sum k^3$ 从 $739162$ 降到 $33040$，减小为约 $1/22$；代数的维数 $\sum k^2$
-从 $\binom{16}8=12870$ 降到 $1430$。基态是能量为 $-3.651093$ 的单态，第一激发能级是位于 $-3.128419$ 的三重态。
+对八个自旋的环，$U(1)$ 块的大小为 $\binom8w=1,8,28,56,70,56,28,8,1$（4.4 节），$SU(2)$ 块的大小为
+$m_S=14,28,20,7,1$（$S=0,\dots,4$，命题 4.13）。对角化的开销 $\sum k^3$ 从 $739162$ 降到 $33040$，减小为约
+$1/22$；代数的维数 $\sum k^2$ 从 $\sum_w\binom8w\binom8{8-w}=\binom{16}8=12870$（从 $16$ 个元素中选 $8$ 个，其中 $w$ 个
+取自前 $8$ 个）降到 $\sum_Sm_S^2=1430=\binom{16}8/9$（推论 B.10）。由定理 9.9（环的长度为偶数且 $J>0$），基态是
+唯一的单态，且 $E_0(0)<E_0(1)$。*数值观察*（由上面的代码计算）：基态能量为 $-3.651093$，第一激发能级是位于
+$-3.128419$ 的三重态。
 
-> **物理意义。** Heisenberg 模型描述磁性绝缘体中局域电子自旋的交换相互作用；$J_{ij}>0$ 倾向于使相邻
-> 自旋反平行。它的谱由多重态组成，而磁场 $h\,S^z$ 把每个多重态分裂为 $2S+1$ 个等间距能级（习题 4）。
-> 若二分格子的两个子格之间的耦合 $J_{ij}>0$，子格内部的耦合 $J_{ij}\le0$，且两个子格大小相等，则基态是
-> 单态（Lieb–Mattis 定理，E. Lieb and D. Mattis, *J. Math. Phys.* 3 (1962) 749；此处不加证明地陈述）。
-> 上面八个自旋的环就是一个例子。
+> **物理意义**（物理解释，而非本课程的定理）。Heisenberg 模型描述磁性绝缘体中局域电子自旋的交换相互作用；
+> $J_{ij}>0$ 倾向于使相邻自旋反平行。它的谱由多重态组成，而磁场 $h\,S^z$ 把每个多重态分裂为 $2S+1$ 个等间距
+> 能级（习题 4）。定理 9.9（二分耦合；对偶数长度的反铁磁链和环，基态是单态）可追溯到 E. Lieb 和 D. Mattis
+> （*J. Math. Phys.* 3 (1962) 749）。
 
 ## 4.7 可与之比较的工具
 
@@ -661,7 +801,7 @@ SymbolicWedderburn.jl（Julia）为半定规划的对称性约化计算 Wedderbu
 用融合树处理 $SU(2)$。本库的 `decompose` 是面向小矩阵（$n$ 至多几百）的稠密方法；它接受任意矩阵列表
 （群元素或生成元），验证其结果（命题 4.9），并把代数及其交换子作为带有 `to_algebra`、`from_algebra`、
 `to_commutant`、`from_commutant` 的 `TypeIAlgebra` 对象返回，使第 3 章、第 5–8 章的内容可以直接应用。对
-自旋 $\frac12$ 链，`su2.SU2Chain` 直接给出 $SU(2)$ 块，对 $L$ 至多 $16$ 的所有自旋值都适用。
+自旋 $\frac12$ 链，`su2.SU2Chain` 直接给出 $SU(2)$ 块（推论 4.17）；它最多接受 $L=18$ 个自旋，这一上限由基所需的内存决定。
 
 ## 习题
 
@@ -679,22 +819,29 @@ SymbolicWedderburn.jl（Julia）为半定规划的对称性约化计算 Wedderbu
 <details>
 <summary>解答</summary>
 
-1. 与 $d=2$ 时一样：$\pi(\sigma)$ 是置换矩阵，它固定 $|b_1\dots b_L\rangle$ 当且仅当 $b$ 在各轮换上为常数，而这样的
-   $b$ 共有 $d^{\#\text{cycles}}$ 个。由推论 4.5(c)，
+1. 由引理 B.1(c)，$\pi(\sigma)$ 是置换矩阵，它固定 $|b_1\dots b_L\rangle$ 当且仅当 $b$ 在 $\sigma$ 的各轮换上为常数，
+   而这样的 $b$ 共有 $d^{\#\text{cycles}(\sigma)}$ 个。由推论 4.5(c)，
    $\dim\pi(S_L)'=\frac1{L!}\sum_\sigma(d^2)^{\#\text{cycles}(\sigma)}=\frac{x(x+1)\cdots(x+L-1)}{L!}$，其中 $x=d^2$
-   （第 5 章习题 2），这就是 $\binom{d^2+L-1}L$：$\binom63=20$，$\binom74=35$。$35$ 也等于
-   $\dim\{S_a\}''$，这就是 $L=4$ 时的定理 4.14。
+   （恒等式 $\sum_\sigma x^{\#\text{cycles}(\sigma)}=x(x+1)\cdots(x+L-1)$ 在第 5 章习题 2 的解答中证明），这就是
+   $\binom{d^2+L-1}L$（命题 B.3 通过对多重集计数证明了同一维数）：$\binom63=20$，$\binom74=35$。$35$ 也等于
+   $\dim\{S_a\}''$，这就是 $L=4$ 时的定理 4.14(b)：$\{S_a\}''=\pi(S_4)'$。
 
 ```python
 for n, value in ((3, 20), (4, 35)):
     assert dc.commutant_dimension(dc.permutation_representation(n, 2)) == math.comb(n + 3, n) == value
 ```
 
-2. 设 $j_1\ge j_2$。$S_z$ 在 $|m_1\rangle\otimes|m_2\rangle$ 上的特征值为 $m_1+m_2$，所以对
-   $M\in j_1+j_2+\mathbb Z$，$d_M$ 是满足 $|M-m_2|\le j_1$ 的 $m_2\in\{-j_2,\dots,j_2\}$ 的个数：若 $|M|\le j_1-j_2$，
-   则全部 $2j_2+1$ 个都满足；若 $j_1-j_2\le|M|\le j_1+j_2$，则为 $j_1+j_2-|M|+1$ 个（对 $M\ge0$，条件为
-   $m_2\ge M-j_1$）；超出此范围则为 $0$。由推论 4.12，$m_j=d_j-d_{j+1}$ 在 $j_1-j_2\le j\le j_1+j_2$ 时为 $1$，
-   在 $j<j_1-j_2$ 时为 $(2j_2+1)-(2j_2+1)=0$。
+2. $S_a=S^{(j_1)}_a\otimes1+1\otimes S^{(j_2)}_a$ 是自旋表示（4.5 节），而酉算子 $x\otimes y\mapsto y\otimes x$ 把它与
+   $(j_2,j_1)$ 的自旋表示缠结起来；所以可设 $j_1\ge j_2$。$S_z$ 在 $|m_1\rangle\otimes|m_2\rangle$ 上的特征值为 $m_1+m_2$，
+   所以它的特征值属于 $j_1+j_2+\mathbb Z$，而对这样的 $M$，$d_M$ 是满足 $|M-m_2|\le j_1$ 的 $m_2\in\{-j_2,\dots,j_2\}$
+   的个数（此时自动有 $m_1=M-m_2\in j_1+\mathbb Z$）；对 $M\notin j_1+j_2+\mathbb Z$，$d_M=0$。对 $M\ge0$，条件为
+   $M-j_1\le m_2\le M+j_1$，且 $M+j_1\ge j_2$，所以 $m_2$ 从 $\max(-j_2,M-j_1)$ 取到 $j_2$：当 $0\le M\le j_1-j_2$ 时
+   $d_M=2j_2+1$，当 $j_1-j_2\le M\le j_1+j_2$ 时 $d_M=j_1+j_2-M+1$，当 $M>j_1+j_2$ 时 $d_M=0$。由推论 4.12，自旋
+   $j\ge0$ 的重数为 $m_j=d_j-d_{j+1}$。若 $j\notin j_1+j_2+\mathbb Z$ 或 $j>j_1+j_2$，它为 $0$；$m_{j_1+j_2}=1-0=1$；对
+   $j_1-j_2\le j<j_1+j_2$（其中 $j\in j_1+j_2+\mathbb Z$，所以 $j+1\le j_1+j_2$），
+   $m_j=(j_1+j_2-j+1)-(j_1+j_2-j)=1$；而对 $0\le j<j_1-j_2$（所以 $j+1\le j_1-j_2$），$m_j=(2j_2+1)-(2j_2+1)=0$。
+   因此 $j_1\otimes j_2\cong\bigoplus_{j=j_1-j_2}^{j_1+j_2}j$，每个自旋恰好出现一次。对 $j_2=\frac12$，这就是
+   定理 4.16(d)，后者还给出了系数。
 
 ```python
 def coupled(a, b):                                        # S^(a) (x) 1 + 1 (x) S^(b)
@@ -709,12 +856,13 @@ for a, b, ks in ((1.0, 0.5, (2, 4)), (1.0, 1.0, (1, 3, 5))):  # 1 (x) 1/2 = 1/2 
 3. $U_\theta=\sum_qe^{iq\theta}P_q$，而 $e^{iq\theta}=e^{iq'\theta}$ 当且仅当 $(q-q')\theta\in2\pi\mathbb Z$，对无理的
    $\theta/2\pi$ 这迫使 $q=q'$。所以 $U_\theta$ 的特征子空间就是诸 $P_q$ 的像，而一个算子与正规矩阵 $U_\theta$ 可交换
    当且仅当它保持其特征子空间（定理 1.5(d) 以及如 2.2 节中的 Lagrange 插值），即当且仅当 $X=\sum_qP_qXP_q$；
-   由命题 4.10，这就是 $U(1)'$。
+   由命题 4.10，这就是 $U(1)'$。论证只用到对出现的荷 $q$ 而言诸 $e^{iq\theta}$ 互不相同；代码取 $\theta=1$ 和四个
+   量子比特的荷 $0,\dots,4$，对它们来说 $0<|q-q'|\le4<2\pi$ 就足够了。
    对 $\theta=\pi$，特征值 $(-1)^w$ 只看汉明重量的奇偶性：有两个维数为 $2^{n-1}$ 的特征子空间（$n\ge1$ 时，
-   即偶子集与奇子集），交换子为 $M_{2^{n-1}}\oplus M_{2^{n-1}}$。
+   即偶权重的构型与奇权重的构型；翻转第一个比特是它们之间的一个双射），交换子为 $M_{2^{n-1}}\oplus M_{2^{n-1}}$。
 
 ```python
-for theta, m in ((1.0, (1, 1, 4, 4, 6)), (math.pi, (8, 8))):
+for theta, m in ((1.0, (1, 1, 4, 4, 6)), (math.pi, (8, 8))):   # theta = 1: e^{iq}, q = 0..4, distinct as 4 < 2 pi
     D_theta = dc.from_generators(torch.linalg.matrix_exp(1j * theta * N_op))
     assert D_theta.multiplicities == m and set(D_theta.k_factors) == {1}
 ```
