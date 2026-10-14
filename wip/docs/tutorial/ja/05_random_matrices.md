@@ -697,7 +697,7 @@ QuSpin のような厳密対角化コードはセクターごとにスペクト�
    $V\in U(k)$ に対して $S\mapsto V^TSV$ のもとで不変であることを示せ。$\lambda_1,\dots,\lambda_k$ を $S$ の固有値（重複度を込めて）とし、
    単位円 $\mathbb T$ のボレル集合 $B$ に対し $N_B(S)=\#\{j:\lambda_j\in B\}$ とおく。$N_B(S)$ が
    確率変数であること、$\nu(B)=\frac1k\mathbb EN_B(S)$ が正規化された弧長であること（固有位相の平均密度は
-   一様である）、そして $0$ でないすべての整数 $m$ に対し $\mathbb E\operatorname{Tr}S^m=0$ であることを示せ。
+   一様である）、そしてすべての整数 $m\neq0$ に対し $\mathbb E\operatorname{Tr}S^m=0$ であることを示せ。
    $k=32$ の COE の固有位相について $\langle r\rangle$ を計算し、5.3節の GOE の値と比較せよ（数値的観察）。
 
 <details>
