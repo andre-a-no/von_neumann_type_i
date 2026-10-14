@@ -104,10 +104,12 @@ $\operatorname{Hom}(\sigma,\rho)$，而这 $m_c$ 个映射的像相互正交，�
 结构定理得出不可约表示，在这里由不可约表示得出结构；两种情形下都有 $\dim\rho(X)'=\sum_cm_c^2$ 和
 $\dim\rho(X)''=\sum_ck_c^2$。$\rho(X)''$ 的极小中心投影 $P_c=\sum_jQ_{c,j}Q_{c,j}^*$ 的像是 $\rho_c$ 的
 **同型分量**。
+由定理 4.3，每个厄米的 $H\in\rho(X)'$ 都具有形式 $V(\bigoplus_c1_{k_c}\otimes h_c)V^*$，其中 $h_c\in M_{m_c}$
+厄米，而 $1_{k_c}\otimes h_c$ 是含 $k_c$ 个 $h_c$ 拷贝的分块对角矩阵：$H$ 的谱是诸 $m_c\times m_c$ 块 $h_c$ 的谱的
+并，$h_c$ 的每个特征值重复 $k_c$ 次。
 
-> **物理意义。** 若 $\rho(X)$ 是一个对称性，则每个对称哈密顿量 $H\in\rho(X)'$ 都具有形式
-> $V(\bigoplus_c1_{k_c}\otimes h_c)V^*$：$m_c\times m_c$ 块 $h_c$ 的每个特征值都出现 $k_c$ 次。这些
-> $k_c$ 重简并的能级就是该对称性的**多重态**，而需要对角化的块的大小是重数 $m_c$，而不是多重态的大小。
+> **物理意义**（物理解释，而非本课程的定理）。若 $\rho(X)$ 是一个对称性，$H\in\rho(X)'$ 是哈密顿量，则刚才
+> 描述的 $k_c$ 重简并能级就是该对称性的**多重态**，而需要对角化的块的大小是重数 $m_c$，而不是多重态的大小。
 
 对有限群，重数不需要分解任何东西就能算出。
 
@@ -148,11 +150,37 @@ $\langle Y,Z\rangle_{HS}=\operatorname{Tr}(Y^*Z)$ 是自伴的（作替换 $g\to
 $A_{ii}B_{jj}$），由此得到 $\frac1{|G|}\sum_g|\chi_\pi(g)|^2$。
 
 我们用特征标重做 2.4 节的例子。置换矩阵的迹等于它固定的基向量的个数，而 $\pi(\sigma)$ 固定
-$|b_1b_2b_3\rangle$ 当且仅当 $b$ 在 $\sigma$ 的每个轮换上为常数，所以 $\chi_\pi(\sigma)=2^{\#\text{cycles}(\sigma)}$。
-群 $S_3$ 有平凡表示、符号表示和标准表示（$\mathbb C^3$ 上的置换表示 $P_\sigma$ 去掉平凡表示），其特征标分别为
-$1$、$\operatorname{sgn}\sigma=(-1)^{3-\#\text{cycles}}$ 和 $\operatorname{Tr}P_\sigma-1$；它们都是实的。代码把 $P_\sigma$ 求为
-$\pi(\sigma)$ 在 $|100\rangle,|010\rangle,|001\rangle$ 张成的空间上的限制，并且
-$\#\text{cycles}(\sigma)=\dim\ker(P_\sigma-1)$（在各轮换上为常数的向量）。
+$|b_1b_2b_3\rangle$ 当且仅当 $b$ 在 $\sigma$ 的每个轮换上为常数（引理 B.1(c)），所以
+$\chi_\pi(\sigma)=2^{\#\text{cycles}(\sigma)}$。手头有 $S_3$ 的三个酉表示。设 $P_\sigma e_i=e_{\sigma(i)}$ 是 $\mathbb C^3$ 上的
+置换表示（到置换矩阵中的同态）。**平凡**表示是 $\sigma\mapsto1$。**符号**表示是
+$\operatorname{sgn}\sigma=\det P_\sigma$，它是到 $\{\pm1\}\subseteq U(1)$ 中的同态，因为行列式是可乘的，而置换矩阵
+的行列式为 $\pm1$。直线 $\mathbb C(1,1,1)$ 是不变的，因此 $E=(1,1,1)^\perp$ 也是不变的（引理 4.1(a)）；**标准**
+表示是 $P$ 在 $E$ 上的限制。在适配于 $\mathbb C(1,1,1)\oplus E$ 的规范正交基下，$P_\sigma=1\oplus\operatorname{std}(\sigma)$，
+所以 $\chi_{\rm std}(\sigma)=\operatorname{Tr}P_\sigma-1$，即不动点个数减一。$S_3$ 的六个元素是恒等元、三个对换和
+两个 $3$-轮换，它们分别有 $3,2,1$ 个轮换和 $3,1,0$ 个不动点；对换交换 $1_3$ 的两列，所以其符号为 $-1$，而
+$3$-轮换是两个对换的乘积（$(1\,2\,3)=(1\,3)(1\,2)$），所以其符号为 $+1$。由此得到下表
+
+| | 恒等元（$1$） | 对换（$3$） | $3$-轮换（$2$） |
+|---|---|---|---|
+| $\chi_{\rm triv}$ | $1$ | $1$ | $1$ |
+| $\operatorname{sgn}$ | $1$ | $-1$ | $1$ |
+| $\chi_{\rm std}$ | $2$ | $0$ | $-1$ |
+| $\chi_\pi$ | $8$ | $4$ | $2$ |
+
+（所以 $\operatorname{sgn}\sigma=(-1)^{3-\#\text{cycles}(\sigma)}$；所有特征标都是实的）。逐个共轭类计算
+$\langle\varphi,\psi\rangle_G$：
+$\langle\chi_{\rm triv},\chi_{\rm triv}\rangle_G=\frac{1+3+2}6=1$，$\langle\operatorname{sgn},\operatorname{sgn}\rangle_G=\frac{1+3+2}6=1$，
+$\langle\chi_{\rm std},\chi_{\rm std}\rangle_G=\frac{4+0+2}6=1$，所以由推论 4.5(c)，这三个表示都是不可约的，并且
+由于它们的特征标不同，它们两两不等价。推论 4.5(b) 给出它们在 $\pi$ 中的重数：
+$$
+m_{\rm triv}=\tfrac{8+3\cdot4+2\cdot2}6=4,\qquad m_{\rm sgn}=\tfrac{8-3\cdot4+2\cdot2}6=0,\qquad
+m_{\rm std}=\tfrac{2\cdot8+0-2\cdot2}6=2 .
+$$
+所以平凡表示和标准表示分别等价于 $\pi$ 的成分 $\rho_c$（定理 4.3），其 $m_c=4$ 和 $m_c=2$；它们占据
+$4\cdot1+2\cdot2=8=\sum_ck_cm_c$ 维，所以没有其他成分：$k=(1,2)$，$m=(4,2)$，并且
+$\dim\pi(S_3)'=4^2+2^2=\frac16(64+3\cdot16+2\cdot4)=20$（推论 4.5(c)）。代码重新计算这张表：它把 $P_\sigma$ 求为
+$\pi(\sigma)$ 在 $|100\rangle,|010\rangle,|001\rangle$ 张成的不变子空间上的限制（$\pi(\sigma)$ 在其上置换唯一的那个 $1$
+的位置，引理 B.1(a)），并且 $\#\text{cycles}(\sigma)=\dim\ker(P_\sigma-1)$（在各轮换上为常数的向量）。
 
 ```python
 import math
@@ -180,8 +208,7 @@ assert close(mult, torch.tensor([4.0, 0.0, 2.0], dtype=torch.float64))
 assert dc.commutant_dimension(G) == 20                                # Corollary 4.5(c): M_4 (+) M_2
 ```
 
-平凡表示出现 $4$ 次，符号表示完全不出现，标准表示出现两次；由于 $4\cdot1+2\cdot2=8$，没有其他表示出现，
-并且 $\dim\pi(S_3)'=\frac16(64+3\cdot16+2\cdot4)=20$。这就是 2.4 节的分解，现在由每个表示的一张六个数的表得到。
+这就是 2.4 节的分解，现在由每个表示的一张六个数的表得到。
 
 ## 4.3 从生成元到代数：一个随机化算法
 
@@ -204,53 +231,86 @@ $V^*aV=\bigoplus_da_d\otimes1$ 作用为 $a_c$，而诸 $a_c$ 取遍 $M_{k_c}$�
 不变子空间。$\square$
 
 **命题 4.7（一般性）。** 设 $K$ 和 $Y$ 分别是 $\mathcal A'_h$ 和 $\mathcal A'$ 中相互独立的随机元素，其分布在这些
-实向量空间上关于 Lebesgue 测度有密度。则以概率一：(a) 引理 4.6 的假设成立；(b) 对 $K$ 的任意两个像位于同一
-直和项中的谱投影 $\Pi_i,\Pi_j$，有 $\Pi_iY\Pi_j\neq0$。
+实向量空间上关于 Lebesgue 测度有密度（引理 A.3）。则以概率一：(a) 引理 4.6 的假设成立；(b) 对 $K$ 的任意两个
+像位于同一直和项中的不同谱投影 $\Pi_i,\Pi_j$，有 $\Pi_iY\Pi_j\neq0$。
 
-*证明。* 我们要用到：*$\mathbb R^d$ 上的实多项式 $p\not\equiv0$ 只在一个 Lebesgue 零测集上为零。* 当 $d=1$
-时它只有有限多个根。当 $d>1$ 时，写 $p=\sum_jp_j(x')t^j$，其中 $x'\in\mathbb R^{d-1}$，且某个 $p_j\not\equiv0$；
-在零测集 $\{p_j=0\}$（归纳）之外，截面 $\{t:p(x',t)=0\}$ 是有限的，再由 Tonelli 定理得测度为 $0$。
-
-(a) 厄米矩阵 $\kappa=\bigoplus_c\kappa_c\in M_N$ 实线性地依赖于 $K$。$1,\kappa,\dots,\kappa^{N-1}$ 关于
+*证明。* (a) 厄米矩阵 $\kappa=\bigoplus_c\kappa_c\in M_N$ 实线性地依赖于 $K$。$1,\kappa,\dots,\kappa^{N-1}$ 关于
 $\langle\cdot,\cdot\rangle_{HS}$ 的 Gram 行列式 $\delta(K)=\det[\operatorname{Tr}\kappa^{i+j}]_{i,j=0}^{N-1}$ 是 $K$ 的坐标的实
 多项式，它非零当且仅当这些幂线性无关。由于对 $\kappa=U\operatorname{diag}(\lambda)U^*$ 有
 $p(\kappa)=U\operatorname{diag}(p(\lambda_l))U^*$，一个次数 $<N$ 的非零多项式零化 $\kappa$ 当且仅当它在
 $\operatorname{spec}\kappa$ 上为零，而这当且仅当 $\kappa$ 的不同特征值少于 $N$ 个时才可能（对这些特征值取
 $\prod_\mu(t-\mu)$）。所以 $\delta(K)\neq0$ 就是引理 4.6 的假设，并且 $\delta\not\equiv0$：它在
-$V(\bigoplus_c1\otimes\operatorname{diag}(\text{互不相同的实数}))V^*\in\mathcal A'_h$ 处非零。因此
-$\{\delta=0\}$ 是零测集。
+$V(\bigoplus_c1\otimes\operatorname{diag}(\text{互不相同的实数}))V^*\in\mathcal A'_h$ 处非零。因此由推论 A.7(b)，
+$\mathbb P(\delta(K)=0)=0$。
 
-(b) 在 (a) 成立的开集上，谱投影是 $K$ 的多项式，其系数是特征值的连续函数（定理 1.5(a) 的证明）。固定这样的
-$K$。由引理 4.6，$V^*\Pi_iV$ 和 $V^*\Pi_jV$ 分别投影到 $\mathbb C^{k_c}\otimes e_i$ 和 $\mathbb C^{k_c}\otimes e_j$ 上，
-而对 $V^*YV=\bigoplus_d1\otimes y_d$，$\Pi_iY\Pi_j=0$ 当且仅当 $\langle e_i,y_ce_j\rangle=0$。映射
-$Y\mapsto\langle e_i,y_ce_j\rangle$ 是实线性映射 $\mathcal A'\to\mathbb C$ 且非零（它在
-$V(1\otimes|e_i\rangle\langle e_j|)V^*$ 处的值为 $1$），所以它的核是零测集。由于 $Y$ 与 $K$ 独立，Tonelli 定理
-给出概率 $0$。$\square$
+(b) 集合 $O=\{\delta\neq0\}\subseteq\mathcal A'_h$ 是开集（$\delta$ 连续）。对 $K\in O$，$K$ 恰有 $N$ 个互不相同的特征值
+$\mu_1(K)<\dots<\mu_N(K)$（即 $\kappa$ 的特征值，重数为诸 $k_c$），所以它按特征值递增编号的谱投影
+$\Pi_1(K),\dots,\Pi_N(K)$ 在 $O$ 上连续（命题 A.13）。固定 $l\neq l'$，令 $\mathcal N_{ll'}$ 为满足下列条件的
+$(K,Y)\in O\times\mathcal A'$ 的集合：对某个 $c$ 有 $P_c\Pi_l(K)=\Pi_l(K)$ 且 $P_c\Pi_{l'}(K)=\Pi_{l'}(K)$（$P_c$ 为中心投影），
+并且 $\Pi_l(K)Y\Pi_{l'}(K)=0$；它由 Borel 集 $O\times\mathcal A'$ 上的连续方程定义，因此是 Borel 集。固定一个使两个像
+都位于直和项 $c$ 中的 $K\in O$。由引理 4.6，$V^*\Pi_lV$ 和 $V^*\Pi_{l'}V$ 分别投影到 $\mathbb C^{k_c}\otimes e$ 和
+$\mathbb C^{k_c}\otimes e'$ 上，其中 $e,e'$ 是 $\kappa_c$ 的规范正交特征向量，而对 $V^*YV=\bigoplus_d1\otimes y_d$，
+$\Pi_lY\Pi_{l'}=0$ 当且仅当 $\langle e,y_ce'\rangle=0$。映射 $Y\mapsto\langle e,y_ce'\rangle$ 是实线性映射
+$\mathcal A'\to\mathbb C$ 且非零（它在 $V(0\oplus\dots\oplus1\otimes|e\rangle\langle e'|\oplus\dots\oplus0)V^*$ 处的值为 $1$），
+所以它的核是真子空间，是零测集（推论 A.7(c)）。所以每个截面 $\{Y:(K,Y)\in\mathcal N_{ll'}\}$ 都是零测集（若两个像
+位于不同的直和项中，它是空集），而由于 $Y$ 与 $K$ 独立，由推论 A.7(d) 得 $\mathbb P((K,Y)\in\mathcal N_{ll'})=0$。
+(b) 中的事件只在 $\{\delta(K)=0\}\cup\bigcup_{l\neq l'}\{(K,Y)\in\mathcal N_{ll'}\}$ 上不成立，而这是有限个概率为 $0$ 的
+事件之并。$\square$
 
-**引理 4.8（对齐各拷贝）。** 设 $W_i,W_j$ 是 $\mathcal A$ 在其上不可约地作用的不变子空间，其规范正交基为
+**引理 4.8（压缩；对齐各拷贝）。** (a) 设 $W$ 是一个 $\mathcal A$-不变子空间，其规范正交基为
+$Q\in M_{n\times d}$，$\sigma(a)=Q^*aQ$ 为限制。则 $\sigma(\mathcal A)$ 是 $*$-代数，
+$\{Q^*YQ:Y\in\mathcal A'\}=\sigma(\mathcal A)'$，且 $\{Q^*KQ:K\in\mathcal A'_h\}=\sigma(\mathcal A)'_h$。$\mathcal A$ 在 $W$ 上
+不可约地作用，当且仅当对每个 $Y\in\mathcal A'$ 有 $Q^*YQ\in\mathbb C1$。若不然，且 $X$ 是 $\mathcal A'$ 或
+$\mathcal A'_h$ 中具有密度的随机元素，则以概率一 $Q^*XQ\notin\mathbb C1$。
+
+(b) 设 $W_i,W_j$ 是 $\mathcal A$ 在其上不可约地作用的不变子空间，其规范正交基为
 $Q_i,Q_j$，限制为 $\sigma_i(a)=Q_i^*aQ_i$，并设 $Y\in\mathcal A'$。则 $T=Q_i^*YQ_j\in\operatorname{Hom}(\sigma_j,\sigma_i)$。
 若 $T\neq0$，则 $T=\lambda U$，其中 $\lambda>0$，$U$ 为酉矩阵，并且 $Q_j'=Q_jU^*$ 对所有 $a\in\mathcal A$ 满足
 $Q_j'^*aQ_j'=\sigma_i(a)$。若 $W_i,W_j$ 位于不同的直和项中（$W_i\subseteq P_c\mathbb C^n$，
 $W_j\subseteq P_d\mathbb C^n$，$c\neq d$），则 $T=0$。
 
-*证明。* 与定理 4.3 的证明一样，$aQ_j=Q_j\sigma_j(a)$ 且 $Q_i^*a=\sigma_i(a)Q_i^*$，所以
+*证明。* (a) 与定理 4.3 的证明一样（$W$ 在 $a$ 和 $a^*$ 下不变），对 $a\in\mathcal A$ 有 $aQ=Q\sigma(a)$ 且
+$Q^*a=\sigma(a)Q^*$。因此 $\sigma(ab)=Q^*aQ\sigma(b)=\sigma(a)\sigma(b)$，$\sigma(a^*)=\sigma(a)^*$，
+$\sigma(1)=Q^*Q=1_d$，所以 $\sigma$ 是保单位的 $*$-同态，$\sigma(\mathcal A)$ 是 $*$-代数；并且对 $Y\in\mathcal A'$，
+$Q^*YQ\sigma(a)=Q^*YaQ=Q^*aYQ=\sigma(a)Q^*YQ$。反之，对 $T\in\sigma(\mathcal A)'$，令 $Y=QTQ^*$；则
+$aY=Q\sigma(a)TQ^*=QT\sigma(a)Q^*=Ya$，所以 $Y\in\mathcal A'$，$Q^*YQ=T$，并且若 $T$ 厄米则 $Y$ 也厄米。若 $\sigma$
+不可约，则 $\sigma(\mathcal A)'=\operatorname{Hom}(\sigma,\sigma)=\mathbb C1$（引理 4.2(b)）。若 $E\subseteq\mathbb C^d$ 是不同于
+$0,\mathbb C^d$ 的 $\sigma$-不变子空间，则 $E^\perp$ 也是（引理 4.1(a)），而到 $E$ 上的正交投影是
+$\sigma(\mathcal A)'_h$ 中的一个非数乘元素。在这种情形下，$\mathbb C1\cap\sigma(\mathcal A)'$ 和
+$\mathbb R1\cap\sigma(\mathcal A)'_h$ 是真实子空间，它们在满射实线性映射 $X\mapsto Q^*XQ$ 下的原像是 $\mathcal A'$ 和
+$\mathcal A'_h$ 的真子空间，而这些都是零测集（推论 A.7(c)）。
+
+(b) 与 (a) 一样，$aQ_j=Q_j\sigma_j(a)$ 且 $Q_i^*a=\sigma_i(a)Q_i^*$，所以
 $T\sigma_j(a)=Q_i^*YaQ_j=Q_i^*aYQ_j=\sigma_i(a)T$。引理 4.2 给出 $T=\lambda U$ 和
 $U\sigma_j(a)U^*=\sigma_i(a)$，后者就是 $Q_j'^*aQ_j'$。最后，$P_c\in\mathcal A\cap\mathcal A'$，$Q_i=P_cQ_i$，
 $P_cQ_j=0$，所以 $T=Q_i^*P_cYQ_j=Q_i^*YP_cQ_j=0$。$\square$
 
 于是算法（`decompose.wedderburn`，前端为 `from_group` 和 `from_generators`）如下：
 
-1. *对交换子采样。* 对有限群的全部元素，取 $Y=P(Z)$ 和 $K=P(Z+Z^*)$，其中 $P$ 为 twirl，$Z$ 为高斯
-   矩阵：它们是高斯分布在到 $\mathcal A'$ 和 $\mathcal A'_h$ 上的线性满射下的像，因而有密度。对生成元，
-   $Y,K$ 是 $\mathcal A'=\{X:[S_j,X]=[S_j^*,X]=0\}$ 的一组基的高斯线性组合，而 $\mathcal A'$ 是 $M_n$ 上一个
-   线性映射的零空间。
+1. *对交换子采样。* 对有限群的全部元素，取 $Y=P(Z)$ 和 $K=P(Z'+Z'^*)$，其中 $P$ 为 twirl，$Z,Z'$ 为相互
+   独立的 Ginibre 矩阵。$P$ 是 $M_n$ 到 $\mathcal A'$ 上的线性投影，且 $P(Z)^*=P(Z^*)$，所以 $Z\mapsto P(Z)$ 和
+   $Z'\mapsto P(Z'+Z'^*)$ 是到 $\mathcal A'$ 和到 $\mathcal A'_h$ 上的实线性满射（对 $H\in\mathcal A'_h$，
+   $P(\frac H2+\frac H2)=H$）；Ginibre 矩阵是 $M_n$ 中的非退化中心化高斯向量（命题 A.16），所以 $Y$ 和 $K$ 是
+   $\mathcal A'$ 和 $\mathcal A'_h$ 中的非退化中心化高斯向量，从而有密度（定理 A.15）。对生成元，
+   $\mathcal A'=\{X:[S_j,X]=[S_j^*,X]=0\}$ 是 $M_n$ 上一个线性映射的零空间（本库使用厄米部分
+   $\frac12(S_j+S_j^*)$、$\frac1{2i}(S_j-S_j^*)$，它们与 $S_j,S_j^*$ 张成同一个复空间，因而有相同的交换子）；取它的一组基
+   $(B_r)_{r\le D}$，令 $Y=\sum_rc_rB_r$，$K=Y'+Y'^*$，其中 $Y'$ 是 $Y$ 的独立拷贝，诸 $c_r$ 是相互独立的标准复
+   高斯变量：它们是 $\mathbb C^D$ 中非退化高斯向量在到 $\mathcal A'$ 上的实线性双射 $c\mapsto\sum_rc_rB_r$ 和到
+   $\mathcal A'_h$ 上的实线性满射 $c\mapsto X+X^*$（$X=\sum_rc_rB_r$）下的像，因此同样有密度。每个随机元素都是
+   新的抽样，与之前的抽样独立；本库把它们重新缩放为单位范数，这不改变任何特征子空间，也不改变任何块是否为零。
 2. *分裂。* $K$ 的特征子空间是不可约的（引理 4.6，命题 4.7(a)）；它们的维数就是诸 $k_c$。
-3. *分组与对齐。* 块 $Q_i^*YQ_j$ 恰好在同一直和项内非零（命题 4.7(b)，引理 4.8）；各类给出扇区，
-   类的大小给出 $m_c$，而极分解因子把各拷贝对齐。
+3. *分组与对齐。* 维数相同的特征子空间之间的块 $Q_i^*YQ_j$ 恰好在同一直和项内非零（命题 4.7(b)，
+   引理 4.8(b)）；关系"由一个非零块相连"的各等价类给出扇区，类的大小给出 $m_c$，而极分解因子把各拷贝对齐到
+   每类的一个参照拷贝（引理 4.8(b)；对齐到一个已对齐拷贝的拷贝也就对齐到参照拷贝）。
 4. *组装* Kronecker 顺序下的 $V$，使得 $V^*aV=\bigoplus_ca_c\otimes1_{m_c}$。
 
-在浮点运算中，不同拷贝的相近特征值被放在一起，再由交换子的一个新随机元素的压缩来分开（见 `decompose`
-模块的 docstring）。无论如何，结果最后都会得到验证：
+所以，在精确算术中，若 $K$ 的特征子空间被精确地分开，则算法以概率一返回一个如定理 4.3 所述的分解：由引理
+4.6，直和项 $c$ 包含 $m_c$ 个维数为 $k_c$ 的特征子空间，而对齐之后，这一构造正是定理 4.3 证明中的存在性部分。
+在浮点运算中，本库把相差小于某个容差的特征值视为相等，所以计算出的"特征子空间" $W$ 可能是 $K$ 的若干特征
+子空间之和；它仍是 $\mathcal A$-不变的（引理 4.6），本库把一个新的随机元素 $X\in\mathcal A'_h$ 压缩到它上面。由
+引理 4.8(a)，只要 $\mathcal A$ 在 $W$ 上不可约地作用，$Q^*XQ$ 就是 $1$ 的倍数，否则以概率一不是；此时它的特征子
+空间在 $\sigma(\mathcal A)$ 下不变（把引理 4.6 应用于 $\sigma(\mathcal A)$），把 $W$ 分裂为更小的不变子空间，本库重复
+这一步，直到每个压缩都是数乘。无论浮点运算中发生什么，结果最后都会得到验证：
 
 **命题 4.9（证书）。** 设 $\mathcal A$ 由 $S_1,\dots,S_J$ 及其伴随生成，
 $\mathcal B=V(\bigoplus_cM_{k_c}\otimes1_{m_c})V^*$，其中 $V$ 为酉矩阵。若所有 $S_j\in\mathcal B$ 且
@@ -292,9 +352,24 @@ assert s[1] > 1e-3 and abs(s[0] - s[1]) < 1e-10
 assert all(close(W.mH @ Y @ Wa, 0) for W in spaces if W.shape[1] == 1)   # different summands: zero
 ```
 
-主要开销在交换子：每个 twirl 样本需要 $O(|G|n^3)$；对生成元，本库借助 $\mathcal A$ 的一个随机元素把
-零空间问题约化为 $N=\sum_ck_cm_c^2$ 个未知数，但仍需要 $O(n^2N)$ 的内存，对八个自旋 $\frac12$ 的总自旋
-（$n=256$，$N=4900$）约为 $10$ GB。因此对自旋链，4.6 节使用模块 `su2`，它事先就知道答案。
+主要开销在交换子：一个 twirl 样本需要 $|G|$ 次 $n\times n$ 矩阵乘积。对生成元，本库首先对角化 $\mathcal A$ 的
+一个厄米元素 $R=U\operatorname{diag}(\lambda)U^*$（生成元厄米部分的一个随机实线性组合，加上两个这样的组合的对称化
+乘积的一个倍数）。每个 $X\in\mathcal A'$ 都与 $R$ 可交换，因而与它的谱投影可交换（定理 1.5(d)），所以 $U^*XU$
+关于 $R$ 的特征子空间（维数为 $d_\lambda$）是分块对角的；这一点被预先施加，于是零空间问题只有
+$N_R=\sum_\lambda d_\lambda^2$ 个未知数，而不是 $n^2$ 个。把若干特征值归并在一起只会使块变大，所以约化后的问题有
+相同的解集 $\mathcal A'$。在分解中，$V^*RV=\bigoplus_cr_c\otimes1_{m_c}$，其中 $r_c\in M_{k_c}$ 厄米；若 $\lambda$ 在
+$r_c$ 中的重数为 $\mu_c(\lambda)$，则 $d_\lambda=\sum_c\mu_c(\lambda)m_c$，并且由于对整数 $\mu\ge0$ 有 $\mu^2\ge\mu$，
+$$
+N_R=\sum_\lambda\Big(\sum_c\mu_c(\lambda)m_c\Big)^2\ge\sum_{\lambda,c}\mu_c(\lambda)^2m_c^2\ge\sum_{\lambda,c}\mu_c(\lambda)m_c^2=\sum_ck_cm_c^2,
+$$
+等号成立当且仅当所有 $r_c$ 的特征值都是单重的且两两不同。对 $L=3,4,5$ 个自旋的总自旋，下面的代码发现等号
+成立（*数值观察*）。即使是最小值也很大：对八个自旋 $\frac12$（$n=256$），$\sum_ck_cm_c^2=4900$，而约化后的
+方程组是一个 $(n^2+N_R)\times N_R$ 矩阵，有 $3.5\cdot10^8$ 个复元素。因此对自旋链，4.6 节使用模块 `su2`，它事先
+就知道答案。
+
+```python
+PLACEHOLDER
+```
 
 ## 4.4 $U(1)$ 与荷扇区
 
@@ -313,18 +388,27 @@ $U(1)''$ 表示它的交换子。
 *证明。* (1) $U_\theta=\sum_qe^{iq\theta}P_q$ 是酉的，$U_\theta U_{\theta'}=U_{\theta+\theta'}$（定理 1.5(c)），且
 $U_{2\pi}=1$。反之，对连续表示，$(U_\theta)_{\theta\ge0}$ 是矩阵的连续半群，所以由引理 8.5（在第 8 章证明；
 证明只用到有限维）对 $\theta\ge0$ 有 $U_\theta=e^{\theta B}$，而对 $\theta<0$ 有
-$U_\theta=U_{-\theta}^{-1}=e^{\theta B}$。在 $0$ 处对 $U_\theta^*U_\theta=1$ 求导得 $B^*+B=0$，所以 $B=iQ$，其中
-$Q$ 厄米，而 $U_{2\pi}=1$ 迫使每个特征值满足 $e^{2\pi iq}=1$，$q\in\mathbb Z$。(2) (i)$\Rightarrow$(ii)：在
+$U_\theta=U_{-\theta}^{-1}=e^{\theta B}$。在 $0$ 处对 $U_\theta^*U_\theta=1$ 求导（引理 8.1）得 $B^*+B=0$，所以
+$B=iQ$，其中 $Q$ 厄米。指数级数 $e^{i\theta Q}$ 等于函数演算（命题 8.2(1)，取 $H=-Q$），所以
+$U_{2\pi}=\sum_qe^{2\pi iq}P_q=1$ 迫使 $Q$ 的每个特征值 $q$ 满足 $e^{2\pi iq}=1$，$q\in\mathbb Z$。(2) (i)$\Rightarrow$(ii)：在
 $\theta=0$ 处求导。(ii)$\Rightarrow$(iii)：$X$ 与 $P_q=f(Q)$ 可交换（定理 1.5(d)），所以当 $q\neq q'$ 时
 $P_qXP_{q'}=XP_qP_{q'}=0$。(iii)$\Rightarrow$(i)：$XU_\theta=\sum_qe^{iq\theta}P_qXP_q=U_\theta X$。分块对角算子构成
-$\bigoplus_qM_{d_q}\otimes1_1$，其交换子为 $\bigoplus_q1_{d_q}\otimes M_1=\operatorname{span}\{P_q\}$（定理 2.6）。
+$\bigoplus_qM_{d_q}\otimes1_1$（在适配于诸 $P_q$ 的像的规范正交基下），其交换子为
+$\bigoplus_q1_{d_q}\otimes M_1=\operatorname{span}\{P_q\}$：与它们可交换的算子与每个 $P_q$ 可交换，所以是分块对角的，
+而每个块与 $M_{d_q}$ 可交换，因而是数乘（引理 2.5 第 5 步，取 $m=1$）。
 (3) $\frac d{dt}e^{itH}Qe^{-itH}=ie^{itH}[H,Q]e^{-itH}$（命题 8.2）对所有 $t$ 为零当且仅当 $[H,Q]=0$。此时
 $e^{itH}$ 与 $P_q$ 可交换（定理 1.5(d)，用两次），并且
 $\operatorname{Tr}(P_q\rho(t))=\operatorname{Tr}(e^{itH}P_qe^{-itH}\rho)=\operatorname{Tr}(P_q\rho)$。$\square$
 
 因此 $U(1)$ 的不可约表示就是特征标 $\theta\mapsto e^{iq\theta}$，$q\in\mathbb Z$（与每个阿贝尔群一样，它们是
-一维的），而荷 $q$ 的重数为 $d_q$。荷在张量积下相加：$e^{i\theta(Q_1\otimes1+1\otimes Q_2)}=e^{i\theta Q_1}\otimes e^{i\theta Q_2}$
-在 $P_{q_1}\otimes P_{q_2}$ 的像上以荷 $q_1+q_2$ 作用。这就是第 7 章融合张量积的融合规则
+一维的），而荷 $q$ 的重数为 $d_q$。荷在张量积下相加：若 $u_k$ 和 $w_l$ 分别是 $Q_1$ 和 $Q_2$ 的规范正交
+特征基，特征值为 $\alpha_k$ 和 $\beta_l$，则规范正交基 $u_k\otimes w_l$ 由 $Q_1\otimes1+1\otimes Q_2$ 的特征向量（特征值
+$\alpha_k+\beta_l$）组成，同时也由 $e^{i\theta Q_1}\otimes e^{i\theta Q_2}$ 的特征向量（特征值 $e^{i\theta\alpha_k}e^{i\theta\beta_l}$）
+组成，所以由函数演算的定义，
+$$
+e^{i\theta(Q_1\otimes1+1\otimes Q_2)}=e^{i\theta Q_1}\otimes e^{i\theta Q_2},
+$$
+它在 $P_{q_1}\otimes P_{q_2}$ 的像上以荷 $q_1+q_2$ 作用。这就是第 7 章融合张量积的融合规则
 $(q_1,q_2)\mapsto q_1+q_2$。
 
 对 $n$ 个量子比特，荷是**数算子** $\hat N=\sum_jn_j$，其中 $n_j=|1\rangle\langle1|$ 作用在量子比特 $j$ 上：
@@ -335,8 +419,9 @@ $$
 这就是 `chains.SpinChain(n).algebra`，即 $n$ 个荷为 $0,1$ 的 $M_1\oplus M_1$ 拷贝的融合积（比特 $1$ = 自旋向上，
 $\hat N=S^z+\frac n2$；而在 `decompose.total_spin` 中，自旋向上是 $\mathbb C^2$ 的*第一个*基向量，这只是给基
 重新编号，并不改变扇区）。每个 XXZ 哈密顿量
-$\sum_{\langle ij\rangle}J(s^x_is^x_j+s^y_is^y_j+\Delta s^z_is^z_j)$ 都保持 $\hat N$ 守恒，因为跃迁项
-$s^x_is^x_j+s^y_is^y_j=\frac12(s^+_is^-_j+s^-_is^+_j)$ 把一个向上的自旋从一个格点移到另一个格点。
+$\sum_{\langle ij\rangle}J(s^x_is^x_j+s^y_is^y_j+\Delta s^z_is^z_j)$ 都保持 $\hat N$ 守恒：$s^z_is^z_j$ 在基 $|b\rangle$ 下是对角的，
+而跃迁项 $s^x_is^x_j+s^y_is^y_j=\frac12(s^+_is^-_j+s^-_is^+_j)$（展开 $s^\pm=s^x\pm is^y$；交叉项相消）把 $|b\rangle$ 映为
+$0$，或映为一个向上的自旋从格点 $i,j$ 中的一个移到另一个所得的构型，所以它把 $\hat N$ 的每个特征子空间映入自身。
 
 ```python
 import functools
@@ -365,7 +450,7 @@ E_sec = torch.cat([torch.linalg.eigvalsh(Hc.matrix[0, N, :k, :k]) for N, k in en
 assert close(torch.sort(E_sec).values, torch.linalg.eigvalsh(H))
 ```
 
-> **物理意义。** $U(1)$ 对称性就是粒子数、荷或磁化强度的守恒。命题 4.10(3) 是这一情形下的 Noether
+> **物理意义**（物理解释，而非本课程的定理）。$U(1)$ 对称性就是粒子数、荷或磁化强度的守恒。命题 4.10(3) 是这一情形下的 Noether
 > 定理：荷守恒当且仅当哈密顿量是对称的，此时动力学永远不会离开一个扇区（定理 8.3）。若此外没有任何东西
 > 能测量扇区之间的相干性，这些扇区就是超选择扇区（第 3 章）。
 
@@ -379,10 +464,17 @@ $$
 $\mathbb C^2$ 上的 $s_a=\frac12\sigma_a$（Pauli 矩阵）。若 $(S_a)$ 与 $(T_a)$ 是自旋表示，则
 $S_a\otimes1+1\otimes T_a$ 也是（交叉项可交换）；因此 $L$ 个自旋 $\frac12$ 的**总自旋**
 $S_a=\sum_is_a^{(i)}$（`decompose.total_spin(L)`）是一个自旋表示。转动 $e^{-i\theta\,\mathbf n\cdot\mathbf S}$
-对所有 $\theta,\mathbf n$ 都与 $X$ 可交换，当且仅当 $X$ 与三个 $S_a$ 可交换（在 $\theta=0$ 处求导；反过来用
-定理 1.5(d)），所以"$SU(2)$ 作用"的交换子是 $\{S_x,S_y,S_z\}'$，并且由定理 2.2，转动与诸 $S_a$ 生成同一个
-代数。对 $L$ 个自旋 $\frac12$，转动就是 $V^{\otimes L}$，$V\in SU(2)$：每个这样的 $V$ 都是某个
-$e^{-i\theta\,\mathbf n\cdot\mathbf s}$，并且 $e^{-i\theta\,\mathbf n\cdot\mathbf S}=(e^{-i\theta\,\mathbf n\cdot\mathbf s})^{\otimes L}$。
+（$\theta\in\mathbb R$，$\mathbf n\in\mathbb R^3$ 为单位向量，函数演算）对所有 $\theta,\mathbf n$ 都与 $X$ 可交换，当且仅当
+$X$ 与三个 $S_a$ 可交换（在 $\theta=0$ 处求导，命题 8.2(1)；反过来用定理 1.5(d)），所以"$SU(2)$ 作用"的交换子是
+$\{S_x,S_y,S_z\}'$，并且由定理 2.2，转动与诸 $S_a$ 生成同一个代数（两个集合都在取伴随下封闭）。对 $L$ 个自旋
+$\frac12$，转动就是 $V^{\otimes L}$，$V\in SU(2)$。事实上，$\mathbf n\cdot\mathbf S=\sum_ih^{(i)}$，其中
+$h=\mathbf n\cdot\mathbf s$，而与 4.4 节中的荷一样（对 $L$ 归纳），$e^{-i\theta\,\mathbf n\cdot\mathbf S}=(e^{-i\theta h})^{\otimes L}$，
+且 $e^{-i\theta h}\in SU(2)$（它的特征值为 $e^{\mp i\theta/2}$，因为 $h$ 无迹且 $h^2=\frac14$）。反之，$V\in SU(2)$ 是正规的，
+其特征值的模为 $1$、乘积为 $1$，所以 $V=W\operatorname{diag}(e^{i\varphi},e^{-i\varphi})W^*$，其中 $W$ 为酉矩阵，并且对无迹
+厄米矩阵 $A=W\operatorname{diag}(\varphi,-\varphi)W^*$ 有 $V=e^{iA}$。无迹厄米 $2\times2$ 矩阵是 Pauli 矩阵的实线性组合
+$A=2\,\mathbf c\cdot\mathbf s$，所以 $V=e^{-i\theta\,\mathbf n\cdot\mathbf s}$，其中 $\theta=2|\mathbf c|$，
+$\mathbf n=-\mathbf c/|\mathbf c|$（若 $\mathbf c=0$ 则 $\theta=0$）。定理 B.6(a),(c) 与推论 B.7（取 $d=2$）直接表明，
+诸 $V^{\otimes L}$（$V\in SU(2)$）张成由诸 $S_a$ 生成的代数。
 
 令 $S_\pm=S_x\pm iS_y$，于是 $S_-=S_+^*$，并令 $\mathbf S^2=S_x^2+S_y^2+S_z^2$。由这些关系得
 $$
@@ -433,7 +525,8 @@ $$
 所以由 $S_x,S_y,S_z$ 生成的代数是 $\bigoplus_SM_{2S+1}\otimes1_{m_S}$，其交换子是
 $\bigoplus_S1_{2S+1}\otimes M_{m_S}$。
 
-*证明。* $S_z|b\rangle=(|b|-\frac L2)|b\rangle$，所以若 $\frac L2+M\in\{0,\dots,L\}$，则
+*证明。* $S_z=\sum_is_z^{(i)}$ 在乘积基下是对角的，在 $u$ 个自旋向上、$L-u$ 个自旋向下的乘积态上特征值为
+$u-\frac L2$，所以若 $\frac L2+M\in\{0,\dots,L\}$，则
 $d_M=\binom L{L/2+M}=\binom L{L/2-M}$，否则 $d_M=0$。应用推论 4.12 与定理 4.3。这些值是正的，因为当
 $j<\frac{L-1}2$ 时 $\binom L{j+1}/\binom Lj=\frac{L-j}{j+1}>1$。$\square$
 
@@ -461,18 +554,19 @@ for c, k in enumerate(D4.k_factors):
     assert close(casimir.matrix[0, c, :k, :k], (k - 1) / 2 * (k + 1) / 2 * torch.eye(k))
 ```
 
-哪些算子与所有转动可交换？格点置换就是：用 $\pi(\sigma)$ 共轭把 $s^{(i)}_a$ 映为 $s^{(\sigma(i))}_a$，所以它
-保持 $\sum_is^{(i)}_a$ 不变。反过来的结论是一个经典定理。
+哪些算子与所有转动可交换？格点置换就是：用 $\pi(\sigma)$ 共轭把 $s^{(i)}_a$ 映为 $s^{(\sigma(i))}_a$（引理 B.1(b)），所以它
+保持 $\sum_is^{(i)}_a$ 不变。反之，除此之外再没有别的：
 
 **定理 4.14（Schur–Weyl 对偶）。** 设 $\pi$ 是 $S_L$ 置换 $(\mathbb C^2)^{\otimes L}$ 各张量因子的表示。
 (a) $\operatorname{span}\pi(S_L)\subseteq\{S_x,S_y,S_z\}'$。(b) 等号成立；等价地（定理 2.2），由总自旋生成的
 代数是 $\pi(S_L)'$。
 
-(a) 部分刚刚已证。(b) 部分对一般的 $L$ 不加证明地陈述；它对 $(\mathbb C^d)^{\otimes L}$ 与 $U(d)$ 的对角作用
-成立（W. Fulton and J. Harris, *Representation Theory*, Springer 1991, Lecture 6；R. Goodman and
-N. Wallach, *Symmetry, Representations, and Invariants*, Springer 2009, Section 9.1）。对 $L\le5$ 我们加以
-验证：由 (a)，只需两个空间维数相同。对 $L=2$，它就是 $k=2$ 时的引理 5.8，因为
-$\{S_a\}'=\{V\otimes V:V\in SU(2)\}'=\{V\otimes V:V\in U(2)\}'$（相位作为数乘作用）。
+*证明。* (a) 部分刚刚已证。(b) 部分就是推论 B.7，即定理 B.6 在 $d=2$ 时的情形，而定理 B.6 对所有 $d$ 和 $L$
+证明了 $(\mathbb C^d)^{\otimes L}$ 与 $U(d)$ 的对角作用的对偶。$\square$
+
+（延伸阅读：W. Fulton and J. Harris, *Representation Theory*, Springer 1991, Lecture 6；R. Goodman and
+N. Wallach, *Symmetry, Representations, and Invariants*, Springer 2009, Section 9.1。）对 $L\le5$，代码数值地比较
+这两个空间：由 (a)，只需它们维数相同。
 
 ```python
 for n in range(2, 6):
@@ -486,11 +580,12 @@ print(Dp)
 assert sorted(zip(Dp.multiplicities, Dp.k_factors)) == sorted(zip(D4.k_factors, D4.multiplicities))
 ```
 
-打印出的维数是 $2,5,14,42$，即 Catalan 数 $\binom{2L}L/(L+1)$。最后一行展示了对偶的作用：$\pi(S_4)''$
-的块为 $k=(1,2,3)$，重数为 $(5,1,3)$——正是总自旋的数对 $(k_c,m_c)$ 互换角色。由定理 4.14(b) 与命题 2.7，
-自旋 $S$ 的重数空间承载 $S_L$ 的一个不可约表示，这里对 $S=2,1,0$ 其维数分别为 $1,3,2$。
+打印出的维数是 $2,5,14,42$，即 Catalan 数 $\binom{2L}L/(L+1)$；推论 B.10 对每个 $L$ 证明了
+$\dim\{S_a\}'=\sum_Sm_S^2=\binom{2L}L/(L+1)$。最后一行展示了对偶的作用：$\pi(S_4)''$
+的块为 $k=(1,2,3)$，重数为 $(5,1,3)$——正是总自旋的数对 $(k_c,m_c)$ 互换角色。一般地（推论 B.9），自旋 $S$ 的
+重数空间承载 $S_L$ 的一个维数为 $m_S$ 的不可约表示，并且这些表示两两不等价；这里对 $S=2,1,0$ 其维数分别为 $1,3,2$。
 
-> **物理意义。** 对每个转动不变的哈密顿量，一个自旋 $S$ 多重态由 $2S+1$ 个能量相同的态组成，它们由
+> **物理意义**（物理解释，而非本课程的定理）。对每个转动不变的哈密顿量，一个自旋 $S$ 多重态由 $2S+1$ 个能量相同的态组成，它们由
 > $S^z=M$ 区分。两个自旋 $\frac12$ 构成一个三重态和一个单态；四个自旋构成一个五重态、三个三重态和两个
 > 单态。两个单态的重数空间和三个三重态的重数空间就是第 10 章中无退相干的量子比特与无噪声的三能级系统（qutrit）。
 

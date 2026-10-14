@@ -52,13 +52,17 @@ $\operatorname{span}\{1,J\}$, $J$ the all-ones matrix, and $\mathbb C^n=\mathbb 
 a sum of two inequivalent irreducible representations, the trivial one and the **standard** one of dimension
 $n-1$. (b) (*Graph networks.*) The equivariant maps from $\mathbb C^{[n]^p}$ to $\mathbb C^{[n]^q}$ (tensors
 of order $p$ and $q$ on $n$ vertices) are counted by the partitions of a set of $p+q$ elements into at most $n$
-blocks; for $n\ge p+q$ their number is the **Bell number** $B_{p+q}$ ($B_2=2$, $B_3=5$, $B_4=15$).
+blocks; for $n\ge p+q$ their number is the **Bell number** $B_{p+q}$, the number of all partitions of a set of
+$p+q$ elements ($B_2=2$, $B_3=5$, $B_4=15$).
 
 *Proof.* (b) Two tuples $x,y\in[n]^{p+q}$ lie in the same orbit iff they have the same **equality pattern**,
 the partition of the positions $\{1,\dots,p+q\}$ by $i\sim j\Leftrightarrow x_i=x_j$. The pattern is clearly
 invariant. Conversely, if $x,y$ have the same pattern, $x_i\mapsto y_i$ is a well-defined injection of
 $\{x_i\}$ into $[n]$, which extends to a permutation $\sigma$ with $\sigma x=y$. Every partition with at most
-$n$ blocks is a pattern (give the blocks distinct values). Lemma 12.1 concludes. (a) For $p=q=1$ there are two
+$n$ blocks is a pattern (give the blocks distinct values). Lemma 12.1 concludes. For $n\ge p+q$ the bound on the number
+of blocks is void. Counting by the number of blocks: $B_2=1+1$; $B_3=1+3+1$ (a two-block partition of a $3$-set is
+fixed by its singleton); $B_4=1+7+6+1$ (two blocks: $4$ of sizes $3+1$ and $3$ of sizes $2+2$; three blocks: the
+$\binom42=6$ choices of the pair). (a) For $p=q=1$ there are two
 orbits on $[n]^2$, the diagonal and its complement, with indicators $1$ and $J-1$. So
 $\dim\pi(S_n)'=2=\sum_cm_c^2$ (Theorem 2.6, Proposition 2.7), which forces two sectors with $m_c=1$, i.e. two
 inequivalent irreducible summands, and $\pi(S_n)'$ is spanned by their projections $P_1,P_2$. The projection onto the
@@ -108,8 +112,10 @@ assert (D_node.k_factors, D_node.multiplicities) == ((1, 3), (1, 1))
 assert (D_edge.k_factors, D_edge.multiplicities) == ((1, 2, 3, 3), (2, 1, 1, 3))
 ```
 
-So, in the decomposition computed by `dc.from_group` (the asserts check its output), $\mathbb C^{16}$ contains the
-trivial representation twice, one of dimension $2$ once, and two of dimension $3$ once and three times:
+So, in the decomposition computed by `dc.from_group` (the asserts check its output), $\mathbb C^{16}$ contains a
+representation of dimension $1$ twice — the trivial one, whose multiplicity is the number $2$ of orbits on $[4]^2$ by
+Proposition 12.7(a) and Lemma 12.1 (the code of Section 12.4 identifies this sector) — one of dimension $2$ once, and
+two of dimension $3$ once and three times:
 $16=1\cdot2+2\cdot1+3\cdot1+3\cdot3$, and $15=2^2+1^2+1^2+3^2$ agrees with the orbit count of Lemma 12.1 and
 $\dim\pi(G)'=\sum_cm_c^2$ (Theorem 2.6). For two representations, everything reduces to one commutant:
 
@@ -142,7 +148,12 @@ $\pi(G)'\cong\bigoplus_cM_{m_c}$ (Proposition 2.7), and $\operatorname{Hom}_G(\p
 irreducible representation occurs in both.
 
 *Proof.* Apply Theorem 2.6 and Proposition 2.7 to $\pi=\pi_1\oplus\pi_2$: there is a unitary $V$ with
-$V^*\pi(g)V=\bigoplus_c\rho_c(g)\otimes1_{m_c}$ and $V^*\pi(G)'V=\bigoplus_c1_{k_c}\otimes M_{m_c}$. Since
+$V^*\pi(g)V=\bigoplus_c\rho_c(g)\otimes1_{m_c}$ and $V^*\pi(G)'V=\bigoplus_c1_{k_c}\otimes M_{m_c}$. By the uniqueness
+of multiplicities (Section 2.4) every irreducible representation occurring in $\pi$ is equivalent to exactly one
+$\rho_c$, so the $\rho_c$ are representatives of the classes in the statement. Any other representatives are
+$\rho_c'=w_c\rho_cw_c^*$ with unitaries $w_c$ (Lemma 4.2(c)), and replacing $V$ by $V\bigoplus_c(w_c^*\otimes1)$ turns
+the first normal form into $\bigoplus_c\rho'_c(g)\otimes1_{m_c}$ and leaves the second unchanged, as $w_c^*\otimes1$
+commutes with $1\otimes M_{m_c}$; so we may use the $\rho_c$ of Proposition 2.7. Since
 $X\mapsto V^*XV$ is a $*$-isomorphism and $P_1\in\pi(G)'$ (Lemma 12.3), $V^*P_1V=\bigoplus_c1\otimes p_c$ with
 projections $p_c$. Choose unitaries $u_c$ with $u_c^*p_cu_c=1_{a_c}\oplus0_{b_c}$ (Theorem 1.3), where now
 $a_c=\operatorname{rank}p_c$, $b_c=m_c-a_c$, and replace $V$ by $V\bigoplus_c(1\otimes u_c)$; this changes neither
@@ -179,7 +190,8 @@ features $\pi_2$ have $b=(2,1,1,3)$, so $\dim\operatorname{Hom}_G=1\cdot2+1\cdot
 ## 12.2 An equivariant layer with the library
 
 The proof of Theorem 12.4 is an algorithm, once the decomposition of Theorem 2.6 is known; `dc.from_group`
-computes it by the randomised method of Section 4.3. For $\pi_1=\pi_2$ it is just Theorem 2.6: the weights are blocks
+computes it by the randomised method of Section 4.3 (correct with probability one in exact arithmetic; here the
+asserts check the computed output). For $\pi_1=\pi_2$ it is just Theorem 2.6: the weights are blocks
 $w_c\in M_{m_c}$, an operator of the abstract commutant `D.commutant_algebra()` $=\bigoplus_cM_{m_c}$, and the
 layer is $x\mapsto V\big(\bigoplus_c1_{k_c}\otimes w_c\big)V^*x$, computed by `D.from_commutant`. The module
 below is chapter code, not part of the library.
@@ -251,6 +263,8 @@ err = equivariance_error(node_to_edge, G_node, G_edge)
 print(f"node -> edge: sectors k = {node_to_edge.D.k_factors}, a = {node_to_edge.a}, "
       f"{n_params} parameters, equivariance error {err:.1e}")
 assert n_params == bell[3] and err < 1e-12
+b = tuple(m - a for m, a in zip(node_to_edge.D.multiplicities, node_to_edge.a))
+assert node_to_edge.D.k_factors == (1, 2, 3, 3) and node_to_edge.a == [1, 0, 0, 1] and b == (2, 1, 1, 3)
 corners = node_to_edge.D.basis('commutant')[:, n:, :n].reshape(-1, 16 * n)   # Lemma 12.3: Q_2^* pi(G)' Q_1
 assert torch.linalg.matrix_rank(corners).item() == bell[3]
 ```
@@ -333,13 +347,15 @@ $u_0e^{s-s^*}$ by Lemma 11.1. With $u_0=1$, (b) gives $\Phi(e^{s-s^*})=e^{\Phi(s
 the skew-adjoint elements of $\pi(G)'$. $\square$
 
 So an orthogonal (unitary) equivariant layer is `optimize.UnitaryParam` on `D.commutant_algebra()` followed by
-$\Phi$; by (c) this parametrisation reaches every equivariant unitary, and every iterate of a gradient method is
-exactly unitary and exactly equivariant. Likewise `PositiveParam` gives positive equivariant layers, normalised as
+$\Phi$; by (c) this parametrisation reaches every equivariant unitary, and in exact arithmetic every iterate of a
+gradient method is unitary and equivariant (the code checks both to $10^{-12}$ after training). Likewise `PositiveParam` gives positive equivariant layers, normalised as
 in Chapter 11 (spectrum in $[\ell,1]$ with maximum $1$; by (a), a general positive layer is $\Phi(t^*t)$), and a
 spectral layer $f(L)$ of a self-adjoint equivariant generator $L$, such as the diffusion $e^{-tL}$, needs
 eigendecompositions of the blocks $w_c$, of cost of order $\sum_cm_c^3$ ($37$ here) instead of $n^3=4096$; the library
-computes gradients through `apply_function` by automatic differentiation. The code fits an equivariant unitary to
-$32$ input–output pairs, and checks (b) and the gradient with respect to $t$ against dense matrices and the formula
+differentiates through `apply_function` (we prove nothing about its backward pass; the code checks one derivative
+below). The code fits an equivariant unitary to $32$ input–output pairs with Adam — a numerical observation of this
+run, not a theorem: the loss decreases by more than a factor $10^3$, which the assert checks, and no convergence
+statement is claimed — and checks (b) and the gradient with respect to $t$ against dense matrices and the formula
 $\frac d{dt}e^{-tL}=-Le^{-tL}$ (for $L=U\operatorname{diag}(\lambda)U^*$, $e^{-tL}=U\operatorname{diag}(e^{-t\lambda_i})U^*$ by
 Theorem 1.5, and $U$ does not depend on $t$).
 
@@ -416,7 +432,8 @@ dimension $\sum_cm_c^2$.
 then $g\cdot(h\cdot p)=(gh)\cdot p$, and $g\cdot p$ has the matrix $\sigma(g)(B)=A^TBA$, $A=\pi(g)^{-1}$. The
 average $M=|G|^{-1}\sum_g\sigma(g)$ satisfies $\sigma(h)M=M$ and $MB=B$ for invariant $B$, so (as in the proof of
 Theorem 12.5) it is idempotent with range the invariant polynomials, and their number is
-$\operatorname{Tr}M=|G|^{-1}\sum_g\operatorname{Tr}\sigma(g)$. $A$ is unitary, hence $A=R\Lambda R^{-1}$ with
+$\operatorname{Tr}M=|G|^{-1}\sum_g\operatorname{Tr}\sigma(g)$ (an idempotent is $1\oplus0$ in a basis adapted to range
+$\oplus$ kernel, so its trace is its rank). $A$ is unitary, hence $A=R\Lambda R^{-1}$ with
 $\Lambda=\operatorname{diag}(\lambda)$ (Theorem 1.3). The symmetric matrices
 $B_{ij}=(R^{-1})^T(e_ie_j^T+e_je_i^T)R^{-1}$, $i\le j$, form a basis, and
 $A^TB_{ij}A=(R^{-1})^T\Lambda(e_ie_j^T+e_je_i^T)\Lambda R^{-1}=\lambda_i\lambda_jB_{ij}$. So
@@ -566,8 +583,10 @@ through them, and `to_commutant`/`from_commutant` translate between the two pict
    $V^*x_i$ in sector $c$ as $\sum_{a,j}(X_{i,c})_{aj}e_a\otimes e_j$ with $X_{i,c}\in M_{k_c\times m_c}$, and let
    $S_c\in M_{Nk_c\times m_c}$ be the matrices $X_{1,c},\dots,X_{N,c}$ stacked. Show that the equivariant $T$ with
    $Tx_1=\dots=Tx_N=0$ form a space of dimension $\sum_cm_c(m_c-\operatorname{rank}S_c)$; for independent standard
-   complex Gaussian vectors $x_i$ this is $\sum_cm_c\max(0,m_c-Nk_c)$ almost surely. For the edge representation,
-   two samples determine an equivariant layer, while an arbitrary $16\times16$ matrix needs sixteen.
+   complex Gaussian vectors $x_i$ this is $\sum_cm_c\max(0,m_c-Nk_c)$ almost surely. Deduce that an equivariant $T$ is
+   determined by $Tx_1,\dots,Tx_N$ (among equivariant maps) iff this dimension is $0$, and that for the edge
+   representation two Gaussian samples determine an equivariant layer almost surely and one sample never does, while
+   an arbitrary $16\times16$ matrix is never determined by fewer than sixteen samples.
 
 <details>
 <summary>Solutions</summary>
@@ -596,8 +615,8 @@ assert all((T[i, :, j] - (A_ if i == j else 0) - B_).abs().max() < 1e-12 for i i
    matrices. A real basis of $H_{\mathbb R}$ is then a complex basis of $\operatorname{Hom}_G$: it spans, and a
    complex relation $\sum_j(\alpha_j+i\beta_j)T_j=0$ with real $T_j$ splits into real and imaginary parts. In
    Lemma 12.1 the orbit indicators are such a real basis. (The blocks $y_c$ of Theorem 12.4 are complex even for real
-   data: $V$ is complex in general, and the parametrisation by $\operatorname{Re}T$ uses twice as many real parameters
-   as needed.)
+   data, as the $V$ computed by the library need not be real; parametrising $\operatorname{Re}T$ by complex $y_c$ uses
+   twice as many real parameters as needed.)
 
 3. (a) $(\pi(g)f(x))_{gy}=f(x)_y=f(x_y)=f((\pi(g)x)_{gy})$. (b) For $R(x_1,x_2)=(-x_2,x_1)$ and $x=(1,-1)$,
    $f(Rx)=f(1,1)=(1,1)$ but $Rf(x)=R(1,0)=(0,1)$. (c) $\|\pi(g)x\|=\|x\|$, so
@@ -626,7 +645,11 @@ assert max((gate(g @ x) - g @ gate(x)).abs().max().item() for g in G_edge) < 1e-
    Corollary A.7(b) the rank is $\min(Nk_c,m_c)$ almost surely. For the edge representation,
    $(k,m)=(1,2),(2,1),(3,1),(3,3)$ (the computed decomposition), only the sector $(1,2)$ contributes:
    $2\cdot(2-1)=2$ for $N=1$, and $0$ for $N=2$. An arbitrary $16\times16$ matrix is the case of the trivial group
-   (one sector, $k=1$, $m=16$): the dimension is $16\max(0,16-N)$, so sixteen samples are needed.
+   (one sector, $k=1$, $m=16$): the dimension is $16(16-\operatorname{rank}S)\ge16(16-N)>0$ for every choice of
+   $N<16$ samples, as $\operatorname{rank}S\le N$, and $0$ almost surely for $N=16$ Gaussian samples. Since
+   $T\mapsto(Tx_1,\dots,Tx_N)$ is linear, two equivariant maps agree on the samples iff their difference lies in the
+   space just computed, which gives the criterion. For $N=1$ the space has dimension at least $2$ for *every* $x_1$,
+   because $\operatorname{rank}S_c\le Nk_c=1<m_c=2$ in the sector $(1,2)$.
 
 ```python
 basis = D_edge.basis('commutant')                                # (15, 16, 16), Hilbert-Schmidt orthonormal
