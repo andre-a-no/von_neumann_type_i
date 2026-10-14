@@ -517,7 +517,7 @@ they are real. Let $E_{ij}$ be the matrix units and, for $i\ne j$ and $a\in D$, 
 $a[ji]=\bar a[ij]$.
 
 **Lemma E.20.** $\operatorname{Herm}_n(D)$ is closed under $\circ$, has the unit $\sum_iE_{ii}$ and dimension
-$n+d\frac{n(n-1)}2$, and for distinct $i,j,k,l$ and $a,b\in D$:
+$n+d\frac{n(n-1)}2$, and for $a,b\in D$, all $i,j,k$ in the first two formulas and distinct $i,j,k,l$ in the others ($a[ij]$ always has $i\ne j$):
 $$
 E_{ii}\circ E_{jj}=\delta_{ij}E_{ii},\quad E_{kk}\circ a[ij]=\tfrac12(\delta_{ki}+\delta_{kj})a[ij],\quad
 a[ij]\circ b[ij]=\langle a,b\rangle(E_{ii}+E_{jj}),\quad a[ij]\circ b[jk]=\tfrac12(ab)[ik],\quad a[ij]\circ b[kl]=0 .

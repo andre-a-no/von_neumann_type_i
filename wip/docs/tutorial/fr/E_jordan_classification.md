@@ -552,7 +552,7 @@ vérifient $\bar x=x$, ils sont donc réels. Soient $E_{ij}$ les unités matrici
 $a[ij]=aE_{ij}+\bar aE_{ji}$ ; ainsi $a[ji]=\bar a[ij]$.
 
 **Lemme E.20.** $\operatorname{Herm}_n(D)$ est stable par $\circ$, a pour unité $\sum_iE_{ii}$ et pour dimension
-$n+d\frac{n(n-1)}2$, et pour $i,j,k,l$ distincts et $a,b\in D$ :
+$n+d\frac{n(n-1)}2$, et, pour $a,b\in D$, avec $i,j,k$ quelconques dans les deux premières formules et $i,j,k,l$ distincts dans les autres ($a[ij]$ toujours avec $i\ne j$) :
 $$
 E_{ii}\circ E_{jj}=\delta_{ij}E_{ii},\quad E_{kk}\circ a[ij]=\tfrac12(\delta_{ki}+\delta_{kj})a[ij],\quad
 a[ij]\circ b[ij]=\langle a,b\rangle(E_{ii}+E_{jj}),\quad a[ij]\circ b[jk]=\tfrac12(ab)[ik],\quad a[ij]\circ b[kl]=0 .

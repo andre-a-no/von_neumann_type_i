@@ -515,7 +515,7 @@ $(XY)_{ik}=\sum_jX_{ij}Y_{jk}$（定义它不需要 $D$ 的结合性）。对角
 $a[ji]=\bar a[ij]$。
 
 **引理 E.20.** $\operatorname{Herm}_n(D)$ 在 $\circ$ 下封闭，有单位元 $\sum_iE_{ii}$，维数为
-$n+d\frac{n(n-1)}2$，并且对互不相同的 $i,j,k,l$ 以及 $a,b\in D$：
+$n+d\frac{n(n-1)}2$，并且对 $a,b\in D$、前两个公式中任意的 $i,j,k$ 以及其余公式中互不相同的 $i,j,k,l$（$a[ij]$ 中总有 $i\ne j$）：
 $$
 E_{ii}\circ E_{jj}=\delta_{ij}E_{ii},\quad E_{kk}\circ a[ij]=\tfrac12(\delta_{ki}+\delta_{kj})a[ij],\quad
 a[ij]\circ b[ij]=\langle a,b\rangle(E_{ii}+E_{jj}),\quad a[ij]\circ b[jk]=\tfrac12(ab)[ik],\quad a[ij]\circ b[kl]=0 .

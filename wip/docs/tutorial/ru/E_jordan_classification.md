@@ -517,7 +517,7 @@ $(XY)_{ik}=\sum_jX_{ij}Y_{jk}$ (для этого определения асс�
 $a[ji]=\bar a[ij]$.
 
 **Лемма E.20.** $\operatorname{Herm}_n(D)$ замкнута относительно $\circ$, имеет единицу $\sum_iE_{ii}$ и размерность
-$n+d\frac{n(n-1)}2$, и для различных $i,j,k,l$ и $a,b\in D$:
+$n+d\frac{n(n-1)}2$, и для $a,b\in D$, произвольных $i,j,k$ в первых двух формулах и различных $i,j,k,l$ в остальных ($a[ij]$ всегда с $i\ne j$):
 $$
 E_{ii}\circ E_{jj}=\delta_{ij}E_{ii},\quad E_{kk}\circ a[ij]=\tfrac12(\delta_{ki}+\delta_{kj})a[ij],\quad
 a[ij]\circ b[ij]=\langle a,b\rangle(E_{ii}+E_{jj}),\quad a[ij]\circ b[jk]=\tfrac12(ab)[ik],\quad a[ij]\circ b[kl]=0 .

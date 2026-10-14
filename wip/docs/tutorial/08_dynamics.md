@@ -344,12 +344,12 @@ by (2). $\square$
 
 **Proposition 8.9 (sector weights).** Let $\rho(t)=e^{t\mathcal L}\rho_0$ and $p(t)$ its sector weights.
 
-1. If there are no jumps between sectors, every $p_c(t)$ is constant.
+1. If there are no jumps between sectors ($K^{dc}_{m,l}=0$ for all $m,l$ and $d\ne c$), every $p_c(t)$ is constant.
 2. If for every $m$ and every pair $d\ne c$, $\sum_lK^{dc*}_{m,l}K^{dc}_{m,l}=r_{m,dc}1_{k_c}$ with numbers
    $r_{m,dc}$, then $p'=Qp$ with $Q_{dc}=\sum_mg_mr_{m,dc}$ for $d\ne c$ and $Q_{cc}=-\sum_{d\ne c}Q_{dc}$.
    Hence $p(t)=e^{tQ}p(0)$ does not depend on $H$, on the $L_j$ or on the states inside the sectors.
 
-*Proof.* $p_d'=\operatorname{Tr}(P_d\mathcal L(\rho))$. The Hamiltonian term vanishes as in Theorem 8.3.
+*Proof.* $p_d'=\operatorname{Tr}(P_d\mathcal L(\rho))$ by Lemma 8.1. The Hamiltonian term vanishes as in Theorem 8.3.
 For $L_j\in\mathcal M$, $\operatorname{Tr}(P_dL_j\rho L_j^*)-\operatorname{Tr}(P_dL_j^*L_j\rho)
 =\operatorname{Tr}(L_j^*P_dL_j\rho)-\operatorname{Tr}(L_j^*L_jP_d\rho)=0$, as $P_d$ is central. For a jump
 $\Phi$ between sectors, $\operatorname{Tr}(P_d\Phi(\rho))=\sum_c\operatorname{Tr}\big(\sum_lK^{dc*}_lK^{dc}_l\rho_c\big)$
@@ -358,7 +358,8 @@ the terms $c=d$ and $d'=d$ cancel. This proves (1), and under the hypothesis of 
 are $\sum_{c\ne d}r_{dc}p_c-\sum_{d'\ne d}r_{d'd}p_d$. Lemma 8.1 gives $p(t)=e^{tQ}p(0)$. $\square$
 
 Under the hypothesis of (2), for $d\ne c$, $r_{m,dc}$ is the entry $T_{dc}(\rho)$ of the transition
-matrix of $\Phi_m$ (defined before Proposition 6.12) for every state $\rho$. So, for one jump with rate
+matrix of $\Phi_m$ (defined before Proposition 6.12) for every state $\rho$ with $p_c>0$, since
+$\operatorname{Tr}\Phi_{m,dc}(\rho_c)=\operatorname{Tr}\big(\sum_lK^{dc*}_{m,l}K^{dc}_{m,l}\rho_c\big)=r_{m,dc}p_c$. So, for one jump with rate
 $1$, $Q=R-\operatorname{diag}(\sum_dR_{dc})_c$ with $R$ = `transition_matrix()` (the diagonal of $R$ cancels).
 
 **Example: particle loss.** Two bosonic modes with at most two particles; the sectors are
@@ -370,8 +371,10 @@ Since $a_1^*a_1+a_2^*a_2=N$, Proposition 8.9(2) applies with $Q_{N-1,N}=\gamma N
 $$
 p_2(t)=q^2,\qquad p_1(t)=2q(1-q),\qquad p_0(t)=(1-q)^2,\qquad q=e^{-\gamma t},
 $$
-a binomial law: each particle survives independently with probability $e^{-\gamma t}$, whatever the
-hopping and the interaction do (check $p'=Qp$ by differentiation).
+the binomial law with parameters $2$ and $q$ (the law of the number of survivors if each particle survives
+independently with probability $q$), whatever the hopping and the interaction do: both sides solve
+$p'=Qp$ (differentiate) with $p(0)=(0,0,1)$, so they agree by Lemma 8.1. The code checks
+$\Phi^*(1)=0\oplus1\oplus2$, i.e. $a_1^*a_1+a_2^*a_2=N$ on the blocks used, and $p(t)$ against both formulas.
 
 ```python
 fock = TypeIAlgebra([1, 2, 3], [1, 2, 3], precision='double', charges=[0, 1, 2])   # N = 0, 1, 2
@@ -404,11 +407,19 @@ for s, rho_s in zip(ts, traj):
 neg = min(w.min().item() for rho_s in traj for w in rho_s.eigenvalues())
 print(f"smallest eigenvalue of rho(t) under RK4: {neg:.1e}")
 assert neg > -1e-7                                                 # positive up to the RK4 error
+
+sm = torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=c128)           # |g><e|; H = 0, rate 3, one step h = 1
+decay = lambda s, X: 3.0 * (sm @ X @ sm.mH - 0.5 * (sm.mH @ sm @ X + X @ sm.mH @ sm))
+step = dynamics.rk4(decay, torch.diag(torch.tensor([0.0, 1.0], dtype=c128)), [0.0, 1.0], substeps=1)[-1]
+assert (step - torch.diag(torch.tensor([-3 / 8, 11 / 8], dtype=c128))).abs().max() < 1e-14   # not positive
 ```
 
 RK4 is not guaranteed to preserve positivity: for $\rho'=\mathcal L\rho$ a step of size $h$ is
 $\rho\mapsto T(h\mathcal L)\rho$ with the polynomial $T$ of Section 8.1 (insert the four stages), which is
-trace preserving but need not be positive. Numerical observation: in this run the smallest eigenvalue of
+trace preserving (as $\operatorname{Tr}\mathcal L(X)=0$ for all $X$) but need not be positive. For example, on $M_2$ with
+basis $|g\rangle,|e\rangle$, $H=0$ and one jump $|g\rangle\langle e|$ with rate $\gamma$, $\mathcal L$ maps
+$\operatorname{diag}(a,b)$ to $\gamma b\operatorname{diag}(1,-1)$, so one step with $h\gamma=3$ maps $\operatorname{diag}(0,1)$ to
+$\operatorname{diag}(1-T(-3),T(-3))=\operatorname{diag}(-\frac38,\frac{11}8)$. Numerical observation: in this run the smallest eigenvalue of
 $\rho(t)$ is $\approx-2\cdot10^{-8}$ (the printed value, with steps up to $0.02$). `lindblad_channel` is exact
 but treats only jumps inside the sectors. Finally we check Proposition 8.8(2) for a random map between the
 sectors, against the GKSL generator on $M_6$ built with numpy:
@@ -432,8 +443,10 @@ print(f"coherences between sectors created on M_6: {np.abs(full - E_full).max():
 
 Collect the jumps of the generator of Section 8.3 into $\Phi_{\mathrm{tot}}(\rho)=\sum_jg_jL_j\rho L_j^*+\sum_mg_m\Phi_m(\rho)$,
 with $A=\Phi_{\mathrm{tot}}^*(1)=\sum_jg_jL_j^*L_j+\sum_mg_m\Phi_m^*(1)\ge0$ in $\mathcal M$, and
-$H_{\mathrm{eff}}=H-\frac i2A$. By Proposition 8.8(1) and Theorem 8.6 (whose $S_n$ map $\mathcal M$ into
-$\mathcal M$, because $H_{\mathrm{eff}}\in\mathcal M$),
+$H_{\mathrm{eff}}=H-\frac i2A$. Apply Theorem 8.6 to the generator $\hat{\mathcal L}$ on $M_D$ of Proposition 8.8(1):
+by the proof of Proposition 8.8 its jump part maps $\mathcal M$ into $\mathcal M$, where it equals $\Phi_{\mathrm{tot}}$, and
+its sum $\sum\hat L^*\hat L$ over the jumps is $A$, so its $H_{\mathrm{eff}}$ is $H-\frac i2A\in\mathcal M$. Hence its $S_n(t)$ map
+$\mathcal M$ into $\mathcal M$ (by induction on $n$), and for $\rho\in\mathcal M$
 $$
 \rho(t)=\sum_{n\ge0}S_n(t)\rho,\qquad S_0(t)\rho=e^{-itH_{\mathrm{eff}}}\rho\,e^{itH_{\mathrm{eff}}^*},
 \qquad S_n(t)=\int_0^tS_0(t-s)\,\Phi_{\mathrm{tot}}\,S_{n-1}(s)\,ds .
@@ -456,13 +469,15 @@ $\operatorname{Tr}|\phi\rangle\langle\phi|=\|\phi\|^2$. $\square$
 > is the basis of the quantum-trajectory (Monte Carlo wave-function) method [J. Dalibard, Y. Castin,
 > K. Mølmer, *Phys. Rev. Lett.* 68, 580 (1992)]; here we only use its mathematical part.
 
-For losses, counting the clicks is the same as measuring the charge:
+For losses the Dyson terms are the sector components of $\rho(t)$ (in the language of the box: counting the
+clicks is the same as measuring the charge). The **Lüders update** of a state $\rho$ by a projection $P$ with
+$\operatorname{Tr}(P\rho)>0$ is the state $P\rho P/\operatorname{Tr}(P\rho P)$ (note $\operatorname{Tr}(P\rho P)=\operatorname{Tr}(P\rho)$).
 
 **Proposition 8.11.** Let the sectors be labelled $N=0,\dots,C-1$, let there be no jumps inside the
 sectors, let every jump lower the charge by one ($K^{dc}_{m,l}=0$ unless $d=c-1$), and let
 $\rho=P_{N_0}\rho P_{N_0}$. Then $S_n(t)\rho=P_{N_0-n}\,\rho(t)\,P_{N_0-n}$ for $0\le n\le N_0$ and
-$S_n(t)\rho=0$ for $n>N_0$. In particular the Lüders update of $\rho(t)$ by $P_{N_0}$ ("no particle lost")
-is the no-jump state:
+$S_n(t)\rho=0$ for $n>N_0$. In particular $p_{N_0}(t)=w_0(t)>0$, and the Lüders update of $\rho(t)$ by $P_{N_0}$
+("no particle lost") is the no-jump state:
 $$
 \frac{P_{N_0}\rho(t)P_{N_0}}{p_{N_0}(t)}=\frac{e^{-itH_{\mathrm{eff}}}\rho\,e^{itH_{\mathrm{eff}}^*}}{w_0(t)},
 \qquad p_{N_0}(t)=w_0(t).
@@ -471,12 +486,14 @@ $$
 *Proof.* $S_0(s)$ maps operators supported in sector $N$ to operators supported in sector $N$, as
 $H_{\mathrm{eff}}\in\mathcal M$; $\Phi_{\mathrm{tot}}$ maps sector $N\ge1$ to sector $N-1$ and annihilates sector $0$.
 By induction $S_n(s)\rho$ is supported in sector $N_0-n$ for all $s$, and is $0$ for $n>N_0$. Compressing
-$\rho(t)=\sum_nS_n(t)\rho$ with $P_{N_0-n}$ keeps exactly the $n$-th term. $\square$
+$\rho(t)=\sum_nS_n(t)\rho$ with $P_{N_0-n}$ keeps exactly the $n$-th term. Finally $w_0(t)>0$, because
+$e^{-itH_{\mathrm{eff}}}$ is invertible (Lemma 8.1), so $S_0(t)\rho$ is a nonzero positive matrix. $\square$
 
 The library's `states.lueders_update(rho, P)` returns $P\rho P/\operatorname{Tr}(P\rho P)$ and
 $\operatorname{Tr}(\rho P)$. Let the two modes now leak at different rates $\gamma_1>\gamma_2$; then
-$A=\gamma_1n_1+\gamma_2n_2$ is not central, Proposition 8.9(2) does not apply, and post-selection on
-$N=2$ gives a genuinely non-Hermitian evolution. We check Proposition 8.11 for $n=0$ and, by computing
+$A=\gamma_1n_1+\gamma_2n_2$ is not central (in the sector $N=2$ it is $\operatorname{diag}(2\gamma_1,\gamma_1+\gamma_2,2\gamma_2)$ in the
+basis $|20\rangle,|11\rangle,|02\rangle$), Proposition 8.9(2) does not apply, and the post-selected state on $N=2$ is
+the normalised evolution by $H_{\mathrm{eff}}$ whose anti-Hermitian part $-\frac i2A$ is not a multiple of $1$ in that sector. We check Proposition 8.11 for $n=0$ and, by computing
 the integral for $S_1$ with Simpson's rule, for $n=1$:
 
 ```python

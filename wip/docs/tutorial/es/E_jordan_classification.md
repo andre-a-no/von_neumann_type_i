@@ -542,7 +542,7 @@ $\bar x=x$, luego son reales. Sean $E_{ij}$ las unidades matriciales y, para $i\
 $a[ij]=aE_{ij}+\bar aE_{ji}$; así $a[ji]=\bar a[ij]$.
 
 **Lema E.20.** $\operatorname{Herm}_n(D)$ es cerrado bajo $\circ$, tiene la unidad $\sum_iE_{ii}$ y dimensión
-$n+d\frac{n(n-1)}2$, y para $i,j,k,l$ distintos y $a,b\in D$:
+$n+d\frac{n(n-1)}2$, y, para $a,b\in D$, con $i,j,k$ arbitrarios en las dos primeras fórmulas e $i,j,k,l$ distintos en las demás ($a[ij]$ siempre con $i\ne j$):
 $$
 E_{ii}\circ E_{jj}=\delta_{ij}E_{ii},\quad E_{kk}\circ a[ij]=\tfrac12(\delta_{ki}+\delta_{kj})a[ij],\quad
 a[ij]\circ b[ij]=\langle a,b\rangle(E_{ii}+E_{jj}),\quad a[ij]\circ b[jk]=\tfrac12(ab)[ik],\quad a[ij]\circ b[kl]=0 .

@@ -516,7 +516,7 @@ $(XY)_{ik}=\sum_jX_{ij}Y_{jk}$ である（これを定義するのに $D$ の�
 $a[ji]=\bar a[ij]$ である。
 
 **補題 E.20.** $\operatorname{Herm}_n(D)$ は $\circ$ について閉じており、単位元 $\sum_iE_{ii}$ と次元
-$n+d\frac{n(n-1)}2$ をもち、相異なる $i,j,k,l$ と $a,b\in D$ に対し
+$n+d\frac{n(n-1)}2$ をもち、$a,b\in D$ と、最初の二式では任意の $i,j,k$、残りの式では相異なる $i,j,k,l$ に対し（$a[ij]$ では常に $i\ne j$）
 $$
 E_{ii}\circ E_{jj}=\delta_{ij}E_{ii},\quad E_{kk}\circ a[ij]=\tfrac12(\delta_{ki}+\delta_{kj})a[ij],\quad
 a[ij]\circ b[ij]=\langle a,b\rangle(E_{ii}+E_{jj}),\quad a[ij]\circ b[jk]=\tfrac12(ab)[ik],\quad a[ij]\circ b[kl]=0 .

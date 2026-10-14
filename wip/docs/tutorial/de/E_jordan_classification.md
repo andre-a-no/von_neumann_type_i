@@ -550,7 +550,7 @@ erfüllen $\bar x=x$, sind also reell. Seien $E_{ij}$ die Matrixeinheiten und, f
 $a[ij]=aE_{ij}+\bar aE_{ji}$; somit $a[ji]=\bar a[ij]$.
 
 **Lemma E.20.** $\operatorname{Herm}_n(D)$ ist unter $\circ$ abgeschlossen, hat das Einselement $\sum_iE_{ii}$ und die
-Dimension $n+d\frac{n(n-1)}2$, und für verschiedene $i,j,k,l$ und $a,b\in D$ gilt
+Dimension $n+d\frac{n(n-1)}2$, und für $a,b\in D$, beliebige $i,j,k$ in den ersten beiden Formeln und verschiedene $i,j,k,l$ in den übrigen ($a[ij]$ stets mit $i\ne j$) gilt
 $$
 E_{ii}\circ E_{jj}=\delta_{ij}E_{ii},\quad E_{kk}\circ a[ij]=\tfrac12(\delta_{ki}+\delta_{kj})a[ij],\quad
 a[ij]\circ b[ij]=\langle a,b\rangle(E_{ii}+E_{jj}),\quad a[ij]\circ b[jk]=\tfrac12(ab)[ik],\quad a[ij]\circ b[kl]=0 .
