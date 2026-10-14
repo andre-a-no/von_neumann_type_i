@@ -288,7 +288,7 @@ und $`\mathrm{Tr}(Y|X|Y)=\mathrm{Tr}\,A+\mathrm{Tr}\,B`$; man wende Lemma 11.8 a
 $`Y`$ mit $`X_\pm`$ (Satz 1.5(d)), und $`AB=Y^4X_+X_-=0`$. $`\square`$
 
 Also ist $`z\ge0`$ in Exp. 3, und $`\underline z=0`$ (man nehme $`Y=1`$). Die Gleichheitsbedingung ist schwächer als
-Kommutativität: Für $`X=\mathrm{diag}(1,-1,0)`$ und $`Y`$ mit den Zeilen $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`|a|<1`$, ist
+Kommutativität: Für $`X=\mathrm{diag}(1,-1,0)`$ und $`Y`$ mit den Zeilen $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`-1<a<1`$, ist
 $`AB=(Ye_1)\langle Ye_1,Ye_2\rangle(Ye_2)^*=0`$, während $`XY\ne YX`$ für $`a\ne0`$.
 
 *Rechnung:* Proposition 11.9 an zufälligen Paaren und das Beispiel für Gleichheit ohne Kommutativität — [Tutorial, Abschnitt 11.3](../../tutorial/de/11_optimisation.md#s-11-3).

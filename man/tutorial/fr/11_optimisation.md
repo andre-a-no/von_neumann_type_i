@@ -129,7 +129,7 @@ assert abs(z_max - exact) < 1e-12 and abs(z_min + exact) < 1e-12 and abs(exact -
 *Notes de cours :* [section 11.3](../../lecture_notes/fr/11_optimisation.md#s-11-3) ; [lemme 11.8](../../lecture_notes/fr/11_optimisation.md#r-11-8), [proposition 11.9](../../lecture_notes/fr/11_optimisation.md#r-11-9).
 
 D'après [notes de cours, proposition 11.9](../../lecture_notes/fr/11_optimisation.md#r-11-9), $`z=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ge0`$ dans Exp. 3, avec égalité si et seulement si
-$`YX_+Y^2X_-Y=0`$, en particulier si $`XY=YX`$. Pour $`X=\mathrm{diag}(1,-1,0)`$ et $`Y`$ de lignes $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`|a|<1`$, l'égalité a lieu bien
+$`YX_+Y^2X_-Y=0`$, en particulier si $`XY=YX`$. Pour $`X=\mathrm{diag}(1,-1,0)`$ et $`Y`$ de lignes $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`-1<a<1`$, l'égalité a lieu bien
 que $`XY\ne YX`$ pour $`a\ne0`$. Le code vérifie les deux (avec $`a=0.5`$) ; `X.abs()` est $`|X|`$ et `trace_norm()` est
 $`\|\cdot\|_1`$.
 

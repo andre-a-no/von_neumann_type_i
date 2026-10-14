@@ -286,7 +286,7 @@ $`YXY=A-B`$ et $`\mathrm{Tr}(Y|X|Y)=\mathrm{Tr}\,A+\mathrm{Tr}\,B`$ ; appliquons
 $`Y`$ commute avec $`X_\pm`$ (théorème 1.5(d)), et $`AB=Y^4X_+X_-=0`$. $`\square`$
 
 Ainsi $`z\ge0`$ dans Exp. 3, et $`\underline z=0`$ (prendre $`Y=1`$). La condition d'égalité est plus faible que la
-commutation : pour $`X=\mathrm{diag}(1,-1,0)`$ et $`Y`$ de lignes $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`|a|<1`$, on a
+commutation : pour $`X=\mathrm{diag}(1,-1,0)`$ et $`Y`$ de lignes $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`-1<a<1`$, on a
 $`AB=(Ye_1)\langle Ye_1,Ye_2\rangle(Ye_2)^*=0`$, alors que $`XY\ne YX`$ pour $`a\ne0`$.
 
 *Calcul :* la proposition 11.9 sur des couples aléatoires, et l'exemple d'égalité sans commutation — [tutoriel, section 11.3](../../tutorial/fr/11_optimisation.md#s-11-3).

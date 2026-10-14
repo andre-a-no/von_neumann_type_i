@@ -248,7 +248,8 @@ codes; the noiseless subsystems of Section 10.1 are such codes, corrected by $`\
 (Corollary D.10(c), with the two tensor factors exchanged). By Theorem 2.6 every $`\mathfrak A`$ is
 $`*`$-isomorphic to some $`\bigoplus_cM_{k_c}`$; when $`C\ge2`$ and some $`k_c\ge2`$, a correctable $`\mathfrak A`$ protects the
 sector label $`c`$ together with the quantum information of each $`M_{k_c}`$ — a **hybrid** code (remark after
-Corollary D.10, with an example where the Knill–Laflamme condition fails but Theorem 10.7 applies).
+Corollary D.10; an example where the Knill–Laflamme condition fails but Theorem 10.7 applies is computed in
+[tutorial, Section D.5](../tutorial/D_gksl.md#s-D-5)).
 Historically: C. Bény, A. Kempf, D. W. Kribs, *Phys. Rev. Lett.* 98, 100502 (2007) and *Phys. Rev. A* 76,
 042303 (2007); operator codes: Kribs–Laflamme–Poulin, *Phys. Rev. Lett.* 94, 180501 (2005).
 

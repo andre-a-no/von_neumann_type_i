@@ -129,7 +129,7 @@ assert abs(z_max - exact) < 1e-12 and abs(z_min + exact) < 1e-12 and abs(exact -
 *Apuntes:* [sección 11.3](../../lecture_notes/es/11_optimisation.md#s-11-3); [lema 11.8](../../lecture_notes/es/11_optimisation.md#r-11-8), [proposición 11.9](../../lecture_notes/es/11_optimisation.md#r-11-9).
 
 Según [apuntes de clase, proposición 11.9](../../lecture_notes/es/11_optimisation.md#r-11-9), $`z=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ge0`$ en Exp. 3, con igualdad si y solo si
-$`YX_+Y^2X_-Y=0`$, en particular si $`XY=YX`$. Para $`X=\mathrm{diag}(1,-1,0)`$ e $`Y`$ con filas $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`|a|<1`$, la igualdad se cumple
+$`YX_+Y^2X_-Y=0`$, en particular si $`XY=YX`$. Para $`X=\mathrm{diag}(1,-1,0)`$ e $`Y`$ con filas $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`-1<a<1`$, la igualdad se cumple
 aunque $`XY\ne YX`$ para $`a\ne0`$. El código comprueba ambas cosas (con $`a=0.5`$); `X.abs()` es $`|X|`$ y `trace_norm()` es
 $`\|\cdot\|_1`$.
 

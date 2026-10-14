@@ -122,7 +122,7 @@ assert abs(z_max - exact) < 1e-12 and abs(z_min + exact) < 1e-12 and abs(exact -
 *讲义：* [11.3 节](../../lecture_notes/zh/11_optimisation.md#s-11-3)；[引理 11.8](../../lecture_notes/zh/11_optimisation.md#r-11-8)、[命题 11.9](../../lecture_notes/zh/11_optimisation.md#r-11-9)。
 
 由[讲义，命题 11.9](../../lecture_notes/zh/11_optimisation.md#r-11-9)，在实验 3 中 $`z=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ge0`$，等号成立当且仅当 $`YX_+Y^2X_-Y=0`$，特别地，当 $`XY=YX`$ 时成立。
-对 $`X=\mathrm{diag}(1,-1,0)`$ 以及行为 $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`|a|<1`$ 的 $`Y`$，虽然当 $`a\ne0`$ 时 $`XY\ne YX`$，等号仍然成立。代码对两者都作了检验
+对 $`X=\mathrm{diag}(1,-1,0)`$ 以及行为 $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`-1<a<1`$ 的 $`Y`$，虽然当 $`a\ne0`$ 时 $`XY\ne YX`$，等号仍然成立。代码对两者都作了检验
 （取 $`a=0.5`$）；`X.abs()` 即 $`|X|`$，`trace_norm()` 即 $`\|\cdot\|_1`$。
 
 ```python

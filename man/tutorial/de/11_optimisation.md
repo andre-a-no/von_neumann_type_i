@@ -129,7 +129,7 @@ assert abs(z_max - exact) < 1e-12 and abs(z_min + exact) < 1e-12 and abs(exact -
 *Vorlesungsnotizen:* [Abschnitt 11.3](../../lecture_notes/de/11_optimisation.md#s-11-3); [Lemma 11.8](../../lecture_notes/de/11_optimisation.md#r-11-8), [Proposition 11.9](../../lecture_notes/de/11_optimisation.md#r-11-9).
 
 Nach [Vorlesungsnotizen, Proposition 11.9](../../lecture_notes/de/11_optimisation.md#r-11-9) ist $`z=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ge0`$ in Exp. 3, mit Gleichheit genau dann,
-wenn $`YX_+Y^2X_-Y=0`$, insbesondere wenn $`XY=YX`$. Für $`X=\mathrm{diag}(1,-1,0)`$ und $`Y`$ mit den Zeilen $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`|a|<1`$, gilt Gleichheit,
+wenn $`YX_+Y^2X_-Y=0`$, insbesondere wenn $`XY=YX`$. Für $`X=\mathrm{diag}(1,-1,0)`$ und $`Y`$ mit den Zeilen $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`-1<a<1`$, gilt Gleichheit,
 obwohl $`XY\ne YX`$ für $`a\ne0`$. Der Code prüft beides (mit $`a=0.5`$); `X.abs()` ist $`|X|`$, und `trace_norm()` ist
 $`\|\cdot\|_1`$.
 

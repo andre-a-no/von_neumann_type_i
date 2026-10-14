@@ -270,8 +270,8 @@ d'opérateurs (codes de sous-systèmes) ; les sous-systèmes sans bruit de la se
 $`\mathcal R=\mathrm{id}`$ (corollaire D.10(c), les deux facteurs tensoriels étant échangés). D'après le théorème 2.6, toute
 $`\mathfrak A`$ est $`*`$-isomorphe à une algèbre $`\bigoplus_cM_{k_c}`$ ; lorsque $`C\ge2`$ et que $`k_c\ge2`$ pour au moins un $`c`$, une
 $`\mathfrak A`$ corrigeable protège l'étiquette de secteur $`c`$ en même temps que l'information quantique de chaque $`M_{k_c}`$ :
-c'est un code **hybride** (remarque suivant le corollaire D.10, avec un exemple où la condition de Knill–Laflamme est en
-défaut mais où le théorème 10.7 s'applique). Historiquement : C. Bény, A. Kempf, D. W. Kribs, *Phys. Rev. Lett.* 98,
+c'est un code **hybride** (remarque suivant le corollaire D.10 ; un exemple où la condition de Knill–Laflamme est en
+défaut mais où le théorème 10.7 s'applique est calculé dans le [tutoriel, section D.5](../../tutorial/fr/D_gksl.md#s-D-5)). Historiquement : C. Bény, A. Kempf, D. W. Kribs, *Phys. Rev. Lett.* 98,
 100502 (2007) et *Phys. Rev. A* 76, 042303 (2007) ; codes d'opérateurs : Kribs–Laflamme–Poulin,
 *Phys. Rev. Lett.* 94, 180501 (2005).
 

@@ -265,8 +265,8 @@ $`\mathfrak A=M_k\otimes1_m`$ auf $`\mathcal C=\mathbb C^k\otimes\mathbb C^m`$ e
 $`\mathcal R=\mathrm{id}`$ (Korollar D.10(c), mit vertauschten Tensorfaktoren). Nach Satz 2.6 ist jedes $`\mathfrak A`$
 $`*`$-isomorph zu einer Algebra $`\bigoplus_cM_{k_c}`$; ist $`C\ge2`$ und $`k_c\ge2`$ für ein $`c`$, so schützt ein korrigierbares
 $`\mathfrak A`$ die Sektorbezeichnung $`c`$ zusammen mit der Quanteninformation jedes $`M_{k_c}`$ – ein **hybrider** Code
-(Bemerkung nach Korollar D.10, mit einem Beispiel, in dem die Knill–Laflamme-Bedingung verletzt ist, Satz 10.7 aber
-greift). Historisch: C. Bény, A. Kempf, D. W. Kribs, *Phys. Rev. Lett.* 98, 100502 (2007) und *Phys. Rev. A* 76,
+(Bemerkung nach Korollar D.10; ein Beispiel, in dem die Knill–Laflamme-Bedingung verletzt ist, Satz 10.7 aber
+greift, wird im [Tutorial, Abschnitt D.5](../../tutorial/de/D_gksl.md#s-D-5) berechnet). Historisch: C. Bény, A. Kempf, D. W. Kribs, *Phys. Rev. Lett.* 98, 100502 (2007) und *Phys. Rev. A* 76,
 042303 (2007); Operator-Codes: Kribs–Laflamme–Poulin, *Phys. Rev. Lett.* 94, 180501 (2005).
 
 **Beispiel.** Der Wiederholungscode unter unabhängigen Phasenflips (Wahrscheinlichkeit $`q`$ pro

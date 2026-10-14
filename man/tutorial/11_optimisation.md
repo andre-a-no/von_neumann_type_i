@@ -132,7 +132,7 @@ assert abs(z_max - exact) < 1e-12 and abs(z_min + exact) < 1e-12 and abs(exact -
 
 By [lecture notes, Proposition 11.9](../lecture_notes/11_optimisation.md#r-11-9), $`z=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ge0`$ in Exp. 3,
 with equality iff $`YX_+Y^2X_-Y=0`$, in particular if $`XY=YX`$. For $`X=\mathrm{diag}(1,-1,0)`$ and $`Y`$ with rows
-$`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`|a|<1`$, equality holds although $`XY\ne YX`$ for $`a\ne0`$. The code checks both
+$`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`-1<a<1`$, equality holds although $`XY\ne YX`$ for $`a\ne0`$. The code checks both
 (with $`a=0.5`$); `X.abs()` is $`|X|`$ and `trace_norm()` is $`\|\cdot\|_1`$.
 
 ```python

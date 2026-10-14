@@ -123,7 +123,7 @@ assert abs(z_max - exact) < 1e-12 and abs(z_min + exact) < 1e-12 and abs(exact -
 *講義ノート：* [11.3節](../../lecture_notes/ja/11_optimisation.md#s-11-3)；[補題 11.8](../../lecture_notes/ja/11_optimisation.md#r-11-8)、[命題 11.9](../../lecture_notes/ja/11_optimisation.md#r-11-9)。
 
 [講義ノート、命題 11.9](../../lecture_notes/ja/11_optimisation.md#r-11-9) により、実験 3 では $`z=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ge0`$ であり、等号は $`YX_+Y^2X_-Y=0`$ のときかつそのときに限り
-成り立つ。特に $`XY=YX`$ ならば等号が成り立つ。$`X=\mathrm{diag}(1,-1,0)`$ と、行が $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`|a|<1`$ である $`Y`$ に対しては、$`a\ne0`$ ならば $`XY\ne YX`$ で
+成り立つ。特に $`XY=YX`$ ならば等号が成り立つ。$`X=\mathrm{diag}(1,-1,0)`$ と、行が $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`-1<a<1`$ である $`Y`$ に対しては、$`a\ne0`$ ならば $`XY\ne YX`$ で
 あるにもかかわらず等号が成り立つ。コードは両方を（$`a=0.5`$ で）検証する。`X.abs()` は $`|X|`$、`trace_norm()` は $`\|\cdot\|_1`$ である。
 
 ```python

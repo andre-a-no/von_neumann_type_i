@@ -275,7 +275,7 @@ and $`\mathrm{Tr}(Y|X|Y)=\mathrm{Tr}\,A+\mathrm{Tr}\,B`$; apply Lemma 11.8. If $
 $`X_\pm`$ (Theorem 1.5(d)), and $`AB=Y^4X_+X_-=0`$. $`\square`$
 
 So $`z\ge0`$ in Exp. 3, and $`\underline z=0`$ (take $`Y=1`$). The equality condition is weaker than commutation: for
-$`X=\mathrm{diag}(1,-1,0)`$ and $`Y`$ with rows $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`|a|<1`$,
+$`X=\mathrm{diag}(1,-1,0)`$ and $`Y`$ with rows $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`-1<a<1`$,
 $`AB=(Ye_1)\langle Ye_1,Ye_2\rangle(Ye_2)^*=0`$, while $`XY\ne YX`$ for $`a\ne0`$.
 
 *Computation:* Proposition 11.9 on random pairs, and the example of equality without commutation — [tutorial, Section 11.3](../tutorial/11_optimisation.md#s-11-3).

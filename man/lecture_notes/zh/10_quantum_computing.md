@@ -244,8 +244,8 @@ $`\mathcal C=\mathbb C^k\otimes\mathbb C^m`$ 上的 $`\mathfrak A=M_k\otimes1_m`
 码；10.1 节的无噪声子系统就是这样的码，由 $`\mathcal R=\mathrm{id}`$ 纠正
 （推论 D.10(c)，交换两个张量因子）。由定理 2.6，每个 $`\mathfrak A`$ 都
 $`*`$-同构于某个 $`\bigoplus_cM_{k_c}`$；当 $`C\ge2`$ 且某个 $`k_c\ge2`$ 时，可纠正的 $`\mathfrak A`$ 既保护扇区标记 $`c`$，
-又保护每个 $`M_{k_c}`$ 的量子信息——这就是**混合**码（见推论 D.10 之后的说明，那里有一个
-Knill–Laflamme 条件不成立而定理 10.7 适用的例子）。
+又保护每个 $`M_{k_c}`$ 的量子信息——这就是**混合**码（见推论 D.10 之后的说明；一个
+Knill–Laflamme 条件不成立而定理 10.7 适用的例子在[教程，D.5 节](../../tutorial/zh/D_gksl.md#s-D-5)中计算）。
 历史上：C. Bény, A. Kempf, D. W. Kribs, *Phys. Rev. Lett.* 98, 100502 (2007) 以及 *Phys. Rev. A* 76,
 042303 (2007)；算子码：Kribs–Laflamme–Poulin, *Phys. Rev. Lett.* 94, 180501 (2005)。
 

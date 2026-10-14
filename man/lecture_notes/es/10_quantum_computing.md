@@ -267,8 +267,8 @@ operadores (de subsistemas); los subsistemas sin ruido de la sección 10.1 son c
 por $`\mathcal R=\mathrm{id}`$ (corolario D.10(c), con los dos factores tensoriales intercambiados). Por el
 teorema 2.6, toda $`\mathfrak A`$ es $`*`$-isomorfa a algún $`\bigoplus_cM_{k_c}`$; cuando $`C\ge2`$ y algún $`k_c\ge2`$, una
 $`\mathfrak A`$ corregible protege la etiqueta del sector $`c`$ junto con la información cuántica de cada $`M_{k_c}`$: un
-código **híbrido** (observación tras el corolario D.10, con un ejemplo en el que la condición de Knill–Laflamme
-falla pero se aplica el teorema 10.7). Históricamente: C. Bény, A. Kempf, D. W. Kribs, *Phys. Rev. Lett.* 98,
+código **híbrido** (observación tras el corolario D.10; un ejemplo en el que la condición de Knill–Laflamme
+falla pero se aplica el teorema 10.7 se calcula en el [tutorial, sección D.5](../../tutorial/es/D_gksl.md#s-D-5)). Históricamente: C. Bény, A. Kempf, D. W. Kribs, *Phys. Rev. Lett.* 98,
 100502 (2007) y *Phys. Rev. A* 76, 042303 (2007); códigos de operadores: Kribs–Laflamme–Poulin,
 *Phys. Rev. Lett.* 94, 180501 (2005).
 

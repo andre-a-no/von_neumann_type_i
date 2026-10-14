@@ -283,7 +283,7 @@ $`YXY=A-B`$ y $`\mathrm{Tr}(Y|X|Y)=\mathrm{Tr}\,A+\mathrm{Tr}\,B`$; aplíquese e
 entonces $`Y`$ conmuta con $`X_\pm`$ (teorema 1.5(d)), y $`AB=Y^4X_+X_-=0`$. $`\square`$
 
 Así, $`z\ge0`$ en Exp. 3, y $`\underline z=0`$ (tómese $`Y=1`$). La condición de igualdad es más débil que la
-conmutación: para $`X=\mathrm{diag}(1,-1,0)`$ e $`Y`$ con filas $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`|a|<1`$, se tiene
+conmutación: para $`X=\mathrm{diag}(1,-1,0)`$ e $`Y`$ con filas $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`-1<a<1`$, se tiene
 $`AB=(Ye_1)\langle Ye_1,Ye_2\rangle(Ye_2)^*=0`$, mientras que $`XY\ne YX`$ para $`a\ne0`$.
 
 *Cálculo:* la proposición 11.9 en pares aleatorios, y el ejemplo de igualdad sin conmutación — [tutorial, sección 11.3](../../tutorial/es/11_optimisation.md#s-11-3).
