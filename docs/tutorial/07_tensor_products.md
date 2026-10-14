@@ -2,10 +2,11 @@
 
 # 7. Tensor products and entanglement
 
-Two quantum systems together are described by the tensor product of their algebras. With
-sectors there are two products: the plain one, in which each part keeps its own charge, and the
-*fused* one, in which only the total charge is conserved. This chapter proves the structure of
-both, defines the partial trace as the dual of an embedding, and studies entanglement.
+This chapter studies the tensor product of two algebras with sectors (physically, the algebra of
+two systems together; see the *Physical meaning* boxes). With sectors there are two products: the
+plain one, in which each part keeps its own charge, and the *fused* one, in which only the total
+charge is conserved. We prove the structure of
+both, define the partial trace as the dual of an embedding, and study entanglement.
 
 **You will learn** how sectors multiply and how the library orders them, why the partial trace is
 a channel and, normalised, a conditional expectation of finite index, what the reduced state of a charge-conserving state is, how entanglement splits into a
@@ -115,9 +116,10 @@ for tr in ('Tr_blunt', 'Tr_norm', 'tau_vN'):                                   #
     assert (getattr(AB, tr)() - getattr(A, tr)() * getattr(B, tr)()).abs().max() < 1e-10
 ```
 
-> **Physical meaning.** If each of two systems obeys its own superselection rule — two boxes
+> **Physical meaning** (physical interpretation, not a theorem of this course). If each of two systems obeys its own superselection rule — two boxes
 > that cannot exchange particles — the joint system has a sector for every *pair* of charges, and
-> no observable connects different pairs. A joint sector counts with the product of the weights.
+> no observable connects different pairs. A joint sector counts with the product of the weights
+> (Theorem 7.1(c)).
 
 ## 7.2 The partial trace
 
@@ -129,7 +131,8 @@ $$
 It exists and is unique by Theorem 3.2, applied to the linear functional
 $A\mapsto\operatorname{Tr}(\rho(A\otimes1))$ and the faithful trace $\operatorname{Tr}$ of $\mathcal M_1$: the
 partial trace is the dual, with respect to the blunt traces, of the embedding $A\mapsto A\otimes1$.
-$\operatorname{Tr}_1$ is defined in the same way. For the full algebras $\mathcal M_i=B(H_i)$ this is the
+$\operatorname{Tr}_1$ is defined in the same way; for a state $\rho$, $\operatorname{Tr}_2\rho$ and
+$\operatorname{Tr}_1\rho$ are the **reduced states**. For the full algebras $\mathcal M_i=B(H_i)$ this is the
 **Hilbert-space partial trace** $\operatorname{Tr}_{H_2}:B(H_1\otimes H_2)\to B(H_1)$.
 
 **Proposition 7.2.** (a) For $\rho=\bigoplus_{c,d}\rho_{cd}$,
@@ -199,7 +202,7 @@ assert close(Ptr(rho), rho1)
 assert close(Ptr.adjoint('blunt')(A), kron(A, one2, alg12))                 # Theorem 7.3: the dual
 ```
 
-> **Physical meaning.** $\operatorname{Tr}_2\rho$ is the **reduced state**: all that an observer who can
+> **Physical meaning** (physical interpretation, not a theorem of this course). The reduced state $\operatorname{Tr}_2\rho$ is all that an observer who can
 > only measure the first system learns — the definition says it reproduces every expectation of an
 > observable $A\otimes1$. Joint states with equal reduced states differ in their correlations.
 
@@ -222,7 +225,7 @@ weights $w_c$ on $\mathcal M_1$; then $\operatorname{tr}_w(Y\otimes1)=m\operator
 $\operatorname{Tr}_2$ applied to $AP_c$, multiplied by $w_c$ and summed over $c$, gives
 $\operatorname{tr}_w(X(A\otimes1))=\operatorname{tr}_w((\operatorname{Tr}_2X)A)$, and $A=1$ gives
 $\operatorname{tr}_w(\iota\mathcal E(X))=\operatorname{tr}_w(X)$. If $F=\iota\circ F_0$ is another conditional
-expectation onto $\mathcal M_1\otimes1$ preserving $\operatorname{tr}_w$, then
+expectation onto $\mathcal M_1\otimes1$ preserving $\operatorname{tr}_w$, then, as $F(X(A\otimes1))=F(X)(A\otimes1)$,
 $\operatorname{tr}_w(X(A\otimes1))=\operatorname{tr}_w(F(X)(A\otimes1))=m\operatorname{tr}_w(F_0(X)A)$, so
 $\operatorname{tr}_w((\operatorname{Tr}_2X-mF_0(X))A)=0$ for all $A\in\mathcal M_1$, and $F_0=\mathcal E$ by faithfulness
 (take $A=(\operatorname{Tr}_2X-mF_0(X))^*$). (b) Write $X=\sum_{a,b}X_{ab}\otimes e_{ab}$ with
@@ -234,13 +237,17 @@ Proposition 7.2(a), so the adjoint of the expansion of $Y=u_{ab}$ is
 $u_{ab}^*=\sum_k\iota(\mathcal E(u_{ab}^*v_k))\,v_k^*$, and by (b)
 $\sum_{a,b}u_{ab}u_{ab}^*=\sum_k\big(\sum_{a,b}u_{ab}\,\iota(\mathcal E(u_{ab}^*v_k))\big)v_k^*=\sum_kv_kv_k^*$. $\square$
 
-A family as in (b) is a *quasi-basis* of $\mathcal E$, and $\sum_kv_kv_k^*$, which by (c) does not
-depend on it, is the **Watatani index** $\operatorname{Ind}\mathcal E=m^2$ (Y. Watatani, Mem. Amer. Math.
-Soc. 83, no. 424, 1990). For a factor, $M_k\otimes1\subset M_k\otimes M_m$ contains $\mathbb C^k$ with
-multiplicity $m$ in $\mathbb C^{km}$: its inclusion matrix is $\Lambda=(m)$, and
-$m^2=\|\Lambda\|^2=\dim(M_k\otimes M_m)/\dim M_k$ is its Jones index $[\mathcal M:\mathcal N]$ (V. F. R. Jones,
-Invent. Math. 72, 1, 1983; F. M. Goodman, P. de la Harpe and V. F. R. Jones, *Coxeter graphs and
-towers of algebras*, Springer, 1989). For general $\mathcal M_1$ the inclusion is the direct sum of the
+A family as in (c) is a *quasi-basis* of $\mathcal E$, and $\sum_kv_kv_k^*$, which by (c) does not
+depend on it and by (b) exists, is the **index** $\operatorname{Ind}\mathcal E=m^2$ of $\mathcal E$ (a
+definition; the name follows Y. Watatani, Mem. Amer. Math. Soc. 83, no. 424, 1990). The
+**inclusion matrix** of an inclusion of $\bigoplus_cM_{k_c}$ into $\bigoplus_sM_{n_s}$ has the entries
+$\Lambda_{sc}$, the numbers of copies of the block $c$ of the subalgebra in the block $s$ of the larger one
+(Chapter 9 uses it for towers of algebras). For a factor, $M_k\otimes1\subset M_k\otimes M_m$: ordering
+the basis $e_a\otimes e_b$ of $\mathbb C^{km}$ by $b$ first, $A\otimes1_m=\operatorname{diag}(A,\dots,A)$ with $m$
+copies, so $\Lambda=(m)$, and $m^2=\|\Lambda\|^2=\dim(M_k\otimes M_m)/\dim M_k$. (Further
+reading, not used here: V. F. R. Jones, Invent. Math. 72, 1, 1983, on the index of subfactors, and
+F. M. Goodman, P. de la Harpe and V. F. R. Jones, *Coxeter graphs and towers of algebras*, Springer,
+1989, on inclusion matrices.) For general $\mathcal M_1$ the inclusion is the direct sum of the
 $C_1$ inclusions $M_{k_c}\otimes1\subset M_{k_c}\otimes M_m$, $\Lambda=m1_{C_1}$. The module
 `torch_vn_algebra.inclusions` implements inclusions, their conditional expectations and indices;
 `from_tensor_product(alg1, m)` builds this one:
@@ -298,9 +305,14 @@ of them, so $X$ commutes with $N$ iff it commutes with every $\Pi_q$. $\square$
 
 `fused_tensor_product(alg1, alg2, fuse)` (default `fuse`: addition) orders its sectors by the fused
 charge and the pairs $(c,d)$ inside a sector lexicographically, each with the basis $e_a\otimes e_b$.
-Example: hard-core bosons. The number-conserving operators of two sites form
-$M_1\oplus M_2\oplus M_1$ (charges $0,1,2$), of three sites $M_1\oplus M_3\oplus M_3\oplus M_1$; the fused
-product is that of five sites, up to the order of the basis: $n_q=\sum_c\binom2c\binom3{q-c}=\binom5q$.
+Example: hard-core bosons. On $L$ sites, $(\mathbb C^2)^{\otimes L}$ with the occupation number
+$N=\sum_in^{(i)}$, $n=\operatorname{diag}(0,1)$, the eigenspace $N=q$ is spanned by the $\binom Lq$ product
+basis vectors with $q$ occupied sites, so the number-conserving operators $\{N\}'$ form
+$\bigoplus_qM_{\binom Lq}$ (Proposition 4.10(2)): for two sites $M_1\oplus M_2\oplus M_1$ (charges $0,1,2$), for
+three sites $M_1\oplus M_3\oplus M_3\oplus M_1$. By Proposition 7.5(c) the fused product is $\{N\}'$ for
+the total occupation number of five sites, up to the order of the basis, and indeed
+$n_q=\sum_c\binom2c\binom3{q-c}=\binom5q$ (Vandermonde's identity: a $q$-element subset of five sites
+consists of $c$ of the first two and $q-c$ of the last three).
 
 ```python
 bos1 = TypeIAlgebra([1, 2, 1], [1, 2, 1], precision='double', charges=[0, 1, 2])
@@ -309,6 +321,7 @@ F = fused_tensor_product(bos1, bos2)                         # U(1): total parti
 P = tensor_product(bos1, bos2)                               # particle numbers conserved separately
 print(F.charges, F.k_factors, sum(k * k for k in F.k_factors), sum(k * k for k in P.k_factors))
 assert F.k_factors == [math.comb(5, q) for q in range(6)]
+assert sum(k * k for k in F.k_factors) == 252 and sum(k * k for k in P.k_factors) == 120
 
 N1, N2 = full(bos1.central([0.0, 1.0, 2.0]))[0], full(bos2.central([0.0, 1.0, 2.0, 3.0]))[0]
 N = torch.kron(N1, torch.eye(8, dtype=dt)) + torch.kron(torch.eye(4, dtype=dt), N2)
@@ -318,12 +331,16 @@ A, B = random_operator(bos1), random_operator(bos2)
 assert close(full12(kron(A, B, F)), full12(kron(A, B, P)))   # Proposition 7.5(b)
 ```
 
-The fused algebra has dimension $252$, the plain product $120$; the difference consists of the
-operators that move particles between the two parts, such as hopping terms.
+The fused algebra has dimension $\sum_q\binom5q^2=\binom{10}5=252$ (Vandermonde again), the plain
+product $(1+4+1)(1+9+9+1)=120$ (Theorem 7.1(b)). By Theorem 7.1(a) and Proposition 7.5(b) the plain
+product consists of the elements of the fused one that are block diagonal for the pairs $(c,d)$; the
+remaining $132$ dimensions are spanned by the operators that map a pair block $(c,d)$ into a
+different pair block $(c',d')$ of the same $H_q$, $c'\ne c$ (so $d'\ne d$): they change the charge
+of each part while conserving the total, i.e. here they move particles between the two parts.
 
 A state of $\mathcal M_1\otimes_f\mathcal M_2$ can have coherences between pair blocks, so Proposition
 7.2 does not apply. Let $E_1(X)=\sum_cP_cXP_c$ on $B(H_1)$ (the conditional expectation of Section
-2.6, Physical meaning); it maps onto $\mathcal M_1$, and $\operatorname{Tr}(E_1(X)A)=\operatorname{Tr}(XA)$ for
+2.6); it maps onto $\mathcal M_1$, and $\operatorname{Tr}(E_1(X)A)=\operatorname{Tr}(XA)$ for
 $A\in\mathcal M_1$, because $A=\sum_cP_cAP_c$.
 
 **Theorem 7.6.** Let $\rho$ be the density of a state $\omega$ on $\mathcal M_1\otimes_f\mathcal M_2$. The
@@ -348,9 +365,12 @@ $x'\in\mathbb C^{k_{c'}}$, $y\in\mathbb C^{l_d}$ and $\psi=(x+x')\otimes y/\sqrt
 $|\psi\rangle\langle\psi|\in B(H_q)$, and $\operatorname{Tr}_{H_2}|\psi\rangle\langle\psi|=\frac12|x+x'\rangle\langle x+x'|$
 has the nonzero block $\frac12|x\rangle\langle x'|$, which $E_1$ removes. $\square$
 
-Both library implementations compute this map, for any fusion rule: `partial_trace` traces only
+By the block formula of Theorem 7.6, $(\rho_1)_c=\sum_d\operatorname{tr}_{l_d}\rho_{(c,d),(c,d)}$. Both library
+implementations are built to compute this map for any fusion rule: `partial_trace` traces only
 the diagonal pair blocks $\rho_{(c,d),(c,d)}$, and `partial_trace_channel` uses separate Kraus
-indices for pairs of one sector with the same $c$; its dual is again $A\mapsto A\otimes1$. With
+indices for pairs of one sector with the same $c$, so that its dual is again $A\mapsto A\otimes1$. The
+code checks both, for the two fusion rules below and both choices of the kept factor, against
+$E_1(\operatorname{Tr}_{H_2}\rho)$ computed independently with `einsum`, and the dual against $A\otimes1$. With
 addition $E_1$ does nothing in our example; with the parity rule $f(q,r)=q+r\bmod2$ the charges $0$
 and $2$ of `bos1` fuse identically with every $r$, and $E_1$ removes genuine coherences:
 
@@ -375,10 +395,12 @@ for alg, coherent in ((F, False), (G, True)):
     assert close(composite.partial_trace_channel(alg, keep=1).adjoint('blunt')(A), kron(A, bos2.identity(), alg))
 ```
 
-> **Physical meaning.** In the BCS description of a superconductor only the parity of the electron
+> **Physical meaning** (physical interpretation, not a theorem of this course). In the BCS
+> description of a superconductor only the parity of the electron
 > number is conserved, so the global state may superpose the particle numbers $0$ and $2$ of a
 > region. An observer whose observables conserve the particle number of the region cannot see
-> this coherence: for them the reduced state is the pinched one of Theorem 7.6, a mixture of particle numbers.
+> this coherence: for them the reduced state is the pinched one of Theorem 7.6 (the mathematical
+> content of this box), a mixture of particle numbers.
 
 ## 7.4 Entanglement of pure states
 
@@ -401,11 +423,15 @@ Proposition 7.2(b) gives the reduced states. $\square$
 
 The **entanglement entropy** of $\psi$ is
 $E(\psi)=S(\operatorname{Tr}_2|\psi\rangle\langle\psi|)=S(\operatorname{Tr}_1|\psi\rangle\langle\psi|)=-\sum_is_i^2\log s_i^2$.
-It vanishes iff $r=1$, i.e. iff $\psi=u\otimes v$, and $E(\psi)\le\log\min(a,b)$ with equality iff the
-smaller reduced state is maximally mixed (Corollary 3.6).
+It vanishes iff $r=1$ (each term $-s_i^2\log s_i^2$ is $\ge0$, and $0$ only for $s_i^2=1$), i.e. iff
+$\psi=u\otimes v$ (then $\Psi=uv^T$ has rank $1$, and $r=\operatorname{rank}\Psi\Psi^*=\operatorname{rank}\Psi$), and
+$E(\psi)\le\log\min(a,b)$ with equality iff the smaller reduced state is maximally mixed
+(Corollary 3.6, applied to both reduced states).
 
-With charges, a pure state lies in one sector $H_q$ of the fused product; write
-$\psi=\sum_{(c,d)}\psi_{cd}$ with $\psi_{cd}\in\mathbb C^{k_c}\otimes\mathbb C^{l_d}$.
+With charges we take a unit vector $\psi$ with a definite total charge, i.e. in one sector $H_q$ of the
+fused product (a superposition of different $H_q$ gives on $\mathcal M_1\otimes_f\mathcal M_2$ the same
+state as a mixture, Chapter 3, Exercise 3); write $\psi=\sum_{(c,d)}\psi_{cd}$ with
+$\psi_{cd}\in\mathbb C^{k_c}\otimes\mathbb C^{l_d}$.
 
 **Proposition 7.8 (symmetry-resolved entanglement).** Let $f$ be addition and let the $q_c$ be
 pairwise distinct and the $r_d$ pairwise distinct, so that for each $c$ at most one $d=d(c)$ has
@@ -459,7 +485,8 @@ print(f"E = {E_psi:.4f} = H(p) {H_num:.4f} + configurational {S_conf:.4f}")
 assert abs(E_psi - H_num - S_conf) < 1e-10                  # Proposition 7.8
 ```
 
-> **Physical meaning.** Parties bound by the particle-number superselection rule can use only the
+> **Physical meaning** (physical interpretation, not a theorem of this course). Parties bound by
+> the particle-number superselection rule can use only the
 > configurational part as a resource: the *entanglement of particles* of H. M. Wiseman and J. A.
 > Vaccaro (Phys. Rev. Lett. 91, 097902, 2003). $H(p)$ is measured in cold atoms as the *number
 > entropy* (A. Lukin et al., Science 364, 256, 2019).
@@ -467,16 +494,21 @@ assert abs(E_psi - H_num - S_conf) < 1e-10                  # Proposition 7.8
 ## 7.5 Random states and Page's formula
 
 Let $g\in\mathbb C^N$ have independent coordinates with independent $N(0,\tfrac12)$ real and imaginary
-parts, so $\mathbb E|g_i|^2=1$. A **Haar-random pure state** is $\psi=g/\|g\|$; its law is unitarily
-invariant, as the density $\pi^{-N}e^{-\|g\|^2}$ and Lebesgue measure are (it is the only invariant
-law on the sphere, a fact we do not use).
+parts (a standard complex Gaussian vector, Proposition A.16(a)), so $\mathbb E|g_i|^2=1$; $g\neq0$
+almost surely (Theorem A.20). A **Haar-random pure state** is $\psi=g/\|g\|$. Its law is unitarily
+invariant: $Ug$ has the law of $g$ for every unitary $U$ (Proposition A.16(a)), and
+$Ug/\|Ug\|=U\psi$. By Proposition A.22 it is the only unitarily invariant law on the unit sphere, and,
+as shown in the proof there, it is the law of the first column of a Haar unitary (Theorem 5.3).
 
 **Lemma 7.9.** $\|g\|$ and $\psi=g/\|g\|$ are independent.
 
-*Proof.* Let $h\ge0$ and $\phi\ge0$ be measurable on $(0,\infty)$ and on the unit sphere $S^{2N-1}$.
-Integration in polar coordinates in $\mathbb R^{2N}$, with $\sigma$ the surface measure, gives
+*Proof.* (This is part of Theorem A.20(b).) Let $h\ge0$ and $\phi\ge0$ be Borel functions on
+$(0,\infty)$ and on the unit sphere $S^{2N-1}$ of $\mathbb C^N\cong\mathbb R^{2N}$. As $g$ has the density
+$\pi^{-N}e^{-|x|^2}$ (Proposition A.16(a)), polar coordinates (Theorem A.18 with $n=2N$ and the
+measure $\mu$ defined there) give
 $$
-\mathbb E\big[h(\|g\|)\phi(\psi)\big]=\pi^{-N}\int_0^\infty h(t)e^{-t^2}t^{2N-1}dt\int_{S^{2N-1}}\phi\,d\sigma=:\alpha(h)\beta(\phi).
+\mathbb E\big[h(\|g\|)\phi(\psi)\big]=\pi^{-N}\!\int_{\mathbb R^{2N}}\!h(|x|)e^{-|x|^2}\phi\Big(\frac x{|x|}\Big)dx
+=2N\pi^{-N}\int_0^\infty h(t)e^{-t^2}t^{2N-1}dt\int_{S^{2N-1}}\phi\,d\mu=:\alpha(h)\beta(\phi).
 $$
 Taking $\phi=1$, then $h=1$, then both, gives $\mathbb Eh(\|g\|)=\alpha(h)\beta(1)$,
 $\mathbb E\phi(\psi)=\alpha(1)\beta(\phi)$ and $\alpha(1)\beta(1)=1$, hence
@@ -485,13 +517,17 @@ $\mathbb E[h(\|g\|)\phi(\psi)]=\mathbb Eh(\|g\|)\,\mathbb E\phi(\psi)$. $\square
 **Lemma 7.10.** $\mathbb E\|g\|^4=N(N+1)$. If $G$ is an $a\times b$ matrix with independent entries distributed
 as the $g_i$ (a *Ginibre* matrix), then $\mathbb E\operatorname{Tr}(GG^*)^2=ab(a+b)$.
 
-*Proof.* With $g_i=x+iy$, $\mathbb E|g_i|^4=\mathbb Ex^4+2\mathbb Ex^2\mathbb Ey^2+\mathbb Ey^4=\tfrac34+\tfrac12+\tfrac34=2$,
-so $\mathbb E\|g\|^4=\sum_i\mathbb E|g_i|^4+\sum_{i\ne j}\mathbb E|g_i|^2\mathbb E|g_j|^2=2N+N(N-1)$. Next,
+*Proof.* With $g_i=x+iy$ and $x,y$ independent $N(0,\frac12)$, $\mathbb Ex^4=3(\mathbb Ex^2)^2=\frac34$
+(Theorem A.24: three pairings), so
+$\mathbb E|g_i|^4=\mathbb Ex^4+2\mathbb Ex^2\mathbb Ey^2+\mathbb Ey^4=\tfrac34+\tfrac12+\tfrac34=2$ and
+$\mathbb E\|g\|^4=\sum_i\mathbb E|g_i|^4+\sum_{i\ne j}\mathbb E|g_i|^2\mathbb E|g_j|^2=2N+N(N-1)$. Next,
 $\operatorname{Tr}(GG^*)^2=\sum_{i,i',j,j'}G_{ij}\bar G_{i'j}G_{i'j'}\bar G_{ij'}$. The entries and their
-conjugates are complex linear combinations of independent real Gaussians with
-$\mathbb E[G_{ij}G_{kl}]=0$ and $\mathbb E[G_{ij}\bar G_{kl}]=\delta_{ik}\delta_{jl}$, so Isserlis' formula
-(proof of Proposition 1.10) gives $\mathbb E[G_{ij}\bar G_{i'j}G_{i'j'}\bar G_{ij'}]=\delta_{ii'}+\delta_{jj'}$.
-Summing gives $ab^2+a^2b$. $\square$
+conjugates are complex linear combinations of the coordinates of one centred Gaussian vector (the
+real and imaginary parts of all entries), with $\mathbb E[G_{ij}G_{kl}]=\mathbb E[\bar G_{ij}\bar G_{kl}]=0$ and
+$\mathbb E[G_{ij}\bar G_{kl}]=\delta_{ik}\delta_{jl}$ (Proposition A.16(a)). By the Isserlis–Wick formula
+(Theorem A.24, complex form, with the three pairings of the four factors),
+$\mathbb E[G_{ij}\bar G_{i'j}G_{i'j'}\bar G_{ij'}]=\delta_{ii'}\delta_{i'i}+0+\delta_{jj'}\delta_{jj'}=\delta_{ii'}+\delta_{jj'}$.
+Summing over $i,i'\le a$ and $j,j'\le b$ gives $ab^2+a^2b$. $\square$
 
 **Theorem 7.11 (E. Lubkin, J. Math. Phys. 19, 1028, 1978).** For a Haar-random
 $\psi\in\mathbb C^a\otimes\mathbb C^b$ and $\rho_A=\operatorname{Tr}_2|\psi\rangle\langle\psi|$,
@@ -500,41 +536,67 @@ $$
 $$
 
 *Proof.* Let $G_{\alpha\beta}=\langle e_\alpha\otimes e_\beta,g\rangle$, a Ginibre matrix; the matrix of $\psi$ is
-$\Psi=G/\|g\|$, and by the proof of Lemma 7.7, $\rho_A=\Psi\Psi^*=GG^*/\|g\|^2$. Hence
+$\Psi=G/\|g\|$, and by Proposition 7.2(a), $(\rho_A)_{\alpha\alpha'}=\sum_\beta\Psi_{\alpha\beta}\bar\Psi_{\alpha'\beta}$, i.e.
+$\rho_A=\Psi\Psi^*=GG^*/\|g\|^2$. Hence
 $\operatorname{Tr}(GG^*)^2=\|g\|^4\operatorname{Tr}\rho_A^2$, where $\operatorname{Tr}\rho_A^2\in[0,1]$ is a function of
 $\psi$. By Lemma 7.9, $\mathbb E\operatorname{Tr}(GG^*)^2=\mathbb E\|g\|^4\,\mathbb E\operatorname{Tr}\rho_A^2$, and by Lemma 7.10
 $\mathbb E\operatorname{Tr}\rho_A^2=ab(a+b)/(ab(ab+1))$. $\square$
 
-Chapter 6 obtains the same mean from the fourth moments of a Haar vector, as the output purity of a
-random channel.
+Chapter 6 obtains the same mean from the fourth moments of a unitarily invariant unit vector
+(Lemma 6.14), as the output purity of a random channel (Theorem 6.15 and the remark after it).
 
 **Corollary 7.12.** $\log\frac{ab+1}{a+b}\le\mathbb E\,S(\rho_A)\le\log\min(a,b)$.
 
 *Proof.* By Corollary 3.6, $S(\rho_A)\le\log a$, and by Lemma 7.7,
-$S(\rho_A)=S(\operatorname{Tr}_1|\psi\rangle\langle\psi|)\le\log b$. Jensen's inequality for the concave $\log$ with the
-weights $\lambda_i>0$, the nonzero eigenvalues of $\rho_A$, gives
-$\sum_i\lambda_i\log\lambda_i\le\log\sum_i\lambda_i^2$, i.e. $S(\rho_A)\ge-\log\operatorname{Tr}\rho_A^2$; Jensen's
-inequality for the convex $-\log$ and Theorem 7.11 give
-$\mathbb E[-\log\operatorname{Tr}\rho_A^2]\ge-\log\mathbb E\operatorname{Tr}\rho_A^2$. $\square$
+$S(\rho_A)=S(\operatorname{Tr}_1|\psi\rangle\langle\psi|)\le\log b$. The finite Jensen inequality for the concave
+$\log$ (solution of Exercise 2 in Chapter 3) with the weights $\lambda_i>0$, the nonzero eigenvalues of
+$\rho_A$, gives $\sum_i\lambda_i\log\lambda_i\le\log\sum_i\lambda_i^2$, i.e. $S(\rho_A)\ge-\log X$ with
+$X=\operatorname{Tr}\rho_A^2\in(0,1]$. Let $m=\mathbb EX=\frac{a+b}{ab+1}$ (Theorem 7.11). Lemma 3.4 for the convex
+function $-\log$ on $(0,\infty)$ at the point $m$ gives $-\log X\ge-\log m-(X-m)/m$; both sides are
+bounded ($X\ge1/a$ by Cauchy–Schwarz), and taking expectations gives $\mathbb E[-\log X]\ge-\log m$. $\square$
 
-For fixed $a$ and $b\to\infty$ the bounds meet: a small part of a random pure state is almost
-maximally mixed. The exact mean is Page's formula, which we state without proof.
+For fixed $a$ and $b\to\infty$ the bounds meet: the mean entropy of a small part of a random pure
+state tends to its maximum $\log a$. The exact mean is Page's formula, proved in Appendix C.
 
 **Theorem 7.13 (Page's formula).** For $a\le b$,
 $$
 \mathbb E\,S(\rho_A)=\sum_{k=b+1}^{ab}\frac1k-\frac{a-1}{2b}.
 $$
-It was conjectured by D. N. Page (Phys. Rev. Lett. 71, 1291, 1993) and proved by S. K. Foong and
-S. Kanno (Phys. Rev. Lett. 72, 1148, 1994), J. Sánchez-Ruiz (Phys. Rev. E 52, 5653, 1995) and
-S. Sen (Phys. Rev. Lett. 77, 1, 1996). For $1\ll a\le b$ it is $\approx\log a-\frac a{2b}$; for two
-qubits it is $\frac13$.
+Moreover $\log a-\frac{a-1}{ab+1}-\frac{a-1}{2b}\le\mathbb E\,S(\rho_A)\le\log a-\frac{a-1}{2b}$, so
+$\big|\mathbb E\,S(\rho_A)-\log a+\frac a{2b}\big|\le\frac1{2b}$; for two qubits $\mathbb E\,S(\rho_A)=\frac13$.
 
-The law of $\rho_A$ is the **induced measure** (K. Życzkowski and H.-J. Sommers, J. Phys. A 34,
-7111, 2001). `states.random_density_matrix(alg, rank=r)` forms $G_cG_c^*$ with $k_c\times r$ Ginibre
+*Proof.* This is Theorem C.17 together with Corollary C.18. The proof in Appendix C starts from
+$\rho_A=GG^*/\operatorname{Tr}GG^*$ (proof of Theorem 7.11), computes the joint density of the eigenvalues
+of the Wishart matrix $GG^*$ (Theorem C.13) and of $\rho_A$ (Theorem C.14), and integrates $x\log x$
+against the Laguerre level density (Lemmas C.15 and C.16). $\square$
+
+The formula was conjectured by D. N. Page (Phys. Rev. Lett. 71, 1291, 1993) and proved by S. K.
+Foong and S. Kanno (Phys. Rev. Lett. 72, 1148, 1994), J. Sánchez-Ruiz (Phys. Rev. E 52, 5653, 1995)
+and S. Sen (Phys. Rev. Lett. 77, 1, 1996).
+
+For $a>b$ the roles of $a$ and $b$ are exchanged. Indeed, the unitary $e_\alpha\otimes e_\beta\mapsto e_\beta\otimes e_\alpha$
+of $\mathbb C^a\otimes\mathbb C^b$ onto $\mathbb C^b\otimes\mathbb C^a$ permutes the coordinates of $g$, so it maps a
+Haar-random pure state $\psi$ to a Haar-random pure state $\psi'$ of $\mathbb C^b\otimes\mathbb C^a$; its matrix is
+$\Psi^T$, so $\operatorname{Tr}_2|\psi'\rangle\langle\psi'|=\Psi^T\bar\Psi=\operatorname{Tr}_1|\psi\rangle\langle\psi|$ (Proposition 7.2(a)),
+whose entropy is $S(\rho_A)$ by Lemma 7.7. Hence, with $a'=\min(a,b)$ and $b'=\max(a,b)$, Theorem 7.13 says
+that the mean entanglement entropy falls short of its maximum $\log a'$ by at least $\frac{a'-1}{2b'}$ and
+by at most $\frac{a'-1}{2b'}+\frac{a'-1}{a'b'+1}$, which is less than one nat: it is $0$ for $b'=1$, and
+otherwise $\frac{a'-1}{2b'}\le\frac12$ and $\frac{a'-1}{a'b'+1}<\frac1{b'}\le\frac12$. So for fixed $ab$, as a
+function of $a$, the mean is within one nat of $\log\min(a,b)=\min(\log a,\log(ab)-\log a)$.
+
+The law of $\rho_A$ is the **induced measure** (the name is that of K. Życzkowski and H.-J. Sommers,
+J. Phys. A 34, 7111, 2001; Theorem C.14 gives the density of its eigenvalues).
+`states.random_density_matrix(alg, rank=r)` forms $G_cG_c^*$ with independent $k_c\times r$ Ginibre
 blocks $G_c$ and divides by $\sum_c\operatorname{Tr}G_cG_c^*$. For one block this is the law of $\rho_A$
-above with $b=r$. For several blocks it is the restriction to $\mathcal M_1$ of a Haar-random pure state
-of $H_1\otimes\mathbb C^r$: apply Theorem 7.6 with $\mathcal M_2=M_r$ and a constant fusion rule, so that
-$\mathcal M_1\otimes_f\mathcal M_2=B(H_1\otimes\mathbb C^r)$, with $G_c$ the rows of $G$ in block $c$.
+above with $b=r$ (proof of Theorem 7.11). For several blocks it is the law of the density of the
+restriction to $\mathcal M_1$ of the vector state of a Haar-random pure state $\psi=g/\|g\|$ of
+$H_1\otimes\mathbb C^r$. Indeed, let $G_{i\beta}=\langle e_i\otimes e_\beta,g\rangle$, a $D\times r$ Ginibre
+matrix ($D=\sum_ck_c$), and $G_c$ its rows in block $c$: independent $k_c\times r$ Ginibre matrices.
+Take $\mathcal M_2=M_r$ (one sector) and a constant fusion rule; then there is a single total charge,
+$\Pi=1$, and $\mathcal M_1\otimes_f\mathcal M_2=B(H_1\otimes\mathbb C^r)$. By Theorem 7.6 the restriction has
+the density $E_1(\operatorname{Tr}_{H_2}|\psi\rangle\langle\psi|)$, and $\operatorname{Tr}_{H_2}|\psi\rangle\langle\psi|=GG^*/\|g\|^2$
+(Proposition 7.2(a), as in the proof of Theorem 7.11), whose diagonal blocks are $G_cG_c^*/\|g\|^2$,
+with $\|g\|^2=\sum_c\operatorname{Tr}G_cG_c^*$.
 
 **Proposition 7.14.** For $\rho$ drawn by `random_density_matrix(alg, rank=r)` on $\bigoplus_cM_{k_c}$,
 $D=\sum_ck_c$,
@@ -543,7 +605,10 @@ $$
 $$
 
 *Proof.* $\operatorname{Tr}\rho^2=\sum_c\operatorname{Tr}(G_cG_c^*)^2/\|g\|^4$ with $g\in\mathbb C^{Dr}$ the collection of
-all entries; as in Theorem 7.11, Lemmas 7.9 and 7.10 give $\sum_ck_cr(k_c+r)/(Dr(Dr+1))$. $\square$
+all entries, a function of $g/\|g\|$ with values in $[0,1]$. As in Theorem 7.11, Lemma 7.9 gives
+$\sum_c\mathbb E\operatorname{Tr}(G_cG_c^*)^2=\mathbb E\|g\|^4\,\mathbb E\operatorname{Tr}\rho^2$, and Lemma 7.10 gives
+$\mathbb E\operatorname{Tr}(G_cG_c^*)^2=k_cr(k_c+r)$ and $\mathbb E\|g\|^4=Dr(Dr+1)$, so
+$\mathbb E\operatorname{Tr}\rho^2=\sum_ck_cr(k_c+r)/(Dr(Dr+1))$. $\square$
 
 We check Theorems 7.11 and 7.13 on $10^4$ pure states of $\mathbb C^3\otimes\mathbb C^6$ reduced with
 `partial_trace` and on the induced measure, and Proposition 7.14 for $M_1\oplus M_2\oplus M_3$, $r=2$:
@@ -569,6 +634,8 @@ for name, rho_s in (('reduced pure states', rho_A),
           f"E S = {m_S:.4f} +- {e_S:.4f} (Page {page:.4f})")
     assert abs(m_p - purity_exact) < 5 * e_p and abs(m_S - page) < 5 * e_S     # Theorems 7.11, 7.13
     assert math.log((a * b + 1) / (a + b)) < m_S < math.log(a)                # Corollary 7.12
+assert math.log(a) - (a - 1) / (a * b + 1) - (a - 1) / (2 * b) <= page <= math.log(a) - (a - 1) / (2 * b)
+assert abs(sum(1 / k for k in (3, 4)) - 1 / 4 - 1 / 3) < 1e-15                # two qubits: E S = 1/3
 
 alg3 = TypeIAlgebra([1, 2, 3], [1, 2, 3], precision='double')
 m_p, e_p = mean_se(states.random_density_matrix(alg3, 40_000, rank=2).purity())
@@ -576,16 +643,18 @@ print(f"E Tr rho^2 = {m_p:.4f} +- {e_p:.4f} (exact {26 / 78:.4f})")
 assert abs(m_p - 26 / 78) < 5 * e_p                                          # Proposition 7.14
 ```
 
-> **Physical meaning.** A typical pure state is nearly maximally entangled between any part of at
-> most half the system and the rest. As the part grows, the entanglement rises like $\log a$ and
-> falls beyond the middle: the *Page curve*, which describes how information leaves a black hole
-> in the Hawking radiation, and why the parts of a closed system look thermal.
+> **Physical meaning** (physical interpretation, not a theorem of this course). The mean
+> entanglement entropy of a random pure state, plotted against the size of the part at fixed total
+> dimension (the curve described after Theorem 7.13), is called the *Page curve*. In physics it
+> is used to describe how information leaves a black hole in the Hawking radiation, and why the
+> parts of a closed system look thermal; these are interpretations, not results of this course.
 
 ## 7.6 What to compare with
 
 On one Hilbert space, QuTiP (`Qobj.ptrace`, `entropy_vn`, `rand_ket`, `rand_dm` with the Ginibre
 distribution and a rank) and `numpy` (a reshape and an `einsum`, as above) compute partial traces,
-entropies and induced states, and agree with the library on plain products. Tensor-network
+entropies and induced states for plain products (the `einsum` checks above compare such a computation
+with the library). Tensor-network
 libraries with conserved charges — ITensor (quantum-number block-sparse tensors), TeNPy (charged
 legs, entanglement spectra by charge) and, for non-abelian symmetries, TensorKit.jl (fusion trees) —
 fuse sectors in the same way for large systems and give symmetry-resolved entanglement. The
@@ -593,8 +662,8 @@ library adds the algebraic layer: products are von Neumann algebras with sectors
 fusion rule is any map of the labels, the partial trace is a channel with its dual for each trace
 and the correct restriction for fused products (Theorems 7.3, 7.6), and all of it is batched. It has
 no tensor networks, and `fused_tensor_product` takes a rule with one outcome per pair of charges, as
-for abelian symmetries; a non-abelian rule such as $j_1\otimes j_2=\bigoplus_jj$ for $SU(2)$, with its
-Clebsch–Gordan coefficients, is not a fused product here (the library treats $SU(2)$ for spin-$\frac12$
+for abelian symmetries; a non-abelian rule, as for $SU(2)$, where a pair of spins $j_1,j_2$ combines to
+the several total spins $|j_1-j_2|,\dots,j_1+j_2$ (Chapter 4, Exercise 2), is not a fused product here (the library treats $SU(2)$ for spin-$\frac12$
 chains separately, Chapter 4).
 
 ## Exercises
@@ -618,10 +687,11 @@ chains separately, Chapter 4).
    $\tau_{\mathrm{vN}}((\operatorname{Tr}_2X)A)=\sum_c\frac1{C_1k_c}\sum_d\operatorname{Tr}(X_{cd}(A_c\otimes1))
    =\sum_{c,d}\frac1{C_1C_2k_cl_d}\operatorname{Tr}\big(X_{cd}\,C_2l_d(A_c\otimes1)\big)$, so the dual is
    $A\mapsto\bigoplus_{c,d}C_2l_d\,A_c\otimes1_{l_d}=A\otimes Z$ with the central element
-   $Z=\bigoplus_dC_2l_d1_{l_d}$ of $\mathcal M_2$. It is not unital: of the three traces of the
-   library, only the blunt ones make $\operatorname{Tr}_2$ the dual of $A\mapsto A\otimes1$ (in general,
-   $\operatorname{tr}_w$ on $\mathcal M_1$ and the weights $w_{cd}=w_c$ on the product do, by the same
-   computation).
+   $Z=\bigoplus_dC_2l_d1_{l_d}$ of $\mathcal M_2$. It is unital only if $Z=1$, i.e. $\mathcal M_2=\mathbb C$,
+   and not in the example ($Z=4\cdot1_2\oplus6\cdot1_3$). For `Tr_norm` the same computation gives
+   $A\otimes\bigoplus_dl_d1_{l_d}$, unital only if all $l_d=1$. The blunt traces always make
+   $\operatorname{Tr}_2$ the dual of $A\mapsto A\otimes1$; in general, $\operatorname{tr}_w$ on $\mathcal M_1$ and the
+   weights $w_{cd}=w_c$ on the product do, by the same computation.
 
 ```python
 dual_tau = composite.partial_trace_channel(alg12, keep=1).adjoint('tau_vN')
@@ -648,7 +718,7 @@ assert torch.allclose(mutual, states.relative_entropy(rho, kron(rho1, rho2, alg1
 3. The sectors are $N=0,1,2$, of sizes $1,2,1$. $\psi$ lies in $N=1$, with $\psi_0=|01\rangle/\sqrt2$,
    $\psi_1=|10\rangle/\sqrt2$, so $p=(\frac12,\frac12)$ and, the blocks being one-dimensional,
    $E(\hat\psi_c)=0$: by Proposition 7.8, $E(\psi)=H(p)=\log2$ is all number entanglement, and the
-   usable configurational part is $0$. The vector $(|00\rangle+|11\rangle)/\sqrt2$ superposes $N=0$ and
+   configurational part is $0$. The vector $(|00\rangle+|11\rangle)/\sqrt2$ superposes $N=0$ and
    $N=2$; on the block-diagonal fused algebra its vector state is the mixture
    $\frac12|00\rangle\langle00|+\frac12|11\rangle\langle11|$ of product states (Chapter 3, Exercise 3).
 

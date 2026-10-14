@@ -2,11 +2,11 @@
 
 # 7. Tensorprodukte und Verschränkung
 
-Zwei Quantensysteme zusammen werden durch das Tensorprodukt ihrer Algebren beschrieben. Mit
-Sektoren gibt es zwei Produkte: das einfache, in dem jeder Teil seine eigene Ladung behält, und
-das *fusionierte*, in dem nur die Gesamtladung erhalten ist. Dieses Kapitel beweist die Struktur
-beider, definiert die partielle Spur als duale Abbildung einer Einbettung und untersucht die
-Verschränkung.
+Dieses Kapitel untersucht das Tensorprodukt zweier Algebren mit Sektoren (physikalisch die
+Algebra zweier Systeme zusammen; siehe die Kästen *Physikalische Bedeutung*). Mit Sektoren gibt es
+zwei Produkte: das einfache, in dem jeder Teil seine eigene Ladung behält, und das *fusionierte*,
+in dem nur die Gesamtladung erhalten ist. Wir beweisen die Struktur beider, definieren die
+partielle Spur als duale Abbildung einer Einbettung und untersuchen die Verschränkung.
 
 **Sie lernen,** wie sich Sektoren multiplizieren und wie die Bibliothek sie anordnet, warum die
 partielle Spur ein Kanal und, normiert, eine bedingte Erwartung von endlichem Index ist, wie der
@@ -120,10 +120,10 @@ for tr in ('Tr_blunt', 'Tr_norm', 'tau_vN'):                                   #
     assert (getattr(AB, tr)() - getattr(A, tr)() * getattr(B, tr)()).abs().max() < 1e-10
 ```
 
-> **Physikalische Bedeutung.** Gehorcht jedes von zwei Systemen seiner eigenen Superauswahlregel –
-> zwei Kästen, die keine Teilchen austauschen können –, so hat das Gesamtsystem einen Sektor für
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Gehorcht jedes von zwei Systemen seiner eigenen
+> Superauswahlregel – zwei Kästen, die keine Teilchen austauschen können –, so hat das Gesamtsystem einen Sektor für
 > jedes *Paar* von Ladungen, und keine Observable verbindet verschiedene Paare. Ein gemeinsamer
-> Sektor zählt mit dem Produkt der Gewichte.
+> Sektor zählt mit dem Produkt der Gewichte (Satz 7.1(c)).
 
 ## 7.2 Die partielle Spur
 
@@ -135,7 +135,8 @@ $$
 Sie existiert und ist eindeutig nach Satz 3.2, angewandt auf das lineare Funktional
 $A\mapsto\operatorname{Tr}(\rho(A\otimes1))$ und die treue Spur $\operatorname{Tr}$ von $\mathcal M_1$: Die
 partielle Spur ist die duale Abbildung der Einbettung $A\mapsto A\otimes1$ bezüglich der
-ungewichteten Spuren. $\operatorname{Tr}_1$ wird ebenso definiert. Für die vollen Algebren
+ungewichteten Spuren. $\operatorname{Tr}_1$ wird ebenso definiert; für einen Zustand $\rho$ sind
+$\operatorname{Tr}_2\rho$ und $\operatorname{Tr}_1\rho$ die **reduzierten Zustände**. Für die vollen Algebren
 $\mathcal M_i=B(H_i)$ ist dies die **partielle Spur des Hilbertraums**
 $\operatorname{Tr}_{H_2}:B(H_1\otimes H_2)\to B(H_1)$.
 
@@ -210,8 +211,8 @@ assert close(Ptr(rho), rho1)
 assert close(Ptr.adjoint('blunt')(A), kron(A, one2, alg12))                 # Theorem 7.3: the dual
 ```
 
-> **Physikalische Bedeutung.** $\operatorname{Tr}_2\rho$ ist der **reduzierte Zustand**: alles, was ein
-> Beobachter erfährt, der nur das erste System messen kann – die Definition besagt, dass er jeden
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Der reduzierte Zustand $\operatorname{Tr}_2\rho$
+> ist alles, was ein Beobachter erfährt, der nur das erste System messen kann – die Definition besagt, dass er jeden
 > Erwartungswert einer Observablen $A\otimes1$ reproduziert. Gemeinsame Zustände mit gleichen
 > reduzierten Zuständen unterscheiden sich in ihren Korrelationen.
 
@@ -235,7 +236,8 @@ denselben Gewichten $w_c$ auf $\mathcal M_1$; dann ist $\operatorname{tr}_w(Y\ot
 Definition von $\operatorname{Tr}_2$, angewandt auf $AP_c$, mit $w_c$ multipliziert und über $c$ summiert,
 ergibt $\operatorname{tr}_w(X(A\otimes1))=\operatorname{tr}_w((\operatorname{Tr}_2X)A)$, und $A=1$ ergibt
 $\operatorname{tr}_w(\iota\mathcal E(X))=\operatorname{tr}_w(X)$. Ist $F=\iota\circ F_0$ eine weitere bedingte Erwartung
-auf $\mathcal M_1\otimes1$, die $\operatorname{tr}_w$ erhält, so gilt
+auf $\mathcal M_1\otimes1$, die $\operatorname{tr}_w$ erhält, so gilt wegen
+$F(X(A\otimes1))=F(X)(A\otimes1)$
 $\operatorname{tr}_w(X(A\otimes1))=\operatorname{tr}_w(F(X)(A\otimes1))=m\operatorname{tr}_w(F_0(X)A)$, also
 $\operatorname{tr}_w((\operatorname{Tr}_2X-mF_0(X))A)=0$ für alle $A\in\mathcal M_1$, und wegen der Treue ist
 $F_0=\mathcal E$ (man nehme $A=(\operatorname{Tr}_2X-mF_0(X))^*$). (b) Man schreibe
@@ -247,13 +249,18 @@ $\operatorname{Tr}_2(Y^*)=(\operatorname{Tr}_2Y)^*$, also ist die Adjungierte de
 $u_{ab}^*=\sum_k\iota(\mathcal E(u_{ab}^*v_k))\,v_k^*$, und nach (b) gilt
 $\sum_{a,b}u_{ab}u_{ab}^*=\sum_k\big(\sum_{a,b}u_{ab}\,\iota(\mathcal E(u_{ab}^*v_k))\big)v_k^*=\sum_kv_kv_k^*$. $\square$
 
-Eine Familie wie in (b) ist eine *Quasibasis* von $\mathcal E$, und $\sum_kv_kv_k^*$, das nach (c)
-nicht von ihr abhängt, ist der **Watatani-Index** $\operatorname{Ind}\mathcal E=m^2$ (Y. Watatani, Mem.
-Amer. Math. Soc. 83, no. 424, 1990). Für einen Faktor enthält $M_k\otimes1\subset M_k\otimes M_m$ den
-Raum $\mathbb C^k$ mit Vielfachheit $m$ in $\mathbb C^{km}$: Die Inklusionsmatrix ist $\Lambda=(m)$, und
-$m^2=\|\Lambda\|^2=\dim(M_k\otimes M_m)/\dim M_k$ ist ihr Jones-Index $[\mathcal M:\mathcal N]$
-(V. F. R. Jones, Invent. Math. 72, 1, 1983; F. M. Goodman, P. de la Harpe und V. F. R. Jones,
-*Coxeter graphs and towers of algebras*, Springer, 1989). Für allgemeines $\mathcal M_1$ ist die
+Eine Familie wie in (c) ist eine *Quasibasis* von $\mathcal E$, und $\sum_kv_kv_k^*$, das nach (c)
+nicht von ihr abhängt und nach (b) existiert, ist der **Index** $\operatorname{Ind}\mathcal E=m^2$ von
+$\mathcal E$ (eine Definition; der Name folgt Y. Watatani, Mem. Amer. Math. Soc. 83, no. 424, 1990).
+Die **Inklusionsmatrix** einer Inklusion von $\bigoplus_cM_{k_c}$ in $\bigoplus_sM_{n_s}$ hat die
+Einträge $\Lambda_{sc}$, die Anzahlen der Kopien des Blocks $c$ der Unteralgebra im Block $s$ der
+größeren (Kapitel 9 verwendet sie für Türme von Algebren). Für einen Faktor,
+$M_k\otimes1\subset M_k\otimes M_m$: Ordnet man die Basis $e_a\otimes e_b$ von $\mathbb C^{km}$ zuerst nach
+$b$, so ist $A\otimes1_m=\operatorname{diag}(A,\dots,A)$ mit $m$ Kopien, also $\Lambda=(m)$, und
+$m^2=\|\Lambda\|^2=\dim(M_k\otimes M_m)/\dim M_k$. (Weiterführende Literatur, hier nicht verwendet:
+V. F. R. Jones, Invent. Math. 72, 1, 1983, zum Index von Subfaktoren, und F. M. Goodman, P. de la
+Harpe und V. F. R. Jones, *Coxeter graphs and towers of algebras*, Springer, 1989, zu
+Inklusionsmatrizen.) Für allgemeines $\mathcal M_1$ ist die
 Inklusion die direkte Summe der $C_1$ Inklusionen $M_{k_c}\otimes1\subset M_{k_c}\otimes M_m$,
 $\Lambda=m1_{C_1}$. Das Modul `torch_vn_algebra.inclusions` implementiert Inklusionen, ihre
 bedingten Erwartungen und Indizes; `from_tensor_product(alg1, m)` konstruiert diese hier:
@@ -313,10 +320,15 @@ $N$, wenn es mit jedem $\Pi_q$ kommutiert. $\square$
 
 `fused_tensor_product(alg1, alg2, fuse)` (Standard für `fuse`: die Addition) ordnet seine Sektoren
 nach der fusionierten Ladung und die Paare $(c,d)$ innerhalb eines Sektors lexikographisch, jedes
-mit der Basis $e_a\otimes e_b$. Beispiel: Hard-Core-Bosonen. Die teilchenzahlerhaltenden Operatoren
-zweier Plätze bilden $M_1\oplus M_2\oplus M_1$ (Ladungen $0,1,2$), die dreier Plätze
-$M_1\oplus M_3\oplus M_3\oplus M_1$; das fusionierte Produkt ist das von fünf Plätzen, bis auf die
-Reihenfolge der Basis: $n_q=\sum_c\binom2c\binom3{q-c}=\binom5q$.
+mit der Basis $e_a\otimes e_b$. Beispiel: Hard-Core-Bosonen. Auf $L$ Plätzen, $(\mathbb C^2)^{\otimes L}$
+mit der Besetzungszahl $N=\sum_in^{(i)}$, $n=\operatorname{diag}(0,1)$, wird der Eigenraum $N=q$ von den
+$\binom Lq$ Produktbasisvektoren mit $q$ besetzten Plätzen aufgespannt, also bilden die
+teilchenzahlerhaltenden Operatoren $\{N\}'$ die Algebra $\bigoplus_qM_{\binom Lq}$ (Proposition 4.10(2)):
+für zwei Plätze $M_1\oplus M_2\oplus M_1$ (Ladungen $0,1,2$), für drei Plätze
+$M_1\oplus M_3\oplus M_3\oplus M_1$. Nach Proposition 7.5(c) ist das fusionierte Produkt $\{N\}'$ für
+die Gesamtbesetzungszahl von fünf Plätzen, bis auf die Reihenfolge der Basis, und tatsächlich ist
+$n_q=\sum_c\binom2c\binom3{q-c}=\binom5q$ (Vandermondesche Identität: Eine $q$-elementige Teilmenge
+von fünf Plätzen besteht aus $c$ der ersten beiden und $q-c$ der letzten drei).
 
 ```python
 bos1 = TypeIAlgebra([1, 2, 1], [1, 2, 1], precision='double', charges=[0, 1, 2])
@@ -325,6 +337,7 @@ F = fused_tensor_product(bos1, bos2)                         # U(1): total parti
 P = tensor_product(bos1, bos2)                               # particle numbers conserved separately
 print(F.charges, F.k_factors, sum(k * k for k in F.k_factors), sum(k * k for k in P.k_factors))
 assert F.k_factors == [math.comb(5, q) for q in range(6)]
+assert sum(k * k for k in F.k_factors) == 252 and sum(k * k for k in P.k_factors) == 120
 
 N1, N2 = full(bos1.central([0.0, 1.0, 2.0]))[0], full(bos2.central([0.0, 1.0, 2.0, 3.0]))[0]
 N = torch.kron(N1, torch.eye(8, dtype=dt)) + torch.kron(torch.eye(4, dtype=dt), N2)
@@ -334,12 +347,17 @@ A, B = random_operator(bos1), random_operator(bos2)
 assert close(full12(kron(A, B, F)), full12(kron(A, B, P)))   # Proposition 7.5(b)
 ```
 
-Die fusionierte Algebra hat die Dimension $252$, das einfache Produkt $120$; die Differenz bilden
-die Operatoren, die Teilchen zwischen den beiden Teilen verschieben, etwa Hüpfterme.
+Die fusionierte Algebra hat die Dimension $\sum_q\binom5q^2=\binom{10}5=252$ (wieder Vandermonde),
+das einfache Produkt $(1+4+1)(1+9+9+1)=120$ (Satz 7.1(b)). Nach Satz 7.1(a) und Proposition 7.5(b)
+besteht das einfache Produkt aus den Elementen des fusionierten, die bezüglich der Paare $(c,d)$
+blockdiagonal sind; die übrigen $132$ Dimensionen werden von den Operatoren aufgespannt, die einen
+Paarblock $(c,d)$ in einen anderen Paarblock $(c',d')$ desselben $H_q$ abbilden, $c'\ne c$ (also
+$d'\ne d$): Sie ändern die Ladung jedes Teils bei erhaltener Gesamtladung, d. h. hier verschieben
+sie Teilchen zwischen den beiden Teilen.
 
 Ein Zustand von $\mathcal M_1\otimes_f\mathcal M_2$ kann Kohärenzen zwischen den Blöcken
 verschiedener Paare haben, sodass Proposition 7.2 nicht anwendbar ist. Sei $E_1(X)=\sum_cP_cXP_c$
-auf $B(H_1)$ (die bedingte Erwartung aus Abschnitt 2.6, Physikalische Bedeutung); sie bildet auf
+auf $B(H_1)$ (die bedingte Erwartung aus Abschnitt 2.6); sie bildet auf
 $\mathcal M_1$ ab, und es gilt $\operatorname{Tr}(E_1(X)A)=\operatorname{Tr}(XA)$ für $A\in\mathcal M_1$, da
 $A=\sum_cP_cAP_c$.
 
@@ -366,10 +384,13 @@ $\psi=(x+x')\otimes y/\sqrt2\in H_q$. Dann ist $|\psi\rangle\langle\psi|\in B(H_
 $\operatorname{Tr}_{H_2}|\psi\rangle\langle\psi|=\frac12|x+x'\rangle\langle x+x'|$ hat den von null verschiedenen
 Block $\frac12|x\rangle\langle x'|$, den $E_1$ entfernt. $\square$
 
-Beide Implementierungen der Bibliothek berechnen diese Abbildung, für jede Fusionsregel:
-`partial_trace` bildet nur die Spur der diagonalen Paarblöcke $\rho_{(c,d),(c,d)}$, und
+Nach der Blockformel von Satz 7.6 ist $(\rho_1)_c=\sum_d\operatorname{tr}_{l_d}\rho_{(c,d),(c,d)}$. Beide
+Implementierungen der Bibliothek sind so gebaut, dass sie diese Abbildung für jede Fusionsregel
+berechnen: `partial_trace` bildet nur die Spur der diagonalen Paarblöcke $\rho_{(c,d),(c,d)}$, und
 `partial_trace_channel` verwendet getrennte Kraus-Indizes für Paare eines Sektors mit demselben
-$c$; ihre duale Abbildung ist wieder $A\mapsto A\otimes1$. Mit der Addition bewirkt $E_1$ in unserem
+$c$, sodass ihre duale Abbildung wieder $A\mapsto A\otimes1$ ist. Der Code prüft beide, für die
+beiden Fusionsregeln unten und beide Wahlen des behaltenen Faktors, gegen das unabhängig mit
+`einsum` berechnete $E_1(\operatorname{Tr}_{H_2}\rho)$, und die duale Abbildung gegen $A\otimes1$. Mit der Addition bewirkt $E_1$ in unserem
 Beispiel nichts; mit der Paritätsregel $f(q,r)=q+r\bmod2$ fusionieren die Ladungen $0$ und $2$ von
 `bos1` mit jedem $r$ gleich, und $E_1$ entfernt echte Kohärenzen:
 
@@ -394,11 +415,11 @@ for alg, coherent in ((F, False), (G, True)):
     assert close(composite.partial_trace_channel(alg, keep=1).adjoint('blunt')(A), kron(A, bos2.identity(), alg))
 ```
 
-> **Physikalische Bedeutung.** In der BCS-Beschreibung eines Supraleiters ist nur die Parität der
-> Elektronenzahl erhalten, sodass der globale Zustand die Teilchenzahlen $0$ und $2$ eines Gebiets
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). In der BCS-Beschreibung eines
+> Supraleiters ist nur die Parität der Elektronenzahl erhalten, sodass der globale Zustand die Teilchenzahlen $0$ und $2$ eines Gebiets
 > überlagern kann. Ein Beobachter, dessen Observablen die Teilchenzahl des Gebiets erhalten, kann
 > diese Kohärenz nicht sehen: Für ihn ist der reduzierte Zustand der blockdiagonal gemachte Zustand
-> aus Satz 7.6, eine Mischung von Teilchenzahlen.
+> aus Satz 7.6 (der mathematische Inhalt dieses Kastens), eine Mischung von Teilchenzahlen.
 
 ## 7.4 Verschränkung reiner Zustände
 
@@ -422,11 +443,15 @@ Proposition 7.2(b) liefert die reduzierten Zustände. $\square$
 
 Die **Verschränkungsentropie** von $\psi$ ist
 $E(\psi)=S(\operatorname{Tr}_2|\psi\rangle\langle\psi|)=S(\operatorname{Tr}_1|\psi\rangle\langle\psi|)=-\sum_is_i^2\log s_i^2$.
-Sie verschwindet genau dann, wenn $r=1$, d. h. genau dann, wenn $\psi=u\otimes v$, und es gilt
-$E(\psi)\le\log\min(a,b)$, mit Gleichheit genau dann, wenn der reduzierte Zustand auf dem kleineren
-Faktor maximal gemischt ist (Korollar 3.6).
+Sie verschwindet genau dann, wenn $r=1$ (jeder Term $-s_i^2\log s_i^2$ ist $\ge0$ und nur für
+$s_i^2=1$ gleich $0$), d. h. genau dann, wenn $\psi=u\otimes v$ (dann hat $\Psi=uv^T$ Rang $1$, und
+$r=\operatorname{rank}\Psi\Psi^*=\operatorname{rank}\Psi$), und es gilt $E(\psi)\le\log\min(a,b)$, mit Gleichheit
+genau dann, wenn der reduzierte Zustand auf dem kleineren Faktor maximal gemischt ist
+(Korollar 3.6, angewandt auf beide reduzierten Zustände).
 
-Mit Ladungen liegt ein reiner Zustand in einem Sektor $H_q$ des fusionierten Produkts; wir
+Mit Ladungen nehmen wir einen Einheitsvektor $\psi$ mit bestimmter Gesamtladung, d. h. in einem
+Sektor $H_q$ des fusionierten Produkts (eine Überlagerung verschiedener $H_q$ liefert auf
+$\mathcal M_1\otimes_f\mathcal M_2$ denselben Zustand wie eine Mischung, Kapitel 3, Aufgabe 3); wir
 schreiben $\psi=\sum_{(c,d)}\psi_{cd}$ mit $\psi_{cd}\in\mathbb C^{k_c}\otimes\mathbb C^{l_d}$.
 
 **Proposition 7.8 (symmetrieaufgelöste Verschränkung).** Sei $f$ die Addition, und seien die $q_c$
@@ -483,8 +508,8 @@ print(f"E = {E_psi:.4f} = H(p) {H_num:.4f} + configurational {S_conf:.4f}")
 assert abs(E_psi - H_num - S_conf) < 1e-10                  # Proposition 7.8
 ```
 
-> **Physikalische Bedeutung.** Parteien, die an die Superauswahlregel der Teilchenzahl gebunden
-> sind, können nur den Konfigurationsanteil als Ressource nutzen: die *Verschränkung von Teilchen*
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Parteien, die an die Superauswahlregel der
+> Teilchenzahl gebunden sind, können nur den Konfigurationsanteil als Ressource nutzen: die *Verschränkung von Teilchen*
 > nach H. M. Wiseman und J. A. Vaccaro (Phys. Rev. Lett. 91, 097902, 2003). $H(p)$ wird in kalten
 > Atomen als *Teilchenzahlentropie* (number entropy) gemessen (A. Lukin et al., Science 364, 256,
 > 2019).
@@ -492,18 +517,22 @@ assert abs(E_psi - H_num - S_conf) < 1e-10                  # Proposition 7.8
 ## 7.5 Zufällige Zustände und die Pagesche Formel
 
 Sei $g\in\mathbb C^N$ mit unabhängigen Koordinaten, deren Real- und Imaginärteile unabhängig
-$N(0,\tfrac12)$-verteilt sind, sodass $\mathbb E|g_i|^2=1$. Ein **Haar-zufälliger reiner Zustand** ist
-$\psi=g/\|g\|$; seine Verteilung ist unitär invariant, da die Dichte $\pi^{-N}e^{-\|g\|^2}$ und das
-Lebesgue-Maß es sind (sie ist die einzige invariante Verteilung auf der Sphäre, was wir nicht
-verwenden).
+$N(0,\tfrac12)$-verteilt sind (ein komplexer Standard-Gauß-Vektor, Proposition A.16(a)), sodass
+$\mathbb E|g_i|^2=1$; fast sicher ist $g\neq0$ (Satz A.20). Ein **Haar-zufälliger reiner Zustand** ist
+$\psi=g/\|g\|$. Seine Verteilung ist unitär invariant: $Ug$ hat für jedes unitäre $U$ die Verteilung
+von $g$ (Proposition A.16(a)), und $Ug/\|Ug\|=U\psi$. Nach Proposition A.22 ist sie die einzige unitär
+invariante Verteilung auf der Einheitssphäre, und, wie in deren Beweis gezeigt, ist sie die
+Verteilung der ersten Spalte einer Haar-verteilten unitären Matrix (Satz 5.3).
 
 **Lemma 7.9.** $\|g\|$ und $\psi=g/\|g\|$ sind unabhängig.
 
-*Beweis.* Seien $h\ge0$ und $\phi\ge0$ messbar auf $(0,\infty)$ bzw. auf der Einheitssphäre
-$S^{2N-1}$. Integration in Polarkoordinaten in $\mathbb R^{2N}$, mit dem Oberflächenmaß $\sigma$,
-ergibt
+*Beweis.* (Dies ist ein Teil von Satz A.20(b).) Seien $h\ge0$ und $\phi\ge0$ Borel-Funktionen auf
+$(0,\infty)$ bzw. auf der Einheitssphäre $S^{2N-1}$ von $\mathbb C^N\cong\mathbb R^{2N}$. Da $g$ die Dichte
+$\pi^{-N}e^{-|x|^2}$ hat (Proposition A.16(a)), liefern Polarkoordinaten (Satz A.18 mit $n=2N$ und dem
+dort definierten Maß $\mu$)
 $$
-\mathbb E\big[h(\|g\|)\phi(\psi)\big]=\pi^{-N}\int_0^\infty h(t)e^{-t^2}t^{2N-1}dt\int_{S^{2N-1}}\phi\,d\sigma=:\alpha(h)\beta(\phi).
+\mathbb E\big[h(\|g\|)\phi(\psi)\big]=\pi^{-N}\!\int_{\mathbb R^{2N}}\!h(|x|)e^{-|x|^2}\phi\Big(\frac x{|x|}\Big)dx
+=2N\pi^{-N}\int_0^\infty h(t)e^{-t^2}t^{2N-1}dt\int_{S^{2N-1}}\phi\,d\mu=:\alpha(h)\beta(\phi).
 $$
 Setzt man $\phi=1$, dann $h=1$, dann beides, so erhält man $\mathbb Eh(\|g\|)=\alpha(h)\beta(1)$,
 $\mathbb E\phi(\psi)=\alpha(1)\beta(\phi)$ und $\alpha(1)\beta(1)=1$, also
@@ -512,14 +541,18 @@ $\mathbb E[h(\|g\|)\phi(\psi)]=\mathbb Eh(\|g\|)\,\mathbb E\phi(\psi)$. $\square
 **Lemma 7.10.** $\mathbb E\|g\|^4=N(N+1)$. Ist $G$ eine $a\times b$-Matrix mit unabhängigen, wie die
 $g_i$ verteilten Einträgen (eine *Ginibre*-Matrix), so ist $\mathbb E\operatorname{Tr}(GG^*)^2=ab(a+b)$.
 
-*Beweis.* Mit $g_i=x+iy$ ist $\mathbb E|g_i|^4=\mathbb Ex^4+2\mathbb Ex^2\mathbb Ey^2+\mathbb Ey^4=\tfrac34+\tfrac12+\tfrac34=2$,
-also $\mathbb E\|g\|^4=\sum_i\mathbb E|g_i|^4+\sum_{i\ne j}\mathbb E|g_i|^2\mathbb E|g_j|^2=2N+N(N-1)$. Weiter
+*Beweis.* Mit $g_i=x+iy$ und unabhängigen $N(0,\frac12)$-verteilten $x,y$ ist $\mathbb Ex^4=3(\mathbb Ex^2)^2=\frac34$
+(Satz A.24: drei Paarungen), also
+$\mathbb E|g_i|^4=\mathbb Ex^4+2\mathbb Ex^2\mathbb Ey^2+\mathbb Ey^4=\tfrac34+\tfrac12+\tfrac34=2$ und
+$\mathbb E\|g\|^4=\sum_i\mathbb E|g_i|^4+\sum_{i\ne j}\mathbb E|g_i|^2\mathbb E|g_j|^2=2N+N(N-1)$. Weiter
 ist $\operatorname{Tr}(GG^*)^2=\sum_{i,i',j,j'}G_{ij}\bar G_{i'j}G_{i'j'}\bar G_{ij'}$. Die Einträge und ihre
-Konjugierten sind komplexe Linearkombinationen unabhängiger reeller Gaußscher Variablen mit
-$\mathbb E[G_{ij}G_{kl}]=0$ und $\mathbb E[G_{ij}\bar G_{kl}]=\delta_{ik}\delta_{jl}$, also liefert die
-Formel von Isserlis (Beweis von Proposition 1.10)
-$\mathbb E[G_{ij}\bar G_{i'j}G_{i'j'}\bar G_{ij'}]=\delta_{ii'}+\delta_{jj'}$. Summation ergibt
-$ab^2+a^2b$. $\square$
+Konjugierten sind komplexe Linearkombinationen der Koordinaten eines einzigen zentrierten
+Gauß-Vektors (der Real- und Imaginärteile aller Einträge), mit
+$\mathbb E[G_{ij}G_{kl}]=\mathbb E[\bar G_{ij}\bar G_{kl}]=0$ und $\mathbb E[G_{ij}\bar G_{kl}]=\delta_{ik}\delta_{jl}$
+(Proposition A.16(a)). Nach der Isserlis-Wick-Formel (Satz A.24, komplexe Form, mit den drei
+Paarungen der vier Faktoren) ist
+$\mathbb E[G_{ij}\bar G_{i'j}G_{i'j'}\bar G_{ij'}]=\delta_{ii'}\delta_{i'i}+0+\delta_{jj'}\delta_{jj'}=\delta_{ii'}+\delta_{jj'}$.
+Summation über $i,i'\le a$ und $j,j'\le b$ ergibt $ab^2+a^2b$. $\square$
 
 **Satz 7.11 (E. Lubkin, J. Math. Phys. 19, 1028, 1978).** Für ein Haar-zufälliges
 $\psi\in\mathbb C^a\otimes\mathbb C^b$ und $\rho_A=\operatorname{Tr}_2|\psi\rangle\langle\psi|$ gilt
@@ -528,45 +561,74 @@ $$
 $$
 
 *Beweis.* Sei $G_{\alpha\beta}=\langle e_\alpha\otimes e_\beta,g\rangle$, eine Ginibre-Matrix; die Matrix
-von $\psi$ ist $\Psi=G/\|g\|$, und nach dem Beweis von Lemma 7.7 ist
+von $\psi$ ist $\Psi=G/\|g\|$, und nach Proposition 7.2(a) ist
+$(\rho_A)_{\alpha\alpha'}=\sum_\beta\Psi_{\alpha\beta}\bar\Psi_{\alpha'\beta}$, d. h.
 $\rho_A=\Psi\Psi^*=GG^*/\|g\|^2$. Folglich ist
 $\operatorname{Tr}(GG^*)^2=\|g\|^4\operatorname{Tr}\rho_A^2$, wobei $\operatorname{Tr}\rho_A^2\in[0,1]$ eine Funktion von
 $\psi$ ist. Nach Lemma 7.9 ist $\mathbb E\operatorname{Tr}(GG^*)^2=\mathbb E\|g\|^4\,\mathbb E\operatorname{Tr}\rho_A^2$, und nach
 Lemma 7.10 ist $\mathbb E\operatorname{Tr}\rho_A^2=ab(a+b)/(ab(ab+1))$. $\square$
 
-Kapitel 6 erhält denselben Mittelwert aus den vierten Momenten eines Haar-Vektors, als
-Ausgangsreinheit eines zufälligen Kanals.
+Kapitel 6 erhält denselben Mittelwert aus den vierten Momenten eines Einheitsvektors mit unitär
+invarianter Verteilung (Lemma 6.14), als Ausgangsreinheit eines zufälligen Kanals (Satz 6.15 und
+die Bemerkung danach).
 
 **Korollar 7.12.** $\log\frac{ab+1}{a+b}\le\mathbb E\,S(\rho_A)\le\log\min(a,b)$.
 
 *Beweis.* Nach Korollar 3.6 ist $S(\rho_A)\le\log a$, und nach Lemma 7.7 ist
-$S(\rho_A)=S(\operatorname{Tr}_1|\psi\rangle\langle\psi|)\le\log b$. Die Jensensche Ungleichung für den konkaven
-$\log$ mit den Gewichten $\lambda_i>0$, den von null verschiedenen Eigenwerten von $\rho_A$, liefert
-$\sum_i\lambda_i\log\lambda_i\le\log\sum_i\lambda_i^2$, d. h. $S(\rho_A)\ge-\log\operatorname{Tr}\rho_A^2$; die
-Jensensche Ungleichung für den konvexen $-\log$ und Satz 7.11 liefern
-$\mathbb E[-\log\operatorname{Tr}\rho_A^2]\ge-\log\mathbb E\operatorname{Tr}\rho_A^2$. $\square$
+$S(\rho_A)=S(\operatorname{Tr}_1|\psi\rangle\langle\psi|)\le\log b$. Die endliche Jensensche Ungleichung für den
+konkaven $\log$ (Lösung von Aufgabe 2 in Kapitel 3) mit den Gewichten $\lambda_i>0$, den von null
+verschiedenen Eigenwerten von $\rho_A$, liefert $\sum_i\lambda_i\log\lambda_i\le\log\sum_i\lambda_i^2$,
+d. h. $S(\rho_A)\ge-\log X$ mit $X=\operatorname{Tr}\rho_A^2\in(0,1]$. Sei $m=\mathbb EX=\frac{a+b}{ab+1}$
+(Satz 7.11). Lemma 3.4 für die konvexe Funktion $-\log$ auf $(0,\infty)$ im Punkt $m$ liefert
+$-\log X\ge-\log m-(X-m)/m$; beide Seiten sind beschränkt ($X\ge1/a$ nach Cauchy-Schwarz), und
+Bilden der Erwartungswerte ergibt $\mathbb E[-\log X]\ge-\log m$. $\square$
 
-Für festes $a$ und $b\to\infty$ treffen sich die Schranken: Ein kleiner Teil eines zufälligen
-reinen Zustands ist fast maximal gemischt. Der exakte Mittelwert ist die Pagesche Formel, die wir
-ohne Beweis angeben.
+Für festes $a$ und $b\to\infty$ treffen sich die Schranken: Die mittlere Entropie eines kleinen
+Teils eines zufälligen reinen Zustands strebt gegen ihr Maximum $\log a$. Der exakte Mittelwert ist
+die Pagesche Formel, die in Anhang C bewiesen wird.
 
 **Satz 7.13 (Pagesche Formel).** Für $a\le b$ gilt
 $$
 \mathbb E\,S(\rho_A)=\sum_{k=b+1}^{ab}\frac1k-\frac{a-1}{2b}.
 $$
-Sie wurde von D. N. Page vermutet (Phys. Rev. Lett. 71, 1291, 1993) und von S. K. Foong und
-S. Kanno (Phys. Rev. Lett. 72, 1148, 1994), J. Sánchez-Ruiz (Phys. Rev. E 52, 5653, 1995) und
-S. Sen (Phys. Rev. Lett. 77, 1, 1996) bewiesen. Für $1\ll a\le b$ ist sie $\approx\log a-\frac a{2b}$;
-für zwei Qubits ist sie $\frac13$.
+Außerdem ist $\log a-\frac{a-1}{ab+1}-\frac{a-1}{2b}\le\mathbb E\,S(\rho_A)\le\log a-\frac{a-1}{2b}$, also
+$\big|\mathbb E\,S(\rho_A)-\log a+\frac a{2b}\big|\le\frac1{2b}$; für zwei Qubits ist $\mathbb E\,S(\rho_A)=\frac13$.
 
-Die Verteilung von $\rho_A$ ist das **induzierte Maß** (K. Życzkowski und H.-J. Sommers, J. Phys. A
-34, 7111, 2001). `states.random_density_matrix(alg, rank=r)` bildet $G_cG_c^*$ mit
+*Beweis.* Dies ist Satz C.17 zusammen mit Korollar C.18. Der Beweis in Anhang C geht von
+$\rho_A=GG^*/\operatorname{Tr}GG^*$ aus (Beweis von Satz 7.11), berechnet die gemeinsame Dichte der
+Eigenwerte der Wishart-Matrix $GG^*$ (Satz C.13) und von $\rho_A$ (Satz C.14) und integriert
+$x\log x$ gegen die Laguerre-Niveaudichte (Lemmata C.15 und C.16). $\square$
+
+Die Formel wurde von D. N. Page vermutet (Phys. Rev. Lett. 71, 1291, 1993) und von S. K. Foong und
+S. Kanno (Phys. Rev. Lett. 72, 1148, 1994), J. Sánchez-Ruiz (Phys. Rev. E 52, 5653, 1995) und
+S. Sen (Phys. Rev. Lett. 77, 1, 1996) bewiesen.
+
+Für $a>b$ vertauschen $a$ und $b$ ihre Rollen. Denn die unitäre Abbildung
+$e_\alpha\otimes e_\beta\mapsto e_\beta\otimes e_\alpha$ von $\mathbb C^a\otimes\mathbb C^b$ auf $\mathbb C^b\otimes\mathbb C^a$
+permutiert die Koordinaten von $g$, bildet also einen Haar-zufälligen reinen Zustand $\psi$ auf
+einen Haar-zufälligen reinen Zustand $\psi'$ von $\mathbb C^b\otimes\mathbb C^a$ ab; dessen Matrix ist
+$\Psi^T$, also ist $\operatorname{Tr}_2|\psi'\rangle\langle\psi'|=\Psi^T\bar\Psi=\operatorname{Tr}_1|\psi\rangle\langle\psi|$
+(Proposition 7.2(a)), dessen Entropie nach Lemma 7.7 gleich $S(\rho_A)$ ist. Mit $a'=\min(a,b)$ und
+$b'=\max(a,b)$ besagt Satz 7.13 daher, dass die mittlere Verschränkungsentropie ihr Maximum
+$\log a'$ um mindestens $\frac{a'-1}{2b'}$ und höchstens $\frac{a'-1}{2b'}+\frac{a'-1}{a'b'+1}$ unterschreitet,
+was weniger als ein Nat ist: Für $b'=1$ ist es $0$, und sonst ist $\frac{a'-1}{2b'}\le\frac12$ und
+$\frac{a'-1}{a'b'+1}<\frac1{b'}\le\frac12$. Für festes $ab$ liegt der Mittelwert also, als Funktion von
+$a$, weniger als ein Nat unter $\log\min(a,b)=\min(\log a,\log(ab)-\log a)$.
+
+Die Verteilung von $\rho_A$ ist das **induzierte Maß** (der Name stammt von K. Życzkowski und
+H.-J. Sommers, J. Phys. A 34, 7111, 2001; Satz C.14 gibt die Dichte seiner Eigenwerte an).
+`states.random_density_matrix(alg, rank=r)` bildet $G_cG_c^*$ mit unabhängigen
 $k_c\times r$-Ginibre-Blöcken $G_c$ und teilt durch $\sum_c\operatorname{Tr}G_cG_c^*$. Für einen einzigen
-Block ist dies die obige Verteilung von $\rho_A$ mit $b=r$. Für mehrere Blöcke ist es die
-Einschränkung eines Haar-zufälligen reinen Zustands von $H_1\otimes\mathbb C^r$ auf $\mathcal M_1$: Man
-wende Satz 7.6 mit $\mathcal M_2=M_r$ und einer konstanten Fusionsregel an, sodass
-$\mathcal M_1\otimes_f\mathcal M_2=B(H_1\otimes\mathbb C^r)$, wobei $G_c$ die Zeilen von $G$ im Block $c$
-sind.
+Block ist dies die obige Verteilung von $\rho_A$ mit $b=r$ (Beweis von Satz 7.11). Für mehrere
+Blöcke ist es die Verteilung der Dichte der Einschränkung des Vektorzustands eines
+Haar-zufälligen reinen Zustands $\psi=g/\|g\|$ von $H_1\otimes\mathbb C^r$ auf $\mathcal M_1$. Denn sei
+$G_{i\beta}=\langle e_i\otimes e_\beta,g\rangle$, eine $D\times r$-Ginibre-Matrix ($D=\sum_ck_c$), und
+seien $G_c$ ihre Zeilen im Block $c$: unabhängige $k_c\times r$-Ginibre-Matrizen. Man nehme
+$\mathcal M_2=M_r$ (ein Sektor) und eine konstante Fusionsregel; dann gibt es eine einzige
+Gesamtladung, $\Pi=1$, und $\mathcal M_1\otimes_f\mathcal M_2=B(H_1\otimes\mathbb C^r)$. Nach Satz 7.6 hat die
+Einschränkung die Dichte $E_1(\operatorname{Tr}_{H_2}|\psi\rangle\langle\psi|)$, und
+$\operatorname{Tr}_{H_2}|\psi\rangle\langle\psi|=GG^*/\|g\|^2$ (Proposition 7.2(a), wie im Beweis von
+Satz 7.11), dessen Diagonalblöcke $G_cG_c^*/\|g\|^2$ sind, mit $\|g\|^2=\sum_c\operatorname{Tr}G_cG_c^*$.
 
 **Proposition 7.14.** Für $\rho$, gezogen mit `random_density_matrix(alg, rank=r)` auf
 $\bigoplus_cM_{k_c}$, und $D=\sum_ck_c$ gilt
@@ -575,8 +637,10 @@ $$
 $$
 
 *Beweis.* $\operatorname{Tr}\rho^2=\sum_c\operatorname{Tr}(G_cG_c^*)^2/\|g\|^4$, wobei $g\in\mathbb C^{Dr}$ die
-Gesamtheit aller Einträge ist; wie in Satz 7.11 liefern Lemma 7.9 und Lemma 7.10
-$\sum_ck_cr(k_c+r)/(Dr(Dr+1))$. $\square$
+Gesamtheit aller Einträge ist, ist eine Funktion von $g/\|g\|$ mit Werten in $[0,1]$. Wie in
+Satz 7.11 liefert Lemma 7.9 $\sum_c\mathbb E\operatorname{Tr}(G_cG_c^*)^2=\mathbb E\|g\|^4\,\mathbb E\operatorname{Tr}\rho^2$, und
+Lemma 7.10 liefert $\mathbb E\operatorname{Tr}(G_cG_c^*)^2=k_cr(k_c+r)$ und $\mathbb E\|g\|^4=Dr(Dr+1)$, also
+$\mathbb E\operatorname{Tr}\rho^2=\sum_ck_cr(k_c+r)/(Dr(Dr+1))$. $\square$
 
 Wir prüfen die Sätze 7.11 und 7.13 an $10^4$ reinen Zuständen von $\mathbb C^3\otimes\mathbb C^6$, die
 mit `partial_trace` reduziert werden, und am induzierten Maß, sowie Proposition 7.14 für
@@ -603,6 +667,8 @@ for name, rho_s in (('reduced pure states', rho_A),
           f"E S = {m_S:.4f} +- {e_S:.4f} (Page {page:.4f})")
     assert abs(m_p - purity_exact) < 5 * e_p and abs(m_S - page) < 5 * e_S     # Theorems 7.11, 7.13
     assert math.log((a * b + 1) / (a + b)) < m_S < math.log(a)                # Corollary 7.12
+assert math.log(a) - (a - 1) / (a * b + 1) - (a - 1) / (2 * b) <= page <= math.log(a) - (a - 1) / (2 * b)
+assert abs(sum(1 / k for k in (3, 4)) - 1 / 4 - 1 / 3) < 1e-15                # two qubits: E S = 1/3
 
 alg3 = TypeIAlgebra([1, 2, 3], [1, 2, 3], precision='double')
 m_p, e_p = mean_se(states.random_density_matrix(alg3, 40_000, rank=2).purity())
@@ -610,18 +676,19 @@ print(f"E Tr rho^2 = {m_p:.4f} +- {e_p:.4f} (exact {26 / 78:.4f})")
 assert abs(m_p - 26 / 78) < 5 * e_p                                          # Proposition 7.14
 ```
 
-> **Physikalische Bedeutung.** Ein typischer reiner Zustand ist zwischen jedem Teil, der höchstens
-> die Hälfte des Systems umfasst, und dem Rest nahezu maximal verschränkt. Wächst der Teil, so
-> steigt die Verschränkung wie $\log a$ und fällt jenseits der Mitte wieder: die *Page-Kurve*, die
-> beschreibt, wie Information ein Schwarzes Loch in der Hawking-Strahlung verlässt, und warum die
-> Teile eines abgeschlossenen Systems thermisch aussehen.
+> **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Die mittlere Verschränkungsentropie
+> eines zufälligen reinen Zustands, aufgetragen gegen die Größe des Teils bei fester
+> Gesamtdimension (die nach Satz 7.13 beschriebene Kurve), heißt *Page-Kurve*. In der Physik
+> beschreibt man mit ihr, wie Information ein Schwarzes Loch in der Hawking-Strahlung verlässt und
+> warum die Teile eines abgeschlossenen Systems thermisch aussehen; das sind Deutungen, keine
+> Ergebnisse dieses Kurses.
 
 ## 7.6 Womit man vergleichen sollte
 
 Auf einem einzelnen Hilbertraum berechnen QuTiP (`Qobj.ptrace`, `entropy_vn`, `rand_ket`, `rand_dm`
 mit der Ginibre-Verteilung und einem Rang) und `numpy` (ein `reshape` und ein `einsum`, wie oben)
-partielle Spuren, Entropien und induzierte Zustände und stimmen auf einfachen Produkten mit der
-Bibliothek überein. Tensornetzwerk-Bibliotheken mit erhaltenen Ladungen – ITensor
+partielle Spuren, Entropien und induzierte Zustände für einfache Produkte (die obigen
+`einsum`-Prüfungen vergleichen eine solche Rechnung mit der Bibliothek). Tensornetzwerk-Bibliotheken mit erhaltenen Ladungen – ITensor
 (blockdünnbesetzte Tensoren mit Quantenzahlen), TeNPy (geladene Beine, Verschränkungsspektren
 nach Ladung) und, für nichtabelsche Symmetrien, TensorKit.jl (Fusionsbäume) – fusionieren
 Sektoren für große Systeme auf dieselbe Weise und liefern die symmetrieaufgelöste Verschränkung.
@@ -630,8 +697,9 @@ und Spuren, die Fusionsregel ist eine beliebige Abbildung der Bezeichnungen, die
 ein Kanal mit seiner dualen Abbildung für jede Spur und der korrekten Einschränkung für fusionierte
 Produkte (Sätze 7.3 und 7.6), und alles arbeitet gestapelt (im Batch). Tensornetzwerke enthält sie
 nicht, und `fused_tensor_product` nimmt eine Regel mit einem einzigen Ergebnis pro Ladungspaar,
-wie bei abelschen Symmetrien; eine nichtabelsche Regel wie $j_1\otimes j_2=\bigoplus_jj$ für $SU(2)$
-mit ihren Clebsch-Gordan-Koeffizienten ist hier kein fusioniertes Produkt (die Bibliothek behandelt
+wie bei abelschen Symmetrien; eine nichtabelsche Regel, etwa für $SU(2)$, wo sich zwei Spins
+$j_1,j_2$ zu den mehreren Gesamtspins $|j_1-j_2|,\dots,j_1+j_2$ verbinden (Kapitel 4, Aufgabe 2), ist
+hier kein fusioniertes Produkt (die Bibliothek behandelt
 $SU(2)$ für Spin-$\frac12$-Ketten gesondert, Kapitel 4).
 
 ## Aufgaben
@@ -656,10 +724,12 @@ $SU(2)$ für Spin-$\frac12$-Ketten gesondert, Kapitel 4).
    $\tau_{\mathrm{vN}}((\operatorname{Tr}_2X)A)=\sum_c\frac1{C_1k_c}\sum_d\operatorname{Tr}(X_{cd}(A_c\otimes1))
    =\sum_{c,d}\frac1{C_1C_2k_cl_d}\operatorname{Tr}\big(X_{cd}\,C_2l_d(A_c\otimes1)\big)$, also ist die duale
    Abbildung $A\mapsto\bigoplus_{c,d}C_2l_d\,A_c\otimes1_{l_d}=A\otimes Z$ mit dem zentralen Element
-   $Z=\bigoplus_dC_2l_d1_{l_d}$ von $\mathcal M_2$. Sie ist nicht unital: Von den drei Spuren der
-   Bibliothek machen nur die ungewichteten $\operatorname{Tr}_2$ zur dualen Abbildung von
-   $A\mapsto A\otimes1$ (allgemein leisten das $\operatorname{tr}_w$ auf $\mathcal M_1$ und die Gewichte
-   $w_{cd}=w_c$ auf dem Produkt, nach derselben Rechnung).
+   $Z=\bigoplus_dC_2l_d1_{l_d}$ von $\mathcal M_2$. Sie ist nur für $Z=1$ unital, d. h. für
+   $\mathcal M_2=\mathbb C$, und im Beispiel nicht ($Z=4\cdot1_2\oplus6\cdot1_3$). Für `Tr_norm` liefert
+   dieselbe Rechnung $A\otimes\bigoplus_dl_d1_{l_d}$, unital nur, wenn alle $l_d=1$ sind. Die
+   ungewichteten Spuren machen $\operatorname{Tr}_2$ stets zur dualen Abbildung von $A\mapsto A\otimes1$;
+   allgemein leisten das $\operatorname{tr}_w$ auf $\mathcal M_1$ und die Gewichte $w_{cd}=w_c$ auf dem
+   Produkt, nach derselben Rechnung.
 
 ```python
 dual_tau = composite.partial_trace_channel(alg12, keep=1).adjoint('tau_vN')
@@ -687,7 +757,7 @@ assert torch.allclose(mutual, states.relative_entropy(rho, kron(rho1, rho2, alg1
 3. Die Sektoren sind $N=0,1,2$ mit den Größen $1,2,1$. $\psi$ liegt in $N=1$, mit
    $\psi_0=|01\rangle/\sqrt2$, $\psi_1=|10\rangle/\sqrt2$, also ist $p=(\frac12,\frac12)$, und da die
    Blöcke eindimensional sind, ist $E(\hat\psi_c)=0$: Nach Proposition 7.8 ist
-   $E(\psi)=H(p)=\log2$ vollständig Teilchenzahlverschränkung, und der nutzbare
+   $E(\psi)=H(p)=\log2$ vollständig Teilchenzahlverschränkung, und der
    Konfigurationsanteil ist $0$. Der Vektor $(|00\rangle+|11\rangle)/\sqrt2$ überlagert $N=0$ und
    $N=2$; auf der blockdiagonalen fusionierten Algebra ist sein Vektorzustand die Mischung
    $\frac12|00\rangle\langle00|+\frac12|11\rangle\langle11|$ von Produktzuständen (Kapitel 3,

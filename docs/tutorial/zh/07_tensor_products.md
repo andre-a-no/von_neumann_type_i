@@ -2,9 +2,9 @@
 
 # 7. 张量积与纠缠
 
-两个量子系统合在一起，由它们代数的张量积来描述。有扇区时存在两种积：普通的积，其中每个部分
-各自保持自己的荷；以及*融合*积，其中只有总荷守恒。本章证明这两种积的结构，把偏迹定义为一个
-嵌入的对偶，并研究纠缠。
+本章研究两个带扇区的代数的张量积（在物理上，它是两个系统合在一起的代数；见*物理意义*方框）。
+有扇区时存在两种积：普通的积，其中每个部分各自保持自己的荷；以及*融合*积，其中只有总荷守恒。
+我们证明这两种积的结构，把偏迹定义为一个嵌入的对偶，并研究纠缠。
 
 **你将学到**扇区如何相乘以及本库如何为它们排序，为什么偏迹是一个信道、归一化后又是一个有限指标的
 条件期望，荷守恒态的约化态是什么，纠缠如何分成数的部分与构型的部分，以及随机态的平均纯度与平均熵。
@@ -109,8 +109,9 @@ for tr in ('Tr_blunt', 'Tr_norm', 'tau_vN'):                                   #
     assert (getattr(AB, tr)() - getattr(A, tr)() * getattr(B, tr)()).abs().max() < 1e-10
 ```
 
-> **物理意义。** 如果两个系统各自服从自己的超选择定则——两个不能交换粒子的盒子——那么联合系统
-> 对每一*对*荷都有一个扇区，并且没有可观测量连接不同的荷对。一个联合扇区的权重是两个权重之积。
+> **物理意义**（物理解释，而非本课程的定理）。如果两个系统各自服从自己的超选择定则——两个不能交换粒子的盒子——那么联合系统
+> 对每一*对*荷都有一个扇区，并且没有可观测量连接不同的荷对。一个联合扇区的权重是两个权重之积
+> （定理 7.1(c)）。
 
 ## 7.2 偏迹
 
@@ -121,7 +122,8 @@ $$
 $$
 由定理 3.2（应用于线性泛函 $A\mapsto\operatorname{Tr}(\rho(A\otimes1))$ 和 $\mathcal M_1$ 的忠实迹
 $\operatorname{Tr}$），它存在且唯一：偏迹是嵌入 $A\mapsto A\otimes1$ 关于 blunt 迹的对偶。
-$\operatorname{Tr}_1$ 的定义与此相同。对全代数 $\mathcal M_i=B(H_i)$，这就是
+$\operatorname{Tr}_1$ 的定义与此相同；对态 $\rho$，$\operatorname{Tr}_2\rho$ 与
+$\operatorname{Tr}_1\rho$ 称为**约化态**。对全代数 $\mathcal M_i=B(H_i)$，这就是
 **Hilbert 空间偏迹** $\operatorname{Tr}_{H_2}:B(H_1\otimes H_2)\to B(H_1)$。
 
 **命题 7.2.** (a) 对 $\rho=\bigoplus_{c,d}\rho_{cd}$，
@@ -189,7 +191,7 @@ assert close(Ptr(rho), rho1)
 assert close(Ptr.adjoint('blunt')(A), kron(A, one2, alg12))                 # Theorem 7.3: the dual
 ```
 
-> **物理意义。** $\operatorname{Tr}_2\rho$ 是**约化态**：一个只能测量第一个系统的观察者所能得知的
+> **物理意义**（物理解释，而非本课程的定理）。约化态 $\operatorname{Tr}_2\rho$ 是一个只能测量第一个系统的观察者所能得知的
 > 全部信息——定义表明，它重现了每个可观测量 $A\otimes1$ 的期望值。约化态相同的联合态在关联上有所不同。
 
 **作为条件期望的偏迹。** 设 $\mathcal M_2=M_m(\mathbb C)$，于是 $\mathcal M_1\otimes M_m$ 的扇区
@@ -208,7 +210,7 @@ $X=\sum_{a,b}u_{ab}\,\iota(\mathcal E(u_{ab}^*X))$，且 $\sum_{a,b}u_{ab}u_{ab}
 $\operatorname{tr}_w(Y\otimes1)=m\operatorname{tr}_w(Y)$。把 $\operatorname{Tr}_2$ 的定义应用于 $AP_c$，乘以 $w_c$ 并对 $c$ 求和，得到
 $\operatorname{tr}_w(X(A\otimes1))=\operatorname{tr}_w((\operatorname{Tr}_2X)A)$，取 $A=1$ 得
 $\operatorname{tr}_w(\iota\mathcal E(X))=\operatorname{tr}_w(X)$。若 $F=\iota\circ F_0$ 是到 $\mathcal M_1\otimes1$ 上另一个保持
-$\operatorname{tr}_w$ 的条件期望，则
+$\operatorname{tr}_w$ 的条件期望，则由于 $F(X(A\otimes1))=F(X)(A\otimes1)$，
 $\operatorname{tr}_w(X(A\otimes1))=\operatorname{tr}_w(F(X)(A\otimes1))=m\operatorname{tr}_w(F_0(X)A)$，所以对所有
 $A\in\mathcal M_1$ 有 $\operatorname{tr}_w((\operatorname{Tr}_2X-mF_0(X))A)=0$，由忠实性得 $F_0=\mathcal E$
 （取 $A=(\operatorname{Tr}_2X-mF_0(X))^*$）。(b) 写 $X=\sum_{a,b}X_{ab}\otimes e_{ab}$，其中
@@ -220,13 +222,15 @@ $\sum_{a,b}u_{ab}u_{ab}^*=m\sum_{a,b}1\otimes e_{aa}=m^21$。(c) 由命题 7.2(a
 $u_{ab}^*=\sum_k\iota(\mathcal E(u_{ab}^*v_k))\,v_k^*$，再由 (b)，
 $\sum_{a,b}u_{ab}u_{ab}^*=\sum_k\big(\sum_{a,b}u_{ab}\,\iota(\mathcal E(u_{ab}^*v_k))\big)v_k^*=\sum_kv_kv_k^*$。$\square$
 
-像 (b) 中那样的族称为 $\mathcal E$ 的一个*拟基*，而 $\sum_kv_kv_k^*$ 由 (c) 不依赖于拟基的选取，它就是
-**Watatani 指标** $\operatorname{Ind}\mathcal E=m^2$（Y. Watatani, Mem. Amer. Math.
-Soc. 83, no. 424, 1990）。对因子而言，$M_k\otimes1\subset M_k\otimes M_m$ 以重数 $m$ 在 $\mathbb C^{km}$ 中
-包含 $\mathbb C^k$：其包含矩阵为 $\Lambda=(m)$，而
-$m^2=\|\Lambda\|^2=\dim(M_k\otimes M_m)/\dim M_k$ 是它的 Jones 指标 $[\mathcal M:\mathcal N]$（V. F. R. Jones,
-Invent. Math. 72, 1, 1983；F. M. Goodman, P. de la Harpe and V. F. R. Jones, *Coxeter graphs and
-towers of algebras*, Springer, 1989）。对一般的 $\mathcal M_1$，这个包含是 $C_1$ 个包含
+像 (c) 中那样的族称为 $\mathcal E$ 的一个*拟基*，而 $\sum_kv_kv_k^*$ 由 (c) 不依赖于拟基的选取、由 (b)
+存在，它就是 $\mathcal E$ 的**指标** $\operatorname{Ind}\mathcal E=m^2$（这是一个定义；名称沿用 Y. Watatani, Mem. Amer. Math.
+Soc. 83, no. 424, 1990）。把 $\bigoplus_cM_{k_c}$ 包含到 $\bigoplus_sM_{n_s}$ 中的一个包含，其**包含矩阵**的元素
+$\Lambda_{sc}$ 是子代数的块 $c$ 在较大代数的块 $s$ 中出现的副本个数（第 9 章把它用于代数塔）。对因子而言，
+$M_k\otimes1\subset M_k\otimes M_m$：把 $\mathbb C^{km}$ 的基 $e_a\otimes e_b$ 先按 $b$ 排序，则
+$A\otimes1_m=\operatorname{diag}(A,\dots,A)$，含 $m$ 个副本，所以 $\Lambda=(m)$，并且
+$m^2=\|\Lambda\|^2=\dim(M_k\otimes M_m)/\dim M_k$。（延伸阅读，此处不使用：V. F. R. Jones,
+Invent. Math. 72, 1, 1983，关于子因子的指标；F. M. Goodman, P. de la Harpe and V. F. R. Jones, *Coxeter graphs and
+towers of algebras*, Springer, 1989，关于包含矩阵。）对一般的 $\mathcal M_1$，这个包含是 $C_1$ 个包含
 $M_{k_c}\otimes1\subset M_{k_c}\otimes M_m$ 的直和，$\Lambda=m1_{C_1}$。模块
 `torch_vn_algebra.inclusions` 实现了包含、它们的条件期望和指标；
 `from_tensor_product(alg1, m)` 构造上面这个包含：
@@ -282,9 +286,14 @@ $\Pi_q$ 可交换。$\square$
 
 `fused_tensor_product(alg1, alg2, fuse)`（默认的 `fuse` 为加法）按融合后的荷对扇区排序，扇区内部的
 对 $(c,d)$ 按字典序排列，每个对都采用基 $e_a\otimes e_b$。
-例子：硬核玻色子。两个格点上保持粒子数的算子构成
-$M_1\oplus M_2\oplus M_1$（荷 $0,1,2$），三个格点上则构成 $M_1\oplus M_3\oplus M_3\oplus M_1$；它们的融合积
-在基的顺序意义下就是五个格点的代数：$n_q=\sum_c\binom2c\binom3{q-c}=\binom5q$。
+例子：硬核玻色子。在 $L$ 个格点上，$(\mathbb C^2)^{\otimes L}$ 带有占据数
+$N=\sum_in^{(i)}$，$n=\operatorname{diag}(0,1)$；本征空间 $N=q$ 由恰有 $q$ 个格点被占据的 $\binom Lq$ 个乘积
+基向量张成，所以保持粒子数的算子 $\{N\}'$ 构成
+$\bigoplus_qM_{\binom Lq}$（命题 4.10(2)）：两个格点时为 $M_1\oplus M_2\oplus M_1$（荷 $0,1,2$），
+三个格点时为 $M_1\oplus M_3\oplus M_3\oplus M_1$。由命题 7.5(c)，在基的顺序意义下，融合积就是五个格点的总占据数
+所对应的 $\{N\}'$，并且确实有
+$n_q=\sum_c\binom2c\binom3{q-c}=\binom5q$（Vandermonde 恒等式：五个格点的一个 $q$ 元子集由前两个格点中的
+$c$ 个和后三个格点中的 $q-c$ 个组成）。
 
 ```python
 bos1 = TypeIAlgebra([1, 2, 1], [1, 2, 1], precision='double', charges=[0, 1, 2])
@@ -293,6 +302,7 @@ F = fused_tensor_product(bos1, bos2)                         # U(1): total parti
 P = tensor_product(bos1, bos2)                               # particle numbers conserved separately
 print(F.charges, F.k_factors, sum(k * k for k in F.k_factors), sum(k * k for k in P.k_factors))
 assert F.k_factors == [math.comb(5, q) for q in range(6)]
+assert sum(k * k for k in F.k_factors) == 252 and sum(k * k for k in P.k_factors) == 120
 
 N1, N2 = full(bos1.central([0.0, 1.0, 2.0]))[0], full(bos2.central([0.0, 1.0, 2.0, 3.0]))[0]
 N = torch.kron(N1, torch.eye(8, dtype=dt)) + torch.kron(torch.eye(4, dtype=dt), N2)
@@ -302,10 +312,13 @@ A, B = random_operator(bos1), random_operator(bos2)
 assert close(full12(kron(A, B, F)), full12(kron(A, B, P)))   # Proposition 7.5(b)
 ```
 
-融合代数的维数是 $252$，普通积的维数是 $120$；两者之差由在两部分之间移动粒子的算子构成，例如跃迁项。
+融合代数的维数是 $\sum_q\binom5q^2=\binom{10}5=252$（又是 Vandermonde 恒等式），普通积的维数是
+$(1+4+1)(1+9+9+1)=120$（定理 7.1(b)）。由定理 7.1(a) 和命题 7.5(b)，普通积由融合积中关于对 $(c,d)$
+块对角的元素组成；其余 $132$ 维由这样的算子张成：它们把一个对块 $(c,d)$ 映到同一个 $H_q$ 中另一个对块
+$(c',d')$，$c'\ne c$（因而 $d'\ne d$）。它们在保持总荷守恒的同时改变每个部分的荷，即在这里把粒子在两部分之间移动。
 
 $\mathcal M_1\otimes_f\mathcal M_2$ 上的态可以在不同的对块之间具有相干性，因此命题 7.2 不适用。
-在 $B(H_1)$ 上令 $E_1(X)=\sum_cP_cXP_c$（2.6 节"物理意义"中的条件期望）；它映到 $\mathcal M_1$ 上，
+在 $B(H_1)$ 上令 $E_1(X)=\sum_cP_cXP_c$（2.6 节的条件期望）；它映到 $\mathcal M_1$ 上，
 并且对 $A\in\mathcal M_1$ 有 $\operatorname{Tr}(E_1(X)A)=\operatorname{Tr}(XA)$，因为 $A=\sum_cP_cAP_c$。
 
 **定理 7.6.** 设 $\rho$ 是 $\mathcal M_1\otimes_f\mathcal M_2$ 上的态 $\omega$ 的密度。它到 $\mathcal M_1$ 的
@@ -328,9 +341,11 @@ $x'\in\mathbb C^{k_{c'}}$、$y\in\mathbb C^{l_d}$，并令 $\psi=(x+x')\otimes y
 $|\psi\rangle\langle\psi|\in B(H_q)$，而 $\operatorname{Tr}_{H_2}|\psi\rangle\langle\psi|=\frac12|x+x'\rangle\langle x+x'|$
 具有非零块 $\frac12|x\rangle\langle x'|$，它被 $E_1$ 去掉。$\square$
 
-本库的两种实现对任意融合规则都计算这个映射：`partial_trace` 只对对角的对块 $\rho_{(c,d),(c,d)}$ 求迹，
-而 `partial_trace_channel` 对同一扇区中 $c$ 相同的对使用各自独立的 Kraus 指标；它的对偶仍然是
-$A\mapsto A\otimes1$。在我们的例子中，取加法时 $E_1$ 什么也不做；取宇称规则 $f(q,r)=q+r\bmod2$ 时，
+由定理 7.6 的块公式，$(\rho_1)_c=\sum_d\operatorname{tr}_{l_d}\rho_{(c,d),(c,d)}$。本库的两种实现都被设计为
+对任意融合规则计算这个映射：`partial_trace` 只对对角的对块 $\rho_{(c,d),(c,d)}$ 求迹，
+而 `partial_trace_channel` 对同一扇区中 $c$ 相同的对使用各自独立的 Kraus 指标，使得它的对偶仍然是
+$A\mapsto A\otimes1$。代码对下面两种融合规则以及保留因子的两种选择，把两者与用 `einsum` 独立计算的
+$E_1(\operatorname{Tr}_{H_2}\rho)$ 进行核对，并把对偶与 $A\otimes1$ 进行核对。在我们的例子中，取加法时 $E_1$ 什么也不做；取宇称规则 $f(q,r)=q+r\bmod2$ 时，
 `bos1` 的荷 $0$ 和 $2$ 与每个 $r$ 的融合结果都相同，于是 $E_1$ 去掉了真正的相干性：
 
 ```python
@@ -354,9 +369,9 @@ for alg, coherent in ((F, False), (G, True)):
     assert close(composite.partial_trace_channel(alg, keep=1).adjoint('blunt')(A), kron(A, bos2.identity(), alg))
 ```
 
-> **物理意义。** 在超导体的 BCS 描述中，只有电子数的宇称守恒，因此整体态可以是一个区域的粒子数
+> **物理意义**（物理解释，而非本课程的定理）。在超导体的 BCS 描述中，只有电子数的宇称守恒，因此整体态可以是一个区域的粒子数
 > $0$ 与 $2$ 的叠加。一个其可观测量保持该区域粒子数守恒的观察者看不到这种相干性：对他而言，
-> 约化态是定理 7.6 中经过块对角化（pinching）的那个态，即不同粒子数的混合。
+> 约化态是定理 7.6 中经过块对角化（pinching）的那个态（这是本方框的数学内容），即不同粒子数的混合。
 
 ## 7.4 纯态的纠缠
 
@@ -378,11 +393,14 @@ $|\psi\rangle\langle\psi|=\sum_{i,j}s_is_j|u_i\rangle\langle u_j|\otimes|v_i\ran
 
 $\psi$ 的**纠缠熵**为
 $E(\psi)=S(\operatorname{Tr}_2|\psi\rangle\langle\psi|)=S(\operatorname{Tr}_1|\psi\rangle\langle\psi|)=-\sum_is_i^2\log s_i^2$。
-它为零当且仅当 $r=1$，即当且仅当 $\psi=u\otimes v$；并且 $E(\psi)\le\log\min(a,b)$，等号成立当且仅当
-较小的那个约化态是最大混合态（推论 3.6）。
+它为零当且仅当 $r=1$（每一项 $-s_i^2\log s_i^2$ 都 $\ge0$，且仅当 $s_i^2=1$ 时为 $0$），即当且仅当
+$\psi=u\otimes v$（此时 $\Psi=uv^T$ 的秩为 $1$，而 $r=\operatorname{rank}\Psi\Psi^*=\operatorname{rank}\Psi$）；并且
+$E(\psi)\le\log\min(a,b)$，等号成立当且仅当较小的那个约化态是最大混合态
+（推论 3.6，应用于两个约化态）。
 
-有荷时，纯态位于融合积的某一个扇区 $H_q$ 中；记
-$\psi=\sum_{(c,d)}\psi_{cd}$，其中 $\psi_{cd}\in\mathbb C^{k_c}\otimes\mathbb C^{l_d}$。
+有荷时，我们取具有确定总荷的单位向量 $\psi$，即位于融合积的某一个扇区 $H_q$ 中（不同 $H_q$ 的叠加在
+$\mathcal M_1\otimes_f\mathcal M_2$ 上给出与混合相同的态，第 3 章习题 3）；记 $\psi=\sum_{(c,d)}\psi_{cd}$，其中
+$\psi_{cd}\in\mathbb C^{k_c}\otimes\mathbb C^{l_d}$。
 
 **命题 7.8（对称性分辨纠缠）。** 设 $f$ 是加法，诸 $q_c$ 两两不同，诸 $r_d$ 也两两不同，从而对每个 $c$
 至多有一个 $d=d(c)$ 满足 $q_c+r_d=q$。令 $\psi_c=\psi_{c\,d(c)}$（或 $0$），$p_c=\|\psi_c\|^2$，并在 $p_c>0$ 时令
@@ -433,22 +451,26 @@ print(f"E = {E_psi:.4f} = H(p) {H_num:.4f} + configurational {S_conf:.4f}")
 assert abs(E_psi - H_num - S_conf) < 1e-10                  # Proposition 7.8
 ```
 
-> **物理意义。** 受粒子数超选择定则约束的各方只能把构型部分用作资源：这就是 H. M. Wiseman 和 J. A.
+> **物理意义**（物理解释，而非本课程的定理）。受粒子数超选择定则约束的各方只能把构型部分用作资源：这就是 H. M. Wiseman 和 J. A.
 > Vaccaro 的*粒子纠缠*（Phys. Rev. Lett. 91, 097902, 2003）。$H(p)$ 在冷原子实验中作为*数熵*
 > 被测量（A. Lukin et al., Science 364, 256, 2019）。
 
 ## 7.5 随机态与 Page 公式
 
-设 $g\in\mathbb C^N$ 的各坐标相互独立，其实部与虚部是独立的 $N(0,\tfrac12)$ 随机变量，于是
-$\mathbb E|g_i|^2=1$。**Haar 随机纯态**是 $\psi=g/\|g\|$；它的分布是酉不变的，因为密度
-$\pi^{-N}e^{-\|g\|^2}$ 与 Lebesgue 测度都是酉不变的（它是球面上唯一的不变分布，这一事实我们不会用到）。
+设 $g\in\mathbb C^N$ 的各坐标相互独立，其实部与虚部是独立的 $N(0,\tfrac12)$ 随机变量（标准复高斯向量，
+命题 A.16(a)），于是 $\mathbb E|g_i|^2=1$；$g\neq0$ 几乎必然成立（定理 A.20）。**Haar 随机纯态**是
+$\psi=g/\|g\|$。它的分布是酉不变的：对每个酉矩阵 $U$，$Ug$ 与 $g$ 同分布（命题 A.16(a)），并且
+$Ug/\|Ug\|=U\psi$。由命题 A.22，它是单位球面上唯一的酉不变分布；并且如该命题的证明所示，它是
+Haar 酉矩阵（定理 5.3）第一列的分布。
 
 **引理 7.9.** $\|g\|$ 与 $\psi=g/\|g\|$ 相互独立。
 
-*证明。* 设 $h\ge0$ 与 $\phi\ge0$ 分别是 $(0,\infty)$ 和单位球面 $S^{2N-1}$ 上的可测函数。
-在 $\mathbb R^{2N}$ 中用极坐标积分（$\sigma$ 为面积测度）得
+*证明。*（这是定理 A.20(b) 的一部分。）设 $h\ge0$ 与 $\phi\ge0$ 分别是 $(0,\infty)$ 和
+$\mathbb C^N\cong\mathbb R^{2N}$ 的单位球面 $S^{2N-1}$ 上的 Borel 函数。由于 $g$ 有密度
+$\pi^{-N}e^{-|x|^2}$（命题 A.16(a)），极坐标（取 $n=2N$ 的定理 A.18，以及其中定义的测度 $\mu$）给出
 $$
-\mathbb E\big[h(\|g\|)\phi(\psi)\big]=\pi^{-N}\int_0^\infty h(t)e^{-t^2}t^{2N-1}dt\int_{S^{2N-1}}\phi\,d\sigma=:\alpha(h)\beta(\phi).
+\mathbb E\big[h(\|g\|)\phi(\psi)\big]=\pi^{-N}\!\int_{\mathbb R^{2N}}\!h(|x|)e^{-|x|^2}\phi\Big(\frac x{|x|}\Big)dx
+=2N\pi^{-N}\int_0^\infty h(t)e^{-t^2}t^{2N-1}dt\int_{S^{2N-1}}\phi\,d\mu=:\alpha(h)\beta(\phi).
 $$
 先取 $\phi=1$，再取 $h=1$，再取两者都为 $1$，得到 $\mathbb Eh(\|g\|)=\alpha(h)\beta(1)$、
 $\mathbb E\phi(\psi)=\alpha(1)\beta(\phi)$ 以及 $\alpha(1)\beta(1)=1$，因此
@@ -457,12 +479,16 @@ $\mathbb E[h(\|g\|)\phi(\psi)]=\mathbb Eh(\|g\|)\,\mathbb E\phi(\psi)$。$\squar
 **引理 7.10.** $\mathbb E\|g\|^4=N(N+1)$。若 $G$ 是一个 $a\times b$ 矩阵，其各元素独立且与 $g_i$ 同分布
 （*Ginibre* 矩阵），则 $\mathbb E\operatorname{Tr}(GG^*)^2=ab(a+b)$。
 
-*证明。* 记 $g_i=x+iy$，则 $\mathbb E|g_i|^4=\mathbb Ex^4+2\mathbb Ex^2\mathbb Ey^2+\mathbb Ey^4=\tfrac34+\tfrac12+\tfrac34=2$，
-所以 $\mathbb E\|g\|^4=\sum_i\mathbb E|g_i|^4+\sum_{i\ne j}\mathbb E|g_i|^2\mathbb E|g_j|^2=2N+N(N-1)$。其次，
-$\operatorname{Tr}(GG^*)^2=\sum_{i,i',j,j'}G_{ij}\bar G_{i'j}G_{i'j'}\bar G_{ij'}$。诸元素及其共轭是独立实高斯变量的
-复线性组合，且 $\mathbb E[G_{ij}G_{kl}]=0$，$\mathbb E[G_{ij}\bar G_{kl}]=\delta_{ik}\delta_{jl}$，所以 Isserlis 公式
-（命题 1.10 的证明）给出 $\mathbb E[G_{ij}\bar G_{i'j}G_{i'j'}\bar G_{ij'}]=\delta_{ii'}+\delta_{jj'}$。
-求和得 $ab^2+a^2b$。$\square$
+*证明。* 记 $g_i=x+iy$，其中 $x,y$ 是独立的 $N(0,\frac12)$ 随机变量，则 $\mathbb Ex^4=3(\mathbb Ex^2)^2=\frac34$
+（定理 A.24：三个配对），所以
+$\mathbb E|g_i|^4=\mathbb Ex^4+2\mathbb Ex^2\mathbb Ey^2+\mathbb Ey^4=\tfrac34+\tfrac12+\tfrac34=2$，并且
+$\mathbb E\|g\|^4=\sum_i\mathbb E|g_i|^4+\sum_{i\ne j}\mathbb E|g_i|^2\mathbb E|g_j|^2=2N+N(N-1)$。其次，
+$\operatorname{Tr}(GG^*)^2=\sum_{i,i',j,j'}G_{ij}\bar G_{i'j}G_{i'j'}\bar G_{ij'}$。诸元素及其共轭是同一个中心化
+高斯向量（所有元素的实部与虚部）的坐标的复线性组合，且
+$\mathbb E[G_{ij}G_{kl}]=\mathbb E[\bar G_{ij}\bar G_{kl}]=0$，$\mathbb E[G_{ij}\bar G_{kl}]=\delta_{ik}\delta_{jl}$
+（命题 A.16(a)）。由 Isserlis–Wick 公式（定理 A.24 的复形式，取四个因子的三个配对），
+$\mathbb E[G_{ij}\bar G_{i'j}G_{i'j'}\bar G_{ij'}]=\delta_{ii'}\delta_{i'i}+0+\delta_{jj'}\delta_{jj'}=\delta_{ii'}+\delta_{jj'}$。
+对 $i,i'\le a$ 和 $j,j'\le b$ 求和得 $ab^2+a^2b$。$\square$
 
 **定理 7.11（E. Lubkin, J. Math. Phys. 19, 1028, 1978）。** 对 Haar 随机的
 $\psi\in\mathbb C^a\otimes\mathbb C^b$ 和 $\rho_A=\operatorname{Tr}_2|\psi\rangle\langle\psi|$，
@@ -471,40 +497,65 @@ $$
 $$
 
 *证明。* 令 $G_{\alpha\beta}=\langle e_\alpha\otimes e_\beta,g\rangle$，这是一个 Ginibre 矩阵；$\psi$ 的矩阵为
-$\Psi=G/\|g\|$，由引理 7.7 的证明，$\rho_A=\Psi\Psi^*=GG^*/\|g\|^2$。因此
+$\Psi=G/\|g\|$，由命题 7.2(a)，$(\rho_A)_{\alpha\alpha'}=\sum_\beta\Psi_{\alpha\beta}\bar\Psi_{\alpha'\beta}$，即
+$\rho_A=\Psi\Psi^*=GG^*/\|g\|^2$。因此
 $\operatorname{Tr}(GG^*)^2=\|g\|^4\operatorname{Tr}\rho_A^2$，其中 $\operatorname{Tr}\rho_A^2\in[0,1]$ 是 $\psi$ 的函数。
 由引理 7.9，$\mathbb E\operatorname{Tr}(GG^*)^2=\mathbb E\|g\|^4\,\mathbb E\operatorname{Tr}\rho_A^2$，再由引理 7.10，
 $\mathbb E\operatorname{Tr}\rho_A^2=ab(a+b)/(ab(ab+1))$。$\square$
 
-第 6 章由 Haar 向量的四阶矩得到同一个均值，作为随机信道的输出纯度。
+第 6 章由酉不变单位向量的四阶矩（引理 6.14）得到同一个均值，作为随机信道的输出纯度
+（定理 6.15 及其后的注记）。
 
 **推论 7.12.** $\log\frac{ab+1}{a+b}\le\mathbb E\,S(\rho_A)\le\log\min(a,b)$。
 
 *证明。* 由推论 3.6，$S(\rho_A)\le\log a$；由引理 7.7，
 $S(\rho_A)=S(\operatorname{Tr}_1|\psi\rangle\langle\psi|)\le\log b$。对凹函数 $\log$ 以
-$\rho_A$ 的非零特征值 $\lambda_i>0$ 为权重应用 Jensen 不等式，得
-$\sum_i\lambda_i\log\lambda_i\le\log\sum_i\lambda_i^2$，即 $S(\rho_A)\ge-\log\operatorname{Tr}\rho_A^2$；对凸函数
-$-\log$ 应用 Jensen 不等式并结合定理 7.11，得
-$\mathbb E[-\log\operatorname{Tr}\rho_A^2]\ge-\log\mathbb E\operatorname{Tr}\rho_A^2$。$\square$
+$\rho_A$ 的非零特征值 $\lambda_i>0$ 为权重应用有限形式的 Jensen 不等式（第 3 章习题 2 的解答），得
+$\sum_i\lambda_i\log\lambda_i\le\log\sum_i\lambda_i^2$，即 $S(\rho_A)\ge-\log X$，其中
+$X=\operatorname{Tr}\rho_A^2\in(0,1]$。令 $m=\mathbb EX=\frac{a+b}{ab+1}$（定理 7.11）。对 $(0,\infty)$ 上的凸函数
+$-\log$ 在点 $m$ 处应用引理 3.4，得 $-\log X\ge-\log m-(X-m)/m$；两边都有界（由 Cauchy–Schwarz 不等式，
+$X\ge1/a$），取期望即得 $\mathbb E[-\log X]\ge-\log m$。$\square$
 
-当 $a$ 固定而 $b\to\infty$ 时，上下界趋于一致：随机纯态的一小部分几乎是最大混合的。精确的均值由
-Page 公式给出，我们只陈述而不加证明。
+当 $a$ 固定而 $b\to\infty$ 时，上下界趋于一致：随机纯态的一小部分的平均熵趋于其最大值 $\log a$。
+精确的均值由 Page 公式给出，它在附录 C 中证明。
 
 **定理 7.13（Page 公式）。** 对 $a\le b$，
 $$
 \mathbb E\,S(\rho_A)=\sum_{k=b+1}^{ab}\frac1k-\frac{a-1}{2b}.
 $$
-它由 D. N. Page 提出猜想（Phys. Rev. Lett. 71, 1291, 1993），并由 S. K. Foong 和
-S. Kanno（Phys. Rev. Lett. 72, 1148, 1994）、J. Sánchez-Ruiz（Phys. Rev. E 52, 5653, 1995）以及
-S. Sen（Phys. Rev. Lett. 77, 1, 1996）证明。当 $1\ll a\le b$ 时它约为 $\log a-\frac a{2b}$；对两个量子比特，
-它等于 $\frac13$。
+此外 $\log a-\frac{a-1}{ab+1}-\frac{a-1}{2b}\le\mathbb E\,S(\rho_A)\le\log a-\frac{a-1}{2b}$，所以
+$\big|\mathbb E\,S(\rho_A)-\log a+\frac a{2b}\big|\le\frac1{2b}$；对两个量子比特，$\mathbb E\,S(\rho_A)=\frac13$。
 
-$\rho_A$ 的分布是**诱导测度**（K. Życzkowski and H.-J. Sommers, J. Phys. A 34,
-7111, 2001）。`states.random_density_matrix(alg, rank=r)` 用 $k_c\times r$ 的 Ginibre 块 $G_c$ 构造
-$G_cG_c^*$，再除以 $\sum_c\operatorname{Tr}G_cG_c^*$。对单个块，这就是上面 $b=r$ 时 $\rho_A$ 的分布。
-对多个块，它是 $H_1\otimes\mathbb C^r$ 上一个 Haar 随机纯态到 $\mathcal M_1$ 的限制：取 $\mathcal M_2=M_r$ 和一个
-常值融合规则应用定理 7.6，使得 $\mathcal M_1\otimes_f\mathcal M_2=B(H_1\otimes\mathbb C^r)$，其中 $G_c$ 是 $G$
-位于块 $c$ 中的那些行。
+*证明。* 这就是定理 C.17 连同推论 C.18。附录 C 中的证明从
+$\rho_A=GG^*/\operatorname{Tr}GG^*$（定理 7.11 的证明）出发，计算 Wishart 矩阵 $GG^*$ 的特征值的联合密度
+（定理 C.13）以及 $\rho_A$ 的特征值的联合密度（定理 C.14），再把 $x\log x$ 对 Laguerre 能级密度积分
+（引理 C.15 和 C.16）。$\square$
+
+该公式由 D. N. Page 提出猜想（Phys. Rev. Lett. 71, 1291, 1993），并由 S. K. Foong 和
+S. Kanno（Phys. Rev. Lett. 72, 1148, 1994）、J. Sánchez-Ruiz（Phys. Rev. E 52, 5653, 1995）以及
+S. Sen（Phys. Rev. Lett. 77, 1, 1996）证明。
+
+当 $a>b$ 时，$a$ 与 $b$ 的角色互换。事实上，从 $\mathbb C^a\otimes\mathbb C^b$ 到 $\mathbb C^b\otimes\mathbb C^a$ 上的酉映射
+$e_\alpha\otimes e_\beta\mapsto e_\beta\otimes e_\alpha$ 置换 $g$ 的坐标，所以它把 Haar 随机纯态 $\psi$ 映为
+$\mathbb C^b\otimes\mathbb C^a$ 的 Haar 随机纯态 $\psi'$；后者的矩阵是 $\Psi^T$，所以
+$\operatorname{Tr}_2|\psi'\rangle\langle\psi'|=\Psi^T\bar\Psi=\operatorname{Tr}_1|\psi\rangle\langle\psi|$（命题 7.2(a)），
+由引理 7.7，它的熵是 $S(\rho_A)$。因此，记 $a'=\min(a,b)$，$b'=\max(a,b)$，定理 7.13 表明平均纠缠熵比其最大值
+$\log a'$ 至少小 $\frac{a'-1}{2b'}$，至多小 $\frac{a'-1}{2b'}+\frac{a'-1}{a'b'+1}$，而后者小于一个 nat：当 $b'=1$ 时它为 $0$，
+否则 $\frac{a'-1}{2b'}\le\frac12$ 且 $\frac{a'-1}{a'b'+1}<\frac1{b'}\le\frac12$。所以当 $ab$ 固定时，作为 $a$ 的函数，
+平均值与 $\log\min(a,b)=\min(\log a,\log(ab)-\log a)$ 相差不到一个 nat。
+
+$\rho_A$ 的分布是**诱导测度**（这一名称来自 K. Życzkowski 和 H.-J. Sommers,
+J. Phys. A 34, 7111, 2001；定理 C.14 给出其特征值的密度）。
+`states.random_density_matrix(alg, rank=r)` 用相互独立的 $k_c\times r$ Ginibre 块 $G_c$ 构造
+$G_cG_c^*$，再除以 $\sum_c\operatorname{Tr}G_cG_c^*$。对单个块，这就是上面 $b=r$ 时 $\rho_A$ 的分布
+（定理 7.11 的证明）。对多个块，它是 $H_1\otimes\mathbb C^r$ 的 Haar 随机纯态 $\psi=g/\|g\|$ 的向量态
+到 $\mathcal M_1$ 的限制的密度的分布。事实上，令 $G_{i\beta}=\langle e_i\otimes e_\beta,g\rangle$，这是一个
+$D\times r$ Ginibre 矩阵（$D=\sum_ck_c$），并令 $G_c$ 为它位于块 $c$ 中的那些行：它们是相互独立的
+$k_c\times r$ Ginibre 矩阵。取 $\mathcal M_2=M_r$（一个扇区）和一个常值融合规则；则只有一个总荷，
+$\Pi=1$，并且 $\mathcal M_1\otimes_f\mathcal M_2=B(H_1\otimes\mathbb C^r)$。由定理 7.6，该限制的密度为
+$E_1(\operatorname{Tr}_{H_2}|\psi\rangle\langle\psi|)$，而 $\operatorname{Tr}_{H_2}|\psi\rangle\langle\psi|=GG^*/\|g\|^2$
+（命题 7.2(a)，与定理 7.11 的证明相同），它的对角块是 $G_cG_c^*/\|g\|^2$，其中
+$\|g\|^2=\sum_c\operatorname{Tr}G_cG_c^*$。
 
 **命题 7.14.** 对由 `random_density_matrix(alg, rank=r)` 在 $\bigoplus_cM_{k_c}$ 上抽取的 $\rho$，
 $D=\sum_ck_c$，
@@ -513,7 +564,10 @@ $$
 $$
 
 *证明。* $\operatorname{Tr}\rho^2=\sum_c\operatorname{Tr}(G_cG_c^*)^2/\|g\|^4$，其中 $g\in\mathbb C^{Dr}$ 是全部矩阵元
-构成的向量；与定理 7.11 一样，引理 7.9 和 7.10 给出 $\sum_ck_cr(k_c+r)/(Dr(Dr+1))$。$\square$
+构成的向量；它是 $g/\|g\|$ 的函数，取值于 $[0,1]$。与定理 7.11 一样，引理 7.9 给出
+$\sum_c\mathbb E\operatorname{Tr}(G_cG_c^*)^2=\mathbb E\|g\|^4\,\mathbb E\operatorname{Tr}\rho^2$，而引理 7.10 给出
+$\mathbb E\operatorname{Tr}(G_cG_c^*)^2=k_cr(k_c+r)$ 和 $\mathbb E\|g\|^4=Dr(Dr+1)$，所以
+$\mathbb E\operatorname{Tr}\rho^2=\sum_ck_cr(k_c+r)/(Dr(Dr+1))$。$\square$
 
 我们在 $\mathbb C^3\otimes\mathbb C^6$ 的 $10^4$ 个经 `partial_trace` 约化的纯态上以及诱导测度上检验定理 7.11
 和 7.13，并对 $M_1\oplus M_2\oplus M_3$、$r=2$ 检验命题 7.14：
@@ -539,6 +593,8 @@ for name, rho_s in (('reduced pure states', rho_A),
           f"E S = {m_S:.4f} +- {e_S:.4f} (Page {page:.4f})")
     assert abs(m_p - purity_exact) < 5 * e_p and abs(m_S - page) < 5 * e_S     # Theorems 7.11, 7.13
     assert math.log((a * b + 1) / (a + b)) < m_S < math.log(a)                # Corollary 7.12
+assert math.log(a) - (a - 1) / (a * b + 1) - (a - 1) / (2 * b) <= page <= math.log(a) - (a - 1) / (2 * b)
+assert abs(sum(1 / k for k in (3, 4)) - 1 / 4 - 1 / 3) < 1e-15                # two qubits: E S = 1/3
 
 alg3 = TypeIAlgebra([1, 2, 3], [1, 2, 3], precision='double')
 m_p, e_p = mean_se(states.random_density_matrix(alg3, 40_000, rank=2).purity())
@@ -546,21 +602,21 @@ print(f"E Tr rho^2 = {m_p:.4f} +- {e_p:.4f} (exact {26 / 78:.4f})")
 assert abs(m_p - 26 / 78) < 5 * e_p                                          # Proposition 7.14
 ```
 
-> **物理意义。** 典型的纯态在系统中任意一个不超过一半的部分与其余部分之间几乎是最大纠缠的。
-> 随着该部分增大，纠缠像 $\log a$ 一样增长，越过中点后又下降：这就是 *Page 曲线*，它描述了信息
-> 如何随 Hawking 辐射离开黑洞，也解释了为什么封闭系统的各个部分看起来是热的。
+> **物理意义**（物理解释，而非本课程的定理）。随机纯态的平均纠缠熵在总维数固定时作为该部分大小的函数
+> 所画出的曲线（定理 7.13 之后描述的曲线）称为 *Page 曲线*。在物理中，它被用来描述信息如何随 Hawking
+> 辐射离开黑洞，以及为什么封闭系统的各个部分看起来是热的；这些是解释，而不是本课程的结果。
 
 ## 7.6 可与之比较的工具
 
 在单个 Hilbert 空间上，QuTiP（`Qobj.ptrace`、`entropy_vn`、`rand_ket`、带 Ginibre 分布和秩参数的
-`rand_dm`）和 `numpy`（如上所示，一次 reshape 加一次 `einsum`）可以计算偏迹、熵和诱导态，并且在
-普通积上与本库结果一致。带守恒荷的张量网络库——ITensor（量子数块稀疏张量）、TeNPy（带荷的
+`rand_dm`）和 `numpy`（如上所示，一次 reshape 加一次 `einsum`）可以对普通积计算偏迹、熵和诱导态
+（上面的 `einsum` 检验就是把这样的计算与本库进行比较）。带守恒荷的张量网络库——ITensor（量子数块稀疏张量）、TeNPy（带荷的
 腿、按荷分解的纠缠谱），以及针对非阿贝尔对称性的 TensorKit.jl（融合树）——对大系统以同样的方式
 融合扇区，并给出对称性分辨纠缠。本库增加的是代数层面：积是带有扇区和迹的冯·诺依曼代数，
 融合规则可以是标签的任意映射，偏迹是一个信道，对每种迹都有其对偶，并且对融合积给出正确的
 限制（定理 7.3、7.6），而且这一切都是批量化的。本库没有张量网络，并且 `fused_tensor_product`
-接受的规则对每一对荷只给出一个结果，正如阿贝尔对称性那样；像 $SU(2)$ 的 $j_1\otimes j_2=\bigoplus_jj$
-这样带有 Clebsch–Gordan 系数的非阿贝尔规则，在这里不是融合积（本库对自旋 $\frac12$ 链上的 $SU(2)$
+接受的规则对每一对荷只给出一个结果，正如阿贝尔对称性那样；非阿贝尔规则，例如 $SU(2)$ 的规则（一对自旋 $j_1,j_2$
+组合成若干个总自旋 $|j_1-j_2|,\dots,j_1+j_2$，第 4 章习题 2），在这里不是融合积（本库对自旋 $\frac12$ 链上的 $SU(2)$
 另行处理，见第 4 章）。
 
 ## 习题
@@ -581,9 +637,10 @@ assert abs(m_p - 26 / 78) < 5 * e_p                                          # P
    $\tau_{\mathrm{vN}}((\operatorname{Tr}_2X)A)=\sum_c\frac1{C_1k_c}\sum_d\operatorname{Tr}(X_{cd}(A_c\otimes1))
    =\sum_{c,d}\frac1{C_1C_2k_cl_d}\operatorname{Tr}\big(X_{cd}\,C_2l_d(A_c\otimes1)\big)$，所以对偶为
    $A\mapsto\bigoplus_{c,d}C_2l_d\,A_c\otimes1_{l_d}=A\otimes Z$，其中 $Z=\bigoplus_dC_2l_d1_{l_d}$ 是
-   $\mathcal M_2$ 的中心元。它不保单位：在本库的三种迹中，只有 blunt 迹使 $\operatorname{Tr}_2$ 成为
-   $A\mapsto A\otimes1$ 的对偶（一般地，由同样的计算，$\mathcal M_1$ 上的 $\operatorname{tr}_w$ 与积代数上的
-   权重 $w_{cd}=w_c$ 也能做到这一点）。
+   $\mathcal M_2$ 的中心元。它保单位当且仅当 $Z=1$，即 $\mathcal M_2=\mathbb C$；在本例中不保单位
+   （$Z=4\cdot1_2\oplus6\cdot1_3$）。对 `Tr_norm`，同样的计算给出 $A\otimes\bigoplus_dl_d1_{l_d}$，它保单位当且仅当
+   所有 $l_d=1$。blunt 迹总是使 $\operatorname{Tr}_2$ 成为 $A\mapsto A\otimes1$ 的对偶；一般地，由同样的计算，
+   $\mathcal M_1$ 上的 $\operatorname{tr}_w$ 与积代数上的权重 $w_{cd}=w_c$ 也能做到这一点。
 
 ```python
 dual_tau = composite.partial_trace_channel(alg12, keep=1).adjoint('tau_vN')
@@ -609,7 +666,7 @@ assert torch.allclose(mutual, states.relative_entropy(rho, kron(rho1, rho2, alg1
 
 3. 扇区为 $N=0,1,2$，大小分别为 $1,2,1$。$\psi$ 位于 $N=1$ 中，$\psi_0=|01\rangle/\sqrt2$，
    $\psi_1=|10\rangle/\sqrt2$，所以 $p=(\frac12,\frac12)$；由于各块都是一维的，
-   $E(\hat\psi_c)=0$：由命题 7.8，$E(\psi)=H(p)=\log2$ 全部是数纠缠，可用的构型部分为 $0$。
+   $E(\hat\psi_c)=0$：由命题 7.8，$E(\psi)=H(p)=\log2$ 全部是数纠缠，构型部分为 $0$。
    向量 $(|00\rangle+|11\rangle)/\sqrt2$ 是 $N=0$ 与 $N=2$ 的叠加；在块对角的融合代数上，它的向量态是
    乘积态的混合 $\frac12|00\rangle\langle00|+\frac12|11\rangle\langle11|$（第 3 章习题 3）。
 

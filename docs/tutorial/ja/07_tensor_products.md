@@ -2,7 +2,7 @@
 
 # 7. テンソル積とエンタングルメント
 
-二つの量子系を合わせたものは、それらの環のテンソル積によって記述される。セクターがある場合には二つの積がある：各部分がそれぞれ自分の電荷を保つ通常の積と、全電荷だけが保存される *融合* 積である。本章では両者の構造を証明し、部分トレースを埋め込みの双対として定義し、エンタングルメントを調べる。
+本章では、セクターをもつ二つの環のテンソル積を調べる（物理的には、二つの系を合わせたものの環である。*物理的意味* の囲みを参照）。セクターがある場合には二つの積がある：各部分がそれぞれ自分の電荷を保つ通常の積と、全電荷だけが保存される *融合* 積である。両者の構造を証明し、部分トレースを埋め込みの双対として定義し、エンタングルメントを調べる。
 
 **本章で学ぶこと**：セクターがどのように掛け合わされ、ライブラリがそれらをどう並べるか、部分トレースがなぜチャネルであり、正規化すれば有限指数の条件付き期待値であるか、電荷を保存する状態の縮約状態は何か、エンタングルメントが粒子数の部分と配置の部分にどう分かれるか、そしてランダムな状態の平均純度と平均エントロピー。
 
@@ -103,8 +103,9 @@ for tr in ('Tr_blunt', 'Tr_norm', 'tau_vN'):                                   #
     assert (getattr(AB, tr)() - getattr(A, tr)() * getattr(B, tr)()).abs().max() < 1e-10
 ```
 
-> **物理的意味.** 二つの系がそれぞれ自分の超選択則に従うとき――粒子を交換できない二つの箱――、結合系は
-> 電荷の *組* ごとに一つのセクターをもち、異なる組を結ぶオブザーバブルは存在しない。結合セクターは重みの積で数えられる。
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. 二つの系がそれぞれ自分の超選択則に従うとき――粒子を交換できない二つの箱――、結合系は
+> 電荷の *組* ごとに一つのセクターをもち、異なる組を結ぶオブザーバブルは存在しない。結合セクターは重みの積で数えられる
+> （定理 7.1(c)）。
 
 ## 7.2 部分トレース
 
@@ -115,7 +116,8 @@ $$
 $$
 線形汎関数 $A\mapsto\operatorname{Tr}(\rho(A\otimes1))$ と $\mathcal M_1$ の忠実なトレース $\operatorname{Tr}$ に定理 3.2 を適用すれば、
 これはただ一つ存在する：部分トレースは、blunt トレースに関する埋め込み $A\mapsto A\otimes1$ の双対である。
-$\operatorname{Tr}_1$ も同様に定義する。全行列環 $\mathcal M_i=B(H_i)$ に対しては、これは
+$\operatorname{Tr}_1$ も同様に定義する。状態 $\rho$ に対し、$\operatorname{Tr}_2\rho$ と
+$\operatorname{Tr}_1\rho$ を **縮約状態** という。全行列環 $\mathcal M_i=B(H_i)$ に対しては、これは
 **ヒルベルト空間の部分トレース** $\operatorname{Tr}_{H_2}:B(H_1\otimes H_2)\to B(H_1)$ である。
 
 **命題 7.2.** (a) $\rho=\bigoplus_{c,d}\rho_{cd}$ に対し
@@ -184,7 +186,7 @@ assert close(Ptr(rho), rho1)
 assert close(Ptr.adjoint('blunt')(A), kron(A, one2, alg12))                 # Theorem 7.3: the dual
 ```
 
-> **物理的意味.** $\operatorname{Tr}_2\rho$ は **縮約状態** である：第一の系しか測定できない観測者が知りうるすべてであり、
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. 縮約状態 $\operatorname{Tr}_2\rho$ は、第一の系しか測定できない観測者が知りうるすべてであり、
 > 定義により、それはオブザーバブル $A\otimes1$ のあらゆる期待値を再現する。縮約状態が等しい結合状態どうしは、相関において異なる。
 
 **条件付き期待値としての部分トレース.** $\mathcal M_2=M_m(\mathbb C)$ とすると、
@@ -203,7 +205,7 @@ $X=\sum_kv_k\,\iota(\mathcal E(v_k^*X))$ を満たす任意の族 $(v_k)$ は $\
 双加群性は命題 7.2(c) である。$\mathcal M_1$ 上の同じ重み $w_c$ をもつトレースも $\operatorname{tr}_w$ と書くと、
 $\operatorname{tr}_w(Y\otimes1)=m\operatorname{tr}_w(Y)$ である。$\operatorname{Tr}_2$ の定義を $AP_c$ に適用し、$w_c$ を掛けて $c$ について和をとると
 $\operatorname{tr}_w(X(A\otimes1))=\operatorname{tr}_w((\operatorname{Tr}_2X)A)$ を得て、$A=1$ とすると
-$\operatorname{tr}_w(\iota\mathcal E(X))=\operatorname{tr}_w(X)$ を得る。$F=\iota\circ F_0$ が $\operatorname{tr}_w$ を保つ $\mathcal M_1\otimes1$ の上への別の条件付き期待値ならば、
+$\operatorname{tr}_w(\iota\mathcal E(X))=\operatorname{tr}_w(X)$ を得る。$F=\iota\circ F_0$ が $\operatorname{tr}_w$ を保つ $\mathcal M_1\otimes1$ の上への別の条件付き期待値ならば、$F(X(A\otimes1))=F(X)(A\otimes1)$ であるから
 $\operatorname{tr}_w(X(A\otimes1))=\operatorname{tr}_w(F(X)(A\otimes1))=m\operatorname{tr}_w(F_0(X)A)$ であるから、
 すべての $A\in\mathcal M_1$ に対し $\operatorname{tr}_w((\operatorname{Tr}_2X-mF_0(X))A)=0$ となり、忠実性により $F_0=\mathcal E$ である
 （$A=(\operatorname{Tr}_2X-mF_0(X))^*$ ととる）。(b) $X_{ab}\in\mathcal M_1$ により $X=\sum_{a,b}X_{ab}\otimes e_{ab}$ と書く
@@ -215,13 +217,16 @@ $Y=u_{ab}$ の展開の随伴は
 $u_{ab}^*=\sum_k\iota(\mathcal E(u_{ab}^*v_k))\,v_k^*$ であり、(b) により
 $\sum_{a,b}u_{ab}u_{ab}^*=\sum_k\big(\sum_{a,b}u_{ab}\,\iota(\mathcal E(u_{ab}^*v_k))\big)v_k^*=\sum_kv_kv_k^*$ である。$\square$
 
-(b) のような族を $\mathcal E$ の *準基底* といい、(c) によりその選び方によらない $\sum_kv_kv_k^*$ が
-**綿谷指数** $\operatorname{Ind}\mathcal E=m^2$ である（Y. Watatani, Mem. Amer. Math.
-Soc. 83, no. 424, 1990）。因子の場合、$M_k\otimes1\subset M_k\otimes M_m$ は $\mathbb C^{km}$ の中に $\mathbb C^k$ を
-重複度 $m$ で含む：その包含行列は $\Lambda=(m)$ であり、
-$m^2=\|\Lambda\|^2=\dim(M_k\otimes M_m)/\dim M_k$ はそのジョーンズ指数 $[\mathcal M:\mathcal N]$ である（V. F. R. Jones,
-Invent. Math. 72, 1, 1983; F. M. Goodman, P. de la Harpe and V. F. R. Jones, *Coxeter graphs and
-towers of algebras*, Springer, 1989）。一般の $\mathcal M_1$ に対しては、包含は
+(c) のような族を $\mathcal E$ の *準基底* といい、(c) によりその選び方によらず (b) により存在する $\sum_kv_kv_k^*$ が
+$\mathcal E$ の **指数** $\operatorname{Ind}\mathcal E=m^2$ である（これは定義であり、名称は Y. Watatani, Mem. Amer. Math.
+Soc. 83, no. 424, 1990 にならう）。$\bigoplus_cM_{k_c}$ の $\bigoplus_sM_{n_s}$ への包含の **包含行列** は、成分
+$\Lambda_{sc}$ として、部分環のブロック $c$ が大きい環のブロック $s$ の中に現れるコピーの個数をもつ
+（第9章で環の塔に用いる）。因子の場合、$M_k\otimes1\subset M_k\otimes M_m$ である：$\mathbb C^{km}$ の基底
+$e_a\otimes e_b$ をまず $b$ で並べると、$A\otimes1_m=\operatorname{diag}(A,\dots,A)$（$m$ 個のコピー）となるので
+$\Lambda=(m)$ であり、$m^2=\|\Lambda\|^2=\dim(M_k\otimes M_m)/\dim M_k$ である。（発展的な文献で、ここでは用いない：
+部分因子の指数については V. F. R. Jones, Invent. Math. 72, 1, 1983、包含行列については
+F. M. Goodman, P. de la Harpe and V. F. R. Jones, *Coxeter graphs and towers of algebras*, Springer,
+1989。）一般の $\mathcal M_1$ に対しては、包含は
 $C_1$ 個の包含 $M_{k_c}\otimes1\subset M_{k_c}\otimes M_m$ の直和であり、$\Lambda=m1_{C_1}$ である。モジュール
 `torch_vn_algebra.inclusions` は包含とその条件付き期待値および指数を実装している。
 `from_tensor_product(alg1, m)` はこの包含を構成する。
@@ -277,9 +282,14 @@ $X$ が $N$ と可換であるための必要十分条件は、すべての $\Pi
 
 `fused_tensor_product(alg1, alg2, fuse)`（既定の `fuse` は加法）は、セクターを融合後の電荷で並べ、
 セクター内の組 $(c,d)$ を辞書式に並べ、それぞれに基底 $e_a\otimes e_b$ を用いる。
-例：ハードコア・ボソン。2サイトの粒子数を保存する作用素は
-$M_1\oplus M_2\oplus M_1$（電荷 $0,1,2$）をなし、3サイトでは $M_1\oplus M_3\oplus M_3\oplus M_1$ をなす。その融合積は、
-基底の順序を除いて5サイトのものである：$n_q=\sum_c\binom2c\binom3{q-c}=\binom5q$。
+例：ハードコア・ボソン。$L$ サイト上の $(\mathbb C^2)^{\otimes L}$ に占有数
+$N=\sum_in^{(i)}$, $n=\operatorname{diag}(0,1)$ を考えると、固有空間 $N=q$ は $q$ 個のサイトが占有された $\binom Lq$ 個の積
+基底ベクトルで張られるので、粒子数を保存する作用素 $\{N\}'$ は
+$\bigoplus_qM_{\binom Lq}$ をなす（命題 4.10(2)）：2サイトでは $M_1\oplus M_2\oplus M_1$（電荷 $0,1,2$）、
+3サイトでは $M_1\oplus M_3\oplus M_3\oplus M_1$ である。命題 7.5(c) により、融合積は基底の順序を除いて5サイトの全占有数に対する
+$\{N\}'$ であり、実際
+$n_q=\sum_c\binom2c\binom3{q-c}=\binom5q$ である（ヴァンデルモンドの恒等式：5サイトの $q$ 元部分集合は、最初の2サイトのうちの
+$c$ 個と最後の3サイトのうちの $q-c$ 個からなる）。
 
 ```python
 bos1 = TypeIAlgebra([1, 2, 1], [1, 2, 1], precision='double', charges=[0, 1, 2])
@@ -288,6 +298,7 @@ F = fused_tensor_product(bos1, bos2)                         # U(1): total parti
 P = tensor_product(bos1, bos2)                               # particle numbers conserved separately
 print(F.charges, F.k_factors, sum(k * k for k in F.k_factors), sum(k * k for k in P.k_factors))
 assert F.k_factors == [math.comb(5, q) for q in range(6)]
+assert sum(k * k for k in F.k_factors) == 252 and sum(k * k for k in P.k_factors) == 120
 
 N1, N2 = full(bos1.central([0.0, 1.0, 2.0]))[0], full(bos2.central([0.0, 1.0, 2.0, 3.0]))[0]
 N = torch.kron(N1, torch.eye(8, dtype=dt)) + torch.kron(torch.eye(4, dtype=dt), N2)
@@ -297,10 +308,14 @@ A, B = random_operator(bos1), random_operator(bos2)
 assert close(full12(kron(A, B, F)), full12(kron(A, B, P)))   # Proposition 7.5(b)
 ```
 
-融合環の次元は $252$、通常の積の次元は $120$ である。その差は、二つの部分の間で粒子を移動させる作用素、たとえばホッピング項からなる。
+融合環の次元は $\sum_q\binom5q^2=\binom{10}5=252$（再びヴァンデルモンドの恒等式）、通常の積の次元は
+$(1+4+1)(1+9+9+1)=120$ である（定理 7.1(b)）。定理 7.1(a) と命題 7.5(b) により、通常の積は融合積の元のうち組 $(c,d)$
+についてブロック対角なものからなる。残りの $132$ 次元は、組のブロック $(c,d)$ を同じ $H_q$ の別の組のブロック
+$(c',d')$, $c'\ne c$（したがって $d'\ne d$）へ写す作用素で張られる：これらは全電荷を保存しつつ各部分の電荷を変える、
+すなわちここでは二つの部分の間で粒子を移動させる。
 
 $\mathcal M_1\otimes_f\mathcal M_2$ 上の状態は組のブロックの間にコヒーレンスをもちうるので、命題
-7.2 は適用できない。$B(H_1)$ 上で $E_1(X)=\sum_cP_cXP_c$ とおく（2.6節の物理的意味にある条件付き期待値）。これは $\mathcal M_1$ の上への写像であり、
+7.2 は適用できない。$B(H_1)$ 上で $E_1(X)=\sum_cP_cXP_c$ とおく（2.6節の条件付き期待値）。これは $\mathcal M_1$ の上への写像であり、
 $A\in\mathcal M_1$ に対し $\operatorname{Tr}(E_1(X)A)=\operatorname{Tr}(XA)$ である。$A=\sum_cP_cAP_c$ だからである。
 
 **定理 7.6.** $\rho$ を $\mathcal M_1\otimes_f\mathcal M_2$ 上の状態 $\omega$ の密度とする。
@@ -325,9 +340,12 @@ $x'\in\mathbb C^{k_{c'}}$, $y\in\mathbb C^{l_d}$ をとり、$\psi=(x+x')\otimes
 $|\psi\rangle\langle\psi|\in B(H_q)$ であり、$\operatorname{Tr}_{H_2}|\psi\rangle\langle\psi|=\frac12|x+x'\rangle\langle x+x'|$
 は零でないブロック $\frac12|x\rangle\langle x'|$ をもち、$E_1$ はそれを取り除く。$\square$
 
-ライブラリの二つの実装はいずれも、任意の融合則に対してこの写像を計算する：`partial_trace` は
+定理 7.6 のブロック公式により $(\rho_1)_c=\sum_d\operatorname{tr}_{l_d}\rho_{(c,d),(c,d)}$ である。ライブラリの
+二つの実装はいずれも、任意の融合則に対してこの写像を計算するように作られている：`partial_trace` は
 対角の組のブロック $\rho_{(c,d),(c,d)}$ だけのトレースをとり、`partial_trace_channel` は一つのセクター内で
-$c$ が同じ組に別々のクラウス添字を用いる。その双対はやはり $A\mapsto A\otimes1$ である。
+$c$ が同じ組に別々のクラウス添字を用い、その双対がやはり $A\mapsto A\otimes1$ となるようにしている。コードは
+両者を、下の二つの融合則と残す因子の両方の選び方について、`einsum` で独立に計算した
+$E_1(\operatorname{Tr}_{H_2}\rho)$ と照合し、双対を $A\otimes1$ と照合する。
 我々の例では、加法の場合 $E_1$ は何もしない。パリティ則 $f(q,r)=q+r\bmod2$ の場合には、`bos1` の電荷 $0$
 と $2$ はどの $r$ とも同じように融合し、$E_1$ は本物のコヒーレンスを取り除く。
 
@@ -352,9 +370,9 @@ for alg, coherent in ((F, False), (G, True)):
     assert close(composite.partial_trace_channel(alg, keep=1).adjoint('blunt')(A), kron(A, bos2.identity(), alg))
 ```
 
-> **物理的意味.** 超伝導体の BCS 記述では電子数のパリティだけが保存されるので、全体の状態はある
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. 超伝導体の BCS 記述では電子数のパリティだけが保存されるので、全体の状態はある
 > 領域の粒子数 $0$ と $2$ を重ね合わせうる。オブザーバブルがその領域の粒子数を保存する観測者には、
-> このコヒーレンスは見えない：その観測者にとって縮約状態は定理 7.6 のブロック対角化（ピンチング）されたもの、すなわち粒子数の混合である。
+> このコヒーレンスは見えない：その観測者にとって縮約状態は定理 7.6 のブロック対角化（ピンチング）されたもの（この囲みの数学的内容）、すなわち粒子数の混合である。
 
 ## 7.4 純粋状態のエンタングルメント
 
@@ -377,10 +395,13 @@ $|\psi\rangle\langle\psi|=\sum_{i,j}s_is_j|u_i\rangle\langle u_j|\otimes|v_i\ran
 
 $\psi$ の **エンタングルメント・エントロピー** は
 $E(\psi)=S(\operatorname{Tr}_2|\psi\rangle\langle\psi|)=S(\operatorname{Tr}_1|\psi\rangle\langle\psi|)=-\sum_is_i^2\log s_i^2$ である。
-これが零となるのは $r=1$、すなわち $\psi=u\otimes v$ のときかつそのときに限る。また $E(\psi)\le\log\min(a,b)$ であり、等号は
-小さい方の縮約状態が最大混合状態であるときかつそのときに限り成り立つ（系 3.6）。
+これが零となるのは $r=1$ のとき（各項 $-s_i^2\log s_i^2$ は $\ge0$ であり、$0$ となるのは $s_i^2=1$ のときに限る）、すなわち
+$\psi=u\otimes v$ のとき（このとき $\Psi=uv^T$ の階数は $1$ であり、$r=\operatorname{rank}\Psi\Psi^*=\operatorname{rank}\Psi$）かつそのときに限る。また
+$E(\psi)\le\log\min(a,b)$ であり、等号は小さい方の縮約状態が最大混合状態であるときかつそのときに限り成り立つ
+（系 3.6 を両方の縮約状態に適用する）。
 
-電荷がある場合、純粋状態は融合積の一つのセクター $H_q$ に属する。
+電荷がある場合、全電荷が確定した単位ベクトル $\psi$、すなわち融合積の一つのセクター $H_q$ に属するものをとる（異なる $H_q$ の
+重ね合わせは、$\mathcal M_1\otimes_f\mathcal M_2$ 上で混合と同じ状態を与える。第3章、演習問題 3）。
 $\psi_{cd}\in\mathbb C^{k_c}\otimes\mathbb C^{l_d}$ として $\psi=\sum_{(c,d)}\psi_{cd}$ と書く。
 
 **命題 7.8（対称性分解エンタングルメント）.** $f$ を加法とし、$q_c$ は互いに異なり、$r_d$ も互いに異なるとする。
@@ -434,22 +455,26 @@ print(f"E = {E_psi:.4f} = H(p) {H_num:.4f} + configurational {S_conf:.4f}")
 assert abs(E_psi - H_num - S_conf) < 1e-10                  # Proposition 7.8
 ```
 
-> **物理的意味.** 粒子数の超選択則に縛られた当事者たちは、配置の部分だけを資源として使うことができる：これが
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. 粒子数の超選択則に縛られた当事者たちは、配置の部分だけを資源として使うことができる：これが
 > H. M. Wiseman と J. A. Vaccaro の *粒子のエンタングルメント* である（Phys. Rev. Lett. 91, 097902, 2003）。$H(p)$ は冷却原子において
 > *粒子数エントロピー* として測定されている（A. Lukin et al., Science 364, 256, 2019）。
 
 ## 7.5 ランダムな状態とペイジの公式
 
-$g\in\mathbb C^N$ の座標は独立で、その実部と虚部は独立に $N(0,\tfrac12)$ に従うとする。したがって
-$\mathbb E|g_i|^2=1$ である。**ハール・ランダムな純粋状態** とは $\psi=g/\|g\|$ のことである。その分布はユニタリ不変である。
-密度 $\pi^{-N}e^{-\|g\|^2}$ とルベーグ測度がユニタリ不変だからである（これは球面上の唯一の不変分布であるが、この事実は用いない）。
+$g\in\mathbb C^N$ の座標は独立で、その実部と虚部は独立に $N(0,\tfrac12)$ に従うとする（標準複素ガウスベクトル、
+命題 A.16(a)）。したがって $\mathbb E|g_i|^2=1$ であり、$g\neq0$ はほとんど確実に成り立つ（定理 A.20）。
+**ハール・ランダムな純粋状態** とは $\psi=g/\|g\|$ のことである。その分布はユニタリ不変である：すべてのユニタリ $U$ に対し
+$Ug$ は $g$ と同じ分布に従い（命題 A.16(a)）、$Ug/\|Ug\|=U\psi$ である。命題 A.22 により、これは単位球面上の唯一の
+ユニタリ不変な分布であり、その証明で示したように、ハール・ユニタリ（定理 5.3）の第1列の分布である。
 
 **補題 7.9.** $\|g\|$ と $\psi=g/\|g\|$ は独立である。
 
-*証明.* $h\ge0$ と $\phi\ge0$ をそれぞれ $(0,\infty)$ と単位球面 $S^{2N-1}$ 上の可測関数とする。
-$\mathbb R^{2N}$ における極座標での積分により、$\sigma$ を表面測度として
+*証明.*（これは定理 A.20(b) の一部である。）$h\ge0$ と $\phi\ge0$ をそれぞれ $(0,\infty)$ と
+$\mathbb C^N\cong\mathbb R^{2N}$ の単位球面 $S^{2N-1}$ 上のボレル関数とする。$g$ は密度
+$\pi^{-N}e^{-|x|^2}$ をもつ（命題 A.16(a)）から、極座標（$n=2N$ とした定理 A.18 と、そこで定義された測度 $\mu$）により
 $$
-\mathbb E\big[h(\|g\|)\phi(\psi)\big]=\pi^{-N}\int_0^\infty h(t)e^{-t^2}t^{2N-1}dt\int_{S^{2N-1}}\phi\,d\sigma=:\alpha(h)\beta(\phi).
+\mathbb E\big[h(\|g\|)\phi(\psi)\big]=\pi^{-N}\!\int_{\mathbb R^{2N}}\!h(|x|)e^{-|x|^2}\phi\Big(\frac x{|x|}\Big)dx
+=2N\pi^{-N}\int_0^\infty h(t)e^{-t^2}t^{2N-1}dt\int_{S^{2N-1}}\phi\,d\mu=:\alpha(h)\beta(\phi).
 $$
 を得る。$\phi=1$、次に $h=1$、次に両方をとると、$\mathbb Eh(\|g\|)=\alpha(h)\beta(1)$,
 $\mathbb E\phi(\psi)=\alpha(1)\beta(\phi)$ および $\alpha(1)\beta(1)=1$ を得るから、
@@ -458,12 +483,16 @@ $\mathbb E[h(\|g\|)\phi(\psi)]=\mathbb Eh(\|g\|)\,\mathbb E\phi(\psi)$ である
 **補題 7.10.** $\mathbb E\|g\|^4=N(N+1)$ である。$G$ が $g_i$ と同じ分布に従う独立な成分をもつ $a\times b$ 行列
 （*ジニブル* 行列）ならば、$\mathbb E\operatorname{Tr}(GG^*)^2=ab(a+b)$ である。
 
-*証明.* $g_i=x+iy$ とすると $\mathbb E|g_i|^4=\mathbb Ex^4+2\mathbb Ex^2\mathbb Ey^2+\mathbb Ey^4=\tfrac34+\tfrac12+\tfrac34=2$ であるから、
+*証明.* $g_i=x+iy$ で $x,y$ が独立に $N(0,\frac12)$ に従うとすると、$\mathbb Ex^4=3(\mathbb Ex^2)^2=\frac34$
+（定理 A.24：三つのペアリング）であるから、
+$\mathbb E|g_i|^4=\mathbb Ex^4+2\mathbb Ex^2\mathbb Ey^2+\mathbb Ey^4=\tfrac34+\tfrac12+\tfrac34=2$ であり、
 $\mathbb E\|g\|^4=\sum_i\mathbb E|g_i|^4+\sum_{i\ne j}\mathbb E|g_i|^2\mathbb E|g_j|^2=2N+N(N-1)$ である。次に、
-$\operatorname{Tr}(GG^*)^2=\sum_{i,i',j,j'}G_{ij}\bar G_{i'j}G_{i'j'}\bar G_{ij'}$ である。成分とその複素共役は、
-$\mathbb E[G_{ij}G_{kl}]=0$, $\mathbb E[G_{ij}\bar G_{kl}]=\delta_{ik}\delta_{jl}$ を満たす独立な実ガウス変数の複素線形結合であるから、
-イッサーリスの公式（命題 1.10 の証明）により $\mathbb E[G_{ij}\bar G_{i'j}G_{i'j'}\bar G_{ij'}]=\delta_{ii'}+\delta_{jj'}$ である。
-和をとると $ab^2+a^2b$ を得る。$\square$
+$\operatorname{Tr}(GG^*)^2=\sum_{i,i',j,j'}G_{ij}\bar G_{i'j}G_{i'j'}\bar G_{ij'}$ である。成分とその複素共役は、一つの中心化
+ガウスベクトル（すべての成分の実部と虚部）の座標の複素線形結合であり、
+$\mathbb E[G_{ij}G_{kl}]=\mathbb E[\bar G_{ij}\bar G_{kl}]=0$, $\mathbb E[G_{ij}\bar G_{kl}]=\delta_{ik}\delta_{jl}$ を満たす
+（命題 A.16(a)）。イッサーリス・ウィックの公式（定理 A.24 の複素形、四つの因子の三つのペアリング）により
+$\mathbb E[G_{ij}\bar G_{i'j}G_{i'j'}\bar G_{ij'}]=\delta_{ii'}\delta_{i'i}+0+\delta_{jj'}\delta_{jj'}=\delta_{ii'}+\delta_{jj'}$ である。
+$i,i'\le a$ と $j,j'\le b$ について和をとると $ab^2+a^2b$ を得る。$\square$
 
 **定理 7.11（E. Lubkin, J. Math. Phys. 19, 1028, 1978）.** ハール・ランダムな
 $\psi\in\mathbb C^a\otimes\mathbb C^b$ と $\rho_A=\operatorname{Tr}_2|\psi\rangle\langle\psi|$ に対し、
@@ -472,40 +501,66 @@ $$
 $$
 
 *証明.* $G_{\alpha\beta}=\langle e_\alpha\otimes e_\beta,g\rangle$ とおくと、これはジニブル行列である。$\psi$ の行列は
-$\Psi=G/\|g\|$ であり、補題 7.7 の証明により $\rho_A=\Psi\Psi^*=GG^*/\|g\|^2$ である。したがって
+$\Psi=G/\|g\|$ であり、命題 7.2(a) により $(\rho_A)_{\alpha\alpha'}=\sum_\beta\Psi_{\alpha\beta}\bar\Psi_{\alpha'\beta}$、すなわち
+$\rho_A=\Psi\Psi^*=GG^*/\|g\|^2$ である。したがって
 $\operatorname{Tr}(GG^*)^2=\|g\|^4\operatorname{Tr}\rho_A^2$ であり、$\operatorname{Tr}\rho_A^2\in[0,1]$ は
 $\psi$ の関数である。補題 7.9 により $\mathbb E\operatorname{Tr}(GG^*)^2=\mathbb E\|g\|^4\,\mathbb E\operatorname{Tr}\rho_A^2$ であり、補題 7.10 により
 $\mathbb E\operatorname{Tr}\rho_A^2=ab(a+b)/(ab(ab+1))$ である。$\square$
 
-第6章では、同じ平均をハール・ベクトルの4次モーメントから、ランダムなチャネルの出力純度として得る。
+第6章では、同じ平均をユニタリ不変な単位ベクトルの4次モーメント（補題 6.14）から、ランダムなチャネルの出力純度として
+得る（定理 6.15 とその後の注意）。
 
 **系 7.12.** $\log\frac{ab+1}{a+b}\le\mathbb E\,S(\rho_A)\le\log\min(a,b)$。
 
 *証明.* 系 3.6 により $S(\rho_A)\le\log a$ であり、補題 7.7 により
 $S(\rho_A)=S(\operatorname{Tr}_1|\psi\rangle\langle\psi|)\le\log b$ である。凹関数 $\log$ に対し、
-$\rho_A$ の非零固有値 $\lambda_i>0$ を重みとしてイェンセンの不等式を用いると
-$\sum_i\lambda_i\log\lambda_i\le\log\sum_i\lambda_i^2$、すなわち $S(\rho_A)\ge-\log\operatorname{Tr}\rho_A^2$ を得る。
-凸関数 $-\log$ に対するイェンセンの不等式と定理 7.11 により
-$\mathbb E[-\log\operatorname{Tr}\rho_A^2]\ge-\log\mathbb E\operatorname{Tr}\rho_A^2$ を得る。$\square$
+$\rho_A$ の非零固有値 $\lambda_i>0$ を重みとして有限形のイェンセンの不等式（第3章の演習問題 2 の解答）を用いると
+$\sum_i\lambda_i\log\lambda_i\le\log\sum_i\lambda_i^2$、すなわち $X=\operatorname{Tr}\rho_A^2\in(0,1]$ として $S(\rho_A)\ge-\log X$ を得る。
+$m=\mathbb EX=\frac{a+b}{ab+1}$ とおく（定理 7.11）。$(0,\infty)$ 上の凸関数 $-\log$ に点 $m$ で補題 3.4 を適用すると
+$-\log X\ge-\log m-(X-m)/m$ を得る。両辺は有界であり（コーシー・シュワルツにより $X\ge1/a$）、期待値をとると
+$\mathbb E[-\log X]\ge-\log m$ を得る。$\square$
 
-$a$ を固定して $b\to\infty$ とすると上下の評価は一致する：ランダムな純粋状態の小さな部分はほとんど
-最大混合である。厳密な平均はペイジの公式であり、これは証明なしに述べる。
+$a$ を固定して $b\to\infty$ とすると上下の評価は一致する：ランダムな純粋状態の小さな部分の平均エントロピーは、その最大値
+$\log a$ に近づく。厳密な平均はペイジの公式であり、付録 C で証明される。
 
 **定理 7.13（ペイジの公式）.** $a\le b$ に対し、
 $$
 \mathbb E\,S(\rho_A)=\sum_{k=b+1}^{ab}\frac1k-\frac{a-1}{2b}.
 $$
-これは D. N. Page が予想し（Phys. Rev. Lett. 71, 1291, 1993）、S. K. Foong と
-S. Kanno（Phys. Rev. Lett. 72, 1148, 1994）、J. Sánchez-Ruiz（Phys. Rev. E 52, 5653, 1995）および
-S. Sen（Phys. Rev. Lett. 77, 1, 1996）が証明した。$1\ll a\le b$ のときこれは $\approx\log a-\frac a{2b}$ であり、
-2量子ビットでは $\frac13$ である。
+さらに $\log a-\frac{a-1}{ab+1}-\frac{a-1}{2b}\le\mathbb E\,S(\rho_A)\le\log a-\frac{a-1}{2b}$ であり、したがって
+$\big|\mathbb E\,S(\rho_A)-\log a+\frac a{2b}\big|\le\frac1{2b}$ である。2量子ビットでは $\mathbb E\,S(\rho_A)=\frac13$ である。
 
-$\rho_A$ の分布は **誘導測度** である（K. Życzkowski and H.-J. Sommers, J. Phys. A 34,
-7111, 2001）。`states.random_density_matrix(alg, rank=r)` は $k_c\times r$ のジニブル・ブロック $G_c$ から
+*証明.* これは定理 C.17 と系 C.18 である。付録 C の証明は
+$\rho_A=GG^*/\operatorname{Tr}GG^*$（定理 7.11 の証明）から出発し、ウィシャート行列 $GG^*$ の固有値の同時密度（定理 C.13）と
+$\rho_A$ の固有値の同時密度（定理 C.14）を計算し、$x\log x$ をラゲール準位密度に対して積分する
+（補題 C.15 と C.16）。$\square$
+
+この公式は D. N. Page が予想し（Phys. Rev. Lett. 71, 1291, 1993）、S. K. Foong と
+S. Kanno（Phys. Rev. Lett. 72, 1148, 1994）、J. Sánchez-Ruiz（Phys. Rev. E 52, 5653, 1995）および
+S. Sen（Phys. Rev. Lett. 77, 1, 1996）が証明した。
+
+$a>b$ のときは $a$ と $b$ の役割が入れ替わる。実際、$\mathbb C^a\otimes\mathbb C^b$ から $\mathbb C^b\otimes\mathbb C^a$ の上への
+ユニタリ $e_\alpha\otimes e_\beta\mapsto e_\beta\otimes e_\alpha$ は $g$ の座標を置換するので、ハール・ランダムな純粋状態 $\psi$ を
+$\mathbb C^b\otimes\mathbb C^a$ のハール・ランダムな純粋状態 $\psi'$ に写す。その行列は $\Psi^T$ であるから
+$\operatorname{Tr}_2|\psi'\rangle\langle\psi'|=\Psi^T\bar\Psi=\operatorname{Tr}_1|\psi\rangle\langle\psi|$ であり（命題 7.2(a)）、
+補題 7.7 によりそのエントロピーは $S(\rho_A)$ である。したがって $a'=\min(a,b)$, $b'=\max(a,b)$ とすると、定理 7.13 は、
+平均エンタングルメント・エントロピーがその最大値 $\log a'$ に少なくとも $\frac{a'-1}{2b'}$、高々
+$\frac{a'-1}{2b'}+\frac{a'-1}{a'b'+1}$ だけ足りないことを述べている。後者は1ナット未満である：$b'=1$ ならば $0$ であり、
+そうでなければ $\frac{a'-1}{2b'}\le\frac12$ かつ $\frac{a'-1}{a'b'+1}<\frac1{b'}\le\frac12$ である。ゆえに $ab$ を固定すると、
+$a$ の関数として、平均は $\log\min(a,b)=\min(\log a,\log(ab)-\log a)$ との差が1ナット以内である。
+
+$\rho_A$ の分布は **誘導測度** である（この名称は K. Życzkowski and H.-J. Sommers,
+J. Phys. A 34, 7111, 2001 による。その固有値の密度は定理 C.14 が与える）。
+`states.random_density_matrix(alg, rank=r)` は独立な $k_c\times r$ のジニブル・ブロック $G_c$ から
 $G_cG_c^*$ を作り、$\sum_c\operatorname{Tr}G_cG_c^*$ で割る。ブロックが一つならば、これは上の $\rho_A$ の分布で
-$b=r$ としたものである。ブロックが複数ならば、これは $H_1\otimes\mathbb C^r$ のハール・ランダムな純粋状態の
-$\mathcal M_1$ への制限である：$\mathcal M_2=M_r$ と定数の融合則に対して定理 7.6 を適用すればよい。このとき
-$\mathcal M_1\otimes_f\mathcal M_2=B(H_1\otimes\mathbb C^r)$ であり、$G_c$ はブロック $c$ に属する $G$ の行である。
+$b=r$ としたものである（定理 7.11 の証明）。ブロックが複数ならば、これは $H_1\otimes\mathbb C^r$ のハール・ランダムな
+純粋状態 $\psi=g/\|g\|$ のベクトル状態の $\mathcal M_1$ への制限の密度の分布である。実際、
+$G_{i\beta}=\langle e_i\otimes e_\beta,g\rangle$ を $D\times r$ ジニブル行列（$D=\sum_ck_c$）とし、$G_c$ をブロック $c$ に属するその行とする：
+これらは独立な $k_c\times r$ ジニブル行列である。$\mathcal M_2=M_r$（セクターは一つ）と定数の融合則をとると、
+全電荷はただ一つで $\Pi=1$ であり、$\mathcal M_1\otimes_f\mathcal M_2=B(H_1\otimes\mathbb C^r)$ である。定理 7.6 により、
+制限は密度 $E_1(\operatorname{Tr}_{H_2}|\psi\rangle\langle\psi|)$ をもち、$\operatorname{Tr}_{H_2}|\psi\rangle\langle\psi|=GG^*/\|g\|^2$
+（命題 7.2(a)、定理 7.11 の証明と同様）である。その対角ブロックは $G_cG_c^*/\|g\|^2$ であり、
+$\|g\|^2=\sum_c\operatorname{Tr}G_cG_c^*$ である。
 
 **命題 7.14.** $\bigoplus_cM_{k_c}$ 上で `random_density_matrix(alg, rank=r)` により抽出された $\rho$ と
 $D=\sum_ck_c$ に対し、
@@ -513,8 +568,11 @@ $$
 \mathbb E\operatorname{Tr}\rho^2=\frac{\sum_ck_c(k_c+r)}{D(Dr+1)} .
 $$
 
-*証明.* $g\in\mathbb C^{Dr}$ をすべての成分を集めたものとして $\operatorname{Tr}\rho^2=\sum_c\operatorname{Tr}(G_cG_c^*)^2/\|g\|^4$ である。
-定理 7.11 と同様に、補題 7.9 と 7.10 から $\sum_ck_cr(k_c+r)/(Dr(Dr+1))$ を得る。$\square$
+*証明.* $g\in\mathbb C^{Dr}$ をすべての成分を集めたものとして $\operatorname{Tr}\rho^2=\sum_c\operatorname{Tr}(G_cG_c^*)^2/\|g\|^4$ であり、
+これは $g/\|g\|$ の関数で $[0,1]$ に値をとる。定理 7.11 と同様に、補題 7.9 により
+$\sum_c\mathbb E\operatorname{Tr}(G_cG_c^*)^2=\mathbb E\|g\|^4\,\mathbb E\operatorname{Tr}\rho^2$ であり、補題 7.10 により
+$\mathbb E\operatorname{Tr}(G_cG_c^*)^2=k_cr(k_c+r)$ および $\mathbb E\|g\|^4=Dr(Dr+1)$ であるから、
+$\mathbb E\operatorname{Tr}\rho^2=\sum_ck_cr(k_c+r)/(Dr(Dr+1))$ である。$\square$
 
 `partial_trace` で縮約した $\mathbb C^3\otimes\mathbb C^6$ の $10^4$ 個の純粋状態と誘導測度について定理 7.11 と 7.13 を、
 $M_1\oplus M_2\oplus M_3$, $r=2$ について命題 7.14 を確かめる。
@@ -540,6 +598,8 @@ for name, rho_s in (('reduced pure states', rho_A),
           f"E S = {m_S:.4f} +- {e_S:.4f} (Page {page:.4f})")
     assert abs(m_p - purity_exact) < 5 * e_p and abs(m_S - page) < 5 * e_S     # Theorems 7.11, 7.13
     assert math.log((a * b + 1) / (a + b)) < m_S < math.log(a)                # Corollary 7.12
+assert math.log(a) - (a - 1) / (a * b + 1) - (a - 1) / (2 * b) <= page <= math.log(a) - (a - 1) / (2 * b)
+assert abs(sum(1 / k for k in (3, 4)) - 1 / 4 - 1 / 3) < 1e-15                # two qubits: E S = 1/3
 
 alg3 = TypeIAlgebra([1, 2, 3], [1, 2, 3], precision='double')
 m_p, e_p = mean_se(states.random_density_matrix(alg3, 40_000, rank=2).purity())
@@ -547,22 +607,23 @@ print(f"E Tr rho^2 = {m_p:.4f} +- {e_p:.4f} (exact {26 / 78:.4f})")
 assert abs(m_p - 26 / 78) < 5 * e_p                                          # Proposition 7.14
 ```
 
-> **物理的意味.** 典型的な純粋状態は、系の高々半分の任意の部分とその残りとの間でほぼ最大にエンタングルしている。
-> 部分が大きくなるにつれてエンタングルメントは $\log a$ のように増加し、中央を越えると減少する：これが *ペイジ曲線* であり、
-> 情報がホーキング放射によってブラックホールからどのように出ていくか、そして閉じた系の部分がなぜ熱的に見えるかを記述する。
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. ランダムな純粋状態の平均エンタングルメント・エントロピーを、
+> 全次元を固定して部分の大きさに対してプロットしたもの（定理 7.13 の後で述べた曲線）を *ペイジ曲線* という。物理学では、
+> 情報がホーキング放射によってブラックホールからどのように出ていくか、そして閉じた系の部分がなぜ熱的に見えるかを
+> 記述するために用いられる。これらは解釈であり、本講義の結果ではない。
 
 ## 7.6 比較の対象
 
 単一のヒルベルト空間上では、QuTiP（`Qobj.ptrace`, `entropy_vn`, `rand_ket`, ジニブル分布と階数を指定する `rand_dm`）と
-`numpy`（上のように reshape と `einsum`）が部分トレース、エントロピー、誘導状態を計算し、
-通常の積についてはライブラリと一致する。保存電荷をもつテンソルネットワークのライブラリ――ITensor（量子数によるブロック疎テンソル）、
+`numpy`（上のように reshape と `einsum`）が通常の積について部分トレース、エントロピー、誘導状態を計算する
+（上の `einsum` による検証は、そのような計算をライブラリと比較している）。保存電荷をもつテンソルネットワークのライブラリ――ITensor（量子数によるブロック疎テンソル）、
 TeNPy（電荷付きの脚、電荷ごとのエンタングルメント・スペクトル）、そして非可換対称性に対しては TensorKit.jl（融合木）――は、
 大きな系に対して同じ仕方でセクターを融合し、対称性分解エンタングルメントを与える。ライブラリが付け加えるのは代数的な層である：
 積はセクターとトレースをもつフォン・ノイマン環であり、融合則はラベルの任意の写像であり、部分トレースは
 各トレースに関する双対をもつチャネルで、融合積に対しては正しい制限を与え（定理 7.3, 7.6）、そしてそのすべてがバッチ化されている。
 テンソルネットワークは備えておらず、`fused_tensor_product` が受け取るのは、可換な対称性の場合のように電荷の組ごとに結果が一つの規則である。
-$SU(2)$ に対する $j_1\otimes j_2=\bigoplus_jj$ のような非可換な規則は、そのクレブシュ–ゴルダン係数とともに、
-ここでの融合積ではない（ライブラリはスピン $\frac12$ 鎖に対する $SU(2)$ を別に扱う、第4章）。
+$SU(2)$ の場合のような非可換な規則――スピンの組 $j_1,j_2$ が複数の全スピン $|j_1-j_2|,\dots,j_1+j_2$ に合成される
+（第4章、演習問題 2）――は、ここでの融合積ではない（ライブラリはスピン $\frac12$ 鎖に対する $SU(2)$ を別に扱う、第4章）。
 
 ## 演習問題
 
@@ -585,9 +646,11 @@ $SU(2)$ に対する $j_1\otimes j_2=\bigoplus_jj$ のような非可換な規�
    $\tau_{\mathrm{vN}}((\operatorname{Tr}_2X)A)=\sum_c\frac1{C_1k_c}\sum_d\operatorname{Tr}(X_{cd}(A_c\otimes1))
    =\sum_{c,d}\frac1{C_1C_2k_cl_d}\operatorname{Tr}\big(X_{cd}\,C_2l_d(A_c\otimes1)\big)$ であるから、双対は
    $\mathcal M_2$ の中心元 $Z=\bigoplus_dC_2l_d1_{l_d}$ を用いて
-   $A\mapsto\bigoplus_{c,d}C_2l_d\,A_c\otimes1_{l_d}=A\otimes Z$ である。これは単位的でない：ライブラリの
-   三つのトレースのうち、$\operatorname{Tr}_2$ を $A\mapsto A\otimes1$ の双対にするのは blunt トレースだけである（一般には、
-   同じ計算により、$\mathcal M_1$ 上の $\operatorname{tr}_w$ と積の上の重み $w_{cd}=w_c$ がそうする）。
+   $A\mapsto\bigoplus_{c,d}C_2l_d\,A_c\otimes1_{l_d}=A\otimes Z$ である。これが単位的であるのは $Z=1$、すなわち
+   $\mathcal M_2=\mathbb C$ のときに限り、この例では単位的でない（$Z=4\cdot1_2\oplus6\cdot1_3$）。`Tr_norm` に対しては同じ計算により
+   $A\otimes\bigoplus_dl_d1_{l_d}$ を得て、これが単位的であるのはすべての $l_d=1$ のときに限る。blunt トレースは常に
+   $\operatorname{Tr}_2$ を $A\mapsto A\otimes1$ の双対にする。一般には、同じ計算により、$\mathcal M_1$ 上の $\operatorname{tr}_w$ と
+   積の上の重み $w_{cd}=w_c$ がそうする。
 
 ```python
 dual_tau = composite.partial_trace_channel(alg12, keep=1).adjoint('tau_vN')
@@ -614,7 +677,7 @@ assert torch.allclose(mutual, states.relative_entropy(rho, kron(rho1, rho2, alg1
 3. セクターは $N=0,1,2$ で、大きさは $1,2,1$ である。$\psi$ は $N=1$ に属し、$\psi_0=|01\rangle/\sqrt2$,
    $\psi_1=|10\rangle/\sqrt2$ であるから $p=(\frac12,\frac12)$ であり、ブロックが1次元であるから
    $E(\hat\psi_c)=0$ である：命題 7.8 により $E(\psi)=H(p)=\log2$ はすべて粒子数エンタングルメントであり、
-   使える配置の部分は $0$ である。ベクトル $(|00\rangle+|11\rangle)/\sqrt2$ は $N=0$ と
+   配置の部分は $0$ である。ベクトル $(|00\rangle+|11\rangle)/\sqrt2$ は $N=0$ と
    $N=2$ を重ね合わせる。ブロック対角な融合環の上では、そのベクトル状態は積状態の混合
    $\frac12|00\rangle\langle00|+\frac12|11\rangle\langle11|$ である（第3章、演習問題 3）。
 
