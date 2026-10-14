@@ -288,7 +288,7 @@ assert sorted(W.shape[1] for W in spaces) == [1, 1, 1, 1, 2, 2]      # Lemma 4.6
 assert all(close(G @ W, W @ (W.mH @ G @ W)) for W in spaces)           # invariant subspaces
 Y = dc.twirl(G, torch.randn(8, 8, dtype=dt))
 Wa, Wb = [W for W in spaces if W.shape[1] == 2]
-s = torch.linalg.svdvals(Wa.mH @ Y @ Wb)                               # Lemma 4.8: a multiple of a unitary
+s = torch.linalg.svdvals(Wa.mH @ Y @ Wb)                               # Lemma 4.8(b): a multiple of a unitary
 assert s[1] > 1e-3 and abs(s[0] - s[1]) < 1e-10
 assert all(close(W.mH @ Y @ Wa, 0) for W in spaces if W.shape[1] == 1)   # different summands: zero
 ```
@@ -308,7 +308,12 @@ $$
 $3.5\cdot10^8$ 個の複素成分をもつ。そのため4.6節ではスピン鎖に対して、答えをあらかじめ知っているモジュール `su2` を用いる。
 
 ```python
-PLACEHOLDER
+for n in (3, 4, 5):
+    Dn = dc.from_generators(dc.total_spin(n))
+    _, info = dc.commutant_basis(dc.total_spin(n), return_info=True)
+    N_min = sum(k * m * m for k, m in zip(Dn.k_factors, Dn.multiplicities))
+    assert info['unknowns'] >= N_min                                  # N_R >= sum_c k_c m_c^2
+    print(n, info['unknowns'], N_min)                                # observed: equality
 ```
 
 ## 4.4 $U(1)$ と電荷セクター
@@ -625,6 +630,41 @@ $S_1=\frac12,S_2,\dots,S_L=S$、$|S_n-S_{n-1}|=\frac12$ でラベルをつける
 八つのスピンについてブロックの大きさを比較する。
 
 ```python
+from torch_vn_algebra import su2
+
+def ket(j, m):                                            # |j, m> of Theorem 4.11 (zero if |m| > j)
+    v = torch.zeros(int(2 * j + 1), dtype=dt)
+    if abs(m) <= j:
+        v[int(j - m)] = 1
+    return v
+
+up, dn = ket(0.5, 0.5), ket(0.5, -0.5)
+for j in (0.5, 1.0, 1.5, 2.0):                            # Theorem 4.16
+    Sj = dc.spin_matrices(j)
+    sp_j = [math.sqrt(j * (j + 1) - (j - k) * (j - k + 1)) for k in range(1, int(2 * j) + 1)]
+    assert close(Sj[0] + 1j * Sj[1], torch.diag(torch.tensor(sp_j, dtype=dt), 1))     # S_+ of Theorem 4.11
+    assert close(Sj[2], torch.diag(torch.tensor([j - k for k in range(int(2 * j) + 1)], dtype=dt)))
+    Sc = torch.stack([torch.kron(a, torch.eye(2, dtype=dt)) + torch.kron(torch.eye(len(a), dtype=dt), b)
+                      for a, b in zip(Sj, dc.spin_matrices(0.5))])
+    Sp, Sm = Sc[0] + 1j * Sc[1], Sc[0] - 1j * Sc[1]
+    cols = []
+    for J in (j + 0.5, j - 0.5):
+        for M in [J - k for k in range(int(2 * J + 1))]:
+            al, be = math.sqrt((j + M + 0.5) / (2 * j + 1)), math.sqrt((j - M + 0.5) / (2 * j + 1))
+            p, q = (al, be) if J > j else (-be, al)
+            x = p * torch.kron(ket(j, M - 0.5), up) + q * torch.kron(ket(j, M + 0.5), dn)
+            assert close(Sc[2] @ x, M * x)
+            if M == J:
+                assert close(Sp @ x, 0)                               # highest weight
+            else:
+                assert close(Sm @ cols[-1], math.sqrt((J + M + 1) * (J - M)) * x)   # lowering, (c)
+            for s2, e in ((0.5, up), (-0.5, dn)):                     # the library's Racah formula agrees
+                cg = su2.clebsch_gordan(j, M - s2, 0.5, s2, J, M) if abs(M - s2) <= j else 0.0
+                assert abs(cg - torch.vdot(torch.kron(ket(j, M - s2), e), x).real.item()) < 1e-12
+            cols.append(x)
+    U = torch.stack(cols, 1)
+    assert U.shape == (2 * len(Sj[0]), 2 * len(Sj[0])) and close(U.mH @ U, torch.eye(U.shape[1]))   # (a)
+
 def swap(i, j, n):
     p = list(range(n))
     p[i], p[j] = j, i
@@ -639,8 +679,11 @@ levels = torch.cat([torch.linalg.eigvalsh(h.matrix[0, c, :m, :m]).repeat_interle
                     for c, (k, m) in enumerate(zip(D4.k_factors, D4.multiplicities))])
 assert close(torch.sort(levels).values, torch.linalg.eigvalsh(H4))   # level of H_S repeated 2S+1 times
 
-from torch_vn_algebra import su2
 u1, sym = SpinChain(8, boundary='periodic'), su2.SU2Chain(8, boundary='periodic')
+for S, m in zip(sym.spins, sym.multiplicities):           # Corollary 4.17: orthonormal highest-weight bases
+    B, N = sym.hw_basis(S), int(4 + S)                     # columns in the U(1) sector N = L/2 + S
+    assert B.shape == (math.comb(8, N), m) and close(B.T @ B, torch.eye(m, dtype=B.dtype))
+    assert N == 8 or close(sym.raise_(B, N), 0)            # S_+ B = 0 (S_z = S holds in sector N)
 H_u1, H_su2 = u1.xxz(J=1.0, Delta=1.0), sym.heisenberg(J=1.0)
 E_u1 = torch.sort(torch.cat([torch.linalg.eigvalsh(H_u1.matrix[0, N, :k, :k])
                              for N, k in enumerate(u1.algebra.k_factors)])).values
@@ -648,21 +691,24 @@ E_su2, S_lev, _ = sym.full_spectrum(H_su2, return_quantum_numbers=True)   # leve
 E_su2, S_lev = E_su2[0], S_lev[0]
 assert close(E_u1, E_su2)
 assert S_lev[0] == 0 and (S_lev[1:4] == 1).all() and E_su2[4] - E_su2[3] > 1e-3     # singlet, then triplet
+assert E_su2[1] - E_su2[0] > 1e-3 and close(E_su2[1:4], E_su2[1].expand(3))       # simple singlet (Theorem 9.9)
 assert close(sym.restrict(H_u1).matrix, H_su2.matrix)      # Proposition 4.15(b)
 flops = lambda ks: sum(k ** 3 for k in ks)
 print(u1.algebra.k_factors, sym.multiplicities, flops(u1.algebra.k_factors), flops(sym.multiplicities))
 print(f"ground state energy {E_su2[0].item():.6f}, first excited {E_su2[1].item():.6f} (x3)")
 ```
 
-八つのスピンの環では、$U(1)$ のブロックの大きさは $1,8,28,56,70,56,28,8,1$、$SU(2)$ のブロックの大きさは
-$S=0,\dots,4$ に対して $m_S=14,28,20,7,1$ である。対角化のコスト $\sum k^3$ は $739162$ から $33040$ へ、
-$22$ 分の1に減る。環の次元 $\sum k^2$ は $\binom{16}8=12870$ から $1430$ に減る。基底状態はエネルギー $-3.651093$ の一重項であり、第一励起準位は $-3.128419$ の三重項である。
+八つのスピンの環では、$U(1)$ のブロックの大きさは $\binom8w=1,8,28,56,70,56,28,8,1$（4.4節）、$SU(2)$ のブロックの大きさは
+$S=0,\dots,4$ に対して $m_S=14,28,20,7,1$ である（命題 4.13）。対角化のコスト $\sum k^3$ は $739162$ から $33040$ へ、
+$22$ 分の1に減る。環の次元 $\sum k^2$ は
+$\sum_w\binom8w\binom8{8-w}=\binom{16}8=12870$（$16$ 個の元から $8$ 個を選び、そのうち $w$ 個を最初の $8$ 個から選ぶ）から
+$\sum_Sm_S^2=1430=\binom{16}8/9$ に減る（系 B.10）。定理 9.9 により（環の長さは偶数で $J>0$）、基底状態はただ一つの一重項であり、
+$E_0(0)<E_0(1)$ である。*数値的観察*（上のコードによる計算）：基底エネルギーは $-3.651093$ であり、第一励起準位は $-3.128419$ の三重項である。
 
-> **物理的意味.** ハイゼンベルク模型は、磁性絶縁体における局在電子スピンの交換相互作用を記述する。$J_{ij}>0$ は反平行な隣接スピンを好む。そのスペクトルは
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. ハイゼンベルク模型は、磁性絶縁体における局在電子スピンの交換相互作用を記述する。$J_{ij}>0$ は反平行な隣接スピンを好む。そのスペクトルは
 > 多重項からなり、磁場 $h\,S^z$ は各多重項を $2S+1$ 個の等間隔な準位に分裂させる（演習問題 4）。
-> 二部格子の二つの副格子の間の結合が $J_{ij}>0$、副格子内の結合が $J_{ij}\le0$ で、
-> 副格子の大きさが等しければ、基底状態は一重項である（リーブ・マティスの定理、E. Lieb and D. Mattis,
-> *J. Math. Phys.* 3 (1962) 749。証明なしに述べる）。上の八つのスピンの環はその例である。
+> 定理 9.9（二部的な結合。偶数長の反強磁性の鎖と環では一重項の基底状態）は、E. Lieb と D. Mattis
+> （*J. Math. Phys.* 3 (1962) 749）にさかのぼる。
 
 ## 4.7 比較の対象
 
@@ -670,7 +716,8 @@ $22$ 分の1に減る。環の次元 $\sum k^2$ は $\binom{16}8=12870$ から $
 SymbolicWedderburn.jl（Julia）は半正定値計画の対称性による簡約のためにウェダーバーン分解を計算する。物理では、QuSpin や他の厳密対角化コードが
 $U(1)$ と格子の対称性によってブロック対角化を行い、ITensor と TeNPy はテンソルネットワークにおいてアーベル的な電荷を扱い、
 TensorKit.jl は融合木によって $SU(2)$ を扱う。ライブラリの `decompose` は小さな行列（$n$ は数百程度まで）のための密な手法である。任意の行列のリスト（群の元または生成元）を受け付け、結果を証明書によって確認し（命題 4.9）、環とその可換子環を `to_algebra`、`from_algebra`、`to_commutant`、`from_commutant` をもつ `TypeIAlgebra`
-オブジェクトとして返すので、第3章、第5–8章の内容がただちに適用できる。スピン $\frac12$ の鎖については、`su2.SU2Chain` が $L=16$ までのすべてのスピンの値について $SU(2)$ のブロックを直接与える。
+オブジェクトとして返すので、第3章、第5–8章の内容がただちに適用できる。スピン $\frac12$ の鎖については、`su2.SU2Chain` が $SU(2)$ のブロックを直接与える（系 4.17）。受け付けるスピンの数は
+$L=18$ までであり、この上限は基底のメモリによって決まる。
 
 ## 演習問題
 
@@ -689,21 +736,29 @@ TensorKit.jl は融合木によって $SU(2)$ を扱う。ライブラリの `de
 <details>
 <summary>解答</summary>
 
-1. $d=2$ の場合と同様に、$\pi(\sigma)$ は置換行列であり、$|b_1\dots b_L\rangle$ を固定するのは $b$ が各巡回上で一定であるときかつそのときに限る。そのような $b$ は $d^{\#\text{cycles}}$ 個ある。系 4.5(c) により
+1. 補題 B.1(c) により、$\pi(\sigma)$ は置換行列であり、$|b_1\dots b_L\rangle$ を固定するのは $b$ が $\sigma$ の各巡回上で一定であるときかつそのときに限る。そのような $b$ は $d^{\#\text{cycles}(\sigma)}$ 個ある。系 4.5(c) により
    $\dim\pi(S_L)'=\frac1{L!}\sum_\sigma(d^2)^{\#\text{cycles}(\sigma)}=\frac{x(x+1)\cdots(x+L-1)}{L!}$（$x=d^2$）
-   であり（第5章、演習問題 2）、これは $\binom{d^2+L-1}L$ である：$\binom63=20$、$\binom74=35$。$35$ が
-   $\dim\{S_a\}''$ でもあることは、$L=4$ の定理 4.14 である。
+   であり（恒等式 $\sum_\sigma x^{\#\text{cycles}(\sigma)}=x(x+1)\cdots(x+L-1)$ は第5章、演習問題 2 の解答で証明される）、これは $\binom{d^2+L-1}L$ である
+   （命題 B.3 は多重集合を数えることで同じ次元を証明する）：$\binom63=20$、$\binom74=35$。$35$ が
+   $\dim\{S_a\}''$ でもあることは、$L=4$ の定理 4.14(b) である：$\{S_a\}''=\pi(S_4)'$。
 
 ```python
 for n, value in ((3, 20), (4, 35)):
     assert dc.commutant_dimension(dc.permutation_representation(n, 2)) == math.comb(n + 3, n) == value
 ```
 
-2. $j_1\ge j_2$ とする。$S_z$ は $|m_1\rangle\otimes|m_2\rangle$ 上で固有値 $m_1+m_2$ をもつので、
-   $M\in j_1+j_2+\mathbb Z$ に対し、$d_M$ は $|M-m_2|\le j_1$ を満たす $m_2\in\{-j_2,\dots,j_2\}$ の個数である：
-   $|M|\le j_1-j_2$ ならば $2j_2+1$ 個すべて、$j_1-j_2\le|M|\le j_1+j_2$ ならば $j_1+j_2-|M|+1$ 個（$M\ge0$ に対しては条件は
-   $m_2\ge M-j_1$）、それを超えれば $0$ 個である。系 4.12 により、$m_j=d_j-d_{j+1}$ は $j_1-j_2\le j\le j_1+j_2$ に対して $1$、
-   $j<j_1-j_2$ に対して $(2j_2+1)-(2j_2+1)=0$ である。
+2. $S_a=S^{(j_1)}_a\otimes1+1\otimes S^{(j_2)}_a$ はスピン表現であり（4.5節）、ユニタリ
+   $x\otimes y\mapsto y\otimes x$ はそれを $(j_2,j_1)$ に対するものと絡ませる。よって $j_1\ge j_2$ としてよい。$S_z$ は
+   $|m_1\rangle\otimes|m_2\rangle$ 上で固有値 $m_1+m_2$ をもつので、その固有値は $j_1+j_2+\mathbb Z$ に属し、そのような $M$ に対して $d_M$ は
+   $|M-m_2|\le j_1$ を満たす $m_2\in\{-j_2,\dots,j_2\}$ の個数である（このとき $m_1=M-m_2\in j_1+\mathbb Z$ は自動的に成り立つ）。
+   $M\notin j_1+j_2+\mathbb Z$ に対しては $d_M=0$ である。$M\ge0$ に対しては条件は $M-j_1\le m_2\le M+j_1$ であり、$M+j_1\ge j_2$ であるから、$m_2$ は
+   $\max(-j_2,M-j_1)$ から $j_2$ まで動く：$0\le M\le j_1-j_2$ に対して $d_M=2j_2+1$、
+   $j_1-j_2\le M\le j_1+j_2$ に対して $d_M=j_1+j_2-M+1$、$M>j_1+j_2$ に対して $d_M=0$ である。系 4.12 により、スピン $j\ge0$ の重複度は
+   $m_j=d_j-d_{j+1}$ である。これは $j\notin j_1+j_2+\mathbb Z$ または $j>j_1+j_2$ ならば $0$ であり、$m_{j_1+j_2}=1-0=1$ である。
+   $j_1-j_2\le j<j_1+j_2$（$j\in j_1+j_2+\mathbb Z$ であるから $j+1\le j_1+j_2$）に対しては
+   $m_j=(j_1+j_2-j+1)-(j_1+j_2-j)=1$ であり、$0\le j<j_1-j_2$（したがって $j+1\le j_1-j_2$）に対しては $m_j=(2j_2+1)-(2j_2+1)=0$ である。
+   よって $j_1\otimes j_2\cong\bigoplus_{j=j_1-j_2}^{j_1+j_2}j$ であり、各スピンはちょうど一回現れる。$j_2=\frac12$ に対しては、これは
+   定理 4.16(d) であり、そちらはさらに係数も与える。
 
 ```python
 def coupled(a, b):                                        # S^(a) (x) 1 + 1 (x) S^(b)
@@ -717,12 +772,14 @@ for a, b, ks in ((1.0, 0.5, (2, 4)), (1.0, 1.0, (1, 3, 5))):  # 1 (x) 1/2 = 1/2 
 
 3. $U_\theta=\sum_qe^{iq\theta}P_q$ であり、$e^{iq\theta}=e^{iq'\theta}$ であることは $(q-q')\theta\in2\pi\mathbb Z$ と同値で、
    $\theta/2\pi$ が無理数ならばこれは $q=q'$ を強いる。よって $U_\theta$ の固有空間は $P_q$ の像であり、作用素が
-   正規行列 $U_\theta$ と可換であることは、それが $U_\theta$ の固有空間を保つことと同値である（定理 1.5(d) と、2.2節と同様のラグランジュ補間）。すなわち $X=\sum_qP_qXP_q$ と同値であり、命題 4.10 によりこれは $U(1)'$ である。
+   正規行列 $U_\theta$ と可換であることは、それが $U_\theta$ の固有空間を保つことと同値である（定理 1.5(d) と、2.2節と同様のラグランジュ補間）。すなわち $X=\sum_qP_qXP_q$ と同値であり、命題 4.10 によりこれは $U(1)'$ である。この議論が用いるのは、現れる電荷 $q$ に対する
+   $e^{iq\theta}$ が相異なることだけである。コードは $\theta=1$ と四つの量子ビットの電荷 $0,\dots,4$ をとり、これらについては
+   $0<|q-q'|\le4<2\pi$ で十分である。
    $\theta=\pi$ に対しては、固有値 $(-1)^w$ はハミング重みの偶奇しか見ない：次元
-   $2^{n-1}$ の二つの固有空間があり（$n\ge1$ のとき。偶数個および奇数個の部分集合）、可換子環は $M_{2^{n-1}}\oplus M_{2^{n-1}}$ である。
+   $2^{n-1}$ の二つの固有空間があり（$n\ge1$ のとき。重みが偶数の配置と奇数の配置であり、最初のビットを反転することがそれらの間の全単射を与える）、可換子環は $M_{2^{n-1}}\oplus M_{2^{n-1}}$ である。
 
 ```python
-for theta, m in ((1.0, (1, 1, 4, 4, 6)), (math.pi, (8, 8))):
+for theta, m in ((1.0, (1, 1, 4, 4, 6)), (math.pi, (8, 8))):   # theta = 1: e^{iq}, q = 0..4, distinct as 4 < 2 pi
     D_theta = dc.from_generators(torch.linalg.matrix_exp(1j * theta * N_op))
     assert D_theta.multiplicities == m and set(D_theta.k_factors) == {1}
 ```
