@@ -458,6 +458,11 @@ for s, rho_s in zip(ts, traj):
 neg = min(w.min().item() for rho_s in traj for w in rho_s.eigenvalues())
 print(f"smallest eigenvalue of rho(t) under RK4: {neg:.1e}")
 assert neg > -1e-7                                                 # positive up to the RK4 error
+
+sm = torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=c128)           # |g><e|; H = 0, rate 3, one step h = 1
+decay = lambda s, X: 3.0 * (sm @ X @ sm.mH - 0.5 * (sm.mH @ sm @ X + X @ sm.mH @ sm))
+step = dynamics.rk4(decay, torch.diag(torch.tensor([0.0, 1.0], dtype=c128)), [0.0, 1.0], substeps=1)[-1]
+assert (step - torch.diag(torch.tensor([-3 / 8, 11 / 8], dtype=c128))).abs().max() < 1e-14   # not positive
 ```
 
 RK4 ne préserve pas nécessairement la positivité : pour $\rho'=\mathcal L\rho$, un pas de taille $h$
@@ -486,6 +491,13 @@ full = sum(L @ X @ L.conj().T - 0.5 * (L.conj().T @ L @ X + X @ L.conj().T @ L) 
 E_full = full * embed(np.ones((3, 3, 3)))                          # E(X) = sum_d P_d X P_d
 assert np.abs(E_full - embed(on_M)).max() < 1e-12                  # Proposition 8.8(2)
 print(f"coherences between sectors created on M_6: {np.abs(full - E_full).max():.2f}")
+
+zero = lambda d, c: np.zeros((ks[d], ks[c]))
+L_loss = [np.block([[blocks(a)[(d, c)].numpy() if (d, c) in a else zero(d, c) for c in range(3)] for d in range(3)])
+          for a in (a1, a2)]                                       # a_1, a_2 on M_6: one block per block row and column
+full_loss = sum(L @ X @ L.T - 0.5 * (L.T @ L @ X + X @ L.T @ L) for L in L_loss)
+loss_on_M = dynamics.lindblad_rhs(None, [loss], algebra=fock)(0.0, rho.matrix)[0].numpy()
+assert np.abs(full_loss - embed(loss_on_M)).max() < 1e-12         # Proposition 8.8(3): no compression needed
 ```
 
 ## 8.4 Post-sélection et évolution sans saut
@@ -618,13 +630,17 @@ espace de dimension finie, donc une suite $\sigma_{\tau_m}$, $\tau_m\to\infty$, 
 état $\sigma$ (Bolzano–Weierstrass), et
 $T_t\sigma-\sigma=\lim_m(T_t\sigma_{\tau_m}-\sigma_{\tau_m})=0$. $\square$
 
-**Corollaire 8.13.** S'il n'y a pas de sauts entre secteurs, les états stationnaires engendrent un
-espace de dimension au moins $C$ : chaque secteur porte son propre état stationnaire.
+**Corollaire 8.13.** S'il n'y a pas de sauts entre secteurs (comme dans la proposition 8.9(1)), les
+états stationnaires engendrent un espace de dimension au moins $C$ : chaque secteur porte son propre
+état stationnaire.
 
-*Démonstration.* $\mathcal L$ envoie $P_c\mathcal MP_c\cong M_{k_c}$ dans lui-même ($H$ et tous les
-$L_j$ sont diagonaux par blocs), donc la restriction de $e^{t\mathcal L}$ est un semi-groupe
-dynamique quantique sur $M_{k_c}$ (lemme 8.4(a)), qui admet un état stationnaire $\sigma_c$ d'après
-la proposition 8.12. Les $\sigma_c$ ont des supports disjoints. $\square$
+*Démonstration.* $\mathcal L$ envoie $P_c\mathcal MP_c\cong M_{k_c}$ dans lui-même ($H$ et les $L_j$
+sont dans $\mathcal M$, et $\Phi_m(X)=\sum_lK^{cc}_{m,l}X_cK^{cc*}_{m,l}$ et $\Phi_m^*(1)$ sont
+diagonaux par blocs), donc chaque $e^{t\mathcal L}$ aussi. Sa restriction est CP (lemme 8.4(a)) et TP,
+c'est donc un semi-groupe dynamique quantique sur $M_{k_c}$, qui admet un état stationnaire
+$\sigma_c$ d'après la proposition 8.12 ; en tant qu'élément de $\mathcal M$, $\sigma_c$ est un état
+stationnaire de $e^{t\mathcal L}$. Les $\sigma_c$ sont dans des blocs différents, donc linéairement
+indépendants. $\square$
 
 **Proposition 8.14 (émission spontanée).** Sur $M_2$, de base $|g\rangle,|e\rangle$, soient
 $H=\omega|e\rangle\langle e|$, un saut $L=|g\rangle\langle e|$ et un taux $\gamma>0$. Alors
@@ -650,9 +666,14 @@ $\rho_{gg}$. Enfin, $\rho(t)-|g\rangle\langle g|$ est autoadjoint, de trace null
 $(-\rho_{ee}(t),\rho_{ee}(t))$, donc ses valeurs propres sont
 $\pm(\rho_{ee}(t)^2+|\rho_{ge}(t)|^2)^{1/2}$. $\square$
 
-La cohérence décroît à un taux moitié de celui de la population, ce qui est la relation $T_2=2T_1$
-de la section 6.4 en l'absence de déphasage pur ; le plus petit taux non nul, le **trou spectral**
-$\gamma/2$, gouverne la relaxation. Nous vérifions le spectre avec `lindblad_superoperator`, le
+La cohérence décroît à un taux moitié de celui de la population : avec $T_1=1/\gamma$ et
+$T_2=2/\gamma$, c'est la relation $\frac1{T_2}=\frac1{2T_1}+\frac1{T_\varphi}$ de la section 6.4 sans
+le terme de déphasage. Le plus petit taux de décroissance non nul, le **trou spectral**
+$\min\{-\operatorname{Re}\mu:\mu\ne0\text{ valeur propre de }\mathcal L\}=\gamma/2$, est ici le taux
+de relaxation : d'après la dernière formule, la distance à $|g\rangle\langle g|$ est au plus
+$e^{-\gamma t/2}$ (puisque $|\rho_{ge}|^2\le\rho_{gg}\rho_{ee}$ par positivité,
+$\rho_{ee}^2+|\rho_{ge}|^2\le\rho_{ee}\le1$), et $e^{\gamma t/2}$ fois cette distance tend vers
+$|\rho_{ge}(0)|$ quand $t\to\infty$. Nous vérifions le spectre avec `lindblad_superoperator`, le
 canal et la distance de trace avec `lindblad_channel`, ainsi que le corollaire 8.13 pour des sauts
 aléatoires à l'intérieur des secteurs de $M_2\oplus M_3$ :
 
@@ -689,10 +710,31 @@ print("stationary states per sector:", kernel)
 assert all(dim >= 1 for dim in kernel)                             # Corollary 8.13
 ```
 
-Pour ces sauts aléatoires, le code trouve exactement un état stationnaire par secteur. Les critères
-d'unicité — par exemple, l'existence d'un état stationnaire fidèle jointe à
-$\{H,L_j,L_j^*\}'=\mathbb C1$ [A. Frigerio, *Commun. Math. Phys.* 63, 269 (1978)] — ne sont pas
-démontrés ici ; l'exercice 4 montre que l'unicité peut être en défaut même dans un facteur.
+Observation numérique : pour ces sauts aléatoires, le code trouve exactement un état stationnaire par
+secteur. Le théorème D.6 (le cas de dimension finie d'un critère de A. Frigerio) donne une condition
+suffisante : si un générateur GKSL sur $M_k$ de données $(H;L_1,\dots,L_r)$ a un état stationnaire
+fidèle $\sigma>0$ et si les seules matrices qui commutent avec $H$ et avec tous les $L_j$, $L_j^*$
+sont les multiples de $1$, alors $\sigma$ est l'unique état stationnaire. Sans sauts entre secteurs,
+la restriction de $\mathcal L$ à $P_c\mathcal MP_c\cong M_{k_c}$ est le générateur GKSL de données
+$(H_c;\sqrt{g_1}L_{1,c},\sqrt{g_2}L_{2,c},\dots)$, de sorte que le théorème s'applique secteur par
+secteur ; le code vérifie ses deux hypothèses (en virgule flottante, pour les taux $g_j=1$ utilisés
+ci-dessus), puis teste sa conclusion. L'exercice 4 montre que l'unicité peut être en défaut même dans
+un facteur : la seconde hypothèse y est en défaut.
+
+```python
+for c, k in enumerate(two.k_factors):                              # Theorem D.6 in every sector
+    G_c = dynamics.lindblad_superoperator(two, H_two, L_two)[c][0].numpy()   # on row-major vec(rho_c)
+    w_c, V_c = np.linalg.eig(G_c)
+    sigma_c = V_c[:, np.argmin(abs(w_c))].reshape(k, k)
+    sigma_c = sigma_c / np.trace(sigma_c)
+    assert np.abs(G_c @ sigma_c.reshape(-1)).max() < 1e-12            # stationary
+    assert np.abs(sigma_c - sigma_c.conj().T).max() < 1e-10 and np.linalg.eigvalsh(sigma_c).min() > 1e-3   # faithful
+    ops = [H_two.matrix[0, c, :k, :k].numpy()] + [L.matrix[0, c, :k, :k].numpy() for L in L_two]
+    ops += [A.conj().T for A in ops[1:]]
+    comm = np.concatenate([np.kron(A, np.eye(k)) - np.kron(np.eye(k), A.T) for A in ops])   # X -> [A, X]
+    assert int((np.linalg.svd(comm, compute_uv=False) < 1e-9).sum()) == 1   # commutant = C 1
+assert kernel == [1, 1]                                            # the conclusion of Theorem D.6
+```
 
 ## 8.6 Points de comparaison
 
@@ -773,10 +815,11 @@ assert np.abs(Y @ Y).max() < 1e-15 and np.linalg.matrix_rank(Y) == 1   # one Jor
 4. $L\rho L^*-\frac12\{L^*L,\rho\}=\sigma_z\rho\sigma_z-\rho$ multiplie les coefficients hors
    diagonale par $-2$ et annule la diagonale, et $-i[H,\rho]_{ge}=i\omega\rho_{ge}$. Ainsi
    $\mathcal L(\sigma)=0$ si et seulement si $\sigma_{ge}=0$ (pour $\gamma>0$), et le spectre est
-   $\{0,0,-2\gamma\pm i\omega\}$. Comme $H$ et $\sigma_z$ commutent et que
-   $X\mapsto\sigma_zX\sigma_z$ est une involution,
-   $e^{t\mathcal L}(\rho)=\frac{1+e^{-2\gamma t}}2U_t\rho U_t^* +\frac{1-e^{-2\gamma t}}2U_t\sigma_z\rho\sigma_zU_t^*$
-   avec $U_t=e^{-itH}$ : c'est un canal unifère dont les points fixes sont les matrices qui
+   $\{0,0,-2\gamma\pm i\omega\}$. Avec $U_t=e^{-itH}$,
+   $e^{t\mathcal L}(\rho)=\frac{1+e^{-2\gamma t}}2U_t\rho U_t^*+\frac{1-e^{-2\gamma t}}2U_t\sigma_z\rho\sigma_zU_t^*$ :
+   comme $\sigma_z$ commute avec $U_t$ et $\sigma_z^2=1$, la dérivation montre que le membre de droite
+   $R(t)$ vérifie $R'=-i[H,R]+\gamma(\sigma_zR\sigma_z-R)=\mathcal L(R)$ et $R(0)=\rho$, donc le lemme
+   8.1 s'applique. Pour $t>0$, c'est un canal unifère dont les points fixes sont les matrices qui
    commutent avec ses opérateurs de Kraus (théorème 6.10), c'est-à-dire les matrices diagonales.
 
 ```python
