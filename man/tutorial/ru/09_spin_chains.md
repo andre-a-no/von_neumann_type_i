@@ -262,7 +262,7 @@ assert close(ring8.xxz(1.0, Delta, sector=2).matrix[0, 0] @ Phi, (8 * Delta / 4 
 
 ## 9.5 Методы Ланцоша и Крылова
 
-*Конспект:* [раздел 9.5](../../lecture_notes/ru/09_spin_chains.md#s-9-5); [предложение 9.13](../../lecture_notes/ru/09_spin_chains.md#r-9-13) (Ланцош: $`T_m=Q_m^*HQ_m`$ трёхдиагональна), [теорема 9.14](../../lecture_notes/ru/09_spin_chains.md#r-9-14) (значения Ритца, собственные значения $`T_m`$, удовлетворяют $`\theta^{(m)}_j\ge\lambda_j`$ и убывают с ростом $`m`$), [предложение 9.15](../../lecture_notes/ru/09_spin_chains.md#r-9-15) (эволюция во времени методом Крылова).
+*Конспект:* [раздел 9.5](../../lecture_notes/ru/09_spin_chains.md#s-9-5); [предложение 9.13](../../lecture_notes/ru/09_spin_chains.md#r-9-13) (Ланцош: $`T_m=Q_m^*HQ_m`$ трёхдиагональна), [теорема 9.14](../../lecture_notes/ru/09_spin_chains.md#r-9-14) (значения Ритца, собственные значения $`T_m`$, удовлетворяют $`\theta^{(m)}_j\ge\lambda_j`$ и убывают с ростом $`m`$), [предложение 9.15](../../lecture_notes/ru/09_spin_chains.md#r-9-15) (эволюция во времени методом Крылова), [лемма 9.17](../../lecture_notes/ru/09_spin_chains.md#r-9-17), [теорема 9.18](../../lecture_notes/ru/09_spin_chains.md#r-9-18) и [следствие 9.19](../../lecture_notes/ru/09_spin_chains.md#r-9-19) (оценки ошибки и правило шага).
 
 Сектор $`N=L/2`$ имеет размерность $`12870`$ при $`L=16`$ и $`184756`$ при $`L=20`$, но $`H`$ разрежен ($`O(L)`$ ненулевых
 элементов в строке, `xxz_sparse`), а методам Крылова нужны только произведения $`Hv`$. Пусть $`H`$ — эрмитова матрица размера $`n`$ и
@@ -322,11 +322,13 @@ assert abs(E16.item() - E_dense[16]) < 1e-9 and res.item() < 1e-9
 По [предложению 9.15](../../lecture_notes/ru/09_spin_chains.md#r-9-15) $`\|w_\tau\|=\|v\|`$ и $`\langle w_\tau,Hw_\tau\rangle=\langle v,Hv\rangle`$ для любого $`\tau`$, и
 $`w_\tau=e^{-i\tau H}v`$, если $`\mathcal K_m`$ $`H`$-инвариантно.
 
-Итак, каждый шаг Крылова сохраняет норму и энергию, точен он или нет; о точности предложение 9.15 ничего не говорит,
-если только $`\mathcal K_m`$ не инвариантно. `krylov.evolve` разбивает интервал времени на короткие шаги, каждый из которых
-выполняется в крыловском подпространстве с $`m=30`$, и выдаёт предупреждение, когда эвристический индикатор ошибки велик;
-никакой оценки ошибки для него мы не доказываем, а вместо этого сравниваем его с $`e^{-itH}`$, вычисленным по плотному
-спектральному разложению (теорема 1.5). Выполним квенч из неелевского
+Итак, каждый шаг Крылова сохраняет норму и энергию, точен он или нет. Его точности посвящена
+[теорема 9.18](../../lecture_notes/ru/09_spin_chains.md#r-9-18): шаг длины $`\tau`$ ошибается не более чем на
+$`(4\beta_m/w_T)S_m(|\tau|w_T/2)`$, вычисляемое только по прогону Ланцоша. `krylov.evolve` делает каждый шаг в крыловском
+подпространстве с $`m=30`$ настолько длинным, насколько эта оценка допускает при ошибке не более
+$`\mathrm{tol}=10^{-8}`$ (значение по умолчанию) на всём интервале времени
+([следствие 9.19](../../lecture_notes/ru/09_spin_chains.md#r-9-19)). Мы сравниваем его с $`e^{-itH}`$, вычисленным по плотному
+спектральному разложению (теорема 1.5), и ниже проверяем сами оценки. Выполним квенч из неелевского
 состояния $`|{\uparrow\downarrow\uparrow\downarrow}\cdots\rangle`$ на кольце Гейзенберга и проследим за шахматной намагниченностью
 $`m_s=\frac2L\sum_i(-1)^i\langle s^z_i\rangle`$, сравнивая с плотным пропагатором при $`L=12`$:
 
@@ -352,6 +354,60 @@ print(f"{max(abs(a - b) for a, b in zip(m_s[12][:4], m_s[16][:4])):.1e}")   # L 
 
 *Численное наблюдение:* $`m_s`$ убывает от $`1`$ через $`0.770`$ и $`0.279`$ до $`-0.183`$ при $`t=2`$, одинаково для обоих размеров
 с точностью до $`1.7\cdot10^{-5}`$; при $`t=4`$ значения различаются ($`0.026`$ против $`0.035`$).
+
+**Оценки ошибки.** По [лемме 9.17](../../lecture_notes/ru/09_spin_chains.md#r-9-17) коэффициенты Чебышёва для
+$`e^{-i\rho y}`$ равны $`a_k=(-i)^kJ_k(\rho)`$, причём $`|a_k|\le(|\rho|/2)^k/k!`$.
+[Теорема 9.18](../../lecture_notes/ru/09_spin_chains.md#r-9-18) оценивает ошибку одного шага Крылова величиной
+$`(4\beta_m/w_T)S_m(|\tau|w_T/2)`$ (c), которую возвращает `krylov.expm_multiply_step`, и величиной $`4S_m(\rho/2)`$ при
+$`\rho=|\tau|w`$ (d), где $`S_m(x)=\sum_{j\ge m}x^j/j!`$, а $`w`$ — полуширина спектра. Проверим оценку коэффициентов по
+функциям Бесселя из SciPy и обе оценки ошибки для одного шага из неелевского состояния кольца $`L=12`$ при $`m=20`$, в
+сравнении с плотным пропагатором из блока выше (`w`, `U`). [Следствие 9.19](../../lecture_notes/ru/09_spin_chains.md#r-9-19)
+складывает оценки последовательных шагов; а правило шага `krylov.evolve` удерживает ошибку в момент $`t`$ ниже
+$`\mathrm{tol}\cdot t/t_{\mathrm{end}}`$, с одинаковыми шагами для $`H`$ и $`H+10^4`$ (теорема 9.18(a); сдвинутый оператор меняет
+только диагональ разреженной формы):
+
+```python
+from scipy.special import jv, gammainc
+S = lambda m, x: math.exp(x) * gammainc(m, x)                        # S_m(x) = sum_{j >= m} x^j / j!
+for rho in (1.0, 10.0, 40.0):                                        # Lemma 9.17: |J_k(rho)| <= (rho/2)^k / k!
+    assert all(abs(jv(k, rho)) <= (rho / 2) ** k / math.factorial(k) * (1 + 1e-12) for k in range(80))
+
+c12 = SpinChain(12, 'periodic')
+H12 = c12.xxz_sparse(J=1.0, Delta=1.0, sector=6)                    # w, U: its dense eigendecomposition (above)
+half = ((w[-1] - w[0]) / 2).item()                                   # half-width of the spectrum
+v = c12.vector_in_sector('10' * 6)[None]                             # the Neel state
+exact = lambda t: U @ (torch.exp(-1j * t * w) * (U.mH @ v[0]))
+m = 20
+for tau in (0.5, 1.0, 2.0, 4.0, 8.0):
+    out, bound = krylov.expm_multiply_step(H12, v, tau, m)            # bound: Theorem 9.18(c)
+    err = (out[0] - exact(tau)).norm().item()
+    apriori = 4 * S(m, tau * half / 2)                                # Theorem 9.18(d)
+    print(f"tau w = {tau * half:4.1f}: error {err:.1e}, bound (c) {bound.item():.1e}, bound (d) {apriori:.1e}")
+    assert err <= bound.item() + 1e-13 and bound.item() <= apriori
+
+psi, total = v, 0.0                                                  # Corollary 9.19, five steps of length 1
+for k in range(1, 6):
+    psi, b = krylov.expm_multiply_step(H12, psi, 1.0, m)
+    total += b.item()
+    err = (psi[0] - exact(float(k))).norm().item()
+    assert err <= total + 1e-12
+print(f"after 5 steps: error {err:.1e}, sum of the bounds {total:.1e}")
+
+times = [0.0, 1.0, 3.0, 10.0]
+shifted = krylov.SparseSectorHamiltonian(H12.diag + 1e4, H12.offdiag, H12.dtype)    # H + 10^4
+for s, Hn in ((0.0, H12), (1e4, shifted)):
+    out = krylov.evolve(Hn, v, times, tol=1e-8)                      # the step rule of Corollary 9.19
+    errs = [(p[0] - math.e ** (-1j * t * s) * exact(t)).norm().item() for t, p in zip(times, out)]
+    print(f"shift {s:.0e}:", [f"{e:.1e}" for e in errs])
+    assert all(e <= 1e-8 * t / times[-1] + 1e-10 for e, t in zip(errs, times))
+```
+
+*Численное наблюдение:* ошибка одного шага растёт от уровня округления ($`3\cdot10^{-15}`$ при $`\tau w=2.1`$) до
+$`1.3\cdot10^{-8}`$ при $`\tau w=8.4`$ и $`0.5`$ при $`\tau w=34`$; оценка (c) превышает её в полезной области примерно в $`100`$
+раз, (d) — ещё в $`4`$ раза. Пять шагов длины $`1`$ ошибаются на $`10^{-13}`$, меньше суммы $`6\cdot10^{-12}`$ их оценок.
+`krylov.evolve` здесь выдерживает допуск с большим запасом (ошибки меньше $`10^{-13}`$); со сдвигом $`10^4`$ ошибки
+равны $`10^{-11}`$ — это ошибки округления произведений матрицы на вектор нормы $`10^4`$, которые не покрывает ни одна
+оценка теоремы 9.18.
 
 <a id="s-9-6"></a>
 

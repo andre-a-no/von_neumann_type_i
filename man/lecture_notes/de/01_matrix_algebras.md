@@ -4,7 +4,7 @@
 
 Dieses Kapitel legt die Bezeichnungen fest und beweist die Tatsachen über
 $`M_n(\mathbb C)`$, die alle späteren Kapitel verwenden: den Spektralsatz, den
-Funktionalkalkül, die Polarzerlegung und die durch Singulärwerte definierten Normen. Der
+Funktionalkalkül und seine Ableitung, die Polarzerlegung und die durch Singulärwerte definierten Normen. Der
 Bibliothekscode und die numerischen Überprüfungen dieser Ergebnisse stehen in
 [Tutorial 1](../../tutorial/de/01_matrix_algebras.md).
 
@@ -145,6 +145,128 @@ $`p(A)=\sqrt A`$ und $`p(A)=p(B^2)=V\,\mathrm{diag}(p(\mu_j^2))\,V^*=V\,\mathrm{
 
 **Korollar 1.7.** $`A\ge0`$ genau dann, wenn $`A=T^*T`$ für ein $`T`$ gilt. (Ist $`A\ge0`$, so nehme man $`T=\sqrt A`$;
 umgekehrt ist $`\langle x,T^*Tx\rangle=\|Tx\|^2\ge0`$.)
+
+**Ableitungen.** Gradientenverfahren differenzieren $`f(A)`$ nach $`A`$. Für selbstadjungiertes $`A`$ ist die Ableitung ein
+eintragsweises Produkt mit einer Matrix von Differenzenquotienten von $`f`$.
+
+<a id="r-1-11"></a>
+
+**Satz 1.11 (Daleckii–Krein).** Sei $`A=U\,\mathrm{diag}(\lambda_1,\dots,\lambda_n)\,U^*`$ selbstadjungiert, $`I`$ ein offenes
+Intervall, das $`\mathrm{spec}\,A`$ enthält, und $`f:I\to\mathbb C`$ stetig differenzierbar. Sei
+```math
+f^{[1]}(x,y)=\frac{f(x)-f(y)}{x-y}\quad(x\ne y),\qquad f^{[1]}(x,x)=f'(x)
+```
+die **dividierte Differenz** von $`f`$ und $`L_{ij}=f^{[1]}(\lambda_i,\lambda_j)`$ die **Loewner-Matrix**. Dann gilt für
+jedes selbstadjungierte $`E`$
+```math
+\frac{d}{dt}\Big|_{t=0}f(A+tE)=U\big(L\circ U^*EU\big)U^*,
+```
+wobei $`(X\circ Y)_{ij}=X_{ij}Y_{ij}`$ das eintragsweise (Schur-)Produkt ist.
+
+*Beweis.* Nach dem Hauptsatz der Differential- und Integralrechnung ist $`f^{[1]}(x,y)=\int_0^1f'(y+s(x-y))\,ds`$ für alle
+$`x,y\in I`$ (für $`x=y`$ sind beide Seiten $`f'(x)`$), also ist $`f^{[1]}`$ stetig auf $`I\times I`$. Eine Umordnung der
+Spalten von $`U`$ permutiert die Zeilen und Spalten von $`L`$ und von $`U^*EU`$ in gleicher Weise und ändert die rechte
+Seite nicht; wir dürfen also $`\lambda_1\le\dots\le\lambda_n`$ annehmen. Sei $`\delta>0`$ mit
+$`[\lambda_1-\delta,\lambda_n+\delta]\subset I`$. Für $`0<|t|\,\|E\|<\delta`$ schreiben wir $`A+tE=V\,\mathrm{diag}(\mu_1,\dots,\mu_n)\,V^*`$
+mit $`\mu_1\le\dots\le\mu_n`$; dann ist $`|\mu_j-\lambda_j|\le|t|\,\|E\|`$ (Satz A.10), also liegen alle $`\mu_j\in I`$. Sei
+$`W=U^*V`$ (unitär) und $`\tilde E=U^*EU`$. Wegen $`U^*f(A)=\mathrm{diag}(f(\lambda_i))\,U^*`$ und $`f(A+tE)V=V\,\mathrm{diag}(f(\mu_j))`$ ist
+```math
+\big(U^*(f(A+tE)-f(A))V\big)_{ij}=\big(f(\mu_j)-f(\lambda_i)\big)W_{ij}=f^{[1]}(\lambda_i,\mu_j)\,(\mu_j-\lambda_i)\,W_{ij},
+```
+und dieselbe Rechnung für $`f(x)=x`$ liefert $`(\mu_j-\lambda_i)W_{ij}=t\,(\tilde EW)_{ij}`$. Mit
+$`(L_t)_{ij}=f^{[1]}(\lambda_i,\mu_j)`$ ist das die exakte Identität
+```math
+\frac1t\big(f(A+tE)-f(A)\big)=U\big((L_t\circ\tilde EW)\,W^*\big)U^*.
+```
+Für $`t\to0`$ gilt $`L_t\to L`$ eintragsweise, da $`f^{[1]}`$ stetig ist und $`\mu_j\to\lambda_j`$. Sei $`D_{ij}=W_{ij}`$ für
+$`\lambda_i=\lambda_j`$, sonst $`D_{ij}=0`$, und $`R=W-D`$. Ist $`\lambda_i\ne\lambda_j`$ und $`|t|\,\|E\|\le|\lambda_i-\lambda_j|/2`$, so
+ist $`|\mu_j-\lambda_i|\ge|\lambda_i-\lambda_j|/2`$ und $`|(\tilde EW)_{ij}|\le\|\tilde EW\|=\|E\|`$, also
+$`|W_{ij}|\le2|t|\,\|E\|/|\lambda_i-\lambda_j|`$. Daher gilt $`R\to0`$ und $`DD^*=(W-R)(W-R)^*\to WW^*=1`$. Da $`L_{ij}=L_{ik}`$,
+sobald $`\lambda_k=\lambda_j`$, und $`D_{kj}=0`$ außer für $`\lambda_k=\lambda_j`$, ist
+$`(L\circ\tilde ED)_{ij}=\sum_kL_{ik}\tilde E_{ik}D_{kj}=((L\circ\tilde E)D)_{ij}`$. Folglich
+```math
+(L_t\circ\tilde EW)W^*-L\circ\tilde E=\big((L_t-L)\circ\tilde EW\big)W^*+(L\circ\tilde ER)W^*+(L\circ\tilde ED)R^*+(L\circ\tilde E)(DD^*-1),
+```
+und jeder Term strebt gegen $`0`$, da die Einträge von $`W`$, $`D`$ und $`\tilde E`$ durch $`1`$, $`1`$ und $`\|E\|`$ beschränkt
+sind. $`\square`$
+
+Für reelles $`f`$ ist $`L`$ reell, und $`\mathrm{Tr}\big(G^*U(L\circ U^*EU)U^*\big)=\mathrm{Tr}(\Gamma^*E)`$ mit
+$`\Gamma=U(L\circ U^*GU)U^*`$ für jedes $`G`$ (man schreibe beide Seiten als Summen über $`i,j`$ in der Basis $`U`$): Die
+Ableitung von $`A\mapsto\mathrm{Re}\,\mathrm{Tr}(G^*f(A))`$ in Richtung $`E`$ ist $`\mathrm{Re}\,\mathrm{Tr}(\Gamma^*E)`$.
+
+*In der Bibliothek:* `apply_function` wird (durch Autograd) mit Satz 1.11 differenziert; die Loewner-Matrix ist
+`functional.divided_differences`.
+
+**Rundung.** Für nahe beieinanderliegende $`\lambda_i,\lambda_j`$ verliert der Quotient
+$`(f(\lambda_i)-f(\lambda_j))/(\lambda_i-\lambda_j)`$ durch Auslöschung an Genauigkeit, und für $`\lambda_i=\lambda_j`$ ist er nicht
+definiert. Die Ableitungen sind dann die besseren Daten.
+
+<a id="r-1-12"></a>
+
+**Proposition 1.12 (Mittelwert der Ableitungen).** Seien $`a<b`$, $`h=b-a`$ und $`f`$ dreimal stetig differenzierbar
+auf $`[a,b]`$ (komplexe Werte erlaubt). Dann gilt
+```math
+f^{[1]}(a,b)-\frac{f'(a)+f'(b)}2=-\frac{h^2}2\int_0^1s(1-s)\,f'''(a+sh)\,ds,
+\qquad
+\Big|f^{[1]}(a,b)-\frac{f'(a)+f'(b)}2\Big|\le\frac{h^2}{12}\max_{[a,b]}|f'''|,
+```
+mit Gleichheit für Polynome vom Grad $`3`$.
+
+*Beweis.* Sei $`g(s)=f'(a+sh)`$, sodass $`f^{[1]}(a,b)=\frac1h\int_a^bf'=\int_0^1g`$, und $`\varphi(s)=s(1-s)/2`$, sodass
+$`\varphi(0)=\varphi(1)=0`$, $`\varphi'(0)=\frac12=-\varphi'(1)`$ und $`\varphi''=-1`$. Zweimalige partielle Integration ergibt
+$`\int_0^1\varphi g''=-\int_0^1\varphi'g'=-[\varphi'g]_0^1+\int_0^1\varphi''g=\frac{g(0)+g(1)}2-\int_0^1g`$. Wegen
+$`g''(s)=h^2f'''(a+sh)`$ ist das die Identität; $`\int_0^1\varphi=\frac1{12}`$ liefert die Schranke, und für ein Polynom vom
+Grad $`3`$ ist $`f'''`$ konstant. $`\square`$
+
+<a id="r-1-13"></a>
+
+**Proposition 1.13 (Quotient oder Mittelwert).** Wir nehmen Gleitkommaarithmetik mit Rundungseinheit $`u\le1/20`$ an:
+Für Gleitkommazahlen $`x,y`$ und $`\circ\in\{+,-,\times,/\}`$ ist das berechnete Ergebnis $`(x\circ y)(1+\theta)`$ mit
+$`|\theta|\le u`$ (ohne Überlauf und Unterlauf). Seien $`a\ne b`$ reelle Gleitkommazahlen, $`h=|a-b|`$, $`x=f^{[1]}(a,b)`$,
+und $`\hat f_a,\hat f_b`$ berechnete Werte mit $`|\hat f_a-f(a)|\le\delta_a`$ und $`|\hat f_b-f(b)|\le\delta_b`$.
+
+(a) Der berechnete Quotient $`\hat q`$ aus $`\hat f_a-\hat f_b`$ und $`a-b`$ erfüllt
+$`|\hat q-x|\le R:=(\delta_a+\delta_b)/h+5u|\hat q|`$.
+
+(b) Sei $`|\hat m-x|\le T`$ (zum Beispiel $`\hat m`$ der berechnete Mittelwert der Ableitungen und $`T`$ die Schranke
+aus Proposition 1.12 plus dessen Rundungsfehler). Sei $`y=\hat m`$, falls $`|\hat q-\hat m|\le2R`$, und sonst $`y=\hat q`$.
+Dann ist $`|y-x|\le\min(T,3R)`$.
+
+(c) Ist $`\delta_a+\delta_b\le\Delta`$ und $`T=Mh^2+T_0`$, so gilt $`|y-x|\le(3\Delta)^{2/3}M^{1/3}+T_0+15u|\hat q|`$ für jedes
+$`h`$. Die beiden Fehlerterme $`3\Delta/h`$ und $`Mh^2`$ sind bei $`h_*=(3\Delta/M)^{1/3}`$ gleich.
+
+*Beweis.* (a) Sei $`\tilde q=(\hat f_a-\hat f_b)/(a-b)`$. Die drei Operationen ergeben
+$`\hat q=\tilde q\,(1+\theta_1)(1+\theta_3)/(1+\theta_2)=\tilde q\,(1+\theta)`$ mit $`|\theta_i|\le u`$, also
+$`-3u\le\frac{(1-u)^2}{1+u}-1\le\theta\le\frac{(1+u)^2}{1-u}-1=\frac{3u+u^2}{1-u}\le4u`$. Somit
+$`|\hat q-\tilde q|=|\theta|\,|\tilde q|\le\frac{4u}{1-4u}|\hat q|\le5u|\hat q|`$, und
+$`|\tilde q-x|=|(\hat f_a-f(a))-(\hat f_b-f(b))|/h\le(\delta_a+\delta_b)/h`$. (b) Ist $`y=\hat m`$, so ist $`|y-x|\le T`$ und
+$`|y-x|\le|\hat m-\hat q|+|\hat q-x|\le3R`$. Ist $`y=\hat q`$, so ist $`|y-x|\le R`$ und
+$`T\ge|\hat m-x|\ge|\hat m-\hat q|-|\hat q-x|>2R-R=R`$. (c) $`\min(T,3R)\le\min(Mh^2,3\Delta/h)+T_0+15u|\hat q|`$; für
+$`h\ge h_*`$ ist $`3\Delta/h\le3\Delta/h_*`$, für $`h<h_*`$ ist $`Mh^2<Mh_*^2`$, und $`3\Delta/h_*=Mh_*^2=(3\Delta)^{2/3}M^{1/3}`$. $`\square`$
+
+Der Beweis gilt wörtlich für komplexwertiges $`f`$ (Real- und Imaginärteil werden getrennt gerundet, und $`a-b`$ ist
+reell; $`\theta`$ ist dann komplex mit derselben Schranke). Die Regel (b) braucht $`R`$, das aus den Daten berechnet wird,
+aber nicht $`T`$: Ohne jede Kenntnis von $`f'''`$ ist ihr Fehler höchstens das Dreifache der kleineren der beiden
+Schranken. Eine feste Schwelle, Mittelwert genau dann, wenn $`h\le h_*`$, bräuchte $`M=\max|f'''|/12`$. Die Schwelle
+$`h\le\varepsilon^{1/3}\max(|a|,|b|)`$ ($`\varepsilon=2u`$) früherer Versionen der Bibliothek ist von dieser Art, mit $`M`$ von
+der Größenordnung $`\Delta/\max(|a|,|b|)^3`$: richtig für $`x^p`$ oder $`\log x`$, deren Ableitungen mit $`|x|`$ skalieren,
+falsch für Funktionen, die auf einer von $`|x|`$ unabhängigen Skala variieren. Für $`f(x)=e^{x-c}`$ bei
+$`a\approx c=10^4`$ nahm sie den Mittelwert bis $`h\approx0.06`$, mit relativem Fehler bis $`h^2/12\approx3\cdot10^{-4}`$
+(Proposition 1.12 ist dort bis auf einen Faktor $`e^{h}`$ eine Gleichheit); dasselbe geschieht für $`e^{-i\tau x}`$ und einen
+Hamiltonoperator mit einer großen konstanten Verschiebung.
+
+*In der Bibliothek:* `functional.divided_differences` wendet Regel (b) auf jedes Paar von Eigenwerten an, mit
+$`\delta_a=\varepsilon\,(|\hat f_a|+|a\hat f'_a|)`$ und $`4\varepsilon|\hat q|`$ statt $`5u|\hat q|`$. Die Wahl von $`\delta_a`$ ist eine
+Annahme über die Auswertung von $`f`$, kein Satz: relativer Fehler höchstens $`\varepsilon`$, an einem um höchstens
+$`\varepsilon|a|`$ gestörten Argument (in erster Ordnung; der zweite Term erfasst Funktionen wie $`e^{-i\tau x}`$, die
+$`\tau x`$ runden). Dieselbe Regel wird auf die komplexen Eigenwerte normaler Matrizen angewandt, die der Beweis nicht
+abdeckt. Der Mittelwert wird auch für gleiche Eigenwerte und für Paare genommen, die der Eigenwertlöser nicht trennt,
+$`h\le n\varepsilon\max_l|\lambda_l|`$: Dort ist sein Fehler nach Proposition 1.12 höchstens
+$`(n\varepsilon\max_l|\lambda_l|)^2\max|f'''|/12`$, während der Quotient für ein unstetiges $`f`$ wie eine Indikatorfunktion
+sinnlos wäre.
+
+*Rechnung:* Satz 1.11 im Vergleich mit einem Differenzenquotienten an einem entarteten Spektrum, und die
+Propositionen 1.12 und 1.13 für $`e^{x-c}`$ mit $`c=10^4`$ — [Tutorial, Abschnitt 1.5](../../tutorial/de/01_matrix_algebras.md#s-1-5).
 
 <a id="s-1-4"></a>
 

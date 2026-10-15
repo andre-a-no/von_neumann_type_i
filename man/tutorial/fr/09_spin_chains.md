@@ -270,7 +270,7 @@ $`H\Phi=(E_F-J\Delta)\Phi`$ pour $`L=8`$.
 
 ## 9.5 Lanczos et méthodes de Krylov
 
-*Notes de cours :* [section 9.5](../../lecture_notes/fr/09_spin_chains.md#s-9-5) ; [proposition 9.13](../../lecture_notes/fr/09_spin_chains.md#r-9-13) (Lanczos : $`T_m=Q_m^*HQ_m`$ est tridiagonale), [théorème 9.14](../../lecture_notes/fr/09_spin_chains.md#r-9-14) (les valeurs de Ritz, valeurs propres de $`T_m`$, vérifient $`\theta^{(m)}_j\ge\lambda_j`$ et décroissent avec $`m`$), [proposition 9.15](../../lecture_notes/fr/09_spin_chains.md#r-9-15) (évolution temporelle de Krylov).
+*Notes de cours :* [section 9.5](../../lecture_notes/fr/09_spin_chains.md#s-9-5) ; [proposition 9.13](../../lecture_notes/fr/09_spin_chains.md#r-9-13) (Lanczos : $`T_m=Q_m^*HQ_m`$ est tridiagonale), [théorème 9.14](../../lecture_notes/fr/09_spin_chains.md#r-9-14) (les valeurs de Ritz, valeurs propres de $`T_m`$, vérifient $`\theta^{(m)}_j\ge\lambda_j`$ et décroissent avec $`m`$), [proposition 9.15](../../lecture_notes/fr/09_spin_chains.md#r-9-15) (évolution temporelle de Krylov), [lemme 9.17](../../lecture_notes/fr/09_spin_chains.md#r-9-17), [théorème 9.18](../../lecture_notes/fr/09_spin_chains.md#r-9-18) et [corollaire 9.19](../../lecture_notes/fr/09_spin_chains.md#r-9-19) (bornes d'erreur et règle de pas).
 
 Le secteur $`N=L/2`$ est de dimension $`12870`$ pour $`L=16`$ et $`184756`$ pour $`L=20`$, mais $`H`$ est creuse ($`O(L)`$
 coefficients non nuls par ligne, `xxz_sparse`), et les méthodes de Krylov n'ont besoin que de produits $`Hv`$. Soient
@@ -334,11 +334,13 @@ $`L`$ ; nous ne démontrons rien sur sa limite.
 D'après la [proposition 9.15](../../lecture_notes/fr/09_spin_chains.md#r-9-15), $`\|w_\tau\|=\|v\|`$ et $`\langle w_\tau,Hw_\tau\rangle=\langle v,Hv\rangle`$ pour tout $`\tau`$, et
 $`w_\tau=e^{-i\tau H}v`$ si $`\mathcal K_m`$ est $`H`$-invariant.
 
-Ainsi chaque pas de Krylov conserve la norme et l'énergie, qu'il soit précis ou non ; la proposition 9.15 ne dit
-rien de la précision, sauf si $`\mathcal K_m`$ est invariant. `krylov.evolve` subdivise l'intervalle de temps en pas
-courts, chacun effectué dans un espace de Krylov avec $`m=30`$, et émet un avertissement lorsqu'un indicateur
-d'erreur heuristique est grand ; nous ne démontrons aucune borne d'erreur pour lui et le comparons plutôt à
-$`e^{-itH}`$ calculée à partir d'une décomposition spectrale dense (théorème 1.5). Nous effectuons une
+Ainsi chaque pas de Krylov conserve la norme et l'énergie, qu'il soit précis ou non. Sa précision fait l'objet du
+[théorème 9.18](../../lecture_notes/fr/09_spin_chains.md#r-9-18) : un pas de longueur $`\tau`$ se trompe d'au plus
+$`(4\beta_m/w_T)S_m(|\tau|w_T/2)`$, calculé à partir du seul calcul de Lanczos. `krylov.evolve` fait chaque pas, dans un
+espace de Krylov avec $`m=30`$, aussi long que cette borne le permet pour une erreur d'au plus $`\mathrm{tol}=10^{-8}`$
+(la valeur par défaut) sur tout l'intervalle de temps ([corollaire 9.19](../../lecture_notes/fr/09_spin_chains.md#r-9-19)).
+Nous le comparons à $`e^{-itH}`$ calculée à partir d'une décomposition spectrale dense (théorème 1.5), et vérifions
+les bornes elles-mêmes plus bas. Nous effectuons une
 trempe (*quench*) à partir de l'état de Néel $`|{\uparrow\downarrow\uparrow\downarrow}\cdots\rangle`$ sur l'anneau de
 Heisenberg et suivons l'aimantation alternée $`m_s=\frac2L\sum_i(-1)^i\langle s^z_i\rangle`$, en comparant avec le
 propagateur dense pour $`L=12`$ :
@@ -365,6 +367,60 @@ print(f"{max(abs(a - b) for a, b in zip(m_s[12][:4], m_s[16][:4])):.1e}")   # L 
 
 *Observation numérique :* $`m_s`$ décroît de $`1`$ à $`-0.183`$ en $`t=2`$, en passant par $`0.770`$ et $`0.279`$, de la même
 façon pour les deux tailles à $`1.7\cdot10^{-5}`$ près ; en $`t=4`$, elles diffèrent ($`0.026`$ contre $`0.035`$).
+
+**Bornes d'erreur.** D'après le [lemme 9.17](../../lecture_notes/fr/09_spin_chains.md#r-9-17), les coefficients de
+Tchebychev de $`e^{-i\rho y}`$ sont $`a_k=(-i)^kJ_k(\rho)`$ avec $`|a_k|\le(|\rho|/2)^k/k!`$. Le
+[théorème 9.18](../../lecture_notes/fr/09_spin_chains.md#r-9-18) borne l'erreur d'un pas de Krylov par
+$`(4\beta_m/w_T)S_m(|\tau|w_T/2)`$ (c), la valeur que renvoie `krylov.expm_multiply_step`, et par $`4S_m(\rho/2)`$ avec
+$`\rho=|\tau|w`$ (d), où $`S_m(x)=\sum_{j\ge m}x^j/j!`$ et $`w`$ est la demi-largeur du spectre. Nous vérifions la borne des
+coefficients contre les fonctions de Bessel de SciPy, et les deux bornes d'erreur pour un pas à partir de l'état de
+Néel de l'anneau $`L=12`$ avec $`m=20`$, contre le propagateur dense du bloc précédent (`w`, `U`). Le
+[corollaire 9.19](../../lecture_notes/fr/09_spin_chains.md#r-9-19) additionne les bornes de pas successifs ; et la règle de
+pas de `krylov.evolve` maintient l'erreur à l'instant $`t`$ sous $`\mathrm{tol}\cdot t/t_{\mathrm{end}}`$, avec les mêmes pas pour
+$`H`$ et $`H+10^4`$ (théorème 9.18(a) ; l'opérateur translaté ne change que la diagonale de la forme creuse) :
+
+```python
+from scipy.special import jv, gammainc
+S = lambda m, x: math.exp(x) * gammainc(m, x)                        # S_m(x) = sum_{j >= m} x^j / j!
+for rho in (1.0, 10.0, 40.0):                                        # Lemma 9.17: |J_k(rho)| <= (rho/2)^k / k!
+    assert all(abs(jv(k, rho)) <= (rho / 2) ** k / math.factorial(k) * (1 + 1e-12) for k in range(80))
+
+c12 = SpinChain(12, 'periodic')
+H12 = c12.xxz_sparse(J=1.0, Delta=1.0, sector=6)                    # w, U: its dense eigendecomposition (above)
+half = ((w[-1] - w[0]) / 2).item()                                   # half-width of the spectrum
+v = c12.vector_in_sector('10' * 6)[None]                             # the Neel state
+exact = lambda t: U @ (torch.exp(-1j * t * w) * (U.mH @ v[0]))
+m = 20
+for tau in (0.5, 1.0, 2.0, 4.0, 8.0):
+    out, bound = krylov.expm_multiply_step(H12, v, tau, m)            # bound: Theorem 9.18(c)
+    err = (out[0] - exact(tau)).norm().item()
+    apriori = 4 * S(m, tau * half / 2)                                # Theorem 9.18(d)
+    print(f"tau w = {tau * half:4.1f}: error {err:.1e}, bound (c) {bound.item():.1e}, bound (d) {apriori:.1e}")
+    assert err <= bound.item() + 1e-13 and bound.item() <= apriori
+
+psi, total = v, 0.0                                                  # Corollary 9.19, five steps of length 1
+for k in range(1, 6):
+    psi, b = krylov.expm_multiply_step(H12, psi, 1.0, m)
+    total += b.item()
+    err = (psi[0] - exact(float(k))).norm().item()
+    assert err <= total + 1e-12
+print(f"after 5 steps: error {err:.1e}, sum of the bounds {total:.1e}")
+
+times = [0.0, 1.0, 3.0, 10.0]
+shifted = krylov.SparseSectorHamiltonian(H12.diag + 1e4, H12.offdiag, H12.dtype)    # H + 10^4
+for s, Hn in ((0.0, H12), (1e4, shifted)):
+    out = krylov.evolve(Hn, v, times, tol=1e-8)                      # the step rule of Corollary 9.19
+    errs = [(p[0] - math.e ** (-1j * t * s) * exact(t)).norm().item() for t, p in zip(times, out)]
+    print(f"shift {s:.0e}:", [f"{e:.1e}" for e in errs])
+    assert all(e <= 1e-8 * t / times[-1] + 1e-10 for e, t in zip(errs, times))
+```
+
+*Observation numérique :* l'erreur d'un pas croît du niveau de l'arrondi ($`3\cdot10^{-15}`$ en $`\tau w=2.1`$) à
+$`1.3\cdot10^{-8}`$ en $`\tau w=8.4`$ et $`0.5`$ en $`\tau w=34`$ ; la borne (c) la dépasse d'un facteur d'environ $`100`$ dans
+le domaine utile, (d) d'un facteur $`4`$ de plus. Cinq pas de longueur $`1`$ se trompent de $`10^{-13}`$, sous la somme
+$`6\cdot10^{-12}`$ de leurs bornes. `krylov.evolve` respecte ici sa tolérance avec une large marge (erreurs inférieures
+à $`10^{-13}`$) ; avec la translation $`10^4`$, les erreurs sont de $`10^{-11}`$, les erreurs d'arrondi de produits
+matrice–vecteur de norme $`10^4`$, qu'aucune borne du théorème 9.18 ne couvre.
 
 <a id="s-9-6"></a>
 

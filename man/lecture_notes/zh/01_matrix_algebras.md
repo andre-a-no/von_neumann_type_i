@@ -2,7 +2,7 @@
 
 # 1. 矩阵代数与函数演算
 
-本章固定记号，并证明后续各章都要用到的关于 $`M_n(\mathbb C)`$ 的事实：谱定理、函数演算、
+本章固定记号，并证明后续各章都要用到的关于 $`M_n(\mathbb C)`$ 的事实：谱定理、函数演算及其导数、
 极分解以及由奇异值定义的范数。这些结果的库代码和数值检验见[教程 1](../../tutorial/zh/01_matrix_algebras.md)。
 
 **约定。** 内积 $`\langle x,y\rangle=\sum_i\bar x_iy_i`$ 关于第二个变元是线性的。$`A^*`$ 是共轭
@@ -134,6 +134,109 @@ $`p(A)=\sqrt A`$，且 $`p(A)=p(B^2)=V\,\mathrm{diag}(p(\mu_j^2))\,V^*=V\,\mathr
 
 **推论 1.7.** $`A\ge0`$ 当且仅当对某个 $`T`$ 有 $`A=T^*T`$。（若 $`A\ge0`$，取 $`T=\sqrt A`$；
 反之 $`\langle x,T^*Tx\rangle=\|Tx\|^2\ge0`$。）
+
+**导数。** 梯度方法要对 $`f(A)`$ 关于 $`A`$ 求导。对自伴的 $`A`$，导数是与 $`f`$ 的差商矩阵的逐元素乘积。
+
+<a id="r-1-11"></a>
+
+**定理 1.11（Daleckii–Krein）。** 设 $`A=U\,\mathrm{diag}(\lambda_1,\dots,\lambda_n)\,U^*`$ 自伴，$`I`$ 是包含 $`\mathrm{spec}\,A`$
+的开区间，$`f:I\to\mathbb C`$ 连续可微。设
+```math
+f^{[1]}(x,y)=\frac{f(x)-f(y)}{x-y}\quad(x\ne y),\qquad f^{[1]}(x,x)=f'(x)
+```
+为 $`f`$ 的**差商**（divided difference），$`L_{ij}=f^{[1]}(\lambda_i,\lambda_j)`$ 为 **Loewner 矩阵**。则对每个自伴的 $`E`$，
+```math
+\frac{d}{dt}\Big|_{t=0}f(A+tE)=U\big(L\circ U^*EU\big)U^*,
+```
+其中 $`(X\circ Y)_{ij}=X_{ij}Y_{ij}`$ 是逐元素（Schur）乘积。
+
+*证明。* 由微积分基本定理，对所有 $`x,y\in I`$ 有 $`f^{[1]}(x,y)=\int_0^1f'(y+s(x-y))\,ds`$（$`x=y`$ 时两边都是
+$`f'(x)`$），所以 $`f^{[1]}`$ 在 $`I\times I`$ 上连续。重排 $`U`$ 的列会以同样方式置换 $`L`$ 和 $`U^*EU`$ 的行与列，不改变右边，
+因此可设 $`\lambda_1\le\dots\le\lambda_n`$。取 $`\delta>0`$ 使 $`[\lambda_1-\delta,\lambda_n+\delta]\subset I`$。对
+$`0<|t|\,\|E\|<\delta`$，写 $`A+tE=V\,\mathrm{diag}(\mu_1,\dots,\mu_n)\,V^*`$，$`\mu_1\le\dots\le\mu_n`$；则
+$`|\mu_j-\lambda_j|\le|t|\,\|E\|`$（定理 A.10），故所有 $`\mu_j\in I`$。令 $`W=U^*V`$（酉矩阵），$`\tilde E=U^*EU`$。由于
+$`U^*f(A)=\mathrm{diag}(f(\lambda_i))\,U^*`$ 且 $`f(A+tE)V=V\,\mathrm{diag}(f(\mu_j))`$，
+```math
+\big(U^*(f(A+tE)-f(A))V\big)_{ij}=\big(f(\mu_j)-f(\lambda_i)\big)W_{ij}=f^{[1]}(\lambda_i,\mu_j)\,(\mu_j-\lambda_i)\,W_{ij},
+```
+对 $`f(x)=x`$ 作同样计算得 $`(\mu_j-\lambda_i)W_{ij}=t\,(\tilde EW)_{ij}`$。记 $`(L_t)_{ij}=f^{[1]}(\lambda_i,\mu_j)`$，这就是精确恒等式
+```math
+\frac1t\big(f(A+tE)-f(A)\big)=U\big((L_t\circ\tilde EW)\,W^*\big)U^*.
+```
+当 $`t\to0`$ 时，由于 $`f^{[1]}`$ 连续且 $`\mu_j\to\lambda_j`$，$`L_t\to L`$ 逐元素成立。令：若 $`\lambda_i=\lambda_j`$ 则
+$`D_{ij}=W_{ij}`$，否则 $`D_{ij}=0`$；并令 $`R=W-D`$。若 $`\lambda_i\ne\lambda_j`$ 且 $`|t|\,\|E\|\le|\lambda_i-\lambda_j|/2`$，则
+$`|\mu_j-\lambda_i|\ge|\lambda_i-\lambda_j|/2`$ 且 $`|(\tilde EW)_{ij}|\le\|\tilde EW\|=\|E\|`$，从而
+$`|W_{ij}|\le2|t|\,\|E\|/|\lambda_i-\lambda_j|`$。因此 $`R\to0`$，且 $`DD^*=(W-R)(W-R)^*\to WW^*=1`$。由于只要 $`\lambda_k=\lambda_j`$
+就有 $`L_{ij}=L_{ik}`$，而除非 $`\lambda_k=\lambda_j`$ 否则 $`D_{kj}=0`$，所以
+$`(L\circ\tilde ED)_{ij}=\sum_kL_{ik}\tilde E_{ik}D_{kj}=((L\circ\tilde E)D)_{ij}`$。于是
+```math
+(L_t\circ\tilde EW)W^*-L\circ\tilde E=\big((L_t-L)\circ\tilde EW\big)W^*+(L\circ\tilde ER)W^*+(L\circ\tilde ED)R^*+(L\circ\tilde E)(DD^*-1),
+```
+而每一项都趋于 $`0`$，因为 $`W`$、$`D`$、$`\tilde E`$ 的元素分别以 $`1`$、$`1`$、$`\|E\|`$ 为界。$`\square`$
+
+对实值 $`f`$，$`L`$ 是实矩阵，并且对每个 $`G`$ 有 $`\mathrm{Tr}\big(G^*U(L\circ U^*EU)U^*\big)=\mathrm{Tr}(\Gamma^*E)`$，其中
+$`\Gamma=U(L\circ U^*GU)U^*`$（在基 $`U`$ 下把两边写成对 $`i,j`$ 的求和即可）：$`A\mapsto\mathrm{Re}\,\mathrm{Tr}(G^*f(A))`$ 沿方向
+$`E`$ 的导数是 $`\mathrm{Re}\,\mathrm{Tr}(\Gamma^*E)`$。
+
+*库中：* `apply_function` 借助定理 1.11 求导（通过 autograd）；Loewner 矩阵由 `functional.divided_differences` 计算。
+
+**舍入。** 当 $`\lambda_i,\lambda_j`$ 相近时，商 $`(f(\lambda_i)-f(\lambda_j))/(\lambda_i-\lambda_j)`$ 因相消而损失精度，当
+$`\lambda_i=\lambda_j`$ 时它没有定义。这时导数是更好的数据。
+
+<a id="r-1-12"></a>
+
+**命题 1.12（中点值）。** 设 $`a<b`$，$`h=b-a`$，$`f`$ 在 $`[a,b]`$ 上三次连续可微（允许取复值）。则
+```math
+f^{[1]}(a,b)-\frac{f'(a)+f'(b)}2=-\frac{h^2}2\int_0^1s(1-s)\,f'''(a+sh)\,ds,
+\qquad
+\Big|f^{[1]}(a,b)-\frac{f'(a)+f'(b)}2\Big|\le\frac{h^2}{12}\max_{[a,b]}|f'''|,
+```
+对 $`3`$ 次多项式等号成立。
+
+*证明。* 令 $`g(s)=f'(a+sh)`$，使 $`f^{[1]}(a,b)=\frac1h\int_a^bf'=\int_0^1g`$；令 $`\varphi(s)=s(1-s)/2`$，使
+$`\varphi(0)=\varphi(1)=0`$，$`\varphi'(0)=\frac12=-\varphi'(1)`$，$`\varphi''=-1`$。两次分部积分得
+$`\int_0^1\varphi g''=-\int_0^1\varphi'g'=-[\varphi'g]_0^1+\int_0^1\varphi''g=\frac{g(0)+g(1)}2-\int_0^1g`$。由于
+$`g''(s)=h^2f'''(a+sh)`$，这就是所述恒等式；$`\int_0^1\varphi=\frac1{12}`$ 给出界，而对三次多项式 $`f'''`$ 是常数。$`\square`$
+
+<a id="r-1-13"></a>
+
+**命题 1.13（商还是中点值）。** 设浮点运算的单位舍入误差为 $`u\le1/20`$：对浮点数 $`x,y`$ 和
+$`\circ\in\{+,-,\times,/\}`$，计算结果为 $`(x\circ y)(1+\theta)`$，$`|\theta|\le u`$（无上溢和下溢）。设 $`a\ne b`$ 为实浮点数，
+$`h=|a-b|`$，$`x=f^{[1]}(a,b)`$，$`\hat f_a,\hat f_b`$ 为计算值，满足 $`|\hat f_a-f(a)|\le\delta_a`$、$`|\hat f_b-f(b)|\le\delta_b`$。
+
+(a) $`\hat f_a-\hat f_b`$ 与 $`a-b`$ 的计算商 $`\hat q`$ 满足 $`|\hat q-x|\le R:=(\delta_a+\delta_b)/h+5u|\hat q|`$。
+
+(b) 设 $`|\hat m-x|\le T`$（例如 $`\hat m`$ 为计算出的中点值，$`T`$ 为命题 1.12 的界加上其舍入误差）。若
+$`|\hat q-\hat m|\le2R`$ 则令 $`y=\hat m`$，否则令 $`y=\hat q`$。则 $`|y-x|\le\min(T,3R)`$。
+
+(c) 若 $`\delta_a+\delta_b\le\Delta`$ 且 $`T=Mh^2+T_0`$，则对每个 $`h`$ 有 $`|y-x|\le(3\Delta)^{2/3}M^{1/3}+T_0+15u|\hat q|`$。两个误差项
+$`3\Delta/h`$ 与 $`Mh^2`$ 在 $`h_*=(3\Delta/M)^{1/3}`$ 处相等。
+
+*证明。* (a) 令 $`\tilde q=(\hat f_a-\hat f_b)/(a-b)`$。三次运算给出
+$`\hat q=\tilde q\,(1+\theta_1)(1+\theta_3)/(1+\theta_2)=\tilde q\,(1+\theta)`$，$`|\theta_i|\le u`$，故
+$`-3u\le\frac{(1-u)^2}{1+u}-1\le\theta\le\frac{(1+u)^2}{1-u}-1=\frac{3u+u^2}{1-u}\le4u`$。于是
+$`|\hat q-\tilde q|=|\theta|\,|\tilde q|\le\frac{4u}{1-4u}|\hat q|\le5u|\hat q|`$，且
+$`|\tilde q-x|=|(\hat f_a-f(a))-(\hat f_b-f(b))|/h\le(\delta_a+\delta_b)/h`$。(b) 若 $`y=\hat m`$，则 $`|y-x|\le T`$ 且
+$`|y-x|\le|\hat m-\hat q|+|\hat q-x|\le3R`$。若 $`y=\hat q`$，则 $`|y-x|\le R`$，且
+$`T\ge|\hat m-x|\ge|\hat m-\hat q|-|\hat q-x|>2R-R=R`$。(c) $`\min(T,3R)\le\min(Mh^2,3\Delta/h)+T_0+15u|\hat q|`$；当
+$`h\ge h_*`$ 时 $`3\Delta/h\le3\Delta/h_*`$，当 $`h<h_*`$ 时 $`Mh^2<Mh_*^2`$，而 $`3\Delta/h_*=Mh_*^2=(3\Delta)^{2/3}M^{1/3}`$。$`\square`$
+
+该证明对复值 $`f`$ 逐字成立（实部与虚部分别舍入，$`a-b`$ 为实数；此时 $`\theta`$ 为复数，界相同）。规则 (b) 需要由数据
+算出的 $`R`$，但不需要 $`T`$：不必知道 $`f'''`$，其误差至多是两个界中较小者的三倍。固定阈值（当且仅当 $`h\le h_*`$ 时取
+中点值）则需要 $`M=\max|f'''|/12`$。本库早期版本的阈值 $`h\le\varepsilon^{1/3}\max(|a|,|b|)`$（$`\varepsilon=2u`$）就属这一类，
+相当于 $`M`$ 取 $`\Delta/\max(|a|,|b|)^3`$ 的量级：对导数随 $`|x|`$ 缩放的 $`x^p`$ 或 $`\log x`$ 是对的，对在与 $`|x|`$ 无关的尺度上
+变化的函数则是错的。对 $`a\approx c=10^4`$ 处的 $`f(x)=e^{x-c}`$，它在 $`h\approx0.06`$ 以内都取中点值，相对误差可达
+$`h^2/12\approx3\cdot10^{-4}`$（在那里命题 1.12 除一个因子 $`e^{h}`$ 外是等式）；对 $`e^{-i\tau x}`$ 和带有大常数平移的哈密顿量
+也是如此。
+
+*库中：* `functional.divided_differences` 对每一对本征值应用规则 (b)，取 $`\delta_a=\varepsilon\,(|\hat f_a|+|a\hat f'_a|)`$，并以
+$`4\varepsilon|\hat q|`$ 代替 $`5u|\hat q|`$。$`\delta_a`$ 的选取是关于 $`f`$ 求值的假设，而非定理：在至多扰动 $`\varepsilon|a|`$ 的
+自变量处，相对误差至多 $`\varepsilon`$（一阶近似；第二项涵盖诸如 $`e^{-i\tau x}`$ 这类要对 $`\tau x`$ 舍入的函数）。同一规则也
+用于正规矩阵的复本征值，这不在证明范围之内。对相等的本征值以及本征值求解器无法分辨的本征值对
+$`h\le n\varepsilon\max_l|\lambda_l|`$，也取中点值：由命题 1.12，其误差至多为 $`(n\varepsilon\max_l|\lambda_l|)^2\max|f'''|/12`$，而对于
+不连续的 $`f`$（如示性函数），商是没有意义的。
+
+*计算：* 在简并谱处将定理 1.11 与差商比较，并对 $`c=10^4`$ 的 $`e^{x-c}`$ 检验命题 1.12 和 1.13——[教程，1.5 节](../../tutorial/zh/01_matrix_algebras.md#s-1-5)。
 
 <a id="s-1-4"></a>
 

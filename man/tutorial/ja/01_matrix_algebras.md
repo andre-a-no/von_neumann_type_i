@@ -10,7 +10,7 @@
 
 ## 1.5 ライブラリにおける作用素
 
-*講義ノート：* [1.2節](../../lecture_notes/ja/01_matrix_algebras.md#s-1-2)と[1.3節](../../lecture_notes/ja/01_matrix_algebras.md#s-1-3)：[定理 1.3](../../lecture_notes/ja/01_matrix_algebras.md#r-1-3)、[系 1.4](../../lecture_notes/ja/01_matrix_algebras.md#r-1-4)、[定理 1.5](../../lecture_notes/ja/01_matrix_algebras.md#r-1-5)、[定理 1.6](../../lecture_notes/ja/01_matrix_algebras.md#r-1-6)。
+*講義ノート：* [1.2節](../../lecture_notes/ja/01_matrix_algebras.md#s-1-2)と[1.3節](../../lecture_notes/ja/01_matrix_algebras.md#s-1-3)：[定理 1.3](../../lecture_notes/ja/01_matrix_algebras.md#r-1-3)、[系 1.4](../../lecture_notes/ja/01_matrix_algebras.md#r-1-4)、[定理 1.5](../../lecture_notes/ja/01_matrix_algebras.md#r-1-5)、[定理 1.6](../../lecture_notes/ja/01_matrix_algebras.md#r-1-6)、[定理 1.11](../../lecture_notes/ja/01_matrix_algebras.md#r-1-11)、[命題 1.12](../../lecture_notes/ja/01_matrix_algebras.md#r-1-12)、[命題 1.13](../../lecture_notes/ja/01_matrix_algebras.md#r-1-13)。
 
 ライブラリは環 $`\bigoplus_cM_{k_c}(\mathbb C)`$（第2章）を扱う。単一のブロックは $`C=1`$ の場合であり、`TypeIAlgebra([n], [n])` が $`M_n(\mathbb C)`$ である。（二つのリストはそれぞれ名目上のブロックサイズと実際のブロックサイズであり、当面は両者は等しい。）
 
@@ -50,6 +50,46 @@ assert torch.allclose(spec, torch.exp(torch.tensor([[1.0, 2.0, 4.0]], dtype=spec
 ```
 
 `R @ R` はこの時点ではまだ何も計算しない。積、和、関数は計算の手順（レシピ）を組み立てるだけであり、`.matrix` やトレースなどの数値が要求されたときに評価される。
+
+**微分.** [定理 1.11](../../lecture_notes/ja/01_matrix_algebras.md#r-1-11)（ダレツキー–クレイン）により、自己共役な方向 $`E`$ への $`f(A)`$ の微分は $`U(L\circ U^*EU)U^*`$ である。ここで $`L_{ij}=f^{[1]}(\lambda_i,\lambda_j)`$ は差分商からなるレヴナー行列である（固有値が等しいときは $`f'(\lambda_i)`$）。`functional.divided_differences` は固有値と $`f`$、$`f'`$ の値から $`L`$ を計算し、autograd はそれを用いて `apply_function` を微分する。縮退したスペクトルにおいて、密な指数関数の中心差分商と公式を比較する。中心差分商の誤差は $`O(s^2)`$ に $`\varepsilon/s`$ 程度の丸めを加えたものである：
+
+```python
+from torch_vn_algebra import functional
+
+lam = torch.tensor([1.0, 1.0, 2.0], dtype=torch.float64)          # a degenerate spectrum
+Q = torch.linalg.qr(torch.randn(3, 3, dtype=torch.complex128))[0]  # a unitary
+A0 = Q @ torch.diag(lam).to(torch.complex128) @ Q.mH
+E = torch.randn(3, 3, dtype=torch.complex128)
+E = (E + E.mH) / 2                                                 # a self-adjoint direction
+L = functional.divided_differences(lam, torch.exp(lam), torch.exp(lam))
+D = Q @ (L * (Q.mH @ E @ Q)) @ Q.mH                                # Theorem 1.11 for f = exp
+s = 1e-6
+fd = (torch.linalg.matrix_exp(A0 + s * E) - torch.linalg.matrix_exp(A0 - s * E)) / (2 * s)
+print(f"{(D - fd).abs().max().item():.1e}")
+assert (D - fd).abs().max() < 1e-8
+```
+
+距離 $`h`$ の近い固有値 $`a,b`$ では、商 $`\hat q`$ は桁落ちで精度を失い、中点値 $`\hat m=(f'(a)+f'(b))/2`$ の誤差は高々 $`T=h^2\max|f'''|/12`$ に丸めを加えたものである（[命題 1.12](../../lecture_notes/ja/01_matrix_algebras.md#r-1-12)）。`divided_differences` は $`|\hat q-\hat m|\le2R`$ のとき、かつそのときに限り $`\hat m`$ をとる。ここで $`R`$ は[命題 1.13](../../lecture_notes/ja/01_matrix_algebras.md#r-1-13) の丸め誤差の評価で、評価誤差には $`\varepsilon(|\hat f_a|+|a\hat f'_a|)`$ を用いる。このときその誤差は高々 $`\min(T,3R)`$ である。$`c=10^4`$ 付近の $`f(x)=e^{x-c}`$ でこれを確かめる。ここでは $`f^{[1]}(a,b)=e^{a-c}(e^h-1)/h`$ を `expm1` で正確に計算できる。最後の距離 $`h=0.06`$ は以前の版の閾値 $`\varepsilon^{1/3}\max(|a|,|b|)`$ を下回り、以前の版はそこで中点値をとっていた：
+
+```python
+eps = torch.finfo(torch.float64).eps
+c = 1e4
+f = lambda x: torch.exp(x - c)
+for h in (1e-12, 1e-9, 1e-6, 1e-4, 1e-2, 0.06):
+    w = torch.tensor([c, c + h], dtype=torch.float64)
+    h = (w[1] - w[0]).item()                                       # the distance actually stored
+    fw = f(w)                                                      # f' = f
+    exact = math.expm1(h) / h                                      # f[a, b], as e^(a - c) = 1
+    q = ((fw[1] - fw[0]) / h).item()                               # quotient
+    m = (fw.sum() / 2).item()                                      # midpoint value
+    y = functional.divided_differences(w, fw, fw)[0, 1].item()     # the library's choice
+    R = eps * (fw.abs() + (w * fw).abs()).sum().item() / h + 4 * eps * abs(q)
+    T = h ** 2 * math.exp(h) / 12 + 2 * eps                        # Proposition 1.12, plus rounding
+    print(f"h = {h:.0e}: quotient {abs(q - exact):.0e}, midpoint {abs(m - exact):.0e}, library {abs(y - exact):.0e}")
+    assert abs(y - exact) <= min(T, 3 * R) + 2 * eps              # Proposition 1.13(b)
+```
+
+*数値的観察*：商の誤差は $`h\le10^{-6}`$ で最大 $`5\cdot10^{-10}`$、$`h=0.06`$ で $`10^{-15}`$ である。中点値は $`h\le10^{-9}`$ では丸めを除いて正確で、$`h=0.06`$ では誤差 $`3\cdot10^{-4}`$ である。ライブラリは $`h=10^{-4}`$ を除くすべての行で二つの誤差の小さいほうを得る。$`h=10^{-4}`$ では商のほうがよい（$`10^{-12}`$）にもかかわらず中点値（$`8\cdot10^{-10}`$）をとる。$`R`$ が $`\varepsilon|a|\approx2\cdot10^{-12}`$ だけ摂動された引数を許すためで、これは `torch.exp` には悲観的だが、$`\tau x`$ を丸める $`e^{-i\tau x}`$ のような関数には必要である。保証 $`\min(T,3R)`$ はすべての行で成り立つ。
 
 <a id="s-1-6"></a>
 

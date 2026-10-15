@@ -3,7 +3,7 @@
 # 1. Matrix algebras and functional calculus
 
 This chapter fixes notation and proves the facts about $`M_n(\mathbb C)`$ that every
-later chapter uses: the spectral theorem, the functional calculus, the polar
+later chapter uses: the spectral theorem, the functional calculus and its derivative, the polar
 decomposition and the norms defined by singular values. The library code and the numerical
 checks of these results are in [Tutorial 1](../tutorial/01_matrix_algebras.md).
 
@@ -143,6 +143,126 @@ $`p(A)=\sqrt A`$ and $`p(A)=p(B^2)=V\,\mathrm{diag}(p(\mu_j^2))\,V^*=V\,\mathrm{
 
 **Corollary 1.7.** $`A\ge0`$ iff $`A=T^*T`$ for some $`T`$. (If $`A\ge0`$ take $`T=\sqrt A`$;
 conversely $`\langle x,T^*Tx\rangle=\|Tx\|^2\ge0`$.)
+
+**Derivatives.** Gradient methods differentiate $`f(A)`$ with respect to $`A`$. For self-adjoint $`A`$ the
+derivative is an entrywise product with a matrix of difference quotients of $`f`$.
+
+<a id="r-1-11"></a>
+
+**Theorem 1.11 (Daleckii–Krein).** Let $`A=U\,\mathrm{diag}(\lambda_1,\dots,\lambda_n)\,U^*`$ be self-adjoint, $`I`$ an
+open interval containing $`\mathrm{spec}\,A`$ and $`f:I\to\mathbb C`$ continuously differentiable. Let
+```math
+f^{[1]}(x,y)=\frac{f(x)-f(y)}{x-y}\quad(x\ne y),\qquad f^{[1]}(x,x)=f'(x)
+```
+be the **divided difference** of $`f`$ and $`L_{ij}=f^{[1]}(\lambda_i,\lambda_j)`$ the **Loewner matrix**. Then, for
+every self-adjoint $`E`$,
+```math
+\frac{d}{dt}\Big|_{t=0}f(A+tE)=U\big(L\circ U^*EU\big)U^*,
+```
+where $`(X\circ Y)_{ij}=X_{ij}Y_{ij}`$ is the entrywise (Schur) product.
+
+*Proof.* By the fundamental theorem of calculus, $`f^{[1]}(x,y)=\int_0^1f'(y+s(x-y))\,ds`$ for all $`x,y\in I`$ (for
+$`x=y`$ both sides are $`f'(x)`$), so $`f^{[1]}`$ is continuous on $`I\times I`$. Reordering the columns of $`U`$ permutes
+the rows and columns of $`L`$ and of $`U^*EU`$ alike and does not change the right-hand side, so we may assume
+$`\lambda_1\le\dots\le\lambda_n`$. Let $`\delta>0`$ with $`[\lambda_1-\delta,\lambda_n+\delta]\subset I`$. For
+$`0<|t|\,\|E\|<\delta`$ write $`A+tE=V\,\mathrm{diag}(\mu_1,\dots,\mu_n)\,V^*`$ with $`\mu_1\le\dots\le\mu_n`$; then
+$`|\mu_j-\lambda_j|\le|t|\,\|E\|`$ (Theorem A.10), so all $`\mu_j\in I`$. Put $`W=U^*V`$ (unitary) and $`\tilde E=U^*EU`$.
+As $`U^*f(A)=\mathrm{diag}(f(\lambda_i))\,U^*`$ and $`f(A+tE)V=V\,\mathrm{diag}(f(\mu_j))`$,
+```math
+\big(U^*(f(A+tE)-f(A))V\big)_{ij}=\big(f(\mu_j)-f(\lambda_i)\big)W_{ij}=f^{[1]}(\lambda_i,\mu_j)\,(\mu_j-\lambda_i)\,W_{ij},
+```
+and the same computation for $`f(x)=x`$ gives $`(\mu_j-\lambda_i)W_{ij}=t\,(\tilde EW)_{ij}`$. With
+$`(L_t)_{ij}=f^{[1]}(\lambda_i,\mu_j)`$ this is the exact identity
+```math
+\frac1t\big(f(A+tE)-f(A)\big)=U\big((L_t\circ\tilde EW)\,W^*\big)U^*.
+```
+As $`t\to0`$, $`L_t\to L`$ entrywise, because $`f^{[1]}`$ is continuous and $`\mu_j\to\lambda_j`$. Let $`D_{ij}=W_{ij}`$ if
+$`\lambda_i=\lambda_j`$, $`D_{ij}=0`$ otherwise, and $`R=W-D`$. If $`\lambda_i\ne\lambda_j`$ and
+$`|t|\,\|E\|\le|\lambda_i-\lambda_j|/2`$, then $`|\mu_j-\lambda_i|\ge|\lambda_i-\lambda_j|/2`$ and
+$`|(\tilde EW)_{ij}|\le\|\tilde EW\|=\|E\|`$, so $`|W_{ij}|\le2|t|\,\|E\|/|\lambda_i-\lambda_j|`$. Hence $`R\to0`$ and
+$`DD^*=(W-R)(W-R)^*\to WW^*=1`$. Since $`L_{ij}=L_{ik}`$ whenever $`\lambda_k=\lambda_j`$, and $`D_{kj}=0`$ unless
+$`\lambda_k=\lambda_j`$, we have $`(L\circ\tilde ED)_{ij}=\sum_kL_{ik}\tilde E_{ik}D_{kj}=((L\circ\tilde E)D)_{ij}`$. Therefore
+```math
+(L_t\circ\tilde EW)W^*-L\circ\tilde E=\big((L_t-L)\circ\tilde EW\big)W^*+(L\circ\tilde ER)W^*+(L\circ\tilde ED)R^*+(L\circ\tilde E)(DD^*-1),
+```
+and each term tends to $`0`$, as the entries of $`W`$, $`D`$ and $`\tilde E`$ are bounded by $`1`$, $`1`$ and $`\|E\|`$. $`\square`$
+
+For real $`f`$, $`L`$ is real, and $`\mathrm{Tr}\big(G^*U(L\circ U^*EU)U^*\big)=\mathrm{Tr}(\Gamma^*E)`$ with
+$`\Gamma=U(L\circ U^*GU)U^*`$, for every $`G`$ (write both sides as sums over $`i,j`$ in the basis $`U`$): the derivative
+of $`A\mapsto\mathrm{Re}\,\mathrm{Tr}(G^*f(A))`$ in the direction $`E`$ is $`\mathrm{Re}\,\mathrm{Tr}(\Gamma^*E)`$.
+
+*In the library:* `apply_function` is differentiated (by autograd) with Theorem 1.11; the Loewner matrix is
+`functional.divided_differences`.
+
+**Rounding.** For close $`\lambda_i,\lambda_j`$ the quotient $`(f(\lambda_i)-f(\lambda_j))/(\lambda_i-\lambda_j)`$ loses
+accuracy by cancellation, and for $`\lambda_i=\lambda_j`$ it is not defined. The derivatives are then the better data.
+
+<a id="r-1-12"></a>
+
+**Proposition 1.12 (midpoint value).** Let $`a<b`$, $`h=b-a`$, and $`f`$ three times continuously differentiable
+on $`[a,b]`$ (complex values allowed). Then
+```math
+f^{[1]}(a,b)-\frac{f'(a)+f'(b)}2=-\frac{h^2}2\int_0^1s(1-s)\,f'''(a+sh)\,ds,
+\qquad
+\Big|f^{[1]}(a,b)-\frac{f'(a)+f'(b)}2\Big|\le\frac{h^2}{12}\max_{[a,b]}|f'''|,
+```
+with equality for polynomials of degree $`3`$.
+
+*Proof.* Let $`g(s)=f'(a+sh)`$, so that $`f^{[1]}(a,b)=\frac1h\int_a^bf'=\int_0^1g`$, and $`\varphi(s)=s(1-s)/2`$, so that
+$`\varphi(0)=\varphi(1)=0`$, $`\varphi'(0)=\frac12=-\varphi'(1)`$ and $`\varphi''=-1`$. Integrating by parts twice,
+$`\int_0^1\varphi g''=-\int_0^1\varphi'g'=-[\varphi'g]_0^1+\int_0^1\varphi''g=\frac{g(0)+g(1)}2-\int_0^1g`$. As
+$`g''(s)=h^2f'''(a+sh)`$, this is the identity; $`\int_0^1\varphi=\frac1{12}`$ gives the bound, and for a cubic
+$`f'''`$ is constant. $`\square`$
+
+<a id="r-1-13"></a>
+
+**Proposition 1.13 (quotient or midpoint).** Assume floating-point arithmetic with unit roundoff $`u\le1/20`$:
+for floating-point numbers $`x,y`$ and $`\circ\in\{+,-,\times,/\}`$ the computed result is $`(x\circ y)(1+\theta)`$
+with $`|\theta|\le u`$ (no overflow or underflow). Let $`a\ne b`$ be real floating-point numbers, $`h=|a-b|`$,
+$`x=f^{[1]}(a,b)`$, and let $`\hat f_a,\hat f_b`$ be computed values with $`|\hat f_a-f(a)|\le\delta_a`$ and
+$`|\hat f_b-f(b)|\le\delta_b`$.
+
+(a) The computed quotient $`\hat q`$ of $`\hat f_a-\hat f_b`$ and $`a-b`$ satisfies
+$`|\hat q-x|\le R:=(\delta_a+\delta_b)/h+5u|\hat q|`$.
+
+(b) Let $`|\hat m-x|\le T`$ (for instance, $`\hat m`$ the computed midpoint value and $`T`$ the bound of
+Proposition 1.12 plus its rounding error). Put $`y=\hat m`$ if $`|\hat q-\hat m|\le2R`$, and $`y=\hat q`$ otherwise.
+Then $`|y-x|\le\min(T,3R)`$.
+
+(c) If $`\delta_a+\delta_b\le\Delta`$ and $`T=Mh^2+T_0`$, then $`|y-x|\le(3\Delta)^{2/3}M^{1/3}+T_0+15u|\hat q|`$, for
+every $`h`$. The two error terms $`3\Delta/h`$ and $`Mh^2`$ balance at $`h_*=(3\Delta/M)^{1/3}`$.
+
+*Proof.* (a) Let $`\tilde q=(\hat f_a-\hat f_b)/(a-b)`$. The three operations give
+$`\hat q=\tilde q\,(1+\theta_1)(1+\theta_3)/(1+\theta_2)=\tilde q\,(1+\theta)`$ with $`|\theta_i|\le u`$, hence
+$`-3u\le\frac{(1-u)^2}{1+u}-1\le\theta\le\frac{(1+u)^2}{1-u}-1=\frac{3u+u^2}{1-u}\le4u`$. So
+$`|\hat q-\tilde q|=|\theta|\,|\tilde q|\le\frac{4u}{1-4u}|\hat q|\le5u|\hat q|`$, and
+$`|\tilde q-x|=|(\hat f_a-f(a))-(\hat f_b-f(b))|/h\le(\delta_a+\delta_b)/h`$. (b) If $`y=\hat m`$, then $`|y-x|\le T`$
+and $`|y-x|\le|\hat m-\hat q|+|\hat q-x|\le3R`$. If $`y=\hat q`$, then $`|y-x|\le R`$, and
+$`T\ge|\hat m-x|\ge|\hat m-\hat q|-|\hat q-x|>2R-R=R`$. (c) $`\min(T,3R)\le\min(Mh^2,3\Delta/h)+T_0+15u|\hat q|`$; for
+$`h\ge h_*`$, $`3\Delta/h\le3\Delta/h_*`$, for $`h<h_*`$, $`Mh^2<Mh_*^2`$, and $`3\Delta/h_*=Mh_*^2=(3\Delta)^{2/3}M^{1/3}`$. $`\square`$
+
+The proof holds verbatim for complex-valued $`f`$ (real and imaginary parts are rounded separately, and $`a-b`$ is
+real; $`\theta`$ is then complex with the same bound). The rule (b) needs $`R`$, which is computed from the data, but
+not $`T`$: without any knowledge of $`f'''`$, its error is at most three times the smaller of the two bounds. A fixed
+threshold, midpoint value if and only if $`h\le h_*`$, would need $`M=\max|f'''|/12`$. The threshold
+$`h\le\varepsilon^{1/3}\max(|a|,|b|)`$ ($`\varepsilon=2u`$) of earlier versions of the library is of this kind, with
+$`M`$ of the order of $`\Delta/\max(|a|,|b|)^3`$: right for $`x^p`$ or $`\log x`$, whose derivatives scale with $`|x|`$,
+wrong for functions that vary on a scale unrelated to $`|x|`$. For $`f(x)=e^{x-c}`$ at $`a\approx c=10^4`$ it took the
+midpoint value up to $`h\approx0.06`$, with relative error up to $`h^2/12\approx3\cdot10^{-4}`$ (Proposition 1.12 is an
+equality up to a factor $`e^{h}`$ there); the same happens for $`e^{-i\tau x}`$ and a Hamiltonian with a large
+constant shift.
+
+*In the library:* `functional.divided_differences` applies rule (b) to every pair of eigenvalues, with
+$`\delta_a=\varepsilon\,(|\hat f_a|+|a\hat f'_a|)`$ and $`4\varepsilon|\hat q|`$ in place of $`5u|\hat q|`$. The choice of
+$`\delta_a`$ is an assumption on the evaluation of $`f`$, not a theorem: relative error at most $`\varepsilon`$, at an
+argument perturbed by at most $`\varepsilon|a|`$ (to first order; the second term covers functions such as
+$`e^{-i\tau x}`$, which round $`\tau x`$). The same rule is applied to the complex eigenvalues of normal matrices,
+which the proof does not cover. The midpoint value is also taken for ties and for pairs that the eigensolver does
+not resolve, $`h\le n\varepsilon\max_l|\lambda_l|`$: there its error is at most $`(n\varepsilon\max_l|\lambda_l|)^2\max|f'''|/12`$
+by Proposition 1.12, while the quotient would be meaningless for a discontinuous $`f`$ such as an indicator function.
+
+*Computation:* Theorem 1.11 against a difference quotient at a degenerate spectrum, and Propositions 1.12 and 1.13
+for $`e^{x-c}`$ with $`c=10^4`$ — [tutorial, Section 1.5](../tutorial/01_matrix_algebras.md#s-1-5).
 
 <a id="s-1-4"></a>
 

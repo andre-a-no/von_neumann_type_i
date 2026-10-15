@@ -14,7 +14,7 @@
 
 ## 1.5 Операторы в библиотеке
 
-*Конспект:* [раздел 1.2](../../lecture_notes/ru/01_matrix_algebras.md#s-1-2) и [раздел 1.3](../../lecture_notes/ru/01_matrix_algebras.md#s-1-3): [теорема 1.3](../../lecture_notes/ru/01_matrix_algebras.md#r-1-3), [следствие 1.4](../../lecture_notes/ru/01_matrix_algebras.md#r-1-4), [теорема 1.5](../../lecture_notes/ru/01_matrix_algebras.md#r-1-5), [теорема 1.6](../../lecture_notes/ru/01_matrix_algebras.md#r-1-6).
+*Конспект:* [раздел 1.2](../../lecture_notes/ru/01_matrix_algebras.md#s-1-2) и [раздел 1.3](../../lecture_notes/ru/01_matrix_algebras.md#s-1-3): [теорема 1.3](../../lecture_notes/ru/01_matrix_algebras.md#r-1-3), [следствие 1.4](../../lecture_notes/ru/01_matrix_algebras.md#r-1-4), [теорема 1.5](../../lecture_notes/ru/01_matrix_algebras.md#r-1-5), [теорема 1.6](../../lecture_notes/ru/01_matrix_algebras.md#r-1-6), [теорема 1.11](../../lecture_notes/ru/01_matrix_algebras.md#r-1-11), [предложение 1.12](../../lecture_notes/ru/01_matrix_algebras.md#r-1-12), [предложение 1.13](../../lecture_notes/ru/01_matrix_algebras.md#r-1-13).
 
 Библиотека работает с алгебрами $`\bigoplus_cM_{k_c}(\mathbb C)`$ (глава 2). Один
 блок — это случай $`C=1`$: `TypeIAlgebra([n], [n])` есть $`M_n(\mathbb C)`$. (Два списка —
@@ -71,6 +71,63 @@ assert torch.allclose(spec, torch.exp(torch.tensor([[1.0, 2.0, 4.0]], dtype=spec
 
 `R @ R` пока ничего не вычисляет: произведения, суммы и функции строят «рецепт»,
 который вычисляется, когда запрашивается `.matrix` или число, например след.
+
+**Производные.** По [теореме 1.11](../../lecture_notes/ru/01_matrix_algebras.md#r-1-11) (Далецкий–Крейн) производная $`f(A)`$
+по самосопряжённому направлению $`E`$ равна $`U(L\circ U^*EU)U^*`$, где $`L_{ij}=f^{[1]}(\lambda_i,\lambda_j)`$ — матрица
+Лёвнера из разделённых разностей ($`f'(\lambda_i)`$ для равных собственных значений). `functional.divided_differences`
+вычисляет $`L`$ по собственным значениям и значениям $`f`$ и $`f'`$, и autograd дифференцирует с её помощью
+`apply_function`. Проверим формулу на вырожденном спектре, сравнивая с центральным разностным отношением плотной
+экспоненты, ошибка которого есть $`O(s^2)`$ плюс округление порядка $`\varepsilon/s`$:
+
+```python
+from torch_vn_algebra import functional
+
+lam = torch.tensor([1.0, 1.0, 2.0], dtype=torch.float64)          # a degenerate spectrum
+Q = torch.linalg.qr(torch.randn(3, 3, dtype=torch.complex128))[0]  # a unitary
+A0 = Q @ torch.diag(lam).to(torch.complex128) @ Q.mH
+E = torch.randn(3, 3, dtype=torch.complex128)
+E = (E + E.mH) / 2                                                 # a self-adjoint direction
+L = functional.divided_differences(lam, torch.exp(lam), torch.exp(lam))
+D = Q @ (L * (Q.mH @ E @ Q)) @ Q.mH                                # Theorem 1.11 for f = exp
+s = 1e-6
+fd = (torch.linalg.matrix_exp(A0 + s * E) - torch.linalg.matrix_exp(A0 - s * E)) / (2 * s)
+print(f"{(D - fd).abs().max().item():.1e}")
+assert (D - fd).abs().max() < 1e-8
+```
+
+Для близких собственных значений $`a,b`$ на расстоянии $`h`$ отношение $`\hat q`$ теряет точность из-за сокращения, а
+значение в средней точке $`\hat m=(f'(a)+f'(b))/2`$ ошибается не более чем на $`T=h^2\max|f'''|/12`$ плюс округление
+([предложение 1.12](../../lecture_notes/ru/01_matrix_algebras.md#r-1-12)). `divided_differences` берёт $`\hat m`$ тогда и
+только тогда, когда $`|\hat q-\hat m|\le2R`$, с оценкой округления $`R`$ из
+[предложения 1.13](../../lecture_notes/ru/01_matrix_algebras.md#r-1-13) и ошибкой вычисления $`\varepsilon(|\hat f_a|+|a\hat f'_a|)`$;
+тогда её ошибка не превосходит $`\min(T,3R)`$. Проверим это для $`f(x)=e^{x-c}`$ вблизи $`c=10^4`$, где
+$`f^{[1]}(a,b)=e^{a-c}(e^h-1)/h`$ точно вычисляется через `expm1`. Последнее расстояние, $`h=0.06`$, меньше порога
+$`\varepsilon^{1/3}\max(|a|,|b|)`$ прежних версий, которые брали там среднюю точку:
+
+```python
+eps = torch.finfo(torch.float64).eps
+c = 1e4
+f = lambda x: torch.exp(x - c)
+for h in (1e-12, 1e-9, 1e-6, 1e-4, 1e-2, 0.06):
+    w = torch.tensor([c, c + h], dtype=torch.float64)
+    h = (w[1] - w[0]).item()                                       # the distance actually stored
+    fw = f(w)                                                      # f' = f
+    exact = math.expm1(h) / h                                      # f[a, b], as e^(a - c) = 1
+    q = ((fw[1] - fw[0]) / h).item()                               # quotient
+    m = (fw.sum() / 2).item()                                      # midpoint value
+    y = functional.divided_differences(w, fw, fw)[0, 1].item()     # the library's choice
+    R = eps * (fw.abs() + (w * fw).abs()).sum().item() / h + 4 * eps * abs(q)
+    T = h ** 2 * math.exp(h) / 12 + 2 * eps                        # Proposition 1.12, plus rounding
+    print(f"h = {h:.0e}: quotient {abs(q - exact):.0e}, midpoint {abs(m - exact):.0e}, library {abs(y - exact):.0e}")
+    assert abs(y - exact) <= min(T, 3 * R) + 2 * eps              # Proposition 1.13(b)
+```
+
+*Численное наблюдение:* отношение ошибается до $`5\cdot10^{-10}`$ при $`h\le10^{-6}`$ и на $`10^{-15}`$ при $`h=0.06`$;
+значение в средней точке точно с точностью до округления при $`h\le10^{-9}`$ и ошибается на $`3\cdot10^{-4}`$ при $`h=0.06`$.
+Библиотека имеет меньшую из двух ошибок во всех строках, кроме $`h=10^{-4}`$, где она берёт среднюю точку
+($`8\cdot10^{-10}`$), хотя отношение лучше ($`10^{-12}`$): $`R`$ допускает аргумент, возмущённый на
+$`\varepsilon|a|\approx2\cdot10^{-12}`$, что пессимистично для `torch.exp`, но необходимо для функций вроде $`e^{-i\tau x}`$,
+которые округляют $`\tau x`$. Гарантия $`\min(T,3R)`$ выполняется во всех строках.
 
 <a id="s-1-6"></a>
 

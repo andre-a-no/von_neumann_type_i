@@ -11,7 +11,7 @@ $`L\approx14`$ を超えると高くつく（密行列は $`4^L`$ 個の成分�
 **本章で学ぶこと**：鎖の環がなぜ $`\bigoplus_NM_{\binom LN}`$ であるか、これらの環の塔がなぜ
 パスカルの三角形をブラッテリ図とし、指数 $`4\cos^2\frac\pi{2L+4}`$ をもつか、運動量セクターの数え方、
 マーシャルの符号則と、それが基底状態の運動量とスピンについて導く帰結（リーブ–マティス）、XX 鎖の
-ジョルダン–ウィグナーによる解、二マグノンのベーテ方程式、ランチョス法がなぜ単調に収束するか、
+ジョルダン–ウィグナーによる解、二マグノンのベーテ方程式、ランチョス法がなぜ単調に収束するか、クリロフ法の時間ステップがどれほど正確か、
 そして準位統計と自由フェルミオンのエンタングルメントの測り方。本章の数値的検証は
 [チュートリアル 9](../../tutorial/ja/09_spin_chains.md) にある。
 
@@ -430,6 +430,74 @@ $`\mathcal K_m`$ が不変ならば $`HQ_m=Q_mT_m`$（命題 9.13、$`r_m=0`$）
 これを $`e_1`$ に作用させ、$`Q_me_1=v/\|v\|`$ を用いればよい。$`\square`$
 
 *計算：* クリロフ空間でステップを進める `krylov.evolve` に対する命題 9.15 を、ネール状態からのクエンチで、密な伝播子と照合する — [チュートリアル、9.5節](../../tutorial/ja/09_spin_chains.md#s-9-5)。
+
+**誤差評価.** $`\mathcal K_m`$ が不変でない限り、命題 9.15 は $`w_\tau`$ の精度について何も述べない。誤差は、次数 $`<m`$ の多項式がスペクトル上で $`e^{-i\tau x}`$ をどれだけよく近似するかで決まり、その近似はチェビシェフ多項式が与える。**チェビシェフ多項式** $`\mathcal T_0=1`$、$`\mathcal T_1(y)=y`$、$`\mathcal T_{k+1}(y)=2y\mathcal T_k(y)-\mathcal T_{k-1}(y)`$ は次数 $`k`$ であり、$`\mathcal T_k(\cos\vartheta)=\cos k\vartheta`$ を満たす（$`\cos(k+1)\vartheta+\cos(k-1)\vartheta=2\cos\vartheta\cos k\vartheta`$ から帰納法による）。したがって $`[-1,1]`$ 上で $`|\mathcal T_k|\le1`$ である。
+```math
+S_m(x)=\sum_{j\ge m}\frac{x^j}{j!}\le\frac{x^m}{m!}\Big(1-\frac x{m+1}\Big)^{-1}\qquad(0\le x<m+1)
+```
+と書く。この評価は $`m!/(m+i)!\le(m+1)^{-i}`$ と等比級数から従う。
+
+<a id="r-9-17"></a>
+
+**補題 9.17（$`e^{-i\rho y}`$ のチェビシェフ展開）.** 実数 $`\rho`$ と $`y\in[-1,1]`$ に対して
+```math
+e^{-i\rho y}=a_0+2\sum_{k\ge1}a_k\mathcal T_k(y),\qquad a_k=(-i)^k\sum_{l\ge0}\frac{(-1)^l(\rho/2)^{k+2l}}{l!\,(k+l)!},\qquad|a_k|\le\frac{(|\rho|/2)^k}{k!}.
+```
+したがって、任意の $`m\ge1`$ に対して、次数 $`\le m-1`$ の多項式 $`p=a_0+2\sum_{k=1}^{m-1}a_k\mathcal T_k`$ は $`[-1,1]`$ 上で $`|e^{-i\rho y}-p(y)|\le2S_m(|\rho|/2)`$ を満たす。
+
+（$`a_k`$ を定める和はベッセル関数であり、$`a_k=(-i)^kJ_k(\rho)`$ である。証明にはこの事実は不要である。）
+
+*証明.* *展開.* $`y=\cos\vartheta`$ に対し $`\cos^j\vartheta=2^{-j}(e^{i\vartheta}+e^{-i\vartheta})^j=2^{-j}\sum_{l=0}^j\binom jle^{i(j-2l)\vartheta}`$ なので
+```math
+e^{-i\rho\cos\vartheta}=\sum_{j\ge0}\frac{(-i\rho)^j}{j!}\,2^{-j}\sum_{l=0}^j\binom jl\,e^{i(j-2l)\vartheta}.
+```
+この二重級数は絶対収束する（項の絶対値の和は $`e^{|\rho|}`$）ので、任意の順序で、とくに $`k=j-2l`$ ごとにまとめて和をとってよい。$`k\ge0`$ に対し $`j-2l=k`$ となる項は $`j=k+2l`$ をもち、$`\binom{k+2l}l/(k+2l)!=1/(l!\,(k+l)!)`$ であるから、それらの和は $`a_ke^{ik\vartheta}`$ である。$`k<0`$ に対しては $`\binom jl=\binom j{j-l}`$ から $`e^{ik\vartheta}`$ の係数は $`a_{|k|}`$ である。よって $`e^{-i\rho\cos\vartheta}=a_0+\sum_{k\ge1}a_k(e^{ik\vartheta}+e^{-ik\vartheta})=a_0+2\sum_{k\ge1}a_k\mathcal T_k(\cos\vartheta)`$。
+
+*評価.* $`k\ge0`$ を固定する。$`\vartheta`$ を $`[0,2\pi]`$ 上の一様分布とし、$`k=0`$ ならば $`\sigma=1`$、$`k\ge1`$ ならば $`\sigma`$ を $`\vartheta`$ と独立で $`[0,1]`$ 上の密度 $`k(1-t)^{k-1}`$ をもつ確率変数とする。$`Z=\sqrt\sigma\cos\vartheta\in[-1,1]`$ とおく。このとき $`\mathbb E\cos^{2l}\vartheta=4^{-l}\binom{2l}l`$（上の二項展開で平均が $`0`$ でないのは定数項だけ）であり、$`\mathbb E\sigma^l=k\int_0^1t^l(1-t)^{k-1}dt=l!\,k!/(k+l)!`$（$`l`$ 回部分積分する。$`\int_0^1t^l(1-t)^{k-1}dt=\frac lk\int_0^1t^{l-1}(1-t)^kdt`$。$`k=0`$ では両辺とも $`1`$）。独立性により $`\mathbb EZ^{2l}=(2l)!\,k!/(4^l\,l!\,(k+l)!)`$。$`|Z|\le1`$ なので級数 $`\cos(\rho Z)=\sum_l(-1)^l(\rho Z)^{2l}/(2l)!`$ は一様収束し、期待値を項ごとにとってよい：
+```math
+\frac{(\rho/2)^k}{k!}\,\mathbb E\cos(\rho Z)=\sum_{l\ge0}\frac{(-1)^l\rho^{2l}}{(2l)!}\cdot\frac{(\rho/2)^k\,(2l)!}{4^l\,l!\,(k+l)!}=\sum_{l\ge0}\frac{(-1)^l(\rho/2)^{k+2l}}{l!\,(k+l)!}=i^ka_k.
+```
+$`|\cos|\le1`$ より $`|a_k|\le(|\rho|/2)^k/k!`$。
+
+*打ち切り.* $`|e^{-i\rho y}-p(y)|=2\,|\sum_{k\ge m}a_k\mathcal T_k(y)|\le2\sum_{k\ge m}(|\rho|/2)^k/k!=2S_m(|\rho|/2)`$。$`\square`$
+
+<a id="r-9-18"></a>
+
+**定理 9.18（クリロフ伝播子の誤差）.** $`\dim\mathcal K_m=m\ge2`$、$`\|v\|=1`$ とし、$`Q_m,T_m,r_m`$ を命題 9.13 のとおり、$`\beta_m=\|r_m\|`$、$`\theta_1\le\dots\le\theta_m`$ をリッツ値、$`c_T=(\theta_1+\theta_m)/2`$、$`w_T=(\theta_m-\theta_1)/2`$ とする。$`w_\tau=Q_me^{-i\tau T_m}e_1`$、$`\varphi(t)=\langle e_m,e^{-itT_m}e_1\rangle`$ とし、$`c\in\mathbb R`$、$`w\ge0`$ は $`\mathrm{spec}\,H\subseteq[c-w,c+w]`$ を満たすとする。実数 $`\tau`$ に対して：
+
+(a)（*シフト不変性*）実数 $`s`$ に対し、$`H+s`$ と $`v`$ のランチョスベクトルは $`H`$ と $`v`$ のものと同じであり、$`T_m`$ は $`T_m+s`$ になり、$`r_m`$ は変わらず、$`e^{-i\tau H}v`$ と $`w_\tau`$ はどちらも $`e^{-i\tau s}`$ 倍される。誤差 $`\|e^{-i\tau H}v-w_\tau\|`$ と評価 (b)–(d) は変わらない；
+
+(b)（*事後評価*）$`e^{-i\tau H}v-w_\tau=-i\int_0^\tau\varphi(t)\,e^{-i(\tau-t)H}r_m\,dt`$。よって $`\|e^{-i\tau H}v-w_\tau\|\le\beta_m\,\big|\int_0^\tau|\varphi(t)|\,dt\big|`$；
+
+(c)（*計算可能な評価*）$`w_T>0`$、$`|\varphi(t)|\le2S_{m-1}(|t|w_T/2)`$ であり、
+```math
+\|e^{-i\tau H}v-w_\tau\|\le\frac{4\beta_m}{w_T}\,S_m\Big(\frac{|\tau|\,w_T}2\Big);
+```
+
+(d)（*事前評価*）$`\beta_m\le w`$、$`w_T\le w`$ であり、$`\rho=|\tau|\,w`$ とおくと
+```math
+\|e^{-i\tau H}v-w_\tau\|\le\frac{4\beta_m}w\,S_m\Big(\frac\rho2\Big)\le4S_m\Big(\frac\rho2\Big)\le\frac4{m!}\Big(\frac\rho2\Big)^m\Big(1-\frac\rho{2m+2}\Big)^{-1}\qquad(\rho<2m+2).
+```
+
+*証明.* (a) $`(H+s)^jv`$ は $`H^jv`$ に $`H^iv`$（$`i<j`$）の一次結合を加えたものであり、逆も成り立つので、すべての $`j`$ について $`\mathcal K_j(H+s,v)=\mathcal K_j(H,v)`$。$`(H+s)q_j=Hq_j+sq_j`$ の $`\mathcal K_j\ni q_j`$ に直交する成分は $`Hq_j`$ のそれと同じなので、命題 9.13 の構成は同じ $`q_j`$ を与える。すると $`Q_m^*(H+s)Q_m=T_m+s`$ かつ $`(H+s)Q_m-Q_m(T_m+s)=HQ_m-Q_mT_m`$。定理 1.5(c) により、$`X=H`$ と $`X=T_m`$ に対して $`e^{-i\tau(X+s)}=e^{-i\tau s}e^{-i\tau X}`$。最後に $`\beta_m`$、$`|\varphi|`$、$`w_T`$ は変わらず、$`\mathrm{spec}(H+s)\subseteq[c+s-w,c+s+w]`$。
+
+(b) $`T_m`$ に対する命題 8.2(1) により $`\frac d{dt}w_t=-iQ_mT_me^{-itT_m}e_1`$ であり、$`Q_mT_m=HQ_m-r_me_m^T`$（命題 9.13）なので $`\frac d{dt}w_t=-iHw_t+i\varphi(t)r_m`$。$`\frac d{dt}e^{itH}=iHe^{itH}`$（命題 8.2(1)）であるから、積の微分法則により $`\frac d{dt}(e^{itH}w_t)=i\varphi(t)e^{itH}r_m`$。$`0`$ から $`\tau`$ まで積分すると（補題 A.4(e)）、$`w_0=Q_me_1=v`$ により $`e^{i\tau H}w_\tau-v=i\int_0^\tau\varphi(t)e^{itH}r_m\,dt`$。ユニタリ $`e^{-i\tau H}`$ を作用させ（補題 A.4(b)）、ノルムをとる（補題 A.4(c)）。
+
+(c) $`T_m`$ は $`1`$ の定数倍ではない（$`\beta_1>0`$）ので、その固有値はすべてが等しくはなく（定理 1.3）、$`w_T>0`$。$`T_m`$ は三重対角なので $`T_m^je_1`$ は第 $`j+1`$ 成分より下で $`0`$ であり、次数 $`\le m-2`$ の任意の多項式 $`p`$ に対して $`\langle e_m,p(T_m)e_1\rangle=0`$。補題 9.17（$`m`$ の代わりに $`m-1`$、$`\rho=tw_T`$）により、$`[-1,1]`$ 上で $`|e^{-itw_Ty}-\tilde p(y)|\le2S_{m-1}(|t|w_T/2)`$ となる次数 $`\le m-2`$ の多項式 $`\tilde p`$ がある。すると $`p(x)=e^{-itc_T}\tilde p((x-c_T)/w_T)`$ は次数 $`\le m-2`$ であり、各リッツ値において $`|e^{-itx}-p(x)|\le2S_{m-1}(|t|w_T/2)`$。定理 1.5 と系 1.4(1) により $`|\varphi(t)|=|\langle e_m,(e^{-itT_m}-p(T_m))e_1\rangle|\le\max_i|e^{-it\theta_i}-p(\theta_i)|`$。級数 $`S_{m-1}`$ は非負の項をもち有界区間上で一様収束するので、項ごとに積分してよい：$`\int_0^{|\tau|}2S_{m-1}(tw_T/2)\,dt=\frac4{w_T}S_m(|\tau|w_T/2)`$。(b) と合わせてこれが評価である。
+
+(d) $`Q_m(T_m-c)e_m=Q_mQ_m^*(H-c)q_m`$ は $`(H-c)q_m`$ の $`\mathcal K_m`$ への直交射影であり、$`r_m=(H-c)q_m-Q_m(T_m-c)e_m`$ は直交成分なので、$`\beta_m\le\|(H-c)q_m\|\le\|H-c\|\le w`$（系 1.4(1)）。$`T_m`$ の単位固有ベクトル $`y`$ に対し、リッツ値 $`\langle y,T_my\rangle=\langle Q_my,HQ_my\rangle`$ は $`[c-w,c+w]`$ にあるので $`w_T\le w`$。さらに $`x=|\tau|w_T/2\le\rho/2`$ として $`\frac{4\beta_m}{w_T}S_m(x)=2\beta_m|\tau|\,S_m(x)/x`$ であり、$`S_m(x)/x=\sum_{j\ge m}x^{j-1}/j!`$ は非減少である。これが第一の不等式を与え、$`\beta_m\le w`$ が第二、$`S_m`$ の評価が第三を与える。$`\square`$
+
+評価 (c) はランチョス計算のデータ、すなわち $`\beta_m`$ とリッツ値だけを用いる。リッツ値はスペクトルの内部にあり（定理 9.14）、初期ベクトルが両端の固有ベクトル上に小さな成分しかもたないときには、スペクトルの半幅 $`w`$ を大きく過小評価しうる。しかし (c) には $`w`$ の推定はまったく入らない。表示 (b) は $`T_m`$ だけを含むからである。(d) と $`m!\ge(m/e)^m`$ により、誤差は高々 $`(e\rho/2m)^m`$ 程度であり、$`\rho=|\tau|w`$ が $`2m/e\approx0.74\,m`$ を十分下回れば小さい。したがってステップは長くとれる。ライブラリの以前の版が誤差推定として足し合わせていた量 $`\beta_m|\varphi(\tau)|`$ は、(b) の証明により欠損 $`\frac d{d\tau}w_\tau+iHw_\tau`$ のノルム、すなわち (b) の被積分関数の終点での値であり、誤差ではなく率である。$`\tau`$ が小さいとき $`\varphi(t)\approx(-it)^{m-1}\beta_1\cdots\beta_{m-1}/(m-1)!`$ なので、それは評価 (b) をおよそ $`m/|\tau|`$ 倍上回る。$`\tau`$ が大きいとき $`\varphi`$ は振動し、誤差が $`0`$ でなくても終点で $`0`$ になりうる。
+
+<a id="r-9-19"></a>
+
+**系 9.19（ステップ規則）.** $`\tau=\tau_1+\dots+\tau_N`$、$`\tau_k>0`$、$`\psi_0=v\ne0`$ とし、$`\psi_k=\|\psi_{k-1}\|\,Q_me^{-i\tau_kT_m}e_1`$ を $`\mathcal K_m(H,\psi_{k-1})`$ における $`e^{-i\tau_kH}\psi_{k-1}`$ のクリロフ近似、$`\varepsilon_k`$ をこのステップの評価 (c) に $`\|\psi_{k-1}\|`$ を掛けたものとする（このクリロフ空間の次元が $`<m`$ ならば $`\varepsilon_k=0`$）。このとき任意の $`k`$ に対して $`\|e^{-i(\tau_1+\dots+\tau_k)H}v-\psi_k\|\le\varepsilon_1+\dots+\varepsilon_k`$。特に、各ステップで $`\varepsilon_k\le\mathrm{tol}\cdot\|v\|\,\tau_k/\tau`$ ならば、$`k`$ ステップ後の誤差は高々 $`\mathrm{tol}\cdot\|v\|\,(\tau_1+\dots+\tau_k)/\tau`$ である。$`m\ge2`$ に対し、長さ $`h`$ のステップの評価を $`h`$ で割ったものは $`h`$ について非減少で、$`h\to0`$ で $`0`$ に収束する。したがって許容される最長のステップは正である。
+
+*証明.* $`d_k=e^{-i(\tau_1+\dots+\tau_k)H}v-\psi_k`$ とおく。$`d_k=e^{-i\tau_kH}d_{k-1}+(e^{-i\tau_kH}\psi_{k-1}-\psi_k)`$ であり、$`e^{-i\tau_kH}`$ はユニタリなので、$`\psi_{k-1}/\|\psi_{k-1}\|`$ に定理 9.18(c) を適用して $`\|d_k\|\le\|d_{k-1}\|+\varepsilon_k`$。クリロフ空間の次元が $`j<m`$ ならば、それは $`\mathcal K_j`$ に等しく不変であり、命題 9.15 によりそのステップは厳密である。命題 9.15 によりすべての $`\|\psi_k\|=\|v\|`$。長さ $`h`$ のステップの評価を $`h`$ で割ったものは $`x=hw_T/2`$ として $`2\beta_m\|\psi_{k-1}\|S_m(x)/x`$ であり、$`h`$ について非減少で、$`m\ge2`$ では $`S_m(x)/x\le\frac{x^{m-1}}{m!}(1-\frac x{m+1})^{-1}\to0`$。$`\square`$
+
+*ライブラリでは：* `krylov.expm_multiply_step` は各ステップとともに評価 (c)（`krylov.krylov_error_bound`）を返す。`krylov.evolve`（既定の `dt=None`）は現在の状態でクリロフ空間を構成し、評価 (c) が $`\mathrm{tol}\cdot\|\psi_0\|\,h/(t_{\mathrm{end}}-t_0)`$ 以下となる最長のステップ $`h`$（次の出力時刻まで）をとる。系 9.19 により、返される各状態は $`e^{-i(t-t_0)H}\psi_0`$ から $`\mathrm{tol}\cdot\|\psi_0\|`$ 以内にある。これは厳密な算術での話であり、丸め誤差は含まれない（丸め誤差はステップ数とともに増え、$`H`$ に大きな定数シフトがあると、各行列–ベクトル積が単位時間あたり $`\varepsilon\|H\|`$ 程度の誤差を伴う）。定理 9.18(a) により、ステップは定数シフトによらない。`dt` を固定した場合は、評価の和を $`\mathrm{tol}\cdot\|\psi_0\|`$ と比較し、それより大きければ警告を出す。
+
+*計算：* 補題 9.17、定理 9.18、系 9.19 を、クラスター、大きなシフト、大きなノルムをもつスペクトルについて密な伝播子と照合し、`krylov.evolve` のステップを調べる — [チュートリアル、9.5節](../../tutorial/ja/09_spin_chains.md#s-9-5)。
 
 <a id="s-9-6"></a>
 

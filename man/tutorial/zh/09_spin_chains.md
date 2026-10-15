@@ -259,7 +259,7 @@ assert close(ring8.xxz(1.0, Delta, sector=2).matrix[0, 0] @ Phi, (8 * Delta / 4 
 
 ## 9.5 Lanczos 与 Krylov 方法
 
-*讲义：* [9.5 节](../../lecture_notes/zh/09_spin_chains.md#s-9-5)；[命题 9.13](../../lecture_notes/zh/09_spin_chains.md#r-9-13)（Lanczos：$`T_m=Q_m^*HQ_m`$ 是三对角的）、[定理 9.14](../../lecture_notes/zh/09_spin_chains.md#r-9-14)（Ritz 值，即 $`T_m`$ 的特征值，满足 $`\theta^{(m)}_j\ge\lambda_j`$ 并随 $`m`$ 递减）、[命题 9.15](../../lecture_notes/zh/09_spin_chains.md#r-9-15)（Krylov 时间演化）。
+*讲义：* [9.5 节](../../lecture_notes/zh/09_spin_chains.md#s-9-5)；[命题 9.13](../../lecture_notes/zh/09_spin_chains.md#r-9-13)（Lanczos：$`T_m=Q_m^*HQ_m`$ 是三对角的）、[定理 9.14](../../lecture_notes/zh/09_spin_chains.md#r-9-14)（Ritz 值，即 $`T_m`$ 的特征值，满足 $`\theta^{(m)}_j\ge\lambda_j`$ 并随 $`m`$ 递减）、[命题 9.15](../../lecture_notes/zh/09_spin_chains.md#r-9-15)（Krylov 时间演化）、[引理 9.17](../../lecture_notes/zh/09_spin_chains.md#r-9-17)、[定理 9.18](../../lecture_notes/zh/09_spin_chains.md#r-9-18)和[推论 9.19](../../lecture_notes/zh/09_spin_chains.md#r-9-19)（误差界与步长规则）。
 
 扇区 $`N=L/2`$ 的维数在 $`L=16`$ 时为 $`12870`$，在 $`L=20`$ 时为 $`184756`$，但 $`H`$ 是稀疏的（每行 $`O(L)`$ 个非零
 元素，`xxz_sparse`），而 Krylov 方法只需要乘积 $`Hv`$。设 $`H`$ 是 $`n`$ 阶厄米矩阵，
@@ -317,10 +317,11 @@ $`-0.5,-0.467129,-0.456387,-0.451545,-0.448949`$（$`L=4,\dots,12`$）随 $`L`$ 
 由[命题 9.15](../../lecture_notes/zh/09_spin_chains.md#r-9-15)，对每个 $`\tau`$ 有 $`\|w_\tau\|=\|v\|`$ 和 $`\langle w_\tau,Hw_\tau\rangle=\langle v,Hv\rangle`$，并且若
 $`\mathcal K_m`$ 是 $`H`$-不变的，则 $`w_\tau=e^{-i\tau H}v`$。
 
-所以每个 Krylov 步都保持范数和能量，不论精确与否；除非 $`\mathcal K_m`$ 是不变的，命题 9.15 对精度什么也
-没有说。`krylov.evolve` 把时间区间细分为短步，每一步都在 $`m=30`$ 的 Krylov 空间中完成，并在一个启发式
-误差指标较大时发出警告；我们不为它证明任何误差界，而是把它与由稠密特征分解（定理 1.5）计算出的
-$`e^{-itH}`$ 作比较。我们在 Heisenberg 环上对 Néel 态 $`|{\uparrow\downarrow\uparrow\downarrow}\cdots\rangle`$ 作淬火，跟踪交错磁化
+所以每个 Krylov 步都保持范数和能量，不论精确与否。它的精度是[定理 9.18](../../lecture_notes/zh/09_spin_chains.md#r-9-18)
+的内容：长度为 $`\tau`$ 的一步的误差至多为 $`(4\beta_m/w_T)S_m(|\tau|w_T/2)`$，只由 Lanczos 运行的数据算出。`krylov.evolve` 在
+$`m=30`$ 的 Krylov 空间中取每一步，使其在这个界允许的范围内尽可能长，使整个时间区间上的误差至多为
+$`\mathrm{tol}=10^{-8}`$（默认值）（[推论 9.19](../../lecture_notes/zh/09_spin_chains.md#r-9-19)）。我们把它与由稠密特征分解（定理
+1.5）计算出的 $`e^{-itH}`$ 作比较，并在下面检验这些界本身。我们在 Heisenberg 环上对 Néel 态 $`|{\uparrow\downarrow\uparrow\downarrow}\cdots\rangle`$ 作淬火，跟踪交错磁化
 $`m_s=\frac2L\sum_i(-1)^i\langle s^z_i\rangle`$，并对 $`L=12`$ 与稠密传播子作比较：
 
 ```python
@@ -345,6 +346,55 @@ print(f"{max(abs(a - b) for a, b in zip(m_s[12][:4], m_s[16][:4])):.1e}")   # L 
 
 *数值观察*：$`m_s`$ 从 $`1`$ 经过 $`0.770`$ 和 $`0.279`$ 衰减到 $`t=2`$ 时的 $`-0.183`$，两种尺寸的结果相差在
 $`1.7\cdot10^{-5}`$ 以内；在 $`t=4`$ 时它们不同（$`0.026`$ 对 $`0.035`$）。
+
+**误差界。** 由[引理 9.17](../../lecture_notes/zh/09_spin_chains.md#r-9-17)，$`e^{-i\rho y}`$ 的 Chebyshev 系数为
+$`a_k=(-i)^kJ_k(\rho)`$，且 $`|a_k|\le(|\rho|/2)^k/k!`$。[定理 9.18](../../lecture_notes/zh/09_spin_chains.md#r-9-18) 把一个 Krylov 步的
+误差界定为 $`(4\beta_m/w_T)S_m(|\tau|w_T/2)`$（(c)，即 `krylov.expm_multiply_step` 返回的值），以及 $`4S_m(\rho/2)`$，
+$`\rho=|\tau|w`$（(d)），其中 $`S_m(x)=\sum_{j\ge m}x^j/j!`$，$`w`$ 是谱的半宽。我们用 SciPy 的 Bessel 函数检验系数界，并对
+$`L=12`$ 环的 Néel 态、$`m=20`$ 的一步，用上面代码块中的稠密传播子（`w`、`U`）检验两个误差界。
+[推论 9.19](../../lecture_notes/zh/09_spin_chains.md#r-9-19) 把相继各步的界相加；`krylov.evolve` 的步长规则使时刻 $`t`$ 的误差低于
+$`\mathrm{tol}\cdot t/t_{\mathrm{end}}`$，并且对 $`H`$ 和 $`H+10^4`$ 取相同的步（定理 9.18(a)；平移后的算子只改变稀疏形式的对角线）：
+
+```python
+from scipy.special import jv, gammainc
+S = lambda m, x: math.exp(x) * gammainc(m, x)                        # S_m(x) = sum_{j >= m} x^j / j!
+for rho in (1.0, 10.0, 40.0):                                        # Lemma 9.17: |J_k(rho)| <= (rho/2)^k / k!
+    assert all(abs(jv(k, rho)) <= (rho / 2) ** k / math.factorial(k) * (1 + 1e-12) for k in range(80))
+
+c12 = SpinChain(12, 'periodic')
+H12 = c12.xxz_sparse(J=1.0, Delta=1.0, sector=6)                    # w, U: its dense eigendecomposition (above)
+half = ((w[-1] - w[0]) / 2).item()                                   # half-width of the spectrum
+v = c12.vector_in_sector('10' * 6)[None]                             # the Neel state
+exact = lambda t: U @ (torch.exp(-1j * t * w) * (U.mH @ v[0]))
+m = 20
+for tau in (0.5, 1.0, 2.0, 4.0, 8.0):
+    out, bound = krylov.expm_multiply_step(H12, v, tau, m)            # bound: Theorem 9.18(c)
+    err = (out[0] - exact(tau)).norm().item()
+    apriori = 4 * S(m, tau * half / 2)                                # Theorem 9.18(d)
+    print(f"tau w = {tau * half:4.1f}: error {err:.1e}, bound (c) {bound.item():.1e}, bound (d) {apriori:.1e}")
+    assert err <= bound.item() + 1e-13 and bound.item() <= apriori
+
+psi, total = v, 0.0                                                  # Corollary 9.19, five steps of length 1
+for k in range(1, 6):
+    psi, b = krylov.expm_multiply_step(H12, psi, 1.0, m)
+    total += b.item()
+    err = (psi[0] - exact(float(k))).norm().item()
+    assert err <= total + 1e-12
+print(f"after 5 steps: error {err:.1e}, sum of the bounds {total:.1e}")
+
+times = [0.0, 1.0, 3.0, 10.0]
+shifted = krylov.SparseSectorHamiltonian(H12.diag + 1e4, H12.offdiag, H12.dtype)    # H + 10^4
+for s, Hn in ((0.0, H12), (1e4, shifted)):
+    out = krylov.evolve(Hn, v, times, tol=1e-8)                      # the step rule of Corollary 9.19
+    errs = [(p[0] - math.e ** (-1j * t * s) * exact(t)).norm().item() for t, p in zip(times, out)]
+    print(f"shift {s:.0e}:", [f"{e:.1e}" for e in errs])
+    assert all(e <= 1e-8 * t / times[-1] + 1e-10 for e, t in zip(errs, times))
+```
+
+*数值观察*：一步的误差从舍入水平（$`\tau w=2.1`$ 时为 $`3\cdot10^{-15}`$）增长到 $`\tau w=8.4`$ 时的 $`1.3\cdot10^{-8}`$ 和
+$`\tau w=34`$ 时的 $`0.5`$；在有用的范围内，界 (c) 约比它大 $`100`$ 倍，(d) 再大 $`4`$ 倍。五步长度为 $`1`$ 的步的误差为
+$`10^{-13}`$，低于其界之和 $`6\cdot10^{-12}`$。这里 `krylov.evolve` 以很大的余量满足其容差（误差低于 $`10^{-13}`$）；平移
+$`10^4`$ 时误差为 $`10^{-11}`$，这是范数为 $`10^4`$ 的矩阵–向量乘积的舍入误差，定理 9.18 的任何界都不涵盖它。
 
 <a id="s-9-6"></a>
 

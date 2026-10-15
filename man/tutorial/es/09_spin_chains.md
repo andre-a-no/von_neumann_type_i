@@ -269,7 +269,7 @@ los vectores de Bethe, y las últimas líneas del código comprueban $`H\Phi=(E_
 
 ## 9.5 Lanczos y métodos de Krylov
 
-*Apuntes:* [sección 9.5](../../lecture_notes/es/09_spin_chains.md#s-9-5); [proposición 9.13](../../lecture_notes/es/09_spin_chains.md#r-9-13) (Lanczos: $`T_m=Q_m^*HQ_m`$ es tridiagonal), [teorema 9.14](../../lecture_notes/es/09_spin_chains.md#r-9-14) (los valores de Ritz, los valores propios de $`T_m`$, cumplen $`\theta^{(m)}_j\ge\lambda_j`$ y decrecen con $`m`$), [proposición 9.15](../../lecture_notes/es/09_spin_chains.md#r-9-15) (evolución temporal de Krylov).
+*Apuntes:* [sección 9.5](../../lecture_notes/es/09_spin_chains.md#s-9-5); [proposición 9.13](../../lecture_notes/es/09_spin_chains.md#r-9-13) (Lanczos: $`T_m=Q_m^*HQ_m`$ es tridiagonal), [teorema 9.14](../../lecture_notes/es/09_spin_chains.md#r-9-14) (los valores de Ritz, los valores propios de $`T_m`$, cumplen $`\theta^{(m)}_j\ge\lambda_j`$ y decrecen con $`m`$), [proposición 9.15](../../lecture_notes/es/09_spin_chains.md#r-9-15) (evolución temporal de Krylov), [lema 9.17](../../lecture_notes/es/09_spin_chains.md#r-9-17), [teorema 9.18](../../lecture_notes/es/09_spin_chains.md#r-9-18) y [corolario 9.19](../../lecture_notes/es/09_spin_chains.md#r-9-19) (cotas de error y la regla de paso).
 
 El sector $`N=L/2`$ tiene dimensión $`12870`$ para $`L=16`$ y $`184756`$ para $`L=20`$, pero $`H`$ es dispersa ($`O(L)`$ entradas
 no nulas por fila, `xxz_sparse`), y los métodos de Krylov solo necesitan productos $`Hv`$. Sea $`H`$ hermítica de
@@ -331,11 +331,13 @@ no demostramos nada sobre su límite.
 Por la [proposición 9.15](../../lecture_notes/es/09_spin_chains.md#r-9-15), $`\|w_\tau\|=\|v\|`$ y $`\langle w_\tau,Hw_\tau\rangle=\langle v,Hv\rangle`$ para todo $`\tau`$, y
 $`w_\tau=e^{-i\tau H}v`$ si $`\mathcal K_m`$ es $`H`$-invariante.
 
-Así, cada paso de Krylov conserva la norma y la energía, sea preciso o no; la proposición 9.15 no dice nada
-sobre la precisión salvo que $`\mathcal K_m`$ sea invariante. `krylov.evolve` subdivide el intervalo de tiempo en pasos
-cortos, cada uno realizado en un espacio de Krylov con $`m=30`$, y emite una advertencia cuando un indicador
-heurístico del error es grande; no demostramos ninguna cota de error para él y, en su lugar, lo comparamos con
-$`e^{-itH}`$ calculada a partir de una descomposición espectral densa (teorema 1.5). Realizamos un
+Así, cada paso de Krylov conserva la norma y la energía, sea preciso o no. Su precisión es el objeto del
+[teorema 9.18](../../lecture_notes/es/09_spin_chains.md#r-9-18): un paso de longitud $`\tau`$ yerra a lo sumo en
+$`(4\beta_m/w_T)S_m(|\tau|w_T/2)`$, calculado solo a partir de la ejecución de Lanczos. `krylov.evolve` da cada paso, en
+un espacio de Krylov con $`m=30`$, tan largo como esta cota permite para un error de a lo sumo $`\mathrm{tol}=10^{-8}`$
+(el valor por defecto) en todo el intervalo de tiempo ([corolario 9.19](../../lecture_notes/es/09_spin_chains.md#r-9-19)).
+Lo comparamos con $`e^{-itH}`$ calculada a partir de una descomposición espectral densa (teorema 1.5), y comprobamos
+las propias cotas más abajo. Realizamos un
 *quench* desde el estado de Néel $`|{\uparrow\downarrow\uparrow\downarrow}\cdots\rangle`$ en el anillo de Heisenberg y
 seguimos la magnetización alternada $`m_s=\frac2L\sum_i(-1)^i\langle s^z_i\rangle`$, comparando con el propagador denso
 para $`L=12`$:
@@ -362,6 +364,60 @@ print(f"{max(abs(a - b) for a, b in zip(m_s[12][:4], m_s[16][:4])):.1e}")   # L 
 
 *Observación numérica:* $`m_s`$ decae desde $`1`$, pasando por $`0.770`$ y $`0.279`$, hasta $`-0.183`$ en $`t=2`$, igual para
 ambos tamaños salvo $`1.7\cdot10^{-5}`$; en $`t=4`$ difieren ($`0.026`$ frente a $`0.035`$).
+
+**Cotas de error.** Por el [lema 9.17](../../lecture_notes/es/09_spin_chains.md#r-9-17), los coeficientes de Chebyshev de
+$`e^{-i\rho y}`$ son $`a_k=(-i)^kJ_k(\rho)`$ con $`|a_k|\le(|\rho|/2)^k/k!`$. El [teorema 9.18](../../lecture_notes/es/09_spin_chains.md#r-9-18)
+acota el error de un paso de Krylov por $`(4\beta_m/w_T)S_m(|\tau|w_T/2)`$ (c), el valor que devuelve
+`krylov.expm_multiply_step`, y por $`4S_m(\rho/2)`$ con $`\rho=|\tau|w`$ (d), donde $`S_m(x)=\sum_{j\ge m}x^j/j!`$ y $`w`$ es la
+semianchura del espectro. Comprobamos la cota de los coeficientes frente a las funciones de Bessel de SciPy, y ambas
+cotas de error para un paso desde el estado de Néel del anillo $`L=12`$ con $`m=20`$, frente al propagador denso del
+bloque anterior (`w`, `U`). El [corolario 9.19](../../lecture_notes/es/09_spin_chains.md#r-9-19) suma las cotas de pasos
+sucesivos; y la regla de paso de `krylov.evolve` mantiene el error en el instante $`t`$ por debajo de
+$`\mathrm{tol}\cdot t/t_{\mathrm{end}}`$, con los mismos pasos para $`H`$ y $`H+10^4`$ (teorema 9.18(a); el operador desplazado solo
+cambia la diagonal de la forma dispersa):
+
+```python
+from scipy.special import jv, gammainc
+S = lambda m, x: math.exp(x) * gammainc(m, x)                        # S_m(x) = sum_{j >= m} x^j / j!
+for rho in (1.0, 10.0, 40.0):                                        # Lemma 9.17: |J_k(rho)| <= (rho/2)^k / k!
+    assert all(abs(jv(k, rho)) <= (rho / 2) ** k / math.factorial(k) * (1 + 1e-12) for k in range(80))
+
+c12 = SpinChain(12, 'periodic')
+H12 = c12.xxz_sparse(J=1.0, Delta=1.0, sector=6)                    # w, U: its dense eigendecomposition (above)
+half = ((w[-1] - w[0]) / 2).item()                                   # half-width of the spectrum
+v = c12.vector_in_sector('10' * 6)[None]                             # the Neel state
+exact = lambda t: U @ (torch.exp(-1j * t * w) * (U.mH @ v[0]))
+m = 20
+for tau in (0.5, 1.0, 2.0, 4.0, 8.0):
+    out, bound = krylov.expm_multiply_step(H12, v, tau, m)            # bound: Theorem 9.18(c)
+    err = (out[0] - exact(tau)).norm().item()
+    apriori = 4 * S(m, tau * half / 2)                                # Theorem 9.18(d)
+    print(f"tau w = {tau * half:4.1f}: error {err:.1e}, bound (c) {bound.item():.1e}, bound (d) {apriori:.1e}")
+    assert err <= bound.item() + 1e-13 and bound.item() <= apriori
+
+psi, total = v, 0.0                                                  # Corollary 9.19, five steps of length 1
+for k in range(1, 6):
+    psi, b = krylov.expm_multiply_step(H12, psi, 1.0, m)
+    total += b.item()
+    err = (psi[0] - exact(float(k))).norm().item()
+    assert err <= total + 1e-12
+print(f"after 5 steps: error {err:.1e}, sum of the bounds {total:.1e}")
+
+times = [0.0, 1.0, 3.0, 10.0]
+shifted = krylov.SparseSectorHamiltonian(H12.diag + 1e4, H12.offdiag, H12.dtype)    # H + 10^4
+for s, Hn in ((0.0, H12), (1e4, shifted)):
+    out = krylov.evolve(Hn, v, times, tol=1e-8)                      # the step rule of Corollary 9.19
+    errs = [(p[0] - math.e ** (-1j * t * s) * exact(t)).norm().item() for t, p in zip(times, out)]
+    print(f"shift {s:.0e}:", [f"{e:.1e}" for e in errs])
+    assert all(e <= 1e-8 * t / times[-1] + 1e-10 for e, t in zip(errs, times))
+```
+
+*Observación numérica:* el error de un paso crece desde el nivel de redondeo ($`3\cdot10^{-15}`$ en $`\tau w=2.1`$) hasta
+$`1.3\cdot10^{-8}`$ en $`\tau w=8.4`$ y $`0.5`$ en $`\tau w=34`$; la cota (c) lo supera en un factor de unos $`100`$ en el rango
+útil, y (d) en otro factor $`4`$. Cinco pasos de longitud $`1`$ yerran en $`10^{-13}`$, por debajo de la suma
+$`6\cdot10^{-12}`$ de sus cotas. `krylov.evolve` cumple aquí su tolerancia con amplio margen (errores por debajo de
+$`10^{-13}`$); con el desplazamiento $`10^4`$ los errores son $`10^{-11}`$, los errores de redondeo de productos
+matriz–vector de norma $`10^4`$, que ninguna cota del teorema 9.18 cubre.
 
 <a id="s-9-6"></a>
 

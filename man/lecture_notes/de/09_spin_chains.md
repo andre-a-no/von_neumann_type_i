@@ -12,7 +12,7 @@ saubere Ketten (Unordnung) hinaus.
 **Sie lernen**, warum die Algebra einer Kette $`\bigoplus_NM_{\binom LN}`$ ist und warum der Turm dieser Algebren
 das Pascalsche Dreieck als Bratteli-Diagramm und den Index $`4\cos^2\frac\pi{2L+4}`$ hat, wie man Impulssektoren
 abzählt, die Marshallsche Vorzeichenregel und ihre Folgen für Impuls und Spin von Grundzuständen (Lieb–Mattis),
-die Jordan-Wigner-Lösung der XX-Kette, die Bethe-Gleichungen für zwei Magnonen, warum Lanczos monoton konvergiert
+die Jordan-Wigner-Lösung der XX-Kette, die Bethe-Gleichungen für zwei Magnonen, warum Lanczos monoton konvergiert, wie genau ein Krylov-Zeitschritt ist
 und wie man Niveaustatistik und die Verschränkung freier Fermionen misst. Die numerischen Kontrollen dieses
 Kapitels stehen im [Tutorial 9](../../tutorial/de/09_spin_chains.md).
 
@@ -456,6 +456,146 @@ $`\mathcal K_m`$ invariant, so gilt $`HQ_m=Q_mT_m`$ (Proposition 9.13, $`r_m=0`$
 Summation der Exponentialreihe (Proposition 8.2(1)), $`e^{-i\tau H}Q_m=Q_me^{-i\tau T_m}`$; man wende dies auf $`e_1`$ an, mit $`Q_me_1=v/\|v\|`$. $`\square`$
 
 *Rechnung:* Proposition 9.15 für `krylov.evolve`, das schrittweise in Krylov-Räumen rechnet, bei einem Quench aus dem Néel-Zustand, im Vergleich mit dem dichten Propagator — [Tutorial, Abschnitt 9.5](../../tutorial/de/09_spin_chains.md#s-9-5).
+
+**Fehlerschranken.** Außer wenn $`\mathcal K_m`$ invariant ist, sagt Proposition 9.15 nichts über die Genauigkeit von
+$`w_\tau`$. Der Fehler hängt davon ab, wie gut Polynome vom Grad $`<m`$ die Funktion $`e^{-i\tau x}`$ auf dem Spektrum
+approximieren, und Tschebyschow-Polynome liefern die Approximation. Die **Tschebyschow-Polynome** $`\mathcal T_0=1`$,
+$`\mathcal T_1(y)=y`$, $`\mathcal T_{k+1}(y)=2y\mathcal T_k(y)-\mathcal T_{k-1}(y)`$ haben Grad $`k`$ und erfüllen $`\mathcal T_k(\cos\vartheta)=\cos k\vartheta`$
+(durch Induktion, aus $`\cos(k+1)\vartheta+\cos(k-1)\vartheta=2\cos\vartheta\cos k\vartheta`$), also $`|\mathcal T_k|\le1`$ auf $`[-1,1]`$. Wir schreiben
+```math
+S_m(x)=\sum_{j\ge m}\frac{x^j}{j!}\le\frac{x^m}{m!}\Big(1-\frac x{m+1}\Big)^{-1}\qquad(0\le x<m+1),
+```
+wobei die Schranke aus $`m!/(m+i)!\le(m+1)^{-i}`$ und der geometrischen Reihe folgt.
+
+<a id="r-9-17"></a>
+
+**Lemma 9.17 (Tschebyschow-Entwicklung von $`e^{-i\rho y}`$).** Für reelles $`\rho`$ und $`y\in[-1,1]`$ gilt
+```math
+e^{-i\rho y}=a_0+2\sum_{k\ge1}a_k\mathcal T_k(y),\qquad a_k=(-i)^k\sum_{l\ge0}\frac{(-1)^l(\rho/2)^{k+2l}}{l!\,(k+l)!},\qquad|a_k|\le\frac{(|\rho|/2)^k}{k!}.
+```
+Daher erfüllt für jedes $`m\ge1`$ das Polynom $`p=a_0+2\sum_{k=1}^{m-1}a_k\mathcal T_k`$ vom Grad $`\le m-1`$ die Ungleichung
+$`|e^{-i\rho y}-p(y)|\le2S_m(|\rho|/2)`$ auf $`[-1,1]`$.
+
+(Die Summen, die $`a_k`$ definieren, sind die Bessel-Funktionen, $`a_k=(-i)^kJ_k(\rho)`$; der Beweis braucht das nicht.)
+
+*Beweis.* *Entwicklung.* Für $`y=\cos\vartheta`$ ist $`\cos^j\vartheta=2^{-j}(e^{i\vartheta}+e^{-i\vartheta})^j=2^{-j}\sum_{l=0}^j\binom jle^{i(j-2l)\vartheta}`$, also
+```math
+e^{-i\rho\cos\vartheta}=\sum_{j\ge0}\frac{(-i\rho)^j}{j!}\,2^{-j}\sum_{l=0}^j\binom jl\,e^{i(j-2l)\vartheta}.
+```
+Die Doppelreihe konvergiert absolut (die Beträge ihrer Glieder summieren sich zu $`e^{|\rho|}`$), darf also in beliebiger
+Reihenfolge summiert werden, insbesondere nach $`k=j-2l`$. Für $`k\ge0`$ haben die Glieder mit $`j-2l=k`$ den Index
+$`j=k+2l`$, und wegen $`\binom{k+2l}l/(k+2l)!=1/(l!\,(k+l)!)`$ summieren sie sich zu $`a_ke^{ik\vartheta}`$; für $`k<0`$ zeigt
+$`\binom jl=\binom j{j-l}`$, dass der Koeffizient von $`e^{ik\vartheta}`$ gleich $`a_{|k|}`$ ist. Also
+$`e^{-i\rho\cos\vartheta}=a_0+\sum_{k\ge1}a_k(e^{ik\vartheta}+e^{-ik\vartheta})=a_0+2\sum_{k\ge1}a_k\mathcal T_k(\cos\vartheta)`$.
+
+*Schranke.* Sei $`k\ge0`$ fest. Sei $`\vartheta`$ gleichverteilt auf $`[0,2\pi]`$; sei $`\sigma=1`$ für $`k=0`$, und für $`k\ge1`$
+sei $`\sigma`$ unabhängig von $`\vartheta`$ mit Dichte $`k(1-t)^{k-1}`$ auf $`[0,1]`$. Sei $`Z=\sqrt\sigma\cos\vartheta\in[-1,1]`$. Dann
+ist $`\mathbb E\cos^{2l}\vartheta=4^{-l}\binom{2l}l`$ (in der obigen Binomialentwicklung hat nur das konstante Glied einen von
+null verschiedenen Mittelwert), und $`\mathbb E\sigma^l=k\int_0^1t^l(1-t)^{k-1}dt=l!\,k!/(k+l)!`$ ($`l`$-mal partiell
+integrieren, $`\int_0^1t^l(1-t)^{k-1}dt=\frac lk\int_0^1t^{l-1}(1-t)^kdt`$; für $`k=0`$ sind beide Seiten $`1`$). Wegen der
+Unabhängigkeit ist $`\mathbb EZ^{2l}=(2l)!\,k!/(4^l\,l!\,(k+l)!)`$. Die Reihe $`\cos(\rho Z)=\sum_l(-1)^l(\rho Z)^{2l}/(2l)!`$
+konvergiert gleichmäßig, da $`|Z|\le1`$; ihr Erwartungswert darf also gliedweise gebildet werden:
+```math
+\frac{(\rho/2)^k}{k!}\,\mathbb E\cos(\rho Z)=\sum_{l\ge0}\frac{(-1)^l\rho^{2l}}{(2l)!}\cdot\frac{(\rho/2)^k\,(2l)!}{4^l\,l!\,(k+l)!}=\sum_{l\ge0}\frac{(-1)^l(\rho/2)^{k+2l}}{l!\,(k+l)!}=i^ka_k.
+```
+Wegen $`|\cos|\le1`$ ist $`|a_k|\le(|\rho|/2)^k/k!`$.
+
+*Abschneiden.* $`|e^{-i\rho y}-p(y)|=2\,|\sum_{k\ge m}a_k\mathcal T_k(y)|\le2\sum_{k\ge m}(|\rho|/2)^k/k!=2S_m(|\rho|/2)`$. $`\square`$
+
+<a id="r-9-18"></a>
+
+**Satz 9.18 (Fehler des Krylov-Propagators).** Sei $`\dim\mathcal K_m=m\ge2`$ und $`\|v\|=1`$, seien $`Q_m,T_m,r_m`$ wie in
+Proposition 9.13, $`\beta_m=\|r_m\|`$, $`\theta_1\le\dots\le\theta_m`$ die Ritz-Werte, $`c_T=(\theta_1+\theta_m)/2`$ und
+$`w_T=(\theta_m-\theta_1)/2`$. Sei $`w_\tau=Q_me^{-i\tau T_m}e_1`$ und $`\varphi(t)=\langle e_m,e^{-itT_m}e_1\rangle`$, und seien
+$`c\in\mathbb R`$, $`w\ge0`$ mit $`\mathrm{spec}\,H\subseteq[c-w,c+w]`$. Für reelles $`\tau`$ gilt:
+
+(a) (*Verschiebungsinvarianz*) für reelles $`s`$ sind die Lanczos-Vektoren von $`H+s`$ und $`v`$ die von $`H`$ und $`v`$,
+$`T_m`$ wird zu $`T_m+s`$, $`r_m`$ bleibt unverändert, und $`e^{-i\tau H}v`$ und $`w_\tau`$ werden beide mit $`e^{-i\tau s}`$
+multipliziert; der Fehler $`\|e^{-i\tau H}v-w_\tau\|`$ und die Schranken (b)–(d) ändern sich nicht;
+
+(b) (*a posteriori*) $`e^{-i\tau H}v-w_\tau=-i\int_0^\tau\varphi(t)\,e^{-i(\tau-t)H}r_m\,dt`$, also
+$`\|e^{-i\tau H}v-w_\tau\|\le\beta_m\,\big|\int_0^\tau|\varphi(t)|\,dt\big|`$;
+
+(c) (*berechenbare Schranke*) $`w_T>0`$, $`|\varphi(t)|\le2S_{m-1}(|t|w_T/2)`$, und
+```math
+\|e^{-i\tau H}v-w_\tau\|\le\frac{4\beta_m}{w_T}\,S_m\Big(\frac{|\tau|\,w_T}2\Big);
+```
+
+(d) (*a priori*) $`\beta_m\le w`$ und $`w_T\le w`$, und mit $`\rho=|\tau|\,w`$
+```math
+\|e^{-i\tau H}v-w_\tau\|\le\frac{4\beta_m}w\,S_m\Big(\frac\rho2\Big)\le4S_m\Big(\frac\rho2\Big)\le\frac4{m!}\Big(\frac\rho2\Big)^m\Big(1-\frac\rho{2m+2}\Big)^{-1}\qquad(\rho<2m+2).
+```
+
+*Beweis.* (a) $`(H+s)^jv`$ ist $`H^jv`$ plus eine Linearkombination der $`H^iv`$, $`i<j`$, und umgekehrt, also
+$`\mathcal K_j(H+s,v)=\mathcal K_j(H,v)`$ für alle $`j`$. Die zu $`\mathcal K_j\ni q_j`$ orthogonale Komponente von $`(H+s)q_j=Hq_j+sq_j`$
+ist die von $`Hq_j`$, also liefert die Konstruktion von Proposition 9.13 dieselben $`q_j`$; dann ist $`Q_m^*(H+s)Q_m=T_m+s`$
+und $`(H+s)Q_m-Q_m(T_m+s)=HQ_m-Q_mT_m`$. Nach Satz 1.5(c) ist $`e^{-i\tau(X+s)}=e^{-i\tau s}e^{-i\tau X}`$ für $`X=H`$ und
+$`X=T_m`$. Schließlich ändern sich $`\beta_m`$, $`|\varphi|`$ und $`w_T`$ nicht, und $`\mathrm{spec}(H+s)\subseteq[c+s-w,c+s+w]`$.
+
+(b) Nach Proposition 8.2(1) für $`T_m`$ ist $`\frac d{dt}w_t=-iQ_mT_me^{-itT_m}e_1`$, und $`Q_mT_m=HQ_m-r_me_m^T`$ (Proposition
+9.13), also $`\frac d{dt}w_t=-iHw_t+i\varphi(t)r_m`$. Wegen $`\frac d{dt}e^{itH}=iHe^{itH}`$ (Proposition 8.2(1)) liefert die
+Produktregel $`\frac d{dt}(e^{itH}w_t)=i\varphi(t)e^{itH}r_m`$. Integration von $`0`$ bis $`\tau`$ (Lemma A.4(e)) mit
+$`w_0=Q_me_1=v`$ ergibt $`e^{i\tau H}w_\tau-v=i\int_0^\tau\varphi(t)e^{itH}r_m\,dt`$. Man wende das Unitäre $`e^{-i\tau H}`$ an
+(Lemma A.4(b)) und gehe zu Normen über (Lemma A.4(c)).
+
+(c) $`T_m`$ ist kein Vielfaches von $`1`$ ($`\beta_1>0`$), also sind seine Eigenwerte nicht alle gleich (Satz 1.3) und
+$`w_T>0`$. Da $`T_m`$ tridiagonal ist, verschwindet $`T_m^je_1`$ unterhalb des Eintrags $`j+1`$, also ist
+$`\langle e_m,p(T_m)e_1\rangle=0`$ für jedes Polynom $`p`$ vom Grad $`\le m-2`$. Nach Lemma 9.17 mit $`m-1`$ statt $`m`$ und
+$`\rho=tw_T`$ gibt es ein Polynom $`\tilde p`$ vom Grad $`\le m-2`$ mit $`|e^{-itw_Ty}-\tilde p(y)|\le2S_{m-1}(|t|w_T/2)`$ auf
+$`[-1,1]`$; dann hat $`p(x)=e^{-itc_T}\tilde p((x-c_T)/w_T)`$ den Grad $`\le m-2`$, und $`|e^{-itx}-p(x)|\le2S_{m-1}(|t|w_T/2)`$ an
+jedem Ritz-Wert. Nach Satz 1.5 und Korollar 1.4(1) ist
+$`|\varphi(t)|=|\langle e_m,(e^{-itT_m}-p(T_m))e_1\rangle|\le\max_i|e^{-it\theta_i}-p(\theta_i)|`$. Die Reihe $`S_{m-1}`$ hat
+nichtnegative Glieder und konvergiert gleichmäßig auf beschränkten Intervallen, darf also gliedweise integriert
+werden: $`\int_0^{|\tau|}2S_{m-1}(tw_T/2)\,dt=\frac4{w_T}S_m(|\tau|w_T/2)`$; mit (b) ist das die Schranke.
+
+(d) $`Q_m(T_m-c)e_m=Q_mQ_m^*(H-c)q_m`$ ist die Orthogonalprojektion von $`(H-c)q_m`$ auf $`\mathcal K_m`$, und
+$`r_m=(H-c)q_m-Q_m(T_m-c)e_m`$ ist die orthogonale Komponente, also $`\beta_m\le\|(H-c)q_m\|\le\|H-c\|\le w`$ (Korollar 1.4(1)).
+Für einen Einheitseigenvektor $`y`$ von $`T_m`$ liegt der Ritz-Wert $`\langle y,T_my\rangle=\langle Q_my,HQ_my\rangle`$ in
+$`[c-w,c+w]`$, also $`w_T\le w`$. Nun ist $`\frac{4\beta_m}{w_T}S_m(x)=2\beta_m|\tau|\,S_m(x)/x`$ mit $`x=|\tau|w_T/2\le\rho/2`$, und
+$`S_m(x)/x=\sum_{j\ge m}x^{j-1}/j!`$ ist monoton wachsend; das gibt die erste Ungleichung, $`\beta_m\le w`$ die zweite und die
+Schranke für $`S_m`$ die dritte. $`\square`$
+
+Die Schranke (c) verwendet nur die Daten des Lanczos-Laufs, $`\beta_m`$ und die Ritz-Werte. Die Ritz-Werte liegen im
+Inneren des Spektrums (Satz 9.14) und können seine halbe Breite $`w`$ stark unterschätzen, wenn der Startvektor nur
+kleine Komponenten auf den äußersten Eigenvektoren hat; aber keine Schätzung von $`w`$ geht in (c) ein, denn die
+Darstellung (b) enthält nur $`T_m`$. Nach (d) und $`m!\ge(m/e)^m`$ ist der Fehler höchstens von der Größenordnung
+$`(e\rho/2m)^m`$: Er ist klein, sobald $`\rho=|\tau|w`$ deutlich unter $`2m/e\approx0.74\,m`$ liegt, die Schritte können also
+lang sein. Die Größe $`\beta_m|\varphi(\tau)|`$, die frühere Versionen der Bibliothek als Fehlerschätzung aufsummierten,
+ist nach dem Beweis von (b) die Norm des Defekts $`\frac d{d\tau}w_\tau+iHw_\tau`$: der Integrand von (b) am Endpunkt, eine
+Rate und kein Fehler. Für kleines $`\tau`$ ist $`\varphi(t)\approx(-it)^{m-1}\beta_1\cdots\beta_{m-1}/(m-1)!`$, sodass sie die
+Schranke (b) um einen Faktor von etwa $`m/|\tau|`$ übersteigt; für großes $`\tau`$ oszilliert $`\varphi`$ und kann am
+Endpunkt verschwinden, ohne dass der Fehler verschwindet.
+
+<a id="r-9-19"></a>
+
+**Korollar 9.19 (Schrittregel).** Sei $`\tau=\tau_1+\dots+\tau_N`$ mit $`\tau_k>0`$, $`\psi_0=v\ne0`$, sei
+$`\psi_k=\|\psi_{k-1}\|\,Q_me^{-i\tau_kT_m}e_1`$ die Krylov-Näherung von $`e^{-i\tau_kH}\psi_{k-1}`$ in $`\mathcal K_m(H,\psi_{k-1})`$
+und $`\varepsilon_k`$ die Schranke (c) für diesen Schritt mal $`\|\psi_{k-1}\|`$ ($`\varepsilon_k=0`$, falls dieser Krylov-Raum eine
+Dimension $`<m`$ hat). Dann gilt $`\|e^{-i(\tau_1+\dots+\tau_k)H}v-\psi_k\|\le\varepsilon_1+\dots+\varepsilon_k`$ für jedes $`k`$.
+Insbesondere ist der Fehler nach $`k`$ Schritten höchstens $`\mathrm{tol}\cdot\|v\|\,(\tau_1+\dots+\tau_k)/\tau`$, wenn in jedem
+Schritt $`\varepsilon_k\le\mathrm{tol}\cdot\|v\|\,\tau_k/\tau`$ gilt. Für $`m\ge2`$ ist die Schranke eines Schritts der Länge $`h`$,
+geteilt durch $`h`$, monoton wachsend in $`h`$ und strebt für $`h\to0`$ gegen $`0`$; der längste zulässige Schritt ist also
+positiv.
+
+*Beweis.* Sei $`d_k=e^{-i(\tau_1+\dots+\tau_k)H}v-\psi_k`$. Dann ist $`d_k=e^{-i\tau_kH}d_{k-1}+(e^{-i\tau_kH}\psi_{k-1}-\psi_k)`$, und
+$`e^{-i\tau_kH}`$ ist unitär, also $`\|d_k\|\le\|d_{k-1}\|+\varepsilon_k`$ nach Satz 9.18(c), angewandt auf $`\psi_{k-1}/\|\psi_{k-1}\|`$;
+hat der Krylov-Raum die Dimension $`j<m`$, so ist er gleich $`\mathcal K_j`$ und invariant, und der Schritt ist nach
+Proposition 9.15 exakt. Alle $`\|\psi_k\|=\|v\|`$ nach Proposition 9.15. Die Schranke eines Schritts der Länge $`h`$, geteilt
+durch $`h`$, ist $`2\beta_m\|\psi_{k-1}\|S_m(x)/x`$ mit $`x=hw_T/2`$, monoton wachsend in $`h`$, und
+$`S_m(x)/x\le\frac{x^{m-1}}{m!}(1-\frac x{m+1})^{-1}\to0`$ für $`m\ge2`$. $`\square`$
+
+*In der Bibliothek:* `krylov.expm_multiply_step` gibt mit jedem Schritt die Schranke (c) zurück
+(`krylov.krylov_error_bound`). `krylov.evolve` (Standard `dt=None`) baut den Krylov-Raum im aktuellen Zustand auf und
+macht den längsten Schritt $`h`$, bis zur nächsten Ausgabezeit, dessen Schranke (c) höchstens
+$`\mathrm{tol}\cdot\|\psi_0\|\,h/(t_{\mathrm{end}}-t_0)`$ ist; nach Korollar 9.19 liegt dann jeder zurückgegebene Zustand innerhalb
+von $`\mathrm{tol}\cdot\|\psi_0\|`$ um $`e^{-i(t-t_0)H}\psi_0`$. Das gilt in exakter Arithmetik: Rundungsfehler sind nicht
+erfasst (sie wachsen mit der Zahl der Schritte, und mit $`\varepsilon\|H\|`$ pro Zeiteinheit bei einer großen konstanten
+Verschiebung von $`H`$, die jedes Matrix-Vektor-Produkt mitführt). Nach Satz 9.18(a) hängen die Schritte nicht von
+einer konstanten Verschiebung ab. Mit festem `dt` wird die Summe der Schranken mit $`\mathrm{tol}\cdot\|\psi_0\|`$ verglichen,
+mit einer Warnung, wenn sie größer ist.
+
+*Rechnung:* Lemma 9.17, Satz 9.18 und Korollar 9.19 im Vergleich mit dem dichten Propagator, für Spektren mit
+Häufungen, einer großen Verschiebung und einer großen Norm, und die Schritte von `krylov.evolve` — [Tutorial, Abschnitt 9.5](../../tutorial/de/09_spin_chains.md#s-9-5).
 
 <a id="s-9-6"></a>
 

@@ -2,7 +2,7 @@
 
 # 1. 行列環と関数計算
 
-本章では記号を定め、以降のすべての章で用いる $`M_n(\mathbb C)`$ に関する事実、すなわちスペクトル定理、関数計算、極分解、および特異値によって定義されるノルムを証明する。これらの結果のライブラリのコードと数値的な検証は[チュートリアル 1](../../tutorial/ja/01_matrix_algebras.md)にある。
+本章では記号を定め、以降のすべての章で用いる $`M_n(\mathbb C)`$ に関する事実、すなわちスペクトル定理、関数計算とその微分、極分解、および特異値によって定義されるノルムを証明する。これらの結果のライブラリのコードと数値的な検証は[チュートリアル 1](../../tutorial/ja/01_matrix_algebras.md)にある。
 
 **規約.** 内積 $`\langle x,y\rangle=\sum_i\bar x_iy_i`$ は第二引数について線形とする。$`A^*`$ は共役転置であり、したがって $`\langle x,Ay\rangle=\langle A^*x,y\rangle`$ である。$`e_1,\dots,e_n`$ は標準基底、$`1`$ は単位行列、$`\mathrm{Tr}`$ は通常のトレースを表す。
 
@@ -122,6 +122,70 @@ $`p(A)=\sqrt A`$ かつ $`p(A)=p(B^2)=V\,\mathrm{diag}(p(\mu_j^2))\,V^*=V\,\math
 
 **系 1.7.** $`A\ge0`$ $`\iff`$ ある $`T`$ により $`A=T^*T`$。（$`A\ge0`$ ならば $`T=\sqrt A`$ ととればよい。
 逆に $`\langle x,T^*Tx\rangle=\|Tx\|^2\ge0`$ である。）
+
+**微分.** 勾配法では $`f(A)`$ を $`A`$ について微分する。自己共役な $`A`$ に対しては、微分は $`f`$ の差分商からなる行列との成分ごとの積である。
+
+<a id="r-1-11"></a>
+
+**定理 1.11（ダレツキー–クレイン）.** $`A=U\,\mathrm{diag}(\lambda_1,\dots,\lambda_n)\,U^*`$ を自己共役、$`I`$ を $`\mathrm{spec}\,A`$ を含む開区間、$`f:I\to\mathbb C`$ を連続微分可能とする。
+```math
+f^{[1]}(x,y)=\frac{f(x)-f(y)}{x-y}\quad(x\ne y),\qquad f^{[1]}(x,x)=f'(x)
+```
+を $`f`$ の**差分商**（divided difference）、$`L_{ij}=f^{[1]}(\lambda_i,\lambda_j)`$ を**レヴナー行列**とする。このとき任意の自己共役な $`E`$ に対して
+```math
+\frac{d}{dt}\Big|_{t=0}f(A+tE)=U\big(L\circ U^*EU\big)U^*
+```
+が成り立つ。ここで $`(X\circ Y)_{ij}=X_{ij}Y_{ij}`$ は成分ごとの（シューア）積である。
+
+*証明.* 微積分の基本定理により、すべての $`x,y\in I`$ に対して $`f^{[1]}(x,y)=\int_0^1f'(y+s(x-y))\,ds`$ である（$`x=y`$ では両辺とも $`f'(x)`$）。よって $`f^{[1]}`$ は $`I\times I`$ 上で連続である。$`U`$ の列を並べ替えると $`L`$ と $`U^*EU`$ の行と列が同じように置換され、右辺は変わらないので、$`\lambda_1\le\dots\le\lambda_n`$ と仮定してよい。$`[\lambda_1-\delta,\lambda_n+\delta]\subset I`$ となる $`\delta>0`$ をとる。$`0<|t|\,\|E\|<\delta`$ に対して $`A+tE=V\,\mathrm{diag}(\mu_1,\dots,\mu_n)\,V^*`$（$`\mu_1\le\dots\le\mu_n`$）と書く。すると $`|\mu_j-\lambda_j|\le|t|\,\|E\|`$（定理 A.10）であり、すべての $`\mu_j\in I`$ である。$`W=U^*V`$（ユニタリ）、$`\tilde E=U^*EU`$ とおく。$`U^*f(A)=\mathrm{diag}(f(\lambda_i))\,U^*`$ かつ $`f(A+tE)V=V\,\mathrm{diag}(f(\mu_j))`$ であるから
+```math
+\big(U^*(f(A+tE)-f(A))V\big)_{ij}=\big(f(\mu_j)-f(\lambda_i)\big)W_{ij}=f^{[1]}(\lambda_i,\mu_j)\,(\mu_j-\lambda_i)\,W_{ij}
+```
+であり、$`f(x)=x`$ に対する同じ計算から $`(\mu_j-\lambda_i)W_{ij}=t\,(\tilde EW)_{ij}`$ を得る。$`(L_t)_{ij}=f^{[1]}(\lambda_i,\mu_j)`$ とおけば、これは厳密な恒等式
+```math
+\frac1t\big(f(A+tE)-f(A)\big)=U\big((L_t\circ\tilde EW)\,W^*\big)U^*
+```
+である。$`t\to0`$ のとき、$`f^{[1]}`$ が連続で $`\mu_j\to\lambda_j`$ であるから、$`L_t\to L`$（成分ごと）。$`\lambda_i=\lambda_j`$ ならば $`D_{ij}=W_{ij}`$、そうでなければ $`D_{ij}=0`$ とし、$`R=W-D`$ とおく。$`\lambda_i\ne\lambda_j`$ かつ $`|t|\,\|E\|\le|\lambda_i-\lambda_j|/2`$ ならば、$`|\mu_j-\lambda_i|\ge|\lambda_i-\lambda_j|/2`$ かつ $`|(\tilde EW)_{ij}|\le\|\tilde EW\|=\|E\|`$ なので $`|W_{ij}|\le2|t|\,\|E\|/|\lambda_i-\lambda_j|`$ である。したがって $`R\to0`$ であり、$`DD^*=(W-R)(W-R)^*\to WW^*=1`$。$`\lambda_k=\lambda_j`$ ならば $`L_{ij}=L_{ik}`$ であり、$`\lambda_k=\lambda_j`$ でなければ $`D_{kj}=0`$ であるから、$`(L\circ\tilde ED)_{ij}=\sum_kL_{ik}\tilde E_{ik}D_{kj}=((L\circ\tilde E)D)_{ij}`$。ゆえに
+```math
+(L_t\circ\tilde EW)W^*-L\circ\tilde E=\big((L_t-L)\circ\tilde EW\big)W^*+(L\circ\tilde ER)W^*+(L\circ\tilde ED)R^*+(L\circ\tilde E)(DD^*-1)
+```
+であり、$`W`$、$`D`$、$`\tilde E`$ の成分はそれぞれ $`1`$、$`1`$、$`\|E\|`$ で抑えられるので、各項は $`0`$ に収束する。$`\square`$
+
+実数値の $`f`$ に対しては $`L`$ は実行列であり、任意の $`G`$ に対して $`\mathrm{Tr}\big(G^*U(L\circ U^*EU)U^*\big)=\mathrm{Tr}(\Gamma^*E)`$、$`\Gamma=U(L\circ U^*GU)U^*`$ が成り立つ（基底 $`U`$ で両辺を $`i,j`$ についての和として書けばよい）。すなわち $`A\mapsto\mathrm{Re}\,\mathrm{Tr}(G^*f(A))`$ の方向 $`E`$ への微分は $`\mathrm{Re}\,\mathrm{Tr}(\Gamma^*E)`$ である。
+
+*ライブラリでは：* `apply_function` は定理 1.11 によって（autograd で）微分される。レヴナー行列は `functional.divided_differences` である。
+
+**丸め.** $`\lambda_i,\lambda_j`$ が近いとき、商 $`(f(\lambda_i)-f(\lambda_j))/(\lambda_i-\lambda_j)`$ は桁落ちにより精度を失い、$`\lambda_i=\lambda_j`$ では定義されない。このときは導関数のほうがよいデータである。
+
+<a id="r-1-12"></a>
+
+**命題 1.12（中点値）.** $`a<b`$、$`h=b-a`$ とし、$`f`$ を $`[a,b]`$ 上で 3 回連続微分可能とする（複素数値でもよい）。このとき
+```math
+f^{[1]}(a,b)-\frac{f'(a)+f'(b)}2=-\frac{h^2}2\int_0^1s(1-s)\,f'''(a+sh)\,ds,
+\qquad
+\Big|f^{[1]}(a,b)-\frac{f'(a)+f'(b)}2\Big|\le\frac{h^2}{12}\max_{[a,b]}|f'''|
+```
+であり、$`3`$ 次多項式に対して等号が成り立つ。
+
+*証明.* $`g(s)=f'(a+sh)`$ とおくと $`f^{[1]}(a,b)=\frac1h\int_a^bf'=\int_0^1g`$ であり、$`\varphi(s)=s(1-s)/2`$ とおくと $`\varphi(0)=\varphi(1)=0`$、$`\varphi'(0)=\frac12=-\varphi'(1)`$、$`\varphi''=-1`$ である。2 回部分積分して $`\int_0^1\varphi g''=-\int_0^1\varphi'g'=-[\varphi'g]_0^1+\int_0^1\varphi''g=\frac{g(0)+g(1)}2-\int_0^1g`$。$`g''(s)=h^2f'''(a+sh)`$ なのでこれが恒等式であり、$`\int_0^1\varphi=\frac1{12}`$ から評価が従う。3 次多項式では $`f'''`$ は定数である。$`\square`$
+
+<a id="r-1-13"></a>
+
+**命題 1.13（商か中点値か）.** 単位丸め誤差 $`u\le1/20`$ の浮動小数点演算を仮定する。すなわち浮動小数点数 $`x,y`$ と $`\circ\in\{+,-,\times,/\}`$ に対し、計算結果は $`(x\circ y)(1+\theta)`$、$`|\theta|\le u`$ である（オーバーフローもアンダーフローもないとする）。$`a\ne b`$ を実の浮動小数点数、$`h=|a-b|`$、$`x=f^{[1]}(a,b)`$ とし、$`\hat f_a,\hat f_b`$ を $`|\hat f_a-f(a)|\le\delta_a`$、$`|\hat f_b-f(b)|\le\delta_b`$ を満たす計算値とする。
+
+(a) $`\hat f_a-\hat f_b`$ と $`a-b`$ の計算された商 $`\hat q`$ は $`|\hat q-x|\le R:=(\delta_a+\delta_b)/h+5u|\hat q|`$ を満たす。
+
+(b) $`|\hat m-x|\le T`$ とする（たとえば $`\hat m`$ を計算された中点値、$`T`$ を命題 1.12 の評価にその丸め誤差を加えたもの）。$`|\hat q-\hat m|\le2R`$ ならば $`y=\hat m`$、そうでなければ $`y=\hat q`$ とおく。このとき $`|y-x|\le\min(T,3R)`$。
+
+(c) $`\delta_a+\delta_b\le\Delta`$ かつ $`T=Mh^2+T_0`$ ならば、任意の $`h`$ に対して $`|y-x|\le(3\Delta)^{2/3}M^{1/3}+T_0+15u|\hat q|`$。二つの誤差項 $`3\Delta/h`$ と $`Mh^2`$ は $`h_*=(3\Delta/M)^{1/3}`$ で釣り合う。
+
+*証明.* (a) $`\tilde q=(\hat f_a-\hat f_b)/(a-b)`$ とおく。三つの演算から $`\hat q=\tilde q\,(1+\theta_1)(1+\theta_3)/(1+\theta_2)=\tilde q\,(1+\theta)`$、$`|\theta_i|\le u`$ となり、$`-3u\le\frac{(1-u)^2}{1+u}-1\le\theta\le\frac{(1+u)^2}{1-u}-1=\frac{3u+u^2}{1-u}\le4u`$。よって $`|\hat q-\tilde q|=|\theta|\,|\tilde q|\le\frac{4u}{1-4u}|\hat q|\le5u|\hat q|`$ であり、$`|\tilde q-x|=|(\hat f_a-f(a))-(\hat f_b-f(b))|/h\le(\delta_a+\delta_b)/h`$。(b) $`y=\hat m`$ ならば $`|y-x|\le T`$ かつ $`|y-x|\le|\hat m-\hat q|+|\hat q-x|\le3R`$。$`y=\hat q`$ ならば $`|y-x|\le R`$ であり、$`T\ge|\hat m-x|\ge|\hat m-\hat q|-|\hat q-x|>2R-R=R`$。(c) $`\min(T,3R)\le\min(Mh^2,3\Delta/h)+T_0+15u|\hat q|`$。$`h\ge h_*`$ では $`3\Delta/h\le3\Delta/h_*`$、$`h<h_*`$ では $`Mh^2<Mh_*^2`$ であり、$`3\Delta/h_*=Mh_*^2=(3\Delta)^{2/3}M^{1/3}`$。$`\square`$
+
+この証明は複素数値の $`f`$ に対してもそのまま成り立つ（実部と虚部は別々に丸められ、$`a-b`$ は実数である。このとき $`\theta`$ は同じ評価をもつ複素数である）。規則 (b) はデータから計算できる $`R`$ を必要とするが、$`T`$ は必要としない。$`f'''`$ について何も知らなくても、その誤差は二つの評価の小さいほうの高々 3 倍である。固定した閾値（$`h\le h_*`$ のとき、かつそのときに限り中点値をとる）には $`M=\max|f'''|/12`$ が必要になる。ライブラリの以前の版の閾値 $`h\le\varepsilon^{1/3}\max(|a|,|b|)`$（$`\varepsilon=2u`$）はこの種のもので、$`M`$ を $`\Delta/\max(|a|,|b|)^3`$ 程度とみなすことにあたる。これは導関数が $`|x|`$ とともにスケールする $`x^p`$ や $`\log x`$ には正しいが、$`|x|`$ と無関係なスケールで変化する関数には誤りである。$`a\approx c=10^4`$ における $`f(x)=e^{x-c}`$ では、$`h\approx0.06`$ まで中点値をとり、相対誤差は $`h^2/12\approx3\cdot10^{-4}`$ に達した（そこでは命題 1.12 は因子 $`e^{h}`$ を除いて等式である）。$`e^{-i\tau x}`$ と大きな定数シフトをもつハミルトニアンでも同じことが起こる。
+
+*ライブラリでは：* `functional.divided_differences` は固有値のすべての対に規則 (b) を適用する。その際 $`\delta_a=\varepsilon\,(|\hat f_a|+|a\hat f'_a|)`$ とし、$`5u|\hat q|`$ の代わりに $`4\varepsilon|\hat q|`$ を用いる。$`\delta_a`$ の選び方は $`f`$ の評価に関する仮定であって定理ではない。すなわち、高々 $`\varepsilon|a|`$ だけ摂動された引数において相対誤差が高々 $`\varepsilon`$ であるという仮定である（一次の近似。第二項は $`\tau x`$ を丸める $`e^{-i\tau x}`$ のような関数をカバーする）。同じ規則は正規行列の複素固有値にも適用されるが、これは証明の範囲外である。等しい固有値の対、および固有値ソルバーが分離できない対 $`h\le n\varepsilon\max_l|\lambda_l|`$ に対しても中点値をとる。そこでは命題 1.12 によりその誤差は高々 $`(n\varepsilon\max_l|\lambda_l|)^2\max|f'''|/12`$ であり、一方、指示関数のような不連続な $`f`$ に対しては商は意味をもたない。
+
+*計算：* 縮退したスペクトルにおける定理 1.11 と差分商との比較、および $`c=10^4`$ の $`e^{x-c}`$ に対する命題 1.12 と 1.13 の検証 — [チュートリアル、1.5節](../../tutorial/ja/01_matrix_algebras.md#s-1-5)。
 
 <a id="s-1-4"></a>
 

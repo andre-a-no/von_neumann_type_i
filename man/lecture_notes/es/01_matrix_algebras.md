@@ -3,7 +3,7 @@
 # 1. Álgebras de matrices y cálculo funcional
 
 Este capítulo fija la notación y demuestra los hechos sobre $`M_n(\mathbb C)`$ que se usan en
-todos los capítulos posteriores: el teorema espectral, el cálculo funcional, la
+todos los capítulos posteriores: el teorema espectral, el cálculo funcional y su derivada, la
 descomposición polar y las normas definidas por los valores singulares. El código de la
 biblioteca y las comprobaciones numéricas de estos resultados están en el
 [Tutorial 1](../../tutorial/es/01_matrix_algebras.md).
@@ -146,6 +146,127 @@ $`p(A)=\sqrt A`$ y $`p(A)=p(B^2)=V\,\mathrm{diag}(p(\mu_j^2))\,V^*=V\,\mathrm{di
 
 **Corolario 1.7.** $`A\ge0`$ si y solo si $`A=T^*T`$ para alguna $`T`$. (Si $`A\ge0`$, tómese
 $`T=\sqrt A`$; recíprocamente, $`\langle x,T^*Tx\rangle=\|Tx\|^2\ge0`$.)
+
+**Derivadas.** Los métodos de gradiente derivan $`f(A)`$ respecto de $`A`$. Para $`A`$ autoadjunta, la derivada es
+un producto entrada a entrada con una matriz de cocientes de diferencias de $`f`$.
+
+<a id="r-1-11"></a>
+
+**Teorema 1.11 (Daleckii–Krein).** Sean $`A=U\,\mathrm{diag}(\lambda_1,\dots,\lambda_n)\,U^*`$ autoadjunta, $`I`$ un
+intervalo abierto que contiene a $`\mathrm{spec}\,A`$ y $`f:I\to\mathbb C`$ continuamente diferenciable. Sean
+```math
+f^{[1]}(x,y)=\frac{f(x)-f(y)}{x-y}\quad(x\ne y),\qquad f^{[1]}(x,x)=f'(x)
+```
+la **diferencia dividida** de $`f`$ y $`L_{ij}=f^{[1]}(\lambda_i,\lambda_j)`$ la **matriz de Loewner**. Entonces, para
+toda $`E`$ autoadjunta,
+```math
+\frac{d}{dt}\Big|_{t=0}f(A+tE)=U\big(L\circ U^*EU\big)U^*,
+```
+donde $`(X\circ Y)_{ij}=X_{ij}Y_{ij}`$ es el producto entrada a entrada (de Schur).
+
+*Demostración.* Por el teorema fundamental del cálculo, $`f^{[1]}(x,y)=\int_0^1f'(y+s(x-y))\,ds`$ para todos
+$`x,y\in I`$ (para $`x=y`$ ambos lados valen $`f'(x)`$), así que $`f^{[1]}`$ es continua en $`I\times I`$. Reordenar las
+columnas de $`U`$ permuta del mismo modo las filas y columnas de $`L`$ y de $`U^*EU`$ y no cambia el lado derecho, así
+que podemos suponer $`\lambda_1\le\dots\le\lambda_n`$. Sea $`\delta>0`$ con $`[\lambda_1-\delta,\lambda_n+\delta]\subset I`$. Para
+$`0<|t|\,\|E\|<\delta`$ escribimos $`A+tE=V\,\mathrm{diag}(\mu_1,\dots,\mu_n)\,V^*`$ con $`\mu_1\le\dots\le\mu_n`$; entonces
+$`|\mu_j-\lambda_j|\le|t|\,\|E\|`$ (teorema A.10), luego todos los $`\mu_j\in I`$. Sean $`W=U^*V`$ (unitaria) y $`\tilde E=U^*EU`$.
+Como $`U^*f(A)=\mathrm{diag}(f(\lambda_i))\,U^*`$ y $`f(A+tE)V=V\,\mathrm{diag}(f(\mu_j))`$,
+```math
+\big(U^*(f(A+tE)-f(A))V\big)_{ij}=\big(f(\mu_j)-f(\lambda_i)\big)W_{ij}=f^{[1]}(\lambda_i,\mu_j)\,(\mu_j-\lambda_i)\,W_{ij},
+```
+y el mismo cálculo para $`f(x)=x`$ da $`(\mu_j-\lambda_i)W_{ij}=t\,(\tilde EW)_{ij}`$. Con
+$`(L_t)_{ij}=f^{[1]}(\lambda_i,\mu_j)`$ esto es la identidad exacta
+```math
+\frac1t\big(f(A+tE)-f(A)\big)=U\big((L_t\circ\tilde EW)\,W^*\big)U^*.
+```
+Cuando $`t\to0`$, $`L_t\to L`$ entrada a entrada, porque $`f^{[1]}`$ es continua y $`\mu_j\to\lambda_j`$. Sean $`D_{ij}=W_{ij}`$ si
+$`\lambda_i=\lambda_j`$, $`D_{ij}=0`$ en otro caso, y $`R=W-D`$. Si $`\lambda_i\ne\lambda_j`$ y
+$`|t|\,\|E\|\le|\lambda_i-\lambda_j|/2`$, entonces $`|\mu_j-\lambda_i|\ge|\lambda_i-\lambda_j|/2`$ y
+$`|(\tilde EW)_{ij}|\le\|\tilde EW\|=\|E\|`$, así que $`|W_{ij}|\le2|t|\,\|E\|/|\lambda_i-\lambda_j|`$. Por tanto $`R\to0`$ y
+$`DD^*=(W-R)(W-R)^*\to WW^*=1`$. Como $`L_{ij}=L_{ik}`$ siempre que $`\lambda_k=\lambda_j`$, y $`D_{kj}=0`$ salvo si
+$`\lambda_k=\lambda_j`$, se tiene $`(L\circ\tilde ED)_{ij}=\sum_kL_{ik}\tilde E_{ik}D_{kj}=((L\circ\tilde E)D)_{ij}`$. Por consiguiente
+```math
+(L_t\circ\tilde EW)W^*-L\circ\tilde E=\big((L_t-L)\circ\tilde EW\big)W^*+(L\circ\tilde ER)W^*+(L\circ\tilde ED)R^*+(L\circ\tilde E)(DD^*-1),
+```
+y cada término tiende a $`0`$, pues las entradas de $`W`$, $`D`$ y $`\tilde E`$ están acotadas por $`1`$, $`1`$ y $`\|E\|`$. $`\square`$
+
+Para $`f`$ real, $`L`$ es real, y $`\mathrm{Tr}\big(G^*U(L\circ U^*EU)U^*\big)=\mathrm{Tr}(\Gamma^*E)`$ con
+$`\Gamma=U(L\circ U^*GU)U^*`$, para toda $`G`$ (escríbanse ambos lados como sumas sobre $`i,j`$ en la base $`U`$): la
+derivada de $`A\mapsto\mathrm{Re}\,\mathrm{Tr}(G^*f(A))`$ en la dirección $`E`$ es $`\mathrm{Re}\,\mathrm{Tr}(\Gamma^*E)`$.
+
+*En la biblioteca:* `apply_function` se deriva (con autograd) mediante el teorema 1.11; la matriz de Loewner es
+`functional.divided_differences`.
+
+**Redondeo.** Para $`\lambda_i,\lambda_j`$ próximos, el cociente $`(f(\lambda_i)-f(\lambda_j))/(\lambda_i-\lambda_j)`$ pierde
+precisión por cancelación, y para $`\lambda_i=\lambda_j`$ no está definido. Las derivadas son entonces los mejores datos.
+
+<a id="r-1-12"></a>
+
+**Proposición 1.12 (valor del punto medio).** Sean $`a<b`$, $`h=b-a`$ y $`f`$ tres veces continuamente
+diferenciable en $`[a,b]`$ (se admiten valores complejos). Entonces
+```math
+f^{[1]}(a,b)-\frac{f'(a)+f'(b)}2=-\frac{h^2}2\int_0^1s(1-s)\,f'''(a+sh)\,ds,
+\qquad
+\Big|f^{[1]}(a,b)-\frac{f'(a)+f'(b)}2\Big|\le\frac{h^2}{12}\max_{[a,b]}|f'''|,
+```
+con igualdad para los polinomios de grado $`3`$.
+
+*Demostración.* Sean $`g(s)=f'(a+sh)`$, de modo que $`f^{[1]}(a,b)=\frac1h\int_a^bf'=\int_0^1g`$, y $`\varphi(s)=s(1-s)/2`$, de
+modo que $`\varphi(0)=\varphi(1)=0`$, $`\varphi'(0)=\frac12=-\varphi'(1)`$ y $`\varphi''=-1`$. Integrando por partes dos veces,
+$`\int_0^1\varphi g''=-\int_0^1\varphi'g'=-[\varphi'g]_0^1+\int_0^1\varphi''g=\frac{g(0)+g(1)}2-\int_0^1g`$. Como
+$`g''(s)=h^2f'''(a+sh)`$, esto es la identidad; $`\int_0^1\varphi=\frac1{12}`$ da la cota, y para una cúbica $`f'''`$ es
+constante. $`\square`$
+
+<a id="r-1-13"></a>
+
+**Proposición 1.13 (cociente o punto medio).** Supongamos aritmética de coma flotante con unidad de redondeo
+$`u\le1/20`$: para números de coma flotante $`x,y`$ y $`\circ\in\{+,-,\times,/\}`$ el resultado calculado es
+$`(x\circ y)(1+\theta)`$ con $`|\theta|\le u`$ (sin desbordamiento ni subdesbordamiento). Sean $`a\ne b`$ números reales de
+coma flotante, $`h=|a-b|`$, $`x=f^{[1]}(a,b)`$, y $`\hat f_a,\hat f_b`$ valores calculados con $`|\hat f_a-f(a)|\le\delta_a`$ y
+$`|\hat f_b-f(b)|\le\delta_b`$.
+
+(a) El cociente calculado $`\hat q`$ de $`\hat f_a-\hat f_b`$ y $`a-b`$ cumple
+$`|\hat q-x|\le R:=(\delta_a+\delta_b)/h+5u|\hat q|`$.
+
+(b) Sea $`|\hat m-x|\le T`$ (por ejemplo, $`\hat m`$ el valor del punto medio calculado y $`T`$ la cota de la
+proposición 1.12 más su error de redondeo). Pongamos $`y=\hat m`$ si $`|\hat q-\hat m|\le2R`$, e $`y=\hat q`$ en otro caso.
+Entonces $`|y-x|\le\min(T,3R)`$.
+
+(c) Si $`\delta_a+\delta_b\le\Delta`$ y $`T=Mh^2+T_0`$, entonces $`|y-x|\le(3\Delta)^{2/3}M^{1/3}+T_0+15u|\hat q|`$ para todo $`h`$.
+Los dos términos de error $`3\Delta/h`$ y $`Mh^2`$ se equilibran en $`h_*=(3\Delta/M)^{1/3}`$.
+
+*Demostración.* (a) Sea $`\tilde q=(\hat f_a-\hat f_b)/(a-b)`$. Las tres operaciones dan
+$`\hat q=\tilde q\,(1+\theta_1)(1+\theta_3)/(1+\theta_2)=\tilde q\,(1+\theta)`$ con $`|\theta_i|\le u`$, luego
+$`-3u\le\frac{(1-u)^2}{1+u}-1\le\theta\le\frac{(1+u)^2}{1-u}-1=\frac{3u+u^2}{1-u}\le4u`$. Así
+$`|\hat q-\tilde q|=|\theta|\,|\tilde q|\le\frac{4u}{1-4u}|\hat q|\le5u|\hat q|`$, y
+$`|\tilde q-x|=|(\hat f_a-f(a))-(\hat f_b-f(b))|/h\le(\delta_a+\delta_b)/h`$. (b) Si $`y=\hat m`$, entonces $`|y-x|\le T`$
+y $`|y-x|\le|\hat m-\hat q|+|\hat q-x|\le3R`$. Si $`y=\hat q`$, entonces $`|y-x|\le R`$, y
+$`T\ge|\hat m-x|\ge|\hat m-\hat q|-|\hat q-x|>2R-R=R`$. (c) $`\min(T,3R)\le\min(Mh^2,3\Delta/h)+T_0+15u|\hat q|`$; para
+$`h\ge h_*`$, $`3\Delta/h\le3\Delta/h_*`$, para $`h<h_*`$, $`Mh^2<Mh_*^2`$, y $`3\Delta/h_*=Mh_*^2=(3\Delta)^{2/3}M^{1/3}`$. $`\square`$
+
+La demostración vale literalmente para $`f`$ con valores complejos (las partes real e imaginaria se redondean por
+separado y $`a-b`$ es real; $`\theta`$ es entonces complejo con la misma cota). La regla (b) necesita $`R`$, que se
+calcula a partir de los datos, pero no $`T`$: sin conocer $`f'''`$, su error es a lo sumo tres veces la menor de las
+dos cotas. Un umbral fijo, valor del punto medio si y solo si $`h\le h_*`$, necesitaría $`M=\max|f'''|/12`$. El umbral
+$`h\le\varepsilon^{1/3}\max(|a|,|b|)`$ ($`\varepsilon=2u`$) de versiones anteriores de la biblioteca es de este tipo, con
+$`M`$ del orden de $`\Delta/\max(|a|,|b|)^3`$: correcto para $`x^p`$ o $`\log x`$, cuyas derivadas escalan con $`|x|`$,
+erróneo para funciones que varían en una escala sin relación con $`|x|`$. Para $`f(x)=e^{x-c}`$ en $`a\approx c=10^4`$
+tomaba el valor del punto medio hasta $`h\approx0.06`$, con error relativo de hasta $`h^2/12\approx3\cdot10^{-4}`$ (allí la
+proposición 1.12 es una igualdad salvo un factor $`e^{h}`$); lo mismo ocurre con $`e^{-i\tau x}`$ y un hamiltoniano con
+un gran desplazamiento constante.
+
+*En la biblioteca:* `functional.divided_differences` aplica la regla (b) a cada par de valores propios, con
+$`\delta_a=\varepsilon\,(|\hat f_a|+|a\hat f'_a|)`$ y $`4\varepsilon|\hat q|`$ en lugar de $`5u|\hat q|`$. La elección de $`\delta_a`$
+es una hipótesis sobre la evaluación de $`f`$, no un teorema: error relativo a lo sumo $`\varepsilon`$, en un argumento
+perturbado a lo sumo en $`\varepsilon|a|`$ (a primer orden; el segundo término cubre funciones como $`e^{-i\tau x}`$, que
+redondean $`\tau x`$). La misma regla se aplica a los valores propios complejos de matrices normales, que la
+demostración no cubre. El valor del punto medio se toma también para empates y para pares que el resolvedor de
+valores propios no separa, $`h\le n\varepsilon\max_l|\lambda_l|`$: allí su error es a lo sumo
+$`(n\varepsilon\max_l|\lambda_l|)^2\max|f'''|/12`$ por la proposición 1.12, mientras que el cociente carecería de sentido para
+una $`f`$ discontinua, como una función indicatriz.
+
+*Cálculo:* el teorema 1.11 frente a un cociente de diferencias en un espectro degenerado, y las proposiciones 1.12 y
+1.13 para $`e^{x-c}`$ con $`c=10^4`$ — [tutorial, sección 1.5](../../tutorial/es/01_matrix_algebras.md#s-1-5).
 
 <a id="s-1-4"></a>
 

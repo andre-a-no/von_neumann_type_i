@@ -14,7 +14,7 @@ résultat exact.
 
 ## 1.5 Les opérateurs dans la bibliothèque
 
-*Notes de cours :* [section 1.2](../../lecture_notes/fr/01_matrix_algebras.md#s-1-2) et [section 1.3](../../lecture_notes/fr/01_matrix_algebras.md#s-1-3) : [théorème 1.3](../../lecture_notes/fr/01_matrix_algebras.md#r-1-3), [corollaire 1.4](../../lecture_notes/fr/01_matrix_algebras.md#r-1-4), [théorème 1.5](../../lecture_notes/fr/01_matrix_algebras.md#r-1-5), [théorème 1.6](../../lecture_notes/fr/01_matrix_algebras.md#r-1-6).
+*Notes de cours :* [section 1.2](../../lecture_notes/fr/01_matrix_algebras.md#s-1-2) et [section 1.3](../../lecture_notes/fr/01_matrix_algebras.md#s-1-3) : [théorème 1.3](../../lecture_notes/fr/01_matrix_algebras.md#r-1-3), [corollaire 1.4](../../lecture_notes/fr/01_matrix_algebras.md#r-1-4), [théorème 1.5](../../lecture_notes/fr/01_matrix_algebras.md#r-1-5), [théorème 1.6](../../lecture_notes/fr/01_matrix_algebras.md#r-1-6), [théorème 1.11](../../lecture_notes/fr/01_matrix_algebras.md#r-1-11), [proposition 1.12](../../lecture_notes/fr/01_matrix_algebras.md#r-1-12), [proposition 1.13](../../lecture_notes/fr/01_matrix_algebras.md#r-1-13).
 
 La bibliothèque travaille avec des algèbres $`\bigoplus_cM_{k_c}(\mathbb C)`$ (chapitre 2). Un
 bloc unique correspond au cas $`C=1`$ : `TypeIAlgebra([n], [n])` est $`M_n(\mathbb C)`$. (Les
@@ -75,6 +75,64 @@ assert torch.allclose(spec, torch.exp(torch.tensor([[1.0, 2.0, 4.0]], dtype=spec
 
 `R @ R` ne calcule encore rien : produits, sommes et fonctions construisent une recette,
 qui n'est évaluée que lorsqu'on demande `.matrix` ou un nombre tel qu'une trace.
+
+**Dérivées.** D'après le [théorème 1.11](../../lecture_notes/fr/01_matrix_algebras.md#r-1-11) (Daleckii–Krein), la dérivée
+de $`f(A)`$ dans une direction autoadjointe $`E`$ est $`U(L\circ U^*EU)U^*`$, avec la matrice de Loewner
+$`L_{ij}=f^{[1]}(\lambda_i,\lambda_j)`$ des différences divisées ($`f'(\lambda_i)`$ pour des valeurs propres égales).
+`functional.divided_differences` calcule $`L`$ à partir des valeurs propres et des valeurs de $`f`$ et $`f'`$, et
+autograd dérive `apply_function` avec elle. Nous vérifions la formule en un spectre dégénéré, contre un quotient
+différentiel centré de l'exponentielle dense, dont l'erreur est $`O(s^2)`$ plus un arrondi de l'ordre de $`\varepsilon/s`$ :
+
+```python
+from torch_vn_algebra import functional
+
+lam = torch.tensor([1.0, 1.0, 2.0], dtype=torch.float64)          # a degenerate spectrum
+Q = torch.linalg.qr(torch.randn(3, 3, dtype=torch.complex128))[0]  # a unitary
+A0 = Q @ torch.diag(lam).to(torch.complex128) @ Q.mH
+E = torch.randn(3, 3, dtype=torch.complex128)
+E = (E + E.mH) / 2                                                 # a self-adjoint direction
+L = functional.divided_differences(lam, torch.exp(lam), torch.exp(lam))
+D = Q @ (L * (Q.mH @ E @ Q)) @ Q.mH                                # Theorem 1.11 for f = exp
+s = 1e-6
+fd = (torch.linalg.matrix_exp(A0 + s * E) - torch.linalg.matrix_exp(A0 - s * E)) / (2 * s)
+print(f"{(D - fd).abs().max().item():.1e}")
+assert (D - fd).abs().max() < 1e-8
+```
+
+Pour des valeurs propres proches $`a,b`$ à distance $`h`$, le quotient $`\hat q`$ perd en précision par compensation, et
+la valeur au point milieu $`\hat m=(f'(a)+f'(b))/2`$ se trompe d'au plus $`T=h^2\max|f'''|/12`$ plus l'arrondi
+([proposition 1.12](../../lecture_notes/fr/01_matrix_algebras.md#r-1-12)). `divided_differences` prend $`\hat m`$ si et
+seulement si $`|\hat q-\hat m|\le2R`$, avec la borne d'arrondi $`R`$ de la
+[proposition 1.13](../../lecture_notes/fr/01_matrix_algebras.md#r-1-13) et l'erreur d'évaluation
+$`\varepsilon(|\hat f_a|+|a\hat f'_a|)`$ ; son erreur est alors au plus $`\min(T,3R)`$. Nous le vérifions pour
+$`f(x)=e^{x-c}`$ près de $`c=10^4`$, où $`f^{[1]}(a,b)=e^{a-c}(e^h-1)/h`$ se calcule précisément avec `expm1`. La dernière
+distance, $`h=0.06`$, est sous le seuil $`\varepsilon^{1/3}\max(|a|,|b|)`$ des versions antérieures, qui y prenaient la
+valeur au point milieu :
+
+```python
+eps = torch.finfo(torch.float64).eps
+c = 1e4
+f = lambda x: torch.exp(x - c)
+for h in (1e-12, 1e-9, 1e-6, 1e-4, 1e-2, 0.06):
+    w = torch.tensor([c, c + h], dtype=torch.float64)
+    h = (w[1] - w[0]).item()                                       # the distance actually stored
+    fw = f(w)                                                      # f' = f
+    exact = math.expm1(h) / h                                      # f[a, b], as e^(a - c) = 1
+    q = ((fw[1] - fw[0]) / h).item()                               # quotient
+    m = (fw.sum() / 2).item()                                      # midpoint value
+    y = functional.divided_differences(w, fw, fw)[0, 1].item()     # the library's choice
+    R = eps * (fw.abs() + (w * fw).abs()).sum().item() / h + 4 * eps * abs(q)
+    T = h ** 2 * math.exp(h) / 12 + 2 * eps                        # Proposition 1.12, plus rounding
+    print(f"h = {h:.0e}: quotient {abs(q - exact):.0e}, midpoint {abs(m - exact):.0e}, library {abs(y - exact):.0e}")
+    assert abs(y - exact) <= min(T, 3 * R) + 2 * eps              # Proposition 1.13(b)
+```
+
+*Observation numérique :* le quotient se trompe jusqu'à $`5\cdot10^{-10}`$ pour $`h\le10^{-6}`$ et de $`10^{-15}`$ en
+$`h=0.06`$ ; la valeur au point milieu est exacte à l'arrondi près pour $`h\le10^{-9}`$ et se trompe de $`3\cdot10^{-4}`$ en
+$`h=0.06`$. La bibliothèque a la plus petite des deux erreurs sur chaque ligne sauf $`h=10^{-4}`$, où elle prend la
+valeur au point milieu ($`8\cdot10^{-10}`$) bien que le quotient soit meilleur ($`10^{-12}`$) : $`R`$ admet un argument
+perturbé de $`\varepsilon|a|\approx2\cdot10^{-12}`$, ce qui est pessimiste pour `torch.exp` mais nécessaire pour des
+fonctions comme $`e^{-i\tau x}`$, qui arrondissent $`\tau x`$. La garantie $`\min(T,3R)`$ est respectée sur chaque ligne.
 
 <a id="s-1-6"></a>
 

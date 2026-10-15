@@ -9,7 +9,7 @@ $`L\approx14`$ 以上就变得代价高昂（一个稠密矩阵有 $`4^L`$ 个�
 
 **你将学到**为什么链的代数是 $`\bigoplus_NM_{\binom LN}`$，为什么这些代数构成的塔以 Pascal 三角形为 Bratteli 图、
 以 $`4\cos^2\frac\pi{2L+4}`$ 为指标，如何计数动量扇区，Marshall 符号规则及其对基态动量与自旋的推论
-（Lieb–Mattis），XX 链的 Jordan–Wigner 解，双磁振子 Bethe 方程，为什么 Lanczos 方法单调收敛，以及如何测量
+（Lieb–Mattis），XX 链的 Jordan–Wigner 解，双磁振子 Bethe 方程，为什么 Lanczos 方法单调收敛，Krylov 时间步有多精确，以及如何测量
 能级统计和自由费米子的纠缠。本章的数值检验见
 [教程 9](../../tutorial/zh/09_spin_chains.md)。
 
@@ -416,6 +416,128 @@ $`\mathcal K_m`$ 是不变的，则 $`HQ_m=Q_mT_m`$（命题 9.13，$`r_m=0`$）
 $`e_1`$，并注意 $`Q_me_1=v/\|v\|`$。$`\square`$
 
 *计算：* 对在 Krylov 空间中逐步推进的 `krylov.evolve` 检验命题 9.15，用的是 Néel 态的淬火，并与稠密传播子对照——[教程，9.5 节](../../tutorial/zh/09_spin_chains.md#s-9-5)。
+
+**误差界。** 除非 $`\mathcal K_m`$ 是不变子空间，命题 9.15 对 $`w_\tau`$ 的精度没有任何结论。误差取决于次数 $`<m`$ 的多项式在谱上
+逼近 $`e^{-i\tau x}`$ 的好坏，而 Chebyshev 多项式给出这种逼近。**Chebyshev 多项式** $`\mathcal T_0=1`$、$`\mathcal T_1(y)=y`$、
+$`\mathcal T_{k+1}(y)=2y\mathcal T_k(y)-\mathcal T_{k-1}(y)`$ 的次数为 $`k`$，且满足 $`\mathcal T_k(\cos\vartheta)=\cos k\vartheta`$（由
+$`\cos(k+1)\vartheta+\cos(k-1)\vartheta=2\cos\vartheta\cos k\vartheta`$ 归纳得到），所以在 $`[-1,1]`$ 上 $`|\mathcal T_k|\le1`$。记
+```math
+S_m(x)=\sum_{j\ge m}\frac{x^j}{j!}\le\frac{x^m}{m!}\Big(1-\frac x{m+1}\Big)^{-1}\qquad(0\le x<m+1),
+```
+其中的界由 $`m!/(m+i)!\le(m+1)^{-i}`$ 和几何级数得到。
+
+<a id="r-9-17"></a>
+
+**引理 9.17（$`e^{-i\rho y}`$ 的 Chebyshev 展开）。** 对实数 $`\rho`$ 和 $`y\in[-1,1]`$，
+```math
+e^{-i\rho y}=a_0+2\sum_{k\ge1}a_k\mathcal T_k(y),\qquad a_k=(-i)^k\sum_{l\ge0}\frac{(-1)^l(\rho/2)^{k+2l}}{l!\,(k+l)!},\qquad|a_k|\le\frac{(|\rho|/2)^k}{k!}.
+```
+因此对每个 $`m\ge1`$，次数 $`\le m-1`$ 的多项式 $`p=a_0+2\sum_{k=1}^{m-1}a_k\mathcal T_k`$ 在 $`[-1,1]`$ 上满足
+$`|e^{-i\rho y}-p(y)|\le2S_m(|\rho|/2)`$。
+
+（定义 $`a_k`$ 的级数就是 Bessel 函数，$`a_k=(-i)^kJ_k(\rho)`$；证明不需要这一点。）
+
+*证明。* *展开。* 对 $`y=\cos\vartheta`$，$`\cos^j\vartheta=2^{-j}(e^{i\vartheta}+e^{-i\vartheta})^j=2^{-j}\sum_{l=0}^j\binom jle^{i(j-2l)\vartheta}`$，所以
+```math
+e^{-i\rho\cos\vartheta}=\sum_{j\ge0}\frac{(-i\rho)^j}{j!}\,2^{-j}\sum_{l=0}^j\binom jl\,e^{i(j-2l)\vartheta}.
+```
+该二重级数绝对收敛（各项模之和为 $`e^{|\rho|}`$），因此可以按任意顺序求和，特别是按 $`k=j-2l`$ 分组。对 $`k\ge0`$，满足
+$`j-2l=k`$ 的项有 $`j=k+2l`$，由于 $`\binom{k+2l}l/(k+2l)!=1/(l!\,(k+l)!)`$，它们之和为 $`a_ke^{ik\vartheta}`$；对 $`k<0`$，
+$`\binom jl=\binom j{j-l}`$ 表明 $`e^{ik\vartheta}`$ 的系数是 $`a_{|k|}`$。因此
+$`e^{-i\rho\cos\vartheta}=a_0+\sum_{k\ge1}a_k(e^{ik\vartheta}+e^{-ik\vartheta})=a_0+2\sum_{k\ge1}a_k\mathcal T_k(\cos\vartheta)`$。
+
+*界。* 固定 $`k\ge0`$。设 $`\vartheta`$ 在 $`[0,2\pi]`$ 上均匀分布；若 $`k=0`$ 令 $`\sigma=1`$，若 $`k\ge1`$ 令 $`\sigma`$ 与 $`\vartheta`$
+独立，在 $`[0,1]`$ 上的密度为 $`k(1-t)^{k-1}`$。令 $`Z=\sqrt\sigma\cos\vartheta\in[-1,1]`$。则
+$`\mathbb E\cos^{2l}\vartheta=4^{-l}\binom{2l}l`$（上面的二项展开中只有常数项的均值非零），且
+$`\mathbb E\sigma^l=k\int_0^1t^l(1-t)^{k-1}dt=l!\,k!/(k+l)!`$（分部积分 $`l`$ 次，
+$`\int_0^1t^l(1-t)^{k-1}dt=\frac lk\int_0^1t^{l-1}(1-t)^kdt`$；$`k=0`$ 时两边都是 $`1`$）。由独立性，
+$`\mathbb EZ^{2l}=(2l)!\,k!/(4^l\,l!\,(k+l)!)`$。由于 $`|Z|\le1`$，级数 $`\cos(\rho Z)=\sum_l(-1)^l(\rho Z)^{2l}/(2l)!`$ 一致收敛，所以
+可以逐项取期望：
+```math
+\frac{(\rho/2)^k}{k!}\,\mathbb E\cos(\rho Z)=\sum_{l\ge0}\frac{(-1)^l\rho^{2l}}{(2l)!}\cdot\frac{(\rho/2)^k\,(2l)!}{4^l\,l!\,(k+l)!}=\sum_{l\ge0}\frac{(-1)^l(\rho/2)^{k+2l}}{l!\,(k+l)!}=i^ka_k.
+```
+由于 $`|\cos|\le1`$，$`|a_k|\le(|\rho|/2)^k/k!`$。
+
+*截断。* $`|e^{-i\rho y}-p(y)|=2\,|\sum_{k\ge m}a_k\mathcal T_k(y)|\le2\sum_{k\ge m}(|\rho|/2)^k/k!=2S_m(|\rho|/2)`$。$`\square`$
+
+<a id="r-9-18"></a>
+
+**定理 9.18（Krylov 传播子的误差）。** 设 $`\dim\mathcal K_m=m\ge2`$，$`\|v\|=1`$，$`Q_m,T_m,r_m`$ 如命题 9.13，
+$`\beta_m=\|r_m\|`$，$`\theta_1\le\dots\le\theta_m`$ 为 Ritz 值，$`c_T=(\theta_1+\theta_m)/2`$，$`w_T=(\theta_m-\theta_1)/2`$。令
+$`w_\tau=Q_me^{-i\tau T_m}e_1`$，$`\varphi(t)=\langle e_m,e^{-itT_m}e_1\rangle`$，并设 $`c\in\mathbb R`$、$`w\ge0`$ 满足
+$`\mathrm{spec}\,H\subseteq[c-w,c+w]`$。对实数 $`\tau`$：
+
+(a)（*平移不变性*）对实数 $`s`$，$`H+s`$ 与 $`v`$ 的 Lanczos 向量就是 $`H`$ 与 $`v`$ 的 Lanczos 向量，$`T_m`$ 变为 $`T_m+s`$，$`r_m`$
+不变，$`e^{-i\tau H}v`$ 与 $`w_\tau`$ 都乘以 $`e^{-i\tau s}`$；误差 $`\|e^{-i\tau H}v-w_\tau\|`$ 以及界 (b)–(d) 都不变；
+
+(b)（*后验*）$`e^{-i\tau H}v-w_\tau=-i\int_0^\tau\varphi(t)\,e^{-i(\tau-t)H}r_m\,dt`$，从而
+$`\|e^{-i\tau H}v-w_\tau\|\le\beta_m\,\big|\int_0^\tau|\varphi(t)|\,dt\big|`$；
+
+(c)（*可计算的界*）$`w_T>0`$，$`|\varphi(t)|\le2S_{m-1}(|t|w_T/2)`$，且
+```math
+\|e^{-i\tau H}v-w_\tau\|\le\frac{4\beta_m}{w_T}\,S_m\Big(\frac{|\tau|\,w_T}2\Big);
+```
+
+(d)（*先验*）$`\beta_m\le w`$，$`w_T\le w`$，并且记 $`\rho=|\tau|\,w`$，
+```math
+\|e^{-i\tau H}v-w_\tau\|\le\frac{4\beta_m}w\,S_m\Big(\frac\rho2\Big)\le4S_m\Big(\frac\rho2\Big)\le\frac4{m!}\Big(\frac\rho2\Big)^m\Big(1-\frac\rho{2m+2}\Big)^{-1}\qquad(\rho<2m+2).
+```
+
+*证明。* (a) $`(H+s)^jv`$ 等于 $`H^jv`$ 加上 $`H^iv`$（$`i<j`$）的线性组合，反之亦然，所以对所有 $`j`$ 有
+$`\mathcal K_j(H+s,v)=\mathcal K_j(H,v)`$。$`(H+s)q_j=Hq_j+sq_j`$ 正交于 $`\mathcal K_j\ni q_j`$ 的分量就是 $`Hq_j`$ 的分量，故命题 9.13
+的构造给出相同的 $`q_j`$；于是 $`Q_m^*(H+s)Q_m=T_m+s`$，且 $`(H+s)Q_m-Q_m(T_m+s)=HQ_m-Q_mT_m`$。由定理 1.5(c)，对 $`X=H`$ 和
+$`X=T_m`$ 有 $`e^{-i\tau(X+s)}=e^{-i\tau s}e^{-i\tau X}`$。最后，$`\beta_m`$、$`|\varphi|`$、$`w_T`$ 不变，且
+$`\mathrm{spec}(H+s)\subseteq[c+s-w,c+s+w]`$。
+
+(b) 对 $`T_m`$ 用命题 8.2(1)，$`\frac d{dt}w_t=-iQ_mT_me^{-itT_m}e_1`$，而 $`Q_mT_m=HQ_m-r_me_m^T`$（命题 9.13），所以
+$`\frac d{dt}w_t=-iHw_t+i\varphi(t)r_m`$。由于 $`\frac d{dt}e^{itH}=iHe^{itH}`$（命题 8.2(1)），乘积法则给出
+$`\frac d{dt}(e^{itH}w_t)=i\varphi(t)e^{itH}r_m`$。从 $`0`$ 到 $`\tau`$ 积分（引理 A.4(e)），并利用 $`w_0=Q_me_1=v`$，得
+$`e^{i\tau H}w_\tau-v=i\int_0^\tau\varphi(t)e^{itH}r_m\,dt`$。作用酉算子 $`e^{-i\tau H}`$（引理 A.4(b)）并取范数（引理 A.4(c)）即可。
+
+(c) $`T_m`$ 不是 $`1`$ 的倍数（$`\beta_1>0`$），所以其本征值不全相等（定理 1.3），$`w_T>0`$。因为 $`T_m`$ 是三对角的，
+$`T_m^je_1`$ 在第 $`j+1`$ 个分量以下为零，所以对每个次数 $`\le m-2`$ 的多项式 $`p`$ 有 $`\langle e_m,p(T_m)e_1\rangle=0`$。由引理 9.17
+（以 $`m-1`$ 代替 $`m`$，$`\rho=tw_T`$），存在次数 $`\le m-2`$ 的多项式 $`\tilde p`$，在 $`[-1,1]`$ 上
+$`|e^{-itw_Ty}-\tilde p(y)|\le2S_{m-1}(|t|w_T/2)`$；于是 $`p(x)=e^{-itc_T}\tilde p((x-c_T)/w_T)`$ 的次数 $`\le m-2`$，且在每个 Ritz 值
+处 $`|e^{-itx}-p(x)|\le2S_{m-1}(|t|w_T/2)`$。由定理 1.5 和推论 1.4(1)，
+$`|\varphi(t)|=|\langle e_m,(e^{-itT_m}-p(T_m))e_1\rangle|\le\max_i|e^{-it\theta_i}-p(\theta_i)|`$。级数 $`S_{m-1}`$ 的项非负，且在有界区间
+上一致收敛，所以可以逐项积分：$`\int_0^{|\tau|}2S_{m-1}(tw_T/2)\,dt=\frac4{w_T}S_m(|\tau|w_T/2)`$；结合 (b) 即得此界。
+
+(d) $`Q_m(T_m-c)e_m=Q_mQ_m^*(H-c)q_m`$ 是 $`(H-c)q_m`$ 在 $`\mathcal K_m`$ 上的正交投影，$`r_m=(H-c)q_m-Q_m(T_m-c)e_m`$ 是正交
+分量，所以 $`\beta_m\le\|(H-c)q_m\|\le\|H-c\|\le w`$（推论 1.4(1)）。对 $`T_m`$ 的单位本征向量 $`y`$，Ritz 值
+$`\langle y,T_my\rangle=\langle Q_my,HQ_my\rangle`$ 位于 $`[c-w,c+w]`$，所以 $`w_T\le w`$。又
+$`\frac{4\beta_m}{w_T}S_m(x)=2\beta_m|\tau|\,S_m(x)/x`$，其中 $`x=|\tau|w_T/2\le\rho/2`$，而 $`S_m(x)/x=\sum_{j\ge m}x^{j-1}/j!`$ 单调不减；这给出
+第一个不等式，$`\beta_m\le w`$ 给出第二个，$`S_m`$ 的界给出第三个。$`\square`$
+
+界 (c) 只用到 Lanczos 运行的数据：$`\beta_m`$ 和 Ritz 值。Ritz 值位于谱的内部（定理 9.14），当初始向量在端点本征向量上的分量
+很小时，可能大大低估谱的半宽 $`w`$；但 (c) 中不出现对 $`w`$ 的任何估计，因为表示式 (b) 只涉及 $`T_m`$。由 (d) 和
+$`m!\ge(m/e)^m`$，误差至多为 $`(e\rho/2m)^m`$ 的量级：只要 $`\rho=|\tau|w`$ 明显小于 $`2m/e\approx0.74\,m`$，误差就很小，因此步长
+可以很长。本库早期版本作为误差估计累加的量 $`\beta_m|\varphi(\tau)|`$，由 (b) 的证明，是缺陷 $`\frac d{d\tau}w_\tau+iHw_\tau`$ 的范数：
+即 (b) 中被积函数在端点处的值，是一个速率而不是误差。对小的 $`\tau`$，$`\varphi(t)\approx(-it)^{m-1}\beta_1\cdots\beta_{m-1}/(m-1)!`$，
+所以它比界 (b) 大约大 $`m/|\tau|`$ 倍；对大的 $`\tau`$，$`\varphi`$ 振荡，可能在端点处为零而误差并不为零。
+
+<a id="r-9-19"></a>
+
+**推论 9.19（步长规则）。** 设 $`\tau=\tau_1+\dots+\tau_N`$，$`\tau_k>0`$，$`\psi_0=v\ne0`$，
+$`\psi_k=\|\psi_{k-1}\|\,Q_me^{-i\tau_kT_m}e_1`$ 是 $`e^{-i\tau_kH}\psi_{k-1}`$ 在 $`\mathcal K_m(H,\psi_{k-1})`$ 中的 Krylov 近似，$`\varepsilon_k`$ 是
+这一步的界 (c) 乘以 $`\|\psi_{k-1}\|`$（若该 Krylov 空间的维数 $`<m`$，则 $`\varepsilon_k=0`$）。则对每个 $`k`$ 有
+$`\|e^{-i(\tau_1+\dots+\tau_k)H}v-\psi_k\|\le\varepsilon_1+\dots+\varepsilon_k`$。特别地，若每一步都有
+$`\varepsilon_k\le\mathrm{tol}\cdot\|v\|\,\tau_k/\tau`$，则 $`k`$ 步后的误差至多为 $`\mathrm{tol}\cdot\|v\|\,(\tau_1+\dots+\tau_k)/\tau`$。对
+$`m\ge2`$，长度为 $`h`$ 的一步的界除以 $`h`$ 关于 $`h`$ 单调不减，且当 $`h\to0`$ 时趋于 $`0`$，所以最长的容许步长是正的。
+
+*证明。* 令 $`d_k=e^{-i(\tau_1+\dots+\tau_k)H}v-\psi_k`$。则 $`d_k=e^{-i\tau_kH}d_{k-1}+(e^{-i\tau_kH}\psi_{k-1}-\psi_k)`$，而
+$`e^{-i\tau_kH}`$ 是酉的，所以对 $`\psi_{k-1}/\|\psi_{k-1}\|`$ 应用定理 9.18(c) 得 $`\|d_k\|\le\|d_{k-1}\|+\varepsilon_k`$；若 Krylov 空间的
+维数 $`j<m`$，它等于 $`\mathcal K_j`$ 且是不变的，由命题 9.15 这一步是精确的。由命题 9.15，所有 $`\|\psi_k\|=\|v\|`$。长度为 $`h`$
+的一步的界除以 $`h`$ 等于 $`2\beta_m\|\psi_{k-1}\|S_m(x)/x`$，$`x=hw_T/2`$，关于 $`h`$ 单调不减，且对 $`m\ge2`$ 有
+$`S_m(x)/x\le\frac{x^{m-1}}{m!}(1-\frac x{m+1})^{-1}\to0`$。$`\square`$
+
+*库中：* `krylov.expm_multiply_step` 在每一步都返回界 (c)（`krylov.krylov_error_bound`）。`krylov.evolve`（默认
+`dt=None`）在当前态处构造 Krylov 空间，取界 (c) 不超过 $`\mathrm{tol}\cdot\|\psi_0\|\,h/(t_{\mathrm{end}}-t_0)`$ 的最长步长 $`h`$（不超过
+下一个输出时刻）；由推论 9.19，返回的每个态与 $`e^{-i(t-t_0)H}\psi_0`$ 的距离不超过 $`\mathrm{tol}\cdot\|\psi_0\|`$。这在精确算术中
+成立：舍入误差不在其中（它们随步数增长，并且当 $`H`$ 有很大的常数平移时，每个矩阵–向量乘积都带有每单位时间
+$`\varepsilon\|H\|`$ 量级的误差）。由定理 9.18(a)，步长不依赖于常数平移。若 `dt` 固定，则把各步界之和与
+$`\mathrm{tol}\cdot\|\psi_0\|`$ 比较，超过时给出警告。
+
+*计算：* 将引理 9.17、定理 9.18 和推论 9.19 与稠密传播子对照，所用的谱带有簇、大平移和大范数，并考察 `krylov.evolve` 的步长——[教程，9.5 节](../../tutorial/zh/09_spin_chains.md#s-9-5)。
 
 <a id="s-9-6"></a>
 

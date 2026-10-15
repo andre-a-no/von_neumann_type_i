@@ -12,7 +12,7 @@ free fermions and the Bethe ansatz, and goes beyond dense matrices (Krylov metho
 algebras has Pascal's triangle as Bratteli diagram and index $`4\cos^2\frac\pi{2L+4}`$, how momentum sectors
 are counted, the Marshall sign rule and its consequences for the momentum and spin of ground states
 (Lieb–Mattis), the Jordan–Wigner solution of the XX chain, the two-magnon Bethe equations, why Lanczos
-converges monotonically, and how to measure level statistics and free-fermion entanglement. The numerical
+converges monotonically, how accurate a Krylov time step is, and how to measure level statistics and free-fermion entanglement. The numerical
 checks of this chapter are in [Tutorial 9](../tutorial/09_spin_chains.md).
 
 Throughout, the sites are $`0,\dots,L-1`$, the basis of $`(\mathbb C^2)^{\otimes L}`$ consists of the
@@ -428,6 +428,141 @@ $`e^{-i\tau H}Q_m=Q_me^{-i\tau T_m}`$; apply to
 $`e_1`$, with $`Q_me_1=v/\|v\|`$. $`\square`$
 
 *Computation:* Proposition 9.15 for `krylov.evolve`, which steps in Krylov spaces, on a quench of the Néel state, against the dense propagator — [tutorial, Section 9.5](../tutorial/09_spin_chains.md#s-9-5).
+
+**Error bounds.** Unless $`\mathcal K_m`$ is invariant, Proposition 9.15 says nothing about the accuracy of $`w_\tau`$. The
+error is governed by how well polynomials of degree $`<m`$ approximate $`e^{-i\tau x}`$ on the spectrum, and Chebyshev
+polynomials provide the approximation. The **Chebyshev polynomials** $`\mathcal T_0=1`$, $`\mathcal T_1(y)=y`$,
+$`\mathcal T_{k+1}(y)=2y\mathcal T_k(y)-\mathcal T_{k-1}(y)`$ have degree $`k`$ and satisfy $`\mathcal T_k(\cos\vartheta)=\cos k\vartheta`$ (by induction, from
+$`\cos(k+1)\vartheta+\cos(k-1)\vartheta=2\cos\vartheta\cos k\vartheta`$), so $`|\mathcal T_k|\le1`$ on $`[-1,1]`$. We write
+```math
+S_m(x)=\sum_{j\ge m}\frac{x^j}{j!}\le\frac{x^m}{m!}\Big(1-\frac x{m+1}\Big)^{-1}\qquad(0\le x<m+1),
+```
+where the bound follows from $`m!/(m+i)!\le(m+1)^{-i}`$ and the geometric series.
+
+<a id="r-9-17"></a>
+
+**Lemma 9.17 (Chebyshev expansion of $`e^{-i\rho y}`$).** For real $`\rho`$ and $`y\in[-1,1]`$,
+```math
+e^{-i\rho y}=a_0+2\sum_{k\ge1}a_k\mathcal T_k(y),\qquad a_k=(-i)^k\sum_{l\ge0}\frac{(-1)^l(\rho/2)^{k+2l}}{l!\,(k+l)!},\qquad|a_k|\le\frac{(|\rho|/2)^k}{k!}.
+```
+Hence, for every $`m\ge1`$, the polynomial $`p=a_0+2\sum_{k=1}^{m-1}a_k\mathcal T_k`$ of degree $`\le m-1`$ satisfies
+$`|e^{-i\rho y}-p(y)|\le2S_m(|\rho|/2)`$ on $`[-1,1]`$.
+
+(The sums defining $`a_k`$ are the Bessel functions, $`a_k=(-i)^kJ_k(\rho)`$; the proof does not need this.)
+
+*Proof.* *Expansion.* For $`y=\cos\vartheta`$, $`\cos^j\vartheta=2^{-j}(e^{i\vartheta}+e^{-i\vartheta})^j=2^{-j}\sum_{l=0}^j\binom jle^{i(j-2l)\vartheta}`$, so
+```math
+e^{-i\rho\cos\vartheta}=\sum_{j\ge0}\frac{(-i\rho)^j}{j!}\,2^{-j}\sum_{l=0}^j\binom jl\,e^{i(j-2l)\vartheta}.
+```
+The double series converges absolutely (the moduli of its terms sum to $`e^{|\rho|}`$), so it may be summed in any
+order, in particular by $`k=j-2l`$. For $`k\ge0`$ the terms with $`j-2l=k`$ have $`j=k+2l`$, and as
+$`\binom{k+2l}l/(k+2l)!=1/(l!\,(k+l)!)`$ they sum to $`a_ke^{ik\vartheta}`$; for $`k<0`$, $`\binom jl=\binom j{j-l}`$ shows that the
+coefficient of $`e^{ik\vartheta}`$ is $`a_{|k|}`$. Hence
+$`e^{-i\rho\cos\vartheta}=a_0+\sum_{k\ge1}a_k(e^{ik\vartheta}+e^{-ik\vartheta})=a_0+2\sum_{k\ge1}a_k\mathcal T_k(\cos\vartheta)`$.
+
+*Bound.* Fix $`k\ge0`$. Let $`\vartheta`$ be uniform on $`[0,2\pi]`$; let $`\sigma=1`$ if $`k=0`$, and for $`k\ge1`$ let $`\sigma`$
+be independent of $`\vartheta`$ with density $`k(1-t)^{k-1}`$ on $`[0,1]`$. Put $`Z=\sqrt\sigma\cos\vartheta\in[-1,1]`$. Then
+$`\mathbb E\cos^{2l}\vartheta=4^{-l}\binom{2l}l`$ (in the binomial expansion above only the constant term has nonzero
+mean), and $`\mathbb E\sigma^l=k\int_0^1t^l(1-t)^{k-1}dt=l!\,k!/(k+l)!`$ (integrate by parts $`l`$ times,
+$`\int_0^1t^l(1-t)^{k-1}dt=\frac lk\int_0^1t^{l-1}(1-t)^kdt`$; for $`k=0`$ both sides are $`1`$). By independence,
+$`\mathbb EZ^{2l}=(2l)!\,k!/(4^l\,l!\,(k+l)!)`$. The series $`\cos(\rho Z)=\sum_l(-1)^l(\rho Z)^{2l}/(2l)!`$ converges uniformly, as
+$`|Z|\le1`$, so its mean may be taken termwise:
+```math
+\frac{(\rho/2)^k}{k!}\,\mathbb E\cos(\rho Z)=\sum_{l\ge0}\frac{(-1)^l\rho^{2l}}{(2l)!}\cdot\frac{(\rho/2)^k\,(2l)!}{4^l\,l!\,(k+l)!}=\sum_{l\ge0}\frac{(-1)^l(\rho/2)^{k+2l}}{l!\,(k+l)!}=i^ka_k.
+```
+As $`|\cos|\le1`$, $`|a_k|\le(|\rho|/2)^k/k!`$.
+
+*Truncation.* $`|e^{-i\rho y}-p(y)|=2\,|\sum_{k\ge m}a_k\mathcal T_k(y)|\le2\sum_{k\ge m}(|\rho|/2)^k/k!=2S_m(|\rho|/2)`$. $`\square`$
+
+<a id="r-9-18"></a>
+
+**Theorem 9.18 (error of the Krylov propagator).** Let $`\dim\mathcal K_m=m\ge2`$ and $`\|v\|=1`$, let $`Q_m,T_m,r_m`$ be as
+in Proposition 9.13, $`\beta_m=\|r_m\|`$, $`\theta_1\le\dots\le\theta_m`$ the Ritz values, $`c_T=(\theta_1+\theta_m)/2`$ and
+$`w_T=(\theta_m-\theta_1)/2`$. Let $`w_\tau=Q_me^{-i\tau T_m}e_1`$ and $`\varphi(t)=\langle e_m,e^{-itT_m}e_1\rangle`$, and let
+$`c\in\mathbb R`$, $`w\ge0`$ with $`\mathrm{spec}\,H\subseteq[c-w,c+w]`$. For real $`\tau`$:
+
+(a) (*shift invariance*) for real $`s`$, the Lanczos vectors of $`H+s`$ and $`v`$ are those of $`H`$ and $`v`$, $`T_m`$
+becomes $`T_m+s`$, $`r_m`$ is unchanged, and $`e^{-i\tau H}v`$ and $`w_\tau`$ are both multiplied by $`e^{-i\tau s}`$; the
+error $`\|e^{-i\tau H}v-w_\tau\|`$ and the bounds (b)–(d) do not change;
+
+(b) (*a posteriori*) $`e^{-i\tau H}v-w_\tau=-i\int_0^\tau\varphi(t)\,e^{-i(\tau-t)H}r_m\,dt`$, hence
+$`\|e^{-i\tau H}v-w_\tau\|\le\beta_m\,\big|\int_0^\tau|\varphi(t)|\,dt\big|`$;
+
+(c) (*computable bound*) $`w_T>0`$, $`|\varphi(t)|\le2S_{m-1}(|t|w_T/2)`$, and
+```math
+\|e^{-i\tau H}v-w_\tau\|\le\frac{4\beta_m}{w_T}\,S_m\Big(\frac{|\tau|\,w_T}2\Big);
+```
+
+(d) (*a priori*) $`\beta_m\le w`$ and $`w_T\le w`$, and with $`\rho=|\tau|\,w`$
+```math
+\|e^{-i\tau H}v-w_\tau\|\le\frac{4\beta_m}w\,S_m\Big(\frac\rho2\Big)\le4S_m\Big(\frac\rho2\Big)\le\frac4{m!}\Big(\frac\rho2\Big)^m\Big(1-\frac\rho{2m+2}\Big)^{-1}\qquad(\rho<2m+2).
+```
+
+*Proof.* (a) $`(H+s)^jv`$ is $`H^jv`$ plus a combination of the $`H^iv`$, $`i<j`$, and conversely, so
+$`\mathcal K_j(H+s,v)=\mathcal K_j(H,v)`$ for all $`j`$. The component of $`(H+s)q_j=Hq_j+sq_j`$ orthogonal to $`\mathcal K_j\ni q_j`$ is
+that of $`Hq_j`$, so the construction of Proposition 9.13 gives the same $`q_j`$; then $`Q_m^*(H+s)Q_m=T_m+s`$ and
+$`(H+s)Q_m-Q_m(T_m+s)=HQ_m-Q_mT_m`$. By Theorem 1.5(c), $`e^{-i\tau(X+s)}=e^{-i\tau s}e^{-i\tau X}`$ for $`X=H`$ and
+$`X=T_m`$. Finally $`\beta_m`$, $`|\varphi|`$ and $`w_T`$ do not change, and $`\mathrm{spec}(H+s)\subseteq[c+s-w,c+s+w]`$.
+
+(b) By Proposition 8.2(1) for $`T_m`$, $`\frac d{dt}w_t=-iQ_mT_me^{-itT_m}e_1`$, and $`Q_mT_m=HQ_m-r_me_m^T`$ (Proposition 9.13),
+so $`\frac d{dt}w_t=-iHw_t+i\varphi(t)r_m`$. As $`\frac d{dt}e^{itH}=iHe^{itH}`$ (Proposition 8.2(1)), the product rule gives
+$`\frac d{dt}(e^{itH}w_t)=i\varphi(t)e^{itH}r_m`$. Integrating from $`0`$ to $`\tau`$ (Lemma A.4(e)), with $`w_0=Q_me_1=v`$,
+$`e^{i\tau H}w_\tau-v=i\int_0^\tau\varphi(t)e^{itH}r_m\,dt`$. Apply the unitary $`e^{-i\tau H}`$ (Lemma A.4(b)) and take norms
+(Lemma A.4(c)).
+
+(c) $`T_m`$ is not a multiple of $`1`$ ($`\beta_1>0`$), so its eigenvalues are not all equal (Theorem 1.3) and $`w_T>0`$. As
+$`T_m`$ is tridiagonal, $`T_m^je_1`$ vanishes below its entry $`j+1`$, so $`\langle e_m,p(T_m)e_1\rangle=0`$ for every polynomial $`p`$
+of degree $`\le m-2`$. By Lemma 9.17, with $`m-1`$ in place of $`m`$ and $`\rho=tw_T`$, there is a polynomial $`\tilde p`$ of degree
+$`\le m-2`$ with $`|e^{-itw_Ty}-\tilde p(y)|\le2S_{m-1}(|t|w_T/2)`$ on $`[-1,1]`$; then $`p(x)=e^{-itc_T}\tilde p((x-c_T)/w_T)`$ has
+degree $`\le m-2`$ and $`|e^{-itx}-p(x)|\le2S_{m-1}(|t|w_T/2)`$ at every Ritz value. By Theorem 1.5 and Corollary 1.4(1),
+$`|\varphi(t)|=|\langle e_m,(e^{-itT_m}-p(T_m))e_1\rangle|\le\max_i|e^{-it\theta_i}-p(\theta_i)|`$. The series $`S_{m-1}`$ has
+nonnegative terms and converges uniformly on bounded intervals, so it may be integrated termwise:
+$`\int_0^{|\tau|}2S_{m-1}(tw_T/2)\,dt=\frac4{w_T}S_m(|\tau|w_T/2)`$; with (b) this is the bound.
+
+(d) $`Q_m(T_m-c)e_m=Q_mQ_m^*(H-c)q_m`$ is the orthogonal projection of $`(H-c)q_m`$ onto $`\mathcal K_m`$, and
+$`r_m=(H-c)q_m-Q_m(T_m-c)e_m`$ is the orthogonal component, so $`\beta_m\le\|(H-c)q_m\|\le\|H-c\|\le w`$ (Corollary 1.4(1)). For a
+unit eigenvector $`y`$ of $`T_m`$, the Ritz value $`\langle y,T_my\rangle=\langle Q_my,HQ_my\rangle`$ lies in $`[c-w,c+w]`$, so $`w_T\le w`$.
+Now $`\frac{4\beta_m}{w_T}S_m(x)=2\beta_m|\tau|\,S_m(x)/x`$ with $`x=|\tau|w_T/2\le\rho/2`$, and $`S_m(x)/x=\sum_{j\ge m}x^{j-1}/j!`$ is
+nondecreasing; this gives the first inequality, $`\beta_m\le w`$ the second, and the bound on $`S_m`$ the third. $`\square`$
+
+The bound (c) uses only the data of the Lanczos run, $`\beta_m`$ and the Ritz values. The Ritz values lie inside the
+spectrum (Theorem 9.14) and can underestimate its half-width $`w`$ by far, for a start vector with small components
+on the extreme eigenvectors; but no estimate of $`w`$ enters (c), because the representation (b) involves $`T_m`$
+alone. By (d) and $`m!\ge(m/e)^m`$, the error is at most of the order of $`(e\rho/2m)^m`$: it is small once
+$`\rho=|\tau|w`$ is well below $`2m/e\approx0.74\,m`$, so the steps can be long. The quantity
+$`\beta_m|\varphi(\tau)|`$, which earlier versions of the library added up as an error estimate, is by the proof of (b)
+the norm of the defect $`\frac d{d\tau}w_\tau+iHw_\tau`$: the integrand of (b) at the end point, a rate rather than an
+error. For small $`\tau`$, $`\varphi(t)\approx(-it)^{m-1}\beta_1\cdots\beta_{m-1}/(m-1)!`$, so it exceeds the bound (b) by a
+factor of about $`m/|\tau|`$; for large $`\tau`$, $`\varphi`$ oscillates and can vanish at the end point while the error
+does not.
+
+<a id="r-9-19"></a>
+
+**Corollary 9.19 (step rule).** Let $`\tau=\tau_1+\dots+\tau_N`$ with $`\tau_k>0`$, $`\psi_0=v\ne0`$, and let
+$`\psi_k=\|\psi_{k-1}\|\,Q_me^{-i\tau_kT_m}e_1`$ be the Krylov approximation of $`e^{-i\tau_kH}\psi_{k-1}`$ in
+$`\mathcal K_m(H,\psi_{k-1})`$, and $`\varepsilon_k`$ the bound (c) for this step times $`\|\psi_{k-1}\|`$ ($`\varepsilon_k=0`$ if this Krylov
+space has dimension $`<m`$). Then $`\|e^{-i(\tau_1+\dots+\tau_k)H}v-\psi_k\|\le\varepsilon_1+\dots+\varepsilon_k`$ for every $`k`$. In
+particular, if $`\varepsilon_k\le\mathrm{tol}\cdot\|v\|\,\tau_k/\tau`$ for every step, the error after $`k`$ steps is at most
+$`\mathrm{tol}\cdot\|v\|\,(\tau_1+\dots+\tau_k)/\tau`$. For $`m\ge2`$ the bound for a step of length $`h`$, divided by $`h`$, is
+nondecreasing in $`h`$ and tends to $`0`$ as $`h\to0`$, so the longest admissible step is positive.
+
+*Proof.* Let $`d_k=e^{-i(\tau_1+\dots+\tau_k)H}v-\psi_k`$. Then $`d_k=e^{-i\tau_kH}d_{k-1}+(e^{-i\tau_kH}\psi_{k-1}-\psi_k)`$, and
+$`e^{-i\tau_kH}`$ is unitary, so $`\|d_k\|\le\|d_{k-1}\|+\varepsilon_k`$ by Theorem 9.18(c) applied to $`\psi_{k-1}/\|\psi_{k-1}\|`$; if the
+Krylov space has dimension $`j<m`$, it equals $`\mathcal K_j`$ and is invariant, and the step is exact by Proposition 9.15. All
+$`\|\psi_k\|=\|v\|`$ by Proposition 9.15. The bound for a step of length $`h`$ divided by $`h`$ is $`2\beta_m\|\psi_{k-1}\|S_m(x)/x`$ with
+$`x=hw_T/2`$, nondecreasing in $`h`$, and $`S_m(x)/x\le\frac{x^{m-1}}{m!}(1-\frac x{m+1})^{-1}\to0`$ for $`m\ge2`$. $`\square`$
+
+*In the library:* `krylov.expm_multiply_step` returns the bound (c) (`krylov.krylov_error_bound`) with every step.
+`krylov.evolve` (default `dt=None`) builds the Krylov space at the current state and takes the longest step $`h`$, up to
+the next output time, whose bound (c) is at most $`\mathrm{tol}\cdot\|\psi_0\|\,h/(t_{\mathrm{end}}-t_0)`$; by Corollary 9.19 every
+returned state is then within $`\mathrm{tol}\cdot\|\psi_0\|`$ of $`e^{-i(t-t_0)H}\psi_0`$. This holds in exact arithmetic: rounding
+errors are not included (they grow with the number of steps, and with $`\varepsilon\|H\|`$ per unit time for a large
+constant shift of $`H`$, which every matrix–vector product carries). By Theorem 9.18(a) the steps do not depend on a
+constant shift. With a fixed `dt` the sum of the bounds is compared with $`\mathrm{tol}\cdot\|\psi_0\|`$, with a warning if it
+is larger.
+
+*Computation:* Lemma 9.17, Theorem 9.18 and Corollary 9.19 against the dense propagator, for spectra with clusters, a
+large shift and a large norm, and the steps of `krylov.evolve` — [tutorial, Section 9.5](../tutorial/09_spin_chains.md#s-9-5).
 
 <a id="s-9-6"></a>
 

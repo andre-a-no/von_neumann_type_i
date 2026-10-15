@@ -13,7 +13,7 @@ matrices densas (métodos de Krylov) y de las cadenas limpias (desorden).
 álgebras tiene como diagrama de Bratteli el triángulo de Pascal e índice $`4\cos^2\frac\pi{2L+4}`$, cómo se
 cuentan los sectores de momento, la regla de signos de Marshall y sus consecuencias para el momento y el espín
 de los estados fundamentales (Lieb–Mattis), la solución de Jordan–Wigner de la cadena XX, las ecuaciones de
-Bethe de dos magnones, por qué Lanczos converge monótonamente, y cómo medir la estadística de niveles y el
+Bethe de dos magnones, por qué Lanczos converge monótonamente, cuán preciso es un paso de Krylov en el tiempo, y cómo medir la estadística de niveles y el
 entrelazamiento de fermiones libres. Las comprobaciones numéricas de este capítulo están en el
 [Tutorial 9](../../tutorial/es/09_spin_chains.md).
 
@@ -454,6 +454,144 @@ $`\mathcal K_m`$ es invariante, $`HQ_m=Q_mT_m`$ (proposición 9.13, $`r_m=0`$), 
 serie exponencial (proposición 8.2(1)), $`e^{-i\tau H}Q_m=Q_me^{-i\tau T_m}`$; se aplica a $`e_1`$, con $`Q_me_1=v/\|v\|`$. $`\square`$
 
 *Cálculo:* la proposición 9.15 para `krylov.evolve`, que avanza por pasos en espacios de Krylov, en un cambio súbito (quench) desde el estado de Néel, frente al propagador denso — [tutorial, sección 9.5](../../tutorial/es/09_spin_chains.md#s-9-5).
+
+**Cotas de error.** Salvo que $`\mathcal K_m`$ sea invariante, la proposición 9.15 no dice nada sobre la precisión de
+$`w_\tau`$. El error depende de lo bien que los polinomios de grado $`<m`$ aproximan $`e^{-i\tau x}`$ en el espectro, y los
+polinomios de Chebyshev proporcionan la aproximación. Los **polinomios de Chebyshev** $`\mathcal T_0=1`$, $`\mathcal T_1(y)=y`$,
+$`\mathcal T_{k+1}(y)=2y\mathcal T_k(y)-\mathcal T_{k-1}(y)`$ tienen grado $`k`$ y cumplen $`\mathcal T_k(\cos\vartheta)=\cos k\vartheta`$ (por inducción, a
+partir de $`\cos(k+1)\vartheta+\cos(k-1)\vartheta=2\cos\vartheta\cos k\vartheta`$), luego $`|\mathcal T_k|\le1`$ en $`[-1,1]`$. Escribimos
+```math
+S_m(x)=\sum_{j\ge m}\frac{x^j}{j!}\le\frac{x^m}{m!}\Big(1-\frac x{m+1}\Big)^{-1}\qquad(0\le x<m+1),
+```
+donde la cota se sigue de $`m!/(m+i)!\le(m+1)^{-i}`$ y la serie geométrica.
+
+<a id="r-9-17"></a>
+
+**Lema 9.17 (desarrollo de Chebyshev de $`e^{-i\rho y}`$).** Para $`\rho`$ real e $`y\in[-1,1]`$,
+```math
+e^{-i\rho y}=a_0+2\sum_{k\ge1}a_k\mathcal T_k(y),\qquad a_k=(-i)^k\sum_{l\ge0}\frac{(-1)^l(\rho/2)^{k+2l}}{l!\,(k+l)!},\qquad|a_k|\le\frac{(|\rho|/2)^k}{k!}.
+```
+Por tanto, para todo $`m\ge1`$, el polinomio $`p=a_0+2\sum_{k=1}^{m-1}a_k\mathcal T_k`$ de grado $`\le m-1`$ cumple
+$`|e^{-i\rho y}-p(y)|\le2S_m(|\rho|/2)`$ en $`[-1,1]`$.
+
+(Las sumas que definen $`a_k`$ son las funciones de Bessel, $`a_k=(-i)^kJ_k(\rho)`$; la demostración no lo necesita.)
+
+*Demostración.* *Desarrollo.* Para $`y=\cos\vartheta`$, $`\cos^j\vartheta=2^{-j}(e^{i\vartheta}+e^{-i\vartheta})^j=2^{-j}\sum_{l=0}^j\binom jle^{i(j-2l)\vartheta}`$, luego
+```math
+e^{-i\rho\cos\vartheta}=\sum_{j\ge0}\frac{(-i\rho)^j}{j!}\,2^{-j}\sum_{l=0}^j\binom jl\,e^{i(j-2l)\vartheta}.
+```
+La serie doble converge absolutamente (los módulos de sus términos suman $`e^{|\rho|}`$), así que puede sumarse en
+cualquier orden, en particular según $`k=j-2l`$. Para $`k\ge0`$ los términos con $`j-2l=k`$ tienen $`j=k+2l`$, y como
+$`\binom{k+2l}l/(k+2l)!=1/(l!\,(k+l)!)`$ suman $`a_ke^{ik\vartheta}`$; para $`k<0`$, $`\binom jl=\binom j{j-l}`$ muestra que el
+coeficiente de $`e^{ik\vartheta}`$ es $`a_{|k|}`$. Por tanto
+$`e^{-i\rho\cos\vartheta}=a_0+\sum_{k\ge1}a_k(e^{ik\vartheta}+e^{-ik\vartheta})=a_0+2\sum_{k\ge1}a_k\mathcal T_k(\cos\vartheta)`$.
+
+*Cota.* Fijemos $`k\ge0`$. Sea $`\vartheta`$ uniforme en $`[0,2\pi]`$; sea $`\sigma=1`$ si $`k=0`$, y para $`k\ge1`$ sea $`\sigma`$
+independiente de $`\vartheta`$ con densidad $`k(1-t)^{k-1}`$ en $`[0,1]`$. Pongamos $`Z=\sqrt\sigma\cos\vartheta\in[-1,1]`$.
+Entonces $`\mathbb E\cos^{2l}\vartheta=4^{-l}\binom{2l}l`$ (en el desarrollo binomial anterior solo el término constante tiene
+media no nula), y $`\mathbb E\sigma^l=k\int_0^1t^l(1-t)^{k-1}dt=l!\,k!/(k+l)!`$ (integrando por partes $`l`$ veces,
+$`\int_0^1t^l(1-t)^{k-1}dt=\frac lk\int_0^1t^{l-1}(1-t)^kdt`$; para $`k=0`$ ambos lados valen $`1`$). Por independencia,
+$`\mathbb EZ^{2l}=(2l)!\,k!/(4^l\,l!\,(k+l)!)`$. La serie $`\cos(\rho Z)=\sum_l(-1)^l(\rho Z)^{2l}/(2l)!`$ converge uniformemente,
+pues $`|Z|\le1`$, así que su media puede tomarse término a término:
+```math
+\frac{(\rho/2)^k}{k!}\,\mathbb E\cos(\rho Z)=\sum_{l\ge0}\frac{(-1)^l\rho^{2l}}{(2l)!}\cdot\frac{(\rho/2)^k\,(2l)!}{4^l\,l!\,(k+l)!}=\sum_{l\ge0}\frac{(-1)^l(\rho/2)^{k+2l}}{l!\,(k+l)!}=i^ka_k.
+```
+Como $`|\cos|\le1`$, $`|a_k|\le(|\rho|/2)^k/k!`$.
+
+*Truncación.* $`|e^{-i\rho y}-p(y)|=2\,|\sum_{k\ge m}a_k\mathcal T_k(y)|\le2\sum_{k\ge m}(|\rho|/2)^k/k!=2S_m(|\rho|/2)`$. $`\square`$
+
+<a id="r-9-18"></a>
+
+**Teorema 9.18 (error del propagador de Krylov).** Sean $`\dim\mathcal K_m=m\ge2`$ y $`\|v\|=1`$, $`Q_m,T_m,r_m`$ como en la
+proposición 9.13, $`\beta_m=\|r_m\|`$, $`\theta_1\le\dots\le\theta_m`$ los valores de Ritz, $`c_T=(\theta_1+\theta_m)/2`$ y
+$`w_T=(\theta_m-\theta_1)/2`$. Sean $`w_\tau=Q_me^{-i\tau T_m}e_1`$ y $`\varphi(t)=\langle e_m,e^{-itT_m}e_1\rangle`$, y sean
+$`c\in\mathbb R`$, $`w\ge0`$ con $`\mathrm{spec}\,H\subseteq[c-w,c+w]`$. Para $`\tau`$ real:
+
+(a) (*invariancia por desplazamiento*) para $`s`$ real, los vectores de Lanczos de $`H+s`$ y $`v`$ son los de $`H`$ y $`v`$,
+$`T_m`$ pasa a ser $`T_m+s`$, $`r_m`$ no cambia, y $`e^{-i\tau H}v`$ y $`w_\tau`$ quedan ambos multiplicados por $`e^{-i\tau s}`$; el
+error $`\|e^{-i\tau H}v-w_\tau\|`$ y las cotas (b)–(d) no cambian;
+
+(b) (*a posteriori*) $`e^{-i\tau H}v-w_\tau=-i\int_0^\tau\varphi(t)\,e^{-i(\tau-t)H}r_m\,dt`$, luego
+$`\|e^{-i\tau H}v-w_\tau\|\le\beta_m\,\big|\int_0^\tau|\varphi(t)|\,dt\big|`$;
+
+(c) (*cota calculable*) $`w_T>0`$, $`|\varphi(t)|\le2S_{m-1}(|t|w_T/2)`$, y
+```math
+\|e^{-i\tau H}v-w_\tau\|\le\frac{4\beta_m}{w_T}\,S_m\Big(\frac{|\tau|\,w_T}2\Big);
+```
+
+(d) (*a priori*) $`\beta_m\le w`$ y $`w_T\le w`$, y con $`\rho=|\tau|\,w`$
+```math
+\|e^{-i\tau H}v-w_\tau\|\le\frac{4\beta_m}w\,S_m\Big(\frac\rho2\Big)\le4S_m\Big(\frac\rho2\Big)\le\frac4{m!}\Big(\frac\rho2\Big)^m\Big(1-\frac\rho{2m+2}\Big)^{-1}\qquad(\rho<2m+2).
+```
+
+*Demostración.* (a) $`(H+s)^jv`$ es $`H^jv`$ más una combinación de los $`H^iv`$, $`i<j`$, y recíprocamente, así que
+$`\mathcal K_j(H+s,v)=\mathcal K_j(H,v)`$ para todo $`j`$. La componente de $`(H+s)q_j=Hq_j+sq_j`$ ortogonal a $`\mathcal K_j\ni q_j`$ es
+la de $`Hq_j`$, de modo que la construcción de la proposición 9.13 da los mismos $`q_j`$; entonces $`Q_m^*(H+s)Q_m=T_m+s`$ y
+$`(H+s)Q_m-Q_m(T_m+s)=HQ_m-Q_mT_m`$. Por el teorema 1.5(c), $`e^{-i\tau(X+s)}=e^{-i\tau s}e^{-i\tau X}`$ para $`X=H`$ y
+$`X=T_m`$. Finalmente, $`\beta_m`$, $`|\varphi|`$ y $`w_T`$ no cambian, y $`\mathrm{spec}(H+s)\subseteq[c+s-w,c+s+w]`$.
+
+(b) Por la proposición 8.2(1) para $`T_m`$, $`\frac d{dt}w_t=-iQ_mT_me^{-itT_m}e_1`$, y $`Q_mT_m=HQ_m-r_me_m^T`$ (proposición
+9.13), luego $`\frac d{dt}w_t=-iHw_t+i\varphi(t)r_m`$. Como $`\frac d{dt}e^{itH}=iHe^{itH}`$ (proposición 8.2(1)), la regla del
+producto da $`\frac d{dt}(e^{itH}w_t)=i\varphi(t)e^{itH}r_m`$. Integrando de $`0`$ a $`\tau`$ (lema A.4(e)), con $`w_0=Q_me_1=v`$,
+$`e^{i\tau H}w_\tau-v=i\int_0^\tau\varphi(t)e^{itH}r_m\,dt`$. Se aplica la unitaria $`e^{-i\tau H}`$ (lema A.4(b)) y se toman
+normas (lema A.4(c)).
+
+(c) $`T_m`$ no es múltiplo de $`1`$ ($`\beta_1>0`$), así que sus valores propios no son todos iguales (teorema 1.3) y
+$`w_T>0`$. Como $`T_m`$ es tridiagonal, $`T_m^je_1`$ se anula por debajo de su entrada $`j+1`$, luego $`\langle e_m,p(T_m)e_1\rangle=0`$
+para todo polinomio $`p`$ de grado $`\le m-2`$. Por el lema 9.17, con $`m-1`$ en lugar de $`m`$ y $`\rho=tw_T`$, hay un
+polinomio $`\tilde p`$ de grado $`\le m-2`$ con $`|e^{-itw_Ty}-\tilde p(y)|\le2S_{m-1}(|t|w_T/2)`$ en $`[-1,1]`$; entonces
+$`p(x)=e^{-itc_T}\tilde p((x-c_T)/w_T)`$ tiene grado $`\le m-2`$ y $`|e^{-itx}-p(x)|\le2S_{m-1}(|t|w_T/2)`$ en cada valor de
+Ritz. Por el teorema 1.5 y el corolario 1.4(1),
+$`|\varphi(t)|=|\langle e_m,(e^{-itT_m}-p(T_m))e_1\rangle|\le\max_i|e^{-it\theta_i}-p(\theta_i)|`$. La serie $`S_{m-1}`$ tiene términos
+no negativos y converge uniformemente en intervalos acotados, así que puede integrarse término a término:
+$`\int_0^{|\tau|}2S_{m-1}(tw_T/2)\,dt=\frac4{w_T}S_m(|\tau|w_T/2)`$; con (b) esta es la cota.
+
+(d) $`Q_m(T_m-c)e_m=Q_mQ_m^*(H-c)q_m`$ es la proyección ortogonal de $`(H-c)q_m`$ sobre $`\mathcal K_m`$, y
+$`r_m=(H-c)q_m-Q_m(T_m-c)e_m`$ es la componente ortogonal, así que $`\beta_m\le\|(H-c)q_m\|\le\|H-c\|\le w`$ (corolario 1.4(1)).
+Para un vector propio unitario $`y`$ de $`T_m`$, el valor de Ritz $`\langle y,T_my\rangle=\langle Q_my,HQ_my\rangle`$ está en
+$`[c-w,c+w]`$, luego $`w_T\le w`$. Ahora $`\frac{4\beta_m}{w_T}S_m(x)=2\beta_m|\tau|\,S_m(x)/x`$ con $`x=|\tau|w_T/2\le\rho/2`$, y
+$`S_m(x)/x=\sum_{j\ge m}x^{j-1}/j!`$ es no decreciente; esto da la primera desigualdad, $`\beta_m\le w`$ la segunda y la
+cota de $`S_m`$ la tercera. $`\square`$
+
+La cota (c) usa solo los datos de la ejecución de Lanczos, $`\beta_m`$ y los valores de Ritz. Los valores de Ritz están
+dentro del espectro (teorema 9.14) y pueden subestimar mucho su semianchura $`w`$, para un vector inicial con
+componentes pequeñas sobre los vectores propios extremos; pero ninguna estimación de $`w`$ entra en (c), porque la
+representación (b) solo involucra a $`T_m`$. Por (d) y $`m!\ge(m/e)^m`$, el error es a lo sumo del orden de
+$`(e\rho/2m)^m`$: es pequeño en cuanto $`\rho=|\tau|w`$ está bastante por debajo de $`2m/e\approx0.74\,m`$, así que los
+pasos pueden ser largos. La cantidad $`\beta_m|\varphi(\tau)|`$, que versiones anteriores de la biblioteca sumaban como
+estimación del error, es por la demostración de (b) la norma del defecto $`\frac d{d\tau}w_\tau+iHw_\tau`$: el integrando de
+(b) en el extremo, una tasa y no un error. Para $`\tau`$ pequeño, $`\varphi(t)\approx(-it)^{m-1}\beta_1\cdots\beta_{m-1}/(m-1)!`$, así
+que supera la cota (b) por un factor de aproximadamente $`m/|\tau|`$; para $`\tau`$ grande, $`\varphi`$ oscila y puede
+anularse en el extremo sin que el error se anule.
+
+<a id="r-9-19"></a>
+
+**Corolario 9.19 (regla de paso).** Sean $`\tau=\tau_1+\dots+\tau_N`$ con $`\tau_k>0`$, $`\psi_0=v\ne0`$,
+$`\psi_k=\|\psi_{k-1}\|\,Q_me^{-i\tau_kT_m}e_1`$ la aproximación de Krylov de $`e^{-i\tau_kH}\psi_{k-1}`$ en
+$`\mathcal K_m(H,\psi_{k-1})`$, y $`\varepsilon_k`$ la cota (c) de este paso multiplicada por $`\|\psi_{k-1}\|`$ ($`\varepsilon_k=0`$ si
+este espacio de Krylov tiene dimensión $`<m`$). Entonces $`\|e^{-i(\tau_1+\dots+\tau_k)H}v-\psi_k\|\le\varepsilon_1+\dots+\varepsilon_k`$ para
+todo $`k`$. En particular, si $`\varepsilon_k\le\mathrm{tol}\cdot\|v\|\,\tau_k/\tau`$ en cada paso, el error tras $`k`$ pasos es a lo
+sumo $`\mathrm{tol}\cdot\|v\|\,(\tau_1+\dots+\tau_k)/\tau`$. Para $`m\ge2`$ la cota de un paso de longitud $`h`$, dividida por
+$`h`$, es no decreciente en $`h`$ y tiende a $`0`$ cuando $`h\to0`$, así que el paso admisible más largo es positivo.
+
+*Demostración.* Sea $`d_k=e^{-i(\tau_1+\dots+\tau_k)H}v-\psi_k`$. Entonces $`d_k=e^{-i\tau_kH}d_{k-1}+(e^{-i\tau_kH}\psi_{k-1}-\psi_k)`$,
+y $`e^{-i\tau_kH}`$ es unitaria, así que $`\|d_k\|\le\|d_{k-1}\|+\varepsilon_k`$ por el teorema 9.18(c) aplicado a
+$`\psi_{k-1}/\|\psi_{k-1}\|`$; si el espacio de Krylov tiene dimensión $`j<m`$, coincide con $`\mathcal K_j`$ y es invariante, y
+el paso es exacto por la proposición 9.15. Todas las $`\|\psi_k\|=\|v\|`$ por la proposición 9.15. La cota de un paso de
+longitud $`h`$ dividida por $`h`$ es $`2\beta_m\|\psi_{k-1}\|S_m(x)/x`$ con $`x=hw_T/2`$, no decreciente en $`h`$, y
+$`S_m(x)/x\le\frac{x^{m-1}}{m!}(1-\frac x{m+1})^{-1}\to0`$ para $`m\ge2`$. $`\square`$
+
+*En la biblioteca:* `krylov.expm_multiply_step` devuelve la cota (c) (`krylov.krylov_error_bound`) con cada paso.
+`krylov.evolve` (por defecto `dt=None`) construye el espacio de Krylov en el estado actual y da el paso más largo $`h`$,
+hasta el siguiente instante de salida, cuya cota (c) es a lo sumo $`\mathrm{tol}\cdot\|\psi_0\|\,h/(t_{\mathrm{end}}-t_0)`$; por el
+corolario 9.19 cada estado devuelto está entonces a distancia a lo sumo $`\mathrm{tol}\cdot\|\psi_0\|`$ de
+$`e^{-i(t-t_0)H}\psi_0`$. Esto vale en aritmética exacta: los errores de redondeo no están incluidos (crecen con el número
+de pasos, y con $`\varepsilon\|H\|`$ por unidad de tiempo para un gran desplazamiento constante de $`H`$, que arrastra cada
+producto matriz–vector). Por el teorema 9.18(a) los pasos no dependen de un desplazamiento constante. Con un `dt`
+fijo, la suma de las cotas se compara con $`\mathrm{tol}\cdot\|\psi_0\|`$, con un aviso si es mayor.
+
+*Cálculo:* el lema 9.17, el teorema 9.18 y el corolario 9.19 frente al propagador denso, para espectros con cúmulos,
+un gran desplazamiento y una gran norma, y los pasos de `krylov.evolve` — [tutorial, sección 9.5](../../tutorial/es/09_spin_chains.md#s-9-5).
 
 <a id="s-9-6"></a>
 

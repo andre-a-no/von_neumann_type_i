@@ -12,7 +12,7 @@
 
 ## 1.5 库中的算子
 
-*讲义：* [1.2 节](../../lecture_notes/zh/01_matrix_algebras.md#s-1-2)和[1.3 节](../../lecture_notes/zh/01_matrix_algebras.md#s-1-3)：[定理 1.3](../../lecture_notes/zh/01_matrix_algebras.md#r-1-3)、[推论 1.4](../../lecture_notes/zh/01_matrix_algebras.md#r-1-4)、[定理 1.5](../../lecture_notes/zh/01_matrix_algebras.md#r-1-5)、[定理 1.6](../../lecture_notes/zh/01_matrix_algebras.md#r-1-6)。
+*讲义：* [1.2 节](../../lecture_notes/zh/01_matrix_algebras.md#s-1-2)和[1.3 节](../../lecture_notes/zh/01_matrix_algebras.md#s-1-3)：[定理 1.3](../../lecture_notes/zh/01_matrix_algebras.md#r-1-3)、[推论 1.4](../../lecture_notes/zh/01_matrix_algebras.md#r-1-4)、[定理 1.5](../../lecture_notes/zh/01_matrix_algebras.md#r-1-5)、[定理 1.6](../../lecture_notes/zh/01_matrix_algebras.md#r-1-6)、[定理 1.11](../../lecture_notes/zh/01_matrix_algebras.md#r-1-11)、[命题 1.12](../../lecture_notes/zh/01_matrix_algebras.md#r-1-12)、[命题 1.13](../../lecture_notes/zh/01_matrix_algebras.md#r-1-13)。
 
 本库处理代数 $`\bigoplus_cM_{k_c}(\mathbb C)`$（第 2 章）。单个块是 $`C=1`$ 的情形：
 `TypeIAlgebra([n], [n])` 就是 $`M_n(\mathbb C)`$。（两个列表分别是名义块大小和实际块大小；
@@ -64,6 +64,58 @@ assert torch.allclose(spec, torch.exp(torch.tensor([[1.0, 2.0, 4.0]], dtype=spec
 
 `R @ R` 此时还不进行任何计算：乘积、和以及函数只构建一个计算方案，在请求 `.matrix`
 或诸如迹之类的数值时才进行求值。
+
+**导数。** 由[定理 1.11](../../lecture_notes/zh/01_matrix_algebras.md#r-1-11)（Daleckii–Krein），$`f(A)`$ 沿自伴方向 $`E`$
+的导数是 $`U(L\circ U^*EU)U^*`$，其中 $`L_{ij}=f^{[1]}(\lambda_i,\lambda_j)`$ 是差商构成的 Loewner 矩阵（本征值相等时取
+$`f'(\lambda_i)`$）。`functional.divided_differences` 由本征值以及 $`f`$、$`f'`$ 的值计算 $`L`$，autograd 用它对 `apply_function`
+求导。我们在简并谱处把公式与稠密指数函数的中心差商比较，后者的误差为 $`O(s^2)`$ 加上 $`\varepsilon/s`$ 量级的舍入：
+
+```python
+from torch_vn_algebra import functional
+
+lam = torch.tensor([1.0, 1.0, 2.0], dtype=torch.float64)          # a degenerate spectrum
+Q = torch.linalg.qr(torch.randn(3, 3, dtype=torch.complex128))[0]  # a unitary
+A0 = Q @ torch.diag(lam).to(torch.complex128) @ Q.mH
+E = torch.randn(3, 3, dtype=torch.complex128)
+E = (E + E.mH) / 2                                                 # a self-adjoint direction
+L = functional.divided_differences(lam, torch.exp(lam), torch.exp(lam))
+D = Q @ (L * (Q.mH @ E @ Q)) @ Q.mH                                # Theorem 1.11 for f = exp
+s = 1e-6
+fd = (torch.linalg.matrix_exp(A0 + s * E) - torch.linalg.matrix_exp(A0 - s * E)) / (2 * s)
+print(f"{(D - fd).abs().max().item():.1e}")
+assert (D - fd).abs().max() < 1e-8
+```
+
+对距离为 $`h`$ 的相近本征值 $`a,b`$，商 $`\hat q`$ 因相消而损失精度，而中点值 $`\hat m=(f'(a)+f'(b))/2`$ 的误差至多为
+$`T=h^2\max|f'''|/12`$ 加上舍入（[命题 1.12](../../lecture_notes/zh/01_matrix_algebras.md#r-1-12)）。`divided_differences` 当且仅当
+$`|\hat q-\hat m|\le2R`$ 时取 $`\hat m`$，其中 $`R`$ 是[命题 1.13](../../lecture_notes/zh/01_matrix_algebras.md#r-1-13) 的舍入界，求值误差取
+$`\varepsilon(|\hat f_a|+|a\hat f'_a|)`$；于是其误差至多为 $`\min(T,3R)`$。我们对 $`c=10^4`$ 附近的 $`f(x)=e^{x-c}`$ 检验这一点，
+此时 $`f^{[1]}(a,b)=e^{a-c}(e^h-1)/h`$ 可用 `expm1` 精确计算。最后一个距离 $`h=0.06`$ 低于早期版本的阈值
+$`\varepsilon^{1/3}\max(|a|,|b|)`$，早期版本在那里取的是中点值：
+
+```python
+eps = torch.finfo(torch.float64).eps
+c = 1e4
+f = lambda x: torch.exp(x - c)
+for h in (1e-12, 1e-9, 1e-6, 1e-4, 1e-2, 0.06):
+    w = torch.tensor([c, c + h], dtype=torch.float64)
+    h = (w[1] - w[0]).item()                                       # the distance actually stored
+    fw = f(w)                                                      # f' = f
+    exact = math.expm1(h) / h                                      # f[a, b], as e^(a - c) = 1
+    q = ((fw[1] - fw[0]) / h).item()                               # quotient
+    m = (fw.sum() / 2).item()                                      # midpoint value
+    y = functional.divided_differences(w, fw, fw)[0, 1].item()     # the library's choice
+    R = eps * (fw.abs() + (w * fw).abs()).sum().item() / h + 4 * eps * abs(q)
+    T = h ** 2 * math.exp(h) / 12 + 2 * eps                        # Proposition 1.12, plus rounding
+    print(f"h = {h:.0e}: quotient {abs(q - exact):.0e}, midpoint {abs(m - exact):.0e}, library {abs(y - exact):.0e}")
+    assert abs(y - exact) <= min(T, 3 * R) + 2 * eps              # Proposition 1.13(b)
+```
+
+*数值观察*：对 $`h\le10^{-6}`$，商的误差可达 $`5\cdot10^{-10}`$，在 $`h=0.06`$ 处为 $`10^{-15}`$；中点值对 $`h\le10^{-9}`$
+在舍入意义下是精确的，在 $`h=0.06`$ 处误差为 $`3\cdot10^{-4}`$。除 $`h=10^{-4}`$ 外，库在每一行都取得两者中较小的误差；
+在 $`h=10^{-4}`$ 处它取中点值（$`8\cdot10^{-10}`$），尽管商更好（$`10^{-12}`$）：$`R`$ 允许自变量有
+$`\varepsilon|a|\approx2\cdot10^{-12}`$ 的扰动，这对 `torch.exp` 偏于保守，但对 $`e^{-i\tau x}`$ 这类要对 $`\tau x`$ 舍入的函数是必要的。
+保证 $`\min(T,3R)`$ 在每一行都成立。
 
 <a id="s-1-6"></a>
 

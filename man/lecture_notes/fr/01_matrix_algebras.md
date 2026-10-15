@@ -3,7 +3,7 @@
 # 1. Algèbres de matrices et calcul fonctionnel
 
 Ce chapitre fixe les notations et démontre les propriétés de $`M_n(\mathbb C)`$ dont se
-servent tous les chapitres suivants : le théorème spectral, le calcul fonctionnel, la
+servent tous les chapitres suivants : le théorème spectral, le calcul fonctionnel et sa dérivée, la
 décomposition polaire et les normes définies par les valeurs singulières. Le code de la
 bibliothèque et les vérifications numériques de ces résultats se trouvent dans le
 [Tutoriel 1](../../tutorial/fr/01_matrix_algebras.md).
@@ -150,6 +150,128 @@ $`p(A)=\sqrt A`$ et $`p(A)=p(B^2)=V\,\mathrm{diag}(p(\mu_j^2))\,V^*=V\,\mathrm{d
 
 **Corollaire 1.7.** $`A\ge0`$ si et seulement si $`A=T^*T`$ pour une certaine matrice $`T`$. (Si
 $`A\ge0`$, on prend $`T=\sqrt A`$ ; réciproquement, $`\langle x,T^*Tx\rangle=\|Tx\|^2\ge0`$.)
+
+**Dérivées.** Les méthodes de gradient dérivent $`f(A)`$ par rapport à $`A`$. Pour $`A`$ autoadjointe, la dérivée est un
+produit coefficient par coefficient avec une matrice de quotients différentiels de $`f`$.
+
+<a id="r-1-11"></a>
+
+**Théorème 1.11 (Daleckii–Krein).** Soient $`A=U\,\mathrm{diag}(\lambda_1,\dots,\lambda_n)\,U^*`$ autoadjointe, $`I`$ un
+intervalle ouvert contenant $`\mathrm{spec}\,A`$ et $`f:I\to\mathbb C`$ continûment dérivable. Soient
+```math
+f^{[1]}(x,y)=\frac{f(x)-f(y)}{x-y}\quad(x\ne y),\qquad f^{[1]}(x,x)=f'(x)
+```
+la **différence divisée** de $`f`$ et $`L_{ij}=f^{[1]}(\lambda_i,\lambda_j)`$ la **matrice de Loewner**. Alors, pour toute
+$`E`$ autoadjointe,
+```math
+\frac{d}{dt}\Big|_{t=0}f(A+tE)=U\big(L\circ U^*EU\big)U^*,
+```
+où $`(X\circ Y)_{ij}=X_{ij}Y_{ij}`$ est le produit coefficient par coefficient (de Schur).
+
+*Démonstration.* Par le théorème fondamental de l'analyse, $`f^{[1]}(x,y)=\int_0^1f'(y+s(x-y))\,ds`$ pour tous
+$`x,y\in I`$ (pour $`x=y`$ les deux membres valent $`f'(x)`$), donc $`f^{[1]}`$ est continue sur $`I\times I`$. Réordonner
+les colonnes de $`U`$ permute de la même façon les lignes et les colonnes de $`L`$ et de $`U^*EU`$ et ne change pas le
+membre de droite ; on peut donc supposer $`\lambda_1\le\dots\le\lambda_n`$. Soit $`\delta>0`$ avec
+$`[\lambda_1-\delta,\lambda_n+\delta]\subset I`$. Pour $`0<|t|\,\|E\|<\delta`$, écrivons $`A+tE=V\,\mathrm{diag}(\mu_1,\dots,\mu_n)\,V^*`$
+avec $`\mu_1\le\dots\le\mu_n`$ ; alors $`|\mu_j-\lambda_j|\le|t|\,\|E\|`$ (théorème A.10), donc tous les $`\mu_j\in I`$. Posons
+$`W=U^*V`$ (unitaire) et $`\tilde E=U^*EU`$. Comme $`U^*f(A)=\mathrm{diag}(f(\lambda_i))\,U^*`$ et $`f(A+tE)V=V\,\mathrm{diag}(f(\mu_j))`$,
+```math
+\big(U^*(f(A+tE)-f(A))V\big)_{ij}=\big(f(\mu_j)-f(\lambda_i)\big)W_{ij}=f^{[1]}(\lambda_i,\mu_j)\,(\mu_j-\lambda_i)\,W_{ij},
+```
+et le même calcul pour $`f(x)=x`$ donne $`(\mu_j-\lambda_i)W_{ij}=t\,(\tilde EW)_{ij}`$. Avec
+$`(L_t)_{ij}=f^{[1]}(\lambda_i,\mu_j)`$, c'est l'identité exacte
+```math
+\frac1t\big(f(A+tE)-f(A)\big)=U\big((L_t\circ\tilde EW)\,W^*\big)U^*.
+```
+Quand $`t\to0`$, $`L_t\to L`$ coefficient par coefficient, car $`f^{[1]}`$ est continue et $`\mu_j\to\lambda_j`$. Soient
+$`D_{ij}=W_{ij}`$ si $`\lambda_i=\lambda_j`$, $`D_{ij}=0`$ sinon, et $`R=W-D`$. Si $`\lambda_i\ne\lambda_j`$ et
+$`|t|\,\|E\|\le|\lambda_i-\lambda_j|/2`$, alors $`|\mu_j-\lambda_i|\ge|\lambda_i-\lambda_j|/2`$ et
+$`|(\tilde EW)_{ij}|\le\|\tilde EW\|=\|E\|`$, donc $`|W_{ij}|\le2|t|\,\|E\|/|\lambda_i-\lambda_j|`$. Ainsi $`R\to0`$ et
+$`DD^*=(W-R)(W-R)^*\to WW^*=1`$. Comme $`L_{ij}=L_{ik}`$ dès que $`\lambda_k=\lambda_j`$, et $`D_{kj}=0`$ sauf si
+$`\lambda_k=\lambda_j`$, on a $`(L\circ\tilde ED)_{ij}=\sum_kL_{ik}\tilde E_{ik}D_{kj}=((L\circ\tilde E)D)_{ij}`$. Par conséquent
+```math
+(L_t\circ\tilde EW)W^*-L\circ\tilde E=\big((L_t-L)\circ\tilde EW\big)W^*+(L\circ\tilde ER)W^*+(L\circ\tilde ED)R^*+(L\circ\tilde E)(DD^*-1),
+```
+et chaque terme tend vers $`0`$, car les coefficients de $`W`$, $`D`$ et $`\tilde E`$ sont bornés par $`1`$, $`1`$ et $`\|E\|`$. $`\square`$
+
+Pour $`f`$ réelle, $`L`$ est réelle, et $`\mathrm{Tr}\big(G^*U(L\circ U^*EU)U^*\big)=\mathrm{Tr}(\Gamma^*E)`$ avec
+$`\Gamma=U(L\circ U^*GU)U^*`$, pour toute $`G`$ (écrire les deux membres comme sommes sur $`i,j`$ dans la base $`U`$) : la
+dérivée de $`A\mapsto\mathrm{Re}\,\mathrm{Tr}(G^*f(A))`$ dans la direction $`E`$ est $`\mathrm{Re}\,\mathrm{Tr}(\Gamma^*E)`$.
+
+*Dans la bibliothèque :* `apply_function` est dérivée (par autograd) au moyen du théorème 1.11 ; la matrice de
+Loewner est `functional.divided_differences`.
+
+**Arrondi.** Pour $`\lambda_i,\lambda_j`$ proches, le quotient $`(f(\lambda_i)-f(\lambda_j))/(\lambda_i-\lambda_j)`$ perd en
+précision par compensation, et pour $`\lambda_i=\lambda_j`$ il n'est pas défini. Les dérivées sont alors les meilleures
+données.
+
+<a id="r-1-12"></a>
+
+**Proposition 1.12 (valeur au point milieu).** Soient $`a<b`$, $`h=b-a`$ et $`f`$ trois fois continûment dérivable sur
+$`[a,b]`$ (valeurs complexes permises). Alors
+```math
+f^{[1]}(a,b)-\frac{f'(a)+f'(b)}2=-\frac{h^2}2\int_0^1s(1-s)\,f'''(a+sh)\,ds,
+\qquad
+\Big|f^{[1]}(a,b)-\frac{f'(a)+f'(b)}2\Big|\le\frac{h^2}{12}\max_{[a,b]}|f'''|,
+```
+avec égalité pour les polynômes de degré $`3`$.
+
+*Démonstration.* Soient $`g(s)=f'(a+sh)`$, de sorte que $`f^{[1]}(a,b)=\frac1h\int_a^bf'=\int_0^1g`$, et $`\varphi(s)=s(1-s)/2`$,
+de sorte que $`\varphi(0)=\varphi(1)=0`$, $`\varphi'(0)=\frac12=-\varphi'(1)`$ et $`\varphi''=-1`$. Deux intégrations par parties
+donnent $`\int_0^1\varphi g''=-\int_0^1\varphi'g'=-[\varphi'g]_0^1+\int_0^1\varphi''g=\frac{g(0)+g(1)}2-\int_0^1g`$. Comme
+$`g''(s)=h^2f'''(a+sh)`$, c'est l'identité ; $`\int_0^1\varphi=\frac1{12}`$ donne la borne, et pour un polynôme de degré
+$`3`$, $`f'''`$ est constante. $`\square`$
+
+<a id="r-1-13"></a>
+
+**Proposition 1.13 (quotient ou point milieu).** Supposons une arithmétique flottante d'unité d'arrondi $`u\le1/20`$ :
+pour des nombres flottants $`x,y`$ et $`\circ\in\{+,-,\times,/\}`$, le résultat calculé est $`(x\circ y)(1+\theta)`$ avec
+$`|\theta|\le u`$ (ni dépassement de capacité ni sous-dépassement). Soient $`a\ne b`$ des nombres flottants réels,
+$`h=|a-b|`$, $`x=f^{[1]}(a,b)`$, et $`\hat f_a,\hat f_b`$ des valeurs calculées avec $`|\hat f_a-f(a)|\le\delta_a`$ et
+$`|\hat f_b-f(b)|\le\delta_b`$.
+
+(a) Le quotient calculé $`\hat q`$ de $`\hat f_a-\hat f_b`$ par $`a-b`$ vérifie
+$`|\hat q-x|\le R:=(\delta_a+\delta_b)/h+5u|\hat q|`$.
+
+(b) Soit $`|\hat m-x|\le T`$ (par exemple $`\hat m`$ la valeur au point milieu calculée et $`T`$ la borne de la
+proposition 1.12 plus son erreur d'arrondi). Posons $`y=\hat m`$ si $`|\hat q-\hat m|\le2R`$, et $`y=\hat q`$ sinon. Alors
+$`|y-x|\le\min(T,3R)`$.
+
+(c) Si $`\delta_a+\delta_b\le\Delta`$ et $`T=Mh^2+T_0`$, alors $`|y-x|\le(3\Delta)^{2/3}M^{1/3}+T_0+15u|\hat q|`$ pour tout $`h`$.
+Les deux termes d'erreur $`3\Delta/h`$ et $`Mh^2`$ s'équilibrent en $`h_*=(3\Delta/M)^{1/3}`$.
+
+*Démonstration.* (a) Soit $`\tilde q=(\hat f_a-\hat f_b)/(a-b)`$. Les trois opérations donnent
+$`\hat q=\tilde q\,(1+\theta_1)(1+\theta_3)/(1+\theta_2)=\tilde q\,(1+\theta)`$ avec $`|\theta_i|\le u`$, d'où
+$`-3u\le\frac{(1-u)^2}{1+u}-1\le\theta\le\frac{(1+u)^2}{1-u}-1=\frac{3u+u^2}{1-u}\le4u`$. Donc
+$`|\hat q-\tilde q|=|\theta|\,|\tilde q|\le\frac{4u}{1-4u}|\hat q|\le5u|\hat q|`$, et
+$`|\tilde q-x|=|(\hat f_a-f(a))-(\hat f_b-f(b))|/h\le(\delta_a+\delta_b)/h`$. (b) Si $`y=\hat m`$, alors $`|y-x|\le T`$ et
+$`|y-x|\le|\hat m-\hat q|+|\hat q-x|\le3R`$. Si $`y=\hat q`$, alors $`|y-x|\le R`$, et
+$`T\ge|\hat m-x|\ge|\hat m-\hat q|-|\hat q-x|>2R-R=R`$. (c) $`\min(T,3R)\le\min(Mh^2,3\Delta/h)+T_0+15u|\hat q|`$ ; pour
+$`h\ge h_*`$, $`3\Delta/h\le3\Delta/h_*`$, pour $`h<h_*`$, $`Mh^2<Mh_*^2`$, et $`3\Delta/h_*=Mh_*^2=(3\Delta)^{2/3}M^{1/3}`$. $`\square`$
+
+La démonstration vaut mot pour mot pour $`f`$ à valeurs complexes (parties réelle et imaginaire sont arrondies
+séparément, et $`a-b`$ est réel ; $`\theta`$ est alors complexe avec la même borne). La règle (b) a besoin de $`R`$, qui
+se calcule à partir des données, mais pas de $`T`$ : sans rien savoir de $`f'''`$, son erreur est au plus trois fois la
+plus petite des deux bornes. Un seuil fixe, valeur au point milieu si et seulement si $`h\le h_*`$, demanderait
+$`M=\max|f'''|/12`$. Le seuil $`h\le\varepsilon^{1/3}\max(|a|,|b|)`$ ($`\varepsilon=2u`$) des versions antérieures de la
+bibliothèque est de ce type, avec $`M`$ de l'ordre de $`\Delta/\max(|a|,|b|)^3`$ : juste pour $`x^p`$ ou $`\log x`$, dont les
+dérivées suivent l'échelle de $`|x|`$, faux pour les fonctions qui varient à une échelle sans rapport avec $`|x|`$. Pour
+$`f(x)=e^{x-c}`$ en $`a\approx c=10^4`$, il prenait la valeur au point milieu jusqu'à $`h\approx0.06`$, avec une erreur
+relative atteignant $`h^2/12\approx3\cdot10^{-4}`$ (la proposition 1.12 y est une égalité à un facteur $`e^{h}`$ près) ; il
+en va de même pour $`e^{-i\tau x}`$ et un hamiltonien comportant un grand décalage constant.
+
+*Dans la bibliothèque :* `functional.divided_differences` applique la règle (b) à chaque paire de valeurs propres,
+avec $`\delta_a=\varepsilon\,(|\hat f_a|+|a\hat f'_a|)`$ et $`4\varepsilon|\hat q|`$ au lieu de $`5u|\hat q|`$. Le choix de $`\delta_a`$
+est une hypothèse sur l'évaluation de $`f`$, non un théorème : erreur relative au plus $`\varepsilon`$, en un argument
+perturbé d'au plus $`\varepsilon|a|`$ (au premier ordre ; le second terme couvre des fonctions comme $`e^{-i\tau x}`$, qui
+arrondissent $`\tau x`$). La même règle s'applique aux valeurs propres complexes des matrices normales, que la
+démonstration ne couvre pas. La valeur au point milieu est aussi prise pour les égalités et pour les paires que le
+solveur de valeurs propres ne sépare pas, $`h\le n\varepsilon\max_l|\lambda_l|`$ : son erreur y est au plus
+$`(n\varepsilon\max_l|\lambda_l|)^2\max|f'''|/12`$ par la proposition 1.12, tandis que le quotient n'aurait pas de sens pour
+une $`f`$ discontinue, comme une fonction indicatrice.
+
+*Calcul :* le théorème 1.11 comparé à un quotient différentiel en un spectre dégénéré, et les propositions 1.12 et
+1.13 pour $`e^{x-c}`$ avec $`c=10^4`$ — [tutoriel, section 1.5](../../tutorial/fr/01_matrix_algebras.md#s-1-5).
 
 <a id="s-1-4"></a>
 

@@ -267,7 +267,7 @@ Bethe-Vektoren orthogonal, und die letzten Zeilen des Codes prüfen $`H\Phi=(E_F
 
 ## 9.5 Lanczos- und Krylov-Verfahren
 
-*Vorlesungsnotizen:* [Abschnitt 9.5](../../lecture_notes/de/09_spin_chains.md#s-9-5); [Proposition 9.13](../../lecture_notes/de/09_spin_chains.md#r-9-13) (Lanczos: $`T_m=Q_m^*HQ_m`$ ist tridiagonal), [Satz 9.14](../../lecture_notes/de/09_spin_chains.md#r-9-14) (die Ritz-Werte, die Eigenwerte von $`T_m`$, erfüllen $`\theta^{(m)}_j\ge\lambda_j`$ und fallen mit $`m`$), [Proposition 9.15](../../lecture_notes/de/09_spin_chains.md#r-9-15) (Krylov-Zeitentwicklung).
+*Vorlesungsnotizen:* [Abschnitt 9.5](../../lecture_notes/de/09_spin_chains.md#s-9-5); [Proposition 9.13](../../lecture_notes/de/09_spin_chains.md#r-9-13) (Lanczos: $`T_m=Q_m^*HQ_m`$ ist tridiagonal), [Satz 9.14](../../lecture_notes/de/09_spin_chains.md#r-9-14) (die Ritz-Werte, die Eigenwerte von $`T_m`$, erfüllen $`\theta^{(m)}_j\ge\lambda_j`$ und fallen mit $`m`$), [Proposition 9.15](../../lecture_notes/de/09_spin_chains.md#r-9-15) (Krylov-Zeitentwicklung), [Lemma 9.17](../../lecture_notes/de/09_spin_chains.md#r-9-17), [Satz 9.18](../../lecture_notes/de/09_spin_chains.md#r-9-18) und [Korollar 9.19](../../lecture_notes/de/09_spin_chains.md#r-9-19) (Fehlerschranken und Schrittregel).
 
 Der Sektor $`N=L/2`$ hat die Dimension $`12870`$ für $`L=16`$ und $`184756`$ für $`L=20`$, aber $`H`$ ist dünn besetzt ($`O(L)`$
 von null verschiedene Einträge pro Zeile, `xxz_sparse`), und Krylov-Verfahren brauchen nur Produkte $`Hv`$. Sei $`H`$
@@ -330,11 +330,13 @@ Beobachtung:* Die Energie pro Platz, $`-0.5,-0.467129,-0.456387,-0.451545,-0.448
 Nach [Proposition 9.15](../../lecture_notes/de/09_spin_chains.md#r-9-15) gilt $`\|w_\tau\|=\|v\|`$ und $`\langle w_\tau,Hw_\tau\rangle=\langle v,Hv\rangle`$ für jedes $`\tau`$, und
 $`w_\tau=e^{-i\tau H}v`$, falls $`\mathcal K_m`$ $`H`$-invariant ist.
 
-Jeder Krylov-Schritt erhält also Norm und Energie, ob er genau ist oder nicht; Proposition 9.15 sagt nichts
-über die Genauigkeit, außer wenn $`\mathcal K_m`$ invariant ist. `krylov.evolve` unterteilt das Zeitintervall in kurze
-Schritte, jeden in einem Krylov-Raum mit $`m=30`$, und warnt, wenn ein heuristischer Fehlerindikator groß ist; wir
-beweisen dafür keine Fehlerschranke und vergleichen stattdessen mit $`e^{-itH}`$, berechnet aus einer dichten
-Eigenzerlegung (Satz 1.5). Wir führen einen
+Jeder Krylov-Schritt erhält also Norm und Energie, ob er genau ist oder nicht. Seine Genauigkeit ist Gegenstand von
+[Satz 9.18](../../lecture_notes/de/09_spin_chains.md#r-9-18): Ein Schritt der Länge $`\tau`$ irrt höchstens um
+$`(4\beta_m/w_T)S_m(|\tau|w_T/2)`$, allein aus dem Lanczos-Lauf berechnet. `krylov.evolve` macht jeden Schritt, in einem
+Krylov-Raum mit $`m=30`$, so lang, wie diese Schranke es für einen Fehler von höchstens $`\mathrm{tol}=10^{-8}`$ (der
+Standardwert) über die ganze Zeitspanne erlaubt ([Korollar 9.19](../../lecture_notes/de/09_spin_chains.md#r-9-19)). Wir
+vergleichen mit $`e^{-itH}`$, berechnet aus einer dichten Eigenzerlegung (Satz 1.5), und prüfen unten die Schranken
+selbst. Wir führen einen
 Quench aus dem Néel-Zustand $`|{\uparrow\downarrow\uparrow\downarrow}\cdots\rangle`$ auf dem Heisenberg-Ring durch und
 verfolgen die alternierende Magnetisierung $`m_s=\frac2L\sum_i(-1)^i\langle s^z_i\rangle`$, im Vergleich mit dem dichten
 Propagator für $`L=12`$:
@@ -361,6 +363,60 @@ print(f"{max(abs(a - b) for a, b in zip(m_s[12][:4], m_s[16][:4])):.1e}")   # L 
 
 *Numerische Beobachtung:* $`m_s`$ fällt von $`1`$ über $`0.770`$ und $`0.279`$ auf $`-0.183`$ bei $`t=2`$, für beide Größen bis
 auf $`1.7\cdot10^{-5}`$ übereinstimmend; bei $`t=4`$ unterscheiden sie sich ($`0.026`$ gegenüber $`0.035`$).
+
+**Fehlerschranken.** Nach [Lemma 9.17](../../lecture_notes/de/09_spin_chains.md#r-9-17) sind die
+Tschebyschow-Koeffizienten von $`e^{-i\rho y}`$ gleich $`a_k=(-i)^kJ_k(\rho)`$ mit $`|a_k|\le(|\rho|/2)^k/k!`$.
+[Satz 9.18](../../lecture_notes/de/09_spin_chains.md#r-9-18) beschränkt den Fehler eines Krylov-Schritts durch
+$`(4\beta_m/w_T)S_m(|\tau|w_T/2)`$ (c), den Wert, den `krylov.expm_multiply_step` zurückgibt, und durch $`4S_m(\rho/2)`$ mit
+$`\rho=|\tau|w`$ (d), wobei $`S_m(x)=\sum_{j\ge m}x^j/j!`$ und $`w`$ die halbe Breite des Spektrums ist. Wir prüfen die
+Koeffizientenschranke an den Bessel-Funktionen von SciPy und beide Fehlerschranken für einen Schritt aus dem
+Néel-Zustand des Rings $`L=12`$ mit $`m=20`$, gegen den dichten Propagator aus dem Block oben (`w`, `U`).
+[Korollar 9.19](../../lecture_notes/de/09_spin_chains.md#r-9-19) addiert die Schranken aufeinanderfolgender Schritte; und
+die Schrittregel von `krylov.evolve` hält den Fehler zur Zeit $`t`$ unter $`\mathrm{tol}\cdot t/t_{\mathrm{end}}`$, mit denselben
+Schritten für $`H`$ und $`H+10^4`$ (Satz 9.18(a); der verschobene Operator ändert nur die Diagonale der dünnen Form):
+
+```python
+from scipy.special import jv, gammainc
+S = lambda m, x: math.exp(x) * gammainc(m, x)                        # S_m(x) = sum_{j >= m} x^j / j!
+for rho in (1.0, 10.0, 40.0):                                        # Lemma 9.17: |J_k(rho)| <= (rho/2)^k / k!
+    assert all(abs(jv(k, rho)) <= (rho / 2) ** k / math.factorial(k) * (1 + 1e-12) for k in range(80))
+
+c12 = SpinChain(12, 'periodic')
+H12 = c12.xxz_sparse(J=1.0, Delta=1.0, sector=6)                    # w, U: its dense eigendecomposition (above)
+half = ((w[-1] - w[0]) / 2).item()                                   # half-width of the spectrum
+v = c12.vector_in_sector('10' * 6)[None]                             # the Neel state
+exact = lambda t: U @ (torch.exp(-1j * t * w) * (U.mH @ v[0]))
+m = 20
+for tau in (0.5, 1.0, 2.0, 4.0, 8.0):
+    out, bound = krylov.expm_multiply_step(H12, v, tau, m)            # bound: Theorem 9.18(c)
+    err = (out[0] - exact(tau)).norm().item()
+    apriori = 4 * S(m, tau * half / 2)                                # Theorem 9.18(d)
+    print(f"tau w = {tau * half:4.1f}: error {err:.1e}, bound (c) {bound.item():.1e}, bound (d) {apriori:.1e}")
+    assert err <= bound.item() + 1e-13 and bound.item() <= apriori
+
+psi, total = v, 0.0                                                  # Corollary 9.19, five steps of length 1
+for k in range(1, 6):
+    psi, b = krylov.expm_multiply_step(H12, psi, 1.0, m)
+    total += b.item()
+    err = (psi[0] - exact(float(k))).norm().item()
+    assert err <= total + 1e-12
+print(f"after 5 steps: error {err:.1e}, sum of the bounds {total:.1e}")
+
+times = [0.0, 1.0, 3.0, 10.0]
+shifted = krylov.SparseSectorHamiltonian(H12.diag + 1e4, H12.offdiag, H12.dtype)    # H + 10^4
+for s, Hn in ((0.0, H12), (1e4, shifted)):
+    out = krylov.evolve(Hn, v, times, tol=1e-8)                      # the step rule of Corollary 9.19
+    errs = [(p[0] - math.e ** (-1j * t * s) * exact(t)).norm().item() for t, p in zip(times, out)]
+    print(f"shift {s:.0e}:", [f"{e:.1e}" for e in errs])
+    assert all(e <= 1e-8 * t / times[-1] + 1e-10 for e, t in zip(errs, times))
+```
+
+*Numerische Beobachtung:* Der Fehler eines Schritts wächst vom Rundungsniveau ($`3\cdot10^{-15}`$ bei $`\tau w=2.1`$) auf
+$`1.3\cdot10^{-8}`$ bei $`\tau w=8.4`$ und $`0.5`$ bei $`\tau w=34`$; die Schranke (c) übersteigt ihn im nützlichen Bereich um
+einen Faktor von etwa $`100`$, (d) um einen weiteren Faktor $`4`$. Fünf Schritte der Länge $`1`$ irren um $`10^{-13}`$,
+unter der Summe $`6\cdot10^{-12}`$ ihrer Schranken. `krylov.evolve` hält hier seine Toleranz mit großem Abstand ein
+(Fehler unter $`10^{-13}`$); mit der Verschiebung $`10^4`$ sind die Fehler $`10^{-11}`$, die Rundungsfehler von
+Matrix-Vektor-Produkten der Norm $`10^4`$, die keine Schranke von Satz 9.18 erfasst.
 
 <a id="s-9-6"></a>
 
