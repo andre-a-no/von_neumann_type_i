@@ -4,6 +4,17 @@ All notable changes to `torch_vn_algebra`. The format follows [Keep a Changelog]
 versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the public API is everything exported by
 `torch_vn_algebra/__init__.py` and documented in the module docstrings).
 
+## [Unreleased]
+
+### Added
+- Script `scripts/connes_stormer.py` and paper subsection "Use case: the Connes–Størmer entropy of two MASAs":
+  H(Δ_n | UΔ_nU*) computed by batched optimisation over partitions of unity; closed form for n = 2 (one-dimensional
+  maximisation, H > Choda's h(U) unless |u_11|² ∈ {0, 1/2, 1}); for n = 3, 4, 5 general partitions beat the best
+  orthonormal basis found for some Haar-random U (values certified in mpmath); part of `scripts/run_all.sh`.
+  Tests `tests/test_connes_stormer.py`.
+- Paper, Section 6: the equality case of Proposition 1 is stated as the new part and related to Kantorovich-type
+  inequalities (Greub–Rheinboldt; Furuta et al.).
+
 ## [1.0.0] – 2026-10-15
 
 First release, the version described in the paper (arXiv:2606.15882).

@@ -335,7 +335,9 @@ nohup bash scripts/run_all.sh full cuda > full_run.log 2>&1 &   # the full run (
 - Scripts and the parts of the paper they produce: `validate_known_results` (Section 5), `numerics` (Section 3),
   `inequality_search` and `bounds_search` (Section 6), `renyi_threshold` (Section 6.1: the data-processing thresholds
   of the sandwiched and Petz Rényi divergences, located by batched optimisation with violations certified in mpmath;
-  about 2 minutes in quick mode on one CPU thread), `chains` (Section 7), `baselines` (Section 9),
+  about 2 minutes in quick mode on one CPU thread), `connes_stormer` (Section 6, use case: the Connes–Størmer
+  relative entropy of two maximal abelian subalgebras of M_n, closed form for n = 2 and the observation that
+  orthonormal bases are not always optimal for n ≥ 3; about 12 minutes in full mode on a CPU), `chains` (Section 7), `baselines` (Section 9),
   `benchmark_library` (Section 10).
 - The driver first prints the GPU, its memory, CUDA and cuDNN versions (also saved to
   `man/article/generated/logs/environment.txt`) and stops if CUDA is not available.
