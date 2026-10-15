@@ -3,38 +3,40 @@
 # Tutorial 5. Random matrices in an algebra
 
 This tutorial accompanies [Chapter 5](../lecture_notes/05_random_matrices.md) of the lecture notes, which constructs the Haar measure
-on the unitary group of $\mathcal M=\bigoplus_cM_{k_c}$ ([Corollary 5.4](../lecture_notes/05_random_matrices.md#r-5-4)), computes its first and second
+on the unitary group of $`\mathcal M=\bigoplus_cM_{k_c}`$ ([Corollary 5.4](../lecture_notes/05_random_matrices.md#r-5-4)), computes its first and second
 moments ([Proposition 5.7](../lecture_notes/05_random_matrices.md#r-5-7), [Theorem 5.10](../lecture_notes/05_random_matrices.md#r-5-10)) and shows why level statistics must be
-computed sector by sector ([Theorem 5.15](../lecture_notes/05_random_matrices.md#r-5-15)). We sample Haar unitaries and Gaussian ensembles with
-the library and check these results by Monte Carlo: a mean must agree with the exact value within $5$
+computed sector by sector ([Theorem 5.15](../lecture_notes/05_random_matrices.md#r-5-15), [Theorem 5.18](../lecture_notes/05_random_matrices.md#r-5-18)). We sample Haar unitaries and Gaussian ensembles with
+the library and check these results by Monte Carlo: a mean must agree with the exact value within $`5`$
 standard errors. Results without a theorem behind them are marked as numerical observations.
 
-Throughout, $\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)$ with $D=\sum_ck_c$, $P_c$ are the
-minimal central projections, and $E$ is the conditional expectation onto the centre of
-Proposition 2.8. $U(k)$ is the group of unitary $k\times k$ matrices and
-$U(\mathcal M)=\{U\in\mathcal M:U^*U=1\}$ the unitary group of $\mathcal M$. Random variables
-live on a probability space with expectation $\mathbb E$; the expectation of a random matrix is
+Throughout, $`\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)`$ with $`D=\sum_ck_c`$, $`P_c`$ are the
+minimal central projections, and $`E`$ is the conditional expectation onto the centre of
+Proposition 2.8. $`U(k)`$ is the group of unitary $`k\times k`$ matrices and
+$`U(\mathcal M)=\{U\in\mathcal M:U^*U=1\}`$ the unitary group of $`\mathcal M`$. Random variables
+live on a probability space with expectation $`\mathbb E`$; the expectation of a random matrix is
 taken entrywise. A *standard complex Gaussian* variable has independent real and imaginary parts
-$\sim N(0,\tfrac12)$, so that $\mathbb E|z|^2=1$ (this is what `torch.randn` draws for a complex
+$`\sim N(0,\tfrac12)`$, so that $`\mathbb E|z|^2=1`$ (this is what `torch.randn` draws for a complex
 dtype, according to its documentation; the first code block checks the second moments); a *Ginibre matrix* has independent standard complex Gaussian entries.
 
 <a id="s-5-1"></a>
 
 ## 5.1 Haar measure
 
-*Lecture notes:* [Section 5.1](../lecture_notes/05_random_matrices.md#s-5-1); [Theorem 5.3](../lecture_notes/05_random_matrices.md#r-5-3) (the unitary factor of the QR decomposition of a Ginibre matrix, with the phases fixed by $\Lambda=\mathrm{diag}(R'_{ii}/|R'_{ii}|)$, is Haar distributed), [Corollary 5.4](../lecture_notes/05_random_matrices.md#r-5-4) (the blocks of a Haar unitary of $U(\mathcal M)$ are independent and Haar distributed) and [Corollary 5.5](../lecture_notes/05_random_matrices.md#r-5-5) ($\mathbb EU_{ij}=0$, $\mathbb E|U_{ij}|^2=1/k$). The Haar measure of $SU(k)$ is the law of $e^{-i\theta/k}U$, $\theta=\arg\det U$.
+*Lecture notes:* [Section 5.1](../lecture_notes/05_random_matrices.md#s-5-1); [Theorem 5.3](../lecture_notes/05_random_matrices.md#r-5-3) (the unitary factor of the QR decomposition of a Ginibre matrix, with the phases fixed by $`\Lambda=\mathrm{diag}(R'_{ii}/|R'_{ii}|)`$, is Haar distributed), [Corollary 5.4](../lecture_notes/05_random_matrices.md#r-5-4) (the blocks of a Haar unitary of $`U(\mathcal M)`$ are independent and Haar distributed) and [Corollary 5.5](../lecture_notes/05_random_matrices.md#r-5-5) ($`\mathbb EU_{ij}=0`$, $`\mathbb E|U_{ij}|^2=1/k`$). The Haar measure of $`SU(k)`$ is the law of $`e^{-i\theta/k}U`$, $`\theta=\arg\det U`$.
 
-Without the correction $\Lambda$ of [Theorem 5.3](../lecture_notes/05_random_matrices.md#r-5-3) the law of $Q'$ depends on the sign convention
+Without the correction $`\Lambda`$ of [Theorem 5.3](../lecture_notes/05_random_matrices.md#r-5-3) the law of $`Q'`$ depends on the sign convention
 of the QR routine. For the routine called by `torch.linalg.qr` (LAPACK) the code below finds
-$\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'$ many standard errors away from $0$, whereas a Haar unitary has
-$\mathbb EU=0$ (Corollary 5.5): so this $Q'$ is not Haar distributed. This is a statement about that
-routine, checked by the code, not a theorem.
+$`\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'`$ many standard errors away from $`0`$, whereas a Haar unitary has
+$`\mathbb EU=0`$ (Corollary 5.5): so this $`Q'`$ is not Haar distributed. This is a statement about that
+routine, checked by the code, not a theorem. For this sign convention — $`R'_{11}`$ real with the sign opposite
+to $`\mathrm{Re}\,Z_{11}`$, which the code checks — the lecture notes prove $`\mathrm{Re}\,Q'_{11}<0`$ almost surely (after
+[Theorem 5.3](../lecture_notes/05_random_matrices.md#r-5-3)), and the code confirms it in every sample.
 
-The library draws $U(\mathcal M)$-Haar unitaries with `random_unitary_operator`, one batched QR
+The library draws $`U(\mathcal M)`$-Haar unitaries with `random_unitary_operator`, one batched QR
 decomposition per block size for all sectors and samples at once (on a GPU, Gram–Schmidt, which
-gives the same $Q$ by the uniqueness in Lemma 5.2). The measure `'haar'` is Theorem 5.3 in every
-block; for a complex algebra `'haar_su'` multiplies by $e^{-i\theta/k}$ as above; `'coe'` is the
-ensemble $S=W^TW$ of Exercise 3 (the library's other measures are not used in this course). We check
+gives the same $`Q`$ by the uniqueness in Lemma 5.2). The measure `'haar'` is Theorem 5.3 in every
+block; for a complex algebra `'haar_su'` multiplies by $`e^{-i\theta/k}`$ as above; `'coe'` is the
+ensemble $`S=W^TW`$ of Exercise 3 (the library's other measures are not used in this course). We check
 Corollaries 5.4 and 5.5, and that the library's sampler is exactly the corrected QR of Theorem 5.3:
 
 ```python
@@ -81,6 +83,8 @@ torch.manual_seed(1)
 V = alg.random_unitary(2, batch_size=B)                              # the library, same random numbers
 Q, R = torch.linalg.qr(Z)                                            # LAPACK: diag(R) real, either sign
 d = R.diagonal(dim1=-2, dim2=-1)
+assert (d.imag == 0).all() and (d[:, 0].real * Z[:, 0, 0].real < 0).all()   # LAPACK: R'_11 real, sign of -Re Z_11
+assert (Q[:, 0, 0].real < 0).all()                                   # hence Re Q'_11 < 0 (after Theorem 5.3)
 assert close(V, Q * (d / d.abs()).unsqueeze(-2))                     # Theorem 5.3: V = Q Lambda
 raw = Q.diagonal(dim1=-2, dim2=-1).sum(-1).real                      # Re Tr Q without the correction
 print(f"E Re Tr Q without the phase correction: {raw.mean():.4f} +- {raw.std() / math.sqrt(B):.4f}")
@@ -88,18 +92,18 @@ assert abs(raw.mean()) > 20 * raw.std() / math.sqrt(B)               # far from 
 ```
 
 *Numerical observation.* Without the correction the code finds
-$\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'\approx-0.84$ for $k=2$, whereas a Haar unitary has $\mathbb EU=0$.
+$`\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'\approx-0.84`$ for $`k=2`$, whereas a Haar unitary has $`\mathbb EU=0`$.
 
 <a id="s-5-2"></a>
 
 ## 5.2 Moments and the Weingarten calculus
 
-*Lecture notes:* [Section 5.2](../lecture_notes/05_random_matrices.md#s-5-2); [Proposition 5.7](../lecture_notes/05_random_matrices.md#r-5-7) ($\mathbb E[UXU^*]=E(X)$), [Lemma 5.8](../lecture_notes/05_random_matrices.md#r-5-8) (the commutant of all $V\otimes V$ is $\mathrm{span}\{1,F\}$, $F$ the swap), [Theorem 5.10](../lecture_notes/05_random_matrices.md#r-5-10) (the Weingarten formula of order two) and [Corollary 5.11](../lecture_notes/05_random_matrices.md#r-5-11).
+*Lecture notes:* [Section 5.2](../lecture_notes/05_random_matrices.md#s-5-2); [Proposition 5.7](../lecture_notes/05_random_matrices.md#r-5-7) ($`\mathbb E[UXU^*]=E(X)`$), [Lemma 5.8](../lecture_notes/05_random_matrices.md#r-5-8) (the commutant of all $`V\otimes V`$ is $`\mathrm{span}\{1,F\}`$, $`F`$ the swap), [Theorem 5.10](../lecture_notes/05_random_matrices.md#r-5-10) (the Weingarten formula of order two) and [Corollary 5.11](../lecture_notes/05_random_matrices.md#r-5-11).
 
 We check Proposition 5.7 against `channels.center_expectation`, Lemma 5.8 by linear algebra (the
-commutant of three sampled $V\otimes V$, computed as a null space, contains $F$ and is $2$-dimensional, so by
-Lemma 5.8 it is already $\mathrm{span}\{1,F\}$), and Theorem 5.10 and Corollary 5.11 by Monte Carlo with the
-$U(3)$ block of the samples above:
+commutant of three sampled $`V\otimes V`$, computed as a null space, contains $`F`$ and is $`2`$-dimensional, so by
+Lemma 5.8 it is already $`\mathrm{span}\{1,F\}`$), and Theorem 5.10 and Corollary 5.11 by Monte Carlo with the
+$`U(3)`$ block of the samples above:
 
 ```python
 X = alg.from_blocks([torch.randn(k, k, dtype=dt) for k in alg.k_factors])      # a fixed element
@@ -148,10 +152,10 @@ assert ((mean - alpha * torch.eye(k * k, dtype=dt) - beta * F).abs() <= 5 * err)
 
 ## 5.3 Level statistics
 
-*Lecture notes:* [Section 5.3](../lecture_notes/05_random_matrices.md#s-5-3): the GOE $H=(G+G^T)/2$, the GUE $H=(G+G^*)/\sqrt2$, and the spacing ratio $r_i=\min(s_i,s_{i+1})/\max(s_i,s_{i+1})$ of the spacings $s_i=\lambda_{i+1}-\lambda_i$; [Proposition 5.13](../lecture_notes/05_random_matrices.md#r-5-13) (the Wigner surmise for $2\times2$ matrices) and [Proposition 5.14](../lecture_notes/05_random_matrices.md#r-5-14) (the mean ratio is $2\ln2-1$ for independent levels, $4-2\sqrt3$ and $\frac{2\sqrt3}\pi-\frac12$ for the $3\times3$ GOE and GUE, where $\mathbb Er=I_1/I_0$ with $I_j=\int_0^1x^jf_\beta(x)\,dx$).
+*Lecture notes:* [Section 5.3](../lecture_notes/05_random_matrices.md#s-5-3): the GOE $`H=(G+G^T)/2`$, the GUE $`H=(G+G^*)/\sqrt2`$, and the spacing ratio $`r_i=\min(s_i,s_{i+1})/\max(s_i,s_{i+1})`$ of the spacings $`s_i=\lambda_{i+1}-\lambda_i`$; [Proposition 5.13](../lecture_notes/05_random_matrices.md#r-5-13) (the Wigner surmise for $`2\times2`$ matrices) and [Proposition 5.14](../lecture_notes/05_random_matrices.md#r-5-14) (the mean ratio is $`2\ln2-1`$ for independent levels, $`4-2\sqrt3`$ and $`\frac{2\sqrt3}\pi-\frac12`$ for the $`3\times3`$ GOE and GUE, where $`\mathbb Er=I_1/I_0`$ with $`I_j=\int_0^1x^jf_\beta(x)\,dx`$).
 
 The function `SpinChain.level_spacing_ratio` (in `chains`) returns the mean ratio of each row of
-levels. We check Propositions 5.13 and 5.14 and record the GOE value for $n=64$:
+levels. We check Propositions 5.13 and 5.14 and record the GOE value for $`n=64`$:
 
 ```python
 ratio = SpinChain.level_spacing_ratio
@@ -202,51 +206,59 @@ def same_mean(a, b, name):
     assert abs(a.mean().item() - b.mean().item()) <= 5 * math.hypot(ea, eb)
 ```
 
-*Numerical observation.* The code finds $\langle r\rangle\approx0.53$ for the middle half of the spectrum
-of the GOE with $n=64$, below the exact $3\times3$ value $4-2\sqrt3\approx0.536$ and far above the value
-$2\ln2-1\approx0.386$ of independent levels. This number is an output of the computation, not a
-theorem; below it serves as the reference for GOE blocks of the same size $64$, whose spacing ratios have
+*Numerical observation.* The code finds $`\langle r\rangle\approx0.53`$ for the middle half of the spectrum
+of the GOE with $`n=64`$, below the exact $`3\times3`$ value $`4-2\sqrt3\approx0.536`$ and far above the value
+$`2\ln2-1\approx0.386`$ of independent levels. This number is an output of the computation, not a
+theorem; below it serves as the reference for GOE blocks of the same size $`64`$, whose spacing ratios have
 exactly the same law.
 
 <a id="s-5-4"></a>
 
 ## 5.4 Why sectors must not be mixed
 
-*Lecture notes:* [Section 5.4](../lecture_notes/05_random_matrices.md#s-5-4); by [Theorem 5.15](../lecture_notes/05_random_matrices.md#r-5-15) levels of different independent blocks do not repel: for two GOE blocks the smallest spacing $\delta$ of the merged spectrum has $P(\delta<\varepsilon)$ at least of order $\varepsilon$, whereas inside one GOE block it is at most of order $\varepsilon^2$.
+*Lecture notes:* [Section 5.4](../lecture_notes/05_random_matrices.md#s-5-4); by [Theorem 5.15](../lecture_notes/05_random_matrices.md#r-5-15) levels of different independent blocks do not repel: for two GOE blocks the smallest spacing $`\delta`$ of the merged spectrum has $`P(\delta<\varepsilon)`$ at least of order $`\varepsilon`$, whereas inside one GOE block it is at most of order $`\varepsilon^2`$. By [Theorem 5.18](../lecture_notes/05_random_matrices.md#r-5-18), with [Lemma 5.16](../lecture_notes/05_random_matrices.md#r-5-16) for GOE blocks, the merged spectrum of $`C`$ independent copies of one block has, in a window $`I`$ where the level density is positive, the spacing ratios of independent levels up to $`A/C`$: pooled over many samples, the mean ratio $`\mathbb ES(I)/\mathbb EN(I)`$ of the levels in $`I`$ differs from $`2\ln2-1`$ by at most $`A/C`$.
 
-With more sectors the effect is stronger. We do not prove a limit theorem for many sectors; the
-following experiment is a numerical observation. In the library the blocks are separate from the start:
-`eigenvalues()` returns one spectrum per sector, and mixing them is an explicit `torch.cat`. We put $C$
-independent GOE blocks of size $64$ in one algebra and compare the mean ratio per sector with that of the
-merged spectrum. Each sector is a GOE matrix of size $64$, so its ratios have exactly the law of `r_goe`
-above, and the code tests this; the behaviour of the merged spectrum is only observed:
+With more sectors the effect is stronger. In the library the blocks are separate from the start:
+`eigenvalues()` returns one spectrum per sector, and mixing them is an explicit `torch.cat`. We put $`C`$
+independent GOE blocks of size $`64`$ in one algebra and compare the mean ratio per sector with the pooled mean ratio
+of the merged spectrum over the levels in $`I=[-4,4]`$ (the level density of GOE(64) is positive everywhere, Lemma 5.16).
+Each sector is a GOE matrix of size $`64`$, so its ratios have exactly the law of `r_goe` above, and the code tests this.
+The pooled mean $`\sum S/\sum N`$ over the samples estimates $`\mathbb ES(I)/\mathbb EN(I)`$; its standard error comes from the
+per-sample sums $`S,N`$ (delta method). The rate of Theorem 5.18 is checked in the form
+$`C\,|\langle r\rangle_C-(2\ln2-1)|\le2\,(\langle r\rangle_2-(2\ln2-1))`$ up to $`5`$ standard errors, that is $`A=2(\langle r\rangle_2-(2\ln2-1))`$ for all $`C\ge2`$:
 
 ```python
-k, merged_r = 64, {}
+k, P0, merged_r, merged_se = 64, 2 * math.log(2) - 1, {}, {}
 for C in (1, 2, 4, 8, 16):
     alg_C = TypeIAlgebra([k] * C, [k] * C, complex_valued=False, precision='double')
-    G = torch.randn(800 // C, C, k, k, dtype=torch.float64)
+    G = torch.randn(1600 // C, C, k, k, dtype=torch.float64)
     lam = alg_C.operator((G + G.mT) / 2, is_self_adjoint=True).eigenvalues()    # one spectrum per sector
     per_sector = torch.stack([ratio(l[:, k // 4: 3 * k // 4]) for l in lam])
-    merged = torch.cat(lam, dim=-1).sort(dim=-1).values                       # the spectrum on C^D
-    r_m = ratio(merged[:, k * C // 4: 3 * k * C // 4])
-    merged_r[C] = r_m.mean().item()
-    print(f"C = {C:2d}: <r> per sector {per_sector.mean():.4f}, merged {merged_r[C]:.4f}"
-          f" +- {r_m.std() / math.sqrt(len(r_m)):.4f}")
     same_mean(per_sector.flatten(), r_goe, f"C = {C:2d}: sectors vs GOE(64)")   # every sector is GOE(64)
-assert merged_r[1] > merged_r[2] > merged_r[4] > merged_r[16]       # numerical observation
-assert abs(merged_r[16] - (2 * math.log(2) - 1)) < 0.01              # numerical observation
+    merged = torch.cat(lam, dim=-1).sort(dim=-1).values                       # the spectrum on C^D
+    s = merged.diff(dim=-1)
+    r = torch.minimum(s[:, :-1], s[:, 1:]) / torch.maximum(s[:, :-1], s[:, 1:])   # r(y) at the inner levels
+    inside = (merged[:, 1:-1].abs() <= 4).double()                             # inner levels y in I = [-4, 4]
+    S, N = (r * inside).sum(-1), (merged.abs() <= 4).double().sum(-1)          # S(I), N(I) per sample
+    R = (S.sum() / N.sum()).item()                                             # pooled: estimates E S(I) / E N(I)
+    merged_r[C], merged_se[C] = R, ((S - R * N).pow(2).sum().sqrt() / N.sum()).item()   # delta method
+    print(f"C = {C:2d}: <r> per sector {per_sector.mean():.4f}, merged {R:.4f} +- {merged_se[C]:.4f},"
+          f"  C (<r> - (2 ln 2 - 1)) = {C * (R - P0):+.4f},  C^2 (<r> - (2 ln 2 - 1)) = {C * C * (R - P0):+.4f}")
+for C in (4, 8, 16):                                                          # Theorem 5.18: deviation <= A / C
+    assert C * abs(merged_r[C] - P0) <= 2 * (merged_r[2] - P0) + 5 * C * merged_se[C]
+assert merged_r[1] > merged_r[2] > merged_r[4]
 ```
 
-*Numerical observation.* Every sector has $\langle r\rangle\approx0.53$, the GOE(64) value of Section 5.3
+*Numerical observation.* Every sector has $`\langle r\rangle\approx0.53`$, the GOE(64) value of Section 5.3
 (this agreement is a test of a fact: the sectors are GOE(64) matrices). The merged spectrum drops to
-$0.42$ for two sectors and to about $0.39$, within $0.01$ of the value $2\ln2-1$ of independent levels
-(Proposition 5.14(a)), for $8$ and $16$ sectors. That the merged spectrum approaches independent levels as
-$C$ grows is what the code observes; it is not proved in this course.
+$`0.43`$ for two sectors, to $`0.40`$ for four, and is within one standard error ($`0.0015`$) of $`2\ln2-1`$ for $`8`$ and $`16`$
+sectors, as Theorem 5.18 predicts. The deviation decreases faster than the proven rate $`1/C`$: the code finds
+$`C^2(\langle r\rangle_C-(2\ln2-1))`$ between $`0.14`$ and $`0.17`$ for $`C=1,2,4`$, i.e. a decrease like $`1/C^2`$, until the deviation
+drops below the statistical error. This $`1/C^2`$ behaviour is an output of the computation, not a theorem of this course.
 
 The same happens in a physical model. The Heisenberg chain with random fields (Chapter 9) conserves
-the magnetisation, so its Hamiltonian lies in $\bigoplus_{N=0}^LM_{\binom LN}$ (Proposition 9.1). Its blocks are *not*
-independent — all of them depend on the same random fields — so Theorem 5.15 does not apply as stated;
+the magnetisation, so its Hamiltonian lies in $`\bigoplus_{N=0}^LM_{\binom LN}`$ (Proposition 9.1). Its blocks are *not*
+independent — all of them depend on the same random fields — so Theorems 5.15 and 5.18 do not apply as stated;
 the experiment below shows the same effect, as a numerical observation.
 
 ```python
@@ -260,8 +272,8 @@ print(f"Heisenberg chain, L = 10: <r> in sector N = 5: {r_sector:.4f}, all secto
 assert r_sector > 0.49 and r_all < 0.42                             # numerical observation
 ```
 
-*Numerical observation.* Inside the sector $N=5$ the code finds $\langle r\rangle\approx0.53$, close to the
-GOE(64) value above, and the spectrum with all sectors mixed gives $0.39$, close to $2\ln2-1$.
+*Numerical observation.* Inside the sector $`N=5`$ the code finds $`\langle r\rangle\approx0.53`$, close to the
+GOE(64) value above, and the spectrum with all sectors mixed gives $`0.39`$, close to $`2\ln2-1`$.
 
 <a id="s-5-5"></a>
 
@@ -284,14 +296,14 @@ the default.
 ## Exercises
 
 The numerical parts of the [exercises](../lecture_notes/05_random_matrices.md#x-5) of the lecture notes:
-1. For $U$ Haar on $U(\mathcal M)$, $\mathcal M=M_1\oplus M_2\oplus M_3$, check $\mathbb E|\mathrm{Tr}\,U|^2=C=3$ and
-   $\mathbb E|\mathrm{Tr}\,U|^4=17$.
-2. Compute the Weingarten matrix of order $3$ for $k=3$ ([Theorem 5.12](../lecture_notes/05_random_matrices.md#r-5-12)) numerically and check
-   $\mathbb E|U_{11}|^6=\frac1{10}$.
-3. The **circular orthogonal ensemble** (`measure='coe'`) is $S=W^TW$ with $W$ Haar on $U(k)$. Check that the
-   library's COE is $W^TW$, that $S$ is unitary and symmetric, that $\mathbb E\mathrm{Tr}\,S^m=0$ for $m=1,2,3$
-   and that the mean density of the eigenphases is uniform. Compute $\langle r\rangle$ for the eigenphases of
-   the COE with $k=32$ and compare it with the GOE value of Section 5.3 (a numerical observation).
+1. For $`U`$ Haar on $`U(\mathcal M)`$, $`\mathcal M=M_1\oplus M_2\oplus M_3`$, check $`\mathbb E|\mathrm{Tr}\,U|^2=C=3`$ and
+   $`\mathbb E|\mathrm{Tr}\,U|^4=17`$.
+2. Compute the Weingarten matrix of order $`3`$ for $`k=3`$ ([Theorem 5.12](../lecture_notes/05_random_matrices.md#r-5-12)) numerically and check
+   $`\mathbb E|U_{11}|^6=\frac1{10}`$.
+3. The **circular orthogonal ensemble** (`measure='coe'`) is $`S=W^TW`$ with $`W`$ Haar on $`U(k)`$. Check that the
+   library's COE is $`W^TW`$, that $`S`$ is unitary and symmetric, that $`\mathbb E\mathrm{Tr}\,S^m=0`$ for $`m=1,2,3`$
+   and that the mean density of the eigenphases is uniform. Compute $`\langle r\rangle`$ for the eigenphases of
+   the COE with $`k=32`$ and compare it with the GOE value of Section 5.3 (a numerical observation).
 
 <details>
 <summary>Solutions</summary>
@@ -328,8 +340,8 @@ mc(u3[:, 0, 0].abs() ** 6, 0.1, "E|U_11|^6")
 
 *Exercise 3.*
 
-   *Numerical observation.* The code finds $\langle r\rangle\approx0.53$ for the COE with $k=32$, within
-   $0.015$ of the GOE(64) value of Section 5.3. This agreement is an output of the computation; no
+   *Numerical observation.* The code finds $`\langle r\rangle\approx0.53`$ for the COE with $`k=32`$, within
+   $`0.015`$ of the GOE(64) value of Section 5.3. This agreement is an output of the computation; no
    theorem of this course relates the spacing statistics of the COE to those of the GOE (for the
    circular ensembles see F. J. Dyson, J. Math. Phys. 3 (1962), 140–156).
 

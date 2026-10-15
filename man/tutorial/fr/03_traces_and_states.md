@@ -3,23 +3,23 @@
 # Tutoriel 3. Traces, états et entropie
 
 Ce tutoriel accompagne le [chapitre 3](../../lecture_notes/fr/03_traces_and_states.md) des notes de cours, qui classifie les traces
-sur $\mathcal M=\bigoplus_cM_{k_c}$ ([théorème 3.1](../../lecture_notes/fr/03_traces_and_states.md#r-3-1)), représente les états par des densités
+sur $`\mathcal M=\bigoplus_cM_{k_c}`$ ([théorème 3.1](../../lecture_notes/fr/03_traces_and_states.md#r-3-1)), représente les états par des densités
 ([théorème 3.2](../../lecture_notes/fr/03_traces_and_states.md#r-3-2)) et démontre les inégalités d'entropie de base. Nous utilisons les trois traces de la
-bibliothèque, convertissons les densités de l'une à l'autre, et vérifions numériquement les théorèmes sur $M_2\oplus M_3\oplus M_5$.
+bibliothèque, convertissons les densités de l'une à l'autre, et vérifions numériquement les théorèmes sur $`M_2\oplus M_3\oplus M_5`$.
 
 <a id="s-3-1"></a>
 
 ## 3.1 Traces
 
-*Notes de cours :* [section 3.1](../../lecture_notes/fr/03_traces_and_states.md#s-3-1) ; d'après le [théorème 3.1](../../lecture_notes/fr/03_traces_and_states.md#r-3-1), toute trace est de la forme $\mathrm{tr}_w(A)=\sum_cw_c\mathrm{Tr}\,A_c$.
+*Notes de cours :* [section 3.1](../../lecture_notes/fr/03_traces_and_states.md#s-3-1) ; d'après le [théorème 3.1](../../lecture_notes/fr/03_traces_and_states.md#r-3-1), toute trace est de la forme $`\mathrm{tr}_w(A)=\sum_cw_c\mathrm{Tr}\,A_c`$.
 
 La bibliothèque implémente trois traces fidèles :
 
-| nom | poids $w_c$ | valeur en $1$ | signification |
+| nom | poids $`w_c`$ | valeur en $`1`$ | signification |
 |---|---|---|---|
-| `Tr_blunt` | $1$ | $D$ | trace de $\bigoplus_c\mathbb C^{k_c}$ (multiplicités $m_c=1$) |
-| `Tr_norm` | $1/k_c$ | $C$ | chaque bloc normalisé |
-| `tau_vN` | $1/(Ck_c)$ | $1$ | l'état tracial de poids égaux $1/C$ sur les secteurs |
+| `Tr_blunt` | $`1`$ | $`D`$ | trace de $`\bigoplus_c\mathbb C^{k_c}`$ (multiplicités $`m_c=1`$) |
+| `Tr_norm` | $`1/k_c`$ | $`C`$ | chaque bloc normalisé |
+| `tau_vN` | $`1/(Ck_c)`$ | $`1`$ | l'état tracial de poids égaux $`1/C`$ sur les secteurs |
 
 ```python
 import math
@@ -43,9 +43,9 @@ assert (A.Tr_norm() - 3 * A.tau_vN()).abs().max() < 1e-12       # Tr_norm = C ta
 
 ## 3.2 États et densités
 
-*Notes de cours :* [section 3.2](../../lecture_notes/fr/03_traces_and_states.md#s-3-2) ; le [théorème 3.2](../../lecture_notes/fr/03_traces_and_states.md#r-3-2) donne la densité $\rho_w$ d'un état pour toute trace fidèle, avec $w_c(\rho_w)_c=w'_c(\rho_{w'})_c$.
+*Notes de cours :* [section 3.2](../../lecture_notes/fr/03_traces_and_states.md#s-3-2) ; le [théorème 3.2](../../lecture_notes/fr/03_traces_and_states.md#r-3-2) donne la densité $`\rho_w`$ d'un état pour toute trace fidèle, avec $`w_c(\rho_w)_c=w'_c(\rho_{w'})_c`$.
 
-La bibliothèque stocke un état par sa densité $\rho=\rho_{\mathrm{blunt}}$ relativement à
+La bibliothèque stocke un état par sa densité $`\rho=\rho_{\mathrm{blunt}}`$ relativement à
 la trace brute `Tr_blunt` (classe `DensityMatrix`) ; `density(trace)` et
 `DensityMatrix.from_density` effectuent les conversions. La valeur de l'état ne dépend pas
 de la convention :
@@ -65,7 +65,7 @@ for trace, tr in (('blunt', lambda X: X.Tr_blunt()), ('norm', lambda X: X.Tr_nor
 
 ## 3.3 La partie classique d'un état
 
-*Notes de cours :* [section 3.3](../../lecture_notes/fr/03_traces_and_states.md#s-3-3) : les probabilités des secteurs $p_c=\mathrm{Tr}\,\rho_c$, et l'application $\rho\mapsto\sum_cP_c\rho P_c$, qui est l'identité sur $\mathcal M$.
+*Notes de cours :* [section 3.3](../../lecture_notes/fr/03_traces_and_states.md#s-3-3) : les probabilités des secteurs $`p_c=\mathrm{Tr}\,\rho_c`$, et l'application $`\rho\mapsto\sum_cP_c\rho P_c`$, qui est l'identité sur $`\mathcal M`$.
 
 ```python
 p = rho.sector_probabilities()                                   # shape (batch, C)
@@ -79,7 +79,7 @@ assert (measure_sector(rho).matrix - rho.matrix).abs().max() < 1e-12   # no dist
 
 ## 3.4 Entropie
 
-*Notes de cours :* [section 3.4](../../lecture_notes/fr/03_traces_and_states.md#s-3-4) ; le [théorème 3.3](../../lecture_notes/fr/03_traces_and_states.md#r-3-3) donne $S(\rho)=H(p)+\sum_cp_cS(\sigma_c)$, et l'entropie relativement à $\mathrm{tr}_w$ est $S_w(\rho)=S(\rho)+\sum_cp_c\log w_c$.
+*Notes de cours :* [section 3.4](../../lecture_notes/fr/03_traces_and_states.md#s-3-4) ; le [théorème 3.3](../../lecture_notes/fr/03_traces_and_states.md#r-3-3) donne $`S(\rho)=H(p)+\sum_cp_cS(\sigma_c)`$, et l'entropie relativement à $`\mathrm{tr}_w`$ est $`S_w(\rho)=S(\rho)+\sum_cp_c\log w_c`$.
 
 ```python
 S = rho.von_neumann_entropy()
@@ -98,7 +98,7 @@ assert torch.allclose(S_tau, S + (p * torch.log(w_tau)).sum(-1))
 
 ## 3.5 Entropie relative et inégalité de Klein
 
-*Notes de cours :* [section 3.5](../../lecture_notes/fr/03_traces_and_states.md#s-3-5) ; [corollaire 3.6](../../lecture_notes/fr/03_traces_and_states.md#r-3-6) ($S(\rho)\le\log D$, avec égalité pour $\rho=1/D$) et [théorème 3.7](../../lecture_notes/fr/03_traces_and_states.md#r-3-7) ($S(\rho\|\sigma)\ge S(E\rho\|E\sigma)=\sum_cp_c\log(p_c/q_c)$ pour l'espérance conditionnelle $E$ sur le centre).
+*Notes de cours :* [section 3.5](../../lecture_notes/fr/03_traces_and_states.md#s-3-5) ; [corollaire 3.6](../../lecture_notes/fr/03_traces_and_states.md#r-3-6) ($`S(\rho)\le\log D`$, avec égalité pour $`\rho=1/D`$) et [théorème 3.7](../../lecture_notes/fr/03_traces_and_states.md#r-3-7) ($`S(\rho\|\sigma)\ge S(E\rho\|E\sigma)=\sum_cp_c\log(p_c/q_c)`$ pour l'espérance conditionnelle $`E`$ sur le centre).
 
 ```python
 sigma_state = states.random_density_matrix(alg, batch_size=4)
@@ -129,15 +129,15 @@ assert (E(A_pos).michelson_contrast <= A_pos.michelson_contrast + 1e-12).all()
 
 ## 3.7 Une inégalité plausible mais fausse
 
-*Notes de cours :* [section 3.7](../../lecture_notes/fr/03_traces_and_states.md#s-3-7) ; d'après la [proposition 3.9](../../lecture_notes/fr/03_traces_and_states.md#r-3-9), pour $X,Y\ge0$ dans $M_k$, $\max_U|\mathrm{Tr}(XUY)|=\|YX\|_1\ge\mathrm{Tr}(XY)$, avec égalité si et seulement si $XY=YX$.
+*Notes de cours :* [section 3.7](../../lecture_notes/fr/03_traces_and_states.md#s-3-7) ; d'après la [proposition 3.9](../../lecture_notes/fr/03_traces_and_states.md#r-3-9), pour $`X,Y\ge0`$ dans $`M_k`$, $`\max_U|\mathrm{Tr}(XUY)|=\|YX\|_1\ge\mathrm{Tr}(XY)`$, avec égalité si et seulement si $`XY=YX`$.
 
-La bibliothèque trouve le point où le maximum est atteint grâce à la décomposition polaire : pour $YX=W|YX|$, l'unitaire $U=W^*$
-atteint $\|YX\|_1$ ([notes de cours, théorème 1.9](../../lecture_notes/fr/01_matrix_algebras.md#r-1-9)). Une recherche aléatoire parmi des
-unitaires distribués selon la loi de Haar (c'est ainsi que la bibliothèque tire $U$) fait moins bien en moyenne
-([notes de cours, section 3.7](../../lecture_notes/fr/03_traces_and_states.md#s-3-7)) ; la borne de probabilité $b^4/(a^4k^2)$ qui y est rappelée ne dit rien
-dans l'exécution ci-dessous, où $b/a=6$ et $k=6$. Le code calcule le supremum exact
-pour un couple qui ne commute pas avec $k=6$ ainsi que le meilleur de $20000$ tirages de Haar,
-tous deux diminués de $\mathrm{Tr}(XY)$. D'après la proposition 3.9, aucun tirage ne peut
+La bibliothèque trouve le point où le maximum est atteint grâce à la décomposition polaire : pour $`YX=W|YX|`$, l'unitaire $`U=W^*`$
+atteint $`\|YX\|_1`$ ([notes de cours, théorème 1.9](../../lecture_notes/fr/01_matrix_algebras.md#r-1-9)). Une recherche aléatoire parmi des
+unitaires distribués selon la loi de Haar (c'est ainsi que la bibliothèque tire $`U`$) fait moins bien en moyenne
+([notes de cours, section 3.7](../../lecture_notes/fr/03_traces_and_states.md#s-3-7)) ; la borne de probabilité $`b^4/(a^4k^2)`$ qui y est rappelée ne dit rien
+dans l'exécution ci-dessous, où $`b/a=6`$ et $`k=6`$. Le code calcule le supremum exact
+pour un couple qui ne commute pas avec $`k=6`$ ainsi que le meilleur de $`20000`$ tirages de Haar,
+tous deux diminués de $`\mathrm{Tr}(XY)`$. D'après la proposition 3.9, aucun tirage ne peut
 dépasser le supremum ; l'écart entre le meilleur tirage et le supremum est une observation
 numérique de cette exécution, pas un théorème.
 
@@ -164,7 +164,7 @@ assert best.item() <= gap.item() + 1e-10               # Proposition 3.9: no sam
 
 QuTiP (`entropy_vn`, `entropy_relative`) et d'autres bibliothèques d'information quantique
 (par exemple `toqito`) calculent les entropies et entropies relatives de matrices densité sur
-un seul espace de Hilbert, avec la trace de cet espace ; sur $\bigoplus_c\mathbb C^{k_c}$, c'est
+un seul espace de Hilbert, avec la trace de cet espace ; sur $`\bigoplus_c\mathbb C^{k_c}`$, c'est
 la trace brute d'ici (à la base du logarithme près, qui varie d'une bibliothèque à l'autre).
 Ce qu'elles ne fournissent pas, c'est
 la famille de traces du théorème 3.1 et les conversions du théorème 3.2, qui deviennent
@@ -175,9 +175,9 @@ pondérés différemment.
 
 ## Exercices
 
-[Exercice 1](../../lecture_notes/fr/03_traces_and_states.md#x-3) des notes de cours : la densité de l'état tracial $\tau_{\mathrm{vN}}$
-(`states.tracial_state`) relativement à $\tau_{\mathrm{vN}}$ est $1$, et son entropie vaut
-$S=\log C+\frac1C\sum_c\log k_c$. Vérifier les deux pour $M_2\oplus M_3\oplus M_5$.
+[Exercice 1](../../lecture_notes/fr/03_traces_and_states.md#x-3) des notes de cours : la densité de l'état tracial $`\tau_{\mathrm{vN}}`$
+(`states.tracial_state`) relativement à $`\tau_{\mathrm{vN}}`$ est $`1`$, et son entropie vaut
+$`S=\log C+\frac1C\sum_c\log k_c`$. Vérifier les deux pour $`M_2\oplus M_3\oplus M_5`$.
 
 <details>
 <summary>Solutions</summary>

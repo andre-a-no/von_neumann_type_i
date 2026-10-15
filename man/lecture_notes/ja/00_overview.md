@@ -2,67 +2,67 @@
 
 # 0. 本講義の主題
 
-フォン・ノイマン環は、主に紙と鉛筆で研究されている。有限次元では、そのどれもが全行列環の直和と $*$-同型である（定理 2.6）から、原理的には何でも計算できる——しかしそのような環を数値的に扱うとき、環はしばしば一つの大きな行列へと平坦化され、その構造（セクター、中心、多数のトレース）は計算から消えてしまう。本講義とライブラリ `torch_vn_algebra` は逆の方針をとる：**環そのものがデータ型** であり、その中での計算を効率的に実行する。
+フォン・ノイマン環は、主に紙と鉛筆で研究されている。有限次元では、そのどれもが全行列環の直和と $`*`$-同型である（定理 2.6）から、原理的には何でも計算できる——しかしそのような環を数値的に扱うとき、環はしばしば一つの大きな行列へと平坦化され、その構造（セクター、中心、多数のトレース）は計算から消えてしまう。本講義とライブラリ `torch_vn_algebra` は逆の方針をとる：**環そのものがデータ型** であり、その中での計算を効率的に実行する。
 
 <a id="s-0-1"></a>
 
 ## 0.1 基本的な観察
 
-$\mathbb C^n$ 上のフォン・ノイマン環 $\mathcal M$ は、ユニタリな基底変換を除いて
-$$
+$`\mathbb C^n`$ 上のフォン・ノイマン環 $`\mathcal M`$ は、ユニタリな基底変換を除いて
+```math
 \mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)\otimes1_{m_c}
-$$
-である（定理 2.6）。抽象的な環としては $\bigoplus_cM_{k_c}(\mathbb C)$ であり、その元は
-$C$ 個の正方ブロックのリストである。これはまさに *セクター軸* をもつテンソルの形である：
-$\mathcal M$ の元は形状 $(C,k,k)$ の配列であり（ブロックは $k=\max_ck_c$ までゼロでパディングする。ライブラリはこの形で格納する。2.5 節）、$B$ 個の元——モンテカルロ標本、最適化の初期点、時間ステップ、乱れの実現——は形状 $(B,C,k,k)$ の配列をなす。現代の配列ライブラリ（CPU および GPU 上の PyTorch）は、まさにこのような「小さな行列のバッチ」のためのバッチ化されたルーチン——行列積、固有値分解、QR 分解——を提供しており、これらはニューラルネットワークでも使われている。
+```
+である（定理 2.6）。抽象的な環としては $`\bigoplus_cM_{k_c}(\mathbb C)`$ であり、その元は
+$`C`$ 個の正方ブロックのリストである。これはまさに *セクター軸* をもつテンソルの形である：
+$`\mathcal M`$ の元は形状 $`(C,k,k)`$ の配列であり（ブロックは $`k=\max_ck_c`$ までゼロでパディングする。ライブラリはこの形で格納する。2.5 節）、$`B`$ 個の元——モンテカルロ標本、最適化の初期点、時間ステップ、乱れの実現——は形状 $`(B,C,k,k)`$ の配列をなす。現代の配列ライブラリ（CPU および GPU 上の PyTorch）は、まさにこのような「小さな行列のバッチ」のためのバッチ化されたルーチン——行列積、固有値分解、QR 分解——を提供しており、これらはニューラルネットワークでも使われている。
 
-*ライブラリでは：* $\mathcal M$ の元は `TypeIAlgebra` の作用素であり、形状 $(B,C,k_{\max},k_{\max})$ の一つのテンソルとして格納される — [チュートリアル、1.5節](../../tutorial/ja/01_matrix_algebras.md#s-1-5) および [チュートリアル、2.5節](../../tutorial/ja/02_von_neumann_algebras.md#s-2-5)。
+*ライブラリでは：* $`\mathcal M`$ の元は `TypeIAlgebra` の作用素であり、形状 $`(B,C,k_{\max},k_{\max})`$ の一つのテンソルとして格納される — [チュートリアル、1.5節](../../tutorial/ja/01_matrix_algebras.md#s-1-5) および [チュートリアル、2.5節](../../tutorial/ja/02_von_neumann_algebras.md#s-2-5)。
 
 この同一視のもとで、環の演算はバッチ化された配列演算となる。この対応は厳密である（表の最初の六行はどれも恒等式であり、以下で本講義の結果から証明する）。演算を実行する数値ルーチンだけが浮動小数点で計算する。
 
-| 環 $\mathcal M$ において | 形状 $(B,C,k,k)$ の配列上で |
+| 環 $`\mathcal M`$ において | 形状 $`(B,C,k,k)`$ の配列上で |
 |---|---|
-| 積 $AB$、和、随伴 | $(B,C)$ にわたるバッチ化された行列積、和、共役転置 |
-| 関数計算 $f(A)$（第1章） | ブロックのバッチ化された固有値分解 |
-| トレース $\sum_cw_c\mathrm{Tr}\,A_c$（第3章） | ブロックごとの対角和と、セクター軸にわたる重み付き和 |
+| 積 $`AB`$、和、随伴 | $`(B,C)`$ にわたるバッチ化された行列積、和、共役転置 |
+| 関数計算 $`f(A)`$（第1章） | ブロックのバッチ化された固有値分解 |
+| トレース $`\sum_cw_c\mathrm{Tr}\,A_c`$（第3章） | ブロックごとの対角和と、セクター軸にわたる重み付き和 |
 | 中心、中心射影（第2章） | セクターごとに一つの数 |
-| 中心の上への条件付き期待値 | ブロックのトレースを $k_c$ で割り、ブロードキャストで戻す |
-| ユニタリ群 $\prod_cU(k_c)$ 上のハール測度 | ガウス型ブロックのバッチ化された QR 分解と、定理 5.3 の位相補正 |
+| 中心の上への条件付き期待値 | ブロックのトレースを $`k_c`$ で割り、ブロードキャストで戻す |
+| ユニタリ群 $`\prod_cU(k_c)`$ 上のハール測度 | ガウス型ブロックのバッチ化された QR 分解と、定理 5.3 の位相補正 |
 | 状態、チャネル、ダイナミクス（第3, 6, 8章） | 上の演算から組み立てられる |
 
-*最初の六行の証明.* 定理 2.6 により、$\mathcal M=V\big(\bigoplus_cM_{k_c}\otimes1_{m_c}\big)V^*$ となるユニタリ $V$ が存在し、
-$\varphi\big(V(\bigoplus_cA_c\otimes1_{m_c})V^*\big)=\bigoplus_cA_c$ は $\mathcal M$ から
-$\bigoplus_cM_{k_c}(\mathbb C)$ の上への $*$-同型である（$A_c\otimes1_{m_c}$ が $A_c$ を決定するので well-defined であり、
-$(A_c\otimes1)(B_c\otimes1)=A_cB_c\otimes1$ なので乗法的である）。ライブラリは $\varphi(A)$ を格納する（2.5 節）。
-(1) $\bigoplus_cM_{k_c}$ では、和、積、随伴はブロックごとにとられる。
-(2) $A\in\mathcal M$ を正規、$\varphi(A)=\bigoplus_cA_c$ とし、$f$ を $\mathrm{spec}\,A$ 上の関数とする。各 $A_c$ は正規である。
-$\varphi(A)^*\varphi(A)=\varphi(A^*A)=\varphi(AA^*)=\varphi(A)\varphi(A)^*$ がブロックごとに成り立つからである。
-$x\neq0$ について $A_cx=\lambda x$ ならば、$V(0\oplus\dots\oplus x\otimes e_1\oplus\dots\oplus0)$（$x\otimes e_1$ は第
-$c$ 成分）は $A$ の固有値 $\lambda$ に対する固有ベクトルであるから、$\mathrm{spec}\,A_c\subseteq\mathrm{spec}\,A$ である。$p$ を
-$\mathrm{spec}\,A$ 上で $p=f$ となる多項式とする（定理 1.5 の証明と同じくラグランジュ補間による）。$\mathrm{spec}\,X\subseteq\mathrm{spec}\,A$ かつ
-$X=U\Lambda U^*$ である任意の正規な $X$ に対し、定理 1.5(b) により $f(X)=Uf(\Lambda)U^*=Up(\Lambda)U^*=p(X)$ である。
-よって $f(A)=p(A)$、$f(A_c)=p(A_c)$ であり、$\varphi$ は単位的な準同型であるから、
-$$
+*最初の六行の証明.* 定理 2.6 により、$`\mathcal M=V\big(\bigoplus_cM_{k_c}\otimes1_{m_c}\big)V^*`$ となるユニタリ $`V`$ が存在し、
+$`\varphi\big(V(\bigoplus_cA_c\otimes1_{m_c})V^*\big)=\bigoplus_cA_c`$ は $`\mathcal M`$ から
+$`\bigoplus_cM_{k_c}(\mathbb C)`$ の上への $`*`$-同型である（$`A_c\otimes1_{m_c}`$ が $`A_c`$ を決定するので well-defined であり、
+$`(A_c\otimes1)(B_c\otimes1)=A_cB_c\otimes1`$ なので乗法的である）。ライブラリは $`\varphi(A)`$ を格納する（2.5 節）。
+(1) $`\bigoplus_cM_{k_c}`$ では、和、積、随伴はブロックごとにとられる。
+(2) $`A\in\mathcal M`$ を正規、$`\varphi(A)=\bigoplus_cA_c`$ とし、$`f`$ を $`\mathrm{spec}\,A`$ 上の関数とする。各 $`A_c`$ は正規である。
+$`\varphi(A)^*\varphi(A)=\varphi(A^*A)=\varphi(AA^*)=\varphi(A)\varphi(A)^*`$ がブロックごとに成り立つからである。
+$`x\neq0`$ について $`A_cx=\lambda x`$ ならば、$`V(0\oplus\dots\oplus x\otimes e_1\oplus\dots\oplus0)`$（$`x\otimes e_1`$ は第
+$`c`$ 成分）は $`A`$ の固有値 $`\lambda`$ に対する固有ベクトルであるから、$`\mathrm{spec}\,A_c\subseteq\mathrm{spec}\,A`$ である。$`p`$ を
+$`\mathrm{spec}\,A`$ 上で $`p=f`$ となる多項式とする（定理 1.5 の証明と同じくラグランジュ補間による）。$`\mathrm{spec}\,X\subseteq\mathrm{spec}\,A`$ かつ
+$`X=U\Lambda U^*`$ である任意の正規な $`X`$ に対し、定理 1.5(b) により $`f(X)=Uf(\Lambda)U^*=Up(\Lambda)U^*=p(X)`$ である。
+よって $`f(A)=p(A)`$、$`f(A_c)=p(A_c)`$ であり、$`\varphi`$ は単位的な準同型であるから、
+```math
 \varphi(f(A))=p(\varphi(A))=\bigoplus_cp(A_c)=\bigoplus_cf(A_c),\qquad f(A_c)=U_cf(\Lambda_c)U_c^*
-$$
-が任意の対角化 $A_c=U_c\Lambda_cU_c^*$（定理 1.3）について成り立つ：ブロックごとに一回の固有値分解である。
-(3) $\bigoplus_cM_{k_c}$ のトレースは汎関数 $\sum_cw_c\mathrm{Tr}\,A_c$ である（定理 3.1）。
-(4) $Z(\mathcal M)$ は極小中心射影 $P_c$ で張られ、$\varphi(P_c)$ はブロック $c$ で $1_{k_c}$、それ以外で $0$ である
-（定理 2.6）から、$\varphi(Z(\mathcal M))=\{\bigoplus_cz_c1_{k_c}:z\in\mathbb C^C\}$ である。
-(5) 命題 2.8。(6) 系 5.4（独立なブロックで、それぞれ $U(k_c)$ 上のハール分布に従う）と定理 5.3
+```
+が任意の対角化 $`A_c=U_c\Lambda_cU_c^*`$（定理 1.3）について成り立つ：ブロックごとに一回の固有値分解である。
+(3) $`\bigoplus_cM_{k_c}`$ のトレースは汎関数 $`\sum_cw_c\mathrm{Tr}\,A_c`$ である（定理 3.1）。
+(4) $`Z(\mathcal M)`$ は極小中心射影 $`P_c`$ で張られ、$`\varphi(P_c)`$ はブロック $`c`$ で $`1_{k_c}`$、それ以外で $`0`$ である
+（定理 2.6）から、$`\varphi(Z(\mathcal M))=\{\bigoplus_cz_c1_{k_c}:z\in\mathbb C^C\}`$ である。
+(5) 命題 2.8。(6) 系 5.4（独立なブロックで、それぞれ $`U(k_c)`$ 上のハール分布に従う）と定理 5.3
 （各ブロックはガウス行列の QR 分解から得られる）。最後の行は参照先を示すだけである：状態は密度で表され（定理 3.2）、
 セクター間のチャネルはブロック間のクラウス作用素で表され（命題 6.4）、閉じたダイナミクスは
-$e^{-itH}=\bigoplus_ce^{-itH_c}$ で表される（命題 8.2）。
+$`e^{-itH}=\bigoplus_ce^{-itH_c}`$ で表される（命題 8.2）。
 
 *ライブラリでは：* 積と、`sqrt` や `apply_function` などの関数 — [チュートリアル、1.5節](../../tutorial/ja/01_matrix_algebras.md#s-1-5)；トレース、例えば `Tr_blunt` — [チュートリアル、3.1節](../../tutorial/ja/03_traces_and_states.md#s-3-1)；中心、`TypeIAlgebra.central` — [チュートリアル、2.5節](../../tutorial/ja/02_von_neumann_algebras.md#s-2-5)；中心の上への条件付き期待値、`channels.center_expectation` — [チュートリアル、2.6節](../../tutorial/ja/02_von_neumann_algebras.md#s-2-6)；ハール・ユニタリ、`random_unitary_operator` — [チュートリアル、5.1節](../../tutorial/ja/05_random_matrices.md#s-5-1)。
 
-*計算：* $\bigoplus_{c=1}^{64}M_{16}(\mathbb C)$ 上での表の 2 行目 — [チュートリアル、0.2節](../../tutorial/ja/00_overview.md#s-0-2)；ブロックごとの計算にかかる計算量 — [チュートリアル、0.1節](../../tutorial/ja/00_overview.md#s-0-1)。
+*計算：* $`\bigoplus_{c=1}^{64}M_{16}(\mathbb C)`$ 上での表の 2 行目 — [チュートリアル、0.2節](../../tutorial/ja/00_overview.md#s-0-2)；ブロックごとの計算にかかる計算量 — [チュートリアル、0.1節](../../tutorial/ja/00_overview.md#s-0-1)。
 
 <a id="s-0-2"></a>
 
 ## 0.2 最初の計算
 
-*計算：* $\bigoplus_{c=1}^{64}M_{16}(\mathbb C)$ のランダムな正の元の平方根とトレースを、ブロックごとに、および $M_{1024}(\mathbb C)$ で計算する — [チュートリアル、0.2節](../../tutorial/ja/00_overview.md#s-0-2)。
+*計算：* $`\bigoplus_{c=1}^{64}M_{16}(\mathbb C)`$ のランダムな正の元の平方根とトレースを、ブロックごとに、および $`M_{1024}(\mathbb C)`$ で計算する — [チュートリアル、0.2節](../../tutorial/ja/00_overview.md#s-0-2)。
 
 <a id="s-0-3"></a>
 

@@ -20,7 +20,7 @@ from typing import List, Optional, Sequence
 
 import torch
 
-from .algebra import TypeIAlgebra, _same_device
+from .algebra import TypeIAlgebra, _same_device, _as_tensor
 from . import cost
 from .states import DensityMatrix, _trace_weights
 
@@ -228,7 +228,7 @@ class Channel:
         if len(blocks) != algebra.C:
             raise ValueError(f"from_superoperator: need {algebra.C} blocks, got {len(blocks)}")
         k_max, C = algebra.k_max, algebra.C
-        blocks = [torch.as_tensor(S) for S in blocks]
+        blocks = [_as_tensor(S) for S in blocks]
         batch = max(S.shape[0] if S.dim() == 3 else 1 for S, k_c in zip(blocks, algebra.k_factors) if k_c)
         r = k_max * k_max
         kraus = torch.zeros(batch, r, C, k_max, k_max, dtype=algebra.hilbert.dtype, device=algebra.hilbert.device)
@@ -372,7 +372,7 @@ def random_mixed_unitary_channel(alg: TypeIAlgebra, n_unitaries: int, batch_size
     if weights is None:                       # in the algebra's precision, so that the channel is TP to round-off
         weights = torch.distributions.Dirichlet(torch.ones(n_unitaries, dtype=rdt)).sample((batch_size,))
     else:
-        weights = torch.as_tensor(weights)
+        weights = _as_tensor(weights)
         if weights.shape[-1] != n_unitaries or weights.dim() > 2 or (weights.dim() == 2
                                                                     and weights.shape[0] not in (1, batch_size)):
             raise ValueError(f"weights must have shape ({n_unitaries},) or (batch_size, {n_unitaries})")
@@ -443,7 +443,7 @@ class InterSectorChannel:
         for (d, c), ops in blocks.items():
             m_d, k_c = algebra_out.k_factors[d], algebra_in.k_factors[c]
             for i, op in enumerate(ops):
-                op = torch.as_tensor(op)
+                op = _as_tensor(op)
                 assert op.shape[-2:] == (m_d, k_c), f"block ({d}, {c}) must be {m_d} x {k_c}"
                 K[:, i, d, c, :m_d, :k_c] = algebra_out._to_field(op, f"Kraus block ({d}, {c})").to(dtype)
         return InterSectorChannel(algebra_in, algebra_out, K)
@@ -563,7 +563,8 @@ def random_inter_sector_channel(algebra_in: TypeIAlgebra, algebra_out: TypeIAlge
                                 batch_size: int = 1) -> InterSectorChannel:
     """
     Random trace-preserving map from a Haar-random Stinespring isometry per input sector,
-    V_c: C^{k_c} -> ((+)_d C^{m_d}) (x) C^r, split into the blocks K_i^{dc}.
+    V_c: C^{k_c} -> C^r (x) ((+)_d C^{m_d}) (environment first), split into the blocks
+    K_i^{dc} = (<i| (x) P_d) V_c.
     """
     if algebra_in.hilbert.complex_valued != algebra_out.hilbert.complex_valued:
         raise ValueError("both algebras must be real or both complex")

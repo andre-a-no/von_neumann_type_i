@@ -33,7 +33,8 @@ pytest -q                      # about a minute on a CPU; GPU tests run when CUD
      (`tests/test_sync_free.py` counts them);
    - property flags set by the library must be mathematically guaranteed;
    - single and double precision, real and complex algebras, CPU and GPU.
-4. Run `pytest -q` before pushing; CI runs the test suite on Python 3.9–3.12.
+4. Run `pytest -q` before pushing; CI runs the test suite on Python 3.8–3.13 with the latest dependencies and on Python 3.8 with the oldest
+   supported ones (PyTorch 1.13, NumPy 1.21, SciPy 1.7): do not use newer APIs without a fallback.
 5. Changes visible to users go into `CHANGELOG.md` under "Unreleased".
 
 ## Documentation
@@ -44,7 +45,9 @@ lecture notes and the tutorial have one file per chapter with the same name and 
 anchors (`<a id="r-4-20"></a>` before Theorem 4.20, `<a id="s-4-7"></a>` before Section 4.7). Both exist in seven
 languages; the English text is authoritative and `tests/test_man.py` runs every code block of the tutorial and checks
 that code, displayed formulas, headings, anchors and links agree across translations. A change to an English chapter
-needs the same change in every translation (or an issue asking for it). Write `\mathrm{Tr}`, not `\operatorname{Tr}`.
+needs the same change in every translation (or an issue asking for it). Formulas use GitHub's verbatim math syntax:
+inline ``$`\mathrm{Tr}\,A`$``, displays in a ```` ```math ```` block; plain `$...$` and `$$...$$` lose `\,`, `\{` and `^*` to
+Markdown on GitHub. Write `\mathrm{Tr}`, not `\operatorname{Tr}`.
 
 ## Code of conduct
 

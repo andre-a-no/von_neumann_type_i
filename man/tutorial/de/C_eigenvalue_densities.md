@@ -14,8 +14,8 @@ exakter Arithmetik.
 
 *Vorlesungsnotizen:* [Abschnitt C.2](../../lecture_notes/de/C_eigenvalue_densities.md#s-C-2); [Lemma C.4](../../lecture_notes/de/C_eigenvalue_densities.md#r-C-4), [Satz C.5](../../lecture_notes/de/C_eigenvalue_densities.md#r-C-5).
 
-Die folgende Prüfung differenziert $\Psi$ numerisch für $n=2,3$ und beide $\beta$: In $X=0$ ist die Jacobi-Determinante $\Delta(\lambda)^\beta$, und
-bei einem festen $X\neq0$ hängt ihr Verhältnis zu $\Delta(\lambda)^\beta$ nicht von $\lambda$ ab (Lemma C.4(a)).
+Die folgende Prüfung differenziert $`\Psi`$ numerisch für $`n=2,3`$ und beide $`\beta`$: In $`X=0`$ ist die Jacobi-Determinante $`\Delta(\lambda)^\beta`$, und
+bei einem festen $`X\neq0`$ hängt ihr Verhältnis zu $`\Delta(\lambda)^\beta`$ nicht von $`\lambda`$ ab (Lemma C.4(a)).
 
 ```python
 import math
@@ -82,11 +82,11 @@ for n in (2, 3):
 
 *Vorlesungsnotizen:* [Abschnitt C.3](../../lecture_notes/de/C_eigenvalue_densities.md#s-C-3); [Satz C.7](../../lecture_notes/de/C_eigenvalue_densities.md#r-C-7), [Korollar C.8](../../lecture_notes/de/C_eigenvalue_densities.md#r-C-8).
 
-Wir prüfen Satz C.7 für $n=3$: Die Niveaudichte des GOE wird aus der gemeinsamen Dichte durch Integration über die
+Wir prüfen Satz C.7 für $`n=3`$: Die Niveaudichte des GOE wird aus der gemeinsamen Dichte durch Integration über die
 beiden anderen Eigenwerte auf einem Gitter berechnet und mit der mittleren Anzahl von Eigenwerten in jedem Intervall
-verglichen; außerdem prüfen wir, dass die Eigenvektoren mit den Eigenwerten unkorreliert sind ($|\tilde U_{11}|^2$ hängt
-nicht von den Phasen $D$ ab und lässt sich daher an jedem von `eigh` gelieferten Eigenrahmen ablesen). Für Haar-verteiltes
-$U\in O(3)$ ist $\mathbb E|U_{11}|^2=\frac13$ ([Vorlesungsnotizen, Abschnitt C.3](../../lecture_notes/de/C_eigenvalue_densities.md#s-C-3)).
+verglichen; außerdem prüfen wir, dass die Eigenvektoren mit den Eigenwerten unkorreliert sind ($`|\tilde U_{11}|^2`$ hängt
+nicht von den Phasen $`D`$ ab und lässt sich daher an jedem von `eigh` gelieferten Eigenrahmen ablesen). Für Haar-verteiltes
+$`U\in O(3)`$ ist $`\mathbb E|U_{11}|^2=\frac13`$ ([Vorlesungsnotizen, Abschnitt C.3](../../lecture_notes/de/C_eigenvalue_densities.md#s-C-3)).
 
 ```python
 B, n = 200_000, 3
@@ -118,8 +118,8 @@ mc((u11 - 1 / 3) * goe_lam[:, 0], 0.0, "GOE(3): E (|U_11|^2 - 1/3) lambda_1")   
 *Vorlesungsnotizen:* [Abschnitt C.4](../../lecture_notes/de/C_eigenvalue_densities.md#s-C-4); [Lemma C.10](../../lecture_notes/de/C_eigenvalue_densities.md#r-C-10).
 
 Nach [Lemma C.10](../../lecture_notes/de/C_eigenvalue_densities.md#r-C-10) und Korollar C.6 der Vorlesungsnotizen ist die Niveaudichte des GUE gleich
-$K_n(x)e^{-x^2/2}$, mit $K_n=v^TM^{-1}v$, berechnet aus der Matrix $M$ der Momente. Wir prüfen das für $n=3$ mit den
-Momenten $\int x^{2m}e^{-x^2/2}dx=\sqrt{2\pi}(2m-1)(2m-3)\cdots1$:
+$`K_n(x)e^{-x^2/2}`$, mit $`K_n=v^TM^{-1}v`$, berechnet aus der Matrix $`M`$ der Momente. Wir prüfen das für $`n=3`$ mit den
+Momenten $`\int x^{2m}e^{-x^2/2}dx=\sqrt{2\pi}(2m-1)(2m-3)\cdots1`$:
 
 ```python
 def one_point(x, n, moment, w):
@@ -143,12 +143,12 @@ for lo, hi in zip(edges[:-1], edges[1:]):
 
 *Vorlesungsnotizen:* [Abschnitt C.5](../../lecture_notes/de/C_eigenvalue_densities.md#s-C-5); [Lemma C.11](../../lecture_notes/de/C_eigenvalue_densities.md#r-C-11) (Bartlett), [Lemma C.12](../../lecture_notes/de/C_eigenvalue_densities.md#r-C-12) (Cholesky), [Satz C.14](../../lecture_notes/de/C_eigenvalue_densities.md#r-C-14) (induziertes Maß).
 
-In der Bibliothek zieht `states.random_density_matrix(TypeIAlgebra([a], [a]), N, rank=b)` $N$ Zustände
-$\rho_A=GG^*/\mathrm{Tr}\,GG^*$ mit einer $a\times b$-Ginibre-Matrix $G$, also gemäß dem induzierten Maß aus
+In der Bibliothek zieht `states.random_density_matrix(TypeIAlgebra([a], [a]), N, rank=b)` $`N`$ Zustände
+$`\rho_A=GG^*/\mathrm{Tr}\,GG^*`$ mit einer $`a\times b`$-Ginibre-Matrix $`G`$, also gemäß dem induzierten Maß aus
 [Satz C.14](../../lecture_notes/de/C_eigenvalue_densities.md#r-C-14); `rho.eigenvalues()` liefert die Eigenwerte jedes Blocks in aufsteigender Reihenfolge.
 
 Wir prüfen Lemma C.11 am Cholesky-Faktor, den `torch.linalg.cholesky` berechnet (nach
-Lemma C.12 das eindeutige $L\in T_+$), und Satz C.14 für $a=2$, wo $\mu_1\in(0,\frac12)$ die Dichte $\propto(1-2t)^2(t(1-t))^{b-2}$ hat:
+Lemma C.12 das eindeutige $`L\in T_+`$), und Satz C.14 für $`a=2`$, wo $`\mu_1\in(0,\frac12)`$ die Dichte $`\propto(1-2t)^2(t(1-t))^{b-2}`$ hat:
 
 ```python
 a, b, B = 3, 5, 100_000
@@ -178,10 +178,10 @@ for b2 in (2, 4):
 
 *Vorlesungsnotizen:* [Abschnitt C.6](../../lecture_notes/de/C_eigenvalue_densities.md#s-C-6); [Lemma C.15](../../lecture_notes/de/C_eigenvalue_densities.md#r-C-15), [Lemma C.16](../../lecture_notes/de/C_eigenvalue_densities.md#r-C-16), [Satz C.17](../../lecture_notes/de/C_eigenvalue_densities.md#r-C-17) (Pagesche Formel), [Korollar C.18](../../lecture_notes/de/C_eigenvalue_densities.md#r-C-18).
 
-Wir prüfen die Laguerre-Niveaudichte an einem Histogramm, die Werte $A^{(\alpha)}_{k,m}$ aus Lemma C.16 und das
-Zwischenergebnis $\int x\log x\,\rho_{a,b}=ab\,I_0+\Sigma$ durch Quadratur (wobei $I_0$ selbst durch Quadratur berechnet wird), die Identität für
-$\Sigma$ in exakter Arithmetik, die Pagesche Formel an einer direkten Integration der
-induzierten Dichte für $a=2$ (exakte rationale Werte) und an Monte-Carlo sowie Korollar C.18:
+Wir prüfen die Laguerre-Niveaudichte an einem Histogramm, die Werte $`A^{(\alpha)}_{k,m}`$ aus Lemma C.16 und das
+Zwischenergebnis $`\int x\log x\,\rho_{a,b}=ab\,I_0+\Sigma`$ durch Quadratur (wobei $`I_0`$ selbst durch Quadratur berechnet wird), die Identität für
+$`\Sigma`$ in exakter Arithmetik, die Pagesche Formel an einer direkten Integration der
+induzierten Dichte für $`a=2`$ (exakte rationale Werte) und an Monte-Carlo sowie Korollar C.18:
 
 ```python
 def laguerre(k, al, x):

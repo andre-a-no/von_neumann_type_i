@@ -6,23 +6,23 @@
 構造を証明し、部分トレースを埋め込みの双対として定義し、エンタングルメントとランダムな状態を調べる。ここではこれらの積を
 ライブラリで構成し、部分トレースとエンタングルメント・エントロピーを計算し、定理を数値的に確かめる。
 
-本章を通じて、$\mathcal M_1=\bigoplus_{c=1}^{C_1}M_{k_c}(\mathbb C)$ は
-$H_1=\bigoplus_c\mathbb C^{k_c}$ に極小中心射影 $P_c$ をもって作用し、
-$\mathcal M_2=\bigoplus_{d=1}^{C_2}M_{l_d}(\mathbb C)$ は $H_2=\bigoplus_d\mathbb C^{l_d}$ に
-極小中心射影 $Q_d$ をもって作用する。$\mathrm{Tr}$ は作用素が作用する空間のトレースであり、$\mathcal M_i$ 上では第3章の blunt トレースである。
-$\mathbb C^k\otimes\mathbb C^l$ 上の $X$ に対し $X_{(a,b),(a',b')}=\langle e_a\otimes e_b,X\,e_{a'}\otimes e_{b'}\rangle$ と書き、
-$e_a\otimes e_b\mapsto e_{(a-1)l+b}$ によって $\mathbb C^k\otimes\mathbb C^l$ を $\mathbb C^{kl}$ と同一視する
-（クロネッカー規約）。したがって $(A\otimes B)_{(a,b),(a',b')}=A_{aa'}B_{bb'}$ である。
+本章を通じて、$`\mathcal M_1=\bigoplus_{c=1}^{C_1}M_{k_c}(\mathbb C)`$ は
+$`H_1=\bigoplus_c\mathbb C^{k_c}`$ に極小中心射影 $`P_c`$ をもって作用し、
+$`\mathcal M_2=\bigoplus_{d=1}^{C_2}M_{l_d}(\mathbb C)`$ は $`H_2=\bigoplus_d\mathbb C^{l_d}`$ に
+極小中心射影 $`Q_d`$ をもって作用する。$`\mathrm{Tr}`$ は作用素が作用する空間のトレースであり、$`\mathcal M_i`$ 上では第3章の blunt トレースである。
+$`\mathbb C^k\otimes\mathbb C^l`$ 上の $`X`$ に対し $`X_{(a,b),(a',b')}=\langle e_a\otimes e_b,X\,e_{a'}\otimes e_{b'}\rangle`$ と書き、
+$`e_a\otimes e_b\mapsto e_{(a-1)l+b}`$ によって $`\mathbb C^k\otimes\mathbb C^l`$ を $`\mathbb C^{kl}`$ と同一視する
+（クロネッカー規約）。したがって $`(A\otimes B)_{(a,b),(a',b')}=A_{aa'}B_{bb'}`$ である。
 
 <a id="s-7-1"></a>
 
 ## 7.1 二つの環のテンソル積
 
-*講義ノート：* [7.1節](../../lecture_notes/ja/07_tensor_products.md#s-7-1)：[定理 7.1](../../lecture_notes/ja/07_tensor_products.md#r-7-1)（$\mathcal M_1\otimes\mathcal M_2$ の構造）。
+*講義ノート：* [7.1節](../../lecture_notes/ja/07_tensor_products.md#s-7-1)：[定理 7.1](../../lecture_notes/ja/07_tensor_products.md#r-7-1)（$`\mathcal M_1\otimes\mathcal M_2`$ の構造）。
 
-`tensor_product(alg1, alg2)` はこの環を構成する。セクター $(c,d)$ の番号は $s=cC_2+d$（コードでは番号は
-$0$ から始まる）、電荷は $(q_c,r_d)$ であり、その内部で $e_a\otimes e_b$ の番号は $a\,l_d+b$ である。
-`kron(A, B, alg12)` は $A\otimes B$ を計算する。セクターの順序は $H_1\otimes H_2$ のクロネッカー順序と基底の置換だけ異なる。この置換は下の `kron_rows` が明示的に構成し、それを用いて全行列のクロネッカー積と比較する。
+`tensor_product(alg1, alg2)` はこの環を構成する。セクター $`(c,d)`$ の番号は $`s=cC_2+d`$（コードでは番号は
+$`0`$ から始まる）、電荷は $`(q_c,r_d)`$ であり、その内部で $`e_a\otimes e_b`$ の番号は $`a\,l_d+b`$ である。
+`kron(A, B, alg12)` は $`A\otimes B`$ を計算する。セクターの順序は $`H_1\otimes H_2`$ のクロネッカー順序と基底の置換だけ異なる。この置換は下の `kron_rows` が明示的に構成し、それを用いて全行列のクロネッカー積と比較する。
 
 ```python
 import math
@@ -81,11 +81,11 @@ for tr in ('Tr_blunt', 'Tr_norm', 'tau_vN'):                                   #
 
 ## 7.2 部分トレース
 
-*講義ノート：* [7.2節](../../lecture_notes/ja/07_tensor_products.md#s-7-2)：$\mathrm{Tr}_2$ の定義、[命題 7.2](../../lecture_notes/ja/07_tensor_products.md#r-7-2)、[定理 7.3](../../lecture_notes/ja/07_tensor_products.md#r-7-3)（部分トレースはチャネルである）、[命題 7.4](../../lecture_notes/ja/07_tensor_products.md#r-7-4)（指数 $m^2$ の条件付き期待値）。
+*講義ノート：* [7.2節](../../lecture_notes/ja/07_tensor_products.md#s-7-2)：$`\mathrm{Tr}_2`$ の定義、[命題 7.2](../../lecture_notes/ja/07_tensor_products.md#r-7-2)、[定理 7.3](../../lecture_notes/ja/07_tensor_products.md#r-7-3)（部分トレースはチャネルである）、[命題 7.4](../../lecture_notes/ja/07_tensor_products.md#r-7-4)（指数 $`m^2`$ の条件付き期待値）。
 
-`partial_trace(X, keep=1)` は各ブロック $\rho_{cd}$ を $(k_c,l_d,k_c,l_d)$ の形に並べ替えてトレースをとる。
+`partial_trace(X, keep=1)` は各ブロック $`\rho_{cd}`$ を $`(k_c,l_d,k_c,l_d)`$ の形に並べ替えてトレースをとる。
 `composite.partial_trace_channel(alg12, keep=1)` は定理 7.3 のチャネルであり、そのクラウス作用素は
-セクター $(c,d)$ からセクター $c$ への $1_{k_c}\otimes\langle j|$ である。両者を定義、独立な `numpy.einsum`、
+セクター $`(c,d)`$ からセクター $`c`$ への $`1_{k_c}\otimes\langle j|`$ である。両者を定義、独立な `numpy.einsum`、
 および双対性と照合する。
 
 ```python
@@ -107,8 +107,8 @@ assert close(Ptr.adjoint('blunt')(A), kron(A, one2, alg12))                 # Th
 ```
 
 モジュール `torch_vn_algebra.inclusions` は包含とその条件付き期待値および指数を実装している。
-`from_tensor_product(alg1, m)` は[命題 7.4](../../lecture_notes/ja/07_tensor_products.md#r-7-4) の包含 $\mathcal M_1\otimes1\subset\mathcal M_1\otimes M_m$ を、
-包含行列 $\Lambda=m1_{C_1}$、指数 $m^2$ とともに構成する（[講義ノート、7.2節](../../lecture_notes/ja/07_tensor_products.md#s-7-2)）：
+`from_tensor_product(alg1, m)` は[命題 7.4](../../lecture_notes/ja/07_tensor_products.md#r-7-4) の包含 $`\mathcal M_1\otimes1\subset\mathcal M_1\otimes M_m`$ を、
+包含行列 $`\Lambda=m1_{C_1}`$、指数 $`m^2`$ とともに構成する（[講義ノート、7.2節](../../lecture_notes/ja/07_tensor_products.md#s-7-2)）：
 
 ```python
 from torch_vn_algebra import inclusions
@@ -139,10 +139,10 @@ print(inc.matrix.tolist(), inc.component_indices())           # Lambda = 3 * 1_2
 *講義ノート：* [7.3節](../../lecture_notes/ja/07_tensor_products.md#s-7-3)：[命題 7.5](../../lecture_notes/ja/07_tensor_products.md#r-7-5)（融合積）と[定理 7.6](../../lecture_notes/ja/07_tensor_products.md#r-7-6)（融合積の縮約状態）。
 
 `fused_tensor_product(alg1, alg2, fuse)`（既定の `fuse` は加法）は、セクターを融合後の電荷で並べ、
-セクター内の組 $(c,d)$ を辞書式に並べ、それぞれに基底 $e_a\otimes e_b$ を用いる。
-例：ハードコア・ボソン（[講義ノート、7.3節](../../lecture_notes/ja/07_tensor_products.md#s-7-3)）。粒子数を保存する作用素は、2サイトでは $M_1\oplus M_2\oplus M_1$
-（電荷 $0,1,2$）、3サイトでは $M_1\oplus M_3\oplus M_3\oplus M_1$ をなし、[命題 7.5(c)](../../lecture_notes/ja/07_tensor_products.md#r-7-5) により、それらの融合積は
-5サイトの全占有数に対する $\{N\}'$ であって、$n_q=\binom5q$ である。
+セクター内の組 $`(c,d)`$ を辞書式に並べ、それぞれに基底 $`e_a\otimes e_b`$ を用いる。
+例：ハードコア・ボソン（[講義ノート、7.3節](../../lecture_notes/ja/07_tensor_products.md#s-7-3)）。粒子数を保存する作用素は、2サイトでは $`M_1\oplus M_2\oplus M_1`$
+（電荷 $`0,1,2`$）、3サイトでは $`M_1\oplus M_3\oplus M_3\oplus M_1`$ をなし、[命題 7.5(c)](../../lecture_notes/ja/07_tensor_products.md#r-7-5) により、それらの融合積は
+5サイトの全占有数に対する $`\{N\}'`$ であって、$`n_q=\binom5q`$ である。
 
 ```python
 bos1 = TypeIAlgebra([1, 2, 1], [1, 2, 1], precision='double', charges=[0, 1, 2])
@@ -161,20 +161,20 @@ A, B = random_operator(bos1), random_operator(bos2)
 assert close(full12(kron(A, B, F)), full12(kron(A, B, P)))   # Proposition 7.5(b)
 ```
 
-融合環の次元は $\sum_q\binom5q^2=\binom{10}5=252$（再びヴァンデルモンドの恒等式）、通常の積の次元は
-$(1+4+1)(1+9+9+1)=120$ である（定理 7.1(b)）。定理 7.1(a) と命題 7.5(b) により、通常の積は融合積の元のうち組 $(c,d)$
-についてブロック対角なものからなる。残りの $132$ 次元は、組のブロック $(c,d)$ を同じ $H_q$ の別の組のブロック
-$(c',d')$, $c'\ne c$（したがって $d'\ne d$）へ写す作用素で張られる：これらは全電荷を保存しつつ各部分の電荷を変える、
+融合環の次元は $`\sum_q\binom5q^2=\binom{10}5=252`$（再びヴァンデルモンドの恒等式）、通常の積の次元は
+$`(1+4+1)(1+9+9+1)=120`$ である（定理 7.1(b)）。定理 7.1(a) と命題 7.5(b) により、通常の積は融合積の元のうち組 $`(c,d)`$
+についてブロック対角なものからなる。残りの $`132`$ 次元は、組のブロック $`(c,d)`$ を同じ $`H_q`$ の別の組のブロック
+$`(c',d')`$, $`c'\ne c`$（したがって $`d'\ne d`$）へ写す作用素で張られる：これらは全電荷を保存しつつ各部分の電荷を変える、
 すなわちここでは二つの部分の間で粒子を移動させる。
 
-定理 7.6 のブロック公式により $(\rho_1)_c=\sum_d\mathrm{tr}_{l_d}\,\rho_{(c,d),(c,d)}$ である。ライブラリの
+定理 7.6 のブロック公式により $`(\rho_1)_c=\sum_d\mathrm{tr}_{l_d}\,\rho_{(c,d),(c,d)}`$ である。ライブラリの
 二つの実装はいずれも、任意の融合則に対してこの写像を計算するように作られている：`partial_trace` は
-対角の組のブロック $\rho_{(c,d),(c,d)}$ だけのトレースをとり、`partial_trace_channel` は一つのセクター内で
-$c$ が同じ組に別々のクラウス添字を用い、その双対がやはり $A\mapsto A\otimes1$ となるようにしている。コードは
+対角の組のブロック $`\rho_{(c,d),(c,d)}`$ だけのトレースをとり、`partial_trace_channel` は一つのセクター内で
+$`c`$ が同じ組に別々のクラウス添字を用い、その双対がやはり $`A\mapsto A\otimes1`$ となるようにしている。コードは
 両者を、下の二つの融合則と残す因子の両方の選び方について、`einsum` で独立に計算した
-$E_1(\mathrm{Tr}_{H_2}\,\rho)$ と照合し、双対を $A\otimes1$ と照合する。
-我々の例では、加法の場合 $E_1$ は何もしない。パリティ則 $f(q,r)=q+r\bmod2$ の場合には、`bos1` の電荷 $0$
-と $2$ はどの $r$ とも同じように融合し、$E_1$ は本物のコヒーレンスを取り除く。
+$`E_1(\mathrm{Tr}_{H_2}\,\rho)`$ と照合し、双対を $`A\otimes1`$ と照合する。
+我々の例では、加法の場合 $`E_1`$ は何もしない。パリティ則 $`f(q,r)=q+r\bmod2`$ の場合には、`bos1` の電荷 $`0`$
+と $`2`$ はどの $`r`$ とも同じように融合し、$`E_1`$ は本物のコヒーレンスを取り除く。
 
 ```python
 G = fused_tensor_product(bos1, bos2, fuse=lambda q, r: (q + r) % 2)       # only the parity is conserved
@@ -201,11 +201,11 @@ for alg, coherent in ((F, False), (G, True)):
 
 ## 7.4 純粋状態のエンタングルメント
 
-*講義ノート：* [7.4節](../../lecture_notes/ja/07_tensor_products.md#s-7-4)：[補題 7.7](../../lecture_notes/ja/07_tensor_products.md#r-7-7)（シュミット分解）と[命題 7.8](../../lecture_notes/ja/07_tensor_products.md#r-7-8)（対称性分解エンタングルメント）：$E(\psi)=H(p)+\sum_cp_cE(\hat\psi_c)$。ここで $p_c$ は第一の部分のセクター $c$ の確率である。
+*講義ノート：* [7.4節](../../lecture_notes/ja/07_tensor_products.md#s-7-4)：[補題 7.7](../../lecture_notes/ja/07_tensor_products.md#r-7-7)（シュミット分解）と[命題 7.8](../../lecture_notes/ja/07_tensor_products.md#r-7-8)（対称性分解エンタングルメント）：$`E(\psi)=H(p)+\sum_cp_cE(\hat\psi_c)`$。ここで $`p_c`$ は第一の部分のセクター $`c`$ の確率である。
 
-$H(p)$ を **粒子数エンタングルメント**、$\sum_cp_cE(\hat\psi_c)$ を **配置エンタングルメント** という。
-5サイト上の $2$ 粒子のランダムな状態について、両側の部分トレースと $4\times8$ 行列 $\Psi$ の特異値から
-$E(\psi)$ を計算する。
+$`H(p)`$ を **粒子数エンタングルメント**、$`\sum_cp_cE(\hat\psi_c)`$ を **配置エンタングルメント** という。
+5サイト上の $`2`$ 粒子のランダムな状態について、両側の部分トレースと $`4\times8`$ 行列 $`\Psi`$ の特異値から
+$`E(\psi)`$ を計算する。
 
 ```python
 s = F.charges.index(2)                                      # the sector of two particles, n_q = 10
@@ -243,8 +243,8 @@ assert abs(E_psi - H_num - S_conf) < 1e-10                  # Proposition 7.8
 
 *講義ノート：* [7.5節](../../lecture_notes/ja/07_tensor_products.md#s-7-5)：[定理 7.11](../../lecture_notes/ja/07_tensor_products.md#r-7-11)（Lubkin）、[系 7.12](../../lecture_notes/ja/07_tensor_products.md#r-7-12)、[定理 7.13](../../lecture_notes/ja/07_tensor_products.md#r-7-13)（ペイジの公式）、[命題 7.14](../../lecture_notes/ja/07_tensor_products.md#r-7-14)（誘導測度）。
 
-`partial_trace` で縮約した $\mathbb C^3\otimes\mathbb C^6$ の $10^4$ 個の純粋状態と誘導測度について定理 7.11 と 7.13 を、
-$M_1\oplus M_2\oplus M_3$, $r=2$ について命題 7.14 を確かめる。
+`partial_trace` で縮約した $`\mathbb C^3\otimes\mathbb C^6`$ の $`10^4`$ 個の純粋状態と誘導測度について定理 7.11 と 7.13 を、
+$`M_1\oplus M_2\oplus M_3`$, $`r=2`$ について命題 7.14 を確かめる。
 
 ```python
 a, b, n_samples = 3, 6, 10_000
@@ -288,8 +288,8 @@ TeNPy（電荷付きの脚、電荷ごとのエンタングルメント・スペ
 積はセクターとトレースをもつフォン・ノイマン環であり、融合則はラベルの任意の写像であり、部分トレースは
 各トレースに関する双対をもつチャネルで、融合積に対しては正しい制限を与え（定理 7.3, 7.6）、そしてそのすべてがバッチ化されている。
 テンソルネットワークは備えておらず、`fused_tensor_product` が受け取るのは、可換な対称性の場合のように電荷の組ごとに結果が一つの規則である。
-$SU(2)$ の場合のような非可換な規則――スピンの組 $j_1,j_2$ が複数の全スピン $|j_1-j_2|,\dots,j_1+j_2$ に合成される
-（第4章、演習問題 2）――は、ここでの融合積ではない（ライブラリはスピン $\frac12$ 鎖に対する $SU(2)$ を別に扱う、第4章）。
+$`SU(2)`$ の場合のような非可換な規則――スピンの組 $`j_1,j_2`$ が複数の全スピン $`|j_1-j_2|,\dots,j_1+j_2`$ に合成される
+（第4章、演習問題 2）――は、ここでの融合積ではない（ライブラリはスピン $`\frac12`$ 鎖に対する $`SU(2)`$ を別に扱う、第4章）。
 
 <a id="x-7"></a>
 
@@ -297,12 +297,12 @@ $SU(2)$ の場合のような非可換な規則――スピンの組 $j_1,j_2$ �
 
 講義ノートの[演習問題](../../lecture_notes/ja/07_tensor_products.md#x-7)の数値的検証：
 
-1. $\tau_{\mathrm{vN}}$ に関する $\mathrm{Tr}_2$ の双対
-   `partial_trace_channel(alg12).adjoint('tau_vN')` が、$Z=\bigoplus_dC_2l_d1_{l_d}$ として $A\mapsto A\otimes Z$ であることを確かめよ。
+1. $`\tau_{\mathrm{vN}}`$ に関する $`\mathrm{Tr}_2`$ の双対
+   `partial_trace_channel(alg12).adjoint('tau_vN')` が、$`Z=\bigoplus_dC_2l_d1_{l_d}`$ として $`A\mapsto A\otimes Z`$ であることを確かめよ。
 2. （劣加法性.）`alg12` のランダムな状態について、相互情報量
-   $S(\rho_1)+S(\rho_2)-S(\rho)$ が正であり、$S(\rho\|\rho_1\otimes\rho_2)$ に等しいことを確かめよ。
-3. 二つのサイトで共有された一つの粒子 $\psi=(|01\rangle+|10\rangle)/\sqrt2$ について、
-   $E(\psi)=H(p)=\log2$ を確かめよ。
+   $`S(\rho_1)+S(\rho_2)-S(\rho)`$ が正であり、$`S(\rho\|\rho_1\otimes\rho_2)`$ に等しいことを確かめよ。
+3. 二つのサイトで共有された一つの粒子 $`\psi=(|01\rangle+|10\rangle)/\sqrt2`$ について、
+   $`E(\psi)=H(p)=\log2`$ を確かめよ。
 
 <details>
 <summary>解答</summary>

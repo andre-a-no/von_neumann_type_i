@@ -12,8 +12,8 @@ GUE 以及 Laguerre 系综的能级密度、Bartlett 分解、诱导测度和 Pa
 
 *讲义：* [C.2 节](../../lecture_notes/zh/C_eigenvalue_densities.md#s-C-2)；[引理 C.4](../../lecture_notes/zh/C_eigenvalue_densities.md#r-C-4)、[定理 C.5](../../lecture_notes/zh/C_eigenvalue_densities.md#r-C-5)。
 
-下面的检验对 $n=2,3$ 和两种 $\beta$ 数值地对 $\Psi$ 求导：在 $X=0$ 处 Jacobi 行列式是 $\Delta(\lambda)^\beta$，而
-在固定的 $X\neq0$ 处它与 $\Delta(\lambda)^\beta$ 之比不依赖于 $\lambda$（引理 C.4(a)）。
+下面的检验对 $`n=2,3`$ 和两种 $`\beta`$ 数值地对 $`\Psi`$ 求导：在 $`X=0`$ 处 Jacobi 行列式是 $`\Delta(\lambda)^\beta`$，而
+在固定的 $`X\neq0`$ 处它与 $`\Delta(\lambda)^\beta`$ 之比不依赖于 $`\lambda`$（引理 C.4(a)）。
 
 ```python
 import math
@@ -80,9 +80,9 @@ for n in (2, 3):
 
 *讲义：* [C.3 节](../../lecture_notes/zh/C_eigenvalue_densities.md#s-C-3)；[定理 C.7](../../lecture_notes/zh/C_eigenvalue_densities.md#r-C-7)、[推论 C.8](../../lecture_notes/zh/C_eigenvalue_densities.md#r-C-8)。
 
-我们对 $n=3$ 检验定理 C.7：GOE 的能级密度由联合密度在网格上对另外两个特征值积分算出，并与每个区间内
-特征值的平均个数比较；我们还检验特征向量与特征值不相关（$|\tilde U_{11}|^2$ 不依赖于相位 $D$，所以可以从
-`eigh` 返回的任何特征标架读出）。对服从 Haar 分布的 $U\in O(3)$，$\mathbb E|U_{11}|^2=\frac13$
+我们对 $`n=3`$ 检验定理 C.7：GOE 的能级密度由联合密度在网格上对另外两个特征值积分算出，并与每个区间内
+特征值的平均个数比较；我们还检验特征向量与特征值不相关（$`|\tilde U_{11}|^2`$ 不依赖于相位 $`D`$，所以可以从
+`eigh` 返回的任何特征标架读出）。对服从 Haar 分布的 $`U\in O(3)`$，$`\mathbb E|U_{11}|^2=\frac13`$
 （[讲义，C.3 节](../../lecture_notes/zh/C_eigenvalue_densities.md#s-C-3)）。
 
 ```python
@@ -114,9 +114,9 @@ mc((u11 - 1 / 3) * goe_lam[:, 0], 0.0, "GOE(3): E (|U_11|^2 - 1/3) lambda_1")   
 
 *讲义：* [C.4 节](../../lecture_notes/zh/C_eigenvalue_densities.md#s-C-4)；[引理 C.10](../../lecture_notes/zh/C_eigenvalue_densities.md#r-C-10)。
 
-由[引理 C.10](../../lecture_notes/zh/C_eigenvalue_densities.md#r-C-10) 与讲义的推论 C.6，GUE 的能级密度是 $K_n(x)e^{-x^2/2}$，其中
-$K_n=v^TM^{-1}v$ 由矩构成的矩阵 $M$ 算出。我们对 $n=3$ 用矩
-$\int x^{2m}e^{-x^2/2}dx=\sqrt{2\pi}(2m-1)(2m-3)\cdots1$ 来检验这一点：
+由[引理 C.10](../../lecture_notes/zh/C_eigenvalue_densities.md#r-C-10) 与讲义的推论 C.6，GUE 的能级密度是 $`K_n(x)e^{-x^2/2}`$，其中
+$`K_n=v^TM^{-1}v`$ 由矩构成的矩阵 $`M`$ 算出。我们对 $`n=3`$ 用矩
+$`\int x^{2m}e^{-x^2/2}dx=\sqrt{2\pi}(2m-1)(2m-3)\cdots1`$ 来检验这一点：
 
 ```python
 def one_point(x, n, moment, w):
@@ -140,12 +140,12 @@ for lo, hi in zip(edges[:-1], edges[1:]):
 
 *讲义：* [C.5 节](../../lecture_notes/zh/C_eigenvalue_densities.md#s-C-5)；[引理 C.11](../../lecture_notes/zh/C_eigenvalue_densities.md#r-C-11)（Bartlett），[引理 C.12](../../lecture_notes/zh/C_eigenvalue_densities.md#r-C-12)（Cholesky），[定理 C.14](../../lecture_notes/zh/C_eigenvalue_densities.md#r-C-14)（诱导测度）。
 
-在本库中，`states.random_density_matrix(TypeIAlgebra([a], [a]), N, rank=b)` 抽取 $N$ 个态
-$\rho_A=GG^*/\mathrm{Tr}\,GG^*$，其中 $G$ 是 $a\times b$ Ginibre 矩阵，也就是[定理 C.14](../../lecture_notes/zh/C_eigenvalue_densities.md#r-C-14) 的诱导测度；
+在本库中，`states.random_density_matrix(TypeIAlgebra([a], [a]), N, rank=b)` 抽取 $`N`$ 个态
+$`\rho_A=GG^*/\mathrm{Tr}\,GG^*`$，其中 $`G`$ 是 $`a\times b`$ Ginibre 矩阵，也就是[定理 C.14](../../lecture_notes/zh/C_eigenvalue_densities.md#r-C-14) 的诱导测度；
 `rho.eigenvalues()` 按升序返回每个块的特征值。
 
-我们在 `torch.linalg.cholesky` 计算出的 Cholesky 因子上检验引理 C.11（由引理 C.12，它就是唯一的 $L\in T_+$），
-并对 $a=2$ 检验定理 C.14，此时 $\mu_1\in(0,\frac12)$ 的密度 $\propto(1-2t)^2(t(1-t))^{b-2}$：
+我们在 `torch.linalg.cholesky` 计算出的 Cholesky 因子上检验引理 C.11（由引理 C.12，它就是唯一的 $`L\in T_+`$），
+并对 $`a=2`$ 检验定理 C.14，此时 $`\mu_1\in(0,\frac12)`$ 的密度 $`\propto(1-2t)^2(t(1-t))^{b-2}`$：
 
 ```python
 a, b, B = 3, 5, 100_000
@@ -175,9 +175,9 @@ for b2 in (2, 4):
 
 *讲义：* [C.6 节](../../lecture_notes/zh/C_eigenvalue_densities.md#s-C-6)；[引理 C.15](../../lecture_notes/zh/C_eigenvalue_densities.md#r-C-15)、[引理 C.16](../../lecture_notes/zh/C_eigenvalue_densities.md#r-C-16)、[定理 C.17](../../lecture_notes/zh/C_eigenvalue_densities.md#r-C-17)（Page 公式），[推论 C.18](../../lecture_notes/zh/C_eigenvalue_densities.md#r-C-18)。
 
-我们检验：Laguerre 能级密度与直方图的比较；引理 C.16 的值 $A^{(\alpha)}_{k,m}$ 以及中间
-结果 $\int x\log x\,\rho_{a,b}=ab\,I_0+\Sigma$（用数值积分，其中 $I_0$ 本身也用数值积分计算）；$\Sigma$ 的恒等式
-（精确算术）；Page 公式，与 $a=2$ 时诱导密度的直接积分（精确有理数值）以及蒙特卡罗结果比较；
+我们检验：Laguerre 能级密度与直方图的比较；引理 C.16 的值 $`A^{(\alpha)}_{k,m}`$ 以及中间
+结果 $`\int x\log x\,\rho_{a,b}=ab\,I_0+\Sigma`$（用数值积分，其中 $`I_0`$ 本身也用数值积分计算）；$`\Sigma`$ 的恒等式
+（精确算术）；Page 公式，与 $`a=2`$ 时诱导密度的直接积分（精确有理数值）以及蒙特卡罗结果比较；
 最后是推论 C.18：
 
 ```python

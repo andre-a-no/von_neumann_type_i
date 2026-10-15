@@ -15,6 +15,15 @@ so that sup / inf of a functional can be searched for with many independent star
 
     best = optimize.extremize(objective, params, maximize=True)
 
+Initialisation (`init`, for a fraction `init_fraction` of the starts; the default 'haar' is unchanged): the extremes
+of many trace functionals sit at aligned eigenbases, a set of Haar measure zero, and in a real algebra a unitary chart
+U0 exp(G - G^T) never leaves the connected component (det = +-1 per sector) of U0. `structured_unitary` provides
+'diagonal' (random signs on the diagonal), 'pairs' (2x2 rotations of consecutive basis vectors at random angles) and
+'oriented' (Haar, with det U0_c = +1 in every sector of a real algebra) starting points; `spectrum_init` gives the
+structured starts two-level spectra. With X on 'diagonal' and Y on 'pairs', the relative eigenbasis of X and Y is
+a direct sum of 2x2 rotations, the structure of the maximisers of Exp. 1 and Exp. 3 (paper, Section 6), in every
+dimension.
+
 The objective maps the current operators to one value per start, shape (batch,). The search is
 local: the result is a lower bound for a supremum (an upper bound for an infimum) and should be
 checked with more starts / steps.
@@ -29,6 +38,67 @@ from . import cost
 Operator = TypeIAlgebra.Operator
 
 
+INITS = ('haar', 'diagonal', 'pairs', 'rotations', 'oriented')
+
+
+def structured_unitary(alg: TypeIAlgebra, batch_size: int, kind: str = 'pairs') -> torch.Tensor:
+    """
+    Block-diagonal unitaries (batch, C, k_max, k_max) (zero on the padding) as starting points of a search:
+      'haar'      Haar-random in every sector (random_unitary_operator);
+      'diagonal'  diag(+-1) with independent random signs;
+      'pairs'     R diag(+-1): R rotates the consecutive basis vectors (e_0, e_1), (e_2, e_3), ... of every sector
+                  by independent angles uniform in [0, pi) (an odd sector keeps its last vector), with random signs;
+      'rotations' R alone (det = +1 in every sector);
+      'oriented'  Haar-random, and in a real algebra with det = +1 in every sector (first column negated where
+                  det = -1); in a complex algebra the same as 'haar'.
+    """
+    if kind not in INITS:
+        raise ValueError(f"unknown init {kind!r}; choose from {INITS}")
+    base = alg.random_unitary_operator(batch_size).matrix
+    if kind == 'haar':
+        return base
+    if kind == 'oriented':
+        if alg.complex_valued:
+            return base
+        k = torch.tensor(alg.k_factors, device=base.device)
+        pad = (torch.arange(alg.k_max, device=base.device) >= k[:, None]).to(base.dtype)       # (C, k_max)
+        det = torch.linalg.det(base + torch.diag_embed(pad))                                   # padding as 1
+        col = torch.ones(batch_size, alg.C, alg.k_max, dtype=base.dtype, device=base.device)
+        col[..., 0] = torch.where(det < 0, -1.0, 1.0).to(base.dtype)                          # negate column 0
+        return base * col[..., None, :]
+    rdt, dev, B, C, n = alg.hilbert.real_dtype, base.device, batch_size, alg.C, alg.k_max
+    k = torch.tensor(alg.k_factors, device=dev)
+    act = (torch.arange(n, device=dev) < k[:, None]).to(rdt)                                     # (C, n)
+    signs = torch.where(torch.rand(B, C, n, device=dev) < 0.5, -1.0, 1.0).to(rdt) * act
+    if kind == 'diagonal':
+        return torch.diag_embed(signs).to(base.dtype)
+    R = torch.diag_embed(act.expand(B, C, n)).clone()
+    t = torch.pi * torch.rand(B, C, n // 2, dtype=rdt, device=dev)
+    i = torch.arange(n // 2, device=dev)
+    full = (2 * i + 1 < k[:, None]).to(rdt)                                                     # (C, n//2): pair active
+    c, s = torch.cos(t) * full + (1 - full), torch.sin(t) * full
+    R[..., 2 * i, 2 * i], R[..., 2 * i + 1, 2 * i + 1] = c * act[:, 2 * i], c * act[:, 2 * i + 1]
+    R[..., 2 * i, 2 * i + 1], R[..., 2 * i + 1, 2 * i] = -s, s
+    if kind == 'rotations':
+        return R.to(base.dtype)
+    return (R * signs[..., None, :]).to(base.dtype)                                             # R diag(+-1)
+
+
+def _initial_base(alg: TypeIAlgebra, batch_size: int, init: str, init_fraction: float):
+    """Haar bases with some starts replaced by structured_unitary(init): a random fraction `init_fraction` (float) of
+    them, or those selected by a boolean tensor (batch,) (e.g. the `structured` mask of another parameter, so that X
+    and Y start structured at the same starts). Returns (base, mask)."""
+    base = alg.random_unitary_operator(batch_size).matrix
+    mask = torch.zeros(batch_size, dtype=torch.bool, device=base.device)
+    if init != 'haar':
+        if torch.is_tensor(init_fraction):
+            mask = init_fraction.to(device=base.device, dtype=torch.bool).expand(batch_size).clone()
+        elif init_fraction > 0:
+            mask = torch.rand(batch_size, device=base.device) < init_fraction
+        base = torch.where(mask[:, None, None, None], structured_unitary(alg, batch_size, init), base)
+    return base, mask
+
+
 class Param:
     """Base class: a differentiable parametrisation of a batch of operators."""
 
@@ -40,11 +110,15 @@ class Param:
 
 
 class UnitaryParam(Param):
-    """Block-diagonal unitaries U = U0 exp(G - G^*), one per start; U0 Haar-random by default."""
+    """Block-diagonal unitaries U = U0 exp(G - G^*), one per start; U0 Haar-random by default, or a structured start
+    (`init`, see structured_unitary) for a random fraction `init_fraction` of the starts."""
 
-    def __init__(self, alg: TypeIAlgebra, batch_size: int, base: Optional[torch.Tensor] = None):
+    def __init__(self, alg: TypeIAlgebra, batch_size: int, base: Optional[torch.Tensor] = None, init: str = 'haar',
+                 init_fraction=1.0):
         self.alg = alg
-        self.base = alg.random_unitary_operator(batch_size).matrix if base is None else base
+        if init not in INITS:
+            raise ValueError(f"unknown init {init!r}; choose from {INITS}")
+        self.base = _initial_base(alg, batch_size, init, init_fraction)[0] if base is None else base
         self.G = torch.zeros_like(self.base, requires_grad=True)
         self._cache = (None, None)
         self.G.register_hook(self._invalidate)       # a backward pass frees the graph of the cached U
@@ -143,13 +217,51 @@ class SpectrumParam(Param):
 
 
 class PositiveParam(Param):
-    """Positive operators X = U diag(lambda) U^* with a prescribed or bounded Michelson contrast."""
+    """Positive operators X = U diag(lambda) U^* with a prescribed or bounded Michelson contrast. The eigenbasis
+    U = U0 exp(G - G^*) starts at a Haar-random U0, or at structured_unitary(init) for a random fraction
+    `init_fraction` of the starts (`self.structured` marks them)."""
 
     def __init__(self, alg: TypeIAlgebra, batch_size: int, delta: Optional[torch.Tensor] = None,
-                 delta_range=(0.0, 0.999), pin_sector: Optional[int] = None):
+                 delta_range=(0.0, 0.999), pin_sector: Optional[int] = None, init: str = 'haar',
+                 init_fraction=1.0, spectrum_init: Optional[str] = None):
         self.alg = alg
         self.spectrum = SpectrumParam(alg, batch_size, delta, delta_range, pin_sector)
-        self.unitary = UnitaryParam(alg, batch_size)
+        if init not in INITS:
+            raise ValueError(f"unknown init {init!r}; choose from {INITS}")
+        base, self.structured = _initial_base(alg, batch_size, init, init_fraction)
+        self.unitary = UnitaryParam(alg, batch_size, base=base)
+        if spectrum_init is not None:
+            self._init_spectrum(spectrum_init)
+
+    def _init_spectrum(self, kind: str, t: float = 1.5):
+        """Two-level starting spectra for the structured starts: 'pairs' puts one eigenvalue near lambda_max and one
+        near lambda_min in every pair of consecutive slots (random order), 'high' all near lambda_max; a free
+        contrast starts near the upper end of its range. (sin(+-t) = +-0.9975: near the ends, where the gradient of
+        (1 + sin)/2 does not vanish.)"""
+        if kind not in ('pairs', 'high'):
+            raise ValueError("spectrum_init must be 'pairs', 'high' or None")
+        sp, m = self.spectrum, self.structured
+        B, C, n = sp.theta.shape
+        with torch.no_grad():
+            if kind == 'high':
+                th = torch.full_like(sp.theta, t)
+            else:
+                first = torch.rand(B, C, (n + 1) // 2, device=sp.theta.device) < 0.5
+                hi = torch.stack([first, ~first], dim=-1).reshape(B, C, -1)[..., :n]
+                # consistent with the pinned slots: lambda_max on a high slot and lambda_min on a low one
+                b = torch.arange(B, device=hi.device)
+                k = torch.tensor(self.alg.k_factors, device=hi.device)
+                for pin, val in ((sp.pin_max, True), (sp.pin_min, False)):
+                    c, i = pin.unbind(-1)
+                    j = i ^ 1                                                   # partner slot in the pair
+                    ok = j < k[c]
+                    hi[b[ok], c[ok], j[ok]] = not val
+                for pin, val in ((sp.pin_max, True), (sp.pin_min, False)):
+                    hi[b, pin[:, 0], pin[:, 1]] = val
+                th = torch.where(hi, torch.full_like(sp.theta, t), torch.full_like(sp.theta, -t))
+            sp.theta.copy_(torch.where(m[:, None, None], th, sp.theta))
+            if sp.eta is not None:
+                sp.eta.copy_(torch.where(m, torch.full_like(sp.eta, t), sp.eta))
 
     def parameters(self):
         return self.spectrum.parameters() + self.unitary.parameters()
@@ -179,13 +291,16 @@ class PositiveParam(Param):
 class SelfAdjointParam(PositiveParam):
     """
     Self-adjoint X = U diag(s * lambda) U^* where |X| has a prescribed or bounded contrast and the
-    signs s = +-1 are drawn at random per start and kept fixed (discrete variables; the multistart
-    covers the sign patterns).
+    signs s = +-1 are drawn at random per start (discrete variables; the multistart covers the sign patterns, and
+    discrete_step flips single signs between rounds). For the starts with a structured eigenbasis (init != 'haar'),
+    the signs alternate within the consecutive pairs of slots (one + and one - per pair, in random order), the sign
+    pattern of the maximisers of Exp. 3 (paper, Section 6).
     """
 
     def __init__(self, alg: TypeIAlgebra, batch_size: int, delta: Optional[torch.Tensor] = None,
-                 delta_range=(0.0, 0.999), pin_sector: Optional[int] = None):
-        super().__init__(alg, batch_size, delta, delta_range, pin_sector)
+                 delta_range=(0.0, 0.999), pin_sector: Optional[int] = None, init: str = 'haar',
+                 init_fraction=1.0, spectrum_init: Optional[str] = None):
+        super().__init__(alg, batch_size, delta, delta_range, pin_sector, init, init_fraction, spectrum_init)
         dev = alg.hilbert.device
         # U absorbs permutations within a sector, so the sign pattern matters only through the number n_c of
         # negative eigenvalues in every sector. Independent signs would almost never give a pattern that is
@@ -201,6 +316,13 @@ class SelfAdjointParam(PositiveParam):
         keys = keys + (torch.arange(alg.k_max, device=dev) >= k[:, None]).to(keys.dtype)   # padding ranks last
         rank = torch.argsort(torch.argsort(keys, dim=-1), dim=-1)                   # random order within a sector
         neg = rank < n_neg[..., None]
+        if self.structured.any():                                       # alternating within consecutive pairs
+            first = torch.rand(B, C, (alg.k_max + 1) // 2, device=dev) < 0.5
+            alt = torch.stack([first, ~first], dim=-1).reshape(B, C, -1)[..., :alg.k_max]
+            odd = torch.arange(alg.k_max, device=dev) == (k[:, None] - 1).long()          # last slot of odd k
+            odd = odd & (k[:, None].long() % 2 == 1)
+            alt = torch.where(odd, torch.rand(B, C, alg.k_max, device=dev) < 0.5, alt)
+            neg = torch.where(self.structured[:, None, None], alt, neg)
         self.signs = torch.where(neg, -1.0, 1.0).to(alg.hilbert.real_dtype)
 
     def _signed(self, lam):

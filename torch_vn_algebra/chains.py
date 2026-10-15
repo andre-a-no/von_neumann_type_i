@@ -30,6 +30,14 @@ from .states import DensityMatrix
 Operator = TypeIAlgebra.Operator
 
 
+def _sparse_coo(indices: torch.Tensor, values: torch.Tensor, size) -> torch.Tensor:
+    """COO tensor without the (O(nnz log nnz)) invariant check where PyTorch offers to skip it (from 2.0)."""
+    try:
+        return torch.sparse_coo_tensor(indices, values, size, check_invariants=False)
+    except TypeError:                                     # PyTorch < 2.0
+        return torch.sparse_coo_tensor(indices, values, size)
+
+
 def _labels(L: int) -> List[List[int]]:
     """Basis labels per sector, in the order of iterated fused products with single sites."""
     labels = [[0], [1]]                                  # one site: N = 0 -> |0>, N = 1 -> |1>
@@ -190,7 +198,7 @@ class SpinChain:
         off = None
         if rows is not None and len(rows):
             vals = torch.full((len(rows),), J / 2, dtype=self.dtype, device=self.device)
-            off = torch.sparse_coo_tensor(torch.stack([rows, cols]), vals, (k, k), check_invariants=False)
+            off = _sparse_coo(torch.stack([rows, cols]), vals, (k, k))
         return SparseSectorHamiltonian(diag, off, self.dtype)
 
     # ------------------------------------------------------------------

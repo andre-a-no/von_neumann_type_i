@@ -13,9 +13,9 @@ zufälligen Beispielen aus, mit den Lindblad-Routinen der Bibliothek und `numpy`
 
 *Vorlesungsnotizen:* [Abschnitt D.2](../../lecture_notes/de/D_gksl.md#s-D-2); [Lemma D.1](../../lecture_notes/de/D_gksl.md#r-D-1), [Satz D.3](../../lecture_notes/de/D_gksl.md#r-D-3).
 
-Wir prüfen Satz D.3 an einem GKSL-Generator mit beliebigen Sprüngen auf $M_3$, erzeugt mit `lindblad_superoperator`
-(die Matrix $S$ von $\mathcal L$ auf dem zeilenweise gebildeten $\mathrm{vec}\,\rho$, so dass $J_{(i,a),(j,b)}=S_{(a,b),(i,j)}$ wie in
-Abschnitt 6.1), und an $\theta-\mathrm{id}$:
+Wir prüfen Satz D.3 an einem GKSL-Generator mit beliebigen Sprüngen auf $`M_3`$, erzeugt mit `lindblad_superoperator`
+(die Matrix $`S`$ von $`\mathcal L`$ auf dem zeilenweise gebildeten $`\mathrm{vec}\,\rho`$, so dass $`J_{(i,a),(j,b)}=S_{(a,b),(i,j)}`$ wie in
+Abschnitt 6.1), und an $`\theta-\mathrm{id}`$:
 
 ```python
 import math
@@ -78,8 +78,8 @@ for t in (0.01, 0.1, 1.0):
 
 *Vorlesungsnotizen:* [Abschnitt D.3](../../lecture_notes/de/D_gksl.md#s-D-3); [Satz D.4](../../lecture_notes/de/D_gksl.md#r-D-4), [Satz D.5](../../lecture_notes/de/D_gksl.md#r-D-5), [Satz D.6](../../lecture_notes/de/D_gksl.md#r-D-6).
 
-Der Beweis von Satz D.4 ist ein Algorithmus: $\Phi$ aus der Kompression von $J(\mathcal L)$ auf $\Omega^\perp$, dann
-$G$ aus $\xi_1$, dann $H$. Wir führen ihn für den obigen Generator aus, bauen den Generator mit der Bibliothek wieder auf und
+Der Beweis von Satz D.4 ist ein Algorithmus: $`\Phi`$ aus der Kompression von $`J(\mathcal L)`$ auf $`\Omega^\perp`$, dann
+$`G`$ aus $`\xi_1`$, dann $`H`$. Wir führen ihn für den obigen Generator aus, bauen den Generator mit der Bibliothek wieder auf und
 vergleichen mit der normierten Form der ursprünglichen Daten, berechnet nach Satz D.5(iii) und (i):
 
 ```python
@@ -113,12 +113,12 @@ assert np.abs(Wr @ u - Wn).max() < 1e-12 and np.abs(u.conj().T @ u - np.eye(2)).
 print("eigenvalues of the normalised H:", np.round(np.linalg.eigvalsh(H_rec), 4), " jumps:", len(L_rec))
 ```
 
-Nach [Satz D.6](../../lecture_notes/de/D_gksl.md#r-D-6) ist ein treuer stationärer Zustand $\sigma$ eindeutig, wenn nur die Vielfachen von $1$ mit $H$
-und allen $L_j$, $L_j^*$ kommutieren; dann ist auch $\ker\mathcal L^*=\mathbb C1$. Für den obigen zufälligen Generator prüft
-der Code die Voraussetzungen und die Folgerung (die Matrix von $\mathcal L^*$ auf den zeilenweise gebildeten Vektoren von
-$A^T$ ist $S^T$: $\mathrm{vec}(\mathcal L^*(A)^T)=S^T\mathrm{vec}(A^T)$) sowie das zweite Beispiel aus
-[Vorlesungsnotizen, Abschnitt D.3](../../lecture_notes/de/D_gksl.md#s-D-3): auf $M_3$ $H=0$, $L_1=|e_1\rangle\langle e_3|$, $L_2=|e_2\rangle\langle e_3|$,
-wo nur die Vielfachen von $1$ mit $L_j,L_j^*$ kommutieren, aber $\dim\ker\mathcal L=4$ ist:
+Nach [Satz D.6](../../lecture_notes/de/D_gksl.md#r-D-6) ist ein treuer stationärer Zustand $`\sigma`$ eindeutig, wenn nur die Vielfachen von $`1`$ mit $`H`$
+und allen $`L_j`$, $`L_j^*`$ kommutieren; dann ist auch $`\ker\mathcal L^*=\mathbb C1`$. Für den obigen zufälligen Generator prüft
+der Code die Voraussetzungen und die Folgerung (die Matrix von $`\mathcal L^*`$ auf den zeilenweise gebildeten Vektoren von
+$`A^T`$ ist $`S^T`$: $`\mathrm{vec}(\mathcal L^*(A)^T)=S^T\mathrm{vec}(A^T)`$) sowie das zweite Beispiel aus
+[Vorlesungsnotizen, Abschnitt D.3](../../lecture_notes/de/D_gksl.md#s-D-3): auf $`M_3`$ $`H=0`$, $`L_1=|e_1\rangle\langle e_3|`$, $`L_2=|e_2\rangle\langle e_3|`$,
+wo nur die Vielfachen von $`1`$ mit $`L_j,L_j^*`$ kommutieren, aber $`\dim\ker\mathcal L=4`$ ist:
 
 ```python
 def kernel_dim(S, tol=1e-9):
@@ -150,10 +150,10 @@ assert kernel_dim(S_abs) == 4                             # no faithful stationa
 
 *Vorlesungsnotizen:* [Abschnitt D.4](../../lecture_notes/de/D_gksl.md#s-D-4); [Satz D.7](../../lecture_notes/de/D_gksl.md#r-D-7), [Korollar D.8](../../lecture_notes/de/D_gksl.md#r-D-8).
 
-Wir prüfen [Satz D.7](../../lecture_notes/de/D_gksl.md#r-D-7) auf $M_1\oplus M_2\subseteq M_3$ für einen Generator von `lindblad_rhs` mit einem Sprung
+Wir prüfen [Satz D.7](../../lecture_notes/de/D_gksl.md#r-D-7) auf $`M_1\oplus M_2\subseteq M_3`$ für einen Generator von `lindblad_rhs` mit einem Sprung
 innerhalb der Sektoren und einem zufälligen Sprung zwischen ihnen und folgen dabei den fünf Schritten des Beweises; dazu
-den dualen Generator aus [Korollar D.8](../../lecture_notes/de/D_gksl.md#r-D-8). Wie nach dem Beweis bemerkt, ist $J(\mathcal L\circ E)$ hier auf
-$\Omega^\perp$ nicht positiv:
+den dualen Generator aus [Korollar D.8](../../lecture_notes/de/D_gksl.md#r-D-8). Wie nach dem Beweis bemerkt, ist $`J(\mathcal L\circ E)`$ hier auf
+$`\Omega^\perp`$ nicht positiv:
 
 ```python
 alg = TypeIAlgebra([1, 2], [1, 2], precision='double')    # M = M_1 (+) M_2 in M_3
@@ -202,13 +202,13 @@ assert np.linalg.eigvalsh(Pomega @ J @ Pomega).min() < -0.1
 
 *Vorlesungsnotizen:* [Abschnitt D.5](../../lecture_notes/de/D_gksl.md#s-D-5); [Satz D.9](../../lecture_notes/de/D_gksl.md#r-D-9), [Korollar D.10](../../lecture_notes/de/D_gksl.md#r-D-10).
 
-Eine korrigierbare $\mathfrak A$ mit $C\ge2$ Sektoren und mindestens einem $k_c\ge2$ ist ein **hybrider** Code
-([Vorlesungsnotizen, Abschnitt D.5](../../lecture_notes/de/D_gksl.md#s-D-5)). Als Beispiel nehmen wir $\mathfrak A=(M_2\otimes1_2)\oplus M_1$ auf einem
-zufälligen fünfdimensionalen Code in $\mathbb C^8$ und ein Rauschen, das über $\sum_iB_{c,i}^*B_{c,i}=1_{m_c}$ auf die Eichfaktoren
-$\mathbb C^{m_c}$ wirkt, die Sektoren auf orthogonale Unterräume abbildet, $\mathcal C^\perp$ durcheinanderwirft und dann durch eine
+Eine korrigierbare $`\mathfrak A`$ mit $`C\ge2`$ Sektoren und mindestens einem $`k_c\ge2`$ ist ein **hybrider** Code
+([Vorlesungsnotizen, Abschnitt D.5](../../lecture_notes/de/D_gksl.md#s-D-5)). Als Beispiel nehmen wir $`\mathfrak A=(M_2\otimes1_2)\oplus M_1`$ auf einem
+zufälligen fünfdimensionalen Code in $`\mathbb C^8`$ und ein Rauschen, das über $`\sum_iB_{c,i}^*B_{c,i}=1_{m_c}`$ auf die Eichfaktoren
+$`\mathbb C^{m_c}`$ wirkt, die Sektoren auf orthogonale Unterräume abbildet, $`\mathcal C^\perp`$ durcheinanderwirft und dann durch eine
 zufällige unitäre Matrix gemischt wird (Satz 6.7). Die Knill–Laflamme-Bedingung ist verletzt, die Bedingung von
-[Satz D.9](../../lecture_notes/de/D_gksl.md#r-D-9) erfüllt, und die Wiederherstellung aus dem Beweis stellt jedes $A\in\mathfrak A$ wieder her, nicht aber
-einen generischen Operator auf $\mathcal C$:
+[Satz D.9](../../lecture_notes/de/D_gksl.md#r-D-9) erfüllt, und die Wiederherstellung aus dem Beweis stellt jedes $`A\in\mathfrak A`$ wieder her, nicht aber
+einen generischen Operator auf $`\mathcal C`$:
 
 ```python
 D, dims = 8, [(2, 2), (1, 1)]                             # A = (M_2 (x) 1_2) (+) (M_1 (x) 1_1), dim C = 5

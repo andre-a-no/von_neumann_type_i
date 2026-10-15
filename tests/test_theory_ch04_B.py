@@ -1,0 +1,1563 @@
+"""
+Theory of Chapter 4 (symmetries and representations, real/complex/quaternionic type) and of Appendix B (Schur-Weyl
+duality, Weingarten calculus, Wigner-Eckart, Haar measure of O(k)) of the lecture notes, tested through the library:
+identities on random and adversarial instances, exact small cases, and Monte Carlo statements with z-score bounds.
+"""
+import functools
+import itertools
+import math
+
+import pytest
+import torch
+
+import torch_vn_algebra.decompose as dc
+from torch_vn_algebra import SpinChain, su2
+
+C = torch.complex128
+R = torch.float64
+TOL = 1e-9
+
+
+# ----------------------------------------------------------------------------
+# helpers (independent of the library)
+# ----------------------------------------------------------------------------
+
+def close(x, y, tol=TOL):
+    t = lambda v: v if isinstance(v, torch.Tensor) else torch.tensor(v, dtype=C if isinstance(v, complex) else R)
+    x, y = t(x), t(y)
+    assert x.dtype in (R, C) and y.dtype in (R, C, torch.int64), (x.dtype, y.dtype)   # no float32 constants
+    return (x - y).abs().max().item() < tol
+
+
+def haar(d, B, gen):
+    """B Haar unitaries of U(d) (Theorem 5.3: QR of Ginibre matrices with the phases of diag R removed)."""
+    Q, Rr = torch.linalg.qr(torch.randn(B, d, d, dtype=C, generator=gen))
+    r = Rr.diagonal(dim1=-2, dim2=-1)
+    return Q * (r / r.abs()).unsqueeze(-2)
+
+
+def kpow(A, n):
+    """A^{(x) n} for a batch (B, d, d)."""
+    out = A
+    for _ in range(n - 1):
+        out = torch.einsum('bij,bkl->bikjl', out, A).reshape(A.shape[0], out.shape[1] * A.shape[1], -1)
+    return out
+
+
+def real_rank(vectors, tol=1e-9):
+    """Dimension over R of the span of complex matrices/vectors (stacked on dim 0)."""
+    X = vectors.reshape(vectors.shape[0], -1)
+    return int(torch.linalg.matrix_rank(torch.cat([X.real, X.imag], 1), atol=tol))
+
+
+def real_commutant_dim(gens, tol=1e-9):
+    """dim_R {X real : X s = s X, X s^T = s^T X for all generators s}."""
+    gens = torch.cat([gens, gens.mT]).to(R)
+    n = gens.shape[-1]
+    eye = torch.eye(n, dtype=R)
+    eqs = torch.cat([torch.kron(eye, s) - torch.kron(s.T.contiguous(), eye) for s in gens])
+    return n * n - int(torch.linalg.matrix_rank(eqs, atol=tol))
+
+
+def real_commutant_basis(gens, tol=1e-9):
+    """Orthonormal basis (row-major vec) of the real commutant {X real : [X, s] = [X, s^T] = 0}."""
+    gens = torch.cat([gens, gens.mT]).to(R)
+    n = gens.shape[-1]
+    eye = torch.eye(n, dtype=R)
+    eqs = torch.cat([torch.kron(s, eye) - torch.kron(eye, s.T.contiguous()) for s in gens])
+    _, s, Vh = torch.linalg.svd(eqs)
+    rank = int((s > tol).sum())
+    return Vh[rank:].reshape(-1, n, n)
+
+
+def eigen_clusters(w, tol=1e-7):
+    """Multiplicities of the sorted real eigenvalues w."""
+    out, start = [], 0
+    for i in range(1, len(w) + 1):
+        if i == len(w) or w[i] - w[i - 1] > tol:
+            out.append(i - start)
+            start = i
+    return out
+
+
+def realify(x):
+    """M_k(C) -> M_2k(R), x -> [[Re x, -Im x], [Im x, Re x]] (an injective *-homomorphism of real algebras)."""
+    return torch.cat([torch.cat([x.real, -x.imag], -1), torch.cat([x.imag, x.real], -1)], -2)
+
+
+def omega(k):
+    """Omega_k = 1_{k/2} (x) [[0, -1], [1, 0]]."""
+    return torch.kron(torch.eye(k // 2, dtype=C), torch.tensor([[0, -1], [1, 0]], dtype=C))
+
+
+def quat_block(r, gen):
+    """A random y in M_{2r}(C) with y Omega = Omega conj(y), i.e. the image of M_r(H) (Theorem 4.21(b))."""
+    a = torch.randn(r, r, dtype=C, generator=gen)
+    b = torch.randn(r, r, dtype=C, generator=gen)
+    y = torch.zeros(2 * r, 2 * r, dtype=C)
+    y[0::2, 0::2], y[0::2, 1::2], y[1::2, 0::2], y[1::2, 1::2] = a, -b, b.conj(), a.conj()
+    return y
+
+
+def hidden_real_algebra(spec, n_gens, seed):
+    """
+    Real generators of a real algebra (+)_blocks (B (x) 1_m) hidden by a random orthogonal matrix: type 'R' gives
+    M_k(R) (x) 1_m, 'C' the realified M_k(C) (x) 1_m, 'H' the realified M_{k/2}(H) (x) 1_m. Returns the generators
+    and the expected sorted list of (type, k_c, m_c) of the complex decomposition (Section 4.7).
+    """
+    g = torch.Generator().manual_seed(seed)
+    per_gen, expected = [[] for _ in range(n_gens)], []
+    for t, k, m in spec:
+        for j in range(n_gens):
+            if t == 'R':
+                a = torch.randn(k, k, dtype=R, generator=g)
+            elif t == 'C':
+                a = realify(torch.randn(k, k, dtype=C, generator=g))
+            else:
+                a = realify(quat_block(k // 2, g))
+            per_gen[j].append(torch.kron(a, torch.eye(m, dtype=R)))
+        expected += {'R': [('R', k, m)], 'C': [('C', k, m)] * 2, 'H': [('H', k, 2 * m)]}[t]
+    gens = torch.stack([torch.block_diag(*b) for b in per_gen])
+    n = gens.shape[-1]
+    O, _ = torch.linalg.qr(torch.randn(n, n, dtype=R, generator=g))
+    return O @ gens @ O.T, sorted(expected)
+
+
+def group_closure(gens, max_order=200):
+    """All elements of the finite matrix group generated by gens (list of (n, n))."""
+    key = lambda x: tuple(torch.round(torch.view_as_real(x.to(C)) * 1e6).flatten().long().tolist())
+    eye = torch.eye(gens[0].shape[0], dtype=gens[0].dtype)
+    elems, seen, frontier = [eye], {key(eye)}, [eye]
+    while frontier:
+        new = []
+        for x in frontier:
+            for s in gens:
+                y = s @ x
+                if key(y) not in seen:
+                    seen.add(key(y))
+                    elems.append(y)
+                    new.append(y)
+        frontier = new
+        assert len(elems) <= max_order
+    return elems
+
+
+def regular_representation(elems):
+    """pi(g) e_h = e_{gh} on R^{|G|} (real permutation matrices)."""
+    key = lambda x: tuple(torch.round(torch.view_as_real(x.to(C)) * 1e6).flatten().long().tolist())
+    pos = {key(h): i for i, h in enumerate(elems)}
+    N = len(elems)
+    reg = torch.zeros(N, N, N, dtype=R)
+    for i, g in enumerate(elems):
+        for j, h in enumerate(elems):
+            reg[i, pos[key(g @ h)], j] = 1.0
+    return reg
+
+
+def quaternion_units():
+    """2 x 2 complex matrices M(a, b) = [[a, -b], [conj b, conj a]] of I = (i, 0), J = (0, 1) (Lemma E.15(2))."""
+    M = lambda a, b: torch.tensor([[a, -b], [complex(b).conjugate(), complex(a).conjugate()]], dtype=C)
+    return M(1j, 0), M(0, 1), M(0, 1j)
+
+
+def groups():
+    I, J, K = quaternion_units()
+    rot = lambda t: torch.tensor([[math.cos(t), -math.sin(t)], [math.sin(t), math.cos(t)]], dtype=R)
+    refl = torch.tensor([[1.0, 0.0], [0.0, -1.0]], dtype=R)
+    a6 = torch.tensor([[complex(math.cos(math.pi / 3), math.sin(math.pi / 3)), 0],
+                       [0, complex(math.cos(math.pi / 3), -math.sin(math.pi / 3))]], dtype=C)
+    return {
+        # name: (generators, expected sorted (type, k, m) of the regular representation)
+        'Z3': ([rot(2 * math.pi / 3)], [('C', 1, 1), ('C', 1, 1), ('R', 1, 1)]),
+        'Z4': ([rot(math.pi / 2)], [('C', 1, 1), ('C', 1, 1), ('R', 1, 1), ('R', 1, 1)]),
+        'S3': ([rot(2 * math.pi / 3), refl], [('R', 1, 1), ('R', 1, 1), ('R', 2, 2)]),
+        'D4': ([rot(math.pi / 2), refl], [('R', 1, 1)] * 4 + [('R', 2, 2)]),
+        'Q8': ([I, J], [('H', 2, 2)] + [('R', 1, 1)] * 4),
+        'Dic3': ([a6, J], [('C', 1, 1), ('C', 1, 1), ('H', 2, 2), ('R', 1, 1), ('R', 1, 1), ('R', 2, 2)]),
+    }
+
+
+@functools.lru_cache(maxsize=None)
+def regular_decomposition(name):
+    gens, expected = groups()[name]
+    G = regular_representation(group_closure(gens))
+    return G, dc.from_group(G), expected
+
+
+@functools.lru_cache(maxsize=None)
+def mixed_real(index):
+    specs = [
+        [('R', 3, 2), ('C', 2, 1)],
+        [('H', 2, 1), ('R', 1, 1)],
+        [('H', 4, 1), ('R', 2, 3)],
+        [('C', 1, 3), ('H', 2, 2), ('R', 1, 2)],
+        [('C', 3, 1), ('C', 3, 1)],
+        [('R', 2, 1), ('C', 2, 2), ('H', 2, 1)],
+        [('R', 1, 1), ('C', 1, 1)],                                     # three sectors of the same shape (1, 1)
+        [('C', 2, 1), ('R', 2, 1), ('H', 2, 3)],                        # equal shapes of real and complex type
+    ]
+    gens, expected = hidden_real_algebra(specs[index], 2, seed=10 + index)
+    D = dc.from_generators(gens)
+    return gens, D, D.real_structure(), expected
+
+
+MIXED = range(8)
+
+
+def outside(D, X, side):
+    """max relative distance of the matrices X from A (side='algebra') or A' (side='commutant')."""
+    E = D.conditional_expectation(X, side)
+    return ((X - E).flatten(1).norm(dim=1) / X.flatten(1).norm(dim=1)).max().item()
+
+
+def blocks(D, op, c):
+    k = D.k_factors[c]
+    return op.matrix[:, c, :k, :k]
+
+
+def cblocks(D, op, c):
+    m = D.multiplicities[c]
+    return op.matrix[:, c, :m, :m]
+
+
+def Vc(D, c):
+    o = D.offsets[c]
+    return D.V[:, o:o + D.sector_dims[c]]
+
+
+def takagi_real(J, gen):
+    """Lemma 4.19(a),(c) by its proof: an orthonormal basis W of the fixed space of theta_J v = J conj(v)
+    (J conj(J) = 1), so that J conj(W) = W and J = W W^T."""
+    k = J.shape[0]
+    cols = []
+    while len(cols) < k:
+        v = torch.randn(k, dtype=C, generator=gen)
+        w = (v + J @ v.conj()) / 2                      # theta w = w
+        for u in cols:
+            w = w - torch.vdot(u, w) * u                # <u, w> is real on the fixed space: stays fixed
+        if w.norm() > 1e-6:
+            cols.append(w / w.norm())
+    return torch.stack(cols, 1)
+
+
+def takagi_quaternionic(J, gen):
+    """Lemma 4.19(b),(c) by its proof: W = (w_1, theta w_1, w_2, theta w_2, ...) with theta v = J conj(v)
+    (J conj(J) = -1), so that J conj(W) = W Omega."""
+    k = J.shape[0]
+    cols = []
+    while len(cols) < k:
+        v = torch.randn(k, dtype=C, generator=gen)
+        for u in cols:
+            v = v - torch.vdot(u, v) * u
+        if v.norm() > 1e-6:
+            v = v / v.norm()
+            cols += [v, J @ v.conj()]
+    return torch.stack(cols, 1)
+
+
+# ============================================================================
+# Chapter 4, Sections 4.1-4.2
+# ============================================================================
+
+def test_weyl_trick_unitarises_a_finite_group():
+    """Section 4.1 (Weyl's trick): P = sum rho(g)^* rho(g) makes P^{1/2} rho P^{-1/2} unitary and equivalent."""
+    g = torch.Generator().manual_seed(1)
+    G = dc.permutation_representation(3, 2)
+    T = torch.randn(8, 8, dtype=C, generator=g) + 3 * torch.eye(8, dtype=C)
+    rho = T @ G @ torch.linalg.inv(T)                                   # an equivalent, non-unitary representation
+    assert not close(rho[1].mH @ rho[1], torch.eye(8, dtype=R), 1e-3)
+    P = (rho.mH @ rho).sum(0)
+    w, U = torch.linalg.eigh(P)
+    assert w.min() >= 1 - 1e-9                                          # P >= rho(e)^* rho(e) = 1
+    Ph, Pmh = U @ torch.diag(w.sqrt().to(C)) @ U.mH, U @ torch.diag(w.rsqrt().to(C)) @ U.mH
+    sig = Ph @ rho @ Pmh
+    assert close(sig.mH @ sig, torch.eye(8, dtype=C).expand(6, 8, 8))
+    assert close(rho.mH @ P @ rho, P.expand(6, 8, 8))                    # rho(h)^* P rho(h) = P
+    D = dc.from_group(sig)                                              # same decomposition as pi
+    assert (D.k_factors, D.multiplicities) == ((1, 2), (4, 2))
+
+
+@pytest.mark.parametrize('name', ['Z3', 'Z4', 'S3', 'D4', 'Q8', 'Dic3'])
+def test_isotypic_decomposition_and_commutant_of_regular_representation(name):
+    """Theorem 4.3 / Corollary 4.5: in the regular representation every irreducible occurs dim(rho) times."""
+    G, D, expected = regular_decomposition(name)
+    assert D.k_factors == D.multiplicities                              # m_rho = dim rho (Exercise 5 solution)
+    assert sum(k * k for k in D.k_factors) == G.shape[0]
+    assert D.dims == (G.shape[0], G.shape[0])
+    rho = D.to_algebra(G)
+    assert close(D.from_algebra(rho), G)                                # V^* pi(g) V = (+) rho_c(g) (x) 1
+    Y = dc.twirl(G.to(C), torch.randn(G.shape[-1], G.shape[-1], dtype=C, generator=torch.Generator().manual_seed(2)))
+    assert close(D.from_commutant(D.to_commutant(Y)), Y)                # V^* Y V = (+) 1 (x) y_c
+
+
+@pytest.mark.parametrize('rep', [(3, 2), (4, 2), (3, 3), ('Q8',), ('Dic3',)], ids=str)
+def test_schur_orthogonality_and_characters(rep):
+    """Theorem 4.4 and Corollary 4.5(a)-(c): Schur orthogonality of the irreducible blocks, characters, multiplicities."""
+    if len(rep) == 2:
+        G = dc.permutation_representation(*rep)
+        D = dc.from_group(G)
+    else:
+        G, D, _ = regular_decomposition(rep[0])
+        G = G.to(C)
+    N = G.shape[0]
+    rho = D.to_algebra(G)
+    for c, kc in enumerate(D.k_factors):
+        for d, kd in enumerate(D.k_factors):
+            s = torch.einsum('gij,gkl->ijkl', blocks(D, rho, c), blocks(D, rho, d).conj()) / N
+            want = (torch.einsum('ik,jl->ijkl', torch.eye(kc, dtype=R), torch.eye(kc, dtype=R)) / kc) if c == d else 0
+            assert close(s, want)                                       # Theorem 4.4
+    chi = torch.stack([blocks(D, rho, c).diagonal(dim1=-2, dim2=-1).sum(-1) for c in range(D.C)])
+    assert close(chi.conj() @ chi.T / N, torch.eye(D.C, dtype=R))                # Corollary 4.5(a)
+    chi_pi = G.diagonal(dim1=-2, dim2=-1).sum(-1)
+    assert close(chi.conj() @ chi_pi / N, torch.tensor(D.multiplicities, dtype=C))   # Corollary 4.5(b)
+    assert dc.commutant_dimension(G) == round((chi_pi.abs() ** 2).mean().item()) == D.commutant_dim   # (c)
+
+
+def test_s3_character_table_by_hand():
+    """Section 4.2: chi_pi = 2^{#cycles}, multiplicities 4, 0, 2 of trivial, sign, standard; dim pi(S_3)' = 20."""
+    perms = list(itertools.permutations(range(3)))
+    G = dc.permutation_representation(3, 2)
+    ncyc = [3 - int(torch.linalg.matrix_rank(torch.eye(3, dtype=R)[list(p)] - torch.eye(3, dtype=R))) for p in perms]
+    chi_pi = G.diagonal(dim1=-2, dim2=-1).sum(-1).real
+    assert chi_pi.tolist() == [2.0 ** c for c in ncyc]
+    triv = torch.ones(6, dtype=R)
+    sgn = torch.tensor([float(torch.det(torch.eye(3, dtype=R)[list(p)])) for p in perms], dtype=R)
+    assert sgn.tolist() == [(-1.0) ** (3 - c) for c in ncyc]
+    std = torch.tensor([float(sum(p[i] == i for i in range(3))) - 1 for p in perms], dtype=R)
+    for chi, m in ((triv, 4), (sgn, 0), (std, 2)):
+        assert abs((chi * chi).mean().item() - 1) < 1e-12               # irreducible
+        assert abs((chi * chi_pi).mean().item() - m) < 1e-12
+    assert abs((chi_pi ** 2).mean().item() - 20) < 1e-12 and dc.commutant_dimension(G) == 20
+
+
+@pytest.mark.parametrize('rep', [(3, 2), (2, 3), (4, 2)], ids=str)
+def test_twirl_is_orthogonal_projection_with_trace_dim(rep):
+    """Section 4.2: the twirl is idempotent, HS-self-adjoint, onto pi(G)', with trace (1/|G|) sum |chi|^2."""
+    G = dc.permutation_representation(*rep)
+    n = G.shape[-1]
+    g = torch.Generator().manual_seed(3)
+    X, Y = torch.randn(2, n, n, dtype=C, generator=g)
+    PX, PY = dc.twirl(G, X), dc.twirl(G, Y)
+    assert close(dc.twirl(G, PX), PX)
+    assert abs(torch.vdot(PX.flatten(), Y.flatten()) - torch.vdot(X.flatten(), PY.flatten())) < 1e-9
+    assert close(G @ PX, PX @ G)
+    E = torch.eye(n * n, dtype=C).reshape(n * n, n, n)                  # trace of the superoperator
+    tr = sum(dc.twirl(G, E[i])[i // n, i % n] for i in range(n * n)).real.item()
+    assert abs(tr - dc.commutant_dimension(G)) < 1e-9
+    assert abs(tr - (G.diagonal(dim1=-2, dim2=-1).sum(-1).abs() ** 2).mean().item()) < 1e-9
+
+
+def test_schur_lemma_abelian_irreducibles_are_one_dimensional():
+    """Section 4.1: an abelian group has only one-dimensional irreducible representations."""
+    for name in ('Z3', 'Z4'):
+        _, D, _ = regular_decomposition(name)
+        assert set(D.k_factors) == {1}
+    G = dc.permutation_representation(2, 3)                             # S_2 is abelian
+    assert set(dc.from_group(G).k_factors) == {1}
+
+
+# ============================================================================
+# Section 4.3: the randomised algorithm
+# ============================================================================
+
+@pytest.mark.parametrize('rep', [(3, 2), (3, 3), (4, 2)], ids=str)
+def test_eigenspaces_of_random_commutant_element_and_alignment(rep):
+    """Lemma 4.6, Proposition 4.7, Lemma 4.8(b): eigenspaces of K are m_c irreducible pieces of size k_c;
+    blocks of Y between them are nonzero multiples of unitaries within a sector and zero across sectors."""
+    G = dc.permutation_representation(*rep)
+    D = dc.from_group(G)
+    n = G.shape[-1]
+    g = torch.Generator().manual_seed(4)
+    Z = torch.randn(n, n, dtype=C, generator=g)
+    K = dc.twirl(G, Z + Z.mH)
+    w, Q = torch.linalg.eigh(K)
+    cuts = [0] + [i + 1 for i in range(n - 1) if w[i + 1] - w[i] > 1e-8] + [n]
+    spaces = [Q[:, a:b] for a, b in zip(cuts[:-1], cuts[1:])]
+    want = sorted(k for k, m in zip(D.k_factors, D.multiplicities) for _ in range(m))
+    assert sorted(W.shape[1] for W in spaces) == want
+    Pc = D.central_projections()
+    sector = []
+    for W in spaces:
+        assert close(G @ W, W @ (W.mH @ G @ W))                          # invariant
+        sigma = W.mH @ G @ W                                            # irreducible: commutant of restriction is C 1
+        Ws = [W.mH @ dc.twirl(G, torch.randn(n, n, dtype=C, generator=g)) @ W for _ in range(2)]
+        assert all(close(x, x.trace() / x.shape[0] * torch.eye(x.shape[0], dtype=R), 1e-8) for x in Ws)   # Lemma 4.8(a)
+        weights = [torch.linalg.norm(P @ W).item() ** 2 for P in Pc]
+        sector.append(max(range(D.C), key=lambda c: weights[c]))
+        assert max(weights) > W.shape[1] - 1e-8
+        assert sigma.shape[-1] == W.shape[1]
+    Y = dc.twirl(G, torch.randn(n, n, dtype=C, generator=g))
+    for i, Wi in enumerate(spaces):
+        for j, Wj in enumerate(spaces):
+            T = Wi.mH @ Y @ Wj
+            if sector[i] != sector[j]:
+                assert close(T, 0, 1e-8)
+            else:
+                s = torch.linalg.svdvals(T)
+                assert s.min() > 1e-4 and s.max() - s.min() < 1e-8       # lambda U, lambda > 0
+                U = T / s[0]
+                Wj2 = Wj @ U.mH                                         # aligned copy
+                assert close(Wj2.mH @ G @ Wj2, Wi.mH @ G @ Wi, 1e-8)
+
+
+def test_certificate_detects_an_algebra_that_is_too_small():
+    """Proposition 4.9: generators in B and dim A' = sum m_c^2 certify A = B; a generator outside B is detected."""
+    S = dc.total_spin(3)
+    D = dc.from_generators(S)
+    res = D.verify()
+    assert res['ok'] and res['commutant_dim'] == (D.commutant_dim, D.commutant_dim)
+    swap = dc.permutation_representation(3, 2, [[1, 0, 2]])
+    bad = D.verify(generators=torch.cat([S, swap]))                     # the swap is in A' but not in A
+    assert not bad['ok'] and bad['algebra'] > 1e-3
+
+
+# ============================================================================
+# Section 4.4: U(1)
+# ============================================================================
+
+def test_charge_sectors_and_conserved_charge():
+    """Proposition 4.10: U(1)' = (+)_q M_{d_q}, all k_c = 1; [H, Q] = 0 conserves the sector weights."""
+    g = torch.Generator().manual_seed(5)
+    charges = torch.tensor([0, 0, 1, 1, 1, -2, 3, 3, 3, 3], dtype=R)
+    n = len(charges)
+    W = haar(n, 1, g)[0]
+    Q = W @ torch.diag(charges).to(C) @ W.mH
+    U1 = torch.linalg.matrix_exp(1j * 1.0 * Q)
+    D = dc.from_generators(U1)                                          # one U_theta suffices for theta = 1
+    assert set(D.k_factors) == {1} and sorted(D.multiplicities) == [1, 2, 3, 4]
+    assert close(U1 @ torch.linalg.matrix_exp(1j * 0.7 * Q), torch.linalg.matrix_exp(1j * 1.7 * Q))
+    assert close(torch.linalg.matrix_exp(2j * math.pi * Q), torch.eye(n, dtype=R))                   # U_{2 pi} = 1
+    X = D.from_commutant(D.commutant_algebra().operator(torch.randn(1, D.C, 4, 4, dtype=C, generator=g)))[0]
+    H = X + X.mH                                                        # Hermitian in U(1)'
+    assert close(H @ Q, Q @ H)
+    Pq = torch.stack([W[:, charges == q] @ W[:, charges == q].mH for q in (0, 1, -2, 3)])
+    assert close(sum(P @ H @ P for P in Pq), H)                         # (iii)
+    psi = torch.randn(n, dtype=C, generator=g)
+    rho0 = torch.outer(psi, psi.conj()) / psi.norm() ** 2
+    for t in (0.3, 2.0):
+        Ut = torch.linalg.matrix_exp(-1j * t * H)
+        rho_t = Ut @ rho0 @ Ut.mH
+        assert close(torch.einsum('qij,ji->q', Pq, rho_t), torch.einsum('qij,ji->q', Pq, rho0))
+        assert close(Ut.mH @ Q @ Ut, Q)
+
+
+def test_charges_add_under_tensor_products():
+    """Section 4.4: exp(i theta (Q1 (x) 1 + 1 (x) Q2)) = exp(i theta Q1) (x) exp(i theta Q2); fused charges."""
+    g = torch.Generator().manual_seed(6)
+    Q1 = torch.diag(torch.tensor([0, 1, 1], dtype=C))
+    Q2 = torch.diag(torch.tensor([0, 2], dtype=C))
+    W1, W2 = haar(3, 1, g)[0], haar(2, 1, g)[0]
+    Q1, Q2 = W1 @ Q1 @ W1.mH, W2 @ Q2 @ W2.mH
+    Qt = torch.kron(Q1, torch.eye(2, dtype=C)) + torch.kron(torch.eye(3, dtype=C), Q2)
+    th = 0.83
+    assert close(torch.linalg.matrix_exp(1j * th * Qt),
+                 torch.kron(torch.linalg.matrix_exp(1j * th * Q1), torch.linalg.matrix_exp(1j * th * Q2)))
+    assert close(torch.linalg.eigvalsh(Qt), torch.tensor([0, 1, 1, 2, 3, 3], dtype=R))
+
+
+@pytest.mark.parametrize('L', [3, 4, 5])
+def test_number_operator_sectors_and_xxz(L):
+    """Section 4.4: sectors of N = S_z + L/2 have dimension binom(L, w); every XXZ Hamiltonian conserves N."""
+    Sx, Sy, Sz = dc.total_spin(L)
+    N_op = Sz + L / 2 * torch.eye(2 ** L, dtype=C)
+    D = dc.from_generators(N_op)
+    assert set(D.k_factors) == {1} and sorted(D.multiplicities) == sorted(math.comb(L, w) for w in range(L + 1))
+    sx, sy, sz = dc.spin_matrices(0.5)
+    site = lambda a, i: functools.reduce(torch.kron, [a if k == i else torch.eye(2, dtype=C) for k in range(L)])
+    g = torch.Generator().manual_seed(L)
+    H = sum(float(torch.randn((), generator=g)) * (site(sx, i) @ site(sx, j) + site(sy, i) @ site(sy, j)
+                                                   + 0.37 * site(sz, i) @ site(sz, j))
+            for i in range(L) for j in range(i + 1, L))
+    assert close(H @ N_op, N_op @ H)
+    sp = sx + 1j * sy
+    for i, j in ((0, 1), (0, L - 1)):                                   # hopping = (s+ s- + s- s+)/2
+        hop = site(sx, i) @ site(sx, j) + site(sy, i) @ site(sy, j)
+        assert close(hop, (site(sp, i) @ site(sp.mH.resolve_conj().contiguous(), j) + site(sp.mH.resolve_conj().contiguous(), i) @ site(sp, j)) / 2)
+    E = torch.cat([torch.linalg.eigvalsh(b[:m, :m]) for b, m in
+                   zip(D.to_commutant(H).matrix[0], D.multiplicities)])
+    assert close(torch.sort(E).values, torch.linalg.eigvalsh(H))
+
+
+def test_exercise_3_single_unitary_versus_parity():
+    """Exercise 4.3: {U_theta}' = U(1)' for theta/2pi irrational; {exp(i pi N)}' = M_{2^{n-1}} (+) M_{2^{n-1}}."""
+    for n in (3, 4):
+        N_op = dc.total_spin(n)[2] + n / 2 * torch.eye(2 ** n, dtype=C)
+        D1 = dc.from_generators(torch.linalg.matrix_exp(1j * math.sqrt(2) * N_op))
+        assert sorted(D1.multiplicities) == sorted(math.comb(n, w) for w in range(n + 1))
+        Dp = dc.from_generators(torch.linalg.matrix_exp(1j * math.pi * N_op))
+        assert Dp.multiplicities == (2 ** (n - 1), 2 ** (n - 1)) and Dp.k_factors == (1, 1)
+
+
+# ============================================================================
+# Section 4.5: SU(2)
+# ============================================================================
+
+@pytest.mark.parametrize('s', [0, 0.5, 1, 1.5, 2, 2.5, 3.5])
+def test_irreducible_spin_representations(s):
+    """Theorem 4.11: spin s satisfies the relations, S^2 = s(s+1), the S_+ formula, and is irreducible."""
+    Sx, Sy, Sz = dc.spin_matrices(s)
+    d = int(2 * s + 1)
+    assert close(Sx @ Sy - Sy @ Sx, 1j * Sz) and close(Sy @ Sz - Sz @ Sy, 1j * Sx) and close(Sz @ Sx - Sx @ Sz, 1j * Sy)
+    assert close(Sx @ Sx + Sy @ Sy + Sz @ Sz, s * (s + 1) * torch.eye(d, dtype=R))
+    Sp, Sm = Sx + 1j * Sy, Sx - 1j * Sy
+    assert close(Sz @ Sp - Sp @ Sz, Sp) and close(Sp @ Sm - Sm @ Sp, 2 * Sz)
+    assert close(Sx @ Sx + Sy @ Sy + Sz @ Sz, Sm @ Sp + Sz @ Sz + Sz)
+    ms = [s - a for a in range(d)]
+    for a in range(1, d):
+        m = ms[a]
+        assert abs(Sp[a - 1, a].item() - math.sqrt(s * (s + 1) - m * (m + 1))) < 1e-12
+        assert abs(Sp[a - 1, a].item() - math.sqrt((s - m) * (s + m + 1))) < 1e-12
+    D = dc.from_generators(torch.stack([Sx, Sy, Sz]))
+    assert D.k_factors == (d,) and D.multiplicities == (1,)
+
+
+@pytest.mark.parametrize('content', [{0.5: 2, 1: 1}, {0: 3, 1.5: 1}, {1: 2, 2: 1, 0.5: 1}], ids=str)
+def test_spin_representation_classification_by_sz(content):
+    """Corollary 4.12: a hidden (+)_s spin s (x) 1_{m_s} has multiplicities m_s = d_s - d_{s+1}."""
+    g = torch.Generator().manual_seed(7)
+    mats = [torch.kron(dc.spin_matrices(s), torch.eye(m, dtype=C)[None]) for s, m in content.items()]
+    S = torch.stack([torch.block_diag(*[x[a] for x in mats]) for a in range(3)])
+    n = S.shape[-1]
+    W = haar(n, 1, g)[0]
+    S = W @ S @ W.mH
+    D = dc.from_generators(S)
+    assert sorted(zip(D.k_factors, D.multiplicities)) == sorted((int(2 * s + 1), m) for s, m in content.items())
+    w = torch.linalg.eigvalsh(S[2])
+    dM = lambda M: int(((w - M).abs() < 1e-8).sum())
+    for s, m in content.items():
+        assert dM(s) - dM(s + 1) == m
+
+
+@pytest.mark.parametrize('L', [1, 2, 3, 4, 5])
+def test_total_spin_of_L_spins_one_half(L):
+    """Proposition 4.13: spin S occurs with m_S = binom(L, L/2-S) - binom(L, L/2-S-1); S^2 = S(S+1) on it."""
+    S = dc.total_spin(L)
+    D = dc.from_generators(S)
+    want = sorted((L - 2 * j + 1, math.comb(L, j) - (math.comb(L, j - 1) if j else 0)) for j in range(L // 2 + 1))
+    assert sorted(zip(D.k_factors, D.multiplicities)) == want
+    assert all(m > 0 for _, m in want)
+    cas = D.to_algebra((S @ S).sum(0))
+    for c, k in enumerate(D.k_factors):
+        Sv = (k - 1) / 2
+        assert close(blocks(D, cas, c), Sv * (Sv + 1) * torch.eye(k, dtype=R))
+    assert D.dims == (math.comb(L + 3, 3), math.comb(2 * L, L) // (L + 1))   # Corollaries B.9, B.10
+
+
+def test_total_spin_for_spin_one_sites():
+    """Corollary 4.12 for three spins 1: 1 (x) 1 (x) 1 = 0 + 3 x 1 + 2 x 2 + 3, from the S_z degeneracies."""
+    S = dc.total_spin(3, spin=1.0)
+    D = dc.from_generators(S)
+    w = torch.linalg.eigvalsh(S[2])
+    dM = lambda M: int(((w - M).abs() < 1e-8).sum())
+    want = sorted((2 * s + 1, dM(s) - dM(s + 1)) for s in range(4))
+    assert sorted(zip(D.k_factors, D.multiplicities)) == want == [(1, 1), (3, 3), (5, 2), (7, 1)]
+
+
+def test_rotations_and_su2_tensor_powers():
+    """Section 4.5: exp(-i theta n.S) = V^{(x)L} with V = exp(-i theta n.s) in SU(2), and every V in SU(2) is such."""
+    g = torch.Generator().manual_seed(8)
+    L = 3
+    S, s = dc.total_spin(L), dc.spin_matrices(0.5)
+    nvec = torch.randn(3, dtype=R, generator=g)
+    nvec = nvec / nvec.norm()
+    th = 1.3
+    V = torch.linalg.matrix_exp(-1j * th * torch.einsum('a,aij->ij', nvec.to(C), s))
+    assert abs(torch.linalg.det(V) - 1) < 1e-12
+    assert close(torch.linalg.matrix_exp(-1j * th * torch.einsum('a,aij->ij', nvec.to(C), S)),
+                 functools.reduce(torch.kron, [V] * L))
+    U = haar(2, 1, g)[0]
+    U = U / torch.sqrt(torch.linalg.det(U))                             # in SU(2)
+    w, Wv = torch.linalg.eig(U)
+    A = Wv @ torch.diag(torch.angle(w).to(C)) @ torch.linalg.inv(Wv)   # U = exp(iA), A traceless Hermitian
+    A = (A + A.mH) / 2
+    c = torch.stack([torch.trace(A @ sa).real for sa in s])             # A = 2 c.s, c_a = Tr(A s_a)
+    assert close(A, 2 * torch.einsum('a,aij->ij', c.to(C), s))
+    theta, nn = 2 * c.norm(), -c / c.norm()
+    assert close(torch.linalg.matrix_exp(-1j * theta * torch.einsum('a,aij->ij', nn.to(C), s)), U)
+
+
+@pytest.mark.parametrize('L', [2, 3, 4, 5])
+def test_schur_weyl_duality_for_spins(L):
+    """Theorem 4.14 / Corollary B.7: span pi(S_L) = {S_a}' (dimension the Catalan number) and {S_a}'' = pi(S_L)'."""
+    S = dc.total_spin(L)
+    comm = dc.commutant_basis(S)
+    P = dc.permutation_representation(L, 2)
+    assert close(P @ S[:, None] - S[:, None] @ P, 0)                    # (a)
+    r = lambda X: int(torch.linalg.matrix_rank(X.reshape(X.shape[0], -1), atol=1e-9))
+    assert r(comm) == r(P) == r(torch.cat([comm, P])) == math.comb(2 * L, L) // (L + 1)
+    for a in range(3):                                                   # pi(sigma) s^(i) pi(sigma)^* = s^(sigma(i))
+        s_site = dc.collective_operators(dc.spin_matrices(0.5)[a:a + 1], 1)[0]
+        site = lambda i: functools.reduce(torch.kron, [s_site if k == i else torch.eye(2, dtype=C) for k in range(L)])
+        for p in list(itertools.permutations(range(L)))[:6]:
+            Pp = dc.permutation_representation(L, 2, [list(p)])[0]
+            assert close(Pp @ site(0) @ Pp.mH, site(p[0]))
+
+
+# ============================================================================
+# Section 4.6: spin systems
+# ============================================================================
+
+@pytest.mark.parametrize('L', [4, 5])
+def test_heisenberg_dirac_identity_and_blocks(L):
+    """Proposition 4.15: s_i.s_j = F_ij/2 - 1/4; H in span pi(S_L); levels of H_S with degeneracy 2S+1;
+    highest-weight spaces of dimension m_S, invariant, with H acting as H_S."""
+    g = torch.Generator().manual_seed(9 + L)
+    s = dc.spin_matrices(0.5)
+    site = lambda a, i: functools.reduce(torch.kron, [a if k == i else torch.eye(2, dtype=C) for k in range(L)])
+    def swap(i, j):
+        p = list(range(L))
+        p[i], p[j] = j, i
+        return dc.permutation_representation(L, 2, [p])[0]
+    H = torch.zeros(2 ** L, 2 ** L, dtype=C)
+    for i in range(L):
+        for j in range(i + 1, L):
+            ss = sum(site(a, i) @ site(a, j) for a in s)
+            assert close(ss, swap(i, j) / 2 - torch.eye(2 ** L, dtype=R) / 4)    # Dirac's identity
+            H = H + float(torch.randn((), generator=g)) * ss
+    P = dc.permutation_representation(L, 2).reshape(math.factorial(L), -1)
+    coef = torch.linalg.lstsq(P.T, H.reshape(-1, 1), driver='gelsd').solution
+    assert close(P.T @ coef, H.reshape(-1, 1))                         # H in span pi(S_L)
+    S = dc.total_spin(L)
+    D = dc.from_generators(S)
+    h = D.to_commutant(H)
+    assert close(D.from_commutant(h), H)
+    lev = torch.cat([torch.linalg.eigvalsh(b[:m, :m]).repeat_interleave(k)
+                     for b, k, m in zip(h.matrix[0], D.k_factors, D.multiplicities)])
+    assert close(torch.sort(lev).values, torch.linalg.eigvalsh(H))
+    Sp = S[0] + 1j * S[1]
+    for c, (k, m) in enumerate(zip(D.k_factors, D.multiplicities)):
+        Sv = (k - 1) / 2
+        A = torch.cat([Sp, S[2] - Sv * torch.eye(2 ** L, dtype=R)])
+        _, sv, Vh = torch.linalg.svd(A)
+        B = Vh[int((sv > 1e-9).sum()):].mH                              # ker S_+ cap ker(S_z - S)
+        assert B.shape[1] == m
+        assert close(H @ B, B @ (B.mH @ H @ B))                         # invariant
+        assert close(torch.linalg.eigvalsh(B.mH @ H @ B), torch.linalg.eigvalsh(h.matrix[0, c, :m, :m]))
+    for mu in (-0.5, -1.0):                                             # mu < 0: no highest-weight vectors
+        A = torch.cat([Sp, S[2] - mu * torch.eye(2 ** L, dtype=R)])
+        assert torch.linalg.matrix_rank(A, atol=1e-9) == 2 ** L
+
+
+@pytest.mark.parametrize('j', [0.5, 1.0, 1.5, 2.0, 2.5])
+def test_clebsch_gordan_j_times_one_half(j):
+    """Theorem 4.16: the vectors |j +- 1/2, M>> are orthonormal, of weight M, lower with sqrt((J+M)(J-M+1)),
+    the top ones are highest weight (Condon-Shortley signs), and their coordinates are the library's CG coefficients."""
+    def ket(jj, m):
+        v = torch.zeros(int(2 * jj + 1), dtype=C)
+        if abs(m) <= jj + 1e-12:
+            v[int(round(jj - m))] = 1
+        return v
+    Sj, s = dc.spin_matrices(j), dc.spin_matrices(0.5)
+    d = Sj.shape[-1]
+    Sc = torch.stack([torch.kron(a, torch.eye(2, dtype=C)) + torch.kron(torch.eye(d, dtype=C), b) for a, b in zip(Sj, s)])
+    Sp, Sm = Sc[0] + 1j * Sc[1], Sc[0] - 1j * Sc[1]
+    up, dn = ket(0.5, 0.5), ket(0.5, -0.5)
+    cols = {}
+    for J in (j + 0.5, j - 0.5):
+        for a in range(int(2 * J + 1)):
+            M = J - a
+            al, be = math.sqrt((j + M + 0.5) / (2 * j + 1)), math.sqrt((j - M + 0.5) / (2 * j + 1))
+            p, q = (al, be) if J > j else (-be, al)
+            x = p * torch.kron(ket(j, M - 0.5), up) + q * torch.kron(ket(j, M + 0.5), dn)
+            cols[J, M] = x
+            assert close(Sc[2] @ x, M * x)
+            for sig, e in ((0.5, up), (-0.5, dn)):
+                cg = su2.clebsch_gordan(j, M - sig, 0.5, sig, J, M) if abs(M - sig) <= j else 0.0
+                assert abs(cg - torch.vdot(torch.kron(ket(j, M - sig), e), x).real.item()) < 1e-12
+    for (J, M), x in cols.items():
+        lower = cols.get((J, M - 1), torch.zeros_like(x))
+        assert close(Sm @ x, math.sqrt((J + M) * (J - M + 1)) * lower)
+    U = torch.stack(list(cols.values()), 1)
+    assert U.shape == (2 * d, 2 * d) and close(U.mH @ U, torch.eye(2 * d, dtype=R))
+    top = cols[j - 0.5, j - 0.5]
+    assert close(Sp @ top, 0) and close(Sp @ cols[j + 0.5, j + 0.5], 0)
+    assert torch.vdot(torch.kron(ket(j, j), dn), top).real > 0          # Condon-Shortley
+    ker = torch.cat([Sp, Sc[2] - (j - 0.5) * torch.eye(2 * d, dtype=R)])
+    assert 2 * d - torch.linalg.matrix_rank(ker, atol=1e-9) == 1        # unique up to a phase
+    for a in range(3):                                                   # (d): S_a acts as spin (j+1/2) (+) spin (j-1/2)
+        rep = torch.block_diag(dc.spin_matrices(j + 0.5)[a], dc.spin_matrices(j - 0.5)[a])
+        assert close(U.mH @ Sc[a] @ U, rep)
+
+
+def highest_weight_bases(L):
+    """Corollary 4.17 by its recursion: orthonormal bases B[2S] of ker S_+ cap ker(S_z - S) of L spins 1/2."""
+    s = dc.spin_matrices(0.5)
+    up, dn = torch.tensor([1, 0], dtype=C), torch.tensor([0, 1], dtype=C)
+    B = {1: torch.stack([up], 1)}
+    for n in range(2, L + 1):
+        T = dc.total_spin(n - 1)
+        Tm = T[0] - 1j * T[1]
+        new = {}
+        for t2 in range(n % 2, n + 1, 2):                               # 2S
+            S = t2 / 2
+            cols = []
+            if t2 - 1 in B:
+                cols += [torch.kron(v, up) for v in B[t2 - 1].T]
+            if t2 + 1 in B:
+                a, b = math.sqrt((2 * S + 1) / (2 * S + 2)), -1 / math.sqrt((2 * S + 1) * (2 * S + 2))
+                cols += [a * torch.kron(v, dn) + b * torch.kron(Tm @ v, up) for v in B[t2 + 1].T]
+            if cols:
+                new[t2] = torch.stack(cols, 1)
+        B = new
+    return B
+
+
+@pytest.mark.parametrize('L', [2, 3, 5, 6])
+def test_highest_weight_vectors_one_site_at_a_time(L):
+    """Corollary 4.17: the recursion gives orthonormal bases of the highest-weight spaces, of dimensions m_S."""
+    S = dc.total_spin(L)
+    Sp = S[0] + 1j * S[1]
+    for t2, B in highest_weight_bases(L).items():
+        Sv = t2 / 2
+        m = math.comb(L, (L - t2) // 2) - (math.comb(L, (L - t2) // 2 - 1) if L > t2 else 0)
+        assert B.shape[1] == m == su2.multiplicity(L, Sv)
+        assert close(B.mH @ B, torch.eye(m, dtype=R)) and close(Sp @ B, 0) and close(S[2] @ B, Sv * B)
+        ker = torch.cat([Sp, S[2] - Sv * torch.eye(2 ** L, dtype=R)])
+        assert 2 ** L - torch.linalg.matrix_rank(ker, atol=1e-9) == m   # spanning
+
+
+def test_su2chain_highest_weight_bases():
+    """Corollary 4.17 in the library: SU2Chain.hw_basis is orthonormal, of size m_S, annihilated by S_+."""
+    L = 7
+    sym = su2.SU2Chain(L)
+    for S, m in zip(sym.spins, sym.multiplicities):
+        B, N = sym.hw_basis(S), int(L / 2 + S)
+        assert B.shape == (math.comb(L, N), m) == (math.comb(L, N), su2.multiplicity(L, S))
+        assert close(B.T @ B, torch.eye(m, dtype=B.dtype))
+        assert N == L or close(sym.raise_(B, N), 0)
+
+
+def test_zeeman_splitting():
+    """Exercise 4.4: H + h S_z has the eigenvalues E + h M, M = -S..S, for the eigenvalues E of H_S."""
+    L, h = 4, 0.37
+    S = dc.total_spin(L)
+    D = dc.from_generators(S)
+    ring = [(i, (i + 1) % L) for i in range(L)]
+    def swap(i, j):
+        p = list(range(L))
+        p[i], p[j] = j, i
+        return dc.permutation_representation(L, 2, [p])[0]
+    H = sum(swap(i, j) / 2 - torch.eye(2 ** L, dtype=R) / 4 for i, j in ring)
+    Hh = H + h * S[2]
+    assert close(Hh @ S[2], S[2] @ Hh) and close(Hh @ (S @ S).sum(0), (S @ S).sum(0) @ Hh)
+    assert not close(Hh @ S[0], S[0] @ Hh, 1e-3)
+    hb = D.to_commutant(H).matrix[0]
+    want = []
+    for c, (k, m) in enumerate(zip(D.k_factors, D.multiplicities)):
+        Sv = (k - 1) / 2
+        for E in torch.linalg.eigvalsh(hb[c, :m, :m]).tolist():
+            want += [E + h * (Sv - a) for a in range(k)]
+    assert close(torch.sort(torch.tensor(want, dtype=R)).values, torch.linalg.eigvalsh(Hh))
+
+
+@pytest.mark.parametrize('j1,j2', [(1, 0.5), (1, 1), (1.5, 1), (2, 1.5), (0.5, 0.5)])
+def test_exercise_2_clebsch_gordan_series(j1, j2):
+    """Exercise 4.2: j1 (x) j2 = |j1-j2| + ... + j1+j2, each once."""
+    A, Bm = dc.spin_matrices(j1), dc.spin_matrices(j2)
+    ea, eb = torch.eye(A.shape[-1], dtype=C), torch.eye(Bm.shape[-1], dtype=C)
+    D = dc.from_generators(torch.stack([torch.kron(x, eb) + torch.kron(ea, y) for x, y in zip(A, Bm)]))
+    J = [abs(j1 - j2) + i for i in range(int(round(2 * min(j1, j2))) + 1)]
+    assert D.k_factors == tuple(int(2 * x + 1) for x in J) and set(D.multiplicities) == {1}
+
+
+def test_exercise_1_dimension_of_permutation_commutant():
+    """Exercise 4.1: chi_pi(sigma) = d^{#cycles} and dim pi(S_L)' = binom(d^2 + L - 1, L)."""
+    for L, d in ((3, 2), (4, 2), (2, 3), (3, 3), (2, 4)):
+        G = dc.permutation_representation(L, d)
+        perms = list(itertools.permutations(range(L)))
+        ncyc = [n_cycles(p) for p in perms]
+        assert G.diagonal(dim1=-2, dim2=-1).sum(-1).real.tolist() == [float(d ** c) for c in ncyc]
+        assert dc.commutant_dimension(G) == math.comb(d * d + L - 1, L)
+
+
+def _orbit(p, i):
+    out, j = {i}, p[i]
+    while j != i:
+        out.add(j)
+        j = p[j]
+    return out
+
+
+# ============================================================================
+# Section 4.7: real, complex and quaternionic type
+# ============================================================================
+
+def test_lemma_4_18_real_parts():
+    """Lemma 4.18: A = A_R + i A_R with dim_R A_R = dim_C A, A' closed under conjugation, real commutant."""
+    gens, D, rs, _ = mixed_real(3)
+    Bs = D.basis('algebra')
+    assert real_rank(torch.cat([Bs.real, Bs.imag]).to(C)) == D.dim       # dim_R A_R = dim_C A
+    Bc = D.basis('commutant')
+    assert outside(D, Bc.conj(), 'commutant') < 1e-9                     # conj(A') = A'
+    assert real_commutant_dim(gens) == D.commutant_dim                    # (A')_R: dim_R = dim_C A'
+    assert outside(D, gens.mT.to(C), 'algebra') < 1e-9                   # A_R closed under transposition
+
+
+@pytest.mark.parametrize('idx', MIXED)
+def test_types_of_hidden_real_algebras(idx):
+    """Theorem 4.20/4.21: the types, k_c and m_c of a real algebra (+) M_k(R), M_k(C), M_{k/2}(H) hidden by an
+    orthogonal matrix are found; real_structure is ok and its residuals are at rounding level."""
+    gens, D, rs, expected = mixed_real(idx)
+    assert sorted(zip(rs.types, D.k_factors, D.multiplicities)) == expected
+    assert rs.ok and max(rs.residuals.values()) < 1e-12
+
+
+@pytest.mark.parametrize('idx', MIXED)
+def test_conjugation_of_sectors(idx):
+    """Theorem 4.20(a),(b),(d): conj(V_c) = V_sigma(c) (J (x) M), pi_sigma(c)(conj a) = J conj(pi_c(a)) J^*,
+    sigma an involution preserving (k, m); J conj J = M conj M = eps for sigma(c) = c; k, m even if eps = -1;
+    (conj X)_sigma(c) = M conj(x_c) M^* on the commutant."""
+    gens, D, rs, _ = mixed_real(idx)
+    g = torch.Generator().manual_seed(20 + idx)
+    a = (gens[0] + 1j * gens[1] + 0.3j * (gens[0] @ gens[1])).to(C)       # a complex element of A
+    pa, pab = D.to_algebra(a), D.to_algebra(a.conj())
+    Bc = dc.commutant_basis(gens)
+    X = torch.einsum('r,rij->ij', torch.randn(len(Bc), dtype=C, generator=g), Bc)
+    xa, xab = D.to_commutant(X), D.to_commutant(X.conj())
+    for c, d in enumerate(rs.partner):
+        k, m = D.k_factors[c], D.multiplicities[c]
+        J, M = rs.J[c], rs.M[c]
+        assert rs.partner[d] == c and (D.k_factors[d], D.multiplicities[d]) == (k, m)
+        assert close(J.mH @ J, torch.eye(k, dtype=R)) and close(M.mH @ M, torch.eye(m, dtype=R))
+        assert close(Vc(D, c).conj(), Vc(D, d) @ torch.kron(J, M))
+        assert close(blocks(D, pab, d), J @ blocks(D, pa, c).conj() @ J.mH)
+        assert close(cblocks(D, xab, d), M @ cblocks(D, xa, c).conj() @ M.mH)
+        P = D.central_projections()
+        assert close(P[c].conj(), P[d])
+        if d == c:
+            eps = {'R': 1.0, 'H': -1.0}[rs.types[c]]
+            assert close(J @ J.conj(), eps * torch.eye(k, dtype=R)) and close(M @ M.conj(), eps * torch.eye(m, dtype=R))
+            if eps < 0:
+                assert k % 2 == 0 and m % 2 == 0
+                assert close(J.T, -J) and close(M.T, -M)                  # J antisymmetric
+            else:
+                assert close(J.T, J) and close(M.T, M)                    # J symmetric
+            if k % 2 or m % 2:
+                assert rs.types[c] == 'R'
+        else:
+            assert rs.types[c] == 'C'
+
+
+@pytest.mark.parametrize('idx', [0, 2, 3])
+def test_real_structure_does_not_depend_on_the_decomposition(idx):
+    """Theorem 4.20(c): sigma and eps_c do not depend on V (another seed), and J'_c = lambda u^* J_c conj(u)."""
+    gens, D, rs, _ = mixed_real(idx)
+    D2 = dc.from_generators(gens, seed=11)
+    rs2 = D2.real_structure()
+    P, P2 = D.central_projections(), D2.central_projections()
+    match = [min(range(D2.C), key=lambda e: (P[c] - P2[e]).abs().max().item()) for c in range(D.C)]
+    assert all(close(P[c], P2[match[c]]) for c in range(D.C))
+    for c, d in enumerate(rs.partner):
+        e = match[c]
+        assert rs2.partner[e] == match[d] and rs2.types[e] == rs.types[c]
+        if d == c:
+            k, m = D.k_factors[c], D.multiplicities[c]
+            Y = Vc(D, c).mH @ Vc(D2, e)                                 # = u (x) w
+            Rr = Y.reshape(k, m, k, m).permute(0, 2, 1, 3).reshape(k * k, m * m)
+            U, s, _ = torch.linalg.svd(Rr)
+            assert s[1:].max().item() < 1e-9 if len(s) > 1 else True
+            u = U[:, 0].reshape(k, k) * math.sqrt(k)
+            Jp = u.mH @ rs.J[c] @ u.conj()
+            lam = (torch.vdot(Jp.flatten(), rs2.J[e].flatten()) / k)
+            assert abs(abs(lam) - 1) < 1e-9 and close(rs2.J[e], lam * Jp)
+
+
+@pytest.mark.parametrize('idx', MIXED)
+def test_real_algebra_isomorphism_and_takagi(idx):
+    """Theorem 4.21: pi_c(a) in R_c for real a; for real type W_J^* pi_c(a) W_J is real and O_c = V_c(W_J (x) W_M)
+    is real orthonormal with a O_c = O_c(alpha (x) 1); for quaternionic type W_J^* pi_c(a) W_J is in the image of
+    M_r(H) and transposition becomes the quaternionic adjoint; dim_R A_R = sum k_c^2."""
+    gens, D, rs, _ = mixed_real(idx)
+    g = torch.Generator().manual_seed(30 + idx)
+    a = (gens[0] + 0.7 * gens[1] @ gens[0]).to(C)                       # a real element of A
+    pa, paT = D.to_algebra(a), D.to_algebra(a.mT)
+    for c, d in enumerate(rs.partner):
+        k, m = D.k_factors[c], D.multiplicities[c]
+        x, J = blocks(D, pa, c)[0], rs.J[c]
+        if rs.types[c] == 'R':
+            assert close(x @ J, J @ x.conj())                           # x in R_c
+            WJ, WM = takagi_real(J, g), takagi_real(rs.M[c], g)
+            assert close(J @ WJ.conj(), WJ) and close(J, WJ @ WJ.T) and close(WJ.mH @ WJ, torch.eye(k, dtype=R))
+            alpha = WJ.mH @ x @ WJ
+            assert close(alpha.imag, 0)
+            Oc = Vc(D, c) @ torch.kron(WJ, WM)
+            assert close(Oc.imag, 0) and close(Oc.mH @ Oc, torch.eye(k * m, dtype=R))
+            assert close(a @ Oc, Oc @ torch.kron(alpha, torch.eye(m, dtype=C)))
+        elif rs.types[c] == 'H':
+            assert close(x @ J, J @ x.conj())
+            WJ = takagi_quaternionic(J, g)
+            Om = omega(k)
+            assert close(J @ WJ.conj(), WJ @ Om) and close(J, WJ @ Om @ WJ.T) and close(WJ.mH @ WJ, torch.eye(k, dtype=R))
+            y, yT = WJ.mH @ x @ WJ, WJ.mH @ blocks(D, paT, c)[0] @ WJ
+            assert close(y @ Om, Om @ y.conj())                         # y = M(h), h in M_{k/2}(H)
+            assert close(yT, y.mH)                                      # transpose -> quaternionic adjoint
+    # dim_R A_R from the real span of real elements Re(b), b in a basis of A
+    Bs = D.basis('algebra')
+    assert real_rank(torch.cat([Bs.real, Bs.imag]).to(C)) == sum(k * k for k in D.k_factors)
+
+
+@pytest.mark.parametrize('idx', MIXED)
+def test_real_basis_block_form(idx):
+    """Theorem 4.21 via real_basis(): O is real orthogonal; O^T a O is alpha (x) 1 with real alpha on real sectors,
+    [[Re x, Im x], [-Im x, Re x]] on complex pairs, and leaves every block invariant."""
+    gens, D, rs, _ = mixed_real(idx)
+    O, blks = D.real_basis()
+    n = D.n
+    assert O.dtype == R and close(O.T @ O, torch.eye(n, dtype=R))
+    for b in blks:
+        cs = b['columns']
+        Oc = O[:, cs]
+        for a in gens:
+            A = O.T @ a @ O
+            outside = torch.ones(n, dtype=torch.bool)
+            outside[cs] = False
+            assert close(A[outside][:, cs], 0)
+            if b['type'] == 'R':
+                c = b['sectors'][0]
+                k, m = D.k_factors[c], D.multiplicities[c]
+                Ab = Oc.T @ a @ Oc
+                assert close(Ab, torch.kron(Ab[0::m, 0::m].contiguous(), torch.eye(m, dtype=R)))
+            if b['type'] == 'C':
+                c = b['sectors'][0]
+                xm = torch.kron(blocks(D, D.to_algebra(a.to(C)), c)[0], torch.eye(D.multiplicities[c], dtype=C))
+                assert close(Oc.T @ a @ Oc, torch.cat([torch.cat([xm.real, xm.imag], 1),
+                                                       torch.cat([-xm.imag, xm.real], 1)]))
+    assert sorted(b['type'] for b in blks) == sorted(t for c, t in enumerate(rs.types) if t != 'C' or rs.partner[c] > c)
+
+
+def test_real_structure_rejects_algebra_not_closed_under_conjugation():
+    """Theorem 4.20 needs conj(A) = A: real_structure raises ValueError otherwise."""
+    z = complex(math.cos(math.pi / 4), math.sin(math.pi / 4))
+    H = torch.tensor([[1, z], [z.conjugate(), -1]], dtype=C)
+    D = dc.from_generators(H)
+    with pytest.raises(ValueError):
+        D.real_structure()
+
+
+def test_three_examples_of_section_4_7():
+    """Section 4.7 examples: so(3) on R^3 (x) R^2 real type (3, 2); Omega_2 (x) 1_2 complex pair (1, 2);
+    quaternions on R^4 and on R^8 quaternionic type (2, 2) and (2, 4); A_R = M_3(R), C, H."""
+    L = torch.zeros(3, 3, 3, dtype=R)
+    for i, (b1, b2) in enumerate([(1, 2), (2, 0), (0, 1)]):
+        L[i, b1, b2], L[i, b2, b1] = -1.0, 1.0
+    eps = torch.zeros(3, 3, 3, dtype=R)
+    for (a, b, c), sgn in (((0, 1, 2), 1), ((1, 2, 0), 1), ((2, 0, 1), 1), ((0, 2, 1), -1), ((2, 1, 0), -1), ((1, 0, 2), -1)):
+        eps[a, b, c] = sgn
+    assert close(L, -eps)                                               # (L_a)_bc = -eps_abc
+    iL = 1j * L.to(C)
+    assert close(iL[0] @ iL[1] - iL[1] @ iL[0], 1j * iL[2])             # a spin representation, spin 1
+    assert close(torch.linalg.eigvalsh(iL[2]), torch.tensor([-1.0, 0.0, 1.0], dtype=R))
+    Om = torch.tensor([[[0.0, -1.0], [1.0, 0.0]]], dtype=R)
+    I, J, K = quaternion_units()
+    LH = torch.stack([realify_left(q) for q in (I, J, K)])
+    e2 = torch.eye(2, dtype=R)[None]
+    cases = [(torch.kron(L, e2), [('R', 3, 2)], 9), (torch.kron(Om, e2), [('C', 1, 2)] * 2, 2),
+             (LH, [('H', 2, 2)], 4), (torch.kron(e2, LH), [('H', 2, 4)], 4)]
+    for gens, want, dimR in cases:
+        D = dc.from_generators(gens)
+        rs = D.real_structure()
+        assert rs.ok and sorted(zip(rs.types, D.k_factors, D.multiplicities)) == want
+        assert D.dim == dimR                                            # dim_R A_R = dim_C A
+    for q in (I, J, K):                                                 # L_{conj q} = L_q^T
+        assert close(realify_left(q.mH), realify_left(q).T)
+
+
+def realify_left(Mq):
+    """Left multiplication by the quaternion with 2 x 2 matrix M(q) on H = R^4, coordinates (Re a, Im a, Re b, Im b),
+    where x = (a, b) has M(x) = [[a, -b], [conj b, conj a]]."""
+    cols = []
+    for e in torch.eye(4, dtype=R):
+        a, b = complex(e[0], e[1]), complex(e[2], e[3])
+        Mx = torch.tensor([[a, -b], [b.conjugate(), a.conjugate()]], dtype=C)
+        P = Mq @ Mx
+        cols.append([P[0, 0].real, P[0, 0].imag, -P[0, 1].real, -P[0, 1].imag])
+    return torch.tensor(cols, dtype=R).T
+
+
+@pytest.mark.parametrize('name', ['Z3', 'Z4', 'S3', 'D4', 'Q8', 'Dic3'])
+def test_types_of_finite_groups_and_frobenius_schur_indicator(name):
+    """Theorem 4.20 for real regular representations: the type of each sector agrees with the Frobenius-Schur
+    indicator (1/|G|) sum_g chi_c(g^2) = 1, 0, -1 for real, complex, quaternionic type (D4 and Q8 have the same
+    character table but different types)."""
+    G, D, expected = regular_decomposition(name)
+    rs = D.real_structure()
+    assert rs.ok and sorted(zip(rs.types, D.k_factors, D.multiplicities)) == expected
+    rho = D.to_algebra(G)
+    for c in range(D.C):
+        x = blocks(D, rho, c)
+        nu = (x @ x).diagonal(dim1=-2, dim2=-1).sum(-1).mean()
+        assert close(nu, {'R': 1.0, 'C': 0.0, 'H': -1.0}[rs.types[c]])
+        chi = x.diagonal(dim1=-2, dim2=-1).sum(-1)
+        chi_partner = blocks(D, rho, rs.partner[c]).diagonal(dim1=-2, dim2=-1).sum(-1)
+        assert close(chi_partner, chi.conj())                           # pi_sigma(c) = conj(pi_c) up to J
+        assert (rs.types[c] == 'C') == (not close(chi, chi.conj(), 1e-6))
+    assert D.dim == G.shape[0]                                          # dim_R A_R = |G| (Exercise 5)
+
+
+def test_exercise_5_quaternion_group():
+    """Exercise 4.5: Q_8 regular representation: four real sectors k = m = 1 and one quaternionic k = m = 2,
+    with J_c = lambda Omega_2 in a basis where the block is M(g)."""
+    G, D, _ = regular_decomposition('Q8')
+    rs = D.real_structure()
+    c = D.k_factors.index(2)
+    assert rs.types[c] == 'H'
+    rho = blocks(D, D.to_algebra(G), c)
+    I, J, K = quaternion_units()
+    elems = group_closure([I, J])
+    Mg = torch.stack(elems)                                             # the 2-dim representation M(g)
+    reg = regular_representation(elems)
+    assert close(reg, G)                                                # same element order
+    # find u with rho = u M u^*: u spans Hom(M, rho)
+    Yr = torch.randn(2, 2, dtype=C, generator=torch.Generator().manual_seed(1))
+    T = sum(rho[i] @ Yr @ Mg[i].mH for i in range(8)) / 8               # in Hom(M, rho)
+    s = torch.linalg.svdvals(T)
+    u = T / s[0]
+    assert close(u.mH @ u, torch.eye(2, dtype=R)) and close(u @ Mg @ u.mH, rho)
+    Jb = u.mH @ rs.J[c] @ u.conj()                                     # J_c in the basis of M(g)
+    lam = Jb[1, 0]
+    assert abs(abs(lam) - 1) < 1e-9 and close(Jb, lam * torch.tensor([[0, -1], [1, 0]], dtype=C))
+
+
+@pytest.mark.parametrize('L', [1, 2, 3])
+def test_realified_spin_types_and_kramers(L):
+    """Theorems 4.20, 4.22, Proposition 4.23 on the realified total spin of L spins 1/2: half-integer spins are of
+    quaternionic type, integer spins of real type (with m doubled); a random real symmetric element of the
+    commutant has eigenvalue multiplicities divisible by 2 k_c on the quaternionic sectors (Kramers)."""
+    S = dc.total_spin(L)
+    gens = realify(1j * S)                                              # real generators of the realified action
+    D = dc.from_generators(gens)
+    rs = D.real_structure()
+    want = sorted(('H' if t2 % 2 else 'R', t2 + 1, 2 * su2.multiplicity(L, t2 / 2)) for t2 in su2.two_spins(L))
+    assert rs.ok and sorted(zip(rs.types, D.k_factors, D.multiplicities)) == want
+    g = torch.Generator().manual_seed(40 + L)
+    basis = real_commutant_basis(gens)
+    assert len(basis) == D.commutant_dim
+    X = torch.einsum('r,rij->ij', torch.randn(len(basis), dtype=R, generator=g), basis)
+    X = X + X.T
+    mult = eigen_clusters(torch.linalg.eigvalsh(X))
+    for c, t in enumerate(rs.types):
+        P = D.central_projections()[c]
+        w = torch.linalg.eigvalsh(P @ X.to(C) @ P + 1e3 * (torch.eye(D.n, dtype=R) - P))[:D.sector_dims[c]]
+        mc = eigen_clusters(w)
+        k = D.k_factors[c]
+        if t == 'H':
+            assert all(x % (2 * k) == 0 for x in mc)                    # Kramers degeneracy
+        else:
+            assert all(x == k for x in mc)
+    assert sum(mult) == D.n
+
+
+@pytest.mark.parametrize('idx', MIXED)
+def test_real_elements_of_the_commutant(idx):
+    """Proposition 4.23: a random real symmetric X in A' has x_sigma(c) = M conj(x_c) M^*; Kramers pairs on
+    quaternionic sectors (multiplicity divisible by 2 k_c in X); equal spectra on complex pairs; on real sectors
+    O_c^T X O_c = 1 (x) y with y real symmetric; on quaternionic sectors W_M^* x_c W_M is quaternion Hermitian."""
+    gens, D, rs, _ = mixed_real(idx)
+    g = torch.Generator().manual_seed(50 + idx)
+    basis = real_commutant_basis(gens)
+    assert len(basis) == D.commutant_dim
+    X0 = torch.einsum('r,rij->ij', torch.randn(len(basis), dtype=R, generator=g), basis)
+    X = X0 + X0.T
+    xs, x0 = D.to_commutant(X.to(C)), D.to_commutant(X0.to(C))
+    assert close(D.from_commutant(xs), X.to(C))
+    O, blks = D.real_basis()
+    Pc = D.central_projections()
+    for c, d in enumerate(rs.partner):
+        k, m = D.k_factors[c], D.multiplicities[c]
+        xc, M = cblocks(D, xs, c)[0], rs.M[c]
+        assert close(cblocks(D, xs, d)[0], M @ xc.conj() @ M.mH)
+        ev = torch.linalg.eigvalsh(xc)
+        w = torch.linalg.eigvalsh(Pc[c] @ X.to(C) @ Pc[c] + 1e3 * (torch.eye(D.n, dtype=R) - Pc[c]))[:k * m]
+        assert close(w, ev.repeat_interleave(k), 1e-8)
+        if rs.types[c] == 'H':
+            assert all(x % 2 == 0 for x in eigen_clusters(ev))
+            assert all(x % (2 * k) == 0 for x in eigen_clusters(w))
+            WM = takagi_quaternionic(M, g)
+            y = WM.mH @ xc @ WM
+            Om = omega(m)
+            assert close(y @ Om, Om @ y.conj()) and close(y, y.mH)
+        elif rs.types[c] == 'C':
+            assert close(ev, torch.linalg.eigvalsh(cblocks(D, xs, d)[0]))
+        else:
+            WM = takagi_real(M, g)
+            assert close((WM.mH @ cblocks(D, x0, c)[0] @ WM).imag, 0)     # y real even without symmetry
+            b = next(b for b in blks if b['sectors'] == (c,))
+            Oc = O[:, b['columns']]
+            Y = Oc.T @ X @ Oc
+            y = Y[:m, :m]
+            assert close(Y, torch.kron(torch.eye(k, dtype=R), y)) and close(y, y.T)
+
+
+@pytest.mark.parametrize('idx', MIXED)
+def test_real_schur_lemma_irreducible_real_modules(idx):
+    """Theorem 4.22: the eigenspaces of a generic real symmetric element of (A')_R are irreducible real modules of
+    dimension k_c, 2 k_c, 2 k_c, with commutant D_U of real dimension 1, 2, 4 (R, C, H) by type."""
+    gens, D, rs, _ = mixed_real(idx)
+    g = torch.Generator().manual_seed(60 + idx)
+    basis = real_commutant_basis(gens)
+    X = torch.einsum('r,rij->ij', torch.randn(len(basis), dtype=R, generator=g), basis)
+    X = X + X.T
+    w, Q = torch.linalg.eigh(X)
+    cuts = [0] + [i + 1 for i in range(D.n - 1) if w[i + 1] - w[i] > 1e-7] + [D.n]
+    found = []
+    Pc = D.central_projections()
+    for a, b in zip(cuts[:-1], cuts[1:]):
+        U = Q[:, a:b]
+        restricted = U.T @ gens @ U
+        assert close(gens @ U, U @ restricted)                          # invariant real subspace
+        dD = real_commutant_dim(restricted)
+        c = max(range(D.C), key=lambda e: torch.linalg.norm(Pc[e] @ U.to(C)).item())
+        found.append((rs.types[c], D.k_factors[c], b - a, dD))
+    want = []
+    for c, t in enumerate(rs.types):
+        k, m = D.k_factors[c], D.multiplicities[c]
+        if t == 'R':
+            want += [('R', k, k, 1)] * m
+        elif t == 'H':
+            want += [('H', k, 2 * k, 4)] * (m // 2)
+        else:
+            want += [('C', k, 2 * k, 2)] * m                            # counted once from each sector of a pair
+    want_pairs = sorted(x for x in want if x[0] != 'C') + sorted(x for x in want if x[0] == 'C')[::2]
+    assert sorted(found) == sorted(want_pairs)
+
+
+def test_real_schur_lemma_irreducibility_criterion():
+    """Theorem 4.22(c): R^n is irreducible iff one orbit with m = 1 (real, complex) or m = 2 (quaternionic)."""
+    L = torch.zeros(3, 3, 3, dtype=R)
+    for i, (b1, b2) in enumerate([(1, 2), (2, 0), (0, 1)]):
+        L[i, b1, b2], L[i, b2, b1] = -1.0, 1.0
+    Om = torch.tensor([[[0.0, -1.0], [1.0, 0.0]]], dtype=R)
+    LH = torch.stack([realify_left(q) for q in quaternion_units()])
+    e2 = torch.eye(2, dtype=R)[None]
+    for gens, irreducible in ((L, True), (torch.kron(L, e2), False), (Om, True), (torch.kron(Om, e2), False),
+                              (LH, True), (torch.kron(e2, LH), False),
+                              (torch.stack([torch.block_diag(L[a], Om[0]) for a in range(3)]), False)):
+        D = dc.from_generators(gens)
+        rs = D.real_structure()
+        orbits = {frozenset((c, d)) for c, d in enumerate(rs.partner)}
+        crit = len(orbits) == 1 and all(m == (2 if t == 'H' else 1) for t, m in zip(rs.types, D.multiplicities))
+        basis = real_commutant_basis(gens)
+        X = torch.einsum('r,rij->ij', torch.randn(len(basis), dtype=R, generator=torch.Generator().manual_seed(3)), basis)
+        X = X + X.T
+        scalar = close(X, X.trace() / X.shape[0] * torch.eye(X.shape[0], dtype=R), 1e-9)
+        assert crit == irreducible == scalar
+
+
+# ============================================================================
+# Appendix B
+# ============================================================================
+
+def n_cycles(p):
+    return len({frozenset(_orbit(p, i)) for i in range(len(p))})
+
+
+def compose(s, t):
+    return tuple(s[m] for m in t)
+
+
+def inverse(s):
+    return tuple(sorted(range(len(s)), key=lambda m: s[m]))
+
+
+@pytest.mark.parametrize('n,d', [(2, 2), (3, 2), (3, 3), (4, 2), (2, 4)])
+def test_permutation_operators(n, d):
+    """Lemma B.1: pi is a homomorphism of permutation matrices moving slot m to sigma(m); conjugation permutes
+    the factors; Tr pi(sigma) = d^{#cycles}; Gram matrix; linear independence iff n <= d."""
+    perms = list(itertools.permutations(range(n)))
+    P = dc.permutation_representation(n, d, [list(p) for p in perms])
+    idx = {p: i for i, p in enumerate(perms)}
+    g = torch.Generator().manual_seed(70 + n + d)
+    for s in perms[:6]:
+        for t in perms[-4:]:
+            assert close(P[idx[s]] @ P[idx[t]], P[idx[compose(s, t)]])
+    xs = torch.randn(n, d, dtype=C, generator=g)
+    As = torch.randn(n, d, d, dtype=C, generator=g)
+    for s in perms[:8]:
+        si = inverse(s)
+        assert close(P[idx[s]] @ functools.reduce(torch.kron, list(xs)), functools.reduce(torch.kron, [xs[si[p]] for p in range(n)]))
+        assert close(P[idx[s]] @ functools.reduce(torch.kron, list(As)) @ P[idx[s]].mH,
+                     functools.reduce(torch.kron, [As[si[p]] for p in range(n)]))
+        assert abs(torch.trace(P[idx[s]]).real.item() - d ** n_cycles(s)) < 1e-12
+    Gm = torch.einsum('sij,tij->st', P.conj(), P).real
+    want = torch.tensor([[float(d) ** n_cycles(compose(inverse(s), t)) for t in perms] for s in perms], dtype=R)
+    assert close(Gm, want)
+    rank = int(torch.linalg.matrix_rank(P.reshape(len(perms), -1), atol=1e-9))
+    assert (rank == math.factorial(n)) == (n <= d)
+
+
+@pytest.mark.parametrize('n', [2, 3, 4])
+def test_polarisation_identity(n):
+    """Lemma B.2: sum_sigma A_sigma(1) (x) ... = sum_eps (-1)^{n-|eps|} (sum eps_m A_m)^{(x) n}."""
+    A = torch.randn(n, 2, 2, dtype=C, generator=torch.Generator().manual_seed(n))
+    lhs = sum(functools.reduce(torch.kron, [A[s[m]] for m in range(n)]) for s in itertools.permutations(range(n)))
+    rhs = sum((-1) ** (n - sum(e)) * functools.reduce(torch.kron, [sum(em * a for em, a in zip(e, A))] * n)
+              for e in itertools.product((0, 1), repeat=n))
+    assert close(lhs, rhs, 1e-8)
+
+
+@pytest.mark.parametrize('n,d', [(2, 2), (3, 2), (2, 3), (4, 2)])
+def test_symmetriser_commutant_and_spans(n, d):
+    """Proposition B.3 and Theorem B.6(a): pi(S_n)' = span A^{(x)n} = span V^{(x)n} (V in U(d) or SU(d)), of
+    dimension binom(d^2+n-1, n); the symmetriser is the projection onto it."""
+    g = torch.Generator().manual_seed(80 + n + d)
+    G = dc.permutation_representation(n, d)
+    N = math.comb(d * d + n - 1, n)
+    assert dc.commutant_dimension(G) == N
+    r = lambda X: int(torch.linalg.matrix_rank(X.reshape(X.shape[0], -1), atol=1e-9))
+    A = kpow(torch.randn(N + 6, d, d, dtype=C, generator=g), n)
+    V = haar(d, N + 6, g)
+    SU = V / torch.linalg.det(V).pow(1 / d)[:, None, None]
+    assert close(torch.linalg.det(SU), torch.ones(N + 6, dtype=C))
+    assert r(A) == r(kpow(V, n)) == r(kpow(SU, n)) == r(torch.cat([A, kpow(V, n)])) == N
+    assert close(G @ A[:3, None] - A[:3, None] @ G, 0, 1e-8)
+    X = torch.randn(d ** n, d ** n, dtype=C, generator=g)
+    SX = dc.twirl(G, X)
+    assert r(torch.cat([A, SX[None]])) == N                             # S(X) in T_n
+    As = torch.randn(n, d, d, dtype=C, generator=g)
+    prod = functools.reduce(torch.kron, list(As))
+    sym = sum(functools.reduce(torch.kron, [As[s[m]] for m in range(n)]) for s in itertools.permutations(range(n)))
+    assert close(dc.twirl(G, prod), sym / math.factorial(n), 1e-9)
+
+
+def test_cayley_transform_steps():
+    """Lemma B.4: (1+iH)(1-iH)^{-1} is unitary for Hermitian H, and A = -i(1+B)^{-1}(B-1) inverts the transform."""
+    g = torch.Generator().manual_seed(9)
+    Z = torch.randn(4, 4, dtype=C, generator=g)
+    H = Z + Z.mH
+    eye = torch.eye(4, dtype=C)
+    Cy = (eye + 1j * H) @ torch.linalg.inv(eye - 1j * H)
+    assert close(Cy.mH @ Cy, eye)
+    adj = torch.linalg.det(eye - 1j * H) * torch.linalg.inv(eye - 1j * H)
+    assert close((eye + 1j * H) @ adj, torch.linalg.det(eye - 1j * H) * Cy)
+    B = torch.randn(4, 4, dtype=C, generator=g)
+    A = -1j * torch.linalg.inv(eye + B) @ (B - eye)
+    assert close((eye + 1j * A) @ torch.linalg.inv(eye - 1j * A), B)
+
+
+def test_newton_identities():
+    """Lemma B.5: k e_k = sum_j (-1)^{j-1} e_{k-j} p_j for commuting x_m; with x_m = A^(m), e_n = A^{(x) n}."""
+    g = torch.Generator().manual_seed(10)
+    n = 5
+    W = torch.randn(4, 4, dtype=C, generator=g)
+    xs = [W @ torch.diag(torch.randn(4, dtype=C, generator=g)) @ torch.linalg.inv(W) for _ in range(n)]
+    e = [torch.eye(4, dtype=C)]
+    for k in range(1, n + 1):
+        ek = sum(functools.reduce(torch.matmul, [xs[m] for m in Sset]) for Sset in itertools.combinations(range(n), k))
+        pk = lambda j: sum(torch.linalg.matrix_power(x, j) for x in xs)
+        assert close(k * ek, sum((-1) ** (j - 1) * e[k - j] @ pk(j) for j in range(1, k + 1)), 1e-6)
+        e.append(ek)
+    A = torch.randn(2, 2, dtype=C, generator=g)
+    m = 4
+    dpi = lambda X: dc.collective_operators(X[None], m)[0]
+    E = [torch.eye(2 ** m, dtype=C)]
+    for k in range(1, m + 1):
+        E.append(sum((-1) ** (j - 1) * E[k - j] @ dpi(torch.linalg.matrix_power(A, j)) for j in range(1, k + 1)) / k)
+    assert close(E[m], functools.reduce(torch.kron, [A] * m), 1e-8)
+
+
+@pytest.mark.parametrize('n,d', [(2, 2), (3, 2), (2, 3), (3, 3)])
+def test_lie_algebra_generates_the_commutant_of_permutations(n, d):
+    """Theorem B.6(b),(c): dPi(M_d) generates T_n = pi(S_n)', whose commutant is span pi(S_n)."""
+    basis = torch.eye(d * d, dtype=C).reshape(d * d, d, d)
+    X = dc.collective_operators(basis, n)
+    D = dc.from_generators(X)
+    P = dc.permutation_representation(n, d)
+    assert D.dim == math.comb(d * d + n - 1, n)
+    rank = int(torch.linalg.matrix_rank(P.reshape(P.shape[0], -1), atol=1e-9))
+    assert D.commutant_dim == rank
+    assert outside(D, P, 'commutant') < 1e-9                            # span pi(S_n) = A'
+    g = torch.Generator().manual_seed(11)
+    V = kpow(haar(d, 2, g), n)
+    assert outside(D, V, 'algebra') < 1e-9                               # V^{(x) n} in A
+
+
+@pytest.mark.parametrize('n,d', [(3, 3), (3, 2), (4, 2), (2, 4)])
+def test_decomposition_of_tensor_power(n, d):
+    """Theorem B.8: from_group(pi(S_n)) has sum k_c^2 = dim span pi (= n! for n <= d) and sum m_c^2 =
+    binom(d^2+n-1, n); V^{(x) n} acts as (+) 1 (x) tau_c(V) with unitary, irreducible tau_c."""
+    G = dc.permutation_representation(n, d)
+    D = dc.from_group(G)
+    rank = int(torch.linalg.matrix_rank(G.reshape(G.shape[0], -1), atol=1e-9))
+    assert D.dim == rank and (n > d or rank == math.factorial(n))
+    assert D.commutant_dim == math.comb(d * d + n - 1, n)
+    g = torch.Generator().manual_seed(12)
+    V = kpow(haar(d, 3, g), n)
+    tau = D.to_commutant(V)
+    assert close(D.from_commutant(tau), V)
+    for c, m in enumerate(D.multiplicities):
+        t = tau.matrix[:, c, :m, :m]
+        assert close(t.mH @ t, torch.eye(m, dtype=C).expand(3, m, m))
+    many = D.to_commutant(kpow(haar(d, 4 * D.commutant_dim, g), n)).matrix
+    for c, m in enumerate(D.multiplicities):                              # tau_c(U(d)) spans M_{m_c}
+        assert real_rank(many[:, c, :m, :m]) == 2 * m * m
+
+
+@pytest.mark.parametrize('L', [3, 4, 5])
+def test_spin_multiplicity_spaces_carry_irreducible_permutation_representations(L):
+    """Corollary B.9: pi(S_L)'' has blocks k = m_S with multiplicities 2S+1; dim pi(S_L)' = binom(L+3, 3)."""
+    G = dc.permutation_representation(L, 2)
+    D = dc.from_group(G)
+    want = sorted((math.comb(L, j) - (math.comb(L, j - 1) if j else 0), L - 2 * j + 1) for j in range(L // 2 + 1))
+    assert sorted(zip(D.k_factors, D.multiplicities)) == want
+    assert D.commutant_dim == math.comb(L + 3, 3) == sum((L - 2 * j + 1) ** 2 for j in range(L // 2 + 1))
+
+
+@pytest.mark.parametrize('L', [1, 2, 3, 4])
+def test_catalan_numbers_via_vectorisation(L):
+    """Corollary B.10: vec{S_a}' is the common kernel of S_a (x) 1 - 1 (x) S_a^T, unitarily the spin-0 summand of
+    2L spins, of dimension binom(2L, L)/(L+1)."""
+    S = dc.total_spin(L)
+    N = 2 ** L
+    eye = torch.eye(N, dtype=C)
+    ops = torch.stack([torch.kron(Sa, eye) - torch.kron(eye, Sa.T.contiguous()) for Sa in S])
+    cat = math.comb(2 * L, L) // (L + 1)
+    assert N * N - int(torch.linalg.matrix_rank(ops.reshape(-1, N * N), atol=1e-9)) == cat
+    sy = 2 * dc.spin_matrices(0.5)[1]
+    for a, s in enumerate(dc.spin_matrices(0.5)):
+        assert close(sy @ (-s.T) @ sy, s)
+    Y = torch.kron(eye, functools.reduce(torch.kron, [sy] * L))
+    S2 = dc.total_spin(2 * L)
+    assert close(Y @ ops @ Y.mH, S2)
+    X = torch.randn(N, N, dtype=C, generator=torch.Generator().manual_seed(L))
+    A = S[0] @ X - X @ S[0]
+    assert close(A.reshape(-1), ops[0] @ X.reshape(-1))                  # vec(AX - XA) = (A (x) 1 - 1 (x) A^T) vec X
+
+
+def weingarten(n, d):
+    perms = list(itertools.permutations(range(n)))
+    Gm = torch.tensor([[float(d) ** n_cycles(compose(inverse(s), t)) for t in perms] for s in perms], dtype=R)
+    return perms, Gm, torch.linalg.pinv(Gm, hermitian=True)
+
+
+def test_pseudo_inverse_gram_projection():
+    """Lemma B.12: x -> sum v_a W_ab <v_b, x> with W = G^+ is the orthogonal projection onto span{v_a}."""
+    g = torch.Generator().manual_seed(13)
+    base = torch.randn(3, 6, dtype=C, generator=g)
+    v = torch.cat([base, (base[0] + 2j * base[1])[None], torch.zeros(1, 6, dtype=C)])   # dependent family
+    Gm = v.conj() @ v.T
+    W = torch.linalg.pinv(Gm, hermitian=True)
+    Q = v.T @ W @ v.conj()
+    assert close(Q @ Q, Q) and close(Q, Q.mH) and close(Q @ base.T, base.T)
+    assert abs(torch.trace(Q).real.item() - 3) < 1e-9
+
+
+@pytest.mark.parametrize('n,d', [(2, 2), (3, 2), (3, 3), (4, 2), (2, 5), (4, 3)])
+def test_weingarten_function_structure(n, d):
+    """Theorem B.13(a),(b): W_{sigma tau} = Wg(sigma^{-1} tau), a class function invariant under inversion;
+    G invertible iff n <= d."""
+    perms, Gm, W = weingarten(n, d)
+    pos = {p: a for a, p in enumerate(perms)}
+    Wg = {p: W[0, pos[p]].item() for p in perms}
+    for a, s in enumerate(perms):
+        for b, t in enumerate(perms):
+            assert abs(W[a, b].item() - Wg[compose(inverse(s), t)]) < 1e-12
+    for p in perms:
+        assert abs(Wg[p] - Wg[inverse(p)]) < 1e-12
+        for r in perms[:6]:
+            assert abs(Wg[p] - Wg[compose(compose(inverse(r), p), r)]) < 1e-12
+    assert (int(torch.linalg.matrix_rank(Gm)) == math.factorial(n)) == (n <= d)
+
+
+@pytest.mark.parametrize('d', [1, 2, 3, 7])
+def test_weingarten_order_two_and_d_one(d):
+    """Section B.5: Wg(e) = 1/(d^2-1), Wg(tau) = -1/(d(d^2-1)) for n = 2 <= d; for d = 1, W = G/(n!)^2."""
+    if d >= 2:
+        _, _, W = weingarten(2, d)
+        assert close(W[0], torch.tensor([1 / (d * d - 1), -1 / (d * (d * d - 1))], dtype=R), 1e-13)
+    else:
+        for n in (2, 3):
+            _, Gm, W = weingarten(n, 1)
+            assert close(W, Gm / math.factorial(n) ** 2, 1e-13) and abs(W.sum().item() - 1) < 1e-12
+
+
+@pytest.mark.parametrize('n,d', [(2, 2), (3, 2), (3, 3), (4, 2), (2, 3)])
+def test_weingarten_formula_is_projection_onto_span_of_permutations(n, d):
+    """Theorem B.13(c): Phi(X) = sum Wg(s^{-1} t) Tr(pi(t)^* X) pi(s) is the orthogonal projection onto
+    span pi(S_n) = {V^{(x) n}}' (also for n > d, where G is singular)."""
+    perms, _, W = weingarten(n, d)
+    P = dc.permutation_representation(n, d, [list(p) for p in perms])
+    g = torch.Generator().manual_seed(90 + n + d)
+    X = torch.randn(d ** n, d ** n, dtype=C, generator=g)
+    Phi = torch.einsum('st,tij,ij,skl->kl', W.to(C), P.conj(), X, P)
+    A = P.reshape(len(perms), -1).T
+    coef = torch.linalg.pinv(A) @ X.reshape(-1, 1)                     # A is rank-deficient for n > d
+    assert close(Phi.reshape(-1, 1), A @ coef)                           # orthogonal projection
+    V = kpow(haar(d, 1, g), n)[0]
+    assert close(V @ Phi, Phi @ V)
+
+
+def test_weingarten_moment_formula_index_convention():
+    """Theorem B.13(d): the moment tensor from the delta formula equals <e_i, Phi(|e_j><e_j'|) e_i'>."""
+    n, d = 3, 2
+    perms, _, W = weingarten(n, d)
+    pos = {p: a for a, p in enumerate(perms)}
+    Wg = lambda p: W[0, pos[p]].item()
+    P = dc.permutation_representation(n, d, [list(p) for p in perms])
+    idx = list(itertools.product(range(d), repeat=n))
+    g = torch.Generator().manual_seed(14)
+    for _ in range(40):
+        i, j, ip, jp = (idx[int(torch.randint(len(idx), (1,), generator=g))] for _ in range(4))
+        if torch.rand((), generator=g) < 0.5:                           # make some pairs match
+            sg = perms[int(torch.randint(len(perms), (1,), generator=g))]
+            ip = tuple(i[sg.index(m)] for m in range(n))
+        formula = sum(Wg(compose(s, inverse(t))) for s in perms for t in perms
+                      if all(i[m] == ip[s[m]] and j[m] == jp[t[m]] for m in range(n)))
+        flat = lambda b: sum(b[m] * d ** (n - 1 - m) for m in range(n))
+        X = torch.zeros(d ** n, d ** n, dtype=C)
+        X[flat(j), flat(jp)] = 1
+        Phi = torch.einsum('st,tij,ij,skl->kl', W.to(C), P.conj(), X, P)
+        assert abs(Phi[flat(i), flat(ip)].item() - formula) < 1e-12
+
+
+def test_weingarten_moments_monte_carlo():
+    """Theorem B.13(d),(e) and Corollary B.14 by Monte Carlo (d = 2, n = 3, singular G): E|U_11|^6 = 1/4,
+    E U_11 U_12 conj(U_11 U_12) from the formula, and E U_11^2 conj(U_11) = 0 (z < 5)."""
+    g = torch.Generator().manual_seed(15)
+    B = 200_000
+    U = haar(2, B, g)
+    for vals, exact in (((U[:, 0, 0].abs() ** 6), 0.25),
+                        ((U[:, 0, 0] * U[:, 0, 1]).abs() ** 2, 1 / 6),
+                        ((U[:, 0, 0] ** 2 * U[:, 0, 0].conj()), 0.0),
+                        ((U[:, 0, 0] * U[:, 1, 1] * (U[:, 0, 0] * U[:, 1, 1]).conj()), 1 / 3)):
+        z = (vals.mean() - exact).abs() / (vals.std() / math.sqrt(B))
+        assert z < 5
+    perms, _, W = weingarten(2, 2)                                       # E|U11 U12|^2 = Wg(e) + Wg(tau)... exact
+    assert abs((W[0, 0] + W[0, 1]).item() - 1 / 6) < 1e-12               # i=(1,1), j=(1,2): sigma any, tau = e
+    perms, _, W = weingarten(3, 2)
+    assert abs(W.sum().item() - 0.25) < 1e-12                           # Corollary B.14 via 1^T W 1
+
+
+@pytest.mark.parametrize('n,d', [(1, 1), (2, 1), (1, 3), (2, 2), (3, 2), (4, 2), (3, 3), (4, 3)])
+def test_moment_of_one_entry(n, d):
+    """Corollary B.14: E|U_11|^{2n} = 1^T G^+ 1 = n!/(d(d+1)...(d+n-1)) for all n, d."""
+    _, Gm, W = weingarten(n, d)
+    rows = Gm.sum(1)
+    assert close(rows, rows[0].expand_as(rows), 1e-9)                   # constant row sums c_n(d)
+    assert abs(rows[0].item() - math.prod(d + i for i in range(n))) < 1e-9
+    assert abs(W.sum().item() - math.factorial(n) / math.prod(d + i for i in range(n))) < 1e-12
+
+
+def test_haar_twirl_monte_carlo():
+    """Lemma B.11: E[U^{(x)2} X U^{(x)2*}] = alpha 1 + beta F (Theorem 5.10) by Monte Carlo (z < 5)."""
+    g = torch.Generator().manual_seed(16)
+    d, B = 3, 20_000
+    X = torch.randn(d * d, d * d, dtype=C, generator=g)
+    U2 = kpow(haar(d, B, g), 2)
+    Y = U2 @ X @ U2.mH
+    F = dc.permutation_representation(2, d, [[1, 0]])[0]
+    trX, trFX = torch.trace(X), torch.trace(F @ X)
+    alpha = (trX - trFX / d) / (d * d - 1)
+    beta = (trFX - trX / d) / (d * d - 1)
+    exact = alpha * torch.eye(d * d, dtype=C) + beta * F
+    z = ((Y.mean(0) - exact).abs() / (Y.std(0) / math.sqrt(B))).max().item()
+    assert z < 5.5
+
+
+def test_spherical_components_and_tensor_operators():
+    """Lemma B.15: site spins and total spin are vector operators; spherical components are rank-1 tensor
+    operators; sum_a T_a T'_a = sum_q (-1)^q T_q T'_{-q}; the intertwining form (c)."""
+    L = 4
+    S = dc.total_spin(L)
+    Sp, Sm = S[0] + 1j * S[1], S[0] - 1j * S[1]
+    s = dc.spin_matrices(0.5)
+    site = lambda a, i: functools.reduce(torch.kron, [a if k == i else torch.eye(2, dtype=C) for k in range(L)])
+    sph = lambda X, Y, Z: {1: -(X + 1j * Y) / math.sqrt(2), 0: Z, -1: (X - 1j * Y) / math.sqrt(2)}
+    epsl = {(0, 1, 2): 1, (1, 2, 0): 1, (2, 0, 1): 1, (0, 2, 1): -1, (2, 1, 0): -1, (1, 0, 2): -1}
+    for T3 in ([site(a, 2) for a in s], list(S)):
+        for a in range(3):
+            for b in range(3):
+                rhs = sum(1j * epsl.get((a, b, c), 0) * T3[c] for c in range(3))
+                assert close(S[a] @ T3[b] - T3[b] @ S[a], rhs)
+        T = sph(*T3)
+        zero = torch.zeros_like(T[0])
+        for q in (-1, 0, 1):
+            assert close(S[2] @ T[q] - T[q] @ S[2], q * T[q])
+            assert close(Sp @ T[q] - T[q] @ Sp, math.sqrt(2 - q * (q + 1)) * T.get(q + 1, zero))
+            assert close(Sm @ T[q] - T[q] @ Sm, math.sqrt(2 - q * (q - 1)) * T.get(q - 1, zero))
+        # (c): Psi (S_a (x) 1 + 1 (x) S^(1)_a) = S_a Psi with Psi(v (x) |1,q>) = T_q v
+        Psi = torch.cat([T[q] for q in (1, 0, -1)], 1)                    # columns ordered (q, v) -> need (v, q)
+        Psi = Psi.reshape(2 ** L, 3, 2 ** L).permute(0, 2, 1).reshape(2 ** L, 3 * 2 ** L)
+        S1 = dc.spin_matrices(1)
+        for a in range(3):
+            lhs = Psi @ (torch.kron(S[a], torch.eye(3, dtype=C)) + torch.kron(torch.eye(2 ** L, dtype=C), S1[a]))
+            assert close(lhs, S[a] @ Psi)
+    T, T2 = sph(*[site(a, 0) for a in s]), sph(*[site(a, 3) for a in s])
+    assert close(sum(site(a, 0) @ site(a, 3) for a in s), sum((-1) ** q * T[q] @ T2[-q] for q in (-1, 0, 1)))
+
+
+def spin_adapted_basis(L):
+    """The orthonormal basis |S, M; b> of Theorem B.16 for L spins 1/2: highest-weight vectors (Corollary 4.17)
+    lowered with S_- / sqrt((S+M)(S-M+1)). Returns {2S: tensor (2^L, 2S+1, m_S)}."""
+    S = dc.total_spin(L)
+    Sm = S[0] - 1j * S[1]
+    out = {}
+    for t2, B in highest_weight_bases(L).items():
+        Sv = t2 / 2
+        vecs = [B]
+        for a in range(t2):
+            M = Sv - a
+            vecs.append(Sm @ vecs[-1] / math.sqrt((Sv + M) * (Sv - M + 1)))
+        out[t2] = torch.stack(vecs, 1)
+    return out
+
+
+@pytest.mark.parametrize('L', [4, 5])
+def test_wigner_eckart(L):
+    """Theorem B.16: in the basis |S, M; b>, V^* S_a V = (+) S^(S)_a (x) 1, and the matrix elements of a site spin
+    are <S M; 1 q | S' M'> R_ab with one reduced matrix R per pair (S, S'), zero unless |S - S'| <= 1 <= S + S'."""
+    S = dc.total_spin(L)
+    basis = spin_adapted_basis(L)
+    V = torch.cat([b.reshape(2 ** L, -1) for b in basis.values()], 1)
+    assert close(V.mH @ V, torch.eye(2 ** L, dtype=R))
+    for a in range(3):
+        rep = torch.block_diag(*[torch.kron(dc.spin_matrices(t2 / 2)[a], torch.eye(b.shape[2], dtype=C))
+                                 for t2, b in basis.items()])
+        assert close(V.mH @ S[a] @ V, rep)
+    s = dc.spin_matrices(0.5)
+    site = lambda a, i: functools.reduce(torch.kron, [a if k == i else torch.eye(2, dtype=C) for k in range(L)])
+    for i in (0, L - 1):
+        X, Y, Z = (site(a, i) for a in s)
+        T = {1: -(X + 1j * Y) / math.sqrt(2), 0: Z, -1: (X - 1j * Y) / math.sqrt(2)}
+        for t2, Bin in basis.items():
+            for t2p, Bout in basis.items():
+                Sv, Svp = t2 / 2, t2p / 2
+                rows, cg = [], []
+                for q in (-1, 0, 1):
+                    E = torch.einsum('xma,xy,ynb->mnab', Bout.conj(), T[q], Bin)     # (M', M, a, b)
+                    for mp in range(t2p + 1):
+                        for mm in range(t2 + 1):
+                            Mp, M = Svp - mp, Sv - mm
+                            rows.append(E[mp, mm].reshape(-1))
+                            ok = abs(Sv - 1) <= Svp <= Sv + 1 and abs(M + q) <= Svp and abs(M + q - Mp) < 1e-9
+                            cg.append(su2.clebsch_gordan(Sv, M, 1, q, Svp, Mp) if ok else 0.0)
+                rows, cg = torch.stack(rows), torch.tensor(cg, dtype=C)
+                if not (abs(Sv - Svp) <= 1 <= Sv + Svp):
+                    assert close(rows, 0)                                # (a)
+                    continue
+                Rr = (cg.conj() @ rows) / (cg.abs() ** 2).sum()           # least squares reduced matrix
+                assert close(rows, torch.outer(cg, Rr))                  # (b), (c): M' = M + q
+                assert Rr.abs().max() > 1e-3
+
+
+def test_haar_measure_of_orthogonal_group():
+    """Theorem B.17: QR of a real Gaussian matrix with sign correction is Haar on O(k): E O = 0,
+    E[O X O^T] = Tr X / k, E O_ij O_lm = delta_il delta_jm / k (Monte Carlo, z < 5); the corrected O does not
+    depend on the QR routine's sign choice."""
+    g = torch.Generator().manual_seed(17)
+    k, B = 3, 100_000
+    Z = torch.randn(B, k, k, dtype=R, generator=g)
+    Q, Rr = torch.linalg.qr(Z)
+    O = Q * torch.sign(Rr.diagonal(dim1=-2, dim2=-1)).unsqueeze(-2)
+    Q2, R2 = -Q, -Rr                                                    # another QR decomposition
+    assert close(Q2 * torch.sign(R2.diagonal(dim1=-2, dim2=-1)).unsqueeze(-2), O)
+    assert close(O.mT @ O, torch.eye(k, dtype=R).expand(B, k, k))
+    zO = (O.mean(0).abs() / (O.std(0) / math.sqrt(B))).max()
+    assert zO < 5
+    X = torch.randn(k, k, dtype=R, generator=g)
+    Y = O @ X @ O.mT
+    exact = torch.trace(X) / k * torch.eye(k, dtype=R)
+    assert ((Y.mean(0) - exact).abs() / (Y.std(0) / math.sqrt(B))).max() < 5
+    second = torch.einsum('bij,blm->bijlm', O, O)
+    expected = torch.einsum('il,jm->ijlm', torch.eye(k, dtype=R), torch.eye(k, dtype=R)) / k
+    zz = ((second.mean(0) - expected).abs() / (second.std(0) / math.sqrt(B) + 1e-300)).max()
+    assert zz < 5.5

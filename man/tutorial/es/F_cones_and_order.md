@@ -4,9 +4,9 @@
 
 Este tutorial acompaña al [apéndice F](../../lecture_notes/es/F_cones_and_order.md) de los apuntes de clase, que demuestra que el cono de cuadrados de un
 álgebra de Jordan euclídea es simétrico, el teorema de Koecher–Vinberg ([teorema F.12](../../lecture_notes/es/F_cones_and_order.md#r-F-12)), y el teorema de Kadison y
-la forma de los $*$-isomorfismos de Jordan para las álgebras $\bigoplus_cM_{k_c}(\mathbb C)$
+la forma de los $`*`$-isomorfismos de Jordan para las álgebras $`\bigoplus_cM_{k_c}(\mathbb C)`$
 ([teoremas F.15](../../lecture_notes/es/F_cones_and_order.md#r-F-15) y [F.18](../../lecture_notes/es/F_cones_and_order.md#r-F-18)). Comprobamos numéricamente estos resultados sobre matrices, sobre el factor de
-espín $V_4$ de la biblioteca y sobre el cono de las matrices definidas positivas.
+espín $`V_4`$ de la biblioteca y sobre el cono de las matrices definidas positivas.
 
 <a id="s-F-2"></a>
 
@@ -14,13 +14,13 @@ espín $V_4$ de la biblioteca y sobre el cono de las matrices definidas positiva
 
 *Apuntes:* [sección F.2](../../lecture_notes/es/F_cones_and_order.md#s-F-2); [teorema F.5](../../lecture_notes/es/F_cones_and_order.md#r-F-5), [teorema F.6](../../lecture_notes/es/F_cones_and_order.md#r-F-6), [corolario F.7](../../lecture_notes/es/F_cones_and_order.md#r-F-7).
 
-En $V_4$ el código usa el `SpinFactor` de la biblioteca ([tutorial, sección 13.2](../../tutorial/es/13_jordan_algebras.md#s-13-2)): `random` (con `cone=True` para elementos de $Q$),
+En $`V_4`$ el código usa el `SpinFactor` de la biblioteca ([tutorial, sección 13.2](../../tutorial/es/13_jordan_algebras.md#s-13-2)): `random` (con `cone=True` para elementos de $`Q`$),
 `inner`, `spectral_decomposition`, `in_cone`, `product`, `quadratic_representation`, `exp`, `log` y `apply_function`.
 
-El código comprueba el teorema F.5 para $\mathrm{Herm}_4(\mathbb C)$ y para el cono de Lorentz $Q\subseteq V_4$ (el
-emparejamiento negativo es el testigo $c_i$ de (1), $\langle y,c_i\rangle=\lambda_i\|c_i\|^2<0$), el teorema F.6 en $V_4$, donde en las coordenadas
-$(a,u)$ los operadores $L(b)$ y $P(y)$ son matrices simétricas $5\times5$, y el corolario F.7 en
-$\mathrm{Herm}_5(\mathbb R)$:
+El código comprueba el teorema F.5 para $`\mathrm{Herm}_4(\mathbb C)`$ y para el cono de Lorentz $`Q\subseteq V_4`$ (el
+emparejamiento negativo es el testigo $`c_i`$ de (1), $`\langle y,c_i\rangle=\lambda_i\|c_i\|^2<0`$), el teorema F.6 en $`V_4`$, donde en las coordenadas
+$`(a,u)`$ los operadores $`L(b)`$ y $`P(y)`$ son matrices simétricas $`5\times5`$, y el corolario F.7 en
+$`\mathrm{Herm}_5(\mathbb R)`$:
 
 ```python
 import math
@@ -79,8 +79,8 @@ assert (rhs - lhs > -1e-9 * rhs).all()
 
 *Apuntes:* [sección F.3](../../lecture_notes/es/F_cones_and_order.md#s-F-3); [proposición F.11](../../lecture_notes/es/F_cones_and_order.md#r-F-11), [teorema F.12](../../lecture_notes/es/F_cones_and_order.md#r-F-12), [ejemplo F.13](../../lecture_notes/es/F_cones_and_order.md#r-F-13).
 
-El código calcula $D^3f$ en $e$ por diferenciación automática de $f(x)=-\frac{n+1}2\log\det x$ en coordenadas
-ortonormales de $\mathrm{Herm}_3(\mathbb R)$ y comprueba las afirmaciones de la proposición F.11 y del teorema F.12:
+El código calcula $`D^3f`$ en $`e`$ por diferenciación automática de $`f(x)=-\frac{n+1}2\log\det x`$ en coordenadas
+ortonormales de $`\mathrm{Herm}_3(\mathbb R)`$ y comprueba las afirmaciones de la proposición F.11 y del teorema F.12:
 
 ```python
 from torch.autograd.functional import jacobian, hessian
@@ -113,10 +113,10 @@ assert close(prod(u, prod(u2, v)), prod(u2, prod(u, v)))           # Jordan iden
 
 *Apuntes:* [sección F.4](../../lecture_notes/es/F_cones_and_order.md#s-F-4); [teorema F.15](../../lecture_notes/es/F_cones_and_order.md#r-F-15), [teorema F.18](../../lecture_notes/es/F_cones_and_order.md#r-F-18).
 
-Según los [apuntes de clase, teorema F.15](../../lecture_notes/es/F_cones_and_order.md#r-F-15), una biyección lineal unital $\Phi$ tal que $\Phi$ y $\Phi^{-1}$ son
-positivas es un $*$-isomorfismo de Jordan. El código construye una aplicación así de $M_2\oplus M_2\oplus M_3$, de la forma del
-[teorema F.18](../../lecture_notes/es/F_cones_and_order.md#r-F-18): intercambia los dos bloques $M_2$, traspone dos bloques y conjuga por unitarias. Comprueba
-que $\Phi$ es unital y positiva en ambos sentidos, que conserva el producto de Jordan y que no es
+Según los [apuntes de clase, teorema F.15](../../lecture_notes/es/F_cones_and_order.md#r-F-15), una biyección lineal unital $`\Phi`$ tal que $`\Phi`$ y $`\Phi^{-1}`$ son
+positivas es un $`*`$-isomorfismo de Jordan. El código construye una aplicación así de $`M_2\oplus M_2\oplus M_3`$, de la forma del
+[teorema F.18](../../lecture_notes/es/F_cones_and_order.md#r-F-18): intercambia los dos bloques $`M_2`$, traspone dos bloques y conjuga por unitarias. Comprueba
+que $`\Phi`$ es unital y positiva en ambos sentidos, que conserva el producto de Jordan y que no es
 multiplicativa:
 
 ```python
@@ -150,11 +150,11 @@ assert not close(Phi([s @ t for s, t in zip(x, y)])[0], (Phi(x)[0] @ Phi(y)[0]))
 
 <a id="s-F-5"></a>
 
-## F.5 $*$-isomorfismos de Jordan de $\bigoplus_cM_{k_c}$
+## F.5 $`*`$-isomorfismos de Jordan de $`\bigoplus_cM_{k_c}`$
 
 *Apuntes:* [sección F.5](../../lecture_notes/es/F_cones_and_order.md#s-F-5); [teorema F.17](../../lecture_notes/es/F_cones_and_order.md#r-F-17).
 
-El código construye el automorfismo de Jordan $x\mapsto Ux^TU^*$ de $M_3$ y recupera $U$ (salvo una fase) siguiendo los
+El código construye el automorfismo de Jordan $`x\mapsto Ux^TU^*`$ de $`M_3`$ y recupera $`U`$ (salvo una fase) siguiendo los
 pasos de la demostración ([apuntes de clase, teorema F.17](../../lecture_notes/es/F_cones_and_order.md#r-F-17)):
 
 ```python
@@ -184,9 +184,9 @@ print("U recovered up to the phase", complex(phase))
 
 ## Ejercicios
 
-[Ejercicio 2](../../lecture_notes/es/F_cones_and_order.md#x-F) de los apuntes de clase: para $0<t<1$, $\Psi_t(x)=(1-t)x+\frac tn\mathrm{Tr}(x)1$ sobre $M_n$ es una
+[Ejercicio 2](../../lecture_notes/es/F_cones_and_order.md#x-F) de los apuntes de clase: para $`0<t<1`$, $`\Psi_t(x)=(1-t)x+\frac tn\mathrm{Tr}(x)1`$ sobre $`M_n`$ es una
 biyección positiva unital cuya inversa no es positiva, y no lleva proyecciones en proyecciones. Compruébelo
-numéricamente para $n=3$, $t=\frac14$ y una proyección de rango uno $p$.
+numéricamente para $`n=3`$, $`t=\frac14`$ y una proyección de rango uno $`p`$.
 
 <details>
 <summary>Soluciones</summary>

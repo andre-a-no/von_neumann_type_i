@@ -1,0 +1,91 @@
+# Documentation website (GitHub Pages), built from man/ and README.md by .github/workflows/pages.yml.
+# Local build:  pip install -r docs_site/requirements.txt && mkdocs serve   (or: mkdocs build --strict)
+# The pages are the Markdown files of man/ unchanged; docs_site/hooks.py adds the home page (README.md), the API
+# reference, the navigation in seven languages, GitHub-style math ($`...`$ and ```math) for MathJax, and SEO metadata.
+site_name: torch_vn_algebra
+site_url: https://andre-a-no.github.io/von_neumann_type_i/
+site_description: >-
+  torch_vn_algebra: a PyTorch library for block-diagonal matrices with symmetry sectors (finite-dimensional Type I
+  von Neumann algebras): Haar random unitaries, quantum states and channels, Lindblad dynamics, spin chains in symmetry
+  sectors, Wedderburn decomposition, on CPU and GPU, with lecture notes and a tutorial in seven languages.
+site_author: Irina Nikolaeva, Andrej Novikov
+repo_url: https://github.com/andre-a-no/von_neumann_type_i
+repo_name: andre-a-no/von_neumann_type_i
+edit_uri: edit/main/man/
+copyright: Copyright &copy; 2026 Irina Nikolaeva, Andrej Novikov &middot; MIT License
+
+docs_dir: man
+exclude_docs: |
+  article/*
+  !article/main.pdf
+
+theme:
+  name: material
+  custom_dir: docs_site/overrides
+  language: en
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle: {icon: material/brightness-7, name: Switch to dark mode}
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle: {icon: material/brightness-4, name: Switch to light mode}
+  icon:
+    repo: fontawesome/brands/github
+
+hooks:
+  - docs_site/hooks.py
+
+markdown_extensions:
+  - abbr
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+      inline_syntax: [round]
+      block_syntax: [square]
+  - pymdownx.superfences:
+      custom_fences:
+        - name: math
+          class: arithmatex
+          format: !!python/name:pymdownx.arithmatex.arithmatex_fenced_format
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+
+plugins:
+  - search:
+      lang: [en, es, fr, de, ru, ja]
+
+validation:
+  omitted_files: warn
+  absolute_links: info
+  unrecognized_links: warn
+  anchors: info        # ids in raw HTML next to math with "<" are missed by the check; see tests/test_man.py
+
+extra:
+  # used by docs_site/hooks.py for <meta name="keywords">, Open Graph and the JSON-LD record of the home page
+  keywords: >-
+    von Neumann algebra, block-diagonal matrix, symmetry sectors, superselection sectors, PyTorch, GPU,
+    Haar random unitary, random matrices, quantum channels, Kraus operators, Choi matrix, density matrix,
+    Lindblad equation, open quantum systems, spin chains, exact diagonalization, Wedderburn decomposition,
+    commutant, group representations, Clebsch-Gordan, conditional expectation, Jones index, Jordan algebra,
+    Renyi divergence, equivariant neural networks, lecture notes
+  paper: https://arxiv.org/abs/2606.15882
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/andre-a-no/von_neumann_type_i
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/torch_vn_algebra/

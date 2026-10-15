@@ -8,21 +8,21 @@
 ライブラリを検証し、密な行列には大きすぎるセクターに `krylov` のランチョス法とクリロフ法を用い、準位統計と
 エンタングルメントを計算する。
 
-本章を通じて、サイトは $0,\dots,L-1$ とし、$(\mathbb C^2)^{\otimes L}$ の基底は配置
-$|b\rangle=|b_0\dots b_{L-1}\rangle$ からなり、上向きスピンに対して $b_i=1$ とする（ライブラリの規約：ラベルの
-第 $i$ ビットがサイト $i$ である）。$s^a_i$（$a=x,y,z$）はサイト $i$ 上のスピン行列 $\frac12\sigma_a$、
-$s^\pm_i=s^x_i\pm is^y_i$、$n_i=s^z_i+\frac12$、$S^a=\sum_is^a_i$ とし、$N=S^z+\frac L2$ は上向きスピンの
-個数である。鎖は **開いた** 鎖（ボンド $(i,i+1)$、$i<L-1$）か **周期的** な鎖（ボンド $(L-1,0)$ も含む。このとき
-$L\ge3$ で、添字は $L$ を法とする）である。$J>0$（反強磁性）、$\hbar=1$ とし、$\log$ は自然対数である。
+本章を通じて、サイトは $`0,\dots,L-1`$ とし、$`(\mathbb C^2)^{\otimes L}`$ の基底は配置
+$`|b\rangle=|b_0\dots b_{L-1}\rangle`$ からなり、上向きスピンに対して $`b_i=1`$ とする（ライブラリの規約：ラベルの
+第 $`i`$ ビットがサイト $`i`$ である）。$`s^a_i`$（$`a=x,y,z`$）はサイト $`i`$ 上のスピン行列 $`\frac12\sigma_a`$、
+$`s^\pm_i=s^x_i\pm is^y_i`$、$`n_i=s^z_i+\frac12`$、$`S^a=\sum_is^a_i`$ とし、$`N=S^z+\frac L2`$ は上向きスピンの
+個数である。鎖は **開いた** 鎖（ボンド $`(i,i+1)`$、$`i<L-1`$）か **周期的** な鎖（ボンド $`(L-1,0)`$ も含む。このとき
+$`L\ge3`$ で、添字は $`L`$ を法とする）である。$`J>0`$（反強磁性）、$`\hbar=1`$ とし、$`\log`$ は自然対数である。
 
 <a id="s-9-1"></a>
 
-## 9.1 XXZ 鎖とその $U(1)$ セクター
+## 9.1 XXZ 鎖とその $`U(1)`$ セクター
 
-*講義ノート：* [9.1節](../../lecture_notes/ja/09_spin_chains.md#s-9-1)；[命題 9.1](../../lecture_notes/ja/09_spin_chains.md#r-9-1)（$H$ は $S^z$ を保存する）、[命題 9.2](../../lecture_notes/ja/09_spin_chains.md#r-9-2)、[補題 9.3](../../lecture_notes/ja/09_spin_chains.md#r-9-3)、[系 9.4](../../lecture_notes/ja/09_spin_chains.md#r-9-4)（鎖の塔とその指数）。
+*講義ノート：* [9.1節](../../lecture_notes/ja/09_spin_chains.md#s-9-1)；[命題 9.1](../../lecture_notes/ja/09_spin_chains.md#r-9-1)（$`H`$ は $`S^z`$ を保存する）、[命題 9.2](../../lecture_notes/ja/09_spin_chains.md#r-9-2)、[補題 9.3](../../lecture_notes/ja/09_spin_chains.md#r-9-3)、[系 9.4](../../lecture_notes/ja/09_spin_chains.md#r-9-4)（鎖の塔とその指数）。
 
 `SpinChain(L).xxz` は各セクターの配置（`chain.labels[N]`）から直接ブロックを構成する。
-これを、クロネッカー積から構成した完全な $2^L\times2^L$ 行列と比較する。
+これを、クロネッカー積から構成した完全な $`2^L\times2^L`$ 行列と比較する。
 
 ```python
 import functools, itertools, math, time
@@ -52,9 +52,9 @@ for N, k in enumerate(chain.algebra.k_factors):
     assert close(H.matrix[0, N, :k, :k], H_full[lab][:, lab])
 ```
 
-鎖の塔 $\mathcal A_0\subset\mathcal A_1\subset\cdots$：`inclusions.chain_tower` が包含を、
-`inclusions.bratteli_diagram` がそのブラッテリ図を、`Inclusion.index` が指数 $\|\Lambda\|^2$ を与える。コードは
-パスカルの法則、[補題 9.3](../../lecture_notes/ja/09_spin_chains.md#r-9-3)、および $[\mathcal A_{L+1}:\mathcal A_L]=4\cos^2\frac\pi{2L+4}$（[系 9.4](../../lecture_notes/ja/09_spin_chains.md#r-9-4)）を確かめる。
+鎖の塔 $`\mathcal A_0\subset\mathcal A_1\subset\cdots`$：`inclusions.chain_tower` が包含を、
+`inclusions.bratteli_diagram` がそのブラッテリ図を、`Inclusion.index` が指数 $`\|\Lambda\|^2`$ を与える。コードは
+パスカルの法則、[補題 9.3](../../lecture_notes/ja/09_spin_chains.md#r-9-3)、および $`[\mathcal A_{L+1}:\mathcal A_L]=4\cos^2\frac\pi{2L+4}`$（[系 9.4](../../lecture_notes/ja/09_spin_chains.md#r-9-4)）を確かめる。
 
 ```python
 tower = inclusions.chain_tower(8)                                    # A_0 c A_1 c ... c A_8
@@ -75,7 +75,7 @@ for L_, inc in enumerate(tower):
 
 *講義ノート：* [9.2節](../../lecture_notes/ja/09_spin_chains.md#s-9-2)；[命題 9.5](../../lecture_notes/ja/09_spin_chains.md#r-9-5)（運動量セクター）、[定理 9.7](../../lecture_notes/ja/09_spin_chains.md#r-9-7)（マーシャルの符号則）、[系 9.8](../../lecture_notes/ja/09_spin_chains.md#r-9-8)（基底状態の運動量）。
 
-`xxz_momentum` は、各軌道から代表元 $a$ を一つずつとった正規化された基底 $|a,k\rangle$ でブロックを構成する。
+`xxz_momentum` は、各軌道から代表元 $`a`$ を一つずつとった正規化された基底 $`|a,k\rangle`$ でブロックを構成する。
 軌道を独立に数え、スペクトルを密なセクターと比較する。
 
 ```python
@@ -93,11 +93,11 @@ E_k = torch.sort(torch.cat([e[0] for e in Hk.eigenvalues()])).values
 assert close(E_k, torch.linalg.eigvalsh(ring.xxz(1.0, 1.0, h=0.2, sector=6).matrix[0, 0]))
 ```
 
-$924$ 個の状態からなるセクター $N=6$ は、大きさ $80,75,78,76,78,75,80,75,78,76,78,75$ のブロックに分かれる。
+$`924`$ 個の状態からなるセクター $`N=6`$ は、大きさ $`80,75,78,76,78,75,80,75,78,76,78,75`$ のブロックに分かれる。
 
 マーシャルの符号則（[定理 9.7](../../lecture_notes/ja/09_spin_chains.md#r-9-7)）により、ランダム磁場中の開いた鎖と周期的な鎖について
-$(-1)^{N_B(b)}\psi(b)$ は各セクターで一つの符号をもち、[系 9.8](../../lecture_notes/ja/09_spin_chains.md#r-9-8) により環のセクター $N$ の最低準位は
-$N$ が偶数なら運動量ブロック $k=0$ に、奇数なら $k=\pi$ にある：
+$`(-1)^{N_B(b)}\psi(b)`$ は各セクターで一つの符号をもち、[系 9.8](../../lecture_notes/ja/09_spin_chains.md#r-9-8) により環のセクター $`N`$ の最低準位は
+$`N`$ が偶数なら運動量ブロック $`k=0`$ に、奇数なら $`k=\pi`$ にある：
 
 ```python
 for bc in ('open', 'periodic'):
@@ -115,12 +115,12 @@ for N in range(1, L):
 
 <a id="s-9-3"></a>
 
-## 9.3 $\Delta=1$ における $SU(2)$
+## 9.3 $`\Delta=1`$ における $`SU(2)`$
 
-*講義ノート：* [9.3節](../../lecture_notes/ja/09_spin_chains.md#s-9-3)；[定理 9.9](../../lecture_notes/ja/09_spin_chains.md#r-9-9)（リーブ–マティス）。$\Delta=1$ かつ $h=0$ のとき $H\cong\bigoplus_S1_{2S+1}\otimes H_S$ であり、`SU2Chain` は最高ウェイトベクトルの上でブロック $H_S$ を構成する。
+*講義ノート：* [9.3節](../../lecture_notes/ja/09_spin_chains.md#s-9-3)；[定理 9.9](../../lecture_notes/ja/09_spin_chains.md#r-9-9)（リーブ–マティス）。$`\Delta=1`$ かつ $`h=0`$ のとき $`H\cong\bigoplus_S1_{2S+1}\otimes H_S`$ であり、`SU2Chain` は最高ウェイトベクトルの上でブロック $`H_S`$ を構成する。
 
-十二個のスピンについてブロックの大きさを比較し、定理 9.9 を $U(1)$ セクターで確かめ、ギャップを計算し、さらに
-鎖ではない二部グラフ（$n_A=5$、$n_B=3$、$S_*=1$、ランダムな結合）で定理 9.7 と 9.9 を確かめる。
+十二個のスピンについてブロックの大きさを比較し、定理 9.9 を $`U(1)`$ セクターで確かめ、ギャップを計算し、さらに
+鎖ではない二部グラフ（$`n_A=5`$、$`n_B=3`$、$`S_*=1`$、ランダムな結合）で定理 9.7 と 9.9 を確かめる。
 
 ```python
 sym = SU2Chain(12, boundary='periodic', complex_valued=False)
@@ -158,17 +158,17 @@ w8 = torch.linalg.eigvalsh(H8)
 assert w8[2] - w8[0] < 1e-10 and w8[3] - w8[0] > 1e-8                # ground space: one triplet, S_* = 1
 ```
 
-$SU(2)$ ブロックの大きさは $m_S=132,297,275,154,54,11,1$ で、最大の $U(1)$ ブロックの $924$ と比べて小さく、
-対角化のコスト $\sum k^3$ は $2.0\cdot10^9$ から $5.3\cdot10^7$ に減る。*数値的観察*：$L$ とギャップの積はゆっくりと増加し、
-$L=6,\dots,12$ に対して $4.108,4.181,4.232,4.270$ である。$L\to\infty$ でのそのふるまいについては何も証明しない。
+$`SU(2)`$ ブロックの大きさは $`m_S=132,297,275,154,54,11,1`$ で、最大の $`U(1)`$ ブロックの $`924`$ と比べて小さく、
+対角化のコスト $`\sum k^3`$ は $`2.0\cdot10^9`$ から $`5.3\cdot10^7`$ に減る。*数値的観察*：$`L`$ とギャップの積はゆっくりと増加し、
+$`L=6,\dots,12`$ に対して $`4.108,4.181,4.232,4.270`$ である。$`L\to\infty`$ でのそのふるまいについては何も証明しない。
 
 **相関.** 各サイトのスピンはベクトル作用素をなし、その球面成分は階数一のテンソル作用素をなす
 （補題 B.15(a),(b)）。**ウィグナー–エッカートの定理**（定理 B.16）により、二つの多重項の間のそれらの行列要素は
 クレブシュ–ゴルダン係数と、磁気量子数によらない **換算行列要素** との積であり、
-$\mathbf s_i\cdot\mathbf s_j=\sum_q(-1)^qs^{(i)}_qs^{(j)}_{-q}$ である（補題 B.15(a)）。`spin_correlation` はこれを用いて、
-最高ウェイトベクトルだけから各 $H_S$ 上の $\mathbf s_i\cdot\mathbf s_j$ を構成する。`'direct'` 法は代わりにボンド演算子を
-最高ウェイトベクトルへ圧縮する。$\mathbf s_i\cdot\mathbf s_j\in\{S_a\}'$ であるから、これは命題 4.15(b) により正しい。
-第一の方法の実装が正しいことはここでは証明しない。コードは、両者が互いに一致し、かつ $U(1)$ セクターで
+$`\mathbf s_i\cdot\mathbf s_j=\sum_q(-1)^qs^{(i)}_qs^{(j)}_{-q}`$ である（補題 B.15(a)）。`spin_correlation` はこれを用いて、
+最高ウェイトベクトルだけから各 $`H_S`$ 上の $`\mathbf s_i\cdot\mathbf s_j`$ を構成する。`'direct'` 法は代わりにボンド演算子を
+最高ウェイトベクトルへ圧縮する。$`\mathbf s_i\cdot\mathbf s_j\in\{S_a\}'`$ であるから、これは命題 4.15(b) により正しい。
+第一の方法の実装が正しいことはここでは証明しない。コードは、両者が互いに一致し、かつ $`U(1)`$ セクターで
 書き下した基底状態上で定義どおりに評価した値とも一致することを確かめる。
 
 ```python
@@ -191,14 +191,14 @@ assert ((-1.0) ** torch.arange(1, 12) * corr_we[1:] > 0).all()       # signs (-1
 print([round(x, 4) for x in corr_we.tolist()])
 ```
 
-相関 $\langle\mathbf s_0\cdot\mathbf s_r\rangle=0.75,-0.4489,0.1878,-0.1658,0.1209,-0.1224,0.1070,\dots$ は
+相関 $`\langle\mathbf s_0\cdot\mathbf s_r\rangle=0.75,-0.4489,0.1878,-0.1658,0.1209,-0.1224,0.1070,\dots`$ は
 符号が交互に変わる。これは定理 9.7 と 9.9 がすべての偶数の環に対して強制することである（[講義ノート、9.3節](../../lecture_notes/ja/09_spin_chains.md#s-9-3)）。
 
 <a id="s-9-4"></a>
 
 ## 9.4 厳密な検証：自由フェルミオンとベーテ仮説
 
-*講義ノート：* [9.4節](../../lecture_notes/ja/09_spin_chains.md#s-9-4)；[定理 9.10](../../lecture_notes/ja/09_spin_chains.md#r-9-10) により、開いた XX 鎖のセクター $N$ のエネルギーは相異なる $N$ 個の $\varepsilon_k=J\cos\frac{\pi k}{L+1}$ の和である；[命題 9.12](../../lecture_notes/ja/09_spin_chains.md#r-9-12)（二マグノン、ベーテ方程式）。
+*講義ノート：* [9.4節](../../lecture_notes/ja/09_spin_chains.md#s-9-4)；[定理 9.10](../../lecture_notes/ja/09_spin_chains.md#r-9-10) により、開いた XX 鎖のセクター $`N`$ のエネルギーは相異なる $`N`$ 個の $`\varepsilon_k=J\cos\frac{\pi k}{L+1}`$ の和である；[命題 9.12](../../lecture_notes/ja/09_spin_chains.md#r-9-12)（二マグノン、ベーテ方程式）。
 
 ```python
 L = 10
@@ -211,11 +211,11 @@ for N in range(L + 1):
     assert abs(E[0].item() - sum(sorted(eps)[:N])) < 1e-12           # ground state: the N lowest modes
 ```
 
-[命題 9.12](../../lecture_notes/ja/09_spin_chains.md#r-9-12) により、$K=2\pi n/L$、$c=\cos\frac K2$ として
-$F(q)=(-1)^ne^{iqL}(c-\Delta e^{-iq})+c-\Delta e^{iq}$ の各根 $q$ は環のセクター $N=2$ の固有ベクトル $\Psi$ を与える
-（[講義ノート、9.4節](../../lecture_notes/ja/09_spin_chains.md#s-9-4)）。コードは根を $q\in(0,\pi)$ で（散乱状態）、また直線
-$q=i\kappa$、$\pi+i\kappa$（$\kappa>0$）の上で（束縛状態）探し、$L=9$、$\Delta=0.6$ に対して各根について $\Psi$ を構成し、
-$36$ 個の状態からなるセクター $N=2$ と比較する：
+[命題 9.12](../../lecture_notes/ja/09_spin_chains.md#r-9-12) により、$`K=2\pi n/L`$、$`c=\cos\frac K2`$ として
+$`F(q)=(-1)^ne^{iqL}(c-\Delta e^{-iq})+c-\Delta e^{iq}`$ の各根 $`q`$ は環のセクター $`N=2`$ の固有ベクトル $`\Psi`$ を与える
+（[講義ノート、9.4節](../../lecture_notes/ja/09_spin_chains.md#s-9-4)）。コードは根を $`q\in(0,\pi)`$ で（散乱状態）、また直線
+$`q=i\kappa`$、$`\pi+i\kappa`$（$`\kappa>0`$）の上で（束縛状態）探し、$`L=9`$、$`\Delta=0.6`$ に対して各根について $`\Psi`$ を構成し、
+$`36`$ 個の状態からなるセクター $`N=2`$ と比較する：
 
 ```python
 L, Delta = 9, 0.6
@@ -252,26 +252,26 @@ for x in range(8):
 assert close(ring8.xxz(1.0, Delta, sector=2).matrix[0, 0] @ Phi, (8 * Delta / 4 - Delta) * Phi)   # E_F - J Delta
 ```
 
-*数値的観察*：$L=9$、$\Delta=0.6$ に対して探索は $36$ 個の根、すなわち散乱状態 $34$ 個と束縛状態 $2$ 個を見つけ、
-それらのベクトルは（丸め誤差の範囲で）一次独立な固有ベクトルである：$36$ 個の固有状態すべてがベーテ方程式から
-得られる。他の $L$ について完全性は証明されておらず、偶数の $L$ と $\Delta\ne0$ では完全性は成り立たない
-（[講義ノート、9.4節](../../lecture_notes/ja/09_spin_chains.md#s-9-4)）：ベクトル $\Phi=\sum_x(-1)^x|x,x+1\rangle$ はすべてのベーテ・ベクトルと直交し、
-コードの最後の数行は $L=8$ に対して $H\Phi=(E_F-J\Delta)\Phi$ を確かめる。
+*数値的観察*：$`L=9`$、$`\Delta=0.6`$ に対して探索は $`36`$ 個の根、すなわち散乱状態 $`34`$ 個と束縛状態 $`2`$ 個を見つけ、
+それらのベクトルは（丸め誤差の範囲で）一次独立な固有ベクトルである：$`36`$ 個の固有状態すべてがベーテ方程式から
+得られる。他の $`L`$ について完全性は証明されておらず、偶数の $`L`$ と $`\Delta\ne0`$ では完全性は成り立たない
+（[講義ノート、9.4節](../../lecture_notes/ja/09_spin_chains.md#s-9-4)）：ベクトル $`\Phi=\sum_x(-1)^x|x,x+1\rangle`$ はすべてのベーテ・ベクトルと直交し、
+コードの最後の数行は $`L=8`$ に対して $`H\Phi=(E_F-J\Delta)\Phi`$ を確かめる。
 
 <a id="s-9-5"></a>
 
 ## 9.5 ランチョス法とクリロフ法
 
-*講義ノート：* [9.5節](../../lecture_notes/ja/09_spin_chains.md#s-9-5)；[命題 9.13](../../lecture_notes/ja/09_spin_chains.md#r-9-13)（ランチョス法：$T_m=Q_m^*HQ_m$ は三重対角）、[定理 9.14](../../lecture_notes/ja/09_spin_chains.md#r-9-14)（リッツ値、すなわち $T_m$ の固有値は $\theta^{(m)}_j\ge\lambda_j$ を満たし、$m$ とともに減少する）、[命題 9.15](../../lecture_notes/ja/09_spin_chains.md#r-9-15)（クリロフ法による時間発展）。
+*講義ノート：* [9.5節](../../lecture_notes/ja/09_spin_chains.md#s-9-5)；[命題 9.13](../../lecture_notes/ja/09_spin_chains.md#r-9-13)（ランチョス法：$`T_m=Q_m^*HQ_m`$ は三重対角）、[定理 9.14](../../lecture_notes/ja/09_spin_chains.md#r-9-14)（リッツ値、すなわち $`T_m`$ の固有値は $`\theta^{(m)}_j\ge\lambda_j`$ を満たし、$`m`$ とともに減少する）、[命題 9.15](../../lecture_notes/ja/09_spin_chains.md#r-9-15)（クリロフ法による時間発展）、[補題 9.17](../../lecture_notes/ja/09_spin_chains.md#r-9-17)、[定理 9.18](../../lecture_notes/ja/09_spin_chains.md#r-9-18)、[系 9.19](../../lecture_notes/ja/09_spin_chains.md#r-9-19)（誤差評価とステップ規則）。
 
-セクター $N=L/2$ の次元は $L=16$ で $12870$、$L=20$ で $184756$ であるが、$H$ は疎であり（各行に $O(L)$ 個の非零
-成分、`xxz_sparse`）、クリロフ法は積 $Hv$ だけを必要とする。$H$ をサイズ $n$ のエルミート行列とし、
-$v\ne0$ とする。**クリロフ空間** は $\mathcal K_m=\mathrm{span}\{v,Hv,\dots,H^{m-1}v\}$ である。
+セクター $`N=L/2`$ の次元は $`L=16`$ で $`12870`$、$`L=20`$ で $`184756`$ であるが、$`H`$ は疎であり（各行に $`O(L)`$ 個の非零
+成分、`xxz_sparse`）、クリロフ法は積 $`Hv`$ だけを必要とする。$`H`$ をサイズ $`n`$ のエルミート行列とし、
+$`v\ne0`$ とする。**クリロフ空間** は $`\mathcal K_m=\mathrm{span}\{v,Hv,\dots,H^{m-1}v\}`$ である。
 
-定理 9.14 は $\theta^{(m)}_1$ がどれだけ速く $\lambda_1$ に近づくかについては何もいわない。それは下で観察するだけである。
-浮動小数点演算では $q_j$ は直交性を失う。`krylov.lanczos` は完全な再直交化を行い、コードは計算された $q_j$ が
-丸め誤差の範囲で正規直交であり $Q_m^*HQ_m=T_m$ であることを確かめる。開いた XX 鎖については、セクター $N$ の
-厳密な基底状態エネルギーは $N$ 個の最小の $\varepsilon_k$ の和である（定理 9.10(c)）。
+定理 9.14 は $`\theta^{(m)}_1`$ がどれだけ速く $`\lambda_1`$ に近づくかについては何もいわない。それは下で観察するだけである。
+浮動小数点演算では $`q_j`$ は直交性を失う。`krylov.lanczos` は完全な再直交化を行い、コードは計算された $`q_j`$ が
+丸め誤差の範囲で正規直交であり $`Q_m^*HQ_m=T_m`$ であることを確かめる。開いた XX 鎖については、セクター $`N`$ の
+厳密な基底状態エネルギーは $`N`$ 個の最小の $`\varepsilon_k`$ の和である（定理 9.10(c)）。
 
 ```python
 L, N = 12, 6
@@ -286,14 +286,14 @@ assert (ritz[1:] <= ritz[:-1] + 1e-12).all() and (ritz >= E_xx - 1e-12).all()   
 print([f"{(ritz[m - 1] - E_xx).item():.1e}" for m in (5, 10, 20, 40)])
 ```
 
-*数値的観察*：最小のリッツ値の誤差は（定理 9.14 により当然ながら）単調に減少し、$5$、$10$、$20$ ステップの後で
-それぞれ $0.42$、$3.1\cdot10^{-3}$、$3.1\cdot10^{-6}$ となり、$40$ ステップの後には丸め誤差の水準に達する。次元は $924$ である。
-`krylov.ground_state` は、正規化されたリッツ対 $(E,\psi)$ の残差 $\|H\psi-E\psi\|$ が $10^{-10}\max(1,|E|)$ を下回るまで
-（`v0` が与えられなければガウス型のランダムベクトルから）ランチョス法を再始動し（再始動は高々 $20$ 回で、そうならなければ
+*数値的観察*：最小のリッツ値の誤差は（定理 9.14 により当然ながら）単調に減少し、$`5`$、$`10`$、$`20`$ ステップの後で
+それぞれ $`0.42`$、$`3.1\cdot10^{-3}`$、$`3.1\cdot10^{-6}`$ となり、$`40`$ ステップの後には丸め誤差の水準に達する。次元は $`924`$ である。
+`krylov.ground_state` は、正規化されたリッツ対 $`(E,\psi)`$ の残差 $`\|H\psi-E\psi\|`$ が $`10^{-10}\max(1,|E|)`$ を下回るまで
+（`v0` が与えられなければガウス型のランダムベクトルから）ランチョス法を再始動し（再始動は高々 $`20`$ 回で、そうならなければ
 警告を出す）、残差を返す。小さな残差は近くに固有値があることを保証するが、それが最小のものであることは保証しない
 （[講義ノート、9.5節](../../lecture_notes/ja/09_spin_chains.md#s-9-5)）ので、密な対角化と比較する。これが唯一の参照である（ここで
-計算するので、値は数値的なものである）：$L=12$ まではセクター $N=L/2$、$L=16$ では次元 $810$ の運動量ブロック $k=0$ で
-あり、後者は系 9.8 によりセクター $N=8$ の基底状態を含む。$L=4$ では値 $-2J$ は厳密である（[講義ノート、9.5節](../../lecture_notes/ja/09_spin_chains.md#s-9-5)）。
+計算するので、値は数値的なものである）：$`L=12`$ まではセクター $`N=L/2`$、$`L=16`$ では次元 $`810`$ の運動量ブロック $`k=0`$ で
+あり、後者は系 9.8 によりセクター $`N=8`$ の基底状態を含む。$`L=4`$ では値 $`-2J`$ は厳密である（[講義ノート、9.5節](../../lecture_notes/ja/09_spin_chains.md#s-9-5)）。
 
 ```python
 E_dense = {}                                                         # numerical references, dense
@@ -312,21 +312,23 @@ print(f"L = 16: E0 = {E16.item():.10f}, residual {res.item():.1e}, {time.time() 
 assert abs(E16.item() - E_dense[16]) < 1e-9 and res.item() < 1e-9
 ```
 
-$L=16$（次元 $12870$）では、ランチョス法は一つの CPU スレッドで一秒を十分に下回る時間で終わる。*数値的観察*：
-サイトあたりのエネルギー $-0.5,-0.467129,-0.456387,-0.451545,-0.448949$（$L=4,\dots,12$）は $L$ とともに増加する。
+$`L=16`$（次元 $`12870`$）では、ランチョス法は一つの CPU スレッドで一秒を十分に下回る時間で終わる。*数値的観察*：
+サイトあたりのエネルギー $`-0.5,-0.467129,-0.456387,-0.451545,-0.448949`$（$`L=4,\dots,12`$）は $`L`$ とともに増加する。
 その極限については何も証明しない。
 
-**時間発展.** $e^{-i\tau H}v$ に対しては $\mathcal K_m$ に射影する：$w_\tau=\|v\|\,Q_me^{-i\tau T_m}e_1$。
+**時間発展.** $`e^{-i\tau H}v`$ に対しては $`\mathcal K_m`$ に射影する：$`w_\tau=\|v\|\,Q_me^{-i\tau T_m}e_1`$。
 
-[命題 9.15](../../lecture_notes/ja/09_spin_chains.md#r-9-15) により、任意の $\tau$ に対して $\|w_\tau\|=\|v\|$ かつ $\langle w_\tau,Hw_\tau\rangle=\langle v,Hv\rangle$ であり、
-$\mathcal K_m$ が $H$ 不変ならば $w_\tau=e^{-i\tau H}v$ である。
+[命題 9.15](../../lecture_notes/ja/09_spin_chains.md#r-9-15) により、任意の $`\tau`$ に対して $`\|w_\tau\|=\|v\|`$ かつ $`\langle w_\tau,Hw_\tau\rangle=\langle v,Hv\rangle`$ であり、
+$`\mathcal K_m`$ が $`H`$ 不変ならば $`w_\tau=e^{-i\tau H}v`$ である。
 
-したがって、クリロフ法の各ステップは、正確であろうとなかろうとノルムとエネルギーを保存する。$\mathcal K_m$ が不変で
-ない限り、命題 9.15 は精度については何もいわない。`krylov.evolve` は時間区間を短いステップに分割し、各ステップを
-$m=30$ のクリロフ空間で行い、発見的な誤差指標が大きいときには警告を出す。それに対する誤差限界は何も証明せず、代わりに
-密な固有値分解（定理 1.5）から計算した $e^{-itH}$ と比較する。ハイゼンベルク環の上で
-ネール状態 $|{\uparrow\downarrow\uparrow\downarrow}\cdots\rangle$ からクエンチを行い、交替磁化
-$m_s=\frac2L\sum_i(-1)^i\langle s^z_i\rangle$ を追跡し、$L=12$ については密な伝播子と比較する。
+したがって、クリロフ法の各ステップは、正確であろうとなかろうとノルムとエネルギーを保存する。その精度は
+[定理 9.18](../../lecture_notes/ja/09_spin_chains.md#r-9-18) の主題である。長さ $`\tau`$ の 1 ステップの誤差は高々
+$`(4\beta_m/w_T)S_m(|\tau|w_T/2)`$ であり、これはランチョス計算だけから求まる。`krylov.evolve` は $`m=30`$ のクリロフ空間で、
+時間区間全体での誤差が高々 $`\mathrm{tol}=10^{-8}`$（既定値）となるようにこの評価が許す限り長い各ステップをとる
+（[系 9.19](../../lecture_notes/ja/09_spin_chains.md#r-9-19)）。これを密な固有値分解（定理 1.5）から計算した $`e^{-itH}`$ と比較し、
+評価そのものも下で確かめる。ハイゼンベルク環の上で
+ネール状態 $`|{\uparrow\downarrow\uparrow\downarrow}\cdots\rangle`$ からクエンチを行い、交替磁化
+$`m_s=\frac2L\sum_i(-1)^i\langle s^z_i\rangle`$ を追跡し、$`L=12`$ については密な伝播子と比較する。
 
 ```python
 times, m_s = [0.0, 0.5, 1.0, 2.0, 4.0], {}
@@ -348,8 +350,48 @@ for n in (12, 16):
 print(f"{max(abs(a - b) for a, b in zip(m_s[12][:4], m_s[16][:4])):.1e}")   # L = 12 vs 16 up to t = 2
 ```
 
-*数値的観察*：$m_s$ は $1$ から $0.770$、$0.279$ を経て $t=2$ で $-0.183$ まで減衰し、二つのサイズで
-$1.7\cdot10^{-5}$ の範囲で一致する。$t=4$ では両者は異なる（$0.026$ 対 $0.035$）。
+*数値的観察*：$`m_s`$ は $`1`$ から $`0.770`$、$`0.279`$ を経て $`t=2`$ で $`-0.183`$ まで減衰し、二つのサイズで
+$`1.7\cdot10^{-5}`$ の範囲で一致する。$`t=4`$ では両者は異なる（$`0.026`$ 対 $`0.035`$）。
+
+**誤差評価.** [補題 9.17](../../lecture_notes/ja/09_spin_chains.md#r-9-17) により、$`e^{-i\rho y}`$ のチェビシェフ係数は $`a_k=(-i)^kJ_k(\rho)`$ であり、$`|a_k|\le(|\rho|/2)^k/k!`$ を満たす。[定理 9.18](../../lecture_notes/ja/09_spin_chains.md#r-9-18) はクリロフ法の 1 ステップの誤差を $`(4\beta_m/w_T)S_m(|\tau|w_T/2)`$（(c)、`krylov.expm_multiply_step` が返す値）および $`\rho=|\tau|w`$ として $`4S_m(\rho/2)`$（(d)）で評価する。ここで $`S_m(x)=\sum_{j\ge m}x^j/j!`$、$`w`$ はスペクトルの半幅である。係数の評価を SciPy のベッセル関数で確かめ、二つの誤差評価を、環 $`L=12`$ のネール状態からの $`m=20`$ の 1 ステップについて、上のブロックの密な伝播子（`w`、`U`）と照合する。[系 9.19](../../lecture_notes/ja/09_spin_chains.md#r-9-19) は相次ぐステップの評価を足し合わせる。また `krylov.evolve` のステップ規則は時刻 $`t`$ での誤差を $`\mathrm{tol}\cdot t/t_{\mathrm{end}}`$ 未満に保ち、$`H`$ と $`H+10^4`$ で同じステップをとる（定理 9.18(a)。シフトした演算子は疎な形の対角成分だけを変える）：
+
+```python
+from scipy.special import jv, gammainc
+S = lambda m, x: math.exp(x) * gammainc(m, x)                        # S_m(x) = sum_{j >= m} x^j / j!
+for rho in (1.0, 10.0, 40.0):                                        # Lemma 9.17: |J_k(rho)| <= (rho/2)^k / k!
+    assert all(abs(jv(k, rho)) <= (rho / 2) ** k / math.factorial(k) * (1 + 1e-12) for k in range(80))
+
+c12 = SpinChain(12, 'periodic')
+H12 = c12.xxz_sparse(J=1.0, Delta=1.0, sector=6)                    # w, U: its dense eigendecomposition (above)
+half = ((w[-1] - w[0]) / 2).item()                                   # half-width of the spectrum
+v = c12.vector_in_sector('10' * 6)[None]                             # the Neel state
+exact = lambda t: U @ (torch.exp(-1j * t * w) * (U.mH @ v[0]))
+m = 20
+for tau in (0.5, 1.0, 2.0, 4.0, 8.0):
+    out, bound = krylov.expm_multiply_step(H12, v, tau, m)            # bound: Theorem 9.18(c)
+    err = (out[0] - exact(tau)).norm().item()
+    apriori = 4 * S(m, tau * half / 2)                                # Theorem 9.18(d)
+    print(f"tau w = {tau * half:4.1f}: error {err:.1e}, bound (c) {bound.item():.1e}, bound (d) {apriori:.1e}")
+    assert err <= bound.item() + 1e-13 and bound.item() <= apriori
+
+psi, total = v, 0.0                                                  # Corollary 9.19, five steps of length 1
+for k in range(1, 6):
+    psi, b = krylov.expm_multiply_step(H12, psi, 1.0, m)
+    total += b.item()
+    err = (psi[0] - exact(float(k))).norm().item()
+    assert err <= total + 1e-12
+print(f"after 5 steps: error {err:.1e}, sum of the bounds {total:.1e}")
+
+times = [0.0, 1.0, 3.0, 10.0]
+shifted = krylov.SparseSectorHamiltonian(H12.diag + 1e4, H12.offdiag, H12.dtype)    # H + 10^4
+for s, Hn in ((0.0, H12), (1e4, shifted)):
+    out = krylov.evolve(Hn, v, times, tol=1e-8)                      # the step rule of Corollary 9.19
+    errs = [(p[0] - math.e ** (-1j * t * s) * exact(t)).norm().item() for t, p in zip(times, out)]
+    print(f"shift {s:.0e}:", [f"{e:.1e}" for e in errs])
+    assert all(e <= 1e-8 * t / times[-1] + 1e-10 for e, t in zip(errs, times))
+```
+
+*数値的観察*：1 ステップの誤差は丸めの水準（$`\tau w=2.1`$ で $`3\cdot10^{-15}`$）から $`\tau w=8.4`$ で $`1.3\cdot10^{-8}`$、$`\tau w=34`$ で $`0.5`$ まで増える。評価 (c) は有用な範囲でそれをおよそ $`100`$ 倍上回り、(d) はさらに $`4`$ 倍上回る。長さ $`1`$ の 5 ステップの誤差は $`10^{-13}`$ で、評価の和 $`6\cdot10^{-12}`$ を下回る。ここで `krylov.evolve` は許容誤差を大きな余裕をもって満たす（誤差は $`10^{-13}`$ 未満）。シフト $`10^4`$ では誤差は $`10^{-11}`$ であり、これはノルム $`10^4`$ の行列–ベクトル積の丸め誤差で、定理 9.18 のどの評価にも含まれない。
 
 <a id="s-9-6"></a>
 
@@ -357,12 +399,12 @@ $1.7\cdot10^{-5}$ の範囲で一致する。$t=4$ では両者は異なる（$0
 
 *講義ノート：* [9.6節](../../lecture_notes/ja/09_spin_chains.md#s-9-6)；[定理 9.16](../../lecture_notes/ja/09_spin_chains.md#r-9-16)（ペシェルの公式）。
 
-**ランダム磁場ハイゼンベルク鎖** は、$[-W,W]$ 上の一様分布に従う独立な磁場 $h_i$ をもつ。これは $S^z$ を保存する
-（命題 9.1）ので、準位統計はセクター $N$ ごとに計算する（定理 5.15 と 5.4節：セクターを混ぜると独立な準位を偽造して
-しまう）。二つの磁場が異なれば $THT^*-H=\sum_i(h_{i-1}-h_i)s^z_i\ne0$ であるから、並進はもはや対称性ではない。
-セクター $N=L/2$ の中央の半分で $\langle r\rangle$ を計算し、独立な実現にわたる標準誤差を一つ添え（各実現が平均比を
-一つ与える）、二つの参照値と比較する：独立な指数分布の間隔の厳密な平均比 $2\log2-1\approx0.3863$（命題 5.14(a)）と、
-$L=10$ のセクターと同じ大きさ $252$ の GOE 行列（5.3節の定義による。コードは GOE 行列の二倍である $G+G^T$ を
+**ランダム磁場ハイゼンベルク鎖** は、$`[-W,W]`$ 上の一様分布に従う独立な磁場 $`h_i`$ をもつ。これは $`S^z`$ を保存する
+（命題 9.1）ので、準位統計はセクター $`N`$ ごとに計算する（定理 5.15 と 5.4節：セクターを混ぜると独立な準位を偽造して
+しまう）。二つの磁場が異なれば $`THT^*-H=\sum_i(h_{i-1}-h_i)s^z_i\ne0`$ であるから、並進はもはや対称性ではない。
+セクター $`N=L/2`$ の中央の半分で $`\langle r\rangle`$ を計算し、独立な実現にわたる標準誤差を一つ添え（各実現が平均比を
+一つ与える）、二つの参照値と比較する：独立な指数分布の間隔の厳密な平均比 $`2\log2-1\approx0.3863`$（命題 5.14(a)）と、
+$`L=10`$ のセクターと同じ大きさ $`252`$ の GOE 行列（5.3節の定義による。コードは GOE 行列の二倍である $`G+G^T`$ を
 サンプルするが、これはどの比も変えない）の平均比で、後者はここでサンプルする。これらの比較は数値的観察であって
 定理ではない：ランダムな鎖のスペクトルについては何も証明しない。
 
@@ -385,25 +427,25 @@ assert abs(r_mean[10, 16][0] - (2 * math.log(2) - 1)) < 0.015               # nu
 assert r_mean[10, 1][0] > r_mean[10, 2][0] > r_mean[10, 4][0] > r_mean[10, 8][0]
 ```
 
-*数値的観察*：$L=10$ では平均比は $0.530$（$W=0.5$、サンプルした GOE の値 $0.533$ に近い）から $0.484$（$W=2$）、
-$0.410$（$W=4$）を経て $0.384$（$W=16$、$2\log2-1$ に近い）まで変化し、標準誤差は $0.003$–$0.004$ である。$L=8$ では
-$W=0.5$ での値（$0.507$）が $W=1$ での値（$0.525$）より小さい。$W=0$ では環は $T$（9.2節）および全スピン（9.3節）と
-可換であるから、そのセクター $N=L/2$ はブロックに分かれる。磁場はこれらのブロックを、作用素ノルムが高々 $\frac{WL}2$ の
-$\sum_ih_is^z_i$ を通じてのみ結合する。
+*数値的観察*：$`L=10`$ では平均比は $`0.530`$（$`W=0.5`$、サンプルした GOE の値 $`0.533`$ に近い）から $`0.484`$（$`W=2`$）、
+$`0.410`$（$`W=4`$）を経て $`0.384`$（$`W=16`$、$`2\log2-1`$ に近い）まで変化し、標準誤差は $`0.003`$–$`0.004`$ である。$`L=8`$ では
+$`W=0.5`$ での値（$`0.507`$）が $`W=1`$ での値（$`0.525`$）より小さい。$`W=0`$ では環は $`T`$（9.2節）および全スピン（9.3節）と
+可換であるから、そのセクター $`N=L/2`$ はブロックに分かれる。磁場はこれらのブロックを、作用素ノルムが高々 $`\frac{WL}2`$ の
+$`\sum_ih_is^z_i`$ を通じてのみ結合する。
 
-> **物理的意味**（物理的解釈であり、本講義の定理ではない）. 物理学者は $\langle r\rangle$ の変化を、GOE の準位のように
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. 物理学者は $`\langle r\rangle`$ の変化を、GOE の準位のように
 > 反発する準位（弱い乱れ）から独立な準位のようにふるまう準位へのクロスオーバーと読み、後者を固有状態の
-> **多体局在**（強い乱れ）に帰する。クロスオーバーは $L$ とともにずれていく。$L\to\infty$ でそれがどこにあるか、
+> **多体局在**（強い乱れ）に帰する。クロスオーバーは $`L`$ とともにずれていく。$`L\to\infty`$ でそれがどこにあるか、
 > そもそも局在相が存在するかどうかは、物理学の文献における未解決問題である（D. Luitz, N. Laflorencie, F. Alet,
 > *Phys. Rev. B* 91 (2015) 081103; J. Šuntajs, J. Bonča, T. Prosen, L. Vidmar, *Phys. Rev. E* 102 (2020) 062144）。
-> $L=8$、$W=0.5$ でのくぼみは、$W=0$ における余分なブロック構造の名残と読まれる（5.4節と比較せよ）。
+> $`L=8`$、$`W=0.5`$ でのくぼみは、$`W=0`$ における余分なブロック構造の名残と読まれる（5.4節と比較せよ）。
 
-**自由フェルミオンのエンタングルメント.** 開いた XX 鎖の固有状態について、最初の $n$ 個のサイトの
-エンタングルメント・エントロピーは $n\times n$ 行列によって決まる。
+**自由フェルミオンのエンタングルメント.** 開いた XX 鎖の固有状態について、最初の $`n`$ 個のサイトの
+エンタングルメント・エントロピーは $`n\times n`$ 行列によって決まる。
 
 `entanglement_entropy` は縮約状態をセクターごとに計算し（それはブロックの磁化と可換である、
-命題 7.8）、そのエントロピーを求める。セクター $N$ の基底状態は $N$ 個の最低のモードからなる $\Phi$ であり、
-$\varepsilon_k$ が相異なるので単純である。
+命題 7.8）、そのエントロピーを求める。セクター $`N`$ の基底状態は $`N`$ 個の最低のモードからなる $`\Phi`$ であり、
+$`\varepsilon_k`$ が相異なるので単純である。
 
 ```python
 L, N = 12, 6
@@ -419,7 +461,7 @@ assert np.allclose(S_lib, S_peschel, atol=1e-9)                       # Theorem 
 print([round(s, 4) for s in S_lib[:6]])
 ```
 
-*数値的観察*：エントロピー $0.6931,0.5199,0.7456,0.6283,0.7719,0.6560$（$n=1,\dots,6$）は $n$ の偶奇とともに振動する。
+*数値的観察*：エントロピー $`0.6931,0.5199,0.7456,0.6283,0.7719,0.6560`$（$`n=1,\dots,6`$）は $`n`$ の偶奇とともに振動する。
 定理 9.16 は I. Peschel（*J. Phys. A* 36 (2003) L205）による。
 
 <a id="s-9-7"></a>
@@ -429,22 +471,22 @@ print([round(s, 4) for s in S_lib[:6]])
 QuSpin（Python）は磁化、運動量、パリティ、スピン反転のセクターでスピン鎖のハミルトニアンを構成し、
 SciPy の疎な固有値ソルバーと行列指数関数を用いる。専用の厳密対角化コード
 （XDiag、SPINPACK、HΦ）は大規模な疎問題向けに最適化されており、格子の対称性と大型計算機を用いて
-そのようなコードは約 40–50 スピンに達している。ITensor、TeNPy、TensorKit.jl（$SU(2)$ の融合木をもつ）は
+そのようなコードは約 40–50 スピンに達している。ITensor、TeNPy、TensorKit.jl（$`SU(2)`$ の融合木をもつ）は
 行列積状態によって長い鎖を扱う。このライブラリが付け加えるものは控えめで具体的である：鎖を
-`TypeIAlgebra` $\bigoplus_NM_{\binom LN}$ として扱い、第3–8章の状態、チャネル、エントロピー、ダイナミクスを
-セクターごとに適用できること。指数をもつ包含の塔。最高ウェイトベクトルから得られる $SU(2)$ ブロックと
+`TypeIAlgebra` $`\bigoplus_NM_{\binom LN}`$ として扱い、第3–8章の状態、チャネル、エントロピー、ダイナミクスを
+セクターごとに適用できること。指数をもつ包含の塔。最高ウェイトベクトルから得られる $`SU(2)`$ ブロックと
 ウィグナー–エッカートによる相関。一度の呼び出しで乱れの実現のバッチを扱えること。そしてセクターから決して
 出ない縮約状態。反転やスピン反転のセクターはなく、運動量セクターは一様な XXZ 鎖に限られ、密な
-方法は $L\approx16$ まで、クリロフ法は $L\approx24$ まで（大型 GPU では約 $26$ まで）であり、テンソルネットワークはない。
+方法は $`L\approx16`$ まで、クリロフ法は $`L\approx24`$ まで（大型 GPU では約 $`26`$ まで）であり、テンソルネットワークはない。
 
 <a id="x-9"></a>
 
 ## 演習問題
 
-講義ノートの[演習問題 1–3](../../lecture_notes/ja/09_spin_chains.md#x-9)：$L=4$、$N=2$ に対する運動量セクターの次元 $d_{2,m}=2,1,2,1$；
-ハイゼンベルク環の基底状態に対する和則 $E_0=JL\langle\mathbf s_0\cdot\mathbf s_1\rangle$ と $\sum_r\langle\mathbf s_0\cdot\mathbf s_r\rangle=0$；
-そしてセクター $N=L/2$ ですべての係数が $1$ のベクトルから始めた `krylov.ground_state`。これはスペクトルの最上端
-$E=JL/4$ を返す。これらを数値的に確かめよ。
+講義ノートの[演習問題 1–3](../../lecture_notes/ja/09_spin_chains.md#x-9)：$`L=4`$、$`N=2`$ に対する運動量セクターの次元 $`d_{2,m}=2,1,2,1`$；
+ハイゼンベルク環の基底状態に対する和則 $`E_0=JL\langle\mathbf s_0\cdot\mathbf s_1\rangle`$ と $`\sum_r\langle\mathbf s_0\cdot\mathbf s_r\rangle=0`$；
+そしてセクター $`N=L/2`$ ですべての係数が $`1`$ のベクトルから始めた `krylov.ground_state`。これはスペクトルの最上端
+$`E=JL/4`$ を返す。これらを数値的に確かめよ。
 
 <details>
 <summary>解答</summary>

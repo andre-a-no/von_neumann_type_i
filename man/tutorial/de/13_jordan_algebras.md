@@ -3,7 +3,7 @@
 # Tutorial 13. Jordan-Algebren: warum die Quantenmechanik *-Algebren verwendet
 
 Dieses Tutorial begleitet [Kapitel 13](../../lecture_notes/de/13_jordan_algebras.md) der Vorlesungsnotizen, das das Jordan-Produkt
-$x\circ y=\frac12(xy+yx)$ und die quadratische Darstellung $P(y)x=yxy$, die Spinfaktoren $V_m$ und den Lorentz-Kegel untersucht
+$`x\circ y=\frac12(xy+yx)`$ und die quadratische Darstellung $`P(y)x=yxy`$, die Spinfaktoren $`V_m`$ und den Lorentz-Kegel untersucht
 und zeigt, dass die Jordan-Struktur den Kommutator nur bis auf das Vorzeichen bestimmt, was zusammengesetzte Systeme
 erkennen ([Proposition 13.12](../../lecture_notes/de/13_jordan_algebras.md#r-13-12)). Hier verwenden wir das Modul `torch_vn_algebra.jordan` und die Klasse `SpinFactor`, um
 diese Ergebnisse numerisch zu überprüfen.
@@ -14,9 +14,9 @@ diese Ergebnisse numerisch zu überprüfen.
 
 *Vorlesungsnotizen:* [Abschnitt 13.1](../../lecture_notes/de/13_jordan_algebras.md#s-13-1): [Lemma 13.1](../../lecture_notes/de/13_jordan_algebras.md#r-13-1) (die Jordan-Identität) und [Proposition 13.2](../../lecture_notes/de/13_jordan_algebras.md#r-13-2) (die quadratische Darstellung).
 
-Das Modul `torch_vn_algebra.jordan` implementiert das Jordan-Produkt $x\circ y$, die Jordan-Potenzen und die quadratische
-Darstellung $P(y)=2L(y)^2-L(y^2)$ auf Operatoren einer `TypeIAlgebra`, verzögert ausgewertet und gebündelt über alle Sektoren.
-Der Code prüft [Lemma 13.1](../../lecture_notes/de/13_jordan_algebras.md#r-13-1) und [Proposition 13.2](../../lecture_notes/de/13_jordan_algebras.md#r-13-2) an zufälligen selbstadjungierten Elementen von $M_2\oplus M_3$:
+Das Modul `torch_vn_algebra.jordan` implementiert das Jordan-Produkt $`x\circ y`$, die Jordan-Potenzen und die quadratische
+Darstellung $`P(y)=2L(y)^2-L(y^2)`$ auf Operatoren einer `TypeIAlgebra`, verzögert ausgewertet und gebündelt über alle Sektoren.
+Der Code prüft [Lemma 13.1](../../lecture_notes/de/13_jordan_algebras.md#r-13-1) und [Proposition 13.2](../../lecture_notes/de/13_jordan_algebras.md#r-13-2) an zufälligen selbstadjungierten Elementen von $`M_2\oplus M_3`$:
 
 ```python
 import math
@@ -57,13 +57,13 @@ assert abs(torch.linalg.det(jp(p, q).matrix[0, 0]).real.item() + 1 / 16) < 1e-14
 
 ## 13.2 Spinfaktoren und der Lorentz-Kegel
 
-*Vorlesungsnotizen:* [Abschnitt 13.2](../../lecture_notes/de/13_jordan_algebras.md#s-13-2): [Lemma 13.3](../../lecture_notes/de/13_jordan_algebras.md#r-13-3) (antikommutierende Symmetrien), [Satz 13.4](../../lecture_notes/de/13_jordan_algebras.md#r-13-4) (Spektraltheorie von $V_m$) und [Proposition 13.5](../../lecture_notes/de/13_jordan_algebras.md#r-13-5).
+*Vorlesungsnotizen:* [Abschnitt 13.2](../../lecture_notes/de/13_jordan_algebras.md#s-13-2): [Lemma 13.3](../../lecture_notes/de/13_jordan_algebras.md#r-13-3) (antikommutierende Symmetrien), [Satz 13.4](../../lecture_notes/de/13_jordan_algebras.md#r-13-4) (Spektraltheorie von $`V_m`$) und [Proposition 13.5](../../lecture_notes/de/13_jordan_algebras.md#r-13-5).
 
-Die Klasse `SpinFactor(m)` speichert Elemente $x=(a,u)$ von $V_m$ als Tensoren der Form `(batch, m+1)`, mit dem Produkt,
-der Spektralzerlegung und dem Funktionalkalkül aus [Satz 13.4](../../lecture_notes/de/13_jordan_algebras.md#r-13-4); `to_matrix` ist die Abbildung $\phi$ aus
-[Lemma 13.3](../../lecture_notes/de/13_jordan_algebras.md#r-13-3), aufgebaut aus den $s_i$ von `jordan.anticommuting_symmetries(m)`. Der Code prüft die Jordan-Identität
-und Satz 13.4 in $V_5$, [Proposition 13.5](../../lecture_notes/de/13_jordan_algebras.md#r-13-5)(b) für ein zufälliges orthogonales $O$ und (c) für $m\le6$ sowie die
-Majorana-Operatoren aus Abschnitt 9.4 für $p=3$ ([Vorlesungsnotizen, Abschnitt 13.2](../../lecture_notes/de/13_jordan_algebras.md#s-13-2)):
+Die Klasse `SpinFactor(m)` speichert Elemente $`x=(a,u)`$ von $`V_m`$ als Tensoren der Form `(batch, m+1)`, mit dem Produkt,
+der Spektralzerlegung und dem Funktionalkalkül aus [Satz 13.4](../../lecture_notes/de/13_jordan_algebras.md#r-13-4); `to_matrix` ist die Abbildung $`\phi`$ aus
+[Lemma 13.3](../../lecture_notes/de/13_jordan_algebras.md#r-13-3), aufgebaut aus den $`s_i`$ von `jordan.anticommuting_symmetries(m)`. Der Code prüft die Jordan-Identität
+und Satz 13.4 in $`V_5`$, [Proposition 13.5](../../lecture_notes/de/13_jordan_algebras.md#r-13-5)(b) für ein zufälliges orthogonales $`O`$ und (c) für $`m\le6`$ sowie die
+Majorana-Operatoren aus Abschnitt 9.4 für $`p=3`$ ([Vorlesungsnotizen, Abschnitt 13.2](../../lecture_notes/de/13_jordan_algebras.md#s-13-2)):
 
 ```python
 V = SpinFactor(5)
@@ -104,8 +104,8 @@ for j in range(1, pq + 1):
     assert close(s6[2 * j - 2], sign * (c + c.mH)) and close(s6[2 * j - 1], sign * 1j * (c - c.mH))
 ```
 
-Für $m=1$ erzeugt $s_1=Z$ die Diagonalmatrizen, der Dimension $2=m+1$, und $V_1\cong\mathbb R\oplus\mathbb R$ ist
-nicht einfach. Die ausgegebenen Dimensionen sind $3,4$ für $m=2$; $5,16$ für $m=4$; $7,64$ für $m=6$.
+Für $`m=1`$ erzeugt $`s_1=Z`$ die Diagonalmatrizen, der Dimension $`2=m+1`$, und $`V_1\cong\mathbb R\oplus\mathbb R`$ ist
+nicht einfach. Die ausgegebenen Dimensionen sind $`3,4`$ für $`m=2`$; $`5,16`$ für $`m=4`$; $`7,64`$ für $`m=6`$.
 
 <a id="s-13-3"></a>
 
@@ -113,10 +113,10 @@ nicht einfach. Die ausgegebenen Dimensionen sind $3,4$ für $m=2$; $5,16$ für $
 
 *Vorlesungsnotizen:* [Abschnitt 13.3](../../lecture_notes/de/13_jordan_algebras.md#s-13-3): [Proposition 13.6](../../lecture_notes/de/13_jordan_algebras.md#r-13-6).
 
-`jordan.compare_with_star_algebra` berechnet die Dimensionen der von gegebenen hermiteschen Matrizen und $1$ erzeugten
-Jordan-Algebra und des selbstadjungierten Teils der von ihnen erzeugten $*$-Algebra. Der Code prüft
-[Proposition 13.6](../../lecture_notes/de/13_jordan_algebras.md#r-13-6)(a) für ein zufälliges Paar reeller symmetrischer Matrizen, $n=2,\dots,5$, und (b): Für zwei zufällige
-hermitesche $2\times2$-Matrizen sind die Dimensionen $3$ und $4$, und die unitäre Matrix $U$ aus dem Beweis macht beide reell.
+`jordan.compare_with_star_algebra` berechnet die Dimensionen der von gegebenen hermiteschen Matrizen und $`1`$ erzeugten
+Jordan-Algebra und des selbstadjungierten Teils der von ihnen erzeugten $`*`$-Algebra. Der Code prüft
+[Proposition 13.6](../../lecture_notes/de/13_jordan_algebras.md#r-13-6)(a) für ein zufälliges Paar reeller symmetrischer Matrizen, $`n=2,\dots,5`$, und (b): Für zwei zufällige
+hermitesche $`2\times2`$-Matrizen sind die Dimensionen $`3`$ und $`4`$, und die unitäre Matrix $`U`$ aus dem Beweis macht beide reell.
 
 ```python
 for n in range(2, 6):                                            # Proposition 13.6(a), a random real pair
@@ -140,8 +140,8 @@ Um = W2 @ W1.mH                                                  # U (n . sigma)
 assert all((Um @ A @ Um.mH).imag.abs().max() < 1e-12 for A in H[:2])
 ```
 
-Drei generische hermitesche $2\times2$-Matrizen erzeugen ganz $\mathrm{Herm}_2(\mathbb C)$: Dimension $4$ in
-beiden Spalten. In einem Block $M_2$ von $\mathcal M$ verraten zwei Observablen die komplexe Struktur also nie; eine
+Drei generische hermitesche $`2\times2`$-Matrizen erzeugen ganz $`\mathrm{Herm}_2(\mathbb C)`$: Dimension $`4`$ in
+beiden Spalten. In einem Block $`M_2`$ von $`\mathcal M`$ verraten zwei Observablen die komplexe Struktur also nie; eine
 dritte kann es.
 
 <a id="s-13-5"></a>
@@ -150,9 +150,9 @@ dritte kann es.
 
 *Vorlesungsnotizen:* [Abschnitt 13.5](../../lecture_notes/de/13_jordan_algebras.md#s-13-5): [Proposition 13.9](../../lecture_notes/de/13_jordan_algebras.md#r-13-9) (die Transposition), [Proposition 13.11](../../lecture_notes/de/13_jordan_algebras.md#r-13-11), [Proposition 13.12](../../lecture_notes/de/13_jordan_algebras.md#r-13-12) (zusammengesetzte Systeme) und [Proposition 13.13](../../lecture_notes/de/13_jordan_algebras.md#r-13-13) (Dynamik).
 
-`jordan.transpose_map` ist die Transposition $T$, blockweise angewandt. Der Code prüft [Proposition 13.9](../../lecture_notes/de/13_jordan_algebras.md#r-13-9) (mit der
-Choi-Matrix von $T$ auf $M_3$), die Matrix $O_T=\mathrm{diag}(1,-1,1)$ der Transposition auf Bloch-Vektoren aus dem
-Beweis von [Proposition 13.11](../../lecture_notes/de/13_jordan_algebras.md#r-13-11), die Produktformel und $\circ_\theta$ aus [Proposition 13.12](../../lecture_notes/de/13_jordan_algebras.md#r-13-12) mit dem
+`jordan.transpose_map` ist die Transposition $`T`$, blockweise angewandt. Der Code prüft [Proposition 13.9](../../lecture_notes/de/13_jordan_algebras.md#r-13-9) (mit der
+Choi-Matrix von $`T`$ auf $`M_3`$), die Matrix $`O_T=\mathrm{diag}(1,-1,1)`$ der Transposition auf Bloch-Vektoren aus dem
+Beweis von [Proposition 13.11](../../lecture_notes/de/13_jordan_algebras.md#r-13-11), die Produktformel und $`\circ_\theta`$ aus [Proposition 13.12](../../lecture_notes/de/13_jordan_algebras.md#r-13-12) mit dem
 Spektrum der partiellen Transposition des Bell-Zustands sowie [Proposition 13.13](../../lecture_notes/de/13_jordan_algebras.md#r-13-13)(a), (b):
 
 ```python
@@ -204,10 +204,10 @@ assert close(jm(z1, jm(z2, Hm)) - jm(z2, jm(z1, Hm)), 0.25 * cm(cm(z1, z2), Hm))
 
 *Vorlesungsnotizen:* [Abschnitt 13.6](../../lecture_notes/de/13_jordan_algebras.md#s-13-6): [Proposition 13.14](../../lecture_notes/de/13_jordan_algebras.md#r-13-14).
 
-Nach [Vorlesungsnotizen, Proposition 13.14](../../lecture_notes/de/13_jordan_algebras.md#r-13-14) gilt $\mathrm{tr}|P(y)x|\le\mathrm{tr}\,P(y)|x|$ in $V_m$, mit Gleichheit, falls $x\in Q$ oder
-$-x\in Q$. Über $\phi$, das $\phi(P(y)x)=\phi(y)\phi(x)\phi(y)$ und $\phi(|x|)=|\phi(x)|$ erfüllt, ist das auch die
-Ungleichung $\mathrm{Tr}|YXY|\le\mathrm{Tr}(Y|X|Y)$ aus Proposition 11.9 für $Y=Y^*$ ([Vorlesungsnotizen, Abschnitt 13.6](../../lecture_notes/de/13_jordan_algebras.md#s-13-6)).
-Der Code prüft beides für $m=2,4,7$:
+Nach [Vorlesungsnotizen, Proposition 13.14](../../lecture_notes/de/13_jordan_algebras.md#r-13-14) gilt $`\mathrm{tr}|P(y)x|\le\mathrm{tr}\,P(y)|x|`$ in $`V_m`$, mit Gleichheit, falls $`x\in Q`$ oder
+$`-x\in Q`$. Über $`\phi`$, das $`\phi(P(y)x)=\phi(y)\phi(x)\phi(y)`$ und $`\phi(|x|)=|\phi(x)|`$ erfüllt, ist das auch die
+Ungleichung $`\mathrm{Tr}|YXY|\le\mathrm{Tr}(Y|X|Y)`$ aus Proposition 11.9 für $`Y=Y^*`$ ([Vorlesungsnotizen, Abschnitt 13.6](../../lecture_notes/de/13_jordan_algebras.md#s-13-6)).
+Der Code prüft beides für $`m=2,4,7`$:
 
 ```python
 for m in (2, 4, 7):
@@ -230,9 +230,9 @@ for m in (2, 4, 7):
     assert (tr_rhs - tn >= -1e-10 * tr_rhs).all()                       # Proposition 11.9 for Y = Y*
 ```
 
-Die Lücke $\mathrm{tr}\,P(y)|x|-\mathrm{tr}|P(y)x|$ verschwindet für definite $x$ (Proposition 13.14).
+Die Lücke $`\mathrm{tr}\,P(y)|x|-\mathrm{tr}|P(y)x|`$ verschwindet für definite $`x`$ (Proposition 13.14).
 Numerische Beobachtung (kein Satz): Für diese Gaußschen Stichproben liegen die ausgegebenen maximalen Lücken in der
-Größenordnung $10^1$–$10^2$; die Ungleichung ist für indefinite $x$ also weit von einer Gleichheit entfernt.
+Größenordnung $`10^1`$–$`10^2`$; die Ungleichung ist für indefinite $`x`$ also weit von einer Gleichheit entfernt.
 
 <a id="s-13-7"></a>
 
@@ -244,13 +244,13 @@ werden gewöhnlich von Hand mit Matrizen geschrieben. Computeralgebra deckt die 
 Spinfaktoren gehören) und, ausgehend von einer Oktonionenalgebra, die 27-dimensionale exzeptionelle Jordan-Algebra;
 auch Magma hat Konstruktoren für Jordan-Algebren, einschließlich der exzeptionellen. Das sind exakte algebraische
 Werkzeuge, keine gebündelten numerischen. Die Lorentz-Kegel sind Standard in der Optimierung: SOCP-Löser (ECOS, SCS,
-Clarabel, MOSEK, zugänglich über die `SOC`-Nebenbedingung von cvxpy) verwenden die Spektralzerlegung von $V_m$ (zur
+Clarabel, MOSEK, zugänglich über die `SOC`-Nebenbedingung von cvxpy) verwenden die Spektralzerlegung von $`V_m`$ (zur
 Projektion auf den Kegel) oder seine quadratische Darstellung (für die Nesterov-Todd-Skalierung von
-Innere-Punkte-Verfahren), und semidefinite Löser tun dasselbe für $\mathrm{Herm}_n$. Die Bibliothek fügt
+Innere-Punkte-Verfahren), und semidefinite Löser tun dasselbe für $`\mathrm{Herm}_n`$. Die Bibliothek fügt
 Jordan-Produkte, die quadratische Darstellung und die Transposition als gebündelte, differenzierbare Operatoren auf
-$\bigoplus_cM_{k_c}$ hinzu; Spinfaktoren mit ihrem Funktionalkalkül und ihrer Matrixdarstellung; und eine
+$`\bigoplus_cM_{k_c}`$ hinzu; Spinfaktoren mit ihrem Funktionalkalkül und ihrer Matrixdarstellung; und eine
 randomisierte Berechnung der von gegebenen Matrizen erzeugten Jordan-Algebra, verglichen mit der von ihnen erzeugten
-$*$-Algebra.
+$`*`$-Algebra.
 
 <a id="x-13"></a>
 
@@ -258,11 +258,11 @@ $*$-Algebra.
 
 [Aufgaben](../../lecture_notes/de/13_jordan_algebras.md#x-13) 1–3 der Vorlesungsnotizen, numerisch:
 
-- *Aufgabe 1* (Homogenität des Lorentz-Kegels): $P(x^{1/2})1=x$, $P(y^{-1})P(y)=\mathrm{id}$ und $P(y)Q\subseteq Q$
-  in $V_4$.
-- *Aufgabe 2* (isotrope Zustände): Der kleinste Eigenwert von $\theta(\rho_p)$ ist $\frac{1-3p}4$.
-- *Aufgabe 3* (Produkte von Randpunkten): $(1,w)\circ(1,w')\notin Q$ für zufällige Einheitsvektoren $w,w'$, und
-  $(1,w)\circ(1,w)\in Q$.
+- *Aufgabe 1* (Homogenität des Lorentz-Kegels): $`P(x^{1/2})1=x`$, $`P(y^{-1})P(y)=\mathrm{id}`$ und $`P(y)Q\subseteq Q`$
+  in $`V_4`$.
+- *Aufgabe 2* (isotrope Zustände): Der kleinste Eigenwert von $`\theta(\rho_p)`$ ist $`\frac{1-3p}4`$.
+- *Aufgabe 3* (Produkte von Randpunkten): $`(1,w)\circ(1,w')\notin Q`$ für zufällige Einheitsvektoren $`w,w'`$, und
+  $`(1,w)\circ(1,w)\in Q`$.
 
 <details>
 <summary>Lösungen</summary>

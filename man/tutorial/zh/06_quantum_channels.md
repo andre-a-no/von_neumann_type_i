@@ -6,12 +6,12 @@
 Kraus 算子、Stinespring 扩张——并研究对偶、不动点、转移矩阵和随机信道。这里我们看本库如何存储信道，
 并数值地检验这些结果。
 
-在本章中，$\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)$，
-$\mathcal N=\bigoplus_{d=1}^{C'}M_{k'_d}(\mathbb C)$，其极小中心投影分别为 $P_c$ 和
-$Q_d$；$A=\bigoplus_cA_c$；$M_{k'\times k}$ 是复 $k'\times k$ 矩阵构成的空间；
-$E_{ij}=|i\rangle\langle j|$ 为矩阵单位；$\mathrm{Tr}$ 是 blunt 迹
-$\sum_c\mathrm{Tr}\,A_c$，而 $\mathrm{tr}_w=\sum_cw_c\mathrm{Tr}\,A_c$ 是一个忠实
-迹（定理 3.1）。分块矩阵作用在 $\mathbb C^n\otimes\mathbb C^k$ 上，块指标在前。
+在本章中，$`\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)`$，
+$`\mathcal N=\bigoplus_{d=1}^{C'}M_{k'_d}(\mathbb C)`$，其极小中心投影分别为 $`P_c`$ 和
+$`Q_d`$；$`A=\bigoplus_cA_c`$；$`M_{k'\times k}`$ 是复 $`k'\times k`$ 矩阵构成的空间；
+$`E_{ij}=|i\rangle\langle j|`$ 为矩阵单位；$`\mathrm{Tr}`$ 是 blunt 迹
+$`\sum_c\mathrm{Tr}\,A_c`$，而 $`\mathrm{tr}_w=\sum_cw_c\mathrm{Tr}\,A_c`$ 是一个忠实
+迹（定理 3.1）。分块矩阵作用在 $`\mathbb C^n\otimes\mathbb C^k`$ 上，块指标在前。
 
 <a id="s-6-1"></a>
 
@@ -19,19 +19,19 @@ $\sum_c\mathrm{Tr}\,A_c$，而 $\mathrm{tr}_w=\sum_cw_c\mathrm{Tr}\,A_c$ 是一�
 
 *讲义：* [6.1 节](../../lecture_notes/zh/06_quantum_channels.md#s-6-1)：[命题 6.1](../../lecture_notes/zh/06_quantum_channels.md#r-6-1)（转置）、[定理 6.2](../../lecture_notes/zh/06_quantum_channels.md#r-6-2)（Choi）、[推论 6.3](../../lecture_notes/zh/06_quantum_channels.md#r-6-3)（Kraus 秩）和[命题 6.4](../../lecture_notes/zh/06_quantum_channels.md#r-6-4)（直和之间的映射）。
 
-本库有两个类。`Channel` 存储**保扇区**的映射（$C'=C$，$k'=k$，
-对 $d\ne c$ 有 $\Phi_{dc}=0$），其 Kraus 算子 $K_l=\bigoplus_cK^{cc}_l$ 属于 $\mathcal M$，以形状为
+本库有两个类。`Channel` 存储**保扇区**的映射（$`C'=C`$，$`k'=k`$，
+对 $`d\ne c`$ 有 $`\Phi_{dc}=0`$），其 Kraus 算子 $`K_l=\bigoplus_cK^{cc}_l`$ 属于 $`\mathcal M`$，以形状为
 `(batch, r, C, k_max, k_max)` 的张量存储；`InterSectorChannel` 以形状
 `(batch, r, C', C, k'_max, k_max)` 存储[命题 6.4](../../lecture_notes/zh/06_quantum_channels.md#r-6-4) 中的一般映射。`Channel.choi()` 对每个扇区返回
-$J(\Phi_{cc})$，而 `Channel.superoperator()` 返回 $\Phi_{cc}$ 作用在按行展开的向量上的矩阵 $S_c$，
-$\mathrm{vec}(X)_{(a,b)}=X_{ab}$。二者以不同的顺序包含同样的数
-$\Phi(E_{ij})_{ab}=J_{(i,a),(j,b)}=S_{(a,b),(i,j)}$。`Channel.from_superoperator`
-在某个 Choi 矩阵不是厄米矩阵，即 $\|J-J^*\|>2\cdot10^{-10}s$（双精度下）时抛出 `ValueError`，其中
-$s=\max(1,\|J\|)$，范数取谱范数；否则它把 $J$ 替换为其厄米部分 $(J+J^*)/2$，
-像[定理 6.2](../../lecture_notes/zh/06_quantum_channels.md#r-6-2) 的证明那样将其对角化，若某个特征值小于 $-10^{-10}s$ 则抛出 `ValueError`，
-并把其余的负特征值置为 $0$。由于 $J^*=J$ 当且仅当对所有 $X$ 有 $\Phi(X^*)=\Phi(X)^*$
+$`J(\Phi_{cc})`$，而 `Channel.superoperator()` 返回 $`\Phi_{cc}`$ 作用在按行展开的向量上的矩阵 $`S_c`$，
+$`\mathrm{vec}(X)_{(a,b)}=X_{ab}`$。二者以不同的顺序包含同样的数
+$`\Phi(E_{ij})_{ab}=J_{(i,a),(j,b)}=S_{(a,b),(i,j)}`$。`Channel.from_superoperator`
+在某个 Choi 矩阵不是厄米矩阵，即 $`\|J-J^*\|>2\cdot10^{-10}s`$（双精度下）时抛出 `ValueError`，其中
+$`s=\max(1,\|J\|)`$，范数取谱范数；否则它把 $`J`$ 替换为其厄米部分 $`(J+J^*)/2`$，
+像[定理 6.2](../../lecture_notes/zh/06_quantum_channels.md#r-6-2) 的证明那样将其对角化，若某个特征值小于 $`-10^{-10}s`$ 则抛出 `ValueError`，
+并把其余的负特征值置为 $`0`$。由于 $`J^*=J`$ 当且仅当对所有 $`X`$ 有 $`\Phi(X^*)=\Phi(X)^*`$
 （[讲义，6.1 节](../../lecture_notes/zh/06_quantum_channels.md#s-6-1)），在这些舍入容差的范围内，它拒绝的恰好是不保持伴随的映射，
-以及其余映射中恰好那些不是 CP 的映射；例如 $X\mapsto iX$ 和转置都会被拒绝。
+以及其余映射中恰好那些不是 CP 的映射；例如 $`X\mapsto iX`$ 和转置都会被拒绝。
 
 ```python
 import math
@@ -103,9 +103,9 @@ except ValueError as e:
 
 ## 6.2 Stinespring 扩张与 Kraus 算子的自由度
 
-*讲义：* [6.2 节](../../lecture_notes/zh/06_quantum_channels.md#s-6-2)：[定理 6.5](../../lecture_notes/zh/06_quantum_channels.md#r-6-5)（Stinespring）和[定理 6.7](../../lecture_notes/zh/06_quantum_channels.md#r-6-7)（酉自由度）。对 6.1 节中信道的块 $c=1$，代码检验 $V$ 是等距，$\Phi(\rho)=\mathrm{Tr}_E(V\rho V^*)$ 和 $\Phi^*(B)=V^*(1\otimes B)V$ 成立，并且 Kraus 算子 $\sum_lu_{jl}K_l$ 给出同一个信道。
+*讲义：* [6.2 节](../../lecture_notes/zh/06_quantum_channels.md#s-6-2)：[定理 6.5](../../lecture_notes/zh/06_quantum_channels.md#r-6-5)（Stinespring）和[定理 6.7](../../lecture_notes/zh/06_quantum_channels.md#r-6-7)（酉自由度）。对 6.1 节中信道的块 $`c=1`$，代码检验 $`V`$ 是等距，$`\Phi(\rho)=\mathrm{Tr}_E(V\rho V^*)`$ 和 $`\Phi^*(B)=V^*(1\otimes B)V`$ 成立，并且 Kraus 算子 $`\sum_lu_{jl}K_l`$ 给出同一个信道。
 
-在代码中，$V$ 的环境指标是 Kraus 张量的第一个指标：
+在代码中，$`V`$ 的环境指标是 Kraus 张量的第一个指标：
 
 ```python
 K = Phi.kraus[0, :, 1, :3, :3]                            # the two Kraus operators of block c = 1
@@ -129,13 +129,13 @@ assert close(PhiL(rho), out) and all(close(a, b) for a, b in zip(PhiL.choi(), J)
 
 ## 6.3 关于迹的对偶
 
-*讲义：* [6.3 节](../../lecture_notes/zh/06_quantum_channels.md#s-6-3)：关于 $(w,v)$ 的对偶 $\Phi^\sharp$、[命题 6.8](../../lecture_notes/zh/06_quantum_channels.md#r-6-8) 和[推论 6.9](../../lecture_notes/zh/06_quantum_channels.md#r-6-9)。
+*讲义：* [6.3 节](../../lecture_notes/zh/06_quantum_channels.md#s-6-3)：关于 $`(w,v)`$ 的对偶 $`\Phi^\sharp`$、[命题 6.8](../../lecture_notes/zh/06_quantum_channels.md#r-6-8) 和[推论 6.9](../../lecture_notes/zh/06_quantum_channels.md#r-6-9)。
 
-在本库中，`Channel.adjoint()` 是 $\Phi^*$，而 `InterSectorChannel.adjoint(trace=...)` 是对两个代数
-使用同一个具名迹（`'blunt'`、`'norm'`、`'tau_vN'`）时的 $\Phi^\sharp$；`tau_vN` 的权重
-$1/(Ck_c)$ 和 $1/(C'k'_d)$ 还会受到扇区个数的影响。下面对一个随机映射
-$M_2\oplus M_3\to M_1\oplus M_2\oplus M_2$ 和三种迹检验[命题 6.8](../../lecture_notes/zh/06_quantum_channels.md#r-6-8)，并对 $M_1\oplus M_2$ 上的粒子丢失
-$\Phi(x)=(x_0+\mathrm{Tr}\,x_1)\oplus0$ 检验[推论 6.9(a)](../../lecture_notes/zh/06_quantum_channels.md#r-6-9)；它对 blunt 迹是保迹的，对 `Tr_norm` 则不是
+在本库中，`Channel.adjoint()` 是 $`\Phi^*`$，而 `InterSectorChannel.adjoint(trace=...)` 是对两个代数
+使用同一个具名迹（`'blunt'`、`'norm'`、`'tau_vN'`）时的 $`\Phi^\sharp`$；`tau_vN` 的权重
+$`1/(Ck_c)`$ 和 $`1/(C'k'_d)`$ 还会受到扇区个数的影响。下面对一个随机映射
+$`M_2\oplus M_3\to M_1\oplus M_2\oplus M_2`$ 和三种迹检验[命题 6.8](../../lecture_notes/zh/06_quantum_channels.md#r-6-8)，并对 $`M_1\oplus M_2`$ 上的粒子丢失
+$`\Phi(x)=(x_0+\mathrm{Tr}\,x_1)\oplus0`$ 检验[推论 6.9(a)](../../lecture_notes/zh/06_quantum_channels.md#r-6-9)；它对 blunt 迹是保迹的，对 `Tr_norm` 则不是
 （[讲义，6.3 节](../../lecture_notes/zh/06_quantum_channels.md#s-6-3)）：
 
 ```python
@@ -173,19 +173,19 @@ print(s.Tr_norm().real.item(), loss(s).Tr_norm().real.item())      # Tr_norm is 
 
 *讲义：* [6.4 节](../../lecture_notes/zh/06_quantum_channels.md#s-6-4)：[定理 6.10](../../lecture_notes/zh/06_quantum_channels.md#r-6-10)（保单位信道的不动点）、[定理 6.11](../../lecture_notes/zh/06_quantum_channels.md#r-6-11)（保单位信道使熵增加）和[命题 6.12](../../lecture_notes/zh/06_quantum_channels.md#r-6-12)（转移矩阵）。
 
-本库的标准信道在每个块内部作用（$p,\gamma\in[0,1]$）：
+本库的标准信道在每个块内部作用（$`p,\gamma\in[0,1]`$）：
 
-| 信道 | $\Phi(\rho)_c$ | 块 $c$ 中的 Kraus 算子 |
+| 信道 | $`\Phi(\rho)_c`$ | 块 $`c`$ 中的 Kraus 算子 |
 |---|---|---|
-| `dephasing_channel` | $(1-p)\rho_c+p\mathrm{diag}\,\rho_c$ | $\sqrt{1-p}\,1$, $\sqrt p\,E_{ii}$ |
-| `depolarizing_channel` | $(1-p)\rho_c+p\mathrm{Tr}(\rho_c)\,1/k_c$ | $\sqrt{1-p}\,1$, $\sqrt{p/k_c}\,E_{ij}$ |
-| `center_expectation` | $\mathrm{Tr}(\rho_c)\,1/k_c$ | $\sqrt{1/k_c}\,E_{ij}$ |
-| `amplitude_damping_channel` | 能级 $i>0$ 衰减到 $0$ | $E_{00}+\sqrt{1-\gamma}\sum_{i>0}E_{ii}$, $\sqrt\gamma\,E_{0i}$ |
-| `random_mixed_unitary_channel` | $\sum_jp_jU_j\rho U_j^*$ | $\sqrt{p_j}\,U_j$ |
+| `dephasing_channel` | $`(1-p)\rho_c+p\mathrm{diag}\,\rho_c`$ | $`\sqrt{1-p}\,1`$, $`\sqrt p\,E_{ii}`$ |
+| `depolarizing_channel` | $`(1-p)\rho_c+p\mathrm{Tr}(\rho_c)\,1/k_c`$ | $`\sqrt{1-p}\,1`$, $`\sqrt{p/k_c}\,E_{ij}`$ |
+| `center_expectation` | $`\mathrm{Tr}(\rho_c)\,1/k_c`$ | $`\sqrt{1/k_c}\,E_{ij}`$ |
+| `amplitude_damping_channel` | 能级 $`i>0`$ 衰减到 $`0`$ | $`E_{00}+\sqrt{1-\gamma}\sum_{i>0}E_{ii}`$, $`\sqrt\gamma\,E_{0i}`$ |
+| `random_mixed_unitary_channel` | $`\sum_jp_jU_j\rho U_j^*`$ | $`\sqrt{p_j}\,U_j`$ |
 
-对表中 $M_2\oplus M_3$ 上的每个信道，代码计算其不动点空间（$S_c-1$ 的零空间）的维数和其 Kraus 算子的
+对表中 $`M_2\oplus M_3`$ 上的每个信道，代码计算其不动点空间（$`S_c-1`$ 的零空间）的维数和其 Kraus 算子的
 交换子的维数：对保单位信道二者一致（[定理 6.10](../../lecture_notes/zh/06_quantum_channels.md#r-6-10)），对振幅阻尼二者维数相同但是不同的空间。
-然后它在 $100$ 个随机态上检验[定理 6.11](../../lecture_notes/zh/06_quantum_channels.md#r-6-11)，并对 6.3 节的映射 `Psi` 和粒子丢失检验[命题 6.12](../../lecture_notes/zh/06_quantum_channels.md#r-6-12)。
+然后它在 $`100`$ 个随机态上检验[定理 6.11](../../lecture_notes/zh/06_quantum_channels.md#r-6-11)，并对 6.3 节的映射 `Psi` 和粒子丢失检验[命题 6.12](../../lecture_notes/zh/06_quantum_channels.md#r-6-12)。
 
 ```python
 def fixed_dims(Phi):
@@ -238,12 +238,12 @@ assert close(classical(rho), alg_out.central([Tp[d] / k for d, k in enumerate(al
 assert torch.allclose(loss.transition_matrix()[0], torch.tensor([[1.0, 1.0], [0.0, 0.0]], dtype=T.dtype))
 ```
 
-在完全振幅阻尼下，$M_2\oplus M_3$ 的最大混合态的熵从
-$\log5\approx1.609$ 降到 $H(\tfrac25,\tfrac35)\approx0.673$：非保单位的信道可以起到纯化作用。
+在完全振幅阻尼下，$`M_2\oplus M_3`$ 的最大混合态的熵从
+$`\log5\approx1.609`$ 降到 $`H(\tfrac25,\tfrac35)\approx0.673`$：非保单位的信道可以起到纯化作用。
 
-在 $M_2$ 上，退相位 $D_p$ 与振幅阻尼 $A_\gamma$ 可交换，它们的复合把相干项乘以 $(1-p)\sqrt{1-\gamma}$；
-取 $1-p=e^{-t/T_\varphi}$ 和 $1-\gamma=e^{-t/T_1}$，就得到 $1/T_2=1/(2T_1)+1/T_\varphi$（[讲义，6.4 节](../../lecture_notes/zh/06_quantum_channels.md#s-6-4)，
-*量子比特的相干项*）。代码检验这些恒等式以及复合律 $D_{p(t)}D_{p(s)}=D_{p(t+s)}$、$A_{\gamma(t)}A_{\gamma(s)}=A_{\gamma(t+s)}$：
+在 $`M_2`$ 上，退相位 $`D_p`$ 与振幅阻尼 $`A_\gamma`$ 可交换，它们的复合把相干项乘以 $`(1-p)\sqrt{1-\gamma}`$；
+取 $`1-p=e^{-t/T_\varphi}`$ 和 $`1-\gamma=e^{-t/T_1}`$，就得到 $`1/T_2=1/(2T_1)+1/T_\varphi`$（[讲义，6.4 节](../../lecture_notes/zh/06_quantum_channels.md#s-6-4)，
+*量子比特的相干项*）。代码检验这些恒等式以及复合律 $`D_{p(t)}D_{p(s)}=D_{p(t+s)}`$、$`A_{\gamma(t)}A_{\gamma(s)}=A_{\gamma(t+s)}`$：
 
 ```python
 q2 = TypeIAlgebra([2], [2], precision='double')
@@ -271,17 +271,17 @@ assert abs(coh_t - math.exp(-t1 * (1 / (2 * T1) + 1 / Tphi))) < 1e-12       # 1/
 
 *讲义：* [6.5 节](../../lecture_notes/zh/06_quantum_channels.md#s-6-5)：[引理 6.13](../../lecture_notes/zh/06_quantum_channels.md#r-6-13) 和[定理 6.15](../../lecture_notes/zh/06_quantum_channels.md#r-6-15)（随机信道的输出纯度）。
 
-与本库（`random_isometry`）一样，**Haar 随机等距** $V:\mathbb C^k\to\mathbb C^N$ 定义为
-$G=QR$ 中的因子 $Q$，其中 $G$ 是 $N\times k$ 的 Ginibre 矩阵（各元素独立，密度为
-$\pi^{-1}e^{-|z|^2}$），$Q^*Q=1$，$R$ 是对角元为正的上三角矩阵（在 CPU 上，本库先取 LAPACK
-分解 $G=Q'R'$，再把 $Q'$ 的第 $i$ 列乘以 $R'_{ii}/|R'_{ii}|$；与定理 5.3 中一样，只要所有
-$R'_{ii}\ne0$，即只要 $G$ 的秩为 $k$，这就给出上述分解，而由引理 6.13 的证明，这几乎必然成立；
+与本库（`random_isometry`）一样，**Haar 随机等距** $`V:\mathbb C^k\to\mathbb C^N`$ 定义为
+$`G=QR`$ 中的因子 $`Q`$，其中 $`G`$ 是 $`N\times k`$ 的 Ginibre 矩阵（各元素独立，密度为
+$`\pi^{-1}e^{-|z|^2}`$），$`Q^*Q=1`$，$`R`$ 是对角元为正的上三角矩阵（在 CPU 上，本库先取 LAPACK
+分解 $`G=Q'R'`$，再把 $`Q'`$ 的第 $`i`$ 列乘以 $`R'_{ii}/|R'_{ii}|`$；与定理 5.3 中一样，只要所有
+$`R'_{ii}\ne0`$，即只要 $`G`$ 的秩为 $`k`$，这就给出上述分解，而由引理 6.13 的证明，这几乎必然成立；
 对 GPU 上的大批量，本库使用 Gram–Schmidt 正交化，它直接给出该分解）。
-`random_channel(alg, r)` 在每个块中独立地抽取这样的 $V_c:\mathbb C^{k_c}\to\mathbb C^r\otimes\mathbb C^{k_c}$，
+`random_channel(alg, r)` 在每个块中独立地抽取这样的 $`V_c:\mathbb C^{k_c}\to\mathbb C^r\otimes\mathbb C^{k_c}`$，
 并使用定理 6.5 中的 Kraus 算子。
 
-由[讲义，定理 6.15](../../lecture_notes/zh/06_quantum_channels.md#r-6-15)，对大小为 $k$ 的扇区中的纯态 $\psi$ 和由 `random_channel` 以 Kraus 秩 $r$ 抽取的 $\Phi$，
-$\mathbb E\mathrm{Tr}\,\Phi(\psi)^2=(k+r)/(kr+1)$ 且 $\mathbb E\,\Phi(\psi)=1_k/k$。我们用 $20\,000$ 个样本估计二者，
+由[讲义，定理 6.15](../../lecture_notes/zh/06_quantum_channels.md#r-6-15)，对大小为 $`k`$ 的扇区中的纯态 $`\psi`$ 和由 `random_channel` 以 Kraus 秩 $`r`$ 抽取的 $`\Phi`$，
+$`\mathbb E\mathrm{Tr}\,\Phi(\psi)^2=(k+r)/(kr+1)`$ 且 $`\mathbb E\,\Phi(\psi)=1_k/k`$。我们用 $`20\,000`$ 个样本估计二者，
 并给出均值的标准误差：
 
 ```python
@@ -311,11 +311,11 @@ QuTiP（`to_choi`、`to_kraus`、`to_super`、`to_stinespring`）、Qiskit（`qi
 `amplitude_damping_error` 等噪声模型）、toqito（`toqito.channel_ops`、`toqito.channel_props`）以及
 QETLAB（`ChoiMatrix`、`KrausOperators`、`ApplyMap`、`RandomSuperoperator`）可以在 6.1–6.2 节的
 各种表示之间转换、检验完全正性，并且（大多数）可以抽取随机信道，
-适用于完整矩阵代数之间的映射 $M_n\to M_m$。
+适用于完整矩阵代数之间的映射 $`M_n\to M_m`$。
 它们的约定各不相同（按列或按行堆叠、Choi 矩阵中因子的顺序），所以
-在比较数值之前要先比较约定。$\mathcal M$ 上的保扇区信道在那里可以
-当作 $M_D$（$D=\sum_ck_c$）上的信道处理，其超算子的大小为 $D^2\times D^2$，
-而不是每个扇区 $k_c^2\times k_c^2$。本库增加的是块结构本身：按扇区并成批存储的
+在比较数值之前要先比较约定。$`\mathcal M`$ 上的保扇区信道在那里可以
+当作 $`M_D`$（$`D=\sum_ck_c`$）上的信道处理，其超算子的大小为 $`D^2\times D^2`$，
+而不是每个扇区 $`k_c^2\times k_c^2`$。本库增加的是块结构本身：按扇区并成批存储的
 Kraus 算子、不同代数之间的映射（`InterSectorChannel`）、
 关于第 3 章各种迹的对偶，以及扇区之间的转移矩阵。
 
@@ -325,11 +325,11 @@ Kraus 算子、不同代数之间的映射（`InterSectorChannel`）、
 
 讲义中[习题](../../lecture_notes/zh/06_quantum_channels.md#x-6)的数值检验：
 
-1. （Werner–Holevo）用 `Channel.from_superoperator` 检验 $M_3$ 上的 $\Phi(\rho)=\big(\mathrm{Tr}(\rho)1-\rho^T\big)/(k-1)$
-   是 Kraus 秩为 $3$ 的保单位信道。
-2. 检验 $M_2\oplus M_3$ 上的退相位信道在块 $c$ 中的 Kraus 秩为 $k_c$，而本库存储了 $1+k_{\max}$ 个 Kraus 算子。
-3. 检验以 $X^aZ^b/k$ 为 Kraus 算子的混合酉信道就是 $M_3$ 上的 `center_expectation`。
-4. 对本库的三种迹检验 $(\Psi\circ\Phi)^\sharp=\Phi^\sharp\circ\Psi^\sharp$。
+1. （Werner–Holevo）用 `Channel.from_superoperator` 检验 $`M_3`$ 上的 $`\Phi(\rho)=\big(\mathrm{Tr}(\rho)1-\rho^T\big)/(k-1)`$
+   是 Kraus 秩为 $`3`$ 的保单位信道。
+2. 检验 $`M_2\oplus M_3`$ 上的退相位信道在块 $`c`$ 中的 Kraus 秩为 $`k_c`$，而本库存储了 $`1+k_{\max}`$ 个 Kraus 算子。
+3. 检验以 $`X^aZ^b/k`$ 为 Kraus 算子的混合酉信道就是 $`M_3`$ 上的 `center_expectation`。
+4. 对本库的三种迹检验 $`(\Psi\circ\Phi)^\sharp=\Phi^\sharp\circ\Psi^\sharp`$。
 
 <details>
 <summary>解答</summary>

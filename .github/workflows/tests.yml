@@ -8,8 +8,9 @@ jobs:
   pytest:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false                  # report every Python version, not only the first failure
       matrix:
-        python-version: ["3.9", "3.10", "3.12"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -19,6 +20,22 @@ jobs:
         run: |
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -e ".[test]"
+      - name: Test
+        run: pytest -q
+
+  # the lowest supported versions (pyproject.toml): Python 3.8, PyTorch 1.13, NumPy 1.21 (and SciPy 1.7 for the tests)
+  oldest-dependencies:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+      - name: Install
+        run: |
+          pip install "torch==1.13.1" --index-url https://download.pytorch.org/whl/cpu
+          pip install "numpy==1.21.6" "scipy==1.7.3" pytest
+          pip install -e . --no-deps
       - name: Test
         run: pytest -q
 

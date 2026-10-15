@@ -8,25 +8,25 @@ comme la duale d'un plongement et étudie l'intrication et les états aléatoire
 produits avec la bibliothèque, calculons des traces partielles et des entropies d'intrication, et
 vérifions numériquement les théorèmes.
 
-Dans tout ce chapitre, $\mathcal M_1=\bigoplus_{c=1}^{C_1}M_{k_c}(\mathbb C)$ agit sur
-$H_1=\bigoplus_c\mathbb C^{k_c}$, avec les projecteurs centraux minimaux $P_c$, et
-$\mathcal M_2=\bigoplus_{d=1}^{C_2}M_{l_d}(\mathbb C)$ agit sur $H_2=\bigoplus_d\mathbb C^{l_d}$, avec
-les projecteurs centraux minimaux $Q_d$. $\mathrm{Tr}$ désigne la trace de l'espace sur lequel
-agit un opérateur ; sur $\mathcal M_i$, c'est la trace brute du chapitre 3. Pour $X$ sur
-$\mathbb C^k\otimes\mathbb C^l$, on note $X_{(a,b),(a',b')}=\langle e_a\otimes e_b,X\,e_{a'}\otimes e_{b'}\rangle$,
-et l'on identifie $\mathbb C^k\otimes\mathbb C^l$ à $\mathbb C^{kl}$ par $e_a\otimes e_b\mapsto e_{(a-1)l+b}$
-(la convention de Kronecker), de sorte que $(A\otimes B)_{(a,b),(a',b')}=A_{aa'}B_{bb'}$.
+Dans tout ce chapitre, $`\mathcal M_1=\bigoplus_{c=1}^{C_1}M_{k_c}(\mathbb C)`$ agit sur
+$`H_1=\bigoplus_c\mathbb C^{k_c}`$, avec les projecteurs centraux minimaux $`P_c`$, et
+$`\mathcal M_2=\bigoplus_{d=1}^{C_2}M_{l_d}(\mathbb C)`$ agit sur $`H_2=\bigoplus_d\mathbb C^{l_d}`$, avec
+les projecteurs centraux minimaux $`Q_d`$. $`\mathrm{Tr}`$ désigne la trace de l'espace sur lequel
+agit un opérateur ; sur $`\mathcal M_i`$, c'est la trace brute du chapitre 3. Pour $`X`$ sur
+$`\mathbb C^k\otimes\mathbb C^l`$, on note $`X_{(a,b),(a',b')}=\langle e_a\otimes e_b,X\,e_{a'}\otimes e_{b'}\rangle`$,
+et l'on identifie $`\mathbb C^k\otimes\mathbb C^l`$ à $`\mathbb C^{kl}`$ par $`e_a\otimes e_b\mapsto e_{(a-1)l+b}`$
+(la convention de Kronecker), de sorte que $`(A\otimes B)_{(a,b),(a',b')}=A_{aa'}B_{bb'}`$.
 
 <a id="s-7-1"></a>
 
 ## 7.1 Le produit tensoriel de deux algèbres
 
-*Notes de cours :* [section 7.1](../../lecture_notes/fr/07_tensor_products.md#s-7-1) : [théorème 7.1](../../lecture_notes/fr/07_tensor_products.md#r-7-1) (la structure de $\mathcal M_1\otimes\mathcal M_2$).
+*Notes de cours :* [section 7.1](../../lecture_notes/fr/07_tensor_products.md#s-7-1) : [théorème 7.1](../../lecture_notes/fr/07_tensor_products.md#r-7-1) (la structure de $`\mathcal M_1\otimes\mathcal M_2`$).
 
-`tensor_product(alg1, alg2)` construit cette algèbre. Le secteur $(c,d)$ a pour indice $s=cC_2+d$
-(indices à partir de $0$ dans le code) et pour charge $(q_c,r_d)$, et, à l'intérieur de ce
-secteur, $e_a\otimes e_b$ a pour indice $a\,l_d+b$. `kron(A, B, alg12)` calcule $A\otimes B$. L'ordre
-des secteurs diffère de l'ordre de Kronecker de $H_1\otimes H_2$ par une permutation de la base, que
+`tensor_product(alg1, alg2)` construit cette algèbre. Le secteur $`(c,d)`$ a pour indice $`s=cC_2+d`$
+(indices à partir de $`0`$ dans le code) et pour charge $`(q_c,r_d)`$, et, à l'intérieur de ce
+secteur, $`e_a\otimes e_b`$ a pour indice $`a\,l_d+b`$. `kron(A, B, alg12)` calcule $`A\otimes B`$. L'ordre
+des secteurs diffère de l'ordre de Kronecker de $`H_1\otimes H_2`$ par une permutation de la base, que
 `kron_rows` construit explicitement ci-dessous ; elle permet de comparer avec des produits de
 Kronecker de matrices pleines.
 
@@ -87,11 +87,11 @@ for tr in ('Tr_blunt', 'Tr_norm', 'tau_vN'):                                   #
 
 ## 7.2 La trace partielle
 
-*Notes de cours :* [section 7.2](../../lecture_notes/fr/07_tensor_products.md#s-7-2) : la définition de $\mathrm{Tr}_2$, [proposition 7.2](../../lecture_notes/fr/07_tensor_products.md#r-7-2), [théorème 7.3](../../lecture_notes/fr/07_tensor_products.md#r-7-3) (la trace partielle est un canal) et [proposition 7.4](../../lecture_notes/fr/07_tensor_products.md#r-7-4) (une espérance conditionnelle d'indice $m^2$).
+*Notes de cours :* [section 7.2](../../lecture_notes/fr/07_tensor_products.md#s-7-2) : la définition de $`\mathrm{Tr}_2`$, [proposition 7.2](../../lecture_notes/fr/07_tensor_products.md#r-7-2), [théorème 7.3](../../lecture_notes/fr/07_tensor_products.md#r-7-3) (la trace partielle est un canal) et [proposition 7.4](../../lecture_notes/fr/07_tensor_products.md#r-7-4) (une espérance conditionnelle d'indice $`m^2`$).
 
-`partial_trace(X, keep=1)` remet chaque bloc $\rho_{cd}$ sous la forme $(k_c,l_d,k_c,l_d)$ et prend
+`partial_trace(X, keep=1)` remet chaque bloc $`\rho_{cd}`$ sous la forme $`(k_c,l_d,k_c,l_d)`$ et prend
 la trace ; `composite.partial_trace_channel(alg12, keep=1)` est le canal du théorème 7.3, avec les
-opérateurs de Kraus $1_{k_c}\otimes\langle j|$ du secteur $(c,d)$ vers le secteur $c$. On vérifie les
+opérateurs de Kraus $`1_{k_c}\otimes\langle j|`$ du secteur $`(c,d)`$ vers le secteur $`c`$. On vérifie les
 deux par rapport à la définition, à un `numpy.einsum` indépendant et à la dualité :
 
 ```python
@@ -113,8 +113,8 @@ assert close(Ptr.adjoint('blunt')(A), kron(A, one2, alg12))                 # Th
 ```
 
 Le module `torch_vn_algebra.inclusions` implémente les inclusions, leurs espérances conditionnelles et leurs
-indices ; `from_tensor_product(alg1, m)` construit l'inclusion $\mathcal M_1\otimes1\subset\mathcal M_1\otimes M_m$ de la
-[proposition 7.4](../../lecture_notes/fr/07_tensor_products.md#r-7-4), de matrice d'inclusion $\Lambda=m1_{C_1}$ et d'indice $m^2$
+indices ; `from_tensor_product(alg1, m)` construit l'inclusion $`\mathcal M_1\otimes1\subset\mathcal M_1\otimes M_m`$ de la
+[proposition 7.4](../../lecture_notes/fr/07_tensor_products.md#r-7-4), de matrice d'inclusion $`\Lambda=m1_{C_1}`$ et d'indice $`m^2`$
 ([notes de cours, section 7.2](../../lecture_notes/fr/07_tensor_products.md#s-7-2)) :
 
 ```python
@@ -146,12 +146,12 @@ print(inc.matrix.tolist(), inc.component_indices())           # Lambda = 3 * 1_2
 *Notes de cours :* [section 7.3](../../lecture_notes/fr/07_tensor_products.md#s-7-3) : [proposition 7.5](../../lecture_notes/fr/07_tensor_products.md#r-7-5) (le produit fusionné) et [théorème 7.6](../../lecture_notes/fr/07_tensor_products.md#r-7-6) (l'état réduit d'un produit fusionné).
 
 `fused_tensor_product(alg1, alg2, fuse)` (par défaut, `fuse` est l'addition) ordonne ses secteurs
-selon la charge fusionnée, et les couples $(c,d)$ à l'intérieur d'un secteur dans l'ordre
-lexicographique, chacun avec la base $e_a\otimes e_b$. Exemple : les bosons de cœur dur
-([notes de cours, section 7.3](../../lecture_notes/fr/07_tensor_products.md#s-7-3)). Les opérateurs qui conservent le nombre forment $M_1\oplus M_2\oplus M_1$
-(charges $0,1,2$) sur deux sites et $M_1\oplus M_3\oplus M_3\oplus M_1$ sur trois sites, et, d'après la
-[proposition 7.5(c)](../../lecture_notes/fr/07_tensor_products.md#r-7-5), leur produit fusionné est $\{N\}'$ pour le nombre d'occupation total de cinq sites,
-avec $n_q=\binom5q$.
+selon la charge fusionnée, et les couples $`(c,d)`$ à l'intérieur d'un secteur dans l'ordre
+lexicographique, chacun avec la base $`e_a\otimes e_b`$. Exemple : les bosons de cœur dur
+([notes de cours, section 7.3](../../lecture_notes/fr/07_tensor_products.md#s-7-3)). Les opérateurs qui conservent le nombre forment $`M_1\oplus M_2\oplus M_1`$
+(charges $`0,1,2`$) sur deux sites et $`M_1\oplus M_3\oplus M_3\oplus M_1`$ sur trois sites, et, d'après la
+[proposition 7.5(c)](../../lecture_notes/fr/07_tensor_products.md#r-7-5), leur produit fusionné est $`\{N\}'`$ pour le nombre d'occupation total de cinq sites,
+avec $`n_q=\binom5q`$.
 
 ```python
 bos1 = TypeIAlgebra([1, 2, 1], [1, 2, 1], precision='double', charges=[0, 1, 2])
@@ -170,25 +170,25 @@ A, B = random_operator(bos1), random_operator(bos2)
 assert close(full12(kron(A, B, F)), full12(kron(A, B, P)))   # Proposition 7.5(b)
 ```
 
-L'algèbre fusionnée est de dimension $\sum_q\binom5q^2=\binom{10}5=252$ (encore Vandermonde), le
-produit simple de dimension $(1+4+1)(1+9+9+1)=120$ (théorème 7.1(b)). D'après le théorème 7.1(a) et
+L'algèbre fusionnée est de dimension $`\sum_q\binom5q^2=\binom{10}5=252`$ (encore Vandermonde), le
+produit simple de dimension $`(1+4+1)(1+9+9+1)=120`$ (théorème 7.1(b)). D'après le théorème 7.1(a) et
 la proposition 7.5(b), le produit simple est formé des éléments du produit fusionné qui sont
-diagonaux par blocs pour les couples $(c,d)$ ; les $132$ dimensions restantes sont engendrées par
-les opérateurs qui envoient un bloc de couple $(c,d)$ dans un autre bloc de couple $(c',d')$ du même
-$H_q$, $c'\ne c$ (donc $d'\ne d$) : ils changent la charge de chaque partie en conservant la charge
+diagonaux par blocs pour les couples $`(c,d)`$ ; les $`132`$ dimensions restantes sont engendrées par
+les opérateurs qui envoient un bloc de couple $`(c,d)`$ dans un autre bloc de couple $`(c',d')`$ du même
+$`H_q`$, $`c'\ne c`$ (donc $`d'\ne d`$) : ils changent la charge de chaque partie en conservant la charge
 totale, c'est-à-dire qu'ici ils déplacent des particules d'une partie à l'autre.
 
-D'après la formule par blocs du théorème 7.6, $(\rho_1)_c=\sum_d\mathrm{tr}_{l_d}\,\rho_{(c,d),(c,d)}$. Les
+D'après la formule par blocs du théorème 7.6, $`(\rho_1)_c=\sum_d\mathrm{tr}_{l_d}\,\rho_{(c,d),(c,d)}`$. Les
 deux implémentations de la bibliothèque sont conçues pour calculer cette application pour toute
 règle de fusion : `partial_trace` ne prend la trace que des blocs diagonaux de couples
-$\rho_{(c,d),(c,d)}$, et `partial_trace_channel` utilise des indices de Kraus distincts pour les
-couples d'un même secteur ayant le même $c$, de sorte que sa duale est de nouveau
-$A\mapsto A\otimes1$. Le code vérifie les deux, pour les deux règles de fusion ci-dessous et les
-deux choix du facteur conservé, contre $E_1(\mathrm{Tr}_{H_2}\,\rho)$ calculé indépendamment avec
-`einsum`, et la duale contre $A\otimes1$. Avec
-l'addition, $E_1$ n'a aucun effet dans notre exemple ; avec la règle de parité
-$f(q,r)=q+r\bmod2$, les charges $0$ et $2$ de `bos1` fusionnent de la même manière avec tout $r$, et
-$E_1$ supprime de véritables cohérences :
+$`\rho_{(c,d),(c,d)}`$, et `partial_trace_channel` utilise des indices de Kraus distincts pour les
+couples d'un même secteur ayant le même $`c`$, de sorte que sa duale est de nouveau
+$`A\mapsto A\otimes1`$. Le code vérifie les deux, pour les deux règles de fusion ci-dessous et les
+deux choix du facteur conservé, contre $`E_1(\mathrm{Tr}_{H_2}\,\rho)`$ calculé indépendamment avec
+`einsum`, et la duale contre $`A\otimes1`$. Avec
+l'addition, $`E_1`$ n'a aucun effet dans notre exemple ; avec la règle de parité
+$`f(q,r)=q+r\bmod2`$, les charges $`0`$ et $`2`$ de `bos1` fusionnent de la même manière avec tout $`r`$, et
+$`E_1`$ supprime de véritables cohérences :
 
 ```python
 G = fused_tensor_product(bos1, bos2, fuse=lambda q, r: (q + r) % 2)       # only the parity is conserved
@@ -215,12 +215,12 @@ for alg, coherent in ((F, False), (G, True)):
 
 ## 7.4 Intrication des états purs
 
-*Notes de cours :* [section 7.4](../../lecture_notes/fr/07_tensor_products.md#s-7-4) : [lemme 7.7](../../lecture_notes/fr/07_tensor_products.md#r-7-7) (décomposition de Schmidt) et [proposition 7.8](../../lecture_notes/fr/07_tensor_products.md#r-7-8) (intrication résolue en symétrie) : $E(\psi)=H(p)+\sum_cp_cE(\hat\psi_c)$, où $p_c$ est la probabilité du secteur $c$ de la première partie.
+*Notes de cours :* [section 7.4](../../lecture_notes/fr/07_tensor_products.md#s-7-4) : [lemme 7.7](../../lecture_notes/fr/07_tensor_products.md#r-7-7) (décomposition de Schmidt) et [proposition 7.8](../../lecture_notes/fr/07_tensor_products.md#r-7-8) (intrication résolue en symétrie) : $`E(\psi)=H(p)+\sum_cp_cE(\hat\psi_c)`$, où $`p_c`$ est la probabilité du secteur $`c`$ de la première partie.
 
-$H(p)$ est l'**intrication de nombre** et $\sum_cp_cE(\hat\psi_c)$ l'**intrication
-configurationnelle**. Pour un état aléatoire de $2$ particules sur les cinq sites, on calcule
-$E(\psi)$ à partir des traces partielles des deux côtés et des valeurs singulières de la matrice
-$\Psi$ de taille $4\times8$ :
+$`H(p)`$ est l'**intrication de nombre** et $`\sum_cp_cE(\hat\psi_c)`$ l'**intrication
+configurationnelle**. Pour un état aléatoire de $`2`$ particules sur les cinq sites, on calcule
+$`E(\psi)`$ à partir des traces partielles des deux côtés et des valeurs singulières de la matrice
+$`\Psi`$ de taille $`4\times8`$ :
 
 ```python
 s = F.charges.index(2)                                      # the sector of two particles, n_q = 10
@@ -258,9 +258,9 @@ assert abs(E_psi - H_num - S_conf) < 1e-10                  # Proposition 7.8
 
 *Notes de cours :* [section 7.5](../../lecture_notes/fr/07_tensor_products.md#s-7-5) : [théorème 7.11](../../lecture_notes/fr/07_tensor_products.md#r-7-11) (Lubkin), [corollaire 7.12](../../lecture_notes/fr/07_tensor_products.md#r-7-12), [théorème 7.13](../../lecture_notes/fr/07_tensor_products.md#r-7-13) (formule de Page) et [proposition 7.14](../../lecture_notes/fr/07_tensor_products.md#r-7-14) (la mesure induite).
 
-On vérifie les théorèmes 7.11 et 7.13 sur $10^4$ états purs de $\mathbb C^3\otimes\mathbb C^6$ réduits
+On vérifie les théorèmes 7.11 et 7.13 sur $`10^4`$ états purs de $`\mathbb C^3\otimes\mathbb C^6`$ réduits
 avec `partial_trace` et sur la mesure induite, ainsi que la proposition 7.14 pour
-$M_1\oplus M_2\oplus M_3$, $r=2$ :
+$`M_1\oplus M_2\oplus M_3`$, $`r=2`$ :
 
 ```python
 a, b, n_samples = 3, 6, 10_000
@@ -309,8 +309,8 @@ de von Neumann avec secteurs et traces, la règle de fusion est une application 
 correcte pour les produits fusionnés (théorèmes 7.3 et 7.6), et tout cela fonctionne par lots. Elle
 n'a pas de réseaux de tenseurs, et `fused_tensor_product` prend une règle avec un seul résultat par
 couple de charges, comme pour les symétries abéliennes ; une règle non abélienne, comme pour
-$SU(2)$, où deux spins $j_1,j_2$ se combinent en les différents spins totaux
-$|j_1-j_2|,\dots,j_1+j_2$ (chapitre 4, exercice 2), n'est pas ici un produit fusionné (la bibliothèque traite $SU(2)$ séparément pour les chaînes de spins $\frac12$,
+$`SU(2)`$, où deux spins $`j_1,j_2`$ se combinent en les différents spins totaux
+$`|j_1-j_2|,\dots,j_1+j_2`$ (chapitre 4, exercice 2), n'est pas ici un produit fusionné (la bibliothèque traite $`SU(2)`$ séparément pour les chaînes de spins $`\frac12`$,
 chapitre 4).
 
 <a id="x-7"></a>
@@ -319,12 +319,12 @@ chapitre 4).
 
 [Exercices](../../lecture_notes/fr/07_tensor_products.md#x-7) des notes de cours, numériquement :
 
-1. Vérifier que la duale de $\mathrm{Tr}_2$ relativement à $\tau_{\mathrm{vN}}$,
-   `partial_trace_channel(alg12).adjoint('tau_vN')`, est $A\mapsto A\otimes Z$ avec $Z=\bigoplus_dC_2l_d1_{l_d}$.
+1. Vérifier que la duale de $`\mathrm{Tr}_2`$ relativement à $`\tau_{\mathrm{vN}}`$,
+   `partial_trace_channel(alg12).adjoint('tau_vN')`, est $`A\mapsto A\otimes Z`$ avec $`Z=\bigoplus_dC_2l_d1_{l_d}`$.
 2. (Sous-additivité.) Vérifier sur des états aléatoires de `alg12` que l'information mutuelle
-   $S(\rho_1)+S(\rho_2)-S(\rho)$ est positive et égale à $S(\rho\|\rho_1\otimes\rho_2)$.
-3. Pour une particule partagée entre deux sites, $\psi=(|01\rangle+|10\rangle)/\sqrt2$, vérifier que
-   $E(\psi)=H(p)=\log2$.
+   $`S(\rho_1)+S(\rho_2)-S(\rho)`$ est positive et égale à $`S(\rho\|\rho_1\otimes\rho_2)`$.
+3. Pour une particule partagée entre deux sites, $`\psi=(|01\rangle+|10\rangle)/\sqrt2`$, vérifier que
+   $`E(\psi)=H(p)=\log2`$.
 
 <details>
 <summary>Solutions</summary>

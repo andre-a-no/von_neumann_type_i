@@ -4,7 +4,7 @@
 
 Este tutorial acompaña al [apéndice B](../../lecture_notes/es/B_schur_weyl.md) de los apuntes de clase, que demuestra la dualidad de Schur–Weyl
 ([teorema B.6](../../lecture_notes/es/B_schur_weyl.md#r-B-6)) y la fórmula de Weingarten de cualquier orden ([teorema B.13](../../lecture_notes/es/B_schur_weyl.md#r-B-13)). Comprobamos las
-dimensiones de la dualidad, la descomposición de $(\mathbb C^d)^{\otimes n}$ calculada por la biblioteca, la función de
+dimensiones de la dualidad, la descomposición de $`(\mathbb C^d)^{\otimes n}`$ calculada por la biblioteca, la función de
 Weingarten frente a promedios de Monte Carlo sobre unitarias de Haar, el teorema de Wigner–Eckart y la medida de Haar
 del grupo ortogonal.
 
@@ -14,10 +14,10 @@ del grupo ortogonal.
 
 *Apuntes:* [sección B.3](../../lecture_notes/es/B_schur_weyl.md#s-B-3); [lema B.1](../../lecture_notes/es/B_schur_weyl.md#r-B-1), [lema B.2](../../lecture_notes/es/B_schur_weyl.md#r-B-2), [proposición B.3](../../lecture_notes/es/B_schur_weyl.md#r-B-3), [lema B.5](../../lecture_notes/es/B_schur_weyl.md#r-B-5), [teorema B.6](../../lecture_notes/es/B_schur_weyl.md#r-B-6).
 
-El código compara, para $d$ y $n$ pequeños, cuatro dimensiones: la de $\mathrm{span}\,\pi(S_n)$, la del conmutante de
-dos $V^{\otimes n}$ aleatorios (que contiene $\{V^{\otimes n}\}'=\mathrm{span}\,\pi(S_n)$ y coincide con él en todos los
-casos impresos), y las de los subespacios generados por muchos $A^{\otimes n}$ y $V^{\otimes n}$ aleatorios frente a
-$\binom{d^2+n-1}n$ ([proposición B.3](../../lecture_notes/es/B_schur_weyl.md#r-B-3), [teorema B.6](../../lecture_notes/es/B_schur_weyl.md#r-B-6)). Los operadores $\pi(\sigma)$ los construye
+El código compara, para $`d`$ y $`n`$ pequeños, cuatro dimensiones: la de $`\mathrm{span}\,\pi(S_n)`$, la del conmutante de
+dos $`V^{\otimes n}`$ aleatorios (que contiene $`\{V^{\otimes n}\}'=\mathrm{span}\,\pi(S_n)`$ y coincide con él en todos los
+casos impresos), y las de los subespacios generados por muchos $`A^{\otimes n}`$ y $`V^{\otimes n}`$ aleatorios frente a
+$`\binom{d^2+n-1}n`$ ([proposición B.3](../../lecture_notes/es/B_schur_weyl.md#r-B-3), [teorema B.6](../../lecture_notes/es/B_schur_weyl.md#r-B-6)). Los operadores $`\pi(\sigma)`$ los construye
 `decompose.permutation_representation(n, d)`; el código comprueba que sigue el convenio del [lema B.1(a)](../../lecture_notes/es/B_schur_weyl.md#r-B-1), y
 comprueba el [lema B.2](../../lecture_notes/es/B_schur_weyl.md#r-B-2) y la recursión de Newton del [lema B.5](../../lecture_notes/es/B_schur_weyl.md#r-B-5), usada en la demostración del teorema B.6(b).
 
@@ -90,14 +90,14 @@ assert close(e[n], functools.reduce(torch.kron, [A] * n), 1e-8)
 
 <a id="s-B-4"></a>
 
-## B.4 La descomposición de $(\mathbb C^d)^{\otimes n}$
+## B.4 La descomposición de $`(\mathbb C^d)^{\otimes n}`$
 
 *Apuntes:* [sección B.4](../../lecture_notes/es/B_schur_weyl.md#s-B-4); [teorema B.8](../../lecture_notes/es/B_schur_weyl.md#r-B-8), [corolario B.9](../../lecture_notes/es/B_schur_weyl.md#r-B-9), [corolario B.10](../../lecture_notes/es/B_schur_weyl.md#r-B-10).
 
-El código descompone $\pi(S_3)$ sobre $(\mathbb C^3)^{\otimes3}$ con `decompose.from_group`, cuyos `k_factors` y
-`multiplicities` son los $k_c$ y $m_c$, y comprueba las dimensiones del [teorema B.8](../../lecture_notes/es/B_schur_weyl.md#r-B-8); después descompone
-$\pi(S_L)$ sobre $(\mathbb C^2)^{\otimes L}$ para $L=5,6$ y compara los pares $(k_c,m_c)$ con los $(m_S,2S+1)$ del
-[corolario B.9](../../lecture_notes/es/B_schur_weyl.md#r-B-9), y $\sum_ck_c^2$ con el número de Catalan del [corolario B.10](../../lecture_notes/es/B_schur_weyl.md#r-B-10). El algoritmo en que se
+El código descompone $`\pi(S_3)`$ sobre $`(\mathbb C^3)^{\otimes3}`$ con `decompose.from_group`, cuyos `k_factors` y
+`multiplicities` son los $`k_c`$ y $`m_c`$, y comprueba las dimensiones del [teorema B.8](../../lecture_notes/es/B_schur_weyl.md#r-B-8); después descompone
+$`\pi(S_L)`$ sobre $`(\mathbb C^2)^{\otimes L}`$ para $`L=5,6`$ y compara los pares $`(k_c,m_c)`$ con los $`(m_S,2S+1)`$ del
+[corolario B.9](../../lecture_notes/es/B_schur_weyl.md#r-B-9), y $`\sum_ck_c^2`$ con el número de Catalan del [corolario B.10](../../lecture_notes/es/B_schur_weyl.md#r-B-10). El algoritmo en que se
 basa `from_group` se explica en el [tutorial 4, sección 4.3](04_symmetries.md#s-4-3).
 
 ```python
@@ -123,10 +123,10 @@ for L in (5, 6):
 
 *Apuntes:* [sección B.5](../../lecture_notes/es/B_schur_weyl.md#s-B-5); [lema B.11](../../lecture_notes/es/B_schur_weyl.md#r-B-11), [teorema B.13](../../lecture_notes/es/B_schur_weyl.md#r-B-13), [corolario B.14](../../lecture_notes/es/B_schur_weyl.md#r-B-14).
 
-El código calcula $\mathrm{Wg}$ a partir de la pseudoinversa, comprueba el [teorema B.13(a), (b)](../../lecture_notes/es/B_schur_weyl.md#r-B-13) y el
-[teorema 5.10](../../lecture_notes/es/05_random_matrices.md#r-5-10), y compara el tensor completo de momentos de orden $n=3$ para
-$d=2$ — un caso con $G$ singular — y el twirl de una $X$ aleatoria ([lema B.11](../../lecture_notes/es/B_schur_weyl.md#r-B-11)) con promedios de Monte Carlo
-sobre unitarias de Haar; la entrada $\mathbb E|U_{11}|^6=\frac{3!}{2\cdot3\cdot4}$ es el [corolario B.14](../../lecture_notes/es/B_schur_weyl.md#r-B-14).
+El código calcula $`\mathrm{Wg}`$ a partir de la pseudoinversa, comprueba el [teorema B.13(a), (b)](../../lecture_notes/es/B_schur_weyl.md#r-B-13) y el
+[teorema 5.10](../../lecture_notes/es/05_random_matrices.md#r-5-10), y compara el tensor completo de momentos de orden $`n=3`$ para
+$`d=2`$ — un caso con $`G`$ singular — y el twirl de una $`X`$ aleatoria ([lema B.11](../../lecture_notes/es/B_schur_weyl.md#r-B-11)) con promedios de Monte Carlo
+sobre unitarias de Haar; la entrada $`\mathbb E|U_{11}|^6=\frac{3!}{2\cdot3\cdot4}`$ es el [corolario B.14](../../lecture_notes/es/B_schur_weyl.md#r-B-14).
 
 ```python
 def n_cycles(p):                                        # number of cycles of a permutation in one-line form
@@ -181,7 +181,7 @@ assert abs(exact[0, 0].item() - 1 / 4) < 1e-12                            # Coro
 
 X = torch.randn(N, N, dtype=dt)
 T = Phi(X)
-coef = torch.linalg.lstsq(P.reshape(len(perms), -1).T, T.reshape(-1, 1)).solution
+coef = torch.linalg.lstsq(P.reshape(len(perms), -1).T, T.reshape(-1, 1), driver='gelsd').solution
 assert close(Phi(T), T) and close(torch.einsum('s,sij->ij', coef[:, 0], P), T)   # a projection into span pi(S_n)
 Vn = power(haar(d, 1), n)[0]
 assert close(Vn @ T, T @ Vn)                                             # = {V^{(x)n}}'
@@ -192,14 +192,14 @@ assert ((Y.mean(0) - T).abs() <= 5 * Y.std(0) / math.sqrt(B) + 1e-12).all()   # 
 
 <a id="s-B-6"></a>
 
-## B.6 Operadores tensoriales y el teorema de Wigner–Eckart para $SU(2)$
+## B.6 Operadores tensoriales y el teorema de Wigner–Eckart para $`SU(2)`$
 
 *Apuntes:* [sección B.6](../../lecture_notes/es/B_schur_weyl.md#s-B-6); [lema B.15](../../lecture_notes/es/B_schur_weyl.md#r-B-15), [teorema B.16](../../lecture_notes/es/B_schur_weyl.md#r-B-16).
 
-El código comprueba el [lema B.15](../../lecture_notes/es/B_schur_weyl.md#r-B-15) para los espines de sitio de seis espines $\frac12$ (`decompose.total_spin`,
+El código comprueba el [lema B.15](../../lecture_notes/es/B_schur_weyl.md#r-B-15) para los espines de sitio de seis espines $`\frac12`$ (`decompose.total_spin`,
 `decompose.spin_matrices`) y el [teorema B.16](../../lecture_notes/es/B_schur_weyl.md#r-B-16) en una forma independiente de la base: en la descomposición
 calculada por `decompose.from_generators` (cuyas bases de sector, los bloques de columnas de `V`, no tienen por qué ser
-las $|S,M\rangle$), el bloque de $(T_q)_q$ entre dos multipletes, como matriz con filas $(M',M,q)$ y columnas $(a,b)$,
+las $`|S,M\rangle`$), el bloque de $`(T_q)_q`$ entre dos multipletes, como matriz con filas $`(M',M,q)`$ y columnas $`(a,b)`$,
 tiene rango a lo sumo uno, y es nulo fuera del rango de (a). El teorema es el principio en que se basa
 `su2.spin_correlation`, que el [tutorial 9, sección 9.3](09_spin_chains.md#s-9-3) comprueba frente al método `'direct'`.
 
@@ -244,15 +244,15 @@ assert close(X @ X2 + Y @ Y2 + Z @ Z2, sum((-1) ** q * T[q] @ T2[-q] for q in (-
 
 *Apuntes:* [sección B.7](../../lecture_notes/es/B_schur_weyl.md#s-B-7); [teorema B.17](../../lecture_notes/es/B_schur_weyl.md#r-B-17).
 
-Por el [teorema B.17](../../lecture_notes/es/B_schur_weyl.md#r-B-17), el factor ortogonal $O$ de la descomposición QR $Z=OR$ de una matriz gaussiana real,
-normalizada por $R_{ii}>0$, está distribuido según la medida de Haar en $O(k)$, con
-$\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k$; para cualquier otra descomposición QR $Z=O'R'$,
-$O=O'\mathrm{diag}(\mathrm{sgn}\,R'_{ii})$.
+Por el [teorema B.17](../../lecture_notes/es/B_schur_weyl.md#r-B-17), el factor ortogonal $`O`$ de la descomposición QR $`Z=OR`$ de una matriz gaussiana real,
+normalizada por $`R_{ii}>0`$, está distribuido según la medida de Haar en $`O(k)`$, con
+$`\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k`$; para cualquier otra descomposición QR $`Z=O'R'`$,
+$`O=O'\mathrm{diag}(\mathrm{sgn}\,R'_{ii})`$.
 
-El código comprueba mediante Monte Carlo los segundos momentos, $\mathbb E\mathrm{Tr}\,O=0$ y
-$\mathbb E(\mathrm{Tr}\,O)^2=\sum_{i,l}\mathbb E[O_{ii}O_{ll}]=1$. Registra además una *observación numérica* sobre la
+El código comprueba mediante Monte Carlo los segundos momentos, $`\mathbb E\mathrm{Tr}\,O=0`$ y
+$`\mathbb E(\mathrm{Tr}\,O)^2=\sum_{i,l}\mathbb E[O_{ii}O_{ll}]=1`$. Registra además una *observación numérica* sobre la
 rutina QR de `torch.linalg.qr` (una afirmación sobre esa rutina, no un teorema): sin la corrección de signos, su
-factor $Q'$ tiene $\mathbb E\mathrm{Tr}\,Q'$ a muchos errores estándar de $0$, así que no está distribuido según la
+factor $`Q'`$ tiene $`\mathbb E\mathrm{Tr}\,Q'`$ a muchos errores estándar de $`0`$, así que no está distribuido según la
 medida de Haar.
 
 ```python

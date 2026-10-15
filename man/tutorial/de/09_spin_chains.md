@@ -9,22 +9,22 @@ sie über Grundzustände aussagen ([Satz 9.7](../../lecture_notes/de/09_spin_cha
 Krylov-Verfahren aus `krylov` für Sektoren, die für dichte Matrizen zu groß sind, und berechnen Niveaustatistik und
 Verschränkung.
 
-Im ganzen Kapitel sind die Plätze $0,\dots,L-1$, die Basis von $(\mathbb C^2)^{\otimes L}$ besteht aus den
-Konfigurationen $|b\rangle=|b_0\dots b_{L-1}\rangle$ mit $b_i=1$ für Spin nach oben (Konvention der Bibliothek: Bit
-$i$ eines Labels ist Platz $i$), $s^a_i$ ($a=x,y,z$) sind die Spinmatrizen $\frac12\sigma_a$ auf Platz $i$,
-$s^\pm_i=s^x_i\pm is^y_i$, $n_i=s^z_i+\frac12$, $S^a=\sum_is^a_i$, und $N=S^z+\frac L2$ ist die Anzahl der Spins nach
-oben. Eine Kette ist **offen** (Bindungen $(i,i+1)$, $i<L-1$) oder **periodisch** (zusätzlich die Bindung
-$(L-1,0)$; dann ist $L\ge3$, und Indizes werden modulo $L$ genommen). $J>0$ (antiferromagnetisch), $\hbar=1$, und
-$\log$ ist der natürliche Logarithmus.
+Im ganzen Kapitel sind die Plätze $`0,\dots,L-1`$, die Basis von $`(\mathbb C^2)^{\otimes L}`$ besteht aus den
+Konfigurationen $`|b\rangle=|b_0\dots b_{L-1}\rangle`$ mit $`b_i=1`$ für Spin nach oben (Konvention der Bibliothek: Bit
+$`i`$ eines Labels ist Platz $`i`$), $`s^a_i`$ ($`a=x,y,z`$) sind die Spinmatrizen $`\frac12\sigma_a`$ auf Platz $`i`$,
+$`s^\pm_i=s^x_i\pm is^y_i`$, $`n_i=s^z_i+\frac12`$, $`S^a=\sum_is^a_i`$, und $`N=S^z+\frac L2`$ ist die Anzahl der Spins nach
+oben. Eine Kette ist **offen** (Bindungen $`(i,i+1)`$, $`i<L-1`$) oder **periodisch** (zusätzlich die Bindung
+$`(L-1,0)`$; dann ist $`L\ge3`$, und Indizes werden modulo $`L`$ genommen). $`J>0`$ (antiferromagnetisch), $`\hbar=1`$, und
+$`\log`$ ist der natürliche Logarithmus.
 
 <a id="s-9-1"></a>
 
-## 9.1 Die XXZ-Kette und ihre $U(1)$-Sektoren
+## 9.1 Die XXZ-Kette und ihre $`U(1)`$-Sektoren
 
-*Vorlesungsnotizen:* [Abschnitt 9.1](../../lecture_notes/de/09_spin_chains.md#s-9-1); [Proposition 9.1](../../lecture_notes/de/09_spin_chains.md#r-9-1) ($H$ erhält $S^z$), [Proposition 9.2](../../lecture_notes/de/09_spin_chains.md#r-9-2), [Lemma 9.3](../../lecture_notes/de/09_spin_chains.md#r-9-3) und [Korollar 9.4](../../lecture_notes/de/09_spin_chains.md#r-9-4) (der Turm der Ketten und sein Index).
+*Vorlesungsnotizen:* [Abschnitt 9.1](../../lecture_notes/de/09_spin_chains.md#s-9-1); [Proposition 9.1](../../lecture_notes/de/09_spin_chains.md#r-9-1) ($`H`$ erhält $`S^z`$), [Proposition 9.2](../../lecture_notes/de/09_spin_chains.md#r-9-2), [Lemma 9.3](../../lecture_notes/de/09_spin_chains.md#r-9-3) und [Korollar 9.4](../../lecture_notes/de/09_spin_chains.md#r-9-4) (der Turm der Ketten und sein Index).
 
 `SpinChain(L).xxz` baut die Blöcke direkt aus den Konfigurationen jedes Sektors (`chain.labels[N]`). Wir
-vergleichen sie mit der vollen $2^L\times2^L$-Matrix, die aus Kronecker-Produkten gebildet wird:
+vergleichen sie mit der vollen $`2^L\times2^L`$-Matrix, die aus Kronecker-Produkten gebildet wird:
 
 ```python
 import functools, itertools, math, time
@@ -54,9 +54,9 @@ for N, k in enumerate(chain.algebra.k_factors):
     assert close(H.matrix[0, N, :k, :k], H_full[lab][:, lab])
 ```
 
-Der Turm $\mathcal A_0\subset\mathcal A_1\subset\cdots$ der Ketten: `inclusions.chain_tower` baut die Inklusionen,
-`inclusions.bratteli_diagram` ihr Bratteli-Diagramm und `Inclusion.index` den Index $\|\Lambda\|^2$. Der Code prüft
-die Pascalsche Regel, [Lemma 9.3](../../lecture_notes/de/09_spin_chains.md#r-9-3) und $[\mathcal A_{L+1}:\mathcal A_L]=4\cos^2\frac\pi{2L+4}$ ([Korollar 9.4](../../lecture_notes/de/09_spin_chains.md#r-9-4)).
+Der Turm $`\mathcal A_0\subset\mathcal A_1\subset\cdots`$ der Ketten: `inclusions.chain_tower` baut die Inklusionen,
+`inclusions.bratteli_diagram` ihr Bratteli-Diagramm und `Inclusion.index` den Index $`\|\Lambda\|^2`$. Der Code prüft
+die Pascalsche Regel, [Lemma 9.3](../../lecture_notes/de/09_spin_chains.md#r-9-3) und $`[\mathcal A_{L+1}:\mathcal A_L]=4\cos^2\frac\pi{2L+4}`$ ([Korollar 9.4](../../lecture_notes/de/09_spin_chains.md#r-9-4)).
 
 ```python
 tower = inclusions.chain_tower(8)                                    # A_0 c A_1 c ... c A_8
@@ -77,7 +77,7 @@ for L_, inc in enumerate(tower):
 
 *Vorlesungsnotizen:* [Abschnitt 9.2](../../lecture_notes/de/09_spin_chains.md#s-9-2); [Proposition 9.5](../../lecture_notes/de/09_spin_chains.md#r-9-5) (Impulssektoren), [Satz 9.7](../../lecture_notes/de/09_spin_chains.md#r-9-7) (Marshallsche Vorzeichenregel), [Korollar 9.8](../../lecture_notes/de/09_spin_chains.md#r-9-8) (Impuls des Grundzustands).
 
-`xxz_momentum` baut die Blöcke in der normierten Basis $|a,k\rangle$, mit einem Repräsentanten $a$ pro Bahn. Wir
+`xxz_momentum` baut die Blöcke in der normierten Basis $`|a,k\rangle`$, mit einem Repräsentanten $`a`$ pro Bahn. Wir
 zählen die Bahnen unabhängig ab und vergleichen die Spektren mit dem dichten Sektor:
 
 ```python
@@ -95,11 +95,11 @@ E_k = torch.sort(torch.cat([e[0] for e in Hk.eigenvalues()])).values
 assert close(E_k, torch.linalg.eigvalsh(ring.xxz(1.0, 1.0, h=0.2, sector=6).matrix[0, 0]))
 ```
 
-Der Sektor $N=6$ mit $924$ Zuständen zerfällt in Blöcke der Größen $80,75,78,76,78,75,80,75,78,76,78,75$.
+Der Sektor $`N=6`$ mit $`924`$ Zuständen zerfällt in Blöcke der Größen $`80,75,78,76,78,75,80,75,78,76,78,75`$.
 
-Nach der Marshallschen Vorzeichenregel ([Satz 9.7](../../lecture_notes/de/09_spin_chains.md#r-9-7)) hat $(-1)^{N_B(b)}\psi(b)$ für offene und periodische Ketten mit
-Zufallsfeldern in jedem Sektor ein einziges Vorzeichen, und nach [Korollar 9.8](../../lecture_notes/de/09_spin_chains.md#r-9-8) liegt das tiefste Niveau des Sektors $N$
-des Rings im Impulsblock $k=0$ für gerades $N$ und $k=\pi$ für ungerades $N$:
+Nach der Marshallschen Vorzeichenregel ([Satz 9.7](../../lecture_notes/de/09_spin_chains.md#r-9-7)) hat $`(-1)^{N_B(b)}\psi(b)`$ für offene und periodische Ketten mit
+Zufallsfeldern in jedem Sektor ein einziges Vorzeichen, und nach [Korollar 9.8](../../lecture_notes/de/09_spin_chains.md#r-9-8) liegt das tiefste Niveau des Sektors $`N`$
+des Rings im Impulsblock $`k=0`$ für gerades $`N`$ und $`k=\pi`$ für ungerades $`N`$:
 
 ```python
 for bc in ('open', 'periodic'):
@@ -117,12 +117,12 @@ for N in range(1, L):
 
 <a id="s-9-3"></a>
 
-## 9.3 $SU(2)$ bei $\Delta=1$
+## 9.3 $`SU(2)`$ bei $`\Delta=1`$
 
-*Vorlesungsnotizen:* [Abschnitt 9.3](../../lecture_notes/de/09_spin_chains.md#s-9-3); [Satz 9.9](../../lecture_notes/de/09_spin_chains.md#r-9-9) (Lieb-Mattis). Für $\Delta=1$ und $h=0$ ist $H\cong\bigoplus_S1_{2S+1}\otimes H_S$, und `SU2Chain` baut die Blöcke $H_S$ auf den Vektoren höchsten Gewichts.
+*Vorlesungsnotizen:* [Abschnitt 9.3](../../lecture_notes/de/09_spin_chains.md#s-9-3); [Satz 9.9](../../lecture_notes/de/09_spin_chains.md#r-9-9) (Lieb-Mattis). Für $`\Delta=1`$ und $`h=0`$ ist $`H\cong\bigoplus_S1_{2S+1}\otimes H_S`$, und `SU2Chain` baut die Blöcke $`H_S`$ auf den Vektoren höchsten Gewichts.
 
-Wir vergleichen die Blockgrößen für zwölf Spins, prüfen Satz 9.9 an den $U(1)$-Sektoren, berechnen die Lücke und
-prüfen die Sätze 9.7 und 9.9 auf einem bipartiten Graphen, der keine Kette ist ($n_A=5$, $n_B=3$, $S_*=1$, zufällige
+Wir vergleichen die Blockgrößen für zwölf Spins, prüfen Satz 9.9 an den $`U(1)`$-Sektoren, berechnen die Lücke und
+prüfen die Sätze 9.7 und 9.9 auf einem bipartiten Graphen, der keine Kette ist ($`n_A=5`$, $`n_B=3`$, $`S_*=1`$, zufällige
 Kopplungen):
 
 ```python
@@ -161,20 +161,20 @@ w8 = torch.linalg.eigvalsh(H8)
 assert w8[2] - w8[0] < 1e-10 and w8[3] - w8[0] > 1e-8                # ground space: one triplet, S_* = 1
 ```
 
-Die $SU(2)$-Blöcke haben die Größen $m_S=132,297,275,154,54,11,1$ gegenüber $924$ für den größten $U(1)$-Block, und
-der Aufwand $\sum k^3$ der Diagonalisierung sinkt von $2.0\cdot10^9$ auf $5.3\cdot10^7$. *Numerische Beobachtung:*
-$L$ mal die Lücke wächst langsam, $4.108,4.181,4.232,4.270$ für $L=6,\dots,12$; über ihr Verhalten für $L\to\infty$
+Die $`SU(2)`$-Blöcke haben die Größen $`m_S=132,297,275,154,54,11,1`$ gegenüber $`924`$ für den größten $`U(1)`$-Block, und
+der Aufwand $`\sum k^3`$ der Diagonalisierung sinkt von $`2.0\cdot10^9`$ auf $`5.3\cdot10^7`$. *Numerische Beobachtung:*
+$`L`$ mal die Lücke wächst langsam, $`4.108,4.181,4.232,4.270`$ für $`L=6,\dots,12`$; über ihr Verhalten für $`L\to\infty`$
 beweisen wir nichts.
 
 **Korrelationen.** Die Spins der Plätze bilden Vektoroperatoren und ihre sphärischen Komponenten Tensoroperatoren
 vom Rang eins (Lemma B.15(a),(b)). Nach dem **Wigner-Eckart-Theorem** (Satz B.16) sind ihre Matrixelemente zwischen
 zwei Multipletts ein Clebsch-Gordan-Koeffizient mal ein **reduziertes Matrixelement**, das nicht von den
-magnetischen Quantenzahlen abhängt, und $\mathbf s_i\cdot\mathbf s_j=\sum_q(-1)^qs^{(i)}_qs^{(j)}_{-q}$ (Lemma B.15(a)).
-`spin_correlation` nutzt dies, um $\mathbf s_i\cdot\mathbf s_j$ auf jedem $H_S$ allein aus Vektoren höchsten Gewichts
+magnetischen Quantenzahlen abhängt, und $`\mathbf s_i\cdot\mathbf s_j=\sum_q(-1)^qs^{(i)}_qs^{(j)}_{-q}`$ (Lemma B.15(a)).
+`spin_correlation` nutzt dies, um $`\mathbf s_i\cdot\mathbf s_j`$ auf jedem $`H_S`$ allein aus Vektoren höchsten Gewichts
 zu bauen; die Methode `'direct'` komprimiert stattdessen den Bindungsoperator auf die Vektoren höchsten Gewichts,
-was nach Proposition 4.15(b) korrekt ist, da $\mathbf s_i\cdot\mathbf s_j\in\{S_a\}'$. Dass die Implementierung der ersten
+was nach Proposition 4.15(b) korrekt ist, da $`\mathbf s_i\cdot\mathbf s_j\in\{S_a\}'`$. Dass die Implementierung der ersten
 Methode korrekt ist, wird hier nicht bewiesen; der Code prüft, dass beide untereinander und mit der Definition
-übereinstimmen, ausgewertet auf dem im $U(1)$-Sektor ausgeschriebenen Grundzustand:
+übereinstimmen, ausgewertet auf dem im $`U(1)`$-Sektor ausgeschriebenen Grundzustand:
 
 ```python
 gs = sym.ground_state(H_su2)
@@ -196,14 +196,14 @@ assert ((-1.0) ** torch.arange(1, 12) * corr_we[1:] > 0).all()       # signs (-1
 print([round(x, 4) for x in corr_we.tolist()])
 ```
 
-Die Korrelationen $\langle\mathbf s_0\cdot\mathbf s_r\rangle=0.75,-0.4489,0.1878,-0.1658,0.1209,-0.1224,0.1070,\dots$
+Die Korrelationen $`\langle\mathbf s_0\cdot\mathbf s_r\rangle=0.75,-0.4489,0.1878,-0.1658,0.1209,-0.1224,0.1070,\dots`$
 wechseln das Vorzeichen, wie es die Sätze 9.7 und 9.9 für jeden geraden Ring erzwingen ([Vorlesungsnotizen, Abschnitt 9.3](../../lecture_notes/de/09_spin_chains.md#s-9-3)).
 
 <a id="s-9-4"></a>
 
 ## 9.4 Exakte Prüfungen: freie Fermionen und der Bethe-Ansatz
 
-*Vorlesungsnotizen:* [Abschnitt 9.4](../../lecture_notes/de/09_spin_chains.md#s-9-4); nach [Satz 9.10](../../lecture_notes/de/09_spin_chains.md#r-9-10) sind die Energien des Sektors $N$ der offenen XX-Kette die Summen von $N$ verschiedenen $\varepsilon_k=J\cos\frac{\pi k}{L+1}$; [Proposition 9.12](../../lecture_notes/de/09_spin_chains.md#r-9-12) (zwei Magnonen, Bethe-Gleichungen).
+*Vorlesungsnotizen:* [Abschnitt 9.4](../../lecture_notes/de/09_spin_chains.md#s-9-4); nach [Satz 9.10](../../lecture_notes/de/09_spin_chains.md#r-9-10) sind die Energien des Sektors $`N`$ der offenen XX-Kette die Summen von $`N`$ verschiedenen $`\varepsilon_k=J\cos\frac{\pi k}{L+1}`$; [Proposition 9.12](../../lecture_notes/de/09_spin_chains.md#r-9-12) (zwei Magnonen, Bethe-Gleichungen).
 
 ```python
 L = 10
@@ -216,11 +216,11 @@ for N in range(L + 1):
     assert abs(E[0].item() - sum(sorted(eps)[:N])) < 1e-12           # ground state: the N lowest modes
 ```
 
-Nach [Proposition 9.12](../../lecture_notes/de/09_spin_chains.md#r-9-12) liefert jede Nullstelle $q$ von $F(q)=(-1)^ne^{iqL}(c-\Delta e^{-iq})+c-\Delta e^{iq}$, mit
-$K=2\pi n/L$ und $c=\cos\frac K2$, einen Eigenvektor $\Psi$ des Sektors $N=2$ des Rings
-([Vorlesungsnotizen, Abschnitt 9.4](../../lecture_notes/de/09_spin_chains.md#s-9-4)). Der Code sucht Nullstellen $q\in(0,\pi)$ (Streuzustände) und auf den Geraden
-$q=i\kappa$, $\pi+i\kappa$, $\kappa>0$ (gebundene Zustände), baut $\Psi$ zu jeder Nullstelle für $L=9$, $\Delta=0.6$ und vergleicht
-mit dem Sektor $N=2$ mit $36$ Zuständen:
+Nach [Proposition 9.12](../../lecture_notes/de/09_spin_chains.md#r-9-12) liefert jede Nullstelle $`q`$ von $`F(q)=(-1)^ne^{iqL}(c-\Delta e^{-iq})+c-\Delta e^{iq}`$, mit
+$`K=2\pi n/L`$ und $`c=\cos\frac K2`$, einen Eigenvektor $`\Psi`$ des Sektors $`N=2`$ des Rings
+([Vorlesungsnotizen, Abschnitt 9.4](../../lecture_notes/de/09_spin_chains.md#s-9-4)). Der Code sucht Nullstellen $`q\in(0,\pi)`$ (Streuzustände) und auf den Geraden
+$`q=i\kappa`$, $`\pi+i\kappa`$, $`\kappa>0`$ (gebundene Zustände), baut $`\Psi`$ zu jeder Nullstelle für $`L=9`$, $`\Delta=0.6`$ und vergleicht
+mit dem Sektor $`N=2`$ mit $`36`$ Zuständen:
 
 ```python
 L, Delta = 9, 0.6
@@ -257,27 +257,27 @@ for x in range(8):
 assert close(ring8.xxz(1.0, Delta, sector=2).matrix[0, 0] @ Phi, (8 * Delta / 4 - Delta) * Phi)   # E_F - J Delta
 ```
 
-*Numerische Beobachtung:* Für $L=9$ und $\Delta=0.6$ findet die Suche $36$ Nullstellen, $34$ Streuzustände und $2$
-gebundene Zustände, deren Vektoren linear unabhängige Eigenvektoren sind (bis auf Rundung): Alle $36$ Eigenzustände
-stammen aus den Bethe-Gleichungen. Die Vollständigkeit ist für andere $L$ nicht bewiesen, und für gerades $L$ und
-$\Delta\ne0$ ist sie verletzt ([Vorlesungsnotizen, Abschnitt 9.4](../../lecture_notes/de/09_spin_chains.md#s-9-4)): Der Vektor $\Phi=\sum_x(-1)^x|x,x+1\rangle$ ist zu allen
-Bethe-Vektoren orthogonal, und die letzten Zeilen des Codes prüfen $H\Phi=(E_F-J\Delta)\Phi$ für $L=8$.
+*Numerische Beobachtung:* Für $`L=9`$ und $`\Delta=0.6`$ findet die Suche $`36`$ Nullstellen, $`34`$ Streuzustände und $`2`$
+gebundene Zustände, deren Vektoren linear unabhängige Eigenvektoren sind (bis auf Rundung): Alle $`36`$ Eigenzustände
+stammen aus den Bethe-Gleichungen. Die Vollständigkeit ist für andere $`L`$ nicht bewiesen, und für gerades $`L`$ und
+$`\Delta\ne0`$ ist sie verletzt ([Vorlesungsnotizen, Abschnitt 9.4](../../lecture_notes/de/09_spin_chains.md#s-9-4)): Der Vektor $`\Phi=\sum_x(-1)^x|x,x+1\rangle`$ ist zu allen
+Bethe-Vektoren orthogonal, und die letzten Zeilen des Codes prüfen $`H\Phi=(E_F-J\Delta)\Phi`$ für $`L=8`$.
 
 <a id="s-9-5"></a>
 
 ## 9.5 Lanczos- und Krylov-Verfahren
 
-*Vorlesungsnotizen:* [Abschnitt 9.5](../../lecture_notes/de/09_spin_chains.md#s-9-5); [Proposition 9.13](../../lecture_notes/de/09_spin_chains.md#r-9-13) (Lanczos: $T_m=Q_m^*HQ_m$ ist tridiagonal), [Satz 9.14](../../lecture_notes/de/09_spin_chains.md#r-9-14) (die Ritz-Werte, die Eigenwerte von $T_m$, erfüllen $\theta^{(m)}_j\ge\lambda_j$ und fallen mit $m$), [Proposition 9.15](../../lecture_notes/de/09_spin_chains.md#r-9-15) (Krylov-Zeitentwicklung).
+*Vorlesungsnotizen:* [Abschnitt 9.5](../../lecture_notes/de/09_spin_chains.md#s-9-5); [Proposition 9.13](../../lecture_notes/de/09_spin_chains.md#r-9-13) (Lanczos: $`T_m=Q_m^*HQ_m`$ ist tridiagonal), [Satz 9.14](../../lecture_notes/de/09_spin_chains.md#r-9-14) (die Ritz-Werte, die Eigenwerte von $`T_m`$, erfüllen $`\theta^{(m)}_j\ge\lambda_j`$ und fallen mit $`m`$), [Proposition 9.15](../../lecture_notes/de/09_spin_chains.md#r-9-15) (Krylov-Zeitentwicklung), [Lemma 9.17](../../lecture_notes/de/09_spin_chains.md#r-9-17), [Satz 9.18](../../lecture_notes/de/09_spin_chains.md#r-9-18) und [Korollar 9.19](../../lecture_notes/de/09_spin_chains.md#r-9-19) (Fehlerschranken und Schrittregel).
 
-Der Sektor $N=L/2$ hat die Dimension $12870$ für $L=16$ und $184756$ für $L=20$, aber $H$ ist dünn besetzt ($O(L)$
-von null verschiedene Einträge pro Zeile, `xxz_sparse`), und Krylov-Verfahren brauchen nur Produkte $Hv$. Sei $H$
-hermitesch von der Größe $n$ und $v\ne0$. Der **Krylov-Raum** ist
-$\mathcal K_m=\mathrm{span}\{v,Hv,\dots,H^{m-1}v\}$.
+Der Sektor $`N=L/2`$ hat die Dimension $`12870`$ für $`L=16`$ und $`184756`$ für $`L=20`$, aber $`H`$ ist dünn besetzt ($`O(L)`$
+von null verschiedene Einträge pro Zeile, `xxz_sparse`), und Krylov-Verfahren brauchen nur Produkte $`Hv`$. Sei $`H`$
+hermitesch von der Größe $`n`$ und $`v\ne0`$. Der **Krylov-Raum** ist
+$`\mathcal K_m=\mathrm{span}\{v,Hv,\dots,H^{m-1}v\}`$.
 
-Satz 9.14 sagt nichts darüber, wie schnell sich $\theta^{(m)}_1$ an $\lambda_1$ annähert; wir beobachten es unten nur.
-In Gleitkommaarithmetik verlieren die $q_j$ ihre Orthogonalität; `krylov.lanczos` reorthogonalisiert vollständig,
-und der Code prüft, dass die berechneten $q_j$ orthonormal sind und $Q_m^*HQ_m=T_m$ bis auf Rundung gilt. Für die
-offene XX-Kette ist die exakte Grundzustandsenergie des Sektors $N$ die Summe der $N$ kleinsten $\varepsilon_k$
+Satz 9.14 sagt nichts darüber, wie schnell sich $`\theta^{(m)}_1`$ an $`\lambda_1`$ annähert; wir beobachten es unten nur.
+In Gleitkommaarithmetik verlieren die $`q_j`$ ihre Orthogonalität; `krylov.lanczos` reorthogonalisiert vollständig,
+und der Code prüft, dass die berechneten $`q_j`$ orthonormal sind und $`Q_m^*HQ_m=T_m`$ bis auf Rundung gilt. Für die
+offene XX-Kette ist die exakte Grundzustandsenergie des Sektors $`N`$ die Summe der $`N`$ kleinsten $`\varepsilon_k`$
 (Satz 9.10(c)):
 
 ```python
@@ -293,16 +293,16 @@ assert (ritz[1:] <= ritz[:-1] + 1e-12).all() and (ritz >= E_xx - 1e-12).all()   
 print([f"{(ritz[m - 1] - E_xx).item():.1e}" for m in (5, 10, 20, 40)])
 ```
 
-*Numerische Beobachtung:* Der Fehler des kleinsten Ritz-Werts fällt monoton (wie er nach Satz 9.14 muss), $0.42$,
-$3.1\cdot10^{-3}$ und $3.1\cdot10^{-6}$ nach $5$, $10$ und $20$ Schritten, und erreicht nach $40$ Schritten das
-Rundungsniveau, in Dimension $924$. `krylov.ground_state` startet Lanczos neu (von einem gaußschen Zufallsvektor,
-sofern kein `v0` angegeben ist), bis das Residuum $\|H\psi-E\psi\|$ seines normierten Ritz-Paares $(E,\psi)$ unter
-$10^{-10}\max(1,|E|)$ liegt (höchstens $20$ Neustarts, sonst mit einer Warnung), und gibt das Residuum zurück. Ein
+*Numerische Beobachtung:* Der Fehler des kleinsten Ritz-Werts fällt monoton (wie er nach Satz 9.14 muss), $`0.42`$,
+$`3.1\cdot10^{-3}`$ und $`3.1\cdot10^{-6}`$ nach $`5`$, $`10`$ und $`20`$ Schritten, und erreicht nach $`40`$ Schritten das
+Rundungsniveau, in Dimension $`924`$. `krylov.ground_state` startet Lanczos neu (von einem gaußschen Zufallsvektor,
+sofern kein `v0` angegeben ist), bis das Residuum $`\|H\psi-E\psi\|`$ seines normierten Ritz-Paares $`(E,\psi)`$ unter
+$`10^{-10}\max(1,|E|)`$ liegt (höchstens $`20`$ Neustarts, sonst mit einer Warnung), und gibt das Residuum zurück. Ein
 kleines Residuum garantiert einen nahen Eigenwert, aber nicht, dass er der kleinste ist
 ([Vorlesungsnotizen, Abschnitt 9.5](../../lecture_notes/de/09_spin_chains.md#s-9-5)); daher vergleichen wir mit dichter
-Diagonalisierung, unserer einzigen Referenz (hier berechnet, die Werte sind also numerisch): der Sektor $N=L/2$ bis
-$L=12$ und für $L=16$ der Impulsblock $k=0$ der Dimension $810$, der nach Korollar 9.8 den Grundzustand des Sektors
-$N=8$ enthält. Für $L=4$ ist der Wert $-2J$ exakt ([Vorlesungsnotizen, Abschnitt 9.5](../../lecture_notes/de/09_spin_chains.md#s-9-5)).
+Diagonalisierung, unserer einzigen Referenz (hier berechnet, die Werte sind also numerisch): der Sektor $`N=L/2`$ bis
+$`L=12`$ und für $`L=16`$ der Impulsblock $`k=0`$ der Dimension $`810`$, der nach Korollar 9.8 den Grundzustand des Sektors
+$`N=8`$ enthält. Für $`L=4`$ ist der Wert $`-2J`$ exakt ([Vorlesungsnotizen, Abschnitt 9.5](../../lecture_notes/de/09_spin_chains.md#s-9-5)).
 
 ```python
 E_dense = {}                                                         # numerical references, dense
@@ -321,23 +321,25 @@ print(f"L = 16: E0 = {E16.item():.10f}, residual {res.item():.1e}, {time.time() 
 assert abs(E16.item() - E_dense[16]) < 1e-9 and res.item() < 1e-9
 ```
 
-Für $L=16$ (Dimension $12870$) braucht Lanczos auf einem CPU-Thread deutlich weniger als eine Sekunde. *Numerische
-Beobachtung:* Die Energie pro Platz, $-0.5,-0.467129,-0.456387,-0.451545,-0.448949$ für $L=4,\dots,12$, wächst mit $L$;
+Für $`L=16`$ (Dimension $`12870`$) braucht Lanczos auf einem CPU-Thread deutlich weniger als eine Sekunde. *Numerische
+Beobachtung:* Die Energie pro Platz, $`-0.5,-0.467129,-0.456387,-0.451545,-0.448949`$ für $`L=4,\dots,12`$, wächst mit $`L`$;
 über ihren Grenzwert beweisen wir nichts.
 
-**Zeitentwicklung.** Für $e^{-i\tau H}v$ projiziert man auf $\mathcal K_m$: $w_\tau=\|v\|\,Q_me^{-i\tau T_m}e_1$.
+**Zeitentwicklung.** Für $`e^{-i\tau H}v`$ projiziert man auf $`\mathcal K_m`$: $`w_\tau=\|v\|\,Q_me^{-i\tau T_m}e_1`$.
 
-Nach [Proposition 9.15](../../lecture_notes/de/09_spin_chains.md#r-9-15) gilt $\|w_\tau\|=\|v\|$ und $\langle w_\tau,Hw_\tau\rangle=\langle v,Hv\rangle$ für jedes $\tau$, und
-$w_\tau=e^{-i\tau H}v$, falls $\mathcal K_m$ $H$-invariant ist.
+Nach [Proposition 9.15](../../lecture_notes/de/09_spin_chains.md#r-9-15) gilt $`\|w_\tau\|=\|v\|`$ und $`\langle w_\tau,Hw_\tau\rangle=\langle v,Hv\rangle`$ für jedes $`\tau`$, und
+$`w_\tau=e^{-i\tau H}v`$, falls $`\mathcal K_m`$ $`H`$-invariant ist.
 
-Jeder Krylov-Schritt erhält also Norm und Energie, ob er genau ist oder nicht; Proposition 9.15 sagt nichts
-über die Genauigkeit, außer wenn $\mathcal K_m$ invariant ist. `krylov.evolve` unterteilt das Zeitintervall in kurze
-Schritte, jeden in einem Krylov-Raum mit $m=30$, und warnt, wenn ein heuristischer Fehlerindikator groß ist; wir
-beweisen dafür keine Fehlerschranke und vergleichen stattdessen mit $e^{-itH}$, berechnet aus einer dichten
-Eigenzerlegung (Satz 1.5). Wir führen einen
-Quench aus dem Néel-Zustand $|{\uparrow\downarrow\uparrow\downarrow}\cdots\rangle$ auf dem Heisenberg-Ring durch und
-verfolgen die alternierende Magnetisierung $m_s=\frac2L\sum_i(-1)^i\langle s^z_i\rangle$, im Vergleich mit dem dichten
-Propagator für $L=12$:
+Jeder Krylov-Schritt erhält also Norm und Energie, ob er genau ist oder nicht. Seine Genauigkeit ist Gegenstand von
+[Satz 9.18](../../lecture_notes/de/09_spin_chains.md#r-9-18): Ein Schritt der Länge $`\tau`$ irrt höchstens um
+$`(4\beta_m/w_T)S_m(|\tau|w_T/2)`$, allein aus dem Lanczos-Lauf berechnet. `krylov.evolve` macht jeden Schritt, in einem
+Krylov-Raum mit $`m=30`$, so lang, wie diese Schranke es für einen Fehler von höchstens $`\mathrm{tol}=10^{-8}`$ (der
+Standardwert) über die ganze Zeitspanne erlaubt ([Korollar 9.19](../../lecture_notes/de/09_spin_chains.md#r-9-19)). Wir
+vergleichen mit $`e^{-itH}`$, berechnet aus einer dichten Eigenzerlegung (Satz 1.5), und prüfen unten die Schranken
+selbst. Wir führen einen
+Quench aus dem Néel-Zustand $`|{\uparrow\downarrow\uparrow\downarrow}\cdots\rangle`$ auf dem Heisenberg-Ring durch und
+verfolgen die alternierende Magnetisierung $`m_s=\frac2L\sum_i(-1)^i\langle s^z_i\rangle`$, im Vergleich mit dem dichten
+Propagator für $`L=12`$:
 
 ```python
 times, m_s = [0.0, 0.5, 1.0, 2.0, 4.0], {}
@@ -359,8 +361,62 @@ for n in (12, 16):
 print(f"{max(abs(a - b) for a, b in zip(m_s[12][:4], m_s[16][:4])):.1e}")   # L = 12 vs 16 up to t = 2
 ```
 
-*Numerische Beobachtung:* $m_s$ fällt von $1$ über $0.770$ und $0.279$ auf $-0.183$ bei $t=2$, für beide Größen bis
-auf $1.7\cdot10^{-5}$ übereinstimmend; bei $t=4$ unterscheiden sie sich ($0.026$ gegenüber $0.035$).
+*Numerische Beobachtung:* $`m_s`$ fällt von $`1`$ über $`0.770`$ und $`0.279`$ auf $`-0.183`$ bei $`t=2`$, für beide Größen bis
+auf $`1.7\cdot10^{-5}`$ übereinstimmend; bei $`t=4`$ unterscheiden sie sich ($`0.026`$ gegenüber $`0.035`$).
+
+**Fehlerschranken.** Nach [Lemma 9.17](../../lecture_notes/de/09_spin_chains.md#r-9-17) sind die
+Tschebyschow-Koeffizienten von $`e^{-i\rho y}`$ gleich $`a_k=(-i)^kJ_k(\rho)`$ mit $`|a_k|\le(|\rho|/2)^k/k!`$.
+[Satz 9.18](../../lecture_notes/de/09_spin_chains.md#r-9-18) beschränkt den Fehler eines Krylov-Schritts durch
+$`(4\beta_m/w_T)S_m(|\tau|w_T/2)`$ (c), den Wert, den `krylov.expm_multiply_step` zurückgibt, und durch $`4S_m(\rho/2)`$ mit
+$`\rho=|\tau|w`$ (d), wobei $`S_m(x)=\sum_{j\ge m}x^j/j!`$ und $`w`$ die halbe Breite des Spektrums ist. Wir prüfen die
+Koeffizientenschranke an den Bessel-Funktionen von SciPy und beide Fehlerschranken für einen Schritt aus dem
+Néel-Zustand des Rings $`L=12`$ mit $`m=20`$, gegen den dichten Propagator aus dem Block oben (`w`, `U`).
+[Korollar 9.19](../../lecture_notes/de/09_spin_chains.md#r-9-19) addiert die Schranken aufeinanderfolgender Schritte; und
+die Schrittregel von `krylov.evolve` hält den Fehler zur Zeit $`t`$ unter $`\mathrm{tol}\cdot t/t_{\mathrm{end}}`$, mit denselben
+Schritten für $`H`$ und $`H+10^4`$ (Satz 9.18(a); der verschobene Operator ändert nur die Diagonale der dünnen Form):
+
+```python
+from scipy.special import jv, gammainc
+S = lambda m, x: math.exp(x) * gammainc(m, x)                        # S_m(x) = sum_{j >= m} x^j / j!
+for rho in (1.0, 10.0, 40.0):                                        # Lemma 9.17: |J_k(rho)| <= (rho/2)^k / k!
+    assert all(abs(jv(k, rho)) <= (rho / 2) ** k / math.factorial(k) * (1 + 1e-12) for k in range(80))
+
+c12 = SpinChain(12, 'periodic')
+H12 = c12.xxz_sparse(J=1.0, Delta=1.0, sector=6)                    # w, U: its dense eigendecomposition (above)
+half = ((w[-1] - w[0]) / 2).item()                                   # half-width of the spectrum
+v = c12.vector_in_sector('10' * 6)[None]                             # the Neel state
+exact = lambda t: U @ (torch.exp(-1j * t * w) * (U.mH @ v[0]))
+m = 20
+for tau in (0.5, 1.0, 2.0, 4.0, 8.0):
+    out, bound = krylov.expm_multiply_step(H12, v, tau, m)            # bound: Theorem 9.18(c)
+    err = (out[0] - exact(tau)).norm().item()
+    apriori = 4 * S(m, tau * half / 2)                                # Theorem 9.18(d)
+    print(f"tau w = {tau * half:4.1f}: error {err:.1e}, bound (c) {bound.item():.1e}, bound (d) {apriori:.1e}")
+    assert err <= bound.item() + 1e-13 and bound.item() <= apriori
+
+psi, total = v, 0.0                                                  # Corollary 9.19, five steps of length 1
+for k in range(1, 6):
+    psi, b = krylov.expm_multiply_step(H12, psi, 1.0, m)
+    total += b.item()
+    err = (psi[0] - exact(float(k))).norm().item()
+    assert err <= total + 1e-12
+print(f"after 5 steps: error {err:.1e}, sum of the bounds {total:.1e}")
+
+times = [0.0, 1.0, 3.0, 10.0]
+shifted = krylov.SparseSectorHamiltonian(H12.diag + 1e4, H12.offdiag, H12.dtype)    # H + 10^4
+for s, Hn in ((0.0, H12), (1e4, shifted)):
+    out = krylov.evolve(Hn, v, times, tol=1e-8)                      # the step rule of Corollary 9.19
+    errs = [(p[0] - math.e ** (-1j * t * s) * exact(t)).norm().item() for t, p in zip(times, out)]
+    print(f"shift {s:.0e}:", [f"{e:.1e}" for e in errs])
+    assert all(e <= 1e-8 * t / times[-1] + 1e-10 for e, t in zip(errs, times))
+```
+
+*Numerische Beobachtung:* Der Fehler eines Schritts wächst vom Rundungsniveau ($`3\cdot10^{-15}`$ bei $`\tau w=2.1`$) auf
+$`1.3\cdot10^{-8}`$ bei $`\tau w=8.4`$ und $`0.5`$ bei $`\tau w=34`$; die Schranke (c) übersteigt ihn im nützlichen Bereich um
+einen Faktor von etwa $`100`$, (d) um einen weiteren Faktor $`4`$. Fünf Schritte der Länge $`1`$ irren um $`10^{-13}`$,
+unter der Summe $`6\cdot10^{-12}`$ ihrer Schranken. `krylov.evolve` hält hier seine Toleranz mit großem Abstand ein
+(Fehler unter $`10^{-13}`$); mit der Verschiebung $`10^4`$ sind die Fehler $`10^{-11}`$, die Rundungsfehler von
+Matrix-Vektor-Produkten der Norm $`10^4`$, die keine Schranke von Satz 9.18 erfasst.
 
 <a id="s-9-6"></a>
 
@@ -368,15 +424,15 @@ auf $1.7\cdot10^{-5}$ übereinstimmend; bei $t=4$ unterscheiden sie sich ($0.026
 
 *Vorlesungsnotizen:* [Abschnitt 9.6](../../lecture_notes/de/09_spin_chains.md#s-9-6); [Satz 9.16](../../lecture_notes/de/09_spin_chains.md#r-9-16) (Peschels Formel).
 
-Die **Heisenberg-Kette im Zufallsfeld** hat unabhängige, auf $[-W,W]$ gleichverteilte Felder $h_i$. Sie erhält
-$S^z$ (Proposition 9.1), daher wird die Niveaustatistik pro Sektor $N$ berechnet (Satz 5.15 und Abschnitt 5.4: Das
+Die **Heisenberg-Kette im Zufallsfeld** hat unabhängige, auf $`[-W,W]`$ gleichverteilte Felder $`h_i`$. Sie erhält
+$`S^z`$ (Proposition 9.1), daher wird die Niveaustatistik pro Sektor $`N`$ berechnet (Satz 5.15 und Abschnitt 5.4: Das
 Mischen von Sektoren täuscht unabhängige Niveaus vor). Unterscheiden sich zwei Felder, so ist
-$THT^*-H=\sum_i(h_{i-1}-h_i)s^z_i\ne0$, Translationen sind also keine Symmetrie mehr. Wir berechnen $\langle r\rangle$ in
-der mittleren Hälfte des Sektors $N=L/2$, mit einem Standardfehler über die unabhängigen Realisierungen (jede
-liefert ein mittleres Verhältnis), und vergleichen mit zwei Referenzen: $2\log2-1\approx0.3863$, dem exakten
+$`THT^*-H=\sum_i(h_{i-1}-h_i)s^z_i\ne0`$, Translationen sind also keine Symmetrie mehr. Wir berechnen $`\langle r\rangle`$ in
+der mittleren Hälfte des Sektors $`N=L/2`$, mit einem Standardfehler über die unabhängigen Realisierungen (jede
+liefert ein mittleres Verhältnis), und vergleichen mit zwei Referenzen: $`2\log2-1\approx0.3863`$, dem exakten
 mittleren Verhältnis unabhängiger exponentialverteilter Abstände (Proposition 5.14(a)), und dem mittleren
-Verhältnis von GOE-Matrizen (wie in Abschnitt 5.3 definiert; der Code zieht $G+G^T$, das Doppelte einer
-GOE-Matrix, was kein Verhältnis ändert) derselben Größe $252$ wie der Sektor für $L=10$, hier gezogen. Die Vergleiche
+Verhältnis von GOE-Matrizen (wie in Abschnitt 5.3 definiert; der Code zieht $`G+G^T`$, das Doppelte einer
+GOE-Matrix, was kein Verhältnis ändert) derselben Größe $`252`$ wie der Sektor für $`L=10`$, hier gezogen. Die Vergleiche
 sind numerische Beobachtungen, keine Sätze: Über das Spektrum der zufälligen Kette beweisen wir nichts.
 
 ```python
@@ -398,27 +454,27 @@ assert abs(r_mean[10, 16][0] - (2 * math.log(2) - 1)) < 0.015               # nu
 assert r_mean[10, 1][0] > r_mean[10, 2][0] > r_mean[10, 4][0] > r_mean[10, 8][0]
 ```
 
-*Numerische Beobachtung:* Für $L=10$ geht das mittlere Verhältnis von $0.530$ ($W=0.5$), nahe am gezogenen GOE-Wert
-$0.533$, über $0.484$ ($W=2$) und $0.410$ ($W=4$) bis $0.384$ ($W=16$), nahe an $2\log2-1$, mit Standardfehlern von
-$0.003$–$0.004$. Für $L=8$ liegt der Wert bei $W=0.5$ ($0.507$) unter dem bei $W=1$ ($0.525$). Bei $W=0$ kommutiert
-der Ring mit $T$ (Abschnitt 9.2) und mit dem Gesamtspin (Abschnitt 9.3), also zerfällt sein Sektor $N=L/2$ in
-Blöcke; die Felder koppeln diese Blöcke nur über $\sum_ih_is^z_i$, mit Operatornorm höchstens $\frac{WL}2$.
+*Numerische Beobachtung:* Für $`L=10`$ geht das mittlere Verhältnis von $`0.530`$ ($`W=0.5`$), nahe am gezogenen GOE-Wert
+$`0.533`$, über $`0.484`$ ($`W=2`$) und $`0.410`$ ($`W=4`$) bis $`0.384`$ ($`W=16`$), nahe an $`2\log2-1`$, mit Standardfehlern von
+$`0.003`$–$`0.004`$. Für $`L=8`$ liegt der Wert bei $`W=0.5`$ ($`0.507`$) unter dem bei $`W=1`$ ($`0.525`$). Bei $`W=0`$ kommutiert
+der Ring mit $`T`$ (Abschnitt 9.2) und mit dem Gesamtspin (Abschnitt 9.3), also zerfällt sein Sektor $`N=L/2`$ in
+Blöcke; die Felder koppeln diese Blöcke nur über $`\sum_ih_is^z_i`$, mit Operatornorm höchstens $`\frac{WL}2`$.
 
 > **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Physiker deuten die Änderung von
-> $\langle r\rangle$ als Übergang von Niveaus, die sich wie die des GOE abstoßen (schwache Unordnung), zu Niveaus, die
+> $`\langle r\rangle`$ als Übergang von Niveaus, die sich wie die des GOE abstoßen (schwache Unordnung), zu Niveaus, die
 > sich wie unabhängige verhalten, zurückgeführt auf eine **Vielteilchenlokalisierung** der Eigenzustände (starke
-> Unordnung). Der Übergangsbereich driftet mit $L$; wo er für $L\to\infty$ liegt und ob es eine lokalisierte Phase
+> Unordnung). Der Übergangsbereich driftet mit $`L`$; wo er für $`L\to\infty`$ liegt und ob es eine lokalisierte Phase
 > überhaupt gibt, sind offene Fragen in der physikalischen Literatur (D. Luitz, N. Laflorencie, F. Alet,
 > *Phys. Rev. B* 91 (2015) 081103; J. Šuntajs, J. Bonča, T. Prosen, L. Vidmar, *Phys. Rev. E* 102 (2020) 062144). Die
-> Delle bei $L=8$, $W=0.5$ wird als Überrest der zusätzlichen Blockstruktur bei $W=0$ gedeutet (vergleiche
+> Delle bei $`L=8`$, $`W=0.5`$ wird als Überrest der zusätzlichen Blockstruktur bei $`W=0`$ gedeutet (vergleiche
 > Abschnitt 5.4).
 
 **Verschränkung freier Fermionen.** Für die Eigenzustände der offenen XX-Kette ist die Verschränkungsentropie der
-ersten $n$ Plätze durch eine $n\times n$-Matrix bestimmt.
+ersten $`n`$ Plätze durch eine $`n\times n`$-Matrix bestimmt.
 
 `entanglement_entropy` berechnet den reduzierten Zustand Sektor für Sektor (er kommutiert mit der Magnetisierung
-des Blocks, Proposition 7.8) und seine Entropie. Der Grundzustand des Sektors $N$ ist $\Phi$ mit den $N$
-niedrigsten Moden, einfach, weil die $\varepsilon_k$ verschieden sind:
+des Blocks, Proposition 7.8) und seine Entropie. Der Grundzustand des Sektors $`N`$ ist $`\Phi`$ mit den $`N`$
+niedrigsten Moden, einfach, weil die $`\varepsilon_k`$ verschieden sind:
 
 ```python
 L, N = 12, 6
@@ -434,8 +490,8 @@ assert np.allclose(S_lib, S_peschel, atol=1e-9)                       # Theorem 
 print([round(s, 4) for s in S_lib[:6]])
 ```
 
-*Numerische Beobachtung:* Die Entropien $0.6931,0.5199,0.7456,0.6283,0.7719,0.6560$ für $n=1,\dots,6$ oszillieren
-mit der Parität von $n$. Satz 9.16 stammt von I. Peschel (*J. Phys. A* 36 (2003) L205).
+*Numerische Beobachtung:* Die Entropien $`0.6931,0.5199,0.7456,0.6283,0.7719,0.6560`$ für $`n=1,\dots,6`$ oszillieren
+mit der Parität von $`n`$. Satz 9.16 stammt von I. Peschel (*J. Phys. A* 36 (2003) L205).
 
 <a id="s-9-7"></a>
 
@@ -445,22 +501,22 @@ QuSpin (Python) baut Spinketten-Hamiltonoperatoren in Sektoren von Magnetisierun
 und verwendet die dünn besetzten Eigenwertlöser und Matrixexponentiale von SciPy; spezialisierte Codes für exakte
 Diagonalisierung (XDiag, SPINPACK, HΦ) sind für große dünn besetzte Probleme optimiert, und mit Gittersymmetrien und
 großen Rechnern haben solche Codes etwa 40–50 Spins erreicht; ITensor, TeNPy und TensorKit.jl (mit
-$SU(2)$-Fusionsbäumen) behandeln lange Ketten mit Matrixproduktzuständen. Was die Bibliothek hinzufügt, ist
-bescheiden und spezifisch: die Kette als `TypeIAlgebra` $\bigoplus_NM_{\binom LN}$, sodass die Zustände, Kanäle,
+$`SU(2)`$-Fusionsbäumen) behandeln lange Ketten mit Matrixproduktzuständen. Was die Bibliothek hinzufügt, ist
+bescheiden und spezifisch: die Kette als `TypeIAlgebra` $`\bigoplus_NM_{\binom LN}`$, sodass die Zustände, Kanäle,
 Entropien und Dynamiken der Kapitel 3–8 Sektor für Sektor gelten; den Inklusionsturm mit seinem Index;
-$SU(2)$-Blöcke aus Vektoren höchsten Gewichts mit Wigner-Eckart-Korrelationen; Stapel von
+$`SU(2)`$-Blöcke aus Vektoren höchsten Gewichts mit Wigner-Eckart-Korrelationen; Stapel von
 Unordnungsrealisierungen in einem einzigen Aufruf; und reduzierte Zustände, die die Sektoren nie verlassen. Sie hat
 keine Spiegelungs- oder Spinumkehrsektoren, Impulssektoren nur für homogene XXZ-Ketten, dichte Verfahren bis
-$L\approx16$, Krylov-Verfahren bis $L\approx24$ (etwa $26$ auf einer großen GPU) und keine Tensornetzwerke.
+$`L\approx16`$, Krylov-Verfahren bis $`L\approx24`$ (etwa $`26`$ auf einer großen GPU) und keine Tensornetzwerke.
 
 <a id="x-9"></a>
 
 ## Aufgaben
 
-[Aufgaben 1–3](../../lecture_notes/de/09_spin_chains.md#x-9) der Vorlesungsnotizen: die Dimensionen $d_{2,m}=2,1,2,1$ der Impulssektoren für
-$L=4$, $N=2$; die Summenregeln $E_0=JL\langle\mathbf s_0\cdot\mathbf s_1\rangle$ und $\sum_r\langle\mathbf s_0\cdot\mathbf s_r\rangle=0$ für den
-Grundzustand des Heisenberg-Rings; und `krylov.ground_state`, gestartet vom Vektor mit allen Koeffizienten gleich $1$
-im Sektor $N=L/2$, das $E=JL/4$ liefert, das obere Ende des Spektrums. Man überprüfe dies numerisch.
+[Aufgaben 1–3](../../lecture_notes/de/09_spin_chains.md#x-9) der Vorlesungsnotizen: die Dimensionen $`d_{2,m}=2,1,2,1`$ der Impulssektoren für
+$`L=4`$, $`N=2`$; die Summenregeln $`E_0=JL\langle\mathbf s_0\cdot\mathbf s_1\rangle`$ und $`\sum_r\langle\mathbf s_0\cdot\mathbf s_r\rangle=0`$ für den
+Grundzustand des Heisenberg-Rings; und `krylov.ground_state`, gestartet vom Vektor mit allen Koeffizienten gleich $`1`$
+im Sektor $`N=L/2`$, das $`E=JL/4`$ liefert, das obere Ende des Spektrums. Man überprüfe dies numerisch.
 
 <details>
 <summary>Lösungen</summary>

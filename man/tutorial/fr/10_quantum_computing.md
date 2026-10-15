@@ -3,10 +3,10 @@
 # Tutoriel 10. Calcul quantique
 
 Ce tutoriel accompagne le [chapitre 10](../../lecture_notes/fr/10_quantum_computing.md) des notes de cours, qui décrit le bruit d'un ordinateur
-quantique par la $*$-algèbre de ses opérateurs de Kraus. Nous calculons des algèbres de points fixes et des sous-systèmes
+quantique par la $`*`$-algèbre de ses opérateurs de Kraus. Nous calculons des algèbres de points fixes et des sous-systèmes
 sans bruit ([théorème 10.2](../../lecture_notes/fr/10_quantum_computing.md#r-10-2)), vérifions le théorème de Knill–Laflamme ([théorème 10.5](../../lecture_notes/fr/10_quantum_computing.md#r-10-5)) et la correction
 d'une étiquette de secteur ([proposition 10.6](../../lecture_notes/fr/10_quantum_computing.md#r-10-6)) sur le code de répétition, et simulons un ansatz à mélangeur XY
-avec amortissement d'amplitude et post-sélection dans l'algèbre $\bigoplus_wM_{\binom nw}$ des secteurs de poids de Hamming
+avec amortissement d'amplitude et post-sélection dans l'algèbre $`\bigoplus_wM_{\binom nw}`$ des secteurs de poids de Hamming
 ([propositions 10.8](../../lecture_notes/fr/10_quantum_computing.md#r-10-8)–[10.10](../../lecture_notes/fr/10_quantum_computing.md#r-10-10)).
 
 <a id="s-10-1"></a>
@@ -15,15 +15,15 @@ avec amortissement d'amplitude et post-sélection dans l'algèbre $\bigoplus_wM_
 
 *Notes de cours :* [section 10.1](../../lecture_notes/fr/10_quantum_computing.md#s-10-1) ; [théorème 10.2](../../lecture_notes/fr/10_quantum_computing.md#r-10-2), [corollaire 10.3](../../lecture_notes/fr/10_quantum_computing.md#r-10-3), [proposition 10.4](../../lecture_notes/fr/10_quantum_computing.md#r-10-4).
 
-D'après [notes de cours, corollaire 10.3](../../lecture_notes/fr/10_quantum_computing.md#r-10-3), le déphasage collectif $\Phi(\rho)=\tfrac12(U\rho U^*+U^*\rho U)$,
-$U=e^{-i\theta Z_{\mathrm{tot}}}$, sur $n$ qubits a pour algèbre d'interaction $\mathcal A=\mathrm{span}\{P_0,\dots,P_n\}$
-($P_w$ le projecteur sur le sous-espace $H_w$ engendré par les vecteurs de base de poids de Hamming $w$), et
-$\mathrm{Fix}(\Phi)=\mathcal A'=\bigoplus_wB(H_w)$ ([théorème 10.2](../../lecture_notes/fr/10_quantum_computing.md#r-10-2)).
+D'après [notes de cours, corollaire 10.3](../../lecture_notes/fr/10_quantum_computing.md#r-10-3), le déphasage collectif $`\Phi(\rho)=\tfrac12(U\rho U^*+U^*\rho U)`$,
+$`U=e^{-i\theta Z_{\mathrm{tot}}}`$, sur $`n`$ qubits a pour algèbre d'interaction $`\mathcal A=\mathrm{span}\{P_0,\dots,P_n\}`$
+($`P_w`$ le projecteur sur le sous-espace $`H_w`$ engendré par les vecteurs de base de poids de Hamming $`w`$), et
+$`\mathrm{Fix}(\Phi)=\mathcal A'=\bigoplus_wB(H_w)`$ ([théorème 10.2](../../lecture_notes/fr/10_quantum_computing.md#r-10-2)).
 
-Les commutants sont des noyaux de $T\mapsto(AT-TA)_A$ (chapitre 2), les points fixes celui de
-$\sum_iE_i\otimes\bar E_i-1$ (la matrice de $\Phi-\mathrm{id}$ sur les matrices vectorisées ligne par
-ligne). Pour $n=4$, les trois espaces du corollaire sont de dimensions $5$, $70=1+16+36+16+1$ et
-$70$ :
+Les commutants sont des noyaux de $`T\mapsto(AT-TA)_A`$ (chapitre 2), les points fixes celui de
+$`\sum_iE_i\otimes\bar E_i-1`$ (la matrice de $`\Phi-\mathrm{id}`$ sur les matrices vectorisées ligne par
+ligne). Pour $`n=4`$, les trois espaces du corollaire sont de dimensions $`5`$, $`70=1+16+36+16+1`$ et
+$`70`$ :
 
 ```python
 import itertools
@@ -67,9 +67,9 @@ span = torch.linalg.svdvals(torch.stack([F.reshape(-1) for F in comm + fix]))
 assert int((span > 1e-9).sum()) == 70                             # Fix(Phi) = A' (Theorem 10.2)
 ```
 
-$\bigoplus_wM_{\binom nw}$ est l'algèbre d'une `SpinChain` (chapitre 9), dont les secteurs sont les
+$`\bigoplus_wM_{\binom nw}`$ est l'algèbre d'une `SpinChain` (chapitre 9), dont les secteurs sont les
 nombres de spins vers le haut, c'est-à-dire les poids de Hamming. Là, les opérateurs de Kraus sont
-centraux, $U=\sum_we^{-i\theta(n-2w)}P_w$, et le canal est l'identité : la bibliothèque stocke la
+centraux, $`U=\sum_we^{-i\theta(n-2w)}P_w`$, et le canal est l'identité : la bibliothèque stocke la
 partie sans bruit.
 
 ```python
@@ -85,11 +85,11 @@ rho = states.random_density_matrix(M, batch_size=3)
 assert (Phi_M(rho).matrix - rho.matrix).abs().max() < 1e-12      # no state of M is disturbed
 ```
 
-Les rotations collectives $e^{-i\theta\,\mathbf n\cdot\mathbf S}$, $S_\alpha=\tfrac12\sum_j\sigma_{\alpha,j}$, appartiennent à la
-$*$-algèbre $\mathcal B$ engendrée par $1,S_x,S_y,S_z$. Pour $n=4$, la [section 10.1](../../lecture_notes/fr/10_quantum_computing.md#s-10-1) des notes de cours montre que
-$\dim\mathcal B=35$, $\dim\mathcal B'=14$ et $\dim K=2$ pour $K=\ker S_x\cap\ker S_y\cap\ker S_z$ ; le code trouve les mêmes
+Les rotations collectives $`e^{-i\theta\,\mathbf n\cdot\mathbf S}`$, $`S_\alpha=\tfrac12\sum_j\sigma_{\alpha,j}`$, appartiennent à la
+$`*`$-algèbre $`\mathcal B`$ engendrée par $`1,S_x,S_y,S_z`$. Pour $`n=4`$, la [section 10.1](../../lecture_notes/fr/10_quantum_computing.md#s-10-1) des notes de cours montre que
+$`\dim\mathcal B=35`$, $`\dim\mathcal B'=14`$ et $`\dim K=2`$ pour $`K=\ker S_x\cap\ker S_y\cap\ker S_z`$ ; le code trouve les mêmes
 nombres et vérifie la [proposition 10.4](../../lecture_notes/fr/10_quantum_computing.md#r-10-4) : un canal dont les opérateurs de Kraus sont des rotations collectives
-aléatoires fixe un état à support dans $K$, et déplace un état générique.
+aléatoires fixe un état à support dans $`K`$, et déplace un état générique.
 
 ```python
 S = [sum(on(P, j, n) for j in range(n)) / 2 for P in (X, Y, Z)]
@@ -113,13 +113,13 @@ for G in (K @ torch.randn(2, 2, dtype=dt), torch.randn(16, 16, dtype=dt)):  # su
 
 *Notes de cours :* [section 10.2](../../lecture_notes/fr/10_quantum_computing.md#s-10-2) ; [théorème 10.5](../../lecture_notes/fr/10_quantum_computing.md#r-10-5).
 
-L'exemple du bit-flip de la [section 10.2](../../lecture_notes/fr/10_quantum_computing.md#s-10-2) des notes de cours : pour $\mathcal C=\mathrm{span}\{|000\rangle,|111\rangle\}$ et
+L'exemple du bit-flip de la [section 10.2](../../lecture_notes/fr/10_quantum_computing.md#s-10-2) des notes de cours : pour $`\mathcal C=\mathrm{span}\{|000\rangle,|111\rangle\}`$ et
 « au plus un bit inversé », la condition de Knill–Laflamme du [théorème 10.5](../../lecture_notes/fr/10_quantum_computing.md#r-10-5) est vérifiée avec
-$\Lambda=\mathrm{diag}(p_0,\dots,p_3)$, et la récupération $\mathcal R(\sigma)=\sum_{k=0}^3PX_k\sigma X_kP$ restaure tout
-état du code. Si chaque qubit est inversé indépendamment avec probabilité $p$, la condition est en défaut, et la
-fidélité de $|0_L\rangle$ après récupération vaut $1-3p^2+2p^3=0.972$ pour $p=0.1$. La fonction auxiliaire `kl_matrix` renvoie
-$\Lambda$, ou `None` si la condition est en défaut. Dans la bibliothèque, $M_8$ est une algèbre à un seul bloc, et
-`R @ Phi` est la composée $\mathcal R\circ\Phi$ :
+$`\Lambda=\mathrm{diag}(p_0,\dots,p_3)`$, et la récupération $`\mathcal R(\sigma)=\sum_{k=0}^3PX_k\sigma X_kP`$ restaure tout
+état du code. Si chaque qubit est inversé indépendamment avec probabilité $`p`$, la condition est en défaut, et la
+fidélité de $`|0_L\rangle`$ après récupération vaut $`1-3p^2+2p^3=0.972`$ pour $`p=0.1`$. La fonction auxiliaire `kl_matrix` renvoie
+$`\Lambda`$, ou `None` si la condition est en défaut. Dans la bibliothèque, $`M_8`$ est une algèbre à un seul bloc, et
+`R @ Phi` est la composée $`\mathcal R\circ\Phi`$ :
 
 ```python
 M8 = TypeIAlgebra([8], [8], precision='double')
@@ -163,11 +163,11 @@ assert abs(F - (1 - 3 * p**2 + 2 * p**3)) < 1e-12
 *Notes de cours :* [section 10.3](../../lecture_notes/fr/10_quantum_computing.md#s-10-3) ; [proposition 10.6](../../lecture_notes/fr/10_quantum_computing.md#r-10-6).
 
 L'exemple de la [section 10.3](../../lecture_notes/fr/10_quantum_computing.md#s-10-3) des notes de cours : le code de répétition soumis à des inversions de phase
-indépendantes (probabilité $q$ par qubit), suivies d'au plus une inversion de bit. Le qubit n'est pas protégé (la
+indépendantes (probabilité $`q`$ par qubit), suivies d'au plus une inversion de bit. Le qubit n'est pas protégé (la
 condition de Knill–Laflamme est en défaut), mais le bit classique l'est : la condition 2 de la
-[proposition 10.6](../../lecture_notes/fr/10_quantum_computing.md#r-10-6) est vérifiée pour $P_0=|000\rangle\langle000|$, $P_1=|111\rangle\langle111|$, et le vote majoritaire
-$N_0=\sum_{|b|\le1}|b\rangle\langle b|$, $N_1=1-N_0$ lit le bit. Après la récupération de la section 10.2, la fidélité de
-$|{+_L}\rangle$ vaut $(1+(1-2q)^3)/2=0.8645$ pour $q=0.05$.
+[proposition 10.6](../../lecture_notes/fr/10_quantum_computing.md#r-10-6) est vérifiée pour $`P_0=|000\rangle\langle000|`$, $`P_1=|111\rangle\langle111|`$, et le vote majoritaire
+$`N_0=\sum_{|b|\le1}|b\rangle\langle b|`$, $`N_1=1-N_0`$ lit le bit. Après la récupération de la section 10.2, la fidélité de
+$`|{+_L}\rangle`$ vaut $`(1+(1-2q)^3)/2=0.8645`$ pour $`q=0.05`$.
 
 ```python
 q = 0.05
@@ -193,20 +193,20 @@ assert abs(F_plus - (1 + (1 - 2 * q) ** 3) / 2) < 1e-12
 
 *Notes de cours :* [section 10.4](../../lecture_notes/fr/10_quantum_computing.md#s-10-4) ; [proposition 10.8](../../lecture_notes/fr/10_quantum_computing.md#r-10-8), [proposition 10.9](../../lecture_notes/fr/10_quantum_computing.md#r-10-9), [proposition 10.10](../../lecture_notes/fr/10_quantum_computing.md#r-10-10).
 
-L'ansatz à opérateurs alternés quantique alterne $e^{-i\gamma H_C}$, où $H_C$ est un hamiltonien de coût diagonal,
-et $e^{-i\beta H_M}$, où $H_M=\tfrac14\sum_{(i,j)}(X_iX_j+Y_iY_j)$ est le mélangeur XY sur un anneau. D'après
-[notes de cours, proposition 10.8](../../lecture_notes/fr/10_quantum_computing.md#r-10-8), tous ces opérateurs appartiennent à $\mathcal M=\{P_0,\dots,P_n\}'\cong\bigoplus_wM_{\binom nw}$,
+L'ansatz à opérateurs alternés quantique alterne $`e^{-i\gamma H_C}`$, où $`H_C`$ est un hamiltonien de coût diagonal,
+et $`e^{-i\beta H_M}`$, où $`H_M=\tfrac14\sum_{(i,j)}(X_iX_j+Y_iY_j)`$ est le mélangeur XY sur un anneau. D'après
+[notes de cours, proposition 10.8](../../lecture_notes/fr/10_quantum_computing.md#r-10-8), tous ces opérateurs appartiennent à $`\mathcal M=\{P_0,\dots,P_n\}'\cong\bigoplus_wM_{\binom nw}`$,
 donc l'ansatz ne quitte jamais le secteur de poids de Hamming de son état initial.
 
-Dans la bibliothèque, $\mathcal M$ est `SpinChain(n).algebra` (bit $1$ = spin vers le haut, donc
-$S^z_i=-\tfrac12Z_i$), et $H_M$ est son hamiltonien XXZ
-$J\sum_{(i,j)}\big(\tfrac12(S^+_iS^-_j+S^-_iS^+_j)+\Delta S^z_iS^z_j\big)$ avec $J=1$, $\Delta=0$, puisque
-$S^+_iS^-_j+S^-_iS^+_j=\tfrac12(X_iX_j+Y_iY_j)$ ; nous le vérifions sur la matrice dense $64\times64$.
-Pour $H_C$, nous prenons la bissection du graphe formé des triangles $\{0,1,2\}$, $\{3,4,5\}$ reliés
-par les arêtes $(2,3)$, $(5,0)$ : $H_C=\sum_{(i,j)\in E}\tfrac12(1-Z_iZ_j)$, $Z_iZ_j=4S^z_iS^z_j$, compte
-les arêtes coupées. La meilleure bissection coupe $2$ arêtes (les deux triangles ; tout autre ensemble de trois sommets
-coupe les deux triangles, et un triangle coupé a deux arêtes coupées) ; nous partons de $|101010\rangle$, qui en
-coupe $6$. Enfin, tout l'ansatz est recalculé avec des matrices denses $64\times64$, indépendamment de
+Dans la bibliothèque, $`\mathcal M`$ est `SpinChain(n).algebra` (bit $`1`$ = spin vers le haut, donc
+$`S^z_i=-\tfrac12Z_i`$), et $`H_M`$ est son hamiltonien XXZ
+$`J\sum_{(i,j)}\big(\tfrac12(S^+_iS^-_j+S^-_iS^+_j)+\Delta S^z_iS^z_j\big)`$ avec $`J=1`$, $`\Delta=0`$, puisque
+$`S^+_iS^-_j+S^-_iS^+_j=\tfrac12(X_iX_j+Y_iY_j)`$ ; nous le vérifions sur la matrice dense $`64\times64`$.
+Pour $`H_C`$, nous prenons la bissection du graphe formé des triangles $`\{0,1,2\}`$, $`\{3,4,5\}`$ reliés
+par les arêtes $`(2,3)`$, $`(5,0)`$ : $`H_C=\sum_{(i,j)\in E}\tfrac12(1-Z_iZ_j)`$, $`Z_iZ_j=4S^z_iS^z_j`$, compte
+les arêtes coupées. La meilleure bissection coupe $`2`$ arêtes (les deux triangles ; tout autre ensemble de trois sommets
+coupe les deux triangles, et un triangle coupé a deux arêtes coupées) ; nous partons de $`|101010\rangle`$, qui en
+coupe $`6`$. Enfin, tout l'ansatz est recalculé avec des matrices denses $`64\times64`$, indépendamment de
 la bibliothèque.
 
 ```python
@@ -237,18 +237,18 @@ assert abs(psi[weight == w].norm().item() - 1) < 1e-12           # Proposition 1
 assert abs((psi.conj() @ HC_dense @ psi).real.item() - states.expectation(ideal, H_C).real.item()) < 1e-10
 ```
 
-L'**amortissement d'amplitude** du qubit $i$ ($|1\rangle\to|0\rangle$ avec probabilité $g$) a pour
-opérateurs de Kraus $K_0^{(i)}=|0\rangle\langle0|_i+\sqrt{1-g}\,|1\rangle\langle1|_i$ et
-$K_1^{(i)}=\sqrt g\,|0\rangle\langle1|_i$, qui abaisse le poids : c'est une application entre secteurs,
+L'**amortissement d'amplitude** du qubit $`i`$ ($`|1\rangle\to|0\rangle`$ avec probabilité $`g`$) a pour
+opérateurs de Kraus $`K_0^{(i)}=|0\rangle\langle0|_i+\sqrt{1-g}\,|1\rangle\langle1|_i`$ et
+$`K_1^{(i)}=\sqrt g\,|0\rangle\langle1|_i`$, qui abaisse le poids : c'est une application entre secteurs,
 `chain.site_amplitude_damping(i, g)` (un `InterSectorChannel`).
 
 D'après [notes de cours, proposition 10.9](../../lecture_notes/fr/10_quantum_computing.md#r-10-9), si chaque couche du circuit est suivie de l'amortissement
-de tous les qubits, le poids $w$ de l'état initial est encore obtenu avec probabilité $(1-g)^{wp}$ après $p$ couches,
+de tous les qubits, le poids $`w`$ de l'état initial est encore obtenu avec probabilité $`(1-g)^{wp}`$ après $`p`$ couches,
 et l'état post-sélectionné est l'état sans bruit.
 
 Un `InterSectorChannel` ne conserve que les blocs diagonaux de sa sortie ; ici il n'y en a pas
 d'autres (la démonstration de la proposition 10.9 s'applique mot pour mot à l'amortissement d'un seul qubit,
-avec $s\in\{0,1\}$), donc rien n'est perdu. Avec $g=0.05$ et $p=2$, le taux d'acceptation vaut $0.95^6=0.7351$ :
+avec $`s\in\{0,1\}`$), donc rien n'est perdu. Avec $`g=0.05`$ et $`p=2`$, le taux d'acceptation vaut $`0.95^6=0.7351`$ :
 
 ```python
 g = 0.05
@@ -270,18 +270,18 @@ assert abs(post.fidelity(ideal).item() - 1) < 1e-10 and abs(cut(post) - cut(idea
 ```
 
 Observation numérique (les valeurs affichées) : la partie non admissible abaisse la coupe moyenne de
-$4.3789$ à $4.3123$, une amélioration factice qui tromperait un optimiseur des angles ; après
+$`4.3789`$ à $`4.3123`$, une amélioration factice qui tromperait un optimiseur des angles ; après
 post-sélection, la valeur est exacte (proposition 10.9).
 
 D'après [notes de cours, proposition 10.10](../../lecture_notes/fr/10_quantum_computing.md#r-10-10), sous l'équation de Lindblad avec amortissement d'amplitude
-(taux $\gamma_1$) et déphasage $L_k=S^z_k$ (taux $\gamma_2$), un état partant de $H_w$ conserve le poids $w$ avec
-probabilité $e^{-\gamma_1wt}$, et l'état post-sélectionné ne dépend pas de $\gamma_1$ ; pour $\gamma_2=0$, la
+(taux $`\gamma_1`$) et déphasage $`L_k=S^z_k`$ (taux $`\gamma_2`$), un état partant de $`H_w`$ conserve le poids $`w`$ avec
+probabilité $`e^{-\gamma_1wt}`$, et l'état post-sélectionné ne dépend pas de $`\gamma_1`$ ; pour $`\gamma_2=0`$, la
 post-sélection est parfaite. L'article
-d'accompagnement (`examples/paper/ex9_qaoa_xy_mixer.py`) fait évoluer $|111000\rangle$ sous $H_M$
-pendant $T=2$ ; nous reproduisons sa ligne $\gamma_1=\gamma_2=0.1$ : $P(w=3)=e^{-0.6}=0.5488$
-(proposition 10.10) et, comme observation numérique du code ci-dessous, une fidélité de $0.4805$ et une
-fidélité post-sélectionnée de $0.8755$ ; d'après la proposition 10.10, cette dernière est la même que
-pour $\gamma_1=0$.
+d'accompagnement (`examples/paper/ex9_qaoa_xy_mixer.py`) fait évoluer $`|111000\rangle`$ sous $`H_M`$
+pendant $`T=2`$ ; nous reproduisons sa ligne $`\gamma_1=\gamma_2=0.1`$ : $`P(w=3)=e^{-0.6}=0.5488`$
+(proposition 10.10) et, comme observation numérique du code ci-dessous, une fidélité de $`0.4805`$ et une
+fidélité post-sélectionnée de $`0.8755`$ ; d'après la proposition 10.10, cette dernière est la même que
+pour $`\gamma_1=0`$.
 
 ```python
 T = 2.0
@@ -304,17 +304,17 @@ assert post_T[0.1, 0.1].trace_distance(post_T[0.0, 0.1]).item() < 1e-6       # i
 ## 10.5 Points de comparaison
 
 Qiskit (`qiskit.quantum_info`, modèles de bruit d'Aer, `QAOAAnsatz` avec un mélangeur personnalisé),
-Cirq, PennyLane (`qml.qaoa.xy_mixer`, `default.mixed`) et QuTiP/`qutip-qip` simulent tout cela sur $n$
+Cirq, PennyLane (`qml.qaoa.xy_mixer`, `default.mixed`) et QuTiP/`qutip-qip` simulent tout cela sur $`n`$
 qubits complets et sont les bons outils pour les circuits ; stim échantillonne des circuits de
 Clifford avec un bruit de type Pauli sur des milliers de qubits (l'amortissement d'amplitude n'est
 pas un canal de Pauli : les canaux de Pauli sont unitaux, l'amortissement d'amplitude ne l'est pas). Nous ne connaissons dans ces logiciels aucune fonction qui calcule l'algèbre
 d'interaction d'un canal, son commutant ou toute son algèbre de points fixes (`steadystate` de QuTiP
 renvoie un seul état stationnaire d'un lindbladien) ; pour les décompositions numériques par blocs
-des $*$-algèbres de matrices, voir Murota et al., *Japan J. Indust. Appl. Math.* 27 (2010). La
-bibliothèque ajoute le stockage dans $\bigoplus_wM_{\binom nw}$, les applications entre secteurs et la
-post-sélection comme projecteur central, par lots. Un secteur requiert $\binom nw^2$ coefficients au
-lieu de $4^n$ ($1.7\cdot10^8$ contre $4.3\cdot10^9$ pour $n=16$, $w=8$), mais l'algèbre complète est
-complétée par des zéros jusqu'à $(n+1)\binom n{\lfloor n/2\rfloor}^2$ coefficients ($2.8\cdot10^9$), une
+des $`*`$-algèbres de matrices, voir Murota et al., *Japan J. Indust. Appl. Math.* 27 (2010). La
+bibliothèque ajoute le stockage dans $`\bigoplus_wM_{\binom nw}`$, les applications entre secteurs et la
+post-sélection comme projecteur central, par lots. Un secteur requiert $`\binom nw^2`$ coefficients au
+lieu de $`4^n`$ ($`1.7\cdot10^8`$ contre $`4.3\cdot10^9`$ pour $`n=16`$, $`w=8`$), mais l'algèbre complète est
+complétée par des zéros jusqu'à $`(n+1)\binom n{\lfloor n/2\rfloor}^2`$ coefficients ($`2.8\cdot10^9`$), une
 économie modeste. Elle n'est pas un simulateur de circuits et n'a pas de formalisme des
 stabilisateurs.
 
@@ -323,9 +323,9 @@ stabilisateurs.
 ## Exercices
 
 [Exercices 1–3](../../lecture_notes/fr/10_quantum_computing.md#x-10) des notes de cours, numériquement : pour l'amortissement d'amplitude d'un qubit,
-$\mathcal A'$, $\mathrm{Fix}(\Phi)$ et $\mathrm{Fix}(\Phi^*)$ sont de dimension un (exercice 1) ; pour le canal du
-[corollaire 10.3](../../lecture_notes/fr/10_quantum_computing.md#r-10-3) avec $\theta=\pi/2$ et $n=4$, $\dim\mathrm{Fix}(\Phi)=128$ (exercice 2) ; la récupération
-$\mathcal R$ du code de bit-flip corrige l'erreur cohérente $e^{-i\phi X_1}$ (exercice 3).
+$`\mathcal A'`$, $`\mathrm{Fix}(\Phi)`$ et $`\mathrm{Fix}(\Phi^*)`$ sont de dimension un (exercice 1) ; pour le canal du
+[corollaire 10.3](../../lecture_notes/fr/10_quantum_computing.md#r-10-3) avec $`\theta=\pi/2`$ et $`n=4`$, $`\dim\mathrm{Fix}(\Phi)=128`$ (exercice 2) ; la récupération
+$`\mathcal R`$ du code de bit-flip corrige l'erreur cohérente $`e^{-i\phi X_1}`$ (exercice 3).
 
 <details>
 <summary>Solutions</summary>

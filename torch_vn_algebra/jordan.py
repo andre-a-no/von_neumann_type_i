@@ -470,7 +470,7 @@ def _candidates(coords: _HermCoords, Q: torch.Tensor, R: torch.Tensor, kinds) ->
     """Coordinates (N, k) of r∘v_j (and (i/2)[r, v_j]) for all columns v_j of Q, in chunks of matrices."""
     cdt = _complex_of(coords.real_dtype)
     out = []
-    step = _chunk_size(coords.n, cdt.itemsize)
+    step = _chunk_size(coords.n, cost.itemsize(cdt))
     for s in range(0, Q.shape[1], step):
         Bm = coords.mat(Q[:, s:s + step].mT)
         for kind in kinds:
@@ -491,7 +491,7 @@ def _closure(H: torch.Tensor, coords: _HermCoords, unital: bool, kinds, th: Dict
     """Orthonormal coordinates (N, d) of the closure of span(H (+ 1)) under the products in kinds."""
     n, N = coords.n, coords.N
     dev, rdt = H.device, coords.real_dtype
-    cost.check_memory(3 * N * N * rdt.itemsize, dev, f"closure of a subspace of Herm_{n} (N = {N})")
+    cost.check_memory(3 * N * N * cost.itemsize(rdt), dev, f"closure of a subspace of Herm_{n} (N = {N})")
     stats: Dict = {}
     cols = [coords.vec(H).mT] if H.shape[0] else []
     if unital:
@@ -639,7 +639,7 @@ class JordanAlgebra:
             r = r - self.project(r)
             return torch.linalg.vector_norm(r, dim=(-2, -1)).amax()
         if exhaustive:
-            step = max(1, _chunk_size(n, cdt.itemsize) // max(1, d))
+            step = max(1, _chunk_size(n, cost.itemsize(cdt)) // max(1, d))
             for s in range(0, d, step):
                 Bi = B[s:s + step]                                          # (k, n, n)
                 X = _bilinear(Bi[:, None], B[None], product)                # (k, d, n, n)

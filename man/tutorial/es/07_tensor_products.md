@@ -8,25 +8,25 @@ dual de una inclusión y estudia el entrelazamiento y los estados aleatorios. Aq
 productos con la biblioteca, calculamos trazas parciales y entropías de entrelazamiento, y comprobamos
 numéricamente los teoremas.
 
-En todo el capítulo, $\mathcal M_1=\bigoplus_{c=1}^{C_1}M_{k_c}(\mathbb C)$ actúa sobre
-$H_1=\bigoplus_c\mathbb C^{k_c}$ con proyecciones centrales minimales $P_c$, y
-$\mathcal M_2=\bigoplus_{d=1}^{C_2}M_{l_d}(\mathbb C)$ actúa sobre $H_2=\bigoplus_d\mathbb C^{l_d}$
-con proyecciones centrales minimales $Q_d$. $\mathrm{Tr}$ es la traza del espacio sobre el que
-actúa un operador; sobre $\mathcal M_i$ es la traza `blunt` del capítulo 3. Para $X$ sobre
-$\mathbb C^k\otimes\mathbb C^l$ escribimos $X_{(a,b),(a',b')}=\langle e_a\otimes e_b,X\,e_{a'}\otimes e_{b'}\rangle$,
-e identificamos $\mathbb C^k\otimes\mathbb C^l$ con $\mathbb C^{kl}$ mediante $e_a\otimes e_b\mapsto e_{(a-1)l+b}$
-(el convenio de Kronecker), de modo que $(A\otimes B)_{(a,b),(a',b')}=A_{aa'}B_{bb'}$.
+En todo el capítulo, $`\mathcal M_1=\bigoplus_{c=1}^{C_1}M_{k_c}(\mathbb C)`$ actúa sobre
+$`H_1=\bigoplus_c\mathbb C^{k_c}`$ con proyecciones centrales minimales $`P_c`$, y
+$`\mathcal M_2=\bigoplus_{d=1}^{C_2}M_{l_d}(\mathbb C)`$ actúa sobre $`H_2=\bigoplus_d\mathbb C^{l_d}`$
+con proyecciones centrales minimales $`Q_d`$. $`\mathrm{Tr}`$ es la traza del espacio sobre el que
+actúa un operador; sobre $`\mathcal M_i`$ es la traza `blunt` del capítulo 3. Para $`X`$ sobre
+$`\mathbb C^k\otimes\mathbb C^l`$ escribimos $`X_{(a,b),(a',b')}=\langle e_a\otimes e_b,X\,e_{a'}\otimes e_{b'}\rangle`$,
+e identificamos $`\mathbb C^k\otimes\mathbb C^l`$ con $`\mathbb C^{kl}`$ mediante $`e_a\otimes e_b\mapsto e_{(a-1)l+b}`$
+(el convenio de Kronecker), de modo que $`(A\otimes B)_{(a,b),(a',b')}=A_{aa'}B_{bb'}`$.
 
 <a id="s-7-1"></a>
 
 ## 7.1 El producto tensorial de dos álgebras
 
-*Apuntes:* [sección 7.1](../../lecture_notes/es/07_tensor_products.md#s-7-1): [teorema 7.1](../../lecture_notes/es/07_tensor_products.md#r-7-1) (la estructura de $\mathcal M_1\otimes\mathcal M_2$).
+*Apuntes:* [sección 7.1](../../lecture_notes/es/07_tensor_products.md#s-7-1): [teorema 7.1](../../lecture_notes/es/07_tensor_products.md#r-7-1) (la estructura de $`\mathcal M_1\otimes\mathcal M_2`$).
 
-`tensor_product(alg1, alg2)` construye esta álgebra. El sector $(c,d)$ tiene índice $s=cC_2+d$
-(índices desde $0$ en el código) y carga $(q_c,r_d)$, y dentro de él $e_a\otimes e_b$ tiene índice
-$a\,l_d+b$. `kron(A, B, alg12)` calcula $A\otimes B$. El orden de los sectores difiere del orden de
-Kronecker de $H_1\otimes H_2$ en una permutación de la base, que `kron_rows` construye
+`tensor_product(alg1, alg2)` construye esta álgebra. El sector $`(c,d)`$ tiene índice $`s=cC_2+d`$
+(índices desde $`0`$ en el código) y carga $`(q_c,r_d)`$, y dentro de él $`e_a\otimes e_b`$ tiene índice
+$`a\,l_d+b`$. `kron(A, B, alg12)` calcula $`A\otimes B`$. El orden de los sectores difiere del orden de
+Kronecker de $`H_1\otimes H_2`$ en una permutación de la base, que `kron_rows` construye
 explícitamente más abajo; con ella comparamos con productos de Kronecker de matrices completas.
 
 ```python
@@ -86,11 +86,11 @@ for tr in ('Tr_blunt', 'Tr_norm', 'tau_vN'):                                   #
 
 ## 7.2 La traza parcial
 
-*Apuntes:* [sección 7.2](../../lecture_notes/es/07_tensor_products.md#s-7-2): la definición de $\mathrm{Tr}_2$, [proposición 7.2](../../lecture_notes/es/07_tensor_products.md#r-7-2), [teorema 7.3](../../lecture_notes/es/07_tensor_products.md#r-7-3) (la traza parcial es un canal) y [proposición 7.4](../../lecture_notes/es/07_tensor_products.md#r-7-4) (una esperanza condicional de índice $m^2$).
+*Apuntes:* [sección 7.2](../../lecture_notes/es/07_tensor_products.md#s-7-2): la definición de $`\mathrm{Tr}_2`$, [proposición 7.2](../../lecture_notes/es/07_tensor_products.md#r-7-2), [teorema 7.3](../../lecture_notes/es/07_tensor_products.md#r-7-3) (la traza parcial es un canal) y [proposición 7.4](../../lecture_notes/es/07_tensor_products.md#r-7-4) (una esperanza condicional de índice $`m^2`$).
 
-`partial_trace(X, keep=1)` reorganiza cada bloque $\rho_{cd}$ con forma $(k_c,l_d,k_c,l_d)$ y toma
+`partial_trace(X, keep=1)` reorganiza cada bloque $`\rho_{cd}`$ con forma $`(k_c,l_d,k_c,l_d)`$ y toma
 la traza; `composite.partial_trace_channel(alg12, keep=1)` es el canal del teorema 7.3, con
-operadores de Kraus $1_{k_c}\otimes\langle j|$ del sector $(c,d)$ al sector $c$. Comprobamos ambos
+operadores de Kraus $`1_{k_c}\otimes\langle j|`$ del sector $`(c,d)`$ al sector $`c`$. Comprobamos ambos
 frente a la definición, frente a un `numpy.einsum` independiente y frente a la dualidad:
 
 ```python
@@ -112,8 +112,8 @@ assert close(Ptr.adjoint('blunt')(A), kron(A, one2, alg12))                 # Th
 ```
 
 El módulo `torch_vn_algebra.inclusions` implementa las inclusiones, sus esperanzas condicionales y sus
-índices; `from_tensor_product(alg1, m)` construye la inclusión $\mathcal M_1\otimes1\subset\mathcal M_1\otimes M_m$ de la
-[proposición 7.4](../../lecture_notes/es/07_tensor_products.md#r-7-4), con matriz de inclusión $\Lambda=m1_{C_1}$ e índice $m^2$
+índices; `from_tensor_product(alg1, m)` construye la inclusión $`\mathcal M_1\otimes1\subset\mathcal M_1\otimes M_m`$ de la
+[proposición 7.4](../../lecture_notes/es/07_tensor_products.md#r-7-4), con matriz de inclusión $`\Lambda=m1_{C_1}`$ e índice $`m^2`$
 ([apuntes de clase, sección 7.2](../../lecture_notes/es/07_tensor_products.md#s-7-2)):
 
 ```python
@@ -145,11 +145,11 @@ print(inc.matrix.tolist(), inc.component_indices())           # Lambda = 3 * 1_2
 *Apuntes:* [sección 7.3](../../lecture_notes/es/07_tensor_products.md#s-7-3): [proposición 7.5](../../lecture_notes/es/07_tensor_products.md#r-7-5) (el producto fusionado) y [teorema 7.6](../../lecture_notes/es/07_tensor_products.md#r-7-6) (el estado reducido de un producto fusionado).
 
 `fused_tensor_product(alg1, alg2, fuse)` (`fuse` por defecto: la suma) ordena sus sectores según la
-carga fusionada y los pares $(c,d)$ dentro de un sector lexicográficamente, cada uno con la base
-$e_a\otimes e_b$. Ejemplo: bosones de núcleo duro ([apuntes de clase, sección 7.3](../../lecture_notes/es/07_tensor_products.md#s-7-3)). Los operadores que
-conservan el número sobre dos sitios forman $M_1\oplus M_2\oplus M_1$ (cargas $0,1,2$), sobre tres sitios
-$M_1\oplus M_3\oplus M_3\oplus M_1$, y, por la [proposición 7.5(c)](../../lecture_notes/es/07_tensor_products.md#r-7-5), su producto fusionado es $\{N\}'$ para el
-número de ocupación total de cinco sitios, con $n_q=\binom5q$.
+carga fusionada y los pares $`(c,d)`$ dentro de un sector lexicográficamente, cada uno con la base
+$`e_a\otimes e_b`$. Ejemplo: bosones de núcleo duro ([apuntes de clase, sección 7.3](../../lecture_notes/es/07_tensor_products.md#s-7-3)). Los operadores que
+conservan el número sobre dos sitios forman $`M_1\oplus M_2\oplus M_1`$ (cargas $`0,1,2`$), sobre tres sitios
+$`M_1\oplus M_3\oplus M_3\oplus M_1`$, y, por la [proposición 7.5(c)](../../lecture_notes/es/07_tensor_products.md#r-7-5), su producto fusionado es $`\{N\}'`$ para el
+número de ocupación total de cinco sitios, con $`n_q=\binom5q`$.
 
 ```python
 bos1 = TypeIAlgebra([1, 2, 1], [1, 2, 1], precision='double', charges=[0, 1, 2])
@@ -168,23 +168,23 @@ A, B = random_operator(bos1), random_operator(bos2)
 assert close(full12(kron(A, B, F)), full12(kron(A, B, P)))   # Proposition 7.5(b)
 ```
 
-El álgebra fusionada tiene dimensión $\sum_q\binom5q^2=\binom{10}5=252$ (de nuevo Vandermonde), el
-producto simple $(1+4+1)(1+9+9+1)=120$ (teorema 7.1(b)). Por el teorema 7.1(a) y la proposición 7.5(b),
+El álgebra fusionada tiene dimensión $`\sum_q\binom5q^2=\binom{10}5=252`$ (de nuevo Vandermonde), el
+producto simple $`(1+4+1)(1+9+9+1)=120`$ (teorema 7.1(b)). Por el teorema 7.1(a) y la proposición 7.5(b),
 el producto simple consta de los elementos del fusionado que son diagonales por bloques para los
-pares $(c,d)$; las $132$ dimensiones restantes están generadas por los operadores que llevan un bloque
-de par $(c,d)$ a otro bloque de par $(c',d')$ del mismo $H_q$, $c'\ne c$ (luego $d'\ne d$): cambian la
+pares $`(c,d)`$; las $`132`$ dimensiones restantes están generadas por los operadores que llevan un bloque
+de par $`(c,d)`$ a otro bloque de par $`(c',d')`$ del mismo $`H_q`$, $`c'\ne c`$ (luego $`d'\ne d`$): cambian la
 carga de cada parte conservando la total, es decir, aquí mueven partículas entre las dos partes.
 
-Por la fórmula por bloques del teorema 7.6, $(\rho_1)_c=\sum_d\mathrm{tr}_{l_d}\,\rho_{(c,d),(c,d)}$. Las dos
+Por la fórmula por bloques del teorema 7.6, $`(\rho_1)_c=\sum_d\mathrm{tr}_{l_d}\,\rho_{(c,d),(c,d)}`$. Las dos
 implementaciones de la biblioteca están construidas para calcular esta aplicación para cualquier
 regla de fusión: `partial_trace` toma la traza solo de los bloques diagonales de pares
-$\rho_{(c,d),(c,d)}$, y `partial_trace_channel` usa índices de Kraus separados para los pares de un
-mismo sector con el mismo $c$, de modo que su dual es de nuevo $A\mapsto A\otimes1$. El código
+$`\rho_{(c,d),(c,d)}`$, y `partial_trace_channel` usa índices de Kraus separados para los pares de un
+mismo sector con el mismo $`c`$, de modo que su dual es de nuevo $`A\mapsto A\otimes1`$. El código
 comprueba ambas, para las dos reglas de fusión siguientes y las dos elecciones del factor
-conservado, frente a $E_1(\mathrm{Tr}_{H_2}\,\rho)$ calculado independientemente con `einsum`, y el dual
-frente a $A\otimes1$. Con la suma, $E_1$ no hace
-nada en nuestro ejemplo; con la regla de paridad $f(q,r)=q+r\bmod2$, las cargas $0$ y $2$ de `bos1`
-se fusionan igual con todo $r$, y $E_1$ elimina coherencias genuinas:
+conservado, frente a $`E_1(\mathrm{Tr}_{H_2}\,\rho)`$ calculado independientemente con `einsum`, y el dual
+frente a $`A\otimes1`$. Con la suma, $`E_1`$ no hace
+nada en nuestro ejemplo; con la regla de paridad $`f(q,r)=q+r\bmod2`$, las cargas $`0`$ y $`2`$ de `bos1`
+se fusionan igual con todo $`r`$, y $`E_1`$ elimina coherencias genuinas:
 
 ```python
 G = fused_tensor_product(bos1, bos2, fuse=lambda q, r: (q + r) % 2)       # only the parity is conserved
@@ -211,12 +211,12 @@ for alg, coherent in ((F, False), (G, True)):
 
 ## 7.4 Entrelazamiento de estados puros
 
-*Apuntes:* [sección 7.4](../../lecture_notes/es/07_tensor_products.md#s-7-4): [lema 7.7](../../lecture_notes/es/07_tensor_products.md#r-7-7) (descomposición de Schmidt) y [proposición 7.8](../../lecture_notes/es/07_tensor_products.md#r-7-8) (entrelazamiento resuelto por simetría): $E(\psi)=H(p)+\sum_cp_cE(\hat\psi_c)$, donde $p_c$ es la probabilidad del sector $c$ de la primera parte.
+*Apuntes:* [sección 7.4](../../lecture_notes/es/07_tensor_products.md#s-7-4): [lema 7.7](../../lecture_notes/es/07_tensor_products.md#r-7-7) (descomposición de Schmidt) y [proposición 7.8](../../lecture_notes/es/07_tensor_products.md#r-7-8) (entrelazamiento resuelto por simetría): $`E(\psi)=H(p)+\sum_cp_cE(\hat\psi_c)`$, donde $`p_c`$ es la probabilidad del sector $`c`$ de la primera parte.
 
-$H(p)$ es el **entrelazamiento de número** y $\sum_cp_cE(\hat\psi_c)$ el **entrelazamiento
-configuracional**. Para un estado aleatorio de $2$ partículas en los cinco sitios calculamos
-$E(\psi)$ a partir de las trazas parciales de ambos lados y de los valores singulares de la matriz
-$\Psi$ de tamaño $4\times8$:
+$`H(p)`$ es el **entrelazamiento de número** y $`\sum_cp_cE(\hat\psi_c)`$ el **entrelazamiento
+configuracional**. Para un estado aleatorio de $`2`$ partículas en los cinco sitios calculamos
+$`E(\psi)`$ a partir de las trazas parciales de ambos lados y de los valores singulares de la matriz
+$`\Psi`$ de tamaño $`4\times8`$:
 
 ```python
 s = F.charges.index(2)                                      # the sector of two particles, n_q = 10
@@ -254,9 +254,9 @@ assert abs(E_psi - H_num - S_conf) < 1e-10                  # Proposition 7.8
 
 *Apuntes:* [sección 7.5](../../lecture_notes/es/07_tensor_products.md#s-7-5): [teorema 7.11](../../lecture_notes/es/07_tensor_products.md#r-7-11) (Lubkin), [corolario 7.12](../../lecture_notes/es/07_tensor_products.md#r-7-12), [teorema 7.13](../../lecture_notes/es/07_tensor_products.md#r-7-13) (fórmula de Page) y [proposición 7.14](../../lecture_notes/es/07_tensor_products.md#r-7-14) (la medida inducida).
 
-Comprobamos los teoremas 7.11 y 7.13 sobre $10^4$ estados puros de $\mathbb C^3\otimes\mathbb C^6$
+Comprobamos los teoremas 7.11 y 7.13 sobre $`10^4`$ estados puros de $`\mathbb C^3\otimes\mathbb C^6`$
 reducidos con `partial_trace` y sobre la medida inducida, y la proposición 7.14 para
-$M_1\oplus M_2\oplus M_3$, $r=2$:
+$`M_1\oplus M_2\oplus M_3`$, $`r=2`$:
 
 ```python
 a, b, n_samples = 3, 6, 10_000
@@ -304,8 +304,8 @@ fusión es cualquier aplicación de las etiquetas, la traza parcial es un canal 
 traza y la restricción correcta para los productos fusionados (teoremas 7.3 y 7.6), y todo ello
 funciona por lotes. No incluye redes tensoriales, y `fused_tensor_product` admite una regla con un
 único resultado por par de cargas, como en las simetrías abelianas; una regla no abeliana, como
-la de $SU(2)$, donde un par de espines $j_1,j_2$ se combina en los varios espines totales
-$|j_1-j_2|,\dots,j_1+j_2$ (capítulo 4, ejercicio 2), no es aquí un producto fusionado (la biblioteca trata $SU(2)$ por separado para las cadenas de espín $\frac12$,
+la de $`SU(2)`$, donde un par de espines $`j_1,j_2`$ se combina en los varios espines totales
+$`|j_1-j_2|,\dots,j_1+j_2`$ (capítulo 4, ejercicio 2), no es aquí un producto fusionado (la biblioteca trata $`SU(2)`$ por separado para las cadenas de espín $`\frac12`$,
 capítulo 4).
 
 <a id="x-7"></a>
@@ -314,12 +314,12 @@ capítulo 4).
 
 [Ejercicios](../../lecture_notes/es/07_tensor_products.md#x-7) de los apuntes de clase, numéricamente:
 
-1. Compruebe que el dual de $\mathrm{Tr}_2$ respecto de $\tau_{\mathrm{vN}}$,
-   `partial_trace_channel(alg12).adjoint('tau_vN')`, es $A\mapsto A\otimes Z$ con $Z=\bigoplus_dC_2l_d1_{l_d}$.
+1. Compruebe que el dual de $`\mathrm{Tr}_2`$ respecto de $`\tau_{\mathrm{vN}}`$,
+   `partial_trace_channel(alg12).adjoint('tau_vN')`, es $`A\mapsto A\otimes Z`$ con $`Z=\bigoplus_dC_2l_d1_{l_d}`$.
 2. (Subaditividad.) Compruebe sobre estados aleatorios de `alg12` que la información mutua
-   $S(\rho_1)+S(\rho_2)-S(\rho)$ es positiva y es igual a $S(\rho\|\rho_1\otimes\rho_2)$.
-3. Para una partícula compartida por dos sitios, $\psi=(|01\rangle+|10\rangle)/\sqrt2$, compruebe que
-   $E(\psi)=H(p)=\log2$.
+   $`S(\rho_1)+S(\rho_2)-S(\rho)`$ es positiva y es igual a $`S(\rho\|\rho_1\otimes\rho_2)`$.
+3. Para una partícula compartida por dos sitios, $`\psi=(|01\rangle+|10\rangle)/\sqrt2`$, compruebe que
+   $`E(\psi)=H(p)=\log2`$.
 
 <details>
 <summary>Soluciones</summary>

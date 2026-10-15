@@ -13,10 +13,10 @@ Elementen. Jordan-Produkte von Operatoren in der Bibliothek sind Gegenstand von 
 
 *Vorlesungsnotizen:* [Abschnitt E.3](../../lecture_notes/de/E_jordan_classification.md#s-E-3); [Lemma E.1](../../lecture_notes/de/E_jordan_classification.md#r-E-1), [Lemma E.3](../../lecture_notes/de/E_jordan_classification.md#r-E-3), [Proposition E.4](../../lecture_notes/de/E_jordan_classification.md#r-E-4), [Satz E.5](../../lecture_notes/de/E_jordan_classification.md#r-E-5).
 
-In einer formal reellen Jordan-Algebra ist die Spurform $\tau(x,y)=\mathrm{Tr}\,L(x\circ y)$ assoziativ und positiv
+In einer formal reellen Jordan-Algebra ist die Spurform $`\tau(x,y)=\mathrm{Tr}\,L(x\circ y)`$ assoziativ und positiv
 definit ([Vorlesungsnotizen, Satz E.5](../../lecture_notes/de/E_jordan_classification.md#r-E-5)). Der Code prüft [Lemma E.1(4)](../../lecture_notes/de/E_jordan_classification.md#r-E-1),
-[Lemma E.3](../../lecture_notes/de/E_jordan_classification.md#r-E-3) (die Idempotente $p_i(x)$, nur mit Jordan-Potenzen berechnet), [Proposition E.4](../../lecture_notes/de/E_jordan_classification.md#r-E-4)
-und Satz E.5 in $\mathrm{Herm}_3(\mathbb C)$, gegeben durch Strukturkonstanten (die Algebren $\mathrm{Herm}_n(D)$ aus
+[Lemma E.3](../../lecture_notes/de/E_jordan_classification.md#r-E-3) (die Idempotente $`p_i(x)`$, nur mit Jordan-Potenzen berechnet), [Proposition E.4](../../lecture_notes/de/E_jordan_classification.md#r-E-4)
+und Satz E.5 in $`\mathrm{Herm}_3(\mathbb C)`$, gegeben durch Strukturkonstanten (die Algebren $`\mathrm{Herm}_n(D)`$ aus
 [Abschnitt E.7](../../lecture_notes/de/E_jordan_classification.md#s-E-7)); das zu ihrer Konstruktion verwendete Cayley–Dickson-Produkt `cd` ist das aus [Abschnitt E.6](../../lecture_notes/de/E_jordan_classification.md#s-E-6).
 
 ```python
@@ -120,9 +120,9 @@ assert torch.allclose(mul(C3, x, y) @ T3 @ w, x @ T3 @ mul(C3, y, w))         # 
 
 *Vorlesungsnotizen:* [Abschnitt E.6](../../lecture_notes/de/E_jordan_classification.md#s-E-6); [Lemma E.14](../../lecture_notes/de/E_jordan_classification.md#r-E-14), [Lemma E.15](../../lecture_notes/de/E_jordan_classification.md#r-E-15), [Lemma E.18](../../lecture_notes/de/E_jordan_classification.md#r-E-18).
 
-Der Code konstruiert $\mathbb O$ durch Cayley–Dickson-Verdopplung und prüft an zufälligen Oktonionen die Identitäten
+Der Code konstruiert $`\mathbb O`$ durch Cayley–Dickson-Verdopplung und prüft an zufälligen Oktonionen die Identitäten
 von Lemma E.14, die Moufang-Identität von Lemma E.18 und die Nichtassoziativität aus Lemma E.15, sowie den
-Homomorphismus $M$:
+Homomorphismus $`M`$:
 
 ```python
 o = torch.randn(4, 1000, 8, dtype=dt)             # random octonions
@@ -153,9 +153,9 @@ assert torch.allclose(M(cd(p4, q4)), M(p4) @ M(q4)) and torch.allclose(M(conj(p4
 
 *Vorlesungsnotizen:* [Abschnitt E.8](../../lecture_notes/de/E_jordan_classification.md#s-E-8); [Lemma E.20](../../lecture_notes/de/E_jordan_classification.md#r-E-20), [Lemma E.23](../../lecture_notes/de/E_jordan_classification.md#r-E-23), [Satz E.24](../../lecture_notes/de/E_jordan_classification.md#r-E-24), [Korollar E.25](../../lecture_notes/de/E_jordan_classification.md#r-E-25).
 
-Der Code prüft an zufälligen Elementen die Jordan-Identität der Albert-Algebra $\mathrm{Herm}_3(\mathbb O)$
+Der Code prüft an zufälligen Elementen die Jordan-Identität der Albert-Algebra $`\mathrm{Herm}_3(\mathbb O)`$
 ([Vorlesungsnotizen, Satz E.24(2)](../../lecture_notes/de/E_jordan_classification.md#r-E-24)) sowie die Assoziativität und Positivität ihrer Spurform
-([Lemma E.20](../../lecture_notes/de/E_jordan_classification.md#r-E-20)), zeigt numerisch, dass die Jordan-Identität in $\mathrm{Herm}_4(\mathbb O)$ verletzt ist
+([Lemma E.20](../../lecture_notes/de/E_jordan_classification.md#r-E-20)), zeigt numerisch, dass die Jordan-Identität in $`\mathrm{Herm}_4(\mathbb O)`$ verletzt ist
 ([Korollar E.25](../../lecture_notes/de/E_jordan_classification.md#r-E-25)), prüft den Automorphismus aus [Lemma E.23](../../lecture_notes/de/E_jordan_classification.md#r-E-23) und führt die drei Schritte (a)–(c)
 des Beweises von Satz E.24(2) an einem zufälligen Element aus:
 
@@ -203,9 +203,9 @@ assert abs(abs(x3[11].item()) - s.norm().item()) < 1e-12
 
 *Vorlesungsnotizen:* [Abschnitt E.9](../../lecture_notes/de/E_jordan_classification.md#s-E-9); [Satz E.5](../../lecture_notes/de/E_jordan_classification.md#r-E-5), [Satz E.8](../../lecture_notes/de/E_jordan_classification.md#r-E-8), [Proposition E.11](../../lecture_notes/de/E_jordan_classification.md#r-E-11), [Satz E.27](../../lecture_notes/de/E_jordan_classification.md#r-E-27).
 
-Der Code berechnet für jeden Typ den Jordan-Rahmen $(E_{ii})$ bzw. $(c_w,c_{-w})$, die Dimensionen der Peirce-Räume als
-gemeinsame Eigenräume der $L(c_i)$ (Satz E.8), die Dimensionsformel aus Proposition E.11(2) und die Positivität der
-Spurform $\tau$ (Satz E.5):
+Der Code berechnet für jeden Typ den Jordan-Rahmen $`(E_{ii})`$ bzw. $`(c_w,c_{-w})`$, die Dimensionen der Peirce-Räume als
+gemeinsame Eigenräume der $`L(c_i)`$ (Satz E.8), die Dimensionsformel aus Proposition E.11(2) und die Positivität der
+Spurform $`\tau`$ (Satz E.5):
 
 ```python
 def peirce(C, frame):

@@ -4,9 +4,9 @@
 
 このチュートリアルは講義ノートの[第4章](../../lecture_notes/ja/04_symmetries.md)に対応する。同章では対称性の環の背後にある表現論を展開し、
 それを任意の行列のリストが生成するフォン・ノイマン環を分解するランダム化アルゴリズムに変え（[命題 4.9](../../lecture_notes/ja/04_symmetries.md#r-4-9)）、
-$U(1)$ と $SU(2)$ に適用し、実行列によって生成される環のセクターを実型・複素型・四元数型に分類する
-（[定理 4.20](../../lecture_notes/ja/04_symmetries.md#r-4-20)）。ここでは指標を計算し、群と生成元に対して分解を実行し、`SpinChain` と `su2.SU2Chain` で
-スピン鎖をセクターごとに構成し、分解の実構造を計算する。
+$`U(1)`$ と $`SU(2)`$ に適用し、実行列によって生成される環のセクターを実型・複素型・四元数型に分類する
+（[定理 4.20](../../lecture_notes/ja/04_symmetries.md#r-4-20)）。さらに、雑音を含む生成元の分解を解析する（[定理 4.25](../../lecture_notes/ja/04_symmetries.md#r-4-25)）。ここでは指標を計算し、群と生成元に対して分解を実行し、`SpinChain` と `su2.SU2Chain` で
+スピン鎖をセクターごとに構成し、分解の実構造を計算し、雑音を含む生成元の分解を保証する。
 
 <a id="s-4-2"></a>
 
@@ -14,19 +14,19 @@ $U(1)$ と $SU(2)$ に適用し、実行列によって生成される環のセ�
 
 *講義ノート：* [4.2節](../../lecture_notes/ja/04_symmetries.md#s-4-2)；[定理 4.3](../../lecture_notes/ja/04_symmetries.md#r-4-3)、[定理 4.4](../../lecture_notes/ja/04_symmetries.md#r-4-4)、[系 4.5](../../lecture_notes/ja/04_symmetries.md#r-4-5)。
 
-講義ノートの[4.2節](../../lecture_notes/ja/04_symmetries.md#s-4-2)では、$S_3$ の三つの既約表現——自明表現、符号、および
-$(1,1,1)^\perp\subseteq\mathbb C^3$ 上の標準表現——と、$(\mathbb C^2)^{\otimes3}$ の三つの因子を置換する表現 $\pi$ の指標
-$\chi_\pi(\sigma)=2^{\#\text{cycles}(\sigma)}$ を手で計算し（下の表）、[系 4.5](../../lecture_notes/ja/04_symmetries.md#r-4-5) から重複度 $m_{\rm triv}=4$、$m_{\rm sgn}=0$、
-$m_{\rm std}=2$ と $\dim\pi(S_3)'=20$ を得る。コードはこの表を計算し直す：$P_\sigma$ を
-$|100\rangle,|010\rangle,|001\rangle$ の張る不変部分空間への $\pi(\sigma)$ の制限として求め（その上で $\pi(\sigma)$ はただ一つの $1$ の位置を置換する。補題 B.1(a)）、
-$\#\text{cycles}(\sigma)=\dim\ker(P_\sigma-1)$（各巡回上で一定なベクトル）を用いる。
+講義ノートの[4.2節](../../lecture_notes/ja/04_symmetries.md#s-4-2)では、$`S_3`$ の三つの既約表現——自明表現、符号、および
+$`(1,1,1)^\perp\subseteq\mathbb C^3`$ 上の標準表現——と、$`(\mathbb C^2)^{\otimes3}`$ の三つの因子を置換する表現 $`\pi`$ の指標
+$`\chi_\pi(\sigma)=2^{\#\text{cycles}(\sigma)}`$ を手で計算し（下の表）、[系 4.5](../../lecture_notes/ja/04_symmetries.md#r-4-5) から重複度 $`m_{\rm triv}=4`$、$`m_{\rm sgn}=0`$、
+$`m_{\rm std}=2`$ と $`\dim\pi(S_3)'=20`$ を得る。コードはこの表を計算し直す：$`P_\sigma`$ を
+$`|100\rangle,|010\rangle,|001\rangle`$ の張る不変部分空間への $`\pi(\sigma)`$ の制限として求め（その上で $`\pi(\sigma)`$ はただ一つの $`1`$ の位置を置換する。補題 B.1(a)）、
+$`\#\text{cycles}(\sigma)=\dim\ker(P_\sigma-1)`$（各巡回上で一定なベクトル）を用いる。
 
-| | 単位元（$1$） | 互換（$3$） | $3$-巡回（$2$） |
+| | 単位元（$`1`$） | 互換（$`3`$） | $`3`$-巡回（$`2`$） |
 |---|---|---|---|
-| $\chi_{\rm triv}$ | $1$ | $1$ | $1$ |
-| $\mathrm{sgn}$ | $1$ | $-1$ | $1$ |
-| $\chi_{\rm std}$ | $2$ | $0$ | $-1$ |
-| $\chi_\pi$ | $8$ | $4$ | $2$ |
+| $`\chi_{\rm triv}`$ | $`1`$ | $`1`$ | $`1`$ |
+| $`\mathrm{sgn}`$ | $`1`$ | $`-1`$ | $`1`$ |
+| $`\chi_{\rm std}`$ | $`2`$ | $`0`$ | $`-1`$ |
+| $`\chi_\pi`$ | $`8`$ | $`4`$ | $`2`$ |
 
 ```python
 import math
@@ -64,12 +64,12 @@ assert dc.commutant_dimension(G) == 20                                # Corollar
 
 講義ノートのランダム化アルゴリズムは `decompose.wedderburn` であり、フロントエンドは `from_group`（有限群の全元。可換子環は
 ツワール `decompose.twirl` でサンプリングする）と `from_generators`（任意の行列のリスト。可換子環は核 `decompose.commutant_basis`）である。
-これは $\mathbb C^n$ をランダムな $K\in\mathcal A'_h$ の固有空間に分け、ランダムな $Y\in\mathcal A'$ のブロックを用いてそれらをまとめて整列させ、
-ユニタリ `V`、$k_c$（`k_factors`）、$m_c$（`multiplicities`）をもつ `Decomposition` を返す。浮動小数点演算では、許容誤差より近い固有値を
+これは $`\mathbb C^n`$ をランダムな $`K\in\mathcal A'_h`$ の固有空間に分け、ランダムな $`Y\in\mathcal A'`$ のブロックを用いてそれらをまとめて整列させ、
+ユニタリ `V`、$`k_c`$（`k_factors`）、$`m_c`$（`multiplicities`）をもつ `Decomposition` を返す。浮動小数点演算では、許容誤差より近い固有値を
 等しいものとして扱い、得られた部分空間に可換子環の新しいランダムな元を圧縮することでそれらをさらに分割する
 （[補題 4.8(a)](../../lecture_notes/ja/04_symmetries.md#r-4-8)）。
 
-`Decomposition.verify()` は、生成元（および可換子環の新しい元）の $\mathcal B$（あるいは $\mathcal B'$）からの相対距離を報告し、$\sum_cm_c^2$ を $\dim\mathcal A'$（群に対しては指標から、系 4.5(c)。生成元に対しては核から）と比較する。$S_3$ と三つの量子ビットに対してこれを実行し、それから中身を見てみる：一つのランダムな $K$ の固有空間と、一つのランダムな $Y$ の絡作用素である。
+`Decomposition.verify()` は、生成元（および可換子環の新しい元）の $`\mathcal B`$（あるいは $`\mathcal B'`$）からの相対距離を報告し、$`\sum_cm_c^2`$ を $`\dim\mathcal A'`$（群に対しては指標から、系 4.5(c)。生成元に対しては核から）と比較する。$`S_3`$ と三つの量子ビットに対してこれを実行し、それから中身を見てみる：一つのランダムな $`K`$ の固有空間と、一つのランダムな $`Y`$ の絡作用素である。
 
 ```python
 D = dc.from_group(G)                                     # the twirl samples pi(S_3)'
@@ -97,19 +97,19 @@ assert s[1] > 1e-3 and abs(s[0] - s[1]) < 1e-10
 assert all(close(W.mH @ Y @ Wa, 0) for W in spaces if W.shape[1] == 1)   # different summands: zero
 ```
 
-計算量を支配するのは可換子環である：ツワールのサンプル一つに $n\times n$ 行列の積が $|G|$ 回かかる。生成元に対しては、
-ライブラリはまず $\mathcal A$ のエルミートな元 $R=U\mathrm{diag}(\lambda)U^*$（生成元のエルミート部分のランダムな実線形結合に、
-そのような二つの結合の対称化された積の定数倍を加えたもの）を対角化する。任意の $X\in\mathcal A'$ は $R$ と可換であり、したがってそのスペクトル射影とも可換である（定理 1.5(d)）から、
-$U^*XU$ は $R$ の固有空間（次元 $d_\lambda$）に関してブロック対角である。これをあらかじめ課すことにより、核の問題の未知数は $n^2$ 個ではなく
-$N_R=\sum_\lambda d_\lambda^2$ 個になる。いくつかの固有値をまとめてもブロックが大きくなるだけなので、縮小された問題は同じ解集合 $\mathcal A'$ をもつ。
-分解において $V^*RV=\bigoplus_cr_c\otimes1_{m_c}$（エルミートな $r_c\in M_{k_c}$）である。$\lambda$ の $r_c$ における重複度を
-$\mu_c(\lambda)$ とすると $d_\lambda=\sum_c\mu_c(\lambda)m_c$ であり、整数 $\mu\ge0$ に対して $\mu^2\ge\mu$ であるから
-$$
+計算量を支配するのは可換子環である：ツワールのサンプル一つに $`n\times n`$ 行列の積が $`|G|`$ 回かかる。生成元に対しては、
+ライブラリはまず $`\mathcal A`$ のエルミートな元 $`R=U\mathrm{diag}(\lambda)U^*`$（生成元のエルミート部分のランダムな実線形結合に、
+そのような二つの結合の対称化された積の定数倍を加えたもの）を対角化する。任意の $`X\in\mathcal A'`$ は $`R`$ と可換であり、したがってそのスペクトル射影とも可換である（定理 1.5(d)）から、
+$`U^*XU`$ は $`R`$ の固有空間（次元 $`d_\lambda`$）に関してブロック対角である。これをあらかじめ課すことにより、核の問題の未知数は $`n^2`$ 個ではなく
+$`N_R=\sum_\lambda d_\lambda^2`$ 個になる。いくつかの固有値をまとめてもブロックが大きくなるだけなので、縮小された問題は同じ解集合 $`\mathcal A'`$ をもつ。
+分解において $`V^*RV=\bigoplus_cr_c\otimes1_{m_c}`$（エルミートな $`r_c\in M_{k_c}`$）である。$`\lambda`$ の $`r_c`$ における重複度を
+$`\mu_c(\lambda)`$ とすると $`d_\lambda=\sum_c\mu_c(\lambda)m_c`$ であり、整数 $`\mu\ge0`$ に対して $`\mu^2\ge\mu`$ であるから
+```math
 N_R=\sum_\lambda\Big(\sum_c\mu_c(\lambda)m_c\Big)^2\ge\sum_{\lambda,c}\mu_c(\lambda)^2m_c^2\ge\sum_{\lambda,c}\mu_c(\lambda)m_c^2=\sum_ck_cm_c^2,
-$$
-であり、等号はすべての $r_c$ の固有値が単純かつ互いに相異なるときかつそのときに限り成り立つ。$L=3,4,5$ 個のスピンの全スピンについて、下のコードは等号を見いだす（*数値的観察*）。
-最小値でさえ大きい：八つのスピン $\frac12$（$n=256$）では $\sum_ck_cm_c^2=4900$ であり、縮小された連立方程式は $(n^2+N_R)\times N_R$ 行列で、
-$3.5\cdot10^8$ 個の複素成分をもつ。そのため4.6節ではスピン鎖に対して、答えをあらかじめ知っているモジュール `su2` を用いる。
+```
+であり、等号はすべての $`r_c`$ の固有値が単純かつ互いに相異なるときかつそのときに限り成り立つ。$`L=3,4,5`$ 個のスピンの全スピンについて、下のコードは等号を見いだす（*数値的観察*）。
+最小値でさえ大きい：八つのスピン $`\frac12`$（$`n=256`$）では $`\sum_ck_cm_c^2=4900`$ であり、縮小された連立方程式は $`(n^2+N_R)\times N_R`$ 行列で、
+$`3.5\cdot10^8`$ 個の複素成分をもつ。そのため4.6節ではスピン鎖に対して、答えをあらかじめ知っているモジュール `su2` を用いる。
 
 ```python
 for n in (3, 4, 5):
@@ -122,15 +122,15 @@ for n in (3, 4, 5):
 
 <a id="s-4-4"></a>
 
-## 4.4 $U(1)$ と電荷セクター
+## 4.4 $`U(1)`$ と電荷セクター
 
 *講義ノート：* [4.4節](../../lecture_notes/ja/04_symmetries.md#s-4-4)；[命題 4.10](../../lecture_notes/ja/04_symmetries.md#r-4-10)。
 
-$n$ 個の量子ビットに対しては、電荷は個数作用素 $\hat N=\sum_jn_j$（$n_j=|1\rangle\langle1|$ は量子ビット $j$ 上に作用する）であり、
-それを保存する作用素全体は $U(1)'\cong\bigoplus_{w=0}^nM_{\binom nw}(\mathbb C)$ をなす（[講義ノート、4.4節](../../lecture_notes/ja/04_symmetries.md#s-4-4)）。
-これは `chains.SpinChain(n).algebra` である（ビット $1$ = 上向きスピン、$\hat N=S^z+\frac n2$。一方 `decompose.total_spin` では上向きスピンは
-$\mathbb C^2$ の *第一の* 基底ベクトルであり、これは基底の番号を付け替えるがセクターは変えない）。任意の XXZ ハミルトニアンは $U(1)'$ に属する。
-コードは $\hat N$ だけからセクターを求め、四つのスピンの XXZ 環をセクターごとに対角化する。
+$`n`$ 個の量子ビットに対しては、電荷は個数作用素 $`\hat N=\sum_jn_j`$（$`n_j=|1\rangle\langle1|`$ は量子ビット $`j`$ 上に作用する）であり、
+それを保存する作用素全体は $`U(1)'\cong\bigoplus_{w=0}^nM_{\binom nw}(\mathbb C)`$ をなす（[講義ノート、4.4節](../../lecture_notes/ja/04_symmetries.md#s-4-4)）。
+これは `chains.SpinChain(n).algebra` である（ビット $`1`$ = 上向きスピン、$`\hat N=S^z+\frac n2`$。一方 `decompose.total_spin` では上向きスピンは
+$`\mathbb C^2`$ の *第一の* 基底ベクトルであり、これは基底の番号を付け替えるがセクターは変えない）。任意の XXZ ハミルトニアンは $`U(1)'`$ に属する。
+コードは $`\hat N`$ だけからセクターを求め、四つのスピンの XXZ 環をセクターごとに対角化する。
 
 ```python
 import functools
@@ -161,13 +161,13 @@ assert close(torch.sort(E_sec).values, torch.linalg.eigvalsh(H))
 
 <a id="s-4-5"></a>
 
-## 4.5 $SU(2)$：スピン
+## 4.5 $`SU(2)`$：スピン
 
-*講義ノート：* [4.5節](../../lecture_notes/ja/04_symmetries.md#s-4-5)；[定理 4.11](../../lecture_notes/ja/04_symmetries.md#r-4-11)、[命題 4.13](../../lecture_notes/ja/04_symmetries.md#r-4-13)、[定理 4.14](../../lecture_notes/ja/04_symmetries.md#r-4-14)。スピン $s$ は `decompose.spin_matrices(s)`、$L$ 個のスピン $\frac12$ の全スピンは `decompose.total_spin(L)` である。
+*講義ノート：* [4.5節](../../lecture_notes/ja/04_symmetries.md#s-4-5)；[定理 4.11](../../lecture_notes/ja/04_symmetries.md#r-4-11)、[命題 4.13](../../lecture_notes/ja/04_symmetries.md#r-4-13)、[定理 4.14](../../lecture_notes/ja/04_symmetries.md#r-4-14)。スピン $`s`$ は `decompose.spin_matrices(s)`、$`L`$ 個のスピン $`\frac12`$ の全スピンは `decompose.total_spin(L)` である。
 
-$L=4$ に対して、[講義ノート、命題 4.13](../../lecture_notes/ja/04_symmetries.md#r-4-13) は重複度 $1,3,2$ をもつ $\{S_x,S_y,S_z\}''\cong M_5\oplus M_3\oplus M_1$
-（次元 $35$）と、可換子環 $\{S_x,S_y,S_z\}'\cong M_1\oplus M_3\oplus M_2$（次元 $14$）を与える。ライブラリは三つの生成元だけから同じものを
-見つけ（セクターは $(k_c,m_c)$ の順に並べられる）、スピン $S$ 上で $\mathbf S^2=S(S+1)$ となる（[定理 4.11](../../lecture_notes/ja/04_symmetries.md#r-4-11)）：
+$`L=4`$ に対して、[講義ノート、命題 4.13](../../lecture_notes/ja/04_symmetries.md#r-4-13) は重複度 $`1,3,2`$ をもつ $`\{S_x,S_y,S_z\}''\cong M_5\oplus M_3\oplus M_1`$
+（次元 $`35`$）と、可換子環 $`\{S_x,S_y,S_z\}'\cong M_1\oplus M_3\oplus M_2`$（次元 $`14`$）を与える。ライブラリは三つの生成元だけから同じものを
+見つけ（セクターは $`(k_c,m_c)`$ の順に並べられる）、スピン $`S`$ 上で $`\mathbf S^2=S(S+1)`$ となる（[定理 4.11](../../lecture_notes/ja/04_symmetries.md#r-4-11)）：
 
 ```python
 S4 = dc.total_spin(4)
@@ -184,8 +184,8 @@ for c, k in enumerate(D4.k_factors):
 ```
 
 [講義ノート、定理 4.14](../../lecture_notes/ja/04_symmetries.md#r-4-14)（シューア・ワイル双対性）により、サイトの置換は全スピンの可換子環を張る：
-$\mathrm{span}\,\pi(S_L)=\{S_x,S_y,S_z\}'$。$L\le5$ について、コードは二つの空間を数値的に比較する：定理の (a) により
-$\mathrm{span}\,\pi(S_L)\subseteq\{S_x,S_y,S_z\}'$ であるから、それらの次元が等しければ十分である。
+$`\mathrm{span}\,\pi(S_L)=\{S_x,S_y,S_z\}'`$。$`L\le5`$ について、コードは二つの空間を数値的に比較する：定理の (a) により
+$`\mathrm{span}\,\pi(S_L)\subseteq\{S_x,S_y,S_z\}'`$ であるから、それらの次元が等しければ十分である。
 
 ```python
 for n in range(2, 6):
@@ -199,9 +199,9 @@ print(Dp)
 assert sorted(zip(Dp.multiplicities, Dp.k_factors)) == sorted(zip(D4.k_factors, D4.multiplicities))
 ```
 
-出力される次元は $2,5,14,42$ であり、カタラン数 $\binom{2L}L/(L+1)$ である。系 B.10 はすべての $L$ について
-$\dim\{S_a\}'=\sum_Sm_S^2=\binom{2L}L/(L+1)$ を証明している。最後の行は双対性が働いている様子である：
-$\pi(S_4)''$ はブロック $k=(1,2,3)$ と重複度 $(5,1,3)$ をもつ——全スピンの組 $(k_c,m_c)$ の役割を入れ替えたものである。一般に（系 B.9）スピン $S$ の重複度空間は次元 $m_S$ の $S_L$ の既約表現を担い、これらは互いに非同値である。ここでは $S=2,1,0$ に対してその次元は $1,3,2$ である。
+出力される次元は $`2,5,14,42`$ であり、カタラン数 $`\binom{2L}L/(L+1)`$ である。系 B.10 はすべての $`L`$ について
+$`\dim\{S_a\}'=\sum_Sm_S^2=\binom{2L}L/(L+1)`$ を証明している。最後の行は双対性が働いている様子である：
+$`\pi(S_4)''`$ はブロック $`k=(1,2,3)`$ と重複度 $`(5,1,3)`$ をもつ——全スピンの組 $`(k_c,m_c)`$ の役割を入れ替えたものである。一般に（系 B.9）スピン $`S`$ の重複度空間は次元 $`m_S`$ の $`S_L`$ の既約表現を担い、これらは互いに非同値である。ここでは $`S=2,1,0`$ に対してその次元は $`1,3,2`$ である。
 
 <a id="s-4-6"></a>
 
@@ -209,10 +209,10 @@ $\pi(S_4)''$ はブロック $k=(1,2,3)$ と重複度 $(5,1,3)$ をもつ——�
 
 *講義ノート：* [4.6節](../../lecture_notes/ja/04_symmetries.md#s-4-6)；[命題 4.15](../../lecture_notes/ja/04_symmetries.md#r-4-15)、[定理 4.16](../../lecture_notes/ja/04_symmetries.md#r-4-16)、[系 4.17](../../lecture_notes/ja/04_symmetries.md#r-4-17)。
 
-[講義ノート、系 4.17](../../lecture_notes/ja/04_symmetries.md#r-4-17) により、$L$ 個のスピン $\frac12$ の最高ウェイトベクトルの正規直交基底は、
+[講義ノート、系 4.17](../../lecture_notes/ja/04_symmetries.md#r-4-17) により、$`L`$ 個のスピン $`\frac12`$ の最高ウェイトベクトルの正規直交基底は、
 [定理 4.16](../../lecture_notes/ja/04_symmetries.md#r-4-16) のクレブシュ・ゴルダン係数を用いて一サイトずつ構成できる。各基底ベクトルに中間スピンの列
-$S_1=\frac12,S_2,\dots,S_L=S$ でラベルをつけると、`su2.SU2Chain` が構成するヤマノウチ基底が得られる（そのソースはまさにこれらの係数を用いる。
-下のコードは系 4.17 の結論だけを確かめる）。それは `SpinChain` の $U(1)$ セクター $\hat N=\frac L2+S$ の内部にある（`SpinChain` のサイトの順序は
+$`S_1=\frac12,S_2,\dots,S_L=S`$ でラベルをつけると、`su2.SU2Chain` が構成するヤマノウチ基底が得られる（そのソースはまさにこれらの係数を用いる。
+下のコードは系 4.17 の結論だけを確かめる）。それは `SpinChain` の $`U(1)`$ セクター $`\hat N=\frac L2+S`$ の内部にある（`SpinChain` のサイトの順序は
 テンソル因子の付け替えであり、補題 B.1(b) により全スピンと可換である）。コードは定理 4.16 を密な行列とライブラリの `su2.clebsch_gordan` に
 対して確かめ、それから八つのスピンの基底について系 4.17 の結論を確かめる。また[命題 4.15(a)](../../lecture_notes/ja/04_symmetries.md#r-4-15) を `D4` を用いて
 四つのスピンの環で確かめ、八つのスピンについてブロックの大きさを比較する。
@@ -286,63 +286,63 @@ print(u1.algebra.k_factors, sym.multiplicities, flops(u1.algebra.k_factors), flo
 print(f"ground state energy {E_su2[0].item():.6f}, first excited {E_su2[1].item():.6f} (x3)")
 ```
 
-八つのスピンの環では、$U(1)$ のブロックの大きさは $\binom8w=1,8,28,56,70,56,28,8,1$（4.4節）、$SU(2)$ のブロックの大きさは
-$S=0,\dots,4$ に対して $m_S=14,28,20,7,1$ である（命題 4.13）。対角化のコスト $\sum k^3$ は $739162$ から $33040$ へ、
-$22$ 分の1に減る。環の次元 $\sum k^2$ は
-$\sum_w\binom8w\binom8{8-w}=\binom{16}8=12870$（$16$ 個の元から $8$ 個を選び、そのうち $w$ 個を最初の $8$ 個から選ぶ）から
-$\sum_Sm_S^2=1430=\binom{16}8/9$ に減る（系 B.10）。定理 9.9 により（環の長さは偶数で $J>0$）、基底状態はただ一つの一重項であり、
-$E_0(0)<E_0(1)$ である。*数値的観察*（上のコードによる計算）：基底エネルギーは $-3.651093$ であり、第一励起準位は $-3.128419$ の三重項である。
+八つのスピンの環では、$`U(1)`$ のブロックの大きさは $`\binom8w=1,8,28,56,70,56,28,8,1`$（4.4節）、$`SU(2)`$ のブロックの大きさは
+$`S=0,\dots,4`$ に対して $`m_S=14,28,20,7,1`$ である（命題 4.13）。対角化のコスト $`\sum k^3`$ は $`739162`$ から $`33040`$ へ、
+$`22`$ 分の1に減る。環の次元 $`\sum k^2`$ は
+$`\sum_w\binom8w\binom8{8-w}=\binom{16}8=12870`$（$`16`$ 個の元から $`8`$ 個を選び、そのうち $`w`$ 個を最初の $`8`$ 個から選ぶ）から
+$`\sum_Sm_S^2=1430=\binom{16}8/9`$ に減る（系 B.10）。定理 9.9 により（環の長さは偶数で $`J>0`$）、基底状態はただ一つの一重項であり、
+$`E_0(0)<E_0(1)`$ である。*数値的観察*（上のコードによる計算）：基底エネルギーは $`-3.651093`$ であり、第一励起準位は $`-3.128419`$ の三重項である。
 
 <a id="s-4-7"></a>
 
 ## 4.7 実代数：実型、複素型、四元数型
 
-*講義ノート：* [4.7節](../../lecture_notes/ja/04_symmetries.md#s-4-7)。複素共役で閉じた $*$-環 $\mathcal A$ と、列ブロック $V_c$ がセクターに属する分解 $V$ に対して、
-[定理 4.20](../../lecture_notes/ja/04_symmetries.md#r-4-20) は $\bar P_c=P_{\sigma(c)}$ となるセクターの置換 $\sigma$、$\overline{V_c}=V_{\sigma(c)}(J_c\otimes M_c)$ となる
-ユニタリ $J_c$、$M_c$、および $\sigma(c)=c$ のとき $J_c\bar J_c=\varepsilon_c1$ となる符号 $\varepsilon_c$ を与える；型と実代数 $\mathcal A_{\mathbb R}$ は
+*講義ノート：* [4.7節](../../lecture_notes/ja/04_symmetries.md#s-4-7)。複素共役で閉じた $`*`$-環 $`\mathcal A`$ と、列ブロック $`V_c`$ がセクターに属する分解 $`V`$ に対して、
+[定理 4.20](../../lecture_notes/ja/04_symmetries.md#r-4-20) は $`\bar P_c=P_{\sigma(c)}`$ となるセクターの置換 $`\sigma`$、$`\overline{V_c}=V_{\sigma(c)}(J_c\otimes M_c)`$ となる
+ユニタリ $`J_c`$、$`M_c`$、および $`\sigma(c)=c`$ のとき $`J_c\bar J_c=\varepsilon_c1`$ となる符号 $`\varepsilon_c`$ を与える；型と実代数 $`\mathcal A_{\mathbb R}`$ は
 [定理 4.21](../../lecture_notes/ja/04_symmetries.md#r-4-21)、実シューアの補題は[定理 4.22](../../lecture_notes/ja/04_symmetries.md#r-4-22) であり、可換子環の実元は
 [命題 4.23](../../lecture_notes/ja/04_symmetries.md#r-4-23) で記述される。
 
-`Decomposition.real_structure()` は、`wedderburn`（`from_generators`、`from_group`）が返す分解に対して $\sigma$、$J_c$、$M_c$ と型を計算する。
+`Decomposition.real_structure()` は、`wedderburn`（`from_generators`、`from_group`）が返す分解に対して $`\sigma`$、$`J_c`$、$`M_c`$ と型を計算する。
 保存されている生成元の共役が
-$V(\bigoplus_cM_{k_c}\otimes1)V^*$ に属することを確かめ（相対残差 `'conjugation'`）、ユニタリ $P=V^*\bar V$ を作る。その列ブロック
-$c$ は $V^*\overline{V_c}$ である：定理 4.20(a) により、それはセクター $\sigma(c)$ の行の上にのみ台をもち、そこで
-$J_c\otimes M_c$ に等しい。ライブラリはブロックの最大部分を担うセクターを $\sigma(c)$ とし、
-$(k_{\sigma(c)},m_{\sigma(c)})=(k_c,m_c)$ を要求し、残りを評価する（`'leak'`）；ブロックを、成分
-$T_{(a,b),(j,l)}=T_{(a,j),(b,l)}$ をもつ $k_c^2\times m_c^2$ 行列に並べ替える。$T=J\otimes M$ に対してこれは階数一の行列
-$\mathrm{vec}\,J\,(\mathrm{vec}\,M)^T$ であり、その主特異ベクトルから $J_c$ と $M_c$ を読み取り（$\|J_c\|_F^2=k_c$ とする）、ブロックと $J_c\otimes M_c$ の距離を記録する（`'kron'`）。これら三つの残差のいずれかが
-許容誤差を超えるか、形が異なるか、相手が対合をなさないならば、`ValueError` を送出する（環が共役で閉じていない）。$\sigma(c)=c$ に対しては $\varepsilon_c$ を $\mathrm{Re}\,\mathrm{Tr}(J_c\bar J_c)/k_c$ の符号とし——
-厳密な算術ではちょうど $\pm1$ であるから、二つの候補は $2$ 離れている——、これらのセクターにわたる
-$\|J_c\bar J_c-\varepsilon_c\|_F/\sqrt{k_c}$ と
-$\|M_c\bar M_c-\varepsilon_c\|_F/\sqrt{m_c}$ の最大値を `'sign'` として記録する。ただし、ある $\varepsilon_c=-1$ で $k_c$ または $m_c$ が奇数ならば
-（定理 4.20(b) により不可能）、それを少なくとも $1$ に引き上げる。結果は `types`、`partner`（$\sigma$）、
+$`V(\bigoplus_cM_{k_c}\otimes1)V^*`$ に属することを確かめ（相対残差 `'conjugation'`）、ユニタリ $`P=V^*\bar V`$ を作る。その列ブロック
+$`c`$ は $`V^*\overline{V_c}`$ である：定理 4.20(a) により、それはセクター $`\sigma(c)`$ の行の上にのみ台をもち、そこで
+$`J_c\otimes M_c`$ に等しい。ライブラリはブロックの最大部分を担うセクターを $`\sigma(c)`$ とし、
+$`(k_{\sigma(c)},m_{\sigma(c)})=(k_c,m_c)`$ を要求し、残りを評価する（`'leak'`）；ブロックを、成分
+$`T_{(a,b),(j,l)}=T_{(a,j),(b,l)}`$ をもつ $`k_c^2\times m_c^2`$ 行列に並べ替える。$`T=J\otimes M`$ に対してこれは階数一の行列
+$`\mathrm{vec}\,J\,(\mathrm{vec}\,M)^T`$ であり、その主特異ベクトルから $`J_c`$ と $`M_c`$ を読み取り（$`\|J_c\|_F^2=k_c`$ とする）、ブロックと $`J_c\otimes M_c`$ の距離を記録する（`'kron'`）。これら三つの残差のいずれかが
+許容誤差を超えるか、形が異なるか、相手が対合をなさないならば、`ValueError` を送出する（環が共役で閉じていない）。$`\sigma(c)=c`$ に対しては $`\varepsilon_c`$ を $`\mathrm{Re}\,\mathrm{Tr}(J_c\bar J_c)/k_c`$ の符号とし——
+厳密な算術ではちょうど $`\pm1`$ であるから、二つの候補は $`2`$ 離れている——、これらのセクターにわたる
+$`\|J_c\bar J_c-\varepsilon_c\|_F/\sqrt{k_c}`$ と
+$`\|M_c\bar M_c-\varepsilon_c\|_F/\sqrt{m_c}`$ の最大値を `'sign'` として記録する。ただし、ある $`\varepsilon_c=-1`$ で $`k_c`$ または $`m_c`$ が奇数ならば
+（定理 4.20(b) により不可能）、それを少なくとも $`1`$ に引き上げる。結果は `types`、`partner`（$`\sigma`$）、
 `J`、`M`、`residuals`、`ok` をもち、`ok` はすべての残差が許容誤差（既定では分解の受理
-閾値）以下であることを表す；そのとき $|\mathrm{Tr}(J_c\bar J_c)/k_c-\varepsilon_c|\le\|J_c\bar J_c-\varepsilon_c\|_F/\sqrt{k_c}$
+閾値）以下であることを表す；そのとき $`|\mathrm{Tr}(J_c\bar J_c)/k_c-\varepsilon_c|\le\|J_c\bar J_c-\varepsilon_c\|_F/\sqrt{k_c}`$
 （コーシー–シュワルツ）も許容誤差以下である。
 
-`Decomposition.real_basis()` は実直交 $n\times n$ 行列 $O$ と、その列ブロックを記述するリスト（型、セクター、
+`Decomposition.real_basis()` は実直交 $`n\times n`$ 行列 $`O`$ と、その列ブロックを記述するリスト（型、セクター、
 列の範囲）を返す：
-実型のセクターに対しては定理 4.21(a) の列 $O_c=V_c(W_J\otimes W_M)$ であり、実な $\alpha_c(a)$ により $O_c^TaO_c=\alpha_c(a)\otimes1_{m_c}$
-となる；四元数型のセクターに対しては、$J_c\otimes M_c=WW^T$ かつ
-$(J_c\otimes M_c)\bar W=W$ を満たす $W$ による列 $V_cW$ であり（$(J_c\otimes M_c)\overline{(J_c\otimes M_c)}=\varepsilon_c^2=1$ であるから $\varepsilon=1$ の補題 4.19(c)）、
-これらは定理 4.21(a) の計算により実である；そして対 $c,\sigma(c)$（$c<\sigma(c)$）に対しては、列 $\sqrt2\mathrm{Re}\,V_c$ に続いて
-$\sqrt2\mathrm{Im}\,V_c$ である。これらは正規直交である：$V_c^*\overline{V_c}=V_c^*V_{\sigma(c)}(J_c\otimes M_c)=0$ と
-$V_c^T\overline{V_c}=\overline{V_c^*V_c}=1$ およびそれらの共役から $(\mathrm{Re}\,V_c)^T\mathrm{Re}\,V_c=(\mathrm{Im}\,V_c)^T\mathrm{Im}\,V_c=\frac12$ と
-$(\mathrm{Re}\,V_c)^T\mathrm{Im}\,V_c=0$ が得られる；異なるブロックの列は、$\sigma$ の異なる軌道 $\mathcal O$ の
-直交射影 $P_{\mathcal O}=\sum_{e\in\mathcal O}P_e$ の値域に属する（$\overline{V_c}=V_{\sigma(c)}(J_c\otimes M_c)$ であるから）ので、$O$ は直交行列である。実な $a$ に対し、$x=\pi_c(a)\otimes1_{m_c}$ として $aV_c=V_cx$ の実部と虚部をとると
-$$
+実型のセクターに対しては定理 4.21(a) の列 $`O_c=V_c(W_J\otimes W_M)`$ であり、実な $`\alpha_c(a)`$ により $`O_c^TaO_c=\alpha_c(a)\otimes1_{m_c}`$
+となる；四元数型のセクターに対しては、$`J_c\otimes M_c=WW^T`$ かつ
+$`(J_c\otimes M_c)\bar W=W`$ を満たす $`W`$ による列 $`V_cW`$ であり（$`(J_c\otimes M_c)\overline{(J_c\otimes M_c)}=\varepsilon_c^2=1`$ であるから $`\varepsilon=1`$ の補題 4.19(c)）、
+これらは定理 4.21(a) の計算により実である；そして対 $`c,\sigma(c)`$（$`c<\sigma(c)`$）に対しては、列 $`\sqrt2\mathrm{Re}\,V_c`$ に続いて
+$`\sqrt2\mathrm{Im}\,V_c`$ である。これらは正規直交である：$`V_c^*\overline{V_c}=V_c^*V_{\sigma(c)}(J_c\otimes M_c)=0`$ と
+$`V_c^T\overline{V_c}=\overline{V_c^*V_c}=1`$ およびそれらの共役から $`(\mathrm{Re}\,V_c)^T\mathrm{Re}\,V_c=(\mathrm{Im}\,V_c)^T\mathrm{Im}\,V_c=\frac12`$ と
+$`(\mathrm{Re}\,V_c)^T\mathrm{Im}\,V_c=0`$ が得られる；異なるブロックの列は、$`\sigma`$ の異なる軌道 $`\mathcal O`$ の
+直交射影 $`P_{\mathcal O}=\sum_{e\in\mathcal O}P_e`$ の値域に属する（$`\overline{V_c}=V_{\sigma(c)}(J_c\otimes M_c)`$ であるから）ので、$`O`$ は直交行列である。実な $`a`$ に対し、$`x=\pi_c(a)\otimes1_{m_c}`$ として $`aV_c=V_cx`$ の実部と虚部をとると
+```math
 O^TaO=\begin{pmatrix}\mathrm{Re}\,x&\mathrm{Im}\,x\\-\mathrm{Im}\,x&\mathrm{Re}\,x\end{pmatrix}\quad\text{on these columns.}
-$$
-となる。対称なユニタリ $J=X+iY$ の $WW^T=J$ を満たす高木因子 $W$ は、ランダムな $t$ に対する $X+tY$ の直交
-対角化から計算される（$J\bar J=JJ^*=1$ の虚部は $YX-XY$ であるから、$X$ と $Y$ は可換な実対称行列である）；ライブラリは残差 $\|WW^T-J\|_F/\|J\|_F$ と
-$\|\mathrm{Im}(V_cW)\|_F/\sqrt{k_cm_c}$ によって結果を受理し、そのいずれかが
-$\max(\text{tolerance},10^3\,\epsilon_{\rm mach}\,n)$ を超えると警告する（`DecompositionWarning`）。
+```
+となる。対称なユニタリ $`J=X+iY`$ の $`WW^T=J`$ を満たす高木因子 $`W`$ は、ランダムな $`t`$ に対する $`X+tY`$ の直交
+対角化から計算される（$`J\bar J=JJ^*=1`$ の虚部は $`YX-XY`$ であるから、$`X`$ と $`Y`$ は可換な実対称行列である）；ライブラリは残差 $`\|WW^T-J\|_F/\|J\|_F`$ と
+$`\|\mathrm{Im}(V_cW)\|_F/\sqrt{k_cm_c}`$ によって結果を受理し、そのいずれかが
+$`\max(\text{tolerance},10^3\,\epsilon_{\rm mach}\,n)`$ を超えると警告する（`DecompositionWarning`）。
 
-講義ノートの[4.7節](../../lecture_notes/ja/04_symmetries.md#s-4-7)では、実行列によって生成される三つの環を調べる：(i) $\mathbb R^3\otimes\mathbb R^2$ 上の
-$L_a\otimes1_2$（$(L_a)_{bc}=-\epsilon_{abc}$ は $\mathbb R^3$ の回転の生成元）：実型のセクターが一つ、$k=3$、$m=2$；(ii)
-$\mathbb R^2\otimes\mathbb R^2$ 上の $\Omega_2\otimes1_2$：複素型の対、$k=1$、$m=2$；(iii) $\mathbb H^2=\mathbb R^8$ 上の四元数による左乗法
-$1_2\otimes L_q$：四元数型のセクターが一つ、$k=2$、$m=4$。コードはそれぞれの分解と実構造を計算し、定理 4.20(a),(b) と、実型（定理 4.21(a)）
-および対に対する $O^TaO$ のブロック形を確かめる。
+講義ノートの[4.7節](../../lecture_notes/ja/04_symmetries.md#s-4-7)では、実行列によって生成される三つの環を調べる：(i) $`\mathbb R^3\otimes\mathbb R^2`$ 上の
+$`L_a\otimes1_2`$（$`(L_a)_{bc}=-\epsilon_{abc}`$ は $`\mathbb R^3`$ の回転の生成元）：実型のセクターが一つ、$`k=3`$、$`m=2`$；(ii)
+$`\mathbb R^2\otimes\mathbb R^2`$ 上の $`\Omega_2\otimes1_2`$：複素型の対、$`k=1`$、$`m=2`$；(iii) $`\mathbb H^2=\mathbb R^8`$ 上の四元数による左乗法
+$`1_2\otimes L_q`$：四元数型のセクターが一つ、$`k=2`$、$`m=4`$。コードはそれぞれの分解と実構造を計算し、定理 4.20(a),(b) と、実型（定理 4.21(a)）
+および対に対する $`O^TaO`$ のブロック形を確かめる。
 
 ```python
 def qmul(p, q):                                           # H = CD(C), Section E.6: (a, b)(c, d)
@@ -392,9 +392,9 @@ assert close(O_t.T @ real_examples['C'][0][0] @ O_t,
              torch.cat([torch.cat([x_t.real, x_t.imag], 1), torch.cat([-x_t.imag, x_t.real], 1)]))
 ```
 
-コードは三つの例の既約な実加群 $\mathbb R^3$、$\mathbb R^2$、$\mathbb R^4$ の上で定理 4.22 を確かめる（ライブラリが見つける型と重複度、
-すなわち $m=1$ の実型、$m=1$ の複素型の対、$m=2$ の四元数型により、定理 4.22(c) からこれらは既約である）。その際、実
-可換子環を実線形方程式 $Xs=sX$、$Xs^T=s^TX$ の零空間として計算する。次に各例で可換子環のランダムな実対称元に対して命題 4.23 を確かめる。
+コードは三つの例の既約な実加群 $`\mathbb R^3`$、$`\mathbb R^2`$、$`\mathbb R^4`$ の上で定理 4.22 を確かめる（ライブラリが見つける型と重複度、
+すなわち $`m=1`$ の実型、$`m=1`$ の複素型の対、$`m=2`$ の四元数型により、定理 4.22(c) からこれらは既約である）。その際、実
+可換子環を実線形方程式 $`Xs=sX`$、$`Xs^T=s^TX`$ の零空間として計算する。次に各例で可換子環のランダムな実対称元に対して命題 4.23 を確かめる。
 
 ```python
 def real_commutant_dim(gens):                             # dim_R {X real : X s = s X, X s^T = s^T X}
@@ -434,22 +434,150 @@ for t, (gens, ks, ms) in real_examples.items():           # Proposition 4.23
 
 有限群については、GAP と SageMath が指標表を厳密に計算し、系 4.5 により重複度が得られる。RepLAB（MATLAB；D. Rosset, F. Montealegre-Mora, J.-D. Bancal）は有限群およびコンパクト群の表現を数値的に分解し、これも可換子環のランダムな元を用いる。
 SymbolicWedderburn.jl（Julia）は半正定値計画の対称性による簡約のためにウェダーバーン分解を計算する。物理では、QuSpin や他の厳密対角化コードが
-$U(1)$ と格子の対称性によってブロック対角化を行い、ITensor と TeNPy はテンソルネットワークにおいてアーベル的な電荷を扱い、
-TensorKit.jl は融合木によって $SU(2)$ を扱う。ライブラリの `decompose` は小さな行列（$n$ は数百程度まで）のための密な手法である。任意の行列のリスト（群の元または生成元）を受け付け、結果を証明書によって確認し（命題 4.9）、環とその可換子環を `to_algebra`、`from_algebra`、`to_commutant`、`from_commutant` をもつ `TypeIAlgebra`
-オブジェクトとして返すので、第3章、第5–8章の内容がただちに適用できる。スピン $\frac12$ の鎖については、`su2.SU2Chain` が $SU(2)$ のブロックを直接与える（系 4.17）。受け付けるスピンの数は
-$L=18$ までであり、この上限は基底のメモリによって決まる。
+$`U(1)`$ と格子の対称性によってブロック対角化を行い、ITensor と TeNPy はテンソルネットワークにおいてアーベル的な電荷を扱い、
+TensorKit.jl は融合木によって $`SU(2)`$ を扱う。ライブラリの `decompose` は小さな行列（$`n`$ は数百程度まで）のための密な手法である。任意の行列のリスト（群の元または生成元）を受け付け、結果を証明書によって確認し（命題 4.9）、環とその可換子環を `to_algebra`、`from_algebra`、`to_commutant`、`from_commutant` をもつ `TypeIAlgebra`
+オブジェクトとして返すので、第3章、第5–8章の内容がただちに適用できる。スピン $`\frac12`$ の鎖については、`su2.SU2Chain` が $`SU(2)`$ のブロックを直接与える（系 4.17）。受け付けるスピンの数は
+$`L=18`$ までであり、この上限は基底のメモリによって決まる。
+
+<a id="s-4-9"></a>
+
+## 4.9 数値分解の安定性
+
+*講義ノート：* [4.9節](../../lecture_notes/ja/04_symmetries.md#s-4-9)；[補題 4.24](../../lecture_notes/ja/04_symmetries.md#r-4-24)、[定理 4.25](../../lecture_notes/ja/04_symmetries.md#r-4-25)、[命題 4.26](../../lecture_notes/ja/04_symmetries.md#r-4-26)、[命題 4.27](../../lecture_notes/ja/04_symmetries.md#r-4-27)、[定理 4.28](../../lecture_notes/ja/04_symmetries.md#r-4-28)。
+
+雑音を含む生成元の可換子環は許容誤差によって決まる：[定理 4.25](../../lecture_notes/ja/04_symmetries.md#r-4-25) によれば、交換子写像 $`X\mapsto([H_j,X])_j`$ の特異値に
+対する閾値 $`\theta`$ は、$`2\eta<\theta<\gamma-2\eta`$（$`\eta`$ は雑音、$`\gamma`$ は厳密な写像のギャップ）ならば可換子環の厳密な次元 $`d`$ を
+与え、摂動された零特異値に対する評価 $`2\eta`$ は達成される。最初のブロックは定理 4.25(c) の例
+$`\tilde H_1=\mathrm{diag}(1,1,0)+\eta(E_{12}+E_{21})`$ の特異値を計算し、窓の下・中・上で `commutant_basis` により可換子環を判定する
+（ライブラリは生成元をフロベニウスノルム 1 に正規化するので、`tol` をスケールし直している）。
+
+```python
+import warnings
+
+def commutator_svals(Hs):
+    """Singular values, in increasing order, of X -> ([H_j, X])_j with Hilbert-Schmidt norms (row-major vec)."""
+    n = Hs.shape[-1]
+    eye = torch.eye(n, dtype=dt)
+    L = torch.cat([torch.kron(H, eye) - torch.kron(eye, H.T.contiguous()) for H in Hs])
+    return torch.linalg.svdvals(L).flip(0)
+
+eta = 1e-3
+H1 = torch.diag(torch.tensor([1.0, 1.0, 0.0], dtype=dt))
+H1t = H1.clone()
+H1t[0, 1] = H1t[1, 0] = eta                               # a symmetry broken at the level eta
+s = commutator_svals(H1t[None])
+expected = torch.tensor([0, 0, 0, 2 * eta, 2 * eta, 1 - eta, 1 - eta, 1 + eta, 1 + eta], dtype=torch.float64)
+assert close(s, expected, 1e-12)                          # Theorem 4.25(a) and (c): the bound 2 eta is attained
+assert close(commutator_svals(H1[None])[4:6], [0, 1])      # exact generator: d = 5, gap 1
+scale = torch.linalg.matrix_norm(H1t).item()              # theta = tol for unit-norm generators
+for theta, dim in ((0.5 * eta, 3), (20 * eta, 5), (2.0, 9)):
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', dc.DecompositionWarning)
+        assert dc.commutant_basis(H1t, tol=theta / scale).shape[0] == dim
+print('theta < 2 eta: dim 3 (symmetry lost); in the window: 5; above the gap: 9')
+```
+
+次に、三つのスピン $`\frac12`$ の三つのスピン演算子（$`k=(2,4)`$、$`m=(2,1)`$、$`d=5`$、正規化後のギャップ $`\gamma=1/\sqrt3`$）を、大きさ
+$`\eta`$ が増加するエルミートな雑音で摂動する。各レベルについてコードは、特異値 $`\sigma_d`$ と $`\sigma_{d+1}`$ で定理 4.25(a) を確かめ、
+`tol` を観測された窓の中央（対数スケール）に置き、次元と定理 4.25(b) の評価 $`\|\tilde\Pi-\Pi\|\le4\eta/\gamma`$ を確かめてから分解する。
+既定の `tol` $`=\epsilon_{\rm mach}^{1/2}`$ では、雑音が許容誤差を超えるとすぐに雑音が真に受けられる：雑音を含む生成元は $`M_8`$ を生成し、
+それは生成元にとっては正しい答えだが、求める対称性ではない。（ここでフィルタしている `DecompositionWarning` は、ある特異値が切断点から
+$`\epsilon_{\rm mach}^{-1/8}`$ 倍以内にあることを知らせる。）
+
+```python
+S = dc.total_spin(3)
+unit = lambda S: S / torch.linalg.matrix_norm(S)[:, None, None]     # the Hermitian generators the library uses
+sv = commutator_svals(unit(S))
+d, gamma = 5, sv[5].item()
+assert sv[4] < 1e-12 and abs(gamma - 1 / math.sqrt(3)) < 1e-12
+B0 = dc.commutant_basis(S).reshape(d, -1)
+Pi0 = B0.T @ B0.conj()                                    # orthogonal projection onto vec(A')
+gen = torch.Generator().manual_seed(1)
+print(' eta       sigma_d   sigma_d+1  tol       (k, m)            default tol')
+for eta in (1e-8, 1e-6, 1e-4, 1e-3):
+    E = torch.randn(S.shape, dtype=dt, generator=gen)
+    E = E + E.mH
+    St = S + eta * E / torch.linalg.matrix_norm(E, ord=2)[:, None, None]
+    eta_n = torch.linalg.matrix_norm(unit(St) - unit(S), ord=2).norm().item()   # eta of Theorem 4.25
+    st = commutator_svals(unit(St))
+    assert st[d - 1] <= 2 * eta_n and st[d] >= gamma - 2 * eta_n                # Theorem 4.25(a)
+    tol = math.sqrt(st[d - 1] * st[d]) / max(1.0, st[-1].item())
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', dc.DecompositionWarning)
+        Bt = dc.commutant_basis(St, tol=tol).reshape(d, -1)                     # Theorem 4.25(b): dimension d
+        Dt = dc.from_generators(St, tol=tol)
+        Dd = dc.from_generators(St)
+    assert torch.linalg.matrix_norm(Bt.T @ Bt.conj() - Pi0, ord=2) <= 4 * eta_n / gamma
+    assert (Dt.k_factors, Dt.multiplicities) == ((2, 4), (2, 1))
+    print(f'{eta_n:.1e}  {st[d - 1]:.1e}   {st[d]:.3f}      {tol:.1e}   {Dt.k_factors}, {Dt.multiplicities}'
+          f'   {Dd.k_factors}, {Dd.multiplicities}')
+```
+
+`Decomposition.certificate()` は出力に対して[命題 4.26](../../lecture_notes/ja/04_symmetries.md#r-4-26) を評価する：後退誤差 $`r`$（正規化された生成元と計算された環
+$`\tilde{\mathcal B}`$ との距離）、それらの射影 $`H_j=E(\tilde H_j)`$ の交換子写像のギャップ $`\gamma_{\mathcal B}`$（ブロックから計算し、ここでは密な
+特異値と照合する）、そして $`\dim\mathcal A'=\sum_cm_c^2`$ を保証する閾値の窓 $`(2r,\gamma_{\mathcal B}-2r)`$ である。実際に用いた閾値がこの窓に
+入っていれば結果は `trusted` であり、そうでなければ証明書は警告する。雑音より小さい許容誤差では $`M_8`$ が得られ、これらの生成元に
+対しては保証されるが、ギャップは雑音と同程度である：より多くの対称性をもつモデルが距離 $`\gamma_{\mathcal B}/2`$ にあるかもしれない。
+雑音より大きいが $`2r`$ より小さい許容誤差では正しい構造が得られるが、証明書はそれを保証できない。
+
+```python
+c = dc.from_generators(S).certificate()
+assert c.certified and c.trusted and c.residuals['backward'] < 1e-12 and abs(c.gap - gamma) < 1e-10
+E = torch.randn(S.shape, dtype=dt, generator=gen)
+St = S + 1e-4 * (E + E.mH)
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore', dc.DecompositionWarning)
+    Dt = dc.from_generators(St, tol=1e-2)
+    D_low = dc.from_generators(St, tol=1e-12)                          # below the noise
+    D_mid = dc.from_generators(St, tol=1e-3)                           # above the noise, below 2 r
+ct = Dt.certificate()
+print(ct, 'window', [f'{w:.1e}' for w in ct.window], 'threshold', f"{ct.rank['threshold']:.1e}")
+assert ct.trusted and 1e-5 < ct.residuals['backward'] < 1e-2 and ct.window[0] < ct.rank['threshold'] < ct.window[1]
+sb = commutator_svals(Dt.conditional_expectation(unit(St)))           # the projected generators H_j
+assert sb[d - 1] < 1e-12 and abs(sb[d] - ct.gap) < 1e-10              # Proposition 4.26(a), (b)
+c_low = D_low.certificate()
+assert D_low.k_factors == (8,) and c_low.certified and c_low.gap < 1e-3
+with warnings.catch_warnings(record=True) as caught:
+    warnings.simplefilter('always')
+    c_mid = D_mid.certificate()
+assert D_mid.k_factors == (2, 4) and not c_mid.trusted and caught
+print('tol 1e-12:', D_low.k_factors, f'gap {c_low.gap:.1e};  tol 1e-3:', D_mid.k_factors, 'trusted:', c_mid.trusted)
+```
+
+最後に[命題 4.27](../../lecture_notes/ja/04_symmetries.md#r-4-27)：$`\mathcal A'_h`$ の標準ガウスベクトル $`G`$ のブロックは独立な GUE 行列による $`\kappa_c=k_c^{-1/2}H_c`$ であり、
+異なるセクターの固有値が $`x`$ より近づく確率は高々 $`x`$ のオーダーである（ここでの評価は
+$`\sqrt{2/\pi}\,x\,m_1m_2(\frac1{k_1m_1}+\frac1{k_2m_2})^{-1/2}`$）。一方 $`2\times2`$ ブロックの内部では間隔は $`x^3`$ のオーダーである。
+$`\mathcal A'`$ の正規直交基底 `D.basis('commutant')` で取った $`2\cdot10^4`$ 個のサンプルによるモンテカルロ検証：
+
+```python
+D = dc.from_generators(S)
+coef = torch.randn(20000, d, dtype=dt, generator=gen)
+Z = torch.einsum('br,rij->bij', coef, D.basis('commutant'))         # standard complex Gaussian vectors of A'
+x_c = D.to_commutant((Z + Z.mH) / math.sqrt(2)).matrix              # blocks of G: kappa_1 (2 x 2), kappa_2 (1 x 1)
+assert abs((x_c[:, 0, :2, :2].abs() ** 2).sum((-2, -1)).mean().item() - 4 / 2) < 0.05   # E Tr kappa_1^2 = m_1^2 / k_1
+ev = torch.linalg.eigvalsh(x_c[:, 0, :2, :2])
+cross = (ev - x_c[:, 1, :1, 0].real).abs().min(1).values           # delta_x
+(k1, k2), (m1, m2) = D.k_factors, D.multiplicities
+for x in (0.01, 0.03, 0.1):
+    bound = math.sqrt(2 / math.pi) * x * m1 * m2 / math.sqrt(1 / (k1 * m1) + 1 / (k2 * m2))
+    p = (cross < x).double().mean().item()
+    print(f'x = {x}:  P(delta_x < x) = {p:.4f} <= {bound:.4f}')
+    assert p <= bound
+p_in = (ev[:, 1] - ev[:, 0] < 0.2).double().mean().item()
+assert p_in <= k1 ** 1.5 * 0.2 ** 3 / (6 * math.sqrt(math.pi))      # Proposition 4.27(c), m = 2
+```
 
 <a id="x-4"></a>
 
 ## 演習問題
 
 講義ノートの[演習問題](../../lecture_notes/ja/04_symmetries.md#x-4)を数値的に確かめる（下の解答はこの順序である）：
-1. $d=2$、$L=3,4$ に対する $\dim\pi(S_L)'=\binom{d^2+L-1}L$（値 $20$ と $35$）；
-2. `from_generators` による $1\otimes\frac12\cong\frac12\oplus\frac32$ と $1\otimes1\cong0\oplus1\oplus2$；
-3. 四つの量子ビット上の $e^{i\theta\hat N}$ の可換子環、$\theta=1$ の場合（$0<|q-q'|\le4<2\pi$ であるから、電荷 $0,\dots,4$ は相異なる
-   $e^{iq}$ を与える）と $\theta=\pi$ の場合；
-4. ゼーマン分裂：八つのスピンのハイゼンベルク環に対する $H+hS_z$ のスペクトルを、`su2.SU2Chain` と $U(1)$ セクターとで計算する；
-5. `real_structure` による $Q_8$ の正則表現のセクター。
+1. $`d=2`$、$`L=3,4`$ に対する $`\dim\pi(S_L)'=\binom{d^2+L-1}L`$（値 $`20`$ と $`35`$）；
+2. `from_generators` による $`1\otimes\frac12\cong\frac12\oplus\frac32`$ と $`1\otimes1\cong0\oplus1\oplus2`$；
+3. 四つの量子ビット上の $`e^{i\theta\hat N}`$ の可換子環、$`\theta=1`$ の場合（$`0<|q-q'|\le4<2\pi`$ であるから、電荷 $`0,\dots,4`$ は相異なる
+   $`e^{iq}`$ を与える）と $`\theta=\pi`$ の場合；
+4. ゼーマン分裂：八つのスピンのハイゼンベルク環に対する $`H+hS_z`$ のスペクトルを、`su2.SU2Chain` と $`U(1)`$ セクターとで計算する；
+5. `real_structure` による $`Q_8`$ の正則表現のセクター。
 
 <details>
 <summary>解答</summary>

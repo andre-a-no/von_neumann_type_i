@@ -13,9 +13,9 @@
 
 *講義ノート：* [D.2節](../../lecture_notes/ja/D_gksl.md#s-D-2)；[補題 D.1](../../lecture_notes/ja/D_gksl.md#r-D-1)、[定理 D.3](../../lecture_notes/ja/D_gksl.md#r-D-3)。
 
-定理 D.3 を、`lindblad_superoperator` で構成した $M_3$ 上の任意のジャンプをもつ GKSL 生成子
-（行優先の $\mathrm{vec}\,\rho$ に作用する $\mathcal L$ の行列 $S$ であり、6.1節と同様に
-$J_{(i,a),(j,b)}=S_{(a,b),(i,j)}$ となる）と、$\theta-\mathrm{id}$ について確かめる：
+定理 D.3 を、`lindblad_superoperator` で構成した $`M_3`$ 上の任意のジャンプをもつ GKSL 生成子
+（行優先の $`\mathrm{vec}\,\rho`$ に作用する $`\mathcal L`$ の行列 $`S`$ であり、6.1節と同様に
+$`J_{(i,a),(j,b)}=S_{(a,b),(i,j)}`$ となる）と、$`\theta-\mathrm{id}`$ について確かめる：
 
 ```python
 import math
@@ -78,8 +78,8 @@ for t in (0.01, 0.1, 1.0):
 
 *講義ノート：* [D.3節](../../lecture_notes/ja/D_gksl.md#s-D-3)；[定理 D.4](../../lecture_notes/ja/D_gksl.md#r-D-4)、[定理 D.5](../../lecture_notes/ja/D_gksl.md#r-D-5)、[定理 D.6](../../lecture_notes/ja/D_gksl.md#r-D-6)。
 
-定理 D.4 の証明はアルゴリズムである：$J(\mathcal L)$ の $\Omega^\perp$ への圧縮から $\Phi$ を、次に $\xi_1$ から
-$G$ を、そして $H$ を得る。これを上の生成子に対して実行し、ライブラリで生成子を再構成し、定理 D.5(iii) と (i)
+定理 D.4 の証明はアルゴリズムである：$`J(\mathcal L)`$ の $`\Omega^\perp`$ への圧縮から $`\Phi`$ を、次に $`\xi_1`$ から
+$`G`$ を、そして $`H`$ を得る。これを上の生成子に対して実行し、ライブラリで生成子を再構成し、定理 D.5(iii) と (i)
 で計算した元のデータの正規化された形と比較する：
 
 ```python
@@ -113,11 +113,11 @@ assert np.abs(Wr @ u - Wn).max() < 1e-12 and np.abs(u.conj().T @ u - np.eye(2)).
 print("eigenvalues of the normalised H:", np.round(np.linalg.eigvalsh(H_rec), 4), " jumps:", len(L_rec))
 ```
 
-[定理 D.6](../../lecture_notes/ja/D_gksl.md#r-D-6) により、$H$ とすべての $L_j$、$L_j^*$ と可換なのが $1$ の定数倍だけであるとき、忠実な定常状態
-$\sigma$ は一意であり、そのとき $\ker\mathcal L^*=\mathbb C1$ でもある。上のランダムな生成子について、コードは仮定と結論を
-確かめ（行優先に並べた $A^T$ のベクトルに作用する $\mathcal L^*$ の行列は $S^T$: $\mathrm{vec}(\mathcal L^*(A)^T)=S^T\mathrm{vec}(A^T)$ である）、
-さらに[講義ノート、D.3節](../../lecture_notes/ja/D_gksl.md#s-D-3)の第二の例を確かめる：$M_3$ 上で $H=0$、$L_1=|e_1\rangle\langle e_3|$、
-$L_2=|e_2\rangle\langle e_3|$ とすると、$L_j,L_j^*$ と可換なのは $1$ の定数倍だけであるが $\dim\ker\mathcal L=4$ である：
+[定理 D.6](../../lecture_notes/ja/D_gksl.md#r-D-6) により、$`H`$ とすべての $`L_j`$、$`L_j^*`$ と可換なのが $`1`$ の定数倍だけであるとき、忠実な定常状態
+$`\sigma`$ は一意であり、そのとき $`\ker\mathcal L^*=\mathbb C1`$ でもある。上のランダムな生成子について、コードは仮定と結論を
+確かめ（行優先に並べた $`A^T`$ のベクトルに作用する $`\mathcal L^*`$ の行列は $`S^T`$: $`\mathrm{vec}(\mathcal L^*(A)^T)=S^T\mathrm{vec}(A^T)`$ である）、
+さらに[講義ノート、D.3節](../../lecture_notes/ja/D_gksl.md#s-D-3)の第二の例を確かめる：$`M_3`$ 上で $`H=0`$、$`L_1=|e_1\rangle\langle e_3|`$、
+$`L_2=|e_2\rangle\langle e_3|`$ とすると、$`L_j,L_j^*`$ と可換なのは $`1`$ の定数倍だけであるが $`\dim\ker\mathcal L=4`$ である：
 
 ```python
 def kernel_dim(S, tol=1e-9):
@@ -150,8 +150,8 @@ assert kernel_dim(S_abs) == 4                             # no faithful stationa
 *講義ノート：* [D.4節](../../lecture_notes/ja/D_gksl.md#s-D-4)；[定理 D.7](../../lecture_notes/ja/D_gksl.md#r-D-7)、[系 D.8](../../lecture_notes/ja/D_gksl.md#r-D-8)。
 
 セクター内のジャンプとセクター間のランダムなジャンプをもつ `lindblad_rhs` の生成子について、
-$M_1\oplus M_2\subseteq M_3$ 上で証明の五つのステップに沿って[定理 D.7](../../lecture_notes/ja/D_gksl.md#r-D-7) を確かめ、さらに[系 D.8](../../lecture_notes/ja/D_gksl.md#r-D-8) の
-双対生成子を確かめる。証明の後で注意したように、ここでは $J(\mathcal L\circ E)$ は $\Omega^\perp$ 上で正ではない：
+$`M_1\oplus M_2\subseteq M_3`$ 上で証明の五つのステップに沿って[定理 D.7](../../lecture_notes/ja/D_gksl.md#r-D-7) を確かめ、さらに[系 D.8](../../lecture_notes/ja/D_gksl.md#r-D-8) の
+双対生成子を確かめる。証明の後で注意したように、ここでは $`J(\mathcal L\circ E)`$ は $`\Omega^\perp`$ 上で正ではない：
 
 ```python
 alg = TypeIAlgebra([1, 2], [1, 2], precision='double')    # M = M_1 (+) M_2 in M_3
@@ -200,12 +200,12 @@ assert np.linalg.eigvalsh(Pomega @ J @ Pomega).min() < -0.1
 
 *講義ノート：* [D.5節](../../lecture_notes/ja/D_gksl.md#s-D-5)；[定理 D.9](../../lecture_notes/ja/D_gksl.md#r-D-9)、[系 D.10](../../lecture_notes/ja/D_gksl.md#r-D-10)。
 
-$C\ge2$ 個のセクターをもち、ある $k_c\ge2$ である訂正可能な $\mathfrak A$ は **ハイブリッド** 符号である
-（[講義ノート、D.5節](../../lecture_notes/ja/D_gksl.md#s-D-5)）。例として、$\mathbb C^8$ 内のランダムな五次元の符号上の
-$\mathfrak A=(M_2\otimes1_2)\oplus M_1$ と、次のようなノイズをとる：ゲージ因子 $\mathbb C^{m_c}$ に
-$\sum_iB_{c,i}^*B_{c,i}=1_{m_c}$ を通じて作用し、セクターを互いに直交する部分空間に写し、$\mathcal C^\perp$ をかき混ぜ、
+$`C\ge2`$ 個のセクターをもち、ある $`k_c\ge2`$ である訂正可能な $`\mathfrak A`$ は **ハイブリッド** 符号である
+（[講義ノート、D.5節](../../lecture_notes/ja/D_gksl.md#s-D-5)）。例として、$`\mathbb C^8`$ 内のランダムな五次元の符号上の
+$`\mathfrak A=(M_2\otimes1_2)\oplus M_1`$ と、次のようなノイズをとる：ゲージ因子 $`\mathbb C^{m_c}`$ に
+$`\sum_iB_{c,i}^*B_{c,i}=1_{m_c}`$ を通じて作用し、セクターを互いに直交する部分空間に写し、$`\mathcal C^\perp`$ をかき混ぜ、
 その後ランダムなユニタリによって混ぜ合わされる（定理 6.7）。クニル–ラフラム条件は成り立たず、[定理 D.9](../../lecture_notes/ja/D_gksl.md#r-D-9) の
-条件は成り立ち、証明の回復はすべての $A\in\mathfrak A$ を復元するが、$\mathcal C$ 上の一般の作用素は復元しない：
+条件は成り立ち、証明の回復はすべての $`A\in\mathfrak A`$ を復元するが、$`\mathcal C`$ 上の一般の作用素は復元しない：
 
 ```python
 D, dims = 8, [(2, 2), (1, 1)]                             # A = (M_2 (x) 1_2) (+) (M_1 (x) 1_1), dim C = 5

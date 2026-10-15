@@ -6,7 +6,7 @@ Este tutorial acompaña al [apéndice A](../../lecture_notes/es/A_analysis.md) d
 y de probabilidad que los capítulos citan por número: conjuntos de ceros de polinomios, desigualdades de valores propios,
 vectores gaussianos y sus direcciones, momentos gaussianos y espaciamientos uniformes. Las comprobaciones usan solo NumPy,
 no la biblioteca: cada bloque muestrea vectores o matrices aleatorios y los compara con el enunciado exacto. La función
-auxiliar `mc`, definida en el primer bloque, comprueba que una media de Monte Carlo está a menos de $5$ errores estándar
+auxiliar `mc`, definida en el primer bloque, comprueba que una media de Monte Carlo está a menos de $`5`$ errores estándar
 del valor exacto.
 
 <a id="s-A-2"></a>
@@ -15,9 +15,9 @@ del valor exacto.
 
 *Apuntes:* [sección A.2](../../lecture_notes/es/A_analysis.md#s-A-2); [corolario A.7](../../lecture_notes/es/A_analysis.md#r-A-7).
 
-Por el [corolario A.7](../../lecture_notes/es/A_analysis.md#r-A-7), un polinomio que no es idénticamente nulo se anula con probabilidad $0$ en un
-vector aleatorio con densidad. Para $\det Z$, con $Z$ una matriz real $3\times3$ con entradas $N(0,1)$ independientes,
-esto da $\mathbb P(|\det Z|<\varepsilon)\to0$ cuando $\varepsilon\to0$.
+Por el [corolario A.7](../../lecture_notes/es/A_analysis.md#r-A-7), un polinomio que no es idénticamente nulo se anula con probabilidad $`0`$ en un
+vector aleatorio con densidad. Para $`\det Z`$, con $`Z`$ una matriz real $`3\times3`$ con entradas $`N(0,1)`$ independientes,
+esto da $`\mathbb P(|\det Z|<\varepsilon)\to0`$ cuando $`\varepsilon\to0`$.
 
 ```python
 import math
@@ -50,9 +50,9 @@ assert fractions[1] < 0.2 * fractions[0] and fractions[2] < 0.2 * fractions[1]
 *Apuntes:* [sección A.3](../../lecture_notes/es/A_analysis.md#s-A-3); [teorema A.8](../../lecture_notes/es/A_analysis.md#r-A-8), [corolario A.9](../../lecture_notes/es/A_analysis.md#r-A-9), [teorema A.10](../../lecture_notes/es/A_analysis.md#r-A-10), [lema A.12](../../lecture_notes/es/A_analysis.md#r-A-12).
 
 El bloque comprueba, sobre matrices hermíticas aleatorias, las desigualdades de Weyl
-$\lambda_j(A)+\lambda_1(E)\le\lambda_j(A+E)\le\lambda_j(A)+\lambda_n(E)$ ([teorema A.10](../../lecture_notes/es/A_analysis.md#r-A-10)), la cota de
-Courant–Fischer $\max_{x\in U,|x|=1}\langle x,Ax\rangle\ge\lambda_j(A)$ para $U$ de dimensión $j$
-([teorema A.8](../../lecture_notes/es/A_analysis.md#r-A-8)), el entrelazamiento $\lambda_j(A)\le\lambda_j(Q^*AQ)\le\lambda_{j+n-m}(A)$
+$`\lambda_j(A)+\lambda_1(E)\le\lambda_j(A+E)\le\lambda_j(A)+\lambda_n(E)`$ ([teorema A.10](../../lecture_notes/es/A_analysis.md#r-A-10)), la cota de
+Courant–Fischer $`\max_{x\in U,|x|=1}\langle x,Ax\rangle\ge\lambda_j(A)`$ para $`U`$ de dimensión $`j`$
+([teorema A.8](../../lecture_notes/es/A_analysis.md#r-A-8)), el entrelazamiento $`\lambda_j(A)\le\lambda_j(Q^*AQ)\le\lambda_{j+n-m}(A)`$
 ([corolario A.9](../../lecture_notes/es/A_analysis.md#r-A-9)) y la fórmula de Lagrange para las proyecciones espectrales ([lema A.12](../../lecture_notes/es/A_analysis.md#r-A-12)).
 
 ```python
@@ -96,10 +96,10 @@ for i, m_i in enumerate(mult):
 
 *Apuntes:* [sección A.4](../../lecture_notes/es/A_analysis.md#s-A-4); [teorema A.15](../../lecture_notes/es/A_analysis.md#r-A-15), [proposición A.17](../../lecture_notes/es/A_analysis.md#r-A-17).
 
-El [teorema A.15](../../lecture_notes/es/A_analysis.md#r-A-15) da la densidad $f_X$ de un vector gaussiano centrado no degenerado $X$; el bloque
-compara $\mathbb P(X\in[0,1]^2)$ con la integral de $f_X$ calculada por la regla del punto medio. Por la
-[proposición A.17](../../lecture_notes/es/A_analysis.md#r-A-17), $\mathbb E\mathrm{Tr}\,H^2$ vale $n(n+1)/2$ para el GOE y $n^2$ para el GUE,
-y $OHO^T$ tiene la ley de la matriz $H$ del GOE; el bloque comprueba dos momentos de sus entradas.
+El [teorema A.15](../../lecture_notes/es/A_analysis.md#r-A-15) da la densidad $`f_X`$ de un vector gaussiano centrado no degenerado $`X`$; el bloque
+compara $`\mathbb P(X\in[0,1]^2)`$ con la integral de $`f_X`$ calculada por la regla del punto medio. Por la
+[proposición A.17](../../lecture_notes/es/A_analysis.md#r-A-17), $`\mathbb E\mathrm{Tr}\,H^2`$ vale $`n(n+1)/2`$ para el GOE y $`n^2`$ para el GUE,
+y $`OHO^T`$ tiene la ley de la matriz $`H`$ del GOE; el bloque comprueba dos momentos de sus entradas.
 
 ```python
 Amat = rng.standard_normal((2, 4))                       # Theorem A.15: X = A g in R^2, A of rank 2
@@ -131,10 +131,10 @@ mc(rot[:, 0, 1] ** 2, 0.5, "E (O H O^T)_12^2")
 
 *Apuntes:* [sección A.5](../../lecture_notes/es/A_analysis.md#s-A-5); [corolario A.19](../../lecture_notes/es/A_analysis.md#r-A-19), [teorema A.20](../../lecture_notes/es/A_analysis.md#r-A-20), [corolario A.21](../../lecture_notes/es/A_analysis.md#r-A-21).
 
-Para un vector gaussiano complejo estándar $z\in\mathbb C^3$, el [teorema A.20](../../lecture_notes/es/A_analysis.md#r-A-20)(b) dice que $|z|^2$ tiene la
-densidad $t^{N-1}e^{-t}/(N-1)!$ y que $z/|z|$ es uniforme sobre la esfera e independiente de $|z|$; el
+Para un vector gaussiano complejo estándar $`z\in\mathbb C^3`$, el [teorema A.20](../../lecture_notes/es/A_analysis.md#r-A-20)(b) dice que $`|z|^2`$ tiene la
+densidad $`t^{N-1}e^{-t}/(N-1)!`$ y que $`z/|z|`$ es uniforme sobre la esfera e independiente de $`|z|`$; el
 [corolario A.21](../../lecture_notes/es/A_analysis.md#r-A-21) da los momentos de un vector unitario uniforme. El bloque comprueba estos hechos, el volumen
-$V_3=4\pi/3$ de la bola unidad ([corolario A.19](../../lecture_notes/es/A_analysis.md#r-A-19)) y que la fase de $z_1$ es uniforme
+$`V_3=4\pi/3`$ de la bola unidad ([corolario A.19](../../lecture_notes/es/A_analysis.md#r-A-19)) y que la fase de $`z_1`$ es uniforme
 ([sección A.5](../../lecture_notes/es/A_analysis.md#s-A-5), tras el teorema A.20).
 
 ```python
@@ -167,9 +167,9 @@ mc((phase >= 0) & (phase < 1), 1 / (2 * math.pi), "P(arg z_1 in [0, 1))")
 *Apuntes:* [sección A.6](../../lecture_notes/es/A_analysis.md#s-A-6); [teorema A.24](../../lecture_notes/es/A_analysis.md#r-A-24).
 
 La fórmula de Isserlis–Wick ([teorema A.24](../../lecture_notes/es/A_analysis.md#r-A-24)) escribe un momento de un vector gaussiano centrado como una
-suma, sobre los $(2p-1)!!$ emparejamientos, de productos de covarianzas. El bloque enumera los emparejamientos, compara la
-fórmula con momentos de Monte Carlo de un vector gaussiano en $\mathbb R^3$ y recupera $\mathbb E|z|^4=2$ para una
-gaussiana compleja estándar $z$ a partir de la forma compleja del teorema.
+suma, sobre los $`(2p-1)!!`$ emparejamientos, de productos de covarianzas. El bloque enumera los emparejamientos, compara la
+fórmula con momentos de Monte Carlo de un vector gaussiano en $`\mathbb R^3`$ y recupera $`\mathbb E|z|^4=2`$ para una
+gaussiana compleja estándar $`z`$ a partir de la forma compleja del teorema.
 
 ```python
 def pairings(idx):
@@ -204,11 +204,11 @@ assert abs(wick(cz, (0, 1, 0, 1)) - 2) < 1e-12                           # E|z|^
 
 *Apuntes:* [sección A.7](../../lecture_notes/es/A_analysis.md#s-A-7); [teorema A.25](../../lecture_notes/es/A_analysis.md#r-A-25), [corolario A.26](../../lecture_notes/es/A_analysis.md#r-A-26).
 
-Por el [corolario A.26](../../lecture_notes/es/A_analysis.md#r-A-26), los $n+1$ espaciamientos de $n$ puntos uniformes ordenados tienen la ley de las
-variables exponenciales normalizadas $(e_0,\dots,e_n)/T$, con los momentos de la parte (c), $\mathbb P(s_i/s_j\le t)=t/(1+t)$
-y cociente de espaciamientos medio $2\ln2-1$. El bloque comprueba estos hechos para ambas familias con $n=5$, y la
-independencia de $(e_0,\dots,e_n)/T$ y $T$ ([teorema A.25](../../lecture_notes/es/A_analysis.md#r-A-25)) mediante
-$\mathbb E[w_0T^2]=\mathbb Ew_0\,\mathbb ET^2=n+2$.
+Por el [corolario A.26](../../lecture_notes/es/A_analysis.md#r-A-26), los $`n+1`$ espaciamientos de $`n`$ puntos uniformes ordenados tienen la ley de las
+variables exponenciales normalizadas $`(e_0,\dots,e_n)/T`$, con los momentos de la parte (c), $`\mathbb P(s_i/s_j\le t)=t/(1+t)`$
+y cociente de espaciamientos medio $`2\ln2-1`$. El bloque comprueba estos hechos para ambas familias con $`n=5`$, y la
+independencia de $`(e_0,\dots,e_n)/T`$ y $`T`$ ([teorema A.25](../../lecture_notes/es/A_analysis.md#r-A-25)) mediante
+$`\mathbb E[w_0T^2]=\mathbb Ew_0\,\mathbb ET^2=n+2`$.
 
 ```python
 n, B = 5, 200_000                                       # Corollary A.26

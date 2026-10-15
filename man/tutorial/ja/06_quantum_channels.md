@@ -6,12 +6,12 @@
 — チョイ行列、クラウス作用素、スタインスプリング拡張 — を証明し、双対、不動点、遷移行列、ランダムなチャネルを調べる。
 ここではライブラリがチャネルをどのように格納するかを見て、これらの結果を数値的に確かめる。
 
-本章を通じて、$\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)$ および
-$\mathcal N=\bigoplus_{d=1}^{C'}M_{k'_d}(\mathbb C)$ とし、それぞれの極小中心射影を $P_c$ と
-$Q_d$ とする。$A=\bigoplus_cA_c$、$M_{k'\times k}$ は複素 $k'\times k$ 行列の空間、
-$E_{ij}=|i\rangle\langle j|$ は行列単位、$\mathrm{Tr}$ は blunt トレース
-$\sum_c\mathrm{Tr}\,A_c$、$\mathrm{tr}_w=\sum_cw_c\mathrm{Tr}\,A_c$ は忠実な
-トレース（定理 3.1）である。ブロック行列は $\mathbb C^n\otimes\mathbb C^k$ に作用し、ブロックの添字を先に書く。
+本章を通じて、$`\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)`$ および
+$`\mathcal N=\bigoplus_{d=1}^{C'}M_{k'_d}(\mathbb C)`$ とし、それぞれの極小中心射影を $`P_c`$ と
+$`Q_d`$ とする。$`A=\bigoplus_cA_c`$、$`M_{k'\times k}`$ は複素 $`k'\times k`$ 行列の空間、
+$`E_{ij}=|i\rangle\langle j|`$ は行列単位、$`\mathrm{Tr}`$ は blunt トレース
+$`\sum_c\mathrm{Tr}\,A_c`$、$`\mathrm{tr}_w=\sum_cw_c\mathrm{Tr}\,A_c`$ は忠実な
+トレース（定理 3.1）である。ブロック行列は $`\mathbb C^n\otimes\mathbb C^k`$ に作用し、ブロックの添字を先に書く。
 
 <a id="s-6-1"></a>
 
@@ -19,20 +19,20 @@ $\sum_c\mathrm{Tr}\,A_c$、$\mathrm{tr}_w=\sum_cw_c\mathrm{Tr}\,A_c$ は忠実�
 
 *講義ノート：* [6.1節](../../lecture_notes/ja/06_quantum_channels.md#s-6-1)：[命題 6.1](../../lecture_notes/ja/06_quantum_channels.md#r-6-1)（転置）、[定理 6.2](../../lecture_notes/ja/06_quantum_channels.md#r-6-2)（チョイ）、[系 6.3](../../lecture_notes/ja/06_quantum_channels.md#r-6-3)（クラウス階数）、[命題 6.4](../../lecture_notes/ja/06_quantum_channels.md#r-6-4)（直和の間の写像）。
 
-ライブラリには二つのクラスがある。`Channel` は **セクター保存** 写像（$C'=C$、$k'=k$、
-$d\ne c$ に対し $\Phi_{dc}=0$）を格納する。そのクラウス作用素 $K_l=\bigoplus_cK^{cc}_l$ は $\mathcal M$ に属し、
+ライブラリには二つのクラスがある。`Channel` は **セクター保存** 写像（$`C'=C`$、$`k'=k`$、
+$`d\ne c`$ に対し $`\Phi_{dc}=0`$）を格納する。そのクラウス作用素 $`K_l=\bigoplus_cK^{cc}_l`$ は $`\mathcal M`$ に属し、
 形状 `(batch, r, C, k_max, k_max)` のテンソルとして格納される。`InterSectorChannel` は
 [命題 6.4](../../lecture_notes/ja/06_quantum_channels.md#r-6-4) の一般の写像を形状 `(batch, r, C', C, k'_max, k_max)` で格納する。`Channel.choi()` は各セクターについて
-$J(\Phi_{cc})$ を返し、`Channel.superoperator()` は行優先のベクトル
-$\mathrm{vec}(X)_{(a,b)}=X_{ab}$ に作用する $\Phi_{cc}$ の行列 $S_c$ を返す。どちらも同じ数
-$\Phi(E_{ij})_{ab}=J_{(i,a),(j,b)}=S_{(a,b),(i,j)}$ を異なる順序で含んでいる。`Channel.from_superoperator`
-は、チョイ行列がエルミートでないとき、すなわち $\|J-J^*\|>2\cdot10^{-10}s$（倍精度の場合）のとき `ValueError` を送出する。
-ここで $s=\max(1,\|J\|)$ であり、ノルムはスペクトルノルムである。そうでなければ $J$ をそのエルミート部分 $(J+J^*)/2$ で置き換え、
-[定理 6.2](../../lecture_notes/ja/06_quantum_channels.md#r-6-2) の証明のようにこれを対角化し、ある固有値が $-10^{-10}s$ より小さければ `ValueError` を送出し、
-残りの負の固有値を $0$ にする。$J^*=J$ はすべての $X$ に対し $\Phi(X^*)=\Phi(X)^*$ となることと同値であるから
+$`J(\Phi_{cc})`$ を返し、`Channel.superoperator()` は行優先のベクトル
+$`\mathrm{vec}(X)_{(a,b)}=X_{ab}`$ に作用する $`\Phi_{cc}`$ の行列 $`S_c`$ を返す。どちらも同じ数
+$`\Phi(E_{ij})_{ab}=J_{(i,a),(j,b)}=S_{(a,b),(i,j)}`$ を異なる順序で含んでいる。`Channel.from_superoperator`
+は、チョイ行列がエルミートでないとき、すなわち $`\|J-J^*\|>2\cdot10^{-10}s`$（倍精度の場合）のとき `ValueError` を送出する。
+ここで $`s=\max(1,\|J\|)`$ であり、ノルムはスペクトルノルムである。そうでなければ $`J`$ をそのエルミート部分 $`(J+J^*)/2`$ で置き換え、
+[定理 6.2](../../lecture_notes/ja/06_quantum_channels.md#r-6-2) の証明のようにこれを対角化し、ある固有値が $`-10^{-10}s`$ より小さければ `ValueError` を送出し、
+残りの負の固有値を $`0`$ にする。$`J^*=J`$ はすべての $`X`$ に対し $`\Phi(X^*)=\Phi(X)^*`$ となることと同値であるから
 （[講義ノート、6.1節](../../lecture_notes/ja/06_quantum_channels.md#s-6-1)）、これらの丸め誤差の許容範囲を除いて、このメソッドが拒否するのは
 随伴を保たない写像と、それ以外の写像のうち CP でないものにちょうど一致する。
-例えば $X\mapsto iX$ と転置は拒否される。
+例えば $`X\mapsto iX`$ と転置は拒否される。
 
 ```python
 import math
@@ -104,9 +104,9 @@ except ValueError as e:
 
 ## 6.2 スタインスプリング拡張とクラウス作用素の自由度
 
-*講義ノート：* [6.2節](../../lecture_notes/ja/06_quantum_channels.md#s-6-2)：[定理 6.5](../../lecture_notes/ja/06_quantum_channels.md#r-6-5)（スタインスプリング）と[定理 6.7](../../lecture_notes/ja/06_quantum_channels.md#r-6-7)（ユニタリ自由度）。6.1節のチャネルのブロック $c=1$ について、コードは $V$ が等長作用素であること、$\Phi(\rho)=\mathrm{Tr}_E(V\rho V^*)$ と $\Phi^*(B)=V^*(1\otimes B)V$ が成り立つこと、そしてクラウス作用素 $\sum_lu_{jl}K_l$ が同じチャネルを与えることを確かめる。
+*講義ノート：* [6.2節](../../lecture_notes/ja/06_quantum_channels.md#s-6-2)：[定理 6.5](../../lecture_notes/ja/06_quantum_channels.md#r-6-5)（スタインスプリング）と[定理 6.7](../../lecture_notes/ja/06_quantum_channels.md#r-6-7)（ユニタリ自由度）。6.1節のチャネルのブロック $`c=1`$ について、コードは $`V`$ が等長作用素であること、$`\Phi(\rho)=\mathrm{Tr}_E(V\rho V^*)`$ と $`\Phi^*(B)=V^*(1\otimes B)V`$ が成り立つこと、そしてクラウス作用素 $`\sum_lu_{jl}K_l`$ が同じチャネルを与えることを確かめる。
 
-コードでは、$V$ の環境の添字はクラウス・テンソルの最初の添字である：
+コードでは、$`V`$ の環境の添字はクラウス・テンソルの最初の添字である：
 
 ```python
 K = Phi.kraus[0, :, 1, :3, :3]                            # the two Kraus operators of block c = 1
@@ -130,13 +130,13 @@ assert close(PhiL(rho), out) and all(close(a, b) for a, b in zip(PhiL.choi(), J)
 
 ## 6.3 トレースに関する双対
 
-*講義ノート：* [6.3節](../../lecture_notes/ja/06_quantum_channels.md#s-6-3)：$(w,v)$ に関する双対 $\Phi^\sharp$、[命題 6.8](../../lecture_notes/ja/06_quantum_channels.md#r-6-8)、[系 6.9](../../lecture_notes/ja/06_quantum_channels.md#r-6-9)。
+*講義ノート：* [6.3節](../../lecture_notes/ja/06_quantum_channels.md#s-6-3)：$`(w,v)`$ に関する双対 $`\Phi^\sharp`$、[命題 6.8](../../lecture_notes/ja/06_quantum_channels.md#r-6-8)、[系 6.9](../../lecture_notes/ja/06_quantum_channels.md#r-6-9)。
 
-ライブラリでは、`Channel.adjoint()` は $\Phi^*$ であり、`InterSectorChannel.adjoint(trace=...)` は
-両方の環で同じ名前のトレース（`'blunt'`、`'norm'`、`'tau_vN'`）を用いたときの $\Phi^\sharp$ である。`tau_vN` の重み
-$1/(Ck_c)$ と $1/(C'k'_d)$ はセクターの個数にもよる。ランダムな写像
-$M_2\oplus M_3\to M_1\oplus M_2\oplus M_2$ と三つのトレースについて[命題 6.8](../../lecture_notes/ja/06_quantum_channels.md#r-6-8) を確かめ、$M_1\oplus M_2$ 上の粒子損失
-$\Phi(x)=(x_0+\mathrm{Tr}\,x_1)\oplus0$ について[系 6.9(a)](../../lecture_notes/ja/06_quantum_channels.md#r-6-9) を確かめる。粒子損失は blunt トレースに関しては TP であるが、
+ライブラリでは、`Channel.adjoint()` は $`\Phi^*`$ であり、`InterSectorChannel.adjoint(trace=...)` は
+両方の環で同じ名前のトレース（`'blunt'`、`'norm'`、`'tau_vN'`）を用いたときの $`\Phi^\sharp`$ である。`tau_vN` の重み
+$`1/(Ck_c)`$ と $`1/(C'k'_d)`$ はセクターの個数にもよる。ランダムな写像
+$`M_2\oplus M_3\to M_1\oplus M_2\oplus M_2`$ と三つのトレースについて[命題 6.8](../../lecture_notes/ja/06_quantum_channels.md#r-6-8) を確かめ、$`M_1\oplus M_2`$ 上の粒子損失
+$`\Phi(x)=(x_0+\mathrm{Tr}\,x_1)\oplus0`$ について[系 6.9(a)](../../lecture_notes/ja/06_quantum_channels.md#r-6-9) を確かめる。粒子損失は blunt トレースに関しては TP であるが、
 `Tr_norm` に関してはそうでない（[講義ノート、6.3節](../../lecture_notes/ja/06_quantum_channels.md#s-6-3)）：
 
 ```python
@@ -174,19 +174,19 @@ print(s.Tr_norm().real.item(), loss(s).Tr_norm().real.item())      # Tr_norm is 
 
 *講義ノート：* [6.4節](../../lecture_notes/ja/06_quantum_channels.md#s-6-4)：[定理 6.10](../../lecture_notes/ja/06_quantum_channels.md#r-6-10)（単位的チャネルの不動点）、[定理 6.11](../../lecture_notes/ja/06_quantum_channels.md#r-6-11)（単位的チャネルはエントロピーを増加させる）、[命題 6.12](../../lecture_notes/ja/06_quantum_channels.md#r-6-12)（遷移行列）。
 
-ライブラリの標準的なチャネルは各ブロックの内部で作用する（$p,\gamma\in[0,1]$）：
+ライブラリの標準的なチャネルは各ブロックの内部で作用する（$`p,\gamma\in[0,1]`$）：
 
-| チャネル | $\Phi(\rho)_c$ | ブロック $c$ のクラウス作用素 |
+| チャネル | $`\Phi(\rho)_c`$ | ブロック $`c`$ のクラウス作用素 |
 |---|---|---|
-| `dephasing_channel` | $(1-p)\rho_c+p\mathrm{diag}\,\rho_c$ | $\sqrt{1-p}\,1$, $\sqrt p\,E_{ii}$ |
-| `depolarizing_channel` | $(1-p)\rho_c+p\mathrm{Tr}(\rho_c)\,1/k_c$ | $\sqrt{1-p}\,1$, $\sqrt{p/k_c}\,E_{ij}$ |
-| `center_expectation` | $\mathrm{Tr}(\rho_c)\,1/k_c$ | $\sqrt{1/k_c}\,E_{ij}$ |
-| `amplitude_damping_channel` | 準位 $i>0$ は $0$ へ減衰する | $E_{00}+\sqrt{1-\gamma}\sum_{i>0}E_{ii}$, $\sqrt\gamma\,E_{0i}$ |
-| `random_mixed_unitary_channel` | $\sum_jp_jU_j\rho U_j^*$ | $\sqrt{p_j}\,U_j$ |
+| `dephasing_channel` | $`(1-p)\rho_c+p\mathrm{diag}\,\rho_c`$ | $`\sqrt{1-p}\,1`$, $`\sqrt p\,E_{ii}`$ |
+| `depolarizing_channel` | $`(1-p)\rho_c+p\mathrm{Tr}(\rho_c)\,1/k_c`$ | $`\sqrt{1-p}\,1`$, $`\sqrt{p/k_c}\,E_{ij}`$ |
+| `center_expectation` | $`\mathrm{Tr}(\rho_c)\,1/k_c`$ | $`\sqrt{1/k_c}\,E_{ij}`$ |
+| `amplitude_damping_channel` | 準位 $`i>0`$ は $`0`$ へ減衰する | $`E_{00}+\sqrt{1-\gamma}\sum_{i>0}E_{ii}`$, $`\sqrt\gamma\,E_{0i}`$ |
+| `random_mixed_unitary_channel` | $`\sum_jp_jU_j\rho U_j^*`$ | $`\sqrt{p_j}\,U_j`$ |
 
-$M_2\oplus M_3$ 上の表の各チャネルについて、コードはその不動点（$S_c-1$ の零空間）の次元と、クラウス作用素の
+$`M_2\oplus M_3`$ 上の表の各チャネルについて、コードはその不動点（$`S_c-1`$ の零空間）の次元と、クラウス作用素の
 可換子環の次元を計算する：単位的チャネルでは両者は一致し（[定理 6.10](../../lecture_notes/ja/06_quantum_channels.md#r-6-10)）、振幅減衰では次元は等しいが異なる空間である。
-次に $100$ 個のランダムな状態で[定理 6.11](../../lecture_notes/ja/06_quantum_channels.md#r-6-11) を確かめ、6.3節の写像 `Psi` と粒子損失について[命題 6.12](../../lecture_notes/ja/06_quantum_channels.md#r-6-12) を確かめる。
+次に $`100`$ 個のランダムな状態で[定理 6.11](../../lecture_notes/ja/06_quantum_channels.md#r-6-11) を確かめ、6.3節の写像 `Psi` と粒子損失について[命題 6.12](../../lecture_notes/ja/06_quantum_channels.md#r-6-12) を確かめる。
 
 ```python
 def fixed_dims(Phi):
@@ -239,12 +239,12 @@ assert close(classical(rho), alg_out.central([Tp[d] / k for d, k in enumerate(al
 assert torch.allclose(loss.transition_matrix()[0], torch.tensor([[1.0, 1.0], [0.0, 0.0]], dtype=T.dtype))
 ```
 
-完全な振幅減衰のもとで、$M_2\oplus M_3$ の最大混合状態のエントロピーは
-$\log5\approx1.609$ から $H(\tfrac25,\tfrac35)\approx0.673$ へ下がる：単位的でないチャネルは状態を純粋化しうる。
+完全な振幅減衰のもとで、$`M_2\oplus M_3`$ の最大混合状態のエントロピーは
+$`\log5\approx1.609`$ から $`H(\tfrac25,\tfrac35)\approx0.673`$ へ下がる：単位的でないチャネルは状態を純粋化しうる。
 
-$M_2$ 上で位相緩和 $D_p$ と振幅減衰 $A_\gamma$ は可換であり、その合成はコヒーレンスに $(1-p)\sqrt{1-\gamma}$ を掛ける。
-$1-p=e^{-t/T_\varphi}$、$1-\gamma=e^{-t/T_1}$ とすれば $1/T_2=1/(2T_1)+1/T_\varphi$ が得られる（[講義ノート、6.4節](../../lecture_notes/ja/06_quantum_channels.md#s-6-4)、
-*量子ビットのコヒーレンス*）。コードはこれらの恒等式と合成則 $D_{p(t)}D_{p(s)}=D_{p(t+s)}$、$A_{\gamma(t)}A_{\gamma(s)}=A_{\gamma(t+s)}$ を確かめる：
+$`M_2`$ 上で位相緩和 $`D_p`$ と振幅減衰 $`A_\gamma`$ は可換であり、その合成はコヒーレンスに $`(1-p)\sqrt{1-\gamma}`$ を掛ける。
+$`1-p=e^{-t/T_\varphi}`$、$`1-\gamma=e^{-t/T_1}`$ とすれば $`1/T_2=1/(2T_1)+1/T_\varphi`$ が得られる（[講義ノート、6.4節](../../lecture_notes/ja/06_quantum_channels.md#s-6-4)、
+*量子ビットのコヒーレンス*）。コードはこれらの恒等式と合成則 $`D_{p(t)}D_{p(s)}=D_{p(t+s)}`$、$`A_{\gamma(t)}A_{\gamma(s)}=A_{\gamma(t+s)}`$ を確かめる：
 
 ```python
 q2 = TypeIAlgebra([2], [2], precision='double')
@@ -272,18 +272,18 @@ assert abs(coh_t - math.exp(-t1 * (1 / (2 * T1) + 1 / Tphi))) < 1e-12       # 1/
 
 *講義ノート：* [6.5節](../../lecture_notes/ja/06_quantum_channels.md#s-6-5)：[補題 6.13](../../lecture_notes/ja/06_quantum_channels.md#r-6-13) と[定理 6.15](../../lecture_notes/ja/06_quantum_channels.md#r-6-15)（ランダムなチャネルの出力純度）。
 
-**ハール・ランダムな等長作用素** $V:\mathbb C^k\to\mathbb C^N$ とは、ライブラリ（`random_isometry`）と同様に、
-$G=QR$ の因子 $Q$ のことである。ここで $G$ は $N\times k$ のジニブル行列（成分は独立で、密度
-$\pi^{-1}e^{-|z|^2}$ をもつ）、$Q^*Q=1$、$R$ は対角成分が正の上三角行列である（CPU 上では、ライブラリは LAPACK の分解 $G=Q'R'$ をとり、$Q'$ の第 $i$ 列に
-$R'_{ii}/|R'_{ii}|$ を掛ける。定理 5.3 と同様に、これはすべての $R'_{ii}\ne0$ のとき、すなわち $G$ の階数が $k$ のとき
+**ハール・ランダムな等長作用素** $`V:\mathbb C^k\to\mathbb C^N`$ とは、ライブラリ（`random_isometry`）と同様に、
+$`G=QR`$ の因子 $`Q`$ のことである。ここで $`G`$ は $`N\times k`$ のジニブル行列（成分は独立で、密度
+$`\pi^{-1}e^{-|z|^2}`$ をもつ）、$`Q^*Q=1`$、$`R`$ は対角成分が正の上三角行列である（CPU 上では、ライブラリは LAPACK の分解 $`G=Q'R'`$ をとり、$`Q'`$ の第 $`i`$ 列に
+$`R'_{ii}/|R'_{ii}|`$ を掛ける。定理 5.3 と同様に、これはすべての $`R'_{ii}\ne0`$ のとき、すなわち $`G`$ の階数が $`k`$ のとき
 この分解を与え、補題 6.13 の証明によりこれはほとんど確実に成り立つ。GPU 上の大きなバッチに対してはグラム・シュミットの
 直交化を用い、これは直接この分解を与える）。
-`random_channel(alg, r)` はこのような $V_c:\mathbb C^{k_c}\to\mathbb C^r\otimes\mathbb C^{k_c}$ を
+`random_channel(alg, r)` はこのような $`V_c:\mathbb C^{k_c}\to\mathbb C^r\otimes\mathbb C^{k_c}`$ を
 各ブロックで独立に生成し、定理 6.5 のクラウス作用素を用いる。
 
-講義ノートの[定理 6.15](../../lecture_notes/ja/06_quantum_channels.md#r-6-15)により、サイズ $k$ のセクターの純粋状態 $\psi$ と、`random_channel` でクラウス階数 $r$ で
-生成した $\Phi$ に対し、$\mathbb E\mathrm{Tr}\,\Phi(\psi)^2=(k+r)/(kr+1)$ かつ $\mathbb E\,\Phi(\psi)=1_k/k$ である。
-両者を $20\,000$ 個のサンプルから、平均の標準誤差とともに推定する：
+講義ノートの[定理 6.15](../../lecture_notes/ja/06_quantum_channels.md#r-6-15)により、サイズ $`k`$ のセクターの純粋状態 $`\psi`$ と、`random_channel` でクラウス階数 $`r`$ で
+生成した $`\Phi`$ に対し、$`\mathbb E\mathrm{Tr}\,\Phi(\psi)^2=(k+r)/(kr+1)`$ かつ $`\mathbb E\,\Phi(\psi)=1_k/k`$ である。
+両者を $`20\,000`$ 個のサンプルから、平均の標準誤差とともに推定する：
 
 ```python
 B = 20_000
@@ -312,11 +312,11 @@ QuTiP（`to_choi`, `to_kraus`, `to_super`, `to_stinespring`）、Qiskit（`qiski
 `amplitude_damping_error` などの雑音モデル）、toqito（`toqito.channel_ops`, `toqito.channel_props`）および
 QETLAB（`ChoiMatrix`, `KrausOperators`, `ApplyMap`, `RandomSuperoperator`）は、6.1–6.2節の表現の間の変換、
 完全正値性の判定、そして（その多くは）ランダムなチャネルの生成を、
-全行列環の間の写像 $M_n\to M_m$ について行う。
+全行列環の間の写像 $`M_n\to M_m`$ について行う。
 それらの規約は互いに異なる（列方向か行方向の積み重ね、チョイ行列の因子の順序）ので、
-数値を比べる前に規約を比べること。$\mathcal M$ 上のセクター保存チャネルは、それらのパッケージでは
-$M_D$（$D=\sum_ck_c$）上のチャネルとして扱え、その超演算子のサイズはセクターごとの $k_c^2\times k_c^2$
-ではなく $D^2\times D^2$ となる。ライブラリが付け加えるのはブロック構造そのものである：セクターごとに、
+数値を比べる前に規約を比べること。$`\mathcal M`$ 上のセクター保存チャネルは、それらのパッケージでは
+$`M_D`$（$`D=\sum_ck_c`$）上のチャネルとして扱え、その超演算子のサイズはセクターごとの $`k_c^2\times k_c^2`$
+ではなく $`D^2\times D^2`$ となる。ライブラリが付け加えるのはブロック構造そのものである：セクターごとに、
 バッチとして格納されたクラウス作用素、異なる環の間の写像（`InterSectorChannel`）、
 第3章の各トレースに関する双対、そしてセクター間の遷移行列である。
 
@@ -326,12 +326,12 @@ $M_D$（$D=\sum_ck_c$）上のチャネルとして扱え、その超演算子�
 
 講義ノートの[演習問題](../../lecture_notes/ja/06_quantum_channels.md#x-6)の数値的検証：
 
-1. （ワーナー–ホレボ）`Channel.from_superoperator` を用いて、$M_3$ 上の $\Phi(\rho)=\big(\mathrm{Tr}(\rho)1-\rho^T\big)/(k-1)$
-   がクラウス階数 $3$ の単位的チャネルであることを確かめよ。
-2. $M_2\oplus M_3$ 上の位相緩和チャネルのブロック $c$ におけるクラウス階数が $k_c$ である一方、ライブラリは
-   $1+k_{\max}$ 個のクラウス作用素を格納することを確かめよ。
-3. クラウス作用素 $X^aZ^b/k$ をもつ混合ユニタリ・チャネルが $M_3$ 上の `center_expectation` であることを確かめよ。
-4. ライブラリの三つのトレースについて $(\Psi\circ\Phi)^\sharp=\Phi^\sharp\circ\Psi^\sharp$ を確かめよ。
+1. （ワーナー–ホレボ）`Channel.from_superoperator` を用いて、$`M_3`$ 上の $`\Phi(\rho)=\big(\mathrm{Tr}(\rho)1-\rho^T\big)/(k-1)`$
+   がクラウス階数 $`3`$ の単位的チャネルであることを確かめよ。
+2. $`M_2\oplus M_3`$ 上の位相緩和チャネルのブロック $`c`$ におけるクラウス階数が $`k_c`$ である一方、ライブラリは
+   $`1+k_{\max}`$ 個のクラウス作用素を格納することを確かめよ。
+3. クラウス作用素 $`X^aZ^b/k`$ をもつ混合ユニタリ・チャネルが $`M_3`$ 上の `center_expectation` であることを確かめよ。
+4. ライブラリの三つのトレースについて $`(\Psi\circ\Phi)^\sharp=\Phi^\sharp\circ\Psi^\sharp`$ を確かめよ。
 
 <details>
 <summary>解答</summary>

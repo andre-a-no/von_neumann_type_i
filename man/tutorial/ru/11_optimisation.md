@@ -5,17 +5,17 @@
 Это руководство сопровождает [главу 11](../../lecture_notes/ru/11_optimisation.md) конспекта лекций, в которой доказываются экстремумы трёх следовых
 функционалов и объясняется, почему выборка унитарных операторов их не находит. Здесь параметризации множеств ограничений
 (`optimize.PositiveParam`, `UnitaryParam`, `SelfAdjointParam`) и мультистартовый оптимизатор (`optimize.extremize`)
-библиотеки сверяются с этими теоремами. Пусть $\Delta$ — контраст Майкельсона и $\ell(\delta)=(1-\delta)/(1+\delta)$;
+библиотеки сверяются с этими теоремами. Пусть $`\Delta`$ — контраст Майкельсона и $`\ell(\delta)=(1-\delta)/(1+\delta)`$;
 три функционала таковы:
 
 | | функционал | переменные |
 |---|---|---|
-| Эксп. 1 | $z=\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)$ | $X,Y\ge0$, $U\in\mathcal M$ унитарен |
-| Эксп. 2 | $z=\mathrm{Tr}\lvert XY\rvert-\mathrm{Tr}(\lvert X\rvert\,\lvert Y\rvert)$ | $X=UX_0$, $Y=VY_0$, $X_0,Y_0\ge0$, $U,V$ унитарны |
-| Эксп. 3 | $z=\mathrm{Tr}(Y\lvert X\rvert Y)-\mathrm{Tr}\lvert YXY\rvert$ | $X=X^*$, $Y\ge0$ |
+| Эксп. 1 | $`z=\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)`$ | $`X,Y\ge0`$, $`U\in\mathcal M`$ унитарен |
+| Эксп. 2 | $`z=\mathrm{Tr}\lvert XY\rvert-\mathrm{Tr}(\lvert X\rvert\,\lvert Y\rvert)`$ | $`X=UX_0`$, $`Y=VY_0`$, $`X_0,Y_0\ge0`$, $`U,V`$ унитарны |
+| Эксп. 3 | $`z=\mathrm{Tr}(Y\lvert X\rvert Y)-\mathrm{Tr}\lvert YXY\rvert`$ | $`X=X^*`$, $`Y\ge0`$ |
 
-где $|X|$, $|Y|$ нормированы условием $\lambda_{\max}=1$, а их контрасты служат параметрами. **Огибающие** — это
-$\overline z(\delta)=\sup\{z:\Delta(|X|)=\delta\}$ и $\underline z(\delta)=\inf\{z:\Delta(|X|)=\delta\}$, где все остальные
+где $`|X|`$, $`|Y|`$ нормированы условием $`\lambda_{\max}=1`$, а их контрасты служат параметрами. **Огибающие** — это
+$`\overline z(\delta)=\sup\{z:\Delta(|X|)=\delta\}`$ и $`\underline z(\delta)=\inf\{z:\Delta(|X|)=\delta\}`$, где все остальные
 переменные свободны.
 
 <a id="s-11-1"></a>
@@ -24,18 +24,18 @@ $\overline z(\delta)=\sup\{z:\Delta(|X|)=\delta\}$ и $\underline z(\delta)=\inf
 
 *Конспект:* [раздел 11.1](../../lecture_notes/ru/11_optimisation.md#s-11-1); [лемма 11.1](../../lecture_notes/ru/11_optimisation.md#r-11-1), [предложение 11.2](../../lecture_notes/ru/11_optimisation.md#r-11-2).
 
-`optimize.PositiveParam` с заданным контрастом $\delta$ реализует параметризацию из [раздела 11.1](../../lecture_notes/ru/11_optimisation.md#s-11-1)
-конспекта лекций: для каждого старта он выбирает два различных слота $s_\pm$ (`spectrum.pin_max`, `spectrum.pin_min`; каждая
-упорядоченная пара имеет вероятность $1/(D(D-1))$) и случайный по Хаару унитарный $U_0$ (`unitary.base`, выбирается функцией
-`random_unitary_operator`, [лемма 11.10](../../lecture_notes/ru/11_optimisation.md#r-11-10)) и отображает параметры $\theta$ (`spectrum.theta`) и $G$ (`unitary.G`) в
-$$
+`optimize.PositiveParam` с заданным контрастом $`\delta`$ реализует параметризацию из [раздела 11.1](../../lecture_notes/ru/11_optimisation.md#s-11-1)
+конспекта лекций: для каждого старта он выбирает два различных слота $`s_\pm`$ (`spectrum.pin_max`, `spectrum.pin_min`; каждая
+упорядоченная пара имеет вероятность $`1/(D(D-1))`$) и случайный по Хаару унитарный $`U_0`$ (`unitary.base`, выбирается функцией
+`random_unitary_operator`, [лемма 11.10](../../lecture_notes/ru/11_optimisation.md#r-11-10)) и отображает параметры $`\theta`$ (`spectrum.theta`) и $`G`$ (`unitary.G`) в
+```math
 X(\theta,G)=U\mathrm{diag}(\lambda)U^*,\qquad U=U_0\,e^{G-G^*},\qquad
 \lambda_{s_+}=1,\quad\lambda_{s_-}=\ell(\delta),\quad\lambda_s=\ell+(1-\ell)\tfrac{1+\sin\theta_s}2\ \text{otherwise}.
-$$
-`UnitaryParam` — это одно лишь отображение $G\mapsto U_0e^{G-G^*}$, а `SelfAdjointParam` добавляет знаки:
-$X=U\mathrm{diag}(\sigma\lambda)U^*$. По [предложению 11.2](../../lecture_notes/ru/11_optimisation.md#r-11-2) образ — это множество операторов оболочки контраста $\mathcal P_\delta$
-со значениями $1$ и $\ell(\delta)$ в выбранных слотах. Свободный контраст в $[a,b]$ — это ещё один параметр; по умолчанию
-в библиотеке $[a,b]=[0,0.999]$, и код ниже это значение сохраняет.
+```
+`UnitaryParam` — это одно лишь отображение $`G\mapsto U_0e^{G-G^*}`$, а `SelfAdjointParam` добавляет знаки:
+$`X=U\mathrm{diag}(\sigma\lambda)U^*`$. По [предложению 11.2](../../lecture_notes/ru/11_optimisation.md#r-11-2) образ — это множество операторов оболочки контраста $`\mathcal P_\delta`$
+со значениями $`1`$ и $`\ell(\delta)`$ в выбранных слотах. Свободный контраст в $`[a,b]`$ — это ещё один параметр; по умолчанию
+в библиотеке $`[a,b]=[0,0.999]`$, и код ниже это значение сохраняет.
 
 Код проверяет ограничение, а также конструктивно проверяет предложение 11.2: параметры из доказательства воспроизводят заданный оператор.
 
@@ -76,14 +76,14 @@ assert err < 1e-10
 
 *Конспект:* [раздел 11.2](../../lecture_notes/ru/11_optimisation.md#s-11-2); [теорема 11.4](../../lecture_notes/ru/11_optimisation.md#r-11-4), [следствие 11.5](../../lecture_notes/ru/11_optimisation.md#r-11-5), [предложение 11.6](../../lecture_notes/ru/11_optimisation.md#r-11-6), [следствие 11.7](../../lecture_notes/ru/11_optimisation.md#r-11-7).
 
-Согласно [теореме 11.4](../../lecture_notes/ru/11_optimisation.md#r-11-4) конспекта лекций (неравенство фон Неймана для следов), $|\mathrm{Tr}(AB)|\le\sum_is_i(A)s_i(B)$, а по
-[следствию 11.5](../../lecture_notes/ru/11_optimisation.md#r-11-5) $\sum_ip^\downarrow_iq^\uparrow_i\le\mathrm{Tr}(PQ)\le\sum_ip^\downarrow_iq^\downarrow_i$ для самосопряжённых $P,Q$ с собственными значениями $p,q$ и $\mathrm{Tr}(PQ)\le\|PQ\|_1\le\sum_ip^\downarrow_iq^\downarrow_i$ для
-$P,Q\ge0$. Для эксп. 2 с фиксированными спектрами [предложение 11.6](../../lecture_notes/ru/11_optimisation.md#r-11-6) даёт $\sup z=-\inf z=\sum_c\sum_ix^\downarrow_{c,i}(y^\downarrow_{c,i}-y^\uparrow_{c,i})$, причём значение достигается
-при $X_0=\mathrm{diag}(x^\downarrow)$, $V=J$ (обращающая перестановка) и $Y_0=\mathrm{diag}(y^\uparrow)$ (соответственно $\mathrm{diag}(y^\downarrow)$), а [следствие 11.7](../../lecture_notes/ru/11_optimisation.md#r-11-7) даёт
-огибающую $\sup z=-\inf z=\sum_c\lfloor k_c/2\rfloor(1-\ell_X)(1-\ell_Y)$.
+Согласно [теореме 11.4](../../lecture_notes/ru/11_optimisation.md#r-11-4) конспекта лекций (неравенство фон Неймана для следов), $`|\mathrm{Tr}(AB)|\le\sum_is_i(A)s_i(B)`$, а по
+[следствию 11.5](../../lecture_notes/ru/11_optimisation.md#r-11-5) $`\sum_ip^\downarrow_iq^\uparrow_i\le\mathrm{Tr}(PQ)\le\sum_ip^\downarrow_iq^\downarrow_i`$ для самосопряжённых $`P,Q`$ с собственными значениями $`p,q`$ и $`\mathrm{Tr}(PQ)\le\|PQ\|_1\le\sum_ip^\downarrow_iq^\downarrow_i`$ для
+$`P,Q\ge0`$. Для эксп. 2 с фиксированными спектрами [предложение 11.6](../../lecture_notes/ru/11_optimisation.md#r-11-6) даёт $`\sup z=-\inf z=\sum_c\sum_ix^\downarrow_{c,i}(y^\downarrow_{c,i}-y^\uparrow_{c,i})`$, причём значение достигается
+при $`X_0=\mathrm{diag}(x^\downarrow)`$, $`V=J`$ (обращающая перестановка) и $`Y_0=\mathrm{diag}(y^\uparrow)`$ (соответственно $`\mathrm{diag}(y^\downarrow)`$), а [следствие 11.7](../../lecture_notes/ru/11_optimisation.md#r-11-7) даёт
+огибающую $`\sup z=-\inf z=\sum_c\lfloor k_c/2\rfloor(1-\ell_X)(1-\ell_Y)`$.
 
-Здесь $1-\ell_X=2\delta/(1+\delta)$ при $\Delta(|X|)=\delta$; при нечётном $k_c$ среднее собственное значение роли не играет. Код
-проверяет теорему 11.4, следствие 11.5 и экстремальные конфигурации предложения 11.6 для $k=3$, $C=2$.
+Здесь $`1-\ell_X=2\delta/(1+\delta)`$ при $`\Delta(|X|)=\delta`$; при нечётном $`k_c`$ среднее собственное значение роли не играет. Код
+проверяет теорему 11.4, следствие 11.5 и экстремальные конфигурации предложения 11.6 для $`k=3`$, $`C=2`$.
 
 ```python
 M5 = TypeIAlgebra([5], [5], precision='double')
@@ -125,9 +125,9 @@ assert abs(z_max - exact) < 1e-12 and abs(z_min + exact) < 1e-12 and abs(exact -
 
 *Конспект:* [раздел 11.3](../../lecture_notes/ru/11_optimisation.md#s-11-3); [лемма 11.8](../../lecture_notes/ru/11_optimisation.md#r-11-8), [предложение 11.9](../../lecture_notes/ru/11_optimisation.md#r-11-9).
 
-Согласно [предложению 11.9](../../lecture_notes/ru/11_optimisation.md#r-11-9) конспекта лекций, в эксп. 3 $z=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ge0$, причём равенство имеет место тогда и только
-тогда, когда $YX_+Y^2X_-Y=0$, в частности если $XY=YX$. Для $X=\mathrm{diag}(1,-1,0)$ и $Y$ со строками $(1,0,a)$, $(0,1,0)$, $(a,0,1)$, $|a|<1$, равенство выполняется,
-хотя $XY\ne YX$ при $a\ne0$. Код проверяет и то и другое (при $a=0.5$); `X.abs()` — это $|X|$, а `trace_norm()` — $\|\cdot\|_1$.
+Согласно [предложению 11.9](../../lecture_notes/ru/11_optimisation.md#r-11-9) конспекта лекций, в эксп. 3 $`z=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ge0`$, причём равенство имеет место тогда и только
+тогда, когда $`YX_+Y^2X_-Y=0`$, в частности если $`XY=YX`$. Для $`X=\mathrm{diag}(1,-1,0)`$ и $`Y`$ со строками $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`-1<a<1`$, равенство выполняется,
+хотя $`XY\ne YX`$ при $`a\ne0`$. Код проверяет и то и другое (при $`a=0.5`$); `X.abs()` — это $`|X|`$, а `trace_norm()` — $`\|\cdot\|_1`$.
 
 ```python
 def z_exp3(X, Y):
@@ -151,20 +151,20 @@ assert abs(z_exp3(Xe, Ye).item()) < 1e-12 and (Xe @ Ye - Ye @ Xe).operator_norm(
 
 *Конспект:* [раздел 11.4](../../lecture_notes/ru/11_optimisation.md#s-11-4); [лемма 11.10](../../lecture_notes/ru/11_optimisation.md#r-11-10), [предложение 11.11](../../lecture_notes/ru/11_optimisation.md#r-11-11), [следствие 11.12](../../lecture_notes/ru/11_optimisation.md#r-11-12), [лемма 11.13](../../lecture_notes/ru/11_optimisation.md#r-11-13).
 
-Насколько велико обычно $|\mathrm{Tr}(AU)|$ по сравнению с его максимумом $\|A\|_1$? Библиотека выбирает $U$ как
-множитель $Q$ в QR-разложении $Z=QR$, $R_{ii}>0$, **матрицы Жинибра** $Z$ (независимые элементы с
-плотностью $\pi^{-1}e^{-|z|^2}$; рецепт Меццадри), независимо в каждом блоке.
+Насколько велико обычно $`|\mathrm{Tr}(AU)|`$ по сравнению с его максимумом $`\|A\|_1`$? Библиотека выбирает $`U`$ как
+множитель $`Q`$ в QR-разложении $`Z=QR`$, $`R_{ii}>0`$, **матрицы Жинибра** $`Z`$ (независимые элементы с
+плотностью $`\pi^{-1}e^{-|z|^2}`$; рецепт Меццадри), независимо в каждом блоке.
 
-Согласно [предложению 11.11](../../lecture_notes/ru/11_optimisation.md#r-11-11) конспекта лекций, $\mathbb E|\mathrm{Tr}(AU)|^2=\|A\|_2^2/k$ для распределённой по Хаару $U\in U(k)$, а по
-[следствию 11.12](../../lecture_notes/ru/11_optimisation.md#r-11-12) для $X,Y\ge0$ со спектрами в $[a,b]$, $a>0$, среднеквадратичное значение $|\mathrm{Tr}(XUY)|$ не превосходит
-его максимума по $U$, умноженного на $\min(1/\sqrt k,b^2/(a^2k))$, и $\mathbb P\big(|\mathrm{Tr}(XUY)|\ge\mathrm{Tr}(XY)\big)\le b^4/(a^4k^2)$.
+Согласно [предложению 11.11](../../lecture_notes/ru/11_optimisation.md#r-11-11) конспекта лекций, $`\mathbb E|\mathrm{Tr}(AU)|^2=\|A\|_2^2/k`$ для распределённой по Хаару $`U\in U(k)`$, а по
+[следствию 11.12](../../lecture_notes/ru/11_optimisation.md#r-11-12) для $`X,Y\ge0`$ со спектрами в $`[a,b]`$, $`a>0`$, среднеквадратичное значение $`|\mathrm{Tr}(XUY)|`$ не превосходит
+его максимума по $`U`$, умноженного на $`\min(1/\sqrt k,b^2/(a^2k))`$, и $`\mathbb P\big(|\mathrm{Tr}(XUY)|\ge\mathrm{Tr}(XY)\big)\le b^4/(a^4k^2)`$.
 
-Итак, $N$ выборок по Хаару находят нарушение неравенства $|\mathrm{Tr}(XUY)|\le\mathrm{Tr}(XY)$ с вероятностью не более
-$Nb^4/(a^4k^2)$ (объединение $N$ событий), хотя нарушение существует для каждой некоммутирующей пары (предложение 3.9). Эта
-оценка информативна лишь при $k>\sqrt N\,b^2/a^2$ (для $b/a=6$ и $N=2000$: $k>1609$); численно выборки пропускают
-нарушение уже при гораздо меньших $k$ (см. ниже). Код проверяет предложение 11.11 методом Монте-Карло (выборочное среднее
-отличается от точного значения меньше чем на пять стандартных ошибок — для этого запуска с фиксированным зерном) и для спектров, равномерно распределённых в $[0.2,1.2]$ ($b/a=6$), печатает
-отношение из следствия 11.12, $\sup z$ и лучшее $z$ из $2000$ выборок, оба относительно $\mathrm{Tr}(XY)$.
+Итак, $`N`$ выборок по Хаару находят нарушение неравенства $`|\mathrm{Tr}(XUY)|\le\mathrm{Tr}(XY)`$ с вероятностью не более
+$`Nb^4/(a^4k^2)`$ (объединение $`N`$ событий), хотя нарушение существует для каждой некоммутирующей пары (предложение 3.9). Эта
+оценка информативна лишь при $`k>\sqrt N\,b^2/a^2`$ (для $`b/a=6`$ и $`N=2000`$: $`k>1609`$); численно выборки пропускают
+нарушение уже при гораздо меньших $`k`$ (см. ниже). Код проверяет предложение 11.11 методом Монте-Карло (выборочное среднее
+отличается от точного значения меньше чем на пять стандартных ошибок — для этого запуска с фиксированным зерном) и для спектров, равномерно распределённых в $`[0.2,1.2]`$ ($`b/a=6`$), печатает
+отношение из следствия 11.12, $`\sup z`$ и лучшее $`z`$ из $`2000`$ выборок, оба относительно $`\mathrm{Tr}(XY)`$.
 
 ```python
 def random_pair(alg_k):
@@ -192,21 +192,21 @@ for k in (2, 4, 8, 16, 32):
 ```
 
 *Численное наблюдение* (напечатанная таблица; утверждается только для этого запуска с фиксированным зерном): отношение остаётся
-ниже доказанной оценки $\min(1/\sqrt k,b^2/(a^2k))$ и примерно уменьшается вдвое при каждом удвоении $k$, т. е. убывает как $1/k$,
-а начиная с $k=4$ лучшая из $2000$ выборок не достигает даже $z=0$. Градиентный поиск, напротив, подходит близко к обоим
-экстремумам в запуске ниже (это тоже численное наблюдение). Для пары `Xf, Yf` оба экстремума по $U$ известны:
+ниже доказанной оценки $`\min(1/\sqrt k,b^2/(a^2k))`$ и примерно уменьшается вдвое при каждом удвоении $`k`$, т. е. убывает как $`1/k`$,
+а начиная с $`k=4`$ лучшая из $`2000`$ выборок не достигает даже $`z=0`$. Градиентный поиск, напротив, подходит близко к обоим
+экстремумам в запуске ниже (это тоже численное наблюдение). Для пары `Xf, Yf` оба экстремума по $`U`$ известны:
 
-Согласно [лемме 11.13](../../lecture_notes/ru/11_optimisation.md#r-11-13) конспекта лекций, $\min_U|\mathrm{Tr}(AU)|=0$ для всякой $A\in M_k(\mathbb C)$, $k\ge2$.
+Согласно [лемме 11.13](../../lecture_notes/ru/11_optimisation.md#r-11-13) конспекта лекций, $`\min_U|\mathrm{Tr}(AU)|=0`$ для всякой $`A\in M_k(\mathbb C)`$, $`k\ge2`$.
 
-Поэтому $\inf_Uz=-\mathrm{Tr}(XY)$ и $\sup_Uz=\|YX\|_1-\mathrm{Tr}(XY)$ (предложение 3.9). Один вызов `extremize`
-приближает оба, причём $12$ стартов максимизируют $z$, а $12$ — максимизируют $-z$ (с относительной точностью $10^{-3}$ в этом
+Поэтому $`\inf_Uz=-\mathrm{Tr}(XY)`$ и $`\sup_Uz=\|YX\|_1-\mathrm{Tr}(XY)`$ (предложение 3.9). Один вызов `extremize`
+приближает оба, причём $`12`$ стартов максимизируют $`z`$, а $`12`$ — максимизируют $`-z`$ (с относительной точностью $`10^{-3}`$ в этом
 запуске, что утверждается ниже). По предложению 11.11 среднеквадратичное значение
-$|\mathrm{Tr}(XUY)|$ равно $\|YX\|_2/\sqrt k$; с оценками из доказательства следствия 11.12 (спектры в $[a,b]$)
-$\mathbb E|\mathrm{Tr}(XUY)|^2\le b^4$ и $\mathrm{Tr}(XY)\ge ka^2$, так что неравенство Маркова даёт
-$\mathbb P\big(z\ge-(1-\varepsilon)\mathrm{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)$ для $\varepsilon>0$: при больших $k$
-величина $z$ с высокой вероятностью близка к своему инфимуму.
-*Численное наблюдение* (утверждается для этого запуска с фиксированным зерном): выборка подходит к инфимуму ближе чем на $1\,\%$,
-но не достигает даже $z=0$, тогда как супремум положителен:
+$`|\mathrm{Tr}(XUY)|`$ равно $`\|YX\|_2/\sqrt k`$; с оценками из доказательства следствия 11.12 (спектры в $`[a,b]`$)
+$`\mathbb E|\mathrm{Tr}(XUY)|^2\le b^4`$ и $`\mathrm{Tr}(XY)\ge ka^2`$, так что неравенство Маркова даёт
+$`\mathbb P\big(z\ge-(1-\varepsilon)\mathrm{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)`$ для $`\varepsilon>0`$: при больших $`k`$
+величина $`z`$ с высокой вероятностью близка к своему инфимуму.
+*Численное наблюдение* (утверждается для этого запуска с фиксированным зерном): выборка подходит к инфимуму ближе чем на $`1\,\%`$,
+но не достигает даже $`z=0`$, тогда как супремум положителен:
 
 ```python
 trXY = (Xf @ Yf).trace.real
@@ -229,40 +229,40 @@ assert z_mc.max().item() < 0                                               # ...
 
 ## 11.5 Мультистартовый поиск огибающих
 
-*Конспект:* [раздел 11.5](../../lecture_notes/ru/11_optimisation.md#s-11-5); [предложение 11.14](../../lecture_notes/ru/11_optimisation.md#r-11-14), [следствие 11.7](../../lecture_notes/ru/11_optimisation.md#r-11-7), [предложение 11.9](../../lecture_notes/ru/11_optimisation.md#r-11-9).
+*Конспект:* [раздел 11.5](../../lecture_notes/ru/11_optimisation.md#s-11-5); [предложение 11.14](../../lecture_notes/ru/11_optimisation.md#r-11-14), [следствие 11.7](../../lecture_notes/ru/11_optimisation.md#r-11-7), [предложение 11.9](../../lecture_notes/ru/11_optimisation.md#r-11-9), [предложение 11.15](../../lecture_notes/ru/11_optimisation.md#r-11-15), [следствие 11.16](../../lecture_notes/ru/11_optimisation.md#r-11-16).
 
 `optimize.extremize(objective, params, maximize)` запускает Adam на `rounds` раундов по `steps` шагов (скорость обучения
-`lr * decay**round`) с функцией потерь $\mp\sum_b\text{objective}_b$, после каждого раунда перецентрирует унитарные карты и
+`lr * decay**round`) с функцией потерь $`\mp\sum_b\text{objective}_b`$, после каждого раунда перецентрирует унитарные карты и
 возвращает **для каждого старта** наибольшее (при `maximize=False` — наименьшее) из значений целевой функции, вычисленных в
-градиентных итерациях и один раз в конечной точке. Каждый элемент пакета — независимый старт со своими слотами, знаками, $U_0$ и
-контрастом: Adam действует покоординатно, поэтому если $b$-я компонента целевой функции зависит только от $b$-х параметров (как во
+градиентных итерациях и один раз в конечной точке. Каждый элемент пакета — независимый старт со своими слотами, знаками, $`U_0`$ и
+контрастом: Adam действует покоординатно, поэтому если $`b`$-я компонента целевой функции зависит только от $`b`$-х параметров (как во
 всех целевых функциях ниже), старты не взаимодействуют. Знаки
 `SelfAdjointParam` дискретны: между раундами `discrete_step` для каждого старта пробует восемь одиночных перебросов знака (каждый
 в равномерно случайном слоте), один за другим, и сохраняет каждый переброс, улучшающий целевую функцию.
 
 В точной арифметике каждая итерация допустима (предложение 11.2 и замечания после него), поэтому каждое возвращённое значение
-есть значение $z$ в допустимой точке; в арифметике с плавающей точкой — это значение с точностью до округления (утверждения ниже
-допускают $10^{-12}$). Следовательно, максимизация даёт
+есть значение $`z`$ в допустимой точке; в арифметике с плавающей точкой — это значение с точностью до округления (утверждения ниже
+допускают $`10^{-12}`$). Следовательно, максимизация даёт
 **нижнюю оценку** супремума, минимизация — верхнюю оценку инфимума, и не более того: локальный поиск
 может остановиться в локальном экстремуме. Оценка в другую сторону требует доказательства, как следствие 11.7 и предложение 11.9, или
 выпуклой релаксации (раздел 11.6). Вычисленная огибающая проверяется (i) по замкнутым формулам; (ii) по
 построенным вручную конфигурациям, например прямым суммам решений меньшего размера, ниже которых она опускаться не должна; (iii) по
 структурированным выборкам (двухуровневые спектры, базисы-перестановки), значения которых — тоже достигаемые значения.
 
-Согласно [предложению 11.14](../../lecture_notes/ru/11_optimisation.md#r-11-14) конспекта лекций, если все $k_c\ge2$, то нижняя огибающая эксп. 1 равна $\underline z(\delta)=-\big(D-2\delta/(1+\delta)\big)$.
+Согласно [предложению 11.14](../../lecture_notes/ru/11_optimisation.md#r-11-14) конспекта лекций, если все $`k_c\ge2`$, то нижняя огибающая эксп. 1 равна $`\underline z(\delta)=-\big(D-2\delta/(1+\delta)\big)`$.
 
-Код проверяет предложение 11.14 на $M_2\oplus M_2$, следствие 11.7 на $M_3\oplus M_3$ (оба контраста заданы,
-$k=3$ нечётно) и предложение 11.9; супремумы и инфимумы находятся одним вызовом, как выше. Односторонние утверждения (ни одно
+Код проверяет предложение 11.14 на $`M_2\oplus M_2`$, следствие 11.7 на $`M_3\oplus M_3`$ (оба контраста заданы,
+$`k=3`$ нечётно) и предложение 11.9; супремумы и инфимумы находятся одним вызовом, как выше. Односторонние утверждения (ни одно
 возвращённое значение не выходит за доказанный экстремум) являются следствиями этих теорем; утверждения о том, что поиск подходит
 к экстремуму с указанной точностью, — численные наблюдения этого запуска с фиксированным зерном. Ключевое слово `is_self_adjoint` выбирает
-алгоритм для следовой нормы (сингулярные числа или собственные значения для $YXY$) без проверки на каждом шаге. Последняя
-проверка относится к типу (ii): $z$ из эксп. 3 аддитивна относительно прямых сумм, а контраст прямой суммы равен наибольшему
-из контрастов слагаемых (упражнение 3), поэтому для огибающих эксп. 3 с $\Delta(Y)$, свободным в $[0,0.999]$, как в коде,
-$$
+алгоритм для следовой нормы (сингулярные числа или собственные значения для $`YXY`$) без проверки на каждом шаге. Последняя
+проверка относится к типу (ii): $`z`$ из эксп. 3 аддитивна относительно прямых сумм, а контраст прямой суммы равен наибольшему
+из контрастов слагаемых (упражнение 3), поэтому для огибающих эксп. 3 с $`\Delta(Y)`$, свободным в $`[0,0.999]`$, как в коде,
+```math
 \overline z_{M_2\oplus M_2}(\delta)\ \ge\ \overline z_{M_2}(\delta)+\sup_{\delta'\le\delta}\overline z_{M_2}(\delta');
-$$
-в частности, сумма двух значений, достигнутых на $M_2$ при контрастах $\delta$ и $\delta'\le\delta$, является значением,
-достигаемым на $M_2\oplus M_2$ при контрасте $\delta$.
+```
+в частности, сумма двух значений, достигнутых на $`M_2`$ при контрастах $`\delta`$ и $`\delta'\le\delta`$, является значением,
+достигаемым на $`M_2\oplus M_2`$ при контрасте $`\delta`$.
 
 ```python
 torch.manual_seed(1)
@@ -310,22 +310,114 @@ sup_M22, inf3 = best3[0].item(), -best3[1].item()
 s_M2 = exp3(TypeIAlgebra([2], [2], precision='double'),
             torch.tensor([0.0, 0.5], dtype=torch.float64).repeat_interleave(S), 1.0)
 direct_sum = (s_M2[1] + s_M2.max()).item()                                 # delta = 0.5, best delta' <= 0.5
-conj = [(1 - dl) * (2 * 0.999 / 1.999) ** 2 for dl in (0.0, 0.5)]          # unproven closed form, d = 0.999
+closed = [(1 - dl) * (2 * 0.999 / 1.999) ** 2 for dl in (0.0, 0.5)]        # Corollary 11.16, d = 0.999
 print(f"Exp. 3  inf {inf3:.1e};  sup for M_2 at delta = 0, 0.5: {s_M2[0]:.5f}, {s_M2[1]:.5f}"
-      f"  (closed form {conj[0]:.5f}, {conj[1]:.5f})")
+      f"  (closed form {closed[0]:.5f}, {closed[1]:.5f})")
 print(f"        sup for M_2 (+) M_2 at 0.5: search {sup_M22:.5f}, direct sum {direct_sum:.5f}")
 assert inf3 >= -1e-12 and inf3 < 1e-6                                       # Proposition 11.9
 assert sup_M22 >= direct_sum - 5e-3 * direct_sum                           # (ii), up to 0.5 %
+assert (s_M2 <= torch.tensor(closed, dtype=torch.float64) + 1e-12).all()   # Corollary 11.16: one-sided
+assert sup_M22 <= (2 - 0.5) * (2 * 0.999 / 1.999) ** 2 + 1e-12
 ```
 
-*Численные наблюдения* (напечатанные значения этого запуска). Поиск на $M_2\oplus M_2$ отстаёт от прямой суммы примерно на
-$0.2\,\%$: он сошёлся не полностью, и
-наилучшая нижняя оценка для $\overline z_{M_2\oplus M_2}(0.5)$ — большее из двух чисел; обнаруживать такое — назначение проверки
-(ii). Значения для $M_2$ совпадают с точностью до $10^{-4}$ с $(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2$, где
-$d=0.999$ — наибольший допустимый контраст $Y$. Эта замкнутая формула **не** является теоремой этого курса: сопроводительная
-статья наблюдала её численно (в вещественных алгебрах) и не доказала, а код её печатает, ничего о ней не утверждая. Для блоков
-большего размера замкнутая форма верхних огибающих эксп. 1 и эксп. 3 нам неизвестна; вычисленные кривые тогда являются нижними
-оценками (достигнутыми значениями), и не более того.
+*Численные наблюдения* (напечатанные значения этого запуска). Поиск на $`M_2\oplus M_2`$ отстаёт от прямой суммы примерно на
+$`0.2\,\%`$: он сошёлся не полностью, и
+наилучшая нижняя оценка для $`\overline z_{M_2\oplus M_2}(0.5)`$ — большее из двух чисел; обнаруживать такое — назначение проверки
+(ii). Значения для $`M_2`$ совпадают с точностью до $`10^{-4}`$ с $`(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2`$, где
+$`d=0.999`$ — наибольший допустимый контраст $`Y`$. Эта замкнутая формула, впервые наблюдавшаяся численно в
+сопроводительной статье, является верхней огибающей из [следствия 11.16](../../lecture_notes/ru/11_optimisation.md#r-11-16)
+(ниже); код утверждает только доказанное направление (ни одного значения выше неё). По тому же следствию прямая сумма
+оптимальна: $`\overline z_{M_2\oplus M_2}(0.5)=1.5\,(2d/(1+d))^2`$. Для блоков любого размера верхние огибающие эксп. 1 и эксп. 3 даёт
+[теорема 11.20](../../lecture_notes/ru/11_optimisation.md#r-11-20) ([раздел 11.7](#s-11-7)).
+
+Согласно [предложению 11.15](../../lecture_notes/ru/11_optimisation.md#r-11-15) конспекта лекций, на $`M_2`$ для спектров
+$`x_1\ge x_2`$ матрицы $`X`$ (матрицы $`|X|`$ в эксп. 3) и $`y_1\ge y_2`$ матрицы $`Y`$ супремум $`\sup z`$ равен
+$`(x_1-x_2)^2(y_1-y_2)^2/(4(x_1+x_2)(y_1+y_2))`$ в эксп. 1 и $`\frac{2x_1x_2}{x_1+x_2}(y_1-y_2)^2`$ в эксп. 3. Если
+$`e_1`$ — собственный вектор $`X`$ для собственного значения с модулем $`x_1`$, а $`f_1`$ — собственный вектор $`Y`$ для $`y_1`$,
+то супремум достигается, когда $`\gamma=|\langle e_1,f_1\rangle|^2`$ равно $`\gamma_1=\frac14+\frac S{2q}`$ (эксп. 1, при
+$`|\mathrm{Tr}(XUY)|=\|YX\|_1`$) или $`\gamma_3=\frac Sq`$ (эксп. 3, $`X=\mathrm{diag}(x_1,-x_2)`$), где $`S=x_1y_2+x_2y_1`$
+и $`q=(x_1+x_2)(y_1+y_2)`$. По
+[следствию 11.16](../../lecture_notes/ru/11_optimisation.md#r-11-16) для $`C`$ блоков размера $`2`$ при $`\Delta(|X|)=\delta`$ и
+$`\Delta(Y)=\delta'`$ в эксп. 1 $`\sup z=C\delta^2\delta'^2/((1+\delta)(1+\delta'))`$ и
+$`\inf z=-(2C-1+\ell(\delta)\ell(\delta'))`$, а в эксп. 3 $`\sup z=(C-\delta)\big(2\delta'/(1+\delta')\big)^2`$. Оба
+супремума возрастают по $`\delta'`$: при $`\Delta(Y)`$, свободном в $`[0,d]`$, верхние огибающие равны значениям при $`\delta'=d`$,
+а при $`d\to1`$ стремятся к $`C\delta^2/(2(1+\delta))`$ и $`C-\delta`$ — значениям для вырожденного $`Y`$
+($`\Delta(Y)=1`$).
+
+Код строит вещественные точки максимума из доказательства для $`C=1,2`$ (`from_blocks`), проверяет контрасты и значения,
+проверяет оценки предложения 11.15 на случайных комплексных парах, достигает пределов $`d\to1`$ с проекторами ранга один
+в каждом блоке и запускает мультистартовый поиск для эксп. 1 на $`M_2`$ вдоль $`\Delta(X)`$ при $`\Delta(Y)`$, свободном в
+$`[0,0.999]`$; результат не должен превышать замкнутую формулу (теорему) и в этом запуске отличается от неё менее чем на
+$`10^{-3}`$.
+
+```python
+def rot(gamma):                                                             # real basis f with |<e_1, f_1>|^2 = gamma
+    t = math.acos(math.sqrt(gamma))
+    return torch.tensor([[math.cos(t), -math.sin(t)], [math.sin(t), math.cos(t)]], dtype=torch.float64)
+
+def gammas(x1, x2, y1, y2):                                                 # gamma_1 (Exp. 1), gamma_3 (Exp. 3)
+    S, q = x1 * y2 + x2 * y1, (x1 + x2) * (y1 + y2)
+    return 0.25 + S / (2 * q), S / q
+
+env1 = lambda C, dl, dp: C * dl ** 2 * dp ** 2 / ((1 + dl) * (1 + dp))     # Corollary 11.16(a)
+env3 = lambda C, dl, dp: (C - dl) * (2 * dp / (1 + dp)) ** 2               # Corollary 11.16(b)
+
+def maximisers(C, dl, dp):
+    """Exp. 1: (X, U, Y) and Exp. 3: (X, Y) attaining Corollary 11.16 on C blocks of size 2."""
+    a2 = TypeIAlgebra([2] * C, [2] * C, complex_valued=False, precision='double')
+    lx, ly = ell(dl), ell(dp)
+    R = rot(gammas(1.0, lx, 1.0, ly)[0])
+    X0 = torch.diag(torch.tensor([1.0, lx], dtype=torch.float64))
+    Y0 = R @ torch.diag(torch.tensor([1.0, ly], dtype=torch.float64)) @ R.T
+    W, _, Vh = torch.linalg.svd(Y0 @ X0)                                    # Y X = W Sigma V^T, U = V W^T
+    exp1 = [a2.from_blocks([m] * C) for m in (X0, Vh.T @ W.T, Y0)]
+    xs = [lx] + [1.0] * (C - 1)                                             # |X|: {1, ell} in block 1, {1, 1} else
+    Rs = [rot(gammas(1.0, x2, 1.0, ly)[1]) for x2 in xs]
+    X3 = a2.from_blocks([torch.diag(torch.tensor([1.0, -x2], dtype=torch.float64)) for x2 in xs])
+    Y3 = a2.from_blocks([Rc @ torch.diag(torch.tensor([1.0, ly], dtype=torch.float64)) @ Rc.T for Rc in Rs])
+    return exp1, (X3, Y3)
+
+print(" C  delta  delta'   Exp. 1 z / formula      Exp. 3 z / formula")
+for C in (1, 2):
+    for dl, dp in ((0.5, 0.8), (0.9, 0.3), (0.4, 1.0)):
+        (X, U, Y), (X3, Y3) = maximisers(C, dl, dp)
+        assert abs(X.michelson_contrast.item() - dl) < 1e-12 and abs(Y.michelson_contrast.item() - dp) < 1e-12
+        assert abs(X3.abs().michelson_contrast.item() - dl) < 1e-12 and abs(Y3.michelson_contrast.item() - dp) < 1e-12
+        z1v = ((X @ U @ Y).trace.abs() - (X @ Y).trace.real).item()
+        z3v = ((Y3 @ X3.abs() @ Y3).trace.real - (Y3 @ X3 @ Y3).trace_norm()).item()
+        print(f" {C}   {dl:.1f}    {dp:.1f}    {z1v:.6f} / {env1(C, dl, dp):.6f}    {z3v:.6f} / {env3(C, dl, dp):.6f}")
+        assert abs(z1v - env1(C, dl, dp)) < 1e-12 and abs(z3v - env3(C, dl, dp)) < 1e-12
+print("limits d -> 1 at delta = 0.4:", env1(1, 0.4, 1.0), 0.4 ** 2 / (2 * 1.4), env3(1, 0.4, 1.0), 1 - 0.4)
+
+# Proposition 11.15 on random complex pairs in M_2: no pair exceeds the bounds
+M2c = TypeIAlgebra([2], [2], precision='double')
+x = torch.rand(4000, 2, dtype=torch.float64).sort(-1, descending=True)[0]
+y = torch.rand(4000, 2, dtype=torch.float64).sort(-1, descending=True)[0]
+V, Wc = M2c.random_unitary_operator(4000).matrix, M2c.random_unitary_operator(4000).matrix
+Xr = M2c.operator(V @ torch.diag_embed(x.to(V.dtype)).unsqueeze(1) @ V.mH, is_positive=True)
+Xi = M2c.operator(V @ torch.diag_embed((x * torch.tensor([1.0, -1.0])).to(V.dtype)).unsqueeze(1) @ V.mH,
+                  is_self_adjoint=True)
+Yr = M2c.operator(Wc @ torch.diag_embed(y.to(V.dtype)).unsqueeze(1) @ Wc.mH, is_positive=True)
+(x1, x2), (y1, y2) = x.unbind(-1), y.unbind(-1)
+sup1 = (Yr @ Xr).trace_norm() - (Xr @ Yr).trace.real                        # sup over U (Theorem 1.9)
+z3r = (Yr @ Xi.abs() @ Yr).trace.real - M2c.operator((Yr @ Xi @ Yr).matrix, is_self_adjoint=True).trace_norm()
+assert (sup1 <= (x1 - x2) ** 2 * (y1 - y2) ** 2 / (4 * (x1 + x2) * (y1 + y2)) + 1e-12).all()
+assert (z3r <= 2 * x1 * x2 / (x1 + x2) * (y1 - y2) ** 2 + 1e-12).all()
+
+# multistart search for Exp. 1 on M_2 along Delta(X), Delta(Y) free in [0, 0.999]
+torch.manual_seed(2)
+M2r = TypeIAlgebra([2], [2], complex_valued=False, precision='double')
+gx = torch.tensor([0.3, 0.6, 0.9], dtype=torch.float64)
+Xp, Yp1, Up = opt.PositiveParam(M2r, 3 * S, delta=gx.repeat_interleave(S)), opt.PositiveParam(M2r, 3 * S), \
+    opt.UnitaryParam(M2r, 3 * S)
+def z1m():
+    xm, ym = Xp.operator(), Yp1.operator()
+    return (xm @ Up.operator() @ ym).trace.abs() - (xm @ ym).trace.real
+sup1m = opt.extremize(z1m, [Xp, Yp1, Up], maximize=True, rounds=4, steps=30).reshape(3, S).max(1)[0]
+exact1m = env1(1, gx, 0.999)                                                # Corollary 11.16(c)
+print("Exp. 1 sup on M_2:", [f"{v:.5f}" for v in sup1m.tolist()], " closed form:", [f"{v:.5f}" for v in exact1m.tolist()])
+assert (sup1m <= exact1m + 1e-12).all() and ((exact1m - sup1m) / exact1m).max() < 1e-3
+```
 
 <a id="s-11-6"></a>
 
@@ -338,17 +430,170 @@ Adam) — альтернативу Adam в перецентрируемой ка
 с точностью до допуска решателя; релаксация — выпуклая задача на большем допустимом множестве — оценивает супремум сверху, т. е. в
 том направлении, которое локальный поиск дать не может. **NCTSSOS**, **ncpol2sdpa** и **NCSOStools** оценивают собственные значения и следы некоммутативных
 многочленов сразу во всех размерностях (раздел 0.3). Библиотека добавляет к этому точные параметризации спектральных ограничений
-и ограничений на контраст для $\bigoplus_cM_{k_c}$ (экстремумы могут находиться в любом секторе), унитарные операторы, согласованные с
+и ограничений на контраст для $`\bigoplus_cM_{k_c}`$ (экстремумы могут находиться в любом секторе), унитарные операторы, согласованные с
 блоками, и одно пакетное вычисление для многих стартов и значений ограничений на CPU или GPU. Она даёт кандидатов в
 экстремальные точки и нижние оценки супремумов; остальное должны дать доказательства или релаксации.
+
+<a id="s-11-7"></a>
+
+## 11.7 Огибающие для блоков любого размера
+
+*Конспект:* [раздел 11.7](../../lecture_notes/ru/11_optimisation.md#s-11-7); [лемма 11.17](../../lecture_notes/ru/11_optimisation.md#r-11-17), [лемма 11.18](../../lecture_notes/ru/11_optimisation.md#r-11-18), [предложение 11.19](../../lecture_notes/ru/11_optimisation.md#r-11-19), [теорема 11.20](../../lecture_notes/ru/11_optimisation.md#r-11-20).
+
+По [теореме 11.20 конспекта](../../lecture_notes/ru/11_optimisation.md#r-11-20), при $`N=\sum_c\lfloor k_c/2\rfloor`$,
+$`\Delta(X)=\delta`$ (в эксп. 3: $`\Delta(|X|)=\delta`$) и $`\Delta(Y)=\delta'`$ супремумы эксп. 1 и эксп. 3 равны
+```math
+\sup z_1=N\,\frac{\delta^2\delta'^2}{(1+\delta)(1+\delta')},\qquad
+\sup z_3=(N-\epsilon\,\delta)\Big(\frac{2\delta'}{1+\delta'}\Big)^2,
+```
+где $`\epsilon=1`$, если все $`k_c`$ чётны, и $`\epsilon=0`$ иначе.
+Ключевой шаг — [предложение 11.19](../../lecture_notes/ru/11_optimisation.md#r-11-19): для $`X=X_+\oplus(-1)`$ на
+$`\mathbb C^m\oplus\mathbb C^m`$ и $`Y=b+(1-b)Q`$, где $`Q`$ — проектор на образ $`\binom C\Sigma`$, оператор $`YXY`$ имеет те же
+собственные значения, что и матрица $`\mathcal L`$, аффинная по $`A=C^2`$, и $`z\le(1-b)^2\sum_i2x_i/(1+x_i)`$. Первый блок
+проверяет это на $`M_6`$ ($`m=3`$, $`X_+`$ с собственными значениями $`0.3,1,1`$ в случайном базисе): спектры $`YXY`$
+(`eigenvalues`) и $`\mathcal L`$ совпадают при случайных углах, ни один угол не превышает оценку, а углы случая равенства
+её достигают.
+
+```python
+# Proposition 11.19 on M_6, m = 3: X = X_+ (+) (-1), Y = b + (1 - b) Q, Q the projection onto the range of (C; Sigma)
+torch.manual_seed(4)
+m, b = 3, 0.2
+M6 = TypeIAlgebra([2 * m], [2 * m], precision='double')
+W = TypeIAlgebra([m], [m], precision='double').random_unitary_operator(1).matrix[0, 0]
+x = torch.tensor([0.3, 1.0, 1.0], dtype=torch.float64)                    # X_+ = 1 - (1 - a) e e^*, a = 0.3
+Xp = W @ torch.diag(x).to(W.dtype) @ W.mH
+
+def model(theta, Xp):
+    v = torch.cat([torch.diag(torch.cos(theta)), torch.diag(torch.sin(theta))]).to(Xp.dtype)
+    Xm = torch.block_diag(Xp, -torch.eye(m, dtype=Xp.dtype))
+    Ym = b * torch.eye(2 * m, dtype=Xp.dtype) + (1 - b) * v @ v.mH
+    return M6.operator(Xm[None, None], is_self_adjoint=True), M6.operator(Ym[None, None], is_positive=True)
+
+def lin(theta, Xp):                                                        # the matrix L of the proof
+    w, V = torch.linalg.eigh(Xp)
+    f = lambda g: V @ torch.diag(g(w)).to(V.dtype) @ V.mH
+    A = torch.diag(torch.cos(theta) ** 2).to(Xp.dtype)
+    K12, X12 = f(lambda t: (1 + t).sqrt()), f(torch.sqrt)
+    top = (1 - b ** 2) * K12 @ A @ K12 + b ** 2 * Xp - torch.eye(m, dtype=Xp.dtype)
+    return torch.cat([torch.cat([top, b * X12], 1), torch.cat([b * X12, torch.zeros_like(Xp)], 1)])
+
+bound = (1 - b) ** 2 * (2 * x / (1 + x)).sum().item()                       # Proposition 11.19
+worst = 0.0
+for _ in range(200):
+    theta = torch.rand(m, dtype=torch.float64) * math.pi / 2
+    X, Y = model(theta, Xp)
+    YXY = M6.operator((Y @ X @ Y).matrix, is_self_adjoint=True)
+    assert torch.allclose(YXY.eigenvalues()[0][0], torch.linalg.eigvalsh(lin(theta, Xp)), atol=1e-12)
+    worst = max(worst, ((Y @ X.abs() @ Y).trace.real - YXY.trace_norm()).item())
+th_star = torch.acos(((1 + b * x) / ((1 + x) * (1 + b))).sqrt())            # equality case, X_+ diagonal
+X, Y = model(th_star, torch.diag(x).to(W.dtype))
+z_star = ((Y @ X.abs() @ Y).trace.real - (Y @ X @ Y).trace_norm()).item()
+print(f"Proposition 11.19: largest z at 200 random angles {worst:.6f} <= {bound:.6f}; at the maximiser {z_star:.12f}")
+assert worst <= bound + 1e-12 and abs(z_star - bound) < 1e-12
+```
+
+Второй блок строит с помощью `from_blocks` точки максимума из доказательства теоремы 11.20 для нескольких размеров блоков:
+блоки $`2\times2`$, как в предложении 11.15, и блоки $`1\times1`$; в эксп. 3 собственное значение $`\ell(\delta)`$ оператора $`|X|`$
+находится в блоке $`2\times2`$, если все $`k_c`$ чётны, и в блоке $`1\times1`$ иначе; в эксп. 1 унитарный оператор —
+сопряжённый к полярному множителю $`YX`$ (`polar`). Контрасты и значения должны совпадать с теоремой с точностью $`10^{-12}`$.
+
+```python
+def sup_exact(exp, ks, dl, dp):                                             # Theorem 11.20
+    N = sum(k // 2 for k in ks)
+    if exp == 1:
+        return N * dl ** 2 * dp ** 2 / ((1 + dl) * (1 + dp))
+    return (N - dl * all(k % 2 == 0 for k in ks)) * (2 * dp / (1 + dp)) ** 2
+
+def maximisers_any(ks, dl, dp):
+    """Exp. 1 (X, U, Y) and Exp. 3 (X, Y) attaining Theorem 11.20: 2 x 2 maximisers of Proposition 11.15 and 1 x 1
+    blocks; in Exp. 3 the eigenvalue ell(delta) of |X| on a 2 x 2 block if all k_c are even, else on a 1 x 1 block."""
+    lx, ly = ell(dl), ell(dp)
+    even = all(k % 2 == 0 for k in ks)
+    two = lambda d: torch.diag(torch.tensor(d, dtype=torch.float64))
+    R1 = rot(gammas(1.0, lx, 1.0, ly)[0])
+    blocks = {name: [] for name in ('X1', 'Y1', 'X3', 'Y3')}
+    placed = False
+    for k in ks:
+        b1 = {name: [] for name in blocks}
+        for j in range(k // 2):
+            x3 = lx if even and not placed else 1.0
+            placed = placed or x3 == lx
+            R3 = rot(gammas(1.0, x3, 1.0, ly)[1])
+            b1['X1'].append(two([1.0, lx]))
+            b1['Y1'].append(R1 @ two([1.0, ly]) @ R1.T)
+            b1['X3'].append(two([1.0, -x3]))
+            b1['Y3'].append(R3 @ two([1.0, ly]) @ R3.T)
+        if k % 2:
+            b1['X1'].append(two([1.0]))
+            b1['Y1'].append(two([1.0]))
+            b1['X3'].append(two([1.0 if placed else lx]))
+            b1['Y3'].append(two([1.0]))
+            placed = True
+        for name in blocks:
+            blocks[name].append(torch.block_diag(*b1[name]))
+    a = TypeIAlgebra(ks, ks, complex_valued=False, precision='double')
+    X1, Y1, X3, Y3 = (a.from_blocks(blocks[name]) for name in ('X1', 'Y1', 'X3', 'Y3'))
+    U1 = (Y1 @ X1).polar()[0].adjoint()                                      # U = W^*, Y X = W |Y X|
+    return (X1, U1, Y1), (X3, Y3)
+
+print(" sizes      delta  delta'   Exp. 1 z / Theorem 11.20    Exp. 3 z / Theorem 11.20")
+for ks in ([4, 4], [3, 2], [2, 2, 2], [16], [3]):
+    for dl, dp in ((0.5, 0.8), (0.9, 0.999)):
+        (X, U, Y), (X3, Y3) = maximisers_any(ks, dl, dp)
+        assert abs(X.michelson_contrast.item() - dl) < 1e-12 and abs(Y.michelson_contrast.item() - dp) < 1e-12
+        assert abs(X3.abs().michelson_contrast.item() - dl) < 1e-12 and abs(Y3.michelson_contrast.item() - dp) < 1e-12
+        z1v = ((X @ U @ Y).trace.abs() - (X @ Y).trace.real).item()
+        z3v = ((Y3 @ X3.abs() @ Y3).trace.real - (Y3 @ X3 @ Y3).trace_norm()).item()
+        print(f" {str(ks):10s} {dl:.1f}    {dp:.3f}   {z1v:.6f} / {sup_exact(1, ks, dl, dp):.6f}"
+              f"       {z3v:.6f} / {sup_exact(3, ks, dl, dp):.6f}")
+        assert abs(z1v - sup_exact(1, ks, dl, dp)) < 1e-12 and abs(z3v - sup_exact(3, ks, dl, dp)) < 1e-12
+```
+
+Хааровски случайные начальные точки редко оказываются вблизи этих точек максимума, когда блоков много. С `init='diagonal'`
+для $`X`$, `init='pairs'` для $`Y`$ (относительный собственный базис тогда — прямая сумма поворотов $`2\times2`$),
+`spectrum_init` (двухуровневые спектры; в эксп. 3 $`|X|`$ близок к $`1`$, и в каждой паре одно положительное и одно
+отрицательное собственное значение $`X`$) и `init='rotations'` для $`U`$ (повороты тех же пар с определителем $`+1`$: в вещественной алгебре карта $`U_0e^{G-G^*}`$ остаётся
+в компоненте связности $`U_0`$, а точка максимума эксп. 1 имеет определитель $`+1`$ в каждом секторе) половина стартов
+начинается с этой структуры, а другая половина — из хааровски случайных точек (`init_fraction`; маска `X.structured`
+заставляет $`Y`$ и $`U`$ начинать структурированно в тех же стартах). Поиски ниже остаются ниже теоремы 11.20 (проверяется:
+теорема) и в этом запуске с фиксированным зерном приближаются к ней с точностью $`10^{-3}`$ (численное наблюдение).
+
+```python
+# multistart search along Delta(X), resp. Delta(|X|), with Delta(Y) free in [0, 0.999]; half of the starts structured
+def search_any(exp, ks, deltas, starts=8, seed=0):
+    torch.manual_seed(seed)
+    a = TypeIAlgebra(ks, ks, complex_valued=False, precision='double')
+    d = torch.tensor(deltas, dtype=torch.float64).repeat_interleave(starts)
+    cls = opt.SelfAdjointParam if exp == 3 else opt.PositiveParam
+    Xs = cls(a, len(d), delta=d, init='diagonal', init_fraction=0.5, spectrum_init='high' if exp == 3 else 'pairs')
+    Ys = opt.PositiveParam(a, len(d), init='pairs', init_fraction=Xs.structured, spectrum_init='pairs')
+    Us = opt.UnitaryParam(a, len(d), init='rotations', init_fraction=Xs.structured)
+    def z():
+        x, y = Xs.operator(), Ys.operator()
+        if exp == 1:
+            return (x @ Us.operator() @ y).trace.abs() - (x @ y).trace.real
+        M = a.operator((y @ x @ y).matrix, is_self_adjoint=True)
+        return (y @ Xs.abs_operator() @ y).trace.real - M.trace_norm()
+    params = [Xs, Ys, Us] if exp == 1 else [Xs, Ys]
+    vals = opt.extremize(z, params, maximize=True, rounds=6, steps=40).reshape(len(deltas), starts)
+    return vals.nan_to_num(nan=-math.inf).max(1)[0]
+
+for exp, ks in ((3, [4, 4]), (3, [3]), (1, [2] * 6)):
+    deltas = [0.3, 0.8]
+    found = search_any(exp, ks, deltas)
+    exact = torch.tensor([sup_exact(exp, ks, dl, 0.999) for dl in deltas], dtype=torch.float64)
+    print(f"Exp. {exp} on {ks}: search {[round(v, 6) for v in found.tolist()]}, Theorem 11.20 "
+          f"{[round(v, 6) for v in exact.tolist()]}")
+    assert (found <= exact + 1e-12).all() and ((exact - found) / exact).max() < 1e-3
+```
 
 <a id="x-11"></a>
 
 ## Упражнения
 
-[Упражнения 1 и 2](../../lecture_notes/ru/11_optimisation.md#x-11) конспекта лекций, численно: преобразование Кэли $C(S)=(1-S)(1+S)^{-1}$ косоэрмитовой $S$ унитарно,
-не имеет собственного значения $-1$, и $S=(1-C)(1+C)^{-1}$ (упражнение 1); для $O$, распределённой по Хаару на $O(k)$ и выбранной
-функцией `random_unitary_operator` вещественной алгебры (`complex_valued=False`), $\mathbb E\mathrm{Tr}(AO)^2=\|A\|_2^2/k$ (упражнение 2).
+[Упражнения 1 и 2](../../lecture_notes/ru/11_optimisation.md#x-11) конспекта лекций, численно: преобразование Кэли $`C(S)=(1-S)(1+S)^{-1}`$ косоэрмитовой $`S`$ унитарно,
+не имеет собственного значения $`-1`$, и $`S=(1-C)(1+C)^{-1}`$ (упражнение 1); для $`O`$, распределённой по Хаару на $`O(k)`$ и выбранной
+функцией `random_unitary_operator` вещественной алгебры (`complex_valued=False`), $`\mathbb E\mathrm{Tr}(AO)^2=\|A\|_2^2/k`$ (упражнение 2).
 
 <details>
 <summary>Решения</summary>

@@ -14,9 +14,9 @@ y `numpy`.
 
 *Apuntes:* [sección D.2](../../lecture_notes/es/D_gksl.md#s-D-2); [lema D.1](../../lecture_notes/es/D_gksl.md#r-D-1), [teorema D.3](../../lecture_notes/es/D_gksl.md#r-D-3).
 
-Comprobamos el teorema D.3 en un generador GKSL con saltos arbitrarios sobre $M_3$, construido con `lindblad_superoperator`
-(la matriz $S$ de $\mathcal L$ sobre $\mathrm{vec}\,\rho$ ordenado por filas, de modo que $J_{(i,a),(j,b)}=S_{(a,b),(i,j)}$ como en la
-sección 6.1), y en $\theta-\mathrm{id}$:
+Comprobamos el teorema D.3 en un generador GKSL con saltos arbitrarios sobre $`M_3`$, construido con `lindblad_superoperator`
+(la matriz $`S`$ de $`\mathcal L`$ sobre $`\mathrm{vec}\,\rho`$ ordenado por filas, de modo que $`J_{(i,a),(j,b)}=S_{(a,b),(i,j)}`$ como en la
+sección 6.1), y en $`\theta-\mathrm{id}`$:
 
 ```python
 import math
@@ -79,8 +79,8 @@ for t in (0.01, 0.1, 1.0):
 
 *Apuntes:* [sección D.3](../../lecture_notes/es/D_gksl.md#s-D-3); [teorema D.4](../../lecture_notes/es/D_gksl.md#r-D-4), [teorema D.5](../../lecture_notes/es/D_gksl.md#r-D-5), [teorema D.6](../../lecture_notes/es/D_gksl.md#r-D-6).
 
-La demostración del teorema D.4 es un algoritmo: $\Phi$ a partir de la compresión de $J(\mathcal L)$ a $\Omega^\perp$, después
-$G$ a partir de $\xi_1$, después $H$. Lo ejecutamos sobre el generador anterior, reconstruimos el generador con la biblioteca y
+La demostración del teorema D.4 es un algoritmo: $`\Phi`$ a partir de la compresión de $`J(\mathcal L)`$ a $`\Omega^\perp`$, después
+$`G`$ a partir de $`\xi_1`$, después $`H`$. Lo ejecutamos sobre el generador anterior, reconstruimos el generador con la biblioteca y
 comparamos con la forma normalizada de los datos originales calculada mediante el teorema D.5(iii) y (i):
 
 ```python
@@ -114,12 +114,12 @@ assert np.abs(Wr @ u - Wn).max() < 1e-12 and np.abs(u.conj().T @ u - np.eye(2)).
 print("eigenvalues of the normalised H:", np.round(np.linalg.eigvalsh(H_rec), 4), " jumps:", len(L_rec))
 ```
 
-Por el [teorema D.6](../../lecture_notes/es/D_gksl.md#r-D-6), un estado estacionario fiel $\sigma$ es único cuando solo los múltiplos de $1$ conmutan
-con $H$ y con todos los $L_j$, $L_j^*$; entonces también $\ker\mathcal L^*=\mathbb C1$. Para el generador aleatorio anterior,
-el código comprueba las hipótesis y la conclusión (la matriz de $\mathcal L^*$ sobre los vectores de $A^T$ ordenados por
-filas es $S^T$: $\mathrm{vec}(\mathcal L^*(A)^T)=S^T\mathrm{vec}(A^T)$), y el segundo ejemplo de los
-[apuntes de clase, sección D.3](../../lecture_notes/es/D_gksl.md#s-D-3): sobre $M_3$, $H=0$, $L_1=|e_1\rangle\langle e_3|$, $L_2=|e_2\rangle\langle e_3|$,
-donde solo los múltiplos de $1$ conmutan con $L_j,L_j^*$ pero $\dim\ker\mathcal L=4$:
+Por el [teorema D.6](../../lecture_notes/es/D_gksl.md#r-D-6), un estado estacionario fiel $`\sigma`$ es único cuando solo los múltiplos de $`1`$ conmutan
+con $`H`$ y con todos los $`L_j`$, $`L_j^*`$; entonces también $`\ker\mathcal L^*=\mathbb C1`$. Para el generador aleatorio anterior,
+el código comprueba las hipótesis y la conclusión (la matriz de $`\mathcal L^*`$ sobre los vectores de $`A^T`$ ordenados por
+filas es $`S^T`$: $`\mathrm{vec}(\mathcal L^*(A)^T)=S^T\mathrm{vec}(A^T)`$), y el segundo ejemplo de los
+[apuntes de clase, sección D.3](../../lecture_notes/es/D_gksl.md#s-D-3): sobre $`M_3`$, $`H=0`$, $`L_1=|e_1\rangle\langle e_3|`$, $`L_2=|e_2\rangle\langle e_3|`$,
+donde solo los múltiplos de $`1`$ conmutan con $`L_j,L_j^*`$ pero $`\dim\ker\mathcal L=4`$:
 
 ```python
 def kernel_dim(S, tol=1e-9):
@@ -151,10 +151,10 @@ assert kernel_dim(S_abs) == 4                             # no faithful stationa
 
 *Apuntes:* [sección D.4](../../lecture_notes/es/D_gksl.md#s-D-4); [teorema D.7](../../lecture_notes/es/D_gksl.md#r-D-7), [corolario D.8](../../lecture_notes/es/D_gksl.md#r-D-8).
 
-Comprobamos el [teorema D.7](../../lecture_notes/es/D_gksl.md#r-D-7) sobre $M_1\oplus M_2\subseteq M_3$ para un generador de `lindblad_rhs` con un
+Comprobamos el [teorema D.7](../../lecture_notes/es/D_gksl.md#r-D-7) sobre $`M_1\oplus M_2\subseteq M_3`$ para un generador de `lindblad_rhs` con un
 salto dentro de los sectores y un salto aleatorio entre ellos, siguiendo los cinco pasos de la demostración, y el
-generador dual del [corolario D.8](../../lecture_notes/es/D_gksl.md#r-D-8). Como se observa tras la demostración, aquí $J(\mathcal L\circ E)$ no es
-positiva sobre $\Omega^\perp$:
+generador dual del [corolario D.8](../../lecture_notes/es/D_gksl.md#r-D-8). Como se observa tras la demostración, aquí $`J(\mathcal L\circ E)`$ no es
+positiva sobre $`\Omega^\perp`$:
 
 ```python
 alg = TypeIAlgebra([1, 2], [1, 2], precision='double')    # M = M_1 (+) M_2 in M_3
@@ -203,12 +203,12 @@ assert np.linalg.eigvalsh(Pomega @ J @ Pomega).min() < -0.1
 
 *Apuntes:* [sección D.5](../../lecture_notes/es/D_gksl.md#s-D-5); [teorema D.9](../../lecture_notes/es/D_gksl.md#r-D-9), [corolario D.10](../../lecture_notes/es/D_gksl.md#r-D-10).
 
-Una $\mathfrak A$ corregible con $C\ge2$ sectores y algún $k_c\ge2$ es un código **híbrido**
-([apuntes de clase, sección D.5](../../lecture_notes/es/D_gksl.md#s-D-5)). Como ejemplo tomamos $\mathfrak A=(M_2\otimes1_2)\oplus M_1$ sobre un
-código aleatorio de dimensión cinco en $\mathbb C^8$ y un ruido que actúa sobre los factores gauge $\mathbb C^{m_c}$ mediante
-$\sum_iB_{c,i}^*B_{c,i}=1_{m_c}$, lleva los sectores a subespacios ortogonales, revuelve $\mathcal C^\perp$ y después se mezcla mediante
+Una $`\mathfrak A`$ corregible con $`C\ge2`$ sectores y algún $`k_c\ge2`$ es un código **híbrido**
+([apuntes de clase, sección D.5](../../lecture_notes/es/D_gksl.md#s-D-5)). Como ejemplo tomamos $`\mathfrak A=(M_2\otimes1_2)\oplus M_1`$ sobre un
+código aleatorio de dimensión cinco en $`\mathbb C^8`$ y un ruido que actúa sobre los factores gauge $`\mathbb C^{m_c}`$ mediante
+$`\sum_iB_{c,i}^*B_{c,i}=1_{m_c}`$, lleva los sectores a subespacios ortogonales, revuelve $`\mathcal C^\perp`$ y después se mezcla mediante
 una matriz unitaria aleatoria (teorema 6.7). La condición de Knill–Laflamme falla, la condición del [teorema D.9](../../lecture_notes/es/D_gksl.md#r-D-9) se
-cumple, y la recuperación de la demostración restablece todo $A\in\mathfrak A$, pero no un operador genérico sobre $\mathcal C$:
+cumple, y la recuperación de la demostración restablece todo $`A\in\mathfrak A`$, pero no un operador genérico sobre $`\mathcal C`$:
 
 ```python
 D, dims = 8, [(2, 2), (1, 1)]                             # A = (M_2 (x) 1_2) (+) (M_1 (x) 1_1), dim C = 5

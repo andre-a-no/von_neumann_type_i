@@ -12,9 +12,9 @@ Lindblad 例程和 `numpy`，把这些证明作为算法在随机例子上运行
 
 *讲义：* [D.2 节](../../lecture_notes/zh/D_gksl.md#s-D-2)；[引理 D.1](../../lecture_notes/zh/D_gksl.md#r-D-1)、[定理 D.3](../../lecture_notes/zh/D_gksl.md#r-D-3)。
 
-我们在 $M_3$ 上一个带任意跳跃的 GKSL 生成元上检验定理 D.3，它由 `lindblad_superoperator` 构造
-（即 $\mathcal L$ 作用在按行展开的 $\mathrm{vec}\,\rho$ 上的矩阵 $S$，因此与 6.1 节一样
-$J_{(i,a),(j,b)}=S_{(a,b),(i,j)}$），并且也在 $\theta-\mathrm{id}$ 上检验：
+我们在 $`M_3`$ 上一个带任意跳跃的 GKSL 生成元上检验定理 D.3，它由 `lindblad_superoperator` 构造
+（即 $`\mathcal L`$ 作用在按行展开的 $`\mathrm{vec}\,\rho`$ 上的矩阵 $`S`$，因此与 6.1 节一样
+$`J_{(i,a),(j,b)}=S_{(a,b),(i,j)}`$），并且也在 $`\theta-\mathrm{id}`$ 上检验：
 
 ```python
 import math
@@ -77,8 +77,8 @@ for t in (0.01, 0.1, 1.0):
 
 *讲义：* [D.3 节](../../lecture_notes/zh/D_gksl.md#s-D-3)；[定理 D.4](../../lecture_notes/zh/D_gksl.md#r-D-4)、[定理 D.5](../../lecture_notes/zh/D_gksl.md#r-D-5)、[定理 D.6](../../lecture_notes/zh/D_gksl.md#r-D-6)。
 
-定理 D.4 的证明就是一个算法：由 $J(\mathcal L)$ 在 $\Omega^\perp$ 上的压缩得到 $\Phi$，再由 $\xi_1$ 得到 $G$，
-然后得到 $H$。我们对上面的生成元运行这个算法，用本库重建生成元，并与按定理 D.5(iii) 和 (i) 计算出的
+定理 D.4 的证明就是一个算法：由 $`J(\mathcal L)`$ 在 $`\Omega^\perp`$ 上的压缩得到 $`\Phi`$，再由 $`\xi_1`$ 得到 $`G`$，
+然后得到 $`H`$。我们对上面的生成元运行这个算法，用本库重建生成元，并与按定理 D.5(iii) 和 (i) 计算出的
 原始数据的归一化形式进行比较：
 
 ```python
@@ -112,11 +112,11 @@ assert np.abs(Wr @ u - Wn).max() < 1e-12 and np.abs(u.conj().T @ u - np.eye(2)).
 print("eigenvalues of the normalised H:", np.round(np.linalg.eigvalsh(H_rec), 4), " jumps:", len(L_rec))
 ```
 
-由[定理 D.6](../../lecture_notes/zh/D_gksl.md#r-D-6)，当与 $H$ 以及所有 $L_j$、$L_j^*$ 可交换的只有 $1$ 的倍数时，忠实稳态 $\sigma$ 是唯一的；
-此时还有 $\ker\mathcal L^*=\mathbb C1$。对上面的随机生成元，代码检验了假设与结论（$\mathcal L^*$ 在 $A^T$ 的按行展开
-向量上的矩阵是 $S^T$: $\mathrm{vec}(\mathcal L^*(A)^T)=S^T\mathrm{vec}(A^T)$），并检验了
-[讲义，D.3 节](../../lecture_notes/zh/D_gksl.md#s-D-3)的第二个例子：在 $M_3$ 上，$H=0$，$L_1=|e_1\rangle\langle e_3|$，$L_2=|e_2\rangle\langle e_3|$，
-此时与 $L_j,L_j^*$ 可交换的只有 $1$ 的倍数，但 $\dim\ker\mathcal L=4$：
+由[定理 D.6](../../lecture_notes/zh/D_gksl.md#r-D-6)，当与 $`H`$ 以及所有 $`L_j`$、$`L_j^*`$ 可交换的只有 $`1`$ 的倍数时，忠实稳态 $`\sigma`$ 是唯一的；
+此时还有 $`\ker\mathcal L^*=\mathbb C1`$。对上面的随机生成元，代码检验了假设与结论（$`\mathcal L^*`$ 在 $`A^T`$ 的按行展开
+向量上的矩阵是 $`S^T`$: $`\mathrm{vec}(\mathcal L^*(A)^T)=S^T\mathrm{vec}(A^T)`$），并检验了
+[讲义，D.3 节](../../lecture_notes/zh/D_gksl.md#s-D-3)的第二个例子：在 $`M_3`$ 上，$`H=0`$，$`L_1=|e_1\rangle\langle e_3|`$，$`L_2=|e_2\rangle\langle e_3|`$，
+此时与 $`L_j,L_j^*`$ 可交换的只有 $`1`$ 的倍数，但 $`\dim\ker\mathcal L=4`$：
 
 ```python
 def kernel_dim(S, tol=1e-9):
@@ -148,9 +148,9 @@ assert kernel_dim(S_abs) == 4                             # no faithful stationa
 
 *讲义：* [D.4 节](../../lecture_notes/zh/D_gksl.md#s-D-4)；[定理 D.7](../../lecture_notes/zh/D_gksl.md#r-D-7)、[推论 D.8](../../lecture_notes/zh/D_gksl.md#r-D-8)。
 
-我们在 $M_1\oplus M_2\subseteq M_3$ 上，对 `lindblad_rhs` 的一个生成元检验[定理 D.7](../../lecture_notes/zh/D_gksl.md#r-D-7)，它有一个扇区内部的
+我们在 $`M_1\oplus M_2\subseteq M_3`$ 上，对 `lindblad_rhs` 的一个生成元检验[定理 D.7](../../lecture_notes/zh/D_gksl.md#r-D-7)，它有一个扇区内部的
 跳跃和一个随机的扇区之间的跳跃，检验按照证明的五个步骤进行；我们还检验[推论 D.8](../../lecture_notes/zh/D_gksl.md#r-D-8) 的对偶生成元。正如证明
-之后所指出的，这里 $J(\mathcal L\circ E)$ 在 $\Omega^\perp$ 上不是正的：
+之后所指出的，这里 $`J(\mathcal L\circ E)`$ 在 $`\Omega^\perp`$ 上不是正的：
 
 ```python
 alg = TypeIAlgebra([1, 2], [1, 2], precision='double')    # M = M_1 (+) M_2 in M_3
@@ -199,12 +199,12 @@ assert np.linalg.eigvalsh(Pomega @ J @ Pomega).min() < -0.1
 
 *讲义：* [D.5 节](../../lecture_notes/zh/D_gksl.md#s-D-5)；[定理 D.9](../../lecture_notes/zh/D_gksl.md#r-D-9)、[推论 D.10](../../lecture_notes/zh/D_gksl.md#r-D-10)。
 
-具有 $C\ge2$ 个扇区且某个 $k_c\ge2$ 的可纠正 $\mathfrak A$ 是一个**混合**码（[讲义，D.5 节](../../lecture_notes/zh/D_gksl.md#s-D-5)）。
-作为例子，我们在 $\mathbb C^8$ 中一个随机的五维码上取
-$\mathfrak A=(M_2\otimes1_2)\oplus M_1$，噪声通过 $\sum_iB_{c,i}^*B_{c,i}=1_{m_c}$ 作用在规范因子 $\mathbb C^{m_c}$ 上，
-把各扇区映到相互正交的子空间，打乱 $\mathcal C^\perp$，然后再被一个随机酉矩阵混合（定理 6.7）。
-Knill–Laflamme 条件不成立，[定理 D.9](../../lecture_notes/zh/D_gksl.md#r-D-9) 的条件成立，而证明中的恢复还原了每个 $A\in\mathfrak A$，
-却不能还原 $\mathcal C$ 上的一般算子：
+具有 $`C\ge2`$ 个扇区且某个 $`k_c\ge2`$ 的可纠正 $`\mathfrak A`$ 是一个**混合**码（[讲义，D.5 节](../../lecture_notes/zh/D_gksl.md#s-D-5)）。
+作为例子，我们在 $`\mathbb C^8`$ 中一个随机的五维码上取
+$`\mathfrak A=(M_2\otimes1_2)\oplus M_1`$，噪声通过 $`\sum_iB_{c,i}^*B_{c,i}=1_{m_c}`$ 作用在规范因子 $`\mathbb C^{m_c}`$ 上，
+把各扇区映到相互正交的子空间，打乱 $`\mathcal C^\perp`$，然后再被一个随机酉矩阵混合（定理 6.7）。
+Knill–Laflamme 条件不成立，[定理 D.9](../../lecture_notes/zh/D_gksl.md#r-D-9) 的条件成立，而证明中的恢复还原了每个 $`A\in\mathfrak A`$，
+却不能还原 $`\mathcal C`$ 上的一般算子：
 
 ```python
 D, dims = 8, [(2, 2), (1, 1)]                             # A = (M_2 (x) 1_2) (+) (M_1 (x) 1_1), dim C = 5

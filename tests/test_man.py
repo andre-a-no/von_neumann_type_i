@@ -66,7 +66,21 @@ def test_no_code_in_lecture_notes_and_no_operatorname(item):
     text = path.read_text(encoding='utf-8')
     assert '\\operatorname' not in text, 'use \\mathrm{...}: \\operatorname is not rendered by every Markdown engine'
     if side == 'lecture_notes':
-        assert '```' not in text, 'the lecture notes contain no code; code goes to the tutorial'
+        fences = re.findall(r'^```(\S*)', text, flags=re.M)[::2]
+        assert set(fences) <= {'math'}, 'the lecture notes contain no code; code goes to the tutorial'
+
+
+@pytest.mark.parametrize('item', ALL, ids=_id)
+def test_math_is_verbatim_for_github(item):
+    """GitHub applies Markdown escapes and emphasis inside $...$ and $$...$$ (\\, and \\{ lose the backslash, ^* starts
+    italics); only $`...`$ and ```math blocks reach the math renderer unchanged."""
+    _, path = item
+    text = path.read_text(encoding='utf-8')
+    text = re.sub(r'^```.*?^```', '', text, flags=re.S | re.M)    # ```math displays and code blocks
+    text = re.sub(r'\$`[^`]+`\$', '', text)                       # inline math
+    text = re.sub(r'`[^`]*`', '', text)                             # code spans
+    assert '$' not in text, 'write $`...`$ for inline math and a ```math block for displays: ' + \
+        text[max(text.find('$') - 40, 0):text.find('$') + 40]
 
 
 @pytest.mark.parametrize('side', SIDES)
@@ -88,7 +102,7 @@ def test_translation_follows_english(lang, english):
     assert _headings(tr) == _headings(en), 'same sections'
     assert _anchors(tr) == _anchors(en), 'same anchors'
     assert tr.count('\n|') == en.count('\n|'), 'same table rows'
-    assert tr.count('$$') == en.count('$$'), 'same displayed formulas'
+    assert tr.count('```math') == en.count('```math'), 'same displayed formulas'
     assert tr.count('<details>') == en.count('<details>')
 
 

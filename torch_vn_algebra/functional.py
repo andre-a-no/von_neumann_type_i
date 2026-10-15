@@ -94,18 +94,37 @@ def values_and_derivative(f: Callable[[torch.Tensor], torch.Tensor], w: torch.Te
 
 def divided_differences(w: torch.Tensor, fw: torch.Tensor, dfw: torch.Tensor) -> torch.Tensor:
     """
-    Loewner matrix L_ij = (f(w_i) - f(w_j)) / (w_i - w_j), and (f'(w_i) + f'(w_j)) / 2 where w_i and w_j
-    coincide up to eps^(1/3) relative to max(|w_i|, |w_j|) (which balances the truncation error of the
-    midpoint value against the cancellation error of the quotient). w may be complex. Shape (..., k, k).
+    Loewner matrix L_ij = f[w_i, w_j] = (f(w_i) - f(w_j)) / (w_i - w_j) (f'(w_i) on ties) of the Daleckii-Krein
+    formula (Theorem 1.11 of the lecture notes), from the values fw = f(w) and dfw = f'(w). w may be complex.
+    Shape (..., k, k).
+
+    For close w_i, w_j the quotient q loses accuracy by cancellation, and the midpoint m = (f'(w_i) + f'(w_j)) / 2,
+    whose error is at most |w_i - w_j|^2 sup |f'''| / 12 (Proposition 1.12), may be better. The choice
+    (Proposition 1.13) compares the two with a bound R for the rounding error of q: m is used iff |q - m| <= 2 R,
+    which makes the error at most min(T, 3 R), T the error of m, without knowing f'''. Here
+    R = eps (d_i + d_j) / |w_i - w_j| + 4 eps |q| with d_i = |f(w_i)| + |w_i f'(w_i)|: the assumed evaluation error
+    of f (relative error eps of the value, at an argument with relative error eps; e.g. exp(-1j * t * w) rounds
+    t * w). The midpoint is also used for ties, for a non-finite quotient, and for pairs that the eigensolver does
+    not resolve, |w_i - w_j| <= k eps max_l |w_l| (e.g. a degenerate eigenvalue 0 computed as +-1e-17, where the
+    quotient is meaningless also for a discontinuous f).
     """
     dw = w.unsqueeze(-1) - w.unsqueeze(-2)
     df = fw.unsqueeze(-1) - fw.unsqueeze(-2)
     finfo = torch.finfo(w.real.dtype if torch.is_complex(w) else w.dtype)
-    scale = torch.maximum(w.abs().unsqueeze(-1), w.abs().unsqueeze(-2)).clamp(min=finfo.tiny)
-    close = dw.abs() <= finfo.eps ** (1 / 3) * scale
     dtype = torch.promote_types(torch.promote_types(df.dtype, dw.dtype), dfw.dtype)
-    quotient = df.to(dtype) / torch.where(close, torch.ones_like(dw), dw).to(dtype)
-    return torch.where(close, 0.5 * (dfw.unsqueeze(-1) + dfw.unsqueeze(-2)).to(dtype), quotient)
+    tie = dw == 0
+    safe = torch.where(tie, torch.ones_like(dw), dw)
+    quotient = df.to(dtype) / safe.to(dtype)
+    midpoint = 0.5 * (dfw.unsqueeze(-1) + dfw.unsqueeze(-2)).to(dtype)
+    with torch.no_grad():                                   # the choice is made on the values
+        wd, q, mid = w.detach(), quotient.detach(), midpoint.detach()
+        d = fw.detach().abs() + (wd * dfw.detach()).abs()
+        R = finfo.eps * (d.unsqueeze(-1) + d.unsqueeze(-2)) / safe.abs() + 4 * finfo.eps * q.abs()
+        use_mid = tie | ~torch.isfinite(q) | ((q - mid).abs() <= 2 * R)
+        if w.shape[-1] > 1:
+            radius = wd.abs().amax(dim=-1, keepdim=True).unsqueeze(-1)          # scale of the block's spectrum
+            use_mid = use_mid | (dw.abs() <= w.shape[-1] * finfo.eps * radius)
+    return torch.where(use_mid, midpoint, quotient)
 
 
 # ----------------------------------------------------------------------
@@ -317,7 +336,11 @@ def singular_values(X: torch.Tensor, method: str = 'auto') -> torch.Tensor:
     if use_dilation(X, method):
         lam = cost.batched_call(torch.linalg.eigvalsh, _dilation(X), f"eigvalsh (dilation of size {2 * k})")
         return lam[..., k:].flip(-1).clamp(min=0)
-    return cost.batched_call(torch.linalg.svdvals, X, f"svdvals (blocks of size {k})", kind='svd')
+    # singular values are homogeneous: scale each block to entries of order 1 first (older LAPACK builds lose the
+    # small singular values of float32 blocks with entries near 1e+-30)
+    s = cost.abs_max(X, (-2, -1)).clamp(min=torch.finfo(X.real.dtype).tiny)
+    Xs = X * s.reciprocal()[..., None, None].to(X.dtype)
+    return cost.batched_call(torch.linalg.svdvals, Xs, f"svdvals (blocks of size {k})", kind='svd') * s[..., None]
 
 
 def svd(X: torch.Tensor, method: str = 'auto') -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -533,6 +556,8 @@ def holomorphic(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], cent
         err_t = torch.maximum(quadrature, rounding).max()
         err_t = torch.where(bad, torch.full_like(err_t, -1.0), err_t)               # -1 flags a failure
         err = float(err_t)                                     # one synchronisation per doubling
+        if math.isnan(err):                                    # overflow in the estimate (e.g. inf / inf) is a
+            err = math.inf                                     # failure to converge, never a pass
         if err < 0:
             raise ValueError("f is not finite on the contour, or the contour passes through the spectrum: choose "
                              "center and radius so that the circle encloses the spectrum and f is holomorphic on "

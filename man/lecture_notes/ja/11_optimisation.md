@@ -11,266 +11,266 @@
 等号条件つきのトレース不等式。ハール分布のサンプルが平均二乗の意味で極値から遠く離れている理由。そしてマルチスタート探索が何を証明するのか。本章の数値的な検算とライブラリの最適化器は
 [チュートリアル 11](../../tutorial/ja/11_optimisation.md)にある。
 
-本章を通じて、$\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)$（$D=\sum_ck_c\ge2$）とし、$\mathrm{Tr}$ は
-blunt トレース（3.1節）、$\|A\|_1=\sum_c\|A_c\|_1$ は $A$ を
-$M_D(\mathbb C)$ のブロック対角行列とみなしたときのトレースノルムとする。$A\in M_k(\mathbb C)$ の特異値を $s_1(A)\ge\dots\ge s_k(A)$ とし、$x^\downarrow$ と
-$x^\uparrow$ は実ベクトル $x$ を減少順および増加順に並べ替えたものとする。$\Delta$ はマイケルソン・
-コントラスト（3.6節）であり、$\delta\in[0,1)$ に対し
-$$
+本章を通じて、$`\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)`$（$`D=\sum_ck_c\ge2`$）とし、$`\mathrm{Tr}`$ は
+blunt トレース（3.1節）、$`\|A\|_1=\sum_c\|A_c\|_1`$ は $`A`$ を
+$`M_D(\mathbb C)`$ のブロック対角行列とみなしたときのトレースノルムとする。$`A\in M_k(\mathbb C)`$ の特異値を $`s_1(A)\ge\dots\ge s_k(A)`$ とし、$`x^\downarrow`$ と
+$`x^\uparrow`$ は実ベクトル $`x`$ を減少順および増加順に並べ替えたものとする。$`\Delta`$ はマイケルソン・
+コントラスト（3.6節）であり、$`\delta\in[0,1)`$ に対し
+```math
 \ell(\delta)=\frac{1-\delta}{1+\delta},\qquad 1-\ell(\delta)=\frac{2\delta}{1+\delta};
-$$
-とおく。$\lambda_{\max}=1$ の正作用素のコントラストは $\ell(\lambda_{\min})$ であるから、そのコントラストが $\delta$ であるための必要十分条件は
-$\lambda_{\min}=\ell(\delta)$ である。$\ell$ は $[0,1]$ の狭義減少な対合だからである。例として解説論文の三つの汎関数
+```
+とおく。$`\lambda_{\max}=1`$ の正作用素のコントラストは $`\ell(\lambda_{\min})`$ であるから、そのコントラストが $`\delta`$ であるための必要十分条件は
+$`\lambda_{\min}=\ell(\delta)`$ である。$`\ell`$ は $`[0,1]`$ の狭義減少な対合だからである。例として解説論文の三つの汎関数
 （*From sampling to optimisation* の節）を扱う。
 
 | | 汎関数 | 変数 |
 |---|---|---|
-| 実験 1 | $z=\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)$ | $X,Y\ge0$、$U\in\mathcal M$ はユニタリ |
-| 実験 2 | $z=\mathrm{Tr}\lvert XY\rvert-\mathrm{Tr}(\lvert X\rvert\,\lvert Y\rvert)$ | $X=UX_0$、$Y=VY_0$、$X_0,Y_0\ge0$、$U,V$ はユニタリ |
-| 実験 3 | $z=\mathrm{Tr}(Y\lvert X\rvert Y)-\mathrm{Tr}\lvert YXY\rvert$ | $X=X^*$、$Y\ge0$ |
+| 実験 1 | $`z=\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)`$ | $`X,Y\ge0`$、$`U\in\mathcal M`$ はユニタリ |
+| 実験 2 | $`z=\mathrm{Tr}\lvert XY\rvert-\mathrm{Tr}(\lvert X\rvert\,\lvert Y\rvert)`$ | $`X=UX_0`$、$`Y=VY_0`$、$`X_0,Y_0\ge0`$、$`U,V`$ はユニタリ |
+| 実験 3 | $`z=\mathrm{Tr}(Y\lvert X\rvert Y)-\mathrm{Tr}\lvert YXY\rvert`$ | $`X=X^*`$、$`Y\ge0`$ |
 
-ここで $|X|$、$|Y|$ は $\lambda_{\max}=1$ に正規化し、それらのコントラストをパラメータとする。**包絡線** とは
-$\overline z(\delta)=\sup\{z:\Delta(|X|)=\delta\}$ と $\underline z(\delta)=\inf\{z:\Delta(|X|)=\delta\}$ のことであり、その他の
+ここで $`|X|`$、$`|Y|`$ は $`\lambda_{\max}=1`$ に正規化し、それらのコントラストをパラメータとする。**包絡線** とは
+$`\overline z(\delta)=\sup\{z:\Delta(|X|)=\delta\}`$ と $`\underline z(\delta)=\inf\{z:\Delta(|X|)=\delta\}`$ のことであり、その他の
 変数はすべて自由に動かす。
 
 <a id="s-11-1"></a>
 
 ## 11.1 制約集合とそのパラメータ化
 
-**定義.** $\delta\in[0,1)$ と $\ell=\ell(\delta)$ に対し、**コントラスト殻** を次で定める。
-$$
+**定義.** $`\delta\in[0,1)`$ と $`\ell=\ell(\delta)`$ に対し、**コントラスト殻** を次で定める。
+```math
 \mathcal P_\delta=\{X\in\mathcal M:X\ge0,\ \lambda_{\max}(X)=1,\ \Delta(X)=\delta\}
 =\{X=X^*:\mathrm{spec}\,X\subseteq[\ell,1],\ 1,\ell\in\mathrm{spec}\,X\}.
-$$
-$\mathcal M$ の **スロット** とは $D$ 個の組 $(c,i)$（$i\le k_c$）のことである。$\lambda\in\mathbb R^D$ に対し
-$\mathrm{diag}(\lambda)=\bigoplus_c\mathrm{diag}(\lambda_{c,1},\dots,\lambda_{c,k_c})$ とおく。
+```
+$`\mathcal M`$ の **スロット** とは $`D`$ 個の組 $`(c,i)`$（$`i\le k_c`$）のことである。$`\lambda\in\mathbb R^D`$ に対し
+$`\mathrm{diag}(\lambda)=\bigoplus_c\mathrm{diag}(\lambda_{c,1},\dots,\lambda_{c,k_c})`$ とおく。
 
-**パラメータ化.** コントラスト $\delta$ を指定すると、探索は各スタートごとに二つの異なるスロット
-$s_\pm=(c_\pm,i_\pm)$（まず $s_+$ を $D$ 個のスロットから一様に、次に $s_-$ を残りの $D-1$ 個から一様に選ぶので、
-相異なるスロットの順序対はどれも確率 $1/(D(D-1))$ をもつ）とハール分布に従うランダムなユニタリ $U_0\in\mathcal M$
-（補題 11.10）を抽出し、$\theta\in\mathbb R^D$ と
-$G=\bigoplus_cG_c$ を次のように写す。
-$$
+**パラメータ化.** コントラスト $`\delta`$ を指定すると、探索は各スタートごとに二つの異なるスロット
+$`s_\pm=(c_\pm,i_\pm)`$（まず $`s_+`$ を $`D`$ 個のスロットから一様に、次に $`s_-`$ を残りの $`D-1`$ 個から一様に選ぶので、
+相異なるスロットの順序対はどれも確率 $`1/(D(D-1))`$ をもつ）とハール分布に従うランダムなユニタリ $`U_0\in\mathcal M`$
+（補題 11.10）を抽出し、$`\theta\in\mathbb R^D`$ と
+$`G=\bigoplus_cG_c`$ を次のように写す。
+```math
 X(\theta,G)=U\mathrm{diag}(\lambda)U^*,\qquad U=U_0\,e^{G-G^*},\qquad
 \lambda_{s_+}=1,\quad\lambda_{s_-}=\ell,\quad\lambda_s=\ell+(1-\ell)\tfrac{1+\sin\theta_s}2\ \text{otherwise}.
-$$
-ユニタリだけなら $G\mapsto U_0e^{G-G^*}$ でパラメータ化される。シグモイドとは異なり、$(1+\sin\theta)/2$ は有限の $\theta$ で $0$ と $1$
-に到達する。本章の極値をとるスペクトル（系 11.7、命題 11.14）は $\ell$ と $1$ にあるので、これは都合がよい。
-$[a,b]$ 内の自由なコントラストはパラメータが一つ増えるだけであり、$\delta=a+(b-a)(1+\sin\eta)/2$ とすればよい（例えば $[a,b]=[0,0.999]$）。この制限のもとで達成される値は制限なしでも
+```
+ユニタリだけなら $`G\mapsto U_0e^{G-G^*}`$ でパラメータ化される。シグモイドとは異なり、$`(1+\sin\theta)/2`$ は有限の $`\theta`$ で $`0`$ と $`1`$
+に到達する。本章の極値をとるスペクトル（系 11.7、命題 11.14）は $`\ell`$ と $`1`$ にあるので、これは都合がよい。
+$`[a,b]`$ 内の自由なコントラストはパラメータが一つ増えるだけであり、$`\delta=a+(b-a)(1+\sin\eta)/2`$ とすればよい（例えば $`[a,b]=[0,0.999]`$）。この制限のもとで達成される値は制限なしでも
 達成されるから、それは依然として制限なしの上限の下界（制限なしの下限の上界）である。
 
-*ライブラリでは：* このパラメータ化は `optimize.PositiveParam` であり、$G\mapsto U_0e^{G-G^*}$ は `optimize.UnitaryParam` である — [チュートリアル、11.1節](../../tutorial/ja/11_optimisation.md#s-11-1)。
+*ライブラリでは：* このパラメータ化は `optimize.PositiveParam` であり、$`G\mapsto U_0e^{G-G^*}`$ は `optimize.UnitaryParam` である — [チュートリアル、11.1節](../../tutorial/ja/11_optimisation.md#s-11-1)。
 
 <a id="r-11-1"></a>
 
-**補題 11.1.** 任意のユニタリ $U_0\in\mathcal M$ に対し、$G\mapsto U_0e^{G-G^*}$ は $\mathcal M$ のユニタリ群の上への
+**補題 11.1.** 任意のユニタリ $`U_0\in\mathcal M`$ に対し、$`G\mapsto U_0e^{G-G^*}`$ は $`\mathcal M`$ のユニタリ群の上への
 写像である。
 
-*証明.* $U$ をユニタリとする。定理 1.3（ブロックごと）と系 1.4(2) により、
-$W_c$ をユニタリ、$\varphi_{c,j}\in\mathbb R$ として $U_0^*U=\bigoplus_cW_c\mathrm{diag}(e^{i\varphi_{c,j}})_jW_c^*$ と書ける。このとき
-$S=\bigoplus_cW_c\mathrm{diag}(i\varphi_{c,j})_jW_c^*$ は $S^*=-S$ と $e^S=U_0^*U$ を満たし（級数
-$\sum_nS^n/n!$ は固有基底において項ごとに計算される）、$G=S/2$ とすれば $G-G^*=S$ である。$\square$
+*証明.* $`U`$ をユニタリとする。定理 1.3（ブロックごと）と系 1.4(2) により、
+$`W_c`$ をユニタリ、$`\varphi_{c,j}\in\mathbb R`$ として $`U_0^*U=\bigoplus_cW_c\mathrm{diag}(e^{i\varphi_{c,j}})_jW_c^*`$ と書ける。このとき
+$`S=\bigoplus_cW_c\mathrm{diag}(i\varphi_{c,j})_jW_c^*`$ は $`S^*=-S`$ と $`e^S=U_0^*U`$ を満たし（級数
+$`\sum_nS^n/n!`$ は固有基底において項ごとに計算される）、$`G=S/2`$ とすれば $`G-G^*=S`$ である。$`\square`$
 
 <a id="r-11-2"></a>
 
-**命題 11.2（パラメータ化は全射である）.** $\delta$、$s_\pm$、$U_0$ を固定すると、
-$(\theta,G)\mapsto X(\theta,G)$ の像は $\{X\in\mathcal P_\delta:1\in\mathrm{spec}\,X_{c_+},\ \ell\in\mathrm{spec}\,X_{c_-}\}$ であり、
-$\mathcal P_\delta$ は相異なるスロットのすべての組にわたるこれらの像の和集合である。
+**命題 11.2（パラメータ化は全射である）.** $`\delta`$、$`s_\pm`$、$`U_0`$ を固定すると、
+$`(\theta,G)\mapsto X(\theta,G)`$ の像は $`\{X\in\mathcal P_\delta:1\in\mathrm{spec}\,X_{c_+},\ \ell\in\mathrm{spec}\,X_{c_-}\}`$ であり、
+$`\mathcal P_\delta`$ は相異なるスロットのすべての組にわたるこれらの像の和集合である。
 
-*証明.* 像はこの集合に含まれる：$X$ の固有値は $\lambda_s\in[\ell,1]$ であり、$\lambda_{s_\pm}$ はブロック
-$c_\pm$ にある。逆に、$X_c=W_c\mathrm{diag}(\mu_c)W_c^*$ と対角化し、各 $\mu_c$ を並べ替えて（$W_c$ を
-$W_c\Pi_c$ で置き換える。$\Pi_c$ は置換行列）$\mu_{s_+}=1$ かつ $\mu_{s_-}=\ell$ となるようにする。これは可能である：$c_+=c_-$
-かつ $\delta>0$ ならば、$1\ne\ell$ は同じブロックの二つの固有値であって異なる位置を占める。$\delta=0$ ならば、
-すべての固有値は $1$ である。$\ell<1$ ならば、残りのスロットに対して $\theta_s=\arcsin\big(2(\mu_s-\ell)/(1-\ell)-1\big)$ とおけば
-$\lambda=\mu$ となる（$\ell=1$ ならば $\theta$ は任意）。補題 11.1 により $U_0e^{G-G^*}=\bigoplus_cW_c$ を満たす $G$ が得られる。
-*和集合:* $X\in\mathcal P_\delta$ に対し、固有値 $1$、$\ell$ を含むブロック $c_\pm$ と、その中の相異なるスロットを選ぶ。
-$c_+=c_-$ かつ $\delta>0$ ならば、そのブロックは二つの異なる固有値をもつから $k_{c_+}\ge2$ である。$\delta=0$ ならば $X=1$ であり、
-任意の二つのスロットでよい。$\square$
+*証明.* 像はこの集合に含まれる：$`X`$ の固有値は $`\lambda_s\in[\ell,1]`$ であり、$`\lambda_{s_\pm}`$ はブロック
+$`c_\pm`$ にある。逆に、$`X_c=W_c\mathrm{diag}(\mu_c)W_c^*`$ と対角化し、各 $`\mu_c`$ を並べ替えて（$`W_c`$ を
+$`W_c\Pi_c`$ で置き換える。$`\Pi_c`$ は置換行列）$`\mu_{s_+}=1`$ かつ $`\mu_{s_-}=\ell`$ となるようにする。これは可能である：$`c_+=c_-`$
+かつ $`\delta>0`$ ならば、$`1\ne\ell`$ は同じブロックの二つの固有値であって異なる位置を占める。$`\delta=0`$ ならば、
+すべての固有値は $`1`$ である。$`\ell<1`$ ならば、残りのスロットに対して $`\theta_s=\arcsin\big(2(\mu_s-\ell)/(1-\ell)-1\big)`$ とおけば
+$`\lambda=\mu`$ となる（$`\ell=1`$ ならば $`\theta`$ は任意）。補題 11.1 により $`U_0e^{G-G^*}=\bigoplus_cW_c`$ を満たす $`G`$ が得られる。
+*和集合:* $`X\in\mathcal P_\delta`$ に対し、固有値 $`1`$、$`\ell`$ を含むブロック $`c_\pm`$ と、その中の相異なるスロットを選ぶ。
+$`c_+=c_-`$ かつ $`\delta>0`$ ならば、そのブロックは二つの異なる固有値をもつから $`k_{c_+}\ge2`$ である。$`\delta=0`$ ならば $`X=1`$ であり、
+任意の二つのスロットでよい。$`\square`$
 
 *計算：* 命題 11.2 の構成的な検証：証明のパラメータが目標の作用素を再現する — [チュートリアル、11.1節](../../tutorial/ja/11_optimisation.md#s-11-1)。
 
 スロットのどの組も正の確率で抽出されるから、殻のすべての点は正の確率であるスタートの像に含まれ、
 （厳密な算術では）制約はすべての反復で成り立つ。
-自己共役な $X$（実験 3）に対しては $X=U\mathrm{diag}(\sigma\lambda)U^*$ を用いる。ここで符号 $\sigma\in\{\pm1\}^D$ はスタートごとに抽出され
-（各ブロックで、負号の個数は $\{0,\dots,k_c\}$ 上で一様であり、その位置は一様にランダムであるから、どの符号パターンも
+自己共役な $`X`$（実験 3）に対しては $`X=U\mathrm{diag}(\sigma\lambda)U^*`$ を用いる。ここで符号 $`\sigma\in\{\pm1\}^D`$ はスタートごとに抽出され
+（各ブロックで、負号の個数は $`\{0,\dots,k_c\}`$ 上で一様であり、その位置は一様にランダムであるから、どの符号パターンも
 正の確率をもつ）、11.5節の符号反転によってのみ変更される。このとき
-$|X|=U\mathrm{diag}(\lambda)U^*$ であり（定理 1.5(e)、$\lambda>0$ であるから）、符号とスロットにわたる和集合は
-$\{X=X^*:|X|\in\mathcal P_\delta\}$ である：そのような $X$ に対し $X_c=W_c\mathrm{diag}(\nu_c)W_c^*$ と対角化すると、
-$|\nu_{c,i}|\ge\ell>0$ として $|X|_c=W_c\mathrm{diag}(|\nu_c|)W_c^*$ となるので、$\mu=|\nu|$ と
-$\sigma_s=\nu_s/|\nu_s|$ に命題 11.2 の証明を適用すればよい。意味をもつのは $S=G-G^*$ だけである。
+$`|X|=U\mathrm{diag}(\lambda)U^*`$ であり（定理 1.5(e)、$`\lambda>0`$ であるから）、符号とスロットにわたる和集合は
+$`\{X=X^*:|X|\in\mathcal P_\delta\}`$ である：そのような $`X`$ に対し $`X_c=W_c\mathrm{diag}(\nu_c)W_c^*`$ と対角化すると、
+$`|\nu_{c,i}|\ge\ell>0`$ として $`|X|_c=W_c\mathrm{diag}(|\nu_c|)W_c^*`$ となるので、$`\mu=|\nu|`$ と
+$`\sigma_s=\nu_s/|\nu_s|`$ に命題 11.2 の証明を適用すればよい。意味をもつのは $`S=G-G^*`$ だけである。
 
 *ライブラリでは：* `optimize.SelfAdjointParam` — [チュートリアル、11.1節](../../tutorial/ja/11_optimisation.md#s-11-1)。
 
-チャート $S\mapsto U_0e^S$ が良い振る舞いをするのは $S=0$ の近くだけである。$\mathfrak u=\{S\in\mathcal M:S^*=-S\}$、
-$\mathcal M_h=\{H\in\mathcal M:H^*=H\}$ とおく。これらは実部分空間であり、$\mathcal M=\mathfrak u\oplus\mathcal M_h$ である
-（$X=\frac{X-X^*}2+\frac{X+X^*}2$）。*$0$ の近くで、$S\mapsto U_0e^S$ は $\mathfrak u$ の開球 $N\ni0$ からユニタリ群における
-$U_0$ の近傍の上への同相写像である。* 実際、$\Psi(S,H)=U_0e^Se^H$ は $C^1$ 写像
-$\mathfrak u\times\mathcal M_h\to\mathcal M$ であり（級数 $\sum_{m,n\ge0}U_0S^mH^n/(m!\,n!)$ と、その各項の実座標に関する
+チャート $`S\mapsto U_0e^S`$ が良い振る舞いをするのは $`S=0`$ の近くだけである。$`\mathfrak u=\{S\in\mathcal M:S^*=-S\}`$、
+$`\mathcal M_h=\{H\in\mathcal M:H^*=H\}`$ とおく。これらは実部分空間であり、$`\mathcal M=\mathfrak u\oplus\mathcal M_h`$ である
+（$`X=\frac{X-X^*}2+\frac{X+X^*}2`$）。*$`0`$ の近くで、$`S\mapsto U_0e^S`$ は $`\mathfrak u`$ の開球 $`N\ni0`$ からユニタリ群における
+$`U_0`$ の近傍の上への同相写像である。* 実際、$`\Psi(S,H)=U_0e^Se^H`$ は $`C^1`$ 写像
+$`\mathfrak u\times\mathcal M_h\to\mathcal M`$ であり（級数 $`\sum_{m,n\ge0}U_0S^mH^n/(m!\,n!)`$ と、その各項の実座標に関する
 偏導関数の級数は有界集合上で一様収束する）、
-$e^{tS}e^{tH}=1+t(S+H)+O(t^2)$ により、その $0$ における微分は $(S,H)\mapsto U_0(S+H)$ であって、これは
-$\mathcal M$ の上への全単射である。逆関数定理により、$\mathfrak u$ の開球 $N\ni0$ と $\mathcal M_h$ の開球 $N_h\ni0$ が存在して、
-$\Psi$ は $N\times N_h$ から開集合 $O\subseteq\mathcal M$ の上への同相写像となる。
-$\Psi(S,H)$ がユニタリならば $e^H=e^{-S}U_0^*\Psi(S,H)$ もユニタリである（固有値が純虚数である正規行列 $S$ の固有基底では、
-$e^{\pm S}$ は絶対値 $1$ の成分をもつ対角行列であり、互いに逆である）。しかし $e^H$ は正の固有値 $e^{h_i}$（$h_i$ は $H$ の
-固有値）をもつから、$e^{h_i}=1$（系 1.4(2)）であり $H=0$ である。
-したがって $O\cap U(\mathcal M)=U_0e^N$ である。ここで $U(\mathcal M)$ は $\mathcal M$ のユニタリ群である。これは
-$U(\mathcal M)$ における $U_0$ の近傍であり、$S\mapsto U_0e^S$ は連続な全単射 $N\to U_0e^N$ で、その逆写像、すなわち
-$\Psi^{-1}$ の第一成分は連続である。$0$ から遠いところではチャートは単射でない：任意の射影 $P\in\mathcal M$ に対し
-$e^{2\pi iP}=1=e^0$ である。そのため探索は各ラウンドの後にチャートの **再中心化** を行う（$U_0\leftarrow U_0e^{G-G^*}$、
-$G\leftarrow0$）。他の二つのチャートも $0$ において同じ微分 $S\mapsto U_0S$ をもつ。ケーリー・チャート
-$S\mapsto U_0C(-S/2)$（演習 1）：$(1+tS/2)(1-tS/2)^{-1}=(1+tS/2)(1+tS/2+O(t^2))=1+tS+O(t^2)$。極分解レトラクション、
-すなわち $S$ を $A=U_0(1+S)$ のユニタリ因子に写す写像（定理 1.8）：$A^*A=(1-S)(1+S)=1+S^*S\ge1$ は可逆であるから $|A|$ も
-可逆であり、ユニタリ因子は $A|A|^{-1}$ である。$S$ の代わりに $tS$ をとると $|A|^{-1}=(1+t^2S^*S)^{-1/2}=1+O(t^2)$
-（$S^*S$ の固有基底で計算する）であるから、この因子は $U_0(1+tS)+O(t^2)$ である。
+$`e^{tS}e^{tH}=1+t(S+H)+O(t^2)`$ により、その $`0`$ における微分は $`(S,H)\mapsto U_0(S+H)`$ であって、これは
+$`\mathcal M`$ の上への全単射である。逆関数定理により、$`\mathfrak u`$ の開球 $`N\ni0`$ と $`\mathcal M_h`$ の開球 $`N_h\ni0`$ が存在して、
+$`\Psi`$ は $`N\times N_h`$ から開集合 $`O\subseteq\mathcal M`$ の上への同相写像となる。
+$`\Psi(S,H)`$ がユニタリならば $`e^H=e^{-S}U_0^*\Psi(S,H)`$ もユニタリである（固有値が純虚数である正規行列 $`S`$ の固有基底では、
+$`e^{\pm S}`$ は絶対値 $`1`$ の成分をもつ対角行列であり、互いに逆である）。しかし $`e^H`$ は正の固有値 $`e^{h_i}`$（$`h_i`$ は $`H`$ の
+固有値）をもつから、$`e^{h_i}=1`$（系 1.4(2)）であり $`H=0`$ である。
+したがって $`O\cap U(\mathcal M)=U_0e^N`$ である。ここで $`U(\mathcal M)`$ は $`\mathcal M`$ のユニタリ群である。これは
+$`U(\mathcal M)`$ における $`U_0`$ の近傍であり、$`S\mapsto U_0e^S`$ は連続な全単射 $`N\to U_0e^N`$ で、その逆写像、すなわち
+$`\Psi^{-1}`$ の第一成分は連続である。$`0`$ から遠いところではチャートは単射でない：任意の射影 $`P\in\mathcal M`$ に対し
+$`e^{2\pi iP}=1=e^0`$ である。そのため探索は各ラウンドの後にチャートの **再中心化** を行う（$`U_0\leftarrow U_0e^{G-G^*}`$、
+$`G\leftarrow0`$）。他の二つのチャートも $`0`$ において同じ微分 $`S\mapsto U_0S`$ をもつ。ケーリー・チャート
+$`S\mapsto U_0C(-S/2)`$（演習 1）：$`(1+tS/2)(1-tS/2)^{-1}=(1+tS/2)(1+tS/2+O(t^2))=1+tS+O(t^2)`$。極分解レトラクション、
+すなわち $`S`$ を $`A=U_0(1+S)`$ のユニタリ因子に写す写像（定理 1.8）：$`A^*A=(1-S)(1+S)=1+S^*S\ge1`$ は可逆であるから $`|A|`$ も
+可逆であり、ユニタリ因子は $`A|A|^{-1}`$ である。$`S`$ の代わりに $`tS`$ をとると $`|A|^{-1}=(1+t^2S^*S)^{-1/2}=1+O(t^2)`$
+（$`S^*S`$ の固有基底で計算する）であるから、この因子は $`U_0(1+tS)+O(t^2)`$ である。
 
-> **物理的意味**（物理的解釈であり、本講義の定理ではない）. マイケルソン・コントラストは干渉縞の可視度 $(I_{\max}-I_{\min})/(I_{\max}+I_{\min})$ である。
-> $\lambda_{\max}=1$ をもつ $0\le X\le1$（フィルター、減衰器、検出器の効率）に対しては、
-> それはダイナミックレンジ $\lambda_{\min}/\lambda_{\max}$、すなわち条件数の逆数を定める。
+> **物理的意味**（物理的解釈であり、本講義の定理ではない）. マイケルソン・コントラストは干渉縞の可視度 $`(I_{\max}-I_{\min})/(I_{\max}+I_{\min})`$ である。
+> $`\lambda_{\max}=1`$ をもつ $`0\le X\le1`$（フィルター、減衰器、検出器の効率）に対しては、
+> それはダイナミックレンジ $`\lambda_{\min}/\lambda_{\max}`$、すなわち条件数の逆数を定める。
 
 <a id="s-11-2"></a>
 
 ## 11.2 フォン・ノイマンのトレース不等式
 
-成分が $c_{ij}\ge0$ で、すべての行和と列和が $1$ である行列 $(c_{ij})$ を **二重確率行列** という。ユニタリ $G$ に対し、
-$G$ の行と列は単位ベクトルであるから、$(|G_{ij}|^2)$ と $(|G_{ji}|^2)$ は二重確率行列である。
+成分が $`c_{ij}\ge0`$ で、すべての行和と列和が $`1`$ である行列 $`(c_{ij})`$ を **二重確率行列** という。ユニタリ $`G`$ に対し、
+$`G`$ の行と列は単位ベクトルであるから、$`(|G_{ij}|^2)`$ と $`(|G_{ji}|^2)`$ は二重確率行列である。
 
 <a id="r-11-3"></a>
 
-**補題 11.3（並べ替え）.** $p_1\ge\dots\ge p_k$、$q_1\ge\dots\ge q_k$ を実数とし、$(c_{ij})$ を二重確率行列とする。
-このとき $\sum_ip_iq_{k+1-i}\le\sum_{i,j}p_iq_jc_{ij}\le\sum_ip_iq_i$ である。
+**補題 11.3（並べ替え）.** $`p_1\ge\dots\ge p_k`$、$`q_1\ge\dots\ge q_k`$ を実数とし、$`(c_{ij})`$ を二重確率行列とする。
+このとき $`\sum_ip_iq_{k+1-i}\le\sum_{i,j}p_iq_jc_{ij}\le\sum_ip_iq_i`$ である。
 
-*証明.* *上界.* $m\le k$ に対し $r_j=\sum_{i\le m}c_{ij}\in[0,1]$ とおくと、$\sum_jr_j=m$ である。
-$j\le m$ に対し $q_j\ge q_m$、$j>m$ に対し $q_j\le q_m$ であるから、
-$$
+*証明.* *上界.* $`m\le k`$ に対し $`r_j=\sum_{i\le m}c_{ij}\in[0,1]`$ とおくと、$`\sum_jr_j=m`$ である。
+$`j\le m`$ に対し $`q_j\ge q_m`$、$`j>m`$ に対し $`q_j\le q_m`$ であるから、
+```math
 \sum_{j\le m}q_j-\sum_jq_jr_j=\sum_{j\le m}q_j(1-r_j)-\sum_{j>m}q_jr_j\ge q_m\Big(m-\sum_jr_j\Big)=0 .
-$$
-$x_i=\sum_jq_jc_{ij}$ とおくと、これは $\sum_{i\le m}x_i\le\sum_{j\le m}q_j$ を意味し、$m=k$ では等号が成り立つ。
-アーベルの総和法と $p_m-p_{m+1}\ge0$ により、
-$$
+```
+$`x_i=\sum_jq_jc_{ij}`$ とおくと、これは $`\sum_{i\le m}x_i\le\sum_{j\le m}q_j`$ を意味し、$`m=k`$ では等号が成り立つ。
+アーベルの総和法と $`p_m-p_{m+1}\ge0`$ により、
+```math
 \sum_ip_ix_i=p_k\sum_{i\le k}x_i+\sum_{m<k}(p_m-p_{m+1})\sum_{i\le m}x_i
 \le p_k\sum_{j\le k}q_j+\sum_{m<k}(p_m-p_{m+1})\sum_{j\le m}q_j=\sum_ip_iq_i .
-$$
-*下界.* 上界を $p$、減少列 $q'_j=-q_{k+1-j}$、および二重確率行列
-$c'_{ij}=c_{i,k+1-j}$ に適用する：$-\sum_{ij}p_iq_jc_{ij}=\sum_{ij}p_iq'_jc'_{ij}\le\sum_ip_iq'_i=-\sum_ip_iq_{k+1-i}$。$\square$
+```
+*下界.* 上界を $`p`$、減少列 $`q'_j=-q_{k+1-j}`$、および二重確率行列
+$`c'_{ij}=c_{i,k+1-j}`$ に適用する：$`-\sum_{ij}p_iq_jc_{ij}=\sum_{ij}p_iq'_jc'_{ij}\le\sum_ip_iq'_i=-\sum_ip_iq_{k+1-i}`$。$`\square`$
 
-任意の $A\in M_k(\mathbb C)$ は **特異値分解** $A=W\Sigma V^*$（$W,V$ はユニタリ、
-$\Sigma=\mathrm{diag}(s_i(A))$）をもつ：$A=W'|A|$（定理 1.8）、$|A|=V\Sigma V^*$（定理 1.3）と書き、$W=W'V$ とすればよい。
+任意の $`A\in M_k(\mathbb C)`$ は **特異値分解** $`A=W\Sigma V^*`$（$`W,V`$ はユニタリ、
+$`\Sigma=\mathrm{diag}(s_i(A))`$）をもつ：$`A=W'|A|`$（定理 1.8）、$`|A|=V\Sigma V^*`$（定理 1.3）と書き、$`W=W'V`$ とすればよい。
 
 <a id="r-11-4"></a>
 
-**定理 11.4（フォン・ノイマンのトレース不等式）.** $A,B\in M_k(\mathbb C)$ に対し
-$|\mathrm{Tr}(AB)|\le\sum_is_i(A)\,s_i(B)$ である。
+**定理 11.4（フォン・ノイマンのトレース不等式）.** $`A,B\in M_k(\mathbb C)`$ に対し
+$`|\mathrm{Tr}(AB)|\le\sum_is_i(A)\,s_i(B)`$ である。
 
-*証明.* $A=W_A\Sigma_AV_A^*$、$B=W_B\Sigma_BV_B^*$、$a_i=s_i(A)$、$b_j=s_j(B)$、$G=V_A^*W_B$、$H=V_B^*W_A$ とおく。
-巡回性により $\mathrm{Tr}(AB)=\mathrm{Tr}(\Sigma_AG\Sigma_BH)=\sum_{i,j}a_iG_{ij}b_jH_{ji}$ であるから、
-$|g||h|\le\frac12(|g|^2+|h|^2)$ と $a_ib_j\ge0$ により
-$$
+*証明.* $`A=W_A\Sigma_AV_A^*`$、$`B=W_B\Sigma_BV_B^*`$、$`a_i=s_i(A)`$、$`b_j=s_j(B)`$、$`G=V_A^*W_B`$、$`H=V_B^*W_A`$ とおく。
+巡回性により $`\mathrm{Tr}(AB)=\mathrm{Tr}(\Sigma_AG\Sigma_BH)=\sum_{i,j}a_iG_{ij}b_jH_{ji}`$ であるから、
+$`|g||h|\le\frac12(|g|^2+|h|^2)`$ と $`a_ib_j\ge0`$ により
+```math
 |\mathrm{Tr}(AB)|\le\sum_{i,j}a_ib_j\,d_{ij},\qquad d_{ij}=\tfrac12\big(|G_{ij}|^2+|H_{ji}|^2\big).
-$$
-$(d_{ij})$ は二重確率行列であり、補題 11.3 により $\sum_{ij}a_ib_jd_{ij}\le\sum_ia_ib_i$ である。$\square$
+```
+$`(d_{ij})`$ は二重確率行列であり、補題 11.3 により $`\sum_{ij}a_ib_jd_{ij}\le\sum_ia_ib_i`$ である。$`\square`$
 
 <a id="r-11-5"></a>
 
-**系 11.5.** (a) 固有値 $p,q$ をもつ自己共役な $P,Q\in M_k(\mathbb C)$ に対し、
-$\sum_ip^\downarrow_iq^\uparrow_i\le\mathrm{Tr}(PQ)\le\sum_ip^\downarrow_iq^\downarrow_i$。
-(b) $P,Q\ge0$ に対し、$\mathrm{Tr}(PQ)\le\|PQ\|_1\le\sum_ip^\downarrow_iq^\downarrow_i$。
+**系 11.5.** (a) 固有値 $`p,q`$ をもつ自己共役な $`P,Q\in M_k(\mathbb C)`$ に対し、
+$`\sum_ip^\downarrow_iq^\uparrow_i\le\mathrm{Tr}(PQ)\le\sum_ip^\downarrow_iq^\downarrow_i`$。
+(b) $`P,Q\ge0`$ に対し、$`\mathrm{Tr}(PQ)\le\|PQ\|_1\le\sum_ip^\downarrow_iq^\downarrow_i`$。
 
 *証明.* (a) 定理 3.5 の証明と同様に、減少順に並べた固有基底に対する二重確率行列
-$c_{ij}=|\langle u_i,v_j\rangle|^2$ を用いて $\mathrm{Tr}(PQ)=\sum_{ij}p_iq_jc_{ij}$ と書ける。補題 11.3 を適用する（その下界は
-$\sum_ip^\downarrow_iq^\downarrow_{k+1-i}=\sum_ip^\downarrow_iq^\uparrow_i$ である）。(b) 第一の不等式は
-定理 1.9 である。定理 1.9 と定理 11.4 により $\|PQ\|_1=\max_U|\mathrm{Tr}(P\,QU)|\le\sum_is_i(P)s_i(QU)$ であり、
-$|QU|=(U^*Q^2U)^{1/2}=U^*QU$（定理 1.6）であるから $s_i(QU)=q^\downarrow_i$ である。$\square$
+$`c_{ij}=|\langle u_i,v_j\rangle|^2`$ を用いて $`\mathrm{Tr}(PQ)=\sum_{ij}p_iq_jc_{ij}`$ と書ける。補題 11.3 を適用する（その下界は
+$`\sum_ip^\downarrow_iq^\downarrow_{k+1-i}=\sum_ip^\downarrow_iq^\uparrow_i`$ である）。(b) 第一の不等式は
+定理 1.9 である。定理 1.9 と定理 11.4 により $`\|PQ\|_1=\max_U|\mathrm{Tr}(P\,QU)|\le\sum_is_i(P)s_i(QU)`$ であり、
+$`|QU|=(U^*Q^2U)^{1/2}=U^*QU`$（定理 1.6）であるから $`s_i(QU)=q^\downarrow_i`$ である。$`\square`$
 
 *計算：* ランダム行列での定理 11.4 と系 11.5 — [チュートリアル、11.2節](../../tutorial/ja/11_optimisation.md#s-11-2)。
 
-したがって、スペクトル $x,y$ をもつ $M_k(\mathbb C)$ の $X,Y\ge0$ に対し、命題 3.9 の破れ $\|YX\|_1-\mathrm{Tr}(XY)$ は
-高々 $\sum_ix^\downarrow_i(y^\downarrow_i-y^\uparrow_i)$ である（$(Y,X)$ に対する系 11.5(b) と (a) の下界による）。
+したがって、スペクトル $`x,y`$ をもつ $`M_k(\mathbb C)`$ の $`X,Y\ge0`$ に対し、命題 3.9 の破れ $`\|YX\|_1-\mathrm{Tr}(XY)`$ は
+高々 $`\sum_ix^\downarrow_i(y^\downarrow_i-y^\uparrow_i)`$ である（$`(Y,X)`$ に対する系 11.5(b) と (a) の下界による）。
 実験 2 については、この数がちょうど厳密な答えである。
 
 <a id="r-11-6"></a>
 
-**命題 11.6（スペクトルを固定した実験 2）.** 実験 2 では $|X|=X_0$、$|Y|=Y_0$ であり、
-$z=\|X_0VY_0\|_1-\mathrm{Tr}(X_0Y_0)$ である。$(X_0)_c$ のスペクトル $x_c$ と $(Y_0)_c$ のスペクトル $y_c$ を固定し、
-固有基底と $V$ を動かすとき、
-$$
+**命題 11.6（スペクトルを固定した実験 2）.** 実験 2 では $`|X|=X_0`$、$`|Y|=Y_0`$ であり、
+$`z=\|X_0VY_0\|_1-\mathrm{Tr}(X_0Y_0)`$ である。$`(X_0)_c`$ のスペクトル $`x_c`$ と $`(Y_0)_c`$ のスペクトル $`y_c`$ を固定し、
+固有基底と $`V`$ を動かすとき、
+```math
 \sup z=-\inf z=\sum_c\sum_ix^\downarrow_{c,i}\big(y^\downarrow_{c,i}-y^\uparrow_{c,i}\big),
-$$
+```
 であり、どちらも達成される。
 
-*証明.* $X^*X=X_0U^*UX_0=X_0^2$ であるから $|X|=X_0$（定理 1.6）。同様に $|Y|=Y_0$ であり、$|UA|=|A|$ により
-$\mathrm{Tr}|XY|=\|X_0VY_0\|_1$ である。すべての変数はブロックごとに作用し、$z$ はブロックにわたる和であるから、$C=1$ としてよい。
-$Y'=VY_0V^*\ge0$（スペクトル $y$）とおく。$|AV|=V^*|A|V$ であるから $\|X_0VY_0\|_1=\|X_0Y'V\|_1=\|X_0Y'\|_1$ である。系 11.5
-を組 $(X_0,Y')$ と $(X_0,Y_0)$ に適用し、$\|X_0Y'\|_1\ge\mathrm{Tr}(X_0Y')$ を用いると、
-$$
+*証明.* $`X^*X=X_0U^*UX_0=X_0^2`$ であるから $`|X|=X_0`$（定理 1.6）。同様に $`|Y|=Y_0`$ であり、$`|UA|=|A|`$ により
+$`\mathrm{Tr}|XY|=\|X_0VY_0\|_1`$ である。すべての変数はブロックごとに作用し、$`z`$ はブロックにわたる和であるから、$`C=1`$ としてよい。
+$`Y'=VY_0V^*\ge0`$（スペクトル $`y`$）とおく。$`|AV|=V^*|A|V`$ であるから $`\|X_0VY_0\|_1=\|X_0Y'V\|_1=\|X_0Y'\|_1`$ である。系 11.5
+を組 $`(X_0,Y')`$ と $`(X_0,Y_0)`$ に適用し、$`\|X_0Y'\|_1\ge\mathrm{Tr}(X_0Y')`$ を用いると、
+```math
 \sum_ix^\downarrow_iy^\uparrow_i-\sum_ix^\downarrow_iy^\downarrow_i\le\|X_0Y'\|_1-\mathrm{Tr}(X_0Y_0)\le\sum_ix^\downarrow_iy^\downarrow_i-\sum_ix^\downarrow_iy^\uparrow_i .
-$$
-を得る。$J$ を逆順の置換 $Je_i=e_{k+1-i}$ とする。このとき $J\mathrm{diag}(w)=\mathrm{diag}(w_k,\dots,w_1)J$ であり、
-$\mathrm{diag}(w)J$ のトレースノルムは $\sum_i|w_i|$ である。$X_0=\mathrm{diag}(x^\downarrow)$、$V=J$ とすると、
-$Y_0=\mathrm{diag}(y^\uparrow)$ に対しては $X_0VY_0=\mathrm{diag}(x^\downarrow_iy^\downarrow_i)J$ かつ
-$\mathrm{Tr}(X_0Y_0)=\sum_ix^\downarrow_iy^\uparrow_i$（上界）であり、$Y_0=\mathrm{diag}(y^\downarrow)$ に対しては
-$X_0VY_0=\mathrm{diag}(x^\downarrow_iy^\uparrow_i)J$ かつ $\mathrm{Tr}(X_0Y_0)=\sum_ix^\downarrow_iy^\downarrow_i$
-（下界）である。$\square$
+```
+を得る。$`J`$ を逆順の置換 $`Je_i=e_{k+1-i}`$ とする。このとき $`J\mathrm{diag}(w)=\mathrm{diag}(w_k,\dots,w_1)J`$ であり、
+$`\mathrm{diag}(w)J`$ のトレースノルムは $`\sum_i|w_i|`$ である。$`X_0=\mathrm{diag}(x^\downarrow)`$、$`V=J`$ とすると、
+$`Y_0=\mathrm{diag}(y^\uparrow)`$ に対しては $`X_0VY_0=\mathrm{diag}(x^\downarrow_iy^\downarrow_i)J`$ かつ
+$`\mathrm{Tr}(X_0Y_0)=\sum_ix^\downarrow_iy^\uparrow_i`$（上界）であり、$`Y_0=\mathrm{diag}(y^\downarrow)`$ に対しては
+$`X_0VY_0=\mathrm{diag}(x^\downarrow_iy^\uparrow_i)J`$ かつ $`\mathrm{Tr}(X_0Y_0)=\sum_ix^\downarrow_iy^\downarrow_i`$
+（下界）である。$`\square`$
 
 <a id="r-11-7"></a>
 
-**系 11.7（実験 2 の包絡線）.** $\ell_X,\ell_Y\in(0,1]$ とし、ある $k_c\ge2$ とする。
-$\lambda_{\max}=1$、$\lambda_{\min}(X_0)=\ell_X$、$\lambda_{\min}(Y_0)=\ell_Y$ を満たすすべての $X_0,Y_0\ge0$ とすべてのユニタリにわたって、
-$$
+**系 11.7（実験 2 の包絡線）.** $`\ell_X,\ell_Y\in(0,1]`$ とし、ある $`k_c\ge2`$ とする。
+$`\lambda_{\max}=1`$、$`\lambda_{\min}(X_0)=\ell_X`$、$`\lambda_{\min}(Y_0)=\ell_Y`$ を満たすすべての $`X_0,Y_0\ge0`$ とすべてのユニタリにわたって、
+```math
 \sup z=-\inf z=\sum_c\Big\lfloor\frac{k_c}2\Big\rfloor(1-\ell_X)(1-\ell_Y).
-$$
+```
 
-*証明.* 一つのブロックにおいて $x_i=x^\downarrow_{c,i}$、$y_i=y^\downarrow_{c,i}$、$k=k_c$ と書くと、$y^\uparrow_{c,i}=y_{k+1-i}$ である。
-$i$ と $k+1-i$ を対にすると $x_i(y_i-y_{k+1-i})+x_{k+1-i}(y_{k+1-i}-y_i)=(x_i-x_{k+1-i})(y_i-y_{k+1-i})$ であり、
-$k$ が奇数のとき中央の添字は $x_i(y_i-y_i)=0$ を寄与する。したがって
-$$
+*証明.* 一つのブロックにおいて $`x_i=x^\downarrow_{c,i}`$、$`y_i=y^\downarrow_{c,i}`$、$`k=k_c`$ と書くと、$`y^\uparrow_{c,i}=y_{k+1-i}`$ である。
+$`i`$ と $`k+1-i`$ を対にすると $`x_i(y_i-y_{k+1-i})+x_{k+1-i}(y_{k+1-i}-y_i)=(x_i-x_{k+1-i})(y_i-y_{k+1-i})`$ であり、
+$`k`$ が奇数のとき中央の添字は $`x_i(y_i-y_i)=0`$ を寄与する。したがって
+```math
 \sum_ix_i(y_i-y_{k+1-i})=\sum_{i\le\lfloor k/2\rfloor}(x_i-x_{k+1-i})(y_i-y_{k+1-i})\le\Big\lfloor\frac k2\Big\rfloor(1-\ell_X)(1-\ell_Y),
-$$
-である。$x_i\in[\ell_X,1]$、$y_i\in[\ell_Y,1]$ は減少列であるから、二つの因子はそれぞれ $[0,1-\ell_X]$ と $[0,1-\ell_Y]$ に
-含まれるからである。すべてのブロックにおいて、大きい方から $\lfloor k_c/2\rfloor$ 個の
-固有値が $1$ で、小さい方から $\lfloor k_c/2\rfloor$ 個が $\ell_X$（それぞれ $\ell_Y$）であり、中央のもの（$k_c$ が奇数のとき）は
-$[\ell_X,1]$（それぞれ $[\ell_Y,1]$）内で任意であるとき、等号が成り立つ。ある $k_c\ge2$ であるから、これらのスペクトルの全体での極値は $1$ と $\ell_X$（$\ell_Y$）である。命題 11.6
-により結論を得る。$\square$
+```
+である。$`x_i\in[\ell_X,1]`$、$`y_i\in[\ell_Y,1]`$ は減少列であるから、二つの因子はそれぞれ $`[0,1-\ell_X]`$ と $`[0,1-\ell_Y]`$ に
+含まれるからである。すべてのブロックにおいて、大きい方から $`\lfloor k_c/2\rfloor`$ 個の
+固有値が $`1`$ で、小さい方から $`\lfloor k_c/2\rfloor`$ 個が $`\ell_X`$（それぞれ $`\ell_Y`$）であり、中央のもの（$`k_c`$ が奇数のとき）は
+$`[\ell_X,1]`$（それぞれ $`[\ell_Y,1]`$）内で任意であるとき、等号が成り立つ。ある $`k_c\ge2`$ であるから、これらのスペクトルの全体での極値は $`1`$ と $`\ell_X`$（$`\ell_Y`$）である。命題 11.6
+により結論を得る。$`\square`$
 
-ここで $\Delta(|X|)=\delta$ に対し $1-\ell_X=2\delta/(1+\delta)$ である。$k_c$ が奇数のとき中央の固有値は関係しない。
+ここで $`\Delta(|X|)=\delta`$ に対し $`1-\ell_X=2\delta/(1+\delta)`$ である。$`k_c`$ が奇数のとき中央の固有値は関係しない。
 
-*計算：* $k=3$、$C=2$ に対する命題 11.6 の極値配置と系 11.7 の包絡線 — [チュートリアル、11.2節](../../tutorial/ja/11_optimisation.md#s-11-2)；マルチスタート探索で求めた包絡線 — [チュートリアル、11.5節](../../tutorial/ja/11_optimisation.md#s-11-5)。
+*計算：* $`k=3`$、$`C=2`$ に対する命題 11.6 の極値配置と系 11.7 の包絡線 — [チュートリアル、11.2節](../../tutorial/ja/11_optimisation.md#s-11-2)；マルチスタート探索で求めた包絡線 — [チュートリアル、11.5節](../../tutorial/ja/11_optimisation.md#s-11-5)。
 
 <a id="s-11-3"></a>
 
 ## 11.3 等号条件つきのトレース不等式
 
-$X=X^*$ に対し、$f_+(t)=\max(t,0)$、$f_-(t)=\max(-t,0)$ として $X_\pm=f_\pm(X)$ とおく。このとき $X_\pm\ge0$、$X=X_+-X_-$、
-$|X|=X_++X_-$、$X_+X_-=0$ である（定理 1.5(c)。$|X|=(X^2)^{1/2}=h(X)$、
-$h(t)=\sqrt{t^2}=|t|=f_+(t)+f_-(t)$ については 1.5(e)。正値性は系 1.4(3)）。
+$`X=X^*`$ に対し、$`f_+(t)=\max(t,0)`$、$`f_-(t)=\max(-t,0)`$ として $`X_\pm=f_\pm(X)`$ とおく。このとき $`X_\pm\ge0`$、$`X=X_+-X_-`$、
+$`|X|=X_++X_-`$、$`X_+X_-=0`$ である（定理 1.5(c)。$`|X|=(X^2)^{1/2}=h(X)`$、
+$`h(t)=\sqrt{t^2}=|t|=f_+(t)+f_-(t)`$ については 1.5(e)。正値性は系 1.4(3)）。
 
 <a id="r-11-8"></a>
 
-**補題 11.8.** $M_n(\mathbb C)$ の $A,B\ge0$ に対し $\|A-B\|_1\le\mathrm{Tr}\,A+\mathrm{Tr}\,B$ であり、等号は
-$AB=0$ のときかつそのときに限り成り立つ。
+**補題 11.8.** $`M_n(\mathbb C)`$ の $`A,B\ge0`$ に対し $`\|A-B\|_1\le\mathrm{Tr}\,A+\mathrm{Tr}\,B`$ であり、等号は
+$`AB=0`$ のときかつそのときに限り成り立つ。
 
-*証明.* $H=A-B$ とし、$(0,\infty)$ 上で $g=1$、それ以外で $g=0$ として $Q=g(H)$ とおく。$g=\bar g=g^2$ であるから $Q$ は射影である（定理 1.5(c)）。$|t|=t(2g(t)-1)$ であるから
-$|H|=H(2Q-1)$ であり（定理 1.5(c),(e)）、射影 $R=Q,1-Q$ に対して $\mathrm{Tr}(AR)=\mathrm{Tr}(RAR)$（巡回性）を
+*証明.* $`H=A-B`$ とし、$`(0,\infty)`$ 上で $`g=1`$、それ以外で $`g=0`$ として $`Q=g(H)`$ とおく。$`g=\bar g=g^2`$ であるから $`Q`$ は射影である（定理 1.5(c)）。$`|t|=t(2g(t)-1)`$ であるから
+$`|H|=H(2Q-1)`$ であり（定理 1.5(c),(e)）、射影 $`R=Q,1-Q`$ に対して $`\mathrm{Tr}(AR)=\mathrm{Tr}(RAR)`$（巡回性）を
 用いると、
-$$
+```math
 \|H\|_1=\mathrm{Tr}\big(A(2Q-1)\big)-\mathrm{Tr}\big(B(2Q-1)\big)
 =\mathrm{Tr}\,A+\mathrm{Tr}\,B-2\mathrm{Tr}\big((1-Q)A(1-Q)\big)-2\mathrm{Tr}(QBQ).
-$$
-である。引かれているトレースは $\ge0$ であり、$\mathrm{Tr}(RAR)=\|A^{1/2}R\|_2^2$ が零となるのは $AR=0$ のときかつそのときに限る。したがって等号が成り立つのは
-$A(1-Q)=0$ かつ $BQ=0$ のときかつそのときに限り、そのとき $AB=AQB=A(BQ)^*=0$ である。逆に $AB=0$ ならば $BA=0$ であり、
-$(A-B)^2=A^2+B^2=(A+B)^2$ であるから、定理 1.6 により $|A-B|=A+B$ である。$\square$
+```
+である。引かれているトレースは $`\ge0`$ であり、$`\mathrm{Tr}(RAR)=\|A^{1/2}R\|_2^2`$ が零となるのは $`AR=0`$ のときかつそのときに限る。したがって等号が成り立つのは
+$`A(1-Q)=0`$ かつ $`BQ=0`$ のときかつそのときに限り、そのとき $`AB=AQB=A(BQ)^*=0`$ である。逆に $`AB=0`$ ならば $`BA=0`$ であり、
+$`(A-B)^2=A^2+B^2=(A+B)^2`$ であるから、定理 1.6 により $`|A-B|=A+B`$ である。$`\square`$
 
 <a id="r-11-9"></a>
 
-**命題 11.9（実験 3）.** $\mathcal M$ の $X=X^*$ と $Y\ge0$ に対し
-$\mathrm{Tr}|YXY|\le\mathrm{Tr}(Y|X|Y)$ であり、等号は $YX_+Y^2X_-Y=0$ のときかつそのときに限り成り立つ。特に $XY=YX$ ならば等号が成り立つ。
+**命題 11.9（実験 3）.** $`\mathcal M`$ の $`X=X^*`$ と $`Y\ge0`$ に対し
+$`\mathrm{Tr}|YXY|\le\mathrm{Tr}(Y|X|Y)`$ であり、等号は $`YX_+Y^2X_-Y=0`$ のときかつそのときに限り成り立つ。特に $`XY=YX`$ ならば等号が成り立つ。
 
-*証明.* $M_D(\mathbb C)$ において $A=YX_+Y$ と $B=YX_-Y$ は正であり（系 1.7 を $T=X_\pm^{1/2}Y$ として適用）、$YXY=A-B$
-かつ $\mathrm{Tr}(Y|X|Y)=\mathrm{Tr}\,A+\mathrm{Tr}\,B$ である。補題 11.8 を適用する。$XY=YX$ ならば $Y$ は
-$X_\pm$ と可換であり（定理 1.5(d)）、$AB=Y^4X_+X_-=0$ である。$\square$
+*証明.* $`M_D(\mathbb C)`$ において $`A=YX_+Y`$ と $`B=YX_-Y`$ は正であり（系 1.7 を $`T=X_\pm^{1/2}Y`$ として適用）、$`YXY=A-B`$
+かつ $`\mathrm{Tr}(Y|X|Y)=\mathrm{Tr}\,A+\mathrm{Tr}\,B`$ である。補題 11.8 を適用する。$`XY=YX`$ ならば $`Y`$ は
+$`X_\pm`$ と可換であり（定理 1.5(d)）、$`AB=Y^4X_+X_-=0`$ である。$`\square`$
 
-したがって実験 3 では $z\ge0$ であり、$\underline z=0$ である（$Y=1$ とする）。等号条件は可換性より弱い：
-$X=\mathrm{diag}(1,-1,0)$ と、行が $(1,0,a)$、$(0,1,0)$、$(a,0,1)$（$|a|<1$）である $Y$ に対し、
-$AB=(Ye_1)\langle Ye_1,Ye_2\rangle(Ye_2)^*=0$ であるが、$a\ne0$ ならば $XY\ne YX$ である。
+したがって実験 3 では $`z\ge0`$ であり、$`\underline z=0`$ である（$`Y=1`$ とする）。等号条件は可換性より弱い：
+$`X=\mathrm{diag}(1,-1,0)`$ と、行が $`(1,0,a)`$、$`(0,1,0)`$、$`(a,0,1)`$（$`-1<a<1`$）である $`Y`$ に対し、
+$`AB=(Ye_1)\langle Ye_1,Ye_2\rangle(Ye_2)^*=0`$ であるが、$`a\ne0`$ ならば $`XY\ne YX`$ である。
 
 *計算：* ランダムな組での命題 11.9 と、可換でないのに等号が成り立つ例 — [チュートリアル、11.3節](../../tutorial/ja/11_optimisation.md#s-11-3)。
 
@@ -278,69 +278,69 @@ $AB=(Ye_1)\langle Ye_1,Ye_2\rangle(Ye_2)^*=0$ であるが、$a\ne0$ ならば $
 
 ## 11.4 サンプリング対最適化
 
-$|\mathrm{Tr}(AU)|$ は、その最大値 $\|A\|_1$ と比べて典型的にどれほどの大きさか。我々は $U$ を、
-**ジニブル行列** $Z$（成分は独立で密度
-$\pi^{-1}e^{-|z|^2}$ をもつ。Mezzadri の処方）の QR 分解 $Z=QR$（$R_{ii}>0$）の因子 $Q$ として、各ブロックで独立にサンプリングする。
+$`|\mathrm{Tr}(AU)|`$ は、その最大値 $`\|A\|_1`$ と比べて典型的にどれほどの大きさか。我々は $`U`$ を、
+**ジニブル行列** $`Z`$（成分は独立で密度
+$`\pi^{-1}e^{-|z|^2}`$ をもつ。Mezzadri の処方）の QR 分解 $`Z=QR`$（$`R_{ii}>0`$）の因子 $`Q`$ として、各ブロックで独立にサンプリングする。
 
 <a id="r-11-10"></a>
 
-**補題 11.10.** $Q$ は $U(k)$ 上でハール分布に従う。特に、任意の固定されたユニタリ $V\in M_k(\mathbb C)$ に対し、$VQ$ は
-$Q$ と同じ分布をもつ。独立なブロックをもつユニタリ $\bigoplus_cQ_c$ は、$\mathcal M$ のユニタリ群上でハール分布に従う。
+**補題 11.10.** $`Q`$ は $`U(k)`$ 上でハール分布に従う。特に、任意の固定されたユニタリ $`V\in M_k(\mathbb C)`$ に対し、$`VQ`$ は
+$`Q`$ と同じ分布をもつ。独立なブロックをもつユニタリ $`\bigoplus_cQ_c`$ は、$`\mathcal M`$ のユニタリ群上でハール分布に従う。
 
 *証明.* これは定理 5.3（左不変性はその証明の同変性の段階である。分布は一意性の補題 5.1 によってハール測度と
-同定され、その測度論的な段階は系 A.2 である）と系 5.4 である。$\square$
+同定され、その測度論的な段階は系 A.2 である）と系 5.4 である。$`\square`$
 
 *ライブラリでは：* このサンプラーは `TypeIAlgebra.random_unitary_operator` である — [チュートリアル、11.4節](../../tutorial/ja/11_optimisation.md#s-11-4)。
 
 <a id="r-11-11"></a>
 
-**命題 11.11.** ハール分布に従う $U\in U(k)$ と $A\in M_k(\mathbb C)$ に対し、$\mathbb E\mathrm{Tr}(AU)=0$ かつ
-$\mathbb E|\mathrm{Tr}(AU)|^2=\|A\|_2^2/k$ である。
+**命題 11.11.** ハール分布に従う $`U\in U(k)`$ と $`A\in M_k(\mathbb C)`$ に対し、$`\mathbb E\mathrm{Tr}(AU)=0`$ かつ
+$`\mathbb E|\mathrm{Tr}(AU)|^2=\|A\|_2^2/k`$ である。
 
-*証明.* 系 5.5 により $\mathbb EU_{ij}=0$ である。命題 5.7（$C=1$）を $X=|e_j\rangle\langle e_m|$ に適用すると、
+*証明.* 系 5.5 により $`\mathbb EU_{ij}=0`$ である。命題 5.7（$`C=1`$）を $`X=|e_j\rangle\langle e_m|`$ に適用すると、
 1次のワインガルテン公式
-$\mathbb E[U_{ij}\bar U_{lm}]=\mathbb E(UXU^*)_{il}=\delta_{il}\delta_{jm}/k$ を得る。$k\ge2$ に対しては、これは
-2次の公式（定理 5.10）において $i_2=i'_2$、$j_2=j'_2$ とおき両者について和をとることからも従う。
-$\sum_{i_2,j_2}|U_{i_2j_2}|^2=k$ だからである。$\mathrm{Tr}(AU)=\sum_{ij}A_{ji}U_{ij}$ を用いると、
-$\mathbb E|\mathrm{Tr}(AU)|^2=\sum_{ijlm}A_{ji}\bar A_{ml}\mathbb E[U_{ij}\bar U_{lm}]=\frac1k\sum_{ij}|A_{ji}|^2$ である。$\square$
+$`\mathbb E[U_{ij}\bar U_{lm}]=\mathbb E(UXU^*)_{il}=\delta_{il}\delta_{jm}/k`$ を得る。$`k\ge2`$ に対しては、これは
+2次の公式（定理 5.10）において $`i_2=i'_2`$、$`j_2=j'_2`$ とおき両者について和をとることからも従う。
+$`\sum_{i_2,j_2}|U_{i_2j_2}|^2=k`$ だからである。$`\mathrm{Tr}(AU)=\sum_{ij}A_{ji}U_{ij}`$ を用いると、
+$`\mathbb E|\mathrm{Tr}(AU)|^2=\sum_{ijlm}A_{ji}\bar A_{ml}\mathbb E[U_{ij}\bar U_{lm}]=\frac1k\sum_{ij}|A_{ji}|^2`$ である。$`\square`$
 
 <a id="r-11-12"></a>
 
-**系 11.12.** $M_k(\mathbb C)$ の $X,Y\ge0$ のスペクトルが $[a,b]$（$a>0$）に含まれるとし、$U$ をハール分布に従うとする。このとき
-$$
+**系 11.12.** $`M_k(\mathbb C)`$ の $`X,Y\ge0`$ のスペクトルが $`[a,b]`$（$`a>0`$）に含まれるとし、$`U`$ をハール分布に従うとする。このとき
+```math
 \frac{\big(\mathbb E|\mathrm{Tr}(XUY)|^2\big)^{1/2}}{\max_V|\mathrm{Tr}(XVY)|}=\frac{\|YX\|_2}{\sqrt k\,\|YX\|_1}\le\min\Big(\frac1{\sqrt k},\frac{b^2}{a^2k}\Big),
 \qquad
 \mathbb P\big(|\mathrm{Tr}(XUY)|\ge\mathrm{Tr}(XY)\big)\le\frac{b^4}{a^4k^2}.
-$$
+```
 
-*証明.* 等式は $A=YX$ に対する命題 11.11（$\mathrm{Tr}(XUY)=\mathrm{Tr}(AU)$ であるから）と命題 3.9 である。
-$\|A\|_2^2=\sum_is_i^2\le(\sum_is_i)^2=\|A\|_1^2$（1.4節）であるから、比は $\le1/\sqrt k$ である。
-$\|Av\|=\||A|v\|$（1.4節）であるから、$|A|$ を対角化すると $s_k(A)=\min_{\|v\|=1}\|Av\|$ および
-$s_1(A)=\max_{\|v\|=1}\|Av\|$ を得る。また単位ベクトル $v$ に対し $\|Xv\|^2=\langle v,X^2v\rangle\in[a^2,b^2]$ であり
-（$X^2-a^2$ と $b^2-X^2$ に対する系 1.4(3)）、$Y$ についても同様である。よって $a^2\le s_k(A)\le s_1(A)\le b^2$、$\|A\|_2^2\le kb^4$、
-$\|A\|_1\ge ka^2$ である。最後に $\mathrm{Tr}(XY)=\mathrm{Tr}(X^{1/2}YX^{1/2})\ge a\mathrm{Tr}\,X\ge ka^2$ であり、
-$|\mathrm{Tr}(XUY)|^2$ に対するマルコフの不等式により、確率は $(kb^4/k)/(ka^2)^2$ で抑えられる。$\square$
+*証明.* 等式は $`A=YX`$ に対する命題 11.11（$`\mathrm{Tr}(XUY)=\mathrm{Tr}(AU)`$ であるから）と命題 3.9 である。
+$`\|A\|_2^2=\sum_is_i^2\le(\sum_is_i)^2=\|A\|_1^2`$（1.4節）であるから、比は $`\le1/\sqrt k`$ である。
+$`\|Av\|=\||A|v\|`$（1.4節）であるから、$`|A|`$ を対角化すると $`s_k(A)=\min_{\|v\|=1}\|Av\|`$ および
+$`s_1(A)=\max_{\|v\|=1}\|Av\|`$ を得る。また単位ベクトル $`v`$ に対し $`\|Xv\|^2=\langle v,X^2v\rangle\in[a^2,b^2]`$ であり
+（$`X^2-a^2`$ と $`b^2-X^2`$ に対する系 1.4(3)）、$`Y`$ についても同様である。よって $`a^2\le s_k(A)\le s_1(A)\le b^2`$、$`\|A\|_2^2\le kb^4`$、
+$`\|A\|_1\ge ka^2`$ である。最後に $`\mathrm{Tr}(XY)=\mathrm{Tr}(X^{1/2}YX^{1/2})\ge a\mathrm{Tr}\,X\ge ka^2`$ であり、
+$`|\mathrm{Tr}(XUY)|^2`$ に対するマルコフの不等式により、確率は $`(kb^4/k)/(ka^2)^2`$ で抑えられる。$`\square`$
 
-したがって、$N$ 個のハール・サンプルが $|\mathrm{Tr}(XUY)|\le\mathrm{Tr}(XY)$ の破れを見つける確率は高々
-$Nb^4/(a^4k^2)$ である（$N$ 個の事象の和）。破れは可換でないすべての組に対して存在する（命題 3.9）にもかかわらず、である。
-この上界が意味をもつのは $k>\sqrt N\,b^2/a^2$ のときだけである（$b/a=6$、$N=2000$ では $k>1609$）。
+したがって、$`N`$ 個のハール・サンプルが $`|\mathrm{Tr}(XUY)|\le\mathrm{Tr}(XY)`$ の破れを見つける確率は高々
+$`Nb^4/(a^4k^2)`$ である（$`N`$ 個の事象の和）。破れは可換でないすべての組に対して存在する（命題 3.9）にもかかわらず、である。
+この上界が意味をもつのは $`k>\sqrt N\,b^2/a^2`$ のときだけである（$`b/a=6`$、$`N=2000`$ では $`k>1609`$）。
 
-*計算：* モンテカルロ法による命題 11.11 の検証と、$k\le32$ に対する系 11.12 の比と $2000$ 個のサンプルの最良値との比較 — [チュートリアル、11.4節](../../tutorial/ja/11_optimisation.md#s-11-4)。
+*計算：* モンテカルロ法による命題 11.11 の検証と、$`k\le32`$ に対する系 11.12 の比と $`2000`$ 個のサンプルの最良値との比較 — [チュートリアル、11.4節](../../tutorial/ja/11_optimisation.md#s-11-4)。
 
 <a id="r-11-13"></a>
 
-**補題 11.13.** $k\ge2$ ならば、任意の $A\in M_k(\mathbb C)$ に対し $\min_U|\mathrm{Tr}(AU)|=0$ である。
+**補題 11.13.** $`k\ge2`$ ならば、任意の $`A\in M_k(\mathbb C)`$ に対し $`\min_U|\mathrm{Tr}(AU)|=0`$ である。
 
-*証明.* $A=W\Sigma V^*$ とし、$P$ を巡回シフト $Pe_i=e_{(i\bmod k)+1}$ とする。$k\ge2$ ならばその対角成分は零である。
-$U=VPW^*$ に対し $\mathrm{Tr}(AU)=\mathrm{Tr}(\Sigma P)=0$ である。$\square$
+*証明.* $`A=W\Sigma V^*`$ とし、$`P`$ を巡回シフト $`Pe_i=e_{(i\bmod k)+1}`$ とする。$`k\ge2`$ ならばその対角成分は零である。
+$`U=VPW^*`$ に対し $`\mathrm{Tr}(AU)=\mathrm{Tr}(\Sigma P)=0`$ である。$`\square`$
 
-したがって $\inf_Uz=-\mathrm{Tr}(XY)$、$\sup_Uz=\|YX\|_1-\mathrm{Tr}(XY)$ である（命題 3.9）。命題 11.11 により $|\mathrm{Tr}(XUY)|$ の二乗平均平方根は $\|YX\|_2/\sqrt k$ である。
-系 11.12 の証明における評価（スペクトルは $[a,b]$ 内）により $\mathbb E|\mathrm{Tr}(XUY)|^2\le b^4$ かつ
-$\mathrm{Tr}(XY)\ge ka^2$ であるから、マルコフの不等式により $\varepsilon>0$ に対し
-$\mathbb P\big(z\ge-(1-\varepsilon)\mathrm{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)$ が成り立つ：$k$ が大きいとき、
-$z$ は高い確率でその下限に近い。
+したがって $`\inf_Uz=-\mathrm{Tr}(XY)`$、$`\sup_Uz=\|YX\|_1-\mathrm{Tr}(XY)`$ である（命題 3.9）。命題 11.11 により $`|\mathrm{Tr}(XUY)|`$ の二乗平均平方根は $`\|YX\|_2/\sqrt k`$ である。
+系 11.12 の証明における評価（スペクトルは $`[a,b]`$ 内）により $`\mathbb E|\mathrm{Tr}(XUY)|^2\le b^4`$ かつ
+$`\mathrm{Tr}(XY)\ge ka^2`$ であるから、マルコフの不等式により $`\varepsilon>0`$ に対し
+$`\mathbb P\big(z\ge-(1-\varepsilon)\mathrm{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)`$ が成り立つ：$`k`$ が大きいとき、
+$`z`$ は高い確率でその下限に近い。
 
-*計算：* 勾配上昇法と勾配降下法による $U$ についての両極値と、$20\,000$ 個のハール・サンプルとの比較 — [チュートリアル、11.4節](../../tutorial/ja/11_optimisation.md#s-11-4)。
+*計算：* 勾配上昇法と勾配降下法による $`U`$ についての両極値と、$`20\,000`$ 個のハール・サンプルとの比較 — [チュートリアル、11.4節](../../tutorial/ja/11_optimisation.md#s-11-4)。
 
 > **物理的意味**（物理的解釈であり、本講義の定理ではない）. 系 11.12 は、統計力学で **典型性** と呼ばれるものの、
 > 弱いが証明可能な一例である：高次元では、ほとんどすべての状態や時間発展が巨視的な量にほぼ同じ値を与えると
@@ -351,7 +351,7 @@ $z$ は高い確率でその下限に近い。
 
 ## 11.5 包絡線のためのマルチスタート探索
 
-**マルチスタート探索** は、それぞれ固有のスロット、符号、$U_0$、コントラストをもつ多数の独立なスタートから、
+**マルチスタート探索** は、それぞれ固有のスロット、符号、$`U_0`$、コントラストをもつ多数の独立なスタートから、
 勾配法をラウンドに分けて実行する。各ラウンドの後にユニタリ・チャートを再中心化し、スタートごとに、反復点における
 目的関数の最良値を返す。自己共役なパラメータ化の符号は離散的である：ラウンドの間に、ランダムなスロットでの単一の
 符号反転によって変更され、各反転は目的関数を改善する場合に保持される。
@@ -359,7 +359,7 @@ $z$ は高い確率でその下限に近い。
 *ライブラリでは：* `optimize.extremize` — [チュートリアル、11.5節](../../tutorial/ja/11_optimisation.md#s-11-5)。
 
 厳密な算術では、すべての反復は許容的である（命題 11.2 とその後の注意）から、返される値はすべて許容点における
-$z$ の値である。浮動小数点ではそれは丸め誤差を除いてその値である。したがって最大化は上限の
+$`z`$ の値である。浮動小数点ではそれは丸め誤差を除いてその値である。したがって最大化は上限の
 **下界** を、最小化は下限の上界を与え、それ以上のものではない——局所探索は局所極値で止まりうる。
 逆向きの評価には、系 11.7 や命題 11.9 のような証明か、凸緩和（11.6節）が必要である。計算された包絡線は
 (i) 閉じた形と照合し、(ii) 小さな解の直和のような手で構成した配置と照合し（包絡線はそれを下回ってはならない）、
@@ -367,23 +367,153 @@ $z$ の値である。浮動小数点ではそれは丸め誤差を除いてそ�
 
 <a id="r-11-14"></a>
 
-**命題 11.14（実験 1 の下側包絡線）.** すべての $k_c\ge2$ とする。$X\in\mathcal P_\delta$、
-$\lambda_{\max}(Y)=1$ を満たす $Y\ge0$、およびユニタリ $U\in\mathcal M$ にわたって $\ \min z=-\big(D-2\delta/(1+\delta)\big)$ である。
+**命題 11.14（実験 1 の下側包絡線）.** すべての $`k_c\ge2`$ とする。$`X\in\mathcal P_\delta`$、
+$`\lambda_{\max}(Y)=1`$ を満たす $`Y\ge0`$、およびユニタリ $`U\in\mathcal M`$ にわたって $`\ \min z=-\big(D-2\delta/(1+\delta)\big)`$ である。
 
-*証明.* $Y\le1$ から $X^{1/2}YX^{1/2}\le X$ が従うので、$\mathrm{Tr}(XY)\le\mathrm{Tr}\,X\le(D-1)+\ell(\delta)$ である。
-$X$ の一つの固有値は $\ell(\delta)$ であり、他は $\le1$ だからである。よって $z\ge-\mathrm{Tr}(XY)\ge-(D-2\delta/(1+\delta))$ である。
-等号は、$X$ の固有値が一度だけ $\ell(\delta)$ でそれ以外は $1$、$Y=1$、かつ $U=\bigoplus_cU_c$ が
-$\mathrm{Tr}(X_cU_c)=0$ を満たす（補題 11.13）とき成り立つ。$\square$
+*証明.* $`Y\le1`$ から $`X^{1/2}YX^{1/2}\le X`$ が従うので、$`\mathrm{Tr}(XY)\le\mathrm{Tr}\,X\le(D-1)+\ell(\delta)`$ である。
+$`X`$ の一つの固有値は $`\ell(\delta)`$ であり、他は $`\le1`$ だからである。よって $`z\ge-\mathrm{Tr}(XY)\ge-(D-2\delta/(1+\delta))`$ である。
+等号は、$`X`$ の固有値が一度だけ $`\ell(\delta)`$ でそれ以外は $`1`$、$`Y=1`$、かつ $`U=\bigoplus_cU_c`$ が
+$`\mathrm{Tr}(X_cU_c)=0`$ を満たす（補題 11.13）とき成り立つ。$`\square`$
 
-型 (ii) の検証には直和を使うことができる：実験 3 の $z$ は直和について加法的であり、直和のコントラストは各成分のコントラストの
-最大値である（演習 3）から、$\Delta(Y)$ を固定された区間 $[0,b]$ 内で自由とした実験 3 の包絡線について、
-$$
+型 (ii) の検証には直和を使うことができる：実験 3 の $`z`$ は直和について加法的であり、直和のコントラストは各成分のコントラストの
+最大値である（演習 3）から、$`\Delta(Y)`$ を固定された区間 $`[0,b]`$ 内で自由とした実験 3 の包絡線について、
+```math
 \overline z_{M_2\oplus M_2}(\delta)\ \ge\ \overline z_{M_2}(\delta)+\sup_{\delta'\le\delta}\overline z_{M_2}(\delta');
-$$
-特に、$M_2$ 上でコントラスト $\delta$ と $\delta'\le\delta$ において達成される二つの値の和は、$M_2\oplus M_2$ 上でコントラスト
-$\delta$ において達成される値である。
+```
+特に、$`M_2`$ 上でコントラスト $`\delta`$ と $`\delta'\le\delta`$ において達成される二つの値の和は、$`M_2\oplus M_2`$ 上でコントラスト
+$`\delta`$ において達成される値である。
 
-*計算：* マルチスタート探索による $M_2\oplus M_2$ 上の命題 11.14、$M_3\oplus M_3$ 上の系 11.7、命題 11.9 の検証と、型 (ii) の検証 — [チュートリアル、11.5節](../../tutorial/ja/11_optimisation.md#s-11-5)。
+*計算：* マルチスタート探索による $`M_2\oplus M_2`$ 上の命題 11.14、$`M_3\oplus M_3`$ 上の系 11.7、命題 11.9 の検証と、型 (ii) の検証 — [チュートリアル、11.5節](../../tutorial/ja/11_optimisation.md#s-11-5)。
+
+サイズ $`2`$ のブロックについては、実験 1 と実験 3 の上側包絡線が厳密に分かる。$`M_2(\mathbb C)`$ では固有基底は
+一つの数を通してのみ効いてくる：正規直交な固有基底 $`e_1,e_2`$ と $`f_1,f_2`$ に対し、二重確率行列
+$`(|\langle e_i,f_j\rangle|^2)`$ の行は $`(\gamma,1-\gamma)`$ と $`(1-\gamma,\gamma)`$ であり、$`\gamma=|\langle e_1,f_1\rangle|^2\in[0,1]`$、
+しかもすべての $`\gamma`$ が実基底で実現される（$`f_1=\cos t\,e_1+\sin t\,e_2`$、$`f_2=-\sin t\,e_1+\cos t\,e_2`$、$`\gamma=\cos^2t`$）。
+
+<a id="r-11-15"></a>
+
+**命題 11.15（$`M_2`$ 上の実験 1 と実験 3）.** $`M_2(\mathbb C)`$ の $`Y\ge0`$ の固有値を
+$`y_1\ge y_2\ge0`$、固有ベクトルを $`f_1,f_2`$ とし、$`y_1>0`$ とする。
+
+(a) $`X\ge0`$ の固有値を $`x_1\ge x_2\ge0`$、$`x_1>0`$、固有ベクトルを $`e_1,e_2`$ とする。任意のユニタリ $`U`$ に対し
+```math
+\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)\ \le\ \frac{(x_1-x_2)^2(y_1-y_2)^2}{4(x_1+x_2)(y_1+y_2)} .
+```
+$`x_1>x_2`$ かつ $`y_1>y_2`$ ならば、等号が成り立つのは $`|\mathrm{Tr}(XUY)|=\|YX\|_1`$ かつ
+$`\gamma=\gamma_1:=\frac14+\frac{x_1y_2+x_2y_1}{2(x_1+x_2)(y_1+y_2)}`$ のとき、かつそのときに限る。そうでなければ上界は $`0`$ であり、
+それが達成されるのは $`|\mathrm{Tr}(XUY)|=\|YX\|_1`$ のとき、かつそのときに限る。
+
+(b) $`X=X^*`$ とし、$`|X|`$ の固有値を $`x_1\ge x_2\ge0`$、$`x_1>0`$ とする。このとき
+```math
+\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ \le\ \frac{2x_1x_2}{x_1+x_2}\,(y_1-y_2)^2 .
+```
+$`X`$ が正負両方の符号の固有値をもち $`y_1>y_2`$ ならば、$`e_1`$、$`e_2`$ を絶対値 $`x_1`$、$`x_2`$ の固有値に対する $`X`$ の
+固有ベクトルとすると、等号が成り立つのは $`\gamma=\gamma_3:=\frac{x_1y_2+x_2y_1}{(x_1+x_2)(y_1+y_2)}`$ のとき、かつそのときに限る。
+
+上のようなすべての固有値について、両方の上界は実の $`X`$、$`Y`$、$`U`$ によって達成される（(b) では
+$`X=\mathrm{diag}(x_1,-x_2)`$）。特に、それらは $`M_2(\mathbb R)`$ でも同じである。
+
+*証明.* 左辺を $`z`$ と書き、$`S=x_1y_2+x_2y_1`$、$`p=(x_1-x_2)(y_1-y_2)\ge0`$、
+$`q=(x_1+x_2)(y_1+y_2)>0`$ とおく。すると $`q-2S=p`$ である。
+
+(a) 定理 1.9 により $`|\mathrm{Tr}(XUY)|=|\mathrm{Tr}(YX\,U)|\le\|YX\|_1`$ であり、$`U=W^*`$、$`YX=W|YX|`$ で等号が成り立つ。
+系 11.5 の証明と同様に、$`P=\sum_ia_i|e_i\rangle\langle e_i|`$、$`Q=\sum_jb_j|f_j\rangle\langle f_j|`$ に対して
+$`\mathrm{Tr}(PQ)=\sum_{i,j}a_ib_j|\langle e_i,f_j\rangle|^2`$ である。よって
+$`\mathrm{Tr}(XY)=(x_1y_2+x_2y_1)+\gamma(x_1-x_2)(y_1-y_2)=S+\gamma p`$ および
+$`\mathrm{Tr}(X^2Y^2)=(x_1^2y_2^2+x_2^2y_1^2)+\gamma(x_1^2-x_2^2)(y_1^2-y_2^2)`$。$`YX`$ の特異値の二乗 $`s_1^2,s_2^2`$ は
+$`(YX)^*YX=XY^2X`$ の固有値なので、$`s_1^2+s_2^2=\mathrm{Tr}(X^2Y^2)`$、
+$`s_1s_2=|\det(YX)|=x_1x_2y_1y_2`$ である。したがって
+```math
+\|YX\|_1^2=(s_1+s_2)^2=\mathrm{Tr}(X^2Y^2)+2x_1x_2y_1y_2=S^2+\gamma pq .
+```
+$`r\ge0`$ に対し $`\sqrt r\le r/q+q/4`$ であり、等号は $`\sqrt r=q/2`$ のときに限る（$`(\sqrt r-q/2)^2\ge0`$ を展開する）。$`r=S^2+\gamma pq`$ として
+```math
+z\ \le\ \|YX\|_1-\mathrm{Tr}(XY)\ \le\ \frac{S^2+\gamma pq}q+\frac q4-S-\gamma p=\frac{(q/2-S)^2}q=\frac{p^2}{4q}.
+```
+等号が成り立つのは $`|\mathrm{Tr}(XUY)|=\|YX\|_1`$ かつ $`S^2+\gamma pq=q^2/4`$、すなわち $`\gamma pq=(q/2-S)(q/2+S)=\frac p2(q/2+S)`$ のとき、かつそのときに限る。
+$`p>0`$ ならこれは $`\gamma=(q/2+S)/(2q)=\gamma_1`$ を意味し、$`0\le S\le q/2`$ よりこれは $`[\frac14,\frac12]`$ に属する。$`p=0`$ なら
+すべての $`\gamma`$ で成り立つ。
+
+(b) $`X`$ を $`-X`$ に替えても両辺は変わらない。$`X\ge0`$ ならば $`YXY\ge0`$、$`|YXY|=YXY`$ で $`z=0`$ である。
+$`X\le0`$ でも同様。そうでなければ $`x_2>0`$ であり、必要なら $`X`$ を $`-X`$ に替えて $`Xe_1=x_1e_1`$、
+$`Xe_2=-x_2e_2`$ とできる。$`u=\langle e_1,Y^2e_1\rangle=\gamma y_1^2+(1-\gamma)y_2^2`$、$`v=\langle e_2,Y^2e_2\rangle=s-u`$、$`s=y_1^2+y_2^2`$ とおく。
+すると $`\mathrm{Tr}(Y|X|Y)=\mathrm{Tr}(|X|Y^2)=x_1u+x_2v=:A`$ である。自己共役行列 $`YXY`$ の行列式は
+$`\det X(\det Y)^2=-x_1x_2y_1^2y_2^2\le0`$ なので、その固有値は $`\mu_+\ge0\ge\mu_-`$ であり、
+```math
+\mathrm{Tr}|YXY|=\mu_+-\mu_-=\sqrt{(\mu_++\mu_-)^2-4\mu_+\mu_-}=\sqrt{L^2+K^2},\qquad L=\mathrm{Tr}(XY^2)=x_1u-x_2v,\quad K=2\sqrt{x_1x_2}\,y_1y_2 .
+```
+$`\alpha=(x_1-x_2)/(x_1+x_2)`$、$`\beta=2\sqrt{x_1x_2}/(x_1+x_2)>0`$ とおくと $`\alpha^2+\beta^2=1`$ である。
+$`A=(x_1-x_2)u+x_2s`$、$`L=(x_1+x_2)u-x_2s`$ だから $`A-\alpha L=x_2s(1+\alpha)=2x_1x_2s/(x_1+x_2)`$、
+$`\beta K=4x_1x_2y_1y_2/(x_1+x_2)`$ であり、したがって $`A-\alpha L-\beta K=\frac{2x_1x_2}{x_1+x_2}(y_1-y_2)^2=:m`$。
+$`\mathbb R^2`$ における Cauchy–Schwarz の不等式から $`\sqrt{L^2+K^2}\ge\alpha L+\beta K`$ なので
+```math
+z=A-\sqrt{L^2+K^2}\ \le\ A-\alpha L-\beta K=m,
+```
+であり、等号は $`(L,K)`$ が $`(\alpha,\beta)`$ の非負倍であるとき、すなわち（$`\beta>0`$、$`K\ge0`$ より）
+$`\beta L=\alpha K`$、つまり $`(x_1+x_2)u-x_2s=(x_1-x_2)y_1y_2`$ のとき、かつそのときに限る。これで $`u`$ が定まり、
+$`u-y_2^2=(y_1-y_2)(x_1y_2+x_2y_1)/(x_1+x_2)`$ である。$`y_1>y_2`$ なら $`u=\gamma y_1^2+(1-\gamma)y_2^2`$ から $`\gamma=\gamma_3\in[0,\frac12]`$ を得る。
+
+*実の最大化元.* $`e_i`$ を標準基底、$`f_1,f_2`$ を $`\cos^2t=\gamma_1`$（または $`\gamma_3`$）となる回転した実基底とし、
+(a) では実の特異値分解 $`YX=W\Sigma V^{\mathrm T}`$（実対称行列 $`(YX)^{\mathrm T}YX`$ の対角化による）から
+$`U=VW^{\mathrm T}`$ とおけば、$`\mathrm{Tr}(UYX)=\mathrm{Tr}\,\Sigma=\|YX\|_1`$ となる。$`\square`$
+
+<a id="r-11-16"></a>
+
+**系 11.16（サイズ $`2`$ のブロックに対する実験 1 と実験 3 の包絡線）.** すべての $`k_c=2`$（よって $`D=2C`$）とし、
+$`\delta\in[0,1)`$、$`\delta'\in[0,1]`$、$`\ell=\ell(\delta)`$、$`\ell'=\ell(\delta')`$（$`\ell(1)=0`$ とする）とする。$`Y`$ は
+$`\lambda_{\max}(Y)=1`$ かつ $`\Delta(Y)=\delta'`$、すなわち $`\lambda_{\min}(Y)=\ell'`$ を満たす正作用素全体を動くとする。
+
+(a) 実験 1、$`X\in\mathcal P_\delta`$、このような $`Y`$、ユニタリ $`U`$ にわたって：
+$`\ \sup z=C\,\frac{\delta^2\delta'^2}{(1+\delta)(1+\delta')}`$、$`\inf z=-(2C-1+\ell\ell')`$。
+
+(b) 実験 3、$`|X|\in\mathcal P_\delta`$ を満たす $`X=X^*`$ とこのような $`Y`$ にわたって：
+$`\ \sup z=(C-\delta)\Big(\frac{2\delta'}{1+\delta'}\Big)^2`$、$`\inf z=0`$。
+
+四つの値はすべて達成される。したがって、もう一方のコントラストを $`[0,d]`$（$`d\in(0,1)`$）で自由とすると：実験 1 の
+上側包絡線は $`\Delta(X)=\delta`$ に沿って $`C\delta^2d^2/((1+\delta)(1+d))`$、（(a) の対称性により）$`\Delta(Y)=\delta'`$ に沿って
+$`C\delta'^2d^2/((1+\delta')(1+d))`$ であり、実験 3 の上側包絡線は $`\Delta(|X|)=\delta`$ に沿って $`(C-\delta)\big(2d/(1+d)\big)^2`$、
+$`\Delta(Y)=\delta'`$ に沿って $`d`$ によらず $`C\big(2\delta'/(1+\delta')\big)^2`$ である。$`d\to1`$ のとき最初の二つは増加して
+$`C\delta^2/(2(1+\delta))`$ と $`C-\delta`$、すなわち $`\Delta(Y)=1`$（特異な $`Y`$）での値に近づく。
+
+*証明.* $`x_{c,1}\ge x_{c,2}`$ を $`X_c`$（(b) では $`|X|_c`$）の固有値、$`y_{c,1}\ge y_{c,2}`$ を $`Y_c`$ の固有値とする。
+これらは $`[\ell,1]`$ と $`[\ell',1]`$ に属し、$`\ell`$ はそのブロックの小さい方の固有値である。
+$`1-\ell=2\delta/(1+\delta)`$、$`1+\ell=2/(1+\delta)`$ より $`(1-\ell)^2/(1+\ell)=2\delta^2/(1+\delta)`$、
+$`2\ell/(1+\ell)=1-\delta`$ であることに注意する。$`\ell'`$ についても同様。
+
+(a) *上限.* 三角不等式と各ブロックでの定理 1.9 により
+$`|\mathrm{Tr}(XUY)|\le\sum_c|\mathrm{Tr}(X_cU_cY_c)|\le\sum_c\|Y_cX_c\|_1`$ だから、命題 11.15(a) により（$`Y_c=0`$ のブロックの
+寄与は $`-\mathrm{Tr}(X_cY_c)=0`$）
+```math
+z\le\sum_c\frac{x_{c,1}y_{c,1}}4\,g\Big(\frac{x_{c,2}}{x_{c,1}}\Big)\,g\Big(\frac{y_{c,2}}{y_{c,1}}\Big),\qquad g(r)=\frac{(1-r)^2}{1+r}.
+```
+$`g`$ は $`[0,1]`$ で減少し、$`x_{c,2}/x_{c,1}\ge x_{c,2}\ge\ell`$、$`y_{c,2}/y_{c,1}\ge\ell'`$、$`x_{c,1},y_{c,1}\le1`$ なので、
+各項は高々 $`g(\ell)g(\ell')/4=\delta^2\delta'^2/((1+\delta)(1+\delta'))`$ である。等号：各ブロックで
+$`X_c=\mathrm{diag}(1,\ell)`$、固有値 $`1,\ell'`$ をもち $`\gamma=\gamma_1`$ となる $`Y_c`$、$`U_c=W_c^*`$、$`Y_cX_c=W_c|Y_cX_c|`$ とすると、
+各ブロックで $`\mathrm{Tr}(X_cU_cY_c)=\|Y_cX_c\|_1\ge0`$ となり、絶対値が足し合わされる。
+*下限.* $`z\ge-\mathrm{Tr}(XY)`$ であり、$`\mathrm{Tr}(Y_cX_cU_c)=0`$ を満たす $`U=\bigoplus_cU_c`$（補題 11.13）で等号が成り立つ。
+系 11.5(a) により $`\mathrm{Tr}(XY)\le\sum_c(x_{c,1}y_{c,1}+x_{c,2}y_{c,2})`$。$`\ell`$ と $`\ell'`$ が同じブロックにあれば、
+そのブロックの寄与は高々 $`1+\ell\ell'`$、他の各ブロックは高々 $`2`$ である。そうでなければ二つのブロックの寄与は
+高々 $`1+\ell`$ と $`1+\ell'`$ で、$`2C-2+\ell+\ell'=2C-1+\ell\ell'-(1-\ell)(1-\ell')`$。よって
+$`\mathrm{Tr}(XY)\le2C-1+\ell\ell'`$ であり、$`X=\mathrm{diag}(1,\ell)\oplus1\oplus\dots\oplus1`$、
+$`Y=\mathrm{diag}(1,\ell')\oplus1\oplus\dots\oplus1`$ で等号が成り立つ。
+
+(b) トレース、トレースノルム、$`|\cdot|`$ はブロックごとに作用する（演習 3）ので $`z=\sum_cz_c`$ であり、命題 11.15(b) により
+$`z_c\le H_c(y_{c,1}-y_{c,2})^2\le H_c(1-\ell')^2`$、ただし $`H_c=2x_{c,1}x_{c,2}/(x_{c,1}+x_{c,2})\le x_{c,1}\le1`$。$`|X|`$ が
+固有値 $`\ell`$ をもつブロック $`c_-`$ では $`x_{c_-,2}=\ell`$ であり、$`H_{c_-}=2\ell/(1+\ell/x_{c_-,1})\le2\ell/(1+\ell)=1-\delta`$。
+よって $`z\le(C-1+1-\delta)(1-\ell')^2`$。等号：$`X_1=\mathrm{diag}(1,-\ell)`$、$`c\ge2`$ で $`X_c=\mathrm{diag}(1,-1)`$、
+各 $`Y_c`$ は固有値 $`1,\ell'`$ をもちそのブロックの $`\gamma=\gamma_3`$ をとる（$`c\ge2`$ では $`\gamma_3=\frac12`$）。下限は
+命題 11.9 であり、$`X`$、$`Y`$ が可換なとき等号が成り立つ。
+
+*自由なコントラスト.* (a) の上限は $`\delta'`$ について増加し（$`\delta>0`$ なら狭義）、(b) の上限は $`\delta'`$ について
+狭義増加、$`\delta`$ について減少する。したがって $`[0,d]`$ で自由なコントラストにわたる上限は $`d`$ で達成され
+（実験 3 で $`\Delta(Y)`$ に沿う場合は $`\Delta(|X|)=0`$ で）、$`d\to1`$ の極限は $`\Delta(Y)=1`$ でのみ達成される
+（実験 1 では $`\delta>0`$ のとき）。$`\square`$
+
+$`C=1`$、$`d=0.999`$ の場合、これらは解説論文が最初に（実環において）数値的に観察した閉じた形である。任意の $`C`$ について、
+上側包絡線は $`M_2`$ 上の $`C`$ 個の解の直和の値である（実験 3 では $`C-\delta=(1-\delta)+(C-1)\cdot1`$）。$`M_2\oplus M_2`$ 上では
+上の直和の不等式は等式になる。11.7節では、これらの上限を任意のサイズのブロックに拡張する（定理 11.20）。
+
+*計算：* 命題 11.15 の最大化元、$`C=1,2`$ に対する系 11.16 の包絡線とその $`d\to1`$ の極限、およびそれらと比較するマルチスタート探索 — [チュートリアル、11.5節](../../tutorial/ja/11_optimisation.md#s-11-5)。
 
 <a id="s-11-6"></a>
 
@@ -391,40 +521,227 @@ $\delta$ において達成される値である。
 
 *ライブラリでは：* 他のソフトウェアとの比較。その中には、凸緩和によって上限を上から抑える SDP ソルバーも含まれる — [チュートリアル、11.6節](../../tutorial/ja/11_optimisation.md#s-11-6)。
 
+<a id="s-11-7"></a>
+
+## 11.7 任意のサイズのブロックに対する包絡線
+
+系 11.16 の上限は任意のサイズのブロックに拡張される。
+```math
+N=\sum_c\Big\lfloor\frac{k_c}2\Big\rfloor,
+```
+すなわちセクターに収まる互いに直交する 2 次元部分空間の最大個数とおく。上側包絡線は、命題 11.15 の最大化元を $`N`$ 個の
+サイズ $`2`$ のブロックに置き、残りを $`1\times1`$ ブロックとした直和によって達成される。証明はスペクトルを二値に帰着し、
+次に作用素をサイズ $`1`$ と $`2`$ のブロックに帰着する（補題 11.17）。そこでは命題 11.15 が適用できる——ただし実験 3 で
+$`|X|`$ の $`\lambda_{\min}`$ に対する固有ベクトルが複数のブロックにまたがる場合は例外であり、命題 11.19 がこの場合を
+線形化によって処理する。
+
+*頂点の議論.* 立方体の面 $`F=\{x\in[s,t]^n:x_i=t\ (i\in I),\ x_j=s\ (j\in J)\}`$ 上の凸関数 $`f`$ は、$`F`$ 上の最大値を
+$`F`$ の頂点、すなわちすべての座標が $`\{s,t\}`$ に属する点でとる。実際、$`F`$ の各点はこれらの頂点の凸結合であり（自由な
+座標の一つを $`s`$ と $`t`$ の凸結合として書き、自由な座標の個数についての帰納法による）、そこでの $`f`$ の値は頂点での
+値の最大値以下である。
+
+<a id="r-11-17"></a>
+
+**補題 11.17（二つの射影）.** 射影 $`P,Q\in M_n(\mathbb C)`$ に対し、$`\mathbb C^n`$ は次元 $`1`$ または $`2`$ の部分空間の
+直交和であって、各部分空間は $`P`$ と $`Q`$ で不変であり、各 2 次元部分空間には正規直交基底 $`f,f'`$ があってその上で
+$`P=|f\rangle\langle f|`$、$`Q=|q\rangle\langle q|`$、$`q=\cos\theta\,f+e^{i\psi}\sin\theta\,f'`$、$`\theta\in[0,\pi/2]`$ となる。
+$`P,Q`$ が実ならば、すべて実に選べる。
+
+*証明.* $`PQP`$ は $`\mathrm{ran}\,P`$ 上で自己共役である。その正規直交固有基底を $`v_1,\dots,v_r`$、$`PQPv_i=\mu_iv_i`$
+（定理 1.3）とし、$`W_i=\mathrm{span}\{v_i,Qv_i\}`$ とおく。すると $`PQv_i=PQPv_i=\mu_iv_i`$ なので $`W_i`$ は $`P`$ で不変で
+あり、（$`Q^2=Q`$ より）$`Q`$ でも不変である。$`i\ne j`$ に対し
+$`\langle v_i,Qv_j\rangle=\langle Qv_i,Qv_j\rangle=\langle v_i,PQPv_j\rangle=0`$ だから、$`W_i`$ は互いに直交する。その和は
+$`\mathrm{ran}\,P`$ を含み、その直交補空間 $`W`$ は $`Q`$ で不変（二つの射影はともに自己共役）かつ $`\ker P`$ に含まれ、$`W`$ 上の
+$`Q`$ の正規直交固有基底が 1 次元の直和成分を与える。次元 $`1`$ の $`W_i`$ は $`v_i`$ で張られる。$`\dim W_i=2`$ ならば
+$`f=v_i`$ とし、$`f'`$ を $`Qv_i`$ の $`f`$ に直交する成分を正規化したものとする。すると $`W_i`$ 上で $`P=|f\rangle\langle f|`$ で
+あり、$`Q`$ は $`W_i`$ を $`\mathrm{span}\{Qv_i\}`$ の上へ写すので、そこではある単位ベクトル $`q=\alpha f+\beta f'`$ について
+$`Q=|q\rangle\langle q|`$ である。$`q`$ に位相を掛けて $`\alpha\ge0`$ とでき、$`\alpha=\cos\theta`$、$`\beta=e^{i\psi}\sin\theta`$、
+$`\theta\in[0,\pi/2]`$ となる。実の場合、固有基底、$`f'`$、$`q`$ は実で、$`e^{i\psi}=\pm1`$ である。$`\square`$
+
+<a id="r-11-18"></a>
+
+**補題 11.18（実験 3：単調性と凸性）.** $`X=X^*`$ を可逆、$`P`$ をその正の部分への射影（$`X_+=PX`$）、$`S=2P-1`$、
+$`Y\ge0`$、$`z(X,Y)=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|`$ とする。
+
+(a) $`|X'|`$ が $`P`$ と可換で $`X'=S|X'|`$ であり、$`|X|\le|X'|`$ ならば、$`z(X,Y)\le z(X',Y)`$ である。
+
+(b) $`X`$ を固定すると、$`z`$ は $`K=Y^2`$ の凸関数である：$`K_1,K_2\ge0`$ と $`t\in[0,1]`$ に対し
+$`z\big(X,(tK_1+(1-t)K_2)^{1/2}\big)\le t\,z(X,K_1^{1/2})+(1-t)\,z(X,K_2^{1/2})`$。
+
+*証明.* $`A=YX_+Y`$、$`B=YX_-Y`$ とおくと $`z=\mathrm{Tr}\,A+\mathrm{Tr}\,B-\|A-B\|_1`$ である（命題 11.9 の証明）。
+
+(a) $`X_+=P|X|=|X|^{1/2}P|X|^{1/2}`$、$`X_-=(1-P)|X|`$ であり、$`P|X'|-P|X|=P(|X'|-|X|)P\ge0`$、$`1-P`$ についても同様である。
+よって $`X'`$ に対する作用素 $`A',B'`$ について $`A\le A'`$、$`B\le B'`$（系 1.7）。$`R\ge0`$ に対し
+$`\|A+R-B\|_1\le\|A-B\|_1+\mathrm{Tr}\,R`$（三角不等式、$`\|R\|_1=\mathrm{Tr}\,R`$）なので、$`A`$ または $`B`$ が増えても
+$`\mathrm{Tr}\,A+\mathrm{Tr}\,B-\|A-B\|_1`$ は減らない。
+
+(b) 自己共役な $`H`$ と $`-1\le T\le1`$ を満たす自己共役な $`T`$ に対し $`|\mathrm{Tr}(TH)|\le\|H\|_1`$ である：作用素
+$`T\pm i(1-T^2)^{1/2}`$ はユニタリ（定理 1.5）でその平均は $`T`$ であり、それぞれに定理 1.9 を適用すればよい。等号は
+$`T=2Q-1`$（$`Q`$ は $`H`$ の正の部分への射影）で成り立つ（補題 11.8 の証明）。$`T=1-2E`$ とおくと
+```math
+z=2\min_{0\le E\le1}\mathrm{Tr}\big(EA+(1-E)B\big).
+```
+まず $`Y`$ を可逆とする。すると $`N=|X|^{1/2}Y`$ は可逆で、$`A=N^*PN`$、$`B=N^*(1-P)N`$ であり、$`E\mapsto F=NEN^*`$ は
+$`\{0\le E\le1\}`$ を $`\{0\le F\le G\}`$、$`G=NN^*=|X|^{1/2}Y^2|X|^{1/2}`$ の上へ写す（系 1.7、両方向）。
+$`\mathrm{Tr}(EA)=\mathrm{Tr}(PF)`$、$`\mathrm{Tr}((1-E)B)=\mathrm{Tr}((1-P)(G-F))`$ なので
+$`z=2\min\{\mathrm{Tr}(PF+(1-P)(G-F)):0\le F\le G\}`$。$`0\le F_i\le G_i`$ ならば $`tF_1+(1-t)F_2`$ は $`tG_1+(1-t)G_2`$ に対して
+許容され、目的関数は $`(F,G)`$ について線形である。よって $`z`$ は $`G`$ について凸であり、$`G`$ は $`Y^2`$ についてアフィンで
+ある。$`K_1`$ または $`K_2`$ が特異な場合は、$`K_i+\varepsilon`$ に適用して $`\varepsilon\to0`$ とする（$`z`$ は $`Y`$ について連続、
+$`K\mapsto K^{1/2}`$ も連続）。$`\square`$
+
+<a id="r-11-19"></a>
+
+**命題 11.19（$`m`$ 個のブロック上の実験 3）.** $`\mathbb C^m\oplus\mathbb C^m`$ 上で $`X=X_+\oplus(-1)`$ とし、$`0<X_+\le1`$ の
+固有値を $`x_1,\dots,x_m`$ とする。$`C=\mathrm{diag}(\cos\theta_j)`$、$`\Sigma=\mathrm{diag}(\sin\theta_j)`$、$`Q`$ を等長写像
+$`v=\binom C\Sigma:\mathbb C^m\to\mathbb C^{2m}`$ の像への射影、$`b\in[0,1)`$、$`Y=b+(1-b)Q`$ とする。このとき
+```math
+\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ \le\ (1-b)^2\sum_{i=1}^m\frac{2x_i}{1+x_i},
+```
+であり、等号は $`X_+=\mathrm{diag}(x_1,\dots,x_m)`$ かつ $`\cos^2\theta_i=(1+bx_i)/((1+x_i)(1+b))`$ のとき成り立つ。
+
+*証明.* 線形代数の二つの事実：正方行列 $`R,T`$ に対し $`\det(\lambda-RT)=\det(\lambda-TR)`$（$`R`$ が可逆なら
+$`RT=R(TR)R^{-1}`$、一般には $`R`$ についての連続性による）、および右下のブロック $`E`$ が可逆なブロック行列に対し
+$`\det\begin{pmatrix}R&S\\T&E\end{pmatrix}=\det E\,\det(R-SE^{-1}T)`$（左から $`\begin{pmatrix}1&-SE^{-1}\\0&1\end{pmatrix}`$ を
+掛ける）。
+
+$`\gamma=1-b^2`$、$`K=1+X_+`$、$`A=C^2`$ とおくと $`\Sigma^2=1-A`$ である。$`Q=vv^*`$ のブロックは
+$`C^2,\ C\Sigma,\ C\Sigma,\ \Sigma^2`$ であり、$`Y^2=b^2+\gamma Q`$（$`Q^2=Q`$ による）。$`\lambda>0`$ に対し、$`\lambda-XY^2`$ の
+右下のブロックは可逆な対角行列 $`E=\lambda+b^2+\gamma\Sigma^2=\lambda+1-\gamma A`$ であり、$`C,\Sigma,E`$ はすべて対角で
+$`(b^2+\gamma A)E-\gamma^2A\Sigma^2=\lambda(b^2+\gamma A)+b^2`$ なので
+```math
+\det(\lambda-XY^2)=\det E\,\det\Big(\lambda-X_+\big(\lambda(b^2+\gamma A)+b^2\big)E^{-1}\Big)
+=\det\big((\lambda+1)(\lambda-b^2X_+)-\lambda\gamma KA\big)=p(\lambda),
+```
+ここで $`p(\lambda)=\det\big((\lambda+1)(\lambda-b^2X_+)-\lambda\gamma K^{1/2}AK^{1/2}\big)`$（行列
+$`K^{-1}(\lambda+1)(\lambda-b^2X_+)-\lambda\gamma A`$ を $`K^{1/2}`$ で共役にする）。自己共役行列
+```math
+\mathcal L=\begin{pmatrix}\gamma K^{1/2}AK^{1/2}+b^2X_+-1&bX_+^{1/2}\\ bX_+^{1/2}&0\end{pmatrix}
+```
+は、右下のブロックを $`\lambda`$ とした同じ公式により
+$`\det(\lambda-\mathcal L)=\lambda^m\det(\lambda+1-\gamma K^{1/2}AK^{1/2}-b^2X_+-b^2X_+/\lambda)=p(\lambda)`$ を満たす。
+$`\det(\lambda-YXY)=\det(\lambda-XY^2)`$ なので、$`YXY`$ と $`\mathcal L`$ の特性多項式は $`\lambda>0`$ で一致し、したがって至る
+ところで一致し、これら自己共役行列は同じ固有値をもつ：$`\mathrm{Tr}|YXY|=\|\mathcal L\|_1`$。
+$`\Delta=(1-X_+)(1+X_+)^{-1}`$、$`\Gamma=2X_+^{1/2}(1+X_+)^{-1}`$（$`X_+`$ の関数なので可換で、$`\Delta^2+\Gamma^2=1`$）とし、
+```math
+T=\begin{pmatrix}-\Delta&\Gamma\\ \Gamma&\Delta\end{pmatrix},\qquad T^2=1 .
+```
+$`T`$ は固有値 $`\pm1`$ の自己共役行列なので $`\|\mathcal L\|_1\ge\mathrm{Tr}(T\mathcal L)`$（補題 11.18(b) の証明）。さて
+$`\mathrm{Tr}(Y|X|Y)=\mathrm{Tr}(|X|Y^2)=b^2\mathrm{Tr}\,X_++\gamma\mathrm{Tr}(X_+A)+mb^2+\gamma\mathrm{Tr}(1-A)`$ であり、
+$`K^{1/2}\Delta K^{1/2}=1-X_+`$ より
+$`\mathrm{Tr}(T\mathcal L)=-\gamma\mathrm{Tr}((1-X_+)A)-\mathrm{Tr}(\Delta(b^2X_+-1))+2b\,\mathrm{Tr}(\Gamma X_+^{1/2})`$ である。$`A`$ を
+含む項は打ち消し合い、$`X_+`$ の固有基底で
+```math
+\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\le\sum_{i=1}^m\Big(b^2x_i+1+\frac{1-x_i}{1+x_i}(b^2x_i-1)-\frac{4bx_i}{1+x_i}\Big)
+=(1-b)^2\sum_{i=1}^m\frac{2x_i}{1+x_i}.
+```
+$`X_+`$ が対角ならば、$`X`$ と $`Y`$ は $`\mathrm{span}\{e_i,e_{m+i}\}`$ 上の $`2\times2`$ ブロックの直和で、そこで
+$`X=\mathrm{diag}(x_i,-1)`$ であり、命題 11.15(b) は $`\gamma_3=\sin^2\theta_i`$、すなわち述べた角度のとき値
+$`\frac{2x_i}{1+x_i}(1-b)^2`$ を与える。$`\square`$
+
+$`\mathcal L`$ は $`A=PQP`$（$`P`$ は第一の直和成分への射影）についてアフィンなので、$`z`$ は $`A`$ の凹関数であり、$`T`$ は
+最大化元における $`\mathcal L`$ の符号である。ただし角度を固定すると、$`X_+`$ の最小固有値に対する固有ベクトルについての
+最大値は一般に一つのブロックの内部ではとられない（数値的観察）。そうなるのは同時最大値だけである。
+
+<a id="r-11-20"></a>
+
+**定理 11.20（実験 1 と実験 3 の上側包絡線）.** $`N\ge1`$、$`\delta\in[0,1)`$、$`\delta'\in[0,1]`$、$`\ell=\ell(\delta)`$、
+$`\ell'=\ell(\delta')`$（$`\ell(1)=0`$ とする）とし、$`Y`$ は $`\lambda_{\max}(Y)=1`$ かつ $`\Delta(Y)=\delta'`$ を満たす正作用素全体を
+動くとする。
+
+(a) 実験 1、$`X\in\mathcal P_\delta`$、そのような $`Y`$、ユニタリ $`U\in\mathcal M`$ にわたって：
+$`\ \sup z=N\,\frac{\delta^2\delta'^2}{(1+\delta)(1+\delta')}`$。
+
+(b) 実験 3、$`|X|\in\mathcal P_\delta`$ を満たす $`X=X^*`$ とそのような $`Y`$ にわたって：すべての $`k_c`$ が偶数ならば
+$`\ \sup z=(N-\delta)\Big(\frac{2\delta'}{1+\delta'}\Big)^2`$、ある $`k_c`$ が奇数ならば
+$`\ \sup z=N\Big(\frac{2\delta'}{1+\delta'}\Big)^2`$。
+
+どちらの上限も実作用素によって達成され、$`\bigoplus_cM_{k_c}(\mathbb R)`$ でも同じである。
+
+*証明.* $`\mathcal M`$ での上界は実作用素に対してなおさら成り立ち、以下の最大化元は実である。
+
+(a) 各ブロックで定理 1.9 を用いると $`|\mathrm{Tr}(XUY)|\le\|YX\|_1`$ であり、等号は $`\mathcal M`$ のユニタリ $`U=W^*`$、
+$`YX=W|YX|`$ で成り立つ。よって $`\sup_Uz=F(X,Y):=\|YX\|_1-\mathrm{Tr}(XY)`$。$`X`$ の固定した（セクターに適合した）正規直交
+固有基底 $`(e_s)`$ に対し、$`F`$ は固有値 $`x\in[\ell,1]^D`$ の凸関数であり（$`x`$ の線形関数のノルムから線形関数を引いたもの）、
+$`X\in\mathcal P_\delta`$ は $`x`$ が面 $`\{x_s=1,\ x_{s'}=\ell\}`$ 上にあることを意味する。頂点の議論により、ある射影
+$`P\in\mathcal M`$ について $`F(X,Y)\le F(X',Y)`$、$`X'=\ell+(1-\ell)P`$ である。同様に $`F(X',Y)\le F(X',Y')`$、
+$`Y'=\ell'+(1-\ell')Q`$。各セクターで $`P_c,Q_c`$ に補題 11.17 を適用すると、$`X'`$ と $`Y'`$ は次元 $`1`$ と $`2`$ の部分空間上の
+直和であり、$`\|Y'X'\|_1`$ と $`\mathrm{Tr}(X'Y')`$ も同様である。1 次元の直和成分の寄与は $`xy-xy=0`$ である。2 次元の成分上では
+$`X'`$ の固有値は $`1,\ell`$、$`Y'`$ の固有値は $`1,\ell'`$ なので、命題 11.15(a) によりその寄与は高々
+$`(1-\ell)^2(1-\ell')^2/(4(1+\ell)(1+\ell'))=\delta^2\delta'^2/((1+\delta)(1+\delta'))`$ である（系 11.16 の証明を参照）。サイズ $`k_c`$
+のセクターはそれを高々 $`\lfloor k_c/2\rfloor`$ 個含む。等号：$`N`$ 個のブロックで $`X=\mathrm{diag}(1,\ell)`$、$`Y`$ は固有値
+$`1,\ell'`$ で $`\gamma=\gamma_1`$、残りの 1 次元ブロックで $`X=Y=1`$、そしてユニタリ $`W^*`$。
+
+(b) $`X`$ は可逆（$`\ell>0`$）で、$`z(-X,Y)=z(X,Y)`$ である。$`P`$ を $`X`$ の正の部分への射影、$`S=2P-1`$ とする。$`|X|`$ は
+$`P`$ と可換（どちらも $`X`$ の関数）なので、固有値 $`\ell`$ に対する単位固有ベクトル $`e`$ で、一つのセクター内にあり、
+$`\mathrm{ran}\,P`$ または $`\ker P`$ に属するものがある。必要なら $`X`$ を $`-X`$ に取り替えて $`e\in\mathrm{ran}\,P`$ とする。
+すると $`|X|\le|X'|:=1-(1-\ell)|e\rangle\langle e|`$ であり、$`X'=S|X'|=S-(1-\ell)|e\rangle\langle e|`$ は
+$`|X'|\in\mathcal P_\delta`$（$`D\ge2`$）を満たし、補題 11.18(a) により $`z(X,Y)\le z(X',Y)`$。補題 11.18(b) と、$`Y^2`$ の
+$`[\ell'^2,1]`$ 内の固有値に対する頂点の議論により、ある射影 $`Q\in\mathcal M`$ について $`z(X',Y)\le z(X',Y')`$、
+$`Y'=\ell'+(1-\ell')Q`$ である。各セクターで $`P_c,Q_c`$ に補題 11.17 を適用する。
+$`e`$ を含まないセクターでは $`X'=S`$ は部分空間上の直和である。1 次元の直和成分の寄与は $`0`$（そこでは $`X'`$ と $`Y'`$ は
+可換、命題 11.9）、2 次元の成分の寄与は命題 11.15(b)（$`x_1=x_2=1`$）により高々 $`(1-\ell')^2`$：合計で高々
+$`\lfloor k_c/2\rfloor(1-\ell')^2`$。
+$`e`$ のセクターでは、$`|X'|\le1`$ と補題 11.18(a) により同じ上界が得られ、したがって $`k_c`$ が奇数ならば
+$`\lfloor k_c/2\rfloor(1-\ell')^2`$、セクターが含む 2 次元部分空間が $`k_c/2`$ 個未満ならば $`(k_c/2-1)(1-\ell')^2`$ である。
+そうでなければ、その $`m=k_c/2`$ 個の 2 次元部分空間がセクターを埋め尽くし、基底は $`f_j,f_j'`$、$`f_j\in\mathrm{ran}\,P`$、
+$`f_j'\in\ker P`$ である。$`f_j'`$ に $`e^{-i\psi_j}`$ を掛けるユニタリは $`X'`$ と可換（$`\ker P`$ 上で $`X'=-1`$）で、補題 11.17 の
+位相を取り除く。基底 $`(f_1,\dots,f_m,f_1',\dots,f_m')`$ においてこのセクターは命題 11.19 の状況であり、
+$`X_+=1-(1-\ell)|e\rangle\langle e|`$ の固有値は $`\ell,1,\dots,1`$ である。$`2\ell/(1+\ell)=1-\delta`$ なので、その寄与は高々
+$`(1-\ell')^2(1-\delta+m-1)=(k_c/2-\delta)(1-\ell')^2`$ である。
+セクターについて和をとると、すべての $`k_c`$ が偶数ならば $`z\le(N-\delta)(1-\ell')^2`$（$`N-1\le N-\delta`$ に注意）、そうで
+なければ $`z\le N(1-\ell')^2`$ である。ここで $`1-\ell'=2\delta'/(1+\delta')`$。
+等号：すべての $`k_c`$ が偶数ならば、一つのブロックで $`X=\mathrm{diag}(\ell,-1)`$、他の $`N-1`$ 個のブロックで
+$`\mathrm{diag}(1,-1)`$、各ブロックで $`Y`$ は固有値 $`1,\ell'`$ で $`\gamma=\gamma_3`$（命題 11.15(b)）。ある $`k_c`$ が奇数ならば、
+$`N`$ 個のブロックで $`X=\mathrm{diag}(1,-1)`$、奇数セクターの 1 次元ブロックに固有値 $`\ell`$、他の 1 次元ブロックに $`1`$、
+$`Y`$ はブロック上では前と同じで 1 次元ブロック上では $`1`$。$`\square`$
+
+$`k_c=2`$ のとき、これは系 11.16 の上限の部分である（$`N=C`$）。サイズ $`k`$ の $`C`$ 個のセクターで、もう一方のコントラストが
+$`[0,d]`$、$`d\in(0,1)`$ で自由なとき、上限は $`\delta'`$ について増加し、上側包絡線は次のとおりである：実験 1 ではどちらの
+コントラストに沿っても $`C\lfloor k/2\rfloor\delta^2d^2/((1+\delta)(1+d))`$、実験 3 では $`\Delta(|X|)=\delta`$ に沿って、$`k`$ が
+偶数なら $`(Ck/2-\delta)\big(2d/(1+d)\big)^2`$、奇数なら $`C\lfloor k/2\rfloor\big(2d/(1+d)\big)^2`$、$`\Delta(Y)=\delta'`$ に沿っては
+（$`|X|=1`$ で達成され）$`C\lfloor k/2\rfloor\big(2\delta'/(1+\delta')\big)^2`$。$`k`$ が偶数のとき、これらは 11.5 節の直和の値で
+あり、直和の不等式はどちらの汎関数についても等式になる。$`k`$ が奇数のとき、1 次元の直和成分をもつ直和は実験 1 では最適
+だが、実験 3 では最適でない：$`|X|`$ の固有値 $`\ell`$ を 1 次元ブロックに置けば何のコストもかからず、包絡線は $`\delta`$ に
+依存しない。
+
+*計算：* 命題 11.19（$`YXY`$ と $`\mathcal L`$ のスペクトル、上界とその等号の場合）、いくつかのブロックサイズに対する定理 11.20
+の最大化元、および構造化された初期点から包絡線に到達するマルチスタート探索 —
+[チュートリアル、11.7節](../../tutorial/ja/11_optimisation.md#s-11-7)。
+
 <a id="x-11"></a>
 
 ## 演習問題
 
-1. （**ケーリー変換.**）$S^*=-S$ に対し、$C(S)=(1-S)(1+S)^{-1}$ がユニタリであり、$S\mapsto C(S)$ が
-   固有値 $-1$ をもたないユニタリ全体の上への全単射であることを示せ。したがって指数写像（補題 11.1）とは異なり、ケーリー・チャート
-   $U_0C(S)$ は $-U_0$ を取りこぼす。
-2. （**実ハール測度.**）$O(k)$ 上でハール分布に従う $O$（実ジニブル行列の QR）と実行列 $A$ に対し、
-   $\mathbb E\mathrm{Tr}(AO)^2=\|A\|_2^2/k$ を示し、実環で確かめよ。
-3. （**直和.**）実験 3 の $z$ が直和について加法的であること、および $\lambda_{\max}=1$ をもつ $A,A'\ge0$ に対し
-   $\Delta(A\oplus A')=\max(\Delta(A),\Delta(A'))$ であることを示せ。11.5節の直和に関する
-   不等式を導け（$\Delta(Y)$ は固定された区間 $[0,b]$ 内で自由とする）。
+1. （**ケーリー変換.**）$`S^*=-S`$ に対し、$`C(S)=(1-S)(1+S)^{-1}`$ がユニタリであり、$`S\mapsto C(S)`$ が
+   固有値 $`-1`$ をもたないユニタリ全体の上への全単射であることを示せ。したがって指数写像（補題 11.1）とは異なり、ケーリー・チャート
+   $`U_0C(S)`$ は $`-U_0`$ を取りこぼす。
+2. （**実ハール測度.**）$`O(k)`$ 上でハール分布に従う $`O`$（実ジニブル行列の QR）と実行列 $`A`$ に対し、
+   $`\mathbb E\mathrm{Tr}(AO)^2=\|A\|_2^2/k`$ を示し、実環で確かめよ。
+3. （**直和.**）実験 3 の $`z`$ が直和について加法的であること、および $`\lambda_{\max}=1`$ をもつ $`A,A'\ge0`$ に対し
+   $`\Delta(A\oplus A')=\max(\Delta(A),\Delta(A'))`$ であることを示せ。11.5節の直和に関する
+   不等式を導け（$`\Delta(Y)`$ は固定された区間 $`[0,b]`$ 内で自由とする）。
 
 <details>
 <summary>解答</summary>
 
-1. $S$ は正規で $iS$ は自己共役であるから、$S$ の固有値は純虚数であり（系 1.4(2)）、$1\pm S$ は可逆である。
-   これらは可換であり、$(1+S)^*=1-S$ である。したがって
-   $C^*C=(1-S)^{-1}(1+S)(1-S)(1+S)^{-1}=1$ であり、$1+C=2(1+S)^{-1}$ は可逆であるから $-1\notin\mathrm{spec}\,C$ である。
-   逆に、$1+U$ が可逆であるユニタリ $U$ に対し、$S=(1-U)(1+U)^{-1}$ は歪自己共役である：
-   $S^*=(1+U^*)^{-1}(1-U^*)=(U+1)^{-1}U\,U^*(U-1)=(U+1)^{-1}(U-1)=-S$（$U\pm1$ は可換であるから）。可換な $C$ と $S$ に対し、
-   $C(1+S)=1-S$ は $S(1+C)=1-C$ と同値である（どちらも $C+CS+S=1$ を意味する）。さて $C(S)$ は $S$ と可換であり、
-   $S=(1-U)(1+U)^{-1}$ は $U$ と可換である。よって $U=C(S)$ と $S=(1-U)(1+U)^{-1}$ は同値である：二つの写像は互いに逆である。
+1. $`S`$ は正規で $`iS`$ は自己共役であるから、$`S`$ の固有値は純虚数であり（系 1.4(2)）、$`1\pm S`$ は可逆である。
+   これらは可換であり、$`(1+S)^*=1-S`$ である。したがって
+   $`C^*C=(1-S)^{-1}(1+S)(1-S)(1+S)^{-1}=1`$ であり、$`1+C=2(1+S)^{-1}`$ は可逆であるから $`-1\notin\mathrm{spec}\,C`$ である。
+   逆に、$`1+U`$ が可逆であるユニタリ $`U`$ に対し、$`S=(1-U)(1+U)^{-1}`$ は歪自己共役である：
+   $`S^*=(1+U^*)^{-1}(1-U^*)=(U+1)^{-1}U\,U^*(U-1)=(U+1)^{-1}(U-1)=-S`$（$`U\pm1`$ は可換であるから）。可換な $`C`$ と $`S`$ に対し、
+   $`C(1+S)=1-S`$ は $`S(1+C)=1-C`$ と同値である（どちらも $`C+CS+S=1`$ を意味する）。さて $`C(S)`$ は $`S`$ と可換であり、
+   $`S=(1-U)(1+U)^{-1}`$ は $`U`$ と可換である。よって $`U=C(S)`$ と $`S=(1-U)(1+U)^{-1}`$ は同値である：二つの写像は互いに逆である。
 
-2. 定理 B.17（補題 C.2 も参照）により、実ガウス行列の符号補正された QR 因子 $O$（ライブラリは実環に対してこれを
-   サンプリングする）は $O(k)$ 上でハール分布に従うから、$V\in O(k)$ に対し $VO$ は $O$ と同じ分布をもつ。
-   $\mathrm{diag}(\pm1)$ を左から掛けることにより $i\ne l$ に対して $\mathbb E[O_{ij}O_{lm}]=0$ を得る。置換により
-   $\mathbb E[O_{ij}O_{im}]$ は $i$ に依存しないことが分かり、$\sum_iO_{ij}O_{im}=\delta_{jm}$ である。したがって
-   $\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k$ であり、$\mathbb E\mathrm{Tr}(AO)^2=\sum_{ij}A_{ji}^2/k$ である。
+2. 定理 B.17（補題 C.2 も参照）により、実ガウス行列の符号補正された QR 因子 $`O`$（ライブラリは実環に対してこれを
+   サンプリングする）は $`O(k)`$ 上でハール分布に従うから、$`V\in O(k)`$ に対し $`VO`$ は $`O`$ と同じ分布をもつ。
+   $`\mathrm{diag}(\pm1)`$ を左から掛けることにより $`i\ne l`$ に対して $`\mathbb E[O_{ij}O_{lm}]=0`$ を得る。置換により
+   $`\mathbb E[O_{ij}O_{im}]`$ は $`i`$ に依存しないことが分かり、$`\sum_iO_{ij}O_{im}=\delta_{jm}`$ である。したがって
+   $`\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k`$ であり、$`\mathbb E\mathrm{Tr}(AO)^2=\sum_{ij}A_{ji}^2/k`$ である。
 
-3. ブロック対角作用素のトレースとトレースノルムはブロックにわたる和であり、$|X\oplus X'|=|X|\oplus|X'|$ である。
-   $\lambda_{\min}(A\oplus A')=\min(\lambda_{\min}(A),\lambda_{\min}(A'))$ であり、$\Delta$ は $\lambda_{\min}$ について減少する。
-   したがって $(X,Y)$ が $\delta$ で許容的、$(X',Y')$ が $\delta'\le\delta$ で許容的ならば、$(X\oplus X',Y\oplus Y')$ は
-   $\delta$ で許容的であり、$z=z(X,Y)+z(X',Y')$ である。両方の組と $\delta'\le\delta$ にわたって上限をとればよい。
+3. ブロック対角作用素のトレースとトレースノルムはブロックにわたる和であり、$`|X\oplus X'|=|X|\oplus|X'|`$ である。
+   $`\lambda_{\min}(A\oplus A')=\min(\lambda_{\min}(A),\lambda_{\min}(A'))`$ であり、$`\Delta`$ は $`\lambda_{\min}`$ について減少する。
+   したがって $`(X,Y)`$ が $`\delta`$ で許容的、$`(X',Y')`$ が $`\delta'\le\delta`$ で許容的ならば、$`(X\oplus X',Y\oplus Y')`$ は
+   $`\delta`$ で許容的であり、$`z=z(X,Y)+z(X',Y')`$ である。両方の組と $`\delta'\le\delta`$ にわたって上限をとればよい。
 
 </details>
 

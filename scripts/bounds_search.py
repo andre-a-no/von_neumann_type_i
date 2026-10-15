@@ -15,6 +15,12 @@ optimised from several random starts in one batch (torch_vn_algebra.optimize).
 If the Monte Carlo samples of scripts/experiment.py are available in results/experiments, they are
 overlaid and the script checks that all of them lie between the two envelopes.
 
+All upper envelopes of Exp. 1 and Exp. 3 (and both envelopes of Exp. 2) are proved in closed form (paper, Theorem 3 and
+Proposition 2; scripts/certify_envelopes.py): the search is compared with them for every configuration and both
+axes (relative shortfall and excess in bounds.json; macros BoundsSupDevOne, BoundsSupDevThree). Half of the starts of
+Exp. 1 and Exp. 3 begin at structured points (optimize.structured_unitary and two-level spectra: X diagonal, Y
+rotated in pairs, U rotating the same pairs), the other half at Haar-random ones.
+
 Writes generated/bounds.tex, generated/bounds.json, figures/bounds_*.pdf.
 
     python scripts/bounds_search.py --mode full --device cuda
@@ -30,6 +36,7 @@ from common import ROOT, parse_args, save_json, write_tex, env_macro, sync, sci,
 
 from torch_vn_algebra import TypeIAlgebra, optimize as opt
 from bounds_checks import DMAX, structured_samples, direct_sum_bound, exact_envelope
+import certify_envelopes as ce
 
 args = parse_args(__doc__)
 dev = args.device
@@ -52,14 +59,27 @@ def trace_norm(op):
     return op.trace_norm()
 
 
+STRUCTURED_FRACTION = 0.5                                # starts of Exp. 1, 3 with a structured initial point
+
+
 def build(exp, alg, batch, delta_x, delta_y):
-    """Parametrised operators and the objective z for one experiment."""
-    if exp == 3:
-        X = opt.SelfAdjointParam(alg, batch, delta=delta_x)
-    else:
+    """Parametrised operators and the objective z for one experiment. In Exp. 1 and 3 a fraction of the starts begins
+    at the structure of the maximisers (paper, Theorem 3), which Haar-random starts miss when C is large: X diagonal
+    (in Exp. 3 with one positive and one negative eigenvalue in each pair of slots), Y rotated in consecutive pairs of
+    X's eigenvectors, two-level spectra (one eigenvalue near 1 and one near lambda_min per pair; |X| near 1 in
+    Exp. 3), and U rotating the same pairs (det = +1 in every sector: a chart U0 exp(G - G^T) of a real algebra stays
+    in the connected component of U0, and the maximiser of Exp. 1 lies in that of the identity)."""
+    if exp == 2:
         X = opt.PositiveParam(alg, batch, delta=delta_x)
-    Y = opt.PositiveParam(alg, batch, delta=delta_y)
-    U = opt.UnitaryParam(alg, batch)
+        Y = opt.PositiveParam(alg, batch, delta=delta_y)
+        U = opt.UnitaryParam(alg, batch)
+    else:
+        cls = opt.SelfAdjointParam if exp == 3 else opt.PositiveParam
+        X = cls(alg, batch, delta=delta_x, init='diagonal', init_fraction=STRUCTURED_FRACTION,
+                spectrum_init='high' if exp == 3 else 'pairs')
+        Y = opt.PositiveParam(alg, batch, delta=delta_y, init='pairs', init_fraction=X.structured,
+                              spectrum_init='pairs')
+        U = opt.UnitaryParam(alg, batch, init='rotations', init_fraction=X.structured)
     if exp == 1:
         def z():
             x, y = X.operator(), Y.operator()
@@ -245,7 +265,10 @@ for exp in (1, 2, 3):
                        label=f'two-level spectra, structured bases ({len(st)})')
             ax.plot(GRID, env[along]['sup'], 'r-', lw=1.5, label='sup (optimisation)')
             ax.plot(GRID, env[along]['inf'], 'b-', lw=1.5, label='inf (optimisation)')
-            for curve in (exact_envelope(exp, k, C, GRID) or {}).values():
+            curves = dict(exact_envelope(exp, k, C, GRID) or {})
+            if exp in (1, 3):
+                curves['sup'] = ce.exact_sup(exp, k, GRID, C=C, along=along)
+            for curve in curves.values():
                 ax.plot(GRID, curve, 'k--', lw=0.9, label='exact')
             if dsum is not None and exp in (1, 3):
                 ax.plot(GRID, dsum[along]['sup'], 'k:', lw=1.2, label='direct sum of $k=2$ solutions')
@@ -321,19 +344,26 @@ for r in results:
                 exact_dev2 = max(exact_dev2, float(np.max(np.abs(sgn * np.array(r[f'{n}_vs_{along}'])[mask] - ex[mask])
                                                           / ex[mask])))
 print(f"Exp 2 envelopes (all k, C) vs exact +-C floor(k/2) 2d/(1+d)(1-lo): max relative deviation {exact_dev2:.1e}")
-# conjectured closed forms for k = 2, C = 1 along Delta(X) = d with the free contrast capped at D = DMAX (no proof;
-# compared numerically): Exp 1: sup z = d^2 D^2 / ((1 + d)(1 + D)),  Exp 3: sup z = (1 - d)(2D / (1 + D))^2
-# (for D -> 1: d^2 / (2 (1 + d)) and 1 - d)
-conj_dev = {}
+# the upper envelopes of Exp. 1 and Exp. 3 are proved for all k and C (paper, Theorem 3; scripts/certify_envelopes.py):
+# relative shortfall of the search (where the exact value exceeds 1e-3 of its maximum) and excess (must be rounding)
+sup_dev, sup_excess = {}, {}
 for r in results:
-    if r['k'] == 2 and r['C'] == 1 and r['experiment'] in (1, 3):
-        g = np.array(r['grid'])
-        D = DMAX
-        conj = g ** 2 * D ** 2 / ((1 + g) * (1 + D)) if r['experiment'] == 1 else (1 - g) * (2 * D / (1 + D)) ** 2
-        mask = conj > 1e-3
-        conj_dev[r['experiment']] = float(np.max(np.abs(np.array(r['sup_vs_x'])[mask] - conj[mask]) / conj[mask]))
-        print(f"Exp {r['experiment']} upper envelope (k=2, C=1) vs conjectured closed form: "
-              f"max relative deviation {conj_dev[r['experiment']]:.1e}")
+    e = r['experiment']
+    if e not in (1, 3):
+        continue
+    devs, exc = [], []
+    for along in ('x', 'y'):
+        ex = ce.exact_sup(e, r['k'], GRID, C=r['C'], along=along)
+        got = np.array(r[f'sup_vs_{along}'])
+        r[f'sup_exact_{along}'] = ex.tolist()
+        mask = ex > 1e-3 * ex.max()
+        devs.append(float(np.max((ex[mask] - got[mask]) / ex[mask])))
+        exc.append(float(np.max(got - ex)))
+    r['sup_exact_dev'], r['sup_exact_excess'] = max(devs), max(exc)
+    sup_dev[e] = max(sup_dev.get(e, 0.0), r['sup_exact_dev'])
+    sup_excess[e] = max(sup_excess.get(e, -np.inf), r['sup_exact_excess'])
+    print(f"Exp {e} k={r['k']:2d} C={r['C']:2d}: upper envelopes vs exact (Theorem 3): relative shortfall "
+          f"{r['sup_exact_dev']:.1e}, largest excess {r['sup_exact_excess']:.1e}")
 
 save_json(args, 'bounds', dict(results=results, results_2d=results_2d, starts=STARTS, steps=ROUNDS * STEPS,
                                seconds=time.time() - t_start))
@@ -343,7 +373,8 @@ tex += f"\\newcommand{{\\BoundsGrid}}{{{len(GRID)}}}\n"
 tex += f"\\newcommand{{\\BoundsExactDev}}{{{exact_dev:.1e}}}\n"
 tex += f"\\newcommand{{\\BoundsExactDevTwo}}{{{exact_dev2:.1e}}}\n"
 for e, name in ((1, 'One'), (3, 'Three')):
-    tex += f"\\newcommand{{\\BoundsConjDev{name}}}{{{f'{conj_dev[e]:.1e}' if e in conj_dev else '--'}}}\n"
+    tex += f"\\newcommand{{\\BoundsSupDev{name}}}{{{f'{max(sup_dev[e], 0.0):.1e}' if e in sup_dev else '--'}}}\n"
+    tex += f"\\newcommand{{\\BoundsSupExcess{name}}}{{{f'{sup_excess[e]:.1e}' if e in sup_excess else '--'}}}\n"
 exp3_inf = max((abs(v) for r in results if r['experiment'] == 3 for v in r['inf_vs_x'] + r['inf_vs_y']), default=0.0)
 mc_checked = sum(r['mc_samples'] or 0 for r in results)
 mc_dropped = sum(r.get('mc_dropped') or 0 for r in results)

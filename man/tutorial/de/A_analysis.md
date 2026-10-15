@@ -7,7 +7,7 @@ Wahrscheinlichkeitstheorie beweist, die die Kapitel mit ihrer Nummer zitieren: N
 Eigenwertungleichungen, Gauß-Vektoren und ihre Richtungen, Gaußsche Momente und gleichverteilte Abstände. Die Prüfungen
 verwenden nur NumPy, nicht die Bibliothek: Jeder Block zieht zufällige Vektoren oder Matrizen und vergleicht sie mit der
 exakten Aussage. Die im ersten Block definierte Hilfsfunktion `mc` stellt sicher, dass ein Monte-Carlo-Mittelwert
-höchstens $5$ Standardfehler vom exakten Wert entfernt liegt.
+höchstens $`5`$ Standardfehler vom exakten Wert entfernt liegt.
 
 <a id="s-A-2"></a>
 
@@ -16,8 +16,8 @@ höchstens $5$ Standardfehler vom exakten Wert entfernt liegt.
 *Vorlesungsnotizen:* [Abschnitt A.2](../../lecture_notes/de/A_analysis.md#s-A-2); [Korollar A.7](../../lecture_notes/de/A_analysis.md#r-A-7).
 
 Nach [Korollar A.7](../../lecture_notes/de/A_analysis.md#r-A-7) verschwindet ein nicht identisch verschwindendes Polynom an einem zufälligen Vektor mit
-Dichte mit Wahrscheinlichkeit $0$. Für $\det Z$, wobei $Z$ eine reelle $3\times3$-Matrix mit unabhängigen
-$N(0,1)$-Einträgen ist, ergibt das $\mathbb P(|\det Z|<\varepsilon)\to0$ für $\varepsilon\to0$.
+Dichte mit Wahrscheinlichkeit $`0`$. Für $`\det Z`$, wobei $`Z`$ eine reelle $`3\times3`$-Matrix mit unabhängigen
+$`N(0,1)`$-Einträgen ist, ergibt das $`\mathbb P(|\det Z|<\varepsilon)\to0`$ für $`\varepsilon\to0`$.
 
 ```python
 import math
@@ -50,9 +50,9 @@ assert fractions[1] < 0.2 * fractions[0] and fractions[2] < 0.2 * fractions[1]
 *Vorlesungsnotizen:* [Abschnitt A.3](../../lecture_notes/de/A_analysis.md#s-A-3); [Satz A.8](../../lecture_notes/de/A_analysis.md#r-A-8), [Korollar A.9](../../lecture_notes/de/A_analysis.md#r-A-9), [Satz A.10](../../lecture_notes/de/A_analysis.md#r-A-10), [Lemma A.12](../../lecture_notes/de/A_analysis.md#r-A-12).
 
 Der Block prüft an zufälligen hermiteschen Matrizen die Weylschen Ungleichungen
-$\lambda_j(A)+\lambda_1(E)\le\lambda_j(A+E)\le\lambda_j(A)+\lambda_n(E)$ ([Satz A.10](../../lecture_notes/de/A_analysis.md#r-A-10)), die
-Courant–Fischer-Schranke $\max_{x\in U,|x|=1}\langle x,Ax\rangle\ge\lambda_j(A)$ für $j$-dimensionales $U$
-([Satz A.8](../../lecture_notes/de/A_analysis.md#r-A-8)), die Verschränkung $\lambda_j(A)\le\lambda_j(Q^*AQ)\le\lambda_{j+n-m}(A)$
+$`\lambda_j(A)+\lambda_1(E)\le\lambda_j(A+E)\le\lambda_j(A)+\lambda_n(E)`$ ([Satz A.10](../../lecture_notes/de/A_analysis.md#r-A-10)), die
+Courant–Fischer-Schranke $`\max_{x\in U,|x|=1}\langle x,Ax\rangle\ge\lambda_j(A)`$ für $`j`$-dimensionales $`U`$
+([Satz A.8](../../lecture_notes/de/A_analysis.md#r-A-8)), die Verschränkung $`\lambda_j(A)\le\lambda_j(Q^*AQ)\le\lambda_{j+n-m}(A)`$
 ([Korollar A.9](../../lecture_notes/de/A_analysis.md#r-A-9)) und die Lagrange-Formel für die Spektralprojektionen ([Lemma A.12](../../lecture_notes/de/A_analysis.md#r-A-12)).
 
 ```python
@@ -96,10 +96,10 @@ for i, m_i in enumerate(mult):
 
 *Vorlesungsnotizen:* [Abschnitt A.4](../../lecture_notes/de/A_analysis.md#s-A-4); [Satz A.15](../../lecture_notes/de/A_analysis.md#r-A-15), [Proposition A.17](../../lecture_notes/de/A_analysis.md#r-A-17).
 
-[Satz A.15](../../lecture_notes/de/A_analysis.md#r-A-15) liefert die Dichte $f_X$ eines nicht ausgearteten zentrierten Gauß-Vektors $X$; der Block
-vergleicht $\mathbb P(X\in[0,1]^2)$ mit dem nach der Mittelpunktsregel berechneten Integral von $f_X$. Nach
-[Proposition A.17](../../lecture_notes/de/A_analysis.md#r-A-17) ist $\mathbb E\mathrm{Tr}\,H^2$ gleich $n(n+1)/2$ für das GOE und $n^2$ für das GUE,
-und $OHO^T$ hat die Verteilung der GOE-Matrix $H$; der Block prüft zwei Momente ihrer Einträge.
+[Satz A.15](../../lecture_notes/de/A_analysis.md#r-A-15) liefert die Dichte $`f_X`$ eines nicht ausgearteten zentrierten Gauß-Vektors $`X`$; der Block
+vergleicht $`\mathbb P(X\in[0,1]^2)`$ mit dem nach der Mittelpunktsregel berechneten Integral von $`f_X`$. Nach
+[Proposition A.17](../../lecture_notes/de/A_analysis.md#r-A-17) ist $`\mathbb E\mathrm{Tr}\,H^2`$ gleich $`n(n+1)/2`$ für das GOE und $`n^2`$ für das GUE,
+und $`OHO^T`$ hat die Verteilung der GOE-Matrix $`H`$; der Block prüft zwei Momente ihrer Einträge.
 
 ```python
 Amat = rng.standard_normal((2, 4))                       # Theorem A.15: X = A g in R^2, A of rank 2
@@ -131,10 +131,10 @@ mc(rot[:, 0, 1] ** 2, 0.5, "E (O H O^T)_12^2")
 
 *Vorlesungsnotizen:* [Abschnitt A.5](../../lecture_notes/de/A_analysis.md#s-A-5); [Korollar A.19](../../lecture_notes/de/A_analysis.md#r-A-19), [Satz A.20](../../lecture_notes/de/A_analysis.md#r-A-20), [Korollar A.21](../../lecture_notes/de/A_analysis.md#r-A-21).
 
-Für einen komplexen Standard-Gauß-Vektor $z\in\mathbb C^3$ besagt [Satz A.20](../../lecture_notes/de/A_analysis.md#r-A-20)(b), dass $|z|^2$ die
-Dichte $t^{N-1}e^{-t}/(N-1)!$ hat und $z/|z|$ gleichverteilt auf der Sphäre und unabhängig von $|z|$ ist;
+Für einen komplexen Standard-Gauß-Vektor $`z\in\mathbb C^3`$ besagt [Satz A.20](../../lecture_notes/de/A_analysis.md#r-A-20)(b), dass $`|z|^2`$ die
+Dichte $`t^{N-1}e^{-t}/(N-1)!`$ hat und $`z/|z|`$ gleichverteilt auf der Sphäre und unabhängig von $`|z|`$ ist;
 [Korollar A.21](../../lecture_notes/de/A_analysis.md#r-A-21) liefert die Momente eines gleichverteilten Einheitsvektors. Der Block prüft dies, das Volumen
-$V_3=4\pi/3$ der Einheitskugel ([Korollar A.19](../../lecture_notes/de/A_analysis.md#r-A-19)) und dass die Phase von $z_1$ gleichverteilt ist
+$`V_3=4\pi/3`$ der Einheitskugel ([Korollar A.19](../../lecture_notes/de/A_analysis.md#r-A-19)) und dass die Phase von $`z_1`$ gleichverteilt ist
 ([Abschnitt A.5](../../lecture_notes/de/A_analysis.md#s-A-5), nach Satz A.20).
 
 ```python
@@ -167,9 +167,9 @@ mc((phase >= 0) & (phase < 1), 1 / (2 * math.pi), "P(arg z_1 in [0, 1))")
 *Vorlesungsnotizen:* [Abschnitt A.6](../../lecture_notes/de/A_analysis.md#s-A-6); [Satz A.24](../../lecture_notes/de/A_analysis.md#r-A-24).
 
 Die Isserlis-Wick-Formel ([Satz A.24](../../lecture_notes/de/A_analysis.md#r-A-24)) schreibt ein Moment eines zentrierten Gauß-Vektors als Summe
-über die $(2p-1)!!$ Paarungen von Produkten von Kovarianzen. Der Block zählt die Paarungen auf, vergleicht die Formel
-mit Monte-Carlo-Momenten eines Gauß-Vektors in $\mathbb R^3$ und gewinnt $\mathbb E|z|^4=2$ für eine komplexe
-Standard-Gauß-Variable $z$ aus der komplexen Form des Satzes zurück.
+über die $`(2p-1)!!`$ Paarungen von Produkten von Kovarianzen. Der Block zählt die Paarungen auf, vergleicht die Formel
+mit Monte-Carlo-Momenten eines Gauß-Vektors in $`\mathbb R^3`$ und gewinnt $`\mathbb E|z|^4=2`$ für eine komplexe
+Standard-Gauß-Variable $`z`$ aus der komplexen Form des Satzes zurück.
 
 ```python
 def pairings(idx):
@@ -204,11 +204,11 @@ assert abs(wick(cz, (0, 1, 0, 1)) - 2) < 1e-12                           # E|z|^
 
 *Vorlesungsnotizen:* [Abschnitt A.7](../../lecture_notes/de/A_analysis.md#s-A-7); [Satz A.25](../../lecture_notes/de/A_analysis.md#r-A-25), [Korollar A.26](../../lecture_notes/de/A_analysis.md#r-A-26).
 
-Nach [Korollar A.26](../../lecture_notes/de/A_analysis.md#r-A-26) haben die $n+1$ Abstände von $n$ sortierten gleichverteilten Punkten die Verteilung
-der normierten exponentialverteilten Variablen $(e_0,\dots,e_n)/T$, mit den Momenten aus Teil (c),
-$\mathbb P(s_i/s_j\le t)=t/(1+t)$ und dem mittleren Abstandsverhältnis $2\ln2-1$. Der Block prüft dies für beide
-Familien mit $n=5$ sowie die Unabhängigkeit von $(e_0,\dots,e_n)/T$ und $T$ ([Satz A.25](../../lecture_notes/de/A_analysis.md#r-A-25)) über
-$\mathbb E[w_0T^2]=\mathbb Ew_0\,\mathbb ET^2=n+2$.
+Nach [Korollar A.26](../../lecture_notes/de/A_analysis.md#r-A-26) haben die $`n+1`$ Abstände von $`n`$ sortierten gleichverteilten Punkten die Verteilung
+der normierten exponentialverteilten Variablen $`(e_0,\dots,e_n)/T`$, mit den Momenten aus Teil (c),
+$`\mathbb P(s_i/s_j\le t)=t/(1+t)`$ und dem mittleren Abstandsverhältnis $`2\ln2-1`$. Der Block prüft dies für beide
+Familien mit $`n=5`$ sowie die Unabhängigkeit von $`(e_0,\dots,e_n)/T`$ und $`T`$ ([Satz A.25](../../lecture_notes/de/A_analysis.md#r-A-25)) über
+$`\mathbb E[w_0T^2]=\mathbb Ew_0\,\mathbb ET^2=n+2`$.
 
 ```python
 n, B = 5, 200_000                                       # Corollary A.26

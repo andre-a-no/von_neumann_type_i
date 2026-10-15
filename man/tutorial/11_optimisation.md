@@ -5,17 +5,17 @@
 This tutorial accompanies [Chapter 11](../lecture_notes/11_optimisation.md) of the lecture notes, which proves the extremes of three
 trace functionals and explains why sampling unitaries fails to find them. Here the parametrisations of
 constraint sets (`optimize.PositiveParam`, `UnitaryParam`, `SelfAdjointParam`) and the multistart optimiser
-(`optimize.extremize`) of the library are checked against those theorems. With $\Delta$ the Michelson contrast
-and $\ell(\delta)=(1-\delta)/(1+\delta)$, the three functionals are:
+(`optimize.extremize`) of the library are checked against those theorems. With $`\Delta`$ the Michelson contrast
+and $`\ell(\delta)=(1-\delta)/(1+\delta)`$, the three functionals are:
 
 | | functional | variables |
 |---|---|---|
-| Exp. 1 | $z=\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)$ | $X,Y\ge0$, $U\in\mathcal M$ unitary |
-| Exp. 2 | $z=\mathrm{Tr}\lvert XY\rvert-\mathrm{Tr}(\lvert X\rvert\,\lvert Y\rvert)$ | $X=UX_0$, $Y=VY_0$, $X_0,Y_0\ge0$, $U,V$ unitary |
-| Exp. 3 | $z=\mathrm{Tr}(Y\lvert X\rvert Y)-\mathrm{Tr}\lvert YXY\rvert$ | $X=X^*$, $Y\ge0$ |
+| Exp. 1 | $`z=\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)`$ | $`X,Y\ge0`$, $`U\in\mathcal M`$ unitary |
+| Exp. 2 | $`z=\mathrm{Tr}\lvert XY\rvert-\mathrm{Tr}(\lvert X\rvert\,\lvert Y\rvert)`$ | $`X=UX_0`$, $`Y=VY_0`$, $`X_0,Y_0\ge0`$, $`U,V`$ unitary |
+| Exp. 3 | $`z=\mathrm{Tr}(Y\lvert X\rvert Y)-\mathrm{Tr}\lvert YXY\rvert`$ | $`X=X^*`$, $`Y\ge0`$ |
 
-with $|X|$, $|Y|$ normalised to $\lambda_{\max}=1$ and their contrasts as parameters. The **envelopes** are
-$\overline z(\delta)=\sup\{z:\Delta(|X|)=\delta\}$ and $\underline z(\delta)=\inf\{z:\Delta(|X|)=\delta\}$, all other
+with $`|X|`$, $`|Y|`$ normalised to $`\lambda_{\max}=1`$ and their contrasts as parameters. The **envelopes** are
+$`\overline z(\delta)=\sup\{z:\Delta(|X|)=\delta\}`$ and $`\underline z(\delta)=\inf\{z:\Delta(|X|)=\delta\}`$, all other
 variables being free.
 
 <a id="s-11-1"></a>
@@ -24,19 +24,19 @@ variables being free.
 
 *Lecture notes:* [Section 11.1](../lecture_notes/11_optimisation.md#s-11-1); [Lemma 11.1](../lecture_notes/11_optimisation.md#r-11-1), [Proposition 11.2](../lecture_notes/11_optimisation.md#r-11-2).
 
-`optimize.PositiveParam` with prescribed contrast $\delta$ implements the parametrisation of
-[lecture notes, Section 11.1](../lecture_notes/11_optimisation.md#s-11-1): per start it draws two distinct slots $s_\pm$ (`spectrum.pin_max`,
-`spectrum.pin_min`; every ordered pair has probability $1/(D(D-1))$) and a Haar-random unitary $U_0$
-(`unitary.base`, drawn by `random_unitary_operator`, [Lemma 11.10](../lecture_notes/11_optimisation.md#r-11-10)), and maps the parameters $\theta$
-(`spectrum.theta`) and $G$ (`unitary.G`) to
-$$
+`optimize.PositiveParam` with prescribed contrast $`\delta`$ implements the parametrisation of
+[lecture notes, Section 11.1](../lecture_notes/11_optimisation.md#s-11-1): per start it draws two distinct slots $`s_\pm`$ (`spectrum.pin_max`,
+`spectrum.pin_min`; every ordered pair has probability $`1/(D(D-1))`$) and a Haar-random unitary $`U_0`$
+(`unitary.base`, drawn by `random_unitary_operator`, [Lemma 11.10](../lecture_notes/11_optimisation.md#r-11-10)), and maps the parameters $`\theta`$
+(`spectrum.theta`) and $`G`$ (`unitary.G`) to
+```math
 X(\theta,G)=U\mathrm{diag}(\lambda)U^*,\qquad U=U_0\,e^{G-G^*},\qquad
 \lambda_{s_+}=1,\quad\lambda_{s_-}=\ell(\delta),\quad\lambda_s=\ell+(1-\ell)\tfrac{1+\sin\theta_s}2\ \text{otherwise}.
-$$
-`UnitaryParam` is the map $G\mapsto U_0e^{G-G^*}$ alone, and `SelfAdjointParam` adds signs,
-$X=U\mathrm{diag}(\sigma\lambda)U^*$. By [Proposition 11.2](../lecture_notes/11_optimisation.md#r-11-2) the image is the set of operators of
-the contrast shell $\mathcal P_\delta$ with $1$ and $\ell(\delta)$ in the drawn slots. A free contrast in $[a,b]$ is one more
-parameter; the library's default is $[a,b]=[0,0.999]$, and the code below keeps it.
+```
+`UnitaryParam` is the map $`G\mapsto U_0e^{G-G^*}`$ alone, and `SelfAdjointParam` adds signs,
+$`X=U\mathrm{diag}(\sigma\lambda)U^*`$. By [Proposition 11.2](../lecture_notes/11_optimisation.md#r-11-2) the image is the set of operators of
+the contrast shell $`\mathcal P_\delta`$ with $`1`$ and $`\ell(\delta)`$ in the drawn slots. A free contrast in $`[a,b]`$ is one more
+parameter; the library's default is $`[a,b]=[0,0.999]`$, and the code below keeps it.
 
 The code checks the constraint, and Proposition 11.2 constructively: the parameters of the proof reproduce a target.
 
@@ -78,17 +78,17 @@ assert err < 1e-10
 *Lecture notes:* [Section 11.2](../lecture_notes/11_optimisation.md#s-11-2); [Theorem 11.4](../lecture_notes/11_optimisation.md#r-11-4), [Corollary 11.5](../lecture_notes/11_optimisation.md#r-11-5), [Proposition 11.6](../lecture_notes/11_optimisation.md#r-11-6), [Corollary 11.7](../lecture_notes/11_optimisation.md#r-11-7).
 
 By [lecture notes, Theorem 11.4](../lecture_notes/11_optimisation.md#r-11-4) (von Neumann's trace inequality),
-$|\mathrm{Tr}(AB)|\le\sum_is_i(A)s_i(B)$, and by [Corollary 11.5](../lecture_notes/11_optimisation.md#r-11-5),
-$\sum_ip^\downarrow_iq^\uparrow_i\le\mathrm{Tr}(PQ)\le\sum_ip^\downarrow_iq^\downarrow_i$ for self-adjoint $P,Q$ with
-eigenvalues $p,q$, and $\mathrm{Tr}(PQ)\le\|PQ\|_1\le\sum_ip^\downarrow_iq^\downarrow_i$ for $P,Q\ge0$. For Exp. 2 with
+$`|\mathrm{Tr}(AB)|\le\sum_is_i(A)s_i(B)`$, and by [Corollary 11.5](../lecture_notes/11_optimisation.md#r-11-5),
+$`\sum_ip^\downarrow_iq^\uparrow_i\le\mathrm{Tr}(PQ)\le\sum_ip^\downarrow_iq^\downarrow_i`$ for self-adjoint $`P,Q`$ with
+eigenvalues $`p,q`$, and $`\mathrm{Tr}(PQ)\le\|PQ\|_1\le\sum_ip^\downarrow_iq^\downarrow_i`$ for $`P,Q\ge0`$. For Exp. 2 with
 fixed spectra, [Proposition 11.6](../lecture_notes/11_optimisation.md#r-11-6) gives
-$\sup z=-\inf z=\sum_c\sum_ix^\downarrow_{c,i}(y^\downarrow_{c,i}-y^\uparrow_{c,i})$, attained for
-$X_0=\mathrm{diag}(x^\downarrow)$, $V=J$ the reversal permutation and $Y_0=\mathrm{diag}(y^\uparrow)$ (resp.
-$\mathrm{diag}(y^\downarrow)$), and [Corollary 11.7](../lecture_notes/11_optimisation.md#r-11-7) gives the envelope
-$\sup z=-\inf z=\sum_c\lfloor k_c/2\rfloor(1-\ell_X)(1-\ell_Y)$.
+$`\sup z=-\inf z=\sum_c\sum_ix^\downarrow_{c,i}(y^\downarrow_{c,i}-y^\uparrow_{c,i})`$, attained for
+$`X_0=\mathrm{diag}(x^\downarrow)`$, $`V=J`$ the reversal permutation and $`Y_0=\mathrm{diag}(y^\uparrow)`$ (resp.
+$`\mathrm{diag}(y^\downarrow)`$), and [Corollary 11.7](../lecture_notes/11_optimisation.md#r-11-7) gives the envelope
+$`\sup z=-\inf z=\sum_c\lfloor k_c/2\rfloor(1-\ell_X)(1-\ell_Y)`$.
 
-Here $1-\ell_X=2\delta/(1+\delta)$ for $\Delta(|X|)=\delta$; for odd $k_c$ the middle eigenvalue is irrelevant. The code
-checks Theorem 11.4, Corollary 11.5 and the extremal configurations of Proposition 11.6 for $k=3$, $C=2$.
+Here $`1-\ell_X=2\delta/(1+\delta)`$ for $`\Delta(|X|)=\delta`$; for odd $`k_c`$ the middle eigenvalue is irrelevant. The code
+checks Theorem 11.4, Corollary 11.5 and the extremal configurations of Proposition 11.6 for $`k=3`$, $`C=2`$.
 
 ```python
 M5 = TypeIAlgebra([5], [5], precision='double')
@@ -130,10 +130,10 @@ assert abs(z_max - exact) < 1e-12 and abs(z_min + exact) < 1e-12 and abs(exact -
 
 *Lecture notes:* [Section 11.3](../lecture_notes/11_optimisation.md#s-11-3); [Lemma 11.8](../lecture_notes/11_optimisation.md#r-11-8), [Proposition 11.9](../lecture_notes/11_optimisation.md#r-11-9).
 
-By [lecture notes, Proposition 11.9](../lecture_notes/11_optimisation.md#r-11-9), $z=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ge0$ in Exp. 3,
-with equality iff $YX_+Y^2X_-Y=0$, in particular if $XY=YX$. For $X=\mathrm{diag}(1,-1,0)$ and $Y$ with rows
-$(1,0,a)$, $(0,1,0)$, $(a,0,1)$, $|a|<1$, equality holds although $XY\ne YX$ for $a\ne0$. The code checks both
-(with $a=0.5$); `X.abs()` is $|X|$ and `trace_norm()` is $\|\cdot\|_1$.
+By [lecture notes, Proposition 11.9](../lecture_notes/11_optimisation.md#r-11-9), $`z=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ge0`$ in Exp. 3,
+with equality iff $`YX_+Y^2X_-Y=0`$, in particular if $`XY=YX`$. For $`X=\mathrm{diag}(1,-1,0)`$ and $`Y`$ with rows
+$`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`-1<a<1`$, equality holds although $`XY\ne YX`$ for $`a\ne0`$. The code checks both
+(with $`a=0.5`$); `X.abs()` is $`|X|`$ and `trace_norm()` is $`\|\cdot\|_1`$.
 
 ```python
 def z_exp3(X, Y):
@@ -157,22 +157,22 @@ assert abs(z_exp3(Xe, Ye).item()) < 1e-12 and (Xe @ Ye - Ye @ Xe).operator_norm(
 
 *Lecture notes:* [Section 11.4](../lecture_notes/11_optimisation.md#s-11-4); [Lemma 11.10](../lecture_notes/11_optimisation.md#r-11-10), [Proposition 11.11](../lecture_notes/11_optimisation.md#r-11-11), [Corollary 11.12](../lecture_notes/11_optimisation.md#r-11-12), [Lemma 11.13](../lecture_notes/11_optimisation.md#r-11-13).
 
-How large is $|\mathrm{Tr}(AU)|$ typically, compared with its maximum $\|A\|_1$? The library samples $U$ as
-the factor $Q$ of the QR decomposition $Z=QR$, $R_{ii}>0$, of a **Ginibre matrix** $Z$ (independent entries with
-density $\pi^{-1}e^{-|z|^2}$; Mezzadri's recipe), independently in every block.
+How large is $`|\mathrm{Tr}(AU)|`$ typically, compared with its maximum $`\|A\|_1`$? The library samples $`U`$ as
+the factor $`Q`$ of the QR decomposition $`Z=QR`$, $`R_{ii}>0`$, of a **Ginibre matrix** $`Z`$ (independent entries with
+density $`\pi^{-1}e^{-|z|^2}`$; Mezzadri's recipe), independently in every block.
 
-By [lecture notes, Proposition 11.11](../lecture_notes/11_optimisation.md#r-11-11), $\mathbb E|\mathrm{Tr}(AU)|^2=\|A\|_2^2/k$ for Haar
-$U\in U(k)$, and by [Corollary 11.12](../lecture_notes/11_optimisation.md#r-11-12), for $X,Y\ge0$ with spectra in $[a,b]$, $a>0$, the root mean square of
-$|\mathrm{Tr}(XUY)|$ is at most $\min(1/\sqrt k,b^2/(a^2k))$ times its maximum over $U$, and
-$\mathbb P\big(|\mathrm{Tr}(XUY)|\ge\mathrm{Tr}(XY)\big)\le b^4/(a^4k^2)$.
+By [lecture notes, Proposition 11.11](../lecture_notes/11_optimisation.md#r-11-11), $`\mathbb E|\mathrm{Tr}(AU)|^2=\|A\|_2^2/k`$ for Haar
+$`U\in U(k)`$, and by [Corollary 11.12](../lecture_notes/11_optimisation.md#r-11-12), for $`X,Y\ge0`$ with spectra in $`[a,b]`$, $`a>0`$, the root mean square of
+$`|\mathrm{Tr}(XUY)|`$ is at most $`\min(1/\sqrt k,b^2/(a^2k))`$ times its maximum over $`U`$, and
+$`\mathbb P\big(|\mathrm{Tr}(XUY)|\ge\mathrm{Tr}(XY)\big)\le b^4/(a^4k^2)`$.
 
-So $N$ Haar samples find a violation of $|\mathrm{Tr}(XUY)|\le\mathrm{Tr}(XY)$ with probability at most
-$Nb^4/(a^4k^2)$ (a union of $N$ events), although one exists for every non-commuting pair (Proposition 3.9). The bound
-is informative only for $k>\sqrt N\,b^2/a^2$ (for $b/a=6$ and $N=2000$: $k>1609$); numerically, samples miss the
-violation already for much smaller $k$ (below). The code checks Proposition 11.11 by Monte Carlo (the sample mean
+So $`N`$ Haar samples find a violation of $`|\mathrm{Tr}(XUY)|\le\mathrm{Tr}(XY)`$ with probability at most
+$`Nb^4/(a^4k^2)`$ (a union of $`N`$ events), although one exists for every non-commuting pair (Proposition 3.9). The bound
+is informative only for $`k>\sqrt N\,b^2/a^2`$ (for $`b/a=6`$ and $`N=2000`$: $`k>1609`$); numerically, samples miss the
+violation already for much smaller $`k`$ (below). The code checks Proposition 11.11 by Monte Carlo (the sample mean
 lies within five standard errors of the exact value, for this seeded run) and prints, for spectra uniform in
-$[0.2,1.2]$ ($b/a=6$), the ratio of Corollary 11.12, $\sup z$ and the best $z$ of $2000$ samples, both relative to
-$\mathrm{Tr}(XY)$.
+$`[0.2,1.2]`$ ($`b/a=6`$), the ratio of Corollary 11.12, $`\sup z`$ and the best $`z`$ of $`2000`$ samples, both relative to
+$`\mathrm{Tr}(XY)`$.
 
 ```python
 def random_pair(alg_k):
@@ -200,21 +200,21 @@ for k in (2, 4, 8, 16, 32):
 ```
 
 *Numerical observation* (the printed table; asserted only for this seeded run): the ratio stays below the proved bound
-$\min(1/\sqrt k,b^2/(a^2k))$ and roughly halves whenever $k$ doubles, i.e. it falls like $1/k$, and from $k=4$ on the
-best of $2000$ samples does not even reach $z=0$. A gradient search, in contrast, comes close to both extremes in the
-run below (again a numerical observation). For the pair `Xf, Yf` both extremes over $U$ are known:
+$`\min(1/\sqrt k,b^2/(a^2k))`$ and roughly halves whenever $`k`$ doubles, i.e. it falls like $`1/k`$, and from $`k=4`$ on the
+best of $`2000`$ samples does not even reach $`z=0`$. A gradient search, in contrast, comes close to both extremes in the
+run below (again a numerical observation). For the pair `Xf, Yf` both extremes over $`U`$ are known:
 
-By [lecture notes, Lemma 11.13](../lecture_notes/11_optimisation.md#r-11-13), $\min_U|\mathrm{Tr}(AU)|=0$ for every $A\in M_k(\mathbb C)$, $k\ge2$.
+By [lecture notes, Lemma 11.13](../lecture_notes/11_optimisation.md#r-11-13), $`\min_U|\mathrm{Tr}(AU)|=0`$ for every $`A\in M_k(\mathbb C)`$, $`k\ge2`$.
 
-So $\inf_Uz=-\mathrm{Tr}(XY)$ and $\sup_Uz=\|YX\|_1-\mathrm{Tr}(XY)$ (Proposition 3.9). One call of `extremize`
-approximates both, with $12$ starts maximising $z$ and $12$ maximising $-z$ (to relative accuracy $10^{-3}$ in this
+So $`\inf_Uz=-\mathrm{Tr}(XY)`$ and $`\sup_Uz=\|YX\|_1-\mathrm{Tr}(XY)`$ (Proposition 3.9). One call of `extremize`
+approximates both, with $`12`$ starts maximising $`z`$ and $`12`$ maximising $`-z`$ (to relative accuracy $`10^{-3}`$ in this
 run, asserted below). By Proposition 11.11 the root mean square of
-$|\mathrm{Tr}(XUY)|$ is $\|YX\|_2/\sqrt k$; with the bounds in the proof of Corollary 11.12 (spectra in $[a,b]$),
-$\mathbb E|\mathrm{Tr}(XUY)|^2\le b^4$ and $\mathrm{Tr}(XY)\ge ka^2$, so Markov's inequality gives
-$\mathbb P\big(z\ge-(1-\varepsilon)\mathrm{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)$ for $\varepsilon>0$: for large $k$,
-$z$ is close to its infimum with high probability.
-*Numerical observation* (asserted for this seeded run): sampling comes within $1\,\%$ of the infimum, but does not
-even reach $z=0$, while the supremum is positive:
+$`|\mathrm{Tr}(XUY)|`$ is $`\|YX\|_2/\sqrt k`$; with the bounds in the proof of Corollary 11.12 (spectra in $`[a,b]`$),
+$`\mathbb E|\mathrm{Tr}(XUY)|^2\le b^4`$ and $`\mathrm{Tr}(XY)\ge ka^2`$, so Markov's inequality gives
+$`\mathbb P\big(z\ge-(1-\varepsilon)\mathrm{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)`$ for $`\varepsilon>0`$: for large $`k`$,
+$`z`$ is close to its infimum with high probability.
+*Numerical observation* (asserted for this seeded run): sampling comes within $`1\,\%`$ of the infimum, but does not
+even reach $`z=0`$, while the supremum is positive:
 
 ```python
 trXY = (Xf @ Yf).trace.real
@@ -237,42 +237,42 @@ assert z_mc.max().item() < 0                                               # ...
 
 ## 11.5 Multistart search for envelopes
 
-*Lecture notes:* [Section 11.5](../lecture_notes/11_optimisation.md#s-11-5); [Proposition 11.14](../lecture_notes/11_optimisation.md#r-11-14), [Corollary 11.7](../lecture_notes/11_optimisation.md#r-11-7), [Proposition 11.9](../lecture_notes/11_optimisation.md#r-11-9).
+*Lecture notes:* [Section 11.5](../lecture_notes/11_optimisation.md#s-11-5); [Proposition 11.14](../lecture_notes/11_optimisation.md#r-11-14), [Corollary 11.7](../lecture_notes/11_optimisation.md#r-11-7), [Proposition 11.9](../lecture_notes/11_optimisation.md#r-11-9), [Proposition 11.15](../lecture_notes/11_optimisation.md#r-11-15), [Corollary 11.16](../lecture_notes/11_optimisation.md#r-11-16).
 
 `optimize.extremize(objective, params, maximize)` runs Adam in `rounds` rounds of `steps` steps (learning rate
-`lr * decay**round`) on the loss $\mp\sum_b\text{objective}_b$, re-centres the unitary charts after every round,
+`lr * decay**round`) on the loss $`\mp\sum_b\text{objective}_b`$, re-centres the unitary charts after every round,
 and returns **per start** the largest (smallest, for `maximize=False`) value of the objective among those computed at
 the gradient iterates and once at the final point. Every batch element is an independent start with its own slots,
-signs, $U_0$ and contrast: Adam acts coordinatewise, so if the $b$-th entry of the objective depends only on the
-$b$-th parameters (as in all objectives below), the starts do not interact. The signs of `SelfAdjointParam` are
+signs, $`U_0`$ and contrast: Adam acts coordinatewise, so if the $`b`$-th entry of the objective depends only on the
+$`b`$-th parameters (as in all objectives below), the starts do not interact. The signs of `SelfAdjointParam` are
 discrete: between rounds, `discrete_step` tries eight single sign flips per start (each at a uniformly random slot),
 one after the other, and keeps each flip that improves the objective.
 
 In exact arithmetic every iterate is admissible (Proposition 11.2 and the remarks after it), so every returned value
-is the value of $z$ at an admissible point; in floating point it is that value up to rounding (the asserts below
-allow $10^{-12}$). Hence a maximisation gives a **lower bound** for the supremum, a minimisation an upper bound for
+is the value of $`z`$ at an admissible point; in floating point it is that value up to rounding (the asserts below
+allow $`10^{-12}`$). Hence a maximisation gives a **lower bound** for the supremum, a minimisation an upper bound for
 the infimum, and nothing more — a local search can stop at a local extremum. The other direction needs a proof,
 like Corollary 11.7 and Proposition 11.9, or a convex relaxation (Section 11.6). A computed envelope is checked
 (i) against closed forms; (ii) against configurations built by hand, such as direct sums of smaller solutions, which
 it must not fall below; (iii) against structured samples (two-level spectra, permutation bases), whose values are
 further attained values.
 
-By [lecture notes, Proposition 11.14](../lecture_notes/11_optimisation.md#r-11-14), if all $k_c\ge2$, the lower envelope of Exp. 1 is
-$\underline z(\delta)=-\big(D-2\delta/(1+\delta)\big)$.
+By [lecture notes, Proposition 11.14](../lecture_notes/11_optimisation.md#r-11-14), if all $`k_c\ge2`$, the lower envelope of Exp. 1 is
+$`\underline z(\delta)=-\big(D-2\delta/(1+\delta)\big)`$.
 
-The code checks Proposition 11.14 on $M_2\oplus M_2$, Corollary 11.7 on $M_3\oplus M_3$ (both contrasts prescribed,
-$k=3$ odd) and Proposition 11.9; suprema and infima share one call, as above. The one-sided asserts (no returned
+The code checks Proposition 11.14 on $`M_2\oplus M_2`$, Corollary 11.7 on $`M_3\oplus M_3`$ (both contrasts prescribed,
+$`k=3`$ odd) and Proposition 11.9; suprema and infima share one call, as above. The one-sided asserts (no returned
 value beyond a proved extreme) are consequences of these theorems; the asserts that the search comes within the
 stated tolerance of the extreme are numerical observations of this seeded run. The keyword `is_self_adjoint` selects
-the algorithm for the trace norm (singular values, or eigenvalues for $YXY$) without a test at every step. The last
-check is of type (ii): $z$ of Exp. 3 is additive over direct sums, and the contrast of a direct sum is the largest
-contrast of its summands (Exercise 3), so, for the envelopes of Exp. 3 with $\Delta(Y)$ free in $[0,0.999]$ as in
+the algorithm for the trace norm (singular values, or eigenvalues for $`YXY`$) without a test at every step. The last
+check is of type (ii): $`z`$ of Exp. 3 is additive over direct sums, and the contrast of a direct sum is the largest
+contrast of its summands (Exercise 3), so, for the envelopes of Exp. 3 with $`\Delta(Y)`$ free in $`[0,0.999]`$ as in
 the code,
-$$
+```math
 \overline z_{M_2\oplus M_2}(\delta)\ \ge\ \overline z_{M_2}(\delta)+\sup_{\delta'\le\delta}\overline z_{M_2}(\delta');
-$$
-in particular the sum of two values attained on $M_2$ at contrasts $\delta$ and $\delta'\le\delta$ is a value
-attained on $M_2\oplus M_2$ at contrast $\delta$.
+```
+in particular the sum of two values attained on $`M_2`$ at contrasts $`\delta`$ and $`\delta'\le\delta`$ is a value
+attained on $`M_2\oplus M_2`$ at contrast $`\delta`$.
 
 ```python
 torch.manual_seed(1)
@@ -320,22 +320,113 @@ sup_M22, inf3 = best3[0].item(), -best3[1].item()
 s_M2 = exp3(TypeIAlgebra([2], [2], precision='double'),
             torch.tensor([0.0, 0.5], dtype=torch.float64).repeat_interleave(S), 1.0)
 direct_sum = (s_M2[1] + s_M2.max()).item()                                 # delta = 0.5, best delta' <= 0.5
-conj = [(1 - dl) * (2 * 0.999 / 1.999) ** 2 for dl in (0.0, 0.5)]          # unproven closed form, d = 0.999
+closed = [(1 - dl) * (2 * 0.999 / 1.999) ** 2 for dl in (0.0, 0.5)]        # Corollary 11.16, d = 0.999
 print(f"Exp. 3  inf {inf3:.1e};  sup for M_2 at delta = 0, 0.5: {s_M2[0]:.5f}, {s_M2[1]:.5f}"
-      f"  (closed form {conj[0]:.5f}, {conj[1]:.5f})")
+      f"  (closed form {closed[0]:.5f}, {closed[1]:.5f})")
 print(f"        sup for M_2 (+) M_2 at 0.5: search {sup_M22:.5f}, direct sum {direct_sum:.5f}")
 assert inf3 >= -1e-12 and inf3 < 1e-6                                       # Proposition 11.9
 assert sup_M22 >= direct_sum - 5e-3 * direct_sum                           # (ii), up to 0.5 %
+assert (s_M2 <= torch.tensor(closed, dtype=torch.float64) + 1e-12).all()   # Corollary 11.16: one-sided
+assert sup_M22 <= (2 - 0.5) * (2 * 0.999 / 1.999) ** 2 + 1e-12
 ```
 
-*Numerical observations* (the printed values of this run). The search on $M_2\oplus M_2$ falls short of the direct
-sum by about $0.2\,\%$: it has not fully converged, and the best lower bound for $\overline z_{M_2\oplus M_2}(0.5)$ is
-the larger number — detecting this is the purpose of check (ii). The values for $M_2$ agree to $10^{-4}$ with
-$(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2$, where $d=0.999$ is the largest admitted contrast of $Y$. This
-closed form is **not** a theorem of this course: the companion paper observed it numerically (in real algebras) and
-did not prove it, and the code prints it without asserting anything about it. For larger blocks we know no closed
-form for the upper envelopes of Exp. 1 and Exp. 3; computed curves are then lower bounds (attained values), nothing
-more.
+*Numerical observations* (the printed values of this run). The search on $`M_2\oplus M_2`$ falls short of the direct
+sum by about $`0.2\,\%`$: it has not fully converged, and the best lower bound for $`\overline z_{M_2\oplus M_2}(0.5)`$ is
+the larger number — detecting this is the purpose of check (ii). The values for $`M_2`$ agree to $`10^{-4}`$ with
+$`(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2`$, where $`d=0.999`$ is the largest admitted contrast of $`Y`$. This
+closed form, first observed numerically in the companion paper, is the upper envelope of
+[Corollary 11.16](../lecture_notes/11_optimisation.md#r-11-16) (below); the code asserts only the proved direction (no
+value above it). By the same corollary the direct sum is optimal: $`\overline z_{M_2\oplus M_2}(0.5)=1.5\,(2d/(1+d))^2`$.
+For blocks of any size the upper envelopes of Exp. 1 and Exp. 3 are given by
+[Theorem 11.20](../lecture_notes/11_optimisation.md#r-11-20) ([Section 11.7](#s-11-7)).
+
+By [lecture notes, Proposition 11.15](../lecture_notes/11_optimisation.md#r-11-15), on $`M_2`$, for spectra
+$`x_1\ge x_2`$ of $`X`$ (of $`|X|`$ in Exp. 3) and $`y_1\ge y_2`$ of $`Y`$, $`\sup z`$ is
+$`(x_1-x_2)^2(y_1-y_2)^2/(4(x_1+x_2)(y_1+y_2))`$ in Exp. 1 and $`\frac{2x_1x_2}{x_1+x_2}(y_1-y_2)^2`$ in Exp. 3. With
+$`e_1`$ an eigenvector of $`X`$ for its eigenvalue of modulus $`x_1`$ and $`f_1`$ one of $`Y`$ for $`y_1`$, the supremum is
+attained when $`\gamma=|\langle e_1,f_1\rangle|^2`$ is $`\gamma_1=\frac14+\frac S{2q}`$ (Exp. 1, with
+$`|\mathrm{Tr}(XUY)|=\|YX\|_1`$) or $`\gamma_3=\frac Sq`$ (Exp. 3, $`X=\mathrm{diag}(x_1,-x_2)`$), where $`S=x_1y_2+x_2y_1`$
+and $`q=(x_1+x_2)(y_1+y_2)`$. By
+[Corollary 11.16](../lecture_notes/11_optimisation.md#r-11-16), for $`C`$ blocks of size $`2`$ with $`\Delta(|X|)=\delta`$ and
+$`\Delta(Y)=\delta'`$, Exp. 1 has $`\sup z=C\delta^2\delta'^2/((1+\delta)(1+\delta'))`$ and
+$`\inf z=-(2C-1+\ell(\delta)\ell(\delta'))`$, and Exp. 3 has $`\sup z=(C-\delta)\big(2\delta'/(1+\delta')\big)^2`$. Both
+suprema increase with $`\delta'`$: with $`\Delta(Y)`$ free in $`[0,d]`$ the upper envelopes are the values at $`\delta'=d`$,
+and as $`d\to1`$ they tend to $`C\delta^2/(2(1+\delta))`$ and $`C-\delta`$, the values for a singular $`Y`$
+($`\Delta(Y)=1`$).
+
+The code builds the real maximisers of the proof for $`C=1,2`$ (`from_blocks`), checks the contrasts and the values,
+checks the bounds of Proposition 11.15 on random complex pairs, attains the limits $`d\to1`$ with rank-one projections
+in every block, and runs a multistart search for Exp. 1 on $`M_2`$ along $`\Delta(X)`$ with $`\Delta(Y)`$ free in
+$`[0,0.999]`$, which must stay below the closed form (a theorem) and, in this run, comes within $`10^{-3}`$ of it.
+
+```python
+def rot(gamma):                                                             # real basis f with |<e_1, f_1>|^2 = gamma
+    t = math.acos(math.sqrt(gamma))
+    return torch.tensor([[math.cos(t), -math.sin(t)], [math.sin(t), math.cos(t)]], dtype=torch.float64)
+
+def gammas(x1, x2, y1, y2):                                                 # gamma_1 (Exp. 1), gamma_3 (Exp. 3)
+    S, q = x1 * y2 + x2 * y1, (x1 + x2) * (y1 + y2)
+    return 0.25 + S / (2 * q), S / q
+
+env1 = lambda C, dl, dp: C * dl ** 2 * dp ** 2 / ((1 + dl) * (1 + dp))     # Corollary 11.16(a)
+env3 = lambda C, dl, dp: (C - dl) * (2 * dp / (1 + dp)) ** 2               # Corollary 11.16(b)
+
+def maximisers(C, dl, dp):
+    """Exp. 1: (X, U, Y) and Exp. 3: (X, Y) attaining Corollary 11.16 on C blocks of size 2."""
+    a2 = TypeIAlgebra([2] * C, [2] * C, complex_valued=False, precision='double')
+    lx, ly = ell(dl), ell(dp)
+    R = rot(gammas(1.0, lx, 1.0, ly)[0])
+    X0 = torch.diag(torch.tensor([1.0, lx], dtype=torch.float64))
+    Y0 = R @ torch.diag(torch.tensor([1.0, ly], dtype=torch.float64)) @ R.T
+    W, _, Vh = torch.linalg.svd(Y0 @ X0)                                    # Y X = W Sigma V^T, U = V W^T
+    exp1 = [a2.from_blocks([m] * C) for m in (X0, Vh.T @ W.T, Y0)]
+    xs = [lx] + [1.0] * (C - 1)                                             # |X|: {1, ell} in block 1, {1, 1} else
+    Rs = [rot(gammas(1.0, x2, 1.0, ly)[1]) for x2 in xs]
+    X3 = a2.from_blocks([torch.diag(torch.tensor([1.0, -x2], dtype=torch.float64)) for x2 in xs])
+    Y3 = a2.from_blocks([Rc @ torch.diag(torch.tensor([1.0, ly], dtype=torch.float64)) @ Rc.T for Rc in Rs])
+    return exp1, (X3, Y3)
+
+print(" C  delta  delta'   Exp. 1 z / formula      Exp. 3 z / formula")
+for C in (1, 2):
+    for dl, dp in ((0.5, 0.8), (0.9, 0.3), (0.4, 1.0)):
+        (X, U, Y), (X3, Y3) = maximisers(C, dl, dp)
+        assert abs(X.michelson_contrast.item() - dl) < 1e-12 and abs(Y.michelson_contrast.item() - dp) < 1e-12
+        assert abs(X3.abs().michelson_contrast.item() - dl) < 1e-12 and abs(Y3.michelson_contrast.item() - dp) < 1e-12
+        z1v = ((X @ U @ Y).trace.abs() - (X @ Y).trace.real).item()
+        z3v = ((Y3 @ X3.abs() @ Y3).trace.real - (Y3 @ X3 @ Y3).trace_norm()).item()
+        print(f" {C}   {dl:.1f}    {dp:.1f}    {z1v:.6f} / {env1(C, dl, dp):.6f}    {z3v:.6f} / {env3(C, dl, dp):.6f}")
+        assert abs(z1v - env1(C, dl, dp)) < 1e-12 and abs(z3v - env3(C, dl, dp)) < 1e-12
+print("limits d -> 1 at delta = 0.4:", env1(1, 0.4, 1.0), 0.4 ** 2 / (2 * 1.4), env3(1, 0.4, 1.0), 1 - 0.4)
+
+# Proposition 11.15 on random complex pairs in M_2: no pair exceeds the bounds
+M2c = TypeIAlgebra([2], [2], precision='double')
+x = torch.rand(4000, 2, dtype=torch.float64).sort(-1, descending=True)[0]
+y = torch.rand(4000, 2, dtype=torch.float64).sort(-1, descending=True)[0]
+V, Wc = M2c.random_unitary_operator(4000).matrix, M2c.random_unitary_operator(4000).matrix
+Xr = M2c.operator(V @ torch.diag_embed(x.to(V.dtype)).unsqueeze(1) @ V.mH, is_positive=True)
+Xi = M2c.operator(V @ torch.diag_embed((x * torch.tensor([1.0, -1.0])).to(V.dtype)).unsqueeze(1) @ V.mH,
+                  is_self_adjoint=True)
+Yr = M2c.operator(Wc @ torch.diag_embed(y.to(V.dtype)).unsqueeze(1) @ Wc.mH, is_positive=True)
+(x1, x2), (y1, y2) = x.unbind(-1), y.unbind(-1)
+sup1 = (Yr @ Xr).trace_norm() - (Xr @ Yr).trace.real                        # sup over U (Theorem 1.9)
+z3r = (Yr @ Xi.abs() @ Yr).trace.real - M2c.operator((Yr @ Xi @ Yr).matrix, is_self_adjoint=True).trace_norm()
+assert (sup1 <= (x1 - x2) ** 2 * (y1 - y2) ** 2 / (4 * (x1 + x2) * (y1 + y2)) + 1e-12).all()
+assert (z3r <= 2 * x1 * x2 / (x1 + x2) * (y1 - y2) ** 2 + 1e-12).all()
+
+# multistart search for Exp. 1 on M_2 along Delta(X), Delta(Y) free in [0, 0.999]
+torch.manual_seed(2)
+M2r = TypeIAlgebra([2], [2], complex_valued=False, precision='double')
+gx = torch.tensor([0.3, 0.6, 0.9], dtype=torch.float64)
+Xp, Yp1, Up = opt.PositiveParam(M2r, 3 * S, delta=gx.repeat_interleave(S)), opt.PositiveParam(M2r, 3 * S), \
+    opt.UnitaryParam(M2r, 3 * S)
+def z1m():
+    xm, ym = Xp.operator(), Yp1.operator()
+    return (xm @ Up.operator() @ ym).trace.abs() - (xm @ ym).trace.real
+sup1m = opt.extremize(z1m, [Xp, Yp1, Up], maximize=True, rounds=4, steps=30).reshape(3, S).max(1)[0]
+exact1m = env1(1, gx, 0.999)                                                # Corollary 11.16(c)
+print("Exp. 1 sup on M_2:", [f"{v:.5f}" for v in sup1m.tolist()], " closed form:", [f"{v:.5f}" for v in exact1m.tolist()])
+assert (sup1m <= exact1m + 1e-12).all() and ((exact1m - sup1m) / exact1m).max() < 1e-3
+```
 
 <a id="s-11-6"></a>
 
@@ -348,18 +439,171 @@ convex problems in operator variables to SDP solvers, which return an optimum to
 both up to the solver tolerance; a relaxation — a convex problem over a larger feasible set — bounds the supremum
 from above, the direction a local search cannot give. **NCTSSOS**, **ncpol2sdpa** and **NCSOStools** bound eigenvalues and traces of noncommutative
 polynomials in all dimensions at once (Section 0.3). The library adds exact parametrisations of the spectral and
-contrast constraints of $\bigoplus_cM_{k_c}$ (the extremes may sit in any sector), unitaries that respect the
+contrast constraints of $`\bigoplus_cM_{k_c}`$ (the extremes may sit in any sector), unitaries that respect the
 blocks, and one batched computation for many starts and constraint values, on a CPU or a GPU. It produces candidate
 extremisers and lower bounds for suprema; proofs or relaxations must supply the rest.
+
+<a id="s-11-7"></a>
+
+## 11.7 Envelopes for blocks of any size
+
+*Lecture notes:* [Section 11.7](../lecture_notes/11_optimisation.md#s-11-7); [Lemma 11.17](../lecture_notes/11_optimisation.md#r-11-17), [Lemma 11.18](../lecture_notes/11_optimisation.md#r-11-18), [Proposition 11.19](../lecture_notes/11_optimisation.md#r-11-19), [Theorem 11.20](../lecture_notes/11_optimisation.md#r-11-20).
+
+By [lecture notes, Theorem 11.20](../lecture_notes/11_optimisation.md#r-11-20), with $`N=\sum_c\lfloor k_c/2\rfloor`$,
+$`\Delta(X)=\delta`$ (in Exp. 3: $`\Delta(|X|)=\delta`$) and $`\Delta(Y)=\delta'`$, the suprema of Exp. 1 and Exp. 3 are
+```math
+\sup z_1=N\,\frac{\delta^2\delta'^2}{(1+\delta)(1+\delta')},\qquad
+\sup z_3=(N-\epsilon\,\delta)\Big(\frac{2\delta'}{1+\delta'}\Big)^2,
+```
+where $`\epsilon=1`$ if every $`k_c`$ is even and $`\epsilon=0`$ otherwise.
+The key step is [Proposition 11.19](../lecture_notes/11_optimisation.md#r-11-19): for $`X=X_+\oplus(-1)`$ on
+$`\mathbb C^m\oplus\mathbb C^m`$ and $`Y=b+(1-b)Q`$, $`Q`$ the projection onto the range of $`\binom C\Sigma`$, the
+operator $`YXY`$ has the eigenvalues of a matrix $`\mathcal L`$ that is affine in $`A=C^2`$, and
+$`z\le(1-b)^2\sum_i2x_i/(1+x_i)`$. The first block checks this on $`M_6`$ ($`m=3`$, $`X_+`$ with eigenvalues $`0.3,1,1`$
+in a random basis): the spectra of $`YXY`$ (`eigenvalues`) and of $`\mathcal L`$ agree at random angles, no angle
+exceeds the bound, and the angles of the equality case attain it.
+
+```python
+# Proposition 11.19 on M_6, m = 3: X = X_+ (+) (-1), Y = b + (1 - b) Q, Q the projection onto the range of (C; Sigma)
+torch.manual_seed(4)
+m, b = 3, 0.2
+M6 = TypeIAlgebra([2 * m], [2 * m], precision='double')
+W = TypeIAlgebra([m], [m], precision='double').random_unitary_operator(1).matrix[0, 0]
+x = torch.tensor([0.3, 1.0, 1.0], dtype=torch.float64)                    # X_+ = 1 - (1 - a) e e^*, a = 0.3
+Xp = W @ torch.diag(x).to(W.dtype) @ W.mH
+
+def model(theta, Xp):
+    v = torch.cat([torch.diag(torch.cos(theta)), torch.diag(torch.sin(theta))]).to(Xp.dtype)
+    Xm = torch.block_diag(Xp, -torch.eye(m, dtype=Xp.dtype))
+    Ym = b * torch.eye(2 * m, dtype=Xp.dtype) + (1 - b) * v @ v.mH
+    return M6.operator(Xm[None, None], is_self_adjoint=True), M6.operator(Ym[None, None], is_positive=True)
+
+def lin(theta, Xp):                                                        # the matrix L of the proof
+    w, V = torch.linalg.eigh(Xp)
+    f = lambda g: V @ torch.diag(g(w)).to(V.dtype) @ V.mH
+    A = torch.diag(torch.cos(theta) ** 2).to(Xp.dtype)
+    K12, X12 = f(lambda t: (1 + t).sqrt()), f(torch.sqrt)
+    top = (1 - b ** 2) * K12 @ A @ K12 + b ** 2 * Xp - torch.eye(m, dtype=Xp.dtype)
+    return torch.cat([torch.cat([top, b * X12], 1), torch.cat([b * X12, torch.zeros_like(Xp)], 1)])
+
+bound = (1 - b) ** 2 * (2 * x / (1 + x)).sum().item()                       # Proposition 11.19
+worst = 0.0
+for _ in range(200):
+    theta = torch.rand(m, dtype=torch.float64) * math.pi / 2
+    X, Y = model(theta, Xp)
+    YXY = M6.operator((Y @ X @ Y).matrix, is_self_adjoint=True)
+    assert torch.allclose(YXY.eigenvalues()[0][0], torch.linalg.eigvalsh(lin(theta, Xp)), atol=1e-12)
+    worst = max(worst, ((Y @ X.abs() @ Y).trace.real - YXY.trace_norm()).item())
+th_star = torch.acos(((1 + b * x) / ((1 + x) * (1 + b))).sqrt())            # equality case, X_+ diagonal
+X, Y = model(th_star, torch.diag(x).to(W.dtype))
+z_star = ((Y @ X.abs() @ Y).trace.real - (Y @ X @ Y).trace_norm()).item()
+print(f"Proposition 11.19: largest z at 200 random angles {worst:.6f} <= {bound:.6f}; at the maximiser {z_star:.12f}")
+assert worst <= bound + 1e-12 and abs(z_star - bound) < 1e-12
+```
+
+The second block builds the maximisers of the proof of Theorem 11.20 for several block sizes with `from_blocks`:
+$`2\times2`$ blocks as in Proposition 11.15 and $`1\times1`$ blocks; in Exp. 3 the eigenvalue $`\ell(\delta)`$ of $`|X|`$
+sits on a $`2\times2`$ block if every $`k_c`$ is even and on a $`1\times1`$ block otherwise; in Exp. 1 the unitary is the
+adjoint of the polar factor of $`YX`$ (`polar`). The contrasts and the values must match the theorem to $`10^{-12}`$.
+
+```python
+def sup_exact(exp, ks, dl, dp):                                             # Theorem 11.20
+    N = sum(k // 2 for k in ks)
+    if exp == 1:
+        return N * dl ** 2 * dp ** 2 / ((1 + dl) * (1 + dp))
+    return (N - dl * all(k % 2 == 0 for k in ks)) * (2 * dp / (1 + dp)) ** 2
+
+def maximisers_any(ks, dl, dp):
+    """Exp. 1 (X, U, Y) and Exp. 3 (X, Y) attaining Theorem 11.20: 2 x 2 maximisers of Proposition 11.15 and 1 x 1
+    blocks; in Exp. 3 the eigenvalue ell(delta) of |X| on a 2 x 2 block if all k_c are even, else on a 1 x 1 block."""
+    lx, ly = ell(dl), ell(dp)
+    even = all(k % 2 == 0 for k in ks)
+    two = lambda d: torch.diag(torch.tensor(d, dtype=torch.float64))
+    R1 = rot(gammas(1.0, lx, 1.0, ly)[0])
+    blocks = {name: [] for name in ('X1', 'Y1', 'X3', 'Y3')}
+    placed = False
+    for k in ks:
+        b1 = {name: [] for name in blocks}
+        for j in range(k // 2):
+            x3 = lx if even and not placed else 1.0
+            placed = placed or x3 == lx
+            R3 = rot(gammas(1.0, x3, 1.0, ly)[1])
+            b1['X1'].append(two([1.0, lx]))
+            b1['Y1'].append(R1 @ two([1.0, ly]) @ R1.T)
+            b1['X3'].append(two([1.0, -x3]))
+            b1['Y3'].append(R3 @ two([1.0, ly]) @ R3.T)
+        if k % 2:
+            b1['X1'].append(two([1.0]))
+            b1['Y1'].append(two([1.0]))
+            b1['X3'].append(two([1.0 if placed else lx]))
+            b1['Y3'].append(two([1.0]))
+            placed = True
+        for name in blocks:
+            blocks[name].append(torch.block_diag(*b1[name]))
+    a = TypeIAlgebra(ks, ks, complex_valued=False, precision='double')
+    X1, Y1, X3, Y3 = (a.from_blocks(blocks[name]) for name in ('X1', 'Y1', 'X3', 'Y3'))
+    U1 = (Y1 @ X1).polar()[0].adjoint()                                      # U = W^*, Y X = W |Y X|
+    return (X1, U1, Y1), (X3, Y3)
+
+print(" sizes      delta  delta'   Exp. 1 z / Theorem 11.20    Exp. 3 z / Theorem 11.20")
+for ks in ([4, 4], [3, 2], [2, 2, 2], [16], [3]):
+    for dl, dp in ((0.5, 0.8), (0.9, 0.999)):
+        (X, U, Y), (X3, Y3) = maximisers_any(ks, dl, dp)
+        assert abs(X.michelson_contrast.item() - dl) < 1e-12 and abs(Y.michelson_contrast.item() - dp) < 1e-12
+        assert abs(X3.abs().michelson_contrast.item() - dl) < 1e-12 and abs(Y3.michelson_contrast.item() - dp) < 1e-12
+        z1v = ((X @ U @ Y).trace.abs() - (X @ Y).trace.real).item()
+        z3v = ((Y3 @ X3.abs() @ Y3).trace.real - (Y3 @ X3 @ Y3).trace_norm()).item()
+        print(f" {str(ks):10s} {dl:.1f}    {dp:.3f}   {z1v:.6f} / {sup_exact(1, ks, dl, dp):.6f}"
+              f"       {z3v:.6f} / {sup_exact(3, ks, dl, dp):.6f}")
+        assert abs(z1v - sup_exact(1, ks, dl, dp)) < 1e-12 and abs(z3v - sup_exact(3, ks, dl, dp)) < 1e-12
+```
+
+Haar-random starting points rarely come near these maximisers when there are many blocks. With `init='diagonal'` for
+$`X`$, `init='pairs'` for $`Y`$ (the relative eigenbasis is then a direct sum of $`2\times2`$ rotations), `spectrum_init`
+(two-level spectra; in Exp. 3, $`|X|`$ near $`1`$ and one positive and one negative eigenvalue of $`X`$ per pair) and
+`init='rotations'` for $`U`$ (rotations of the same pairs, with determinant $`+1`$: in a real algebra a chart $`U_0e^{G-G^*}`$ stays in the connected component of $`U_0`$, and
+the maximiser of Exp. 1 has determinant $`+1`$ in every sector), half of the starts begin at this structure, the other
+half at Haar-random points (`init_fraction`; the mask `X.structured` makes $`Y`$ and $`U`$ start structured at the same
+starts). The searches below stay below Theorem 11.20 (asserted: a theorem) and, in this seeded run, come within
+$`10^{-3}`$ of it (a numerical observation).
+
+```python
+# multistart search along Delta(X), resp. Delta(|X|), with Delta(Y) free in [0, 0.999]; half of the starts structured
+def search_any(exp, ks, deltas, starts=8, seed=0):
+    torch.manual_seed(seed)
+    a = TypeIAlgebra(ks, ks, complex_valued=False, precision='double')
+    d = torch.tensor(deltas, dtype=torch.float64).repeat_interleave(starts)
+    cls = opt.SelfAdjointParam if exp == 3 else opt.PositiveParam
+    Xs = cls(a, len(d), delta=d, init='diagonal', init_fraction=0.5, spectrum_init='high' if exp == 3 else 'pairs')
+    Ys = opt.PositiveParam(a, len(d), init='pairs', init_fraction=Xs.structured, spectrum_init='pairs')
+    Us = opt.UnitaryParam(a, len(d), init='rotations', init_fraction=Xs.structured)
+    def z():
+        x, y = Xs.operator(), Ys.operator()
+        if exp == 1:
+            return (x @ Us.operator() @ y).trace.abs() - (x @ y).trace.real
+        M = a.operator((y @ x @ y).matrix, is_self_adjoint=True)
+        return (y @ Xs.abs_operator() @ y).trace.real - M.trace_norm()
+    params = [Xs, Ys, Us] if exp == 1 else [Xs, Ys]
+    vals = opt.extremize(z, params, maximize=True, rounds=6, steps=40).reshape(len(deltas), starts)
+    return vals.nan_to_num(nan=-math.inf).max(1)[0]
+
+for exp, ks in ((3, [4, 4]), (3, [3]), (1, [2] * 6)):
+    deltas = [0.3, 0.8]
+    found = search_any(exp, ks, deltas)
+    exact = torch.tensor([sup_exact(exp, ks, dl, 0.999) for dl in deltas], dtype=torch.float64)
+    print(f"Exp. {exp} on {ks}: search {[round(v, 6) for v in found.tolist()]}, Theorem 11.20 "
+          f"{[round(v, 6) for v in exact.tolist()]}")
+    assert (found <= exact + 1e-12).all() and ((exact - found) / exact).max() < 1e-3
+```
 
 <a id="x-11"></a>
 
 ## Exercises
 
 [Exercises 1 and 2](../lecture_notes/11_optimisation.md#x-11) of the lecture notes, numerically: the Cayley transform
-$C(S)=(1-S)(1+S)^{-1}$ of a skew-adjoint $S$ is unitary, has no eigenvalue $-1$, and $S=(1-C)(1+C)^{-1}$
-(Exercise 1); for $O$ Haar-distributed on $O(k)$, sampled by `random_unitary_operator` of a real algebra
-(`complex_valued=False`), $\mathbb E\mathrm{Tr}(AO)^2=\|A\|_2^2/k$ (Exercise 2).
+$`C(S)=(1-S)(1+S)^{-1}`$ of a skew-adjoint $`S`$ is unitary, has no eigenvalue $`-1`$, and $`S=(1-C)(1+C)^{-1}`$
+(Exercise 1); for $`O`$ Haar-distributed on $`O(k)`$, sampled by `random_unitary_operator` of a real algebra
+(`complex_valued=False`), $`\mathbb E\mathrm{Tr}(AO)^2=\|A\|_2^2/k`$ (Exercise 2).
 
 <details>
 <summary>Solutions</summary>

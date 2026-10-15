@@ -74,7 +74,10 @@ basis vector :math:`i`, becomes column :math:`\text{off}_c+i\,m_c+j` of :math:`V
   :math:`(Jn^2)\times N` system is computed by an incremental QR factorisation and an SVD of the
   :math:`N\times N` triangular factor: :math:`O(n^3+Jn^2N^2)` time, :math:`O(n^2N)` memory.
   Clusters are formed with a generous tolerance; merging distinct eigenvalues only enlarges
-  :math:`N` and is always safe, because all constraints are imposed afterwards.
+  :math:`N` and is always safe, because all constraints are imposed afterwards. Gaps below
+  :math:`10\,\mathrm{tol}\,\max|\lambda|` never separate clusters: an :math:`X` coupling such
+  eigenvalues can commute with the generators up to ``tol``, and only the rank decision below may
+  exclude it (otherwise e.g. :math:`\mathrm{diag}(1,1+10^{-12})` would lose its commutant :math:`M_2`).
 * for a **finite group** (``wedderburn(..., group=True)``, all elements :math:`\pi(g)` given): the
   twirl :math:`P(X)=|G|^{-1}\sum_g\pi(g)X\pi(g)^*` is the orthogonal projection of :math:`M_n` onto
   :math:`\pi(G)'`, so a random element of :math:`\mathcal A'` costs :math:`O(|G|n^3)` and no basis of
@@ -101,14 +104,21 @@ to unit Frobenius norm:
   singular values below ``tol``). ``tol`` decides what counts as a symmetry: input known to accuracy
   :math:`\delta` needs ``tol`` :math:`>\delta` (e.g. single-precision data decomposed in double).
   Singular values within a factor :math:`\varepsilon^{-1/8}` (90 in double) of the threshold
-  trigger a :class:`DecompositionWarning` (ill-determined commutant).
+  trigger a :class:`DecompositionWarning` (the commutant dimension may depend on ``tol``).
+  For generators known to accuracy :math:`\eta` (Hermitian parts, unit Frobenius norm), lecture
+  notes Theorem 4.25: the computed commutant has the exact dimension and is within
+  :math:`4\eta/\gamma` of the exact one if :math:`2\eta<\theta<\gamma-2\eta`, with :math:`\gamma`
+  the smallest non-zero singular value of the exact commutator map; the window is empty if
+  :math:`\eta\ge\gamma/4`, and :math:`\theta<2\eta` can lose the symmetry.
 * noise level :math:`\nu` of the commutant samples: :math:`n\varepsilon` for the twirl or a given
-  basis; for a null-space basis also the largest neglected singular value and the perturbation
-  :math:`\varepsilon\sigma_{\max}/\sigma_{\min,\text{kept}}` of the null space. The decision
-  threshold below is :math:`\theta=\max(\varepsilon^{1/2},10^3\nu)`, i.e. :math:`\varepsilon^{1/2}`
+  basis; for a null-space basis also :math:`\max(\sigma_{\text{null,max}},\varepsilon\max(1,\sigma_{\max}))
+  /\sigma_{\text{kept,min}}`, an estimate of the distance of the computed commutant from the exact
+  one (lecture notes, Lemma 4.24(a)). The decision thresholds below use
+  :math:`\phi=\min(10^3\nu,\nu^{1/2})`, between the noise and the unit scale of the structure
+  (Theorem 4.28), and :math:`\theta=\max(\varepsilon^{1/2},\phi)`, i.e. :math:`\varepsilon^{1/2}`
   for well-conditioned input (``Decomposition.diagnostics['thresholds']``).
 * eigenvalue clustering: a gap smaller than :math:`\varepsilon^{1/4}` times the spread of the
-  spectrum, or than :math:`10^3\nu\,\|K\|`, does not separate clusters. Merging is safe
+  spectrum, or than :math:`\phi\,\|K\|`, does not separate clusters. Merging is safe
   (merged clusters are split later); a separating gap :math:`\ge\varepsilon^{1/4}` keeps the
   eigenspace error below :math:`\varepsilon^{3/4}`.
 * irreducibility: a compressed commutant element :math:`Q^*YQ` with
@@ -120,6 +130,12 @@ to unit Frobenius norm:
   a unitary, by Schur's lemma).
 * acceptance (``verify``): relative residuals :math:`\le\theta`. Achieved residuals are typically
   :math:`10^{-15}`--:math:`10^{-13}` in double precision and :math:`10^{-6}` in single precision.
+* a-posteriori certificate (``Decomposition.certificate()``, lecture notes Proposition 4.26): the
+  backward error :math:`r` (distance of the Hermitian generators from the computed algebra
+  :math:`\mathcal B`), the gap :math:`\gamma_{\mathcal B}` of the commutator map of their projections onto
+  :math:`\mathcal B` (exactly computable from the blocks), and the window
+  :math:`(2r,\gamma_{\mathcal B}-2r)` of rank thresholds certified to give :math:`\dim\mathcal A'=\sum_cm_c^2`:
+  if it is non-empty, the result is the exact decomposition of generators within :math:`r` of the input.
 
 Limitations
 -----------
@@ -169,8 +185,8 @@ from .algebra import TypeIAlgebra
 Operator = TypeIAlgebra.Operator
 MatrixLike = Union[torch.Tensor, Sequence]
 
-__all__ = ["Decomposition", "RealStructure", "DecompositionError", "DecompositionWarning", "commutant_basis",
-           "commutant_dimension", "twirl", "wedderburn", "from_group", "from_generators",
+__all__ = ["Decomposition", "RealStructure", "Certificate", "DecompositionError", "DecompositionWarning",
+           "commutant_basis", "commutant_dimension", "twirl", "wedderburn", "from_group", "from_generators",
            "permutation_representation", "collective_operators", "total_spin", "spin_matrices"]
 
 
@@ -402,7 +418,7 @@ def _nullspace_commutant(Hs: torch.Tensor, tol: float, gen: torch.Generator, n: 
         return basis, dict(method='nullspace', unknowns=n * n, threshold=0.0, sigma=None)
     R = _probe(Hs, gen)
     w, U = torch.linalg.eigh(R)
-    bounds = _gap_clusters(w, eps ** 0.25, 1e3 * n * eps)
+    bounds = _gap_clusters(w, eps ** 0.25, max(1e3 * n * eps, 10 * tol))   # gaps ~ tol: decided by the SVD
     lab = torch.empty(n, dtype=torch.long, device=device)
     for c, (s, e) in enumerate(bounds):
         lab[s:e] = c
@@ -435,8 +451,9 @@ def _nullspace_commutant(Hs: torch.Tensor, tol: float, gen: torch.Generator, n: 
     if int(near):
         warnings.warn(f"commutant_basis: {int(near)} singular value(s) of the commutator map lie within a "
                       f"factor {gray:.0f} of the rank threshold {thr:.1e} (largest null {info['sigma_null_max']:.1e},"
-                      f" smallest kept {info['sigma_kept_min']:.1e}); the commutant dimension is ill-determined, "
-                      "pass an explicit tol", DecompositionWarning, stacklevel=3)
+                      f" smallest kept {info['sigma_kept_min']:.1e}); the commutant dimension may depend on tol: "
+                      "pass an explicit tol inside the gap (lecture notes, Theorem 4.25; Decomposition.certificate())",
+                      DecompositionWarning, stacklevel=3)
     return basis, info
 
 
@@ -470,9 +487,10 @@ def commutant_basis(generators: MatrixLike, tol: Optional[float] = None, *, grou
     method: 'nullspace' (null space of X -> ([H_j, X])_j after the reduction by a random element of
         the algebra; O(n^3 + J n^2 N^2) with N = sum_c k_c m_c^2 for a generic probe, n^6 at worst),
         'twirl' (group only: range of the twirl of d + 8 random matrices, d from the characters;
-        O(d |G| n^3)), or 'auto': the twirl for a group when d |G| <= n^2, otherwise the null space;
-        for a group the null space uses three random elements of span pi(G) = A as generators and
-        its dimension is checked against the characters (falling back to the twirl).
+        O(d |G| n^3)), or 'auto': the null space (for a group the twirl is never cheaper: by Burnside
+        d |G| = sum_g |chi(g)|^2 >= chi(e)^2 = n^2); for a group the null space uses three random elements
+        of span pi(G) = A as generators and its dimension is checked against the characters (falling back
+        to the twirl).
     seed: seed of the random probe (the span does not depend on it); None for fresh entropy.
     precision: 'double' or 'single' (default: from the input dtype).
     return_info: also return a dict of diagnostics (method, singular values at the threshold).
@@ -493,7 +511,7 @@ def commutant_basis(generators: MatrixLike, tol: Optional[float] = None, *, grou
     if group:
         _check_unitary_group(S, tol)
         d = commutant_dimension(S)
-        use_twirl = method == 'twirl' or (method == 'auto' and (d + 8) * S.shape[0] <= n * n)
+        use_twirl = method == 'twirl'
         if not use_twirl:
             c = _randn((3, S.shape[0]), dtype, device, gen)
             Hs = _normalised(torch.einsum('rg,gab->rab', c, S))
@@ -593,6 +611,76 @@ class RealStructure:
 
     def __repr__(self) -> str:
         return f"RealStructure(types={self.types}, partner={self.partner}, ok={self.ok})"
+
+
+class Certificate:
+    r"""
+    A-posteriori certificate of a decomposition (lecture notes, Section 4.9), as returned by
+    :meth:`Decomposition.certificate`. All norms refer to the Hermitian generators :math:`\tilde H_j` the null space is
+    computed from: the Hermitian and anti-Hermitian parts of the generators, normalised to unit Frobenius norm.
+
+    With :math:`\mathcal B=V(\bigoplus_cM_{k_c}\otimes1_{m_c})V^*`, :math:`E_{\mathcal B}` the trace-preserving
+    conditional expectation and :math:`H_j=E_{\mathcal B}(\tilde H_j)`:
+
+    * ``residuals``: dict with 'unitarity' = :math:`\|V^*V-1\|` (operator norm), 'algebra' and 'commutant' (as in
+      :meth:`Decomposition.verify`: max relative Frobenius distances of the generators from :math:`\mathcal B` and of
+      commutant samples from :math:`\mathcal B'`), and 'backward' = :math:`r=(\sum_j\|\tilde H_j-H_j\|_F^2)^{1/2}`;
+    * ``gap``: :math:`\gamma_{\mathcal B}`, the smallest non-zero singular value of the commutator map
+      :math:`X\mapsto([H_j,X])_j` of the projected generators (``inf`` if that map is zero), computed exactly from the
+      blocks of the :math:`H_j` (Proposition 4.26(a));
+    * ``certified``: :math:`\gamma_{\mathcal B}>2r` (and the residuals pass ``verify``). Then the :math:`H_j`, at
+      distance :math:`r` from the input, generate exactly :math:`\mathcal B` -- the decomposition is exact for them --
+      and for every threshold :math:`\theta` in ``window`` :math:`=(2r,\gamma_{\mathcal B}-2r)` the commutant of the
+      input at tolerance :math:`\theta` has dimension :math:`\sum_cm_c^2` (Proposition 4.26, Theorem 4.25);
+    * ``rank``: for a null-space commutant, dict with 'threshold' (the cut :math:`\theta`), 'sigma_null_max' and
+      'sigma_kept_min' (the singular values on both sides of the cut), 'gap' = their ratio and 'margin' =
+      min(threshold / sigma_null_max, sigma_kept_min / threshold) (the singular values are those of the reduced
+      null-space problem of :func:`commutant_basis`); ``tol_window`` is ``window`` in units of ``tol`` (divided by
+      max(1, sigma_max)): the tolerances certified by Proposition 4.26(c) for the full commutator map. None otherwise
+      (twirl or given commutant);
+    * ``links``: dict with the link 'threshold' of the grouping step, 'tree_min' (the weakest intertwiner norm used
+      to align copies) and 'cross_max' (the strongest intertwiner norm between pieces put into different sectors),
+      relative to the unit-norm random element of the commutant;
+    * ``trusted``: certified, and for a null-space commutant the cut :math:`\theta` lies in ``window``;
+    * ``ok``: the result of :meth:`Decomposition.verify`.
+    """
+
+    def __init__(self, residuals, gap, window, rank, tol_window, links, commutant_dim, certified, trusted, ok):
+        self.residuals = dict(residuals)
+        self.gap = float(gap)
+        self.window = tuple(window)
+        self.rank = None if rank is None else dict(rank)
+        self.tol_window = None if tol_window is None else tuple(tol_window)
+        self.links = dict(links)
+        self.commutant_dim = tuple(commutant_dim)
+        self.certified, self.trusted, self.ok = bool(certified), bool(trusted), bool(ok)
+
+    def __repr__(self) -> str:
+        return (f"Certificate(backward={self.residuals['backward']:.1e}, gap={self.gap:.2e}, "
+                f"certified={self.certified}, trusted={self.trusted}, ok={self.ok})")
+
+
+def _algebra_gap(blocks: torch.Tensor, ks: Sequence[int]) -> float:
+    r"""
+    Smallest non-zero singular value :math:`\gamma_{\mathcal B}` of :math:`X\mapsto([h_j,X])_j` for
+    :math:`V^*h_jV=\bigoplus_ca_{j,c}\otimes1_{m_c}` (lecture notes, Proposition 4.26(a)): the minimum over sector pairs
+    (c, e) of the smallest singular value of :math:`Y\mapsto(a_{j,c}Y-Ya_{j,e})_j` on :math:`M_{k_c\times k_e}`, the
+    second smallest for c = e (the smallest is 0, on :math:`Y=1`). blocks: (J, C, k_max, k_max).
+    """
+    gap = float('inf')
+    for c, kc in enumerate(ks):
+        A = blocks[:, c, :kc, :kc]
+        for e, ke in enumerate(ks):
+            if c == e and kc == 1:
+                continue
+            B = blocks[:, e, :ke, :ke]
+            Ic = torch.eye(kc, dtype=blocks.dtype, device=blocks.device)
+            Ie = torch.eye(ke, dtype=blocks.dtype, device=blocks.device)
+            # vec(a Y - Y b) = (a (x) 1 - 1 (x) b^T) vec(Y), row-major
+            Phi = torch.einsum('jab,pq->japbq', A, Ie) - torch.einsum('ab,jqp->japbq', Ic, B)
+            sv = torch.linalg.svdvals(Phi.reshape(-1, kc * ke)).flip(0)
+            gap = min(gap, float(sv[1] if c == e else sv[0]))
+    return gap
 
 
 class Decomposition:
@@ -964,6 +1052,64 @@ class Decomposition:
         out['tol'] = tol
         return out
 
+    def certificate(self, generators: Optional[MatrixLike] = None, tol: Optional[float] = None,
+                    warn: bool = True) -> Certificate:
+        r"""
+        A-posteriori certificate of the decomposition (lecture notes, Proposition 4.26 and Theorem 4.25): the
+        residuals, the backward error :math:`r` (distance of the normalised Hermitian generators from the computed
+        algebra :math:`\mathcal B`), the gap :math:`\gamma_{\mathcal B}` of the commutator map of their projections onto
+        :math:`\mathcal B`, the window :math:`(2r,\gamma_{\mathcal B}-2r)` of rank thresholds that certify
+        :math:`\dim\mathcal A'=\sum_cm_c^2`, and the singular values at the cut actually used. See :class:`Certificate`.
+
+        generators: the generators (default: those given to :func:`wedderburn`). tol: acceptance tolerance of the
+        residuals (default: that of :meth:`verify`). warn: issue a :class:`DecompositionWarning` if the result is not
+        ``trusted`` (the gap is not certified, or the cut lies outside the certified window).
+        Cost: one conditional expectation per generator and one SVD of size :math:`Jk_ck_e\times k_ck_e` per pair of
+        sectors.
+        """
+        data = self._verify_data or {}
+        gens = generators if generators is not None else data.get('generators')
+        if gens is None:
+            raise ValueError("certificate: no generators (pass generators=...)")
+        S = _stack(gens).to(device=self.device, dtype=self.dtype)
+        res = self.verify(tol=tol, generators=S)
+        rank_tol = float(data.get('rank_tol', _eps(self.dtype) ** 0.5))
+        H = _hermitian_parts(S, rank_tol)
+        eye = torch.eye(self.n, dtype=self.dtype, device=self.device)
+        residuals = dict(unitarity=float(torch.linalg.matrix_norm(self.V.mH @ self.V - eye, ord=2)),
+                         algebra=res['algebra'], commutant=res['commutant'])
+        if H.shape[0]:
+            blocks = self._to_blocks(H, 'algebra')
+            r = float(_fro(H - self._from_blocks(blocks, 'algebra', self.algebra)).pow(2).sum().sqrt())
+            gap = _algebra_gap(blocks, self.k_factors)
+        else:                                               # only multiples of 1: B must be M_1 (x) 1_n
+            r, gap = 0.0, (float('inf') if self.k_factors == (1,) else 0.0)
+        residuals['backward'] = r
+        window = (2 * r, gap - 2 * r)
+        certified = window[0] < window[1] and res['ok']
+        info = self.diagnostics.get('commutant_info')
+        rank = tol_window = None
+        trusted = certified
+        if info is not None and info.get('sigma_null_max') is not None:
+            thr, null, kept = info['threshold'], info['sigma_null_max'], info['sigma_kept_min']
+            scale = max(1.0, info.get('sigma_max') or 0.0)
+            rank = dict(threshold=thr, sigma_null_max=null, sigma_kept_min=kept,
+                        gap=kept / null if null > 0 else float('inf'),
+                        margin=min(thr / null if null > 0 else float('inf'), kept / thr if thr > 0 else float('inf')))
+            tol_window = (window[0] / scale, window[1] / scale)
+            trusted = certified and window[0] < thr < window[1]
+        links = dict(threshold=self.diagnostics.get('link_threshold'), tree_min=self.diagnostics.get('link_tree_min'),
+                     cross_max=self.diagnostics.get('link_cross_max'))
+        cert = Certificate(residuals, gap, window, rank, tol_window, links, res['commutant_dim'], certified, trusted,
+                           res['ok'])
+        if warn and not trusted:
+            where = '' if rank is None else f", rank threshold {rank['threshold']:.1e}"
+            warnings.warn(f"certificate: the decomposition is not certified at its rank threshold (backward error "
+                          f"{r:.1e}, algebra gap {gap:.1e}, certified window ({window[0]:.1e}, {window[1]:.1e}){where}"
+                          f", verify ok={res['ok']}); the structure (k_c, m_c) may depend on tol",
+                          DecompositionWarning, stacklevel=2)
+        return cert
+
 
 def _thresholds(eps: float, n: int, noise: float) -> Dict[str, float]:
     """
@@ -972,8 +1118,9 @@ def _thresholds(eps: float, n: int, noise: float) -> Dict[str, float]:
     perturbation eps sigma_max / sigma_kept_min of the null space). See 'Tolerances' in the module docstring.
     """
     nu = max(n * eps, noise)
-    small = max(eps ** 0.5, 1e3 * nu)
-    return dict(cluster=eps ** 0.25, floor=1e3 * nu, small=small, polar=max(eps ** 0.25, 10 * small))
+    floor = min(1e3 * nu, nu ** 0.5)
+    small = max(eps ** 0.5, floor)
+    return dict(cluster=eps ** 0.25, floor=floor, small=small, polar=max(eps ** 0.25, 10 * small))
 
 
 def _irreducible_subspaces(sampler, th: Dict[str, float], n: int, max_rounds: int, diag: Dict) -> List[torch.Tensor]:
@@ -1051,6 +1198,14 @@ def _decompose_once(sampler, n: int, dtype, device, th: Dict[str, float], max_ro
     classes = {}
     for i in range(M):
         classes.setdefault(find(i), []).append(i)
+    # margins of the grouping decision (lecture notes, Theorem 4.28): unlinked pairs of equal dimension lie below the
+    # threshold, the edges of the alignment trees above it
+    cls = {i: r for r, mem in classes.items() for i in mem}
+    cross = [max(norms[i][j], norms[j][i]) for i in range(M) for j in range(M)
+             if i < j and dims[i] == dims[j] and cls[i] != cls[j]]
+    diag['link_threshold'] = thr
+    diag['link_cross_max'] = max(cross) if cross else 0.0
+    weakest = float('inf')
     # align the copies of every class (Prim: largest intertwiner first), Q_j' = Q_j polar(W_i^* T_ij)^*
     sectors = []
     for mem in classes.values():
@@ -1060,6 +1215,7 @@ def _decompose_once(sampler, n: int, dtype, device, th: Dict[str, float], max_ro
         rest = set(mem[1:])
         while rest:
             i, j = max(((i, j) for i in order for j in rest), key=lambda p: norms[p[0]][p[1]])
+            weakest = min(weakest, norms[i][j])
             T = W[i].mH @ blocks[(i, j)]
             A, s, Bh = torch.linalg.svd(T)
             if float(s[-1]) < (1 - th['polar']) * float(s[0]):
@@ -1072,6 +1228,7 @@ def _decompose_once(sampler, n: int, dtype, device, th: Dict[str, float], max_ro
     sectors.sort(key=lambda t: (t[0], t[1]))
     V = torch.cat([c for _, _, c in sectors], dim=1)
     diag['irreducible_subspaces'] = M
+    diag['link_tree_min'] = weakest
     return Decomposition(V, [k for k, _, _ in sectors], [m for _, m, _ in sectors], precision, diag)
 
 
@@ -1099,7 +1256,9 @@ def wedderburn(generators: MatrixLike, *, group: bool = False, method: str = 'ra
         d is used as dim A' in the verification.
     max_tries: independent random draws before DecompositionError; max_rounds: splitting rounds per draw.
 
-    Returns a verified :class:`Decomposition`; ``diagnostics`` records attempts, rounds and residuals.
+    Returns a verified :class:`Decomposition`; ``diagnostics`` records attempts, rounds, residuals and the margins of
+    the grouping step ('link_threshold', 'link_tree_min', 'link_cross_max'). ``Decomposition.certificate()`` gives an
+    a-posteriori certificate (lecture notes, Proposition 4.26).
     Cost: commutant (see commutant_basis) + O(n^3) per random element + O(J n^3) verification.
     """
     if method != 'random':
@@ -1133,8 +1292,7 @@ def wedderburn(generators: MatrixLike, *, group: bool = False, method: str = 'ra
         basis, cinfo = _nullspace_commutant(_hermitian_parts(S, tol), tol, gen, n, dtype, device)
         sampler, dim_c = _BasisSampler(basis, gen), basis.shape[0]
         scale = max(1.0, cinfo.get('sigma_max') or 0.0)
-        noise = max((cinfo.get('sigma_null_max') or 0.0) / scale,             # neglected commutators
-                    eps * scale / cinfo.get('sigma_kept_min', float('inf')))  # perturbation of the null space
+        noise = max(cinfo.get('sigma_null_max') or 0.0, eps * scale) / cinfo.get('sigma_kept_min', float('inf'))
         info['commutant_method'] = 'nullspace'
         info['commutant_info'] = cinfo
     info['commutant_dim'] = dim_c
@@ -1147,7 +1305,7 @@ def wedderburn(generators: MatrixLike, *, group: bool = False, method: str = 'ra
         except _Retry as e:
             failures.append(str(e))
             continue
-        dec._verify_data = dict(generators=S, sampler=sampler, commutant_dim=dim_c, tol=th['small'])
+        dec._verify_data = dict(generators=S, sampler=sampler, commutant_dim=dim_c, tol=th['small'], rank_tol=tol)
         res = dec.verify()
         if res['ok']:
             dec.diagnostics.update(info)

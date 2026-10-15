@@ -2,35 +2,37 @@
 
 # チュートリアル 5. 環の中のランダム行列
 
-このチュートリアルは講義ノートの[第5章](../../lecture_notes/ja/05_random_matrices.md)に対応する。同章では $\mathcal M=\bigoplus_cM_{k_c}$ のユニタリ群上の
+このチュートリアルは講義ノートの[第5章](../../lecture_notes/ja/05_random_matrices.md)に対応する。同章では $`\mathcal M=\bigoplus_cM_{k_c}`$ のユニタリ群上の
 ハール測度を構成し（[系 5.4](../../lecture_notes/ja/05_random_matrices.md#r-5-4)）、その1次と2次のモーメントを計算し（[命題 5.7](../../lecture_notes/ja/05_random_matrices.md#r-5-7)、[定理 5.10](../../lecture_notes/ja/05_random_matrices.md#r-5-10)）、
-準位統計をセクターごとに計算しなければならない理由を示す（[定理 5.15](../../lecture_notes/ja/05_random_matrices.md#r-5-15)）。ここではライブラリでハール・ユニタリと
-ガウス・アンサンブルを生成し、これらの結果をモンテカルロ法で確かめる：平均は標準誤差の $5$ 倍以内で厳密な値と一致しなければならない。
+準位統計をセクターごとに計算しなければならない理由を示す（[定理 5.15](../../lecture_notes/ja/05_random_matrices.md#r-5-15)、[定理 5.18](../../lecture_notes/ja/05_random_matrices.md#r-5-18)）。ここではライブラリでハール・ユニタリと
+ガウス・アンサンブルを生成し、これらの結果をモンテカルロ法で確かめる：平均は標準誤差の $`5`$ 倍以内で厳密な値と一致しなければならない。
 定理の裏付けのない結果は数値的観察と明記する。
 
-本章を通じて、$\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)$、$D=\sum_ck_c$ とし、$P_c$ は
-極小中心射影、$E$ は命題 2.8 の中心への条件付き期待値とする。$U(k)$ は $k\times k$ ユニタリ行列のなす群であり、
-$U(\mathcal M)=\{U\in\mathcal M:U^*U=1\}$ は $\mathcal M$ のユニタリ群である。確率変数は期待値 $\mathbb E$ をもつ確率空間上に定義され、ランダム行列の期待値は成分ごとにとる。*標準複素ガウス* 変数とは、実部と虚部が独立で
-$\sim N(0,\tfrac12)$ であり、したがって $\mathbb E|z|^2=1$ となるものである（ドキュメントによれば、複素
+本章を通じて、$`\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)`$、$`D=\sum_ck_c`$ とし、$`P_c`$ は
+極小中心射影、$`E`$ は命題 2.8 の中心への条件付き期待値とする。$`U(k)`$ は $`k\times k`$ ユニタリ行列のなす群であり、
+$`U(\mathcal M)=\{U\in\mathcal M:U^*U=1\}`$ は $`\mathcal M`$ のユニタリ群である。確率変数は期待値 $`\mathbb E`$ をもつ確率空間上に定義され、ランダム行列の期待値は成分ごとにとる。*標準複素ガウス* 変数とは、実部と虚部が独立で
+$`\sim N(0,\tfrac12)`$ であり、したがって $`\mathbb E|z|^2=1`$ となるものである（ドキュメントによれば、複素
 dtype に対して `torch.randn` が生成するのはこれである。最初のコードブロックで2次のモーメントを確かめる）。*ジニブル行列* とは、成分が独立な標準複素ガウス変数である行列である。
 
 <a id="s-5-1"></a>
 
 ## 5.1 ハール測度
 
-*講義ノート：* [5.1節](../../lecture_notes/ja/05_random_matrices.md#s-5-1)；[定理 5.3](../../lecture_notes/ja/05_random_matrices.md#r-5-3)（ジニブル行列の QR 分解のユニタリ因子は、位相を $\Lambda=\mathrm{diag}(R'_{ii}/|R'_{ii}|)$ で固定すればハール分布に従う）、[系 5.4](../../lecture_notes/ja/05_random_matrices.md#r-5-4)（$U(\mathcal M)$ のハール・ユニタリのブロックは独立で、それぞれハール分布に従う）、[系 5.5](../../lecture_notes/ja/05_random_matrices.md#r-5-5)（$\mathbb EU_{ij}=0$、$\mathbb E|U_{ij}|^2=1/k$）。$SU(k)$ のハール測度は $e^{-i\theta/k}U$（$\theta=\arg\det U$）の分布である。
+*講義ノート：* [5.1節](../../lecture_notes/ja/05_random_matrices.md#s-5-1)；[定理 5.3](../../lecture_notes/ja/05_random_matrices.md#r-5-3)（ジニブル行列の QR 分解のユニタリ因子は、位相を $`\Lambda=\mathrm{diag}(R'_{ii}/|R'_{ii}|)`$ で固定すればハール分布に従う）、[系 5.4](../../lecture_notes/ja/05_random_matrices.md#r-5-4)（$`U(\mathcal M)`$ のハール・ユニタリのブロックは独立で、それぞれハール分布に従う）、[系 5.5](../../lecture_notes/ja/05_random_matrices.md#r-5-5)（$`\mathbb EU_{ij}=0`$、$`\mathbb E|U_{ij}|^2=1/k`$）。$`SU(k)`$ のハール測度は $`e^{-i\theta/k}U`$（$`\theta=\arg\det U`$）の分布である。
 
-[定理 5.3](../../lecture_notes/ja/05_random_matrices.md#r-5-3) の補正 $\Lambda$ がなければ、$Q'$ の分布は QR ルーチンの符号の規約に依存する。
+[定理 5.3](../../lecture_notes/ja/05_random_matrices.md#r-5-3) の補正 $`\Lambda`$ がなければ、$`Q'`$ の分布は QR ルーチンの符号の規約に依存する。
 `torch.linalg.qr` が呼び出すルーチン（LAPACK）について、下のコードは
-$\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'$ が $0$ から標準誤差の何倍も離れていることを見いだすが、ハール・ユニタリでは
-$\mathbb EU=0$ である（系 5.5）。したがってこの $Q'$ はハール分布に従わない。これはそのルーチンについての主張であり、
-コードで確かめられるもので、定理ではない。
+$`\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'`$ が $`0`$ から標準誤差の何倍も離れていることを見いだすが、ハール・ユニタリでは
+$`\mathbb EU=0`$ である（系 5.5）。したがってこの $`Q'`$ はハール分布に従わない。これはそのルーチンについての主張であり、
+コードで確かめられるもので、定理ではない。この符号の規約（$`R'_{11}`$ は $`\mathrm{Re}\,Z_{11}`$ と逆符号の実数であり、
+コードはこれを確かめる）に対しては、講義ノートが（[定理 5.3](../../lecture_notes/ja/05_random_matrices.md#r-5-3) の後で）ほとんど確実に $`\mathrm{Re}\,Q'_{11}<0`$ となることを証明しており、
+コードはすべてのサンプルでこれを確認する。
 
-ライブラリは `random_unitary_operator` により $U(\mathcal M)$ 上のハール・ユニタリを生成する。ブロックサイズごとに一回のバッチ化された QR
+ライブラリは `random_unitary_operator` により $`U(\mathcal M)`$ 上のハール・ユニタリを生成する。ブロックサイズごとに一回のバッチ化された QR
 分解で、すべてのセクターとサンプルを一度に処理する（GPU 上ではグラム・シュミットを用いるが、
-補題 5.2 の一意性により同じ $Q$ が得られる）。測度 `'haar'` は各ブロックにおける定理 5.3 であり、
-複素環に対しては `'haar_su'` が上のように $e^{-i\theta/k}$ を掛ける。`'coe'` は演習問題 3 のアンサンブル
-$S=W^TW$ である（ライブラリのその他の測度は本講義では用いない）。系 5.4 と 5.5、
+補題 5.2 の一意性により同じ $`Q`$ が得られる）。測度 `'haar'` は各ブロックにおける定理 5.3 であり、
+複素環に対しては `'haar_su'` が上のように $`e^{-i\theta/k}`$ を掛ける。`'coe'` は演習問題 3 のアンサンブル
+$`S=W^TW`$ である（ライブラリのその他の測度は本講義では用いない）。系 5.4 と 5.5、
 およびライブラリのサンプラーがちょうど定理 5.3 の補正付き QR であることを確かめる：
 
 ```python
@@ -77,25 +79,27 @@ torch.manual_seed(1)
 V = alg.random_unitary(2, batch_size=B)                              # the library, same random numbers
 Q, R = torch.linalg.qr(Z)                                            # LAPACK: diag(R) real, either sign
 d = R.diagonal(dim1=-2, dim2=-1)
+assert (d.imag == 0).all() and (d[:, 0].real * Z[:, 0, 0].real < 0).all()   # LAPACK: R'_11 real, sign of -Re Z_11
+assert (Q[:, 0, 0].real < 0).all()                                   # hence Re Q'_11 < 0 (after Theorem 5.3)
 assert close(V, Q * (d / d.abs()).unsqueeze(-2))                     # Theorem 5.3: V = Q Lambda
 raw = Q.diagonal(dim1=-2, dim2=-1).sum(-1).real                      # Re Tr Q without the correction
 print(f"E Re Tr Q without the phase correction: {raw.mean():.4f} +- {raw.std() / math.sqrt(B):.4f}")
 assert abs(raw.mean()) > 20 * raw.std() / math.sqrt(B)               # far from 0: not Haar
 ```
 
-*数値的観察.* 補正がなければ、コードは $k=2$ に対し
-$\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'\approx-0.84$ を見いだすが、ハール・ユニタリでは $\mathbb EU=0$ である。
+*数値的観察.* 補正がなければ、コードは $`k=2`$ に対し
+$`\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'\approx-0.84`$ を見いだすが、ハール・ユニタリでは $`\mathbb EU=0`$ である。
 
 <a id="s-5-2"></a>
 
 ## 5.2 モーメントとワインガルテン計算
 
-*講義ノート：* [5.2節](../../lecture_notes/ja/05_random_matrices.md#s-5-2)；[命題 5.7](../../lecture_notes/ja/05_random_matrices.md#r-5-7)（$\mathbb E[UXU^*]=E(X)$）、[補題 5.8](../../lecture_notes/ja/05_random_matrices.md#r-5-8)（すべての $V\otimes V$ の可換子環は $\mathrm{span}\{1,F\}$、$F$ はスワップ）、[定理 5.10](../../lecture_notes/ja/05_random_matrices.md#r-5-10)（2次のワインガルテン公式）、[系 5.11](../../lecture_notes/ja/05_random_matrices.md#r-5-11)。
+*講義ノート：* [5.2節](../../lecture_notes/ja/05_random_matrices.md#s-5-2)；[命題 5.7](../../lecture_notes/ja/05_random_matrices.md#r-5-7)（$`\mathbb E[UXU^*]=E(X)`$）、[補題 5.8](../../lecture_notes/ja/05_random_matrices.md#r-5-8)（すべての $`V\otimes V`$ の可換子環は $`\mathrm{span}\{1,F\}`$、$`F`$ はスワップ）、[定理 5.10](../../lecture_notes/ja/05_random_matrices.md#r-5-10)（2次のワインガルテン公式）、[系 5.11](../../lecture_notes/ja/05_random_matrices.md#r-5-11)。
 
 命題 5.7 を `channels.center_expectation` と照合し、補題 5.8 を線形代数で確かめ（サンプルした三つの
-$V\otimes V$ の可換子環を零空間として計算すると、それは $F$ を含み $2$ 次元であるから、
-補題 5.8 によりすでに $\mathrm{span}\{1,F\}$ である）、定理 5.10 と系 5.11 を上のサンプルの
-$U(3)$ ブロックを用いたモンテカルロ法で確かめる：
+$`V\otimes V`$ の可換子環を零空間として計算すると、それは $`F`$ を含み $`2`$ 次元であるから、
+補題 5.8 によりすでに $`\mathrm{span}\{1,F\}`$ である）、定理 5.10 と系 5.11 を上のサンプルの
+$`U(3)`$ ブロックを用いたモンテカルロ法で確かめる：
 
 ```python
 X = alg.from_blocks([torch.randn(k, k, dtype=dt) for k in alg.k_factors])      # a fixed element
@@ -144,10 +148,10 @@ assert ((mean - alpha * torch.eye(k * k, dtype=dt) - beta * F).abs() <= 5 * err)
 
 ## 5.3 準位統計
 
-*講義ノート：* [5.3節](../../lecture_notes/ja/05_random_matrices.md#s-5-3)：GOE $H=(G+G^T)/2$、GUE $H=(G+G^*)/\sqrt2$、および準位間隔 $s_i=\lambda_{i+1}-\lambda_i$ の間隔比 $r_i=\min(s_i,s_{i+1})/\max(s_i,s_{i+1})$；[命題 5.13](../../lecture_notes/ja/05_random_matrices.md#r-5-13)（$2\times2$ 行列に対するウィグナー推測）と[命題 5.14](../../lecture_notes/ja/05_random_matrices.md#r-5-14)（平均比は独立な準位では $2\ln2-1$、$3\times3$ の GOE と GUE ではそれぞれ $4-2\sqrt3$ と $\frac{2\sqrt3}\pi-\frac12$。ここで $\mathbb Er=I_1/I_0$、$I_j=\int_0^1x^jf_\beta(x)\,dx$）。
+*講義ノート：* [5.3節](../../lecture_notes/ja/05_random_matrices.md#s-5-3)：GOE $`H=(G+G^T)/2`$、GUE $`H=(G+G^*)/\sqrt2`$、および準位間隔 $`s_i=\lambda_{i+1}-\lambda_i`$ の間隔比 $`r_i=\min(s_i,s_{i+1})/\max(s_i,s_{i+1})`$；[命題 5.13](../../lecture_notes/ja/05_random_matrices.md#r-5-13)（$`2\times2`$ 行列に対するウィグナー推測）と[命題 5.14](../../lecture_notes/ja/05_random_matrices.md#r-5-14)（平均比は独立な準位では $`2\ln2-1`$、$`3\times3`$ の GOE と GUE ではそれぞれ $`4-2\sqrt3`$ と $`\frac{2\sqrt3}\pi-\frac12`$。ここで $`\mathbb Er=I_1/I_0`$、$`I_j=\int_0^1x^jf_\beta(x)\,dx`$）。
 
 関数 `SpinChain.level_spacing_ratio`（`chains` 内）は準位の各行の平均間隔比を返す。
-命題 5.13 と 5.14 を確かめ、$n=64$ に対する GOE の値を記録する：
+命題 5.13 と 5.14 を確かめ、$`n=64`$ に対する GOE の値を記録する：
 
 ```python
 ratio = SpinChain.level_spacing_ratio
@@ -198,51 +202,59 @@ def same_mean(a, b, name):
     assert abs(a.mean().item() - b.mean().item()) <= 5 * math.hypot(ea, eb)
 ```
 
-*数値的観察.* コードは、$n=64$ の GOE のスペクトルの中央半分について $\langle r\rangle\approx0.53$ を見いだす。これは
-$3\times3$ の厳密な値 $4-2\sqrt3\approx0.536$ より小さく、独立な準位の値
-$2\ln2-1\approx0.386$ よりはるかに大きい。この数は計算の出力であって
-定理ではない。以下ではこれを、同じサイズ $64$ の GOE ブロックに対する参照値として用いる。それらの間隔比は
+*数値的観察.* コードは、$`n=64`$ の GOE のスペクトルの中央半分について $`\langle r\rangle\approx0.53`$ を見いだす。これは
+$`3\times3`$ の厳密な値 $`4-2\sqrt3\approx0.536`$ より小さく、独立な準位の値
+$`2\ln2-1\approx0.386`$ よりはるかに大きい。この数は計算の出力であって
+定理ではない。以下ではこれを、同じサイズ $`64`$ の GOE ブロックに対する参照値として用いる。それらの間隔比は
 まったく同じ分布をもつ。
 
 <a id="s-5-4"></a>
 
 ## 5.4 なぜセクターを混ぜてはならないか
 
-*講義ノート：* [5.4節](../../lecture_notes/ja/05_random_matrices.md#s-5-4)；[定理 5.15](../../lecture_notes/ja/05_random_matrices.md#r-5-15) により、異なる独立なブロックの準位は反発しない：二つの GOE ブロックでは、合併したスペクトルの最小間隔 $\delta$ について $P(\delta<\varepsilon)$ は少なくとも $\varepsilon$ のオーダーであるが、一つの GOE ブロックの内部では高々 $\varepsilon^2$ のオーダーである。
+*講義ノート：* [5.4節](../../lecture_notes/ja/05_random_matrices.md#s-5-4)；[定理 5.15](../../lecture_notes/ja/05_random_matrices.md#r-5-15) により、異なる独立なブロックの準位は反発しない：二つの GOE ブロックでは、合併したスペクトルの最小間隔 $`\delta`$ について $`P(\delta<\varepsilon)`$ は少なくとも $`\varepsilon`$ のオーダーであるが、一つの GOE ブロックの内部では高々 $`\varepsilon^2`$ のオーダーである。[定理 5.18](../../lecture_notes/ja/05_random_matrices.md#r-5-18)（GOE ブロックについては [補題 5.16](../../lecture_notes/ja/05_random_matrices.md#r-5-16)）により、一つのブロックの $`C`$ 個の独立なコピーの合併したスペクトルは、準位密度が正である窓 $`I`$ において、$`A/C`$ の誤差を除いて独立な準位の間隔比をもつ：多数のサンプルをまとめると、$`I`$ 内の準位の平均比 $`\mathbb ES(I)/\mathbb EN(I)`$ と $`2\ln2-1`$ との差は高々 $`A/C`$ である。
 
-セクターが多いほど効果は強まる。多数のセクターに対する極限定理は証明しない。以下の
-実験は数値的観察である。ライブラリではブロックは最初から分かれている：
-`eigenvalues()` はセクターごとに一つのスペクトルを返し、それらを混ぜるには明示的な `torch.cat` が必要である。サイズ $64$ の独立な
-GOE ブロック $C$ 個を一つの環に入れ、セクターごとの平均間隔比と合併したスペクトルのそれとを
-比較する。各セクターはサイズ $64$ の GOE 行列であるから、その間隔比は上の `r_goe` とまったく同じ分布をもち、
-コードはこれを検定する。合併したスペクトルの振る舞いは観察されるだけである：
+セクターが多いほど効果は強まる。ライブラリではブロックは最初から分かれている：`eigenvalues()` はセクターごとに一つの
+スペクトルを返し、それらを混ぜるには明示的な `torch.cat` が必要である。サイズ $`64`$ の独立な GOE ブロック $`C`$ 個を一つの環に
+入れ、セクターごとの平均間隔比と、合併したスペクトルの $`I=[-4,4]`$ 内の準位についてサンプルをまとめた平均間隔比とを比較する
+（GOE(64) の準位密度はいたるところ正である、補題 5.16）。各セクターはサイズ $`64`$ の GOE 行列であるから、その間隔比は上の
+`r_goe` とまったく同じ分布をもち、コードはこれを検定する。サンプルをまとめた平均 $`\sum S/\sum N`$ は
+$`\mathbb ES(I)/\mathbb EN(I)`$ を推定し、その標準誤差はサンプルごとの和 $`S,N`$ から求める（デルタ法）。定理 5.18 の速さは
+$`C\,|\langle r\rangle_C-(2\ln2-1)|\le2\,(\langle r\rangle_2-(2\ln2-1))`$（標準誤差の $`5`$ 倍まで許す）という形で、すなわちすべての
+$`C\ge2`$ に対して $`A=2(\langle r\rangle_2-(2\ln2-1))`$ として検定する：
 
 ```python
-k, merged_r = 64, {}
+k, P0, merged_r, merged_se = 64, 2 * math.log(2) - 1, {}, {}
 for C in (1, 2, 4, 8, 16):
     alg_C = TypeIAlgebra([k] * C, [k] * C, complex_valued=False, precision='double')
-    G = torch.randn(800 // C, C, k, k, dtype=torch.float64)
+    G = torch.randn(1600 // C, C, k, k, dtype=torch.float64)
     lam = alg_C.operator((G + G.mT) / 2, is_self_adjoint=True).eigenvalues()    # one spectrum per sector
     per_sector = torch.stack([ratio(l[:, k // 4: 3 * k // 4]) for l in lam])
-    merged = torch.cat(lam, dim=-1).sort(dim=-1).values                       # the spectrum on C^D
-    r_m = ratio(merged[:, k * C // 4: 3 * k * C // 4])
-    merged_r[C] = r_m.mean().item()
-    print(f"C = {C:2d}: <r> per sector {per_sector.mean():.4f}, merged {merged_r[C]:.4f}"
-          f" +- {r_m.std() / math.sqrt(len(r_m)):.4f}")
     same_mean(per_sector.flatten(), r_goe, f"C = {C:2d}: sectors vs GOE(64)")   # every sector is GOE(64)
-assert merged_r[1] > merged_r[2] > merged_r[4] > merged_r[16]       # numerical observation
-assert abs(merged_r[16] - (2 * math.log(2) - 1)) < 0.01              # numerical observation
+    merged = torch.cat(lam, dim=-1).sort(dim=-1).values                       # the spectrum on C^D
+    s = merged.diff(dim=-1)
+    r = torch.minimum(s[:, :-1], s[:, 1:]) / torch.maximum(s[:, :-1], s[:, 1:])   # r(y) at the inner levels
+    inside = (merged[:, 1:-1].abs() <= 4).double()                             # inner levels y in I = [-4, 4]
+    S, N = (r * inside).sum(-1), (merged.abs() <= 4).double().sum(-1)          # S(I), N(I) per sample
+    R = (S.sum() / N.sum()).item()                                             # pooled: estimates E S(I) / E N(I)
+    merged_r[C], merged_se[C] = R, ((S - R * N).pow(2).sum().sqrt() / N.sum()).item()   # delta method
+    print(f"C = {C:2d}: <r> per sector {per_sector.mean():.4f}, merged {R:.4f} +- {merged_se[C]:.4f},"
+          f"  C (<r> - (2 ln 2 - 1)) = {C * (R - P0):+.4f},  C^2 (<r> - (2 ln 2 - 1)) = {C * C * (R - P0):+.4f}")
+for C in (4, 8, 16):                                                          # Theorem 5.18: deviation <= A / C
+    assert C * abs(merged_r[C] - P0) <= 2 * (merged_r[2] - P0) + 5 * C * merged_se[C]
+assert merged_r[1] > merged_r[2] > merged_r[4]
 ```
 
-*数値的観察.* どのセクターも $\langle r\rangle\approx0.53$ であり、これは 5.3節の GOE(64) の値である
-（この一致はある事実の検定である：各セクターは GOE(64) 行列である）。合併したスペクトルでは、二つのセクターで
-$0.42$ に下がり、$8$ と $16$ のセクターでは約 $0.39$ まで下がり、独立な準位の値 $2\ln2-1$ との差は $0.01$ 以内となる
-（命題 5.14(a)）。$C$ が大きくなるにつれて合併したスペクトルが独立な準位に近づくことは、コードが観察する事柄であり、
-本講義では証明しない。
+*数値的観察.* どのセクターも $`\langle r\rangle\approx0.53`$ であり、これは 5.3節の GOE(64) の値である（この一致はある事実の
+検定である：各セクターは GOE(64) 行列である）。合併したスペクトルは、二つのセクターで $`0.43`$、四つで $`0.40`$ に下がり、$`8`$ と
+$`16`$ のセクターでは $`2\ln2-1`$ との差が標準誤差（$`0.0015`$）1個分未満となる。これは定理 5.18 の予言どおりである。偏差は証明された
+速さ $`1/C`$ より速く減少する：コードは $`C=1,2,4`$ に対して $`C^2(\langle r\rangle_C-(2\ln2-1))`$ が $`0.14`$ と $`0.17`$ の間にある
+こと、すなわち偏差が統計誤差より小さくなるまでは $`1/C^2`$ のように減少することを見いだす。この $`1/C^2`$ の振る舞いは計算の
+出力であり、本講義の定理ではない。
 
 同じことが物理的なモデルでも起こる。ランダム磁場中のハイゼンベルク鎖（第9章）は
-磁化を保存するから、そのハミルトニアンは $\bigoplus_{N=0}^LM_{\binom LN}$ に属する（命題 9.1）。そのブロックは独立では *ない*
-——すべてが同じランダム磁場に依存する——ので、定理 5.15 はそのままでは適用できない。
+磁化を保存するから、そのハミルトニアンは $`\bigoplus_{N=0}^LM_{\binom LN}`$ に属する（命題 9.1）。そのブロックは独立では *ない*
+——すべてが同じランダム磁場に依存する——ので、定理 5.15 と 5.18 はそのままでは適用できない。
 下の実験は、数値的観察として、同じ効果を示す。
 
 ```python
@@ -256,8 +268,8 @@ print(f"Heisenberg chain, L = 10: <r> in sector N = 5: {r_sector:.4f}, all secto
 assert r_sector > 0.49 and r_all < 0.42                             # numerical observation
 ```
 
-*数値的観察.* セクター $N=5$ の内部では、コードは上の GOE(64) の値に近い $\langle r\rangle\approx0.53$ を見いだし、
-すべてのセクターを混ぜたスペクトルでは $2\ln2-1$ に近い $0.39$ となる。
+*数値的観察.* セクター $`N=5`$ の内部では、コードは上の GOE(64) の値に近い $`\langle r\rangle\approx0.53`$ を見いだし、
+すべてのセクターを混ぜたスペクトルでは $`2\ln2-1`$ に近い $`0.39`$ となる。
 
 <a id="s-5-5"></a>
 
@@ -280,13 +292,13 @@ QuSpin のような厳密対角化コードはセクターごとにスペクト�
 ## 演習問題
 
 講義ノートの[演習問題](../../lecture_notes/ja/05_random_matrices.md#x-5)の数値的な部分：
-1. $\mathcal M=M_1\oplus M_2\oplus M_3$ とし、$U$ を $U(\mathcal M)$ 上でハール分布に従うとして、$\mathbb E|\mathrm{Tr}\,U|^2=C=3$ と
-   $\mathbb E|\mathrm{Tr}\,U|^4=17$ を確かめよ。
-2. $k=3$ に対し $3$ 次のワインガルテン行列（[定理 5.12](../../lecture_notes/ja/05_random_matrices.md#r-5-12)）を数値的に計算し、
-   $\mathbb E|U_{11}|^6=\frac1{10}$ を確かめよ。
-3. **円形直交アンサンブル**（`measure='coe'`）は、$W$ を $U(k)$ 上でハール分布に従うとして $S=W^TW$ で与えられる。ライブラリの
-   COE が $W^TW$ であること、$S$ がユニタリかつ対称であること、$m=1,2,3$ に対し $\mathbb E\mathrm{Tr}\,S^m=0$ であること、
-   固有位相の平均密度が一様であることを確かめよ。$k=32$ の COE の固有位相について $\langle r\rangle$ を計算し、
+1. $`\mathcal M=M_1\oplus M_2\oplus M_3`$ とし、$`U`$ を $`U(\mathcal M)`$ 上でハール分布に従うとして、$`\mathbb E|\mathrm{Tr}\,U|^2=C=3`$ と
+   $`\mathbb E|\mathrm{Tr}\,U|^4=17`$ を確かめよ。
+2. $`k=3`$ に対し $`3`$ 次のワインガルテン行列（[定理 5.12](../../lecture_notes/ja/05_random_matrices.md#r-5-12)）を数値的に計算し、
+   $`\mathbb E|U_{11}|^6=\frac1{10}`$ を確かめよ。
+3. **円形直交アンサンブル**（`measure='coe'`）は、$`W`$ を $`U(k)`$ 上でハール分布に従うとして $`S=W^TW`$ で与えられる。ライブラリの
+   COE が $`W^TW`$ であること、$`S`$ がユニタリかつ対称であること、$`m=1,2,3`$ に対し $`\mathbb E\mathrm{Tr}\,S^m=0`$ であること、
+   固有位相の平均密度が一様であることを確かめよ。$`k=32`$ の COE の固有位相について $`\langle r\rangle`$ を計算し、
    5.3節の GOE の値と比較せよ（数値的観察）。
 
 <details>
@@ -324,8 +336,8 @@ mc(u3[:, 0, 0].abs() ** 6, 0.1, "E|U_11|^6")
 
 *演習問題 3.*
 
-   *数値的観察.* コードは $k=32$ の COE について $\langle r\rangle\approx0.53$ を見いだし、これは 5.3節の GOE(64) の値と
-   $0.015$ 以内で一致する。この一致は計算の出力である。本講義の
+   *数値的観察.* コードは $`k=32`$ の COE について $`\langle r\rangle\approx0.53`$ を見いだし、これは 5.3節の GOE(64) の値と
+   $`0.015`$ 以内で一致する。この一致は計算の出力である。本講義の
    定理で COE の間隔統計を GOE のそれと結びつけるものはない（円形
    アンサンブルについては F. J. Dyson, J. Math. Phys. 3 (1962), 140–156 を参照）。
 

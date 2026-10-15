@@ -14,8 +14,8 @@ quadrature and exact arithmetic.
 
 *Lecture notes:* [Section C.2](../lecture_notes/C_eigenvalue_densities.md#s-C-2); [Lemma C.4](../lecture_notes/C_eigenvalue_densities.md#r-C-4), [Theorem C.5](../lecture_notes/C_eigenvalue_densities.md#r-C-5).
 
-The check below differentiates $\Psi$ numerically for $n=2,3$ and both $\beta$: at $X=0$ the Jacobian is $\Delta(\lambda)^\beta$, and
-at a fixed $X\neq0$ its ratio to $\Delta(\lambda)^\beta$ does not depend on $\lambda$ (Lemma C.4(a)).
+The check below differentiates $`\Psi`$ numerically for $`n=2,3`$ and both $`\beta`$: at $`X=0`$ the Jacobian is $`\Delta(\lambda)^\beta`$, and
+at a fixed $`X\neq0`$ its ratio to $`\Delta(\lambda)^\beta`$ does not depend on $`\lambda`$ (Lemma C.4(a)).
 
 ```python
 import math
@@ -82,10 +82,10 @@ for n in (2, 3):
 
 *Lecture notes:* [Section C.3](../lecture_notes/C_eigenvalue_densities.md#s-C-3); [Theorem C.7](../lecture_notes/C_eigenvalue_densities.md#r-C-7), [Corollary C.8](../lecture_notes/C_eigenvalue_densities.md#r-C-8).
 
-We check Theorem C.7 for $n=3$: the GOE level density is computed from the joint density by integrating over the other two eigenvalues on a grid, and compared
+We check Theorem C.7 for $`n=3`$: the GOE level density is computed from the joint density by integrating over the other two eigenvalues on a grid, and compared
 with the mean number of eigenvalues in each bin; we also check that the eigenvectors are uncorrelated with the
-eigenvalues ($|\tilde U_{11}|^2$ does not depend on the phases $D$, so it can be read off any eigenframe returned by
-`eigh`). For Haar $U\in O(3)$, $\mathbb E|U_{11}|^2=\frac13$ ([lecture notes, Section C.3](../lecture_notes/C_eigenvalue_densities.md#s-C-3)).
+eigenvalues ($`|\tilde U_{11}|^2`$ does not depend on the phases $`D`$, so it can be read off any eigenframe returned by
+`eigh`). For Haar $`U\in O(3)`$, $`\mathbb E|U_{11}|^2=\frac13`$ ([lecture notes, Section C.3](../lecture_notes/C_eigenvalue_densities.md#s-C-3)).
 
 ```python
 B, n = 200_000, 3
@@ -116,9 +116,9 @@ mc((u11 - 1 / 3) * goe_lam[:, 0], 0.0, "GOE(3): E (|U_11|^2 - 1/3) lambda_1")   
 
 *Lecture notes:* [Section C.4](../lecture_notes/C_eigenvalue_densities.md#s-C-4); [Lemma C.10](../lecture_notes/C_eigenvalue_densities.md#r-C-10).
 
-By [Lemma C.10](../lecture_notes/C_eigenvalue_densities.md#r-C-10) and Corollary C.6 of the lecture notes, the GUE level density is $K_n(x)e^{-x^2/2}$, with
-$K_n=v^TM^{-1}v$ computed from the matrix $M$ of moments. We check this for $n=3$ with the moments
-$\int x^{2m}e^{-x^2/2}dx=\sqrt{2\pi}(2m-1)(2m-3)\cdots1$:
+By [Lemma C.10](../lecture_notes/C_eigenvalue_densities.md#r-C-10) and Corollary C.6 of the lecture notes, the GUE level density is $`K_n(x)e^{-x^2/2}`$, with
+$`K_n=v^TM^{-1}v`$ computed from the matrix $`M`$ of moments. We check this for $`n=3`$ with the moments
+$`\int x^{2m}e^{-x^2/2}dx=\sqrt{2\pi}(2m-1)(2m-3)\cdots1`$:
 
 ```python
 def one_point(x, n, moment, w):
@@ -142,12 +142,12 @@ for lo, hi in zip(edges[:-1], edges[1:]):
 
 *Lecture notes:* [Section C.5](../lecture_notes/C_eigenvalue_densities.md#s-C-5); [Lemma C.11](../lecture_notes/C_eigenvalue_densities.md#r-C-11) (Bartlett), [Lemma C.12](../lecture_notes/C_eigenvalue_densities.md#r-C-12) (Cholesky), [Theorem C.14](../lecture_notes/C_eigenvalue_densities.md#r-C-14) (induced measure).
 
-In the library, `states.random_density_matrix(TypeIAlgebra([a], [a]), N, rank=b)` samples $N$ states
-$\rho_A=GG^*/\mathrm{Tr}\,GG^*$ with $G$ an $a\times b$ Ginibre matrix, that is, the induced measure of
+In the library, `states.random_density_matrix(TypeIAlgebra([a], [a]), N, rank=b)` samples $`N`$ states
+$`\rho_A=GG^*/\mathrm{Tr}\,GG^*`$ with $`G`$ an $`a\times b`$ Ginibre matrix, that is, the induced measure of
 [Theorem C.14](../lecture_notes/C_eigenvalue_densities.md#r-C-14); `rho.eigenvalues()` returns the eigenvalues of each block in ascending order.
 
-We check Lemma C.11 on the Cholesky factor computed by `torch.linalg.cholesky` (which is the unique $L\in T_+$ by
-Lemma C.12), and Theorem C.14 for $a=2$, where $\mu_1\in(0,\frac12)$ has the density $\propto(1-2t)^2(t(1-t))^{b-2}$:
+We check Lemma C.11 on the Cholesky factor computed by `torch.linalg.cholesky` (which is the unique $`L\in T_+`$ by
+Lemma C.12), and Theorem C.14 for $`a=2`$, where $`\mu_1\in(0,\frac12)`$ has the density $`\propto(1-2t)^2(t(1-t))^{b-2}`$:
 
 ```python
 a, b, B = 3, 5, 100_000
@@ -177,10 +177,10 @@ for b2 in (2, 4):
 
 *Lecture notes:* [Section C.6](../lecture_notes/C_eigenvalue_densities.md#s-C-6); [Lemma C.15](../lecture_notes/C_eigenvalue_densities.md#r-C-15), [Lemma C.16](../lecture_notes/C_eigenvalue_densities.md#r-C-16), [Theorem C.17](../lecture_notes/C_eigenvalue_densities.md#r-C-17) (Page's formula), [Corollary C.18](../lecture_notes/C_eigenvalue_densities.md#r-C-18).
 
-We check the Laguerre level density against a histogram, the values $A^{(\alpha)}_{k,m}$ of Lemma C.16 and the intermediate
-result $\int x\log x\,\rho_{a,b}=ab\,I_0+\Sigma$ by quadrature (with $I_0$ itself computed by quadrature), the identity for
-$\Sigma$ in exact arithmetic, Page's formula against a direct integration of the
-induced density for $a=2$ (exact rational values) and against Monte Carlo, and Corollary C.18:
+We check the Laguerre level density against a histogram, the values $`A^{(\alpha)}_{k,m}`$ of Lemma C.16 and the intermediate
+result $`\int x\log x\,\rho_{a,b}=ab\,I_0+\Sigma`$ by quadrature (with $`I_0`$ itself computed by quadrature), the identity for
+$`\Sigma`$ in exact arithmetic, Page's formula against a direct integration of the
+induced density for $`a=2`$ (exact rational values) and against Monte Carlo, and Corollary C.18:
 
 ```python
 def laguerre(k, al, x):

@@ -13,7 +13,7 @@ from typing import Optional, Sequence, Tuple
 
 import torch
 
-from .algebra import TypeIAlgebra
+from .algebra import TypeIAlgebra, _as_tensor
 from . import cost
 
 Operator = TypeIAlgebra.Operator
@@ -133,7 +133,7 @@ class DensityMatrix(Operator):
                 raise ValueError("mix: p must lie in [0, 1] (otherwise the result is not a state)")
             pt = p
         else:
-            pt = torch.as_tensor(p).to(device=self.algebra.hilbert.device, dtype=self.algebra.hilbert.real_dtype)
+            pt = _as_tensor(p).to(device=self.algebra.hilbert.device, dtype=self.algebra.hilbert.real_dtype)
             if bool(((pt < 0) | (pt > 1)).any()):        # one synchronisation (validation)
                 raise ValueError("mix: p must lie in [0, 1] (otherwise the result is not a state)")
             if pt.dim() == 1:
@@ -233,6 +233,9 @@ def gibbs_state(H: Operator, beta: float) -> DensityMatrix:
     B = H.matrix.shape[0]
     dec = H._decompositions('hermitian')                     # one eigendecomposition per block size
     x_max = torch.stack([(-beta * w).reshape(B, -1).amax(-1) for _, _, _, (w, _) in dec], dim=-1).amax(-1)  # (B,)
+    if torch.is_grad_enabled() and H.matrix.requires_grad:   # differentiable path (Daleckii-Krein); the shift is a
+        mat = H.apply_function(lambda w: torch.exp(-beta * w - x_max[:, None])).matrix   # constant and cancels in rho
+        return _density(alg, mat)
     mat = torch.zeros_like(H.matrix)
     for k, idx, _, (w, V) in dec:
         e = torch.exp(-beta * w - x_max.repeat_interleave(len(idx))[:, None]).to(V.dtype)

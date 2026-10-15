@@ -4,9 +4,9 @@
 
 Это руководство сопровождает [приложение F](../../lecture_notes/ru/F_cones_and_order.md) конспекта лекций, где доказывается, что конус квадратов евклидовой
 йордановой алгебры является симметрическим, а также теорема Кёхера–Винберга ([теорема F.12](../../lecture_notes/ru/F_cones_and_order.md#r-F-12)), теорема Кадисона и
-вид йордановых $*$-изоморфизмов для алгебр $\bigoplus_cM_{k_c}(\mathbb C)$
+вид йордановых $`*`$-изоморфизмов для алгебр $`\bigoplus_cM_{k_c}(\mathbb C)`$
 ([теоремы F.15](../../lecture_notes/ru/F_cones_and_order.md#r-F-15) и [F.18](../../lecture_notes/ru/F_cones_and_order.md#r-F-18)). Мы численно проверяем эти результаты на матрицах, на спин-факторе
-$V_4$ библиотеки и на конусе положительно определённых матриц.
+$`V_4`$ библиотеки и на конусе положительно определённых матриц.
 
 <a id="s-F-2"></a>
 
@@ -14,13 +14,13 @@ $V_4$ библиотеки и на конусе положительно опр�
 
 *Конспект:* [раздел F.2](../../lecture_notes/ru/F_cones_and_order.md#s-F-2); [теорема F.5](../../lecture_notes/ru/F_cones_and_order.md#r-F-5), [теорема F.6](../../lecture_notes/ru/F_cones_and_order.md#r-F-6), [следствие F.7](../../lecture_notes/ru/F_cones_and_order.md#r-F-7).
 
-В $V_4$ код использует `SpinFactor` библиотеки ([руководство, раздел 13.2](../../tutorial/ru/13_jordan_algebras.md#s-13-2)): `random` (с `cone=True` для элементов $Q$),
+В $`V_4`$ код использует `SpinFactor` библиотеки ([руководство, раздел 13.2](../../tutorial/ru/13_jordan_algebras.md#s-13-2)): `random` (с `cone=True` для элементов $`Q`$),
 `inner`, `spectral_decomposition`, `in_cone`, `product`, `quadratic_representation`, `exp`, `log` и `apply_function`.
 
-Код проверяет теорему F.5 для $\mathrm{Herm}_4(\mathbb C)$ и для конуса Лоренца $Q\subseteq V_4$ (отрицательное
-спаривание — это свидетель $c_i$ из (1), $\langle y,c_i\rangle=\lambda_i\|c_i\|^2<0$), теорему F.6 в $V_4$, где в координатах
-$(a,u)$ операторы $L(b)$ и $P(y)$ — симметричные матрицы $5\times5$, и следствие F.7 в
-$\mathrm{Herm}_5(\mathbb R)$:
+Код проверяет теорему F.5 для $`\mathrm{Herm}_4(\mathbb C)`$ и для конуса Лоренца $`Q\subseteq V_4`$ (отрицательное
+спаривание — это свидетель $`c_i`$ из (1), $`\langle y,c_i\rangle=\lambda_i\|c_i\|^2<0`$), теорему F.6 в $`V_4`$, где в координатах
+$`(a,u)`$ операторы $`L(b)`$ и $`P(y)`$ — симметричные матрицы $`5\times5`$, и следствие F.7 в
+$`\mathrm{Herm}_5(\mathbb R)`$:
 
 ```python
 import math
@@ -79,8 +79,8 @@ assert (rhs - lhs > -1e-9 * rhs).all()
 
 *Конспект:* [раздел F.3](../../lecture_notes/ru/F_cones_and_order.md#s-F-3); [предложение F.11](../../lecture_notes/ru/F_cones_and_order.md#r-F-11), [теорема F.12](../../lecture_notes/ru/F_cones_and_order.md#r-F-12), [пример F.13](../../lecture_notes/ru/F_cones_and_order.md#r-F-13).
 
-Код вычисляет $D^3f$ в точке $e$ автоматическим дифференцированием $f(x)=-\frac{n+1}2\log\det x$ в ортонормированных
-координатах $\mathrm{Herm}_3(\mathbb R)$ и проверяет утверждения предложения F.11 и теоремы F.12:
+Код вычисляет $`D^3f`$ в точке $`e`$ автоматическим дифференцированием $`f(x)=-\frac{n+1}2\log\det x`$ в ортонормированных
+координатах $`\mathrm{Herm}_3(\mathbb R)`$ и проверяет утверждения предложения F.11 и теоремы F.12:
 
 ```python
 from torch.autograd.functional import jacobian, hessian
@@ -113,10 +113,10 @@ assert close(prod(u, prod(u2, v)), prod(u2, prod(u, v)))           # Jordan iden
 
 *Конспект:* [раздел F.4](../../lecture_notes/ru/F_cones_and_order.md#s-F-4); [теорема F.15](../../lecture_notes/ru/F_cones_and_order.md#r-F-15), [теорема F.18](../../lecture_notes/ru/F_cones_and_order.md#r-F-18).
 
-Согласно [конспекту лекций, теорема F.15](../../lecture_notes/ru/F_cones_and_order.md#r-F-15), унитальная линейная биекция $\Phi$, для которой $\Phi$ и $\Phi^{-1}$
-положительны, является йордановым $*$-изоморфизмом. Код строит такое отображение $M_2\oplus M_2\oplus M_3$ вида из
-[теоремы F.18](../../lecture_notes/ru/F_cones_and_order.md#r-F-18): оно переставляет два блока $M_2$, транспонирует два блока и сопрягает унитарными матрицами. Код
-проверяет, что $\Phi$ унитально и положительно в обе стороны, что оно сохраняет йорданово произведение и что оно не
+Согласно [конспекту лекций, теорема F.15](../../lecture_notes/ru/F_cones_and_order.md#r-F-15), унитальная линейная биекция $`\Phi`$, для которой $`\Phi`$ и $`\Phi^{-1}`$
+положительны, является йордановым $`*`$-изоморфизмом. Код строит такое отображение $`M_2\oplus M_2\oplus M_3`$ вида из
+[теоремы F.18](../../lecture_notes/ru/F_cones_and_order.md#r-F-18): оно переставляет два блока $`M_2`$, транспонирует два блока и сопрягает унитарными матрицами. Код
+проверяет, что $`\Phi`$ унитально и положительно в обе стороны, что оно сохраняет йорданово произведение и что оно не
 мультипликативно:
 
 ```python
@@ -150,11 +150,11 @@ assert not close(Phi([s @ t for s, t in zip(x, y)])[0], (Phi(x)[0] @ Phi(y)[0]))
 
 <a id="s-F-5"></a>
 
-## F.5 Йордановы $*$-изоморфизмы $\bigoplus_cM_{k_c}$
+## F.5 Йордановы $`*`$-изоморфизмы $`\bigoplus_cM_{k_c}`$
 
 *Конспект:* [раздел F.5](../../lecture_notes/ru/F_cones_and_order.md#s-F-5); [теорема F.17](../../lecture_notes/ru/F_cones_and_order.md#r-F-17).
 
-Код строит йорданов автоморфизм $x\mapsto Ux^TU^*$ алгебры $M_3$ и восстанавливает $U$ (с точностью до фазы), следуя шагам
+Код строит йорданов автоморфизм $`x\mapsto Ux^TU^*`$ алгебры $`M_3`$ и восстанавливает $`U`$ (с точностью до фазы), следуя шагам
 доказательства ([конспект лекций, теорема F.17](../../lecture_notes/ru/F_cones_and_order.md#r-F-17)):
 
 ```python
@@ -184,9 +184,9 @@ print("U recovered up to the phase", complex(phase))
 
 ## Упражнения
 
-[Упражнение 2](../../lecture_notes/ru/F_cones_and_order.md#x-F) конспекта лекций: для $0<t<1$ отображение $\Psi_t(x)=(1-t)x+\frac tn\mathrm{Tr}(x)1$ на $M_n$ — унитальная
+[Упражнение 2](../../lecture_notes/ru/F_cones_and_order.md#x-F) конспекта лекций: для $`0<t<1`$ отображение $`\Psi_t(x)=(1-t)x+\frac tn\mathrm{Tr}(x)1`$ на $`M_n`$ — унитальная
 положительная биекция, обратное к которой не положительно, и оно не переводит проекторы в проекторы. Проверьте это
-численно для $n=3$, $t=\frac14$ и проектора $p$ ранга один.
+численно для $`n=3`$, $`t=\frac14`$ и проектора $`p`$ ранга один.
 
 <details>
 <summary>Решения</summary>

@@ -4,7 +4,7 @@
 
 このチュートリアルは講義ノートの[付録 B](../../lecture_notes/ja/B_schur_weyl.md)に対応する。付録 B はシューア・ワイル双対性
 （[定理 B.6](../../lecture_notes/ja/B_schur_weyl.md#r-B-6)）と任意の次数のワインガルテン公式（[定理 B.13](../../lecture_notes/ja/B_schur_weyl.md#r-B-13)）を証明する。ここでは、双対性における
-次元、ライブラリが計算する $(\mathbb C^d)^{\otimes n}$ の分解、ハール・ユニタリにわたるモンテカルロ平均と比較した
+次元、ライブラリが計算する $`(\mathbb C^d)^{\otimes n}`$ の分解、ハール・ユニタリにわたるモンテカルロ平均と比較した
 ワインガルテン関数、ウィグナー・エッカルトの定理、そして直交群のハール測度を確かめる。
 
 <a id="s-B-3"></a>
@@ -13,10 +13,10 @@
 
 *講義ノート：* [B.3節](../../lecture_notes/ja/B_schur_weyl.md#s-B-3)；[補題 B.1](../../lecture_notes/ja/B_schur_weyl.md#r-B-1)、[補題 B.2](../../lecture_notes/ja/B_schur_weyl.md#r-B-2)、[命題 B.3](../../lecture_notes/ja/B_schur_weyl.md#r-B-3)、[補題 B.5](../../lecture_notes/ja/B_schur_weyl.md#r-B-5)、[定理 B.6](../../lecture_notes/ja/B_schur_weyl.md#r-B-6)。
 
-コードは小さな $d$ と $n$ について四つの次元を比較する：$\mathrm{span}\,\pi(S_n)$ の次元、二つのランダムな
-$V^{\otimes n}$ の可換子環の次元（これは $\{V^{\otimes n}\}'=\mathrm{span}\,\pi(S_n)$ を含み、出力されるすべての場合でそれと一致する）、
-そして多数のランダムな $A^{\otimes n}$ と $V^{\otimes n}$ の張る空間の次元を $\binom{d^2+n-1}n$ と比較する
-（[命題 B.3](../../lecture_notes/ja/B_schur_weyl.md#r-B-3)、[定理 B.6](../../lecture_notes/ja/B_schur_weyl.md#r-B-6)）。作用素 $\pi(\sigma)$ は `decompose.permutation_representation(n, d)` が
+コードは小さな $`d`$ と $`n`$ について四つの次元を比較する：$`\mathrm{span}\,\pi(S_n)`$ の次元、二つのランダムな
+$`V^{\otimes n}`$ の可換子環の次元（これは $`\{V^{\otimes n}\}'=\mathrm{span}\,\pi(S_n)`$ を含み、出力されるすべての場合でそれと一致する）、
+そして多数のランダムな $`A^{\otimes n}`$ と $`V^{\otimes n}`$ の張る空間の次元を $`\binom{d^2+n-1}n`$ と比較する
+（[命題 B.3](../../lecture_notes/ja/B_schur_weyl.md#r-B-3)、[定理 B.6](../../lecture_notes/ja/B_schur_weyl.md#r-B-6)）。作用素 $`\pi(\sigma)`$ は `decompose.permutation_representation(n, d)` が
 構成する。コードはそれが[補題 B.1(a)](../../lecture_notes/ja/B_schur_weyl.md#r-B-1) の規約に従うことを確かめ、さらに[補題 B.2](../../lecture_notes/ja/B_schur_weyl.md#r-B-2) と、定理 B.6(b) の
 証明で用いる[補題 B.5](../../lecture_notes/ja/B_schur_weyl.md#r-B-5) のニュートン漸化式を確かめる。
 
@@ -89,14 +89,14 @@ assert close(e[n], functools.reduce(torch.kron, [A] * n), 1e-8)
 
 <a id="s-B-4"></a>
 
-## B.4 $(\mathbb C^d)^{\otimes n}$ の分解
+## B.4 $`(\mathbb C^d)^{\otimes n}`$ の分解
 
 *講義ノート：* [B.4節](../../lecture_notes/ja/B_schur_weyl.md#s-B-4)；[定理 B.8](../../lecture_notes/ja/B_schur_weyl.md#r-B-8)、[系 B.9](../../lecture_notes/ja/B_schur_weyl.md#r-B-9)、[系 B.10](../../lecture_notes/ja/B_schur_weyl.md#r-B-10)。
 
-コードは `decompose.from_group` で $(\mathbb C^3)^{\otimes3}$ 上の $\pi(S_3)$ を分解し（その `k_factors` と
-`multiplicities` が $k_c$ と $m_c$ である）、[定理 B.8](../../lecture_notes/ja/B_schur_weyl.md#r-B-8) の次元を確かめる。次に $L=5,6$ に対して
-$(\mathbb C^2)^{\otimes L}$ 上の $\pi(S_L)$ を分解し、組 $(k_c,m_c)$ を[系 B.9](../../lecture_notes/ja/B_schur_weyl.md#r-B-9) の $(m_S,2S+1)$ と、
-$\sum_ck_c^2$ を[系 B.10](../../lecture_notes/ja/B_schur_weyl.md#r-B-10) のカタラン数と比較する。`from_group` の背後にあるアルゴリズムは
+コードは `decompose.from_group` で $`(\mathbb C^3)^{\otimes3}`$ 上の $`\pi(S_3)`$ を分解し（その `k_factors` と
+`multiplicities` が $`k_c`$ と $`m_c`$ である）、[定理 B.8](../../lecture_notes/ja/B_schur_weyl.md#r-B-8) の次元を確かめる。次に $`L=5,6`$ に対して
+$`(\mathbb C^2)^{\otimes L}`$ 上の $`\pi(S_L)`$ を分解し、組 $`(k_c,m_c)`$ を[系 B.9](../../lecture_notes/ja/B_schur_weyl.md#r-B-9) の $`(m_S,2S+1)`$ と、
+$`\sum_ck_c^2`$ を[系 B.10](../../lecture_notes/ja/B_schur_weyl.md#r-B-10) のカタラン数と比較する。`from_group` の背後にあるアルゴリズムは
 [チュートリアル 4、4.3節](04_symmetries.md#s-4-3)で説明する。
 
 ```python
@@ -122,10 +122,10 @@ for L in (5, 6):
 
 *講義ノート：* [B.5節](../../lecture_notes/ja/B_schur_weyl.md#s-B-5)；[補題 B.11](../../lecture_notes/ja/B_schur_weyl.md#r-B-11)、[定理 B.13](../../lecture_notes/ja/B_schur_weyl.md#r-B-13)、[系 B.14](../../lecture_notes/ja/B_schur_weyl.md#r-B-14)。
 
-コードは擬似逆行列から $\mathrm{Wg}$ を計算し、[定理 B.13(a)、(b)](../../lecture_notes/ja/B_schur_weyl.md#r-B-13) と
-[定理 5.10](../../lecture_notes/ja/05_random_matrices.md#r-5-10) を確かめ、さらに $d=2$ での次数 $n=3$ のモーメント・テンソル全体
-（$G$ が特異となる場合）と、ランダムな $X$ のツワール（[補題 B.11](../../lecture_notes/ja/B_schur_weyl.md#r-B-11)）を、ハール・ユニタリにわたるモンテカルロ
-平均と比較する。成分 $\mathbb E|U_{11}|^6=\frac{3!}{2\cdot3\cdot4}$ は[系 B.14](../../lecture_notes/ja/B_schur_weyl.md#r-B-14) である。
+コードは擬似逆行列から $`\mathrm{Wg}`$ を計算し、[定理 B.13(a)、(b)](../../lecture_notes/ja/B_schur_weyl.md#r-B-13) と
+[定理 5.10](../../lecture_notes/ja/05_random_matrices.md#r-5-10) を確かめ、さらに $`d=2`$ での次数 $`n=3`$ のモーメント・テンソル全体
+（$`G`$ が特異となる場合）と、ランダムな $`X`$ のツワール（[補題 B.11](../../lecture_notes/ja/B_schur_weyl.md#r-B-11)）を、ハール・ユニタリにわたるモンテカルロ
+平均と比較する。成分 $`\mathbb E|U_{11}|^6=\frac{3!}{2\cdot3\cdot4}`$ は[系 B.14](../../lecture_notes/ja/B_schur_weyl.md#r-B-14) である。
 
 ```python
 def n_cycles(p):                                        # number of cycles of a permutation in one-line form
@@ -180,7 +180,7 @@ assert abs(exact[0, 0].item() - 1 / 4) < 1e-12                            # Coro
 
 X = torch.randn(N, N, dtype=dt)
 T = Phi(X)
-coef = torch.linalg.lstsq(P.reshape(len(perms), -1).T, T.reshape(-1, 1)).solution
+coef = torch.linalg.lstsq(P.reshape(len(perms), -1).T, T.reshape(-1, 1), driver='gelsd').solution
 assert close(Phi(T), T) and close(torch.einsum('s,sij->ij', coef[:, 0], P), T)   # a projection into span pi(S_n)
 Vn = power(haar(d, 1), n)[0]
 assert close(Vn @ T, T @ Vn)                                             # = {V^{(x)n}}'
@@ -191,14 +191,14 @@ assert ((Y.mean(0) - T).abs() <= 5 * Y.std(0) / math.sqrt(B) + 1e-12).all()   # 
 
 <a id="s-B-6"></a>
 
-## B.6 テンソル作用素と $SU(2)$ に対するウィグナー・エッカルトの定理
+## B.6 テンソル作用素と $`SU(2)`$ に対するウィグナー・エッカルトの定理
 
 *講義ノート：* [B.6節](../../lecture_notes/ja/B_schur_weyl.md#s-B-6)；[補題 B.15](../../lecture_notes/ja/B_schur_weyl.md#r-B-15)、[定理 B.16](../../lecture_notes/ja/B_schur_weyl.md#r-B-16)。
 
-コードは六つのスピン $\frac12$ のサイトスピンについて[補題 B.15](../../lecture_notes/ja/B_schur_weyl.md#r-B-15) を確かめ（`decompose.total_spin`、
+コードは六つのスピン $`\frac12`$ のサイトスピンについて[補題 B.15](../../lecture_notes/ja/B_schur_weyl.md#r-B-15) を確かめ（`decompose.total_spin`、
 `decompose.spin_matrices`）、[定理 B.16](../../lecture_notes/ja/B_schur_weyl.md#r-B-16) を基底によらない形で確かめる：`decompose.from_generators` が
-計算した分解（そのセクター基底、すなわち `V` の列ブロックは $|S,M\rangle$ である必要はない）において、二つの多重項の
-間の $(T_q)_q$ のブロックを行 $(M',M,q)$、列 $(a,b)$ の行列とみなすと、その階数は高々一であり、(a) の範囲外では
+計算した分解（そのセクター基底、すなわち `V` の列ブロックは $`|S,M\rangle`$ である必要はない）において、二つの多重項の
+間の $`(T_q)_q`$ のブロックを行 $`(M',M,q)`$、列 $`(a,b)`$ の行列とみなすと、その階数は高々一であり、(a) の範囲外では
 零である。この定理は `su2.spin_correlation` の背後にある原理であり、[チュートリアル 9、9.3節](09_spin_chains.md#s-9-3)で
 `'direct'` 法と比較して確かめる。
 
@@ -243,13 +243,13 @@ assert close(X @ X2 + Y @ Y2 + Z @ Z2, sum((-1) ** q * T[q] @ T2[-q] for q in (-
 
 *講義ノート：* [B.7節](../../lecture_notes/ja/B_schur_weyl.md#s-B-7)；[定理 B.17](../../lecture_notes/ja/B_schur_weyl.md#r-B-17)。
 
-[定理 B.17](../../lecture_notes/ja/B_schur_weyl.md#r-B-17) により、実ガウス行列の QR 分解 $Z=OR$ を $R_{ii}>0$ で正規化したときの直交因子 $O$ は
-$O(k)$ 上でハール分布に従い、$\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k$ である。他の任意の QR 分解 $Z=O'R'$ に
-対しては $O=O'\mathrm{diag}(\mathrm{sgn}\,R'_{ii})$ である。
+[定理 B.17](../../lecture_notes/ja/B_schur_weyl.md#r-B-17) により、実ガウス行列の QR 分解 $`Z=OR`$ を $`R_{ii}>0`$ で正規化したときの直交因子 $`O`$ は
+$`O(k)`$ 上でハール分布に従い、$`\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k`$ である。他の任意の QR 分解 $`Z=O'R'`$ に
+対しては $`O=O'\mathrm{diag}(\mathrm{sgn}\,R'_{ii})`$ である。
 
-コードは二次モーメント、$\mathbb E\mathrm{Tr}\,O=0$、そして $\mathbb E(\mathrm{Tr}\,O)^2=\sum_{i,l}\mathbb E[O_{ii}O_{ll}]=1$ を
+コードは二次モーメント、$`\mathbb E\mathrm{Tr}\,O=0`$、そして $`\mathbb E(\mathrm{Tr}\,O)^2=\sum_{i,l}\mathbb E[O_{ii}O_{ll}]=1`$ を
 モンテカルロ法で確かめる。また、`torch.linalg.qr` の QR ルーチンについての*数値的観察*（定理ではなく、そのルーチンについての
-主張）も記録する：符号の補正をしなければ、その因子 $Q'$ の $\mathbb E\mathrm{Tr}\,Q'$ は $0$ から標準誤差の何倍も離れており、
+主張）も記録する：符号の補正をしなければ、その因子 $`Q'`$ の $`\mathbb E\mathrm{Tr}\,Q'`$ は $`0`$ から標準誤差の何倍も離れており、
 したがってハール分布に従わない。
 
 ```python

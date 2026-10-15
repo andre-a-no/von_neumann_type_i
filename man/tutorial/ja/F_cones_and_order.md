@@ -3,8 +3,8 @@
 # チュートリアル、付録 F. 対称錐、順序同型とジョルダン写像
 
 このチュートリアルは講義ノートの[付録 F](../../lecture_notes/ja/F_cones_and_order.md)に対応する。付録 F は、ユークリッド的ジョルダン代数の平方の錐が対称錐であること、
-ケッヒャー–ヴィンベルクの定理（[定理 F.12](../../lecture_notes/ja/F_cones_and_order.md#r-F-12)）、そしてカディソンの定理と、環 $\bigoplus_cM_{k_c}(\mathbb C)$ のジョルダン $*$-同型の形
-（[定理 F.15](../../lecture_notes/ja/F_cones_and_order.md#r-F-15) と [F.18](../../lecture_notes/ja/F_cones_and_order.md#r-F-18)）を証明する。ここではこれらの結果を、行列、ライブラリのスピン因子 $V_4$、および
+ケッヒャー–ヴィンベルクの定理（[定理 F.12](../../lecture_notes/ja/F_cones_and_order.md#r-F-12)）、そしてカディソンの定理と、環 $`\bigoplus_cM_{k_c}(\mathbb C)`$ のジョルダン $`*`$-同型の形
+（[定理 F.15](../../lecture_notes/ja/F_cones_and_order.md#r-F-15) と [F.18](../../lecture_notes/ja/F_cones_and_order.md#r-F-18)）を証明する。ここではこれらの結果を、行列、ライブラリのスピン因子 $`V_4`$、および
 正定値行列の錐の上で数値的に確かめる。
 
 <a id="s-F-2"></a>
@@ -13,13 +13,13 @@
 
 *講義ノート：* [F.2節](../../lecture_notes/ja/F_cones_and_order.md#s-F-2)；[定理 F.5](../../lecture_notes/ja/F_cones_and_order.md#r-F-5)、[定理 F.6](../../lecture_notes/ja/F_cones_and_order.md#r-F-6)、[系 F.7](../../lecture_notes/ja/F_cones_and_order.md#r-F-7)。
 
-$V_4$ では、コードはライブラリの `SpinFactor`（[チュートリアル、13.2節](../../tutorial/ja/13_jordan_algebras.md#s-13-2)）を用いる：`random`（$Q$ の元には `cone=True` を指定）、
+$`V_4`$ では、コードはライブラリの `SpinFactor`（[チュートリアル、13.2節](../../tutorial/ja/13_jordan_algebras.md#s-13-2)）を用いる：`random`（$`Q`$ の元には `cone=True` を指定）、
 `inner`, `spectral_decomposition`, `in_cone`, `product`, `quadratic_representation`, `exp`, `log`, `apply_function`。
 
-コードは $\mathrm{Herm}_4(\mathbb C)$ とローレンツ錐 $Q\subseteq V_4$ に対して定理 F.5 を（負のペアリングは
-(1), $\langle y,c_i\rangle=\lambda_i\|c_i\|^2<0$ の証拠 $c_i$ である）、$V_4$ において定理 F.6 を（座標
-$(a,u)$ において作用素 $L(b)$ と $P(y)$ は $5\times5$ 対称行列である）、そして
-$\mathrm{Herm}_5(\mathbb R)$ において系 F.7 を検証する：
+コードは $`\mathrm{Herm}_4(\mathbb C)`$ とローレンツ錐 $`Q\subseteq V_4`$ に対して定理 F.5 を（負のペアリングは
+(1), $`\langle y,c_i\rangle=\lambda_i\|c_i\|^2<0`$ の証拠 $`c_i`$ である）、$`V_4`$ において定理 F.6 を（座標
+$`(a,u)`$ において作用素 $`L(b)`$ と $`P(y)`$ は $`5\times5`$ 対称行列である）、そして
+$`\mathrm{Herm}_5(\mathbb R)`$ において系 F.7 を検証する：
 
 ```python
 import math
@@ -78,8 +78,8 @@ assert (rhs - lhs > -1e-9 * rhs).all()
 
 *講義ノート：* [F.3節](../../lecture_notes/ja/F_cones_and_order.md#s-F-3)；[命題 F.11](../../lecture_notes/ja/F_cones_and_order.md#r-F-11)、[定理 F.12](../../lecture_notes/ja/F_cones_and_order.md#r-F-12)、[例 F.13](../../lecture_notes/ja/F_cones_and_order.md#r-F-13)。
 
-コードは $\mathrm{Herm}_3(\mathbb R)$ の正規直交座標において $f(x)=-\frac{n+1}2\log\det x$ を自動微分することで $e$ における
-$D^3f$ を計算し、命題 F.11 と定理 F.12 の主張を検証する：
+コードは $`\mathrm{Herm}_3(\mathbb R)`$ の正規直交座標において $`f(x)=-\frac{n+1}2\log\det x`$ を自動微分することで $`e`$ における
+$`D^3f`$ を計算し、命題 F.11 と定理 F.12 の主張を検証する：
 
 ```python
 from torch.autograd.functional import jacobian, hessian
@@ -112,9 +112,9 @@ assert close(prod(u, prod(u2, v)), prod(u2, prod(u, v)))           # Jordan iden
 
 *講義ノート：* [F.4節](../../lecture_notes/ja/F_cones_and_order.md#s-F-4)；[定理 F.15](../../lecture_notes/ja/F_cones_and_order.md#r-F-15)、[定理 F.18](../../lecture_notes/ja/F_cones_and_order.md#r-F-18)。
 
-[講義ノート、定理 F.15](../../lecture_notes/ja/F_cones_and_order.md#r-F-15)により、$\Phi$ と $\Phi^{-1}$ がともに正値であるような単位的線形全単射 $\Phi$ はジョルダン $*$-同型である。
-コードは、[定理 F.18](../../lecture_notes/ja/F_cones_and_order.md#r-F-18) の形をもつそのような $M_2\oplus M_2\oplus M_3$ の写像を構成する：それは二つの $M_2$ ブロックを入れ替え、
-二つのブロックを転置し、ユニタリで共役をとる。そして、$\Phi$ が単位的で両方向に正値であること、ジョルダン積を保つこと、
+[講義ノート、定理 F.15](../../lecture_notes/ja/F_cones_and_order.md#r-F-15)により、$`\Phi`$ と $`\Phi^{-1}`$ がともに正値であるような単位的線形全単射 $`\Phi`$ はジョルダン $`*`$-同型である。
+コードは、[定理 F.18](../../lecture_notes/ja/F_cones_and_order.md#r-F-18) の形をもつそのような $`M_2\oplus M_2\oplus M_3`$ の写像を構成する：それは二つの $`M_2`$ ブロックを入れ替え、
+二つのブロックを転置し、ユニタリで共役をとる。そして、$`\Phi`$ が単位的で両方向に正値であること、ジョルダン積を保つこと、
 乗法的でないことを確かめる：
 
 ```python
@@ -148,12 +148,12 @@ assert not close(Phi([s @ t for s, t in zip(x, y)])[0], (Phi(x)[0] @ Phi(y)[0]))
 
 <a id="s-F-5"></a>
 
-## F.5 $\bigoplus_cM_{k_c}$ のジョルダン $*$-同型
+## F.5 $`\bigoplus_cM_{k_c}`$ のジョルダン $`*`$-同型
 
 *講義ノート：* [F.5節](../../lecture_notes/ja/F_cones_and_order.md#s-F-5)；[定理 F.17](../../lecture_notes/ja/F_cones_and_order.md#r-F-17)。
 
-コードは $M_3$ のジョルダン自己同型 $x\mapsto Ux^TU^*$ を構成し、証明の手順（[講義ノート、定理 F.17](../../lecture_notes/ja/F_cones_and_order.md#r-F-17)）によって
-$U$ を（位相を除いて）復元する：
+コードは $`M_3`$ のジョルダン自己同型 $`x\mapsto Ux^TU^*`$ を構成し、証明の手順（[講義ノート、定理 F.17](../../lecture_notes/ja/F_cones_and_order.md#r-F-17)）によって
+$`U`$ を（位相を除いて）復元する：
 
 ```python
 k = 3
@@ -182,8 +182,8 @@ print("U recovered up to the phase", complex(phase))
 
 ## 演習問題
 
-講義ノートの[演習問題 2](../../lecture_notes/ja/F_cones_and_order.md#x-F)：$0<t<1$ に対し、$M_n$ 上の $\Psi_t(x)=(1-t)x+\frac tn\mathrm{Tr}(x)1$ は、逆写像が正値でない
-単位的な正値全単射であり、射影を射影に写さない。$n=3$、$t=\frac14$、階数1の射影 $p$ についてこれを数値的に確かめよ。
+講義ノートの[演習問題 2](../../lecture_notes/ja/F_cones_and_order.md#x-F)：$`0<t<1`$ に対し、$`M_n`$ 上の $`\Psi_t(x)=(1-t)x+\frac tn\mathrm{Tr}(x)1`$ は、逆写像が正値でない
+単位的な正値全単射であり、射影を射影に写さない。$`n=3`$、$`t=\frac14`$、階数1の射影 $`p`$ についてこれを数値的に確かめよ。
 
 <details>
 <summary>解答</summary>

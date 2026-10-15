@@ -13,10 +13,10 @@ elements. Jordan products of operators in the library are the subject of [Tutori
 
 *Lecture notes:* [Section E.3](../lecture_notes/E_jordan_classification.md#s-E-3); [Lemma E.1](../lecture_notes/E_jordan_classification.md#r-E-1), [Lemma E.3](../lecture_notes/E_jordan_classification.md#r-E-3), [Proposition E.4](../lecture_notes/E_jordan_classification.md#r-E-4), [Theorem E.5](../lecture_notes/E_jordan_classification.md#r-E-5).
 
-In a formally real Jordan algebra the trace form $\tau(x,y)=\mathrm{Tr}\,L(x\circ y)$ is associative and positive
+In a formally real Jordan algebra the trace form $`\tau(x,y)=\mathrm{Tr}\,L(x\circ y)`$ is associative and positive
 definite ([lecture notes, Theorem E.5](../lecture_notes/E_jordan_classification.md#r-E-5)). The code checks [Lemma E.1(4)](../lecture_notes/E_jordan_classification.md#r-E-1),
-[Lemma E.3](../lecture_notes/E_jordan_classification.md#r-E-3) (the idempotents $p_i(x)$ computed with Jordan powers only), [Proposition E.4](../lecture_notes/E_jordan_classification.md#r-E-4)
-and Theorem E.5 in $\mathrm{Herm}_3(\mathbb C)$, given by structure constants (the algebras $\mathrm{Herm}_n(D)$ of
+[Lemma E.3](../lecture_notes/E_jordan_classification.md#r-E-3) (the idempotents $`p_i(x)`$ computed with Jordan powers only), [Proposition E.4](../lecture_notes/E_jordan_classification.md#r-E-4)
+and Theorem E.5 in $`\mathrm{Herm}_3(\mathbb C)`$, given by structure constants (the algebras $`\mathrm{Herm}_n(D)`$ of
 [Section E.7](../lecture_notes/E_jordan_classification.md#s-E-7)); the Cayley–Dickson product `cd` used to build it is the one of [Section E.6](../lecture_notes/E_jordan_classification.md#s-E-6).
 
 ```python
@@ -120,8 +120,8 @@ assert torch.allclose(mul(C3, x, y) @ T3 @ w, x @ T3 @ mul(C3, y, w))         # 
 
 *Lecture notes:* [Section E.6](../lecture_notes/E_jordan_classification.md#s-E-6); [Lemma E.14](../lecture_notes/E_jordan_classification.md#r-E-14), [Lemma E.15](../lecture_notes/E_jordan_classification.md#r-E-15), [Lemma E.18](../lecture_notes/E_jordan_classification.md#r-E-18).
 
-The code builds $\mathbb O$ by Cayley–Dickson doubling and checks the identities of Lemma E.14, the Moufang identity
-of Lemma E.18 and the non-associativity of Lemma E.15 on random octonions, and the homomorphism $M$:
+The code builds $`\mathbb O`$ by Cayley–Dickson doubling and checks the identities of Lemma E.14, the Moufang identity
+of Lemma E.18 and the non-associativity of Lemma E.15 on random octonions, and the homomorphism $`M`$:
 
 ```python
 o = torch.randn(4, 1000, 8, dtype=dt)             # random octonions
@@ -152,9 +152,9 @@ assert torch.allclose(M(cd(p4, q4)), M(p4) @ M(q4)) and torch.allclose(M(conj(p4
 
 *Lecture notes:* [Section E.8](../lecture_notes/E_jordan_classification.md#s-E-8); [Lemma E.20](../lecture_notes/E_jordan_classification.md#r-E-20), [Lemma E.23](../lecture_notes/E_jordan_classification.md#r-E-23), [Theorem E.24](../lecture_notes/E_jordan_classification.md#r-E-24), [Corollary E.25](../lecture_notes/E_jordan_classification.md#r-E-25).
 
-The code checks the Jordan identity of the Albert algebra $\mathrm{Herm}_3(\mathbb O)$
+The code checks the Jordan identity of the Albert algebra $`\mathrm{Herm}_3(\mathbb O)`$
 ([lecture notes, Theorem E.24(2)](../lecture_notes/E_jordan_classification.md#r-E-24)) and the associativity and positivity of its trace form on random elements
-([Lemma E.20](../lecture_notes/E_jordan_classification.md#r-E-20)), shows numerically that the Jordan identity fails in $\mathrm{Herm}_4(\mathbb O)$
+([Lemma E.20](../lecture_notes/E_jordan_classification.md#r-E-20)), shows numerically that the Jordan identity fails in $`\mathrm{Herm}_4(\mathbb O)`$
 ([Corollary E.25](../lecture_notes/E_jordan_classification.md#r-E-25)), checks the automorphism of [Lemma E.23](../lecture_notes/E_jordan_classification.md#r-E-23), and runs the three steps (a)–(c)
 of the proof of Theorem E.24(2) on a random element:
 
@@ -202,9 +202,9 @@ assert abs(abs(x3[11].item()) - s.norm().item()) < 1e-12
 
 *Lecture notes:* [Section E.9](../lecture_notes/E_jordan_classification.md#s-E-9); [Theorem E.5](../lecture_notes/E_jordan_classification.md#r-E-5), [Theorem E.8](../lecture_notes/E_jordan_classification.md#r-E-8), [Proposition E.11](../lecture_notes/E_jordan_classification.md#r-E-11), [Theorem E.27](../lecture_notes/E_jordan_classification.md#r-E-27).
 
-The code computes, for every type, the Jordan frame $(E_{ii})$ or $(c_w,c_{-w})$, the dimensions of the Peirce spaces as
-common eigenspaces of the $L(c_i)$ (Theorem E.8), the dimension formula of Proposition E.11(2) and the positivity of the trace
-form $\tau$ (Theorem E.5):
+The code computes, for every type, the Jordan frame $`(E_{ii})`$ or $`(c_w,c_{-w})`$, the dimensions of the Peirce spaces as
+common eigenspaces of the $`L(c_i)`$ (Theorem E.8), the dimension formula of Proposition E.11(2) and the positivity of the trace
+form $`\tau`$ (Theorem E.5):
 
 ```python
 def peirce(C, frame):

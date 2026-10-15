@@ -4,7 +4,7 @@
 
 Dieses Tutorial begleitet [Anhang B](../../lecture_notes/de/B_schur_weyl.md) der Vorlesungsnotizen, der die Schur-Weyl-Dualität
 ([Satz B.6](../../lecture_notes/de/B_schur_weyl.md#r-B-6)) und die Weingarten-Formel beliebiger Ordnung ([Satz B.13](../../lecture_notes/de/B_schur_weyl.md#r-B-13)) beweist. Wir prüfen die
-Dimensionen in der Dualität, die von der Bibliothek berechnete Zerlegung von $(\mathbb C^d)^{\otimes n}$, die
+Dimensionen in der Dualität, die von der Bibliothek berechnete Zerlegung von $`(\mathbb C^d)^{\otimes n}`$, die
 Weingarten-Funktion gegen Monte-Carlo-Mittel über Haar-verteilte unitäre Matrizen, das Wigner-Eckart-Theorem und das
 Haar-Maß der orthogonalen Gruppe.
 
@@ -14,10 +14,10 @@ Haar-Maß der orthogonalen Gruppe.
 
 *Vorlesungsnotizen:* [Abschnitt B.3](../../lecture_notes/de/B_schur_weyl.md#s-B-3); [Lemma B.1](../../lecture_notes/de/B_schur_weyl.md#r-B-1), [Lemma B.2](../../lecture_notes/de/B_schur_weyl.md#r-B-2), [Proposition B.3](../../lecture_notes/de/B_schur_weyl.md#r-B-3), [Lemma B.5](../../lecture_notes/de/B_schur_weyl.md#r-B-5), [Satz B.6](../../lecture_notes/de/B_schur_weyl.md#r-B-6).
 
-Der Code vergleicht für kleine $d$ und $n$ vier Dimensionen: die von $\mathrm{span}\,\pi(S_n)$, die der Kommutante
-zweier zufälliger $V^{\otimes n}$ (die $\{V^{\otimes n}\}'=\mathrm{span}\,\pi(S_n)$ enthält und in allen ausgegebenen
-Fällen damit übereinstimmt) sowie die der Spanne vieler zufälliger $A^{\otimes n}$ und $V^{\otimes n}$ mit
-$\binom{d^2+n-1}n$ ([Proposition B.3](../../lecture_notes/de/B_schur_weyl.md#r-B-3), [Satz B.6](../../lecture_notes/de/B_schur_weyl.md#r-B-6)). Die Operatoren $\pi(\sigma)$ erzeugt
+Der Code vergleicht für kleine $`d`$ und $`n`$ vier Dimensionen: die von $`\mathrm{span}\,\pi(S_n)`$, die der Kommutante
+zweier zufälliger $`V^{\otimes n}`$ (die $`\{V^{\otimes n}\}'=\mathrm{span}\,\pi(S_n)`$ enthält und in allen ausgegebenen
+Fällen damit übereinstimmt) sowie die der Spanne vieler zufälliger $`A^{\otimes n}`$ und $`V^{\otimes n}`$ mit
+$`\binom{d^2+n-1}n`$ ([Proposition B.3](../../lecture_notes/de/B_schur_weyl.md#r-B-3), [Satz B.6](../../lecture_notes/de/B_schur_weyl.md#r-B-6)). Die Operatoren $`\pi(\sigma)`$ erzeugt
 `decompose.permutation_representation(n, d)`; der Code prüft, dass diese Funktion der Konvention von
 [Lemma B.1(a)](../../lecture_notes/de/B_schur_weyl.md#r-B-1) folgt, und er prüft [Lemma B.2](../../lecture_notes/de/B_schur_weyl.md#r-B-2) und die Newton-Rekursion aus [Lemma B.5](../../lecture_notes/de/B_schur_weyl.md#r-B-5),
 die im Beweis von Satz B.6(b) verwendet wird.
@@ -91,14 +91,14 @@ assert close(e[n], functools.reduce(torch.kron, [A] * n), 1e-8)
 
 <a id="s-B-4"></a>
 
-## B.4 Die Zerlegung von $(\mathbb C^d)^{\otimes n}$
+## B.4 Die Zerlegung von $`(\mathbb C^d)^{\otimes n}`$
 
 *Vorlesungsnotizen:* [Abschnitt B.4](../../lecture_notes/de/B_schur_weyl.md#s-B-4); [Satz B.8](../../lecture_notes/de/B_schur_weyl.md#r-B-8), [Korollar B.9](../../lecture_notes/de/B_schur_weyl.md#r-B-9), [Korollar B.10](../../lecture_notes/de/B_schur_weyl.md#r-B-10).
 
-Der Code zerlegt $\pi(S_3)$ auf $(\mathbb C^3)^{\otimes3}$ mit `decompose.from_group`, deren `k_factors` und
-`multiplicities` die $k_c$ und $m_c$ sind, und prüft die Dimensionen aus [Satz B.8](../../lecture_notes/de/B_schur_weyl.md#r-B-8); dann zerlegt er
-$\pi(S_L)$ auf $(\mathbb C^2)^{\otimes L}$ für $L=5,6$ und vergleicht die Paare $(k_c,m_c)$ mit den Paaren $(m_S,2S+1)$
-aus [Korollar B.9](../../lecture_notes/de/B_schur_weyl.md#r-B-9) und $\sum_ck_c^2$ mit der Catalan-Zahl aus [Korollar B.10](../../lecture_notes/de/B_schur_weyl.md#r-B-10). Der Algorithmus hinter
+Der Code zerlegt $`\pi(S_3)`$ auf $`(\mathbb C^3)^{\otimes3}`$ mit `decompose.from_group`, deren `k_factors` und
+`multiplicities` die $`k_c`$ und $`m_c`$ sind, und prüft die Dimensionen aus [Satz B.8](../../lecture_notes/de/B_schur_weyl.md#r-B-8); dann zerlegt er
+$`\pi(S_L)`$ auf $`(\mathbb C^2)^{\otimes L}`$ für $`L=5,6`$ und vergleicht die Paare $`(k_c,m_c)`$ mit den Paaren $`(m_S,2S+1)`$
+aus [Korollar B.9](../../lecture_notes/de/B_schur_weyl.md#r-B-9) und $`\sum_ck_c^2`$ mit der Catalan-Zahl aus [Korollar B.10](../../lecture_notes/de/B_schur_weyl.md#r-B-10). Der Algorithmus hinter
 `from_group` wird in [Tutorial 4, Abschnitt 4.3](04_symmetries.md#s-4-3) erklärt.
 
 ```python
@@ -124,10 +124,10 @@ for L in (5, 6):
 
 *Vorlesungsnotizen:* [Abschnitt B.5](../../lecture_notes/de/B_schur_weyl.md#s-B-5); [Lemma B.11](../../lecture_notes/de/B_schur_weyl.md#r-B-11), [Satz B.13](../../lecture_notes/de/B_schur_weyl.md#r-B-13), [Korollar B.14](../../lecture_notes/de/B_schur_weyl.md#r-B-14).
 
-Der Code berechnet $\mathrm{Wg}$ aus der Pseudoinversen, prüft [Satz B.13(a), (b)](../../lecture_notes/de/B_schur_weyl.md#r-B-13) und
-[Satz 5.10](../../lecture_notes/de/05_random_matrices.md#r-5-10) und vergleicht den gesamten Momententensor der Ordnung $n=3$ für $d=2$ –
-einen Fall mit singulärem $G$ – sowie den Twirl eines zufälligen $X$ ([Lemma B.11](../../lecture_notes/de/B_schur_weyl.md#r-B-11)) mit Monte-Carlo-Mitteln über
-Haar-verteilte unitäre Matrizen; der Eintrag $\mathbb E|U_{11}|^6=\frac{3!}{2\cdot3\cdot4}$ ist [Korollar B.14](../../lecture_notes/de/B_schur_weyl.md#r-B-14).
+Der Code berechnet $`\mathrm{Wg}`$ aus der Pseudoinversen, prüft [Satz B.13(a), (b)](../../lecture_notes/de/B_schur_weyl.md#r-B-13) und
+[Satz 5.10](../../lecture_notes/de/05_random_matrices.md#r-5-10) und vergleicht den gesamten Momententensor der Ordnung $`n=3`$ für $`d=2`$ –
+einen Fall mit singulärem $`G`$ – sowie den Twirl eines zufälligen $`X`$ ([Lemma B.11](../../lecture_notes/de/B_schur_weyl.md#r-B-11)) mit Monte-Carlo-Mitteln über
+Haar-verteilte unitäre Matrizen; der Eintrag $`\mathbb E|U_{11}|^6=\frac{3!}{2\cdot3\cdot4}`$ ist [Korollar B.14](../../lecture_notes/de/B_schur_weyl.md#r-B-14).
 
 ```python
 def n_cycles(p):                                        # number of cycles of a permutation in one-line form
@@ -182,7 +182,7 @@ assert abs(exact[0, 0].item() - 1 / 4) < 1e-12                            # Coro
 
 X = torch.randn(N, N, dtype=dt)
 T = Phi(X)
-coef = torch.linalg.lstsq(P.reshape(len(perms), -1).T, T.reshape(-1, 1)).solution
+coef = torch.linalg.lstsq(P.reshape(len(perms), -1).T, T.reshape(-1, 1), driver='gelsd').solution
 assert close(Phi(T), T) and close(torch.einsum('s,sij->ij', coef[:, 0], P), T)   # a projection into span pi(S_n)
 Vn = power(haar(d, 1), n)[0]
 assert close(Vn @ T, T @ Vn)                                             # = {V^{(x)n}}'
@@ -193,14 +193,14 @@ assert ((Y.mean(0) - T).abs() <= 5 * Y.std(0) / math.sqrt(B) + 1e-12).all()   # 
 
 <a id="s-B-6"></a>
 
-## B.6 Tensoroperatoren und das Wigner-Eckart-Theorem für $SU(2)$
+## B.6 Tensoroperatoren und das Wigner-Eckart-Theorem für $`SU(2)`$
 
 *Vorlesungsnotizen:* [Abschnitt B.6](../../lecture_notes/de/B_schur_weyl.md#s-B-6); [Lemma B.15](../../lecture_notes/de/B_schur_weyl.md#r-B-15), [Satz B.16](../../lecture_notes/de/B_schur_weyl.md#r-B-16).
 
-Der Code prüft [Lemma B.15](../../lecture_notes/de/B_schur_weyl.md#r-B-15) für die Platzspins von sechs Spins $\frac12$ (`decompose.total_spin`,
+Der Code prüft [Lemma B.15](../../lecture_notes/de/B_schur_weyl.md#r-B-15) für die Platzspins von sechs Spins $`\frac12`$ (`decompose.total_spin`,
 `decompose.spin_matrices`) und [Satz B.16](../../lecture_notes/de/B_schur_weyl.md#r-B-16) in einer basisfreien Form: In der von `decompose.from_generators`
-berechneten Zerlegung (deren Sektorbasen, die Spaltenblöcke von `V`, nicht die $|S,M\rangle$ sein müssen) hat der Block
-von $(T_q)_q$ zwischen zwei Multipletts, als Matrix mit Zeilen $(M',M,q)$ und Spalten $(a,b)$, höchstens Rang eins, und
+berechneten Zerlegung (deren Sektorbasen, die Spaltenblöcke von `V`, nicht die $`|S,M\rangle`$ sein müssen) hat der Block
+von $`(T_q)_q`$ zwischen zwei Multipletts, als Matrix mit Zeilen $`(M',M,q)`$ und Spalten $`(a,b)`$, höchstens Rang eins, und
 er ist außerhalb des Bereichs aus (a) null. Der Satz ist das Prinzip hinter `su2.spin_correlation`, das
 [Tutorial 9, Abschnitt 9.3](09_spin_chains.md#s-9-3) gegen die Methode `'direct'` prüft.
 
@@ -245,14 +245,14 @@ assert close(X @ X2 + Y @ Y2 + Z @ Z2, sum((-1) ** q * T[q] @ T2[-q] for q in (-
 
 *Vorlesungsnotizen:* [Abschnitt B.7](../../lecture_notes/de/B_schur_weyl.md#s-B-7); [Satz B.17](../../lecture_notes/de/B_schur_weyl.md#r-B-17).
 
-Nach [Satz B.17](../../lecture_notes/de/B_schur_weyl.md#r-B-17) ist der orthogonale Faktor $O$ der QR-Zerlegung $Z=OR$ einer reellen Gaußschen Matrix,
-normiert durch $R_{ii}>0$, Haar-verteilt auf $O(k)$, mit $\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k$; für jede
-andere QR-Zerlegung $Z=O'R'$ ist $O=O'\mathrm{diag}(\mathrm{sgn}\,R'_{ii})$.
+Nach [Satz B.17](../../lecture_notes/de/B_schur_weyl.md#r-B-17) ist der orthogonale Faktor $`O`$ der QR-Zerlegung $`Z=OR`$ einer reellen Gaußschen Matrix,
+normiert durch $`R_{ii}>0`$, Haar-verteilt auf $`O(k)`$, mit $`\mathbb E[O_{ij}O_{lm}]=\delta_{il}\delta_{jm}/k`$; für jede
+andere QR-Zerlegung $`Z=O'R'`$ ist $`O=O'\mathrm{diag}(\mathrm{sgn}\,R'_{ii})`$.
 
-Der Code prüft per Monte-Carlo die zweiten Momente, $\mathbb E\mathrm{Tr}\,O=0$ und
-$\mathbb E(\mathrm{Tr}\,O)^2=\sum_{i,l}\mathbb E[O_{ii}O_{ll}]=1$. Außerdem hält er eine *numerische Beobachtung* über die
+Der Code prüft per Monte-Carlo die zweiten Momente, $`\mathbb E\mathrm{Tr}\,O=0`$ und
+$`\mathbb E(\mathrm{Tr}\,O)^2=\sum_{i,l}\mathbb E[O_{ii}O_{ll}]=1`$. Außerdem hält er eine *numerische Beobachtung* über die
 QR-Routine von `torch.linalg.qr` fest (eine Aussage über diese Routine, kein Satz): Ohne die Vorzeichenkorrektur liegt
-$\mathbb E\mathrm{Tr}\,Q'$ für ihren Faktor $Q'$ viele Standardfehler von $0$ entfernt, er ist also nicht
+$`\mathbb E\mathrm{Tr}\,Q'`$ für ihren Faktor $`Q'`$ viele Standardfehler von $`0`$ entfernt, er ist also nicht
 Haar-verteilt.
 
 ```python

@@ -3,12 +3,12 @@
 # Tutorial 0. Worum es in diesem Kurs geht
 
 Dieses Tutorial begleitet [Kapitel 0](../../lecture_notes/de/00_overview.md) der Vorlesungsnotizen, das ein Element einer
-von-Neumann-Algebra $\bigoplus_cM_{k_c}(\mathbb C)$ mit einem Array der Gestalt $(C,k,k)$ identifiziert und beweist,
+von-Neumann-Algebra $`\bigoplus_cM_{k_c}(\mathbb C)`$ mit einem Array der Gestalt $`(C,k,k)`$ identifiziert und beweist,
 dass ihre Operationen gestapelte Array-Operationen sind. Hier sehen wir, was das in der Bibliothek
 `torch_vn_algebra` ergibt: was es kostet, eine erste Rechnung und wie sich die Bibliothek zu vorhandener Software verhält.
 
 Von-Neumann-Algebren werden meist mit Papier und Bleistift untersucht. In endlicher Dimension
-ist jede von ihnen $*$-isomorph zu einer direkten Summe voller Matrixalgebren (Satz 2.6), sodass
+ist jede von ihnen $`*`$-isomorph zu einer direkten Summe voller Matrixalgebren (Satz 2.6), sodass
 sich im Prinzip alles berechnen lässt – wird eine solche Algebra jedoch numerisch behandelt, so
 wird sie oft zu einer einzigen großen Matrix verflacht, und ihre Struktur (die Sektoren, das
 Zentrum, die vielen Spuren) verschwindet aus der Rechnung. Dieser Kurs und die Bibliothek
@@ -23,63 +23,63 @@ Rechnungen in ihr werden effizient ausgeführt.
 [Satz 3.1](../../lecture_notes/de/03_traces_and_states.md#r-3-1), [Satz 5.3](../../lecture_notes/de/05_random_matrices.md#r-5-3) und
 [Korollar 5.4](../../lecture_notes/de/05_random_matrices.md#r-5-4) beweist, dass die ersten sechs Zeilen der folgenden Tabelle Identitäten sind:
 
-| in der Algebra $\mathcal M$ | auf dem Array der Gestalt $(B,C,k,k)$ |
+| in der Algebra $`\mathcal M`$ | auf dem Array der Gestalt $`(B,C,k,k)`$ |
 |---|---|
-| Produkt $AB$, Summe, Adjungierte | gestapeltes Matrixprodukt, Summe, konjugierte Transposition über $(B,C)$ |
-| Funktionalkalkül $f(A)$ (Kapitel 1) | gestapelte Eigenzerlegung der Blöcke |
-| eine Spur $\sum_cw_c\mathrm{Tr}\,A_c$ (Kapitel 3) | Diagonalsumme pro Block, gewichtete Summe über die Sektorachse |
+| Produkt $`AB`$, Summe, Adjungierte | gestapeltes Matrixprodukt, Summe, konjugierte Transposition über $`(B,C)`$ |
+| Funktionalkalkül $`f(A)`$ (Kapitel 1) | gestapelte Eigenzerlegung der Blöcke |
+| eine Spur $`\sum_cw_c\mathrm{Tr}\,A_c`$ (Kapitel 3) | Diagonalsumme pro Block, gewichtete Summe über die Sektorachse |
 | das Zentrum, zentrale Projektionen (Kapitel 2) | eine Zahl pro Sektor |
-| bedingte Erwartung auf das Zentrum | Blockspur geteilt durch $k_c$, zurück auf die Blöcke verteilt |
-| Haar-Maß auf der unitären Gruppe $\prod_cU(k_c)$ | gestapelte QR-Zerlegung Gaußscher Blöcke, mit der Phasenkorrektur aus Satz 5.3 |
+| bedingte Erwartung auf das Zentrum | Blockspur geteilt durch $`k_c`$, zurück auf die Blöcke verteilt |
+| Haar-Maß auf der unitären Gruppe $`\prod_cU(k_c)`$ | gestapelte QR-Zerlegung Gaußscher Blöcke, mit der Phasenkorrektur aus Satz 5.3 |
 | Zustände, Kanäle, Dynamik (Kapitel 3, 6, 8) | aus den obigen Operationen aufgebaut |
 
 Zwei Konsequenzen machen dies zu mehr als bloßer Buchführung.
 
-- **Aufwand.** Eine Spektralzerlegung in $\mathcal M$ wird blockweise berechnet (Zeile 2 der
+- **Aufwand.** Eine Spektralzerlegung in $`\mathcal M`$ wird blockweise berechnet (Zeile 2 der
   Tabelle). Die üblichen dichten Eigenwertlöser (LAPACK, das PyTorch auf einer CPU aufruft)
   benötigen eine Anzahl von Gleitkommaoperationen, die wie die dritte Potenz der Matrixgröße
   wächst; das ist eine Beschreibung dieser Algorithmen, kein Ergebnis dieses Kurses. In dem
-  Modell, in dem ein $k\times k$-Eigenwertproblem eine Konstante mal $k^3$ kostet, kostet eine
-  Spektralzerlegung in $\mathcal M$ $\sum_ck_c^3$ gegenüber $D^3$ für die Einbettung in
-  $M_D(\mathbb C)$, $D=\sum_ck_c$; für $C$ gleich große Blöcke der Größe $k$ ist das Verhältnis
-  $(Ck)^3/(Ck^3)=C^2$. Produkte laufen auf dem aufgefüllten Tensor; das Schulbuchprodukt zweier
-  $k\times k$-Matrizen braucht $k^3$ Multiplikationen ($k^2$ Einträge, jeder eine Summe von $k$
-  Produkten), also braucht ein Produkt in $\mathcal M$ $C\,k_{\max}^3$, was mit $\sum_ck_c^3$
-  übereinstimmt, wenn alle Blöcke gleich groß sind. Ein Element wird als $C\,k_{\max}^2$ Zahlen
-  gespeichert gegenüber $D^2$; für gleich große Blöcke ist das Verhältnis $(Ck)^2/(Ck^2)=C$. Was
+  Modell, in dem ein $`k\times k`$-Eigenwertproblem eine Konstante mal $`k^3`$ kostet, kostet eine
+  Spektralzerlegung in $`\mathcal M`$ $`\sum_ck_c^3`$ gegenüber $`D^3`$ für die Einbettung in
+  $`M_D(\mathbb C)`$, $`D=\sum_ck_c`$; für $`C`$ gleich große Blöcke der Größe $`k`$ ist das Verhältnis
+  $`(Ck)^3/(Ck^3)=C^2`$. Produkte laufen auf dem aufgefüllten Tensor; das Schulbuchprodukt zweier
+  $`k\times k`$-Matrizen braucht $`k^3`$ Multiplikationen ($`k^2`$ Einträge, jeder eine Summe von $`k`$
+  Produkten), also braucht ein Produkt in $`\mathcal M`$ $`C\,k_{\max}^3`$, was mit $`\sum_ck_c^3`$
+  übereinstimmt, wenn alle Blöcke gleich groß sind. Ein Element wird als $`C\,k_{\max}^2`$ Zahlen
+  gespeichert gegenüber $`D^2`$; für gleich große Blöcke ist das Verhältnis $`(Ck)^2/(Ck^2)=C`$. Was
   der Code tut: Produkte, Summen und Spuren sind einzelne Tensoroperationen auf dem ganzen Array
-  $(B,C,k_{\max},k_{\max})$; hermitesche Eigenzerlegungen, Singulärwerte und QR-Zerlegungen werden
-  auf den Stapel aller $B\cdot n_k$ Blöcke jeder vorkommenden Größe $k$ ($n_k$ die Zahl der Sektoren
+  $`(B,C,k_{\max},k_{\max})`$; hermitesche Eigenzerlegungen, Singulärwerte und QR-Zerlegungen werden
+  auf den Stapel aller $`B\cdot n_k`$ Blöcke jeder vorkommenden Größe $`k`$ ($`n_k`$ die Zahl der Sektoren
   dieser Größe) in einem gestapelten Aufruf angewandt – ein einziger Aufruf, wenn alle Sektoren
-  gleich groß sind. Auf einer CPU mit $t\ge2$ PyTorch-Threads teilt die Bibliothek einen solchen
-  Aufruf in $t$ Teilstücke auf, die in parallelen Threads laufen, sofern der Stapel mindestens
-  $2t$ Blöcke hat und (Zahl der Blöcke)$\,\cdot k^3\ge2^{18}$ gilt (Modul `cost`, Funktion `_run`); die
+  gleich groß sind. Auf einer CPU mit $`t\ge2`$ PyTorch-Threads teilt die Bibliothek einen solchen
+  Aufruf in höchstens $`t`$ Teilstücke auf, die in parallelen Threads laufen, sofern der Stapel mindestens
+  $`2t`$ Blöcke hat und (Zahl der Blöcke)$`\,\cdot k^3\ge2^{18}`$ gilt (Modul `cost`, Funktion `_run`); die
   Ergebnisse sind dieselben LAPACK-Aufrufe auf denselben Matrizen. Ziel ist, eine GPU oder alle
   Kerne einer CPU auszulasten.
 - **Korrektheit durch Konstruktion.** Jedes mit Nullen aufgefüllte Array der Gestalt
-  $(C,k_{\max},k_{\max})$ ist ein Element von $\mathcal M$; was aus den Blöcken berechnet wird,
-  bleibt also in $\mathcal M$. Die zufälligen unitären Elemente der Bibliothek werden mit der
+  $`(C,k_{\max},k_{\max})`$ ist ein Element von $`\mathcal M`$; was aus den Blöcken berechnet wird,
+  bleibt also in $`\mathcal M`$. Die zufälligen unitären Elemente der Bibliothek werden mit der
   Konstruktion aus Satz 5.3 unabhängig in jedem Block gezogen (`random_unitary_operator` ruft den
   blockweisen Sampler `random_unitary` einmal pro Blockgröße auf, und Abschnitt 5.1 prüft
   `random_unitary` an dieser Konstruktion), was nach Korollar 5.4 das Haar-Maß von
-  $\prod_cU(k_c)$ ergibt (für ideale Gaußsche Zufallszahlen); ein Haar-verteiltes unitäres Element
-  von $U(D)$ liegt für $C\ge2$ mit Wahrscheinlichkeit null in dieser Untergruppe (Abschnitt 5.1,
+  $`\prod_cU(k_c)`$ ergibt (für ideale Gaußsche Zufallszahlen); ein Haar-verteiltes unitäres Element
+  von $`U(D)`$ liegt für $`C\ge2`$ mit Wahrscheinlichkeit null in dieser Untergruppe (Abschnitt 5.1,
   nach Korollar 5.4). Ein Gradientenschritt verändert die Blöcke und kann die Algebra daher nicht
-  verlassen. Und die Spuren sind die Funktionale $\sum_cw_c\mathrm{Tr}\,A_c$ aus Satz 3.1 mit
+  verlassen. Und die Spuren sind die Funktionale $`\sum_cw_c\mathrm{Tr}\,A_c`$ aus Satz 3.1 mit
   explizit gewählten Gewichten (und die Dichten und bedingten Erwartungen werden bezüglich dieser
-  gebildet), nicht die Spur irgendeines $\mathbb C^n$, auf dem $\mathcal M$ zufällig wirkt, die
-  $w_c=m_c$ festlegen würde (Abschnitt 2.3).
+  gebildet), nicht die Spur irgendeines $`\mathbb C^n`$, auf dem $`\mathcal M`$ zufällig wirkt, die
+  $`w_c=m_c`$ festlegen würde (Abschnitt 2.3).
 
 <a id="s-0-2"></a>
 
 ## 0.2 Eine erste Rechnung
 
-*Vorlesungsnotizen:* [Abschnitt 0.1](../../lecture_notes/de/00_overview.md#s-0-1), Zeile 2 der Tabelle: $f(A)=\bigoplus_cf(A_c)$, eine Eigenzerlegung pro Block.
+*Vorlesungsnotizen:* [Abschnitt 0.1](../../lecture_notes/de/00_overview.md#s-0-1), Zeile 2 der Tabelle: $`f(A)=\bigoplus_cf(A_c)`$, eine Eigenzerlegung pro Block.
 
-Wir vergleichen dieselbe Rechnung in $\mathcal M=\bigoplus_{c=1}^{64}M_{16}(\mathbb C)$ und in
-dessen Einbettung in $M_{1024}(\mathbb C)$: die Quadratwurzel eines zufälligen positiven Elements
+Wir vergleichen dieselbe Rechnung in $`\mathcal M=\bigoplus_{c=1}^{64}M_{16}(\mathbb C)`$ und in
+dessen Einbettung in $`M_{1024}(\mathbb C)`$: die Quadratwurzel eines zufälligen positiven Elements
 und ihre Spur. `TypeIAlgebra(n_factors, k_factors)` nimmt zwei Listen von Blockgrößen: die
-nominellen Größen $n_c$ und die Größen $k_c\le n_c$ der tatsächlich verwendeten Blöcke
+nominellen Größen $`n_c`$ und die Größen $`k_c\le n_c`$ der tatsächlich verwendeten Blöcke
 (Abschnitt 1.5). Jede Algebra, die der Kurs mit `TypeIAlgebra` konstruiert, hat zwei gleiche
 Listen.
 
@@ -112,19 +112,19 @@ print(f"in the algebra: {t_blocks * 1e3:.1f} ms, as one 1024 x 1024 matrix: {t_b
 ```
 
 Die Ergebnisse stimmen bis auf Rundungsfehler überein (Zeile 2 der Tabelle), und das
-Speicherverhältnis ist $C$, wie oben gezählt. Die 64 Blöcke gehen als ein gestapelter Aufruf auf
-einem Stapel der Gestalt $(64,16,16)$ an den Eigenwertlöser; mit $2\le t\le32$ PyTorch-Threads
-teilt die Bibliothek ihn in $t$ Teilstücke auf ($64\cdot16^3=2^{18}$ erreicht die Schwelle des
+Speicherverhältnis ist $`C`$, wie oben gezählt. Die 64 Blöcke gehen als ein gestapelter Aufruf auf
+einem Stapel der Gestalt $`(64,16,16)`$ an den Eigenwertlöser; mit $`2\le t\le32`$ PyTorch-Threads
+teilt die Bibliothek ihn in höchstens $`t`$ Teilstücke auf ($`64\cdot16^3=2^{18}`$ erreicht die Schwelle des
 Moduls `cost` genau), mit einem Thread nicht. *Numerische Beobachtung* (die Laufzeiten hängen
 von der Hardware ab; der Code gibt sie aus): Auf zwei 4-Kern-CPUs brauchte die Version in der
 Algebra 3–10 ms und die Version mit der großen Matrix 400–760 ms, ein Faktor zwischen einigen
 Zehn und einigen Hundert (auf der zweiten Maschine mit 4 Threads und auch mit einem). Der
-gemessene Faktor liegt weit unter dem Verhältnis $C^2=4096$ des kubischen Kostenmodells: Eine
+gemessene Faktor liegt weit unter dem Verhältnis $`C^2=4096`$ des kubischen Kostenmodells: Eine
 Operationszählung ist ein Modell der Laufzeit, nicht die Laufzeit, und auf diesen Maschinen
 liefen die kleinen Eigenwertprobleme mit einer viel geringeren Rate an Operationen pro Sekunde
-als das große. Im Kostenmodell wächst das Verhältnis $C^2$ mit der Zahl der Sektoren. Bei einem
-Stapel von $B$ Elementen bleibt die Version in der Algebra ein einziger gestapelter Aufruf; die
-Version mit der großen Matrix muss $B$ Eigenwertprobleme der Größe $1024$ lösen.
+als das große. Im Kostenmodell wächst das Verhältnis $`C^2`$ mit der Zahl der Sektoren. Bei einem
+Stapel von $`B`$ Elementen bleibt die Version in der Algebra ein einziger gestapelter Aufruf; die
+Version mit der großen Matrix muss $`B`$ Eigenwertprobleme der Größe $`1024`$ lösen.
 
 <a id="s-0-3"></a>
 
@@ -142,10 +142,10 @@ alle mit unterschiedlichem Zweck:
   automatisches Differenzieren. Technisch sind sie die nächsten Verwandten. Ihr Gegenstand ist
   jedoch ein zu kontrahierendes Tensornetzwerk, keine Operatoralgebra: Soweit wir ihrer
   Dokumentation entnehmen konnten, stellen sie weder die Familie der Spuren, Zustände und Dichten
-  bereit noch das Zentrum und bedingte Erwartungen, Haar-Maße auf $\prod_cU(k_c)$ oder Kanäle
+  bereit noch das Zentrum und bedingte Erwartungen, Haar-Maße auf $`\prod_cU(k_c)`$ oder Kanäle
   zwischen Sektoren.
-- **Numerische Blockdiagonalisierung** von Matrix-$*$-Algebren [2, 3, 4] findet die Zerlegung
-  $\mathcal M\cong\bigoplus_cM_{k_c}\otimes1_{m_c}$ einer gegebenen Algebra – typischerweise, um
+- **Numerische Blockdiagonalisierung** von Matrix-$`*`$-Algebren [2, 3, 4] findet die Zerlegung
+  $`\mathcal M\cong\bigoplus_cM_{k_c}\otimes1_{m_c}`$ einer gegebenen Algebra – typischerweise, um
   semidefinite Programme mit Symmetrie zu verkleinern. Das ist komplementär: Jene Algorithmen
   finden die Blöcke; diese Bibliothek rechnet in ihnen. Ihr Eingabeschritt (Modul `decompose`,
   Abschnitt 4.3) verwendet die Idee aus [2, 3], dass die Eigenräume eines zufälligen Elements der
@@ -194,14 +194,14 @@ erscheinen nur als *numerische Beobachtungen* zum eigenen Code des Tutorials.
    Python library for Abelian symmetric tensor network calculations*, SciPost Phys. Codebases 52
    (2025).
 2. K. Murota, Y. Kanno, M. Kojima, S. Kojima, *A numerical algorithm for block-diagonal
-   decomposition of matrix $*$-algebras with application to semidefinite programming*, Japan J.
+   decomposition of matrix $`*`$-algebras with application to semidefinite programming*, Japan J.
    Indust. Appl. Math. 27 (2010) 125–160 (Preprint: Technical Report METR 2007-52, University of
    Tokyo, 2007).
 3. T. Maehara, K. Murota, *A numerical algorithm for block-diagonal decomposition of matrix
-   $*$-algebras with general irreducible components*, Japan J. Indust. Appl. Math. 27 (2010)
+   $`*`$-algebras with general irreducible components*, Japan J. Indust. Appl. Math. 27 (2010)
    263–293.
 4. E. de Klerk, C. Dobre, D. V. Pasechnik, *Numerical block diagonalization of matrix
-   $*$-algebras with application to semidefinite programming*, Math. Program. 129 (2011) 91–111.
+   $`*`$-algebras with application to semidefinite programming*, Math. Program. 129 (2011) 91–111.
 5. I. Klep, J. Povh, *Semidefinite programming and sums of hermitian squares of noncommutative
    polynomials*, J. Pure Appl. Algebra 214 (2010) 740–749.
 

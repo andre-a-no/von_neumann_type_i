@@ -3,9 +3,9 @@
 # 教程 4. 对称性与表示
 
 本教程配合讲义的[第 4 章](../../lecture_notes/zh/04_symmetries.md)。该章发展了对称性代数背后的表示论，把它变成一个随机化算法，
-用以分解由任意一组矩阵生成的冯·诺依曼代数（[命题 4.9](../../lecture_notes/zh/04_symmetries.md#r-4-9)），将其应用于 $U(1)$ 和 $SU(2)$，
-并把由实矩阵生成的代数的扇区分为实型、复型与四元数型（[定理 4.20](../../lecture_notes/zh/04_symmetries.md#r-4-20)）。我们计算特征标，
-对群和对生成元运行分解，用 `SpinChain` 和 `su2.SU2Chain` 逐个扇区地构造自旋链，并计算一个分解的实结构。
+用以分解由任意一组矩阵生成的冯·诺依曼代数（[命题 4.9](../../lecture_notes/zh/04_symmetries.md#r-4-9)），将其应用于 $`U(1)`$ 和 $`SU(2)`$，
+并把由实矩阵生成的代数的扇区分为实型、复型与四元数型（[定理 4.20](../../lecture_notes/zh/04_symmetries.md#r-4-20)），还分析含噪声生成元的分解（[定理 4.25](../../lecture_notes/zh/04_symmetries.md#r-4-25)）。我们计算特征标，
+对群和对生成元运行分解，用 `SpinChain` 和 `su2.SU2Chain` 逐个扇区地构造自旋链，计算一个分解的实结构，并为含噪声生成元的分解出具证书。
 
 <a id="s-4-2"></a>
 
@@ -13,19 +13,19 @@
 
 *讲义：* [4.2 节](../../lecture_notes/zh/04_symmetries.md#s-4-2)；[定理 4.3](../../lecture_notes/zh/04_symmetries.md#r-4-3)、[定理 4.4](../../lecture_notes/zh/04_symmetries.md#r-4-4)、[推论 4.5](../../lecture_notes/zh/04_symmetries.md#r-4-5)。
 
-讲义的 [4.2 节](../../lecture_notes/zh/04_symmetries.md#s-4-2)手工计算了 $S_3$ 的三个不可约表示——平凡表示、符号表示以及
-$(1,1,1)^\perp\subseteq\mathbb C^3$ 上的标准表示——的特征标，以及置换 $(\mathbb C^2)^{\otimes3}$ 的三个因子的表示 $\pi$ 的特征标
-$\chi_\pi(\sigma)=2^{\#\text{cycles}(\sigma)}$（见下表），并由[推论 4.5](../../lecture_notes/zh/04_symmetries.md#r-4-5)得到重数 $m_{\rm triv}=4$，$m_{\rm sgn}=0$，
-$m_{\rm std}=2$ 以及 $\dim\pi(S_3)'=20$。代码重新计算这张表：它把 $P_\sigma$ 求为 $\pi(\sigma)$ 在
-$|100\rangle,|010\rangle,|001\rangle$ 张成的不变子空间上的限制（$\pi(\sigma)$ 在其上置换唯一的那个 $1$ 的位置，引理 B.1(a)），
-并且 $\#\text{cycles}(\sigma)=\dim\ker(P_\sigma-1)$（在各轮换上为常数的向量）。
+讲义的 [4.2 节](../../lecture_notes/zh/04_symmetries.md#s-4-2)手工计算了 $`S_3`$ 的三个不可约表示——平凡表示、符号表示以及
+$`(1,1,1)^\perp\subseteq\mathbb C^3`$ 上的标准表示——的特征标，以及置换 $`(\mathbb C^2)^{\otimes3}`$ 的三个因子的表示 $`\pi`$ 的特征标
+$`\chi_\pi(\sigma)=2^{\#\text{cycles}(\sigma)}`$（见下表），并由[推论 4.5](../../lecture_notes/zh/04_symmetries.md#r-4-5)得到重数 $`m_{\rm triv}=4`$，$`m_{\rm sgn}=0`$，
+$`m_{\rm std}=2`$ 以及 $`\dim\pi(S_3)'=20`$。代码重新计算这张表：它把 $`P_\sigma`$ 求为 $`\pi(\sigma)`$ 在
+$`|100\rangle,|010\rangle,|001\rangle`$ 张成的不变子空间上的限制（$`\pi(\sigma)`$ 在其上置换唯一的那个 $`1`$ 的位置，引理 B.1(a)），
+并且 $`\#\text{cycles}(\sigma)=\dim\ker(P_\sigma-1)`$（在各轮换上为常数的向量）。
 
-| | 恒等元（$1$） | 对换（$3$） | $3$-轮换（$2$） |
+| | 恒等元（$`1`$） | 对换（$`3`$） | $`3`$-轮换（$`2`$） |
 |---|---|---|---|
-| $\chi_{\rm triv}$ | $1$ | $1$ | $1$ |
-| $\mathrm{sgn}$ | $1$ | $-1$ | $1$ |
-| $\chi_{\rm std}$ | $2$ | $0$ | $-1$ |
-| $\chi_\pi$ | $8$ | $4$ | $2$ |
+| $`\chi_{\rm triv}`$ | $`1`$ | $`1`$ | $`1`$ |
+| $`\mathrm{sgn}`$ | $`1`$ | $`-1`$ | $`1`$ |
+| $`\chi_{\rm std}`$ | $`2`$ | $`0`$ | $`-1`$ |
+| $`\chi_\pi`$ | $`8`$ | $`4`$ | $`2`$ |
 
 ```python
 import math
@@ -62,15 +62,15 @@ assert dc.commutant_dimension(G) == 20                                # Corollar
 *讲义：* [4.3 节](../../lecture_notes/zh/04_symmetries.md#s-4-3)；[引理 4.6](../../lecture_notes/zh/04_symmetries.md#r-4-6)、[命题 4.7](../../lecture_notes/zh/04_symmetries.md#r-4-7)、[引理 4.8](../../lecture_notes/zh/04_symmetries.md#r-4-8)、[命题 4.9](../../lecture_notes/zh/04_symmetries.md#r-4-9)。
 
 讲义中的随机化算法就是 `decompose.wedderburn`，其前端为 `from_group`（有限群的全部元素；用 twirl `decompose.twirl`
-对交换子采样）和 `from_generators`（任意一组矩阵；交换子是一个零空间，`decompose.commutant_basis`）。它把 $\mathbb C^n$
-分解为一个随机 $K\in\mathcal A'_h$ 的特征子空间，借助一个随机 $Y\in\mathcal A'$ 的块对它们分组并对齐，然后返回一个
-`Decomposition`，其中含有酉矩阵 `V`、诸 $k_c$（`k_factors`）和诸 $m_c$（`multiplicities`）。在浮点运算中，它把相差小于
+对交换子采样）和 `from_generators`（任意一组矩阵；交换子是一个零空间，`decompose.commutant_basis`）。它把 $`\mathbb C^n`$
+分解为一个随机 $`K\in\mathcal A'_h`$ 的特征子空间，借助一个随机 $`Y\in\mathcal A'`$ 的块对它们分组并对齐，然后返回一个
+`Decomposition`，其中含有酉矩阵 `V`、诸 $`k_c`$（`k_factors`）和诸 $`m_c`$（`multiplicities`）。在浮点运算中，它把相差小于
 某个容差的特征值视为相等，并把交换子的新随机元素压缩到所得子空间上，以进一步分裂这些子空间
 （[引理 4.8(a)](../../lecture_notes/zh/04_symmetries.md#r-4-8)）。
 
-`Decomposition.verify()` 报告生成元（以及交换子的新元素）到 $\mathcal B$（相应地 $\mathcal B'$）的相对距离，
-并将 $\sum_cm_c^2$ 与 $\dim\mathcal A'$ 比较（对群由特征标得到，推论 4.5(c)；对生成元由零空间得到）。我们
-对 $S_3$ 与三个量子比特运行它，然后看看内部：一个随机 $K$ 的特征子空间和一个随机 $Y$ 的缠结算子。
+`Decomposition.verify()` 报告生成元（以及交换子的新元素）到 $`\mathcal B`$（相应地 $`\mathcal B'`$）的相对距离，
+并将 $`\sum_cm_c^2`$ 与 $`\dim\mathcal A'`$ 比较（对群由特征标得到，推论 4.5(c)；对生成元由零空间得到）。我们
+对 $`S_3`$ 与三个量子比特运行它，然后看看内部：一个随机 $`K`$ 的特征子空间和一个随机 $`Y`$ 的缠结算子。
 
 ```python
 D = dc.from_group(G)                                     # the twirl samples pi(S_3)'
@@ -98,19 +98,19 @@ assert s[1] > 1e-3 and abs(s[0] - s[1]) < 1e-10
 assert all(close(W.mH @ Y @ Wa, 0) for W in spaces if W.shape[1] == 1)   # different summands: zero
 ```
 
-主要开销在交换子：一个 twirl 样本需要 $|G|$ 次 $n\times n$ 矩阵乘积。对生成元，本库首先对角化 $\mathcal A$ 的
-一个厄米元素 $R=U\mathrm{diag}(\lambda)U^*$（生成元厄米部分的一个随机实线性组合，加上两个这样的组合的对称化
-乘积的一个倍数）。每个 $X\in\mathcal A'$ 都与 $R$ 可交换，因而与它的谱投影可交换（定理 1.5(d)），所以 $U^*XU$
-关于 $R$ 的特征子空间（维数为 $d_\lambda$）是分块对角的；这一点被预先施加，于是零空间问题只有
-$N_R=\sum_\lambda d_\lambda^2$ 个未知数，而不是 $n^2$ 个。把若干特征值归并在一起只会使块变大，所以约化后的问题有
-相同的解集 $\mathcal A'$。在分解中，$V^*RV=\bigoplus_cr_c\otimes1_{m_c}$，其中 $r_c\in M_{k_c}$ 厄米；若 $\lambda$ 在
-$r_c$ 中的重数为 $\mu_c(\lambda)$，则 $d_\lambda=\sum_c\mu_c(\lambda)m_c$，并且由于对整数 $\mu\ge0$ 有 $\mu^2\ge\mu$，
-$$
+主要开销在交换子：一个 twirl 样本需要 $`|G|`$ 次 $`n\times n`$ 矩阵乘积。对生成元，本库首先对角化 $`\mathcal A`$ 的
+一个厄米元素 $`R=U\mathrm{diag}(\lambda)U^*`$（生成元厄米部分的一个随机实线性组合，加上两个这样的组合的对称化
+乘积的一个倍数）。每个 $`X\in\mathcal A'`$ 都与 $`R`$ 可交换，因而与它的谱投影可交换（定理 1.5(d)），所以 $`U^*XU`$
+关于 $`R`$ 的特征子空间（维数为 $`d_\lambda`$）是分块对角的；这一点被预先施加，于是零空间问题只有
+$`N_R=\sum_\lambda d_\lambda^2`$ 个未知数，而不是 $`n^2`$ 个。把若干特征值归并在一起只会使块变大，所以约化后的问题有
+相同的解集 $`\mathcal A'`$。在分解中，$`V^*RV=\bigoplus_cr_c\otimes1_{m_c}`$，其中 $`r_c\in M_{k_c}`$ 厄米；若 $`\lambda`$ 在
+$`r_c`$ 中的重数为 $`\mu_c(\lambda)`$，则 $`d_\lambda=\sum_c\mu_c(\lambda)m_c`$，并且由于对整数 $`\mu\ge0`$ 有 $`\mu^2\ge\mu`$，
+```math
 N_R=\sum_\lambda\Big(\sum_c\mu_c(\lambda)m_c\Big)^2\ge\sum_{\lambda,c}\mu_c(\lambda)^2m_c^2\ge\sum_{\lambda,c}\mu_c(\lambda)m_c^2=\sum_ck_cm_c^2,
-$$
-等号成立当且仅当所有 $r_c$ 的特征值都是单重的且两两不同。对 $L=3,4,5$ 个自旋的总自旋，下面的代码发现等号
-成立（*数值观察*）。即使是最小值也很大：对八个自旋 $\frac12$（$n=256$），$\sum_ck_cm_c^2=4900$，而约化后的
-方程组是一个 $(n^2+N_R)\times N_R$ 矩阵，有 $3.5\cdot10^8$ 个复元素。因此对自旋链，4.6 节使用模块 `su2`，它事先
+```
+等号成立当且仅当所有 $`r_c`$ 的特征值都是单重的且两两不同。对 $`L=3,4,5`$ 个自旋的总自旋，下面的代码发现等号
+成立（*数值观察*）。即使是最小值也很大：对八个自旋 $`\frac12`$（$`n=256`$），$`\sum_ck_cm_c^2=4900`$，而约化后的
+方程组是一个 $`(n^2+N_R)\times N_R`$ 矩阵，有 $`3.5\cdot10^8`$ 个复元素。因此对自旋链，4.6 节使用模块 `su2`，它事先
 就知道答案。
 
 ```python
@@ -124,15 +124,15 @@ for n in (3, 4, 5):
 
 <a id="s-4-4"></a>
 
-## 4.4 $U(1)$ 与荷扇区
+## 4.4 $`U(1)`$ 与荷扇区
 
 *讲义：* [4.4 节](../../lecture_notes/zh/04_symmetries.md#s-4-4)；[命题 4.10](../../lecture_notes/zh/04_symmetries.md#r-4-10)。
 
-对 $n$ 个量子比特，荷是数算子 $\hat N=\sum_jn_j$，其中 $n_j=|1\rangle\langle1|$ 作用在量子比特 $j$ 上，保持它守恒的算子构成
-$U(1)'\cong\bigoplus_{w=0}^nM_{\binom nw}(\mathbb C)$（[讲义，4.4 节](../../lecture_notes/zh/04_symmetries.md#s-4-4)），这就是
-`chains.SpinChain(n).algebra`（比特 $1$ = 自旋向上，$\hat N=S^z+\frac n2$；而在 `decompose.total_spin` 中，自旋向上是
-$\mathbb C^2$ 的*第一个*基向量，这只是给基重新编号，并不改变扇区）。每个 XXZ 哈密顿量都属于 $U(1)'$。代码仅由
-$\hat N$ 找出各扇区，并逐个扇区对角化一个四自旋的 XXZ 环。
+对 $`n`$ 个量子比特，荷是数算子 $`\hat N=\sum_jn_j`$，其中 $`n_j=|1\rangle\langle1|`$ 作用在量子比特 $`j`$ 上，保持它守恒的算子构成
+$`U(1)'\cong\bigoplus_{w=0}^nM_{\binom nw}(\mathbb C)`$（[讲义，4.4 节](../../lecture_notes/zh/04_symmetries.md#s-4-4)），这就是
+`chains.SpinChain(n).algebra`（比特 $`1`$ = 自旋向上，$`\hat N=S^z+\frac n2`$；而在 `decompose.total_spin` 中，自旋向上是
+$`\mathbb C^2`$ 的*第一个*基向量，这只是给基重新编号，并不改变扇区）。每个 XXZ 哈密顿量都属于 $`U(1)'`$。代码仅由
+$`\hat N`$ 找出各扇区，并逐个扇区对角化一个四自旋的 XXZ 环。
 
 ```python
 import functools
@@ -163,13 +163,13 @@ assert close(torch.sort(E_sec).values, torch.linalg.eigvalsh(H))
 
 <a id="s-4-5"></a>
 
-## 4.5 $SU(2)$：自旋
+## 4.5 $`SU(2)`$：自旋
 
-*讲义：* [4.5 节](../../lecture_notes/zh/04_symmetries.md#s-4-5)；[定理 4.11](../../lecture_notes/zh/04_symmetries.md#r-4-11)、[命题 4.13](../../lecture_notes/zh/04_symmetries.md#r-4-13)、[定理 4.14](../../lecture_notes/zh/04_symmetries.md#r-4-14)。自旋 $s$ 即 `decompose.spin_matrices(s)`，$L$ 个自旋 $\frac12$ 的总自旋即 `decompose.total_spin(L)`。
+*讲义：* [4.5 节](../../lecture_notes/zh/04_symmetries.md#s-4-5)；[定理 4.11](../../lecture_notes/zh/04_symmetries.md#r-4-11)、[命题 4.13](../../lecture_notes/zh/04_symmetries.md#r-4-13)、[定理 4.14](../../lecture_notes/zh/04_symmetries.md#r-4-14)。自旋 $`s`$ 即 `decompose.spin_matrices(s)`，$`L`$ 个自旋 $`\frac12`$ 的总自旋即 `decompose.total_spin(L)`。
 
-对 $L=4$，[讲义，命题 4.13](../../lecture_notes/zh/04_symmetries.md#r-4-13) 给出 $\{S_x,S_y,S_z\}''\cong M_5\oplus M_3\oplus M_1$，重数为 $1,3,2$，
-维数为 $35$，而交换子 $\{S_x,S_y,S_z\}'\cong M_1\oplus M_3\oplus M_2$，维数为 $14$。本库仅由三个生成元就得到同样的结果
-（扇区按 $(k_c,m_c)$ 排序），并且在自旋 $S$ 上 $\mathbf S^2=S(S+1)$（[定理 4.11](../../lecture_notes/zh/04_symmetries.md#r-4-11)）：
+对 $`L=4`$，[讲义，命题 4.13](../../lecture_notes/zh/04_symmetries.md#r-4-13) 给出 $`\{S_x,S_y,S_z\}''\cong M_5\oplus M_3\oplus M_1`$，重数为 $`1,3,2`$，
+维数为 $`35`$，而交换子 $`\{S_x,S_y,S_z\}'\cong M_1\oplus M_3\oplus M_2`$，维数为 $`14`$。本库仅由三个生成元就得到同样的结果
+（扇区按 $`(k_c,m_c)`$ 排序），并且在自旋 $`S`$ 上 $`\mathbf S^2=S(S+1)`$（[定理 4.11](../../lecture_notes/zh/04_symmetries.md#r-4-11)）：
 
 ```python
 S4 = dc.total_spin(4)
@@ -186,8 +186,8 @@ for c, k in enumerate(D4.k_factors):
 ```
 
 由[讲义，定理 4.14](../../lecture_notes/zh/04_symmetries.md#r-4-14)（Schur–Weyl 对偶），格点的置换张成总自旋的交换子：
-$\mathrm{span}\,\pi(S_L)=\{S_x,S_y,S_z\}'$。对 $L\le5$，代码数值地比较这两个空间：由定理的 (a) 部分，
-$\mathrm{span}\,\pi(S_L)\subseteq\{S_x,S_y,S_z\}'$，只需它们维数相同。
+$`\mathrm{span}\,\pi(S_L)=\{S_x,S_y,S_z\}'`$。对 $`L\le5`$，代码数值地比较这两个空间：由定理的 (a) 部分，
+$`\mathrm{span}\,\pi(S_L)\subseteq\{S_x,S_y,S_z\}'`$，只需它们维数相同。
 
 ```python
 for n in range(2, 6):
@@ -201,10 +201,10 @@ print(Dp)
 assert sorted(zip(Dp.multiplicities, Dp.k_factors)) == sorted(zip(D4.k_factors, D4.multiplicities))
 ```
 
-打印出的维数是 $2,5,14,42$，即 Catalan 数 $\binom{2L}L/(L+1)$；推论 B.10 对每个 $L$ 证明了
-$\dim\{S_a\}'=\sum_Sm_S^2=\binom{2L}L/(L+1)$。最后一行展示了对偶的作用：$\pi(S_4)''$
-的块为 $k=(1,2,3)$，重数为 $(5,1,3)$——正是总自旋的数对 $(k_c,m_c)$ 互换角色。一般地（推论 B.9），自旋 $S$ 的
-重数空间承载 $S_L$ 的一个维数为 $m_S$ 的不可约表示，并且这些表示两两不等价；这里对 $S=2,1,0$ 其维数分别为 $1,3,2$。
+打印出的维数是 $`2,5,14,42`$，即 Catalan 数 $`\binom{2L}L/(L+1)`$；推论 B.10 对每个 $`L`$ 证明了
+$`\dim\{S_a\}'=\sum_Sm_S^2=\binom{2L}L/(L+1)`$。最后一行展示了对偶的作用：$`\pi(S_4)''`$
+的块为 $`k=(1,2,3)`$，重数为 $`(5,1,3)`$——正是总自旋的数对 $`(k_c,m_c)`$ 互换角色。一般地（推论 B.9），自旋 $`S`$ 的
+重数空间承载 $`S_L`$ 的一个维数为 $`m_S`$ 的不可约表示，并且这些表示两两不等价；这里对 $`S=2,1,0`$ 其维数分别为 $`1,3,2`$。
 
 <a id="s-4-6"></a>
 
@@ -212,10 +212,10 @@ $\dim\{S_a\}'=\sum_Sm_S^2=\binom{2L}L/(L+1)$。最后一行展示了对偶的作
 
 *讲义：* [4.6 节](../../lecture_notes/zh/04_symmetries.md#s-4-6)；[命题 4.15](../../lecture_notes/zh/04_symmetries.md#r-4-15)、[定理 4.16](../../lecture_notes/zh/04_symmetries.md#r-4-16)、[推论 4.17](../../lecture_notes/zh/04_symmetries.md#r-4-17)。
 
-由[讲义，推论 4.17](../../lecture_notes/zh/04_symmetries.md#r-4-17)，$L$ 个自旋 $\frac12$ 的最高权向量的规范正交基可以用
-[定理 4.16](../../lecture_notes/zh/04_symmetries.md#r-4-16)的 Clebsch–Gordan 系数逐个格点地构造。用中间自旋序列 $S_1=\frac12,S_2,\dots,S_L=S$
+由[讲义，推论 4.17](../../lecture_notes/zh/04_symmetries.md#r-4-17)，$`L`$ 个自旋 $`\frac12`$ 的最高权向量的规范正交基可以用
+[定理 4.16](../../lecture_notes/zh/04_symmetries.md#r-4-16)的 Clebsch–Gordan 系数逐个格点地构造。用中间自旋序列 $`S_1=\frac12,S_2,\dots,S_L=S`$
 标记每个基向量，就得到 `su2.SU2Chain` 所构造的 Yamanouchi 基（其源代码恰好使用这些系数；下面的代码只检验推论 4.17
-的结论），它位于 `SpinChain` 的 $U(1)$ 扇区 $\hat N=\frac L2+S$ 之中（`SpinChain` 的格点顺序是张量因子的重新标记，由
+的结论），它位于 `SpinChain` 的 $`U(1)`$ 扇区 $`\hat N=\frac L2+S`$ 之中（`SpinChain` 的格点顺序是张量因子的重新标记，由
 引理 B.1(b)，它与总自旋可交换）。代码用稠密矩阵以及本库的 `su2.clebsch_gordan` 检验定理 4.16，然后对八个自旋的基
 检验推论 4.17 的结论。我们还用 `D4` 在四个自旋的环上检验[命题 4.15(a)](../../lecture_notes/zh/04_symmetries.md#r-4-15)，并比较八个自旋
 时的块大小。
@@ -289,62 +289,62 @@ print(u1.algebra.k_factors, sym.multiplicities, flops(u1.algebra.k_factors), flo
 print(f"ground state energy {E_su2[0].item():.6f}, first excited {E_su2[1].item():.6f} (x3)")
 ```
 
-对八个自旋的环，$U(1)$ 块的大小为 $\binom8w=1,8,28,56,70,56,28,8,1$（4.4 节），$SU(2)$ 块的大小为
-$m_S=14,28,20,7,1$（$S=0,\dots,4$，命题 4.13）。对角化的开销 $\sum k^3$ 从 $739162$ 降到 $33040$，减小为约
-$1/22$；代数的维数 $\sum k^2$ 从 $\sum_w\binom8w\binom8{8-w}=\binom{16}8=12870$（从 $16$ 个元素中选 $8$ 个，其中 $w$ 个
-取自前 $8$ 个）降到 $\sum_Sm_S^2=1430=\binom{16}8/9$（推论 B.10）。由定理 9.9（环的长度为偶数且 $J>0$），基态是
-唯一的单态，且 $E_0(0)<E_0(1)$。*数值观察*（由上面的代码计算）：基态能量为 $-3.651093$，第一激发能级是位于
-$-3.128419$ 的三重态。
+对八个自旋的环，$`U(1)`$ 块的大小为 $`\binom8w=1,8,28,56,70,56,28,8,1`$（4.4 节），$`SU(2)`$ 块的大小为
+$`m_S=14,28,20,7,1`$（$`S=0,\dots,4`$，命题 4.13）。对角化的开销 $`\sum k^3`$ 从 $`739162`$ 降到 $`33040`$，减小为约
+$`1/22`$；代数的维数 $`\sum k^2`$ 从 $`\sum_w\binom8w\binom8{8-w}=\binom{16}8=12870`$（从 $`16`$ 个元素中选 $`8`$ 个，其中 $`w`$ 个
+取自前 $`8`$ 个）降到 $`\sum_Sm_S^2=1430=\binom{16}8/9`$（推论 B.10）。由定理 9.9（环的长度为偶数且 $`J>0`$），基态是
+唯一的单态，且 $`E_0(0)<E_0(1)`$。*数值观察*（由上面的代码计算）：基态能量为 $`-3.651093`$，第一激发能级是位于
+$`-3.128419`$ 的三重态。
 
 <a id="s-4-7"></a>
 
 ## 4.7 实代数：实型、复型与四元数型
 
-*讲义：* [4.7 节](../../lecture_notes/zh/04_symmetries.md#s-4-7)。对在复共轭下封闭的 $*$-代数 $\mathcal A$，以及其列块 $V_c$ 属于各扇区的
-分解 $V$，[定理 4.20](../../lecture_notes/zh/04_symmetries.md#r-4-20) 给出满足 $\bar P_c=P_{\sigma(c)}$ 的扇区置换 $\sigma$、满足
-$\overline{V_c}=V_{\sigma(c)}(J_c\otimes M_c)$ 的酉矩阵 $J_c$、$M_c$，以及当 $\sigma(c)=c$ 时满足 $J_c\bar J_c=\varepsilon_c1$ 的符号
-$\varepsilon_c$；类型与实代数 $\mathcal A_{\mathbb R}$ 见[定理 4.21](../../lecture_notes/zh/04_symmetries.md#r-4-21)，实 Schur 引理是
+*讲义：* [4.7 节](../../lecture_notes/zh/04_symmetries.md#s-4-7)。对在复共轭下封闭的 $`*`$-代数 $`\mathcal A`$，以及其列块 $`V_c`$ 属于各扇区的
+分解 $`V`$，[定理 4.20](../../lecture_notes/zh/04_symmetries.md#r-4-20) 给出满足 $`\bar P_c=P_{\sigma(c)}`$ 的扇区置换 $`\sigma`$、满足
+$`\overline{V_c}=V_{\sigma(c)}(J_c\otimes M_c)`$ 的酉矩阵 $`J_c`$、$`M_c`$，以及当 $`\sigma(c)=c`$ 时满足 $`J_c\bar J_c=\varepsilon_c1`$ 的符号
+$`\varepsilon_c`$；类型与实代数 $`\mathcal A_{\mathbb R}`$ 见[定理 4.21](../../lecture_notes/zh/04_symmetries.md#r-4-21)，实 Schur 引理是
 [定理 4.22](../../lecture_notes/zh/04_symmetries.md#r-4-22)，交换子的实元素由[命题 4.23](../../lecture_notes/zh/04_symmetries.md#r-4-23)刻画。
 
-`Decomposition.real_structure()` 对 `wedderburn`（`from_generators`、`from_group`）返回的分解计算 $\sigma$、$J_c$、
-$M_c$ 以及类型。它检查所存储的生成元的共轭落在 $V(\bigoplus_cM_{k_c}\otimes1)V^*$ 中（相对残差
-`'conjugation'`），并构造酉矩阵 $P=V^*\bar V$，其第 $c$ 个列块为 $V^*\overline{V_c}$：由定理 4.20(a)，它只在扇区
-$\sigma(c)$ 的行上非零，并在那里等于 $J_c\otimes M_c$。本库取承载该块最大部分的扇区作为 $\sigma(c)$，要求
-$(k_{\sigma(c)},m_{\sigma(c)})=(k_c,m_c)$，并界定其余部分（`'leak'`）；它把该块重排为
-$k_c^2\times m_c^2$ 矩阵，其元素为 $T_{(a,b),(j,l)}=T_{(a,j),(b,l)}$，对 $T=J\otimes M$ 这就是秩一矩阵
-$\mathrm{vec}\,J\,(\mathrm{vec}\,M)^T$，由其主奇异向量读出 $J_c$ 与 $M_c$（取
-$\|J_c\|_F^2=k_c$），并记录该块与 $J_c\otimes M_c$ 的距离（`'kron'`）。若这三个残差之一超过容差、形状不同，或
-配对不构成对合，它就抛出 `ValueError`（该代数在共轭下不封闭）。对 $\sigma(c)=c$，它把 $\varepsilon_c$ 设为
-$\mathrm{Re}\,\mathrm{Tr}(J_c\bar J_c)/k_c$ 的符号——在精确算术中它恰为 $\pm1$，所以两个候选值相差 $2$——并把
-这些扇区上 $\|J_c\bar J_c-\varepsilon_c\|_F/\sqrt{k_c}$ 与 $\|M_c\bar M_c-\varepsilon_c\|_F/\sqrt{m_c}$ 的最大值记为
-`'sign'`；若某个 $\varepsilon_c=-1$ 而 $k_c$ 或 $m_c$ 为奇数（由定理 4.20(b) 这不可能），则把它提高到至少 $1$。结果
-具有 `types`、`partner`（$\sigma$）、`J`、`M`、`residuals` 和 `ok`，后者表示所有残差都不超过容差（默认是分解的
-接受阈值）；此时 $|\mathrm{Tr}(J_c\bar J_c)/k_c-\varepsilon_c|\le\|J_c\bar J_c-\varepsilon_c\|_F/\sqrt{k_c}$
+`Decomposition.real_structure()` 对 `wedderburn`（`from_generators`、`from_group`）返回的分解计算 $`\sigma`$、$`J_c`$、
+$`M_c`$ 以及类型。它检查所存储的生成元的共轭落在 $`V(\bigoplus_cM_{k_c}\otimes1)V^*`$ 中（相对残差
+`'conjugation'`），并构造酉矩阵 $`P=V^*\bar V`$，其第 $`c`$ 个列块为 $`V^*\overline{V_c}`$：由定理 4.20(a)，它只在扇区
+$`\sigma(c)`$ 的行上非零，并在那里等于 $`J_c\otimes M_c`$。本库取承载该块最大部分的扇区作为 $`\sigma(c)`$，要求
+$`(k_{\sigma(c)},m_{\sigma(c)})=(k_c,m_c)`$，并界定其余部分（`'leak'`）；它把该块重排为
+$`k_c^2\times m_c^2`$ 矩阵，其元素为 $`T_{(a,b),(j,l)}=T_{(a,j),(b,l)}`$，对 $`T=J\otimes M`$ 这就是秩一矩阵
+$`\mathrm{vec}\,J\,(\mathrm{vec}\,M)^T`$，由其主奇异向量读出 $`J_c`$ 与 $`M_c`$（取
+$`\|J_c\|_F^2=k_c`$），并记录该块与 $`J_c\otimes M_c`$ 的距离（`'kron'`）。若这三个残差之一超过容差、形状不同，或
+配对不构成对合，它就抛出 `ValueError`（该代数在共轭下不封闭）。对 $`\sigma(c)=c`$，它把 $`\varepsilon_c`$ 设为
+$`\mathrm{Re}\,\mathrm{Tr}(J_c\bar J_c)/k_c`$ 的符号——在精确算术中它恰为 $`\pm1`$，所以两个候选值相差 $`2`$——并把
+这些扇区上 $`\|J_c\bar J_c-\varepsilon_c\|_F/\sqrt{k_c}`$ 与 $`\|M_c\bar M_c-\varepsilon_c\|_F/\sqrt{m_c}`$ 的最大值记为
+`'sign'`；若某个 $`\varepsilon_c=-1`$ 而 $`k_c`$ 或 $`m_c`$ 为奇数（由定理 4.20(b) 这不可能），则把它提高到至少 $`1`$。结果
+具有 `types`、`partner`（$`\sigma`$）、`J`、`M`、`residuals` 和 `ok`，后者表示所有残差都不超过容差（默认是分解的
+接受阈值）；此时 $`|\mathrm{Tr}(J_c\bar J_c)/k_c-\varepsilon_c|\le\|J_c\bar J_c-\varepsilon_c\|_F/\sqrt{k_c}`$
 （Cauchy–Schwarz）也不超过容差。
 
-`Decomposition.real_basis()` 返回一个实正交 $n\times n$ 矩阵 $O$，以及描述其各列块的列表（类型、扇区、
-列范围）：对实型扇区，是定理 4.21(a) 的列 $O_c=V_c(W_J\otimes W_M)$，使得 $O_c^TaO_c=\alpha_c(a)\otimes1_{m_c}$，
-其中 $\alpha_c(a)$ 为实矩阵；对四元数型扇区，是列 $V_cW$，其中 $J_c\otimes M_c=WW^T$ 且
-$(J_c\otimes M_c)\bar W=W$（引理 4.19(c)，取 $\varepsilon=1$，因为 $(J_c\otimes M_c)\overline{(J_c\otimes M_c)}=\varepsilon_c^2=1$），
-由定理 4.21(a) 的计算，它们是实的；对一对 $c,\sigma(c)$（$c<\sigma(c)$），是列 $\sqrt2\mathrm{Re}\,V_c$，后接
-$\sqrt2\mathrm{Im}\,V_c$。这些列是规范正交的：$V_c^*\overline{V_c}=V_c^*V_{\sigma(c)}(J_c\otimes M_c)=0$ 与
-$V_c^T\overline{V_c}=\overline{V_c^*V_c}=1$ 及其共轭给出 $(\mathrm{Re}\,V_c)^T\mathrm{Re}\,V_c=(\mathrm{Im}\,V_c)^T\mathrm{Im}\,V_c=\frac12$ 与
-$(\mathrm{Re}\,V_c)^T\mathrm{Im}\,V_c=0$；不同块的列落在 $\sigma$ 的不同轨道 $\mathcal O$ 的正交投影
-$P_{\mathcal O}=\sum_{e\in\mathcal O}P_e$ 的像中（因为 $\overline{V_c}=V_{\sigma(c)}(J_c\otimes M_c)$），所以 $O$ 是正交的。对实的 $a$，
-取 $aV_c=V_cx$（$x=\pi_c(a)\otimes1_{m_c}$）的实部与虚部，得
-$$
+`Decomposition.real_basis()` 返回一个实正交 $`n\times n`$ 矩阵 $`O`$，以及描述其各列块的列表（类型、扇区、
+列范围）：对实型扇区，是定理 4.21(a) 的列 $`O_c=V_c(W_J\otimes W_M)`$，使得 $`O_c^TaO_c=\alpha_c(a)\otimes1_{m_c}`$，
+其中 $`\alpha_c(a)`$ 为实矩阵；对四元数型扇区，是列 $`V_cW`$，其中 $`J_c\otimes M_c=WW^T`$ 且
+$`(J_c\otimes M_c)\bar W=W`$（引理 4.19(c)，取 $`\varepsilon=1`$，因为 $`(J_c\otimes M_c)\overline{(J_c\otimes M_c)}=\varepsilon_c^2=1`$），
+由定理 4.21(a) 的计算，它们是实的；对一对 $`c,\sigma(c)`$（$`c<\sigma(c)`$），是列 $`\sqrt2\mathrm{Re}\,V_c`$，后接
+$`\sqrt2\mathrm{Im}\,V_c`$。这些列是规范正交的：$`V_c^*\overline{V_c}=V_c^*V_{\sigma(c)}(J_c\otimes M_c)=0`$ 与
+$`V_c^T\overline{V_c}=\overline{V_c^*V_c}=1`$ 及其共轭给出 $`(\mathrm{Re}\,V_c)^T\mathrm{Re}\,V_c=(\mathrm{Im}\,V_c)^T\mathrm{Im}\,V_c=\frac12`$ 与
+$`(\mathrm{Re}\,V_c)^T\mathrm{Im}\,V_c=0`$；不同块的列落在 $`\sigma`$ 的不同轨道 $`\mathcal O`$ 的正交投影
+$`P_{\mathcal O}=\sum_{e\in\mathcal O}P_e`$ 的像中（因为 $`\overline{V_c}=V_{\sigma(c)}(J_c\otimes M_c)`$），所以 $`O`$ 是正交的。对实的 $`a`$，
+取 $`aV_c=V_cx`$（$`x=\pi_c(a)\otimes1_{m_c}`$）的实部与虚部，得
+```math
 O^TaO=\begin{pmatrix}\mathrm{Re}\,x&\mathrm{Im}\,x\\-\mathrm{Im}\,x&\mathrm{Re}\,x\end{pmatrix}\quad\text{on these columns.}
-$$
-对称酉矩阵 $J=X+iY$ 的满足 $WW^T=J$ 的 Takagi 因子 $W$，由 $X+tY$（$t$ 随机）的正交对角化计算得到
-（$X$ 与 $Y$ 是可交换的实对称矩阵，因为 $J\bar J=JJ^*=1$ 的虚部是 $YX-XY$）；本库依据残差
-$\|WW^T-J\|_F/\|J\|_F$ 与 $\|\mathrm{Im}(V_cW)\|_F/\sqrt{k_cm_c}$ 接受结果，若其中之一超过
-$\max(\text{tolerance},10^3\,\epsilon_{\rm mach}\,n)$，则发出警告（`DecompositionWarning`）。
+```
+对称酉矩阵 $`J=X+iY`$ 的满足 $`WW^T=J`$ 的 Takagi 因子 $`W`$，由 $`X+tY`$（$`t`$ 随机）的正交对角化计算得到
+（$`X`$ 与 $`Y`$ 是可交换的实对称矩阵，因为 $`J\bar J=JJ^*=1`$ 的虚部是 $`YX-XY`$）；本库依据残差
+$`\|WW^T-J\|_F/\|J\|_F`$ 与 $`\|\mathrm{Im}(V_cW)\|_F/\sqrt{k_cm_c}`$ 接受结果，若其中之一超过
+$`\max(\text{tolerance},10^3\,\epsilon_{\rm mach}\,n)`$，则发出警告（`DecompositionWarning`）。
 
-讲义的 [4.7 节](../../lecture_notes/zh/04_symmetries.md#s-4-7)详细讨论了三个由实矩阵生成的代数：(i) $\mathbb R^3\otimes\mathbb R^2$ 上的
-$L_a\otimes1_2$，其中 $(L_a)_{bc}=-\epsilon_{abc}$ 是 $\mathbb R^3$ 的转动的生成元：一个实型扇区，$k=3$，$m=2$；(ii)
-$\mathbb R^2\otimes\mathbb R^2$ 上的 $\Omega_2\otimes1_2$：一对复型扇区，$k=1$，$m=2$；(iii) 四元数在
-$\mathbb H^2=\mathbb R^8$ 上的左乘 $1_2\otimes L_q$：一个四元数型扇区，$k=2$，$m=4$。代码计算每个代数的分解与实结构，
-并检验定理 4.20(a),(b)，以及实型（定理 4.21(a)）和复型扇区对的 $O^TaO$ 的分块形式。
+讲义的 [4.7 节](../../lecture_notes/zh/04_symmetries.md#s-4-7)详细讨论了三个由实矩阵生成的代数：(i) $`\mathbb R^3\otimes\mathbb R^2`$ 上的
+$`L_a\otimes1_2`$，其中 $`(L_a)_{bc}=-\epsilon_{abc}`$ 是 $`\mathbb R^3`$ 的转动的生成元：一个实型扇区，$`k=3`$，$`m=2`$；(ii)
+$`\mathbb R^2\otimes\mathbb R^2`$ 上的 $`\Omega_2\otimes1_2`$：一对复型扇区，$`k=1`$，$`m=2`$；(iii) 四元数在
+$`\mathbb H^2=\mathbb R^8`$ 上的左乘 $`1_2\otimes L_q`$：一个四元数型扇区，$`k=2`$，$`m=4`$。代码计算每个代数的分解与实结构，
+并检验定理 4.20(a),(b)，以及实型（定理 4.21(a)）和复型扇区对的 $`O^TaO`$ 的分块形式。
 
 ```python
 def qmul(p, q):                                           # H = CD(C), Section E.6: (a, b)(c, d)
@@ -394,9 +394,9 @@ assert close(O_t.T @ real_examples['C'][0][0] @ O_t,
              torch.cat([torch.cat([x_t.real, x_t.imag], 1), torch.cat([-x_t.imag, x_t.real], 1)]))
 ```
 
-代码在三个例子的不可约实模 $\mathbb R^3$、$\mathbb R^2$、$\mathbb R^4$ 上验证定理 4.22（本库找到的类型与重数——
-$m=1$ 的实型、$m=1$ 的复型对、$m=2$ 的四元数型——由定理 4.22(c) 使它们不可约），其中实交换子作为实线性方程
-$Xs=sX$，$Xs^T=s^TX$ 的零空间来计算；然后对每个例子中交换子的一个随机实对称元素验证命题 4.23。
+代码在三个例子的不可约实模 $`\mathbb R^3`$、$`\mathbb R^2`$、$`\mathbb R^4`$ 上验证定理 4.22（本库找到的类型与重数——
+$`m=1`$ 的实型、$`m=1`$ 的复型对、$`m=2`$ 的四元数型——由定理 4.22(c) 使它们不可约），其中实交换子作为实线性方程
+$`Xs=sX`$，$`Xs^T=s^TX`$ 的零空间来计算；然后对每个例子中交换子的一个随机实对称元素验证命题 4.23。
 
 ```python
 def real_commutant_dim(gens):                             # dim_R {X real : X s = s X, X s^T = s^T X}
@@ -437,23 +437,147 @@ for t, (gens, ks, ms) in real_examples.items():           # Proposition 4.23
 对有限群，GAP 和 SageMath 精确计算特征标表，然后由推论 4.5 得到重数；RepLAB（MATLAB；D. Rosset,
 F. Montealegre-Mora, J.-D. Bancal）数值地分解有限群和紧群的表示，同样使用交换子的随机元素；
 SymbolicWedderburn.jl（Julia）为半定规划的对称性约化计算 Wedderburn 分解。在物理中，QuSpin 和其他精确
-对角化程序对 $U(1)$ 和晶格对称性进行块对角化，ITensor 和 TeNPy 在张量网络中携带阿贝尔荷，TensorKit.jl
-用融合树处理 $SU(2)$。本库的 `decompose` 是面向小矩阵（$n$ 至多几百）的稠密方法；它接受任意矩阵列表
+对角化程序对 $`U(1)`$ 和晶格对称性进行块对角化，ITensor 和 TeNPy 在张量网络中携带阿贝尔荷，TensorKit.jl
+用融合树处理 $`SU(2)`$。本库的 `decompose` 是面向小矩阵（$`n`$ 至多几百）的稠密方法；它接受任意矩阵列表
 （群元素或生成元），验证其结果（命题 4.9），并把代数及其交换子作为带有 `to_algebra`、`from_algebra`、
 `to_commutant`、`from_commutant` 的 `TypeIAlgebra` 对象返回，使第 3 章、第 5–8 章的内容可以直接应用。对
-自旋 $\frac12$ 链，`su2.SU2Chain` 直接给出 $SU(2)$ 块（推论 4.17）；它最多接受 $L=18$ 个自旋，这一上限由基所需的内存决定。
+自旋 $`\frac12`$ 链，`su2.SU2Chain` 直接给出 $`SU(2)`$ 块（推论 4.17）；它最多接受 $`L=18`$ 个自旋，这一上限由基所需的内存决定。
+
+<a id="s-4-9"></a>
+
+## 4.9 数值分解的稳定性
+
+*讲义：* [4.9 节](../../lecture_notes/zh/04_symmetries.md#s-4-9)；[引理 4.24](../../lecture_notes/zh/04_symmetries.md#r-4-24)、[定理 4.25](../../lecture_notes/zh/04_symmetries.md#r-4-25)、[命题 4.26](../../lecture_notes/zh/04_symmetries.md#r-4-26)、[命题 4.27](../../lecture_notes/zh/04_symmetries.md#r-4-27)、[定理 4.28](../../lecture_notes/zh/04_symmetries.md#r-4-28)。
+
+含噪声生成元的交换子由一个容差决定：[定理 4.25](../../lecture_notes/zh/04_symmetries.md#r-4-25) 指出，若 $`2\eta<\theta<\gamma-2\eta`$（$`\eta`$ 为噪声，$`\gamma`$ 为精确映射的
+能隙），则交换子映射 $`X\mapsto([H_j,X])_j`$ 的奇异值上的阈值 $`\theta`$ 给出交换子的精确维数 $`d`$，并且被扰动的零奇异值的界 $`2\eta`$
+是可以取到的。第一个代码块计算定理 4.25(c) 中例子 $`\tilde H_1=\mathrm{diag}(1,1,0)+\eta(E_{12}+E_{21})`$ 的奇异值，并用 `commutant_basis`
+在窗口之下、之内和之上判定交换子（库把生成元归一化为单位 Frobenius 范数，因此 `tol` 要相应缩放）。
+
+```python
+import warnings
+
+def commutator_svals(Hs):
+    """Singular values, in increasing order, of X -> ([H_j, X])_j with Hilbert-Schmidt norms (row-major vec)."""
+    n = Hs.shape[-1]
+    eye = torch.eye(n, dtype=dt)
+    L = torch.cat([torch.kron(H, eye) - torch.kron(eye, H.T.contiguous()) for H in Hs])
+    return torch.linalg.svdvals(L).flip(0)
+
+eta = 1e-3
+H1 = torch.diag(torch.tensor([1.0, 1.0, 0.0], dtype=dt))
+H1t = H1.clone()
+H1t[0, 1] = H1t[1, 0] = eta                               # a symmetry broken at the level eta
+s = commutator_svals(H1t[None])
+expected = torch.tensor([0, 0, 0, 2 * eta, 2 * eta, 1 - eta, 1 - eta, 1 + eta, 1 + eta], dtype=torch.float64)
+assert close(s, expected, 1e-12)                          # Theorem 4.25(a) and (c): the bound 2 eta is attained
+assert close(commutator_svals(H1[None])[4:6], [0, 1])      # exact generator: d = 5, gap 1
+scale = torch.linalg.matrix_norm(H1t).item()              # theta = tol for unit-norm generators
+for theta, dim in ((0.5 * eta, 3), (20 * eta, 5), (2.0, 9)):
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', dc.DecompositionWarning)
+        assert dc.commutant_basis(H1t, tol=theta / scale).shape[0] == dim
+print('theta < 2 eta: dim 3 (symmetry lost); in the window: 5; above the gap: 9')
+```
+
+接下来是三个自旋 $`\frac12`$ 的三个自旋算符（$`k=(2,4)`$，$`m=(2,1)`$，$`d=5`$，归一化后能隙 $`\gamma=1/\sqrt3`$），受到大小 $`\eta`$ 递增的
+厄米噪声扰动。对每个噪声水平，代码在奇异值 $`\sigma_d`$ 和 $`\sigma_{d+1}`$ 上检验定理 4.25(a)，把 `tol` 放在观测窗口的中间（对数尺度），
+检验维数以及定理 4.25(b) 的界 $`\|\tilde\Pi-\Pi\|\le4\eta/\gamma`$，然后进行分解。使用默认的 `tol` $`=\epsilon_{\rm mach}^{1/2}`$ 时，噪声一旦
+超过容差就被认真对待：含噪声的生成元生成 $`M_8`$，这对它们而言是正确答案，但不是我们要找的对称性。（这里被过滤的
+`DecompositionWarning` 报告某个奇异值与截断点的距离不到 $`\epsilon_{\rm mach}^{-1/8}`$ 倍。）
+
+```python
+S = dc.total_spin(3)
+unit = lambda S: S / torch.linalg.matrix_norm(S)[:, None, None]     # the Hermitian generators the library uses
+sv = commutator_svals(unit(S))
+d, gamma = 5, sv[5].item()
+assert sv[4] < 1e-12 and abs(gamma - 1 / math.sqrt(3)) < 1e-12
+B0 = dc.commutant_basis(S).reshape(d, -1)
+Pi0 = B0.T @ B0.conj()                                    # orthogonal projection onto vec(A')
+gen = torch.Generator().manual_seed(1)
+print(' eta       sigma_d   sigma_d+1  tol       (k, m)            default tol')
+for eta in (1e-8, 1e-6, 1e-4, 1e-3):
+    E = torch.randn(S.shape, dtype=dt, generator=gen)
+    E = E + E.mH
+    St = S + eta * E / torch.linalg.matrix_norm(E, ord=2)[:, None, None]
+    eta_n = torch.linalg.matrix_norm(unit(St) - unit(S), ord=2).norm().item()   # eta of Theorem 4.25
+    st = commutator_svals(unit(St))
+    assert st[d - 1] <= 2 * eta_n and st[d] >= gamma - 2 * eta_n                # Theorem 4.25(a)
+    tol = math.sqrt(st[d - 1] * st[d]) / max(1.0, st[-1].item())
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', dc.DecompositionWarning)
+        Bt = dc.commutant_basis(St, tol=tol).reshape(d, -1)                     # Theorem 4.25(b): dimension d
+        Dt = dc.from_generators(St, tol=tol)
+        Dd = dc.from_generators(St)
+    assert torch.linalg.matrix_norm(Bt.T @ Bt.conj() - Pi0, ord=2) <= 4 * eta_n / gamma
+    assert (Dt.k_factors, Dt.multiplicities) == ((2, 4), (2, 1))
+    print(f'{eta_n:.1e}  {st[d - 1]:.1e}   {st[d]:.3f}      {tol:.1e}   {Dt.k_factors}, {Dt.multiplicities}'
+          f'   {Dd.k_factors}, {Dd.multiplicities}')
+```
+
+`Decomposition.certificate()` 在输出上计算[命题 4.26](../../lecture_notes/zh/04_symmetries.md#r-4-26)：后向误差 $`r`$（归一化生成元到计算出的代数 $`\tilde{\mathcal B}`$ 的距离）、
+它们的投影 $`H_j=E(\tilde H_j)`$ 的交换子映射的能隙 $`\gamma_{\mathcal B}`$（由各块计算，这里与稠密奇异值相比较），以及证明
+$`\dim\mathcal A'=\sum_cm_c^2`$ 的阈值窗口 $`(2r,\gamma_{\mathcal B}-2r)`$。若实际使用的阈值位于该窗口内，结果为 `trusted`；否则证书发出警告。
+低于噪声的容差给出 $`M_8`$，对这些生成元而言是被证明的，但能隙与噪声同阶：对称性更多的模型可能就在距离 $`\gamma_{\mathcal B}/2`$ 处。
+高于噪声但低于 $`2r`$ 的容差给出正确的结构，但证书无法为之担保。
+
+```python
+c = dc.from_generators(S).certificate()
+assert c.certified and c.trusted and c.residuals['backward'] < 1e-12 and abs(c.gap - gamma) < 1e-10
+E = torch.randn(S.shape, dtype=dt, generator=gen)
+St = S + 1e-4 * (E + E.mH)
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore', dc.DecompositionWarning)
+    Dt = dc.from_generators(St, tol=1e-2)
+    D_low = dc.from_generators(St, tol=1e-12)                          # below the noise
+    D_mid = dc.from_generators(St, tol=1e-3)                           # above the noise, below 2 r
+ct = Dt.certificate()
+print(ct, 'window', [f'{w:.1e}' for w in ct.window], 'threshold', f"{ct.rank['threshold']:.1e}")
+assert ct.trusted and 1e-5 < ct.residuals['backward'] < 1e-2 and ct.window[0] < ct.rank['threshold'] < ct.window[1]
+sb = commutator_svals(Dt.conditional_expectation(unit(St)))           # the projected generators H_j
+assert sb[d - 1] < 1e-12 and abs(sb[d] - ct.gap) < 1e-10              # Proposition 4.26(a), (b)
+c_low = D_low.certificate()
+assert D_low.k_factors == (8,) and c_low.certified and c_low.gap < 1e-3
+with warnings.catch_warnings(record=True) as caught:
+    warnings.simplefilter('always')
+    c_mid = D_mid.certificate()
+assert D_mid.k_factors == (2, 4) and not c_mid.trusted and caught
+print('tol 1e-12:', D_low.k_factors, f'gap {c_low.gap:.1e};  tol 1e-3:', D_mid.k_factors, 'trusted:', c_mid.trusted)
+```
+
+最后是[命题 4.27](../../lecture_notes/zh/04_symmetries.md#r-4-27)：对 $`\mathcal A'_h`$ 的标准高斯向量 $`G`$，各块为 $`\kappa_c=k_c^{-1/2}H_c`$，其中 $`H_c`$ 为独立的 GUE 矩阵；不同
+扇区的特征值彼此靠近到小于 $`x`$ 的概率至多为 $`x`$ 阶（这里的界为 $`\sqrt{2/\pi}\,x\,m_1m_2(\frac1{k_1m_1}+\frac1{k_2m_2})^{-1/2}`$），而在
+$`2\times2`$ 块内部间距为 $`x^3`$ 阶。用 $`2\cdot10^4`$ 个样本作蒙特卡罗检验，样本取自 $`\mathcal A'`$ 的规范正交基 `D.basis('commutant')`：
+
+```python
+D = dc.from_generators(S)
+coef = torch.randn(20000, d, dtype=dt, generator=gen)
+Z = torch.einsum('br,rij->bij', coef, D.basis('commutant'))         # standard complex Gaussian vectors of A'
+x_c = D.to_commutant((Z + Z.mH) / math.sqrt(2)).matrix              # blocks of G: kappa_1 (2 x 2), kappa_2 (1 x 1)
+assert abs((x_c[:, 0, :2, :2].abs() ** 2).sum((-2, -1)).mean().item() - 4 / 2) < 0.05   # E Tr kappa_1^2 = m_1^2 / k_1
+ev = torch.linalg.eigvalsh(x_c[:, 0, :2, :2])
+cross = (ev - x_c[:, 1, :1, 0].real).abs().min(1).values           # delta_x
+(k1, k2), (m1, m2) = D.k_factors, D.multiplicities
+for x in (0.01, 0.03, 0.1):
+    bound = math.sqrt(2 / math.pi) * x * m1 * m2 / math.sqrt(1 / (k1 * m1) + 1 / (k2 * m2))
+    p = (cross < x).double().mean().item()
+    print(f'x = {x}:  P(delta_x < x) = {p:.4f} <= {bound:.4f}')
+    assert p <= bound
+p_in = (ev[:, 1] - ev[:, 0] < 0.2).double().mean().item()
+assert p_in <= k1 ** 1.5 * 0.2 ** 3 / (6 * math.sqrt(math.pi))      # Proposition 4.27(c), m = 2
+```
 
 <a id="x-4"></a>
 
 ## 习题
 
 讲义的[习题](../../lecture_notes/zh/04_symmetries.md#x-4)的数值检验（下面的解答按此顺序排列）：
-1. 对 $d=2$ 和 $L=3,4$ 验证 $\dim\pi(S_L)'=\binom{d^2+L-1}L$（即 $20$ 和 $35$）；
-2. 用 `from_generators` 验证 $1\otimes\frac12\cong\frac12\oplus\frac32$ 和 $1\otimes1\cong0\oplus1\oplus2$；
-3. 四个量子比特上 $e^{i\theta\hat N}$ 的交换子，取 $\theta=1$（荷 $0,\dots,4$ 给出互不相同的 $e^{iq}$，因为
-   $0<|q-q'|\le4<2\pi$）和 $\theta=\pi$；
-4. Zeeman 分裂：八个自旋的 Heisenberg 环的 $H+hS_z$ 的谱，分别用 `su2.SU2Chain` 和在各 $U(1)$ 扇区中计算；
-5. $Q_8$ 的正则表示的扇区，用 `real_structure` 计算。
+1. 对 $`d=2`$ 和 $`L=3,4`$ 验证 $`\dim\pi(S_L)'=\binom{d^2+L-1}L`$（即 $`20`$ 和 $`35`$）；
+2. 用 `from_generators` 验证 $`1\otimes\frac12\cong\frac12\oplus\frac32`$ 和 $`1\otimes1\cong0\oplus1\oplus2`$；
+3. 四个量子比特上 $`e^{i\theta\hat N}`$ 的交换子，取 $`\theta=1`$（荷 $`0,\dots,4`$ 给出互不相同的 $`e^{iq}`$，因为
+   $`0<|q-q'|\le4<2\pi`$）和 $`\theta=\pi`$；
+4. Zeeman 分裂：八个自旋的 Heisenberg 环的 $`H+hS_z`$ 的谱，分别用 `su2.SU2Chain` 和在各 $`U(1)`$ 扇区中计算；
+5. $`Q_8`$ 的正则表示的扇区，用 `real_structure` 计算。
 
 <details>
 <summary>解答</summary>

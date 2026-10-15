@@ -3,7 +3,7 @@
 # Tutoriel 13. Algèbres de Jordan : pourquoi la mécanique quantique utilise des *-algèbres
 
 Ce tutoriel accompagne le [chapitre 13](../../lecture_notes/fr/13_jordan_algebras.md) des notes de cours, qui étudie le produit de Jordan
-$x\circ y=\frac12(xy+yx)$ et la représentation quadratique $P(y)x=yxy$, les facteurs de spin $V_m$ et le cône de Lorentz,
+$`x\circ y=\frac12(xy+yx)`$ et la représentation quadratique $`P(y)x=yxy`$, les facteurs de spin $`V_m`$ et le cône de Lorentz,
 et montre que la structure de Jordan ne détermine le commutateur qu'au signe près, ce que les systèmes composés
 détectent ([proposition 13.12](../../lecture_notes/fr/13_jordan_algebras.md#r-13-12)). Nous utilisons ici le module `torch_vn_algebra.jordan` et la classe `SpinFactor` pour vérifier
 numériquement ces résultats.
@@ -14,9 +14,9 @@ numériquement ces résultats.
 
 *Notes de cours :* [section 13.1](../../lecture_notes/fr/13_jordan_algebras.md#s-13-1) : [lemme 13.1](../../lecture_notes/fr/13_jordan_algebras.md#r-13-1) (l'identité de Jordan) et [proposition 13.2](../../lecture_notes/fr/13_jordan_algebras.md#r-13-2) (la représentation quadratique).
 
-Le module `torch_vn_algebra.jordan` implémente le produit de Jordan $x\circ y$, les puissances de Jordan et la représentation
-quadratique $P(y)=2L(y)^2-L(y^2)$ sur les opérateurs d'une `TypeIAlgebra`, de façon paresseuse et par lots sur tous les secteurs.
-Le code vérifie le [lemme 13.1](../../lecture_notes/fr/13_jordan_algebras.md#r-13-1) et la [proposition 13.2](../../lecture_notes/fr/13_jordan_algebras.md#r-13-2) sur des éléments autoadjoints aléatoires de $M_2\oplus M_3$ :
+Le module `torch_vn_algebra.jordan` implémente le produit de Jordan $`x\circ y`$, les puissances de Jordan et la représentation
+quadratique $`P(y)=2L(y)^2-L(y^2)`$ sur les opérateurs d'une `TypeIAlgebra`, de façon paresseuse et par lots sur tous les secteurs.
+Le code vérifie le [lemme 13.1](../../lecture_notes/fr/13_jordan_algebras.md#r-13-1) et la [proposition 13.2](../../lecture_notes/fr/13_jordan_algebras.md#r-13-2) sur des éléments autoadjoints aléatoires de $`M_2\oplus M_3`$ :
 
 ```python
 import math
@@ -57,13 +57,13 @@ assert abs(torch.linalg.det(jp(p, q).matrix[0, 0]).real.item() + 1 / 16) < 1e-14
 
 ## 13.2 Facteurs de spin et cône de Lorentz
 
-*Notes de cours :* [section 13.2](../../lecture_notes/fr/13_jordan_algebras.md#s-13-2) : [lemme 13.3](../../lecture_notes/fr/13_jordan_algebras.md#r-13-3) (symétries anticommutantes), [théorème 13.4](../../lecture_notes/fr/13_jordan_algebras.md#r-13-4) (théorie spectrale de $V_m$) et [proposition 13.5](../../lecture_notes/fr/13_jordan_algebras.md#r-13-5).
+*Notes de cours :* [section 13.2](../../lecture_notes/fr/13_jordan_algebras.md#s-13-2) : [lemme 13.3](../../lecture_notes/fr/13_jordan_algebras.md#r-13-3) (symétries anticommutantes), [théorème 13.4](../../lecture_notes/fr/13_jordan_algebras.md#r-13-4) (théorie spectrale de $`V_m`$) et [proposition 13.5](../../lecture_notes/fr/13_jordan_algebras.md#r-13-5).
 
-La classe `SpinFactor(m)` stocke les éléments $x=(a,u)$ de $V_m$ sous forme de tenseurs de forme `(batch, m+1)`, avec le produit,
-la décomposition spectrale et le calcul fonctionnel du [théorème 13.4](../../lecture_notes/fr/13_jordan_algebras.md#r-13-4) ; `to_matrix` est l'application $\phi$ du
-[lemme 13.3](../../lecture_notes/fr/13_jordan_algebras.md#r-13-3), construite à partir des $s_i$ de `jordan.anticommuting_symmetries(m)`. Le code vérifie l'identité de Jordan
-et le théorème 13.4 dans $V_5$, la [proposition 13.5](../../lecture_notes/fr/13_jordan_algebras.md#r-13-5)(b) pour un $O$ orthogonal aléatoire et (c) pour $m\le6$, ainsi que les
-opérateurs de Majorana de la section 9.4 pour $p=3$ ([notes de cours, section 13.2](../../lecture_notes/fr/13_jordan_algebras.md#s-13-2)) :
+La classe `SpinFactor(m)` stocke les éléments $`x=(a,u)`$ de $`V_m`$ sous forme de tenseurs de forme `(batch, m+1)`, avec le produit,
+la décomposition spectrale et le calcul fonctionnel du [théorème 13.4](../../lecture_notes/fr/13_jordan_algebras.md#r-13-4) ; `to_matrix` est l'application $`\phi`$ du
+[lemme 13.3](../../lecture_notes/fr/13_jordan_algebras.md#r-13-3), construite à partir des $`s_i`$ de `jordan.anticommuting_symmetries(m)`. Le code vérifie l'identité de Jordan
+et le théorème 13.4 dans $`V_5`$, la [proposition 13.5](../../lecture_notes/fr/13_jordan_algebras.md#r-13-5)(b) pour un $`O`$ orthogonal aléatoire et (c) pour $`m\le6`$, ainsi que les
+opérateurs de Majorana de la section 9.4 pour $`p=3`$ ([notes de cours, section 13.2](../../lecture_notes/fr/13_jordan_algebras.md#s-13-2)) :
 
 ```python
 V = SpinFactor(5)
@@ -104,8 +104,8 @@ for j in range(1, pq + 1):
     assert close(s6[2 * j - 2], sign * (c + c.mH)) and close(s6[2 * j - 1], sign * 1j * (c - c.mH))
 ```
 
-Pour $m=1$, $s_1=Z$ engendre les matrices diagonales, de dimension $2=m+1$, et $V_1\cong\mathbb R\oplus\mathbb R$
-n'est pas simple. Les dimensions affichées sont $3,4$ pour $m=2$ ; $5,16$ pour $m=4$ ; $7,64$ pour $m=6$.
+Pour $`m=1`$, $`s_1=Z`$ engendre les matrices diagonales, de dimension $`2=m+1`$, et $`V_1\cong\mathbb R\oplus\mathbb R`$
+n'est pas simple. Les dimensions affichées sont $`3,4`$ pour $`m=2`$ ; $`5,16`$ pour $`m=4`$ ; $`7,64`$ pour $`m=6`$.
 
 <a id="s-13-3"></a>
 
@@ -114,9 +114,9 @@ n'est pas simple. Les dimensions affichées sont $3,4$ pour $m=2$ ; $5,16$ pour 
 *Notes de cours :* [section 13.3](../../lecture_notes/fr/13_jordan_algebras.md#s-13-3) : [proposition 13.6](../../lecture_notes/fr/13_jordan_algebras.md#r-13-6).
 
 `jordan.compare_with_star_algebra` calcule les dimensions de l'algèbre de Jordan engendrée par des matrices hermitiennes
-données et $1$, et de la partie autoadjointe de la $*$-algèbre qu'elles engendrent. Le code vérifie la
-[proposition 13.6](../../lecture_notes/fr/13_jordan_algebras.md#r-13-6)(a) pour un couple aléatoire de matrices symétriques réelles, $n=2,\dots,5$, et (b) : pour deux matrices
-hermitiennes $2\times2$ aléatoires, les dimensions sont $3$ et $4$, et l'unitaire $U$ de la démonstration les rend toutes deux réelles.
+données et $`1`$, et de la partie autoadjointe de la $`*`$-algèbre qu'elles engendrent. Le code vérifie la
+[proposition 13.6](../../lecture_notes/fr/13_jordan_algebras.md#r-13-6)(a) pour un couple aléatoire de matrices symétriques réelles, $`n=2,\dots,5`$, et (b) : pour deux matrices
+hermitiennes $`2\times2`$ aléatoires, les dimensions sont $`3`$ et $`4`$, et l'unitaire $`U`$ de la démonstration les rend toutes deux réelles.
 
 ```python
 for n in range(2, 6):                                            # Proposition 13.6(a), a random real pair
@@ -140,8 +140,8 @@ Um = W2 @ W1.mH                                                  # U (n . sigma)
 assert all((Um @ A @ Um.mH).imag.abs().max() < 1e-12 for A in H[:2])
 ```
 
-Trois matrices hermitiennes $2\times2$ génériques engendrent $\mathrm{Herm}_2(\mathbb C)$ tout entier :
-dimension $4$ dans les deux colonnes. Dans un bloc $M_2$ de $\mathcal M$, deux observables ne révèlent donc jamais la
+Trois matrices hermitiennes $`2\times2`$ génériques engendrent $`\mathrm{Herm}_2(\mathbb C)`$ tout entier :
+dimension $`4`$ dans les deux colonnes. Dans un bloc $`M_2`$ de $`\mathcal M`$, deux observables ne révèlent donc jamais la
 structure complexe ; une troisième le peut.
 
 <a id="s-13-5"></a>
@@ -150,9 +150,9 @@ structure complexe ; une troisième le peut.
 
 *Notes de cours :* [section 13.5](../../lecture_notes/fr/13_jordan_algebras.md#s-13-5) : [proposition 13.9](../../lecture_notes/fr/13_jordan_algebras.md#r-13-9) (la transposée), [proposition 13.11](../../lecture_notes/fr/13_jordan_algebras.md#r-13-11), [proposition 13.12](../../lecture_notes/fr/13_jordan_algebras.md#r-13-12) (systèmes composés) et [proposition 13.13](../../lecture_notes/fr/13_jordan_algebras.md#r-13-13) (dynamique).
 
-`jordan.transpose_map` est la transposée $T$, appliquée bloc par bloc. Le code vérifie la [proposition 13.9](../../lecture_notes/fr/13_jordan_algebras.md#r-13-9) (avec la
-matrice de Choi de $T$ sur $M_3$), la matrice $O_T=\mathrm{diag}(1,-1,1)$ de la transposée sur les vecteurs de Bloch, tirée de la
-démonstration de la [proposition 13.11](../../lecture_notes/fr/13_jordan_algebras.md#r-13-11), la formule du produit et $\circ_\theta$ de la [proposition 13.12](../../lecture_notes/fr/13_jordan_algebras.md#r-13-12) avec le
+`jordan.transpose_map` est la transposée $`T`$, appliquée bloc par bloc. Le code vérifie la [proposition 13.9](../../lecture_notes/fr/13_jordan_algebras.md#r-13-9) (avec la
+matrice de Choi de $`T`$ sur $`M_3`$), la matrice $`O_T=\mathrm{diag}(1,-1,1)`$ de la transposée sur les vecteurs de Bloch, tirée de la
+démonstration de la [proposition 13.11](../../lecture_notes/fr/13_jordan_algebras.md#r-13-11), la formule du produit et $`\circ_\theta`$ de la [proposition 13.12](../../lecture_notes/fr/13_jordan_algebras.md#r-13-12) avec le
 spectre de la transposée partielle de l'état de Bell, et la [proposition 13.13](../../lecture_notes/fr/13_jordan_algebras.md#r-13-13)(a), (b) :
 
 ```python
@@ -204,10 +204,10 @@ assert close(jm(z1, jm(z2, Hm)) - jm(z2, jm(z1, Hm)), 0.25 * cm(cm(z1, z2), Hm))
 
 *Notes de cours :* [section 13.6](../../lecture_notes/fr/13_jordan_algebras.md#s-13-6) : [proposition 13.14](../../lecture_notes/fr/13_jordan_algebras.md#r-13-14).
 
-D'après [notes de cours, proposition 13.14](../../lecture_notes/fr/13_jordan_algebras.md#r-13-14), $\mathrm{tr}|P(y)x|\le\mathrm{tr}\,P(y)|x|$ dans $V_m$, avec égalité si $x\in Q$ ou
-$-x\in Q$. Via $\phi$, qui vérifie $\phi(P(y)x)=\phi(y)\phi(x)\phi(y)$ et $\phi(|x|)=|\phi(x)|$, c'est aussi
-l'inégalité $\mathrm{Tr}|YXY|\le\mathrm{Tr}(Y|X|Y)$ de la proposition 11.9 pour $Y=Y^*$ ([notes de cours, section 13.6](../../lecture_notes/fr/13_jordan_algebras.md#s-13-6)).
-Le code vérifie les deux pour $m=2,4,7$ :
+D'après [notes de cours, proposition 13.14](../../lecture_notes/fr/13_jordan_algebras.md#r-13-14), $`\mathrm{tr}|P(y)x|\le\mathrm{tr}\,P(y)|x|`$ dans $`V_m`$, avec égalité si $`x\in Q`$ ou
+$`-x\in Q`$. Via $`\phi`$, qui vérifie $`\phi(P(y)x)=\phi(y)\phi(x)\phi(y)`$ et $`\phi(|x|)=|\phi(x)|`$, c'est aussi
+l'inégalité $`\mathrm{Tr}|YXY|\le\mathrm{Tr}(Y|X|Y)`$ de la proposition 11.9 pour $`Y=Y^*`$ ([notes de cours, section 13.6](../../lecture_notes/fr/13_jordan_algebras.md#s-13-6)).
+Le code vérifie les deux pour $`m=2,4,7`$ :
 
 ```python
 for m in (2, 4, 7):
@@ -230,9 +230,9 @@ for m in (2, 4, 7):
     assert (tr_rhs - tn >= -1e-10 * tr_rhs).all()                       # Proposition 11.9 for Y = Y*
 ```
 
-L'écart $\mathrm{tr}\,P(y)|x|-\mathrm{tr}|P(y)x|$ s'annule pour $x$ défini (proposition 13.14). Observation
+L'écart $`\mathrm{tr}\,P(y)|x|-\mathrm{tr}|P(y)x|`$ s'annule pour $`x`$ défini (proposition 13.14). Observation
 numérique (pas un théorème) : pour ces échantillons gaussiens, les écarts maximaux affichés sont de l'ordre de
-$10^1$–$10^2$, donc l'inégalité est loin d'être une égalité pour $x$ indéfini.
+$`10^1`$–$`10^2`$, donc l'inégalité est loin d'être une égalité pour $`x`$ indéfini.
 
 <a id="s-13-7"></a>
 
@@ -245,12 +245,12 @@ symétriques (qui comprennent les facteurs de spin) et, à partir d'une algèbre
 exceptionnelle de dimension 27 ; Magma dispose lui aussi de constructeurs d'algèbres de Jordan, y compris
 l'exceptionnelle. Ce sont des outils algébriques exacts plutôt que des outils numériques par lots. Les cônes de
 Lorentz sont standard en optimisation : les solveurs SOCP (ECOS, SCS, Clarabel, MOSEK, accessibles par la contrainte
-`SOC` de cvxpy) utilisent la décomposition spectrale de $V_m$ (pour projeter sur le cône) ou sa représentation
+`SOC` de cvxpy) utilisent la décomposition spectrale de $`V_m`$ (pour projeter sur le cône) ou sa représentation
 quadratique (pour la mise à l'échelle de Nesterov–Todd des méthodes de points intérieurs), et les solveurs
-semi-définis font de même pour $\mathrm{Herm}_n$. La bibliothèque ajoute les produits de Jordan, la
-représentation quadratique et la transposée comme opérateurs par lots et différentiables sur $\bigoplus_cM_{k_c}$ ;
+semi-définis font de même pour $`\mathrm{Herm}_n`$. La bibliothèque ajoute les produits de Jordan, la
+représentation quadratique et la transposée comme opérateurs par lots et différentiables sur $`\bigoplus_cM_{k_c}`$ ;
 les facteurs de spin avec leur calcul fonctionnel et leur représentation matricielle ; et un calcul randomisé de
-l'algèbre de Jordan engendrée par des matrices données, comparée à la $*$-algèbre qu'elles engendrent.
+l'algèbre de Jordan engendrée par des matrices données, comparée à la $`*`$-algèbre qu'elles engendrent.
 
 <a id="x-13"></a>
 
@@ -258,11 +258,11 @@ l'algèbre de Jordan engendrée par des matrices données, comparée à la $*$-a
 
 [Exercices](../../lecture_notes/fr/13_jordan_algebras.md#x-13) 1–3 des notes de cours, numériquement :
 
-- *Exercice 1* (homogénéité du cône de Lorentz) : $P(x^{1/2})1=x$, $P(y^{-1})P(y)=\mathrm{id}$ et $P(y)Q\subseteq Q$
-  dans $V_4$.
-- *Exercice 2* (états isotropes) : la plus petite valeur propre de $\theta(\rho_p)$ est $\frac{1-3p}4$.
-- *Exercice 3* (produits de points du bord) : $(1,w)\circ(1,w')\notin Q$ pour des vecteurs unitaires aléatoires $w,w'$, et
-  $(1,w)\circ(1,w)\in Q$.
+- *Exercice 1* (homogénéité du cône de Lorentz) : $`P(x^{1/2})1=x`$, $`P(y^{-1})P(y)=\mathrm{id}`$ et $`P(y)Q\subseteq Q`$
+  dans $`V_4`$.
+- *Exercice 2* (états isotropes) : la plus petite valeur propre de $`\theta(\rho_p)`$ est $`\frac{1-3p}4`$.
+- *Exercice 3* (produits de points du bord) : $`(1,w)\circ(1,w')\notin Q`$ pour des vecteurs unitaires aléatoires $`w,w'`$, et
+  $`(1,w)\circ(1,w)\in Q`$.
 
 <details>
 <summary>Solutions</summary>

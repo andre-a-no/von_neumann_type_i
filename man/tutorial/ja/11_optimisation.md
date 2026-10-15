@@ -5,16 +5,16 @@
 このチュートリアルは講義ノートの[第11章](../../lecture_notes/ja/11_optimisation.md)に対応する。同章は三つのトレース汎関数の極値を証明し、ユニタリの
 サンプリングではそれらが見つからない理由を説明する。ここでは、ライブラリの制約集合のパラメータ化
 （`optimize.PositiveParam`、`UnitaryParam`、`SelfAdjointParam`）とマルチスタート最適化器（`optimize.extremize`）を、
-それらの定理と照合する。$\Delta$ をマイケルソン・コントラスト、$\ell(\delta)=(1-\delta)/(1+\delta)$ とすると、三つの汎関数は次のとおりである：
+それらの定理と照合する。$`\Delta`$ をマイケルソン・コントラスト、$`\ell(\delta)=(1-\delta)/(1+\delta)`$ とすると、三つの汎関数は次のとおりである：
 
 | | 汎関数 | 変数 |
 |---|---|---|
-| 実験 1 | $z=\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)$ | $X,Y\ge0$、$U\in\mathcal M$ はユニタリ |
-| 実験 2 | $z=\mathrm{Tr}\lvert XY\rvert-\mathrm{Tr}(\lvert X\rvert\,\lvert Y\rvert)$ | $X=UX_0$、$Y=VY_0$、$X_0,Y_0\ge0$、$U,V$ はユニタリ |
-| 実験 3 | $z=\mathrm{Tr}(Y\lvert X\rvert Y)-\mathrm{Tr}\lvert YXY\rvert$ | $X=X^*$、$Y\ge0$ |
+| 実験 1 | $`z=\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)`$ | $`X,Y\ge0`$、$`U\in\mathcal M`$ はユニタリ |
+| 実験 2 | $`z=\mathrm{Tr}\lvert XY\rvert-\mathrm{Tr}(\lvert X\rvert\,\lvert Y\rvert)`$ | $`X=UX_0`$、$`Y=VY_0`$、$`X_0,Y_0\ge0`$、$`U,V`$ はユニタリ |
+| 実験 3 | $`z=\mathrm{Tr}(Y\lvert X\rvert Y)-\mathrm{Tr}\lvert YXY\rvert`$ | $`X=X^*`$、$`Y\ge0`$ |
 
-ここで $|X|$、$|Y|$ は $\lambda_{\max}=1$ に正規化し、それらのコントラストをパラメータとする。**包絡線** とは
-$\overline z(\delta)=\sup\{z:\Delta(|X|)=\delta\}$ と $\underline z(\delta)=\inf\{z:\Delta(|X|)=\delta\}$ のことであり、その他の
+ここで $`|X|`$、$`|Y|`$ は $`\lambda_{\max}=1`$ に正規化し、それらのコントラストをパラメータとする。**包絡線** とは
+$`\overline z(\delta)=\sup\{z:\Delta(|X|)=\delta\}`$ と $`\underline z(\delta)=\inf\{z:\Delta(|X|)=\delta\}`$ のことであり、その他の
 変数はすべて自由に動かす。
 
 <a id="s-11-1"></a>
@@ -23,17 +23,17 @@ $\overline z(\delta)=\sup\{z:\Delta(|X|)=\delta\}$ と $\underline z(\delta)=\in
 
 *講義ノート：* [11.1節](../../lecture_notes/ja/11_optimisation.md#s-11-1)；[補題 11.1](../../lecture_notes/ja/11_optimisation.md#r-11-1)、[命題 11.2](../../lecture_notes/ja/11_optimisation.md#r-11-2)。
 
-コントラスト $\delta$ を指定した `optimize.PositiveParam` は、講義ノートの[11.1節](../../lecture_notes/ja/11_optimisation.md#s-11-1)のパラメータ化を実装する：
-各スタートごとに二つの異なるスロット $s_\pm$（`spectrum.pin_max`、`spectrum.pin_min`。どの順序対も確率 $1/(D(D-1))$ をもつ）と
-ハール分布に従うランダムなユニタリ $U_0$（`unitary.base`。`random_unitary_operator` で抽出する。[補題 11.10](../../lecture_notes/ja/11_optimisation.md#r-11-10)）を
-抽出し、パラメータ $\theta$（`spectrum.theta`）と $G$（`unitary.G`）を次のように写す。
-$$
+コントラスト $`\delta`$ を指定した `optimize.PositiveParam` は、講義ノートの[11.1節](../../lecture_notes/ja/11_optimisation.md#s-11-1)のパラメータ化を実装する：
+各スタートごとに二つの異なるスロット $`s_\pm`$（`spectrum.pin_max`、`spectrum.pin_min`。どの順序対も確率 $`1/(D(D-1))`$ をもつ）と
+ハール分布に従うランダムなユニタリ $`U_0`$（`unitary.base`。`random_unitary_operator` で抽出する。[補題 11.10](../../lecture_notes/ja/11_optimisation.md#r-11-10)）を
+抽出し、パラメータ $`\theta`$（`spectrum.theta`）と $`G`$（`unitary.G`）を次のように写す。
+```math
 X(\theta,G)=U\mathrm{diag}(\lambda)U^*,\qquad U=U_0\,e^{G-G^*},\qquad
 \lambda_{s_+}=1,\quad\lambda_{s_-}=\ell(\delta),\quad\lambda_s=\ell+(1-\ell)\tfrac{1+\sin\theta_s}2\ \text{otherwise}.
-$$
-`UnitaryParam` は写像 $G\mapsto U_0e^{G-G^*}$ 単独であり、`SelfAdjointParam` は符号を加えて $X=U\mathrm{diag}(\sigma\lambda)U^*$ とする。
-[命題 11.2](../../lecture_notes/ja/11_optimisation.md#r-11-2) により、像は、抽出されたスロットに $1$ と $\ell(\delta)$ をもつコントラスト殻 $\mathcal P_\delta$ の作用素全体である。
-$[a,b]$ 内の自由なコントラストはパラメータが一つ増えるだけである。ライブラリの既定値は $[a,b]=[0,0.999]$ であり、以下のコードもこれを用いる。
+```
+`UnitaryParam` は写像 $`G\mapsto U_0e^{G-G^*}`$ 単独であり、`SelfAdjointParam` は符号を加えて $`X=U\mathrm{diag}(\sigma\lambda)U^*`$ とする。
+[命題 11.2](../../lecture_notes/ja/11_optimisation.md#r-11-2) により、像は、抽出されたスロットに $`1`$ と $`\ell(\delta)`$ をもつコントラスト殻 $`\mathcal P_\delta`$ の作用素全体である。
+$`[a,b]`$ 内の自由なコントラストはパラメータが一つ増えるだけである。ライブラリの既定値は $`[a,b]=[0,0.999]`$ であり、以下のコードもこれを用いる。
 
 コードは制約を検証し、さらに命題 11.2 を構成的に検証する：証明のパラメータが目標の作用素を再現する。
 
@@ -74,13 +74,13 @@ assert err < 1e-10
 
 *講義ノート：* [11.2節](../../lecture_notes/ja/11_optimisation.md#s-11-2)；[定理 11.4](../../lecture_notes/ja/11_optimisation.md#r-11-4)、[系 11.5](../../lecture_notes/ja/11_optimisation.md#r-11-5)、[命題 11.6](../../lecture_notes/ja/11_optimisation.md#r-11-6)、[系 11.7](../../lecture_notes/ja/11_optimisation.md#r-11-7)。
 
-[講義ノート、定理 11.4](../../lecture_notes/ja/11_optimisation.md#r-11-4)（フォン・ノイマンのトレース不等式）により $|\mathrm{Tr}(AB)|\le\sum_is_i(A)s_i(B)$ であり、
-[系 11.5](../../lecture_notes/ja/11_optimisation.md#r-11-5) により、固有値 $p,q$ をもつ自己共役な $P,Q$ に対し $\sum_ip^\downarrow_iq^\uparrow_i\le\mathrm{Tr}(PQ)\le\sum_ip^\downarrow_iq^\downarrow_i$、$P,Q\ge0$ に対し $\mathrm{Tr}(PQ)\le\|PQ\|_1\le\sum_ip^\downarrow_iq^\downarrow_i$ である。
-スペクトルを固定した実験 2 については、[命題 11.6](../../lecture_notes/ja/11_optimisation.md#r-11-6) により $\sup z=-\inf z=\sum_c\sum_ix^\downarrow_{c,i}(y^\downarrow_{c,i}-y^\uparrow_{c,i})$ であり、これは $X_0=\mathrm{diag}(x^\downarrow)$、$V=J$（反転置換）、$Y_0=\mathrm{diag}(y^\uparrow)$
-（それぞれ $\mathrm{diag}(y^\downarrow)$）で達成される。また[系 11.7](../../lecture_notes/ja/11_optimisation.md#r-11-7) は包絡線 $\sup z=-\inf z=\sum_c\lfloor k_c/2\rfloor(1-\ell_X)(1-\ell_Y)$ を与える。
+[講義ノート、定理 11.4](../../lecture_notes/ja/11_optimisation.md#r-11-4)（フォン・ノイマンのトレース不等式）により $`|\mathrm{Tr}(AB)|\le\sum_is_i(A)s_i(B)`$ であり、
+[系 11.5](../../lecture_notes/ja/11_optimisation.md#r-11-5) により、固有値 $`p,q`$ をもつ自己共役な $`P,Q`$ に対し $`\sum_ip^\downarrow_iq^\uparrow_i\le\mathrm{Tr}(PQ)\le\sum_ip^\downarrow_iq^\downarrow_i`$、$`P,Q\ge0`$ に対し $`\mathrm{Tr}(PQ)\le\|PQ\|_1\le\sum_ip^\downarrow_iq^\downarrow_i`$ である。
+スペクトルを固定した実験 2 については、[命題 11.6](../../lecture_notes/ja/11_optimisation.md#r-11-6) により $`\sup z=-\inf z=\sum_c\sum_ix^\downarrow_{c,i}(y^\downarrow_{c,i}-y^\uparrow_{c,i})`$ であり、これは $`X_0=\mathrm{diag}(x^\downarrow)`$、$`V=J`$（反転置換）、$`Y_0=\mathrm{diag}(y^\uparrow)`$
+（それぞれ $`\mathrm{diag}(y^\downarrow)`$）で達成される。また[系 11.7](../../lecture_notes/ja/11_optimisation.md#r-11-7) は包絡線 $`\sup z=-\inf z=\sum_c\lfloor k_c/2\rfloor(1-\ell_X)(1-\ell_Y)`$ を与える。
 
-ここで $\Delta(|X|)=\delta$ に対し $1-\ell_X=2\delta/(1+\delta)$ である。$k_c$ が奇数のとき中央の固有値は関係しない。コードは
-$k=3$、$C=2$ について定理 11.4、系 11.5、および命題 11.6 の極値配置を検証する。
+ここで $`\Delta(|X|)=\delta`$ に対し $`1-\ell_X=2\delta/(1+\delta)`$ である。$`k_c`$ が奇数のとき中央の固有値は関係しない。コードは
+$`k=3`$、$`C=2`$ について定理 11.4、系 11.5、および命題 11.6 の極値配置を検証する。
 
 ```python
 M5 = TypeIAlgebra([5], [5], precision='double')
@@ -122,9 +122,9 @@ assert abs(z_max - exact) < 1e-12 and abs(z_min + exact) < 1e-12 and abs(exact -
 
 *講義ノート：* [11.3節](../../lecture_notes/ja/11_optimisation.md#s-11-3)；[補題 11.8](../../lecture_notes/ja/11_optimisation.md#r-11-8)、[命題 11.9](../../lecture_notes/ja/11_optimisation.md#r-11-9)。
 
-[講義ノート、命題 11.9](../../lecture_notes/ja/11_optimisation.md#r-11-9) により、実験 3 では $z=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ge0$ であり、等号は $YX_+Y^2X_-Y=0$ のときかつそのときに限り
-成り立つ。特に $XY=YX$ ならば等号が成り立つ。$X=\mathrm{diag}(1,-1,0)$ と、行が $(1,0,a)$, $(0,1,0)$, $(a,0,1)$, $|a|<1$ である $Y$ に対しては、$a\ne0$ ならば $XY\ne YX$ で
-あるにもかかわらず等号が成り立つ。コードは両方を（$a=0.5$ で）検証する。`X.abs()` は $|X|$、`trace_norm()` は $\|\cdot\|_1$ である。
+[講義ノート、命題 11.9](../../lecture_notes/ja/11_optimisation.md#r-11-9) により、実験 3 では $`z=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ge0`$ であり、等号は $`YX_+Y^2X_-Y=0`$ のときかつそのときに限り
+成り立つ。特に $`XY=YX`$ ならば等号が成り立つ。$`X=\mathrm{diag}(1,-1,0)`$ と、行が $`(1,0,a)`$, $`(0,1,0)`$, $`(a,0,1)`$, $`-1<a<1`$ である $`Y`$ に対しては、$`a\ne0`$ ならば $`XY\ne YX`$ で
+あるにもかかわらず等号が成り立つ。コードは両方を（$`a=0.5`$ で）検証する。`X.abs()` は $`|X|`$、`trace_norm()` は $`\|\cdot\|_1`$ である。
 
 ```python
 def z_exp3(X, Y):
@@ -148,20 +148,20 @@ assert abs(z_exp3(Xe, Ye).item()) < 1e-12 and (Xe @ Ye - Ye @ Xe).operator_norm(
 
 *講義ノート：* [11.4節](../../lecture_notes/ja/11_optimisation.md#s-11-4)；[補題 11.10](../../lecture_notes/ja/11_optimisation.md#r-11-10)、[命題 11.11](../../lecture_notes/ja/11_optimisation.md#r-11-11)、[系 11.12](../../lecture_notes/ja/11_optimisation.md#r-11-12)、[補題 11.13](../../lecture_notes/ja/11_optimisation.md#r-11-13)。
 
-$|\mathrm{Tr}(AU)|$ は、その最大値 $\|A\|_1$ と比べて典型的にどれほどの大きさか。ライブラリは $U$ を、
-**ジニブル行列** $Z$（成分は独立で密度
-$\pi^{-1}e^{-|z|^2}$ をもつ。Mezzadri の処方）の QR 分解 $Z=QR$（$R_{ii}>0$）の因子 $Q$ として、各ブロックで独立にサンプリングする。
+$`|\mathrm{Tr}(AU)|`$ は、その最大値 $`\|A\|_1`$ と比べて典型的にどれほどの大きさか。ライブラリは $`U`$ を、
+**ジニブル行列** $`Z`$（成分は独立で密度
+$`\pi^{-1}e^{-|z|^2}`$ をもつ。Mezzadri の処方）の QR 分解 $`Z=QR`$（$`R_{ii}>0`$）の因子 $`Q`$ として、各ブロックで独立にサンプリングする。
 
-[講義ノート、命題 11.11](../../lecture_notes/ja/11_optimisation.md#r-11-11) により、ハール分布に従う $U\in U(k)$ に対し $\mathbb E|\mathrm{Tr}(AU)|^2=\|A\|_2^2/k$ であり、
-[系 11.12](../../lecture_notes/ja/11_optimisation.md#r-11-12) により、スペクトルが $[a,b]$、$a>0$ に含まれる $X,Y\ge0$ に対し、$|\mathrm{Tr}(XUY)|$ の二乗平均平方根は
-$U$ についての最大値の高々 $\min(1/\sqrt k,b^2/(a^2k))$ 倍であり、$\mathbb P\big(|\mathrm{Tr}(XUY)|\ge\mathrm{Tr}(XY)\big)\le b^4/(a^4k^2)$ である。
+[講義ノート、命題 11.11](../../lecture_notes/ja/11_optimisation.md#r-11-11) により、ハール分布に従う $`U\in U(k)`$ に対し $`\mathbb E|\mathrm{Tr}(AU)|^2=\|A\|_2^2/k`$ であり、
+[系 11.12](../../lecture_notes/ja/11_optimisation.md#r-11-12) により、スペクトルが $`[a,b]`$、$`a>0`$ に含まれる $`X,Y\ge0`$ に対し、$`|\mathrm{Tr}(XUY)|`$ の二乗平均平方根は
+$`U`$ についての最大値の高々 $`\min(1/\sqrt k,b^2/(a^2k))`$ 倍であり、$`\mathbb P\big(|\mathrm{Tr}(XUY)|\ge\mathrm{Tr}(XY)\big)\le b^4/(a^4k^2)`$ である。
 
-したがって、$N$ 個のハール・サンプルが $|\mathrm{Tr}(XUY)|\le\mathrm{Tr}(XY)$ の破れを見つける確率は高々
-$Nb^4/(a^4k^2)$ である（$N$ 個の事象の和）。破れは可換でないすべての組に対して存在する（命題 3.9）にもかかわらず、である。
-この上界が意味をもつのは $k>\sqrt N\,b^2/a^2$ のときだけである（$b/a=6$、$N=2000$ では $k>1609$）。数値的には、サンプルは
-それよりはるかに小さい $k$ ですでに破れを見逃す（下記）。コードは命題 11.11 をモンテカルロ法で検証し（この
-シード固定の実行では、標本平均は厳密な値から標準誤差の5倍以内にある）、$[0.2,1.2]$ 上で一様なスペクトル（$b/a=6$）に対して、
-系 11.12 の比、$\sup z$、および $2000$ 個のサンプルのうち最良の $z$ を出力する。後二者はいずれも $\mathrm{Tr}(XY)$ に対する相対値である。
+したがって、$`N`$ 個のハール・サンプルが $`|\mathrm{Tr}(XUY)|\le\mathrm{Tr}(XY)`$ の破れを見つける確率は高々
+$`Nb^4/(a^4k^2)`$ である（$`N`$ 個の事象の和）。破れは可換でないすべての組に対して存在する（命題 3.9）にもかかわらず、である。
+この上界が意味をもつのは $`k>\sqrt N\,b^2/a^2`$ のときだけである（$`b/a=6`$、$`N=2000`$ では $`k>1609`$）。数値的には、サンプルは
+それよりはるかに小さい $`k`$ ですでに破れを見逃す（下記）。コードは命題 11.11 をモンテカルロ法で検証し（この
+シード固定の実行では、標本平均は厳密な値から標準誤差の5倍以内にある）、$`[0.2,1.2]`$ 上で一様なスペクトル（$`b/a=6`$）に対して、
+系 11.12 の比、$`\sup z`$、および $`2000`$ 個のサンプルのうち最良の $`z`$ を出力する。後二者はいずれも $`\mathrm{Tr}(XY)`$ に対する相対値である。
 
 ```python
 def random_pair(alg_k):
@@ -189,21 +189,21 @@ for k in (2, 4, 8, 16, 32):
 ```
 
 *数値的観察*（出力される表。このシード固定の実行についてのみ assert する）：比は証明された上界
-$\min(1/\sqrt k,b^2/(a^2k))$ を下回り続け、$k$ が2倍になるごとにほぼ半分になる。すなわち $1/k$ のように減少する。
-また $k=4$ 以降では $2000$ 個のサンプルのうち最良のものでも $z=0$ にさえ届かない。これに対し勾配探索は、下記の実行で
-両方の極値に近づく（これも数値的観察である）。組 `Xf, Yf` については、$U$ に関する両方の極値が分かっている。
+$`\min(1/\sqrt k,b^2/(a^2k))`$ を下回り続け、$`k`$ が2倍になるごとにほぼ半分になる。すなわち $`1/k`$ のように減少する。
+また $`k=4`$ 以降では $`2000`$ 個のサンプルのうち最良のものでも $`z=0`$ にさえ届かない。これに対し勾配探索は、下記の実行で
+両方の極値に近づく（これも数値的観察である）。組 `Xf, Yf` については、$`U`$ に関する両方の極値が分かっている。
 
-[講義ノート、補題 11.13](../../lecture_notes/ja/11_optimisation.md#r-11-13) により、$k\ge2$ ならば任意の $A\in M_k(\mathbb C)$ に対し $\min_U|\mathrm{Tr}(AU)|=0$ である。
+[講義ノート、補題 11.13](../../lecture_notes/ja/11_optimisation.md#r-11-13) により、$`k\ge2`$ ならば任意の $`A\in M_k(\mathbb C)`$ に対し $`\min_U|\mathrm{Tr}(AU)|=0`$ である。
 
-したがって $\inf_Uz=-\mathrm{Tr}(XY)$、$\sup_Uz=\|YX\|_1-\mathrm{Tr}(XY)$ である（命題 3.9）。`extremize` を一回
-呼び出せば両方が近似される。$12$ 個のスタートが $z$ を最大化し、$12$ 個が $-z$ を最大化する（この実行では相対精度
-$10^{-3}$ まで。下で assert する）。命題 11.11 により $|\mathrm{Tr}(XUY)|$ の二乗平均平方根は $\|YX\|_2/\sqrt k$ である。
-系 11.12 の証明における評価（スペクトルは $[a,b]$ 内）により $\mathbb E|\mathrm{Tr}(XUY)|^2\le b^4$ かつ
-$\mathrm{Tr}(XY)\ge ka^2$ であるから、マルコフの不等式により $\varepsilon>0$ に対し
-$\mathbb P\big(z\ge-(1-\varepsilon)\mathrm{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)$ が成り立つ：$k$ が大きいとき、
-$z$ は高い確率でその下限に近い。
-*数値的観察*（このシード固定の実行について assert する）：サンプリングは下限の $1\,\%$ 以内に達するが、
-$z=0$ にさえ届かない。一方、上限は正である。
+したがって $`\inf_Uz=-\mathrm{Tr}(XY)`$、$`\sup_Uz=\|YX\|_1-\mathrm{Tr}(XY)`$ である（命題 3.9）。`extremize` を一回
+呼び出せば両方が近似される。$`12`$ 個のスタートが $`z`$ を最大化し、$`12`$ 個が $`-z`$ を最大化する（この実行では相対精度
+$`10^{-3}`$ まで。下で assert する）。命題 11.11 により $`|\mathrm{Tr}(XUY)|`$ の二乗平均平方根は $`\|YX\|_2/\sqrt k`$ である。
+系 11.12 の証明における評価（スペクトルは $`[a,b]`$ 内）により $`\mathbb E|\mathrm{Tr}(XUY)|^2\le b^4`$ かつ
+$`\mathrm{Tr}(XY)\ge ka^2`$ であるから、マルコフの不等式により $`\varepsilon>0`$ に対し
+$`\mathbb P\big(z\ge-(1-\varepsilon)\mathrm{Tr}(XY)\big)\le b^4/(\varepsilon^2a^4k^2)`$ が成り立つ：$`k`$ が大きいとき、
+$`z`$ は高い確率でその下限に近い。
+*数値的観察*（このシード固定の実行について assert する）：サンプリングは下限の $`1\,\%`$ 以内に達するが、
+$`z=0`$ にさえ届かない。一方、上限は正である。
 
 ```python
 trXY = (Xf @ Yf).trace.real
@@ -226,38 +226,38 @@ assert z_mc.max().item() < 0                                               # ...
 
 ## 11.5 包絡線のためのマルチスタート探索
 
-*講義ノート：* [11.5節](../../lecture_notes/ja/11_optimisation.md#s-11-5)；[命題 11.14](../../lecture_notes/ja/11_optimisation.md#r-11-14)、[系 11.7](../../lecture_notes/ja/11_optimisation.md#r-11-7)、[命題 11.9](../../lecture_notes/ja/11_optimisation.md#r-11-9)。
+*講義ノート：* [11.5節](../../lecture_notes/ja/11_optimisation.md#s-11-5)；[命題 11.14](../../lecture_notes/ja/11_optimisation.md#r-11-14)、[系 11.7](../../lecture_notes/ja/11_optimisation.md#r-11-7)、[命題 11.9](../../lecture_notes/ja/11_optimisation.md#r-11-9)、[命題 11.15](../../lecture_notes/ja/11_optimisation.md#r-11-15)、[系 11.16](../../lecture_notes/ja/11_optimisation.md#r-11-16)。
 
 `optimize.extremize(objective, params, maximize)` は Adam を `steps` ステップずつ `rounds` ラウンド実行し（学習率は
-`lr * decay**round`、損失は $\mp\sum_b\text{objective}_b$）、各ラウンドの後にユニタリ・チャートを再中心化し、
+`lr * decay**round`、損失は $`\mp\sum_b\text{objective}_b`$）、各ラウンドの後にユニタリ・チャートを再中心化し、
 **スタートごとに**、勾配法の反復点と最終点（一度）で計算された目的関数の値のうち最大のもの（`maximize=False` のときは
-最小のもの）を返す。バッチの各要素は、それぞれ固有のスロット、符号、$U_0$、コントラストをもつ独立なスタートである：
-Adam は座標ごとに作用するから、目的関数の第 $b$ 成分が第 $b$ のパラメータだけに依存するならば（以下のすべての目的関数が
+最小のもの）を返す。バッチの各要素は、それぞれ固有のスロット、符号、$`U_0`$、コントラストをもつ独立なスタートである：
+Adam は座標ごとに作用するから、目的関数の第 $`b`$ 成分が第 $`b`$ のパラメータだけに依存するならば（以下のすべての目的関数が
 そうである）、スタート同士は相互作用しない。
 `SelfAdjointParam` の符号は離散的である：ラウンドの間に、`discrete_step` はスタートごとに単一の符号反転を八回
 （それぞれ一様にランダムなスロットで）、一つずつ順に試し、目的関数を改善する反転をそのつど保持する。
 
 厳密な算術では、すべての反復は許容的である（命題 11.2 とその後の注意）から、返される値はすべて許容点における
-$z$ の値である。浮動小数点ではそれは丸め誤差を除いてその値である（下の assert は $10^{-12}$ を許す）。したがって最大化は上限の
+$`z`$ の値である。浮動小数点ではそれは丸め誤差を除いてその値である（下の assert は $`10^{-12}`$ を許す）。したがって最大化は上限の
 **下界** を、最小化は下限の上界を与え、それ以上のものではない——局所探索は局所極値で止まりうる。
 逆向きの評価には、系 11.7 や命題 11.9 のような証明か、凸緩和（11.6節）が必要である。計算された包絡線は
 (i) 閉じた形と照合し、(ii) 小さな解の直和のような手で構成した配置と照合し（包絡線はそれを下回ってはならない）、
 (iii) 構造化されたサンプル（2準位のスペクトル、置換基底）と照合する。後者の値もまた達成される値である。
 
-[講義ノート、命題 11.14](../../lecture_notes/ja/11_optimisation.md#r-11-14) により、すべての $k_c\ge2$ ならば、実験 1 の下側包絡線は $\underline z(\delta)=-\big(D-2\delta/(1+\delta)\big)$ である。
+[講義ノート、命題 11.14](../../lecture_notes/ja/11_optimisation.md#r-11-14) により、すべての $`k_c\ge2`$ ならば、実験 1 の下側包絡線は $`\underline z(\delta)=-\big(D-2\delta/(1+\delta)\big)`$ である。
 
-コードは $M_2\oplus M_2$ 上で命題 11.14 を、$M_3\oplus M_3$ 上で系 11.7 を（両方のコントラストを指定、
-$k=3$ は奇数）、そして命題 11.9 を検証する。上限と下限は、上と同様に一回の呼び出しで求める。片側の assert（証明された
+コードは $`M_2\oplus M_2`$ 上で命題 11.14 を、$`M_3\oplus M_3`$ 上で系 11.7 を（両方のコントラストを指定、
+$`k=3`$ は奇数）、そして命題 11.9 を検証する。上限と下限は、上と同様に一回の呼び出しで求める。片側の assert（証明された
 極値を越える値が返されないこと）はこれらの定理の帰結である。探索が極値から所定の許容誤差以内に達するという assert は、
 このシード固定の実行の数値的観察である。キーワード `is_self_adjoint` は
-トレースノルムのアルゴリズム（特異値、あるいは $YXY$ に対しては固有値）を、各ステップで判定することなく選択する。最後の
-検証は型 (ii) である：実験 3 の $z$ は直和について加法的であり、直和のコントラストは各成分のコントラストの
-最大値である（演習 3）から、コードと同様に $\Delta(Y)$ を $[0,0.999]$ 内で自由とした実験 3 の包絡線について、
-$$
+トレースノルムのアルゴリズム（特異値、あるいは $`YXY`$ に対しては固有値）を、各ステップで判定することなく選択する。最後の
+検証は型 (ii) である：実験 3 の $`z`$ は直和について加法的であり、直和のコントラストは各成分のコントラストの
+最大値である（演習 3）から、コードと同様に $`\Delta(Y)`$ を $`[0,0.999]`$ 内で自由とした実験 3 の包絡線について、
+```math
 \overline z_{M_2\oplus M_2}(\delta)\ \ge\ \overline z_{M_2}(\delta)+\sup_{\delta'\le\delta}\overline z_{M_2}(\delta');
-$$
-特に、$M_2$ 上でコントラスト $\delta$ と $\delta'\le\delta$ において達成される二つの値の和は、$M_2\oplus M_2$ 上でコントラスト
-$\delta$ において達成される値である。
+```
+特に、$`M_2`$ 上でコントラスト $`\delta`$ と $`\delta'\le\delta`$ において達成される二つの値の和は、$`M_2\oplus M_2`$ 上でコントラスト
+$`\delta`$ において達成される値である。
 
 ```python
 torch.manual_seed(1)
@@ -305,21 +305,112 @@ sup_M22, inf3 = best3[0].item(), -best3[1].item()
 s_M2 = exp3(TypeIAlgebra([2], [2], precision='double'),
             torch.tensor([0.0, 0.5], dtype=torch.float64).repeat_interleave(S), 1.0)
 direct_sum = (s_M2[1] + s_M2.max()).item()                                 # delta = 0.5, best delta' <= 0.5
-conj = [(1 - dl) * (2 * 0.999 / 1.999) ** 2 for dl in (0.0, 0.5)]          # unproven closed form, d = 0.999
+closed = [(1 - dl) * (2 * 0.999 / 1.999) ** 2 for dl in (0.0, 0.5)]        # Corollary 11.16, d = 0.999
 print(f"Exp. 3  inf {inf3:.1e};  sup for M_2 at delta = 0, 0.5: {s_M2[0]:.5f}, {s_M2[1]:.5f}"
-      f"  (closed form {conj[0]:.5f}, {conj[1]:.5f})")
+      f"  (closed form {closed[0]:.5f}, {closed[1]:.5f})")
 print(f"        sup for M_2 (+) M_2 at 0.5: search {sup_M22:.5f}, direct sum {direct_sum:.5f}")
 assert inf3 >= -1e-12 and inf3 < 1e-6                                       # Proposition 11.9
 assert sup_M22 >= direct_sum - 5e-3 * direct_sum                           # (ii), up to 0.5 %
+assert (s_M2 <= torch.tensor(closed, dtype=torch.float64) + 1e-12).all()   # Corollary 11.16: one-sided
+assert sup_M22 <= (2 - 0.5) * (2 * 0.999 / 1.999) ** 2 + 1e-12
 ```
 
-*数値的観察*（この実行で出力される値）。$M_2\oplus M_2$ 上の探索は直和を約 $0.2\,\%$ 下回る：探索は完全には収束しておらず、
-$\overline z_{M_2\oplus M_2}(0.5)$ の最良の下界は大きい方の数である——これを検出することが検証 (ii)
-の目的である。$M_2$ に対する値は $(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2$ と $10^{-4}$ まで一致する。ここで
-$d=0.999$ は $Y$ に許される最大のコントラストである。この閉じた形は本講義の定理**ではない**：解説論文はこれを
-（実環において）数値的に観察したが証明はしておらず、コードはこれを出力するだけで、何も assert しない。より大きなブロックに
-ついては、実験 1 と実験 3 の上側包絡線の閉じた形を我々は知らない。その場合、計算された曲線は下界（達成される値）であって、
-それ以上のものではない。
+*数値的観察*（この実行で出力される値）。$`M_2\oplus M_2`$ 上の探索は直和を約 $`0.2\,\%`$ 下回る：探索は完全には収束しておらず、
+$`\overline z_{M_2\oplus M_2}(0.5)`$ の最良の下界は大きい方の数である——これを検出することが検証 (ii)
+の目的である。$`M_2`$ に対する値は $`(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2`$ と $`10^{-4}`$ まで一致する。ここで
+$`d=0.999`$ は $`Y`$ に許される最大のコントラストである。この閉じた形は解説論文で最初に数値的に観察されたもので、
+[系 11.16](../../lecture_notes/ja/11_optimisation.md#r-11-16)（下記）の上側包絡線である。コードは証明された向き（それを
+超える値がないこと）だけを assert する。同じ系により直和は最適である：$`\overline z_{M_2\oplus M_2}(0.5)=1.5\,(2d/(1+d))^2`$。
+任意のサイズのブロックに対する実験 1 と実験 3 の上側包絡線は
+[定理 11.20](../../lecture_notes/ja/11_optimisation.md#r-11-20)（[11.7節](#s-11-7)）で与えられる。
+
+[講義ノート、命題 11.15](../../lecture_notes/ja/11_optimisation.md#r-11-15) により、$`M_2`$ 上で $`X`$（実験 3 では $`|X|`$）の
+スペクトル $`x_1\ge x_2`$ と $`Y`$ のスペクトル $`y_1\ge y_2`$ に対し、$`\sup z`$ は実験 1 では
+$`(x_1-x_2)^2(y_1-y_2)^2/(4(x_1+x_2)(y_1+y_2))`$、実験 3 では $`\frac{2x_1x_2}{x_1+x_2}(y_1-y_2)^2`$ である。
+$`e_1`$ を絶対値 $`x_1`$ の固有値に対する $`X`$ の固有ベクトル、$`f_1`$ を $`y_1`$ に対する $`Y`$ の固有ベクトルとすると、
+上限は $`\gamma=|\langle e_1,f_1\rangle|^2`$ が $`\gamma_1=\frac14+\frac S{2q}`$（実験 1、$`|\mathrm{Tr}(XUY)|=\|YX\|_1`$ とともに）
+または $`\gamma_3=\frac Sq`$（実験 3、$`X=\mathrm{diag}(x_1,-x_2)`$）のとき達成される。ここで $`S=x_1y_2+x_2y_1`$、
+$`q=(x_1+x_2)(y_1+y_2)`$ である。
+[系 11.16](../../lecture_notes/ja/11_optimisation.md#r-11-16) により、サイズ $`2`$ の $`C`$ 個のブロックで $`\Delta(|X|)=\delta`$、
+$`\Delta(Y)=\delta'`$ のとき、実験 1 では $`\sup z=C\delta^2\delta'^2/((1+\delta)(1+\delta'))`$、
+$`\inf z=-(2C-1+\ell(\delta)\ell(\delta'))`$、実験 3 では $`\sup z=(C-\delta)\big(2\delta'/(1+\delta')\big)^2`$ である。両方の
+上限は $`\delta'`$ について増加する：$`\Delta(Y)`$ を $`[0,d]`$ で自由とすると上側包絡線は $`\delta'=d`$ での値であり、
+$`d\to1`$ のときそれらは $`C\delta^2/(2(1+\delta))`$ と $`C-\delta`$、すなわち特異な $`Y`$
+（$`\Delta(Y)=1`$）での値に近づく。
+
+コードは $`C=1,2`$ について証明の実の最大化元を構成し（`from_blocks`）、コントラストと値を確かめ、ランダムな複素の組で
+命題 11.15 の上界を確かめ、各ブロックの階数 1 の射影で極限 $`d\to1`$ を達成し、さらに $`M_2`$ 上の実験 1 について
+$`\Delta(X)`$ に沿ったマルチスタート探索（$`\Delta(Y)`$ は $`[0,0.999]`$ で自由）を行う。その結果は閉じた形（定理）を
+超えてはならず、この実行では閉じた形との差が $`10^{-3}`$ 以内に収まる。
+
+```python
+def rot(gamma):                                                             # real basis f with |<e_1, f_1>|^2 = gamma
+    t = math.acos(math.sqrt(gamma))
+    return torch.tensor([[math.cos(t), -math.sin(t)], [math.sin(t), math.cos(t)]], dtype=torch.float64)
+
+def gammas(x1, x2, y1, y2):                                                 # gamma_1 (Exp. 1), gamma_3 (Exp. 3)
+    S, q = x1 * y2 + x2 * y1, (x1 + x2) * (y1 + y2)
+    return 0.25 + S / (2 * q), S / q
+
+env1 = lambda C, dl, dp: C * dl ** 2 * dp ** 2 / ((1 + dl) * (1 + dp))     # Corollary 11.16(a)
+env3 = lambda C, dl, dp: (C - dl) * (2 * dp / (1 + dp)) ** 2               # Corollary 11.16(b)
+
+def maximisers(C, dl, dp):
+    """Exp. 1: (X, U, Y) and Exp. 3: (X, Y) attaining Corollary 11.16 on C blocks of size 2."""
+    a2 = TypeIAlgebra([2] * C, [2] * C, complex_valued=False, precision='double')
+    lx, ly = ell(dl), ell(dp)
+    R = rot(gammas(1.0, lx, 1.0, ly)[0])
+    X0 = torch.diag(torch.tensor([1.0, lx], dtype=torch.float64))
+    Y0 = R @ torch.diag(torch.tensor([1.0, ly], dtype=torch.float64)) @ R.T
+    W, _, Vh = torch.linalg.svd(Y0 @ X0)                                    # Y X = W Sigma V^T, U = V W^T
+    exp1 = [a2.from_blocks([m] * C) for m in (X0, Vh.T @ W.T, Y0)]
+    xs = [lx] + [1.0] * (C - 1)                                             # |X|: {1, ell} in block 1, {1, 1} else
+    Rs = [rot(gammas(1.0, x2, 1.0, ly)[1]) for x2 in xs]
+    X3 = a2.from_blocks([torch.diag(torch.tensor([1.0, -x2], dtype=torch.float64)) for x2 in xs])
+    Y3 = a2.from_blocks([Rc @ torch.diag(torch.tensor([1.0, ly], dtype=torch.float64)) @ Rc.T for Rc in Rs])
+    return exp1, (X3, Y3)
+
+print(" C  delta  delta'   Exp. 1 z / formula      Exp. 3 z / formula")
+for C in (1, 2):
+    for dl, dp in ((0.5, 0.8), (0.9, 0.3), (0.4, 1.0)):
+        (X, U, Y), (X3, Y3) = maximisers(C, dl, dp)
+        assert abs(X.michelson_contrast.item() - dl) < 1e-12 and abs(Y.michelson_contrast.item() - dp) < 1e-12
+        assert abs(X3.abs().michelson_contrast.item() - dl) < 1e-12 and abs(Y3.michelson_contrast.item() - dp) < 1e-12
+        z1v = ((X @ U @ Y).trace.abs() - (X @ Y).trace.real).item()
+        z3v = ((Y3 @ X3.abs() @ Y3).trace.real - (Y3 @ X3 @ Y3).trace_norm()).item()
+        print(f" {C}   {dl:.1f}    {dp:.1f}    {z1v:.6f} / {env1(C, dl, dp):.6f}    {z3v:.6f} / {env3(C, dl, dp):.6f}")
+        assert abs(z1v - env1(C, dl, dp)) < 1e-12 and abs(z3v - env3(C, dl, dp)) < 1e-12
+print("limits d -> 1 at delta = 0.4:", env1(1, 0.4, 1.0), 0.4 ** 2 / (2 * 1.4), env3(1, 0.4, 1.0), 1 - 0.4)
+
+# Proposition 11.15 on random complex pairs in M_2: no pair exceeds the bounds
+M2c = TypeIAlgebra([2], [2], precision='double')
+x = torch.rand(4000, 2, dtype=torch.float64).sort(-1, descending=True)[0]
+y = torch.rand(4000, 2, dtype=torch.float64).sort(-1, descending=True)[0]
+V, Wc = M2c.random_unitary_operator(4000).matrix, M2c.random_unitary_operator(4000).matrix
+Xr = M2c.operator(V @ torch.diag_embed(x.to(V.dtype)).unsqueeze(1) @ V.mH, is_positive=True)
+Xi = M2c.operator(V @ torch.diag_embed((x * torch.tensor([1.0, -1.0])).to(V.dtype)).unsqueeze(1) @ V.mH,
+                  is_self_adjoint=True)
+Yr = M2c.operator(Wc @ torch.diag_embed(y.to(V.dtype)).unsqueeze(1) @ Wc.mH, is_positive=True)
+(x1, x2), (y1, y2) = x.unbind(-1), y.unbind(-1)
+sup1 = (Yr @ Xr).trace_norm() - (Xr @ Yr).trace.real                        # sup over U (Theorem 1.9)
+z3r = (Yr @ Xi.abs() @ Yr).trace.real - M2c.operator((Yr @ Xi @ Yr).matrix, is_self_adjoint=True).trace_norm()
+assert (sup1 <= (x1 - x2) ** 2 * (y1 - y2) ** 2 / (4 * (x1 + x2) * (y1 + y2)) + 1e-12).all()
+assert (z3r <= 2 * x1 * x2 / (x1 + x2) * (y1 - y2) ** 2 + 1e-12).all()
+
+# multistart search for Exp. 1 on M_2 along Delta(X), Delta(Y) free in [0, 0.999]
+torch.manual_seed(2)
+M2r = TypeIAlgebra([2], [2], complex_valued=False, precision='double')
+gx = torch.tensor([0.3, 0.6, 0.9], dtype=torch.float64)
+Xp, Yp1, Up = opt.PositiveParam(M2r, 3 * S, delta=gx.repeat_interleave(S)), opt.PositiveParam(M2r, 3 * S), \
+    opt.UnitaryParam(M2r, 3 * S)
+def z1m():
+    xm, ym = Xp.operator(), Yp1.operator()
+    return (xm @ Up.operator() @ ym).trace.abs() - (xm @ ym).trace.real
+sup1m = opt.extremize(z1m, [Xp, Yp1, Up], maximize=True, rounds=4, steps=30).reshape(3, S).max(1)[0]
+exact1m = env1(1, gx, 0.999)                                                # Corollary 11.16(c)
+print("Exp. 1 sup on M_2:", [f"{v:.5f}" for v in sup1m.tolist()], " closed form:", [f"{v:.5f}" for v in exact1m.tolist()])
+assert (sup1m <= exact1m + 1e-12).all() and ((exact1m - sup1m) / exact1m).max() < 1e-3
+```
 
 <a id="s-11-6"></a>
 
@@ -331,18 +422,169 @@ Adam）とともに提供しており、再中心化したチャートでの Ada
 **cvxpy** は作用素変数の凸問題を SDP ソルバーに渡し、ソルバーは最適値を双対証明書とともに返す。どちらもソルバーの
 許容誤差の範囲での話である。緩和——より大きな実行可能集合上の凸問題——は上限を上から抑える。これは局所探索では
 得られない方向である。**NCTSSOS**、**ncpol2sdpa**、**NCSOStools** は、非可換
-多項式の固有値とトレースをすべての次元で一度に評価する（0.3節）。ライブラリが加えるのは、$\bigoplus_cM_{k_c}$ のスペクトル制約と
+多項式の固有値とトレースをすべての次元で一度に評価する（0.3節）。ライブラリが加えるのは、$`\bigoplus_cM_{k_c}`$ のスペクトル制約と
 コントラスト制約の厳密なパラメータ化（極値はどのセクターにもありうる）、ブロック構造を
 保つユニタリ、そして多数のスタートと制約値に対する、CPU または GPU 上での一回のバッチ計算である。ライブラリは極値の
 候補と上限の下界を生み出す。残りは証明か緩和が補わなければならない。
+
+<a id="s-11-7"></a>
+
+## 11.7 任意のサイズのブロックに対する包絡線
+
+*講義ノート：* [11.7節](../../lecture_notes/ja/11_optimisation.md#s-11-7)；[補題 11.17](../../lecture_notes/ja/11_optimisation.md#r-11-17)、[補題 11.18](../../lecture_notes/ja/11_optimisation.md#r-11-18)、[命題 11.19](../../lecture_notes/ja/11_optimisation.md#r-11-19)、[定理 11.20](../../lecture_notes/ja/11_optimisation.md#r-11-20)。
+
+[講義ノート、定理 11.20](../../lecture_notes/ja/11_optimisation.md#r-11-20) により、$`N=\sum_c\lfloor k_c/2\rfloor`$、
+$`\Delta(X)=\delta`$（実験 3 では $`\Delta(|X|)=\delta`$）、$`\Delta(Y)=\delta'`$ とすると、実験 1 と実験 3 の上限は
+```math
+\sup z_1=N\,\frac{\delta^2\delta'^2}{(1+\delta)(1+\delta')},\qquad
+\sup z_3=(N-\epsilon\,\delta)\Big(\frac{2\delta'}{1+\delta'}\Big)^2,
+```
+である。ここで、すべての $`k_c`$ が偶数なら $`\epsilon=1`$、そうでなければ $`\epsilon=0`$。
+鍵となるのは[命題 11.19](../../lecture_notes/ja/11_optimisation.md#r-11-19)である：$`\mathbb C^m\oplus\mathbb C^m`$ 上の
+$`X=X_+\oplus(-1)`$ と $`Y=b+(1-b)Q`$（$`Q`$ は $`\binom C\Sigma`$ の像への射影）に対し、$`YXY`$ は $`A=C^2`$ についてアフィンな行列
+$`\mathcal L`$ と同じ固有値をもち、$`z\le(1-b)^2\sum_i2x_i/(1+x_i)`$ である。最初のブロックはこれを $`M_6`$ 上で確かめる
+（$`m=3`$、ランダムな基底で固有値 $`0.3,1,1`$ をもつ $`X_+`$）：ランダムな角度で $`YXY`$（`eigenvalues`）と $`\mathcal L`$ の
+スペクトルが一致し、上界を超える角度はなく、等号の場合の角度で上界が達成される。
+
+```python
+# Proposition 11.19 on M_6, m = 3: X = X_+ (+) (-1), Y = b + (1 - b) Q, Q the projection onto the range of (C; Sigma)
+torch.manual_seed(4)
+m, b = 3, 0.2
+M6 = TypeIAlgebra([2 * m], [2 * m], precision='double')
+W = TypeIAlgebra([m], [m], precision='double').random_unitary_operator(1).matrix[0, 0]
+x = torch.tensor([0.3, 1.0, 1.0], dtype=torch.float64)                    # X_+ = 1 - (1 - a) e e^*, a = 0.3
+Xp = W @ torch.diag(x).to(W.dtype) @ W.mH
+
+def model(theta, Xp):
+    v = torch.cat([torch.diag(torch.cos(theta)), torch.diag(torch.sin(theta))]).to(Xp.dtype)
+    Xm = torch.block_diag(Xp, -torch.eye(m, dtype=Xp.dtype))
+    Ym = b * torch.eye(2 * m, dtype=Xp.dtype) + (1 - b) * v @ v.mH
+    return M6.operator(Xm[None, None], is_self_adjoint=True), M6.operator(Ym[None, None], is_positive=True)
+
+def lin(theta, Xp):                                                        # the matrix L of the proof
+    w, V = torch.linalg.eigh(Xp)
+    f = lambda g: V @ torch.diag(g(w)).to(V.dtype) @ V.mH
+    A = torch.diag(torch.cos(theta) ** 2).to(Xp.dtype)
+    K12, X12 = f(lambda t: (1 + t).sqrt()), f(torch.sqrt)
+    top = (1 - b ** 2) * K12 @ A @ K12 + b ** 2 * Xp - torch.eye(m, dtype=Xp.dtype)
+    return torch.cat([torch.cat([top, b * X12], 1), torch.cat([b * X12, torch.zeros_like(Xp)], 1)])
+
+bound = (1 - b) ** 2 * (2 * x / (1 + x)).sum().item()                       # Proposition 11.19
+worst = 0.0
+for _ in range(200):
+    theta = torch.rand(m, dtype=torch.float64) * math.pi / 2
+    X, Y = model(theta, Xp)
+    YXY = M6.operator((Y @ X @ Y).matrix, is_self_adjoint=True)
+    assert torch.allclose(YXY.eigenvalues()[0][0], torch.linalg.eigvalsh(lin(theta, Xp)), atol=1e-12)
+    worst = max(worst, ((Y @ X.abs() @ Y).trace.real - YXY.trace_norm()).item())
+th_star = torch.acos(((1 + b * x) / ((1 + x) * (1 + b))).sqrt())            # equality case, X_+ diagonal
+X, Y = model(th_star, torch.diag(x).to(W.dtype))
+z_star = ((Y @ X.abs() @ Y).trace.real - (Y @ X @ Y).trace_norm()).item()
+print(f"Proposition 11.19: largest z at 200 random angles {worst:.6f} <= {bound:.6f}; at the maximiser {z_star:.12f}")
+assert worst <= bound + 1e-12 and abs(z_star - bound) < 1e-12
+```
+
+二番目のブロックは、定理 11.20 の証明の最大化元を `from_blocks` でいくつかのブロックサイズについて構成する：命題 11.15 の
+$`2\times2`$ ブロックと $`1\times1`$ ブロック。実験 3 では、すべての $`k_c`$ が偶数なら $`|X|`$ の固有値 $`\ell(\delta)`$ は
+$`2\times2`$ ブロックに、そうでなければ $`1\times1`$ ブロックに置かれる。実験 1 のユニタリは $`YX`$ の極分解の因子の随伴
+（`polar`）である。コントラストと値は定理と $`10^{-12}`$ まで一致しなければならない。
+
+```python
+def sup_exact(exp, ks, dl, dp):                                             # Theorem 11.20
+    N = sum(k // 2 for k in ks)
+    if exp == 1:
+        return N * dl ** 2 * dp ** 2 / ((1 + dl) * (1 + dp))
+    return (N - dl * all(k % 2 == 0 for k in ks)) * (2 * dp / (1 + dp)) ** 2
+
+def maximisers_any(ks, dl, dp):
+    """Exp. 1 (X, U, Y) and Exp. 3 (X, Y) attaining Theorem 11.20: 2 x 2 maximisers of Proposition 11.15 and 1 x 1
+    blocks; in Exp. 3 the eigenvalue ell(delta) of |X| on a 2 x 2 block if all k_c are even, else on a 1 x 1 block."""
+    lx, ly = ell(dl), ell(dp)
+    even = all(k % 2 == 0 for k in ks)
+    two = lambda d: torch.diag(torch.tensor(d, dtype=torch.float64))
+    R1 = rot(gammas(1.0, lx, 1.0, ly)[0])
+    blocks = {name: [] for name in ('X1', 'Y1', 'X3', 'Y3')}
+    placed = False
+    for k in ks:
+        b1 = {name: [] for name in blocks}
+        for j in range(k // 2):
+            x3 = lx if even and not placed else 1.0
+            placed = placed or x3 == lx
+            R3 = rot(gammas(1.0, x3, 1.0, ly)[1])
+            b1['X1'].append(two([1.0, lx]))
+            b1['Y1'].append(R1 @ two([1.0, ly]) @ R1.T)
+            b1['X3'].append(two([1.0, -x3]))
+            b1['Y3'].append(R3 @ two([1.0, ly]) @ R3.T)
+        if k % 2:
+            b1['X1'].append(two([1.0]))
+            b1['Y1'].append(two([1.0]))
+            b1['X3'].append(two([1.0 if placed else lx]))
+            b1['Y3'].append(two([1.0]))
+            placed = True
+        for name in blocks:
+            blocks[name].append(torch.block_diag(*b1[name]))
+    a = TypeIAlgebra(ks, ks, complex_valued=False, precision='double')
+    X1, Y1, X3, Y3 = (a.from_blocks(blocks[name]) for name in ('X1', 'Y1', 'X3', 'Y3'))
+    U1 = (Y1 @ X1).polar()[0].adjoint()                                      # U = W^*, Y X = W |Y X|
+    return (X1, U1, Y1), (X3, Y3)
+
+print(" sizes      delta  delta'   Exp. 1 z / Theorem 11.20    Exp. 3 z / Theorem 11.20")
+for ks in ([4, 4], [3, 2], [2, 2, 2], [16], [3]):
+    for dl, dp in ((0.5, 0.8), (0.9, 0.999)):
+        (X, U, Y), (X3, Y3) = maximisers_any(ks, dl, dp)
+        assert abs(X.michelson_contrast.item() - dl) < 1e-12 and abs(Y.michelson_contrast.item() - dp) < 1e-12
+        assert abs(X3.abs().michelson_contrast.item() - dl) < 1e-12 and abs(Y3.michelson_contrast.item() - dp) < 1e-12
+        z1v = ((X @ U @ Y).trace.abs() - (X @ Y).trace.real).item()
+        z3v = ((Y3 @ X3.abs() @ Y3).trace.real - (Y3 @ X3 @ Y3).trace_norm()).item()
+        print(f" {str(ks):10s} {dl:.1f}    {dp:.3f}   {z1v:.6f} / {sup_exact(1, ks, dl, dp):.6f}"
+              f"       {z3v:.6f} / {sup_exact(3, ks, dl, dp):.6f}")
+        assert abs(z1v - sup_exact(1, ks, dl, dp)) < 1e-12 and abs(z3v - sup_exact(3, ks, dl, dp)) < 1e-12
+```
+
+ブロックが多いと、Haar ランダムな初期点がこれらの最大化元に近づくことはまれである。$`X`$ に `init='diagonal'`、$`Y`$ に
+`init='pairs'`（このとき相対的な固有基底は $`2\times2`$ 回転の直和）、`spectrum_init`（二準位スペクトル；実験 3 では $`|X|`$ が
+$`1`$ に近く、各対に $`X`$ の正の固有値と負の固有値が一つずつ）、$`U`$ に `init='rotations'`（同じ対の回転で行列式は $`+1`$；実代数ではチャート
+$`U_0e^{G-G^*}`$ は $`U_0`$ の連結成分にとどまり、実験 1 の最大化元は各セクターで行列式 $`+1`$ をもつ）を用いて、開始点の半分を
+この構造から、残りの半分を Haar ランダムな点から始める（`init_fraction`；マスク `X.structured` により $`Y`$ と $`U`$ も同じ
+開始点で構造化された状態から始まる）。以下の探索は定理 11.20 を超えず（assert：定理）、このシード固定の実行では
+$`10^{-3}`$ 以内まで近づく（数値的観察）。
+
+```python
+# multistart search along Delta(X), resp. Delta(|X|), with Delta(Y) free in [0, 0.999]; half of the starts structured
+def search_any(exp, ks, deltas, starts=8, seed=0):
+    torch.manual_seed(seed)
+    a = TypeIAlgebra(ks, ks, complex_valued=False, precision='double')
+    d = torch.tensor(deltas, dtype=torch.float64).repeat_interleave(starts)
+    cls = opt.SelfAdjointParam if exp == 3 else opt.PositiveParam
+    Xs = cls(a, len(d), delta=d, init='diagonal', init_fraction=0.5, spectrum_init='high' if exp == 3 else 'pairs')
+    Ys = opt.PositiveParam(a, len(d), init='pairs', init_fraction=Xs.structured, spectrum_init='pairs')
+    Us = opt.UnitaryParam(a, len(d), init='rotations', init_fraction=Xs.structured)
+    def z():
+        x, y = Xs.operator(), Ys.operator()
+        if exp == 1:
+            return (x @ Us.operator() @ y).trace.abs() - (x @ y).trace.real
+        M = a.operator((y @ x @ y).matrix, is_self_adjoint=True)
+        return (y @ Xs.abs_operator() @ y).trace.real - M.trace_norm()
+    params = [Xs, Ys, Us] if exp == 1 else [Xs, Ys]
+    vals = opt.extremize(z, params, maximize=True, rounds=6, steps=40).reshape(len(deltas), starts)
+    return vals.nan_to_num(nan=-math.inf).max(1)[0]
+
+for exp, ks in ((3, [4, 4]), (3, [3]), (1, [2] * 6)):
+    deltas = [0.3, 0.8]
+    found = search_any(exp, ks, deltas)
+    exact = torch.tensor([sup_exact(exp, ks, dl, 0.999) for dl in deltas], dtype=torch.float64)
+    print(f"Exp. {exp} on {ks}: search {[round(v, 6) for v in found.tolist()]}, Theorem 11.20 "
+          f"{[round(v, 6) for v in exact.tolist()]}")
+    assert (found <= exact + 1e-12).all() and ((exact - found) / exact).max() < 1e-3
+```
 
 <a id="x-11"></a>
 
 ## 演習問題
 
-講義ノートの[演習問題 1 と 2](../../lecture_notes/ja/11_optimisation.md#x-11)の数値的検証：歪エルミートな $S$ のケーリー変換 $C(S)=(1-S)(1+S)^{-1}$ はユニタリであり、
-固有値 $-1$ をもたず、$S=(1-C)(1+C)^{-1}$ である（演習 1）。実環の `random_unitary_operator`（`complex_valued=False`）で
-サンプリングした、$O(k)$ 上でハール分布に従う $O$ に対し、$\mathbb E\mathrm{Tr}(AO)^2=\|A\|_2^2/k$ である（演習 2）。
+講義ノートの[演習問題 1 と 2](../../lecture_notes/ja/11_optimisation.md#x-11)の数値的検証：歪エルミートな $`S`$ のケーリー変換 $`C(S)=(1-S)(1+S)^{-1}`$ はユニタリであり、
+固有値 $`-1`$ をもたず、$`S=(1-C)(1+C)^{-1}`$ である（演習 1）。実環の `random_unitary_operator`（`complex_valued=False`）で
+サンプリングした、$`O(k)`$ 上でハール分布に従う $`O`$ に対し、$`\mathbb E\mathrm{Tr}(AO)^2=\|A\|_2^2/k`$ である（演習 2）。
 
 <details>
 <summary>解答</summary>

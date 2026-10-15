@@ -1,0 +1,51 @@
+name: docs
+
+# Builds the documentation website (mkdocs.yml: the lecture notes, the tutorial and the API reference in seven
+# languages) and publishes it on GitHub Pages: https://andre-a-no.github.io/von_neumann_type_i/
+# One-time set-up: repository Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths: ["man/**", "README.md", "mkdocs.yml", "docs_site/**", "llms.txt", "torch_vn_algebra/**",
+            ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install MkDocs
+        run: pip install -r docs_site/requirements.txt
+      - name: Build the site (warnings are errors)
+        run: mkdocs build --strict --site-dir _site
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
+        with:
+          path: _site
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

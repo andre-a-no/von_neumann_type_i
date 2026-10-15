@@ -14,9 +14,9 @@ bibliothèque et `numpy`.
 
 *Notes de cours :* [section D.2](../../lecture_notes/fr/D_gksl.md#s-D-2) ; [lemme D.1](../../lecture_notes/fr/D_gksl.md#r-D-1), [théorème D.3](../../lecture_notes/fr/D_gksl.md#r-D-3).
 
-Nous vérifions le théorème D.3 sur un générateur GKSL à sauts arbitraires sur $M_3$, construit par `lindblad_superoperator`
-(la matrice $S$ de $\mathcal L$ agissant sur $\mathrm{vec}\,\rho$ rangé ligne par ligne, de sorte que $J_{(i,a),(j,b)}=S_{(a,b),(i,j)}$ comme à la
-section 6.1), et sur $\theta-\mathrm{id}$ :
+Nous vérifions le théorème D.3 sur un générateur GKSL à sauts arbitraires sur $`M_3`$, construit par `lindblad_superoperator`
+(la matrice $`S`$ de $`\mathcal L`$ agissant sur $`\mathrm{vec}\,\rho`$ rangé ligne par ligne, de sorte que $`J_{(i,a),(j,b)}=S_{(a,b),(i,j)}`$ comme à la
+section 6.1), et sur $`\theta-\mathrm{id}`$ :
 
 ```python
 import math
@@ -79,8 +79,8 @@ for t in (0.01, 0.1, 1.0):
 
 *Notes de cours :* [section D.3](../../lecture_notes/fr/D_gksl.md#s-D-3) ; [théorème D.4](../../lecture_notes/fr/D_gksl.md#r-D-4), [théorème D.5](../../lecture_notes/fr/D_gksl.md#r-D-5), [théorème D.6](../../lecture_notes/fr/D_gksl.md#r-D-6).
 
-La démonstration du théorème D.4 est un algorithme : $\Phi$ à partir de la compression de $J(\mathcal L)$ à $\Omega^\perp$, puis
-$G$ à partir de $\xi_1$, puis $H$. Nous l'exécutons sur le générateur ci-dessus, reconstruisons le générateur avec la bibliothèque, et
+La démonstration du théorème D.4 est un algorithme : $`\Phi`$ à partir de la compression de $`J(\mathcal L)`$ à $`\Omega^\perp`$, puis
+$`G`$ à partir de $`\xi_1`$, puis $`H`$. Nous l'exécutons sur le générateur ci-dessus, reconstruisons le générateur avec la bibliothèque, et
 comparons avec la forme normalisée des données d'origine calculée par le théorème D.5(iii) et (i) :
 
 ```python
@@ -114,12 +114,12 @@ assert np.abs(Wr @ u - Wn).max() < 1e-12 and np.abs(u.conj().T @ u - np.eye(2)).
 print("eigenvalues of the normalised H:", np.round(np.linalg.eigvalsh(H_rec), 4), " jumps:", len(L_rec))
 ```
 
-D'après le [théorème D.6](../../lecture_notes/fr/D_gksl.md#r-D-6), un état stationnaire fidèle $\sigma$ est unique lorsque seuls les multiples de $1$
-commutent avec $H$ et avec tous les $L_j$, $L_j^*$ ; alors on a aussi $\ker\mathcal L^*=\mathbb C1$. Pour le générateur
-aléatoire ci-dessus, le code vérifie les hypothèses et la conclusion (la matrice de $\mathcal L^*$ sur les vecteurs de
-$A^T$ rangés ligne par ligne est $S^T$: $\mathrm{vec}(\mathcal L^*(A)^T)=S^T\mathrm{vec}(A^T)$), ainsi que le
-second exemple des [notes de cours, section D.3](../../lecture_notes/fr/D_gksl.md#s-D-3) : sur $M_3$, $H=0$, $L_1=|e_1\rangle\langle e_3|$,
-$L_2=|e_2\rangle\langle e_3|$, où seuls les multiples de $1$ commutent avec les $L_j,L_j^*$ mais $\dim\ker\mathcal L=4$ :
+D'après le [théorème D.6](../../lecture_notes/fr/D_gksl.md#r-D-6), un état stationnaire fidèle $`\sigma`$ est unique lorsque seuls les multiples de $`1`$
+commutent avec $`H`$ et avec tous les $`L_j`$, $`L_j^*`$ ; alors on a aussi $`\ker\mathcal L^*=\mathbb C1`$. Pour le générateur
+aléatoire ci-dessus, le code vérifie les hypothèses et la conclusion (la matrice de $`\mathcal L^*`$ sur les vecteurs de
+$`A^T`$ rangés ligne par ligne est $`S^T`$: $`\mathrm{vec}(\mathcal L^*(A)^T)=S^T\mathrm{vec}(A^T)`$), ainsi que le
+second exemple des [notes de cours, section D.3](../../lecture_notes/fr/D_gksl.md#s-D-3) : sur $`M_3`$, $`H=0`$, $`L_1=|e_1\rangle\langle e_3|`$,
+$`L_2=|e_2\rangle\langle e_3|`$, où seuls les multiples de $`1`$ commutent avec les $`L_j,L_j^*`$ mais $`\dim\ker\mathcal L=4`$ :
 
 ```python
 def kernel_dim(S, tol=1e-9):
@@ -151,10 +151,10 @@ assert kernel_dim(S_abs) == 4                             # no faithful stationa
 
 *Notes de cours :* [section D.4](../../lecture_notes/fr/D_gksl.md#s-D-4) ; [théorème D.7](../../lecture_notes/fr/D_gksl.md#r-D-7), [corollaire D.8](../../lecture_notes/fr/D_gksl.md#r-D-8).
 
-Nous vérifions le [théorème D.7](../../lecture_notes/fr/D_gksl.md#r-D-7) sur $M_1\oplus M_2\subseteq M_3$ pour un générateur de `lindblad_rhs` avec un
+Nous vérifions le [théorème D.7](../../lecture_notes/fr/D_gksl.md#r-D-7) sur $`M_1\oplus M_2\subseteq M_3`$ pour un générateur de `lindblad_rhs` avec un
 saut à l'intérieur des secteurs et un saut aléatoire entre eux, en suivant les cinq étapes de la démonstration, ainsi que
-le générateur dual du [corollaire D.8](../../lecture_notes/fr/D_gksl.md#r-D-8). Comme on l'a remarqué après la démonstration, $J(\mathcal L\circ E)$ n'est
-pas positive sur $\Omega^\perp$ ici :
+le générateur dual du [corollaire D.8](../../lecture_notes/fr/D_gksl.md#r-D-8). Comme on l'a remarqué après la démonstration, $`J(\mathcal L\circ E)`$ n'est
+pas positive sur $`\Omega^\perp`$ ici :
 
 ```python
 alg = TypeIAlgebra([1, 2], [1, 2], precision='double')    # M = M_1 (+) M_2 in M_3
@@ -203,12 +203,12 @@ assert np.linalg.eigvalsh(Pomega @ J @ Pomega).min() < -0.1
 
 *Notes de cours :* [section D.5](../../lecture_notes/fr/D_gksl.md#s-D-5) ; [théorème D.9](../../lecture_notes/fr/D_gksl.md#r-D-9), [corollaire D.10](../../lecture_notes/fr/D_gksl.md#r-D-10).
 
-Une $\mathfrak A$ corrigeable à $C\ge2$ secteurs, avec au moins un $k_c\ge2$, est un code **hybride**
-([notes de cours, section D.5](../../lecture_notes/fr/D_gksl.md#s-D-5)). Comme exemple, nous prenons $\mathfrak A=(M_2\otimes1_2)\oplus M_1$ sur un
-code aléatoire de dimension cinq dans $\mathbb C^8$ et un bruit qui agit sur les facteurs de jauge $\mathbb C^{m_c}$ par
-$\sum_iB_{c,i}^*B_{c,i}=1_{m_c}$, envoie les secteurs sur des sous-espaces orthogonaux, brouille $\mathcal C^\perp$, puis est mélangé par un
+Une $`\mathfrak A`$ corrigeable à $`C\ge2`$ secteurs, avec au moins un $`k_c\ge2`$, est un code **hybride**
+([notes de cours, section D.5](../../lecture_notes/fr/D_gksl.md#s-D-5)). Comme exemple, nous prenons $`\mathfrak A=(M_2\otimes1_2)\oplus M_1`$ sur un
+code aléatoire de dimension cinq dans $`\mathbb C^8`$ et un bruit qui agit sur les facteurs de jauge $`\mathbb C^{m_c}`$ par
+$`\sum_iB_{c,i}^*B_{c,i}=1_{m_c}`$, envoie les secteurs sur des sous-espaces orthogonaux, brouille $`\mathcal C^\perp`$, puis est mélangé par un
 unitaire aléatoire (théorème 6.7). La condition de Knill–Laflamme est en défaut, la condition du [théorème D.9](../../lecture_notes/fr/D_gksl.md#r-D-9) est
-vérifiée, et la récupération de la démonstration restaure tout $A\in\mathfrak A$, mais pas un opérateur générique sur $\mathcal C$ :
+vérifiée, et la récupération de la démonstration restaure tout $`A\in\mathfrak A`$, mais pas un opérateur générique sur $`\mathcal C`$ :
 
 ```python
 D, dims = 8, [(2, 2), (1, 1)]                             # A = (M_2 (x) 1_2) (+) (M_1 (x) 1_1), dim C = 5

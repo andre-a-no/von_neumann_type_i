@@ -2,9 +2,9 @@
 
 # 教程 10. 量子计算
 
-本教程配合讲义的[第 10 章](../../lecture_notes/zh/10_quantum_computing.md)，该章用量子计算机上噪声的 Kraus 算子所生成的 $*$-代数来描述噪声。
+本教程配合讲义的[第 10 章](../../lecture_notes/zh/10_quantum_computing.md)，该章用量子计算机上噪声的 Kraus 算子所生成的 $`*`$-代数来描述噪声。
 我们计算不动点代数与无噪声子系统（[定理 10.2](../../lecture_notes/zh/10_quantum_computing.md#r-10-2)），在重复码上检验 Knill–Laflamme 定理（[定理 10.5](../../lecture_notes/zh/10_quantum_computing.md#r-10-5)）
-以及扇区标记的纠错（[命题 10.6](../../lecture_notes/zh/10_quantum_computing.md#r-10-6)），并在汉明重量扇区的代数 $\bigoplus_wM_{\binom nw}$ 中模拟带振幅阻尼与
+以及扇区标记的纠错（[命题 10.6](../../lecture_notes/zh/10_quantum_computing.md#r-10-6)），并在汉明重量扇区的代数 $`\bigoplus_wM_{\binom nw}`$ 中模拟带振幅阻尼与
 后选择的 XY 混合算子拟设（[命题 10.8](../../lecture_notes/zh/10_quantum_computing.md#r-10-8)–[10.10](../../lecture_notes/zh/10_quantum_computing.md#r-10-10)）。
 
 <a id="s-10-1"></a>
@@ -13,14 +13,14 @@
 
 *讲义：* [10.1 节](../../lecture_notes/zh/10_quantum_computing.md#s-10-1)；[定理 10.2](../../lecture_notes/zh/10_quantum_computing.md#r-10-2)、[推论 10.3](../../lecture_notes/zh/10_quantum_computing.md#r-10-3)、[命题 10.4](../../lecture_notes/zh/10_quantum_computing.md#r-10-4)。
 
-由[讲义，推论 10.3](../../lecture_notes/zh/10_quantum_computing.md#r-10-3)，$n$ 个量子比特上的集体退相位 $\Phi(\rho)=\tfrac12(U\rho U^*+U^*\rho U)$，
-$U=e^{-i\theta Z_{\mathrm{tot}}}$，其相互作用代数为 $\mathcal A=\mathrm{span}\{P_0,\dots,P_n\}$
-（$P_w$ 是到由汉明重量为 $w$ 的基向量张成的子空间 $H_w$ 上的投影），并且
-$\mathrm{Fix}(\Phi)=\mathcal A'=\bigoplus_wB(H_w)$（[定理 10.2](../../lecture_notes/zh/10_quantum_computing.md#r-10-2)）。
+由[讲义，推论 10.3](../../lecture_notes/zh/10_quantum_computing.md#r-10-3)，$`n`$ 个量子比特上的集体退相位 $`\Phi(\rho)=\tfrac12(U\rho U^*+U^*\rho U)`$，
+$`U=e^{-i\theta Z_{\mathrm{tot}}}`$，其相互作用代数为 $`\mathcal A=\mathrm{span}\{P_0,\dots,P_n\}`$
+（$`P_w`$ 是到由汉明重量为 $`w`$ 的基向量张成的子空间 $`H_w`$ 上的投影），并且
+$`\mathrm{Fix}(\Phi)=\mathcal A'=\bigoplus_wB(H_w)`$（[定理 10.2](../../lecture_notes/zh/10_quantum_computing.md#r-10-2)）。
 
-交换子是 $T\mapsto(AT-TA)_A$ 的零空间（第 2 章），不动点则是
-$\sum_iE_i\otimes\bar E_i-1$（即 $\Phi-\mathrm{id}$ 在按行优先向量化的矩阵上的矩阵）的零空间。对 $n=4$，
-推论中的三个空间的维数分别为 $5$、$70=1+16+36+16+1$ 和 $70$：
+交换子是 $`T\mapsto(AT-TA)_A`$ 的零空间（第 2 章），不动点则是
+$`\sum_iE_i\otimes\bar E_i-1`$（即 $`\Phi-\mathrm{id}`$ 在按行优先向量化的矩阵上的矩阵）的零空间。对 $`n=4`$，
+推论中的三个空间的维数分别为 $`5`$、$`70=1+16+36+16+1`$ 和 $`70`$：
 
 ```python
 import itertools
@@ -64,9 +64,9 @@ span = torch.linalg.svdvals(torch.stack([F.reshape(-1) for F in comm + fix]))
 assert int((span > 1e-9).sum()) == 70                             # Fix(Phi) = A' (Theorem 10.2)
 ```
 
-$\bigoplus_wM_{\binom nw}$ 是 `SpinChain`（第 9 章）的代数，其扇区由向上自旋的个数，即汉明重量
+$`\bigoplus_wM_{\binom nw}`$ 是 `SpinChain`（第 9 章）的代数，其扇区由向上自旋的个数，即汉明重量
 标记。在那里，Kraus 算子是中心元，
-$U=\sum_we^{-i\theta(n-2w)}P_w$，而信道是恒等映射：本库存储的正是无噪声的部分。
+$`U=\sum_we^{-i\theta(n-2w)}P_w`$，而信道是恒等映射：本库存储的正是无噪声的部分。
 
 ```python
 from torch_vn_algebra import SpinChain, TypeIAlgebra, DensityMatrix, channels, states, dynamics
@@ -81,10 +81,10 @@ rho = states.random_density_matrix(M, batch_size=3)
 assert (Phi_M(rho).matrix - rho.matrix).abs().max() < 1e-12      # no state of M is disturbed
 ```
 
-集体转动 $e^{-i\theta\,\mathbf n\cdot\mathbf S}$（$S_\alpha=\tfrac12\sum_j\sigma_{\alpha,j}$）属于由 $1,S_x,S_y,S_z$ 生成的 $*$-代数
-$\mathcal B$。对 $n=4$，讲义的[10.1 节](../../lecture_notes/zh/10_quantum_computing.md#s-10-1)表明 $\dim\mathcal B=35$、$\dim\mathcal B'=14$，且对
-$K=\ker S_x\cap\ker S_y\cap\ker S_z$ 有 $\dim K=2$；代码求得相同的数值，并检验[命题 10.4](../../lecture_notes/zh/10_quantum_computing.md#r-10-4)：以随机集体转动为
-Kraus 算子的信道保持支撑在 $K$ 中的态不变，而会改变一般的态。
+集体转动 $`e^{-i\theta\,\mathbf n\cdot\mathbf S}`$（$`S_\alpha=\tfrac12\sum_j\sigma_{\alpha,j}`$）属于由 $`1,S_x,S_y,S_z`$ 生成的 $`*`$-代数
+$`\mathcal B`$。对 $`n=4`$，讲义的[10.1 节](../../lecture_notes/zh/10_quantum_computing.md#s-10-1)表明 $`\dim\mathcal B=35`$、$`\dim\mathcal B'=14`$，且对
+$`K=\ker S_x\cap\ker S_y\cap\ker S_z`$ 有 $`\dim K=2`$；代码求得相同的数值，并检验[命题 10.4](../../lecture_notes/zh/10_quantum_computing.md#r-10-4)：以随机集体转动为
+Kraus 算子的信道保持支撑在 $`K`$ 中的态不变，而会改变一般的态。
 
 ```python
 S = [sum(on(P, j, n) for j in range(n)) / 2 for P in (X, Y, Z)]
@@ -108,11 +108,11 @@ for G in (K @ torch.randn(2, 2, dtype=dt), torch.randn(16, 16, dtype=dt)):  # su
 
 *讲义：* [10.2 节](../../lecture_notes/zh/10_quantum_computing.md#s-10-2)；[定理 10.5](../../lecture_notes/zh/10_quantum_computing.md#r-10-5)。
 
-讲义[10.2 节](../../lecture_notes/zh/10_quantum_computing.md#s-10-2)中的比特翻转例子：对 $\mathcal C=\mathrm{span}\{|000\rangle,|111\rangle\}$ 和"至多一个比特翻转"，
-[定理 10.5](../../lecture_notes/zh/10_quantum_computing.md#r-10-5) 的 Knill–Laflamme 条件成立，且 $\Lambda=\mathrm{diag}(p_0,\dots,p_3)$，而恢复
-$\mathcal R(\sigma)=\sum_{k=0}^3PX_k\sigma X_kP$ 能还原码中的每个态。若每个量子比特以概率 $p$ 独立地翻转，则该条件不成立，
-恢复后 $|0_L\rangle$ 的保真度为 $1-3p^2+2p^3=0.972$（$p=0.1$）。辅助函数 `kl_matrix` 返回 $\Lambda$，若条件不成立则返回
-`None`。在本库中，$M_8$ 是只有一个块的代数，而 `R @ Phi` 就是复合 $\mathcal R\circ\Phi$：
+讲义[10.2 节](../../lecture_notes/zh/10_quantum_computing.md#s-10-2)中的比特翻转例子：对 $`\mathcal C=\mathrm{span}\{|000\rangle,|111\rangle\}`$ 和"至多一个比特翻转"，
+[定理 10.5](../../lecture_notes/zh/10_quantum_computing.md#r-10-5) 的 Knill–Laflamme 条件成立，且 $`\Lambda=\mathrm{diag}(p_0,\dots,p_3)`$，而恢复
+$`\mathcal R(\sigma)=\sum_{k=0}^3PX_k\sigma X_kP`$ 能还原码中的每个态。若每个量子比特以概率 $`p`$ 独立地翻转，则该条件不成立，
+恢复后 $`|0_L\rangle`$ 的保真度为 $`1-3p^2+2p^3=0.972`$（$`p=0.1`$）。辅助函数 `kl_matrix` 返回 $`\Lambda`$，若条件不成立则返回
+`None`。在本库中，$`M_8`$ 是只有一个块的代数，而 `R @ Phi` 就是复合 $`\mathcal R\circ\Phi`$：
 
 ```python
 M8 = TypeIAlgebra([8], [8], precision='double')
@@ -155,11 +155,11 @@ assert abs(F - (1 - 3 * p**2 + 2 * p**3)) < 1e-12
 
 *讲义：* [10.3 节](../../lecture_notes/zh/10_quantum_computing.md#s-10-3)；[命题 10.6](../../lecture_notes/zh/10_quantum_computing.md#r-10-6)。
 
-讲义[10.3 节](../../lecture_notes/zh/10_quantum_computing.md#s-10-3)中的例子：重复码先受到独立的相位翻转（每个量子比特的概率为 $q$），再受到至多一个比特翻转。
+讲义[10.3 节](../../lecture_notes/zh/10_quantum_computing.md#s-10-3)中的例子：重复码先受到独立的相位翻转（每个量子比特的概率为 $`q`$），再受到至多一个比特翻转。
 量子比特不受保护（Knill–Laflamme 条件不成立），但经典比特受到保护：[命题 10.6](../../lecture_notes/zh/10_quantum_computing.md#r-10-6) 的条件 2 对
-$P_0=|000\rangle\langle000|$、$P_1=|111\rangle\langle111|$ 成立，多数表决 $N_0=\sum_{|b|\le1}|b\rangle\langle b|$，
-$N_1=1-N_0$ 读出该比特。经过 10.2 节的恢复后，$|{+_L}\rangle$ 的保真度为
-$(1+(1-2q)^3)/2=0.8645$（$q=0.05$ 时）。
+$`P_0=|000\rangle\langle000|`$、$`P_1=|111\rangle\langle111|`$ 成立，多数表决 $`N_0=\sum_{|b|\le1}|b\rangle\langle b|`$，
+$`N_1=1-N_0`$ 读出该比特。经过 10.2 节的恢复后，$`|{+_L}\rangle`$ 的保真度为
+$`(1+(1-2q)^3)/2=0.8645`$（$`q=0.05`$ 时）。
 
 ```python
 q = 0.05
@@ -185,18 +185,18 @@ assert abs(F_plus - (1 + (1 - 2 * q) ** 3) / 2) < 1e-12
 
 *讲义：* [10.4 节](../../lecture_notes/zh/10_quantum_computing.md#s-10-4)；[命题 10.8](../../lecture_notes/zh/10_quantum_computing.md#r-10-8)、[命题 10.9](../../lecture_notes/zh/10_quantum_computing.md#r-10-9)、[命题 10.10](../../lecture_notes/zh/10_quantum_computing.md#r-10-10)。
 
-量子交替算子拟设交替作用 $e^{-i\gamma H_C}$（$H_C$ 是对角的代价哈密顿量）与 $e^{-i\beta H_M}$
-（$H_M=\tfrac14\sum_{(i,j)}(X_iX_j+Y_iY_j)$ 是环上的 XY 混合算子）。由[讲义，命题 10.8](../../lecture_notes/zh/10_quantum_computing.md#r-10-8)，它们都属于
-$\mathcal M=\{P_0,\dots,P_n\}'\cong\bigoplus_wM_{\binom nw}$，因此拟设永远不会离开其初态所在的汉明重量扇区。
+量子交替算子拟设交替作用 $`e^{-i\gamma H_C}`$（$`H_C`$ 是对角的代价哈密顿量）与 $`e^{-i\beta H_M}`$
+（$`H_M=\tfrac14\sum_{(i,j)}(X_iX_j+Y_iY_j)`$ 是环上的 XY 混合算子）。由[讲义，命题 10.8](../../lecture_notes/zh/10_quantum_computing.md#r-10-8)，它们都属于
+$`\mathcal M=\{P_0,\dots,P_n\}'\cong\bigoplus_wM_{\binom nw}`$，因此拟设永远不会离开其初态所在的汉明重量扇区。
 
-在本库中，$\mathcal M$ 就是 `SpinChain(n).algebra`（比特 $1$ = 自旋向上，所以 $S^z_i=-\tfrac12Z_i$），而 $H_M$
-是它的 XXZ 哈密顿量 $J\sum_{(i,j)}\big(\tfrac12(S^+_iS^-_j+S^-_iS^+_j)+\Delta S^z_iS^z_j\big)$，取 $J=1$，
-$\Delta=0$，因为 $S^+_iS^-_j+S^-_iS^+_j=\tfrac12(X_iX_j+Y_iY_j)$；我们将它与稠密的
-$64\times64$ 矩阵进行对照。对于 $H_C$，我们取由边 $(2,3)$、$(5,0)$ 连接的两个三角形 $\{0,1,2\}$、$\{3,4,5\}$
-上的图二分问题：$H_C=\sum_{(i,j)\in E}\tfrac12(1-Z_iZ_j)$（$Z_iZ_j=4S^z_iS^z_j$）计算被切割的
-边数。最优的二分切割 $2$ 条边（即分开两个三角形；任何其他由三个顶点构成的集合都会把两个
-三角形都分割开，而一个被分割的三角形有两条被切割的边）；我们从切割 $6$ 条边的 $|101010\rangle$ 出发。最后，整个
-拟设用稠密的 $64\times64$ 矩阵重新计算一遍，与本库无关。
+在本库中，$`\mathcal M`$ 就是 `SpinChain(n).algebra`（比特 $`1`$ = 自旋向上，所以 $`S^z_i=-\tfrac12Z_i`$），而 $`H_M`$
+是它的 XXZ 哈密顿量 $`J\sum_{(i,j)}\big(\tfrac12(S^+_iS^-_j+S^-_iS^+_j)+\Delta S^z_iS^z_j\big)`$，取 $`J=1`$，
+$`\Delta=0`$，因为 $`S^+_iS^-_j+S^-_iS^+_j=\tfrac12(X_iX_j+Y_iY_j)`$；我们将它与稠密的
+$`64\times64`$ 矩阵进行对照。对于 $`H_C`$，我们取由边 $`(2,3)`$、$`(5,0)`$ 连接的两个三角形 $`\{0,1,2\}`$、$`\{3,4,5\}`$
+上的图二分问题：$`H_C=\sum_{(i,j)\in E}\tfrac12(1-Z_iZ_j)`$（$`Z_iZ_j=4S^z_iS^z_j`$）计算被切割的
+边数。最优的二分切割 $`2`$ 条边（即分开两个三角形；任何其他由三个顶点构成的集合都会把两个
+三角形都分割开，而一个被分割的三角形有两条被切割的边）；我们从切割 $`6`$ 条边的 $`|101010\rangle`$ 出发。最后，整个
+拟设用稠密的 $`64\times64`$ 矩阵重新计算一遍，与本库无关。
 
 ```python
 n, w = 6, 3
@@ -226,15 +226,15 @@ assert abs(psi[weight == w].norm().item() - 1) < 1e-12           # Proposition 1
 assert abs((psi.conj() @ HC_dense @ psi).real.item() - states.expectation(ideal, H_C).real.item()) < 1e-10
 ```
 
-量子比特 $i$ 的**振幅阻尼**（以概率 $g$ 发生 $|1\rangle\to|0\rangle$）具有 Kraus 算子
-$K_0^{(i)}=|0\rangle\langle0|_i+\sqrt{1-g}\,|1\rangle\langle1|_i$ 和 $K_1^{(i)}=\sqrt g\,|0\rangle\langle1|_i$，后者降低
+量子比特 $`i`$ 的**振幅阻尼**（以概率 $`g`$ 发生 $`|1\rangle\to|0\rangle`$）具有 Kraus 算子
+$`K_0^{(i)}=|0\rangle\langle0|_i+\sqrt{1-g}\,|1\rangle\langle1|_i`$ 和 $`K_1^{(i)}=\sqrt g\,|0\rangle\langle1|_i`$，后者降低
 重量：这是扇区之间的映射，即 `chain.site_amplitude_damping(i, g)`（一个 `InterSectorChannel`）。
 
-由[讲义，命题 10.9](../../lecture_notes/zh/10_quantum_computing.md#r-10-9)，若线路的每一层之后都对每个量子比特施加阻尼，则经过 $p$ 层后仍以概率
-$(1-g)^{wp}$ 测得初态的重量 $w$，而后选择得到的态就是无噪声的态。
+由[讲义，命题 10.9](../../lecture_notes/zh/10_quantum_computing.md#r-10-9)，若线路的每一层之后都对每个量子比特施加阻尼，则经过 $`p`$ 层后仍以概率
+$`(1-g)^{wp}`$ 测得初态的重量 $`w`$，而后选择得到的态就是无噪声的态。
 
 `InterSectorChannel` 只保留其输出的对角块；这里不存在其他块（命题 10.9 的证明逐字适用于单个量子比特的阻尼，
-此时 $s\in\{0,1\}$），所以没有任何损失。取 $g=0.05$、$p=2$，接受概率为 $0.95^6=0.7351$：
+此时 $`s\in\{0,1\}`$），所以没有任何损失。取 $`g=0.05`$、$`p=2`$，接受概率为 $`0.95^6=0.7351`$：
 
 ```python
 g = 0.05
@@ -255,15 +255,15 @@ assert abs(accept.item() - (1 - g) ** (w * len(layers))) < 1e-12              # 
 assert abs(post.fidelity(ideal).item() - 1) < 1e-10 and abs(cut(post) - cut(ideal)) < 1e-10
 ```
 
-*数值观察*（打印出的值）：不可行部分使期望切割数从 $4.3789$ 降为 $4.3123$，这是一种虚假的改进，
+*数值观察*（打印出的值）：不可行部分使期望切割数从 $`4.3789`$ 降为 $`4.3123`$，这是一种虚假的改进，
 会误导角度的优化器；后选择之后，该值是精确的（命题 10.9）。
 
-由[讲义，命题 10.10](../../lecture_notes/zh/10_quantum_computing.md#r-10-10)，在带振幅阻尼（速率 $\gamma_1$）与退相位 $L_k=S^z_k$（速率 $\gamma_2$）的
-Lindblad 方程下，从 $H_w$ 出发的态以概率 $e^{-\gamma_1wt}$ 保持重量 $w$，且后选择的态不依赖于 $\gamma_1$；
-当 $\gamma_2=0$ 时后选择是完美的。配套论文
-（`examples/paper/ex9_qaoa_xy_mixer.py`）让 $|111000\rangle$ 在 $H_M$ 下演化到 $T=2$；我们重现其中
-$\gamma_1=\gamma_2=0.1$ 那一行：$P(w=3)=e^{-0.6}=0.5488$（命题 10.10），而作为下面代码的*数值观察*，保真度为 $0.4805$，
-后选择后的保真度为 $0.8755$；由命题 10.10，后者与 $\gamma_1=0$ 时相同。
+由[讲义，命题 10.10](../../lecture_notes/zh/10_quantum_computing.md#r-10-10)，在带振幅阻尼（速率 $`\gamma_1`$）与退相位 $`L_k=S^z_k`$（速率 $`\gamma_2`$）的
+Lindblad 方程下，从 $`H_w`$ 出发的态以概率 $`e^{-\gamma_1wt}`$ 保持重量 $`w`$，且后选择的态不依赖于 $`\gamma_1`$；
+当 $`\gamma_2=0`$ 时后选择是完美的。配套论文
+（`examples/paper/ex9_qaoa_xy_mixer.py`）让 $`|111000\rangle`$ 在 $`H_M`$ 下演化到 $`T=2`$；我们重现其中
+$`\gamma_1=\gamma_2=0.1`$ 那一行：$`P(w=3)=e^{-0.6}=0.5488`$（命题 10.10），而作为下面代码的*数值观察*，保真度为 $`0.4805`$，
+后选择后的保真度为 $`0.8755`$；由命题 10.10，后者与 $`\gamma_1=0`$ 时相同。
 
 ```python
 T = 2.0
@@ -286,24 +286,24 @@ assert post_T[0.1, 0.1].trace_distance(post_T[0.0, 0.1]).item() < 1e-6       # i
 ## 10.5 可与之比较的工具
 
 Qiskit（`qiskit.quantum_info`、Aer 噪声模型、带自定义混合算子的 `QAOAAnsatz`）、Cirq、PennyLane
-（`qml.qaoa.xy_mixer`、`default.mixed`）以及 QuTiP/`qutip-qip` 在 $n$ 个完整的量子比特上模拟上述全部内容，
+（`qml.qaoa.xy_mixer`、`default.mixed`）以及 QuTiP/`qutip-qip` 在 $`n`$ 个完整的量子比特上模拟上述全部内容，
 是处理线路的合适工具；stim 对带 Pauli 型噪声的 Clifford 线路进行采样，可处理数千个
 量子比特（振幅阻尼不是 Pauli 信道：Pauli 信道是保单位的，而振幅阻尼不是）。据我们所知，这些软件包中没有任何函数能
 计算信道的相互作用代数、它的交换子或它的整个不动点代数（QuTiP 的
-`steadystate` 返回 Lindblad 生成元的一个稳态）；关于矩阵 $*$-代数的数值块分解，见
+`steadystate` 返回 Lindblad 生成元的一个稳态）；关于矩阵 $`*`$-代数的数值块分解，见
 Murota et al., *Japan J. Indust. Appl. Math.* 27 (2010)。本库增加的是：在
-$\bigoplus_wM_{\binom nw}$ 中的存储、扇区之间的映射以及作为中心投影的后选择，并且都是批量化的。
-一个扇区需要 $\binom nw^2$ 个元素，而不是 $4^n$ 个（对 $n=16$，
-$w=8$，分别为 $1.7\cdot10^8$ 与 $4.3\cdot10^9$），但整个代数会被填充到 $(n+1)\binom n{\lfloor n/2\rfloor}^2$ 个元素（$2.8\cdot10^9$），
+$`\bigoplus_wM_{\binom nw}`$ 中的存储、扇区之间的映射以及作为中心投影的后选择，并且都是批量化的。
+一个扇区需要 $`\binom nw^2`$ 个元素，而不是 $`4^n`$ 个（对 $`n=16`$，
+$`w=8`$，分别为 $`1.7\cdot10^8`$ 与 $`4.3\cdot10^9`$），但整个代数会被填充到 $`(n+1)\binom n{\lfloor n/2\rfloor}^2`$ 个元素（$`2.8\cdot10^9`$），
 节省有限。它不是线路模拟器，也没有稳定子形式体系。
 
 <a id="x-10"></a>
 
 ## 习题
 
-讲义[习题 1–3](../../lecture_notes/zh/10_quantum_computing.md#x-10) 的数值验证：对单个量子比特上的振幅阻尼，$\mathcal A'$、$\mathrm{Fix}(\Phi)$ 与
-$\mathrm{Fix}(\Phi^*)$ 都是一维的（习题 1）；对[推论 10.3](../../lecture_notes/zh/10_quantum_computing.md#r-10-3) 中取 $\theta=\pi/2$、$n=4$ 的信道，
-$\dim\mathrm{Fix}(\Phi)=128$（习题 2）；比特翻转码的恢复 $\mathcal R$ 能纠正相干误差 $e^{-i\phi X_1}$（习题 3）。
+讲义[习题 1–3](../../lecture_notes/zh/10_quantum_computing.md#x-10) 的数值验证：对单个量子比特上的振幅阻尼，$`\mathcal A'`$、$`\mathrm{Fix}(\Phi)`$ 与
+$`\mathrm{Fix}(\Phi^*)`$ 都是一维的（习题 1）；对[推论 10.3](../../lecture_notes/zh/10_quantum_computing.md#r-10-3) 中取 $`\theta=\pi/2`$、$`n=4`$ 的信道，
+$`\dim\mathrm{Fix}(\Phi)=128`$（习题 2）；比特翻转码的恢复 $`\mathcal R`$ 能纠正相干误差 $`e^{-i\phi X_1}`$（习题 3）。
 
 <details>
 <summary>解答</summary>

@@ -19,6 +19,17 @@ from . import functional as _fc
 from .functional import cache_enabled as _fc_cache_enabled
 from .functional import divided_differences as _divided_differences   # noqa: F401 (tests)
 
+def _as_tensor(x) -> torch.Tensor:
+    """torch.as_tensor that keeps Python and NumPy numbers in double precision (torch.as_tensor turns a list of
+    Python floats into float32, which would round data meant for a double-precision algebra)."""
+    if isinstance(x, torch.Tensor):
+        return x
+    try:
+        return torch.as_tensor(np.asarray(x))
+    except (TypeError, ValueError, RuntimeError):       # e.g. a list of tensors that require gradients
+        return torch.as_tensor(x)
+
+
 def _same_device(a, b) -> bool:
     """Device equality that treats 'cpu' and torch.device('cpu'), 'cuda' and 'cuda:<current>' as equal."""
     a, b = torch.device(a), torch.device(b)
@@ -65,6 +76,14 @@ def _orthonormal_columns(Z: torch.Tensor) -> torch.Tensor:
             v = v - P @ (P.mH @ v)
         Q[..., j:j + 1] = v / torch.linalg.vector_norm(v, dim=-2, keepdim=True)
     return Q
+
+
+def _on_positive(w: torch.Tensor, f) -> torch.Tensor:
+    """f(w) for w > 0 and 0 for w <= 0 (eigenvalues of a positive operator, rounding-level negatives included). The
+    masked branch is evaluated at 1, so its derivative never enters the gradient (torch.clamp(w, min=0) passes a
+    gradient at w = 0 in some PyTorch versions and not in others, and sqrt'(0) = inf)."""
+    pos = w > 0
+    return torch.where(pos, f(torch.where(pos, w, torch.ones_like(w))), torch.zeros_like(w))
 
 
 class TypeIAlgebra:
@@ -206,7 +225,7 @@ class TypeIAlgebra:
 
     def bytes_per_operator(self, batch_size: int = 1) -> int:
         """Memory of one materialised operator of this algebra (padded layout)."""
-        return batch_size * self.C * self.k_max ** 2 * self.dtype.itemsize
+        return batch_size * self.C * self.k_max ** 2 * cost.itemsize(self.dtype)
 
     # ========================================================================
     # Random Unitary / Orthogonal / SU(n)
@@ -372,15 +391,12 @@ class TypeIAlgebra:
             largest |entry|, i.e. relative to the size of the operator (an absolute floor would misclassify
             operators of small norm, e.g. 1e-6 times a nilpotent as self-adjoint)."""
             mat = self._matrix
-            scale = mat.abs().amax() if mat.numel() else mat.new_zeros((), dtype=mat.real.dtype)
+            scale = cost.abs_max(mat) if mat.numel() else mat.new_zeros((), dtype=mat.real.dtype)
             return self._eps() * torch.clamp(scale, min=torch.finfo(scale.dtype).tiny)
 
         def _tol(self) -> float:
             """The same tolerance as a Python number (one host synchronisation)."""
             return float(self._tol_t())
-
-        def _max_abs(self, t: torch.Tensor) -> float:
-            return t.abs().max().item() if t.numel() else 0.0
 
         def _validate_properties(self):
             """Check the property flags passed by the user (one host synchronisation for all of them): run when a
@@ -396,17 +412,17 @@ class TypeIAlgebra:
             tol = self._tol_t()
             mat_d = mat.conj().transpose(-2, -1)
             if want('self_adjoint'):
-                checks.append(("Operator marked self-adjoint but not Hermitian", (mat - mat_d).abs().amax() > tol))
+                checks.append(("Operator marked self-adjoint but not Hermitian", cost.abs_max(mat - mat_d) > tol))
             if want('normal'):
                 checks.append(("Operator marked normal but not normal",
-                               (mat @ mat_d - mat_d @ mat).abs().amax() > tol * mat.abs().amax()))
+                               cost.abs_max(mat @ mat_d - mat_d @ mat) > tol * cost.abs_max(mat)))
             if want('positive'):
                 checks.append(("Operator marked positive but has negative eigenvalues", (self.lambda_min < -tol).any()))
             if want('invertible'):
                 checks.append(("Operator marked invertible but has zero eigenvalue",
                                (self._block_svdvals_min() <= tol).any()))
             if want('projection'):
-                checks.append(("Operator marked projection but P^2 != P", (mat @ mat - mat).abs().amax() > tol))
+                checks.append(("Operator marked projection but P^2 != P", cost.abs_max(mat @ mat - mat) > tol))
             failed = torch.stack([c for _, c in checks]).tolist()
             for (msg, _), bad in zip(checks, failed):
                 if bad:
@@ -432,7 +448,7 @@ class TypeIAlgebra:
             mat = self.matrix
             if self._is_self_adjoint is not None:          # set while materialising
                 return self._is_self_adjoint
-            self._is_self_adjoint = bool((mat - mat.conj().transpose(-2, -1)).abs().amax() <= self._tol_t()) \
+            self._is_self_adjoint = bool(cost.abs_max(mat - mat.conj().transpose(-2, -1)) <= self._tol_t()) \
                 if mat.numel() else True
             return self._is_self_adjoint
 
@@ -456,7 +472,7 @@ class TypeIAlgebra:
                 return True
             mat_d = mat.conj().transpose(-2, -1)
             diff = mat @ mat_d - mat_d @ mat
-            self._is_normal = bool(diff.abs().amax() <= self._tol_t() * mat.abs().amax())
+            self._is_normal = bool(cost.abs_max(diff) <= self._tol_t() * cost.abs_max(mat))
             return self._is_normal
 
         @is_normal.setter
@@ -501,7 +517,7 @@ class TypeIAlgebra:
                 self._is_projection = False
                 return False
             mat = self.matrix
-            self._is_projection = bool((mat @ mat - mat).abs().amax() <= self._tol_t()) if mat.numel() else True
+            self._is_projection = bool(cost.abs_max(mat @ mat - mat) <= self._tol_t()) if mat.numel() else True
             return self._is_projection
 
         @is_projection.setter
@@ -561,8 +577,8 @@ class TypeIAlgebra:
         def frobenius_norm(self) -> torch.Tensor:
             """(sum_c ||A_c||_F^2)^{1/2}; the padding is zero."""
             mat = self.matrix
-            s = mat.abs().amax(dim=(-3, -2, -1)).clamp(min=torch.finfo(mat.real.dtype).tiny)      # no overflow
-            return s * torch.linalg.vector_norm(mat / s[:, None, None, None].to(mat.dtype), dim=(-3, -2, -1))
+            s = cost.abs_max(mat, (-3, -2, -1)).clamp(min=torch.finfo(mat.real.dtype).tiny)        # no overflow
+            return s * torch.linalg.vector_norm(mat * s.reciprocal()[:, None, None, None].to(mat.dtype), dim=(-3, -2, -1))
 
         def _groups(self):
             """
@@ -651,6 +667,7 @@ class TypeIAlgebra:
             op._is_self_adjoint = True
             op._is_positive = True
             op._is_normal = True
+            op._batch = self._batch
             return op
 
         def polar(self) -> Tuple['TypeIAlgebra.Operator', 'TypeIAlgebra.Operator']:
@@ -674,6 +691,7 @@ class TypeIAlgebra:
             P = TypeIAlgebra.Operator(self.algebra, generator=lambda: factors()['P'])
             W._is_normal = None
             P._is_self_adjoint = P._is_positive = P._is_normal = True
+            W._batch = P._batch = self._batch
             return W, P
 
         def _require_positive(self, what: str):
@@ -691,7 +709,7 @@ class TypeIAlgebra:
         def sqrt(self) -> 'TypeIAlgebra.Operator':
             """A^{1/2} of a positive operator (spectral calculus on the active blocks)."""
             self._require_positive("sqrt requires positive operator")
-            op = self.apply_function(lambda w: torch.sqrt(torch.clamp(w, min=0)))
+            op = self.apply_function(lambda w: _on_positive(w, torch.sqrt))
             op._is_self_adjoint = True
             op._is_positive = True
             op._is_normal = True
@@ -751,7 +769,9 @@ class TypeIAlgebra:
             op = TypeIAlgebra.Operator(self.algebra, generator=generator)
             for name, value in flags.items():
                 setattr(op, f'_is_{name}', value)
-            op._batch = self._batch if other is None or other._batch is None else max(self._batch or 1, other._batch)
+            # known batch of the result: unknown (None) as soon as one operand's batch is unknown
+            op._batch = self._batch if other is None else (
+                None if self._batch is None or other._batch is None else max(self._batch, other._batch))
             return op
 
         def __add__(self, other: 'TypeIAlgebra.Operator') -> 'TypeIAlgebra.Operator':
@@ -791,8 +811,8 @@ class TypeIAlgebra:
                                 self_adjoint=self._is_self_adjoint if real else None,
                                 positive=True if (self._is_positive and nonneg) else None,
                                 invertible=self._is_invertible if nonzero else None)
-            if isinstance(scalar, torch.Tensor) and scalar.dim() > 0:
-                out._batch = scalar.shape[0] if self._batch in (None, 1) else self._batch
+            if isinstance(scalar, torch.Tensor) and scalar.dim() > 0 and self._batch is not None:
+                out._batch = max(self._batch, scalar.shape[0])
             return out
 
         __rmul__ = __mul__
@@ -821,7 +841,7 @@ class TypeIAlgebra:
                 raise ValueError("cast: the sector structure must agree")
             mat = self.matrix
             if torch.is_complex(mat) and not algebra.complex_valued:
-                if mat.imag.abs().max() > 1e-6 * max(1.0, mat.abs().max().item()):
+                if mat.imag.abs().max() > 1e-6 * max(1.0, cost.abs_max(mat).item()):
                     raise ValueError("operator has a non-negligible imaginary part; the target algebra is real")
                 mat = mat.real
             out = type(self).__new__(type(self))
@@ -1071,9 +1091,11 @@ class TypeIAlgebra:
             """A^p of a positive operator (negative p: on the support only)."""
             self._require_positive("power requires a positive operator")
             def f(w):                                       # w: eigenvalues of one block, (..., k_c)
+                if p == 0:
+                    return torch.ones_like(w)
+                if p > 0:
+                    return _on_positive(w, lambda v: v ** p)
                 w = torch.clamp(w, min=0.0)
-                if p >= 0:
-                    return w ** p
                 # support: eigenvalues above the rounding level of the block (as for inverse / pinv)
                 thr = w.shape[-1] * torch.finfo(w.dtype).eps * w.amax(dim=-1, keepdim=True)
                 big = w > thr
@@ -1134,7 +1156,7 @@ class TypeIAlgebra:
                 all_eig.append(torch.zeros(0, dtype=self.hilbert.dtype, device=self.hilbert.device))
                 continue
             eig = eigenvalue_sampler(k_c)
-            eig = torch.from_numpy(eig) if isinstance(eig, np.ndarray) else torch.as_tensor(eig)
+            eig = _as_tensor(eig)
             if eig.shape[-1:] != (k_c,) or eig.dim() > 2 or (eig.dim() == 2 and eig.shape[0] not in (1, batch_size)):
                 raise ValueError(f"eigenvalue_sampler({k_c}) must return shape ({k_c},) or ({batch_size}, {k_c}), "
                                  f"got {tuple(eig.shape)}")
@@ -1243,9 +1265,9 @@ class TypeIAlgebra:
     def _to_field(self, t: torch.Tensor, what: str) -> torch.Tensor:
         """Convert input data to this algebra's dtype and device; complex data with a non-zero imaginary
         part in a real algebra is an error rather than a silent truncation."""
-        t = torch.as_tensor(t)
+        t = _as_tensor(t)
         if torch.is_complex(t) and not self.hilbert.complex_valued:
-            if t.numel() and bool(t.imag.abs().amax() > 1e-6 * torch.clamp(t.abs().amax(), min=1)):
+            if t.numel() and bool(t.imag.abs().amax() > 1e-6 * torch.clamp(cost.abs_max(t), min=1)):
                 raise ValueError(f"{what}: complex values in a real algebra (create it with complex_valued=True)")
             t = t.real
         return t.to(device=self.hilbert.device, dtype=self.hilbert.dtype)
@@ -1272,7 +1294,7 @@ class TypeIAlgebra:
         """Operator from a list of C blocks of shape (batch, k_c, k_c) (or (k_c, k_c))."""
         if len(blocks) != self.C:
             raise ValueError(f"from_blocks: need {self.C} blocks, got {len(blocks)}")
-        blocks = [torch.as_tensor(b) for b in blocks]
+        blocks = [_as_tensor(b) for b in blocks]
         blocks = [b if b.dim() == 3 else b.unsqueeze(0) for b in blocks]
         batch = max(b.shape[0] for b in blocks)
         mat = torch.zeros(batch, self.C, self.k_max, self.k_max, dtype=self.hilbert.dtype, device=self.hilbert.device)
