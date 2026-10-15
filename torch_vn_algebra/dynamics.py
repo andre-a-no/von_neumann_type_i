@@ -80,6 +80,9 @@ def schrodinger(psi0: torch.Tensor, H: Operator, times) -> torch.Tensor:
                       "precision (create H in a double-precision algebra)", UserWarning, stacklevel=2)
     alg = H.algebra
     Bh = H.matrix.shape[0]
+    if torch.is_grad_enabled() and H.matrix.requires_grad:        # differentiable in H: propagators (Daleckii-Krein)
+        return torch.stack([(propagator(H, float(t)).matrix @ psi0.to(H.matrix.dtype).unsqueeze(-1)).squeeze(-1)
+                            for t in ts])
     out = torch.zeros(len(ts), *psi0.shape, dtype=H.matrix.dtype, device=psi0.device)
     for k, idx, _, (w, V) in H._decompositions('hermitian'):      # one decomposition per block size
         n = len(idx)
@@ -102,8 +105,13 @@ def von_neumann(rho0: Operator, H: Operator, times) -> List[Operator]:
     ts = _times(times, rho.device)
     T = len(ts)
     cost.check_memory(2 * T * rho.numel() * rho.element_size(), rho.device, f"von_neumann ({T} time points)")
-    traj = torch.zeros(T, *rho.shape, dtype=rho.dtype, device=rho.device)
-    for k, idx, _, (w, V) in H._decompositions('hermitian'):      # one decomposition per block size
+    differentiable = torch.is_grad_enabled() and H.matrix.requires_grad
+    if differentiable:                                            # differentiable in H: propagators (Daleckii-Krein)
+        Us = [propagator(H, float(t)).matrix for t in ts]
+        traj = torch.stack([U @ rho @ U.conj().transpose(-2, -1) for U in Us])
+    else:
+        traj = torch.zeros(T, *rho.shape, dtype=rho.dtype, device=rho.device)
+    for k, idx, _, (w, V) in ([] if differentiable else H._decompositions('hermitian')):
         n = len(idx)
         sel = alg._sel(idx)
         V = V.reshape(Bh, n, k, k)

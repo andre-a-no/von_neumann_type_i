@@ -265,6 +265,16 @@ def _apply(x, w, V, f) -> torch.Tensor:
     return _fc.spectral_apply(x, f, 'hermitian', decomposition=(w, V))
 
 
+def _support_xlogx(thr):
+    """lam log lam on the support (lam > thr), 0 elsewhere. The masked branch is evaluated at 1, so its derivative
+    (log lam + 1, -inf at lam = 0) never enters the gradient as 0 * inf = NaN."""
+    def f(lam):
+        on = lam > thr
+        safe = torch.where(on, lam, torch.ones_like(lam))
+        return torch.where(on, safe * torch.log(safe), torch.zeros_like(lam))
+    return f
+
+
 def _projection(w, V, thr) -> torch.Tensor:
     """Support projection V 1[w > thr] V^* (no gradient)."""
     with torch.no_grad():
@@ -372,8 +382,7 @@ def _terms(rho: Operator, sigma: Operator, alpha: Optional[Alpha], kind: str, tr
         n = len(idx)
         tr_, ts, an = _rep(thr_r, n), _rep(thr_s, n), _rep(a, n)
         if kind == 'umegaki' or per_sample:      # Tr rho log rho - Tr rho log sigma, logarithms on the supports
-            ent = _tr(_apply(xr, wr, Vr, lambda lam, t=tr_: torch.where(lam > t, torch.special.xlogy(lam, lam),
-                                                                        torch.zeros_like(lam))))
+            ent = _tr(_apply(xr, wr, Vr, _support_xlogx(tr_)))
             uparts.append((idx, ent - _tr_prod(xr, _apply(xs, ws, Vs, _support_log(ts)))))
         if kind != 'umegaki':
             with torch.no_grad():                # |<v_i|u_j>|^2 and the weight of rho_c inside supp sigma_c

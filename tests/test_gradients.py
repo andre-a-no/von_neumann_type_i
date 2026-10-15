@@ -548,11 +548,7 @@ def test_gradients_finite_at_singular(alg4, name, zeros):
 
 @pytest.mark.parametrize("zeros", [
     'rounding',
-    pytest.param('exact', marks=pytest.mark.xfail(strict=True, reason=(
-        "divergences._terms (Umegaki branch) evaluates where(lam > thr, xlogy(lam, lam), 0) and differentiates it "
-        "in functional.values_and_derivative: at an exact zero eigenvalue the backward of xlogy w.r.t. its second "
-        "argument is 0 * lam / lam = NaN, which enters the Loewner matrix and makes the whole gradient NaN "
-        "(also for alpha = 1 entries of a per-sample alpha tensor)"))),
+    'exact',
 ])
 def test_umegaki_gradient_finite_at_singular_rho(alg4, zeros):
     """D(rho||sigma) with faithful sigma and singular rho (pure, diagonal or rank-deficient): finite gradient in rho."""
@@ -644,9 +640,6 @@ def test_partition_function_gradcheck(alg):
     torch.testing.assert_close(g, -1.3 * rho, rtol=1e-10, atol=1e-12)          # Hellmann-Feynman: grad = -beta rho
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "states.gibbs_state builds exp(-beta H) from H._decompositions('hermitian'), which runs under torch.no_grad: "
-    "the state carries no gradient in H (silently detached), unlike log_partition_function and apply_function"))
 def test_gibbs_state_gradcheck(alg):
     """rho_beta = exp(-beta H) / Z is differentiable in H (gradcheck)."""
     x = spectral_matrix(alg, [[-1.0, 0.2, 0.9], [-0.3, 1.4], [0.5]], seed=40).requires_grad_(True)
@@ -680,9 +673,6 @@ def test_schrodinger_and_von_neumann_gradient_in_initial_state(alg):
     assert gc(lambda m: dyn.von_neumann(_state(alg, m), H, [0.0, 0.6])[1].matrix, x)
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "dynamics.schrodinger and dynamics.von_neumann take the eigendecomposition from H._decompositions('hermitian') "
-    "(computed under torch.no_grad): the trajectories carry no gradient in H, silently (propagator does)"))
 @pytest.mark.parametrize("fn", ['schrodinger', 'von_neumann'])
 def test_schrodinger_and_von_neumann_gradient_in_H(alg, fn):
     """psi(t) and rho(t) are differentiable in the Hamiltonian (gradcheck)."""

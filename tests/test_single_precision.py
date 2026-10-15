@@ -1305,9 +1305,6 @@ def test_hilbert_space_single():
     check((d64(H32.norm(n)).reshape(-1) - 1).abs(), 10 * U, 2, "normalize")
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "HilbertSpace.norm / normalize form sum |psi_i|^2 without scaling: in float32 the squares overflow for entries "
-    ">~ 1.8e19 (norm Inf, normalize -> 0) although the norm is representable; frobenius_norm and lp_norm scale"))
 def test_hilbert_space_norm_large_entries_single():
     """HilbertSpace.norm and normalize of vectors with entries 1e20 (norm 3e20, representable in float32)."""
     H32 = vn.HilbertSpace(4, 4, batch_size=1, n_channels=2, precision='single', device='cpu')
@@ -1316,9 +1313,6 @@ def test_hilbert_space_norm_large_entries_single():
     check((d64(H32.norm(H32.normalize(psi))).reshape(-1) - 1).abs(), 10 * U, 2, "normalize huge")
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "krylov.lanczos / _krylov_step normalise with torch.linalg.vector_norm, which overflows in float32 for entries "
-    ">~ 1.8e19: evolve, expm_multiply_step and ground_state return NaN for a start vector that double handles"))
 def test_krylov_large_norm_vectors_single():
     """krylov.evolve / ground_state with an unnormalised start vector of entries 1e20 (norm representable)."""
     c32 = SpinChain(6, precision='single')
