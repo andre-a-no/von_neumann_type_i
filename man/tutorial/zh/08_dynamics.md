@@ -344,7 +344,127 @@ Schrödinger 与 Lindblad 求解器）、QuantumOptics.jl 以及 SciPy（`scipy.
 算子（用于无序平均），以及自动微分（后两者 dynamiqs 也有）。它
 没有自适应步长控制（RK4 是固定步长的，并且只是近似保正），没有轨迹
 求解器，并且 `lindblad_channel` 不接受扇区之间的跳跃；对于这些情形，以 $`M_D`$ 上的 QuTiP 或 dynamiqs
-为参照。
+为参照。除 RK4 外，`lindblad_evolve` 还有两种时间步进方法，其每一步对每个步长都是信道（8.7 节）：二阶分裂
+格式 `method='kraus'`，以及通过 $`\mathcal L`$ 在 $`\mathcal M`$ 上的矩阵（适用于小扇区）也处理扇区之间跳跃的 `method='exact'`。
+
+<a id="s-8-7"></a>
+
+## 8.7 本身是信道的时间步
+
+*讲义：* [8.7 节](../../lecture_notes/zh/08_dynamics.md#s-8-7)；[命题 8.15](../../lecture_notes/zh/08_dynamics.md#r-8-15)（RK4 不是正的）、[定理 8.16](../../lecture_notes/zh/08_dynamics.md#r-8-16)（每一步都是信道的分裂格式）。
+
+`lindblad_evolve` 有三种时间步进方法，由 `method` 选择：`'rk4'`（默认值，保持不变）是步进 $`R_h=T_4(h\mathcal L)`$；
+`'kraus'` 是定理 8.16 的分裂格式 $`\tilde\Psi_h`$，由 $`E_h=e^{-ihH_{\mathrm{eff}}/2}`$、跳跃部分 $`\Phi_{\mathrm{tot}}`$（扇区内部与
+扇区之间的跳跃）以及修正 $`M_h^{-1/2}`$ 构成；`'exact'` 是 $`e^{h\mathcal L}`$，由 $`\mathcal L`$ 在 $`\bigoplus_cM_{k_c}`$ 上的
+矩阵计算（补零到 $`C k_{\max}^2`$ 个坐标；对常数生成元，每种区间长度计算一次指数，且不使用 `substeps`）。我们先在
+$`\omega=\gamma=1`$、$`h=1`$ 的二能级系统上检验命题 8.15：RK4 的一步等于用 `lindblad_superoperator` 的矩阵算出的
+$`T_4(h\mathcal L)`$，$`\tau-|a|^2<0`$，并且纯态 $`\cos\frac\theta2|g\rangle+\sin\frac\theta2|e\rangle`$（$`\theta=0.2746`$）被映为
+具有负特征值的矩阵；另外两种方法给出的都是态。
+
+```python
+T4 = lambda z: 1 + z + z ** 2 / 2 + z ** 3 / 6 + z ** 4 / 24
+om, gm, h = 1.0, 1.0, 1.0                                          # omega = gamma: Proposition 8.15(3)
+qb = TypeIAlgebra([2], [2], precision='double')                    # basis |g>, |e>
+H_qb = qb.from_blocks([torch.tensor([[0.0, 0.0], [0.0, om]], dtype=f64)])
+L_qb = [qb.from_blocks([torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=f64)])]   # |g><e|
+step = lambda rho, method: dynamics.lindblad_evolve(rho, H_qb, L_qb, [0.0, h], rates=[gm], substeps=1,
+                                                    method=method)[-1]
+gen = dynamics.lindblad_superoperator(qb, H_qb, L_qb, rates=[gm])[0][0].numpy()
+R_h = sum(np.linalg.matrix_power(h * gen, n) / math.factorial(n) for n in range(5))   # T_4(hL)
+X = states.random_density_matrix(qb)
+assert np.abs(step(X, 'rk4').matrix[0, 0].numpy().reshape(-1) - R_h @ X.matrix[0, 0].numpy().reshape(-1)).max() < 1e-14
+
+tau, a = T4(-h * gm), T4(h * (1j * om - gm / 2))
+u = gm ** 2 + 4 * om ** 2
+c = [-gm * u * (4 * om ** 2 - 3 * gm ** 2) / 384, u ** 2 * (4 * om ** 2 - 5 * gm ** 2) / 4608, gm * u ** 3 / 9216,
+     -u ** 4 / 147456]
+assert abs(tau - abs(a) ** 2 - h ** 5 * sum(ci * h ** i for i, ci in enumerate(c))) < 1e-15   # Proposition 8.15(3)
+print(f"tau - |a|^2 = {tau - abs(a) ** 2:.4f}")
+
+th = 0.2746
+psi_th = torch.tensor([math.cos(th / 2), math.sin(th / 2)], dtype=c128)
+pure = DensityMatrix(qb, matrix=torch.outer(psi_th, psi_th.conj())[None, None])
+low = {m: torch.linalg.eigvalsh(step(pure, m).matrix[0, 0]).min().item() for m in dynamics.LINDBLAD_METHODS}
+print({m: f"{v:.2e}" for m, v in low.items()})
+assert low['rk4'] < -8e-5 and low['kraus'] > 0 and low['exact'] > 0
+x_star = max(r.real for r in np.roots([1, -4, 12, -24]) if abs(r.imag) < 1e-12)
+print(f"x_* = {x_star:.4f}")
+```
+
+*数值观察*：这里 $`\tau-|a|^2=-0.0091`$，RK4 一步之后的最小特征值为 $`-8.5\cdot10^{-5}`$（打印出的值）；在四位数字的精度下，
+$`\theta=0.2746`$ 是使它最小的角度。命题 8.15 讨论的是一个量子比特；在带扇区的代数中，同样的缺陷出现在扇区分量 $`R_{dc}`$
+的 Choi 矩阵中，而这一步是 CP 的当且仅当这些矩阵都是正的（命题 6.4）。下面的函数 `step_map` 由 `lindblad_evolve` 在厄米
+矩阵上的作用重建一步（输出被取为自伴的，所以在 $`E_{ij}+E_{ji}`$ 与 $`i(E_{ij}-E_{ji})`$ 上求值，再按线性延拓）。对 8.3 节的
+粒子丢失，我们检验定理 8.16(1) 与命题 8.8(1)：对从 $`0.1`$ 到 $`1000`$ 的步长，`'kraus'` 与 `'exact'` 的每一步都是 CP 且
+TP 的，而 RK4 的一步在 $`h=0.1`$ 时就已经不是 CP 的。
+
+```python
+def step_map(alg, H, jumps, rates, h, method):
+    """{(d, c): matrix of the sector component R_dc of one step, on row-major vec}"""
+    ks_, out = alg.k_factors, {}
+    for c, kc in enumerate(ks_):
+        E = torch.zeros(kc * kc, alg.C, alg.k_max, alg.k_max, dtype=c128)
+        for m in range(kc * kc):
+            E[m, c, m // kc, m % kc] = 1.0
+        Y = [dynamics.lindblad_evolve(alg.operator(Z), H, jumps, [0.0, h], rates=rates, substeps=1,
+                                      method=method)[-1].matrix for Z in (E + E.mH, 1j * (E - E.mH))]
+        RE = 0.5 * (Y[0] - 1j * Y[1])                                  # R(E_ij) by linearity
+        for d, kd in enumerate(ks_):
+            out[d, c] = RE[:, d, :kd, :kd].reshape(kc * kc, kd * kd).T.numpy()
+    return out
+
+def choi_min(alg, S):                                              # smallest eigenvalue of all J(R_dc)
+    ks_ = alg.k_factors
+    return min(np.linalg.eigvalsh(S[d, c].reshape(ks_[d], ks_[d], ks_[c], ks_[c]).transpose(2, 0, 3, 1)
+                                  .reshape(ks_[c] * ks_[d], -1)).min() for d, c in S)
+
+def tp_error(alg, S):                                              # Tr sum_d R_dc(X) = Tr X
+    ks_ = alg.k_factors
+    return max(np.abs(sum(np.trace(S[d, c].reshape(kd, kd, -1), axis1=0, axis2=1) for d, kd in enumerate(ks_))
+                      - np.eye(kc).reshape(-1)).max() for c, kc in enumerate(ks_))
+
+for h in (0.1, 3.0, 1000.0):
+    for m in dynamics.LINDBLAD_METHODS:
+        S = step_map(fock, H_bh, [loss], [0.5], h, m)
+        print(f"h = {h:6}, {m:5}: smallest Choi eigenvalue {choi_min(fock, S):+.1e}, trace error {tp_error(fock, S):.0e}")
+        if m != 'rk4':
+            assert choi_min(fock, S) > -1e-12 and tp_error(fock, S) < 1e-12        # a channel
+assert choi_min(fock, step_map(fock, H_bh, [loss], [0.5], 0.1, 'rk4')) < -5e-5
+```
+
+*数值观察*：对 $`h=0.1`$，RK4 一步的某个 Choi 矩阵的最小特征值为 $`-9.7\cdot10^{-5}`$；对 $`h=3`$（此时 $`h\mathcal L`$ 的某些
+特征值 $`z`$ 满足 $`|T_4(z)|>1`$，RK4 不稳定），它为 $`-9.6\cdot10^{2}`$（见上面的打印）；另外两种方法在舍入误差范围内仍是
+信道。对 $`h=0.1`$，所有特征值都满足 $`|T_4(z)|\le1`$：正性的丧失不是一种不稳定性。用 $`M_h^{-1/2}`$ 的重新归一化是由
+$`M_h`$ 的特征值算出的；当一个扇区内的衰减率不同时，$`M_h`$ 的条件数可能随 $`h`$ 指数增长；当它超过
+$`\varepsilon^{-1/4}`$（$`\varepsilon`$ 为机器精度）时，本库递归地把这一步分成两个步长为 $`h/2`$ 的步，使算出的一步在舍入
+误差范围内保迹。
+
+最后看精度。`'exact'` 与 $`M_6`$ 上带跳跃 $`\sqrt\gamma a_1,\sqrt\gamma a_2`$ 的生成元 $`\hat{\mathcal L}`$ 的
+$`e^{t\hat{\mathcal L}}`$ 一致（命题 8.8(1) 与 (3)，用 SciPy 由 8.3 节的矩阵 `L_loss` 算出），而另外两种方法到它的迹距离
+分别像 $`h^2`$（定理 8.16(3)）和 $`h^4`$ 那样下降：
+
+```python
+rho_f = states.random_density_matrix(fock)
+ref = dynamics.lindblad_evolve(rho_f, H_bh, [loss], [0.0, 2.0], rates=[0.5], method='exact')[-1]
+H6, I6 = embed(H_bh.matrix[0].numpy()), np.eye(6)
+G6 = -1j * (np.kron(H6, I6) - np.kron(I6, H6.T))
+for L6 in L_loss:
+    L6 = math.sqrt(0.5) * L6
+    G6 = G6 + np.kron(L6, L6.conj()) - 0.5 * (np.kron(L6.T @ L6, I6) + np.kron(I6, (L6.T @ L6).T))
+exact6 = sla.expm(2.0 * G6) @ embed(rho_f.matrix[0].numpy()).reshape(-1)
+assert np.abs(exact6 - embed(ref.matrix[0].numpy()).reshape(-1)).max() < 1e-12
+
+for m, subs in (('kraus', (4, 8, 16, 32)), ('rk4', (4, 8, 16, 32))):
+    err = [states.trace_distance(dynamics.lindblad_evolve(rho_f, H_bh, [loss], [0.0, 2.0], rates=[0.5], substeps=n,
+                                                          method=m)[-1], ref).item() for n in subs]
+    ratios = [e0 / e1 for e0, e1 in zip(err[:-1], err[1:])]
+    print(m, [f"{e:.1e}" for e in err], "ratios", [f"{r:.1f}" for r in ratios])
+    assert all((3.5 < r < 4.5) if m == 'kraus' else (12 < r < 20) for r in ratios)
+```
+
+*数值观察*：把 $`h`$ 减半，`'kraus'` 的误差约缩小为 $`1/4`$，RK4 的误差约缩小为 $`1/16`$（打印出的比值）：分裂格式以较低的
+阶换取了对每个步长的正性。对含时的 $`H`$ 或含时的跳跃，`'kraus'` 与 `'exact'` 把生成元冻结在每一步的中点，所以由定理
+8.16(1)，每一步仍是信道；这种冻结中点格式的阶在讲义中没有证明。
 
 <a id="x-8"></a>
 

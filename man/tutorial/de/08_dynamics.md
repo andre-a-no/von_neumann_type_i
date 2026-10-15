@@ -362,7 +362,138 @@ von Hamiltonoperatoren und Sprungoperatoren (für Mittelungen über Unordnung) u
 Differentiation (die letzten beiden auch in dynamiqs). Sie hat keine adaptive Schrittweitensteuerung
 (RK4 arbeitet mit fester Schrittweite und ist nur näherungsweise positiv), keinen Trajektorienlöser,
 und `lindblad_channel` akzeptiert keine Sprünge zwischen Sektoren; dafür sind QuTiP oder dynamiqs
-auf $`M_D`$ die Referenz.
+auf $`M_D`$ die Referenz. Neben RK4 hat `lindblad_evolve` zwei Zeitschrittverfahren, deren Schritte für jede Schrittweite Kanäle sind
+(Abschnitt 8.7): das Splitting zweiter Ordnung `method='kraus'` und `method='exact'`, das auch Sprünge zwischen Sektoren
+behandelt, über die Matrix von $`\mathcal L`$ auf $`\mathcal M`$ (für kleine Sektoren).
+
+<a id="s-8-7"></a>
+
+## 8.7 Zeitschritte, die Kanäle sind
+
+*Vorlesungsnotizen:* [Abschnitt 8.7](../../lecture_notes/de/08_dynamics.md#s-8-7); [Proposition 8.15](../../lecture_notes/de/08_dynamics.md#r-8-15) (RK4 ist nicht positiv), [Satz 8.16](../../lecture_notes/de/08_dynamics.md#r-8-16) (ein Splitting-Verfahren, dessen Schritte Kanäle sind).
+
+`lindblad_evolve` hat drei Zeitschrittverfahren, die mit `method` gewählt werden: `'rk4'` (die unveränderte Voreinstellung)
+ist der Schritt $`R_h=T_4(h\mathcal L)`$; `'kraus'` ist das Splitting $`\tilde\Psi_h`$ aus Satz 8.16, gebaut aus
+$`E_h=e^{-ihH_{\mathrm{eff}}/2}`$, dem Sprunganteil $`\Phi_{\mathrm{tot}}`$ (Sprünge innerhalb der Sektoren und zwischen ihnen)
+und der Korrektur $`M_h^{-1/2}`$; `'exact'` ist $`e^{h\mathcal L}`$, berechnet aus der Matrix von $`\mathcal L`$ auf
+$`\bigoplus_cM_{k_c}`$ (aufgefüllt auf $`C k_{\max}^2`$ Koordinaten; für einen konstanten Generator eine Exponentialfunktion pro
+Intervalllänge, und `substeps` wird nicht verwendet). Zuerst prüfen wir Proposition 8.15 am Zweiniveausystem mit
+$`\omega=\gamma=1`$ und $`h=1`$: Ein RK4-Schritt ist $`T_4(h\mathcal L)`$ mit der Matrix aus `lindblad_superoperator`,
+$`\tau-|a|^2<0`$, und der reine Zustand $`\cos\frac\theta2|g\rangle+\sin\frac\theta2|e\rangle`$, $`\theta=0.2746`$, wird auf
+eine Matrix mit negativem Eigenwert abgebildet; die anderen beiden Verfahren liefern Zustände.
+
+```python
+T4 = lambda z: 1 + z + z ** 2 / 2 + z ** 3 / 6 + z ** 4 / 24
+om, gm, h = 1.0, 1.0, 1.0                                          # omega = gamma: Proposition 8.15(3)
+qb = TypeIAlgebra([2], [2], precision='double')                    # basis |g>, |e>
+H_qb = qb.from_blocks([torch.tensor([[0.0, 0.0], [0.0, om]], dtype=f64)])
+L_qb = [qb.from_blocks([torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=f64)])]   # |g><e|
+step = lambda rho, method: dynamics.lindblad_evolve(rho, H_qb, L_qb, [0.0, h], rates=[gm], substeps=1,
+                                                    method=method)[-1]
+gen = dynamics.lindblad_superoperator(qb, H_qb, L_qb, rates=[gm])[0][0].numpy()
+R_h = sum(np.linalg.matrix_power(h * gen, n) / math.factorial(n) for n in range(5))   # T_4(hL)
+X = states.random_density_matrix(qb)
+assert np.abs(step(X, 'rk4').matrix[0, 0].numpy().reshape(-1) - R_h @ X.matrix[0, 0].numpy().reshape(-1)).max() < 1e-14
+
+tau, a = T4(-h * gm), T4(h * (1j * om - gm / 2))
+u = gm ** 2 + 4 * om ** 2
+c = [-gm * u * (4 * om ** 2 - 3 * gm ** 2) / 384, u ** 2 * (4 * om ** 2 - 5 * gm ** 2) / 4608, gm * u ** 3 / 9216,
+     -u ** 4 / 147456]
+assert abs(tau - abs(a) ** 2 - h ** 5 * sum(ci * h ** i for i, ci in enumerate(c))) < 1e-15   # Proposition 8.15(3)
+print(f"tau - |a|^2 = {tau - abs(a) ** 2:.4f}")
+
+th = 0.2746
+psi_th = torch.tensor([math.cos(th / 2), math.sin(th / 2)], dtype=c128)
+pure = DensityMatrix(qb, matrix=torch.outer(psi_th, psi_th.conj())[None, None])
+low = {m: torch.linalg.eigvalsh(step(pure, m).matrix[0, 0]).min().item() for m in dynamics.LINDBLAD_METHODS}
+print({m: f"{v:.2e}" for m, v in low.items()})
+assert low['rk4'] < -8e-5 and low['kraus'] > 0 and low['exact'] > 0
+x_star = max(r.real for r in np.roots([1, -4, 12, -24]) if abs(r.imag) < 1e-12)
+print(f"x_* = {x_star:.4f}")
+```
+
+Numerische Beobachtung: Hier ist $`\tau-|a|^2=-0.0091`$, und der kleinste Eigenwert nach einem RK4-Schritt ist
+$`-8.5\cdot10^{-5}`$ (die ausgegebenen Werte); $`\theta=0.2746`$ ist auf vier Stellen der Winkel, der ihn minimiert.
+Proposition 8.15 handelt von einem Qubit; in einer Algebra mit Sektoren zeigt sich derselbe Mangel in den Choi-Matrizen der
+Sektorkomponenten $`R_{dc}`$, die genau dann alle positiv sind, wenn der Schritt CP ist (Proposition 6.4). Die Funktion
+`step_map` unten rekonstruiert einen Schritt aus `lindblad_evolve` auf hermiteschen Matrizen (die Ausgabe wird
+selbstadjungiert gemacht, daher wird der Schritt auf $`E_{ij}+E_{ji}`$ und $`i(E_{ij}-E_{ji})`$ ausgewertet und linear
+fortgesetzt). Für den Teilchenverlust aus Abschnitt 8.3 prüfen wir Satz 8.16(1) und Proposition 8.8(1): Die Schritte von
+`'kraus'` und `'exact'` sind CP und TP für Schrittweiten von $`0.1`$ bis $`1000`$, während der RK4-Schritt schon für
+$`h=0.1`$ nicht CP ist.
+
+```python
+def step_map(alg, H, jumps, rates, h, method):
+    """{(d, c): matrix of the sector component R_dc of one step, on row-major vec}"""
+    ks_, out = alg.k_factors, {}
+    for c, kc in enumerate(ks_):
+        E = torch.zeros(kc * kc, alg.C, alg.k_max, alg.k_max, dtype=c128)
+        for m in range(kc * kc):
+            E[m, c, m // kc, m % kc] = 1.0
+        Y = [dynamics.lindblad_evolve(alg.operator(Z), H, jumps, [0.0, h], rates=rates, substeps=1,
+                                      method=method)[-1].matrix for Z in (E + E.mH, 1j * (E - E.mH))]
+        RE = 0.5 * (Y[0] - 1j * Y[1])                                  # R(E_ij) by linearity
+        for d, kd in enumerate(ks_):
+            out[d, c] = RE[:, d, :kd, :kd].reshape(kc * kc, kd * kd).T.numpy()
+    return out
+
+def choi_min(alg, S):                                              # smallest eigenvalue of all J(R_dc)
+    ks_ = alg.k_factors
+    return min(np.linalg.eigvalsh(S[d, c].reshape(ks_[d], ks_[d], ks_[c], ks_[c]).transpose(2, 0, 3, 1)
+                                  .reshape(ks_[c] * ks_[d], -1)).min() for d, c in S)
+
+def tp_error(alg, S):                                              # Tr sum_d R_dc(X) = Tr X
+    ks_ = alg.k_factors
+    return max(np.abs(sum(np.trace(S[d, c].reshape(kd, kd, -1), axis1=0, axis2=1) for d, kd in enumerate(ks_))
+                      - np.eye(kc).reshape(-1)).max() for c, kc in enumerate(ks_))
+
+for h in (0.1, 3.0, 1000.0):
+    for m in dynamics.LINDBLAD_METHODS:
+        S = step_map(fock, H_bh, [loss], [0.5], h, m)
+        print(f"h = {h:6}, {m:5}: smallest Choi eigenvalue {choi_min(fock, S):+.1e}, trace error {tp_error(fock, S):.0e}")
+        if m != 'rk4':
+            assert choi_min(fock, S) > -1e-12 and tp_error(fock, S) < 1e-12        # a channel
+assert choi_min(fock, step_map(fock, H_bh, [loss], [0.5], 0.1, 'rk4')) < -5e-5
+```
+
+Numerische Beobachtung: Für $`h=0.1`$ ist der kleinste Eigenwert einer Choi-Matrix des RK4-Schritts $`-9.7\cdot10^{-5}`$;
+für $`h=3`$, wo einige Eigenwerte $`z`$ von $`h\mathcal L`$ die Ungleichung $`|T_4(z)|>1`$ erfüllen (RK4 ist instabil), ist er
+$`-9.6\cdot10^{2}`$ (oben ausgegeben); die anderen beiden Verfahren bleiben bis auf Rundung Kanäle. Für $`h=0.1`$ erfüllen
+alle Eigenwerte $`|T_4(z)|\le1`$: Der Verlust der Positivität ist keine Instabilität. Die Renormierung mit $`M_h^{-1/2}`$ wird
+aus den Eigenwerten von $`M_h`$ berechnet, deren Konditionszahl exponentiell mit $`h`$ wachsen kann, wenn sich die
+Zerfallsraten in einem Sektor unterscheiden; übersteigt sie $`\varepsilon^{-1/4}`$ ($`\varepsilon`$ die Maschinengenauigkeit),
+so führt die Bibliothek den Schritt rekursiv als zwei Schritte der Weite $`h/2`$ aus, so dass der berechnete Schritt bis auf
+Rundung spurerhaltend bleibt.
+
+Schließlich die Genauigkeit. `'exact'` stimmt mit $`e^{t\hat{\mathcal L}}`$ des Generators $`\hat{\mathcal L}`$ auf $`M_6`$
+mit den Sprüngen $`\sqrt\gamma a_1,\sqrt\gamma a_2`$ überein (Proposition 8.8(1) und (3), mit SciPy aus den Matrizen
+`L_loss` aus Abschnitt 8.3 berechnet), und der Spurabstand der anderen beiden Verfahren dazu fällt wie $`h^2`$ (Satz 8.16(3))
+beziehungsweise wie $`h^4`$:
+
+```python
+rho_f = states.random_density_matrix(fock)
+ref = dynamics.lindblad_evolve(rho_f, H_bh, [loss], [0.0, 2.0], rates=[0.5], method='exact')[-1]
+H6, I6 = embed(H_bh.matrix[0].numpy()), np.eye(6)
+G6 = -1j * (np.kron(H6, I6) - np.kron(I6, H6.T))
+for L6 in L_loss:
+    L6 = math.sqrt(0.5) * L6
+    G6 = G6 + np.kron(L6, L6.conj()) - 0.5 * (np.kron(L6.T @ L6, I6) + np.kron(I6, (L6.T @ L6).T))
+exact6 = sla.expm(2.0 * G6) @ embed(rho_f.matrix[0].numpy()).reshape(-1)
+assert np.abs(exact6 - embed(ref.matrix[0].numpy()).reshape(-1)).max() < 1e-12
+
+for m, subs in (('kraus', (4, 8, 16, 32)), ('rk4', (4, 8, 16, 32))):
+    err = [states.trace_distance(dynamics.lindblad_evolve(rho_f, H_bh, [loss], [0.0, 2.0], rates=[0.5], substeps=n,
+                                                          method=m)[-1], ref).item() for n in subs]
+    ratios = [e0 / e1 for e0, e1 in zip(err[:-1], err[1:])]
+    print(m, [f"{e:.1e}" for e in err], "ratios", [f"{r:.1f}" for r in ratios])
+    assert all((3.5 < r < 4.5) if m == 'kraus' else (12 < r < 20) for r in ratios)
+```
+
+Numerische Beobachtung: Halbieren von $`h`$ teilt den Fehler von `'kraus'` durch etwa $`4`$ und den von RK4 durch etwa
+$`16`$ (die ausgegebenen Verhältnisse): Das Splitting erkauft Positivität für jede Schrittweite mit einer niedrigeren
+Ordnung. Für einen zeitabhängigen Hamiltonoperator $`H`$ oder zeitabhängige Sprünge frieren `'kraus'` und `'exact'` den
+Generator in der Mitte jedes Schritts ein, so dass jeder Schritt nach Satz 8.16(1) ein Kanal bleibt; die Ordnung dieses
+Verfahrens mit eingefrorenem Mittelpunkt wird in den Vorlesungsnotizen nicht bewiesen.
 
 <a id="x-8"></a>
 

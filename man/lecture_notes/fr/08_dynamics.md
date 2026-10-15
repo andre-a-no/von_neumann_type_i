@@ -519,6 +519,189 @@ $`|\rho_{ge}(0)|`$ quand $`t\to\infty`$.
 
 *Calcul :* la comparaison avec d'autres logiciels (QuTiP, dynamiqs, QuantumOptics.jl, SciPy) — [tutoriel, section 8.6](../../tutorial/fr/08_dynamics.md#s-8-6).
 
+<a id="s-8-7"></a>
+
+## 8.7 Pas de temps qui sont des canaux
+
+Un solveur numérique remplace $`e^{t\mathcal L}`$ par $`n`$ pas d'une application $`R_h`$, $`h=t/n`$. Chaque
+$`e^{h\mathcal L}`$ est un canal de $`\mathcal M`$ (proposition 8.8(1)) ; si chaque pas est lui aussi un canal, les densités
+calculées sont des états, quel que soit $`h`$. Pour $`\rho'=\mathcal L(\rho)`$, la méthode de Runge–Kutta classique (RK4)
+est le pas $`\rho\mapsto\rho+\frac h6(k_1+2k_2+2k_3+k_4)`$ avec $`k_1=\mathcal L(\rho)`$, $`k_2=\mathcal L(\rho+\frac h2k_1)`$,
+$`k_3=\mathcal L(\rho+\frac h2k_2)`$ et $`k_4=\mathcal L(\rho+hk_3)`$. En insérant chaque étage dans le suivant,
+$`k_2=(\mathcal L+\frac h2\mathcal L^2)\rho`$, $`k_3=(\mathcal L+\frac h2\mathcal L^2+\frac{h^2}4\mathcal L^3)\rho`$ et
+$`k_4=(\mathcal L+h\mathcal L^2+\frac{h^2}2\mathcal L^3+\frac{h^3}4\mathcal L^4)\rho`$, donc
+```math
+R_h=T_4(h\mathcal L),\qquad T_4(z)=1+z+\frac{z^2}2+\frac{z^3}6+\frac{z^4}{24}.
+```
+$`R_h`$ est TP, car $`\mathrm{Tr}\,\mathcal L(X)=0`$ pour tout $`X`$ (étape 5 de la démonstration du théorème 8.6, avec la
+proposition 8.8(1)), et envoie les éléments autoadjoints sur des éléments autoadjoints, car $`\mathcal L(X^*)=\mathcal L(X)^*`$.
+Elle diffère de $`e^{h\mathcal L}`$ par les termes d'ordre $`\ge5`$ de la série exponentielle, mais elle n'est pas
+forcément positive.
+
+<a id="r-8-15"></a>
+
+**Proposition 8.15 (RK4 n'est pas positif).** Sur $`M_2`$, de base $`|g\rangle,|e\rangle`$, soient $`\mathcal L`$ le
+générateur de la proposition 8.14 ($`H=\omega|e\rangle\langle e|`$ avec $`\omega\in\mathbb R`$, un saut $`|g\rangle\langle e|`$ de
+taux $`\gamma>0`$), $`\lambda=i\omega-\gamma/2`$, $`h>0`$, $`\tau=T_4(-h\gamma)`$ et $`a=T_4(h\lambda)`$.
+
+1. $`R_h(\rho)=\begin{pmatrix}\rho_{gg}+(1-\tau)\rho_{ee}&a\rho_{ge}\\\bar a\rho_{eg}&\tau\rho_{ee}\end{pmatrix}`$, et les
+   assertions suivantes sont équivalentes : $`R_h`$ est positive ; $`R_h`$ est CP ; $`\tau\le1`$ et $`|a|^2\le\tau`$.
+2. $`\tau\le1`$ si et seulement si $`h\gamma\le x_*`$, où $`x_*=2.7853\ldots`$ est l'unique racine réelle de
+   $`x^3-4x^2+12x-24`$. Pour $`h\gamma>x_*`$, l'état $`|e\rangle\langle e|`$ est envoyé sur $`\mathrm{diag}(1-\tau,\tau)`$, dont
+   le premier coefficient est négatif.
+3. Avec $`u=\gamma^2+4\omega^2`$,
+   ```math
+   \tau-|a|^2=h^5\Big(-\frac{\gamma u(4\omega^2-3\gamma^2)}{384}+\frac{u^2(4\omega^2-5\gamma^2)}{4608}\,h
+   +\frac{\gamma u^3}{9216}\,h^2-\frac{u^4}{147456}\,h^3\Big).
+   ```
+   Par conséquent, si $`2\omega>\sqrt3\,\gamma`$, il existe $`h_0>0`$ tel que $`R_h`$ n'est pas positive pour $`0<h<h_0`$ ; si
+   $`\omega=\gamma`$, $`R_h`$ n'est positive pour aucun $`h>0`$ ; si $`\omega=0`$, $`R_h`$ est CP si et seulement si
+   $`h\gamma\le x_*`$.
+
+*Démonstration.* (1) D'après la démonstration de la proposition 8.14, $`\mathcal L(|g\rangle\langle g|)=0`$,
+$`\mathcal L(|e\rangle\langle e|)=\gamma(|g\rangle\langle g|-|e\rangle\langle e|)`$, $`\mathcal L(|g\rangle\langle e|)=\lambda|g\rangle\langle e|`$
+et $`\mathcal L(|e\rangle\langle g|)=\bar\lambda|e\rangle\langle g|`$. Par récurrence,
+$`\mathcal L^n(|e\rangle\langle e|)=(-\gamma)^n(|e\rangle\langle e|-|g\rangle\langle g|)`$ pour $`n\ge1`$, donc
+$`R_h(|e\rangle\langle e|)=|e\rangle\langle e|+(\tau-1)(|e\rangle\langle e|-|g\rangle\langle g|)`$, tandis que $`R_h`$ fixe
+$`|g\rangle\langle g|`$ et multiplie $`|g\rangle\langle e|`$ par $`T_4(h\lambda)=a`$ et $`|e\rangle\langle g|`$ par
+$`T_4(h\bar\lambda)=\bar a`$ ($`T_4`$ est à coefficients réels). C'est la formule. Si $`\tau\le1`$ et $`|a|^2\le\tau`$, les
+opérateurs de Kraus $`|g\rangle\langle g|+\bar a|e\rangle\langle e|`$, $`\sqrt{1-\tau}\,|g\rangle\langle e|`$ et
+$`\sqrt{\tau-|a|^2}\,|e\rangle\langle e|`$ donnent $`R_h`$ (comparer les quatre coefficients), donc $`R_h`$ est CP
+(théorème 6.2), en particulier positive. Réciproquement, soit $`R_h`$ positive. Alors $`R_h(|e\rangle\langle e|)\ge0`$ donne
+$`1-\tau\ge0`$. Pour $`\psi=c|g\rangle+s|e\rangle`$ avec $`c,s>0`$, $`c^2+s^2=1`$, la matrice $`R_h(|\psi\rangle\langle\psi|)\ge0`$ a
+pour déterminant $`s^2\big(c^2(\tau-|a|^2)+\tau(1-\tau)s^2\big)\ge0`$ ; en faisant tendre $`s`$ vers $`0`$, on obtient
+$`\tau-|a|^2\ge0`$.
+
+(2) Avec $`x=h\gamma`$, $`\tau-1=\frac x{24}q(x)`$, $`q(x)=x^3-4x^2+12x-24`$. Comme $`q'(x)=3x^2-8x+12>0`$ (son
+discriminant vaut $`64-144<0`$), $`q`$ est strictement croissante, et $`q(2)=-8<0<3=q(3)`$ ; donc $`q`$ a exactement une
+racine réelle $`x_*\in(2,3)`$, et $`\tau\le1`$ si et seulement si $`x\le x_*`$.
+
+(3) $`\tau-|a|^2=T_4(-h\gamma)-T_4(h\lambda)T_4(h\bar\lambda)`$ est un polynôme en $`h`$ de degré $`8`$. Le coefficient de
+$`h^n`$ dans $`T_4(h\lambda)T_4(h\bar\lambda)`$ est $`\sum\lambda^j\bar\lambda^l/(j!\,l!)`$ sur $`j+l=n`$, $`0\le j,l\le4`$. Pour
+$`n\le4`$, tous ces couples apparaissent, et la somme vaut $`(\lambda+\bar\lambda)^n/n!=(-\gamma)^n/n!`$ par la formule du
+binôme, le coefficient de $`h^n`$ dans $`T_4(-h\gamma)`$ ; donc les coefficients de $`h^0,\dots,h^4`$ dans $`\tau-|a|^2`$
+s'annulent. Pour $`n=5,\dots,8`$, en fonction de $`\sigma=\lambda+\bar\lambda=-\gamma`$ et $`\pi=\lambda\bar\lambda=u/4`$, les
+sommes valent $`\frac{\pi(\lambda^3+\bar\lambda^3)}{24}+\frac{\pi^2\sigma}{12}=\frac{\pi\sigma^3-\pi^2\sigma}{24}`$,
+$`\frac{\pi^2(\lambda^2+\bar\lambda^2)}{48}+\frac{\pi^3}{36}=\frac{\pi^2\sigma^2}{48}-\frac{\pi^3}{72}`$, $`\frac{\pi^3\sigma}{144}`$ et
+$`\frac{\pi^4}{576}`$ (avec $`\lambda^2+\bar\lambda^2=\sigma^2-2\pi`$, $`\lambda^3+\bar\lambda^3=\sigma^3-3\pi\sigma`$), et
+$`T_4(-h\gamma)`$ n'a pas de tels termes ; en substituant $`\sigma`$ et $`\pi`$, on obtient la formule. Si
+$`2\omega>\sqrt3\gamma`$, le coefficient de $`h^5`$ est négatif, donc $`\tau-|a|^2<0`$ pour tout $`h>0`$ petit, et $`R_h`$ n'est
+pas positive d'après (1). Si $`\omega=\gamma`$, alors $`u=5\gamma^2`$, et avec $`y=5h\gamma`$ la formule devient
+$`\tau-|a|^2=-\frac{5(h\gamma)^5}{147456}\,p(y)`$, $`p(y)=y^3-16y^2+32y+384`$. Or $`p(y)>0`$ pour $`y>0`$ :
+$`p(y)=y(y-8)^2+(384-32y)`$ est une somme de deux termes positifs ou nuls, non tous deux nuls, pour $`y\le12`$ ; pour
+$`12\le y\le16`$, $`y(y-8)^2\ge192`$ (croissant pour $`y\ge8`$) et $`384-32y\ge-128`$ ; et $`p(y)=y^2(y-16)+32y+384>0`$ pour
+$`y\ge16`$. Donc $`\tau<|a|^2`$ pour tout $`h>0`$. Si $`\omega=0`$, alors $`u=\gamma^2`$ et, avec $`x=h\gamma`$,
+$`\tau-|a|^2=x^5\big(\frac1{128}-\frac{5x}{4608}+\frac{x^2}{9216}-\frac{x^3}{147456}\big)\ge
+x^5\big(\frac1{128}-\frac{15}{4608}-\frac{27}{147456}\big)>0`$ pour $`0<x\le3`$ ; avec (1) et (2), $`R_h`$ est CP si et
+seulement si $`x\le x_*`$. $`\square`$
+
+Ainsi, pour un système à deux niveaux faiblement amorti ($`2\omega>\sqrt3\,\gamma`$), le pas de RK4 n'est pas positif, si
+petit que soit le pas, alors que ni l'amortissement seul ($`\omega=0`$, d'après (3)) ni la rotation seule n'ont ce défaut pour
+de petits pas : pour $`\gamma=0`$, la démonstration de (1) s'applique avec $`\tau=1`$, et
+$`|T_4(ix)|^2=1-\frac{x^6}{72}+\frac{x^8}{576}\le1`$ pour $`x^2\le8`$ (développer). La violation est petite,
+$`\tau-|a|^2=O(h^5)`$, mais ce n'est pas un effet d'arrondi, et la conservation de la trace par $`R_h`$ n'y remédie pas. La
+théorie de la stabilité de RK4 (la région où $`|T_4(z)|\le1`$) ne la voit pas non plus : ici $`h\lambda`$ et $`-h\gamma`$ sont
+dans cette région pour $`h`$ petit.
+
+*Calcul :* la proposition 8.15 avec `lindblad_evolve(..., method='rk4')` : le pas comme $`T_4(h\mathcal L)`$, un état pur
+envoyé sur une matrice ayant une valeur propre négative, et une matrice de Choi ayant une valeur propre négative pour la
+perte de particules de la section 8.3 — [tutoriel, section 8.7](../../tutorial/fr/08_dynamics.md#s-8-7).
+
+Le schéma suivant est un canal pour toute taille de pas. Il utilise la décomposition
+$`\mathcal L=\mathcal L_0+\Phi_{\mathrm{tot}}`$ de la section 8.4, $`\mathcal L_0(\rho)=-i(H_{\mathrm{eff}}\rho-\rho H_{\mathrm{eff}}^*)`$
+avec $`H_{\mathrm{eff}}=H-\frac i2A`$ et $`A=\Phi_{\mathrm{tot}}^*(1)`$, et le dual $`\Theta^*`$ d'un superopérateur $`\Theta`$ sur
+$`\mathcal M`$ pour la trace, $`\mathrm{Tr}(\Theta(X)Z)=\mathrm{Tr}(X\Theta^*(Z))`$. Pour les superopérateurs $`\Theta`$ sur
+$`\mathcal M`$, on note $`\|\Theta\|_1=\max\{\|\Theta(X)\|_1:X\in\mathcal M,\ \|X\|_1\le1\}`$, avec la norme de trace de la
+section 1.4 ; cette norme est sous-multiplicative.
+
+<a id="r-8-16"></a>
+
+**Théorème 8.16 (un schéma de décomposition dont les pas sont des canaux).** Pour $`h\ge0`$, soient
+$`E_h=e^{-ihH_{\mathrm{eff}}/2}`$, $`S_h(\rho)=E_h\rho E_h^*`$ et
+```math
+\Psi_h=S_h\circ\Big(\mathrm{id}+h\Phi_{\mathrm{tot}}+\frac{h^2}2\Phi_{\mathrm{tot}}^2\Big)\circ S_h,\qquad M_h=\Psi_h^*(1),\qquad
+\tilde\Psi_h(\rho)=\Psi_h\big(M_h^{-1/2}\rho M_h^{-1/2}\big).
+```
+
+1. $`M_h\in\mathcal M`$ et $`M_h\ge e^{ihH_{\mathrm{eff}}^*}e^{-ihH_{\mathrm{eff}}}`$, qui est définie positive ; $`\tilde\Psi_h`$
+   est un canal de $`\mathcal M`$ pour tout $`h\ge0`$.
+2. (*Erreur locale.*) Il existe une constante $`C`$, dépendant de $`\mathcal L`$, telle que
+   $`\|\tilde\Psi_h-e^{h\mathcal L}\|_1\le Ch^3`$ pour $`0\le h\le1`$.
+3. (*Erreur globale.*) Pour tout état $`\rho`$, tout $`t>0`$ et tout entier $`n\ge t`$, avec $`h=t/n`$,
+   $`\|\tilde\Psi_h^n(\rho)-e^{t\mathcal L}\rho\|_1\le Cth^2`$.
+
+*Démonstration.* *Étape 0.* Si $`\Theta`$ est une application positive et TP sur $`\mathcal M`$ et $`Y=Y^*\in\mathcal M`$,
+alors $`\|\Theta(Y)\|_1\le\|Y\|_1`$. En effet, écrivons $`Y=Y_+-Y_-`$, où $`Y_\pm\ge0`$ sont les parties de la
+décomposition spectrale aux valeurs propres positives et aux valeurs propres négatives. Les valeurs singulières de $`Y`$
+sont les valeurs absolues de ses valeurs propres ($`|Y|=(Y^2)^{1/2}`$), donc $`\|Y\|_1=\mathrm{Tr}\,Y_++\mathrm{Tr}\,Y_-`$,
+et, par l'inégalité triangulaire et $`\|P\|_1=\mathrm{Tr}\,P`$ pour $`P\ge0`$ (section 1.4),
+$`\|\Theta(Y)\|_1\le\mathrm{Tr}\,\Theta(Y_+)+\mathrm{Tr}\,\Theta(Y_-)=\|Y\|_1`$. Un $`X\in\mathcal M`$ quelconque s'écrit
+$`Y_1+iY_2`$ avec les autoadjoints $`Y_1=\frac12(X+X^*)`$, $`Y_2=\frac1{2i}(X-X^*)`$ de norme de trace $`\le\|X\|_1`$
+(car $`\|X^*\|_1=\|X\|_1`$, chapitre 1, exercice 2) ; donc $`\|\Theta\|_1\le2`$.
+
+*Étape 1 : (1).* $`H_{\mathrm{eff}}\in\mathcal M`$ (section 8.4), donc $`E_h\in\mathcal M`$ (tous les termes de sa série
+exponentielle sont dans le sous-espace $`\mathcal M`$). $`\Phi_{\mathrm{tot}}`$ envoie $`\mathcal M`$ dans $`\mathcal M`$ et est CP,
+d'opérateurs de Kraus $`\sqrt{g_j}L_j`$ et $`\sqrt{g_m}K^{dc}_{m,l}`$ (proposition 6.4). Donc
+$`\mathrm{id}+h\Phi_{\mathrm{tot}}+\frac{h^2}2\Phi_{\mathrm{tot}}^2`$ est CP (lemme 8.4(a)), $`S_h`$ est CP d'opérateur de Kraus
+$`E_h`$, et $`\Psi_h`$ est CP. Par cyclicité de la trace, $`S_h^*(Z)=E_h^*ZE_h`$, et
+$`\Psi_h^*=S_h^*\circ(\mathrm{id}+h\Phi_{\mathrm{tot}}^*+\frac{h^2}2(\Phi_{\mathrm{tot}}^*)^2)\circ S_h^*`$, où
+$`\Phi_{\mathrm{tot}}^*(Z)=\sum_jg_jL_j^*ZL_j+\sum_mg_m\Phi_m^*(Z)`$ (exercice 1) est positive (proposition 6.8 : les
+opérateurs de Kraus de $`\Phi_m^*`$ sont les $`K^{dc*}_{m,l}`$). Avec $`W=S_h^*(1)=E_h^*E_h\ge0`$, le facteur central envoie
+$`W`$ sur $`W`$ plus un élément positif, et $`S_h^*`$ préserve l'ordre, donc
+$`M_h\ge S_h^*(W)=(E_h^2)^*E_h^2=e^{ihH_{\mathrm{eff}}^*}e^{-ihH_{\mathrm{eff}}}`$ ($`E_h^2=e^{-ihH_{\mathrm{eff}}}`$ d'après le
+lemme 8.1). Cette matrice est définie positive : $`\langle x,(E_h^2)^*E_h^2x\rangle=\|E_h^2x\|^2>0`$ pour $`x\ne0`$, car
+$`E_h^2`$ a pour inverse $`e^{ihH_{\mathrm{eff}}}`$ (lemme 8.1). Toutes les valeurs propres de l'autoadjoint $`M_h\in\mathcal M`$
+sont donc positives, et $`N_h=M_h^{-1/2}\in\mathcal M`$ (calcul fonctionnel, section 1.3) vérifie $`N_hM_hN_h=1`$.
+L'application $`\rho\mapsto N_h\rho N_h`$ est CP, donc $`\tilde\Psi_h`$ aussi (lemme 8.4(a)), et
+$`\mathrm{Tr}\,\tilde\Psi_h(\rho)=\mathrm{Tr}(N_h\rho N_hM_h)=\mathrm{Tr}(\rho N_hM_hN_h)=\mathrm{Tr}\,\rho`$.
+
+*Étape 2 : coefficients de Taylor.* Posons $`\alpha=\frac12\mathcal L_0`$ et $`\beta=\Phi_{\mathrm{tot}}`$, superopérateurs sur
+$`\mathcal M`$. Comme à l'étape 1 de la démonstration du théorème 8.6, $`X(s)=E_s\rho E_s^*`$ résout $`X'=\alpha(X)`$ (dériver
+$`E_s=e^{-isH_{\mathrm{eff}}/2}`$ grâce au lemme 8.1), donc $`S_h=e^{h\alpha}`$ d'après le lemme 8.1, et
+$`\Psi_h=e^{h\alpha}(1+h\beta+\frac{h^2}2\beta^2)e^{h\alpha}`$, tandis que $`e^{h\mathcal L}=e^{h(2\alpha+\beta)}`$. En
+développant les séries absolument convergentes, $`\Psi_h=\sum_{n\ge0}h^nP_n`$ et $`e^{h\mathcal L}=\sum_{n\ge0}h^nQ_n`$ avec
+$`\sum_n\|P_n\|_1\le e^{2\|\alpha\|_1}(1+\|\beta\|_1+\frac12\|\beta\|_1^2)`$ et $`\sum_n\|Q_n\|_1\le e^{\|2\alpha+\beta\|_1}`$. Ici
+$`P_0=Q_0=\mathrm{id}`$, $`P_1=2\alpha+\beta=Q_1`$, et
+$`P_2=\frac{\alpha^2}2+\alpha\beta+\alpha^2+\beta\alpha+\frac{\beta^2}2+\frac{\alpha^2}2=\frac12(2\alpha+\beta)^2=Q_2`$. Par
+conséquent, pour $`0\le h\le1`$, $`\|\Psi_h-e^{h\mathcal L}\|_1\le C_1h^3`$ avec $`C_1=\sum_{n\ge3}(\|P_n\|_1+\|Q_n\|_1)`$, et
+$`\|\Psi_h\|_1\le K=\sum_n\|P_n\|_1`$.
+
+*Étape 3 : (2).* Soit $`x`$ un vecteur propre unitaire de $`M_h`$, de valeur propre $`\mu`$. Comme $`M_h`$ est diagonale par
+blocs, on peut choisir $`x`$ dans un seul secteur, de sorte que $`X=|x\rangle\langle x|\in\mathcal M`$, $`\|X\|_1=1`$. Comme
+$`e^{h\mathcal L}`$ est TP, $`\mu-1=\mathrm{Tr}(XM_h)-\mathrm{Tr}\,X=\mathrm{Tr}\,\Psi_h(X)-\mathrm{Tr}\,e^{h\mathcal L}(X)`$, et
+$`|\mathrm{Tr}\,Y|\le\|Y\|_1`$ (section 1.4) donne $`|\mu-1|\le C_1h^3`$. Soit $`h_1=\min\{1,(2C_1)^{-1/3}\}`$. Pour $`h\le h_1`$,
+tous les $`\mu\ge\frac12`$, et $`N_h`$ a les valeurs propres $`\mu^{-1/2}\le\sqrt2`$ avec
+$`|\mu^{-1/2}-1|=\frac{|1-\mu|}{\sqrt\mu(1+\sqrt\mu)}\le|\mu-1|`$, car $`\sqrt\mu(1+\sqrt\mu)\ge2^{-1/2}(1+2^{-1/2})>1`$. La
+norme d'opérateur d'une matrice autoadjointe est sa plus grande valeur propre en valeur absolue, donc
+$`\|N_h-1\|\le C_1h^3`$ et $`\|N_h\|\le\sqrt2`$. Or
+```math
+\tilde\Psi_h(X)-e^{h\mathcal L}(X)=\Psi_h\big((N_h-1)XN_h+X(N_h-1)\big)+\big(\Psi_h-e^{h\mathcal L}\big)(X),
+```
+et $`\|AB\|_1\le\|A\|\,\|B\|_1`$, $`\|BA\|_1\le\|A\|\,\|B\|_1`$ (chapitre 1, exercice 2 ; la seconde en passant aux adjoints)
+donnent $`\|\tilde\Psi_h-e^{h\mathcal L}\|_1\le\big((1+\sqrt2)K+1\big)C_1h^3`$ pour $`h\le h_1`$. Pour $`h_1<h\le1`$, les deux
+applications sont positives et TP, donc $`\|\tilde\Psi_h-e^{h\mathcal L}\|_1\le4\le4h^3/h_1^3`$ d'après l'étape 0. On prend
+$`C=\max\{((1+\sqrt2)K+1)C_1,\,4h_1^{-3}\}`$.
+
+*Étape 4 : (3).* La somme
+$`\tilde\Psi_h^n-e^{nh\mathcal L}=\sum_{k=0}^{n-1}\tilde\Psi_h^{\,n-1-k}\big(\tilde\Psi_h-e^{h\mathcal L}\big)e^{kh\mathcal L}`$
+est télescopique. Appliqué à $`\rho`$, le $`k`$-ième terme est $`\tilde\Psi_h^{\,n-1-k}(Y_k)`$ avec
+$`Y_k=(\tilde\Psi_h-e^{h\mathcal L})(e^{kh\mathcal L}\rho)`$, qui est autoadjoint (les applications CP préservent
+l'autoadjonction, par la forme de Kraus) avec $`\|Y_k\|_1\le Ch^3`$ d'après (2), car l'état $`e^{kh\mathcal L}\rho`$ est de norme
+de trace $`1`$. D'après (1) et l'étape 0, $`\|\tilde\Psi_h^{\,n-1-k}(Y_k)\|_1\le Ch^3`$, et les $`n`$ termes ont une somme
+au plus égale à $`nCh^3=Cth^2`$. $`\square`$
+
+C'est à l'étape 4 que le fait que les pas soient des canaux paie : les erreurs commises à chaque pas ne sont jamais
+amplifiées, quel que soit $`n`$, et aucune condition de stabilité sur $`h`$ n'est nécessaire. En développant la définition,
+les opérateurs de Kraus de $`\tilde\Psi_h`$ sont $`E_h^2N_h`$, $`\sqrt h\,E_hJE_hN_h`$ et $`\frac h{\sqrt2}E_hJ'JE_hN_h`$, où
+$`J,J'`$ parcourent les opérateurs de Kraus de $`\Phi_{\mathrm{tot}}`$ : un demi-pas de l'évolution sans saut de la
+section 8.4, au plus deux sauts, l'autre demi-pas, et la correction $`N_h`$ des probabilités, avec $`\|N_h-1\|\le C_1h^3`$
+d'après l'étape 3.
+
+*Dans la bibliothèque :* $`\tilde\Psi_h`$ est `lindblad_evolve(..., method='kraus')` ; `method='exact'` calcule
+$`e^{h\mathcal L}`$ lui-même à partir de la matrice de $`\mathcal L`$ sur $`\mathcal M`$ (de taille $`\sum_ck_c^2`$, sauts entre
+secteurs compris), dont les pas sont des canaux d'après la proposition 8.8(1) ; le `method='rk4'` par défaut est
+$`R_h`$ — [tutoriel, section 8.7](../../tutorial/fr/08_dynamics.md#s-8-7).
+
 <a id="x-8"></a>
 
 ## Exercices

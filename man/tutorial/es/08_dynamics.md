@@ -360,7 +360,137 @@ saltos entre sectores como `InterSectorChannel` con la compresión de la proposi
 hamiltonianos y de operadores de salto (para promedios sobre el desorden) y diferenciación
 automática (estas dos últimas también en dynamiqs). No tiene control adaptativo del paso (RK4 es de
 paso fijo y solo aproximadamente positivo), ni integrador de trayectorias, y `lindblad_channel` no
-admite saltos entre sectores; para ello, la referencia son QuTiP o dynamiqs sobre $`M_D`$.
+admite saltos entre sectores; para ello, la referencia son QuTiP o dynamiqs sobre $`M_D`$. Además de RK4, `lindblad_evolve` tiene dos integradores temporales cuyos pasos son canales para todo
+tamaño de paso (sección 8.7): el desdoblamiento de segundo orden `method='kraus'` y `method='exact'`, que también trata
+saltos entre sectores, mediante la matriz de $`\mathcal L`$ sobre $`\mathcal M`$ (para sectores pequeños).
+
+<a id="s-8-7"></a>
+
+## 8.7 Pasos de tiempo que son canales
+
+*Apuntes:* [sección 8.7](../../lecture_notes/es/08_dynamics.md#s-8-7); [proposición 8.15](../../lecture_notes/es/08_dynamics.md#r-8-15) (RK4 no es positivo), [teorema 8.16](../../lecture_notes/es/08_dynamics.md#r-8-16) (un desdoblamiento cuyos pasos son canales).
+
+`lindblad_evolve` tiene tres integradores temporales, que se eligen con `method`: `'rk4'` (el valor por defecto, sin
+cambios) es el paso $`R_h=T_4(h\mathcal L)`$; `'kraus'` es el desdoblamiento $`\tilde\Psi_h`$ del teorema 8.16, construido a
+partir de $`E_h=e^{-ihH_{\mathrm{eff}}/2}`$, la parte de saltos $`\Phi_{\mathrm{tot}}`$ (saltos dentro de los sectores y entre
+ellos) y la corrección $`M_h^{-1/2}`$; `'exact'` es $`e^{h\mathcal L}`$, calculado a partir de la matriz de $`\mathcal L`$ sobre
+$`\bigoplus_cM_{k_c}`$ (rellenada hasta $`C k_{\max}^2`$ coordenadas; para un generador constante, una exponencial por cada
+longitud de intervalo, y `substeps` no se usa). Primero comprobamos la proposición 8.15 en el sistema de dos niveles con
+$`\omega=\gamma=1`$ y $`h=1`$: un paso de RK4 es $`T_4(h\mathcal L)`$ con la matriz de `lindblad_superoperator`,
+$`\tau-|a|^2<0`$, y el estado puro $`\cos\frac\theta2|g\rangle+\sin\frac\theta2|e\rangle`$, $`\theta=0.2746`$, se aplica en una
+matriz con un autovalor negativo; los otros dos métodos dan estados.
+
+```python
+T4 = lambda z: 1 + z + z ** 2 / 2 + z ** 3 / 6 + z ** 4 / 24
+om, gm, h = 1.0, 1.0, 1.0                                          # omega = gamma: Proposition 8.15(3)
+qb = TypeIAlgebra([2], [2], precision='double')                    # basis |g>, |e>
+H_qb = qb.from_blocks([torch.tensor([[0.0, 0.0], [0.0, om]], dtype=f64)])
+L_qb = [qb.from_blocks([torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=f64)])]   # |g><e|
+step = lambda rho, method: dynamics.lindblad_evolve(rho, H_qb, L_qb, [0.0, h], rates=[gm], substeps=1,
+                                                    method=method)[-1]
+gen = dynamics.lindblad_superoperator(qb, H_qb, L_qb, rates=[gm])[0][0].numpy()
+R_h = sum(np.linalg.matrix_power(h * gen, n) / math.factorial(n) for n in range(5))   # T_4(hL)
+X = states.random_density_matrix(qb)
+assert np.abs(step(X, 'rk4').matrix[0, 0].numpy().reshape(-1) - R_h @ X.matrix[0, 0].numpy().reshape(-1)).max() < 1e-14
+
+tau, a = T4(-h * gm), T4(h * (1j * om - gm / 2))
+u = gm ** 2 + 4 * om ** 2
+c = [-gm * u * (4 * om ** 2 - 3 * gm ** 2) / 384, u ** 2 * (4 * om ** 2 - 5 * gm ** 2) / 4608, gm * u ** 3 / 9216,
+     -u ** 4 / 147456]
+assert abs(tau - abs(a) ** 2 - h ** 5 * sum(ci * h ** i for i, ci in enumerate(c))) < 1e-15   # Proposition 8.15(3)
+print(f"tau - |a|^2 = {tau - abs(a) ** 2:.4f}")
+
+th = 0.2746
+psi_th = torch.tensor([math.cos(th / 2), math.sin(th / 2)], dtype=c128)
+pure = DensityMatrix(qb, matrix=torch.outer(psi_th, psi_th.conj())[None, None])
+low = {m: torch.linalg.eigvalsh(step(pure, m).matrix[0, 0]).min().item() for m in dynamics.LINDBLAD_METHODS}
+print({m: f"{v:.2e}" for m, v in low.items()})
+assert low['rk4'] < -8e-5 and low['kraus'] > 0 and low['exact'] > 0
+x_star = max(r.real for r in np.roots([1, -4, 12, -24]) if abs(r.imag) < 1e-12)
+print(f"x_* = {x_star:.4f}")
+```
+
+Observación numérica: aquí $`\tau-|a|^2=-0.0091`$ y el menor autovalor tras un paso de RK4 es $`-8.5\cdot10^{-5}`$ (los
+valores impresos); $`\theta=0.2746`$ es, con cuatro cifras, el ángulo que lo hace mínimo. La proposición 8.15 trata de un
+cúbit; en un álgebra con sectores el mismo defecto aparece en las matrices de Choi de las componentes de sector $`R_{dc}`$,
+que son todas positivas si y solo si el paso es CP (proposición 6.4). La función `step_map` de abajo reconstruye un paso a
+partir de `lindblad_evolve` sobre matrices hermíticas (la salida se hace autoadjunta, así que el paso se evalúa en
+$`E_{ij}+E_{ji}`$ y en $`i(E_{ij}-E_{ji})`$ y se extiende por linealidad). Para la pérdida de partículas de la sección 8.3
+comprobamos el teorema 8.16(1) y la proposición 8.8(1): los pasos de `'kraus'` y de `'exact'` son CP y TP para tamaños de
+paso de $`0.1`$ a $`1000`$, mientras que el paso de RK4 ya no es CP para $`h=0.1`$.
+
+```python
+def step_map(alg, H, jumps, rates, h, method):
+    """{(d, c): matrix of the sector component R_dc of one step, on row-major vec}"""
+    ks_, out = alg.k_factors, {}
+    for c, kc in enumerate(ks_):
+        E = torch.zeros(kc * kc, alg.C, alg.k_max, alg.k_max, dtype=c128)
+        for m in range(kc * kc):
+            E[m, c, m // kc, m % kc] = 1.0
+        Y = [dynamics.lindblad_evolve(alg.operator(Z), H, jumps, [0.0, h], rates=rates, substeps=1,
+                                      method=method)[-1].matrix for Z in (E + E.mH, 1j * (E - E.mH))]
+        RE = 0.5 * (Y[0] - 1j * Y[1])                                  # R(E_ij) by linearity
+        for d, kd in enumerate(ks_):
+            out[d, c] = RE[:, d, :kd, :kd].reshape(kc * kc, kd * kd).T.numpy()
+    return out
+
+def choi_min(alg, S):                                              # smallest eigenvalue of all J(R_dc)
+    ks_ = alg.k_factors
+    return min(np.linalg.eigvalsh(S[d, c].reshape(ks_[d], ks_[d], ks_[c], ks_[c]).transpose(2, 0, 3, 1)
+                                  .reshape(ks_[c] * ks_[d], -1)).min() for d, c in S)
+
+def tp_error(alg, S):                                              # Tr sum_d R_dc(X) = Tr X
+    ks_ = alg.k_factors
+    return max(np.abs(sum(np.trace(S[d, c].reshape(kd, kd, -1), axis1=0, axis2=1) for d, kd in enumerate(ks_))
+                      - np.eye(kc).reshape(-1)).max() for c, kc in enumerate(ks_))
+
+for h in (0.1, 3.0, 1000.0):
+    for m in dynamics.LINDBLAD_METHODS:
+        S = step_map(fock, H_bh, [loss], [0.5], h, m)
+        print(f"h = {h:6}, {m:5}: smallest Choi eigenvalue {choi_min(fock, S):+.1e}, trace error {tp_error(fock, S):.0e}")
+        if m != 'rk4':
+            assert choi_min(fock, S) > -1e-12 and tp_error(fock, S) < 1e-12        # a channel
+assert choi_min(fock, step_map(fock, H_bh, [loss], [0.5], 0.1, 'rk4')) < -5e-5
+```
+
+Observación numérica: para $`h=0.1`$ el menor autovalor de una matriz de Choi del paso de RK4 es $`-9.7\cdot10^{-5}`$;
+para $`h=3`$, donde algunos autovalores $`z`$ de $`h\mathcal L`$ cumplen $`|T_4(z)|>1`$ (RK4 es inestable), es
+$`-9.6\cdot10^{2}`$ (valores impresos arriba); los otros dos métodos siguen siendo canales salvo redondeo. Para $`h=0.1`$
+todos los autovalores cumplen $`|T_4(z)|\le1`$: la pérdida de positividad no es una inestabilidad. La renormalización por
+$`M_h^{-1/2}`$ se calcula a partir de los autovalores de $`M_h`$, cuyo número de condición puede crecer exponencialmente con
+$`h`$ cuando las tasas de decaimiento de un sector difieren; cuando supera $`\varepsilon^{-1/4}`$ ($`\varepsilon`$ la precisión
+de la máquina), la biblioteca da el paso como dos pasos de tamaño $`h/2`$, recursivamente, de modo que el paso calculado
+conserva la traza salvo redondeo.
+
+Por último, la precisión. `'exact'` coincide con $`e^{t\hat{\mathcal L}}`$ del generador $`\hat{\mathcal L}`$ sobre $`M_6`$ con
+los saltos $`\sqrt\gamma a_1,\sqrt\gamma a_2`$ (proposición 8.8(1) y (3), calculado con SciPy a partir de las matrices
+`L_loss` de la sección 8.3), y la distancia de traza de los otros dos métodos a él decrece como $`h^2`$ (teorema 8.16(3)) y
+como $`h^4`$, respectivamente:
+
+```python
+rho_f = states.random_density_matrix(fock)
+ref = dynamics.lindblad_evolve(rho_f, H_bh, [loss], [0.0, 2.0], rates=[0.5], method='exact')[-1]
+H6, I6 = embed(H_bh.matrix[0].numpy()), np.eye(6)
+G6 = -1j * (np.kron(H6, I6) - np.kron(I6, H6.T))
+for L6 in L_loss:
+    L6 = math.sqrt(0.5) * L6
+    G6 = G6 + np.kron(L6, L6.conj()) - 0.5 * (np.kron(L6.T @ L6, I6) + np.kron(I6, (L6.T @ L6).T))
+exact6 = sla.expm(2.0 * G6) @ embed(rho_f.matrix[0].numpy()).reshape(-1)
+assert np.abs(exact6 - embed(ref.matrix[0].numpy()).reshape(-1)).max() < 1e-12
+
+for m, subs in (('kraus', (4, 8, 16, 32)), ('rk4', (4, 8, 16, 32))):
+    err = [states.trace_distance(dynamics.lindblad_evolve(rho_f, H_bh, [loss], [0.0, 2.0], rates=[0.5], substeps=n,
+                                                          method=m)[-1], ref).item() for n in subs]
+    ratios = [e0 / e1 for e0, e1 in zip(err[:-1], err[1:])]
+    print(m, [f"{e:.1e}" for e in err], "ratios", [f"{r:.1f}" for r in ratios])
+    assert all((3.5 < r < 4.5) if m == 'kraus' else (12 < r < 20) for r in ratios)
+```
+
+Observación numérica: dividir $`h`$ por dos divide el error de `'kraus'` por aproximadamente $`4`$ y el de RK4 por
+aproximadamente $`16`$ (los cocientes impresos): el desdoblamiento gana positividad para todo tamaño de paso a cambio de un
+orden menor. Para un $`H`$ dependiente del tiempo o saltos dependientes del tiempo, `'kraus'` y `'exact'` congelan el
+generador en el punto medio de cada paso, así que cada paso sigue siendo un canal por el teorema 8.16(1); el orden de este
+esquema de punto medio congelado no se demuestra en los apuntes.
 
 <a id="x-8"></a>
 

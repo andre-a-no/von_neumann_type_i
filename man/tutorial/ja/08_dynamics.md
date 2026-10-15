@@ -346,7 +346,132 @@ $`D^2`$ 次元の空間に作用し（疎ではあるが、一回の求解の中
 作用素のバッチ（不規則性の平均のため）、そして自動微分（最後の二つは dynamiqs にもある）。
 適応的な刻み幅制御はなく（RK4 は固定刻みで、近似的にしか正値性を保たない）、軌跡
 ソルバーもなく、`lindblad_channel` はセクター間のジャンプを受け付けない。それらについては、$`M_D`$ 上の QuTiP や dynamiqs
-が基準となる。
+が基準となる。 RK4 のほかに、`lindblad_evolve` には各ステップがどの刻み幅でもチャネルである二つの時間積分法がある
+（8.7節）：二次の分割法 `method='kraus'` と、$`\mathcal M`$ 上の $`\mathcal L`$ の行列を通じて（小さいセクターに対して）
+セクター間のジャンプも扱う `method='exact'` である。
+
+<a id="s-8-7"></a>
+
+## 8.7 チャネルである時間ステップ
+
+*講義ノート：* [8.7節](../../lecture_notes/ja/08_dynamics.md#s-8-7)；[命題 8.15](../../lecture_notes/ja/08_dynamics.md#r-8-15)（RK4 は正値でない）、[定理 8.16](../../lecture_notes/ja/08_dynamics.md#r-8-16)（各ステップがチャネルである分割法）。
+
+`lindblad_evolve` には `method` で選ぶ三つの時間積分法がある：`'rk4'`（既定値、変更なし）はステップ
+$`R_h=T_4(h\mathcal L)`$ である。`'kraus'` は定理 8.16 の分割法 $`\tilde\Psi_h`$ であり、$`E_h=e^{-ihH_{\mathrm{eff}}/2}`$、
+ジャンプ部分 $`\Phi_{\mathrm{tot}}`$（セクター内およびセクター間のジャンプ）、補正 $`M_h^{-1/2}`$ から作られる。`'exact'` は
+$`\bigoplus_cM_{k_c}`$ 上の $`\mathcal L`$ の行列（$`C k_{\max}^2`$ 個の座標までゼロで埋めたもの）から計算した
+$`e^{h\mathcal L}`$ である（定数の生成子では区間の長さごとに一回だけ指数関数を計算し、`substeps` は使わない）。まず
+$`\omega=\gamma=1`$、$`h=1`$ の二準位系で命題 8.15 を確かめる：RK4 の一ステップは `lindblad_superoperator` の行列による
+$`T_4(h\mathcal L)`$ であり、$`\tau-|a|^2<0`$ で、純粋状態 $`\cos\frac\theta2|g\rangle+\sin\frac\theta2|e\rangle`$
+（$`\theta=0.2746`$）は負の固有値をもつ行列に写される。他の二つの方法は状態を与える。
+
+```python
+T4 = lambda z: 1 + z + z ** 2 / 2 + z ** 3 / 6 + z ** 4 / 24
+om, gm, h = 1.0, 1.0, 1.0                                          # omega = gamma: Proposition 8.15(3)
+qb = TypeIAlgebra([2], [2], precision='double')                    # basis |g>, |e>
+H_qb = qb.from_blocks([torch.tensor([[0.0, 0.0], [0.0, om]], dtype=f64)])
+L_qb = [qb.from_blocks([torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=f64)])]   # |g><e|
+step = lambda rho, method: dynamics.lindblad_evolve(rho, H_qb, L_qb, [0.0, h], rates=[gm], substeps=1,
+                                                    method=method)[-1]
+gen = dynamics.lindblad_superoperator(qb, H_qb, L_qb, rates=[gm])[0][0].numpy()
+R_h = sum(np.linalg.matrix_power(h * gen, n) / math.factorial(n) for n in range(5))   # T_4(hL)
+X = states.random_density_matrix(qb)
+assert np.abs(step(X, 'rk4').matrix[0, 0].numpy().reshape(-1) - R_h @ X.matrix[0, 0].numpy().reshape(-1)).max() < 1e-14
+
+tau, a = T4(-h * gm), T4(h * (1j * om - gm / 2))
+u = gm ** 2 + 4 * om ** 2
+c = [-gm * u * (4 * om ** 2 - 3 * gm ** 2) / 384, u ** 2 * (4 * om ** 2 - 5 * gm ** 2) / 4608, gm * u ** 3 / 9216,
+     -u ** 4 / 147456]
+assert abs(tau - abs(a) ** 2 - h ** 5 * sum(ci * h ** i for i, ci in enumerate(c))) < 1e-15   # Proposition 8.15(3)
+print(f"tau - |a|^2 = {tau - abs(a) ** 2:.4f}")
+
+th = 0.2746
+psi_th = torch.tensor([math.cos(th / 2), math.sin(th / 2)], dtype=c128)
+pure = DensityMatrix(qb, matrix=torch.outer(psi_th, psi_th.conj())[None, None])
+low = {m: torch.linalg.eigvalsh(step(pure, m).matrix[0, 0]).min().item() for m in dynamics.LINDBLAD_METHODS}
+print({m: f"{v:.2e}" for m, v in low.items()})
+assert low['rk4'] < -8e-5 and low['kraus'] > 0 and low['exact'] > 0
+x_star = max(r.real for r in np.roots([1, -4, 12, -24]) if abs(r.imag) < 1e-12)
+print(f"x_* = {x_star:.4f}")
+```
+
+*数値的観察*：ここでは $`\tau-|a|^2=-0.0091`$ であり、RK4 の一ステップ後の最小固有値は $`-8.5\cdot10^{-5}`$ である（出力される
+値）。$`\theta=0.2746`$ は、四桁の精度で、それを最小にする角度である。命題 8.15 は一つの量子ビットについての主張である。
+セクターをもつ代数では、同じ欠陥がセクター成分 $`R_{dc}`$ のチョイ行列に現れ、ステップが CP であるのはそれらがすべて正である
+とき、かつそのときに限る（命題 6.4）。下の関数 `step_map` は、エルミート行列上の `lindblad_evolve` からステップを再構成する
+（出力は自己共役にされるので、ステップを $`E_{ij}+E_{ji}`$ と $`i(E_{ij}-E_{ji})`$ で評価し、線形に拡張する）。8.3 節の粒子
+損失について、定理 8.16(1) と命題 8.8(1) を確かめる：`'kraus'` と `'exact'` のステップは $`0.1`$ から $`1000`$ までの刻み幅で
+CP かつ TP であるが、RK4 のステップは $`h=0.1`$ ですでに CP でない。
+
+```python
+def step_map(alg, H, jumps, rates, h, method):
+    """{(d, c): matrix of the sector component R_dc of one step, on row-major vec}"""
+    ks_, out = alg.k_factors, {}
+    for c, kc in enumerate(ks_):
+        E = torch.zeros(kc * kc, alg.C, alg.k_max, alg.k_max, dtype=c128)
+        for m in range(kc * kc):
+            E[m, c, m // kc, m % kc] = 1.0
+        Y = [dynamics.lindblad_evolve(alg.operator(Z), H, jumps, [0.0, h], rates=rates, substeps=1,
+                                      method=method)[-1].matrix for Z in (E + E.mH, 1j * (E - E.mH))]
+        RE = 0.5 * (Y[0] - 1j * Y[1])                                  # R(E_ij) by linearity
+        for d, kd in enumerate(ks_):
+            out[d, c] = RE[:, d, :kd, :kd].reshape(kc * kc, kd * kd).T.numpy()
+    return out
+
+def choi_min(alg, S):                                              # smallest eigenvalue of all J(R_dc)
+    ks_ = alg.k_factors
+    return min(np.linalg.eigvalsh(S[d, c].reshape(ks_[d], ks_[d], ks_[c], ks_[c]).transpose(2, 0, 3, 1)
+                                  .reshape(ks_[c] * ks_[d], -1)).min() for d, c in S)
+
+def tp_error(alg, S):                                              # Tr sum_d R_dc(X) = Tr X
+    ks_ = alg.k_factors
+    return max(np.abs(sum(np.trace(S[d, c].reshape(kd, kd, -1), axis1=0, axis2=1) for d, kd in enumerate(ks_))
+                      - np.eye(kc).reshape(-1)).max() for c, kc in enumerate(ks_))
+
+for h in (0.1, 3.0, 1000.0):
+    for m in dynamics.LINDBLAD_METHODS:
+        S = step_map(fock, H_bh, [loss], [0.5], h, m)
+        print(f"h = {h:6}, {m:5}: smallest Choi eigenvalue {choi_min(fock, S):+.1e}, trace error {tp_error(fock, S):.0e}")
+        if m != 'rk4':
+            assert choi_min(fock, S) > -1e-12 and tp_error(fock, S) < 1e-12        # a channel
+assert choi_min(fock, step_map(fock, H_bh, [loss], [0.5], 0.1, 'rk4')) < -5e-5
+```
+
+*数値的観察*：$`h=0.1`$ では RK4 のステップのチョイ行列の最小固有値は $`-9.7\cdot10^{-5}`$ である。$`h\mathcal L`$ のいくつかの
+固有値 $`z`$ が $`|T_4(z)|>1`$ を満たす（RK4 が不安定な）$`h=3`$ では $`-9.6\cdot10^{2}`$ である（上で出力）。他の二つの方法は
+丸め誤差を除いてチャネルのままである。$`h=0.1`$ ではすべての固有値が $`|T_4(z)|\le1`$ を満たす：正値性の破れは不安定性では
+ない。$`M_h^{-1/2}`$ による再規格化は $`M_h`$ の固有値から計算されるが、セクター内の減衰率が異なるとき $`M_h`$ の条件数は
+$`h`$ とともに指数的に増大しうる。それが $`\varepsilon^{-1/4}`$（$`\varepsilon`$ は計算機イプシロン）を超えると、ライブラリは
+そのステップを刻み幅 $`h/2`$ の二つのステップとして再帰的に実行し、計算されたステップが丸め誤差を除いてトレースを保つように
+する。
+
+最後に精度である。`'exact'` は、ジャンプ $`\sqrt\gamma a_1,\sqrt\gamma a_2`$ をもつ $`M_6`$ 上の生成子 $`\hat{\mathcal L}`$ の
+$`e^{t\hat{\mathcal L}}`$（命題 8.8(1) と (3)。8.3 節の行列 `L_loss` から SciPy で計算）と一致し、他の二つの方法のそれとの
+トレース距離はそれぞれ $`h^2`$（定理 8.16(3)）と $`h^4`$ のように減少する：
+
+```python
+rho_f = states.random_density_matrix(fock)
+ref = dynamics.lindblad_evolve(rho_f, H_bh, [loss], [0.0, 2.0], rates=[0.5], method='exact')[-1]
+H6, I6 = embed(H_bh.matrix[0].numpy()), np.eye(6)
+G6 = -1j * (np.kron(H6, I6) - np.kron(I6, H6.T))
+for L6 in L_loss:
+    L6 = math.sqrt(0.5) * L6
+    G6 = G6 + np.kron(L6, L6.conj()) - 0.5 * (np.kron(L6.T @ L6, I6) + np.kron(I6, (L6.T @ L6).T))
+exact6 = sla.expm(2.0 * G6) @ embed(rho_f.matrix[0].numpy()).reshape(-1)
+assert np.abs(exact6 - embed(ref.matrix[0].numpy()).reshape(-1)).max() < 1e-12
+
+for m, subs in (('kraus', (4, 8, 16, 32)), ('rk4', (4, 8, 16, 32))):
+    err = [states.trace_distance(dynamics.lindblad_evolve(rho_f, H_bh, [loss], [0.0, 2.0], rates=[0.5], substeps=n,
+                                                          method=m)[-1], ref).item() for n in subs]
+    ratios = [e0 / e1 for e0, e1 in zip(err[:-1], err[1:])]
+    print(m, [f"{e:.1e}" for e in err], "ratios", [f"{r:.1f}" for r in ratios])
+    assert all((3.5 < r < 4.5) if m == 'kraus' else (12 < r < 20) for r in ratios)
+```
+
+*数値的観察*：$`h`$ を半分にすると、`'kraus'` の誤差は約 $`4`$ 分の $`1`$ に、RK4 の誤差は約 $`16`$ 分の $`1`$ になる（出力
+される比）：分割法は、より低い次数と引き換えに、あらゆる刻み幅での正値性を得る。時間に依存する $`H`$ や時間に依存する
+ジャンプに対しては、`'kraus'` と `'exact'` は各ステップの中点で生成子を固定するので、定理 8.16(1) により各ステップは
+やはりチャネルである。この中点固定スキームの次数は講義ノートでは証明しない。
 
 <a id="x-8"></a>
 

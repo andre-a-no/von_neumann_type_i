@@ -347,7 +347,135 @@ and Lindblad channels sector by sector ($`k_c^2\times k_c^2`$ superoperators), j
 operators (for disorder averages) and automatic differentiation (the last two also in dynamiqs). It
 has no adaptive step-size control (RK4 is fixed step and only approximately positive), no trajectory
 solver, and `lindblad_channel` does not accept jumps between sectors; for those, QuTiP or dynamiqs on
-$`M_D`$ are the reference.
+$`M_D`$ are the reference. Besides RK4, `lindblad_evolve` has two time steppers whose steps are channels for
+every step size (Section 8.7): the second-order splitting `method='kraus'` and `method='exact'`, which also
+treats jumps between sectors, through the matrix of $`\mathcal L`$ on $`\mathcal M`$ (for small sectors).
+
+<a id="s-8-7"></a>
+
+## 8.7 Time steps that are channels
+
+*Lecture notes:* [Section 8.7](../lecture_notes/08_dynamics.md#s-8-7); [Proposition 8.15](../lecture_notes/08_dynamics.md#r-8-15) (RK4 is not positive), [Theorem 8.16](../lecture_notes/08_dynamics.md#r-8-16) (a splitting whose steps are channels).
+
+`lindblad_evolve` has three time steppers, chosen by `method`: `'rk4'` (the default, unchanged) is the step
+$`R_h=T_4(h\mathcal L)`$; `'kraus'` is the splitting $`\tilde\Psi_h`$ of Theorem 8.16, built from
+$`E_h=e^{-ihH_{\mathrm{eff}}/2}`$, the jump part $`\Phi_{\mathrm{tot}}`$ (jumps inside and between the sectors) and the correction
+$`M_h^{-1/2}`$; `'exact'` is $`e^{h\mathcal L}`$, computed from the matrix of $`\mathcal L`$ on $`\bigoplus_cM_{k_c}`$ (padded to
+$`C k_{\max}^2`$ coordinates; for a constant generator one exponential per interval length, and `substeps` is not used).
+We first check Proposition 8.15 on the two-level system with $`\omega=\gamma=1`$ and $`h=1`$: one RK4 step is
+$`T_4(h\mathcal L)`$ with the matrix of `lindblad_superoperator`, $`\tau-|a|^2<0`$, and the pure state
+$`\cos\frac\theta2|g\rangle+\sin\frac\theta2|e\rangle`$, $`\theta=0.2746`$, is mapped to a matrix with a negative eigenvalue;
+the other two methods give states.
+
+```python
+T4 = lambda z: 1 + z + z ** 2 / 2 + z ** 3 / 6 + z ** 4 / 24
+om, gm, h = 1.0, 1.0, 1.0                                          # omega = gamma: Proposition 8.15(3)
+qb = TypeIAlgebra([2], [2], precision='double')                    # basis |g>, |e>
+H_qb = qb.from_blocks([torch.tensor([[0.0, 0.0], [0.0, om]], dtype=f64)])
+L_qb = [qb.from_blocks([torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=f64)])]   # |g><e|
+step = lambda rho, method: dynamics.lindblad_evolve(rho, H_qb, L_qb, [0.0, h], rates=[gm], substeps=1,
+                                                    method=method)[-1]
+gen = dynamics.lindblad_superoperator(qb, H_qb, L_qb, rates=[gm])[0][0].numpy()
+R_h = sum(np.linalg.matrix_power(h * gen, n) / math.factorial(n) for n in range(5))   # T_4(hL)
+X = states.random_density_matrix(qb)
+assert np.abs(step(X, 'rk4').matrix[0, 0].numpy().reshape(-1) - R_h @ X.matrix[0, 0].numpy().reshape(-1)).max() < 1e-14
+
+tau, a = T4(-h * gm), T4(h * (1j * om - gm / 2))
+u = gm ** 2 + 4 * om ** 2
+c = [-gm * u * (4 * om ** 2 - 3 * gm ** 2) / 384, u ** 2 * (4 * om ** 2 - 5 * gm ** 2) / 4608, gm * u ** 3 / 9216,
+     -u ** 4 / 147456]
+assert abs(tau - abs(a) ** 2 - h ** 5 * sum(ci * h ** i for i, ci in enumerate(c))) < 1e-15   # Proposition 8.15(3)
+print(f"tau - |a|^2 = {tau - abs(a) ** 2:.4f}")
+
+th = 0.2746
+psi_th = torch.tensor([math.cos(th / 2), math.sin(th / 2)], dtype=c128)
+pure = DensityMatrix(qb, matrix=torch.outer(psi_th, psi_th.conj())[None, None])
+low = {m: torch.linalg.eigvalsh(step(pure, m).matrix[0, 0]).min().item() for m in dynamics.LINDBLAD_METHODS}
+print({m: f"{v:.2e}" for m, v in low.items()})
+assert low['rk4'] < -8e-5 and low['kraus'] > 0 and low['exact'] > 0
+x_star = max(r.real for r in np.roots([1, -4, 12, -24]) if abs(r.imag) < 1e-12)
+print(f"x_* = {x_star:.4f}")
+```
+
+Numerical observation: here $`\tau-|a|^2=-0.0091`$ and the smallest eigenvalue after one RK4 step is $`-8.5\cdot10^{-5}`$ (the
+printed values); $`\theta=0.2746`$ is, to four digits, the angle that makes it smallest. Proposition 8.15 is about one qubit;
+in an algebra with sectors the same defect appears in the Choi matrices of the sector components $`R_{dc}`$, which are all
+positive iff the step is CP (Proposition 6.4). The function `step_map` below reconstructs a step from `lindblad_evolve` on
+Hermitian matrices (the output is made self-adjoint, so the step is evaluated on $`E_{ij}+E_{ji}`$ and $`i(E_{ij}-E_{ji})`$
+and extended by linearity). For the particle loss of Section 8.3 we check Theorem 8.16(1) and Proposition 8.8(1): the steps
+of `'kraus'` and `'exact'` are CP and TP for step sizes from $`0.1`$ to $`1000`$, while the RK4 step is not CP already
+for $`h=0.1`$.
+
+```python
+def step_map(alg, H, jumps, rates, h, method):
+    """{(d, c): matrix of the sector component R_dc of one step, on row-major vec}"""
+    ks_, out = alg.k_factors, {}
+    for c, kc in enumerate(ks_):
+        E = torch.zeros(kc * kc, alg.C, alg.k_max, alg.k_max, dtype=c128)
+        for m in range(kc * kc):
+            E[m, c, m // kc, m % kc] = 1.0
+        Y = [dynamics.lindblad_evolve(alg.operator(Z), H, jumps, [0.0, h], rates=rates, substeps=1,
+                                      method=method)[-1].matrix for Z in (E + E.mH, 1j * (E - E.mH))]
+        RE = 0.5 * (Y[0] - 1j * Y[1])                                  # R(E_ij) by linearity
+        for d, kd in enumerate(ks_):
+            out[d, c] = RE[:, d, :kd, :kd].reshape(kc * kc, kd * kd).T.numpy()
+    return out
+
+def choi_min(alg, S):                                              # smallest eigenvalue of all J(R_dc)
+    ks_ = alg.k_factors
+    return min(np.linalg.eigvalsh(S[d, c].reshape(ks_[d], ks_[d], ks_[c], ks_[c]).transpose(2, 0, 3, 1)
+                                  .reshape(ks_[c] * ks_[d], -1)).min() for d, c in S)
+
+def tp_error(alg, S):                                              # Tr sum_d R_dc(X) = Tr X
+    ks_ = alg.k_factors
+    return max(np.abs(sum(np.trace(S[d, c].reshape(kd, kd, -1), axis1=0, axis2=1) for d, kd in enumerate(ks_))
+                      - np.eye(kc).reshape(-1)).max() for c, kc in enumerate(ks_))
+
+for h in (0.1, 3.0, 1000.0):
+    for m in dynamics.LINDBLAD_METHODS:
+        S = step_map(fock, H_bh, [loss], [0.5], h, m)
+        print(f"h = {h:6}, {m:5}: smallest Choi eigenvalue {choi_min(fock, S):+.1e}, trace error {tp_error(fock, S):.0e}")
+        if m != 'rk4':
+            assert choi_min(fock, S) > -1e-12 and tp_error(fock, S) < 1e-12        # a channel
+assert choi_min(fock, step_map(fock, H_bh, [loss], [0.5], 0.1, 'rk4')) < -5e-5
+```
+
+Numerical observation: for $`h=0.1`$ the smallest eigenvalue of a Choi matrix of the RK4 step is $`-9.7\cdot10^{-5}`$;
+for $`h=3`$, where some eigenvalues $`z`$ of $`h\mathcal L`$ have $`|T_4(z)|>1`$ (RK4 is unstable), it is $`-9.6\cdot10^{2}`$
+(printed above); the other two methods stay channels up to rounding. For $`h=0.1`$ all eigenvalues satisfy
+$`|T_4(z)|\le1`$: the failure of positivity is not an instability. The renormalisation
+by $`M_h^{-1/2}`$ is computed from the eigenvalues of $`M_h`$, whose condition number can grow exponentially with $`h`$
+when the decay rates in a sector differ; when it exceeds $`\varepsilon^{-1/4}`$ ($`\varepsilon`$ the machine precision) the
+library takes the step as two steps of size $`h/2`$, recursively, so that the computed step stays trace preserving up to
+rounding.
+
+Finally the accuracy. `'exact'` agrees with $`e^{t\hat{\mathcal L}}`$ of the generator $`\hat{\mathcal L}`$ on $`M_6`$ with
+the jumps $`\sqrt\gamma a_1,\sqrt\gamma a_2`$ (Proposition 8.8(1) and (3), computed with SciPy from the matrices `L_loss` of
+Section 8.3), and the trace distance of the other two methods to it falls like $`h^2`$ (Theorem 8.16(3)) and like $`h^4`$, respectively:
+
+```python
+rho_f = states.random_density_matrix(fock)
+ref = dynamics.lindblad_evolve(rho_f, H_bh, [loss], [0.0, 2.0], rates=[0.5], method='exact')[-1]
+H6, I6 = embed(H_bh.matrix[0].numpy()), np.eye(6)
+G6 = -1j * (np.kron(H6, I6) - np.kron(I6, H6.T))
+for L6 in L_loss:
+    L6 = math.sqrt(0.5) * L6
+    G6 = G6 + np.kron(L6, L6.conj()) - 0.5 * (np.kron(L6.T @ L6, I6) + np.kron(I6, (L6.T @ L6).T))
+exact6 = sla.expm(2.0 * G6) @ embed(rho_f.matrix[0].numpy()).reshape(-1)
+assert np.abs(exact6 - embed(ref.matrix[0].numpy()).reshape(-1)).max() < 1e-12
+
+for m, subs in (('kraus', (4, 8, 16, 32)), ('rk4', (4, 8, 16, 32))):
+    err = [states.trace_distance(dynamics.lindblad_evolve(rho_f, H_bh, [loss], [0.0, 2.0], rates=[0.5], substeps=n,
+                                                          method=m)[-1], ref).item() for n in subs]
+    ratios = [e0 / e1 for e0, e1 in zip(err[:-1], err[1:])]
+    print(m, [f"{e:.1e}" for e in err], "ratios", [f"{r:.1f}" for r in ratios])
+    assert all((3.5 < r < 4.5) if m == 'kraus' else (12 < r < 20) for r in ratios)
+```
+
+Numerical observation: halving $`h`$ divides the error of `'kraus'` by about $`4`$ and that of RK4 by about $`16`$ (the
+printed ratios): the splitting buys positivity for every step size with a lower order. For a time-dependent $`H`$ or
+time-dependent jumps, `'kraus'` and `'exact'` freeze the generator at the midpoint of each step, so every step is still a
+channel by Theorem 8.16(1); the order of this frozen-midpoint scheme is not proved in the lecture notes.
 
 <a id="x-8"></a>
 

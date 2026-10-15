@@ -444,6 +444,181 @@ $`t\to\infty`$ のとき $`|\rho_{ge}(0)|`$ に収束する。
 
 *計算：* 他のソフトウェア（QuTiP、dynamiqs、QuantumOptics.jl、SciPy）との比較 — [チュートリアル、8.6節](../../tutorial/ja/08_dynamics.md#s-8-6)。
 
+<a id="s-8-7"></a>
+
+## 8.7 チャネルである時間ステップ
+
+数値ソルバーは $`e^{t\mathcal L}`$ を写像 $`R_h`$ の $`n`$ ステップで置き換える（$`h=t/n`$）。各 $`e^{h\mathcal L}`$ は
+$`\mathcal M`$ のチャネルである（命題 8.8(1)）。各ステップもチャネルであれば、$`h`$ が何であっても、計算された密度は
+状態である。$`\rho'=\mathcal L(\rho)`$ に対する古典的ルンゲ–クッタ法（RK4）は、$`k_1=\mathcal L(\rho)`$、
+$`k_2=\mathcal L(\rho+\frac h2k_1)`$、$`k_3=\mathcal L(\rho+\frac h2k_2)`$、$`k_4=\mathcal L(\rho+hk_3)`$ によるステップ
+$`\rho\mapsto\rho+\frac h6(k_1+2k_2+2k_3+k_4)`$ である。各段を次の段に代入すると
+$`k_2=(\mathcal L+\frac h2\mathcal L^2)\rho`$、$`k_3=(\mathcal L+\frac h2\mathcal L^2+\frac{h^2}4\mathcal L^3)\rho`$、
+$`k_4=(\mathcal L+h\mathcal L^2+\frac{h^2}2\mathcal L^3+\frac{h^3}4\mathcal L^4)\rho`$ となるので
+```math
+R_h=T_4(h\mathcal L),\qquad T_4(z)=1+z+\frac{z^2}2+\frac{z^3}6+\frac{z^4}{24}.
+```
+すべての $`X`$ に対して $`\mathrm{Tr}\,\mathcal L(X)=0`$ であるから（定理 8.6 の証明のステップ 5 と命題 8.8(1)）、$`R_h`$ は
+TP であり、$`\mathcal L(X^*)=\mathcal L(X)^*`$ であるから自己共役元を自己共役元に写す。$`R_h`$ は $`e^{h\mathcal L}`$ と指数級数の
+$`\ge5`$ 次の項だけ異なるが、正値であるとは限らない。
+
+<a id="r-8-15"></a>
+
+**命題 8.15（RK4 は正値でない）.** 基底 $`|g\rangle,|e\rangle`$ をもつ $`M_2`$ 上で、$`\mathcal L`$ を命題 8.14 の生成子
+（$`H=\omega|e\rangle\langle e|`$、$`\omega\in\mathbb R`$、一つのジャンプ $`|g\rangle\langle e|`$、レート $`\gamma>0`$）とし、
+$`\lambda=i\omega-\gamma/2`$、$`h>0`$、$`\tau=T_4(-h\gamma)`$、$`a=T_4(h\lambda)`$ とする。
+
+1. $`R_h(\rho)=\begin{pmatrix}\rho_{gg}+(1-\tau)\rho_{ee}&a\rho_{ge}\\\bar a\rho_{eg}&\tau\rho_{ee}\end{pmatrix}`$ であり、次は
+   同値である：$`R_h`$ は正値；$`R_h`$ は CP；$`\tau\le1`$ かつ $`|a|^2\le\tau`$。
+2. $`\tau\le1`$ であるのは $`h\gamma\le x_*`$ のとき、かつそのときに限る。ここで $`x_*=2.7853\ldots`$ は
+   $`x^3-4x^2+12x-24`$ のただ一つの実根である。$`h\gamma>x_*`$ のとき、状態 $`|e\rangle\langle e|`$ は
+   $`\mathrm{diag}(1-\tau,\tau)`$ に写され、その第一成分は負である。
+3. $`u=\gamma^2+4\omega^2`$ とおくと
+   ```math
+   \tau-|a|^2=h^5\Big(-\frac{\gamma u(4\omega^2-3\gamma^2)}{384}+\frac{u^2(4\omega^2-5\gamma^2)}{4608}\,h
+   +\frac{\gamma u^3}{9216}\,h^2-\frac{u^4}{147456}\,h^3\Big).
+   ```
+   したがって、$`2\omega>\sqrt3\,\gamma`$ ならば、$`0<h<h_0`$ で $`R_h`$ が正値でないような $`h_0>0`$ が存在する。
+   $`\omega=\gamma`$ ならば、どの $`h>0`$ に対しても $`R_h`$ は正値でない。$`\omega=0`$ ならば、$`R_h`$ が CP であるのは
+   $`h\gamma\le x_*`$ のとき、かつそのときに限る。
+
+*証明.* (1) 命題 8.14 の証明により、$`\mathcal L(|g\rangle\langle g|)=0`$、
+$`\mathcal L(|e\rangle\langle e|)=\gamma(|g\rangle\langle g|-|e\rangle\langle e|)`$、$`\mathcal L(|g\rangle\langle e|)=\lambda|g\rangle\langle e|`$、
+$`\mathcal L(|e\rangle\langle g|)=\bar\lambda|e\rangle\langle g|`$ である。帰納法により $`n\ge1`$ に対して
+$`\mathcal L^n(|e\rangle\langle e|)=(-\gamma)^n(|e\rangle\langle e|-|g\rangle\langle g|)`$ であるから
+$`R_h(|e\rangle\langle e|)=|e\rangle\langle e|+(\tau-1)(|e\rangle\langle e|-|g\rangle\langle g|)`$ となり、一方 $`R_h`$ は
+$`|g\rangle\langle g|`$ を固定し、$`|g\rangle\langle e|`$ に $`T_4(h\lambda)=a`$ を、$`|e\rangle\langle g|`$ に
+$`T_4(h\bar\lambda)=\bar a`$ を掛ける（$`T_4`$ の係数は実数）。これが公式である。$`\tau\le1`$ かつ $`|a|^2\le\tau`$ ならば、
+クラウス作用素 $`|g\rangle\langle g|+\bar a|e\rangle\langle e|`$、$`\sqrt{1-\tau}\,|g\rangle\langle e|`$、
+$`\sqrt{\tau-|a|^2}\,|e\rangle\langle e|`$ が $`R_h`$ を与える（四つの成分を比較せよ）ので、$`R_h`$ は CP（定理 6.2）、特に
+正値である。逆に $`R_h`$ が正値であるとする。$`R_h(|e\rangle\langle e|)\ge0`$ から $`1-\tau\ge0`$ を得る。$`c,s>0`$、
+$`c^2+s^2=1`$ である $`\psi=c|g\rangle+s|e\rangle`$ に対し、行列 $`R_h(|\psi\rangle\langle\psi|)\ge0`$ の行列式は
+$`s^2\big(c^2(\tau-|a|^2)+\tau(1-\tau)s^2\big)\ge0`$ である。$`s\to0`$ とすると $`\tau-|a|^2\ge0`$ を得る。
+
+(2) $`x=h\gamma`$ とおくと $`\tau-1=\frac x{24}q(x)`$、$`q(x)=x^3-4x^2+12x-24`$ である。$`q'(x)=3x^2-8x+12>0`$（判別式は
+$`64-144<0`$）であるから $`q`$ は狭義単調増加で、$`q(2)=-8<0<3=q(3)`$ である。よって $`q`$ はちょうど一つの実根
+$`x_*\in(2,3)`$ をもち、$`\tau\le1`$ であるのは $`x\le x_*`$ のとき、かつそのときに限る。
+
+(3) $`\tau-|a|^2=T_4(-h\gamma)-T_4(h\lambda)T_4(h\bar\lambda)`$ は $`h`$ の $`8`$ 次多項式である。
+$`T_4(h\lambda)T_4(h\bar\lambda)`$ における $`h^n`$ の係数は、$`j+l=n`$、$`0\le j,l\le4`$ にわたる和
+$`\sum\lambda^j\bar\lambda^l/(j!\,l!)`$ である。$`n\le4`$ ではそのような組がすべて現れ、二項定理により和は
+$`(\lambda+\bar\lambda)^n/n!=(-\gamma)^n/n!`$、すなわち $`T_4(-h\gamma)`$ における $`h^n`$ の係数である。よって
+$`\tau-|a|^2`$ の $`h^0,\dots,h^4`$ の係数は消える。$`n=5,\dots,8`$ に対しては、$`\sigma=\lambda+\bar\lambda=-\gamma`$ と
+$`\pi=\lambda\bar\lambda=u/4`$ を用いると、和はそれぞれ
+$`\frac{\pi(\lambda^3+\bar\lambda^3)}{24}+\frac{\pi^2\sigma}{12}=\frac{\pi\sigma^3-\pi^2\sigma}{24}`$、
+$`\frac{\pi^2(\lambda^2+\bar\lambda^2)}{48}+\frac{\pi^3}{36}=\frac{\pi^2\sigma^2}{48}-\frac{\pi^3}{72}`$、$`\frac{\pi^3\sigma}{144}`$、
+$`\frac{\pi^4}{576}`$ である（$`\lambda^2+\bar\lambda^2=\sigma^2-2\pi`$、$`\lambda^3+\bar\lambda^3=\sigma^3-3\pi\sigma`$ を用いる）。
+$`T_4(-h\gamma)`$ にはそのような項はない。$`\sigma`$ と $`\pi`$ を代入すると公式を得る。$`2\omega>\sqrt3\gamma`$ ならば
+$`h^5`$ の係数は負であるから、小さいすべての $`h>0`$ に対して $`\tau-|a|^2<0`$ であり、(1) により $`R_h`$ は正値でない。
+$`\omega=\gamma`$ ならば $`u=5\gamma^2`$ であり、$`y=5h\gamma`$ とおくと公式は
+$`\tau-|a|^2=-\frac{5(h\gamma)^5}{147456}\,p(y)`$、$`p(y)=y^3-16y^2+32y+384`$ となる。ここで $`y>0`$ に対し $`p(y)>0`$ である：
+$`y\le12`$ では $`p(y)=y(y-8)^2+(384-32y)`$ は同時には消えない二つの非負の項の和である。$`12\le y\le16`$ では
+$`y(y-8)^2\ge192`$（$`y\ge8`$ で増加）かつ $`384-32y\ge-128`$ である。$`y\ge16`$ では $`p(y)=y^2(y-16)+32y+384>0`$ である。
+よってすべての $`h>0`$ に対して $`\tau<|a|^2`$ である。$`\omega=0`$ ならば $`u=\gamma^2`$ であり、$`x=h\gamma`$ とおくと
+$`0<x\le3`$ に対して
+$`\tau-|a|^2=x^5\big(\frac1{128}-\frac{5x}{4608}+\frac{x^2}{9216}-\frac{x^3}{147456}\big)\ge
+x^5\big(\frac1{128}-\frac{15}{4608}-\frac{27}{147456}\big)>0`$ である。(1) と (2) により、$`R_h`$ が CP であるのは
+$`x\le x_*`$ のとき、かつそのときに限る。$`\square`$
+
+したがって、弱く減衰する二準位系（$`2\omega>\sqrt3\,\gamma`$）では、ステップをどれほど小さくしても RK4 のステップは正値で
+ない。一方、減衰だけ（$`\omega=0`$、(3) による）でも回転だけでも、小さいステップではこの欠陥は生じない：$`\gamma=0`$ では
+(1) の証明が $`\tau=1`$ で適用でき、$`x^2\le8`$ ならば $`|T_4(ix)|^2=1-\frac{x^6}{72}+\frac{x^8}{576}\le1`$ である（展開せよ）。
+破れは小さく $`\tau-|a|^2=O(h^5)`$ であるが、丸め誤差の効果ではなく、$`R_h`$ のトレース保存性によっても解消されない。RK4 の
+安定性理論（$`|T_4(z)|\le1`$ となる領域）もこれを捉えない：ここでは $`h`$ が小さいとき $`h\lambda`$ と $`-h\gamma`$ はその領域に
+ある。
+
+*計算：* `lindblad_evolve(..., method='rk4')` による命題 8.15：$`T_4(h\mathcal L)`$ としてのステップ、負の固有値をもつ行列に
+写される純粋状態、および 8.3 節の粒子損失に対する負の固有値をもつチョイ行列 — [チュートリアル、8.7節](../../tutorial/ja/08_dynamics.md#s-8-7)。
+
+次のスキームは、どの刻み幅に対してもチャネルである。これは 8.4 節の分解 $`\mathcal L=\mathcal L_0+\Phi_{\mathrm{tot}}`$、
+$`\mathcal L_0(\rho)=-i(H_{\mathrm{eff}}\rho-\rho H_{\mathrm{eff}}^*)`$（$`H_{\mathrm{eff}}=H-\frac i2A`$、$`A=\Phi_{\mathrm{tot}}^*(1)`$）と、
+$`\mathcal M`$ 上の超演算子 $`\Theta`$ のトレースに関する双対 $`\Theta^*`$、$`\mathrm{Tr}(\Theta(X)Z)=\mathrm{Tr}(X\Theta^*(Z))`$ を
+用いる。$`\mathcal M`$ 上の超演算子 $`\Theta`$ に対して、1.4 節のトレースノルムを用いて
+$`\|\Theta\|_1=\max\{\|\Theta(X)\|_1:X\in\mathcal M,\ \|X\|_1\le1\}`$ と書く。このノルムは劣乗法的である。
+
+<a id="r-8-16"></a>
+
+**定理 8.16（各ステップがチャネルである分割法）.** $`h\ge0`$ に対して $`E_h=e^{-ihH_{\mathrm{eff}}/2}`$、
+$`S_h(\rho)=E_h\rho E_h^*`$ とし、
+```math
+\Psi_h=S_h\circ\Big(\mathrm{id}+h\Phi_{\mathrm{tot}}+\frac{h^2}2\Phi_{\mathrm{tot}}^2\Big)\circ S_h,\qquad M_h=\Psi_h^*(1),\qquad
+\tilde\Psi_h(\rho)=\Psi_h\big(M_h^{-1/2}\rho M_h^{-1/2}\big)
+```
+とおく。
+
+1. $`M_h\in\mathcal M`$ かつ $`M_h\ge e^{ihH_{\mathrm{eff}}^*}e^{-ihH_{\mathrm{eff}}}`$ であり、右辺は正定値である。$`\tilde\Psi_h`$ は
+   すべての $`h\ge0`$ に対して $`\mathcal M`$ のチャネルである。
+2. （*局所誤差.*）$`\mathcal L`$ に依存する定数 $`C`$ が存在して、$`0\le h\le1`$ に対して
+   $`\|\tilde\Psi_h-e^{h\mathcal L}\|_1\le Ch^3`$ が成り立つ。
+3. （*大域誤差.*）すべての状態 $`\rho`$、すべての $`t>0`$、すべての整数 $`n\ge t`$ に対して、$`h=t/n`$ とおくと
+   $`\|\tilde\Psi_h^n(\rho)-e^{t\mathcal L}\rho\|_1\le Cth^2`$ が成り立つ。
+
+*証明.* *ステップ 0.* $`\Theta`$ が $`\mathcal M`$ 上の正値かつ TP な写像で $`Y=Y^*\in\mathcal M`$ ならば
+$`\|\Theta(Y)\|_1\le\|Y\|_1`$ である。実際、$`Y=Y_+-Y_-`$ と書く。ここで $`Y_\pm\ge0`$ は、スペクトル分解のうち正の固有値に
+対応する部分と負の固有値に対応する部分である。$`Y`$ の特異値はその固有値の絶対値である（$`|Y|=(Y^2)^{1/2}`$）から
+$`\|Y\|_1=\mathrm{Tr}\,Y_++\mathrm{Tr}\,Y_-`$ であり、三角不等式と $`P\ge0`$ に対する $`\|P\|_1=\mathrm{Tr}\,P`$（1.4節）により
+$`\|\Theta(Y)\|_1\le\mathrm{Tr}\,\Theta(Y_+)+\mathrm{Tr}\,\Theta(Y_-)=\|Y\|_1`$ である。任意の $`X\in\mathcal M`$ は、トレースノルムが
+$`\le\|X\|_1`$ である自己共役な $`Y_1=\frac12(X+X^*)`$、$`Y_2=\frac1{2i}(X-X^*)`$ により $`Y_1+iY_2`$ と書ける
+（$`\|X^*\|_1=\|X\|_1`$、第1章、演習問題 2）。よって $`\|\Theta\|_1\le2`$ である。
+
+*ステップ 1：(1).* $`H_{\mathrm{eff}}\in\mathcal M`$（8.4節）であるから $`E_h\in\mathcal M`$ である（その指数級数の項はすべて部分空間
+$`\mathcal M`$ にある）。$`\Phi_{\mathrm{tot}}`$ は $`\mathcal M`$ を $`\mathcal M`$ に写し、クラウス作用素 $`\sqrt{g_j}L_j`$ と
+$`\sqrt{g_m}K^{dc}_{m,l}`$ をもつ CP 写像である（命題 6.4）。よって $`\mathrm{id}+h\Phi_{\mathrm{tot}}+\frac{h^2}2\Phi_{\mathrm{tot}}^2`$
+は CP（補題 8.4(a)）、$`S_h`$ はクラウス作用素 $`E_h`$ をもつ CP 写像であり、$`\Psi_h`$ は CP である。トレースの巡回性により
+$`S_h^*(Z)=E_h^*ZE_h`$ であり、
+$`\Psi_h^*=S_h^*\circ(\mathrm{id}+h\Phi_{\mathrm{tot}}^*+\frac{h^2}2(\Phi_{\mathrm{tot}}^*)^2)\circ S_h^*`$ である。ここで
+$`\Phi_{\mathrm{tot}}^*(Z)=\sum_jg_jL_j^*ZL_j+\sum_mg_m\Phi_m^*(Z)`$（演習問題 1）は正値である（命題 6.8：$`\Phi_m^*`$ のクラウス
+作用素は $`K^{dc*}_{m,l}`$ である）。$`W=S_h^*(1)=E_h^*E_h\ge0`$ とすると、中央の因子は $`W`$ を $`W`$ と正の元の和に写し、
+$`S_h^*`$ は順序を保つから、$`M_h\ge S_h^*(W)=(E_h^2)^*E_h^2=e^{ihH_{\mathrm{eff}}^*}e^{-ihH_{\mathrm{eff}}}`$ である
+（補題 8.1 により $`E_h^2=e^{-ihH_{\mathrm{eff}}}`$）。この行列は正定値である：$`E_h^2`$ は逆 $`e^{ihH_{\mathrm{eff}}}`$ をもつ
+（補題 8.1）から、$`x\ne0`$ に対し $`\langle x,(E_h^2)^*E_h^2x\rangle=\|E_h^2x\|^2>0`$ である。よって自己共役な
+$`M_h\in\mathcal M`$ の固有値はすべて正であり、$`N_h=M_h^{-1/2}\in\mathcal M`$（関数計算、1.3節）は $`N_hM_hN_h=1`$ を満たす。写像
+$`\rho\mapsto N_h\rho N_h`$ は CP であるから $`\tilde\Psi_h`$ も CP であり（補題 8.4(a)）、
+$`\mathrm{Tr}\,\tilde\Psi_h(\rho)=\mathrm{Tr}(N_h\rho N_hM_h)=\mathrm{Tr}(\rho N_hM_hN_h)=\mathrm{Tr}\,\rho`$ である。
+
+*ステップ 2：テイラー係数.* $`\mathcal M`$ 上の超演算子 $`\alpha=\frac12\mathcal L_0`$、$`\beta=\Phi_{\mathrm{tot}}`$ をとる。定理 8.6
+の証明のステップ 1 と同様に、$`X(s)=E_s\rho E_s^*`$ は $`X'=\alpha(X)`$ を満たす（補題 8.1 により
+$`E_s=e^{-isH_{\mathrm{eff}}/2}`$ を微分する）ので、補題 8.1 により $`S_h=e^{h\alpha}`$ であり、
+$`\Psi_h=e^{h\alpha}(1+h\beta+\frac{h^2}2\beta^2)e^{h\alpha}`$、一方 $`e^{h\mathcal L}=e^{h(2\alpha+\beta)}`$ である。絶対収束する
+級数を掛け合わせると $`\Psi_h=\sum_{n\ge0}h^nP_n`$、$`e^{h\mathcal L}=\sum_{n\ge0}h^nQ_n`$ であり、
+$`\sum_n\|P_n\|_1\le e^{2\|\alpha\|_1}(1+\|\beta\|_1+\frac12\|\beta\|_1^2)`$、$`\sum_n\|Q_n\|_1\le e^{\|2\alpha+\beta\|_1}`$ である。
+ここで $`P_0=Q_0=\mathrm{id}`$、$`P_1=2\alpha+\beta=Q_1`$、
+$`P_2=\frac{\alpha^2}2+\alpha\beta+\alpha^2+\beta\alpha+\frac{\beta^2}2+\frac{\alpha^2}2=\frac12(2\alpha+\beta)^2=Q_2`$ である。よって
+$`0\le h\le1`$ に対し、$`C_1=\sum_{n\ge3}(\|P_n\|_1+\|Q_n\|_1)`$ として $`\|\Psi_h-e^{h\mathcal L}\|_1\le C_1h^3`$ であり、
+$`\|\Psi_h\|_1\le K=\sum_n\|P_n\|_1`$ である。
+
+*ステップ 3：(2).* $`x`$ を $`M_h`$ の固有値 $`\mu`$ に対する単位固有ベクトルとする。$`M_h`$ はブロック対角であるから $`x`$ は
+一つのセクターの中にとれ、$`X=|x\rangle\langle x|\in\mathcal M`$、$`\|X\|_1=1`$ である。$`e^{h\mathcal L}`$ は TP であるから
+$`\mu-1=\mathrm{Tr}(XM_h)-\mathrm{Tr}\,X=\mathrm{Tr}\,\Psi_h(X)-\mathrm{Tr}\,e^{h\mathcal L}(X)`$ であり、$`|\mathrm{Tr}\,Y|\le\|Y\|_1`$
+（1.4節）から $`|\mu-1|\le C_1h^3`$ を得る。$`h_1=\min\{1,(2C_1)^{-1/3}\}`$ とおく。$`h\le h_1`$ ならばすべての
+$`\mu\ge\frac12`$ であり、$`N_h`$ の固有値 $`\mu^{-1/2}\le\sqrt2`$ は
+$`|\mu^{-1/2}-1|=\frac{|1-\mu|}{\sqrt\mu(1+\sqrt\mu)}\le|\mu-1|`$ を満たす（$`\sqrt\mu(1+\sqrt\mu)\ge2^{-1/2}(1+2^{-1/2})>1`$ であるから）。
+自己共役行列の作用素ノルムは固有値の絶対値の最大値であるから、$`\|N_h-1\|\le C_1h^3`$、$`\|N_h\|\le\sqrt2`$ である。ここで
+```math
+\tilde\Psi_h(X)-e^{h\mathcal L}(X)=\Psi_h\big((N_h-1)XN_h+X(N_h-1)\big)+\big(\Psi_h-e^{h\mathcal L}\big)(X)
+```
+であり、$`\|AB\|_1\le\|A\|\,\|B\|_1`$、$`\|BA\|_1\le\|A\|\,\|B\|_1`$（第1章、演習問題 2。後者は随伴をとって得る）により、
+$`h\le h_1`$ に対して $`\|\tilde\Psi_h-e^{h\mathcal L}\|_1\le\big((1+\sqrt2)K+1\big)C_1h^3`$ である。$`h_1<h\le1`$ では両方の写像が
+正値かつ TP であるから、ステップ 0 により $`\|\tilde\Psi_h-e^{h\mathcal L}\|_1\le4\le4h^3/h_1^3`$ である。
+$`C=\max\{((1+\sqrt2)K+1)C_1,\,4h_1^{-3}\}`$ とすればよい。
+
+*ステップ 4：(3).* 和
+$`\tilde\Psi_h^n-e^{nh\mathcal L}=\sum_{k=0}^{n-1}\tilde\Psi_h^{\,n-1-k}\big(\tilde\Psi_h-e^{h\mathcal L}\big)e^{kh\mathcal L}`$
+は望遠鏡和である。$`\rho`$ に適用すると、第 $`k`$ 項は $`\tilde\Psi_h^{\,n-1-k}(Y_k)`$ であり、
+$`Y_k=(\tilde\Psi_h-e^{h\mathcal L})(e^{kh\mathcal L}\rho)`$ は自己共役で（クラウス形により CP 写像は自己共役性を保つ）、状態
+$`e^{kh\mathcal L}\rho`$ のトレースノルムは $`1`$ であるから (2) により $`\|Y_k\|_1\le Ch^3`$ である。(1) とステップ 0 により
+$`\|\tilde\Psi_h^{\,n-1-k}(Y_k)\|_1\le Ch^3`$ であり、$`n`$ 個の項の和は高々 $`nCh^3=Cth^2`$ である。$`\square`$
+
+ステップがチャネルであることが効いてくるのはステップ 4 である：各ステップで生じた誤差は、$`n`$ が何であっても決して
+増幅されず、$`h`$ に対する安定性条件は必要ない。定義を展開すると、$`\tilde\Psi_h`$ のクラウス作用素は $`E_h^2N_h`$、
+$`\sqrt h\,E_hJE_hN_h`$、$`\frac h{\sqrt2}E_hJ'JE_hN_h`$ である。ここで $`J,J'`$ は $`\Phi_{\mathrm{tot}}`$ のクラウス作用素を
+動く：8.4 節のジャンプなしの時間発展による半ステップ、高々二回のジャンプ、残りの半ステップ、そして確率の補正 $`N_h`$
+（ステップ 3 により $`\|N_h-1\|\le C_1h^3`$）である。
+
+*ライブラリでは：* $`\tilde\Psi_h`$ は `lindblad_evolve(..., method='kraus')` である。`method='exact'` は $`\mathcal M`$ 上の
+$`\mathcal L`$ の行列（サイズ $`\sum_ck_c^2`$、セクター間のジャンプを含む）から $`e^{h\mathcal L}`$ そのものを計算し、そのステップは
+命題 8.8(1) によりチャネルである。既定の `method='rk4'` は $`R_h`$ である — [チュートリアル、8.7節](../../tutorial/ja/08_dynamics.md#s-8-7)。
+
 <a id="x-8"></a>
 
 ## 演習問題

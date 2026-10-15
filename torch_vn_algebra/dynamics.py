@@ -9,6 +9,7 @@ Exact solvers (time-independent generators):
     lindblad_channel                            exp of the Lindblad superoperator (k_c^2 x k_c^2)
 Fixed-step RK4 solvers (any generator, also time dependent):
     rk4, schrodinger_rk4, lindblad_evolve, solve_operator_ode
+lindblad_evolve(method='kraus' | 'exact'): time steps that are channels (CPTP) for every step size
 """
 from typing import Callable, List, Optional, Sequence, Union
 
@@ -198,6 +199,83 @@ def _rates(jumps, rates):
     return list(rates)
 
 
+def _lindblad_terms(H, jumps, rates, algebra):
+    """Validate the data of a GKSL generator (lindblad_rhs) and split the jumps: returns
+    (plain [(g, L)], inter [(g, InterSectorChannel)], timedep, algebra)."""
+    rates = _rates(jumps, rates)
+    for L in jumps:
+        if isinstance(L, Channel):
+            raise TypeError("a sector-preserving Channel is not a jump operator; pass its Kraus operators, or "
+                            "channel.to_inter_sector() for a jump between sectors")
+    inter = [(g, L) for g, L in zip(rates, jumps) if isinstance(L, InterSectorChannel)]
+    for _, L in inter:
+        if L.algebra_in.k_factors != L.algebra_out.k_factors:
+            raise ValueError("a jump between sectors must map the algebra into itself")
+    plain = [(g, L) for g, L in zip(rates, jumps) if not isinstance(L, InterSectorChannel)]
+    timedep = (callable(H) and not isinstance(H, Operator)) or any(callable(L) and not isinstance(L, Operator)
+                                                                     for _, L in plain)
+    if algebra is None:
+        algebra = _algebra_of(H, *[L for _, L in plain])
+    return plain, inter, timedep, algebra
+
+
+def _lindblad_parts(H, plain, inter, algebra, t, dtype, device):
+    """(H, A, stacked jumps (B, J, C, k, k) with their rates, inter-sector Kraus tensors) at time t: with
+    A = sum_j g_j L_j^* L_j, drho/dt = -i (H rho - rho H^*) - 1/2 (A rho + rho A) + sum_j g_j L_j rho L_j^*
+    + (between sectors). A is kept apart from H so that a real algebra with real jumps stays real."""
+    def get(x):
+        return _mat(x(t) if callable(x) and not isinstance(x, Operator) else x, algebra)
+
+    Hm = None
+    if H is not None:
+        Hm = get(H).to(device=device, dtype=dtype)
+    A = None
+    Ls, gs = None, None
+    if plain:
+        Ls = torch.stack(torch.broadcast_tensors(*[get(L).to(device=device, dtype=dtype) for _, L in plain]),
+                         dim=1)                                           # (B, J, C, k, k)
+        gs = torch.tensor([g for g, _ in plain], dtype=Ls.real.dtype, device=device)
+        A = torch.einsum('j,bjcai,bjcak->bcik', gs.to(dtype), Ls.conj(), Ls)
+    Ks = []
+    for g, L in inter:
+        K = L.kraus.to(device=device, dtype=dtype)                        # (B, r, D, C, m, k)
+        KdK = (K.conj().transpose(-2, -1) @ K).sum(dim=(1, 2))            # (B, C, k, k), block diagonal
+        A = g * KdK if A is None else A + g * KdK
+        Ks.append((g, K))
+    return Hm, A, Ls, gs, Ks
+
+
+def _add_gain(out: torch.Tensor, rho: torch.Tensor, Ls, gs, Ks) -> torch.Tensor:
+    """out + Phi(rho), Phi(rho) = sum_j g_j L_j rho L_j^* + sum_m g_m Phi_m(rho) (the jump part of the generator)."""
+    if Ls is not None:                     # sum_j g_j L_j rho L_j^*: one product over the merged (j, column) index
+        X = (Ls @ rho.unsqueeze(1)) * gs[:, None, None, None].to(rho.dtype)          # (B, J, C, k, k)
+        Bx, J, C, k = X.shape[0], X.shape[1], X.shape[2], X.shape[-1]
+        Xc = X.permute(0, 2, 3, 1, 4).reshape(Bx, C, k, J * k)
+        Lc = Ls.permute(0, 2, 3, 1, 4).reshape(Ls.shape[0], C, k, J * k)
+        out = out + Xc @ Lc.conj().transpose(-2, -1)
+    for g, K in Ks:                        # gain between sectors: sum_{i, c} K^{dc} rho_c K^{dc*}
+        B_, r, D, C, m, k = K.shape
+        X = K @ rho[:, None, None]                                          # (B, r, D, C, m, k)
+        Bx = X.shape[0]
+        Xc = X.permute(0, 2, 4, 1, 3, 5).reshape(Bx, D, m, r * C * k)
+        Kc = K.permute(0, 2, 4, 1, 3, 5).reshape(B_, D, m, r * C * k)
+        out = out + g * (Xc @ Kc.conj().transpose(-2, -1))
+    return out
+
+
+def _gain_dual(Z: torch.Tensor, Ls, gs, Ks) -> torch.Tensor:
+    """Phi^*(Z) = sum_j g_j L_j^* Z L_j + sum_m g_m Phi_m^*(Z), the dual of the jump part for the blunt trace
+    (Phi_m^*(Z)_c = sum_{d,i} K_i^{dc*} Z_d K_i^{dc})."""
+    out = torch.zeros_like(Z)
+    if Ls is not None:
+        X = Ls.conj().transpose(-2, -1) @ Z.unsqueeze(1) @ Ls                    # (B, J, C, k, k)
+        out = out + (X * gs[:, None, None, None].to(Z.dtype)).sum(dim=1)
+    for g, K in Ks:
+        X = K.conj().transpose(-2, -1) @ Z[:, None, :, None] @ K            # (B, r, D, C, k, k)
+        out = out + g * X.sum(dim=(1, 2))
+    return out
+
+
 def lindblad_rhs(H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
                  rates: Optional[Sequence[float]] = None,
                  algebra: Optional[TypeIAlgebra] = None) -> Callable[[float, torch.Tensor], torch.Tensor]:
@@ -214,78 +292,132 @@ def lindblad_rhs(H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
     prepared once; callables of t are evaluated at every step. Raw tensors are restricted to the blocks of
     `algebra` (taken from H or the jumps when they are Operators); without an algebra their padding must be zero.
     """
-    rates = _rates(jumps, rates)
-    for L in jumps:
-        if isinstance(L, Channel):
-            raise TypeError("a sector-preserving Channel is not a jump operator; pass its Kraus operators, or "
-                            "channel.to_inter_sector() for a jump between sectors")
-    inter = [(g, L) for g, L in zip(rates, jumps) if isinstance(L, InterSectorChannel)]
-    for _, L in inter:
-        if L.algebra_in.k_factors != L.algebra_out.k_factors:
-            raise ValueError("a jump between sectors must map the algebra into itself")
-    plain = [(g, L) for g, L in zip(rates, jumps) if not isinstance(L, InterSectorChannel)]
-    timedep = (callable(H) and not isinstance(H, Operator)) or any(callable(L) and not isinstance(L, Operator)
-                                                                     for _, L in plain)
-
-    if algebra is None:
-        algebra = _algebra_of(H, *[L for _, L in plain])
-
-    def get(x, t):
-        return _mat(x(t) if callable(x) and not isinstance(x, Operator) else x, algebra)
-
-    def parts(t, dtype, device):
-        """(H, A, stacked jumps (B, J, C, k, k) with their rates, inter-sector Kraus tensors): with
-        A = sum_j g_j L_j^* L_j, drho/dt = -i (H rho - rho H^*) - 1/2 (A rho + rho A) + sum_j g_j L_j rho L_j^*
-        + (between sectors). A is kept apart from H so that a real algebra with real jumps stays real."""
-        Hm = None
-        if H is not None:
-            Hm = get(H, t).to(device=device, dtype=dtype)
-        A = None
-        Ls, gs = None, None
-        if plain:
-            Ls = torch.stack(torch.broadcast_tensors(*[get(L, t).to(device=device, dtype=dtype) for _, L in plain]),
-                             dim=1)                                           # (B, J, C, k, k)
-            gs = torch.tensor([g for g, _ in plain], dtype=Ls.real.dtype, device=device)
-            A = torch.einsum('j,bjcai,bjcak->bcik', gs.to(dtype), Ls.conj(), Ls)
-        Ks = []
-        for g, L in inter:
-            K = L.kraus.to(device=device, dtype=dtype)                        # (B, r, D, C, m, k)
-            KdK = (K.conj().transpose(-2, -1) @ K).sum(dim=(1, 2))            # (B, C, k, k), block diagonal
-            A = g * KdK if A is None else A + g * KdK
-            Ks.append((g, K))
-        return Hm, A, Ls, gs, Ks
-
+    plain, inter, timedep, algebra = _lindblad_terms(H, jumps, rates, algebra)
     cache = {}
 
     def f(t, rho):
         key = (rho.dtype, rho.device)
         if timedep or key not in cache:
-            cache[key] = parts(t, rho.dtype, rho.device)
+            cache[key] = _lindblad_parts(H, plain, inter, algebra, t, rho.dtype, rho.device)
         Hm, A, Ls, gs, Ks = cache[key]
         out = torch.zeros_like(rho) if Hm is None else -1j * (Hm @ rho - rho @ Hm.conj().transpose(-2, -1))
         if A is not None:
             out = out - 0.5 * (A @ rho + rho @ A)
-        if Ls is not None:                     # sum_j g_j L_j rho L_j^*: one product over the merged (j, column) index
-            X = (Ls @ rho.unsqueeze(1)) * gs[:, None, None, None].to(rho.dtype)          # (B, J, C, k, k)
-            Bx, J, C, k = X.shape[0], X.shape[1], X.shape[2], X.shape[-1]
-            Xc = X.permute(0, 2, 3, 1, 4).reshape(Bx, C, k, J * k)
-            Lc = Ls.permute(0, 2, 3, 1, 4).reshape(Ls.shape[0], C, k, J * k)
-            out = out + Xc @ Lc.conj().transpose(-2, -1)
-        for g, K in Ks:                        # gain between sectors: sum_{i, c} K^{dc} rho_c K^{dc*}
-            B_, r, D, C, m, k = K.shape
-            X = K @ rho[:, None, None]                                          # (B, r, D, C, m, k)
-            Bx = X.shape[0]
-            Xc = X.permute(0, 2, 4, 1, 3, 5).reshape(Bx, D, m, r * C * k)
-            Kc = K.permute(0, 2, 4, 1, 3, 5).reshape(B_, D, m, r * C * k)
-            out = out + g * (Xc @ Kc.conj().transpose(-2, -1))
-        return out
+        return _add_gain(out, rho, Ls, gs, Ks)
     return f
+
+
+def _kraus_step(parts, h: float, alg: TypeIAlgebra, dtype, device) -> Callable[[torch.Tensor], torch.Tensor]:
+    """
+    One step of the completely positive, trace-preserving splitting of Theorem 8.16 for the frozen generator
+    `parts`: with E = exp(-i h/2 H_eff), H_eff = H - i/2 A, S(X) = E X E^*, and Phi the jump part,
+        Psi_h = S o (id + h Phi + h^2/2 Phi^2) o S,    M = Psi_h^*(1),    rho -> Psi_h(M^{-1/2} rho M^{-1/2}).
+    Every factor is CP and the last one makes the step exactly trace preserving. In floating point the trace is
+    preserved up to about eps * cond(M); M is ill-conditioned when h times the spread of the decay rates (the
+    eigenvalues of A) is large, and then the step is taken as two steps of size h/2 (recursively), each a channel.
+    """
+    Hm, A, Ls, gs, Ks = parts
+    mask = alg._const('block_mask', torch.bool).to(device)
+    eye = alg._const('eye', dtype).to(device)
+    G = None                                                          # -i h/2 H_eff = -i h/2 H - h/4 A
+    if Hm is not None:
+        G = (-0.5j * h) * Hm
+    if A is not None:
+        G = -0.25 * h * A if G is None else G - 0.25 * h * A
+    if G is None:
+        E = eye[None]
+    else:
+        k = G.shape[-1]
+        E = cost.batched_call(torch.linalg.matrix_exp, G.reshape(-1, k, k), "exp(-i h/2 H_eff)",
+                              kind='expm').reshape(G.shape) * mask      # the padding of exp(G) is the identity
+    jumps = Ls is not None or len(Ks) > 0
+
+    def phi2(Y):                                                      # Y + h Phi(Y) + h^2/2 Phi(Phi(Y))
+        if not jumps:
+            return Y
+        Y1 = _add_gain(torch.zeros_like(Y), Y, Ls, gs, Ks)
+        Y2 = _add_gain(torch.zeros_like(Y1), Y1, Ls, gs, Ks)
+        return Y + h * Y1 + (0.5 * h * h) * Y2
+
+    def phi2_dual(W):
+        if not jumps:
+            return W
+        W1 = _gain_dual(W, Ls, gs, Ks)
+        W2 = _gain_dual(W1, Ls, gs, Ks)
+        return W + h * W1 + (0.5 * h * h) * W2
+
+    Eh = E.conj().transpose(-2, -1)
+    M = Eh @ phi2_dual(Eh @ E) @ E                                    # Psi_h^*(1) >= (E^2)^* E^2 > 0
+    M = 0.5 * (M + M.conj().transpose(-2, -1))
+    pad = torch.eye(M.shape[-1], dtype=dtype, device=device) - eye   # identity on the padding, for eigh
+    w, V = torch.linalg.eigh(M + pad)
+    if h > 0 and (w[..., -1] / w[..., 0].clamp(min=torch.finfo(w.dtype).tiny)).max().item() \
+            > torch.finfo(w.dtype).eps ** -0.25:
+        half = _kraus_step(parts, 0.5 * h, alg, dtype, device)
+        return lambda rho: half(half(rho))
+    N = (V * w.clamp(min=torch.finfo(w.dtype).tiny).rsqrt().to(dtype).unsqueeze(-2)) @ V.conj().transpose(-2, -1)
+    N = N * mask                                                      # M^{-1/2}, block diagonal
+
+    def step(rho):
+        Y = E @ (N @ rho @ N) @ Eh
+        return E @ phi2(Y) @ Eh
+    return step
+
+
+def _generator_matrix(parts, alg: TypeIAlgebra, dtype, device) -> torch.Tensor:
+    """Matrix of the generator on (+)_c M_{k_max} (zero padded blocks, row-major vec of every block, the sectors one
+    after the other), shape (batch, C k_max^2, C k_max^2); jumps between sectors give off-diagonal sector blocks."""
+    Hm, A, Ls, gs, Ks = parts
+    C, k = alg.C, alg.k_max
+    eye = torch.eye(k, dtype=dtype, device=device)
+    blocks = torch.zeros(1, C, k * k, k * k, dtype=dtype, device=device)
+    if Hm is not None:
+        blocks = blocks - 1j * (_kron(Hm, eye) - _kron(eye, Hm.transpose(-2, -1)))
+    if A is not None:
+        blocks = blocks - 0.5 * (_kron(A, eye) + _kron(eye, A.transpose(-2, -1)))
+    if Ls is not None:                                                # sum_j g_j L_j (x) conj(L_j)
+        blocks = blocks + torch.einsum('j,bjcai,bjcel->bcaeil', gs.to(dtype), Ls, Ls.conj()).reshape(
+            Ls.shape[0], C, k * k, k * k)
+    G = torch.einsum('bcij,cd->bcidj', blocks, torch.eye(C, dtype=dtype, device=device))
+    for g, K in Ks:                                                   # sum_i K_i^{dc} (x) conj(K_i^{dc}) in block (d, c)
+        G = G + g * torch.einsum('brdcai,brdcel->bdaecil', K, K.conj()).reshape(K.shape[0], C, k * k, C, k * k)
+    return G.reshape(G.shape[0], C * k * k, C * k * k)
+
+
+def _exact_step(G: torch.Tensor, h: float, alg: TypeIAlgebra) -> Callable[[torch.Tensor], torch.Tensor]:
+    """rho -> exp(h L) rho with the generator matrix G of _generator_matrix."""
+    S = cost.batched_call(torch.linalg.matrix_exp, h * G, f"exp(hL) (size {G.shape[-1]})", kind='expm')
+    mask = alg._const('block_mask', torch.bool).to(G.device)
+
+    def step(rho):
+        v = rho.reshape(rho.shape[0], -1, 1).to(S.dtype)
+        return (S @ v).reshape(max(S.shape[0], rho.shape[0]), *rho.shape[1:]) * mask
+    return step
+
+
+LINDBLAD_METHODS = ('rk4', 'kraus', 'exact')
 
 
 def lindblad_evolve(rho0: Operator, H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
                     times=(0.0, 1.0), rates: Optional[Sequence[float]] = None,
-                    substeps: int = 20, progress: bool = False) -> List[Operator]:
-    """Integrate the Lindblad equation with RK4; returns rho(t) for every t in `times`."""
+                    substeps: int = 20, progress: bool = False, method: str = 'rk4') -> List[Operator]:
+    """
+    Integrate the Lindblad equation of lindblad_rhs (jumps inside and between sectors); returns rho(t) for every t
+    in `times`. Every interval of `times` is split into `substeps` steps of size h.
+
+    method='rk4' (default): classical Runge-Kutta, fourth order, but a step is not a positive map in general, even
+        for small h (Proposition 8.15 of the lecture notes): rho(t) can acquire small negative eigenvalues.
+    method='kraus': the splitting of Theorem 8.16, exp(-i h/2 H_eff) . exp(-i h/2 H_eff)^* around
+        id + h Phi + h^2/2 Phi^2 (Phi the jump part), renormalised to be exactly trace preserving. Every step is a
+        channel (completely positive and trace preserving) for every h; second order (error O(t h^2)).
+    method='exact': exp(h L) from the matrix of the generator on (+)_c M_{k_c} (size C k_max^2, so for small
+        sectors; jumps between sectors included). For a constant generator the result is exact and one exponential
+        is computed per interval length (`substeps` is not used).
+    For time-dependent H or jumps, 'kraus' and 'exact' freeze the generator at the midpoint of each step; every
+    step is still a channel. `times` must be nondecreasing for these two methods.
+    """
+    if method not in LINDBLAD_METHODS:
+        raise ValueError(f"method must be one of {LINDBLAD_METHODS}, got {method!r}")
     rdt = rho0.matrix.dtype
     dtype = torch.promote_types(rdt, torch.complex64) if rho0.algebra.hilbert.complex_valued or H is not None else rdt
     if H is not None:
@@ -301,12 +433,61 @@ def lindblad_evolve(rho0: Operator, H: Optional[OperatorLike], jumps: Sequence[O
     batches = [rho0.matrix.shape[0]] + [_batch(X) for X in ([H] if H is not None else []) + list(jumps)]
     y0 = rho0.matrix.to(dtype)
     y0 = y0.expand(max(batches), *y0.shape[1:]).clone()
-    ys = rk4(lindblad_rhs(H, jumps, rates, algebra=rho0.algebra), y0, times, substeps, progress)
     alg = rho0.algebra
+    if method == 'rk4':
+        ys = rk4(lindblad_rhs(H, jumps, rates, algebra=alg), y0, times, substeps, progress)
+    else:
+        ys = _lindblad_splitting(alg, H, jumps, rates, y0, times, substeps, progress, method)
     ys = 0.5 * (ys + ys.conj().transpose(-2, -1))          # once for the whole trajectory
     if isinstance(rho0, DensityMatrix):
         return [DensityMatrix(alg, matrix=y, validate=False) for y in ys]
     return [alg.operator(y, is_self_adjoint=True) for y in ys]
+
+
+def _lindblad_splitting(alg, H, jumps, rates, y0, times, substeps, progress, method) -> torch.Tensor:
+    """The 'kraus' and 'exact' time steppers of lindblad_evolve: rho at every point of `times`."""
+    plain, inter, timedep, algebra = _lindblad_terms(H, jumps, rates, alg)
+    ts = _times(times, 'cpu').tolist()
+    if any(b < a for a, b in zip(ts[:-1], ts[1:])):
+        raise ValueError(f"lindblad_evolve(method={method!r}) needs nondecreasing times")
+    dtype, dev = y0.dtype, y0.device
+    cost.check_memory(len(ts) * y0.numel() * y0.element_size(), dev, f"Lindblad trajectory ({len(ts)} time points)")
+    n_sub = 1 if (method == 'exact' and not timedep) else substeps
+    if method == 'exact':
+        n = alg.C * alg.k_max ** 2
+        cost.check_memory(8 * cost.tensor_bytes((y0.shape[0], n, n), dtype), dev,
+                          f"Lindblad generator on (+)_c M_k_max ({n} x {n})")
+    out = y0.new_empty((len(ts), *y0.shape))
+    out[0] = y0
+    y = y0
+    const_parts, const_G, steps = None, None, {}
+    timer = cost.StepTimer(max(len(ts) - 1, 0) * n_sub, f"lindblad_evolve ({method})", progress)
+    for i, (ta, tb) in enumerate(zip(ts[:-1], ts[1:])):
+        h = (tb - ta) / n_sub
+        for s_ in range(n_sub):
+            if timedep or h not in steps:
+                if timedep:
+                    parts = _lindblad_parts(H, plain, inter, algebra, ta + (s_ + 0.5) * h, dtype, dev)   # midpoint
+                else:
+                    if const_parts is None:
+                        const_parts = _lindblad_parts(H, plain, inter, algebra, ta, dtype, dev)
+                    parts = const_parts
+                if method == 'kraus':
+                    step = _kraus_step(parts, h, alg, dtype, dev)
+                else:
+                    G = const_G if (const_G is not None and not timedep) else _generator_matrix(parts, alg, dtype, dev)
+                    if not timedep:
+                        const_G = G
+                    step = _exact_step(G, h, alg)
+                if not timedep:
+                    steps[h] = step
+            else:
+                step = steps[h]
+            y = step(y)
+            timer.step(y.device)
+        out[i + 1] = y
+    timer.close()
+    return out
 
 
 def _kron(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:

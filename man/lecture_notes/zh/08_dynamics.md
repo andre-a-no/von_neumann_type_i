@@ -439,6 +439,164 @@ $`|\rho_{ge}|^2\le\rho_{gg}\rho_{ee}`$，有 $`\rho_{ee}^2+|\rho_{ge}|^2\le\rho_
 
 *计算：* 与其他软件（QuTiP、dynamiqs、QuantumOptics.jl、SciPy）的比较——[教程，8.6 节](../../tutorial/zh/08_dynamics.md#s-8-6)。
 
+<a id="s-8-7"></a>
+
+## 8.7 本身是信道的时间步
+
+数值求解器用映射 $`R_h`$ 的 $`n`$ 步代替 $`e^{t\mathcal L}`$，$`h=t/n`$。每个 $`e^{h\mathcal L}`$ 都是 $`\mathcal M`$ 的信道
+（命题 8.8(1)）；如果每一步也都是信道，那么无论 $`h`$ 取何值，算出的密度都是态。对 $`\rho'=\mathcal L(\rho)`$，经典
+Runge–Kutta 方法（RK4）是步进 $`\rho\mapsto\rho+\frac h6(k_1+2k_2+2k_3+k_4)`$，其中 $`k_1=\mathcal L(\rho)`$，
+$`k_2=\mathcal L(\rho+\frac h2k_1)`$，$`k_3=\mathcal L(\rho+\frac h2k_2)`$，$`k_4=\mathcal L(\rho+hk_3)`$。把各级依次代入，
+$`k_2=(\mathcal L+\frac h2\mathcal L^2)\rho`$，$`k_3=(\mathcal L+\frac h2\mathcal L^2+\frac{h^2}4\mathcal L^3)\rho`$，
+$`k_4=(\mathcal L+h\mathcal L^2+\frac{h^2}2\mathcal L^3+\frac{h^3}4\mathcal L^4)\rho`$，所以
+```math
+R_h=T_4(h\mathcal L),\qquad T_4(z)=1+z+\frac{z^2}2+\frac{z^3}6+\frac{z^4}{24}.
+```
+$`R_h`$ 是 TP 的，因为对每个 $`X`$ 都有 $`\mathrm{Tr}\,\mathcal L(X)=0`$（定理 8.6 证明的第 5 步，结合命题 8.8(1)）；它把自伴
+元映为自伴元，因为 $`\mathcal L(X^*)=\mathcal L(X)^*`$。它与 $`e^{h\mathcal L}`$ 相差指数级数中阶数 $`\ge5`$ 的项，但它不一定
+是正的。
+
+<a id="r-8-15"></a>
+
+**命题 8.15（RK4 不是正的）。** 在以 $`|g\rangle,|e\rangle`$ 为基的 $`M_2`$ 上，令 $`\mathcal L`$ 为命题 8.14 的生成元
+（$`H=\omega|e\rangle\langle e|`$，$`\omega\in\mathbb R`$，单个跳跃 $`|g\rangle\langle e|`$，速率 $`\gamma>0`$），
+$`\lambda=i\omega-\gamma/2`$，$`h>0`$，$`\tau=T_4(-h\gamma)`$，$`a=T_4(h\lambda)`$。
+
+1. $`R_h(\rho)=\begin{pmatrix}\rho_{gg}+(1-\tau)\rho_{ee}&a\rho_{ge}\\\bar a\rho_{eg}&\tau\rho_{ee}\end{pmatrix}`$，并且以下
+   各条等价：$`R_h`$ 是正的；$`R_h`$ 是 CP 的；$`\tau\le1`$ 且 $`|a|^2\le\tau`$。
+2. $`\tau\le1`$ 当且仅当 $`h\gamma\le x_*`$，其中 $`x_*=2.7853\ldots`$ 是 $`x^3-4x^2+12x-24`$ 唯一的实根。当
+   $`h\gamma>x_*`$ 时，态 $`|e\rangle\langle e|`$ 被映为 $`\mathrm{diag}(1-\tau,\tau)`$，其第一个元素为负。
+3. 记 $`u=\gamma^2+4\omega^2`$，则
+   ```math
+   \tau-|a|^2=h^5\Big(-\frac{\gamma u(4\omega^2-3\gamma^2)}{384}+\frac{u^2(4\omega^2-5\gamma^2)}{4608}\,h
+   +\frac{\gamma u^3}{9216}\,h^2-\frac{u^4}{147456}\,h^3\Big).
+   ```
+   因此，若 $`2\omega>\sqrt3\,\gamma`$，则存在 $`h_0>0`$，使得对 $`0<h<h_0`$，$`R_h`$ 不是正的；若 $`\omega=\gamma`$，则对任何
+   $`h>0`$，$`R_h`$ 都不是正的；若 $`\omega=0`$，则 $`R_h`$ 是 CP 的当且仅当 $`h\gamma\le x_*`$。
+
+*证明。* (1) 由命题 8.14 的证明，$`\mathcal L(|g\rangle\langle g|)=0`$，
+$`\mathcal L(|e\rangle\langle e|)=\gamma(|g\rangle\langle g|-|e\rangle\langle e|)`$，$`\mathcal L(|g\rangle\langle e|)=\lambda|g\rangle\langle e|`$，
+$`\mathcal L(|e\rangle\langle g|)=\bar\lambda|e\rangle\langle g|`$。由归纳法，对 $`n\ge1`$ 有
+$`\mathcal L^n(|e\rangle\langle e|)=(-\gamma)^n(|e\rangle\langle e|-|g\rangle\langle g|)`$，所以
+$`R_h(|e\rangle\langle e|)=|e\rangle\langle e|+(\tau-1)(|e\rangle\langle e|-|g\rangle\langle g|)`$；而 $`R_h`$ 保持
+$`|g\rangle\langle g|`$ 不变，把 $`|g\rangle\langle e|`$ 乘以 $`T_4(h\lambda)=a`$，把 $`|e\rangle\langle g|`$ 乘以
+$`T_4(h\bar\lambda)=\bar a`$（$`T_4`$ 的系数是实数）。这就是该公式。若 $`\tau\le1`$ 且 $`|a|^2\le\tau`$，则 Kraus 算子
+$`|g\rangle\langle g|+\bar a|e\rangle\langle e|`$、$`\sqrt{1-\tau}\,|g\rangle\langle e|`$ 与 $`\sqrt{\tau-|a|^2}\,|e\rangle\langle e|`$
+给出 $`R_h`$（比较四个元素），所以 $`R_h`$ 是 CP 的（定理 6.2），特别地是正的。反之，设 $`R_h`$ 是正的。则
+$`R_h(|e\rangle\langle e|)\ge0`$ 给出 $`1-\tau\ge0`$。对 $`\psi=c|g\rangle+s|e\rangle`$，$`c,s>0`$，$`c^2+s^2=1`$，矩阵
+$`R_h(|\psi\rangle\langle\psi|)\ge0`$ 的行列式为 $`s^2\big(c^2(\tau-|a|^2)+\tau(1-\tau)s^2\big)\ge0`$；令 $`s\to0`$ 得
+$`\tau-|a|^2\ge0`$。
+
+(2) 记 $`x=h\gamma`$，则 $`\tau-1=\frac x{24}q(x)`$，$`q(x)=x^3-4x^2+12x-24`$。由于 $`q'(x)=3x^2-8x+12>0`$（其判别式为
+$`64-144<0`$），$`q`$ 严格递增，且 $`q(2)=-8<0<3=q(3)`$；所以 $`q`$ 恰有一个实根 $`x_*\in(2,3)`$，并且 $`\tau\le1`$ 当且仅当
+$`x\le x_*`$。
+
+(3) $`\tau-|a|^2=T_4(-h\gamma)-T_4(h\lambda)T_4(h\bar\lambda)`$ 是 $`h`$ 的 $`8`$ 次多项式。$`T_4(h\lambda)T_4(h\bar\lambda)`$ 中
+$`h^n`$ 的系数是对 $`j+l=n`$、$`0\le j,l\le4`$ 求和的 $`\sum\lambda^j\bar\lambda^l/(j!\,l!)`$。当 $`n\le4`$ 时所有这样的数对都
+出现，由二项式定理，和为 $`(\lambda+\bar\lambda)^n/n!=(-\gamma)^n/n!`$，正是 $`T_4(-h\gamma)`$ 中 $`h^n`$ 的系数；所以
+$`\tau-|a|^2`$ 中 $`h^0,\dots,h^4`$ 的系数为零。对 $`n=5,\dots,8`$，用 $`\sigma=\lambda+\bar\lambda=-\gamma`$ 与
+$`\pi=\lambda\bar\lambda=u/4`$ 表示，这些和分别为
+$`\frac{\pi(\lambda^3+\bar\lambda^3)}{24}+\frac{\pi^2\sigma}{12}=\frac{\pi\sigma^3-\pi^2\sigma}{24}`$、
+$`\frac{\pi^2(\lambda^2+\bar\lambda^2)}{48}+\frac{\pi^3}{36}=\frac{\pi^2\sigma^2}{48}-\frac{\pi^3}{72}`$、$`\frac{\pi^3\sigma}{144}`$ 与
+$`\frac{\pi^4}{576}`$（利用 $`\lambda^2+\bar\lambda^2=\sigma^2-2\pi`$，$`\lambda^3+\bar\lambda^3=\sigma^3-3\pi\sigma`$），而
+$`T_4(-h\gamma)`$ 没有这样的项；代入 $`\sigma`$ 与 $`\pi`$ 即得该公式。若 $`2\omega>\sqrt3\gamma`$，则 $`h^5`$ 的系数为负，
+所以对所有小的 $`h>0`$ 有 $`\tau-|a|^2<0`$，由 (1)，$`R_h`$ 不是正的。若 $`\omega=\gamma`$，则 $`u=5\gamma^2`$，令
+$`y=5h\gamma`$，公式变为 $`\tau-|a|^2=-\frac{5(h\gamma)^5}{147456}\,p(y)`$，$`p(y)=y^3-16y^2+32y+384`$。而对 $`y>0`$ 有
+$`p(y)>0`$：当 $`y\le12`$ 时，$`p(y)=y(y-8)^2+(384-32y)`$ 是两个非负且不同时为零的项之和；当 $`12\le y\le16`$ 时，
+$`y(y-8)^2\ge192`$（它在 $`y\ge8`$ 时递增），且 $`384-32y\ge-128`$；当 $`y\ge16`$ 时，$`p(y)=y^2(y-16)+32y+384>0`$。所以对每个
+$`h>0`$ 都有 $`\tau<|a|^2`$。若 $`\omega=0`$，则 $`u=\gamma^2`$，令 $`x=h\gamma`$，对 $`0<x\le3`$ 有
+$`\tau-|a|^2=x^5\big(\frac1{128}-\frac{5x}{4608}+\frac{x^2}{9216}-\frac{x^3}{147456}\big)\ge
+x^5\big(\frac1{128}-\frac{15}{4608}-\frac{27}{147456}\big)>0`$；结合 (1) 与 (2)，$`R_h`$ 是 CP 的当且仅当 $`x\le x_*`$。$`\square`$
+
+所以，对弱阻尼的二能级系统（$`2\omega>\sqrt3\,\gamma`$），无论步长多小，RK4 的一步都不是正的，尽管单独的阻尼
+（$`\omega=0`$，由 (3)）和单独的转动在小步长下都没有这一缺陷：对 $`\gamma=0`$，(1) 的证明在 $`\tau=1`$ 时适用，而当
+$`x^2\le8`$ 时 $`|T_4(ix)|^2=1-\frac{x^6}{72}+\frac{x^8}{576}\le1`$（展开即得）。这一违背很小，$`\tau-|a|^2=O(h^5)`$，但它
+不是舍入效应，$`R_h`$ 的保迹性也不能消除它。RK4 的稳定性理论（$`|T_4(z)|\le1`$ 的区域）同样看不到它：这里当 $`h`$
+小时，$`h\lambda`$ 与 $`-h\gamma`$ 都位于该区域内。
+
+*计算：* 用 `lindblad_evolve(..., method='rk4')` 检验命题 8.15：一步等于 $`T_4(h\mathcal L)`$，一个纯态被映为具有负特征值的
+矩阵，以及对 8.3 节的粒子丢失，一个 Choi 矩阵具有负特征值——[教程，8.7 节](../../tutorial/zh/08_dynamics.md#s-8-7)。
+
+下面的格式对每个步长都是信道。它使用 8.4 节的分解 $`\mathcal L=\mathcal L_0+\Phi_{\mathrm{tot}}`$，
+$`\mathcal L_0(\rho)=-i(H_{\mathrm{eff}}\rho-\rho H_{\mathrm{eff}}^*)`$，其中 $`H_{\mathrm{eff}}=H-\frac i2A`$，$`A=\Phi_{\mathrm{tot}}^*(1)`$；
+并使用 $`\mathcal M`$ 上超算子 $`\Theta`$ 关于迹的对偶 $`\Theta^*`$，$`\mathrm{Tr}(\Theta(X)Z)=\mathrm{Tr}(X\Theta^*(Z))`$。对
+$`\mathcal M`$ 上的超算子 $`\Theta`$，记 $`\|\Theta\|_1=\max\{\|\Theta(X)\|_1:X\in\mathcal M,\ \|X\|_1\le1\}`$，其中迹范数如 1.4 节；
+该范数是次可乘的。
+
+<a id="r-8-16"></a>
+
+**定理 8.16（每一步都是信道的分裂格式）。** 对 $`h\ge0`$，令 $`E_h=e^{-ihH_{\mathrm{eff}}/2}`$，$`S_h(\rho)=E_h\rho E_h^*`$，以及
+```math
+\Psi_h=S_h\circ\Big(\mathrm{id}+h\Phi_{\mathrm{tot}}+\frac{h^2}2\Phi_{\mathrm{tot}}^2\Big)\circ S_h,\qquad M_h=\Psi_h^*(1),\qquad
+\tilde\Psi_h(\rho)=\Psi_h\big(M_h^{-1/2}\rho M_h^{-1/2}\big).
+```
+
+1. $`M_h\in\mathcal M`$，且 $`M_h\ge e^{ihH_{\mathrm{eff}}^*}e^{-ihH_{\mathrm{eff}}}`$，后者正定；对每个 $`h\ge0`$，$`\tilde\Psi_h`$ 是
+   $`\mathcal M`$ 的信道。
+2. （*局部误差。*）存在依赖于 $`\mathcal L`$ 的常数 $`C`$，使得对 $`0\le h\le1`$ 有 $`\|\tilde\Psi_h-e^{h\mathcal L}\|_1\le Ch^3`$。
+3. （*整体误差。*）对每个态 $`\rho`$、每个 $`t>0`$ 和每个整数 $`n\ge t`$，记 $`h=t/n`$，有
+   $`\|\tilde\Psi_h^n(\rho)-e^{t\mathcal L}\rho\|_1\le Cth^2`$。
+
+*证明。* *第 0 步。* 若 $`\Theta`$ 是 $`\mathcal M`$ 上正的 TP 映射，$`Y=Y^*\in\mathcal M`$，则 $`\|\Theta(Y)\|_1\le\|Y\|_1`$。
+事实上，写 $`Y=Y_+-Y_-`$，其中 $`Y_\pm\ge0`$ 是谱分解中对应正特征值与负特征值的部分。$`Y`$ 的奇异值是其特征值的绝对值
+（$`|Y|=(Y^2)^{1/2}`$），所以 $`\|Y\|_1=\mathrm{Tr}\,Y_++\mathrm{Tr}\,Y_-`$；由三角不等式以及对 $`P\ge0`$ 有
+$`\|P\|_1=\mathrm{Tr}\,P`$（1.4 节），$`\|\Theta(Y)\|_1\le\mathrm{Tr}\,\Theta(Y_+)+\mathrm{Tr}\,\Theta(Y_-)=\|Y\|_1`$。任意
+$`X\in\mathcal M`$ 可写成 $`Y_1+iY_2`$，其中自伴的 $`Y_1=\frac12(X+X^*)`$、$`Y_2=\frac1{2i}(X-X^*)`$ 的迹范数 $`\le\|X\|_1`$
+（因为 $`\|X^*\|_1=\|X\|_1`$，第 1 章习题 2）；因此 $`\|\Theta\|_1\le2`$。
+
+*第 1 步：(1)。* $`H_{\mathrm{eff}}\in\mathcal M`$（8.4 节），所以 $`E_h\in\mathcal M`$（其指数级数的所有项都在子空间
+$`\mathcal M`$ 中）。$`\Phi_{\mathrm{tot}}`$ 把 $`\mathcal M`$ 映入 $`\mathcal M`$ 且是 CP 的，其 Kraus 算子为 $`\sqrt{g_j}L_j`$ 与
+$`\sqrt{g_m}K^{dc}_{m,l}`$（命题 6.4）。所以 $`\mathrm{id}+h\Phi_{\mathrm{tot}}+\frac{h^2}2\Phi_{\mathrm{tot}}^2`$ 是 CP 的（引理 8.4(a)），
+$`S_h`$ 是 CP 的，其 Kraus 算子为 $`E_h`$，从而 $`\Psi_h`$ 是 CP 的。由迹的循环性，$`S_h^*(Z)=E_h^*ZE_h`$，且
+$`\Psi_h^*=S_h^*\circ(\mathrm{id}+h\Phi_{\mathrm{tot}}^*+\frac{h^2}2(\Phi_{\mathrm{tot}}^*)^2)\circ S_h^*`$，其中
+$`\Phi_{\mathrm{tot}}^*(Z)=\sum_jg_jL_j^*ZL_j+\sum_mg_m\Phi_m^*(Z)`$（习题 1）是正的（命题 6.8：$`\Phi_m^*`$ 的 Kraus 算子是
+$`K^{dc*}_{m,l}`$）。令 $`W=S_h^*(1)=E_h^*E_h\ge0`$，中间的因子把 $`W`$ 映为 $`W`$ 加上一个正元，而 $`S_h^*`$ 保序，所以
+$`M_h\ge S_h^*(W)=(E_h^2)^*E_h^2=e^{ihH_{\mathrm{eff}}^*}e^{-ihH_{\mathrm{eff}}}`$（由引理 8.1，$`E_h^2=e^{-ihH_{\mathrm{eff}}}`$）。这个
+矩阵是正定的：对 $`x\ne0`$，$`\langle x,(E_h^2)^*E_h^2x\rangle=\|E_h^2x\|^2>0`$，因为 $`E_h^2`$ 有逆 $`e^{ihH_{\mathrm{eff}}}`$
+（引理 8.1）。所以自伴的 $`M_h\in\mathcal M`$ 的所有特征值都是正的，$`N_h=M_h^{-1/2}\in\mathcal M`$（函数演算，1.3 节）满足
+$`N_hM_hN_h=1`$。映射 $`\rho\mapsto N_h\rho N_h`$ 是 CP 的，从而 $`\tilde\Psi_h`$ 也是（引理 8.4(a)），并且
+$`\mathrm{Tr}\,\tilde\Psi_h(\rho)=\mathrm{Tr}(N_h\rho N_hM_h)=\mathrm{Tr}(\rho N_hM_hN_h)=\mathrm{Tr}\,\rho`$。
+
+*第 2 步：Taylor 系数。* 令 $`\alpha=\frac12\mathcal L_0`$，$`\beta=\Phi_{\mathrm{tot}}`$，它们是 $`\mathcal M`$ 上的超算子。与
+定理 8.6 证明的第 1 步一样，$`X(s)=E_s\rho E_s^*`$ 满足 $`X'=\alpha(X)`$（由引理 8.1 对 $`E_s=e^{-isH_{\mathrm{eff}}/2}`$ 求导），
+所以由引理 8.1，$`S_h=e^{h\alpha}`$，$`\Psi_h=e^{h\alpha}(1+h\beta+\frac{h^2}2\beta^2)e^{h\alpha}`$，而
+$`e^{h\mathcal L}=e^{h(2\alpha+\beta)}`$。把绝对收敛的级数乘开，得 $`\Psi_h=\sum_{n\ge0}h^nP_n`$ 与
+$`e^{h\mathcal L}=\sum_{n\ge0}h^nQ_n`$，其中 $`\sum_n\|P_n\|_1\le e^{2\|\alpha\|_1}(1+\|\beta\|_1+\frac12\|\beta\|_1^2)`$，
+$`\sum_n\|Q_n\|_1\le e^{\|2\alpha+\beta\|_1}`$。这里 $`P_0=Q_0=\mathrm{id}`$，$`P_1=2\alpha+\beta=Q_1`$，且
+$`P_2=\frac{\alpha^2}2+\alpha\beta+\alpha^2+\beta\alpha+\frac{\beta^2}2+\frac{\alpha^2}2=\frac12(2\alpha+\beta)^2=Q_2`$。因此，对
+$`0\le h\le1`$，$`\|\Psi_h-e^{h\mathcal L}\|_1\le C_1h^3`$，其中 $`C_1=\sum_{n\ge3}(\|P_n\|_1+\|Q_n\|_1)`$，并且
+$`\|\Psi_h\|_1\le K=\sum_n\|P_n\|_1`$。
+
+*第 3 步：(2)。* 设 $`x`$ 是 $`M_h`$ 的单位特征向量，特征值为 $`\mu`$。由于 $`M_h`$ 是块对角的，可以在单个扇区中选取
+$`x`$，于是 $`X=|x\rangle\langle x|\in\mathcal M`$，$`\|X\|_1=1`$。由于 $`e^{h\mathcal L}`$ 是 TP 的，
+$`\mu-1=\mathrm{Tr}(XM_h)-\mathrm{Tr}\,X=\mathrm{Tr}\,\Psi_h(X)-\mathrm{Tr}\,e^{h\mathcal L}(X)`$，而 $`|\mathrm{Tr}\,Y|\le\|Y\|_1`$
+（1.4 节）给出 $`|\mu-1|\le C_1h^3`$。令 $`h_1=\min\{1,(2C_1)^{-1/3}\}`$。对 $`h\le h_1`$，所有 $`\mu\ge\frac12`$，$`N_h`$ 的特征值
+为 $`\mu^{-1/2}\le\sqrt2`$，且 $`|\mu^{-1/2}-1|=\frac{|1-\mu|}{\sqrt\mu(1+\sqrt\mu)}\le|\mu-1|`$，因为
+$`\sqrt\mu(1+\sqrt\mu)\ge2^{-1/2}(1+2^{-1/2})>1`$。自伴矩阵的算子范数是其特征值绝对值的最大者，所以
+$`\|N_h-1\|\le C_1h^3`$，$`\|N_h\|\le\sqrt2`$。现在
+```math
+\tilde\Psi_h(X)-e^{h\mathcal L}(X)=\Psi_h\big((N_h-1)XN_h+X(N_h-1)\big)+\big(\Psi_h-e^{h\mathcal L}\big)(X),
+```
+而 $`\|AB\|_1\le\|A\|\,\|B\|_1`$、$`\|BA\|_1\le\|A\|\,\|B\|_1`$（第 1 章习题 2；后者取伴随即得）给出：对 $`h\le h_1`$，
+$`\|\tilde\Psi_h-e^{h\mathcal L}\|_1\le\big((1+\sqrt2)K+1\big)C_1h^3`$。对 $`h_1<h\le1`$，两个映射都是正的且 TP，所以由第 0 步，
+$`\|\tilde\Psi_h-e^{h\mathcal L}\|_1\le4\le4h^3/h_1^3`$。取 $`C=\max\{((1+\sqrt2)K+1)C_1,\,4h_1^{-3}\}`$。
+
+*第 4 步：(3)。* 和式
+$`\tilde\Psi_h^n-e^{nh\mathcal L}=\sum_{k=0}^{n-1}\tilde\Psi_h^{\,n-1-k}\big(\tilde\Psi_h-e^{h\mathcal L}\big)e^{kh\mathcal L}`$
+是裂项和。作用于 $`\rho`$，第 $`k`$ 项为 $`\tilde\Psi_h^{\,n-1-k}(Y_k)`$，其中
+$`Y_k=(\tilde\Psi_h-e^{h\mathcal L})(e^{kh\mathcal L}\rho)`$ 是自伴的（由 Kraus 形式，CP 映射保持自伴性），并且由 (2)，
+$`\|Y_k\|_1\le Ch^3`$，因为态 $`e^{kh\mathcal L}\rho`$ 的迹范数为 $`1`$。由 (1) 与第 0 步，
+$`\|\tilde\Psi_h^{\,n-1-k}(Y_k)\|_1\le Ch^3`$，这 $`n`$ 项之和至多为 $`nCh^3=Cth^2`$。$`\square`$
+
+第 4 步正是"每一步都是信道"发挥作用之处：无论 $`n`$ 多大，单步中产生的误差都不会被放大，也不需要对 $`h`$ 加任何
+稳定性条件。展开定义，$`\tilde\Psi_h`$ 的 Kraus 算子为 $`E_h^2N_h`$、$`\sqrt h\,E_hJE_hN_h`$ 与 $`\frac h{\sqrt2}E_hJ'JE_hN_h`$，
+其中 $`J,J'`$ 取遍 $`\Phi_{\mathrm{tot}}`$ 的 Kraus 算子：先按 8.4 节的无跳跃演化走半步，至多两次跳跃，再走另外半步，最后
+以 $`N_h`$ 修正概率，由第 3 步，$`\|N_h-1\|\le C_1h^3`$。
+
+*库中：* $`\tilde\Psi_h`$ 是 `lindblad_evolve(..., method='kraus')`；`method='exact'` 由 $`\mathcal L`$ 在 $`\mathcal M`$ 上的矩阵
+（大小为 $`\sum_ck_c^2`$，包含扇区之间的跳跃）直接计算 $`e^{h\mathcal L}`$，由命题 8.8(1)，其每一步都是信道；默认的
+`method='rk4'` 是 $`R_h`$——[教程，8.7 节](../../tutorial/zh/08_dynamics.md#s-8-7)。
+
 <a id="x-8"></a>
 
 ## 习题
