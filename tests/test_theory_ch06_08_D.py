@@ -1691,7 +1691,7 @@ def test_prop_8_14_spontaneous_emission(omega, gamma):
         exact = math.sqrt(rho0[1, 1].real ** 2 * math.exp(-2 * gamma * t) + abs(rho0[0, 1]) ** 2 * math.exp(-gamma * t))
         dist = states.trace_distance(ch(r0), ground).item()
         assert abs(dist - exact) < 1e-12 and dist <= math.exp(-gamma * t / 2) + 1e-12
-    t = 60 / gamma
+    t = 30 / gamma          # dist ~ e^-15: rounding (~1e-16 absolute) stays far below the 1e-6 relative tolerance
     ch = dynamics.lindblad_channel(q2, H, [sm], t=t, rates=[gamma])
     dist = states.trace_distance(ch(r0), ground).item()
     assert abs(math.exp(gamma * t / 2) * dist - abs(rho0[0, 1])) < 1e-6
