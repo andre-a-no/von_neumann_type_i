@@ -127,13 +127,26 @@ def check_memory(nbytes: float, device, what: str):
 
 def itemsize(dtype: torch.dtype) -> int:
     """Bytes per entry of `dtype` (torch.dtype.itemsize exists only from PyTorch 2.1)."""
-    return torch.empty((), dtype=dtype).element_size()
+    n = getattr(dtype, 'itemsize', None)
+    return n if n is not None else torch.empty((), dtype=dtype).element_size()
+
+
+def _complex_abs_overflows() -> bool:
+    """True for PyTorch versions whose vectorised |z| computes sqrt(Re^2 + Im^2) and overflows (1.13, 2.0)."""
+    z = torch.full((64,), 1e30 + 1e30j, dtype=torch.complex64)
+    return not bool(torch.isfinite(z.abs()).all())
+
+
+_ABS_OVERFLOWS = _complex_abs_overflows()
 
 
 def abs_max(x: torch.Tensor, dim=None) -> torch.Tensor:
-    """max |x_i| over `dim` (all axes by default) up to a factor sqrt(2) (max of |Re|, |Im|): a scale that never
-    overflows (older PyTorch computes |z| of large complex entries as sqrt(Re^2 + Im^2) and overflows)."""
-    r = torch.maximum(x.real.abs(), x.imag.abs()) if x.is_complex() else x.abs()
+    """max |x_i| over `dim` (all axes by default). On PyTorch versions whose complex |z| overflows for large
+    entries, max(|Re|, |Im|) instead (within a factor sqrt(2) of max |x_i|, never overflows)."""
+    if x.is_complex() and _ABS_OVERFLOWS:
+        r = torch.maximum(x.real.abs(), x.imag.abs())
+    else:
+        r = x.abs()
     return r.amax() if dim is None else r.amax(dim=dim)
 
 

@@ -336,11 +336,7 @@ def singular_values(X: torch.Tensor, method: str = 'auto') -> torch.Tensor:
     if use_dilation(X, method):
         lam = cost.batched_call(torch.linalg.eigvalsh, _dilation(X), f"eigvalsh (dilation of size {2 * k})")
         return lam[..., k:].flip(-1).clamp(min=0)
-    # singular values are homogeneous: scale each block to entries of order 1 first (older LAPACK builds lose the
-    # small singular values of float32 blocks with entries near 1e+-30)
-    s = cost.abs_max(X, (-2, -1)).clamp(min=torch.finfo(X.real.dtype).tiny)
-    Xs = X * s.reciprocal()[..., None, None].to(X.dtype)
-    return cost.batched_call(torch.linalg.svdvals, Xs, f"svdvals (blocks of size {k})", kind='svd') * s[..., None]
+    return cost.batched_call(torch.linalg.svdvals, X, f"svdvals (blocks of size {k})", kind='svd')
 
 
 def svd(X: torch.Tensor, method: str = 'auto') -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
