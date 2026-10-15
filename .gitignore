@@ -25,3 +25,5 @@ research_notes/
 results/
 # arXiv upload built by scripts/make_arxiv.sh
 man/article/arxiv.tar.gz
+# temporary git worktrees of Claude Code agents
+.claude/worktrees/
