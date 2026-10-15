@@ -505,7 +505,7 @@ $`\Delta(|X|)=0`$ 处），而 $`d\to1`$ 时的极限只在 $`\Delta(Y)=1`$ 处�
 
 对 $`C=1`$、$`d=0.999`$，这正是配套论文最早在数值上观察到的闭式（在实代数中）。对每个 $`C`$，上包络都是
 $`M_2`$ 上 $`C`$ 个解的直和所给出的值（实验 3 中 $`C-\delta=(1-\delta)+(C-1)\cdot1`$）：在 $`M_2\oplus M_2`$ 上，
-上面的直和不等式取等号。对大小 $`k_c\ge3`$ 的块，我们不知道这些上包络的闭式。
+上面的直和不等式取等号。第 11.7 节把这些上确界推广到任意大小的块（定理 11.20）。
 
 *计算：* 命题 11.15 的极大点、$`C=1,2`$ 时推论 11.16 的包络及其 $`d\to1`$ 的极限，以及与之比较的多起点搜索——[教程，11.5 节](../../tutorial/zh/11_optimisation.md#s-11-5)。
 
@@ -514,6 +514,177 @@ $`M_2`$ 上 $`C`$ 个解的直和所给出的值（实验 3 中 $`C-\delta=(1-\d
 ## 11.6 可与之比较的工具
 
 *库中：* 与其他软件的比较，其中包括 SDP 求解器，其凸松弛从上方界定上确界——[教程，11.6 节](../../tutorial/zh/11_optimisation.md#s-11-6)。
+
+<a id="s-11-7"></a>
+
+## 11.7 任意大小的块的包络
+
+推论 11.16 中的上确界可推广到任意大小的块。令
+```math
+N=\sum_c\Big\lfloor\frac{k_c}2\Big\rfloor,
+```
+即各扇区中能容纳的两两正交的二维子空间的最大个数。上包络由命题 11.15 的极大点在 $`N`$ 个大小为 $`2`$ 的块上与
+$`1\times1`$ 块的直和取到。证明先把谱化为两个值，再把算子化为大小为 $`1`$ 和 $`2`$ 的块（引理 11.17），在那里可用
+命题 11.15——唯一的例外是实验 3 中 $`|X|`$ 属于 $`\lambda_{\min}`$ 的特征向量分散在多个块上的情形；命题 11.19 用线性化
+处理这一情形。
+
+*顶点论证。* 立方体的一个面 $`F=\{x\in[s,t]^n:x_i=t\ (i\in I),\ x_j=s\ (j\in J)\}`$ 上的凸函数 $`f`$ 在 $`F`$ 的某个顶点
+（所有坐标都属于 $`\{s,t\}`$ 的点）取到它在 $`F`$ 上的最大值：$`F`$ 的每个点都是这些顶点的凸组合（把一个自由坐标写成
+$`s`$ 与 $`t`$ 的凸组合，再对自由坐标的个数归纳），而 $`f`$ 在该点的值不超过它在各顶点处的最大值。
+
+<a id="r-11-17"></a>
+
+**引理 11.17（两个投影）。** 对投影 $`P,Q\in M_n(\mathbb C)`$，$`\mathbb C^n`$ 是若干维数为 $`1`$ 或 $`2`$ 的子空间的正交和，
+每个子空间在 $`P`$ 与 $`Q`$ 下不变，且每个二维子空间上有标准正交基 $`f,f'`$，使得在其上 $`P=|f\rangle\langle f|`$，
+$`Q=|q\rangle\langle q|`$，$`q=\cos\theta\,f+e^{i\psi}\sin\theta\,f'`$，$`\theta\in[0,\pi/2]`$。对实的 $`P,Q`$，一切都可取为实的。
+
+*证明。* $`PQP`$ 在 $`\mathrm{ran}\,P`$ 上自伴；取其标准正交特征向量基 $`v_1,\dots,v_r`$，$`PQPv_i=\mu_iv_i`$（定理 1.3），
+令 $`W_i=\mathrm{span}\{v_i,Qv_i\}`$。则 $`PQv_i=PQPv_i=\mu_iv_i`$，故 $`W_i`$ 在 $`P`$ 下不变，并且（由于 $`Q^2=Q`$）在
+$`Q`$ 下不变。对 $`i\ne j`$，$`\langle v_i,Qv_j\rangle=\langle Qv_i,Qv_j\rangle=\langle v_i,PQPv_j\rangle=0`$，因此各 $`W_i`$ 两两正交。
+它们的和包含 $`\mathrm{ran}\,P`$；其正交补 $`W`$ 在 $`Q`$ 下不变（两个投影都是自伴的）且含于 $`\ker P`$，$`Q`$ 在 $`W`$ 上的
+标准正交特征向量基给出一维直和项。维数为 $`1`$ 的 $`W_i`$ 由 $`v_i`$ 张成。若 $`\dim W_i=2`$，令 $`f=v_i`$，$`f'`$ 为 $`Qv_i`$
+与 $`f`$ 正交的分量的归一化；则在 $`W_i`$ 上 $`P=|f\rangle\langle f|`$，而 $`Q`$ 把 $`W_i`$ 映到 $`\mathrm{span}\{Qv_i\}`$ 上，
+故在那里对某单位向量 $`q=\alpha f+\beta f'`$ 有 $`Q=|q\rangle\langle q|`$；把 $`q`$ 乘以一个相位可使 $`\alpha\ge0`$，于是
+$`\alpha=\cos\theta`$，$`\beta=e^{i\psi}\sin\theta`$，$`\theta\in[0,\pi/2]`$。在实的情形，特征向量基、$`f'`$ 与 $`q`$ 都是实的，
+且 $`e^{i\psi}=\pm1`$。$`\square`$
+
+<a id="r-11-18"></a>
+
+**引理 11.18（实验 3：单调性与凸性）。** 设 $`X=X^*`$ 可逆，$`P`$ 为到其正部的投影（$`X_+=PX`$），$`S=2P-1`$，
+$`Y\ge0`$，$`z(X,Y)=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|`$。
+
+(a) 若 $`|X|\le|X'|`$，其中 $`|X'|`$ 与 $`P`$ 可交换且 $`X'=S|X'|`$，则 $`z(X,Y)\le z(X',Y)`$。
+
+(b) 固定 $`X`$ 时，$`z`$ 是 $`K=Y^2`$ 的凸函数：对 $`K_1,K_2\ge0`$ 与 $`t\in[0,1]`$，
+$`z\big(X,(tK_1+(1-t)K_2)^{1/2}\big)\le t\,z(X,K_1^{1/2})+(1-t)\,z(X,K_2^{1/2})`$。
+
+*证明。* 令 $`A=YX_+Y`$，$`B=YX_-Y`$，则 $`z=\mathrm{Tr}\,A+\mathrm{Tr}\,B-\|A-B\|_1`$（命题 11.9 的证明）。
+
+(a) $`X_+=P|X|=|X|^{1/2}P|X|^{1/2}`$，$`X_-=(1-P)|X|`$，且 $`P|X'|-P|X|=P(|X'|-|X|)P\ge0`$，对 $`1-P`$ 亦然；故对 $`X'`$ 的
+算子 $`A',B'`$ 有 $`A\le A'`$，$`B\le B'`$（推论 1.7）。对 $`R\ge0`$，$`\|A+R-B\|_1\le\|A-B\|_1+\mathrm{Tr}\,R`$（三角不等式，
+$`\|R\|_1=\mathrm{Tr}\,R`$），所以当 $`A`$ 或 $`B`$ 增大时 $`\mathrm{Tr}\,A+\mathrm{Tr}\,B-\|A-B\|_1`$ 不减。
+
+(b) 对自伴的 $`H`$ 与满足 $`-1\le T\le1`$ 的自伴 $`T`$，有 $`|\mathrm{Tr}(TH)|\le\|H\|_1`$：算子 $`T\pm i(1-T^2)^{1/2}`$ 是
+酉的（定理 1.5），其平均为 $`T`$，对每一个应用定理 1.9 即可。当 $`T=2Q-1`$、$`Q`$ 为到 $`H`$ 正部的投影时等号成立
+（引理 11.8 的证明）。取 $`T=1-2E`$，
+```math
+z=2\min_{0\le E\le1}\mathrm{Tr}\big(EA+(1-E)B\big).
+```
+先设 $`Y`$ 可逆。则 $`N=|X|^{1/2}Y`$ 可逆，$`A=N^*PN`$，$`B=N^*(1-P)N`$，且 $`E\mapsto F=NEN^*`$ 把 $`\{0\le E\le1\}`$ 映满
+$`\{0\le F\le G\}`$，$`G=NN^*=|X|^{1/2}Y^2|X|^{1/2}`$（推论 1.7，两个方向）。由于 $`\mathrm{Tr}(EA)=\mathrm{Tr}(PF)`$ 且
+$`\mathrm{Tr}((1-E)B)=\mathrm{Tr}((1-P)(G-F))`$，$`z=2\min\{\mathrm{Tr}(PF+(1-P)(G-F)):0\le F\le G\}`$。若 $`0\le F_i\le G_i`$，则
+$`tF_1+(1-t)F_2`$ 对 $`tG_1+(1-t)G_2`$ 可行，且目标函数关于 $`(F,G)`$ 是线性的；所以 $`z`$ 关于 $`G`$ 是凸的，而 $`G`$ 关于
+$`Y^2`$ 是仿射的。若 $`K_1`$ 或 $`K_2`$ 奇异，把上述结论用于 $`K_i+\varepsilon`$ 并令 $`\varepsilon\to0`$（$`z`$ 关于 $`Y`$ 连续，
+$`K\mapsto K^{1/2}`$ 连续）。$`\square`$
+
+<a id="r-11-19"></a>
+
+**命题 11.19（$`m`$ 个块上的实验 3）。** 设 $`\mathbb C^m\oplus\mathbb C^m`$ 上 $`X=X_+\oplus(-1)`$，其中 $`0<X_+\le1`$ 的特征值为
+$`x_1,\dots,x_m`$；设 $`C=\mathrm{diag}(\cos\theta_j)`$，$`\Sigma=\mathrm{diag}(\sin\theta_j)`$，$`Q`$ 为到等距映射
+$`v=\binom C\Sigma:\mathbb C^m\to\mathbb C^{2m}`$ 的值域的投影，$`b\in[0,1)`$，$`Y=b+(1-b)Q`$。则
+```math
+\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ \le\ (1-b)^2\sum_{i=1}^m\frac{2x_i}{1+x_i},
+```
+当 $`X_+=\mathrm{diag}(x_1,\dots,x_m)`$ 且 $`\cos^2\theta_i=(1+bx_i)/((1+x_i)(1+b))`$ 时等号成立。
+
+*证明。* 两个线性代数事实：对方阵 $`R,T`$，$`\det(\lambda-RT)=\det(\lambda-TR)`$（$`R`$ 可逆时 $`RT=R(TR)R^{-1}`$；一般情形
+由关于 $`R`$ 的连续性得到）；对右下块 $`E`$ 可逆的分块矩阵，$`\det\begin{pmatrix}R&S\\T&E\end{pmatrix}=\det E\,\det(R-SE^{-1}T)`$
+（左乘 $`\begin{pmatrix}1&-SE^{-1}\\0&1\end{pmatrix}`$）。
+
+令 $`\gamma=1-b^2`$，$`K=1+X_+`$，$`A=C^2`$，于是 $`\Sigma^2=1-A`$；$`Q=vv^*`$ 的各块为 $`C^2,\ C\Sigma,\ C\Sigma,\ \Sigma^2`$，
+且 $`Y^2=b^2+\gamma Q`$（因为 $`Q^2=Q`$）。对 $`\lambda>0`$，$`\lambda-XY^2`$ 的右下块是可逆对角矩阵
+$`E=\lambda+b^2+\gamma\Sigma^2=\lambda+1-\gamma A`$；由于 $`C,\Sigma,E`$ 都是对角的，且
+$`(b^2+\gamma A)E-\gamma^2A\Sigma^2=\lambda(b^2+\gamma A)+b^2`$，
+```math
+\det(\lambda-XY^2)=\det E\,\det\Big(\lambda-X_+\big(\lambda(b^2+\gamma A)+b^2\big)E^{-1}\Big)
+=\det\big((\lambda+1)(\lambda-b^2X_+)-\lambda\gamma KA\big)=p(\lambda),
+```
+其中 $`p(\lambda)=\det\big((\lambda+1)(\lambda-b^2X_+)-\lambda\gamma K^{1/2}AK^{1/2}\big)`$（用 $`K^{1/2}`$ 共轭矩阵
+$`K^{-1}(\lambda+1)(\lambda-b^2X_+)-\lambda\gamma A`$）。对自伴矩阵
+```math
+\mathcal L=\begin{pmatrix}\gamma K^{1/2}AK^{1/2}+b^2X_+-1&bX_+^{1/2}\\ bX_+^{1/2}&0\end{pmatrix}
+```
+用右下块为 $`\lambda`$ 的同一公式得
+$`\det(\lambda-\mathcal L)=\lambda^m\det(\lambda+1-\gamma K^{1/2}AK^{1/2}-b^2X_+-b^2X_+/\lambda)=p(\lambda)`$。由于
+$`\det(\lambda-YXY)=\det(\lambda-XY^2)`$，$`YXY`$ 与 $`\mathcal L`$ 的特征多项式在 $`\lambda>0`$ 上一致，从而处处一致，这两个
+自伴矩阵有相同的特征值：$`\mathrm{Tr}|YXY|=\|\mathcal L\|_1`$。令 $`\Delta=(1-X_+)(1+X_+)^{-1}`$，$`\Gamma=2X_+^{1/2}(1+X_+)^{-1}`$
+（$`X_+`$ 的函数，故可交换，且 $`\Delta^2+\Gamma^2=1`$），以及
+```math
+T=\begin{pmatrix}-\Delta&\Gamma\\ \Gamma&\Delta\end{pmatrix},\qquad T^2=1 .
+```
+$`T`$ 自伴，特征值为 $`\pm1`$，故 $`\|\mathcal L\|_1\ge\mathrm{Tr}(T\mathcal L)`$（引理 11.18(b) 的证明）。而
+$`\mathrm{Tr}(Y|X|Y)=\mathrm{Tr}(|X|Y^2)=b^2\mathrm{Tr}\,X_++\gamma\mathrm{Tr}(X_+A)+mb^2+\gamma\mathrm{Tr}(1-A)`$，并且由于
+$`K^{1/2}\Delta K^{1/2}=1-X_+`$，
+$`\mathrm{Tr}(T\mathcal L)=-\gamma\mathrm{Tr}((1-X_+)A)-\mathrm{Tr}(\Delta(b^2X_+-1))+2b\,\mathrm{Tr}(\Gamma X_+^{1/2})`$。含 $`A`$ 的项
+相互抵消，在 $`X_+`$ 的特征向量基下
+```math
+\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\le\sum_{i=1}^m\Big(b^2x_i+1+\frac{1-x_i}{1+x_i}(b^2x_i-1)-\frac{4bx_i}{1+x_i}\Big)
+=(1-b)^2\sum_{i=1}^m\frac{2x_i}{1+x_i}.
+```
+当 $`X_+`$ 为对角时，$`X`$ 与 $`Y`$ 是 $`\mathrm{span}\{e_i,e_{m+i}\}`$ 上 $`2\times2`$ 块的直和，在其上 $`X=\mathrm{diag}(x_i,-1)`$，
+命题 11.15(b) 在 $`\gamma_3=\sin^2\theta_i`$（即所述角度）时给出值 $`\frac{2x_i}{1+x_i}(1-b)^2`$。$`\square`$
+
+由于 $`\mathcal L`$ 关于 $`A=PQP`$ 是仿射的（$`P`$ 为到第一个直和项的投影），$`z`$ 是 $`A`$ 的凹函数，而 $`T`$ 是极大点处
+$`\mathcal L`$ 的符号。然而，固定角度时，关于 $`X_+`$ 的最小特征值的特征向量的最大值一般并不在单个块内取到（一个数值
+观察）；只有联合最大值如此。
+
+<a id="r-11-20"></a>
+
+**定理 11.20（实验 1 与实验 3 的上包络）。** 设 $`N\ge1`$，$`\delta\in[0,1)`$，$`\delta'\in[0,1]`$，$`\ell=\ell(\delta)`$，
+$`\ell'=\ell(\delta')`$（约定 $`\ell(1)=0`$），并令 $`Y`$ 取遍满足 $`\lambda_{\max}(Y)=1`$ 与 $`\Delta(Y)=\delta'`$ 的正算子。
+
+(a) 实验 1，在 $`X\in\mathcal P_\delta`$、这样的 $`Y`$ 与酉算子 $`U\in\mathcal M`$ 上：
+$`\ \sup z=N\,\frac{\delta^2\delta'^2}{(1+\delta)(1+\delta')}`$。
+
+(b) 实验 3，在满足 $`|X|\in\mathcal P_\delta`$ 的 $`X=X^*`$ 与这样的 $`Y`$ 上：若所有 $`k_c`$ 为偶数，
+$`\ \sup z=(N-\delta)\Big(\frac{2\delta'}{1+\delta'}\Big)^2`$；若某个 $`k_c`$ 为奇数，
+$`\ \sup z=N\Big(\frac{2\delta'}{1+\delta'}\Big)^2`$。
+
+两个上确界都可由实算子取到，在 $`\bigoplus_cM_{k_c}(\mathbb R)`$ 中相同。
+
+*证明。* $`\mathcal M`$ 中的上界对实算子更是成立，而下面的极大点都是实的。
+
+(a) 对每个块用定理 1.9，$`|\mathrm{Tr}(XUY)|\le\|YX\|_1`$，当 $`U=W^*`$、$`YX=W|YX|`$（$`\mathcal M`$ 中的酉元）时取等号；所以
+$`\sup_Uz=F(X,Y):=\|YX\|_1-\mathrm{Tr}(XY)`$。对 $`X`$ 的固定的（与扇区相适应的）标准正交特征向量基 $`(e_s)`$，$`F`$ 是特征值
+$`x\in[\ell,1]^D`$ 的凸函数（$`x`$ 的线性函数的范数减去一个线性函数），而 $`X\in\mathcal P_\delta`$ 意味着 $`x`$ 位于某个面
+$`\{x_s=1,\ x_{s'}=\ell\}`$ 上；由顶点论证，对某投影 $`P\in\mathcal M`$ 有 $`F(X,Y)\le F(X',Y)`$，$`X'=\ell+(1-\ell)P`$。同理
+$`F(X',Y)\le F(X',Y')`$，$`Y'=\ell'+(1-\ell')Q`$。在每个扇区中对 $`P_c,Q_c`$ 应用引理 11.17：$`X'`$ 与 $`Y'`$ 是维数为 $`1`$ 和
+$`2`$ 的子空间上的直和，$`\|Y'X'\|_1`$ 与 $`\mathrm{Tr}(X'Y')`$ 亦然。一维直和项贡献 $`xy-xy=0`$。在二维直和项上，$`X'`$ 的
+特征值为 $`1,\ell`$，$`Y'`$ 的特征值为 $`1,\ell'`$，故由命题 11.15(a) 其贡献至多为
+$`(1-\ell)^2(1-\ell')^2/(4(1+\ell)(1+\ell'))=\delta^2\delta'^2/((1+\delta)(1+\delta'))`$（见推论 11.16 的证明）。大小为 $`k_c`$ 的
+扇区至多含 $`\lfloor k_c/2\rfloor`$ 个这样的子空间。等号：$`N`$ 个块上 $`X=\mathrm{diag}(1,\ell)`$，$`Y`$ 的特征值为 $`1,\ell'`$
+且 $`\gamma=\gamma_1`$，其余一维块上 $`X=Y=1`$，以及酉元 $`W^*`$。
+
+(b) $`X`$ 可逆（$`\ell>0`$），且 $`z(-X,Y)=z(X,Y)`$。令 $`P`$ 为到 $`X`$ 正部的投影，$`S=2P-1`$。$`|X|`$ 与 $`P`$ 可交换（二者
+都是 $`X`$ 的函数），因此 $`|X|`$ 有属于特征值 $`\ell`$ 的单位特征向量 $`e`$，它位于单个扇区中，且属于 $`\mathrm{ran}\,P`$ 或
+$`\ker P`$；必要时把 $`X`$ 换成 $`-X`$，可设 $`e\in\mathrm{ran}\,P`$。于是 $`|X|\le|X'|:=1-(1-\ell)|e\rangle\langle e|`$，
+$`X'=S|X'|=S-(1-\ell)|e\rangle\langle e|`$ 满足 $`|X'|\in\mathcal P_\delta`$（$`D\ge2`$），由引理 11.18(a)，$`z(X,Y)\le z(X',Y)`$。
+由引理 11.18(b) 及对 $`Y^2`$ 在 $`[\ell'^2,1]`$ 中的特征值的顶点论证，对某投影 $`Q\in\mathcal M`$ 有 $`z(X',Y)\le z(X',Y')`$，
+$`Y'=\ell'+(1-\ell')Q`$。在每个扇区中对 $`P_c,Q_c`$ 应用引理 11.17。
+在不含 $`e`$ 的扇区中，$`X'=S`$ 是各子空间上的直和；一维直和项贡献 $`0`$（在那里 $`X'`$ 与 $`Y'`$ 可交换，命题 11.9），二维
+直和项由命题 11.15(b)（取 $`x_1=x_2=1`$）至多贡献 $`(1-\ell')^2`$：合计至多 $`\lfloor k_c/2\rfloor(1-\ell')^2`$。
+在 $`e`$ 所在的扇区中，由引理 11.18(a) 与 $`|X'|\le1`$ 得同样的界，因此若 $`k_c`$ 为奇数，贡献至多 $`\lfloor k_c/2\rfloor(1-\ell')^2`$；
+若该扇区所含二维子空间少于 $`k_c/2`$ 个，则至多 $`(k_c/2-1)(1-\ell')^2`$。否则它的 $`m=k_c/2`$ 个二维子空间填满该扇区，
+其基为 $`f_j,f_j'`$，$`f_j\in\mathrm{ran}\,P`$，$`f_j'\in\ker P`$。把 $`f_j'`$ 乘以 $`e^{-i\psi_j}`$ 的酉元与 $`X'`$ 可交换
+（$`X'`$ 在 $`\ker P`$ 上等于 $`-1`$），并消去引理 11.17 中的相位；在基 $`(f_1,\dots,f_m,f_1',\dots,f_m')`$ 下，该扇区正是
+命题 11.19 的情形，其中 $`X_+=1-(1-\ell)|e\rangle\langle e|`$，特征值为 $`\ell,1,\dots,1`$；由于 $`2\ell/(1+\ell)=1-\delta`$，其贡献
+至多为 $`(1-\ell')^2(1-\delta+m-1)=(k_c/2-\delta)(1-\ell')^2`$。
+对各扇区求和：若所有 $`k_c`$ 为偶数，$`z\le(N-\delta)(1-\ell')^2`$（注意 $`N-1\le N-\delta`$），否则 $`z\le N(1-\ell')^2`$；
+这里 $`1-\ell'=2\delta'/(1+\delta')`$。
+等号：若所有 $`k_c`$ 为偶数，在一个块上 $`X=\mathrm{diag}(\ell,-1)`$，在其余 $`N-1`$ 个块上 $`X=\mathrm{diag}(1,-1)`$，且每个块上
+$`Y`$ 的特征值为 $`1,\ell'`$、$`\gamma=\gamma_3`$（命题 11.15(b)）；若某个 $`k_c`$ 为奇数，在 $`N`$ 个块上 $`X=\mathrm{diag}(1,-1)`$，
+特征值 $`\ell`$ 位于某个奇数扇区的一维块上，其余一维块上为 $`1`$，$`Y`$ 在各块上同前，在一维块上为 $`1`$。$`\square`$
+
+对 $`k_c=2`$，这就是推论 11.16 中关于上确界的部分（$`N=C`$）。对 $`C`$ 个大小为 $`k`$ 的扇区、另一个对比度在 $`[0,d]`$
+（$`d\in(0,1)`$）中自由时，上确界关于 $`\delta'`$ 递增，上包络为：实验 1 中沿任一对比度为
+$`C\lfloor k/2\rfloor\delta^2d^2/((1+\delta)(1+d))`$；实验 3 中沿 $`\Delta(|X|)=\delta`$，$`k`$ 为偶数时为
+$`(Ck/2-\delta)\big(2d/(1+d)\big)^2`$，$`k`$ 为奇数时为 $`C\lfloor k/2\rfloor\big(2d/(1+d)\big)^2`$；沿 $`\Delta(Y)=\delta'`$（在
+$`|X|=1`$ 处取到）为 $`C\lfloor k/2\rfloor\big(2\delta'/(1+\delta')\big)^2`$。$`k`$ 为偶数时，这些正是 11.5 节中直和的值：
+对两个泛函，直和不等式都取等号。$`k`$ 为奇数时，带一维直和项的直和在实验 1 中是最优的，在实验 3 中却不是：$`|X|`$ 的
+特征值 $`\ell`$ 放在一维块上，在那里没有代价，包络与 $`\delta`$ 无关。
+
+*计算：* 命题 11.19（$`YXY`$ 与 $`\mathcal L`$ 的谱、该界及其等号情形）、定理 11.20 对若干块大小的极大点，以及从结构化
+起点出发达到包络的多起点搜索——[教程，11.7 节](../../tutorial/zh/11_optimisation.md#s-11-7)。
 
 <a id="x-11"></a>
 

@@ -14,6 +14,8 @@
 \newcommand{\C}{\mathbb{C}}
 \newcommand{\M}{\mathcal{M}}
 \newtheorem{proposition}{Proposition}
+\newtheorem{theorem}[proposition]{Theorem}
+\newtheorem{lemma}[proposition]{Lemma}
 
 \lstset{language=Python, basicstyle=\ttfamily\footnotesize, frame=single, breaklines=true,
         columns=fullflexible, keepspaces=true, commentstyle=\color{gray}, showstringspaces=false}
@@ -38,6 +40,7 @@
 \providecommand{\BaseMinKS}{--}\providecommand{\BoundsStChecked}{--}\providecommand{\BoundsStOutside}{--}\providecommand{\BoundsShortfall}{--}
 \providecommand{\ChainRingRows}{\multicolumn{6}{c}{\emph{run scripts/chains.py}}\\}
 \providecommand{\RenyiRows}{\multicolumn{5}{c}{\emph{run scripts/renyi\_threshold.py}}\\}
+\providecommand{\BoundsSupDevOne}{(not generated)}\providecommand{\BoundsSupDevThree}{(not generated)}
 \providecommand{\RenyiMode}{--}\providecommand{\RenyiDevice}{--}\providecommand{\RenyiTol}{--}
 \newcommand{\fig}[2]{\IfFileExists{figures/#1}{\includegraphics[width=#2]{#1}}{\fbox{\small figure \detokenize{#1} not generated}}}
 
@@ -70,7 +73,8 @@ exact results from random matrix theory, quantum information and integrable spin
 spectra and dynamics, Heisenberg ring energies, Peschel's entanglement formula, the GOE--Poisson
 crossover of disordered chains). Applied to the trace inequalities of our earlier work, constrained
 optimisation replaces Monte Carlo sampling: it finds extremal values that sampling misses in all but the
-smallest dimensions, and reproduces the bounds that are known in closed form. Without being told where they lie,
+smallest dimensions, and reproduces their sharp contrast-dependent bounds, which we prove in closed form for sectors of
+every size. Without being told where they lie,
 the same method brackets the data-processing thresholds $\alpha=\frac12$ and $\alpha=2$ of the sandwiched and Petz
 Rényi divergences, with the violations certified in high-precision arithmetic.
 \end{abstract}
@@ -864,15 +868,102 @@ and $Y_c$ with spectrum $\{1,\ell'\}$ at the angle of (b); $\inf z=0$ is Proposi
 
 \noindent Both suprema increase with $\delta'$. With the free contrast capped at $D$, the upper envelopes along
 $\Delta(X)=\delta$ are therefore $C\delta^2D^2/((1+\delta)(1+D))$ and $(C-\delta)\,(2D/(1+D))^2$; for $C=1$ and $D=0.999$ these
-are the closed forms that we first found numerically, and the optimiser reproduces them to a relative deviation of
-\IfFileExists{generated/bounds.tex}{\BoundsConjDevOne\ and \BoundsConjDevThree}{(not generated)}. As $D\to1$ they increase
+are the closed forms that we first found numerically. As $D\to1$ they increase
 to $C\delta^2/(2(1+\delta))$ and $C-\delta$, the values at $\Delta(Y)=1$ (a singular $Y$), which no $Y$ with $\Delta(Y)<1$
 attains (for $\delta>0$ in Exp.~1). Along $\Delta(Y)=\delta'$ the upper envelopes are $C\delta'^2D^2/((1+\delta')(1+D))$ and,
 attained at $|X|=1$, $C\,(2\delta'/(1+\delta'))^2$ for every $D$. For $k=2$ the direct sums~(ii) are thus optimal for every
-$C$, and check~(i) applies to all configurations with $k=2$. For $k\ge3$ the upper envelopes of Exp.~1 and Exp.~3 are,
-to our knowledge, not known in closed form; the computed curves are lower bounds for them (a local search), consistent
-with the direct sums~(ii), and suggest conjectures for sharp contrast-dependent inequalities (for instance, that the direct
-sums are optimal for even $k$), which we leave for future work.
+$C$.
+
+\paragraph{Sectors of any size.} The upper envelopes of Exp.~1 and Exp.~3 are known for every sector size. Let
+$N=\sum_c\lfloor k_c/2\rfloor$ be the largest number of mutually orthogonal two-dimensional subspaces that fit into the
+sectors.
+
+\begin{theorem}\label{thm:allk}
+Let $\M=\bigoplus_{c=1}^CM_{k_c}(\C)$ or $\bigoplus_{c=1}^CM_{k_c}(\mathbb R)$ with $N\ge1$, and let $X$ and $Y$ (in Exp.~3:
+$|X|$ and $Y$) be normalised to $\lambda_{\max}=1$, with prescribed contrasts $\delta\in[0,1)$ and $\delta'\in[0,1]$. Then
+\[
+  \text{Exp.~1:}\ \ \sup z=\frac{N\,\delta^2\delta'^2}{(1+\delta)(1+\delta')},\qquad
+  \text{Exp.~3:}\ \ \sup z=\begin{cases}(N-\delta)\bigl(\frac{2\delta'}{1+\delta'}\bigr)^2&\text{if every }k_c\text{ is even},\\[2pt]
+  N\bigl(\frac{2\delta'}{1+\delta'}\bigr)^2&\text{if some }k_c\text{ is odd},\end{cases}
+\]
+and both suprema are attained by real direct sums of the $2\times2$ maximisers of Proposition~\ref{prop:k2} and
+$1\times1$ blocks.
+\end{theorem}
+
+\noindent For $C$ sectors of size $k$ and the other contrast free in $[0,D]$, the upper envelopes are therefore
+$C\lfloor k/2\rfloor\delta^2D^2/((1+\delta)(1+D))$ in Exp.~1, along either contrast; in Exp.~3 along $\Delta(|X|)=\delta$
+\[
+  \overline z(\delta)=\Bigl(\frac{Ck}2-\delta\Bigr)\Bigl(\frac{2D}{1+D}\Bigr)^2\quad(k\text{ even}),\qquad
+  \overline z(\delta)=C\Bigl\lfloor\frac k2\Bigr\rfloor\Bigl(\frac{2D}{1+D}\Bigr)^2\quad(k\text{ odd}),
+\]
+and along $\Delta(Y)=\delta'$, attained at $|X|=1$, $C\lfloor k/2\rfloor(2\delta'/(1+\delta'))^2$. For even $k$ these are
+the values of the direct sums~(ii): the direct sums are optimal for even $k$, in both functionals. For odd $k$ the
+direct sums with a one-dimensional summand are optimal in Exp.~1 but not in Exp.~3: there the eigenvalue
+$\lambda_{\min}$ of $|X|$ can be placed on a one-dimensional summand, where it costs nothing, and the envelope along
+$\Delta(|X|)$ does not depend on $\delta$ (for $k=3$, $C=1$: $(2D/(1+D))^2>(1-\delta)(2D/(1+D))^2$). The
+proof (Appendix~\ref{app:envelopes}) reduces both functionals to two-level spectra and, with the two-projection lemma, to
+$2\times2$ blocks, which Proposition~\ref{prop:k2} handles, except in one case: in Exp.~3 the eigenvector of $|X|$ for
+$\lambda_{\min}$ may be spread over all two-dimensional blocks of its sector, so that $X$ is not block-diagonal. This case
+is settled by the following bound, which is sharp; its proof linearises the problem.
+
+\begin{proposition}\label{prop:mblocks}
+Let $X=X_+\oplus(-1)$ on $\C^m\oplus\C^m$, where $0<X_+\le1$ has eigenvalues $x_1,\dots,x_m$; let
+$c_\theta=\mathrm{diag}(\cos\theta_j)$, $s_\theta=\mathrm{diag}(\sin\theta_j)$, $Q$ the projection onto the range of
+$\binom{c_\theta}{s_\theta}:\C^m\to\C^{2m}$, $b\in[0,1)$ and $Y=b+(1-b)Q$. Then
+\[
+  \Tr(Y|X|Y)-\Tr|YXY|\ \le\ (1-b)^2\sum_{i=1}^m\frac{2x_i}{1+x_i},
+\]
+with equality for $X_+=\mathrm{diag}(x_1,\dots,x_m)$ and $\cos^2\theta_i=(1+bx_i)/((1+x_i)(1+b))$.
+\end{proposition}
+\begin{proof}
+Let $\gamma=1-b^2$, $K=1+X_+$, $A=c_\theta^2$ (so $s_\theta^2=1-A$). In the decomposition $\C^m\oplus\C^m$,
+$Y^2=b^2+\gamma Q$ has the blocks $b^2+\gamma A$, $\gamma c_\theta s_\theta$, $\gamma c_\theta s_\theta$, $b^2+\gamma s_\theta^2$, all diagonal.
+For $\lambda>0$ the lower right block of $\lambda-XY^2$ is the invertible diagonal $E=\lambda+1-\gamma A$, and as
+$(b^2+\gamma A)E-\gamma^2As_\theta^2=\lambda(b^2+\gamma A)+b^2$, the Schur complement formula gives
+\[
+  \det(\lambda-XY^2)=\det\bigl(\lambda E-X_+(\lambda(b^2+\gamma A)+b^2)\bigr)=\det\bigl((\lambda+1)(\lambda-b^2X_+)-\lambda\gamma KA\bigr)
+  =p(\lambda),
+\]
+$p(\lambda)=\det\bigl((\lambda+1)(\lambda-b^2X_+)-\lambda\gamma K^{1/2}AK^{1/2}\bigr)$. The Schur complement of the lower right
+block $\lambda$ gives $\det(\lambda-\mathcal L)=p(\lambda)$ as well, for the self-adjoint matrix
+\[
+  \mathcal L=\begin{pmatrix}\gamma K^{1/2}AK^{1/2}+b^2X_+-1 & bX_+^{1/2}\\ bX_+^{1/2} & 0\end{pmatrix},
+\]
+which is affine in $A$. Since $\det(\lambda-YXY)=\det(\lambda-XY^2)$, the polynomials agree and $YXY$ and $\mathcal L$ have
+the same eigenvalues; hence $\Tr|YXY|=\|\mathcal L\|_1\ge\Tr(T\mathcal L)$ for every self-adjoint $T$ with $\|T\|\le1$.
+Take
+\[
+  T=\begin{pmatrix}-\Delta & G\\ G & \Delta\end{pmatrix},\qquad \Delta=\frac{1-X_+}{1+X_+},\quad G=\frac{2X_+^{1/2}}{1+X_+},
+\]
+so that $T^2=1$ ($\Delta$ and $G$ commute and $\Delta^2+G^2=1$). With $\Tr(Y|X|Y)=\Tr(|X|Y^2)=b^2\Tr X_++\gamma\Tr(X_+A)+mb^2+\gamma\Tr(1-A)$
+and $K^{1/2}\Delta K^{1/2}=1-X_+$, the terms containing $A$ cancel in $\Tr(|X|Y^2)-\Tr(T\mathcal L)$, and
+\[
+  \Tr(Y|X|Y)-\Tr|YXY|\le\sum_{i=1}^m\Bigl(b^2x_i+1+\frac{1-x_i}{1+x_i}(b^2x_i-1)-\frac{4bx_i}{1+x_i}\Bigr)=(1-b)^2\sum_{i=1}^m\frac{2x_i}{1+x_i}.
+\]
+For diagonal $X_+$ both operators are direct sums of $2\times2$ blocks, on which $X=\mathrm{diag}(x_i,-1)$, and
+Proposition~\ref{prop:k2}(b) gives the value $(1-b)^2\,2x_i/(1+x_i)$ at the stated angle (there $\gamma=\sin^2\theta_i$).
+\end{proof}
+
+\noindent Since $\mathcal L$ is affine in $A=PQP$ ($P$ the projection onto the first summand), $z$ is a concave
+function of $A$, and $T$ is the sign of $\mathcal L$ at the maximiser. For fixed angles, however, the maximum over the
+direction of the eigenvector for $\lambda_{\min}(|X|)$ is in general not attained in a single block; only the joint
+maximum is. Before this proof we had certified the cases $k=4$ and $k=6$ ($C=1$) numerically, by a rigorous branch and
+bound over the angles of the reduced model (\texttt{scripts/certify\_envelopes.py}; gaps $10^{-7}$ and $10^{-5}$,
+including floating-point rounding); it agrees with Theorem~\ref{thm:allk} and serves as an independent check. All
+upper envelopes of the three functionals studied here, along either contrast, are now proved, and so are the lower
+envelopes with the other contrast free; we have not studied the lower envelope of Exp.~1 with both contrasts
+prescribed for $k\ge3$. The optimiser reproduces the upper envelopes of Theorem~\ref{thm:allk} for all eight
+configurations, along either contrast, to a relative deviation of \BoundsSupDevOne\ (Exp.~1) and \BoundsSupDevThree\
+(Exp.~3). For this, half of the starts begin at the structure of the maximisers
+(\texttt{init} and \texttt{spectrum\_init} of \texttt{optimize}): $X$ diagonal, $Y$ rotated in pairs of eigenvectors of
+$X$, two-level spectra (in Exp.~3 one positive and one negative eigenvalue of $X$ per pair), and $U$ rotating the same
+pairs. The last point matters in a real algebra: a chart $U_0e^{G-G^*}$ never leaves the connected component of
+$U_0$, and the maximiser of Exp.~1 has determinant $+1$ in every sector, which a Haar-random $U_0$ has with probability
+$2^{-C}$. With Haar-random starts only, the run of the first version of this section fell short of
+Theorem~\ref{thm:allk} by up to $35\%$ (Exp.~3) and $13\%$ (Exp.~1) for $k=2$, $C=32$; with the structured starts, a CPU
+run with 12 starts per grid point and 240 steps reaches it to a relative $10^{-3}$ (Exp.~3) and $10^{-5}$ (Exp.~1)
+for $k=2$, $C=32$ and for $k=16$, $C=1,2,16$ (the remaining gap in Exp.~3 comes from the kink of $z$ at the maximiser,
+which is smoothed only on the scale $\lambda_{\min}(Y)=0.001/1.999$; it decreases with the step size).
 
 \begin{table}[h]
 \centering\small
@@ -925,8 +1016,8 @@ scalar and grows with both contrasts.}
 
 \subsection{Rediscovering the data-processing thresholds of the Rényi divergences}\label{sec:renyi}
 
-The envelopes above are largely unknown. A test of the method on an inequality whose range of validity is known
-exactly is to ask it where that range ends, without telling it. For states $\rho,\sigma$ on $\M$ (densities with
+The closed forms above were first found numerically and proved afterwards. A further test of the method, on an
+inequality whose range of validity is known exactly, is to ask it where that range ends, without telling it. For states $\rho,\sigma$ on $\M$ (densities with
 respect to $\Tr_{\mathrm{blunt}}$) and $\alpha\in(0,1)\cup(1,\infty)$ the Petz~\cite{petz1986} and the
 sandwiched~\cite{mullerlennert2013,wilde2014} Rényi divergences are
 \[
@@ -1404,6 +1495,75 @@ The code is available under the MIT licence at
 \texttt{.quick\_output/}, not into the paper's tables), and \texttt{python scripts/gpu\_check.py} checks a GPU in a few
 minutes (correctness against the CPU, absence of per-sector work, timings). The tables state the device and the mode
 they were produced with; the JSON file next to each table also records the commit of the code.
+
+\appendix
+\section{Proof of Theorem~\ref{thm:allk}}\label{app:envelopes}
+
+Throughout, $a=\ell=(1-\delta)/(1+\delta)$ and $b=\ell'=(1-\delta')/(1+\delta')$ are the smallest eigenvalues of the operators
+with contrasts $\delta$ and $\delta'$; it suffices to prove the upper bounds in the complex algebra, since the
+maximisers are real. A \emph{vertex argument} is used twice: a convex function on a face of a cube $[s,t]^n$ attains its
+maximum at a vertex of the face, i.e.\ at a point with all coordinates in $\{s,t\}$.
+
+\begin{lemma}[two projections]\label{lem:twoproj}
+For projections $P,Q$ on a finite-dimensional Hilbert space $H$, $H$ is the orthogonal sum of subspaces of
+dimension $1$ or $2$ invariant under $P$ and $Q$; on each two-dimensional one there is an orthonormal basis $f,f'$ with
+$P=ff^*$ and $Q=qq^*$, $q=\cos\theta\,f+e^{i\psi}\sin\theta\,f'$.
+\end{lemma}
+\begin{proof}
+$PQP$ is self-adjoint on $\mathrm{ran}\,P$; let $v_i$ be an orthonormal eigenbasis, $PQPv_i=\mu_iv_i$, and
+$W_i=\mathrm{span}\{v_i,Qv_i\}$. Then $PQv_i=PQPv_i=\mu_iv_i$, so $W_i$ is invariant under $P$ and $Q$, and for $i\ne j$,
+$\langle v_i,Qv_j\rangle=\langle Qv_i,Qv_j\rangle=\langle v_i,PQPv_j\rangle=0$, so the $W_i$ are orthogonal. Their sum
+contains $\mathrm{ran}\,P$; its orthogonal complement is invariant under $Q$ and contained in $\ker P$, and an eigenbasis
+of $Q$ there gives one-dimensional summands. If $\dim W_i=2$, $P|_{W_i}=v_iv_i^*$ and $Q|_{W_i}$ has the range
+$\mathrm{span}\{Qv_i\}$; put $f=v_i$.
+\end{proof}
+
+\begin{lemma}\label{lem:exp3}
+Let $X=X^*$ be invertible, $P$ the projection onto the positive part of $X$, $S=2P-1$, and $Y\ge0$. In Exp.~3:
+(a) if $|X|\le|X'|$, $X'=S|X'|$ and $|X'|$ commutes with $P$, then $z(X,Y)\le z(X',Y)$; (b) for fixed $X$, $z$ is
+a convex function of $Y^2$.
+\end{lemma}
+\begin{proof}
+With $A=YX_+Y$ and $B=YX_-Y$, $z=\Tr A+\Tr B-\|A-B\|_1$. (a) $A=Y|X|^{1/2}P|X|^{1/2}Y$ is non-decreasing in $|X|$ among
+operators commuting with $P$, and so is $B$; by the triangle inequality $\|A+R-B\|_1\le\|A-B\|_1+\Tr R$ for $R\ge0$,
+so $z$ does not decrease when $A$ or $B$ increases. (b) As $\|H\|_1=\max_{-1\le T\le1}\Tr(TH)$ for self-adjoint $H$, with
+$T=1-2E$ we get $z=2\min_{0\le E\le1}\Tr\bigl(EA+(1-E)B\bigr)$. For invertible $Y$, $N=|X|^{1/2}Y$ is invertible and
+$E\mapsto F=NEN^*$ maps $\{0\le E\le1\}$ onto $\{0\le F\le G\}$, $G=NN^*=|X|^{1/2}Y^2|X|^{1/2}$, with $\Tr(EA)=\Tr(PF)$ and
+$\Tr((1-E)B)=\Tr((1-P)(G-F))$. So $z=2\min\{\Tr(PF+(1-P)(G-F)):0\le F\le G\}$ is the partial minimum of a linear
+function over a convex set of pairs $(F,G)$, hence convex in $G$, which is affine in $Y^2$; by continuity also at
+singular $Y$.
+\end{proof}
+
+\emph{Exp.~1.} By the trace-norm duality $|\Tr(XUY)|\le\|YX\|_1$, with equality for the polar unitary of $YX$, which
+lies in $\M$; so $\sup_Uz=F(X,Y):=\|YX\|_1-\Tr(XY)$. For a fixed eigenbasis of $X$, $F$ is a convex function of the
+eigenvalues (a norm of a linear map minus a linear function), and the admissible eigenvalues form the union of the
+faces $\{x_i=1,\ x_j=a\}$ of $[a,1]^n$; by the vertex argument $F(X,Y)\le F(X',Y)$ for some $X'=a+(1-a)P$ with a
+projection $P$ in $\M$, and likewise $Y'=b+(1-b)Q$. By Lemma~\ref{lem:twoproj}, applied in every sector, $X'$, $Y'$ are
+direct sums over subspaces of dimension $1$ or $2$, and so are $\|Y'X'\|_1$ and $\Tr(X'Y')$. One-dimensional summands
+contribute $0$; on a two-dimensional one $X'=\mathrm{diag}(1,a)$ and $Y'$ has the eigenvalues $1,b$, so it contributes
+at most $\delta^2\delta'^2/((1+\delta)(1+\delta'))$ by Proposition~\ref{prop:k2}(a); a sector of size $k_c$ holds at most
+$\lfloor k_c/2\rfloor$ of them. Equality: $N$ blocks at the angle of Proposition~\ref{prop:k2}(a), $X=Y=1$ on the
+remaining one-dimensional blocks, and the polar unitary.
+
+\emph{Exp.~3.} Let $\delta<1$, so that $X$ is invertible; $z(-X,Y)=z(X,Y)$. Since $|X|$ commutes with $P$, it has a
+unit eigenvector $e$ for its eigenvalue $a$ in one sector and in $\mathrm{ran}\,P$ or in $\ker P$; replacing $X$ by
+$-X$ if necessary, $e\in\mathrm{ran}\,P$. Then $|X|\le|X'|:=1-(1-a)ee^*$, and $X'=S|X'|=S-(1-a)ee^*$ has contrast $\delta$;
+by Lemma~\ref{lem:exp3}(a), $z(X,Y)\le z(X',Y)$. By Lemma~\ref{lem:exp3}(b) and the vertex argument for the eigenvalues
+of $Y^2$ in $[b^2,1]$, $z(X',Y)\le z(X',Y')$ with $Y'=b+(1-b)Q$, $Q\ne0,1$ a projection in $\M$. Apply
+Lemma~\ref{lem:twoproj} to $P$ and $Q$ in every sector. In a sector without $e$, $X'=S$ is a direct sum over the
+subspaces, a one-dimensional summand contributes $0$, and a two-dimensional one contributes at most $(1-b)^2$ by
+Proposition~\ref{prop:k2}(b) ($|X|=1$ there): together at most $\lfloor k_c/2\rfloor(1-b)^2$. In the sector of $e$,
+Lemma~\ref{lem:exp3}(a) with $|X'|\le1$ gives the same bound for $z$ restricted to it, and, if its size $k_c$ is odd or
+it contains fewer than $k_c/2$ two-dimensional subspaces, at most $\lfloor k_c/2\rfloor(1-b)^2$, resp.\
+$(k_c/2-1)(1-b)^2$. Otherwise its $m=k_c/2$ two-dimensional subspaces fill it, with bases $f_j,f_j'$, $f_j\in\mathrm{ran}\,P$;
+the unitary that multiplies $f_j'$ by $e^{-i\psi_j}$ commutes with $X'$ (which is $-1$ on $\ker P$) and removes the
+phases, and in the basis $(f_1,\dots,f_m,f_1',\dots,f_m')$ we are in the setting of Proposition~\ref{prop:mblocks} with
+$X_+=1-(1-a)ee^*$, whose eigenvalues are $a,1,\dots,1$: the sector contributes at most
+$(1-b)^2\bigl(\frac{2a}{1+a}+m-1\bigr)=(k_c/2-\delta)(1-b)^2$. Summing over the sectors, $z\le(N-\delta)(1-b)^2$ if every $k_c$ is
+even and $z\le N(1-b)^2$ otherwise. Equality: if every $k_c$ is even, $X=\mathrm{diag}(a,-1)\oplus\mathrm{diag}(1,-1)^{\oplus(N-1)}$
+and $Y$ with eigenvalues $1,b$ in every block at the angle of Proposition~\ref{prop:k2}(b); if some $k_c$ is odd,
+$X=\mathrm{diag}(1,-1)$ on $N$ blocks, the eigenvalue $a$ on a one-dimensional block of an odd sector, $1$ on the other
+one-dimensional blocks, and $Y$ as before ($Y=1$ on the one-dimensional blocks). \qed
 
 {\sloppy
 \begin{thebibliography}{99}

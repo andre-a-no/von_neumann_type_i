@@ -316,8 +316,8 @@ $`\overline z_{M_2\oplus M_2}(0.5)`$ 的最佳下界是较大的那个数——�
 的目的。$`M_2`$ 的值与 $`(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2`$ 吻合到 $`10^{-4}`$，其中
 $`d=0.999`$ 是 $`Y`$ 所允许的最大对比度。这个闭式最早由配套论文在数值上观察到，它就是
 [推论 11.16](../../lecture_notes/zh/11_optimisation.md#r-11-16)（见下文）的上包络；代码只断言已证明的方向（没有值超过它）。
-由同一推论，直和是最优的：$`\overline z_{M_2\oplus M_2}(0.5)=1.5\,(2d/(1+d))^2`$。对更大的块，我们不知道实验 1 与
-实验 3 的上包络的闭式；此时计算得到的曲线只是下界（可取到的值），仅此而已。
+由同一推论，直和是最优的：$`\overline z_{M_2\oplus M_2}(0.5)=1.5\,(2d/(1+d))^2`$。对任意大小的块，实验 1 与实验 3 的上包络由
+[定理 11.20](../../lecture_notes/zh/11_optimisation.md#r-11-20)（[11.7 节](#s-11-7)）给出。
 
 由[讲义，命题 11.15](../../lecture_notes/zh/11_optimisation.md#r-11-15)，在 $`M_2`$ 上，对 $`X`$（实验 3 中为 $`|X|`$）的谱
 $`x_1\ge x_2`$ 与 $`Y`$ 的谱 $`y_1\ge y_2`$，$`\sup z`$ 在实验 1 中为
@@ -420,6 +420,155 @@ Adam），可替代在重新居中的坐标卡中运行的 Adam（这里不作�
 对比度约束的精确参数化（极值可以位于任何扇区）、遵从
 块结构的酉算子，以及在 CPU 或 GPU 上对许多起点和约束值进行的一次批量计算。它给出候选的
 极值点以及上确界的下界；其余部分必须由证明或松弛来补足。
+
+<a id="s-11-7"></a>
+
+## 11.7 任意大小的块的包络
+
+*讲义：* [11.7 节](../../lecture_notes/zh/11_optimisation.md#s-11-7)；[引理 11.17](../../lecture_notes/zh/11_optimisation.md#r-11-17)、[引理 11.18](../../lecture_notes/zh/11_optimisation.md#r-11-18)、[命题 11.19](../../lecture_notes/zh/11_optimisation.md#r-11-19)、[定理 11.20](../../lecture_notes/zh/11_optimisation.md#r-11-20)。
+
+由[讲义，定理 11.20](../../lecture_notes/zh/11_optimisation.md#r-11-20)，记 $`N=\sum_c\lfloor k_c/2\rfloor`$，$`\Delta(X)=\delta`$
+（实验 3 中为 $`\Delta(|X|)=\delta`$），$`\Delta(Y)=\delta'`$，则实验 1 与实验 3 的上确界为
+```math
+\sup z_1=N\,\frac{\delta^2\delta'^2}{(1+\delta)(1+\delta')},\qquad
+\sup z_3=(N-\epsilon\,\delta)\Big(\frac{2\delta'}{1+\delta'}\Big)^2,
+```
+其中所有 $`k_c`$ 为偶数时 $`\epsilon=1`$，否则 $`\epsilon=0`$。
+关键一步是[命题 11.19](../../lecture_notes/zh/11_optimisation.md#r-11-19)：对 $`\mathbb C^m\oplus\mathbb C^m`$ 上的
+$`X=X_+\oplus(-1)`$ 与 $`Y=b+(1-b)Q`$（$`Q`$ 为到 $`\binom C\Sigma`$ 值域的投影），$`YXY`$ 的特征值等于一个关于 $`A=C^2`$
+仿射的矩阵 $`\mathcal L`$ 的特征值，并且 $`z\le(1-b)^2\sum_i2x_i/(1+x_i)`$。第一段代码在 $`M_6`$ 上验证这一点（$`m=3`$，$`X_+`$
+在随机基下的特征值为 $`0.3,1,1`$）：在随机角度下 $`YXY`$（`eigenvalues`）与 $`\mathcal L`$ 的谱一致，没有角度超过该界，
+等号情形的角度达到它。
+
+```python
+# Proposition 11.19 on M_6, m = 3: X = X_+ (+) (-1), Y = b + (1 - b) Q, Q the projection onto the range of (C; Sigma)
+torch.manual_seed(4)
+m, b = 3, 0.2
+M6 = TypeIAlgebra([2 * m], [2 * m], precision='double')
+W = TypeIAlgebra([m], [m], precision='double').random_unitary_operator(1).matrix[0, 0]
+x = torch.tensor([0.3, 1.0, 1.0], dtype=torch.float64)                    # X_+ = 1 - (1 - a) e e^*, a = 0.3
+Xp = W @ torch.diag(x).to(W.dtype) @ W.mH
+
+def model(theta, Xp):
+    v = torch.cat([torch.diag(torch.cos(theta)), torch.diag(torch.sin(theta))]).to(Xp.dtype)
+    Xm = torch.block_diag(Xp, -torch.eye(m, dtype=Xp.dtype))
+    Ym = b * torch.eye(2 * m, dtype=Xp.dtype) + (1 - b) * v @ v.mH
+    return M6.operator(Xm[None, None], is_self_adjoint=True), M6.operator(Ym[None, None], is_positive=True)
+
+def lin(theta, Xp):                                                        # the matrix L of the proof
+    w, V = torch.linalg.eigh(Xp)
+    f = lambda g: V @ torch.diag(g(w)).to(V.dtype) @ V.mH
+    A = torch.diag(torch.cos(theta) ** 2).to(Xp.dtype)
+    K12, X12 = f(lambda t: (1 + t).sqrt()), f(torch.sqrt)
+    top = (1 - b ** 2) * K12 @ A @ K12 + b ** 2 * Xp - torch.eye(m, dtype=Xp.dtype)
+    return torch.cat([torch.cat([top, b * X12], 1), torch.cat([b * X12, torch.zeros_like(Xp)], 1)])
+
+bound = (1 - b) ** 2 * (2 * x / (1 + x)).sum().item()                       # Proposition 11.19
+worst = 0.0
+for _ in range(200):
+    theta = torch.rand(m, dtype=torch.float64) * math.pi / 2
+    X, Y = model(theta, Xp)
+    YXY = M6.operator((Y @ X @ Y).matrix, is_self_adjoint=True)
+    assert torch.allclose(YXY.eigenvalues()[0][0], torch.linalg.eigvalsh(lin(theta, Xp)), atol=1e-12)
+    worst = max(worst, ((Y @ X.abs() @ Y).trace.real - YXY.trace_norm()).item())
+th_star = torch.acos(((1 + b * x) / ((1 + x) * (1 + b))).sqrt())            # equality case, X_+ diagonal
+X, Y = model(th_star, torch.diag(x).to(W.dtype))
+z_star = ((Y @ X.abs() @ Y).trace.real - (Y @ X @ Y).trace_norm()).item()
+print(f"Proposition 11.19: largest z at 200 random angles {worst:.6f} <= {bound:.6f}; at the maximiser {z_star:.12f}")
+assert worst <= bound + 1e-12 and abs(z_star - bound) < 1e-12
+```
+
+第二段代码用 `from_blocks` 对若干块大小构造定理 11.20 证明中的极大点：如命题 11.15 的 $`2\times2`$ 块与 $`1\times1`$ 块；
+实验 3 中，若所有 $`k_c`$ 为偶数，$`|X|`$ 的特征值 $`\ell(\delta)`$ 位于一个 $`2\times2`$ 块上，否则位于一个 $`1\times1`$ 块上；
+实验 1 中的酉元是 $`YX`$ 的极分解因子的伴随（`polar`）。对比度与数值须与定理在 $`10^{-12}`$ 内一致。
+
+```python
+def sup_exact(exp, ks, dl, dp):                                             # Theorem 11.20
+    N = sum(k // 2 for k in ks)
+    if exp == 1:
+        return N * dl ** 2 * dp ** 2 / ((1 + dl) * (1 + dp))
+    return (N - dl * all(k % 2 == 0 for k in ks)) * (2 * dp / (1 + dp)) ** 2
+
+def maximisers_any(ks, dl, dp):
+    """Exp. 1 (X, U, Y) and Exp. 3 (X, Y) attaining Theorem 11.20: 2 x 2 maximisers of Proposition 11.15 and 1 x 1
+    blocks; in Exp. 3 the eigenvalue ell(delta) of |X| on a 2 x 2 block if all k_c are even, else on a 1 x 1 block."""
+    lx, ly = ell(dl), ell(dp)
+    even = all(k % 2 == 0 for k in ks)
+    two = lambda d: torch.diag(torch.tensor(d, dtype=torch.float64))
+    R1 = rot(gammas(1.0, lx, 1.0, ly)[0])
+    blocks = {name: [] for name in ('X1', 'Y1', 'X3', 'Y3')}
+    placed = False
+    for k in ks:
+        b1 = {name: [] for name in blocks}
+        for j in range(k // 2):
+            x3 = lx if even and not placed else 1.0
+            placed = placed or x3 == lx
+            R3 = rot(gammas(1.0, x3, 1.0, ly)[1])
+            b1['X1'].append(two([1.0, lx]))
+            b1['Y1'].append(R1 @ two([1.0, ly]) @ R1.T)
+            b1['X3'].append(two([1.0, -x3]))
+            b1['Y3'].append(R3 @ two([1.0, ly]) @ R3.T)
+        if k % 2:
+            b1['X1'].append(two([1.0]))
+            b1['Y1'].append(two([1.0]))
+            b1['X3'].append(two([1.0 if placed else lx]))
+            b1['Y3'].append(two([1.0]))
+            placed = True
+        for name in blocks:
+            blocks[name].append(torch.block_diag(*b1[name]))
+    a = TypeIAlgebra(ks, ks, complex_valued=False, precision='double')
+    X1, Y1, X3, Y3 = (a.from_blocks(blocks[name]) for name in ('X1', 'Y1', 'X3', 'Y3'))
+    U1 = (Y1 @ X1).polar()[0].adjoint()                                      # U = W^*, Y X = W |Y X|
+    return (X1, U1, Y1), (X3, Y3)
+
+print(" sizes      delta  delta'   Exp. 1 z / Theorem 11.20    Exp. 3 z / Theorem 11.20")
+for ks in ([4, 4], [3, 2], [2, 2, 2], [16], [3]):
+    for dl, dp in ((0.5, 0.8), (0.9, 0.999)):
+        (X, U, Y), (X3, Y3) = maximisers_any(ks, dl, dp)
+        assert abs(X.michelson_contrast.item() - dl) < 1e-12 and abs(Y.michelson_contrast.item() - dp) < 1e-12
+        assert abs(X3.abs().michelson_contrast.item() - dl) < 1e-12 and abs(Y3.michelson_contrast.item() - dp) < 1e-12
+        z1v = ((X @ U @ Y).trace.abs() - (X @ Y).trace.real).item()
+        z3v = ((Y3 @ X3.abs() @ Y3).trace.real - (Y3 @ X3 @ Y3).trace_norm()).item()
+        print(f" {str(ks):10s} {dl:.1f}    {dp:.3f}   {z1v:.6f} / {sup_exact(1, ks, dl, dp):.6f}"
+              f"       {z3v:.6f} / {sup_exact(3, ks, dl, dp):.6f}")
+        assert abs(z1v - sup_exact(1, ks, dl, dp)) < 1e-12 and abs(z3v - sup_exact(3, ks, dl, dp)) < 1e-12
+```
+
+块很多时，Haar 随机起点很少接近这些极大点。对 $`X`$ 用 `init='diagonal'`，对 $`Y`$ 用 `init='pairs'`（此时相对特征基是
+$`2\times2`$ 旋转的直和），用 `spectrum_init`（两能级谱；实验 3 中 $`|X|`$ 接近 $`1`$，且每对中 $`X`$ 有一个正特征值和一个
+负特征值），对 $`U`$ 用 `init='rotations'`（同样成对的旋转，行列式为 $`+1`$：在实代数中，图卡 $`U_0e^{G-G^*}`$ 停留在 $`U_0`$ 的连通分支内，而实验 1 的极大点在
+每个扇区中行列式为 $`+1`$），一半的起点从这种结构出发，另一半从 Haar 随机点出发（`init_fraction`；掩码 `X.structured`
+使 $`Y`$ 与 $`U`$ 在相同的起点上结构化出发）。下面的搜索不超过定理 11.20（断言：一个定理），并且在这次固定种子的运行中
+与之相差在 $`10^{-3}`$ 以内（一个数值观察）。
+
+```python
+# multistart search along Delta(X), resp. Delta(|X|), with Delta(Y) free in [0, 0.999]; half of the starts structured
+def search_any(exp, ks, deltas, starts=8, seed=0):
+    torch.manual_seed(seed)
+    a = TypeIAlgebra(ks, ks, complex_valued=False, precision='double')
+    d = torch.tensor(deltas, dtype=torch.float64).repeat_interleave(starts)
+    cls = opt.SelfAdjointParam if exp == 3 else opt.PositiveParam
+    Xs = cls(a, len(d), delta=d, init='diagonal', init_fraction=0.5, spectrum_init='high' if exp == 3 else 'pairs')
+    Ys = opt.PositiveParam(a, len(d), init='pairs', init_fraction=Xs.structured, spectrum_init='pairs')
+    Us = opt.UnitaryParam(a, len(d), init='rotations', init_fraction=Xs.structured)
+    def z():
+        x, y = Xs.operator(), Ys.operator()
+        if exp == 1:
+            return (x @ Us.operator() @ y).trace.abs() - (x @ y).trace.real
+        M = a.operator((y @ x @ y).matrix, is_self_adjoint=True)
+        return (y @ Xs.abs_operator() @ y).trace.real - M.trace_norm()
+    params = [Xs, Ys, Us] if exp == 1 else [Xs, Ys]
+    vals = opt.extremize(z, params, maximize=True, rounds=6, steps=40).reshape(len(deltas), starts)
+    return vals.nan_to_num(nan=-math.inf).max(1)[0]
+
+for exp, ks in ((3, [4, 4]), (3, [3]), (1, [2] * 6)):
+    deltas = [0.3, 0.8]
+    found = search_any(exp, ks, deltas)
+    exact = torch.tensor([sup_exact(exp, ks, dl, 0.999) for dl in deltas], dtype=torch.float64)
+    print(f"Exp. {exp} on {ks}: search {[round(v, 6) for v in found.tolist()]}, Theorem 11.20 "
+          f"{[round(v, 6) for v in exact.tolist()]}")
+    assert (found <= exact + 1e-12).all() and ((exact - found) / exact).max() < 1e-3
+```
 
 <a id="x-11"></a>
 

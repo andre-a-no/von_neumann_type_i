@@ -542,7 +542,7 @@ erreicht (in Exp. 1 falls $`\delta>0`$). $`\square`$
 Für $`C=1`$ und $`d=0.999`$ sind dies die geschlossenen Formen, die die Begleitarbeit zuerst numerisch beobachtet hat (in
 reellen Algebren). Für jedes $`C`$ sind die oberen Einhüllenden die Werte direkter Summen von $`C`$ Lösungen auf $`M_2`$
 ($`C-\delta=(1-\delta)+(C-1)\cdot1`$ in Exp. 3): Auf $`M_2\oplus M_2`$ ist die obige Ungleichung für direkte Summen eine
-Gleichheit. Für Blöcke der Größe $`k_c\ge3`$ kennen wir keine geschlossene Form dieser oberen Einhüllenden.
+Gleichheit. Abschnitt 11.7 überträgt diese Suprema auf Blöcke beliebiger Größe (Satz 11.20).
 
 *Rechnung:* die Maximierer aus Proposition 11.15, die Einhüllenden aus Korollar 11.16 für $`C=1,2`$ und ihr Grenzwert
 $`d\to1`$ sowie eine Multistart-Suche im Vergleich dazu — [Tutorial, Abschnitt 11.5](../../tutorial/de/11_optimisation.md#s-11-5).
@@ -552,6 +552,203 @@ $`d\to1`$ sowie eine Multistart-Suche im Vergleich dazu — [Tutorial, Abschnitt
 ## 11.6 Womit man vergleichen sollte
 
 *In der Bibliothek:* der Vergleich mit anderer Software, darunter SDP-Löser, deren konvexe Relaxierungen ein Supremum nach oben beschränken — [Tutorial, Abschnitt 11.6](../../tutorial/de/11_optimisation.md#s-11-6).
+
+<a id="s-11-7"></a>
+
+## 11.7 Einhüllende für Blöcke beliebiger Größe
+
+Die Suprema aus Korollar 11.16 übertragen sich auf Blöcke jeder Größe. Sei
+```math
+N=\sum_c\Big\lfloor\frac{k_c}2\Big\rfloor,
+```
+die größte Anzahl paarweise orthogonaler zweidimensionaler Unterräume, die in die Sektoren passen. Die oberen Einhüllenden
+werden von direkten Summen der Maximierer aus Proposition 11.15 auf $`N`$ Blöcken der Größe $`2`$ und von $`1\times1`$-Blöcken
+angenommen. Der Beweis reduziert die Spektren auf zwei Werte, dann die Operatoren auf Blöcke der Größe $`1`$ und $`2`$
+(Lemma 11.17), auf die Proposition 11.15 anwendbar ist — außer in Exp. 3, wenn der Eigenvektor von $`|X|`$ zu
+$`\lambda_{\min}`$ über mehrere Blöcke verteilt ist; diesen Fall erledigt Proposition 11.19 durch eine Linearisierung.
+
+*Eckenargument.* Eine konvexe Funktion $`f`$ auf einer Seite $`F=\{x\in[s,t]^n:x_i=t\ (i\in I),\ x_j=s\ (j\in J)\}`$ eines
+Würfels nimmt ihr Maximum über $`F`$ in einer Ecke von $`F`$ an, einem Punkt mit allen Koordinaten in $`\{s,t\}`$: Jeder
+Punkt von $`F`$ ist Konvexkombination dieser Ecken (man schreibt eine freie Koordinate als Konvexkombination von $`s`$ und
+$`t`$ und macht Induktion über die Anzahl der freien Koordinaten), und der Wert von $`f`$ dort ist höchstens der größte Wert
+in den Ecken.
+
+<a id="r-11-17"></a>
+
+**Lemma 11.17 (zwei Projektionen).** Für Projektionen $`P,Q\in M_n(\mathbb C)`$ ist $`\mathbb C^n`$ orthogonale Summe von
+Unterräumen der Dimension $`1`$ oder $`2`$, jeder invariant unter $`P`$ und $`Q`$, so dass jeder zweidimensionale eine
+Orthonormalbasis $`f,f'`$ mit $`P=|f\rangle\langle f|`$ und $`Q=|q\rangle\langle q|`$ auf ihm hat,
+$`q=\cos\theta\,f+e^{i\psi}\sin\theta\,f'`$, $`\theta\in[0,\pi/2]`$. Für reelle $`P,Q`$ lässt sich alles reell wählen.
+
+*Beweis.* $`PQP`$ ist selbstadjungiert auf $`\mathrm{ran}\,P`$; sei $`v_1,\dots,v_r`$ eine Orthonormalbasis aus Eigenvektoren,
+$`PQPv_i=\mu_iv_i`$ (Satz 1.3), und $`W_i=\mathrm{span}\{v_i,Qv_i\}`$. Dann ist $`PQv_i=PQPv_i=\mu_iv_i`$, also ist $`W_i`$
+invariant unter $`P`$ und (wegen $`Q^2=Q`$) unter $`Q`$. Für $`i\ne j`$ gilt
+$`\langle v_i,Qv_j\rangle=\langle Qv_i,Qv_j\rangle=\langle v_i,PQPv_j\rangle=0`$, die $`W_i`$ sind also paarweise orthogonal.
+Ihre Summe enthält $`\mathrm{ran}\,P`$; ihr orthogonales Komplement $`W`$ ist invariant unter $`Q`$ (beide Projektionen sind
+selbstadjungiert) und in $`\ker P`$ enthalten, und eine Orthonormalbasis aus Eigenvektoren von $`Q`$ auf $`W`$ liefert
+eindimensionale Summanden. Ein $`W_i`$ der Dimension $`1`$ wird von $`v_i`$ aufgespannt. Ist $`\dim W_i=2`$, so setze $`f=v_i`$
+und sei $`f'`$ die normierte, zu $`f`$ orthogonale Komponente von $`Qv_i`$; dann ist $`P=|f\rangle\langle f|`$ auf $`W_i`$, und
+$`Q`$ bildet $`W_i`$ auf $`\mathrm{span}\{Qv_i\}`$ ab, also $`Q=|q\rangle\langle q|`$ dort für einen Einheitsvektor
+$`q=\alpha f+\beta f'`$; Multiplikation von $`q`$ mit einer Phase ergibt $`\alpha\ge0`$, und $`\alpha=\cos\theta`$,
+$`\beta=e^{i\psi}\sin\theta`$ mit $`\theta\in[0,\pi/2]`$. Im reellen Fall sind die Eigenbasis, $`f'`$ und $`q`$ reell und
+$`e^{i\psi}=\pm1`$. $`\square`$
+
+<a id="r-11-18"></a>
+
+**Lemma 11.18 (Exp. 3: Monotonie und Konvexität).** Sei $`X=X^*`$ invertierbar, $`P`$ die Projektion auf seinen positiven
+Teil ($`X_+=PX`$), $`S=2P-1`$, $`Y\ge0`$ und $`z(X,Y)=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|`$.
+
+(a) Ist $`|X|\le|X'|`$, wobei $`|X'|`$ mit $`P`$ vertauscht und $`X'=S|X'|`$, so gilt $`z(X,Y)\le z(X',Y)`$.
+
+(b) Bei festem $`X`$ ist $`z`$ eine konvexe Funktion von $`K=Y^2`$: Für $`K_1,K_2\ge0`$ und $`t\in[0,1]`$ gilt
+$`z\big(X,(tK_1+(1-t)K_2)^{1/2}\big)\le t\,z(X,K_1^{1/2})+(1-t)\,z(X,K_2^{1/2})`$.
+
+*Beweis.* Mit $`A=YX_+Y`$ und $`B=YX_-Y`$ ist $`z=\mathrm{Tr}\,A+\mathrm{Tr}\,B-\|A-B\|_1`$ (Beweis von Proposition 11.9).
+
+(a) $`X_+=P|X|=|X|^{1/2}P|X|^{1/2}`$ und $`X_-=(1-P)|X|`$, und $`P|X'|-P|X|=P(|X'|-|X|)P\ge0`$, ebenso mit $`1-P`$; also
+$`A\le A'`$ und $`B\le B'`$ für die Operatoren $`A',B'`$ von $`X'`$ (Korollar 1.7). Für $`R\ge0`$ ist
+$`\|A+R-B\|_1\le\|A-B\|_1+\mathrm{Tr}\,R`$ (Dreiecksungleichung, $`\|R\|_1=\mathrm{Tr}\,R`$), also fällt
+$`\mathrm{Tr}\,A+\mathrm{Tr}\,B-\|A-B\|_1`$ nicht, wenn $`A`$ oder $`B`$ wächst.
+
+(b) Für selbstadjungiertes $`H`$ und selbstadjungiertes $`T`$ mit $`-1\le T\le1`$ gilt $`|\mathrm{Tr}(TH)|\le\|H\|_1`$: Die
+Operatoren $`T\pm i(1-T^2)^{1/2}`$ sind unitär (Satz 1.5) mit Mittelwert $`T`$, und Satz 1.9 gilt für jeden von ihnen.
+Gleichheit gilt für $`T=2Q-1`$, $`Q`$ die Projektion auf den positiven Teil von $`H`$ (Beweis von Lemma 11.8). Mit $`T=1-2E`$:
+```math
+z=2\min_{0\le E\le1}\mathrm{Tr}\big(EA+(1-E)B\big).
+```
+Sei zunächst $`Y`$ invertierbar. Dann ist $`N=|X|^{1/2}Y`$ invertierbar, $`A=N^*PN`$, $`B=N^*(1-P)N`$, und $`E\mapsto F=NEN^*`$
+bildet $`\{0\le E\le1\}`$ auf $`\{0\le F\le G\}`$ ab, $`G=NN^*=|X|^{1/2}Y^2|X|^{1/2}`$ (Korollar 1.7, in beiden Richtungen). Da
+$`\mathrm{Tr}(EA)=\mathrm{Tr}(PF)`$ und $`\mathrm{Tr}((1-E)B)=\mathrm{Tr}((1-P)(G-F))`$, ist
+$`z=2\min\{\mathrm{Tr}(PF+(1-P)(G-F)):0\le F\le G\}`$. Ist $`0\le F_i\le G_i`$, so ist $`tF_1+(1-t)F_2`$ zulässig für
+$`tG_1+(1-t)G_2`$, und die Zielfunktion ist linear in $`(F,G)`$; also ist $`z`$ konvex in $`G`$, und $`G`$ ist affin in $`Y^2`$.
+Für singuläres $`K_1`$ oder $`K_2`$ wende man dies auf $`K_i+\varepsilon`$ an und lasse $`\varepsilon\to0`$ ($`z`$ ist stetig
+in $`Y`$, und $`K\mapsto K^{1/2}`$ ist stetig). $`\square`$
+
+<a id="r-11-19"></a>
+
+**Proposition 11.19 (Exp. 3 auf $`m`$ Blöcken).** Sei $`X=X_+\oplus(-1)`$ auf $`\mathbb C^m\oplus\mathbb C^m`$, wobei
+$`0<X_+\le1`$ die Eigenwerte $`x_1,\dots,x_m`$ hat; seien $`C=\mathrm{diag}(\cos\theta_j)`$, $`\Sigma=\mathrm{diag}(\sin\theta_j)`$,
+$`Q`$ die Projektion auf das Bild der Isometrie $`v=\binom C\Sigma:\mathbb C^m\to\mathbb C^{2m}`$, $`b\in[0,1)`$ und
+$`Y=b+(1-b)Q`$. Dann gilt
+```math
+\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ \le\ (1-b)^2\sum_{i=1}^m\frac{2x_i}{1+x_i},
+```
+mit Gleichheit für $`X_+=\mathrm{diag}(x_1,\dots,x_m)`$ und $`\cos^2\theta_i=(1+bx_i)/((1+x_i)(1+b))`$.
+
+*Beweis.* Zwei Tatsachen der linearen Algebra: Für quadratische $`R,T`$ ist $`\det(\lambda-RT)=\det(\lambda-TR)`$ (für
+invertierbares $`R`$ ist $`RT=R(TR)R^{-1}`$; allgemein durch Stetigkeit in $`R`$), und für eine Blockmatrix mit invertierbarem
+rechtem unterem Block $`E`$ ist $`\det\begin{pmatrix}R&S\\T&E\end{pmatrix}=\det E\,\det(R-SE^{-1}T)`$ (von links mit
+$`\begin{pmatrix}1&-SE^{-1}\\0&1\end{pmatrix}`$ multiplizieren).
+
+Seien $`\gamma=1-b^2`$, $`K=1+X_+`$ und $`A=C^2`$, also $`\Sigma^2=1-A`$; $`Q=vv^*`$ hat die Blöcke
+$`C^2,\ C\Sigma,\ C\Sigma,\ \Sigma^2`$, und $`Y^2=b^2+\gamma Q`$ (wegen $`Q^2=Q`$). Für $`\lambda>0`$ ist der rechte untere Block
+von $`\lambda-XY^2`$ die invertierbare Diagonalmatrix $`E=\lambda+b^2+\gamma\Sigma^2=\lambda+1-\gamma A`$, und da
+$`C,\Sigma,E`$ diagonal sind und $`(b^2+\gamma A)E-\gamma^2A\Sigma^2=\lambda(b^2+\gamma A)+b^2`$ gilt,
+```math
+\det(\lambda-XY^2)=\det E\,\det\Big(\lambda-X_+\big(\lambda(b^2+\gamma A)+b^2\big)E^{-1}\Big)
+=\det\big((\lambda+1)(\lambda-b^2X_+)-\lambda\gamma KA\big)=p(\lambda),
+```
+mit $`p(\lambda)=\det\big((\lambda+1)(\lambda-b^2X_+)-\lambda\gamma K^{1/2}AK^{1/2}\big)`$ (man konjugiere die Matrix
+$`K^{-1}(\lambda+1)(\lambda-b^2X_+)-\lambda\gamma A`$ mit $`K^{1/2}`$). Die selbstadjungierte Matrix
+```math
+\mathcal L=\begin{pmatrix}\gamma K^{1/2}AK^{1/2}+b^2X_+-1&bX_+^{1/2}\\ bX_+^{1/2}&0\end{pmatrix}
+```
+erfüllt nach derselben Formel mit rechtem unterem Block $`\lambda`$
+$`\det(\lambda-\mathcal L)=\lambda^m\det(\lambda+1-\gamma K^{1/2}AK^{1/2}-b^2X_+-b^2X_+/\lambda)=p(\lambda)`$. Da
+$`\det(\lambda-YXY)=\det(\lambda-XY^2)`$, stimmen die charakteristischen Polynome von $`YXY`$ und $`\mathcal L`$ für
+$`\lambda>0`$ überein, also überall, und diese selbstadjungierten Matrizen haben dieselben Eigenwerte:
+$`\mathrm{Tr}|YXY|=\|\mathcal L\|_1`$. Seien $`\Delta=(1-X_+)(1+X_+)^{-1}`$ und $`\Gamma=2X_+^{1/2}(1+X_+)^{-1}`$ (Funktionen von
+$`X_+`$, also vertauschbar, und $`\Delta^2+\Gamma^2=1`$), und
+```math
+T=\begin{pmatrix}-\Delta&\Gamma\\ \Gamma&\Delta\end{pmatrix},\qquad T^2=1 .
+```
+$`T`$ ist selbstadjungiert mit Eigenwerten $`\pm1`$, also $`\|\mathcal L\|_1\ge\mathrm{Tr}(T\mathcal L)`$ (Beweis von
+Lemma 11.18(b)). Nun ist $`\mathrm{Tr}(Y|X|Y)=\mathrm{Tr}(|X|Y^2)=b^2\mathrm{Tr}\,X_++\gamma\mathrm{Tr}(X_+A)+mb^2+\gamma\mathrm{Tr}(1-A)`$
+und, wegen $`K^{1/2}\Delta K^{1/2}=1-X_+`$,
+$`\mathrm{Tr}(T\mathcal L)=-\gamma\mathrm{Tr}((1-X_+)A)-\mathrm{Tr}(\Delta(b^2X_+-1))+2b\,\mathrm{Tr}(\Gamma X_+^{1/2})`$. Die Terme
+mit $`A`$ heben sich weg, und in einer Eigenbasis von $`X_+`$ ist
+```math
+\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\le\sum_{i=1}^m\Big(b^2x_i+1+\frac{1-x_i}{1+x_i}(b^2x_i-1)-\frac{4bx_i}{1+x_i}\Big)
+=(1-b)^2\sum_{i=1}^m\frac{2x_i}{1+x_i}.
+```
+Für diagonales $`X_+`$ sind $`X`$ und $`Y`$ direkte Summen der $`2\times2`$-Blöcke auf $`\mathrm{span}\{e_i,e_{m+i}\}`$, mit
+$`X=\mathrm{diag}(x_i,-1)`$ dort, und Proposition 11.15(b) liefert den Wert $`\frac{2x_i}{1+x_i}(1-b)^2`$ für
+$`\gamma_3=\sin^2\theta_i`$, d. h. beim angegebenen Winkel. $`\square`$
+
+Da $`\mathcal L`$ affin in $`A=PQP`$ ist ($`P`$ die Projektion auf den ersten Summanden), ist $`z`$ eine konkave Funktion von
+$`A`$, und $`T`$ ist das Vorzeichen von $`\mathcal L`$ im Maximierer. Bei festen Winkeln wird das Maximum über den
+Eigenvektor von $`X_+`$ zu seinem kleinsten Eigenwert dagegen im Allgemeinen nicht innerhalb eines einzigen Blocks
+angenommen (eine numerische Beobachtung); nur das gemeinsame Maximum.
+
+<a id="r-11-20"></a>
+
+**Satz 11.20 (obere Einhüllende von Exp. 1 und Exp. 3).** Seien $`N\ge1`$, $`\delta\in[0,1)`$, $`\delta'\in[0,1]`$,
+$`\ell=\ell(\delta)`$, $`\ell'=\ell(\delta')`$ (mit $`\ell(1)=0`$), und $`Y`$ durchlaufe die positiven Operatoren mit
+$`\lambda_{\max}(Y)=1`$ und $`\Delta(Y)=\delta'`$.
+
+(a) Exp. 1, über $`X\in\mathcal P_\delta`$, solche $`Y`$ und unitäre $`U\in\mathcal M`$:
+$`\ \sup z=N\,\frac{\delta^2\delta'^2}{(1+\delta)(1+\delta')}`$.
+
+(b) Exp. 3, über $`X=X^*`$ mit $`|X|\in\mathcal P_\delta`$ und solche $`Y`$:
+$`\ \sup z=(N-\delta)\Big(\frac{2\delta'}{1+\delta'}\Big)^2`$, wenn alle $`k_c`$ gerade sind, und
+$`\ \sup z=N\Big(\frac{2\delta'}{1+\delta'}\Big)^2`$, wenn ein $`k_c`$ ungerade ist.
+
+Beide Suprema werden angenommen, von reellen Operatoren, und sind in $`\bigoplus_cM_{k_c}(\mathbb R)`$ dieselben.
+
+*Beweis.* Obere Schranken in $`\mathcal M`$ gelten erst recht für reelle Operatoren, und die Maximierer unten sind reell.
+
+(a) Nach Satz 1.9 in jedem Block ist $`|\mathrm{Tr}(XUY)|\le\|YX\|_1`$, mit Gleichheit für $`U=W^*`$, $`YX=W|YX|`$, ein unitäres
+Element von $`\mathcal M`$; also $`\sup_Uz=F(X,Y):=\|YX\|_1-\mathrm{Tr}(XY)`$. Für eine feste Orthonormalbasis $`(e_s)`$ aus
+Eigenvektoren von $`X`$ (den Sektoren angepasst) ist $`F`$ eine konvexe Funktion der Eigenwerte $`x\in[\ell,1]^D`$ (eine Norm
+einer linearen Funktion von $`x`$ minus eine lineare Funktion), und $`X\in\mathcal P_\delta`$ heißt, dass $`x`$ auf einer
+Seite $`\{x_s=1,\ x_{s'}=\ell\}`$ liegt; nach dem Eckenargument ist $`F(X,Y)\le F(X',Y)`$ mit $`X'=\ell+(1-\ell)P`$ für eine
+Projektion $`P\in\mathcal M`$. Ebenso $`F(X',Y)\le F(X',Y')`$ mit $`Y'=\ell'+(1-\ell')Q`$. Man wende Lemma 11.17 auf $`P_c,Q_c`$
+in jedem Sektor an: $`X'`$ und $`Y'`$ sind direkte Summen über Unterräume der Dimension $`1`$ und $`2`$, und ebenso
+$`\|Y'X'\|_1`$ und $`\mathrm{Tr}(X'Y')`$. Ein eindimensionaler Summand trägt $`xy-xy=0`$ bei. Auf einem zweidimensionalen hat
+$`X'`$ die Eigenwerte $`1,\ell`$ und $`Y'`$ die Eigenwerte $`1,\ell'`$, also trägt er nach Proposition 11.15(a) höchstens
+$`(1-\ell)^2(1-\ell')^2/(4(1+\ell)(1+\ell'))=\delta^2\delta'^2/((1+\delta)(1+\delta'))`$ bei (siehe den Beweis von Korollar 11.16).
+Ein Sektor der Größe $`k_c`$ enthält höchstens $`\lfloor k_c/2\rfloor`$ davon. Gleichheit: $`N`$ Blöcke mit
+$`X=\mathrm{diag}(1,\ell)`$ und $`Y`$ mit Eigenwerten $`1,\ell'`$ bei $`\gamma=\gamma_1`$, $`X=Y=1`$ auf den übrigen
+eindimensionalen Blöcken, und das unitäre $`W^*`$.
+
+(b) $`X`$ ist invertierbar ($`\ell>0`$), und $`z(-X,Y)=z(X,Y)`$. Sei $`P`$ die Projektion auf den positiven Teil von $`X`$ und
+$`S=2P-1`$. $`|X|`$ vertauscht mit $`P`$ (beide sind Funktionen von $`X`$), hat also einen Einheits-Eigenvektor $`e`$ zum
+Eigenwert $`\ell`$ in einem einzigen Sektor und in $`\mathrm{ran}\,P`$ oder in $`\ker P`$; nach eventuellem Ersetzen von $`X`$
+durch $`-X`$ ist $`e\in\mathrm{ran}\,P`$. Dann ist $`|X|\le|X'|:=1-(1-\ell)|e\rangle\langle e|`$, $`X'=S|X'|=S-(1-\ell)|e\rangle\langle e|`$
+erfüllt $`|X'|\in\mathcal P_\delta`$ ($`D\ge2`$), und $`z(X,Y)\le z(X',Y)`$ nach Lemma 11.18(a). Nach Lemma 11.18(b) und dem
+Eckenargument für die Eigenwerte von $`Y^2`$ in $`[\ell'^2,1]`$ ist $`z(X',Y)\le z(X',Y')`$ mit $`Y'=\ell'+(1-\ell')Q`$ für eine
+Projektion $`Q\in\mathcal M`$. Man wende Lemma 11.17 auf $`P_c,Q_c`$ in jedem Sektor an.
+In einem Sektor ohne $`e`$ ist $`X'=S`$ direkte Summe über die Unterräume; ein eindimensionaler Summand trägt $`0`$ bei
+(dort vertauschen $`X'`$ und $`Y'`$, Proposition 11.9), ein zweidimensionaler höchstens $`(1-\ell')^2`$ nach
+Proposition 11.15(b) mit $`x_1=x_2=1`$: insgesamt höchstens $`\lfloor k_c/2\rfloor(1-\ell')^2`$.
+Im Sektor von $`e`$ liefert Lemma 11.18(a) mit $`|X'|\le1`$ dieselbe Schranke, also $`\lfloor k_c/2\rfloor(1-\ell')^2`$, wenn
+$`k_c`$ ungerade ist, und $`(k_c/2-1)(1-\ell')^2`$, wenn der Sektor weniger als $`k_c/2`$ zweidimensionale Unterräume enthält.
+Andernfalls füllen ihn seine $`m=k_c/2`$ zweidimensionalen Unterräume aus, mit Basen $`f_j,f_j'`$, $`f_j\in\mathrm{ran}\,P`$,
+$`f_j'\in\ker P`$. Das unitäre Element, das $`f_j'`$ mit $`e^{-i\psi_j}`$ multipliziert, vertauscht mit $`X'`$ ($`X'=-1`$ auf
+$`\ker P`$) und beseitigt die Phasen aus Lemma 11.17, und in der Basis $`(f_1,\dots,f_m,f_1',\dots,f_m')`$ ist der Sektor die
+Situation von Proposition 11.19 mit $`X_+=1-(1-\ell)|e\rangle\langle e|`$, dessen Eigenwerte $`\ell,1,\dots,1`$ sind; wegen
+$`2\ell/(1+\ell)=1-\delta`$ trägt er höchstens $`(1-\ell')^2(1-\delta+m-1)=(k_c/2-\delta)(1-\ell')^2`$ bei.
+Summation über die Sektoren ergibt $`z\le(N-\delta)(1-\ell')^2`$, wenn alle $`k_c`$ gerade sind (beachte $`N-1\le N-\delta`$),
+und sonst $`z\le N(1-\ell')^2`$; dabei ist $`1-\ell'=2\delta'/(1+\delta')`$.
+Gleichheit: Sind alle $`k_c`$ gerade, so $`X=\mathrm{diag}(\ell,-1)`$ auf einem Block und $`\mathrm{diag}(1,-1)`$ auf den übrigen
+$`N-1`$ Blöcken, und $`Y`$ mit Eigenwerten $`1,\ell'`$ bei $`\gamma=\gamma_3`$ jedes Blocks (Proposition 11.15(b)); ist ein $`k_c`$
+ungerade, so $`X=\mathrm{diag}(1,-1)`$ auf $`N`$ Blöcken, der Eigenwert $`\ell`$ auf einem eindimensionalen Block eines
+ungeraden Sektors und $`1`$ auf den übrigen eindimensionalen Blöcken, $`Y`$ wie zuvor auf den Blöcken und $`1`$ auf den
+eindimensionalen Blöcken. $`\square`$
+
+Für $`k_c=2`$ ist dies der Supremum-Teil von Korollar 11.16 ($`N=C`$). Für $`C`$ Sektoren der Größe $`k`$ und den anderen
+Kontrast frei in $`[0,d]`$, $`d\in(0,1)`$, wachsen die Suprema in $`\delta'`$, und die oberen Einhüllenden sind: in Exp. 1
+$`C\lfloor k/2\rfloor\delta^2d^2/((1+\delta)(1+d))`$, entlang jedes der beiden Kontraste; in Exp. 3 entlang
+$`\Delta(|X|)=\delta`$ $`(Ck/2-\delta)\big(2d/(1+d)\big)^2`$ für gerades $`k`$ und $`C\lfloor k/2\rfloor\big(2d/(1+d)\big)^2`$ für
+ungerades $`k`$; entlang $`\Delta(Y)=\delta'`$, angenommen bei $`|X|=1`$, $`C\lfloor k/2\rfloor\big(2\delta'/(1+\delta')\big)^2`$.
+Für gerades $`k`$ sind dies die Werte der direkten Summen aus Abschnitt 11.5: Die Ungleichung für direkte Summen ist eine
+Gleichheit, für beide Funktionale. Für ungerades $`k`$ sind die direkten Summen mit einem eindimensionalen Summanden in
+Exp. 1 optimal, in Exp. 3 aber nicht: Der Eigenwert $`\ell`$ von $`|X|`$ sitzt auf einem eindimensionalen Block, wo er nichts
+kostet, und die Einhüllende hängt nicht von $`\delta`$ ab.
+
+*Rechnung:* Proposition 11.19 (Spektren von $`YXY`$ und $`\mathcal L`$, die Schranke und ihr Gleichheitsfall), die Maximierer
+aus Satz 11.20 für Blöcke mehrerer Größen und Multistart-Suchen, die die Einhüllenden von strukturierten Startpunkten aus
+erreichen — [Tutorial, Abschnitt 11.7](../../tutorial/de/11_optimisation.md#s-11-7).
 
 <a id="x-11"></a>
 

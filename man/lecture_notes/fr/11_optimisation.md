@@ -539,8 +539,7 @@ qu'en $`\Delta(Y)=1`$ (dans Exp. 1 si $`\delta>0`$). $`\square`$
 Pour $`C=1`$ et $`d=0.999`$, ce sont les formes closes que l'article qui accompagne la bibliothèque a d'abord observées
 numériquement (dans des algèbres réelles). Pour tout $`C`$, les enveloppes supérieures sont les valeurs de sommes directes
 de $`C`$ solutions sur $`M_2`$ ($`C-\delta=(1-\delta)+(C-1)\cdot1`$ dans Exp. 3) : sur $`M_2\oplus M_2`$, l'inégalité des
-sommes directes ci-dessus est une égalité. Pour des blocs de taille $`k_c\ge3`$, nous ne connaissons pas de forme close de
-ces enveloppes supérieures.
+sommes directes ci-dessus est une égalité. La section 11.7 étend ces suprema aux blocs de toute taille (théorème 11.20).
 
 *Calcul :* les maximiseurs de la proposition 11.15, les enveloppes du corollaire 11.16 pour $`C=1,2`$ et leur limite
 $`d\to1`$, et une recherche multi-départs comparée à elles — [tutoriel, section 11.5](../../tutorial/fr/11_optimisation.md#s-11-5).
@@ -550,6 +549,205 @@ $`d\to1`$, et une recherche multi-départs comparée à elles — [tutoriel, sec
 ## 11.6 Points de comparaison
 
 *Dans la bibliothèque :* la comparaison avec d'autres logiciels, parmi lesquels des solveurs SDP, dont les relaxations convexes majorent un supremum — [tutoriel, section 11.6](../../tutorial/fr/11_optimisation.md#s-11-6).
+
+<a id="s-11-7"></a>
+
+## 11.7 Enveloppes pour des blocs de taille quelconque
+
+Les suprema du corollaire 11.16 s'étendent aux blocs de toute taille. Soit
+```math
+N=\sum_c\Big\lfloor\frac{k_c}2\Big\rfloor,
+```
+le plus grand nombre de sous-espaces de dimension deux deux à deux orthogonaux que contiennent les secteurs. Les enveloppes
+supérieures sont atteintes par des sommes directes des maximiseurs de la proposition 11.15 sur $`N`$ blocs de taille $`2`$
+et de blocs $`1\times1`$. La démonstration réduit les spectres à deux valeurs, puis les opérateurs à des blocs de taille
+$`1`$ et $`2`$ (lemme 11.17), où la proposition 11.15 s'applique — sauf dans Exp. 3 lorsque le vecteur propre de $`|X|`$
+pour $`\lambda_{\min}`$ est réparti sur plusieurs blocs ; la proposition 11.19 règle ce cas par une linéarisation.
+
+*Argument des sommets.* Une fonction convexe $`f`$ sur une face $`F=\{x\in[s,t]^n:x_i=t\ (i\in I),\ x_j=s\ (j\in J)\}`$
+d'un cube atteint son maximum sur $`F`$ en un sommet de $`F`$, un point dont toutes les coordonnées sont dans $`\{s,t\}`$ :
+tout point de $`F`$ est combinaison convexe de ces sommets (on écrit une coordonnée libre comme combinaison convexe de $`s`$
+et $`t`$, puis on raisonne par récurrence sur le nombre de coordonnées libres), et la valeur de $`f`$ en ce point est au
+plus la plus grande valeur aux sommets.
+
+<a id="r-11-17"></a>
+
+**Lemme 11.17 (deux projecteurs).** Pour des projecteurs $`P,Q\in M_n(\mathbb C)`$, $`\mathbb C^n`$ est somme orthogonale
+de sous-espaces de dimension $`1`$ ou $`2`$, chacun invariant par $`P`$ et $`Q`$, tels que chacun de dimension deux possède
+une base orthonormée $`f,f'`$ avec $`P=|f\rangle\langle f|`$ et $`Q=|q\rangle\langle q|`$ sur lui,
+$`q=\cos\theta\,f+e^{i\psi}\sin\theta\,f'`$, $`\theta\in[0,\pi/2]`$. Pour $`P,Q`$ réels, tout peut être choisi réel.
+
+*Démonstration.* $`PQP`$ est autoadjoint sur $`\mathrm{ran}\,P`$ ; soit $`v_1,\dots,v_r`$ une base orthonormée de vecteurs
+propres, $`PQPv_i=\mu_iv_i`$ (théorème 1.3), et $`W_i=\mathrm{span}\{v_i,Qv_i\}`$. Alors $`PQv_i=PQPv_i=\mu_iv_i`$, donc $`W_i`$
+est invariant par $`P`$ et (car $`Q^2=Q`$) par $`Q`$. Pour $`i\ne j`$,
+$`\langle v_i,Qv_j\rangle=\langle Qv_i,Qv_j\rangle=\langle v_i,PQPv_j\rangle=0`$, donc les $`W_i`$ sont deux à deux orthogonaux.
+Leur somme contient $`\mathrm{ran}\,P`$ ; son orthogonal $`W`$ est invariant par $`Q`$ (les deux projecteurs sont
+autoadjoints) et contenu dans $`\ker P`$, et une base orthonormée de vecteurs propres de $`Q`$ sur $`W`$ fournit des
+sommandes de dimension un. Un $`W_i`$ de dimension $`1`$ est engendré par $`v_i`$. Si $`\dim W_i=2`$, posons $`f=v_i`$ et
+soit $`f'`$ la composante normalisée de $`Qv_i`$ orthogonale à $`f`$ ; alors $`P=|f\rangle\langle f|`$ sur $`W_i`$, et $`Q`$
+envoie $`W_i`$ sur $`\mathrm{span}\{Qv_i\}`$, donc $`Q=|q\rangle\langle q|`$ sur $`W_i`$ pour un vecteur unitaire
+$`q=\alpha f+\beta f'`$ ; en multipliant $`q`$ par une phase on obtient $`\alpha\ge0`$, et $`\alpha=\cos\theta`$,
+$`\beta=e^{i\psi}\sin\theta`$ avec $`\theta\in[0,\pi/2]`$. Dans le cas réel, la base de vecteurs propres, $`f'`$ et $`q`$ sont
+réels et $`e^{i\psi}=\pm1`$. $`\square`$
+
+<a id="r-11-18"></a>
+
+**Lemme 11.18 (Exp. 3 : monotonie et convexité).** Soient $`X=X^*`$ inversible, $`P`$ le projecteur sur sa partie positive
+($`X_+=PX`$), $`S=2P-1`$, $`Y\ge0`$ et $`z(X,Y)=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|`$.
+
+(a) Si $`|X|\le|X'|`$, où $`|X'|`$ commute avec $`P`$ et $`X'=S|X'|`$, alors $`z(X,Y)\le z(X',Y)`$.
+
+(b) À $`X`$ fixé, $`z`$ est une fonction convexe de $`K=Y^2`$ : pour $`K_1,K_2\ge0`$ et $`t\in[0,1]`$,
+$`z\big(X,(tK_1+(1-t)K_2)^{1/2}\big)\le t\,z(X,K_1^{1/2})+(1-t)\,z(X,K_2^{1/2})`$.
+
+*Démonstration.* Avec $`A=YX_+Y`$ et $`B=YX_-Y`$, $`z=\mathrm{Tr}\,A+\mathrm{Tr}\,B-\|A-B\|_1`$ (démonstration de la
+proposition 11.9).
+
+(a) $`X_+=P|X|=|X|^{1/2}P|X|^{1/2}`$ et $`X_-=(1-P)|X|`$, et $`P|X'|-P|X|=P(|X'|-|X|)P\ge0`$, de même avec $`1-P`$ ; donc
+$`A\le A'`$ et $`B\le B'`$ pour les opérateurs $`A',B'`$ de $`X'`$ (corollaire 1.7). Pour $`R\ge0`$,
+$`\|A+R-B\|_1\le\|A-B\|_1+\mathrm{Tr}\,R`$ (inégalité triangulaire, $`\|R\|_1=\mathrm{Tr}\,R`$), donc
+$`\mathrm{Tr}\,A+\mathrm{Tr}\,B-\|A-B\|_1`$ ne décroît pas quand $`A`$ ou $`B`$ croît.
+
+(b) Pour $`H`$ autoadjoint et $`T`$ autoadjoint avec $`-1\le T\le1`$, $`|\mathrm{Tr}(TH)|\le\|H\|_1`$ : les opérateurs
+$`T\pm i(1-T^2)^{1/2}`$ sont unitaires (théorème 1.5) de moyenne $`T`$, et le théorème 1.9 s'applique à chacun. Il y a
+égalité pour $`T=2Q-1`$, $`Q`$ le projecteur sur la partie positive de $`H`$ (démonstration du lemme 11.8). Avec $`T=1-2E`$,
+```math
+z=2\min_{0\le E\le1}\mathrm{Tr}\big(EA+(1-E)B\big).
+```
+Supposons d'abord $`Y`$ inversible. Alors $`N=|X|^{1/2}Y`$ est inversible, $`A=N^*PN`$, $`B=N^*(1-P)N`$, et $`E\mapsto F=NEN^*`$
+envoie $`\{0\le E\le1\}`$ sur $`\{0\le F\le G\}`$, $`G=NN^*=|X|^{1/2}Y^2|X|^{1/2}`$ (corollaire 1.7, dans les deux sens). Comme
+$`\mathrm{Tr}(EA)=\mathrm{Tr}(PF)`$ et $`\mathrm{Tr}((1-E)B)=\mathrm{Tr}((1-P)(G-F))`$,
+$`z=2\min\{\mathrm{Tr}(PF+(1-P)(G-F)):0\le F\le G\}`$. Si $`0\le F_i\le G_i`$, alors $`tF_1+(1-t)F_2`$ est admissible pour
+$`tG_1+(1-t)G_2`$, et l'objectif est linéaire en $`(F,G)`$ ; donc $`z`$ est convexe en $`G`$, qui est affine en $`Y^2`$. Pour
+$`K_1`$ ou $`K_2`$ singulier, on applique ceci à $`K_i+\varepsilon`$ et on fait $`\varepsilon\to0`$ ($`z`$ est continue en $`Y`$, et
+$`K\mapsto K^{1/2}`$ est continue). $`\square`$
+
+<a id="r-11-19"></a>
+
+**Proposition 11.19 (Exp. 3 sur $`m`$ blocs).** Soit $`X=X_+\oplus(-1)`$ sur $`\mathbb C^m\oplus\mathbb C^m`$, où
+$`0<X_+\le1`$ a pour valeurs propres $`x_1,\dots,x_m`$ ; soient $`C=\mathrm{diag}(\cos\theta_j)`$, $`\Sigma=\mathrm{diag}(\sin\theta_j)`$,
+$`Q`$ le projecteur sur l'image de l'isométrie $`v=\binom C\Sigma:\mathbb C^m\to\mathbb C^{2m}`$, $`b\in[0,1)`$ et
+$`Y=b+(1-b)Q`$. Alors
+```math
+\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ \le\ (1-b)^2\sum_{i=1}^m\frac{2x_i}{1+x_i},
+```
+avec égalité pour $`X_+=\mathrm{diag}(x_1,\dots,x_m)`$ et $`\cos^2\theta_i=(1+bx_i)/((1+x_i)(1+b))`$.
+
+*Démonstration.* Deux faits d'algèbre linéaire : pour $`R,T`$ carrées, $`\det(\lambda-RT)=\det(\lambda-TR)`$ (pour $`R`$
+inversible, $`RT=R(TR)R^{-1}`$ ; en général par continuité en $`R`$), et pour une matrice par blocs dont le bloc inférieur
+droit $`E`$ est inversible, $`\det\begin{pmatrix}R&S\\T&E\end{pmatrix}=\det E\,\det(R-SE^{-1}T)`$ (multiplier à gauche par
+$`\begin{pmatrix}1&-SE^{-1}\\0&1\end{pmatrix}`$).
+
+Soient $`\gamma=1-b^2`$, $`K=1+X_+`$ et $`A=C^2`$, de sorte que $`\Sigma^2=1-A`$ ; $`Q=vv^*`$ a les blocs
+$`C^2,\ C\Sigma,\ C\Sigma,\ \Sigma^2`$, et $`Y^2=b^2+\gamma Q`$ (car $`Q^2=Q`$). Pour $`\lambda>0`$, le bloc inférieur droit de
+$`\lambda-XY^2`$ est la matrice diagonale inversible $`E=\lambda+b^2+\gamma\Sigma^2=\lambda+1-\gamma A`$, et comme
+$`C,\Sigma,E`$ sont diagonales et $`(b^2+\gamma A)E-\gamma^2A\Sigma^2=\lambda(b^2+\gamma A)+b^2`$,
+```math
+\det(\lambda-XY^2)=\det E\,\det\Big(\lambda-X_+\big(\lambda(b^2+\gamma A)+b^2\big)E^{-1}\Big)
+=\det\big((\lambda+1)(\lambda-b^2X_+)-\lambda\gamma KA\big)=p(\lambda),
+```
+où $`p(\lambda)=\det\big((\lambda+1)(\lambda-b^2X_+)-\lambda\gamma K^{1/2}AK^{1/2}\big)`$ (conjuguer la matrice
+$`K^{-1}(\lambda+1)(\lambda-b^2X_+)-\lambda\gamma A`$ par $`K^{1/2}`$). La matrice autoadjointe
+```math
+\mathcal L=\begin{pmatrix}\gamma K^{1/2}AK^{1/2}+b^2X_+-1&bX_+^{1/2}\\ bX_+^{1/2}&0\end{pmatrix}
+```
+vérifie, par la même formule avec le bloc inférieur droit $`\lambda`$,
+$`\det(\lambda-\mathcal L)=\lambda^m\det(\lambda+1-\gamma K^{1/2}AK^{1/2}-b^2X_+-b^2X_+/\lambda)=p(\lambda)`$. Comme
+$`\det(\lambda-YXY)=\det(\lambda-XY^2)`$, les polynômes caractéristiques de $`YXY`$ et de $`\mathcal L`$ coïncident pour
+$`\lambda>0`$, donc partout, et ces matrices autoadjointes ont les mêmes valeurs propres : $`\mathrm{Tr}|YXY|=\|\mathcal L\|_1`$.
+Soient $`\Delta=(1-X_+)(1+X_+)^{-1}`$ et $`\Gamma=2X_+^{1/2}(1+X_+)^{-1}`$ (fonctions de $`X_+`$, donc elles commutent, et
+$`\Delta^2+\Gamma^2=1`$), et
+```math
+T=\begin{pmatrix}-\Delta&\Gamma\\ \Gamma&\Delta\end{pmatrix},\qquad T^2=1 .
+```
+$`T`$ est autoadjointe de valeurs propres $`\pm1`$, donc $`\|\mathcal L\|_1\ge\mathrm{Tr}(T\mathcal L)`$ (démonstration du
+lemme 11.18(b)). Or $`\mathrm{Tr}(Y|X|Y)=\mathrm{Tr}(|X|Y^2)=b^2\mathrm{Tr}\,X_++\gamma\mathrm{Tr}(X_+A)+mb^2+\gamma\mathrm{Tr}(1-A)`$
+et, comme $`K^{1/2}\Delta K^{1/2}=1-X_+`$,
+$`\mathrm{Tr}(T\mathcal L)=-\gamma\mathrm{Tr}((1-X_+)A)-\mathrm{Tr}(\Delta(b^2X_+-1))+2b\,\mathrm{Tr}(\Gamma X_+^{1/2})`$. Les termes
+contenant $`A`$ se compensent, et dans une base de vecteurs propres de $`X_+`$
+```math
+\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\le\sum_{i=1}^m\Big(b^2x_i+1+\frac{1-x_i}{1+x_i}(b^2x_i-1)-\frac{4bx_i}{1+x_i}\Big)
+=(1-b)^2\sum_{i=1}^m\frac{2x_i}{1+x_i}.
+```
+Pour $`X_+`$ diagonal, $`X`$ et $`Y`$ sont sommes directes des blocs $`2\times2`$ sur $`\mathrm{span}\{e_i,e_{m+i}\}`$, avec
+$`X=\mathrm{diag}(x_i,-1)`$ sur chacun, et la proposition 11.15(b) donne la valeur $`\frac{2x_i}{1+x_i}(1-b)^2`$ lorsque
+$`\gamma_3=\sin^2\theta_i`$, c'est-à-dire à l'angle indiqué. $`\square`$
+
+Comme $`\mathcal L`$ est affine en $`A=PQP`$ ($`P`$ le projecteur sur le premier sommande), $`z`$ est une fonction concave de
+$`A`$, et $`T`$ est le signe de $`\mathcal L`$ au maximiseur. À angles fixés, en revanche, le maximum sur le vecteur propre
+de $`X_+`$ pour sa plus petite valeur propre n'est en général pas atteint à l'intérieur d'un seul bloc (une observation
+numérique) ; seul le maximum joint l'est.
+
+<a id="r-11-20"></a>
+
+**Théorème 11.20 (enveloppes supérieures d'Exp. 1 et d'Exp. 3).** Soient $`N\ge1`$, $`\delta\in[0,1)`$, $`\delta'\in[0,1]`$,
+$`\ell=\ell(\delta)`$, $`\ell'=\ell(\delta')`$ (avec $`\ell(1)=0`$), et faisons parcourir à $`Y`$ les opérateurs positifs avec
+$`\lambda_{\max}(Y)=1`$ et $`\Delta(Y)=\delta'`$.
+
+(a) Exp. 1, sur $`X\in\mathcal P_\delta`$, de tels $`Y`$ et les unitaires $`U\in\mathcal M`$ :
+$`\ \sup z=N\,\frac{\delta^2\delta'^2}{(1+\delta)(1+\delta')}`$.
+
+(b) Exp. 3, sur $`X=X^*`$ avec $`|X|\in\mathcal P_\delta`$ et de tels $`Y`$ :
+$`\ \sup z=(N-\delta)\Big(\frac{2\delta'}{1+\delta'}\Big)^2`$ si tous les $`k_c`$ sont pairs, et
+$`\ \sup z=N\Big(\frac{2\delta'}{1+\delta'}\Big)^2`$ si un $`k_c`$ est impair.
+
+Les deux suprema sont atteints, par des opérateurs réels, et sont les mêmes dans $`\bigoplus_cM_{k_c}(\mathbb R)`$.
+
+*Démonstration.* Les bornes supérieures dans $`\mathcal M`$ valent a fortiori pour des opérateurs réels, et les maximiseurs
+ci-dessous sont réels.
+
+(a) D'après le théorème 1.9 dans chaque bloc, $`|\mathrm{Tr}(XUY)|\le\|YX\|_1`$, avec égalité pour $`U=W^*`$, $`YX=W|YX|`$, un
+unitaire de $`\mathcal M`$ ; donc $`\sup_Uz=F(X,Y):=\|YX\|_1-\mathrm{Tr}(XY)`$. Pour une base orthonormée fixe $`(e_s)`$ de
+vecteurs propres de $`X`$ (adaptée aux secteurs), $`F`$ est une fonction convexe des valeurs propres $`x\in[\ell,1]^D`$ (une
+norme d'une fonction linéaire de $`x`$ moins une fonction linéaire), et $`X\in\mathcal P_\delta`$ signifie que $`x`$ est dans
+une face $`\{x_s=1,\ x_{s'}=\ell\}`$ ; par l'argument des sommets, $`F(X,Y)\le F(X',Y)`$ avec $`X'=\ell+(1-\ell)P`$ pour un
+projecteur $`P\in\mathcal M`$. De même $`F(X',Y)\le F(X',Y')`$ avec $`Y'=\ell'+(1-\ell')Q`$. Appliquons le lemme 11.17 à
+$`P_c,Q_c`$ dans chaque secteur : $`X'`$ et $`Y'`$ sont sommes directes sur des sous-espaces de dimension $`1`$ et $`2`$, et
+$`\|Y'X'\|_1`$ et $`\mathrm{Tr}(X'Y')`$ aussi. Un sommande de dimension un contribue $`xy-xy=0`$. Sur un sommande de
+dimension deux, $`X'`$ a les valeurs propres $`1,\ell`$ et $`Y'`$ les valeurs propres $`1,\ell'`$, donc d'après la
+proposition 11.15(a) il contribue au plus $`(1-\ell)^2(1-\ell')^2/(4(1+\ell)(1+\ell'))=\delta^2\delta'^2/((1+\delta)(1+\delta'))`$
+(voir la démonstration du corollaire 11.16). Un secteur de taille $`k_c`$ en contient au plus $`\lfloor k_c/2\rfloor`$.
+Égalité : $`N`$ blocs avec $`X=\mathrm{diag}(1,\ell)`$ et $`Y`$ de valeurs propres $`1,\ell'`$ en $`\gamma=\gamma_1`$, $`X=Y=1`$ sur
+les blocs de dimension un restants, et l'unitaire $`W^*`$.
+
+(b) $`X`$ est inversible ($`\ell>0`$), et $`z(-X,Y)=z(X,Y)`$. Soient $`P`$ le projecteur sur la partie positive de $`X`$ et
+$`S=2P-1`$. $`|X|`$ commute avec $`P`$ (ce sont deux fonctions de $`X`$), donc il possède un vecteur propre unitaire $`e`$
+pour la valeur propre $`\ell`$ dans un seul secteur et dans $`\mathrm{ran}\,P`$ ou dans $`\ker P`$ ; quitte à remplacer $`X`$
+par $`-X`$, $`e\in\mathrm{ran}\,P`$. Alors $`|X|\le|X'|:=1-(1-\ell)|e\rangle\langle e|`$, $`X'=S|X'|=S-(1-\ell)|e\rangle\langle e|`$
+vérifie $`|X'|\in\mathcal P_\delta`$ ($`D\ge2`$), et $`z(X,Y)\le z(X',Y)`$ par le lemme 11.18(a). Par le lemme 11.18(b) et
+l'argument des sommets pour les valeurs propres de $`Y^2`$ dans $`[\ell'^2,1]`$, $`z(X',Y)\le z(X',Y')`$ avec
+$`Y'=\ell'+(1-\ell')Q`$ pour un projecteur $`Q\in\mathcal M`$. Appliquons le lemme 11.17 à $`P_c,Q_c`$ dans chaque secteur.
+Dans un secteur sans $`e`$, $`X'=S`$ est somme directe sur les sous-espaces ; un sommande de dimension un contribue $`0`$
+($`X'`$ et $`Y'`$ y commutent, proposition 11.9), et un sommande de dimension deux au plus $`(1-\ell')^2`$ par la
+proposition 11.15(b) avec $`x_1=x_2=1`$ : en tout au plus $`\lfloor k_c/2\rfloor(1-\ell')^2`$.
+Dans le secteur de $`e`$, le lemme 11.18(a) avec $`|X'|\le1`$ donne la même borne, donc $`\lfloor k_c/2\rfloor(1-\ell')^2`$ si
+$`k_c`$ est impair, et $`(k_c/2-1)(1-\ell')^2`$ si le secteur contient moins de $`k_c/2`$ sous-espaces de dimension deux.
+Sinon ses $`m=k_c/2`$ sous-espaces de dimension deux le remplissent, avec des bases $`f_j,f_j'`$, $`f_j\in\mathrm{ran}\,P`$,
+$`f_j'\in\ker P`$. L'unitaire qui multiplie $`f_j'`$ par $`e^{-i\psi_j}`$ commute avec $`X'`$ ($`X'=-1`$ sur $`\ker P`$) et
+supprime les phases du lemme 11.17, et dans la base $`(f_1,\dots,f_m,f_1',\dots,f_m')`$ le secteur est la situation de la
+proposition 11.19 avec $`X_+=1-(1-\ell)|e\rangle\langle e|`$, de valeurs propres $`\ell,1,\dots,1`$ ; comme
+$`2\ell/(1+\ell)=1-\delta`$, il contribue au plus $`(1-\ell')^2(1-\delta+m-1)=(k_c/2-\delta)(1-\ell')^2`$.
+En sommant sur les secteurs, $`z\le(N-\delta)(1-\ell')^2`$ si tous les $`k_c`$ sont pairs (noter $`N-1\le N-\delta`$) et
+$`z\le N(1-\ell')^2`$ sinon ; $`1-\ell'=2\delta'/(1+\delta')`$.
+Égalité : si tous les $`k_c`$ sont pairs, $`X=\mathrm{diag}(\ell,-1)`$ sur un bloc et $`\mathrm{diag}(1,-1)`$ sur les $`N-1`$
+autres, et $`Y`$ de valeurs propres $`1,\ell'`$ en $`\gamma=\gamma_3`$ de chaque bloc (proposition 11.15(b)) ; si un $`k_c`$ est
+impair, $`X=\mathrm{diag}(1,-1)`$ sur $`N`$ blocs, la valeur propre $`\ell`$ sur un bloc de dimension un d'un secteur impair
+et $`1`$ sur les autres blocs de dimension un, $`Y`$ comme précédemment sur les blocs et $`1`$ sur les blocs de dimension un.
+$`\square`$
+
+Pour $`k_c=2`$, c'est la partie « suprema » du corollaire 11.16 ($`N=C`$). Pour $`C`$ secteurs de taille $`k`$ et l'autre
+contraste libre dans $`[0,d]`$, $`d\in(0,1)`$, les suprema croissent avec $`\delta'`$ et les enveloppes supérieures sont :
+dans Exp. 1, $`C\lfloor k/2\rfloor\delta^2d^2/((1+\delta)(1+d))`$, le long de l'un ou l'autre contraste ; dans Exp. 3 le long de
+$`\Delta(|X|)=\delta`$, $`(Ck/2-\delta)\big(2d/(1+d)\big)^2`$ pour $`k`$ pair et $`C\lfloor k/2\rfloor\big(2d/(1+d)\big)^2`$ pour
+$`k`$ impair ; le long de $`\Delta(Y)=\delta'`$, atteinte en $`|X|=1`$, $`C\lfloor k/2\rfloor\big(2\delta'/(1+\delta')\big)^2`$.
+Pour $`k`$ pair, ce sont les valeurs des sommes directes de la section 11.5 : l'inégalité des sommes directes est une
+égalité, pour les deux fonctionnelles. Pour $`k`$ impair, les sommes directes avec un sommande de dimension un sont
+optimales dans Exp. 1, mais pas dans Exp. 3 : la valeur propre $`\ell`$ de $`|X|`$ se place sur un bloc de dimension un, où
+elle ne coûte rien, et l'enveloppe ne dépend pas de $`\delta`$.
+
+*Calcul :* la proposition 11.19 (spectres de $`YXY`$ et de $`\mathcal L`$, la borne et son cas d'égalité), les maximiseurs du
+théorème 11.20 pour des blocs de plusieurs tailles, et des recherches multi-départs qui atteignent les enveloppes à partir
+de points de départ structurés — [tutoriel, section 11.7](../../tutorial/fr/11_optimisation.md#s-11-7).
 
 <a id="x-11"></a>
 

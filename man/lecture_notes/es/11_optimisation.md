@@ -534,7 +534,7 @@ $`\Delta(Y)=1`$ (en Exp. 1 si $`\delta>0`$). $`\square`$
 Para $`C=1`$ y $`d=0.999`$ estas son las formas cerradas que el artículo que acompaña a la biblioteca observó primero
 numéricamente (en álgebras reales). Para todo $`C`$ las envolventes superiores son los valores de sumas directas de $`C`$
 soluciones en $`M_2`$ ($`C-\delta=(1-\delta)+(C-1)\cdot1`$ en Exp. 3): en $`M_2\oplus M_2`$ la desigualdad de sumas directas
-anterior es una igualdad. Para bloques de tamaño $`k_c\ge3`$ no conocemos ninguna forma cerrada de estas envolventes superiores.
+anterior es una igualdad. La sección 11.7 extiende estos supremos a bloques de cualquier tamaño (teorema 11.20).
 
 *Cálculo:* los maximizadores de la proposición 11.15, las envolventes del corolario 11.16 para $`C=1,2`$ y su límite
 $`d\to1`$, y una búsqueda multiarranque frente a ellas — [tutorial, sección 11.5](../../tutorial/es/11_optimisation.md#s-11-5).
@@ -544,6 +544,204 @@ $`d\to1`$, y una búsqueda multiarranque frente a ellas — [tutorial, sección 
 ## 11.6 Con qué comparar
 
 *En la biblioteca:* la comparación con otro software, incluidos resolvedores SDP, cuyas relajaciones convexas acotan un supremo por arriba — [tutorial, sección 11.6](../../tutorial/es/11_optimisation.md#s-11-6).
+
+<a id="s-11-7"></a>
+
+## 11.7 Envolventes para bloques de cualquier tamaño
+
+Los supremos del corolario 11.16 se extienden a bloques de cualquier tamaño. Sea
+```math
+N=\sum_c\Big\lfloor\frac{k_c}2\Big\rfloor,
+```
+el mayor número de subespacios bidimensionales mutuamente ortogonales que caben en los sectores. Las envolventes superiores
+se alcanzan con sumas directas de los maximizadores de la proposición 11.15 en $`N`$ bloques de tamaño $`2`$ y de bloques
+$`1\times1`$. La demostración reduce los espectros a dos valores y luego los operadores a bloques de tamaño $`1`$ y $`2`$
+(lema 11.17), donde se aplica la proposición 11.15 — salvo en Exp. 3 cuando el vector propio de $`|X|`$ para
+$`\lambda_{\min}`$ está repartido entre varios bloques; la proposición 11.19 resuelve este caso mediante una linealización.
+
+*Argumento de vértices.* Una función convexa $`f`$ sobre una cara $`F=\{x\in[s,t]^n:x_i=t\ (i\in I),\ x_j=s\ (j\in J)\}`$
+de un cubo alcanza su máximo sobre $`F`$ en un vértice de $`F`$, un punto con todas las coordenadas en $`\{s,t\}`$: todo punto
+de $`F`$ es combinación convexa de estos vértices (se escribe una coordenada libre como combinación convexa de $`s`$ y $`t`$ y se
+procede por inducción sobre el número de coordenadas libres), y el valor de $`f`$ en él es a lo sumo el mayor valor en los
+vértices.
+
+<a id="r-11-17"></a>
+
+**Lema 11.17 (dos proyecciones).** Para proyecciones $`P,Q\in M_n(\mathbb C)`$, $`\mathbb C^n`$ es suma ortogonal de
+subespacios de dimensión $`1`$ o $`2`$, cada uno invariante por $`P`$ y $`Q`$, tales que cada uno bidimensional tiene una
+base ortonormal $`f,f'`$ con $`P=|f\rangle\langle f|`$ y $`Q=|q\rangle\langle q|`$ sobre él,
+$`q=\cos\theta\,f+e^{i\psi}\sin\theta\,f'`$, $`\theta\in[0,\pi/2]`$. Para $`P,Q`$ reales todo puede elegirse real.
+
+*Demostración.* $`PQP`$ es autoadjunto en $`\mathrm{ran}\,P`$; sea $`v_1,\dots,v_r`$ una base ortonormal de vectores propios,
+$`PQPv_i=\mu_iv_i`$ (teorema 1.3), y $`W_i=\mathrm{span}\{v_i,Qv_i\}`$. Entonces $`PQv_i=PQPv_i=\mu_iv_i`$, de modo que $`W_i`$
+es invariante por $`P`$ y (pues $`Q^2=Q`$) por $`Q`$. Para $`i\ne j`$,
+$`\langle v_i,Qv_j\rangle=\langle Qv_i,Qv_j\rangle=\langle v_i,PQPv_j\rangle=0`$, así que los $`W_i`$ son mutuamente ortogonales.
+Su suma contiene $`\mathrm{ran}\,P`$; su complemento ortogonal $`W`$ es invariante por $`Q`$ (ambas proyecciones son
+autoadjuntas) y está contenido en $`\ker P`$, y una base ortonormal de vectores propios de $`Q`$ en $`W`$ da sumandos
+unidimensionales. Un $`W_i`$ de dimensión $`1`$ está generado por $`v_i`$. Si $`\dim W_i=2`$, sea $`f=v_i`$ y $`f'`$ la
+componente normalizada de $`Qv_i`$ ortogonal a $`f`$; entonces $`P=|f\rangle\langle f|`$ en $`W_i`$, y $`Q`$ aplica $`W_i`$ sobre
+$`\mathrm{span}\{Qv_i\}`$, luego $`Q=|q\rangle\langle q|`$ allí para un vector unitario $`q=\alpha f+\beta f'`$; multiplicando $`q`$
+por una fase se logra $`\alpha\ge0`$, y $`\alpha=\cos\theta`$, $`\beta=e^{i\psi}\sin\theta`$ con $`\theta\in[0,\pi/2]`$. En el caso
+real la base de vectores propios, $`f'`$ y $`q`$ son reales y $`e^{i\psi}=\pm1`$. $`\square`$
+
+<a id="r-11-18"></a>
+
+**Lema 11.18 (Exp. 3: monotonía y convexidad).** Sean $`X=X^*`$ invertible, $`P`$ la proyección sobre su parte positiva
+($`X_+=PX`$), $`S=2P-1`$, $`Y\ge0`$ y $`z(X,Y)=\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|`$.
+
+(a) Si $`|X|\le|X'|`$, donde $`|X'|`$ conmuta con $`P`$ y $`X'=S|X'|`$, entonces $`z(X,Y)\le z(X',Y)`$.
+
+(b) Para $`X`$ fijo, $`z`$ es una función convexa de $`K=Y^2`$: para $`K_1,K_2\ge0`$ y $`t\in[0,1]`$,
+$`z\big(X,(tK_1+(1-t)K_2)^{1/2}\big)\le t\,z(X,K_1^{1/2})+(1-t)\,z(X,K_2^{1/2})`$.
+
+*Demostración.* Con $`A=YX_+Y`$ y $`B=YX_-Y`$, $`z=\mathrm{Tr}\,A+\mathrm{Tr}\,B-\|A-B\|_1`$ (demostración de la proposición 11.9).
+
+(a) $`X_+=P|X|=|X|^{1/2}P|X|^{1/2}`$ y $`X_-=(1-P)|X|`$, y $`P|X'|-P|X|=P(|X'|-|X|)P\ge0`$, e igual con $`1-P`$; por tanto
+$`A\le A'`$ y $`B\le B'`$ para los operadores $`A',B'`$ de $`X'`$ (corolario 1.7). Para $`R\ge0`$,
+$`\|A+R-B\|_1\le\|A-B\|_1+\mathrm{Tr}\,R`$ (desigualdad triangular, $`\|R\|_1=\mathrm{Tr}\,R`$), así que
+$`\mathrm{Tr}\,A+\mathrm{Tr}\,B-\|A-B\|_1`$ no decrece cuando crece $`A`$ o $`B`$.
+
+(b) Para $`H`$ autoadjunto y $`T`$ autoadjunto con $`-1\le T\le1`$, $`|\mathrm{Tr}(TH)|\le\|H\|_1`$: los operadores
+$`T\pm i(1-T^2)^{1/2}`$ son unitarios (teorema 1.5) con media $`T`$, y el teorema 1.9 se aplica a cada uno. Hay igualdad para
+$`T=2Q-1`$, con $`Q`$ la proyección sobre la parte positiva de $`H`$ (demostración del lema 11.8). Con $`T=1-2E`$,
+```math
+z=2\min_{0\le E\le1}\mathrm{Tr}\big(EA+(1-E)B\big).
+```
+Sea primero $`Y`$ invertible. Entonces $`N=|X|^{1/2}Y`$ es invertible, $`A=N^*PN`$, $`B=N^*(1-P)N`$, y $`E\mapsto F=NEN^*`$
+aplica $`\{0\le E\le1\}`$ sobre $`\{0\le F\le G\}`$, $`G=NN^*=|X|^{1/2}Y^2|X|^{1/2}`$ (corolario 1.7, en ambos sentidos). Como
+$`\mathrm{Tr}(EA)=\mathrm{Tr}(PF)`$ y $`\mathrm{Tr}((1-E)B)=\mathrm{Tr}((1-P)(G-F))`$,
+$`z=2\min\{\mathrm{Tr}(PF+(1-P)(G-F)):0\le F\le G\}`$. Si $`0\le F_i\le G_i`$, entonces $`tF_1+(1-t)F_2`$ es admisible para
+$`tG_1+(1-t)G_2`$, y el objetivo es lineal en $`(F,G)`$; así que $`z`$ es convexa en $`G`$, que es afín en $`Y^2`$. Para
+$`K_1`$ o $`K_2`$ singulares se aplica esto a $`K_i+\varepsilon`$ y se hace $`\varepsilon\to0`$ ($`z`$ es continua en $`Y`$, y
+$`K\mapsto K^{1/2}`$ es continua). $`\square`$
+
+<a id="r-11-19"></a>
+
+**Proposición 11.19 (Exp. 3 en $`m`$ bloques).** Sea $`X=X_+\oplus(-1)`$ en $`\mathbb C^m\oplus\mathbb C^m`$, donde
+$`0<X_+\le1`$ tiene valores propios $`x_1,\dots,x_m`$; sean $`C=\mathrm{diag}(\cos\theta_j)`$, $`\Sigma=\mathrm{diag}(\sin\theta_j)`$,
+$`Q`$ la proyección sobre la imagen de la isometría $`v=\binom C\Sigma:\mathbb C^m\to\mathbb C^{2m}`$, $`b\in[0,1)`$ e
+$`Y=b+(1-b)Q`$. Entonces
+```math
+\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ \le\ (1-b)^2\sum_{i=1}^m\frac{2x_i}{1+x_i},
+```
+con igualdad para $`X_+=\mathrm{diag}(x_1,\dots,x_m)`$ y $`\cos^2\theta_i=(1+bx_i)/((1+x_i)(1+b))`$.
+
+*Demostración.* Dos hechos de álgebra lineal: para $`R,T`$ cuadradas, $`\det(\lambda-RT)=\det(\lambda-TR)`$ (para $`R`$
+invertible, $`RT=R(TR)R^{-1}`$; en general por continuidad en $`R`$), y para una matriz por bloques con bloque inferior
+derecho $`E`$ invertible, $`\det\begin{pmatrix}R&S\\T&E\end{pmatrix}=\det E\,\det(R-SE^{-1}T)`$ (multiplíquese por la izquierda
+por $`\begin{pmatrix}1&-SE^{-1}\\0&1\end{pmatrix}`$).
+
+Sean $`\gamma=1-b^2`$, $`K=1+X_+`$ y $`A=C^2`$, de modo que $`\Sigma^2=1-A`$; $`Q=vv^*`$ tiene los bloques
+$`C^2,\ C\Sigma,\ C\Sigma,\ \Sigma^2`$, e $`Y^2=b^2+\gamma Q`$ (pues $`Q^2=Q`$). Para $`\lambda>0`$ el bloque inferior derecho de
+$`\lambda-XY^2`$ es la matriz diagonal invertible $`E=\lambda+b^2+\gamma\Sigma^2=\lambda+1-\gamma A`$, y como $`C,\Sigma,E`$ son
+diagonales y $`(b^2+\gamma A)E-\gamma^2A\Sigma^2=\lambda(b^2+\gamma A)+b^2`$,
+```math
+\det(\lambda-XY^2)=\det E\,\det\Big(\lambda-X_+\big(\lambda(b^2+\gamma A)+b^2\big)E^{-1}\Big)
+=\det\big((\lambda+1)(\lambda-b^2X_+)-\lambda\gamma KA\big)=p(\lambda),
+```
+donde $`p(\lambda)=\det\big((\lambda+1)(\lambda-b^2X_+)-\lambda\gamma K^{1/2}AK^{1/2}\big)`$ (conjúguese la matriz
+$`K^{-1}(\lambda+1)(\lambda-b^2X_+)-\lambda\gamma A`$ por $`K^{1/2}`$). La matriz autoadjunta
+```math
+\mathcal L=\begin{pmatrix}\gamma K^{1/2}AK^{1/2}+b^2X_+-1&bX_+^{1/2}\\ bX_+^{1/2}&0\end{pmatrix}
+```
+cumple, por la misma fórmula con bloque inferior derecho $`\lambda`$,
+$`\det(\lambda-\mathcal L)=\lambda^m\det(\lambda+1-\gamma K^{1/2}AK^{1/2}-b^2X_+-b^2X_+/\lambda)=p(\lambda)`$. Como
+$`\det(\lambda-YXY)=\det(\lambda-XY^2)`$, los polinomios característicos de $`YXY`$ y $`\mathcal L`$ coinciden para
+$`\lambda>0`$, luego en todas partes, y estas matrices autoadjuntas tienen los mismos valores propios:
+$`\mathrm{Tr}|YXY|=\|\mathcal L\|_1`$. Sean $`\Delta=(1-X_+)(1+X_+)^{-1}`$ y $`\Gamma=2X_+^{1/2}(1+X_+)^{-1}`$ (funciones de $`X_+`$,
+luego conmutan, y $`\Delta^2+\Gamma^2=1`$), y
+```math
+T=\begin{pmatrix}-\Delta&\Gamma\\ \Gamma&\Delta\end{pmatrix},\qquad T^2=1 .
+```
+$`T`$ es autoadjunta con valores propios $`\pm1`$, así que $`\|\mathcal L\|_1\ge\mathrm{Tr}(T\mathcal L)`$ (demostración del
+lema 11.18(b)). Ahora bien,
+$`\mathrm{Tr}(Y|X|Y)=\mathrm{Tr}(|X|Y^2)=b^2\mathrm{Tr}\,X_++\gamma\mathrm{Tr}(X_+A)+mb^2+\gamma\mathrm{Tr}(1-A)`$ y, como
+$`K^{1/2}\Delta K^{1/2}=1-X_+`$,
+$`\mathrm{Tr}(T\mathcal L)=-\gamma\mathrm{Tr}((1-X_+)A)-\mathrm{Tr}(\Delta(b^2X_+-1))+2b\,\mathrm{Tr}(\Gamma X_+^{1/2})`$. Los términos
+que contienen $`A`$ se cancelan, y en una base de vectores propios de $`X_+`$
+```math
+\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\le\sum_{i=1}^m\Big(b^2x_i+1+\frac{1-x_i}{1+x_i}(b^2x_i-1)-\frac{4bx_i}{1+x_i}\Big)
+=(1-b)^2\sum_{i=1}^m\frac{2x_i}{1+x_i}.
+```
+Para $`X_+`$ diagonal, $`X`$ e $`Y`$ son sumas directas de los bloques $`2\times2`$ sobre $`\mathrm{span}\{e_i,e_{m+i}\}`$, con
+$`X=\mathrm{diag}(x_i,-1)`$ allí, y la proposición 11.15(b) da el valor $`\frac{2x_i}{1+x_i}(1-b)^2`$ cuando
+$`\gamma_3=\sin^2\theta_i`$, es decir, en el ángulo indicado. $`\square`$
+
+Como $`\mathcal L`$ es afín en $`A=PQP`$ ($`P`$ la proyección sobre el primer sumando), $`z`$ es una función cóncava de
+$`A`$, y $`T`$ es el signo de $`\mathcal L`$ en el maximizador. Sin embargo, para ángulos fijos el máximo sobre el vector
+propio de $`X_+`$ para su menor valor propio en general no se alcanza dentro de un solo bloque (una observación
+numérica); solo el máximo conjunto lo hace.
+
+<a id="r-11-20"></a>
+
+**Teorema 11.20 (envolventes superiores de Exp. 1 y Exp. 3).** Sean $`N\ge1`$, $`\delta\in[0,1)`$, $`\delta'\in[0,1]`$,
+$`\ell=\ell(\delta)`$, $`\ell'=\ell(\delta')`$ (con $`\ell(1)=0`$), y recorra $`Y`$ los operadores positivos con
+$`\lambda_{\max}(Y)=1`$ y $`\Delta(Y)=\delta'`$.
+
+(a) Exp. 1, sobre $`X\in\mathcal P_\delta`$, tales $`Y`$ y unitarias $`U\in\mathcal M`$:
+$`\ \sup z=N\,\frac{\delta^2\delta'^2}{(1+\delta)(1+\delta')}`$.
+
+(b) Exp. 3, sobre $`X=X^*`$ con $`|X|\in\mathcal P_\delta`$ y tales $`Y`$:
+$`\ \sup z=(N-\delta)\Big(\frac{2\delta'}{1+\delta'}\Big)^2`$ si todos los $`k_c`$ son pares, y
+$`\ \sup z=N\Big(\frac{2\delta'}{1+\delta'}\Big)^2`$ si algún $`k_c`$ es impar.
+
+Ambos supremos se alcanzan, con operadores reales, y son los mismos en $`\bigoplus_cM_{k_c}(\mathbb R)`$.
+
+*Demostración.* Las cotas superiores en $`\mathcal M`$ valen a fortiori para operadores reales, y los maximizadores de abajo
+son reales.
+
+(a) Por el teorema 1.9 en cada bloque, $`|\mathrm{Tr}(XUY)|\le\|YX\|_1`$, con igualdad para $`U=W^*`$, $`YX=W|YX|`$, una unitaria
+de $`\mathcal M`$; así $`\sup_Uz=F(X,Y):=\|YX\|_1-\mathrm{Tr}(XY)`$. Para una base ortonormal fija $`(e_s)`$ de vectores propios de
+$`X`$ (adaptada a los sectores), $`F`$ es una función convexa de los valores propios $`x\in[\ell,1]^D`$ (una norma de una
+función lineal de $`x`$ menos una función lineal), y $`X\in\mathcal P_\delta`$ significa que $`x`$ está en una cara
+$`\{x_s=1,\ x_{s'}=\ell\}`$; por el argumento de vértices $`F(X,Y)\le F(X',Y)`$ con $`X'=\ell+(1-\ell)P`$ para una proyección
+$`P\in\mathcal M`$. Del mismo modo $`F(X',Y)\le F(X',Y')`$ con $`Y'=\ell'+(1-\ell')Q`$. Aplíquese el lema 11.17 a $`P_c,Q_c`$ en
+cada sector: $`X'`$ e $`Y'`$ son sumas directas sobre subespacios de dimensión $`1`$ y $`2`$, y también lo son
+$`\|Y'X'\|_1`$ y $`\mathrm{Tr}(X'Y')`$. Un sumando unidimensional contribuye $`xy-xy=0`$. En uno bidimensional, $`X'`$ tiene
+valores propios $`1,\ell`$ e $`Y'`$ valores propios $`1,\ell'`$, así que por la proposición 11.15(a) contribuye a lo sumo
+$`(1-\ell)^2(1-\ell')^2/(4(1+\ell)(1+\ell'))=\delta^2\delta'^2/((1+\delta)(1+\delta'))`$ (véase la demostración del corolario 11.16).
+Un sector de tamaño $`k_c`$ contiene a lo sumo $`\lfloor k_c/2\rfloor`$ de ellos. Igualdad: $`N`$ bloques con
+$`X=\mathrm{diag}(1,\ell)`$ e $`Y`$ con valores propios $`1,\ell'`$ en $`\gamma=\gamma_1`$, $`X=Y=1`$ en los bloques unidimensionales
+restantes, y la unitaria $`W^*`$.
+
+(b) $`X`$ es invertible ($`\ell>0`$), y $`z(-X,Y)=z(X,Y)`$. Sean $`P`$ la proyección sobre la parte positiva de $`X`$ y
+$`S=2P-1`$. $`|X|`$ conmuta con $`P`$ (ambos son funciones de $`X`$), así que tiene un vector propio unitario $`e`$ para el
+valor propio $`\ell`$ en un solo sector y en $`\mathrm{ran}\,P`$ o en $`\ker P`$; sustituyendo $`X`$ por $`-X`$ si hace falta,
+$`e\in\mathrm{ran}\,P`$. Entonces $`|X|\le|X'|:=1-(1-\ell)|e\rangle\langle e|`$, $`X'=S|X'|=S-(1-\ell)|e\rangle\langle e|`$ cumple
+$`|X'|\in\mathcal P_\delta`$ ($`D\ge2`$), y $`z(X,Y)\le z(X',Y)`$ por el lema 11.18(a). Por el lema 11.18(b) y el argumento de
+vértices para los valores propios de $`Y^2`$ en $`[\ell'^2,1]`$, $`z(X',Y)\le z(X',Y')`$ con $`Y'=\ell'+(1-\ell')Q`$ para una
+proyección $`Q\in\mathcal M`$. Aplíquese el lema 11.17 a $`P_c,Q_c`$ en cada sector.
+En un sector sin $`e`$, $`X'=S`$ es suma directa sobre los subespacios; un sumando unidimensional contribuye $`0`$ (allí
+$`X'`$ e $`Y'`$ conmutan, proposición 11.9), y uno bidimensional a lo sumo $`(1-\ell')^2`$ por la proposición 11.15(b) con
+$`x_1=x_2=1`$: en total a lo sumo $`\lfloor k_c/2\rfloor(1-\ell')^2`$.
+En el sector de $`e`$, el lema 11.18(a) con $`|X'|\le1`$ da la misma cota, y por tanto $`\lfloor k_c/2\rfloor(1-\ell')^2`$ si
+$`k_c`$ es impar, y $`(k_c/2-1)(1-\ell')^2`$ si el sector contiene menos de $`k_c/2`$ subespacios bidimensionales.
+En otro caso sus $`m=k_c/2`$ subespacios bidimensionales lo llenan, con bases $`f_j,f_j'`$, $`f_j\in\mathrm{ran}\,P`$,
+$`f_j'\in\ker P`$. La unitaria que multiplica $`f_j'`$ por $`e^{-i\psi_j}`$ conmuta con $`X'`$ ($`X'=-1`$ en $`\ker P`$) y elimina
+las fases del lema 11.17, y en la base $`(f_1,\dots,f_m,f_1',\dots,f_m')`$ el sector es la situación de la
+proposición 11.19 con $`X_+=1-(1-\ell)|e\rangle\langle e|`$, cuyos valores propios son $`\ell,1,\dots,1`$; como
+$`2\ell/(1+\ell)=1-\delta`$, contribuye a lo sumo $`(1-\ell')^2(1-\delta+m-1)=(k_c/2-\delta)(1-\ell')^2`$.
+Sumando sobre los sectores, $`z\le(N-\delta)(1-\ell')^2`$ si todos los $`k_c`$ son pares (nótese $`N-1\le N-\delta`$) y
+$`z\le N(1-\ell')^2`$ en otro caso; $`1-\ell'=2\delta'/(1+\delta')`$.
+Igualdad: si todos los $`k_c`$ son pares, $`X=\mathrm{diag}(\ell,-1)`$ en un bloque y $`\mathrm{diag}(1,-1)`$ en los otros
+$`N-1`$ bloques, e $`Y`$ con valores propios $`1,\ell'`$ en $`\gamma=\gamma_3`$ de cada bloque (proposición 11.15(b)); si algún
+$`k_c`$ es impar, $`X=\mathrm{diag}(1,-1)`$ en $`N`$ bloques, el valor propio $`\ell`$ en un bloque unidimensional de un sector
+impar y $`1`$ en los demás bloques unidimensionales, $`Y`$ como antes en los bloques y $`1`$ en los bloques unidimensionales.
+$`\square`$
+
+Para $`k_c=2`$ esta es la parte de supremos del corolario 11.16 ($`N=C`$). Para $`C`$ sectores de tamaño $`k`$ y el otro
+contraste libre en $`[0,d]`$, $`d\in(0,1)`$, los supremos crecen con $`\delta'`$ y las envolventes superiores son: en Exp. 1
+$`C\lfloor k/2\rfloor\delta^2d^2/((1+\delta)(1+d))`$, a lo largo de cualquiera de los dos contrastes; en Exp. 3 a lo largo de
+$`\Delta(|X|)=\delta`$, $`(Ck/2-\delta)\big(2d/(1+d)\big)^2`$ para $`k`$ par y $`C\lfloor k/2\rfloor\big(2d/(1+d)\big)^2`$ para $`k`$
+impar; a lo largo de $`\Delta(Y)=\delta'`$, alcanzada en $`|X|=1`$, $`C\lfloor k/2\rfloor\big(2\delta'/(1+\delta')\big)^2`$. Para
+$`k`$ par estos son los valores de las sumas directas de la sección 11.5: la desigualdad de sumas directas es una igualdad,
+en ambos funcionales. Para $`k`$ impar las sumas directas con un sumando unidimensional son óptimas en Exp. 1, pero no en
+Exp. 3: el valor propio $`\ell`$ de $`|X|`$ se sitúa en un bloque unidimensional, donde no cuesta nada, y la envolvente no
+depende de $`\delta`$.
+
+*Cálculo:* la proposición 11.19 (espectros de $`YXY`$ y de $`\mathcal L`$, la cota y su caso de igualdad), los maximizadores
+del teorema 11.20 para bloques de varios tamaños y búsquedas multiarranque que alcanzan las envolventes desde puntos de
+partida estructurados — [tutorial, sección 11.7](../../tutorial/es/11_optimisation.md#s-11-7).
 
 <a id="x-11"></a>
 

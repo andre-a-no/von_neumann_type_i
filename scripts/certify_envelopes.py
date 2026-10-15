@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 r"""
-Certified upper bounds for the upper envelopes of Exp. 1 and Exp. 3 (paper, Section 6), C = 1, k = 2, 3, 4 (and 6).
+Exact upper envelopes of Exp. 1 and Exp. 3 (paper, Section 6) for every sector size k and number of sectors C, with
+proofs; an independent branch-and-bound certificate for k = 4, 6.
 
 The multistart search of scripts/bounds_search.py only gives LOWER bounds for
 
@@ -8,10 +9,17 @@ The multistart search of scripts/bounds_search.py only gives LOWER bounds for
             Exp 3:  z = Tr(Y |X| Y) - Tr|Y X Y|      X = X^*,    Y >= 0
 
 with the normalisation lambda_max = 1 and one contrast prescribed, the other free in [0, D] (D = 0.999 as in the
-paper). This script proves upper bounds. Most of them are exact (Theorems 1 and 4 below; for k = 2 they give the
-closed forms of Section 6 with independent proofs); the case left open by the theorems (Exp. 3, k even >= 4,
-envelope along Delta(|X|)) is reduced to a model in 2m - 1 = k - 1 angles and certified by a rigorous branch and
-bound.
+paper). This script proves the matching upper bounds: all these envelopes are known exactly (Theorems 1, 4 and 7
+and Corollary 8 below; for k = 2 they give the closed forms of Section 6 with independent proofs):
+
+    Exp 1:  sup z = C floor(k/2) delta^2 D^2 / ((1 + delta)(1 + D))                (either contrast, Theorem 1)
+    Exp 3:  sup z = (C k/2 - delta) (2D/(1 + D))^2      along Delta(|X|) = delta, k even   (Theorem 7, Corollary 8)
+                  = C floor(k/2) (2D/(1 + D))^2         along Delta(|X|) = delta, k odd    (Theorem 4)
+                  = C floor(k/2) (2 delta/(1 + delta))^2 along Delta(Y) = delta           (Theorem 4)
+
+The branch and bound of the m-block model (Theorem 4) was the first proof for k = 4, 6 (to 1e-7, 1e-5); it is kept
+as a numerical check of Theorem 7, which is independent of it.
+
 Notation: a = (1 - delta)/(1 + delta) is lambda_min of the operator with prescribed contrast delta, b = (1 - D)/(1 + D)
 the smallest admissible lambda_min of the free one, n the dimension. All statements hold in the real and in the
 complex algebra (every reduction ends in real configurations), so the real envelopes of the paper have the same
@@ -83,8 +91,9 @@ sup z = C floor(k/2) s0(a_Y) = C floor(k/2) (2 delta_Y / (1 + delta_Y))^2. (ii) 
 Delta(Y) in [0, D] free: k odd: sup z = C floor(k/2) s0(b), independent of delta; k = 2: sup z = (C - 1) s0(b) +
 s3(a, b) (for C = 1 the paper's closed form); k even:
     (C k/2 - 1) s0(b) + s3(a, b) <= sup z <= (C - 1)(k/2) s0(b) + max((k/2 - 1) s0(b), Z_{k/2}(a, b)),
-where Z_m is the supremum of the m-block model below (the lower bound is the direct sum; the script certifies
-Z_2 and Z_3 numerically, i.e. k = 4, 6).
+where Z_m is the supremum of the m-block model below (the lower bound is the direct sum). Theorem 7 gives
+Z_m = s3(a, b) + (m - 1) s0(b), so sup z = (C k/2 - 1) s0(b) + s3(a, b) = (C k/2 - delta) s0(b) for every even k
+(the branch and bound below certifies Z_2 and Z_3 independently, i.e. k = 4, 6).
 Proof. By the reduction, z <= z(X', Y) with X' = S - (1 - a) e e^*, Y = b + (1 - b) Q; also z(X', Y) <= z(S, Y) by
 (b) (|X'| <= 1), and z(S, Y) is the sum over the blocks of Lemma 0 of k = 2 values at delta = 0, each <= s0(b) by
 Lemma 3, so a sector with m two-dimensional blocks contributes <= m s0(b), m <= floor(k/2). (i): along Delta(Y) the
@@ -108,6 +117,64 @@ the reduction maps a configuration at delta' to X' = S - (1 - a') e e^*, and S -
 larger |X|, so by Lemma 2 (b) at least the same z. Hence for delta in [delta_i, delta_{i+1}],
 dsum(delta) <= sup z(delta) <= UB(delta_i), and max_i UB(delta_i) - dsum(delta_{i+1}) bounds the gap to the direct
 sums dsum (also non-increasing) on all of [0, delta_N] (certify_all_contrasts).
+
+Lemma 6 (linearisation of the m-block model). Let H = C^m (+) C^m (blocks: ran P (+) ran P^perp), X = X_+ (+) (-1)
+with X_+ = X_+^* > 0 on C^m, K = 1 + X_+, and Y = b + (1 - b) Q, b in [0, 1), where Q is the projection onto the
+range of the isometry v = (C; Sigma), C = diag(cos theta_j), Sigma = diag(sin theta_j) (the m-block model: Lemma 0
+puts every (P, Q) whose blocks fill H in this form, with f_j, f_j' the j-th basis vectors of the two summands). With
+A = C^2 and gamma = 1 - b^2, YXY has the same eigenvalues (with multiplicity) as the self-adjoint 2m x 2m matrix
+    M(A) = [[gamma K^{1/2} A K^{1/2} + b^2 X_+ - 1,  b X_+^{1/2}],
+            [b X_+^{1/2},                             0         ]],
+which is AFFINE in A. Proof: both characteristic polynomials equal p(lambda) = det((lambda + 1)(lambda - b^2 X_+) -
+lambda gamma K^{1/2} A K^{1/2}) (polynomials in lambda, so it suffices to compare them for large lambda > 0).
+(1) det(lambda - YXY) = det(lambda - X Y^2) (det(lambda - ST) = det(lambda - TS) for square S, T). In the block
+decomposition Y^2 = b^2 + gamma Q = [[b^2 + gamma C^2, gamma C Sigma], [gamma C Sigma, b^2 + gamma Sigma^2]], and
+lambda - X Y^2 = [[lambda - X_+ (b^2 + gamma C^2), -gamma X_+ C Sigma], [gamma C Sigma, E]] with the diagonal
+E = lambda + b^2 + gamma Sigma^2 = lambda + 1 - gamma C^2 (C^2 + Sigma^2 = 1, b^2 + gamma = 1). The Schur complement
+formula det [[R, S], [T, E]] = det(E) det(R - S E^{-1} T) and the identity
+(b^2 + gamma C^2) E - gamma^2 C^2 Sigma^2 = lambda (b^2 + gamma C^2) + b^2 (all factors diagonal) give
+det(lambda - X Y^2) = det(E) det(lambda - X_+ (lambda (b^2 + gamma C^2) + b^2) E^{-1})
+                    = det(lambda E - X_+ (lambda (b^2 + gamma C^2) + b^2))
+                    = det((lambda + 1)(lambda - b^2 X_+) - lambda gamma K C^2) = p(lambda)
+(the last step: lambda(lambda + 1 - gamma C^2) - X_+(lambda b^2 + b^2 + lambda gamma C^2) = (lambda + 1)(lambda -
+b^2 X_+) - lambda gamma (1 + X_+) C^2, then det(K Z) = det(K^{1/2} Z K^{1/2}) for Z = K^{-1}(...)).
+(2) det(lambda - M) = lambda^m det(lambda + 1 - gamma K^{1/2} A K^{1/2} - b^2 X_+ - b^2 X_+ / lambda) (Schur
+complement of the lower right block lambda) = det(lambda (lambda + 1) - lambda gamma K^{1/2} A K^{1/2} - (lambda + 1)
+b^2 X_+) = p(lambda). QED.
+
+Theorem 7 (Exp. 3 on the m-block model). In the setting of Lemma 6, with x_1, ..., x_m the eigenvalues of X_+ and
+|X| = X_+ (+) 1,
+    z = Tr(Y |X| Y) - Tr|Y X Y| <= (1 - b)^2 sum_i 2 x_i / (1 + x_i),
+and equality holds for X_+ = diag(x_i), cos^2(theta_i) = (1 + x_i b)/((1 + x_i)(1 + b)) (the direct sum of the k = 2
+maximisers of Lemma 3, each block attaining s3(x_i, b)). In particular, for X_+ = 1 - (1 - a) e e^* (eigenvalues
+a, 1, ..., 1): Z_m = (1 - b)^2 (2a/(1 + a) + m - 1) = s3(a, b) + (m - 1) s0(b) = (m - delta) s0(b).
+Proof. By Lemma 6, Tr|YXY| = ||M(A)||_1 >= Tr(T M(A)) for every T with ||T|| <= 1 (Theorem 1.9 of the lecture notes
+for unitaries; a self-adjoint contraction T is the mean of the unitaries T +- i (1 - T^2)^{1/2}). Take, with the
+functions of X_+ Delta = (1 - X_+)(1 + X_+)^{-1} and G = 2 X_+^{1/2} (1 + X_+)^{-1} (Delta^2 + G^2 = 1, commuting),
+    T = [[-Delta, G], [G, Delta]],     T^2 = 1, so ||T|| = 1.
+Tr(Y|X|Y) = Tr(|X| Y^2) = b^2 Tr X_+ + gamma Tr(X_+ A) + m b^2 + gamma Tr(1 - A) (P Q P = A, P^perp Q P^perp =
+1 - A), and Tr(T M(A)) = -gamma Tr((1 - X_+) A) - Tr(Delta (b^2 X_+ - 1)) + 2 b Tr(G X_+^{1/2})
+(K^{1/2} Delta K^{1/2} = 1 - X_+). The terms in A cancel:
+    z <= b^2 Tr X_+ + m + Tr(Delta (b^2 X_+ - 1)) - 4 b Tr(X_+ (1 + X_+)^{-1}),
+and per eigenvalue x (delta_x = (1 - x)/(1 + x)): b^2 x + 1 + delta_x (b^2 x - 1) - 4 b x/(1 + x)
+= (2x/(1 + x)) (b^2 - 2b + 1). Equality: for diagonal X_+ and Y the configuration is a direct sum of m 2 x 2 blocks
+X = diag(x_i, -1), whose maxima s3(x_i, b) = (1 - b)^2 2 x_i/(1 + x_i) (Lemma 3, with x_i in place of a) add up to the
+bound. QED. (For b = 0, Y = Q a projection: z <= sum_i 2 x_i/(1 + x_i); M(A) = (K^{1/2} A K^{1/2} - 1) (+) 0.)
+Remark: Theorem 7 does not need the reduction e in one block: z is concave in A = P Q P (M(A) is affine in A), and T
+is the sign of M(A*) at the direct sum A*. For fixed theta, the maximum over e is in general NOT at e = f_j
+(numerically: interior maxima exceed both vertices by up to 0.2 for m = 2); only the joint maximum is.
+
+Corollary 8 (all envelopes of Exp. 3). Let the sectors have sizes k_1, ..., k_C, N = sum_c floor(k_c/2) >= 1,
+Delta(|X|) = delta in [0, 1) and Delta(Y) = delta' in [0, 1] prescribed, a = l(delta), b = l(delta'). Then
+    sup z = (N - delta) (1 - b)^2   if every k_c is even,     sup z = N (1 - b)^2   if some k_c is odd,
+and the supremum is attained. Hence, with the other contrast free in [0, D]: along Delta(|X|) = delta the envelope is
+(N - delta [all k_c even]) (2D/(1 + D))^2 (both factors increase in delta'), along Delta(Y) = delta' it is
+N (2 delta'/(1 + delta'))^2 (attained at |X| = 1). Proof: the reduction before Lemma 3 holds verbatim with Y of
+prescribed contrast (the vertex argument keeps both eigenvalues 1 and b, Q != 0, 1); the sectors without e contribute
+at most floor(k_c/2) (1 - b)^2 each (Theorem 4); the sector of e at most floor(k_c/2) (1 - b)^2 if k_c is odd or if
+it has fewer than k_c/2 two-dimensional blocks (then at most (k_c/2 - 1)(1 - b)^2), and (k_c/2 - delta)(1 - b)^2
+by Theorem 7 if its k_c/2 blocks fill it. Attained: blocks at the angles of Theorem 7, the eigenvalue a of |X| on a
+two-dimensional block (all k_c even) or on a one-dimensional block of an odd sector. QED.
 
 Certificate for Z_m (branch and bound). For a box B with centre c and half-widths r, let T_c be the sign of
 Y X Y at c (Y X Y is invertible: an orthogonal symmetry; numerically renormalised to ||T_c|| <= 1, see below). By
@@ -145,9 +212,10 @@ Remark (convex relaxations are not enough). z is concave in |X| (Lemma 2 (a): a 
 the direct sum by up to s0/3 (k = 4, delta -> 1), because it forgets that e e^* has rank one. The certificate
 therefore uses branch and bound.
 
-    python scripts/certify_envelopes.py                         # table for k = 2, 3, 4 (about 1 s without --search)
+    python scripts/certify_envelopes.py                         # exact envelopes, k = 2, 3, 4, 16 (instant)
+    python scripts/certify_envelopes.py --bnb                   # + branch and bound for k = 4 (seconds)
+    python scripts/certify_envelopes.py --bnb --k6 --tol 1e-5   # + k = 6 (minutes)
     python scripts/certify_envelopes.py --search --continuum 1000
-    python scripts/certify_envelopes.py --k6 --tol 1e-5         # also k = 6 (minutes)
 """
 import argparse
 import math
@@ -197,6 +265,99 @@ def direct_sum(exp, k, delta, D=DMAX, C=1):
     if k % 2 == 0:
         return s3(delta, D) + (C * m - 1) * s0(D)
     return C * m * s0(D) + 0 * np.asarray(delta, dtype=float)
+
+
+def _sizes(k, C):
+    ks = [k] * C if np.isscalar(k) else list(k)
+    return ks, sum(kc // 2 for kc in ks), all(kc % 2 == 0 for kc in ks)
+
+
+def exact_sup(exp, k, delta, D=DMAX, C=1, along='x', other=None):
+    """
+    The upper envelope sup z (proved: Theorem 1, Corollary 8; Exp. 2: paper, Section 6) for C sectors of size k (or
+    sectors of the sizes in the list k), as a function of the prescribed contrast `delta` of the first operator
+    (along='x': X, resp. |X| in Exp. 2, 3) or of the second one (along='y': Y, resp. |Y|); the other contrast is free
+    in [0, D], or prescribed (= other). Vectorised over delta. With N = sum_c floor(k_c/2):
+        Exp 1  N d_X^2 d_Y^2 / ((1 + d_X)(1 + d_Y))
+        Exp 2  N (2 d_X/(1 + d_X)) (2 d_Y/(1 + d_Y))
+        Exp 3  (N - d_X [all k_c even]) (2 d_Y/(1 + d_Y))^2   (along Delta(Y) with |X| free: d_X = 0)
+    """
+    ks, N, even = _sizes(k, C)
+    d = np.asarray(delta, dtype=float)
+    free = other is None
+    o = np.asarray(D if free else other, dtype=float)
+    dx, dy = (d, o) if along == 'x' else (o, d)
+    if exp == 1:
+        return N * dx ** 2 * dy ** 2 / ((1 + dx) * (1 + dy))
+    if exp == 2:
+        return N * (1 - lo(dx)) * (1 - lo(dy))
+    if exp != 3:
+        raise ValueError("exp must be 1, 2 or 3")
+    if along == 'y' and free:
+        dx = 0.0 * dy                               # |X| = 1 is admissible and maximal (Theorem 4 (i))
+    return (N - dx * float(even)) * (1 - lo(dy)) ** 2
+
+
+def exact_inf(exp, k, delta, D=DMAX, C=1, along='x'):
+    """The lower envelope inf z with the other contrast free in [0, D] (paper, Section 6; Exp. 1 needs all k_c >= 2):
+    Exp 1 -(sum_c k_c - 2 delta/(1 + delta)) along either contrast, Exp 2 -sup, Exp 3 0."""
+    ks, N, _ = _sizes(k, C)
+    d = np.asarray(delta, dtype=float)
+    if exp == 1:
+        if min(ks) < 2:
+            raise ValueError("Exp. 1: the closed form needs all k_c >= 2")
+        return -(sum(ks) - 2 * d / (1 + d))
+    if exp == 2:
+        return -exact_sup(2, k, d, D, C, along)
+    return 0.0 * d
+
+
+def linearisation(theta, Xp, b):
+    """
+    Lemma 6: the self-adjoint 2m x 2m matrix M(A), A = diag(cos^2 theta), whose eigenvalues are those of Y X Y in the
+    m-block model with X = Xp (+) (-1) (Xp > 0 on C^m, real or complex) and Y = b + (1 - b) Q. Returns (M, T, value):
+    T = [[-Delta, G], [G, Delta]] the symmetry of Theorem 7 and value = Tr(|X| Y^2) - Tr(T M), which equals
+    (1 - b)^2 sum_i 2 x_i/(1 + x_i) for every theta (Theorem 7).
+    """
+    theta = np.asarray(theta, dtype=float)
+    m = len(theta)
+    w, V = np.linalg.eigh(Xp)
+
+    def f(g):
+        return (V * g(w)) @ V.conj().T
+    A = np.diag(np.cos(theta) ** 2)
+    gam = 1 - b ** 2
+    Kh, Xh = f(lambda x: np.sqrt(1 + x)), f(np.sqrt)
+    M = np.zeros((2 * m, 2 * m), dtype=np.result_type(Xp, float))
+    M[:m, :m] = gam * Kh @ A @ Kh + b ** 2 * Xp - np.eye(m)
+    M[:m, m:] = M[m:, :m] = b * Xh
+    T = np.block([[-f(lambda x: (1 - x) / (1 + x)), f(lambda x: 2 * np.sqrt(x) / (1 + x))],
+                  [f(lambda x: 2 * np.sqrt(x) / (1 + x)), f(lambda x: (1 - x) / (1 + x))]])
+    trace_absx_y2 = (b ** 2 * np.trace(Xp) + gam * np.trace(Xp @ A) + m * b ** 2 + gam * np.trace(np.eye(m) - A)).real
+    return M, T, trace_absx_y2 - np.trace(T @ M).real
+
+
+def block_model_operators(theta, Xp, b):
+    """X = Xp (+) (-1) and Y = b + (1 - b) Q of the m-block model (Lemma 6), basis (f_1..f_m, f_1'..f_m')."""
+    theta = np.asarray(theta, dtype=float)
+    m = len(theta)
+    v = np.vstack([np.diag(np.cos(theta)), np.diag(np.sin(theta))])
+    Y = b * np.eye(2 * m) + (1 - b) * v @ v.T
+    X = np.zeros((2 * m, 2 * m), dtype=np.result_type(Xp, float))
+    X[:m, :m], X[m:, m:] = Xp, -np.eye(m)
+    return X, Y
+
+
+def blocks_bound(x, b):
+    """Theorem 7: (1 - b)^2 sum_i 2 x_i/(1 + x_i), the supremum over the angles for |X| = diag(x) (+) 1."""
+    x = np.asarray(x, dtype=float)
+    return (1 - b) ** 2 * float(np.sum(2 * x / (1 + x)))
+
+
+def blocks_maximiser(x, b):
+    """Angles of the equality case of Theorem 7 for X_+ = diag(x): cos^2 theta_i = (1 + x_i b)/((1 + x_i)(1 + b))."""
+    x = np.asarray(x, dtype=float)
+    return np.arccos(np.sqrt((1 + x * b) / ((1 + x) * (1 + b))))
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -377,35 +538,35 @@ def certify_blocks(m, delta, D=DMAX, tol=1e-6, max_boxes=BOX_LIMIT, chunk=100_00
 # certified envelopes
 # ---------------------------------------------------------------------------------------------------------------
 
-def certified_sup(exp, k, delta, D=DMAX, tol=1e-6, C=1):
+def certified_sup(exp, k, delta, D=DMAX, tol=1e-6, C=1, method='theorem'):
     """
     Certified sup z for C sectors of size k, envelope along the prescribed contrast delta of X (|X| for Exp. 3),
     the other contrast free in [0, D]. Returns dict(lower, upper, method): lower is attained (a configuration with
-    this value exists, up to rounding), upper is a proven bound (Theorems 1 and 4, or the branch and bound).
+    this value exists, up to rounding), upper is a proven bound. method='theorem': Theorems 1, 4, 7 (exact, every k);
+    method='bnb' (Exp. 3, k = 4, 6): the reduction of Theorem 4 and the branch and bound of Z_{k/2}, which does not
+    use Theorem 7.
     """
     m = k // 2
     if exp == 1:
-        v = float(C * m * s1(delta, D))
+        v = float(exact_sup(1, k, delta, D, C))
         return dict(lower=v, upper=v, method='Theorem 1 (exact)')
     if exp != 3:
         raise ValueError("Exp. 2 is known exactly (paper); only Exp. 1 and 3 here")
-    rest = float((C - 1) * m * s0(D))                    # the sectors without e (Theorem 4 (ii))
-    if delta == 0 or k % 2:
-        v = float(C * m * s0(D))
-        return dict(lower=v, upper=v, method='Theorem 4 (exact)')
-    if k == 2:
-        v = rest + float(s3(delta, D))
-        return dict(lower=v, upper=v, method='Lemma 3 / Theorem 4 (exact)')
-    if k in (4, 6):
+    if method == 'bnb' and k % 2 == 0 and k > 2 and delta > 0:
+        if k not in (4, 6):
+            raise ValueError("branch and bound for k = 4, 6 only")
+        rest = float((C - 1) * m * s0(D))                # the sectors without e (Theorem 4 (ii))
         r = certify_blocks(m, delta, D, tol)
         return dict(lower=rest + r['lower'], upper=rest + max(r['upper'], float((m - 1) * s0(D))), boxes=r['boxes'],
                     seconds=r['seconds'], method='Theorem 4 + branch and bound')
-    raise ValueError("certified here for even k <= 6 (k odd: any k)")
+    v = float(exact_sup(3, k, delta, D, C))
+    return dict(lower=v, upper=v, method='Theorem 7 (exact)' if k % 2 == 0 and k > 2 else 'Theorem 4 (exact)')
 
 
 def certify_all_contrasts(n=1000, D=DMAX, tol=1e-6, dmax=DMAX):
     """
-    Exp. 3, k = 4, C = 1: a certificate for EVERY contrast delta in [0, dmax]. sup z is non-increasing in delta
+    Exp. 3, k = 4, C = 1: a branch-and-bound certificate (independent of Theorem 7) for EVERY contrast delta in
+    [0, dmax]. sup z is non-increasing in delta
     (for delta <= delta', a >= a', and |X''| = 1 - (1 - a) e e^* >= 1 - (1 - a') e e^*, so Lemma 2 (b) maps every
     configuration at delta' to one at delta with at least the same z). Hence on [delta_i, delta_{i+1}],
     dsum(delta) <= sup z(delta) <= UB(delta_i), and the gap to the direct sums is at most
@@ -414,7 +575,7 @@ def certify_all_contrasts(n=1000, D=DMAX, tol=1e-6, dmax=DMAX):
     """
     t0 = time.time()
     grid = np.linspace(0.0, dmax, n + 1)
-    ub = np.array([certified_sup(3, 4, d, D, tol)['upper'] for d in grid])
+    ub = np.array([certified_sup(3, 4, d, D, tol, method='bnb')['upper'] for d in grid])
     ds = direct_sum(3, 4, grid, D)
     return dict(gap=float(np.max(ub[:-1] - ds[1:])), pointwise_gap=float(np.max(ub - ds)), seconds=time.time() - t0)
 
@@ -474,27 +635,29 @@ def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument('--grid', type=float, nargs='*', default=[0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 0.99, 0.999])
     p.add_argument('--tol', type=float, default=1e-7, help='branch-and-bound gap (absolute)')
+    p.add_argument('--bnb', action='store_true', help='Exp. 3, k = 4: also the branch and bound (seconds)')
     p.add_argument('--search', action='store_true', help='also run the multistart search for comparison')
-    p.add_argument('--k6', action='store_true', help='also k = 6 (Exp. 3: branch and bound in 5 angles, minutes)')
+    p.add_argument('--k6', action='store_true', help='with --bnb also k = 6 (branch and bound in 5 angles, minutes)')
     p.add_argument('--continuum', type=int, default=0, metavar='N',
-                   help='Exp. 3, k = 4: certify all contrasts in [0, 0.999] with N + 1 grid points')
+                   help='Exp. 3, k = 4: branch and bound for all contrasts in [0, 0.999] with N + 1 grid points')
     args = p.parse_args()
     print(f"C = 1; envelopes along the prescribed contrast (Delta(X), resp. Delta(|X|)); the other contrast free in "
           f"[0, {DMAX}]")
-    print(f"{'exp':>3s} {'k':>2s} {'delta':>6s} {'direct sum':>12s} {'certified UB':>13s} {'UB-dsum':>9s} "
-          f"{'relaxation':>11s} {'search':>10s} {'boxes':>7s} {'time[s]':>7s}  method")
+    print(f"{'exp':>3s} {'k':>2s} {'delta':>6s} {'sup z (exact)':>14s} {'direct sum':>12s} {'B&B upper':>12s} "
+          f"{'B&B - exact':>11s} {'search':>10s} {'boxes':>7s} {'time[s]':>7s}  method")
     t_all = time.time()
     for exp in (1, 3):
-        for k in (2, 3, 4) + ((6,) if args.k6 else ()):
-            found = search_sup(exp, k, args.grid) if args.search else [float('nan')] * len(args.grid)
+        for k in (2, 3, 4) + ((6,) if args.k6 else ()) + (16,):
+            found = search_sup(exp, k, args.grid) if args.search and k <= 6 else [float('nan')] * len(args.grid)
             for delta, sv in zip(args.grid, found):
-                r = certified_sup(exp, k, delta, tol=args.tol)
+                r = certified_sup(exp, k, delta)
                 ds = float(direct_sum(exp, k, delta))
-                rel = float(max((k // 2 - 1) * s0(), relaxation_bound(k // 2, delta))) \
-                    if exp == 3 and k % 2 == 0 and k > 2 else float('nan')
-                print(f"{exp:3d} {k:2d} {delta:6.3f} {ds:12.8f} {r['upper']:13.8f} {r['upper'] - ds:9.1e} "
-                      f"{rel:11.6f} {sv:10.6f} {r.get('boxes', 0):7d} {r.get('seconds', 0.0):7.2f}  {r['method']}",
-                      flush=True)
+                bb = dict(upper=float('nan'))
+                if args.bnb and exp == 3 and k in (4, 6) and delta > 0:
+                    bb = certified_sup(exp, k, delta, tol=args.tol, method='bnb')
+                print(f"{exp:3d} {k:2d} {delta:6.3f} {r['upper']:14.8f} {ds:12.8f} {bb['upper']:12.8f} "
+                      f"{bb['upper'] - r['upper']:11.1e} {sv:10.6f} {bb.get('boxes', 0):7d} "
+                      f"{bb.get('seconds', 0.0):7.2f}  {r['method']}", flush=True)
     if args.continuum:
         c = certify_all_contrasts(args.continuum, tol=args.tol)
         print(f"Exp 3, k = 4, all delta in [0, {DMAX}] ({args.continuum + 1} grid points): sup z - direct sum <= "
