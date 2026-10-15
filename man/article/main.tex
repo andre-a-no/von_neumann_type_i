@@ -1386,9 +1386,11 @@ partition into the minimal projections $e_{jj}$ of $\Delta_n$ gives the lower bo
   H(\Delta_n|U\Delta_nU^*)\ \ge\ h(U)=\frac1n\sum_{i,j}\eta\bigl(|u_{ij}|^2\bigr),
 \]
 the entropy of the unistochastic matrix $(|u_{ij}|^2)$, averaged over its rows; this quantity and its relation to the
-Connes--St{\o}rmer entropy of two MASAs are studied by Choda~\cite{choda}. To our knowledge, $H(\Delta_n|U\Delta_nU^*)$
-itself has not been determined in closed form, not even for $n=2$ (cf.\ the discussion in~\cite{bakshi}). We compute
-it with the library, prove a closed form for $n=2$, and report what the computations show for $n\ge3$.
+Connes--St{\o}rmer entropy of two MASAs are studied by Choda~\cite{choda}. For $n=2$, the Connes--St{\o}rmer entropy of
+pairs of spin model subfactors built from $2\times2$ complex Hadamard matrices was computed by Bakshi and
+Guin~\cite{bakshi}. We compute $H(\Delta_n|U\Delta_nU^*)$ with the library, give a short self-contained proof of a
+closed form for every $U\in U(2)$, and report what the computations show for $n\ge3$, where we are not aware of a
+closed form.
 
 \begin{lemma}\label{lem:cs}
 Let $P,Q\subset M_n(\C)$ be unital $*$-subalgebras, $S(\sigma)=-\Tr\sigma\log\sigma$, and $G(\rho)=S(E_Q\rho)-S(E_P\rho)$
@@ -1923,9 +1925,10 @@ degenerate cases'', arXiv:2011.04366 (2020).
   19 (1986), 57--106.
 \bibitem{connes1975} A.~Connes, E.~St{\o}rmer, ``Entropy for automorphisms of II$_1$ von Neumann algebras'', Acta Math.\
   134 (1975), 289--306.
-\bibitem{choda} M.~Choda, preprint arXiv:0803.0591.
-\bibitem{bakshi} Bakshi et al., ``Relative position between a pair of spin model subfactors'', preprint
-  arXiv:2212.07197.
+\bibitem{choda} M.~Choda, ``Relative entropy for maximal abelian subalgebras of matrices and the entropy of
+  unistochastic matrices'', Internat.\ J.\ Math.\ 19 (2008), 767--776; arXiv:0803.0591.
+\bibitem{bakshi} K.~C.~Bakshi, S.~Guin, ``Relative position between a pair of spin model subfactors'', J.\ Aust.\
+  Math.\ Soc.\ (2025); arXiv:2212.07197.
 \bibitem{greub1959} W.~Greub, W.~Rheinboldt, ``On a generalization of an inequality of L.~V.~Kantorovich'', Proc.\
   Amer.\ Math.\ Soc.\ 10 (1959), 407--415.
 \bibitem{furuta2005} T.~Furuta, J.~Mi\'ci\'c Hot, J.~Pe\v{c}ari\'c, Y.~Seo, \emph{Mond--Pe\v{c}ari\'c Method in Operator
