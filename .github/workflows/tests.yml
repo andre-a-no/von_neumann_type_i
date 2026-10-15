@@ -35,9 +35,10 @@ jobs:
         run: |
           pip install "torch==1.13.1" --index-url https://download.pytorch.org/whl/cpu
           pip install "numpy==1.21.6" "scipy==1.7.3" pytest
-          pip install -e . --no-deps
+      # tests run on the source tree: the build backend (setuptools >= 77) needs Python >= 3.9, while users on
+      # Python 3.8 install the pure-Python wheel from PyPI, which needs no build
       - name: Test
-        run: pytest -q
+        run: PYTHONPATH=$PWD pytest -q
 
   package:
     runs-on: ubuntu-latest

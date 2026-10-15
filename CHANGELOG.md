@@ -91,7 +91,9 @@ and with the latest ones on Python 3.8–3.13.
 ### Changed
 - Minimum requirements lowered from Python 3.9 / PyTorch 2.0 to Python 3.8 / PyTorch 1.13 / NumPy 1.21
   (fallbacks for `torch.dtype.itemsize`, `check_invariants` of sparse tensors, overflow-safe complex scaling and
-  version-independent gradients at the boundary of the positive cone); the package builds with setuptools ≥ 61.
+  version-independent gradients at the boundary of the positive cone). The workarounds are active only on the
+  PyTorch versions that need them; on current versions the code paths and timings are unchanged. The wheel is pure
+  Python and installs on Python 3.8; building from source needs Python ≥ 3.9 (setuptools ≥ 77, PEP 639 metadata).
 - Decompositions run as one batched call per distinct block size, split into one chunk per thread on a multi-core
   CPU; no host synchronisations in the computational paths (GPU).
 - `optimize`: spectra parametrised to reach the ends of [lambda_min, 1]; sign patterns of self-adjoint operators are

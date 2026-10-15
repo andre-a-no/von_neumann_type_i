@@ -1,5 +1,6 @@
 [build-system]
-requires = ["setuptools>=61"]                # 61: PEP 621 metadata; also builds on Python 3.8
+requires = ["setuptools>=77"]                # PEP 639 license metadata (the wheel is pure Python, py3-none-any:
+                                             # pip installs it on Python 3.8 without building)
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +8,8 @@ name = "torch_vn_algebra"
 dynamic = ["version"]
 description = "PyTorch library for block-diagonal matrices with symmetry sectors (Type I von Neumann algebras): Haar random unitaries, quantum states, channels, Lindblad dynamics, spin chains; batched on GPU"
 readme = "README.md"
-license = { text = "MIT" }                   # table form: SPDX strings need setuptools >= 77 (Python >= 3.9)
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "Irina Nikolaeva" }, { name = "Andrej Novikov" }]
 requires-python = ">=3.8"
 dependencies = ["torch>=1.13", "numpy>=1.21"]   # the whole test suite passes with these minimal versions
@@ -24,7 +26,6 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Intended Audience :: Education",
     "Natural Language :: English",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",

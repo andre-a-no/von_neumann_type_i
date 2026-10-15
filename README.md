@@ -153,7 +153,8 @@ below are the better choice; the sections *What to compare with* of the tutorial
 ## Installation
 
 Requirements: Python ≥ 3.8, PyTorch ≥ 1.13, NumPy ≥ 1.21 (the whole test suite runs in CI with exactly these
-minimal versions and with the latest ones on Python 3.8–3.13); SciPy ≥ 1.7 only for the tests and scripts.
+minimal versions and with the latest ones on Python 3.8–3.13); SciPy ≥ 1.7 only for the tests and scripts. On
+Python 3.8 install the wheel from PyPI (`pip install torch_vn_algebra`); building from source needs Python ≥ 3.9.
 
 From PyPI (install PyTorch for your CPU/GPU first, see <https://pytorch.org>):
 
