@@ -407,6 +407,138 @@ alcanzado en $`M_2\oplus M_2`$ con contraste $`\delta`$.
 
 *Cálculo:* la proposición 11.14 en $`M_2\oplus M_2`$, el corolario 11.7 en $`M_3\oplus M_3`$ y la proposición 11.9 mediante búsqueda multiarranque, con una comprobación del tipo (ii) — [tutorial, sección 11.5](../../tutorial/es/11_optimisation.md#s-11-5).
 
+Para bloques de tamaño $`2`$ las envolventes superiores de Exp. 1 y Exp. 3 se conocen exactamente. En $`M_2(\mathbb C)`$
+las bases propias intervienen solo a través de un número: para bases propias ortonormales $`e_1,e_2`$ y $`f_1,f_2`$ la
+matriz doblemente estocástica $`(|\langle e_i,f_j\rangle|^2)`$ tiene filas $`(\gamma,1-\gamma)`$ y $`(1-\gamma,\gamma)`$, $`\gamma=|\langle e_1,f_1\rangle|^2\in[0,1]`$, y
+todo $`\gamma`$ se obtiene con bases reales ($`f_1=\cos t\,e_1+\sin t\,e_2`$, $`f_2=-\sin t\,e_1+\cos t\,e_2`$, $`\gamma=\cos^2t`$).
+
+<a id="r-11-15"></a>
+
+**Proposición 11.15 (Exp. 1 y Exp. 3 en $`M_2`$).** Sea $`Y\ge0`$ en $`M_2(\mathbb C)`$ con valores propios
+$`y_1\ge y_2\ge0`$, vectores propios $`f_1,f_2`$, e $`y_1>0`$.
+
+(a) Sea $`X\ge0`$ con valores propios $`x_1\ge x_2\ge0`$, $`x_1>0`$, y vectores propios $`e_1,e_2`$. Para toda unitaria $`U`$,
+```math
+\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)\ \le\ \frac{(x_1-x_2)^2(y_1-y_2)^2}{4(x_1+x_2)(y_1+y_2)} .
+```
+Si $`x_1>x_2`$ e $`y_1>y_2`$, la igualdad se da si y solo si $`|\mathrm{Tr}(XUY)|=\|YX\|_1`$ y
+$`\gamma=\gamma_1:=\frac14+\frac{x_1y_2+x_2y_1}{2(x_1+x_2)(y_1+y_2)}`$; en otro caso la cota es $`0`$, y se alcanza si y solo si
+$`|\mathrm{Tr}(XUY)|=\|YX\|_1`$.
+
+(b) Sea $`X=X^*`$, y sean $`x_1\ge x_2\ge0`$, $`x_1>0`$, los valores propios de $`|X|`$. Entonces
+```math
+\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ \le\ \frac{2x_1x_2}{x_1+x_2}\,(y_1-y_2)^2 .
+```
+Si $`X`$ tiene valores propios de ambos signos e $`y_1>y_2`$, sean $`e_1`$, $`e_2`$ vectores propios de $`X`$ para sus
+valores propios de módulo $`x_1`$ y $`x_2`$; entonces la igualdad se da si y solo si $`\gamma=\gamma_3:=\frac{x_1y_2+x_2y_1}{(x_1+x_2)(y_1+y_2)}`$.
+
+Para todos los valores propios como arriba ambas cotas se alcanzan, con $`X`$, $`Y`$ y $`U`$ reales (en (b) con
+$`X=\mathrm{diag}(x_1,-x_2)`$); en particular son las mismas en $`M_2(\mathbb R)`$.
+
+*Demostración.* Escribimos $`z`$ para el lado izquierdo, y ponemos $`S=x_1y_2+x_2y_1`$, $`p=(x_1-x_2)(y_1-y_2)\ge0`$ y
+$`q=(x_1+x_2)(y_1+y_2)>0`$, de modo que $`q-2S=p`$.
+
+(a) Por el teorema 1.9, $`|\mathrm{Tr}(XUY)|=|\mathrm{Tr}(YX\,U)|\le\|YX\|_1`$, con igualdad para $`U=W^*`$, $`YX=W|YX|`$.
+Como en la demostración del corolario 11.5, $`\mathrm{Tr}(PQ)=\sum_{i,j}a_ib_j|\langle e_i,f_j\rangle|^2`$ para $`P=\sum_ia_i|e_i\rangle\langle e_i|`$,
+$`Q=\sum_jb_j|f_j\rangle\langle f_j|`$; por tanto
+$`\mathrm{Tr}(XY)=(x_1y_2+x_2y_1)+\gamma(x_1-x_2)(y_1-y_2)=S+\gamma p`$ y
+$`\mathrm{Tr}(X^2Y^2)=(x_1^2y_2^2+x_2^2y_1^2)+\gamma(x_1^2-x_2^2)(y_1^2-y_2^2)`$. Los cuadrados $`s_1^2,s_2^2`$ de los valores
+singulares de $`YX`$ son los valores propios de $`(YX)^*YX=XY^2X`$, luego $`s_1^2+s_2^2=\mathrm{Tr}(X^2Y^2)`$ y
+$`s_1s_2=|\det(YX)|=x_1x_2y_1y_2`$. Por consiguiente
+```math
+\|YX\|_1^2=(s_1+s_2)^2=\mathrm{Tr}(X^2Y^2)+2x_1x_2y_1y_2=S^2+\gamma pq .
+```
+Para $`r\ge0`$, $`\sqrt r\le r/q+q/4`$, con igualdad si y solo si $`\sqrt r=q/2`$ (desarrollar $`(\sqrt r-q/2)^2\ge0`$). Con $`r=S^2+\gamma pq`$,
+```math
+z\ \le\ \|YX\|_1-\mathrm{Tr}(XY)\ \le\ \frac{S^2+\gamma pq}q+\frac q4-S-\gamma p=\frac{(q/2-S)^2}q=\frac{p^2}{4q}.
+```
+La igualdad se da si y solo si $`|\mathrm{Tr}(XUY)|=\|YX\|_1`$ y $`S^2+\gamma pq=q^2/4`$, es decir, $`\gamma pq=(q/2-S)(q/2+S)=\frac p2(q/2+S)`$.
+Si $`p>0`$ esto dice $`\gamma=(q/2+S)/(2q)=\gamma_1`$, que está en $`[\frac14,\frac12]`$ porque $`0\le S\le q/2`$; si $`p=0`$ se cumple
+para todo $`\gamma`$.
+
+(b) Sustituir $`X`$ por $`-X`$ no cambia ninguno de los lados. Si $`X\ge0`$, entonces $`YXY\ge0`$, $`|YXY|=YXY`$ y $`z=0`$;
+lo mismo para $`X\le0`$. En otro caso $`x_2>0`$ y, sustituyendo $`X`$ por $`-X`$ si hace falta, $`Xe_1=x_1e_1`$,
+$`Xe_2=-x_2e_2`$. Sean $`u=\langle e_1,Y^2e_1\rangle=\gamma y_1^2+(1-\gamma)y_2^2`$ y $`v=\langle e_2,Y^2e_2\rangle=s-u`$, $`s=y_1^2+y_2^2`$.
+Entonces $`\mathrm{Tr}(Y|X|Y)=\mathrm{Tr}(|X|Y^2)=x_1u+x_2v=:A`$. La matriz autoadjunta $`YXY`$ tiene determinante
+$`\det X(\det Y)^2=-x_1x_2y_1^2y_2^2\le0`$, así que sus valores propios son $`\mu_+\ge0\ge\mu_-`$ y
+```math
+\mathrm{Tr}|YXY|=\mu_+-\mu_-=\sqrt{(\mu_++\mu_-)^2-4\mu_+\mu_-}=\sqrt{L^2+K^2},\qquad L=\mathrm{Tr}(XY^2)=x_1u-x_2v,\quad K=2\sqrt{x_1x_2}\,y_1y_2 .
+```
+Sean $`\alpha=(x_1-x_2)/(x_1+x_2)`$ y $`\beta=2\sqrt{x_1x_2}/(x_1+x_2)>0`$, de modo que $`\alpha^2+\beta^2=1`$. Como
+$`A=(x_1-x_2)u+x_2s`$ y $`L=(x_1+x_2)u-x_2s`$, se tiene $`A-\alpha L=x_2s(1+\alpha)=2x_1x_2s/(x_1+x_2)`$ y
+$`\beta K=4x_1x_2y_1y_2/(x_1+x_2)`$, luego $`A-\alpha L-\beta K=\frac{2x_1x_2}{x_1+x_2}(y_1-y_2)^2=:m`$. La
+desigualdad de Cauchy–Schwarz en $`\mathbb R^2`$ da $`\sqrt{L^2+K^2}\ge\alpha L+\beta K`$, así que
+```math
+z=A-\sqrt{L^2+K^2}\ \le\ A-\alpha L-\beta K=m,
+```
+con igualdad si y solo si $`(L,K)`$ es un múltiplo no negativo de $`(\alpha,\beta)`$, es decir (pues $`\beta>0`$, $`K\ge0`$) si y solo si
+$`\beta L=\alpha K`$, es decir, $`(x_1+x_2)u-x_2s=(x_1-x_2)y_1y_2`$. Esto determina $`u`$, y
+$`u-y_2^2=(y_1-y_2)(x_1y_2+x_2y_1)/(x_1+x_2)`$; para $`y_1>y_2`$, $`u=\gamma y_1^2+(1-\gamma)y_2^2`$ da $`\gamma=\gamma_3\in[0,\frac12]`$.
+
+*Maximizadores reales.* Tómese $`e_i`$ la base canónica, $`f_1,f_2`$ la base real girada con $`\cos^2t=\gamma_1`$ (resp. $`\gamma_3`$),
+y, en (a), $`U=VW^{\mathrm T}`$ a partir de una descomposición en valores singulares real $`YX=W\Sigma V^{\mathrm T}`$ (diagonalizando
+la matriz real simétrica $`(YX)^{\mathrm T}YX`$), de modo que $`\mathrm{Tr}(UYX)=\mathrm{Tr}\,\Sigma=\|YX\|_1`$. $`\square`$
+
+<a id="r-11-16"></a>
+
+**Corolario 11.16 (envolventes de Exp. 1 y Exp. 3 para bloques de tamaño $`2`$).** Supongamos que todos los $`k_c=2`$ (así $`D=2C`$),
+$`\delta\in[0,1)`$, $`\delta'\in[0,1]`$, $`\ell=\ell(\delta)`$, $`\ell'=\ell(\delta')`$ (con $`\ell(1)=0`$), y que $`Y`$
+recorre los operadores positivos con $`\lambda_{\max}(Y)=1`$ y $`\Delta(Y)=\delta'`$, es decir, $`\lambda_{\min}(Y)=\ell'`$.
+
+(a) Exp. 1, sobre $`X\in\mathcal P_\delta`$, tales $`Y`$ y unitarias $`U`$:
+$`\ \sup z=C\,\frac{\delta^2\delta'^2}{(1+\delta)(1+\delta')}`$ e $`\inf z=-(2C-1+\ell\ell')`$.
+
+(b) Exp. 3, sobre $`X=X^*`$ con $`|X|\in\mathcal P_\delta`$ y tales $`Y`$:
+$`\ \sup z=(C-\delta)\Big(\frac{2\delta'}{1+\delta'}\Big)^2`$ e $`\inf z=0`$.
+
+Los cuatro valores se alcanzan. En consecuencia, con el otro contraste libre en $`[0,d]`$, $`d\in(0,1)`$: la envolvente
+superior de Exp. 1 es $`C\delta^2d^2/((1+\delta)(1+d))`$ a lo largo de $`\Delta(X)=\delta`$ y (por la simetría de (a))
+$`C\delta'^2d^2/((1+\delta')(1+d))`$ a lo largo de $`\Delta(Y)=\delta'`$; la de Exp. 3 es $`(C-\delta)\big(2d/(1+d)\big)^2`$ a lo largo de $`\Delta(|X|)=\delta`$ y
+$`C\big(2\delta'/(1+\delta')\big)^2`$ a lo largo de $`\Delta(Y)=\delta'`$, sea cual sea $`d`$. Cuando $`d\to1`$ las dos primeras crecen hasta
+$`C\delta^2/(2(1+\delta))`$ y $`C-\delta`$, los valores en $`\Delta(Y)=1`$ ($`Y`$ singular).
+
+*Demostración.* Sean $`x_{c,1}\ge x_{c,2}`$ los valores propios de $`X_c`$ (en (b): de $`|X|_c`$) e $`y_{c,1}\ge y_{c,2}`$ los de
+$`Y_c`$; están en $`[\ell,1]`$ y $`[\ell',1]`$, y $`\ell`$ es el menor de su bloque. Obsérvese que
+$`1-\ell=2\delta/(1+\delta)`$, $`1+\ell=2/(1+\delta)`$, luego $`(1-\ell)^2/(1+\ell)=2\delta^2/(1+\delta)`$ y
+$`2\ell/(1+\ell)=1-\delta`$; análogamente para $`\ell'`$.
+
+(a) *Supremo.* Por la desigualdad triangular y el teorema 1.9 en cada bloque,
+$`|\mathrm{Tr}(XUY)|\le\sum_c|\mathrm{Tr}(X_cU_cY_c)|\le\sum_c\|Y_cX_c\|_1`$, luego, por la proposición 11.15(a) (un bloque con
+$`Y_c=0`$ contribuye $`-\mathrm{Tr}(X_cY_c)=0`$),
+```math
+z\le\sum_c\frac{x_{c,1}y_{c,1}}4\,g\Big(\frac{x_{c,2}}{x_{c,1}}\Big)\,g\Big(\frac{y_{c,2}}{y_{c,1}}\Big),\qquad g(r)=\frac{(1-r)^2}{1+r}.
+```
+$`g`$ es decreciente en $`[0,1]`$, $`x_{c,2}/x_{c,1}\ge x_{c,2}\ge\ell`$, $`y_{c,2}/y_{c,1}\ge\ell'`$ y $`x_{c,1},y_{c,1}\le1`$, así que
+cada término es a lo sumo $`g(\ell)g(\ell')/4=\delta^2\delta'^2/((1+\delta)(1+\delta'))`$. Igualdad: en cada bloque
+$`X_c=\mathrm{diag}(1,\ell)`$, $`Y_c`$ con valores propios $`1,\ell'`$ en $`\gamma=\gamma_1`$, y $`U_c=W_c^*`$, $`Y_cX_c=W_c|Y_cX_c|`$;
+entonces $`\mathrm{Tr}(X_cU_cY_c)=\|Y_cX_c\|_1\ge0`$ en cada bloque, y los módulos se suman.
+*Ínfimo.* $`z\ge-\mathrm{Tr}(XY)`$, con igualdad para $`U=\bigoplus_cU_c`$, $`\mathrm{Tr}(Y_cX_cU_c)=0`$ (lema 11.13). Por el
+corolario 11.5(a), $`\mathrm{Tr}(XY)\le\sum_c(x_{c,1}y_{c,1}+x_{c,2}y_{c,2})`$. Si $`\ell`$ y $`\ell'`$ están en el mismo
+bloque, este contribuye a lo sumo $`1+\ell\ell'`$ y cada uno de los demás a lo sumo $`2`$; si no, los dos bloques contribuyen a
+lo sumo $`1+\ell`$ y $`1+\ell'`$, y $`2C-2+\ell+\ell'=2C-1+\ell\ell'-(1-\ell)(1-\ell')`$. Así
+$`\mathrm{Tr}(XY)\le2C-1+\ell\ell'`$, con igualdad para $`X=\mathrm{diag}(1,\ell)\oplus1\oplus\dots\oplus1`$ e
+$`Y=\mathrm{diag}(1,\ell')\oplus1\oplus\dots\oplus1`$.
+
+(b) Las trazas, las normas traza y $`|\cdot|`$ actúan bloque a bloque (ejercicio 3), luego $`z=\sum_cz_c`$, y por la proposición 11.15(b)
+$`z_c\le H_c(y_{c,1}-y_{c,2})^2\le H_c(1-\ell')^2`$ con $`H_c=2x_{c,1}x_{c,2}/(x_{c,1}+x_{c,2})\le x_{c,1}\le1`$. En un bloque
+$`c_-`$ en el que $`|X|`$ tiene el valor propio $`\ell`$, $`x_{c_-,2}=\ell`$ y $`H_{c_-}=2\ell/(1+\ell/x_{c_-,1})\le2\ell/(1+\ell)=1-\delta`$.
+Por tanto $`z\le(C-1+1-\delta)(1-\ell')^2`$. Igualdad: $`X_1=\mathrm{diag}(1,-\ell)`$, $`X_c=\mathrm{diag}(1,-1)`$ para $`c\ge2`$,
+y cada $`Y_c`$ con valores propios $`1,\ell'`$ en el $`\gamma=\gamma_3`$ de su bloque (para $`c\ge2`$, $`\gamma_3=\frac12`$). El ínfimo es
+la proposición 11.9, con igualdad para $`X`$, $`Y`$ que conmutan.
+
+*Contraste libre.* El supremo en (a) crece con $`\delta'`$ (estrictamente si $`\delta>0`$), y el de (b) crece
+estrictamente con $`\delta'`$ y decrece con $`\delta`$. Sobre el contraste libre en $`[0,d]`$ los supremos se alcanzan, por tanto,
+en $`d`$ (a lo largo de $`\Delta(Y)`$ en Exp. 3: en $`\Delta(|X|)=0`$), y los límites cuando $`d\to1`$ solo se alcanzan en
+$`\Delta(Y)=1`$ (en Exp. 1 si $`\delta>0`$). $`\square`$
+
+Para $`C=1`$ y $`d=0.999`$ estas son las formas cerradas que el artículo que acompaña a la biblioteca observó primero
+numéricamente (en álgebras reales). Para todo $`C`$ las envolventes superiores son los valores de sumas directas de $`C`$
+soluciones en $`M_2`$ ($`C-\delta=(1-\delta)+(C-1)\cdot1`$ en Exp. 3): en $`M_2\oplus M_2`$ la desigualdad de sumas directas
+anterior es una igualdad. Para bloques de tamaño $`k_c\ge3`$ no conocemos ninguna forma cerrada de estas envolventes superiores.
+
+*Cálculo:* los maximizadores de la proposición 11.15, las envolventes del corolario 11.16 para $`C=1,2`$ y su límite
+$`d\to1`$, y una búsqueda multiarranque frente a ellas — [tutorial, sección 11.5](../../tutorial/es/11_optimisation.md#s-11-5).
+
 <a id="s-11-6"></a>
 
 ## 11.6 Con qué comparar

@@ -415,6 +415,138 @@ auf $`M_2\oplus M_2`$ beim Kontrast $`\delta`$ angenommener Wert.
 
 *Rechnung:* Proposition 11.14 auf $`M_2\oplus M_2`$, Korollar 11.7 auf $`M_3\oplus M_3`$ und Proposition 11.9 per Multistart-Suche, mit einer Prüfung vom Typ (ii) — [Tutorial, Abschnitt 11.5](../../tutorial/de/11_optimisation.md#s-11-5).
 
+Für Blöcke der Größe $`2`$ sind die oberen Einhüllenden von Exp. 1 und Exp. 3 exakt bekannt. In $`M_2(\mathbb C)`$
+gehen die Eigenbasen nur über eine Zahl ein: Für Orthonormalbasen aus Eigenvektoren $`e_1,e_2`$ und $`f_1,f_2`$ hat die
+doppelt stochastische Matrix $`(|\langle e_i,f_j\rangle|^2)`$ die Zeilen $`(\gamma,1-\gamma)`$ und $`(1-\gamma,\gamma)`$, $`\gamma=|\langle e_1,f_1\rangle|^2\in[0,1]`$, und
+jedes $`\gamma`$ tritt schon für reelle Basen auf ($`f_1=\cos t\,e_1+\sin t\,e_2`$, $`f_2=-\sin t\,e_1+\cos t\,e_2`$, $`\gamma=\cos^2t`$).
+
+<a id="r-11-15"></a>
+
+**Proposition 11.15 (Exp. 1 und Exp. 3 auf $`M_2`$).** Sei $`Y\ge0`$ in $`M_2(\mathbb C)`$ mit Eigenwerten
+$`y_1\ge y_2\ge0`$, Eigenvektoren $`f_1,f_2`$ und $`y_1>0`$.
+
+(a) Sei $`X\ge0`$ mit Eigenwerten $`x_1\ge x_2\ge0`$, $`x_1>0`$, und Eigenvektoren $`e_1,e_2`$. Für jedes unitäre $`U`$ gilt
+```math
+\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)\ \le\ \frac{(x_1-x_2)^2(y_1-y_2)^2}{4(x_1+x_2)(y_1+y_2)} .
+```
+Ist $`x_1>x_2`$ und $`y_1>y_2`$, so gilt Gleichheit genau dann, wenn $`|\mathrm{Tr}(XUY)|=\|YX\|_1`$ und
+$`\gamma=\gamma_1:=\frac14+\frac{x_1y_2+x_2y_1}{2(x_1+x_2)(y_1+y_2)}`$; andernfalls ist die Schranke $`0`$, und sie wird genau dann
+angenommen, wenn $`|\mathrm{Tr}(XUY)|=\|YX\|_1`$.
+
+(b) Sei $`X=X^*`$, und $`|X|`$ habe die Eigenwerte $`x_1\ge x_2\ge0`$, $`x_1>0`$. Dann gilt
+```math
+\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ \le\ \frac{2x_1x_2}{x_1+x_2}\,(y_1-y_2)^2 .
+```
+Hat $`X`$ Eigenwerte beider Vorzeichen und ist $`y_1>y_2`$, so seien $`e_1`$, $`e_2`$ Eigenvektoren von $`X`$ zu seinen
+Eigenwerten vom Betrag $`x_1`$ und $`x_2`$; dann gilt Gleichheit genau dann, wenn $`\gamma=\gamma_3:=\frac{x_1y_2+x_2y_1}{(x_1+x_2)(y_1+y_2)}`$.
+
+Für alle Eigenwerte wie oben werden beide Schranken angenommen, und zwar von reellen $`X`$, $`Y`$ und $`U`$ (in (b) mit
+$`X=\mathrm{diag}(x_1,-x_2)`$); insbesondere sind sie in $`M_2(\mathbb R)`$ dieselben.
+
+*Beweis.* Wir schreiben $`z`$ für die linke Seite und setzen $`S=x_1y_2+x_2y_1`$, $`p=(x_1-x_2)(y_1-y_2)\ge0`$ und
+$`q=(x_1+x_2)(y_1+y_2)>0`$, sodass $`q-2S=p`$.
+
+(a) Nach Satz 1.9 ist $`|\mathrm{Tr}(XUY)|=|\mathrm{Tr}(YX\,U)|\le\|YX\|_1`$, mit Gleichheit für $`U=W^*`$, $`YX=W|YX|`$.
+Wie im Beweis von Korollar 11.5 ist $`\mathrm{Tr}(PQ)=\sum_{i,j}a_ib_j|\langle e_i,f_j\rangle|^2`$ für $`P=\sum_ia_i|e_i\rangle\langle e_i|`$,
+$`Q=\sum_jb_j|f_j\rangle\langle f_j|`$; daher
+$`\mathrm{Tr}(XY)=(x_1y_2+x_2y_1)+\gamma(x_1-x_2)(y_1-y_2)=S+\gamma p`$ und
+$`\mathrm{Tr}(X^2Y^2)=(x_1^2y_2^2+x_2^2y_1^2)+\gamma(x_1^2-x_2^2)(y_1^2-y_2^2)`$. Die Quadrate $`s_1^2,s_2^2`$ der
+Singulärwerte von $`YX`$ sind die Eigenwerte von $`(YX)^*YX=XY^2X`$, also $`s_1^2+s_2^2=\mathrm{Tr}(X^2Y^2)`$ und
+$`s_1s_2=|\det(YX)|=x_1x_2y_1y_2`$. Folglich
+```math
+\|YX\|_1^2=(s_1+s_2)^2=\mathrm{Tr}(X^2Y^2)+2x_1x_2y_1y_2=S^2+\gamma pq .
+```
+Für $`r\ge0`$ ist $`\sqrt r\le r/q+q/4`$, mit Gleichheit genau für $`\sqrt r=q/2`$ (man multipliziere $`(\sqrt r-q/2)^2\ge0`$ aus). Mit $`r=S^2+\gamma pq`$ folgt
+```math
+z\ \le\ \|YX\|_1-\mathrm{Tr}(XY)\ \le\ \frac{S^2+\gamma pq}q+\frac q4-S-\gamma p=\frac{(q/2-S)^2}q=\frac{p^2}{4q}.
+```
+Gleichheit gilt genau dann, wenn $`|\mathrm{Tr}(XUY)|=\|YX\|_1`$ und $`S^2+\gamma pq=q^2/4`$, d. h. $`\gamma pq=(q/2-S)(q/2+S)=\frac p2(q/2+S)`$.
+Für $`p>0`$ heißt das $`\gamma=(q/2+S)/(2q)=\gamma_1`$, und das liegt in $`[\frac14,\frac12]`$, da $`0\le S\le q/2`$; für $`p=0`$ gilt es
+für jedes $`\gamma`$.
+
+(b) Ersetzt man $`X`$ durch $`-X`$, so ändert sich keine der beiden Seiten. Ist $`X\ge0`$, so ist $`YXY\ge0`$, $`|YXY|=YXY`$ und $`z=0`$;
+ebenso für $`X\le0`$. Andernfalls ist $`x_2>0`$, und nach eventuellem Ersetzen von $`X`$ durch $`-X`$ gilt $`Xe_1=x_1e_1`$,
+$`Xe_2=-x_2e_2`$. Sei $`u=\langle e_1,Y^2e_1\rangle=\gamma y_1^2+(1-\gamma)y_2^2`$ und $`v=\langle e_2,Y^2e_2\rangle=s-u`$, $`s=y_1^2+y_2^2`$.
+Dann ist $`\mathrm{Tr}(Y|X|Y)=\mathrm{Tr}(|X|Y^2)=x_1u+x_2v=:A`$. Die selbstadjungierte Matrix $`YXY`$ hat die Determinante
+$`\det X(\det Y)^2=-x_1x_2y_1^2y_2^2\le0`$, also Eigenwerte $`\mu_+\ge0\ge\mu_-`$, und
+```math
+\mathrm{Tr}|YXY|=\mu_+-\mu_-=\sqrt{(\mu_++\mu_-)^2-4\mu_+\mu_-}=\sqrt{L^2+K^2},\qquad L=\mathrm{Tr}(XY^2)=x_1u-x_2v,\quad K=2\sqrt{x_1x_2}\,y_1y_2 .
+```
+Sei $`\alpha=(x_1-x_2)/(x_1+x_2)`$ und $`\beta=2\sqrt{x_1x_2}/(x_1+x_2)>0`$, sodass $`\alpha^2+\beta^2=1`$. Wegen
+$`A=(x_1-x_2)u+x_2s`$ und $`L=(x_1+x_2)u-x_2s`$ ist $`A-\alpha L=x_2s(1+\alpha)=2x_1x_2s/(x_1+x_2)`$ und
+$`\beta K=4x_1x_2y_1y_2/(x_1+x_2)`$, also $`A-\alpha L-\beta K=\frac{2x_1x_2}{x_1+x_2}(y_1-y_2)^2=:m`$. Die
+Cauchy–Schwarz-Ungleichung in $`\mathbb R^2`$ liefert $`\sqrt{L^2+K^2}\ge\alpha L+\beta K`$, also
+```math
+z=A-\sqrt{L^2+K^2}\ \le\ A-\alpha L-\beta K=m,
+```
+mit Gleichheit genau dann, wenn $`(L,K)`$ ein nichtnegatives Vielfaches von $`(\alpha,\beta)`$ ist, d. h. (da $`\beta>0`$, $`K\ge0`$)
+genau dann, wenn $`\beta L=\alpha K`$, d. h. $`(x_1+x_2)u-x_2s=(x_1-x_2)y_1y_2`$. Das legt $`u`$ fest, und
+$`u-y_2^2=(y_1-y_2)(x_1y_2+x_2y_1)/(x_1+x_2)`$; für $`y_1>y_2`$ liefert $`u=\gamma y_1^2+(1-\gamma)y_2^2`$ dann $`\gamma=\gamma_3\in[0,\frac12]`$.
+
+*Reelle Maximierer.* Man nehme für $`e_i`$ die Standardbasis, für $`f_1,f_2`$ die gedrehte reelle Basis mit $`\cos^2t=\gamma_1`$ (bzw. $`\gamma_3`$)
+und in (a) $`U=VW^{\mathrm T}`$ aus einer reellen Singulärwertzerlegung $`YX=W\Sigma V^{\mathrm T}`$ (durch Diagonalisieren
+der reellen symmetrischen Matrix $`(YX)^{\mathrm T}YX`$), sodass $`\mathrm{Tr}(UYX)=\mathrm{Tr}\,\Sigma=\|YX\|_1`$. $`\square`$
+
+<a id="r-11-16"></a>
+
+**Korollar 11.16 (Einhüllende von Exp. 1 und Exp. 3 für Blöcke der Größe $`2`$).** Seien alle $`k_c=2`$ (also $`D=2C`$),
+$`\delta\in[0,1)`$, $`\delta'\in[0,1]`$, $`\ell=\ell(\delta)`$, $`\ell'=\ell(\delta')`$ (mit $`\ell(1)=0`$), und $`Y`$
+durchlaufe die positiven Operatoren mit $`\lambda_{\max}(Y)=1`$ und $`\Delta(Y)=\delta'`$, d. h. $`\lambda_{\min}(Y)=\ell'`$.
+
+(a) Exp. 1, über $`X\in\mathcal P_\delta`$, solche $`Y`$ und unitäre $`U`$:
+$`\ \sup z=C\,\frac{\delta^2\delta'^2}{(1+\delta)(1+\delta')}`$ und $`\inf z=-(2C-1+\ell\ell')`$.
+
+(b) Exp. 3, über $`X=X^*`$ mit $`|X|\in\mathcal P_\delta`$ und solche $`Y`$:
+$`\ \sup z=(C-\delta)\Big(\frac{2\delta'}{1+\delta'}\Big)^2`$ und $`\inf z=0`$.
+
+Alle vier Werte werden angenommen. Folglich gilt mit dem anderen Kontrast frei in $`[0,d]`$, $`d\in(0,1)`$: Die obere
+Einhüllende von Exp. 1 ist $`C\delta^2d^2/((1+\delta)(1+d))`$ entlang $`\Delta(X)=\delta`$ und (wegen der Symmetrie von (a))
+$`C\delta'^2d^2/((1+\delta')(1+d))`$ entlang $`\Delta(Y)=\delta'`$; die von Exp. 3 ist $`(C-\delta)\big(2d/(1+d)\big)^2`$ entlang $`\Delta(|X|)=\delta`$ und
+$`C\big(2\delta'/(1+\delta')\big)^2`$ entlang $`\Delta(Y)=\delta'`$, für jedes $`d`$. Für $`d\to1`$ wachsen die ersten beiden gegen
+$`C\delta^2/(2(1+\delta))`$ und $`C-\delta`$, die Werte bei $`\Delta(Y)=1`$ (singuläres $`Y`$).
+
+*Beweis.* Seien $`x_{c,1}\ge x_{c,2}`$ die Eigenwerte von $`X_c`$ (in (b): von $`|X|_c`$) und $`y_{c,1}\ge y_{c,2}`$ die von
+$`Y_c`$; sie liegen in $`[\ell,1]`$ und $`[\ell',1]`$, und $`\ell`$ ist der kleinere in seinem Block. Es ist
+$`1-\ell=2\delta/(1+\delta)`$, $`1+\ell=2/(1+\delta)`$, also $`(1-\ell)^2/(1+\ell)=2\delta^2/(1+\delta)`$ und
+$`2\ell/(1+\ell)=1-\delta`$; ebenso für $`\ell'`$.
+
+(a) *Supremum.* Nach der Dreiecksungleichung und Satz 1.9 in jedem Block ist
+$`|\mathrm{Tr}(XUY)|\le\sum_c|\mathrm{Tr}(X_cU_cY_c)|\le\sum_c\|Y_cX_c\|_1`$, also nach Proposition 11.15(a) (ein Block mit
+$`Y_c=0`$ trägt $`-\mathrm{Tr}(X_cY_c)=0`$ bei)
+```math
+z\le\sum_c\frac{x_{c,1}y_{c,1}}4\,g\Big(\frac{x_{c,2}}{x_{c,1}}\Big)\,g\Big(\frac{y_{c,2}}{y_{c,1}}\Big),\qquad g(r)=\frac{(1-r)^2}{1+r}.
+```
+$`g`$ fällt auf $`[0,1]`$, $`x_{c,2}/x_{c,1}\ge x_{c,2}\ge\ell`$, $`y_{c,2}/y_{c,1}\ge\ell'`$ und $`x_{c,1},y_{c,1}\le1`$, also ist
+jeder Summand höchstens $`g(\ell)g(\ell')/4=\delta^2\delta'^2/((1+\delta)(1+\delta'))`$. Gleichheit: in jedem Block
+$`X_c=\mathrm{diag}(1,\ell)`$, $`Y_c`$ mit Eigenwerten $`1,\ell'`$ bei $`\gamma=\gamma_1`$ und $`U_c=W_c^*`$, $`Y_cX_c=W_c|Y_cX_c|`$;
+dann ist $`\mathrm{Tr}(X_cU_cY_c)=\|Y_cX_c\|_1\ge0`$ in jedem Block, und die Beträge addieren sich.
+*Infimum.* $`z\ge-\mathrm{Tr}(XY)`$, mit Gleichheit für $`U=\bigoplus_cU_c`$, $`\mathrm{Tr}(Y_cX_cU_c)=0`$ (Lemma 11.13). Nach
+Korollar 11.5(a) ist $`\mathrm{Tr}(XY)\le\sum_c(x_{c,1}y_{c,1}+x_{c,2}y_{c,2})`$. Liegen $`\ell`$ und $`\ell'`$ im selben
+Block, so trägt dieser höchstens $`1+\ell\ell'`$ bei und jeder andere höchstens $`2`$; andernfalls tragen die beiden Blöcke
+höchstens $`1+\ell`$ und $`1+\ell'`$ bei, und $`2C-2+\ell+\ell'=2C-1+\ell\ell'-(1-\ell)(1-\ell')`$. Also ist
+$`\mathrm{Tr}(XY)\le2C-1+\ell\ell'`$, mit Gleichheit für $`X=\mathrm{diag}(1,\ell)\oplus1\oplus\dots\oplus1`$ und
+$`Y=\mathrm{diag}(1,\ell')\oplus1\oplus\dots\oplus1`$.
+
+(b) Spuren, Spurnormen und $`|\cdot|`$ wirken blockweise (Aufgabe 3), also $`z=\sum_cz_c`$, und nach Proposition 11.15(b) ist
+$`z_c\le H_c(y_{c,1}-y_{c,2})^2\le H_c(1-\ell')^2`$ mit $`H_c=2x_{c,1}x_{c,2}/(x_{c,1}+x_{c,2})\le x_{c,1}\le1`$. In einem Block
+$`c_-`$, in dem $`|X|`$ den Eigenwert $`\ell`$ hat, ist $`x_{c_-,2}=\ell`$ und $`H_{c_-}=2\ell/(1+\ell/x_{c_-,1})\le2\ell/(1+\ell)=1-\delta`$.
+Daher ist $`z\le(C-1+1-\delta)(1-\ell')^2`$. Gleichheit: $`X_1=\mathrm{diag}(1,-\ell)`$, $`X_c=\mathrm{diag}(1,-1)`$ für $`c\ge2`$,
+und jedes $`Y_c`$ mit Eigenwerten $`1,\ell'`$ beim $`\gamma=\gamma_3`$ seines Blocks (für $`c\ge2`$ ist $`\gamma_3=\frac12`$). Das Infimum ist
+Proposition 11.9, mit Gleichheit für kommutierende $`X`$, $`Y`$.
+
+*Freier Kontrast.* Das Supremum in (a) wächst in $`\delta'`$ (streng, falls $`\delta>0`$), das in (b) wächst streng in
+$`\delta'`$ und fällt in $`\delta`$. Über den freien Kontrast in $`[0,d]`$ werden die Suprema daher bei $`d`$ angenommen
+(entlang $`\Delta(Y)`$ in Exp. 3: bei $`\Delta(|X|)=0`$), und die Grenzwerte für $`d\to1`$ werden nur bei $`\Delta(Y)=1`$
+erreicht (in Exp. 1 falls $`\delta>0`$). $`\square`$
+
+Für $`C=1`$ und $`d=0.999`$ sind dies die geschlossenen Formen, die die Begleitarbeit zuerst numerisch beobachtet hat (in
+reellen Algebren). Für jedes $`C`$ sind die oberen Einhüllenden die Werte direkter Summen von $`C`$ Lösungen auf $`M_2`$
+($`C-\delta=(1-\delta)+(C-1)\cdot1`$ in Exp. 3): Auf $`M_2\oplus M_2`$ ist die obige Ungleichung für direkte Summen eine
+Gleichheit. Für Blöcke der Größe $`k_c\ge3`$ kennen wir keine geschlossene Form dieser oberen Einhüllenden.
+
+*Rechnung:* die Maximierer aus Proposition 11.15, die Einhüllenden aus Korollar 11.16 für $`C=1,2`$ und ihr Grenzwert
+$`d\to1`$ sowie eine Multistart-Suche im Vergleich dazu — [Tutorial, Abschnitt 11.5](../../tutorial/de/11_optimisation.md#s-11-5).
+
 <a id="s-11-6"></a>
 
 ## 11.6 Womit man vergleichen sollte

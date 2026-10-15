@@ -380,6 +380,135 @@ $`\delta`$ 处取到的值。
 
 *计算：* 用多起点搜索检验 $`M_2\oplus M_2`$ 上的命题 11.14、$`M_3\oplus M_3`$ 上的推论 11.7 以及命题 11.9，并做一项类型 (ii) 的检验——[教程，11.5 节](../../tutorial/zh/11_optimisation.md#s-11-5)。
 
+对大小为 $`2`$ 的块，实验 1 与实验 3 的上包络可以精确求出。在 $`M_2(\mathbb C)`$ 中，本征基只通过一个数起作用：
+对正交归一本征基 $`e_1,e_2`$ 与 $`f_1,f_2`$，双随机矩阵 $`(|\langle e_i,f_j\rangle|^2)`$ 的两行为
+$`(\gamma,1-\gamma)`$ 与 $`(1-\gamma,\gamma)`$，$`\gamma=|\langle e_1,f_1\rangle|^2\in[0,1]`$，而且每个 $`\gamma`$
+都可由实基取到（$`f_1=\cos t\,e_1+\sin t\,e_2`$，$`f_2=-\sin t\,e_1+\cos t\,e_2`$，$`\gamma=\cos^2t`$）。
+
+<a id="r-11-15"></a>
+
+**命题 11.15（$`M_2`$ 上的实验 1 与实验 3）。** 设 $`M_2(\mathbb C)`$ 中的 $`Y\ge0`$ 的特征值为
+$`y_1\ge y_2\ge0`$，本征向量为 $`f_1,f_2`$，且 $`y_1>0`$。
+
+(a) 设 $`X\ge0`$ 的特征值为 $`x_1\ge x_2\ge0`$，$`x_1>0`$，本征向量为 $`e_1,e_2`$。则对每个酉矩阵 $`U`$，
+```math
+\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)\ \le\ \frac{(x_1-x_2)^2(y_1-y_2)^2}{4(x_1+x_2)(y_1+y_2)} .
+```
+若 $`x_1>x_2`$ 且 $`y_1>y_2`$，则等号成立当且仅当 $`|\mathrm{Tr}(XUY)|=\|YX\|_1`$ 且
+$`\gamma=\gamma_1:=\frac14+\frac{x_1y_2+x_2y_1}{2(x_1+x_2)(y_1+y_2)}`$；否则该界为 $`0`$，且它被取到当且仅当
+$`|\mathrm{Tr}(XUY)|=\|YX\|_1`$。
+
+(b) 设 $`X=X^*`$，$`|X|`$ 的特征值为 $`x_1\ge x_2\ge0`$，$`x_1>0`$。则
+```math
+\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ \le\ \frac{2x_1x_2}{x_1+x_2}\,(y_1-y_2)^2 .
+```
+若 $`X`$ 有正负两种符号的特征值且 $`y_1>y_2`$，令 $`e_1`$、$`e_2`$ 为 $`X`$ 对应于模为 $`x_1`$ 与 $`x_2`$ 的特征值的
+本征向量；则等号成立当且仅当 $`\gamma=\gamma_3:=\frac{x_1y_2+x_2y_1}{(x_1+x_2)(y_1+y_2)}`$。
+
+对上述任意特征值，两个界都能取到，且可由实的 $`X`$、$`Y`$、$`U`$ 取到（在 (b) 中取 $`X=\mathrm{diag}(x_1,-x_2)`$）；
+特别地，它们在 $`M_2(\mathbb R)`$ 中相同。
+
+*证明。* 记 $`z`$ 为左边，并令 $`S=x_1y_2+x_2y_1`$，$`p=(x_1-x_2)(y_1-y_2)\ge0`$，
+$`q=(x_1+x_2)(y_1+y_2)>0`$，于是 $`q-2S=p`$。
+
+(a) 由定理 1.9，$`|\mathrm{Tr}(XUY)|=|\mathrm{Tr}(YX\,U)|\le\|YX\|_1`$，当 $`U=W^*`$、$`YX=W|YX|`$ 时取等号。
+与推论 11.5 的证明一样，对 $`P=\sum_ia_i|e_i\rangle\langle e_i|`$、$`Q=\sum_jb_j|f_j\rangle\langle f_j|`$ 有
+$`\mathrm{Tr}(PQ)=\sum_{i,j}a_ib_j|\langle e_i,f_j\rangle|^2`$；因此
+$`\mathrm{Tr}(XY)=(x_1y_2+x_2y_1)+\gamma(x_1-x_2)(y_1-y_2)=S+\gamma p`$，且
+$`\mathrm{Tr}(X^2Y^2)=(x_1^2y_2^2+x_2^2y_1^2)+\gamma(x_1^2-x_2^2)(y_1^2-y_2^2)`$。$`YX`$ 的奇异值的平方 $`s_1^2,s_2^2`$
+是 $`(YX)^*YX=XY^2X`$ 的特征值，所以 $`s_1^2+s_2^2=\mathrm{Tr}(X^2Y^2)`$，且
+$`s_1s_2=|\det(YX)|=x_1x_2y_1y_2`$。因此
+```math
+\|YX\|_1^2=(s_1+s_2)^2=\mathrm{Tr}(X^2Y^2)+2x_1x_2y_1y_2=S^2+\gamma pq .
+```
+对 $`r\ge0`$，$`\sqrt r\le r/q+q/4`$，等号当且仅当 $`\sqrt r=q/2`$（展开 $`(\sqrt r-q/2)^2\ge0`$）。取 $`r=S^2+\gamma pq`$，
+```math
+z\ \le\ \|YX\|_1-\mathrm{Tr}(XY)\ \le\ \frac{S^2+\gamma pq}q+\frac q4-S-\gamma p=\frac{(q/2-S)^2}q=\frac{p^2}{4q}.
+```
+等号成立当且仅当 $`|\mathrm{Tr}(XUY)|=\|YX\|_1`$ 且 $`S^2+\gamma pq=q^2/4`$，即 $`\gamma pq=(q/2-S)(q/2+S)=\frac p2(q/2+S)`$。
+若 $`p>0`$，这就是 $`\gamma=(q/2+S)/(2q)=\gamma_1`$，由于 $`0\le S\le q/2`$，它落在 $`[\frac14,\frac12]`$ 中；若 $`p=0`$，
+它对每个 $`\gamma`$ 都成立。
+
+(b) 把 $`X`$ 换成 $`-X`$ 两边都不变。若 $`X\ge0`$，则 $`YXY\ge0`$，$`|YXY|=YXY`$，于是 $`z=0`$；
+$`X\le0`$ 时同理。否则 $`x_2>0`$，必要时把 $`X`$ 换成 $`-X`$，可设 $`Xe_1=x_1e_1`$，
+$`Xe_2=-x_2e_2`$。令 $`u=\langle e_1,Y^2e_1\rangle=\gamma y_1^2+(1-\gamma)y_2^2`$，$`v=\langle e_2,Y^2e_2\rangle=s-u`$，$`s=y_1^2+y_2^2`$。
+则 $`\mathrm{Tr}(Y|X|Y)=\mathrm{Tr}(|X|Y^2)=x_1u+x_2v=:A`$。自伴矩阵 $`YXY`$ 的行列式为
+$`\det X(\det Y)^2=-x_1x_2y_1^2y_2^2\le0`$，所以其特征值为 $`\mu_+\ge0\ge\mu_-`$，且
+```math
+\mathrm{Tr}|YXY|=\mu_+-\mu_-=\sqrt{(\mu_++\mu_-)^2-4\mu_+\mu_-}=\sqrt{L^2+K^2},\qquad L=\mathrm{Tr}(XY^2)=x_1u-x_2v,\quad K=2\sqrt{x_1x_2}\,y_1y_2 .
+```
+令 $`\alpha=(x_1-x_2)/(x_1+x_2)`$，$`\beta=2\sqrt{x_1x_2}/(x_1+x_2)>0`$，于是 $`\alpha^2+\beta^2=1`$。由于
+$`A=(x_1-x_2)u+x_2s`$，$`L=(x_1+x_2)u-x_2s`$，有 $`A-\alpha L=x_2s(1+\alpha)=2x_1x_2s/(x_1+x_2)`$ 与
+$`\beta K=4x_1x_2y_1y_2/(x_1+x_2)`$，从而 $`A-\alpha L-\beta K=\frac{2x_1x_2}{x_1+x_2}(y_1-y_2)^2=:m`$。
+$`\mathbb R^2`$ 中的 Cauchy–Schwarz 不等式给出 $`\sqrt{L^2+K^2}\ge\alpha L+\beta K`$，所以
+```math
+z=A-\sqrt{L^2+K^2}\ \le\ A-\alpha L-\beta K=m,
+```
+等号成立当且仅当 $`(L,K)`$ 是 $`(\alpha,\beta)`$ 的非负倍数，即（因为 $`\beta>0`$，$`K\ge0`$）当且仅当
+$`\beta L=\alpha K`$，即 $`(x_1+x_2)u-x_2s=(x_1-x_2)y_1y_2`$。这确定了 $`u`$，且
+$`u-y_2^2=(y_1-y_2)(x_1y_2+x_2y_1)/(x_1+x_2)`$；当 $`y_1>y_2`$ 时，由 $`u=\gamma y_1^2+(1-\gamma)y_2^2`$ 得 $`\gamma=\gamma_3\in[0,\frac12]`$。
+
+*实的极大点。* 取 $`e_i`$ 为标准基，$`f_1,f_2`$ 为满足 $`\cos^2t=\gamma_1`$（相应地 $`\gamma_3`$）的旋转实基，
+在 (a) 中由实奇异值分解 $`YX=W\Sigma V^{\mathrm T}`$（对实对称矩阵 $`(YX)^{\mathrm T}YX`$ 作对角化）取
+$`U=VW^{\mathrm T}`$，于是 $`\mathrm{Tr}(UYX)=\mathrm{Tr}\,\Sigma=\|YX\|_1`$。$`\square`$
+
+<a id="r-11-16"></a>
+
+**推论 11.16（块大小为 $`2`$ 时实验 1 与实验 3 的包络）。** 设所有 $`k_c=2`$（于是 $`D=2C`$），
+$`\delta\in[0,1)`$，$`\delta'\in[0,1]`$，$`\ell=\ell(\delta)`$，$`\ell'=\ell(\delta')`$（约定 $`\ell(1)=0`$），并让 $`Y`$
+取遍满足 $`\lambda_{\max}(Y)=1`$、$`\Delta(Y)=\delta'`$（即 $`\lambda_{\min}(Y)=\ell'`$）的正算子。
+
+(a) 实验 1，在 $`X\in\mathcal P_\delta`$、这样的 $`Y`$ 与酉算子 $`U`$ 上：
+$`\ \sup z=C\,\frac{\delta^2\delta'^2}{(1+\delta)(1+\delta')}`$，$`\inf z=-(2C-1+\ell\ell')`$。
+
+(b) 实验 3，在满足 $`|X|\in\mathcal P_\delta`$ 的 $`X=X^*`$ 与这样的 $`Y`$ 上：
+$`\ \sup z=(C-\delta)\Big(\frac{2\delta'}{1+\delta'}\Big)^2`$，$`\inf z=0`$。
+
+四个值都能取到。因此，当另一个对比度在 $`[0,d]`$（$`d\in(0,1)`$）中自由变化时：实验 1 的上包络沿
+$`\Delta(X)=\delta`$ 为 $`C\delta^2d^2/((1+\delta)(1+d))`$，（由 (a) 的对称性）沿 $`\Delta(Y)=\delta'`$ 为
+$`C\delta'^2d^2/((1+\delta')(1+d))`$；实验 3 的上包络沿 $`\Delta(|X|)=\delta`$ 为 $`(C-\delta)\big(2d/(1+d)\big)^2`$，沿
+$`\Delta(Y)=\delta'`$ 为 $`C\big(2\delta'/(1+\delta')\big)^2`$，与 $`d`$ 无关。当 $`d\to1`$ 时，前两者递增地趋于
+$`C\delta^2/(2(1+\delta))`$ 与 $`C-\delta`$，即 $`\Delta(Y)=1`$（$`Y`$ 奇异）时的值。
+
+*证明。* 设 $`x_{c,1}\ge x_{c,2}`$ 为 $`X_c`$（在 (b) 中为 $`|X|_c`$）的特征值，$`y_{c,1}\ge y_{c,2}`$ 为
+$`Y_c`$ 的特征值；它们分别落在 $`[\ell,1]`$ 与 $`[\ell',1]`$ 中，而 $`\ell`$ 是它所在块中较小的那个。注意
+$`1-\ell=2\delta/(1+\delta)`$，$`1+\ell=2/(1+\delta)`$，故 $`(1-\ell)^2/(1+\ell)=2\delta^2/(1+\delta)`$ 且
+$`2\ell/(1+\ell)=1-\delta`$；$`\ell'`$ 同理。
+
+(a) *上确界。* 由三角不等式以及在每个块上应用定理 1.9，
+$`|\mathrm{Tr}(XUY)|\le\sum_c|\mathrm{Tr}(X_cU_cY_c)|\le\sum_c\|Y_cX_c\|_1`$，于是由命题 11.15(a)（$`Y_c=0`$ 的块贡献
+$`-\mathrm{Tr}(X_cY_c)=0`$）
+```math
+z\le\sum_c\frac{x_{c,1}y_{c,1}}4\,g\Big(\frac{x_{c,2}}{x_{c,1}}\Big)\,g\Big(\frac{y_{c,2}}{y_{c,1}}\Big),\qquad g(r)=\frac{(1-r)^2}{1+r}.
+```
+$`g`$ 在 $`[0,1]`$ 上递减，$`x_{c,2}/x_{c,1}\ge x_{c,2}\ge\ell`$，$`y_{c,2}/y_{c,1}\ge\ell'`$，且 $`x_{c,1},y_{c,1}\le1`$，所以
+每一项至多为 $`g(\ell)g(\ell')/4=\delta^2\delta'^2/((1+\delta)(1+\delta'))`$。取等：每个块中
+$`X_c=\mathrm{diag}(1,\ell)`$，$`Y_c`$ 的特征值为 $`1,\ell'`$ 且 $`\gamma=\gamma_1`$，$`U_c=W_c^*`$，$`Y_cX_c=W_c|Y_cX_c|`$；
+这时每个块中 $`\mathrm{Tr}(X_cU_cY_c)=\|Y_cX_c\|_1\ge0`$，模长相加。
+*下确界。* $`z\ge-\mathrm{Tr}(XY)`$，当 $`U=\bigoplus_cU_c`$ 满足 $`\mathrm{Tr}(Y_cX_cU_c)=0`$（引理 11.13）时取等号。由
+推论 11.5(a)，$`\mathrm{Tr}(XY)\le\sum_c(x_{c,1}y_{c,1}+x_{c,2}y_{c,2})`$。若 $`\ell`$ 与 $`\ell'`$ 在同一个块中，
+该块贡献至多 $`1+\ell\ell'`$，其余每块至多 $`2`$；否则这两个块分别贡献至多 $`1+\ell`$ 与 $`1+\ell'`$，而
+$`2C-2+\ell+\ell'=2C-1+\ell\ell'-(1-\ell)(1-\ell')`$。所以
+$`\mathrm{Tr}(XY)\le2C-1+\ell\ell'`$，当 $`X=\mathrm{diag}(1,\ell)\oplus1\oplus\dots\oplus1`$、
+$`Y=\mathrm{diag}(1,\ell')\oplus1\oplus\dots\oplus1`$ 时取等号。
+
+(b) 迹、迹范数与 $`|\cdot|`$ 都按块作用（习题 3），所以 $`z=\sum_cz_c`$，由命题 11.15(b)，
+$`z_c\le H_c(y_{c,1}-y_{c,2})^2\le H_c(1-\ell')^2`$，其中 $`H_c=2x_{c,1}x_{c,2}/(x_{c,1}+x_{c,2})\le x_{c,1}\le1`$。在 $`|X|`$
+具有特征值 $`\ell`$ 的块 $`c_-`$ 中，$`x_{c_-,2}=\ell`$，且 $`H_{c_-}=2\ell/(1+\ell/x_{c_-,1})\le2\ell/(1+\ell)=1-\delta`$。
+因此 $`z\le(C-1+1-\delta)(1-\ell')^2`$。取等：$`X_1=\mathrm{diag}(1,-\ell)`$，$`c\ge2`$ 时 $`X_c=\mathrm{diag}(1,-1)`$，
+每个 $`Y_c`$ 的特征值为 $`1,\ell'`$ 且取其所在块的 $`\gamma=\gamma_3`$（$`c\ge2`$ 时 $`\gamma_3=\frac12`$）。下确界即
+命题 11.9，$`X`$、$`Y`$ 可交换时取等号。
+
+*自由对比度。* (a) 中的上确界随 $`\delta'`$ 递增（若 $`\delta>0`$ 则严格递增），(b) 中的上确界随 $`\delta'`$ 严格递增、
+随 $`\delta`$ 递减。因此在 $`[0,d]`$ 中自由的对比度上，上确界在 $`d`$ 处取到（实验 3 沿 $`\Delta(Y)`$ 时：在
+$`\Delta(|X|)=0`$ 处），而 $`d\to1`$ 时的极限只在 $`\Delta(Y)=1`$ 处达到（对实验 1 要求 $`\delta>0`$）。$`\square`$
+
+对 $`C=1`$、$`d=0.999`$，这正是配套论文最早在数值上观察到的闭式（在实代数中）。对每个 $`C`$，上包络都是
+$`M_2`$ 上 $`C`$ 个解的直和所给出的值（实验 3 中 $`C-\delta=(1-\delta)+(C-1)\cdot1`$）：在 $`M_2\oplus M_2`$ 上，
+上面的直和不等式取等号。对大小 $`k_c\ge3`$ 的块，我们不知道这些上包络的闭式。
+
+*计算：* 命题 11.15 的极大点、$`C=1,2`$ 时推论 11.16 的包络及其 $`d\to1`$ 的极限，以及与之比较的多起点搜索——[教程，11.5 节](../../tutorial/zh/11_optimisation.md#s-11-5)。
+
 <a id="s-11-6"></a>
 
 ## 11.6 可与之比较的工具

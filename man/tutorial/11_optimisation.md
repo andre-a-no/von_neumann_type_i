@@ -237,7 +237,7 @@ assert z_mc.max().item() < 0                                               # ...
 
 ## 11.5 Multistart search for envelopes
 
-*Lecture notes:* [Section 11.5](../lecture_notes/11_optimisation.md#s-11-5); [Proposition 11.14](../lecture_notes/11_optimisation.md#r-11-14), [Corollary 11.7](../lecture_notes/11_optimisation.md#r-11-7), [Proposition 11.9](../lecture_notes/11_optimisation.md#r-11-9).
+*Lecture notes:* [Section 11.5](../lecture_notes/11_optimisation.md#s-11-5); [Proposition 11.14](../lecture_notes/11_optimisation.md#r-11-14), [Corollary 11.7](../lecture_notes/11_optimisation.md#r-11-7), [Proposition 11.9](../lecture_notes/11_optimisation.md#r-11-9), [Proposition 11.15](../lecture_notes/11_optimisation.md#r-11-15), [Corollary 11.16](../lecture_notes/11_optimisation.md#r-11-16).
 
 `optimize.extremize(objective, params, maximize)` runs Adam in `rounds` rounds of `steps` steps (learning rate
 `lr * decay**round`) on the loss $`\mp\sum_b\text{objective}_b`$, re-centres the unitary charts after every round,
@@ -320,22 +320,113 @@ sup_M22, inf3 = best3[0].item(), -best3[1].item()
 s_M2 = exp3(TypeIAlgebra([2], [2], precision='double'),
             torch.tensor([0.0, 0.5], dtype=torch.float64).repeat_interleave(S), 1.0)
 direct_sum = (s_M2[1] + s_M2.max()).item()                                 # delta = 0.5, best delta' <= 0.5
-conj = [(1 - dl) * (2 * 0.999 / 1.999) ** 2 for dl in (0.0, 0.5)]          # unproven closed form, d = 0.999
+closed = [(1 - dl) * (2 * 0.999 / 1.999) ** 2 for dl in (0.0, 0.5)]        # Corollary 11.16, d = 0.999
 print(f"Exp. 3  inf {inf3:.1e};  sup for M_2 at delta = 0, 0.5: {s_M2[0]:.5f}, {s_M2[1]:.5f}"
-      f"  (closed form {conj[0]:.5f}, {conj[1]:.5f})")
+      f"  (closed form {closed[0]:.5f}, {closed[1]:.5f})")
 print(f"        sup for M_2 (+) M_2 at 0.5: search {sup_M22:.5f}, direct sum {direct_sum:.5f}")
 assert inf3 >= -1e-12 and inf3 < 1e-6                                       # Proposition 11.9
 assert sup_M22 >= direct_sum - 5e-3 * direct_sum                           # (ii), up to 0.5 %
+assert (s_M2 <= torch.tensor(closed, dtype=torch.float64) + 1e-12).all()   # Corollary 11.16: one-sided
+assert sup_M22 <= (2 - 0.5) * (2 * 0.999 / 1.999) ** 2 + 1e-12
 ```
 
 *Numerical observations* (the printed values of this run). The search on $`M_2\oplus M_2`$ falls short of the direct
 sum by about $`0.2\,\%`$: it has not fully converged, and the best lower bound for $`\overline z_{M_2\oplus M_2}(0.5)`$ is
 the larger number — detecting this is the purpose of check (ii). The values for $`M_2`$ agree to $`10^{-4}`$ with
 $`(1-\delta)\big(2d/(1+d)\big)^2=(1-\delta)(1-\ell(d))^2`$, where $`d=0.999`$ is the largest admitted contrast of $`Y`$. This
-closed form is **not** a theorem of this course: the companion paper observed it numerically (in real algebras) and
-did not prove it, and the code prints it without asserting anything about it. For larger blocks we know no closed
-form for the upper envelopes of Exp. 1 and Exp. 3; computed curves are then lower bounds (attained values), nothing
-more.
+closed form, first observed numerically in the companion paper, is the upper envelope of
+[Corollary 11.16](../lecture_notes/11_optimisation.md#r-11-16) (below); the code asserts only the proved direction (no
+value above it). By the same corollary the direct sum is optimal: $`\overline z_{M_2\oplus M_2}(0.5)=1.5\,(2d/(1+d))^2`$.
+For larger blocks we know no closed form for the upper envelopes of Exp. 1 and Exp. 3; computed curves are then lower
+bounds (attained values), nothing more.
+
+By [lecture notes, Proposition 11.15](../lecture_notes/11_optimisation.md#r-11-15), on $`M_2`$, for spectra
+$`x_1\ge x_2`$ of $`X`$ (of $`|X|`$ in Exp. 3) and $`y_1\ge y_2`$ of $`Y`$, $`\sup z`$ is
+$`(x_1-x_2)^2(y_1-y_2)^2/(4(x_1+x_2)(y_1+y_2))`$ in Exp. 1 and $`\frac{2x_1x_2}{x_1+x_2}(y_1-y_2)^2`$ in Exp. 3. With
+$`e_1`$ an eigenvector of $`X`$ for its eigenvalue of modulus $`x_1`$ and $`f_1`$ one of $`Y`$ for $`y_1`$, the supremum is
+attained when $`\gamma=|\langle e_1,f_1\rangle|^2`$ is $`\gamma_1=\frac14+\frac S{2q}`$ (Exp. 1, with
+$`|\mathrm{Tr}(XUY)|=\|YX\|_1`$) or $`\gamma_3=\frac Sq`$ (Exp. 3, $`X=\mathrm{diag}(x_1,-x_2)`$), where $`S=x_1y_2+x_2y_1`$
+and $`q=(x_1+x_2)(y_1+y_2)`$. By
+[Corollary 11.16](../lecture_notes/11_optimisation.md#r-11-16), for $`C`$ blocks of size $`2`$ with $`\Delta(|X|)=\delta`$ and
+$`\Delta(Y)=\delta'`$, Exp. 1 has $`\sup z=C\delta^2\delta'^2/((1+\delta)(1+\delta'))`$ and
+$`\inf z=-(2C-1+\ell(\delta)\ell(\delta'))`$, and Exp. 3 has $`\sup z=(C-\delta)\big(2\delta'/(1+\delta')\big)^2`$. Both
+suprema increase with $`\delta'`$: with $`\Delta(Y)`$ free in $`[0,d]`$ the upper envelopes are the values at $`\delta'=d`$,
+and as $`d\to1`$ they tend to $`C\delta^2/(2(1+\delta))`$ and $`C-\delta`$, the values for a singular $`Y`$
+($`\Delta(Y)=1`$).
+
+The code builds the real maximisers of the proof for $`C=1,2`$ (`from_blocks`), checks the contrasts and the values,
+checks the bounds of Proposition 11.15 on random complex pairs, attains the limits $`d\to1`$ with rank-one projections
+in every block, and runs a multistart search for Exp. 1 on $`M_2`$ along $`\Delta(X)`$ with $`\Delta(Y)`$ free in
+$`[0,0.999]`$, which must stay below the closed form (a theorem) and, in this run, comes within $`10^{-3}`$ of it.
+
+```python
+def rot(gamma):                                                             # real basis f with |<e_1, f_1>|^2 = gamma
+    t = math.acos(math.sqrt(gamma))
+    return torch.tensor([[math.cos(t), -math.sin(t)], [math.sin(t), math.cos(t)]], dtype=torch.float64)
+
+def gammas(x1, x2, y1, y2):                                                 # gamma_1 (Exp. 1), gamma_3 (Exp. 3)
+    S, q = x1 * y2 + x2 * y1, (x1 + x2) * (y1 + y2)
+    return 0.25 + S / (2 * q), S / q
+
+env1 = lambda C, dl, dp: C * dl ** 2 * dp ** 2 / ((1 + dl) * (1 + dp))     # Corollary 11.16(a)
+env3 = lambda C, dl, dp: (C - dl) * (2 * dp / (1 + dp)) ** 2               # Corollary 11.16(b)
+
+def maximisers(C, dl, dp):
+    """Exp. 1: (X, U, Y) and Exp. 3: (X, Y) attaining Corollary 11.16 on C blocks of size 2."""
+    a2 = TypeIAlgebra([2] * C, [2] * C, complex_valued=False, precision='double')
+    lx, ly = ell(dl), ell(dp)
+    R = rot(gammas(1.0, lx, 1.0, ly)[0])
+    X0 = torch.diag(torch.tensor([1.0, lx], dtype=torch.float64))
+    Y0 = R @ torch.diag(torch.tensor([1.0, ly], dtype=torch.float64)) @ R.T
+    W, _, Vh = torch.linalg.svd(Y0 @ X0)                                    # Y X = W Sigma V^T, U = V W^T
+    exp1 = [a2.from_blocks([m] * C) for m in (X0, Vh.T @ W.T, Y0)]
+    xs = [lx] + [1.0] * (C - 1)                                             # |X|: {1, ell} in block 1, {1, 1} else
+    Rs = [rot(gammas(1.0, x2, 1.0, ly)[1]) for x2 in xs]
+    X3 = a2.from_blocks([torch.diag(torch.tensor([1.0, -x2], dtype=torch.float64)) for x2 in xs])
+    Y3 = a2.from_blocks([Rc @ torch.diag(torch.tensor([1.0, ly], dtype=torch.float64)) @ Rc.T for Rc in Rs])
+    return exp1, (X3, Y3)
+
+print(" C  delta  delta'   Exp. 1 z / formula      Exp. 3 z / formula")
+for C in (1, 2):
+    for dl, dp in ((0.5, 0.8), (0.9, 0.3), (0.4, 1.0)):
+        (X, U, Y), (X3, Y3) = maximisers(C, dl, dp)
+        assert abs(X.michelson_contrast.item() - dl) < 1e-12 and abs(Y.michelson_contrast.item() - dp) < 1e-12
+        assert abs(X3.abs().michelson_contrast.item() - dl) < 1e-12 and abs(Y3.michelson_contrast.item() - dp) < 1e-12
+        z1v = ((X @ U @ Y).trace.abs() - (X @ Y).trace.real).item()
+        z3v = ((Y3 @ X3.abs() @ Y3).trace.real - (Y3 @ X3 @ Y3).trace_norm()).item()
+        print(f" {C}   {dl:.1f}    {dp:.1f}    {z1v:.6f} / {env1(C, dl, dp):.6f}    {z3v:.6f} / {env3(C, dl, dp):.6f}")
+        assert abs(z1v - env1(C, dl, dp)) < 1e-12 and abs(z3v - env3(C, dl, dp)) < 1e-12
+print("limits d -> 1 at delta = 0.4:", env1(1, 0.4, 1.0), 0.4 ** 2 / (2 * 1.4), env3(1, 0.4, 1.0), 1 - 0.4)
+
+# Proposition 11.15 on random complex pairs in M_2: no pair exceeds the bounds
+M2c = TypeIAlgebra([2], [2], precision='double')
+x = torch.rand(4000, 2, dtype=torch.float64).sort(-1, descending=True)[0]
+y = torch.rand(4000, 2, dtype=torch.float64).sort(-1, descending=True)[0]
+V, Wc = M2c.random_unitary_operator(4000).matrix, M2c.random_unitary_operator(4000).matrix
+Xr = M2c.operator(V @ torch.diag_embed(x.to(V.dtype)).unsqueeze(1) @ V.mH, is_positive=True)
+Xi = M2c.operator(V @ torch.diag_embed((x * torch.tensor([1.0, -1.0])).to(V.dtype)).unsqueeze(1) @ V.mH,
+                  is_self_adjoint=True)
+Yr = M2c.operator(Wc @ torch.diag_embed(y.to(V.dtype)).unsqueeze(1) @ Wc.mH, is_positive=True)
+(x1, x2), (y1, y2) = x.unbind(-1), y.unbind(-1)
+sup1 = (Yr @ Xr).trace_norm() - (Xr @ Yr).trace.real                        # sup over U (Theorem 1.9)
+z3r = (Yr @ Xi.abs() @ Yr).trace.real - M2c.operator((Yr @ Xi @ Yr).matrix, is_self_adjoint=True).trace_norm()
+assert (sup1 <= (x1 - x2) ** 2 * (y1 - y2) ** 2 / (4 * (x1 + x2) * (y1 + y2)) + 1e-12).all()
+assert (z3r <= 2 * x1 * x2 / (x1 + x2) * (y1 - y2) ** 2 + 1e-12).all()
+
+# multistart search for Exp. 1 on M_2 along Delta(X), Delta(Y) free in [0, 0.999]
+torch.manual_seed(2)
+M2r = TypeIAlgebra([2], [2], complex_valued=False, precision='double')
+gx = torch.tensor([0.3, 0.6, 0.9], dtype=torch.float64)
+Xp, Yp1, Up = opt.PositiveParam(M2r, 3 * S, delta=gx.repeat_interleave(S)), opt.PositiveParam(M2r, 3 * S), \
+    opt.UnitaryParam(M2r, 3 * S)
+def z1m():
+    xm, ym = Xp.operator(), Yp1.operator()
+    return (xm @ Up.operator() @ ym).trace.abs() - (xm @ ym).trace.real
+sup1m = opt.extremize(z1m, [Xp, Yp1, Up], maximize=True, rounds=4, steps=30).reshape(3, S).max(1)[0]
+exact1m = env1(1, gx, 0.999)                                                # Corollary 11.16(c)
+print("Exp. 1 sup on M_2:", [f"{v:.5f}" for v in sup1m.tolist()], " closed form:", [f"{v:.5f}" for v in exact1m.tolist()])
+assert (sup1m <= exact1m + 1e-12).all() and ((exact1m - sup1m) / exact1m).max() < 1e-3
+```
 
 <a id="s-11-6"></a>
 

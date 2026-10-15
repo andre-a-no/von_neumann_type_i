@@ -395,6 +395,138 @@ attained on $`M_2\oplus M_2`$ at contrast $`\delta`$.
 
 *Computation:* Proposition 11.14 on $`M_2\oplus M_2`$, Corollary 11.7 on $`M_3\oplus M_3`$ and Proposition 11.9 by multistart search, with a check of type (ii) — [tutorial, Section 11.5](../tutorial/11_optimisation.md#s-11-5).
 
+For blocks of size $`2`$ the upper envelopes of Exp. 1 and Exp. 3 are known exactly. In $`M_2(\mathbb C)`$ the
+eigenbases enter only through one number: for orthonormal eigenbases $`e_1,e_2`$ and $`f_1,f_2`$ the doubly stochastic
+matrix $`(|\langle e_i,f_j\rangle|^2)`$ has rows $`(\gamma,1-\gamma)`$ and $`(1-\gamma,\gamma)`$, $`\gamma=|\langle e_1,f_1\rangle|^2\in[0,1]`$, and
+every $`\gamma`$ occurs for real bases ($`f_1=\cos t\,e_1+\sin t\,e_2`$, $`f_2=-\sin t\,e_1+\cos t\,e_2`$, $`\gamma=\cos^2t`$).
+
+<a id="r-11-15"></a>
+
+**Proposition 11.15 (Exp. 1 and Exp. 3 on $`M_2`$).** Let $`Y\ge0`$ in $`M_2(\mathbb C)`$ have eigenvalues
+$`y_1\ge y_2\ge0`$ with eigenvectors $`f_1,f_2`$, and $`y_1>0`$.
+
+(a) Let $`X\ge0`$ have eigenvalues $`x_1\ge x_2\ge0`$, $`x_1>0`$, with eigenvectors $`e_1,e_2`$. For every unitary $`U`$,
+```math
+\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)\ \le\ \frac{(x_1-x_2)^2(y_1-y_2)^2}{4(x_1+x_2)(y_1+y_2)} .
+```
+If $`x_1>x_2`$ and $`y_1>y_2`$, equality holds iff $`|\mathrm{Tr}(XUY)|=\|YX\|_1`$ and
+$`\gamma=\gamma_1:=\frac14+\frac{x_1y_2+x_2y_1}{2(x_1+x_2)(y_1+y_2)}`$; otherwise the bound is $`0`$, and it is attained iff
+$`|\mathrm{Tr}(XUY)|=\|YX\|_1`$.
+
+(b) Let $`X=X^*`$, and let $`|X|`$ have eigenvalues $`x_1\ge x_2\ge0`$, $`x_1>0`$. Then
+```math
+\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ \le\ \frac{2x_1x_2}{x_1+x_2}\,(y_1-y_2)^2 .
+```
+If $`X`$ has eigenvalues of both signs and $`y_1>y_2`$, let $`e_1`$, $`e_2`$ be eigenvectors of $`X`$ for its eigenvalues
+of modulus $`x_1`$ and $`x_2`$; then equality holds iff $`\gamma=\gamma_3:=\frac{x_1y_2+x_2y_1}{(x_1+x_2)(y_1+y_2)}`$.
+
+For all eigenvalues as above both bounds are attained, by real $`X`$, $`Y`$ and $`U`$ (in (b) with $`X=\mathrm{diag}(x_1,-x_2)`$); in
+particular they are the same in $`M_2(\mathbb R)`$.
+
+*Proof.* Write $`z`$ for the left side, and put $`S=x_1y_2+x_2y_1`$, $`p=(x_1-x_2)(y_1-y_2)\ge0`$ and
+$`q=(x_1+x_2)(y_1+y_2)>0`$, so that $`q-2S=p`$.
+
+(a) By Theorem 1.9, $`|\mathrm{Tr}(XUY)|=|\mathrm{Tr}(YX\,U)|\le\|YX\|_1`$, with equality for $`U=W^*`$, $`YX=W|YX|`$.
+As in the proof of Corollary 11.5, $`\mathrm{Tr}(PQ)=\sum_{i,j}a_ib_j|\langle e_i,f_j\rangle|^2`$ for $`P=\sum_ia_i|e_i\rangle\langle e_i|`$,
+$`Q=\sum_jb_j|f_j\rangle\langle f_j|`$; hence
+$`\mathrm{Tr}(XY)=(x_1y_2+x_2y_1)+\gamma(x_1-x_2)(y_1-y_2)=S+\gamma p`$ and
+$`\mathrm{Tr}(X^2Y^2)=(x_1^2y_2^2+x_2^2y_1^2)+\gamma(x_1^2-x_2^2)(y_1^2-y_2^2)`$. The squares $`s_1^2,s_2^2`$ of the singular
+values of $`YX`$ are the eigenvalues of $`(YX)^*YX=XY^2X`$, so $`s_1^2+s_2^2=\mathrm{Tr}(X^2Y^2)`$ and
+$`s_1s_2=|\det(YX)|=x_1x_2y_1y_2`$. Therefore
+```math
+\|YX\|_1^2=(s_1+s_2)^2=\mathrm{Tr}(X^2Y^2)+2x_1x_2y_1y_2=S^2+\gamma pq .
+```
+For $`r\ge0`$, $`\sqrt r\le r/q+q/4`$, with equality iff $`\sqrt r=q/2`$ (expand $`(\sqrt r-q/2)^2\ge0`$). With $`r=S^2+\gamma pq`$,
+```math
+z\ \le\ \|YX\|_1-\mathrm{Tr}(XY)\ \le\ \frac{S^2+\gamma pq}q+\frac q4-S-\gamma p=\frac{(q/2-S)^2}q=\frac{p^2}{4q}.
+```
+Equality holds iff $`|\mathrm{Tr}(XUY)|=\|YX\|_1`$ and $`S^2+\gamma pq=q^2/4`$, i.e. $`\gamma pq=(q/2-S)(q/2+S)=\frac p2(q/2+S)`$.
+If $`p>0`$ this says $`\gamma=(q/2+S)/(2q)=\gamma_1`$, which lies in $`[\frac14,\frac12]`$ as $`0\le S\le q/2`$; if $`p=0`$ it holds for
+every $`\gamma`$.
+
+(b) Replacing $`X`$ by $`-X`$ changes neither side. If $`X\ge0`$, then $`YXY\ge0`$, $`|YXY|=YXY`$ and $`z=0`$;
+likewise for $`X\le0`$. Otherwise $`x_2>0`$ and, after replacing $`X`$ by $`-X`$ if necessary, $`Xe_1=x_1e_1`$,
+$`Xe_2=-x_2e_2`$. Let $`u=\langle e_1,Y^2e_1\rangle=\gamma y_1^2+(1-\gamma)y_2^2`$ and $`v=\langle e_2,Y^2e_2\rangle=s-u`$, $`s=y_1^2+y_2^2`$.
+Then $`\mathrm{Tr}(Y|X|Y)=\mathrm{Tr}(|X|Y^2)=x_1u+x_2v=:A`$. The self-adjoint $`YXY`$ has determinant
+$`\det X(\det Y)^2=-x_1x_2y_1^2y_2^2\le0`$, so its eigenvalues are $`\mu_+\ge0\ge\mu_-`$ and
+```math
+\mathrm{Tr}|YXY|=\mu_+-\mu_-=\sqrt{(\mu_++\mu_-)^2-4\mu_+\mu_-}=\sqrt{L^2+K^2},\qquad L=\mathrm{Tr}(XY^2)=x_1u-x_2v,\quad K=2\sqrt{x_1x_2}\,y_1y_2 .
+```
+Let $`\alpha=(x_1-x_2)/(x_1+x_2)`$ and $`\beta=2\sqrt{x_1x_2}/(x_1+x_2)>0`$, so $`\alpha^2+\beta^2=1`$. Since
+$`A=(x_1-x_2)u+x_2s`$ and $`L=(x_1+x_2)u-x_2s`$, we have $`A-\alpha L=x_2s(1+\alpha)=2x_1x_2s/(x_1+x_2)`$ and
+$`\beta K=4x_1x_2y_1y_2/(x_1+x_2)`$, hence $`A-\alpha L-\beta K=\frac{2x_1x_2}{x_1+x_2}(y_1-y_2)^2=:m`$. The
+Cauchy–Schwarz inequality in $`\mathbb R^2`$ gives $`\sqrt{L^2+K^2}\ge\alpha L+\beta K`$, so
+```math
+z=A-\sqrt{L^2+K^2}\ \le\ A-\alpha L-\beta K=m,
+```
+with equality iff $`(L,K)`$ is a non-negative multiple of $`(\alpha,\beta)`$, i.e. (as $`\beta>0`$, $`K\ge0`$) iff
+$`\beta L=\alpha K`$, i.e. $`(x_1+x_2)u-x_2s=(x_1-x_2)y_1y_2`$. This determines $`u`$, and
+$`u-y_2^2=(y_1-y_2)(x_1y_2+x_2y_1)/(x_1+x_2)`$; for $`y_1>y_2`$, $`u=\gamma y_1^2+(1-\gamma)y_2^2`$ gives $`\gamma=\gamma_3\in[0,\frac12]`$.
+
+*Real maximisers.* Take $`e_i`$ the standard basis, $`f_1,f_2`$ the rotated real basis with $`\cos^2t=\gamma_1`$ (resp. $`\gamma_3`$),
+and, in (a), $`U=VW^{\mathrm T}`$ from a real singular value decomposition $`YX=W\Sigma V^{\mathrm T}`$ (diagonalise
+the real symmetric $`(YX)^{\mathrm T}YX`$), so that $`\mathrm{Tr}(UYX)=\mathrm{Tr}\,\Sigma=\|YX\|_1`$. $`\square`$
+
+<a id="r-11-16"></a>
+
+**Corollary 11.16 (envelopes of Exp. 1 and Exp. 3 for blocks of size $`2`$).** Let all $`k_c=2`$ (so $`D=2C`$),
+$`\delta\in[0,1)`$, $`\delta'\in[0,1]`$, $`\ell=\ell(\delta)`$, $`\ell'=\ell(\delta')`$ (with $`\ell(1)=0`$), and let $`Y`$
+range over the positive operators with $`\lambda_{\max}(Y)=1`$ and $`\Delta(Y)=\delta'`$, i.e. $`\lambda_{\min}(Y)=\ell'`$.
+
+(a) Exp. 1, over $`X\in\mathcal P_\delta`$, such $`Y`$ and unitaries $`U`$:
+$`\ \sup z=C\,\frac{\delta^2\delta'^2}{(1+\delta)(1+\delta')}`$ and $`\inf z=-(2C-1+\ell\ell')`$.
+
+(b) Exp. 3, over $`X=X^*`$ with $`|X|\in\mathcal P_\delta`$ and such $`Y`$:
+$`\ \sup z=(C-\delta)\Big(\frac{2\delta'}{1+\delta'}\Big)^2`$ and $`\inf z=0`$.
+
+All four values are attained. Consequently, with the other contrast free in $`[0,d]`$, $`d\in(0,1)`$: the upper
+envelope of Exp. 1 is $`C\delta^2d^2/((1+\delta)(1+d))`$ along $`\Delta(X)=\delta`$ and (by the symmetry of (a))
+$`C\delta'^2d^2/((1+\delta')(1+d))`$ along $`\Delta(Y)=\delta'`$; that of Exp. 3 is $`(C-\delta)\big(2d/(1+d)\big)^2`$ along $`\Delta(|X|)=\delta`$ and
+$`C\big(2\delta'/(1+\delta')\big)^2`$ along $`\Delta(Y)=\delta'`$, whatever $`d`$. As $`d\to1`$ the first two increase to
+$`C\delta^2/(2(1+\delta))`$ and $`C-\delta`$, the values at $`\Delta(Y)=1`$ (singular $`Y`$).
+
+*Proof.* Let $`x_{c,1}\ge x_{c,2}`$ be the eigenvalues of $`X_c`$ (in (b): of $`|X|_c`$) and $`y_{c,1}\ge y_{c,2}`$ those of
+$`Y_c`$; they lie in $`[\ell,1]`$ and $`[\ell',1]`$, and $`\ell`$ is the smaller one in its block. Note
+$`1-\ell=2\delta/(1+\delta)`$, $`1+\ell=2/(1+\delta)`$, so $`(1-\ell)^2/(1+\ell)=2\delta^2/(1+\delta)`$ and
+$`2\ell/(1+\ell)=1-\delta`$; likewise for $`\ell'`$.
+
+(a) *Supremum.* By the triangle inequality and Theorem 1.9 in each block,
+$`|\mathrm{Tr}(XUY)|\le\sum_c|\mathrm{Tr}(X_cU_cY_c)|\le\sum_c\|Y_cX_c\|_1`$, so by Proposition 11.15(a) (a block with
+$`Y_c=0`$ contributes $`-\mathrm{Tr}(X_cY_c)=0`$)
+```math
+z\le\sum_c\frac{x_{c,1}y_{c,1}}4\,g\Big(\frac{x_{c,2}}{x_{c,1}}\Big)\,g\Big(\frac{y_{c,2}}{y_{c,1}}\Big),\qquad g(r)=\frac{(1-r)^2}{1+r}.
+```
+$`g`$ decreases on $`[0,1]`$, $`x_{c,2}/x_{c,1}\ge x_{c,2}\ge\ell`$, $`y_{c,2}/y_{c,1}\ge\ell'`$ and $`x_{c,1},y_{c,1}\le1`$, so
+every term is at most $`g(\ell)g(\ell')/4=\delta^2\delta'^2/((1+\delta)(1+\delta'))`$. Equality: in every block
+$`X_c=\mathrm{diag}(1,\ell)`$, $`Y_c`$ with eigenvalues $`1,\ell'`$ at $`\gamma=\gamma_1`$, and $`U_c=W_c^*`$, $`Y_cX_c=W_c|Y_cX_c|`$;
+then $`\mathrm{Tr}(X_cU_cY_c)=\|Y_cX_c\|_1\ge0`$ in every block, so the moduli add.
+*Infimum.* $`z\ge-\mathrm{Tr}(XY)`$, with equality for $`U=\bigoplus_cU_c`$, $`\mathrm{Tr}(Y_cX_cU_c)=0`$ (Lemma 11.13). By
+Corollary 11.5(a), $`\mathrm{Tr}(XY)\le\sum_c(x_{c,1}y_{c,1}+x_{c,2}y_{c,2})`$. If $`\ell`$ and $`\ell'`$ lie in the same
+block, it contributes at most $`1+\ell\ell'`$ and every other block at most $`2`$; otherwise the two blocks contribute at
+most $`1+\ell`$ and $`1+\ell'`$, and $`2C-2+\ell+\ell'=2C-1+\ell\ell'-(1-\ell)(1-\ell')`$. So
+$`\mathrm{Tr}(XY)\le2C-1+\ell\ell'`$, with equality for $`X=\mathrm{diag}(1,\ell)\oplus1\oplus\dots\oplus1`$ and
+$`Y=\mathrm{diag}(1,\ell')\oplus1\oplus\dots\oplus1`$.
+
+(b) Traces, trace norms and $`|\cdot|`$ act blockwise (Exercise 3), so $`z=\sum_cz_c`$, and by Proposition 11.15(b)
+$`z_c\le H_c(y_{c,1}-y_{c,2})^2\le H_c(1-\ell')^2`$ with $`H_c=2x_{c,1}x_{c,2}/(x_{c,1}+x_{c,2})\le x_{c,1}\le1`$. In a block
+$`c_-`$ in which $`|X|`$ has the eigenvalue $`\ell`$, $`x_{c_-,2}=\ell`$ and $`H_{c_-}=2\ell/(1+\ell/x_{c_-,1})\le2\ell/(1+\ell)=1-\delta`$.
+Hence $`z\le(C-1+1-\delta)(1-\ell')^2`$. Equality: $`X_1=\mathrm{diag}(1,-\ell)`$, $`X_c=\mathrm{diag}(1,-1)`$ for $`c\ge2`$,
+and every $`Y_c`$ with eigenvalues $`1,\ell'`$ at $`\gamma=\gamma_3`$ of its block (for $`c\ge2`$, $`\gamma_3=\frac12`$). The infimum is
+Proposition 11.9, with equality for commuting $`X`$, $`Y`$.
+
+*Free contrast.* The supremum in (a) increases in $`\delta'`$ (strictly if $`\delta>0`$), and the one in (b) increases
+strictly in $`\delta'`$ and decreases in $`\delta`$. Over the free contrast in $`[0,d]`$ the suprema are therefore
+attained at $`d`$ (along $`\Delta(Y)`$ in Exp. 3: at $`\Delta(|X|)=0`$), and the limits as $`d\to1`$ are reached only at
+$`\Delta(Y)=1`$ (in Exp. 1 if $`\delta>0`$). $`\square`$
+
+For $`C=1`$ and $`d=0.999`$ these are the closed forms that the companion paper first observed numerically (in real
+algebras). For every $`C`$ the upper envelopes are the values of direct sums of $`C`$ solutions on $`M_2`$
+($`C-\delta=(1-\delta)+(C-1)\cdot1`$ in Exp. 3): on $`M_2\oplus M_2`$ the direct-sum inequality above is an equality. For blocks of size $`k_c\ge3`$ we know no
+closed form for these upper envelopes.
+
+*Computation:* the maximisers of Proposition 11.15, the envelopes of Corollary 11.16 for $`C=1,2`$ and their limit
+$`d\to1`$, and a multistart search against them — [tutorial, Section 11.5](../tutorial/11_optimisation.md#s-11-5).
+
 <a id="s-11-6"></a>
 
 ## 11.6 What to compare with

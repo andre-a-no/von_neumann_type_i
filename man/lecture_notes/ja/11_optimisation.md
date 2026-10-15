@@ -385,6 +385,136 @@ $`\delta`$ において達成される値である。
 
 *計算：* マルチスタート探索による $`M_2\oplus M_2`$ 上の命題 11.14、$`M_3\oplus M_3`$ 上の系 11.7、命題 11.9 の検証と、型 (ii) の検証 — [チュートリアル、11.5節](../../tutorial/ja/11_optimisation.md#s-11-5)。
 
+サイズ $`2`$ のブロックについては、実験 1 と実験 3 の上側包絡線が厳密に分かる。$`M_2(\mathbb C)`$ では固有基底は
+一つの数を通してのみ効いてくる：正規直交な固有基底 $`e_1,e_2`$ と $`f_1,f_2`$ に対し、二重確率行列
+$`(|\langle e_i,f_j\rangle|^2)`$ の行は $`(\gamma,1-\gamma)`$ と $`(1-\gamma,\gamma)`$ であり、$`\gamma=|\langle e_1,f_1\rangle|^2\in[0,1]`$、
+しかもすべての $`\gamma`$ が実基底で実現される（$`f_1=\cos t\,e_1+\sin t\,e_2`$、$`f_2=-\sin t\,e_1+\cos t\,e_2`$、$`\gamma=\cos^2t`$）。
+
+<a id="r-11-15"></a>
+
+**命題 11.15（$`M_2`$ 上の実験 1 と実験 3）.** $`M_2(\mathbb C)`$ の $`Y\ge0`$ の固有値を
+$`y_1\ge y_2\ge0`$、固有ベクトルを $`f_1,f_2`$ とし、$`y_1>0`$ とする。
+
+(a) $`X\ge0`$ の固有値を $`x_1\ge x_2\ge0`$、$`x_1>0`$、固有ベクトルを $`e_1,e_2`$ とする。任意のユニタリ $`U`$ に対し
+```math
+\lvert\mathrm{Tr}(XUY)\rvert-\mathrm{Tr}(XY)\ \le\ \frac{(x_1-x_2)^2(y_1-y_2)^2}{4(x_1+x_2)(y_1+y_2)} .
+```
+$`x_1>x_2`$ かつ $`y_1>y_2`$ ならば、等号が成り立つのは $`|\mathrm{Tr}(XUY)|=\|YX\|_1`$ かつ
+$`\gamma=\gamma_1:=\frac14+\frac{x_1y_2+x_2y_1}{2(x_1+x_2)(y_1+y_2)}`$ のとき、かつそのときに限る。そうでなければ上界は $`0`$ であり、
+それが達成されるのは $`|\mathrm{Tr}(XUY)|=\|YX\|_1`$ のとき、かつそのときに限る。
+
+(b) $`X=X^*`$ とし、$`|X|`$ の固有値を $`x_1\ge x_2\ge0`$、$`x_1>0`$ とする。このとき
+```math
+\mathrm{Tr}(Y|X|Y)-\mathrm{Tr}|YXY|\ \le\ \frac{2x_1x_2}{x_1+x_2}\,(y_1-y_2)^2 .
+```
+$`X`$ が正負両方の符号の固有値をもち $`y_1>y_2`$ ならば、$`e_1`$、$`e_2`$ を絶対値 $`x_1`$、$`x_2`$ の固有値に対する $`X`$ の
+固有ベクトルとすると、等号が成り立つのは $`\gamma=\gamma_3:=\frac{x_1y_2+x_2y_1}{(x_1+x_2)(y_1+y_2)}`$ のとき、かつそのときに限る。
+
+上のようなすべての固有値について、両方の上界は実の $`X`$、$`Y`$、$`U`$ によって達成される（(b) では
+$`X=\mathrm{diag}(x_1,-x_2)`$）。特に、それらは $`M_2(\mathbb R)`$ でも同じである。
+
+*証明.* 左辺を $`z`$ と書き、$`S=x_1y_2+x_2y_1`$、$`p=(x_1-x_2)(y_1-y_2)\ge0`$、
+$`q=(x_1+x_2)(y_1+y_2)>0`$ とおく。すると $`q-2S=p`$ である。
+
+(a) 定理 1.9 により $`|\mathrm{Tr}(XUY)|=|\mathrm{Tr}(YX\,U)|\le\|YX\|_1`$ であり、$`U=W^*`$、$`YX=W|YX|`$ で等号が成り立つ。
+系 11.5 の証明と同様に、$`P=\sum_ia_i|e_i\rangle\langle e_i|`$、$`Q=\sum_jb_j|f_j\rangle\langle f_j|`$ に対して
+$`\mathrm{Tr}(PQ)=\sum_{i,j}a_ib_j|\langle e_i,f_j\rangle|^2`$ である。よって
+$`\mathrm{Tr}(XY)=(x_1y_2+x_2y_1)+\gamma(x_1-x_2)(y_1-y_2)=S+\gamma p`$ および
+$`\mathrm{Tr}(X^2Y^2)=(x_1^2y_2^2+x_2^2y_1^2)+\gamma(x_1^2-x_2^2)(y_1^2-y_2^2)`$。$`YX`$ の特異値の二乗 $`s_1^2,s_2^2`$ は
+$`(YX)^*YX=XY^2X`$ の固有値なので、$`s_1^2+s_2^2=\mathrm{Tr}(X^2Y^2)`$、
+$`s_1s_2=|\det(YX)|=x_1x_2y_1y_2`$ である。したがって
+```math
+\|YX\|_1^2=(s_1+s_2)^2=\mathrm{Tr}(X^2Y^2)+2x_1x_2y_1y_2=S^2+\gamma pq .
+```
+$`r\ge0`$ に対し $`\sqrt r\le r/q+q/4`$ であり、等号は $`\sqrt r=q/2`$ のときに限る（$`(\sqrt r-q/2)^2\ge0`$ を展開する）。$`r=S^2+\gamma pq`$ として
+```math
+z\ \le\ \|YX\|_1-\mathrm{Tr}(XY)\ \le\ \frac{S^2+\gamma pq}q+\frac q4-S-\gamma p=\frac{(q/2-S)^2}q=\frac{p^2}{4q}.
+```
+等号が成り立つのは $`|\mathrm{Tr}(XUY)|=\|YX\|_1`$ かつ $`S^2+\gamma pq=q^2/4`$、すなわち $`\gamma pq=(q/2-S)(q/2+S)=\frac p2(q/2+S)`$ のとき、かつそのときに限る。
+$`p>0`$ ならこれは $`\gamma=(q/2+S)/(2q)=\gamma_1`$ を意味し、$`0\le S\le q/2`$ よりこれは $`[\frac14,\frac12]`$ に属する。$`p=0`$ なら
+すべての $`\gamma`$ で成り立つ。
+
+(b) $`X`$ を $`-X`$ に替えても両辺は変わらない。$`X\ge0`$ ならば $`YXY\ge0`$、$`|YXY|=YXY`$ で $`z=0`$ である。
+$`X\le0`$ でも同様。そうでなければ $`x_2>0`$ であり、必要なら $`X`$ を $`-X`$ に替えて $`Xe_1=x_1e_1`$、
+$`Xe_2=-x_2e_2`$ とできる。$`u=\langle e_1,Y^2e_1\rangle=\gamma y_1^2+(1-\gamma)y_2^2`$、$`v=\langle e_2,Y^2e_2\rangle=s-u`$、$`s=y_1^2+y_2^2`$ とおく。
+すると $`\mathrm{Tr}(Y|X|Y)=\mathrm{Tr}(|X|Y^2)=x_1u+x_2v=:A`$ である。自己共役行列 $`YXY`$ の行列式は
+$`\det X(\det Y)^2=-x_1x_2y_1^2y_2^2\le0`$ なので、その固有値は $`\mu_+\ge0\ge\mu_-`$ であり、
+```math
+\mathrm{Tr}|YXY|=\mu_+-\mu_-=\sqrt{(\mu_++\mu_-)^2-4\mu_+\mu_-}=\sqrt{L^2+K^2},\qquad L=\mathrm{Tr}(XY^2)=x_1u-x_2v,\quad K=2\sqrt{x_1x_2}\,y_1y_2 .
+```
+$`\alpha=(x_1-x_2)/(x_1+x_2)`$、$`\beta=2\sqrt{x_1x_2}/(x_1+x_2)>0`$ とおくと $`\alpha^2+\beta^2=1`$ である。
+$`A=(x_1-x_2)u+x_2s`$、$`L=(x_1+x_2)u-x_2s`$ だから $`A-\alpha L=x_2s(1+\alpha)=2x_1x_2s/(x_1+x_2)`$、
+$`\beta K=4x_1x_2y_1y_2/(x_1+x_2)`$ であり、したがって $`A-\alpha L-\beta K=\frac{2x_1x_2}{x_1+x_2}(y_1-y_2)^2=:m`$。
+$`\mathbb R^2`$ における Cauchy–Schwarz の不等式から $`\sqrt{L^2+K^2}\ge\alpha L+\beta K`$ なので
+```math
+z=A-\sqrt{L^2+K^2}\ \le\ A-\alpha L-\beta K=m,
+```
+であり、等号は $`(L,K)`$ が $`(\alpha,\beta)`$ の非負倍であるとき、すなわち（$`\beta>0`$、$`K\ge0`$ より）
+$`\beta L=\alpha K`$、つまり $`(x_1+x_2)u-x_2s=(x_1-x_2)y_1y_2`$ のとき、かつそのときに限る。これで $`u`$ が定まり、
+$`u-y_2^2=(y_1-y_2)(x_1y_2+x_2y_1)/(x_1+x_2)`$ である。$`y_1>y_2`$ なら $`u=\gamma y_1^2+(1-\gamma)y_2^2`$ から $`\gamma=\gamma_3\in[0,\frac12]`$ を得る。
+
+*実の最大化元.* $`e_i`$ を標準基底、$`f_1,f_2`$ を $`\cos^2t=\gamma_1`$（または $`\gamma_3`$）となる回転した実基底とし、
+(a) では実の特異値分解 $`YX=W\Sigma V^{\mathrm T}`$（実対称行列 $`(YX)^{\mathrm T}YX`$ の対角化による）から
+$`U=VW^{\mathrm T}`$ とおけば、$`\mathrm{Tr}(UYX)=\mathrm{Tr}\,\Sigma=\|YX\|_1`$ となる。$`\square`$
+
+<a id="r-11-16"></a>
+
+**系 11.16（サイズ $`2`$ のブロックに対する実験 1 と実験 3 の包絡線）.** すべての $`k_c=2`$（よって $`D=2C`$）とし、
+$`\delta\in[0,1)`$、$`\delta'\in[0,1]`$、$`\ell=\ell(\delta)`$、$`\ell'=\ell(\delta')`$（$`\ell(1)=0`$ とする）とする。$`Y`$ は
+$`\lambda_{\max}(Y)=1`$ かつ $`\Delta(Y)=\delta'`$、すなわち $`\lambda_{\min}(Y)=\ell'`$ を満たす正作用素全体を動くとする。
+
+(a) 実験 1、$`X\in\mathcal P_\delta`$、このような $`Y`$、ユニタリ $`U`$ にわたって：
+$`\ \sup z=C\,\frac{\delta^2\delta'^2}{(1+\delta)(1+\delta')}`$、$`\inf z=-(2C-1+\ell\ell')`$。
+
+(b) 実験 3、$`|X|\in\mathcal P_\delta`$ を満たす $`X=X^*`$ とこのような $`Y`$ にわたって：
+$`\ \sup z=(C-\delta)\Big(\frac{2\delta'}{1+\delta'}\Big)^2`$、$`\inf z=0`$。
+
+四つの値はすべて達成される。したがって、もう一方のコントラストを $`[0,d]`$（$`d\in(0,1)`$）で自由とすると：実験 1 の
+上側包絡線は $`\Delta(X)=\delta`$ に沿って $`C\delta^2d^2/((1+\delta)(1+d))`$、（(a) の対称性により）$`\Delta(Y)=\delta'`$ に沿って
+$`C\delta'^2d^2/((1+\delta')(1+d))`$ であり、実験 3 の上側包絡線は $`\Delta(|X|)=\delta`$ に沿って $`(C-\delta)\big(2d/(1+d)\big)^2`$、
+$`\Delta(Y)=\delta'`$ に沿って $`d`$ によらず $`C\big(2\delta'/(1+\delta')\big)^2`$ である。$`d\to1`$ のとき最初の二つは増加して
+$`C\delta^2/(2(1+\delta))`$ と $`C-\delta`$、すなわち $`\Delta(Y)=1`$（特異な $`Y`$）での値に近づく。
+
+*証明.* $`x_{c,1}\ge x_{c,2}`$ を $`X_c`$（(b) では $`|X|_c`$）の固有値、$`y_{c,1}\ge y_{c,2}`$ を $`Y_c`$ の固有値とする。
+これらは $`[\ell,1]`$ と $`[\ell',1]`$ に属し、$`\ell`$ はそのブロックの小さい方の固有値である。
+$`1-\ell=2\delta/(1+\delta)`$、$`1+\ell=2/(1+\delta)`$ より $`(1-\ell)^2/(1+\ell)=2\delta^2/(1+\delta)`$、
+$`2\ell/(1+\ell)=1-\delta`$ であることに注意する。$`\ell'`$ についても同様。
+
+(a) *上限.* 三角不等式と各ブロックでの定理 1.9 により
+$`|\mathrm{Tr}(XUY)|\le\sum_c|\mathrm{Tr}(X_cU_cY_c)|\le\sum_c\|Y_cX_c\|_1`$ だから、命題 11.15(a) により（$`Y_c=0`$ のブロックの
+寄与は $`-\mathrm{Tr}(X_cY_c)=0`$）
+```math
+z\le\sum_c\frac{x_{c,1}y_{c,1}}4\,g\Big(\frac{x_{c,2}}{x_{c,1}}\Big)\,g\Big(\frac{y_{c,2}}{y_{c,1}}\Big),\qquad g(r)=\frac{(1-r)^2}{1+r}.
+```
+$`g`$ は $`[0,1]`$ で減少し、$`x_{c,2}/x_{c,1}\ge x_{c,2}\ge\ell`$、$`y_{c,2}/y_{c,1}\ge\ell'`$、$`x_{c,1},y_{c,1}\le1`$ なので、
+各項は高々 $`g(\ell)g(\ell')/4=\delta^2\delta'^2/((1+\delta)(1+\delta'))`$ である。等号：各ブロックで
+$`X_c=\mathrm{diag}(1,\ell)`$、固有値 $`1,\ell'`$ をもち $`\gamma=\gamma_1`$ となる $`Y_c`$、$`U_c=W_c^*`$、$`Y_cX_c=W_c|Y_cX_c|`$ とすると、
+各ブロックで $`\mathrm{Tr}(X_cU_cY_c)=\|Y_cX_c\|_1\ge0`$ となり、絶対値が足し合わされる。
+*下限.* $`z\ge-\mathrm{Tr}(XY)`$ であり、$`\mathrm{Tr}(Y_cX_cU_c)=0`$ を満たす $`U=\bigoplus_cU_c`$（補題 11.13）で等号が成り立つ。
+系 11.5(a) により $`\mathrm{Tr}(XY)\le\sum_c(x_{c,1}y_{c,1}+x_{c,2}y_{c,2})`$。$`\ell`$ と $`\ell'`$ が同じブロックにあれば、
+そのブロックの寄与は高々 $`1+\ell\ell'`$、他の各ブロックは高々 $`2`$ である。そうでなければ二つのブロックの寄与は
+高々 $`1+\ell`$ と $`1+\ell'`$ で、$`2C-2+\ell+\ell'=2C-1+\ell\ell'-(1-\ell)(1-\ell')`$。よって
+$`\mathrm{Tr}(XY)\le2C-1+\ell\ell'`$ であり、$`X=\mathrm{diag}(1,\ell)\oplus1\oplus\dots\oplus1`$、
+$`Y=\mathrm{diag}(1,\ell')\oplus1\oplus\dots\oplus1`$ で等号が成り立つ。
+
+(b) トレース、トレースノルム、$`|\cdot|`$ はブロックごとに作用する（演習 3）ので $`z=\sum_cz_c`$ であり、命題 11.15(b) により
+$`z_c\le H_c(y_{c,1}-y_{c,2})^2\le H_c(1-\ell')^2`$、ただし $`H_c=2x_{c,1}x_{c,2}/(x_{c,1}+x_{c,2})\le x_{c,1}\le1`$。$`|X|`$ が
+固有値 $`\ell`$ をもつブロック $`c_-`$ では $`x_{c_-,2}=\ell`$ であり、$`H_{c_-}=2\ell/(1+\ell/x_{c_-,1})\le2\ell/(1+\ell)=1-\delta`$。
+よって $`z\le(C-1+1-\delta)(1-\ell')^2`$。等号：$`X_1=\mathrm{diag}(1,-\ell)`$、$`c\ge2`$ で $`X_c=\mathrm{diag}(1,-1)`$、
+各 $`Y_c`$ は固有値 $`1,\ell'`$ をもちそのブロックの $`\gamma=\gamma_3`$ をとる（$`c\ge2`$ では $`\gamma_3=\frac12`$）。下限は
+命題 11.9 であり、$`X`$、$`Y`$ が可換なとき等号が成り立つ。
+
+*自由なコントラスト.* (a) の上限は $`\delta'`$ について増加し（$`\delta>0`$ なら狭義）、(b) の上限は $`\delta'`$ について
+狭義増加、$`\delta`$ について減少する。したがって $`[0,d]`$ で自由なコントラストにわたる上限は $`d`$ で達成され
+（実験 3 で $`\Delta(Y)`$ に沿う場合は $`\Delta(|X|)=0`$ で）、$`d\to1`$ の極限は $`\Delta(Y)=1`$ でのみ達成される
+（実験 1 では $`\delta>0`$ のとき）。$`\square`$
+
+$`C=1`$、$`d=0.999`$ の場合、これらは解説論文が最初に（実環において）数値的に観察した閉じた形である。任意の $`C`$ について、
+上側包絡線は $`M_2`$ 上の $`C`$ 個の解の直和の値である（実験 3 では $`C-\delta=(1-\delta)+(C-1)\cdot1`$）。$`M_2\oplus M_2`$ 上では
+上の直和の不等式は等式になる。サイズ $`k_c\ge3`$ のブロックについては、これらの上側包絡線の閉じた形を我々は知らない。
+
+*計算：* 命題 11.15 の最大化元、$`C=1,2`$ に対する系 11.16 の包絡線とその $`d\to1`$ の極限、およびそれらと比較するマルチスタート探索 — [チュートリアル、11.5節](../../tutorial/ja/11_optimisation.md#s-11-5)。
+
 <a id="s-11-6"></a>
 
 ## 11.6 比較の対象

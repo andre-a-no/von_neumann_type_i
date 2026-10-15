@@ -770,7 +770,7 @@ for larger $k$ or $C$ they stay in a narrow band far from both envelopes (Figure
 the extremes are attained at degenerate spectra with aligned eigenbases, a set that Haar sampling essentially never
 reaches.
 
-Four envelopes can be checked analytically. In Exp.~3, $z\ge0$ always:
+Several envelopes can be checked analytically. In Exp.~3, $z\ge0$ always:
 
 \begin{proposition}
 For $X=X^*$ and $Y\ge0$, $\Tr|YXY|\le\Tr(Y|X|Y)$, with equality if and only if $YX_+Y^2X_-Y=0$, in particular
@@ -809,14 +809,70 @@ free,
 which tends to $C\lfloor k/2\rfloor\frac{2\delta}{1+\delta}$ as $\Delta(|Y|)\to1$. The optimiser reproduces the upper and
 lower envelopes of Exp.~2 for all eight configurations, along either contrast, to a relative deviation of
 \IfFileExists{generated/bounds.tex}{\BoundsExactDevTwo}{(not generated)}.
-For $k=2$, $C=1$ the computed upper envelopes of Exp.~1 and Exp.~3 along $\Delta(X)=\delta$, with the free contrast
-capped at $D=0.999$, agree with
-$\delta^2D^2/((1+\delta)(1+D))$ and $(1-\delta)\,(2D/(1+D))^2$ (for $D\to1$: $\delta^2/(2(1+\delta))$ and $1-\delta$) to a relative deviation of
-\IfFileExists{generated/bounds.tex}{\BoundsConjDevOne\ and \BoundsConjDevThree}{(not generated)}; we have no proof of
-these closed forms. For larger $k$ and $C$ the upper envelopes of Exp.~1 and Exp.~3 are, to our knowledge, not known in
-closed form; the computed curves are lower bounds for them (a local search), consistent with the direct sums~(ii),
-and suggest conjectures for sharp contrast-dependent inequalities (for instance, that the direct sums are optimal),
-which we leave for future work.
+For sectors of size $k=2$ the upper envelopes of Exp.~1 and Exp.~3 can be computed exactly. In $M_2(\C)$ the
+eigenbases $(e_i)$ of $X$ and $(f_j)$ of $Y$ enter only through $\gamma=|\langle e_1,f_1\rangle|^2\in[0,1]$, since
+$(|\langle e_i,f_j\rangle|^2)$ is doubly stochastic; phases play no role, and every $\gamma$ is reached by a real rotation, so
+real and complex algebras have the same envelopes.
+
+\begin{proposition}\label{prop:k2}
+(a) Let $X,Y\ge0$ in $M_2(\C)$ have eigenvalues $x_1\ge x_2\ge0$ and $y_1\ge y_2\ge0$, $x_1,y_1>0$. For every unitary $U$,
+\[
+  |\Tr(XUY)|-\Tr(XY)\ \le\ \frac{(x_1-x_2)^2(y_1-y_2)^2}{4(x_1+x_2)(y_1+y_2)} .
+\]
+(b) Let $X=X^*$ in $M_2(\C)$, let $|X|$ have eigenvalues $x_1\ge x_2\ge0$, $x_1>0$, and let $Y$ be as in (a). Then
+\[
+  \Tr(Y|X|Y)-\Tr|YXY|\ \le\ \frac{2x_1x_2}{x_1+x_2}\,(y_1-y_2)^2 .
+\]
+Let $S=x_1y_2+x_2y_1$, $q=(x_1+x_2)(y_1+y_2)$, and let $e_1$ be an eigenvector of $X$ for its eigenvalue of modulus $x_1$,
+$f_1$ one of $Y$ for $y_1$. The bound (a) is attained iff $|\Tr(XUY)|=\|YX\|_1$ and, if $x_1>x_2$ and $y_1>y_2$,
+$\gamma=\frac14+\frac S{2q}$ (otherwise the bound is $0$). If $x_2>0$ and $y_1>y_2$, the bound (b) is attained iff $X$ is
+indefinite and $\gamma=\frac Sq$ (otherwise it is $0$, and so is $z$). Both bounds are attained by real $X$, $Y$, $U$.\\
+(c) Let $\M=\bigoplus_{c=1}^CM_2(\C)$, $X$ and $Y$ (in Exp.~3: $|X|$ and $Y$) normalised to $\lambda_{\max}=1$ with contrasts
+$\delta<1$ and $\delta'\le1$, and $\ell=\frac{1-\delta}{1+\delta}$, $\ell'=\frac{1-\delta'}{1+\delta'}$. Then
+\begin{align*}
+  \text{Exp.~1:}\quad & \sup z=\frac{C\,\delta^2\delta'^2}{(1+\delta)(1+\delta')}, && \inf z=-(2C-1+\ell\ell'),\\
+  \text{Exp.~3:}\quad & \sup z=(C-\delta)\Bigl(\frac{2\delta'}{1+\delta'}\Bigr)^2, && \inf z=0,
+\end{align*}
+and all four values are attained.
+\end{proposition}
+\begin{proof}
+Let $p=(x_1-x_2)(y_1-y_2)$, so that $q-2S=p$. (a) $|\Tr(XUY)|=|\Tr(YXU)|\le\|YX\|_1$, with equality for $U=W^*$,
+$YX=W|YX|$. Expanding in the eigenbases, $\Tr(XY)=\sum_{ij}x_iy_j|\langle e_i,f_j\rangle|^2=S+\gamma p$; the singular values of
+$YX$ satisfy $s_1^2+s_2^2=\Tr(X^2Y^2)$ and $s_1s_2=|\det YX|=x_1x_2y_1y_2$, so $\|YX\|_1^2=\Tr(X^2Y^2)+2x_1x_2y_1y_2=S^2+\gamma pq$.
+With $\sqrt r\le r/q+q/4$ (equality iff $\sqrt r=q/2$),
+$z\le\|YX\|_1-\Tr(XY)\le(S^2+\gamma pq)/q+q/4-S-\gamma p=(q/2-S)^2/q=p^2/(4q)$, with equality iff in addition
+$\gamma pq=q^2/4-S^2=\frac p2(\frac q2+S)$.
+(b) $z$ is invariant under $X\mapsto-X$ and vanishes for semidefinite $X$. Otherwise let $Xe_1=x_1e_1$, $Xe_2=-x_2e_2$,
+$u=\langle e_1,Y^2e_1\rangle=\gamma y_1^2+(1-\gamma)y_2^2$ and $s=y_1^2+y_2^2$. Then $\Tr(Y|X|Y)=\Tr(|X|Y^2)=A:=(x_1-x_2)u+x_2s$, and
+since $\det(YXY)=-x_1x_2y_1^2y_2^2\le0$, $\Tr|YXY|=\sqrt{\Tr(YXY)^2-4\det(YXY)}=\sqrt{L^2+K^2}$ with $L=\Tr(XY^2)=(x_1+x_2)u-x_2s$
+and $K=2\sqrt{x_1x_2}\,y_1y_2$. For the unit vector $(\alpha,\beta)=(x_1-x_2,\,2\sqrt{x_1x_2})/(x_1+x_2)$, the Cauchy--Schwarz
+inequality gives $\sqrt{L^2+K^2}\ge\alpha L+\beta K$, and $A-\alpha L-\beta K=\frac{2x_1x_2}{x_1+x_2}(y_1-y_2)^2$ for every $u$;
+equality holds iff $\beta L=\alpha K$, i.e.\ $u-y_2^2=(y_1-y_2)S/(x_1+x_2)$, i.e.\ $\gamma=S/q$. Real maximisers: diagonal $X$, $Y$ rotated by
+$\arccos\sqrt\gamma$, and $U$ from a real singular value decomposition of $YX$.
+(c) In Exp.~1, $|\Tr(XUY)|\le\sum_c\|Y_cX_c\|_1$, and by (a) block $c$ contributes at most
+$\frac{x_{c,1}y_{c,1}}4\,g(\frac{x_{c,2}}{x_{c,1}})\,g(\frac{y_{c,2}}{y_{c,1}})$ with $g(r)=\frac{(1-r)^2}{1+r}$ decreasing; as
+$x_{c,1},y_{c,1}\le1$, $x_{c,2}/x_{c,1}\ge\ell$, $y_{c,2}/y_{c,1}\ge\ell'$ and $g(\ell)=2\delta^2/(1+\delta)$, every block contributes at
+most $\delta^2\delta'^2/((1+\delta)(1+\delta'))$; equality for $X_c=\mathrm{diag}(1,\ell)$, $Y_c$ with spectrum $\{1,\ell'\}$ at the angle
+of (a), and $U_c$ the polar unitaries, which make all block traces positive. For the infimum, $U_c$ with
+$\Tr(X_cU_cY_c)=0$ (a cyclic shift in the singular bases) gives $z=-\Tr(XY)$, and $\Tr(XY)\le\sum_c(x_{c,1}y_{c,1}+x_{c,2}y_{c,2})\le
+2C-1+\ell\ell'$ (if $\ell$ and $\ell'$ lie in different blocks the bound is $2C-2+\ell+\ell'$, smaller by $(1-\ell)(1-\ell')$), with
+equality for $X=\mathrm{diag}(1,\ell)\oplus1$, $Y=\mathrm{diag}(1,\ell')\oplus1$. In Exp.~3, $z=\sum_cz_c$ and by (b)
+$z_c\le h_c(1-\ell')^2$ with $h_c=\frac{2x_{c,1}x_{c,2}}{x_{c,1}+x_{c,2}}\le x_{c,1}\le1$; in the block that holds the eigenvalue $\ell$
+of $|X|$, $h_c=2\ell/(1+\ell/x_{c,1})\le2\ell/(1+\ell)=1-\delta$. Equality for $X=\mathrm{diag}(1,-\ell)\oplus\mathrm{diag}(1,-1)^{\oplus(C-1)}$
+and $Y_c$ with spectrum $\{1,\ell'\}$ at the angle of (b); $\inf z=0$ is Proposition~1.
+\end{proof}
+
+\noindent Both suprema increase with $\delta'$. With the free contrast capped at $D$, the upper envelopes along
+$\Delta(X)=\delta$ are therefore $C\delta^2D^2/((1+\delta)(1+D))$ and $(C-\delta)\,(2D/(1+D))^2$; for $C=1$ and $D=0.999$ these
+are the closed forms that we first found numerically, and the optimiser reproduces them to a relative deviation of
+\IfFileExists{generated/bounds.tex}{\BoundsConjDevOne\ and \BoundsConjDevThree}{(not generated)}. As $D\to1$ they increase
+to $C\delta^2/(2(1+\delta))$ and $C-\delta$, the values at $\Delta(Y)=1$ (a singular $Y$), which no $Y$ with $\Delta(Y)<1$
+attains (for $\delta>0$ in Exp.~1). Along $\Delta(Y)=\delta'$ the upper envelopes are $C\delta'^2D^2/((1+\delta')(1+D))$ and,
+attained at $|X|=1$, $C\,(2\delta'/(1+\delta'))^2$ for every $D$. For $k=2$ the direct sums~(ii) are thus optimal for every
+$C$, and check~(i) applies to all configurations with $k=2$. For $k\ge3$ the upper envelopes of Exp.~1 and Exp.~3 are,
+to our knowledge, not known in closed form; the computed curves are lower bounds for them (a local search), consistent
+with the direct sums~(ii), and suggest conjectures for sharp contrast-dependent inequalities (for instance, that the direct
+sums are optimal for even $k$), which we leave for future work.
 
 \begin{table}[h]
 \centering\small
