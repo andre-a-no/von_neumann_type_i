@@ -390,9 +390,6 @@ class TypeIAlgebra:
             """The same tolerance as a Python number (one host synchronisation)."""
             return float(self._tol_t())
 
-        def _max_abs(self, t: torch.Tensor) -> float:
-            return t.abs().max().item() if t.numel() else 0.0
-
         def _validate_properties(self):
             """Check the property flags passed by the user (one host synchronisation for all of them): run when a
             lazy operator is materialised, and by alg.operator(..., validate=True); flags of an eager operator are

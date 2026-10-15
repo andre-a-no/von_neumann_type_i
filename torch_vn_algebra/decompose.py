@@ -487,9 +487,10 @@ def commutant_basis(generators: MatrixLike, tol: Optional[float] = None, *, grou
     method: 'nullspace' (null space of X -> ([H_j, X])_j after the reduction by a random element of
         the algebra; O(n^3 + J n^2 N^2) with N = sum_c k_c m_c^2 for a generic probe, n^6 at worst),
         'twirl' (group only: range of the twirl of d + 8 random matrices, d from the characters;
-        O(d |G| n^3)), or 'auto': the twirl for a group when (d + 8) |G| <= n^2, otherwise the null space;
-        for a group the null space uses three random elements of span pi(G) = A as generators and
-        its dimension is checked against the characters (falling back to the twirl).
+        O(d |G| n^3)), or 'auto': the null space (for a group the twirl is never cheaper: by Burnside
+        d |G| = sum_g |chi(g)|^2 >= chi(e)^2 = n^2); for a group the null space uses three random elements
+        of span pi(G) = A as generators and its dimension is checked against the characters (falling back
+        to the twirl).
     seed: seed of the random probe (the span does not depend on it); None for fresh entropy.
     precision: 'double' or 'single' (default: from the input dtype).
     return_info: also return a dict of diagnostics (method, singular values at the threshold).
@@ -510,7 +511,7 @@ def commutant_basis(generators: MatrixLike, tol: Optional[float] = None, *, grou
     if group:
         _check_unitary_group(S, tol)
         d = commutant_dimension(S)
-        use_twirl = method == 'twirl' or (method == 'auto' and (d + 8) * S.shape[0] <= n * n)
+        use_twirl = method == 'twirl'
         if not use_twirl:
             c = _randn((3, S.shape[0]), dtype, device, gen)
             Hs = _normalised(torch.einsum('rg,gab->rab', c, S))

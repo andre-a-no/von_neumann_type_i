@@ -161,7 +161,7 @@ class TestHolomorphic:
             A.holomorphic_function(lambda z: 1 / (z - 3), center=1.5, radius=1.5).matrix
         with pytest.raises(ValueError):                    # too few nodes for a large circle: not converged
             A.holomorphic_function(torch.exp, radius=50.0, nodes=4, max_nodes=8).matrix
-        B = torch.randn(6, 6, dtype=torch.float64)
+        B = torch.randn(6, 6, dtype=torch.float64, generator=torch.Generator().manual_seed(0))
         with pytest.raises(ValueError):                    # catastrophic cancellation for exp of a large spread
             TypeIAlgebra([6], [6], precision='double').operator(((B + B.T) * 50)[None, None]).holomorphic_function(
                 torch.exp).matrix
@@ -257,7 +257,7 @@ class TestReviewRegressions:
         N = torch.diag(torch.ones(5, dtype=torch.complex128), 1)
         F, err = fc.holomorphic(N[None], torch.exp)
         assert (F - torch.linalg.matrix_exp(N[None])).abs().max() < 1e-12
-        B = torch.randn(6, 6, dtype=torch.float64)
+        B = torch.randn(6, 6, dtype=torch.float64, generator=torch.Generator().manual_seed(1))
         F, err = fc.holomorphic(((B + B.T) * 2)[None], torch.exp)      # the old radius lost 7 digits here
         ref = torch.linalg.matrix_exp(((B + B.T) * 2)[None])
         assert ((F - ref).abs().max() / ref.abs().max()) < 1e-11

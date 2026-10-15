@@ -1440,23 +1440,24 @@ def test_chain_basis_is_iterated_fused_product():
         assert torch.equal(ops[i].matrix, chain.sz(i).matrix)
 
 
-def test_cost_probe_subtracts_fixed_call_cost():
+def test_cost_probe_subtracts_fixed_call_cost(monkeypatch):
     """Regression: the time estimate of batched_call extrapolated an 8-item slice linearly, so a fixed cost per call
     (ms for batched LAPACK kernels) gave a ~100x overestimate and a false CostWarning (random_unitary(5, batch=1e5)).
-    Simulated kernels: a fixed 20 ms per call and no per-item cost -> no warning; 1e-4 s per item on 2e5 items
-    (20 s) -> a warning with an estimate of about 20 s. The full calls are instantaneous."""
-    import time
+    Simulated kernels on a virtual clock (deterministic, independent of the machine load): a fixed 20 ms per call
+    and no per-item cost -> no warning; 1e-4 s per item on 2e5 items (20 s) -> a warning of about 20 s."""
     n = 200000
     x = torch.zeros(n, 1, 1)
+    clock = [0.0]
+    monkeypatch.setattr(cost.time, 'perf_counter', lambda: clock[0])
 
     def fixed_cost(y):
         if y.shape[0] < n:
-            time.sleep(0.02)
+            clock[0] += 0.02
         return y
 
     def per_item_cost(y):
         if y.shape[0] < n:
-            time.sleep(1e-4 * y.shape[0])
+            clock[0] += 1e-4 * y.shape[0]
         return y
 
     old = cost.get_limits()
@@ -1472,7 +1473,7 @@ def test_cost_probe_subtracts_fixed_call_cost():
         msg = [str(m.message) for m in w if issubclass(m.category, cost.CostWarning)]
         assert len(msg) == 1 and 'about' in msg[0]
         eta = float(msg[0].split('about ')[1].split(' ')[0])
-        assert 15 <= eta <= 60                                   # 20 s; sleep only overshoots on a loaded machine
+        assert 15 <= eta <= 25                                   # 20 s exactly on the virtual clock
     finally:
         cost.set_limits(**old)
 
