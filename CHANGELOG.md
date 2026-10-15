@@ -7,6 +7,10 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 ## [Unreleased]
 
 ### Added
+- Module `permutational`: permutation-invariant ensembles of N two-level systems in ⊕_j M_{2j+1} ⊗ 1_{m_j}
+  (`PermutationalSystem`, `PermutationalLindbladian`), with local dissipators as maps between spin sectors; tests against
+  the full 2^N Lindblad generator and `qutip.piqs`. Script `scripts/permutational.py` and paper section "Use cases":
+  lifetimes of a boundary time crystal under local emission and dephasing.
 - Script `scripts/connes_stormer.py` and paper subsection "Use case: the Connes–Størmer entropy of two MASAs":
   H(Δ_n | UΔ_nU*) computed by batched optimisation over partitions of unity; closed form for n = 2 (one-dimensional
   maximisation, H > Choda's h(U) unless |u_11|² ∈ {0, 1/2, 1}); for n = 3, 4, 5 general partitions beat the best

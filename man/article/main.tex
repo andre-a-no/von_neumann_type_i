@@ -22,7 +22,7 @@
 
 % numbers and tables produced by scripts/*.py (bash scripts/run_all.sh [quick|full] [device])
 \newcommand{\gen}[1]{\IfFileExists{generated/#1.tex}{\input{generated/#1.tex}}{}}
-\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}\gen{renyi_threshold}\gen{connes_stormer}
+\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}\gen{renyi_threshold}\gen{connes_stormer}\gen{permutational}
 % Captions that use these numbers have an empty short caption: the short caption is expanded into main.aux,
 % where a number whose file is missing would be an undefined control sequence.
 \providecommand{\ValidationRows}{\multicolumn{6}{c}{\emph{run scripts/validate\_known\_results.py}}\\}
@@ -1605,6 +1605,13 @@ $S(E_P\rho)=S(\Tr_2\rho)+\log2\ge\log2$ (partial trace over the multiplicity spa
 computed $G^*$ reaches this bound, the computed $H$ stays below it. For
 non-abelian subalgebras we have no closed form; these values are lower bounds found by the search.
 
+\section{Use cases}\label{sec:usecases}
+
+The following computations use the library as a research tool: each asks a question from the literature, is validated
+against independent computations, and reports what is reproduced and what is new.
+
+\input{usecases/permutational.tex}
+
 \section{Comparison with NumPy/SciPy}\label{sec:baselines}
 
 To separate what the library adds from what plain array code already gives, the same computations were written
@@ -1951,6 +1958,25 @@ degenerate cases'', arXiv:2011.04366 (2020).
   J.\ Math.\ Phys.\ 10 (1969), 1388--1398.
 \bibitem{paszke2019} A.~Paszke et al., ``PyTorch: An imperative style, high-performance deep learning
   library'', NeurIPS 2019.
+\bibitem{iemini2018} F.~Iemini, A.~Russomanno, J.~Keeling, M.~Schir\`o, M.~Dalmonte, R.~Fazio, ``Boundary time
+  crystals'', Phys.\ Rev.\ Lett.\ 121 (2018), 035301.
+\bibitem{carollo2021} F.~Carollo, I.~Lesanovsky, ``Exactness of mean-field equations for open Dicke models with an
+  application to pattern retrieval dynamics'', Phys.\ Rev.\ Lett.\ 126 (2021), 230601.
+\bibitem{tucker2018} K.~Tucker, B.~Zhu, R.~J.~Lewis-Swan, J.~Marino, F.~Jimenez, J.~G.~Restrepo, A.~M.~Rey,
+  ``Shattered time: can a dissipative time crystal survive many-body correlations?'', New J.\ Phys.\ 20 (2018),
+  123003.
+\bibitem{prazeres2021} L.~F.~da~Silva~Prazeres, L.~da~Silva~Souza, F.~Iemini, ``Boundary time crystals in collective
+  $d$-level systems'', Phys.\ Rev.\ B 103 (2021), 184308.
+\bibitem{chase2008} B.~A.~Chase, J.~M.~Geremia, ``Collective processes of an ensemble of spin-1/2 particles'',
+  Phys.\ Rev.\ A 78 (2008), 052101.
+\bibitem{baragiola2010} B.~Q.~Baragiola, B.~A.~Chase, J.~Geremia, ``Collective uncertainty in partially polarized
+  and partially decohered spin-1/2 systems'', Phys.\ Rev.\ A 81 (2010), 032104.
+\bibitem{shammah2018} N.~Shammah, S.~Ahmed, N.~Lambert, S.~De~Liberato, F.~Nori, ``Open quantum systems with local
+  and collective incoherent processes: Efficient numerical simulations using permutational invariance'',
+  Phys.\ Rev.\ A 98 (2018), 063815.
+\bibitem{dicke1954} R.~H.~Dicke, ``Coherence in spontaneous radiation processes'', Phys.\ Rev.\ 93 (1954), 99--110.
+\bibitem{gross1982} M.~Gross, S.~Haroche, ``Superradiance: an essay on the theory of collective spontaneous
+  emission'', Phys.\ Rep.\ 93 (1982), 301--396.
 \end{thebibliography}
 }
 
