@@ -336,7 +336,11 @@ def singular_values(X: torch.Tensor, method: str = 'auto') -> torch.Tensor:
     if use_dilation(X, method):
         lam = cost.batched_call(torch.linalg.eigvalsh, _dilation(X), f"eigvalsh (dilation of size {2 * k})")
         return lam[..., k:].flip(-1).clamp(min=0)
-    return cost.batched_call(torch.linalg.svdvals, X, f"svdvals (blocks of size {k})", kind='svd')
+    # singular values are homogeneous: scale each block to entries of order 1 first (older LAPACK builds lose the
+    # small singular values of float32 blocks with entries near 1e+-30)
+    s = cost.abs_max(X, (-2, -1)).clamp(min=torch.finfo(X.real.dtype).tiny)
+    Xs = X * s.reciprocal()[..., None, None].to(X.dtype)
+    return cost.batched_call(torch.linalg.svdvals, Xs, f"svdvals (blocks of size {k})", kind='svd') * s[..., None]
 
 
 def svd(X: torch.Tensor, method: str = 'auto') -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -552,6 +556,8 @@ def holomorphic(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], cent
         err_t = torch.maximum(quadrature, rounding).max()
         err_t = torch.where(bad, torch.full_like(err_t, -1.0), err_t)               # -1 flags a failure
         err = float(err_t)                                     # one synchronisation per doubling
+        if math.isnan(err):                                    # overflow in the estimate (e.g. inf / inf) is a
+            err = math.inf                                     # failure to converge, never a pass
         if err < 0:
             raise ValueError("f is not finite on the contour, or the contour passes through the spectrum: choose "
                              "center and radius so that the circle encloses the spectrum and f is holomorphic on "

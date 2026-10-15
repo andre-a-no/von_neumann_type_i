@@ -615,7 +615,7 @@ def test_heisenberg_dirac_identity_and_blocks(L):
             assert close(ss, swap(i, j) / 2 - torch.eye(2 ** L, dtype=R) / 4)    # Dirac's identity
             H = H + float(torch.randn((), generator=g)) * ss
     P = dc.permutation_representation(L, 2).reshape(math.factorial(L), -1)
-    coef = torch.linalg.lstsq(P.T, H.reshape(-1, 1)).solution
+    coef = torch.linalg.lstsq(P.T, H.reshape(-1, 1), driver='gelsd').solution
     assert close(P.T @ coef, H.reshape(-1, 1))                         # H in span pi(S_L)
     S = dc.total_spin(L)
     D = dc.from_generators(S)
@@ -1380,7 +1380,7 @@ def test_weingarten_formula_is_projection_onto_span_of_permutations(n, d):
     X = torch.randn(d ** n, d ** n, dtype=C, generator=g)
     Phi = torch.einsum('st,tij,ij,skl->kl', W.to(C), P.conj(), X, P)
     A = P.reshape(len(perms), -1).T
-    coef = torch.linalg.lstsq(A, X.reshape(-1, 1)).solution
+    coef = torch.linalg.pinv(A) @ X.reshape(-1, 1)                     # A is rank-deficient for n > d
     assert close(Phi.reshape(-1, 1), A @ coef)                           # orthogonal projection
     V = kpow(haar(d, 1, g), n)[0]
     assert close(V @ Phi, Phi @ V)

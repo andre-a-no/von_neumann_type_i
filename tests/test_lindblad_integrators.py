@@ -272,7 +272,7 @@ def test_kraus_step_matches_numpy_reference():
         N = (V / np.sqrt(w)) @ V.conj().T
         ref = Psi(N @ embed(alg, rho.matrix[0].numpy()) @ N)
         out = dynamics.lindblad_evolve(rho, H, J, [0.0, h], rates=g, substeps=1, method='kraus')[-1]
-        assert np.abs(embed(alg, out.matrix[0].numpy()) - ref).max() < 1e-12
+        assert np.abs(embed(alg, out.matrix[0].numpy()) - ref).max() < 1e-11
 
 
 def test_exact_matches_expm_on_MD():

@@ -1514,7 +1514,7 @@ def test_12_2_deepsets(n):
     J = torch.ones(n, n, dtype=c128)
     span = torch.stack([torch.eye(n, dtype=c128).reshape(-1), J.reshape(-1)], 1)
     for X in basis:                                                               # X in span{1, J}
-        coef = torch.linalg.lstsq(span, X.reshape(-1, 1)).solution
+        coef = torch.linalg.lstsq(span, X.reshape(-1, 1), driver='gelsd').solution
         assert (span @ coef - X.reshape(-1, 1)).abs().max() < 1e-10
     D = dc.from_group(G)
     assert D.k_factors == (1, n - 1) and D.multiplicities == (1, 1)

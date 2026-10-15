@@ -854,14 +854,15 @@ def test_su2_paths_rejects_non_total_spin():
 
 # kills: jordan#6636
 def test_jordan_contains_is_inclusive_at_tolerance():
-    """JordanAlgebra.contains(x, tol): residual <= tol (inclusive): a basis element with residual exactly 0 is
-    contained with tol = 0."""
+    """JordanAlgebra.contains(x, tol): residual <= tol (inclusive): an element is contained with tol equal to its
+    own residual (0 or a rounding-level value, depending on the PyTorch version)."""
     from torch_vn_algebra import jordan as jd
     x = torch.diag(torch.tensor([1.0, 2.0, 0.0], dtype=torch.float64))
     J = jd.jordan_algebra_generated([x])
     b = J.basis[0]
-    assert float(J.residual(b)) == 0.0
-    assert bool(J.contains(b, tol=0.0))
+    r = J.residual(b)
+    assert float(r) < 1e-15
+    assert bool(J.contains(b, tol=float(r)))
 
 
 

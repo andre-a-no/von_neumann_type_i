@@ -1,5 +1,6 @@
 import torch
 from typing import Optional, Tuple, List
+from . import cost
 
 
 class HilbertSpace:
@@ -129,9 +130,10 @@ class HilbertSpace:
             ket = ket.unsqueeze(-1)
         # scaled by the largest |psi_i| (a constant for autograd): the squares cannot overflow or underflow
         # although the norm is representable (float32 overflows for entries above ~1.8e19)
-        scale = ket.detach().abs().amax(dim=(-2, -3), keepdim=True)
-        scale = torch.where(scale > 0, scale, torch.ones_like(scale))
-        x = ket / scale
+        scale = cost.abs_max(ket.detach(), (-2, -3)).unsqueeze(-2).unsqueeze(-2)   # (batch, 1, 1, 1)
+        scale = torch.where(scale > 0, scale.clamp(min=torch.finfo(scale.dtype).tiny), torch.ones_like(scale))
+        x = ket * scale.reciprocal().to(ket.dtype)      # not ket / scale: older PyTorch divides complex by
+        # complex without scaling, and |scale|^2 overflows
         norm_sq = (x.conj() * x).real.sum(dim=(-2, -3), keepdim=True)  # (batch, 1, 1, 1)
         return scale * torch.sqrt(torch.clamp(norm_sq, min=0.0))
     

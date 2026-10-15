@@ -883,9 +883,9 @@ class TestSpinFactor:
         assert bool(V.in_cone(c, interior=True).all())
         Cm = V.to_matrix(c)
         for b in range(4):
-            torch.testing.assert_close(V.to_matrix(V.log(c[b])), torch.as_tensor(sla.logm(Cm[b].numpy())), atol=1e-10,
+            torch.testing.assert_close(V.to_matrix(V.log(c[b])), torch.as_tensor(np.asarray(sla.logm(Cm[b].numpy()), dtype=Cm[b].numpy().dtype)), atol=1e-10,
                                        rtol=0)
-            torch.testing.assert_close(V.to_matrix(V.sqrt(c[b])), torch.as_tensor(sla.sqrtm(Cm[b].numpy())), atol=1e-10,
+            torch.testing.assert_close(V.to_matrix(V.sqrt(c[b])), torch.as_tensor(np.asarray(sla.sqrtm(Cm[b].numpy()), dtype=Cm[b].numpy().dtype)), atol=1e-10,
                                        rtol=0)
         torch.testing.assert_close(V.product(V.inverse(c), c), V.unit((4,)), atol=1e-11, rtol=0)
 

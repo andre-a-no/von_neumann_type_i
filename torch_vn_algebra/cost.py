@@ -125,11 +125,23 @@ def check_memory(nbytes: float, device, what: str):
                       f"{torch.device(device)}; {hint} if this fails.", CostWarning, stacklevel=3)
 
 
+def itemsize(dtype: torch.dtype) -> int:
+    """Bytes per entry of `dtype` (torch.dtype.itemsize exists only from PyTorch 2.1)."""
+    return torch.empty((), dtype=dtype).element_size()
+
+
+def abs_max(x: torch.Tensor, dim=None) -> torch.Tensor:
+    """max |x_i| over `dim` (all axes by default) up to a factor sqrt(2) (max of |Re|, |Im|): a scale that never
+    overflows (older PyTorch computes |z| of large complex entries as sqrt(Re^2 + Im^2) and overflows)."""
+    r = torch.maximum(x.real.abs(), x.imag.abs()) if x.is_complex() else x.abs()
+    return r.amax() if dim is None else r.amax(dim=dim)
+
+
 def tensor_bytes(shape, dtype) -> int:
     n = 1
     for s in shape:
         n *= int(s)
-    return n * dtype.itemsize
+    return n * itemsize(dtype)
 
 
 def kernel_flops(kind: str, k: int, complex_: bool) -> float:

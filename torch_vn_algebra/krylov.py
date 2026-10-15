@@ -93,9 +93,9 @@ def _norm(x: torch.Tensor) -> torch.Tensor:
     Euclidean norm over the last axis without overflow or underflow of the sum of squares (float32 overflows for
     entries above ~1.8e19): the vector is divided by its largest entry first. 0 for a zero vector.
     """
-    scale = x.abs().amax(dim=-1)
-    safe = torch.where(scale > 0, scale, torch.ones_like(scale))
-    return torch.linalg.vector_norm(x / safe.unsqueeze(-1).to(x.dtype), dim=-1) * scale
+    scale = cost.abs_max(x, -1)
+    safe = torch.where(scale > 0, scale.clamp(min=torch.finfo(scale.dtype).tiny), torch.ones_like(scale))
+    return torch.linalg.vector_norm(x * safe.reciprocal().unsqueeze(-1).to(x.dtype), dim=-1) * scale
 
 
 def lanczos(matvec: Callable, v0: torch.Tensor, m: int) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -105,7 +105,7 @@ def lanczos(matvec: Callable, v0: torch.Tensor, m: int) -> Tuple[torch.Tensor, t
     Breakdown (an invariant subspace) is handled by zero beta and zero further vectors.
     """
     B, k = v0.shape
-    q = v0 / torch.clamp(_norm(v0), min=1e-300).unsqueeze(-1).to(v0.dtype)   # v0 = 0 stays 0
+    q = v0 * torch.clamp(_norm(v0), min=1e-300).reciprocal().unsqueeze(-1).to(v0.dtype)   # v0 = 0 stays 0
     w_first = matvec(q)
     dtype = torch.promote_types(v0.dtype, w_first.dtype)     # a complex H makes the basis complex
     q = q.to(dtype)
@@ -134,7 +134,7 @@ def lanczos(matvec: Callable, v0: torch.Tensor, m: int) -> Tuple[torch.Tensor, t
         # constant shift (|Hq| ~ |shift|, while beta does not depend on it)
         ok = b > 100 * torch.finfo(b.dtype).eps * torch.clamp(scale, min=1e-300)
         beta[:, j] = torch.where(ok, b, torch.zeros_like(b))
-        q = torch.where(ok[:, None], w / torch.clamp(b, min=1e-300)[:, None], torch.zeros_like(w))
+        q = torch.where(ok[:, None], w * torch.clamp(b, min=1e-300).reciprocal()[:, None].to(w.dtype), torch.zeros_like(w))
     return alpha, beta, Q
 
 
@@ -177,7 +177,7 @@ def ground_state(H, m: int = 80, tol: Optional[float] = None, max_restarts: int 
         alpha, beta, Q = lanczos(H.matvec, v, m)
         w, Y = torch.linalg.eigh(_ritz_matrix(alpha, beta, Q))
         psi = torch.einsum('bj,bjk->bk', Y[:, :, 0].to(Q.dtype), Q)
-        psi = psi / _norm(psi).unsqueeze(-1).to(psi.dtype)
+        psi = psi * _norm(psi).reciprocal().unsqueeze(-1).to(psi.dtype)
         E = w[:, 0]
         res = _norm(H.matvec(psi) - E[:, None].to(psi.dtype) * psi)
         if torch.all(res < tol * torch.clamp(E.abs(), min=1.0)):

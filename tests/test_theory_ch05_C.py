@@ -373,7 +373,7 @@ def test_lemma_5_8_commutant_of_V_tensor_V(k):
     # 1 and F lie in the span of the basis
     flat = basis.reshape(basis.shape[0], -1)
     for A in (torch.eye(k * k, dtype=CD), F):
-        coef = torch.linalg.lstsq(flat.T, A.reshape(-1, 1)).solution
+        coef = torch.linalg.lstsq(flat.T, A.reshape(-1, 1), driver='gelsd').solution
         assert torch.allclose(flat.T @ coef, A.reshape(-1, 1), atol=1e-10)
 
 

@@ -914,7 +914,7 @@ def test_exercise_2_2_cyclic_shift():
         assert maxdiff(S @ u, w ** j * u) < 1e-12
     # every circulant commutes with S, and the commutant basis lies in span{1, S, S^2}
     span = torch.stack([torch.eye(3, dtype=DT), S, S @ S]).reshape(3, 9)
-    coeff = torch.linalg.lstsq(span.T, c1.reshape(3, 9).T).solution
+    coeff = torch.linalg.lstsq(span.T, c1.reshape(3, 9).T, driver='gelsd').solution
     assert maxdiff(span.T @ coeff, c1.reshape(3, 9).T) < 1e-12
 
 

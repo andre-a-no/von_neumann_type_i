@@ -180,7 +180,7 @@ assert abs(exact[0, 0].item() - 1 / 4) < 1e-12                            # Coro
 
 X = torch.randn(N, N, dtype=dt)
 T = Phi(X)
-coef = torch.linalg.lstsq(P.reshape(len(perms), -1).T, T.reshape(-1, 1)).solution
+coef = torch.linalg.lstsq(P.reshape(len(perms), -1).T, T.reshape(-1, 1), driver='gelsd').solution
 assert close(Phi(T), T) and close(torch.einsum('s,sij->ij', coef[:, 0], P), T)   # a projection into span pi(S_n)
 Vn = power(haar(d, 1), n)[0]
 assert close(Vn @ T, T @ Vn)                                             # = {V^{(x)n}}'
