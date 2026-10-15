@@ -8,6 +8,7 @@ authors:
   - given-names: Andrej
     family-names: Novikov
 version: 1.0.0
+date-released: 2026-10-15
 license: MIT
 repository-code: "https://github.com/andre-a-no/von_neumann_type_i"
 url: "https://andre-a-no.github.io/von_neumann_type_i/"

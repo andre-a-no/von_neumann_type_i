@@ -33,7 +33,8 @@ pytest -q                      # about a minute on a CPU; GPU tests run when CUD
      (`tests/test_sync_free.py` counts them);
    - property flags set by the library must be mathematically guaranteed;
    - single and double precision, real and complex algebras, CPU and GPU.
-4. Run `pytest -q` before pushing; CI runs the test suite on Python 3.9–3.12.
+4. Run `pytest -q` before pushing; CI runs the test suite on Python 3.8–3.13 with the latest dependencies and on Python 3.8 with the oldest
+   supported ones (PyTorch 1.13, NumPy 1.21, SciPy 1.7): do not use newer APIs without a fallback.
 5. Changes visible to users go into `CHANGELOG.md` under "Unreleased".
 
 ## Documentation

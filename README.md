@@ -2,8 +2,8 @@
 
 [![tests](https://github.com/andre-a-no/von_neumann_type_i/actions/workflows/tests.yml/badge.svg)](https://github.com/andre-a-no/von_neumann_type_i/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/torch_vn_algebra.svg)](https://pypi.org/project/torch_vn_algebra/)
-[![Python](https://img.shields.io/badge/python-3.9%E2%80%933.13-blue.svg)](pyproject.toml)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org)
+[![Python](https://img.shields.io/badge/python-3.8%E2%80%933.13-blue.svg)](pyproject.toml)
+[![PyTorch](https://img.shields.io/badge/PyTorch-1.13+-red.svg)](https://pytorch.org)
 [![arXiv](https://img.shields.io/badge/arXiv-2606.15882-b31b1b.svg)](https://arxiv.org/abs/2606.15882)
 [![docs](https://img.shields.io/badge/docs-lecture%20notes%20%26%20tutorial-blue.svg)](https://andre-a-no.github.io/von_neumann_type_i/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -152,7 +152,10 @@ below are the better choice; the sections *What to compare with* of the tutorial
 
 ## Installation
 
-From PyPI (once version 1.0.0 is released; install PyTorch for your CPU/GPU first, see <https://pytorch.org>):
+Requirements: Python ≥ 3.8, PyTorch ≥ 1.13, NumPy ≥ 1.21 (the whole test suite runs in CI with exactly these
+minimal versions and with the latest ones on Python 3.8–3.13); SciPy ≥ 1.7 only for the tests and scripts.
+
+From PyPI (install PyTorch for your CPU/GPU first, see <https://pytorch.org>):
 
 ```bash
 pip install torch_vn_algebra

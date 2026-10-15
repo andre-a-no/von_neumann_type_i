@@ -470,7 +470,8 @@ def test_krylov_scale_safe_norms():
         out_big = krylov.evolve(H, big * v, [0.0, 0.5])[-1]
         out = krylov.evolve(H, v, [0.0, 0.5])[-1]
         assert torch.isfinite(out_big).all()
-        assert ((out_big / big - out).abs().max() < (1e-12 if prec == 'double' else 1e-5))
+        assert ((out_big * (1 / big) - out).abs().max() < (1e-12 if prec == 'double' else 1e-5))   # not / big: older
+        # PyTorch divides complex by real without scaling
         E_big, _, _ = krylov.ground_state(H, v0=big * v)
         E, _, _ = krylov.ground_state(H, v0=v)
         assert torch.isfinite(E_big).all() and abs(E_big.item() - E.item()) < (1e-9 if prec == 'double' else 1e-4)

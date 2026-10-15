@@ -4,9 +4,12 @@ All notable changes to `torch_vn_algebra`. The format follows [Keep a Changelog]
 versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the public API is everything exported by
 `torch_vn_algebra/__init__.py` and documented in the module docstrings).
 
-## [1.0.0] – unreleased
+## [1.0.0] – 2026-10-15
 
-First release, the version described in the paper (arXiv:2606.15882v2) and submitted with it.
+First release, the version described in the paper (arXiv:2606.15882).
+
+Requirements: Python ≥ 3.8, PyTorch ≥ 1.13, NumPy ≥ 1.21; the test suite runs in CI with these oldest versions
+and with the latest ones on Python 3.8–3.13.
 
 ### Added
 - `dynamics.lindblad_evolve(..., method='rk4' | 'kraus' | 'exact')` and `LINDBLAD_METHODS`: time steps that are
@@ -86,6 +89,9 @@ First release, the version described in the paper (arXiv:2606.15882v2) and submi
   finite value.
 
 ### Changed
+- Minimum requirements lowered from Python 3.9 / PyTorch 2.0 to Python 3.8 / PyTorch 1.13 / NumPy 1.21
+  (fallbacks for `torch.dtype.itemsize`, `check_invariants` of sparse tensors, overflow-safe complex scaling and
+  version-independent gradients at the boundary of the positive cone); the package builds with setuptools ≥ 61.
 - Decompositions run as one batched call per distinct block size, split into one chunk per thread on a multi-core
   CPU; no host synchronisations in the computational paths (GPU).
 - `optimize`: spectra parametrised to reach the ends of [lambda_min, 1]; sign patterns of self-adjoint operators are

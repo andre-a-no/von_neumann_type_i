@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=77"]
+requires = ["setuptools>=61"]                # 61: PEP 621 metadata; also builds on Python 3.8
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,11 +7,10 @@ name = "torch_vn_algebra"
 dynamic = ["version"]
 description = "PyTorch library for block-diagonal matrices with symmetry sectors (Type I von Neumann algebras): Haar random unitaries, quantum states, channels, Lindblad dynamics, spin chains; batched on GPU"
 readme = "README.md"
-license = "MIT"
-license-files = ["LICENSE"]
+license = { text = "MIT" }                   # table form: SPDX strings need setuptools >= 77 (Python >= 3.9)
 authors = [{ name = "Irina Nikolaeva" }, { name = "Andrej Novikov" }]
-requires-python = ">=3.9"
-dependencies = ["torch>=2.0", "numpy"]
+requires-python = ">=3.8"
+dependencies = ["torch>=1.13", "numpy>=1.21"]   # the whole test suite passes with these minimal versions
 keywords = ["von Neumann algebra", "operator algebra", "block-diagonal matrix", "symmetry sectors",
             "superselection sectors", "quantum information", "quantum channels", "Kraus operators", "Choi matrix",
             "density matrix", "quantum entropy", "Renyi divergence", "Lindblad equation", "master equation",
@@ -25,9 +24,11 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Intended Audience :: Education",
     "Natural Language :: English",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -51,7 +52,7 @@ Changelog = "https://github.com/andre-a-no/von_neumann_type_i/blob/main/CHANGELO
 
 [project.optional-dependencies]
 scripts = ["scipy", "pandas", "tqdm", "matplotlib", "seaborn", "mpmath"]
-test = ["pytest", "scipy"]
+test = ["pytest", "scipy>=1.7"]
 
 [tool.setuptools]
 packages = ["torch_vn_algebra"]

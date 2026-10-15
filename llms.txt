@@ -2,7 +2,7 @@
 
 > Python library (PyTorch, CPU and CUDA GPU) for batched computation with block-diagonal matrices in symmetry sectors, i.e. finite-dimensional Type I von Neumann algebras M = ⊕_c M_{k_c}(C). Operators are tensors of shape (batch, C, k_max, k_max). Covers random operators and Haar-random unitaries, density matrices and entropies, quantum channels (Kraus, Choi, Stinespring) within and between sectors, tensor products with charge fusion and partial traces, Schrödinger and Lindblad dynamics, spin chains in U(1), momentum and SU(2) sectors (Lanczos, Krylov), numerical Wedderburn decomposition and commutants of matrix algebras and group representations, Clebsch–Gordan coefficients, inclusions of algebras with conditional expectations and Jones indices, Jordan algebras, Petz and sandwiched Rényi divergences, and constrained batched optimisation; differentiable with autograd. MIT license. Companion paper: arXiv:2606.15882.
 
-Install: `pip install torch_vn_algebra` (install PyTorch first). Import: `from torch_vn_algebra import TypeIAlgebra`. Python 3.9 or newer, torch >= 2.0, numpy.
+Install: `pip install torch_vn_algebra` (install PyTorch first). Import: `from torch_vn_algebra import TypeIAlgebra`. Python 3.8 or newer, torch >= 1.13, numpy >= 1.21.
 
 ## Documentation
 

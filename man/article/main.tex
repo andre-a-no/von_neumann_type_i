@@ -84,7 +84,7 @@ Rényi divergences, with the violations certified in high-precision arithmetic.
 \item[Program title:] \texttt{torch\_vn\_algebra}
 \item[Developer's repository link:] \url{https://github.com/andre-a-no/von_neumann_type_i}
 \item[Licensing provisions:] MIT
-\item[Programming language:] Python ($\ge3.9$), PyTorch ($\ge2.0$)
+\item[Programming language:] Python ($\ge3.8$), PyTorch ($\ge1.13$), NumPy ($\ge1.21$)
 \item[Nature of problem:] Numerical experiments in finite-dimensional Type~I von Neumann algebras
 $\bigoplus_cM_{k_c}(\C)$, which describe quantum systems with superselection rules or conserved charges:
 random operators with prescribed spectra, several trace functionals, states, channels within and between
@@ -309,11 +309,11 @@ are described by maps between sectors as above (Section~\ref{sec:chains}).
 
 \section{Design and implementation}\label{sec:design}
 
-\paragraph{Software stack.} The library is pure Python on top of PyTorch~\cite{paszke2019} ($\ge2.0$) and NumPy~\cite{harris2020}. All dense linear algebra goes through \texttt{torch.linalg}, i.e.\ LAPACK
+\paragraph{Software stack.} The library is pure Python on top of PyTorch~\cite{paszke2019} ($\ge1.13$) and NumPy~\cite{harris2020}. All dense linear algebra goes through \texttt{torch.linalg}, i.e.\ LAPACK
 (MKL or OpenBLAS) on CPUs and cuSOLVER, cuBLAS and MAGMA on NVIDIA GPUs; sparse products use PyTorch's CSR
 tensors. Automatic differentiation is PyTorch's reverse mode. The validation and paper scripts additionally use
 SciPy, pandas, Matplotlib and mpmath (for the high-precision certification of Section~\ref{sec:renyi}). Packaging follows \texttt{pyproject.toml}; the test suite runs in continuous
-integration on Python~3.9, 3.10 and 3.12 (CPU), and the paper scripts state the device and mode in the table captions and record the matmul precision, the
+integration on Python~3.8--3.13 (CPU) and with the oldest supported versions (Python~3.8, PyTorch~1.13, NumPy~1.21), and the paper scripts state the device and mode in the table captions and record the matmul precision, the
 PyTorch, CUDA and cuDNN versions and the compute capability in a JSON file next to every table.
 
 \paragraph{Workflow.} A computation proceeds in four steps. (1) An algebra is declared by its sector sizes,

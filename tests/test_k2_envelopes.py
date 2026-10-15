@@ -89,7 +89,7 @@ def test_bounds_hold_for_random_complex_pairs():
 
     def haar():
         Z = (rng.normal(size=(n, 2, 2)) + 1j * rng.normal(size=(n, 2, 2))) / math.sqrt(2)
-        Q, R = np.linalg.qr(Z)
+        Q, R = map(np.stack, zip(*[np.linalg.qr(z) for z in Z]))      # batched qr needs NumPy >= 1.22
         d = np.diagonal(R, axis1=-2, axis2=-1)
         return Q * (d / np.abs(d))[:, None, :]
     x = -np.sort(-rng.random((n, 2)), -1)

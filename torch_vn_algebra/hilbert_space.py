@@ -144,7 +144,7 @@ class HilbertSpace:
             norm = norm.squeeze(-1)
         # Replace zero norms with 1 to avoid division by zero
         norm = torch.where(norm < eps, torch.ones_like(norm), norm)
-        return ket / norm
+        return ket * norm.reciprocal().to(ket.dtype)          # not ket / norm: see norm()
     
     class Basis:
         """
