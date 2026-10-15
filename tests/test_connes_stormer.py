@@ -200,6 +200,7 @@ def test_library_path_equals_numpy():
 
 def test_certification_matches_double():
     """certify (mpmath, re-normalised partition and unitary) agrees with the double-precision value."""
+    pytest.importorskip("mpmath")
     rng = np.random.default_rng(17)
     U = haar_np(rng, 3)
     Z = rng.normal(size=(4, 3, 1)) + 1j * rng.normal(size=(4, 3, 1))
@@ -211,6 +212,7 @@ def test_certification_matches_double():
 def test_quick_comparison_n3_runs():
     """The core of the script (quick configuration) for n = 3 on two Haar unitaries: H >= Choda's value, the bound
     G* >= H of the Lemma, partitions >= bases up to round-off, valid structure of the result."""
+    pytest.importorskip("mpmath")
     torch.manual_seed(0)
     cfg = dict(cs.CONFIGS['quick'], digits=20)
     out = cs.compare(3, 2, cfg, 'cpu', 0, log=lambda s: None)
