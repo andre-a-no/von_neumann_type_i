@@ -143,11 +143,13 @@ def test_lemma_ensemble_identity_and_upper_bound():
             return S(np.real(np.diag(U.conj().T @ rho @ U))) - S(np.real(np.diag(rho)))
 
         for _ in range(20):
-            xs = random_partition(rng, int(rng.integers(2, 2 * n)), n, r=int(rng.integers(1, n + 1)))
+            m = int(rng.integers(2, 2 * n))
+            xs = random_partition(rng, m, n, r=int(rng.integers(-(-n // m), n + 1)))   # m r >= n: S invertible
+            assert np.abs(sum(xs) - np.eye(n)).max() < 1e-12 and min(np.linalg.eigvalsh(x).min() for x in xs) > -1e-12
             t = [np.trace(x).real / n for x in xs]
             rhos = [x / np.trace(x).real for x in xs]
             val = cs.cs_numpy(U, xs)
-            assert abs(sum(t)) - 1 < 1e-12
+            assert abs(sum(t) - 1) < 1e-12
             assert abs(val - sum(tj * G(r) for tj, r in zip(t, rhos))) < 1e-12
             assert val <= max(G(r) for r in rhos) + 1e-12
             assert val <= math.log(n) + 1e-12
