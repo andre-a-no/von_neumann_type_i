@@ -14,6 +14,9 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 - Script `scripts/trace_characterizations.py` and paper use case: violation envelopes V(δ) of eleven inequalities
   that characterise the trace (Gardner, Bikchentaev and coauthors) for φ = Tr(W·) against the Michelson contrast δ of W;
   sharp values (Kantorovich constant, a/b, Specht ratio) proved where possible, violations certified in mpmath.
+- Script `scripts/symmetry_resolved.py` and paper use case: symmetry-resolved entanglement of XXZ ground states
+  (L = 24, eight anisotropies in one batched Lanczos run), with ρ_A assembled block by block in the fused product
+  algebra; equipartition and its breaking, the Luttinger parameter from the charge statistics, free-fermion checks.
 - Script `scripts/connes_stormer.py` and paper subsection "Use case: the Connes–Størmer entropy of two MASAs":
   H(Δ_n | UΔ_nU*) computed by batched optimisation over partitions of unity; closed form for n = 2 (one-dimensional
   maximisation, H > Choda's h(U) unless |u_11|² ∈ {0, 1/2, 1}); for n = 3, 4, 5 general partitions beat the best

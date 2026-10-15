@@ -344,7 +344,9 @@ nohup bash scripts/run_all.sh full cuda > full_run.log 2>&1 &   # the full run (
   orthonormal bases are not always optimal for n ≥ 3; about 12 minutes in full mode on a CPU), `chains` (Section 7), `baselines` (Section 9),
   `benchmark_library` (Section 10), `permutational` (use case: a boundary time crystal of N two-level systems under
   local emission and dephasing, N up to 80 on a CPU and 200 on a GPU), `trace_characterizations` (use case: how strongly inequalities that characterise
-  the trace fail for Tr(W·) as a function of the Michelson contrast of W; about 5 minutes on a CPU).
+  the trace fail for Tr(W·) as a function of the Michelson contrast of W; about 5 minutes on a CPU), `symmetry_resolved`
+  (use case: symmetry-resolved entanglement of XXZ ground states, ρ_A in ⊕_q M_{binom(ℓ,q)} without forming |ψ⟩⟨ψ|;
+  L = 24 in about 20 minutes on a CPU).
 - The driver first prints the GPU, its memory, CUDA and cuDNN versions (also saved to
   `man/article/generated/logs/environment.txt`) and stops if CUDA is not available.
 - Every script writes its own log to `man/article/generated/logs/<script>.log`, including run-time estimates

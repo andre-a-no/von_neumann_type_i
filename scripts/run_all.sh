@@ -17,7 +17,7 @@ EXAMPLE_ENV=""
 if [ "$DEVICE" = cpu ]; then EXAMPLE_ENV="CUDA_VISIBLE_DEVICES="; fi   # the examples pick CUDA when visible
 # short scripts first; inequality_search and bounds_search take hours in full mode and resume after an
 # interruption (finished parts are kept in generated/partial/ until the script completes)
-SCRIPTS=${ONLY:-"validate_known_results numerics baselines benchmark_library chains renyi_threshold connes_stormer permutational trace_characterizations inequality_search bounds_search"}
+SCRIPTS=${ONLY:-"validate_known_results numerics baselines benchmark_library chains renyi_threshold connes_stormer permutational trace_characterizations symmetry_resolved inequality_search bounds_search"}
 cd "$(dirname "$0")/.."
 OUTDIR=man/article/generated                     # only full runs write the paper's tables
 OUTARGS=""

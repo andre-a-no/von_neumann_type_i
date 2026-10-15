@@ -22,7 +22,7 @@
 
 % numbers and tables produced by scripts/*.py (bash scripts/run_all.sh [quick|full] [device])
 \newcommand{\gen}[1]{\IfFileExists{generated/#1.tex}{\input{generated/#1.tex}}{}}
-\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}\gen{renyi_threshold}\gen{connes_stormer}\gen{permutational}\gen{trace_characterizations}
+\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}\gen{renyi_threshold}\gen{connes_stormer}\gen{permutational}\gen{trace_characterizations}\gen{symmetry_resolved}
 % Captions that use these numbers have an empty short caption: the short caption is expanded into main.aux,
 % where a number whose file is missing would be an undefined control sequence.
 \providecommand{\ValidationRows}{\multicolumn{6}{c}{\emph{run scripts/validate\_known\_results.py}}\\}
@@ -1615,6 +1615,8 @@ against independent computations, and reports what is reproduced and what is new
 
 \input{usecases/permutational.tex}
 
+\input{usecases/symmetry_resolved.tex}
+
 \section{Comparison with NumPy/SciPy}\label{sec:baselines}
 
 To separate what the library adds from what plain array code already gives, the same computations were written
@@ -1998,6 +2000,22 @@ degenerate cases'', arXiv:2011.04366 (2020).
   of tracial functionals in operator algebras'', Positivity (2026), doi:10.1007/s11117-026-01180-0.
 \bibitem{bikchentaev2026sgm} A.~M.~Bikchentaev, T.~H.~Dinh, A.~V.~Le, M.~S.~Moslehian, ``Spectral geometric mean
   and trace characterizations'', Positivity 30 (2026), Art.~46.
+\bibitem{laflorencie2014} N.~Laflorencie, S.~Rachel, ``Spin-resolved entanglement spectroscopy of critical spin
+  chains and Luttinger liquids'', J.\ Stat.\ Mech.\ (2014), P11013.
+\bibitem{bonsignori2019} R.~Bonsignori, P.~Ruggiero, P.~Calabrese, ``Symmetry resolved entanglement in free fermionic
+  systems'', J.\ Phys.\ A 52 (2019), 475302.
+\bibitem{fraenkel2020} S.~Fraenkel, M.~Goldstein, ``Symmetry resolved entanglement: exact results in 1D and beyond'',
+  J.\ Stat.\ Mech.\ (2020), 033106.
+\bibitem{estienne2021} B.~Estienne, Y.~Ikhlef, A.~Morin-Duchesne, ``Finite-size corrections in critical
+  symmetry-resolved entanglement'', SciPost Phys.\ 10 (2021), 054.
+\bibitem{song2012} H.~F.~Song, S.~Rachel, C.~Flindt, I.~Klich, N.~Laflorencie, K.~Le~Hur, ``Bipartite fluctuations as
+  a probe of many-body entanglement'', Phys.\ Rev.\ B 85 (2012), 035409.
+\bibitem{lukin2019} A.~Lukin, M.~Rispoli, R.~Schittko, M.~E.~Tai, A.~M.~Kaufman, S.~Choi, V.~Khemani, J.~L\'eonard,
+  M.~Greiner, ``Probing entanglement in a many-body-localized system'', Science 364 (2019), 256--260.
+\bibitem{kiefer2020} M.~Kiefer-Emmanouilidis, R.~Unanyan, M.~Fleischhauer, J.~Sirker, ``Evidence for unbounded growth
+  of the number entropy in many-body localized phases'', Phys.\ Rev.\ Lett.\ 124 (2020), 243601.
+\bibitem{chen2026} K.~Chen, W.~Jia, X.~Li, R.~Meyer, J.~Zhao, ``Detecting symmetry-resolved entanglement: a quantum
+  Monte Carlo approach'', arXiv:2604.02307 (2026).
 \end{thebibliography}
 }
 
