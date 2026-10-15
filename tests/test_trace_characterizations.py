@@ -137,7 +137,12 @@ SHARP = ['gardner', 'triangle', 'realpart', 'square', 'metric', 'young', 'det']
 # ----------------------------------------------------------------------------------------------------------------
 # closed forms: upper bounds never exceeded, explicit extremisers attain them
 # ----------------------------------------------------------------------------------------------------------------
-@pytest.mark.parametrize('name', tc.ORDER)
+ORIGINAL = ['gardner', 'triangle', 'realpart', 'square', 'metric', 'sgm', 'alt', 'young', 'projections', 'monotone',
+            'det']
+NEW = ['subadd', 'powers', 'holder', 'gt', 'pb']
+
+
+@pytest.mark.parametrize('name', ORIGINAL)
 def test_random_points_never_exceed_the_proved_value(name):
     """No random point exceeds V* (the sharp value; for items 6, 7, 10 the lower bound that the search never exceeds
     for n = 2, and a/b - 1 for item 6 with n = 3), for n = 2, 3 and three-level W; V <= 0 for the trace (delta = 0)."""
@@ -439,3 +444,62 @@ def test_quick_run_and_summary():
     assert S['sharp_dev'] < 1e-2
     assert S['sector_central'] < 1e-6
     assert S['sector_det'] < 1e-4
+
+
+# ----------------------------------------------------------------------------------------------------------------
+# items 12-16 (subadditivity, Powers-Stormer, Hoelder and Golden-Thompson for projections, Peierls-Bogoliubov)
+# ----------------------------------------------------------------------------------------------------------------
+@pytest.mark.parametrize('name', NEW)
+def test_new_items_hold_for_the_trace(name):
+    """At delta = 0 (W = 1/2) the forms of items 12-16 used here are true trace inequalities: no random point
+    violates them (plain NumPy, M_2)."""
+    rng = np.random.default_rng(len(name) + 100)
+    w = np.array([0.5, 0.5])
+    dim = 4 if name in ('holder', 'gt') else 16
+    for _ in range(300):
+        v = tc.numpy_value(name, w, rng.normal(size=dim))
+        assert v <= 1e-9, (name, v)
+
+
+@pytest.mark.parametrize('name', NEW)
+def test_new_items_library_matches_scipy_reference(name):
+    """At delta = 0.5 on M_2 the batched library search and the independent SciPy search (plain NumPy, BFGS) find a
+    violation; the library reaches the SciPy value to 2% or exceeds it."""
+    V, final, pts, _ = tc.envelope(name, [2], [0.5], 12, 5, 50, 3)
+    lib = final.max()
+    sci = tc.scipy_reference(name, 0.5, 8, 1)
+    assert lib > 1e-3 and sci > 1e-3
+    assert lib >= 0.98 * sci or name in ('pb', 'powers')       # (pb, powers: suprema approached at the boundary)
+    assert abs(tc.certify(name, pts[0], [2], 30)[0] - lib) < 1e-8 * max(1, lib)
+
+
+def test_holder_projections_leading_order():
+    """Hoelder for projections, p = 3: V = (1 - 2/p)^2 delta^2/4 + O(delta^3) = delta^2/36 + ... (reduced SciPy model
+    on M_2), and p = 2 (Cauchy-Schwarz) is never violated."""
+    for d in (0.02, 0.05):
+        v = tc.scipy_reference('holder', d, 20, 2)
+        assert abs(v / d ** 2 - 1 / 36) < 0.03 / 36 + d * 0.05
+    old = tc.HOLDER_P
+    try:
+        tc.HOLDER_P = 2.0
+        assert tc.scipy_reference('holder', 0.7, 10, 3) <= 1e-12
+    finally:
+        tc.HOLDER_P = old
+
+
+def test_powers_stormer_unbounded_relative_to_its_right_side():
+    """Powers-Stormer with N = R: for nearly orthogonal rank-one A, B the ratio (L - R)/R grows like 1/c (c the
+    overlap), so the normalisation N = phi(A + B) is used instead."""
+    d = 0.5
+    w = density(d)
+    vals = []
+    for c in (1e-2, 1e-3, 1e-4):
+        m = (np.array([1.0, 1.0]) / math.sqrt(2))
+        mp_ = np.array([1.0, -1.0]) / math.sqrt(2)
+        u = m
+        v = c * m + math.sqrt(1 - c ** 2) * mp_
+        A, B = np.outer(u, u), np.outer(v, v)
+        L = phi(w, A + B).real - phi(w, hf(A - B, np.abs)).real
+        R = 2 * phi(w, A @ B @ A).real                       # A^{1/4} = A, B^{1/2} = B for projections
+        vals.append((L - R) / R)
+    assert vals[0] > 10 and vals[1] > 8 * vals[0] and vals[2] > 8 * vals[1]

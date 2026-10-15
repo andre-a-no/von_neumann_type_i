@@ -14,6 +14,8 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 - Script `scripts/trace_characterizations.py` and paper use case: violation envelopes V(δ) of eleven inequalities
   that characterise the trace (Gardner, Bikchentaev and coauthors) for φ = Tr(W·) against the Michelson contrast δ of W;
   sharp values (Kantorovich constant, a/b, Specht ratio) proved where possible, violations certified in mpmath.
+  Extended to sixteen inequalities: Tikhonov's subadditivity, a Powers–Størmer-type inequality (Hoa, Osaka, Toan),
+  Hölder and Golden–Thompson inequalities for projections, and Peierls–Bogoliubov.
 - Script `scripts/symmetry_resolved.py` and paper use case: symmetry-resolved entanglement of XXZ ground states
   (L = 24, eight anisotropies in one batched Lanczos run), with ρ_A assembled block by block in the fused product
   algebra; equipartition and its breaking, the Luttinger parameter from the charge statistics, free-fermion checks.

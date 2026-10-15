@@ -36,31 +36,106 @@ Throughout, φ is a positive linear functional. On M_n it has the form φ = Tr(W
 | 10 | 0 ≤ A ≤ B ⟹ φ(A^p) ≤ φ(B^p). We use **p = 2** | positive A ≤ B | M_n | if the implication holds for all A ≤ B (fixed p > 1), then φ is a non-negative multiple of Tr | A. M. Bikchentaev, O. E. Tikhonov, *Characterization of the trace by monotonicity inequalities*, Linear Algebra Appl. 422 (2007), no. 1, 274–278, doi:10.1016/j.laa.2006.10.005 | A |
 | 11 | (det A)^{1/n} ≤ φ(A)/n with φ(1) = n (an AM–GM analogue) | positive A | M_n | if "some analog of the classical inequalities for the determinant and trace (or permanent and trace)" holds for φ with φ(1) = n, then φ = Tr. **Which determinant inequality the paper uses was not seen**; AM–GM is our choice. This item characterises the *canonical* trace, not traces in general | A. M. Bikchentaev, *Inequalities for determinants and characterization of the trace*, Sib. Math. J. 61 (2020), 248–254, doi:10.1134/S0037446620020068 | A |
 
+## A′. Inequalities evaluated numerically (second round: Hoa, Tikhonov, Novikov, Stolyarov, Petz–Zemánek and others)
+
+These were added at the author's request. Items 12–16 are evaluated in the paper. The column "seen" uses the same
+codes as above.
+
+| # | inequality (form used) | operators | algebra | statement of the characterisation | reference | seen |
+|---|---|---|---|---|---|---|
+| 12 | φ((A+B)^{1/2}) ≤ φ(A^{1/2}) + φ(B^{1/2}). We use **f(t) = t^{1/2}** | positive A, B | von Neumann algebra, positive normal φ | the abstract asks under which assumptions on φ and on a Borel function f with f(0) = 0 the subadditivity inequality φ(f(A+B)) ≤ φ(f(A)) + φ(f(B)) holds for all positive A, B. The visible abstract breaks off there, but later papers cite it as a characterisation of tracial functionals. We use the concave choice f = t^{1/2}; for the trace this is Rotfel'd's inequality | O. E. Tikhonov, *Subadditivity inequalities in von Neumann algebras and characterization of tracial functionals*, Positivity 9 (2005), 259–264, doi:10.1007/s11117-005-2711-1 | A (truncated) |
+| 13 | φ(A+B−\|A−B\|) ≤ 2φ(f(A)^{1/2} g(B) f(A)^{1/2}) with g(t) = t/f(t). We use **f = g = t^{1/2}**: φ(A+B−\|A−B\|) ≤ 2φ(A^{1/4}B^{1/2}A^{1/4}) | positive A, B | C*-algebra, positive linear φ | the generalised Powers–Størmer inequality holds for f operator monotone on [0, ∞), and it "characterizes the tracial functionals on C*-algebras". The exact form shown here comes from a slide summary, not from the paper | D. T. Hoa, H. Osaka, H. M. Toan, *On generalized Powers–Størmer's inequality*, Linear Algebra Appl. 438 (2013), no. 1, 242–249, doi:10.1016/j.laa.2012.07.053; arXiv:1204.6665 | A, S |
+| 14 | \|φ(PQ)\| ≤ φ(P)^{1/p} φ(Q)^{1/q}. We use **p = 3**, q = 3/2 | projections | M_n; C*-algebras | "Hölder, Cauchy–Schwarz(–Bunyakovskii), Golden–Thompson … inequalities, when they hold only for projections, characterize tracial functionals". The exact projection form and exponents were not seen. For p = 2 the inequality is the Cauchy–Schwarz inequality and holds for every positive φ, which explains the restriction p ≠ 2 in #9 (Bikchentaev–Abed) | A. M. Bikchentaev, slides "Commutativity of projections and characterization of tracial functionals" (www.imar.ro/~ot/Bikchentaev.pdf, seen only through a search snippet); restated in Moslehian–Bikchentaev, J. Math. Anal. Appl. 552 (2025), 129764 (search summary of its introduction); compare Bikchentaev–Abed (2019), #9 | S |
+| 15 | φ(e^{P+Q}) ≤ φ(e^{P/2} e^Q e^{P/2}) (symmetric Golden–Thompson) | projections | M_n | same source as #14: Golden–Thompson restricted to projections characterises tracial functionals. **Primary paper not identified; form not seen.** We do **not** attribute it to Petz–Zemánek (see B11) | as #14 | S |
+| 16 | φ(e^A) exp(φ(e^{A/2}Be^{A/2})/φ(e^A)) ≤ φ(e^{A+B}) (symmetric Peierls–Bogoliubov) | self-adjoint A, B | C*-algebra | "either the Peierls–Bogoliubov or the Araki–Lieb–Thirring inequality characterises tracial functionals among positive functionals"; it also answers a question of J. Zemánek. The form of φ(e^A B) used in the paper was not seen; we use the symmetric (real) version | Bikchentaev (2011), as #7 | A |
+
 ## B. Further characterisations (not evaluated: the form was not visible, or the statement is not an inequality)
 
 | # | statement (as far as seen) | algebra | reference | seen |
 |---|---|---|---|---|
-| 12 | "Characterizations of the trace": the content was not visible | M_n | D. Petz, J. Zemánek, *Characterizations of the trace*, Linear Algebra Appl. 111 (1988), 43–52, doi:10.1016/0024-3795(88)90050-X | L |
-| 13 | a positive functional φ on M_n is a positive multiple of Tr iff φ(A) = φ(\|A\|) implies A ≥ 0. For φ(1) = n, a Yang-type inequality φ(A^{1/2}BA^{1/2})^{1/2} ≤ φ(A+B)/2 (A, B ≥ 0) singles out Tr; the placement of the square root was not clear to us | M_n | M. S. Moslehian, A. M. Bikchentaev, *Characterizations of the canonical trace on full matrix algebras*, J. Math. Anal. Appl. 552 (2025), no. 2, 129764 | A |
-| 14 | characterisations of Tr on M_n by a commutator inequality for Hermitian matrices and by a generalised AM–GM inequality for all matrices and conjugate exponents (forms not seen) | M_n | M. S. Moslehian, *More characterizations of the matrix trace*, Rend. Circ. Mat. Palermo (2) 74 (2025), Art. 130, doi:10.1007/s12215-025-01253-1 | A |
-| 15 | inequalities for the spread λ_max − λ_min characterise Tr among positive φ with φ(1) = n, for n ≥ 3; three further characterisations hold for n ≥ 2 | M_n | M. Dalloul, *Characterization of tracial functionals by inequalities for the spread of a matrix*, Lobachevskii J. Math. 45 (2024), 2478–2484, doi:10.1134/S1995080224602777 | A |
-| 16 | an inequality characterising tracial functionals among positive normal functionals on a von Neumann algebra, "strengthening Gardner". One secondary snippet gives it as φ(A) ≤ φ(\|A + iB\|) (A, B self-adjoint). If so, it is #3 with Z = A + iB, and its envelope is κ − 1 | von Neumann algebra | H. Alhasan, K. Fawwaz, *Characterization of tracial functionals on von Neumann algebras*, Lobachevskii J. Math. 42 (2021), 2273–2279, doi:10.1134/S1995080221100024 | A, S |
-| 17 | operator inequalities that are necessary and sufficient for two projections to commute, used to characterise traces among positive normal functionals (part III: arbitrary weights, and positive functionals on C*-algebras) | von Neumann algebra | A. M. Bikchentaev, *Commutativity of projections and characterization of traces on von Neumann algebras*, Sib. Math. J. 51 (2010), 971–977, doi:10.1007/s11202-010-0096-2; *… II*, Math. Notes 89 (2011), 461–471, doi:10.1134/S0001434611030175; *… III*, Int. J. Theor. Phys. 54 (2015), doi:10.1007/s10773-015-2639-6 | A |
-| 18 | a new inequality for a trace on a unital C*-algebra that characterises traces among positive functionals, and a commutativity criterion | unital C*-algebra | A. M. Bikchentaev, *Inequality for a trace on a unital C\*-algebra*, Math. Notes 99 (2016), 487–491, doi:10.1134/S0001434616030214 | A |
-| 19 | tracial states among all states on a Rickart C*-algebra characterised via polar decomposition; a triangle inequality for Hermitian elements and traces | Rickart C*-algebra | A. M. Bikchentaev, *Trace inequalities for Rickart C\*-algebras*, Positivity 25 (2021), 1943–1957, doi:10.1007/s11117-021-00852-3 | A |
-| 20 | *related, quantitative*: the Michelson contrast of positive operators in W*-algebras, and "how the inequalities characterizing traces interplay with the Michelson contrasts of operator **variables**". This concerns the contrast of the variables, not of the density of φ | countably decomposable W*-algebras | S. A. Abed, I. A. Nikolaeva, A. A. Novikov, *Generalisation of Michelson contrast for operators and its properties*, Lobachevskii J. Math. 45 (2024), 3835–3848, doi:10.1134/S1995080224603400; arXiv:2010.10130 | A |
-| 21 | survey of trace inequalities, including characterisations of traces | matrices, operators | A. M. Bikchentaev, F. Kittaneh, M. S. Moslehian, Y. Seo, *Trace Inequalities: For Matrices and Hilbert Space Operators*, Forum for Interdisciplinary Mathematics, Springer, 2024, doi:10.1007/978-981-97-6520-1 | L |
+| B1 | "Characterizations of the trace": the content was not visible | M_n | D. Petz, J. Zemánek, *Characterizations of the trace*, Linear Algebra Appl. 111 (1988), 43–52, doi:10.1016/0024-3795(88)90050-X | L |
+| B2 | a positive functional φ on M_n is a positive multiple of Tr iff φ(A) = φ(\|A\|) implies A ≥ 0. For φ(1) = n, a Yang-type inequality φ(A^{1/2}BA^{1/2})^{1/2} ≤ φ(A+B)/2 (A, B ≥ 0) singles out Tr; the placement of the square root was not clear to us | M_n | M. S. Moslehian, A. M. Bikchentaev, *Characterizations of the canonical trace on full matrix algebras*, J. Math. Anal. Appl. 552 (2025), no. 2, 129764 | A |
+| B3 | characterisations of Tr on M_n by a commutator inequality for Hermitian matrices and by a generalised AM–GM inequality for all matrices and conjugate exponents (forms not seen) | M_n | M. S. Moslehian, *More characterizations of the matrix trace*, Rend. Circ. Mat. Palermo (2) 74 (2025), Art. 130, doi:10.1007/s12215-025-01253-1 | A |
+| B4 | inequalities for the spread λ_max − λ_min characterise Tr among positive φ with φ(1) = n, for n ≥ 3; three further characterisations hold for n ≥ 2 | M_n | M. Dalloul, *Characterization of tracial functionals by inequalities for the spread of a matrix*, Lobachevskii J. Math. 45 (2024), 2478–2484, doi:10.1134/S1995080224602777 | A |
+| B5 | an inequality characterising tracial functionals among positive normal functionals on a von Neumann algebra, "strengthening Gardner". One secondary snippet gives it as φ(A) ≤ φ(\|A + iB\|) (A, B self-adjoint). If so, it is #3 with Z = A + iB, and its envelope is κ − 1 | von Neumann algebra | H. Alhasan, K. Fawwaz, *Characterization of tracial functionals on von Neumann algebras*, Lobachevskii J. Math. 42 (2021), 2273–2279, doi:10.1134/S1995080221100024 | A, S |
+| B6 | operator inequalities that are necessary and sufficient for two projections to commute, used to characterise traces among positive normal functionals (part III: arbitrary weights, and positive functionals on C*-algebras) | von Neumann algebra | A. M. Bikchentaev, *Commutativity of projections and characterization of traces on von Neumann algebras*, Sib. Math. J. 51 (2010), 971–977, doi:10.1007/s11202-010-0096-2; *… II*, Math. Notes 89 (2011), 461–471, doi:10.1134/S0001434611030175; *… III*, Int. J. Theor. Phys. 54 (2015), doi:10.1007/s10773-015-2639-6 | A |
+| B7 | a new inequality for a trace on a unital C*-algebra that characterises traces among positive functionals, and a commutativity criterion | unital C*-algebra | A. M. Bikchentaev, *Inequality for a trace on a unital C\*-algebra*, Math. Notes 99 (2016), 487–491, doi:10.1134/S0001434616030214 | A |
+| B8 | tracial states among all states on a Rickart C*-algebra characterised via polar decomposition; a triangle inequality for Hermitian elements and traces | Rickart C*-algebra | A. M. Bikchentaev, *Trace inequalities for Rickart C\*-algebras*, Positivity 25 (2021), 1943–1957, doi:10.1007/s11117-021-00852-3 | A |
+| B9 | *related, quantitative*: the Michelson contrast of positive operators in W*-algebras, and "how the inequalities characterizing traces interplay with the Michelson contrasts of operator **variables**". This concerns the contrast of the variables, not of the density of φ | countably decomposable W*-algebras | S. A. Abed, I. A. Nikolaeva, A. A. Novikov, *Generalisation of Michelson contrast for operators and its properties*, Lobachevskii J. Math. 45 (2024), 3835–3848, doi:10.1134/S1995080224603400; arXiv:2010.10130 | A |
+| B10 | survey of trace inequalities, including characterisations of traces | matrices, operators | A. M. Bikchentaev, F. Kittaneh, M. S. Moslehian, Y. Seo, *Trace Inequalities: For Matrices and Hilbert Space Operators*, Forum for Interdisciplinary Mathematics, Springer, 2024, doi:10.1007/978-981-97-6520-1 | L |
+
+### B′. Second round (not evaluated)
+
+| # | statement (as far as seen) | algebra | reference | seen |
+|---|---|---|---|---|
+| B11 | Petz–Zemánek: "a number of equivalent conditions which characterize the trace among the linear functionals on the matrix algebra; some of these results are extended to more general operator algebras". **The conditions themselves were not visible.** No source confirms that they include Golden–Thompson. Bikchentaev (2011) answers "a question of J. Zemánek" about the Peierls–Bogoliubov inequality | M_n, operator algebras | Petz, Zemánek (1988), B1 | A |
+| B12 | weighted monotonicity: Tr(w(A) f(A)) ≤ Tr(w(A) f(B)) for Hermitian A ≤ B and a weight w ≥ 0; the paper gives conditions that characterise the trace through this inequality | M_n | D. T. Hoa, O. E. Tikhonov, *Weighted trace inequalities of monotonicity*, Lobachevskii J. Math. 26 (2007), 63–67 | A |
+| B13 | operator version, with the symmetric form τ(w(A)^{1/2} f(A) w(A)^{1/2}). It characterises traces among all weights on a von Neumann algebra, and among positive functionals on a C*-algebra, by operator inequalities. The pairs (w, f) were not seen, so the item was not evaluated: with w(t) = t and an operator monotone f, φ_W(A^{1/2}(f(B)−f(A))A^{1/2}) ≥ 0 holds for every positive φ, so no violation is possible for those choices | von Neumann / C*-algebras | D. T. Hoa, O. E. Tikhonov, *Weighted monotonicity inequalities for traces on operator algebras*, Math. Notes 88 (2010), 177–182, doi:10.1134/S0001434610070175 | A, S |
+| B14 | a function is operator monotone (operator convex) if the corresponding inequalities hold for some normal state on B(H), dim H = ∞; operator convex functions with respect to a von Neumann algebra, by the type of its summands. This is a characterisation of *functions*, not of traces | B(H), von Neumann algebras | D. T. Hoa, O. E. Tikhonov, *To the theory of operator monotone and operator convex functions*, Izv. Vyssh. Uchebn. Zaved. Mat. 2010, no. 3, 9–14; Russian Math. (Iz. VUZ) 54:3 (2010), 7–11, doi:10.3103/S1066369X10030023 | A |
+| B15 | characterisation of operator monotone functions by Powers–Størmer type inequalities (functions, not traces) | matrices | D. T. Hoa, H. Osaka, J. Tomiyama, *Characterization of operator monotone functions by Powers–Størmer type inequalities*, Linear Multilinear Algebra 63 (2015), no. 8, 1577–1589 (author list from a citing paper); see also arXiv:1207.5201 | S |
+| B16 | survey chapter on matrix inequalities and characterisations of operator monotone functions | matrices | D. T. Hoa, H. Osaka, O. E. Tikhonov, *Matrix Inequalities and Characterizations of Operator Monotone Functions*, Springer book chapter (2022), doi:10.1007/978-3-031-02104-6_4 | L |
+| B17 | a list of inequalities that characterise **central elements** of von Neumann algebras and C*-algebras: a positive a is central iff certain inequalities hold for all positive (normal) functionals. Key lemma: φ(sas) < φ(a) for a symmetry s produces two functionals separating a. This is the dual problem (fixed element, all functionals), not evaluated here | von Neumann / C*-algebras | A. A. Novikov, O. E. Tikhonov, *Characterization of central elements of operator algebras by inequalities*, Lobachevskii J. Math. 36 (2015), 208–210, doi:10.1134/S1995080215020146; arXiv:1502.01267 | A |
+| B18 | related: measures on orthoideals and L₁-spaces associated with positive operators; L₁-space for a positive operator affiliated with a von Neumann algebra (no trace characterisation seen) | von Neumann algebras | A. A. Novikov, O. E. Tikhonov, Lobachevskii J. Math. 37 (2016), no. 4, 497–499; A. A. Novikov, *L₁-space for a positive operator affiliated with von Neumann algebra*, Positivity (2017), doi:10.1007/s11117-016-0422-4 | L |
+| B19 | centrality characterised by local monotonicity of functions such as the exponential on C*-algebras (dual problem, as B17) | C*-algebras | D. Virosztek, *Connections between centrality and local monotonicity of certain functions on C\*-algebras*, J. Math. Anal. Appl. 453 (2017), 221–226; arXiv:1608.05409 | L |
+| B20 | Hölder-type trace inequalities for Rényi means, and in the limit for the Log-Euclidean mean of positive definite matrices, characterise the canonical trace among positive linear functionals; also the Fiedler–Pták spectral geometric mean (forms not seen) | M_n | L. Molnár, *Rényi means, Hölder inequality and trace characterizations*, Positivity 30 (2026), Art. 70, doi:10.1007/s11117-026-01224-5 | A |
+| B21 | commutativity of projections expressed by operator inequalities, applied to trace characterisation among positive normal functionals (part I of B6) | von Neumann algebras | A. M. Bikchentaev, *Commutativity of projectors and trace characterization on von Neumann algebras. I*, Russian Math. (Iz. VUZ) 53 (2009), no. 12, doi:10.3103/S1066369X0912010X (volume and issue inferred from the DOI; check) | L |
+| B22 | a survey by Petz of trace inequalities, which lists Petz–Zemánek (1988) among trace characterisations | matrices | D. Petz, *A survey of certain trace inequalities*, Banach Center Publ. 30 (1994) | L |
+| B23 | traces and subadditive measures on projections of JBW- and von Neumann algebras. Related, but not a characterisation of traces among functionals by an operator inequality | JBW/von Neumann | L. J. Bunce, J. Hamhalter, Proc. Amer. Math. Soc. (1995) (title from a citing listing) | L |
+
+**On A. I. Stolyarov.** Beyond Stolyarov–Tikhonov–Sherstnev (2002), #2, the search found no further paper by Stolyarov
+on trace characterisations.
+
+**Conflicting attribution.** One search summary credits the |A+iB| characterisation (B5) to
+"Bikchentaev and Tikhonov, 2021". The Springer listing names H. Alhasan and K. Fawwaz. The author should check.
 
 ## C. What we did not find
 
 We found no paper that gives **quantitative** information of the following kind: how large the violation of a
 trace-characterising inequality can be for a fixed non-tracial φ, as a function of a spectral quantity of its density.
-Examples would be the Michelson contrast, or the condition number a/b of W. The closest work is #20, which asks
+Examples would be the Michelson contrast, or the condition number a/b of W. The closest work is B9, which asks
 about the contrast of the operator variables.
 
 Our search was limited to abstracts and listings, so this statement is "not found", not "does not exist". The proofs
 in the papers above may contain such estimates implicitly. For instance, the proof via "nearly parallel pure states"
 in #6 must produce some violation size.
 
-We found no reference for a characterisation by a Golden–Thompson-type inequality φ(e^{A+B}) ≤ φ(e^A e^B), nor by
-Hölder's inequality for φ, so neither is listed.
+We found no paper that characterises traces by Golden–Thompson or Hölder for *general* operators. The search
+summaries give only the projection versions, #14 and #15. We also found no trace characterisation by Kosaki, by
+Hiai, or by Cho–Ito–Kittaneh, and none by a commutator inequality |φ(XY−YX)| ≤ …, beyond the commutator inequality
+for Hermitian matrices in B3, whose form we did not see. Hiai–Petz ("The Golden–Thompson trace inequality
+is complemented") appears in Petz's survey, but as a trace inequality, not as a characterisation.
+
+## D. Proof details moved out of the paper subsection (for length)
+
+**Proposition tcB(c)** (item 9, n = 2). Ranks 0 and 2 give no violation.
+
+1. Set-up. Take rank-one P = uu\*, Q = vv\* and write u = c v + σ v_⊥. Normalise a + b = 2, and put β = v\*Wv,
+   ρ = \|v\*Wv_⊥\| and γ = 2 − β.
+2. The ratio (L − R)/N equals r/(1 + r), where, with c = cos θ,
+   r = ρ sin 2θ / ((3β + γ)/2 + ((β − γ)/2) cos 2θ).
+3. The maximum over θ is r = ρ/(2√β).
+4. Use ρ² = β(2 − β) − (1 − δ²). The maximum over β is at β = √(1 − δ²), where r² = (1 − √(1 − δ²))/2 = sin²(ψ/2).
+
+**Proposition tcC, item 7** (ALT, r = 2, q = 1).
+
+1. Set-up. Work in the basis f₁ = e₊, f₂ = e₋. Take B = η f₁f₁\* + f₂f₂\* and A = uu\* with u = f₁ + sη f₂.
+2. Limit. As η → 0, the ratio tends to W₁₁/(W₁₁ + 2sW₁₂ + s²W₂₂).
+3. Maximum. At s = −W₁₂/W₂₂ this equals W₁₁W₂₂/(W₁₁W₂₂ − W₁₂²) = κ².
+
+**Proposition tcC, item 10** (monotonicity, p = 2).
+
+1. Set-up. Take A = uu\* and B = A + t vv\*, with u and v at angles α and π − α to e₁. Write y = −cos 2α and normalise
+   a + b = 2.
+2. Then Re (u\*v)(v\*Wu) = −y(δ − y) and u\*Wu = v\*Wv = 1 − δy.
+3. With the optimal t = y(δ − y)/(1 − δy), the value is y²(δ − y)²/((1 − 2δy + y²)(1 − y²)).
+4. Maximising over y gives m(δ).
+
+**Item 14, leading order** (Hölder for projections).
+
+1. Set-up. Take W = (1 + δD)/2 with D = diag(1, −1), and real unit vectors u, v at angles m ± ε/2. Put P = uu\* and
+   Q = vv\*.
+2. Expansion. φ(PQ) = (cos²ε + δ cos ε cos 2m)/2. With weights 1/p and 1/q,
+   φ(P)^{1/p} φ(Q)^{1/q} = (1 + δ cos 2m + δ(1/q − 1/p) ε sin 2m)/2 + O(δ²ε²).
+3. Hence L − R = (−ε² − δ(1 − 2/p) ε sin 2m)/2 + O(δ³) for ε = O(δ).
+4. Maximise at ε = −δ(1 − 2/p) sin 2m / 2 and m = π/4. The result is V ≥ (1 − 2/p)² δ²/4 + O(δ³).
+5. The search, the reduced SciPy model and the tests give equality to leading order, δ²/36 for p = 3.
