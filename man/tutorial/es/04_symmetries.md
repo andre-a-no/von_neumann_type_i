@@ -5,10 +5,11 @@
 Este tutorial acompaña al [capítulo 4](../../lecture_notes/es/04_symmetries.md) de los apuntes de clase, que desarrolla la teoría de
 representaciones que hay detrás de las álgebras de simetrías, la convierte en un algoritmo aleatorizado que descompone el
 álgebra de von Neumann generada por cualquier lista de matrices ([proposición 4.9](../../lecture_notes/es/04_symmetries.md#r-4-9)), la aplica a $`U(1)`$ y
-$`SU(2)`$, y clasifica los sectores de un álgebra generada por matrices reales en tipo real, complejo y cuaterniónico
-([teorema 4.20](../../lecture_notes/es/04_symmetries.md#r-4-20)). Calculamos caracteres, ejecutamos la descomposición sobre grupos y sobre generadores,
-construimos cadenas de espines sector por sector con `SpinChain` y `su2.SU2Chain`, y calculamos la estructura real de
-una descomposición.
+$`SU(2)`$, clasifica los sectores de un álgebra generada por matrices reales en tipo real, complejo y cuaterniónico
+([teorema 4.20](../../lecture_notes/es/04_symmetries.md#r-4-20)) y analiza la descomposición de generadores con ruido
+([teorema 4.25](../../lecture_notes/es/04_symmetries.md#r-4-25)). Calculamos caracteres, ejecutamos la descomposición sobre grupos y sobre generadores,
+construimos cadenas de espines sector por sector con `SpinChain` y `su2.SU2Chain`, calculamos la estructura real de
+una descomposición y certificamos una descomposición de generadores con ruido.
 
 <a id="s-4-2"></a>
 
@@ -480,6 +481,138 @@ resultado (proposición 4.9) y devuelve el álgebra y su conmutante como objetos
 `from_algebra`, `to_commutant`, `from_commutant`, de modo que los capítulos 3 y 5–8 se aplican de inmediato. Para
 cadenas de espín $`\frac12`$, `su2.SU2Chain` da directamente los bloques de $`SU(2)`$ (corolario 4.17); acepta hasta
 $`L=18`$ espines, un límite fijado por la memoria de las bases.
+
+<a id="s-4-9"></a>
+
+## 4.9 Estabilidad de la descomposición numérica
+
+*Apuntes:* [sección 4.9](../../lecture_notes/es/04_symmetries.md#s-4-9); [lema 4.24](../../lecture_notes/es/04_symmetries.md#r-4-24), [teorema 4.25](../../lecture_notes/es/04_symmetries.md#r-4-25), [proposición 4.26](../../lecture_notes/es/04_symmetries.md#r-4-26), [proposición 4.27](../../lecture_notes/es/04_symmetries.md#r-4-27), [teorema 4.28](../../lecture_notes/es/04_symmetries.md#r-4-28).
+
+El conmutante de generadores con ruido se decide mediante una tolerancia: el [teorema 4.25](../../lecture_notes/es/04_symmetries.md#r-4-25) dice que un umbral
+$`\theta`$ sobre los valores singulares de la aplicación conmutador $`X\mapsto([H_j,X])_j`$ da la dimensión exacta $`d`$ del conmutante si
+$`2\eta<\theta<\gamma-2\eta`$, con $`\eta`$ el ruido y $`\gamma`$ el hueco de la aplicación exacta, y que la cota $`2\eta`$ sobre los valores
+singulares nulos perturbados se alcanza. El primer bloque calcula los valores singulares del ejemplo del teorema 4.25(c),
+$`\tilde H_1=\mathrm{diag}(1,1,0)+\eta(E_{12}+E_{21})`$, y decide el conmutante con `commutant_basis` por debajo, dentro y por encima de la
+ventana (la biblioteca normaliza los generadores a norma de Frobenius unidad; de ahí el `tol` reescalado).
+
+```python
+import warnings
+
+def commutator_svals(Hs):
+    """Singular values, in increasing order, of X -> ([H_j, X])_j with Hilbert-Schmidt norms (row-major vec)."""
+    n = Hs.shape[-1]
+    eye = torch.eye(n, dtype=dt)
+    L = torch.cat([torch.kron(H, eye) - torch.kron(eye, H.T.contiguous()) for H in Hs])
+    return torch.linalg.svdvals(L).flip(0)
+
+eta = 1e-3
+H1 = torch.diag(torch.tensor([1.0, 1.0, 0.0], dtype=dt))
+H1t = H1.clone()
+H1t[0, 1] = H1t[1, 0] = eta                               # a symmetry broken at the level eta
+s = commutator_svals(H1t[None])
+expected = torch.tensor([0, 0, 0, 2 * eta, 2 * eta, 1 - eta, 1 - eta, 1 + eta, 1 + eta], dtype=torch.float64)
+assert close(s, expected, 1e-12)                          # Theorem 4.25(a) and (c): the bound 2 eta is attained
+assert close(commutator_svals(H1[None])[4:6], [0, 1])      # exact generator: d = 5, gap 1
+scale = torch.linalg.matrix_norm(H1t).item()              # theta = tol for unit-norm generators
+for theta, dim in ((0.5 * eta, 3), (20 * eta, 5), (2.0, 9)):
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', dc.DecompositionWarning)
+        assert dc.commutant_basis(H1t, tol=theta / scale).shape[0] == dim
+print('theta < 2 eta: dim 3 (symmetry lost); in the window: 5; above the gap: 9')
+```
+
+A continuación, los tres operadores de espín de tres espines $`\frac12`$ ($`k=(2,4)`$, $`m=(2,1)`$, $`d=5`$, hueco $`\gamma=1/\sqrt3`$ tras la
+normalización), perturbados por ruido hermítico de tamaño creciente $`\eta`$. Para cada nivel el código comprueba el teorema 4.25(a) en los
+valores singulares $`\sigma_d`$ y $`\sigma_{d+1}`$, coloca `tol` en el centro de la ventana observada (en escala logarítmica), comprueba la
+dimensión y la cota $`\|\tilde\Pi-\Pi\|\le4\eta/\gamma`$ del teorema 4.25(b), y descompone. Con el `tol` por defecto
+$`=\epsilon_{\rm mach}^{1/2}`$ el ruido se toma en serio en cuanto supera la tolerancia: los generadores con ruido generan $`M_8`$, que es la
+respuesta correcta para ellos, pero no la simetría que se busca. (El `DecompositionWarning` filtrado aquí indica que un valor singular está a
+menos de un factor $`\epsilon_{\rm mach}^{-1/8}`$ del corte.)
+
+```python
+S = dc.total_spin(3)
+unit = lambda S: S / torch.linalg.matrix_norm(S)[:, None, None]     # the Hermitian generators the library uses
+sv = commutator_svals(unit(S))
+d, gamma = 5, sv[5].item()
+assert sv[4] < 1e-12 and abs(gamma - 1 / math.sqrt(3)) < 1e-12
+B0 = dc.commutant_basis(S).reshape(d, -1)
+Pi0 = B0.T @ B0.conj()                                    # orthogonal projection onto vec(A')
+gen = torch.Generator().manual_seed(1)
+print(' eta       sigma_d   sigma_d+1  tol       (k, m)            default tol')
+for eta in (1e-8, 1e-6, 1e-4, 1e-3):
+    E = torch.randn(S.shape, dtype=dt, generator=gen)
+    E = E + E.mH
+    St = S + eta * E / torch.linalg.matrix_norm(E, ord=2)[:, None, None]
+    eta_n = torch.linalg.matrix_norm(unit(St) - unit(S), ord=2).norm().item()   # eta of Theorem 4.25
+    st = commutator_svals(unit(St))
+    assert st[d - 1] <= 2 * eta_n and st[d] >= gamma - 2 * eta_n                # Theorem 4.25(a)
+    tol = math.sqrt(st[d - 1] * st[d]) / max(1.0, st[-1].item())
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', dc.DecompositionWarning)
+        Bt = dc.commutant_basis(St, tol=tol).reshape(d, -1)                     # Theorem 4.25(b): dimension d
+        Dt = dc.from_generators(St, tol=tol)
+        Dd = dc.from_generators(St)
+    assert torch.linalg.matrix_norm(Bt.T @ Bt.conj() - Pi0, ord=2) <= 4 * eta_n / gamma
+    assert (Dt.k_factors, Dt.multiplicities) == ((2, 4), (2, 1))
+    print(f'{eta_n:.1e}  {st[d - 1]:.1e}   {st[d]:.3f}      {tol:.1e}   {Dt.k_factors}, {Dt.multiplicities}'
+          f'   {Dd.k_factors}, {Dd.multiplicities}')
+```
+
+`Decomposition.certificate()` evalúa la [proposición 4.26](../../lecture_notes/es/04_symmetries.md#r-4-26) sobre la salida: el error hacia atrás $`r`$ (la distancia de los
+generadores normalizados al álgebra calculada $`\tilde{\mathcal B}`$), el hueco $`\gamma_{\mathcal B}`$ de la aplicación conmutador de sus
+proyecciones $`H_j=E(\tilde H_j)`$ —calculado a partir de los bloques y comprobado aquí frente a los valores singulares densos— y la ventana
+$`(2r,\gamma_{\mathcal B}-2r)`$ de umbrales que certifican $`\dim\mathcal A'=\sum_cm_c^2`$. El resultado es `trusted` si el umbral efectivamente usado
+está en esa ventana; si no, el certificado avisa. Una tolerancia por debajo del ruido da $`M_8`$, certificada para estos generadores, pero con
+un hueco del orden del ruido: un modelo con más simetría puede estar a distancia $`\gamma_{\mathcal B}/2`$. Una tolerancia por encima del ruido
+pero por debajo de $`2r`$ da la estructura correcta, que el certificado no puede garantizar.
+
+```python
+c = dc.from_generators(S).certificate()
+assert c.certified and c.trusted and c.residuals['backward'] < 1e-12 and abs(c.gap - gamma) < 1e-10
+E = torch.randn(S.shape, dtype=dt, generator=gen)
+St = S + 1e-4 * (E + E.mH)
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore', dc.DecompositionWarning)
+    Dt = dc.from_generators(St, tol=1e-2)
+    D_low = dc.from_generators(St, tol=1e-12)                          # below the noise
+    D_mid = dc.from_generators(St, tol=1e-3)                           # above the noise, below 2 r
+ct = Dt.certificate()
+print(ct, 'window', [f'{w:.1e}' for w in ct.window], 'threshold', f"{ct.rank['threshold']:.1e}")
+assert ct.trusted and 1e-5 < ct.residuals['backward'] < 1e-2 and ct.window[0] < ct.rank['threshold'] < ct.window[1]
+sb = commutator_svals(Dt.conditional_expectation(unit(St)))           # the projected generators H_j
+assert sb[d - 1] < 1e-12 and abs(sb[d] - ct.gap) < 1e-10              # Proposition 4.26(a), (b)
+c_low = D_low.certificate()
+assert D_low.k_factors == (8,) and c_low.certified and c_low.gap < 1e-3
+with warnings.catch_warnings(record=True) as caught:
+    warnings.simplefilter('always')
+    c_mid = D_mid.certificate()
+assert D_mid.k_factors == (2, 4) and not c_mid.trusted and caught
+print('tol 1e-12:', D_low.k_factors, f'gap {c_low.gap:.1e};  tol 1e-3:', D_mid.k_factors, 'trusted:', c_mid.trusted)
+```
+
+Por último, la [proposición 4.27](../../lecture_notes/es/04_symmetries.md#r-4-27): para un vector gaussiano estándar $`G`$ de $`\mathcal A'_h`$ los bloques son
+$`\kappa_c=k_c^{-1/2}H_c`$ con matrices GUE independientes, y la probabilidad de que autovalores de sectores distintos se acerquen a menos de
+$`x`$ es a lo sumo de orden $`x`$ (aquí la cota es $`\sqrt{2/\pi}\,x\,m_1m_2(\frac1{k_1m_1}+\frac1{k_2m_2})^{-1/2}`$), mientras que dentro del bloque
+$`2\times2`$ el espaciamiento es de orden $`x^3`$. Una comprobación de Monte Carlo con $`2\cdot10^4`$ muestras, tomadas en la base ortonormal
+`D.basis('commutant')` de $`\mathcal A'`$:
+
+```python
+D = dc.from_generators(S)
+coef = torch.randn(20000, d, dtype=dt, generator=gen)
+Z = torch.einsum('br,rij->bij', coef, D.basis('commutant'))         # standard complex Gaussian vectors of A'
+x_c = D.to_commutant((Z + Z.mH) / math.sqrt(2)).matrix              # blocks of G: kappa_1 (2 x 2), kappa_2 (1 x 1)
+assert abs((x_c[:, 0, :2, :2].abs() ** 2).sum((-2, -1)).mean().item() - 4 / 2) < 0.05   # E Tr kappa_1^2 = m_1^2 / k_1
+ev = torch.linalg.eigvalsh(x_c[:, 0, :2, :2])
+cross = (ev - x_c[:, 1, :1, 0].real).abs().min(1).values           # delta_x
+(k1, k2), (m1, m2) = D.k_factors, D.multiplicities
+for x in (0.01, 0.03, 0.1):
+    bound = math.sqrt(2 / math.pi) * x * m1 * m2 / math.sqrt(1 / (k1 * m1) + 1 / (k2 * m2))
+    p = (cross < x).double().mean().item()
+    print(f'x = {x}:  P(delta_x < x) = {p:.4f} <= {bound:.4f}')
+    assert p <= bound
+p_in = (ev[:, 1] - ev[:, 0] < 0.2).double().mean().item()
+assert p_in <= k1 ** 1.5 * 0.2 ** 3 / (6 * math.sqrt(math.pi))      # Proposition 4.27(c), m = 2
+```
 
 <a id="x-4"></a>
 

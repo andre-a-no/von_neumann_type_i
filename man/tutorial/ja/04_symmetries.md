@@ -5,8 +5,8 @@
 このチュートリアルは講義ノートの[第4章](../../lecture_notes/ja/04_symmetries.md)に対応する。同章では対称性の環の背後にある表現論を展開し、
 それを任意の行列のリストが生成するフォン・ノイマン環を分解するランダム化アルゴリズムに変え（[命題 4.9](../../lecture_notes/ja/04_symmetries.md#r-4-9)）、
 $`U(1)`$ と $`SU(2)`$ に適用し、実行列によって生成される環のセクターを実型・複素型・四元数型に分類する
-（[定理 4.20](../../lecture_notes/ja/04_symmetries.md#r-4-20)）。ここでは指標を計算し、群と生成元に対して分解を実行し、`SpinChain` と `su2.SU2Chain` で
-スピン鎖をセクターごとに構成し、分解の実構造を計算する。
+（[定理 4.20](../../lecture_notes/ja/04_symmetries.md#r-4-20)）。さらに、雑音を含む生成元の分解を解析する（[定理 4.25](../../lecture_notes/ja/04_symmetries.md#r-4-25)）。ここでは指標を計算し、群と生成元に対して分解を実行し、`SpinChain` と `su2.SU2Chain` で
+スピン鎖をセクターごとに構成し、分解の実構造を計算し、雑音を含む生成元の分解を保証する。
 
 <a id="s-4-2"></a>
 
@@ -438,6 +438,134 @@ $`U(1)`$ と格子の対称性によってブロック対角化を行い、ITens
 TensorKit.jl は融合木によって $`SU(2)`$ を扱う。ライブラリの `decompose` は小さな行列（$`n`$ は数百程度まで）のための密な手法である。任意の行列のリスト（群の元または生成元）を受け付け、結果を証明書によって確認し（命題 4.9）、環とその可換子環を `to_algebra`、`from_algebra`、`to_commutant`、`from_commutant` をもつ `TypeIAlgebra`
 オブジェクトとして返すので、第3章、第5–8章の内容がただちに適用できる。スピン $`\frac12`$ の鎖については、`su2.SU2Chain` が $`SU(2)`$ のブロックを直接与える（系 4.17）。受け付けるスピンの数は
 $`L=18`$ までであり、この上限は基底のメモリによって決まる。
+
+<a id="s-4-9"></a>
+
+## 4.9 数値分解の安定性
+
+*講義ノート：* [4.9節](../../lecture_notes/ja/04_symmetries.md#s-4-9)；[補題 4.24](../../lecture_notes/ja/04_symmetries.md#r-4-24)、[定理 4.25](../../lecture_notes/ja/04_symmetries.md#r-4-25)、[命題 4.26](../../lecture_notes/ja/04_symmetries.md#r-4-26)、[命題 4.27](../../lecture_notes/ja/04_symmetries.md#r-4-27)、[定理 4.28](../../lecture_notes/ja/04_symmetries.md#r-4-28)。
+
+雑音を含む生成元の可換子環は許容誤差によって決まる：[定理 4.25](../../lecture_notes/ja/04_symmetries.md#r-4-25) によれば、交換子写像 $`X\mapsto([H_j,X])_j`$ の特異値に
+対する閾値 $`\theta`$ は、$`2\eta<\theta<\gamma-2\eta`$（$`\eta`$ は雑音、$`\gamma`$ は厳密な写像のギャップ）ならば可換子環の厳密な次元 $`d`$ を
+与え、摂動された零特異値に対する評価 $`2\eta`$ は達成される。最初のブロックは定理 4.25(c) の例
+$`\tilde H_1=\mathrm{diag}(1,1,0)+\eta(E_{12}+E_{21})`$ の特異値を計算し、窓の下・中・上で `commutant_basis` により可換子環を判定する
+（ライブラリは生成元をフロベニウスノルム 1 に正規化するので、`tol` をスケールし直している）。
+
+```python
+import warnings
+
+def commutator_svals(Hs):
+    """Singular values, in increasing order, of X -> ([H_j, X])_j with Hilbert-Schmidt norms (row-major vec)."""
+    n = Hs.shape[-1]
+    eye = torch.eye(n, dtype=dt)
+    L = torch.cat([torch.kron(H, eye) - torch.kron(eye, H.T.contiguous()) for H in Hs])
+    return torch.linalg.svdvals(L).flip(0)
+
+eta = 1e-3
+H1 = torch.diag(torch.tensor([1.0, 1.0, 0.0], dtype=dt))
+H1t = H1.clone()
+H1t[0, 1] = H1t[1, 0] = eta                               # a symmetry broken at the level eta
+s = commutator_svals(H1t[None])
+expected = torch.tensor([0, 0, 0, 2 * eta, 2 * eta, 1 - eta, 1 - eta, 1 + eta, 1 + eta], dtype=torch.float64)
+assert close(s, expected, 1e-12)                          # Theorem 4.25(a) and (c): the bound 2 eta is attained
+assert close(commutator_svals(H1[None])[4:6], [0, 1])      # exact generator: d = 5, gap 1
+scale = torch.linalg.matrix_norm(H1t).item()              # theta = tol for unit-norm generators
+for theta, dim in ((0.5 * eta, 3), (20 * eta, 5), (2.0, 9)):
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', dc.DecompositionWarning)
+        assert dc.commutant_basis(H1t, tol=theta / scale).shape[0] == dim
+print('theta < 2 eta: dim 3 (symmetry lost); in the window: 5; above the gap: 9')
+```
+
+次に、三つのスピン $`\frac12`$ の三つのスピン演算子（$`k=(2,4)`$、$`m=(2,1)`$、$`d=5`$、正規化後のギャップ $`\gamma=1/\sqrt3`$）を、大きさ
+$`\eta`$ が増加するエルミートな雑音で摂動する。各レベルについてコードは、特異値 $`\sigma_d`$ と $`\sigma_{d+1}`$ で定理 4.25(a) を確かめ、
+`tol` を観測された窓の中央（対数スケール）に置き、次元と定理 4.25(b) の評価 $`\|\tilde\Pi-\Pi\|\le4\eta/\gamma`$ を確かめてから分解する。
+既定の `tol` $`=\epsilon_{\rm mach}^{1/2}`$ では、雑音が許容誤差を超えるとすぐに雑音が真に受けられる：雑音を含む生成元は $`M_8`$ を生成し、
+それは生成元にとっては正しい答えだが、求める対称性ではない。（ここでフィルタしている `DecompositionWarning` は、ある特異値が切断点から
+$`\epsilon_{\rm mach}^{-1/8}`$ 倍以内にあることを知らせる。）
+
+```python
+S = dc.total_spin(3)
+unit = lambda S: S / torch.linalg.matrix_norm(S)[:, None, None]     # the Hermitian generators the library uses
+sv = commutator_svals(unit(S))
+d, gamma = 5, sv[5].item()
+assert sv[4] < 1e-12 and abs(gamma - 1 / math.sqrt(3)) < 1e-12
+B0 = dc.commutant_basis(S).reshape(d, -1)
+Pi0 = B0.T @ B0.conj()                                    # orthogonal projection onto vec(A')
+gen = torch.Generator().manual_seed(1)
+print(' eta       sigma_d   sigma_d+1  tol       (k, m)            default tol')
+for eta in (1e-8, 1e-6, 1e-4, 1e-3):
+    E = torch.randn(S.shape, dtype=dt, generator=gen)
+    E = E + E.mH
+    St = S + eta * E / torch.linalg.matrix_norm(E, ord=2)[:, None, None]
+    eta_n = torch.linalg.matrix_norm(unit(St) - unit(S), ord=2).norm().item()   # eta of Theorem 4.25
+    st = commutator_svals(unit(St))
+    assert st[d - 1] <= 2 * eta_n and st[d] >= gamma - 2 * eta_n                # Theorem 4.25(a)
+    tol = math.sqrt(st[d - 1] * st[d]) / max(1.0, st[-1].item())
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', dc.DecompositionWarning)
+        Bt = dc.commutant_basis(St, tol=tol).reshape(d, -1)                     # Theorem 4.25(b): dimension d
+        Dt = dc.from_generators(St, tol=tol)
+        Dd = dc.from_generators(St)
+    assert torch.linalg.matrix_norm(Bt.T @ Bt.conj() - Pi0, ord=2) <= 4 * eta_n / gamma
+    assert (Dt.k_factors, Dt.multiplicities) == ((2, 4), (2, 1))
+    print(f'{eta_n:.1e}  {st[d - 1]:.1e}   {st[d]:.3f}      {tol:.1e}   {Dt.k_factors}, {Dt.multiplicities}'
+          f'   {Dd.k_factors}, {Dd.multiplicities}')
+```
+
+`Decomposition.certificate()` は出力に対して[命題 4.26](../../lecture_notes/ja/04_symmetries.md#r-4-26) を評価する：後退誤差 $`r`$（正規化された生成元と計算された環
+$`\tilde{\mathcal B}`$ との距離）、それらの射影 $`H_j=E(\tilde H_j)`$ の交換子写像のギャップ $`\gamma_{\mathcal B}`$（ブロックから計算し、ここでは密な
+特異値と照合する）、そして $`\dim\mathcal A'=\sum_cm_c^2`$ を保証する閾値の窓 $`(2r,\gamma_{\mathcal B}-2r)`$ である。実際に用いた閾値がこの窓に
+入っていれば結果は `trusted` であり、そうでなければ証明書は警告する。雑音より小さい許容誤差では $`M_8`$ が得られ、これらの生成元に
+対しては保証されるが、ギャップは雑音と同程度である：より多くの対称性をもつモデルが距離 $`\gamma_{\mathcal B}/2`$ にあるかもしれない。
+雑音より大きいが $`2r`$ より小さい許容誤差では正しい構造が得られるが、証明書はそれを保証できない。
+
+```python
+c = dc.from_generators(S).certificate()
+assert c.certified and c.trusted and c.residuals['backward'] < 1e-12 and abs(c.gap - gamma) < 1e-10
+E = torch.randn(S.shape, dtype=dt, generator=gen)
+St = S + 1e-4 * (E + E.mH)
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore', dc.DecompositionWarning)
+    Dt = dc.from_generators(St, tol=1e-2)
+    D_low = dc.from_generators(St, tol=1e-12)                          # below the noise
+    D_mid = dc.from_generators(St, tol=1e-3)                           # above the noise, below 2 r
+ct = Dt.certificate()
+print(ct, 'window', [f'{w:.1e}' for w in ct.window], 'threshold', f"{ct.rank['threshold']:.1e}")
+assert ct.trusted and 1e-5 < ct.residuals['backward'] < 1e-2 and ct.window[0] < ct.rank['threshold'] < ct.window[1]
+sb = commutator_svals(Dt.conditional_expectation(unit(St)))           # the projected generators H_j
+assert sb[d - 1] < 1e-12 and abs(sb[d] - ct.gap) < 1e-10              # Proposition 4.26(a), (b)
+c_low = D_low.certificate()
+assert D_low.k_factors == (8,) and c_low.certified and c_low.gap < 1e-3
+with warnings.catch_warnings(record=True) as caught:
+    warnings.simplefilter('always')
+    c_mid = D_mid.certificate()
+assert D_mid.k_factors == (2, 4) and not c_mid.trusted and caught
+print('tol 1e-12:', D_low.k_factors, f'gap {c_low.gap:.1e};  tol 1e-3:', D_mid.k_factors, 'trusted:', c_mid.trusted)
+```
+
+最後に[命題 4.27](../../lecture_notes/ja/04_symmetries.md#r-4-27)：$`\mathcal A'_h`$ の標準ガウスベクトル $`G`$ のブロックは独立な GUE 行列による $`\kappa_c=k_c^{-1/2}H_c`$ であり、
+異なるセクターの固有値が $`x`$ より近づく確率は高々 $`x`$ のオーダーである（ここでの評価は
+$`\sqrt{2/\pi}\,x\,m_1m_2(\frac1{k_1m_1}+\frac1{k_2m_2})^{-1/2}`$）。一方 $`2\times2`$ ブロックの内部では間隔は $`x^3`$ のオーダーである。
+$`\mathcal A'`$ の正規直交基底 `D.basis('commutant')` で取った $`2\cdot10^4`$ 個のサンプルによるモンテカルロ検証：
+
+```python
+D = dc.from_generators(S)
+coef = torch.randn(20000, d, dtype=dt, generator=gen)
+Z = torch.einsum('br,rij->bij', coef, D.basis('commutant'))         # standard complex Gaussian vectors of A'
+x_c = D.to_commutant((Z + Z.mH) / math.sqrt(2)).matrix              # blocks of G: kappa_1 (2 x 2), kappa_2 (1 x 1)
+assert abs((x_c[:, 0, :2, :2].abs() ** 2).sum((-2, -1)).mean().item() - 4 / 2) < 0.05   # E Tr kappa_1^2 = m_1^2 / k_1
+ev = torch.linalg.eigvalsh(x_c[:, 0, :2, :2])
+cross = (ev - x_c[:, 1, :1, 0].real).abs().min(1).values           # delta_x
+(k1, k2), (m1, m2) = D.k_factors, D.multiplicities
+for x in (0.01, 0.03, 0.1):
+    bound = math.sqrt(2 / math.pi) * x * m1 * m2 / math.sqrt(1 / (k1 * m1) + 1 / (k2 * m2))
+    p = (cross < x).double().mean().item()
+    print(f'x = {x}:  P(delta_x < x) = {p:.4f} <= {bound:.4f}')
+    assert p <= bound
+p_in = (ev[:, 1] - ev[:, 0] < 0.2).double().mean().item()
+assert p_in <= k1 ** 1.5 * 0.2 ** 3 / (6 * math.sqrt(math.pi))      # Proposition 4.27(c), m = 2
+```
 
 <a id="x-4"></a>
 

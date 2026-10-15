@@ -31,7 +31,7 @@ commutes with every element of $`S'`$, so $`S\subseteq S''`$; applied to $`S'`$ 
 $`S'\subseteq S'''`$, and taking commutants in $`S\subseteq S''`$ (which reverses inclusions)
 gives $`S'''\subseteq S'`$. Hence $`S'=S'''`$.
 
-*Computation:* commutants as null spaces, numerically — [tutorial, Section 2.4](../tutorial/02_von_neumann_algebras.md#s-2-4). *In the library:* `decompose.commutant_dimension` — [tutorial, Section 4.2](../tutorial/04_symmetries.md#s-4-2); `decompose.commutant_basis` — [tutorial, Section 4.3](../tutorial/04_symmetries.md#s-4-3).
+*Computation:* commutants as null spaces, numerically — [tutorial, Section 2.4](../tutorial/02_von_neumann_algebras.md#s-2-4). *In the library:* `decompose.commutant_dimension` — [tutorial, Section 4.2](../tutorial/04_symmetries.md#s-4-2); `decompose.commutant_basis` — [tutorial, Section 4.3](../tutorial/04_symmetries.md#s-4-3); which tolerance of the null space is correct for noisy matrices, Theorem 4.25 — [tutorial, Section 4.9](../tutorial/04_symmetries.md#s-4-9).
 
 When an algebra acts on a subspace $`E`$ of $`\mathbb C^n`$, we identify $`E`$ with
 $`\mathbb C^{\dim E}`$ by an orthonormal basis, so that all results stated on $`\mathbb C^n`$

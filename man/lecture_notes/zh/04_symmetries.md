@@ -8,8 +8,8 @@
 
 **你将学到**完全可约性与 Schur 引理，分解为不可约表示的方式如何决定交换子与生成的代数，特征标如何
 计算重数，为什么交换子的一个随机元素能数值地找到分解，什么是荷扇区，不可约自旋表示以及 $`L`$ 个
-自旋 $`\frac12`$ 如何分解，为什么 $`SU(2)`$ 不变哈密顿量的块比 $`U(1)`$ 不变哈密顿量的块小得多，以及复共轭如何
-把由实矩阵生成的代数的扇区分为实型、复型与四元数型。本章的数值检验见
+自旋 $`\frac12`$ 如何分解，为什么 $`SU(2)`$ 不变哈密顿量的块比 $`U(1)`$ 不变哈密顿量的块小得多，复共轭如何
+把由实矩阵生成的代数的扇区分为实型、复型与四元数型，以及哪些容差能使含噪声生成元的数值分解正确、其输出如何自我证明。本章的数值检验见
 [教程 4](../../tutorial/zh/04_symmetries.md)。
 
 在本章中，$`S'`$ 是 $`S\subseteq M_n(\mathbb C)`$ 的交换子（第 2 章）。若 $`S^*=S`$，则 $`S''`$ 是**由** $`S`$
@@ -331,6 +331,9 @@ $`\dim\mathcal B'=\sum_cm_c^2=\dim\mathcal A'`$。所以 $`\mathcal B'=\mathcal 
 $`\mathcal B=\mathcal B''=\mathcal A''=\mathcal A`$。$`\square`$
 
 *库中：* 该算法 `decompose.wedderburn`（前端为 `from_group`、`from_generators`）、命题 4.9 的判据 `Decomposition.verify()` 及其代价——[教程，4.3 节](../../tutorial/zh/04_symmetries.md#s-4-3)。
+
+4.9 节把浮点部分定量化：对含噪声的生成元，哪些容差给出正确的交换子（定理 4.25），随机元素的特征值间隙有多小（命题 4.27），
+计算出的分解与精确分解有多接近（定理 4.28），以及输出本身能证明什么（命题 4.26）。
 
 <a id="s-4-4"></a>
 
@@ -983,6 +986,286 @@ $`y_c\Omega=\Omega\bar y_c`$（即把定理 4.21(b) 中的计算里的 $`J_c`$ �
 ## 4.8 可与之比较的工具
 
 *库中：* 与其他软件的比较——[教程，4.8 节](../../tutorial/zh/04_symmetries.md#s-4-8)。
+
+<a id="s-4-9"></a>
+
+## 4.9 数值分解的稳定性
+
+4.3 节在精确算术中分析了算法。实际中生成元只是近似已知的——来自测量或经过舍入——而对称性由一个容差来判定：
+交换子由交换子映射的那些奇异值低于阈值 $`\theta`$ 的奇异向量张成。本节说明哪些阈值是正确的、计算得到的对象与精确对象
+相距多远，以及仅凭输出能证明什么。
+
+本节中 $`H_1,\dots,H_J`$ 均为厄米矩阵，$`\mathcal A=\{H_j\}''`$（库首先把生成元换成它们的厄米部分，它们生成同一个代数，4.3 节）。
+**交换子映射**为
+```math
+L:M_n(\mathbb C)\to M_n(\mathbb C)^J,\qquad LX=([H_1,X],\dots,[H_J,X]),
+```
+其中 $`M_n`$ 上取范数 $`\|X\|_2`$，$`M_n^J`$ 上取 $`\|(X_j)_j\|_2=(\sum_j\|X_j\|_2^2)^{1/2}`$；$`\ker L=\mathcal A'`$ 的维数为
+$`d=\sum_cm_c^2`$。对有限维复内积空间之间、定义域维数为 $`p`$ 的线性映射 $`T`$，记 $`\sigma_1(T)\le\dots\le\sigma_p(T)`$ 为
+$`T^*T\ge0`$ 的特征值的平方根，按*递增*顺序排列（对方阵而言，它们就是 1.4 节的奇异值，只是顺序相反）。由于
+$`|Tx|^2=\langle x,T^*Tx\rangle`$，有 $`\ker T=\ker T^*T`$ 且 $`\sigma_p(T)=\|T\|`$。交换子映射的**能隙**是 $`\gamma=\sigma_{d+1}(L)`$，即它最小的
+非零奇异值（若 $`d=n^2`$，则 $`\gamma=\infty`$）。我们使用 $`\|AX\|_2\le\|A\|\|X\|_2`$（对 $`X`$ 的各列应用 $`|Ax|\le\|A\||x|`$）以及
+$`\|XA\|_2=\|A^*X^*\|_2\le\|X\|_2\|A\|`$，从而 $`\|[E,X]\|_2\le2\|E\|\|X\|_2`$。
+
+<a id="r-4-24"></a>
+
+**引理 4.24（扰动）。** (a) 设 $`T,\tilde T`$ 是同一对有限维复内积空间之间的线性映射，$`\Delta=\|\tilde T-T\|`$。则对所有 $`i`$，
+$`|\sigma_i(\tilde T)-\sigma_i(T)|\le\Delta`$。若进一步 $`\sigma_d(T)=0<\gamma=\sigma_{d+1}(T)`$ 且 $`\Delta<\gamma/2`$，令 $`\Pi`$ 为到 $`\ker T`$ 的正交投影，
+$`\tilde\Pi`$ 为 $`\tilde T^*\tilde T`$ 对应于其特征值 $`\le\Delta^2`$ 的谱投影；则 $`\tilde\Pi`$ 的秩为 $`d`$，且 $`\|\tilde\Pi-\Pi\|\le2\Delta/\gamma`$。
+
+(b) 设 $`A,\tilde A\in\mathrm{Herm}_n`$，$`\|\tilde A-A\|\le\Delta`$，$`\mu`$ 是 $`A`$ 的重数为 $`r`$ 的特征值，谱投影为 $`P`$，它与 $`A`$ 的其余
+特征值的距离为 $`g>2\Delta`$。则 $`\tilde A`$ 恰有 $`r`$ 个特征值落在 $`[\mu-\Delta,\mu+\Delta]`$ 中，其余特征值与 $`\mu`$ 的距离都 $`\ge g-\Delta`$，
+并且 $`\tilde A`$ 对应于这 $`r`$ 个特征值的谱投影 $`\tilde P`$ 满足 $`\|\tilde P-P\|\le2\Delta/g`$。
+
+(c) 设 $`P,\tilde P`$ 是秩为 $`k`$ 的正交投影，$`\|\tilde P-P\|\le\varepsilon\le\frac12`$，$`\tilde Q\in M_{n\times k}`$ 的各列构成
+$`\mathrm{ran}\,\tilde P`$ 的规范正交基。则 $`S=\tilde Q^*P\tilde Q`$ 正定，$`Q=P\tilde QS^{-1/2}`$ 的各列构成 $`\mathrm{ran}\,P`$ 的规范正交基，
+且 $`\|Q-\tilde Q\|\le2\varepsilon`$。
+
+(d) 对可逆的 $`M\in M_k`$，$`\mathrm{pol}(M)=M(M^*M)^{-1/2}`$ 是酉矩阵（定理 1.8 中的酉矩阵）。若 $`\|M-\lambda U\|\le\zeta<\lambda`$，其中
+$`\lambda>0`$，$`U`$ 为酉矩阵，则 $`M`$ 可逆且 $`\|\mathrm{pol}(M)-U\|\le2\zeta/\lambda`$。
+
+*证明。* (a) 由定理 A.8 应用于 $`T^*T`$，并且 $`t\mapsto t^{1/2}`$ 递增，得
+$`\sigma_i(T)=\min_{\dim U=i}\max_{x\in U,|x|=1}|Tx|`$。对单位向量 $`x`$，$`|\tilde Tx|\le|Tx|+\Delta`$；先对 $`U`$ 取最大再取最小，得
+$`\sigma_i(\tilde T)\le\sigma_i(T)+\Delta`$，交换 $`T,\tilde T`$ 得反向不等式。因此当 $`i\le d`$ 时 $`\sigma_i(\tilde T)\le\Delta`$，当 $`i>d`$ 时
+$`\sigma_i(\tilde T)\ge\gamma-\Delta>\Delta`$，故 $`\tilde\Pi`$ 的秩为 $`d`$。对单位向量 $`x\in\mathrm{ran}\,\tilde\Pi`$，按 $`\tilde T^*\tilde T`$ 的特征向量展开得
+$`|\tilde Tx|^2=\langle x,\tilde T^*\tilde Tx\rangle\le\Delta^2`$，于是 $`|Tx|\le2\Delta`$；另一方面 $`Tx=T(1-\Pi)x`$，其中 $`(1-\Pi)x\perp\ker T^*T`$，
+而在那里 $`T^*T`$ 的特征值 $`\ge\gamma^2`$，于是 $`|Tx|\ge\gamma|(1-\Pi)x|`$。因此 $`\|(1-\Pi)\tilde\Pi\|\le2\Delta/\gamma`$。对单位向量 $`x\in\ker T`$，
+$`|\tilde Tx|\le\Delta`$，且
+$`|\tilde Tx|^2=\langle\tilde\Pi x,\tilde T^*\tilde T\tilde\Pi x\rangle+\langle(1-\tilde\Pi)x,\tilde T^*\tilde T(1-\tilde\Pi)x\rangle\ge(\gamma-\Delta)^2|(1-\tilde\Pi)x|^2`$
+（$`\tilde\Pi`$ 与 $`\tilde T^*\tilde T`$ 可交换，后者在 $`\mathrm{ran}(1-\tilde\Pi)`$ 上的特征值 $`\ge(\gamma-\Delta)^2`$），所以
+$`\|(1-\tilde\Pi)\Pi\|\le\Delta/(\gamma-\Delta)\le2\Delta/\gamma`$。最后，
+$`(\Pi-\tilde\Pi)x=\Pi(1-\tilde\Pi)(1-\tilde\Pi)x-(1-\Pi)\tilde\Pi\,\tilde\Pi x`$ 是两个正交向量之和，而
+$`\|\Pi(1-\tilde\Pi)\|=\|(1-\tilde\Pi)\Pi\|`$（取伴随，引理 1.1），所以
+$`|(\Pi-\tilde\Pi)x|^2\le(2\Delta/\gamma)^2(|(1-\tilde\Pi)x|^2+|\tilde\Pi x|^2)=(2\Delta/\gamma)^2|x|^2`$。
+
+(b) 将特征值按递增顺序编号。由定理 A.10，满足 $`\lambda_i(A)=\mu`$ 的 $`r`$ 个特征值 $`\lambda_i(\tilde A)`$ 落在 $`[\mu-\Delta,\mu+\Delta]`$ 中，
+其余与 $`\mu`$ 的距离 $`\ge g-\Delta>\Delta`$。因此 $`(\tilde A-\mu)^2`$ 的 $`r`$ 个最小特征值（它们 $`\le\Delta^2`$）恰来自这 $`r`$ 个特征值，
+对 $`T=A-\mu`$、$`\tilde T=\tilde A-\mu`$（于是 $`\ker T=\mathrm{ran}\,P`$，$`\sigma_{r+1}(T)=g`$）应用 (a) 即得估计。
+
+(c) $`(1-P)\tilde Q=(1-P)\tilde P\tilde Q=(1-P)(\tilde P-P)\tilde Q`$ 的范数 $`\le\varepsilon`$，所以 $`S=1-\tilde Q^*(1-P)\tilde Q`$ 的特征值
+在 $`[1-\varepsilon^2,1]`$ 中（定理 A.10），$`S^{-1/2}`$ 存在（定理 1.5）。$`Q^*Q=S^{-1/2}\tilde Q^*P\tilde QS^{-1/2}=1`$，且
+$`\mathrm{ran}\,Q\subseteq\mathrm{ran}\,P`$ 的维数为 $`k`$。由 $`Q-\tilde Q=\tilde Q(S^{-1/2}-1)-(1-P)\tilde QS^{-1/2}`$，
+$`\|Q-\tilde Q\|\le(1-\varepsilon^2)^{-1/2}-1+\varepsilon(1-\varepsilon^2)^{-1/2}=f(\varepsilon)`$，其中 $`f(\varepsilon)=((1+\varepsilon)/(1-\varepsilon))^{1/2}-1`$。
+其导数 $`(1-\varepsilon)^{-1}(1-\varepsilon^2)^{-1/2}`$ 递增，故 $`f`$ 是凸函数且 $`f(0)=0`$，从而
+$`f(\varepsilon)\le2\varepsilon f(\frac12)=2\varepsilon(\sqrt3-1)<2\varepsilon`$。
+
+(d) $`M^*M>0`$，且 $`\mathrm{pol}(M)^*\mathrm{pol}(M)=(M^*M)^{-1/2}M^*M(M^*M)^{-1/2}=1`$；$`\mathrm{pol}(M)|M|=M`$，所以它就是定理 1.8 中的
+酉矩阵。记 $`M=\lambda U(1+G)`$，其中 $`\|G\|=\|M-\lambda U\|/\lambda\le\zeta/\lambda<1`$。由 (a)（取 $`T=1`$，$`\tilde T=1+G`$），
+$`R=((1+G)^*(1+G))^{1/2}`$ 的特征值在 $`[1-\|G\|,1+\|G\|]`$ 中，所以 $`R`$、$`1+G`$ 和 $`M`$ 可逆；$`M^*M=\lambda^2R^2`$，所以
+$`\mathrm{pol}(M)=UW`$，其中 $`W=(1+G)R^{-1}`$ 为酉矩阵，且 $`\|W-1\|\le\|W-WR\|+\|WR-1\|=\|1-R\|+\|G\|\le2\|G\|`$。$`\square`$
+
+<a id="r-4-25"></a>
+
+**定理 4.25（给定容差下的交换子）。** 设 $`\tilde H_1,\dots,\tilde H_J`$ 为厄米矩阵，$`\eta=(\sum_j\|\tilde H_j-H_j\|^2)^{1/2}`$，
+$`\tilde L`$ 为它们的交换子映射；对 $`\theta\ge0`$，令 $`\mathcal C_\theta`$ 为 $`\tilde L^*\tilde L`$ 的特征值 $`\le\theta^2`$ 的特征向量张成的空间——
+**容差** $`\theta`$ **下的交换子**（$`\mathcal C_0=\{\tilde H_j\}'`$）。
+
+(a) 对所有 $`i`$，$`|\sigma_i(\tilde L)-\sigma_i(L)|\le2\eta`$；特别地，当 $`i\le d`$ 时 $`\sigma_i(\tilde L)\le2\eta`$，且
+$`\sigma_{d+1}(\tilde L)\ge\gamma-2\eta`$。
+
+(b) 若 $`2\eta<\theta<\gamma-2\eta`$，则 $`\dim\mathcal C_\theta=d`$，$`\mathcal C_\theta`$ 在 $`X\mapsto X^*`$ 下封闭，并且到 $`\mathcal C_\theta`$ 的
+正交投影 $`\tilde\Pi`$ 与到 $`\mathcal A'`$ 的正交投影 $`\Pi`$ 满足 $`\|\tilde\Pi-\Pi\|\le4\eta/\gamma`$。
+
+(c) 若 $`\theta\ge\gamma+2\eta`$，则 $`\dim\mathcal C_\theta>d`$。若 $`\theta<2\eta`$，可能出现 $`\dim\mathcal C_\theta<d`$：对
+$`H_1=\mathrm{diag}(1,1,0)`$ 和 $`\tilde H_1=H_1+\eta(E_{12}+E_{21})`$，$`d=5`$，$`\gamma=1`$，$`\tilde L`$ 的奇异值为
+$`0,0,0,2\eta,2\eta,1-\eta,1-\eta,1+\eta,1+\eta`$，并且当 $`\theta<2\eta`$ 时 $`\dim\mathcal C_\theta=3`$。
+
+因此容差必须大于噪声水平的两倍，并小于能隙减去噪声水平的两倍；这样的 $`\theta`$ 存在当且仅当 $`\eta<\gamma/4`$，此时计算出的
+交换子维数正确，且与真正的交换子相距不超过 $`4\eta/\gamma`$。界 $`2\eta`$ 在 (c) 的例子中取到。
+
+*证明。* (a) $`\|(\tilde L-L)X\|_2^2=\sum_j\|[\tilde H_j-H_j,X]\|_2^2\le4\eta^2\|X\|_2^2`$，且当 $`i\le d`$ 时 $`\sigma_i(L)=0`$；应用引理 4.24(a)。
+(b) 由 (a)，当 $`i\le d`$ 时 $`\sigma_i(\tilde L)\le2\eta<\theta`$，当 $`i>d`$ 时 $`\sigma_i(\tilde L)\ge\gamma-2\eta>\theta`$，所以 $`\mathcal C_\theta`$ 是引理
+4.24(a) 中取 $`\Delta=2\eta<\gamma/2`$ 时投影 $`\tilde\Pi`$ 的像。对厄米矩阵 $`H`$，
+$`\langle Y,[H,X]\rangle_{HS}=\mathrm{Tr}(Y^*HX-Y^*XH)=\langle[H,Y],X\rangle_{HS}`$，所以 $`\tilde L^*\tilde LX=\sum_j[\tilde H_j,[\tilde H_j,X]]`$，
+取伴随得 $`(\tilde L^*\tilde LX)^*=\sum_j[[X^*,\tilde H_j],\tilde H_j]=\tilde L^*\tilde L(X^*)`$。因此 $`X\mapsto X^*`$ 把 $`\tilde L^*\tilde L`$ 的每个
+特征子空间（其特征值为实数）映到自身。(c) 由 (a)，$`\sigma_{d+1}(\tilde L)\le\gamma+2\eta\le\theta`$。在例子中，对 $`\mathbb C^3=\mathbb C^2\oplus\mathbb C`$ 记
+$`X=\begin{pmatrix}X_{11}&x_{12}\\x_{21}&x_{22}\end{pmatrix}`$，$`\tilde H_1=(1+\eta\sigma)\oplus0`$，$`\sigma=\begin{pmatrix}0&1\\1&0\end{pmatrix}`$。
+则 $`[\tilde H_1,X]`$ 的各块为 $`\eta[\sigma,X_{11}]`$、$`(1+\eta\sigma)x_{12}`$、$`-x_{21}(1+\eta\sigma)`$ 和 $`0`$，这是一个正交分解。
+$`X_{11}\mapsto[\sigma,X_{11}]`$ 在 $`1,\sigma`$ 上为零，并把规范正交对 $`\mathrm{diag}(1,-1)/\sqrt2`$、$`\begin{pmatrix}0&-i\\i&0\end{pmatrix}/\sqrt2`$
+互相映为对方的 $`\mp2i`$ 倍；$`1+\eta\sigma`$ 的特征值为 $`1\pm\eta`$。由此得到奇异值；$`\eta=0`$ 给出 $`d=5`$ 和 $`\gamma=1`$，而当 $`\theta<2\eta`$
+时只剩下三个零。$`\square`$
+
+库中 $`\theta`$ 等于 `tol` 乘以 $`\max(1,\sigma_{\max})`$（模块文档字符串）；零空间是在对未知量作约化之后计算的，这一约化对精确的
+生成元是精确的（4.3 节），所报告的奇异值属于约化后的映射。定理 4.25 需要 $`\eta`$ 和 $`\gamma`$，而它们在实践中未知。尽管如此，
+输出仍可被证明：
+
+<a id="r-4-26"></a>
+
+**命题 4.26（后验证书）。** 设 $`\tilde H_1,\dots,\tilde H_J`$ 为厄米矩阵，$`\tilde V`$ 为酉矩阵，$`\sum_ck_cm_c=n`$；令
+$`\tilde{\mathcal B}=\tilde V(\bigoplus_cM_{k_c}\otimes1_{m_c})\tilde V^*`$，$`E`$ 为 $`M_n`$ 关于 $`\langle\cdot,\cdot\rangle_{HS}`$ 到 $`\tilde{\mathcal B}`$ 的
+正交投影，$`H_j=E(\tilde H_j)`$，$`\tilde V^*H_j\tilde V=\bigoplus_ca_{j,c}\otimes1_{m_c}`$，$`r=(\sum_j\|\tilde H_j-H_j\|_2^2)^{1/2}`$
+（**后向误差**），$`d=\sum_cm_c^2`$，$`\gamma_{\mathcal B}`$ 为 $`H_1,\dots,H_J`$ 的交换子映射的 $`\sigma_{d+1}`$。
+
+(a) $`\gamma_{\mathcal B}`$ 等于 $`\sigma_2(\Phi_{cc})`$（对 $`k_c\ge2`$ 的 $`c`$）与 $`\sigma_1(\Phi_{ce})`$（对 $`c\neq e`$）中的最小者（若都不存在则为
+$`\infty`$），其中 $`\Phi_{ce}:M_{k_c\times k_e}\to M_{k_c\times k_e}^J`$，$`Y\mapsto(a_{j,c}Y-Ya_{j,e})_j`$。
+
+(b) 若 $`\gamma_{\mathcal B}>0`$，则各 $`H_j`$ 生成 $`\tilde{\mathcal B}`$：$`\tilde V`$ 与 $`(k_c,m_c)`$ 是由与输入相距 $`r`$ 的厄米矩阵所生成的代数的
+精确分解。
+
+(c) 若 $`2r<\gamma_{\mathcal B}`$，则对每个 $`\theta\in(2r,\gamma_{\mathcal B}-2r)`$，输入在容差 $`\theta`$ 下的交换子维数为 $`d`$，且与
+$`\tilde{\mathcal B}'`$ 相距不超过 $`4r/\gamma_{\mathcal B}`$；并且满足 $`(\sum_j\|H^0_j-\tilde H_j\|^2)^{1/2}<\gamma_{\mathcal B}/2-r`$ 的厄米矩阵
+$`H^0_j`$ 所生成的代数，其交换子的维数 $`\le d`$。
+
+*证明。* $`\tilde{\mathcal B}`$ 在 $`X\mapsto X^*`$ 下封闭，而这是一个保持 $`\mathrm{Re}\langle\cdot,\cdot\rangle_{HS}`$ 的反线性映射，所以它把
+$`\tilde{\mathcal B}^\perp`$ 映到自身并与 $`E`$ 可交换；因此各 $`H_j`$ 与 $`a_{j,c}`$ 都是厄米的，且 $`\|\tilde H_j-H_j\|\le\|\tilde H_j-H_j\|_2`$。
+(a) 把 $`\tilde V^*X\tilde V`$ 写成分块 $`X_{ce}\in M_{k_cm_c\times k_em_e}=M_{k_c\times k_e}\otimes M_{m_c\times m_e}`$（Kronecker 顺序）；
+$`X\mapsto\tilde V^*X\tilde V`$ 保持 $`\|\cdot\|_2`$，这些块相互正交，且 $`\tilde V^*[H_j,X]\tilde V`$ 的 $`(c,e)`$ 块为
+$`(a_{j,c}\otimes1)X_{ce}-X_{ce}(a_{j,e}\otimes1)`$，当 $`X_{ce}=Y\otimes Z`$ 时它等于 $`\Phi_{ce}(Y)_j\otimes Z`$。因此交换子映射在 $`(c,e)`$ 块上
+作用为 $`\Phi_{ce}\otimes\mathrm{id}`$，它的 $`T^*T`$ 为 $`\bigoplus_{c,e}\Phi_{ce}^*\Phi_{ce}\otimes1`$，其奇异值就是各 $`\Phi_{ce}`$ 的奇异值，每个重复
+$`m_cm_e`$ 次。由于 $`\Phi_{cc}(1)=0`$，至少有 $`\sum_cm_c^2=d`$ 个奇异值为零，并且恰为 $`d`$ 个当且仅当对所有 $`c`$ 有 $`\sigma_2(\Phi_{cc})>0`$、
+对 $`c\neq e`$ 有 $`\sigma_1(\Phi_{ce})>0`$；此时 $`\sigma_{d+1}`$ 是这些数中的最小者，否则两边都为 $`0`$。(b) $`H_j\in\tilde{\mathcal B}`$ 与
+$`\tilde{\mathcal B}'`$ 可交换，而 $`\tilde{\mathcal B}'`$ 的维数为 $`d`$（定理 4.3，如命题 4.9 的证明），所以 $`\tilde{\mathcal B}'\subseteq\{H_j\}'`$；若
+$`\gamma_{\mathcal B}>0`$，至多 $`d`$ 个奇异值为零，所以 $`\{H_j\}'=\tilde{\mathcal B}'`$，$`\{H_j\}''=\tilde{\mathcal B}''=\tilde{\mathcal B}`$（定理 2.2）。
+(c) 对精确生成元 $`H_j`$（能隙 $`\gamma_{\mathcal B}`$，由 (b) 交换子为 $`\tilde{\mathcal B}'`$）和相距 $`\eta\le r`$ 的扰动生成元 $`\tilde H_j`$
+应用定理 4.25。对 $`H^0_j`$，$`(\sum_j\|H^0_j-H_j\|^2)^{1/2}<\gamma_{\mathcal B}/2`$，定理 4.25(a) 给出其交换子映射的 $`\sigma_{d+1}>0`$。$`\square`$
+
+于是输出能为自己作证：后向误差 $`r`$ 小且能隙 $`\gamma_{\mathcal B}`$ 远大于 $`2r`$，意味着计算出的结构对于稍加修改的生成元是精确的，
+$`(2r,\gamma_{\mathcal B}-2r)`$ 中的每个阈值给出相同的交换子维数，而且没有任何对称性更多的模型与输入的距离小于 $`\gamma_{\mathcal B}/2-r`$。
+
+*库中：* 证书是 `Decomposition.certificate()`：如 (a) 那样由各块得到的 $`r`$ 和 $`\gamma_{\mathcal B}`$、窗口 $`(2r,\gamma_{\mathcal B}-2r)`$，以及实际
+所用阈值两侧的奇异值；若该阈值不在窗口内则发出警告——[教程，4.9 节](../../tutorial/zh/04_symmetries.md#s-4-9)。
+
+其余步骤——用随机 $`K`$ 拆分、用随机 $`Y`$ 分组——需要定量的一般性。库中的样本是重新缩放的高斯向量（4.3 节第 1 步）：取交换子的
+规范正交基 $`(B_r)`$ 和独立的标准复高斯变量 $`c_r`$，$`Y=\sum_rc_rB_r`$ 是 $`\mathcal A'`$ 的**标准复高斯向量**（其分布与基无关，
+命题 A.16(a)），而对独立副本 $`Y'`$ 有 $`K=Y'+Y'^*=\sqrt2\,G`$，其中 $`G`$ 是带内积 $`\langle X,Y\rangle=\mathrm{Tr}(XY)`$ 的实空间 $`\mathcal A'_h`$ 的
+**标准高斯向量**（$`\sqrt2\,Y'`$ 是带 $`\mathrm{Re}\langle\cdot,\cdot\rangle_{HS}`$ 的实空间 $`\mathcal A'`$ 的标准高斯向量，而 $`X\mapsto\frac12(X+X^*)`$
+是到 $`\mathcal A'_h`$ 的正交投影；命题 A.16(a)、A.14(b)）。对群平均采样同样成立：$`Z+Z^*=\sqrt2\,H`$，其中 $`H`$ 为 GUE 矩阵，即
+$`\mathrm{Herm}_n`$ 的标准高斯向量，它到 $`\mathcal A'_h`$ 的正交投影就是群平均；Ginibre 矩阵的群平均是 $`\mathcal A'`$ 的标准复高斯向量。
+
+<a id="r-4-27"></a>
+
+**命题 4.27（交换子的随机元素）。** 设 $`G`$ 与 $`Z`$ 相互独立，分别为 $`\mathcal A'_h`$ 的标准高斯向量和 $`\mathcal A'`$ 的标准复高斯向量。
+
+(a) $`V^*GV=\bigoplus_c1_{k_c}\otimes k_c^{-1/2}H_c`$，$`V^*ZV=\bigoplus_c1_{k_c}\otimes k_c^{-1/2}Z_c`$，其中 $`H_c`$ 为 GUE 矩阵，$`Z_c`$ 为
+Ginibre 矩阵，大小为 $`m_c`$，全部相互独立；$`\mathbb E\|G\|_2^2=\mathbb E\|Z\|_2^2=d`$。
+
+(b) 令 $`\kappa_c=k_c^{-1/2}H_c`$，$`\delta_\times=\min|\lambda_i(\kappa_c)-\lambda_j(\kappa_e)|`$，最小值取遍 $`c\neq e`$ 及所有 $`i,j`$。对 $`x>0`$，
+```math
+\mathbb P(\delta_\times<x)\le\sqrt{\tfrac2\pi}\;x\sum_{c<e}m_cm_e\Big(\frac1{k_cm_c}+\frac1{k_em_e}\Big)^{-1/2}.
+```
+
+(c) 当 $`m_c\ge2`$ 时，令 $`\delta_c`$ 为 $`\kappa_c`$ 的最小能级间距。则当 $`k_c^{1/2}x\le1`$ 时 $`\mathbb P(\delta_c<x)\le C_{m_c}k_c^{3/2}x^3`$，
+其中 $`C_{m_c}`$ 是命题 C.9 中的常数（$`\beta=2`$）；对 $`m_c=2`$，$`C_2=1/(6\sqrt\pi)`$ 对所有 $`x`$ 成立。
+
+(d) 设 $`X`$ 为维数 $`D`$ 的实内积空间的标准高斯向量，$`W`$ 是与 $`X`$ 独立的随机变量，$`f\ge0`$ 为 Borel 函数且对 $`t>0`$ 有
+$`f(w,tx)=tf(w,x)`$。则 $`\mathbb P(f(W,X)<\varepsilon|X|)\le2\,\mathbb P(f(W,X)<\varepsilon(2D)^{1/2})`$。对 $`X=G`$，$`D=d`$；对 $`X=Z`$，以
+$`(2d)^{1/2}`$ 代入同样成立。
+
+(e) 若 $`G`$ 满足引理 4.6 的假设，且 $`\Pi,\Pi'`$ 是 $`G`$ 对应于同一个 $`\kappa_c`$ 的两个不同特征值的谱投影，则在给定 $`G`$ 的条件下，
+$`\|\Pi Z\Pi'\|_2^2`$ 在 $`(0,\infty)`$ 上的密度为 $`e^{-t}`$：$`\mathbb P(\|\Pi Z\Pi'\|_2<x)=1-e^{-x^2}\le x^2`$。
+
+因此，令 $`\delta(G)=\min(\delta_\times,\min_c\delta_c)`$（当 $`G`$ 有 $`N=\sum_cm_c`$ 个不同特征值时为其不同特征值之间的最小距离，否则为 $`0`$），
+$`\beta(G,Z)=\min\|\Pi_l Z\Pi_{l'}\|_2`$（取遍同一直和项中不同谱投影组成的对），则
+```math
+\mathbb P\big(\delta(G)<\varepsilon\|G\|_2\big)\le\frac{4\sqrt d}{\sqrt\pi}\,\varepsilon\sum_{c<e}\frac{m_cm_e}{(\frac1{k_cm_c}+\frac1{k_em_e})^{1/2}}
++2\sum_{c:m_c\ge2}C_{m_c}(2dk_c)^{3/2}\varepsilon^3=:p_\delta(\varepsilon),\qquad
+\mathbb P\big(\beta(G,Z)<\beta'\|Z\|_2\big)\le4d\beta'^2\sum_cm_c(m_c-1)=:p_\beta(\beta'),
+```
+前者要求 $`\varepsilon(2dk_c)^{1/2}\le1`$。阶 $`\varepsilon`$ 无法改进：不同扇区的能级不互相排斥（定理 5.15），而同一扇区的能级相互排斥
+（阶 $`\varepsilon^3`$）。
+
+*证明。* (a) 矩阵 $`k_c^{-1/2}V(1\otimes b)V^*`$（$`b`$ 取遍 $`\mathrm{Herm}_{m_c}`$ 关于 $`\mathrm{Tr}(xy)`$ 的规范正交基，$`c=1,\dots,C`$）构成
+$`\mathcal A'_h`$ 的规范正交基（$`\mathrm{Tr}((1\otimes b)(1\otimes b'))=k_c\mathrm{Tr}(bb')`$），故由命题 A.14(b)，$`\kappa_c=k_c^{-1/2}\sum_bg_bb`$，
+系数 $`g_b`$ 独立且服从 $`N(0,1)`$。对基 $`e_{ii}`$、$`(e_{ij}+e_{ji})/\sqrt2`$、$`i(e_{ij}-e_{ji})/\sqrt2`$，$`\sum_bg_bb`$ 的元素独立，
+$`h_{ii}\sim N(0,1)`$，$`\mathrm{Re}\,h_{ij},\mathrm{Im}\,h_{ij}\sim N(0,\frac12)`$：它是 GUE 矩阵（命题 A.17）。同理，$`\mathcal A'`$ 的规范正交基
+$`k_c^{-1/2}V(1\otimes e_{jj'})V^*`$ 给出元素为独立标准复高斯变量的 $`Z_c`$。最后 $`\mathbb E\|G\|_2^2=\sum\mathbb Eg_b^2=d`$，$`Z`$ 同理。
+
+(b) 固定 $`c\neq e`$，令 $`s=(\frac1{k_cm_c}+\frac1{k_em_e})^{1/2}`$，并令 $`u\in\mathcal A'_h`$ 在直和项 $`c`$ 中的块为 $`\alpha1`$、在直和项 $`e`$ 中为
+$`-\beta1`$、其余为 $`0`$，其中 $`\alpha=1/(k_cm_cs)`$，$`\beta=1/(k_em_es)`$。则 $`\|u\|_2^2=\alpha^2k_cm_c+\beta^2k_em_e=1`$，$`\alpha+\beta=s`$。
+由命题 A.14(b)，$`G=G_0+tu`$，其中 $`t=\langle u,G\rangle\sim N(0,1)`$ 与 $`G_0`$ 独立。各块为 $`\kappa_c=\kappa^0_c+t\alpha`$ 和
+$`\kappa_e=\kappa^0_e-t\beta`$，所以 $`\lambda_i(\kappa_c)-\lambda_j(\kappa_e)=a+ts`$，其中 $`a=\lambda_i(\kappa^0_c)-\lambda_j(\kappa^0_e)`$ 是 $`G_0`$ 的
+函数（推论 A.11）。对固定的 $`a`$，$`\{t:|a+ts|<x\}`$ 是长度为 $`2x/s`$ 的区间，概率 $`\le2x/(s\sqrt{2\pi})`$；由独立性（Fubini），这给出
+$`\mathbb P(|\lambda_i(\kappa_c)-\lambda_j(\kappa_e)|<x)`$ 的上界。对 $`c<e`$、$`i\le m_c`$、$`j\le m_e`$ 求和。
+
+(c) $`\delta_c<x`$ 当且仅当 $`H_c`$ 的最小能级间距 $`<k_c^{1/2}x`$；用命题 C.9。当 $`m_c=2`$ 时，间距的密度为
+$`s^2e^{-s^2/4}/(2\sqrt\pi)\le s^2/(2\sqrt\pi)`$（命题 5.13 的证明），它在 $`(0,y)`$ 上的积分 $`\le y^3/(6\sqrt\pi)`$。
+
+(d) 在规范正交坐标下，$`X`$ 是 $`\mathbb R^D`$ 的标准高斯向量；由定理 A.20(a)，$`|X|`$ 与 $`X/|X|`$ 独立，从而与 $`(W,X/|X|)`$ 独立。
+由 Markov 不等式，$`\mathbb P(|X|^2\ge2D)\le\mathbb E|X|^2/2D=\frac12`$。由于 $`f(W,X)=|X|f(W,X/|X|)`$，
+$`\mathbb P(f(W,X)<\varepsilon(2D)^{1/2})\ge\mathbb P(f(W,X/|X|)<\varepsilon)\,\mathbb P(|X|^2<2D)\ge\frac12\mathbb P(f(W,X)<\varepsilon|X|)`$。对 $`Z`$，
+$`\sqrt2Z`$ 是维数 $`2d`$ 的标准高斯向量，对 $`\sqrt2Z`$ 的 $`\varepsilon(4d)^{1/2}`$ 即对 $`Z`$ 的 $`\varepsilon(2d)^{1/2}`$。
+
+(e) 由 (a) 和引理 4.6，$`V^*\Pi V`$ 与 $`V^*\Pi'V`$ 分别投影到 $`\mathbb C^{k_c}\otimes e`$ 和 $`\mathbb C^{k_c}\otimes e'`$，其中 $`e,e'`$ 是 $`H_c`$
+的规范正交特征向量，只依赖于 $`G`$。于是 $`\|\Pi Z\Pi'\|_2^2=k_c|\langle e,k_c^{-1/2}Z_ce'\rangle|^2=|\langle e,Z_ce'\rangle|^2`$，而对固定的
+$`e,e'`$，$`\langle e,Z_ce'\rangle`$ 是 $`Z_c`$ 沿单位向量 $`|e\rangle\langle e'|`$ 的坐标，是标准复高斯变量（命题 A.16(a)(b)），其模的平方的
+密度为 $`e^{-t}`$（定理 A.20(b)，$`N=1`$）。由于 $`Z`$ 与 $`G`$ 独立，Fubini 定理给出条件陈述。*推论部分。* 先对平凡的 $`W`$ 用 (d)，
+再用 (b)、(c) 和并集估计，取 $`x=\varepsilon(2d)^{1/2}`$；再对 $`W=G`$ 用 (d)，然后用 (e) 和对 $`\sum_cm_c(m_c-1)`$ 个有序对的并集估计，
+取 $`x^2=2d\beta'^2`$。由推论 A.11 和命题 A.13，这些事件是 Borel 的。$`\square`$
+
+在算法中，交换子的样本取自计算出的交换子，而不是 $`\mathcal A'`$；我们把它们与其在 $`\mathcal A'`$ 上的投影作比较。
+
+<a id="r-4-28"></a>
+
+**定理 4.28（分解的稳定性）。** 设 $`\tilde{\mathcal A}'\subseteq M_n`$ 是维数为 $`d`$、在 $`X\mapsto X^*`$ 下封闭的子空间，正交投影为
+$`\tilde\Pi`$，且 $`\|\tilde\Pi-\Pi\|\le\varepsilon_0<1`$（由定理 4.25(b)，对窗口内容差下的交换子有 $`\varepsilon_0=4\eta/\gamma`$）。设
+$`\tilde K\in\tilde{\mathcal A}'_h`$，$`\tilde Y\in\tilde{\mathcal A}'`$，$`K=\Pi(\tilde K)\in\mathcal A'_h`$，$`Y=\Pi(\tilde Y)\in\mathcal A'`$。假设 $`K`$ 满足
+引理 4.6 的假设，特征值为 $`\mu_1<\dots<\mu_N`$，谱投影 $`P_l`$ 的秩为 $`k_{c(l)}`$ 且位于直和项 $`c(l)`$ 中，$`\delta=\min_l(\mu_{l+1}-\mu_l)`$；令
+$`\beta=\min\{\|P_lYP_{l'}\|_2:l\neq l',\,c(l)=c(l')\}`$（若无此种对则为 $`\infty`$），$`h=\max_cm_c-1`$，以及
+```math
+\rho=\varepsilon_0\|\tilde K\|_2,\qquad\varepsilon_1=\frac{2\rho}\delta,\qquad\zeta=(\varepsilon_0+2\varepsilon_1)\|\tilde Y\|_2,\qquad
+\xi=\frac{k_{\max}^{1/2}(\varepsilon_0+4\varepsilon_1)\|\tilde Y\|_2}\beta .
+```
+
+(a) 若 $`4\rho<\delta`$，则对每个 $`\tau\in[2\rho,\delta-2\rho)`$，把 $`\tilde K`$ 的递增特征值在相邻两者之差大于 $`\tau`$ 处切开，得到 $`N`$
+组；第 $`l`$ 组有 $`k_{c(l)}`$ 个元素，其谱投影 $`\tilde P_l`$ 满足 $`\|\tilde P_l-P_l\|\le\varepsilon_1`$。
+
+(b) 若还有 $`2\zeta<\beta`$，则对每个 $`\theta'\in[\zeta,\beta-\zeta)`$，大小相同的两组 $`l\neq l'`$ 满足 $`\|\tilde P_l\tilde Y\tilde P_{l'}\|_2>\theta'`$
+当且仅当 $`c(l)=c(l')`$。因此第 3 步连通的类就是各直和项，算法返回精确的 $`(k_c,m_c)`$。
+
+(c) 若还有 $`3^h\xi\le1`$，令 $`\tilde V`$ 按第 3–4 步由各 $`\mathrm{ran}\,\tilde P_l`$ 的规范正交基装配而成，每个直和项的各拷贝沿任意深度
+$`\le h`$ 的树用极分解因子对齐。则存在酉矩阵 $`\hat V`$，对所有 $`a\in\mathcal A`$ 有 $`\hat V^*a\hat V=\bigoplus_c\rho_c(a)\otimes1_{m_c}`$
+（定理 4.3 意义下的分解），且 $`\|\tilde V-\hat V\|\le N^{1/2}(2\varepsilon_1+3^h\xi)`$。
+
+(d) 设 $`\tilde K`$ 是 $`\tilde{\mathcal A}'_h`$ 的标准高斯向量的正倍数，$`\tilde Y`$ 是与之独立的、$`\tilde{\mathcal A}'`$ 的标准复高斯向量的正倍数，
+如库中那样。（库把它们归一化；在 $`\tilde K`$ 与 $`\tilde Y`$ 乘以正常数、并相应缩放 $`\tau`$ 与 $`\theta'`$ 时，(a)–(c) 的假设与结论都不变。）对每个由对组成的 Borel 集 $`\mathcal E`$，$`\mathbb P((K,Y)\in\mathcal E)\le(1-\varepsilon_0^2)^{-3d/2}\,\mathbb P((cG,c'Z)\in\mathcal E)`$，
+其中 $`G,Z`$ 如命题 4.27，倍数 $`c,c'`$ 与上相同。因此，若 $`\varepsilon,\beta'\in(0,1]`$ 且 $`\varepsilon_0\le\varepsilon\beta'/(14\cdot3^hk_{\max}^{1/2})`$，
+则除去一个概率 $`\le(1-\varepsilon_0^2)^{-3d/2}(p_\delta(\varepsilon)+p_\beta(\beta'))`$ 的事件外，(a)–(c) 的假设都成立，且
+$`\|\tilde V-\hat V\|\le17\cdot3^h(Nk_{\max})^{1/2}\varepsilon_0/(\varepsilon\beta')`$。若 $`\varepsilon_0^2\le1/(3d)`$，该因子 $`\le2`$。
+
+*证明。* $`\Pi`$ 与 $`X\mapsto X^*`$ 可交换（同命题 4.26 中的 $`E`$），所以 $`K`$ 是厄米的。对 $`X\in\mathrm{ran}\,\tilde\Pi`$，
+$`X-\Pi X=(1-\Pi)\tilde\Pi X=(\tilde\Pi-\Pi)\tilde\Pi X`$，所以 $`\|X-\Pi X\|_2\le\varepsilon_0\|X\|_2`$ 且 $`\|\Pi X\|_2\le\|X\|_2`$。(a) 因此
+$`\|\tilde K-K\|\le\|\tilde K-K\|_2\le\rho`$。对每个 $`\mu_l`$ 应用引理 4.24(b)（$`g\ge\delta>4\rho`$，$`\Delta=\rho`$），得 $`\tilde K`$ 恰有
+$`k_{c(l)}`$ 个特征值在 $`[\mu_l-\rho,\mu_l+\rho]`$ 中；这些区间互不相交，同一区间中相邻特征值之差 $`\le2\rho\le\tau`$，不同区间中的特征值之差
+$`\ge\delta-2\rho>\tau`$；并且 $`\|\tilde P_l-P_l\|\le2\rho/\delta`$。(b) 由 $`\|AXB\|_2\le\|A\|\|X\|_2\|B\|`$，
+$`|\|\tilde P_l\tilde Y\tilde P_{l'}\|_2-\|P_lYP_{l'}\|_2|\le\|\tilde Y-Y\|_2+\|(\tilde P_l-P_l)Y\|_2+\|Y(\tilde P_{l'}-P_{l'})\|_2\le\zeta`$，而当
+$`c(l)\neq c(l')`$ 时 $`P_lYP_{l'}=0`$（引理 4.8(b)），否则 $`\|P_lYP_{l'}\|_2\ge\beta`$。所以同一直和项的所有组彼此相连，且不与其他组相连，
+直和项 $`c`$ 给出 $`m_c`$ 个大小为 $`k_c`$ 的组。
+
+(c) 令 $`\tilde Q_l`$ 为 $`\mathrm{ran}\,\tilde P_l`$ 的基，$`Q_l`$ 为引理 4.24(c) 给出的 $`\mathrm{ran}\,P_l`$ 的基（$`\varepsilon_1<\frac12`$），于是
+$`\|\tilde Q_l-Q_l\|\le2\varepsilon_1`$。由引理 4.8(b)，对同一直和项 $`c`$ 中的 $`l,l'`$，$`T_{ll'}=Q_l^*YQ_{l'}=\lambda_{ll'}U_{ll'}`$，其中 $`U_{ll'}`$ 为
+酉矩阵，$`\lambda_{ll'}=k_c^{-1/2}\|P_lYP_{l'}\|_2\ge\beta k_{\max}^{-1/2}`$，并且 $`\tilde T_{ll'}=\tilde Q_l^*\tilde Y\tilde Q_{l'}`$ 满足
+$`\|\tilde T_{ll'}-T_{ll'}\|\le\varepsilon_0\|\tilde Y\|_2+4\varepsilon_1\|Y\|_2\le\xi\lambda_{ll'}`$。算法在根上取 $`\tilde W_{l_0}=1`$，沿从 $`l`$ 到 $`l'`$ 的边取
+$`\tilde W_{l'}=\mathrm{pol}(\tilde W_l^*\tilde T_{ll'})^*`$；用 $`T_{ll'}`$ 以同样方式定义 $`W_l`$，于是 $`W_{l'}=U_{ll'}^*W_l`$。由引理 4.8(b) 并沿树
+归纳，直和项 $`c`$ 各拷贝的基 $`Q_lW_l`$ 携带相同的矩阵 $`(Q_lW_l)^*a(Q_lW_l)`$，所以按 $`\tilde Q_l\tilde W_l`$ 在 $`\tilde V`$ 中的方式排列的
+$`Q_lW_l`$ 构成一个如定理 4.3 证明存在性部分那样的分解 $`\hat V`$。令 $`e_l=\|\tilde W_l-W_l\|`$。则
+$`\|\tilde W_l^*\tilde T_{ll'}-W_l^*T_{ll'}\|\le e_l\|\tilde T_{ll'}\|+\|\tilde T_{ll'}-T_{ll'}\|\le\lambda_{ll'}(e_l(1+\xi)+\xi)`$，若它 $`<\lambda_{ll'}`$，
+引理 4.24(d)（取 $`W_l^*T_{ll'}=\lambda_{ll'}W_l^*U_{ll'}`$）给出 $`e_{l'}\le2e_l(1+\xi)+2\xi\le3e_l+2\xi`$。对深度 $`t`$ 归纳得 $`e_l\le\xi(3^t-1)`$：
+归纳步为 $`3\xi(3^t-1)+2\xi=\xi(3^{t+1}-1)`$，并且它适用，因为当 $`t\le h-1`$ 时
+$`e_l(1+\xi)+\xi\le\xi3^t(1+\xi)\le\frac13\cdot\frac43<1`$（因为 $`\xi\le3^{-h}\le\frac13`$）。于是
+$`\|\tilde Q_l\tilde W_l-Q_lW_l\|\le2\varepsilon_1+3^h\xi`$；矩阵 $`\tilde V-\hat V`$ 由这 $`N`$ 个列块组成，而
+$`|\sum_lA_lx_l|\le\sum_l\|A_l\||x_l|\le(\sum_l\|A_l\|^2)^{1/2}|x|`$ 给出估计。
+
+(d) 在 $`\tilde{\mathcal A}'_h`$ 与 $`\mathcal A'_h`$ 的规范正交坐标下（二者实维数均为 $`d`$：在伴随下封闭的子空间是 $`\mathcal S_h\oplus i\mathcal S_h`$），
+$`\Pi`$ 限制为线性映射 $`B:\tilde{\mathcal A}'_h\to\mathcal A'_h`$，满足 $`(1-\varepsilon_0^2)|x|^2\le|Bx|^2\le|x|^2`$。因此 $`B`$ 是双射，$`|B^{-1}y|\ge|y|`$，
+且 $`|\det B|=\det(B^TB)^{1/2}\ge(1-\varepsilon_0^2)^{d/2}`$（定理 A.8）。由引理 A.3(c)，$`K/c=B(\tilde K/c)`$ 的密度为
+$`\varphi_d(B^{-1}y)/|\det B|\le(1-\varepsilon_0^2)^{-d/2}\varphi_d(y)`$，其中 $`\varphi_d`$ 是 $`G`$ 的密度。在维数为 $`2d`$ 的实空间 $`\tilde{\mathcal A}'`$ 上
+同样的论证对 $`Y`$ 给出因子 $`(1-\varepsilon_0^2)^{-d}`$，且 $`K,Y`$ 独立。在命题 4.27 的两个事件（对 $`K`$ 和 $`Y`$；它们在倍数下不变）的
+补集上，并利用 $`(1-\varepsilon_0^2)^{1/2}\ge\frac{\sqrt3}2`$：$`\delta\ge\varepsilon\|K\|_2\ge\frac{\sqrt3}2\varepsilon\|\tilde K\|_2`$，所以
+$`\varepsilon_1\le\frac4{\sqrt3}\frac{\varepsilon_0}\varepsilon<\frac12`$；$`\beta\ge\beta'\|Y\|_2\ge\frac{\sqrt3}2\beta'\|\tilde Y\|_2`$，且
+$`2\zeta\le2(1+\frac8{\sqrt3\varepsilon})\varepsilon_0\|\tilde Y\|_2\le11.24\,\frac{\varepsilon_0}\varepsilon\|\tilde Y\|_2\le\frac{11.24}{14}\beta'\|\tilde Y\|_2<\beta`$；以及
+$`3^h\xi\le3^hk_{\max}^{1/2}\frac{2}{\sqrt3\beta'}(1+\frac{16}{\sqrt3\varepsilon})\varepsilon_0\le11.83\cdot3^hk_{\max}^{1/2}\frac{\varepsilon_0}{\varepsilon\beta'}\le\frac{11.83}{14}<1`$。$`\|\tilde V-\hat V\|`$ 的界由
+$`2\varepsilon_1\le4.62\,\varepsilon_0/\varepsilon`$、$`3^h\xi`$ 的界以及 $`4.62+11.83<17`$ 得到。最后，
+$`(1-\frac1{3d})^{-3d/2}\le(\frac23)^{-3/2}<2`$，因为 $`(1-\frac1m)^{-m}`$ 对 $`m\ge2`$ 递减。$`\square`$
+
+综上：若噪声相对于能隙很小，$`\eta\le\gamma\varepsilon\beta'/(56\cdot3^hk_{\max}^{1/2})`$，且各阈值位于定理 4.25 与 4.28 的窗口中，则除一个概率为
+$`O(\varepsilon+\beta'^2)`$ 的事件外，算法恢复 $`(k_c,m_c)`$，并给出与某个精确分解相距 $`O(\eta/\gamma)`$ 的 $`V`$。这些常数是最坏情形的界；
+典型误差要小得多。库无法知道 $`\eta`$ 和 $`\gamma`$，因此用
+$`\nu=\max(\sigma_d(\tilde L),\epsilon_{\rm mach}\max(1,\sigma_{\max}))/\sigma_{d+1}(\tilde L)`$ 估计其交换子样本的相对误差（由引理 4.24(a)，它与
+$`\varepsilon_0`$ 同阶，因为 $`\sigma_d(\tilde L)\le\Delta`$），并把聚类的下限阈值和连接阈值放在 $`\min(10^3\nu,\nu^{1/2})`$（后者至少为
+$`\epsilon_{\rm mach}^{1/2}`$），介于噪声与结构的单位尺度之间；之后由命题 4.26 检验结果。
+
+*计算：* 含噪声生成元上的定理 4.25（奇异值的能隙与容差的对比，以及 (c) 的例子）、证书的命题 4.26，以及用蒙特卡罗方法检验
+命题 4.27——[教程，4.9 节](../../tutorial/zh/04_symmetries.md#s-4-9)。
 
 <a id="x-4"></a>
 

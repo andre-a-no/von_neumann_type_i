@@ -20,7 +20,9 @@ $`20`$ and $`\pi(S_3)''\cong M_1\oplus M_2`$ has dimension $`5`$. The code below
 numerically, and that the commutant of $`\pi(S_3)'`$ is again $`\pi(S_3)''`$
 ([Theorem 2.2](../lecture_notes/02_von_neumann_algebras.md#r-2-2)): the commutant of a set $`S`$ is the null
 space of the linear map $`X\mapsto(AX-XA)_{A\in S}`$, whose dimension is computed here in floating
-point, by counting the singular values above a tolerance.
+point, by counting the singular values above a tolerance. The tolerance must separate the singular values that vanish in
+exact arithmetic from the others; for noisy matrices [Theorem 4.25](../lecture_notes/04_symmetries.md#r-4-25) says
+where it may lie ([Tutorial 4, Section 4.9](04_symmetries.md#s-4-9)).
 
 ```python
 import itertools

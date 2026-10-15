@@ -4,7 +4,7 @@
 
 第2章では、対称性の群がフォン・ノイマン環（対称性作用素の張る空間）とその可換子環（対称なオブザーバブル）を生み出すことを示し（命題 2.7）、一つの例を手で分解した。本章ではその背後にある表現論を与え、それをライブラリが任意の行列のリストに対して実行するアルゴリズムに変え、スピン系の二つの対称性に応用する：$`U(1)`$（粒子数あるいは磁化）と $`SU(2)`$（スピンの回転）である。
 
-**本章で学ぶこと**：完全可約性とシューアの補題、既約表現への分解が可換子環と生成される環をどのように決定するか、指標がどのように重複度を数えるか、可換子環のランダムな元がなぜ分解を数値的に見つけるか、電荷セクターとは何か、既約なスピン表現と $`L`$ 個のスピン $`\frac12`$ の分解、$`SU(2)`$ 不変なハミルトニアンのブロックが $`U(1)`$ 不変なものよりはるかに小さい理由、そして複素共役が実行列によって生成される環のセクターをどのように実型・複素型・四元数型に分類するか。本章の数値的な検算は
+**本章で学ぶこと**：完全可約性とシューアの補題、既約表現への分解が可換子環と生成される環をどのように決定するか、指標がどのように重複度を数えるか、可換子環のランダムな元がなぜ分解を数値的に見つけるか、電荷セクターとは何か、既約なスピン表現と $`L`$ 個のスピン $`\frac12`$ の分解、$`SU(2)`$ 不変なハミルトニアンのブロックが $`U(1)`$ 不変なものよりはるかに小さい理由、複素共役が実行列によって生成される環のセクターをどのように実型・複素型・四元数型に分類するか、そして雑音を含む生成元の数値分解をどの許容誤差が正しくし、その出力がどのように自らを保証するか。本章の数値的な検算は
 [チュートリアル 4](../../tutorial/ja/04_symmetries.md) にある。
 
 本章を通じて、$`S'`$ は $`S\subseteq M_n(\mathbb C)`$ の可換子環である（第2章）。$`S^*=S`$ ならば、$`S''`$ は $`S`$ **が生成するフォン・ノイマン環** である：これは $`S`$ を含む $`*`$-環であり、$`S`$ を含む任意の $`*`$-環 $`\mathcal B\supseteq S`$ は
@@ -273,6 +273,10 @@ $`\mathcal B'\subseteq\mathcal A'`$ である。$`\mathbb C^n`$ 上の $`\mathca
 $`\mathcal B=\mathcal B''=\mathcal A''=\mathcal A`$ である。$`\square`$
 
 *ライブラリでは：* アルゴリズム `decompose.wedderburn`（フロントエンド `from_group`、`from_generators`）、命題 4.9 の証明書 `Decomposition.verify()`、およびそれらの計算コスト — [チュートリアル、4.3節](../../tutorial/ja/04_symmetries.md#s-4-3)。
+
+4.9節では浮動小数点の部分を定量化する：雑音を含む生成元に対してどの許容誤差が正しい可換子環を与えるか（定理 4.25）、ランダムな元の
+固有値ギャップがどれほど小さいか（命題 4.27）、計算された分解が厳密な分解にどれほど近いか（定理 4.28）、そして出力がそれ自身で何を
+保証するか（命題 4.26）。
 
 <a id="s-4-4"></a>
 
@@ -905,6 +909,307 @@ $`X=X^T`$ ならば、$`\mathbb M(h^*)=y_c^*=y_c`$ かつ $`\mathbb M`$ は単�
 ## 4.8 比較の対象
 
 *ライブラリでは：* 他のソフトウェアとの比較 — [チュートリアル、4.8節](../../tutorial/ja/04_symmetries.md#s-4-8)。
+
+<a id="s-4-9"></a>
+
+## 4.9 数値分解の安定性
+
+4.3節では厳密な演算のもとでアルゴリズムを解析した。実際には生成元は近似的にしかわからない（測定値であったり丸められていたりする）。
+そして対称性は許容誤差によって判定される：可換子環は、交換子写像の特異値のうち閾値 $`\theta`$ を下回るものに対応する特異ベクトルで
+張られる。本節では、どの閾値が正しいか、計算された対象が厳密な対象からどれだけ離れているか、そして出力だけから何が保証できるかを述べる。
+
+本節を通じて $`H_1,\dots,H_J`$ はエルミートであり、$`\mathcal A=\{H_j\}''`$ とする（ライブラリはまず生成元をそのエルミート部分に置き換える。
+それらは同じ環を生成する、4.3節）。**交換子写像** は
+```math
+L:M_n(\mathbb C)\to M_n(\mathbb C)^J,\qquad LX=([H_1,X],\dots,[H_J,X])
+```
+であり、$`M_n`$ にはノルム $`\|X\|_2`$、$`M_n^J`$ には $`\|(X_j)_j\|_2=(\sum_j\|X_j\|_2^2)^{1/2}`$ を入れる。$`\ker L=\mathcal A'`$ の次元は
+$`d=\sum_cm_c^2`$ である。有限次元複素内積空間の間の線形写像 $`T`$（定義域の次元を $`p`$ とする）に対し、$`\sigma_1(T)\le\dots\le\sigma_p(T)`$ で
+$`T^*T\ge0`$ の固有値の平方根を *昇順* に並べたものを表す（正方行列ではこれは1.4節の特異値を逆順に並べたものである）。
+$`|Tx|^2=\langle x,T^*Tx\rangle`$ だから $`\ker T=\ker T^*T`$ かつ $`\sigma_p(T)=\|T\|`$ である。交換子写像の **ギャップ** とは
+$`\gamma=\sigma_{d+1}(L)`$、すなわちその最小の非零特異値である（$`d=n^2`$ なら $`\gamma=\infty`$）。$`\|AX\|_2\le\|A\|\|X\|_2`$（$`X`$ の各列に
+$`|Ax|\le\|A\||x|`$ を適用する）と $`\|XA\|_2=\|A^*X^*\|_2\le\|X\|_2\|A\|`$ を用いる。したがって $`\|[E,X]\|_2\le2\|E\|\|X\|_2`$ である。
+
+<a id="r-4-24"></a>
+
+**補題 4.24（摂動）.** (a) $`T,\tilde T`$ を同じ有限次元複素内積空間の間の線形写像とし、$`\Delta=\|\tilde T-T\|`$ とする。このとき
+すべての $`i`$ について $`|\sigma_i(\tilde T)-\sigma_i(T)|\le\Delta`$ である。さらに $`\sigma_d(T)=0<\gamma=\sigma_{d+1}(T)`$ かつ $`\Delta<\gamma/2`$ なら、
+$`\Pi`$ を $`\ker T`$ への直交射影、$`\tilde\Pi`$ を $`\tilde T^*\tilde T`$ の固有値 $`\le\Delta^2`$ に対するスペクトル射影とすると、$`\tilde\Pi`$ の
+階数は $`d`$ であり、$`\|\tilde\Pi-\Pi\|\le2\Delta/\gamma`$ である。
+
+(b) $`A,\tilde A\in\mathrm{Herm}_n`$、$`\|\tilde A-A\|\le\Delta`$ とし、$`\mu`$ を $`A`$ の重複度 $`r`$ の固有値、$`P`$ をそのスペクトル射影とし、
+$`\mu`$ は $`A`$ の他の固有値から距離 $`g>2\Delta`$ 離れているとする。このとき $`\tilde A`$ は $`[\mu-\Delta,\mu+\Delta]`$ にちょうど $`r`$ 個の
+固有値をもち、他の固有値はすべて $`\mu`$ から距離 $`\ge g-\Delta`$ にあり、これら $`r`$ 個の固有値に対する $`\tilde A`$ のスペクトル射影 $`\tilde P`$ は
+$`\|\tilde P-P\|\le2\Delta/g`$ を満たす。
+
+(c) $`P,\tilde P`$ を階数 $`k`$ の直交射影で $`\|\tilde P-P\|\le\varepsilon\le\frac12`$ とし、$`\tilde Q\in M_{n\times k}`$ の列が
+$`\mathrm{ran}\,\tilde P`$ の正規直交基底をなすとする。このとき $`S=\tilde Q^*P\tilde Q`$ は正定値であり、$`Q=P\tilde QS^{-1/2}`$ の列は
+$`\mathrm{ran}\,P`$ の正規直交基底をなし、$`\|Q-\tilde Q\|\le2\varepsilon`$ である。
+
+(d) 可逆な $`M\in M_k`$ に対し $`\mathrm{pol}(M)=M(M^*M)^{-1/2}`$ はユニタリである（定理 1.8 のユニタリ）。$`\lambda>0`$、$`U`$ ユニタリで
+$`\|M-\lambda U\|\le\zeta<\lambda`$ ならば、$`M`$ は可逆で $`\|\mathrm{pol}(M)-U\|\le2\zeta/\lambda`$ である。
+
+*証明.* (a) 定理 A.8 を $`T^*T`$ に適用し、$`t\mapsto t^{1/2}`$ が増加であることから
+$`\sigma_i(T)=\min_{\dim U=i}\max_{x\in U,|x|=1}|Tx|`$ である。単位ベクトル $`x`$ に対し $`|\tilde Tx|\le|Tx|+\Delta`$；$`U`$ 上で最大をとり、次に最小を
+とれば $`\sigma_i(\tilde T)\le\sigma_i(T)+\Delta`$ を得て、$`T,\tilde T`$ を入れ替えれば逆向きの不等式を得る。よって $`i\le d`$ では
+$`\sigma_i(\tilde T)\le\Delta`$、$`i>d`$ では $`\sigma_i(\tilde T)\ge\gamma-\Delta>\Delta`$ であり、$`\tilde\Pi`$ の階数は $`d`$ である。単位ベクトル
+$`x\in\mathrm{ran}\,\tilde\Pi`$ に対し、$`\tilde T^*\tilde T`$ の固有ベクトルで展開すると $`|\tilde Tx|^2=\langle x,\tilde T^*\tilde Tx\rangle\le\Delta^2`$ となるので
+$`|Tx|\le2\Delta`$；一方 $`Tx=T(1-\Pi)x`$ で $`(1-\Pi)x\perp\ker T^*T`$ であり、そこでは $`T^*T`$ の固有値は $`\ge\gamma^2`$ だから
+$`|Tx|\ge\gamma|(1-\Pi)x|`$。よって $`\|(1-\Pi)\tilde\Pi\|\le2\Delta/\gamma`$。単位ベクトル $`x\in\ker T`$ に対しては $`|\tilde Tx|\le\Delta`$ であり、
+$`|\tilde Tx|^2=\langle\tilde\Pi x,\tilde T^*\tilde T\tilde\Pi x\rangle+\langle(1-\tilde\Pi)x,\tilde T^*\tilde T(1-\tilde\Pi)x\rangle\ge(\gamma-\Delta)^2|(1-\tilde\Pi)x|^2`$
+（$`\tilde\Pi`$ は $`\tilde T^*\tilde T`$ と可換であり、$`\mathrm{ran}(1-\tilde\Pi)`$ 上でのその固有値は $`\ge(\gamma-\Delta)^2`$）だから
+$`\|(1-\tilde\Pi)\Pi\|\le\Delta/(\gamma-\Delta)\le2\Delta/\gamma`$。最後に、
+$`(\Pi-\tilde\Pi)x=\Pi(1-\tilde\Pi)(1-\tilde\Pi)x-(1-\Pi)\tilde\Pi\,\tilde\Pi x`$ は直交する二つのベクトルの和であり、
+$`\|\Pi(1-\tilde\Pi)\|=\|(1-\tilde\Pi)\Pi\|`$（随伴、補題 1.1）だから
+$`|(\Pi-\tilde\Pi)x|^2\le(2\Delta/\gamma)^2(|(1-\tilde\Pi)x|^2+|\tilde\Pi x|^2)=(2\Delta/\gamma)^2|x|^2`$。
+
+(b) 固有値を昇順に番号付ける。定理 A.10 により、$`\lambda_i(A)=\mu`$ となる $`r`$ 個の固有値 $`\lambda_i(\tilde A)`$ は $`[\mu-\Delta,\mu+\Delta]`$
+にあり、他は $`\mu`$ から距離 $`\ge g-\Delta>\Delta`$ にある。よって $`(\tilde A-\mu)^2`$ の小さい方から $`r`$ 個の固有値（いずれも $`\le\Delta^2`$）は
+これら $`r`$ 個の固有値に対応し、$`T=A-\mu`$、$`\tilde T=\tilde A-\mu`$（このとき $`\ker T=\mathrm{ran}\,P`$、$`\sigma_{r+1}(T)=g`$）として (a) を
+適用すれば評価を得る。
+
+(c) $`(1-P)\tilde Q=(1-P)\tilde P\tilde Q=(1-P)(\tilde P-P)\tilde Q`$ のノルムは $`\le\varepsilon`$ だから、$`S=1-\tilde Q^*(1-P)\tilde Q`$ の固有値は
+$`[1-\varepsilon^2,1]`$ にあり（定理 A.10）、$`S^{-1/2}`$ が存在する（定理 1.5）。$`Q^*Q=S^{-1/2}\tilde Q^*P\tilde QS^{-1/2}=1`$ であり、
+$`\mathrm{ran}\,Q\subseteq\mathrm{ran}\,P`$ の次元は $`k`$ である。$`Q-\tilde Q=\tilde Q(S^{-1/2}-1)-(1-P)\tilde QS^{-1/2}`$ より
+$`\|Q-\tilde Q\|\le(1-\varepsilon^2)^{-1/2}-1+\varepsilon(1-\varepsilon^2)^{-1/2}=f(\varepsilon)`$、ただし $`f(\varepsilon)=((1+\varepsilon)/(1-\varepsilon))^{1/2}-1`$。
+その導関数 $`(1-\varepsilon)^{-1}(1-\varepsilon^2)^{-1/2}`$ は増加なので $`f`$ は凸で $`f(0)=0`$ であり、
+$`f(\varepsilon)\le2\varepsilon f(\frac12)=2\varepsilon(\sqrt3-1)<2\varepsilon`$。
+
+(d) $`M^*M>0`$ であり、$`\mathrm{pol}(M)^*\mathrm{pol}(M)=(M^*M)^{-1/2}M^*M(M^*M)^{-1/2}=1`$；$`\mathrm{pol}(M)|M|=M`$ だから、これは定理 1.8 の
+ユニタリである。$`M=\lambda U(1+G)`$、$`\|G\|=\|M-\lambda U\|/\lambda\le\zeta/\lambda<1`$ と書く。(a)（$`T=1`$、$`\tilde T=1+G`$ とする）により
+$`R=((1+G)^*(1+G))^{1/2}`$ の固有値は $`[1-\|G\|,1+\|G\|]`$ にあるので、$`R`$、$`1+G`$、$`M`$ は可逆である；$`M^*M=\lambda^2R^2`$ だから
+$`\mathrm{pol}(M)=UW`$、ただし $`W=(1+G)R^{-1}`$ はユニタリであり、$`\|W-1\|\le\|W-WR\|+\|WR-1\|=\|1-R\|+\|G\|\le2\|G\|`$。$`\square`$
+
+<a id="r-4-25"></a>
+
+**定理 4.25（許容誤差のもとでの可換子環）.** $`\tilde H_1,\dots,\tilde H_J`$ をエルミートとし、$`\eta=(\sum_j\|\tilde H_j-H_j\|^2)^{1/2}`$、
+$`\tilde L`$ をその交換子写像とする。$`\theta\ge0`$ に対し、$`\tilde L^*\tilde L`$ の固有値 $`\le\theta^2`$ の固有ベクトルが張る空間を $`\mathcal C_\theta`$ とし、
+これを **許容誤差** $`\theta`$ **の可換子環** と呼ぶ（$`\mathcal C_0=\{\tilde H_j\}'`$）。
+
+(a) すべての $`i`$ について $`|\sigma_i(\tilde L)-\sigma_i(L)|\le2\eta`$；特に $`i\le d`$ では $`\sigma_i(\tilde L)\le2\eta`$ であり、
+$`\sigma_{d+1}(\tilde L)\ge\gamma-2\eta`$ である。
+
+(b) $`2\eta<\theta<\gamma-2\eta`$ ならば、$`\dim\mathcal C_\theta=d`$、$`\mathcal C_\theta`$ は $`X\mapsto X^*`$ で閉じており、$`\mathcal C_\theta`$ への直交射影
+$`\tilde\Pi`$ と $`\mathcal A'`$ への直交射影 $`\Pi`$ は $`\|\tilde\Pi-\Pi\|\le4\eta/\gamma`$ を満たす。
+
+(c) $`\theta\ge\gamma+2\eta`$ ならば $`\dim\mathcal C_\theta>d`$ である。$`\theta<2\eta`$ では $`\dim\mathcal C_\theta<d`$ が起こりうる：
+$`H_1=\mathrm{diag}(1,1,0)`$、$`\tilde H_1=H_1+\eta(E_{12}+E_{21})`$ に対し、$`d=5`$、$`\gamma=1`$ であり、$`\tilde L`$ の特異値は
+$`0,0,0,2\eta,2\eta,1-\eta,1-\eta,1+\eta,1+\eta`$ で、$`\theta<2\eta`$ のとき $`\dim\mathcal C_\theta=3`$ である。
+
+したがって許容誤差は雑音レベルの2倍を超え、かつギャップから雑音レベルの2倍を引いたものより小さくなければならない；このような
+$`\theta`$ が存在するのは $`\eta<\gamma/4`$ のとき、かつそのときに限り、そのとき計算された可換子環は正しい次元をもち、真の可換子環から
+$`4\eta/\gamma`$ 以内にある。評価 $`2\eta`$ は (c) の例で達成される。
+
+*証明.* (a) $`\|(\tilde L-L)X\|_2^2=\sum_j\|[\tilde H_j-H_j,X]\|_2^2\le4\eta^2\|X\|_2^2`$ であり、$`i\le d`$ では $`\sigma_i(L)=0`$；補題 4.24(a) を
+適用する。(b) (a) により $`i\le d`$ では $`\sigma_i(\tilde L)\le2\eta<\theta`$、$`i>d`$ では $`\sigma_i(\tilde L)\ge\gamma-2\eta>\theta`$ だから、
+$`\mathcal C_\theta`$ は $`\Delta=2\eta<\gamma/2`$ とした補題 4.24(a) の射影 $`\tilde\Pi`$ の像である。エルミートな $`H`$ に対し
+$`\langle Y,[H,X]\rangle_{HS}=\mathrm{Tr}(Y^*HX-Y^*XH)=\langle[H,Y],X\rangle_{HS}`$ だから $`\tilde L^*\tilde LX=\sum_j[\tilde H_j,[\tilde H_j,X]]`$ であり、
+随伴をとると $`(\tilde L^*\tilde LX)^*=\sum_j[[X^*,\tilde H_j],\tilde H_j]=\tilde L^*\tilde L(X^*)`$。よって $`X\mapsto X^*`$ は $`\tilde L^*\tilde L`$ の各固有空間
+（その固有値は実数）をそれ自身に写す。(c) (a) により $`\sigma_{d+1}(\tilde L)\le\gamma+2\eta\le\theta`$。例では
+$`\mathbb C^3=\mathbb C^2\oplus\mathbb C`$ に対し $`X=\begin{pmatrix}X_{11}&x_{12}\\x_{21}&x_{22}\end{pmatrix}`$、$`\tilde H_1=(1+\eta\sigma)\oplus0`$、
+$`\sigma=\begin{pmatrix}0&1\\1&0\end{pmatrix}`$ と書く。すると $`[\tilde H_1,X]`$ のブロックは $`\eta[\sigma,X_{11}]`$、$`(1+\eta\sigma)x_{12}`$、
+$`-x_{21}(1+\eta\sigma)`$、$`0`$ であり、これは直交分解である。$`X_{11}\mapsto[\sigma,X_{11}]`$ は $`1,\sigma`$ 上で消え、正規直交な組
+$`\mathrm{diag}(1,-1)/\sqrt2`$、$`\begin{pmatrix}0&-i\\i&0\end{pmatrix}/\sqrt2`$ を互いに相手の $`\mp2i`$ 倍に写す；$`1+\eta\sigma`$ の固有値は
+$`1\pm\eta`$ である。これで特異値が得られる；$`\eta=0`$ とすれば $`d=5`$、$`\gamma=1`$ であり、$`\theta<2\eta`$ では三つの零だけが残る。$`\square`$
+
+ライブラリでは $`\theta`$ は `tol` に $`\max(1,\sigma_{\max})`$ を掛けたものである（モジュールの docstring）；核は未知数を縮約したのちに計算され、
+この縮約は厳密な生成元に対しては厳密である（4.3節）。報告される特異値は縮約された写像のものである。定理 4.25 は $`\eta`$ と $`\gamma`$ を
+必要とするが、実際にはこれらは未知である。それでも出力は保証できる：
+
+<a id="r-4-26"></a>
+
+**命題 4.26（事後証明書）.** $`\tilde H_1,\dots,\tilde H_J`$ をエルミート、$`\tilde V`$ をユニタリ、$`\sum_ck_cm_c=n`$ とする；
+$`\tilde{\mathcal B}=\tilde V(\bigoplus_cM_{k_c}\otimes1_{m_c})\tilde V^*`$、$`E`$ を $`\langle\cdot,\cdot\rangle_{HS}`$ に関する $`M_n`$ から $`\tilde{\mathcal B}`$ への
+直交射影、$`H_j=E(\tilde H_j)`$、$`\tilde V^*H_j\tilde V=\bigoplus_ca_{j,c}\otimes1_{m_c}`$、$`r=(\sum_j\|\tilde H_j-H_j\|_2^2)^{1/2}`$（**後退誤差**）、
+$`d=\sum_cm_c^2`$ とし、$`\gamma_{\mathcal B}`$ を $`H_1,\dots,H_J`$ の交換子写像の $`\sigma_{d+1}`$ とする。
+
+(a) $`\gamma_{\mathcal B}`$ は、$`k_c\ge2`$ である $`c`$ についての $`\sigma_2(\Phi_{cc})`$ と、$`c\neq e`$ についての $`\sigma_1(\Phi_{ce})`$ の最小値である
+（どちらもなければ $`\infty`$）。ここで $`\Phi_{ce}:M_{k_c\times k_e}\to M_{k_c\times k_e}^J`$、$`Y\mapsto(a_{j,c}Y-Ya_{j,e})_j`$。
+
+(b) $`\gamma_{\mathcal B}>0`$ ならば $`H_j`$ は $`\tilde{\mathcal B}`$ を生成する：$`\tilde V`$ と $`(k_c,m_c)`$ は、入力から距離 $`r`$ にあるエルミート行列が
+生成する環の厳密な分解である。
+
+(c) $`2r<\gamma_{\mathcal B}`$ ならば、すべての $`\theta\in(2r,\gamma_{\mathcal B}-2r)`$ について入力の許容誤差 $`\theta`$ の可換子環は次元 $`d`$ をもち、
+$`\tilde{\mathcal B}'`$ から $`4r/\gamma_{\mathcal B}`$ 以内にある；また $`(\sum_j\|H^0_j-\tilde H_j\|^2)^{1/2}<\gamma_{\mathcal B}/2-r`$ を満たすエルミート
+行列 $`H^0_j`$ が生成する環の可換子環の次元は $`\le d`$ である。
+
+*証明.* $`\tilde{\mathcal B}`$ は $`X\mapsto X^*`$ で閉じており、これは $`\mathrm{Re}\langle\cdot,\cdot\rangle_{HS}`$ を保つ反線形写像だから、
+$`\tilde{\mathcal B}^\perp`$ をそれ自身に写し、$`E`$ と可換である；よって $`H_j`$ と $`a_{j,c}`$ はエルミートであり、$`\|\tilde H_j-H_j\|\le\|\tilde H_j-H_j\|_2`$。
+(a) $`\tilde V^*X\tilde V`$ をブロック $`X_{ce}\in M_{k_cm_c\times k_em_e}=M_{k_c\times k_e}\otimes M_{m_c\times m_e}`$（クロネッカー順序）に分ける；
+$`X\mapsto\tilde V^*X\tilde V`$ は $`\|\cdot\|_2`$ を保ち、これらのブロックは直交し、$`\tilde V^*[H_j,X]\tilde V`$ の $`(c,e)`$ ブロックは
+$`(a_{j,c}\otimes1)X_{ce}-X_{ce}(a_{j,e}\otimes1)`$ であり、$`X_{ce}=Y\otimes Z`$ に対しては $`\Phi_{ce}(Y)_j\otimes Z`$ である。よって交換子写像は
+$`(c,e)`$ ブロック上で $`\Phi_{ce}\otimes\mathrm{id}`$ として作用し、その $`T^*T`$ は $`\bigoplus_{c,e}\Phi_{ce}^*\Phi_{ce}\otimes1`$ であり、その特異値は
+各 $`\Phi_{ce}`$ の特異値をそれぞれ $`m_cm_e`$ 回繰り返したものである。$`\Phi_{cc}(1)=0`$ だから少なくとも $`\sum_cm_c^2=d`$ 個が零であり、
+ちょうど $`d`$ 個であるのは、すべての $`c`$ で $`\sigma_2(\Phi_{cc})>0`$ かつ $`c\neq e`$ で $`\sigma_1(\Phi_{ce})>0`$ のとき、かつそのときに限る；
+そのとき $`\sigma_{d+1}`$ はこれらの数の最小値であり、そうでなければ両辺とも $`0`$ である。(b) $`H_j\in\tilde{\mathcal B}`$ は次元 $`d`$ の
+$`\tilde{\mathcal B}'`$ と可換である（定理 4.3、命題 4.9 の証明と同様）から、$`\tilde{\mathcal B}'\subseteq\{H_j\}'`$；$`\gamma_{\mathcal B}>0`$ ならば零となる
+特異値は高々 $`d`$ 個だから、$`\{H_j\}'=\tilde{\mathcal B}'`$ かつ $`\{H_j\}''=\tilde{\mathcal B}''=\tilde{\mathcal B}`$（定理 2.2）。(c) 厳密な生成元 $`H_j`$
+（ギャップ $`\gamma_{\mathcal B}`$、(b) により可換子環は $`\tilde{\mathcal B}'`$）と、距離 $`\eta\le r`$ にある摂動された $`\tilde H_j`$ に定理 4.25 を
+適用する。$`H^0_j`$ については $`(\sum_j\|H^0_j-H_j\|^2)^{1/2}<\gamma_{\mathcal B}/2`$ であり、定理 4.25(a) によりその交換子写像の
+$`\sigma_{d+1}>0`$ である。$`\square`$
+
+こうして出力は自らを保証する：後退誤差 $`r`$ が小さく、ギャップ $`\gamma_{\mathcal B}`$ が $`2r`$ よりはるかに大きければ、計算された構造は
+わずかに変更した生成元に対して厳密であり、$`(2r,\gamma_{\mathcal B}-2r)`$ のどの閾値も同じ可換子環の次元を与え、より多くの対称性をもつ
+モデルは入力から $`\gamma_{\mathcal B}/2-r`$ 以内には存在しない。
+
+*ライブラリでは：* 証明書は `Decomposition.certificate()` である：(a) のようにブロックから求めた $`r`$ と $`\gamma_{\mathcal B}`$、窓
+$`(2r,\gamma_{\mathcal B}-2r)`$、実際に用いた閾値の両側の特異値を返し、その閾値が窓に入っていなければ警告する — [チュートリアル、4.9節](../../tutorial/ja/04_symmetries.md#s-4-9)。
+
+残りのステップ（ランダムな $`K`$ による分割とランダムな $`Y`$ によるグループ化）には定量的な一般性が必要である。ライブラリのサンプルは
+スケールし直したガウスベクトルである（4.3節、ステップ 1）：可換子環の正規直交基底 $`(B_r)`$ と独立な標準複素ガウス変数 $`c_r`$ により、
+$`Y=\sum_rc_rB_r`$ は $`\mathcal A'`$ の **標準複素ガウスベクトル** であり（その分布は基底によらない、命題 A.16(a)）、独立なコピー $`Y'`$ に対し
+$`K=Y'+Y'^*=\sqrt2\,G`$ である。ここで $`G`$ は内積 $`\langle X,Y\rangle=\mathrm{Tr}(XY)`$ をもつ実空間 $`\mathcal A'_h`$ の **標準ガウスベクトル** である
+（$`\sqrt2\,Y'`$ は $`\mathrm{Re}\langle\cdot,\cdot\rangle_{HS}`$ をもつ実空間 $`\mathcal A'`$ の標準ガウスベクトルであり、$`X\mapsto\frac12(X+X^*)`$ は
+$`\mathcal A'_h`$ への直交射影である；命題 A.16(a)、A.14(b)）。群平均によるサンプリングでも同じことが成り立つ：$`Z+Z^*=\sqrt2\,H`$ で、
+$`H`$ は GUE 行列、すなわち $`\mathrm{Herm}_n`$ の標準ガウスベクトルであり、その $`\mathcal A'_h`$ への直交射影が群平均である。また Ginibre
+行列の群平均は $`\mathcal A'`$ の標準複素ガウスベクトルである。
+
+<a id="r-4-27"></a>
+
+**命題 4.27（可換子環のランダムな元）.** $`G`$ と $`Z`$ を独立とし、それぞれ $`\mathcal A'_h`$ の標準ガウスベクトル、$`\mathcal A'`$ の
+標準複素ガウスベクトルとする。
+
+(a) $`V^*GV=\bigoplus_c1_{k_c}\otimes k_c^{-1/2}H_c`$、$`V^*ZV=\bigoplus_c1_{k_c}\otimes k_c^{-1/2}Z_c`$ であり、$`H_c`$ はサイズ $`m_c`$ の GUE
+行列、$`Z_c`$ はサイズ $`m_c`$ の Ginibre 行列で、すべて独立である；$`\mathbb E\|G\|_2^2=\mathbb E\|Z\|_2^2=d`$。
+
+(b) $`\kappa_c=k_c^{-1/2}H_c`$ とし、$`\delta_\times=\min|\lambda_i(\kappa_c)-\lambda_j(\kappa_e)|`$（$`c\neq e`$ とすべての $`i,j`$ にわたる最小）とする。
+$`x>0`$ に対し
+```math
+\mathbb P(\delta_\times<x)\le\sqrt{\tfrac2\pi}\;x\sum_{c<e}m_cm_e\Big(\frac1{k_cm_c}+\frac1{k_em_e}\Big)^{-1/2}.
+```
+
+(c) $`m_c\ge2`$ のとき $`\delta_c`$ を $`\kappa_c`$ の最小準位間隔とする。このとき $`k_c^{1/2}x\le1`$ に対し $`\mathbb P(\delta_c<x)\le C_{m_c}k_c^{3/2}x^3`$
+であり、$`C_{m_c}`$ は命題 C.9 の定数（$`\beta=2`$）である；$`m_c=2`$ ではすべての $`x`$ について $`C_2=1/(6\sqrt\pi)`$ でよい。
+
+(d) $`X`$ を次元 $`D`$ の実内積空間の標準ガウスベクトル、$`W`$ を $`X`$ と独立な確率変数、$`f\ge0`$ を $`t>0`$ に対し
+$`f(w,tx)=tf(w,x)`$ を満たすボレル関数とする。このとき $`\mathbb P(f(W,X)<\varepsilon|X|)\le2\,\mathbb P(f(W,X)<\varepsilon(2D)^{1/2})`$ である。
+$`X=G`$ では $`D=d`$；$`X=Z`$ では $`(2d)^{1/2}`$ で同じことが成り立つ。
+
+(e) $`G`$ が補題 4.6 の仮定を満たし、$`\Pi,\Pi'`$ が同じ $`\kappa_c`$ の相異なる二つの固有値に対する $`G`$ のスペクトル射影ならば、$`G`$ を
+与えたときの条件付きで $`\|\Pi Z\Pi'\|_2^2`$ は $`(0,\infty)`$ 上の密度 $`e^{-t}`$ をもつ：$`\mathbb P(\|\Pi Z\Pi'\|_2<x)=1-e^{-x^2}\le x^2`$。
+
+したがって、$`\delta(G)=\min(\delta_\times,\min_c\delta_c)`$（$`G`$ の相異なる固有値が $`N=\sum_cm_c`$ 個のときその間の最小距離、そうでなければ
+$`0`$）と、同じ直和成分内の相異なるスペクトル射影の組にわたる $`\beta(G,Z)=\min\|\Pi_l Z\Pi_{l'}\|_2`$ に対し
+```math
+\mathbb P\big(\delta(G)<\varepsilon\|G\|_2\big)\le\frac{4\sqrt d}{\sqrt\pi}\,\varepsilon\sum_{c<e}\frac{m_cm_e}{(\frac1{k_cm_c}+\frac1{k_em_e})^{1/2}}
++2\sum_{c:m_c\ge2}C_{m_c}(2dk_c)^{3/2}\varepsilon^3=:p_\delta(\varepsilon),\qquad
+\mathbb P\big(\beta(G,Z)<\beta'\|Z\|_2\big)\le4d\beta'^2\sum_cm_c(m_c-1)=:p_\beta(\beta')
+```
+が成り立つ（前者は $`\varepsilon(2dk_c)^{1/2}\le1`$ のとき）。オーダー $`\varepsilon`$ は改善できない：異なるセクターの準位は反発しない（定理 5.15）が、
+同じセクターの準位は反発する（オーダー $`\varepsilon^3`$）。
+
+*証明.* (a) 行列 $`k_c^{-1/2}V(1\otimes b)V^*`$（$`b`$ は $`\mathrm{Tr}(xy)`$ に関する $`\mathrm{Herm}_{m_c}`$ の正規直交基底を動き、$`c=1,\dots,C`$）は
+$`\mathcal A'_h`$ の正規直交基底をなす（$`\mathrm{Tr}((1\otimes b)(1\otimes b'))=k_c\mathrm{Tr}(bb')`$）から、命題 A.14(b) により
+$`\kappa_c=k_c^{-1/2}\sum_bg_bb`$ であり、係数 $`g_b`$ は独立に $`N(0,1)`$ に従う。基底 $`e_{ii}`$、$`(e_{ij}+e_{ji})/\sqrt2`$、$`i(e_{ij}-e_{ji})/\sqrt2`$
+に対し $`\sum_bg_bb`$ の成分は独立で $`h_{ii}\sim N(0,1)`$、$`\mathrm{Re}\,h_{ij},\mathrm{Im}\,h_{ij}\sim N(0,\frac12)`$：これは GUE 行列である（命題 A.17）。
+同様に $`\mathcal A'`$ の正規直交基底 $`k_c^{-1/2}V(1\otimes e_{jj'})V^*`$ から、成分が独立な標準複素ガウス変数である $`Z_c`$ を得る。最後に
+$`\mathbb E\|G\|_2^2=\sum\mathbb Eg_b^2=d`$ であり、$`Z`$ も同様である。
+
+(b) $`c\neq e`$ を固定し、$`s=(\frac1{k_cm_c}+\frac1{k_em_e})^{1/2}`$ とおき、$`u\in\mathcal A'_h`$ を直和成分 $`c`$ でブロック $`\alpha1`$、直和成分 $`e`$
+で $`-\beta1`$、他では $`0`$ とする（$`\alpha=1/(k_cm_cs)`$、$`\beta=1/(k_em_es)`$）。このとき $`\|u\|_2^2=\alpha^2k_cm_c+\beta^2k_em_e=1`$、
+$`\alpha+\beta=s`$ である。命題 A.14(b) により $`G=G_0+tu`$ で、$`t=\langle u,G\rangle\sim N(0,1)`$ は $`G_0`$ と独立である。ブロックは
+$`\kappa_c=\kappa^0_c+t\alpha`$、$`\kappa_e=\kappa^0_e-t\beta`$ だから $`\lambda_i(\kappa_c)-\lambda_j(\kappa_e)=a+ts`$ であり、
+$`a=\lambda_i(\kappa^0_c)-\lambda_j(\kappa^0_e)`$ は $`G_0`$ の関数である（系 A.11）。$`a`$ を固定すると $`\{t:|a+ts|<x\}`$ は長さ $`2x/s`$ の区間で、
+その確率は $`\le2x/(s\sqrt{2\pi})`$；独立性（Fubini）により、これが $`\mathbb P(|\lambda_i(\kappa_c)-\lambda_j(\kappa_e)|<x)`$ を抑える。
+$`c<e`$、$`i\le m_c`$、$`j\le m_e`$ について和をとる。
+
+(c) $`\delta_c<x`$ であるのは $`H_c`$ の最小準位間隔が $`<k_c^{1/2}x`$ のとき、かつそのときに限る；命題 C.9。$`m_c=2`$ では間隔の密度は
+$`s^2e^{-s^2/4}/(2\sqrt\pi)\le s^2/(2\sqrt\pi)`$（命題 5.13 の証明）であり、その $`(0,y)`$ 上の積分は $`\le y^3/(6\sqrt\pi)`$ である。
+
+(d) 正規直交座標で $`X`$ は $`\mathbb R^D`$ の標準ガウスベクトルである；定理 A.20(a) により $`|X|`$ は $`X/|X|`$ と独立であり、したがって
+$`(W,X/|X|)`$ と独立である。マルコフの不等式により $`\mathbb P(|X|^2\ge2D)\le\mathbb E|X|^2/2D=\frac12`$。$`f(W,X)=|X|f(W,X/|X|)`$ だから
+$`\mathbb P(f(W,X)<\varepsilon(2D)^{1/2})\ge\mathbb P(f(W,X/|X|)<\varepsilon)\,\mathbb P(|X|^2<2D)\ge\frac12\mathbb P(f(W,X)<\varepsilon|X|)`$。$`Z`$ については
+$`\sqrt2Z`$ が次元 $`2d`$ の標準ガウスベクトルであり、$`\sqrt2Z`$ に対する $`\varepsilon(4d)^{1/2}`$ は $`Z`$ に対する $`\varepsilon(2d)^{1/2}`$ である。
+
+(e) (a) と補題 4.6 により、$`V^*\Pi V`$ と $`V^*\Pi'V`$ は $`H_c`$ の正規直交固有ベクトル $`e,e'`$（$`G`$ のみに依存する）について
+$`\mathbb C^{k_c}\otimes e`$ と $`\mathbb C^{k_c}\otimes e'`$ への射影である。すると $`\|\Pi Z\Pi'\|_2^2=k_c|\langle e,k_c^{-1/2}Z_ce'\rangle|^2=|\langle e,Z_ce'\rangle|^2`$
+であり、$`e,e'`$ を固定すると $`\langle e,Z_ce'\rangle`$ は単位ベクトル $`|e\rangle\langle e'|`$ に沿った $`Z_c`$ の座標、すなわち標準複素ガウス変数で
+あり（命題 A.16(a),(b)）、その絶対値の2乗は密度 $`e^{-t}`$ をもつ（定理 A.20(b)、$`N=1`$）。$`Z`$ は $`G`$ と独立だから、Fubini の定理により
+条件付きの主張が得られる。*帰結.* 自明な $`W`$ に対して (d)、次に (b)、(c) と和集合の評価を $`x=\varepsilon(2d)^{1/2}`$ で用いる；また
+$`W=G`$ に対して (d)、次に (e) と $`\sum_cm_c(m_c-1)`$ 個の順序対についての和集合の評価を $`x^2=2d\beta'^2`$ で用いる。系 A.11 と命題 A.13
+により、これらの事象はボレルである。$`\square`$
+
+アルゴリズムでは、可換子環のサンプルは $`\mathcal A'`$ からではなく計算された可換子環から取られる；それらを $`\mathcal A'`$ への射影と比較する。
+
+<a id="r-4-28"></a>
+
+**定理 4.28（分解の安定性）.** $`\tilde{\mathcal A}'\subseteq M_n`$ を $`X\mapsto X^*`$ で閉じた次元 $`d`$ の部分空間とし、その直交射影 $`\tilde\Pi`$
+は $`\|\tilde\Pi-\Pi\|\le\varepsilon_0<1`$ を満たすとする（定理 4.25(b) により、窓の中の許容誤差での可換子環に対しては $`\varepsilon_0=4\eta/\gamma`$）。
+$`\tilde K\in\tilde{\mathcal A}'_h`$、$`\tilde Y\in\tilde{\mathcal A}'`$、$`K=\Pi(\tilde K)\in\mathcal A'_h`$、$`Y=\Pi(\tilde Y)\in\mathcal A'`$ とする。$`K`$ は補題 4.6 の仮定を
+満たし、固有値 $`\mu_1<\dots<\mu_N`$、直和成分 $`c(l)`$ 内の階数 $`k_{c(l)}`$ のスペクトル射影 $`P_l`$ をもつとし、$`\delta=\min_l(\mu_{l+1}-\mu_l)`$ とする；
+$`\beta=\min\{\|P_lYP_{l'}\|_2:l\neq l',\,c(l)=c(l')\}`$（そのような組がなければ $`\infty`$）、$`h=\max_cm_c-1`$、そして
+```math
+\rho=\varepsilon_0\|\tilde K\|_2,\qquad\varepsilon_1=\frac{2\rho}\delta,\qquad\zeta=(\varepsilon_0+2\varepsilon_1)\|\tilde Y\|_2,\qquad
+\xi=\frac{k_{\max}^{1/2}(\varepsilon_0+4\varepsilon_1)\|\tilde Y\|_2}\beta
+```
+とおく。
+
+(a) $`4\rho<\delta`$ ならば、任意の $`\tau\in[2\rho,\delta-2\rho)`$ について、$`\tilde K`$ の昇順の固有値を隣り合う二つの差が $`\tau`$ を超える
+ところで切ると $`N`$ 個のグループができる；$`l`$ 番目は $`k_{c(l)}`$ 個の元をもち、そのスペクトル射影 $`\tilde P_l`$ は
+$`\|\tilde P_l-P_l\|\le\varepsilon_1`$ を満たす。
+
+(b) さらに $`2\zeta<\beta`$ ならば、任意の $`\theta'\in[\zeta,\beta-\zeta)`$ について、同じ大きさの二つのグループ $`l\neq l'`$ が
+$`\|\tilde P_l\tilde Y\tilde P_{l'}\|_2>\theta'`$ を満たすのは $`c(l)=c(l')`$ のとき、かつそのときに限る。よってステップ 3 の連結な類は直和成分で
+あり、アルゴリズムは厳密な $`(k_c,m_c)`$ を返す。
+
+(c) さらに $`3^h\xi\le1`$ ならば、$`\tilde V`$ をステップ 3–4 のように $`\mathrm{ran}\,\tilde P_l`$ の正規直交基底から組み立て、各直和成分の
+コピーを深さ $`\le h`$ の任意の木に沿って極分解の因子で整列させたものとする。このとき、すべての $`a\in\mathcal A`$ について
+$`\hat V^*a\hat V=\bigoplus_c\rho_c(a)\otimes1_{m_c}`$ を満たすユニタリ $`\hat V`$（定理 4.3 の意味の分解）が存在し、
+$`\|\tilde V-\hat V\|\le N^{1/2}(2\varepsilon_1+3^h\xi)`$ である。
+
+(d) ライブラリと同様に、$`\tilde K`$ を $`\tilde{\mathcal A}'_h`$ の標準ガウスベクトルの正の定数倍、$`\tilde Y`$ をそれと独立な $`\tilde{\mathcal A}'`$ の
+標準複素ガウスベクトルの正の定数倍とする。（ライブラリはこれらを正規化するが、$`\tilde K`$ と $`\tilde Y`$ を正の定数倍し、$`\tau`$ と $`\theta'`$ をそれに合わせてスケールしても、(a)–(c) の仮定と結論は変わらない。）組からなる任意のボレル集合 $`\mathcal E`$ に対し、命題 4.27 と同じ定数倍 $`c,c'`$ について
+$`\mathbb P((K,Y)\in\mathcal E)\le(1-\varepsilon_0^2)^{-3d/2}\,\mathbb P((cG,c'Z)\in\mathcal E)`$ が成り立つ。したがって $`\varepsilon,\beta'\in(0,1]`$ かつ
+$`\varepsilon_0\le\varepsilon\beta'/(14\cdot3^hk_{\max}^{1/2})`$ ならば、確率 $`\le(1-\varepsilon_0^2)^{-3d/2}(p_\delta(\varepsilon)+p_\beta(\beta'))`$ の事象を除いて
+(a)–(c) の仮定が成り立ち、$`\|\tilde V-\hat V\|\le17\cdot3^h(Nk_{\max})^{1/2}\varepsilon_0/(\varepsilon\beta')`$ である。$`\varepsilon_0^2\le1/(3d)`$ ならば
+その因子は $`\le2`$ である。
+
+*証明.* $`\Pi`$ は $`X\mapsto X^*`$ と可換である（命題 4.26 の $`E`$ と同様）から $`K`$ はエルミートである。$`X\in\mathrm{ran}\,\tilde\Pi`$ に対し
+$`X-\Pi X=(1-\Pi)\tilde\Pi X=(\tilde\Pi-\Pi)\tilde\Pi X`$ だから $`\|X-\Pi X\|_2\le\varepsilon_0\|X\|_2`$ かつ $`\|\Pi X\|_2\le\|X\|_2`$。(a) よって
+$`\|\tilde K-K\|\le\|\tilde K-K\|_2\le\rho`$。各 $`\mu_l`$ に補題 4.24(b)（$`g\ge\delta>4\rho`$、$`\Delta=\rho`$）を適用すると、$`\tilde K`$ は
+$`[\mu_l-\rho,\mu_l+\rho]`$ にちょうど $`k_{c(l)}`$ 個の固有値をもつ；これらの区間は交わらず、一つの区間内で隣り合う固有値の差は
+$`\le2\rho\le\tau`$、異なる区間の固有値の差は $`\ge\delta-2\rho>\tau`$ である；また $`\|\tilde P_l-P_l\|\le2\rho/\delta`$。(b)
+$`\|AXB\|_2\le\|A\|\|X\|_2\|B\|`$ により
+$`|\|\tilde P_l\tilde Y\tilde P_{l'}\|_2-\|P_lYP_{l'}\|_2|\le\|\tilde Y-Y\|_2+\|(\tilde P_l-P_l)Y\|_2+\|Y(\tilde P_{l'}-P_{l'})\|_2\le\zeta`$ であり、一方
+$`c(l)\neq c(l')`$ なら $`P_lYP_{l'}=0`$（補題 4.8(b)）、そうでなければ $`\|P_lYP_{l'}\|_2\ge\beta`$ である。よって一つの直和成分のグループは
+すべて互いに結ばれ、他のどのグループとも結ばれず、直和成分 $`c`$ は大きさ $`k_c`$ のグループを $`m_c`$ 個与える。
+
+(c) $`\tilde Q_l`$ を $`\mathrm{ran}\,\tilde P_l`$ の基底、$`Q_l`$ を補題 4.24(c) による $`\mathrm{ran}\,P_l`$ の基底とする（$`\varepsilon_1<\frac12`$）。すると
+$`\|\tilde Q_l-Q_l\|\le2\varepsilon_1`$。補題 4.8(b) により、一つの直和成分 $`c`$ 内の $`l,l'`$ に対し $`T_{ll'}=Q_l^*YQ_{l'}=\lambda_{ll'}U_{ll'}`$ であり、
+$`U_{ll'}`$ はユニタリ、$`\lambda_{ll'}=k_c^{-1/2}\|P_lYP_{l'}\|_2\ge\beta k_{\max}^{-1/2}`$ である。また $`\tilde T_{ll'}=\tilde Q_l^*\tilde Y\tilde Q_{l'}`$ は
+$`\|\tilde T_{ll'}-T_{ll'}\|\le\varepsilon_0\|\tilde Y\|_2+4\varepsilon_1\|Y\|_2\le\xi\lambda_{ll'}`$ を満たす。アルゴリズムは根で $`\tilde W_{l_0}=1`$ とし、
+$`l`$ から $`l'`$ への辺に沿って $`\tilde W_{l'}=\mathrm{pol}(\tilde W_l^*\tilde T_{ll'})^*`$ とする；$`T_{ll'}`$ から同じように $`W_l`$ を定めると
+$`W_{l'}=U_{ll'}^*W_l`$ である。補題 4.8(b) と木に沿った帰納法により、直和成分 $`c`$ のコピーの基底 $`Q_lW_l`$ は同じ行列
+$`(Q_lW_l)^*a(Q_lW_l)`$ をもつ。よって $`\tilde Q_l\tilde W_l`$ が $`\tilde V`$ の中で並んでいるのと同じように $`Q_lW_l`$ を並べると、定理 4.3 の
+証明の存在部分のような分解 $`\hat V`$ が得られる。$`e_l=\|\tilde W_l-W_l\|`$ とおく。すると
+$`\|\tilde W_l^*\tilde T_{ll'}-W_l^*T_{ll'}\|\le e_l\|\tilde T_{ll'}\|+\|\tilde T_{ll'}-T_{ll'}\|\le\lambda_{ll'}(e_l(1+\xi)+\xi)`$ であり、これが
+$`<\lambda_{ll'}`$ ならば、補題 4.24(d)（$`W_l^*T_{ll'}=\lambda_{ll'}W_l^*U_{ll'}`$ として）により $`e_{l'}\le2e_l(1+\xi)+2\xi\le3e_l+2\xi`$。深さ $`t`$ に
+関する帰納法で $`e_l\le\xi(3^t-1)`$：帰納のステップは $`3\xi(3^t-1)+2\xi=\xi(3^{t+1}-1)`$ であり、$`t\le h-1`$ では
+$`e_l(1+\xi)+\xi\le\xi3^t(1+\xi)\le\frac13\cdot\frac43<1`$（$`\xi\le3^{-h}\le\frac13`$ による）だから適用できる。よって
+$`\|\tilde Q_l\tilde W_l-Q_lW_l\|\le2\varepsilon_1+3^h\xi`$；行列 $`\tilde V-\hat V`$ はこれら $`N`$ 個の列ブロックからなり、
+$`|\sum_lA_lx_l|\le\sum_l\|A_l\||x_l|\le(\sum_l\|A_l\|^2)^{1/2}|x|`$ により評価を得る。
+
+(d) $`\tilde{\mathcal A}'_h`$ と $`\mathcal A'_h`$ の正規直交座標で（どちらも実次元 $`d`$：随伴で閉じた部分空間は $`\mathcal S_h\oplus i\mathcal S_h`$）、
+$`\Pi`$ は線形写像 $`B:\tilde{\mathcal A}'_h\to\mathcal A'_h`$ に制限され、$`(1-\varepsilon_0^2)|x|^2\le|Bx|^2\le|x|^2`$ を満たす。よって $`B`$ は全単射で、
+$`|B^{-1}y|\ge|y|`$、$`|\det B|=\det(B^TB)^{1/2}\ge(1-\varepsilon_0^2)^{d/2}`$（定理 A.8）。補題 A.3(c) により $`K/c=B(\tilde K/c)`$ は密度
+$`\varphi_d(B^{-1}y)/|\det B|\le(1-\varepsilon_0^2)^{-d/2}\varphi_d(y)`$ をもつ。ここで $`\varphi_d`$ は $`G`$ の密度である。次元 $`2d`$ の実空間
+$`\tilde{\mathcal A}'`$ 上の同じ議論で $`Y`$ に対する因子 $`(1-\varepsilon_0^2)^{-d}`$ を得て、$`K,Y`$ は独立である。命題 4.27 の二つの事象（$`K`$ と
+$`Y`$ について；これらは定数倍で不変）の補集合上で、$`(1-\varepsilon_0^2)^{1/2}\ge\frac{\sqrt3}2`$ を用いると：$`\delta\ge\varepsilon\|K\|_2\ge\frac{\sqrt3}2\varepsilon\|\tilde K\|_2`$
+だから $`\varepsilon_1\le\frac4{\sqrt3}\frac{\varepsilon_0}\varepsilon<\frac12`$；$`\beta\ge\beta'\|Y\|_2\ge\frac{\sqrt3}2\beta'\|\tilde Y\|_2`$ であり、
+$`2\zeta\le2(1+\frac8{\sqrt3\varepsilon})\varepsilon_0\|\tilde Y\|_2\le11.24\,\frac{\varepsilon_0}\varepsilon\|\tilde Y\|_2\le\frac{11.24}{14}\beta'\|\tilde Y\|_2<\beta`$；そして
+$`3^h\xi\le3^hk_{\max}^{1/2}\frac{2}{\sqrt3\beta'}(1+\frac{16}{\sqrt3\varepsilon})\varepsilon_0\le11.83\cdot3^hk_{\max}^{1/2}\frac{\varepsilon_0}{\varepsilon\beta'}\le\frac{11.83}{14}<1`$。$`\|\tilde V-\hat V\|`$ の評価は
+$`2\varepsilon_1\le4.62\,\varepsilon_0/\varepsilon`$、$`3^h\xi`$ の評価、および $`4.62+11.83<17`$ から従う。最後に、$`(1-\frac1m)^{-m}`$ は $`m\ge2`$ で減少するので
+$`(1-\frac1{3d})^{-3d/2}\le(\frac23)^{-3/2}<2`$。$`\square`$
+
+まとめると：雑音がギャップに比べて小さく、$`\eta\le\gamma\varepsilon\beta'/(56\cdot3^hk_{\max}^{1/2})`$ であり、閾値が定理 4.25 と 4.28 の窓に
+入っていれば、アルゴリズムは確率 $`O(\varepsilon+\beta'^2)`$ の事象を除いて $`(k_c,m_c)`$ を復元し、厳密な分解から $`O(\eta/\gamma)`$ 以内の $`V`$ を
+与える。定数は最悪の場合の評価であり、典型的な誤差ははるかに小さい。ライブラリは $`\eta`$ と $`\gamma`$ を知りえないので、可換子環の
+サンプルの相対誤差を $`\nu=\max(\sigma_d(\tilde L),\epsilon_{\rm mach}\max(1,\sigma_{\max}))/\sigma_{d+1}(\tilde L)`$ で見積もり（補題 4.24(a) により
+$`\varepsilon_0`$ と同じオーダー、$`\sigma_d(\tilde L)\le\Delta`$ だから）、クラスタリングの下限閾値と結合の閾値を $`\min(10^3\nu,\nu^{1/2})`$ に
+置く（後者は少なくとも $`\epsilon_{\rm mach}^{1/2}`$）。これは雑音と構造の単位スケールの間である；その後、命題 4.26 が結果を検査する。
+
+*計算：* 雑音を含む生成元での定理 4.25（特異値のギャップと許容誤差の比較、および (c) の例）、証明書についての命題 4.26、
+モンテカルロ法による命題 4.27 — [チュートリアル、4.9節](../../tutorial/ja/04_symmetries.md#s-4-9)。
 
 <a id="x-4"></a>
 

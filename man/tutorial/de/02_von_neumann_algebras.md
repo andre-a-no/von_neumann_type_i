@@ -20,7 +20,9 @@ $`20`$ und $`\pi(S_3)''\cong M_1\oplus M_2`$ die Dimension $`5`$. Der Code unten
 sowie, dass die Kommutante von $`\pi(S_3)'`$ wieder $`\pi(S_3)''`$ ist
 ([Satz 2.2](../../lecture_notes/de/02_von_neumann_algebras.md#r-2-2)): Die Kommutante einer Menge $`S`$ ist der
 Kern der linearen Abbildung $`X\mapsto(AX-XA)_{A\in S}`$, dessen Dimension hier in Gleitkommaarithmetik
-berechnet wird, indem die Singulärwerte oberhalb einer Toleranz gezählt werden.
+berechnet wird, indem die Singulärwerte oberhalb einer Toleranz gezählt werden. Die Toleranz muss die Singulärwerte, die in
+exakter Arithmetik verschwinden, von den übrigen trennen; für verrauschte Matrizen sagt [Satz 4.25](../../lecture_notes/de/04_symmetries.md#r-4-25),
+wo sie liegen darf ([Tutorial 4, Abschnitt 4.9](04_symmetries.md#s-4-9)).
 
 ```python
 import itertools

@@ -20,7 +20,9 @@ $`20`$ et $`\pi(S_3)''\cong M_1\oplus M_2`$ est de dimension $`5`$. Le code ci-d
 ainsi que le fait que le commutant de $`\pi(S_3)'`$ est à nouveau $`\pi(S_3)''`$
 ([théorème 2.2](../../lecture_notes/fr/02_von_neumann_algebras.md#r-2-2)) : le commutant d'une partie $`S`$ est le
 noyau de l'application linéaire $`X\mapsto(AX-XA)_{A\in S}`$, dont la dimension est calculée ici en virgule
-flottante, en comptant les valeurs singulières supérieures à une tolérance.
+flottante, en comptant les valeurs singulières supérieures à une tolérance. La tolérance doit séparer les valeurs singulières qui
+s'annulent en arithmétique exacte des autres ; pour des matrices bruitées, le [théorème 4.25](../../lecture_notes/fr/04_symmetries.md#r-4-25)
+dit où elle peut se trouver ([tutoriel 4, section 4.9](04_symmetries.md#s-4-9)).
 
 ```python
 import itertools

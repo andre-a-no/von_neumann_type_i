@@ -20,7 +20,9 @@ $`20`$ y $`\pi(S_3)''\cong M_1\oplus M_2`$ tiene dimensión $`5`$. El código de
 y que el conmutante de $`\pi(S_3)'`$ es de nuevo $`\pi(S_3)''`$
 ([teorema 2.2](../../lecture_notes/es/02_von_neumann_algebras.md#r-2-2)): el conmutante de un conjunto $`S`$ es el
 núcleo de la aplicación lineal $`X\mapsto(AX-XA)_{A\in S}`$, cuya dimensión se calcula aquí en coma
-flotante, contando los valores singulares por encima de una tolerancia.
+flotante, contando los valores singulares por encima de una tolerancia. La tolerancia debe separar los valores singulares que se
+anulan en aritmética exacta de los demás; para matrices con ruido, el [teorema 4.25](../../lecture_notes/es/04_symmetries.md#r-4-25)
+dice dónde puede estar ([tutorial 4, sección 4.9](04_symmetries.md#s-4-9)).
 
 ```python
 import itertools

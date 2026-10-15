@@ -4,11 +4,12 @@
 
 Ce tutoriel accompagne le [chapitre 4](../../lecture_notes/fr/04_symmetries.md) des notes de cours, qui développe la théorie des représentations
 sous-jacente aux algèbres de symétries, en tire un algorithme randomisé qui décompose l'algèbre de von Neumann engendrée par
-une liste quelconque de matrices ([proposition 4.9](../../lecture_notes/fr/04_symmetries.md#r-4-9)), l'applique à $`U(1)`$ et $`SU(2)`$, et répartit les secteurs
+une liste quelconque de matrices ([proposition 4.9](../../lecture_notes/fr/04_symmetries.md#r-4-9)), l'applique à $`U(1)`$ et $`SU(2)`$, répartit les secteurs
 d'une algèbre engendrée par des matrices réelles en type réel, complexe et quaternionique
-([théorème 4.20](../../lecture_notes/fr/04_symmetries.md#r-4-20)). Nous calculons des caractères, appliquons la décomposition à des groupes et à des
-générateurs, construisons des chaînes de spins secteur par secteur avec `SpinChain` et `su2.SU2Chain`, et calculons la
-structure réelle d'une décomposition.
+([théorème 4.20](../../lecture_notes/fr/04_symmetries.md#r-4-20)) et analyse la décomposition de générateurs bruités
+([théorème 4.25](../../lecture_notes/fr/04_symmetries.md#r-4-25)). Nous calculons des caractères, appliquons la décomposition à des groupes et à des
+générateurs, construisons des chaînes de spins secteur par secteur avec `SpinChain` et `su2.SU2Chain`, calculons la
+structure réelle d'une décomposition et certifions une décomposition de générateurs bruités.
 
 <a id="s-4-2"></a>
 
@@ -482,6 +483,138 @@ ou générateurs), certifie son résultat (proposition 4.9) et renvoie l'algèbr
 `TypeIAlgebra` munis de `to_algebra`, `from_algebra`, `to_commutant`, `from_commutant`, de sorte que les chapitres 3
 et 5–8 s'appliquent immédiatement. Pour les chaînes de spins $`\frac12`$, `su2.SU2Chain` fournit directement les blocs
 de $`SU(2)`$ (corollaire 4.17) ; il accepte jusqu'à $`L=18`$ spins, une limite fixée par la mémoire des bases.
+
+<a id="s-4-9"></a>
+
+## 4.9 Stabilité de la décomposition numérique
+
+*Notes de cours :* [section 4.9](../../lecture_notes/fr/04_symmetries.md#s-4-9) ; [lemme 4.24](../../lecture_notes/fr/04_symmetries.md#r-4-24), [théorème 4.25](../../lecture_notes/fr/04_symmetries.md#r-4-25), [proposition 4.26](../../lecture_notes/fr/04_symmetries.md#r-4-26), [proposition 4.27](../../lecture_notes/fr/04_symmetries.md#r-4-27), [théorème 4.28](../../lecture_notes/fr/04_symmetries.md#r-4-28).
+
+Le commutant de générateurs bruités est décidé par une tolérance : le [théorème 4.25](../../lecture_notes/fr/04_symmetries.md#r-4-25) dit qu'un seuil $`\theta`$ sur les
+valeurs singulières de l'application commutateur $`X\mapsto([H_j,X])_j`$ donne la dimension exacte $`d`$ du commutant si
+$`2\eta<\theta<\gamma-2\eta`$, avec $`\eta`$ le bruit et $`\gamma`$ le trou de l'application exacte, et que la borne $`2\eta`$ sur les valeurs
+singulières nulles perturbées est atteinte. Le premier bloc calcule les valeurs singulières de l'exemple du théorème 4.25(c),
+$`\tilde H_1=\mathrm{diag}(1,1,0)+\eta(E_{12}+E_{21})`$, et décide le commutant avec `commutant_basis` en dessous, dans et au-dessus de la
+fenêtre (la bibliothèque normalise les générateurs en norme de Frobenius unité, d'où le `tol` remis à l'échelle).
+
+```python
+import warnings
+
+def commutator_svals(Hs):
+    """Singular values, in increasing order, of X -> ([H_j, X])_j with Hilbert-Schmidt norms (row-major vec)."""
+    n = Hs.shape[-1]
+    eye = torch.eye(n, dtype=dt)
+    L = torch.cat([torch.kron(H, eye) - torch.kron(eye, H.T.contiguous()) for H in Hs])
+    return torch.linalg.svdvals(L).flip(0)
+
+eta = 1e-3
+H1 = torch.diag(torch.tensor([1.0, 1.0, 0.0], dtype=dt))
+H1t = H1.clone()
+H1t[0, 1] = H1t[1, 0] = eta                               # a symmetry broken at the level eta
+s = commutator_svals(H1t[None])
+expected = torch.tensor([0, 0, 0, 2 * eta, 2 * eta, 1 - eta, 1 - eta, 1 + eta, 1 + eta], dtype=torch.float64)
+assert close(s, expected, 1e-12)                          # Theorem 4.25(a) and (c): the bound 2 eta is attained
+assert close(commutator_svals(H1[None])[4:6], [0, 1])      # exact generator: d = 5, gap 1
+scale = torch.linalg.matrix_norm(H1t).item()              # theta = tol for unit-norm generators
+for theta, dim in ((0.5 * eta, 3), (20 * eta, 5), (2.0, 9)):
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', dc.DecompositionWarning)
+        assert dc.commutant_basis(H1t, tol=theta / scale).shape[0] == dim
+print('theta < 2 eta: dim 3 (symmetry lost); in the window: 5; above the gap: 9')
+```
+
+Ensuite, les trois opérateurs de spin de trois spins $`\frac12`$ ($`k=(2,4)`$, $`m=(2,1)`$, $`d=5`$, trou $`\gamma=1/\sqrt3`$ après
+normalisation), perturbés par un bruit hermitien de taille croissante $`\eta`$. Pour chaque niveau le code vérifie le théorème 4.25(a) sur les
+valeurs singulières $`\sigma_d`$ et $`\sigma_{d+1}`$, place `tol` au milieu de la fenêtre observée (en échelle logarithmique), vérifie la
+dimension et la borne $`\|\tilde\Pi-\Pi\|\le4\eta/\gamma`$ du théorème 4.25(b), puis décompose. Avec le `tol` par défaut
+$`=\epsilon_{\rm mach}^{1/2}`$, le bruit est pris au sérieux dès qu'il dépasse la tolérance : les générateurs bruités engendrent $`M_8`$, ce qui est
+la bonne réponse pour eux, mais pas la symétrie recherchée. (Le `DecompositionWarning` filtré ici signale qu'une valeur singulière est à moins
+d'un facteur $`\epsilon_{\rm mach}^{-1/8}`$ de la coupure.)
+
+```python
+S = dc.total_spin(3)
+unit = lambda S: S / torch.linalg.matrix_norm(S)[:, None, None]     # the Hermitian generators the library uses
+sv = commutator_svals(unit(S))
+d, gamma = 5, sv[5].item()
+assert sv[4] < 1e-12 and abs(gamma - 1 / math.sqrt(3)) < 1e-12
+B0 = dc.commutant_basis(S).reshape(d, -1)
+Pi0 = B0.T @ B0.conj()                                    # orthogonal projection onto vec(A')
+gen = torch.Generator().manual_seed(1)
+print(' eta       sigma_d   sigma_d+1  tol       (k, m)            default tol')
+for eta in (1e-8, 1e-6, 1e-4, 1e-3):
+    E = torch.randn(S.shape, dtype=dt, generator=gen)
+    E = E + E.mH
+    St = S + eta * E / torch.linalg.matrix_norm(E, ord=2)[:, None, None]
+    eta_n = torch.linalg.matrix_norm(unit(St) - unit(S), ord=2).norm().item()   # eta of Theorem 4.25
+    st = commutator_svals(unit(St))
+    assert st[d - 1] <= 2 * eta_n and st[d] >= gamma - 2 * eta_n                # Theorem 4.25(a)
+    tol = math.sqrt(st[d - 1] * st[d]) / max(1.0, st[-1].item())
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', dc.DecompositionWarning)
+        Bt = dc.commutant_basis(St, tol=tol).reshape(d, -1)                     # Theorem 4.25(b): dimension d
+        Dt = dc.from_generators(St, tol=tol)
+        Dd = dc.from_generators(St)
+    assert torch.linalg.matrix_norm(Bt.T @ Bt.conj() - Pi0, ord=2) <= 4 * eta_n / gamma
+    assert (Dt.k_factors, Dt.multiplicities) == ((2, 4), (2, 1))
+    print(f'{eta_n:.1e}  {st[d - 1]:.1e}   {st[d]:.3f}      {tol:.1e}   {Dt.k_factors}, {Dt.multiplicities}'
+          f'   {Dd.k_factors}, {Dd.multiplicities}')
+```
+
+`Decomposition.certificate()` évalue la [proposition 4.26](../../lecture_notes/fr/04_symmetries.md#r-4-26) sur la sortie : l'erreur inverse $`r`$ (la distance des générateurs
+normalisés à l'algèbre calculée $`\tilde{\mathcal B}`$), le trou $`\gamma_{\mathcal B}`$ de l'application commutateur de leurs projections
+$`H_j=E(\tilde H_j)`$ — calculé à partir des blocs, et comparé ici aux valeurs singulières denses — et la fenêtre $`(2r,\gamma_{\mathcal B}-2r)`$
+des seuils qui certifient $`\dim\mathcal A'=\sum_cm_c^2`$. Le résultat est `trusted` si le seuil effectivement utilisé est dans cette fenêtre ;
+sinon le certificat avertit. Une tolérance inférieure au bruit donne $`M_8`$, certifiée pour ces générateurs, mais avec un trou de l'ordre du
+bruit : un modèle plus symétrique peut se trouver à distance $`\gamma_{\mathcal B}/2`$. Une tolérance supérieure au bruit mais inférieure à
+$`2r`$ donne la bonne structure, que le certificat ne peut pas garantir.
+
+```python
+c = dc.from_generators(S).certificate()
+assert c.certified and c.trusted and c.residuals['backward'] < 1e-12 and abs(c.gap - gamma) < 1e-10
+E = torch.randn(S.shape, dtype=dt, generator=gen)
+St = S + 1e-4 * (E + E.mH)
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore', dc.DecompositionWarning)
+    Dt = dc.from_generators(St, tol=1e-2)
+    D_low = dc.from_generators(St, tol=1e-12)                          # below the noise
+    D_mid = dc.from_generators(St, tol=1e-3)                           # above the noise, below 2 r
+ct = Dt.certificate()
+print(ct, 'window', [f'{w:.1e}' for w in ct.window], 'threshold', f"{ct.rank['threshold']:.1e}")
+assert ct.trusted and 1e-5 < ct.residuals['backward'] < 1e-2 and ct.window[0] < ct.rank['threshold'] < ct.window[1]
+sb = commutator_svals(Dt.conditional_expectation(unit(St)))           # the projected generators H_j
+assert sb[d - 1] < 1e-12 and abs(sb[d] - ct.gap) < 1e-10              # Proposition 4.26(a), (b)
+c_low = D_low.certificate()
+assert D_low.k_factors == (8,) and c_low.certified and c_low.gap < 1e-3
+with warnings.catch_warnings(record=True) as caught:
+    warnings.simplefilter('always')
+    c_mid = D_mid.certificate()
+assert D_mid.k_factors == (2, 4) and not c_mid.trusted and caught
+print('tol 1e-12:', D_low.k_factors, f'gap {c_low.gap:.1e};  tol 1e-3:', D_mid.k_factors, 'trusted:', c_mid.trusted)
+```
+
+Enfin, la [proposition 4.27](../../lecture_notes/fr/04_symmetries.md#r-4-27) : pour un vecteur gaussien standard $`G`$ de $`\mathcal A'_h`$ les blocs sont
+$`\kappa_c=k_c^{-1/2}H_c`$ avec des matrices GUE indépendantes, et la probabilité que des valeurs propres de secteurs différents se rapprochent
+à moins de $`x`$ est au plus d'ordre $`x`$ (ici la borne est $`\sqrt{2/\pi}\,x\,m_1m_2(\frac1{k_1m_1}+\frac1{k_2m_2})^{-1/2}`$), tandis que dans le
+bloc $`2\times2`$ l'espacement est d'ordre $`x^3`$. Une vérification de Monte-Carlo avec $`2\cdot10^4`$ échantillons, tirés dans la base
+orthonormée `D.basis('commutant')` de $`\mathcal A'`$ :
+
+```python
+D = dc.from_generators(S)
+coef = torch.randn(20000, d, dtype=dt, generator=gen)
+Z = torch.einsum('br,rij->bij', coef, D.basis('commutant'))         # standard complex Gaussian vectors of A'
+x_c = D.to_commutant((Z + Z.mH) / math.sqrt(2)).matrix              # blocks of G: kappa_1 (2 x 2), kappa_2 (1 x 1)
+assert abs((x_c[:, 0, :2, :2].abs() ** 2).sum((-2, -1)).mean().item() - 4 / 2) < 0.05   # E Tr kappa_1^2 = m_1^2 / k_1
+ev = torch.linalg.eigvalsh(x_c[:, 0, :2, :2])
+cross = (ev - x_c[:, 1, :1, 0].real).abs().min(1).values           # delta_x
+(k1, k2), (m1, m2) = D.k_factors, D.multiplicities
+for x in (0.01, 0.03, 0.1):
+    bound = math.sqrt(2 / math.pi) * x * m1 * m2 / math.sqrt(1 / (k1 * m1) + 1 / (k2 * m2))
+    p = (cross < x).double().mean().item()
+    print(f'x = {x}:  P(delta_x < x) = {p:.4f} <= {bound:.4f}')
+    assert p <= bound
+p_in = (ev[:, 1] - ev[:, 0] < 0.2).double().mean().item()
+assert p_in <= k1 ** 1.5 * 0.2 ** 3 / (6 * math.sqrt(math.pi))      # Proposition 4.27(c), m = 2
+```
 
 <a id="x-4"></a>
 

@@ -6,8 +6,9 @@
 стоящая за алгебрами симметрий, превращается в рандомизированный алгоритм, раскладывающий алгебру фон Неймана, порождённую
 произвольным списком матриц ([предложение 4.9](../../lecture_notes/ru/04_symmetries.md#r-4-9)), применяется к $`U(1)`$ и $`SU(2)`$, а секторы алгебры,
 порождённой вещественными матрицами, разделяются на вещественный, комплексный и кватернионный тип
-([теорема 4.20](../../lecture_notes/ru/04_symmetries.md#r-4-20)). Мы вычисляем характеры, запускаем разложение для групп и для образующих, строим
-спиновые цепочки по секторам с помощью `SpinChain` и `su2.SU2Chain` и вычисляем вещественную структуру разложения.
+([теорема 4.20](../../lecture_notes/ru/04_symmetries.md#r-4-20)), а также анализируется разложение зашумлённых образующих
+([теорема 4.25](../../lecture_notes/ru/04_symmetries.md#r-4-25)). Мы вычисляем характеры, запускаем разложение для групп и для образующих, строим
+спиновые цепочки по секторам с помощью `SpinChain` и `su2.SU2Chain`, вычисляем вещественную структуру разложения и сертифицируем разложение зашумлённых образующих.
 
 <a id="s-4-2"></a>
 
@@ -470,6 +471,138 @@ SymbolicWedderburn.jl (Julia) вычисляет разложения Ведде
 объекты `TypeIAlgebra` с `to_algebra`, `from_algebra`, `to_commutant`, `from_commutant`, так что главы 3, 5–8
 применимы сразу. Для цепочек спинов $`\frac12`$ `su2.SU2Chain` даёт блоки $`SU(2)`$ напрямую (следствие 4.17); он принимает
 до $`L=18`$ спинов — предел, определяемый памятью для базисов.
+
+<a id="s-4-9"></a>
+
+## 4.9 Устойчивость численного разложения
+
+*Конспект:* [раздел 4.9](../../lecture_notes/ru/04_symmetries.md#s-4-9); [лемма 4.24](../../lecture_notes/ru/04_symmetries.md#r-4-24), [теорема 4.25](../../lecture_notes/ru/04_symmetries.md#r-4-25), [предложение 4.26](../../lecture_notes/ru/04_symmetries.md#r-4-26), [предложение 4.27](../../lecture_notes/ru/04_symmetries.md#r-4-27), [теорема 4.28](../../lecture_notes/ru/04_symmetries.md#r-4-28).
+
+Коммутант зашумлённых образующих определяется допуском: [теорема 4.25](../../lecture_notes/ru/04_symmetries.md#r-4-25) утверждает, что порог $`\theta`$ для сингулярных
+чисел коммутаторного отображения $`X\mapsto([H_j,X])_j`$ даёт точную размерность $`d`$ коммутанта, если $`2\eta<\theta<\gamma-2\eta`$, где
+$`\eta`$ — шум, а $`\gamma`$ — щель точного отображения, и что оценка $`2\eta`$ для возмущённых нулевых сингулярных чисел достигается. Первый
+блок вычисляет сингулярные числа примера из теоремы 4.25(c), $`\tilde H_1=\mathrm{diag}(1,1,0)+\eta(E_{12}+E_{21})`$, и определяет коммутант
+с помощью `commutant_basis` ниже окна, внутри него и выше (библиотека нормирует образующие на единичную норму Фробениуса, отсюда
+перемасштабированный `tol`).
+
+```python
+import warnings
+
+def commutator_svals(Hs):
+    """Singular values, in increasing order, of X -> ([H_j, X])_j with Hilbert-Schmidt norms (row-major vec)."""
+    n = Hs.shape[-1]
+    eye = torch.eye(n, dtype=dt)
+    L = torch.cat([torch.kron(H, eye) - torch.kron(eye, H.T.contiguous()) for H in Hs])
+    return torch.linalg.svdvals(L).flip(0)
+
+eta = 1e-3
+H1 = torch.diag(torch.tensor([1.0, 1.0, 0.0], dtype=dt))
+H1t = H1.clone()
+H1t[0, 1] = H1t[1, 0] = eta                               # a symmetry broken at the level eta
+s = commutator_svals(H1t[None])
+expected = torch.tensor([0, 0, 0, 2 * eta, 2 * eta, 1 - eta, 1 - eta, 1 + eta, 1 + eta], dtype=torch.float64)
+assert close(s, expected, 1e-12)                          # Theorem 4.25(a) and (c): the bound 2 eta is attained
+assert close(commutator_svals(H1[None])[4:6], [0, 1])      # exact generator: d = 5, gap 1
+scale = torch.linalg.matrix_norm(H1t).item()              # theta = tol for unit-norm generators
+for theta, dim in ((0.5 * eta, 3), (20 * eta, 5), (2.0, 9)):
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', dc.DecompositionWarning)
+        assert dc.commutant_basis(H1t, tol=theta / scale).shape[0] == dim
+print('theta < 2 eta: dim 3 (symmetry lost); in the window: 5; above the gap: 9')
+```
+
+Далее — три спиновых оператора трёх спинов $`\frac12`$ ($`k=(2,4)`$, $`m=(2,1)`$, $`d=5`$, щель $`\gamma=1/\sqrt3`$ после нормировки),
+возмущённые эрмитовым шумом возрастающей величины $`\eta`$. Для каждого уровня код проверяет теорему 4.25(a) на сингулярных числах
+$`\sigma_d`$ и $`\sigma_{d+1}`$, помещает `tol` в середину наблюдаемого окна (в логарифмическом масштабе), проверяет размерность и оценку
+$`\|\tilde\Pi-\Pi\|\le4\eta/\gamma`$ теоремы 4.25(b) и выполняет разложение. С `tol` по умолчанию $`=\epsilon_{\rm mach}^{1/2}`$ шум
+принимается всерьёз, как только он превышает допуск: зашумлённые образующие порождают $`M_8`$ — это правильный ответ для них, но не та
+симметрия, которую ищут. (Отфильтрованное здесь `DecompositionWarning` сообщает, что некоторое сингулярное число отстоит от разреза менее
+чем в $`\epsilon_{\rm mach}^{-1/8}`$ раз.)
+
+```python
+S = dc.total_spin(3)
+unit = lambda S: S / torch.linalg.matrix_norm(S)[:, None, None]     # the Hermitian generators the library uses
+sv = commutator_svals(unit(S))
+d, gamma = 5, sv[5].item()
+assert sv[4] < 1e-12 and abs(gamma - 1 / math.sqrt(3)) < 1e-12
+B0 = dc.commutant_basis(S).reshape(d, -1)
+Pi0 = B0.T @ B0.conj()                                    # orthogonal projection onto vec(A')
+gen = torch.Generator().manual_seed(1)
+print(' eta       sigma_d   sigma_d+1  tol       (k, m)            default tol')
+for eta in (1e-8, 1e-6, 1e-4, 1e-3):
+    E = torch.randn(S.shape, dtype=dt, generator=gen)
+    E = E + E.mH
+    St = S + eta * E / torch.linalg.matrix_norm(E, ord=2)[:, None, None]
+    eta_n = torch.linalg.matrix_norm(unit(St) - unit(S), ord=2).norm().item()   # eta of Theorem 4.25
+    st = commutator_svals(unit(St))
+    assert st[d - 1] <= 2 * eta_n and st[d] >= gamma - 2 * eta_n                # Theorem 4.25(a)
+    tol = math.sqrt(st[d - 1] * st[d]) / max(1.0, st[-1].item())
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', dc.DecompositionWarning)
+        Bt = dc.commutant_basis(St, tol=tol).reshape(d, -1)                     # Theorem 4.25(b): dimension d
+        Dt = dc.from_generators(St, tol=tol)
+        Dd = dc.from_generators(St)
+    assert torch.linalg.matrix_norm(Bt.T @ Bt.conj() - Pi0, ord=2) <= 4 * eta_n / gamma
+    assert (Dt.k_factors, Dt.multiplicities) == ((2, 4), (2, 1))
+    print(f'{eta_n:.1e}  {st[d - 1]:.1e}   {st[d]:.3f}      {tol:.1e}   {Dt.k_factors}, {Dt.multiplicities}'
+          f'   {Dd.k_factors}, {Dd.multiplicities}')
+```
+
+`Decomposition.certificate()` вычисляет на результате [предложение 4.26](../../lecture_notes/ru/04_symmetries.md#r-4-26): обратную ошибку $`r`$ (расстояние нормированных
+образующих до вычисленной алгебры $`\tilde{\mathcal B}`$), щель $`\gamma_{\mathcal B}`$ коммутаторного отображения их проекций $`H_j=E(\tilde H_j)`$ —
+вычисленную по блокам и сверенную здесь с плотными сингулярными числами — и окно $`(2r,\gamma_{\mathcal B}-2r)`$ порогов, сертифицирующих
+$`\dim\mathcal A'=\sum_cm_c^2`$. Результат `trusted`, если фактически использованный порог лежит в этом окне; иначе сертификат выдаёт
+предупреждение. Допуск ниже шума даёт $`M_8`$, сертифицированную для этих образующих, но со щелью порядка шума: модель с большей
+симметрией может находиться на расстоянии $`\gamma_{\mathcal B}/2`$. Допуск выше шума, но ниже $`2r`$ даёт правильную структуру, за которую
+сертификат поручиться не может.
+
+```python
+c = dc.from_generators(S).certificate()
+assert c.certified and c.trusted and c.residuals['backward'] < 1e-12 and abs(c.gap - gamma) < 1e-10
+E = torch.randn(S.shape, dtype=dt, generator=gen)
+St = S + 1e-4 * (E + E.mH)
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore', dc.DecompositionWarning)
+    Dt = dc.from_generators(St, tol=1e-2)
+    D_low = dc.from_generators(St, tol=1e-12)                          # below the noise
+    D_mid = dc.from_generators(St, tol=1e-3)                           # above the noise, below 2 r
+ct = Dt.certificate()
+print(ct, 'window', [f'{w:.1e}' for w in ct.window], 'threshold', f"{ct.rank['threshold']:.1e}")
+assert ct.trusted and 1e-5 < ct.residuals['backward'] < 1e-2 and ct.window[0] < ct.rank['threshold'] < ct.window[1]
+sb = commutator_svals(Dt.conditional_expectation(unit(St)))           # the projected generators H_j
+assert sb[d - 1] < 1e-12 and abs(sb[d] - ct.gap) < 1e-10              # Proposition 4.26(a), (b)
+c_low = D_low.certificate()
+assert D_low.k_factors == (8,) and c_low.certified and c_low.gap < 1e-3
+with warnings.catch_warnings(record=True) as caught:
+    warnings.simplefilter('always')
+    c_mid = D_mid.certificate()
+assert D_mid.k_factors == (2, 4) and not c_mid.trusted and caught
+print('tol 1e-12:', D_low.k_factors, f'gap {c_low.gap:.1e};  tol 1e-3:', D_mid.k_factors, 'trusted:', c_mid.trusted)
+```
+
+Наконец, [предложение 4.27](../../lecture_notes/ru/04_symmetries.md#r-4-27): для стандартного гауссова вектора $`G`$ в $`\mathcal A'_h`$ блоки равны $`\kappa_c=k_c^{-1/2}H_c`$ с
+независимыми матрицами GUE, и вероятность того, что собственные значения разных секторов сблизятся меньше чем на $`x`$, не более чем
+порядка $`x`$ (здесь оценка равна $`\sqrt{2/\pi}\,x\,m_1m_2(\frac1{k_1m_1}+\frac1{k_2m_2})^{-1/2}`$), тогда как внутри блока $`2\times2`$
+расстояние имеет порядок $`x^3`$. Проверка методом Монте-Карло с $`2\cdot10^4`$ выборками в ортонормированном базисе
+`D.basis('commutant')` пространства $`\mathcal A'`$:
+
+```python
+D = dc.from_generators(S)
+coef = torch.randn(20000, d, dtype=dt, generator=gen)
+Z = torch.einsum('br,rij->bij', coef, D.basis('commutant'))         # standard complex Gaussian vectors of A'
+x_c = D.to_commutant((Z + Z.mH) / math.sqrt(2)).matrix              # blocks of G: kappa_1 (2 x 2), kappa_2 (1 x 1)
+assert abs((x_c[:, 0, :2, :2].abs() ** 2).sum((-2, -1)).mean().item() - 4 / 2) < 0.05   # E Tr kappa_1^2 = m_1^2 / k_1
+ev = torch.linalg.eigvalsh(x_c[:, 0, :2, :2])
+cross = (ev - x_c[:, 1, :1, 0].real).abs().min(1).values           # delta_x
+(k1, k2), (m1, m2) = D.k_factors, D.multiplicities
+for x in (0.01, 0.03, 0.1):
+    bound = math.sqrt(2 / math.pi) * x * m1 * m2 / math.sqrt(1 / (k1 * m1) + 1 / (k2 * m2))
+    p = (cross < x).double().mean().item()
+    print(f'x = {x}:  P(delta_x < x) = {p:.4f} <= {bound:.4f}')
+    assert p <= bound
+p_in = (ev[:, 1] - ev[:, 0] < 0.2).double().mean().item()
+assert p_in <= k1 ** 1.5 * 0.2 ** 3 / (6 * math.sqrt(math.pi))      # Proposition 4.27(c), m = 2
+```
 
 <a id="x-4"></a>
 

@@ -18,7 +18,8 @@ $`S_3`$ 的表示 $`\pi`$：$`\pi(S_3)'\cong M_4\oplus M_2`$ 的维数为
 $`20`$，$`\pi(S_3)''\cong M_1\oplus M_2`$ 的维数为 $`5`$。下面的代码对这两个维数做数值上的确认，
 并确认 $`\pi(S_3)'`$ 的交换子又是 $`\pi(S_3)''`$
 （[定理 2.2](../../lecture_notes/zh/02_von_neumann_algebras.md#r-2-2)）：集合 $`S`$ 的交换子是线性映射
-$`X\mapsto(AX-XA)_{A\in S}`$ 的零空间，这里在浮点运算中通过计数大于某个容差的奇异值来计算其维数。
+$`X\mapsto(AX-XA)_{A\in S}`$ 的零空间，这里在浮点运算中通过计数大于某个容差的奇异值来计算其维数。容差必须把在精确运算中为零的奇异值与其余奇异值分开；
+对含噪声的矩阵，[定理 4.25](../../lecture_notes/zh/04_symmetries.md#r-4-25) 给出它可以取值的范围（[教程 4，4.9 节](04_symmetries.md#s-4-9)）。
 
 ```python
 import itertools

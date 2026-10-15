@@ -14,8 +14,9 @@ determina el conmutante y el álgebra generada, cómo los caracteres cuentan mul
 elemento aleatorio del conmutante encuentra numéricamente la descomposición, qué son los sectores de
 carga, las representaciones irreducibles de espín y cómo se descomponen $`L`$ espines $`\frac12`$, por qué
 los hamiltonianos invariantes por $`SU(2)`$ tienen bloques mucho más pequeños que los invariantes por
-$`U(1)`$, y cómo la conjugación compleja clasifica los sectores de un álgebra generada por matrices reales en
-tipo real, complejo y cuaterniónico. Las comprobaciones numéricas de este capítulo están en el
+$`U(1)`$, cómo la conjugación compleja clasifica los sectores de un álgebra generada por matrices reales en
+tipo real, complejo y cuaterniónico, y qué tolerancias hacen correcta la descomposición numérica de generadores con
+ruido y cómo su salida se certifica a sí misma. Las comprobaciones numéricas de este capítulo están en el
 [Tutorial 4](../../tutorial/es/04_symmetries.md).
 
 En todo el capítulo, $`S'`$ es el conmutante de $`S\subseteq M_n(\mathbb C)`$ (capítulo 2). Si $`S^*=S`$, $`S''`$ es
@@ -378,6 +379,11 @@ aplica en $`1`$ por una de ellas y en $`0`$ por las demás), da $`\dim\mathcal B
 $`\mathcal B'=\mathcal A'`$ y $`\mathcal B=\mathcal B''=\mathcal A''=\mathcal A`$. $`\square`$
 
 *En la biblioteca:* el algoritmo, `decompose.wedderburn` (interfaces `from_group`, `from_generators`), el certificado de la proposición 4.9, `Decomposition.verify()`, y su coste — [tutorial, sección 4.3](../../tutorial/es/04_symmetries.md#s-4-3).
+
+La sección 4.9 hace cuantitativa la parte en coma flotante: qué tolerancias dan el conmutante correcto para generadores
+con ruido (teorema 4.25), cuán pequeños son los huecos entre autovalores de los elementos aleatorios (proposición 4.27),
+cuán cerca está la descomposición calculada de una exacta (teorema 4.28) y qué certifica la salida por sí misma
+(proposición 4.26).
 
 <a id="s-4-4"></a>
 
@@ -1128,6 +1134,327 @@ inyectiva.
 ## 4.8 Con qué comparar
 
 *En la biblioteca:* la comparación con otro software — [tutorial, sección 4.8](../../tutorial/es/04_symmetries.md#s-4-8).
+
+<a id="s-4-9"></a>
+
+## 4.9 Estabilidad de la descomposición numérica
+
+La sección 4.3 analizó el algoritmo en aritmética exacta. En la práctica los generadores solo se conocen de forma
+aproximada —medidos o redondeados— y una simetría se decide mediante una tolerancia: el conmutante está generado por los
+vectores singulares de la aplicación conmutador cuyos valores singulares quedan por debajo de un umbral $`\theta`$. Esta
+sección dice qué umbrales son correctos, a qué distancia están los objetos calculados de los exactos y qué puede
+certificarse a partir de la salida sola.
+
+En toda la sección, $`H_1,\dots,H_J`$ son hermíticas y $`\mathcal A=\{H_j\}''`$ (la biblioteca sustituye primero los generadores
+por sus partes hermíticas, que generan la misma álgebra, sección 4.3). La **aplicación conmutador** es
+```math
+L:M_n(\mathbb C)\to M_n(\mathbb C)^J,\qquad LX=([H_1,X],\dots,[H_J,X]),
+```
+con la norma $`\|X\|_2`$ en $`M_n`$ y $`\|(X_j)_j\|_2=(\sum_j\|X_j\|_2^2)^{1/2}`$ en $`M_n^J`$; $`\ker L=\mathcal A'`$ tiene dimensión
+$`d=\sum_cm_c^2`$. Para una aplicación lineal $`T`$ entre espacios complejos con producto interior de dimensión finita cuyo
+dominio tiene dimensión $`p`$, $`\sigma_1(T)\le\dots\le\sigma_p(T)`$ denotan las raíces cuadradas de los autovalores de
+$`T^*T\ge0`$, en orden *creciente* (para una matriz cuadrada son sus valores singulares, sección 1.4, en orden inverso). Como
+$`|Tx|^2=\langle x,T^*Tx\rangle`$, $`\ker T=\ker T^*T`$ y $`\sigma_p(T)=\|T\|`$. El **hueco** de la aplicación conmutador es
+$`\gamma=\sigma_{d+1}(L)`$, su menor valor singular no nulo ($`\gamma=\infty`$ si $`d=n^2`$). Usamos
+$`\|AX\|_2\le\|A\|\|X\|_2`$ (aplíquese $`|Ax|\le\|A\||x|`$ a las columnas de $`X`$) y $`\|XA\|_2=\|A^*X^*\|_2\le\|X\|_2\|A\|`$,
+de donde $`\|[E,X]\|_2\le2\|E\|\|X\|_2`$.
+
+<a id="r-4-24"></a>
+
+**Lema 4.24 (perturbación).** (a) Sean $`T,\tilde T`$ aplicaciones lineales entre los mismos espacios complejos con producto
+interior de dimensión finita y $`\Delta=\|\tilde T-T\|`$. Entonces $`|\sigma_i(\tilde T)-\sigma_i(T)|\le\Delta`$ para todo $`i`$. Si además
+$`\sigma_d(T)=0<\gamma=\sigma_{d+1}(T)`$ y $`\Delta<\gamma/2`$, sean $`\Pi`$ la proyección ortogonal sobre $`\ker T`$ y
+$`\tilde\Pi`$ la proyección espectral de $`\tilde T^*\tilde T`$ para sus autovalores $`\le\Delta^2`$; entonces $`\tilde\Pi`$ tiene rango
+$`d`$ y $`\|\tilde\Pi-\Pi\|\le2\Delta/\gamma`$.
+
+(b) Sean $`A,\tilde A\in\mathrm{Herm}_n`$ con $`\|\tilde A-A\|\le\Delta`$, y sea $`\mu`$ un autovalor de $`A`$ de
+multiplicidad $`r`$, con proyección espectral $`P`$, a distancia $`g>2\Delta`$ de los demás autovalores de $`A`$. Entonces
+$`\tilde A`$ tiene exactamente $`r`$ autovalores en $`[\mu-\Delta,\mu+\Delta]`$, todos los demás a distancia $`\ge g-\Delta`$ de $`\mu`$,
+y la proyección espectral $`\tilde P`$ de $`\tilde A`$ para estos $`r`$ autovalores cumple $`\|\tilde P-P\|\le2\Delta/g`$.
+
+(c) Sean $`P,\tilde P`$ proyecciones ortogonales de rango $`k`$ con $`\|\tilde P-P\|\le\varepsilon\le\frac12`$, y sean las columnas
+de $`\tilde Q\in M_{n\times k}`$ una base ortonormal de $`\mathrm{ran}\,\tilde P`$. Entonces $`S=\tilde Q^*P\tilde Q`$ es definida
+positiva, las columnas de $`Q=P\tilde QS^{-1/2}`$ son una base ortonormal de $`\mathrm{ran}\,P`$ y $`\|Q-\tilde Q\|\le2\varepsilon`$.
+
+(d) Para $`M\in M_k`$ invertible, $`\mathrm{pol}(M)=M(M^*M)^{-1/2}`$ es unitaria (la unitaria del teorema 1.8). Si
+$`\|M-\lambda U\|\le\zeta<\lambda`$ con $`\lambda>0`$ y $`U`$ unitaria, entonces $`M`$ es invertible y
+$`\|\mathrm{pol}(M)-U\|\le2\zeta/\lambda`$.
+
+*Demostración.* (a) Por el teorema A.8 para $`T^*T`$, y como $`t\mapsto t^{1/2}`$ es creciente,
+$`\sigma_i(T)=\min_{\dim U=i}\max_{x\in U,|x|=1}|Tx|`$. Para $`x`$ unitario, $`|\tilde Tx|\le|Tx|+\Delta`$; tomando el máximo sobre $`U`$
+y luego el mínimo se obtiene $`\sigma_i(\tilde T)\le\sigma_i(T)+\Delta`$, e intercambiando $`T,\tilde T`$ la desigualdad inversa. Por tanto
+$`\sigma_i(\tilde T)\le\Delta`$ para $`i\le d`$ y $`\sigma_i(\tilde T)\ge\gamma-\Delta>\Delta`$ para $`i>d`$, así que $`\tilde\Pi`$ tiene rango $`d`$.
+Para $`x\in\mathrm{ran}\,\tilde\Pi`$ unitario, desarrollando en autovectores de $`\tilde T^*\tilde T`$ se obtiene $`|\tilde Tx|^2=\langle x,\tilde T^*\tilde Tx\rangle\le\Delta^2`$,
+luego $`|Tx|\le2\Delta`$; y $`Tx=T(1-\Pi)x`$ con $`(1-\Pi)x\perp\ker T^*T`$, donde los autovalores de $`T^*T`$ son $`\ge\gamma^2`$,
+luego $`|Tx|\ge\gamma|(1-\Pi)x|`$. Por tanto $`\|(1-\Pi)\tilde\Pi\|\le2\Delta/\gamma`$. Para $`x\in\ker T`$ unitario, $`|\tilde Tx|\le\Delta`$ y
+$`|\tilde Tx|^2=\langle\tilde\Pi x,\tilde T^*\tilde T\tilde\Pi x\rangle+\langle(1-\tilde\Pi)x,\tilde T^*\tilde T(1-\tilde\Pi)x\rangle\ge(\gamma-\Delta)^2|(1-\tilde\Pi)x|^2`$
+($`\tilde\Pi`$ conmuta con $`\tilde T^*\tilde T`$, cuyos autovalores en $`\mathrm{ran}(1-\tilde\Pi)`$ son $`\ge(\gamma-\Delta)^2`$), así que
+$`\|(1-\tilde\Pi)\Pi\|\le\Delta/(\gamma-\Delta)\le2\Delta/\gamma`$. Finalmente
+$`(\Pi-\tilde\Pi)x=\Pi(1-\tilde\Pi)(1-\tilde\Pi)x-(1-\Pi)\tilde\Pi\,\tilde\Pi x`$ es suma de dos vectores ortogonales, y
+$`\|\Pi(1-\tilde\Pi)\|=\|(1-\tilde\Pi)\Pi\|`$ (adjuntos, lema 1.1), así que
+$`|(\Pi-\tilde\Pi)x|^2\le(2\Delta/\gamma)^2(|(1-\tilde\Pi)x|^2+|\tilde\Pi x|^2)=(2\Delta/\gamma)^2|x|^2`$.
+
+(b) Numérense los autovalores en orden creciente. Por el teorema A.10, los $`r`$ autovalores $`\lambda_i(\tilde A)`$ con $`\lambda_i(A)=\mu`$
+están en $`[\mu-\Delta,\mu+\Delta]`$, y los demás a distancia $`\ge g-\Delta>\Delta`$ de $`\mu`$. Así, los $`r`$ menores autovalores de
+$`(\tilde A-\mu)^2`$, que son $`\le\Delta^2`$, son los de estos $`r`$ autovalores, y (a) con
+$`T=A-\mu`$, $`\tilde T=\tilde A-\mu`$ (de modo que $`\ker T=\mathrm{ran}\,P`$ y $`\sigma_{r+1}(T)=g`$) da la cota.
+
+(c) $`(1-P)\tilde Q=(1-P)\tilde P\tilde Q=(1-P)(\tilde P-P)\tilde Q`$ tiene norma $`\le\varepsilon`$, así que
+$`S=1-\tilde Q^*(1-P)\tilde Q`$ tiene autovalores en $`[1-\varepsilon^2,1]`$ (teorema A.10) y $`S^{-1/2}`$ existe (teorema 1.5).
+$`Q^*Q=S^{-1/2}\tilde Q^*P\tilde QS^{-1/2}=1`$, y $`\mathrm{ran}\,Q\subseteq\mathrm{ran}\,P`$ tiene dimensión $`k`$. De
+$`Q-\tilde Q=\tilde Q(S^{-1/2}-1)-(1-P)\tilde QS^{-1/2}`$,
+$`\|Q-\tilde Q\|\le(1-\varepsilon^2)^{-1/2}-1+\varepsilon(1-\varepsilon^2)^{-1/2}=f(\varepsilon)`$ con $`f(\varepsilon)=((1+\varepsilon)/(1-\varepsilon))^{1/2}-1`$.
+Su derivada $`(1-\varepsilon)^{-1}(1-\varepsilon^2)^{-1/2}`$ es creciente, así que $`f`$ es convexa con $`f(0)=0`$, y
+$`f(\varepsilon)\le2\varepsilon f(\frac12)=2\varepsilon(\sqrt3-1)<2\varepsilon`$.
+
+(d) $`M^*M>0`$, y $`\mathrm{pol}(M)^*\mathrm{pol}(M)=(M^*M)^{-1/2}M^*M(M^*M)^{-1/2}=1`$; $`\mathrm{pol}(M)|M|=M`$, así que es la unitaria del
+teorema 1.8. Escríbase $`M=\lambda U(1+G)`$ con $`\|G\|=\|M-\lambda U\|/\lambda\le\zeta/\lambda<1`$. Por (a) (con $`T=1`$,
+$`\tilde T=1+G`$), los autovalores de $`R=((1+G)^*(1+G))^{1/2}`$ están en $`[1-\|G\|,1+\|G\|]`$, así que $`R`$, $`1+G`$ y $`M`$ son invertibles;
+$`M^*M=\lambda^2R^2`$, luego $`\mathrm{pol}(M)=UW`$ con la unitaria $`W=(1+G)R^{-1}`$, y
+$`\|W-1\|\le\|W-WR\|+\|WR-1\|=\|1-R\|+\|G\|\le2\|G\|`$. $`\square`$
+
+<a id="r-4-25"></a>
+
+**Teorema 4.25 (el conmutante con una tolerancia).** Sean $`\tilde H_1,\dots,\tilde H_J`$ hermíticas,
+$`\eta=(\sum_j\|\tilde H_j-H_j\|^2)^{1/2}`$, $`\tilde L`$ su aplicación conmutador, y para $`\theta\ge0`$ sea $`\mathcal C_\theta`$ el espacio
+generado por los autovectores de $`\tilde L^*\tilde L`$ con autovalores $`\le\theta^2`$ —el **conmutante con tolerancia** $`\theta`$
+($`\mathcal C_0=\{\tilde H_j\}'`$).
+
+(a) $`|\sigma_i(\tilde L)-\sigma_i(L)|\le2\eta`$ para todo $`i`$; en particular $`\sigma_i(\tilde L)\le2\eta`$ para $`i\le d`$ y
+$`\sigma_{d+1}(\tilde L)\ge\gamma-2\eta`$.
+
+(b) Si $`2\eta<\theta<\gamma-2\eta`$, entonces $`\dim\mathcal C_\theta=d`$, $`\mathcal C_\theta`$ es cerrado por $`X\mapsto X^*`$, y las
+proyecciones ortogonales $`\tilde\Pi`$ sobre $`\mathcal C_\theta`$ y $`\Pi`$ sobre $`\mathcal A'`$ cumplen $`\|\tilde\Pi-\Pi\|\le4\eta/\gamma`$.
+
+(c) Si $`\theta\ge\gamma+2\eta`$, entonces $`\dim\mathcal C_\theta>d`$. Si $`\theta<2\eta`$, puede ocurrir $`\dim\mathcal C_\theta<d`$: para
+$`H_1=\mathrm{diag}(1,1,0)`$ y $`\tilde H_1=H_1+\eta(E_{12}+E_{21})`$, $`d=5`$, $`\gamma=1`$, los valores singulares de $`\tilde L`$ son
+$`0,0,0,2\eta,2\eta,1-\eta,1-\eta,1+\eta,1+\eta`$, y $`\dim\mathcal C_\theta=3`$ para $`\theta<2\eta`$.
+
+Así, la tolerancia debe superar el doble del nivel de ruido y quedar por debajo del hueco menos el doble del nivel de ruido;
+tal $`\theta`$ existe si y solo si $`\eta<\gamma/4`$, y entonces el conmutante calculado tiene la dimensión correcta y está a
+distancia $`\le4\eta/\gamma`$ del verdadero. La cota $`2\eta`$ se alcanza en el ejemplo de (c).
+
+*Demostración.* (a) $`\|(\tilde L-L)X\|_2^2=\sum_j\|[\tilde H_j-H_j,X]\|_2^2\le4\eta^2\|X\|_2^2`$, y $`\sigma_i(L)=0`$ para $`i\le d`$; aplíquese
+el lema 4.24(a). (b) Por (a), $`\sigma_i(\tilde L)\le2\eta<\theta`$ para $`i\le d`$ y $`\sigma_i(\tilde L)\ge\gamma-2\eta>\theta`$ para $`i>d`$, así que
+$`\mathcal C_\theta`$ es la imagen de la proyección $`\tilde\Pi`$ del lema 4.24(a) con $`\Delta=2\eta<\gamma/2`$. Para $`H`$ hermítica,
+$`\langle Y,[H,X]\rangle_{HS}=\mathrm{Tr}(Y^*HX-Y^*XH)=\langle[H,Y],X\rangle_{HS}`$, así que $`\tilde L^*\tilde LX=\sum_j[\tilde H_j,[\tilde H_j,X]]`$, y
+tomando adjuntos, $`(\tilde L^*\tilde LX)^*=\sum_j[[X^*,\tilde H_j],\tilde H_j]=\tilde L^*\tilde L(X^*)`$. Así $`X\mapsto X^*`$ lleva cada
+autoespacio de $`\tilde L^*\tilde L`$ (sus autovalores son reales) en sí mismo. (c) $`\sigma_{d+1}(\tilde L)\le\gamma+2\eta\le\theta`$ por (a). En el
+ejemplo escríbase $`X=\begin{pmatrix}X_{11}&x_{12}\\x_{21}&x_{22}\end{pmatrix}`$ para $`\mathbb C^3=\mathbb C^2\oplus\mathbb C`$ y $`\tilde H_1=(1+\eta\sigma)\oplus0`$,
+$`\sigma=\begin{pmatrix}0&1\\1&0\end{pmatrix}`$. Entonces $`[\tilde H_1,X]`$ tiene los bloques $`\eta[\sigma,X_{11}]`$, $`(1+\eta\sigma)x_{12}`$,
+$`-x_{21}(1+\eta\sigma)`$ y $`0`$, una descomposición ortogonal. $`X_{11}\mapsto[\sigma,X_{11}]`$ se anula en $`1,\sigma`$ y lleva el par
+ortonormal $`\mathrm{diag}(1,-1)/\sqrt2`$, $`\begin{pmatrix}0&-i\\i&0\end{pmatrix}/\sqrt2`$ a $`\mp2i`$ veces el otro; $`1+\eta\sigma`$ tiene los
+autovalores $`1\pm\eta`$. Esto da los valores singulares; $`\eta=0`$ da $`d=5`$ y $`\gamma=1`$, y para $`\theta<2\eta`$ solo quedan los tres
+ceros. $`\square`$
+
+En la biblioteca $`\theta`$ es `tol` por $`\max(1,\sigma_{\max})`$ (docstring del módulo); el núcleo se calcula tras una reducción de
+las incógnitas que es exacta para generadores exactos (sección 4.3), y los valores singulares que informa son los de la
+aplicación reducida. El teorema 4.25 necesita $`\eta`$ y $`\gamma`$, que en la práctica se desconocen. Aun así la salida puede certificarse:
+
+<a id="r-4-26"></a>
+
+**Proposición 4.26 (certificado a posteriori).** Sean $`\tilde H_1,\dots,\tilde H_J`$ hermíticas, $`\tilde V`$ unitaria y
+$`\sum_ck_cm_c=n`$; sean $`\tilde{\mathcal B}=\tilde V(\bigoplus_cM_{k_c}\otimes1_{m_c})\tilde V^*`$, $`E`$ la proyección ortogonal de
+$`M_n`$ sobre $`\tilde{\mathcal B}`$ para $`\langle\cdot,\cdot\rangle_{HS}`$, $`H_j=E(\tilde H_j)`$ con $`\tilde V^*H_j\tilde V=\bigoplus_ca_{j,c}\otimes1_{m_c}`$,
+$`r=(\sum_j\|\tilde H_j-H_j\|_2^2)^{1/2}`$ (el **error hacia atrás**), $`d=\sum_cm_c^2`$, y $`\gamma_{\mathcal B}=\sigma_{d+1}`$ de la
+aplicación conmutador de $`H_1,\dots,H_J`$.
+
+(a) $`\gamma_{\mathcal B}`$ es el mínimo de $`\sigma_2(\Phi_{cc})`$ sobre los $`c`$ con $`k_c\ge2`$ y de $`\sigma_1(\Phi_{ce})`$ sobre $`c\neq e`$
+($`\infty`$ si no hay ninguno), donde $`\Phi_{ce}:M_{k_c\times k_e}\to M_{k_c\times k_e}^J`$, $`Y\mapsto(a_{j,c}Y-Ya_{j,e})_j`$.
+
+(b) Si $`\gamma_{\mathcal B}>0`$, las $`H_j`$ generan $`\tilde{\mathcal B}`$: $`\tilde V`$ y $`(k_c,m_c)`$ son una descomposición exacta del álgebra
+generada por matrices hermíticas a distancia $`r`$ de la entrada.
+
+(c) Si $`2r<\gamma_{\mathcal B}`$, entonces para todo $`\theta\in(2r,\gamma_{\mathcal B}-2r)`$ el conmutante con tolerancia $`\theta`$ de la entrada
+tiene dimensión $`d`$ y está a distancia $`\le4r/\gamma_{\mathcal B}`$ de $`\tilde{\mathcal B}'`$; y matrices hermíticas $`H^0_j`$ con
+$`(\sum_j\|H^0_j-\tilde H_j\|^2)^{1/2}<\gamma_{\mathcal B}/2-r`$ generan un álgebra cuyo conmutante tiene dimensión $`\le d`$.
+
+*Demostración.* $`\tilde{\mathcal B}`$ es cerrada por $`X\mapsto X^*`$, aplicación antilineal que preserva $`\mathrm{Re}\langle\cdot,\cdot\rangle_{HS}`$; luego
+lleva $`\tilde{\mathcal B}^\perp`$ en sí mismo y conmuta con $`E`$; por tanto las $`H_j`$ y las $`a_{j,c}`$ son hermíticas, y
+$`\|\tilde H_j-H_j\|\le\|\tilde H_j-H_j\|_2`$. (a) Escríbase $`\tilde V^*X\tilde V`$ en bloques $`X_{ce}\in M_{k_cm_c\times k_em_e}=M_{k_c\times k_e}\otimes M_{m_c\times m_e}`$
+(orden de Kronecker); $`X\mapsto\tilde V^*X\tilde V`$ preserva $`\|\cdot\|_2`$, estos bloques son ortogonales, y el bloque $`(c,e)`$ de
+$`\tilde V^*[H_j,X]\tilde V`$ es $`(a_{j,c}\otimes1)X_{ce}-X_{ce}(a_{j,e}\otimes1)`$, que vale $`\Phi_{ce}(Y)_j\otimes Z`$ para $`X_{ce}=Y\otimes Z`$. Así la
+aplicación conmutador actúa como $`\Phi_{ce}\otimes\mathrm{id}`$ en el bloque $`(c,e)`$, su $`T^*T`$ es $`\bigoplus_{c,e}\Phi_{ce}^*\Phi_{ce}\otimes1`$, y sus
+valores singulares son los de las $`\Phi_{ce}`$, cada uno repetido $`m_cm_e`$ veces. Como $`\Phi_{cc}(1)=0`$, al menos $`\sum_cm_c^2=d`$ de ellos se
+anulan, y exactamente $`d`$ si y solo si $`\sigma_2(\Phi_{cc})>0`$ para todo $`c`$ y $`\sigma_1(\Phi_{ce})>0`$ para $`c\neq e`$; entonces $`\sigma_{d+1}`$ es el
+menor de estos números, y en otro caso ambos lados valen $`0`$. (b) Las $`H_j\in\tilde{\mathcal B}`$ conmutan con $`\tilde{\mathcal B}'`$, que tiene
+dimensión $`d`$ (teorema 4.3, como en la demostración de la proposición 4.9), así que $`\tilde{\mathcal B}'\subseteq\{H_j\}'`$; si $`\gamma_{\mathcal B}>0`$,
+se anulan a lo sumo $`d`$ valores singulares, así que $`\{H_j\}'=\tilde{\mathcal B}'`$ y $`\{H_j\}''=\tilde{\mathcal B}''=\tilde{\mathcal B}`$ (teorema 2.2).
+(c) Teorema 4.25 con los generadores exactos $`H_j`$ (hueco $`\gamma_{\mathcal B}`$, conmutante $`\tilde{\mathcal B}'`$ por (b)) y los perturbados
+$`\tilde H_j`$, a distancia $`\eta\le r`$. Para las $`H^0_j`$, $`(\sum_j\|H^0_j-H_j\|^2)^{1/2}<\gamma_{\mathcal B}/2`$, y el teorema 4.25(a) da
+$`\sigma_{d+1}>0`$ para su aplicación conmutador. $`\square`$
+
+Así la salida se certifica a sí misma: un error hacia atrás $`r`$ pequeño y un hueco $`\gamma_{\mathcal B}`$ muy por encima de $`2r`$ significan
+que la estructura calculada es exacta para generadores ligeramente modificados, que todo umbral en $`(2r,\gamma_{\mathcal B}-2r)`$ da la misma
+dimensión del conmutante, y que ningún modelo con más simetría está a distancia menor que $`\gamma_{\mathcal B}/2-r`$ de la entrada.
+
+*En la biblioteca:* el certificado es `Decomposition.certificate()`: $`r`$, $`\gamma_{\mathcal B}`$ a partir de los bloques como en (a), la ventana
+$`(2r,\gamma_{\mathcal B}-2r)`$ y los valores singulares a ambos lados del umbral efectivamente usado, con un aviso cuando ese umbral no
+está en la ventana — [tutorial, sección 4.9](../../tutorial/es/04_symmetries.md#s-4-9).
+
+Los pasos restantes —separar mediante un $`K`$ aleatorio y agrupar mediante un $`Y`$ aleatorio— requieren genericidad cuantitativa. Las
+muestras de la biblioteca son vectores gaussianos reescalados (sección 4.3, paso 1): con una base ortonormal $`(B_r)`$ del conmutante e
+independientes gaussianas complejas estándar $`c_r`$, $`Y=\sum_rc_rB_r`$ es un **vector gaussiano complejo estándar** de $`\mathcal A'`$ (su ley
+no depende de la base, proposición A.16(a)), y $`K=Y'+Y'^*=\sqrt2\,G`$ para una copia independiente $`Y'`$, donde $`G`$ es el **vector
+gaussiano estándar** del espacio real $`\mathcal A'_h`$ con $`\langle X,Y\rangle=\mathrm{Tr}(XY)`$ ($`\sqrt2\,Y'`$ es el vector gaussiano estándar del
+espacio real $`\mathcal A'`$ con $`\mathrm{Re}\langle\cdot,\cdot\rangle_{HS}`$, y $`X\mapsto\frac12(X+X^*)`$ es la proyección ortogonal sobre $`\mathcal A'_h`$;
+proposiciones A.16(a), A.14(b)). Lo mismo vale para el muestreo por promedio sobre el grupo, pues $`Z+Z^*=\sqrt2\,H`$ con $`H`$ una matriz
+GUE, el vector gaussiano estándar de $`\mathrm{Herm}_n`$, cuya proyección ortogonal sobre $`\mathcal A'_h`$ es el promedio sobre el grupo, y el
+promedio de una matriz de Ginibre es un vector gaussiano complejo estándar de $`\mathcal A'`$.
+
+<a id="r-4-27"></a>
+
+**Proposición 4.27 (elementos aleatorios del conmutante).** Sean $`G`$ y $`Z`$ vectores gaussianos estándar independientes de
+$`\mathcal A'_h`$ y vectores gaussianos complejos estándar de $`\mathcal A'`$, respectivamente.
+
+(a) $`V^*GV=\bigoplus_c1_{k_c}\otimes k_c^{-1/2}H_c`$ y $`V^*ZV=\bigoplus_c1_{k_c}\otimes k_c^{-1/2}Z_c`$ con matrices GUE $`H_c`$ y matrices de
+Ginibre $`Z_c`$ de tamaño $`m_c`$, todas independientes; $`\mathbb E\|G\|_2^2=\mathbb E\|Z\|_2^2=d`$.
+
+(b) Sean $`\kappa_c=k_c^{-1/2}H_c`$ y $`\delta_\times=\min|\lambda_i(\kappa_c)-\lambda_j(\kappa_e)|`$ sobre $`c\neq e`$ y todos los $`i,j`$. Para $`x>0`$,
+```math
+\mathbb P(\delta_\times<x)\le\sqrt{\tfrac2\pi}\;x\sum_{c<e}m_cm_e\Big(\frac1{k_cm_c}+\frac1{k_em_e}\Big)^{-1/2}.
+```
+
+(c) Para $`m_c\ge2`$ sea $`\delta_c`$ el menor espaciamiento de $`\kappa_c`$. Entonces $`\mathbb P(\delta_c<x)\le C_{m_c}k_c^{3/2}x^3`$ para
+$`k_c^{1/2}x\le1`$, con la constante $`C_{m_c}`$ de la proposición C.9 ($`\beta=2`$); para $`m_c=2`$, $`C_2=1/(6\sqrt\pi)`$ para todo $`x`$.
+
+(d) Sean $`X`$ un vector gaussiano estándar de un espacio real con producto interior de dimensión $`D`$, $`W`$ una variable aleatoria
+independiente de $`X`$, y $`f\ge0`$ boreliana con $`f(w,tx)=tf(w,x)`$ para $`t>0`$. Entonces
+$`\mathbb P(f(W,X)<\varepsilon|X|)\le2\,\mathbb P(f(W,X)<\varepsilon(2D)^{1/2})`$. Para $`X=G`$, $`D=d`$; para $`X=Z`$ vale lo mismo con $`(2d)^{1/2}`$.
+
+(e) Si $`G`$ cumple la hipótesis del lema 4.6 y $`\Pi,\Pi'`$ son proyecciones espectrales de $`G`$ para dos autovalores distintos de la
+misma $`\kappa_c`$, entonces, condicionado a $`G`$, $`\|\Pi Z\Pi'\|_2^2`$ tiene la densidad $`e^{-t}`$ en $`(0,\infty)`$:
+$`\mathbb P(\|\Pi Z\Pi'\|_2<x)=1-e^{-x^2}\le x^2`$.
+
+En consecuencia, con $`\delta(G)=\min(\delta_\times,\min_c\delta_c)`$ (la menor distancia entre autovalores distintos de $`G`$ cuando estos son
+$`N=\sum_cm_c`$, y $`0`$ en otro caso) y $`\beta(G,Z)=\min\|\Pi_l Z\Pi_{l'}\|_2`$ sobre los pares de proyecciones espectrales distintas en el
+mismo sumando,
+```math
+\mathbb P\big(\delta(G)<\varepsilon\|G\|_2\big)\le\frac{4\sqrt d}{\sqrt\pi}\,\varepsilon\sum_{c<e}\frac{m_cm_e}{(\frac1{k_cm_c}+\frac1{k_em_e})^{1/2}}
++2\sum_{c:m_c\ge2}C_{m_c}(2dk_c)^{3/2}\varepsilon^3=:p_\delta(\varepsilon),\qquad
+\mathbb P\big(\beta(G,Z)<\beta'\|Z\|_2\big)\le4d\beta'^2\sum_cm_c(m_c-1)=:p_\beta(\beta'),
+```
+la primera para $`\varepsilon(2dk_c)^{1/2}\le1`$. El orden $`\varepsilon`$ no puede mejorarse: los niveles de sectores distintos no se repelen
+(teorema 5.15), mientras que los de un mismo sector sí (orden $`\varepsilon^3`$).
+
+*Demostración.* (a) Las matrices $`k_c^{-1/2}V(1\otimes b)V^*`$, con $`b`$ en una base ortonormal de $`\mathrm{Herm}_{m_c}`$ para $`\mathrm{Tr}(xy)`$ y
+$`c=1,\dots,C`$, forman una base ortonormal de $`\mathcal A'_h`$ ($`\mathrm{Tr}((1\otimes b)(1\otimes b'))=k_c\mathrm{Tr}(bb')`$), así que por la
+proposición A.14(b) $`\kappa_c=k_c^{-1/2}\sum_bg_bb`$ con coeficientes $`g_b`$ independientes $`N(0,1)`$. Para la base $`e_{ii}`$,
+$`(e_{ij}+e_{ji})/\sqrt2`$, $`i(e_{ij}-e_{ji})/\sqrt2`$, $`\sum_bg_bb`$ tiene entradas independientes $`h_{ii}\sim N(0,1)`$ y
+$`\mathrm{Re}\,h_{ij},\mathrm{Im}\,h_{ij}\sim N(0,\frac12)`$: es una matriz GUE (proposición A.17). Del mismo modo la base ortonormal
+$`k_c^{-1/2}V(1\otimes e_{jj'})V^*`$ de $`\mathcal A'`$ da $`Z_c`$ con entradas gaussianas complejas estándar independientes. Finalmente
+$`\mathbb E\|G\|_2^2=\sum\mathbb Eg_b^2=d`$, y lo mismo para $`Z`$.
+
+(b) Fíjense $`c\neq e`$, póngase $`s=(\frac1{k_cm_c}+\frac1{k_em_e})^{1/2}`$ y sea $`u\in\mathcal A'_h`$ con los bloques $`\alpha1`$ en el sumando $`c`$, $`-\beta1`$
+en el sumando $`e`$ y $`0`$ en los demás, $`\alpha=1/(k_cm_cs)`$, $`\beta=1/(k_em_es)`$. Entonces $`\|u\|_2^2=\alpha^2k_cm_c+\beta^2k_em_e=1`$ y
+$`\alpha+\beta=s`$. Por la proposición A.14(b), $`G=G_0+tu`$ con $`t=\langle u,G\rangle\sim N(0,1)`$ independiente de $`G_0`$. Los bloques son
+$`\kappa_c=\kappa^0_c+t\alpha`$ y $`\kappa_e=\kappa^0_e-t\beta`$, así que $`\lambda_i(\kappa_c)-\lambda_j(\kappa_e)=a+ts`$ con
+$`a=\lambda_i(\kappa^0_c)-\lambda_j(\kappa^0_e)`$ función de $`G_0`$ (corolario A.11). Para $`a`$ fijo, $`\{t:|a+ts|<x\}`$ es un intervalo
+de longitud $`2x/s`$, de probabilidad $`\le2x/(s\sqrt{2\pi})`$; por independencia (Fubini) esto acota
+$`\mathbb P(|\lambda_i(\kappa_c)-\lambda_j(\kappa_e)|<x)`$. Súmese sobre $`c<e`$, $`i\le m_c`$, $`j\le m_e`$.
+
+(c) $`\delta_c<x`$ si y solo si el menor espaciamiento de $`H_c`$ es $`<k_c^{1/2}x`$; proposición C.9. Para $`m_c=2`$ el espaciamiento tiene la densidad
+$`s^2e^{-s^2/4}/(2\sqrt\pi)\le s^2/(2\sqrt\pi)`$ (demostración de la proposición 5.13), cuya integral sobre $`(0,y)`$ es $`\le y^3/(6\sqrt\pi)`$.
+
+(d) En coordenadas ortonormales $`X`$ es un vector gaussiano estándar de $`\mathbb R^D`$; por el teorema A.20(a), $`|X|`$ es independiente de
+$`X/|X|`$, luego de $`(W,X/|X|)`$. Por la desigualdad de Markov $`\mathbb P(|X|^2\ge2D)\le\mathbb E|X|^2/2D=\frac12`$. Como
+$`f(W,X)=|X|f(W,X/|X|)`$,
+$`\mathbb P(f(W,X)<\varepsilon(2D)^{1/2})\ge\mathbb P(f(W,X/|X|)<\varepsilon)\,\mathbb P(|X|^2<2D)\ge\frac12\mathbb P(f(W,X)<\varepsilon|X|)`$. Para $`Z`$,
+$`\sqrt2Z`$ es un vector gaussiano estándar de dimensión $`2d`$, y $`\varepsilon(4d)^{1/2}`$ para $`\sqrt2Z`$ es $`\varepsilon(2d)^{1/2}`$ para $`Z`$.
+
+(e) Por (a) y el lema 4.6, $`V^*\Pi V`$ y $`V^*\Pi'V`$ proyectan sobre $`\mathbb C^{k_c}\otimes e`$ y $`\mathbb C^{k_c}\otimes e'`$ para autovectores
+ortonormales $`e,e'`$ de $`H_c`$, que solo dependen de $`G`$. Entonces $`\|\Pi Z\Pi'\|_2^2=k_c|\langle e,k_c^{-1/2}Z_ce'\rangle|^2=|\langle e,Z_ce'\rangle|^2`$,
+y para $`e,e'`$ fijos, $`\langle e,Z_ce'\rangle`$ es la coordenada de $`Z_c`$ a lo largo del vector unitario $`|e\rangle\langle e'|`$, una gaussiana
+compleja estándar (proposición A.16(a),(b)), cuyo módulo al cuadrado tiene la densidad $`e^{-t}`$ (teorema A.20(b), $`N=1`$). Como $`Z`$ es
+independiente de $`G`$, el teorema de Fubini da el enunciado condicional. *Consecuencias.* (d) con $`W`$ trivial, luego (b), (c) y una cota de
+unión, con $`x=\varepsilon(2d)^{1/2}`$; y (d) con $`W=G`$, luego (e) y una cota de unión sobre los $`\sum_cm_c(m_c-1)`$ pares ordenados, con
+$`x^2=2d\beta'^2`$. Los sucesos son borelianos por el corolario A.11 y la proposición A.13. $`\square`$
+
+Para el algoritmo, las muestras del conmutante se toman del conmutante calculado, no de $`\mathcal A'`$; las comparamos con sus
+proyecciones sobre $`\mathcal A'`$.
+
+<a id="r-4-28"></a>
+
+**Teorema 4.28 (estabilidad de la descomposición).** Sea $`\tilde{\mathcal A}'\subseteq M_n`$ un subespacio de dimensión $`d`$, cerrado por
+$`X\mapsto X^*`$, con proyección ortogonal $`\tilde\Pi`$ y $`\|\tilde\Pi-\Pi\|\le\varepsilon_0<1`$ (por el teorema 4.25(b), $`\varepsilon_0=4\eta/\gamma`$
+para el conmutante con una tolerancia en la ventana). Sean $`\tilde K\in\tilde{\mathcal A}'_h`$, $`\tilde Y\in\tilde{\mathcal A}'`$, $`K=\Pi(\tilde K)\in\mathcal A'_h`$
+e $`Y=\Pi(\tilde Y)\in\mathcal A'`$. Supóngase que $`K`$ cumple la hipótesis del lema 4.6, con autovalores $`\mu_1<\dots<\mu_N`$, proyecciones
+espectrales $`P_l`$ de rango $`k_{c(l)}`$ en el sumando $`c(l)`$, y $`\delta=\min_l(\mu_{l+1}-\mu_l)`$; sean
+$`\beta=\min\{\|P_lYP_{l'}\|_2:l\neq l',\,c(l)=c(l')\}`$ ($`\infty`$ si no hay tal par), $`h=\max_cm_c-1`$, y
+```math
+\rho=\varepsilon_0\|\tilde K\|_2,\qquad\varepsilon_1=\frac{2\rho}\delta,\qquad\zeta=(\varepsilon_0+2\varepsilon_1)\|\tilde Y\|_2,\qquad
+\xi=\frac{k_{\max}^{1/2}(\varepsilon_0+4\varepsilon_1)\|\tilde Y\|_2}\beta .
+```
+
+(a) Si $`4\rho<\delta`$, entonces para todo $`\tau\in[2\rho,\delta-2\rho)`$ los autovalores crecientes de $`\tilde K`$, cortados donde dos consecutivos
+difieren en más de $`\tau`$, forman $`N`$ grupos; el $`l`$-ésimo tiene $`k_{c(l)}`$ elementos, y su proyección espectral $`\tilde P_l`$ cumple
+$`\|\tilde P_l-P_l\|\le\varepsilon_1`$.
+
+(b) Si además $`2\zeta<\beta`$, entonces para todo $`\theta'\in[\zeta,\beta-\zeta)`$ dos grupos $`l\neq l'`$ del mismo tamaño cumplen
+$`\|\tilde P_l\tilde Y\tilde P_{l'}\|_2>\theta'`$ si y solo si $`c(l)=c(l')`$. Así las clases enlazadas del paso 3 son los sumandos, y el algoritmo
+devuelve los $`(k_c,m_c)`$ exactos.
+
+(c) Si además $`3^h\xi\le1`$, sea $`\tilde V`$ ensamblada como en los pasos 3–4 a partir de bases ortonormales de los $`\mathrm{ran}\,\tilde P_l`$, con las
+copias de cada sumando alineadas mediante factores polares a lo largo de cualquier árbol de profundidad $`\le h`$. Existe una unitaria $`\hat V`$
+con $`\hat V^*a\hat V=\bigoplus_c\rho_c(a)\otimes1_{m_c}`$ para toda $`a\in\mathcal A`$ (una descomposición como en el teorema 4.3) y
+$`\|\tilde V-\hat V\|\le N^{1/2}(2\varepsilon_1+3^h\xi)`$.
+
+(d) Sean $`\tilde K`$ un múltiplo positivo de un vector gaussiano estándar de $`\tilde{\mathcal A}'_h`$ e $`\tilde Y`$ un múltiplo positivo
+independiente de un vector gaussiano complejo estándar de $`\tilde{\mathcal A}'`$, como en la biblioteca. (La biblioteca los normaliza a norma unidad; las hipótesis y conclusiones de (a)–(c) no cambian al multiplicar $`\tilde K`$ y $`\tilde Y`$ por constantes positivas, reescalando $`\tau`$ y $`\theta'`$.) Para todo conjunto boreliano
+$`\mathcal E`$ de pares, $`\mathbb P((K,Y)\in\mathcal E)\le(1-\varepsilon_0^2)^{-3d/2}\,\mathbb P((cG,c'Z)\in\mathcal E)`$ para los mismos múltiplos $`c,c'`$
+de $`G,Z`$ que en la proposición 4.27. En consecuencia, si $`\varepsilon,\beta'\in(0,1]`$ y $`\varepsilon_0\le\varepsilon\beta'/(14\cdot3^hk_{\max}^{1/2})`$, entonces
+fuera de un suceso de probabilidad $`\le(1-\varepsilon_0^2)^{-3d/2}(p_\delta(\varepsilon)+p_\beta(\beta'))`$ se cumplen las hipótesis de (a)–(c), y
+$`\|\tilde V-\hat V\|\le17\cdot3^h(Nk_{\max})^{1/2}\varepsilon_0/(\varepsilon\beta')`$. Si $`\varepsilon_0^2\le1/(3d)`$, el factor es $`\le2`$.
+
+*Demostración.* $`\Pi`$ conmuta con $`X\mapsto X^*`$ (como $`E`$ en la proposición 4.26), así que $`K`$ es hermítica. Para $`X\in\mathrm{ran}\,\tilde\Pi`$,
+$`X-\Pi X=(1-\Pi)\tilde\Pi X=(\tilde\Pi-\Pi)\tilde\Pi X`$, así que $`\|X-\Pi X\|_2\le\varepsilon_0\|X\|_2`$ y $`\|\Pi X\|_2\le\|X\|_2`$. (a) Por tanto
+$`\|\tilde K-K\|\le\|\tilde K-K\|_2\le\rho`$. El lema 4.24(b) para cada $`\mu_l`$ (con $`g\ge\delta>4\rho`$, $`\Delta=\rho`$) da exactamente
+$`k_{c(l)}`$ autovalores de $`\tilde K`$ en $`[\mu_l-\rho,\mu_l+\rho]`$; estos intervalos son disjuntos, autovalores consecutivos en uno de ellos difieren
+en $`\le2\rho\le\tau`$, y autovalores en intervalos distintos en $`\ge\delta-2\rho>\tau`$; y $`\|\tilde P_l-P_l\|\le2\rho/\delta`$. (b) Por
+$`\|AXB\|_2\le\|A\|\|X\|_2\|B\|`$,
+$`|\|\tilde P_l\tilde Y\tilde P_{l'}\|_2-\|P_lYP_{l'}\|_2|\le\|\tilde Y-Y\|_2+\|(\tilde P_l-P_l)Y\|_2+\|Y(\tilde P_{l'}-P_{l'})\|_2\le\zeta`$, mientras que
+$`P_lYP_{l'}=0`$ si $`c(l)\neq c(l')`$ (lema 4.8(b)) y $`\|P_lYP_{l'}\|_2\ge\beta`$ en otro caso. Todos los grupos de un sumando quedan, pues,
+enlazados entre sí y con ningún otro grupo, y el sumando $`c`$ da $`m_c`$ grupos de tamaño $`k_c`$.
+
+(c) Sean $`\tilde Q_l`$ la base de $`\mathrm{ran}\,\tilde P_l`$ y $`Q_l`$ la base de $`\mathrm{ran}\,P_l`$ dada por el lema 4.24(c)
+($`\varepsilon_1<\frac12`$), de modo que $`\|\tilde Q_l-Q_l\|\le2\varepsilon_1`$. Por el lema 4.8(b), $`T_{ll'}=Q_l^*YQ_{l'}=\lambda_{ll'}U_{ll'}`$ para $`l,l'`$ en un
+mismo sumando $`c`$, con $`U_{ll'}`$ unitaria y $`\lambda_{ll'}=k_c^{-1/2}\|P_lYP_{l'}\|_2\ge\beta k_{\max}^{-1/2}`$, y
+$`\tilde T_{ll'}=\tilde Q_l^*\tilde Y\tilde Q_{l'}`$ cumple $`\|\tilde T_{ll'}-T_{ll'}\|\le\varepsilon_0\|\tilde Y\|_2+4\varepsilon_1\|Y\|_2\le\xi\lambda_{ll'}`$. El algoritmo
+pone $`\tilde W_{l_0}=1`$ en la raíz y $`\tilde W_{l'}=\mathrm{pol}(\tilde W_l^*\tilde T_{ll'})^*`$ a lo largo de una arista de $`l`$ a $`l'`$; defínanse las $`W_l`$
+del mismo modo a partir de las $`T_{ll'}`$, de modo que $`W_{l'}=U_{ll'}^*W_l`$. Por el lema 4.8(b) e inducción a lo largo del árbol, las bases
+$`Q_lW_l`$ de las copias del sumando $`c`$ llevan las mismas matrices $`(Q_lW_l)^*a(Q_lW_l)`$, así que las $`Q_lW_l`$, dispuestas como lo están las
+$`\tilde Q_l\tilde W_l`$ en $`\tilde V`$, forman una descomposición $`\hat V`$ como en la parte de existencia de la demostración del teorema 4.3. Sea
+$`e_l=\|\tilde W_l-W_l\|`$. Entonces
+$`\|\tilde W_l^*\tilde T_{ll'}-W_l^*T_{ll'}\|\le e_l\|\tilde T_{ll'}\|+\|\tilde T_{ll'}-T_{ll'}\|\le\lambda_{ll'}(e_l(1+\xi)+\xi)`$, y si esto es
+$`<\lambda_{ll'}`$, el lema 4.24(d) (con $`W_l^*T_{ll'}=\lambda_{ll'}W_l^*U_{ll'}`$) da $`e_{l'}\le2e_l(1+\xi)+2\xi\le3e_l+2\xi`$. Por inducción sobre
+la profundidad $`t`$, $`e_l\le\xi(3^t-1)`$: el paso es $`3\xi(3^t-1)+2\xi=\xi(3^{t+1}-1)`$, y se aplica porque para $`t\le h-1`$,
+$`e_l(1+\xi)+\xi\le\xi3^t(1+\xi)\le\frac13\cdot\frac43<1`$ (pues $`\xi\le3^{-h}\le\frac13`$). Así
+$`\|\tilde Q_l\tilde W_l-Q_lW_l\|\le2\varepsilon_1+3^h\xi`$; la matriz $`\tilde V-\hat V`$ consta de estos $`N`$ bloques de columnas, y
+$`|\sum_lA_lx_l|\le\sum_l\|A_l\||x_l|\le(\sum_l\|A_l\|^2)^{1/2}|x|`$ da la cota.
+
+(d) En coordenadas ortonormales de $`\tilde{\mathcal A}'_h`$ y $`\mathcal A'_h`$ (ambos de dimensión real $`d`$: un subespacio cerrado por adjunción es
+$`\mathcal S_h\oplus i\mathcal S_h`$), $`\Pi`$ se restringe a una aplicación lineal $`B:\tilde{\mathcal A}'_h\to\mathcal A'_h`$ con
+$`(1-\varepsilon_0^2)|x|^2\le|Bx|^2\le|x|^2`$. Así $`B`$ es biyectiva, $`|B^{-1}y|\ge|y|`$ y $`|\det B|=\det(B^TB)^{1/2}\ge(1-\varepsilon_0^2)^{d/2}`$
+(teorema A.8). Por el lema A.3(c), $`K/c=B(\tilde K/c)`$ tiene la densidad $`\varphi_d(B^{-1}y)/|\det B|\le(1-\varepsilon_0^2)^{-d/2}\varphi_d(y)`$,
+donde $`\varphi_d`$ es la densidad de $`G`$. El mismo argumento en el espacio real $`\tilde{\mathcal A}'`$ de dimensión $`2d`$ da el factor
+$`(1-\varepsilon_0^2)^{-d}`$ para $`Y`$, y $`K,Y`$ son independientes. En el complemento de los dos sucesos de la proposición 4.27 (para $`K`$ y
+$`Y`$; son invariantes por los múltiplos), y con $`(1-\varepsilon_0^2)^{1/2}\ge\frac{\sqrt3}2`$: $`\delta\ge\varepsilon\|K\|_2\ge\frac{\sqrt3}2\varepsilon\|\tilde K\|_2`$, así que
+$`\varepsilon_1\le\frac4{\sqrt3}\frac{\varepsilon_0}\varepsilon<\frac12`$; $`\beta\ge\beta'\|Y\|_2\ge\frac{\sqrt3}2\beta'\|\tilde Y\|_2`$, y
+$`2\zeta\le2(1+\frac8{\sqrt3\varepsilon})\varepsilon_0\|\tilde Y\|_2\le11.24\,\frac{\varepsilon_0}\varepsilon\|\tilde Y\|_2\le\frac{11.24}{14}\beta'\|\tilde Y\|_2<\beta`$; y
+$`3^h\xi\le3^hk_{\max}^{1/2}\frac{2}{\sqrt3\beta'}(1+\frac{16}{\sqrt3\varepsilon})\varepsilon_0\le11.83\cdot3^hk_{\max}^{1/2}\frac{\varepsilon_0}{\varepsilon\beta'}\le\frac{11.83}{14}<1`$. La cota de $`\|\tilde V-\hat V\|`$ se sigue de
+$`2\varepsilon_1\le4.62\,\varepsilon_0/\varepsilon`$, la cota de $`3^h\xi`$ y $`4.62+11.83<17`$. Finalmente
+$`(1-\frac1{3d})^{-3d/2}\le(\frac23)^{-3/2}<2`$, pues $`(1-\frac1m)^{-m}`$ decrece en $`m\ge2`$. $`\square`$
+
+En conjunto: si el ruido es pequeño frente al hueco, $`\eta\le\gamma\varepsilon\beta'/(56\cdot3^hk_{\max}^{1/2})`$, y los umbrales están en las
+ventanas de los teoremas 4.25 y 4.28, el algoritmo recupera $`(k_c,m_c)`$ y una $`V`$ a distancia $`O(\eta/\gamma)`$ de una descomposición exacta,
+salvo con probabilidad $`O(\varepsilon+\beta'^2)`$. Las constantes son cotas del peor caso; los errores típicos son mucho menores. La biblioteca no
+puede conocer $`\eta`$ ni $`\gamma`$, así que estima el error relativo de sus muestras del conmutante mediante
+$`\nu=\max(\sigma_d(\tilde L),\epsilon_{\rm mach}\max(1,\sigma_{\max}))/\sigma_{d+1}(\tilde L)`$ (del orden de $`\varepsilon_0`$ por el lema 4.24(a), pues
+$`\sigma_d(\tilde L)\le\Delta`$) y coloca su umbral mínimo de agrupamiento y su umbral de enlace en $`\min(10^3\nu,\nu^{1/2})`$ (el segundo al menos
+$`\epsilon_{\rm mach}^{1/2}`$), entre el ruido y la escala unidad de la estructura; la proposición 4.26 comprueba después el resultado.
+
+*Cálculo:* el teorema 4.25 en generadores con ruido (el hueco de los valores singulares frente a la tolerancia, y el ejemplo de (c)),
+la proposición 4.26 para el certificado y la proposición 4.27 por Monte Carlo — [tutorial, sección 4.9](../../tutorial/es/04_symmetries.md#s-4-9).
 
 <a id="x-4"></a>
 

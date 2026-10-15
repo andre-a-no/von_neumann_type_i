@@ -4,8 +4,8 @@
 
 本教程配合讲义的[第 4 章](../../lecture_notes/zh/04_symmetries.md)。该章发展了对称性代数背后的表示论，把它变成一个随机化算法，
 用以分解由任意一组矩阵生成的冯·诺依曼代数（[命题 4.9](../../lecture_notes/zh/04_symmetries.md#r-4-9)），将其应用于 $`U(1)`$ 和 $`SU(2)`$，
-并把由实矩阵生成的代数的扇区分为实型、复型与四元数型（[定理 4.20](../../lecture_notes/zh/04_symmetries.md#r-4-20)）。我们计算特征标，
-对群和对生成元运行分解，用 `SpinChain` 和 `su2.SU2Chain` 逐个扇区地构造自旋链，并计算一个分解的实结构。
+并把由实矩阵生成的代数的扇区分为实型、复型与四元数型（[定理 4.20](../../lecture_notes/zh/04_symmetries.md#r-4-20)），还分析含噪声生成元的分解（[定理 4.25](../../lecture_notes/zh/04_symmetries.md#r-4-25)）。我们计算特征标，
+对群和对生成元运行分解，用 `SpinChain` 和 `su2.SU2Chain` 逐个扇区地构造自旋链，计算一个分解的实结构，并为含噪声生成元的分解出具证书。
 
 <a id="s-4-2"></a>
 
@@ -442,6 +442,130 @@ SymbolicWedderburn.jl（Julia）为半定规划的对称性约化计算 Wedderbu
 （群元素或生成元），验证其结果（命题 4.9），并把代数及其交换子作为带有 `to_algebra`、`from_algebra`、
 `to_commutant`、`from_commutant` 的 `TypeIAlgebra` 对象返回，使第 3 章、第 5–8 章的内容可以直接应用。对
 自旋 $`\frac12`$ 链，`su2.SU2Chain` 直接给出 $`SU(2)`$ 块（推论 4.17）；它最多接受 $`L=18`$ 个自旋，这一上限由基所需的内存决定。
+
+<a id="s-4-9"></a>
+
+## 4.9 数值分解的稳定性
+
+*讲义：* [4.9 节](../../lecture_notes/zh/04_symmetries.md#s-4-9)；[引理 4.24](../../lecture_notes/zh/04_symmetries.md#r-4-24)、[定理 4.25](../../lecture_notes/zh/04_symmetries.md#r-4-25)、[命题 4.26](../../lecture_notes/zh/04_symmetries.md#r-4-26)、[命题 4.27](../../lecture_notes/zh/04_symmetries.md#r-4-27)、[定理 4.28](../../lecture_notes/zh/04_symmetries.md#r-4-28)。
+
+含噪声生成元的交换子由一个容差决定：[定理 4.25](../../lecture_notes/zh/04_symmetries.md#r-4-25) 指出，若 $`2\eta<\theta<\gamma-2\eta`$（$`\eta`$ 为噪声，$`\gamma`$ 为精确映射的
+能隙），则交换子映射 $`X\mapsto([H_j,X])_j`$ 的奇异值上的阈值 $`\theta`$ 给出交换子的精确维数 $`d`$，并且被扰动的零奇异值的界 $`2\eta`$
+是可以取到的。第一个代码块计算定理 4.25(c) 中例子 $`\tilde H_1=\mathrm{diag}(1,1,0)+\eta(E_{12}+E_{21})`$ 的奇异值，并用 `commutant_basis`
+在窗口之下、之内和之上判定交换子（库把生成元归一化为单位 Frobenius 范数，因此 `tol` 要相应缩放）。
+
+```python
+import warnings
+
+def commutator_svals(Hs):
+    """Singular values, in increasing order, of X -> ([H_j, X])_j with Hilbert-Schmidt norms (row-major vec)."""
+    n = Hs.shape[-1]
+    eye = torch.eye(n, dtype=dt)
+    L = torch.cat([torch.kron(H, eye) - torch.kron(eye, H.T.contiguous()) for H in Hs])
+    return torch.linalg.svdvals(L).flip(0)
+
+eta = 1e-3
+H1 = torch.diag(torch.tensor([1.0, 1.0, 0.0], dtype=dt))
+H1t = H1.clone()
+H1t[0, 1] = H1t[1, 0] = eta                               # a symmetry broken at the level eta
+s = commutator_svals(H1t[None])
+expected = torch.tensor([0, 0, 0, 2 * eta, 2 * eta, 1 - eta, 1 - eta, 1 + eta, 1 + eta], dtype=torch.float64)
+assert close(s, expected, 1e-12)                          # Theorem 4.25(a) and (c): the bound 2 eta is attained
+assert close(commutator_svals(H1[None])[4:6], [0, 1])      # exact generator: d = 5, gap 1
+scale = torch.linalg.matrix_norm(H1t).item()              # theta = tol for unit-norm generators
+for theta, dim in ((0.5 * eta, 3), (20 * eta, 5), (2.0, 9)):
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', dc.DecompositionWarning)
+        assert dc.commutant_basis(H1t, tol=theta / scale).shape[0] == dim
+print('theta < 2 eta: dim 3 (symmetry lost); in the window: 5; above the gap: 9')
+```
+
+接下来是三个自旋 $`\frac12`$ 的三个自旋算符（$`k=(2,4)`$，$`m=(2,1)`$，$`d=5`$，归一化后能隙 $`\gamma=1/\sqrt3`$），受到大小 $`\eta`$ 递增的
+厄米噪声扰动。对每个噪声水平，代码在奇异值 $`\sigma_d`$ 和 $`\sigma_{d+1}`$ 上检验定理 4.25(a)，把 `tol` 放在观测窗口的中间（对数尺度），
+检验维数以及定理 4.25(b) 的界 $`\|\tilde\Pi-\Pi\|\le4\eta/\gamma`$，然后进行分解。使用默认的 `tol` $`=\epsilon_{\rm mach}^{1/2}`$ 时，噪声一旦
+超过容差就被认真对待：含噪声的生成元生成 $`M_8`$，这对它们而言是正确答案，但不是我们要找的对称性。（这里被过滤的
+`DecompositionWarning` 报告某个奇异值与截断点的距离不到 $`\epsilon_{\rm mach}^{-1/8}`$ 倍。）
+
+```python
+S = dc.total_spin(3)
+unit = lambda S: S / torch.linalg.matrix_norm(S)[:, None, None]     # the Hermitian generators the library uses
+sv = commutator_svals(unit(S))
+d, gamma = 5, sv[5].item()
+assert sv[4] < 1e-12 and abs(gamma - 1 / math.sqrt(3)) < 1e-12
+B0 = dc.commutant_basis(S).reshape(d, -1)
+Pi0 = B0.T @ B0.conj()                                    # orthogonal projection onto vec(A')
+gen = torch.Generator().manual_seed(1)
+print(' eta       sigma_d   sigma_d+1  tol       (k, m)            default tol')
+for eta in (1e-8, 1e-6, 1e-4, 1e-3):
+    E = torch.randn(S.shape, dtype=dt, generator=gen)
+    E = E + E.mH
+    St = S + eta * E / torch.linalg.matrix_norm(E, ord=2)[:, None, None]
+    eta_n = torch.linalg.matrix_norm(unit(St) - unit(S), ord=2).norm().item()   # eta of Theorem 4.25
+    st = commutator_svals(unit(St))
+    assert st[d - 1] <= 2 * eta_n and st[d] >= gamma - 2 * eta_n                # Theorem 4.25(a)
+    tol = math.sqrt(st[d - 1] * st[d]) / max(1.0, st[-1].item())
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', dc.DecompositionWarning)
+        Bt = dc.commutant_basis(St, tol=tol).reshape(d, -1)                     # Theorem 4.25(b): dimension d
+        Dt = dc.from_generators(St, tol=tol)
+        Dd = dc.from_generators(St)
+    assert torch.linalg.matrix_norm(Bt.T @ Bt.conj() - Pi0, ord=2) <= 4 * eta_n / gamma
+    assert (Dt.k_factors, Dt.multiplicities) == ((2, 4), (2, 1))
+    print(f'{eta_n:.1e}  {st[d - 1]:.1e}   {st[d]:.3f}      {tol:.1e}   {Dt.k_factors}, {Dt.multiplicities}'
+          f'   {Dd.k_factors}, {Dd.multiplicities}')
+```
+
+`Decomposition.certificate()` 在输出上计算[命题 4.26](../../lecture_notes/zh/04_symmetries.md#r-4-26)：后向误差 $`r`$（归一化生成元到计算出的代数 $`\tilde{\mathcal B}`$ 的距离）、
+它们的投影 $`H_j=E(\tilde H_j)`$ 的交换子映射的能隙 $`\gamma_{\mathcal B}`$（由各块计算，这里与稠密奇异值相比较），以及证明
+$`\dim\mathcal A'=\sum_cm_c^2`$ 的阈值窗口 $`(2r,\gamma_{\mathcal B}-2r)`$。若实际使用的阈值位于该窗口内，结果为 `trusted`；否则证书发出警告。
+低于噪声的容差给出 $`M_8`$，对这些生成元而言是被证明的，但能隙与噪声同阶：对称性更多的模型可能就在距离 $`\gamma_{\mathcal B}/2`$ 处。
+高于噪声但低于 $`2r`$ 的容差给出正确的结构，但证书无法为之担保。
+
+```python
+c = dc.from_generators(S).certificate()
+assert c.certified and c.trusted and c.residuals['backward'] < 1e-12 and abs(c.gap - gamma) < 1e-10
+E = torch.randn(S.shape, dtype=dt, generator=gen)
+St = S + 1e-4 * (E + E.mH)
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore', dc.DecompositionWarning)
+    Dt = dc.from_generators(St, tol=1e-2)
+    D_low = dc.from_generators(St, tol=1e-12)                          # below the noise
+    D_mid = dc.from_generators(St, tol=1e-3)                           # above the noise, below 2 r
+ct = Dt.certificate()
+print(ct, 'window', [f'{w:.1e}' for w in ct.window], 'threshold', f"{ct.rank['threshold']:.1e}")
+assert ct.trusted and 1e-5 < ct.residuals['backward'] < 1e-2 and ct.window[0] < ct.rank['threshold'] < ct.window[1]
+sb = commutator_svals(Dt.conditional_expectation(unit(St)))           # the projected generators H_j
+assert sb[d - 1] < 1e-12 and abs(sb[d] - ct.gap) < 1e-10              # Proposition 4.26(a), (b)
+c_low = D_low.certificate()
+assert D_low.k_factors == (8,) and c_low.certified and c_low.gap < 1e-3
+with warnings.catch_warnings(record=True) as caught:
+    warnings.simplefilter('always')
+    c_mid = D_mid.certificate()
+assert D_mid.k_factors == (2, 4) and not c_mid.trusted and caught
+print('tol 1e-12:', D_low.k_factors, f'gap {c_low.gap:.1e};  tol 1e-3:', D_mid.k_factors, 'trusted:', c_mid.trusted)
+```
+
+最后是[命题 4.27](../../lecture_notes/zh/04_symmetries.md#r-4-27)：对 $`\mathcal A'_h`$ 的标准高斯向量 $`G`$，各块为 $`\kappa_c=k_c^{-1/2}H_c`$，其中 $`H_c`$ 为独立的 GUE 矩阵；不同
+扇区的特征值彼此靠近到小于 $`x`$ 的概率至多为 $`x`$ 阶（这里的界为 $`\sqrt{2/\pi}\,x\,m_1m_2(\frac1{k_1m_1}+\frac1{k_2m_2})^{-1/2}`$），而在
+$`2\times2`$ 块内部间距为 $`x^3`$ 阶。用 $`2\cdot10^4`$ 个样本作蒙特卡罗检验，样本取自 $`\mathcal A'`$ 的规范正交基 `D.basis('commutant')`：
+
+```python
+D = dc.from_generators(S)
+coef = torch.randn(20000, d, dtype=dt, generator=gen)
+Z = torch.einsum('br,rij->bij', coef, D.basis('commutant'))         # standard complex Gaussian vectors of A'
+x_c = D.to_commutant((Z + Z.mH) / math.sqrt(2)).matrix              # blocks of G: kappa_1 (2 x 2), kappa_2 (1 x 1)
+assert abs((x_c[:, 0, :2, :2].abs() ** 2).sum((-2, -1)).mean().item() - 4 / 2) < 0.05   # E Tr kappa_1^2 = m_1^2 / k_1
+ev = torch.linalg.eigvalsh(x_c[:, 0, :2, :2])
+cross = (ev - x_c[:, 1, :1, 0].real).abs().min(1).values           # delta_x
+(k1, k2), (m1, m2) = D.k_factors, D.multiplicities
+for x in (0.01, 0.03, 0.1):
+    bound = math.sqrt(2 / math.pi) * x * m1 * m2 / math.sqrt(1 / (k1 * m1) + 1 / (k2 * m2))
+    p = (cross < x).double().mean().item()
+    print(f'x = {x}:  P(delta_x < x) = {p:.4f} <= {bound:.4f}')
+    assert p <= bound
+p_in = (ev[:, 1] - ev[:, 0] < 0.2).double().mean().item()
+assert p_in <= k1 ** 1.5 * 0.2 ** 3 / (6 * math.sqrt(math.pi))      # Proposition 4.27(c), m = 2
+```
 
 <a id="x-4"></a>
 
