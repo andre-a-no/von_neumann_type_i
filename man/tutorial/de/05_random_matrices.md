@@ -5,7 +5,7 @@
 Dieses Tutorial begleitet [Kapitel 5](../../lecture_notes/de/05_random_matrices.md) der Vorlesungsnotizen, das das Haar-Maß auf der unitären
 Gruppe von $`\mathcal M=\bigoplus_cM_{k_c}`$ konstruiert ([Korollar 5.4](../../lecture_notes/de/05_random_matrices.md#r-5-4)), seine ersten und zweiten Momente
 berechnet ([Proposition 5.7](../../lecture_notes/de/05_random_matrices.md#r-5-7), [Satz 5.10](../../lecture_notes/de/05_random_matrices.md#r-5-10)) und zeigt, warum Niveaustatistik sektorweise berechnet
-werden muss ([Satz 5.15](../../lecture_notes/de/05_random_matrices.md#r-5-15)). Wir ziehen mit der Bibliothek Haar-verteilte unitäre Matrizen und Gaußsche
+werden muss ([Satz 5.15](../../lecture_notes/de/05_random_matrices.md#r-5-15), [Satz 5.18](../../lecture_notes/de/05_random_matrices.md#r-5-18)). Wir ziehen mit der Bibliothek Haar-verteilte unitäre Matrizen und Gaußsche
 Ensembles und überprüfen diese Ergebnisse per Monte-Carlo: Ein Mittelwert muss bis auf $`5`$ Standardfehler mit dem
 exakten Wert übereinstimmen. Ergebnisse ohne zugrunde liegenden Satz sind als numerische Beobachtungen gekennzeichnet.
 
@@ -30,7 +30,9 @@ Vorzeichenkonvention der QR-Routine ab. Für die von `torch.linalg.qr` aufgerufe
 findet der folgende Code $`\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'`$ viele Standardfehler von
 $`0`$ entfernt, während eine Haar-verteilte unitäre Matrix $`\mathbb EU=0`$ hat (Korollar 5.5): Dieses
 $`Q'`$ ist also nicht Haar-verteilt. Das ist eine Aussage über diese Routine, vom Code überprüft,
-kein Satz.
+kein Satz. Für diese Vorzeichenkonvention – $`R'_{11}`$ reell mit dem zu $`\mathrm{Re}\,Z_{11}`$ entgegengesetzten
+Vorzeichen, was der Code prüft – beweisen die Vorlesungsnotizen fast sicher $`\mathrm{Re}\,Q'_{11}<0`$ (nach
+[Satz 5.3](../../lecture_notes/de/05_random_matrices.md#r-5-3)), und der Code bestätigt es in jeder Stichprobe.
 
 Die Bibliothek zieht Haar-verteilte unitäre Elemente von $`U(\mathcal M)`$ mit
 `random_unitary_operator`, mit einer einzigen gestapelten QR-Zerlegung pro Blockgröße für alle
@@ -85,6 +87,8 @@ torch.manual_seed(1)
 V = alg.random_unitary(2, batch_size=B)                              # the library, same random numbers
 Q, R = torch.linalg.qr(Z)                                            # LAPACK: diag(R) real, either sign
 d = R.diagonal(dim1=-2, dim2=-1)
+assert (d.imag == 0).all() and (d[:, 0].real * Z[:, 0, 0].real < 0).all()   # LAPACK: R'_11 real, sign of -Re Z_11
+assert (Q[:, 0, 0].real < 0).all()                                   # hence Re Q'_11 < 0 (after Theorem 5.3)
 assert close(V, Q * (d / d.abs()).unsqueeze(-2))                     # Theorem 5.3: V = Q Lambda
 raw = Q.diagonal(dim1=-2, dim2=-1).sum(-1).real                      # Re Tr Q without the correction
 print(f"E Re Tr Q without the phase correction: {raw.mean():.4f} +- {raw.std() / math.sqrt(B):.4f}")
@@ -218,45 +222,53 @@ Abstandsverhältnisse genau dieselbe Verteilung haben.
 
 ## 5.4 Warum Sektoren nicht vermischt werden dürfen
 
-*Vorlesungsnotizen:* [Abschnitt 5.4](../../lecture_notes/de/05_random_matrices.md#s-5-4); nach [Satz 5.15](../../lecture_notes/de/05_random_matrices.md#r-5-15) stoßen sich Niveaus verschiedener unabhängiger Blöcke nicht ab: Für zwei GOE-Blöcke ist für den kleinsten Abstand $`\delta`$ des vereinigten Spektrums $`P(\delta<\varepsilon)`$ mindestens von der Ordnung $`\varepsilon`$, innerhalb eines GOE-Blocks dagegen höchstens von der Ordnung $`\varepsilon^2`$.
+*Vorlesungsnotizen:* [Abschnitt 5.4](../../lecture_notes/de/05_random_matrices.md#s-5-4); nach [Satz 5.15](../../lecture_notes/de/05_random_matrices.md#r-5-15) stoßen sich Niveaus verschiedener unabhängiger Blöcke nicht ab: Für zwei GOE-Blöcke ist für den kleinsten Abstand $`\delta`$ des vereinigten Spektrums $`P(\delta<\varepsilon)`$ mindestens von der Ordnung $`\varepsilon`$, innerhalb eines GOE-Blocks dagegen höchstens von der Ordnung $`\varepsilon^2`$. Nach [Satz 5.18](../../lecture_notes/de/05_random_matrices.md#r-5-18), mit [Lemma 5.16](../../lecture_notes/de/05_random_matrices.md#r-5-16) für GOE-Blöcke, hat das vereinigte Spektrum von $`C`$ unabhängigen Kopien eines Blocks in einem Fenster $`I`$, in dem die Niveaudichte positiv ist, bis auf $`A/C`$ die Abstandsverhältnisse unabhängiger Niveaus: Über viele Stichproben gepoolt weicht das mittlere Verhältnis $`\mathbb ES(I)/\mathbb EN(I)`$ der Niveaus in $`I`$ um höchstens $`A/C`$ von $`2\ln2-1`$ ab.
 
-Mit mehr Sektoren ist der Effekt stärker. Wir beweisen keinen Grenzwertsatz für viele Sektoren;
-das folgende Experiment ist eine numerische Beobachtung. In der Bibliothek sind die Blöcke von
-vornherein getrennt: `eigenvalues()` gibt ein Spektrum pro Sektor zurück, und sie zu vermischen
-erfordert ein explizites `torch.cat`. Wir legen $`C`$ unabhängige GOE-Blöcke der Größe $`64`$ in eine
-Algebra und vergleichen das mittlere Verhältnis pro Sektor mit dem des vereinigten Spektrums. Jeder
-Sektor ist eine GOE-Matrix der Größe $`64`$, seine Verhältnisse haben also genau die Verteilung von
-`r_goe` oben, und der Code testet das; das Verhalten des vereinigten Spektrums wird nur beobachtet:
+Mit mehr Sektoren ist der Effekt stärker. In der Bibliothek sind die Blöcke von vornherein getrennt: `eigenvalues()`
+gibt ein Spektrum pro Sektor zurück, und sie zu vermischen erfordert ein explizites `torch.cat`. Wir legen $`C`$ unabhängige
+GOE-Blöcke der Größe $`64`$ in eine Algebra und vergleichen das mittlere Verhältnis pro Sektor mit dem gepoolten mittleren
+Verhältnis des vereinigten Spektrums über die Niveaus in $`I=[-4,4]`$ (die Niveaudichte von GOE(64) ist überall positiv,
+Lemma 5.16). Jeder Sektor ist eine GOE-Matrix der Größe $`64`$, seine Verhältnisse haben also genau die Verteilung von
+`r_goe` oben, und der Code testet das. Der gepoolte Mittelwert $`\sum S/\sum N`$ über die Stichproben schätzt
+$`\mathbb ES(I)/\mathbb EN(I)`$; sein Standardfehler ergibt sich aus den Summen $`S,N`$ je Stichprobe (Delta-Methode). Die Rate
+von Satz 5.18 wird in der Form $`C\,|\langle r\rangle_C-(2\ln2-1)|\le2\,(\langle r\rangle_2-(2\ln2-1))`$ bis auf $`5`$ Standardfehler
+geprüft, also mit $`A=2(\langle r\rangle_2-(2\ln2-1))`$ für alle $`C\ge2`$:
 
 ```python
-k, merged_r = 64, {}
+k, P0, merged_r, merged_se = 64, 2 * math.log(2) - 1, {}, {}
 for C in (1, 2, 4, 8, 16):
     alg_C = TypeIAlgebra([k] * C, [k] * C, complex_valued=False, precision='double')
-    G = torch.randn(800 // C, C, k, k, dtype=torch.float64)
+    G = torch.randn(1600 // C, C, k, k, dtype=torch.float64)
     lam = alg_C.operator((G + G.mT) / 2, is_self_adjoint=True).eigenvalues()    # one spectrum per sector
     per_sector = torch.stack([ratio(l[:, k // 4: 3 * k // 4]) for l in lam])
-    merged = torch.cat(lam, dim=-1).sort(dim=-1).values                       # the spectrum on C^D
-    r_m = ratio(merged[:, k * C // 4: 3 * k * C // 4])
-    merged_r[C] = r_m.mean().item()
-    print(f"C = {C:2d}: <r> per sector {per_sector.mean():.4f}, merged {merged_r[C]:.4f}"
-          f" +- {r_m.std() / math.sqrt(len(r_m)):.4f}")
     same_mean(per_sector.flatten(), r_goe, f"C = {C:2d}: sectors vs GOE(64)")   # every sector is GOE(64)
-assert merged_r[1] > merged_r[2] > merged_r[4] > merged_r[16]       # numerical observation
-assert abs(merged_r[16] - (2 * math.log(2) - 1)) < 0.01              # numerical observation
+    merged = torch.cat(lam, dim=-1).sort(dim=-1).values                       # the spectrum on C^D
+    s = merged.diff(dim=-1)
+    r = torch.minimum(s[:, :-1], s[:, 1:]) / torch.maximum(s[:, :-1], s[:, 1:])   # r(y) at the inner levels
+    inside = (merged[:, 1:-1].abs() <= 4).double()                             # inner levels y in I = [-4, 4]
+    S, N = (r * inside).sum(-1), (merged.abs() <= 4).double().sum(-1)          # S(I), N(I) per sample
+    R = (S.sum() / N.sum()).item()                                             # pooled: estimates E S(I) / E N(I)
+    merged_r[C], merged_se[C] = R, ((S - R * N).pow(2).sum().sqrt() / N.sum()).item()   # delta method
+    print(f"C = {C:2d}: <r> per sector {per_sector.mean():.4f}, merged {R:.4f} +- {merged_se[C]:.4f},"
+          f"  C (<r> - (2 ln 2 - 1)) = {C * (R - P0):+.4f},  C^2 (<r> - (2 ln 2 - 1)) = {C * C * (R - P0):+.4f}")
+for C in (4, 8, 16):                                                          # Theorem 5.18: deviation <= A / C
+    assert C * abs(merged_r[C] - P0) <= 2 * (merged_r[2] - P0) + 5 * C * merged_se[C]
+assert merged_r[1] > merged_r[2] > merged_r[4]
 ```
 
-*Numerische Beobachtung.* Jeder Sektor hat $`\langle r\rangle\approx0.53`$, den GOE(64)-Wert aus
-Abschnitt 5.3 (diese Übereinstimmung ist der Test einer Tatsache: Die Sektoren sind
-GOE(64)-Matrizen). Das vereinigte Spektrum fällt bei zwei Sektoren auf $`0.42`$ und bei $`8`$ und $`16`$
-Sektoren auf etwa $`0.39`$, weniger als $`0.01`$ vom Wert $`2\ln2-1`$ unabhängiger Niveaus entfernt
-(Proposition 5.14(a)). Dass sich das vereinigte Spektrum mit wachsendem $`C`$ unabhängigen Niveaus
-nähert, beobachtet der Code; in diesem Kurs wird es nicht bewiesen.
+*Numerische Beobachtung.* Jeder Sektor hat $`\langle r\rangle\approx0.53`$, den GOE(64)-Wert aus Abschnitt 5.3 (diese
+Übereinstimmung ist der Test einer Tatsache: Die Sektoren sind GOE(64)-Matrizen). Das vereinigte Spektrum fällt bei zwei
+Sektoren auf $`0.43`$, bei vier auf $`0.40`$ und liegt bei $`8`$ und $`16`$ Sektoren weniger als einen Standardfehler ($`0.0015`$)
+von $`2\ln2-1`$ entfernt, wie Satz 5.18 vorhersagt. Die Abweichung fällt schneller als die bewiesene Rate $`1/C`$: Der Code
+findet $`C^2(\langle r\rangle_C-(2\ln2-1))`$ zwischen $`0.14`$ und $`0.17`$ für $`C=1,2,4`$, also einen Abfall wie $`1/C^2`$, bis die
+Abweichung unter den statistischen Fehler fällt. Dieses $`1/C^2`$-Verhalten ist ein Ergebnis der Rechnung, kein Satz dieses
+Kurses.
 
 Dasselbe geschieht in einem physikalischen Modell. Die Heisenberg-Kette mit Zufallsfeldern
 (Kapitel 9) erhält die Magnetisierung, also liegt ihr Hamiltonoperator in
 $`\bigoplus_{N=0}^LM_{\binom LN}`$ (Proposition 9.1). Ihre Blöcke sind *nicht* unabhängig – sie
-hängen alle von denselben Zufallsfeldern ab –, sodass Satz 5.15 in der angegebenen Form nicht
-anwendbar ist; das folgende Experiment zeigt denselben Effekt, als numerische Beobachtung.
+hängen alle von denselben Zufallsfeldern ab –, sodass die Sätze 5.15 und 5.18 in der angegebenen Form nicht
+anwendbar sind; das folgende Experiment zeigt denselben Effekt, als numerische Beobachtung.
 
 ```python
 chain = SpinChain(10, complex_valued=False)                         # sectors N = 0, ..., 10

@@ -13,7 +13,7 @@ wrong in spectral statistics when the sectors are ignored.
 the phases must be fixed), that averaging over the unitary group of the algebra is the
 conditional expectation onto the centre, the Weingarten formula of order two, the Wigner
 surmise, the spacing ratio and its exact value for $`3\times3`$ Gaussian matrices, and why level statistics computed on a spectrum with mixed
-sectors look like those of independent levels.
+sectors look like those of independent levels, the more so the more sectors are mixed.
 
 *Computation:* the numerical checks of this chapter — [Tutorial 5](../tutorial/05_random_matrices.md).
 
@@ -102,7 +102,10 @@ The same proof with real Gaussian matrices gives the Haar measure of the orthogo
 with the correction $`\mathrm{diag}(\mathrm{sgn}\,R'_{ii})`$; this is written out in Theorem B.17.
 Without the correction $`\Lambda`$ the law of $`Q'`$ depends on the sign convention of the QR routine and
 need not be the Haar measure (the recipe with $`\Lambda`$ is due to F. Mezzadri, *How to
-generate random matrices from the classical compact groups*, Notices AMS 54 (2007), 592–604).
+generate random matrices from the classical compact groups*, Notices AMS 54 (2007), 592–604). For example, if the routine makes $`R'_{11}`$ real with the sign opposite to
+$`\mathrm{Re}\,Z_{11}`$ (as the Householder QR of LAPACK does), the first columns $`z_1=R'_{11}q'_1`$ of $`Z=Q'R'`$ give
+$`\mathrm{Re}\,Q'_{11}=-|\mathrm{Re}\,Z_{11}|/\|z_1\|<0`$ almost surely ($`\mathrm{Re}\,Z_{11}\sim N(0,\frac12)`$ vanishes with probability $`0`$);
+so $`\mathbb E\,\mathrm{Re}\,Q'_{11}<0`$, whereas $`\mathbb EU_{11}=0`$ for a Haar unitary (Corollary 5.5).
 
 *Computation:* the library's sampler `TypeIAlgebra.random_unitary` is the corrected QR of Theorem 5.3, and the uncorrected $`Q'`$ of `torch.linalg.qr` is not Haar distributed — [tutorial, Section 5.1](../tutorial/05_random_matrices.md#s-5-1).
 
@@ -484,7 +487,8 @@ $`s_i/s_{i+1}`$ of consecutive spacings has the law of $`e_i/e_{i+1}`$, and each
 
 Let $`H=\bigoplus_cH_c\in\mathcal M`$ be a random self-adjoint element with **independent blocks**,
 for example GOE blocks. As an operator on $`\mathbb C^D`$ its spectrum is the union of the spectra
-of the blocks. Inside a block the levels repel; we show that levels of different blocks do not.
+of the blocks. Inside a block the levels repel; we show that levels of different blocks do not, and that with many
+independent blocks the merged spectrum has the spacing ratios of independent levels.
 
 Assume that each block has a bounded continuous **level density** $`\rho_c`$:
 $`\mathbb E\sum_i\varphi(\lambda_i(H_c))=\int\varphi\,\rho_c`$ for bounded Borel $`\varphi`$ (so
@@ -525,7 +529,159 @@ coincide), so $`\int\rho_c\rho_d>0`$. Inside a $`2\times2`$ GOE block it is $`1-
 $`\varepsilon^2`$ (Proposition C.9). The level-repulsion test fails for the merged spectrum although
 every block is a perfect GOE.
 
-*Computation:* for $`C`$ independent GOE blocks the mean spacing ratio of the merged spectrum falls towards the value $`2\ln2-1`$ of independent levels as $`C`$ grows, and the Heisenberg chain with random fields (Chapter 9), whose blocks are not independent, shows the same effect; both are numerical observations — [tutorial, Section 5.4](../tutorial/05_random_matrices.md#s-5-4).
+With many sectors the merged spectrum loses every trace of the blocks: its spacing ratios become those of
+independent levels. We prove this, with a rate, for $`C`$ independent copies $`H_1,\dots,H_C`$ of one random
+self-adjoint $`k\times k`$ matrix $`H`$, with $`k`$ fixed and $`C\to\infty`$, for the levels in a window where the level
+density is positive. Two hypotheses on $`H`$ are used:
+
+- **(H1)** its level density $`\rho`$ is bounded and Lipschitz: $`\rho\le\rho_{\max}`$ and $`|\rho(x)-\rho(y)|\le L|x-y|`$;
+- **(H2)** its smallest spacing $`\delta=\min_i(\lambda_{i+1}-\lambda_i)`$ ($`\delta=+\infty`$ if $`k=1`$) satisfies
+  $`P(\delta\le\varepsilon)\le K\varepsilon^2`$ for all $`\varepsilon\ge0`$.
+
+(H2) is a weak form of level repulsion inside the block; with $`\varepsilon=0`$ it says that the spectrum of $`H`$ is
+simple almost surely.
+
+<a id="r-5-16"></a>
+
+**Lemma 5.16 (GOE and GUE blocks).** GOE and GUE matrices of every size $`n\ge1`$ satisfy (H1) and (H2), and their
+level density is positive everywhere.
+
+*Proof.* Positivity was shown after Theorem 5.15. *(H2).* For $`n=1`$ there is nothing to prove. For $`n\ge2`$ and
+$`0\le\varepsilon<1`$, Proposition C.9 gives a constant $`K_0`$ with $`P(\delta\le\varepsilon)\le P(\delta<\varepsilon')\le K_0\varepsilon'^{\beta+1}\le K_0\varepsilon'^2`$
+for every $`\varepsilon'\in(\varepsilon,1]`$; let $`\varepsilon'\downarrow\varepsilon`$. With $`K=\max(K_0,1)`$ the bound also holds for $`\varepsilon\ge1`$.
+*(H1).* $`\rho`$ is bounded by Corollary C.8. In its notation, with $`x\in\mathbb R`$ and $`y\in\mathbb R^{n-1}`$,
+$`|\Delta(x,y)|=|\Delta(y)|\prod_i|x-y_i|`$, so
+```math
+\rho(x)=\frac{n}{n!\,Z_{n,\beta}}\int_{\mathbb R^{n-1}}|\Delta(y)|^\beta e^{-|y|^2/2}\,g_y(x)\,dy,\qquad
+g_y(x)=f_0(x)\prod_{i=1}^{n-1}f_i(x),
+```
+with $`f_0(x)=e^{-x^2/(2n)}`$ and $`f_i(x)=|x-y_i|^\beta e^{-x^2/(2n)}`$ (for $`n=1`$ there is no $`y`$, and $`\rho=f_0/Z_{1,\beta}`$). Let
+$`a=(\beta+1)\sup_x(1+|x|)^{\beta+1}e^{-x^2/(2n)}<\infty`$. From $`|x-y_i|\le(1+|x|)(1+|y_i|)`$ we get $`|f_i|\le a(1+|y_i|)^\beta`$, and $`f_i`$ is
+continuous, continuously differentiable off $`y_i`$, with $`|f_i'(x)|\le\big(\beta|x-y_i|^{\beta-1}+|x||x-y_i|^\beta\big)e^{-x^2/(2n)}\le a(1+|y_i|)^\beta`$.
+By the mean value theorem on each side of $`y_i`$, $`f_i`$ is Lipschitz with constant $`a(1+|y_i|)^\beta`$; likewise $`f_0`$ with
+constant $`a`$, and $`|f_0|\le1\le a`$. Writing the difference of two products as a telescoping sum,
+$`|g_y(x)-g_y(x')|\le\sum_i|f_i(x)-f_i(x')|\prod_{j\neq i}\sup|f_j|\le na^n\prod_i(1+|y_i|)^\beta\,|x-x'|`$. Hence $`\rho`$ is
+Lipschitz with $`L=\frac{n^2a^n}{n!\,Z_{n,\beta}}\int|\Delta(y)|^\beta\prod_i(1+|y_i|)^\beta e^{-|y|^2/2}dy`$, which is finite by the bound
+$`|\Delta(y)|\le\prod_i(1+|y_i|)^{n-2}`$ of the proof of Theorem C.7. $`\square`$
+
+Let $`\Lambda_c`$ be the set of levels of $`H_c`$; the **merged spectrum of $`m`$ blocks** is $`\Lambda_1\cup\dots\cup\Lambda_m`$. For a point
+$`x`$ let $`L_m(x)`$ and $`R_m(x)`$ be the distances from $`x`$ to the nearest level of the merged spectrum of $`m`$ blocks below and above
+$`x`$ ($`+\infty`$ if there is none), and, when both are finite, $`r_m(x)=\min(L_m(x),R_m(x))/\max(L_m(x),R_m(x))`$. For an interval
+$`J`$ of length $`|J|`$ let $`N(J)`$ be the number of levels of $`H`$ in $`J`$, $`\rho(J)=\int_J\rho=\mathbb EN(J)`$ and $`\sigma(J)=P(N(J)=0)`$.
+
+<a id="r-5-17"></a>
+
+**Lemma 5.17 (the two gaps around a fixed point).** Assume (H1) and (H2), and let $`\ell,\rho_*>0`$ and $`x\in\mathbb R`$ with
+$`\rho\ge\rho_*`$ on $`[x-\ell,x+\ell]`$. There is a constant $`A`$, depending only on $`k,K,L,\rho_{\max},\rho_*,\ell`$, such that for
+all $`m\ge1`$ and $`0\le t\le1`$
+```math
+\Big|P\big(L_m(x),R_m(x)<\infty,\ r_m(x)\le t\big)-\frac{2t}{1+t}\Big|\le\frac Am .
+```
+
+*Proof.* For $`m\le2`$ any $`A\ge2`$ will do; let $`m\ge3`$. *One block.* Since $`1\{N\ge1\}\le N\le k\,1\{N\ge1\}`$, taking
+expectations gives (1): $`1-\rho(J)\le\sigma(J)\le1-\rho(J)/k\le e^{-\rho(J)/k}`$. If $`N(J)\ge2`$, two levels lie in $`J`$ and
+$`\delta\le|J|`$; as $`N-1\{N\ge1\}\le k\,1\{N\ge2\}`$, (H2) gives (2): $`\sigma(J)\le1-\rho(J)+kK|J|^2`$. For $`c>0`$, by Tonelli's
+theorem and (H2),
+```math
+\mathbb Ee^{-c\delta}=\int_0^1P\big(e^{-c\delta}>u\big)\,du\le\int_0^1\frac{K\ln^2u}{c^2}\,du=\frac{2K}{c^2}.\qquad(3)
+```
+*Simplicity.* By (H2) with $`\varepsilon=0`$ each block has a simple spectrum almost surely; by Theorem 5.15 with
+$`\psi(u,v)=1\{u=v\}`$ (the diagonal is a null set) two blocks have no common level almost surely; and $`x`$ is almost surely not
+a level, since $`\mathbb EN(\{x\})=0`$.
+
+*A formula.* Write $`\Lambda`$ for the merged spectrum of $`m`$ blocks, $`L,R`$ for $`L_m(x),R_m(x)`$, fix $`t`$, and let
+$`J_b=[x-tb,x+b)`$ and $`\sigma_b=\sigma(J_b)`$ for $`b>0`$; $`J_b`$ grows with $`b`$, so $`\sigma_b`$ is nonincreasing. Almost surely
+```math
+1\{R<\infty,\ L>tR\}=\sum_{y\in\Lambda,\ y>x}1\{\Lambda\cap J_{y-x}=\{y\}\},
+```
+since for $`y=x+R`$ the other levels in $`J_R`$ are those in $`[x-tR,x)`$, which exist iff $`L\le tR`$, and for $`y>x+R`$ the level
+$`x+R`$ lies in $`J_{y-x}`$. Split the sum according to the block of $`y`$. The blocks are independent and have the same law, and
+given the levels of the block of $`y`$, the other $`m-1`$ blocks miss $`J_{y-x}`$ with probability $`\sigma_{y-x}^{m-1}`$; by Fubini's
+theorem as in the proof of Theorem 5.15,
+```math
+P(R<\infty,\ L>tR)=m\,\mathbb E\sum_{y\in\Lambda_1,\ y>x}1\{\Lambda_1\cap J_{y-x}=\{y\}\}\,\sigma_{y-x}^{m-1}=M-E_1,
+```
+where $`M=m\,\mathbb E\sum_{y\in\Lambda_1,y>x}\sigma_{y-x}^{m-1}=m\int_0^\infty\rho(x+b)\sigma_b^{m-1}db`$ (definition of $`\rho`$) and $`E_1\ge0`$
+is the same expectation with $`1\{\Lambda_1\cap J_{y-x}\neq\{y\}\}`$.
+
+*$`E_1`$ is small.* On that event $`H_1`$ has a second level within distance $`|J_{y-x}|\le2(y-x)`$ of $`y`$, so $`y-x\ge\delta_1/2`$,
+where $`\delta_1`$ is the smallest spacing of $`H_1`$. By (1), $`\sigma_b\le e^{-\rho_*\min(b,\ell)/k}`$, as $`J_b\supseteq[x,x+\min(b,\ell))`$. With at
+most $`k`$ terms, $`\mu=(m-1)\rho_*/k`$ and (3),
+$`E_1\le mk\,\mathbb Ee^{-\mu\min(\delta_1/2,\ell)}\le mk\big(8Kk^2/((m-1)\rho_*)^2+e^{-(m-1)\rho_*\ell/k}\big)`$.
+
+*$`M`$ is close to $`\frac1{1+t}`$.* Let $`\rho_0=\rho(x)`$, $`a=(1+t)\rho_0`$ and $`b_1=\min(\ell,1/a)\ge b_0=\min(\ell,1/(2\rho_{\max}))`$.
+Then $`m\int_0^{1/a}\rho_0(1-ab)^{m-1}db=\rho_0/a=\frac1{1+t}`$. For $`0<b\le b_1`$: $`|\rho(J_b)-ab|\le\int_{J_b}|\rho-\rho_0|\le L\frac{(1+t^2)b^2}2\le Lb^2`$,
+so by (1) and (2) $`|\sigma_b-(1-ab)|\le K_1b^2`$ with $`K_1=L+4kK`$; both numbers lie in $`[0,e^{-\rho_*b/k}]`$; and
+$`|\rho(x+b)-\rho_0|\le Lb`$. By $`|u^n-v^n|\le n|u-v|\max(u,v)^{n-1}`$ for $`u,v\ge0`$,
+```math
+\big|\rho(x+b)\sigma_b^{m-1}-\rho_0(1-ab)^{m-1}\big|\le\rho_{\max}(m-1)K_1b^2e^{-(m-2)\rho_*b/k}+Lb\,e^{-(m-1)\rho_*b/k}.
+```
+With $`\int_0^\infty b^je^{-\lambda b}db=j!/\lambda^{j+1}`$, $`m`$ times the integral of this over $`(0,b_1]`$ is at most
+$`2m(m-1)\rho_{\max}K_1k^3/((m-2)\rho_*)^3+mLk^2/((m-1)\rho_*)^2`$. The remaining parts are
+$`m\int_{b_1}^\infty\rho(x+b)\sigma_b^{m-1}db\le mk\,e^{-(m-1)\rho_*b_0/k}`$ (as $`\int\rho=k`$ and $`\sigma_b\le\sigma_{b_1}`$) and
+$`m\int_{b_1}^{1/a}\rho_0(1-ab)^{m-1}db\le(1-ab_1)^m\le e^{-m\rho_*b_0}`$.
+
+*Both sides.* The same argument for the matrices $`-H_c`$ (level density $`\rho(-\,\cdot)`$, same hypotheses) at the point $`-x`$
+gives $`P(L<\infty,\ R>tL)=M'-E_1'`$ with the same bounds. For $`t<1`$ the events $`\{R<\infty,\ L\le tR\}`$ and
+$`\{L<\infty,\ R\le tL\}`$ are disjoint (together they give $`L\le t^2L`$, while $`L>0`$), and their union is
+$`\{L,R<\infty,\ r_m(x)\le t\}`$, so
+```math
+P\big(L,R<\infty,\ r_m(x)\le t\big)-\frac{2t}{1+t}=-P(R=\infty)-P(L=\infty)-\Big(M-\frac1{1+t}\Big)-\Big(M'-\frac1{1+t}\Big)+E_1+E_1'.
+```
+By (1), $`P(R=\infty)\le\sigma((x,x+\ell))^m\le e^{-m\rho_*\ell/k}`$, and likewise for $`L`$; for $`t=1`$ the probability is
+$`1-P(L=\infty\text{ or }R=\infty)`$. Every term is at most a constant over $`m`$, because $`m(m-1)/(m-2)^3\le18/m`$,
+$`m/(m-1)^2\le4/m`$ and $`me^{-(m-1)c}\le4/(mc^2)`$ for $`c>0`$ (from $`u^2e^{-u}\le1`$). $`\square`$
+
+<a id="r-5-18"></a>
+
+**Theorem 5.18 (many independent sectors look like independent levels).** Assume (H1) and (H2). Let $`I=[\alpha,\gamma]`$
+and $`\ell,\rho_*>0`$ with $`\rho\ge\rho_*`$ on $`[\alpha-\ell,\gamma+\ell]`$, let $`C\ge2`$, and let $`\Lambda`$ be the merged spectrum of
+$`C`$ blocks (simple almost surely). For a level $`y`$ with neighbours $`y_-<y<y_+`$ in $`\Lambda`$ let
+$`r(y)=\min(y-y_-,y_+-y)/\max(y-y_-,y_+-y)`$. Let $`N(I)`$ be the number of levels in $`I`$, $`N_t(I)`$ the number of those
+with two neighbours and $`r(y)\le t`$, and $`S(I)`$ the sum of $`r(y)`$ over the levels in $`I`$ with two neighbours. Then
+$`\mathbb EN(I)=C\rho(I)`$, and there is a constant $`A`$, depending only on $`k,K,L,\rho_{\max},\rho_*,\ell`$ and $`\rho(I)`$, such
+that for $`0\le t\le1`$
+```math
+\Big|\frac{\mathbb EN_t(I)}{\mathbb EN(I)}-\frac{2t}{1+t}\Big|\le\frac AC,\qquad
+\Big|\frac{\mathbb ES(I)}{\mathbb EN(I)}-(2\ln2-1)\Big|\le\frac AC .
+```
+
+The ratios of expectations are what a computation pooled over many samples estimates: the fraction of the levels in
+$`I`$ with $`r\le t`$, and their mean spacing ratio. By Lemma 5.16 the theorem applies to independent GOE or GUE blocks of
+any fixed size and to every compact interval $`I`$.
+
+*Proof.* $`\mathbb EN(I)=\sum_c\rho(I)`$. The blocks have the same law, so
+$`\mathbb EN_t(I)=C\,\mathbb E\sum_{y\in\Lambda_1\cap I}1\{y\text{ has two neighbours},\ r(y)\le t\}`$. Let $`m=C-1`$, and for
+$`y\in\Lambda_1`$ let $`L'(y),R'(y)`$ be its gaps in the merged spectrum $`\Lambda'`$ of $`H_2,\dots,H_C`$ (as in Lemma 5.17) and $`r'(y)`$
+their ratio. The other levels of $`H_1`$ are at distance $`\ge\delta_1`$ from $`y`$; so if $`\max(L'(y),R'(y))<\delta_1`$, the neighbours of
+$`y`$ in $`\Lambda`$ are those in $`\Lambda'`$, and $`r(y)=r'(y)`$. Now $`\Lambda'`$ is independent of $`H_1`$, and $`\max(L'(y),R'(y))\ge s`$
+requires $`\Lambda'`$ to miss $`(y-s,y)`$ or $`(y,y+s)`$, which by (1) has probability at most $`2e^{-m\rho_*\min(s,\ell)/k}`$ for
+$`y\in I`$. By Fubini's theorem (as in the proof of Theorem 5.15) and (3),
+```math
+\Big|\mathbb EN_t(I)-C\,\mathbb E\sum_{y\in\Lambda_1\cap I}p_m(y,t)\Big|\le2Ck\big(\mathbb Ee^{-m\rho_*\delta_1/k}+e^{-m\rho_*\ell/k}\big)
+\le2Ck\Big(\frac{2Kk^2}{(m\rho_*)^2}+e^{-m\rho_*\ell/k}\Big),
+```
+where $`p_m(x,t)=P\big(L_m(x),R_m(x)<\infty,\ r_m(x)\le t\big)`$, a Borel function of $`x`$ by Fubini's theorem. By the definition of
+$`\rho`$, $`\mathbb E\sum_{y\in\Lambda_1\cap I}p_m(y,t)=\int_I\rho(x)p_m(x,t)\,dx`$, and Lemma 5.17 applies at every $`x\in I`$ with one
+constant $`A_0`$. Dividing by $`C\rho(I)`$,
+$`\big|\mathbb EN_t(I)/\mathbb EN(I)-\frac{2t}{1+t}\big|\le A_0/m+2k\big(2Kk^2/(m\rho_*)^2+e^{-m\rho_*\ell/k}\big)/\rho(I)`$, which is at
+most a constant over $`C`$ since $`m\ge C/2`$. For the mean, $`r(y)=\int_0^11\{r(y)>t\}\,dt`$, so by Tonelli's theorem
+$`\mathbb ES(I)=\int_0^1\big(\mathbb EN_1(I)-\mathbb EN_t(I)\big)dt`$, while $`\int_0^1\big(1-\frac{2t}{1+t}\big)dt=\int_0^1\frac{1-t}{1+t}dt=2\ln2-1`$
+(Proposition 5.14(a)); so the second deviation is at most twice the bound of the first. $`\square`$
+
+The proof shows the mechanism. A level $`y`$ of one block sees the other $`C-1`$ blocks as an independent configuration,
+whose levels next to $`y`$ lie at distances of order $`1/(C\rho)`$; at such distances the other levels of the block of $`y`$ are
+absent with high probability (this is where $`C\to\infty`$ and (H2) enter), so $`r(y)`$ is the ratio in which $`y`$ divides the
+gap of the other blocks that contains it. For a constant density and at most one level per block near $`y`$ the formula of
+the proof gives exactly the value of independent levels, $`m\int_0^{1/a}\rho_0(1-ab)^{m-1}db=\frac1{1+t}`$, for every $`m`$; the
+errors come from the variation of $`\rho`$ over a gap and from two levels of one block in a gap. The rate $`1/C`$ is what the proof
+gives; for GOE blocks the deviation found numerically decreases like $`1/C^2`$ (a numerical observation, in the tutorial).
+That superpositions of many independent sparse point processes are close to Poisson processes is a classical theme of
+probability (B. Grigelionis, Theory Probab. Appl. 8 (1963), 177–182); Theorem 5.18 is the case needed here, with a proof
+within this course. Independence of the blocks is essential to the proof: the theorem does not apply to the sectors of the
+Heisenberg chain with random fields (Chapter 9), which all depend on the same fields.
+
+*Computation:* Theorem 5.18 for $`C`$ independent GOE blocks of size $`64`$, with a check of the rate $`1/C`$; and the Heisenberg chain with random fields, whose blocks are not independent, where the same effect is a numerical observation — [tutorial, Section 5.4](../tutorial/05_random_matrices.md#s-5-4).
 
 > **Physical meaning** (physical interpretation, not a theorem of this course). Levels with different
 > conserved quantum numbers do not interact, so they cross freely; only levels of the same symmetry repel. A spectrum that mixes symmetry sectors

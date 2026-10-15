@@ -14,7 +14,7 @@ Haar (et pourquoi il faut fixer les phases), que la moyenne sur le groupe unitai
 l'espérance conditionnelle sur le centre, la formule de Weingarten d'ordre deux, la surmise de
 Wigner, le rapport d'espacements et sa valeur exacte pour les matrices gaussiennes $`3\times3`$, et
 pourquoi les statistiques de niveaux calculées sur un spectre où les secteurs sont mélangés
-ressemblent à celles de niveaux indépendants.
+ressemblent à celles de niveaux indépendants, d'autant plus que les secteurs mélangés sont nombreux.
 
 *Calcul :* les vérifications numériques de ce chapitre — [Tutoriel 5](../../tutorial/fr/05_random_matrices.md).
 
@@ -113,7 +113,10 @@ orthogonal $`O(k)`$, avec la correction $`\mathrm{diag}(\mathrm{sgn}\,R'_{ii})`$
 que détaille le théorème B.17. Sans la correction $`\Lambda`$, la loi de $`Q'`$ dépend de la convention
 de signe de la routine QR et n'est pas nécessairement la mesure de Haar (la recette avec $`\Lambda`$
 est due à F. Mezzadri, *How to generate random matrices from the classical compact groups*,
-Notices AMS 54 (2007), 592–604).
+Notices AMS 54 (2007), 592–604). Par exemple, si la routine rend $`R'_{11}`$ réel de signe opposé à celui de
+$`\mathrm{Re}\,Z_{11}`$ (comme le fait la QR de Householder de LAPACK), les premières colonnes $`z_1=R'_{11}q'_1`$ de $`Z=Q'R'`$ donnent
+$`\mathrm{Re}\,Q'_{11}=-|\mathrm{Re}\,Z_{11}|/\|z_1\|<0`$ presque sûrement ($`\mathrm{Re}\,Z_{11}\sim N(0,\frac12)`$ s'annule avec probabilité $`0`$) ;
+donc $`\mathbb E\,\mathrm{Re}\,Q'_{11}<0`$, alors que $`\mathbb EU_{11}=0`$ pour un unitaire de Haar (corollaire 5.5).
 
 *Calcul :* l'échantillonneur de la bibliothèque `TypeIAlgebra.random_unitary` est la QR corrigée du théorème 5.3, et le $`Q'`$ non corrigé de `torch.linalg.qr` n'est pas distribué selon la loi de Haar — [tutoriel, section 5.1](../../tutorial/fr/05_random_matrices.md#s-5-1).
 
@@ -542,7 +545,8 @@ d'espacements $`r_i`$ a la loi de $`r`$ dans (a) (théorème A.25 et corollaire 
 Soit $`H=\bigoplus_cH_c\in\mathcal M`$ un élément autoadjoint aléatoire à **blocs indépendants**, par
 exemple des blocs GOE. En tant qu'opérateur sur $`\mathbb C^D`$, son spectre est la réunion des
 spectres des blocs. À l'intérieur d'un bloc, les niveaux se repoussent ; nous montrons que les
-niveaux de blocs différents ne se repoussent pas.
+niveaux de blocs différents ne se repoussent pas, et qu'avec de nombreux blocs indépendants le spectre
+fusionné a les rapports d'espacements de niveaux indépendants.
 
 Supposons que chaque bloc ait une **densité de niveaux** $`\rho_c`$ continue et bornée :
 $`\mathbb E\sum_i\varphi(\lambda_i(H_c))=\int\varphi\,\rho_c`$ pour toute $`\varphi`$ borélienne bornée
@@ -587,7 +591,168 @@ l'intérieur d'un bloc GOE $`n\times n`$ elle est au plus une constante fois $`\
 (proposition C.9). Le test de répulsion des niveaux échoue pour le spectre fusionné, bien que
 chaque bloc soit un GOE parfait.
 
-*Calcul :* pour $`C`$ blocs GOE indépendants, le rapport d'espacements moyen du spectre fusionné décroît vers la valeur $`2\ln2-1`$ des niveaux indépendants quand $`C`$ croît, et la chaîne de Heisenberg en champs aléatoires (chapitre 9), dont les blocs ne sont pas indépendants, montre le même effet ; ce sont deux observations numériques — [tutoriel, section 5.4](../../tutorial/fr/05_random_matrices.md#s-5-4).
+Avec de nombreux secteurs, le spectre fusionné perd toute trace des blocs : ses rapports d'espacements deviennent ceux
+de niveaux indépendants. Nous le démontrons, avec une vitesse, pour $`C`$ copies indépendantes $`H_1,\dots,H_C`$ d'une même
+matrice autoadjointe aléatoire $`H`$ de taille $`k\times k`$, avec $`k`$ fixé et $`C\to\infty`$, pour les niveaux d'une fenêtre
+où la densité de niveaux est strictement positive. Deux hypothèses sur $`H`$ sont utilisées :
+
+- **(H1)** sa densité de niveaux $`\rho`$ est bornée et lipschitzienne : $`\rho\le\rho_{\max}`$ et $`|\rho(x)-\rho(y)|\le L|x-y|`$ ;
+- **(H2)** son plus petit espacement $`\delta=\min_i(\lambda_{i+1}-\lambda_i)`$ ($`\delta=+\infty`$ si $`k=1`$) vérifie
+  $`P(\delta\le\varepsilon)\le K\varepsilon^2`$ pour tout $`\varepsilon\ge0`$.
+
+(H2) est une forme faible de répulsion des niveaux à l'intérieur du bloc ; avec $`\varepsilon=0`$, elle dit que le spectre de
+$`H`$ est simple presque sûrement.
+
+<a id="r-5-16"></a>
+
+**Lemme 5.16 (blocs GOE et GUE).** Les matrices GOE et GUE de toute taille $`n\ge1`$ vérifient (H1) et (H2), et leur
+densité de niveaux est strictement positive partout.
+
+*Démonstration.* La positivité a été montrée après le théorème 5.15. *(H2).* Pour $`n=1`$, il n'y a rien à démontrer. Pour
+$`n\ge2`$ et $`0\le\varepsilon<1`$, la proposition C.9 fournit une constante $`K_0`$ telle que
+$`P(\delta\le\varepsilon)\le P(\delta<\varepsilon')\le K_0\varepsilon'^{\beta+1}\le K_0\varepsilon'^2`$ pour tout $`\varepsilon'\in(\varepsilon,1]`$ ; faire
+$`\varepsilon'\downarrow\varepsilon`$. Avec $`K=\max(K_0,1)`$, la borne vaut aussi pour $`\varepsilon\ge1`$.
+*(H1).* $`\rho`$ est bornée par le corollaire C.8. Dans ses notations, avec $`x\in\mathbb R`$ et $`y\in\mathbb R^{n-1}`$,
+$`|\Delta(x,y)|=|\Delta(y)|\prod_i|x-y_i|`$, donc
+```math
+\rho(x)=\frac{n}{n!\,Z_{n,\beta}}\int_{\mathbb R^{n-1}}|\Delta(y)|^\beta e^{-|y|^2/2}\,g_y(x)\,dy,\qquad
+g_y(x)=f_0(x)\prod_{i=1}^{n-1}f_i(x),
+```
+avec $`f_0(x)=e^{-x^2/(2n)}`$ et $`f_i(x)=|x-y_i|^\beta e^{-x^2/(2n)}`$ (pour $`n=1`$ il n'y a pas de $`y`$, et $`\rho=f_0/Z_{1,\beta}`$).
+Soit $`a=(\beta+1)\sup_x(1+|x|)^{\beta+1}e^{-x^2/(2n)}<\infty`$. De $`|x-y_i|\le(1+|x|)(1+|y_i|)`$ on tire $`|f_i|\le a(1+|y_i|)^\beta`$, et
+$`f_i`$ est continue, de classe $`C^1`$ hors de $`y_i`$, avec
+$`|f_i'(x)|\le\big(\beta|x-y_i|^{\beta-1}+|x||x-y_i|^\beta\big)e^{-x^2/(2n)}\le a(1+|y_i|)^\beta`$. Par l'inégalité des accroissements finis de
+chaque côté de $`y_i`$, $`f_i`$ est lipschitzienne de constante $`a(1+|y_i|)^\beta`$ ; de même $`f_0`$ de constante $`a`$, et
+$`|f_0|\le1\le a`$. En écrivant la différence de deux produits comme une somme télescopique,
+$`|g_y(x)-g_y(x')|\le\sum_i|f_i(x)-f_i(x')|\prod_{j\neq i}\sup|f_j|\le na^n\prod_i(1+|y_i|)^\beta\,|x-x'|`$. Donc $`\rho`$ est
+lipschitzienne avec $`L=\frac{n^2a^n}{n!\,Z_{n,\beta}}\int|\Delta(y)|^\beta\prod_i(1+|y_i|)^\beta e^{-|y|^2/2}dy`$, qui est fini grâce à la
+borne $`|\Delta(y)|\le\prod_i(1+|y_i|)^{n-2}`$ de la démonstration du théorème C.7. $`\square`$
+
+Soit $`\Lambda_c`$ l'ensemble des niveaux de $`H_c`$ ; le **spectre fusionné de $`m`$ blocs** est $`\Lambda_1\cup\dots\cup\Lambda_m`$. Pour
+un point $`x`$, soient $`L_m(x)`$ et $`R_m(x)`$ les distances de $`x`$ au niveau le plus proche du spectre fusionné de $`m`$
+blocs au-dessous et au-dessus de $`x`$ ($`+\infty`$ s'il n'y en a pas) et, lorsque les deux sont finies,
+$`r_m(x)=\min(L_m(x),R_m(x))/\max(L_m(x),R_m(x))`$. Pour un intervalle $`J`$ de longueur $`|J|`$, soient $`N(J)`$ le nombre de
+niveaux de $`H`$ dans $`J`$, $`\rho(J)=\int_J\rho=\mathbb EN(J)`$ et $`\sigma(J)=P(N(J)=0)`$.
+
+<a id="r-5-17"></a>
+
+**Lemme 5.17 (les deux lacunes autour d'un point fixé).** Supposons (H1) et (H2), et soient $`\ell,\rho_*>0`$ et
+$`x\in\mathbb R`$ avec $`\rho\ge\rho_*`$ sur $`[x-\ell,x+\ell]`$. Il existe une constante $`A`$, ne dépendant que de
+$`k,K,L,\rho_{\max},\rho_*,\ell`$, telle que pour tout $`m\ge1`$ et $`0\le t\le1`$
+```math
+\Big|P\big(L_m(x),R_m(x)<\infty,\ r_m(x)\le t\big)-\frac{2t}{1+t}\Big|\le\frac Am .
+```
+
+*Démonstration.* Pour $`m\le2`$, tout $`A\ge2`$ convient ; soit $`m\ge3`$. *Un bloc.* Comme
+$`1\{N\ge1\}\le N\le k\,1\{N\ge1\}`$, en prenant les espérances on obtient (1) : $`1-\rho(J)\le\sigma(J)\le1-\rho(J)/k\le e^{-\rho(J)/k}`$.
+Si $`N(J)\ge2`$, deux niveaux sont dans $`J`$ et $`\delta\le|J|`$ ; comme $`N-1\{N\ge1\}\le k\,1\{N\ge2\}`$, (H2) donne (2) :
+$`\sigma(J)\le1-\rho(J)+kK|J|^2`$. Pour $`c>0`$, d'après le théorème de Tonelli et (H2),
+```math
+\mathbb Ee^{-c\delta}=\int_0^1P\big(e^{-c\delta}>u\big)\,du\le\int_0^1\frac{K\ln^2u}{c^2}\,du=\frac{2K}{c^2}.\qquad(3)
+```
+*Simplicité.* D'après (H2) avec $`\varepsilon=0`$, chaque bloc a un spectre simple presque sûrement ; d'après le théorème 5.15
+avec $`\psi(u,v)=1\{u=v\}`$ (la diagonale est négligeable), deux blocs n'ont presque sûrement aucun niveau commun ; et $`x`$
+n'est presque sûrement pas un niveau, car $`\mathbb EN(\{x\})=0`$.
+
+*Une formule.* Notons $`\Lambda`$ le spectre fusionné de $`m`$ blocs, $`L,R`$ pour $`L_m(x),R_m(x)`$, fixons $`t`$ et posons
+$`J_b=[x-tb,x+b)`$ et $`\sigma_b=\sigma(J_b)`$ pour $`b>0`$ ; $`J_b`$ croît avec $`b`$, donc $`\sigma_b`$ est décroissante.
+Presque sûrement
+```math
+1\{R<\infty,\ L>tR\}=\sum_{y\in\Lambda,\ y>x}1\{\Lambda\cap J_{y-x}=\{y\}\},
+```
+car pour $`y=x+R`$ les autres niveaux dans $`J_R`$ sont ceux de $`[x-tR,x)`$, qui existent si et seulement si $`L\le tR`$, et pour
+$`y>x+R`$ le niveau $`x+R`$ est dans $`J_{y-x}`$. Séparons la somme selon le bloc de $`y`$. Les blocs sont indépendants et de
+même loi, et, les niveaux du bloc de $`y`$ étant donnés, les $`m-1`$ autres blocs évitent $`J_{y-x}`$ avec probabilité
+$`\sigma_{y-x}^{m-1}`$ ; d'après le théorème de Fubini, comme dans la démonstration du théorème 5.15,
+```math
+P(R<\infty,\ L>tR)=m\,\mathbb E\sum_{y\in\Lambda_1,\ y>x}1\{\Lambda_1\cap J_{y-x}=\{y\}\}\,\sigma_{y-x}^{m-1}=M-E_1,
+```
+où $`M=m\,\mathbb E\sum_{y\in\Lambda_1,y>x}\sigma_{y-x}^{m-1}=m\int_0^\infty\rho(x+b)\sigma_b^{m-1}db`$ (définition de $`\rho`$) et $`E_1\ge0`$
+est la même espérance avec $`1\{\Lambda_1\cap J_{y-x}\neq\{y\}\}`$.
+
+*$`E_1`$ est petit.* Sur cet événement, $`H_1`$ a un second niveau à distance $`\le|J_{y-x}|\le2(y-x)`$ de $`y`$, donc
+$`y-x\ge\delta_1/2`$, où $`\delta_1`$ est le plus petit espacement de $`H_1`$. D'après (1), $`\sigma_b\le e^{-\rho_*\min(b,\ell)/k}`$, car
+$`J_b\supseteq[x,x+\min(b,\ell))`$. Avec au plus $`k`$ termes, $`\mu=(m-1)\rho_*/k`$ et (3),
+$`E_1\le mk\,\mathbb Ee^{-\mu\min(\delta_1/2,\ell)}\le mk\big(8Kk^2/((m-1)\rho_*)^2+e^{-(m-1)\rho_*\ell/k}\big)`$.
+
+*$`M`$ est proche de $`\frac1{1+t}`$.* Soient $`\rho_0=\rho(x)`$, $`a=(1+t)\rho_0`$ et $`b_1=\min(\ell,1/a)\ge b_0=\min(\ell,1/(2\rho_{\max}))`$.
+Alors $`m\int_0^{1/a}\rho_0(1-ab)^{m-1}db=\rho_0/a=\frac1{1+t}`$. Pour $`0<b\le b_1`$ :
+$`|\rho(J_b)-ab|\le\int_{J_b}|\rho-\rho_0|\le L\frac{(1+t^2)b^2}2\le Lb^2`$, donc d'après (1) et (2) $`|\sigma_b-(1-ab)|\le K_1b^2`$ avec
+$`K_1=L+4kK`$ ; les deux nombres sont dans $`[0,e^{-\rho_*b/k}]`$ ; et $`|\rho(x+b)-\rho_0|\le Lb`$. D'après
+$`|u^n-v^n|\le n|u-v|\max(u,v)^{n-1}`$ pour $`u,v\ge0`$,
+```math
+\big|\rho(x+b)\sigma_b^{m-1}-\rho_0(1-ab)^{m-1}\big|\le\rho_{\max}(m-1)K_1b^2e^{-(m-2)\rho_*b/k}+Lb\,e^{-(m-1)\rho_*b/k}.
+```
+Avec $`\int_0^\infty b^je^{-\lambda b}db=j!/\lambda^{j+1}`$, $`m`$ fois l'intégrale de ceci sur $`(0,b_1]`$ est au plus
+$`2m(m-1)\rho_{\max}K_1k^3/((m-2)\rho_*)^3+mLk^2/((m-1)\rho_*)^2`$. Les parties restantes sont
+$`m\int_{b_1}^\infty\rho(x+b)\sigma_b^{m-1}db\le mk\,e^{-(m-1)\rho_*b_0/k}`$ (car $`\int\rho=k`$ et $`\sigma_b\le\sigma_{b_1}`$) et
+$`m\int_{b_1}^{1/a}\rho_0(1-ab)^{m-1}db\le(1-ab_1)^m\le e^{-m\rho_*b_0}`$.
+
+*Des deux côtés.* Le même argument pour les matrices $`-H_c`$ (densité de niveaux $`\rho(-\,\cdot)`$, mêmes hypothèses) au point
+$`-x`$ donne $`P(L<\infty,\ R>tL)=M'-E_1'`$ avec les mêmes bornes. Pour $`t<1`$, les événements $`\{R<\infty,\ L\le tR\}`$ et
+$`\{L<\infty,\ R\le tL\}`$ sont disjoints (ensemble ils donneraient $`L\le t^2L`$, alors que $`L>0`$), et leur réunion est
+$`\{L,R<\infty,\ r_m(x)\le t\}`$, donc
+```math
+P\big(L,R<\infty,\ r_m(x)\le t\big)-\frac{2t}{1+t}=-P(R=\infty)-P(L=\infty)-\Big(M-\frac1{1+t}\Big)-\Big(M'-\frac1{1+t}\Big)+E_1+E_1'.
+```
+D'après (1), $`P(R=\infty)\le\sigma((x,x+\ell))^m\le e^{-m\rho_*\ell/k}`$, et de même pour $`L`$ ; pour $`t=1`$, la probabilité vaut
+$`1-P(L=\infty\text{ ou }R=\infty)`$. Chaque terme est au plus une constante divisée par $`m`$, car
+$`m(m-1)/(m-2)^3\le18/m`$, $`m/(m-1)^2\le4/m`$ et $`me^{-(m-1)c}\le4/(mc^2)`$ pour $`c>0`$ (d'après $`u^2e^{-u}\le1`$). $`\square`$
+
+<a id="r-5-18"></a>
+
+**Théorème 5.18 (de nombreux secteurs indépendants ressemblent à des niveaux indépendants).** Supposons (H1) et (H2).
+Soient $`I=[\alpha,\gamma]`$ et $`\ell,\rho_*>0`$ avec $`\rho\ge\rho_*`$ sur $`[\alpha-\ell,\gamma+\ell]`$, soit $`C\ge2`$, et soit
+$`\Lambda`$ le spectre fusionné de $`C`$ blocs (simple presque sûrement). Pour un niveau $`y`$ de voisins $`y_-<y<y_+`$ dans
+$`\Lambda`$, soit $`r(y)=\min(y-y_-,y_+-y)/\max(y-y_-,y_+-y)`$. Soient $`N(I)`$ le nombre de niveaux dans $`I`$, $`N_t(I)`$ le
+nombre de ceux qui ont deux voisins et $`r(y)\le t`$, et $`S(I)`$ la somme des $`r(y)`$ sur les niveaux de $`I`$ ayant deux
+voisins. Alors $`\mathbb EN(I)=C\rho(I)`$, et il existe une constante $`A`$, ne dépendant que de $`k,K,L,\rho_{\max},\rho_*,\ell`$ et
+$`\rho(I)`$, telle que pour $`0\le t\le1`$
+```math
+\Big|\frac{\mathbb EN_t(I)}{\mathbb EN(I)}-\frac{2t}{1+t}\Big|\le\frac AC,\qquad
+\Big|\frac{\mathbb ES(I)}{\mathbb EN(I)}-(2\ln2-1)\Big|\le\frac AC .
+```
+
+Les rapports d'espérances sont ce qu'estime un calcul qui regroupe de nombreux échantillons : la proportion des niveaux de
+$`I`$ ayant $`r\le t`$, et leur rapport d'espacements moyen. D'après le lemme 5.16, le théorème s'applique à des blocs GOE
+ou GUE indépendants de toute taille fixée et à tout intervalle compact $`I`$.
+
+*Démonstration.* $`\mathbb EN(I)=\sum_c\rho(I)`$. Les blocs ont la même loi, donc
+$`\mathbb EN_t(I)=C\,\mathbb E\sum_{y\in\Lambda_1\cap I}1\{y\text{ a deux voisins},\ r(y)\le t\}`$. Soit $`m=C-1`$ et, pour
+$`y\in\Lambda_1`$, soient $`L'(y),R'(y)`$ ses lacunes dans le spectre fusionné $`\Lambda'`$ de $`H_2,\dots,H_C`$ (comme dans le
+lemme 5.17) et $`r'(y)`$ leur rapport. Les autres niveaux de $`H_1`$ sont à distance $`\ge\delta_1`$ de $`y`$ ; donc si
+$`\max(L'(y),R'(y))<\delta_1`$, les voisins de $`y`$ dans $`\Lambda`$ sont ceux dans $`\Lambda'`$, et $`r(y)=r'(y)`$. Or $`\Lambda'`$ est
+indépendant de $`H_1`$, et $`\max(L'(y),R'(y))\ge s`$ exige que $`\Lambda'`$ évite $`(y-s,y)`$ ou $`(y,y+s)`$, ce qui d'après (1) a
+une probabilité au plus $`2e^{-m\rho_*\min(s,\ell)/k}`$ pour $`y\in I`$. D'après le théorème de Fubini (comme dans la
+démonstration du théorème 5.15) et (3),
+```math
+\Big|\mathbb EN_t(I)-C\,\mathbb E\sum_{y\in\Lambda_1\cap I}p_m(y,t)\Big|\le2Ck\big(\mathbb Ee^{-m\rho_*\delta_1/k}+e^{-m\rho_*\ell/k}\big)
+\le2Ck\Big(\frac{2Kk^2}{(m\rho_*)^2}+e^{-m\rho_*\ell/k}\Big),
+```
+où $`p_m(x,t)=P\big(L_m(x),R_m(x)<\infty,\ r_m(x)\le t\big)`$, fonction borélienne de $`x`$ d'après le théorème de Fubini.
+D'après la définition de $`\rho`$, $`\mathbb E\sum_{y\in\Lambda_1\cap I}p_m(y,t)=\int_I\rho(x)p_m(x,t)\,dx`$, et le lemme 5.17
+s'applique en tout $`x\in I`$ avec une même constante $`A_0`$. En divisant par $`C\rho(I)`$,
+$`\big|\mathbb EN_t(I)/\mathbb EN(I)-\frac{2t}{1+t}\big|\le A_0/m+2k\big(2Kk^2/(m\rho_*)^2+e^{-m\rho_*\ell/k}\big)/\rho(I)`$, qui est au
+plus une constante divisée par $`C`$ puisque $`m\ge C/2`$. Pour la moyenne, $`r(y)=\int_0^11\{r(y)>t\}\,dt`$, donc d'après le
+théorème de Tonelli $`\mathbb ES(I)=\int_0^1\big(\mathbb EN_1(I)-\mathbb EN_t(I)\big)dt`$, tandis que
+$`\int_0^1\big(1-\frac{2t}{1+t}\big)dt=\int_0^1\frac{1-t}{1+t}dt=2\ln2-1`$ (proposition 5.14(a)) ; la seconde déviation est donc au plus le
+double de la borne de la première. $`\square`$
+
+La démonstration montre le mécanisme. Un niveau $`y`$ d'un bloc voit les $`C-1`$ autres blocs comme une configuration
+indépendante, dont les niveaux voisins de $`y`$ sont à des distances d'ordre $`1/(C\rho)`$ ; à de telles distances, les autres
+niveaux du bloc de $`y`$ sont absents avec grande probabilité (c'est là qu'interviennent $`C\to\infty`$ et (H2)), de sorte que
+$`r(y)`$ est le rapport dans lequel $`y`$ partage la lacune des autres blocs qui le contient. Pour une densité constante et au
+plus un niveau par bloc près de $`y`$, la formule de la démonstration donne exactement la valeur des niveaux indépendants,
+$`m\int_0^{1/a}\rho_0(1-ab)^{m-1}db=\frac1{1+t}`$, pour tout $`m`$ ; les erreurs proviennent de la variation de $`\rho`$ sur une
+lacune et de deux niveaux d'un même bloc dans une lacune. La vitesse $`1/C`$ est celle que donne la démonstration ; pour
+des blocs GOE, l'écart trouvé numériquement décroît comme $`1/C^2`$ (une observation numérique, dans le tutoriel). Que les
+superpositions de nombreux processus ponctuels indépendants et clairsemés soient proches de processus de Poisson est un
+thème classique des probabilités (B. Grigelionis, Theory Probab. Appl. 8 (1963), 177–182) ; le théorème 5.18 en est le
+cas utile ici, avec une démonstration interne à ce cours. L'indépendance des blocs est essentielle à la démonstration : le
+théorème ne s'applique pas aux secteurs de la chaîne de Heisenberg en champs aléatoires (chapitre 9), qui dépendent tous
+des mêmes champs.
+
+*Calcul :* le théorème 5.18 pour $`C`$ blocs GOE indépendants de taille $`64`$, avec une vérification de la vitesse $`1/C`$ ; et la chaîne de Heisenberg en champs aléatoires, dont les blocs ne sont pas indépendants, où le même effet est une observation numérique — [tutoriel, section 5.4](../../tutorial/fr/05_random_matrices.md#s-5-4).
 
 > **Interprétation physique** (interprétation physique, pas un théorème de ce cours). Des niveaux
 > portant des nombres quantiques conservés différents n'interagissent pas, ils se croisent donc

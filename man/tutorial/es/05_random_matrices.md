@@ -5,7 +5,7 @@
 Este tutorial acompaña al [capítulo 5](../../lecture_notes/es/05_random_matrices.md) de los apuntes de clase, que construye la medida de Haar
 sobre el grupo unitario de $`\mathcal M=\bigoplus_cM_{k_c}`$ ([corolario 5.4](../../lecture_notes/es/05_random_matrices.md#r-5-4)), calcula sus momentos de primer y
 segundo orden ([proposición 5.7](../../lecture_notes/es/05_random_matrices.md#r-5-7), [teorema 5.10](../../lecture_notes/es/05_random_matrices.md#r-5-10)) y muestra por qué la estadística de niveles debe
-calcularse sector por sector ([teorema 5.15](../../lecture_notes/es/05_random_matrices.md#r-5-15)). Generamos unitarias de Haar y conjuntos gaussianos con
+calcularse sector por sector ([teorema 5.15](../../lecture_notes/es/05_random_matrices.md#r-5-15), [teorema 5.18](../../lecture_notes/es/05_random_matrices.md#r-5-18)). Generamos unitarias de Haar y conjuntos gaussianos con
 la biblioteca y comprobamos estos resultados mediante Monte Carlo: una media debe coincidir con el valor exacto
 dentro de $`5`$ errores estándar. Los resultados que no se apoyan en un teorema se señalan como observaciones numéricas.
 
@@ -30,7 +30,9 @@ Sin la corrección $`\Lambda`$ del [teorema 5.3](../../lecture_notes/es/05_rando
 rutina QR. Para la rutina a la que llama `torch.linalg.qr` (LAPACK), el código siguiente encuentra
 $`\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'`$ a muchos errores estándar de $`0`$, mientras que una
 unitaria de Haar tiene $`\mathbb EU=0`$ (corolario 5.5): así que este $`Q'`$ no está distribuido según
-la medida de Haar. Esta es una afirmación sobre esa rutina, comprobada por el código, no un teorema.
+la medida de Haar. Esta es una afirmación sobre esa rutina, comprobada por el código, no un teorema. Para este convenio de signos —$`R'_{11}`$ real con el signo
+opuesto al de $`\mathrm{Re}\,Z_{11}`$, lo que el código comprueba—, los apuntes demuestran $`\mathrm{Re}\,Q'_{11}<0`$ casi seguramente
+(después del [teorema 5.3](../../lecture_notes/es/05_random_matrices.md#r-5-3)), y el código lo confirma en cada muestra.
 
 La biblioteca genera unitarias de Haar de $`U(\mathcal M)`$ con `random_unitary_operator`, mediante
 una única descomposición QR por lotes por cada tamaño de bloque, para todos los sectores y todas
@@ -85,6 +87,8 @@ torch.manual_seed(1)
 V = alg.random_unitary(2, batch_size=B)                              # the library, same random numbers
 Q, R = torch.linalg.qr(Z)                                            # LAPACK: diag(R) real, either sign
 d = R.diagonal(dim1=-2, dim2=-1)
+assert (d.imag == 0).all() and (d[:, 0].real * Z[:, 0, 0].real < 0).all()   # LAPACK: R'_11 real, sign of -Re Z_11
+assert (Q[:, 0, 0].real < 0).all()                                   # hence Re Q'_11 < 0 (after Theorem 5.3)
 assert close(V, Q * (d / d.abs()).unsqueeze(-2))                     # Theorem 5.3: V = Q Lambda
 raw = Q.diagonal(dim1=-2, dim2=-1).sum(-1).real                      # Re Tr Q without the correction
 print(f"E Re Tr Q without the phase correction: {raw.mean():.4f} +- {raw.std() / math.sqrt(B):.4f}")
@@ -218,44 +222,52 @@ tamaño $`64`$, cuyos cocientes de espaciamientos tienen exactamente la misma le
 
 ## 5.4 Por qué no deben mezclarse los sectores
 
-*Apuntes:* [sección 5.4](../../lecture_notes/es/05_random_matrices.md#s-5-4); por el [teorema 5.15](../../lecture_notes/es/05_random_matrices.md#r-5-15), los niveles de bloques independientes distintos no se repelen: para dos bloques GOE, el menor espaciamiento $`\delta`$ del espectro fusionado tiene $`P(\delta<\varepsilon)`$ al menos del orden de $`\varepsilon`$, mientras que dentro de un bloque GOE es a lo sumo del orden de $`\varepsilon^2`$.
+*Apuntes:* [sección 5.4](../../lecture_notes/es/05_random_matrices.md#s-5-4); por el [teorema 5.15](../../lecture_notes/es/05_random_matrices.md#r-5-15), los niveles de bloques independientes distintos no se repelen: para dos bloques GOE, el menor espaciamiento $`\delta`$ del espectro fusionado tiene $`P(\delta<\varepsilon)`$ al menos del orden de $`\varepsilon`$, mientras que dentro de un bloque GOE es a lo sumo del orden de $`\varepsilon^2`$. Por el [teorema 5.18](../../lecture_notes/es/05_random_matrices.md#r-5-18), con el [lema 5.16](../../lecture_notes/es/05_random_matrices.md#r-5-16) para bloques GOE, el espectro fusionado de $`C`$ copias independientes de un mismo bloque tiene, en una ventana $`I`$ donde la densidad de niveles es positiva, los cocientes de espaciamientos de niveles independientes salvo $`A/C`$: agrupando muchas muestras, el cociente medio $`\mathbb ES(I)/\mathbb EN(I)`$ de los niveles de $`I`$ difiere de $`2\ln2-1`$ a lo sumo en $`A/C`$.
 
-Con más sectores el efecto es más fuerte. No demostramos ningún teorema límite para muchos
-sectores; el experimento siguiente es una observación numérica. En la biblioteca, los bloques están
-separados desde el principio: `eigenvalues()` devuelve un espectro por sector, y mezclarlos requiere
-un `torch.cat` explícito. Ponemos $`C`$ bloques GOE independientes de tamaño $`64`$ en una misma álgebra
-y comparamos el cociente medio por sector con el del espectro fusionado. Cada sector es una matriz
-GOE de tamaño $`64`$, así que sus cocientes tienen exactamente la ley de `r_goe` de más arriba, y el
-código lo comprueba; el comportamiento del espectro fusionado solo se observa:
+Con más sectores el efecto es más fuerte. En la biblioteca, los bloques están separados desde el principio:
+`eigenvalues()` devuelve un espectro por sector, y mezclarlos requiere un `torch.cat` explícito. Ponemos $`C`$ bloques GOE
+independientes de tamaño $`64`$ en una misma álgebra y comparamos el cociente medio por sector con el cociente medio agrupado
+del espectro fusionado sobre los niveles de $`I=[-4,4]`$ (la densidad de niveles de GOE(64) es positiva en todas partes,
+lema 5.16). Cada sector es una matriz GOE de tamaño $`64`$, así que sus cocientes tienen exactamente la ley de `r_goe` de
+más arriba, y el código lo comprueba. La media agrupada $`\sum S/\sum N`$ sobre las muestras estima $`\mathbb ES(I)/\mathbb EN(I)`$;
+su error estándar se obtiene de las sumas $`S,N`$ por muestra (método delta). La velocidad del teorema 5.18 se comprueba en la
+forma $`C\,|\langle r\rangle_C-(2\ln2-1)|\le2\,(\langle r\rangle_2-(2\ln2-1))`$ salvo $`5`$ errores estándar, es decir,
+$`A=2(\langle r\rangle_2-(2\ln2-1))`$ para todo $`C\ge2`$:
 
 ```python
-k, merged_r = 64, {}
+k, P0, merged_r, merged_se = 64, 2 * math.log(2) - 1, {}, {}
 for C in (1, 2, 4, 8, 16):
     alg_C = TypeIAlgebra([k] * C, [k] * C, complex_valued=False, precision='double')
-    G = torch.randn(800 // C, C, k, k, dtype=torch.float64)
+    G = torch.randn(1600 // C, C, k, k, dtype=torch.float64)
     lam = alg_C.operator((G + G.mT) / 2, is_self_adjoint=True).eigenvalues()    # one spectrum per sector
     per_sector = torch.stack([ratio(l[:, k // 4: 3 * k // 4]) for l in lam])
-    merged = torch.cat(lam, dim=-1).sort(dim=-1).values                       # the spectrum on C^D
-    r_m = ratio(merged[:, k * C // 4: 3 * k * C // 4])
-    merged_r[C] = r_m.mean().item()
-    print(f"C = {C:2d}: <r> per sector {per_sector.mean():.4f}, merged {merged_r[C]:.4f}"
-          f" +- {r_m.std() / math.sqrt(len(r_m)):.4f}")
     same_mean(per_sector.flatten(), r_goe, f"C = {C:2d}: sectors vs GOE(64)")   # every sector is GOE(64)
-assert merged_r[1] > merged_r[2] > merged_r[4] > merged_r[16]       # numerical observation
-assert abs(merged_r[16] - (2 * math.log(2) - 1)) < 0.01              # numerical observation
+    merged = torch.cat(lam, dim=-1).sort(dim=-1).values                       # the spectrum on C^D
+    s = merged.diff(dim=-1)
+    r = torch.minimum(s[:, :-1], s[:, 1:]) / torch.maximum(s[:, :-1], s[:, 1:])   # r(y) at the inner levels
+    inside = (merged[:, 1:-1].abs() <= 4).double()                             # inner levels y in I = [-4, 4]
+    S, N = (r * inside).sum(-1), (merged.abs() <= 4).double().sum(-1)          # S(I), N(I) per sample
+    R = (S.sum() / N.sum()).item()                                             # pooled: estimates E S(I) / E N(I)
+    merged_r[C], merged_se[C] = R, ((S - R * N).pow(2).sum().sqrt() / N.sum()).item()   # delta method
+    print(f"C = {C:2d}: <r> per sector {per_sector.mean():.4f}, merged {R:.4f} +- {merged_se[C]:.4f},"
+          f"  C (<r> - (2 ln 2 - 1)) = {C * (R - P0):+.4f},  C^2 (<r> - (2 ln 2 - 1)) = {C * C * (R - P0):+.4f}")
+for C in (4, 8, 16):                                                          # Theorem 5.18: deviation <= A / C
+    assert C * abs(merged_r[C] - P0) <= 2 * (merged_r[2] - P0) + 5 * C * merged_se[C]
+assert merged_r[1] > merged_r[2] > merged_r[4]
 ```
 
-*Observación numérica.* Cada sector tiene $`\langle r\rangle\approx0.53`$, el valor GOE(64) de la
-sección 5.3 (esta coincidencia es la comprobación de un hecho: los sectores son matrices GOE(64)).
-El espectro fusionado baja a $`0.42`$ con dos sectores y a aproximadamente $`0.39`$, a menos de $`0.01`$
-del valor $`2\ln2-1`$ de los niveles independientes (proposición 5.14(a)), con $`8`$ y $`16`$ sectores.
-Que el espectro fusionado se acerque a niveles independientes cuando $`C`$ crece es lo que observa el
-código; no se demuestra en este curso.
+*Observación numérica.* Cada sector tiene $`\langle r\rangle\approx0.53`$, el valor GOE(64) de la sección 5.3 (esta
+coincidencia es la comprobación de un hecho: los sectores son matrices GOE(64)). El espectro fusionado baja a $`0.43`$ con
+dos sectores, a $`0.40`$ con cuatro, y queda a menos de un error estándar ($`0.0015`$) de $`2\ln2-1`$ con $`8`$ y $`16`$
+sectores, como predice el teorema 5.18. La desviación decrece más deprisa que la velocidad demostrada $`1/C`$: el código
+encuentra $`C^2(\langle r\rangle_C-(2\ln2-1))`$ entre $`0.14`$ y $`0.17`$ para $`C=1,2,4`$, es decir, un decrecimiento como $`1/C^2`$,
+hasta que la desviación cae por debajo del error estadístico. Este comportamiento en $`1/C^2`$ es un resultado del cálculo,
+no un teorema de este curso.
 
 Lo mismo ocurre en un modelo físico. La cadena de Heisenberg con campos aleatorios (capítulo 9)
 conserva la magnetización, así que su hamiltoniano está en $`\bigoplus_{N=0}^LM_{\binom LN}`$
 (proposición 9.1). Sus bloques *no* son independientes —todos dependen de los mismos campos
-aleatorios—, así que el teorema 5.15 no se aplica tal como está enunciado; el experimento siguiente
+aleatorios—, así que los teoremas 5.15 y 5.18 no se aplican tal como están enunciados; el experimento siguiente
 muestra el mismo efecto, como observación numérica.
 
 ```python

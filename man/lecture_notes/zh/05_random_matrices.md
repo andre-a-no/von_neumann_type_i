@@ -9,7 +9,7 @@
 
 **你将学到**为什么高斯矩阵的 QR 分解给出 Haar 酉矩阵（以及为什么必须固定相位），在代数的
 酉群上求平均就是到中心上的条件期望，二阶 Weingarten 公式，Wigner 猜测，间距比及其对 $`3\times3`$
-高斯矩阵的精确值，以及为什么在混合了扇区的谱上计算的能级统计看起来像独立能级的统计。
+高斯矩阵的精确值，以及为什么在混合了扇区的谱上计算的能级统计看起来像独立能级的统计，而且混合的扇区越多就越像。
 
 *计算：* 本章的数值检验——[教程 5](../../tutorial/zh/05_random_matrices.md)。
 
@@ -93,7 +93,10 @@ $`|R'_{ii}|>0`$ 的上三角矩阵，所以由唯一性得 $`Q'\Lambda=Q(Z)`$。
 对实高斯矩阵作同样的证明，就得到正交群 $`O(k)`$ 的 Haar 测度，
 修正因子为 $`\mathrm{diag}(\mathrm{sgn}\,R'_{ii})`$；这在定理 B.17 中详细写出。
 若不作修正 $`\Lambda`$，$`Q'`$ 的分布依赖于 QR 例程的符号约定，未必是 Haar 测度（带 $`\Lambda`$ 的做法出自 F. Mezzadri, *How to
-generate random matrices from the classical compact groups*, Notices AMS 54 (2007), 592–604）。
+generate random matrices from the classical compact groups*, Notices AMS 54 (2007), 592–604）。例如，若例程使 $`R'_{11}`$ 为实数且符号与 $`\mathrm{Re}\,Z_{11}`$ 相反（LAPACK 的 Householder QR
+正是如此），则 $`Z=Q'R'`$ 的第一列 $`z_1=R'_{11}q'_1`$ 给出几乎必然成立的 $`\mathrm{Re}\,Q'_{11}=-|\mathrm{Re}\,Z_{11}|/\|z_1\|<0`$
+（$`\mathrm{Re}\,Z_{11}\sim N(0,\frac12)`$ 为零的概率是 $`0`$）；所以 $`\mathbb E\,\mathrm{Re}\,Q'_{11}<0`$，而 Haar 酉矩阵满足
+$`\mathbb EU_{11}=0`$（推论 5.5）。
 
 *计算：* 本库的采样器 `TypeIAlgebra.random_unitary` 就是定理 5.3 中经过修正的 QR，而 `torch.linalg.qr` 给出的未经修正的 $`Q'`$ 不服从 Haar 分布——[教程，5.1 节](../../tutorial/zh/05_random_matrices.md#s-5-1)。
 
@@ -469,7 +472,7 @@ $`I_0=L_2-2L_3+L_4=\frac{2\pi}{81\sqrt3}`$，且 $`\mathbb Er=\frac{81\sqrt3}{4\
 
 设 $`H=\bigoplus_cH_c\in\mathcal M`$ 是一个具有**相互独立的块**的随机自伴元素，
 例如 GOE 块。作为 $`\mathbb C^D`$ 上的算子，它的谱是各块谱的
-并。在一个块内部能级相互排斥；我们将证明不同块的能级之间并不排斥。
+并。在一个块内部能级相互排斥；我们将证明不同块的能级之间并不排斥，并且有许多独立块时，合并谱具有独立能级的间距比。
 
 假设每个块都有有界连续的**能级密度** $`\rho_c`$：
 对有界 Borel 函数 $`\varphi`$ 有 $`\mathbb E\sum_i\varphi(\lambda_i(H_c))=\int\varphi\,\rho_c`$（从而
@@ -510,7 +513,147 @@ $`\mathbb EN_\varepsilon\le\big(\sum_{c<d}k_ck_d\big)P(N_\varepsilon\ge1)`$，�
 $`\varepsilon^2`$（命题 C.9）。尽管每个块都是完美的 GOE，
 合并谱却通不过能级排斥检验。
 
-*计算：* 对 $`C`$ 个独立的 GOE 块，随着 $`C`$ 增大，合并谱的平均间距比下降并趋向独立能级的值 $`2\ln2-1`$；带随机场的 Heisenberg 链（第 9 章）的各块并不独立，却显示出同样的效应；二者都是数值观察——[教程，5.4 节](../../tutorial/zh/05_random_matrices.md#s-5-4)。
+当扇区很多时，合并谱会失去块的一切痕迹：它的间距比变成独立能级的间距比。我们对同一个随机 $`k\times k`$ 自伴矩阵
+$`H`$ 的 $`C`$ 个独立副本 $`H_1,\dots,H_C`$，在 $`k`$ 固定、$`C\to\infty`$ 时，对能级密度为正的窗口中的能级证明这一点，并给出
+收敛速度。对 $`H`$ 使用两个假设：
+
+- **(H1)** 它的能级密度 $`\rho`$ 有界且是 Lipschitz 的：$`\rho\le\rho_{\max}`$ 且 $`|\rho(x)-\rho(y)|\le L|x-y|`$；
+- **(H2)** 它的最小间距 $`\delta=\min_i(\lambda_{i+1}-\lambda_i)`$（$`k=1`$ 时 $`\delta=+\infty`$）对所有 $`\varepsilon\ge0`$ 满足
+  $`P(\delta\le\varepsilon)\le K\varepsilon^2`$。
+
+(H2) 是块内能级排斥的一种弱形式；取 $`\varepsilon=0`$，它说明 $`H`$ 的谱几乎必然是单的。
+
+<a id="r-5-16"></a>
+
+**引理 5.16（GOE 块与 GUE 块）。** 任意大小 $`n\ge1`$ 的 GOE 与 GUE 矩阵满足 (H1) 和 (H2)，且它们的能级密度处处为正。
+
+*证明。* 正性已在定理 5.15 之后证明。*(H2)。* 对 $`n=1`$ 无需证明。对 $`n\ge2`$ 和 $`0\le\varepsilon<1`$，命题 C.9 给出常数
+$`K_0`$，使得对每个 $`\varepsilon'\in(\varepsilon,1]`$ 有
+$`P(\delta\le\varepsilon)\le P(\delta<\varepsilon')\le K_0\varepsilon'^{\beta+1}\le K_0\varepsilon'^2`$；令 $`\varepsilon'\downarrow\varepsilon`$ 即可。取
+$`K=\max(K_0,1)`$，该界对 $`\varepsilon\ge1`$ 也成立。
+*(H1)。* 由推论 C.8，$`\rho`$ 有界。用其记号，对 $`x\in\mathbb R`$ 与 $`y\in\mathbb R^{n-1}`$，
+$`|\Delta(x,y)|=|\Delta(y)|\prod_i|x-y_i|`$，所以
+```math
+\rho(x)=\frac{n}{n!\,Z_{n,\beta}}\int_{\mathbb R^{n-1}}|\Delta(y)|^\beta e^{-|y|^2/2}\,g_y(x)\,dy,\qquad
+g_y(x)=f_0(x)\prod_{i=1}^{n-1}f_i(x),
+```
+其中 $`f_0(x)=e^{-x^2/(2n)}`$，$`f_i(x)=|x-y_i|^\beta e^{-x^2/(2n)}`$（$`n=1`$ 时没有 $`y`$，且 $`\rho=f_0/Z_{1,\beta}`$）。令
+$`a=(\beta+1)\sup_x(1+|x|)^{\beta+1}e^{-x^2/(2n)}<\infty`$。由 $`|x-y_i|\le(1+|x|)(1+|y_i|)`$ 得 $`|f_i|\le a(1+|y_i|)^\beta`$，并且 $`f_i`$
+连续，在 $`y_i`$ 之外连续可微，且
+$`|f_i'(x)|\le\big(\beta|x-y_i|^{\beta-1}+|x||x-y_i|^\beta\big)e^{-x^2/(2n)}\le a(1+|y_i|)^\beta`$。在 $`y_i`$ 的两侧分别用中值定理，
+$`f_i`$ 是 Lipschitz 的，常数为 $`a(1+|y_i|)^\beta`$；同样 $`f_0`$ 的常数为 $`a`$，且 $`|f_0|\le1\le a`$。把两个乘积之差写成
+裂项和，
+$`|g_y(x)-g_y(x')|\le\sum_i|f_i(x)-f_i(x')|\prod_{j\neq i}\sup|f_j|\le na^n\prod_i(1+|y_i|)^\beta\,|x-x'|`$。因此 $`\rho`$ 是 Lipschitz
+的，常数为 $`L=\frac{n^2a^n}{n!\,Z_{n,\beta}}\int|\Delta(y)|^\beta\prod_i(1+|y_i|)^\beta e^{-|y|^2/2}dy`$，由定理 C.7 证明中的界
+$`|\Delta(y)|\le\prod_i(1+|y_i|)^{n-2}`$，它是有限的。$`\square`$
+
+设 $`\Lambda_c`$ 为 $`H_c`$ 的能级集合；**$`m`$ 个块的合并谱**是 $`\Lambda_1\cup\dots\cup\Lambda_m`$。对一点 $`x`$，令 $`L_m(x)`$ 和
+$`R_m(x)`$ 为 $`x`$ 到 $`m`$ 个块的合并谱中位于 $`x`$ 下方和上方的最近能级的距离（若不存在则为 $`+\infty`$），当二者都有限时令
+$`r_m(x)=\min(L_m(x),R_m(x))/\max(L_m(x),R_m(x))`$。对长度为 $`|J|`$ 的区间 $`J`$，令 $`N(J)`$ 为 $`H`$ 落在 $`J`$ 中的能级个数，
+$`\rho(J)=\int_J\rho=\mathbb EN(J)`$，$`\sigma(J)=P(N(J)=0)`$。
+
+<a id="r-5-17"></a>
+
+**引理 5.17（定点两侧的两个间隙）。** 设 (H1) 和 (H2) 成立，$`\ell,\rho_*>0`$，$`x\in\mathbb R`$ 且在 $`[x-\ell,x+\ell]`$ 上
+$`\rho\ge\rho_*`$。则存在只依赖于 $`k,K,L,\rho_{\max},\rho_*,\ell`$ 的常数 $`A`$，使得对所有 $`m\ge1`$ 和 $`0\le t\le1`$
+```math
+\Big|P\big(L_m(x),R_m(x)<\infty,\ r_m(x)\le t\big)-\frac{2t}{1+t}\Big|\le\frac Am .
+```
+
+*证明。* 对 $`m\le2`$，任何 $`A\ge2`$ 都可以；设 $`m\ge3`$。*一个块。* 由于 $`1\{N\ge1\}\le N\le k\,1\{N\ge1\}`$，取期望得 (1)：
+$`1-\rho(J)\le\sigma(J)\le1-\rho(J)/k\le e^{-\rho(J)/k}`$。若 $`N(J)\ge2`$，则有两个能级在 $`J`$ 中，从而 $`\delta\le|J|`$；由于
+$`N-1\{N\ge1\}\le k\,1\{N\ge2\}`$，(H2) 给出 (2)：$`\sigma(J)\le1-\rho(J)+kK|J|^2`$。对 $`c>0`$，由 Tonelli 定理和 (H2)，
+```math
+\mathbb Ee^{-c\delta}=\int_0^1P\big(e^{-c\delta}>u\big)\,du\le\int_0^1\frac{K\ln^2u}{c^2}\,du=\frac{2K}{c^2}.\qquad(3)
+```
+*单谱性。* 由取 $`\varepsilon=0`$ 的 (H2)，每个块的谱几乎必然是单的；由定理 5.15 取 $`\psi(u,v)=1\{u=v\}`$（对角线是零测集），两个块
+几乎必然没有公共能级；又因 $`\mathbb EN(\{x\})=0`$，$`x`$ 几乎必然不是能级。
+
+*一个公式。* 记 $`\Lambda`$ 为 $`m`$ 个块的合并谱，$`L,R`$ 为 $`L_m(x),R_m(x)`$，固定 $`t`$，对 $`b>0`$ 令 $`J_b=[x-tb,x+b)`$，
+$`\sigma_b=\sigma(J_b)`$；$`J_b`$ 随 $`b`$ 增大，所以 $`\sigma_b`$ 单调不增。几乎必然有
+```math
+1\{R<\infty,\ L>tR\}=\sum_{y\in\Lambda,\ y>x}1\{\Lambda\cap J_{y-x}=\{y\}\},
+```
+因为对 $`y=x+R`$，$`J_R`$ 中的其他能级就是 $`[x-tR,x)`$ 中的能级，它们存在当且仅当 $`L\le tR`$；而对 $`y>x+R`$，能级 $`x+R`$
+位于 $`J_{y-x}`$ 中。按 $`y`$ 所属的块拆分这个和。各块独立同分布，且在给定 $`y`$ 所在块的能级时，其余 $`m-1`$ 个块都避开
+$`J_{y-x}`$ 的概率为 $`\sigma_{y-x}^{m-1}`$；如定理 5.15 的证明那样用 Fubini 定理，
+```math
+P(R<\infty,\ L>tR)=m\,\mathbb E\sum_{y\in\Lambda_1,\ y>x}1\{\Lambda_1\cap J_{y-x}=\{y\}\}\,\sigma_{y-x}^{m-1}=M-E_1,
+```
+其中 $`M=m\,\mathbb E\sum_{y\in\Lambda_1,y>x}\sigma_{y-x}^{m-1}=m\int_0^\infty\rho(x+b)\sigma_b^{m-1}db`$（$`\rho`$ 的定义），$`E_1\ge0`$ 是把指示
+函数换成 $`1\{\Lambda_1\cap J_{y-x}\neq\{y\}\}`$ 的同一期望。
+
+*$`E_1`$ 很小。* 在该事件上，$`H_1`$ 在距 $`y`$ 不超过 $`|J_{y-x}|\le2(y-x)`$ 处有第二个能级，所以 $`y-x\ge\delta_1/2`$，其中
+$`\delta_1`$ 是 $`H_1`$ 的最小间距。由 (1)，$`\sigma_b\le e^{-\rho_*\min(b,\ell)/k}`$，因为 $`J_b\supseteq[x,x+\min(b,\ell))`$。和中至多
+$`k`$ 项，令 $`\mu=(m-1)\rho_*/k`$，由 (3)，
+$`E_1\le mk\,\mathbb Ee^{-\mu\min(\delta_1/2,\ell)}\le mk\big(8Kk^2/((m-1)\rho_*)^2+e^{-(m-1)\rho_*\ell/k}\big)`$。
+
+*$`M`$ 接近 $`\frac1{1+t}`$。* 令 $`\rho_0=\rho(x)`$，$`a=(1+t)\rho_0`$，$`b_1=\min(\ell,1/a)\ge b_0=\min(\ell,1/(2\rho_{\max}))`$。则
+$`m\int_0^{1/a}\rho_0(1-ab)^{m-1}db=\rho_0/a=\frac1{1+t}`$。对 $`0<b\le b_1`$：
+$`|\rho(J_b)-ab|\le\int_{J_b}|\rho-\rho_0|\le L\frac{(1+t^2)b^2}2\le Lb^2`$，所以由 (1) 和 (2)，$`|\sigma_b-(1-ab)|\le K_1b^2`$，其中
+$`K_1=L+4kK`$；这两个数都在 $`[0,e^{-\rho_*b/k}]`$ 中；并且 $`|\rho(x+b)-\rho_0|\le Lb`$。由 $`u,v\ge0`$ 时的
+$`|u^n-v^n|\le n|u-v|\max(u,v)^{n-1}`$，
+```math
+\big|\rho(x+b)\sigma_b^{m-1}-\rho_0(1-ab)^{m-1}\big|\le\rho_{\max}(m-1)K_1b^2e^{-(m-2)\rho_*b/k}+Lb\,e^{-(m-1)\rho_*b/k}.
+```
+利用 $`\int_0^\infty b^je^{-\lambda b}db=j!/\lambda^{j+1}`$，上式在 $`(0,b_1]`$ 上的积分乘以 $`m`$ 至多为
+$`2m(m-1)\rho_{\max}K_1k^3/((m-2)\rho_*)^3+mLk^2/((m-1)\rho_*)^2`$。其余部分为
+$`m\int_{b_1}^\infty\rho(x+b)\sigma_b^{m-1}db\le mk\,e^{-(m-1)\rho_*b_0/k}`$（因为 $`\int\rho=k`$ 且 $`\sigma_b\le\sigma_{b_1}`$）以及
+$`m\int_{b_1}^{1/a}\rho_0(1-ab)^{m-1}db\le(1-ab_1)^m\le e^{-m\rho_*b_0}`$。
+
+*两侧。* 对矩阵 $`-H_c`$（能级密度为 $`\rho(-\,\cdot)`$，满足同样的假设）在点 $`-x`$ 处作同样的论证，得
+$`P(L<\infty,\ R>tL)=M'-E_1'`$，且有同样的界。对 $`t<1`$，事件 $`\{R<\infty,\ L\le tR\}`$ 与 $`\{L<\infty,\ R\le tL\}`$ 互不相交
+（二者同时成立会给出 $`L\le t^2L`$，而 $`L>0`$），其并为 $`\{L,R<\infty,\ r_m(x)\le t\}`$，所以
+```math
+P\big(L,R<\infty,\ r_m(x)\le t\big)-\frac{2t}{1+t}=-P(R=\infty)-P(L=\infty)-\Big(M-\frac1{1+t}\Big)-\Big(M'-\frac1{1+t}\Big)+E_1+E_1'.
+```
+由 (1)，$`P(R=\infty)\le\sigma((x,x+\ell))^m\le e^{-m\rho_*\ell/k}`$，$`L`$ 同理；对 $`t=1`$，该概率等于
+$`1-P(L=\infty\text{ 或 }R=\infty)`$。每一项至多是某常数除以 $`m`$，因为 $`m(m-1)/(m-2)^3\le18/m`$，$`m/(m-1)^2\le4/m`$，并且对
+$`c>0`$ 有 $`me^{-(m-1)c}\le4/(mc^2)`$（由 $`u^2e^{-u}\le1`$）。$`\square`$
+
+<a id="r-5-18"></a>
+
+**定理 5.18（许多独立扇区看起来像独立能级）。** 设 (H1) 和 (H2) 成立。设 $`I=[\alpha,\gamma]`$，$`\ell,\rho_*>0`$ 且在
+$`[\alpha-\ell,\gamma+\ell]`$ 上 $`\rho\ge\rho_*`$，$`C\ge2`$，$`\Lambda`$ 为 $`C`$ 个块的合并谱（几乎必然是单的）。对在 $`\Lambda`$ 中有
+邻居 $`y_-<y<y_+`$ 的能级 $`y`$，令 $`r(y)=\min(y-y_-,y_+-y)/\max(y-y_-,y_+-y)`$。令 $`N(I)`$ 为 $`I`$ 中的能级数，$`N_t(I)`$ 为
+其中有两个邻居且 $`r(y)\le t`$ 的能级数，$`S(I)`$ 为 $`I`$ 中有两个邻居的能级的 $`r(y)`$ 之和。则 $`\mathbb EN(I)=C\rho(I)`$，并且
+存在只依赖于 $`k,K,L,\rho_{\max},\rho_*,\ell`$ 和 $`\rho(I)`$ 的常数 $`A`$，使得对 $`0\le t\le1`$
+```math
+\Big|\frac{\mathbb EN_t(I)}{\mathbb EN(I)}-\frac{2t}{1+t}\Big|\le\frac AC,\qquad
+\Big|\frac{\mathbb ES(I)}{\mathbb EN(I)}-(2\ln2-1)\Big|\le\frac AC .
+```
+
+期望之比正是把许多样本合并起来的计算所估计的量：$`I`$ 中 $`r\le t`$ 的能级所占比例，以及它们的平均间距比。由引理 5.16，
+该定理适用于任意固定大小的独立 GOE 或 GUE 块和任意紧区间 $`I`$。
+
+*证明。* $`\mathbb EN(I)=\sum_c\rho(I)`$。各块同分布，所以
+$`\mathbb EN_t(I)=C\,\mathbb E\sum_{y\in\Lambda_1\cap I}1\{y\text{ 有两个邻居},\ r(y)\le t\}`$。令 $`m=C-1`$，对 $`y\in\Lambda_1`$，令
+$`L'(y),R'(y)`$ 为它在 $`H_2,\dots,H_C`$ 的合并谱 $`\Lambda'`$ 中的间隙（如引理 5.17），$`r'(y)`$ 为它们的比。$`H_1`$ 的其他能级与
+$`y`$ 的距离 $`\ge\delta_1`$；所以若 $`\max(L'(y),R'(y))<\delta_1`$，则 $`y`$ 在 $`\Lambda`$ 中的邻居就是它在 $`\Lambda'`$ 中的邻居，且
+$`r(y)=r'(y)`$。$`\Lambda'`$ 与 $`H_1`$ 独立，而 $`\max(L'(y),R'(y))\ge s`$ 要求 $`\Lambda'`$ 避开 $`(y-s,y)`$ 或 $`(y,y+s)`$，由 (1)，对
+$`y\in I`$ 其概率至多为 $`2e^{-m\rho_*\min(s,\ell)/k}`$。由 Fubini 定理（如定理 5.15 的证明）和 (3)，
+```math
+\Big|\mathbb EN_t(I)-C\,\mathbb E\sum_{y\in\Lambda_1\cap I}p_m(y,t)\Big|\le2Ck\big(\mathbb Ee^{-m\rho_*\delta_1/k}+e^{-m\rho_*\ell/k}\big)
+\le2Ck\Big(\frac{2Kk^2}{(m\rho_*)^2}+e^{-m\rho_*\ell/k}\Big),
+```
+其中 $`p_m(x,t)=P\big(L_m(x),R_m(x)<\infty,\ r_m(x)\le t\big)`$，由 Fubini 定理它是 $`x`$ 的 Borel 函数。由 $`\rho`$ 的定义，
+$`\mathbb E\sum_{y\in\Lambda_1\cap I}p_m(y,t)=\int_I\rho(x)p_m(x,t)\,dx`$，而引理 5.17 在每个 $`x\in I`$ 处以同一常数 $`A_0`$ 成立。除以
+$`C\rho(I)`$ 得
+$`\big|\mathbb EN_t(I)/\mathbb EN(I)-\frac{2t}{1+t}\big|\le A_0/m+2k\big(2Kk^2/(m\rho_*)^2+e^{-m\rho_*\ell/k}\big)/\rho(I)`$，因为 $`m\ge C/2`$，
+它至多是某常数除以 $`C`$。对于均值，$`r(y)=\int_0^11\{r(y)>t\}\,dt`$，所以由 Tonelli 定理
+$`\mathbb ES(I)=\int_0^1\big(\mathbb EN_1(I)-\mathbb EN_t(I)\big)dt`$，而 $`\int_0^1\big(1-\frac{2t}{1+t}\big)dt=\int_0^1\frac{1-t}{1+t}dt=2\ln2-1`$
+（命题 5.14(a)）；所以第二个偏差至多是第一个界的两倍。$`\square`$
+
+证明揭示了机制。一个块的能级 $`y`$ 把其余 $`C-1`$ 个块看作一个独立的构型，其在 $`y`$ 旁边的能级距离为 $`1/(C\rho)`$ 的量级；
+在这样的距离上，$`y`$ 所在块的其他能级以高概率不出现（$`C\to\infty`$ 和 (H2) 在此起作用），所以 $`r(y)`$ 就是 $`y`$ 分割
+其余块中包含它的那个间隙的比例。对常数密度且在 $`y`$ 附近每块至多一个能级的情形，证明中的公式对每个 $`m`$ 都恰好给出独立
+能级的值 $`m\int_0^{1/a}\rho_0(1-ab)^{m-1}db=\frac1{1+t}`$；误差来自 $`\rho`$ 在一个间隙上的变化，以及同一块的两个能级落在一个
+间隙中。速度 $`1/C`$ 是证明所给出的；对 GOE 块，数值上发现的偏差像 $`1/C^2`$ 那样减小（这是一个数值观察，见教程）。许多
+独立的稀疏点过程的叠加接近 Poisson 过程，这是概率论的一个经典主题（B. Grigelionis, Theory Probab. Appl. 8 (1963),
+177–182）；定理 5.18 是这里所需的情形，并在本课程范围内给出了证明。块的独立性对证明至关重要：该定理不适用于带随机场的
+Heisenberg 链（第 9 章）的扇区，它们都依赖于同一组随机场。
+
+*计算：* 对 $`C`$ 个大小为 $`64`$ 的独立 GOE 块检验定理 5.18，并检验速度 $`1/C`$；以及带随机场的 Heisenberg 链，其各块并不独立，在那里同样的效应是一个数值观察——[教程，5.4 节](../../tutorial/zh/05_random_matrices.md#s-5-4)。
 
 > **物理意义**（物理解释，而非本课程的定理）。具有不同守恒量子数的能级之间没有相互作用，
 > 所以它们可以自由交叉；只有同一对称性的能级才相互排斥。因此，混合了对称扇区的谱

@@ -4,7 +4,7 @@
 
 本教程配合讲义的[第 5 章](../../lecture_notes/zh/05_random_matrices.md)。该章构造了 $`\mathcal M=\bigoplus_cM_{k_c}`$ 的酉群上的 Haar 测度
 （[推论 5.4](../../lecture_notes/zh/05_random_matrices.md#r-5-4)），计算了它的一阶矩和二阶矩（[命题 5.7](../../lecture_notes/zh/05_random_matrices.md#r-5-7)、[定理 5.10](../../lecture_notes/zh/05_random_matrices.md#r-5-10)），并说明了为什么能级统计
-必须逐个扇区计算（[定理 5.15](../../lecture_notes/zh/05_random_matrices.md#r-5-15)）。我们用本库抽取 Haar 酉矩阵和高斯系综，并用蒙特卡罗方法检验这些
+必须逐个扇区计算（[定理 5.15](../../lecture_notes/zh/05_random_matrices.md#r-5-15)、[定理 5.18](../../lecture_notes/zh/05_random_matrices.md#r-5-18)）。我们用本库抽取 Haar 酉矩阵和高斯系综，并用蒙特卡罗方法检验这些
 结果：均值与精确值之差必须在 $`5`$ 个标准误差之内。没有定理支撑的结果都标为数值观察。
 
 在本章中，$`\mathcal M=\bigoplus_{c=1}^CM_{k_c}(\mathbb C)`$，$`D=\sum_ck_c`$，$`P_c`$ 为
@@ -24,7 +24,8 @@ dtype 抽取的分布；第一个代码块检验了二阶矩）；*Ginibre 矩�
 对 `torch.linalg.qr` 所调用的例程（LAPACK），下面的代码发现
 $`\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'`$ 离 $`0`$ 有许多个标准误差，而 Haar 酉矩阵满足
 $`\mathbb EU=0`$（推论 5.5）：所以这个 $`Q'`$ 不服从 Haar 分布。这是关于该例程的陈述，
-由代码检验，而不是定理。
+由代码检验，而不是定理。对这一符号约定（$`R'_{11}`$ 为实数且符号与 $`\mathrm{Re}\,Z_{11}`$ 相反，代码检验了这一点），
+讲义（[定理 5.3](../../lecture_notes/zh/05_random_matrices.md#r-5-3) 之后）证明了几乎必然有 $`\mathrm{Re}\,Q'_{11}<0`$，代码在每个样本中都确认了这一点。
 
 本库用 `random_unitary_operator` 抽取 $`U(\mathcal M)`$ 上的 Haar 酉元：对每种块大小，
 一次批量 QR 分解同时处理所有扇区和所有样本（在 GPU 上则用 Gram–Schmidt，由引理 5.2 中的
@@ -77,6 +78,8 @@ torch.manual_seed(1)
 V = alg.random_unitary(2, batch_size=B)                              # the library, same random numbers
 Q, R = torch.linalg.qr(Z)                                            # LAPACK: diag(R) real, either sign
 d = R.diagonal(dim1=-2, dim2=-1)
+assert (d.imag == 0).all() and (d[:, 0].real * Z[:, 0, 0].real < 0).all()   # LAPACK: R'_11 real, sign of -Re Z_11
+assert (Q[:, 0, 0].real < 0).all()                                   # hence Re Q'_11 < 0 (after Theorem 5.3)
 assert close(V, Q * (d / d.abs()).unsqueeze(-2))                     # Theorem 5.3: V = Q Lambda
 raw = Q.diagonal(dim1=-2, dim2=-1).sum(-1).real                      # Re Tr Q without the correction
 print(f"E Re Tr Q without the phase correction: {raw.mean():.4f} +- {raw.std() / math.sqrt(B):.4f}")
@@ -208,40 +211,47 @@ $`2\ln2-1\approx0.386`$。这个数是计算的输出，而不是
 
 ## 5.4 为何不能混合扇区
 
-*讲义：* [5.4 节](../../lecture_notes/zh/05_random_matrices.md#s-5-4)；由[定理 5.15](../../lecture_notes/zh/05_random_matrices.md#r-5-15)，不同的独立块的能级之间并不排斥：对两个 GOE 块，合并谱的最小间距 $`\delta`$ 满足 $`P(\delta<\varepsilon)`$ 至少是 $`\varepsilon`$ 的量级，而在一个 GOE 块内部它至多是 $`\varepsilon^2`$ 的量级。
+*讲义：* [5.4 节](../../lecture_notes/zh/05_random_matrices.md#s-5-4)；由[定理 5.15](../../lecture_notes/zh/05_random_matrices.md#r-5-15)，不同的独立块的能级之间并不排斥：对两个 GOE 块，合并谱的最小间距 $`\delta`$ 满足 $`P(\delta<\varepsilon)`$ 至少是 $`\varepsilon`$ 的量级，而在一个 GOE 块内部它至多是 $`\varepsilon^2`$ 的量级。由[定理 5.18](../../lecture_notes/zh/05_random_matrices.md#r-5-18)（对 GOE 块结合[引理 5.16](../../lecture_notes/zh/05_random_matrices.md#r-5-16)），同一个块的 $`C`$ 个独立副本的合并谱，在能级密度为正的窗口 $`I`$ 中，在 $`A/C`$ 的误差内具有独立能级的间距比：把许多样本合并起来，$`I`$ 中能级的平均比 $`\mathbb ES(I)/\mathbb EN(I)`$ 与 $`2\ln2-1`$ 之差至多为 $`A/C`$。
 
-扇区越多，这一效应越强。我们不对多个扇区证明极限定理；下面的
-实验是一个数值观察。在本库中，各块从一开始就是分开的：
-`eigenvalues()` 对每个扇区返回一个谱，混合它们需要显式地调用 `torch.cat`。我们把 $`C`$
-个大小为 $`64`$ 的独立 GOE 块放进一个代数，并比较每个扇区的平均间距比与
-合并谱的平均间距比。每个扇区都是大小为 $`64`$ 的 GOE 矩阵，所以它的间距比与上面的 `r_goe`
-具有完全相同的分布，代码检验了这一点；合并谱的行为则只是被观察到：
+扇区越多，这一效应越强。在本库中，各块从一开始就是分开的：`eigenvalues()` 对每个扇区返回一个谱，混合它们需要显式地
+调用 `torch.cat`。我们把 $`C`$ 个大小为 $`64`$ 的独立 GOE 块放进一个代数，比较每个扇区的平均间距比与合并谱在 $`I=[-4,4]`$
+中的能级上合并样本得到的平均间距比（GOE(64) 的能级密度处处为正，引理 5.16）。每个扇区都是大小为 $`64`$ 的 GOE 矩阵，
+所以它的间距比与上面的 `r_goe` 具有完全相同的分布，代码检验了这一点。对样本合并的均值 $`\sum S/\sum N`$ 估计
+$`\mathbb ES(I)/\mathbb EN(I)`$；它的标准误差由每个样本的和 $`S,N`$ 得到（delta 方法）。定理 5.18 的速度以
+$`C\,|\langle r\rangle_C-(2\ln2-1)|\le2\,(\langle r\rangle_2-(2\ln2-1))`$（允许 $`5`$ 个标准误差）的形式检验，即对所有 $`C\ge2`$ 取
+$`A=2(\langle r\rangle_2-(2\ln2-1))`$：
 
 ```python
-k, merged_r = 64, {}
+k, P0, merged_r, merged_se = 64, 2 * math.log(2) - 1, {}, {}
 for C in (1, 2, 4, 8, 16):
     alg_C = TypeIAlgebra([k] * C, [k] * C, complex_valued=False, precision='double')
-    G = torch.randn(800 // C, C, k, k, dtype=torch.float64)
+    G = torch.randn(1600 // C, C, k, k, dtype=torch.float64)
     lam = alg_C.operator((G + G.mT) / 2, is_self_adjoint=True).eigenvalues()    # one spectrum per sector
     per_sector = torch.stack([ratio(l[:, k // 4: 3 * k // 4]) for l in lam])
-    merged = torch.cat(lam, dim=-1).sort(dim=-1).values                       # the spectrum on C^D
-    r_m = ratio(merged[:, k * C // 4: 3 * k * C // 4])
-    merged_r[C] = r_m.mean().item()
-    print(f"C = {C:2d}: <r> per sector {per_sector.mean():.4f}, merged {merged_r[C]:.4f}"
-          f" +- {r_m.std() / math.sqrt(len(r_m)):.4f}")
     same_mean(per_sector.flatten(), r_goe, f"C = {C:2d}: sectors vs GOE(64)")   # every sector is GOE(64)
-assert merged_r[1] > merged_r[2] > merged_r[4] > merged_r[16]       # numerical observation
-assert abs(merged_r[16] - (2 * math.log(2) - 1)) < 0.01              # numerical observation
+    merged = torch.cat(lam, dim=-1).sort(dim=-1).values                       # the spectrum on C^D
+    s = merged.diff(dim=-1)
+    r = torch.minimum(s[:, :-1], s[:, 1:]) / torch.maximum(s[:, :-1], s[:, 1:])   # r(y) at the inner levels
+    inside = (merged[:, 1:-1].abs() <= 4).double()                             # inner levels y in I = [-4, 4]
+    S, N = (r * inside).sum(-1), (merged.abs() <= 4).double().sum(-1)          # S(I), N(I) per sample
+    R = (S.sum() / N.sum()).item()                                             # pooled: estimates E S(I) / E N(I)
+    merged_r[C], merged_se[C] = R, ((S - R * N).pow(2).sum().sqrt() / N.sum()).item()   # delta method
+    print(f"C = {C:2d}: <r> per sector {per_sector.mean():.4f}, merged {R:.4f} +- {merged_se[C]:.4f},"
+          f"  C (<r> - (2 ln 2 - 1)) = {C * (R - P0):+.4f},  C^2 (<r> - (2 ln 2 - 1)) = {C * C * (R - P0):+.4f}")
+for C in (4, 8, 16):                                                          # Theorem 5.18: deviation <= A / C
+    assert C * abs(merged_r[C] - P0) <= 2 * (merged_r[2] - P0) + 5 * C * merged_se[C]
+assert merged_r[1] > merged_r[2] > merged_r[4]
 ```
 
-*数值观察。* 每个扇区都有 $`\langle r\rangle\approx0.53`$，即 5.3 节中 GOE(64) 的值
-（这一吻合是对一个事实的检验：各扇区都是 GOE(64) 矩阵）。合并谱在两个扇区时降到
-$`0.42`$，在 $`8`$ 和 $`16`$ 个扇区时降到约 $`0.39`$，与独立能级的值 $`2\ln2-1`$ 相差不到 $`0.01`$
-（命题 5.14(a)）。随着 $`C`$ 增大合并谱趋近于独立能级，这是代码观察到的现象；本课程并不证明它。
+*数值观察。* 每个扇区都有 $`\langle r\rangle\approx0.53`$，即 5.3 节中 GOE(64) 的值（这一吻合是对一个事实的检验：各扇区都是
+GOE(64) 矩阵）。合并谱在两个扇区时降到 $`0.43`$，四个扇区时降到 $`0.40`$，在 $`8`$ 和 $`16`$ 个扇区时与 $`2\ln2-1`$ 相差不到一个
+标准误差（$`0.0015`$），正如定理 5.18 所预言。偏差的减小比已证明的速度 $`1/C`$ 更快：代码发现对 $`C=1,2,4`$，
+$`C^2(\langle r\rangle_C-(2\ln2-1))`$ 介于 $`0.14`$ 和 $`0.17`$ 之间，即像 $`1/C^2`$ 那样减小，直到偏差低于统计误差。这种 $`1/C^2`$
+行为是计算的输出，而不是本课程的定理。
 
 在物理模型中也会发生同样的事情。带随机场的 Heisenberg 链（第 9 章）守恒
 磁化强度，所以它的哈密顿量属于 $`\bigoplus_{N=0}^LM_{\binom LN}`$（命题 9.1）。它的各块*不是*
-相互独立的——它们都依赖于同一组随机场——所以定理 5.15 不能照原样应用；
+相互独立的——它们都依赖于同一组随机场——所以定理 5.15 和 5.18 不能照原样应用；
 下面的实验显示出同样的效应，作为一个数值观察。
 
 ```python

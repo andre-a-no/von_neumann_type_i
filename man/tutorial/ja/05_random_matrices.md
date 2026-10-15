@@ -4,7 +4,7 @@
 
 このチュートリアルは講義ノートの[第5章](../../lecture_notes/ja/05_random_matrices.md)に対応する。同章では $`\mathcal M=\bigoplus_cM_{k_c}`$ のユニタリ群上の
 ハール測度を構成し（[系 5.4](../../lecture_notes/ja/05_random_matrices.md#r-5-4)）、その1次と2次のモーメントを計算し（[命題 5.7](../../lecture_notes/ja/05_random_matrices.md#r-5-7)、[定理 5.10](../../lecture_notes/ja/05_random_matrices.md#r-5-10)）、
-準位統計をセクターごとに計算しなければならない理由を示す（[定理 5.15](../../lecture_notes/ja/05_random_matrices.md#r-5-15)）。ここではライブラリでハール・ユニタリと
+準位統計をセクターごとに計算しなければならない理由を示す（[定理 5.15](../../lecture_notes/ja/05_random_matrices.md#r-5-15)、[定理 5.18](../../lecture_notes/ja/05_random_matrices.md#r-5-18)）。ここではライブラリでハール・ユニタリと
 ガウス・アンサンブルを生成し、これらの結果をモンテカルロ法で確かめる：平均は標準誤差の $`5`$ 倍以内で厳密な値と一致しなければならない。
 定理の裏付けのない結果は数値的観察と明記する。
 
@@ -24,7 +24,9 @@ dtype に対して `torch.randn` が生成するのはこれである。最初�
 `torch.linalg.qr` が呼び出すルーチン（LAPACK）について、下のコードは
 $`\mathbb E\mathrm{Re}\,\mathrm{Tr}\,Q'`$ が $`0`$ から標準誤差の何倍も離れていることを見いだすが、ハール・ユニタリでは
 $`\mathbb EU=0`$ である（系 5.5）。したがってこの $`Q'`$ はハール分布に従わない。これはそのルーチンについての主張であり、
-コードで確かめられるもので、定理ではない。
+コードで確かめられるもので、定理ではない。この符号の規約（$`R'_{11}`$ は $`\mathrm{Re}\,Z_{11}`$ と逆符号の実数であり、
+コードはこれを確かめる）に対しては、講義ノートが（[定理 5.3](../../lecture_notes/ja/05_random_matrices.md#r-5-3) の後で）ほとんど確実に $`\mathrm{Re}\,Q'_{11}<0`$ となることを証明しており、
+コードはすべてのサンプルでこれを確認する。
 
 ライブラリは `random_unitary_operator` により $`U(\mathcal M)`$ 上のハール・ユニタリを生成する。ブロックサイズごとに一回のバッチ化された QR
 分解で、すべてのセクターとサンプルを一度に処理する（GPU 上ではグラム・シュミットを用いるが、
@@ -77,6 +79,8 @@ torch.manual_seed(1)
 V = alg.random_unitary(2, batch_size=B)                              # the library, same random numbers
 Q, R = torch.linalg.qr(Z)                                            # LAPACK: diag(R) real, either sign
 d = R.diagonal(dim1=-2, dim2=-1)
+assert (d.imag == 0).all() and (d[:, 0].real * Z[:, 0, 0].real < 0).all()   # LAPACK: R'_11 real, sign of -Re Z_11
+assert (Q[:, 0, 0].real < 0).all()                                   # hence Re Q'_11 < 0 (after Theorem 5.3)
 assert close(V, Q * (d / d.abs()).unsqueeze(-2))                     # Theorem 5.3: V = Q Lambda
 raw = Q.diagonal(dim1=-2, dim2=-1).sum(-1).real                      # Re Tr Q without the correction
 print(f"E Re Tr Q without the phase correction: {raw.mean():.4f} +- {raw.std() / math.sqrt(B):.4f}")
@@ -208,41 +212,49 @@ $`2\ln2-1\approx0.386`$ よりはるかに大きい。この数は計算の出�
 
 ## 5.4 なぜセクターを混ぜてはならないか
 
-*講義ノート：* [5.4節](../../lecture_notes/ja/05_random_matrices.md#s-5-4)；[定理 5.15](../../lecture_notes/ja/05_random_matrices.md#r-5-15) により、異なる独立なブロックの準位は反発しない：二つの GOE ブロックでは、合併したスペクトルの最小間隔 $`\delta`$ について $`P(\delta<\varepsilon)`$ は少なくとも $`\varepsilon`$ のオーダーであるが、一つの GOE ブロックの内部では高々 $`\varepsilon^2`$ のオーダーである。
+*講義ノート：* [5.4節](../../lecture_notes/ja/05_random_matrices.md#s-5-4)；[定理 5.15](../../lecture_notes/ja/05_random_matrices.md#r-5-15) により、異なる独立なブロックの準位は反発しない：二つの GOE ブロックでは、合併したスペクトルの最小間隔 $`\delta`$ について $`P(\delta<\varepsilon)`$ は少なくとも $`\varepsilon`$ のオーダーであるが、一つの GOE ブロックの内部では高々 $`\varepsilon^2`$ のオーダーである。[定理 5.18](../../lecture_notes/ja/05_random_matrices.md#r-5-18)（GOE ブロックについては [補題 5.16](../../lecture_notes/ja/05_random_matrices.md#r-5-16)）により、一つのブロックの $`C`$ 個の独立なコピーの合併したスペクトルは、準位密度が正である窓 $`I`$ において、$`A/C`$ の誤差を除いて独立な準位の間隔比をもつ：多数のサンプルをまとめると、$`I`$ 内の準位の平均比 $`\mathbb ES(I)/\mathbb EN(I)`$ と $`2\ln2-1`$ との差は高々 $`A/C`$ である。
 
-セクターが多いほど効果は強まる。多数のセクターに対する極限定理は証明しない。以下の
-実験は数値的観察である。ライブラリではブロックは最初から分かれている：
-`eigenvalues()` はセクターごとに一つのスペクトルを返し、それらを混ぜるには明示的な `torch.cat` が必要である。サイズ $`64`$ の独立な
-GOE ブロック $`C`$ 個を一つの環に入れ、セクターごとの平均間隔比と合併したスペクトルのそれとを
-比較する。各セクターはサイズ $`64`$ の GOE 行列であるから、その間隔比は上の `r_goe` とまったく同じ分布をもち、
-コードはこれを検定する。合併したスペクトルの振る舞いは観察されるだけである：
+セクターが多いほど効果は強まる。ライブラリではブロックは最初から分かれている：`eigenvalues()` はセクターごとに一つの
+スペクトルを返し、それらを混ぜるには明示的な `torch.cat` が必要である。サイズ $`64`$ の独立な GOE ブロック $`C`$ 個を一つの環に
+入れ、セクターごとの平均間隔比と、合併したスペクトルの $`I=[-4,4]`$ 内の準位についてサンプルをまとめた平均間隔比とを比較する
+（GOE(64) の準位密度はいたるところ正である、補題 5.16）。各セクターはサイズ $`64`$ の GOE 行列であるから、その間隔比は上の
+`r_goe` とまったく同じ分布をもち、コードはこれを検定する。サンプルをまとめた平均 $`\sum S/\sum N`$ は
+$`\mathbb ES(I)/\mathbb EN(I)`$ を推定し、その標準誤差はサンプルごとの和 $`S,N`$ から求める（デルタ法）。定理 5.18 の速さは
+$`C\,|\langle r\rangle_C-(2\ln2-1)|\le2\,(\langle r\rangle_2-(2\ln2-1))`$（標準誤差の $`5`$ 倍まで許す）という形で、すなわちすべての
+$`C\ge2`$ に対して $`A=2(\langle r\rangle_2-(2\ln2-1))`$ として検定する：
 
 ```python
-k, merged_r = 64, {}
+k, P0, merged_r, merged_se = 64, 2 * math.log(2) - 1, {}, {}
 for C in (1, 2, 4, 8, 16):
     alg_C = TypeIAlgebra([k] * C, [k] * C, complex_valued=False, precision='double')
-    G = torch.randn(800 // C, C, k, k, dtype=torch.float64)
+    G = torch.randn(1600 // C, C, k, k, dtype=torch.float64)
     lam = alg_C.operator((G + G.mT) / 2, is_self_adjoint=True).eigenvalues()    # one spectrum per sector
     per_sector = torch.stack([ratio(l[:, k // 4: 3 * k // 4]) for l in lam])
-    merged = torch.cat(lam, dim=-1).sort(dim=-1).values                       # the spectrum on C^D
-    r_m = ratio(merged[:, k * C // 4: 3 * k * C // 4])
-    merged_r[C] = r_m.mean().item()
-    print(f"C = {C:2d}: <r> per sector {per_sector.mean():.4f}, merged {merged_r[C]:.4f}"
-          f" +- {r_m.std() / math.sqrt(len(r_m)):.4f}")
     same_mean(per_sector.flatten(), r_goe, f"C = {C:2d}: sectors vs GOE(64)")   # every sector is GOE(64)
-assert merged_r[1] > merged_r[2] > merged_r[4] > merged_r[16]       # numerical observation
-assert abs(merged_r[16] - (2 * math.log(2) - 1)) < 0.01              # numerical observation
+    merged = torch.cat(lam, dim=-1).sort(dim=-1).values                       # the spectrum on C^D
+    s = merged.diff(dim=-1)
+    r = torch.minimum(s[:, :-1], s[:, 1:]) / torch.maximum(s[:, :-1], s[:, 1:])   # r(y) at the inner levels
+    inside = (merged[:, 1:-1].abs() <= 4).double()                             # inner levels y in I = [-4, 4]
+    S, N = (r * inside).sum(-1), (merged.abs() <= 4).double().sum(-1)          # S(I), N(I) per sample
+    R = (S.sum() / N.sum()).item()                                             # pooled: estimates E S(I) / E N(I)
+    merged_r[C], merged_se[C] = R, ((S - R * N).pow(2).sum().sqrt() / N.sum()).item()   # delta method
+    print(f"C = {C:2d}: <r> per sector {per_sector.mean():.4f}, merged {R:.4f} +- {merged_se[C]:.4f},"
+          f"  C (<r> - (2 ln 2 - 1)) = {C * (R - P0):+.4f},  C^2 (<r> - (2 ln 2 - 1)) = {C * C * (R - P0):+.4f}")
+for C in (4, 8, 16):                                                          # Theorem 5.18: deviation <= A / C
+    assert C * abs(merged_r[C] - P0) <= 2 * (merged_r[2] - P0) + 5 * C * merged_se[C]
+assert merged_r[1] > merged_r[2] > merged_r[4]
 ```
 
-*数値的観察.* どのセクターも $`\langle r\rangle\approx0.53`$ であり、これは 5.3節の GOE(64) の値である
-（この一致はある事実の検定である：各セクターは GOE(64) 行列である）。合併したスペクトルでは、二つのセクターで
-$`0.42`$ に下がり、$`8`$ と $`16`$ のセクターでは約 $`0.39`$ まで下がり、独立な準位の値 $`2\ln2-1`$ との差は $`0.01`$ 以内となる
-（命題 5.14(a)）。$`C`$ が大きくなるにつれて合併したスペクトルが独立な準位に近づくことは、コードが観察する事柄であり、
-本講義では証明しない。
+*数値的観察.* どのセクターも $`\langle r\rangle\approx0.53`$ であり、これは 5.3節の GOE(64) の値である（この一致はある事実の
+検定である：各セクターは GOE(64) 行列である）。合併したスペクトルは、二つのセクターで $`0.43`$、四つで $`0.40`$ に下がり、$`8`$ と
+$`16`$ のセクターでは $`2\ln2-1`$ との差が標準誤差（$`0.0015`$）1個分未満となる。これは定理 5.18 の予言どおりである。偏差は証明された
+速さ $`1/C`$ より速く減少する：コードは $`C=1,2,4`$ に対して $`C^2(\langle r\rangle_C-(2\ln2-1))`$ が $`0.14`$ と $`0.17`$ の間にある
+こと、すなわち偏差が統計誤差より小さくなるまでは $`1/C^2`$ のように減少することを見いだす。この $`1/C^2`$ の振る舞いは計算の
+出力であり、本講義の定理ではない。
 
 同じことが物理的なモデルでも起こる。ランダム磁場中のハイゼンベルク鎖（第9章）は
 磁化を保存するから、そのハミルトニアンは $`\bigoplus_{N=0}^LM_{\binom LN}`$ に属する（命題 9.1）。そのブロックは独立では *ない*
-——すべてが同じランダム磁場に依存する——ので、定理 5.15 はそのままでは適用できない。
+——すべてが同じランダム磁場に依存する——ので、定理 5.15 と 5.18 はそのままでは適用できない。
 下の実験は、数値的観察として、同じ効果を示す。
 
 ```python

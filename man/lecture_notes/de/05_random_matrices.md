@@ -14,7 +14,7 @@ liefert (und warum die Phasen festgelegt werden müssen), dass die Mittelung üb
 der Algebra die bedingte Erwartung auf das Zentrum ist, die Weingarten-Formel zweiter Ordnung, die
 Wignersche Vermutung, das Abstandsverhältnis und seinen exakten Wert für Gaußsche
 $`3\times3`$-Matrizen, und warum eine Niveaustatistik, die an einem Spektrum mit vermischten Sektoren
-berechnet wird, wie die unabhängiger Niveaus aussieht.
+berechnet wird, wie die unabhängiger Niveaus aussieht, umso mehr, je mehr Sektoren vermischt sind.
 
 *Rechnung:* Die numerischen Überprüfungen dieses Kapitels — [Tutorial 5](../../tutorial/de/05_random_matrices.md).
 
@@ -110,7 +110,10 @@ $`O(k)`$, mit der Korrektur $`\mathrm{diag}(\mathrm{sgn}\,R'_{ii})`$; das wird i
 ausgeführt. Ohne die Korrektur $`\Lambda`$ hängt die Verteilung von $`Q'`$ von der
 Vorzeichenkonvention der QR-Routine ab und ist nicht notwendig das Haar-Maß (das Rezept mit
 $`\Lambda`$ stammt von F. Mezzadri, *How to generate random matrices from the classical compact
-groups*, Notices AMS 54 (2007), 592–604).
+groups*, Notices AMS 54 (2007), 592–604). Macht die Routine zum Beispiel $`R'_{11}`$ reell mit dem zu $`\mathrm{Re}\,Z_{11}`$
+entgegengesetzten Vorzeichen (wie die Householder-QR von LAPACK), so ergeben die ersten Spalten $`z_1=R'_{11}q'_1`$ von $`Z=Q'R'`$
+fast sicher $`\mathrm{Re}\,Q'_{11}=-|\mathrm{Re}\,Z_{11}|/\|z_1\|<0`$ ($`\mathrm{Re}\,Z_{11}\sim N(0,\frac12)`$ verschwindet mit Wahrscheinlichkeit $`0`$);
+also ist $`\mathbb E\,\mathrm{Re}\,Q'_{11}<0`$, während $`\mathbb EU_{11}=0`$ für eine Haar-verteilte unitäre Matrix gilt (Korollar 5.5).
 
 *Rechnung:* Der Sampler `TypeIAlgebra.random_unitary` der Bibliothek ist die korrigierte QR-Zerlegung aus Satz 5.3, und das unkorrigierte $`Q'`$ von `torch.linalg.qr` ist nicht Haar-verteilt — [Tutorial, Abschnitt 5.1](../../tutorial/de/05_random_matrices.md#s-5-1).
 
@@ -540,7 +543,8 @@ Abstandsverhältnis $`r_i`$ die Verteilung von $`r`$ aus (a) hat (Satz A.25 und 
 Sei $`H=\bigoplus_cH_c\in\mathcal M`$ ein zufälliges selbstadjungiertes Element mit **unabhängigen
 Blöcken**, zum Beispiel GOE-Blöcken. Als Operator auf $`\mathbb C^D`$ hat es als Spektrum die
 Vereinigung der Spektren der Blöcke. Innerhalb eines Blocks stoßen sich die Niveaus ab; wir zeigen,
-dass Niveaus verschiedener Blöcke dies nicht tun.
+dass Niveaus verschiedener Blöcke dies nicht tun, und dass das vereinigte Spektrum vieler unabhängiger Blöcke
+die Abstandsverhältnisse unabhängiger Niveaus hat.
 
 Wir nehmen an, dass jeder Block eine beschränkte stetige **Niveaudichte** $`\rho_c`$ hat:
 $`\mathbb E\sum_i\varphi(\lambda_i(H_c))=\int\varphi\,\rho_c`$ für beschränkte Borel-Funktionen
@@ -586,7 +590,167 @@ Innerhalb eines $`2\times2`$-GOE-Blocks ist sie gleich $`1-e^{-\varepsilon^2/4}\
 eine Konstante mal $`\varepsilon^2`$ (Proposition C.9). Der Test auf Niveauabstoßung schlägt für das
 vereinigte Spektrum fehl, obwohl jeder Block ein perfektes GOE ist.
 
-*Rechnung:* Für $`C`$ unabhängige GOE-Blöcke fällt das mittlere Abstandsverhältnis des vereinigten Spektrums mit wachsendem $`C`$ in Richtung des Werts $`2\ln2-1`$ unabhängiger Niveaus, und die Heisenberg-Kette mit Zufallsfeldern (Kapitel 9), deren Blöcke nicht unabhängig sind, zeigt denselben Effekt; beides sind numerische Beobachtungen — [Tutorial, Abschnitt 5.4](../../tutorial/de/05_random_matrices.md#s-5-4).
+Bei vielen Sektoren verliert das vereinigte Spektrum jede Spur der Blöcke: Seine Abstandsverhältnisse werden die
+unabhängiger Niveaus. Wir beweisen dies mit einer Rate für $`C`$ unabhängige Kopien $`H_1,\dots,H_C`$ einer zufälligen
+selbstadjungierten $`k\times k`$-Matrix $`H`$, mit festem $`k`$ und $`C\to\infty`$, für die Niveaus in einem Fenster, in dem die
+Niveaudichte positiv ist. Zwei Voraussetzungen an $`H`$ werden benutzt:
+
+- **(H1)** ihre Niveaudichte $`\rho`$ ist beschränkt und Lipschitz-stetig: $`\rho\le\rho_{\max}`$ und $`|\rho(x)-\rho(y)|\le L|x-y|`$;
+- **(H2)** ihr kleinster Abstand $`\delta=\min_i(\lambda_{i+1}-\lambda_i)`$ ($`\delta=+\infty`$ für $`k=1`$) erfüllt
+  $`P(\delta\le\varepsilon)\le K\varepsilon^2`$ für alle $`\varepsilon\ge0`$.
+
+(H2) ist eine schwache Form der Niveauabstoßung innerhalb des Blocks; mit $`\varepsilon=0`$ besagt sie, dass das Spektrum von
+$`H`$ fast sicher einfach ist.
+
+<a id="r-5-16"></a>
+
+**Lemma 5.16 (GOE- und GUE-Blöcke).** GOE- und GUE-Matrizen jeder Größe $`n\ge1`$ erfüllen (H1) und (H2), und ihre
+Niveaudichte ist überall positiv.
+
+*Beweis.* Die Positivität wurde nach Satz 5.15 gezeigt. *(H2).* Für $`n=1`$ ist nichts zu zeigen. Für $`n\ge2`$ und
+$`0\le\varepsilon<1`$ liefert Proposition C.9 eine Konstante $`K_0`$ mit
+$`P(\delta\le\varepsilon)\le P(\delta<\varepsilon')\le K_0\varepsilon'^{\beta+1}\le K_0\varepsilon'^2`$ für jedes $`\varepsilon'\in(\varepsilon,1]`$; man lasse
+$`\varepsilon'\downarrow\varepsilon`$ gehen. Mit $`K=\max(K_0,1)`$ gilt die Schranke auch für $`\varepsilon\ge1`$.
+*(H1).* $`\rho`$ ist nach Korollar C.8 beschränkt. In dessen Notation gilt mit $`x\in\mathbb R`$ und $`y\in\mathbb R^{n-1}`$
+$`|\Delta(x,y)|=|\Delta(y)|\prod_i|x-y_i|`$, also
+```math
+\rho(x)=\frac{n}{n!\,Z_{n,\beta}}\int_{\mathbb R^{n-1}}|\Delta(y)|^\beta e^{-|y|^2/2}\,g_y(x)\,dy,\qquad
+g_y(x)=f_0(x)\prod_{i=1}^{n-1}f_i(x),
+```
+mit $`f_0(x)=e^{-x^2/(2n)}`$ und $`f_i(x)=|x-y_i|^\beta e^{-x^2/(2n)}`$ (für $`n=1`$ gibt es kein $`y`$, und $`\rho=f_0/Z_{1,\beta}`$). Sei
+$`a=(\beta+1)\sup_x(1+|x|)^{\beta+1}e^{-x^2/(2n)}<\infty`$. Aus $`|x-y_i|\le(1+|x|)(1+|y_i|)`$ folgt $`|f_i|\le a(1+|y_i|)^\beta`$, und $`f_i`$
+ist stetig, außerhalb von $`y_i`$ stetig differenzierbar, mit
+$`|f_i'(x)|\le\big(\beta|x-y_i|^{\beta-1}+|x||x-y_i|^\beta\big)e^{-x^2/(2n)}\le a(1+|y_i|)^\beta`$. Nach dem Mittelwertsatz auf beiden Seiten
+von $`y_i`$ ist $`f_i`$ Lipschitz-stetig mit Konstante $`a(1+|y_i|)^\beta`$; ebenso $`f_0`$ mit Konstante $`a`$, und $`|f_0|\le1\le a`$.
+Schreibt man die Differenz zweier Produkte als Teleskopsumme, so folgt
+$`|g_y(x)-g_y(x')|\le\sum_i|f_i(x)-f_i(x')|\prod_{j\neq i}\sup|f_j|\le na^n\prod_i(1+|y_i|)^\beta\,|x-x'|`$. Also ist $`\rho`$
+Lipschitz-stetig mit $`L=\frac{n^2a^n}{n!\,Z_{n,\beta}}\int|\Delta(y)|^\beta\prod_i(1+|y_i|)^\beta e^{-|y|^2/2}dy`$, und das ist endlich wegen der
+Schranke $`|\Delta(y)|\le\prod_i(1+|y_i|)^{n-2}`$ aus dem Beweis von Satz C.7. $`\square`$
+
+Sei $`\Lambda_c`$ die Menge der Niveaus von $`H_c`$; das **vereinigte Spektrum von $`m`$ Blöcken** ist $`\Lambda_1\cup\dots\cup\Lambda_m`$. Für
+einen Punkt $`x`$ seien $`L_m(x)`$ und $`R_m(x)`$ die Abstände von $`x`$ zum nächsten Niveau des vereinigten Spektrums von $`m`$
+Blöcken unterhalb und oberhalb von $`x`$ ($`+\infty`$, falls es keines gibt), und, wenn beide endlich sind,
+$`r_m(x)=\min(L_m(x),R_m(x))/\max(L_m(x),R_m(x))`$. Für ein Intervall $`J`$ der Länge $`|J|`$ seien $`N(J)`$ die Anzahl der Niveaus
+von $`H`$ in $`J`$, $`\rho(J)=\int_J\rho=\mathbb EN(J)`$ und $`\sigma(J)=P(N(J)=0)`$.
+
+<a id="r-5-17"></a>
+
+**Lemma 5.17 (die beiden Lücken um einen festen Punkt).** Es gelten (H1) und (H2), und seien $`\ell,\rho_*>0`$ und
+$`x\in\mathbb R`$ mit $`\rho\ge\rho_*`$ auf $`[x-\ell,x+\ell]`$. Es gibt eine Konstante $`A`$, die nur von $`k,K,L,\rho_{\max},\rho_*,\ell`$
+abhängt, sodass für alle $`m\ge1`$ und $`0\le t\le1`$
+```math
+\Big|P\big(L_m(x),R_m(x)<\infty,\ r_m(x)\le t\big)-\frac{2t}{1+t}\Big|\le\frac Am .
+```
+
+*Beweis.* Für $`m\le2`$ genügt jedes $`A\ge2`$; sei $`m\ge3`$. *Ein Block.* Wegen $`1\{N\ge1\}\le N\le k\,1\{N\ge1\}`$ liefern
+Erwartungswerte (1): $`1-\rho(J)\le\sigma(J)\le1-\rho(J)/k\le e^{-\rho(J)/k}`$. Ist $`N(J)\ge2`$, so liegen zwei Niveaus in $`J`$, und
+$`\delta\le|J|`$; wegen $`N-1\{N\ge1\}\le k\,1\{N\ge2\}`$ liefert (H2) (2): $`\sigma(J)\le1-\rho(J)+kK|J|^2`$. Für $`c>0`$ gilt nach dem
+Satz von Tonelli und (H2)
+```math
+\mathbb Ee^{-c\delta}=\int_0^1P\big(e^{-c\delta}>u\big)\,du\le\int_0^1\frac{K\ln^2u}{c^2}\,du=\frac{2K}{c^2}.\qquad(3)
+```
+*Einfachheit.* Nach (H2) mit $`\varepsilon=0`$ hat jeder Block fast sicher ein einfaches Spektrum; nach Satz 5.15 mit
+$`\psi(u,v)=1\{u=v\}`$ (die Diagonale ist eine Nullmenge) haben zwei Blöcke fast sicher kein gemeinsames Niveau; und $`x`$ ist fast
+sicher kein Niveau, da $`\mathbb EN(\{x\})=0`$.
+
+*Eine Formel.* Wir schreiben $`\Lambda`$ für das vereinigte Spektrum von $`m`$ Blöcken und $`L,R`$ für $`L_m(x),R_m(x)`$, halten $`t`$
+fest und setzen $`J_b=[x-tb,x+b)`$ und $`\sigma_b=\sigma(J_b)`$ für $`b>0`$; $`J_b`$ wächst mit $`b`$, also ist $`\sigma_b`$
+monoton fallend. Fast sicher gilt
+```math
+1\{R<\infty,\ L>tR\}=\sum_{y\in\Lambda,\ y>x}1\{\Lambda\cap J_{y-x}=\{y\}\},
+```
+denn für $`y=x+R`$ sind die anderen Niveaus in $`J_R`$ die in $`[x-tR,x)`$, und solche gibt es genau dann, wenn $`L\le tR`$; für
+$`y>x+R`$ liegt das Niveau $`x+R`$ in $`J_{y-x}`$. Wir zerlegen die Summe nach dem Block von $`y`$. Die Blöcke sind unabhängig
+und gleich verteilt, und gegeben die Niveaus des Blocks von $`y`$ verfehlen die übrigen $`m-1`$ Blöcke $`J_{y-x}`$ mit
+Wahrscheinlichkeit $`\sigma_{y-x}^{m-1}`$; nach dem Satz von Fubini wie im Beweis von Satz 5.15 ist
+```math
+P(R<\infty,\ L>tR)=m\,\mathbb E\sum_{y\in\Lambda_1,\ y>x}1\{\Lambda_1\cap J_{y-x}=\{y\}\}\,\sigma_{y-x}^{m-1}=M-E_1,
+```
+mit $`M=m\,\mathbb E\sum_{y\in\Lambda_1,y>x}\sigma_{y-x}^{m-1}=m\int_0^\infty\rho(x+b)\sigma_b^{m-1}db`$ (Definition von $`\rho`$), und $`E_1\ge0`$ ist
+derselbe Erwartungswert mit $`1\{\Lambda_1\cap J_{y-x}\neq\{y\}\}`$.
+
+*$`E_1`$ ist klein.* Auf diesem Ereignis hat $`H_1`$ ein zweites Niveau im Abstand $`\le|J_{y-x}|\le2(y-x)`$ von $`y`$, also ist
+$`y-x\ge\delta_1/2`$, wobei $`\delta_1`$ der kleinste Abstand von $`H_1`$ ist. Nach (1) ist $`\sigma_b\le e^{-\rho_*\min(b,\ell)/k}`$, da
+$`J_b\supseteq[x,x+\min(b,\ell))`$. Mit höchstens $`k`$ Summanden, $`\mu=(m-1)\rho_*/k`$ und (3) folgt
+$`E_1\le mk\,\mathbb Ee^{-\mu\min(\delta_1/2,\ell)}\le mk\big(8Kk^2/((m-1)\rho_*)^2+e^{-(m-1)\rho_*\ell/k}\big)`$.
+
+*$`M`$ liegt nahe bei $`\frac1{1+t}`$.* Seien $`\rho_0=\rho(x)`$, $`a=(1+t)\rho_0`$ und $`b_1=\min(\ell,1/a)\ge b_0=\min(\ell,1/(2\rho_{\max}))`$.
+Dann ist $`m\int_0^{1/a}\rho_0(1-ab)^{m-1}db=\rho_0/a=\frac1{1+t}`$. Für $`0<b\le b_1`$ gilt
+$`|\rho(J_b)-ab|\le\int_{J_b}|\rho-\rho_0|\le L\frac{(1+t^2)b^2}2\le Lb^2`$, nach (1) und (2) also $`|\sigma_b-(1-ab)|\le K_1b^2`$ mit
+$`K_1=L+4kK`$; beide Zahlen liegen in $`[0,e^{-\rho_*b/k}]`$; und $`|\rho(x+b)-\rho_0|\le Lb`$. Mit
+$`|u^n-v^n|\le n|u-v|\max(u,v)^{n-1}`$ für $`u,v\ge0`$ folgt
+```math
+\big|\rho(x+b)\sigma_b^{m-1}-\rho_0(1-ab)^{m-1}\big|\le\rho_{\max}(m-1)K_1b^2e^{-(m-2)\rho_*b/k}+Lb\,e^{-(m-1)\rho_*b/k}.
+```
+Mit $`\int_0^\infty b^je^{-\lambda b}db=j!/\lambda^{j+1}`$ ist das $`m`$-Fache des Integrals hiervon über $`(0,b_1]`$ höchstens
+$`2m(m-1)\rho_{\max}K_1k^3/((m-2)\rho_*)^3+mLk^2/((m-1)\rho_*)^2`$. Die restlichen Teile sind
+$`m\int_{b_1}^\infty\rho(x+b)\sigma_b^{m-1}db\le mk\,e^{-(m-1)\rho_*b_0/k}`$ (da $`\int\rho=k`$ und $`\sigma_b\le\sigma_{b_1}`$) und
+$`m\int_{b_1}^{1/a}\rho_0(1-ab)^{m-1}db\le(1-ab_1)^m\le e^{-m\rho_*b_0}`$.
+
+*Beide Seiten.* Dasselbe Argument für die Matrizen $`-H_c`$ (Niveaudichte $`\rho(-\,\cdot)`$, dieselben Voraussetzungen) im
+Punkt $`-x`$ liefert $`P(L<\infty,\ R>tL)=M'-E_1'`$ mit denselben Schranken. Für $`t<1`$ sind die Ereignisse
+$`\{R<\infty,\ L\le tR\}`$ und $`\{L<\infty,\ R\le tL\}`$ disjunkt (zusammen ergäben sie $`L\le t^2L`$, während $`L>0`$), und ihre
+Vereinigung ist $`\{L,R<\infty,\ r_m(x)\le t\}`$, also
+```math
+P\big(L,R<\infty,\ r_m(x)\le t\big)-\frac{2t}{1+t}=-P(R=\infty)-P(L=\infty)-\Big(M-\frac1{1+t}\Big)-\Big(M'-\frac1{1+t}\Big)+E_1+E_1'.
+```
+Nach (1) ist $`P(R=\infty)\le\sigma((x,x+\ell))^m\le e^{-m\rho_*\ell/k}`$, ebenso für $`L`$; für $`t=1`$ ist die Wahrscheinlichkeit
+$`1-P(L=\infty\text{ oder }R=\infty)`$. Jeder Term ist höchstens eine Konstante durch $`m`$, denn $`m(m-1)/(m-2)^3\le18/m`$,
+$`m/(m-1)^2\le4/m`$ und $`me^{-(m-1)c}\le4/(mc^2)`$ für $`c>0`$ (aus $`u^2e^{-u}\le1`$). $`\square`$
+
+<a id="r-5-18"></a>
+
+**Satz 5.18 (viele unabhängige Sektoren sehen wie unabhängige Niveaus aus).** Es gelten (H1) und (H2). Seien
+$`I=[\alpha,\gamma]`$ und $`\ell,\rho_*>0`$ mit $`\rho\ge\rho_*`$ auf $`[\alpha-\ell,\gamma+\ell]`$, sei $`C\ge2`$, und sei $`\Lambda`$ das
+vereinigte Spektrum von $`C`$ Blöcken (fast sicher einfach). Für ein Niveau $`y`$ mit Nachbarn $`y_-<y<y_+`$ in $`\Lambda`$ sei
+$`r(y)=\min(y-y_-,y_+-y)/\max(y-y_-,y_+-y)`$. Seien $`N(I)`$ die Anzahl der Niveaus in $`I`$, $`N_t(I)`$ die Anzahl derer mit zwei
+Nachbarn und $`r(y)\le t`$, und $`S(I)`$ die Summe der $`r(y)`$ über die Niveaus in $`I`$ mit zwei Nachbarn. Dann ist
+$`\mathbb EN(I)=C\rho(I)`$, und es gibt eine Konstante $`A`$, die nur von $`k,K,L,\rho_{\max},\rho_*,\ell`$ und $`\rho(I)`$ abhängt,
+sodass für $`0\le t\le1`$
+```math
+\Big|\frac{\mathbb EN_t(I)}{\mathbb EN(I)}-\frac{2t}{1+t}\Big|\le\frac AC,\qquad
+\Big|\frac{\mathbb ES(I)}{\mathbb EN(I)}-(2\ln2-1)\Big|\le\frac AC .
+```
+
+Die Quotienten von Erwartungswerten sind das, was eine über viele Stichproben gepoolte Rechnung schätzt: der Anteil der
+Niveaus in $`I`$ mit $`r\le t`$ und ihr mittleres Abstandsverhältnis. Nach Lemma 5.16 gilt der Satz für unabhängige GOE- oder
+GUE-Blöcke jeder festen Größe und für jedes kompakte Intervall $`I`$.
+
+*Beweis.* $`\mathbb EN(I)=\sum_c\rho(I)`$. Die Blöcke sind gleich verteilt, also
+$`\mathbb EN_t(I)=C\,\mathbb E\sum_{y\in\Lambda_1\cap I}1\{y\text{ hat zwei Nachbarn},\ r(y)\le t\}`$. Sei $`m=C-1`$, und für
+$`y\in\Lambda_1`$ seien $`L'(y),R'(y)`$ seine Lücken im vereinigten Spektrum $`\Lambda'`$ von $`H_2,\dots,H_C`$ (wie in Lemma 5.17)
+und $`r'(y)`$ ihr Verhältnis. Die anderen Niveaus von $`H_1`$ haben von $`y`$ einen Abstand $`\ge\delta_1`$; ist also
+$`\max(L'(y),R'(y))<\delta_1`$, so sind die Nachbarn von $`y`$ in $`\Lambda`$ die in $`\Lambda'`$, und $`r(y)=r'(y)`$. Nun ist $`\Lambda'`$
+unabhängig von $`H_1`$, und $`\max(L'(y),R'(y))\ge s`$ verlangt, dass $`\Lambda'`$ das Intervall $`(y-s,y)`$ oder $`(y,y+s)`$
+verfehlt, was nach (1) für $`y\in I`$ höchstens die Wahrscheinlichkeit $`2e^{-m\rho_*\min(s,\ell)/k}`$ hat. Nach dem Satz von
+Fubini (wie im Beweis von Satz 5.15) und (3) ist
+```math
+\Big|\mathbb EN_t(I)-C\,\mathbb E\sum_{y\in\Lambda_1\cap I}p_m(y,t)\Big|\le2Ck\big(\mathbb Ee^{-m\rho_*\delta_1/k}+e^{-m\rho_*\ell/k}\big)
+\le2Ck\Big(\frac{2Kk^2}{(m\rho_*)^2}+e^{-m\rho_*\ell/k}\Big),
+```
+mit $`p_m(x,t)=P\big(L_m(x),R_m(x)<\infty,\ r_m(x)\le t\big)`$, nach dem Satz von Fubini eine Borel-Funktion von $`x`$. Nach der
+Definition von $`\rho`$ ist $`\mathbb E\sum_{y\in\Lambda_1\cap I}p_m(y,t)=\int_I\rho(x)p_m(x,t)\,dx`$, und Lemma 5.17 gilt in jedem
+$`x\in I`$ mit derselben Konstanten $`A_0`$. Division durch $`C\rho(I)`$ ergibt
+$`\big|\mathbb EN_t(I)/\mathbb EN(I)-\frac{2t}{1+t}\big|\le A_0/m+2k\big(2Kk^2/(m\rho_*)^2+e^{-m\rho_*\ell/k}\big)/\rho(I)`$, und das ist
+höchstens eine Konstante durch $`C`$, da $`m\ge C/2`$. Für den Mittelwert ist $`r(y)=\int_0^11\{r(y)>t\}\,dt`$, nach dem Satz von
+Tonelli also $`\mathbb ES(I)=\int_0^1\big(\mathbb EN_1(I)-\mathbb EN_t(I)\big)dt`$, während
+$`\int_0^1\big(1-\frac{2t}{1+t}\big)dt=\int_0^1\frac{1-t}{1+t}dt=2\ln2-1`$ (Proposition 5.14(a)); die zweite Abweichung ist also höchstens das
+Doppelte der Schranke der ersten. $`\square`$
+
+Der Beweis zeigt den Mechanismus. Ein Niveau $`y`$ eines Blocks sieht die übrigen $`C-1`$ Blöcke als unabhängige
+Konfiguration, deren Niveaus neben $`y`$ Abstände der Ordnung $`1/(C\rho)`$ haben; in solchen Abständen fehlen die anderen
+Niveaus des Blocks von $`y`$ mit hoher Wahrscheinlichkeit (hier gehen $`C\to\infty`$ und (H2) ein), sodass $`r(y)`$ das
+Verhältnis ist, in dem $`y`$ die Lücke der übrigen Blöcke teilt, die es enthält. Für eine konstante Dichte und höchstens ein
+Niveau pro Block nahe $`y`$ liefert die Formel des Beweises genau den Wert unabhängiger Niveaus,
+$`m\int_0^{1/a}\rho_0(1-ab)^{m-1}db=\frac1{1+t}`$, für jedes $`m`$; die Fehler stammen von der Variation von $`\rho`$ über eine Lücke
+und von zwei Niveaus eines Blocks in einer Lücke. Die Rate $`1/C`$ ist die, die der Beweis liefert; für GOE-Blöcke fällt die
+numerisch gefundene Abweichung wie $`1/C^2`$ (eine numerische Beobachtung, im Tutorial). Dass Überlagerungen vieler
+unabhängiger, dünner Punktprozesse nahe an Poisson-Prozessen liegen, ist ein klassisches Thema der
+Wahrscheinlichkeitstheorie (B. Grigelionis, Theory Probab. Appl. 8 (1963), 177–182); Satz 5.18 ist der hier benötigte
+Fall, mit einem Beweis innerhalb dieses Kurses. Die Unabhängigkeit der Blöcke ist für den Beweis wesentlich: Der Satz gilt
+nicht für die Sektoren der Heisenberg-Kette mit Zufallsfeldern (Kapitel 9), die alle von denselben Feldern abhängen.
+
+*Rechnung:* Satz 5.18 für $`C`$ unabhängige GOE-Blöcke der Größe $`64`$, mit einer Prüfung der Rate $`1/C`$; und die Heisenberg-Kette mit Zufallsfeldern, deren Blöcke nicht unabhängig sind, bei der derselbe Effekt eine numerische Beobachtung ist — [Tutorial, Abschnitt 5.4](../../tutorial/de/05_random_matrices.md#s-5-4).
 
 > **Physikalische Bedeutung** (physikalische Deutung, kein Satz dieses Kurses). Niveaus mit
 > verschiedenen erhaltenen Quantenzahlen wechselwirken nicht, also kreuzen sie sich ungehindert;
