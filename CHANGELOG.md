@@ -11,6 +11,9 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
   (`PermutationalSystem`, `PermutationalLindbladian`), with local dissipators as maps between spin sectors; tests against
   the full 2^N Lindblad generator and `qutip.piqs`. Script `scripts/permutational.py` and paper section "Use cases":
   lifetimes of a boundary time crystal under local emission and dephasing.
+- Script `scripts/trace_characterizations.py` and paper use case: violation envelopes V(δ) of eleven inequalities
+  that characterise the trace (Gardner, Bikchentaev and coauthors) for φ = Tr(W·) against the Michelson contrast δ of W;
+  sharp values (Kantorovich constant, a/b, Specht ratio) proved where possible, violations certified in mpmath.
 - Script `scripts/connes_stormer.py` and paper subsection "Use case: the Connes–Størmer entropy of two MASAs":
   H(Δ_n | UΔ_nU*) computed by batched optimisation over partitions of unity; closed form for n = 2 (one-dimensional
   maximisation, H > Choda's h(U) unless |u_11|² ∈ {0, 1/2, 1}); for n = 3, 4, 5 general partitions beat the best

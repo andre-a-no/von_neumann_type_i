@@ -1,0 +1,200 @@
+% Use case: quantitative failure of trace characterisations.
+% Numbers: scripts/trace_characterizations.py -> generated/trace_characterizations.tex (macros \TC...).
+\subsection{Use case: quantitative failure of trace characterisations}\label{sec:tc}
+
+\paragraph{The question.} Many inequalities that hold for the trace also characterise it. Gardner~\cite{gardner1979}
+showed that a positive functional $\varphi$ on a C$^*$-algebra with $|\varphi(X)|\le\varphi(|X|)$ for all $X$ is a
+trace. Monotonicity, Young, Araki--Lieb--Thirring and determinant inequalities, inequalities for projections, for
+$|\varphi(A^2)|$ and for the spectral geometric mean have since been shown to single out traces as well, on $M_n$
+or among the positive normal functionals on a von Neumann
+algebra~\cite{stolyarov2002,bikchentaev2005young,bikchentaev2007mono,bikchentaev2011pb,bikchentaev2019abed,bikchentaev2019metric,bikchentaev2020det,bikchentaev2026moslehian,bikchentaev2026sgm}.
+These theorems answer a yes/no question. We ask how strongly an inequality $L\le R$ fails for a given non-tracial
+functional.
+
+On $M_n$ every positive functional has the form $\varphi_W=\Tr(W\,\cdot\,)$ with $W\ge0$, and it is a trace iff $W$
+is scalar. We write $a\ge b>0$ for the extreme eigenvalues of $W$, $h=a/b=(1+\delta)/(1-\delta)$ with
+$\delta=\Delta(W)$, and $\kappa=(a+b)/(2\sqrt{ab})=(1-\delta^2)^{-1/2}$ for the Kantorovich constant. The
+\emph{violation envelope} is
+\begin{equation}\label{eq:tcV}
+  V(\delta)=\sup\bigl\{(L-R)/N:\ \Delta(W)=\delta,\ \text{all operator variables free}\bigr\},
+\end{equation}
+where $N$ is a normalisation that makes $V$ independent of the scales of $W$ and of the variables (mostly $N=R$).
+Table~\ref{tab:tc} lists the eleven inequalities we studied, in the forms used. \emph{Caveat:} we saw most cited
+papers only as abstracts or listings. For items~7, 8 and~11 the abstracts do not fix the form, and the form in the
+table is our choice; \texttt{usecases/trace\_characterizations\_catalogue.md} records what we saw.
+
+\begin{table}[h]
+\centering\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{rlccccccrc}
+\toprule
+ & inequality $L\le R$ & ref. & $V(0.1)$ & $V(0.5)$ & $V(0.9)$ & $V^\star(0.5)$ & order & slope & $n$-dep.\\
+\midrule
+\TCRows
+\bottomrule
+\end{tabular}
+\caption[]{The inequalities and their certified search values on $M_2$ at $\delta=0.1,0.5,0.9$; $N=R$ except
+$N=\varphi(P)+\varphi(Q)$ in~9 and $N=(\det A)^{1/n}$ in~11. $V^\star$ is the sharp value
+(Propositions~\ref{prop:tcK}, \ref{prop:tcB}); $^a$ marks a value proved sharp for $n=2$ only, $^b$ the lower bound
+of Proposition~\ref{prop:tcC}. ``order'': leading order of $V^\star$ as $\delta\to0$; ``slope'':
+$\log_2(V(0.2)/V(0.1))$ of the search; ``$n$-dep.'': the largest $|V_n/V_2-1|$ for $n=3,4$ and $\delta\ge0.1$; for
+item~7 it reflects only search shortfalls. In~9, $p=1$ is the strongest member of the family
+$\varphi(PQ+QP)\le2\varphi((QPQ)^p)$, $p\in(0,1]$. In~7, $r=2$ and $q=1$. In~8 we use Ando's trace form of Young's
+inequality, $p=q=2$. In~11, the AM--GM analogue. ``n.r.'': no violation found by the search
+\IfFileExists{generated/trace_characterizations.tex}{(\TCMode\ run on \TCDevice)}{}.}
+\label{tab:tc}
+\end{table}
+
+\paragraph{Sectors.} On $\M=\bigoplus_cM_{k_c}$ the traces are $\sum_ct_c\Tr_c$, $t_c\ge0$, so $\varphi_W$ is a trace
+iff $W$ is central, whatever its inter-block contrast. Items~1--10 hold for every trace of $\M$. Both sides of each
+are sums over the blocks ($L$ subadditive; in item~6 use $\sum_c\sqrt{x_cy_c}\le(\sum_cx_c\sum_cy_c)^{1/2}$). Hence
+$V_\M(W)=\max_cV_{M_{k_c}}(W_c)$ for items 1--10. The violation is governed by the \emph{intra-block} contrasts
+alone, and it does not depend on which reference trace (blunt, normalised, multiplicity-weighted) is used to write
+$\varphi=\Tr(W\,\cdot\,)$. Item~11 characterises the \emph{canonical} trace among functionals with $\varphi(1)=n$,
+and central $W$ violate it. The script checks this on $M_2\oplus M_3$ with $W=1\oplus s1$ and
+$W=\mathrm{diag}(1,\ell)\oplus s1$, for $s\in\{\frac14,4\}$ and intra-block contrast $\delta\in\{0.3,0.5,0.7\}$.
+\IfFileExists{generated/trace_characterizations.tex}{For central $W$ the largest value found for items 1--10 is
+$\TCSectorCentral$. For item~11 the search reproduces $1-\mathrm{GM}/\mathrm{AM}$ of the eigenvalues of $W$ to
+$\TCSectorDet$. With intra-block contrast, no value exceeds $V^\star_{M_2}(\delta)$ (largest relative excess
+$\TCSectorExcess$), and the search reaches it to $10^{-3}$ in $\TCSectorReached$ of $\TCSectorTotal$ cases.}{}
+A density that varies only between sectors is invisible to every characterisation except~11.
+
+\paragraph{Closed forms.}
+\begin{proposition}\label{prop:tcK}
+Let $W>0$ in $M_n$, $n\ge2$. For all $X,Y,A$ and all projections $P,Q,R$, with $\varphi=\varphi_W$:
+$|\varphi(X)|\le\kappa\varphi(|X|)$, $\varphi(A+A^*)\le2\kappa\varphi(|A^*|)$, $|\varphi(A^2)|\le\kappa\varphi(A^*A)$,
+$\varphi(|X+Y|)\le\kappa(\varphi(|X|)+\varphi(|Y|))$ and $\varphi(|P-R|)\le\kappa(\varphi(|P-Q|)+\varphi(|Q-R|))$.
+All five constants are attained, so $V=\kappa-1$ for items 1--5, in every dimension.
+\end{proposition}
+\begin{proof}
+Let $X=U|X|$ and $P=|X|$. Then $\varphi(X)=\langle WP^{1/2},UP^{1/2}\rangle_{\mathrm{HS}}$, so $|\varphi(X)|^2\le
+\Tr(W^2P)\Tr P$ for every contraction $U$. Since $(W-a)(W-b)\le0$, $\Tr(W^2P)\Tr P\le((a+b)x-aby)y\le\kappa^2x^2$
+with $x=\Tr WP$ and $y=\Tr P$; the difference is $(\kappa x-\sqrt{ab}\,y)^2$. The second inequality is the same,
+with $A=|A^*|V$. For the fourth, write $X+Y=S|X+Y|$, so that $\varphi(|X+Y|)=\varphi(S^*X)+\varphi(S^*Y)$, and bound
+each term with the contraction $S^*U_X$ or $S^*U_Y$. The fifth is the fourth with $X=P-Q$ and $Y=Q-R$. For the
+third, put $X=W^{1/2}A$ in an eigenbasis of $W$. Then $\varphi(A^*A)=\sum|X_{ij}|^2$, while
+$\varphi(A^2)=\sum_iX_{ii}^2+\sum_{i<j}X_{ij}X_{ji}(w_i+w_j)/\sqrt{w_iw_j}$ and $(w_i+w_j)/\sqrt{w_iw_j}\le2\kappa$.
+Equality holds as follows, with $e_1,e_2$ eigenvectors of $W$ for $a,b$: in the first two for $P=vv^*$ with
+$|\langle e_1,v\rangle|^2=\frac b{a+b}$, $|\langle e_2,v\rangle|^2=\frac a{a+b}$ and $Uv=Wv/\|Wv\|$; in the
+third for $A=\sqrt a\,e_1e_2^*+\sqrt b\,e_2e_1^*$; in the fourth for $X=uu^*$, $Y=-u'u'^*$ with
+$u,u'=\sin t\,e_1\pm\cos t\,e_2$ and $\tan t=\sqrt{b/a}$; in the fifth for $P=uu^*$, $Q=0$, $R=u'u'^*$.
+\end{proof}
+
+\begin{proposition}\label{prop:tcB}
+(a) $\varphi_W(|AB^*|)\le h\cdot\frac12(\varphi_W(|A|^2)+\varphi_W(|B|^2))$, with equality for $A=B=e_1e_2^*$; so
+$V=h-1=2\delta/(1-\delta)$ for item~8, for every $n$. (b) If $\Tr W=n$, then $\inf_{A>0}\varphi_W(A)/(n(\det A)^{1/n})
+=(\det W)^{1/n}$. So item~11 has $V=1-\mathrm{GM}/\mathrm{AM}$ of the eigenvalues of $W$, and the maximum over
+spectra in $[b,a]$ is attained at two-level spectra:
+$V_n(\delta)=1-\min_{1\le m<n}\ell^{(n-m)/n}n/(m+(n-m)\ell)$, $\ell=1/h$. In particular $V_2=1-\sqrt{1-\delta^2}$,
+and $V_n\uparrow1-1/S(h)$, where $S$ is the Specht ratio. (c) For $n=2$, item~9 has $V=s/(1+s)$ with
+$s=\sin(\psi/2)$, $\sin\psi=\delta$; thus $V\sim\delta/2$ as $\delta\to0$ and $V\to\sqrt2-1$ as $\delta\to1$.
+\end{proposition}
+\begin{proof}
+(a) $\varphi_W(|AB^*|)\le a\|A\|_2\|B\|_2$ and $\varphi_W(|A|^2)\ge b\|A\|_2^2$. (b) AM--GM for the eigenvalues of
+$W^{1/2}AW^{1/2}$, with equality at $A=W^{-1}$. In coordinates $x_i=\log w_i$, $\mathrm{AM}/\mathrm{GM}=\frac1n\sum
+e^{x_i-\bar x}$ is convex, so it is maximal at a vertex of the box; the limit is Specht's theorem. (c) Ranks 0 and
+2 give no violation. For $P=uu^*$, $Q=vv^*$, $u=cv+\sigma v_\perp$, normalise $a+b=2$ and put $\beta=v^*Wv$,
+$\rho=|v^*Wv_\perp|$. The ratio is $r/(1+r)$ with $r=\rho\sin2\theta/(\frac{3\beta+\gamma}2+\frac{\beta-\gamma}2
+\cos2\theta)$, where $c=\cos\theta$ and $\gamma=2-\beta$. Its maximum over $\theta$ is $r=\rho/(2\sqrt\beta)$.
+With $\rho^2=\beta(2-\beta)-(1-\delta^2)$, the maximum over $\beta$ is at $\beta=\sqrt{1-\delta^2}$, where
+$r^2=(1-\sqrt{1-\delta^2})/2$.
+\end{proof}
+
+\begin{proposition}\label{prop:tcC}
+For every $n\ge2$: $V_6\ge\kappa-1$, $V_7\ge\kappa^2-1=\delta^2/(1-\delta^2)$ (both approached, not attained), and
+$V_{10}\ge m(\delta):=\max_{0<y<\delta}y^2(\delta-y)^2/((1-2\delta y+y^2)(1-y^2))=\delta^4/16+O(\delta^5)$
+(attained). Conversely, $V\le h-1$ for items 1--8 and 10.
+\end{proposition}
+\begin{proof}
+Let $e_\pm=(e_1\pm e_2)/\sqrt2$. (6) For invertible $A$ and $B=vv^*$, $A\natural B=(v^*Av)^{1/2}vv^*$, because
+$A^{-1}\#B=vv^*/(v^*Av)^{1/2}$. Taking $v=e_+$ and $A=xx^*+\varepsilon$ with $x\propto W^{-1}v$, the ratio
+$\varphi(A\natural B)/\sqrt{\varphi(A)\varphi(B)}$ tends to $((v^*W^{-1}v)(v^*Wv))^{1/2}=\kappa$. (7) In the basis
+$f_1=e_+$, $f_2=e_-$, take $B=\eta f_1f_1^*+f_2f_2^*$ and $A=uu^*$ with $u=f_1+s\eta f_2$. As $\eta\to0$ the ratio
+tends to $W_{11}/(W_{11}+2sW_{12}+s^2W_{22})$, which equals $\kappa^2$ at $s=-W_{12}/W_{22}$. (10) Take $A=uu^*$
+and $B=A+tvv^*$ with $u,v$ at angles $\alpha,\pi-\alpha$ to $e_1$. With $a+b=2$ and $y=-\cos2\alpha$:
+$\mathrm{Re}\,(u^*v)(v^*Wu)=-y(\delta-y)$, $u^*Wu=v^*Wv=1-\delta y$, and the optimal $t$ is
+$y(\delta-y)/(1-\delta y)$. (Upper bound) In each item $L\le aL_0$, with $L_0$ the trace or trace-norm version of
+$L$ (e.g.\ $|\varphi(X)|\le a\|X\|_1$); moreover $L_0\le R_{\Tr}$ and $R\ge bR_{\Tr}$. For item~6,
+$\Tr(A\natural B)=\|A^{1/2}B^{1/2}\|_1\le(\Tr A\Tr B)^{1/2}$.
+\end{proof}
+
+\paragraph{Computation and validation.} $W$ is diagonal with the spectrum of \texttt{optimize.SpectrumParam}, so that
+$\Delta(W)=\delta$ is exact and the other eigenvalues are free. The variables are \texttt{PositiveParam} (free
+contrast in $[0,1]$, so rank-deficient operators are included), \texttt{SelfAdjointParam}, \texttt{UnitaryParam}
+(polar factors, and projections $UDU^*$ with every rank pattern spread over the starts), and positive scalars. Half
+of the starts begin at the structured points of \texttt{optimize}. The
+\IfFileExists{generated/trace_characterizations.tex}{\TCGridSize}{14} contrasts times
+\IfFileExists{generated/trace_characterizations.tex}{\TCStarts}{the} starts form one batch for
+\texttt{extremize}\IfFileExists{generated/trace_characterizations.tex}{ (\TCSteps\ steps, $n=\TCDims$)}{}. For item 1:
+\begin{lstlisting}
+W = opt.SpectrumParam(alg, B, delta=grid.repeat_interleave(starts))   # Delta(W) exact
+P = opt.PositiveParam(alg, B, delta_range=(0.0, 1.0))                 # |X|, any rank
+U = opt.UnitaryParam(alg, B)                                          # X = U P
+def objective():
+    w = W.eigenvalues() / W.eigenvalues().sum((-2, -1), keepdim=True)
+    phi = lambda op: (torch.diagonal(op.matrix, dim1=-2, dim2=-1) * w).sum((-2, -1))
+    p = phi(P.operator()).real
+    return (phi(U.operator() @ P.operator()).abs() - p) / p
+V = opt.extremize(objective, [W, P, U]).reshape(-1, starts).max(1).values
+\end{lstlisting}
+For every contrast, the best final point is recomputed in mpmath with
+\IfFileExists{generated/trace_characterizations.tex}{\TCDigits}{40} digits, after the unitaries are re-ortho\-normalised,
+and $\Delta(W)$ is recomputed from the stored eigenvalues. Every positive entry of Table~\ref{tab:tc} is thus a
+certified violation at an exactly admissible point. \IfFileExists{generated/trace_characterizations.tex}{At
+$\delta=0$ no value exceeds $\TCVzero$. The double-precision and mpmath values agree to $\TCCertDev$ (relative).
+Where $V$ is known exactly (items 1--5, 8, 11, and 9 for $n=2$), the search reproduces it to $\TCSharpDev$ for
+$\delta\ge0.05$ and $n=2,3,4$. Apart from item~6 with $n\ge3$, no value exceeds the bounds of
+Proposition~\ref{prop:tcC} (largest relative excess $\TCBoundExcess$).}{} The tests compare every library objective
+with plain NumPy and with mpmath, check that random points stay below $V^\star$ and that the stated extremisers attain
+it, and run independent SciPy (BFGS) searches for items 1, 9 and~10.
+
+\begin{figure}[h]
+\centering\fig{trace_characterizations.pdf}{\textwidth}
+\caption{Left: certified search values on $M_2$ (symbols) and closed forms or lower bounds (lines), on logarithmic
+axes; the small-$\delta$ slopes are $1$ (items 8, 9), $2$ (items 1--7, 11) and $4$ (item 10). Right: the search
+divided by $V^\star$ for $n=2,3,4$. Items~6 and~7 reach their suprema only as an operator becomes singular, and the
+search stays below them. The item-6 point above~1 is a certified violation beyond $\kappa-1$ for $n=4$.}
+\label{fig:tc}
+\end{figure}
+
+\paragraph{Results.}
+\begin{enumerate}
+\item[(i)] \emph{Detectability.} $V(\delta)>0$ for every $\delta>0$ in all eleven items, by the constructions above.
+\item[(ii)] \emph{Strength.} The strength varies by orders of magnitude. As $\delta\to0$, Young (8) and the
+projection inequality (9) fail linearly. Items 1--5 and 11 fail quadratically, as $\delta^2/2$. Items 6 and 7 fail
+at least quadratically, as $\delta^2/2$ and $\delta^2$. For monotonicity (10) the construction gives only
+$\delta^4/16$, and the search finds nothing larger. At $\delta=0.1$ its violation is $10^{-3}$ of that of items 1--5
+and $10^{-4}$ of that of item~9. As $\delta\to1$, $V\to\infty$ except for items 9 and 11, which tend to
+$\sqrt2-1$ and $1$.
+\item[(iii)] \emph{Dimension.} Items 1--5 and 8 do not depend on $n$ (proved). For items 9 and 10 the search gives
+the same values for $n=3,4$ as for $n=2$, to
+\IfFileExists{generated/trace_characterizations.tex}{$\TCNDev$}{round-off}. For item~7 the values are of the same
+size, all below $\kappa^2-1$. Item~11 grows towards the Specht
+limit. Item~6 depends on $n$. For $n=2$ the search never exceeds $\kappa-1$, but for $n\ge3$ it certifies larger
+violations: \IfFileExists{generated/trace_characterizations.tex}{$V\ge\TCSGMExcessV$ at $n=\TCSGMExcessN$,
+$\delta=\TCSGMExcessDelta$ ($\kappa-1=\TCSGMExcessKappa$)}{}, and a stored point in the tests gives $V>2.1$ at $n=3$,
+$\delta=0.9$, where $\kappa-1=1.29$. There $A$ and $B$ sit on the eigenvectors for $b$, while $A\natural B$ carries
+weight on the eigenvector for $a$, a transfer that needs a third dimension. We only know $\kappa-1\le V_6\le h-1$.
+\item[(iv)] \emph{Extremisers.} Apart from item~6 with $n\ge3$, the extremisers live in the span of eigenvectors for
+$a$ and $b$. They are rank-one operators or matrix units (up to complements and direct sums), they do not commute
+with $W$, and the other eigenvalues of $W$ do not matter. Item~11 is the exception: its extremiser $A=W^{-1}$
+commutes with $W$, and two-level spectra of $W$ are optimal.
+\item[(v)] \emph{Limits of the search.} The suprema of items 6 and 7 are approached only as $B$ becomes singular, with
+$A$ tuned on the scale of its small eigenvalue. Gradient ascent reaches
+\IfFileExists{generated/trace_characterizations.tex}{$\TCSGMRatioHalf$ and $\TCALTRatioHalf$}{part} of the bound at
+$\delta=0.5$, and it finds no violation of item~6 for $\delta\le0.2$.
+\end{enumerate}
+\emph{Observation (conjecture):} $V_7=\kappa^2-1$ and $V_{10}=m(\delta)$ in every dimension, $V_6=\kappa-1$ for
+$n=2$, and item~9 equals Proposition~\ref{prop:tcB}(c) for all $n$.
+
+\paragraph{What is new.} The characterisation theorems are due to the cited authors. The constants $\kappa$, $h$ and
+the Specht ratio are classical, and Proposition~\ref{prop:tcK} is a Kantorovich inequality in disguise. We found no
+study of the envelopes~\eqref{eq:tcV}, but we searched only abstracts and listings. The closest work,
+\cite{abed2024}, relates trace-characterising inequalities to the contrasts of the operator \emph{variables}, not
+of the density. As far as we can tell, the following are new: the sharp values for items 1--5, 8, 11, and for 9
+with $n=2$; the bounds of Proposition~\ref{prop:tcC}; the classification by order of vanishing ($\delta$,
+$\delta^2$, $\delta^4$); the dependence of item~6 on $n$; and the fact that characterisations of traces detect only
+intra-block contrast. The rest are numerical observations.
+\IfFileExists{generated/trace_characterizations.tex}{\emph{Cost:} all 33 envelopes, the sector checks and the mpmath
+recomputations take \TCSeconds~s on \TCWorkers\ CPU processes.}{} Each envelope is one batched optimisation over
+the grid and the starts, whereas the SciPy searches of the tests treat one contrast and one start at a time.

@@ -22,7 +22,7 @@
 
 % numbers and tables produced by scripts/*.py (bash scripts/run_all.sh [quick|full] [device])
 \newcommand{\gen}[1]{\IfFileExists{generated/#1.tex}{\input{generated/#1.tex}}{}}
-\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}\gen{renyi_threshold}\gen{connes_stormer}\gen{permutational}
+\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}\gen{renyi_threshold}\gen{connes_stormer}\gen{permutational}\gen{trace_characterizations}
 % Captions that use these numbers have an empty short caption: the short caption is expanded into main.aux,
 % where a number whose file is missing would be an undefined control sequence.
 \providecommand{\ValidationRows}{\multicolumn{6}{c}{\emph{run scripts/validate\_known\_results.py}}\\}
@@ -30,6 +30,7 @@
 \providecommand{\BoundsRows}{\multicolumn{7}{c}{\emph{run scripts/bounds\_search.py}}\\}
 \providecommand{\BenchmarkRows}{\multicolumn{5}{c}{\emph{run scripts/benchmark\_library.py}}\\}
 \providecommand{\BenchHasGPU}{0}
+\providecommand{\TCRows}{\multicolumn{10}{c}{\emph{run scripts/trace\_characterizations.py}}\\}
 \providecommand{\NumTimeRows}{\multicolumn{9}{c}{\emph{run scripts/numerics.py}}\\}
 \providecommand{\NumAccRows}{\multicolumn{5}{c}{\emph{run scripts/numerics.py}}\\}
 \providecommand{\NumTimeHeader}{generate & eigh $f(A)$ & SVD $|A|$ & channel & expm & opt.\ step}
@@ -1610,6 +1611,8 @@ non-abelian subalgebras we have no closed form; these values are lower bounds fo
 The following computations use the library as a research tool: each asks a question from the literature, is validated
 against independent computations, and reports what is reproduced and what is new.
 
+\input{usecases/trace_characterizations.tex}
+
 \input{usecases/permutational.tex}
 
 \section{Comparison with NumPy/SciPy}\label{sec:baselines}
@@ -1977,6 +1980,24 @@ degenerate cases'', arXiv:2011.04366 (2020).
 \bibitem{dicke1954} R.~H.~Dicke, ``Coherence in spontaneous radiation processes'', Phys.\ Rev.\ 93 (1954), 99--110.
 \bibitem{gross1982} M.~Gross, S.~Haroche, ``Superradiance: an essay on the theory of collective spontaneous
   emission'', Phys.\ Rep.\ 93 (1982), 301--396.
+\bibitem{stolyarov2002} A.~I.~Stolyarov, O.~E.~Tikhonov, A.~N.~Sherstnev, ``Characterization of normal traces on
+  von Neumann algebras by inequalities for the modulus'', Math.\ Notes 72 (2002), 411--416.
+\bibitem{bikchentaev2005young} A.~M.~Bikchentaev, O.~E.~Tikhonov, ``Characterization of the trace by Young's
+  inequality'', J.\ Inequal.\ Pure Appl.\ Math.\ 6 (2005), no.~2, Art.~49.
+\bibitem{bikchentaev2007mono} A.~M.~Bikchentaev, O.~E.~Tikhonov, ``Characterization of the trace by monotonicity
+  inequalities'', Linear Algebra Appl.\ 422 (2007), 274--278.
+\bibitem{bikchentaev2011pb} A.~M.~Bikchentaev, ``The Peierls--Bogoliubov inequality in C$^*$-algebras and
+  characterization of tracial functionals'', Lobachevskii J.\ Math.\ 32 (2011), 175--179.
+\bibitem{bikchentaev2019abed} A.~M.~Bikchentaev, S.~A.~Abed, ``Projections and traces on von Neumann algebras'',
+  Lobachevskii J.\ Math.\ 40 (2019), 1260--1267.
+\bibitem{bikchentaev2019metric} A.~M.~Bikchentaev, ``Metrics on projections of the von Neumann algebra associated
+  with tracial functionals'', Sib.\ Math.\ J.\ 60 (2019), 952--956.
+\bibitem{bikchentaev2020det} A.~M.~Bikchentaev, ``Inequalities for determinants and characterization of the
+  trace'', Sib.\ Math.\ J.\ 61 (2020), 248--254.
+\bibitem{bikchentaev2026moslehian} A.~M.~Bikchentaev, M.~S.~Moslehian, ``Trace inequalities and characterizations
+  of tracial functionals in operator algebras'', Positivity (2026), doi:10.1007/s11117-026-01180-0.
+\bibitem{bikchentaev2026sgm} A.~M.~Bikchentaev, T.~H.~Dinh, A.~V.~Le, M.~S.~Moslehian, ``Spectral geometric mean
+  and trace characterizations'', Positivity 30 (2026), Art.~46.
 \end{thebibliography}
 }
 
