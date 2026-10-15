@@ -2,8 +2,9 @@
 
 # 教程：在讲义的背景下使用 torch_vn_algebra
 
-本教程在[讲义](../../lecture_notes/zh/README.md)的背景下，展示如何在库 `torch_vn_algebra` 中对有限维冯·诺依曼代数
-$`\bigoplus_cM_{k_c}(\mathbb C)`$ 进行计算。每个教程配合讲义中编号相同的一章：它展示那里证明的结果对应的库代码，用精确
+本教程在[讲义](../../lecture_notes/zh/README.md)的背景下，展示如何在 PyTorch 库 `torch_vn_algebra` 中（CPU 与 GPU）对有限维冯·诺依曼代数
+$`\bigoplus_cM_{k_c}(\mathbb C)`$——带对称性扇区的分块对角矩阵——进行计算：随机矩阵与 Haar 随机酉矩阵、量子态、量子信道与熵、
+Schrödinger 与 Lindblad 动力学、对称性扇区中的自旋链与精确对角化、群表示的 Wedderburn 分解、量子纠错、等变层以及若尔当代数。每个教程配合讲义中编号相同的一章：它展示那里证明的结果对应的库代码，用精确
 结果（定理、闭合公式或独立计算）检验代码，并在*可与之比较的工具*一节中列出完成同一任务的标准工具。每一节都以一行
 *讲义：* 开头，链接到该节及其所用的结果。只是计算出来的数值（例如大 $`n`$ 时的能级统计）标记为*数值观察*，从不用作
 前提或测试目标。除讲义的[预备知识](../../lecture_notes/zh/README.md#prerequisites)之外，本教程还假定读者熟悉 Python。

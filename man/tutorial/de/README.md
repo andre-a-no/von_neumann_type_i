@@ -2,8 +2,12 @@
 
 # Tutorial: torch_vn_algebra im Kontext der Vorlesungsnotizen
 
-Dieses Tutorial zeigt, wie man in der Bibliothek `torch_vn_algebra` mit den endlichdimensionalen von-Neumann-Algebren
-$`\bigoplus_cM_{k_c}(\mathbb C)`$ rechnet, im Kontext der [Vorlesungsnotizen](../../lecture_notes/de/README.md). Jedes Tutorial begleitet
+Dieses Tutorial zeigt, wie man in der PyTorch-Bibliothek `torch_vn_algebra` auf CPU und GPU mit den
+endlichdimensionalen von-Neumann-Algebren $`\bigoplus_cM_{k_c}(\mathbb C)`$ – blockdiagonalen Matrizen mit
+Symmetriesektoren – rechnet, im Kontext der [Vorlesungsnotizen](../../lecture_notes/de/README.md): Zufallsmatrizen und
+Haar-verteilte unitäre Matrizen, Quantenzustände, Quantenkanäle und Entropien, Schrödinger- und Lindblad-Dynamik,
+Spinketten und exakte Diagonalisierung in Symmetriesektoren, Wedderburn-Zerlegungen von Gruppendarstellungen,
+Quantenfehlerkorrektur, äquivariante Schichten und Jordan-Algebren. Jedes Tutorial begleitet
 das Kapitel der Vorlesungsnotizen mit derselben Nummer: Es zeigt den Bibliothekscode zu den dort bewiesenen Ergebnissen,
 überprüft den Code an einem exakten Ergebnis (einem Satz, einer geschlossenen Formel oder einer unabhängigen Rechnung)
 und nennt in einem Abschnitt *Womit man vergleichen sollte* die Standardwerkzeuge für dieselbe Aufgabe. Jeder Abschnitt

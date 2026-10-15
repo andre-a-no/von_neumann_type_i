@@ -27,3 +27,5 @@ results/
 man/article/arxiv.tar.gz
 # temporary git worktrees of Claude Code agents
 .claude/worktrees/
+# documentation site built by mkdocs
+site/

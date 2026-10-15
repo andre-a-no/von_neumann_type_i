@@ -2,8 +2,12 @@
 
 # Tutorial: torch_vn_algebra in the context of the lecture notes
 
-This tutorial shows how to compute with the finite-dimensional von Neumann algebras $`\bigoplus_cM_{k_c}(\mathbb C)`$
-in the library `torch_vn_algebra`, in the context of the [lecture notes](../lecture_notes/README.md). Each tutorial accompanies
+This tutorial shows how to compute with the finite-dimensional von Neumann algebras $`\bigoplus_cM_{k_c}(\mathbb C)`$ —
+block-diagonal matrices with symmetry sectors — in the PyTorch library `torch_vn_algebra`, on CPU and GPU, in the
+context of the [lecture notes](../lecture_notes/README.md): random matrices and Haar-random unitaries, quantum states,
+channels and entropies, Schrödinger and Lindblad dynamics, spin chains and exact diagonalisation in symmetry sectors,
+Wedderburn decompositions of group representations, quantum error correction, equivariant layers and Jordan
+algebras. Each tutorial accompanies
 the chapter of the lecture notes with the same number: it shows the library code for the results proved there, checks
 the code against an exact result (a theorem, a closed formula or an independent computation), and names, in a section
 *What to compare with*, the standard tools for the same task. Each section starts with a line *Lecture notes:* that

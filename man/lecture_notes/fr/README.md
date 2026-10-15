@@ -3,8 +3,11 @@
 # Algèbres de von Neumann de dimension finie : notes de cours
 
 Ce cours présente la théorie des algèbres de von Neumann de dimension finie — les algèbres
-$`\bigoplus_cM_{k_c}(\mathbb C)`$ — ainsi que leurs usages en physique quantique, en
-information quantique, en théorie des matrices aléatoires et en apprentissage automatique.
+$`\bigoplus_cM_{k_c}(\mathbb C)`$ de matrices diagonales par blocs — ainsi que leurs usages en physique quantique, en
+information quantique, en théorie des matrices aléatoires et en apprentissage automatique : secteurs de symétrie et de
+supersélection, théorème du bicommutant et théorème de structure de Wedderburn, traces, états et entropie, mesure de
+Haar et calcul de Weingarten, canaux quantiques (Kraus, Stinespring, Choi), équation de Lindblad (GKSL), chaînes de
+spins, correction d'erreurs quantiques, réseaux de neurones équivariants et algèbres de Jordan.
 
 Il s'adresse simultanément à deux publics :
 

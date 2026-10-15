@@ -9,6 +9,15 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 First release, the version described in the paper (arXiv:2606.15882v2) and submitted with it.
 
 ### Added
+- `dynamics.lindblad_evolve(..., method='rk4' | 'kraus' | 'exact')` and `LINDBLAD_METHODS`: time steps that are
+  quantum channels for every step size (course Theorem 8.16; RK4, the default, is not positive, Proposition 8.15).
+- `krylov.krylov_error_bound`; `krylov.evolve(dt=None)` chooses adaptive steps from a proved error bound (course
+  Theorem 9.18, Corollary 9.19) and `expm_multiply_step` returns that bound as `err`.
+- `Decomposition.certificate()` and `Certificate`: a-posteriori certificate of a numerical Wedderburn decomposition
+  (backward error, algebra gap, tolerance window; course Section 4.9).
+- Theory tests (`tests/test_theory_*.py`, `tests/test_review_*.py`, `tests/test_article_claims.py`), single-precision
+  and gradient tests, cross-checks against QuTiP, QuSpin, GAP and SymPy (`tests/test_crosscheck_external.py`).
+- Documentation website (MkDocs, `mkdocs.yml`, `.github/workflows/pages.yml`).
 - `TypeIAlgebra.operator(..., validate=True)` checks property flags passed by the user (they are trusted otherwise).
 - `Operator.apply_function(f, per_block=True)` for functions that couple the eigenvalues of one block.
 - `holomorphic_function(..., atol=...)`: absolute scale of the error estimate where f(X) may vanish.
@@ -45,6 +54,15 @@ First release, the version described in the paper (arXiv:2606.15882v2) and submi
   thresholds of the Rényi divergences".
 
 ### Fixed (independent correctness audit against dense NumPy/SciPy references)
+- Gradients of functions of operators at (nearly) degenerate spectra (divided differences cancelled to 0; later the
+  switching rule between quotient and midpoint was wrong for shifted spectra; now Proposition 1.13 of the course).
+- `decompose`: the commutant ignored `tol`; noise-scaled thresholds saturated for noise >~ 1e-3.
+- `divergences`: orthogonal supports gave finite values instead of +inf; NaN gradient of the Umegaki entropy at a
+  zero eigenvalue.
+- `states.gibbs_state`, `dynamics.schrodinger`, `dynamics.von_neumann` carried no gradient in H.
+- `krylov.evolve`: steps far too long for large ||H|| (error 0.27), too short for a constant shift; float32 overflow
+  of norms. `HilbertSpace.norm` overflowed in float32.
+- `cost`: the timing probe overestimated ~100x (false `CostWarning`); Python lists became float32.
 - `inverse()` and `power(p < 0)` of self-adjoint operators: the support threshold is per block again (small
   sectors next to large sectors of the same size were set to zero).
 - `krylov.evolve` rounded the time grid to float32 (phase error of order E·3e-9).

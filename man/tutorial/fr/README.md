@@ -3,7 +3,11 @@
 # Tutoriel : torch_vn_algebra dans le contexte des notes de cours
 
 Ce tutoriel montre comment calculer avec les algèbres de von Neumann de dimension finie $`\bigoplus_cM_{k_c}(\mathbb C)`$
-dans la bibliothèque `torch_vn_algebra`, dans le contexte des [notes de cours](../../lecture_notes/fr/README.md). Chaque tutoriel
+— des matrices diagonales par blocs avec des secteurs de symétrie — dans la bibliothèque PyTorch `torch_vn_algebra`, sur
+CPU et GPU, dans le contexte des [notes de cours](../../lecture_notes/fr/README.md) : matrices aléatoires et unitaires de
+Haar, états quantiques, canaux et entropies, dynamique de Schrödinger et de Lindblad, chaînes de spins et diagonalisation
+exacte dans les secteurs de symétrie, décompositions de Wedderburn de représentations de groupes, correction d'erreurs
+quantiques, couches équivariantes et algèbres de Jordan. Chaque tutoriel
 accompagne le chapitre des notes de cours de même numéro : il présente le code de la bibliothèque pour les résultats
 qui y sont démontrés, vérifie ce code par rapport à un résultat exact (un théorème, une formule close ou un calcul
 indépendant) et cite, dans une section *Points de comparaison*, les outils de référence pour la même tâche. Chaque

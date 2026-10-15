@@ -3,9 +3,11 @@
 # Endlichdimensionale von-Neumann-Algebren: Vorlesungsnotizen
 
 Dieser Kurs behandelt die Theorie der endlichdimensionalen von-Neumann-Algebren – der
-Algebren $`\bigoplus_cM_{k_c}(\mathbb C)`$ – zusammen mit ihren Anwendungen in der
-Quantenphysik, der Quanteninformation, der Theorie der Zufallsmatrizen und dem
-maschinellen Lernen.
+Algebren $`\bigoplus_cM_{k_c}(\mathbb C)`$ blockdiagonaler Matrizen – zusammen mit ihren Anwendungen in der
+Quantenphysik, der Quanteninformation, der Theorie der Zufallsmatrizen und dem maschinellen Lernen: Symmetrie- und
+Superauswahlsektoren, der Bikommutantensatz und der Struktursatz von Wedderburn, Spuren, Zustände und Entropie, das
+Haar-Maß und der Weingarten-Kalkül, Quantenkanäle (Kraus, Stinespring, Choi), die Lindblad-Gleichung (GKSL),
+Spinketten, Quantenfehlerkorrektur, äquivariante neuronale Netze und Jordan-Algebren.
 
 Er richtet sich zugleich an zwei Arten von Lesern:
 

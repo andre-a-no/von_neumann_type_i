@@ -3,8 +3,11 @@
 # Álgebras de von Neumann de dimensión finita: apuntes de clase
 
 Este curso expone la teoría de las álgebras de von Neumann de dimensión finita —las álgebras
-$`\bigoplus_cM_{k_c}(\mathbb C)`$— junto con sus aplicaciones en física cuántica, información
-cuántica, teoría de matrices aleatorias y aprendizaje automático.
+$`\bigoplus_cM_{k_c}(\mathbb C)`$ de matrices diagonales por bloques— junto con sus aplicaciones en física cuántica,
+información cuántica, teoría de matrices aleatorias y aprendizaje automático: sectores de simetría y de
+superselección, el teorema del doble conmutante y el teorema de estructura de Wedderburn, trazas, estados y entropía,
+la medida de Haar y el cálculo de Weingarten, canales cuánticos (Kraus, Stinespring, Choi), la ecuación de Lindblad
+(GKSL), cadenas de espines, corrección cuántica de errores, redes neuronales equivariantes y álgebras de Jordan.
 
 Está escrito a la vez para dos tipos de lectores:
 

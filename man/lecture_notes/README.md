@@ -3,8 +3,11 @@
 # Finite-dimensional von Neumann algebras: lecture notes
 
 This course teaches the theory of finite-dimensional von Neumann algebras — the algebras
-$`\bigoplus_cM_{k_c}(\mathbb C)`$ — together with their uses in quantum physics, quantum information, random matrix
-theory and machine learning.
+$`\bigoplus_cM_{k_c}(\mathbb C)`$ of block-diagonal matrices — together with their uses in quantum physics, quantum
+information, random matrix theory and machine learning: symmetry and superselection sectors, the double commutant
+theorem and the Wedderburn structure theorem, traces, states and entropy, Haar measure and the Weingarten calculus,
+quantum channels (Kraus, Stinespring, Choi), the Lindblad (GKSL) equation, spin chains, quantum error correction,
+equivariant neural networks and Jordan algebras.
 
 It is written for two kinds of readers at once:
 
