@@ -1,7 +1,7 @@
 """
 The mathematical statements and exact values of the article (man/article/main.tex), checked through the public API
 of torch_vn_algebra: CPU, double precision, fixed seeds. Every test names the statement it checks by the section of
-the article ("Sec. 2", ...) or by its numbered object ("Proposition 1", "Listing 10"). Distributional claims are
+the article ("Sec. 2", ...) or by its numbered object ("Proposition 1") or by the program it refers to ("ex3_channels.py"). Distributional claims are
 checked with z-scores; exact claims to round-off.
 """
 import math
@@ -185,7 +185,7 @@ def test_sec2_densities_for_the_three_traces(ks):
 
 
 def loss_channel(g, alg=None):
-    """Particle loss on two fermionic modes (Listing 3): Kraus sqrt(1 - gN), sqrt(g) a_1, sqrt(g) a_2."""
+    """Particle loss on two fermionic modes (ex3_channels.py): Kraus sqrt(1 - gN), sqrt(g) a_1, sqrt(g) a_2."""
     alg = alg or alg_of([1, 2, 1])
     s, z = g ** 0.5, torch.zeros
     blocks = {
@@ -200,7 +200,7 @@ def loss_channel(g, alg=None):
 
 @pytest.mark.parametrize('g', [0.0, 0.2, 0.5])
 def test_sec4_particle_loss_is_a_pure_death_process(g):
-    """Sec. 4 (Listing 3): the loss channel is trace preserving with T = [[1,g,0],[0,1-g,2g],[0,0,1-2g]] for every state."""
+    """Sec. 4 (ex3_channels.py): the loss channel is trace preserving with T = [[1,g,0],[0,1-g,2g],[0,0,1-2g]] for every state."""
     alg, loss = loss_channel(g)
     assert loss.is_trace_preserving()
     T = torch.tensor([[1, g, 0], [0, 1 - g, 2 * g], [0, 0, 1 - 2 * g]], dtype=torch.float64)
@@ -295,7 +295,7 @@ def test_sec2_fused_product_sizes_and_partial_trace_dual():
 
 @pytest.mark.parametrize('L', [6, 8])
 def test_sec4_saturation_field_of_the_heisenberg_ring(L):
-    """Sec. 4 (Listing 7): E_min(N=1) - E(N=0) = h - 2J (one magnon at k=pi), so the ground state is N=0 iff h >= 2J."""
+    """Sec. 4 (ex7_spin_chain.py): E_min(N=1) - E(N=0) = h - 2J (one magnon at k=pi), so the ground state is N=0 iff h >= 2J."""
     ch = SpinChain(L, 'periodic')
     assert list(ch.algebra.k_factors) == [comb(L, N) for N in range(L + 1)]
     for h in (0.3, 1.9, 2.1, 3.0):
@@ -465,7 +465,7 @@ def test_sec3_eigenvalues_without_eigenvectors():
 # ================================================================================================================
 
 def test_sec4_lueders_conditioning():
-    """Sec. 4 (Listing 2): rho|P = P rho P / Tr(rho P), with probability Tr(rho P); conditioning on a block moves p into it."""
+    """Sec. 4 (ex2_states_measurement.py): rho|P = P rho P / Tr(rho P), with probability Tr(rho P); conditioning on a block moves p into it."""
     alg = alg_of([2, 3])
     rho = states.random_density_matrix(alg, batch_size=5)
     P = from_blocks(alg, [torch.diag(torch.tensor([1.0, 0.0], dtype=DT))[None], torch.zeros(1, 3, 3, dtype=DT)])
@@ -477,7 +477,7 @@ def test_sec4_lueders_conditioning():
 
 
 def test_sec4_spontaneous_emission_exact_solution():
-    """Sec. 4 (Listing 4): P_e(t) = P_e(0) e^{-gamma t}, |rho_eg(t)| = |rho_eg(0)| e^{-gamma t/2} (exp of the generator)."""
+    """Sec. 4 (ex4_dynamics.py): P_e(t) = P_e(0) e^{-gamma t}, |rho_eg(t)| = |rho_eg(0)| e^{-gamma t/2} (exp of the generator)."""
     alg = alg_of([2])
     omega, gamma = 1.0, 0.3
     H = from_blocks(alg, [torch.diag(torch.tensor([0.5 * omega, -0.5 * omega], dtype=DT))[None]])
@@ -506,7 +506,7 @@ def test_sec4_coherence_time_of_damping_and_dephasing():
 
 
 def test_sec4_xy_mixer_post_selection():
-    """Sec. 4 (Listing 9): damping only gives acceptance e^{-w g1 T} and fidelity 1; with dephasing the post-selected state does not depend on g1."""
+    """Sec. 4 (ex9_qaoa_xy_mixer.py): damping only gives acceptance e^{-w g1 T} and fidelity 1; with dephasing the post-selected state does not depend on g1."""
     n, w, T = 4, 2, 1.0
     q = SpinChain(n, 'periodic')
     H = q.xxz(J=1.0, Delta=0.0)
@@ -531,7 +531,7 @@ def test_sec4_xy_mixer_post_selection():
 
 
 def test_sec4_page_formula():
-    """Sec. 4/5 (Listing 5): <S(rho_A)> = sum_{k=n+1}^{mn} 1/k - (m-1)/(2n) for Haar pure states on C^m (x) C^n (z-score)."""
+    """Sec. 4/5 (ex5_page_entropy.py): <S(rho_A)> = sum_{k=n+1}^{mn} 1/k - (m-1)/(2n) for Haar pure states on C^m (x) C^n (z-score)."""
     m, n, B = 2, 3, 20000
     A, Bs = alg_of([m]), alg_of([n])
     AB = composite.tensor_product(A, Bs)
@@ -542,7 +542,7 @@ def test_sec4_page_formula():
 
 
 def test_sec4_exp1_supremum_is_the_trace_norm():
-    """Sec. 4/6 (Listing 6): sup_U z = ||YX||_1 - Tr(XY) > 0 for non-commuting X, Y >= 0, attained at U = W^* (YX = W|YX|)."""
+    """Sec. 4/6 (ex6_inequality_search.py): sup_U z = ||YX||_1 - Tr(XY) > 0 for non-commuting X, Y >= 0, attained at U = W^* (YX = W|YX|)."""
     alg = alg_of([4])
     X, Y = rand_op(alg, 6, 'pos'), rand_op(alg, 6, 'pos')
     sup = (Y @ X).trace_norm() - (X @ Y).trace.real
@@ -1137,7 +1137,7 @@ def listing_inclusion():
 
 
 def test_sec8_listing_inclusion_index_and_expectation():
-    """Sec. 8 (Listing 10): [M:N] = ||Lambda||^2 = (7 + sqrt 45)/2; E is unital, E o iota = id, bimodule, tau-preserving, iota's adjoint."""
+    """Sec. 8 (listings/inclusions.py): [M:N] = ||Lambda||^2 = (7 + sqrt 45)/2; E is unital, E o iota = id, bimodule, tau-preserving, iota's adjoint."""
     N, M, I = listing_inclusion()
     assert I.index() == pytest.approx((7 + math.sqrt(45)) / 2, rel=1e-13)
     for trace in ('blunt', 'norm', 'tau_vN', 'markov', torch.tensor([0.7, 1.9], dtype=torch.float64)):
@@ -1262,7 +1262,7 @@ def test_sec8_spin_chain_tower(L):
 
 @pytest.mark.parametrize('L', [3, 4, 5])
 def test_sec8_schur_weyl_duality(L):
-    """Sec. 8 (Listing 11): permutations of L qubits and total spin generate mutual commutants: k_c and m_c exchanged."""
+    """Sec. 8 (listings/symmetry.py): permutations of L qubits and total spin generate mutual commutants: k_c and m_c exchanged."""
     S = dc.from_group(dc.permutation_representation(L, 2))
     G = dc.from_generators(dc.total_spin(L))
     pairs_S = sorted(zip(S.k_factors, S.multiplicities))

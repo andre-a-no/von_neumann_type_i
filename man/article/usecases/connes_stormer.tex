@@ -1,0 +1,217 @@
+% Use case: the Connes--Stormer relative entropy of two MASAs (moved from the section on subalgebras).
+% Numbers: scripts/connes_stormer.py -> generated/connes_stormer.tex (macros \CS...).
+\subsection{Use case: the Connes--St{\o}rmer entropy of two MASAs}\label{sec:cs}
+
+\paragraph{The quantity.} Let $\M=M_n(\C)$ with the normalised trace $\tau=\Tr/n$, let $\eta(t)=-t\log t$, and for a
+unital $*$-subalgebra $P\subset\M$ let $E_P$ be the $\tau$-preserving conditional expectation onto $P$ (in the
+library, the conditional expectation of an \texttt{Inclusion} for the trace \texttt{'norm'}). The relative entropy of Connes and
+St{\o}rmer~\cite{connes1975} of two subalgebras $P,Q$ is
+\begin{equation}\label{eq:cs}
+  H(P|Q)=\sup\sum_j\bigl[\tau\eta(E_Qx_j)-\tau\eta(E_Px_j)\bigr],
+\end{equation}
+the supremum being taken over all finite partitions of unity $x_j\ge0$, $\sum_jx_j=1$, in $\M$. Connes and St{\o}rmer
+introduced it for finite-dimensional subalgebras on the way to the entropy of automorphisms~\cite{connes1975}; Pimsner
+and Popa extended it to arbitrary subalgebras and related the entropy $H(\M|N)$ of an inclusion $N\subset\M$ to the
+Jones index~\cite{pimsner1986}. The partition $x_1=1$ shows $H(P|Q)\ge0$, and $H(P|P)=0$. As a measure of the relative
+position of two subalgebras (cf.~\cite{bakshi}), its simplest non-trivial instance is a pair of maximal abelian
+subalgebras (MASAs) of $M_n$: the diagonal algebra $\Delta_n$ and a rotated copy $U\Delta_nU^*$, $U$ unitary. The
+partition into the minimal projections $e_{jj}$ of $\Delta_n$ gives the lower bound
+\[
+  H(\Delta_n|U\Delta_nU^*)\ \ge\ h(U)=\frac1n\sum_{i,j}\eta\bigl(|u_{ij}|^2\bigr),
+\]
+the entropy of the unistochastic matrix $(|u_{ij}|^2)$, averaged over its rows. Choda~\cite{choda} showed that $h(U)$ is
+the value of a modified relative entropy in which the partitions are taken in $\Delta_n$. The expectation that
+$H(\Delta_n|U\Delta_nU^*)=h(U)$ was disproved for $n=2$ by Petz, Sz\'ant\'o and Weiner, who remarked that the correct
+formula ``seems to be a hard problem''~\cite[Appendix]{petz2009}. Bakshi and Guin bound the Connes--St{\o}rmer entropy
+of pairs of spin model subfactors built from $2\times2$ complex Hadamard matrices from below by $h(U)$ and note that a
+formula for $H(\Delta_n|U\Delta_nU^*)$ is open even for $n=2$~\cite[Section~2.3 and Theorem~6.22]{bakshi}. We compute
+$H(\Delta_n|U\Delta_nU^*)$ with the library, prove a closed form for every $U\in U(2)$, and report what the
+computations show for $n\ge3$, where we are not aware of a closed form.
+
+\noindent\emph{Fact} (Petz, Sz\'ant\'o and Weiner~\cite[Section~3, Lemma~1 and (7), (8)]{petz2009}). Let
+$P,Q\subset M_n(\C)$ be unital $*$-subalgebras, $S(\sigma)=-\Tr\sigma\log\sigma$, and $G(\rho)=S(E_Q\rho)-S(E_P\rho)$
+for density matrices $\rho$. A partition $(x_j)$ corresponds to the ensemble $t_j=\tau(x_j)$, $\rho_j=x_j/\Tr x_j$,
+with $\sum_jt_j\rho_j=\frac1n$, and
+\[
+  H(P|Q)=\max\Bigl\{\sum_jt_jG(\rho_j):\ t_j\ge0,\ \sum_jt_j=1,\ \sum_jt_j\rho_j=\tfrac1n\Bigr\};
+\]
+the maximum is attained by an ensemble of at most $n^2$ (linearly independent) states, and for two MASAs
+$H(P|Q)\le\log n$.
+
+\begin{lemma}\label{lem:cs}
+In this setting $H(P|Q)$ is the value at $\frac1n$ of the concave envelope of $G$ on the state space. In particular
+$H(P|Q)\le G^*:=\max_\rho G(\rho)$, and $H(P|Q)=G^*$ if and only if $\frac1n$ is a convex combination of maximisers
+of $G$.
+\end{lemma}
+\begin{proof}
+The concave envelope of the continuous function $G$ at $\rho$ is the maximum of $\sum_jt_jG(\rho_j)$ over the finite
+ensembles with $\sum_jt_j\rho_j=\rho$; at $\rho=\frac1n$ this is the Fact. Finally $\sum_jt_jG(\rho_j)\le G^*$, with
+equality iff $G(\rho_j)=G^*$ whenever $t_j>0$.
+\end{proof}
+
+\noindent For complementary MASAs ($|u_{ij}|^2=\frac1n$, e.g.\ the Fourier matrix) $h(U)=\log n$, so $H=\log n$, the
+largest possible value; conversely, $H=\log n$ only for complementary MASAs~\cite[Theorem~3]{petz2009} (see
+also~\cite[Theorem~4.11]{ghosh2026}). For $n=2$ the supremum is a one-dimensional maximisation over orthonormal bases:
+
+\begin{proposition}\label{prop:cs2}
+Let $U\in M_2(\C)$ be unitary, $c=|u_{11}|^2=\cos^2\theta$ with $\theta\in[0,\frac\pi2]$, $h(p)=\eta(p)+\eta(1-p)$, and
+\[
+  \varphi(\alpha)=h\bigl(\cos^2(\alpha-\theta)\bigr)-h(\cos^2\alpha)=\int_{\alpha-\theta}^{\alpha}\psi(\beta)\,d\beta,
+  \qquad\psi(\beta)=\sin(2\beta)\log\tan^2\beta
+\]
+($\psi$ is continuous with $\psi=0$ on $\frac\pi2\mathbb Z$, odd, and of period $\frac\pi2$).
+(a) $H(\Delta_2|U\Delta_2U^*)=\max_\alpha\varphi(\alpha)$. Writing $U=D_1R_\theta D_2$ with diagonal unitaries $D_1,D_2$ and
+the rotation $R_\theta=\bigl(\begin{smallmatrix}\cos\theta&-\sin\theta\\ \sin\theta&\cos\theta\end{smallmatrix}\bigr)$,
+the maximum is attained by the two projections onto the orthonormal basis $D_1(\cos\alpha^*,\sin\alpha^*)^T$,
+$D_1(-\sin\alpha^*,\cos\alpha^*)^T$, where $\alpha^*$ maximises $\varphi$.\\
+(b) $H(\Delta_2|U\Delta_2U^*)\le\kappa\theta$ with $\kappa=\max\psi\approx1.3255$, and $H/\theta\to\kappa$ as
+$\theta\to0$, while $h(c)/\theta\to0$; in particular $H/h(U)\to\infty$ as $c\to1$. $H$ is invariant under $c\mapsto1-c$.
+\end{proposition}
+\begin{proof}
+\emph{Reduction.} Every unitary $2\times2$ matrix is of the form $D_1R_\theta D_2$ (its entries satisfy $|u_{11}|=|u_{22}|$
+and $|u_{12}|=|u_{21}|$). As $D_2\Delta_2D_2^*=\Delta_2$, $Q=U\Delta_2U^*=D_1R_\theta\Delta_2R_\theta^TD_1^*$. The
+automorphism $\gamma=\operatorname{Ad}D_1$ preserves $\tau$ and $\Delta_2$, and $E_{\gamma(R)}=\gamma\circ E_R\circ\gamma^{-1}$
+for every subalgebra $R$; applying $\gamma$ to partitions shows $H(\Delta_2|Q)=H(\Delta_2|R_\theta\Delta_2R_\theta^T)$, with
+the optimal partitions moved by $D_1$. So let $U=R_\theta$.
+
+\emph{Bloch coordinates.} Write $x=t(1+r\cdot\sigma)$ with $t=\tau(x)\ge0$, $r\in\mathbb R^3$, $|r|\le1$ and the Pauli
+matrices $\sigma$; $(x_j)$ is a partition iff $\sum_jt_j=1$ and $\sum_jt_jr_j=0$. For $\rho=\frac12(1+r\cdot\sigma)$,
+$E_{\Delta_2}\rho$ has the eigenvalues $\frac12(1\pm r\cdot z)$, $z=(0,0,1)$, and
+$E_Q\rho=R_\theta E_{\Delta_2}(R_\theta^T\rho R_\theta)R_\theta^T$ has the eigenvalues $\frac12(1\pm r\cdot q)$, where
+$q=(\sin2\theta,0,\cos2\theta)$ is the Bloch vector of $R_\theta e_1$. By the Fact ($x_j=2t_j\rho_j$) the sum
+in~\eqref{eq:cs} is $\sum_jt_jf(r_j)$ with $f(r)=k(r\cdot q)-k(r\cdot z)$ and $k(s)=h(\frac{1+s}2)$.
+
+\emph{Two-element partitions suffice.} $\sum_jt_jf(r_j)\le\max_{|r|\le1}f$, and $f(-r)=f(r)$ because $k$ is even, so the
+partition $\frac12(1\pm r^*\cdot\sigma)$ attains the bound at a maximiser $r^*$: $H=\max_{|r|\le1}f$.
+
+\emph{Pure states in the plane of $z$ and $q$.} $f(r)$ depends on $r$ only through its orthogonal projection $a$ onto the
+plane spanned by $z$ and $q$, $|a|\le1$; write $a=\varrho(\sin\beta,0,\cos\beta)$ with $0\le\varrho\le1$, so that
+$a\cdot z=\varrho\cos\beta$ and $a\cdot q=\varrho\cos(\beta-2\theta)$. For $|s|\le1$,
+$k(s)=\log2-\sum_{m\ge1}s^{2m}/(2m(2m-1))$, hence
+\[
+  f(a)=\sum_{m\ge1}\frac{\varrho^{2m}}{2m(2m-1)}\bigl(\cos^{2m}\beta-\cos^{2m}(\beta-2\theta)\bigr).
+\]
+If $|\cos\beta|\ge|\cos(\beta-2\theta)|$, all coefficients are non-negative and $f(a)$ is largest at $\varrho=1$; otherwise
+all are negative and $f(a)\le0$. Since $\varrho=1$, $\beta=\theta$ gives $f=0$,
+$\max f=\max_\beta[k(\cos(\beta-2\theta))-k(\cos\beta)]$, and with $\beta=2\alpha$ and $k(\cos2\gamma)=h(\cos^2\gamma)$ this
+is $\max_\alpha\varphi(\alpha)$. The maximiser $r^*=(\sin2\alpha^*,0,\cos2\alpha^*)$ is the Bloch vector of the projection
+onto $(\cos\alpha^*,\sin\alpha^*)^T$, and $-r^*$ that of the orthogonal one; this proves (a). The integral form follows
+from $\varphi=0$ at $\theta=0$ and $\partial_\theta h(\cos^2(\alpha-\theta))=h'(\cos^2(\alpha-\theta))\sin(2(\alpha-\theta))
+=\psi(\alpha-\theta)$, $h'(p)=\log\frac{1-p}p$.
+
+(b) $\varphi(\alpha)\le\theta\max\psi$ for every $\alpha$. For a maximiser $\beta^*$ of $\psi$ and
+$\alpha=\beta^*+\theta/2$, the window contains only $\beta$ with $|\beta-\beta^*|\le\theta/2$, so
+$\varphi(\alpha)\ge\theta\min_{|\beta-\beta^*|\le\theta/2}\psi(\beta)=\kappa\theta(1+o(1))$ by continuity, while
+$h(c)=\varphi(0)=\int_{-\theta}^0\psi=o(\theta)$ as $\psi(0)=0$. Finally, $U$ and
+$U\bigl(\begin{smallmatrix}0&1\\1&0\end{smallmatrix}\bigr)$ define the same algebra $Q$, with $|u_{11}|^2=c$ and $1-c$.
+\end{proof}
+
+\noindent At $\alpha=0$, $\varphi(0)=h(c)$ is the value of the partition $e_{11},e_{22}$, i.e.\ $h(U)$. Petz, Sz\'ant\'o
+and Weiner showed that $H(\Delta_2|U\Delta_2U^*)>h(U)$ unless $c\in\{0,\frac12,1\}$~\cite[Appendix]{petz2009}; their
+two-element partitions $r(t),1-r(t)$ give exactly $\varphi(t/2)$, and the strict inequality comes from
+$\varphi'(0)=\psi(\theta)\ne0$. For $c>\frac12$ the optimal basis is rotated away from the basis $R_\theta e_1,R_\theta e_2$ of $Q$
+($\alpha^*<0$, Figure~\ref{fig:cs}): it accepts some entropy of $E_{\Delta_2}x_j$ in exchange for more entropy of
+$E_Qx_j$. Near $c=1$, $H\approx\kappa\sqrt{1-c}$ is much larger than $h(c)\approx(1-c)\log\frac1{1-c}$. Since
+$H(u\Delta_2u^*|v\Delta_2v^*)\le H(R_u|R_v)$ for the spin model subfactors $R_u,R_v$ of two $2\times2$ complex Hadamard
+matrices~\cite[proof of Theorem~6.22]{bakshi}, Proposition~\ref{prop:cs2} with $c=|(u^*v)_{11}|^2$ raises their lower
+bound $h(c)$ for $H(R_u|R_v)$ to $\max_\alpha\varphi(\alpha)$, e.g.\ from $0.3251$ to $0.4024$ at $c=0.9$.
+
+\paragraph{Computation with the library.} For a subalgebra $P=\bigoplus_cM_{k_c}$ of $\M$ given by an inclusion matrix
+$\Lambda$, $\tau\eta(E_Px)=\sum_c\nu_c\Tr\eta(E(x)_c)$ with the restricted trace $\nu=\Lambda^Tw$
+(see above), so~\eqref{eq:cs} needs the conditional expectations of two \texttt{Inclusion}s (the
+second with \texttt{unitary=U}, $Q=UPU^*$) and the spectra of the blocks $E(x_j)_c$, both batched and differentiable,
+for abelian and non-abelian $P$ alike. Partitions with $m$ elements are parametrised as
+$x_j=S^{-1/2}Z_jZ_j^*S^{-1/2}$, $S=\sum_jZ_jZ_j^*$, with free complex $Z_j\in M_n$ (elements of lower rank are limits),
+orthonormal bases as $x_j=w_jw_j^*$ with $W=(w_1,\dots,w_n)$ a \texttt{UnitaryParam}; at a basis the functional
+is $h(U^*W)-h(W)$. Both are maximised by \texttt{optimize.extremize}, batched over the unitaries $U$ and the starts
+(\texttt{scripts/connes\_stormer.py}, double precision). For $n=2$ the library reproduces
+Proposition~\ref{prop:cs2} for complex $U$ with random phases (general partitions with four elements,
+\IfFileExists{generated/connes_stormer.tex}{\CSTwoStarts\ starts) to $\CSTwoDevLib$}{several starts) to round-off}
+(Table~\ref{tab:cs2}, Figure~\ref{fig:cs}); the tests compare the closed form also with a plain SciPy optimisation over
+partitions.
+
+\noindent The program \repofile{connes_stormer.py}, a short version of the script, computes
+$H(\Delta_3|U\Delta_3U^*)$ for one Haar-random $U$ by batched ascent over partitions of unity with nine elements from
+64 starts, and compares it with $h(U)$ (\texttt{inclusions.Inclusion} with \texttt{unitary=U},
+\texttt{conditional\_expectation}, \texttt{optimize.Param}, \texttt{optimize.extremize}).
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{cccccc}
+\toprule
+$c$ & $h(c)$ & $H$, Prop.~\ref{prop:cs2} & $H$, library & $\alpha^*$ & $\kappa\theta$\\
+\midrule
+\CSTwoRows
+\bottomrule
+\end{tabular}
+\caption[]{$H(\Delta_2|U\Delta_2U^*)$ for $c=|u_{11}|^2$: Choda's value $h(c)$, the closed form of
+Proposition~\ref{prop:cs2} with its optimal angle $\alpha^*\in(-\frac\pi4,\frac\pi4]$ (radians), the maximum over general
+partitions with four elements found by the library for $U=D_1R_\theta D_2$ with random phases, and the upper bound
+$\kappa\theta$\IfFileExists{generated/connes_stormer.tex}{ (\CSMode\ run on \CSDevice)}{}.}
+\label{tab:cs2}
+\end{table}
+
+\begin{figure}[h]
+\centering\fig{connes_stormer.pdf}{\textwidth}
+\caption{Left: $H(\Delta_2|U\Delta_2U^*)$ (Proposition~\ref{prop:cs2}) and Choda's value $h(c)$ against $c=|u_{11}|^2$,
+with the values found by the library (circles). Middle: the optimal angle $\alpha^*$ of the basis, and
+$\min(\theta,\frac\pi2-\theta)$ for comparison. Right: $H$ against $h(U)$ for Haar-random $U$, $n=3$ and $n=4$ (the
+best of general partitions and bases); dashed: $H=h(U)$.}
+\label{fig:cs}
+\end{figure}
+
+\paragraph{Larger $n$.} For $n=2$ the optimal partitions are orthonormal bases. For $n\ge3$ we compared, for Haar-random
+$U$, the maximum over general partitions with $m=n^2$ elements with the maximum over bases
+(Table~\ref{tab:cs}\IfFileExists{generated/connes_stormer.tex}{; \CSSteps\ steps for $n=3,4$ and \CSFiveSteps\ for $n=5$}{}).
+For most $U$ they agree to round-off
+(\IfFileExists{generated/connes_stormer.tex}{$\CSThreeAgree$, $\CSFourAgree$ and $\CSFiveAgree$ for $n=3,4,5$}{}),
+but not for all.
+\IfFileExists{generated/connes_stormer.tex}{For \CSThreeFlagged\ of the \CSThreeU\ unitaries with $n=3$,
+\CSFourFlagged\ of the \CSFourU\ with $n=4$ and \CSFiveFlagged\ of the \CSFiveU\ with $n=5$, a partition beats the best
+basis found by more than $\CSFlag$, also after \CSExtStarts\ further basis starts per unitary (half of them at bases
+built from the directions of the partition) and, for the unitary with the largest gap, \CSThreeStressStarts\ more; the
+largest gaps are $\CSThreeGapMax$ ($n=3$), $\CSFourGapMax$ ($n=4$) and $\CSFiveGapMax$ ($n=5$). In all these cases the
+partition consists of $n+1$ rank-one elements (\CSThreeDirs, \CSFourDirs\ and \CSFiveDirs\ distinct directions), two of
+them far from orthogonal. The values at both explicit points were recomputed in mpmath with \CSDigits\ digits, after
+re-normalising the partition and the unitary there (the unitaries are stored in \texttt{connes\_stormer.json}); for the
+unitary with the largest gap at $n=3$ this proves $H(\Delta_3|U\Delta_3U^*)\ge\CSThreeGeneral$, while the best basis
+gives $\CSThreeBasis$.}{(Results not generated: run \texttt{scripts/connes\_stormer.py}.)} Without an upper bound
+over all bases the conclusion remains an observation:
+
+\emph{Observation.} For $n\ge3$ the supremum in~\eqref{eq:cs} for two MASAs is in general not attained at an orthonormal
+basis; for a small but non-negligible fraction of Haar-random $U$, partitions with $n+1$ rank-one elements are better.
+
+\noindent In every sample, $H-h(U)$ is positive (Table~\ref{tab:cs}): the partition into the
+minimal projections is never optimal, as for $n=2$. The bound $G^*$ of Lemma~\ref{lem:cs} (maximised over states, and
+at least $G(\rho_j)$ for the elements of the best partition) exceeds the computed $H$ for every sampled $U$, by at least
+\IfFileExists{generated/connes_stormer.tex}{$\CSThreeNaiveMin$ ($n=3$)}{a few hundredths}: unlike for $n=2$, the
+optimal ensembles do not consist of maximisers of $G$ (an observation as well, since the computed $H$ is a lower
+bound). Complementary MASAs give $H=\log n$ to $\IfFileExists{generated/connes_stormer.tex}{\CSFourierDev}{10^{-8}}$
+($n=2,3,4$, Fourier matrices), and $H(P|P)$ vanishes identically.
+
+\begin{table}[h]
+\centering\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{rrcrcccccr}
+\toprule
+$n$ & $U$ & starts & partition $>$ basis & largest gap & agreement otherwise & \multicolumn{3}{c}{$H-h(U)$: min, median, max} & $G^*>H$\\
+\midrule
+\CSRows
+\bottomrule
+\end{tabular}
+\caption[]{Haar-random $U\in U(n)$: starts per unitary for general partitions ($m=n^2$ elements) and for bases; the
+number of unitaries for which a partition beats the best basis found (after the extended basis search) and the largest
+such gap (both values recomputed in mpmath); the largest difference $|H_{\rm partitions}-H_{\rm bases}|$ for the
+others; the excess of $H$ (the best value found) over Choda's $h(U)$; and the number of unitaries with $G^*>H+10^{-6}$
+\IfFileExists{generated/connes_stormer.tex}{(\CSMode\ run on \CSDevice, \CSSeconds\ s in total)}{}.}
+\label{tab:cs}
+\end{table}
+
+\paragraph{Non-abelian subalgebras.} The same code handles any subalgebra given by an inclusion matrix. For
+$P=M_2\oplus\C\subset M_3$ ($\Lambda=(1\ 1)$) and $P=M_2\otimes1\subset M_4$ ($\Lambda=(2)$) against $uPu^*$ for two
+seeded Haar-random $u$ each, the maxima over partitions with $m=n$, $2n$ and $n^2$ elements agree to
+\IfFileExists{generated/connes_stormer.tex}{$\CSNonabASpread$ and $\CSNonabBSpread$; we obtain $H=\CSNonabA$ and
+$H=\CSNonabB$, against $G^*=\CSNonabAG$ and $G^*=\CSNonabBG$}{a few digits}. For $M_2\otimes1\subset M_4$,
+$S(E_P\rho)=S(\Tr_2\rho)+\log2\ge\log2$ (partial trace over the multiplicity space), so $G^*\le\log2$; the
+computed $G^*$ reaches this bound, the computed $H$ stays below it. For
+non-abelian subalgebras we have no closed form; these values are lower bounds found by the search.

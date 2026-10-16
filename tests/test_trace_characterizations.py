@@ -503,3 +503,353 @@ def test_powers_stormer_unbounded_relative_to_its_right_side():
         R = 2 * phi(w, A @ B @ A).real                       # A^{1/4} = A, B^{1/2} = B for projections
         vals.append((L - R) / R)
     assert vals[0] > 10 and vals[1] > 8 * vals[0] and vals[2] > 8 * vals[1]
+
+
+# ----------------------------------------------------------------------------------------------------------------
+# items 17-25 (Bikchentaev SMJ 2010 Thm 3.4 (iii)-(v); Math. Notes 2011 Thm 2 (v)-(vii); Petz-Zemanek Thm 4;
+# Bikchentaev SMJ 2020 Thm 3(vii); Hoa-Tikhonov Math. Notes 2010 Thms 4-5 with r = 1)
+# ----------------------------------------------------------------------------------------------------------------
+NEW2 = ['pqp', 'absdiff', 'meet', 'expqpq', 'repos', 'reabs', 'join', 'lp', 'wmon']
+PROJ2 = ['pqp', 'absdiff', 'meet', 'expqpq', 'repos', 'reabs', 'join']
+
+
+def spectral_proj(H, keep):
+    """Projection onto the eigenvectors of the Hermitian H whose eigenvalues satisfy keep (plain NumPy)."""
+    e, V = np.linalg.eigh((H + H.conj().T) / 2)
+    Vk = V[:, keep(e)]
+    return Vk @ Vk.conj().T
+
+
+def meet_np(P, Q):
+    return spectral_proj(P + Q, lambda e: e > 2 - 1e-9)
+
+
+def join_np(P, Q):
+    return spectral_proj(P + Q, lambda e: e > 1e-9)
+
+
+def value_new(name, w, *ops):
+    """(L - R)/N of items 17-25, plain NumPy; w the eigenvalues of W (normalised inside: Tr W = 1, or n for 24)."""
+    n = len(w)
+    w = np.asarray(w, dtype=float)
+    w = w / w.sum() * (n if name == 'lp' else 1.0)
+    ph = lambda X: float(np.real(np.sum(w * np.diag(X))))                   # noqa: E731
+    I = np.eye(n)
+    if name == 'lp':
+        A, = ops
+        return math.sqrt(ph(A @ A)) / ph(A) - 1
+    if name == 'wmon':
+        A, C = ops
+        B = A + C
+        return ph(A @ A @ A @ A) / ph(A @ B @ B @ A) - 1
+    P, Q = ops
+    if name == 'pqp':
+        L, R = ph(P @ Q @ P), ph(Q)
+    elif name == 'absdiff':
+        L, R = ph(hf(P - Q, np.abs)), ph(P + Q)
+    elif name == 'meet':
+        L, R = ph(P + Q), ph(I + meet_np(P, Q))
+    elif name == 'expqpq':
+        L, R = ph(hf(Q @ P @ Q, np.exp)), ph(hf(P, np.exp))
+    elif name == 'repos':
+        return -ph((P @ Q + Q @ P) / 2) / (ph(P) + ph(Q))
+    elif name == 'reabs':
+        L, R = ph((P @ Q + Q @ P) / 2), ph(absm(P @ Q))
+    elif name == 'join':
+        L, R = ph(join_np(P, Q)), ph(P + Q)
+    else:
+        raise KeyError(name)
+    if R <= 1e-14:                                  # both sides vanish (e.g. PQ = 0): no violation
+        return 0.0 if L - R <= 1e-14 else math.inf
+    return (L - R) / R
+
+
+def random_new(name, rng, n):
+    if name == 'lp':
+        return (rand_pos(rng, n, int(rng.integers(1, n + 1))),)
+    if name == 'wmon':
+        return (rand_pos(rng, n, int(rng.integers(1, n + 1))), rand_pos(rng, n, int(rng.integers(1, n + 1))))
+    return tuple(rand_proj(rng, n, int(rng.integers(1, n + 1))) for _ in range(2))
+
+
+def bloch_vector(m):
+    """Unit vector u in C^2 with uu^* = (1 + m.sigma)/2 (m a unit vector of R^3)."""
+    th, ph_ = math.acos(max(-1.0, min(1.0, m[2]))), math.atan2(m[1], m[0])
+    return np.array([math.cos(th / 2), np.exp(1j * ph_) * math.sin(th / 2)])
+
+
+def bloch_proj(m):
+    u = bloch_vector(np.asarray(m, dtype=float) / np.linalg.norm(m))
+    return np.outer(u, u.conj())
+
+
+@pytest.mark.parametrize('name', NEW2)
+def test_items_17_25_hold_for_the_trace(name):
+    """At W = 1 (the trace; Tr W = n for item 24) no random point of M_2, M_3, M_4 violates items 17-25 (projections
+    of every rank, lattice operations included)."""
+    rng = np.random.default_rng(len(name) + 200)
+    for n in (2, 3, 4):
+        w = np.ones(n)
+        for _ in range(150):
+            v = value_new(name, w, *random_new(name, rng, n))
+            if np.isfinite(v):
+                assert v <= 1e-9, (name, n, v)
+    # commuting projections: every positive phi satisfies the projection inequalities
+    if name in PROJ2:
+        w = density(0.8, 3, middle=[0.3])
+        for P in (np.diag([1.0, 0, 0]), np.diag([1.0, 1, 0])):
+            for Q in (np.diag([1.0, 0, 0]), np.diag([0.0, 1, 1]), np.diag([1.0, 0, 1])):
+                v = value_new(name, w, P.astype(complex), Q.astype(complex))
+                assert v <= 1e-12, (name, v)
+
+
+@pytest.mark.parametrize('name', NEW2)
+def test_items_17_25_random_points_below_closed_form(name):
+    """No random point exceeds V* (sharp value; for item 25 the lower bound m_25, which no random point reaches) for
+    n = 2, 3, 4 and three-level W: for items 17-23 this is the two-projection reduction to rank-one P, Q on M_2."""
+    rng = np.random.default_rng(len(name) + 300)
+    for n in (2, 3, 4):
+        for d in (0.3, 0.8):
+            w = density(d, n, middle=[0.6, 0.2])
+            vstar = float(tc.reference_curve(name, np.array([d]), n)[0])
+            for _ in range(150):
+                v = value_new(name, w, *random_new(name, rng, n))
+                if np.isfinite(v):
+                    assert v <= vstar + 1e-9, (name, n, d, v, vstar)
+
+
+@pytest.mark.parametrize('d', [0.05, 0.4, 0.9])
+def test_items_17_22_explicit_extremisers(d):
+    """W = diag(1 + d, 1 - d)/2 (Bloch axis z). Item 17: m_z = 0, n = (m - lam d e_z)/(lam - 1), lam = 2/(1 - d^2),
+    gives kappa^2 - 1. Item 18: m, n = (+-sin t, 0, -cos t), cos t = d, gives kappa - 1. Item 21: the same with
+    cos t = tan(psi/2), d = sin psi, gives tan^2(psi/2)/2. Item 22: v = (sqrt(b/(a+b)), sqrt(a/(a+b))), u = Wv/|Wv|
+    gives kappa - 1 (equality in Gardner's bound for X = PQ). Items 19, 23: P, Q -> the eigenvector of a (of b),
+    P != Q, approach d and d/(1 - d)."""
+    w = np.array([1 + d, 1 - d]) / 2
+    k = float(tc.kappa(d))
+    lam = 2 / (1 - d * d)
+    m = np.array([1.0, 0.0, 0.0])
+    nv = (m - lam * d * np.array([0, 0, 1.0])) / (lam - 1)
+    assert abs(np.linalg.norm(nv) - 1) < 1e-12
+    assert abs(value_new('pqp', w, bloch_proj(m), bloch_proj(nv)) - (k * k - 1)) < 1e-12
+    t = math.acos(d)
+    P, Q = bloch_proj([math.sin(t), 0, -math.cos(t)]), bloch_proj([-math.sin(t), 0, -math.cos(t)])
+    assert abs(value_new('absdiff', w, P, Q) - (k - 1)) < 1e-12
+    C = (1 - math.sqrt(1 - d * d)) / d
+    t = math.acos(C)
+    P, Q = bloch_proj([math.sin(t), 0, -math.cos(t)]), bloch_proj([-math.sin(t), 0, -math.cos(t)])
+    assert abs(value_new('repos', w, P, Q) - float(tc.repos_exact(d))) < 1e-12
+    assert abs(C * C / 2 - float(tc.repos_exact(d))) < 1e-14
+    a, b = 1 + d, 1 - d
+    v = np.array([math.sqrt(b / (a + b)), math.sqrt(a / (a + b))])
+    u = np.array([a, b]) * v
+    u /= np.linalg.norm(u)
+    # |PQ| = ((PQ)^*(PQ))^{1/2} has a zero eigenvalue: its square root carries round-off of order sqrt(eps)
+    assert abs(value_new('reabs', w, np.outer(u, u), np.outer(v, v)) - (k - 1)) < 1e-7
+    for eps in (1e-2, 1e-3):        # 1 - <u, v> well above the lattice tolerance 1e-9
+        P, Q = bloch_proj([math.sin(eps), 0, math.cos(eps)]), bloch_proj([-math.sin(eps), 0, math.cos(eps)])
+        vm = value_new('meet', w, P, Q)
+        assert d * (1 - eps * eps) - 1e-12 <= vm < d
+        P, Q = bloch_proj([math.sin(eps), 0, -math.cos(eps)]), bloch_proj([-math.sin(eps), 0, -math.cos(eps)])
+        vj = value_new('join', w, P, Q)
+        assert vj < d / (1 - d) and vj > d / (1 - d) - 2 * eps * eps / (1 - d) ** 2
+
+
+def test_item_20_one_variable_formula():
+    """Item 20: the one-variable maximisation (largest root of a quadratic for each Bloch angle g) equals a BFGS
+    search over rank-one P, Q on M_2 (complex unit vectors), and the leading order is (e-1)^2 d^2/(e(e+1))."""
+    rng = np.random.default_rng(20)
+    for d in (0.2, 0.7):
+        w = density(d)
+        exact = float(tc.expqpq_exact(d)[0])
+
+        def f(x):
+            u = x[:2] + 1j * x[2:4]
+            v = x[4:6] + 1j * x[6:]
+            u, v = u / np.linalg.norm(u), v / np.linalg.norm(v)
+            return -value_new('expqpq', w, np.outer(u, u.conj()), np.outer(v, v.conj()))
+        best = max(-minimize(f, rng.normal(size=8), method='BFGS', options={'gtol': 1e-11}).fun for _ in range(20))
+        assert abs(best - exact) < 1e-8, (d, best, exact)
+    c = (math.e - 1) ** 2 / (math.e * (math.e + 1))
+    for d in (1e-3, 1e-2):
+        assert abs(float(tc.expqpq_exact(d)[0]) / d ** 2 - c) < 3 * d
+
+
+@pytest.mark.parametrize('n', [2, 3, 5])
+def test_item_24_closed_form(n):
+    """Item 24 (phi(1) = n): V = w_min^{-1/2} - 1 at A = the projection onto the eigenvector of w_min; the two-level
+    spectrum {a (n - 1 times), b} minimises w_min; n = 2: (1 - d)^{-1/2} - 1."""
+    rng = np.random.default_rng(n + 24)
+    for d in (0.2, 0.7):
+        lo = (1 - d) / (1 + d)
+        w = np.array([1.0] * (n - 1) + [lo])
+        A = np.zeros((n, n))
+        A[-1, -1] = 1
+        assert abs(value_new('lp', w, A) - float(tc.lp_exact(d, n))) < 1e-12
+        for _ in range(300):
+            ww = np.concatenate([[1.0, lo], rng.uniform(lo, 1, n - 2)])
+            assert value_new('lp', ww, rand_pos(rng, n, int(rng.integers(1, n + 1)))) <= float(tc.lp_exact(d, n)) + 1e-12
+    assert np.allclose(tc.lp_exact(np.array([0.3, 0.8]), 2), (1 - np.array([0.3, 0.8])) ** -0.5 - 1)
+
+
+def test_item_25_construction():
+    """Item 25 (r = 1): the reduced point (theta, log a, phi) gives an admissible 0 <= A <= B = A + tC with the value
+    wmon_ratio; the bound m_25 = d^8/4096 (1 + O(d^2)); rank-one A gives no violation; a BFGS search over A, C >= 0
+    in M_2 does not exceed m_25 at d = 0.9 and reaches it to 1e-3."""
+    for d in (0.3, 0.9):
+        x = tc.wmon_start(d)
+        th, la, ph_ = x
+        a = math.exp(la)
+        R = np.array([[math.cos(th), math.sin(th)], [-math.sin(th), math.cos(th)]])      # eigenbasis of A
+        A = R @ np.diag([1.0, a]) @ R.T
+        v = R @ np.array([math.cos(ph_), math.sin(ph_)])
+        P = np.outer(v, v)
+        w = np.array([1 + d, 1 - d]) / 2
+        Wa = R.T @ np.diag(w) @ R
+        T1 = 2 * np.trace(Wa @ np.diag([1.0, a]) @ np.diag([1.0, a]) @ (R.T @ P @ R) @ np.diag([1.0, a]))
+        T2 = np.trace(Wa @ np.diag([1.0, a]) @ (R.T @ P @ R) @ np.diag([1.0, a]))
+        t = -T1 / (2 * T2)
+        assert t > 0
+        assert abs(value_new('wmon', w, A.astype(complex), (t * P).astype(complex)) - tc.wmon_ratio(d, x)) < 1e-12
+    for d in (0.01, 0.02):
+        assert abs(float(tc.wmon_bound(d)[0]) / (d ** 8 / 4096) - 1) < 3 * d * d
+    rng = np.random.default_rng(25)
+    w = density(0.9)
+    u = np.array([0.6, 0.8])
+    for _ in range(50):
+        assert value_new('wmon', w, np.outer(u, u).astype(complex), rand_pos(rng, 2)) <= 1e-12
+    m = float(tc.wmon_bound(0.9)[0])
+
+    def g(x):
+        La = (x[:4] + 1j * x[4:8]).reshape(2, 2)
+        Lc = (x[8:12] + 1j * x[12:]).reshape(2, 2)
+        return -value_new('wmon', w, La @ La.conj().T, Lc @ Lc.conj().T)
+    best = max(-minimize(g, rng.normal(size=16), method='BFGS').fun for _ in range(40))
+    assert best <= m + 1e-9 and best >= m * (1 - 1e-3), (best, m)
+
+
+def test_bikchentaev_2010_counterexamples():
+    """The M_2 examples in the proof of Bikchentaev (SMJ 2010) Theorem 3.4, density diag(1/2 + s, 1/2 - s):
+    (iv) p = r(1, 1/2 + t), q = r(1, 1/2 - t): phi(pqp) - phi(q) = 2t(2s - t - 4st^2) with phi(1) = 1 (the paper
+    writes h(t) = s - t - 2st^2; same sign for t < s/2, so the conclusion stands); (iii) p = diag(1, 0), q = r(1, t):
+    phi(p + q) = 1 + 2st > phi(1); (v) p = r(1, t), q = r(-1, t): phi(|p - q|) = 2 sqrt(t(1 - t)),
+    phi(p + q) = 1 - 2s + 4st."""
+    def r(sign, t):
+        f = math.sqrt(t * (1 - t))
+        return np.array([[t, sign * f], [sign * f, 1 - t]])
+    for s in (0.1, 0.3):
+        w = np.array([0.5 + s, 0.5 - s])
+        ph = lambda X: float(np.sum(w * np.diag(X)))                     # noqa: E731
+        for t in (0.2 * s, 0.4 * s, 0.3):
+            p, q = r(1, 0.5 + t), r(1, 0.5 - t)
+            diff = ph(p @ q @ p) - ph(q)
+            assert abs(diff - 2 * t * (2 * s - t - 4 * s * t * t)) < 1e-14
+            if t < s / 2:
+                assert diff > 0 and s - t - 2 * s * t * t > 0
+        for t in (0.3, 0.9):
+            assert abs(ph(np.diag([1.0, 0]) + r(1, t)) - (1 + 2 * s * t)) < 1e-14
+            p, q = r(1, t), r(-1, t)
+            assert abs(ph(hf(p - q, np.abs)) - 2 * math.sqrt(t * (1 - t))) < 1e-12
+            assert abs(ph(p + q) - (1 - 2 * s + 4 * s * t)) < 1e-14
+
+
+@pytest.mark.parametrize('name', NEW2)
+def test_items_17_25_library_matches_numpy_and_mpmath(name):
+    """At random admissible points of the library parametrisation on M_3 (projections of ranks (1, 1), (2, 2),
+    (1, 2), so that P meet Q and P join Q are non-trivial), the objective equals plain NumPy and the mpmath
+    recomputation."""
+    pytest.importorskip('mpmath')
+    torch.manual_seed(17)
+    alg = tc.TypeIAlgebra([3], [3], precision='double', device='cpu')
+    B = 6
+    W = tc.Weights(alg, B, delta=torch.full((B,), 0.6, dtype=torch.float64),
+                   total=3.0 if name == 'lp' else 1.0, starts=B)
+    f, params, variables = tc.build(name, alg, B, W)
+    if name in PROJ2:
+        ranks = [(1, 1), (2, 2), (1, 2), (2, 1), (2, 2), (1, 1)]
+        for j, P in enumerate(variables):
+            P.set_rank(torch.tensor([[r[j]] for r in ranks], dtype=torch.long))
+    with torch.no_grad():
+        v = f().numpy()
+        w = W.w().numpy()
+    for i in range(B):
+        point = dict(w=w[i], vars=[x.export(i) if isinstance(x, tc.Var) else dict(kind='scalar', t=float(x.value()[i]))
+                                   for x in variables])
+        c, delta, _ = tc.certify(name, point, [3], 30)
+        assert abs(delta - 0.6) < 1e-12
+        assert abs(c - v[i]) < 1e-8 * max(1.0, abs(c)), (name, i, c, v[i])
+        mats = []
+        for x in point['vars']:
+            if x['kind'] == 'scalar':
+                continue
+            U = x['U'][0]
+            mats.append(U @ np.diag(x['lam'][0]) @ U.conj().T)
+        if name == 'wmon':
+            mats[1] = mats[1] * point['vars'][2]['t']
+        assert abs(value_new(name, w[i][0], *mats) - v[i]) < 1e-8 * max(1.0, abs(v[i])), (name, i)
+
+
+@pytest.mark.parametrize('name', ['pqp', 'absdiff', 'meet', 'expqpq', 'repos', 'reabs', 'join', 'lp'])
+def test_items_17_24_envelope_reaches_closed_form(name):
+    """Batched library search on M_2 at d = 0.5 reaches the closed form to 1e-4 (relative) and the certified value
+    agrees."""
+    pytest.importorskip('mpmath')
+    V, final, pts, _ = tc.envelope(name, [2], [0.5], 16, 4, 60, 5)
+    exact = float(tc.reference_curve(name, np.array([0.5]), 2)[0])
+    assert final.max() <= exact * (1 + 1e-9)
+    assert final.max() >= exact * (1 - 1e-4), (name, final.max(), exact)
+    assert abs(tc.certify(name, pts[0], [2], 30)[0] - final.max()) < 1e-8 * max(1, exact)
+
+
+def test_items_17_25_sectors():
+    """On M_2 (+) M_3: a central density gives V <= 0 for the projection items (a trace for every inter-block
+    contrast) and V = w_min^{-1/2} - 1 for item 24 (canonical trace); an intra-block contrast d gives kappa^2 - 1 for
+    item 17."""
+    pytest.importorskip('mpmath')
+    fixed, meta = tc.sector_densities([0.5])
+    V, final, pts, _ = tc.envelope('pqp', tc.SECTOR_KS, None, 8, 4, 50, 1, fixed=fixed)
+    for v, m in zip(final.max(1), meta):
+        if m['type'] == 'central':
+            assert v < 1e-8 and m['delta'] > 0.5
+        else:
+            assert abs(v - float(tc.alt_bound(m['delta_intra']))) < 1e-4 * v
+    Vl, fl, _, _ = tc.envelope('lp', tc.SECTOR_KS, None, 8, 6, 60, 2, fixed=fixed)
+    assert np.allclose(fl.max(1), tc.det_central(meta, name='lp'), rtol=1e-6)
+    V2, f2, _, _ = tc.envelope('join', tc.SECTOR_KS, None, 8, 4, 50, 3, fixed=fixed)
+    for v, m in zip(f2.max(1), meta):
+        if m['type'] == 'central':
+            assert v < 1e-8
+
+
+def test_items_19_20_odd_dimension():
+    """Items 19, 20 contain phi(1) in N. On M_3, W = diag(a, b, b): rank-one P, Q near the eigenvector of a in
+    span(e_1, e_2), and P = 1, Q = 0 (item 19) or P = Q = 0 (item 20) on e_3, give (n - 1) d/(n - d) (approached) and
+    the odd-n lower bound of item 20; no random point on M_3 exceeds (n - 1) d/(n - d) for item 19, and on M_4 the
+    M_2 values are attained by two copies of the M_2 extremiser."""
+    for d in (0.3, 0.8):
+        a, b = 1 + d, 1 - d
+        w3 = np.array([a, b, b])
+        eps = 1e-3
+        u = np.array([math.cos(eps), math.sin(eps), 0])
+        v = np.array([math.cos(eps), -math.sin(eps), 0])
+        e3 = np.diag([0.0, 0, 1])
+        P, Q = np.outer(u, u) + e3, np.outer(v, v)
+        v19 = value_new('meet', w3, P.astype(complex), Q.astype(complex))
+        target = float(tc.proj_meet_exact(d, 3))
+        assert abs(target - 2 * d / (3 - d)) < 1e-15
+        assert target * (1 - 1e-5) < v19 < target
+        # item 20: the M_2 maximiser in span(e_1, e_2), P = Q = 0 on e_3
+        x = minimize(lambda y: -value_new('expqpq', w3, *[np.pad(np.outer(z, z.conj()), ((0, 1), (0, 1)))
+                                                         for z in (bloch_vector([math.sin(y[0]), 0, math.cos(y[0])]),
+                                                                   bloch_vector([math.sin(y[1]), 0, math.cos(y[1])]))]),
+                     [0.3, 1.0], method='Nelder-Mead', options=dict(xatol=1e-12, fatol=1e-15))
+        assert abs(-x.fun - float(tc.expqpq_exact(d, 3)[0])) < 1e-8
+        rng = np.random.default_rng(int(10 * d))
+        for _ in range(300):
+            assert value_new('meet', w3, *random_new('meet', rng, 3)) < target + 1e-12
+        # M_4: two copies
+        w4 = np.array([a, b, a, b])
+        u2, v2 = np.array([math.cos(eps), math.sin(eps)]), np.array([math.cos(eps), -math.sin(eps)])
+        P4 = np.kron(np.eye(2), np.outer(u2, u2))
+        Q4 = np.kron(np.eye(2), np.outer(v2, v2))
+        assert d * (1 - 1e-5) < value_new('meet', w4, P4.astype(complex), Q4.astype(complex)) < d

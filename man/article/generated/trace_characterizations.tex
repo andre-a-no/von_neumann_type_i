@@ -12,7 +12,7 @@
 \newcommand{\TCDims}{2, 3, 4}
 \newcommand{\TCSectorStarts}{48}
 \newcommand{\TCWorkers}{4}
-\newcommand{\TCSeconds}{600}
+\newcommand{\TCSeconds}{475}
 \newcommand{\TCVzero}{1\times10^{-16}}
 \newcommand{\TCCertDev}{5\times10^{-6}}
 \newcommand{\TCSharpDev}{1\times10^{-7}}
@@ -20,8 +20,8 @@
 \newcommand{\TCNDev}{4\times10^{-3}}
 \newcommand{\TCSectorCentral}{1\times10^{-16}}
 \newcommand{\TCSectorExcess}{1\times10^{-16}}
-\newcommand{\TCSectorReached}{41}
-\newcommand{\TCSectorTotal}{48}
+\newcommand{\TCSectorReached}{63}
+\newcommand{\TCSectorTotal}{72}
 \newcommand{\TCSectorDet}{2\times10^{-11}}
 \newcommand{\TCSciRatioMin}{0.994}
 \newcommand{\TCSciRatioMax}{1.097}
@@ -31,6 +31,165 @@
 \newcommand{\TCSGMExcessKappa}{0.667}
 \newcommand{\TCSGMExcessDelta}{0.8}
 \newcommand{\TCSGMExcessN}{4}
+\newcommand{\TCSharpDevNew}{3\times10^{-4}}
+\newcommand{\TCSharpDevApproached}{2\times10^{-6}}
+\newcommand{\TCNDevNew}{4\times10^{-7}}
+\newcommand{\TCItems}{25}
+\newcommand{\TCVGardnerTenth}{0.0050}
+\newcommand{\TCRefGardnerTenth}{0.0050}
+\newcommand{\TCVGardnerHalf}{0.1547}
+\newcommand{\TCRefGardnerHalf}{0.1547}
+\newcommand{\TCVGardnerNine}{1.2942}
+\newcommand{\TCRefGardnerNine}{1.2942}
+\newcommand{\TCVTriangleTenth}{0.0050}
+\newcommand{\TCRefTriangleTenth}{0.0050}
+\newcommand{\TCVTriangleHalf}{0.1547}
+\newcommand{\TCRefTriangleHalf}{0.1547}
+\newcommand{\TCVTriangleNine}{1.2942}
+\newcommand{\TCRefTriangleNine}{1.2942}
+\newcommand{\TCVRealpartTenth}{0.0050}
+\newcommand{\TCRefRealpartTenth}{0.0050}
+\newcommand{\TCVRealpartHalf}{0.1547}
+\newcommand{\TCRefRealpartHalf}{0.1547}
+\newcommand{\TCVRealpartNine}{1.2942}
+\newcommand{\TCRefRealpartNine}{1.2942}
+\newcommand{\TCVSquareTenth}{0.0050}
+\newcommand{\TCRefSquareTenth}{0.0050}
+\newcommand{\TCVSquareHalf}{0.1547}
+\newcommand{\TCRefSquareHalf}{0.1547}
+\newcommand{\TCVSquareNine}{1.2942}
+\newcommand{\TCRefSquareNine}{1.2942}
+\newcommand{\TCVMetricTenth}{0.0050}
+\newcommand{\TCRefMetricTenth}{0.0050}
+\newcommand{\TCVMetricHalf}{0.1547}
+\newcommand{\TCRefMetricHalf}{0.1547}
+\newcommand{\TCVMetricNine}{1.2942}
+\newcommand{\TCRefMetricNine}{1.2942}
+\newcommand{\TCVSgmTenth}{n.r.}
+\newcommand{\TCRefSgmTenth}{0.0050}
+\newcommand{\TCVSgmHalf}{0.1430}
+\newcommand{\TCRefSgmHalf}{0.1547}
+\newcommand{\TCVSgmNine}{1.1979}
+\newcommand{\TCRefSgmNine}{1.2942}
+\newcommand{\TCVAltTenth}{0.0059}
+\newcommand{\TCRefAltTenth}{0.0101}
+\newcommand{\TCVAltHalf}{0.2653}
+\newcommand{\TCRefAltHalf}{0.3333}
+\newcommand{\TCVAltNine}{3.4322}
+\newcommand{\TCRefAltNine}{4.2632}
+\newcommand{\TCVYoungTenth}{0.2222}
+\newcommand{\TCRefYoungTenth}{0.2222}
+\newcommand{\TCVYoungHalf}{2.0000}
+\newcommand{\TCRefYoungHalf}{2.0000}
+\newcommand{\TCVYoungNine}{18.00}
+\newcommand{\TCRefYoungNine}{18.00}
+\newcommand{\TCVProjectionsTenth}{0.0477}
+\newcommand{\TCRefProjectionsTenth}{0.0477}
+\newcommand{\TCVProjectionsHalf}{0.2056}
+\newcommand{\TCRefProjectionsHalf}{0.2056}
+\newcommand{\TCVProjectionsNine}{0.3469}
+\newcommand{\TCRefProjectionsNine}{0.3469}
+\newcommand{\TCVMonotoneTenth}{6.3\times10^{-6}}
+\newcommand{\TCRefMonotoneTenth}{6.3\times10^{-6}}
+\newcommand{\TCVMonotoneHalf}{0.0052}
+\newcommand{\TCRefMonotoneHalf}{0.0052}
+\newcommand{\TCVMonotoneNine}{0.1825}
+\newcommand{\TCRefMonotoneNine}{0.1825}
+\newcommand{\TCVDetTenth}{0.0050}
+\newcommand{\TCRefDetTenth}{0.0050}
+\newcommand{\TCVDetHalf}{0.1340}
+\newcommand{\TCRefDetHalf}{0.1340}
+\newcommand{\TCVDetNine}{0.5641}
+\newcommand{\TCRefDetNine}{0.5641}
+\newcommand{\TCVSubaddTenth}{0.0050}
+\newcommand{\TCRefSubaddTenth}{--}
+\newcommand{\TCVSubaddHalf}{0.1338}
+\newcommand{\TCRefSubaddHalf}{--}
+\newcommand{\TCVSubaddNine}{0.9678}
+\newcommand{\TCRefSubaddNine}{--}
+\newcommand{\TCVPowersTenth}{0.0048}
+\newcommand{\TCRefPowersTenth}{--}
+\newcommand{\TCVPowersHalf}{0.0911}
+\newcommand{\TCRefPowersHalf}{--}
+\newcommand{\TCVPowersNine}{0.2197}
+\newcommand{\TCRefPowersNine}{--}
+\newcommand{\TCVHolderTenth}{2.8\times10^{-4}}
+\newcommand{\TCRefHolderTenth}{--}
+\newcommand{\TCVHolderHalf}{0.0086}
+\newcommand{\TCRefHolderHalf}{--}
+\newcommand{\TCVHolderNine}{0.0711}
+\newcommand{\TCRefHolderNine}{--}
+\newcommand{\TCVGtTenth}{6.4\times10^{-4}}
+\newcommand{\TCRefGtTenth}{--}
+\newcommand{\TCVGtHalf}{0.0142}
+\newcommand{\TCRefGtHalf}{--}
+\newcommand{\TCVGtNine}{0.0420}
+\newcommand{\TCRefGtNine}{--}
+\newcommand{\TCVPbTenth}{9.7\times10^{-4}}
+\newcommand{\TCRefPbTenth}{--}
+\newcommand{\TCVPbHalf}{0.0561}
+\newcommand{\TCRefPbHalf}{--}
+\newcommand{\TCVPbNine}{0.8890}
+\newcommand{\TCRefPbNine}{--}
+\newcommand{\TCVPqpTenth}{0.0101}
+\newcommand{\TCRefPqpTenth}{0.0101}
+\newcommand{\TCVPqpHalf}{0.3333}
+\newcommand{\TCRefPqpHalf}{0.3333}
+\newcommand{\TCVPqpNine}{4.2632}
+\newcommand{\TCRefPqpNine}{4.2632}
+\newcommand{\TCVAbsdiffTenth}{0.0050}
+\newcommand{\TCRefAbsdiffTenth}{0.0050}
+\newcommand{\TCVAbsdiffHalf}{0.1547}
+\newcommand{\TCRefAbsdiffHalf}{0.1547}
+\newcommand{\TCVAbsdiffNine}{1.2942}
+\newcommand{\TCRefAbsdiffNine}{1.2942}
+\newcommand{\TCVMeetTenth}{0.1000}
+\newcommand{\TCRefMeetTenth}{0.1000}
+\newcommand{\TCVMeetHalf}{0.5000}
+\newcommand{\TCRefMeetHalf}{0.5000}
+\newcommand{\TCVMeetNine}{0.9000}
+\newcommand{\TCRefMeetNine}{0.9000}
+\newcommand{\TCVExpqpqTenth}{0.0029}
+\newcommand{\TCRefExpqpqTenth}{0.0029}
+\newcommand{\TCVExpqpqHalf}{0.0802}
+\newcommand{\TCRefExpqpqHalf}{0.0802}
+\newcommand{\TCVExpqpqNine}{0.3115}
+\newcommand{\TCRefExpqpqNine}{0.3115}
+\newcommand{\TCVReposTenth}{0.0013}
+\newcommand{\TCRefReposTenth}{0.0013}
+\newcommand{\TCVReposHalf}{0.0359}
+\newcommand{\TCRefReposHalf}{0.0359}
+\newcommand{\TCVReposNine}{0.1964}
+\newcommand{\TCRefReposNine}{0.1964}
+\newcommand{\TCVReabsTenth}{0.0050}
+\newcommand{\TCRefReabsTenth}{0.0050}
+\newcommand{\TCVReabsHalf}{0.1547}
+\newcommand{\TCRefReabsHalf}{0.1547}
+\newcommand{\TCVReabsNine}{1.2942}
+\newcommand{\TCRefReabsNine}{1.2942}
+\newcommand{\TCVJoinTenth}{0.1111}
+\newcommand{\TCRefJoinTenth}{0.1111}
+\newcommand{\TCVJoinHalf}{1.0000}
+\newcommand{\TCRefJoinHalf}{1.0000}
+\newcommand{\TCVJoinNine}{9.0000}
+\newcommand{\TCRefJoinNine}{9.0000}
+\newcommand{\TCVLpTenth}{0.0541}
+\newcommand{\TCRefLpTenth}{0.0541}
+\newcommand{\TCVLpHalf}{0.4142}
+\newcommand{\TCRefLpHalf}{0.4142}
+\newcommand{\TCVLpNine}{2.1623}
+\newcommand{\TCRefLpNine}{2.1623}
+\newcommand{\TCVWmonTenth}{n.r.}
+\newcommand{\TCRefWmonTenth}{2.5\times10^{-12}}
+\newcommand{\TCVWmonHalf}{1.5\times10^{-6}}
+\newcommand{\TCRefWmonHalf}{1.7\times10^{-6}}
+\newcommand{\TCVWmonNine}{0.0017}
+\newcommand{\TCRefWmonNine}{0.0017}
+\newcommand{\TCWmonLead}{1.020}
+\newcommand{\TCExpOddHalf}{0.0694}
+\newcommand{\TCWmonFirst}{0.3}
+\newcommand{\TCWmonRatioHalf}{0.89}
+\newcommand{\TCWmonReach}{0.7}
 \newcommand{\TCSGMRatioHalf}{0.924}
 \newcommand{\TCSGMRatioNine}{0.926}
 \newcommand{\TCSGMRatioTenth}{--}
@@ -47,17 +206,45 @@
 1 & $|\varphi(X)|\le\varphi(|X|)$ & \cite{gardner1979} & 0.0050 & 0.1547 & 1.2942 & 0.1547 & $\delta^{2}$ & 2.03 & $4\times10^{-10}$ \\
 2 & $\varphi(|X+Y|)\le\varphi(|X|)+\varphi(|Y|)$ & \cite{gardner1979,stolyarov2002} & 0.0050 & 0.1547 & 1.2942 & 0.1547 & $\delta^{2}$ & 2.03 & $1\times10^{-9}$ \\
 3 & $\varphi(A+A^*)\le2\varphi(|A^*|)$ & \cite{bikchentaev2019abed} & 0.0050 & 0.1547 & 1.2942 & 0.1547 & $\delta^{2}$ & 2.03 & $5\times10^{-10}$ \\
-4 & $|\varphi(A^2)|\le\varphi(A^*A)$ & \cite{bikchentaev2026moslehian} & 0.0050 & 0.1547 & 1.2942 & 0.1547 & $\delta^{2}$ & 2.03 & $1\times10^{-8}$ \\
+4 & $|\varphi(A^2)|\le\varphi(A^*A)$ & \cite{petz1988,bikchentaev2026moslehian} & 0.0050 & 0.1547 & 1.2942 & 0.1547 & $\delta^{2}$ & 2.03 & $1\times10^{-8}$ \\
 5 & $\varphi(|P-R|)\le\varphi(|P-Q|)+\varphi(|Q-R|)$ & \cite{bikchentaev2019metric} & 0.0050 & 0.1547 & 1.2942 & 0.1547 & $\delta^{2}$ & 2.03 & $1\times10^{-8}$ \\
 6 & $\varphi(A\natural B)\le\sqrt{\varphi(A)\varphi(B)}$ & \cite{bikchentaev2026sgm} & n.r. & 0.1430 & 1.1979 & 0.1547$^{b}$ & $\delta^{2}$ & -- & $n\ge3$ \\
 7 & $\varphi((B^{1/2}AB^{1/2})^2)\le\varphi(BA^2B)$ & \cite{bikchentaev2011pb} & 0.0059 & 0.2653 & 3.4322 & 0.3333$^{b}$ & $\delta^{2}$ & 2.31 & $9\times10^{-2}$ \\
 8 & $\varphi(|AB^*|)\le\frac12\varphi(|A|^2)+\frac12\varphi(|B|^2)$ & \cite{bikchentaev2005young} & 0.2222 & 2.0000 & 18.00 & 2.0000 & $\delta^{1}$ & 1.17 & $9\times10^{-12}$ \\
 9 & $\varphi(PQ+QP)\le2\varphi(QPQ)$ & \cite{bikchentaev2019abed} & 0.0477 & 0.2056 & 0.3469 & 0.2056$^{a}$ & $\delta^{1}$ & 0.94 & $3\times10^{-10}$ \\
-10 & $0\le A\le B\Rightarrow\varphi(A^2)\le\varphi(B^2)$ & \cite{bikchentaev2007mono} & $6.3\times10^{-6}$ & 0.0052 & 0.1825 & 0.0052$^{b}$ & $\delta^{4}$ & 4.04 & $3\times10^{-8}$ \\
+10 & $0\le A\le B\Rightarrow\varphi(A^2)\le\varphi(B^2)$ & \cite{bikchentaev2007mono,sano2006,hoa2010} & $6.3\times10^{-6}$ & 0.0052 & 0.1825 & 0.0052$^{b}$ & $\delta^{4}$ & 4.04 & $3\times10^{-8}$ \\
 11 & $(\det A)^{1/n}\le\frac1n\varphi(A)$, $\varphi(1)=n$ & \cite{bikchentaev2020det} & 0.0050 & 0.1340 & 0.5641 & 0.1340 & $\delta^{2}$ & 2.01 & yes \\
 12 & $\varphi((A+B)^{1/2})\le\varphi(A^{1/2})+\varphi(B^{1/2})$ & \cite{tikhonov2005} & 0.0050 & 0.1338 & 0.9678 & -- & -- & 2.00 & $5\times10^{-4}$ \\
 13 & $\varphi(A+B-|A-B|)\le2\varphi(A^{1/4}B^{1/2}A^{1/4})$ & \cite{hoa2013} & 0.0048 & 0.0911 & 0.2197 & -- & -- & 1.93 & $4\times10^{-1}$ \\
-14 & $|\varphi(PQ)|\le\varphi(P)^{1/3}\varphi(Q)^{2/3}$ & \cite{bikchentaev2019abed} & $2.8\times10^{-4}$ & 0.0086 & 0.0711 & -- & -- & 2.03 & $4\times10^{-3}$ \\
-15 & $\varphi(e^{P+Q})\le\varphi(e^{P/2}e^Qe^{P/2})$ & \cite{moslehian2025jmaa} & $6.4\times10^{-4}$ & 0.0142 & 0.0420 & -- & -- & 1.98 & $2\times10^{-1}$ \\
+14 & $|\varphi(PQ)|\le\varphi(P)^{1/3}\varphi(Q)^{2/3}$ & \cite{bikchentaev2011mn,bikchentaev2019abed} & $2.8\times10^{-4}$ & 0.0086 & 0.0711 & -- & -- & 2.03 & $4\times10^{-3}$ \\
+15 & $\varphi(e^{P+Q})\le\varphi(e^{P/2}e^Qe^{P/2})$ & \cite{bikchentaev2011mn} & $6.4\times10^{-4}$ & 0.0142 & 0.0420 & -- & -- & 1.98 & $2\times10^{-1}$ \\
 16 & $\varphi(e^A)e^{\varphi(e^{A/2}Be^{A/2})/\varphi(e^A)}\le\varphi(e^{A+B})$ & \cite{bikchentaev2011pb} & $9.7\times10^{-4}$ & 0.0561 & 0.8890 & -- & -- & 2.35 & $2\times10^{-3}$ \\
+17 & $\varphi(PQP)\le\varphi(Q)$ & \cite{bikchentaev2010smj} & 0.0101 & 0.3333 & 4.2632 & 0.3333 & $\delta^{2}$ & 2.04 & $7\times10^{-9}$ \\
+18 & $\varphi(|P-Q|)\le\varphi(P+Q)$ & \cite{bikchentaev2010smj} & 0.0050 & 0.1547 & 1.2942 & 0.1547 & $\delta^{2}$ & 2.03 & $1\times10^{-8}$ \\
+19 & $\varphi(P+Q)\le\varphi(1+P\wedge Q)$ & \cite{bikchentaev2010smj} & 0.1000 & 0.5000 & 0.9000 & 0.5000$^{c}$ & $\delta^{1}$ & 1.00 & odd $n$ \\
+20 & $\varphi(e^{QPQ})\le\varphi(e^P)$ & \cite{bikchentaev2011mn} & 0.0029 & 0.0802 & 0.3115 & 0.0802 & $\delta^{2}$ & 2.02 & odd $n$ \\
+21 & $\varphi(\mathrm{Re}\,PQ)\ge0$ & \cite{bikchentaev2011mn} & 0.0013 & 0.0359 & 0.1964 & 0.0359 & $\delta^{2}$ & 2.02 & $8\times10^{-9}$ \\
+22 & $\varphi(\mathrm{Re}\,PQ)\le\varphi(|PQ|)$ & \cite{bikchentaev2011mn} & 0.0050 & 0.1547 & 1.2942 & 0.1547 & $\delta^{2}$ & 2.03 & $5\times10^{-9}$ \\
+23 & $\varphi(P\vee Q)\le\varphi(P)+\varphi(Q)$ & \cite{petz1988} & 0.1111 & 1.0000 & 9.0000 & 1.0000$^{c}$ & $\delta^{1}$ & 1.17 & $4\times10^{-7}$ \\
+24 & $\varphi(A^2)^{1/2}\le\varphi(A)$, $\varphi(1)=n$ & \cite{bikchentaev2020det} & 0.0541 & 0.4142 & 2.1623 & 0.4142 & $\delta^{1}$ & 1.13 & yes \\
+25 & $0\le A\le B\Rightarrow\varphi(A^4)\le\varphi(AB^2A)$ & \cite{hoa2010} & n.r. & $1.5\times10^{-6}$ & 0.0017 & $1.7\times10^{-6}{}^{b}$ & $\delta^{8}$ & -- & $3\times10^{-6}$ \\
+}
+\newcommand{\TCClassRows}{%
+8 & $h-1=2\delta/(1-\delta)$ & $2\delta$ & 2.0000 & 2.0000 & sharp \\
+9 & $s/(1+s)$, $s=\sin\frac\psi2$ & $\delta/2$ & 0.2056 & 0.2056 & sharp for $n=2$ \\
+19 & $\delta$ & $\delta$ & 0.5000 & 0.5000 & sharp, approached \\
+23 & $\delta/(1-\delta)$ & $\delta$ & 1.0000 & 1.0000 & sharp, approached \\
+24 & $(1-\delta)^{-1/2}-1$ & $\delta/2$ & 0.4142 & 0.4142 & sharp for $n=2$; grows with $n$ \\
+\midrule
+1--5, 18, 22 & $\kappa-1$ & $\delta^2/2$ & 0.1547 & 0.1547 & sharp \\
+17 & $\kappa^2-1$ & $\delta^2$ & 0.3333 & 0.3333 & sharp \\
+11 & $1-\sqrt{1-\delta^2}$ & $\delta^2/2$ & 0.1340 & 0.1340 & sharp for $n=2$; grows with $n$ \\
+20 & max.\ of one variable & $\frac{(e-1)^2}{e(e+1)}\delta^2$ & 0.0802 & 0.0802 & sharp \\
+21 & $\frac{1}{2}\tan^2(\psi/2)$ & $\delta^2/8$ & 0.0359 & 0.0359 & sharp \\
+6 & $\ge\kappa-1$ & $\ge\delta^2/2$ & 0.1547 & 0.1430 & lower bound \\
+7 & $\ge\kappa^2-1$ & $\ge\delta^2$ & 0.3333 & 0.2653 & lower bound \\
+12--16 & -- & $c\,\delta^2$, $c\in[\frac1{36},\frac12]$ & -- & 0.0086--0.1338 & search \\
+\midrule
+10 & $\ge m(\delta)$ & $\ge\delta^4/16$ & 0.0052 & 0.0052 & lower bound \\
+25 & $\ge m_{25}(\delta)$ & $\ge\delta^8/4096$ & $1.7\times10^{-6}$ & $1.5\times10^{-6}$ & lower bound \\
 }

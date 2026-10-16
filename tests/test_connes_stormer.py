@@ -236,10 +236,8 @@ def test_quick_n2_part_runs():
 
 
 def test_paper_listing_runs():
-    """Listing lst:cs of the paper (extracted from main.tex, with fewer starts and steps) runs and gives H >= h(U)."""
-    tex = (ROOT / 'man' / 'article' / 'main.tex').read_text(encoding='utf-8')
-    start = tex.index('label=lst:cs]')
-    code = tex[tex.index('\n', start) + 1:tex.index('\\end{lstlisting}', start)]
+    """The program man/article/listings/connes_stormer.py of the paper (with fewer starts and steps) runs and gives H >= h(U)."""
+    code = (ROOT / 'man' / 'article' / 'listings' / 'connes_stormer.py').read_text(encoding='utf-8')
     assert 'n, B, m = 3, 64, 9' in code and 'rounds=8, steps=150' in code
     code = code.replace('n, B, m = 3, 64, 9', 'n, B, m = 3, 4, 9').replace('rounds=8, steps=150', 'rounds=3, steps=40')
     torch.manual_seed(0)
