@@ -29,3 +29,4 @@ man/article/arxiv.tar.gz
 .claude/worktrees/
 # documentation site built by mkdocs
 site/
+man/article/arxiv.zip
