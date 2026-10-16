@@ -373,6 +373,103 @@ def _young(alg, B, W):
     return f, [A, Bv, t]
 
 
+def _pos_sqrt(alg, m):
+    """(m)^{1/2} of a positive matrix tensor (B, C, k, k) by the library's functional calculus."""
+    op = alg.operator(m, is_self_adjoint=True, is_positive=True)
+    return op.power(0.5)
+
+
+def _expm_sa(alg, m):
+    """exp of a self-adjoint matrix tensor by the spectral theorem."""
+    return alg.operator(m, is_self_adjoint=True).apply_function(torch.exp)
+
+
+def _sub(alg, B, W):
+    """Subadditivity (Tikhonov 2005) with f(t) = t^{1/2}: phi((A + B)^{1/2}) <= phi(A^{1/2}) + phi(B^{1/2})."""
+    A, Bv, t = PosVar(alg, B, dmax=1 - 1e-10), PosVar(alg, B, dmax=1 - 1e-10), ScalarParam(B, alg.hilbert.device)
+
+    def f():
+        w, s = W.w(), t.value()
+        lhs = phi(_pos_sqrt(alg, A.op().matrix + s[:, None, None, None] * Bv.op().matrix), w).real
+        rhs = phi(A.fn(torch.sqrt), w).real + torch.sqrt(s) * phi(Bv.fn(torch.sqrt), w).real
+        return ratio(lhs - rhs, rhs)
+    return f, [A, Bv, t]
+
+
+def _ps(alg, B, W):
+    """Generalised Powers-Stormer (Hoa-Osaka-Toan 2013) with f(t) = g(t) = t^{1/2}:
+    phi(A + B - |A - B|) <= 2 phi(A^{1/4} B^{1/2} A^{1/4})."""
+    A, Bv, t = PosVar(alg, B, dmax=1 - 1e-10), PosVar(alg, B, dmax=1 - 1e-10), ScalarParam(B, alg.hilbert.device)
+
+    def f():
+        w, s = W.w(), t.value()
+        a, b = A.op().matrix, s[:, None, None, None] * Bv.op().matrix
+        tot = phi(alg.operator(a + b, is_self_adjoint=True), w).real
+        lhs = tot - phi(sa(alg, a - b).abs(), w).real
+        a4 = A.fn(lambda x: x ** 0.25)
+        rhs = 2 * torch.sqrt(s) * phi(a4 @ Bv.fn(torch.sqrt) @ a4, w).real
+        return ratio(lhs - rhs, tot)               # N = phi(A + B): with N = R the ratio is unbounded
+    return f, [A, Bv, t]
+
+
+HOLDER_P = 3.0
+
+
+def _hold(alg, B, W):
+    """Hoelder restricted to projections, p = 3, q = 3/2: |phi(PQ)| <= phi(P)^{1/p} phi(Q)^{1/q}."""
+    P, Q = ProjVar(alg, B), ProjVar(alg, B)
+    cover_ranks([P, Q], W.starts)
+
+    def f():
+        w = W.w()
+        p, q = P.op(), Q.op()
+        rhs = phi(p, w).real ** (1 / HOLDER_P) * phi(q, w).real ** (1 - 1 / HOLDER_P)
+        return ratio(phi(p @ q, w).abs() - rhs, rhs)
+    return f, [P, Q]
+
+
+E_HALF = math.exp(0.5) - 1.0
+
+
+def _gt(alg, B, W):
+    """Golden-Thompson restricted to projections, symmetric form: phi(e^{P+Q}) <= phi(e^{P/2} e^Q e^{P/2});
+    e^{P/2} = 1 + (e^{1/2} - 1) P, e^Q = 1 + (e - 1) Q exactly."""
+    P, Q = ProjVar(alg, B), ProjVar(alg, B)
+    cover_ranks([P, Q], W.starts)
+
+    def f():
+        w = W.w()
+        p, q = P.op().matrix, Q.op().matrix
+        one = alg._const('eye').to(p.dtype)
+        eh = alg.operator(one + E_HALF * p, is_self_adjoint=True)
+        eq = alg.operator(one + (math.e - 1) * q, is_self_adjoint=True)
+        rhs = phi(eh @ eq @ eh, w).real
+        lhs = phi(_expm_sa(alg, p + q), w).real
+        return ratio(lhs - rhs, rhs)
+    return f, [P, Q]
+
+
+def _pb(alg, B, W):
+    """Peierls-Bogoliubov, symmetric form: phi(e^A) exp(phi(e^{A/2} B e^{A/2}) / phi(e^A)) <= phi(e^{A+B}),
+    A, B self-adjoint with free scales."""
+    A, Bv = SAVar(alg, B), SAVar(alg, B)
+    sA, sB = ScalarParam(B, alg.hilbert.device), ScalarParam(B, alg.hilbert.device)
+
+    def f():
+        w = W.w()
+        a = sA.value()[:, None, None, None] * A.op().matrix
+        b = sB.value()[:, None, None, None] * Bv.op().matrix
+        U = A.p.unitary.matrix()
+        lam = A.p.spectrum.eigenvalues() * A.p.signs * sA.value()[:, None, None]
+        ea = phi(A.p._build(torch.exp(lam) * A.p.spectrum.mask), w).real
+        eh = A.p._build(torch.exp(lam / 2) * A.p.spectrum.mask)
+        mid = phi(eh @ alg.operator(b, is_self_adjoint=True) @ eh, w).real
+        lhs = ea * torch.exp(mid / ea)
+        rhs = phi(_expm_sa(alg, a + b), w).real
+        return ratio(lhs - rhs, rhs)
+    return f, [A, Bv, sA, sB]
+
+
 # ----------------------------------------------------------------------------------------------------------------
 # closed forms (paper, Propositions) and lower-bound constructions; delta = Delta(W), kappa the Kantorovich constant
 # ----------------------------------------------------------------------------------------------------------------
@@ -452,6 +549,64 @@ def monotone_bound(d, grid=20001):
     return np.array(out)
 
 
+# ----------------------------------------------------------------------------------------------------------------
+# items 12-16: an independent SciPy search on M_2 (plain NumPy, BFGS from random starts), used as a reference
+# ----------------------------------------------------------------------------------------------------------------
+def _np_fn(A, f):
+    e, V = np.linalg.eigh((A + A.conj().T) / 2)
+    return (V * f(e)) @ V.conj().T
+
+
+def numpy_value(name, w, x):
+    """(L - R)/N of items 12-16 on M_2 for W = diag(w) at the real parameter vector x (plain NumPy)."""
+    ph = lambda X: float(np.real(np.sum(w * np.diag(X))))                       # noqa: E731
+    sq = lambda e: np.sqrt(np.clip(e, 0, None))                                  # noqa: E731
+    if name in ('holder', 'gt'):                                                 # rank-one P = uu^*, Q = vv^*
+        u = np.array([math.cos(x[0]), np.exp(1j * x[1]) * math.sin(x[0])])
+        v = np.array([math.cos(x[2]), np.exp(1j * x[3]) * math.sin(x[2])])
+        P, Q = np.outer(u, u.conj()), np.outer(v, v.conj())
+        if name == 'holder':
+            rhs = ph(P) ** (1 / HOLDER_P) * ph(Q) ** (1 - 1 / HOLDER_P)
+            return (abs(np.sum(w * np.diag(P @ Q))) - rhs) / rhs
+        I = np.eye(2)
+        eh, eq = I + E_HALF * P, I + (math.e - 1) * Q
+        rhs = ph(eh @ eq @ eh)
+        return (ph(_np_fn(P + Q, np.exp)) - rhs) / rhs
+    mats = [(x[8 * i:8 * i + 4] + 1j * x[8 * i + 4:8 * i + 8]).reshape(2, 2) for i in range(2)]
+    if name == 'pb':
+        A, B = [(m + m.conj().T) / 2 for m in mats]
+        ea = ph(_np_fn(A, np.exp))
+        eh = _np_fn(A, lambda e: np.exp(e / 2))
+        lhs = ea * math.exp(ph(eh @ B @ eh) / ea)
+        rhs = ph(_np_fn(A + B, np.exp))
+        return (lhs - rhs) / rhs
+    A, B = [m @ m.conj().T for m in mats]
+    if name == 'subadd':
+        rhs = ph(_np_fn(A, sq)) + ph(_np_fn(B, sq))
+        return (ph(_np_fn(A + B, sq)) - rhs) / rhs
+    if name == 'powers':
+        tot = ph(A + B)
+        lhs = tot - ph(_np_fn(A - B, np.abs))
+        a4 = _np_fn(A, lambda e: np.clip(e, 0, None) ** 0.25)
+        return (lhs - 2 * ph(a4 @ _np_fn(B, sq) @ a4)) / tot
+    raise KeyError(name)
+
+
+def scipy_reference(name, delta, starts=40, seed=0):
+    """Best value of numpy_value over `starts` BFGS runs from random points (M_2, W = diag(1, l) normalised)."""
+    from scipy.optimize import minimize
+    rng = np.random.default_rng(seed)
+    lo = (1 - delta) / (1 + delta)
+    w = np.array([1.0, lo]) / (1 + lo)
+    dim = 4 if name in ('holder', 'gt') else 16
+    best = -np.inf
+    for _ in range(starts):
+        r = minimize(lambda x: -numpy_value(name, w, x), rng.normal(size=dim), method='BFGS')
+        if np.isfinite(r.fun):
+            best = max(best, -float(r.fun))
+    return best
+
+
 # name -> build: the objective; label, norm: LaTeX; ref: bibliography keys; exact(delta, n): sharp value (proved),
 # bound(delta, n): proved lower bound (a construction), or None; order: (p, c) with V = c delta^p + o(delta^p);
 # kind: 'trace' (every trace sum_c t_c Tr_c of a direct sum satisfies it) or 'canonical' (only the canonical trace)
@@ -485,8 +640,20 @@ INEQS = {
     'det': dict(build=_det, label='$(\\det A)^{1/n}\\le\\frac1n\\varphi(A)$, $\\varphi(1)=n$',
                 norm='$(\\det A)^{1/n}$', ref='bikchentaev2020det', exact=lambda d, n: det_exact(d, n), bound=None,
                 order=(2, 0.5), kind='canonical'),
+    'subadd': dict(build=_sub, label='$\\varphi((A+B)^{1/2})\\le\\varphi(A^{1/2})+\\varphi(B^{1/2})$', norm='RHS',
+                   ref='tikhonov2005', exact=None, bound=None, order=None, kind='trace'),
+    'powers': dict(build=_ps, label='$\\varphi(A+B-|A-B|)\\le2\\varphi(A^{1/4}B^{1/2}A^{1/4})$',
+                   norm='$\\varphi(A+B)$',
+                   ref='hoa2013', exact=None, bound=None, order=None, kind='trace'),
+    'holder': dict(build=_hold, label='$|\\varphi(PQ)|\\le\\varphi(P)^{1/3}\\varphi(Q)^{2/3}$', norm='RHS',
+                   ref='bikchentaev2019abed', exact=None, bound=None, order=None, kind='trace'),
+    'gt': dict(build=_gt, label='$\\varphi(e^{P+Q})\\le\\varphi(e^{P/2}e^Qe^{P/2})$', norm='RHS',
+               ref='moslehian2025jmaa', exact=None, bound=None, order=None, kind='trace'),
+    'pb': dict(build=_pb, label='$\\varphi(e^A)e^{\\varphi(e^{A/2}Be^{A/2})/\\varphi(e^A)}\\le\\varphi(e^{A+B})$',
+               norm='RHS', ref='bikchentaev2011pb', exact=None, bound=None, order=None, kind='trace'),
 }
 ORDER = list(INEQS)
+INEQS_INDEX = {name: i for i, name in enumerate(ORDER, 1)}
 
 
 def reference_curve(name, d, n):
@@ -592,6 +759,7 @@ def certify(name, point, ks, digits=40):
             return out
 
         vs = [rebuild(v) for v in point['vars']]
+        tiny = mp.mpf(10) ** (-digits // 2)
         absa = lambda A: herm(A, abs)                                       # noqa: E731
         absg = lambda A: herm(A.transpose_conj() * A, sqrtp)                 # noqa: E731
         if name == 'gardner':
@@ -642,6 +810,36 @@ def certify(name, point, ks, digits=40):
             X = A['X'] * (t * B['X']).transpose_conj()
             rhs = (mp.re(ph(A['P'] * A['P'])) + t ** 2 * mp.re(ph(B['P'] * B['P']))) / 2
             val = (mp.re(ph(absg(X))) - rhs) / rhs
+        elif name == 'subadd':
+            A, B, t = vs
+            rhs = mp.re(ph(herm(A['X'], sqrtp))) + mp.sqrt(t) * mp.re(ph(herm(B['X'], sqrtp)))
+            val = (mp.re(ph(herm(A['X'] + t * B['X'], sqrtp))) - rhs) / rhs
+        elif name == 'powers':
+            A, B, t = vs
+            a, b = A['X'], t * B['X']
+            a4 = herm(a, lambda e: e ** mp.mpf('0.25') if e > 0 else mp.mpf(0))
+            rhs = 2 * mp.re(ph(a4 * herm(b, sqrtp) * a4))
+            val = (mp.re(ph(a + b)) - mp.re(ph(absa(a - b))) - rhs) / mp.re(ph(a + b))
+        elif name == 'holder':
+            P, Q = (v['X'] for v in vs)
+            hp = mp.mpf(HOLDER_P)
+            rhs = mp.re(ph(P)) ** (1 / hp) * mp.re(ph(Q)) ** (1 - 1 / hp)
+            val = (abs(ph(P * Q)) - rhs) / rhs
+        elif name == 'gt':
+            P, Q = (v['X'] for v in vs)
+            I = mp.eye(n)
+            eh = I + (mp.exp(mp.mpf(1) / 2) - 1) * P
+            eq = I + (mp.e - 1) * Q
+            rhs = mp.re(ph(eh * eq * eh))
+            val = (mp.re(ph(herm(P + Q, mp.exp))) - rhs) / rhs
+        elif name == 'pb':
+            A, B, sA, sB = vs
+            a, b = sA * A['X'], sB * B['X']
+            ea = mp.re(ph(herm(a, mp.exp)))
+            eh = herm(a, lambda e: mp.exp(e / 2))
+            lhs = ea * mp.exp(mp.re(ph(eh * b * eh)) / ea)
+            rhs = mp.re(ph(herm(a + b, mp.exp)))
+            val = (lhs - rhs) / rhs
         else:
             raise KeyError(name)
         delta = (max(wv) - min(wv)) / (max(wv) + min(wv))
@@ -690,13 +888,16 @@ CONFIGS = {
     # dims: M_n; grid: Delta(W); starts per grid value; rounds x steps of optimize.extremize; sector_starts per fixed
     # block density on M_2 (+) M_3; digits of the mpmath recomputation; workers: processes (CPU, one thread each)
     'quick': dict(dims=[2, 3], grid=[0.0, 0.05, 0.1, 0.2, 0.5, 0.9], starts=8, rounds=5, steps=40, sector_starts=6,
-                  digits=30, sector_deltas=[0.5], workers=4),
+                  digits=30, sector_deltas=[0.5], workers=4, scipy_deltas=[0.5], scipy_starts=6),
     'check': dict(dims=[2, 3, 4], grid=GRID_FULL, starts=4, rounds=2, steps=20, sector_starts=4, digits=30,
-                  sector_deltas=[0.3, 0.5, 0.7], workers=4),
+                  sector_deltas=[0.3, 0.5, 0.7], workers=4, scipy_deltas=[0.5], scipy_starts=4),
     'full': dict(dims=[2, 3, 4], grid=GRID_FULL, starts=64, rounds=10, steps=80, sector_starts=48, digits=40,
-                 sector_deltas=[0.3, 0.5, 0.7], workers=4),
+                 sector_deltas=[0.3, 0.5, 0.7], workers=4, scipy_deltas=[0.3, 0.5, 0.9], scipy_starts=40),
 }
 SECTOR_KS = [2, 3]
+N_INDEPENDENT = ('gardner', 'triangle', 'realpart', 'square', 'metric', 'young', 'projections', 'monotone',
+                 'subadd', 'holder', 'pb')            # items whose search values do not depend on n (n = 2, 3, 4)
+SCIPY_ITEMS = ('subadd', 'powers', 'holder', 'gt', 'pb')     # items without a closed form: SciPy reference on M_2
 SECTOR_SCALES = [0.25, 4.0]          # level of the second block relative to lambda_max of the first
 
 
@@ -739,6 +940,11 @@ def _task(job):
     warnings.simplefilter('ignore', UserWarning)
     kind, name = job[0], job[1]
     t0 = time.time()
+    if kind == 'sci':
+        _, _, cfg, seed = job
+        warnings.simplefilter('ignore', RuntimeWarning)
+        vals = {str(d): scipy_reference(name, d, cfg['scipy_starts'], seed) for d in cfg['scipy_deltas']}
+        return dict(job=(kind, name), values=vals, seconds=time.time() - t0)
     if kind == 'env':
         _, _, n, cfg, seed, dev = job
         V, final, points, _ = envelope(name, [n], cfg['grid'], cfg['starts'], cfg['rounds'], cfg['steps'], seed, dev)
@@ -794,7 +1000,9 @@ def run(mode, dev='cpu', seed=0, log=print, names=None, workers=None):
         for n in cfg['dims']:
             jobs.append(('env', name, n, cfg, seed + 1000 * j + n, dev))
         jobs.append(('sec', name, cfg, seed + 1000 * j + 99, dev))
-    jobs.sort(key=lambda jb: -(jb[2] if jb[0] == 'env' else 5))          # largest first (load balance)
+        if name in SCIPY_ITEMS and cfg.get('scipy_deltas'):
+            jobs.append(('sci', name, cfg, seed + 1000 * j + 77))
+    jobs.sort(key=lambda jb: -(jb[2] if jb[0] == 'env' else 6 if jb[0] == 'sci' else 5))   # largest first
     t0 = time.time()
     out = []
     if workers > 1:
@@ -818,7 +1026,8 @@ def run(mode, dev='cpu', seed=0, log=print, names=None, workers=None):
             label=INEQS[name]['label'], norm=INEQS[name]['norm'], ref=INEQS[name]['ref'], kind=INEQS[name]['kind'],
             order=INEQS[name]['order'], sharp=INEQS[name]['exact'] is not None,
             dims={str(r['job'][2]): r for r in out if r['job'][0] == 'env' and r['job'][1] == name},
-            sectors=next(r for r in out if r['job'][0] == 'sec' and r['job'][1] == name))
+            sectors=next(r for r in out if r['job'][0] == 'sec' and r['job'][1] == name),
+            scipy=next((r for r in out if r['job'][0] == 'sci' and r['job'][1] == name), None))
     res['seconds'] = time.time() - t0
     res['summary'] = summarise(res)
     log(f"total {res['seconds']:.0f} s ({workers} worker{'s' if workers > 1 else ''})")
@@ -826,6 +1035,9 @@ def run(mode, dev='cpu', seed=0, log=print, names=None, workers=None):
 
 
 def _log_task(r, log):
+    if r['job'][0] == 'sci':
+        log(f"{r['job'][1]:12s} SciPy reference on M_2: {r['values']} ({r['seconds']:.0f} s)")
+        return
     if r['job'][0] == 'env':
         _, name, n = r['job']
         ref = r['reference']
@@ -882,7 +1094,7 @@ def summarise(res):
                     bound_excess = max(bound_excess, float(np.max(rel)))
             if n != 2:
                 m = (grid >= 0.1) & (V2 > 1e-4)
-                if name not in ('det', 'sgm', 'alt') and m.any():
+                if name in N_INDEPENDENT and m.any():
                     ndev = max(ndev, float(np.max(np.abs(Vc[m] / V2[m] - 1))))
                 p[f'ratio_{n}'] = (Vc[m] / V2[m]).tolist()
         v01, v02 = _at(grid, V2, 0.1), _at(grid, V2, 0.2)
@@ -901,12 +1113,26 @@ def summarise(res):
             sec_central = max(sec_central, max(cen))
             for v, m in zip(sec['certified'], sec['meta']):
                 if m['type'] == 'intra':
-                    ref1 = float(reference_curve(name, np.array([m['delta_intra']]), 2)[0])
-                    sec_excess = max(sec_excess, v / ref1 - 1)
-                    if name not in ('sgm', 'alt'):
+                    rc = reference_curve(name, np.array([m['delta_intra']]), 2)
+                    ref1 = float(rc[0]) if rc is not None else _at(grid, V2, m['delta_intra'])
+                    if not ref1 or ref1 <= 0:
+                        continue
+                    if rc is not None:
+                        sec_excess = max(sec_excess, v / ref1 - 1)
+                    if name in ('gardner', 'triangle', 'realpart', 'square', 'metric', 'young', 'projections',
+                                'monotone'):
                         intra_total += 1
                         reached += int(v >= (1 - 1e-3) * ref1)
         S['per'][name] = p
+    sci_ratios = []
+    for name, r in res['inequalities'].items():
+        if r.get('scipy'):
+            V2 = np.array(r['dims']['2']['certified'])
+            for d, v in r['scipy']['values'].items():
+                lib = _at(grid, V2, float(d))
+                if lib is not None and v > 1e-9:
+                    sci_ratios.append((name, float(d), lib / v))
+    S['scipy_ratios'] = sci_ratios
     S.update(V0=v0, sharp_dev=sharp_dev, bound_excess=bound_excess, n_dev=ndev, sector_central=sec_central,
              sector_excess=sec_excess, sector_reached=reached, sector_total=intra_total, sector_det=sec_det,
              sgm_best=sgm_best)
@@ -926,7 +1152,7 @@ def write_outputs(args, res):
             return '--'
         if x <= 1e-12:
             return 'n.r.'                     # no violation resolved by the search at this contrast
-        if abs(x) < 1e-4:
+        if abs(x) < 1e-3:
             return f"${sci(x, 2)}$"
         return f"{x:.4f}" if x < 10 else f"{x:.2f}"
 
@@ -942,6 +1168,9 @@ def write_outputs(args, res):
               ('SectorCentral', sc(S['sector_central'])), ('SectorExcess', sc(S['sector_excess'])),
               ('SectorReached', S['sector_reached']), ('SectorTotal', S['sector_total']),
               ('SectorDet', sc(S['sector_det'])),
+              ('SciRatioMin', f"{min(x[2] for x in S['scipy_ratios']):.3f}" if S['scipy_ratios'] else '--'),
+              ('SciRatioMax', f"{max(x[2] for x in S['scipy_ratios']):.3f}" if S['scipy_ratios'] else '--'),
+              ('SciStarts', cfg.get('scipy_starts', '--')),
               ('SGMExcessRatio', f"{sg['ratio']:.2f}" if sg.get('n') else '--'),
               ('SGMExcessV', f"{sg['V']:.3f}" if sg.get('n') else '--'),
               ('SGMExcessKappa', f"{sg['kappa_minus_1']:.3f}" if sg.get('n') else '--'),
@@ -961,15 +1190,17 @@ def write_outputs(args, res):
     for i, (name, r) in enumerate(res['inequalities'].items(), 1):
         p = S['per'][name]
         ref = p['ref']
-        star = '' if r['sharp'] and name != 'projections' else ('$^{a}$' if name == 'projections' else '$^{b}$')
+        star = '' if (r['sharp'] and name != 'projections') or not ref else \
+            ('$^{a}$' if name == 'projections' else '$^{b}$')
         slope = '--' if p['slope'] is None else f"{p['slope']:.2f}"
         ratios = [abs(v - 1) for n in (3, 4) for v in p.get('ratio_%d' % n, [])]
         ndep = 'yes' if name == 'det' else ('$n\\ge3$' if name == 'sgm' else
                                             (f"${sci(max(ratios), 1)}$" if ratios else '--'))
         cites = ','.join(INEQS[name]['ref'].split(','))
+        order = '--' if r['order'] is None else f"$\\delta^{{{r['order'][0]}}}$"
         rows += (f"{i} & {r['label']} & \\cite{{{cites}}} & {num(p['V']['0.1'])} & {num(p['V']['0.5'])} & "
                  f"{num(p['V']['0.9'])} & {num(ref[1]) if ref else '--'}{star} & "
-                 f"$\\delta^{{{r['order'][0]}}}$ & {slope} & {ndep} \\\\\n")
+                 f"{order} & {slope} & {ndep} \\\\\n")
     tex += "\\newcommand{\\TCRows}{%\n" + rows + "}\n"
     write_tex(args, 'trace_characterizations', tex)
     make_figure(args, res)
@@ -989,7 +1220,7 @@ def make_figure(args, res):
            ('$1-\\sqrt{1-\\delta^2}$: 11 ($n=2$, sharp)', ['det'], lambda d: det_exact(d, 2), 'C5')]
     markers = dict(gardner='o', triangle='s', realpart='^', square='v', metric='D', sgm='x', alt='o', young='o',
                    projections='o', monotone='o', det='o')
-    fig, axes = plt.subplots(1, 2, figsize=(7.6, 3.1))
+    fig, axes = plt.subplots(1, 2, figsize=(7.6, 3.4))
     ax = axes[0]
     dd = np.geomspace(0.01, 0.95, 200)
     for label, names, f, col in fam:
@@ -1000,13 +1231,27 @@ def make_figure(args, res):
             V = np.array(res['inequalities'][name]['dims']['2']['certified'])
             m = (grid > 0) & (V > 0)
             ax.plot(grid[m], V[m], markers[name], ms=3.2, mfc='none', color=col, mew=0.8)
+    extra = [('subadd', 's', '0.15'), ('powers', 'D', '0.35'), ('holder', '^', '0.5'), ('gt', 'v', '0.65'),
+             ('pb', 'P', '0.8')]
+    first = INEQS_INDEX
+    for name, mk, col in extra:
+        if name not in res['inequalities']:
+            continue
+        V = np.array(res['inequalities'][name]['dims']['2']['certified'])
+        m = (grid > 0) & (V > 0)
+        ax.plot(grid[m], V[m], ':', marker=mk, ms=3.0, mfc='none', color=col, lw=0.7, mew=0.7,
+                label=f"{first[name]} (search)")
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_ylim(1e-10, 50)
     ax.set_xlabel('$\\delta=\\Delta(W)$')
     ax.set_ylabel('$V(\\delta)$')
     ax.set_title('$M_2$: search (symbols) and closed forms', fontsize=9)
-    fam_handles = ax.get_legend_handles_labels()
+    hs, ls = ax.get_legend_handles_labels()
+    nf = len(fam)
+    fam_handles = (hs[:nf], ls[:nf])
+    if len(hs) > nf:
+        ax.legend(hs[nf:], ls[nf:], frameon=False, fontsize=5.6, loc='lower right')
     ax = axes[1]
     dims = sorted(int(n) for n in next(iter(res['inequalities'].values()))['dims'])
     styles = {2: '-', 3: '--', 4: ':'}
