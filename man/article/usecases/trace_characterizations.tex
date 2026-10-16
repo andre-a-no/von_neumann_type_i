@@ -9,10 +9,12 @@ $|\varphi(A^2)|$ and for the spectral geometric mean have since been shown to si
 or among the positive normal functionals on a von Neumann
 algebra~\cite{petz1988,stolyarov2002,bikchentaev2005young,bikchentaev2007mono,bikchentaev2011pb,bikchentaev2019abed,bikchentaev2019metric,bikchentaev2020det,bikchentaev2026moslehian,bikchentaev2026sgm}.
 So have subadditivity~\cite{tikhonov2005}, weighted monotonicity~\cite{hoa2007,hoa2010}, the generalised
-Powers--St{\o}rmer inequality~\cite{hoa2013}, and the H\"older and Golden--Thompson inequalities restricted to
-projections~\cite{bikchentaev2011mn}; according to~\cite[Sect.~1]{moslehian2025jmaa}, the H\"older,
-Cauchy--Schwarz, Golden--Thompson, Peierls--Bogoliubov and Araki--Lieb--Thirring inequalities all characterise
-tracial functionals on $M_n$ already when restricted to projections~\cite{bikchentaev2011mn,bikchentaev2011pb}.
+Powers--St{\o}rmer inequality~\cite{hoa2013}, and inequalities restricted to projections $p,q$: the H\"older-type
+inequality $|\varphi(pq)|\le\varphi(p)^{1/\alpha}\varphi(q)^{1/\beta}$ ($\frac1\alpha+\frac1\beta=1$, $\alpha\ne2$),
+the Cauchy--Schwarz inequality $\varphi(|pq|^{1/2})\le\varphi(p)^{1/2}\varphi(q)^{1/2}$, the Golden--Thompson
+inequality $\varphi(e^{p+q})\le\varphi(e^{p/2}e^qe^{p/2})$ and $\varphi(\mathrm{Re}\,pq)\ge0$~\cite[Theorem~2]{bikchentaev2011mn},
+$\varphi(pqp)\le\varphi(q)$ and $\varphi(|p-q|)\le\varphi(p+q)$~\cite[Theorem~3.4]{bikchentaev2010smj}, and the
+Peierls--Bogoliubov and Araki--Lieb--Thirring inequalities~\cite{bikchentaev2011pb}.
 For Young's inequality see also~\cite{cho2009}; Bikchentaev and Moslehian~\cite{bikchentaev2025survey} survey these
 characterisations.
 These theorems answer a yes/no question. We ask how strongly an inequality $L\le R$ fails for a given non-tracial
@@ -27,9 +29,12 @@ $\delta=\Delta(W)$, and $\kappa=(a+b)/(2\sqrt{ab})=(1-\delta^2)^{-1/2}$ for the 
 \end{equation}
 where $N$ is a normalisation that makes $V$ independent of the scales of $W$ and of the variables (mostly $N=R$).
 Table~\ref{tab:tc} lists the sixteen inequalities we studied, in the forms used. \emph{Caveat:} we saw most cited
-papers only as abstracts or listings. For items~7, 8, 11 and 12--16 the abstracts do not fix the form (or the
-function~$f$), and the form in the table is our choice; the full text of~\cite{moslehian2025jmaa} does not fix it
-either. Item~8 extends Young's inequality, which~\cite{bikchentaev2005young} state for positive $A,B$, to arbitrary
+papers only as abstracts or listings. The following forms are checked against the full texts: item~7
+is~\cite[Lemma~2]{bikchentaev2011pb} with $r=2$, $p=1$; item~12 is~\cite[Corollary~1]{tikhonov2005} with the concave
+$f(t)=t^{1/2}$; items~14 and~15 are~\cite[Theorem~2(i), (iv)]{bikchentaev2011mn} with $\alpha=3$; item~16
+is~\cite[Lemma~1]{bikchentaev2011pb}, stated there for positive $H,K$; both sides scale by $e^c$ under $H\mapsto H+c$,
+$K\mapsto K+c$, so the envelope over self-adjoint arguments that we compute is the same. For items~11 and~13 the form
+in the table is our choice. Item~8 extends Young's inequality, which~\cite{bikchentaev2005young} state for positive $A,B$, to arbitrary
 $A,B$, and the value $V=h-1$ of Proposition~\ref{prop:tcB}(a) refers to this extension. For the published form,
 $\varphi(|AB|)\le\frac12\varphi(A^2)+\frac12\varphi(B^2)$ with $A,B\ge0$, an independent search (L-BFGS from 25
 random starts, $n=2,3$) gives only $V\approx\kappa-1$: $0.1546$ at $\delta=0.5$ and $1.294$ at $\delta=0.9$, against
@@ -138,7 +143,9 @@ Write $W=\frac12(1+\delta D)$ with $D=\mathrm{diag}(1,-1)$, take real unit vecto
 in the eigenbasis of $W$, and set $P=uu^*$, $Q=vv^*$. Then
 $L-R=\frac12(-\varepsilon^2-\delta(1-\frac2p)\varepsilon\sin2m)+O(\delta^3)$ for $\varepsilon=O(\delta)$.
 Hence $V_{14}\ge(1-\frac2p)^2\delta^2/4+O(\delta^3)$, which is $\delta^2/36$ for $p=3$, while for $p=2$
-(Cauchy--Schwarz) every positive $\varphi$ satisfies the inequality. For item~13 the natural normalisation $N=R$
+every positive $\varphi$ satisfies the inequality, in agreement with the remark after~\cite[Theorem~2]{bikchentaev2011mn}
+that the case $\alpha=2$ does not characterise traces (item~14 is~\cite[Theorem~2(i)]{bikchentaev2011mn} with
+$\alpha=3$, item~15 is~\cite[Theorem~2(iv)]{bikchentaev2011mn}). For item~13 the natural normalisation $N=R$
 would give $V=\infty$ for every $\delta>0$: for rank-one $A=uu^*$, $B=vv^*$ with overlap $c\to0$,
 $L\approx2c\,|u^*Wu_\perp|$ while $R=2c^2u^*Wu$. We therefore take $N=\varphi(A+B)$. The search gives:
 \begin{itemize}

@@ -144,3 +144,23 @@ is complemented") appears in Petz's survey, but as a trace inequality, not as a 
 3. Hence L − R = (−ε² − δ(1 − 2/p) ε sin 2m)/2 + O(δ³) for ε = O(δ).
 4. Maximise at ε = −δ(1 − 2/p) sin 2m / 2 and m = π/4. The result is V ≥ (1 − 2/p)² δ²/4 + O(δ³).
 5. The search, the reduced SciPy model and the tests give equality to leading order, δ²/36 for p = 3.
+
+## E. Full-text checks (2026-10-16)
+
+- Bikchentaev, Math. Notes 89 (2011), no. 3–4, 461–471, doi:10.1134/S0001434611030175, Theorem 2: for φ ∈ M₊* and
+  projections p, q the trace is characterised by (i) |φ(pq)| ≤ φ(p)^{1/α} φ(q)^{1/β}, α ≠ 2; (ii) φ(|pq|) ≤
+  φ(p)^{1/α} φ(q)^{1/β}, α ≠ 2; (iii) φ(|pq|^{1/2}) ≤ φ(p)^{1/2} φ(q)^{1/2}; (iv) φ(e^{p+q}) ≤ φ(e^{p/2} e^q e^{p/2});
+  (v) φ(e^{qpq}) ≤ φ(e^p); (vi) φ(Re pq) ≥ 0; (vii) φ(Re pq) ≤ φ(|pq|); (viii) φ(Im pq) ≥ 0; (ix) φ(f(p+q)) ≤
+  φ(f(p)) + φ(f(q)) for concave f, f(0) = 0, f′(1) ≠ f(1). The remark after the theorem: α = 2 in (i) does not
+  characterise traces. Items 14 and 15 are (i) with α = 3 and (iv).
+- Bikchentaev, Sib. Math. J. 51 (2010), no. 6, 971–977, doi:10.1007/s11202-010-0096-2 (Russian original Sib. Mat.
+  Zh. 51:6, 1228–1236), Theorem 3.4; announced without proofs in Russian Math. 53 (2009), no. 12, 68–71,
+  doi:10.3103/S1066369X0912010X, Theorem 5: for φ ∈ M₊* the trace is characterised by φ(s_r(pqp)) = φ(s_r(qpq)),
+  φ(p + q) ≤ φ(e + p ∧ q), φ(pqp) ≤ φ(q), φ(|p − q|) ≤ φ(p + q) (p, q projections). Not yet in the table.
+- Bikchentaev, Lobachevskii J. Math. 32 (2011), no. 3, 175–179, doi:10.1134/S1995080211030061: Lemma 1 / Theorem 1
+  (Peierls–Bogoliubov, φ(e^H) exp(φ(e^{H/2}Ke^{H/2})/φ(e^H)) ≤ φ(e^{H+K}), positive H, K) and Lemma 2 / Theorem 2
+  (Araki–Lieb–Thirring, φ((A^{1/2}BA^{1/2})^{rp}) ≤ φ((A^{r/2}B^rA^{r/2})^p) for some r > 1, p > 0, positive A, B).
+  Item 7 is Lemma 2 with r = 2, p = 1; item 16 is Lemma 1 (invariant under H ↦ H + c, K ↦ K + c).
+- Tikhonov, Positivity 9 (2005), no. 2, 259–264, doi:10.1007/s11117-005-2711-1, Corollary 1: for a nonlinear
+  concave f on R₊ with f(0) = 0, φ ∈ M₊* is tracial iff φ(f(A+B)) ≤ φ(f(A)) + φ(f(B)) for all positive A, B.
+  Item 12 (f = t^{1/2}) is this corollary. Corollary 2: φ(AB + BA) ≥ 0 for all positive A, B.
