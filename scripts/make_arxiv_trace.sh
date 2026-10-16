@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Build the arXiv upload of the paper on trace characterisations, man/trace_envelopes/arxiv.zip (and arxiv.tar.gz):
-# main.tex, the figure and the generated numbers, both written by scripts/trace_characterizations.py into man/article.
+# main.tex, the generated numbers and the figures (from scripts/trace_characterizations.py and scripts/bounds_search.py in
+# man/article, and figures/gardner_contrasts.pdf from scripts/trace_envelopes_figures.py).
 # The archive is compiled twice in a clean directory first; the script fails if pdflatex reports an error or an
 # undefined reference. It also writes the compiled man/trace_envelopes/main.pdf.
 set -euo pipefail
@@ -8,7 +9,7 @@ cd "$(dirname "$0")/../man/trace_envelopes"
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$tmp/figures" "$tmp/generated"
 cp main.tex "$tmp/"
-cp ../article/figures/trace_characterizations.pdf "$tmp/figures/"
+cp ../article/figures/trace_characterizations.pdf ../article/figures/bounds2d_exp1_k2_C1.pdf figures/gardner_contrasts.pdf "$tmp/figures/"
 cp ../article/generated/trace_characterizations.tex "$tmp/generated/"
 (cd "$tmp" && for i in 1 2 3; do pdflatex -interaction=batchmode -file-line-error main.tex >/dev/null || true; done)
 if grep -q '^\./[A-Za-z_/]*\.tex:[0-9]*:' "$tmp/main.log" || grep -q 'There were undefined references' "$tmp/main.log"; then

@@ -693,13 +693,37 @@ $Y$ with spectrum $\{1,\ell'\}$ at the angle of Proposition~\ref{prop:k2}, $X=Y=
 and the polar unitary, which makes all block traces positive.
 \end{proof}
 
+\begin{figure}[t]
+\centering\includegraphics[width=\textwidth]{gardner_contrasts.pdf}
+\caption{The unnormalised Gardner violation $z=|\Tr(XUY)|-\Tr(XY)$ for $\|X\|=\|Y\|=1$ in $M_2(\R)$ (top, $N=1$) and
+$M_{16}(\R)$ (bottom, $N=8$), against $\Delta(X)$ (left) and $\Delta(Y)$ (right). Grey: $20000$ random samples with
+Haar-orthogonal eigenbases and $U$ and uniformly drawn contrasts, as in~\cite[Fig.~1]{abed2024}. Solid: the bound of
+Theorem~\ref{thm:gardner2} with $\Delta(Y)$ free, $N\delta^2/(2(1+\delta))$; dots: $z$ at the explicit maximisers of its
+proof, which agree with it to $10^{-15}$. Dashed: the supremum along $\Delta(Y)$, approached as $\Delta(X)\to1$. In
+$M_{16}$ no sample violates Gardner's inequality ($z>0$), although violations up to almost $2$ exist: the maximisers,
+two-level spectra on aligned pairs of eigenvectors, form a set of negligible Haar measure. Computed with plain NumPy by
+\texttt{scripts/\allowbreak trace\_\allowbreak envelopes\_\allowbreak figures.py}.}
+\label{fig:gardner1d}
+\end{figure}
+
+\begin{figure}[t]
+\centering\includegraphics[width=0.8\textwidth]{bounds2d_exp1_k2_C1.pdf}
+\caption{$M_2(\R)$, both contrasts prescribed: the supremum (left) and infimum (right) of
+$z=|\Tr(XUY)|-\Tr(XY)$ found by constrained optimisation on a grid of $\Delta(Y)$ (horizontal) and $\Delta(X)$
+(vertical). The left panel agrees with $\delta^2\delta'^2/((1+\delta)(1+\delta'))$ (Theorem~\ref{thm:gardner2}) to
+$5\times10^{-10}$ at every grid point: a violation needs both operators to be far from scalar.}
+\label{fig:gardner2d}
+\end{figure}
+
 \begin{remark}
 (i) With the contrast of $|Z|$ free, the supremum $N\delta^2/(2(1+\delta))$ is reached at $\delta'=1$, i.e.\ for singular $Z$.
 (ii) The bound is additive over the blocks: it counts the mutually orthogonal two-dimensional subspaces that fit into the
 blocks, and it does not depend on the sizes of the blocks otherwise. (iii) The normalised version is
 Theorem~\ref{thm:kant}: $\sup_Z|\Tr(XZ)|/\Tr(X|Z|)=\kappa(X)$, attained by a rank-one $|Z|$, i.e.\ at $\Delta(|Z|)=1$.
 The unnormalised supremum vanishes to fourth order at $\delta=\delta'=0$ because the violation needs both operators to be
-far from scalar.
+far from scalar. (iv) Figures~\ref{fig:gardner1d} and~\ref{fig:gardner2d} compare the bound with random sampling and with
+numerical optimisation. Sampling, the method of~\cite{abed2024}, stays far below the bound as soon as the blocks are
+larger than $2\times2$, while the optimisation over both contrasts reproduces it.
 \end{remark}
 
 \section{Numerical verification and the remaining items}\label{sec:numerics}
