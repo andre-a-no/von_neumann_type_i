@@ -618,7 +618,7 @@ INEQS = {
                      kind='trace'),
     'realpart': dict(build=_k3, label='$\\varphi(A+A^*)\\le2\\varphi(|A^*|)$', norm='RHS', ref='bikchentaev2019abed',
                      exact=lambda d, n: kantorovich(d), bound=None, order=(2, 0.5), kind='trace'),
-    'square': dict(build=_sq, label='$|\\varphi(A^2)|\\le\\varphi(A^*A)$', norm='RHS', ref='bikchentaev2026moslehian',
+    'square': dict(build=_sq, label='$|\\varphi(A^2)|\\le\\varphi(A^*A)$', norm='RHS', ref='petz1988,bikchentaev2026moslehian',
                    exact=lambda d, n: kantorovich(d), bound=None, order=(2, 0.5), kind='trace'),
     'metric': dict(build=_met, label='$\\varphi(|P-R|)\\le\\varphi(|P-Q|)+\\varphi(|Q-R|)$', norm='RHS',
                    ref='bikchentaev2019metric', exact=lambda d, n: kantorovich(d), bound=None, order=(2, 0.5),

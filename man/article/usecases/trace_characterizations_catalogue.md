@@ -178,3 +178,10 @@ is complemented") appears in Petz's survey, but as a trace inequality, not as a 
   https://emis.muni.cz/journals/JIPAM/images/089_05_JIPAM/089_05.pdf): a positive linear functional φ on M_n with
   φ(|AB|) ≤ φ(A^p)/p + φ(B^q)/q for all A, B ≥ 0 (fixed conjugate p, q) is a multiple of Tr. Item 8 extends this
   (p = q = 2) to arbitrary A, B via Ando's |AB*|; for A, B ≥ 0 the search gives κ − 1.
+- Petz, Zemánek, Linear Algebra Appl. 111 (1988) 43–52, doi:10.1016/0024-3795(88)90050-X. Theorem 1: a linear
+  f on M_n is a nonnegative multiple of tr iff |f(A^k)| ≤ f(|A|^k) for all A and one fixed k = 1, 2, … (k = 1
+  Gardner; k = 2 is item 4, so item 4 is due to Petz–Zemánek). Theorem 2: (b) f(AB − BA) = 0, (c) f(CAC⁻¹) = f(A),
+  (d) |f(A)| ≤ c r(A), (e) limsup |f(A^k)|^{1/k} = r(A), (f) f(P) ≠ 0 for idempotents P ≠ 0, (g) sup |f(P)| < ∞ over
+  idempotents, (h) f constant on idempotents of equal rank, (i) f(A) = 0 when A² = 0, (j) f(A) = … = f(Aⁿ) = 0 ⇒ A
+  nilpotent. Theorem 4: a positive functional on a von Neumann algebra is tracial iff φ(p ∨ q) ≤ φ(p) + φ(q) for all
+  projections (not yet in the table). Theorem 5: Theorem 1 for C*-algebras.
