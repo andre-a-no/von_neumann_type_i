@@ -51,6 +51,35 @@ codes as above.
 | 15 | φ(e^{P+Q}) ≤ φ(e^{P/2} e^Q e^{P/2}) (symmetric Golden–Thompson) | projections | M_n | same source as #14: Golden–Thompson restricted to projections characterises tracial functionals. **Form not seen.** We do **not** attribute it to Petz–Zemánek (see B11) | as #14 (Math. Notes 89 (2011), credited in JMAA 552 (2025), p. 1) | S (via F) |
 | 16 | φ(e^A) exp(φ(e^{A/2}Be^{A/2})/φ(e^A)) ≤ φ(e^{A+B}) (symmetric Peierls–Bogoliubov) | self-adjoint A, B | C*-algebra | "either the Peierls–Bogoliubov or the Araki–Lieb–Thirring inequality characterises tracial functionals among positive functionals"; it also answers a question of J. Zemánek. The form of φ(e^A B) used in the paper was not seen; we use the symmetric (real) version. As for #7, the published hypothesis may be on projections only (B2, p. 1) | Bikchentaev (2011), as #7 | A |
 
+## A″. Inequalities evaluated numerically (third round: forms checked against the full texts)
+
+Items 17–25 were added after reading the full texts (section E). All are marked **F**. "Form used" is what
+`scripts/trace_characterizations.py` evaluates; N is the normalisation of (L − R)/N.
+
+| # | inequality (form used) | N | operators | statement of the characterisation | reference | seen |
+|---|---|---|---|---|---|---|
+| 17 | φ(PQP) ≤ φ(Q) | R | projections | Thm. 3.4 (iv) ⟺ (vi): φ ∈ M₊* is a trace iff the inequality holds for all projections. The proof's M_2 example (density diag(½+s, ½−s), p = r(1,½+t), q = r(1,½−t)) gives φ(pqp) − φ(q) = 2t(2s − t − 4st²) with φ(1) = 1; the paper writes h(t) = s − t − 2st², which has the same sign for t < s/2, so the conclusion stands (checked in the tests) | Bikchentaev, Sib. Math. J. 51 (2010), no. 6, 971–977, Thm. 3.4 | F |
+| 18 | φ(\|P − Q\|) ≤ φ(P + Q) | R | projections | Thm. 3.4 (v) | as #17 | F |
+| 19 | φ(P + Q) ≤ φ(1 + P ∧ Q) | R | projections | Thm. 3.4 (iii) | as #17 | F |
+| 20 | φ(e^{QPQ}) ≤ φ(e^P) | R | projections | Thm. 2 (v) ⟺ (x) | Bikchentaev, Math. Notes 89 (2011), no. 3–4, 461–471, Thm. 2 | F |
+| 21 | φ(Re PQ) ≥ 0, as L = −φ(Re PQ) ≤ R = 0 | φ(P) + φ(Q) | projections | Thm. 2 (vi) | as #20 | F |
+| 22 | φ(Re PQ) ≤ φ(\|PQ\|) | R | projections | Thm. 2 (vii) | as #20 | F |
+| 23 | φ(P ∨ Q) ≤ φ(P) + φ(Q) | R | projections | Thm. 4: a positive functional on a von Neumann algebra is tracial iff it is subadditive on the projection lattice (proof: x, y near the same eigenvector, p_x ∨ p_y = 1) | Petz, Zemánek, Linear Algebra Appl. 111 (1988), 43–52, Thm. 4 | F |
+| 24 | φ(A²)^{1/2} ≤ φ(A), A ≥ 0, φ(1) = n (p = 2, q = 1) | R | positive A | Thm. 3 (vii): for faithful φ with φ(I) = n, φ = tr iff φ(A^p)^{1/p} ≤ φ(A^q)^{1/q} for all A ≥ 0, 0 < q < p. Characterises the *canonical* trace | Bikchentaev, Sib. Math. J. 61 (2020), no. 2, 248–254, Thm. 3 (vii) | F |
+| 25 | 0 ≤ A ≤ B ⟹ φ(A⁴) ≤ φ(AB²A) (r = 1) | R | positive A ≤ B | Lemma 1, Thms. 4–5: φ(A^{2r+2}) ≤ φ(A^rB²A^r) for all 0 ≤ A ≤ B (fixed r ≥ 0) characterises traces; r = 0 is #10 | Dinh Trung Hoa, Tikhonov, Math. Notes 88 (2010), no. 1–2, 177–182 | F |
+
+**Results (paper, Propositions tcP, tcL, tcW; proofs in the appendix `trace_characterizations_appendix.tex`).**
+On M_2, with W = ½(1 + δσ₃) and Bloch vectors m, n of rank-one P, Q: 17: κ² − 1 (attained: m₃ = 0,
+n = (m − λδe₃)/(λ − 1), λ = 2/(1 − δ²)); 18: κ − 1 (also Prop. tcK with X = P, Y = −Q); 19: δ (approached,
+P ≠ Q → e₁); 20: max over one angle of the larger root of a quadratic, (e−1)²δ²/(e(e+1)) + O(δ³); 21: ½tan²(ψ/2),
+δ = sin ψ, ~δ²/8; 22: κ − 1 (Prop. tcK applied to X = PQ); 23: δ/(1 − δ) (approached, P ≠ Q → e₂). Reduction to
+rank-one P, Q on M_2 by the two-projection lemma; the M_2 envelope is non-decreasing in δ (linear-fractional in the
+contrast, even under σ₁-conjugation). 17, 18, 21–23 do not depend on n. 19, 20 contain φ(1) in N: equal to the M_2
+values for even n; for odd n, V₁₉ = (n − 1)δ/(n − δ) (Ky Fan), and V₂₀ ≥ the same maximum with (1 − δ)/(n − 1)
+added to N. 24: V = w_min^{−1/2} − 1 (Tr W = n), maximal √((ℓ + n − 1)/(nℓ)) − 1; n = 2: (1 − δ)^{−1/2} − 1 ~ δ/2.
+25: rank-one A gives no violation (AB²A ≥ A⁴ as operators); A = diag(1, a), a = δ²/8, at 45° to the eigenbasis of W,
+B − A of rank one, gives V ≥ δ⁸/4096 (1 + O(δ²)); the same scaling gives the order δ^{4(r+1)} for general r.
+
 ## B. Further characterisations (not evaluated: the form was not visible, or the statement is not an inequality)
 
 | # | statement (as far as seen) | algebra | reference | seen |
@@ -152,11 +181,11 @@ is complemented") appears in Petz's survey, but as a trace inequality, not as a 
   φ(p)^{1/α} φ(q)^{1/β}, α ≠ 2; (iii) φ(|pq|^{1/2}) ≤ φ(p)^{1/2} φ(q)^{1/2}; (iv) φ(e^{p+q}) ≤ φ(e^{p/2} e^q e^{p/2});
   (v) φ(e^{qpq}) ≤ φ(e^p); (vi) φ(Re pq) ≥ 0; (vii) φ(Re pq) ≤ φ(|pq|); (viii) φ(Im pq) ≥ 0; (ix) φ(f(p+q)) ≤
   φ(f(p)) + φ(f(q)) for concave f, f(0) = 0, f′(1) ≠ f(1). The remark after the theorem: α = 2 in (i) does not
-  characterise traces. Items 14 and 15 are (i) with α = 3 and (iv).
+  characterise traces. Items 14 and 15 are (i) with α = 3 and (iv); items 20, 21, 22 are (v), (vi), (vii).
 - Bikchentaev, Sib. Math. J. 51 (2010), no. 6, 971–977, doi:10.1007/s11202-010-0096-2 (Russian original Sib. Mat.
   Zh. 51:6, 1228–1236), Theorem 3.4; announced without proofs in Russian Math. 53 (2009), no. 12, 68–71,
   doi:10.3103/S1066369X0912010X, Theorem 5: for φ ∈ M₊* the trace is characterised by φ(s_r(pqp)) = φ(s_r(qpq)),
-  φ(p + q) ≤ φ(e + p ∧ q), φ(pqp) ≤ φ(q), φ(|p − q|) ≤ φ(p + q) (p, q projections). Not yet in the table.
+  φ(p + q) ≤ φ(e + p ∧ q), φ(pqp) ≤ φ(q), φ(|p − q|) ≤ φ(p + q) (p, q projections). Items 19, 17, 18.
 - Bikchentaev, Lobachevskii J. Math. 32 (2011), no. 3, 175–179, doi:10.1134/S1995080211030061: Lemma 1 / Theorem 1
   (Peierls–Bogoliubov, φ(e^H) exp(φ(e^{H/2}Ke^{H/2})/φ(e^H)) ≤ φ(e^{H+K}), positive H, K) and Lemma 2 / Theorem 2
   (Araki–Lieb–Thirring, φ((A^{1/2}BA^{1/2})^{rp}) ≤ φ((A^{r/2}B^rA^{r/2})^p) for some r > 1, p > 0, positive A, B).
@@ -168,7 +197,8 @@ is complemented") appears in Petz's survey, but as a trace inequality, not as a 
   φ on M_n with φ(I) = n, φ = tr iff (ii) det(P(exp A)) ≥ exp φ(A) for all pinchings P and A ≥ 0; (iii) det(A)^{1/n}
   ≤ φ(A)/n for A ≥ 0; (iv) per(A) ≤ φ(Aⁿ)/n for nonnegative A; (v) det(I + εA) = 1 + εφ(A) + o(ε); for faithful φ
   also (vi) det(exp A) ≤ exp φ(A) and (vii) φ(A^p)^{1/p} ≤ φ(A^q)^{1/q}, 0 < q < p. Theorem 4: Schur-type
-  inequalities, e.g. Σ λ_t(A)² ≤ φ(A²), tr(A)² ≤ φ(√A)… for A ≥ 0. Item 11 is Theorem 3(iii).
+  inequalities, e.g. Σ λ_t(A)² ≤ φ(A²), tr(A)² ≤ φ(√A)… for A ≥ 0. Item 11 is Theorem 3(iii), item 24 is (vii)
+  with p = 2, q = 1.
 - Hoa, Osaka, Toan, Linear Algebra Appl. 438 (2013) 242–249, doi:10.1016/j.laa.2012.07.053, Lemma 3.1: if
   φ(A + B) − φ(|A − B|) ≤ 2φ(f(A)^{1/2} g(B) f(A)^{1/2}), g(t) = t/f(t), for all A, B ≥ 0 (f continuous, f(0) = 0,
   f > 0 on (0, ∞)), then φ is a multiple of Tr. Remark 4: the case f(t) = t^{1−s}, i.e. A^{(1−s)/2} B^s A^{(1−s)/2};
@@ -184,12 +214,12 @@ is complemented") appears in Petz's survey, but as a trace inequality, not as a 
   (d) |f(A)| ≤ c r(A), (e) limsup |f(A^k)|^{1/k} = r(A), (f) f(P) ≠ 0 for idempotents P ≠ 0, (g) sup |f(P)| < ∞ over
   idempotents, (h) f constant on idempotents of equal rank, (i) f(A) = 0 when A² = 0, (j) f(A) = … = f(Aⁿ) = 0 ⇒ A
   nilpotent. Theorem 4: a positive functional on a von Neumann algebra is tracial iff φ(p ∨ q) ≤ φ(p) + φ(q) for all
-  projections (not yet in the table). Theorem 5: Theorem 1 for C*-algebras.
+  projections (item 23). Theorem 5: Theorem 1 for C*-algebras.
 - Dinh Trung Hoa, Tikhonov, Math. Notes 88 (2010), no. 1–2, 177–182, doi:10.1134/S0001434610070175 (Russian:
   Mat. Zametki 88:2, 193–200, doi:10.4213/mzm8802). Theorem 1: for a faithful normal finite trace,
   τ(A^{1/2}f(A)A^{1/2}) ≤ τ(A^{1/2}f(B)A^{1/2}) for all 0 ≤ A ≤ B iff x f(x) is convex. Proposition 1:
   φ(Af(A)) ≤ ½φ(Af(B) + f(B)A) for all 0 ≤ A ≤ B forces f constant on (0, ∞) or φ tracial. Lemma 1, Theorems 4–5:
   φ(A^{2r+2}) ≤ φ(A^rB²A^r) for all 0 ≤ A ≤ B (fixed r ≥ 0) characterises traces (normal semifinite weights,
   positive functionals on C*-algebras); on M_n this is [Bikchentaev–Tikhonov LAA 2007; Sano–Yatsu JIPAM 7(1) 2006,
-  Art. 36] for r = 0 and [Hoa–Tikhonov LJM 26 (2007), Theorem 6] for r > 0. Item 10 is r = 0. Corollary 3 (r = 0) is
-  Ogasawara's commutativity criterion.
+  Art. 36] for r = 0 and [Hoa–Tikhonov LJM 26 (2007), Theorem 6] for r > 0. Item 10 is r = 0, item 25 is r = 1.
+  Corollary 3 (r = 0) is Ogasawara's commutativity criterion.
