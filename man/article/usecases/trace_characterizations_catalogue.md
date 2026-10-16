@@ -169,3 +169,8 @@ is complemented") appears in Petz's survey, but as a trace inequality, not as a 
   ≤ φ(A)/n for A ≥ 0; (iv) per(A) ≤ φ(Aⁿ)/n for nonnegative A; (v) det(I + εA) = 1 + εφ(A) + o(ε); for faithful φ
   also (vi) det(exp A) ≤ exp φ(A) and (vii) φ(A^p)^{1/p} ≤ φ(A^q)^{1/q}, 0 < q < p. Theorem 4: Schur-type
   inequalities, e.g. Σ λ_t(A)² ≤ φ(A²), tr(A)² ≤ φ(√A)… for A ≥ 0. Item 11 is Theorem 3(iii).
+- Hoa, Osaka, Toan, Linear Algebra Appl. 438 (2013) 242–249, doi:10.1016/j.laa.2012.07.053, Lemma 3.1: if
+  φ(A + B) − φ(|A − B|) ≤ 2φ(f(A)^{1/2} g(B) f(A)^{1/2}), g(t) = t/f(t), for all A, B ≥ 0 (f continuous, f(0) = 0,
+  f > 0 on (0, ∞)), then φ is a multiple of Tr. Remark 4: the case f(t) = t^{1−s}, i.e. A^{(1−s)/2} B^s A^{(1−s)/2};
+  s = 0 gives φ(B) − φ(A) ≤ φ(|A − B|). Item 13 is s = 1/2. Corollaries 3.1–3.2 rederive the triangle inequality
+  (Stolyarov et al.) and Gardner's inequality on M_n.
