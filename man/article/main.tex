@@ -59,18 +59,19 @@ A GPU-Accelerated Framework for Random Block-Diagonal Operators}
 finite-dimensional Type~I von Neumann algebras $\bigoplus_cM_{k_c}(\C)$ of quantum systems with conserved charges or
 superselection rules: random operators with prescribed spectra, states, channels between sectors, spin chains, Lindblad
 dynamics, inclusions of algebras, symmetry reduction and constrained optimisation. Validated against exact results, it
-serves here as a research tool in four use cases. We determine how strongly trace-characterising inequalities fail
-for non-tracial functionals: several violation envelopes are sharp functions of the Michelson contrast of the
-density, given by the Kantorovich constant ($\kappa-1$), the eigenvalue ratio ($a/b-1$) and the Specht ratio, and the
-inequalities detect only the contrast inside a block. For two maximal abelian subalgebras of $M_2$ we prove a closed
-form for the Connes--St{\o}rmer entropy $H(\Delta_2|U\Delta_2U^*)$, stated as open by Bakshi and Guin and by Petz,
-Sz\'ant\'o and Weiner; for $n\ge3$ we observe partitions of unity that beat the best orthonormal bases found. For a
-boundary time crystal with local emission or dephasing we compute finite-$N$ lifetimes up to $N=80$ and observe that
-the collective and local damping rates approximately add. For the XXZ chain at $L=24$, batched over eight anisotropies, the
-sector blocks give the symmetry-resolved entanglement directly, and the charge statistics give the Luttinger parameter
-to about one per cent away from the isotropic point. Constrained optimisation also replaces the Monte Carlo sampling of our
-earlier work on trace inequalities, whose envelopes we prove for sectors of every size, and rediscovers the
-data-processing thresholds $\alpha=\frac12$ and $\alpha=2$ of the Rényi divergences.
+serves here as a research tool in four use cases. Batched, certified optimisation measures how strongly 25 inequalities that characterise
+the trace fail for non-tracial functionals, as a function of the Michelson contrast of the density; the envelopes vanish
+to the orders $\delta$, $\delta^2$, $\delta^4$ and $\delta^8$, agree with closed forms where these are known, and on a
+direct sum detect only the contrast inside a block. For two maximal abelian subalgebras of $M_2$ the computed
+Connes--St{\o}rmer entropy led to a closed form, open in the literature; for $n\ge3$ partitions of unity beat the best
+orthonormal bases found. For a boundary time crystal with local emission or dephasing, maps between the Schur--Weyl
+sectors give finite-$N$ lifetimes up to $N=80$ without truncation, and the collective and local damping rates
+approximately add. For the XXZ chain at $L=24$, batched over eight anisotropies, the sector blocks give the
+symmetry-resolved entanglement directly, and the charge statistics give the Luttinger parameter to within one per cent
+for $-0.5\le\Delta\le0.75$. Constrained optimisation also replaces the Monte Carlo sampling of our earlier work on trace
+inequalities, whose envelopes we prove for sectors of every size, and rediscovers the data-processing thresholds
+$\alpha=\frac12$ and $\alpha=2$ of the Rényi divergences. The mathematical and physical results are developed in three
+companion papers.
 \end{abstract}
 
 \section*{Program summary}
@@ -1572,10 +1573,17 @@ and $Y$ with eigenvalues $1,b$ in every block at the angle of Proposition~\ref{p
 $X=\mathrm{diag}(1,-1)$ on $N$ blocks, the eigenvalue $a$ on a one-dimensional block of an odd sector, $1$ on the other
 one-dimensional blocks, and $Y$ as before ($Y=1$ on the one-dimensional blocks). \qed
 
-\input{usecases/trace_characterizations_appendix.tex}
 
 {\sloppy
 \begin{thebibliography}{99}
+\bibitem{nn_trace} I.~Nikolaeva, A.~Novikov, ``Trace-characterising inequalities fail with the Michelson contrast of
+  the functional and of the operators, and projections detect the failure'', preprint (2026); source in
+  \texttt{man/trace\_envelopes} of the repository.
+\bibitem{nn_cs} I.~Nikolaeva, A.~Novikov, ``The Connes--St{\o}rmer entropy of two maximal abelian subalgebras: a closed form for
+  $M_2$ and partitions that beat bases in $M_n$'', preprint (2026); source in \texttt{man/connes\_stormer} of the repository.
+\bibitem{nn_btc} I.~Nikolaeva, A.~Novikov, ``Exact symmetry sectors at work: finite-$N$ lifetimes of a boundary time
+  crystal under local dissipation and symmetry-resolved entanglement in the XXZ chain'', preprint (2026); source in
+  \texttt{man/btc\_sre} of the repository.
 \bibitem{v1} I.~Nikolaeva, A.~Novikov, ``Finite-dimensional Type I von Neumann algebras in PyTorch: a
   GPU-accelerated framework for random block-diagonal operators'', arXiv:2606.15882v1 (2026).
 \bibitem{gardner1979} L.~T.~Gardner, ``An inequality characterizes the trace'', Canad.\ J.\ Math.\ 31
