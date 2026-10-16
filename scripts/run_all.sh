@@ -65,7 +65,7 @@ fi
 
 echo
 if [ ${#failed[@]} -eq 0 ]; then
-  echo "done: all scripts succeeded; outputs in $OUTDIR (compile man/article/main.tex)"
+  echo "done: all scripts succeeded; outputs in $OUTDIR (compile man/article/vn_algebra_pytorch.tex)"
 else
   echo "done with failures: ${failed[*]} (logs in $LOGS)"; exit 1
 fi

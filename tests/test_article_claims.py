@@ -1,5 +1,5 @@
 """
-The mathematical statements and exact values of the article (man/article/main.tex), checked through the public API
+The mathematical statements and exact values of the article (man/article/vn_algebra_pytorch.tex), checked through the public API
 of torch_vn_algebra: CPU, double precision, fixed seeds. Every test names the statement it checks by the section of
 the article ("Sec. 2", ...) or by its numbered object ("Proposition 1") or by the program it refers to ("ex3_channels.py"). Distributional claims are
 checked with z-scores; exact claims to round-off.

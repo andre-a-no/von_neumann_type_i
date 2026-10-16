@@ -50,10 +50,10 @@ This README is the entry point of the repository:
 | learn the library | [the tutorial](man/tutorial/README.md): the library in the context of the theory, chapter by chapter, with cross-links to the theory (7 languages) |
 | understand the physics behind the models | the boxes *Physical meaning* in the [lecture notes](man/lecture_notes/README.md), e.g. [symmetries and charge sectors](man/lecture_notes/04_symmetries.md), [dynamics](man/lecture_notes/08_dynamics.md), [spin chains](man/lecture_notes/09_spin_chains.md) |
 | compare with other software | [When to use it, and alternatives](#when-to-use-it-and-alternatives) |
-| read the paper | [`man/article/main.pdf`](man/article/main.pdf) (source `man/article/main.tex`) |
-| read the paper on trace characterisations | [`man/trace_envelopes/main.pdf`](man/trace_envelopes/main.pdf): how strongly inequalities that characterise the trace fail, as functions of the Michelson contrasts of the functional and of the operators, and why projections suffice (source `man/trace_envelopes/main.tex`, numbers from `scripts/trace_characterizations.py` and `scripts/trace_contrast.py`, arXiv archive by `scripts/make_arxiv_trace.sh`) |
-| read the paper on the Connes–Størmer entropy | [`man/connes_stormer/main.pdf`](man/connes_stormer/main.pdf): closed form for two MASAs of M_2, partitions that beat bases for n ≥ 3 (numbers from `scripts/connes_stormer.py`, arXiv archive by `scripts/make_arxiv_connes_stormer.sh`) |
-| read the physics paper (time crystal, symmetry-resolved entanglement) | [`man/btc_sre/main.pdf`](man/btc_sre/main.pdf): finite-N lifetimes of a boundary time crystal under local dissipation, SRE in the XXZ chain (numbers from `scripts/permutational.py` and `scripts/symmetry_resolved.py`, arXiv archive by `scripts/make_arxiv_btc_sre.sh`) |
+| read the paper | [`man/article/vn_algebra_pytorch.pdf`](man/article/vn_algebra_pytorch.pdf) (source `man/article/vn_algebra_pytorch.tex`) |
+| read the paper on trace characterisations | [`man/trace_envelopes/trace_inequalities_contrast.pdf`](man/trace_envelopes/trace_inequalities_contrast.pdf): how strongly inequalities that characterise the trace fail, as functions of the Michelson contrasts of the functional and of the operators, and why projections suffice (source `man/trace_envelopes/trace_inequalities_contrast.tex`, numbers from `scripts/trace_characterizations.py` and `scripts/trace_contrast.py`, arXiv archive by `scripts/make_arxiv_trace.sh`) |
+| read the paper on the Connes–Størmer entropy | [`man/connes_stormer/connes_stormer_masas.pdf`](man/connes_stormer/connes_stormer_masas.pdf): closed form for two MASAs of M_2, partitions that beat bases for n ≥ 3 (numbers from `scripts/connes_stormer.py`, arXiv archive by `scripts/make_arxiv_connes_stormer.sh`) |
+| read the physics paper (time crystal, symmetry-resolved entanglement) | [`man/btc_sre/btc_sre_symmetry_sectors.pdf`](man/btc_sre/btc_sre_symmetry_sectors.pdf): finite-N lifetimes of a boundary time crystal under local dissipation, SRE in the XXZ chain (numbers from `scripts/permutational.py` and `scripts/symmetry_resolved.py`, arXiv archive by `scripts/make_arxiv_btc_sre.sh`) |
 | reproduce every number of the paper | [Reproducing the paper](#reproducing-the-paper) |
 | cite it | [Citation](#citation) |
 
@@ -315,14 +315,14 @@ algebras and spin factors (`example_jordan.py`).
 
 ## Reproducing the paper
 
-The paper ([`man/article/main.tex`](man/article/main.tex), compiled [`man/article/main.pdf`](man/article/main.pdf)) contains no number
+The paper ([`man/article/vn_algebra_pytorch.tex`](man/article/vn_algebra_pytorch.tex), compiled [`man/article/vn_algebra_pytorch.pdf`](man/article/vn_algebra_pytorch.pdf)) contains no number
 typed by hand: every table and figure comes from the scripts in [`scripts`](scripts) and the listings in
 [`man/article/listings`](man/article/listings), run by one driver:
 
 ```bash
 bash scripts/run_all.sh                    # quick mode, about 4 minutes on a 4-thread CPU
 bash scripts/run_all.sh full cuda          # sizes of the paper, on a GPU
-cd man/article && pdflatex main.tex && pdflatex main.tex
+cd man/article && pdflatex vn_algebra_pytorch.tex && pdflatex vn_algebra_pytorch.tex
 ```
 
 ### Running the full experiments on a GPU server
@@ -396,7 +396,7 @@ examples/            short usage examples of the library
 man/                 the documentation:
   lecture_notes/     the theory: definitions, theorems, complete proofs (7 languages)
   tutorial/          the library in the context of the theory, executed by the tests (7 languages)
-  article/           the paper: main.tex, main.pdf, generated/ (tables), figures/, listings/ (its programs)
+  article/           the paper: vn_algebra_pytorch.tex and .pdf, generated/ (tables), figures/, listings/ (its programs)
 scripts/             run_all.sh and the scripts behind every table and figure of the paper
 ```
 
