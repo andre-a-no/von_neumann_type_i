@@ -33,3 +33,7 @@ man/article/arxiv.zip
 # arXiv upload built by scripts/make_arxiv_trace.sh
 man/trace_envelopes/arxiv.tar.gz
 man/trace_envelopes/arxiv.zip
+man/btc_sre/arxiv.tar.gz
+man/btc_sre/arxiv.zip
+man/connes_stormer/arxiv.tar.gz
+man/connes_stormer/arxiv.zip
