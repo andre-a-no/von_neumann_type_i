@@ -174,3 +174,7 @@ is complemented") appears in Petz's survey, but as a trace inequality, not as a 
   f > 0 on (0, ∞)), then φ is a multiple of Tr. Remark 4: the case f(t) = t^{1−s}, i.e. A^{(1−s)/2} B^s A^{(1−s)/2};
   s = 0 gives φ(B) − φ(A) ≤ φ(|A − B|). Item 13 is s = 1/2. Corollaries 3.1–3.2 rederive the triangle inequality
   (Stolyarov et al.) and Gardner's inequality on M_n.
+- Bikchentaev, Tikhonov, J. Inequal. Pure Appl. Math. 6 (2005), no. 2, Art. 49 (no DOI; full text at
+  https://emis.muni.cz/journals/JIPAM/images/089_05_JIPAM/089_05.pdf): a positive linear functional φ on M_n with
+  φ(|AB|) ≤ φ(A^p)/p + φ(B^q)/q for all A, B ≥ 0 (fixed conjugate p, q) is a multiple of Tr. Item 8 extends this
+  (p = q = 2) to arbitrary A, B via Ando's |AB*|; for A, B ≥ 0 the search gives κ − 1.
