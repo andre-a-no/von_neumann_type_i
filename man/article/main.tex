@@ -4,8 +4,7 @@
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{graphicx}
 \usepackage{booktabs}
-\usepackage{listings}
-\usepackage{xcolor}
+\usepackage{array}
 \usepackage[margin=2.4cm]{geometry}
 \usepackage{hyperref}
 
@@ -17,8 +16,8 @@
 \newtheorem{theorem}[proposition]{Theorem}
 \newtheorem{lemma}[proposition]{Lemma}
 
-\lstset{language=Python, basicstyle=\ttfamily\footnotesize, frame=single, breaklines=true,
-        columns=fullflexible, keepspaces=true, commentstyle=\color{gray}, showstringspaces=false}
+% link to a program in man/article/listings of the repository
+\newcommand{\repofile}[1]{\href{https://github.com/andre-a-no/von_neumann_type_i/blob/main/man/article/listings/#1}{\texttt{listings/\allowbreak\detokenize{#1}}}}
 
 % numbers and tables produced by scripts/*.py (bash scripts/run_all.sh [quick|full] [device])
 \newcommand{\gen}[1]{\IfFileExists{generated/#1.tex}{\input{generated/#1.tex}}{}}
@@ -233,8 +232,8 @@ quantifies where the library gains and where it does not.
 
 \paragraph{Contributions and outline.} Sections~\ref{sec:math}--\ref{sec:symmetries} describe the library:
 notation and conventions (Section~\ref{sec:math}); the software stack, the workflow, how the challenges (i)--(vii) are
-met, and the number field and precision (Section~\ref{sec:design}); short complete programs, including a noisy quantum
-circuit (Section~\ref{sec:usage}); validation against exact results (Section~\ref{sec:validation}); constrained
+met, and the number field and precision (Section~\ref{sec:design}); an overview of short complete programs in the
+repository, including a noisy quantum circuit (Section~\ref{sec:usage}); validation against exact results (Section~\ref{sec:validation}); constrained
 optimisation instead of Monte Carlo sampling, which proves the envelopes of the trace inequalities of~\cite{v1} for
 sectors of every size and locates the data-processing thresholds of the Rényi divergences (Sections~\ref{sec:optimisation}
 and~\ref{sec:renyi}); charge-conserving tensor products and spin chains with momentum sectors, sparse Krylov solvers
@@ -549,84 +548,69 @@ be changed, and the checks can be switched off locally.
 
 \section{Usage by example}\label{sec:usage}
 
-The listings of this section are complete programs from \texttt{man/article/listings}; the test suite runs
-them, so they stay in sync with the code. Each runs on a CPU in under half a minute and uses a GPU when available.
+The repository contains short complete programs in \texttt{man/article/listings}; the test suite runs them, so they
+stay in sync with the code. Each runs on a CPU in under half a minute and uses a GPU when available.
+Table~\ref{tab:examples} lists the nine introductory examples; the programs of later sections are described where
+they are used.
 
-\paragraph{Random operators with a prescribed contrast.} Listing~\ref{lst:ex1} builds $10^4$ positive
-operators in $M_2\oplus M_3\oplus M_4$ whose spectra have contrast $0.6$ and whose eigenvectors are
-Haar-random in every sector, and evaluates traces and spectral functions.
-\lstinputlisting[caption={Random operators (\texttt{ex1\_random\_operators.py}).},label=lst:ex1]{listings/ex1_random_operators.py}
-
-\paragraph{States, measurement and trace conventions.} Listing~\ref{lst:ex2} conditions random states on
-the outcome of a projective measurement (Lüders rule), which moves all probability into one sector, and
-checks that expectation values do not depend on the trace used to represent the state.
-\lstinputlisting[caption={States and conditioning (\texttt{ex2\_states\_measurement.py}).},label=lst:ex2]{listings/ex2_states_measurement.py}
-
-\paragraph{A map between sectors.} Two fermionic modes have sectors $N=0,1,2$ of dimensions $1,2,1$.
-Particle loss with Kraus operators $\sqrt{1-gN}$, $\sqrt g\,a_1$, $\sqrt g\,a_2$ ($0\le g\le\frac12$) maps sector $N$ to
-$N$ and $N-1$. Listing~\ref{lst:ex3} builds it from its blocks; the classical part is the transition
-matrix of a pure death process (columns: from $N=0,1,2$; rows: to $N=0,1,2$),
-\[
-  T=\begin{pmatrix}1&g&0\\0&1-g&2g\\0&0&1-2g\end{pmatrix},
-\]
-which the program prints. The last lines illustrate a simple fact: a unital positive map cannot
-increase the Michelson contrast, since $\lambda_{\min}1\le A\le\lambda_{\max}1$ implies the same bounds
-for $\Phi(A)$; the non-unital loss channel increases it for most samples.
-\lstinputlisting[caption={Particle loss between sectors (\texttt{ex3\_channels.py}).},label=lst:ex3]{listings/ex3_channels.py}
-
-\paragraph{Open-system dynamics.} Listing~\ref{lst:ex4} integrates spontaneous emission of a two-level
-atom with the RK4 solver and with the exact exponential of the Lindblad generator, and compares both with
-$P_e(t)=P_e(0)e^{-\gamma t}$ and $|\rho_{eg}(t)|=|\rho_{eg}(0)|e^{-\gamma t/2}$.
-\lstinputlisting[caption={Spontaneous emission (\texttt{ex4\_dynamics.py}).},label=lst:ex4]{listings/ex4_dynamics.py}
-
-\paragraph{Tensor products.} Listing~\ref{lst:ex5} estimates the mean entanglement entropy of random
-pure states on $\C^m\otimes\C^n$ and compares it with Page's formula~\cite{page1993}.
-\lstinputlisting[caption={Page entropy (\texttt{ex5\_page\_entropy.py}).},label=lst:ex5]{listings/ex5_page_entropy.py}
-
-\paragraph{Searching for a violation.} Listing~\ref{lst:ex6} compares Haar sampling with batched gradient
-ascent for $\sup_U\bigl(|\Tr(XUY)|-\Tr(XY)\bigr)$, whose exact value $\|YX\|_1-\Tr(XY)$ is positive for
-non-commuting $X,Y\ge0$. Section~\ref{sec:optimisation} studies this systematically.
-\lstinputlisting[caption={Sampling versus optimisation (\texttt{ex6\_inequality\_search.py}).},label=lst:ex6]{listings/ex6_inequality_search.py}
-
-\paragraph{Spin chains.} Listing~\ref{lst:ex7} works with a Heisenberg ring of ten spins. A uniform field
-moves the ground state through the sectors until the chain is fully polarised above the saturation
-field $h_s=2J$ (above it the ground state is the all-down state $N=0$ for our sign $+\sum_ih_iS^z_i$; the last
-crossing is with the one-magnon level at $k=\pi$); 100 realisations of random fields are diagonalised in one batch to compute the mean
-level-spacing ratio; and the entanglement entropy of the ground state is computed from reduced states.
-Section~\ref{sec:chains} checks these tools against exact results.
-\lstinputlisting[caption={Spin chains (\texttt{ex7\_spin\_chain.py}).},label=lst:ex7]{listings/ex7_spin_chain.py}
-
-\paragraph{Large sectors and open chains.} Dense matrices of a sector of dimension $\binom{L}{L/2}$ stop
-fitting at about $L=16$--$18$. Listing~\ref{lst:ex8} uses the sparse form of the Hamiltonian (a batch of
-diagonals and one shared hopping matrix) with Lanczos and Krylov solvers, splits a ring into momentum
-sectors, and lets particles leak out of the chain through Lindblad jumps between sectors.
-\lstinputlisting[caption={Large sectors and open chains (\texttt{ex8\_large\_and\_open\_chains.py}).},label=lst:ex8]{listings/ex8_large_and_open_chains.py}
-
-\paragraph{A noisy quantum circuit with a conserved quantity.} The quantum alternating operator ansatz solves
-constrained optimisation problems with ``XY mixers'' (normalised here as $H_M=\frac14\sum_{\langle ij\rangle}(X_iX_j+Y_iY_j)$, the XXZ form with $J=1$, $\Delta=0$) that keep the Hamming weight of the
-computational basis states, so the evolution stays in the feasible subspace~\cite{hadfield2019}. In the language of
-this paper the qubit register carries the algebra $\bigoplus_{N=0}^nM_{\binom nN}$ of Hamming-weight sectors, the
-mixer is an element of it, amplitude damping (time $T_1$) is a Lindblad jump between sectors and pure dephasing (time $T_\varphi$,
-which together with $T_1$ sets the coherence time $T_2$, $1/T_2=1/(2T_1)+1/T_\varphi$) a jump inside them, and reading out the Hamming weight is the measurement of a central projection. Listing~\ref{lst:ex9}
-evolves $|111000\rangle$ (weight $w=3$) on a ring of six qubits under $H_M$ for a time $T=2$ with both kinds of noise,
-jump operators $S^-_i$ at rate $\gamma_1$ (damping) and $S^z_i=\frac12Z_i$ at rate $\gamma_2$ (dephasing), so that $T_1=1/\gamma_1$,
-$1/T_\varphi=\gamma_2/2$ and $1/T_2=(\gamma_1+\gamma_2)/2$, and post-selects on the initial weight. With damping only (equal rates on all qubits), the post-selected fidelity is exactly one and the acceptance probability is $e^{-w\gamma_1T}$: the
-no-jump evolution is generated by $H-\frac{i}{2}\gamma_1N$, and $N$ is central, so it only rescales the state. This
-exact statement is part of the test suite. Dephasing stays inside the sector and is not detected; because $N$ is central, the
-post-selected state does not depend on $\gamma_1$ even with dephasing (fidelity with the noiseless state):
-\begin{center}\footnotesize
-\begin{tabular}{rrrrr}
+\begin{table}[h]
+\centering\scriptsize
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.25\textwidth}>{\raggedright\arraybackslash}p{0.39\textwidth}%
+>{\raggedright\arraybackslash}p{0.28\textwidth}}
 \toprule
-$\gamma_1$ & $\gamma_2$ & $P(\text{weight }3)$ & fidelity & after post-selection\\
+program & what it shows & key API\\
 \midrule
-0.02 & 0 & 0.8869 & 0.8869 & 1.0000\\
-0 & 0.02 & 1.0000 & 0.9730 & 0.9730\\
-0.02 & 0.02 & 0.8869 & 0.8629 & 0.9730\\
-0.1 & 0.1 & 0.5488 & 0.4805 & 0.8755\\
+\repofile{ex1_random_operators.py} & $10^4$ positive operators in $M_2\oplus M_3\oplus M_4$ with contrast $0.6$ and
+Haar-random eigenvectors in every sector; the three traces and spectral functions &
+\texttt{TypeIAlgebra}, \texttt{operator\_from\_eigenvalues}, \texttt{michelson\_contrast}, \texttt{Tr\_blunt},
+\texttt{tau\_vN}, \texttt{apply\_function}\\
+\repofile{ex2_states_measurement.py} & Lüders conditioning on a projective measurement moves all probability into one
+sector; expectation values do not depend on the trace that represents the state &
+\texttt{states.random\_density\_matrix}, \texttt{condition\_on}, \texttt{sector\_probabilities}, \texttt{density}\\
+\repofile{ex3_channels.py} & particle loss of two fermionic modes as a map between the sectors $N=0,1,2$; unital
+and non-unital channels and the contrast & \texttt{InterSectorChannel.from\_blocks},
+\texttt{transition\_matrix}, \texttt{random\_mixed\_unitary\_channel}\\
+\repofile{ex4_dynamics.py} & spontaneous emission of a two-level atom by RK4 and by the exponential of the
+generator, against $P_e(0)e^{-\gamma t}$ and $|\rho_{eg}(0)|e^{-\gamma t/2}$ & \texttt{dynamics.lindblad\_evolve},
+\texttt{dynamics.lindblad\_channel}\\
+\repofile{ex5_page_entropy.py} & mean entanglement entropy of random pure states on $\C^m\otimes\C^n$ against
+Page's formula~\cite{page1993} & \texttt{tensor\_product}, \texttt{partial\_trace},
+\texttt{states.von\_neumann\_entropy}\\
+\repofile{ex6_inequality_search.py} & Haar sampling against batched gradient ascent for
+$\sup_U(|\Tr(XUY)|-\Tr(XY))=\|YX\|_1-\Tr(XY)$ (Section~\ref{sec:optimisation}) &
+\texttt{random\_unitary\_operator}, \texttt{expm}, \texttt{trace\_norm}\\
+\repofile{ex7_spin_chain.py} & Heisenberg ring of ten spins: the sector of the ground state in a uniform field,
+the mean level-spacing ratio of 100 disorder realisations in one batch, entanglement entropies &
+\texttt{SpinChain}, \texttt{random\_field\_heisenberg}, \texttt{level\_spacing\_ratio},
+\texttt{entanglement\_entropy}\\
+\repofile{ex8_large_and_open_chains.py} & Lanczos ground state of a sector of dimension $12870$, Krylov evolution
+of a domain wall, momentum sectors, particle loss through jumps between sectors & \texttt{xxz\_sparse},
+\texttt{krylov.ground\_state}, \texttt{krylov.evolve}, \texttt{xxz\_momentum}\\
+\repofile{ex9_qaoa_xy_mixer.py} & XY mixer on a ring of six qubits with amplitude damping, dephasing and
+post-selection on the Hamming weight & \texttt{SpinChain.xxz}, \texttt{lowering}, \texttt{algebra.central},
+\texttt{condition\_on}\\
 \bottomrule
 \end{tabular}
-\end{center}
-\lstinputlisting[caption={XY mixer with amplitude damping, dephasing and post-selection (\texttt{ex9\_qaoa\_xy\_mixer.py}).},label=lst:ex9]{listings/ex9_qaoa_xy_mixer.py}
+\caption{The introductory programs in \texttt{man/article/listings} of the repository.}
+\label{tab:examples}
+\end{table}
+
+Some of the examples check exact statements. In \texttt{ex3}, the Kraus operators $\sqrt{1-gN}$,
+$\sqrt g\,a_1$, $\sqrt g\,a_2$ ($0\le g\le\frac12$) map sector $N$ to $N$ and $N-1$, and the classical part is the
+transition matrix of a pure death process (columns: from $N=0,1,2$; rows: to $N=0,1,2$),
+$T=\bigl(\begin{smallmatrix}1&g&0\\0&1-g&2g\\0&0&1-2g\end{smallmatrix}\bigr)$; a unital positive map cannot increase
+the Michelson contrast, since $\lambda_{\min}1\le A\le\lambda_{\max}1$ implies the same bounds for $\Phi(A)$, while the
+non-unital loss channel increases it for most samples. In \texttt{ex7} the ground state moves through the sectors until
+the chain is fully polarised above the saturation field $h_s=2J$ (for our sign $+\sum_ih_iS^z_i$ the all-down state
+$N=0$; the last crossing is with the one-magnon level at $k=\pi$). In \texttt{ex9} the mixer
+$H_M=\frac14\sum_{\langle ij\rangle}(X_iX_j+Y_iY_j)$ keeps the Hamming weight~\cite{hadfield2019}, so the register
+carries the algebra $\bigoplus_{N=0}^nM_{\binom nN}$; amplitude damping ($S^-_i$, rate $\gamma_1$) is a jump between
+sectors, dephasing ($S^z_i$, rate $\gamma_2$) a jump inside them, and reading out the weight measures a central
+projection. With damping only, the post-selected fidelity is exactly one and the acceptance probability is
+$e^{-w\gamma_1T}$, because the no-jump evolution is generated by $H-\frac i2\gamma_1N$ and $N$ is central; for the same
+reason the post-selected state does not depend on $\gamma_1$ even with dephasing. For $|111000\rangle$, $T=2$ and
+$\gamma_1=\gamma_2=0.02$ the program gives the acceptance probability $0.8869$, the fidelity $0.8629$ and $0.9730$ after
+post-selection.
 
 \section{Validation against exact results}\label{sec:validation}
 
@@ -915,7 +899,7 @@ the values of the direct sums~(ii): the direct sums are optimal for even $k$, in
 direct sums with a one-dimensional summand are optimal in Exp.~1 but not in Exp.~3: there the eigenvalue
 $\lambda_{\min}$ of $|X|$ can be placed on a one-dimensional summand, where it costs nothing, and the envelope along
 $\Delta(|X|)$ does not depend on $\delta$ (for $k=3$, $C=1$: $(2D/(1+D))^2>(1-\delta)(2D/(1+D))^2$). The
-proof (Appendix~\ref{app:envelopes}) reduces both functionals to two-level spectra and, with the two-projection lemma, to
+proof (Appendix~\ref{app:envelopes}) reduces both functionals to two-level spectra and, with the two-projection lemma~\cite{halmos1969}, to
 $2\times2$ blocks, which Proposition~\ref{prop:k2} handles, except in one case: in Exp.~3 the eigenvector of $|X|$ for
 $\lambda_{\min}$ may be spread over all two-dimensional blocks of its sector, so that $X$ is not block-diagonal. This case
 is settled by the following bound, which is sharp; its proof linearises the problem.
@@ -1281,28 +1265,12 @@ values $4\cos^2(\pi/n)$, $n=4,6,8,\dots$ ($2,3,2+\sqrt2,\dots$), of the discrete
 theorem~\cite{jones1983}. The tests
 check the spectrum of the path graph and the index for $L\le8$, that the embedding is $x\otimes1_2$ in the basis of
 \texttt{SpinChain}, and that the conditional expectation for the normalised trace of $(\C^2)^{\otimes(L+1)}$ is the
-normalised partial trace over the new site. Listing~\ref{lst:inclusions} shows the interface.
-
-\begin{lstlisting}[caption={Inclusions, conditional expectations and indices (abridged from \texttt{example\_inclusions.py} in \texttt{examples}).},label=lst:inclusions]
-import math, torch
-from torch_vn_algebra import TypeIAlgebra, inclusions as inc
-
-N = TypeIAlgebra([2, 1], [2, 1], precision='double')         # M_2 (+) C
-M = TypeIAlgebra([4, 3], [4, 3], precision='double')         # M_4 (+) M_3
-I = inc.Inclusion(N, M, [[1, 2], [1, 1]], unitary=M.random_unitary_operator(3))
-print(I.index())                                             # ||Lambda||^2 = (7 + sqrt 45)/2
-E = I.conditional_expectation('markov')                      # tau-preserving E: M -> N
-y = M.operator(torch.randn(3, M.C, M.k_max, M.k_max, dtype=M.dtype))
-x = N.operator(torch.randn(3, N.C, N.k_max, N.k_max, dtype=N.dtype))
-print((E(I.embed(x) @ y).matrix - (x @ E(y)).matrix).abs().max())   # bimodule property
-print(E.index().matrix[0, :, 0, 0].real)                     # Watatani index: [M:N] 1
-print(E.pimsner_popa_constant(), E.pimsner_popa_constant(complete=True))
-J, e = I.basic_construction(), I.jones_projection('markov')  # M c M_1 = <M, e_N>
-eye = e.matrix @ J.embed(y).matrix @ e.matrix                # e_N y e_N = E(y) e_N
-print((eye - J.embed(I.embed(E(y))).matrix @ e.matrix).abs().max())
-for L, T in enumerate(inc.chain_tower(6)):                   # A_L c A_{L+1}, x -> x (x) 1_2
-    print(L, T.index(), 4 * math.cos(math.pi / (2 * L + 4)) ** 2)
-\end{lstlisting}
+normalised partial trace over the new site. The program \repofile{inclusions.py} shows the interface: for
+$M_2\oplus\C\subset M_4\oplus M_3$ with a random unitary it computes the index, the Markov conditional expectation and
+its bimodule property, the Watatani index, both Pimsner--Popa constants and the Jones projection of the basic
+construction, and the indices of the spin-chain tower (\texttt{inclusions.Inclusion}, \texttt{index},
+\texttt{conditional\_expectation}, \texttt{pimsner\_popa\_constant}, \texttt{basic\_construction},
+\texttt{jones\_projection}, \texttt{chain\_tower}).
 
 \paragraph{From a symmetry to the algebra: Wedderburn decomposition.} Section~\ref{sec:intro} obtained the
 algebra~\eqref{eq:M} from a symmetry through the commutant. \texttt{decompose} carries out this step numerically.
@@ -1339,8 +1307,11 @@ doubly degenerate eigenvalues (Kramers). The tests recover block structures hidd
 by random unitaries, the Fourier basis of the regular representation of $\mathbb Z_n$, and Schur--Weyl
 duality~\cite{fulton1991}: on $(\C^2)^{\otimes L}$, $L\le6$, the algebra generated by the permutations of the tensor
 factors and the algebra generated by the total spin have the same central projections, with $k_c$ and $m_c$
-exchanged (the dimensions of the irreducible representations of $S_L$ of shape $(L-j,j)$ and $2S+1$, $S=\frac L2-j$);
-Listing~\ref{lst:symmetry} shows it for $L=4$.
+exchanged (the dimensions of the irreducible representations of $S_L$ of shape $(L-j,j)$ and $2S+1$, $S=\frac L2-j$).
+The program \repofile{symmetry.py} shows this for $L=4$ (\texttt{decompose.from\_group} with
+\texttt{permutation\_representation}, \texttt{decompose.from\_generators} with \texttt{total\_spin}) and computes the
+SU(2) blocks and the lowest energy per total spin of a Heisenberg ring of 14 spins (\texttt{SU2Chain},
+\texttt{heisenberg}, \texttt{ground\_state}, \texttt{lowest\_energies}).
 
 \paragraph{SU(2) symmetry of spin chains.} The Heisenberg Hamiltonian $H=\sum J_{ij}\,\mathbf S_i\cdot\mathbf S_j$
 commutes with all of SU(2), not only with $S^z_{\mathrm{tot}}$. On $(\C^2)^{\otimes L}=\bigoplus_S\C^{m_S}\otimes
@@ -1371,20 +1342,6 @@ two exactly degenerate singlets with $E=-3L/8$ at the Majumdar--Ghosh point $J_2
 and SymPy values of the Clebsch--Gordan coefficients, and Wigner--Eckart matrix elements and spin correlations against
 direct evaluation.
 
-\begin{lstlisting}[caption={Schur--Weyl duality from the symmetries alone, and the SU(2) blocks of a Heisenberg ring (cf.\ \texttt{examples/example\_decompose.py} and \texttt{example\_su2.py}).},label=lst:symmetry]
-import torch_vn_algebra.decompose as dc
-from torch_vn_algebra import SU2Chain
-
-S4 = dc.from_group(dc.permutation_representation(4, 2))     # all 24 permutations of 4 qubits
-SU2 = dc.from_generators(dc.total_spin(4))                   # S_x, S_y, S_z
-print(S4.k_factors, S4.multiplicities)                       # (1, 2, 3), (5, 1, 3)
-print(SU2.k_factors, SU2.multiplicities)                     # (1, 3, 5), (2, 3, 1): swapped
-chain = SU2Chain(14, 'periodic', complex_valued=False)
-print(chain.multiplicities)                                  # m_S for S = 0..7, largest 1001
-H = chain.heisenberg(J=1.0)                                  # (+)_S H_S in (+)_S M_{m_S}
-gs = chain.ground_state(H)
-print(gs.energy, gs.spin, chain.lowest_energies(H))          # S = 0; E_0(S) increases with S
-\end{lstlisting}
 
 \noindent Section~\ref{sec:cs} uses the conditional expectations of this section to compute the Connes--St{\o}rmer
 relative entropy of two maximal abelian subalgebras of $M_n$.
@@ -1563,19 +1520,10 @@ with contrasts $\delta$ and $\delta'$; it suffices to prove the upper bounds in 
 maximisers are real. A \emph{vertex argument} is used twice: a convex function on a face of a cube $[s,t]^n$ attains its
 maximum at a vertex of the face, i.e.\ at a point with all coordinates in $\{s,t\}$.
 
-\begin{lemma}[two projections]\label{lem:twoproj}
-For projections $P,Q$ on a finite-dimensional Hilbert space $H$, $H$ is the orthogonal sum of subspaces of
-dimension $1$ or $2$ invariant under $P$ and $Q$; on each two-dimensional one there is an orthonormal basis $f,f'$ with
-$P=ff^*$ and $Q=qq^*$, $q=\cos\theta\,f+e^{i\psi}\sin\theta\,f'$.
-\end{lemma}
-\begin{proof}
-$PQP$ is self-adjoint on $\mathrm{ran}\,P$; let $v_i$ be an orthonormal eigenbasis, $PQPv_i=\mu_iv_i$, and
-$W_i=\mathrm{span}\{v_i,Qv_i\}$. Then $PQv_i=PQPv_i=\mu_iv_i$, so $W_i$ is invariant under $P$ and $Q$, and for $i\ne j$,
-$\langle v_i,Qv_j\rangle=\langle Qv_i,Qv_j\rangle=\langle v_i,PQPv_j\rangle=0$, so the $W_i$ are orthogonal. Their sum
-contains $\mathrm{ran}\,P$; its orthogonal complement is invariant under $Q$ and contained in $\ker P$, and an eigenbasis
-of $Q$ there gives one-dimensional summands. If $\dim W_i=2$, $P|_{W_i}=v_iv_i^*$ and $Q|_{W_i}$ has the range
-$\mathrm{span}\{Qv_i\}$; put $f=v_i$.
-\end{proof}
+\noindent\emph{Fact} (two projections; Halmos~\cite{halmos1969}). For projections $P,Q$ on a finite-dimensional
+Hilbert space $H$, $H$ is the orthogonal sum of subspaces of dimension $1$ or $2$ invariant under $P$ and $Q$; on each
+two-dimensional one there is an orthonormal basis $f,f'$ with $P=ff^*$ and $Q=qq^*$,
+$q=\cos\theta\,f+e^{i\psi}\sin\theta\,f'$.
 
 \begin{lemma}\label{lem:exp3}
 Let $X=X^*$ be invertible, $P$ the projection onto the positive part of $X$, $S=2P-1$, and $Y\ge0$. In Exp.~3:
@@ -1597,7 +1545,7 @@ singular $Y$.
 lies in $\M$; so $\sup_Uz=F(X,Y):=\|YX\|_1-\Tr(XY)$. For a fixed eigenbasis of $X$, $F$ is a convex function of the
 eigenvalues (a norm of a linear map minus a linear function), and the admissible eigenvalues form the union of the
 faces $\{x_i=1,\ x_j=a\}$ of $[a,1]^n$; by the vertex argument $F(X,Y)\le F(X',Y)$ for some $X'=a+(1-a)P$ with a
-projection $P$ in $\M$, and likewise $Y'=b+(1-b)Q$. By Lemma~\ref{lem:twoproj}, applied in every sector, $X'$, $Y'$ are
+projection $P$ in $\M$, and likewise $Y'=b+(1-b)Q$. By the two-projection Fact, applied in every sector, $X'$, $Y'$ are
 direct sums over subspaces of dimension $1$ or $2$, and so are $\|Y'X'\|_1$ and $\Tr(X'Y')$. One-dimensional summands
 contribute $0$; on a two-dimensional one $X'=\mathrm{diag}(1,a)$ and $Y'$ has the eigenvalues $1,b$, so it contributes
 at most $\delta^2\delta'^2/((1+\delta)(1+\delta'))$ by Proposition~\ref{prop:k2}(a); a sector of size $k_c$ holds at most
@@ -1609,7 +1557,7 @@ unit eigenvector $e$ for its eigenvalue $a$ in one sector and in $\mathrm{ran}\,
 $-X$ if necessary, $e\in\mathrm{ran}\,P$. Then $|X|\le|X'|:=1-(1-a)ee^*$, and $X'=S|X'|=S-(1-a)ee^*$ has contrast $\delta$;
 by Lemma~\ref{lem:exp3}(a), $z(X,Y)\le z(X',Y)$. By Lemma~\ref{lem:exp3}(b) and the vertex argument for the eigenvalues
 of $Y^2$ in $[b^2,1]$, $z(X',Y)\le z(X',Y')$ with $Y'=b+(1-b)Q$, $Q\ne0,1$ a projection in $\M$. Apply
-Lemma~\ref{lem:twoproj} to $P$ and $Q$ in every sector. In a sector without $e$, $X'=S$ is a direct sum over the
+the two-projection Fact to $P$ and $Q$ in every sector. In a sector without $e$, $X'=S$ is a direct sum over the
 subspaces, a one-dimensional summand contributes $0$, and a two-dimensional one contributes at most $(1-b)^2$ by
 Proposition~\ref{prop:k2}(b) ($|X|=1$ there): together at most $\lfloor k_c/2\rfloor(1-b)^2$. In the sector of $e$,
 Lemma~\ref{lem:exp3}(a) with $|X'|\le1$ gives the same bound for $z$ restricted to it, and, if its size $k_c$ is odd or

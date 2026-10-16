@@ -56,8 +56,10 @@ becomes real, so the computation runs in the real algebra $\bigoplus_jM_{2j+1}(\
 \IfFileExists{generated/permutational.tex}{For $N=\PMNmax$ a state has $\sum_j(2j+1)^2=\PMDimNmax$ entries, a density
 matrix on $(\C^2)^{\otimes N}$ has $4^N\approx\PMDimFullNmax$.}{}
 
-\lstinputlisting[caption={One batched run over the local emission rate in $\bigoplus_jM_{2j+1}$
-(\texttt{listings/permutational.py}).},label=lst:btc]{listings/permutational.py}
+\noindent The program \repofile{permutational.py} makes one batched run over four local emission rates for $N=30$
+in the real algebra $\bigoplus_jM_{2j+1}(\mathbb R)$, from all spins down, and returns $m_z(t)$ and the distribution
+of $j$ (\texttt{PermutationalSystem}, \texttt{PermutationalLindbladian}, \texttt{coherent\_state},
+\texttt{dynamics.rk4}, \texttt{m\_values}).
 
 \paragraph{Validation.} \IfFileExists{generated/permutational.tex}{%
 (i)~The banded generator, with all nine terms (drive about $x,y,z$, collective and local emission, pumping and

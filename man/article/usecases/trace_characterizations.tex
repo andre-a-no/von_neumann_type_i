@@ -68,7 +68,11 @@ intra-block contrast, no value exceeds $V^\star_{M_2}(\delta)$ (largest relative
 $V_\M=V^\star_{M_2}$ is attained the search reaches it to $10^{-3}$ in $\TCSectorReached$ of $\TCSectorTotal$
 cases.}{} A density that varies only between sectors is invisible to every characterisation except 11 and~24.
 
-\paragraph{Closed forms.}
+\paragraph{Closed forms.} The constants rest on classical inequalities: $\kappa$ enters through the Kantorovich
+inequality $\omega(W^2)\,\omega(1)\le\kappa^2\omega(W)^2$ for positive functionals $\omega$ and $b\le W\le
+a$~\cite{greub1959,furuta2005}, $h$ through $b\le W\le a$, and the Specht ratio through Specht's reverse AM--GM
+inequality. What the following propositions add is that the resulting constants are sharp for the inequalities
+characterising the trace, i.e.\ the values of the envelopes~\eqref{eq:tcV}.
 \begin{proposition}\label{prop:tcK}
 Let $W>0$ in $M_n$, $n\ge2$. For all $X,Y,A$ and all projections $P,Q,R$, with $\varphi=\varphi_W$:
 $|\varphi(X)|\le\kappa\varphi(|X|)$, $\varphi(A+A^*)\le2\kappa\varphi(|A^*|)$, $|\varphi(A^2)|\le\kappa\varphi(A^*A)$,
@@ -77,8 +81,9 @@ All five constants are attained, so $V=\kappa-1$ for items 1--5, in every dimens
 \end{proposition}
 \begin{proof}
 Let $X=U|X|$ and $P=|X|$. Then $\varphi(X)=\langle WP^{1/2},UP^{1/2}\rangle_{\mathrm{HS}}$, so $|\varphi(X)|^2\le
-\Tr(W^2P)\Tr P$ for every contraction $U$. Since $(W-a)(W-b)\le0$, $\Tr(W^2P)\Tr P\le((a+b)x-aby)y\le\kappa^2x^2$
-with $x=\Tr WP$ and $y=\Tr P$; the difference is $(\kappa x-\sqrt{ab}\,y)^2$. The second inequality is the same,
+\Tr(W^2P)\Tr P$ for every contraction $U$, and $\Tr(W^2P)\Tr P\le\kappa^2(\Tr WP)^2$ is the Kantorovich inequality, in
+the form of Greub and Rheinboldt~\cite{greub1959}, for $\omega=\Tr(P\,\cdot\,)$ (its standard proof: $(W-a)(W-b)\le0$ gives $\Tr(W^2P)\Tr P\le((a+b)x-aby)y\le\kappa^2x^2$
+with $x=\Tr WP$ and $y=\Tr P$, the difference being $(\kappa x-\sqrt{ab}\,y)^2$). The second inequality is the same,
 with $A=|A^*|V$. For the fourth, write $X+Y=S|X+Y|$, so that $\varphi(|X+Y|)=\varphi(S^*X)+\varphi(S^*Y)$, and bound
 each term with the contraction $S^*U_X$ or $S^*U_Y$. The fifth is the fourth with $X=P-Q$ and $Y=Q-R$. For the
 third, put $X=W^{1/2}A$ in an eigenbasis of $W$. Then $\varphi(A^*A)=\sum|X_{ij}|^2$, while
@@ -92,15 +97,16 @@ $u,u'=\sin t\,e_1\pm\cos t\,e_2$ and $\tan t=\sqrt{b/a}$; in the fifth for $P=uu
 \begin{proposition}\label{prop:tcB}
 (a) $\varphi_W(|AB^*|)\le h\cdot\frac12(\varphi_W(|A|^2)+\varphi_W(|B|^2))$, with equality for $A=B=e_1e_2^*$; so
 $V=h-1=2\delta/(1-\delta)$ for item~8, the extension of Young's inequality to arbitrary $A,B$, for every $n$. (b) If
-$\Tr W=n$, then $\inf_{A>0}\varphi_W(A)/(n(\det A)^{1/n}) =(\det W)^{1/n}$. So item~11 has $V=1-\mathrm{GM}/\mathrm{AM}$
-of the eigenvalues of $W$, and the maximum over spectra in $[b,a]$ is attained at two-level spectra:
+$\Tr W=n$, item~11 has $V=1-\mathrm{GM}/\mathrm{AM}$ of the eigenvalues of $W$, and the maximum over spectra in
+$[b,a]$ is attained at two-level spectra:
 $V_n(\delta)=1-\min_{1\le m<n}\ell^{(n-m)/n}n/(m+(n-m)\ell)$, $\ell=1/h$. In particular $V_2=1-\sqrt{1-\delta^2}$,
 and $V_n\uparrow1-1/S(h)$, where $S$ is the Specht ratio. (c) For $n=2$, item~9 has $V=s/(1+s)$ with
 $s=\sin(\psi/2)$; thus $V\sim\delta/2$ as $\delta\to0$ and $V\to\sqrt2-1$ as $\delta\to1$.
 \end{proposition}
 \begin{proof}
-(a) $\varphi_W(|AB^*|)\le a\|A\|_2\|B\|_2$ and $\varphi_W(|A|^2)\ge b\|A\|_2^2$. (b) AM--GM for the eigenvalues of
-$W^{1/2}AW^{1/2}$, with equality at $A=W^{-1}$. In coordinates $x_i=\log w_i$, $\mathrm{AM}/\mathrm{GM}=\frac1n\sum
+(a) $\varphi_W(|AB^*|)\le a\|A\|_2\|B\|_2$ and $\varphi_W(|A|^2)\ge b\|A\|_2^2$. (b) By the classical AM--GM argument
+for the eigenvalues of $W^{1/2}AW^{1/2}$, $\inf_{A>0}\varphi_W(A)/(n(\det A)^{1/n})=(\det W)^{1/n}$, attained at
+$A=W^{-1}$. In coordinates $x_i=\log w_i$, $\mathrm{AM}/\mathrm{GM}=\frac1n\sum
 e^{x_i-\bar x}$ is convex, so it is maximal at a vertex of the box; the limit is Specht's theorem. (c) Ranks 0 and
 2 give no violation. For rank-one $P,Q$ the ratio reduces to $r/(1+r)$ with an explicit $r$ depending on two
 angles, whose maximum is $r=\sin(\psi/2)$ (computation in the catalogue file).
@@ -122,7 +128,7 @@ bound) In each item $L\le aL_0$, with $L_0$ the trace or trace-norm version of $
 moreover $L_0\le R_{\Tr}$ and $R\ge bR_{\Tr}$. For item~6, $\Tr(A\natural B)=\|A^{1/2}B^{1/2}\|_1\le(\Tr A\Tr B)^{1/2}$.
 \end{proof}
 
-The new items 17--25 behave as follows; the proofs are in Appendix~\ref{app:tc}.
+Items 17--25 behave as follows; the proofs are in Appendix~\ref{app:tc}.
 
 \begin{proposition}\label{prop:tcP}
 Let $W>0$ in $M_n$, $n\ge2$, and let $P,Q$ be projections. With $N=R$ except $N=\varphi(P)+\varphi(Q)$ in item~21:
@@ -159,19 +165,11 @@ $P+Q$ (eigenvalue $2$ for $P\wedge Q$, range for $P\vee Q$), computed with \text
 function, whose Daleckii--Krein gradient is the derivative of the spectral projection. The
 \IfFileExists{generated/trace_characterizations.tex}{\TCGridSize}{14} contrasts times
 \IfFileExists{generated/trace_characterizations.tex}{\TCStarts}{the} starts form one batch for
-\texttt{extremize}\IfFileExists{generated/trace_characterizations.tex}{ (\TCSteps\ steps, $n=\TCDims$)}{}. For item 1:
-\begin{lstlisting}
-W = opt.SpectrumParam(alg, B, delta=grid.repeat_interleave(starts))   # Delta(W) exact
-P = opt.PositiveParam(alg, B, delta_range=(0.0, 1.0))                 # |X|, any rank
-U = opt.UnitaryParam(alg, B)                                          # X = U P
-def objective():
-    w = W.eigenvalues() / W.eigenvalues().sum((-2, -1), keepdim=True)
-    phi = lambda op: (torch.diagonal(op.matrix, dim1=-2, dim2=-1) * w).sum((-2, -1))
-    p = phi(P.operator()).real
-    return (phi(U.operator() @ P.operator()).abs() - p) / p
-V = opt.extremize(objective, [W, P, U]).reshape(-1, starts).max(1).values
-\end{lstlisting}
-For every contrast, the best final point is recomputed in mpmath with
+\texttt{extremize}\IfFileExists{generated/trace_characterizations.tex}{ (\TCSteps\ steps, $n=\TCDims$)}{}. The
+program \repofile{trace_characterizations.py} does this for item~1 on $M_2$ at five contrasts in one batch and
+reproduces $V=\kappa-1$ (\texttt{optimize.SpectrumParam} with \texttt{delta}, \texttt{PositiveParam},
+\texttt{UnitaryParam}, \texttt{extremize}). In the script, the best final point of every contrast is recomputed in
+mpmath with
 \IfFileExists{generated/trace_characterizations.tex}{\TCDigits}{40} digits, after the unitaries are re-ortho\-normalised,
 and $\Delta(W)$ is recomputed from the stored eigenvalues; the lattice operations are recomputed there from the exact
 eigenvalues. Every positive entry of Table~\ref{tab:tc} is thus a certified violation at an exactly admissible point.
@@ -239,7 +237,8 @@ $\delta\ge\TCWmonReach$}{large $\delta$}.
 dimension, $V_6=\kappa-1$ for $n=2$, and item~9 equals Proposition~\ref{prop:tcB}(c) for all $n$.
 
 \paragraph{What is new.} The characterisation theorems are due to the cited authors. The constants $\kappa$, $h$ and
-the Specht ratio are classical, and Proposition~\ref{prop:tcK} is a Kantorovich inequality in disguise. We found no
+the Specht ratio and the inequalities behind them are classical; the bounds of Proposition~\ref{prop:tcK} are the
+Kantorovich inequality~\cite{greub1959,furuta2005}, and only their sharpness for items 1--5 is ours. We found no
 study of the envelopes~\eqref{eq:tcV}. The closest work is~\cite{abed2024}: its Monte Carlo study
 (\cite[Sect.~5.1, Fig.~1]{abed2024}) plots the unnormalised violation $|\Tr(XY)|-\Tr(X|Y|)$ of Gardner's
 inequality for $\varphi=\Tr(X\,\cdot\,)$ against the contrast $\Delta(X)$ of the density, for real $X,Y$ with

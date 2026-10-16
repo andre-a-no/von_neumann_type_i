@@ -29,21 +29,21 @@ sector probabilities and $S(q)$ the entropies of the normalised blocks. In the f
 so $|\psi\rangle$ is a list of matrices $\Psi_q$ and $\rho_A=\bigoplus_q\Psi_q\Psi_q^*$, without forming
 $|\psi\rangle\langle\psi|$. As $\Delta$ only scales the diagonal of the sector Hamiltonian, the Hamiltonians for several
 $\Delta$ form one \texttt{SparseSectorHamiltonian} with a shared hopping part and one batched Lanczos run gives all
-ground states; all statistics are computed for the batch from the block spectra (Listing~\ref{lst:sre}).
-
-\lstinputlisting[caption={Batched ground states, $\rho_A$ in sector form from the pair blocks of the fused product, and
-the resolved entropies (\texttt{listings/symmetry\_resolved.py}).},label=lst:sre]{listings/symmetry_resolved.py}
+ground states; all statistics are computed for the batch from the block spectra. The program
+\repofile{symmetry_resolved.py} does this for $L=16$, $\ell=8$ and four values of $\Delta$: one batched Lanczos run,
+$\rho_A$ in sector form from the pair blocks of the fused product, and $S(q)$, $H(p)$ with a check
+of~\eqref{eq:sre-split} (\texttt{SpinChain.xxz\_sparse}, \texttt{krylov.SparseSectorHamiltonian},
+\texttt{krylov.ground\_state}, \texttt{composite.fused\_tensor\_product}, \texttt{DensityMatrix}).
 
 \paragraph{Identities and the Gaussian mechanism.} Let $Z_n(q)=\Tr\Pi_q\rho_A^n$ and $p_n(q)=Z_n(q)/\sum_{q'}Z_n(q')$,
-the distribution of $Q_A$ in $\rho_A^n/\Tr\rho_A^n$ ($p_1=p$). With $S_n(q)=S_n(\rho_A^{(q)})$,
+the distribution of $Q_A$ in $\rho_A^n/\Tr\rho_A^n$ ($p_1=p$). With $S_n(q)=S_n(\rho_A^{(q)})$, the standard
+expressions $S_n(q)=(1-n)^{-1}\log[Z_n(q)/Z_1(q)^n]$ and $S(q)=-\partial_n[Z_n(q)/Z_1(q)^n]_{n=1}$ (Eq.~(2.6)
+of~\cite{bonsignori2019}) read, in terms of $p_n$,
 \begin{equation}\label{eq:sre-id}
   S_n(q)-S_n(\rho_A)=\frac{\log p_n(q)-n\log p(q)}{1-n},\qquad
-  S(q)-S(\rho_A)=\log p(q)-\frac{\partial}{\partial n}\log p_n(q)\Big|_{n=1}:
+  S(q)-S(\rho_A)=\log p(q)-\frac{\partial}{\partial n}\log p_n(q)\Big|_{n=1},
 \end{equation}
-the first because $\Tr(\rho_A^{(q)})^n=Z_n(q)/p(q)^n$, the second because
-$\partial_n\log Z_n(q)|_{n=1}=\Tr\Pi_q\rho_A\log\rho_A/p(q)=\log p(q)-S(q)$ and
-$\partial_n\log\sum_qZ_n(q)|_{n=1}=-S(\rho_A)$; averaging the second over $p$ gives~\eqref{eq:sre-split}. So the
-$q$-dependence of the resolved entropies is the $n$-dependence of the charge distributions. At half filling
+so the $q$-dependence of the resolved entropies is the $n$-dependence of the charge distributions. At half filling
 $\langle Q_A\rangle=\ell/2$; put $q_0=\lceil\ell/2\rceil$, $x=q-\ell/2$, $x_0=q_0-\ell/2\in\{0,\frac12\}$. If
 $p_n(q)\propto e^{-x^2/2B_n}$ on the integers, \eqref{eq:sre-id} gives
 \begin{equation}\label{eq:sre-gauss}
@@ -156,7 +156,7 @@ $L=\SRRingLmax$}{below 4 up to $L=3200$}. On the infinite XX chain, $b_1-(\log2\
 $1/(2\pi^2)=\SRInfGRef$}{small and $G_1\approx1/(2\pi^2)$}. This is the Fisher--Hartwig result of Bonsignori,
 Ruggiero and Calabrese~\cite{bonsignori2019}: their Gaussian (Eq.~(4.5) of~\cite{bonsignori2019}) has
 $nB_n=[\log2\ell-2\pi^2n\gamma_2(n)]/\pi^2$ at half filling, so $G_1=-2[\gamma_2(1)+\gamma_2'(1)]$, and their values
-$\gamma_2(1)=-(1+\gamma_E)/(2\pi^2)$ and $\gamma_2'(1)=0.0545724$ (which equals $(1+2\gamma_E)/(4\pi^2)$) give
+$\gamma_2(1)=-(1+\gamma_E)/(2\pi^2)$ and $\gamma_2'(1)=0.0545724$ (numerically $(1+2\gamma_E)/(4\pi^2)$) give
 $G_1=1/(2\pi^2)$; by \eqref{eq:sre-gauss} the free-fermion breaking is
 $S(q)-S(\langle Q_A\rangle)\simeq-\frac{\pi^2}4(q-\langle Q_A\rangle)^2/(\log2\ell+1+\gamma_E)^2$, Eq.~(4.13)
 of~\cite{bonsignori2019}, and the exact
@@ -168,9 +168,8 @@ compared them with the twisted overlaps computed there.
 \paragraph{What is reproduced and what is new.} Equipartition, the $(K/\pi^2)\log\ell$ charge variance with its
 oscillating correction, and the $\log^{-2}\ell$ breaking are
 known~\cite{goldstein2018,xavier2018,bonsignori2019,song2012,estienne2021}; for free fermions the amplitude of the
-breaking is known exactly (Eq.~(4.13) of~\cite{bonsignori2019}, i.e.\ $G_1\to1/(2\pi^2)$), and the
-identities~\eqref{eq:sre-id} rewrite the standard definition of $S_n(q)$ through $Z_n(q)$ (Eq.~(2.6)
-of~\cite{bonsignori2019}). Larger sizes have been reached by DMRG and quantum Monte
+breaking is known exactly (Eq.~(4.13) of~\cite{bonsignori2019}, i.e.\ $G_1\to1/(2\pi^2)$), and~\eqref{eq:sre-id}
+is Eq.~(2.6) of~\cite{bonsignori2019} written with $p_n$. Larger sizes have been reached by DMRG and quantum Monte
 Carlo~\cite{laflorencie2014,xavier2018,chen2026}. Our additions are modest: the integer-sampled widths $B_n$, for
 which the $1/n$ law is visible at
 $L\le\IfFileExists{generated/symmetry_resolved.tex}{\SRL}{24}$ (well for large $K$, less so near $\Delta=1$), while

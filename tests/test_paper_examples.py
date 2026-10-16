@@ -4,7 +4,10 @@ import runpy
 
 import pytest
 
-EXAMPLES = sorted((pathlib.Path(__file__).parent.parent / 'man' / 'article' / 'listings').glob('ex*.py'))
+LISTINGS = pathlib.Path(__file__).parent.parent / 'man' / 'article' / 'listings'
+# connes_stormer.py, permutational.py and symmetry_resolved.py are run by the tests of their use cases
+EXAMPLES = sorted(LISTINGS.glob('ex*.py')) + [LISTINGS / f for f in ('inclusions.py', 'symmetry.py',
+                                                                      'trace_characterizations.py')]
 
 
 @pytest.mark.parametrize('path', EXAMPLES, ids=[p.stem for p in EXAMPLES])

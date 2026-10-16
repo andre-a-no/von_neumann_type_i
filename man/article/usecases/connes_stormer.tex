@@ -28,29 +28,25 @@ formula for $H(\Delta_n|U\Delta_nU^*)$ is open even for $n=2$~\cite[Section~2.3 
 $H(\Delta_n|U\Delta_nU^*)$ with the library, prove a closed form for every $U\in U(2)$, and report what the
 computations show for $n\ge3$, where we are not aware of a closed form.
 
-\begin{lemma}\label{lem:cs}
-Let $P,Q\subset M_n(\C)$ be unital $*$-subalgebras, $S(\sigma)=-\Tr\sigma\log\sigma$, and $G(\rho)=S(E_Q\rho)-S(E_P\rho)$
-for density matrices $\rho$. Then
+\noindent\emph{Fact} (Petz, Sz\'ant\'o and Weiner~\cite[Section~3, Lemma~1 and (7), (8)]{petz2009}). Let
+$P,Q\subset M_n(\C)$ be unital $*$-subalgebras, $S(\sigma)=-\Tr\sigma\log\sigma$, and $G(\rho)=S(E_Q\rho)-S(E_P\rho)$
+for density matrices $\rho$. A partition $(x_j)$ corresponds to the ensemble $t_j=\tau(x_j)$, $\rho_j=x_j/\Tr x_j$,
+with $\sum_jt_j\rho_j=\frac1n$, and
 \[
-  H(P|Q)=\max\Bigl\{\sum_jt_jG(\rho_j):\ t_j\ge0,\ \sum_jt_j=1,\ \sum_jt_j\rho_j=\tfrac1n\Bigr\}\ \le\ G^*:=\max_\rho G(\rho):
+  H(P|Q)=\max\Bigl\{\sum_jt_jG(\rho_j):\ t_j\ge0,\ \sum_jt_j=1,\ \sum_jt_j\rho_j=\tfrac1n\Bigr\};
 \]
-$H(P|Q)$ is the value at $\frac1n$ of the concave envelope of $G$ on the state space. The maximum is attained by an
-ensemble of at most $n^2+1$ states, and $H(P|Q)=G^*$ if and only if $\frac1n$ is a convex combination of maximisers of
-$G$. For two MASAs, $H(P|Q)\le\log n$.
+the maximum is attained by an ensemble of at most $n^2$ (linearly independent) states, and for two MASAs
+$H(P|Q)\le\log n$.
+
+\begin{lemma}\label{lem:cs}
+In this setting $H(P|Q)$ is the value at $\frac1n$ of the concave envelope of $G$ on the state space. In particular
+$H(P|Q)\le G^*:=\max_\rho G(\rho)$, and $H(P|Q)=G^*$ if and only if $\frac1n$ is a convex combination of maximisers
+of $G$.
 \end{lemma}
-\noindent The ensemble form of~\eqref{eq:cs}, the attainment of the supremum and the bound $\log n$ are
-in~\cite[Section~3, Lemma~1 and (7), (8)]{petz2009}, where it is also shown that ensembles of linearly independent
-states, hence at most $n^2$ of them, suffice; the concave-envelope form and the bound $G^*$ are what we add.
 \begin{proof}
-For a partition $(x_j)$ without zero elements put $t_j=\tau(x_j)$ and $\rho_j=x_j/\Tr x_j$; then $x_j=nt_j\rho_j$,
-$\sum_jt_j=1$ and $\sum_jt_j\rho_j=\frac1n$, and conversely every such ensemble is a partition. Since
-$\eta(\lambda a)=\lambda\eta(a)+\eta(\lambda)a$ for $\lambda\ge0$ and $E_P$ preserves the trace,
-$\tau\eta(E_Px_j)=\frac1n\Tr\eta(nt_jE_P\rho_j)=t_jS(E_P\rho_j)+\frac1n\eta(nt_j)$, and likewise for $Q$; the terms
-$\eta(nt_j)/n$ cancel in~\eqref{eq:cs}, which becomes $\sum_jt_jG(\rho_j)$. The pairs $(\rho,G(\rho))$ form a compact
-set in a real space of dimension $n^2$ ($G$ is continuous); its convex hull is compact, and by Carath\'eodory's theorem
-each of its points is a convex combination of at most $n^2+1$ of them, so the supremum is a maximum attained by such an
-ensemble. Finally $\sum_jt_jG(\rho_j)\le G^*$, with equality iff $G(\rho_j)=G^*$ whenever $t_j>0$; for MASAs
-$S(E_Q\rho)\le\log n$ and $S(E_P\rho)\ge0$.
+The concave envelope of the continuous function $G$ at $\rho$ is the maximum of $\sum_jt_jG(\rho_j)$ over the finite
+ensembles with $\sum_jt_j\rho_j=\rho$; at $\rho=\frac1n$ this is the Fact. Finally $\sum_jt_jG(\rho_j)\le G^*$, with
+equality iff $G(\rho_j)=G^*$ whenever $t_j>0$.
 \end{proof}
 
 \noindent For complementary MASAs ($|u_{ij}|^2=\frac1n$, e.g.\ the Fourier matrix) $h(U)=\log n$, so $H=\log n$, the
@@ -68,9 +64,7 @@ Let $U\in M_2(\C)$ be unitary, $c=|u_{11}|^2=\cos^2\theta$ with $\theta\in[0,\fr
 the rotation $R_\theta=\bigl(\begin{smallmatrix}\cos\theta&-\sin\theta\\ \sin\theta&\cos\theta\end{smallmatrix}\bigr)$,
 the maximum is attained by the two projections onto the orthonormal basis $D_1(\cos\alpha^*,\sin\alpha^*)^T$,
 $D_1(-\sin\alpha^*,\cos\alpha^*)^T$, where $\alpha^*$ maximises $\varphi$.\\
-(b) $H(\Delta_2|U\Delta_2U^*)\ge h(c)=h(U)$, with equality if and only if $c\in\{0,\frac12,1\}$
-(the strict inequality is due to Petz, Sz\'ant\'o and Weiner~\cite[Appendix]{petz2009}).\\
-(c) $H(\Delta_2|U\Delta_2U^*)\le\kappa\theta$ with $\kappa=\max\psi\approx1.3255$, and $H/\theta\to\kappa$ as
+(b) $H(\Delta_2|U\Delta_2U^*)\le\kappa\theta$ with $\kappa=\max\psi\approx1.3255$, and $H/\theta\to\kappa$ as
 $\theta\to0$, while $h(c)/\theta\to0$; in particular $H/h(U)\to\infty$ as $c\to1$. $H$ is invariant under $c\mapsto1-c$.
 \end{proposition}
 \begin{proof}
@@ -84,7 +78,7 @@ the optimal partitions moved by $D_1$. So let $U=R_\theta$.
 matrices $\sigma$; $(x_j)$ is a partition iff $\sum_jt_j=1$ and $\sum_jt_jr_j=0$. For $\rho=\frac12(1+r\cdot\sigma)$,
 $E_{\Delta_2}\rho$ has the eigenvalues $\frac12(1\pm r\cdot z)$, $z=(0,0,1)$, and
 $E_Q\rho=R_\theta E_{\Delta_2}(R_\theta^T\rho R_\theta)R_\theta^T$ has the eigenvalues $\frac12(1\pm r\cdot q)$, where
-$q=(\sin2\theta,0,\cos2\theta)$ is the Bloch vector of $R_\theta e_1$. By Lemma~\ref{lem:cs} ($x_j=2t_j\rho_j$) the sum
+$q=(\sin2\theta,0,\cos2\theta)$ is the Bloch vector of $R_\theta e_1$. By the Fact ($x_j=2t_j\rho_j$) the sum
 in~\eqref{eq:cs} is $\sum_jt_jf(r_j)$ with $f(r)=k(r\cdot q)-k(r\cdot z)$ and $k(s)=h(\frac{1+s}2)$.
 
 \emph{Two-element partitions suffice.} $\sum_jt_jf(r_j)\le\max_{|r|\le1}f$, and $f(-r)=f(r)$ because $k$ is even, so the
@@ -105,20 +99,17 @@ onto $(\cos\alpha^*,\sin\alpha^*)^T$, and $-r^*$ that of the orthogonal one; thi
 from $\varphi=0$ at $\theta=0$ and $\partial_\theta h(\cos^2(\alpha-\theta))=h'(\cos^2(\alpha-\theta))\sin(2(\alpha-\theta))
 =\psi(\alpha-\theta)$, $h'(p)=\log\frac{1-p}p$.
 
-(b) $\varphi(0)=h(c)$ is the value of the partition $e_{11},e_{22}$, i.e.\ $h(U)$. The function $\varphi$ is $C^1$ and
-periodic, and $\varphi'(0)=\psi(0)-\psi(-\theta)=\psi(\theta)=\sin(2\theta)\log\tan^2\theta$ vanishes only for
-$\theta\in\{0,\frac\pi4,\frac\pi2\}$; otherwise $\alpha=0$ is not a maximiser and $H>h(c)$. This is the argument
-of~\cite[Appendix]{petz2009}, whose two-element partitions $r(t),1-r(t)$ give exactly $\varphi(t/2)$. For $c\in\{0,1\}$,
-$Q=\Delta_2$ and $H=0=h(c)$; for $c=\frac12$, $h(c)=\log2$ is the upper bound of Lemma~\ref{lem:cs}.
-
-(c) $\varphi(\alpha)\le\theta\max\psi$ for every $\alpha$. For a maximiser $\beta^*$ of $\psi$ and
+(b) $\varphi(\alpha)\le\theta\max\psi$ for every $\alpha$. For a maximiser $\beta^*$ of $\psi$ and
 $\alpha=\beta^*+\theta/2$, the window contains only $\beta$ with $|\beta-\beta^*|\le\theta/2$, so
 $\varphi(\alpha)\ge\theta\min_{|\beta-\beta^*|\le\theta/2}\psi(\beta)=\kappa\theta(1+o(1))$ by continuity, while
 $h(c)=\varphi(0)=\int_{-\theta}^0\psi=o(\theta)$ as $\psi(0)=0$. Finally, $U$ and
 $U\bigl(\begin{smallmatrix}0&1\\1&0\end{smallmatrix}\bigr)$ define the same algebra $Q$, with $|u_{11}|^2=c$ and $1-c$.
 \end{proof}
 
-\noindent For $c>\frac12$ the optimal basis is rotated away from the basis $R_\theta e_1,R_\theta e_2$ of $Q$
+\noindent At $\alpha=0$, $\varphi(0)=h(c)$ is the value of the partition $e_{11},e_{22}$, i.e.\ $h(U)$. Petz, Sz\'ant\'o
+and Weiner showed that $H(\Delta_2|U\Delta_2U^*)>h(U)$ unless $c\in\{0,\frac12,1\}$~\cite[Appendix]{petz2009}; their
+two-element partitions $r(t),1-r(t)$ give exactly $\varphi(t/2)$, and the strict inequality comes from
+$\varphi'(0)=\psi(\theta)\ne0$. For $c>\frac12$ the optimal basis is rotated away from the basis $R_\theta e_1,R_\theta e_2$ of $Q$
 ($\alpha^*<0$, Figure~\ref{fig:cs}): it accepts some entropy of $E_{\Delta_2}x_j$ in exchange for more entropy of
 $E_Qx_j$. Near $c=1$, $H\approx\kappa\sqrt{1-c}$ is much larger than $h(c)\approx(1-c)\log\frac1{1-c}$. Since
 $H(u\Delta_2u^*|v\Delta_2v^*)\le H(R_u|R_v)$ for the spin model subfactors $R_u,R_v$ of two $2\times2$ complex Hadamard
@@ -133,41 +124,16 @@ for abelian and non-abelian $P$ alike. Partitions with $m$ elements are parametr
 $x_j=S^{-1/2}Z_jZ_j^*S^{-1/2}$, $S=\sum_jZ_jZ_j^*$, with free complex $Z_j\in M_n$ (elements of lower rank are limits),
 orthonormal bases as $x_j=w_jw_j^*$ with $W=(w_1,\dots,w_n)$ a \texttt{UnitaryParam}; at a basis the functional
 is $h(U^*W)-h(W)$. Both are maximised by \texttt{optimize.extremize}, batched over the unitaries $U$ and the starts
-(Listing~\ref{lst:cs}; \texttt{scripts/connes\_stormer.py}, double precision). For $n=2$ the library reproduces
+(\texttt{scripts/connes\_stormer.py}, double precision). For $n=2$ the library reproduces
 Proposition~\ref{prop:cs2} for complex $U$ with random phases (general partitions with four elements,
 \IfFileExists{generated/connes_stormer.tex}{\CSTwoStarts\ starts) to $\CSTwoDevLib$}{several starts) to round-off}
 (Table~\ref{tab:cs2}, Figure~\ref{fig:cs}); the tests compare the closed form also with a plain SciPy optimisation over
 partitions.
 
-\begin{lstlisting}[caption={$H(\Delta_3|U\Delta_3U^*)$ for a Haar-random $U$ by batched ascent over partitions of unity
-(abridged from \texttt{scripts/connes\_stormer.py}).},label=lst:cs]
-import torch
-from torch_vn_algebra import TypeIAlgebra, inclusions as inc, optimize as opt
-
-n, B, m = 3, 64, 9                                      # M_3; B starts; m elements per partition
-M = TypeIAlgebra([n], [n], precision='double')
-N = TypeIAlgebra([1] * n, [1] * n, precision='double')  # C^n, embedded as the diagonal
-U = M.random_unitary_operator(1)
-EP = inc.Inclusion(N, M, [[1] * n]).conditional_expectation('norm')             # tau = Tr/n
-EQ = inc.Inclusion(N, M, [[1] * n], unitary=U).conditional_expectation('norm')  # Q = U P U^*
-
-def tau_eta(E, x):                                      # sum_c nu_c Tr eta(E(x)_c)
-    return sum(E.nu[:, c] * torch.special.entr(w.clamp_min(1e-300)).sum(-1)
-               for c, w in enumerate(E(x).eigenvalues()))
-
-Z = torch.randn(B, m, n, n, dtype=M.dtype, requires_grad=True)
-class Partition(opt.Param):
-    def parameters(self): return [Z]
-
-def objective():                                        # x_j = S^{-1/2} Z_j Z_j^* S^{-1/2}
-    G = Z @ Z.mH
-    S = M.operator(G.sum(1, keepdim=True), is_self_adjoint=True, is_positive=True).power(-0.5).matrix
-    x = M.operator((S @ G @ S).reshape(B * m, 1, n, n), is_self_adjoint=True, is_positive=True)
-    return (tau_eta(EQ, x) - tau_eta(EP, x)).reshape(B, m).sum(-1)
-
-H = opt.extremize(objective, [Partition()], rounds=8, steps=150).max()
-h = torch.special.entr(U.matrix[0, 0].abs() ** 2).sum() / n                     # Choda's h(U) <= H
-\end{lstlisting}
+\noindent The program \repofile{connes_stormer.py}, a short version of the script, computes
+$H(\Delta_3|U\Delta_3U^*)$ for one Haar-random $U$ by batched ascent over partitions of unity with nine elements from
+64 starts, and compares it with $h(U)$ (\texttt{inclusions.Inclusion} with \texttt{unitary=U},
+\texttt{conditional\_expectation}, \texttt{optimize.Param}, \texttt{optimize.extremize}).
 
 \begin{table}[h]
 \centering\small
