@@ -68,7 +68,7 @@ Items 17–25 were added after reading the full texts (section E). All are marke
 | 24 | φ(A²)^{1/2} ≤ φ(A), A ≥ 0, φ(1) = n (p = 2, q = 1) | R | positive A | Thm. 3 (vii): for faithful φ with φ(I) = n, φ = tr iff φ(A^p)^{1/p} ≤ φ(A^q)^{1/q} for all A ≥ 0, 0 < q < p. Characterises the *canonical* trace | Bikchentaev, Sib. Math. J. 61 (2020), no. 2, 248–254, Thm. 3 (vii) | F |
 | 25 | 0 ≤ A ≤ B ⟹ φ(A⁴) ≤ φ(AB²A) (r = 1) | R | positive A ≤ B | Lemma 1, Thms. 4–5: φ(A^{2r+2}) ≤ φ(A^rB²A^r) for all 0 ≤ A ≤ B (fixed r ≥ 0) characterises traces; r = 0 is #10 | Dinh Trung Hoa, Tikhonov, Math. Notes 88 (2010), no. 1–2, 177–182 | F |
 
-**Results (proved in the companion paper `man/trace_envelopes/main.tex`, Theorem 6.1 and Propositions 5.5, 7.2).**
+**Results (proved in the companion paper `man/trace_envelopes/main.tex`, theorem on two projections and the propositions on the power mean and on weighted monotonicity).**
 On M_2, with W = ½(1 + δσ₃) and Bloch vectors m, n of rank-one P, Q: 17: κ² − 1 (attained: m₃ = 0,
 n = (m − λδe₃)/(λ − 1), λ = 2/(1 − δ²)); 18: κ − 1 (also Prop. tcK with X = P, Y = −Q); 19: δ (approached,
 P ≠ Q → e₁); 20: max over one angle of the larger root of a quadratic, (e−1)²δ²/(e(e+1)) + O(δ³); 21: ½tan²(ψ/2),
