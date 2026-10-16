@@ -290,6 +290,60 @@ $(A^{1/2}BA^{1/2})^{1/2}$, so $\Tr(A\natural B)=\|A^{1/2}B^{1/2}\|_1\le(\Tr A\Tr
 $L/R\le a/b=h$. For item~8, $\varphi(|AB^*|)\le a\|A\|_2\|B\|_2\le\frac a2(\|A\|_2^2+\|B\|_2^2)$.
 \end{proof}
 
+\subsection{Contrasts of the operator variables}\label{sec:twocontrasts}
+
+The envelope $V_n(\delta)$ lets the operator variables range over all operators. To see how the violation depends on
+the operators themselves, we also prescribe their contrast. For a positive variable $A$ we use $\Delta(A)$, for an
+arbitrary or self-adjoint variable $X$ the contrast $\Delta(|X|)$ of its modulus (for the Peierls--Bogoliubov
+inequality, item~16, the variables are positive, as in~\cite{bikchentaev2011pb}), and we let every operator variable of
+an item have the same contrast $\delta'\in[0,1]$:
+\[
+  V_n(\delta,\delta')=\sup\Bigl\{\frac{L-R}N:\ \Delta(W)=\delta,\ \text{every operator variable of contrast }\delta'\Bigr\}.
+\]
+Projections other than $0$ and $1$ have contrast $1$, so for items 5, 9, 14, 15 and 17--23 only $\delta'=1$ occurs, and
+$V_n(\delta,1)\le V_n(\delta)$ with equality whenever the supremum over all operators is approached by singular ones.
+A positive operator of contrast $\delta'$ whose spectrum has only two points is, up to a positive factor,
+\[
+  A=\ell'+(1-\ell')P,\qquad \ell'=\frac{1-\delta'}{1+\delta'},\qquad P\ \text{a projection},\ P\ne0,1;
+\]
+we call such operators \emph{two-level}. They are the affine images of projections, and as $\delta'\to1$ they become
+scaled projections.
+
+\begin{proposition}\label{prop:scalar}
+If every operator variable is a positive multiple of the identity (for arbitrary and self-adjoint variables: if every
+modulus is), then $L\le R$ in every item of Table~\ref{tab:items} and for every positive $\varphi$. Hence
+$V_n(\delta,0)\le0$ for all items; and $V_n(0,\delta')\le0$, since for $\delta=0$ the functional is a multiple of the trace
+(the canonical trace in items 11 and 24, where $\varphi(1)=n$).
+\end{proposition}
+\begin{proof}
+Item by item, with $|X|=x$, $|Y|=y$ scalar and $X=xU$, $Y=yV$ with unitaries (symmetries for self-adjoint $X,Y$), and
+$A=a$, $B=b$ scalars: (1) $|\varphi(U)|\le\varphi(1)$; (2) $\varphi(|xU+yV|)\le\|xU+yV\|\varphi(1)\le(x+y)\varphi(1)$; (3) and (4)
+as (1); (6) and (7) are equalities; (8) $|AB^*|=xy$ and $xy\le\frac12(x^2+y^2)$; (10) and (25) follow from $a\le b$; (11) is an
+equality for $\varphi(1)=n$; (12) $\sqrt{a+b}\le\sqrt a+\sqrt b$; (13) $a+b-|a-b|=2\min(a,b)\le2\sqrt{ab}$; (16) is an equality;
+(24) $\varphi(a^2)^{1/2}=a\sqrt n\le an$.
+\end{proof}
+
+So a violation needs both contrasts: the functional must be far from a trace and the operators must be far from scalars.
+The next lemma is the mechanism behind the two-level operators: whenever the violation depends convexly on the spectrum of a
+variable, the extremal spectra have only two points.
+
+\begin{lemma}[Vertex principle]\label{lem:vertex}
+Fix all variables except the eigenvalues $\lambda\in[\ell',1]^n$ of one positive variable (its eigenbasis fixed), and let
+$F(\lambda)$, $N(\lambda)>0$ be the resulting values of $L-R$ and $N$. If $\lambda\mapsto F(\lambda)-cN(\lambda)$ is convex for
+every $c\in\R$, then the supremum of $F/N$ over the spectra with $\max_i\lambda_i=1$ and $\min_i\lambda_i=\ell'$ equals its
+supremum over the two-level spectra $\lambda\in\{\ell',1\}^n$ (both values occurring).
+\end{lemma}
+\begin{proof}
+The admissible set is the union of the faces $\{\lambda_i=1,\ \lambda_j=\ell'\}$ of the cube, and the vertices of these faces are
+the two-level spectra. If $F/N>c$ at an admissible point, then $F-cN>0$ there, and by convexity $F-cN>0$ at a vertex of the
+same face, where therefore $F/N>c$.
+\end{proof}
+
+\noindent The hypothesis holds for Gardner's inequality ($F-cN=|\varphi(UT)|-(1+c)\varphi(T)$ for $X=UT$: the modulus of a
+linear function minus a linear one), for item~3, for item~24 ($\varphi(A^2)^{1/2}=\|W^{1/2}A\|_2$ is a norm of a linear
+function of $\lambda$) and for the unnormalised Gardner violation of Section~\ref{sec:gardner2}; for these items two-level
+operators suffice. For the other items we test numerically whether they do (Section~\ref{sec:numerics}).
+
 \section{The Kantorovich class}\label{sec:kant}
 
 \begin{theorem}\label{thm:kant}
@@ -326,6 +380,134 @@ $R=u'u'^*$.
 For a fixed density, $\sup_X|\varphi(X)|/\varphi(|X|)=\kappa(W)$ exactly. In particular the normalised violation of
 Gardner's inequality depends on $W$ only through its extreme eigenvalues, not on the dimension or on the rest of the
 spectrum.
+\end{remark}
+
+\section{Gardner's inequality with two contrasts}\label{sec:gardner2}
+
+For Gardner's inequality both contrasts can be prescribed and the envelope found exactly. It depends on the two contrasts
+only through their product.
+
+\begin{theorem}\label{thm:gardnerD}
+Let $W>0$ and $X$ be in $M_n$, $n\ge2$, with $\Delta(W)=\delta$ and $\Delta(|X|)=\delta'$, $\delta,\delta'\in[0,1]$,
+$\delta\delta'<1$. Then
+\[
+  |\varphi_W(X)|\le\frac{1}{\sqrt{1-\delta^2\delta'^2}}\,\varphi_W(|X|),
+\]
+and the constant is attained. Hence $V_n(\delta,\delta')=\kappa(\delta\delta')-1=(1-\delta^2\delta'^2)^{-1/2}-1$ for Gardner's
+inequality in every dimension; for $\delta'=1$ this is Theorem~\ref{thm:kant}. The same upper bound holds for items 2 and~3
+with the contrasts of $|X|,|Y|$ and of $|A^*|$.
+\end{theorem}
+\begin{proof}
+Write $X=UT$ with $T=|X|$. The supremum of $|\Tr(WUT)|=|\Tr(U\,TW)|$ over unitaries $U$ is $\|TW\|_1$, so we must bound
+$\|TW\|_1/\Tr(TW)$. For fixed eigenbases, $\|TW\|_1-c\Tr(TW)$ is a convex function of the eigenvalues of $T$ (a norm of a
+linear function minus a linear one), and likewise of the eigenvalues of $W$. By Lemma~\ref{lem:vertex}, applied to $T$ and
+then to $W$, we may assume $W=a(\ell+(1-\ell)P)$ and $T=t(\ell'+(1-\ell')Q)$ with projections $P,Q$ and $\ell=\frac{1-\delta}{1+\delta}$,
+$\ell'=\frac{1-\delta'}{1+\delta'}$. By Lemma~\ref{lem:halmos}, $\C^n$ splits into subspaces of dimension $1$ or $2$ invariant
+under $P$ and $Q$, hence under $W$ and $T$, and $\|TW\|_1$ and $\Tr(TW)$ are sums over them. On a one-dimensional summand the
+two contributions are equal. On a two-dimensional one, $W$ and $T$ have the eigenvalues $x_1,x_2$ and $y_1,y_2$, namely
+$a,a\ell$ and $t,t\ell'$; with $S=x_1y_2+x_2y_1$, $q=(x_1+x_2)(y_1+y_2)$, $p=(x_1-x_2)(y_1-y_2)$ and $\gamma$ the squared overlap
+of the leading eigenvectors, the proof of Proposition~\ref{prop:k2} gives $\|TW\|_1^2=S^2+\gamma pq$ and $\Tr(TW)=S+\gamma p$.
+The function $\gamma\mapsto(S^2+\gamma pq)/(S+\gamma p)^2$ is maximal at $\gamma=S/q\in[0,1]$, with the value
+\[
+  \frac{q^2}{4S(S+p)}=\frac{(x_1+x_2)^2(y_1+y_2)^2}{4(x_1y_2+x_2y_1)(x_1y_1+x_2y_2)}=\frac1{1-\delta^2\delta'^2},
+\]
+the last step by inserting $x_2/x_1=\ell$, $y_2/y_1=\ell'$. A quotient of sums is at most the largest quotient of the
+summands. Equality: $n=2$, $W=\mathrm{diag}(a,b)$, $T$ with the eigenvalues $1,\ell'$ and $\gamma=S/q$, and $U$ the adjoint
+polar factor of $TW$ (in $M_n$ add a one-dimensional summand). Items 2 and~3 reduce to the first inequality as in the
+proof of Theorem~\ref{thm:kant}.
+\end{proof}
+
+\noindent Thus the normalised violation of Gardner's inequality is $\frac12\delta^2\delta'^2+O(\delta^4\delta'^4)$: it
+vanishes to second order in each contrast and is symmetric in the density and the operator. The unnormalised violation
+studied in~\cite{abed2024} behaves in the same way (Theorem~\ref{thm:gardner2} below).
+
+In~\cite[Sect.~5]{abed2024} the violation of Gardner's inequality was studied without normalisation: for $X\ge0$ with
+$\|X\|=1$ (the density) and $Z$ with $\|Z\|=1$, the quantity
+\[
+  z(X,Z)=|\Tr(XZ)|-\Tr(X|Z|)
+\]
+was sampled against $\Delta(X)$ and $\Delta(|Z|)$. Writing $Z=U|Z|$ with a unitary (orthogonal, in the real case) $U$,
+$z=|\Tr(XUY)|-\Tr(XY)$ with $Y=|Z|\ge0$, and $\sup_Uz=\|YX\|_1-\Tr(XY)$ by the duality of the trace norm, the supremum being
+attained at the polar unitary of $YX$, which is real if $X,Y$ are. We first solve the $2\times2$ case.
+
+\begin{proposition}\label{prop:k2}
+Let $X,Y\ge0$ in $M_2(\C)$ have eigenvalues $x_1\ge x_2\ge0$ and $y_1\ge y_2\ge0$, $x_1,y_1>0$. For every unitary $U$,
+\[
+  |\Tr(XUY)|-\Tr(XY)\ \le\ \frac{(x_1-x_2)^2(y_1-y_2)^2}{4(x_1+x_2)(y_1+y_2)} .
+\]
+Let $S=x_1y_2+x_2y_1$, $q=(x_1+x_2)(y_1+y_2)$, and $\gamma=|\langle e_1,f_1\rangle|^2$ for unit eigenvectors $e_1$ of $X$ for
+$x_1$ and $f_1$ of $Y$ for $y_1$. If $x_1>x_2$ and $y_1>y_2$, the bound is attained iff $|\Tr(XUY)|=\|YX\|_1$ and
+$\gamma=\frac14+\frac S{2q}$; it is attained by real $X,Y,U$.
+\end{proposition}
+\begin{proof}
+Let $p=(x_1-x_2)(y_1-y_2)$, so that $q-2S=p$. First, $|\Tr(XUY)|=|\Tr(YXU)|\le\|YX\|_1$. Expanding in the eigenbases,
+$\Tr(XY)=\sum_{ij}x_iy_j|\langle e_i,f_j\rangle|^2=S+\gamma p$, since the matrix $(|\langle e_i,f_j\rangle|^2)$ is doubly
+stochastic. The singular values of $YX$ satisfy $s_1^2+s_2^2=\Tr(X^2Y^2)$ and $s_1s_2=|\det YX|=x_1x_2y_1y_2$, so
+$\|YX\|_1^2=\Tr(X^2Y^2)+2x_1x_2y_1y_2=S^2+\gamma pq$. With $\sqrt r\le r/q+q/4$ (equality iff $\sqrt r=q/2$),
+\[
+  \|YX\|_1-\Tr(XY)\le\frac{S^2+\gamma pq}q+\frac q4-S-\gamma p=\frac{(q/2-S)^2}q=\frac{p^2}{4q},
+\]
+with equality iff $\gamma pq=q^2/4-S^2=\frac p2(\frac q2+S)$. Every $\gamma\in[0,1]$ is realised by a real rotation, and the
+polar unitary of a real $YX$ is real.
+\end{proof}
+
+\begin{theorem}\label{thm:gardner2}
+Let $\M=\bigoplus_{c=1}^CM_{k_c}(\mathbb K)$, $\mathbb K\in\{\R,\C\}$, and $N=\sum_c\lfloor k_c/2\rfloor\ge1$. For $X\ge0$ and
+$Y\ge0$ in $\M$ with $\|X\|=\|Y\|=1$, $\Delta(X)=\delta\in[0,1)$ and $\Delta(Y)=\delta'\in[0,1]$, and every unitary
+(orthogonal) $U\in\M$,
+\[
+  |\Tr(XUY)|-\Tr(XY)\le\frac{N\,\delta^2\delta'^2}{(1+\delta)(1+\delta')},
+\]
+and the bound is attained. Equivalently, $\sup\{|\Tr(XZ)|-\Tr(X|Z|):\|X\|=\|Z\|=1,\ \Delta(X)=\delta,\ \Delta(|Z|)=\delta'\}$
+has this value.
+\end{theorem}
+\begin{proof}
+Let $\ell=(1-\delta)/(1+\delta)$ and $\ell'=(1-\delta')/(1+\delta')$ be the smallest eigenvalues. It suffices to prove the
+bound in the complex algebra, since the maximisers below are real. By the remark above, $\sup_Uz=F(X,Y):=\|YX\|_1-\Tr(XY)$,
+and the polar unitary lies in $\M$. For a fixed eigenbasis of $X$, $F$ is a convex function of the eigenvalues of $X$ (a
+norm of a linear function of them minus a linear function). The admissible eigenvalues form the union of the faces
+$\{x_i=1,\ x_j=\ell\}$ of the cube $[\ell,1]^K$, $K=\sum_ck_c$, and a convex function on a face attains its maximum at a vertex; so
+$F(X,Y)\le F(X',Y)$ for some $X'=\ell+(1-\ell)P$ with a projection $P\in\M$, $P\ne0,1$, and likewise $F(X',Y)\le F(X',Y')$
+with $Y'=\ell'+(1-\ell')Q$. By Lemma~\ref{lem:halmos}, applied in every block, $X'$ and $Y'$ are direct sums over subspaces of
+dimension $1$ or $2$, and so are $\|Y'X'\|_1$ and $\Tr(X'Y')$. One-dimensional summands contribute $0$. On a
+two-dimensional one, $X'=\mathrm{diag}(1,\ell)$ and $Y'$ has the eigenvalues $1,\ell'$, so by Proposition~\ref{prop:k2} it
+contributes at most $(1-\ell)^2(1-\ell')^2/(4(1+\ell)(1+\ell'))=\delta^2\delta'^2/((1+\delta)(1+\delta'))$. A block of size
+$k_c$ holds at most $\lfloor k_c/2\rfloor$ two-dimensional summands. Equality: $N$ blocks $\mathrm{diag}(1,\ell)$ and
+$Y$ with spectrum $\{1,\ell'\}$ at the angle of Proposition~\ref{prop:k2}, $X=Y=1$ on the remaining one-dimensional blocks,
+and the polar unitary, which makes all block traces positive.
+\end{proof}
+
+\begin{figure}[t]
+\centering\includegraphics[width=\textwidth]{gardner_contrasts.pdf}
+\caption{The unnormalised Gardner violation $z=|\Tr(XUY)|-\Tr(XY)$ for $\|X\|=\|Y\|=1$ in $M_2(\R)$ (top, $N=1$) and
+$M_{16}(\R)$ (bottom, $N=8$), against $\Delta(X)$ (left) and $\Delta(Y)$ (right). Grey: $20000$ random samples with
+Haar-orthogonal eigenbases and $U$ and uniformly drawn contrasts, as in~\cite[Fig.~1]{abed2024}. Solid: the bound of
+Theorem~\ref{thm:gardner2} with $\Delta(Y)$ free, $N\delta^2/(2(1+\delta))$; dots: $z$ at the explicit maximisers of its
+proof, which agree with it to $10^{-15}$. Dashed: the supremum along $\Delta(Y)$, approached as $\Delta(X)\to1$. In
+$M_{16}$ no sample violates Gardner's inequality ($z>0$), although violations up to almost $2$ exist: the maximisers,
+two-level spectra on aligned pairs of eigenvectors, form a set of negligible Haar measure. Computed with plain NumPy by
+\texttt{scripts/\allowbreak trace\_\allowbreak envelopes\_\allowbreak figures.py}.}
+\label{fig:gardner1d}
+\end{figure}
+
+\begin{figure}[t]
+\centering\includegraphics[width=0.8\textwidth]{bounds2d_exp1_k2_C1.pdf}
+\caption{$M_2(\R)$, both contrasts prescribed: the supremum (left) and infimum (right) of
+$z=|\Tr(XUY)|-\Tr(XY)$ found by constrained optimisation on a grid of $\Delta(Y)$ (horizontal) and $\Delta(X)$
+(vertical). The left panel agrees with $\delta^2\delta'^2/((1+\delta)(1+\delta'))$ (Theorem~\ref{thm:gardner2}) to
+$5\times10^{-10}$ at every grid point: a violation needs both operators to be far from scalar.}
+\label{fig:gardner2d}
+\end{figure}
+
+\begin{remark}
+(i) With the contrast of $|Z|$ free, the supremum $N\delta^2/(2(1+\delta))$ is reached at $\delta'=1$, i.e.\ for singular $Z$.
+(ii) The bound is additive over the blocks: it counts the mutually orthogonal two-dimensional subspaces that fit into the
+blocks, and it does not depend on the sizes of the blocks otherwise. (iii) The normalised version is
+Theorem~\ref{thm:kant}: $\sup_Z|\Tr(XZ)|/\Tr(X|Z|)=\kappa(X)$, attained by a rank-one $|Z|$, i.e.\ at $\Delta(|Z|)=1$.
+The unnormalised supremum vanishes to fourth order at $\delta=\delta'=0$ because the violation needs both operators to be
+far from scalar. (iv) Figures~\ref{fig:gardner1d} and~\ref{fig:gardner2d} compare the bound with random sampling and with
+numerical optimisation. Sampling, the method of~\cite{abed2024}, stays far below the bound as soon as the blocks are
+larger than $2\times2$, while the optimisation over both contrasts reproduces it.
 \end{remark}
 
 \section{Young, Bikchentaev--Abed and the canonical trace}\label{sec:linear}
@@ -633,97 +815,6 @@ every characterisation of traces, but only through the variation \emph{inside} t
 the \emph{canonical} trace $\Tr$ among the functionals with $\varphi(1)=\dim$, and central $W$ violate them; for a fixed
 density their violations are $1-\mathrm{GM}/\mathrm{AM}$ and $w_{\min}^{-1/2}-1$ of the eigenvalues of $W$ normalised to
 $\Tr W=\sum_ck_c$ (Propositions~\ref{prop:det} and~\ref{prop:power}; the proofs do not use the block structure).
-\end{remark}
-
-\section{Gardner's inequality with two prescribed contrasts}\label{sec:gardner2}
-
-In~\cite[Sect.~5]{abed2024} the violation of Gardner's inequality was studied without normalisation: for $X\ge0$ with
-$\|X\|=1$ (the density) and $Z$ with $\|Z\|=1$, the quantity
-\[
-  z(X,Z)=|\Tr(XZ)|-\Tr(X|Z|)
-\]
-was sampled against $\Delta(X)$ and $\Delta(|Z|)$. Writing $Z=U|Z|$ with a unitary (orthogonal, in the real case) $U$,
-$z=|\Tr(XUY)|-\Tr(XY)$ with $Y=|Z|\ge0$, and $\sup_Uz=\|YX\|_1-\Tr(XY)$ by the duality of the trace norm, the supremum being
-attained at the polar unitary of $YX$, which is real if $X,Y$ are. We first solve the $2\times2$ case.
-
-\begin{proposition}\label{prop:k2}
-Let $X,Y\ge0$ in $M_2(\C)$ have eigenvalues $x_1\ge x_2\ge0$ and $y_1\ge y_2\ge0$, $x_1,y_1>0$. For every unitary $U$,
-\[
-  |\Tr(XUY)|-\Tr(XY)\ \le\ \frac{(x_1-x_2)^2(y_1-y_2)^2}{4(x_1+x_2)(y_1+y_2)} .
-\]
-Let $S=x_1y_2+x_2y_1$, $q=(x_1+x_2)(y_1+y_2)$, and $\gamma=|\langle e_1,f_1\rangle|^2$ for unit eigenvectors $e_1$ of $X$ for
-$x_1$ and $f_1$ of $Y$ for $y_1$. If $x_1>x_2$ and $y_1>y_2$, the bound is attained iff $|\Tr(XUY)|=\|YX\|_1$ and
-$\gamma=\frac14+\frac S{2q}$; it is attained by real $X,Y,U$.
-\end{proposition}
-\begin{proof}
-Let $p=(x_1-x_2)(y_1-y_2)$, so that $q-2S=p$. First, $|\Tr(XUY)|=|\Tr(YXU)|\le\|YX\|_1$. Expanding in the eigenbases,
-$\Tr(XY)=\sum_{ij}x_iy_j|\langle e_i,f_j\rangle|^2=S+\gamma p$, since the matrix $(|\langle e_i,f_j\rangle|^2)$ is doubly
-stochastic. The singular values of $YX$ satisfy $s_1^2+s_2^2=\Tr(X^2Y^2)$ and $s_1s_2=|\det YX|=x_1x_2y_1y_2$, so
-$\|YX\|_1^2=\Tr(X^2Y^2)+2x_1x_2y_1y_2=S^2+\gamma pq$. With $\sqrt r\le r/q+q/4$ (equality iff $\sqrt r=q/2$),
-\[
-  \|YX\|_1-\Tr(XY)\le\frac{S^2+\gamma pq}q+\frac q4-S-\gamma p=\frac{(q/2-S)^2}q=\frac{p^2}{4q},
-\]
-with equality iff $\gamma pq=q^2/4-S^2=\frac p2(\frac q2+S)$. Every $\gamma\in[0,1]$ is realised by a real rotation, and the
-polar unitary of a real $YX$ is real.
-\end{proof}
-
-\begin{theorem}\label{thm:gardner2}
-Let $\M=\bigoplus_{c=1}^CM_{k_c}(\mathbb K)$, $\mathbb K\in\{\R,\C\}$, and $N=\sum_c\lfloor k_c/2\rfloor\ge1$. For $X\ge0$ and
-$Y\ge0$ in $\M$ with $\|X\|=\|Y\|=1$, $\Delta(X)=\delta\in[0,1)$ and $\Delta(Y)=\delta'\in[0,1]$, and every unitary
-(orthogonal) $U\in\M$,
-\[
-  |\Tr(XUY)|-\Tr(XY)\le\frac{N\,\delta^2\delta'^2}{(1+\delta)(1+\delta')},
-\]
-and the bound is attained. Equivalently, $\sup\{|\Tr(XZ)|-\Tr(X|Z|):\|X\|=\|Z\|=1,\ \Delta(X)=\delta,\ \Delta(|Z|)=\delta'\}$
-has this value.
-\end{theorem}
-\begin{proof}
-Let $\ell=(1-\delta)/(1+\delta)$ and $\ell'=(1-\delta')/(1+\delta')$ be the smallest eigenvalues. It suffices to prove the
-bound in the complex algebra, since the maximisers below are real. By the remark above, $\sup_Uz=F(X,Y):=\|YX\|_1-\Tr(XY)$,
-and the polar unitary lies in $\M$. For a fixed eigenbasis of $X$, $F$ is a convex function of the eigenvalues of $X$ (a
-norm of a linear function of them minus a linear function). The admissible eigenvalues form the union of the faces
-$\{x_i=1,\ x_j=\ell\}$ of the cube $[\ell,1]^K$, $K=\sum_ck_c$, and a convex function on a face attains its maximum at a vertex; so
-$F(X,Y)\le F(X',Y)$ for some $X'=\ell+(1-\ell)P$ with a projection $P\in\M$, $P\ne0,1$, and likewise $F(X',Y)\le F(X',Y')$
-with $Y'=\ell'+(1-\ell')Q$. By Lemma~\ref{lem:halmos}, applied in every block, $X'$ and $Y'$ are direct sums over subspaces of
-dimension $1$ or $2$, and so are $\|Y'X'\|_1$ and $\Tr(X'Y')$. One-dimensional summands contribute $0$. On a
-two-dimensional one, $X'=\mathrm{diag}(1,\ell)$ and $Y'$ has the eigenvalues $1,\ell'$, so by Proposition~\ref{prop:k2} it
-contributes at most $(1-\ell)^2(1-\ell')^2/(4(1+\ell)(1+\ell'))=\delta^2\delta'^2/((1+\delta)(1+\delta'))$. A block of size
-$k_c$ holds at most $\lfloor k_c/2\rfloor$ two-dimensional summands. Equality: $N$ blocks $\mathrm{diag}(1,\ell)$ and
-$Y$ with spectrum $\{1,\ell'\}$ at the angle of Proposition~\ref{prop:k2}, $X=Y=1$ on the remaining one-dimensional blocks,
-and the polar unitary, which makes all block traces positive.
-\end{proof}
-
-\begin{figure}[t]
-\centering\includegraphics[width=\textwidth]{gardner_contrasts.pdf}
-\caption{The unnormalised Gardner violation $z=|\Tr(XUY)|-\Tr(XY)$ for $\|X\|=\|Y\|=1$ in $M_2(\R)$ (top, $N=1$) and
-$M_{16}(\R)$ (bottom, $N=8$), against $\Delta(X)$ (left) and $\Delta(Y)$ (right). Grey: $20000$ random samples with
-Haar-orthogonal eigenbases and $U$ and uniformly drawn contrasts, as in~\cite[Fig.~1]{abed2024}. Solid: the bound of
-Theorem~\ref{thm:gardner2} with $\Delta(Y)$ free, $N\delta^2/(2(1+\delta))$; dots: $z$ at the explicit maximisers of its
-proof, which agree with it to $10^{-15}$. Dashed: the supremum along $\Delta(Y)$, approached as $\Delta(X)\to1$. In
-$M_{16}$ no sample violates Gardner's inequality ($z>0$), although violations up to almost $2$ exist: the maximisers,
-two-level spectra on aligned pairs of eigenvectors, form a set of negligible Haar measure. Computed with plain NumPy by
-\texttt{scripts/\allowbreak trace\_\allowbreak envelopes\_\allowbreak figures.py}.}
-\label{fig:gardner1d}
-\end{figure}
-
-\begin{figure}[t]
-\centering\includegraphics[width=0.8\textwidth]{bounds2d_exp1_k2_C1.pdf}
-\caption{$M_2(\R)$, both contrasts prescribed: the supremum (left) and infimum (right) of
-$z=|\Tr(XUY)|-\Tr(XY)$ found by constrained optimisation on a grid of $\Delta(Y)$ (horizontal) and $\Delta(X)$
-(vertical). The left panel agrees with $\delta^2\delta'^2/((1+\delta)(1+\delta'))$ (Theorem~\ref{thm:gardner2}) to
-$5\times10^{-10}$ at every grid point: a violation needs both operators to be far from scalar.}
-\label{fig:gardner2d}
-\end{figure}
-
-\begin{remark}
-(i) With the contrast of $|Z|$ free, the supremum $N\delta^2/(2(1+\delta))$ is reached at $\delta'=1$, i.e.\ for singular $Z$.
-(ii) The bound is additive over the blocks: it counts the mutually orthogonal two-dimensional subspaces that fit into the
-blocks, and it does not depend on the sizes of the blocks otherwise. (iii) The normalised version is
-Theorem~\ref{thm:kant}: $\sup_Z|\Tr(XZ)|/\Tr(X|Z|)=\kappa(X)$, attained by a rank-one $|Z|$, i.e.\ at $\Delta(|Z|)=1$.
-The unnormalised supremum vanishes to fourth order at $\delta=\delta'=0$ because the violation needs both operators to be
-far from scalar. (iv) Figures~\ref{fig:gardner1d} and~\ref{fig:gardner2d} compare the bound with random sampling and with
-numerical optimisation. Sampling, the method of~\cite{abed2024}, stays far below the bound as soon as the blocks are
-larger than $2\times2$, while the optimisation over both contrasts reproduces it.
 \end{remark}
 
 \section{Numerical verification and the remaining items}\label{sec:numerics}
