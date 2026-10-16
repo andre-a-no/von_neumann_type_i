@@ -1,0 +1,895 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{hyperref}
+\emergencystretch=2em
+
+% In the repository the figure and the generated numbers live in ../article (written by
+% scripts/trace_characterizations.py); the arXiv archive (scripts/make_arxiv_trace.sh) copies them next to this file.
+\graphicspath{{figures/}{../article/figures/}}
+\IfFileExists{generated/trace_characterizations.tex}{\input{generated/trace_characterizations.tex}}{%
+  \input{../article/generated/trace_characterizations.tex}}
+
+\DeclareMathOperator{\Tr}{Tr}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\M}{\mathcal{M}}
+\renewcommand{\Re}{\mathrm{Re}\,}
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem*{thmA}{Theorem A}
+\newtheorem*{thmB}{Theorem B}
+\newtheorem*{thmC}{Theorem C}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\title{How strongly do trace-characterising inequalities fail?\\
+Sharp violation envelopes in terms of the Michelson contrast}
+\author{Irina Nikolaeva \and Andrej Novikov}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Many inequalities that hold for the trace characterise it: a positive functional that satisfies one of them for all
+operators is tracial. Examples are Gardner's inequality $|\varphi(X)|\le\varphi(|X|)$, the triangle inequality for
+$\varphi(|\cdot|)$, monotonicity, Young's, Araki--Lieb--Thirring's and determinant inequalities, and a family of
+inequalities for pairs of projections. We ask how strongly such an inequality fails for a given non-tracial positive
+functional $\varphi=\Tr(W\,\cdot\,)$ on $M_n$, and measure this by the \emph{violation envelope}: the largest
+normalised violation over all operators, as a function of the Michelson contrast $\delta$ of the density $W$. For
+25 characterisations from the literature we determine the envelope exactly in sixteen cases (three of them
+only in dimension two or in even dimension), give explicit lower
+bounds in four, and compute the remaining ones by a certified numerical search. The envelopes fall into classes by the
+order in which they vanish at the trace: the extended Young inequality, two lattice inequalities for projections, an
+inequality of Bikchentaev and Abed and the power-mean inequality for the canonical trace fail linearly in $\delta$;
+Gardner's inequality, its relatives and most inequalities for projections fail quadratically; the sharp constants are
+expressed through the Kantorovich constant, the condition number and the Specht ratio of $W$. Monotonicity fails at least as
+$\delta^4/16$ and its weighted form at least as $\delta^8/4096$. On a direct sum $\bigoplus_cM_{k_c}$ the envelope is
+governed by the contrasts inside the blocks alone: a density that varies only between blocks is invisible to every
+characterisation of traces. Finally, we determine the sharp upper bound of the unnormalised violation
+$|\Tr(XZ)|-\Tr(X|Z|)$ of Gardner's inequality when both contrasts $\Delta(X)$ and $\Delta(|Z|)$ are prescribed,
+on every direct sum of real or complex matrix algebras, which answers a question raised in earlier work by Abed and
+the authors.
+\end{abstract}
+
+\noindent\textbf{Keywords:} trace characterisation; positive functional; Michelson contrast; Kantorovich inequality;
+Specht ratio; two projections; von Neumann algebra.\\
+\textbf{MSC 2020:} 46L30, 47A63, 15A45, 46L10.
+
+\section{Introduction}\label{sec:intro}
+
+Let $\varphi$ be a positive linear functional on a C$^*$-algebra. Gardner~\cite{gardner1979} proved that $\varphi$ is
+a trace, $\varphi(XY)=\varphi(YX)$, if and only if
+\begin{equation}\label{eq:gardner}
+  |\varphi(X)|\le\varphi(|X|)\qquad\text{for all }X .
+\end{equation}
+This started a long series of results of the same form: an inequality that holds for every trace holds for all
+operators only if $\varphi$ is a trace. On $M_n$ or among the positive normal functionals on a von Neumann algebra,
+traces are characterised by the triangle inequality for $\varphi(|\cdot|)$~\cite{gardner1979,stolyarov2002},
+by $|\varphi(A^k)|\le\varphi(|A|^k)$~\cite{petz1988}, by monotonicity $0\le A\le B\Rightarrow\varphi(A^p)\le
+\varphi(B^p)$~\cite{bikchentaev2007mono,sano2006} and its weighted forms~\cite{hoa2007,hoa2010}, by Young's
+inequality~\cite{bikchentaev2005young,cho2009}, by subadditivity of $\varphi\circ f$ for concave
+$f$~\cite{tikhonov2005}, by the Peierls--Bogoliubov and Araki--Lieb--Thirring inequalities~\cite{bikchentaev2011pb},
+by the generalised Powers--St{\o}rmer inequality~\cite{hoa2013}, by inequalities for determinants and power
+means~\cite{bikchentaev2020det}, by the spectral geometric mean~\cite{bikchentaev2026sgm}, by inequalities for
+$|\varphi(A^2)|$~\cite{bikchentaev2026moslehian}, by metrics on projections~\cite{bikchentaev2019metric}, by
+subadditivity on the projection lattice~\cite[Theorem~4]{petz1988}, and by a family of inequalities in which only
+projections enter~\cite{bikchentaev2009rm,bikchentaev2010smj,bikchentaev2011mn,bikchentaev2019abed}. Bikchentaev and
+Moslehian~\cite{bikchentaev2025survey} survey these results; the canonical trace on $M_n$ is characterised
+in~\cite{moslehian2025jmaa,bikchentaev2020det}. The dual problem, in which the functional is arbitrary and the
+operator is to be characterised as central, is treated in~\cite{novikov2015}.
+
+All these theorems answer a yes/no question. Here we ask a quantitative one: \emph{how strongly does a
+trace-characterising inequality fail for a given non-tracial functional?} On $M_n$ every positive functional has the
+form $\varphi_W=\Tr(W\,\cdot\,)$ with a density $W\ge0$, and $\varphi_W$ is a trace if and only if $W$ is a scalar
+multiple of~$1$. The natural measure of the distance of $W$ from the scalars that is invariant under scaling is the
+Michelson contrast
+\[
+  \Delta(W)=\frac{\lambda_{\max}(W)-\lambda_{\min}(W)}{\lambda_{\max}(W)+\lambda_{\min}(W)}\in[0,1],
+\]
+studied for operators in~\cite{abed2024}. There, a Monte Carlo study~\cite[Sect.~5.1, Fig.~1]{abed2024} plotted the
+violation of Gardner's inequality against $\Delta(W)$ for real $2\times2$ and $3\times3$ matrices and conjectured
+that such violations are bounded by functions of the contrasts~\cite[Sect.~7]{abed2024}. We make this precise. For an
+inequality $L\le R$ (with $L$, $R$ depending on $\varphi$ and on operator variables) the \emph{violation envelope} is
+\[
+  V_n(\delta)=\sup\Bigl\{\frac{L-R}{N}:\ W\ge0\ \text{in}\ M_n,\ \Delta(W)=\delta,\ \text{all operator variables
+  free}\Bigr\},
+\]
+where $N>0$ is a normalisation that makes the quotient invariant under the scaling of $W$ and of the variables
+(mostly $N=R$). By the characterisation theorems, $V_n(\delta)>0$ for $\delta>0$; by construction $V_n(0)=0$.
+
+\paragraph{Results.} We study the 25 inequalities of Table~\ref{tab:items}. Write $a\ge b>0$ for the extreme
+eigenvalues of $W$ and
+\[
+  h=\frac ab=\frac{1+\delta}{1-\delta},\qquad \kappa=\frac{a+b}{2\sqrt{ab}}=\frac1{\sqrt{1-\delta^2}},\qquad
+  \psi=\arcsin\delta,
+\]
+the condition number, the Kantorovich constant and the contrast angle of $W$.
+
+\begin{thmA}
+The envelopes of the inequalities of Table~\ref{tab:items} are as follows.
+\begin{enumerate}
+\item[(a)] $V_n=\kappa-1$ for Gardner's inequality, the triangle inequalities for $\varphi(|\cdot|)$ on operators and on
+projections, $\varphi(A+A^*)\le2\varphi(|A^*|)$, $|\varphi(A^2)|\le\varphi(A^*A)$, $\varphi(|P-Q|)\le\varphi(P+Q)$ and
+$\varphi(\Re PQ)\le\varphi(|PQ|)$, in every dimension $n\ge2$ (Theorem~\ref{thm:kant}, Theorem~\ref{thm:proj}).
+\item[(b)] $V_n=\kappa^2-1$ for $\varphi(PQP)\le\varphi(Q)$; $V_n=\frac12\tan^2(\psi/2)$ for $\varphi(\Re PQ)\ge0$;
+$V_n=\delta/(1-\delta)$ for $\varphi(P\vee Q)\le\varphi(P)+\varphi(Q)$; $V_n=\delta$ for $\varphi(P+Q)\le\varphi(1+P\wedge Q)$
+($n$ even); and $V_n$ is the maximum of an explicit function of one variable, $\frac{(e-1)^2}{e(e+1)}\delta^2+O(\delta^3)$, for
+$\varphi(e^{QPQ})\le\varphi(e^P)$ ($n$ even) (Theorem~\ref{thm:proj}).
+\item[(c)] $V_n=h-1$ for the extension of Young's inequality to arbitrary operators; $V_2=s/(1+s)$, $s=\sin(\psi/2)$, for
+$\varphi(PQ+QP)\le2\varphi(QPQ)$; for the inequalities that characterise the \emph{canonical} trace, $V_2=1-\sqrt{1-\delta^2}$
+for the AM--GM inequality $(\det A)^{1/n}\le\frac1n\varphi(A)$, increasing with $n$ to $1-1/S(h)$ with the Specht ratio $S$,
+and $V_n=\sqrt{(\ell+n-1)/(n\ell)}-1$, $\ell=1/h$, for $\varphi(A^2)^{1/2}\le\varphi(A)$ (Section~\ref{sec:linear}).
+\item[(d)] $V_n\ge\kappa-1$ for the spectral geometric mean inequality, $V_n\ge\kappa^2-1$ for the Araki--Lieb--Thirring
+inequality, $V_n\ge\delta^4/16+O(\delta^5)$ for monotonicity and $V_n\ge\delta^8/4096\,(1+O(\delta^2))$ for its weighted form
+with $r=1$; and $V_n\le h-1$ for the first ten items (Section~\ref{sec:lower}).
+\end{enumerate}
+\end{thmA}
+
+Thus the envelopes vanish at the trace to different orders, $\delta$, $\delta^2$, $\delta^4$ and $\delta^8$
+(Table~\ref{tab:classes}): some characterisations are far more sensitive than others, and two inequalities that are
+equivalent for traces may fail at different rates. For instance, $\varphi(P\vee Q)+\varphi(P\wedge Q)=\varphi(P)+
+\varphi(Q)$ for every trace, yet the lattice subadditivity fails as $\delta/(1-\delta)$ and $\varphi(|P-Q|)\le
+\varphi(P+Q)$, with the same right-hand side, only as $\kappa-1\sim\delta^2/2$.
+
+The second result concerns finite-dimensional von Neumann algebras $\M=\bigoplus_{c=1}^CM_{k_c}$. A positive functional
+$\varphi_W$ on $\M$ is a trace if and only if $W$ is central, i.e.\ scalar on every block, however different the
+scalars are. The violation therefore cannot depend on the global contrast of $W$:
+
+\begin{thmB}
+Let $W=\bigoplus_cW_c>0$ in $\M$. For every inequality of Table~\ref{tab:items} except 11, 16 and 24, the largest
+normalised violation for $\varphi_W$ on $\M$ is at most the largest one for $\varphi_{W_c}$ on the blocks $M_{k_c}$, with
+equality for items 1--10, 12--14, 17, 18, 21--23 and~25. In particular a density that varies only between the blocks
+produces no violation at all (Theorem~\ref{thm:sectors}).
+\end{thmB}
+
+The third result returns to the unnormalised quantity of~\cite{abed2024}, in which both operators are normalised to
+norm one and both contrasts are prescribed:
+
+\begin{thmC}
+Let $\M=\bigoplus_{c=1}^CM_{k_c}(\mathbb K)$, $\mathbb K\in\{\R,\C\}$, $N=\sum_c\lfloor k_c/2\rfloor\ge1$. For $X\ge0$
+and $Z$ in $\M$ with $\|X\|=\|Z\|=1$, $\Delta(X)=\delta<1$ and $\Delta(|Z|)=\delta'$,
+\[
+  \sup\bigl(|\Tr(XZ)|-\Tr(X|Z|)\bigr)=\frac{N\,\delta^2\delta'^2}{(1+\delta)(1+\delta')},
+\]
+and the supremum is attained (Theorem~\ref{thm:gardner2}).
+\end{thmC}
+
+All values in Theorems~A and~C are confirmed by a certified numerical search over all variables, which also gives the
+envelopes of the five inequalities without a closed form (Section~\ref{sec:numerics}).
+
+\paragraph{What is new.} The characterisation theorems are due to the cited authors, and the constants $\kappa$, $h$
+and the Specht ratio, as well as the inequalities behind them (Kantorovich's inequality in the form of Greub and
+Rheinboldt~\cite{greub1959,furuta2005}, Specht's reverse AM--GM inequality~\cite{specht1960}), are classical. The upper
+bounds of Theorem~\ref{thm:kant} are the Kantorovich inequality; what we add is that the resulting constants are the
+exact envelopes. We found no previous study of the envelopes; the closest work is~\cite{abed2024}, which plots
+the unnormalised Gardner violation, defines no envelope and proves no bound. A short account of part of these results
+appears as a use case in the description of the software used for the computations~\cite{lib}.
+
+\paragraph{Organisation.} Section~\ref{sec:setting} fixes the notation, lists the inequalities and collects the tools.
+Sections~\ref{sec:kant}--\ref{sec:lower} prove Theorem~A, Section~\ref{sec:sectors} Theorem~B and
+Section~\ref{sec:gardner2} Theorem~C. Section~\ref{sec:numerics} describes the numerical verification and the
+remaining items, and Section~\ref{sec:open} lists open problems.
+
+\section{Setting and tools}\label{sec:setting}
+
+\subsection{Functionals, contrast and envelopes}
+Throughout, $\Tr$ is the usual trace on $M_n=M_n(\C)$, $|X|=(X^*X)^{1/2}$, $\|X\|_1=\Tr|X|$, $\Re X=\frac12(X+X^*)$,
+and $\varphi=\varphi_W=\Tr(W\,\cdot\,)$ with $W\ge0$; $\varphi$ is a trace iff $W\in\C1$. We write $a\ge b$ for the
+extreme eigenvalues of $W$, $e_1,e_2$ for corresponding unit eigenvectors, and $\delta=\Delta(W)$; unless stated
+otherwise $W>0$, i.e.\ $\delta<1$. The quotient $(L-R)/N$ is invariant under $W\mapsto tW$, $t>0$, and the envelope
+$V_n(\delta)$ is the supremum over all $W$ with $\Delta(W)=\delta$; for a fixed density we write $V(W)$. We call a
+value of an envelope \emph{attained} if the supremum is a maximum and \emph{approached} otherwise. Variables called $P,Q,R$
+are orthogonal projections, $A,B\ge0$ unless said otherwise, and $X,Y$ arbitrary; $P\wedge Q$ and $P\vee Q$ are the
+projections onto $\mathrm{ran}\,P\cap\mathrm{ran}\,Q$ and onto $\mathrm{ran}\,P+\mathrm{ran}\,Q$.
+
+\begin{table}[h]
+\centering\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{rllll}
+\toprule
+ & inequality $L\le R$ & variables & $N$ & source\\
+\midrule
+1 & $|\varphi(X)|\le\varphi(|X|)$ & $X$ & $R$ & \cite{gardner1979}\\
+2 & $\varphi(|X+Y|)\le\varphi(|X|)+\varphi(|Y|)$ & $X,Y$ & $R$ & \cite{gardner1979,stolyarov2002}\\
+3 & $\varphi(A+A^*)\le2\varphi(|A^*|)$ & $A$ arbitrary & $R$ & \cite{bikchentaev2019abed}\\
+4 & $|\varphi(A^2)|\le\varphi(A^*A)$ & $A$ arbitrary & $R$ & \cite[Thm.~1, $k=2$]{petz1988}, \cite{bikchentaev2026moslehian}\\
+5 & $\varphi(|P-R|)\le\varphi(|P-Q|)+\varphi(|Q-R|)$ & $P,Q,R$ & $R$ & \cite{bikchentaev2019metric}\\
+6 & $\varphi(A\natural B)\le\sqrt{\varphi(A)\varphi(B)}$ & $A,B>0$ & $R$ & \cite{bikchentaev2026sgm}\\
+7 & $\varphi((B^{1/2}AB^{1/2})^2)\le\varphi(BA^2B)$ & $A,B$ & $R$ & \cite[Lemma~2, $r=2$, $p=1$]{bikchentaev2011pb}\\
+8 & $\varphi(|AB^*|)\le\frac12\varphi(|A|^2)+\frac12\varphi(|B|^2)$ & $A,B$ arbitrary & $R$ & extension of \cite{bikchentaev2005young}\\
+9 & $\varphi(PQ+QP)\le2\varphi(QPQ)$ & $P,Q$ & $\varphi(P)+\varphi(Q)$ & \cite{bikchentaev2019abed}\\
+10 & $0\le A\le B\Rightarrow\varphi(A^2)\le\varphi(B^2)$ & $A\le B$ & $R$ & \cite{bikchentaev2007mono,sano2006}\\
+11 & $(\det A)^{1/n}\le\frac1n\varphi(A)$, $\varphi(1)=n$ & $A$ & $(\det A)^{1/n}$ & \cite[Thm.~3(iii)]{bikchentaev2020det}\\
+12 & $\varphi((A+B)^{1/2})\le\varphi(A^{1/2})+\varphi(B^{1/2})$ & $A,B$ & $R$ & \cite[Cor.~1]{tikhonov2005}\\
+13 & $\varphi(A+B-|A-B|)\le2\varphi(A^{1/4}B^{1/2}A^{1/4})$ & $A,B$ & $\varphi(A+B)$ & \cite[Lemma~3.1]{hoa2013}\\
+14 & $|\varphi(PQ)|\le\varphi(P)^{1/3}\varphi(Q)^{2/3}$ & $P,Q$ & $R$ & \cite[Thm.~2(i)]{bikchentaev2011mn}\\
+15 & $\varphi(e^{P+Q})\le\varphi(e^{P/2}e^Qe^{P/2})$ & $P,Q$ & $R$ & \cite[Thm.~2(iv)]{bikchentaev2011mn}\\
+16 & $\varphi(e^A)\exp\frac{\varphi(e^{A/2}Be^{A/2})}{\varphi(e^A)}\le\varphi(e^{A+B})$ & $A,B$ self-adj.\ & $R$ &
+\cite[Lemma~1]{bikchentaev2011pb}\\
+17 & $\varphi(PQP)\le\varphi(Q)$ & $P,Q$ & $R$ & \cite[Thm.~3.4(iv)]{bikchentaev2010smj}\\
+18 & $\varphi(|P-Q|)\le\varphi(P+Q)$ & $P,Q$ & $R$ & \cite[Thm.~3.4(v)]{bikchentaev2010smj}\\
+19 & $\varphi(P+Q)\le\varphi(1+P\wedge Q)$ & $P,Q$ & $R$ & \cite[Thm.~3.4(iii)]{bikchentaev2010smj}\\
+20 & $\varphi(e^{QPQ})\le\varphi(e^P)$ & $P,Q$ & $R$ & \cite[Thm.~2(v)]{bikchentaev2011mn}\\
+21 & $0\le\varphi(\Re PQ)$ & $P,Q$ & $\varphi(P)+\varphi(Q)$ & \cite[Thm.~2(vi)]{bikchentaev2011mn}\\
+22 & $\varphi(\Re PQ)\le\varphi(|PQ|)$ & $P,Q$ & $R$ & \cite[Thm.~2(vii)]{bikchentaev2011mn}\\
+23 & $\varphi(P\vee Q)\le\varphi(P)+\varphi(Q)$ & $P,Q$ & $R$ & \cite[Thm.~4]{petz1988}\\
+24 & $\varphi(A^2)^{1/2}\le\varphi(A)$, $\varphi(1)=n$ & $A$ & $R$ & \cite[Thm.~3(vii)]{bikchentaev2020det}\\
+25 & $0\le A\le B\Rightarrow\varphi(A^4)\le\varphi(AB^2A)$ & $A\le B$ & $R$ & \cite[Thms.~4, 5, $r=1$]{hoa2010}, \cite{hoa2007}\\
+\bottomrule
+\end{tabular}
+\caption{The inequalities studied, with the normalisation $N$ of the violation $(L-R)/N$ and the source of the
+characterisation. Projections are $P,Q,R$; positive operators $A,B$ unless stated otherwise. Remarks on the forms are
+in Section~\ref{sec:forms}.}
+\label{tab:items}
+\end{table}
+
+\subsection{Remarks on the forms}\label{sec:forms}
+Several sources state families of inequalities; we use one member. In item~4, $|\varphi(A^k)|\le\varphi(|A|^k)$ for all
+$A$ and one fixed $k\ge1$ characterises the trace on $M_n$~\cite[Theorem~1]{petz1988}; $k=1$ is Gardner's inequality.
+Item~7 is the Araki--Lieb--Thirring inequality $\varphi((B^{1/2}AB^{1/2})^{rp})\le\varphi((B^{r/2}A^rB^{r/2})^p)$ with
+$r=2$, $p=1$~\cite[Lemma~2]{bikchentaev2011pb}. The published form of item~8 is $\varphi(|AB|)\le\frac1p\varphi(A^p)+
+\frac1q\varphi(B^q)$ for $A,B\ge0$~\cite{bikchentaev2005young}; we use $p=q=2$ and allow arbitrary $A,B$, in the form of
+Ando's matrix Young inequality~\cite{ando1995}, and Proposition~\ref{prop:young} refers to this extension. Item~9 is the
+member $p=1$ of the family $\varphi(PQ+QP)\le2\varphi((QPQ)^p)$, $p\in(0,1]$~\cite{bikchentaev2019abed}. Items 10 and 25
+are the cases $r=0$ and $r=1$ of $\varphi(A^{2r+2})\le\varphi(A^rB^2A^r)$ for $0\le A\le B$, which characterises traces for
+every fixed $r\ge0$~\cite[Lemma~1, Theorems~4,~5]{hoa2010}; on $M_n$ the case $r=0$ is
+in~\cite{bikchentaev2007mono,sano2006} and $r>0$ in~\cite[Theorem~6]{hoa2007}. Items 11 and 24 characterise the
+canonical trace among the positive functionals with $\varphi(1)=n$~\cite[Theorem~3]{bikchentaev2020det}; item~24 is (vii)
+there with $p=2$, $q=1$ and needs $\varphi$ faithful. Item~12 is the case $f(t)=t^{1/2}$ of Tikhonov's
+characterisation by $\varphi(f(A+B))\le\varphi(f(A))+\varphi(f(B))$ for concave $f$ with
+$f(0)=0$~\cite[Corollary~1]{tikhonov2005}. Item~13 is the generalised Powers--St{\o}rmer inequality
+$\varphi(A+B)-\varphi(|A-B|)\le2\varphi(f(A)^{1/2}g(B)f(A)^{1/2})$, $g(t)=t/f(t)$, with $f(t)=t^{1/2}$~\cite[Lemma~3.1,
+Remark~4]{hoa2013}; with $N=R$ its envelope would be infinite (Remark~\ref{rem:13}), so we normalise by $\varphi(A+B)$.
+Item~14 is Hölder's inequality for projections with the exponent $\alpha=3$; for $\alpha=2$ it holds for every positive
+$\varphi$~\cite[remark after Theorem~2]{bikchentaev2011mn}. Item~16 is the Peierls--Bogoliubov inequality, stated
+in~\cite{bikchentaev2011pb} for positive $H,K$; both sides scale by $e^c$ under $A\mapsto A+c$, $B\mapsto B+c$, so the
+envelope over self-adjoint arguments is the same. Items 17--19 are~\cite[Theorem~3.4]{bikchentaev2010smj}, announced
+in~\cite{bikchentaev2009rm}, and items 14, 15, 20--22 are~\cite[Theorem~2]{bikchentaev2011mn}.
+
+\subsection{Tools}
+
+\begin{lemma}[Kantorovich inequality~\cite{greub1959}]\label{lem:kant}
+If $b\le W\le a$, $a\ge b>0$, then $\omega(W^2)\,\omega(1)\le\kappa^2\,\omega(W)^2$ for every positive functional
+$\omega$, where $\kappa=(a+b)/(2\sqrt{ab})$.
+\end{lemma}
+\begin{proof}
+$(a-W)(W-b)\ge0$ gives $\omega(W^2)\le(a+b)x-ab\,y$ with $x=\omega(W)$, $y=\omega(1)$, and $((a+b)x-aby)y\le\kappa^2x^2$
+because the difference is $(\kappa x-\sqrt{ab}\,y)^2$.
+\end{proof}
+
+\begin{lemma}[Two projections; Halmos~\cite{halmos1969}]\label{lem:halmos}
+For projections $P,Q$ on a finite-dimensional Hilbert space $H$, $H$ is the orthogonal sum of subspaces of dimension
+$1$ or $2$ invariant under $P$ and $Q$. On each two-dimensional one there is an orthonormal basis $f,f'$ with $P=ff^*$
+and $Q=qq^*$, $q=\cos\theta\,f+e^{i\chi}\sin\theta\,f'$, $0<\theta<\pi/2$.
+\end{lemma}
+
+The next lemma gives a general upper bound; it shows that no envelope of items 1--8 and 10 can exceed the order
+$\delta$.
+
+\begin{lemma}\label{lem:upper}
+For items 1--8 and 10, $V(W)\le h-1$.
+\end{lemma}
+\begin{proof}
+In each item $L\le aL_0$, where $L_0$ is the expression for the trace or the trace norm (e.g.\ $|\varphi(X)|\le a\|X\|_1$,
+$\varphi(|X+Y|)\le a\Tr|X+Y|$, $|\varphi(A^2)|\le a\|A^2\|_1$), $L_0\le R_{\Tr}$ by the trace inequality (for item~4
+$\|A^2\|_1\le\|A\|_2^2$; for item~7 the Araki--Lieb--Thirring inequality; for item~6, $A\natural B$ is unitarily similar to
+$(A^{1/2}BA^{1/2})^{1/2}$, so $\Tr(A\natural B)=\|A^{1/2}B^{1/2}\|_1\le(\Tr A\Tr B)^{1/2}$), and $R\ge bR_{\Tr}$. Hence
+$L/R\le a/b=h$. For item~8, $\varphi(|AB^*|)\le a\|A\|_2\|B\|_2\le\frac a2(\|A\|_2^2+\|B\|_2^2)$.
+\end{proof}
+
+\section{The Kantorovich class}\label{sec:kant}
+
+\begin{theorem}\label{thm:kant}
+Let $W>0$ in $M_n$, $n\ge2$, and $\varphi=\varphi_W$. For all $X,Y,A$ and all projections $P,Q,R$,
+\begin{gather*}
+|\varphi(X)|\le\kappa\,\varphi(|X|),\qquad \varphi(A+A^*)\le2\kappa\,\varphi(|A^*|),\qquad |\varphi(A^2)|\le\kappa\,\varphi(A^*A),\\
+\varphi(|X+Y|)\le\kappa\bigl(\varphi(|X|)+\varphi(|Y|)\bigr),\qquad
+\varphi(|P-R|)\le\kappa\bigl(\varphi(|P-Q|)+\varphi(|Q-R|)\bigr).
+\end{gather*}
+All five constants are attained. Hence $V_n=\kappa-1$ for items 1--5 in every dimension $n\ge2$.
+\end{theorem}
+\begin{proof}
+Let $X=U|X|$ be a polar decomposition and $T=|X|$. Then $\varphi(X)=\Tr(WUT)=\Tr\bigl((WT^{1/2})^*UT^{1/2}\bigr)$, so for every contraction $U$
+\[
+  |\varphi(X)|^2\le\Tr(W^2T)\,\Tr T\le\kappa^2(\Tr WT)^2
+\]
+by the Cauchy--Schwarz inequality and Lemma~\ref{lem:kant} for $\omega=\Tr(T\,\cdot\,)$. The second inequality follows in the same way from
+$\varphi(A+A^*)=2\Re\varphi(|A^*|V)$, where $A=|A^*|V$ is a polar decomposition. For the fourth, write $X+Y=S|X+Y|$; then $\varphi(|X+Y|)=\varphi(S^*X)+\varphi(S^*Y)$, and each term
+is bounded as above with the contraction $S^*U_X$ or $S^*U_Y$ in place of $U$. The fifth is the fourth with $X=P-Q$,
+$Y=Q-R$. For the third, put $X=AW^{1/2}$ in an eigenbasis of $W$ with eigenvalues $w_i$. Then $\varphi(A^*A)=\sum_{ij}|X_{ij}|^2$ and
+\[
+  \varphi(A^2)=\sum_iX_{ii}^2+\sum_{i<j}X_{ij}X_{ji}\frac{w_i+w_j}{\sqrt{w_iw_j}},\qquad\frac{w_i+w_j}{\sqrt{w_iw_j}}\le2\kappa,
+\]
+so $|\varphi(A^2)|\le\sum_i|X_{ii}|^2+\kappa\sum_{i<j}(|X_{ij}|^2+|X_{ji}|^2)\le\kappa\varphi(A^*A)$.
+
+Equality, with $e_1,e_2$ eigenvectors of $W$ for $a,b$: in the first two inequalities for $T=vv^*$ with
+$|\langle e_1,v\rangle|^2=\frac b{a+b}$, $|\langle e_2,v\rangle|^2=\frac a{a+b}$ and $Uv=Wv/\|Wv\|$ (equality in
+Cauchy--Schwarz and in Lemma~\ref{lem:kant}); in the third for $A=\sqrt a\,e_1e_2^*+\sqrt b\,e_2e_1^*$; in the fourth for
+$X=uu^*$, $Y=-u'u'^*$ with $u,u'=\sin t\,e_1\pm\cos t\,e_2$ and $\tan t=\sqrt{b/a}$; in the fifth for $P=uu^*$, $Q=0$,
+$R=u'u'^*$.
+\end{proof}
+
+\begin{remark}
+For a fixed density, $\sup_X|\varphi(X)|/\varphi(|X|)=\kappa(W)$ exactly. In particular the normalised violation of
+Gardner's inequality depends on $W$ only through its extreme eigenvalues, not on the dimension or on the rest of the
+spectrum.
+\end{remark}
+
+\section{Young, Bikchentaev--Abed and the canonical trace}\label{sec:linear}
+
+\begin{proposition}\label{prop:young}
+$\varphi_W(|AB^*|)\le h\cdot\frac12\bigl(\varphi_W(|A|^2)+\varphi_W(|B|^2)\bigr)$ for all $A,B$, with equality for
+$A=B=e_1e_2^*$. Hence $V_n=h-1=2\delta/(1-\delta)$ for item~8 in every dimension.
+\end{proposition}
+\begin{proof}
+$\varphi_W(|AB^*|)\le a\|AB^*\|_1\le a\|A\|_2\|B\|_2$ and $\varphi_W(|A|^2)=\Tr(WA^*A)\ge b\|A\|_2^2$. For $A=B=e_1e_2^*$,
+$|AB^*|=e_1e_1^*$ and $|A|^2=e_2e_2^*$, so $L=a$ and $R=b$.
+\end{proof}
+
+\begin{remark}
+For the published form with $A,B\ge0$ an independent numerical search ($n=2,3$) gives only $V\approx\kappa-1$
+($0.1546$ at $\delta=0.5$ and $1.294$ at $\delta=0.9$, against $\kappa-1=0.1547$ and $1.294$). The linear failure of
+item~8 is a feature of the extension to arbitrary operators.
+\end{remark}
+
+\begin{proposition}\label{prop:abed}
+For $n=2$, item~9 has the envelope $V_2=s/(1+s)$, $s=\sin(\psi/2)$. Thus $V_2\sim\delta/2$ as $\delta\to0$ and
+$V_2\to\sqrt2-1$ as $\delta\to1$.
+\end{proposition}
+\begin{proof}
+If $P$ or $Q$ is $0$ or $1$, or $P=Q$, then $L=R$. Otherwise $P=uu^*$, $Q=vv^*$ with unit vectors; choose phases so that
+$u=cv+\sigma v_\perp$ with $c=\cos\theta$, $\sigma=\sin\theta$, $0<\theta<\pi/2$, and a unit vector $v_\perp\perp v$.
+Normalise $\Tr W=2$, so that $W$ has the eigenvalues $1\pm\delta$, and put $\beta=v^*Wv$, $\gamma=v_\perp^*Wv_\perp=2-\beta$,
+$t=\Re(v^*Wv_\perp)$ and $\rho=|v^*Wv_\perp|$; then $\beta\gamma-\rho^2=\det W=1-\delta^2$. Since $PQ+QP=c(uv^*+vu^*)$
+and $QPQ=c^2Q$,
+\[
+  L-R=2c\Re(v^*Wu)-2c^2\beta=2c\sigma t,\qquad N=u^*Wu+\beta=\beta(1+c^2)+\sigma^2\gamma+2c\sigma t .
+\]
+With $D=\beta(1+c^2)+\sigma^2\gamma>0$ the quotient $2c\sigma t/(D+2c\sigma t)$ increases with $t\le\rho$, so it is at most
+$r/(1+r)$ with
+\[
+  r=\frac{2c\sigma\rho}{D}=\frac{\rho\sin2\theta}{\beta+1+(\beta-1)\cos2\theta}\le\frac{\rho}{\sqrt{(\beta+1)^2-(\beta-1)^2}}
+  =\frac\rho{2\sqrt\beta},
+\]
+using $\gamma=2-\beta$ and $\max_x\sin x/(p+q\cos x)=(p^2-q^2)^{-1/2}$ for $p>|q|$. Finally
+$r^2\le\rho^2/(4\beta)=\frac14\bigl(2-\beta-(1-\delta^2)/\beta\bigr)$, which is maximal at $\beta=\sqrt{1-\delta^2}=\cos\psi$
+with the value $\frac12(1-\cos\psi)=\sin^2(\psi/2)$. All steps are equalities for $v$ with $v^*Wv=\cos\psi$, a phase of
+$v_\perp$ with $v^*Wv_\perp=\rho>0$, and the optimal $\theta$, and $r\mapsto r/(1+r)$ is increasing.
+\end{proof}
+
+\begin{proposition}\label{prop:det}
+Let $\Tr W=n$. For item~11, $V(W)=1-\mathrm{GM}/\mathrm{AM}$ of the eigenvalues of $W$, attained at $A=W^{-1}$. Over
+the densities with contrast $\delta$ the maximum is attained at a two-level spectrum:
+\[
+  V_n(\delta)=1-\min_{1\le m<n}\frac{n\,\ell^{(n-m)/n}}{m+(n-m)\ell},\qquad\ell=\frac1h=\frac{1-\delta}{1+\delta}.
+\]
+In particular $V_2=1-\sqrt{1-\delta^2}$, and $V_n\uparrow1-1/S(h)$ as $n\to\infty$, where
+$S(h)=\frac{(h-1)h^{1/(h-1)}}{e\log h}$ is the Specht ratio.
+\end{proposition}
+\begin{proof}
+By the AM--GM inequality for the eigenvalues of $W^{1/2}AW^{1/2}$, $\varphi_W(A)/n\ge(\det W\det A)^{1/n}$, with
+equality for $A=W^{-1}$, so $\inf_{A>0}\varphi_W(A)/(n(\det A)^{1/n})=(\det W)^{1/n}$ and $V(W)=1-(\det W)^{1/n}$, which
+for $\Tr W=n$ is $1-\mathrm{GM}/\mathrm{AM}$. In the coordinates $x_i=\log w_i$, $\mathrm{AM}/\mathrm{GM}=\frac1n\sum_i
+e^{x_i-\bar x}$ is convex, so on the box of spectra in $[b,a]$ it is maximal at a vertex, a two-level spectrum with $m$
+eigenvalues $a$ and $n-m$ eigenvalues $b$; this gives the formula. Its limit is Specht's theorem~\cite{specht1960}:
+$\sup\mathrm{AM}/\mathrm{GM}$ over all finite families in $[b,a]$ is $S(h)$.
+\end{proof}
+
+\begin{proposition}\label{prop:power}
+Let $\Tr W=n$. For item~24, $V(W)=w_{\min}^{-1/2}-1$, and
+\[
+  V_n(\delta)=\sqrt{\frac{\ell+n-1}{n\ell}}-1,\qquad\ell=\frac{1-\delta}{1+\delta};
+\]
+$V_2=(1-\delta)^{-1/2}-1\sim\delta/2$, $V_n\sim\frac{n-1}n\delta$, and $V_n\uparrow\sqrt h-1$ as $n\to\infty$.
+\end{proposition}
+\begin{proof}
+For $A\ge0$, $\varphi(A^2)=\Tr(A^{1/2}WA^{1/2}A)\le\|A\|\varphi(A)\le\Tr(A)\varphi(A)\le\varphi(A)^2/w_{\min}$, with equality for
+the projection onto an eigenvector for $w_{\min}$. With $\Tr W=n$ and the extreme eigenvalues in the ratio $h$,
+$w_{\min}=nb/\sum_iw_i\ge nb/(b+(n-1)a)=n\ell/(\ell+n-1)$, with equality for the spectrum $\{a,\dots,a,b\}$. For
+$n=2$, $(\ell+1)/(2\ell)=1/(1-\delta)$.
+\end{proof}
+
+\begin{remark}
+Items 11 and 24 characterise the canonical trace among the functionals with $\varphi(1)=n$, so they are violated also by
+central densities on a direct sum (Section~\ref{sec:sectors}), and their envelopes grow with $n$, unlike all others with
+a closed form.
+\end{remark}
+
+\section{Inequalities for two projections}\label{sec:proj}
+
+\begin{theorem}\label{thm:proj}
+Let $W>0$ in $M_n$, $n\ge2$, with $\Delta(W)=\delta$, and let $P,Q$ be projections. With $N$ as in
+Table~\ref{tab:items}:
+\begin{enumerate}
+\item[(17)] $V_n=\kappa^2-1$ for $\varphi(PQP)\le\varphi(Q)$;
+\item[(18)] $V_n=\kappa-1$ for $\varphi(|P-Q|)\le\varphi(P+Q)$;
+\item[(19)] $V_n=\delta$ for $\varphi(P+Q)\le\varphi(1+P\wedge Q)$ if $n$ is even, and $V_n=(n-1)\delta/(n-\delta)$ if $n$
+is odd;
+\item[(20)] for $\varphi(e^{QPQ})\le\varphi(e^P)$ and even $n$, $V_n=\max_{0<g<\pi}\lambda(\delta,g)$, where $\lambda(\delta,g)$ is
+the larger root of the quadratic~\eqref{eq:quad} below, and $V_n=\frac{(e-1)^2}{e(e+1)}\delta^2+O(\delta^3)$;
+\item[(21)] $V_n=\frac12\tan^2(\psi/2)$ for $\varphi(\Re PQ)\ge0$;
+\item[(22)] $V_n=\kappa-1$ for $\varphi(\Re PQ)\le\varphi(|PQ|)$;
+\item[(23)] $V_n=\delta/(1-\delta)$ for $\varphi(P\vee Q)\le\varphi(P)+\varphi(Q)$.
+\end{enumerate}
+The values are attained in 17, 18, 20--22 by rank-one $P,Q$, and approached in 19 and 23 as $P\ne Q$ tend to the same
+eigenvector of $W$. For odd $n$, $V_n$ in item~20 lies between the $M_2$ value and the same maximum with
+$(1-\delta)/(n-1)$ added to $\beta$ in~\eqref{eq:quad}.
+\end{theorem}
+
+\begin{proof}
+\emph{Step 1: reduction to rank-one projections on $M_2$.} By Lemma~\ref{lem:halmos}, $\C^n=\bigoplus_jH_j$ with
+$\dim H_j\in\{1,2\}$, every $H_j$ invariant under $P$ and $Q$. Every operator in $L$, $R$ and $N$ (namely $PQP$, $Q$,
+$|P-Q|$, $P+Q$, $1+P\wedge Q$, $e^{QPQ}$, $e^P$, $\Re PQ$, $|PQ|$, $P\vee Q$) is then block diagonal, with the block
+obtained from $P_j,Q_j$; for the lattice operations because $\mathrm{ran}\,P\cap\mathrm{ran}\,Q=\bigoplus_j(\mathrm{ran}\,
+P_j\cap\mathrm{ran}\,Q_j)$, the projections onto the $H_j$ commuting with $P$ and $Q$. Hence $L=\sum_jL_j$, $R=\sum_jR_j$ and
+$N=\sum_jN_j$, where $L_j$ is the same expression for $P_j,Q_j$ and the functional $\Tr(W_j\,\cdot\,)$ on $H_j$, with the
+compression $W_j$ of $W$ to $H_j$; its spectrum lies in $[b,a]$, so $\Delta(W_j)\le\delta$. On a one-dimensional $H_j$,
+$P_j,Q_j\in\{0,1\}$ commute and $L_j\le R_j$ in all seven items (e.g.\ $\max(p,q)\le p+q$, $p+q\le1+pq$, $e^{pq}\le e^p$).
+On a two-dimensional $H_j$, $P_j\ne Q_j$ are rank-one projections. Since $N_j\ge0$, and $L_j\le R_j$ wherever $N_j=0$,
+\[
+  \frac{L-R}N\le\max_j\frac{L_j-R_j}{N_j},
+\]
+and the quotients do not change when $W_j$ is scaled. It therefore suffices to bound $(L-R)/N$ for
+$W=\frac12(1+\tau\sigma_3)$, $0\le\tau\le\delta$, and $P=\frac12(1+\mu\cdot\sigma)$, $Q=\frac12(1+\nu\cdot\sigma)$ with unit
+Bloch vectors $\mu\ne\nu$ in $\R^3$ ($\sigma=(\sigma_1,\sigma_2,\sigma_3)$ the Pauli matrices). For fixed $\mu,\nu$ the
+quotient is a linear-fractional function of $\tau$ (all three quantities are affine in $W$) with positive denominator, hence
+monotone on $[-\delta,\delta]$; conjugation by $\sigma_1$ maps $\tau$ to $-\tau$ and $(\mu,\nu)$ to reflected vectors. So
+the bound for $\tau=\delta$ covers every $\tau\le\delta$, and the $M_2$ envelope bounds the envelope in every dimension.
+In 17, 18 and 21--23, $N$ vanishes on blocks where $P=Q=0$, so the values below, attained (or approached) on $M_2$, are
+attained (approached) on $M_n$ with $P,Q$ supported on the span of $e_1,e_2$. In 19 and 20, $N$ contains $\varphi(1)$,
+which we treat at the end.
+
+\emph{Step 2: formulas on $M_2$.} Write $\varphi(x_0+x\cdot\sigma)=x_0+\delta x_3$, $\mu\cdot\nu=\cos2\theta$
+($0<\theta\le\pi/2$) and $c=\cos\theta=|\langle u,v\rangle|$ for unit vectors $u,v$ with $P=uu^*$, $Q=vv^*$. Then
+$PQP=c^2P$, $(P-Q)^2=\sin^2\theta\cdot1$, $P\wedge Q=0$, $P\vee Q=1$, $\Re PQ=\frac14(1+\mu\cdot\nu+(\mu+\nu)\cdot\sigma)$,
+$|PQ|=(QPQ)^{1/2}=cQ$, $e^{QPQ}=1+(e^{c^2}-1)Q$, $e^P=1+(e-1)P$, and $|\mu+\nu|=2\cos\theta$. We use the following
+elementary fact: \emph{for $\beta>|z|$, $\max_{|\xi|=1}(\alpha+y\cdot\xi)/(\beta+z\cdot\xi)$ is the unique zero $\lambda$ of
+$\alpha-\lambda\beta+|y-\lambda z|$}, since $(\alpha+y\cdot\xi)-\lambda(\beta+z\cdot\xi)\le\alpha-\lambda\beta+|y-\lambda z|$
+with equality for $\xi\parallel y-\lambda z$, and the right-hand side decreases strictly in $\lambda$.
+
+(17) $L/R=(1+\mu\cdot\nu)(1+\delta\mu_3)/(2(1+\delta\nu_3))$. For fixed $\mu$, the fact with $\alpha=\beta=1$, $y=\mu$,
+$z=\delta e_3$ gives $\max_\nu(1+\mu\cdot\nu)/(1+\delta\nu_3)=2(1-\delta\mu_3)/(1-\delta^2)$, so
+$L/R\le(1-\delta^2\mu_3^2)/(1-\delta^2)\le\kappa^2$, with equality for $\mu_3=0$ and $\nu=(\mu-\lambda\delta e_3)/(\lambda-1)$,
+$\lambda=2/(1-\delta^2)$.
+
+(18) $L/R=\sin\theta/(1+\frac\delta2(\mu_3+\nu_3))\le\sin\theta/(1-\delta\cos\theta)\le\kappa$, the maximum being at
+$\cos\theta=\delta$, $\mu+\nu\parallel-e_3$. (Alternatively, $\varphi(|P-Q|)\le\kappa\varphi(P+Q)$ is the triangle inequality
+of Theorem~\ref{thm:kant} with $X=P$, $Y=-Q$.)
+
+(19) $(L-R)/N=\varphi(P+Q)-1=\frac\delta2(\mu_3+\nu_3)<\delta$, approached as $\mu,\nu\to e_3$.
+
+(20) For fixed $g=2\theta$, the pair $(\mu_3,\nu_3)$ ranges over the image of the unit sphere under $\xi\mapsto(\mu\cdot
+\xi,\nu\cdot\xi)$, a filled ellipse, and the linear-fractional quotient is maximal on its boundary, $\mu_3=\cos x$,
+$\nu_3=\cos(x+g)$. With $K=e-1$ and $E=e^{\cos^2(g/2)}-1$,
+\[
+  \frac{L-R}N=\frac{\alpha+y\cdot\xi_x}{\beta+z\cdot\xi_x},\quad \alpha=\tfrac{E-K}2,\ y=\tfrac\delta2(E\cos g-K,\,-E\sin g),
+  \ \beta=1+\tfrac K2,\ z=(\tfrac{\delta K}2,0),
+\]
+$\xi_x=(\cos x,\sin x)$. By the fact, its maximum $\lambda(\delta,g)$ is the larger root of
+\begin{equation}\label{eq:quad}
+  (\beta^2-|z|^2)\lambda^2-2(\alpha\beta-y\cdot z)\lambda+\alpha^2-|y|^2=0 .
+\end{equation}
+For small $\delta$ the maximiser has $g=2K\delta/e+O(\delta^2)$, $x=\pi/2$, and $L-R=-\frac e8g^2+\frac{K\delta}2g+O(\delta^3)$,
+which gives $V=K^2\delta^2/(e(e+1))+O(\delta^3)$.
+
+(21) With $s=\mu_3+\nu_3\ge-2\cos\theta$, $(L-R)/N=-(2\cos^2\theta+\delta s)/(4(1+\frac\delta2s))$, which decreases in $s$;
+so $(L-R)/N\le(\delta C-C^2)/(2(1-\delta C))$, $C=\cos\theta$. The maximum over $C$ is at $\delta C^2-2C+\delta=0$,
+$C=\tan(\psi/2)$, with the value $C^2/2=\frac12\tan^2(\psi/2)$.
+
+(22) $\varphi(\Re PQ)=\Re\varphi(PQ)\le|\varphi(PQ)|\le\kappa\varphi(|PQ|)$ by Theorem~\ref{thm:kant}, in every dimension.
+Equality: $v=\sqrt{b/(a+b)}\,e_1+\sqrt{a/(a+b)}\,e_2$, $u=Wv/\|Wv\|$; then $PQ=\langle u,v\rangle uv^*$ has the polar factor
+of the equality case of Theorem~\ref{thm:kant}.
+
+(23) $L/R=1/(1+\frac\delta2(\mu_3+\nu_3))<1/(1-\delta)$, approached as $\mu,\nu\to-e_3$.
+
+\emph{Step 3: items 19 and 20 in dimension $n$.} For even $n$ take $W$ with the eigenvalues $a$ and $b$, each $n/2$
+times, and $n/2$ copies of the $M_2$ extremiser, one in each block spanned by an eigenvector for $a$ and one for $b$;
+this attains (approaches) the $M_2$ value, which is an upper bound by Step~1. For odd $n$ at least one block of
+Lemma~\ref{lem:halmos} is one-dimensional, so there are $k'\le k=(n-1)/2$ two-dimensional blocks. In item~19,
+$N\ge\varphi(1)=\Tr W$; by Step~2 a two-dimensional block contributes $L_j-R_j=\Tr W_j\cdot\frac{\Delta(W_j)}2(\mu_3+\nu_3)
+<\lambda_1(W_j)-\lambda_2(W_j)$, and a one-dimensional one $L_j-R_j\le0$. By Ky Fan's maximum
+principle~\cite[Sect.~III.1]{bhatia1997}, $\sum_j\lambda_1(W_j)$ is at most the sum of the $k'$ largest and
+$\sum_j\lambda_2(W_j)$ at least the sum of the $k'$ smallest eigenvalues of $W$. The resulting bound for $(L-R)/N$ is a
+linear-fractional function of the spectrum of $W$ and is maximal for $k'=k$ and the spectrum $a^{(k)},b^{(k+1)}$; hence
+$(L-R)/N<k(a-b)/(k(a+b)+b)=(n-1)\delta/(n-\delta)$, which is approached for this spectrum with $P=1$, $Q=0$ on the remaining
+eigenvector (a block with $L_j=R_j$). In item~20 the same configuration, with $P=Q=0$ on the remaining eigenvector, adds $b/k$ per block
+to $N$, i.e.\ $(1-\delta)/(n-1)$ to $\beta$ (normalisation $\Tr W_j=1$); this gives the lower bound, and the $M_2$ value
+the upper bound.
+\end{proof}
+
+\section{Lower bounds}\label{sec:lower}
+
+\begin{proposition}\label{prop:lower}
+For every $n\ge2$:
+\begin{enumerate}
+\item[(a)] $V_n\ge\kappa-1$ for item~6 (approached);
+\item[(b)] $V_n\ge\kappa^2-1=\delta^2/(1-\delta^2)$ for item~7 (approached);
+\item[(c)] $V_n\ge m(\delta):=\max_{0<y<\delta}\dfrac{y^2(\delta-y)^2}{(1-2\delta y+y^2)(1-y^2)}=\dfrac{\delta^4}{16}+O(\delta^5)$
+for item~10 (attained);
+\item[(d)] $V_n\ge\delta^2/36+O(\delta^3)$ for item~14, and more generally
+$(1-\frac2p)^2\delta^2/4+O(\delta^3)$ for Hölder's inequality $|\varphi(PQ)|\le\varphi(P)^{1/p}\varphi(Q)^{1/q}$.
+\end{enumerate}
+By Lemma~\ref{lem:upper}, $V_n\le h-1$ in (a)--(c).
+\end{proposition}
+\begin{proof}
+All constructions live on $\mathrm{span}\{e_1,e_2\}$ (extended by $0$, or by a small multiple of the identity where
+positive definiteness is required); let $e_\pm=(e_1\pm e_2)/\sqrt2$.
+
+(a) For invertible $A$ and a rank-one $B=vv^*$, $\|v\|=1$, we have $A^{-1}\#vv^*=(v^*Av)^{-1/2}vv^*$, hence
+$(A^{-1}\#B)^{1/2}=(v^*Av)^{-1/4}vv^*$ and $A\natural B=(v^*Av)^{1/2}vv^*$. With $v=e_+$ and $A=xx^*+\varepsilon$,
+\[
+  \frac{\varphi(A\natural B)^2}{\varphi(A)\varphi(B)}=\frac{(v^*Av)(v^*Wv)}{\Tr(WA)}\ \xrightarrow[\varepsilon\to0]{}\
+  \frac{|v^*x|^2\,v^*Wv}{x^*Wx},
+\]
+which for $x=W^{-1}v$ equals $(v^*W^{-1}v)(v^*Wv)=\frac14(a^{-1}+b^{-1})(a+b)=\kappa^2$. By continuity the quotient
+$L/R$ approaches $\kappa$ for positive definite $A$, $B=vv^*+\varepsilon'$.
+
+(b) In the basis $f_1=e_+$, $f_2=e_-$ the density has the entries $W_{11}=W_{22}=\frac{a+b}2$, $W_{12}=\frac{a-b}2$. Take
+$B=\eta f_1f_1^*+f_2f_2^*$ and $A=uu^*$ with $u=f_1+s\eta f_2$. Then $B^{1/2}AB^{1/2}=ww^*$ with $w=\sqrt\eta f_1+s\eta f_2$,
+so $L=\|w\|^2\,w^*Ww=\eta^2W_{11}+O(\eta^{5/2})$, and $Bu=\eta(f_1+sf_2)$, so $R=\|u\|^2\eta^2(W_{11}+2sW_{12}+s^2W_{22})$.
+As $\eta\to0$, $L/R\to W_{11}/(W_{11}+2sW_{12}+s^2W_{22})$, which at $s=-W_{12}/W_{22}$ equals
+$W_{11}W_{22}/(W_{11}W_{22}-W_{12}^2)=(a+b)^2/(4ab)=\kappa^2$.
+
+(c) Normalise $a+b=2$, so $W=\mathrm{diag}(1+\delta,1-\delta)$, and take $A=uu^*$, $B=A+tvv^*$, $t\ge0$, with
+$u=(\cos\alpha,\sin\alpha)$, $v=(-\cos\alpha,\sin\alpha)$ and $y=-\cos2\alpha$. Then $u^*v=y$, $v^*Wu=y-\delta$ and
+$u^*Wu=v^*Wv=1-\delta y$, so
+\[
+  L-R=\varphi(A^2)-\varphi(B^2)=-2t\Re\bigl((u^*v)(v^*Wu)\bigr)-t^2v^*Wv=2ty(\delta-y)-t^2(1-\delta y).
+\]
+For $0<y<\delta$ the best $t=y(\delta-y)/(1-\delta y)>0$ gives $L-R=G:=y^2(\delta-y)^2/(1-\delta y)$ and
+$(L-R)/R=G/(1-\delta y-G)=y^2(\delta-y)^2/((1-2\delta y+y^2)(1-y^2))$. Maximising over $y$ gives $m(\delta)$; the leading
+order comes from $y=\delta/2$.
+
+(d) Take $W=\frac12(1+\delta D)$, $D=\mathrm{diag}(1,-1)$, and real unit vectors $u,v$ at the angles $m\pm\varepsilon/2$ to
+$e_1$, $P=uu^*$, $Q=vv^*$. Then $\varphi(PQ)=\frac12(\cos^2\varepsilon+\delta\cos\varepsilon\cos2m)$ and
+$\varphi(P)^{1/p}\varphi(Q)^{1/q}=\frac12\bigl(1+\delta\cos2m+\delta(\frac1q-\frac1p)\varepsilon\sin2m\bigr)+O(\delta^2\varepsilon^2)$,
+so $L-R=\frac12\bigl(-\varepsilon^2-\delta(1-\frac2p)\varepsilon\sin2m\bigr)+O(\delta^3)$ for $\varepsilon=O(\delta)$. The choice
+$m=\pi/4$, $\varepsilon=-\frac\delta2(1-\frac2p)$ gives $L-R=\frac18(1-\frac2p)^2\delta^2+O(\delta^3)$ and $R=\frac12+O(\delta)$.
+\end{proof}
+
+\begin{proposition}\label{prop:wmon}
+For item~25 ($\varphi(A^4)\le\varphi(AB^2A)$ for $0\le A\le B$), rank-one $A$ gives no violation, and an explicit
+construction with $A$ of rank two and $B-A$ of rank one gives
+\[
+  V_n\ge m_{25}(\delta)=\frac{\delta^8}{4096}\bigl(1+O(\delta^2)\bigr)\qquad\text{in every dimension }n\ge2 .
+\]
+\end{proposition}
+\begin{proof}
+If $A=\alpha uu^*$ has rank one and $A\le B$, then $u^*Bu\ge\alpha$ and $AB^2A=\alpha^2\|Bu\|^2uu^*\ge\alpha^2(u^*Bu)^2uu^*\ge
+A^4$, so every positive $\varphi$ satisfies the inequality. For the construction take $W$ with $\Tr W=1$ and eigenvalues
+$(1\pm\delta)/2$, and, in an orthonormal basis at the angle $\vartheta$ to its eigenbasis, $A=\mathrm{diag}(1,s)$, $0<s<1$,
+and $B=A+tvv^*$ with $v=(\cos\phi,\sin\phi)$; in this basis $W$ has the entries $w_{11,22}=\frac12(1\pm\delta\cos2\vartheta)$
+and $w_{12}=\frac\delta2\sin2\vartheta$. Then $R-L=tT_1+t^2T_2$ with $T_1=\varphi(A^2P_vA+AP_vA^2)$, $T_2=\varphi(AP_vA)$,
+$P_v=vv^*$, and whenever $T_1<0$ the best $t=-T_1/(2T_2)$ gives $(L-R)/R=G/(L-G)$, $G=T_1^2/(4T_2)$. Let $m_{25}(\delta)$
+be the maximum over $(\vartheta,s,\phi)$; it is attained, and by embedding $\C^2\subset\C^n$ (with $A$, $B$ extended by $0$)
+it is a lower bound in every dimension. For the leading order put $\vartheta=\pi/4$, $\sqrt s=\sigma\delta$ and $\tan\phi=-\varrho
+s^{-3/2}$. Then $T_1=\cos^2\phi\,(1+\varrho^2-(1+s)\varrho/\sigma)$, $T_2=\cos^2\phi\,(\frac12+\frac{\varrho^2}{2s}-\frac\varrho\sigma)$ and
+$\cos^2\phi=s^3/(s^3+\varrho^2)$, so that
+\[
+  \frac{L-R}R=\bigl(\sigma^2(\varsigma-\varsigma^2)-\sigma^4\bigr)^2\delta^8+O(\delta^{10}),\qquad\varsigma=\sigma/\varrho,
+\]
+which is maximal for $\varsigma=\frac12$, $\sigma^2=\frac18$, with the value $\delta^8/4096$.
+\end{proof}
+
+\noindent The numerical maximisation gives $m_{25}(0.1)/(0.1^8/4096)=\TCWmonLead$. The same scaling for a general
+exponent $r\ge0$ in $\varphi(A^{2r+2})\le\varphi(A^rB^2A^r)$ gives the order $\delta^{4(r+1)}$; for $r=0$ the supremum of
+the leading coefficient is $\frac1{16}$, that of item~10.
+
+\begin{remark}\label{rem:13}
+With $N=R$, item~13 would have $V=\infty$ for every $\delta>0$: for rank-one $A=uu^*$, $B=vv^*$ with overlap $c=|u^*v|\to0$,
+$L\approx2c\,|u^*Wu_\perp|$ while $R=2c^2u^*Wu$. This is why we normalise by $\varphi(A+B)$.
+\end{remark}
+
+\section{Direct sums: only the contrast inside the blocks matters}\label{sec:sectors}
+
+Let $\M=\bigoplus_{c=1}^CM_{k_c}$, with the trace $\Tr=\sum_c\Tr_c$ and $\varphi_W=\Tr(W\,\cdot\,)$, $W=\bigoplus_cW_c\ge0$. The
+traces on $\M$ are the functionals $\sum_ct_c\Tr_c$, $t_c\ge0$; so $\varphi_W$ is a trace iff $W$ is central, whatever its
+global contrast. The global contrast $\Delta(W)$ thus says nothing about traciality, and the following theorem shows that
+it says nothing about the size of the violation either.
+
+\begin{theorem}\label{thm:sectors}
+Let $W=\bigoplus_cW_c>0$ in $\M$, and let $V_\M(W)$ and $V_{M_{k_c}}(W_c)$ be the suprema of the normalised violation of
+one inequality of Table~\ref{tab:items}, other than 11, 16 and 24, for $\varphi_W$ on $\M$ and for $\varphi_{W_c}$ on
+$M_{k_c}$. Then
+\[
+  V_\M(W)\le\max_cV_{M_{k_c}}(W_c),
+\]
+with equality for items 1--10, 12--14, 17, 18, 21--23 and~25. In particular, if every $W_c$ is scalar, no inequality of
+Table~\ref{tab:items} except 11 and 24 is violated, however different the scalars are; and the envelope on $\M$ along
+the intra-block contrast $\max_c\Delta(W_c)=\delta$ is at most the largest envelope $V_{k_c}(\delta)$ of the blocks.
+\end{theorem}
+\begin{proof}
+All variables of the items are in $\M$, hence block diagonal, and every functional calculus acts blockwise. Let $L_c$,
+$R_c$, $N_c$ be the expressions of the item for the block variables and $\varphi_{W_c}$. For all items except 11, 16 and~24,
+$L\le\sum_cL_c$ (with equality unless $L$ contains an absolute value of a functional, as in 1, 4 and~14),
+$N=\sum_cN_c$, and $R=\sum_cR_c$, except in items 6 and~14, where $R=\sqrt{\sum_c\varphi_c(A_c)\sum_c\varphi_c(B_c)}\ge
+\sum_cR_c$ by the Cauchy--Schwarz inequality and $R\ge\sum_cR_c$ by Hölder's inequality. Since $W>0$, $N_c=0$ forces the
+variables of block~$c$ to vanish where they enter $L_c$, so $L_c\le R_c$ there. Hence
+$(L-R)/N\le\sum_c(L_c-R_c)/\sum_cN_c\le\max_c(L_c-R_c)/N_c$, the maximum over the blocks with $N_c>0$ (for $N=R$ in items 6
+and~14 use $L/R\le\sum_cL_c/\sum_cR_c$ instead). This proves the inequality. For the equality, in the
+listed items $N$ is additive and the variables may vanish on all blocks but one without making $N$ vanish; restricting a
+near-optimal configuration of one block and setting the variables to zero on the other blocks reproduces its quotient
+(in 19, 20 and 15, $N$ contains $\varphi(1)$ and the other blocks dilute the violation). If every $W_c$ is scalar, every
+$V_{M_{k_c}}(W_c)$ vanishes, since $\varphi_{W_c}$ is then a trace on $M_{k_c}$; for item~16 the same conclusion holds
+because the Peierls--Bogoliubov inequality holds for every trace on $\M$.
+\end{proof}
+
+\begin{remark}
+The theorem is a statement about the characterisations, not about the inequalities: a non-central density is detected by
+every characterisation of traces, but only through the variation \emph{inside} the blocks. Items 11 and 24 characterise
+the \emph{canonical} trace $\Tr$ among the functionals with $\varphi(1)=\dim$, and central $W$ violate them; for a fixed
+density their violations are $1-\mathrm{GM}/\mathrm{AM}$ and $w_{\min}^{-1/2}-1$ of the eigenvalues of $W$ normalised to
+$\Tr W=\sum_ck_c$ (Propositions~\ref{prop:det} and~\ref{prop:power}; the proofs do not use the block structure).
+\end{remark}
+
+\section{Gardner's inequality with two prescribed contrasts}\label{sec:gardner2}
+
+In~\cite[Sect.~5]{abed2024} the violation of Gardner's inequality was studied without normalisation: for $X\ge0$ with
+$\|X\|=1$ (the density) and $Z$ with $\|Z\|=1$, the quantity
+\[
+  z(X,Z)=|\Tr(XZ)|-\Tr(X|Z|)
+\]
+was sampled against $\Delta(X)$ and $\Delta(|Z|)$. Writing $Z=U|Z|$ with a unitary (orthogonal, in the real case) $U$,
+$z=|\Tr(XUY)|-\Tr(XY)$ with $Y=|Z|\ge0$, and $\sup_Uz=\|YX\|_1-\Tr(XY)$ by the duality of the trace norm, the supremum being
+attained at the polar unitary of $YX$, which is real if $X,Y$ are. We first solve the $2\times2$ case.
+
+\begin{proposition}\label{prop:k2}
+Let $X,Y\ge0$ in $M_2(\C)$ have eigenvalues $x_1\ge x_2\ge0$ and $y_1\ge y_2\ge0$, $x_1,y_1>0$. For every unitary $U$,
+\[
+  |\Tr(XUY)|-\Tr(XY)\ \le\ \frac{(x_1-x_2)^2(y_1-y_2)^2}{4(x_1+x_2)(y_1+y_2)} .
+\]
+Let $S=x_1y_2+x_2y_1$, $q=(x_1+x_2)(y_1+y_2)$, and $\gamma=|\langle e_1,f_1\rangle|^2$ for unit eigenvectors $e_1$ of $X$ for
+$x_1$ and $f_1$ of $Y$ for $y_1$. If $x_1>x_2$ and $y_1>y_2$, the bound is attained iff $|\Tr(XUY)|=\|YX\|_1$ and
+$\gamma=\frac14+\frac S{2q}$; it is attained by real $X,Y,U$.
+\end{proposition}
+\begin{proof}
+Let $p=(x_1-x_2)(y_1-y_2)$, so that $q-2S=p$. First, $|\Tr(XUY)|=|\Tr(YXU)|\le\|YX\|_1$. Expanding in the eigenbases,
+$\Tr(XY)=\sum_{ij}x_iy_j|\langle e_i,f_j\rangle|^2=S+\gamma p$, since the matrix $(|\langle e_i,f_j\rangle|^2)$ is doubly
+stochastic. The singular values of $YX$ satisfy $s_1^2+s_2^2=\Tr(X^2Y^2)$ and $s_1s_2=|\det YX|=x_1x_2y_1y_2$, so
+$\|YX\|_1^2=\Tr(X^2Y^2)+2x_1x_2y_1y_2=S^2+\gamma pq$. With $\sqrt r\le r/q+q/4$ (equality iff $\sqrt r=q/2$),
+\[
+  \|YX\|_1-\Tr(XY)\le\frac{S^2+\gamma pq}q+\frac q4-S-\gamma p=\frac{(q/2-S)^2}q=\frac{p^2}{4q},
+\]
+with equality iff $\gamma pq=q^2/4-S^2=\frac p2(\frac q2+S)$. Every $\gamma\in[0,1]$ is realised by a real rotation, and the
+polar unitary of a real $YX$ is real.
+\end{proof}
+
+\begin{theorem}\label{thm:gardner2}
+Let $\M=\bigoplus_{c=1}^CM_{k_c}(\mathbb K)$, $\mathbb K\in\{\R,\C\}$, and $N=\sum_c\lfloor k_c/2\rfloor\ge1$. For $X\ge0$ and
+$Y\ge0$ in $\M$ with $\|X\|=\|Y\|=1$, $\Delta(X)=\delta\in[0,1)$ and $\Delta(Y)=\delta'\in[0,1]$, and every unitary
+(orthogonal) $U\in\M$,
+\[
+  |\Tr(XUY)|-\Tr(XY)\le\frac{N\,\delta^2\delta'^2}{(1+\delta)(1+\delta')},
+\]
+and the bound is attained. Equivalently, $\sup\{|\Tr(XZ)|-\Tr(X|Z|):\|X\|=\|Z\|=1,\ \Delta(X)=\delta,\ \Delta(|Z|)=\delta'\}$
+has this value.
+\end{theorem}
+\begin{proof}
+Let $\ell=(1-\delta)/(1+\delta)$ and $\ell'=(1-\delta')/(1+\delta')$ be the smallest eigenvalues. It suffices to prove the
+bound in the complex algebra, since the maximisers below are real. By the remark above, $\sup_Uz=F(X,Y):=\|YX\|_1-\Tr(XY)$,
+and the polar unitary lies in $\M$. For a fixed eigenbasis of $X$, $F$ is a convex function of the eigenvalues of $X$ (a
+norm of a linear function of them minus a linear function). The admissible eigenvalues form the union of the faces
+$\{x_i=1,\ x_j=\ell\}$ of the cube $[\ell,1]^K$, $K=\sum_ck_c$, and a convex function on a face attains its maximum at a vertex; so
+$F(X,Y)\le F(X',Y)$ for some $X'=\ell+(1-\ell)P$ with a projection $P\in\M$, $P\ne0,1$, and likewise $F(X',Y)\le F(X',Y')$
+with $Y'=\ell'+(1-\ell')Q$. By Lemma~\ref{lem:halmos}, applied in every block, $X'$ and $Y'$ are direct sums over subspaces of
+dimension $1$ or $2$, and so are $\|Y'X'\|_1$ and $\Tr(X'Y')$. One-dimensional summands contribute $0$. On a
+two-dimensional one, $X'=\mathrm{diag}(1,\ell)$ and $Y'$ has the eigenvalues $1,\ell'$, so by Proposition~\ref{prop:k2} it
+contributes at most $(1-\ell)^2(1-\ell')^2/(4(1+\ell)(1+\ell'))=\delta^2\delta'^2/((1+\delta)(1+\delta'))$. A block of size
+$k_c$ holds at most $\lfloor k_c/2\rfloor$ two-dimensional summands. Equality: $N$ blocks $\mathrm{diag}(1,\ell)$ and
+$Y$ with spectrum $\{1,\ell'\}$ at the angle of Proposition~\ref{prop:k2}, $X=Y=1$ on the remaining one-dimensional blocks,
+and the polar unitary, which makes all block traces positive.
+\end{proof}
+
+\begin{remark}
+(i) With the contrast of $|Z|$ free, the supremum $N\delta^2/(2(1+\delta))$ is reached at $\delta'=1$, i.e.\ for singular $Z$.
+(ii) The bound is additive over the blocks: it counts the mutually orthogonal two-dimensional subspaces that fit into the
+blocks, and it does not depend on the sizes of the blocks otherwise. (iii) The normalised version is
+Theorem~\ref{thm:kant}: $\sup_Z|\Tr(XZ)|/\Tr(X|Z|)=\kappa(X)$, attained by a rank-one $|Z|$, i.e.\ at $\Delta(|Z|)=1$.
+The unnormalised supremum vanishes to fourth order at $\delta=\delta'=0$ because the violation needs both operators to be
+far from scalar.
+\end{remark}
+
+\section{Numerical verification and the remaining items}\label{sec:numerics}
+
+\subsection{Method}
+All envelopes were computed by constrained optimisation with our PyTorch library \texttt{torch\_\allowbreak vn\_\allowbreak algebra}~\cite{lib}; the program is \texttt{scripts/\allowbreak trace\_\allowbreak characterizations.py} of the
+repository~\cite{lib}. The density $W$ is diagonal with a spectrum parametrised so that $\Delta(W)=\delta$ holds exactly
+and the other eigenvalues are free. Positive variables have a free contrast in $[0,1]$, so rank-deficient operators are
+included; there are self-adjoint and unitary variables (polar factors, and projections $UDU^*$, with every rank pattern
+spread over the starts), and positive scalars. Half of the starts begin at structured points (two-level spectra, rotations
+in pairs of eigenvectors of $W$). The lattice operations are the spectral projections of $P+Q$ for the eigenvalue $2$ ($P\wedge
+Q$) and for the range ($P\vee Q$), computed by functional calculus with an indicator function, whose Daleckii--Krein
+gradient is the derivative of the spectral projection. In 19 and~23 the suprema are approached as $P$ and $Q$ merge, where
+$P\wedge Q$ and $P\vee Q$ jump; there the search maximises $(L-R)/N-10^{-12}/\|P-Q\|_{\mathrm F}^2$, which keeps $P$ and $Q$
+about $10^{-3}$ apart, while the reported values are those of $(L-R)/N$. A grid of $\TCGridSize$ contrasts times
+$\TCStarts$ starts forms one batch per item and dimension ($\TCSteps$ gradient steps, $n=\TCDims$).
+
+\emph{Certification.} The best final point of every contrast is recomputed in mpmath with $\TCDigits$ digits, after the
+unitaries are re-orthonormalised and the contrast is recomputed from the stored eigenvalues; the lattice operations are
+recomputed from the exact eigenvalues. Every positive value reported below is thus a certified violation at an exactly
+admissible point. The double-precision and mpmath values agree to $\TCCertDev$ (relative), and at $\delta=0$ no value
+exceeds $\TCVzero$. Independently, plain NumPy/SciPy searches (BFGS from $\TCSciStarts$ random starts on $M_2$ at
+$\delta=0.3,0.5,0.9$) give values whose ratio to the batched search lies in $[\TCSciRatioMin,\TCSciRatioMax]$; ratios above
+$1$ come from item~13, where BFGS stops earlier. The test suite compares every objective with a plain NumPy implementation
+and with mpmath, checks that random points stay below the proved envelopes and that the stated extremisers attain them.
+The whole computation takes $\TCSeconds$~s on $\TCWorkers$ CPU processes.
+
+\subsection{Results}
+
+\begin{table}[h]
+\centering\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llllll}
+\toprule
+items & $V^\star(\delta)$ & as $\delta\to0$ & $V^\star(0.5)$ & search $V(0.5)$ & status\\
+\midrule
+\TCClassRows
+\bottomrule
+\end{tabular}
+\caption[]{Classes of behaviour, ordered by the order of vanishing of the envelope at the trace. $V^\star$: the sharp
+value or, where marked $\ge$, a proved lower bound; ``search'': the certified search value on $M_2$ (a range over the
+items of a row). Items 11 and 24 are given for $n=2$.}
+\label{tab:classes}
+\end{table}
+
+\begin{table}[h]
+\centering\scriptsize
+\setlength{\tabcolsep}{1.8pt}
+\begin{tabular}{rlccccccrc}
+\toprule
+ & inequality $L\le R$ & ref. & $V(0.1)$ & $V(0.5)$ & $V(0.9)$ & $V^\star(0.5)$ & order & slope & $n$-dep.\\
+\midrule
+\TCRows
+\bottomrule
+\end{tabular}
+\caption[]{Certified search values on $M_2$ at $\delta=0.1,0.5,0.9$ and the proved values $V^\star$; $^a$: sharp for $n=2$
+only, $^b$: a lower bound, $^c$: approached but not attained. ``order'': leading order of $V^\star$ as $\delta\to0$;
+``slope'': $\log_2(V(0.2)/V(0.1))$ of the search; ``$n$-dep.'': the largest $|V_n/V_2-1|$ for $n=3,4$ and $\delta\ge0.1$ (for
+items 7 and 13 it reflects search shortfalls; items 19 and 20 differ for odd $n$, Theorem~\ref{thm:proj}). ``n.r.'': no
+violation resolved by the search ($\TCMode$ run on $\TCDevice$).}
+\label{tab:values}
+\end{table}
+
+\begin{figure}[t]
+\centering\includegraphics[width=\textwidth]{trace_characterizations.pdf}
+\caption[]{Certified search values on $M_2$ (symbols) and closed forms or lower bounds (solid and dashed lines), on
+logarithmic axes, grouped by the order of vanishing: (a) order $\delta$; (b) order $\delta^2$ with sharp values; (c) order
+$\delta^2$, lower bounds (6, 7) and items without a closed form (12--16; dotted: $\delta^2/2$ and $\delta^2/36$); (d) higher
+order (10: $\delta^4$; 25: $\delta^8$; the search resolves item~25 only for $\delta\ge\TCWmonFirst$). (e) The search
+divided by $V^\star$ for each item and $n=2,3,4$ (segments: range over $\delta\ge0.05$; symbols: the minimum). Items 6 and
+7 reach their suprema only as an operator becomes singular, and the search stays below them; the item-6 values above~1
+are certified violations beyond $\kappa-1$ for $n\ge3$. (f) The items that depend on $n$: 11 and 24 (exact, lines) and 6
+(search).}
+\label{fig:tc}
+\end{figure}
+
+Tables~\ref{tab:classes} and~\ref{tab:values} and Figure~\ref{fig:tc} summarise the computation.
+
+\begin{enumerate}
+\item[(i)] \emph{Agreement with the theorems.} Where the envelope is known exactly and attained (items 1--5, 8, 11, and 9
+for $n=2$), the search reproduces it to $\TCSharpDev$ for $\delta\ge0.05$ and $n=2,3,4$; for items 17, 18, 20--22 and 24
+to $\TCSharpDevNew$, and for the approached suprema of 19 and 23 to $\TCSharpDevApproached$. Apart from item~6 with
+$n\ge3$, no value exceeds the lower bounds of Section~\ref{sec:lower} (largest relative excess $\TCBoundExcess$). The
+values of 17, 18 and 21--23 on $M_3$ and $M_4$ agree with the $M_2$ values to $\TCNDevNew$, as Theorem~\ref{thm:proj}
+predicts, and the search on $M_3$ finds the odd-$n$ value $\TCExpOddHalf$ of item~20 at $\delta=0.5$ ($M_2$:
+$\TCRefExpqpqHalf$).
+\item[(ii)] \emph{Items without a closed form.} All five items 12--16 fail quadratically, with $V\approx0.5\,\delta^2$
+(12, 13), $\delta^2/36$ (14, equal to the bound of Proposition~\ref{prop:lower}(d) to leading order), $0.064\,\delta^2$ (15)
+and $0.09\,\delta^2$ (16). Item~15 decreases with $n$, because the identity part of $e^{P/2}e^Qe^{P/2}$ enters $N$; the
+others give the same values for $n=2,3,4$. In item~16 the best points have large $\|A\|$, $\|B\|$, and the supremum is
+approached as the scale grows.
+\item[(iii)] \emph{Dimension.} For items 9 and 10 the search gives the same values for $n=3,4$ as for $n=2$, to $\TCNDev$.
+Item~6 depends on $n$: for $n=2$ the search never exceeds $\kappa-1$, but for $n\ge3$ it certifies larger violations,
+$V\ge\TCSGMExcessV$ at $n=\TCSGMExcessN$, $\delta=\TCSGMExcessDelta$, where $\kappa-1=\TCSGMExcessKappa$; a stored point gives
+$V>2.1$ at $n=3$, $\delta=0.9$, where $\kappa-1=1.29$. We only know $\kappa-1\le V_6\le h-1$.
+\item[(iv)] \emph{Extremisers.} Except for items 6 ($n\ge3$), 11 ($A=W^{-1}$) and 25 ($A$ of rank two with eigenvalue
+ratio $\approx\delta^2/8$), the extremisers are rank-one operators or matrix units in the span of eigenvectors for $a$ and
+$b$, and they do not commute with $W$.
+\item[(v)] \emph{Limits of the search.} The suprema of 6 and 7 are approached only as an operator becomes singular;
+gradient ascent reaches $\TCSGMRatioHalf$ and $\TCALTRatioHalf$ of the bound at $\delta=0.5$, and finds no violation of
+item~6 for $\delta\le0.2$. Item~25 is resolved for $\delta\ge\TCWmonFirst$; the search reaches $m_{25}$ to $10^{-3}$ for
+$\delta\ge\TCWmonReach$ and does not exceed it.
+\item[(vi)] \emph{Direct sums.} On $M_2\oplus M_3$ with $W=1\oplus s1$ and $W=\mathrm{diag}(1,\ell)\oplus s1$, $s\in\{\frac14,4\}$,
+intra-block contrast $\delta\in\{0.3,0.5,0.7\}$: for central $W$ the largest value found for the items that hold for every
+trace is $\TCSectorCentral$; for 11 and 24 the search reproduces the exact values for the fixed density to $\TCSectorDet$;
+with intra-block contrast no value exceeds the $M_2$ envelope (largest relative excess $\TCSectorExcess$), and where
+Theorem~\ref{thm:sectors} gives equality the search reaches it to $10^{-3}$ in $\TCSectorReached$ of $\TCSectorTotal$ cases.
+\end{enumerate}
+
+\section{Open problems}\label{sec:open}
+
+\begin{conjecture}
+$V_n=\kappa^2-1$ for item~7, $V_n=m(\delta)$ for item~10 and $V_n=m_{25}(\delta)$ for item~25 in every dimension;
+$V_2=\kappa-1$ for item~6; and the value of Proposition~\ref{prop:abed} holds for item~9 in every dimension.
+\end{conjecture}
+
+\noindent Further questions: (1) the envelope of item~6 for $n\ge3$, where the search exceeds $\kappa-1$, and whether it
+grows with $n$; (2) closed forms for items 12--16, whose leading coefficients the search gives as $\frac12$, $\frac12$,
+$\frac1{36}$, $0.064$ and $0.09$ (item 14: the leading coefficient $(1-\frac2p)^2/4$ is a lower bound); (3) the analogues
+for infinite-dimensional von Neumann algebras, where the contrast of an unbounded density may be $1$ while the functional
+is still close to a trace in other senses; (4) envelopes for other inequalities that characterise traces, e.g.\ those
+of~\cite{moslehian2025jmaa,bikchentaev2026sgm} with the arithmetic mean, and for the dual problem of characterising
+central elements~\cite{novikov2015}.
+
+\paragraph{Code availability.} The library, the program that computes all numbers, tables and the figure, and the tests
+are available at \url{https://github.com/andre-a-no/von_neumann_type_i} (MIT licence).
+
+{\sloppy
+\begin{thebibliography}{99}
+\bibitem{abed2024} S.~A.~Abed, I.~A.~Nikolaeva, A.~A.~Novikov, ``Generalisation of Michelson contrast for
+  operators and its properties'', Lobachevskii J.\ Math.\ 45 (2024), no.~8, 3835--3848; arXiv:2010.10130.
+\bibitem{ando1995} T.~Ando, ``Matrix Young inequalities'', in: \emph{Operator Theory in Function Spaces and Banach
+  Lattices}, Oper.\ Theory Adv.\ Appl.\ 75, Birkh\"auser, Basel, 1995, 33--38.
+\bibitem{bhatia1997} R.~Bhatia, \emph{Matrix Analysis}, Graduate Texts in Mathematics 169, Springer, 1997.
+\bibitem{bikchentaev2005young} A.~M.~Bikchentaev, O.~E.~Tikhonov, ``Characterization of the trace by Young's
+  inequality'', J.\ Inequal.\ Pure Appl.\ Math.\ 6 (2005), no.~2, Art.~49.
+\bibitem{bikchentaev2007mono} A.~M.~Bikchentaev, O.~E.~Tikhonov, ``Characterization of the trace by monotonicity
+  inequalities'', Linear Algebra Appl.\ 422 (2007), no.~1, 274--278.
+\bibitem{bikchentaev2009rm} A.~M.~Bikchentaev, ``Commutativity of projectors and trace characterization on von Neumann
+  algebras.~I'', Russian Math.\ (Iz.\ VUZ) 53 (2009), no.~12, 68--71.
+\bibitem{bikchentaev2010smj} A.~M.~Bikchentaev, ``Commutativity of projections and characterization of traces on von
+  Neumann algebras'', Sib.\ Math.\ J.\ 51 (2010), no.~6, 971--977.
+\bibitem{bikchentaev2011mn} A.~M.~Bikchentaev, ``Commutation of projections and trace characterization on von
+  Neumann algebras.~II'', Math.\ Notes 89 (2011), no.~3--4, 461--471.
+\bibitem{bikchentaev2011pb} A.~M.~Bikchentaev, ``The Peierls--Bogoliubov inequality in C$^*$-algebras and
+  characterization of tracial functionals'', Lobachevskii J.\ Math.\ 32 (2011), no.~3, 175--179.
+\bibitem{bikchentaev2019abed} A.~M.~Bikchentaev, S.~A.~Abed, ``Projections and traces on von Neumann algebras'',
+  Lobachevskii J.\ Math.\ 40 (2019), no.~9, 1260--1267.
+\bibitem{bikchentaev2019metric} A.~M.~Bikchentaev, ``Metrics on projections of the von Neumann algebra associated
+  with tracial functionals'', Sib.\ Math.\ J.\ 60 (2019), 952--956.
+\bibitem{bikchentaev2020det} A.~M.~Bikchentaev, ``Inequalities for determinants and characterization of the
+  trace'', Sib.\ Math.\ J.\ 61 (2020), no.~2, 248--254.
+\bibitem{bikchentaev2025survey} A.~M.~Bikchentaev, M.~S.~Moslehian, ``Characterizations of tracial functionals on
+  matrix and operator algebras'', Bull.\ Belg.\ Math.\ Soc.\ Simon Stevin 32 (2025), no.~3, 343--361.
+\bibitem{bikchentaev2026moslehian} A.~M.~Bikchentaev, M.~S.~Moslehian, ``Trace inequalities and characterizations
+  of tracial functionals in operator algebras'', Positivity 30 (2026), Art.~24; doi:10.1007/s11117-026-01180-0.
+\bibitem{bikchentaev2026sgm} A.~M.~Bikchentaev, T.~H.~Dinh, A.~V.~Le, M.~S.~Moslehian, ``Spectral geometric mean
+  and trace characterizations'', Positivity 30 (2026), Art.~46.
+\bibitem{cho2009} K.~Cho, T.~Sano, ``Young's inequality and trace'', Linear Algebra Appl.\ 431 (2009), no.~8,
+  1218--1222.
+\bibitem{furuta2005} T.~Furuta, J.~Mi\'ci\'c Hot, J.~Pe\v{c}ari\'c, Y.~Seo, \emph{Mond--Pe\v{c}ari\'c Method in Operator
+  Inequalities}, Element, Zagreb, 2005.
+\bibitem{gardner1979} L.~T.~Gardner, ``An inequality characterizes the trace'', Canad.\ J.\ Math.\ 31
+  (1979), no.~6, 1322--1328.
+\bibitem{greub1959} W.~Greub, W.~Rheinboldt, ``On a generalization of an inequality of L.~V.~Kantorovich'', Proc.\
+  Amer.\ Math.\ Soc.\ 10 (1959), 407--415.
+\bibitem{halmos1969} P.~R.~Halmos, ``Two subspaces'', Trans.\ Amer.\ Math.\ Soc.\ 144 (1969), 381--389.
+\bibitem{hoa2007} Dinh Trung Hoa, O.~E.~Tikhonov, ``Weighted trace inequalities of monotonicity'', Lobachevskii J.\
+  Math.\ 26 (2007), 63--67.
+\bibitem{hoa2010} Dinh Trung Hoa, O.~E.~Tikhonov, ``Weighted monotonicity inequalities for traces on operator
+  algebras'', Math.\ Notes 88 (2010), no.~1--2, 177--182.
+\bibitem{hoa2013} Dinh Trung Hoa, H.~Osaka, Ho Minh Toan, ``On generalized Powers--St{\o}rmer's inequality'', Linear
+  Algebra Appl.\ 438 (2013), no.~1, 242--249.
+\bibitem{lib} I.~Nikolaeva, A.~Novikov, ``Finite-dimensional Type I von Neumann algebras in PyTorch: a
+  GPU-accelerated framework for random block-diagonal operators'', arXiv:2606.15882 (2026);
+  code: \url{https://github.com/andre-a-no/von_neumann_type_i}.
+\bibitem{moslehian2025jmaa} M.~S.~Moslehian, A.~M.~Bikchentaev, ``Characterizations of the canonical trace on full
+  matrix algebras'', J.\ Math.\ Anal.\ Appl.\ 552 (2025), no.~2, 129764.
+\bibitem{novikov2015} A.~A.~Novikov, O.~E.~Tikhonov, ``Characterization of central elements of operator
+  algebras by inequalities'', Lobachevskii J.\ Math.\ 36 (2015), no.~2, 208--210.
+\bibitem{petz1988} D.~Petz, J.~Zem\'anek, ``Characterizations of the trace'', Linear Algebra Appl.\ 111
+  (1988), 43--52.
+\bibitem{sano2006} T.~Sano, T.~Yatsu, ``Characterizations of tracial property via inequalities'', J.\ Inequal.\ Pure
+  Appl.\ Math.\ 7 (2006), no.~1, Art.~36.
+\bibitem{specht1960} W.~Specht, ``Zur Theorie der elementaren Mittel'', Math.\ Z.\ 74 (1960), 91--98.
+\bibitem{stolyarov2002} A.~I.~Stolyarov, O.~E.~Tikhonov, A.~N.~Sherstnev, ``Characterization of normal traces on
+  von Neumann algebras by inequalities for the modulus'', Math.\ Notes 72 (2002), no.~3--4, 411--416.
+\bibitem{tikhonov2005} O.~E.~Tikhonov, ``Subadditivity inequalities in von Neumann algebras and characterization of
+  tracial functionals'', Positivity 9 (2005), no.~2, 259--264.
+\end{thebibliography}
+}
+
+\end{document}

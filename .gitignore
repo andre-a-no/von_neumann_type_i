@@ -30,3 +30,6 @@ man/article/arxiv.tar.gz
 # documentation site built by mkdocs
 site/
 man/article/arxiv.zip
+# arXiv upload built by scripts/make_arxiv_trace.sh
+man/trace_envelopes/arxiv.tar.gz
+man/trace_envelopes/arxiv.zip

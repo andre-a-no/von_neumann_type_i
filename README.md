@@ -51,6 +51,7 @@ This README is the entry point of the repository:
 | understand the physics behind the models | the boxes *Physical meaning* in the [lecture notes](man/lecture_notes/README.md), e.g. [symmetries and charge sectors](man/lecture_notes/04_symmetries.md), [dynamics](man/lecture_notes/08_dynamics.md), [spin chains](man/lecture_notes/09_spin_chains.md) |
 | compare with other software | [When to use it, and alternatives](#when-to-use-it-and-alternatives) |
 | read the paper | [`man/article/main.pdf`](man/article/main.pdf) (source `man/article/main.tex`) |
+| read the paper on trace characterisations | [`man/trace_envelopes/main.pdf`](man/trace_envelopes/main.pdf): how strongly inequalities that characterise the trace fail, as functions of the Michelson contrast (source `man/trace_envelopes/main.tex`, numbers from `scripts/trace_characterizations.py`, arXiv archive by `scripts/make_arxiv_trace.sh`) |
 | reproduce every number of the paper | [Reproducing the paper](#reproducing-the-paper) |
 | cite it | [Citation](#citation) |
 
