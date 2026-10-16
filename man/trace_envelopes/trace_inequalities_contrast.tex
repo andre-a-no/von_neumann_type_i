@@ -15,6 +15,7 @@
 \IfFileExists{generated/trace_characterizations.tex}{\input{generated/trace_characterizations.tex}}{%
   \input{../article/generated/trace_characterizations.tex}}
 \input{generated/trace_contrast.tex}
+\input{generated/trace_montecarlo.tex}
 
 \DeclareMathOperator{\Tr}{Tr}
 \newcommand{\C}{\mathbb{C}}
@@ -59,7 +60,9 @@ and $\delta^8$, and the sharp constants are the Kantorovich constant, the condit
 On a direct sum $\bigoplus_cM_{k_c}$ only the contrast inside the blocks counts. A certified numerical search over all
 operators shows how the largest violation is attained: at projections for most characterisations, at two-level
 operators $\ell+(1-\ell)P$ for the others, so that in practice it suffices to test an inequality on projections and
-their affine images. The search also exhibits the exceptions: a threshold in the contrast of the operators below which
+their affine images. Random sampling confirms both theses from the other side: random operators rarely violate the inequalities, and
+for monotonicity, subadditivity and the Powers--St{\o}rmer inequality essentially never, while samples of scaled
+projections violate them many times more often. The search also exhibits the exceptions: a threshold in the contrast of the operators below which
 no violation occurs (monotonicity, subadditivity, the spectral geometric mean), a peak at the contrast of the density
 (the determinant inequality), invariance under shifts (Peierls--Bogoliubov), and two inequalities that in dimension
 three are violated more strongly by operators that are not two-level. Finally, we determine the sharp bound of the
@@ -142,6 +145,9 @@ operators is attained, or approached, by (scaled) projections for 22 of the 25 i
 projections by definition) and by two-level operators for the other three; in $M_3$ the same holds except for the
 spectral geometric mean and the generalised Powers--St{\o}rmer inequality, which at large contrast are violated more
 strongly by operators that are not two-level. In practice, an inequality characterising the trace can be tested on projections and their affine images.
+Random sampling (Section~\ref{sec:montecarlo}) shows why this matters: random operators violate subadditivity,
+monotonicity and the Powers--St{\o}rmer inequality in fewer than one sample in a thousand, scaled projections in $0.7$ to
+$21\%$ of the samples, and for Gardner's inequality the fraction rises from $4\%$ to $19\%$.
 
 \paragraph{Results with the operators free.} Write $a\ge b>0$ for the extreme eigenvalues of $W$ and
 \[
@@ -904,6 +910,76 @@ $\delta=0.3,0.5,0.9$) give values whose ratio to the batched search lies in $[\T
 $1$ come from item~13, where BFGS stops earlier. The test suite compares every objective with a plain NumPy implementation
 and with mpmath, checks that random points stay below the proved envelopes and that the stated extremisers attain them.
 The whole computation takes $\TCSeconds$~s on $\TCWorkers$ CPU processes.
+
+\subsection{Random sampling}\label{sec:montecarlo}
+
+Before searching for the extremes we sample. A third program (\texttt{scripts/\allowbreak trace\_\allowbreak
+montecarlo.py}, plain NumPy, independent of the library) draws, for each of the 25 items, $\TMCSamples$ random
+functionals on $M_{\TMCn}$ and random operators: $W$ with a uniformly distributed contrast $\Delta(W)\in[0,1)$ and the other
+eigenvalues uniform in between, positive operators $U\mathrm{diag}(\lambda)U^*$ with Haar-random $U$, a uniformly distributed
+contrast and a random scale, arbitrary operators $V|X|$ with a Haar-random $V$, self-adjoint ones with random signs, and
+Haar-random projections. This is the method of~\cite[Sect.~5]{abed2024}, extended to all items. A second sample replaces
+every positive operator (every modulus) by a scaled projection of random rank (\emph{projection sample}).
+
+\begin{figure}[p]
+\centering\includegraphics[width=\textwidth]{montecarlo_delta.pdf}
+\caption[]{Random sampling on $M_{\TMCn}$: the normalised violation $(L-R)/N$ of each item against $\Delta(W)$ for random
+operators (grey) and, for the items whose variables are not projections, for scaled projections (orange); $4000$ of the
+$\TMCSamples$ samples per item are shown. Black dots: the certified envelope $V(\delta)$ (Section~\ref{sec:numerics}); black
+line: the proved value or lower bound. The region $(L-R)/N>0$ is the violation.}
+\label{fig:mcdelta}
+\end{figure}
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{rlrrrr}
+\toprule
+ & & \multicolumn{2}{c}{random operators} & \multicolumn{2}{c}{scaled projections}\\
+item & inequality & violating [\%] & max / $V$ & violating [\%] & max / $V$\\
+\midrule
+\TMCRows
+\bottomrule
+\end{tabular}
+\caption[]{Random sampling, $\TMCSamples$ samples per item and class on $M_{\TMCn}$: the percentage of samples that violate the
+inequality, and the largest sampled violation divided by the certified envelope at the same $\Delta(W)\le0.95$. ``--'':
+not applicable (the variables are projections, or an invertible operator is needed).}
+\label{tab:montecarlo}
+\end{table}
+
+Figure~\ref{fig:mcdelta} and Table~\ref{tab:montecarlo} show three things.
+\begin{enumerate}
+\item[(a)] \emph{No sample exceeds the envelope.} The largest ratio to the certified envelope is at most $1$ for all items
+(up to the interpolation between grid values), an independent check of the computed envelopes.
+\item[(b)] \emph{Random operators rarely come close to the envelope}, and for monotonicity, subadditivity, the
+Powers--St{\o}rmer inequality and the weighted monotonicity they essentially never violate it: in $\TMCSamples$ samples
+less than $0.1\%$ (or none) violate, and the largest violation is a small fraction of the envelope. A Monte Carlo study
+alone would conclude that these inequalities hold for every $\varphi_W$.
+\item[(c)] \emph{Projections detect the failure.} Sampling scaled projections instead of general positive operators raises
+the fraction of violating samples, for Gardner's inequality from $4\%$ to $19\%$, for subadditivity from below $0.1\%$ to
+$21\%$, for the power-mean inequality from $7\%$ to $51\%$, and brings the largest sampled violation close to the envelope.
+The exceptions are those of Section~\ref{sec:projsuffice}: for item~4 and item~7 the extremisers are two-level operators
+that are not projections (for item~7 the violation degenerates exactly at projections), and items 6, 11 need invertible
+operators.
+\end{enumerate}
+
+\begin{figure}[p]
+\centering\includegraphics[width=\textwidth]{montecarlo_operator.pdf}
+\caption[]{The same random samples against the contrast of the operators (the smallest contrast among the variables of a
+sample), coloured by $\Delta(W)$. Violations ($(L-R)/N>0$) occur only at large contrasts of both the operators and the
+density (yellow), in line with Proposition~\ref{prop:scalar} and Figure~\ref{fig:contrast}.}
+\label{fig:mcoperator}
+\end{figure}
+
+\begin{figure}[h]
+\centering\includegraphics[width=\textwidth]{montecarlo_rate.pdf}
+\caption[]{Fraction of samples that violate the inequality, in bins of $\Delta(W)$, for random operators (grey) and scaled
+projections (orange).}
+\label{fig:mcrate}
+\end{figure}
+
+Figure~\ref{fig:mcoperator} shows the samples against the contrast of the operators: the violating samples sit at large
+contrasts of both the operators and the density, and Figure~\ref{fig:mcrate} shows how the fraction of violating samples
+grows with $\Delta(W)$, and how much faster it grows for projections.
 
 \subsection{Do projections suffice?}\label{sec:projsuffice}
 
