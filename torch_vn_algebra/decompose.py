@@ -37,8 +37,8 @@ other. With :math:`C` equivalence classes of dimensions :math:`k_c` occurring :m
 as :math:`\bigoplus_c\rho_c(a)\otimes 1_{m_c}` once the copies of each class are written in
 *aligned* bases (bases in which every copy carries the same matrices :math:`\rho_c(a)`).
 
-*Why a random element of the commutant finds the irreducible pieces* (Murota, Kanno, Kojima and
-Kojima 2010). In the canonical form a Hermitian :math:`K\in\mathcal A'` is
+*Why a random element of the commutant finds the irreducible pieces* (Maehara and Murota 2011,
+who apply the method of Murota, Kanno, Kojima and Kojima 2010 to the commutant). In the canonical form a Hermitian :math:`K\in\mathcal A'` is
 :math:`\bigoplus_c 1_{k_c}\otimes\kappa_c` with Hermitian :math:`\kappa_c\in M_{m_c}`. For a generic
 (e.g. Gaussian) :math:`K` all eigenvalues of all :math:`\kappa_c` are simple and distinct across
 :math:`c`, so the eigenspaces of :math:`K` are exactly the subspaces
@@ -51,7 +51,8 @@ the pieces: the compression :math:`Q^*YQ` of another random :math:`Y\in\mathcal 
 is a generic element of the commutant of :math:`\mathcal A` restricted there, which is scalar iff the
 restriction is irreducible; if it is not scalar, its eigenspaces split the subspace further.
 
-*Why a second random element aligns the copies.* For two irreducible submodules with orthonormal
+*Why a second random element aligns the copies* (the alignment step of Murota, Kanno, Kojima and
+Kojima 2010, Sec. 4.2, here with elements of the commutant). For two irreducible submodules with orthonormal
 bases :math:`Q_i,Q_j` and a generic :math:`Y\in\mathcal A'`, the block :math:`T=Q_i^*YQ_j` is an
 intertwiner: :math:`T\rho_j(a)=\rho_i(a)T` with :math:`\rho_i(a)=Q_i^*aQ_i`. By Schur's lemma
 :math:`T=0` if the submodules are inequivalent and :math:`T=y\,U` with :math:`U` unitary and
@@ -163,11 +164,13 @@ References
 ----------
 * K. Murota, Y. Kanno, M. Kojima, S. Kojima, *A numerical algorithm for block-diagonal decomposition
   of matrix \*-algebras with application to semidefinite programming*, Japan J. Indust. Appl. Math.
-  27 (2010) 125-160 (the random-commutant-element algorithm used here).
+  27 (2010) 125-160 (the alignment of equivalent copies by a second random element, and the reduction by a
+  random element of the algebra, used here).
 * T. Maehara, K. Murota, *A numerical algorithm for block-diagonal decomposition of matrix
   \*-algebras with general irreducible components*, Japan J. Indust. Appl. Math. 27 (2010) 263-293.
 * T. Maehara, K. Murota, *Algorithm for error-controlled simultaneous block-diagonalization of
-  matrices*, SIAM J. Matrix Anal. Appl. 32 (2011) 605-620.
+  matrices*, SIAM J. Matrix Anal. Appl. 32 (2011) 605-620 (the random-commutant-element algorithm used
+  here).
 * W. Fulton, J. Harris, *Representation Theory: A First Course*, Springer GTM 129 (1991): Schur's
   lemma, characters (Sec. 1-2), Schur-Weyl duality (Sec. 6.1).
 * Lecture notes, man/lecture_notes/02_von_neumann_algebras.md, Theorem 2.6 and Proposition 2.7.
@@ -1245,7 +1248,7 @@ def wedderburn(generators: MatrixLike, *, group: bool = False, method: str = 'ra
     group: True if ``generators`` are *all* elements of a unitary representation of a finite group:
         the commutant is then sampled by the twirl (O(|G| n^3) per sample, no commutant basis), and
         dim A' is taken from the characters.
-    method: 'random' (Murota-Kanno-Kojima-Kojima; the only method).
+    method: 'random' (Maehara-Murota with the alignment of Murota-Kanno-Kojima-Kojima; the only method).
     seed: seed of the random elements (default 0: reproducible); None for fresh entropy. The sectors and
         the subspaces do not depend on it, V only up to the unitary freedom (+)_c u_c (x) w_c.
     tol: null-space threshold of the commutant (see commutant_basis); default sqrt(eps).

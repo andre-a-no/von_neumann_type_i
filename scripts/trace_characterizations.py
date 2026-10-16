@@ -646,9 +646,9 @@ INEQS = {
                    norm='$\\varphi(A+B)$',
                    ref='hoa2013', exact=None, bound=None, order=None, kind='trace'),
     'holder': dict(build=_hold, label='$|\\varphi(PQ)|\\le\\varphi(P)^{1/3}\\varphi(Q)^{2/3}$', norm='RHS',
-                   ref='bikchentaev2019abed', exact=None, bound=None, order=None, kind='trace'),
+                   ref='bikchentaev2011mn,bikchentaev2019abed', exact=None, bound=None, order=None, kind='trace'),
     'gt': dict(build=_gt, label='$\\varphi(e^{P+Q})\\le\\varphi(e^{P/2}e^Qe^{P/2})$', norm='RHS',
-               ref='moslehian2025jmaa', exact=None, bound=None, order=None, kind='trace'),
+               ref='bikchentaev2011mn', exact=None, bound=None, order=None, kind='trace'),
     'pb': dict(build=_pb, label='$\\varphi(e^A)e^{\\varphi(e^{A/2}Be^{A/2})/\\varphi(e^A)}\\le\\varphi(e^{A+B})$',
                norm='RHS', ref='bikchentaev2011pb', exact=None, bound=None, order=None, kind='trace'),
 }

@@ -10,7 +10,11 @@ or among the positive normal functionals on a von Neumann
 algebra~\cite{petz1988,stolyarov2002,bikchentaev2005young,bikchentaev2007mono,bikchentaev2011pb,bikchentaev2019abed,bikchentaev2019metric,bikchentaev2020det,bikchentaev2026moslehian,bikchentaev2026sgm}.
 So have subadditivity~\cite{tikhonov2005}, weighted monotonicity~\cite{hoa2007,hoa2010}, the generalised
 Powers--St{\o}rmer inequality~\cite{hoa2013}, and the H\"older and Golden--Thompson inequalities restricted to
-projections~\cite{moslehian2025jmaa}.
+projections~\cite{bikchentaev2011mn}; according to~\cite[Sect.~1]{moslehian2025jmaa}, the H\"older,
+Cauchy--Schwarz, Golden--Thompson, Peierls--Bogoliubov and Araki--Lieb--Thirring inequalities all characterise
+tracial functionals on $M_n$ already when restricted to projections~\cite{bikchentaev2011mn,bikchentaev2011pb}.
+For Young's inequality see also~\cite{cho2009}; Bikchentaev and Moslehian~\cite{bikchentaev2025survey} survey these
+characterisations.
 These theorems answer a yes/no question. We ask how strongly an inequality $L\le R$ fails for a given non-tracial
 functional.
 
@@ -24,7 +28,13 @@ $\delta=\Delta(W)$, and $\kappa=(a+b)/(2\sqrt{ab})=(1-\delta^2)^{-1/2}$ for the 
 where $N$ is a normalisation that makes $V$ independent of the scales of $W$ and of the variables (mostly $N=R$).
 Table~\ref{tab:tc} lists the sixteen inequalities we studied, in the forms used. \emph{Caveat:} we saw most cited
 papers only as abstracts or listings. For items~7, 8, 11 and 12--16 the abstracts do not fix the form (or the
-function~$f$), and the form in the table is our choice. For Petz and Zem\'anek~\cite{petz1988} we could not see the
+function~$f$), and the form in the table is our choice; the full text of~\cite{moslehian2025jmaa} does not fix it
+either. Item~8 extends Young's inequality, which~\cite{bikchentaev2005young} state for positive $A,B$, to arbitrary
+$A,B$, and the value $V=h-1$ of Proposition~\ref{prop:tcB}(a) refers to this extension. For the published form,
+$\varphi(|AB|)\le\frac12\varphi(A^2)+\frac12\varphi(B^2)$ with $A,B\ge0$, an independent search (L-BFGS from 25
+random starts, $n=2,3$) gives only $V\approx\kappa-1$: $0.1546$ at $\delta=0.5$ and $1.294$ at $\delta=0.9$, against
+$\kappa-1=0.1547$ and $1.294$. This is an observation, not a proof; the linear failure of item~8 is a feature of the
+extension. For Petz and Zem\'anek~\cite{petz1988} we could not see the
 conditions at all, so no item is attributed to them. The catalogue
 \texttt{usecases/trace\_characterizations\_catalogue.md} records what we saw, including results not evaluated here
 (e.g.\ the characterisation of central elements~\cite{novikov2015}, the dual problem).
@@ -45,8 +55,9 @@ $N=\varphi(P)+\varphi(Q)$ in~9 and $N=(\det A)^{1/n}$ in~11. $V^\star$ is the sh
 of Proposition~\ref{prop:tcC}. ``order'': leading order of $V^\star$ as $\delta\to0$; ``slope'':
 $\log_2(V(0.2)/V(0.1))$ of the search; ``$n$-dep.'': the largest $|V_n/V_2-1|$ for $n=3,4$ and $\delta\ge0.1$; for
 item~7 it reflects only search shortfalls. In~9, $p=1$ is the strongest member of the family
-$\varphi(PQ+QP)\le2\varphi((QPQ)^p)$, $p\in(0,1]$. In~7, $r=2$ and $q=1$. In~8 we use Ando's trace form of Young's
-inequality, $p=q=2$. In~11, the AM--GM analogue. In 12 and~13, $f(t)=t^{1/2}$ (13: $f=g=t^{1/2}$, $N=\varphi(A+B)$);
+$\varphi(PQ+QP)\le2\varphi((QPQ)^p)$, $p\in(0,1]$. In~7, $r=2$ and $q=1$. In~8 we use an extension of Young's
+inequality ($p=q=2$) to arbitrary $A,B$, modelled on Ando's trace form; for positive $A,B$ the envelope appears to be
+$\kappa-1$ (see the text). In~11, the AM--GM analogue. In 12 and~13, $f(t)=t^{1/2}$ (13: $f=g=t^{1/2}$, $N=\varphi(A+B)$);
 in 14, $p=3$; in 15 and~16, the symmetric forms. ``n.r.'': no violation found by the search
 \IfFileExists{generated/trace_characterizations.tex}{(\TCMode\ run on \TCDevice)}{}.}
 \label{tab:tc}
@@ -91,7 +102,7 @@ $u,u'=\sin t\,e_1\pm\cos t\,e_2$ and $\tan t=\sqrt{b/a}$; in the fifth for $P=uu
 
 \begin{proposition}\label{prop:tcB}
 (a) $\varphi_W(|AB^*|)\le h\cdot\frac12(\varphi_W(|A|^2)+\varphi_W(|B|^2))$, with equality for $A=B=e_1e_2^*$; so
-$V=h-1=2\delta/(1-\delta)$ for item~8, for every $n$. (b) If $\Tr W=n$, then $\inf_{A>0}\varphi_W(A)/(n(\det A)^{1/n})
+$V=h-1=2\delta/(1-\delta)$ for item~8, the extension of Young's inequality to arbitrary $A,B$, for every $n$. (b) If $\Tr W=n$, then $\inf_{A>0}\varphi_W(A)/(n(\det A)^{1/n})
 =(\det W)^{1/n}$. So item~11 has $V=1-\mathrm{GM}/\mathrm{AM}$ of the eigenvalues of $W$, and the maximum over
 spectra in $[b,a]$ is attained at two-level spectra:
 $V_n(\delta)=1-\min_{1\le m<n}\ell^{(n-m)/n}n/(m+(n-m)\ell)$, $\ell=1/h$. In particular $V_2=1-\sqrt{1-\delta^2}$,
@@ -185,8 +196,9 @@ search stays below them. The item-6 point above~1 is a certified violation beyon
 \paragraph{Results.}
 \begin{enumerate}
 \item[(i)] \emph{Detectability.} $V(\delta)>0$ for every $\delta>0$ in all eleven items, by the constructions above.
-\item[(ii)] \emph{Strength.} The strength varies by orders of magnitude. As $\delta\to0$, Young (8) and the
-projection inequality (9) fail linearly. Items 1--5 and 11 fail quadratically, as $\delta^2/2$. Items 6 and 7 fail
+\item[(ii)] \emph{Strength.} The strength varies by orders of magnitude. As $\delta\to0$, the extended Young
+inequality (8) and the projection inequality (9) fail linearly; for positive $A,B$, the published form of Young's
+inequality, the search finds only $V\approx\kappa-1$, i.e.\ a quadratic failure (an observation, not a proof). Items 1--5 and 11 fail quadratically, as $\delta^2/2$. Items 6 and 7 fail
 at least quadratically, as $\delta^2/2$ and $\delta^2$. For monotonicity (10) the construction gives only
 $\delta^4/16$, and the search finds nothing larger. At $\delta=0.1$ its violation is $10^{-3}$ of that of items 1--5
 and $10^{-4}$ of that of item~9. In the search, items 12--16 fail quadratically, with coefficients between $1/36$ and about $1/2$.
@@ -212,9 +224,14 @@ $n=2$, and item~9 equals Proposition~\ref{prop:tcB}(c) for all $n$.
 
 \paragraph{What is new.} The characterisation theorems are due to the cited authors. The constants $\kappa$, $h$ and
 the Specht ratio are classical, and Proposition~\ref{prop:tcK} is a Kantorovich inequality in disguise. We found no
-study of the envelopes~\eqref{eq:tcV}, but we searched only abstracts and listings. The closest work,
-\cite{abed2024}, relates trace-characterising inequalities to the contrasts of the operator \emph{variables}, not
-of the density. As far as we can tell, the following are new: the sharp values for items 1--5, 8, 11, and for 9
+study of the envelopes~\eqref{eq:tcV}; apart from~\cite{abed2024,moslehian2025jmaa}, which we read in full, we
+searched only abstracts and listings. The closest work is~\cite{abed2024}: its Monte Carlo study
+(\cite[Sect.~5.1, Fig.~1]{abed2024}) plots the unnormalised violation $|\Tr(XY)|-\Tr(X|Y|)$ of Gardner's
+inequality for $\varphi=\Tr(X\,\cdot\,)$ against the contrast $\Delta(X)$ of the density, for real $X,Y$ with
+$\|X\|=\|Y\|=1$ and $n=2,3$, and conjectures that such violations have upper bounds depending on Michelson
+contrasts~\cite[Sect.~7]{abed2024}. It defines no envelope, proves no bound, and treats only item~1 (its exact
+unnormalised envelope is the case $k=2$, $C=1$ of Exp.~1 in Section~\ref{sec:optimisation}). As far as we can
+tell, the following are new: the sharp values for items 1--5, 8 (in the extended form), 11, and for 9
 with $n=2$; the bounds of Proposition~\ref{prop:tcC}; the classification by order of vanishing ($\delta$,
 $\delta^2$, $\delta^4$); the leading order of item~14; the dependence of item~6 on $n$; and the fact that characterisations of traces detect only
 intra-block contrast. The rest are numerical observations.

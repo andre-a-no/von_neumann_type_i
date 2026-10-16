@@ -11,8 +11,8 @@ entropy)~\cite{laflorencie2014,goldstein2018,xavier2018}, which has been measure
 is used as a probe of many-body localisation~\cite{kiefer2020}. Goldstein and Sela~\cite{goldstein2018} obtained the
 resolved entropies from the charged moments $Z_n(\alpha)=\Tr\rho_A^ne^{i\alpha Q_A}$; Xavier, Alcaraz and
 Sierra~\cite{xavier2018} found \emph{equipartition} in critical chains: $S(q)$ is independent of $q$ to leading order
-in the block length $\ell$. For free fermions the first $q$-dependent term is of order
-$(q-\langle Q_A\rangle)^2/\log^2\ell$~\cite{bonsignori2019,fraenkel2020}; for Luttinger liquids the corrections decay
+in the block length $\ell$. For free fermions the first $q$-dependent term is
+$-\frac{\pi^2}4(q-\langle Q_A\rangle)^2/(\log2\ell+1+\gamma_E)^2$ at half filling~\cite{bonsignori2019,fraenkel2020}; for Luttinger liquids the corrections decay
 logarithmically with non-universal prefactors~\cite{estienne2021}. The variance of $Q_A$ (full counting statistics)
 grows as $(K/\pi^2)\log\ell$ with the Luttinger parameter $K$~\cite{song2012}. We ask how large the breaking of
 equipartition is in the XXZ chain at the sizes of exact diagonalisation, what controls it, and how well the resolved
@@ -150,23 +150,32 @@ $B_1$. The quadratic dependence on $q$ is not yet reached: the ratio in
 Table~\ref{tab:sre-eq} is \IfFileExists{generated/symmetry_resolved.tex}{\SRRatioMin--\SRRatioMax}{2--3.6} instead of
 4. Free fermions show how slowly it is approached: on the periodic XX ring the ratio is
 \IfFileExists{generated/symmetry_resolved.tex}{\SRRingRatioFirst\ at $L=\SRRingLfirst$ and \SRRingRatio\ at
-$L=\SRRingLmax$}{below 4 up to $L=3200$}. On the infinite XX chain, $b_1-(\log2\ell+1+\gamma_E)/\pi^2$ is
+$L=\SRRingLmax$}{below 4 up to $L=3200$}. On the infinite XX chain, $b_1-(\log2\ell+1+\gamma_E)/\pi^2$
+(the asymptotic variance, \cite[Eq.~(2.49)]{song2012}) is
 \IfFileExists{generated/symmetry_resolved.tex}{$\SRInfBDev$ at $\ell=\SRInfEll$, and $G_1=\SRInfGOne$ while
-$1/(2\pi^2)=\SRInfGRef$}{small and $G_1\approx1/(2\pi^2)$}. We record as an observation that $G_1\to1/(2\pi^2)$; by
-\eqref{eq:sre-gauss} the free-fermion breaking is then
-$S(q)-S(\langle Q_A\rangle)\simeq-\frac{\pi^2}4(q-\langle Q_A\rangle)^2/(\log2\ell+1+\gamma_E)^2$, and the exact
+$1/(2\pi^2)=\SRInfGRef$}{small and $G_1\approx1/(2\pi^2)$}. This is the Fisher--Hartwig result of Bonsignori,
+Ruggiero and Calabrese~\cite{bonsignori2019}: their Gaussian (Eq.~(4.5) of~\cite{bonsignori2019}) has
+$nB_n=[\log2\ell-2\pi^2n\gamma_2(n)]/\pi^2$ at half filling, so $G_1=-2[\gamma_2(1)+\gamma_2'(1)]$, and their values
+$\gamma_2(1)=-(1+\gamma_E)/(2\pi^2)$ and $\gamma_2'(1)=0.0545724$ (which equals $(1+2\gamma_E)/(4\pi^2)$) give
+$G_1=1/(2\pi^2)$; by \eqref{eq:sre-gauss} the free-fermion breaking is
+$S(q)-S(\langle Q_A\rangle)\simeq-\frac{\pi^2}4(q-\langle Q_A\rangle)^2/(\log2\ell+1+\gamma_E)^2$, Eq.~(4.13)
+of~\cite{bonsignori2019}, and the exact
 $S(q_0)-S(q_0+1)$ is \IfFileExists{generated/symmetry_resolved.tex}{\SRInfdSRatioFirst\ ($\ell=\SRInfdSEllFirst$) and
 \SRInfdSRatio\ ($\ell=\SRInfdSEll$)}{about 0.9} times this value. For $\Delta\ne0$ the $G_1$ of
 Table~\ref{tab:sre-eq} are finite-size values of the non-universal amplitudes of~\cite{estienne2021}; we have not
 compared them with the twisted overlaps computed there.
 
-\paragraph{What is reproduced and what is new.} Equipartition, the $(K/\pi^2)\log\ell$ charge variance and the
-$\log^{-2}\ell$ breaking are known~\cite{goldstein2018,xavier2018,bonsignori2019,song2012,estienne2021}, and so are
-larger sizes, by DMRG and quantum Monte Carlo~\cite{laflorencie2014,xavier2018,chen2026}. Our additions are modest: the
-identities~\eqref{eq:sre-id}; the integer-sampled widths $B_n$, for which the $1/n$ law is visible at
+\paragraph{What is reproduced and what is new.} Equipartition, the $(K/\pi^2)\log\ell$ charge variance with its
+oscillating correction, and the $\log^{-2}\ell$ breaking are
+known~\cite{goldstein2018,xavier2018,bonsignori2019,song2012,estienne2021}; for free fermions the amplitude of the
+breaking is known exactly (Eq.~(4.13) of~\cite{bonsignori2019}, i.e.\ $G_1\to1/(2\pi^2)$), and the
+identities~\eqref{eq:sre-id} rewrite the standard definition of $S_n(q)$ through $Z_n(q)$ (Eq.~(2.6)
+of~\cite{bonsignori2019}). Larger sizes have been reached by DMRG and quantum Monte
+Carlo~\cite{laflorencie2014,xavier2018,chen2026}. Our additions are modest: the integer-sampled widths $B_n$, for
+which the $1/n$ law is visible at
 $L\le\IfFileExists{generated/symmetry_resolved.tex}{\SRL}{24}$ (well for large $K$, less so near $\Delta=1$), while
-the variances $b_n$, $n\ge2$, are dominated by the discreteness of $Q_A$; the finite-size amplitudes $G_1(\Delta)$;
-and the free-fermion observation $G_1\to1/(2\pi^2)$.
+the variances $b_n$, $n\ge2$, are dominated by the discreteness of $Q_A$; the finite-size amplitudes $G_1(\Delta)$ for
+$\Delta\ne0$; and an exact check of the free-fermion amplitude, including how slowly it is approached.
 
 \paragraph{Cost.} The \IfFileExists{generated/symmetry_resolved.tex}{\SRNDelta}{eight} ground states per boundary
 condition (batches of \IfFileExists{generated/symmetry_resolved.tex}{\SRChunk, Lanczos with $m=\SRLanczosM$, residuals

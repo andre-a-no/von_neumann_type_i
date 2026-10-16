@@ -8,10 +8,14 @@
 \end{equation}
 with $S=N/2$ and $J_a=\frac12\sum_i\sigma_a^{(i)}$. For $\gamma=\gamma_\phi=0$ this is the \emph{boundary time
 crystal} of Iemini et al.~\cite{iemini2018}: for $\omega>\kappa$ the magnetisation $m_z=\langle J_z\rangle/S$
-oscillates, the oscillations are damped at finite $N$ with a lifetime that grows with $N$, and they persist as
+oscillates, the oscillations are damped at finite $N$ with a lifetime that grows linearly with
+$N$~\cite{liu2026,nemeth2025}, and they persist as
 $N\to\infty$ (a limit cycle of the mean-field equations, which become exact as $N\to\infty$ at fixed
-times~\cite{carollo2021}). Real emitters also decay and dephase individually. Such local terms do not conserve the
-total spin and, in the mean-field equations below, turn the limit cycle into a damped oscillation; robustness of
+times; Carollo and Lesanovsky~\cite{carollo2021} prove this for open Dicke models and note that the proof adapts to
+all-to-all spin models and to individual spin dissipation). Real emitters also decay and dephase individually. Such
+local terms do not conserve the total spin and, in the mean-field equations below, turn the limit cycle into a damped
+oscillation, as Piccitto et al.~\cite{piccitto2021} found in mean field for jump operators acting collectively on
+blocks of $N_s<N$ spins (damping rate $\propto1/N_s$, in a related $p,q$-spin model); robustness of
 boundary time crystals has been studied in multi-level settings~\cite{prazeres2021}, and Tucker et
 al.~\cite{tucker2018} studied single-particle dephasing in a related synchronised phase. We ask how long the
 oscillations live as a function of $N$ and of the local rate, and how the two damping mechanisms---the collective
@@ -38,7 +42,10 @@ its Kraus operators on blunt densities,
 \end{equation}
 with $|j'-j|\le1$, $j_1\in\{j\pm\frac12\}\cap\{j'\pm\frac12\}$, and the coupled multiplets of $V_{j_1}\otimes\C^2$ in
 the last factor; each $K$ has one non-zero diagonal, and $\Phi^*(1)=\sum_iL^{(i)*}L^{(i)}$ is $S+J_z$, $S-J_z$ or $N$.
-(Closed forms of these coefficients are tabulated in~\cite{chase2008,baragiola2010,shammah2018}.) In the library,
+(Closed forms of these coefficients are given in~\cite{chase2008,baragiola2010,shammah2018}; Eqs.~(40)--(46)
+of~\cite{baragiola2010}, whose $\hat\sigma_z$ is half the Pauli matrix and whose $\rho_{J,M;J,M'}$ are the entries of
+the blunt density, agree with~\eqref{eq:btc-kraus}. Permutational symmetry with individual decay and dephasing is also
+exploited by the library PsiQuaSP~\cite{gegg2017} and by the method of Kirton and Keeling~\cite{kirton2017}.) In the library,
 \texttt{permutational.PermutationalSystem(N)} is the algebra with these sectors; \texttt{local\_jump} returns $\Phi$ as an
 \texttt{InterSectorChannel} of rank two, so \texttt{dynamics.lindblad\_evolve} handles~\eqref{eq:btc} with the
 collective jumps as operators and the local ones between sectors, unchanged. Because every operator in~\eqref{eq:btc}
@@ -130,8 +137,10 @@ the rule; points of equal rate are joined, $N$ increasing to the right (filled: 
 
 \paragraph{Results.} \IfFileExists{generated/permutational.tex}{%
 Table~\ref{tab:btc} and Figure~\ref{fig:btc}. Without local terms the lifetime grows linearly,
-$\kappa\tau(N,0)\approx\PMSlope\,N+\PMIntercept$ for $\PMFitNmin\le N\le\PMNmax$ (least squares), consistent with the
-growth with $N$ reported in~\cite{iemini2018}. With local
+$\kappa\tau(N,0)\approx\PMSlope\,N+\PMIntercept$ for $\PMFitNmin\le N\le\PMNmax$ (least squares). The growth is
+linear, as expected: for $\omega\gg\kappa$ the oscillations of $m_z$ from all spins down decay at the rate
+$3\kappa/(2N)$~\cite{liu2026,nemeth2025}, which corresponds to $\kappa\tau\approx2N/3$; our $\omega=\PMOmega\kappa$ lies
+outside that perturbative regime, and the slope is smaller. With local
 terms it saturates at the mean-field value (last row of Table~\ref{tab:btc}), and the two damping mechanisms combine
 approximately like independent decay rates,
 \begin{equation}\label{eq:btc-rule}
@@ -149,9 +158,17 @@ So~\eqref{eq:btc-rule} describes the lifetimes to within the range just stated; 
 our data establish.%
 }{Run \texttt{scripts/permutational.py}.}
 
-\paragraph{What is reproduced and what is new.} The linear growth of the lifetime without local terms and the
-damping of the mean-field limit cycle by local terms are known or follow directly from the mean-field equations~\cite{iemini2018,carollo2021}; the
-superradiance checks reproduce textbook results~\cite{dicke1954,gross1982}. The finite-$N$ lifetimes with local
+\paragraph{What is reproduced and what is new.} Without local terms, the growth of the lifetime with $N$ is known:
+Iemini et al.~\cite{iemini2018} report a decay rate that vanishes as a power of $N$, Piccitto
+et al.~\cite{piccitto2021} state that it decreases as $N^{-1}$ for this model, and for $\omega\gg\kappa$ Liu
+et al.~\cite{liu2026} and Nemeth et al.~\cite{nemeth2025} derive the rate $3\kappa/(2N)$; only the slope
+\IfFileExists{generated/permutational.tex}{\PMSlope}{0.45} at
+$\omega=\IfFileExists{generated/permutational.tex}{\PMOmega}{2}\kappa$ is, as far as we know, new. The damping of the
+mean-field limit cycle by non-collective dissipation was found by Piccitto et al.~\cite{piccitto2021} (for local
+decay see also~\cite{wang2025}), and for local terms it follows directly from the mean-field equations above; that
+local dephasing and local losses wash out the oscillations at finite $N$ was shown with PIQS for
+$N=30$~\cite{shammah2018}. The superradiance checks reproduce textbook results~\cite{dicke1954,gross1982}. The
+finite-$N$ lifetimes with local
 emission or dephasing for $N$ up to \IfFileExists{generated/permutational.tex}{\PMNmax}{80} (Table~\ref{tab:btc}), the
 approximate additivity~\eqref{eq:btc-rule} of the two damping rates and the structure of its deviation are, as far as
 we know, new numbers. They are observations for this model, these rates and this definition of the lifetime; we have
