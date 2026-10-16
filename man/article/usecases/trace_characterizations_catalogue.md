@@ -164,3 +164,8 @@ is complemented") appears in Petz's survey, but as a trace inequality, not as a 
 - Tikhonov, Positivity 9 (2005), no. 2, 259–264, doi:10.1007/s11117-005-2711-1, Corollary 1: for a nonlinear
   concave f on R₊ with f(0) = 0, φ ∈ M₊* is tracial iff φ(f(A+B)) ≤ φ(f(A)) + φ(f(B)) for all positive A, B.
   Item 12 (f = t^{1/2}) is this corollary. Corollary 2: φ(AB + BA) ≥ 0 for all positive A, B.
+- Bikchentaev, Sib. Math. J. 61 (2020), no. 2, 248–254, doi:10.1134/S0037446620020068, Theorem 3: for a positive
+  φ on M_n with φ(I) = n, φ = tr iff (ii) det(P(exp A)) ≥ exp φ(A) for all pinchings P and A ≥ 0; (iii) det(A)^{1/n}
+  ≤ φ(A)/n for A ≥ 0; (iv) per(A) ≤ φ(Aⁿ)/n for nonnegative A; (v) det(I + εA) = 1 + εφ(A) + o(ε); for faithful φ
+  also (vi) det(exp A) ≤ exp φ(A) and (vii) φ(A^p)^{1/p} ≤ φ(A^q)^{1/q}, 0 < q < p. Theorem 4: Schur-type
+  inequalities, e.g. Σ λ_t(A)² ≤ φ(A²), tr(A)² ≤ φ(√A)… for A ≥ 0. Item 11 is Theorem 3(iii).
