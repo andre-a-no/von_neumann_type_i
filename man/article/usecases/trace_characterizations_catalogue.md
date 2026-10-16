@@ -185,3 +185,11 @@ is complemented") appears in Petz's survey, but as a trace inequality, not as a 
   idempotents, (h) f constant on idempotents of equal rank, (i) f(A) = 0 when A² = 0, (j) f(A) = … = f(Aⁿ) = 0 ⇒ A
   nilpotent. Theorem 4: a positive functional on a von Neumann algebra is tracial iff φ(p ∨ q) ≤ φ(p) + φ(q) for all
   projections (not yet in the table). Theorem 5: Theorem 1 for C*-algebras.
+- Dinh Trung Hoa, Tikhonov, Math. Notes 88 (2010), no. 1–2, 177–182, doi:10.1134/S0001434610070175 (Russian:
+  Mat. Zametki 88:2, 193–200, doi:10.4213/mzm8802). Theorem 1: for a faithful normal finite trace,
+  τ(A^{1/2}f(A)A^{1/2}) ≤ τ(A^{1/2}f(B)A^{1/2}) for all 0 ≤ A ≤ B iff x f(x) is convex. Proposition 1:
+  φ(Af(A)) ≤ ½φ(Af(B) + f(B)A) for all 0 ≤ A ≤ B forces f constant on (0, ∞) or φ tracial. Lemma 1, Theorems 4–5:
+  φ(A^{2r+2}) ≤ φ(A^rB²A^r) for all 0 ≤ A ≤ B (fixed r ≥ 0) characterises traces (normal semifinite weights,
+  positive functionals on C*-algebras); on M_n this is [Bikchentaev–Tikhonov LAA 2007; Sano–Yatsu JIPAM 7(1) 2006,
+  Art. 36] for r = 0 and [Hoa–Tikhonov LJM 26 (2007), Theorem 6] for r > 0. Item 10 is r = 0. Corollary 3 (r = 0) is
+  Ogasawara's commutativity criterion.

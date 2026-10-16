@@ -635,7 +635,7 @@ INEQS = {
                         exact=lambda d, n: projections_exact(d) if n == 2 else None,
                         bound=lambda d, n: projections_exact(d), order=(1, 0.5), kind='trace'),
     'monotone': dict(build=_mon, label='$0\\le A\\le B\\Rightarrow\\varphi(A^2)\\le\\varphi(B^2)$',
-                     norm='$\\varphi(B^2)$', ref='bikchentaev2007mono', exact=None,
+                     norm='$\\varphi(B^2)$', ref='bikchentaev2007mono,sano2006,hoa2010', exact=None,
                      bound=lambda d, n: monotone_bound(d), order=(4, 1 / 16), kind='trace'),
     'det': dict(build=_det, label='$(\\det A)^{1/n}\\le\\frac1n\\varphi(A)$, $\\varphi(1)=n$',
                 norm='$(\\det A)^{1/n}$', ref='bikchentaev2020det', exact=lambda d, n: det_exact(d, n), bound=None,
