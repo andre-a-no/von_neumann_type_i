@@ -14,6 +14,7 @@
 \graphicspath{{figures/}{../article/figures/}}
 \IfFileExists{generated/trace_characterizations.tex}{\input{generated/trace_characterizations.tex}}{%
   \input{../article/generated/trace_characterizations.tex}}
+\input{generated/trace_contrast.tex}
 
 \DeclareMathOperator{\Tr}{Tr}
 \newcommand{\C}{\mathbb{C}}
@@ -34,8 +35,8 @@
 \theoremstyle{remark}
 \newtheorem{remark}[theorem]{Remark}
 
-\title{How strongly do trace-characterising inequalities fail?\\
-Sharp violation envelopes in terms of the Michelson contrast}
+\title{Trace-characterising inequalities fail with the Michelson contrast\\
+of the functional and of the operators, and projections detect the failure}
 \author{Irina Nikolaeva \and Andrej Novikov}
 \date{}
 
@@ -44,28 +45,30 @@ Sharp violation envelopes in terms of the Michelson contrast}
 
 \begin{abstract}
 Many inequalities that hold for the trace characterise it: a positive functional that satisfies one of them for all
-operators is tracial. Examples are Gardner's inequality $|\varphi(X)|\le\varphi(|X|)$, the triangle inequality for
-$\varphi(|\cdot|)$, monotonicity, Young's, Araki--Lieb--Thirring's and determinant inequalities, and a family of
-inequalities for pairs of projections. We ask how strongly such an inequality fails for a given non-tracial positive
-functional $\varphi=\Tr(W\,\cdot\,)$ on $M_n$, and measure this by the \emph{violation envelope}: the largest
-normalised violation over all operators, as a function of the Michelson contrast $\delta$ of the density $W$. For
-25 characterisations from the literature we determine the envelope exactly in sixteen cases (three of them
-only in dimension two or in even dimension), give explicit lower
-bounds in four, and compute the remaining ones by a certified numerical search. The envelopes fall into classes by the
-order in which they vanish at the trace: the extended Young inequality, two lattice inequalities for projections, an
-inequality of Bikchentaev and Abed and the power-mean inequality for the canonical trace fail linearly in $\delta$;
-Gardner's inequality, its relatives and most inequalities for projections fail quadratically; the sharp constants are
-expressed through the Kantorovich constant, the condition number and the Specht ratio of $W$. Monotonicity fails at least as
-$\delta^4/16$ and its weighted form at least as $\delta^8/4096$. On a direct sum $\bigoplus_cM_{k_c}$ the envelope is
-governed by the contrasts inside the blocks alone: a density that varies only between blocks is invisible to every
-characterisation of traces. Finally, we determine the sharp upper bound of the unnormalised violation
-$|\Tr(XZ)|-\Tr(X|Z|)$ of Gardner's inequality when both contrasts $\Delta(X)$ and $\Delta(|Z|)$ are prescribed,
-on every direct sum of real or complex matrix algebras, which answers a question raised in earlier work by Abed and
-the authors.
+operators is a trace. We study 25 such characterisations from the literature, among them Gardner's inequality
+$|\varphi(X)|\le\varphi(|X|)$, the triangle inequality for $\varphi(|\cdot|)$, monotonicity, Young's,
+Araki--Lieb--Thirring's, Peierls--Bogoliubov's and determinant inequalities, and inequalities for pairs of projections,
+and ask how strongly they fail for a non-tracial functional $\varphi=\Tr(W\,\cdot\,)$ on $M_n$. Our main observation
+is common to all of them: the violation is governed by Michelson contrasts. It vanishes when the density $W$ or the
+operators entering the inequality have contrast zero, and it rises with both. For Gardner's inequality and its
+relatives we prove that the sharp constant depends on the two contrasts only through their product,
+$|\varphi(X)|\le(1-\Delta(W)^2\Delta(|X|)^2)^{-1/2}\varphi(|X|)$ in even dimension, with an explicit value in odd
+dimension. With the operators free, we determine the envelope as a function of $\delta=\Delta(W)$ exactly in sixteen
+cases and give lower bounds in four; the envelopes vanish at the trace to the orders $\delta$, $\delta^2$, $\delta^4$
+and $\delta^8$, and the sharp constants are the Kantorovich constant, the condition number and the Specht ratio of $W$.
+On a direct sum $\bigoplus_cM_{k_c}$ only the contrast inside the blocks counts. A certified numerical search over all
+operators shows how the largest violation is attained: at projections for most characterisations, at two-level
+operators $\ell+(1-\ell)P$ for the others, so that in practice it suffices to test an inequality on projections and
+their affine images. The search also exhibits the exceptions: a threshold in the contrast of the operators below which
+no violation occurs (monotonicity, subadditivity, the spectral geometric mean), a peak at the contrast of the density
+(the determinant inequality), invariance under shifts (Peierls--Bogoliubov), and two inequalities that in dimension
+three are violated more strongly by operators that are not two-level. Finally, we determine the sharp bound of the
+unnormalised violation $|\Tr(XZ)|-\Tr(X|Z|)$ with both contrasts prescribed, which answers a question raised in earlier
+work by Abed and the authors.
 \end{abstract}
 
 \noindent\textbf{Keywords:} trace characterisation; positive functional; Michelson contrast; Kantorovich inequality;
-Specht ratio; two projections; von Neumann algebra.\\
+Specht ratio; two projections; two-level operators; von Neumann algebra.\\
 \textbf{MSC 2020:} 46L30, 47A63, 15A45, 46L10.
 
 \section{Introduction}\label{sec:intro}
@@ -110,8 +113,37 @@ inequality $L\le R$ (with $L$, $R$ depending on $\varphi$ and on operator variab
 where $N>0$ is a normalisation that makes the quotient invariant under the scaling of $W$ and of the variables
 (mostly $N=R$). By the characterisation theorems, $V_n(\delta)>0$ for $\delta>0$; by construction $V_n(0)=0$.
 
-\paragraph{Results.} We study the 25 inequalities of Table~\ref{tab:items}. Write $a\ge b>0$ for the extreme
-eigenvalues of $W$ and
+\paragraph{Two theses.} We study the 25 inequalities of Table~\ref{tab:items} and find two properties that hold for
+all of them, with exceptions that we identify.
+
+\emph{(I) The violation is governed by contrasts.} Besides the contrast $\delta$ of the density we prescribe the
+contrast $\delta'$ of the operators that enter the inequality (of their moduli, for operators that are not positive).
+If either is zero there is no violation (Proposition~\ref{prop:scalar}); the violation needs a functional far from a
+trace \emph{and} operators far from scalars. For Gardner's inequality the envelope is a function of the product
+alone:
+\[
+  V_n(\delta,\delta')=\frac{1}{\sqrt{1-\delta^2\delta'^2}}-1\qquad(n\ \text{even}),
+\]
+with an explicit, slightly smaller value for odd $n$ (Theorem~\ref{thm:gardnerD}), and the same bound holds for the
+triangle inequality and for $\varphi(A+A^*)\le2\varphi(|A^*|)$. For the extended Young inequality the operators $A=B$
+with two-level modulus give $4\delta\delta'/(1+\delta'^2-2\delta\delta')$, linear in each contrast
+(Proposition~\ref{prop:youngtwo}). For the remaining items Figure~\ref{fig:contrast} shows $V(\delta,\delta')$ from a
+certified search: it rises with $\delta'$ for most of them, but some (monotonicity, subadditivity, the spectral geometric
+mean, the Powers--St{\o}rmer and the power-mean inequality) are violated only by operators of contrast close to $1$, the
+determinant inequality is violated most strongly when the contrast of $A$ equals that of $W$, and the
+Peierls--Bogoliubov inequality, being invariant under $A\mapsto A+c$, $B\mapsto B+c$, does not see the contrast of the
+operators at all.
+
+\emph{(II) Projections detect the failure.} A positive operator of contrast $\delta'$ with only two eigenvalues is, up
+to a factor, $\ell'+(1-\ell')P$ with a projection $P$. We call it \emph{two-level}. Whenever the violation depends convexly
+on the spectrum of a variable, its maximum is attained at two-level operators (Lemma~\ref{lem:vertex}); this is the
+mechanism behind all closed forms below. Numerically (Table~\ref{tab:projsuffice}), in $M_2$ the largest violation over all
+operators is attained, or approached, by (scaled) projections for 22 of the 25 items (for 11 of them the variables are
+projections by definition) and by two-level operators for the other three; in $M_3$ the same holds except for the
+spectral geometric mean and the generalised Powers--St{\o}rmer inequality, which at large contrast are violated more
+strongly by operators that are not two-level. In practice, an inequality characterising the trace can be tested on projections and their affine images.
+
+\paragraph{Results with the operators free.} Write $a\ge b>0$ for the extreme eigenvalues of $W$ and
 \[
   h=\frac ab=\frac{1+\delta}{1-\delta},\qquad \kappa=\frac{a+b}{2\sqrt{ab}}=\frac1{\sqrt{1-\delta^2}},\qquad
   \psi=\arcsin\delta,
@@ -167,8 +199,8 @@ and $Z$ in $\M$ with $\|X\|=\|Z\|=1$, $\Delta(X)=\delta<1$ and $\Delta(|Z|)=\del
 and the supremum is attained (Theorem~\ref{thm:gardner2}).
 \end{thmC}
 
-All values in Theorems~A and~C are confirmed by a certified numerical search over all variables, which also gives the
-envelopes of the five inequalities without a closed form (Section~\ref{sec:numerics}).
+All values in Theorems~A and~C and in Theorem~\ref{thm:gardnerD} are confirmed by a certified numerical search over all
+variables, which also gives the envelopes of the five inequalities without a closed form (Section~\ref{sec:numerics}).
 
 \paragraph{What is new.} The characterisation theorems are due to the cited authors, and the constants $\kappa$, $h$
 and the Specht ratio, as well as the inequalities behind them (Kantorovich's inequality in the form of Greub and
@@ -178,10 +210,11 @@ exact envelopes. We found no previous study of the envelopes; the closest work i
 the unnormalised Gardner violation, defines no envelope and proves no bound. A short account of part of these results
 appears as a use case in the description of the software used for the computations~\cite{lib}.
 
-\paragraph{Organisation.} Section~\ref{sec:setting} fixes the notation, lists the inequalities and collects the tools.
-Sections~\ref{sec:kant}--\ref{sec:lower} prove Theorem~A, Section~\ref{sec:sectors} Theorem~B and
-Section~\ref{sec:gardner2} Theorem~C. Section~\ref{sec:numerics} describes the numerical verification and the
-remaining items, and Section~\ref{sec:open} lists open problems.
+\paragraph{Organisation.} Section~\ref{sec:setting} fixes the notation, lists the inequalities, introduces the
+contrast of the operators and collects the tools, among them the vertex principle. Section~\ref{sec:gardner2} treats
+Gardner's inequality with both contrasts (Theorem~\ref{thm:gardnerD} and Theorem~C); Sections~\ref{sec:kant},
+\ref{sec:linear}, \ref{sec:proj} and~\ref{sec:lower} prove Theorem~A, and Section~\ref{sec:sectors} Theorem~B.
+Section~\ref{sec:numerics} reports the numerical results on both theses, and Section~\ref{sec:open} concludes.
 
 \section{Setting and tools}\label{sec:setting}
 
@@ -393,9 +426,15 @@ $\delta\delta'<1$. Then
 \[
   |\varphi_W(X)|\le\frac{1}{\sqrt{1-\delta^2\delta'^2}}\,\varphi_W(|X|),
 \]
-and the constant is attained. Hence $V_n(\delta,\delta')=\kappa(\delta\delta')-1=(1-\delta^2\delta'^2)^{-1/2}-1$ for Gardner's
-inequality in every dimension; for $\delta'=1$ this is Theorem~\ref{thm:kant}. The same upper bound holds for items 2 and~3
-with the contrasts of $|X|,|Y|$ and of $|A^*|$.
+and for even $n$ the constant is attained: $V_n(\delta,\delta')=\kappa(\delta\delta')-1=(1-\delta^2\delta'^2)^{-1/2}-1$
+for Gardner's inequality. For odd $n=2k+1$,
+\[
+  V_n(\delta,\delta')=\max_{0\le\gamma\le1}\frac{k\sqrt{S^2+\gamma pq}+\ell\ell'}{k(S+\gamma p)+\ell\ell'}-1,\qquad
+  S=\ell+\ell',\ q=(1+\ell)(1+\ell'),\ p=(1-\ell)(1-\ell'),
+\]
+with $\ell=\frac{1-\delta}{1+\delta}$, $\ell'=\frac{1-\delta'}{1+\delta'}$; it is smaller than $\kappa(\delta\delta')-1$ for
+$\delta'<1$ and tends to it as $n\to\infty$. For $\delta'=1$ both give Theorem~\ref{thm:kant}. The upper bound
+$\kappa(\delta\delta')$ holds also for items 2 and~3, with the contrasts of $|X|,|Y|$ and of $|A^*|$.
 \end{theorem}
 \begin{proof}
 Write $X=UT$ with $T=|X|$. The supremum of $|\Tr(WUT)|=|\Tr(U\,TW)|$ over unitaries $U$ is $\|TW\|_1$, so we must bound
@@ -412,9 +451,14 @@ The function $\gamma\mapsto(S^2+\gamma pq)/(S+\gamma p)^2$ is maximal at $\gamma
   \frac{q^2}{4S(S+p)}=\frac{(x_1+x_2)^2(y_1+y_2)^2}{4(x_1y_2+x_2y_1)(x_1y_1+x_2y_2)}=\frac1{1-\delta^2\delta'^2},
 \]
 the last step by inserting $x_2/x_1=\ell$, $y_2/y_1=\ell'$. A quotient of sums is at most the largest quotient of the
-summands. Equality: $n=2$, $W=\mathrm{diag}(a,b)$, $T$ with the eigenvalues $1,\ell'$ and $\gamma=S/q$, and $U$ the adjoint
-polar factor of $TW$ (in $M_n$ add a one-dimensional summand). Items 2 and~3 reduce to the first inequality as in the
-proof of Theorem~\ref{thm:kant}.
+summands. Equality for even $n$: $n/2$ copies of the $2\times2$ configuration $W=\mathrm{diag}(1,\ell)$, $T$ with the
+eigenvalues $1,\ell'$ at $\gamma=S/q$, and $U$ the adjoint polar factor of $TW$. For odd $n$ at least one summand is
+one-dimensional and contributes the same amount $m\ge\ell\ell'$ (normalising the largest eigenvalues of $W$ and $T$ to
+$1$) to $\|TW\|_1$ and to $\Tr(TW)$; the quotient $(\sum_jL_j+m)/(\sum_jN_j+m)$ over at most $k$ two-dimensional summands
+with $L_j\ge N_j$ is largest for $k$ summands, $m=\ell\ell'$, and, by the argument of Lemma~\ref{lem:vertex} applied to
+$L-cN$, the same $\gamma$ in every summand, which gives the stated maximum; it is attained by
+$W=\mathrm{diag}(1,\ell)^{\oplus k}\oplus\ell$ and $T$ correspondingly. Items 2 and~3 reduce to the first inequality as in
+the proof of Theorem~\ref{thm:kant}.
 \end{proof}
 
 \noindent Thus the normalised violation of Gardner's inequality is $\frac12\delta^2\delta'^2+O(\delta^4\delta'^4)$: it
@@ -526,6 +570,25 @@ For the published form with $A,B\ge0$ an independent numerical search ($n=2,3$) 
 ($0.1546$ at $\delta=0.5$ and $1.294$ at $\delta=0.9$, against $\kappa-1=0.1547$ and $1.294$). The linear failure of
 item~8 is a feature of the extension to arbitrary operators.
 \end{remark}
+
+\begin{proposition}\label{prop:youngtwo}
+Let $\Delta(W)=\delta$ and let the moduli of $A$ and $B$ have contrast $\delta'$. For $n=2$ (and, by direct sums, for every
+even $n$) the extended Young inequality has
+\[
+  V_n(\delta,\delta')\ \ge\ \frac{h+\ell'^2}{1+h\ell'^2}-1=\frac{4\delta\delta'}{1+\delta'^2-2\delta\delta'},\qquad
+  \ell'=\frac{1-\delta'}{1+\delta'},
+\]
+attained by $A=B=UT$ with $T=\mathrm{diag}(\ell',1)$ in the eigenbasis of $W=\mathrm{diag}(a,b)$ and $U$ the swap of the
+two basis vectors. For $\delta'=1$ this is Proposition~\ref{prop:young}.
+\end{proposition}
+\begin{proof}
+For $A=B$, $|AB^*|=|AA^*|=AA^*=UT^2U^*=\mathrm{diag}(1,\ell'^2)$ and $|A|^2=T^2=\mathrm{diag}(\ell'^2,1)$, so $L=a+b\ell'^2$ and
+$R=a\ell'^2+b$, and $L/R=(h+\ell'^2)/(h\ell'^2+1)$. Inserting $h=\frac{1+\delta}{1-\delta}$ and $\ell'$ gives the second form.
+\end{proof}
+
+\noindent The certified search over all $A,B$ with this contrast reproduces the bound to four digits on $M_2$
+(Figure~\ref{fig:contrast}); we conjecture equality for even $n$. Unlike Gardner's inequality, the extended Young
+inequality fails \emph{linearly} in each contrast, $V\sim4\delta\delta'$.
 
 \begin{proposition}\label{prop:abed}
 For $n=2$, item~9 has the envelope $V_2=s/(1+s)$, $s=\sin(\psi/2)$. Thus $V_2\sim\delta/2$ as $\delta\to0$ and
@@ -842,7 +905,83 @@ $1$ come from item~13, where BFGS stops earlier. The test suite compares every o
 and with mpmath, checks that random points stay below the proved envelopes and that the stated extremisers attain them.
 The whole computation takes $\TCSeconds$~s on $\TCWorkers$ CPU processes.
 
-\subsection{Results}
+\subsection{Do projections suffice?}\label{sec:projsuffice}
+
+For the 14 items whose variables are not projections, a second program (\texttt{scripts/trace\_contrast.py}) repeats the
+search with the positive variables (the moduli, for the others) restricted in two ways: to two-level operators
+$c(\ell+(1-\ell)P)$ with free $\ell\in[0,1]$, $c>0$ and a projection $P$ of any rank (for self-adjoint variables $\alpha+\beta P$
+with free real $\alpha,\beta$), and to scaled projections $cP$. Everything else is as before ($\TCCStarts$ starts per grid
+point, $\TCCSteps$ gradient steps, best final point recomputed in mpmath with $\TCCDigits$ digits); the whole computation of
+this and the next subsection takes $\TCCSeconds$~s on four CPU processes.
+
+\begin{table}[h]
+\centering\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{r|ccc|ccc|ccc|ccc}
+\toprule
+ & \multicolumn{6}{c|}{$M_2$} & \multicolumn{6}{c}{$M_3$}\\
+ & \multicolumn{3}{c|}{$\delta=0.5$} & \multicolumn{3}{c|}{$\delta=0.9$} & \multicolumn{3}{c|}{$\delta=0.5$} &
+ \multicolumn{3}{c}{$\delta=0.9$}\\
+item & all & two-level & proj. & all & two-level & proj. & all & two-level & proj. & all & two-level & proj.\\
+\midrule
+\TCCRowsA
+\bottomrule
+\end{tabular}
+\caption[]{Certified largest violations over all operators, over two-level operators and over scaled projections, for the
+items whose variables are not projections. In $M_2$ every operator is two-level, so there the middle column only checks
+the restricted parametrisation. ``--'': item~11 needs an invertible $A$.}
+\label{tab:projsuffice}
+\end{table}
+
+Table~\ref{tab:projsuffice} shows four groups.
+\begin{enumerate}
+\item[(a)] \emph{Projections attain the envelope}: items 1, 2, 3, 8, 10, 12, 16 and~24 in $M_2$ and $M_3$ (item~16 to
+within $0.3\%$), and item~13 in $M_2$. Together with the 11 items whose variables are projections by definition, this covers 20 of the 25 items.
+\item[(b)] \emph{Projections approach it}: in items 6 and~7 the supremum is approached as an operator becomes a
+projection, where both sides of the inequality degenerate. Restricted to projections (item~6) or to two-level operators
+(item~7), the search comes closer to the proved lower bound $\kappa-1$, resp.\ $\kappa^2-1$, than without restriction:
+the restriction helps the search.
+\item[(c)] \emph{Two-level operators are needed}: item~4 (the extremiser $A=\sqrt a\,e_1e_2^*+\sqrt b\,e_2e_1^*$ has
+$|A|$ with the eigenvalues $\sqrt a,\sqrt b$), item~11 ($A=W^{-1}$) and item~25 ($A$ with the eigenvalue ratio $\approx\delta^2/8$,
+Proposition~\ref{prop:wmon}; rank-one $A$ gives no violation). In $M_3$ the extremiser of item~4 lives on a
+two-dimensional subspace and vanishes on its complement, so it has three eigenvalues $\sqrt a,\sqrt b,0$; the two-level
+class without $0$ misses it.
+\item[(d)] \emph{Exceptions}: in $M_3$ at $\delta=0.9$ the generalised Powers--St{\o}rmer inequality (item~13) is violated by
+$0.3048$ against $0.2197$ for projections and for $M_2$, and the spectral geometric mean (item~6) exceeds $\kappa-1$ for
+$n\ge3$ (Section~\ref{sec:numerics}, item (iii) below). Here operators that are not two-level do more.
+\end{enumerate}
+
+\subsection{Both contrasts}\label{sec:bothcontrasts}
+
+\begin{figure}[t]
+\centering\includegraphics[width=\textwidth]{trace_contrast.pdf}
+\caption[]{Certified largest violation $V(\delta,\delta')$ with every operator variable of contrast $\delta'$, for
+$\delta=\Delta(W)=0.3,0.6,0.9$ (colours), on $M_2$ (solid, dots) and $M_3$ (dashed); symmetric logarithmic scale, negative
+values (no violation found) shown as $0$. Dotted: the closed form of Theorem~\ref{thm:gardnerD} for Gardner's inequality
+($n=2$) and the bound of Proposition~\ref{prop:youngtwo} for the extended Young inequality.}
+\label{fig:contrast}
+\end{figure}
+
+Figure~\ref{fig:contrast} shows $V(\delta,\delta')$ for the same 14 items. At $\delta'=0$ no item is violated
+(Proposition~\ref{prop:scalar}). Beyond that, the items fall into four classes.
+\begin{enumerate}
+\item[(a)] \emph{Smooth growth in both contrasts}: items 1--3 follow Theorem~\ref{thm:gardnerD} to $\TCCGardnerDev$
+(relative, $n=2,3$, all grid points); item~8 follows Proposition~\ref{prop:youngtwo} on $M_2$.
+\item[(b)] \emph{A threshold in the contrast of the operators}: items 6, 10, 12, 13, 24 and~25 show no violation until
+$\delta'$ is close to $1$; at $\delta=0.9$ the first grid value with a violation above $10^{-4}$ is: \TCCThresholds. These
+characterisations are blind to operators of moderate contrast: their violation needs nearly singular operators.
+\item[(c)] \emph{A peak}: item~11 is violated most strongly when the contrast of $A$ is close to that of $W$ (its
+extremiser is $W^{-1}$), and in $M_2$ items 4 and~7 have an interior maximum in $\delta'$ (for item~4 at the contrast of
+$|A|$ of the extremiser in (c) above); in $M_3$ the additional dimension removes the maxima of 4 and~7.
+\item[(d)] \emph{No dependence on the contrast of the operators}: item~16 is invariant under $A\mapsto A+c$,
+$B\mapsto B+c$, which makes the contrasts of $A$ and $B$ arbitrarily small without changing the quotient; accordingly
+$V(\delta,\delta')$ equals the envelope with free operators for every $\delta'>0$ and jumps to $0$ at $\delta'=0$.
+\end{enumerate}
+On $M_2$ every spectrum is two-level. On $M_3$ the two-level operators of contrast $\delta'$ reproduce the values of
+general spectra with the same contrast except in items 4, 6 and~7 near $\delta'=1$: there the extremisers need a third
+eigenvalue (a zero on the complement of a two-dimensional subspace, or a nearly singular second operator).
+
+\subsection{Envelopes with the operators free}
 
 \begin{table}[h]
 \centering\scriptsize
@@ -873,7 +1012,7 @@ items of a row). Items 11 and 24 are given for $n=2$.}
 \caption[]{Certified search values on $M_2$ at $\delta=0.1,0.5,0.9$ and the proved values $V^\star$; $^a$: sharp for $n=2$
 only, $^b$: a lower bound, $^c$: approached but not attained. ``order'': leading order of $V^\star$ as $\delta\to0$;
 ``slope'': $\log_2(V(0.2)/V(0.1))$ of the search; ``$n$-dep.'': the largest $|V_n/V_2-1|$ for $n=3,4$ and $\delta\ge0.1$ (for
-items 7 and 13 it reflects search shortfalls; items 19 and 20 differ for odd $n$, Theorem~\ref{thm:proj}). ``n.r.'': no
+item~7 it reflects search shortfalls, for item~13 a genuine increase with $n$; items 19 and 20 differ for odd $n$, Theorem~\ref{thm:proj}). ``n.r.'': no
 violation resolved by the search ($\TCMode$ run on $\TCDevice$).}
 \label{tab:values}
 \end{table}
@@ -903,8 +1042,9 @@ predicts, and the search on $M_3$ finds the odd-$n$ value $\TCExpOddHalf$ of ite
 $\TCRefExpqpqHalf$).
 \item[(ii)] \emph{Items without a closed form.} All five items 12--16 fail quadratically, with $V\approx0.5\,\delta^2$
 (12, 13), $\delta^2/36$ (14, equal to the bound of Proposition~\ref{prop:lower}(d) to leading order), $0.064\,\delta^2$ (15)
-and $0.09\,\delta^2$ (16). Item~15 decreases with $n$, because the identity part of $e^{P/2}e^Qe^{P/2}$ enters $N$; the
-others give the same values for $n=2,3,4$. In item~16 the best points have large $\|A\|$, $\|B\|$, and the supremum is
+and $0.09\,\delta^2$ (16). Item~15 decreases with $n$, because the identity part of $e^{P/2}e^Qe^{P/2}$ enters $N$;
+item~13 increases with $n$ at large $\delta$ (on $M_3$ at $\delta=0.9$: $0.3048$ against $0.2197$ on $M_2$, both certified);
+items 12, 14 and~16 give the same values for $n=2,3,4$. In item~16 the best points have large $\|A\|$, $\|B\|$, and the supremum is
 approached as the scale grows.
 \item[(iii)] \emph{Dimension.} For items 9 and 10 the search gives the same values for $n=3,4$ as for $n=2$, to $\TCNDev$.
 Item~6 depends on $n$: for $n=2$ the search never exceeds $\kappa-1$, but for $n\ge3$ it certifies larger violations,
@@ -924,14 +1064,27 @@ with intra-block contrast no value exceeds the $M_2$ envelope (largest relative 
 Theorem~\ref{thm:sectors} gives equality the search reaches it to $10^{-3}$ in $\TCSectorReached$ of $\TCSectorTotal$ cases.
 \end{enumerate}
 
-\section{Open problems}\label{sec:open}
+\section{Conclusions and open problems}\label{sec:open}
+
+For the 25 characterisations of the trace studied here, the violation of the inequality by a non-tracial functional
+$\varphi_W$ is controlled by two Michelson contrasts, that of $W$ and that of the operators: it vanishes if either is
+zero, and for Gardner's inequality and its relatives it is an explicit function of their product. The largest violation
+is found, with few exceptions, at projections or at two-level operators $\ell+(1-\ell)P$, as the vertex principle predicts
+where it applies. Testing a characterisation on projections and their affine images is therefore the efficient way to
+detect a non-tracial functional, and the size of the violation measures the contrast of its density. The exceptions are
+structural: thresholds in the contrast of the operators, a peak at the contrast of the density for the determinant
+inequality, shift invariance for the Peierls--Bogoliubov inequality, and, in dimension three, the spectral geometric
+mean and the generalised Powers--St{\o}rmer inequality.
+
 
 \begin{conjecture}
 $V_n=\kappa^2-1$ for item~7, $V_n=m(\delta)$ for item~10 and $V_n=m_{25}(\delta)$ for item~25 in every dimension;
 $V_2=\kappa-1$ for item~6; and the value of Proposition~\ref{prop:abed} holds for item~9 in every dimension.
 \end{conjecture}
 
-\noindent Further questions: (1) the envelope of item~6 for $n\ge3$, where the search exceeds $\kappa-1$, and whether it
+\noindent Further questions: (0) proofs of the threshold phenomenon of Section~\ref{sec:bothcontrasts}(b), i.e.\ of
+inequalities that hold for every $\varphi_W$ as long as the operators have contrast below a critical value depending on
+$\Delta(W)$, and of the equality in Proposition~\ref{prop:youngtwo}; (1) the envelope of item~6 for $n\ge3$, where the search exceeds $\kappa-1$, and whether it
 grows with $n$; (2) closed forms for items 12--16, whose leading coefficients the search gives as $\frac12$, $\frac12$,
 $\frac1{36}$, $0.064$ and $0.09$ (item 14: the leading coefficient $(1-\frac2p)^2/4$ is a lower bound); (3) the analogues
 for infinite-dimensional von Neumann algebras, where the contrast of an unbounded density may be $1$ while the functional

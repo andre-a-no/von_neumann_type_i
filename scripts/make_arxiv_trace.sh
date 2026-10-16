@@ -9,8 +9,9 @@ cd "$(dirname "$0")/../man/trace_envelopes"
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$tmp/figures" "$tmp/generated"
 cp main.tex "$tmp/"
-cp ../article/figures/trace_characterizations.pdf ../article/figures/bounds2d_exp1_k2_C1.pdf figures/gardner_contrasts.pdf "$tmp/figures/"
-cp ../article/generated/trace_characterizations.tex "$tmp/generated/"
+cp ../article/figures/trace_characterizations.pdf ../article/figures/bounds2d_exp1_k2_C1.pdf figures/gardner_contrasts.pdf \
+   figures/trace_contrast.pdf "$tmp/figures/"
+cp ../article/generated/trace_characterizations.tex generated/trace_contrast.tex "$tmp/generated/"
 (cd "$tmp" && for i in 1 2 3; do pdflatex -interaction=batchmode -file-line-error main.tex >/dev/null || true; done)
 if grep -q '^\./[A-Za-z_/]*\.tex:[0-9]*:' "$tmp/main.log" || grep -q 'There were undefined references' "$tmp/main.log"; then
     grep -E '^\./[A-Za-z_/]*\.tex:[0-9]*:|undefined' "$tmp/main.log" >&2; echo "arXiv build failed" >&2; exit 1
