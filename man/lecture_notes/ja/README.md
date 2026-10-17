@@ -59,4 +59,4 @@ Statistics* (Springer, 2008); J. Watrous, *The Theory of Quantum Information* (C
 2018); M. L. Mehta, *Random Matrices* (Elsevier, 2004).
 
 ライブラリ `torch_vn_algebra` と、この講義ノートの文脈におけるその使い方は、[チュートリアル](../../tutorial/ja/README.md)の主題である。ライブラリの解説論文は
-[`man/article/main.pdf`](https://github.com/andre-a-no/von_neumann_type_i/blob/main/man/article/main.pdf) にある。
+[`man/article/vn_algebra_pytorch.pdf`](https://github.com/andre-a-no/von_neumann_type_i/blob/main/man/article/vn_algebra_pytorch.pdf) にある。

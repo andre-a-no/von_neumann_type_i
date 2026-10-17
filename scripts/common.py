@@ -1,4 +1,4 @@
-"""Shared helpers for the scripts that produce the numbers and figures of the paper (man/article/main.tex)."""
+"""Shared helpers for the scripts that produce the numbers and figures of the paper (man/article/vn_algebra_pytorch.tex)."""
 import argparse
 import atexit
 import json

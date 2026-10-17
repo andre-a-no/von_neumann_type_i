@@ -82,4 +82,4 @@ Statistics* (Springer, 2008) ; J. Watrous, *The Theory of Quantum Information* (
 
 La bibliothèque `torch_vn_algebra` et son usage dans le contexte de ces notes font l'objet du
 [tutoriel](../../tutorial/fr/README.md). L'article qui accompagne la bibliothèque est
-[`man/article/main.pdf`](https://github.com/andre-a-no/von_neumann_type_i/blob/main/man/article/main.pdf).
+[`man/article/vn_algebra_pytorch.pdf`](https://github.com/andre-a-no/von_neumann_type_i/blob/main/man/article/vn_algebra_pytorch.pdf).

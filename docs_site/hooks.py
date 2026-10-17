@@ -59,7 +59,10 @@ def on_config(config):
     nav = [{'Home': 'index.md'}]
     nav += [{SIDE_NAME[s]['en']: _side_nav(s, 'en')} for s in SIDES]
     nav.append({'API reference': ['api/index.md'] + [f'api/{m}.md' for m in API_MODULES]})
-    nav.append({'Paper (PDF)': 'article/main.pdf'})
+    nav.append({'Papers (PDF)': [{'Library (torch_vn_algebra)': 'article/vn_algebra_pytorch.pdf'},
+                                 {'Trace-characterising inequalities': 'trace_envelopes/trace_inequalities_contrast.pdf'},
+                                 {'Connes-Stormer entropy': 'connes_stormer/connes_stormer_masas.pdf'},
+                                 {'Time crystal and SRE': 'btc_sre/btc_sre_symmetry_sectors.pdf'}]})
     nav.append({'Translations': [{NATIVE[l]: [{SIDE_NAME[s][l]: _side_nav(s, l)} for s in SIDES]}
                                  for l in LANGS[1:]]})
     config['nav'] = nav
@@ -73,7 +76,7 @@ def _readme_link(m):
     if re.match(r'[a-z]+:|#', target):
         return m.group(0)
     path, _, frag = target.partition('#')
-    if path.startswith('man/') and (path.endswith('.md') or path == 'man/article/main.pdf'):
+    if path.startswith('man/') and (path.endswith('.md') or path.endswith('.pdf')):
         new = path[len('man/'):]
     else:
         new = BLOB + path.rstrip('/')
