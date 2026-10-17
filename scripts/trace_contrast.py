@@ -271,7 +271,7 @@ def main():
 
 
 # ----------------------------------------------------------------------------------------------------------------
-# report: tables (generated/trace_contrast.tex) and the figure (figures/trace_contrast.pdf)
+# report: tables (generated/trace_contrast.tex); figures: scripts/trace_figures.py
 # ----------------------------------------------------------------------------------------------------------------
 ITEM_NO = {name: i for i, name in enumerate(tc.INEQS, 1)}
 TITLES = dict(gardner='Gardner', triangle='triangle inequality', realpart=r'$\varphi(A+A^*)\leq2\varphi(|A^*|)$',
@@ -300,9 +300,6 @@ def young_two(d, dp):
 
 
 def report(path):
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
     out = Path(path)
     d = json.loads((out / 'generated' / 'trace_contrast.json').read_text())
     cfg = d['config']
@@ -362,38 +359,7 @@ def report(path):
         f"{ITEM_NO[nm]} ($n={n}$): {('--' if f is None else f)}" for nm, n, f in thr) + '}')
     (out / 'generated' / 'trace_contrast.tex').write_text('\n'.join(tex) + '\n')
 
-    # figure: V(delta, delta') against delta' for every operator item
-    fig, axes = plt.subplots(4, 4, figsize=(11, 10.5))
-    cols = ['#1b6ca8', '#c8402f', '#2e8b57']
-    vv = np.array(vg)
-    for ax, name in zip(axes.flat, OPERATOR_ITEMS):
-        for gi, (g, c) in enumerate(zip(gb, cols)):
-            for n, ls in zip(cfg['dims'], ('-', '--')):
-                y = np.array([Bt[(name, n, 'free')][x][gi] for x in vg])
-                y = np.maximum(clip(y), 0.0)
-                ax.plot(vv, y, ls, color=c, lw=1.3, marker='o' if n == 2 else None, ms=2.5,
-                        label=f'$\\delta={g}$' if n == 2 else None)
-            if name == 'gardner':
-                xs = np.linspace(0, 0.999, 200)
-                ax.plot(xs, [gardner_two(g, x, 2) for x in xs], ':', color='k', lw=0.9)
-            if name == 'young':
-                xs = np.linspace(0, 0.999, 200)
-                ax.plot(xs, young_two(g, xs), ':', color='k', lw=0.9)
-        ax.set_title(f"{ITEM_NO[name]}: {TITLES[name]}", fontsize=8)
-        ax.tick_params(labelsize=7)
-        ax.set_yscale('symlog', linthresh=1e-3)
-        ax.spines[['top', 'right']].set_visible(False)
-        ax.grid(color='#e8e8e8', lw=0.5)
-    for ax in axes.flat[len(OPERATOR_ITEMS):]:
-        ax.axis('off')
-    axes.flat[0].legend(frameon=False, fontsize=7)
-    for ax in axes[-1]:
-        ax.set_xlabel("$\\delta'$ (contrast of the operators)", fontsize=8)
-    for ax in axes[:, 0]:
-        ax.set_ylabel('$V(\\delta,\\delta\')$', fontsize=8)
-    fig.tight_layout()
-    (out / 'figures').mkdir(exist_ok=True)
-    fig.savefig(out / 'figures' / 'trace_contrast.pdf', metadata={'CreationDate': None})
+    # the figures (figures/operator_*.pdf) are drawn by scripts/trace_figures.py from generated/trace_contrast.json
     print('wrote report to', out)
 
 

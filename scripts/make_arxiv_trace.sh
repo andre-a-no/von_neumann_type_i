@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Build the arXiv upload of the paper on trace characterisations, man/trace_envelopes/arxiv_trace_inequalities_contrast.zip (and arxiv_trace_inequalities_contrast.tar.gz):
 # trace_inequalities_contrast.tex, the generated numbers and the figures (from scripts/trace_characterizations.py and scripts/bounds_search.py in
-# man/article, and figures/gardner_contrasts.pdf from scripts/trace_envelopes_figures.py).
+# man/article, figures/gardner_contrasts.pdf from scripts/trace_envelopes_figures.py, figures/envelope_*.pdf and
+# figures/operator_*.pdf from scripts/trace_figures.py).
 # The archive is compiled twice in a clean directory first; the script fails if pdflatex reports an error or an
 # undefined reference. It also writes the compiled man/trace_envelopes/trace_inequalities_contrast.pdf.
 set -euo pipefail
@@ -9,8 +10,7 @@ cd "$(dirname "$0")/../man/trace_envelopes"
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$tmp/figures" "$tmp/generated"
 cp trace_inequalities_contrast.tex "$tmp/"
-cp ../article/figures/trace_characterizations.pdf ../article/figures/bounds2d_exp1_k2_C1.pdf figures/gardner_contrasts.pdf \
-   figures/trace_contrast.pdf figures/montecarlo_delta.pdf figures/montecarlo_operator.pdf figures/montecarlo_rate.pdf \
+cp ../article/figures/bounds2d_exp1_k2_C1.pdf figures/gardner_contrasts.pdf figures/envelope_*.pdf figures/operator_*.pdf \
    "$tmp/figures/"
 cp ../article/generated/trace_characterizations.tex generated/trace_contrast.tex generated/trace_montecarlo.tex "$tmp/generated/"
 (cd "$tmp" && for i in 1 2 3; do pdflatex -interaction=batchmode -file-line-error trace_inequalities_contrast.tex >/dev/null || true; done)

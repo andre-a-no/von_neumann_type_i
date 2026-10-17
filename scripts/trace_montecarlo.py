@@ -13,15 +13,14 @@ Michelson contrast of the density, Delta(W), and of the operators, Delta(.):
 
 A second sample replaces every positive variable (and every modulus) by a scaled projection of random rank
 ('projection sample'). For each item the script reports the fraction of samples that violate the inequality, the largest
-sampled violation relative to the envelope, and writes three figures:
+sampled violation relative to the envelope.
 
-  montecarlo_delta.pdf     (L - R)/N against Delta(W) for all 25 items, random and projection samples, with the envelope;
-  montecarlo_operator.pdf  (L - R)/N against the contrast of the operators for the items with operator variables;
-  montecarlo_rate.pdf      fraction of violating samples against Delta(W), random against projection samples.
+For every dimension the samples are summarised in bins of Delta(W) and of the contrast of the operators (largest
+violation, 99th percentile, fraction violating); scripts/trace_figures.py draws them.
 
-Writes man/trace_envelopes/generated/trace_montecarlo.{json,tex} and the figures to man/trace_envelopes/figures.
+Writes man/trace_envelopes/generated/trace_montecarlo.{json,tex}.
 
-    python scripts/trace_montecarlo.py [--samples 40000] [--n 2] [--seed 0]
+    python scripts/trace_montecarlo.py [--samples 40000] [--dims 2,3,4] [--seed 0]
 """
 import argparse
 import json
@@ -284,52 +283,79 @@ def envelope_curve(name, n):
     return grid, V, xs, ref
 
 
-def main():
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--samples', type=int, default=40000)
-    ap.add_argument('--n', type=int, default=2)
-    ap.add_argument('--seed', type=int, default=0)
-    args = ap.parse_args()
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
+DELTA_BINS = np.concatenate([[0.0], np.logspace(-2, np.log10(0.95), 10), [1.0]])
+OP_BINS = np.linspace(0, 1, 11)
 
+
+def binned(x, v, edges):
+    """Per bin of x: the largest v, the 99th percentile of v and the fraction of violating samples (v > 0)."""
+    idx = np.digitize(x, edges) - 1
+    out = dict(max=[], q99=[], fraction=[], count=[])
+    for b in range(len(edges) - 1):
+        m = idx == b
+        if m.sum() < 20:
+            for k in ('max', 'q99', 'fraction'):
+                out[k].append(None)
+            out['count'].append(int(m.sum()))
+            continue
+        out['max'].append(float(v[m].max()))
+        out['q99'].append(float(np.quantile(v[m], 0.99)))
+        out['fraction'].append(float(np.mean(v[m] > 1e-12)))
+        out['count'].append(int(m.sum()))
+    return out
+
+
+def sample_all(n, samples, seed):
     res = {}
     for k, name in enumerate(ITEMS):
         out = {}
         for mode in ('random', 'projection'):
-            if mode == 'projection' and name not in OPERATOR:
-                continue
-            if mode == 'projection' and name in ('det', 'sgm'):
-                continue                                  # need an invertible operator
-            rng = np.random.default_rng(args.seed + 1000 * k + (7 if mode == 'projection' else 0))
-            smp = Sampler(rng, args.samples, args.n, mode == 'projection')
+            if mode == 'projection' and (name not in OPERATOR or name in ('det', 'sgm')):
+                continue                                  # projections by definition, or an invertible operator needed
+            rng = np.random.default_rng(seed + 1000 * k + 100 * n + (7 if mode == 'projection' else 0))
+            smp = Sampler(rng, samples, n, mode == 'projection')
             with np.errstate(all='ignore'):
                 v, dW, dop = item_value(name, smp)
             ok = np.isfinite(v)
             out[mode] = dict(v=v[ok], dW=dW[ok], dop=None if dop is None else dop[ok])
         res[name] = out
-        print(f"{name:12s} random: violating {np.mean(out['random']['v'] > 1e-12):.3f}, max {out['random']['v'].max():+.4f}"
-              + (f"; projections: violating {np.mean(out['projection']['v'] > 1e-12):.3f}, "
-                 f"max {out['projection']['v'].max():+.4f}" if 'projection' in out else ''))
+    return res
 
-    # summary: fraction violating, largest sample relative to the certified envelope at its contrast
-    summary = {}
-    for name in ITEMS:
-        grid, V, _, _ = envelope_curve(name, args.n)
-        row = {}
-        for mode, r in res[name].items():
-            env = np.interp(r['dW'], grid, V)
-            inside = r['dW'] <= grid[-1]                   # the envelope is computed up to its last grid value
-            rel = np.where((env > 1e-6) & inside, r['v'] / np.maximum(env, 1e-300), np.nan)
-            row[mode] = dict(fraction=float(np.mean(r['v'] > 1e-12)), max=float(r['v'].max()),
-                             max_rel=float(np.nanmax(rel)) if np.isfinite(rel).any() else float('nan'),
-                             n=int(len(r['v'])))
-        summary[name] = row
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument('--samples', type=int, default=40000)
+    ap.add_argument('--dims', default='2,3,4')
+    ap.add_argument('--seed', type=int, default=0)
+    args = ap.parse_args()
+    dims = [int(x) for x in args.dims.split(',')]
+    data = dict(samples=args.samples, dims=dims, seed=args.seed, delta_bins=DELTA_BINS.tolist(),
+                op_bins=OP_BINS.tolist(), binned={}, summary={})
+    for n in dims:
+        res = sample_all(n, args.samples, args.seed)
+        data['binned'][str(n)] = {}
+        data['summary'][str(n)] = {}
+        for name in ITEMS:
+            grid, V, _, _ = envelope_curve(name, n)
+            data['binned'][str(n)][name] = {}
+            data['summary'][str(n)][name] = {}
+            for mode, r in res[name].items():
+                env = np.interp(r['dW'], grid, V)
+                inside = r['dW'] <= grid[-1]               # the envelope is computed up to its last grid value
+                rel = np.where((env > 1e-6) & inside, r['v'] / np.maximum(env, 1e-300), np.nan)
+                data['summary'][str(n)][name][mode] = dict(
+                    fraction=float(np.mean(r['v'] > 1e-12)), max=float(r['v'].max()),
+                    max_rel=float(np.nanmax(rel)) if np.isfinite(rel).any() else float('nan'), n=int(len(r['v'])))
+                data['binned'][str(n)][name][mode] = dict(
+                    delta=binned(r['dW'], r['v'], DELTA_BINS),
+                    operator=None if r['dop'] is None else binned(r['dop'], r['v'], OP_BINS))
+            s = data['summary'][str(n)][name]
+            print(f"n={n} {name:12s} " + '; '.join(f"{m}: {100 * x['fraction']:.1f}% violating, max/V {x['max_rel']:.2f}"
+                                                   for m, x in s.items()))
     gen = OUT / 'generated'
     gen.mkdir(parents=True, exist_ok=True)
-    (gen / 'trace_montecarlo.json').write_text(json.dumps(dict(samples=args.samples, n=args.n, seed=args.seed,
-                                                               summary=summary), indent=1))
+    (gen / 'trace_montecarlo.json').write_text(json.dumps(data, indent=1))
+
     import trace_characterizations as tc
     num = {nm: i for i, nm in enumerate(tc.INEQS, 1)}
 
@@ -342,98 +368,21 @@ def main():
 
     rows = []
     for name in ITEMS:
-        s = summary[name]
-        p = s.get('projection')
-        rows.append(f"{num[name]} & {SHORT[name]} & {pct(s['random']['fraction'])} & {rel(s['random']['max_rel'])} & "
-                    f"{pct(p['fraction']) if p else '--'} & {rel(p['max_rel']) if p else '--'} \\\\")
+        cells = [str(num[name]), SHORT[name]]
+        for n in dims:
+            s = data['summary'][str(n)][name]
+            p = s.get('projection')
+            cells += [pct(s['random']['fraction']), pct(p['fraction']) if p else '--']
+        rows.append(' & '.join(cells) + ' \\\\')
+    worst = max(x['max_rel'] for n in dims for s in data['summary'][str(n)].values() for x in s.values()
+                if np.isfinite(x['max_rel']))
     tex = ['% generated by scripts/trace_montecarlo.py -- do not edit by hand',
-           f"\\newcommand{{\\TMCSamples}}{{{args.samples}}}", f"\\newcommand{{\\TMCn}}{{{args.n}}}",
+           f"\\newcommand{{\\TMCSamples}}{{{args.samples}}}",
+           f"\\newcommand{{\\TMCDims}}{{{', '.join(map(str, dims))}}}",
+           f"\\newcommand{{\\TMCWorstRel}}{{{worst:.3f}}}",
            '\\newcommand{\\TMCRows}{%', *rows, '}']
     (gen / 'trace_montecarlo.tex').write_text('\n'.join(tex) + '\n')
-
-    figdir = OUT / 'figures'
-    figdir.mkdir(exist_ok=True)
-    grey, orange = '#9aa7b4', '#e8a33d'
-
-    # figure 1: all items against Delta(W)
-    fig, axes = plt.subplots(5, 5, figsize=(12, 12.5))
-    for ax, name in zip(axes.flat, ITEMS):
-        r = res[name]
-        m = min(4000, len(r['random']['v']))
-        ax.scatter(r['random']['dW'][:m], r['random']['v'][:m], s=1, color=grey, alpha=0.4, rasterized=True)
-        if 'projection' in r:
-            ax.scatter(r['projection']['dW'][:m], r['projection']['v'][:m], s=1, color=orange, alpha=0.4,
-                       rasterized=True)
-        grid, V, xs, ref = envelope_curve(name, args.n)
-        ax.plot(grid, V, 'k.', ms=4)
-        if ref is not None:
-            ax.plot(xs, ref, 'k-', lw=1)
-        ax.axhline(0, color='#555', lw=0.5)
-        top = max(np.nanmax(V), 1e-3)
-        ax.set_ylim(-1.1 * top, 1.25 * top)
-        ax.set_title(f"{num[name]}: {SHORT[name]}", fontsize=8)
-        ax.tick_params(labelsize=6)
-        ax.spines[['top', 'right']].set_visible(False)
-    for ax in axes[-1]:
-        ax.set_xlabel(r'$\Delta(W)$', fontsize=8)
-    for ax in axes[:, 0]:
-        ax.set_ylabel(r'$(L-R)/N$', fontsize=8)
-    fig.tight_layout()
-    fig.savefig(figdir / 'montecarlo_delta.pdf', metadata={'CreationDate': None}, dpi=200)
-    plt.close(fig)
-
-    # figure 2: operator items against the contrast of the operators, coloured by Delta(W)
-    fig, axes = plt.subplots(4, 4, figsize=(12, 10.5))
-    for ax, name in zip(axes.flat, OPERATOR):
-        r = res[name]['random']
-        m = min(6000, len(r['v']))
-        sc = ax.scatter(r['dop'][:m], r['v'][:m], s=1.5, c=r['dW'][:m], cmap='viridis', vmin=0, vmax=1,
-                        rasterized=True)
-        grid, V, _, _ = envelope_curve(name, args.n)
-        top = max(np.nanmax(V), 1e-3)
-        ax.set_ylim(-1.1 * top, 1.25 * top)
-        ax.axhline(0, color='#555', lw=0.5)
-        ax.set_title(f"{num[name]}: {SHORT[name]}", fontsize=8)
-        ax.tick_params(labelsize=6)
-        ax.spines[['top', 'right']].set_visible(False)
-    for ax in axes.flat[len(OPERATOR):]:
-        ax.axis('off')
-    for ax in axes[-1]:
-        ax.set_xlabel("contrast of the operators", fontsize=8)
-    cax = fig.add_axes([0.80, 0.08, 0.15, 0.015])
-    fig.colorbar(sc, cax=cax, orientation='horizontal').set_label(r'$\Delta(W)$', fontsize=8)
-    fig.tight_layout(rect=(0, 0.03, 1, 1))
-    fig.savefig(figdir / 'montecarlo_operator.pdf', metadata={'CreationDate': None}, dpi=200)
-    plt.close(fig)
-
-    # figure 3: fraction of violating samples against Delta(W), random against projection samples
-    bins = np.linspace(0, 1, 11)
-    mid = 0.5 * (bins[1:] + bins[:-1])
-    fig, axes = plt.subplots(4, 4, figsize=(12, 10))
-    for ax, name in zip(axes.flat, OPERATOR):
-        for mode, col, lab in (('random', grey, 'random operators'), ('projection', orange, 'scaled projections')):
-            if mode not in res[name]:
-                continue
-            r = res[name][mode]
-            idx = np.digitize(r['dW'], bins) - 1
-            frac = [np.mean(r['v'][idx == b] > 1e-12) if np.any(idx == b) else np.nan for b in range(len(mid))]
-            ax.plot(mid, frac, 'o-', color=col, ms=3, lw=1.2, label=lab)
-        ax.set_ylim(-0.02, 1.02)
-        ax.set_title(f"{num[name]}: {SHORT[name]}", fontsize=8)
-        ax.tick_params(labelsize=6)
-        ax.spines[['top', 'right']].set_visible(False)
-        ax.grid(color='#e8e8e8', lw=0.5)
-    axes.flat[0].legend(frameon=False, fontsize=7)
-    for ax in axes.flat[len(OPERATOR):]:
-        ax.axis('off')
-    for ax in axes[-1]:
-        ax.set_xlabel(r'$\Delta(W)$', fontsize=8)
-    for ax in axes[:, 0]:
-        ax.set_ylabel('fraction violating', fontsize=8)
-    fig.tight_layout()
-    fig.savefig(figdir / 'montecarlo_rate.pdf', metadata={'CreationDate': None})
-    plt.close(fig)
-    print('wrote', gen / 'trace_montecarlo.json', 'and three figures')
+    print('wrote', gen / 'trace_montecarlo.json', '(figures: scripts/trace_figures.py)')
 
 
 if __name__ == '__main__':
