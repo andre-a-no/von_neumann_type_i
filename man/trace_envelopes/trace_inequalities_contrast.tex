@@ -16,6 +16,7 @@
   \input{../article/generated/trace_characterizations.tex}}
 \input{generated/trace_contrast.tex}
 \input{generated/trace_montecarlo.tex}
+\input{generated/contrast_operations.tex}
 
 \DeclareMathOperator{\Tr}{Tr}
 \newcommand{\C}{\mathbb{C}}
@@ -67,7 +68,11 @@ no violation occurs (monotonicity, subadditivity, the spectral geometric mean), 
 (the determinant inequality), invariance under shifts (Peierls--Bogoliubov), and two inequalities that in dimension
 three are violated more strongly by operators that are not two-level. Finally, we determine the sharp bound of the
 unnormalised violation $|\Tr(XZ)|-\Tr(X|Z|)$ with both contrasts prescribed, which answers a question raised in earlier
-work by Abed and the authors.
+work by Abed and the authors. Since the operators enter the inequalities through composites, we also describe how
+the contrast is transformed: under congruences, products and geometric means the rapidities $\operatorname{artanh}\Delta$
+add, under Jordan products the angles $\arcsin\Delta$ add (and $AB+BA\ge0$ for all relative positions if and only if
+$\Delta(A)^2+\Delta(B)^2\le1$, Gustafson's criterion), and the commutator characterisation $\varphi(AB)=\varphi(BA)$ fails
+exactly by $2\Delta(W)\Delta(A)\Delta(B)$ in even dimension, with suitable normalisation.
 \end{abstract}
 
 \noindent\textbf{Keywords:} trace characterisation; positive functional; Michelson contrast; Kantorovich inequality;
@@ -220,6 +225,7 @@ appears as a use case in the description of the software used for the computatio
 contrast of the operators and collects the tools, among them the vertex principle. Section~\ref{sec:gardner2} treats
 Gardner's inequality with both contrasts (Theorem~\ref{thm:gardnerD} and Theorem~C); Sections~\ref{sec:kant},
 \ref{sec:linear}, \ref{sec:proj} and~\ref{sec:lower} prove Theorem~A, and Section~\ref{sec:sectors} Theorem~B.
+Section~\ref{sec:composite} describes the contrast of sums, congruences, means, Jordan products and commutators.
 Section~\ref{sec:numerics} reports the numerical results on both theses, and Section~\ref{sec:open} concludes.
 
 \section{Setting and tools}\label{sec:setting}
@@ -886,6 +892,189 @@ density their violations are $1-\mathrm{GM}/\mathrm{AM}$ and $w_{\min}^{-1/2}-1$
 $\Tr W=\sum_ck_c$ (Propositions~\ref{prop:det} and~\ref{prop:power}; the proofs do not use the block structure).
 \end{remark}
 
+\section{Contrasts of composite operators}\label{sec:composite}
+
+The operators of Table~\ref{tab:items} enter the inequalities through composites: sums $A+B$ (items 2, 10, 12, 13),
+congruences $B^{1/2}AB^{1/2}$ (items 6, 7), means (item~6), Jordan products $\Re PQ=\frac12(PQ+QP)$ (items 9, 21, 22),
+and, behind every characterisation, the commutator $AB-BA$, on which a functional vanishes if and only if it is a trace.
+This section describes how the contrast of a composite depends on the contrasts of its factors. Two reparametrisations
+of the contrast make the answers additive. For $A>0$ with extreme eigenvalues $M\ge m>0$ let
+\[
+  \eta(A)=\operatorname{artanh}\Delta(A)=\tfrac12\log\frac Mm,\qquad
+  \psi(A)=\arcsin\Delta(A)\in[0,\tfrac\pi2],\qquad m(A)=\frac{M+m}2 .
+\]
+$\eta$ is half the logarithm of the condition number. $\psi$ is the \emph{angle} of the operator in the sense of Krein and
+Gustafson~\cite{gustafson1968,gustafsonrao1997}: the largest angle between $x$ and $Ax$,
+$\cos\psi(A)=\min_{x\ne0}\langle Ax,x\rangle/(\|Ax\|\|x\|)=2\sqrt{Mm}/(M+m)$, and $\sin\psi(A)=\min_{t>0}\|tA-1\|=\Delta(A)$.
+For the density, $\kappa=\cosh\eta(W)=\sec\psi(W)$, so the envelope $\kappa-1$ of the Kantorovich class
+(Theorem~\ref{thm:kant}) is $\sec\psi(W)-1$. The angle between vectors is $\angle(x,y)=\arccos(\Re\langle x,y\rangle/
+(\|x\|\|y\|))$, the angle of the real inner product $\Re\langle\cdot,\cdot\rangle$ on $\C^n=\R^{2n}$; it satisfies the
+triangle inequality.
+
+\begin{proposition}[Multiplicative composites: rapidities add]\label{prop:rapid}
+Let $A,B>0$ in $M_n$ and $\eta_A=\eta(A)$, $\eta_B=\eta(B)$.
+\begin{enumerate}
+\item[(a)] $\Delta(A^p)=\tanh(|p|\eta_A)$ for real $p\ne0$, $\Delta(A\otimes B)=\tanh(\eta_A+\eta_B)$, and the compression of
+$A$ to a subspace has contrast at most $\Delta(A)$.
+\item[(b)] $\tanh|\eta_A-\eta_B|\le\Delta(A^{1/2}BA^{1/2})\le\tanh(\eta_A+\eta_B)$; the same bounds hold for the contrast of
+$|AB|$, and for the spectrum of $AB$.
+\item[(c)] For the geometric mean $A\#B=A^{1/2}(A^{-1/2}BA^{-1/2})^{1/2}A^{1/2}$,
+$\tanh\frac{|\eta_A-\eta_B|}2\le\Delta(A\#B)\le\tanh\frac{\eta_A+\eta_B}2$.
+\item[(d)] $\Delta(sA+tB)\le\max(\Delta(A),\Delta(B))$ for $s,t>0$, and the same holds for the harmonic mean. If
+$\Delta(A),\Delta(B)>0$, then $\Delta(A+tB)=0$ for suitable $t>0$ and a suitable relative position.
+\end{enumerate}
+All bounds are attained by commuting operators, with the extreme eigenvectors aligned (upper bounds) or interchanged
+(lower bounds), in every dimension $n\ge2$.
+\end{proposition}
+\begin{proof}
+(a) Spectral mapping, the eigenvalues of $A\otimes B$ are the products of eigenvalues, and Cauchy interlacing.
+(b) From $m_BA\le A^{1/2}BA^{1/2}\le M_BA$ and the monotonicity of the eigenvalues~\cite{bhatia1997},
+$\lambda_k(A)m_B\le\lambda_k(A^{1/2}BA^{1/2})\le\lambda_k(A)M_B$ for every $k$. Hence the largest eigenvalue lies in
+$[M_Am_B,M_AM_B]$ and the smallest in $[m_Am_B,m_AM_B]$, so the condition number lies in $[h_A/h_B,h_Ah_B]$; since
+$A^{1/2}BA^{1/2}$ is similar to $B^{1/2}AB^{1/2}$, it is also at least $h_B/h_A$. With $\Delta=\tanh(\frac12\log h)$ this
+is (b). For $|AB|$ use the singular values, $\sigma_k(A)\sigma_{\min}(B)\le\sigma_k(AB)\le\sigma_k(A)\sigma_{\max}(B)$;
+$AB$ is similar to $A^{1/2}BA^{1/2}$. (c) The mean is monotone and homogeneous, so $\sqrt{m_Am_B}\le A\#B\le
+\sqrt{M_AM_B}$, which gives the upper bound. From $B=(A\#B)A^{-1}(A\#B)$, whose spectrum is that of
+$A^{-1/2}(A\#B)^2A^{-1/2}$, (a) and (b) give $\eta_B\le\eta_A+2\eta(A\#B)$, and symmetrically. (d) The mediant inequality
+$\frac{sM_A+tM_B}{sm_A+tm_B}\le\max(h_A,h_B)$ bounds the condition number of $sA+tB$; for the harmonic mean apply it to
+$A^{-1}+B^{-1}$. For the last claim take $B=c-A$ with $c>M_A$ in the eigenbasis of $A$ and with the intermediate
+eigenvalues reflected; $\Delta(c-A)=(M_A-m_A)/(2c-M_A-m_A)$ takes every value in $(0,1)$. Attainment: for commuting
+$A,B$ with aligned extreme eigenvectors all extreme eigenvalues multiply (add, for sums), and with interchanged ones the
+quotients do.
+\end{proof}
+
+The Jordan product is different: it need not be positive, and angles, not rapidities, add.
+
+\begin{theorem}[Jordan product]\label{thm:jordan}
+Let $A,B>0$ in $M_n$, $n\ge2$, with contrasts $\delta_A,\delta_B$ and angles $\psi_A,\psi_B$.
+\begin{enumerate}
+\item[(a)] $AB+BA\ge0$ for every relative position of $A$ and $B$ if and only if $\psi_A+\psi_B\le\frac\pi2$, that is,
+$\delta_A^2+\delta_B^2\le1$ (Gustafson~\cite{gustafson1968}). If $\delta_A^2+\delta_B^2>1$, then $AB+BA$ is indefinite
+for some relative position, in every dimension.
+\item[(b)] If $\delta_A^2+\delta_B^2<1$, then
+\[
+  \tanh|\eta_A-\eta_B|\le\Delta(AB+BA)\le\sin(\psi_A+\psi_B).
+\]
+The lower bound is attained by commuting operators with interchanged extreme eigenvectors.
+\item[(c)] On $M_2$, with $a=\frac{1-\delta_A}{1+\delta_A}$, $b=\frac{1-\delta_B}{1+\delta_B}$, $p=(1-a)(1-b)$,
+\[
+  \max\Delta(AB+BA)=\max_{0\le c\le1}\Bigl(1-\frac{4ab-p^2c(1-c)}{(a+b+pc)^2}\Bigr)^{1/2}.
+\]
+On $M_n$, $n\ge3$, the maximum is at least $(2-\mu)/(2+\mu)$, where
+$\mu=\min_{0\le c\le1}\bigl(a+b+pc-\sqrt{(a+b+pc)^2-4ab+p^2c(1-c)}\,\bigr)$ is the smallest eigenvalue of $AB+BA$ over
+the $2\times2$ pairs with spectra $\{1,a\}$ and $\{1,b\}$.
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+(a), (b) For $x\ne0$, $\angle(x,Bx)\le\psi_B$ and $\angle(Bx,ABx)\le\psi_A$ by the formula for $\cos\psi$, so
+$\angle(x,ABx)\le\psi_A+\psi_B$, and likewise $\angle(x,BAx)\le\psi_A+\psi_B$. If $\psi_A+\psi_B<\frac\pi2$, the cone
+$\{y:\angle(x,y)\le\psi_A+\psi_B\}$ is convex, so it contains $(AB+BA)x$; hence $\langle(AB+BA)x,x\rangle>0$, and the
+largest angle of $AB+BA$ is at most $\psi_A+\psi_B$, which is the upper bound in (b). The case $\psi_A+\psi_B=\frac\pi2$
+follows by continuity. For the lower bound let $x,y$ be unit eigenvectors of $A$ for $M_A$ and $m_A$; then
+$\lambda_{\max}(AB+BA)\ge2\Re\langle Bx,Ax\rangle=2M_A\langle Bx,x\rangle\ge2M_Am_B$ and $\lambda_{\min}(AB+BA)\le2m_AM_B$,
+so the condition number is at least $h_A/h_B$, and symmetrically at least $h_B/h_A$. For the converse in (a) and for (c),
+on $M_2$ we may take $A=\mathrm{diag}(1,a)$ and, after a diagonal unitary, $B$ real with eigenvalues $1,b$ and eigenvector
+$(\cos\theta,\sin\theta)$ for $1$; with $c=\cos^2\theta$,
+\[
+  \tfrac12\Tr(AB+BA)=a+b+pc,\qquad\det(AB+BA)=4ab-p^2c(1-c),
+\]
+which gives the formula for $\Delta^2=1-4\det/\Tr^2$ and for the smallest eigenvalue. At $c=\frac12$ the
+determinant is negative if and only if $16ab<p^2$, and with $\sqrt a=\sqrt{1-\delta_A^2}/(1+\delta_A)$,
+$1-a=2\delta_A/(1+\delta_A)$ this is $(1-\delta_A^2)(1-\delta_B^2)<\delta_A^2\delta_B^2$, that is $\delta_A^2+\delta_B^2>1$.
+In $M_n$ take the direct sums of these $2\times2$ blocks with $a\,1_{n-2}$ and $b\,1_{n-2}$. For the lower bound in (c),
+$A=1\oplus A_2$, $B=1\oplus B_2$ (padded with ones) give $AB+BA=2\oplus(A_2B_2+B_2A_2)$; its largest eigenvalue is $2$,
+since $\|A_2B_2+B_2A_2\|\le2$, and its smallest is $\mu$ for the optimal angle.
+\end{proof}
+
+For $\delta_A=\delta_B=0.6$ the commuting value is $\tanh2\eta=\COJordanTanh$, the maximum on $M_2$ is $\COJordanTwo$, the
+lower bound of (c) for $n\ge3$ is $\COJordanThree$, and the upper bound of (b) is $\COJordanSin$. A numerical optimisation
+over all relative positions and intermediate eigenvalues (\texttt{scripts/\allowbreak contrast\_\allowbreak operations.py},
+24 starts per point) finds on $M_3$ and on $M_4$ exactly the value $(2-\mu)/(2+\mu)$ of (c) (largest difference
+$\COJordanDev$ on a grid of $\delta_A$ with $\delta_B=0.6$; Figure~\ref{fig:ops-jordan}): in dimension three and more the
+two extreme eigenvalues of $AB+BA$ come from different blocks, and the maximum is larger than on $M_2$. Equality for every
+$n\ge3$ would follow if the smallest eigenvalue of a Jordan product with spectra in $[a,1]$ and $[b,1]$ were always
+minimised on a two-dimensional subspace, the setting of Strang's eigenvalue bounds~\cite{strang1962}; we do not use
+this. The upper bound of (b) is approached only as $\delta_A^2+\delta_B^2\to1$.
+
+The theorem explains a threshold. The analogue of item~21 for positive operators, $\varphi(\Re AB)\ge0$, holds for every
+positive functional as long as $\Delta(A)^2+\Delta(B)^2\le1$, because then $\Re AB\ge0$; for operators of the same
+contrast $\delta'$ it can fail only for $\delta'>1/\sqrt2$. For projections, $\psi=\frac\pi2$, and $\Re PQ$ is indefinite
+in general; this is why item~21 is violated by every non-tracial functional, with the envelope $\frac12\tan^2(\psi/2)$
+of Theorem~A.
+
+\begin{proposition}[Commutators: three contrasts multiply]\label{prop:commutator}
+Let $A,B>0$ in $M_n$.
+\begin{enumerate}
+\item[(a)] $\|AB-BA\|\le2\Delta(A)\Delta(B)\,m(A)m(B)$, with equality for suitable $A,B$ of any prescribed contrasts in
+every $M_n$, $n\ge2$. In particular $\|AB-BA\|\le\frac{2\Delta(A)\Delta(B)}{(1+\Delta(A))(1+\Delta(B))}\|A\|\|B\|\le
+\frac12\|A\|\|B\|$.
+\item[(b)] For a state $\varphi_W$ ($\Tr W=1$) with $\Delta(W)=\delta$, $h=\frac{1+\delta}{1-\delta}$,
+\[
+  |\varphi_W(AB-BA)|\le2\,c_n(\delta)\,\Delta(A)\Delta(B)\,m(A)m(B),\qquad
+  c_n(\delta)=\begin{cases}\delta,&n\ \text{even},\\[2pt] \dfrac{k(h-1)}{k(h+1)+1},&n=2k+1,\end{cases}
+\]
+and the bound is attained for every $\delta$ and all prescribed contrasts of $A$ and $B$.
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+(a) Write $A=m(A)(1+E)$, $B=m(B)(1+F)$ with self-adjoint $E,F$, $\|E\|=\Delta(A)$, $\|F\|=\Delta(B)$. Then
+$AB-BA=m(A)m(B)(EF-FE)$ and $\|EF-FE\|\le2\|E\|\|F\|$. Equality holds on $M_2$ for $E=\Delta(A)\sigma_z$,
+$F=\Delta(B)\sigma_x$, since $\sigma_z\sigma_x-\sigma_x\sigma_z=2i\sigma_y$; in $M_n$ add a direct summand $m(A)\oplus m(B)$.
+The second form uses $\|A\|=m(A)(1+\Delta(A))$. (b) $C=i(AB-BA)$ is self-adjoint with $\Tr C=0$ and $\|C\|\le K$, the bound
+of (a). By von Neumann's trace inequality~\cite{bhatia1997}, $|\Tr WC|$ is at most the maximum of
+$\sum_iw_ic_i$ over decreasingly ordered $w_i$ (the eigenvalues of $W$) and $c_i\in[-K,K]$ with $\sum_ic_i=0$, which is
+$K\sum_{i\le k}(w_i-w_{n+1-i})$, $k=\lfloor n/2\rfloor$. Let $a=w_1$, $b=w_n=a/h$ and $S=\sum_{i\le k}w_i\le ka$. Then
+$\sum_{i\le k}(w_i-w_{n+1-i})\le S-kb$ and $1=\Tr W\ge S+(n-k)b$. Maximising $S-kb$ under $S\le khb$ and $S\le1-(n-k)b$ gives
+the value at $khb=1-(n-k)b$, namely $k(h-1)/(kh+n-k)$, which is $c_n(\delta)$ for even and odd $n$. For equality take $k$
+copies of the $2\times2$ pair of (a), $W$ diagonal in the eigenbasis of the $k$ blocks of $C$ with the eigenvalues $a$ on the
+positive and $b$ on the negative eigenvectors of $C$, and, for odd $n$, the eigenvalue $b$ of $W$ and scalars $A$, $B$ on
+the remaining one-dimensional block.
+\end{proof}
+
+So the most basic characterisation of the trace, $\varphi(AB)=\varphi(BA)$, fails at the order of the product of three
+contrasts, $2\Delta(W)\Delta(A)\Delta(B)$ in even dimension: the thesis~(I) in its simplest form. The odd dimensions are
+slightly weaker, as for Gardner's inequality (Theorem~\ref{thm:gardnerD}), and $c_{2k+1}(\delta)\to\delta$ as $k\to\infty$.
+
+Figures~\ref{fig:ops-sum}--\ref{fig:ops-commutator} compare random samples ($\COSamples$ per figure and dimension, Haar
+random relative positions, the intermediate eigenvalues uniform between the extreme ones) with these bounds on $M_2$,
+$M_3$ and $M_4$. No sample exceeds a bound (the largest value of sample minus bound is $\COWorst$). Among
+$\COSamples$ further random pairs per dimension with contrasts uniform in $[0,1]^2$, the number of indefinite Jordan
+products with $\delta_A^2+\delta_B^2\le1$ is $\COIndefInside$. As in Section~\ref{sec:montecarlo}, random positions rarely come close to the extremes in higher
+dimension: for the commutator test on $M_4$ the samples stay far below the bound, which needs two aligned $2\times2$
+blocks.
+
+\begin{figure}[!htbp]
+\centering\includegraphics[width=\textwidth]{ops_sum.pdf}
+\caption[]{Contrast of $A+tB$ ($t$ log-uniform) against $\Delta(A)$, with $\Delta(B)=0.6$: it never exceeds
+$\max(\Delta(A),\Delta(B))$ (Proposition~\ref{prop:rapid}(d)).}
+\label{fig:ops-sum}
+\end{figure}
+\begin{figure}[!htbp]
+\centering\includegraphics[width=\textwidth]{ops_congruence.pdf}
+\caption[]{Contrast of $A^{1/2}BA^{1/2}$ against $\Delta(A)$, with $\Delta(B)=0.6$, and the bounds
+$\tanh|\eta_A\pm\eta_B|$ of Proposition~\ref{prop:rapid}(b).}
+\label{fig:ops-congruence}
+\end{figure}
+\begin{figure}[!htbp]
+\centering\includegraphics[width=\textwidth]{ops_geomean.pdf}
+\caption[]{Contrast of the geometric mean $A\#B$ against $\Delta(A)$, with $\Delta(B)=0.6$, and the bounds
+$\tanh\frac12|\eta_A\pm\eta_B|$ of Proposition~\ref{prop:rapid}(c).}
+\label{fig:ops-geomean}
+\end{figure}
+\begin{figure}[!htbp]
+\centering\includegraphics[width=\textwidth]{ops_jordan.pdf}
+\caption[]{Contrast of the Jordan product $AB+BA$ against $\Delta(A)<0.8$, with $\Delta(B)=0.6$ (for $\Delta(A)\le0.8$ it
+is positive, Theorem~\ref{thm:jordan}(a)): the bounds of (b), the largest value of (c) (orange; on $M_3$ and $M_4$ the value
+$(2-\mu)/(2+\mu)$), and the largest value found by optimisation (markers).}
+\label{fig:ops-jordan}
+\end{figure}
+\begin{figure}[!htbp]
+\centering\includegraphics[width=\textwidth]{ops_commutator.pdf}
+\caption[]{The commutator test $|\varphi_W(AB-BA)|/(m(A)m(B))$ for states $\varphi_W$ against $\Delta(W)$, with
+$\Delta(A)=\Delta(B)=0.6$, and the sharp bound $2c_n(\delta)\cdot0.36$ of Proposition~\ref{prop:commutator}(b).}
+\label{fig:ops-commutator}
+\end{figure}
+
 \section{Numerical verification and the remaining items}\label{sec:numerics}
 
 \subsection{Method}
@@ -1111,7 +1300,9 @@ where it applies. Testing a characterisation on projections and their affine ima
 detect a non-tracial functional, and the size of the violation measures the contrast of its density. The exceptions are
 structural: thresholds in the contrast of the operators, a peak at the contrast of the density for the determinant
 inequality, shift invariance for the Peierls--Bogoliubov inequality, and, in dimension three, the spectral geometric
-mean and the generalised Powers--St{\o}rmer inequality.
+mean and the generalised Powers--St{\o}rmer inequality. The contrast of composite operators follows simple rules
+(Section~\ref{sec:composite}): rapidities add for products and means, angles add for Jordan products, and the commutator
+test of traciality fails by the product of the three contrasts of $W$, $A$ and~$B$.
 
 
 \begin{conjecture}
@@ -1188,6 +1379,10 @@ $1-(w_1\ell'+w_2)/(2\sqrt{\ell'})$, $\ell'=\frac{1-\delta'}{1+\delta'}$, $w=\fra
   (1979), no.~6, 1322--1328.
 \bibitem{greub1959} W.~Greub, W.~Rheinboldt, ``On a generalization of an inequality of L.~V.~Kantorovich'', Proc.\
   Amer.\ Math.\ Soc.\ 10 (1959), 407--415.
+\bibitem{gustafson1968} K.~Gustafson, ``The angle of an operator and positive operator products'', Bull.\ Amer.\
+Math.\ Soc.\ \textbf{74} (1968), 488--492.
+\bibitem{gustafsonrao1997} K.~E.~Gustafson, D.~K.~M.~Rao, \emph{Numerical Range: The Field of Values of Linear
+Operators and Matrices}, Springer, New York, 1997.
 \bibitem{halmos1969} P.~R.~Halmos, ``Two subspaces'', Trans.\ Amer.\ Math.\ Soc.\ 144 (1969), 381--389.
 \bibitem{hoa2007} Dinh Trung Hoa, O.~E.~Tikhonov, ``Weighted trace inequalities of monotonicity'', Lobachevskii J.\
   Math.\ 26 (2007), 63--67.
@@ -1209,6 +1404,8 @@ $1-(w_1\ell'+w_2)/(2\sqrt{\ell'})$, $\ell'=\frac{1-\delta'}{1+\delta'}$, $w=\fra
 \bibitem{specht1960} W.~Specht, ``Zur Theorie der elementaren Mittel'', Math.\ Z.\ 74 (1960), 91--98.
 \bibitem{stolyarov2002} A.~I.~Stolyarov, O.~E.~Tikhonov, A.~N.~Sherstnev, ``Characterization of normal traces on
   von Neumann algebras by inequalities for the modulus'', Math.\ Notes 72 (2002), no.~3--4, 411--416.
+\bibitem{strang1962} W.~G.~Strang, ``Eigenvalues of Jordan products'', Amer.\ Math.\ Monthly \textbf{69} (1962),
+37--40.
 \bibitem{tikhonov2005} O.~E.~Tikhonov, ``Subadditivity inequalities in von Neumann algebras and characterization of
   tracial functionals'', Positivity 9 (2005), no.~2, 259--264.
 \end{thebibliography}
