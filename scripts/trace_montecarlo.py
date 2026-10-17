@@ -70,8 +70,9 @@ def phi(w, X):
 
 # ---------------------------------------------------------------------------------------------------- sampling
 class Sampler:
-    def __init__(self, rng, S, n, proj_mode):
+    def __init__(self, rng, S, n, proj_mode, dW=None, dop=None):
         self.rng, self.S, self.n, self.proj = rng, S, n, proj_mode
+        self.dW, self.dop = dW, dop                 # optional: fixed Delta(W); one contrast per sample for every variable
         self.contrasts = []                         # contrasts of the operator variables of the current item
 
     def haar(self):
@@ -87,7 +88,7 @@ class Sampler:
         return self.rng.permuted(lam, axis=1)
 
     def density(self, total=1.0):
-        d = self.rng.uniform(0, 1, self.S) * 0.999
+        d = self.rng.uniform(0, 1, self.S) * 0.999 if self.dW is None else np.full(self.S, self.dW)
         w = self.spectrum(d)
         return total * w / w.sum(1, keepdims=True), d
 
@@ -99,7 +100,8 @@ class Sampler:
         if self.proj and not invertible:
             lam, d = self._projector_spectrum(), np.ones(self.S)
         else:
-            d = self.rng.uniform(0, 1, self.S) * (0.999 if invertible else 1.0)
+            d = self.rng.uniform(0, 1, self.S) if self.dop is None else self.dop
+            d = np.minimum(d, 0.999) if invertible else d
             lam = self.spectrum(d)
         self.contrasts.append(d)
         U = self.haar()
@@ -116,7 +118,7 @@ class Sampler:
         if self.proj:
             lam, d = self._projector_spectrum(), np.ones(self.S)
         else:
-            d = self.rng.uniform(0, 1, self.S)
+            d = self.rng.uniform(0, 1, self.S) if self.dop is None else self.dop
             lam = self.spectrum(d)
         self.contrasts.append(d)
         lam = lam * np.where(self.rng.uniform(0, 1, (self.S, self.n)) < 0.5, -1.0, 1.0)
@@ -322,6 +324,119 @@ def sample_all(n, samples, seed):
     return res
 
 
+
+# ---------------------------------------------------------------------------------------------------- figures
+FIXED_DW = 0.9                                      # Delta(W) of the second sample (contrast of the operators varies)
+GREY, ORANGE, INK, MUTED, GRID = '#7d848c', '#eb6834', '#0b0b0b', '#52514e', '#e6e5e1'
+
+
+def sample_fixed(n, samples, seed):
+    """Operator items: Delta(W) = FIXED_DW and every operator variable of one contrast delta' ~ U[0, 1)."""
+    res = {}
+    for k, name in enumerate(OPERATOR):
+        rng = np.random.default_rng(seed + 50000 + 1000 * k + 100 * n)
+        smp = Sampler(rng, samples, n, False, dW=FIXED_DW, dop=rng.uniform(0, 1, samples))
+        with np.errstate(all='ignore'):
+            v, _, dop = item_value(name, smp)
+        ok = np.isfinite(v)
+        res[name] = dict(v=v[ok], dop=dop[ok])
+    return res
+
+
+def _style(ax):
+    ax.spines[['top', 'right']].set_visible(False)
+    for side in ('left', 'bottom'):
+        ax.spines[side].set_color(MUTED)
+    ax.tick_params(colors=MUTED, labelsize=7)
+    ax.grid(color=GRID, lw=0.6)
+    ax.set_axisbelow(True)
+    ax.axhline(0, color=MUTED, lw=0.7)
+
+
+def _limits(curve, samples):
+    top = max(np.max(curve), 0.0)
+    if top <= 1e-12:                                 # no violation: scale to the samples
+        top = max(float(np.max(samples)) if len(samples) else 0.0, 1e-6)
+    return -0.2 * top, 1.12 * top
+
+
+def figures(res, fixed, dims, fixed_dims):
+    """One figure per item: Monte Carlo samples and the certified envelope, one panel per dimension."""
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    import trace_characterizations as tc
+    num = {nm: i for i, nm in enumerate(tc.INEQS, 1)}
+    env = json.loads((ROOT / 'man' / 'article' / 'generated' / 'trace_characterizations.json').read_text())
+    grid = np.array(env['grid'], dtype=float)
+    con = json.loads((OUT / 'generated' / 'trace_contrast.json').read_text())
+    vg, gb = con['config']['vgrid'], con['config']['grid_b']
+    two = {}
+    for r in con['B']:
+        if r['kind'] == 'free':
+            two.setdefault((r['name'], r['n']), {})[r['vdelta']] = r['cert'][gb.index(FIXED_DW)]
+    figdir = OUT / 'figures'
+    figdir.mkdir(exist_ok=True)
+    for old in figdir.glob('mc_*.pdf'):
+        old.unlink()
+    tex = []
+    for name in ITEMS:
+        op = name in OPERATOR
+        fig, axes = plt.subplots(2 if op else 1, len(dims), figsize=(10, 5.1 if op else 2.55), squeeze=False)
+        for j, n in enumerate(dims):
+            ax = axes[0, j]
+            V = np.array(env['inequalities'][name]['dims'][str(n)]['V'], dtype=float)
+            allv = []
+            for mode, c, a in (('projection', ORANGE, 0.35), ('random', GREY, 0.3)):   # random on top
+                if mode not in res[n][name]:
+                    continue
+                r = res[n][name][mode]
+                m = r['dW'] <= grid[-1]
+                ax.scatter(r['dW'][m], r['v'][m], s=1.2, color=c, alpha=a, lw=0, rasterized=True)
+                allv.append(r['v'][m])
+            ax.plot(grid, V, '-o', color=INK, lw=1.4, ms=3.5, mfc='white', mew=1.0, zorder=3)
+            ax.set_xlim(0, grid[-1] + 0.01)
+            ax.set_ylim(*_limits(V, np.concatenate(allv)))
+            ax.set_title(f'$M_{n}$', fontsize=9, color=INK)
+            ax.set_xlabel(r'$\Delta(W)$', fontsize=8, color=MUTED)
+            _style(ax)
+        axes[0, 0].set_ylabel(r'$(L-R)/N$', fontsize=8, color=MUTED)
+        handles = [plt.Line2D([], [], ls='', marker='o', ms=4, color=GREY, label='random operators'),
+                   plt.Line2D([], [], ls='', marker='o', ms=4, color=ORANGE, label='scaled projections'),
+                   plt.Line2D([], [], color=INK, marker='o', ms=3.5, mfc='white', label='certified envelope')]
+        if not any('projection' in res[n][name] for n in dims):
+            handles.pop(1)
+        if op:
+            for j, n in enumerate(fixed_dims):
+                ax = axes[1, j]
+                r = fixed[n][name]
+                ax.scatter(r['dop'], r['v'], s=1.2, color=GREY, alpha=0.25, lw=0, rasterized=True)
+                y = np.array([two[(name, n)][x] for x in vg], dtype=float)
+                ax.plot(vg, y, '-o', color=INK, lw=1.4, ms=3.5, mfc='white', mew=1.0, zorder=3)
+                ax.set_xlim(0, 1.01)
+                ax.set_ylim(*_limits(y, r['v']))
+                ax.set_title(f'$M_{n}$, $\\Delta(W)={FIXED_DW}$', fontsize=9, color=INK)
+                ax.set_xlabel(r"contrast $\delta'$ of the operators", fontsize=8, color=MUTED)
+                _style(ax)
+            axes[1, 0].set_ylabel(r'$(L-R)/N$', fontsize=8, color=MUTED)
+            for ax in axes[1, len(fixed_dims):]:
+                ax.axis('off')
+            axes[1, -1].legend(handles=handles, loc='center', frameon=False, fontsize=8)
+            fig.tight_layout()
+        else:
+            fig.legend(handles=handles, loc='lower center', ncol=3, frameon=False, fontsize=8)
+            fig.tight_layout(rect=(0, 0.1, 1, 1))
+        fname = f'mc_{num[name]:02d}_{name}.pdf'
+        fig.savefig(figdir / fname, metadata={'CreationDate': None}, dpi=200)
+        plt.close(fig)
+        cap = (f'Item {num[name]}, {tc.INEQS[name]["label"]}: random samples and the certified envelope'
+               + (r'; top: against $\Delta(W)$, bottom: against the contrast $\delta^\prime$ of the operators at '
+                  f'$\\Delta(W)={FIXED_DW}$.' if op else r' against $\Delta(W)$.'))
+        tex += [r'\begin{figure}[!htbp]', r'\centering', f'\\includegraphics[width=\\textwidth]{{{fname}}}',
+                f'\\caption[]{{{cap}}}', f'\\label{{fig:mc-{name}}}', r'\end{figure}', '']
+    (OUT / 'generated' / 'trace_montecarlo_figures.tex').write_text(
+        '% generated by scripts/trace_montecarlo.py -- do not edit by hand\n' + '\n'.join(tex))
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--samples', type=int, default=40000)
@@ -331,8 +446,12 @@ def main():
     dims = [int(x) for x in args.dims.split(',')]
     data = dict(samples=args.samples, dims=dims, seed=args.seed, delta_bins=DELTA_BINS.tolist(),
                 op_bins=OP_BINS.tolist(), binned={}, summary={})
+    allres, fixed = {}, {}
+    fixed_dims = [n for n in dims if n in (2, 3)]          # the two-contrast envelopes are computed on M_2 and M_3
     for n in dims:
-        res = sample_all(n, args.samples, args.seed)
+        res = allres[n] = sample_all(n, args.samples, args.seed)
+        if n in fixed_dims:
+            fixed[n] = sample_fixed(n, args.samples // 2, args.seed)
         data['binned'][str(n)] = {}
         data['summary'][str(n)] = {}
         for name in ITEMS:
@@ -382,7 +501,8 @@ def main():
            f"\\newcommand{{\\TMCWorstRel}}{{{worst:.3f}}}",
            '\\newcommand{\\TMCRows}{%', *rows, '}']
     (gen / 'trace_montecarlo.tex').write_text('\n'.join(tex) + '\n')
-    print('wrote', gen / 'trace_montecarlo.json', '(figures: scripts/trace_figures.py)')
+    figures(allres, fixed, dims, fixed_dims)
+    print('wrote', gen / 'trace_montecarlo.json', 'and figures/mc_*.pdf')
 
 
 if __name__ == '__main__':

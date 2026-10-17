@@ -130,7 +130,7 @@ alone:
 with an explicit, slightly smaller value for odd $n$ (Theorem~\ref{thm:gardnerD}), and the same bound holds for the
 triangle inequality and for $\varphi(A+A^*)\le2\varphi(|A^*|)$. For the extended Young inequality the operators $A=B$
 with two-level modulus give $4\delta\delta'/(1+\delta'^2-2\delta\delta')$, linear in each contrast
-(Proposition~\ref{prop:youngtwo}). For the remaining items Figure~\ref{fig:contrast} shows $V(\delta,\delta')$ from a
+(Proposition~\ref{prop:youngtwo}). For the remaining items Appendix~\ref{app:mc} shows $V(\delta,\delta')$ from a
 certified search: it rises with $\delta'$ for most of them, but some (monotonicity, subadditivity, the spectral geometric
 mean, the Powers--St{\o}rmer and the power-mean inequality) are violated only by operators of contrast close to $1$, the
 determinant inequality is violated most strongly when the contrast of $A$ equals that of $W$, and the
@@ -593,7 +593,7 @@ $R=a\ell'^2+b$, and $L/R=(h+\ell'^2)/(h\ell'^2+1)$. Inserting $h=\frac{1+\delta}
 \end{proof}
 
 \noindent The certified search over all $A,B$ with this contrast reproduces the bound to four digits on $M_2$
-(Figure~\ref{fig:contrast}); we conjecture equality for even $n$. Unlike Gardner's inequality, the extended Young
+(Figure~\ref{fig:mc-young}); we conjecture equality for even $n$. Unlike Gardner's inequality, the extended Young
 inequality fails \emph{linearly} in each contrast, $V\sim4\delta\delta'$.
 
 \begin{proposition}\label{prop:abed}
@@ -920,9 +920,11 @@ $\Delta(W)\in[0,1)$ and the other eigenvalues uniform in between, positive opera
 Haar-random $U$, a uniformly distributed contrast and a random scale, arbitrary operators $V|X|$ with a Haar-random $V$,
 self-adjoint ones with random signs, and Haar-random projections. This is the method of~\cite[Sect.~5]{abed2024},
 extended to all items. A second sample replaces every positive operator (every modulus) by a scaled projection of
-random rank (\emph{projection sample}). The bottom rows of Figures~\ref{fig:env-linear}--\ref{fig:env-higher} show, in
-bins of $\Delta(W)$, the largest sampled violation divided by the certified envelope; Table~\ref{tab:montecarlo} gives
-the fraction of violating samples.
+random rank (\emph{projection sample}). Appendix~\ref{app:mc} has one figure per item with one panel per dimension:
+every sample, $(L-R)/N$ against $\Delta(W)$, together with the certified envelope $V(\delta)$. For the 14 items with
+operator variables a second row shows a third sample, with $\Delta(W)=0.9$ and all operator variables of one contrast
+$\delta'$, against $\delta'$, together with the certified $V(0.9,\delta')$ of Section~\ref{sec:bothcontrasts}.
+Table~\ref{tab:montecarlo} gives the fraction of violating samples.
 
 \begin{table}[h]
 \centering\small
@@ -951,13 +953,13 @@ Powers--St{\o}rmer inequality and the weighted monotonicity essentially never vi
 samples (or none) violate. A Monte Carlo study alone would conclude that these inequalities hold for every $\varphi_W$.
 \item[(c)] \emph{Sampling gets worse with the dimension}: for Gardner's inequality the fraction of violating random samples
 drops from $4.5\%$ on $M_2$ to $0.1\%$ on $M_3$ and to none of the $\TMCSamples$ samples on $M_4$, and the best sample stays
-far below the envelope (Figure~\ref{fig:env-gardner}). The extremal configurations, rank-one operators on a two-dimensional
+far below the envelope (Figure~\ref{fig:mc-gardner}). The extremal configurations, rank-one operators on a two-dimensional
 subspace aligned with the extreme eigenvectors of $W$, have a Haar measure that decreases rapidly with $n$.
 \item[(d)] \emph{Projections detect the failure.} Sampling scaled projections instead of general positive operators raises
 the fraction of violating samples in every dimension, for Gardner's inequality from $4.5\%$ to $18.7\%$ on $M_2$ and from
 $0$ to $0.6\%$ on $M_4$, for subadditivity from below $0.1\%$ to $21\%$, $9\%$ and $5\%$ on $M_2$, $M_3$, $M_4$, for the
-power-mean inequality from $7\%$ to $50\%$ on $M_2$, and brings the best sample close to the envelope (dashed lines in the
-bottom rows). The exceptions are those of Section~\ref{sec:projsuffice}: for items 4 and~7 the extremisers are
+power-mean inequality from $7\%$ to $50\%$ on $M_2$, and brings the best sample close to the envelope (orange points in Figures~\ref{fig:mc-gardner},
+\ref{fig:mc-subadd} and~\ref{fig:mc-lp}). The exceptions are those of Section~\ref{sec:projsuffice}: for items 4 and~7 the extremisers are
 two-level operators that are not projections (for item~7 the violation degenerates exactly at projections), and items 6
 and~11 need invertible operators.
 \end{enumerate}
@@ -1010,20 +1012,7 @@ $n\ge3$ (Section~\ref{sec:numerics}, item (iii) below). Here operators that are 
 
 \subsection{Both contrasts}\label{sec:bothcontrasts}
 
-\begin{figure}[p]
-\centering
-\includegraphics[width=0.92\textwidth]{operator_smooth.pdf}\\[2mm]
-\includegraphics[width=0.92\textwidth]{operator_threshold.pdf}\\[2mm]
-\includegraphics[width=0.92\textwidth]{operator_other.pdf}
-\caption[]{Certified largest violation $V(\delta,\delta')$ with every operator variable of contrast $\delta'$, on $M_2$
-(left) and $M_3$ (right), for $\delta=\Delta(W)=0.9$ (solid) and $0.6$ (dashed); logarithmic scale, points without a
-violation omitted. Top: smooth growth (items 1--3 follow Theorem~\ref{thm:gardnerD}, item~8 Proposition~\ref{prop:youngtwo}).
-Middle: violation only for operators of contrast close to $1$. Bottom: a peak in $\delta'$ (items 4, 7 on $M_2$, item 11
-at the contrast of $W$), no dependence on $\delta'>0$ (item 16), and item~24.}
-\label{fig:contrast}
-\end{figure}
-
-Figure~\ref{fig:contrast} shows $V(\delta,\delta')$ for the same 14 items. At $\delta'=0$ no item is violated
+The bottom rows of Figures~\ref{fig:mc-gardner}--\ref{fig:mc-wmon} (Appendix~\ref{app:mc}) show $V(0.9,\delta')$ for the same 14 items, with random samples. At $\delta'=0$ no item is violated
 (Proposition~\ref{prop:scalar}). Beyond that, the items fall into four classes.
 \begin{enumerate}
 \item[(a)] \emph{Smooth growth in both contrasts}: items 1--3 follow Theorem~\ref{thm:gardnerD} to $\TCCGardnerDev$
@@ -1078,40 +1067,7 @@ violation resolved by the search ($\TCMode$ run on $\TCDevice$).}
 \label{tab:values}
 \end{table}
 
-\begin{figure}[p]
-\centering\includegraphics[width=\textwidth]{envelope_linear.pdf}
-\caption[]{Envelopes of order $\delta$ (items 8, 9, 19, 23, 24). Top: $V(\delta)$ on logarithmic axes for $M_2$, $M_3$ and $M_4$;
-markers: certified search; lines: proved values; grey guides: $\delta^k$, so that the order of vanishing is the slope.
-Bottom: the best random sample in each bin of $\delta$ divided by the envelope, for random operators (solid) and scaled
-projections (dashed).}
-\label{fig:env-linear}
-\end{figure}
-\begin{figure}[p]
-\centering\includegraphics[width=\textwidth]{envelope_gardner.pdf}
-\caption[]{Gardner's inequality and its relatives (items 1--5), as in Figure~\ref{fig:env-linear}. All five envelopes
-equal $\kappa-1$ in every dimension (Theorem~\ref{thm:kant}); the random samples fall further behind as $n$ grows.}
-\label{fig:env-gardner}
-\end{figure}
-\begin{figure}[p]
-\centering\includegraphics[width=\textwidth]{envelope_projection.pdf}
-\caption[]{Inequalities for two projections of order $\delta^2$ (items 17, 18, 20, 21, 22), as in
-Figure~\ref{fig:env-linear} (Theorem~\ref{thm:proj}).}
-\label{fig:env-projection}
-\end{figure}
-\begin{figure}[p]
-\centering\includegraphics[width=\textwidth]{envelope_operator.pdf}
-\caption[]{Inequalities for positive operators (items 6, 7, 11, 12, 13), as in Figure~\ref{fig:env-linear}; dotted lines are
-the lower bounds of Proposition~\ref{prop:lower}.}
-\label{fig:env-operator}
-\end{figure}
-\begin{figure}[p]
-\centering\includegraphics[width=\textwidth]{envelope_higher.pdf}
-\caption[]{Monotonicity ($\delta^4$, item~10), its weighted form ($\delta^8$, item~25), and the items known only from the
-search (14--16), as in Figure~\ref{fig:env-linear}.}
-\label{fig:env-higher}
-\end{figure}
-
-Tables~\ref{tab:classes} and~\ref{tab:values} and Figures~\ref{fig:env-linear}--\ref{fig:env-higher} summarise the computation.
+Tables~\ref{tab:classes} and~\ref{tab:values} and the top rows of Figures~\ref{fig:mc-gardner}--\ref{fig:mc-wmon} summarise the computation.
 
 \begin{enumerate}
 \item[(i)] \emph{Agreement with the theorems.} Where the envelope is known exactly and attained (items 1--5, 8, 11, and 9
@@ -1173,9 +1129,26 @@ is still close to a trace in other senses; (4) envelopes for other inequalities 
 of~\cite{moslehian2025jmaa,bikchentaev2026sgm} with the arithmetic mean, and for the dual problem of characterising
 central elements~\cite{novikov2015}.
 
-\paragraph{Code availability.} The library, the program that computes all numbers, tables and the figure, and the tests
+\paragraph{Code availability.} The library, the programs that compute all numbers, tables and figures, and the tests
 are available at \url{https://github.com/andre-a-no/von_neumann_type_i} (MIT licence).
 
+\clearpage
+\appendix
+\section{Random samples and certified envelopes, item by item}\label{app:mc}
+
+Each figure belongs to one inequality and has one panel per dimension. Top row: the normalised violation $(L-R)/N$ of the
+$\TMCSamples$ random samples (grey) and, where the variables are not projections, of the $\TMCSamples$ scaled-projection
+samples (orange) against $\Delta(W)$ on $M_2$, $M_3$, $M_4$ (Section~\ref{sec:montecarlo}); black: the certified envelope
+$V(\delta)$ on the grid of Section~\ref{sec:numerics}, joined by straight lines. Bottom row (items with operator
+variables): random samples with $\Delta(W)=0.9$ and every operator variable of one contrast $\delta'$, against $\delta'$
+on $M_2$ and $M_3$; black: the certified $V(0.9,\delta')$ of Section~\ref{sec:bothcontrasts}. Samples far below zero are
+cut off. Where a curve is concave between grid points (item~11 below its maximum at $\delta'=\delta$, and after its
+steep drop near $\delta'=1$) a few samples lie above the straight segments; on $M_2$ they lie below the closed form
+$1-(w_1\ell'+w_2)/(2\sqrt{\ell'})$, $\ell'=\frac{1-\delta'}{1+\delta'}$, $w=\frac{2}{1+\ell}(1,\ell)$.
+
+\input{generated/trace_montecarlo_figures.tex}
+
+\clearpage
 {\sloppy
 \begin{thebibliography}{99}
 \bibitem{abed2024} S.~A.~Abed, I.~A.~Nikolaeva, A.~A.~Novikov, ``Generalisation of Michelson contrast for
