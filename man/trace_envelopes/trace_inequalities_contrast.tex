@@ -943,58 +943,86 @@ $A,B$ with aligned extreme eigenvectors all extreme eigenvalues multiply (add, f
 quotients do.
 \end{proof}
 
-The Jordan product is different: it need not be positive, and angles, not rapidities, add.
+\paragraph{The Jordan product.} For $AB+BA$ the picture changes: it need not be positive, and angles, not rapidities,
+add. The reason is geometric. A positive operator $A$ turns every vector by at most its angle: $\angle(x,Ax)\le\psi_A$,
+where $\sin\psi_A=\Delta(A)$. Hence $ABx$ and $BAx$ differ from $x$ by at most $\psi_A+\psi_B$, and so does their sum
+$(AB+BA)x$, as long as $\psi_A+\psi_B<\frac\pi2$. Then $(AB+BA)x$ stays in the half-space of $x$, i.e.\
+$\langle(AB+BA)x,x\rangle>0$. If $\psi_A+\psi_B>\frac\pi2$, a suitable rotation of $B$ against $A$ turns some $x$ by more
+than a right angle, and $AB+BA$ has a negative eigenvalue. In terms of contrasts: \emph{$AB+BA$ is positive for every
+relative position if and only if the point $(\Delta(A),\Delta(B))$ lies in the unit disc}
+(Figure~\ref{fig:ops-positivity}). This criterion is Gustafson's~\cite{gustafson1968}; we add that it is sharp in every
+dimension and that the same angles bound the contrast of $AB+BA$.
+
+\begin{figure}[!htbp]
+\centering\includegraphics[width=\textwidth]{ops_jordan_positivity.pdf}
+\caption[]{Is $AB+BA$ positive? $\COSamples$ random pairs $A,B>0$ per dimension, with contrasts uniform in $[0,1]^2$ and
+Haar random relative position: positive (grey) or indefinite (orange). No indefinite product occurs inside the quarter
+circle $\Delta(A)^2+\Delta(B)^2=1$ (Theorem~\ref{thm:jordan}(a)); outside it occurs for some positions, more often the
+further out.}
+\label{fig:ops-positivity}
+\end{figure}
 
 \begin{theorem}[Jordan product]\label{thm:jordan}
-Let $A,B>0$ in $M_n$, $n\ge2$, with contrasts $\delta_A,\delta_B$ and angles $\psi_A,\psi_B$.
+Let $A,B>0$ in $M_n$, $n\ge2$, with contrasts $\delta_A,\delta_B$, angles $\psi_A=\arcsin\delta_A$, $\psi_B=\arcsin\delta_B$
+and rapidities $\eta_A=\operatorname{artanh}\delta_A$, $\eta_B=\operatorname{artanh}\delta_B$.
 \begin{enumerate}
-\item[(a)] $AB+BA\ge0$ for every relative position of $A$ and $B$ if and only if $\psi_A+\psi_B\le\frac\pi2$, that is,
-$\delta_A^2+\delta_B^2\le1$ (Gustafson~\cite{gustafson1968}). If $\delta_A^2+\delta_B^2>1$, then $AB+BA$ is indefinite
-for some relative position, in every dimension.
-\item[(b)] If $\delta_A^2+\delta_B^2<1$, then
-\[
-  \tanh|\eta_A-\eta_B|\le\Delta(AB+BA)\le\sin(\psi_A+\psi_B).
-\]
-The lower bound is attained by commuting operators with interchanged extreme eigenvectors.
-\item[(c)] On $M_2$, with $a=\frac{1-\delta_A}{1+\delta_A}$, $b=\frac{1-\delta_B}{1+\delta_B}$, $p=(1-a)(1-b)$,
-\[
-  \max\Delta(AB+BA)=\max_{0\le c\le1}\Bigl(1-\frac{4ab-p^2c(1-c)}{(a+b+pc)^2}\Bigr)^{1/2}.
-\]
-On $M_n$, $n\ge3$, the maximum is at least $(2-\mu)/(2+\mu)$, where
-$\mu=\min_{0\le c\le1}\bigl(a+b+pc-\sqrt{(a+b+pc)^2-4ab+p^2c(1-c)}\,\bigr)$ is the smallest eigenvalue of $AB+BA$ over
-the $2\times2$ pairs with spectra $\{1,a\}$ and $\{1,b\}$.
+\item[(a)] $AB+BA\ge0$ for every relative position of $A$ and $B$ if and only if $\delta_A^2+\delta_B^2\le1$. If
+$\delta_A^2+\delta_B^2>1$, $AB+BA$ is indefinite for some relative position, in every dimension.
+\item[(b)] If $\delta_A^2+\delta_B^2<1$, then $\tanh|\eta_A-\eta_B|\le\Delta(AB+BA)\le\sin(\psi_A+\psi_B)$, and the lower
+bound is attained by commuting $A,B$ whose extreme eigenvectors are interchanged.
 \end{enumerate}
 \end{theorem}
 \begin{proof}
-(a), (b) For $x\ne0$, $\angle(x,Bx)\le\psi_B$ and $\angle(Bx,ABx)\le\psi_A$ by the formula for $\cos\psi$, so
-$\angle(x,ABx)\le\psi_A+\psi_B$, and likewise $\angle(x,BAx)\le\psi_A+\psi_B$. If $\psi_A+\psi_B<\frac\pi2$, the cone
-$\{y:\angle(x,y)\le\psi_A+\psi_B\}$ is convex, so it contains $(AB+BA)x$; hence $\langle(AB+BA)x,x\rangle>0$, and the
-largest angle of $AB+BA$ is at most $\psi_A+\psi_B$, which is the upper bound in (b). The case $\psi_A+\psi_B=\frac\pi2$
-follows by continuity. For the lower bound let $x,y$ be unit eigenvectors of $A$ for $M_A$ and $m_A$; then
-$\lambda_{\max}(AB+BA)\ge2\Re\langle Bx,Ax\rangle=2M_A\langle Bx,x\rangle\ge2M_Am_B$ and $\lambda_{\min}(AB+BA)\le2m_AM_B$,
-so the condition number is at least $h_A/h_B$, and symmetrically at least $h_B/h_A$. For the converse in (a) and for (c),
-on $M_2$ we may take $A=\mathrm{diag}(1,a)$ and, after a diagonal unitary, $B$ real with eigenvalues $1,b$ and eigenvector
-$(\cos\theta,\sin\theta)$ for $1$; with $c=\cos^2\theta$,
+(a) and the upper bound in (b). We use the real angle $\angle(x,y)$ defined above. By the formula for $\cos\psi$,
+$\angle(x,Bx)\le\psi_B$ and $\angle(Bx,ABx)\le\psi_A$, so $\angle(x,ABx)\le\psi_A+\psi_B$ by the triangle inequality;
+likewise $\angle(x,BAx)\le\psi_A+\psi_B$. If $\psi_A+\psi_B<\frac\pi2$, the cone $\{y:\angle(x,y)\le\psi_A+\psi_B\}$ is
+convex and contains $(AB+BA)x$, so $\langle(AB+BA)x,x\rangle>0$; moreover the largest angle of $AB+BA$ is at most
+$\psi_A+\psi_B$, and its sine is $\Delta(AB+BA)$. The case $\psi_A+\psi_B=\frac\pi2$ follows by continuity.
+
+Converse in (a). On $M_2$ take $A=\mathrm{diag}(1,a)$ and $B$ with eigenvalues $1,b$ and eigenvector
+$(\cos\theta,\sin\theta)$ for $1$, where $a=\frac{1-\delta_A}{1+\delta_A}$, $b=\frac{1-\delta_B}{1+\delta_B}$. With
+$c=\cos^2\theta$ and $p=(1-a)(1-b)$ a direct computation gives
 \[
-  \tfrac12\Tr(AB+BA)=a+b+pc,\qquad\det(AB+BA)=4ab-p^2c(1-c),
+  \tfrac12\Tr(AB+BA)=a+b+pc,\qquad\det(AB+BA)=4ab-p^2c(1-c).
 \]
-which gives the formula for $\Delta^2=1-4\det/\Tr^2$ and for the smallest eigenvalue. At $c=\frac12$ the
-determinant is negative if and only if $16ab<p^2$, and with $\sqrt a=\sqrt{1-\delta_A^2}/(1+\delta_A)$,
-$1-a=2\delta_A/(1+\delta_A)$ this is $(1-\delta_A^2)(1-\delta_B^2)<\delta_A^2\delta_B^2$, that is $\delta_A^2+\delta_B^2>1$.
-In $M_n$ take the direct sums of these $2\times2$ blocks with $a\,1_{n-2}$ and $b\,1_{n-2}$. For the lower bound in (c),
-$A=1\oplus A_2$, $B=1\oplus B_2$ (padded with ones) give $AB+BA=2\oplus(A_2B_2+B_2A_2)$; its largest eigenvalue is $2$,
-since $\|A_2B_2+B_2A_2\|\le2$, and its smallest is $\mu$ for the optimal angle.
+At $\theta=\pi/4$ the determinant is negative if and only if $16ab<p^2$; with $\sqrt a=\sqrt{1-\delta_A^2}/(1+\delta_A)$ and
+$1-a=2\delta_A/(1+\delta_A)$ this reads $(1-\delta_A^2)(1-\delta_B^2)<\delta_A^2\delta_B^2$, i.e.\ $\delta_A^2+\delta_B^2>1$.
+On $M_n$ add the direct summands $a\,1_{n-2}$ and $b\,1_{n-2}$.
+
+Lower bound in (b). If $x,y$ are unit eigenvectors of $A$ for its extreme eigenvalues $M_A$, $m_A$, then
+$\lambda_{\max}(AB+BA)\ge2\Re\langle Bx,Ax\rangle=2M_A\langle Bx,x\rangle\ge2M_Am_B$ and likewise
+$\lambda_{\min}(AB+BA)\le2m_AM_B$. So the condition number of $AB+BA$ is at least $h_A/h_B$, and by symmetry at least
+$h_B/h_A$.
 \end{proof}
 
-For $\delta_A=\delta_B=0.6$ the commuting value is $\tanh2\eta=\COJordanTanh$, the maximum on $M_2$ is $\COJordanTwo$, the
-lower bound of (c) for $n\ge3$ is $\COJordanThree$, and the upper bound of (b) is $\COJordanSin$. A numerical optimisation
-over all relative positions and intermediate eigenvalues (\texttt{scripts/\allowbreak contrast\_\allowbreak operations.py},
-24 starts per point) finds on $M_3$ and on $M_4$ exactly the value $(2-\mu)/(2+\mu)$ of (c) (largest difference
-$\COJordanDev$ on a grid of $\delta_A$ with $\delta_B=0.6$; Figure~\ref{fig:ops-jordan}): in dimension three and more the
-two extreme eigenvalues of $AB+BA$ come from different blocks, and the maximum is larger than on $M_2$. Equality for every
-$n\ge3$ would follow if the smallest eigenvalue of a Jordan product with spectra in $[a,1]$ and $[b,1]$ were always
-minimised on a two-dimensional subspace, the setting of Strang's eigenvalue bounds~\cite{strang1962}; we do not use
-this. The upper bound of (b) is approached only as $\delta_A^2+\delta_B^2\to1$.
+How large can $\Delta(AB+BA)$ be? The upper bound $\sin(\psi_A+\psi_B)$ is reached only at the boundary of the disc. The
+true maximum depends on the dimension, because in $M_2$ both extreme eigenvalues of $AB+BA$ come from the same pair of
+$2\times2$ matrices, while in $M_3$ they can come from different blocks.
+
+\begin{proposition}[Largest contrast of the Jordan product]\label{prop:jordanmax}
+In the notation of the proof above, let $\delta_A^2+\delta_B^2<1$.
+\begin{enumerate}
+\item[(a)] On $M_2$, $\displaystyle\max\Delta(AB+BA)=\max_{0\le c\le1}\Bigl(1-\frac{4ab-p^2c(1-c)}{(a+b+pc)^2}\Bigr)^{1/2}$.
+\item[(b)] On $M_n$, $n\ge3$, $\max\Delta(AB+BA)\ge(2-\mu)/(2+\mu)$, where
+$\mu=\min_{0\le c\le1}\bigl(a+b+pc-\sqrt{(a+b+pc)^2-4ab+p^2c(1-c)}\,\bigr)$ is the smallest eigenvalue of $AB+BA$ over the
+$2\times2$ pairs of (a).
+\end{enumerate}
+Numerically, both values equal the commuting value $\tanh(\eta_A+\eta_B)$ for small contrasts and exceed it for large ones.
+\end{proposition}
+\begin{proof}
+(a) On $M_2$ every pair is unitarily equivalent to the pair of the proof of Theorem~\ref{thm:jordan} for some $\theta$,
+and $\Delta^2=1-4\det/\Tr^2$. (b) Take $A=1\oplus A_2$ and $B=1\oplus B_2$ (padded with ones) with the $2\times2$ pair
+$A_2,B_2$ of smallest eigenvalue $\mu$. Then $AB+BA=2\oplus(A_2B_2+B_2A_2)$ has the largest eigenvalue $2$, since
+$\|A_2B_2+B_2A_2\|\le2$, and the smallest eigenvalue $\mu$.
+\end{proof}
+
+For $\delta_A=\delta_B=0.6$: the commuting value is $\COJordanTanh$, the maximum on $M_2$ is $\COJordanTwo$, the value of (b)
+for $n\ge3$ is $\COJordanThree$, and $\sin(\psi_A+\psi_B)=\COJordanSin$. A numerical optimisation over all relative
+positions and intermediate eigenvalues (\texttt{scripts/\allowbreak contrast\_\allowbreak operations.py}, 24 starts per point)
+finds on $M_3$ and on $M_4$ exactly the value of (b) (largest difference $\COJordanDev$ on a grid of $\delta_A$ with
+$\delta_B=0.6$; Figure~\ref{fig:ops-jordan}). Equality for every $n\ge3$ would follow if the smallest eigenvalue of a
+Jordan product with spectra in $[a,1]$ and $[b,1]$ were always minimised on a two-dimensional subspace, the setting of
+Strang's eigenvalue bounds~\cite{strang1962}; we do not use this.
 
 The theorem explains a threshold. The analogue of item~21 for positive operators, $\varphi(\Re AB)\ge0$, holds for every
 positive functional as long as $\Delta(A)^2+\Delta(B)^2\le1$, because then $\Re AB\ge0$; for operators of the same
@@ -1064,8 +1092,9 @@ $\tanh\frac12|\eta_A\pm\eta_B|$ of Proposition~\ref{prop:rapid}(c).}
 \begin{figure}[!htbp]
 \centering\includegraphics[width=\textwidth]{ops_jordan.pdf}
 \caption[]{Contrast of the Jordan product $AB+BA$ against $\Delta(A)<0.8$, with $\Delta(B)=0.6$ (for $\Delta(A)\le0.8$ it
-is positive, Theorem~\ref{thm:jordan}(a)): the bounds of (b), the largest value of (c) (orange; on $M_3$ and $M_4$ the value
-$(2-\mu)/(2+\mu)$), and the largest value found by optimisation (markers).}
+is positive, Theorem~\ref{thm:jordan}(a)): the bounds of Theorem~\ref{thm:jordan}(b), the largest value of
+Proposition~\ref{prop:jordanmax} (orange; on $M_3$ and $M_4$ the value $(2-\mu)/(2+\mu)$), and the largest value found by
+optimisation (markers).}
 \label{fig:ops-jordan}
 \end{figure}
 \begin{figure}[!htbp]

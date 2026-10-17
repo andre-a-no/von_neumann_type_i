@@ -7,9 +7,9 @@ script samples random relative positions (Haar unitaries, the other eigenvalues 
 compares the contrast of
 
   sum         A + tB (t log-uniform)            0 <= Delta <= max(Delta(A), Delta(B))
-  congruence  A^{1/2} B A^{1/2}                 tanh|h_A - h_B| <= Delta <= tanh(h_A + h_B),  h = artanh Delta
-  geom. mean  A # B                             tanh|h_A - h_B|/2 <= Delta <= tanh((h_A + h_B)/2)
-  Jordan      AB + BA                           tanh|h_A - h_B| <= Delta <= sin(phi_A + phi_B),  phi = arcsin Delta;
+  congruence  A^{1/2} B A^{1/2}                 tanh|eta_A - eta_B| <= Delta <= tanh(eta_A + eta_B),  eta = artanh Delta
+  geom. mean  A # B                             tanh|eta_A - eta_B|/2 <= Delta <= tanh((eta_A + eta_B)/2)
+  Jordan      AB + BA                           tanh|eta_A - eta_B| <= Delta <= sin(psi_A + psi_B),  psi = arcsin Delta;
                                                 positive for every relative position iff Delta(A)^2 + Delta(B)^2 <= 1
   commutator  |phi_W(AB - BA)| / (m(A) m(B))    <= 2 Delta(W) Delta(A) Delta(B) (n even), m = (lambda_max + lambda_min)/2
 
@@ -90,7 +90,7 @@ H = np.arctanh
 
 
 def hyp(da, db, w=1.0):
-    """(tanh(w|h_A - h_B|), tanh(w(h_A + h_B))): congruence (w = 1) and geometric mean (w = 1/2)."""
+    """(tanh(w|eta_A - eta_B|), tanh(w(eta_A + eta_B))): congruence (w = 1) and geometric mean (w = 1/2)."""
     return np.tanh(w * np.abs(H(da) - H(db))), np.tanh(w * (H(da) + H(db)))
 
 
@@ -179,7 +179,7 @@ def panel_row(name, title_y, xlabel, data, curves, legend, ylim=(-0.02, 1.02), x
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-    fig, axes = plt.subplots(1, len(DIMS), figsize=(10, 2.75))
+    fig, axes = plt.subplots(1, len(DIMS), figsize=(10, 3.3))
     for ax, n in zip(axes, DIMS):
         x, y = data[n]
         ax.scatter(x, y, s=1.2, color=GREY, alpha=0.3, lw=0, rasterized=True)
@@ -195,6 +195,36 @@ def panel_row(name, title_y, xlabel, data, curves, legend, ylim=(-0.02, 1.02), x
     fig.legend(handles=legend(plt), loc='lower center', ncol=len(legend(plt)), frameon=False, fontsize=8)
     fig.tight_layout(rect=(0, 0.1, 1, 1))
     fig.savefig(OUT / 'figures' / f'ops_{name}.pdf', metadata={'CreationDate': None}, dpi=200)
+    plt.close(fig)
+
+
+def positivity_figure(rng, S):
+    """Random pairs (Delta(A), Delta(B)) in random relative position: is AB + BA positive? One panel per dimension."""
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    fig, axes = plt.subplots(1, len(DIMS), figsize=(10, 3.6))
+    t = np.linspace(0, np.pi / 2, 200)
+    for ax, n in zip(axes, DIMS):
+        sa, sb = rng.uniform(0, 1, S), rng.uniform(0, 1, S)
+        P, Q = positive(rng, sa, n), positive(rng, sb, n)
+        neg = np.linalg.eigvalsh(P @ Q + Q @ P)[:, 0] < 0
+        ax.scatter(sa[~neg], sb[~neg], s=1.2, color=GREY, alpha=0.3, lw=0, rasterized=True)
+        ax.scatter(sa[neg], sb[neg], s=1.6, color=ORANGE, alpha=0.6, lw=0, rasterized=True)
+        ax.plot(np.cos(t), np.sin(t), color=INK, lw=1.6)
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.set_aspect('equal')
+        ax.set_title(f'$M_{n}$', fontsize=9, color=INK)
+        ax.set_xlabel(r'$\Delta(A)$', fontsize=8, color=MUTED)
+        style(ax)
+    axes[0].set_ylabel(r'$\Delta(B)$', fontsize=8, color=MUTED)
+    handles = [plt.Line2D([], [], ls='', marker='o', ms=4, color=GREY, label=r'$AB+BA\geq0$'),
+               plt.Line2D([], [], ls='', marker='o', ms=4, color=ORANGE, label=r'$AB+BA$ indefinite'),
+               plt.Line2D([], [], color=INK, label=r'$\Delta(A)^2+\Delta(B)^2=1$')]
+    fig.legend(handles=handles, loc='lower center', ncol=3, frameon=False, fontsize=8)
+    fig.tight_layout(rect=(0, 0.08, 1, 1))
+    fig.savefig(OUT / 'figures' / 'ops_jordan_positivity.pdf', metadata={'CreationDate': None}, dpi=200)
     plt.close(fig)
 
 
@@ -287,11 +317,11 @@ def main():
     lo, hi = hyp(xs, DB)
     panel_row('congruence', r'$\Delta(A^{1/2}BA^{1/2})$', xa, data['congruence'],
               lambda n: [dict(xy=(xs, hi)), dict(xy=(xs, lo), ls='--')],
-              leg((r'$\tanh(h_A+h_B)$', INK, '-', None), (r'$\tanh|h_A-h_B|$', INK, '--', None)))
+              leg((r'$\tanh(\eta_A+\eta_B)$', INK, '-', None), (r'$\tanh|\eta_A-\eta_B|$', INK, '--', None)))
     lo, hi = hyp(xs, DB, 0.5)
     panel_row('geomean', r'$\Delta(A\,\sharp\,B)$', xa, data['geomean'],
               lambda n: [dict(xy=(xs, hi)), dict(xy=(xs, lo), ls='--')],
-              leg((r'$\tanh\frac{h_A+h_B}{2}$', INK, '-', None), (r'$\tanh\frac{|h_A-h_B|}{2}$', INK, '--', None)))
+              leg((r'$\tanh\frac{\eta_A+\eta_B}{2}$', INK, '-', None), (r'$\tanh\frac{|\eta_A-\eta_B|}{2}$', INK, '--', None)))
     xj = np.linspace(0, np.sqrt(1 - DB ** 2), 300)
     lo, hi = jordan_bounds(xj, DB)
     sup2 = np.array([jordan_sup2(s, DB, 20001) for s in xj])
@@ -300,12 +330,14 @@ def main():
               lambda n: [dict(xy=(xj, hi), ls=':'), dict(xy=(xj, lo), ls='--'),
                          dict(xy=(xj, sup2 if n == 2 else sup3), color=ORANGE)]
               + ([dict(xy=(jgrid, res['jordan'][str(n)]), ls='', marker='o')] if n > 2 else []),
-              leg((r'$\sin(\varphi_A+\varphi_B)$', INK, ':', None), (r'$\tanh|h_A-h_B|$', INK, '--', None),
+              leg((r'$\sin(\psi_A+\psi_B)$', INK, ':', None), (r'$\tanh|\eta_A-\eta_B|$', INK, '--', None),
                   ('largest value (Prop.)', ORANGE, '-', None), ('optimisation', INK, '', 'o')))
     panel_row('commutator', r'$|\varphi_W(AB-BA)|/(m(A)m(B))$', r'$\Delta(W)$, with $\Delta(A)=\Delta(B)=' + f'{DB}$',
               data['commutator'],
               lambda n: [dict(xy=(xs, 2 * DB * DB * np.array([trace_test_factor(n, x) for x in xs])))],
               leg(('sharp bound', INK, '-', None)), ylim=(-0.02, 0.8))
+
+    positivity_figure(rng, S)
 
     gen = OUT / 'generated'
     gen.mkdir(exist_ok=True)
