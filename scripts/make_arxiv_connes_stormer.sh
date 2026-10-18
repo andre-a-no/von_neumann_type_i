@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Build the arXiv upload of the paper on the Connes--Stormer entropy of two MASAs, man/connes_stormer/arxiv_connes_stormer_masas.zip (and
-# arxiv_connes_stormer_masas.tar.gz): connes_stormer_masas.tex, the generated numbers and the figure (both from scripts/connes_stormer.py in man/article).
+# arxiv_connes_stormer_masas.tar.gz): connes_stormer_masas.tex, the generated numbers (from scripts/connes_stormer.py, in man/article)
+# and the figures man/connes_stormer/figures/cs_*.pdf (from scripts/connes_stormer_figures.py).
 # The archive is compiled three times in a clean directory first; the script fails if pdflatex reports an error or an
 # undefined reference. It also writes the compiled man/connes_stormer/connes_stormer_masas.pdf.
 set -euo pipefail
@@ -8,7 +9,7 @@ cd "$(dirname "$0")/../man/connes_stormer"
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$tmp/figures" "$tmp/generated"
 cp connes_stormer_masas.tex "$tmp/"
-cp ../article/figures/connes_stormer.pdf "$tmp/figures/"
+cp figures/cs_*.pdf "$tmp/figures/"
 cp ../article/generated/connes_stormer.tex "$tmp/generated/"
 (cd "$tmp" && for i in 1 2 3; do pdflatex -interaction=batchmode -file-line-error connes_stormer_masas.tex >/dev/null || true; done)
 if [ ! -f "$tmp/connes_stormer_masas.pdf" ] || grep -q '^\./[A-Za-z_/]*\.tex:[0-9]*:' "$tmp/connes_stormer_masas.log" \

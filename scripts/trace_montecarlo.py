@@ -429,7 +429,7 @@ def figures(res, fixed, dims, fixed_dims):
         fname = f'mc_{num[name]:02d}_{name}.pdf'
         fig.savefig(figdir / fname, metadata={'CreationDate': None}, dpi=200)
         plt.close(fig)
-        cap = (f'Item {num[name]}, {tc.INEQS[name]["label"]}: random samples and the certified envelope'
+        cap = (f'Item {num[name]}, {tc.INEQS[name]["label"]}: random samples and the computed envelope (a certified lower bound)'
                + (r'; top: against $\Delta(W)$, bottom: against the contrast $\delta^\prime$ of the operators at '
                   f'$\\Delta(W)={FIXED_DW}$.' if op else r' against $\Delta(W)$.'))
         tex += [r'\begin{figure}[!htbp]', r'\centering', f'\\includegraphics[width=\\textwidth]{{{fname}}}',

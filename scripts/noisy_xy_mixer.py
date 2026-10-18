@@ -143,11 +143,11 @@ def main():
         c2 = float(th[0] / g[0] ** 2)
         de = 1 - np.array(res['dephasing']['Fpost'])
         ratio = float(de[0] / (g[0] * info['I']))
-        mixed_raw, mixed_post = 1 - res['mixed']['F'][4], 1 - res['mixed']['Fpost'][4]   # g = 0.01
+        mixed_raw, mixed_post = 1 - res['mixed']['F'][4], 1 - res['mixed']['Fpost'][4]   # g = 10^(-5/3) ~ 0.022
         summary[n] = dict(info, acc_err=acc_err, t1_post=t1_post, thermal_slope=slope, thermal_c2=c2,
                           deph_ratio=ratio, mixed_raw=mixed_raw, mixed_post=mixed_post)
         print(f"n={n}: {info['seconds']:.1f} s; T1: max rel. err. of p {acc_err:.1e}, |1-F_post| {t1_post:.1e}; "
-              f"thermal slope {slope:.3f}; dephasing (1-F_post)/(g I) {ratio:.4f}; mixed g=0.01 raw {mixed_raw:.4f} "
+              f"thermal slope {slope:.3f}; dephasing (1-F_post)/(g I) {ratio:.4f}; mixed g=0.022 raw {mixed_raw:.4f} "
               f"post {mixed_post:.4f}")
         rows.append(f"{n} & {info['sector']} & {info['algebra']} & {info['dense']} & {info['seconds']:.0f} & "
                     f"{acc_err:.0e} & {t1_post:.0e} & {slope:.2f} & {info['I']:.3f} & {ratio:.3f} & "
