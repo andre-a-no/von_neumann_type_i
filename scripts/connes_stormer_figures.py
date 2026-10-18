@@ -2,10 +2,11 @@
 
 Writes man/connes_stormer/figures/cs_bloch.pdf, cs_window.pdf, cs_asymptotics.pdf and cs_numerics.pdf.
 
-The n = 2 figures are computed with NumPy/SciPy directly from the formulas of the paper (Lemma 4.1, Theorem 4.4,
-Proposition 4.6, Theorem 5.1), independently of the library: psi(beta) = sin(2 beta) log tan^2 beta,
+The n = 2 figures are computed with NumPy/SciPy directly from the formulas of the paper (the lemma on psi, the
+variational formula, the proposition on the optimal angle and the asymptotics of Theorem B), independently of the
+library: psi(beta) = sin(2 beta) log tan^2 beta,
 phi(alpha) = int_{alpha-theta}^{alpha} psi, the optimal angle alpha* is the root of psi(alpha) = psi(alpha - theta)
-in the bracket of Proposition 4.6, and H = phi(alpha*). The n >= 3 figure only plots the stored results of
+in the bracket given there, and H = phi(alpha*). The n >= 3 figure only plots the stored results of
 scripts/connes_stormer.py (man/article/generated/connes_stormer.json); it does not rerun that computation.
 
 Usage: python scripts/connes_stormer_figures.py
@@ -77,7 +78,7 @@ BETA_K = -np.arccos(Y) / 2                     # the maximiser of psi in (-pi/4,
 
 
 def alpha_star(th):
-    """The optimal angle of Proposition 4.6, in (-pi/4, pi/4]."""
+    """The optimal angle alpha* of the paper, in (-pi/4, pi/4]."""
     if th <= 0 or th >= np.pi / 2:
         return np.nan
     if abs(th - np.pi / 4) < 1e-14:
