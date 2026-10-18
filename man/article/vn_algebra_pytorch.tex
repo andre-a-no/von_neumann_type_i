@@ -82,14 +82,14 @@ paper documents it. Its design rests on one thesis: keeping the sector structure
 in the algebra correct by construction and cheap. Haar sampling is exact in every block, trace conventions survive maps
 between sectors, and all blocks of one size go through one batched kernel. We show that the library reproduces the
 distributions of the earlier NumPy computation and is about two orders of magnitude faster than its loop formulation
-for small blocks. More important than speed, every operation is differentiable, which turns the sampling of the
-earlier study into optimisation: from block size 4 on, a million Haar samples miss the violation of a trace
-inequality in every one of 16 test cases, while batched gradient ascent finds the exact supremum in all of them within
-seconds. We measure each architectural decision against the simple alternative and validate the library
-against exact results. Its generality is illustrated by symmetry verification for a noisy XY mixer of the quantum
-alternating operator ansatz, whose Hamming-weight sectors form the algebra. One batched run gives, for all noise
-models and rates, the exact acceptance probabilities and post-selected fidelities. It also gives the first-order
-dephasing integral and a gain from post-selection that grows with the register size.
+for small blocks. More important than speed, every operation is differentiable, which turns the sampling of the earlier
+study into variational problems over the states, unitaries and channels of the algebra: from block size 4 on, a million
+Haar samples miss the violation of a trace inequality in every one of 16 test cases, while batched gradient ascent
+finds the exact supremum in all of them in seconds. We measure each architectural decision against the simple
+alternative and validate the library against exact results. Its generality is illustrated by symmetry verification for
+a noisy XY mixer of the quantum alternating operator ansatz, whose Hamming-weight sectors form the algebra. One batched
+run gives, for all noise models and rates, the exact acceptance probabilities and post-selected fidelities. It also
+gives the first-order dephasing integral and a gain from post-selection that grows with the register size.
 \end{abstract}
 
 \section*{Program summary}
@@ -149,8 +149,29 @@ formulation, and for blocks of size 16 about three times faster, and the same co
 differentiable, including spectral functions (by the Daleckii--Krein formula), channels between sectors and the time
 steps of Hamiltonian and Lindblad dynamics, so a question asked by sampling can be asked again as a variational
 problem: maximise a functional over operators with a prescribed spectrum, over states, over unitaries of the algebra or
-over all channels, by batched gradient ascent with many starts in one call. This changes the answers, not only the
-time. The Monte Carlo of~\cite{abed2024,v1} saw no violation of Gardner's inequality for blocks of size 16, and we now
+over all channels, by batched gradient ascent with many starts in one call.
+
+\paragraph{Extremal problems in their own right.} The variational form is not a detour: in operator algebra, quantum information and
+physics, many of the central questions are extremal problems. In operator algebra, a trace inequality is settled by its
+sharp constant~\cite{carlen2010}, and how strongly a characterisation of the trace~\cite{gardner1979,petz1988} fails
+for other functionals is measured by an envelope over unitaries and over spectra with prescribed
+invariants~\cite{abed2024,nn_trace}. The Connes--Størmer entropy
+of two subalgebras is a supremum over finite partitions of unity~\cite{connes1975,pimsner1986}, and the
+Pimsner--Popa constant of a conditional expectation is the best constant in an operator inequality, tied to the
+index~\cite{pimsner1986,frank1998}. In quantum information, data processing and the parameter ranges in which it
+holds, channel capacities and minimal output entropies, and optimal recovery are optimisation problems. The convex
+ones, such as the diamond norm~\cite{watrous2009} or channel-adapted recovery~\cite{fletcher2007}, are semidefinite
+programs and are best solved by SDP solvers, which also return dual certificates. Many important ones are not
+convex: the minimal output entropy, whose additivity was disproved with random channels in
+high dimension~\cite{hastings2009}, suprema over unitaries or over spectra with prescribed contrast, the Rényi and
+sandwiched quantities outside the ranges in which they are monotone~\cite{mullerlennert2013,berta2017}, and entropies
+maximised over partitions. In physics, optimal control of open systems~\cite{khaneja2005,koch2016}, variational state
+preparation~\cite{cerezo2021} and protocols designed to tolerate noise are optimisation problems over unitaries, states
+and channels; when the controls and the noise conserve a charge (Section~\ref{sec:noisy}), all of their variables lie
+in an algebra~\eqref{eq:M}.
+
+\paragraph{Sampling is no substitute.} Asking such a question by sampling changes the answer, not only the time. The
+Monte Carlo of~\cite{abed2024,v1} saw no violation of Gardner's inequality for blocks of size 16, and we now
 know why: by concentration of measure, the unitaries near the maximiser have Haar measure that decays rapidly with the
 dimension. From block size 4 on, a million Haar samples miss the violation in every test case, while gradient ascent
 finds the exact supremum in all of them, to a relative error of $3\times10^{-5}$ and in a few seconds
@@ -218,7 +239,9 @@ compares speed. Section~\ref{sec:design} explains where the speed comes from, wi
 resolve them. Monte Carlo estimates agree with exact Haar, Weingarten, Page and purity values within their standard
 errors (Section~\ref{sec:validation}), and batched optimisation finds extremes that sampling misses
 (Section~\ref{sec:optimisation}). Sections~\ref{sec:chains} and~\ref{sec:symmetries} add spin chains, inclusions and
-symmetry reduction, and Section~\ref{sec:noisy} shows what this generality buys. The intended users are operator
+symmetry reduction, and Section~\ref{sec:noisy} shows what this generality buys.
+% CONTROL-DEMO-INTRO: Section~\ref{sec:control} optimises ... in the noisy register of Section~\ref{sec:noisy}.
+The intended users are operator
 algebraists who test conjectures numerically, quantum information researchers who work with superselection rules or
 symmetric noise, and physicists who need many small symmetric problems, such as disorder realisations or noise sweeps,
 in one batch. The library is not a circuit simulator or a tensor-network code; for single large systems the packages
@@ -280,6 +303,37 @@ formalise von Neumann algebras and continuous functional calculus without comput
 and optimisation over the algebra need; it takes the block structure as input, and its own Wedderburn decomposition
 (Section~\ref{sec:symmetries}) can also supply it.
 
+\paragraph{Optimisation.} Several packages differentiate quantum dynamics. QuTiP~5 does so through its JAX data layer,
+QuTiP-JAX, which gives gradients of Lindblad and Monte Carlo solutions with respect to Hamiltonian and counting-field
+parameters~\cite{lambert2026}. \texttt{dynamiqs} differentiates its Schrödinger, Lindblad and stochastic solvers with
+respect to arbitrary parameters and batches over Hamiltonians, initial states and jump operators~\cite{dynamiqs}.
+QuantumToolbox.jl has experimental forward- and reverse-mode differentiation of its master-equation
+solver~\cite{mercurio2025}, Qiskit Dynamics uses JAX for differentiable simulation and control
+optimisation~\cite{puzzuoli2023}, and PennyLane differentiates noisy circuits on its mixed-state simulator by
+backpropagation~\cite{bergholm2018}. All of these differentiate a trajectory in the full Hilbert space with respect
+to physical parameters. QuTiP-QOC optimises control pulses with GRAPE, CRAB, GOAT and the JAX-based JOPT, also for open
+systems through their Liouvillians~\cite{lambert2026}. Convex problems over states and channels, such as diamond
+norms~\cite{watrous2009} and channel-adapted recovery~\cite{fletcher2007}, are semidefinite programs. The modelling
+languages CVXPY~\cite{diamond2016} and PICOS~\cite{sagnol2022}, both with complex matrix variables, and the MATLAB
+toolbox QETLAB~\cite{qetlab} solve them to the global optimum with a dual certificate. Riemannian optimisation
+libraries supply manifolds: Pymanopt~\cite{townsend2016} includes the unitary group and its powers $U(n)^m$,
+geoopt~\cite{kochurov2020} and McTorch~\cite{meghwanshi2018} add Stiefel manifolds to PyTorch, and
+Manopt.jl~\cite{bergmann2022} works on the real and complex manifolds of Manifolds.jl~\cite{axen2023}.
+
+What \texttt{torch\_vn\_algebra} adds lies between these groups. Its constraint sets are those of the algebra,
+parametrised exactly and batched: the unitary group $\prod_cU(k_c)$ with blocks of different sizes, positive and
+self-adjoint elements with a prescribed spectrum or Michelson contrast, states, and, in the scripts, channels between
+algebras with different sectors and partitions of unity, both parametrised by isometries
+(Sections~\ref{sec:renyi} and~\ref{sec:cs}). Objectives can use the centre, since sector probabilities, post-selection on a
+charge and conditioning on a sector are operations of the data type. Independent starts, parameter values and models
+are elements of one batch, so an envelope over a grid, or a threshold scan over all $\alpha$ of
+Section~\ref{sec:renyi}, is one call. Reported extremal values are recomputed at the optimiser in 50-digit
+arithmetic, so they are certified lower bounds for suprema; they are not upper bounds. Other packages are better in
+three respects. A convex problem belongs to an SDP solver, which returns the global optimum with a certificate where
+our local search returns a lower bound. A single large system belongs to the simulators above. Pulse-level control,
+with waveform constraints and optimisation of the evolution time, is the purpose of QuTiP-QOC. The library is meant
+for problems that are non-convex, live in an algebra~\eqref{eq:M}, and come in many instances.
+
 \begin{table}[t]
 \centering\footnotesize
 \setlength{\tabcolsep}{2.2pt}
@@ -298,6 +352,7 @@ symmetry sectors & -- & ($\checkmark$) & -- & -- & -- & -- & $\checkmark$ & $\ch
 centre, several traces, cond.\ expectations & -- & -- & -- & -- & -- & -- & -- & -- & -- & $\checkmark$\\
 maps between algebras of different sectors & -- & ($\checkmark$) & -- & -- & -- & -- & -- & -- & -- & $\checkmark$\\
 Haar/COE/CSE and prescribed spectra per sector & ($\checkmark$) & ($\checkmark$) & -- & -- & -- & -- & -- & -- & -- & $\checkmark$\\
+optimisation over the constraint sets of $\M$ & -- & -- & -- & -- & -- & -- & -- & -- & -- & $\checkmark$\\
 large single systems & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & ($\checkmark$)\\
 \bottomrule
 \end{tabular}
@@ -305,7 +360,9 @@ large single systems & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$
 ($\checkmark$: supported; ($\checkmark$): partly, through optional backends or plug-ins, for one symmetry (PIQS), or with
 user code; --: not supported). QuTiP~5 uses GPUs and automatic differentiation through its JAX and CuPy backends;
 PIQS handles the sectors of permutational symmetry and the maps between them. Qiskit Aer runs density-matrix
-simulations with noise models on GPUs, QuEST on GPUs and clusters. The last row is where the specialised packages are
+simulations with noise models on GPUs, QuEST on GPUs and clusters. Optimisation over the constraint sets of $\M$
+means unitaries of $\prod_cU(k_c)$ and elements with prescribed spectra as parameters; pulse optimisation (QuTiP-QOC),
+SDP solvers and manifold libraries are compared in the text. The last row is where the specialised packages are
 the better choice.}
 \label{tab:software}
 \end{table}
@@ -1329,6 +1386,9 @@ The run for $n=10$ took 930\,s on a CPU for 28 settings, dominated by dense prod
 (Section~\ref{sec:limitations}). A single density matrix of dimension $2^{10}$ is within easy reach of dedicated
 solvers~\cite{lambert2026,mercurio2025,dynamiqs}; comparisons with them are left for future work.
 
+% CONTROL-DEMO: the subsection on a noise-aware optimisation in the noisy register (sec_control.tex, label sec:control)
+% goes here, at the end of Section~\ref{sec:noisy}.
+
 \section{Applications in the companion papers}\label{sec:usecases}
 
 The library was built for, and used in, four further studies, which are reported with proofs, validation and figures
@@ -1454,6 +1514,23 @@ and mode they were produced with, and the JSON file next to each table records t
   functions on C*-algebras'', J.\ Math.\ Anal.\ Appl.\ 453 (2017), 221--226.
 \bibitem{abed2024} S.~A.~Abed, I.~A.~Nikolaeva, A.~A.~Novikov, ``Generalisation of Michelson contrast for
   operators and its properties'', Lobachevskii J.\ Math.\ 45 (2024), no.~8, 3835--3848; arXiv:2010.10130.
+\bibitem{carlen2010} E.~Carlen, ``Trace inequalities and quantum entropy: an introductory course'', in
+  \emph{Entropy and the Quantum}, Contemp.\ Math.\ 529, Amer.\ Math.\ Soc., 2010, 73--140.
+\bibitem{connes1975} A.~Connes, E.~St{\o}rmer, ``Entropy for automorphisms of II$_1$ von Neumann algebras'', Acta
+  Math.\ 134 (1975), 289--306.
+\bibitem{watrous2009} J.~Watrous, ``Semidefinite programs for completely bounded norms'', Theory Comput.\ 5 (2009),
+  217--238.
+\bibitem{fletcher2007} A.~S.~Fletcher, P.~W.~Shor, M.~Z.~Win, ``Optimum quantum error recovery using semidefinite
+  programming'', Phys.\ Rev.\ A 75 (2007), 012338.
+\bibitem{hastings2009} M.~B.~Hastings, ``Superadditivity of communication capacity using entangled inputs'', Nature
+  Phys.\ 5 (2009), 255--257.
+\bibitem{khaneja2005} N.~Khaneja, T.~Reiss, C.~Kehlet, T.~Schulte-Herbr\"uggen, S.~J.~Glaser, ``Optimal control of
+  coupled spin dynamics: design of NMR pulse sequences by gradient ascent algorithms'', J.\ Magn.\ Reson.\ 172 (2005),
+  296--305.
+\bibitem{koch2016} C.~P.~Koch, ``Controlling open quantum systems: tools, achievements, and limitations'', J.\ Phys.:
+  Condens.\ Matter 28 (2016), 213001.
+\bibitem{cerezo2021} M.~Cerezo, A.~Arrasmith, R.~Babbush, S.~C.~Benjamin, S.~Endo, K.~Fujii, J.~R.~McClean, K.~Mitarai,
+  X.~Yuan, L.~Cincio, P.~J.~Coles, ``Variational quantum algorithms'', Nat.\ Rev.\ Phys.\ 3 (2021), 625--644.
 \bibitem{johansson2013} J.~R.~Johansson, P.~D.~Nation, F.~Nori, ``QuTiP 2: A Python framework for the
   dynamics of open quantum systems'', Comput.\ Phys.\ Commun.\ 184 (2013), 1234--1240.
 \bibitem{lambert2026} N.~Lambert et al., ``QuTiP~5: The Quantum Toolbox in Python'', Phys.\ Rep.\ 1153 (2026),
@@ -1600,6 +1677,24 @@ degenerate cases'', arXiv:2011.04366 (2020).
   October 2026).
 \bibitem{bergholm2018} V.~Bergholm et al., ``PennyLane: Automatic differentiation of hybrid quantum-classical
   computations'', arXiv:1811.04968 (2018).
+\bibitem{puzzuoli2023} D.~Puzzuoli, C.~J.~Wood, D.~J.~Egger, B.~Rosand, K.~Ueda, ``Qiskit Dynamics: A Python package
+  for simulating the time dynamics of quantum systems'', J.\ Open Source Softw.\ 8 (2023), no.~90, 5853.
+\bibitem{diamond2016} S.~Diamond, S.~Boyd, ``CVXPY: A Python-embedded modeling language for convex optimization'',
+  J.\ Mach.\ Learn.\ Res.\ 17 (2016), no.~83, 1--5.
+\bibitem{sagnol2022} G.~Sagnol, M.~Stahlberg, ``PICOS: A Python interface to conic optimization solvers'', J.\ Open
+  Source Softw.\ 7 (2022), no.~70, 3915.
+\bibitem{qetlab} N.~Johnston, QETLAB: A MATLAB toolbox for quantum entanglement, version 1.0 (2025),
+  \url{https://qetlab.com} (accessed October 2026).
+\bibitem{townsend2016} J.~Townsend, N.~Koep, S.~Weichwald, ``Pymanopt: A Python toolbox for optimization on manifolds
+  using automatic differentiation'', J.\ Mach.\ Learn.\ Res.\ 17 (2016), no.~137, 1--5.
+\bibitem{kochurov2020} M.~Kochurov, R.~Karimov, S.~Kozlukov, ``Geoopt: Riemannian optimization in PyTorch'',
+  arXiv:2005.02819 (2020).
+\bibitem{meghwanshi2018} M.~Meghwanshi, P.~Jawanpuria, A.~Kunchukuttan, H.~Kasai, B.~Mishra, ``McTorch, a manifold
+  optimization library for deep learning'', arXiv:1810.01811 (2018).
+\bibitem{bergmann2022} R.~Bergmann, ``Manopt.jl: Optimization on manifolds in Julia'', J.\ Open Source Softw.\ 7
+  (2022), no.~70, 3866.
+\bibitem{axen2023} S.~D.~Axen, M.~Baran, R.~Bergmann, K.~Rzecki, ``Manifolds.jl: An extensible Julia framework for
+  data analysis on manifolds'', ACM Trans.\ Math.\ Softw.\ 49 (2023), no.~4, 1--23.
 \bibitem{weinberg2019} P.~Weinberg, M.~Bukov, ``QuSpin: a Python package for dynamics and exact diagonalisation of
   quantum many body systems. Part II: bosons, fermions and higher spins'', SciPost Phys.\ 7 (2019), 020;
   doi:10.21468/SciPostPhys.7.2.020.
