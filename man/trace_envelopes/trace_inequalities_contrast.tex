@@ -536,7 +536,7 @@ and the polar unitary, which makes all block traces positive.
 \begin{figure}[t]
 \centering\includegraphics[width=\textwidth]{gardner_contrasts.pdf}
 \caption{The unnormalised Gardner violation $z=|\Tr(XUY)|-\Tr(XY)$ for $\|X\|=\|Y\|=1$ in $M_2(\R)$ (top, $N=1$) and
-$M_{16}(\R)$ (bottom, $N=8$), against $\Delta(X)$ (left) and $\Delta(Y)$ (right). Grey: $20000$ random samples with
+$M_{16}(\R)$ (bottom, $N=8$), against $\Delta(X)$ (left) and $\Delta(Y)$ (right). Grey: $100000$ random samples with
 Haar-orthogonal eigenbases and $U$ and uniformly drawn contrasts, as in~\cite[Fig.~1]{abed2024}. Solid: the bound of
 Theorem~\ref{thm:gardner2} with $\Delta(Y)$ free, $N\delta^2/(2(1+\delta))$; dots: $z$ at the explicit maximisers of its
 proof, which agree with it to $10^{-15}$. Dashed: the supremum along $\Delta(Y)$, approached as $\Delta(X)\to1$. In
@@ -1170,12 +1170,12 @@ interpolation between grid values of the envelope). This is an independent check
 Powers--St{\o}rmer inequality and the weighted monotonicity essentially never violate it: less than $0.1\%$ of the
 samples (or none) violate. A Monte Carlo study alone would conclude that these inequalities hold for every $\varphi_W$.
 \item[(c)] \emph{Sampling gets worse with the dimension}: for Gardner's inequality the fraction of violating random samples
-drops from $4.5\%$ on $M_2$ to $0.1\%$ on $M_3$ and to none of the $\TMCSamples$ samples on $M_4$, and the best sample stays
+drops from $4.4\%$ on $M_2$ to below $0.1\%$ on $M_3$ and on $M_4$, and the best sample stays
 far below the envelope (Figure~\ref{fig:mc-gardner}). The extremal configurations, rank-one operators on a two-dimensional
 subspace aligned with the extreme eigenvectors of $W$, have a Haar measure that decreases rapidly with $n$.
 \item[(d)] \emph{Projections detect the failure.} Sampling scaled projections instead of general positive operators raises
-the fraction of violating samples in every dimension, for Gardner's inequality from $4.5\%$ to $18.7\%$ on $M_2$ and from
-$0$ to $0.6\%$ on $M_4$, for subadditivity from below $0.1\%$ to $21\%$, $9\%$ and $5\%$ on $M_2$, $M_3$, $M_4$, for the
+the fraction of violating samples in every dimension, for Gardner's inequality from $4.4\%$ to $19\%$ on $M_2$ and from
+below $0.1\%$ to $0.6\%$ on $M_4$, for subadditivity from below $0.1\%$ to $21\%$, $9\%$ and $5\%$ on $M_2$, $M_3$, $M_4$, for the
 power-mean inequality from $7\%$ to $50\%$ on $M_2$, and brings the best sample close to the envelope (orange points in Figures~\ref{fig:mc-gardner},
 \ref{fig:mc-subadd} and~\ref{fig:mc-lp}). The exceptions are those of Section~\ref{sec:projsuffice}: for items 4 and~7 the extremisers are
 two-level operators that are not projections (for item~7 the violation degenerates exactly at projections), and items 6

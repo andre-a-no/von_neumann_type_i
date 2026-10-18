@@ -5,7 +5,7 @@ Plain NumPy, independent of the library: random samples of z = |Tr(XUY)| - Tr(XY
 between), the sharp bound N d^2 d'^2 / ((1+d)(1+d')) with the other contrast free in [0, 1], and the value of the
 explicit maximisers of the proof, evaluated numerically. Writes man/trace_envelopes/figures/gardner_contrasts.pdf.
 
-    python scripts/trace_envelopes_figures.py [--samples 20000] [--seed 0]
+    python scripts/trace_envelopes_figures.py [--samples 100000] [--seed 0]
 """
 import argparse
 from pathlib import Path
@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parents[1]
 p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-p.add_argument('--samples', type=int, default=20000)
+p.add_argument('--samples', type=int, default=100000)
 p.add_argument('--seed', type=int, default=0)
 p.add_argument('--out', default=str(ROOT / 'man' / 'trace_envelopes' / 'figures' / 'gardner_contrasts.pdf'))
 args = p.parse_args()
@@ -75,7 +75,7 @@ for row, k in enumerate((2, 16)):
     dx, dy, z = samples(k, args.samples)
     for col, (dd, lab) in enumerate(((dx, r'$\Delta(X)$'), (dy, r'$\Delta(Y)$'))):
         ax = axes[row, col]
-        ax.scatter(dd, z, s=1, color='#a9b4bf', alpha=0.35, rasterized=True)
+        ax.scatter(dd, z, s=0.8, color='#a9b4bf', alpha=0.15, lw=0, rasterized=True)
         ax.plot([], [], 'o', ms=3, color='#a9b4bf', label=f'random samples ({len(z)})')
         if col == 0:
             ax.plot(grid, bound(N, grid, 1.0), color='#1b1b1b', lw=1.6, label=r'bound, $\Delta(Y)$ free (Thm. C)')

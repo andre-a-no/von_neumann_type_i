@@ -20,7 +20,7 @@ violation, 99th percentile, fraction violating); scripts/trace_figures.py draws 
 
 Writes man/trace_envelopes/generated/trace_montecarlo.{json,tex}.
 
-    python scripts/trace_montecarlo.py [--samples 40000] [--dims 2,3,4] [--seed 0]
+    python scripts/trace_montecarlo.py [--samples 200000] [--dims 2,3,4] [--seed 0]
 """
 import argparse
 import json
@@ -387,12 +387,12 @@ def figures(res, fixed, dims, fixed_dims):
             ax = axes[0, j]
             V = np.array(env['inequalities'][name]['dims'][str(n)]['V'], dtype=float)
             allv = []
-            for mode, c, a in (('projection', ORANGE, 0.35), ('random', GREY, 0.3)):   # random on top
+            for mode, c, a in (('projection', ORANGE, 0.18), ('random', GREY, 0.12)):   # random on top
                 if mode not in res[n][name]:
                     continue
                 r = res[n][name][mode]
                 m = r['dW'] <= grid[-1]
-                ax.scatter(r['dW'][m], r['v'][m], s=1.2, color=c, alpha=a, lw=0, rasterized=True)
+                ax.scatter(r['dW'][m], r['v'][m], s=0.8, color=c, alpha=a, lw=0, rasterized=True)
                 allv.append(r['v'][m])
             ax.plot(grid, V, '-o', color=INK, lw=1.4, ms=3.5, mfc='white', mew=1.0, zorder=3)
             ax.set_xlim(0, grid[-1] + 0.01)
@@ -410,7 +410,7 @@ def figures(res, fixed, dims, fixed_dims):
             for j, n in enumerate(fixed_dims):
                 ax = axes[1, j]
                 r = fixed[n][name]
-                ax.scatter(r['dop'], r['v'], s=1.2, color=GREY, alpha=0.25, lw=0, rasterized=True)
+                ax.scatter(r['dop'], r['v'], s=0.8, color=GREY, alpha=0.12, lw=0, rasterized=True)
                 y = np.array([two[(name, n)][x] for x in vg], dtype=float)
                 ax.plot(vg, y, '-o', color=INK, lw=1.4, ms=3.5, mfc='white', mew=1.0, zorder=3)
                 ax.set_xlim(0, 1.01)
@@ -439,7 +439,7 @@ def figures(res, fixed, dims, fixed_dims):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--samples', type=int, default=40000)
+    ap.add_argument('--samples', type=int, default=200000)
     ap.add_argument('--dims', default='2,3,4')
     ap.add_argument('--seed', type=int, default=0)
     args = ap.parse_args()

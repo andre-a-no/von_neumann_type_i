@@ -17,7 +17,7 @@ with the proved bounds. The largest contrast of the Jordan product is computed e
 optimisation (scipy, many starts) on M_3 and M_4. Writes man/trace_envelopes/figures/ops_*.pdf and
 man/trace_envelopes/generated/contrast_operations.{json,tex}.
 
-    python scripts/contrast_operations.py [--samples 20000] [--starts 24] [--seed 0]
+    python scripts/contrast_operations.py [--samples 100000] [--starts 24] [--seed 0]
 """
 import argparse
 import json
@@ -182,7 +182,7 @@ def panel_row(name, title_y, xlabel, data, curves, legend, ylim=(-0.02, 1.02), x
     fig, axes = plt.subplots(1, len(DIMS), figsize=(10, 3.3))
     for ax, n in zip(axes, DIMS):
         x, y = data[n]
-        ax.scatter(x, y, s=1.2, color=GREY, alpha=0.3, lw=0, rasterized=True)
+        ax.scatter(x, y, s=0.8, color=GREY, alpha=0.12, lw=0, rasterized=True)
         for c in curves(n):
             ax.plot(*c['xy'], c.get('ls', '-'), color=c.get('color', INK), lw=1.4, marker=c.get('marker'),
                     ms=4, mfc='white', zorder=3)
@@ -209,8 +209,8 @@ def positivity_figure(rng, S):
         sa, sb = rng.uniform(0, 1, S), rng.uniform(0, 1, S)
         P, Q = positive(rng, sa, n), positive(rng, sb, n)
         neg = np.linalg.eigvalsh(P @ Q + Q @ P)[:, 0] < 0
-        ax.scatter(sa[~neg], sb[~neg], s=1.2, color=GREY, alpha=0.3, lw=0, rasterized=True)
-        ax.scatter(sa[neg], sb[neg], s=1.6, color=ORANGE, alpha=0.6, lw=0, rasterized=True)
+        ax.scatter(sa[~neg], sb[~neg], s=0.8, color=GREY, alpha=0.12, lw=0, rasterized=True)
+        ax.scatter(sa[neg], sb[neg], s=1.0, color=ORANGE, alpha=0.35, lw=0, rasterized=True)
         ax.plot(np.cos(t), np.sin(t), color=INK, lw=1.6)
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
@@ -235,7 +235,7 @@ def sci(x):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--samples', type=int, default=20000)
+    ap.add_argument('--samples', type=int, default=100000)
     ap.add_argument('--starts', type=int, default=24)
     ap.add_argument('--seed', type=int, default=0)
     args = ap.parse_args()
