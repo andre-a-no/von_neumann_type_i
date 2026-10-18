@@ -64,11 +64,11 @@ def architecture():
     for y, lab in ((6.75, 'user code'), (5.05, 'data types'), (3.0, 'dispatch'), (0.95, 'kernels')):
         ax.text(0.0, y, lab, ha='left', va='center', fontsize=7.5, color=GREY, style='italic')
     box(ax, c1, 6.35, w1, 0.8, 'user scripts and examples', fs=7.5)
-    box(ax, c2, 6.35, w2 + 0.3 + w3, 0.8, 'models: SpinChain, SU2Chain, Inclusion, decompose', fs=7.5)
+    box(ax, c2, 6.35, w2 + 0.3 + w3, 0.8, 'models: SpinChain, SU2Chain, Inclusion, ...', fs=7.5)
     box(ax, c1, 4.05, w1, 1.95, 'TypeIAlgebra',
         'sector sizes $k_c$, field, precision,\ndevice; cached constants:\nmasks, trace weights $w_c$, size groups',
         edge=BLUE, title_color=BLUE)
-    box(ax, c2, 4.05, w2 + 0.3 + w3, 1.95, 'Operator (also DensityMatrix, Channel, SectorJump)',
+    box(ax, c2, 4.05, w2 + 0.3 + w3, 1.95, 'Operator and its subclasses',
         'matrix $(B,C,k_{\\max},k_{\\max})$, or a generator (lazy recipe)\n'
         'flags: self-adjoint, normal, positive, invertible, ...\n'
         'caches: $\\lambda_{\\min}$, $\\lambda_{\\max}$, trace, inverse, $|A|$, spectrum',
@@ -228,7 +228,7 @@ def noisy_summary():
     w = np.array([n // 2 for n in ns])
     gain_first = 1 + (gd * w + gu * (np.array(ns) - w)) * T / (gp * I)     # first-order prediction
 
-    fig, axes = plt.subplots(1, 3, figsize=(6.8, 2.3), gridspec_kw=dict(width_ratios=[1, 1, 1.35]))
+    fig, axes = plt.subplots(1, 3, figsize=(6.8, 2.75), gridspec_kw=dict(width_ratios=[1, 1, 1.35]))
 
     def style(ax):
         ax.spines[['top', 'right']].set_visible(False)
@@ -268,18 +268,17 @@ def noisy_summary():
     ax.set_xlim(rates[0] / 1.4, rates[-1] * 1.4)
     ax.set_xlabel(r'rate $\gamma$', fontsize=8)
     ax.set_title('(c) infidelity, $n=%d$' % n, fontsize=8)
-    r0 = rates[0]
-    ax.text(r0, 3.0 * (1 - res['mixed']['F'][0]), 'mixed, raw', fontsize=6.6, va='bottom')
-    ax.text(r0, 0.25 * (1 - res['dephasing']['Fpost'][0]), 'dephasing and mixed,\npost-selected', fontsize=6.6,
-            va='top')
-    ax.text(r0, 0.2 * (1 - res['thermal']['Fpost'][0]), 'thermal, post-selected', fontsize=6.6, va='top')
-    handles = [plt.Line2D([], [], color=GREY, ls='--', lw=1.2, label='without post-selection'),
-               plt.Line2D([], [], color=GREY, ls='-', marker='o', mfc='white', ms=3.5, lw=1.6,
-                          label='post-selected'),
-               plt.Line2D([], [], color=INK, ls=':', lw=1.0, label=r'$\gamma_\varphi I$')]
-    ax.legend(handles=handles, fontsize=6.3, frameon=False, loc='lower right', handlelength=2.2)
+    handles = [plt.Line2D([], [], color=col, lw=1.6, label=lab) for col, lab in
+               ((BLUE, r'thermal $T_1$, $\gamma_\uparrow=0.2\gamma_\downarrow$'), (ORANGE, r'dephasing $\gamma_\varphi$'),
+                (GREEN, r'mixed, $\gamma_\downarrow=\gamma_\varphi$, $\gamma_\uparrow=0.1\gamma_\downarrow$'))]
+    handles += [plt.Line2D([], [], color=GREY, ls='--', lw=1.2, label='without post-selection'),
+                plt.Line2D([], [], color=GREY, ls='-', marker='o', mfc='white', ms=3.5, lw=1.6,
+                           label='post-selected on the weight'),
+                plt.Line2D([], [], color=INK, ls=':', lw=1.0, label=r'first order $\gamma_\varphi I$')]
+    fig.legend(handles=handles, loc='lower center', ncol=3, frameon=False, fontsize=6.8, handlelength=2.4,
+               columnspacing=1.6)
     style(ax)
-    fig.tight_layout(w_pad=1.0)
+    fig.tight_layout(w_pad=1.0, rect=(0, 0.17, 1, 1))
     fig.savefig(FIG / 'noisy_summary.pdf', bbox_inches='tight', metadata=META)
     plt.close(fig)
     for n_, g_, f_ in zip(ns, gain, gain_first):
