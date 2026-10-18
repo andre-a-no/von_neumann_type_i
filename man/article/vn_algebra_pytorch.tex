@@ -478,7 +478,8 @@ mechanism & computation & library [ms] & without [ms] & speed-up\\
 $\rho A$; dense jumps between sectors. For the last row the eight jumps $S^-_i$ take
 \IfFileExists{generated/architecture.tex}{\ArchJumpDense}{--}\,MiB as dense maps and
 \IfFileExists{generated/architecture.tex}{\ArchJumpSparse}{--}\,MiB as \texttt{SectorJump}s, and the two evolutions agree
-to \IfFileExists{generated/architecture.tex}{$\ArchJumpDiff$}{round-off}.}
+to \IfFileExists{generated/architecture.tex}{$\ArchJumpDiff$}{round-off}; its time is dominated by the dense Hamiltonian,
+which both versions share.}
 \label{tab:arch}
 \end{table}
 
@@ -1245,10 +1246,12 @@ state is exact. For realistic mixed noise post-selection removes the $T_1$ part,
 \paragraph{Results.} The computation confirms Proposition~\ref{prop:noisy} in every case: at zero temperature the
 post-selected state agrees with the noiseless one to $\NXYTOnePost$ and the acceptance with $e^{-w\gamma T}$ to
 $\NXYAccErr$ (the error of the time steps); the thermal infidelity after post-selection has slope $2.00$; the dephasing
-infidelity agrees with its first-order value to $0.1\%$. The integral $I$ grows linearly with $n$ (each qubit that
-leaves its initial value contributes), so the undetected dephasing error grows with the register while the detected part
-does not reach the accepted runs. For the mixed model, at a rate of $0.01$ per unit of time, post-selection reduces the
-infidelity by a factor of five to six for every $n$ (Table~\ref{tab:noisy}), and what is left is dephasing. For
+infidelity agrees with its first-order value to $0.1\%$. The integral $I$ hardly depends on $n$ at fixed $T$
+($1.17$ for $n=4$, $1.43$ for $n=10$): only the qubits near the two domain walls of $|1^w0^{n-w}\rangle$ have moved by
+time $T$, and dephasing hurts only where the state is not a product of $S^z$ eigenstates. The detected error grows with the
+weight $w$, the undetected one does not, so post-selection gains more for larger registers: for the mixed model at a rate
+of $0.01$ it reduces the infidelity by a factor of $4.4$ for $n=4$ and of $6.8$ for $n=10$ (Table~\ref{tab:noisy}), and
+what is left is dephasing. For
 algorithm design this quantifies the value of the symmetry: it protects against energy relaxation, not against
 dephasing, and the remaining error is predicted to first order by a single integral over the noiseless trajectory.
 

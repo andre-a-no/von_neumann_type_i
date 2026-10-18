@@ -1,0 +1,52 @@
+{
+ "device": "cpu",
+ "torch": "2.14.1+cu130",
+ "threads": 4,
+ "rows": [
+  {
+   "name": "known spectrum",
+   "what": "$\\lambda_{\\max}$, 256 operators in $M_{32}^{\\oplus8}$",
+   "library": 0.0022473599999557337,
+   "naive": 0.02869665899993379,
+   "speedup": 12.76905302243478
+  },
+  {
+   "name": "eigenvalues only",
+   "what": "spectra of the same operators",
+   "library": 0.02826650499991956,
+   "naive": 0.09359552900014023,
+   "speedup": 3.3111815203332204
+  },
+  {
+   "name": "spectral cache",
+   "what": "$e^{-itA}$ for 50 values of $t$",
+   "library": 3.0195657409999512,
+   "naive": 11.717578815000024,
+   "speedup": 3.880550986487104
+  },
+  {
+   "name": "size groups",
+   "what": "spectra, 256 operators in $M_8^{\\oplus64}$",
+   "library": 0.019692838000082702,
+   "naive": 0.07353245800004515,
+   "speedup": 3.7339695781652367
+  },
+  {
+   "name": "trace of a product",
+   "what": "$\\Tr(\\rho A)$, 32 pairs in $M_{256}^{\\oplus2}$",
+   "library": 0.016616802000044117,
+   "naive": 0.04175016600015624,
+   "speedup": 2.5125271397014535
+  },
+  {
+   "name": "sparse jumps",
+   "what": "Lindblad, 8 qubits, $S^-_i$ and $S^z_i$",
+   "library": 0.3546344589999535,
+   "naive": 1.010803141999986,
+   "speedup": 2.8502676949397032
+  }
+ ],
+ "jump_bytes_dense": 50803200,
+ "jump_bytes_sparse": 120960,
+ "jump_max_diff": 4.440892098500626e-15
+}

@@ -6,7 +6,26 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 
 ## [Unreleased]
 
+## [1.1.0] – 2026-10-18
+
+Backward compatible: everything of 1.0.0 works unchanged.
+
 ### Added
+- `channels.SectorJump` (exported at top level): sparse jump operators that map basis vectors to multiples of basis
+  vectors (spin flips S^±_i, S^z_i, particle loss). `dynamics.lindblad_evolve` (all three methods) and `lindblad_rhs`
+  apply L ρ L^* as a weighted permutation of the entries, the dual L^* Z L as a gather and L^*L as a diagonal, in
+  O(Σ_c k_c²) per application instead of O(C² k_max³) for a dense `InterSectorChannel`; `SectorJump.scaled(coef)` with a
+  per-sample coefficient gives one jump per batch element (a sweep over noise rates in one evolution);
+  `to_inter_sector()` converts to the dense form. Tests `tests/test_sector_jump.py`.
+- `SpinChain.sector_jump(i, kind)` with `kind` in `'lower'`, `'raise'`, `'sz'`.
+- Script `scripts/noisy_xy_mixer.py` and the main use case of the library paper: symmetry verification for a noisy
+  XY mixer (Hamming-weight sectors, T1 at zero and finite temperature, dephasing), with exact statements checked to
+  round-off.
+- Script `scripts/architecture_bench.py`: the measured effect of the design decisions (known spectra, eigenvalues
+  without eigenvectors, spectral cache, one call per block size, direct trace formulas, sparse jumps).
+- Scripts for the companion paper on trace-characterising inequalities (`trace_contrast.py`, `trace_montecarlo.py`,
+  `contrast_operations.py`, `trace_envelopes_figures.py`) with tests `tests/test_trace_contrast.py` and
+  `tests/test_contrast_operations.py`.
 - Module `permutational`: permutation-invariant ensembles of N two-level systems in ⊕_j M_{2j+1} ⊗ 1_{m_j}
   (`PermutationalSystem`, `PermutationalLindbladian`), with local dissipators as maps between spin sectors; tests against
   the full 2^N Lindblad generator and `qutip.piqs`. Script `scripts/permutational.py` and paper section "Use cases":
@@ -24,8 +43,14 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
   maximisation, H > Choda's h(U) unless |u_11|² ∈ {0, 1/2, 1}); for n = 3, 4, 5 general partitions beat the best
   orthonormal basis found for some Haar-random U (values certified in mpmath); part of `scripts/run_all.sh`.
   Tests `tests/test_connes_stormer.py`.
-- Paper, Section 6: the equality case of Proposition 1 is stated as the new part and related to Kantorovich-type
-  inequalities (Greub–Rheinboldt; Furuta et al.).
+
+### Changed
+- The papers are split into four, each with its own file names and arXiv build script: the library paper
+  (`man/article/vn_algebra_pytorch`, now a technical description of the architecture with the noisy-circuit use case),
+  the trace-characterisation paper with S. A. Abed (`man/trace_envelopes/trace_inequalities_contrast`, which now also
+  contains the envelopes of the three unnormalised trace functionals of Abed et al. and their proofs), the
+  Connes–Størmer paper (`man/connes_stormer`) and the BTC/SRE paper (`man/btc_sre`).
+- `scripts/trace_characterizations.py` covers 25 inequalities.
 
 ## [1.0.0] – 2026-10-15
 

@@ -8,7 +8,7 @@ device of the run (CPU here; the GPU columns of the performance section are sepa
   eigenvalues only    eigenvalues() (eigvalsh) vs. eigh() with eigenvectors
   spectral cache      exp(-i t A) for 50 times t: one eigendecomposition (cache_spectrum) vs. 50
   size groups         eigvalsh of 64 sectors of size 8: one batched call vs. a Python loop over the sectors
-  trace of a product  Tr(rho A) in O(k^2) vs. forming rho A
+  trace of a product  Tr(rho A) in O(k^2) vs. forming rho A (blocks of size 256)
   sparse jumps        Lindblad evolution of 8 qubits with S^-_i, S^z_i: SectorJump vs. dense jumps between sectors
 
 Writes man/article/generated/architecture.{json,tex}.
@@ -88,11 +88,14 @@ def main():
     rows.append(('size groups', r'spectra, 256 operators in $M_8^{\oplus64}$', best(lambda: Y64.eigenvalues(), R),
                  best(loop, R)))
 
-    rho = states.random_density_matrix(alg, batch_size=B)
+    alg2 = TypeIAlgebra(n_factors=[256] * 2, k_factors=[256] * 2, precision='double')
+    rho = states.random_density_matrix(alg2, batch_size=32)
     rho.matrix
-    rows.append(('trace of a product', r'$\Tr(\rho A)$ in $M_{32}^{\oplus8}$',
-                 best(lambda: states.trace_of_product(rho, X), R),
-                 best(lambda: torch.diagonal(rho.matrix @ X.matrix, dim1=-2, dim2=-1).sum((-1, -2)), R)))
+    X2 = states.random_density_matrix(alg2, batch_size=32)
+    X2.matrix
+    rows.append(('trace of a product', r'$\Tr(\rho A)$, 32 pairs in $M_{256}^{\oplus2}$',
+                 best(lambda: states.trace_of_product(rho, X2), R),
+                 best(lambda: torch.diagonal(rho.matrix @ X2.matrix, dim1=-2, dim2=-1).sum((-1, -2)), R)))
 
     n = 8
     q = SpinChain(n, 'periodic', precision='double')

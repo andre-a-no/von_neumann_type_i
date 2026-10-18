@@ -116,6 +116,11 @@ def figure(results):
     plt.close(fig)
 
 
+def sci(x):
+    m, e = f'{x:.0e}'.split('e')
+    return f'{m}\\times10^{{{int(e)}}}'
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--dims', default='4,6,8,10')
@@ -158,8 +163,8 @@ def main():
            '\\newcommand{\\NXYRows}{%', *rows, '}',
            f'\\newcommand{{\\NXYT}}{{{args.T:g}}}',
            f'\\newcommand{{\\NXYSubsteps}}{{{args.substeps}}}',
-           f'\\newcommand{{\\NXYAccErr}}{{{worst_acc:.0e}}}'.replace('e-0', 'e-'),
-           f'\\newcommand{{\\NXYTOnePost}}{{{worst_t1:.0e}}}'.replace('e-0', 'e-'),
+           f'\\newcommand{{\\NXYAccErr}}{{{sci(worst_acc)}}}',
+           f'\\newcommand{{\\NXYTOnePost}}{{{sci(worst_t1)}}}',
            f'\\newcommand{{\\NXYBatch}}{{{len(MODELS) * len(RATES)}}}']
     (gen / 'noisy_xy.tex').write_text('\n'.join(tex) + '\n')
     print('wrote figures/noisy_xy.pdf and generated/noisy_xy.{json,tex}')

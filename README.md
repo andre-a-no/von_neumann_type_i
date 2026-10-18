@@ -454,7 +454,7 @@ on Zenodo).
   title   = {torch\_vn\_algebra: block-diagonal operators, symmetry sectors and quantum channels in {PyTorch}},
   author  = {Nikolaeva, Irina and Novikov, Andrej},
   year    = {2026},
-  version = {1.0.0},
+  version = {1.1.0},
   url     = {https://github.com/andre-a-no/von_neumann_type_i}
 }
 ```
