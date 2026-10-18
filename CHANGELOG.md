@@ -6,6 +6,12 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 
 ## [Unreleased]
 
+### Fixed
+- `dynamics.lindblad_evolve(method='kraus')` returned NaN gradients when the normalisation operator of a step had a
+  degenerate spectrum (for example M = 1 without jumps). Its inverse square root is now computed with the
+  Daleckii–Krein backward pass of `functional.spectral_apply`, so gradients with respect to the Hamiltonian and the
+  jump rates are finite and agree with finite differences in all three methods (new test).
+
 ## [1.1.0] – 2026-10-18
 
 Backward compatible: everything of 1.0.0 works unchanged.

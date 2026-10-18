@@ -19,7 +19,7 @@ import torch
 
 from .algebra import TypeIAlgebra
 from .channels import Channel, InterSectorChannel, SectorJump
-from . import cost
+from . import cost, functional
 from .states import DensityMatrix
 
 Operator = TypeIAlgebra.Operator
@@ -370,13 +370,15 @@ def _kraus_step(parts, h: float, alg: TypeIAlgebra, dtype, device) -> Callable[[
     M = Eh @ phi2_dual(Eh @ E) @ E                                    # Psi_h^*(1) >= (E^2)^* E^2 > 0
     M = 0.5 * (M + M.conj().transpose(-2, -1))
     pad = torch.eye(M.shape[-1], dtype=dtype, device=device) - eye   # identity on the padding, for eigh
-    w, V = torch.linalg.eigh(M + pad)
+    with torch.no_grad():
+        w, V = torch.linalg.eigh((M + pad).detach())
     if h > 0 and (w[..., -1] / w[..., 0].clamp(min=torch.finfo(w.dtype).tiny)).max().item() \
             > torch.finfo(w.dtype).eps ** -0.25:
         half = _kraus_step(parts, 0.5 * h, alg, dtype, device)
         return lambda rho: half(half(rho))
-    N = (V * w.clamp(min=torch.finfo(w.dtype).tiny).rsqrt().to(dtype).unsqueeze(-2)) @ V.conj().transpose(-2, -1)
-    N = N * mask                                                      # M^{-1/2}, block diagonal
+    tiny = torch.finfo(w.dtype).tiny                                  # M^{-1/2}, block diagonal; Daleckii-Krein
+    N = functional.spectral_apply(M + pad, lambda x: x.clamp(min=tiny).rsqrt(),   # backward: finite gradients
+                                  decomposition=(w, V)).to(dtype) * mask        # at the degenerate spectra of M
 
     def step(rho):
         Y = E @ (N @ rho @ N) @ Eh

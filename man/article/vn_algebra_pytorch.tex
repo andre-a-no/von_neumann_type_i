@@ -82,7 +82,10 @@ paper documents it. Its design rests on one thesis: keeping the sector structure
 in the algebra correct by construction and cheap. Haar sampling is exact in every block, trace conventions survive maps
 between sectors, and all blocks of one size go through one batched kernel. We show that the library reproduces the
 distributions of the earlier NumPy computation and is about two orders of magnitude faster than its loop formulation
-for small blocks; we measure each architectural decision against the simple alternative and validate the library
+for small blocks. More important than speed, every operation is differentiable, which turns the sampling of the
+earlier study into optimisation: from block size 4 on, a million Haar samples miss the violation of a trace
+inequality in every one of 16 test cases, while batched gradient ascent finds the exact supremum in all of them within
+seconds. We measure each architectural decision against the simple alternative and validate the library
 against exact results. Its generality is illustrated by symmetry verification for a noisy XY mixer of the quantum
 alternating operator ansatz, whose Hamming-weight sectors form the algebra. One batched run gives, for all noise
 models and rates, the exact acceptance probabilities and post-selected fidelities. It also gives the first-order
@@ -140,8 +143,21 @@ block by block.\footnote{The first version~\cite{v1} contained errors of this ki
 corrected and tested here.} \texttt{torch\_vn\_algebra} re-implements that modelling as a structured PyTorch library.
 Section~\ref{sec:reproduce} shows that it reproduces the earlier computation: the NumPy formulations and the library
 sample the same distribution. For small blocks the library is about two orders of magnitude faster than the loop
-formulation, and for blocks of size 16 about three times faster. The same code runs on a GPU and can be
-differentiated.
+formulation, and for blocks of size 16 about three times faster, and the same code runs on a GPU.
+
+\paragraph{From sampling to optimisation.} Speed is the smaller gain. Every operation of the library is
+differentiable, including spectral functions (by the Daleckii--Krein formula), channels between sectors and the time
+steps of Hamiltonian and Lindblad dynamics, so a question asked by sampling can be asked again as a variational
+problem: maximise a functional over operators with a prescribed spectrum, over states, over unitaries of the algebra or
+over all channels, by batched gradient ascent with many starts in one call. This changes the answers, not only the
+time. The Monte Carlo of~\cite{abed2024,v1} saw no violation of Gardner's inequality for blocks of size 16, and we now
+know why: by concentration of measure, the unitaries near the maximiser have Haar measure that decays rapidly with the
+dimension. From block size 4 on, a million Haar samples miss the violation in every test case, while gradient ascent
+finds the exact supremum in all of them, to a relative error of $3\times10^{-5}$ and in a few seconds
+(Section~\ref{sec:optimisation}). The violation envelopes of the companion paper~\cite{nn_trace}, the thresholds of
+the Rényi divergences in Section~\ref{sec:renyi} and the partitions in~\cite{nn_cs} are all found this way; every
+reported extremal value is then recomputed at the optimiser in 50-digit arithmetic, so it is a certified lower bound
+for the supremum.
 
 \paragraph{Thesis.} The design rests on one thesis: keeping the sector structure inside the data type makes
 computations in~\eqref{eq:M} both correct by construction and cheap. By sector structure we mean the blocks, the centre,
@@ -1391,6 +1407,16 @@ and second derivatives of $f(A)$ are correct at non-degenerate spectra only.
 \item \emph{Divergences and scale.} For small $\alpha$ the sandwiched divergence of ill-conditioned states is not
 accurate (hence $\alpha\ge0.2$ in Section~\ref{sec:renyi}). Choi matrices, superoperators and $e^{t\mathcal L}$ work
 with $k_c^2\times k_c^2$ matrices and are limited to blocks of a few tens; RK4 and the splitting scale further.
+\item \emph{Learning in the algebra.} Since a Hamiltonian or Lindblad evolution in the library is a differentiable
+composition of block-diagonal maps, a discretised evolution is a deep network whose layers are channels of the algebra,
+and its training is the continuous-depth idea of neural ordinary differential equations~\cite{chen2018} with the
+constraints of quantum mechanics built in: unitary layers as in unitary recurrent networks~\cite{arjovsky2016},
+completely positive layers as in dissipative quantum neural networks~\cite{beer2020}, and conditional expectations as
+pooling. Equivariant linear layers are elements of the commutant, i.e.\ of an algebra~\eqref{eq:M}, by Schur's
+lemma~\cite{cohen2016,finzi2021}, and networks with parameters in a $C^*$-algebra have been proposed
+in~\cite{hashimoto2022}. The library provides the primitives (parametrised unitaries and spectra, gradients through channels and
+through the dynamics; channels themselves are parametrised by Stinespring isometries in the scripts, not yet in the
+library) but no training layers or examples; this is the main direction of future work.
 \item \emph{Scope.} Finite dimensions and Type~I only; no tensor-network methods. Sparse methods exist only for sector
 Hamiltonians and for jumps that map basis vectors to basis vectors; other jumps between sectors are stored densely.
 Benchmarks against QuTiP, \texttt{dynamiqs}, QuantumToolbox.jl, QuSpin and XDiag are future work.
@@ -1632,6 +1658,14 @@ degenerate cases'', arXiv:2011.04366 (2020).
   constrained open spin chains'', New J.\ Phys.\ 14 (2012), 073007; doi:10.1088/1367-2630/14/7/073007.
 \bibitem{albert2014} V.~V.~Albert, L.~Jiang, ``Symmetries and conserved quantities in Lindblad master equations'',
   Phys.\ Rev.\ A 89 (2014), 022118; doi:10.1103/PhysRevA.89.022118.
+\bibitem{chen2018} R.~T.~Q.~Chen, Y.~Rubanova, J.~Bettencourt, D.~Duvenaud, ``Neural ordinary differential
+  equations'', Advances in Neural Information Processing Systems 31 (2018), 6571--6583.
+\bibitem{arjovsky2016} M.~Arjovsky, A.~Shah, Y.~Bengio, ``Unitary evolution recurrent neural networks'', Proc.\ 33rd
+  Int.\ Conf.\ Machine Learning, PMLR 48 (2016), 1120--1128.
+\bibitem{beer2020} K.~Beer, D.~Bondarenko, T.~Farrelly, T.~J.~Osborne, R.~Salzmann, D.~Scheiermann, R.~Wolf,
+  ``Training deep quantum neural networks'', Nat.\ Commun.\ 11 (2020), 808.
+\bibitem{hashimoto2022} Y.~Hashimoto, Z.~Wang, T.~Matsui, ``$C^*$-algebra net: a new approach generalizing neural
+  network parameters to $C^*$-algebra'', Proc.\ 39th Int.\ Conf.\ Machine Learning, PMLR 162 (2022), 8523--8534.
 \end{thebibliography}
 }
 

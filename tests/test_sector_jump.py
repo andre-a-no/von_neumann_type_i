@@ -85,3 +85,28 @@ def test_constructor_rejects_non_injective_maps(chain):
     val[2, :2] = 1.0                                # two basis vectors of sector 2 onto the same one
     with pytest.raises(ValueError):
         SectorJump(alg, target, dst, val.to(alg.dtype))
+
+
+@pytest.mark.parametrize('method', ['rk4', 'kraus', 'exact'])
+def test_gradients_through_the_evolution_match_finite_differences(method):
+    q = SpinChain(4, 'periodic', precision='double')
+    H = q.xxz(J=1.0, Delta=0.0)
+    rho0 = q.basis_state('1100')
+    target = dynamics.von_neumann(rho0, H, [1.0])[0]
+
+    def fidelity(J, g):
+        Hm = q.algebra.operator(H.matrix * J, is_self_adjoint=True)
+        jumps = [q.sector_jump(i, k).scaled(g.sqrt().reshape(1)) for k in ('lower', 'raise', 'sz') for i in range(4)]
+        rho = dynamics.lindblad_evolve(rho0, Hm, jumps, [0.0, 1.0], substeps=20, method=method)[-1]
+        return states.trace_of_product(rho, target).real.sum()
+
+    J = torch.tensor(0.7, dtype=torch.float64, requires_grad=True)
+    g = torch.tensor(0.05, dtype=torch.float64, requires_grad=True)
+    gJ, gg = torch.autograd.grad(fidelity(J, g), (J, g))
+    t = lambda x: torch.tensor(x, dtype=torch.float64)
+    with torch.no_grad():
+        fdJ = (fidelity(t(0.7 + 1e-6), t(0.05)) - fidelity(t(0.7 - 1e-6), t(0.05))) / 2e-6
+        fdg = (fidelity(t(0.7), t(0.05 + 1e-6)) - fidelity(t(0.7), t(0.05 - 1e-6))) / 2e-6
+    assert torch.isfinite(gJ) and torch.isfinite(gg)
+    assert gJ.item() == pytest.approx(fdJ.item(), rel=1e-6)
+    assert gg.item() == pytest.approx(fdg.item(), rel=1e-6)
