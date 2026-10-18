@@ -24,7 +24,7 @@ import torch
 
 from .algebra import TypeIAlgebra
 from . import cost
-from .channels import InterSectorChannel
+from .channels import InterSectorChannel, SectorJump
 from .states import DensityMatrix
 
 Operator = TypeIAlgebra.Operator
@@ -403,6 +403,39 @@ class SpinChain:
             src = torch.arange(len(lab), device=self.device)[up]
             K[0, 0, N - 1, N, self.index_of[lab[up] ^ (1 << i)], src] = 1.0
         return InterSectorChannel(alg, alg, K)
+
+    def sector_jump(self, i: int, kind: str = 'lower') -> 'SectorJump':
+        """S^-_i ('lower', N -> N-1), S^+_i ('raise', N -> N+1) or S^z_i ('sz', inside the sectors) as a sparse
+        SectorJump: the Lindblad solvers then apply it in O(sum_N binom(L, N)^2) operations without forming a dense
+        jump between sectors. For many sites and large sectors this is the efficient form of lowering(i)."""
+        alg = self.algebra
+        C, k = alg.C, alg.k_max
+        target = torch.full((C,), -1, dtype=torch.long, device=self.device)
+        dst = torch.zeros(C, k, dtype=torch.long, device=self.device)
+        val = torch.zeros(C, k, dtype=self.real_dtype, device=self.device)
+        for N in range(self.L + 1):
+            lab = self.labels[N]
+            up = ((lab >> i) & 1).bool()
+            n = len(lab)
+            if kind == 'sz':
+                target[N] = N
+                dst[N, :n] = torch.arange(n, device=self.device)
+                val[N, :n] = up.to(self.real_dtype) - 0.5
+            elif kind == 'lower':
+                if N == 0:
+                    continue
+                target[N] = N - 1
+                dst[N, :n][up] = self.index_of[lab[up] ^ (1 << i)]
+                val[N, :n] = up.to(self.real_dtype)
+            elif kind == 'raise':
+                if N == self.L:
+                    continue
+                target[N] = N + 1
+                dst[N, :n][~up] = self.index_of[lab[~up] | (1 << i)]
+                val[N, :n] = (~up).to(self.real_dtype)
+            else:
+                raise ValueError("kind must be 'lower', 'raise' or 'sz'")
+        return SectorJump(alg, target, dst, val.to(self.dtype))
 
     # ------------------------------------------------------------------
     @staticmethod

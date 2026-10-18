@@ -50,7 +50,10 @@ This README is the entry point of the repository:
 | learn the library | [the tutorial](man/tutorial/README.md): the library in the context of the theory, chapter by chapter, with cross-links to the theory (7 languages) |
 | understand the physics behind the models | the boxes *Physical meaning* in the [lecture notes](man/lecture_notes/README.md), e.g. [symmetries and charge sectors](man/lecture_notes/04_symmetries.md), [dynamics](man/lecture_notes/08_dynamics.md), [spin chains](man/lecture_notes/09_spin_chains.md) |
 | compare with other software | [When to use it, and alternatives](#when-to-use-it-and-alternatives) |
-| read the paper | [`man/article/main.pdf`](man/article/main.pdf) (source `man/article/main.tex`) |
+| read the paper | [`man/article/vn_algebra_pytorch.pdf`](man/article/vn_algebra_pytorch.pdf) (source `man/article/vn_algebra_pytorch.tex`) |
+| read the paper on trace characterisations | [`man/trace_envelopes/trace_inequalities_contrast.pdf`](man/trace_envelopes/trace_inequalities_contrast.pdf): how strongly inequalities that characterise the trace fail, as functions of the Michelson contrasts of the functional and of the operators, and why projections suffice (source `man/trace_envelopes/trace_inequalities_contrast.tex`, numbers from `scripts/trace_characterizations.py` and `scripts/trace_contrast.py`, arXiv archive by `scripts/make_arxiv_trace.sh`) |
+| read the paper on the Connes–Størmer entropy | [`man/connes_stormer/connes_stormer_masas.pdf`](man/connes_stormer/connes_stormer_masas.pdf): closed form for two MASAs of M_2, partitions that beat bases for n ≥ 3 (numbers from `scripts/connes_stormer.py`, arXiv archive by `scripts/make_arxiv_connes_stormer.sh`) |
+| read the physics paper (time crystal, symmetry-resolved entanglement) | [`man/btc_sre/btc_sre_symmetry_sectors.pdf`](man/btc_sre/btc_sre_symmetry_sectors.pdf): finite-N lifetimes of a boundary time crystal under local dissipation, SRE in the XXZ chain (numbers from `scripts/permutational.py` and `scripts/symmetry_resolved.py`, arXiv archive by `scripts/make_arxiv_btc_sre.sh`) |
 | reproduce every number of the paper | [Reproducing the paper](#reproducing-the-paper) |
 | cite it | [Citation](#citation) |
 
@@ -233,12 +236,13 @@ print((Lt(rho) - rho_t[-1]).frobenius_norm().max())
 | `channels` | `Channel` (Kraus form: apply, `adjoint` = Heisenberg picture, composition `@`, `mix`, `choi`, `superoperator`, `from_superoperator`, TP / unitality checks); identity, unitary, dephasing, depolarizing, amplitude damping, Lüders measurement, conditional expectation onto the centre, random (Stinespring) and random mixed-unitary channels |
 | `states` | `DensityMatrix` (an `Operator` subclass: positive, unit `Tr_blunt`; `expectation`, `mix`, `condition_on`, `density(trace)` / `from_density(..., trace)` for the `Tr_norm` and `tau_vN` conventions; preserved by trace-preserving channels and by the dynamics), random density matrices (Hilbert–Schmidt, Bures, fixed rank), Gibbs states and partition functions, tracial state, sector probabilities, Born probabilities, Lüders update, entropy, relative entropy, fidelity, trace distance, purity |
 | `channels.InterSectorChannel` | CP maps between sectors and between different algebras, Φ(ρ)_d = Σ_c Σ_i K_i^{dc} ρ_c K_i^{dc*}: duals for each of the three traces, composition, sector transition matrix, `from_blocks`, `random_inter_sector_channel` |
+| `channels.SectorJump` | sparse jump operators that map basis vectors to multiples of basis vectors (S^±_i, S^z_i, particle loss): L ρ L^* as a weighted permutation, the dual as a gather, L^*L diagonal, O(Σ_c k_c²) per application; a batch of coefficients gives one jump per sample (`scaled`) |
 | `composite` | `tensor_product(alg1, alg2)` (sectors = pairs (c, d)), `fused_tensor_product(alg1, alg2, fuse=add)` (pairs with equal total charge merged into one sector), `kron(A, B, alg12)`, `partial_trace` and `partial_trace_channel` (an `InterSectorChannel`; its dual is the embedding A ↦ A ⊗ 1) |
 | `optimize` | constrained, batched multistart optimisation: `UnitaryParam`, `PositiveParam` / `SelfAdjointParam` with a prescribed or bounded Michelson contrast (hard constraint), `extremize` |
 | `cost` | safeguards: ETA warnings for large batched decompositions and integrators, memory checks with `InsufficientMemoryError`, `set_limits`, `disabled()` |
-| `chains` | `SpinChain`: spin-1/2 chains with conserved S^z, sectors N = 0..L (basis = iterated fused products), XXZ Hamiltonians with batched disorder, full algebra or single sectors, sparse form (`xxz_sparse`), momentum sectors of rings (`xxz_momentum`), reduced states and entanglement, site amplitude damping and jump operators `lowering(i)` between sectors, level-spacing ratio |
+| `chains` | `SpinChain`: spin-1/2 chains with conserved S^z, sectors N = 0..L (basis = iterated fused products), XXZ Hamiltonians with batched disorder, full algebra or single sectors, sparse form (`xxz_sparse`), momentum sectors of rings (`xxz_momentum`), reduced states and entanglement, site amplitude damping and jump operators `lowering(i)` between sectors, sparse jumps `sector_jump(i, 'lower' | 'raise' | 'sz')`, level-spacing ratio |
 | `krylov` | `SparseSectorHamiltonian` (batch of diagonals + shared sparse hopping), batched Lanczos `ground_state`, Krylov `evolve` (exp(-itH) psi with adaptive steps and a proved error bound, `krylov_error_bound`); with `SpinChain.xxz_sparse` for sectors beyond dense matrices |
-| `dynamics` | (Lindblad jumps may be `InterSectorChannel`s, e.g. particle loss) exact `propagator`, `schrodinger`, `von_neumann`; RK4 `schrodinger_rk4` (time-dependent H), `solve_operator_ode` (any dX/dt = f(t, X) in M), Lindblad `lindblad_evolve` (`method="rk4"` default, or the CPTP `"kraus"` and `"exact"` steps), `lindblad_superoperator`, `lindblad_channel` |
+| `dynamics` | (Lindblad jumps may be `InterSectorChannel`s, e.g. particle loss, or sparse `SectorJump`s) exact `propagator`, `schrodinger`, `von_neumann`; RK4 `schrodinger_rk4` (time-dependent H), `solve_operator_ode` (any dX/dt = f(t, X) in M), Lindblad `lindblad_evolve` (`method="rk4"` default, or the CPTP `"kraus"` and `"exact"` steps), `lindblad_superoperator`, `lindblad_channel` |
 | `inclusions` | `Inclusion` (inclusion matrix Λ, optional unitary): `embed`, `as_channel`, `conditional_expectation(trace)` (`ConditionalExpectation`: Kraus form, `index` (Watatani), `quasi_basis`, `pimsner_popa_constant(complete=...)`), `index` (‖Λ‖²), `markov_trace`, `basic_construction`, `jones_projection`, `jones_tower`, `relative_commutant`, `compose`; `bratteli_diagram`, `from_tensor_product`, `diagonal`, `scalars`, `centre`, `chain_algebra`, `chain_tower` |
 | `decompose` | `wedderburn`, `from_group` (all elements of a finite group), `from_generators` (any matrices, e.g. Lie algebra generators) → `Decomposition` (`algebra`, `commutant_algebra`, `to_algebra` / `from_algebra`, `to_commutant` / `from_commutant`, `conditional_expectation`, `central_projections`, `verify`); `commutant_basis`, `twirl`, `permutation_representation`, `total_spin` |
 | `su2` | `SU2Chain`: `multiplicities`, `hw_basis`, `multiplet_basis`, `embed`, `heisenberg` (J, J₂, field, arbitrary bonds; one spin without padding via `spin=`), `restrict` / `lift` (U(1) ↔ SU(2)), `full_spectrum`, `lowest_energies`, `ground_state`, `reduced_matrix_elements`, `spin_correlation`; `clebsch_gordan`, `clebsch_gordan_exact`, `wigner_eckart`, `multiplicity` |
@@ -312,14 +316,14 @@ algebras and spin factors (`example_jordan.py`).
 
 ## Reproducing the paper
 
-The paper ([`man/article/main.tex`](man/article/main.tex), compiled [`man/article/main.pdf`](man/article/main.pdf)) contains no number
+The paper ([`man/article/vn_algebra_pytorch.tex`](man/article/vn_algebra_pytorch.tex), compiled [`man/article/vn_algebra_pytorch.pdf`](man/article/vn_algebra_pytorch.pdf)) contains no number
 typed by hand: every table and figure comes from the scripts in [`scripts`](scripts) and the listings in
 [`man/article/listings`](man/article/listings), run by one driver:
 
 ```bash
 bash scripts/run_all.sh                    # quick mode, about 4 minutes on a 4-thread CPU
 bash scripts/run_all.sh full cuda          # sizes of the paper, on a GPU
-cd man/article && pdflatex main.tex && pdflatex main.tex
+cd man/article && pdflatex vn_algebra_pytorch.tex && pdflatex vn_algebra_pytorch.tex
 ```
 
 ### Running the full experiments on a GPU server
@@ -393,7 +397,7 @@ examples/            short usage examples of the library
 man/                 the documentation:
   lecture_notes/     the theory: definitions, theorems, complete proofs (7 languages)
   tutorial/          the library in the context of the theory, executed by the tests (7 languages)
-  article/           the paper: main.tex, main.pdf, generated/ (tables), figures/, listings/ (its programs)
+  article/           the paper: vn_algebra_pytorch.tex and .pdf, generated/ (tables), figures/, listings/ (its programs)
 scripts/             run_all.sh and the scripts behind every table and figure of the paper
 ```
 
@@ -450,7 +454,7 @@ on Zenodo).
   title   = {torch\_vn\_algebra: block-diagonal operators, symmetry sectors and quantum channels in {PyTorch}},
   author  = {Nikolaeva, Irina and Novikov, Andrej},
   year    = {2026},
-  version = {1.0.0},
+  version = {1.1.0},
   url     = {https://github.com/andre-a-no/von_neumann_type_i}
 }
 ```

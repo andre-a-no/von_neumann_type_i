@@ -1,7 +1,7 @@
 """torch_vn_algebra: finite-dimensional Type I von Neumann algebras in PyTorch."""
 from .algebra import TypeIAlgebra
 from .hilbert_space import HilbertSpace, tensor_product_hilbert, direct_sum_hilbert
-from .channels import Channel, InterSectorChannel
+from .channels import Channel, InterSectorChannel, SectorJump
 from .states import DensityMatrix
 from .chains import SpinChain
 from .composite import tensor_product, fused_tensor_product, kron, partial_trace
@@ -15,7 +15,7 @@ from .functional import caching
 Operator = TypeIAlgebra.Operator
 
 __all__ = ["TypeIAlgebra", "Operator", "HilbertSpace", "tensor_product_hilbert", "direct_sum_hilbert",
-           "Channel", "InterSectorChannel", "DensityMatrix", "tensor_product", "fused_tensor_product", "kron", "partial_trace",
+           "Channel", "InterSectorChannel", "SectorJump", "DensityMatrix", "tensor_product", "fused_tensor_product", "kron", "partial_trace",
            "SpinChain", "SU2Chain", "su2", "Inclusion", "ConditionalExpectation", "inclusions", "Decomposition", "RealStructure", "wedderburn", "commutant_basis", "decompose", "divergences", "SpinFactor", "jordan_algebra_generated", "jordan", "chains", "channels", "composite", "krylov", "cost", "dynamics", "optimize", "states", "functional", "caching"]
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 from . import permutational  # noqa: E402  (PermutationalSystem, PermutationalLindbladian)

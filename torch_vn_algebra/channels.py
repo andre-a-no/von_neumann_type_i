@@ -584,3 +584,93 @@ def random_inter_sector_channel(algebra_in: TypeIAlgebra, algebra_out: TypeIAlge
             if m_d:
                 K[:, :, d, sel, :m_d, :k_c] = V[:, :, :, offsets[d]:offsets[d] + m_d, :]
     return InterSectorChannel(algebra_in, algebra_out, K, trace_preserving=True)
+
+
+class SectorJump:
+    """
+    A sparse jump operator L of M = (+)_c M_{k_c} into itself that maps basis vectors to multiples of basis vectors
+    ("monomial"): sector c goes into one sector d(c) (or to zero), and the basis vector a of sector c goes to
+    val[c, a] times the basis vector dst[c, a] of d(c), injectively on the support. Spin flips S^+_i, S^-_i, local
+    fields S^z_i, particle loss a_i and projections onto basis states are of this form. For a Lindblad term
+    g (L rho L^* - 1/2 {L^*L, rho}) the library then never forms L: L rho L^* is a permutation of the entries of rho
+    with weights val_a conj(val_b), L^*L is diagonal, and the dual L^* Z L is a gather. Cost O(sum_c k_c^2) per
+    application instead of O(C^2 k_max^3) for the same jump as a dense InterSectorChannel.
+
+    target: (C,) target sector d(c) of every sector (-1: L kills the sector); dst: (C, k_max) target positions;
+    val: (C, k_max) or (batch, C, k_max) coefficients (zero on the padding and where L kills the basis vector). A
+    batch of coefficients gives one jump per sample, e.g. sqrt(rate) folded in for a batch of noise strengths.
+    """
+
+    def __init__(self, algebra: TypeIAlgebra, target, dst, val):
+        dev = algebra.hilbert.device
+        C, k = algebra.C, algebra.k_max
+        target = torch.as_tensor(target, dtype=torch.long, device=dev).reshape(C)
+        dst = torch.as_tensor(dst, dtype=torch.long, device=dev).reshape(C, k)
+        val = torch.as_tensor(val, device=dev)
+        if val.dim() == 2:
+            val = val.unsqueeze(0)
+        if tuple(val.shape[1:]) != (C, k):
+            raise ValueError(f"val must have shape (C, k_max) or (batch, C, k_max) = (.., {C}, {k}), got {tuple(val.shape)}")
+        val = algebra._to_field(val, "SectorJump coefficients").to(algebra.dtype)
+        rows = algebra._const('rows')                                        # (C, k_max)
+        live = (val != 0).any(0) & rows & (target >= 0)[:, None]             # support of L, (C, k_max)
+        val = val * live
+        kk = torch.tensor(algebra.k_factors, device=dev)
+        tgt = target.clamp(min=0)
+        if bool(((dst >= kk[tgt][:, None]) & live).any()) or bool(((dst < 0) & live).any()):
+            raise ValueError("SectorJump: a target position lies outside its target sector")
+        flat = tgt[:, None] * k + dst                                        # (C, k_max) row of the target in (C*k_max)
+        used = flat[live]
+        if used.numel() != torch.unique(used).numel():
+            raise ValueError("SectorJump: two basis vectors are mapped to the same basis vector (not injective)")
+        self.algebra = algebra
+        self.target, self.dst, self.val, self._live = target, dst, val, live
+        # flat indices into (C, k_max, k_max) for L rho L^*: entry (c, a, b) of rho lands at (d(c), dst_a, dst_b)
+        self._flat_rows = flat
+        pair = live[:, :, None] & live[:, None, :]                           # (C, k_max, k_max)
+        idx = (tgt[:, None, None] * k + dst[:, :, None]) * k + dst[:, None, :]
+        self._pair = pair
+        self._pair_idx = idx[pair]                                           # (P,)
+
+    def __repr__(self) -> str:
+        return f"SectorJump(batch={self.val.shape[0]}, C={self.algebra.C}, nnz={int(self._live.sum())})"
+
+    def scaled(self, coef) -> 'SectorJump':
+        """The jump c L with a scalar or a per-sample coefficient c of shape (batch,)."""
+        c = torch.as_tensor(coef, device=self.val.device).to(self.val.dtype)
+        c = c.reshape(-1, 1, 1) if c.dim() else c
+        return SectorJump(self.algebra, self.target, self.dst, self.val * c)
+
+    def sandwich(self, rho: torch.Tensor) -> torch.Tensor:
+        """L rho L^* for a block-diagonal rho of shape (B, C, k_max, k_max)."""
+        B = max(rho.shape[0], self.val.shape[0])
+        C, k = self.algebra.C, self.algebra.k_max
+        v = self.val.to(rho.dtype)
+        Y = v[:, :, :, None] * rho * v.conj()[:, :, None, :]                 # (B, C, k, k)
+        out = rho.new_zeros(B, C * k * k)
+        src = Y.expand(B, C, k, k)[:, self._pair]                             # (B, P)
+        out.index_add_(1, self._pair_idx, src)
+        return out.reshape(B, C, k, k)
+
+    def dual_sandwich(self, Z: torch.Tensor) -> torch.Tensor:
+        """L^* Z L (Heisenberg picture) for a block-diagonal Z."""
+        B = max(Z.shape[0], self.val.shape[0])
+        C, k = self.algebra.C, self.algebra.k_max
+        v = self.val.to(Z.dtype)
+        g = Z.reshape(Z.shape[0], -1)[:, self._pair_idx]                     # (B, P)
+        out = Z.new_zeros(B, C, k, k)
+        out[:, self._pair] = g.expand(B, -1)
+        return v.conj()[:, :, :, None] * out * v[:, :, None, :]
+
+    def LdL(self) -> torch.Tensor:
+        """L^*L, diagonal, as a tensor (batch, C, k_max, k_max)."""
+        return torch.diag_embed((self.val.abs() ** 2).to(self.val.dtype))
+
+    def to_inter_sector(self) -> InterSectorChannel:
+        """The same jump as a dense InterSectorChannel (Kraus rank 1)."""
+        alg = self.algebra
+        B, C, k = self.val.shape[0], alg.C, alg.k_max
+        K = torch.zeros(B, 1, C, C, k, k, dtype=alg.dtype, device=self.val.device)
+        c, a = torch.nonzero(self._live, as_tuple=True)
+        K[:, 0, self.target[c], c, self.dst[c, a], a] = self.val[:, c, a]
+        return InterSectorChannel(alg, alg, K)

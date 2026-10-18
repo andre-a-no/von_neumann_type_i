@@ -68,4 +68,4 @@ Statistics* (Springer, 2008)；J. Watrous, *The Theory of Quantum Information* (
 2018)；M. L. Mehta, *Random Matrices* (Elsevier, 2004)。
 
 库 `torch_vn_algebra` 及其在本讲义背景下的使用是[教程](../../tutorial/zh/README.md)的主题。本库的配套论文见
-[`man/article/main.pdf`](https://github.com/andre-a-no/von_neumann_type_i/blob/main/man/article/main.pdf)。
+[`man/article/vn_algebra_pytorch.pdf`](https://github.com/andre-a-no/von_neumann_type_i/blob/main/man/article/vn_algebra_pytorch.pdf)。

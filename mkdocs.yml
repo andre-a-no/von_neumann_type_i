@@ -17,7 +17,13 @@ copyright: Copyright &copy; 2026 Irina Nikolaeva, Andrej Novikov &middot; MIT Li
 docs_dir: man
 exclude_docs: |
   article/*
-  !article/main.pdf
+  !article/vn_algebra_pytorch.pdf
+  trace_envelopes/*
+  !trace_envelopes/trace_inequalities_contrast.pdf
+  connes_stormer/*
+  !connes_stormer/connes_stormer_masas.pdf
+  btc_sre/*
+  !btc_sre/btc_sre_symmetry_sectors.pdf
 
 theme:
   name: material

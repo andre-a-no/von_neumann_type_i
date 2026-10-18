@@ -786,7 +786,9 @@ def test_items_17_25_library_matches_numpy_and_mpmath(name):
             mats.append(U @ np.diag(x['lam'][0]) @ U.conj().T)
         if name == 'wmon':
             mats[1] = mats[1] * point['vars'][2]['t']
-        assert abs(value_new(name, w[i][0], *mats) - v[i]) < 1e-8 * max(1.0, abs(v[i])), (name, i)
+        # |PQ| has a zero eigenvalue for these ranks: its square root carries round-off of order sqrt(eps)
+        tol = 1e-7 if name == 'reabs' else 1e-8
+        assert abs(value_new(name, w[i][0], *mats) - v[i]) < tol * max(1.0, abs(v[i])), (name, i)
 
 
 @pytest.mark.parametrize('name', ['pqp', 'absdiff', 'meet', 'expqpq', 'repos', 'reabs', 'join', 'lp'])
