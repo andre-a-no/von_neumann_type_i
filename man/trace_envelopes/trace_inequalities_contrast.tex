@@ -51,20 +51,18 @@ sharp violation bounds in terms of Michelson contrasts}
 \maketitle
 
 \begin{abstract}
-A positive functional on a matrix algebra is a trace if and only if it satisfies any one of a long list of
-inequalities, the first of which is Gardner's $|\varphi(X)|\le\varphi(|X|)$. We ask how strongly these
-characterisations fail for a functional $\varphi_W=\Tr(W\,\cdot\,)$ that is not a trace, and measure the distance from
-the trace by the Michelson contrast $\delta=\Delta(W)$ of the density. Our main result is that for Gardner's inequality
-the sharp constant depends on $\delta$ and on the contrast $\delta'$ of $|X|$ only through their product:
-$|\varphi_W(X)|\le(1-\delta^2\delta'^2)^{-1/2}\varphi_W(|X|)$, with equality in even dimension. Since a contrast is the
-sine of the Krein--Gustafson angle of an operator, the constant is the secant of the angle whose sine is the product
-of the two contrasts. For 25 characterisations from the literature we determine the largest violation exactly in
-sixteen cases and bound it from below in the others; it vanishes at the trace to the orders $\delta$, $\delta^2$,
-$\delta^4$ or $\delta^8$. On a direct sum of matrix algebras only the contrast inside the blocks counts. We also find
-the sharp bounds of the three unnormalised trace functionals of our earlier work, and we prove, using Gustafson's
-criterion for positive Jordan products, contrast thresholds below which subadditivity of the square root and the
-power-mean inequality cannot fail. A numerical search, certified as a lower bound for each supremum, and Monte Carlo
-sampling support conjectured values for the remaining inequalities.
+A positive functional on a matrix algebra is a trace if and only if it satisfies any one of many inequalities, the
+first being Gardner's $|\varphi(X)|\le\varphi(|X|)$. We ask how strongly these characterisations fail for a non-tracial
+functional $\varphi_W=\Tr(W\,\cdot\,)$, measured by the Michelson contrast $\delta=\Delta(W)$ of its density. For
+Gardner's inequality the sharp constant depends on $\delta$ and on the contrast $\delta'$ of $|X|$ only through their
+product: $|\varphi_W(X)|\le(1-\delta^2\delta'^2)^{-1/2}\varphi_W(|X|)$, with equality in even dimension. As a contrast is
+the sine of the Krein--Gustafson angle of an operator, the constant is the secant of the angle whose sine is
+$\delta\delta'$. For 25 characterisations we find the largest violation exactly in sixteen cases and bound it from below
+in four; it vanishes at the trace to the orders $\delta$, $\delta^2$, $\delta^4$ or $\delta^8$, and on direct sums only
+the contrast inside the blocks counts. We also find the sharp bounds of three unnormalised trace functionals of our
+earlier work and, via Gustafson's criterion for positive Jordan products, contrast thresholds below which subadditivity of
+the square root and the power-mean inequality cannot fail. A numerical search, certified as a lower bound for each
+supremum, supports conjectured values for the remaining inequalities.
 \end{abstract}
 
 \noindent\textbf{Keywords:} trace characterisation; positive functional; Michelson contrast; operator angle;
@@ -102,7 +100,7 @@ so $\Delta(W)\to0$ at infinite temperature, where the Gibbs state becomes the no
 zero temperature. Every bound in terms of $\Delta(W)$ is therefore a law in the temperature: for Gardner's inequality we
 shall find the largest relative violation $\cosh(\beta(E_{\max}-E_{\min})/2)-1$. In the language of modular theory,
 $\varphi_W$ (for invertible $W$) is a trace if and only if its modular group $\sigma_t(X)=W^{it}XW^{-it}$ is trivial;
-the generator $X\mapsto[\log W,X]$ has the spectrum $\{\log w_i-\log w_j\}$, whose largest point is
+the derivation $X\mapsto[\log W,X]$ that generates it has the spectrum $\{\log w_i-\log w_j\}$, whose largest point is
 $\log(\lambda_{\max}(W)/\lambda_{\min}(W))=2\operatorname{artanh}\Delta(W)$. The contrast thus measures how far the
 modular dynamics is from being trivial.
 
@@ -671,8 +669,7 @@ Haar-orthogonal eigenbases and $U$ and uniformly drawn contrasts, as in~\cite[Fi
 Theorem~\ref{thm:gardner2} with $\Delta(Y)$ free, $\nu\delta^2/(2(1+\delta))$; dots: $z$ at the explicit maximisers of its
 proof, which agree with it to $10^{-15}$. Dashed: the supremum along $\Delta(Y)$, approached as $\Delta(X)\to1$. In
 $M_{16}$ no sample violates Gardner's inequality ($z>0$), although violations up to almost $2$ exist: the maximisers,
-two-level spectra on aligned pairs of eigenvectors, form a set of negligible Haar measure. Computed with plain NumPy by
-\texttt{scripts/\allowbreak trace\_\allowbreak envelopes\_\allowbreak figures.py}.}
+two-level spectra on aligned pairs of eigenvectors, form a set of negligible Haar measure.}
 \label{fig:gardner1d}
 \end{figure}
 
@@ -686,13 +683,11 @@ $5\times10^{-10}$ at every grid point: a violation needs both operators to be fa
 \end{figure}
 
 \begin{remark}
-(i) With the contrast of $|Z|$ free, the supremum $\nu\delta^2/(2(1+\delta))$ is reached at $\delta'=1$, i.e.\ for singular $Z$.
-(ii) The bound is additive over the blocks: it counts the mutually orthogonal two-dimensional subspaces that fit into the
-blocks, and it does not depend on the sizes of the blocks otherwise. (iii) The normalised version is
-Theorem~\ref{thm:kant}: $\sup_Z|\Tr(XZ)|/\Tr(X|Z|)=\kappa(X)$, attained by a rank-one $|Z|$, i.e.\ at $\Delta(|Z|)=1$.
-The unnormalised supremum vanishes to fourth order at $\delta=\delta'=0$ because the violation needs both operators to be
-far from scalar. (iv) Figures~\ref{fig:gardner1d} and~\ref{fig:gardner2d} compare the bound with random sampling and with
-numerical optimisation. Sampling, the method of~\cite{abed2024}, stays far below the bound as soon as the blocks are
+With the contrast of $|Z|$ free, the supremum $\nu\delta^2/(2(1+\delta))$ is reached at $\delta'=1$, i.e.\ for singular
+$Z$; the normalised counterpart is Theorem~\ref{thm:kant}, $\sup_Z|\Tr(XZ)|/\Tr(X|Z|)=\kappa(X)$. The bound is additive
+over the blocks: it counts the mutually orthogonal two-dimensional subspaces that fit into them and does not depend on
+the sizes of the blocks otherwise. Figures~\ref{fig:gardner1d} and~\ref{fig:gardner2d} compare it with random sampling,
+the method of~\cite{abed2024}, and with numerical optimisation. Sampling stays far below the bound as soon as the blocks are
 larger than $2\times2$, while the optimisation over both contrasts reproduces it.
 \end{remark}
 
@@ -795,18 +790,18 @@ $(b^2+\gamma A)E-\gamma^2As_\theta^2=\lambda(b^2+\gamma A)+b^2$, the Schur compl
   =p(\lambda),
 \]
 $p(\lambda)=\det\bigl((\lambda+1)(\lambda-b^2X_+)-\lambda\gamma K^{1/2}AK^{1/2}\bigr)$. The Schur complement of the lower right
-block $\lambda$ gives $\det(\lambda-\mathcal L)=p(\lambda)$ as well, for the self-adjoint matrix
+block $\lambda$ gives $\det(\lambda-\Xi)=p(\lambda)$ as well, for the self-adjoint matrix
 \[
-  \mathcal L=\begin{pmatrix}\gamma K^{1/2}AK^{1/2}+b^2X_+-1 & bX_+^{1/2}\\ bX_+^{1/2} & 0\end{pmatrix},
+  \Xi=\begin{pmatrix}\gamma K^{1/2}AK^{1/2}+b^2X_+-1 & bX_+^{1/2}\\ bX_+^{1/2} & 0\end{pmatrix},
 \]
-which is affine in $A$. Since $\det(\lambda-YXY)=\det(\lambda-XY^2)$, the polynomials agree and $YXY$ and $\mathcal L$ have
-the same eigenvalues; hence $\Tr|YXY|=\|\mathcal L\|_1\ge\Tr(T\mathcal L)$ for every self-adjoint $T$ with $\|T\|\le1$.
+which is affine in $A$. Since $\det(\lambda-YXY)=\det(\lambda-XY^2)$, the polynomials agree and $YXY$ and $\Xi$ have
+the same eigenvalues; hence $\Tr|YXY|=\|\Xi\|_1\ge\Tr(T\Xi)$ for every self-adjoint $T$ with $\|T\|\le1$.
 Take
 \[
   T=\begin{pmatrix}-\Lambda & G\\ G & \Lambda\end{pmatrix},\qquad \Lambda=\frac{1-X_+}{1+X_+},\quad G=\frac{2X_+^{1/2}}{1+X_+},
 \]
 so that $T^2=1$ ($\Lambda$ and $G$ commute and $\Lambda^2+G^2=1$). With $\Tr(Y|X|Y)=\Tr(|X|Y^2)=b^2\Tr X_++\gamma\Tr(X_+A)+mb^2+\gamma\Tr(1-A)$
-and $K^{1/2}\Lambda K^{1/2}=1-X_+$, the terms containing $A$ cancel in $\Tr(|X|Y^2)-\Tr(T\mathcal L)$, and
+and $K^{1/2}\Lambda K^{1/2}=1-X_+$, the terms containing $A$ cancel in $\Tr(|X|Y^2)-\Tr(T\Xi)$, and
 \[
   \Tr(Y|X|Y)-\Tr|YXY|\le\sum_{i=1}^m\Bigl(b^2x_i+1+\frac{1-x_i}{1+x_i}(b^2x_i-1)-\frac{4bx_i}{1+x_i}\Bigr)=(1-b)^2\sum_{i=1}^m\frac{2x_i}{1+x_i}.
 \]
@@ -853,10 +848,9 @@ one-dimensional block of an odd sector, $1$ on the other one-dimensional blocks,
 one-dimensional blocks).
 \end{proof}
 
-\noindent Before this proof the cases $k=4$ and $k=6$ ($C=1$) had been certified numerically by a rigorous branch and
-bound over the angles of the reduced model (\texttt{scripts/\allowbreak certify\_\allowbreak envelopes.py}; gaps $10^{-7}$
-and $10^{-5}$, including floating-point rounding), and the constrained optimiser of the library~\cite{lib} reproduces all
-envelopes of $z_2$ and $z_3$; Theorems~\ref{thm:gardner2} and~\ref{thm:exp3} and Proposition~\ref{prop:exp2} thus settle
+\noindent Before this proof was found, the cases $k=4$ and $k=6$ ($C=1$) had been verified by a rigorous branch-and-bound
+computation over the angles of the reduced model (with gaps $10^{-7}$ and $10^{-5}$ that include floating-point
+rounding), and numerical optimisation reproduces all suprema of $z_2$ and $z_3$. Theorems~\ref{thm:gardner2} and~\ref{thm:exp3} and Proposition~\ref{prop:exp2} thus settle
 the three functionals of~\cite[Sect.~5]{abed2024} with both contrasts prescribed. Like Gardner's violation, they are
 additive over the blocks: they count the mutually orthogonal two-dimensional subspaces that fit into the sectors.
 
@@ -868,7 +862,7 @@ $A=B=e_1e_2^*$. Hence $V_n=h-1=2\delta/(1-\delta)$ for item~8 in every dimension
 \end{proposition}
 \begin{proof}
 $\varphi_W(|AB^*|)\le a\|AB^*\|_1\le a\|A\|_2\|B\|_2$ and $\varphi_W(|A|^2)=\Tr(WA^*A)\ge b\|A\|_2^2$. For $A=B=e_1e_2^*$,
-$|AB^*|=e_1e_1^*$ and $|A|^2=e_2e_2^*$, so $L=a$ and $R=b$.
+$|AB^*|=e_1e_1^*$ and $|A|^2=e_2e_2^*$, so $\cL=a$ and $\cR=b$.
 \end{proof}
 
 \begin{remark}
@@ -878,22 +872,22 @@ item~8 is a feature of the extension to arbitrary operators.
 \end{remark}
 
 \begin{proposition}\label{prop:youngtwo}
-Let $\Delta(W)=\delta$ and let the moduli of $A$ and $B$ have contrast $\delta'$. For $n=2$ (and, by direct sums, for every
-even $n$) the extended Young inequality has
+Let $\Delta(W)=\delta$ and let the moduli of $A$ and $B$ have contrast $\delta'$. On $M_2$, for $W=\mathrm{diag}(a,b)$,
+$T=\mathrm{diag}(\ell',1)$ with $\ell'=\frac{1-\delta'}{1+\delta'}$, $U$ the swap of the two basis vectors and $A=B=UT$,
+the extended Young inequality has the relative violation $\frac{h+\ell'^2}{1+h\ell'^2}-1$. Hence, for $n=2$ and, by direct
+sums, for every even $n$,
 \[
-  V_n(\delta,\delta')\ \ge\ \frac{h+\ell'^2}{1+h\ell'^2}-1=\frac{4\delta\delta'}{1+\delta'^2-2\delta\delta'},\qquad
-  \ell'=\frac{1-\delta'}{1+\delta'},
+  V_n(\delta,\delta')\ \ge\ \frac{h+\ell'^2}{1+h\ell'^2}-1=\frac{4\delta\delta'}{1+\delta'^2-2\delta\delta'}.
 \]
-attained by $A=B=UT$ with $T=\mathrm{diag}(\ell',1)$ in the eigenbasis of $W=\mathrm{diag}(a,b)$ and $U$ the swap of the
-two basis vectors. For $\delta'=1$ this is Proposition~\ref{prop:young}.
+For $\delta'=1$ this is the value of Proposition~\ref{prop:young}.
 \end{proposition}
 \begin{proof}
-For $A=B$, $|AB^*|=|AA^*|=AA^*=UT^2U^*=\mathrm{diag}(1,\ell'^2)$ and $|A|^2=T^2=\mathrm{diag}(\ell'^2,1)$, so $L=a+b\ell'^2$ and
-$R=a\ell'^2+b$, and $L/R=(h+\ell'^2)/(h\ell'^2+1)$. Inserting $h=\frac{1+\delta}{1-\delta}$ and $\ell'$ gives the second form.
+For $A=B$, $|AB^*|=|AA^*|=AA^*=UT^2U^*=\mathrm{diag}(1,\ell'^2)$ and $|A|^2=T^2=\mathrm{diag}(\ell'^2,1)$, so $\cL=a+b\ell'^2$ and
+$\cR=a\ell'^2+b$, and $\cL/\cR=(h+\ell'^2)/(h\ell'^2+1)$. Inserting $h=\frac{1+\delta}{1-\delta}$ and $\ell'$ gives the second form.
 \end{proof}
 
-\noindent The certified search over all $A,B$ with this contrast reproduces the bound to four digits on $M_2$
-(Figure~\ref{fig:mc-young}); we conjecture equality for even $n$. Unlike Gardner's inequality, the extended Young
+\noindent The numerical search over all $A,B$ with this contrast finds no larger value on $M_2$ (agreement to four
+digits, Figure~\ref{fig:mc-young}), and we conjecture equality for even $n$. Unlike Gardner's inequality, the extended Young
 inequality fails \emph{linearly} in each contrast, $V\sim4\delta\delta'$.
 
 \begin{proposition}\label{prop:abed}
@@ -901,13 +895,13 @@ For $n=2$, item~9 has the envelope $V_2=s/(1+s)$, $s=\sin(\psi/2)$. Thus $V_2\si
 $V_2\to\sqrt2-1$ as $\delta\to1$.
 \end{proposition}
 \begin{proof}
-If $P$ or $Q$ is $0$ or $1$, or $P=Q$, then $L=R$. Otherwise $P=uu^*$, $Q=vv^*$ with unit vectors; choose phases so that
+If $P$ or $Q$ is $0$ or $1$, or $P=Q$, then $\cL=\cR$. Otherwise $P=uu^*$, $Q=vv^*$ with unit vectors; choose phases so that
 $u=cv+\sigma v_\perp$ with $c=\cos\theta$, $\sigma=\sin\theta$, $0<\theta<\pi/2$, and a unit vector $v_\perp\perp v$.
 Normalise $\Tr W=2$, so that $W$ has the eigenvalues $1\pm\delta$, and put $\beta=v^*Wv$, $\gamma=v_\perp^*Wv_\perp=2-\beta$,
 $t=\Re(v^*Wv_\perp)$ and $\rho=|v^*Wv_\perp|$; then $\beta\gamma-\rho^2=\det W=1-\delta^2$. Since $PQ+QP=c(uv^*+vu^*)$
 and $QPQ=c^2Q$,
 \[
-  L-R=2c\Re(v^*Wu)-2c^2\beta=2c\sigma t,\qquad N=u^*Wu+\beta=\beta(1+c^2)+\sigma^2\gamma+2c\sigma t .
+  \cL-\cR=2c\Re(v^*Wu)-2c^2\beta=2c\sigma t,\qquad \cN=u^*Wu+\beta=\beta(1+c^2)+\sigma^2\gamma+2c\sigma t .
 \]
 With $D=\beta(1+c^2)+\sigma^2\gamma>0$ the quotient $2c\sigma t/(D+2c\sigma t)$ increases with $t\le\rho$, so it is at most
 $r/(1+r)$ with
@@ -962,7 +956,7 @@ a closed form.
 \section{Inequalities for two projections}\label{sec:proj}
 
 \begin{theorem}\label{thm:proj}
-Let $W>0$ in $M_n$, $n\ge2$, with $\Delta(W)=\delta$, and let $P,Q$ be projections. With $N$ as in
+Let $W>0$ in $M_n$, $n\ge2$, with $\Delta(W)=\delta$, and let $P,Q$ be projections. With $\cN$ as in
 Table~\ref{tab:items}:
 \begin{enumerate}
 \item[(17)] $V_n=\kappa^2-1$ for $\varphi(PQP)\le\varphi(Q)$;
@@ -982,25 +976,25 @@ $(1-\delta)/(n-1)$ added to $\beta$ in~\eqref{eq:quad}.
 
 \begin{proof}
 \emph{Step 1: reduction to rank-one projections on $M_2$.} By Lemma~\ref{lem:halmos}, $\C^n=\bigoplus_jH_j$ with
-$\dim H_j\in\{1,2\}$, every $H_j$ invariant under $P$ and $Q$. Every operator in $L$, $R$ and $N$ (namely $PQP$, $Q$,
+$\dim H_j\in\{1,2\}$, every $H_j$ invariant under $P$ and $Q$. Every operator in $\cL$, $\cR$ and $\cN$ (namely $PQP$, $Q$,
 $|P-Q|$, $P+Q$, $1+P\wedge Q$, $e^{QPQ}$, $e^P$, $\Re PQ$, $|PQ|$, $P\vee Q$) is then block diagonal, with the block
 obtained from $P_j,Q_j$; for the lattice operations because $\mathrm{ran}\,P\cap\mathrm{ran}\,Q=\bigoplus_j(\mathrm{ran}\,
-P_j\cap\mathrm{ran}\,Q_j)$, the projections onto the $H_j$ commuting with $P$ and $Q$. Hence $L=\sum_jL_j$, $R=\sum_jR_j$ and
-$N=\sum_jN_j$, where $L_j$ is the same expression for $P_j,Q_j$ and the functional $\Tr(W_j\,\cdot\,)$ on $H_j$, with the
+P_j\cap\mathrm{ran}\,Q_j)$, the projections onto the $H_j$ commuting with $P$ and $Q$. Hence $\cL=\sum_jL_j$, $\cR=\sum_jR_j$ and
+$\cN=\sum_jN_j$, where $\cL_j$ is the same expression for $P_j,Q_j$ and the functional $\Tr(W_j\,\cdot\,)$ on $H_j$, with the
 compression $W_j$ of $W$ to $H_j$; its spectrum lies in $[b,a]$, so $\Delta(W_j)\le\delta$. On a one-dimensional $H_j$,
-$P_j,Q_j\in\{0,1\}$ commute and $L_j\le R_j$ in all seven items (e.g.\ $\max(p,q)\le p+q$, $p+q\le1+pq$, $e^{pq}\le e^p$).
-On a two-dimensional $H_j$, $P_j\ne Q_j$ are rank-one projections. Since $N_j\ge0$, and $L_j\le R_j$ wherever $N_j=0$,
+$P_j,Q_j\in\{0,1\}$ commute and $\cL_j\le \cR_j$ in all seven items (e.g.\ $\max(p,q)\le p+q$, $p+q\le1+pq$, $e^{pq}\le e^p$).
+On a two-dimensional $H_j$, $P_j\ne Q_j$ are rank-one projections. Since $\cN_j\ge0$, and $\cL_j\le \cR_j$ wherever $\cN_j=0$,
 \[
-  \frac{L-R}N\le\max_j\frac{L_j-R_j}{N_j},
+  \frac{\cL-\cR}\cN\le\max_j\frac{\cL_j-\cR_j}{\cN_j},
 \]
-and the quotients do not change when $W_j$ is scaled. It therefore suffices to bound $(L-R)/N$ for
+and the quotients do not change when $W_j$ is scaled. It therefore suffices to bound $(\cL-\cR)/\cN$ for
 $W=\frac12(1+\tau\sigma_3)$, $0\le\tau\le\delta$, and $P=\frac12(1+\mu\cdot\sigma)$, $Q=\frac12(1+\nu\cdot\sigma)$ with unit
 Bloch vectors $\mu\ne\nu$ in $\R^3$ ($\sigma=(\sigma_1,\sigma_2,\sigma_3)$ the Pauli matrices). For fixed $\mu,\nu$ the
 quotient is a linear-fractional function of $\tau$ (all three quantities are affine in $W$) with positive denominator, hence
 monotone on $[-\delta,\delta]$; conjugation by $\sigma_1$ maps $\tau$ to $-\tau$ and $(\mu,\nu)$ to reflected vectors. So
 the bound for $\tau=\delta$ covers every $\tau\le\delta$, and the $M_2$ envelope bounds the envelope in every dimension.
-In 17, 18 and 21--23, $N$ vanishes on blocks where $P=Q=0$, so the values below, attained (or approached) on $M_2$, are
-attained (approached) on $M_n$ with $P,Q$ supported on the span of $e_1,e_2$. In 19 and 20, $N$ contains $\varphi(1)$,
+In 17, 18 and 21--23, $\cN$ vanishes on blocks where $P=Q=0$, so the values below, attained (or approached) on $M_2$, are
+attained (approached) on $M_n$ with $P,Q$ supported on the span of $e_1,e_2$. In 19 and 20, $\cN$ contains $\varphi(1)$,
 which we treat at the end.
 
 \emph{Step 2: formulas on $M_2$.} Write $\varphi(x_0+x\cdot\sigma)=x_0+\delta x_3$, $\mu\cdot\nu=\cos2\theta$
@@ -1011,53 +1005,53 @@ elementary fact: \emph{for $\beta>|z|$, $\max_{|\xi|=1}(\alpha+y\cdot\xi)/(\beta
 $\alpha-\lambda\beta+|y-\lambda z|$}, since $(\alpha+y\cdot\xi)-\lambda(\beta+z\cdot\xi)\le\alpha-\lambda\beta+|y-\lambda z|$
 with equality for $\xi\parallel y-\lambda z$, and the right-hand side decreases strictly in $\lambda$.
 
-(17) $L/R=(1+\mu\cdot\nu)(1+\delta\mu_3)/(2(1+\delta\nu_3))$. For fixed $\mu$, the fact with $\alpha=\beta=1$, $y=\mu$,
+(17) $\cL/\cR=(1+\mu\cdot\nu)(1+\delta\mu_3)/(2(1+\delta\nu_3))$. For fixed $\mu$, the fact with $\alpha=\beta=1$, $y=\mu$,
 $z=\delta e_3$ gives $\max_\nu(1+\mu\cdot\nu)/(1+\delta\nu_3)=2(1-\delta\mu_3)/(1-\delta^2)$, so
-$L/R\le(1-\delta^2\mu_3^2)/(1-\delta^2)\le\kappa^2$, with equality for $\mu_3=0$ and $\nu=(\mu-\lambda\delta e_3)/(\lambda-1)$,
+$\cL/\cR\le(1-\delta^2\mu_3^2)/(1-\delta^2)\le\kappa^2$, with equality for $\mu_3=0$ and $\nu=(\mu-\lambda\delta e_3)/(\lambda-1)$,
 $\lambda=2/(1-\delta^2)$.
 
-(18) $L/R=\sin\theta/(1+\frac\delta2(\mu_3+\nu_3))\le\sin\theta/(1-\delta\cos\theta)\le\kappa$, the maximum being at
+(18) $\cL/\cR=\sin\theta/(1+\frac\delta2(\mu_3+\nu_3))\le\sin\theta/(1-\delta\cos\theta)\le\kappa$, the maximum being at
 $\cos\theta=\delta$, $\mu+\nu\parallel-e_3$. (Alternatively, $\varphi(|P-Q|)\le\kappa\varphi(P+Q)$ is the triangle inequality
 of Theorem~\ref{thm:kant} with $X=P$, $Y=-Q$.)
 
-(19) $(L-R)/N=\varphi(P+Q)-1=\frac\delta2(\mu_3+\nu_3)<\delta$, approached as $\mu,\nu\to e_3$.
+(19) $(\cL-\cR)/\cN=\varphi(P+Q)-1=\frac\delta2(\mu_3+\nu_3)<\delta$, approached as $\mu,\nu\to e_3$.
 
 (20) For fixed $g=2\theta$, the pair $(\mu_3,\nu_3)$ ranges over the image of the unit sphere under $\xi\mapsto(\mu\cdot
 \xi,\nu\cdot\xi)$, a filled ellipse, and the linear-fractional quotient is maximal on its boundary, $\mu_3=\cos x$,
 $\nu_3=\cos(x+g)$. With $K=e-1$ and $E=e^{\cos^2(g/2)}-1$,
 \[
-  \frac{L-R}N=\frac{\alpha+y\cdot\xi_x}{\beta+z\cdot\xi_x},\quad \alpha=\tfrac{E-K}2,\ y=\tfrac\delta2(E\cos g-K,\,-E\sin g),
+  \frac{\cL-\cR}\cN=\frac{\alpha+y\cdot\xi_x}{\beta+z\cdot\xi_x},\quad \alpha=\tfrac{E-K}2,\ y=\tfrac\delta2(E\cos g-K,\,-E\sin g),
   \ \beta=1+\tfrac K2,\ z=(\tfrac{\delta K}2,0),
 \]
 $\xi_x=(\cos x,\sin x)$. By the fact, its maximum $\lambda(\delta,g)$ is the larger root of
 \begin{equation}\label{eq:quad}
   (\beta^2-|z|^2)\lambda^2-2(\alpha\beta-y\cdot z)\lambda+\alpha^2-|y|^2=0 .
 \end{equation}
-For small $\delta$ the maximiser has $g=2K\delta/e+O(\delta^2)$, $x=\pi/2$, and $L-R=-\frac e8g^2+\frac{K\delta}2g+O(\delta^3)$,
+For small $\delta$ the maximiser has $g=2K\delta/e+O(\delta^2)$, $x=\pi/2$, and $\cL-\cR=-\frac e8g^2+\frac{K\delta}2g+O(\delta^3)$,
 which gives $V=K^2\delta^2/(e(e+1))+O(\delta^3)$.
 
-(21) With $s=\mu_3+\nu_3\ge-2\cos\theta$, $(L-R)/N=-(2\cos^2\theta+\delta s)/(4(1+\frac\delta2s))$, which decreases in $s$;
-so $(L-R)/N\le(\delta C-C^2)/(2(1-\delta C))$, $C=\cos\theta$. The maximum over $C$ is at $\delta C^2-2C+\delta=0$,
+(21) With $s=\mu_3+\nu_3\ge-2\cos\theta$, $(\cL-\cR)/\cN=-(2\cos^2\theta+\delta s)/(4(1+\frac\delta2s))$, which decreases in $s$;
+so $(\cL-\cR)/\cN\le(\delta C-C^2)/(2(1-\delta C))$, $C=\cos\theta$. The maximum over $C$ is at $\delta C^2-2C+\delta=0$,
 $C=\tan(\psi/2)$, with the value $C^2/2=\frac12\tan^2(\psi/2)$.
 
 (22) $\varphi(\Re PQ)=\Re\varphi(PQ)\le|\varphi(PQ)|\le\kappa\varphi(|PQ|)$ by Theorem~\ref{thm:kant}, in every dimension.
 Equality: $v=\sqrt{b/(a+b)}\,e_1+\sqrt{a/(a+b)}\,e_2$, $u=Wv/\|Wv\|$; then $PQ=\langle u,v\rangle uv^*$ has the polar factor
 of the equality case of Theorem~\ref{thm:kant}.
 
-(23) $L/R=1/(1+\frac\delta2(\mu_3+\nu_3))<1/(1-\delta)$, approached as $\mu,\nu\to-e_3$.
+(23) $\cL/\cR=1/(1+\frac\delta2(\mu_3+\nu_3))<1/(1-\delta)$, approached as $\mu,\nu\to-e_3$.
 
 \emph{Step 3: items 19 and 20 in dimension $n$.} For even $n$ take $W$ with the eigenvalues $a$ and $b$, each $n/2$
 times, and $n/2$ copies of the $M_2$ extremiser, one in each block spanned by an eigenvector for $a$ and one for $b$;
 this attains (approaches) the $M_2$ value, which is an upper bound by Step~1. For odd $n$ at least one block of
 Lemma~\ref{lem:halmos} is one-dimensional, so there are $k'\le k=(n-1)/2$ two-dimensional blocks. In item~19,
-$N\ge\varphi(1)=\Tr W$; by Step~2 a two-dimensional block contributes $L_j-R_j=\Tr W_j\cdot\frac{\Delta(W_j)}2(\mu_3+\nu_3)
-<\lambda_1(W_j)-\lambda_2(W_j)$, and a one-dimensional one $L_j-R_j\le0$. By Ky Fan's maximum
+$\cN\ge\varphi(1)=\Tr W$; by Step~2 a two-dimensional block contributes $\cL_j-\cR_j=\Tr W_j\cdot\frac{\Delta(W_j)}2(\mu_3+\nu_3)
+<\lambda_1(W_j)-\lambda_2(W_j)$, and a one-dimensional one $\cL_j-\cR_j\le0$. By Ky Fan's maximum
 principle~\cite[Sect.~III.1]{bhatia1997}, $\sum_j\lambda_1(W_j)$ is at most the sum of the $k'$ largest and
-$\sum_j\lambda_2(W_j)$ at least the sum of the $k'$ smallest eigenvalues of $W$. The resulting bound for $(L-R)/N$ is a
+$\sum_j\lambda_2(W_j)$ at least the sum of the $k'$ smallest eigenvalues of $W$. The resulting bound for $(\cL-\cR)/\cN$ is a
 linear-fractional function of the spectrum of $W$ and is maximal for $k'=k$ and the spectrum $a^{(k)},b^{(k+1)}$; hence
-$(L-R)/N<k(a-b)/(k(a+b)+b)=(n-1)\delta/(n-\delta)$, which is approached for this spectrum with $P=1$, $Q=0$ on the remaining
-eigenvector (a block with $L_j=R_j$). In item~20 the same configuration, with $P=Q=0$ on the remaining eigenvector, adds $b/k$ per block
-to $N$, i.e.\ $(1-\delta)/(n-1)$ to $\beta$ (normalisation $\Tr W_j=1$); this gives the lower bound, and the $M_2$ value
+$(\cL-\cR)/\cN<k(a-b)/(k(a+b)+b)=(n-1)\delta/(n-\delta)$, which is approached for this spectrum with $P=1$, $Q=0$ on the remaining
+eigenvector (a block with $\cL_j=\cR_j$). In item~20 the same configuration, with $P=Q=0$ on the remaining eigenvector, adds $b/k$ per block
+to $\cN$, i.e.\ $(1-\delta)/(n-1)$ to $\beta$ (normalisation $\Tr W_j=1$); this gives the lower bound, and the $M_2$ value
 the upper bound.
 \end{proof}
 
@@ -1068,7 +1062,7 @@ For every $n\ge2$:
 \begin{enumerate}
 \item[(a)] $V_n\ge\kappa-1$ for item~6 (approached);
 \item[(b)] $V_n\ge\kappa^2-1=\delta^2/(1-\delta^2)$ for item~7 (approached);
-\item[(c)] $V_n\ge m(\delta):=\max_{0<y<\delta}\dfrac{y^2(\delta-y)^2}{(1-2\delta y+y^2)(1-y^2)}=\dfrac{\delta^4}{16}+O(\delta^5)$
+\item[(c)] $V_n\ge g_{10}(\delta):=\max_{0<y<\delta}\dfrac{y^2(\delta-y)^2}{(1-2\delta y+y^2)(1-y^2)}=\dfrac{\delta^4}{16}+O(\delta^5)$
 for item~10 (attained);
 \item[(d)] $V_n\ge\delta^2/36+O(\delta^3)$ for item~14, and more generally
 $(1-\frac2p)^2\delta^2/4+O(\delta^3)$ for Hölder's inequality $|\varphi(PQ)|\le\varphi(P)^{1/p}\varphi(Q)^{1/q}$.
@@ -1086,36 +1080,36 @@ $(A^{-1}\#B)^{1/2}=(v^*Av)^{-1/4}vv^*$ and $A\natural B=(v^*Av)^{1/2}vv^*$. With
   \frac{|v^*x|^2\,v^*Wv}{x^*Wx},
 \]
 which for $x=W^{-1}v$ equals $(v^*W^{-1}v)(v^*Wv)=\frac14(a^{-1}+b^{-1})(a+b)=\kappa^2$. By continuity the quotient
-$L/R$ approaches $\kappa$ for positive definite $A$, $B=vv^*+\varepsilon'$.
+$\cL/\cR$ approaches $\kappa$ for positive definite $A$, $B=vv^*+\varepsilon'$.
 
 (b) In the basis $f_1=e_+$, $f_2=e_-$ the density has the entries $W_{11}=W_{22}=\frac{a+b}2$, $W_{12}=\frac{a-b}2$. Take
 $B=\eta f_1f_1^*+f_2f_2^*$ and $A=uu^*$ with $u=f_1+s\eta f_2$. Then $B^{1/2}AB^{1/2}=ww^*$ with $w=\sqrt\eta f_1+s\eta f_2$,
-so $L=\|w\|^2\,w^*Ww=\eta^2W_{11}+O(\eta^{5/2})$, and $Bu=\eta(f_1+sf_2)$, so $R=\|u\|^2\eta^2(W_{11}+2sW_{12}+s^2W_{22})$.
-As $\eta\to0$, $L/R\to W_{11}/(W_{11}+2sW_{12}+s^2W_{22})$, which at $s=-W_{12}/W_{22}$ equals
+so $\cL=\|w\|^2\,w^*Ww=\eta^2W_{11}+O(\eta^{5/2})$, and $Bu=\eta(f_1+sf_2)$, so $\cR=\|u\|^2\eta^2(W_{11}+2sW_{12}+s^2W_{22})$.
+As $\eta\to0$, $\cL/\cR\to W_{11}/(W_{11}+2sW_{12}+s^2W_{22})$, which at $s=-W_{12}/W_{22}$ equals
 $W_{11}W_{22}/(W_{11}W_{22}-W_{12}^2)=(a+b)^2/(4ab)=\kappa^2$.
 
 (c) Normalise $a+b=2$, so $W=\mathrm{diag}(1+\delta,1-\delta)$, and take $A=uu^*$, $B=A+tvv^*$, $t\ge0$, with
 $u=(\cos\alpha,\sin\alpha)$, $v=(-\cos\alpha,\sin\alpha)$ and $y=-\cos2\alpha$. Then $u^*v=y$, $v^*Wu=y-\delta$ and
 $u^*Wu=v^*Wv=1-\delta y$, so
 \[
-  L-R=\varphi(A^2)-\varphi(B^2)=-2t\Re\bigl((u^*v)(v^*Wu)\bigr)-t^2v^*Wv=2ty(\delta-y)-t^2(1-\delta y).
+  \cL-\cR=\varphi(A^2)-\varphi(B^2)=-2t\Re\bigl((u^*v)(v^*Wu)\bigr)-t^2v^*Wv=2ty(\delta-y)-t^2(1-\delta y).
 \]
-For $0<y<\delta$ the best $t=y(\delta-y)/(1-\delta y)>0$ gives $L-R=G:=y^2(\delta-y)^2/(1-\delta y)$ and
-$(L-R)/R=G/(1-\delta y-G)=y^2(\delta-y)^2/((1-2\delta y+y^2)(1-y^2))$. Maximising over $y$ gives $m(\delta)$; the leading
+For $0<y<\delta$ the best $t=y(\delta-y)/(1-\delta y)>0$ gives $\cL-\cR=G:=y^2(\delta-y)^2/(1-\delta y)$ and
+$(\cL-\cR)/\cR=G/(1-\delta y-G)=y^2(\delta-y)^2/((1-2\delta y+y^2)(1-y^2))$. Maximising over $y$ gives $g_{10}(\delta)$; the leading
 order comes from $y=\delta/2$.
 
-(d) Take $W=\frac12(1+\delta D)$, $D=\mathrm{diag}(1,-1)$, and real unit vectors $u,v$ at the angles $m\pm\varepsilon/2$ to
-$e_1$, $P=uu^*$, $Q=vv^*$. Then $\varphi(PQ)=\frac12(\cos^2\varepsilon+\delta\cos\varepsilon\cos2m)$ and
-$\varphi(P)^{1/p}\varphi(Q)^{1/q}=\frac12\bigl(1+\delta\cos2m+\delta(\frac1q-\frac1p)\varepsilon\sin2m\bigr)+O(\delta^2\varepsilon^2)$,
-so $L-R=\frac12\bigl(-\varepsilon^2-\delta(1-\frac2p)\varepsilon\sin2m\bigr)+O(\delta^3)$ for $\varepsilon=O(\delta)$. The choice
-$m=\pi/4$, $\varepsilon=-\frac\delta2(1-\frac2p)$ gives $L-R=\frac18(1-\frac2p)^2\delta^2+O(\delta^3)$ and $R=\frac12+O(\delta)$.
+(d) Take $W=\frac12(1+\delta D)$, $D=\mathrm{diag}(1,-1)$, and real unit vectors $u,v$ at the angles $\tau\pm\varepsilon/2$ to
+$e_1$, $P=uu^*$, $Q=vv^*$. Then $\varphi(PQ)=\frac12(\cos^2\varepsilon+\delta\cos\varepsilon\cos2\tau)$ and
+$\varphi(P)^{1/p}\varphi(Q)^{1/q}=\frac12\bigl(1+\delta\cos2\tau+\delta(\frac1q-\frac1p)\varepsilon\sin2\tau\bigr)+O(\delta^2\varepsilon^2)$,
+so $\cL-\cR=\frac12\bigl(-\varepsilon^2-\delta(1-\frac2p)\varepsilon\sin2\tau\bigr)+O(\delta^3)$ for $\varepsilon=O(\delta)$. The choice
+$\tau=\pi/4$, $\varepsilon=-\frac\delta2(1-\frac2p)$ gives $\cL-\cR=\frac18(1-\frac2p)^2\delta^2+O(\delta^3)$ and $\cR=\frac12+O(\delta)$.
 \end{proof}
 
 \begin{proposition}\label{prop:wmon}
 For item~25 ($\varphi(A^4)\le\varphi(AB^2A)$ for $0\le A\le B$), rank-one $A$ gives no violation, and an explicit
 construction with $A$ of rank two and $B-A$ of rank one gives
 \[
-  V_n\ge m_{25}(\delta)=\frac{\delta^8}{4096}\bigl(1+O(\delta^2)\bigr)\qquad\text{in every dimension }n\ge2 .
+  V_n\ge g_{25}(\delta)=\frac{\delta^8}{4096}\bigl(1+O(\delta^2)\bigr)\qquad\text{in every dimension }n\ge2 .
 \]
 \end{proposition}
 \begin{proof}
@@ -1123,25 +1117,25 @@ If $A=\alpha uu^*$ has rank one and $A\le B$, then $u^*Bu\ge\alpha$ and $AB^2A=\
 A^4$, so every positive $\varphi$ satisfies the inequality. For the construction take $W$ with $\Tr W=1$ and eigenvalues
 $(1\pm\delta)/2$, and, in an orthonormal basis at the angle $\vartheta$ to its eigenbasis, $A=\mathrm{diag}(1,s)$, $0<s<1$,
 and $B=A+tvv^*$ with $v=(\cos\phi,\sin\phi)$; in this basis $W$ has the entries $w_{11,22}=\frac12(1\pm\delta\cos2\vartheta)$
-and $w_{12}=\frac\delta2\sin2\vartheta$. Then $R-L=tT_1+t^2T_2$ with $T_1=\varphi(A^2P_vA+AP_vA^2)$, $T_2=\varphi(AP_vA)$,
-$P_v=vv^*$, and whenever $T_1<0$ the best $t=-T_1/(2T_2)$ gives $(L-R)/R=G/(L-G)$, $G=T_1^2/(4T_2)$. Let $m_{25}(\delta)$
+and $w_{12}=\frac\delta2\sin2\vartheta$. Then $\cR-\cL=tT_1+t^2T_2$ with $T_1=\varphi(A^2P_vA+AP_vA^2)$, $T_2=\varphi(AP_vA)$,
+$P_v=vv^*$, and whenever $T_1<0$ the best $t=-T_1/(2T_2)$ gives $(\cL-\cR)/\cR=G/(\cL-G)$, $G=T_1^2/(4T_2)$. Let $g_{25}(\delta)$
 be the maximum over $(\vartheta,s,\phi)$; it is attained, and by embedding $\C^2\subset\C^n$ (with $A$, $B$ extended by $0$)
 it is a lower bound in every dimension. For the leading order put $\vartheta=\pi/4$, $\sqrt s=\sigma\delta$ and $\tan\phi=-\varrho
 s^{-3/2}$. Then $T_1=\cos^2\phi\,(1+\varrho^2-(1+s)\varrho/\sigma)$, $T_2=\cos^2\phi\,(\frac12+\frac{\varrho^2}{2s}-\frac\varrho\sigma)$ and
 $\cos^2\phi=s^3/(s^3+\varrho^2)$, so that
 \[
-  \frac{L-R}R=\bigl(\sigma^2(\varsigma-\varsigma^2)-\sigma^4\bigr)^2\delta^8+O(\delta^{10}),\qquad\varsigma=\sigma/\varrho,
+  \frac{\cL-\cR}\cR=\bigl(\sigma^2(\varsigma-\varsigma^2)-\sigma^4\bigr)^2\delta^8+O(\delta^{10}),\qquad\varsigma=\sigma/\varrho,
 \]
 which is maximal for $\varsigma=\frac12$, $\sigma^2=\frac18$, with the value $\delta^8/4096$.
 \end{proof}
 
-\noindent The numerical maximisation gives $m_{25}(0.1)/(0.1^8/4096)=\TCWmonLead$. The same scaling for a general
+\noindent The numerical maximisation gives $g_{25}(0.1)/(0.1^8/4096)=\TCWmonLead$. The same scaling for a general
 exponent $r\ge0$ in $\varphi(A^{2r+2})\le\varphi(A^rB^2A^r)$ gives the order $\delta^{4(r+1)}$; for $r=0$ the supremum of
 the leading coefficient is $\frac1{16}$, that of item~10.
 
 \begin{remark}\label{rem:13}
-With $N=R$, item~13 would have $V=\infty$ for every $\delta>0$: for rank-one $A=uu^*$, $B=vv^*$ with overlap $c=|u^*v|\to0$,
-$L\approx2c\,|u^*Wu_\perp|$ while $R=2c^2u^*Wu$. This is why we normalise by $\varphi(A+B)$.
+With $\cN=\cR$, item~13 would have $V=\infty$ for every $\delta>0$: for rank-one $A=uu^*$, $B=vv^*$ with overlap $c=|u^*v|\to0$,
+$\cL\approx2c\,|u^*Wu_\perp|$ while $\cR=2c^2u^*Wu$. This is why we normalise by $\varphi(A+B)$.
 \end{remark}
 
 \section{Direct sums: only the contrast inside the blocks matters}\label{sec:sectors}
@@ -1163,17 +1157,17 @@ Table~\ref{tab:items} except 11 and 24 is violated, however different the scalar
 the intra-block contrast $\max_c\Delta(W_c)=\delta$ is at most the largest envelope $V_{k_c}(\delta)$ of the blocks.
 \end{theorem}
 \begin{proof}
-All variables of the items are in $\M$, hence block diagonal, and every functional calculus acts blockwise. Let $L_c$,
-$R_c$, $N_c$ be the expressions of the item for the block variables and $\varphi_{W_c}$. For all items except 11, 16 and~24,
-$L\le\sum_cL_c$ (with equality unless $L$ contains an absolute value of a functional, as in 1, 4 and~14),
-$N=\sum_cN_c$, and $R=\sum_cR_c$, except in items 6 and~14, where $R=\sqrt{\sum_c\varphi_c(A_c)\sum_c\varphi_c(B_c)}\ge
-\sum_cR_c$ by the Cauchy--Schwarz inequality and $R\ge\sum_cR_c$ by Hölder's inequality. Since $W>0$, $N_c=0$ forces the
-variables of block~$c$ to vanish where they enter $L_c$, so $L_c\le R_c$ there. Hence
-$(L-R)/N\le\sum_c(L_c-R_c)/\sum_cN_c\le\max_c(L_c-R_c)/N_c$, the maximum over the blocks with $N_c>0$ (for $N=R$ in items 6
-and~14 use $L/R\le\sum_cL_c/\sum_cR_c$ instead). This proves the inequality. For the equality, in the
-listed items $N$ is additive and the variables may vanish on all blocks but one without making $N$ vanish; restricting a
+All variables of the items are in $\M$, hence block diagonal, and every functional calculus acts blockwise. Let $\cL_c$,
+$\cR_c$, $\cN_c$ be the expressions of the item for the block variables and $\varphi_{W_c}$. For all items except 11, 16 and~24,
+$\cL\le\sum_cL_c$ (with equality unless $\cL$ contains an absolute value of a functional, as in 1, 4 and~14),
+$\cN=\sum_cN_c$, and $\cR=\sum_cR_c$, except in items 6 and~14, where $\cR=\sqrt{\sum_c\varphi_c(A_c)\sum_c\varphi_c(B_c)}\ge
+\sum_cR_c$ by the Cauchy--Schwarz inequality and $\cR\ge\sum_cR_c$ by Hölder's inequality. Since $W>0$, $\cN_c=0$ forces the
+variables of block~$c$ to vanish where they enter $\cL_c$, so $\cL_c\le \cR_c$ there. Hence
+$(\cL-\cR)/\cN\le\sum_c(\cL_c-\cR_c)/\sum_cN_c\le\max_c(\cL_c-\cR_c)/\cN_c$, the maximum over the blocks with $\cN_c>0$ (for $\cN=\cR$ in items 6
+and~14 use $\cL/\cR\le\sum_cL_c/\sum_cR_c$ instead). This proves the inequality. For the equality, in the
+listed items $\cN$ is additive and the variables may vanish on all blocks but one without making $\cN$ vanish; restricting a
 near-optimal configuration of one block and setting the variables to zero on the other blocks reproduces its quotient
-(in 19, 20 and 15, $N$ contains $\varphi(1)$ and the other blocks dilute the violation). If every $W_c$ is scalar, every
+(in 19, 20 and 15, $\cN$ contains $\varphi(1)$ and the other blocks dilute the violation). If every $W_c$ is scalar, every
 $V_{M_{k_c}}(W_c)$ vanishes, since $\varphi_{W_c}$ is then a trace on $M_{k_c}$; for item~16 the same conclusion holds
 because the Peierls--Bogoliubov inequality holds for every trace on $\M$.
 \end{proof}
@@ -1191,16 +1185,18 @@ $\Tr W=\sum_ck_c$ (Propositions~\ref{prop:det} and~\ref{prop:power}; the proofs 
 The operators of Table~\ref{tab:items} enter the inequalities through composites: sums $A+B$ (items 2, 10, 12, 13),
 congruences $B^{1/2}AB^{1/2}$ (items 6, 7), means (item~6), Jordan products $\Re PQ=\frac12(PQ+QP)$ (items 9, 21, 22),
 and, behind every characterisation, the commutator $AB-BA$, on which a functional vanishes if and only if it is a trace.
-This section describes how the contrast of a composite depends on the contrasts of its factors. Two reparametrisations
-of the contrast make the answers additive. For $A>0$ with extreme eigenvalues $M\ge m>0$ let
+This section describes how the contrast of a composite depends on the contrasts of its factors, and then uses the
+answers to explain the thresholds observed in the numerical search. Two reparametrisations of the contrast make the
+answers additive. For $A>0$ with extreme eigenvalues $M_A\ge m_A>0$ and condition number $h_A=M_A/m_A$ let
 \[
-  \eta(A)=\operatorname{artanh}\Delta(A)=\tfrac12\log\frac Mm,\qquad
-  \psi(A)=\arcsin\Delta(A)\in[0,\tfrac\pi2],\qquad m(A)=\frac{M+m}2 .
+  \eta(A)=\operatorname{artanh}\Delta(A)=\tfrac12\log h_A,\qquad
+  \psi(A)=\arcsin\Delta(A)\in[0,\tfrac\pi2],\qquad \bar\lambda(A)=\frac{M_A+m_A}2 .
 \]
-$\eta$ is half the logarithm of the condition number. $\psi$ is the \emph{angle} of the operator in the sense of Krein and
-Gustafson~\cite{gustafson1968,gustafsonrao1997}: the largest angle between $x$ and $Ax$,
-$\cos\psi(A)=\min_{x\ne0}\langle Ax,x\rangle/(\|Ax\|\|x\|)=2\sqrt{Mm}/(M+m)$, and $\sin\psi(A)=\min_{t>0}\|tA-1\|=\Delta(A)$.
-For the density, $\kappa=\cosh\eta(W)=\sec\psi(W)$, so the envelope $\kappa-1$ of the Kantorovich class
+The rapidity $\eta(A)$ is half the logarithm of the condition number, that is, half the Hilbert projective distance of
+$A$ to $1$ and the Thompson distance of $A$ to the scalars (Section~\ref{sec:related}). The angle $\psi(A)$ is that of
+Krein and Gustafson~\cite{krein1969,gustafson1968,gustafsonrao1997}, the largest angle between $x$ and $Ax$:
+$\cos\psi(A)=\min_{x\ne0}\langle Ax,x\rangle/(\|Ax\|\|x\|)=2\sqrt{M_Am_A}/(M_A+m_A)$, and
+$\sin\psi(A)=\min_{t>0}\|tA-1\|=\Delta(A)$, attained at $t=1/\bar\lambda(A)$ (Figure~\ref{fig:angle}(a)). For the density, $\kappa=\cosh\eta(W)=\sec\psi(W)$, so the envelope $\kappa-1$ of the Kantorovich class
 (Theorem~\ref{thm:kant}) is $\sec\psi(W)-1$. The angle between vectors is $\angle(x,y)=\arccos(\Re\langle x,y\rangle/
 (\|x\|\|y\|))$, the angle of the real inner product $\Re\langle\cdot,\cdot\rangle$ on $\C^n=\R^{2n}$; it satisfies the
 triangle inequality.
@@ -1220,6 +1216,12 @@ $\Delta(A),\Delta(B)>0$, then $\Delta(A+tB)=0$ for suitable $t>0$ and a suitable
 All bounds are attained by commuting operators, with the extreme eigenvectors aligned (upper bounds) or interchanged
 (lower bounds), in every dimension $n\ge2$.
 \end{proposition}
+
+\noindent These facts are classical, and we include the short proof for the attainment statements. The upper bound in (b)
+is the submultiplicativity of the condition number, $h(A^{1/2}BA^{1/2})\le h_Ah_B$. In the language of Hilbert's projective
+metric $d_H$, which is invariant under congruences and under inversion, (b) reads
+$|d_H(B,1)-d_H(1,A^{-1})|\le d_H(B,A^{-1})=d_H(A^{1/2}BA^{1/2},1)\le d_H(B,1)+d_H(1,A^{-1})$, i.e.\ it is the triangle
+inequality~\cite{bushell1973,lemmens2012}; this is why rapidities, the halved distances to the scalars, add.
 \begin{proof}
 (a) Spectral mapping, the eigenvalues of $A\otimes B$ are the products of eigenvalues, and Cauchy interlacing.
 (b) From $m_BA\le A^{1/2}BA^{1/2}\le M_BA$ and the monotonicity of the eigenvalues~\cite{bhatia1997},
@@ -1244,8 +1246,11 @@ $(AB+BA)x$, as long as $\psi_A+\psi_B<\frac\pi2$. Then $(AB+BA)x$ stays in the h
 $\langle(AB+BA)x,x\rangle>0$. If $\psi_A+\psi_B>\frac\pi2$, a suitable rotation of $B$ against $A$ turns some $x$ by more
 than a right angle, and $AB+BA$ has a negative eigenvalue. In terms of contrasts: \emph{$AB+BA$ is positive for every
 relative position if and only if the point $(\Delta(A),\Delta(B))$ lies in the unit disc}
-(Figure~\ref{fig:ops-positivity}). This criterion is Gustafson's~\cite{gustafson1968}; we add that it is sharp in every
-dimension and that the same angles bound the contrast of $AB+BA$.
+(Figure~\ref{fig:ops-positivity}). The sufficiency of this criterion is Gustafson's~\cite{gustafson1968}, whose angle
+argument we reproduce. Its sharpness is in the spirit of the work on eigenvalues of Jordan products by
+Strang~\cite{strang1962}, Alikakos and Bates~\cite{alikakos1984,alikakos1985} and Conley, Pucci and
+Serrin~\cite{conley2005}; we include the short proof of both directions, since we need the extremal configuration, and add
+that the same angles bound the contrast of $AB+BA$.
 
 \begin{figure}[!htbp]
 \centering\includegraphics[width=\textwidth]{ops_jordan_positivity.pdf}
@@ -1273,15 +1278,15 @@ likewise $\angle(x,BAx)\le\psi_A+\psi_B$. If $\psi_A+\psi_B<\frac\pi2$, the cone
 convex and contains $(AB+BA)x$, so $\langle(AB+BA)x,x\rangle>0$; moreover the largest angle of $AB+BA$ is at most
 $\psi_A+\psi_B$, and its sine is $\Delta(AB+BA)$. The case $\psi_A+\psi_B=\frac\pi2$ follows by continuity.
 
-Converse in (a). On $M_2$ take $A=\mathrm{diag}(1,a)$ and $B$ with eigenvalues $1,b$ and eigenvector
-$(\cos\theta,\sin\theta)$ for $1$, where $a=\frac{1-\delta_A}{1+\delta_A}$, $b=\frac{1-\delta_B}{1+\delta_B}$. With
-$c=\cos^2\theta$ and $p=(1-a)(1-b)$ a direct computation gives
+Converse in (a). On $M_2$ take $A=\mathrm{diag}(1,\ell_A)$ and $B$ with eigenvalues $1,\ell_B$ and eigenvector
+$(\cos\theta,\sin\theta)$ for $1$, where $\ell_A=\frac{1-\delta_A}{1+\delta_A}$, $\ell_B=\frac{1-\delta_B}{1+\delta_B}$. With
+$c=\cos^2\theta$ and $p=(1-\ell_A)(1-\ell_B)$ a direct computation gives
 \[
-  \tfrac12\Tr(AB+BA)=a+b+pc,\qquad\det(AB+BA)=4ab-p^2c(1-c).
+  \tfrac12\Tr(AB+BA)=\ell_A+\ell_B+pc,\qquad\det(AB+BA)=4\ell_A\ell_B-p^2c(1-c).
 \]
-At $\theta=\pi/4$ the determinant is negative if and only if $16ab<p^2$; with $\sqrt a=\sqrt{1-\delta_A^2}/(1+\delta_A)$ and
-$1-a=2\delta_A/(1+\delta_A)$ this reads $(1-\delta_A^2)(1-\delta_B^2)<\delta_A^2\delta_B^2$, i.e.\ $\delta_A^2+\delta_B^2>1$.
-On $M_n$ add the direct summands $a\,1_{n-2}$ and $b\,1_{n-2}$.
+At $\theta=\pi/4$ the determinant is negative if and only if $16\ell_A\ell_B<p^2$; with
+$\sqrt{\ell_A}=\sqrt{1-\delta_A^2}/(1+\delta_A)$ and $1-\ell_A=2\delta_A/(1+\delta_A)$ this reads $(1-\delta_A^2)(1-\delta_B^2)<\delta_A^2\delta_B^2$, i.e.\ $\delta_A^2+\delta_B^2>1$.
+On $M_n$ add the direct summands $\ell_A1_{n-2}$ and $\ell_B1_{n-2}$.
 
 Lower bound in (b). If $x,y$ are unit eigenvectors of $A$ for its extreme eigenvalues $M_A$, $m_A$, then
 $\lambda_{\max}(AB+BA)\ge2\Re\langle Bx,Ax\rangle=2M_A\langle Bx,x\rangle\ge2M_Am_B$ and likewise
@@ -1296,9 +1301,9 @@ $2\times2$ matrices, while in $M_3$ they can come from different blocks.
 \begin{proposition}[Largest contrast of the Jordan product]\label{prop:jordanmax}
 In the notation of the proof above, let $\delta_A^2+\delta_B^2<1$.
 \begin{enumerate}
-\item[(a)] On $M_2$, $\displaystyle\max\Delta(AB+BA)=\max_{0\le c\le1}\Bigl(1-\frac{4ab-p^2c(1-c)}{(a+b+pc)^2}\Bigr)^{1/2}$.
+\item[(a)] On $M_2$, $\displaystyle\max\Delta(AB+BA)=\max_{0\le c\le1}\Bigl(1-\frac{4\ell_A\ell_B-p^2c(1-c)}{(\ell_A+\ell_B+pc)^2}\Bigr)^{1/2}$.
 \item[(b)] On $M_n$, $n\ge3$, $\max\Delta(AB+BA)\ge(2-\mu)/(2+\mu)$, where
-$\mu=\min_{0\le c\le1}\bigl(a+b+pc-\sqrt{(a+b+pc)^2-4ab+p^2c(1-c)}\,\bigr)$ is the smallest eigenvalue of $AB+BA$ over the
+$\mu=\min_{0\le c\le1}\bigl(\ell_A+\ell_B+pc-\sqrt{(\ell_A+\ell_B+pc)^2-4\ell_A\ell_B+p^2c(1-c)}\,\bigr)$ is the smallest eigenvalue of $AB+BA$ over the
 $2\times2$ pairs of (a).
 \end{enumerate}
 Numerically, both values equal the commuting value $\tanh(\eta_A+\eta_B)$ for small contrasts and exceed it for large ones.
@@ -1312,37 +1317,37 @@ $\|A_2B_2+B_2A_2\|\le2$, and the smallest eigenvalue $\mu$.
 
 For $\delta_A=\delta_B=0.6$: the commuting value is $\COJordanTanh$, the maximum on $M_2$ is $\COJordanTwo$, the value of (b)
 for $n\ge3$ is $\COJordanThree$, and $\sin(\psi_A+\psi_B)=\COJordanSin$. A numerical optimisation over all relative
-positions and intermediate eigenvalues (\texttt{scripts/\allowbreak contrast\_\allowbreak operations.py}, 24 starts per point)
-finds on $M_3$ and on $M_4$ exactly the value of (b) (largest difference $\COJordanDev$ on a grid of $\delta_A$ with
-$\delta_B=0.6$; Figure~\ref{fig:ops-jordan}). Equality for every $n\ge3$ would follow if the smallest eigenvalue of a
-Jordan product with spectra in $[a,1]$ and $[b,1]$ were always minimised on a two-dimensional subspace, the setting of
-Strang's eigenvalue bounds~\cite{strang1962}; we do not use this.
-
-The theorem explains a threshold. The analogue of item~21 for positive operators, $\varphi(\Re AB)\ge0$, holds for every
-positive functional as long as $\Delta(A)^2+\Delta(B)^2\le1$, because then $\Re AB\ge0$; for operators of the same
-contrast $\delta'$ it can fail only for $\delta'>1/\sqrt2$. For projections, $\psi=\frac\pi2$, and $\Re PQ$ is indefinite
-in general; this is why item~21 is violated by every non-tracial functional, with the envelope $\frac12\tan^2(\psi/2)$
-of Theorem~B.
+positions and intermediate eigenvalues (24 starts per point) finds on $M_3$ and on $M_4$ exactly the value of (b)
+(largest difference $\COJordanDev$ on a grid of $\delta_A$ with $\delta_B=0.6$; Figure~\ref{fig:ops-jordan}). Equality for
+every $n\ge3$ would follow if the smallest eigenvalue of a Jordan product with spectra in $[\ell_A,1]$ and $[\ell_B,1]$
+were always attained on a two-dimensional subspace. Strang~\cite{strang1962} bounded this smallest eigenvalue from below,
+and Alikakos and Bates showed that his bound is best possible~\cite{alikakos1985}; we have not checked whether it
+coincides with $\mu$.
 
 \begin{proposition}[Commutators: three contrasts multiply]\label{prop:commutator}
 Let $A,B>0$ in $M_n$.
 \begin{enumerate}
-\item[(a)] $\|AB-BA\|\le2\Delta(A)\Delta(B)\,m(A)m(B)$, with equality for suitable $A,B$ of any prescribed contrasts in
+\item[(a)] $\|AB-BA\|\le2\Delta(A)\Delta(B)\,\bar\lambda(A)\bar\lambda(B)$, with equality for suitable $A,B$ of any prescribed contrasts in
 every $M_n$, $n\ge2$. In particular $\|AB-BA\|\le\frac{2\Delta(A)\Delta(B)}{(1+\Delta(A))(1+\Delta(B))}\|A\|\|B\|\le
 \frac12\|A\|\|B\|$.
 \item[(b)] For a state $\varphi_W$ ($\Tr W=1$) with $\Delta(W)=\delta$, $h=\frac{1+\delta}{1-\delta}$,
 \[
-  |\varphi_W(AB-BA)|\le2\,c_n(\delta)\,\Delta(A)\Delta(B)\,m(A)m(B),\qquad
+  |\varphi_W(AB-BA)|\le2\,c_n(\delta)\,\Delta(A)\Delta(B)\,\bar\lambda(A)\bar\lambda(B),\qquad
   c_n(\delta)=\begin{cases}\delta,&n\ \text{even},\\[2pt] \dfrac{k(h-1)}{k(h+1)+1},&n=2k+1,\end{cases}
 \]
 and the bound is attained for every $\delta$ and all prescribed contrasts of $A$ and $B$.
 \end{enumerate}
 \end{proposition}
+\noindent Part (a) is a consequence of Kittaneh's inequality $\|XY-YX\|\le\|X\|\|Y\|$ for $X\ge0$~\cite{kittaneh2008},
+applied to $X=A-m_A\ge0$ and $Y=B-\bar\lambda(B)$, whose norms are $2\Delta(A)\bar\lambda(A)$ and $\Delta(B)\bar\lambda(B)$;
+equivalently, of the bound $\|AB-BA\|\le\frac12\|A\|\|B\|$ for positive operators applied to $A-m_A$ and $B-m_B$. Our
+contribution is the sharp trace version (b), the commutator test of traciality with all three contrasts prescribed.
+
 \begin{proof}
-(a) Write $A=m(A)(1+E)$, $B=m(B)(1+F)$ with self-adjoint $E,F$, $\|E\|=\Delta(A)$, $\|F\|=\Delta(B)$. Then
-$AB-BA=m(A)m(B)(EF-FE)$ and $\|EF-FE\|\le2\|E\|\|F\|$. Equality holds on $M_2$ for $E=\Delta(A)\sigma_z$,
-$F=\Delta(B)\sigma_x$, since $\sigma_z\sigma_x-\sigma_x\sigma_z=2i\sigma_y$; in $M_n$ add a direct summand $m(A)\oplus m(B)$.
-The second form uses $\|A\|=m(A)(1+\Delta(A))$. (b) $C=i(AB-BA)$ is self-adjoint with $\Tr C=0$ and $\|C\|\le K$, the bound
+(a) Write $A=\bar\lambda(A)(1+E)$, $B=\bar\lambda(B)(1+F)$ with self-adjoint $E,F$, $\|E\|=\Delta(A)$, $\|F\|=\Delta(B)$.
+Then $AB-BA=\bar\lambda(A)\bar\lambda(B)(EF-FE)$ and $\|EF-FE\|\le2\|E\|\|F\|$. Equality holds on $M_2$ for $E=\Delta(A)\sigma_z$,
+$F=\Delta(B)\sigma_x$, since $\sigma_z\sigma_x-\sigma_x\sigma_z=2i\sigma_y$; in $M_n$ add a direct summand $\bar\lambda(A)\oplus\bar\lambda(B)$.
+The second form uses $\|A\|=\bar\lambda(A)(1+\Delta(A))$. (b) $C=i(AB-BA)$ is self-adjoint with $\Tr C=0$ and $\|C\|\le K$, the bound
 of (a). By von Neumann's trace inequality~\cite{bhatia1997}, $|\Tr WC|$ is at most the maximum of
 $\sum_iw_ic_i$ over decreasingly ordered $w_i$ (the eigenvalues of $W$) and $c_i\in[-K,K]$ with $\sum_ic_i=0$, which is
 $K\sum_{i\le k}(w_i-w_{n+1-i})$, $k=\lfloor n/2\rfloor$. Let $a=w_1$, $b=w_n=a/h$ and $S=\sum_{i\le k}w_i\le ka$. Then
@@ -1353,36 +1358,125 @@ positive and $b$ on the negative eigenvectors of $C$, and, for odd $n$, the eige
 the remaining one-dimensional block.
 \end{proof}
 
-So the most basic characterisation of the trace, $\varphi(AB)=\varphi(BA)$, fails at the order of the product of three
-contrasts, $2\Delta(W)\Delta(A)\Delta(B)$ in even dimension: the thesis~(I) in its simplest form. The odd dimensions are
-slightly weaker, as for Gardner's inequality (Theorem~\ref{thm:gardnerD}), and $c_{2k+1}(\delta)\to\delta$ as $k\to\infty$.
+So the most basic characterisation of the trace, $\varphi(AB)=\varphi(BA)$, fails exactly at the order of the product of
+the three contrasts, $2\Delta(W)\Delta(A)\Delta(B)$ in even dimension; this is the simplest instance of the principle that a
+violation needs a functional far from a trace and operators far from scalars. The odd dimensions are slightly weaker, as
+for Gardner's inequality (Theorem~\ref{thm:gardnerD}), and $c_{2k+1}(\delta)\to\delta$ as $k\to\infty$.
 
-Figures~\ref{fig:ops-sum}--\ref{fig:ops-commutator} compare random samples ($\COSamples$ per figure and dimension, Haar
-random relative positions, the intermediate eigenvalues uniform between the extreme ones) with these bounds on $M_2$,
-$M_3$ and $M_4$. No sample exceeds a bound (the largest value of sample minus bound is $\COWorst$). Among
-$\COSamples$ further random pairs per dimension with contrasts uniform in $[0,1]^2$, the number of indefinite Jordan
-products with $\delta_A^2+\delta_B^2\le1$ is $\COIndefInside$. As in Section~\ref{sec:montecarlo}, random positions rarely come close to the extremes in higher
-dimension: for the commutator test on $M_4$ the samples stay far below the bound, which needs two aligned $2\times2$
-blocks.
+Random samples ($\COSamples$ per bound and dimension, Haar random relative positions, the intermediate eigenvalues
+uniform between the extreme ones) never exceed the bounds of this section on $M_2$, $M_3$ and $M_4$ (the largest value of
+sample minus bound is $\COWorst$), and among $\COSamples$ random pairs per dimension with contrasts uniform in $[0,1]^2$ the
+number of indefinite Jordan products with $\delta_A^2+\delta_B^2\le1$ is $\COIndefInside$. As in
+Section~\ref{sec:montecarlo}, random positions rarely come close to the extremes in higher dimension: for the commutator
+test on $M_4$ the samples stay far below the bound, which needs two aligned $2\times2$ blocks
+(Figure~\ref{fig:ops-commutator}).
 
-\begin{figure}[!htbp]
-\centering\includegraphics[width=\textwidth]{ops_sum.pdf}
-\caption[]{Contrast of $A+tB$ ($t$ log-uniform) against $\Delta(A)$, with $\Delta(B)=0.6$: it never exceeds
-$\max(\Delta(A),\Delta(B))$ (Proposition~\ref{prop:rapid}(d)).}
-\label{fig:ops-sum}
+\subsection{Thresholds in the contrast of the operators}\label{sec:thresholds}
+
+The numerical search of Section~\ref{sec:bothcontrasts} shows that several characterisations are not violated at all
+unless the operators have contrast close to $1$. The composition rules above explain this for two of them. The simplest
+example is the analogue of item~21 for positive operators, $\varphi(\Re AB)\ge0$: it holds for every positive functional
+as long as $\Delta(A)^2+\Delta(B)^2\le1$, because then $\Re AB=\frac12(AB+BA)\ge0$ by Theorem~\ref{thm:jordan}, and for
+operators of equal contrast $\delta'$ it can fail only for $\delta'>1/\sqrt2$. Projections have the angle $\frac\pi2$,
+$\Re PQ$ is indefinite in general, and accordingly item~21 is violated by every non-tracial functional, with the
+envelope $\frac12\tan^2(\psi/2)$ of Theorem~B.
+
+For subadditivity of the square root (item~12) the same mechanism works one level deeper, through the link between
+Jordan products and subadditivity found by Moslehian and Najafi~\cite{moslehian2011}.
+
+\begin{proposition}[No violation of item 12 below a contrast threshold]\label{prop:item12}
+Let $A,B>0$ with $\Delta(A^{1/2})^2+\Delta(B^{1/2})^2\le1$, i.e.
+\[
+  \Bigl(\frac{\Delta(A)}{1+\sqrt{1-\Delta(A)^2}}\Bigr)^2+\Bigl(\frac{\Delta(B)}{1+\sqrt{1-\Delta(B)^2}}\Bigr)^2\le1 .
+\]
+Then $(A+B)^{1/2}\le A^{1/2}+B^{1/2}$, and hence $\varphi((A+B)^{1/2})\le\varphi(A^{1/2})+\varphi(B^{1/2})$ for every
+positive functional $\varphi$. In particular, if $\Delta(A)=\Delta(B)=\delta'\le2\sqrt2/3\approx0.943$, item~12 is not
+violated for any density, so $V_n(\delta,\delta')\le0$ for all $\delta$ and $n$.
+\end{proposition}
+\begin{proof}
+By Proposition~\ref{prop:rapid}(a), $\Delta(A^{1/2})=\tanh(\eta_A/2)=\Delta(A)/(1+\sqrt{1-\Delta(A)^2})$, which gives the
+two forms of the hypothesis. By Theorem~\ref{thm:jordan}(a) applied to $A^{1/2}$ and $B^{1/2}$,
+$A^{1/2}B^{1/2}+B^{1/2}A^{1/2}\ge0$, hence
+\[
+  (A^{1/2}+B^{1/2})^2=A+B+A^{1/2}B^{1/2}+B^{1/2}A^{1/2}\ge A+B ,
+\]
+and, the square root being operator monotone, $A^{1/2}+B^{1/2}\ge(A+B)^{1/2}$. A positive functional preserves this
+inequality. For $\Delta(A)=\Delta(B)=\delta'$ the hypothesis reads $\tanh(\eta/2)\le1/\sqrt2$ with $\tanh\eta=\delta'$, i.e.\
+$\delta'=2t/(1+t^2)$ at $t=1/\sqrt2$, which is $2\sqrt2/3$.
+\end{proof}
+
+\begin{figure}[t]
+\centering\includegraphics[width=\textwidth]{contrast_square.pdf}
+\caption{(a) The contrast square: level curves of the Gardner envelope $(1-\delta^2\delta'^2)^{-1/2}-1$ (blue; the
+values $0.02$, $0.1$, $0.3$, $1$), the band in which item~12 cannot be violated (green,
+Proposition~\ref{prop:item12}), the exact violation thresholds of item~24 for $n=2$ and $n=3$ (orange,
+Proposition~\ref{prop:item24}), and, in black, the interval of grid values of $\delta'$ in which the numerical search on $M_2$
+first finds a violation of item~12, at $\delta=0.3$, $0.6$ and $0.9$. (b) The plane of the two operator contrasts:
+$AB+BA\ge0$ for all relative positions inside the quarter disc (blue, Theorem~\ref{thm:jordan}), and
+$(A+B)^{1/2}\le A^{1/2}+B^{1/2}$ in the larger green region (Proposition~\ref{prop:item12}).}
+\label{fig:square}
 \end{figure}
-\begin{figure}[!htbp]
-\centering\includegraphics[width=\textwidth]{ops_congruence.pdf}
-\caption[]{Contrast of $A^{1/2}BA^{1/2}$ against $\Delta(A)$, with $\Delta(B)=0.6$, and the bounds
-$\tanh|\eta_A\pm\eta_B|$ of Proposition~\ref{prop:rapid}(b).}
-\label{fig:ops-congruence}
-\end{figure}
-\begin{figure}[!htbp]
-\centering\includegraphics[width=\textwidth]{ops_geomean.pdf}
-\caption[]{Contrast of the geometric mean $A\#B$ against $\Delta(A)$, with $\Delta(B)=0.6$, and the bounds
-$\tanh\frac12|\eta_A\pm\eta_B|$ of Proposition~\ref{prop:rapid}(c).}
-\label{fig:ops-geomean}
-\end{figure}
+
+The proved threshold is consistent with the computation: on $M_2$ and $M_3$ the search finds no violation of item~12 at
+$\delta'=0.95$ for $\delta\in\{0.3,0.6,0.9\}$, and the first violation above $10^{-4}$ at $\delta'=0.99$ for $\delta=0.6$
+and $0.9$ and only at $\delta'=0.999$ for $\delta=0.3$; all these grid values lie above $2\sqrt2/3$
+(Figure~\ref{fig:square}(a)). Whether the
+operator inequality $(A+B)^{1/2}\le A^{1/2}+B^{1/2}$ is necessary for the absence of violations, i.e.\ whether the
+threshold $2\sqrt2/3$ is sharp as $\delta\to1$, we do not know: by~\cite[Theorem~2.1]{moslehian2011} the positivity of
+$A^{1/2}B^{1/2}+B^{1/2}A^{1/2}$ is equivalent to subadditivity for \emph{all} non-negative operator monotone functions,
+not for the square root alone.
+
+For the power-mean inequality $\varphi(A^2)^{1/2}\le\varphi(A)$ with $\varphi(1)=n$ (item~24) a Kantorovich-type argument
+gives the envelope with both contrasts prescribed in closed form, and with it a sharp threshold.
+
+\begin{proposition}[Item 24 with both contrasts]\label{prop:item24}
+Let $n\ge2$, $\Delta(W)=\delta<1$, $\Tr W=n$, and let $A\ge0$ have $\Delta(A)=\delta'$. Put $\ell=\frac{1-\delta}{1+\delta}$,
+$\ell'=\frac{1-\delta'}{1+\delta'}$,
+\[
+  x_0=n\ell'+(1-\ell')\frac{n\ell}{n-1+\ell},\qquad x_*=\frac{2n\ell'}{1+\ell'},\qquad
+  f(x)=\frac{\sqrt{(1+\ell')x-n\ell'}}x .
+\]
+Then $\varphi_W(A^2)^{1/2}/\varphi_W(A)\le f(\max(x_0,x_*))$, so $V_n(\delta,\delta')\le f(\max(x_0,x_*))-1$, with equality
+if $x_0\ge x_*$ or $(n-1)\ell\ell'\le1$, in particular always for $n=2$. Consequently:
+\begin{enumerate}
+\item[(a)] item~24 is violated for no density if and only if $\delta'\le\sqrt{(n-1)/n}$; for $\delta'>\sqrt{(n-1)/n}$ it is
+violated for every $\delta$ close enough to $1$;
+\item[(b)] for $n=2$ the violation threshold is the curve $f(\max(x_0,x_*))=1$ in the $(\delta,\delta')$-square, and it equals
+$1/\sqrt2$ for all $\delta\ge1/\sqrt2$.
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+Both sides are homogeneous of degree one in $A$, so let $\|A\|=1$; then the spectrum of $A$ lies in $[\ell',1]$ and contains
+both end points. From $(1-A)(A-\ell')\ge0$ we get $A^2\le(1+\ell')A-\ell'$, hence, with $x=\varphi(A)$,
+\[
+  \frac{\varphi(A^2)^{1/2}}{\varphi(A)}\le\frac{\sqrt{(1+\ell')x-n\ell'}}x=f(x),
+\]
+with equality for two-level $A$. If $e$ is a unit eigenvector of $A$ for the eigenvalue $1$, then $A\ge\ell'+(1-\ell')ee^*$,
+so $x\ge n\ell'+(1-\ell')\langle We,e\rangle\ge n\ell'+(1-\ell')\lambda_{\min}(W)$, and $\lambda_{\min}(W)\ge n\ell/(n-1+\ell)$
+for $\Tr W=n$ (proof of Proposition~\ref{prop:power}); so $x\ge x_0$. The function $f$ increases on $[n\ell'/(1+\ell'),x_*]$
+and decreases on $[x_*,\infty)$, since $\frac d{dx}f(x)^2=x^{-3}\bigl(2n\ell'-(1+\ell')x\bigr)$; hence $f(x)\le f(\max(x_0,x_*))$.
+For equality take $A=\ell'+(1-\ell')ee^*$ with a unit vector $e$, so that $x=n\ell'+(1-\ell')\langle We,e\rangle$. If
+$x_0\ge x_*$, let $W$ have the spectrum $\{a,\dots,a,b\}$ and $e$ an eigenvector for $b$; then $x=x_0$. Otherwise we need
+$\langle We,e\rangle=n\ell'/(1+\ell')$; the values $\langle We,e\rangle$ for the spectra $\{a,\dots,a,b\}$ and
+$\{a,b,\dots,b\}$ (normalised to $\Tr W=n$) fill the interval $[n\ell/(n-1+\ell),\,n/(1+(n-1)\ell)]$, whose left end is
+at most $n\ell'/(1+\ell')$ because $x_0\le x_*$, and whose right end is at least $n\ell'/(1+\ell')$ if $(n-1)\ell\ell'\le1$.
+
+(a) Since $f(\max(x_0,x_*))\le f(x_*)=(1+\ell')/(2\sqrt{n\ell'})$, there is no violation if $(1+\ell')^2\le4n\ell'$, i.e.\
+$\ell'\ge(\sqrt n-\sqrt{n-1})^2$, i.e.\ $\delta'\le\sqrt{(n-1)/n}$. Conversely, as $\delta\to1$ we have $\ell\to0$, so
+$x_0\to n\ell'<x_*$ and $(n-1)\ell\ell'\le1$, and the envelope tends to $f(x_*)-1>0$ when $(1+\ell')^2>4n\ell'$. (b) For $n=2$
+equality always holds; $x_0\le x_*$ means $1-\delta\le2\ell'/(1+\ell')$, and at $\ell'=(\sqrt2-1)^2$ this is
+$\delta\ge1/\sqrt2$.
+\end{proof}
+
+\noindent The computed envelopes of item~24 on $M_2$ and $M_3$ with both contrasts prescribed agree at every grid point
+with Proposition~\ref{prop:item24} to $2\times10^{-11}$. The threshold rises above $\sqrt{(n-1)/n}$ for smaller $\delta$ and
+tends to $1$ as $\delta\to0$ (Figure~\ref{fig:square}(a)): the less tracial the functional, the more moderate the
+operators that detect it. For monotonicity (item~10) an argument of this kind is not available: for $0\le A\le B=A+tvv^*$ with a unit vector $v$
+that is not an eigenvector of $A$, $B^2-A^2=t\bigl((A+\frac t2)vv^*+vv^*(A+\frac t2)\bigr)$ is indefinite for every $t>0$,
+however small the contrasts of $A$ and $B$, so the operator inequality fails and only the functional can prevent a
+violation. Correspondingly, the numerically observed onset of violations of item~10 depends on $\delta$: on $M_2$ at
+$\delta'=0.8$ the search finds a violation for $\delta=0.9$ but none for $\delta=0.3$ and $0.6$.
+
 \begin{figure}[!htbp]
 \centering\includegraphics[width=\textwidth]{ops_jordan.pdf}
 \caption[]{Contrast of the Jordan product $AB+BA$ against $\Delta(A)<0.8$, with $\Delta(B)=0.6$ (for $\Delta(A)\le0.8$ it
@@ -1393,50 +1487,177 @@ optimisation (markers).}
 \end{figure}
 \begin{figure}[!htbp]
 \centering\includegraphics[width=\textwidth]{ops_commutator.pdf}
-\caption[]{The commutator test $|\varphi_W(AB-BA)|/(m(A)m(B))$ for states $\varphi_W$ against $\Delta(W)$, with
-$\Delta(A)=\Delta(B)=0.6$, and the sharp bound $2c_n(\delta)\cdot0.36$ of Proposition~\ref{prop:commutator}(b).}
+\caption[]{The commutator test $|\varphi_W(AB-BA)|/(\bar\lambda(A)\bar\lambda(B))$ for random states $\varphi_W$ and random
+$A,B$ against $\Delta(W)$, with $\Delta(A)=\Delta(B)=0.6$, and the sharp bound $2c_n(\delta)\cdot0.36$ of
+Proposition~\ref{prop:commutator}(b). (The panels write $m(A)$ for the midpoint $\bar\lambda(A)$ of the spectrum.)}
 \label{fig:ops-commutator}
 \end{figure}
 
-\section{Numerical verification and the remaining items}\label{sec:numerics}
+\section{Numerical evidence}\label{sec:numerics}
 
-\subsection{Method}
-All envelopes were computed by constrained optimisation with our PyTorch library \texttt{torch\_\allowbreak vn\_\allowbreak algebra}~\cite{lib}; the program is \texttt{scripts/\allowbreak trace\_\allowbreak characterizations.py} of the
-repository~\cite{lib}. The density $W$ is diagonal with a spectrum parametrised so that $\Delta(W)=\delta$ holds exactly
-and the other eigenvalues are free. Positive variables have a free contrast in $[0,1]$, so rank-deficient operators are
-included; there are self-adjoint and unitary variables (polar factors, and projections $UDU^*$, with every rank pattern
-spread over the starts), and positive scalars. Half of the starts begin at structured points (two-level spectra, rotations
-in pairs of eigenvectors of $W$). The lattice operations are the spectral projections of $P+Q$ for the eigenvalue $2$ ($P\wedge
-Q$) and for the range ($P\vee Q$), computed by functional calculus with an indicator function, whose Daleckii--Krein
-gradient is the derivative of the spectral projection. In 19 and~23 the suprema are approached as $P$ and $Q$ merge, where
-$P\wedge Q$ and $P\vee Q$ jump; there the search maximises $(L-R)/N-10^{-12}/\|P-Q\|_{\mathrm F}^2$, which keeps $P$ and $Q$
-about $10^{-3}$ apart, while the reported values are those of $(L-R)/N$. A grid of $\TCGridSize$ contrasts times
-$\TCStarts$ starts forms one batch per item and dimension ($\TCSteps$ gradient steps, $n=\TCDims$).
+\subsection{Method}\label{sec:method}
+The envelopes were computed by constrained gradient ascent with the library of~\cite{lib} (the programs
+\texttt{trace\_\allowbreak characterizations.py}, \texttt{trace\_\allowbreak contrast.py} and \texttt{trace\_\allowbreak
+montecarlo.py} of its repository). The density $W$ is diagonal with a spectrum parametrised so that $\Delta(W)=\delta$
+holds exactly, the other eigenvalues being free. Positive variables have a free contrast in $[0,1]$, so rank-deficient
+operators are included; there are self-adjoint and unitary variables (polar factors, and projections $UDU^*$ with every rank
+pattern spread over the starts) and positive scalars. Half of the starts begin at structured points (two-level spectra,
+rotations in pairs of eigenvectors of $W$). The lattice operations are the spectral projections of $P+Q$ for the
+eigenvalue $2$ ($P\wedge Q$) and for its range ($P\vee Q$), computed by functional calculus with an indicator function. In
+items 19 and~23 the suprema are approached as $P$ and $Q$ merge, where $P\wedge Q$ and $P\vee Q$ jump; there the search
+maximises $(\cL-\cR)/\cN-10^{-12}/\|P-Q\|_{\mathrm F}^2$, which keeps $P$ and $Q$ about $10^{-3}$ apart, while the reported
+values are those of $(\cL-\cR)/\cN$. A grid of $\TCGridSize$ contrasts times $\TCStarts$ starts forms one batch per item
+and dimension ($\TCSteps$ gradient steps, $n=\TCDims$).
 
-\emph{Certification.} The best final point of every contrast is recomputed in mpmath with $\TCDigits$ digits, after the
-unitaries are re-orthonormalised and the contrast is recomputed from the stored eigenvalues; the lattice operations are
-recomputed from the exact eigenvalues. Every positive value reported below is thus a certified violation at an exactly
-admissible point. The double-precision and mpmath values agree to $\TCCertDev$ (relative), and at $\delta=0$ no value
-exceeds $\TCVzero$. Independently, plain NumPy/SciPy searches (BFGS from $\TCSciStarts$ random starts on $M_2$ at
-$\delta=0.3,0.5,0.9$) give values whose ratio to the batched search lies in $[\TCSciRatioMin,\TCSciRatioMax]$; ratios above
-$1$ come from item~13, where BFGS stops earlier. The test suite compares every objective with a plain NumPy implementation
-and with mpmath, checks that random points stay below the proved envelopes and that the stated extremisers attain them.
-The whole computation takes $\TCSeconds$~s on $\TCWorkers$ CPU processes.
+The best final point for every contrast is recomputed with $\TCDigits$-digit arithmetic (mpmath), after the unitaries
+are re-orthonormalised and the contrast is recomputed from the stored eigenvalues. Every reported value is therefore the
+exact violation at an exactly admissible point, and so a rigorous \emph{lower} bound for the supremum; we call it the
+\emph{computed envelope}. It is not an upper bound: where no theorem is available, the true envelope may be larger. The
+double-precision and high-precision values agree to $\TCCertDev$ (relative), and at $\delta=0$ no value exceeds
+$\TCVzero$. Independent NumPy/SciPy searches (BFGS from $\TCSciStarts$ random starts on $M_2$ at $\delta=0.3,0.5,0.9$)
+give values whose ratio to the batched search lies in $[\TCSciRatioMin,\TCSciRatioMax]$; the ratios above $1$ come from
+item~13, where BFGS stops earlier. The whole computation takes $\TCSeconds$~s on $\TCWorkers$ CPU processes.
+
+\subsection{Envelopes with the operators free}
+
+\begin{table}[h]
+\centering\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llllll}
+\toprule
+items & $V^\star(\delta)$ & as $\delta\to0$ & $V^\star(0.5)$ & search $V(0.5)$ & status\\
+\midrule
+\TCClassRows
+\bottomrule
+\end{tabular}
+\caption[]{The items with a proved envelope or lower bound, ordered by the order of vanishing at the trace. $V^\star$:
+the sharp value or, where marked $\ge$, a proved lower bound; ``search'': the computed envelope on $M_2$ (a range over the
+items of a row). Items 11 and 24 are given for $n=2$.}
+\label{tab:classes}
+\end{table}
+
+\begin{table}[h]
+\centering\scriptsize
+\setlength{\tabcolsep}{1.8pt}
+\begin{tabular}{rlccccccrc}
+\toprule
+ & inequality $\cL\le \cR$ & ref. & $V(0.1)$ & $V(0.5)$ & $V(0.9)$ & $V^\star(0.5)$ & order & slope & $n$-dep.\\
+\midrule
+\TCRows
+\bottomrule
+\end{tabular}
+\caption[]{Computed envelopes (certified lower bounds) on $M_2$ at $\delta=0.1,0.5,0.9$ and the proved values $V^\star$;
+$^a$: sharp for $n=2$ only, $^b$: a lower bound, $^c$: approached but not attained. ``order'': leading order of $V^\star$
+as $\delta\to0$; ``slope'': $\log_2(V(0.2)/V(0.1))$ of the search; ``$n$-dep.'': the largest $|V_n/V_2-1|$ for $n=3,4$ and
+$\delta\ge0.1$ (for item~7 it reflects search shortfalls, for item~13 a genuine increase with $n$; items 19 and 20 differ
+for odd $n$, Theorem~\ref{thm:proj}). ``n.r.'': no violation resolved by the search ($\TCMode$ run on $\TCDevice$).}
+\label{tab:values}
+\end{table}
+
+Tables~\ref{tab:classes} and~\ref{tab:values}, Figure~\ref{fig:ladder} and the top rows of
+Figures~\ref{fig:mc-gardner}--\ref{fig:mc-wmon} summarise the computation. Where an envelope is known exactly and
+attained (items 1--5, 8, 11, and 9 for $n=2$), the search reproduces it to $\TCSharpDev$ for $\delta\ge0.05$ and
+$n=2,3,4$; for items 17, 18, 20--22 and 24 it does so to $\TCSharpDevNew$, and for the approached suprema of 19 and 23 to
+$\TCSharpDevApproached$. The values of 17, 18 and 21--23 on $M_3$ and $M_4$ agree with those on $M_2$ to $\TCNDevNew$, as
+Theorem~\ref{thm:proj} predicts, and on $M_3$ the search finds the odd-dimensional value $\TCExpOddHalf$ of item~20 at
+$\delta=0.5$ ($M_2$: $\TCRefExpqpqHalf$). These agreements are a check of the method rather than new information.
+
+The new information concerns the items without a proved envelope. All five items 12--16 fail quadratically, with
+$V\approx0.5\,\delta^2$ (items 12 and 13), $\delta^2/36$ (item~14, equal to the lower bound of
+Proposition~\ref{prop:lower}(d) to leading order), $0.064\,\delta^2$ (item~15) and $0.09\,\delta^2$ (item~16). Item~15
+decreases with $n$, because the identity part of $e^{P/2}e^Qe^{P/2}$ enters $\cN$, whereas item~13 increases with $n$ at
+large $\delta$ (on $M_3$ at $\delta=0.9$ the value $0.3048$ against $0.2197$ on $M_2$); items 12, 14 and~16 give the same
+values for $n=2,3,4$. In item~16 the best points have large $\|A\|$ and $\|B\|$, and the supremum is approached as the
+scale grows. Among the items with a proved lower bound, no computed value exceeds the bound (largest relative excess
+$\TCBoundExcess$) except for item~6 in dimension $n\ge3$: on $M_2$ the search never exceeds $\kappa-1$, but for $n\ge3$ it
+finds larger violations, $V\ge\TCSGMExcessV$ at $n=\TCSGMExcessN$, $\delta=\TCSGMExcessDelta$, where
+$\kappa-1=\TCSGMExcessKappa$, and a stored point gives $V>2.1$ at $n=3$, $\delta=0.9$, where $\kappa-1=1.29$. For item~6 we
+therefore only know $\kappa-1\le V_n\le h-1$. Items 9 and 10 give the same values for $n=3,4$ as for $n=2$, to $\TCNDev$.
+
+Except for items 6 ($n\ge3$), 11 ($A=W^{-1}$) and 25 ($A$ of rank two with eigenvalue ratio $\approx\delta^2/8$), the best
+points are rank-one operators or matrix units in the span of eigenvectors of $W$ for its extreme eigenvalues, and they do
+not commute with $W$. The search has two limitations. The suprema of items 6 and 7 are approached only as an operator
+becomes singular; gradient ascent reaches $\TCSGMRatioHalf$ and $\TCALTRatioHalf$ of the lower bound at $\delta=0.5$ and
+finds no violation of item~6 for $\delta\le0.2$. Item~25 is resolved for $\delta\ge\TCWmonFirst$; the search reaches
+$g_{25}$ to $10^{-3}$ for $\delta\ge\TCWmonReach$ and does not exceed it. Finally, on $M_2\oplus M_3$ with
+$W=1\oplus s1$ and $W=\mathrm{diag}(1,\ell)\oplus s1$, $s\in\{\frac14,4\}$, and intra-block contrast
+$\delta\in\{0.3,0.5,0.7\}$, the computation confirms Theorem~D: for central $W$ the largest value found for the items that
+hold for every trace is $\TCSectorCentral$; for items 11 and 24 the search reproduces the exact values for the fixed
+density to $\TCSectorDet$; with intra-block contrast no value exceeds the $M_2$ envelope (largest relative excess
+$\TCSectorExcess$), and where Theorem~D gives equality the search reaches it to $10^{-3}$ in $\TCSectorReached$ of
+$\TCSectorTotal$ cases.
+
+\subsection{Both contrasts}\label{sec:bothcontrasts}
+
+For the 14 items with operator variables that are not projections, a second computation prescribes the contrast
+$\delta'$ of all operator variables as well ($\TCCStarts$ starts per grid point, $\TCCSteps$ gradient steps, best point
+recomputed with $\TCCDigits$ digits; $\TCCSeconds$~s on four CPU processes). The bottom rows of
+Figures~\ref{fig:mc-gardner}--\ref{fig:mc-wmon} (Appendix~\ref{app:mc}) show the computed $V(0.9,\delta')$. At
+$\delta'=0$ no item is violated, as Proposition~\ref{prop:scalar} requires, but beyond that the dependence on $\delta'$
+takes several forms. For items 1--3 the values follow Theorem~\ref{thm:gardnerD} to $\TCCGardnerDev$ (relative, $n=2,3$,
+all grid points), and item~8 follows Proposition~\ref{prop:youngtwo} on $M_2$; here the violation grows smoothly with
+both contrasts. Items 6, 10, 12, 13, 24 and~25, in contrast, show no violation until $\delta'$ is close to $1$: at
+$\delta=0.9$ the first grid value of $\delta'$ with a violation above $10^{-4}$ is \TCCThresholds. For items 12 and 24
+Section~\ref{sec:thresholds} proves such thresholds, and for item~24 the computed values agree with the exact envelope of
+Proposition~\ref{prop:item24}; for items 6, 10, 13 and 25 the thresholds remain observations. The determinant inequality
+(item~11) behaves differently again: it is violated most strongly when the contrast of $A$ is close to that of $W$, since
+its extremiser is $W^{-1}$, and in $M_2$ items 4 and~7 also have an interior maximum in $\delta'$ (for item~4 at the
+contrast of $|A|$ for the extremiser $A=\sqrt a\,e_1e_2^*+\sqrt b\,e_2e_1^*$), which the additional dimension of $M_3$
+removes. Finally, item~16 does not see the contrast of the operators at all: it is invariant under $A\mapsto A+c$,
+$B\mapsto B+c$, which makes both contrasts arbitrarily small without changing the quotient, so $V(\delta,\delta')$ equals the
+envelope with free operators for every $\delta'>0$ and jumps to $0$ at $\delta'=0$. On $M_3$ two-level operators of
+contrast $\delta'$ reproduce the values of general spectra with the same contrast except in items 4, 6 and~7 near
+$\delta'=1$, where the extremisers need a third eigenvalue.
+
+\subsection{Projections and two-level operators}\label{sec:projsuffice}
+
+For the items to which the vertex principle (Lemma~\ref{lem:vertex}) applies, two-level operators attain the supremum,
+and in eleven items the variables are projections by definition. To see how far this extends, we repeated the search for
+the other 14 items with the positive variables (the moduli, for the others) restricted to two-level operators
+$c(\ell+(1-\ell)P)$ with free $\ell\in[0,1]$, $c>0$ and a projection $P$ of any rank (for self-adjoint variables
+$\alpha+\beta P$ with free real $\alpha,\beta$), and to scaled projections $cP$ (Table~\ref{tab:projsuffice}).
+
+\begin{table}[h]
+\centering\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{r|ccc|ccc|ccc|ccc}
+\toprule
+ & \multicolumn{6}{c|}{$M_2$} & \multicolumn{6}{c}{$M_3$}\\
+ & \multicolumn{3}{c|}{$\delta=0.5$} & \multicolumn{3}{c|}{$\delta=0.9$} & \multicolumn{3}{c|}{$\delta=0.5$} &
+ \multicolumn{3}{c}{$\delta=0.9$}\\
+item & all & two-level & proj. & all & two-level & proj. & all & two-level & proj. & all & two-level & proj.\\
+\midrule
+\TCCRowsA
+\bottomrule
+\end{tabular}
+\caption[]{Computed envelopes (certified lower bounds) over all operators, over two-level operators and over scaled
+projections, for the items whose variables are not projections. In $M_2$ every operator is two-level, so there the middle
+column only checks the restricted parametrisation. ``--'': item~11 needs an invertible $A$.}
+\label{tab:projsuffice}
+\end{table}
+
+The result is an observation with clear exceptions, not a general principle. Scaled projections attain the computed
+envelope for items 1, 2, 3, 8, 10, 12, 16 (to within $0.3\%$) and 24 in $M_2$ and $M_3$, and for item~13 in $M_2$. In
+items 6 and~7 the supremum is approached only in a degenerate limit in which an operator becomes a projection and both
+sides of the inequality vanish; restricting the search to projections (item~6) or to two-level operators (item~7) brings
+it closer to the proved lower bounds $\kappa-1$ and $\kappa^2-1$ than the unrestricted search, but for item~7 the violation
+at projections themselves is zero. Two-level operators that are not projections are needed for item~4 (the extremiser has
+$|A|$ with the eigenvalues $\sqrt a,\sqrt b$), item~11 ($A=W^{-1}$) and item~25 (rank-one $A$ gives no violation,
+Proposition~\ref{prop:wmon}). In $M_3$ the extremiser of item~4 lives on a two-dimensional subspace and vanishes on its
+complement, so it has the three eigenvalues $\sqrt a,\sqrt b,0$ and the restricted search misses it. Finally, operators
+that are not two-level do strictly better in two cases: in $M_3$ at $\delta=0.9$ item~13 is violated by $0.3048$, against
+$0.2197$ for projections and for $M_2$, and item~6 exceeds $\kappa-1$ for $n\ge3$. In short, projections and their affine
+images are a good first test of a characterisation, but they do not always realise the largest violation.
 
 \subsection{Random sampling}\label{sec:montecarlo}
 
-Before searching for the extremes we sample. A third program (\texttt{scripts/\allowbreak trace\_\allowbreak
-montecarlo.py}, plain NumPy, independent of the library) draws, for each of the 25 items and for $n=\TMCDims$,
-$\TMCSamples$ random functionals on $M_n$ and random operators: $W$ with a uniformly distributed contrast
-$\Delta(W)\in[0,1)$ and the other eigenvalues uniform in between, positive operators $U\mathrm{diag}(\lambda)U^*$ with
-Haar-random $U$, a uniformly distributed contrast and a random scale, arbitrary operators $V|X|$ with a Haar-random $V$,
-self-adjoint ones with random signs, and Haar-random projections. This is the method of~\cite[Sect.~5]{abed2024},
-extended to all items. A second sample replaces every positive operator (every modulus) by a scaled projection of
-random rank (\emph{projection sample}). Appendix~\ref{app:mc} has one figure per item with one panel per dimension:
-every sample, $(L-R)/N$ against $\Delta(W)$, together with the certified envelope $V(\delta)$. For the 14 items with
-operator variables a second row shows a third sample, with $\Delta(W)=0.9$ and all operator variables of one contrast
-$\delta'$, against $\delta'$, together with the certified $V(0.9,\delta')$ of Section~\ref{sec:bothcontrasts}.
-Table~\ref{tab:montecarlo} gives the fraction of violating samples.
+Random sampling is the method of~\cite[Sect.~5]{abed2024}. We extended it to all items: for $n=\TMCDims$ and each item
+we draw $\TMCSamples$ random functionals and operators ($W$ with a uniformly distributed contrast and the other
+eigenvalues uniform in between, positive operators $U\mathrm{diag}(\lambda)U^*$ with Haar-random $U$, uniformly distributed
+contrast and random scale, arbitrary operators $V|X|$ with Haar-random $V$, self-adjoint ones with random signs, and
+Haar-random projections), and a second sample in which every positive operator (every modulus) is replaced by a scaled
+projection of random rank. Appendix~\ref{app:mc} shows all samples together with the computed envelopes, and
+Table~\ref{tab:montecarlo} the fraction of violating samples.
 
 \begin{table}[h]
 \centering\small
@@ -1455,191 +1676,49 @@ or an invertible operator is needed).}
 \label{tab:montecarlo}
 \end{table}
 
-The samples show four things.
-\begin{enumerate}
-\item[(a)] \emph{No sample exceeds the envelope}: the largest ratio of a sampled violation to the certified envelope at
-the upper edge of its bin is $\TMCWorstRel$ over all items and dimensions (the excess over $1$ is the linear
-interpolation between grid values of the envelope). This is an independent check of the computed envelopes.
-\item[(b)] \emph{Random operators rarely come close to the envelope}, and for monotonicity, subadditivity, the
-Powers--St{\o}rmer inequality and the weighted monotonicity essentially never violate it: less than $0.1\%$ of the
-samples (or none) violate. A Monte Carlo study alone would conclude that these inequalities hold for every $\varphi_W$.
-\item[(c)] \emph{Sampling gets worse with the dimension}: for Gardner's inequality the fraction of violating random samples
-drops from $4.4\%$ on $M_2$ to below $0.1\%$ on $M_3$ and on $M_4$, and the best sample stays
-far below the envelope (Figure~\ref{fig:mc-gardner}). The extremal configurations, rank-one operators on a two-dimensional
-subspace aligned with the extreme eigenvectors of $W$, have a Haar measure that decreases rapidly with $n$.
-\item[(d)] \emph{Projections detect the failure.} Sampling scaled projections instead of general positive operators raises
-the fraction of violating samples in every dimension, for Gardner's inequality from $4.4\%$ to $19\%$ on $M_2$ and from
-below $0.1\%$ to $0.6\%$ on $M_4$, for subadditivity from below $0.1\%$ to $21\%$, $9\%$ and $5\%$ on $M_2$, $M_3$, $M_4$, for the
-power-mean inequality from $7\%$ to $50\%$ on $M_2$, and brings the best sample close to the envelope (orange points in Figures~\ref{fig:mc-gardner},
-\ref{fig:mc-subadd} and~\ref{fig:mc-lp}). The exceptions are those of Section~\ref{sec:projsuffice}: for items 4 and~7 the extremisers are
-two-level operators that are not projections (for item~7 the violation degenerates exactly at projections), and items 6
-and~11 need invertible operators.
-\end{enumerate}
-
-\subsection{Do projections suffice?}\label{sec:projsuffice}
-
-For the 14 items whose variables are not projections, a second program (\texttt{scripts/\allowbreak trace\_\allowbreak contrast.py}) repeats the
-search with the positive variables (the moduli, for the others) restricted in two ways: to two-level operators
-$c(\ell+(1-\ell)P)$ with free $\ell\in[0,1]$, $c>0$ and a projection $P$ of any rank (for self-adjoint variables $\alpha+\beta P$
-with free real $\alpha,\beta$), and to scaled projections $cP$. Everything else is as before ($\TCCStarts$ starts per grid
-point, $\TCCSteps$ gradient steps, best final point recomputed in mpmath with $\TCCDigits$ digits); the whole computation of
-this and the next subsection takes $\TCCSeconds$~s on four CPU processes.
-
-\begin{table}[h]
-\centering\scriptsize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{r|ccc|ccc|ccc|ccc}
-\toprule
- & \multicolumn{6}{c|}{$M_2$} & \multicolumn{6}{c}{$M_3$}\\
- & \multicolumn{3}{c|}{$\delta=0.5$} & \multicolumn{3}{c|}{$\delta=0.9$} & \multicolumn{3}{c|}{$\delta=0.5$} &
- \multicolumn{3}{c}{$\delta=0.9$}\\
-item & all & two-level & proj. & all & two-level & proj. & all & two-level & proj. & all & two-level & proj.\\
-\midrule
-\TCCRowsA
-\bottomrule
-\end{tabular}
-\caption[]{Certified largest violations over all operators, over two-level operators and over scaled projections, for the
-items whose variables are not projections. In $M_2$ every operator is two-level, so there the middle column only checks
-the restricted parametrisation. ``--'': item~11 needs an invertible $A$.}
-\label{tab:projsuffice}
-\end{table}
-
-Table~\ref{tab:projsuffice} shows four groups.
-\begin{enumerate}
-\item[(a)] \emph{Projections attain the envelope}: items 1, 2, 3, 8, 10, 12, 16 and~24 in $M_2$ and $M_3$ (item~16 to
-within $0.3\%$), and item~13 in $M_2$. Together with the 11 items whose variables are projections by definition, this covers 20 of the 25 items.
-\item[(b)] \emph{Projections approach it}: in items 6 and~7 the supremum is approached as an operator becomes a
-projection, where both sides of the inequality degenerate. Restricted to projections (item~6) or to two-level operators
-(item~7), the search comes closer to the proved lower bound $\kappa-1$, resp.\ $\kappa^2-1$, than without restriction:
-the restriction helps the search.
-\item[(c)] \emph{Two-level operators are needed}: item~4 (the extremiser $A=\sqrt a\,e_1e_2^*+\sqrt b\,e_2e_1^*$ has
-$|A|$ with the eigenvalues $\sqrt a,\sqrt b$), item~11 ($A=W^{-1}$) and item~25 ($A$ with the eigenvalue ratio $\approx\delta^2/8$,
-Proposition~\ref{prop:wmon}; rank-one $A$ gives no violation). In $M_3$ the extremiser of item~4 lives on a
-two-dimensional subspace and vanishes on its complement, so it has three eigenvalues $\sqrt a,\sqrt b,0$; the two-level
-class without $0$ misses it.
-\item[(d)] \emph{Exceptions}: in $M_3$ at $\delta=0.9$ the generalised Powers--St{\o}rmer inequality (item~13) is violated by
-$0.3048$ against $0.2197$ for projections and for $M_2$, and the spectral geometric mean (item~6) exceeds $\kappa-1$ for
-$n\ge3$ (Section~\ref{sec:numerics}, item (iii) below). Here operators that are not two-level do more.
-\end{enumerate}
-
-\subsection{Both contrasts}\label{sec:bothcontrasts}
-
-The bottom rows of Figures~\ref{fig:mc-gardner}--\ref{fig:mc-wmon} (Appendix~\ref{app:mc}) show $V(0.9,\delta')$ for the same 14 items, with random samples. At $\delta'=0$ no item is violated
-(Proposition~\ref{prop:scalar}). Beyond that, the items fall into four classes.
-\begin{enumerate}
-\item[(a)] \emph{Smooth growth in both contrasts}: items 1--3 follow Theorem~\ref{thm:gardnerD} to $\TCCGardnerDev$
-(relative, $n=2,3$, all grid points); item~8 follows Proposition~\ref{prop:youngtwo} on $M_2$.
-\item[(b)] \emph{A threshold in the contrast of the operators}: items 6, 10, 12, 13, 24 and~25 show no violation until
-$\delta'$ is close to $1$; at $\delta=0.9$ the first grid value with a violation above $10^{-4}$ is: \TCCThresholds. These
-characterisations are blind to operators of moderate contrast: their violation needs nearly singular operators.
-\item[(c)] \emph{A peak}: item~11 is violated most strongly when the contrast of $A$ is close to that of $W$ (its
-extremiser is $W^{-1}$), and in $M_2$ items 4 and~7 have an interior maximum in $\delta'$ (for item~4 at the contrast of
-$|A|$ of the extremiser in (c) above); in $M_3$ the additional dimension removes the maxima of 4 and~7.
-\item[(d)] \emph{No dependence on the contrast of the operators}: item~16 is invariant under $A\mapsto A+c$,
-$B\mapsto B+c$, which makes the contrasts of $A$ and $B$ arbitrarily small without changing the quotient; accordingly
-$V(\delta,\delta')$ equals the envelope with free operators for every $\delta'>0$ and jumps to $0$ at $\delta'=0$.
-\end{enumerate}
-On $M_2$ every spectrum is two-level. On $M_3$ the two-level operators of contrast $\delta'$ reproduce the values of
-general spectra with the same contrast except in items 4, 6 and~7 near $\delta'=1$: there the extremisers need a third
-eigenvalue (a zero on the complement of a two-dimensional subspace, or a nearly singular second operator).
-
-\subsection{Envelopes with the operators free}
-
-\begin{table}[h]
-\centering\scriptsize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{llllll}
-\toprule
-items & $V^\star(\delta)$ & as $\delta\to0$ & $V^\star(0.5)$ & search $V(0.5)$ & status\\
-\midrule
-\TCClassRows
-\bottomrule
-\end{tabular}
-\caption[]{Classes of behaviour, ordered by the order of vanishing of the envelope at the trace. $V^\star$: the sharp
-value or, where marked $\ge$, a proved lower bound; ``search'': the certified search value on $M_2$ (a range over the
-items of a row). Items 11 and 24 are given for $n=2$.}
-\label{tab:classes}
-\end{table}
-
-\begin{table}[h]
-\centering\scriptsize
-\setlength{\tabcolsep}{1.8pt}
-\begin{tabular}{rlccccccrc}
-\toprule
- & inequality $L\le R$ & ref. & $V(0.1)$ & $V(0.5)$ & $V(0.9)$ & $V^\star(0.5)$ & order & slope & $n$-dep.\\
-\midrule
-\TCRows
-\bottomrule
-\end{tabular}
-\caption[]{Certified search values on $M_2$ at $\delta=0.1,0.5,0.9$ and the proved values $V^\star$; $^a$: sharp for $n=2$
-only, $^b$: a lower bound, $^c$: approached but not attained. ``order'': leading order of $V^\star$ as $\delta\to0$;
-``slope'': $\log_2(V(0.2)/V(0.1))$ of the search; ``$n$-dep.'': the largest $|V_n/V_2-1|$ for $n=3,4$ and $\delta\ge0.1$ (for
-item~7 it reflects search shortfalls, for item~13 a genuine increase with $n$; items 19 and 20 differ for odd $n$, Theorem~\ref{thm:proj}). ``n.r.'': no
-violation resolved by the search ($\TCMode$ run on $\TCDevice$).}
-\label{tab:values}
-\end{table}
-
-Tables~\ref{tab:classes} and~\ref{tab:values} and the top rows of Figures~\ref{fig:mc-gardner}--\ref{fig:mc-wmon} summarise the computation.
-
-\begin{enumerate}
-\item[(i)] \emph{Agreement with the theorems.} Where the envelope is known exactly and attained (items 1--5, 8, 11, and 9
-for $n=2$), the search reproduces it to $\TCSharpDev$ for $\delta\ge0.05$ and $n=2,3,4$; for items 17, 18, 20--22 and 24
-to $\TCSharpDevNew$, and for the approached suprema of 19 and 23 to $\TCSharpDevApproached$. Apart from item~6 with
-$n\ge3$, no value exceeds the lower bounds of Section~\ref{sec:lower} (largest relative excess $\TCBoundExcess$). The
-values of 17, 18 and 21--23 on $M_3$ and $M_4$ agree with the $M_2$ values to $\TCNDevNew$, as Theorem~\ref{thm:proj}
-predicts, and the search on $M_3$ finds the odd-$n$ value $\TCExpOddHalf$ of item~20 at $\delta=0.5$ ($M_2$:
-$\TCRefExpqpqHalf$).
-\item[(ii)] \emph{Items without a closed form.} All five items 12--16 fail quadratically, with $V\approx0.5\,\delta^2$
-(12, 13), $\delta^2/36$ (14, equal to the bound of Proposition~\ref{prop:lower}(d) to leading order), $0.064\,\delta^2$ (15)
-and $0.09\,\delta^2$ (16). Item~15 decreases with $n$, because the identity part of $e^{P/2}e^Qe^{P/2}$ enters $N$;
-item~13 increases with $n$ at large $\delta$ (on $M_3$ at $\delta=0.9$: $0.3048$ against $0.2197$ on $M_2$, both certified);
-items 12, 14 and~16 give the same values for $n=2,3,4$. In item~16 the best points have large $\|A\|$, $\|B\|$, and the supremum is
-approached as the scale grows.
-\item[(iii)] \emph{Dimension.} For items 9 and 10 the search gives the same values for $n=3,4$ as for $n=2$, to $\TCNDev$.
-Item~6 depends on $n$: for $n=2$ the search never exceeds $\kappa-1$, but for $n\ge3$ it certifies larger violations,
-$V\ge\TCSGMExcessV$ at $n=\TCSGMExcessN$, $\delta=\TCSGMExcessDelta$, where $\kappa-1=\TCSGMExcessKappa$; a stored point gives
-$V>2.1$ at $n=3$, $\delta=0.9$, where $\kappa-1=1.29$. We only know $\kappa-1\le V_6\le h-1$.
-\item[(iv)] \emph{Extremisers.} Except for items 6 ($n\ge3$), 11 ($A=W^{-1}$) and 25 ($A$ of rank two with eigenvalue
-ratio $\approx\delta^2/8$), the extremisers are rank-one operators or matrix units in the span of eigenvectors for $a$ and
-$b$, and they do not commute with $W$.
-\item[(v)] \emph{Limits of the search.} The suprema of 6 and 7 are approached only as an operator becomes singular;
-gradient ascent reaches $\TCSGMRatioHalf$ and $\TCALTRatioHalf$ of the bound at $\delta=0.5$, and finds no violation of
-item~6 for $\delta\le0.2$. Item~25 is resolved for $\delta\ge\TCWmonFirst$; the search reaches $m_{25}$ to $10^{-3}$ for
-$\delta\ge\TCWmonReach$ and does not exceed it.
-\item[(vi)] \emph{Direct sums.} On $M_2\oplus M_3$ with $W=1\oplus s1$ and $W=\mathrm{diag}(1,\ell)\oplus s1$, $s\in\{\frac14,4\}$,
-intra-block contrast $\delta\in\{0.3,0.5,0.7\}$: for central $W$ the largest value found for the items that hold for every
-trace is $\TCSectorCentral$; for 11 and 24 the search reproduces the exact values for the fixed density to $\TCSectorDet$;
-with intra-block contrast no value exceeds the $M_2$ envelope (largest relative excess $\TCSectorExcess$), and where
-Theorem~\ref{thm:sectors} gives equality the search reaches it to $10^{-3}$ in $\TCSectorReached$ of $\TCSectorTotal$ cases.
-\end{enumerate}
+No sample exceeds the computed envelope: the largest ratio of a sampled violation to the envelope at the upper edge of
+its bin is $\TMCWorstRel$ over all items and dimensions, the excess over $1$ being due to the linear interpolation between
+grid values. This is an independent consistency check of the computed values. The samples also show why sampling alone is
+a poor test of a characterisation. Random operators rarely come close to the envelope, and for monotonicity,
+subadditivity, the Powers--St{\o}rmer inequality and the weighted monotonicity fewer than $0.1\%$ of the samples (or none)
+violate the inequality at all, so a Monte Carlo study alone would suggest that these inequalities hold for every
+$\varphi_W$. Sampling also deteriorates with the dimension: for Gardner's inequality the fraction of violating random
+samples drops from $4.4\%$ on $M_2$ to below $0.1\%$ on $M_3$ and $M_4$, and the best sample stays far below the envelope
+(Figure~\ref{fig:mc-gardner}), because the extremal configurations, rank-one operators on a two-dimensional subspace
+aligned with the extreme eigenvectors of $W$, have a Haar measure that decreases rapidly with $n$. Sampling scaled
+projections helps: the fraction of violating samples rises, for Gardner's inequality from $4.4\%$ to $19\%$ on $M_2$ and
+from below $0.1\%$ to $0.6\%$ on $M_4$, for subadditivity from below $0.1\%$ to $21\%$, $9\%$ and $5\%$ on $M_2$, $M_3$,
+$M_4$, and for the power-mean inequality from $7\%$ to $50\%$ on $M_2$, and the best sample comes close to the envelope
+(Figures~\ref{fig:mc-gardner}, \ref{fig:mc-subadd} and~\ref{fig:mc-lp}). The exceptions are those of
+Section~\ref{sec:projsuffice}: items 4 and~7, whose extremisers are two-level operators that are not projections, and
+items 6 and~11, which need invertible operators.
 
 \section{Conclusions and open problems}\label{sec:open}
 
-For the 25 characterisations of the trace studied here, the violation of the inequality by a non-tracial functional
-$\varphi_W$ is controlled by two Michelson contrasts, that of $W$ and that of the operators: it vanishes if either is
-zero, and for Gardner's inequality and its relatives it is an explicit function of their product. The largest violation
-is found, with few exceptions, at projections or at two-level operators $\ell+(1-\ell)P$, as the vertex principle predicts
-where it applies. Testing a characterisation on projections and their affine images is therefore the efficient way to
-detect a non-tracial functional, and the size of the violation measures the contrast of its density. The exceptions are
-structural: thresholds in the contrast of the operators, a peak at the contrast of the density for the determinant
-inequality, shift invariance for the Peierls--Bogoliubov inequality, and, in dimension three, the spectral geometric
-mean and the generalised Powers--St{\o}rmer inequality. The contrast of composite operators follows simple rules
-(Section~\ref{sec:composite}): rapidities add for products and means, angles add for Jordan products, and the commutator
-test of traciality fails by the product of the three contrasts of $W$, $A$ and~$B$.
+A characterisation of the trace by an inequality becomes quantitative once the distance of a functional from the
+traces is measured by the Michelson contrast of its density. For Gardner's inequality the answer is as simple as it could
+be: the sharp constant is the secant of the angle whose sine is the product of the contrasts of the density and of the
+operator. For the other characterisations the envelopes vanish at the trace to the orders $\delta$, $\delta^2$, $\delta^4$
+or $\delta^8$, with the classical reverse-inequality constants as exact values where we could determine them; on direct
+sums only the contrast inside the blocks counts. The rules by which contrasts compose (rapidities add for products and
+means, angles add for Jordan products, three contrasts multiply in the commutator test) explain some of the thresholds in
+the contrast of the operators that the computation reveals, and prove them for subadditivity of the square root and for
+the power-mean inequality. The computation supports the following values.
 
-
-\begin{conjecture}
-$V_n=\kappa^2-1$ for item~7, $V_n=m(\delta)$ for item~10 and $V_n=m_{25}(\delta)$ for item~25 in every dimension;
-$V_2=\kappa-1$ for item~6; and the value of Proposition~\ref{prop:abed} holds for item~9 in every dimension.
+\begin{conjecture}\label{conj:values}
+$V_n=\kappa^2-1$ for item~7, $V_n=g_{10}(\delta)$ for item~10 and $V_n=g_{25}(\delta)$ for item~25 in every dimension;
+$V_2=\kappa-1$ for item~6; the value of Proposition~\ref{prop:abed} holds for item~9 in every dimension; and the lower
+bound of Proposition~\ref{prop:youngtwo} is the two-contrast envelope of item~8 for even $n$.
 \end{conjecture}
 
-\noindent Further questions: (0) proofs of the threshold phenomenon of Section~\ref{sec:bothcontrasts}(b), i.e.\ of
-inequalities that hold for every $\varphi_W$ as long as the operators have contrast below a critical value depending on
-$\Delta(W)$, and of the equality in Proposition~\ref{prop:youngtwo}; (1) the envelope of item~6 for $n\ge3$, where the search exceeds $\kappa-1$, and whether it
-grows with $n$; (2) closed forms for items 12--16, whose leading coefficients the search gives as $\frac12$, $\frac12$,
-$\frac1{36}$, $0.064$ and $0.09$ (item 14: the leading coefficient $(1-\frac2p)^2/4$ is a lower bound); (3) the analogues
-for infinite-dimensional von Neumann algebras, where the contrast of an unbounded density may be $1$ while the functional
-is still close to a trace in other senses; (4) envelopes for other inequalities that characterise traces, e.g.\ those
+Several questions remain open. Is the threshold $2\sqrt2/3$ of Proposition~\ref{prop:item12} sharp as $\delta\to1$, and
+what are the thresholds of items 6, 10, 13 and~25, which the search shows but which no operator inequality of the kind used
+in Section~\ref{sec:thresholds} can explain for item~10? What is the envelope of item~6 for $n\ge3$, where the search
+exceeds $\kappa-1$, and does it grow with $n$? Do items 12--16 have closed forms? The search gives the leading
+coefficients $\frac12$, $\frac12$, $\frac1{36}$, $0.064$ and $0.09$; for item~14 the coefficient $(1-\frac2p)^2/4$ is a
+proved lower bound. Beyond matrix algebras, an unbounded density on an infinite-dimensional von Neumann algebra may have
+contrast $1$ while the functional is close to a trace in other senses, and a different measure of non-traciality may be
+needed. Finally, the same questions can be asked for other characterisations, such as those
 of~\cite{moslehian2025jmaa,bikchentaev2026sgm} with the arithmetic mean, and for the dual problem of characterising
 central elements~\cite{novikov2015}.
 
@@ -1648,17 +1727,17 @@ are available at \url{https://github.com/andre-a-no/von_neumann_type_i} (MIT lic
 
 \clearpage
 \appendix
-\section{Random samples and certified envelopes, item by item}\label{app:mc}
+\section{Random samples and computed envelopes, item by item}\label{app:mc}
 
-Each figure belongs to one inequality and has one panel per dimension. Top row: the normalised violation $(L-R)/N$ of the
-$\TMCSamples$ random samples (grey) and, where the variables are not projections, of the $\TMCSamples$ scaled-projection
-samples (orange) against $\Delta(W)$ on $M_2$, $M_3$, $M_4$ (Section~\ref{sec:montecarlo}); black: the certified envelope
-$V(\delta)$ on the grid of Section~\ref{sec:numerics}, joined by straight lines. Bottom row (items with operator
-variables): random samples with $\Delta(W)=0.9$ and every operator variable of one contrast $\delta'$, against $\delta'$
-on $M_2$ and $M_3$; black: the certified $V(0.9,\delta')$ of Section~\ref{sec:bothcontrasts}. Samples far below zero are
-cut off. Where a curve is concave between grid points (item~11 below its maximum at $\delta'=\delta$, and after its
-steep drop near $\delta'=1$) a few samples lie above the straight segments; on $M_2$ they lie below the closed form
-$1-(w_1\ell'+w_2)/(2\sqrt{\ell'})$, $\ell'=\frac{1-\delta'}{1+\delta'}$, $w=\frac{2}{1+\ell}(1,\ell)$.
+Each figure shows one inequality, with one panel per dimension. Top row: the normalised violation $(\cL-\cR)/\cN$
+(labelled $(L-R)/N$ in the panels) of the random samples (grey) and, where the variables are not projections, of the
+scaled-projection samples (orange) against $\Delta(W)$ on $M_2$, $M_3$, $M_4$; black: the computed envelope $V(\delta)$,
+a certified lower bound for the supremum, joined by straight lines. Bottom row (items with operator variables): samples
+with $\Delta(W)=0.9$ and all operator variables of contrast $\delta'$, against $\delta'$, on $M_2$ and $M_3$, with the
+computed $V(0.9,\delta')$. Samples far below zero are cut off. Where an envelope is concave between grid points (item~11
+below its maximum at $\delta'=\delta$ and after its steep drop near $\delta'=1$), a few samples lie above the straight
+segments; on $M_2$ they lie below the closed form $1-(w_1\ell'+w_2)/(2\sqrt{\ell'})$, $\ell'=\frac{1-\delta'}{1+\delta'}$,
+$w=\frac{2}{1+\ell}(1,\ell)$.
 
 \input{generated/trace_montecarlo_figures.tex}
 
@@ -1667,9 +1746,15 @@ $1-(w_1\ell'+w_2)/(2\sqrt{\ell'})$, $\ell'=\frac{1-\delta'}{1+\delta'}$, $w=\fra
 \begin{thebibliography}{99}
 \bibitem{abed2024} S.~A.~Abed, I.~A.~Nikolaeva, A.~A.~Novikov, ``Generalisation of Michelson contrast for
   operators and its properties'', Lobachevskii J.\ Math.\ 45 (2024), no.~8, 3835--3848; arXiv:2010.10130.
+\bibitem{alikakos1984} N.~Alikakos, P.~W.~Bates, ``Estimates for the eigenvalues of the Jordan product of Hermitian
+  matrices'', Linear Algebra Appl.\ 57 (1984), 41--56.
+\bibitem{alikakos1985} N.~D.~Alikakos, P.~W.~Bates, ``Erratum: Estimates for the eigenvalues of the Jordan product of
+  Hermitian matrices'', Linear Algebra Appl.\ 65 (1985), 282.
 \bibitem{ando1995} T.~Ando, ``Matrix Young inequalities'', in: \emph{Operator Theory in Function Spaces and Banach
   Lattices}, Oper.\ Theory Adv.\ Appl.\ 75, Birkh\"auser, Basel, 1995, 33--38.
 \bibitem{bhatia1997} R.~Bhatia, \emph{Matrix Analysis}, Graduate Texts in Mathematics 169, Springer, 1997.
+\bibitem{bhatia2008} R.~Bhatia, F.~Kittaneh, ``Commutators, pinchings, and spectral variation'', Oper.\ Matrices 2
+  (2008), no.~1, 143--151.
 \bibitem{bikchentaev2005young} A.~M.~Bikchentaev, O.~E.~Tikhonov, ``Characterization of the trace by Young's
   inequality'', J.\ Inequal.\ Pure Appl.\ Math.\ 6 (2005), no.~2, Art.~49.
 \bibitem{bikchentaev2007mono} A.~M.~Bikchentaev, O.~E.~Tikhonov, ``Characterization of the trace by monotonicity
@@ -1694,8 +1779,12 @@ $1-(w_1\ell'+w_2)/(2\sqrt{\ell'})$, $\ell'=\frac{1-\delta'}{1+\delta'}$, $w=\fra
   of tracial functionals in operator algebras'', Positivity 30 (2026), Art.~24; doi:10.1007/s11117-026-01180-0.
 \bibitem{bikchentaev2026sgm} A.~M.~Bikchentaev, T.~H.~Dinh, A.~V.~Le, M.~S.~Moslehian, ``Spectral geometric mean
   and trace characterizations'', Positivity 30 (2026), Art.~46.
+\bibitem{bushell1973} P.~J.~Bushell, ``Hilbert's metric and positive contraction mappings in a Banach space'',
+  Arch.\ Rational Mech.\ Anal.\ 52 (1973), 330--338.
 \bibitem{cho2009} K.~Cho, T.~Sano, ``Young's inequality and trace'', Linear Algebra Appl.\ 431 (2009), no.~8,
   1218--1222.
+\bibitem{conley2005} C.~H.~Conley, P.~Pucci, J.~Serrin, ``Elliptic equations and products of positive definite
+  matrices'', Math.\ Nachr.\ 278 (2005), no.~12--13, 1490--1508.
 \bibitem{furuta2005} T.~Furuta, J.~Mi\'ci\'c Hot, J.~Pe\v{c}ari\'c, Y.~Seo, \emph{Mond--Pe\v{c}ari\'c Method in Operator
   Inequalities}, Element, Zagreb, 2005.
 \bibitem{gardner1979} L.~T.~Gardner, ``An inequality characterizes the trace'', Canad.\ J.\ Math.\ 31
@@ -1704,6 +1793,7 @@ $1-(w_1\ell'+w_2)/(2\sqrt{\ell'})$, $\ell'=\frac{1-\delta'}{1+\delta'}$, $w=\fra
   Amer.\ Math.\ Soc.\ 10 (1959), 407--415.
 \bibitem{gustafson1968} K.~Gustafson, ``The angle of an operator and positive operator products'', Bull.\ Amer.\
 Math.\ Soc.\ \textbf{74} (1968), 488--492.
+\bibitem{gustafson2012} K.~Gustafson, \emph{Antieigenvalue Analysis}, World Scientific, Hackensack, NJ, 2012.
 \bibitem{gustafsonrao1997} K.~E.~Gustafson, D.~K.~M.~Rao, \emph{Numerical Range: The Field of Values of Linear
 Operators and Matrices}, Springer, New York, 1997.
 \bibitem{halmos1969} P.~R.~Halmos, ``Two subspaces'', Trans.\ Amer.\ Math.\ Soc.\ 144 (1969), 381--389.
@@ -1713,11 +1803,25 @@ Operators and Matrices}, Springer, New York, 1997.
   algebras'', Math.\ Notes 88 (2010), no.~1--2, 177--182.
 \bibitem{hoa2013} Dinh Trung Hoa, H.~Osaka, Ho Minh Toan, ``On generalized Powers--St{\o}rmer's inequality'', Linear
   Algebra Appl.\ 438 (2013), no.~1, 242--249.
+\bibitem{kantorovich1948} L.~V.~Kantorovich, ``Functional analysis and applied mathematics'', Uspekhi Mat.\ Nauk 3
+  (1948), no.~6(28), 89--185.
+\bibitem{kittaneh2007} F.~Kittaneh, ``Inequalities for commutators of positive operators'', J.\ Funct.\ Anal.\ 250
+  (2007), no.~1, 132--143.
+\bibitem{kittaneh2008} F.~Kittaneh, ``Norm inequalities for commutators of positive operators and applications'',
+  Math.\ Z.\ 258 (2008), no.~4, 845--849.
+\bibitem{krein1969} M.~G.~Krein, ``Angular localization of the spectrum of a multiplicative integral in a Hilbert
+  space'', Funct.\ Anal.\ Appl.\ 3 (1969), 73--74; translated from Funktsional.\ Anal.\ i Prilozhen.\ 3 (1969), no.~1, 89--90.
+\bibitem{lemmens2012} B.~Lemmens, R.~Nussbaum, \emph{Nonlinear Perron--Frobenius Theory}, Cambridge Tracts in
+  Mathematics 189, Cambridge University Press, Cambridge, 2012.
 \bibitem{lib} I.~Nikolaeva, A.~Novikov, ``Finite-dimensional Type I von Neumann algebras in PyTorch: a
   GPU-accelerated framework for random block-diagonal operators'', arXiv:2606.15882 (2026);
   code: \url{https://github.com/andre-a-no/von_neumann_type_i}.
+\bibitem{moslehian2011} M.~S.~Moslehian, H.~Najafi, ``Around operator monotone functions'', Integral Equations
+  Operator Theory 71 (2011), no.~4, 575--582.
 \bibitem{moslehian2025jmaa} M.~S.~Moslehian, A.~M.~Bikchentaev, ``Characterizations of the canonical trace on full
   matrix algebras'', J.\ Math.\ Anal.\ Appl.\ 552 (2025), no.~2, 129764.
+\bibitem{nicholson1979} D.~W.~Nicholson, ``Eigenvalue bounds for $AB+BA$, with $A$, $B$ positive definite
+  matrices'', Linear Algebra Appl.\ 24 (1979), 173--183.
 \bibitem{novikov2015} A.~A.~Novikov, O.~E.~Tikhonov, ``Characterization of central elements of operator
   algebras by inequalities'', Lobachevskii J.\ Math.\ 36 (2015), no.~2, 208--210.
 \bibitem{petz1988} D.~Petz, J.~Zem\'anek, ``Characterizations of the trace'', Linear Algebra Appl.\ 111
@@ -1729,6 +1833,8 @@ Operators and Matrices}, Springer, New York, 1997.
   von Neumann algebras by inequalities for the modulus'', Math.\ Notes 72 (2002), no.~3--4, 411--416.
 \bibitem{strang1962} W.~G.~Strang, ``Eigenvalues of Jordan products'', Amer.\ Math.\ Monthly \textbf{69} (1962),
 37--40.
+\bibitem{thompson1963} A.~C.~Thompson, ``On certain contraction mappings in a partially ordered vector space'',
+  Proc.\ Amer.\ Math.\ Soc.\ 14 (1963), 438--443.
 \bibitem{tikhonov2005} O.~E.~Tikhonov, ``Subadditivity inequalities in von Neumann algebras and characterization of
   tracial functionals'', Positivity 9 (2005), no.~2, 259--264.
 \end{thebibliography}

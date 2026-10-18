@@ -66,7 +66,7 @@ def architecture():
     box(ax, c1, 6.35, w1, 0.8, 'user scripts and examples', fs=7.5)
     box(ax, c2, 6.35, w2 + 0.3 + w3, 0.8, 'models: SpinChain, SU2Chain, Inclusion, ...', fs=7.5)
     box(ax, c1, 4.05, w1, 1.95, 'TypeIAlgebra',
-        'sector sizes $k_c$, field, precision,\ndevice; cached constants:\nmasks, trace weights $w_c$, size groups',
+        'sector sizes $k_c$, field, precision,\ndevice; cached constants: masks,\ntrace weights $w_c$, size groups',
         edge=BLUE, title_color=BLUE)
     box(ax, c2, 4.05, w2 + 0.3 + w3, 1.95, 'Operator and its subclasses',
         'matrix $(B,C,k_{\\max},k_{\\max})$, or a generator (lazy recipe)\n'
@@ -80,7 +80,7 @@ def architecture():
     box(ax, c3, 2.25, w3, 1.45, 'cost module',
         'time and memory\nestimates, warnings', edge=ORANGE, title_color=ORANGE)
     box(ax, c1, 0.25, w1, 1.45, 'torch.linalg',
-        'LAPACK (CPU);\ncuSOLVER, cuBLAS, MAGMA (GPU)', edge=GREEN, title_color=GREEN)
+        'LAPACK (CPU); cuSOLVER,\ncuBLAS, MAGMA (GPU)', edge=GREEN, title_color=GREEN)
     box(ax, c2, 0.25, w2, 1.45, 'sparse and gathers',
         'CSR Lanczos, Krylov;\nindex maps (SectorJump)', edge=GREEN, title_color=GREEN)
     box(ax, c3, 0.25, w3, 1.45, 'autograd',
