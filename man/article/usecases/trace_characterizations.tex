@@ -1,35 +1,9 @@
 % Use case (short): quantitative failure of trace characterisations. Full account with proofs: man/trace_envelopes.
 % Numbers: scripts/trace_characterizations.py -> generated/trace_characterizations.tex (macros \TC...).
-\subsection{Use case: how strongly trace characterisations fail}\label{sec:tc}
-
-Many inequalities that hold for the trace characterise it: a positive functional $\varphi$ that satisfies one of them for
-all operators is a trace (Gardner~\cite{gardner1979}, and a long series of results surveyed in~\cite{bikchentaev2025survey}).
-On $M_n$ every positive functional is $\varphi_W=\Tr(W\,\cdot\,)$, and we ask how strongly such an inequality $L\le R$ fails
-for a non-tracial $\varphi_W$, measured by the envelope $V(\delta)=\sup\{(L-R)/N:\Delta(W)=\delta\}$ over all operator
-variables, with a scale-invariant normalisation $N$. For \IfFileExists{generated/trace_characterizations.tex}{\TCItems}{25}
-characterisations from the literature the library computes $V$ in one batched optimisation per inequality: the density
-is parametrised with an exact contrast (\texttt{optimize.SpectrumParam}), the operators by \texttt{PositiveParam},
-\texttt{SelfAdjointParam} and \texttt{UnitaryParam} (projections of every rank included), the lattice operations
-$P\wedge Q$, $P\vee Q$ by functional calculus with a Daleckii--Krein gradient, and the best point of every contrast is
-recomputed in mpmath with \IfFileExists{generated/trace_characterizations.tex}{\TCDigits}{40} digits, so that every reported
-violation is certified. \IfFileExists{generated/trace_characterizations.tex}{The whole computation takes \TCSeconds~s on
-\TCWorkers\ CPU processes.}{}
-
-Figure~\ref{fig:tc} shows the result. The envelopes vanish at the trace to different orders, $\delta$, $\delta^2$,
-$\delta^4$ and $\delta^8$; for sixteen inequalities the computed values agree with closed forms proved in the companion
-paper~\cite{nn_trace} (the Kantorovich constant $\kappa-1$ for Gardner's inequality and six relatives, $\kappa^2-1$,
-$h-1$, the Specht ratio and others), for four with explicit lower bounds, and five are known only numerically. On
-$\bigoplus_cM_{k_c}$ only the contrast inside the blocks is detected: a density that varies only between the blocks
-violates none of the inequalities that hold for every trace. The companion paper also prescribes the contrast of the
-operators: the violation vanishes when either contrast is zero, for Gardner's inequality it equals
-$(1-\Delta(W)^2\Delta(|X|)^2)^{-1/2}-1$ in even dimension, and the largest violations are attained, with few exceptions,
-at projections or at two-level operators $\ell+(1-\ell)P$.
-
-\begin{figure}[h]
-\centering\fig{trace_characterizations.pdf}{\textwidth}
-\caption[]{Certified violation envelopes $V(\delta)$ on $M_2$ (symbols) and the closed forms or lower bounds of~\cite{nn_trace}
-(lines), grouped by the order of vanishing: (a) $\delta$; (b) $\delta^2$, sharp; (c) $\delta^2$, lower bounds and items
-without closed form; (d) $\delta^4$ and $\delta^8$. (e) Search divided by the proved value, $n=2,3,4$. (f) Items that
-depend on $n$.}
-\label{fig:tc}
-\end{figure}
+\paragraph{How strongly trace characterisations fail}\label{sec:tc} (with S.~A.~Abed~\cite{nn_trace}). For
+\IfFileExists{generated/trace_characterizations.tex}{\TCItems}{25} inequalities that characterise the trace, the violation
+by $\varphi_W=\Tr(W\,\cdot\,)$ is maximised over all operators at every contrast $\Delta(W)$, in one batched optimisation per
+inequality (\texttt{optimize.SpectrumParam}, \texttt{PositiveParam}, \texttt{UnitaryParam}; lattice operations
+$P\wedge Q$, $P\vee Q$ by functional calculus with Daleckii--Krein gradients), and the best points are recomputed in mpmath
+with \IfFileExists{generated/trace_characterizations.tex}{\TCDigits}{40} digits. The computed envelopes led to closed forms,
+proved in~\cite{nn_trace}, that vanish at the trace to the orders $\delta$, $\delta^2$, $\delta^4$ and $\delta^8$.

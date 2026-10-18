@@ -1,38 +1,7 @@
 % Use case (short): a boundary time crystal under local dissipation. Full account: man/btc_sre (Part A).
 % Numbers: scripts/permutational.py -> generated/permutational.tex (macros \PM...).
-\subsection{Use case: a boundary time crystal under local dissipation}\label{sec:btc}
-
-$N$ two-level systems with a collective drive and collective decay,
-$\dot\rho=-i[\omega J_x,\rho]+\frac{\kappa}{S}\mathcal D[J_-]\rho+\gamma\sum_i\mathcal D[\sigma_-^{(i)}]\rho
-+\gamma_\phi\sum_i\mathcal D[\sigma_z^{(i)}]\rho$, $S=N/2$, form the boundary time crystal of Iemini et
-al.~\cite{iemini2018}: for $\omega>\kappa$ and $\gamma=\gamma_\phi=0$ the magnetisation oscillates, with a lifetime that grows
-linearly in $N$~\cite{liu2026,nemeth2025}. Local emission or dephasing turns the mean-field limit cycle into a damped
-oscillation~\cite{piccitto2021}. The local terms do not conserve the total spin, but they commute with the permutations of
-the sites, so the state stays in the algebra $\M=\bigoplus_jM_{2j+1}\otimes1_{m_j}$ of Schur--Weyl duality, and the local
-dissipators are completely positive maps \emph{between} the sectors $j$ (\texttt{PermutationalLindbladian}; the method of
-permutational invariance~\cite{chase2008,baragiola2010,shammah2018,gegg2017,kirton2017}). The generator costs $O(N^3)$
-per state, and ten local rates are integrated in one batch.
-
-With all sectors kept, the library gives the lifetime $\tau(N,\gamma)$ of the oscillations for
-$N\le\IfFileExists{generated/permutational.tex}{\PMNmax}{80}$ without truncation (Figure~\ref{fig:btc}). Without local terms
-$\kappa\tau(N,0)\approx\IfFileExists{generated/permutational.tex}{\PMSlope\,N+\PMIntercept}{0.45N}$ at
-$\omega=\IfFileExists{generated/permutational.tex}{\PMOmega}{2}\kappa$, in line with the known linear growth; with local
-terms $\tau$ saturates at the mean-field lifetime $\tau_{\mathrm{MF}}$. We observe that the two damping rates
-approximately add,
-\begin{equation}\label{eq:btc-rule}
-  1/\tau\approx1/\tau(N,0)+1/\tau_{\mathrm{MF}},
-\end{equation}
-with relative deviations of $\tau$ between \IfFileExists{generated/permutational.tex}{$\PMRuleMin$ and $\PMRuleMax$ over
-$\PMRuleCount$ data points}{a few per cent}; this is an observation, not a theorem. The companion paper~\cite{nn_btc}
-gives the model, the validation against the full Liouville space and PIQS~\cite{shammah2018}, and the structure of the
-deviations.
-
-\begin{figure}[ht]
-\centering
-\fig{permutational.pdf}{\textwidth}
-\caption{(a) $m_z(t)$ for the largest $N$ without and with local emission, and the mean-field curves (dotted).
-(b) $\tau(N,\gamma)$ for local emission; dotted: $\tau_{\mathrm{MF}}(\gamma)$, dashed: the additive
-rule~\eqref{eq:btc-rule}. (c) All lifetimes with a finite mean-field limit, $\tau/\tau_{\mathrm{MF}}$ against
-$x=\tau(N,0)/\tau_{\mathrm{MF}}$; the dashed curve $x/(1+x)$ is~\eqref{eq:btc-rule}. (d) The relative deviation from
-the rule; points of equal rate are joined, $N$ increasing to the right (filled: emission, open: dephasing).}\label{fig:btc}
-\end{figure}
+\paragraph{A boundary time crystal under local dissipation}\label{sec:btc} \cite{nn_btc}. Local emission and dephasing of
+$N$ two-level systems commute with the permutations of the sites, so the state stays in the Schur--Weyl algebra
+$\bigoplus_jM_{2j+1}\otimes1_{m_j}$, and the local dissipators are maps between its sectors
+(\texttt{PermutationalLindbladian}). With all sectors kept, the lifetimes of the oscillations follow for
+$N\le\IfFileExists{generated/permutational.tex}{\PMNmax}{80}$ without truncation, ten rates in one batch.

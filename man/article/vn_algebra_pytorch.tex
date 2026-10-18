@@ -21,7 +21,7 @@
 
 % numbers and tables produced by scripts/*.py (bash scripts/run_all.sh [quick|full] [device])
 \newcommand{\gen}[1]{\IfFileExists{generated/#1.tex}{\input{generated/#1.tex}}{}}
-\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}\gen{renyi_threshold}\gen{connes_stormer}\gen{permutational}\gen{trace_characterizations}\gen{symmetry_resolved}
+\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}\gen{renyi_threshold}\gen{connes_stormer}\gen{permutational}\gen{trace_characterizations}\gen{symmetry_resolved}\gen{noisy_xy}\gen{architecture}
 % Captions that use these numbers have an empty short caption: the short caption is expanded into main.aux,
 % where a number whose file is missing would be an undefined control sequence.
 \providecommand{\ValidationRows}{\multicolumn{6}{c}{\emph{run scripts/validate\_known\_results.py}}\\}
@@ -39,6 +39,8 @@
 \providecommand{\ChainKrylovRows}{\multicolumn{6}{c}{\emph{run scripts/chains.py}}\\}
 \providecommand{\BaseMinKS}{--}\providecommand{\BoundsStChecked}{--}\providecommand{\BoundsStOutside}{--}\providecommand{\BoundsShortfall}{--}
 \providecommand{\ChainRingRows}{\multicolumn{6}{c}{\emph{run scripts/chains.py}}\\}
+\providecommand{\NXYRows}{\multicolumn{12}{c}{\emph{run scripts/noisy\_xy\_mixer.py}}\\}
+\providecommand{\ArchRows}{\multicolumn{5}{c}{\emph{run scripts/architecture\_bench.py}}\\}
 \providecommand{\RenyiRows}{\multicolumn{5}{c}{\emph{run scripts/renyi\_threshold.py}}\\}
 \providecommand{\BoundsSupDevOne}{(not generated)}\providecommand{\BoundsSupDevThree}{(not generated)}
 \providecommand{\RenyiMode}{--}\providecommand{\RenyiDevice}{--}\providecommand{\RenyiTol}{--}
@@ -57,21 +59,20 @@ A GPU-Accelerated Framework for Random Block-Diagonal Operators}
 \begin{abstract}
 \texttt{torch\_vn\_algebra} is a PyTorch library for batched, differentiable computations on CPUs and GPUs in the
 finite-dimensional Type~I von Neumann algebras $\bigoplus_cM_{k_c}(\C)$ of quantum systems with conserved charges or
-superselection rules: random operators with prescribed spectra, states, channels between sectors, spin chains, Lindblad
-dynamics, inclusions of algebras, symmetry reduction and constrained optimisation. Validated against exact results, it
-serves here as a research tool in four use cases. Batched, certified optimisation measures how strongly 25 inequalities that characterise
-the trace fail for non-tracial functionals, as a function of the Michelson contrast of the density; the envelopes vanish
-to the orders $\delta$, $\delta^2$, $\delta^4$ and $\delta^8$, agree with closed forms where these are known, and on a
-direct sum detect only the contrast inside a block. For two maximal abelian subalgebras of $M_2$ the computed
-Connes--St{\o}rmer entropy led to a closed form, open in the literature; for $n\ge3$ partitions of unity beat the best
-orthonormal bases found. For a boundary time crystal with local emission or dephasing, maps between the Schur--Weyl
-sectors give finite-$N$ lifetimes up to $N=80$ without truncation, and the collective and local damping rates
-approximately add. For the XXZ chain at $L=24$, batched over eight anisotropies, the sector blocks give the
-symmetry-resolved entanglement directly, and the charge statistics give the Luttinger parameter to within one per cent
-for $-0.5\le\Delta\le0.75$. Constrained optimisation also replaces the Monte Carlo sampling of our earlier work on trace
-inequalities, whose envelopes we prove for sectors of every size, and rediscovers the data-processing thresholds
-$\alpha=\frac12$ and $\alpha=2$ of the Rényi divergences. The mathematical and physical results are developed in three
-companion papers.
+superselection rules: random operators with prescribed spectra, states, channels within and between sectors, spin chains,
+Lindblad dynamics, inclusions of algebras, symmetry reduction and constrained optimisation. This paper documents how it is
+built. Operators are lazy recipes that carry their mathematical properties, so the right kernel is chosen without checks
+and nothing is computed that is not read; extreme eigenvalues, traces, inverses and, on request, spectral decompositions
+are cached. The speed comes from a padded block layout with one batched call per block size, a single batched Hermitian
+eigensolver behind spectra, functions, singular values and polar decompositions, direct formulas instead of products, no
+hidden host synchronisation, sparse sector Hamiltonians with batched Krylov solvers, and sparse jumps between sectors
+for the Lindblad solvers; each of these decisions is measured against the naive alternative. The library is validated
+against exact results (Haar and Weingarten moments, Page's formula, circular ensembles). As its main application we
+study symmetry verification for a noisy XY mixer of the quantum alternating operator ansatz, whose Hamming weight
+sectors form the algebra: with all noise models and rates in one batch, we show that post-selection on the weight
+removes amplitude damping exactly at zero temperature, suppresses thermal relaxation from first to second order, and
+leaves dephasing undetected, with an infidelity given to first order by one integral over the noiseless trajectory.
+Four further applications, with their own companion papers, are summarised.
 \end{abstract}
 
 \section*{Program summary}
@@ -83,12 +84,12 @@ companion papers.
 \item[Nature of problem:] Numerical experiments in finite-dimensional Type~I von Neumann algebras
 $\bigoplus_cM_{k_c}(\C)$, which describe quantum systems with superselection rules or conserved charges:
 random operators with prescribed spectra, several trace functionals, states, channels within and between
-sectors, symmetric tensor products, spin chains, Hamiltonian and Lindblad dynamics, extremal problems for
-trace inequalities under spectral constraints, inclusions of algebras, symmetry reduction, and quantum Rényi
-divergences.
-\item[Solution method:] Batched block-diagonal tensors processed by PyTorch linear algebra on CPUs and GPUs;
-exact Haar sampling; spectral functional calculus; Kraus representations; Lanczos and Krylov methods for
-sparse sector Hamiltonians; differentiable parametrisations with batched multistart gradient optimisation;
+sectors, symmetric tensor products, spin chains, Hamiltonian and Lindblad dynamics with jumps between sectors
+(noisy circuits with a conserved charge), extremal problems under spectral constraints, inclusions of algebras,
+symmetry reduction, and quantum Rényi divergences.
+\item[Solution method:] Batched block-diagonal tensors processed by PyTorch linear algebra on CPUs and GPUs, one
+call per block size; lazy operators that carry their properties, with caches for spectra; exact Haar sampling; spectral functional calculus; Kraus representations; Lanczos and Krylov methods for
+sparse sector Hamiltonians; sparse jumps between sectors for the Lindblad solvers; differentiable parametrisations with batched multistart gradient optimisation;
 run-time and memory estimates before expensive steps; inclusion matrices; randomised Wedderburn decomposition
 from random elements of the commutant; highest-weight (Yamanouchi) bases and exact Clebsch--Gordan coefficients.
 \item[Additional comments:] more than 800 unit tests, run in continuous integration; every number, table and figure of
@@ -140,9 +141,9 @@ on one space they form an algebra of the form~\eqref{eq:M}, whose block sizes ar
 irreducible representations, and equivariant layers between two representations are the corresponding off-diagonal
 blocks (for real representations the blocks can also be real or quaternionic~\cite[\S3.5]{fulton1991}); random-matrix methods are used to analyse trained
 weights~\cite{martin2021};
-\item operator theory, our original motivation: inequalities between traces of products characterise the trace
-and the centre of an operator algebra~\cite{gardner1979,petz1988,novikov2015,virosztek2017}, and the size of
-their failure was studied numerically against spectral quantities such as the Michelson contrast~\cite{abed2024}.
+\item operator theory, where inequalities between traces of products characterise the trace and the centre of an
+operator algebra~\cite{gardner1979,petz1988,novikov2015,virosztek2017}, and the size of their failure was studied
+numerically against the Michelson contrast~\cite{abed2024}.
 \end{itemize}
 On $\M$ the trace is not unique: every positive weighting of the sectors gives one, and statements such as
 ``trace preserving'' or ``the dual map'' depend on that choice as soon as maps change the sector structure.
@@ -231,21 +232,20 @@ symmetry is encoded in the sector structure. It is not a circuit simulator and n
 single large systems the specialised packages above remain the better choice; Section~\ref{sec:baselines}
 quantifies where the library gains and where it does not.
 
-\paragraph{Contributions and outline.} Sections~\ref{sec:math}--\ref{sec:symmetries} describe the library:
-notation and conventions (Section~\ref{sec:math}); the software stack, the workflow, how the challenges (i)--(vii) are
-met, and the number field and precision (Section~\ref{sec:design}); an overview of short complete programs in the
-repository, including a noisy quantum circuit (Section~\ref{sec:usage}); validation against exact results (Section~\ref{sec:validation}); constrained
-optimisation instead of Monte Carlo sampling, which proves the envelopes of the trace inequalities of~\cite{v1} for
-sectors of every size and locates the data-processing thresholds of the Rényi divergences (Sections~\ref{sec:optimisation}
-and~\ref{sec:renyi}); charge-conserving tensor products and spin chains with momentum sectors, sparse Krylov solvers
-and particle loss (Section~\ref{sec:chains}); and inclusions of algebras with conditional expectations and indices, the
-Wedderburn decomposition of the algebra generated by a symmetry, and the SU(2) symmetry of spin chains
-(Section~\ref{sec:symmetries}). Section~\ref{sec:usecases} uses the library on four research questions: how strongly
-characterisations of the trace fail for non-tracial functionals (Section~\ref{sec:tc}), the Connes--St{\o}rmer entropy
-of two maximal abelian subalgebras of $M_n$, in closed form for $n=2$ (Section~\ref{sec:cs}), the lifetimes of a
-boundary time crystal under local dissipation (Section~\ref{sec:btc}), and symmetry-resolved entanglement in the XXZ
-chain (Section~\ref{sec:sre}). Section~\ref{sec:baselines} compares with NumPy/SciPy, Section~\ref{sec:performance}
-reports performance, and Section~\ref{sec:limitations} discusses limitations.
+\paragraph{Contributions and outline.} The paper is a technical description of the library: what it computes,
+how the computation is organised, and what each design decision costs or saves. Section~\ref{sec:math} fixes notation
+and conventions. Section~\ref{sec:design} describes the architecture: the software stack and workflow, the data layout,
+lazy evaluation with property flags and caches (Section~\ref{sec:lazy}), the sources of speed with measurements
+(Section~\ref{sec:speed}), the functional calculus and its derivatives, GPUs, the number field and precision, and the
+safeguards for time and memory. Section~\ref{sec:usage} gives short complete programs, Section~\ref{sec:validation}
+validates the library against exact results, Section~\ref{sec:optimisation} describes constrained optimisation, which
+replaces Monte Carlo sampling where extremes matter, and rediscovers the data-processing thresholds of the Rényi
+divergences, Section~\ref{sec:chains} charge-conserving tensor products, spin chains, Krylov solvers and jumps between
+sectors, and Section~\ref{sec:symmetries} inclusions of algebras, the Wedderburn decomposition of a symmetry and SU(2)
+multiplets. The main application, Section~\ref{sec:noisy}, studies symmetry verification for a noisy XY mixer, where the
+Hamming-weight sectors form the algebra; Section~\ref{sec:usecases} summarises four applications reported in companion
+papers. Section~\ref{sec:baselines} compares with NumPy/SciPy, Section~\ref{sec:performance} reports performance, and
+Section~\ref{sec:limitations} discusses limitations.
 
 \section{Mathematical setting}\label{sec:math}
 
@@ -363,11 +363,8 @@ in single sectors $M_{\binom LN}$ without padding, which is what dense diagonali
 
 \paragraph{Objects.} \texttt{Operator} (with \texttt{DensityMatrix} as a subclass for states),
 \texttt{Channel} (sector preserving) and \texttt{InterSectorChannel} (between sectors or algebras) are
-thin wrappers around such tensors; Table~\ref{tab:modules} lists the modules. Operations on operators
-are lazy: they record how to compute the result and do so on first use; the result is cached and the
-recipe dropped, so intermediates of long expressions can be freed. Laziness defers and skips work but
-does not fuse operations; where this matters the library uses direct formulas, e.g.\
-$\Tr(\rho A)=\sum_{ij}\rho_{ij}A_{ji}$ in $O(k^2)$ instead of forming $\rho A$.
+thin wrappers around such tensors, and \texttt{SectorJump} is a sparse jump operator for the Lindblad solvers
+(below); Table~\ref{tab:modules} lists the modules.
 
 \begin{table}[h]
 \centering\small
@@ -402,6 +399,87 @@ Hermitian matrices; spin factors\\
 \end{tabular}
 \caption{Modules of \texttt{torch\_vn\_algebra}.}
 \label{tab:modules}
+\end{table}
+
+\subsection*{Lazy evaluation and caches}\label{sec:lazy}
+
+\paragraph{Operators are recipes until used.} An \texttt{Operator} holds either its matrix or a \emph{generator}, a
+closure that computes it. Sums, products, adjoints, scalar multiples, functions $f(A)$, channel images
+$\Phi(\rho)$ and maps between sectors return new operators that hold only a generator; nothing is computed. The
+matrix is formed on the first access to \texttt{.matrix}: the generator runs, its result is stored, and the generator is
+dropped, because it holds references to the parent operators and would otherwise keep their matrices alive. A long
+expression therefore costs exactly the products that are needed for the requested result, intermediates can be freed as
+soon as the result exists, and branches that are never read are never computed. The batch size of a lazy operator is
+propagated without computing it, so shapes and memory estimates are available before any work is done. Laziness defers
+and skips work; it does not fuse kernels. Where fusion matters, the library uses direct formulas instead of composing
+operations: $\Tr(\rho A)=\sum_{ij}\rho_{ij}A_{ji}$ in $O(k^2)$ per block instead of forming $\rho A$, the sector
+probabilities of a channel image as one contraction $\sum K_{mi}\rho_{ij}\overline{K_{mj}}$ without forming the image.
+
+\paragraph{Properties travel with the recipe.} Every operator carries flags (self-adjoint, normal, positive, invertible,
+projection) that are known, unknown, or checked. Operations set the flags that hold mathematically: the sum of
+self-adjoint operators is self-adjoint, of positive ones positive; a product of invertible operators is invertible; the
+adjoint keeps all flags; an operator built from its spectrum is self-adjoint (positive, if the spectrum is). Flags select
+the kernel: a self-adjoint operator uses the Hermitian eigensolver for its norm, trace norm, inverse and $|A|$, never an
+SVD, and \texttt{lambda\_max} of an operator built from its spectrum is read from the spectrum without any
+decomposition. A flag that is unknown is computed once, on demand, and stored. Flags passed by the user are trusted on
+eager operators and validated when a lazy operator is materialised, with all checks reduced to one host
+synchronisation; the tolerances are kept as device tensors.
+
+\paragraph{Caches.} Scalars that are expensive or needed repeatedly are cached on the operator: the extreme eigenvalues
+(both from one call to the eigenvalue solver, without eigenvectors), the trace, the inverse and $|A|$. The
+eigendecomposition itself is kept only on request (\texttt{cache\_spectrum()} per operator, or the context
+\texttt{caching()} for all): afterwards every function of the operator, for instance $e^{-itH}$ for many $t$, costs two
+matrix products. The cache is keyed by the identity and the version counter of the stored tensor, so an in-place change
+invalidates it. Without caching, a decomposition computed for a positivity check is kept for exactly one further use,
+the functional calculus that typically follows. The algebra caches its own constants on the device (block sizes, masks,
+identities, trace weights, index tensors of the sector groups), so no Python list is copied to the GPU inside a loop.
+
+\subsection*{Where the speed comes from}\label{sec:speed}
+
+\begin{enumerate}\itemsep0pt
+\item \emph{Batching.} Every operation acts on the whole batch $(B,C,k_{\max},k_{\max})$ in one kernel call; a
+Monte Carlo study of $10^5$ samples is one tensor program, not $10^5$ calls.
+\item \emph{One call per block size.} Decompositions are applied to the stacked active blocks of all sectors of equal
+size, one batched call per distinct size (\texttt{\_size\_groups}); contiguous sectors are selected as views, and when no
+sector is padded the result needs no scatter.
+\item \emph{One solver for everything.} Spectra, $f(A)$, $|A|$, singular values, polar decompositions and normal
+operators all go through the batched Hermitian eigensolver (Section~\ref{sec:design}, functional calculus), which is
+fast and not limited in size on GPUs, unlike batched SVD.
+\item \emph{Eigenvalues without eigenvectors} where only the spectrum is needed (extreme eigenvalues, contrasts,
+entropies of spectra).
+\item \emph{Direct formulas} instead of products, as above.
+\item \emph{No hidden synchronisation.} Inner loops do not call \texttt{.item()} or branch on device values;
+validations, ETA probes and convergence checks synchronise once per call, which keeps GPU queues full.
+\item \emph{Sparse where the structure is sparse.} Sector Hamiltonians of spin chains are CSR matrices for the batched
+Lanczos and Krylov solvers (Section~\ref{sec:chains}). Jumps that map basis vectors to multiples of basis vectors
+(spin flips $S^\pm_i$, $S^z_i$, particle loss) are stored as \texttt{SectorJump}: a target sector per sector, a target
+position and a coefficient per basis vector. The Lindblad solvers then apply $L\rho L^*$ as a weighted permutation of the
+entries of $\rho$, the dual $L^*ZL$ as a gather, and $L^*L$ as a diagonal, in $O(\sum_ck_c^2)$ operations, against
+$O(C^2k_{\max}^3)$ and $C^2k_{\max}^2$ stored entries for the same jump as a dense map between sectors. A batch of
+coefficients gives one jump per sample, so a sweep over noise rates is one batched evolution.
+\item \emph{Constant generators are prepared once.} The Lindblad time steppers build $e^{-ihH_{\mathrm{eff}}/2}$, the
+normalisation of the completely positive splitting, or $e^{h\mathcal L}$ once per step size and reuse them for all steps.
+\end{enumerate}
+Table~\ref{tab:arch} measures several of these decisions by computing the same result with and without them.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{llrrr}
+\toprule
+mechanism & computation & library [ms] & without [ms] & speed-up\\
+\midrule
+\ArchRows
+\bottomrule
+\end{tabular}
+\caption[]{The same result with and without one design decision (best of several runs, double precision, CPU with
+\IfFileExists{generated/architecture.tex}{\ArchThreads}{several} threads; \texttt{scripts/architecture\_bench.py}).
+``Without'': eigenvalues by \texttt{eigvalsh} instead of the known spectrum; \texttt{eigh} instead of
+\texttt{eigvalsh}; one decomposition per time instead of the spectral cache; a Python loop over sectors; forming
+$\rho A$; dense jumps between sectors. For the last row the eight jumps $S^-_i$ take
+\IfFileExists{generated/architecture.tex}{\ArchJumpDense}{--}\,MiB as dense maps and
+\IfFileExists{generated/architecture.tex}{\ArchJumpSparse}{--}\,MiB as \texttt{SectorJump}s, and the two evolutions agree
+to \IfFileExists{generated/architecture.tex}{$\ArchJumpDiff$}{round-off}.}
+\label{tab:arch}
 \end{table}
 
 \paragraph{Random unitaries.} Haar unitaries on $U(n)$ and $O(n)$ are obtained from the QR decomposition
@@ -725,305 +803,36 @@ supremum (symmetric log scale).}
 \label{fig:search}
 \end{figure}
 
-\paragraph{Constrained optimisation.} The natural objects are the envelopes
+\paragraph{Constrained optimisation.} The natural objects are envelopes such as
 \[
   \overline z(\delta)=\sup\{z:\Delta(X)=\delta\},\qquad \underline z(\delta)=\inf\{z:\Delta(X)=\delta\},
 \]
-(and the same with $\Delta(Y)$, or with both contrasts prescribed), the supremum being taken over all
-remaining variables. The module \texttt{optimize} parametrises the constraint set exactly: the spectrum
+the supremum being taken over all remaining variables. The module \texttt{optimize} parametrises the constraint set exactly: the spectrum
 is $\lambda_{\max}=1$, $\lambda_{\min}=(1-\delta)/(1+\delta)$ and the other eigenvalues in between, as
 $\lambda_{\min}+(1-\lambda_{\min})(1+\sin\theta)/2$ (unlike a sigmoid, this reaches both ends at finite $\theta$; extremal
 spectra often have all eigenvalues at the ends); the two eigenvalue positions that carry $\lambda_{\max}$ and $\lambda_{\min}$ are drawn at
 random per start, in the same sector or in different ones, so that the starts together cover a dense subset of
 the constraint set, the eigenvectors are $U=U_0e^{G-G^*}$ with a Haar-random $U_0$ per start and a chart
-that is re-centred after every round. For Exp.~3 the signs of the eigenvalues of $X$ are discrete
-variables: the number of negative eigenvalues is drawn per sector (for half of the starts as one fraction common to
+that is re-centred after every round. Discrete variables, such as the signs of the eigenvalues of a self-adjoint $X$
+(Exp.~3), are handled between the gradient rounds: the number of negative eigenvalues is drawn per sector (for half of the starts as one fraction common to
 all sectors), and between the gradient rounds single signs are flipped where this improves $z$. Every iterate is an
 admissible point, so the best value seen per start is kept. Every grid point and every start is one element of the batch, so each envelope (supremum
-or infimum along one contrast) is computed in one batched optimisation. All envelopes are computed in real algebras
-(real symmetric $X,Y$ and orthogonal $U$), the setting of the Monte Carlo study of~\cite{v1}.
+or infimum along one contrast) is computed in one batched optimisation.
 
-Figures~\ref{fig:bounds} and~\ref{fig:bounds2d} and Table~\ref{tab:bounds} show the result. The search is local,
-so the computed envelopes are checked in three independent ways. (i)~Where an
-envelope is known in closed form (below), it is compared with the formula. (ii)~Since $z$ is additive over
-orthogonal blocks (in Exp.~1 the trace $|\Tr(XUY)|$ is only subadditive, but replacing $U$ by $-U$ on a block aligns
-the phases of the block traces, so the bound below holds) and the contrast of a direct sum is the largest contrast of
-its summands, a direct sum of
-$kC/2$ copies of a solution for $k=2$, $C=1$ is an admissible configuration: with $s(\delta)$ the upper envelope
-for $k=2$, $C=1$,
-\[
-  \overline z_{k,C}(\delta)\ \ge\ s(\delta)+\bigl(\tfrac{kC}2-1\bigr)\max_{\delta'\le\delta}s(\delta')\qquad(k\ \text{even}),
-\]
-and the same with $\min$ for the lower envelopes; the computed envelopes must not lie below this value (above, for
-the infima). (iii)~Each Monte Carlo sample of~\cite{v1} and each of
-\IfFileExists{generated/bounds.tex}{\BoundsStChecked}{several thousand} \emph{structured samples} is checked against
-both envelopes, along $\Delta(X)$ and along $\Delta(Y)$; samples that fall outside the linear interpolation between
-grid points are re-optimised at their exact contrast. The structured samples are computed with plain NumPy: all
-spectra take only the two values $1$ and $\lambda_{\min}$, and the eigenbases and $U$ are random signed permutations
-composed with direct sums of $2\times2$ rotations. Unlike Haar samples they come close to the extremal
-configurations in every dimension, so they test the optimiser where Monte Carlo cannot.
-\IfFileExists{generated/bounds.tex}{Of the \BoundsMcChecked\ Monte Carlo samples with both contrasts in the grid
-(\BoundsMcDropped\ have a contrast above $0.999$), \BoundsMcOutside\ remain outside after re-optimisation, and
-\BoundsStOutside\ of the structured samples; the envelopes fall short of the direct sums~(ii) by at most
-\BoundsShortfall\% of the largest value of the curve.}{} For a single sector of size $k=2$ the Haar samples come close
-to the envelopes; with two sectors they already miss a substantial part of the range (Table~\ref{tab:bounds}), and
-for larger $k$ or $C$ they stay in a narrow band far from both envelopes (Figure~\ref{fig:bounds}, bottom row; Table~\ref{tab:search}):
-the extremes are attained at degenerate spectra with aligned eigenbases, a set that Haar sampling essentially never
-reaches.
-
-Several envelopes can be checked analytically. In Exp.~3, $z\ge0$ always: the inequality $\Tr|YXY|\le\Tr(Y|X|Y)$ is
-standard (it follows from $-Y|X|Y\le YXY\le Y|X|Y$, since $-K\le A\le K$ implies $\|A\|_1\le\Tr K$), and what we
-need in addition is the case of equality:
-
-\begin{proposition}
-For $X=X^*$ and $Y\ge0$, equality holds in $\Tr|YXY|\le\Tr(Y|X|Y)$ if and only if $YX_+Y^2X_-Y=0$, in particular
-if $Y$ commutes with $X$.
-\end{proposition}
-\begin{proof}
-With $X=X_+-X_-$, $|X|=X_++X_-$, the triangle inequality for the trace norm gives the inequality,
-$\|YX_+Y-YX_-Y\|_1\le\Tr(YX_+Y)+\Tr(YX_-Y)$; for positive $A,B$, $\|A-B\|_1=\Tr A+\Tr B$ if and only if
-$AB=0$. Indeed, with $P$ the projection onto the positive part of $A-B$,
-$\|A-B\|_1=\Tr\bigl((2P-1)(A-B)\bigr)=\Tr A+\Tr B-2\Tr\bigl((1-P)A\bigr)-2\Tr(PB)$, and both traces subtracted are
-non-negative; equality forces $(1-P)A=0=PB$, so $A=AP$, $B=(1-P)B$ and $AB=AP(1-P)B=0$. Conversely, if $AB=0$ the
-supports of $A$ and $B$ are orthogonal and $|A-B|=A+B$. Apply this to $A=YX_+Y$, $B=YX_-Y$. If $XY=YX$, then $YX_+Y^2X_-Y=Y^4X_+X_-=0$.
-\end{proof}
-\noindent The computed lower envelope of Exp.~3 is zero to within \IfFileExists{generated/bounds.tex}{$\BoundsExpThreeInf$}{round-off}. In Exp.~1, the lower envelope
-for prescribed $\Delta(X)=\delta$ equals $-(kC-2\delta/(1+\delta))$ when all sectors have size $k\ge2$:
-$\Tr(XY)\le\Tr X\le kC-1+\lambda_{\min}(X)$ with equality for $Y=1$, while $|\Tr(UYX)|$ can be made zero
-by a cyclic permutation of the eigenbasis of $X_c$ in every sector. The optimiser reproduces this curve to a relative deviation of
-\IfFileExists{generated/bounds.tex}{\BoundsExactDev}{(not generated)} (along either contrast: in a real algebra
-$\Tr(XUY)=\Tr(YU^TX)$, so $X$ and $Y$ exchange roles). In Exp.~2, $|X|=X_0$ and
-$|Y|=Y_0$ and the unitary $U$ drops out, so $z=\|X_0VY_0\|_1-\Tr(X_0Y_0)$. Since $V$ and the eigenbases act
-sector by sector, von Neumann's trace inequality $\|AB\|_1\le\sum_is_i(A)s_i(B)$, its lower counterpart
-$\|AB\|_1\ge\sum_is_i(A)s_{k+1-i}(B)$ and rearrangement give, for given spectra,
-\[
-  \sup z=-\inf z=\sum_c\sum_i x_{c,i}^\downarrow\bigl(y_{c,i}^\downarrow-y_{c,i}^\uparrow\bigr),
-\]
-with $x_{c,i}^\downarrow$ the eigenvalues of $X_c$ in decreasing order and $y_{c,i}^\downarrow$, $y_{c,i}^\uparrow$ those of
-$Y_c$ in decreasing and increasing order. Pairing $i$ with $k+1-i$,
-$\sum_ix_{c,i}^\downarrow(y_{c,i}^\downarrow-y_{c,i}^\uparrow)=\sum_{i\le k/2}(x_{c,i}^\downarrow-x_{c,k+1-i}^\downarrow)
-(y_{c,i}^\downarrow-y_{c,k+1-i}^\downarrow)\le\lfloor k/2\rfloor(1-\lambda_{\min}(X))(1-\lambda_{\min}(Y))$, with equality
-for two-level spectra. Hence, for sectors of sizes $k_c$, $\sup z=-\inf z=\sum_c\lfloor k_c/2\rfloor(1-\lambda_{\min}(X))(1-\lambda_{\min}(Y))$, and for
-$C$ sectors of size $k$, $\Delta(|X|)=\delta$ prescribed and $\Delta(|Y|)\le0.999$
-free,
-\[
-  \sup z=-\inf z=C\Bigl\lfloor\frac k2\Bigr\rfloor\,\frac{2\delta}{1+\delta}\Bigl(1-\frac{0.001}{1.999}\Bigr),
-\]
-which tends to $C\lfloor k/2\rfloor\frac{2\delta}{1+\delta}$ as $\Delta(|Y|)\to1$. The optimiser reproduces the upper and
-lower envelopes of Exp.~2 for all eight configurations, along either contrast, to a relative deviation of
-\IfFileExists{generated/bounds.tex}{\BoundsExactDevTwo}{(not generated)}.
-For sectors of size $k=2$ the upper envelopes of Exp.~1 and Exp.~3 can be computed exactly. In $M_2(\C)$ the
-eigenbases $(e_i)$ of $X$ and $(f_j)$ of $Y$ enter only through $\gamma=|\langle e_1,f_1\rangle|^2\in[0,1]$, since
-$(|\langle e_i,f_j\rangle|^2)$ is doubly stochastic; phases play no role, and every $\gamma$ is reached by a real rotation, so
-real and complex algebras have the same envelopes.
-
-\begin{proposition}\label{prop:k2}
-(a) Let $X,Y\ge0$ in $M_2(\C)$ have eigenvalues $x_1\ge x_2\ge0$ and $y_1\ge y_2\ge0$, $x_1,y_1>0$. For every unitary $U$,
-\[
-  |\Tr(XUY)|-\Tr(XY)\ \le\ \frac{(x_1-x_2)^2(y_1-y_2)^2}{4(x_1+x_2)(y_1+y_2)} .
-\]
-(b) Let $X=X^*$ in $M_2(\C)$, let $|X|$ have eigenvalues $x_1\ge x_2\ge0$, $x_1>0$, and let $Y$ be as in (a). Then
-\[
-  \Tr(Y|X|Y)-\Tr|YXY|\ \le\ \frac{2x_1x_2}{x_1+x_2}\,(y_1-y_2)^2 .
-\]
-Let $S=x_1y_2+x_2y_1$, $q=(x_1+x_2)(y_1+y_2)$, and let $e_1$ be an eigenvector of $X$ for its eigenvalue of modulus $x_1$,
-$f_1$ one of $Y$ for $y_1$. The bound (a) is attained iff $|\Tr(XUY)|=\|YX\|_1$ and, if $x_1>x_2$ and $y_1>y_2$,
-$\gamma=\frac14+\frac S{2q}$ (otherwise the bound is $0$). If $x_2>0$ and $y_1>y_2$, the bound (b) is attained iff $X$ is
-indefinite and $\gamma=\frac Sq$ (otherwise it is $0$, and so is $z$). Both bounds are attained by real $X$, $Y$, $U$.\\
-(c) Let $\M=\bigoplus_{c=1}^CM_2(\C)$, $X$ and $Y$ (in Exp.~3: $|X|$ and $Y$) normalised to $\lambda_{\max}=1$ with contrasts
-$\delta<1$ and $\delta'\le1$, and $\ell=\frac{1-\delta}{1+\delta}$, $\ell'=\frac{1-\delta'}{1+\delta'}$. Then
-\begin{align*}
-  \text{Exp.~1:}\quad & \sup z=\frac{C\,\delta^2\delta'^2}{(1+\delta)(1+\delta')}, && \inf z=-(2C-1+\ell\ell'),\\
-  \text{Exp.~3:}\quad & \sup z=(C-\delta)\Bigl(\frac{2\delta'}{1+\delta'}\Bigr)^2, && \inf z=0,
-\end{align*}
-and all four values are attained.
-\end{proposition}
-\begin{proof}
-Let $p=(x_1-x_2)(y_1-y_2)$, so that $q-2S=p$. (a) $|\Tr(XUY)|=|\Tr(YXU)|\le\|YX\|_1$, with equality for $U=W^*$,
-$YX=W|YX|$. Expanding in the eigenbases, $\Tr(XY)=\sum_{ij}x_iy_j|\langle e_i,f_j\rangle|^2=S+\gamma p$; the singular values of
-$YX$ satisfy $s_1^2+s_2^2=\Tr(X^2Y^2)$ and $s_1s_2=|\det YX|=x_1x_2y_1y_2$, so $\|YX\|_1^2=\Tr(X^2Y^2)+2x_1x_2y_1y_2=S^2+\gamma pq$.
-With $\sqrt r\le r/q+q/4$ (equality iff $\sqrt r=q/2$),
-$z\le\|YX\|_1-\Tr(XY)\le(S^2+\gamma pq)/q+q/4-S-\gamma p=(q/2-S)^2/q=p^2/(4q)$, with equality iff in addition
-$\gamma pq=q^2/4-S^2=\frac p2(\frac q2+S)$.
-(b) $z$ is invariant under $X\mapsto-X$ and vanishes for semidefinite $X$. Otherwise let $Xe_1=x_1e_1$, $Xe_2=-x_2e_2$,
-$u=\langle e_1,Y^2e_1\rangle=\gamma y_1^2+(1-\gamma)y_2^2$ and $s=y_1^2+y_2^2$. Then $\Tr(Y|X|Y)=\Tr(|X|Y^2)=A:=(x_1-x_2)u+x_2s$, and
-since $\det(YXY)=-x_1x_2y_1^2y_2^2\le0$, $\Tr|YXY|=\sqrt{\Tr(YXY)^2-4\det(YXY)}=\sqrt{L^2+K^2}$ with $L=\Tr(XY^2)=(x_1+x_2)u-x_2s$
-and $K=2\sqrt{x_1x_2}\,y_1y_2$. For the unit vector $(\alpha,\beta)=(x_1-x_2,\,2\sqrt{x_1x_2})/(x_1+x_2)$, the Cauchy--Schwarz
-inequality gives $\sqrt{L^2+K^2}\ge\alpha L+\beta K$, and $A-\alpha L-\beta K=\frac{2x_1x_2}{x_1+x_2}(y_1-y_2)^2$ for every $u$;
-equality holds iff $\beta L=\alpha K$, i.e.\ $u-y_2^2=(y_1-y_2)S/(x_1+x_2)$, i.e.\ $\gamma=S/q$. Real maximisers: diagonal $X$, $Y$ rotated by
-$\arccos\sqrt\gamma$, and $U$ from a real singular value decomposition of $YX$.
-(c) In Exp.~1, $|\Tr(XUY)|\le\sum_c\|Y_cX_c\|_1$, and by (a) block $c$ contributes at most
-$\frac{x_{c,1}y_{c,1}}4\,g(\frac{x_{c,2}}{x_{c,1}})\,g(\frac{y_{c,2}}{y_{c,1}})$ with $g(r)=\frac{(1-r)^2}{1+r}$ decreasing; as
-$x_{c,1},y_{c,1}\le1$, $x_{c,2}/x_{c,1}\ge\ell$, $y_{c,2}/y_{c,1}\ge\ell'$ and $g(\ell)=2\delta^2/(1+\delta)$, every block contributes at
-most $\delta^2\delta'^2/((1+\delta)(1+\delta'))$; equality for $X_c=\mathrm{diag}(1,\ell)$, $Y_c$ with spectrum $\{1,\ell'\}$ at the angle
-of (a), and $U_c$ the polar unitaries, which make all block traces positive. For the infimum, $U_c$ with
-$\Tr(X_cU_cY_c)=0$ (a cyclic shift in the singular bases) gives $z=-\Tr(XY)$, and $\Tr(XY)\le\sum_c(x_{c,1}y_{c,1}+x_{c,2}y_{c,2})\le
-2C-1+\ell\ell'$ (if $\ell$ and $\ell'$ lie in different blocks the bound is $2C-2+\ell+\ell'$, smaller by $(1-\ell)(1-\ell')$), with
-equality for $X=\mathrm{diag}(1,\ell)\oplus1$, $Y=\mathrm{diag}(1,\ell')\oplus1$. In Exp.~3, $z=\sum_cz_c$ and by (b)
-$z_c\le h_c(1-\ell')^2$ with $h_c=\frac{2x_{c,1}x_{c,2}}{x_{c,1}+x_{c,2}}\le x_{c,1}\le1$; in the block that holds the eigenvalue $\ell$
-of $|X|$, $h_c=2\ell/(1+\ell/x_{c,1})\le2\ell/(1+\ell)=1-\delta$. Equality for $X=\mathrm{diag}(1,-\ell)\oplus\mathrm{diag}(1,-1)^{\oplus(C-1)}$
-and $Y_c$ with spectrum $\{1,\ell'\}$ at the angle of (b); $\inf z=0$ is Proposition~1.
-\end{proof}
-
-\noindent Both suprema increase with $\delta'$. With the free contrast capped at $D$, the upper envelopes along
-$\Delta(X)=\delta$ are therefore $C\delta^2D^2/((1+\delta)(1+D))$ and $(C-\delta)\,(2D/(1+D))^2$; for $C=1$ and $D=0.999$ these
-are the closed forms that we first found numerically. As $D\to1$ they increase
-to $C\delta^2/(2(1+\delta))$ and $C-\delta$, the values at $\Delta(Y)=1$ (a singular $Y$), which no $Y$ with $\Delta(Y)<1$
-attains (for $\delta>0$ in Exp.~1). Along $\Delta(Y)=\delta'$ the upper envelopes are $C\delta'^2D^2/((1+\delta')(1+D))$ and,
-attained at $|X|=1$, $C\,(2\delta'/(1+\delta'))^2$ for every $D$. For $k=2$ the direct sums~(ii) are thus optimal for every
-$C$.
-
-\paragraph{Sectors of any size.} The upper envelopes of Exp.~1 and Exp.~3 are known for every sector size. Let
-$N=\sum_c\lfloor k_c/2\rfloor$ be the largest number of mutually orthogonal two-dimensional subspaces that fit into the
-sectors.
-
-\begin{theorem}\label{thm:allk}
-Let $\M=\bigoplus_{c=1}^CM_{k_c}(\C)$ or $\bigoplus_{c=1}^CM_{k_c}(\mathbb R)$ with $N\ge1$, and let $X$ and $Y$ (in Exp.~3:
-$|X|$ and $Y$) be normalised to $\lambda_{\max}=1$, with prescribed contrasts $\delta\in[0,1)$ and $\delta'\in[0,1]$. Then
-\[
-  \text{Exp.~1:}\ \ \sup z=\frac{N\,\delta^2\delta'^2}{(1+\delta)(1+\delta')},\qquad
-  \text{Exp.~3:}\ \ \sup z=\begin{cases}(N-\delta)\bigl(\frac{2\delta'}{1+\delta'}\bigr)^2&\text{if every }k_c\text{ is even},\\[2pt]
-  N\bigl(\frac{2\delta'}{1+\delta'}\bigr)^2&\text{if some }k_c\text{ is odd},\end{cases}
-\]
-and both suprema are attained by real direct sums of the $2\times2$ maximisers of Proposition~\ref{prop:k2} and
-$1\times1$ blocks.
-\end{theorem}
-
-\noindent For $C$ sectors of size $k$ and the other contrast free in $[0,D]$, the upper envelopes are therefore
-$C\lfloor k/2\rfloor\delta^2D^2/((1+\delta)(1+D))$ in Exp.~1, along either contrast; in Exp.~3 along $\Delta(|X|)=\delta$
-\[
-  \overline z(\delta)=\Bigl(\frac{Ck}2-\delta\Bigr)\Bigl(\frac{2D}{1+D}\Bigr)^2\quad(k\text{ even}),\qquad
-  \overline z(\delta)=C\Bigl\lfloor\frac k2\Bigr\rfloor\Bigl(\frac{2D}{1+D}\Bigr)^2\quad(k\text{ odd}),
-\]
-and along $\Delta(Y)=\delta'$, attained at $|X|=1$, $C\lfloor k/2\rfloor(2\delta'/(1+\delta'))^2$. For even $k$ these are
-the values of the direct sums~(ii): the direct sums are optimal for even $k$, in both functionals. For odd $k$ the
-direct sums with a one-dimensional summand are optimal in Exp.~1 but not in Exp.~3: there the eigenvalue
-$\lambda_{\min}$ of $|X|$ can be placed on a one-dimensional summand, where it costs nothing, and the envelope along
-$\Delta(|X|)$ does not depend on $\delta$ (for $k=3$, $C=1$: $(2D/(1+D))^2>(1-\delta)(2D/(1+D))^2$). The
-proof (Appendix~\ref{app:envelopes}) reduces both functionals to two-level spectra and, with the two-projection lemma~\cite{halmos1969}, to
-$2\times2$ blocks, which Proposition~\ref{prop:k2} handles, except in one case: in Exp.~3 the eigenvector of $|X|$ for
-$\lambda_{\min}$ may be spread over all two-dimensional blocks of its sector, so that $X$ is not block-diagonal. This case
-is settled by the following bound, which is sharp; its proof linearises the problem.
-
-\begin{proposition}\label{prop:mblocks}
-Let $X=X_+\oplus(-1)$ on $\C^m\oplus\C^m$, where $0<X_+\le1$ has eigenvalues $x_1,\dots,x_m$; let
-$c_\theta=\mathrm{diag}(\cos\theta_j)$, $s_\theta=\mathrm{diag}(\sin\theta_j)$, $Q$ the projection onto the range of
-$\binom{c_\theta}{s_\theta}:\C^m\to\C^{2m}$, $b\in[0,1)$ and $Y=b+(1-b)Q$. Then
-\[
-  \Tr(Y|X|Y)-\Tr|YXY|\ \le\ (1-b)^2\sum_{i=1}^m\frac{2x_i}{1+x_i},
-\]
-with equality for $X_+=\mathrm{diag}(x_1,\dots,x_m)$ and $\cos^2\theta_i=(1+bx_i)/((1+x_i)(1+b))$.
-\end{proposition}
-\begin{proof}
-Let $\gamma=1-b^2$, $K=1+X_+$, $A=c_\theta^2$ (so $s_\theta^2=1-A$). In the decomposition $\C^m\oplus\C^m$,
-$Y^2=b^2+\gamma Q$ has the blocks $b^2+\gamma A$, $\gamma c_\theta s_\theta$, $\gamma c_\theta s_\theta$, $b^2+\gamma s_\theta^2$, all diagonal.
-For $\lambda>0$ the lower right block of $\lambda-XY^2$ is the invertible diagonal $E=\lambda+1-\gamma A$, and as
-$(b^2+\gamma A)E-\gamma^2As_\theta^2=\lambda(b^2+\gamma A)+b^2$, the Schur complement formula gives
-\[
-  \det(\lambda-XY^2)=\det\bigl(\lambda E-X_+(\lambda(b^2+\gamma A)+b^2)\bigr)=\det\bigl((\lambda+1)(\lambda-b^2X_+)-\lambda\gamma KA\bigr)
-  =p(\lambda),
-\]
-$p(\lambda)=\det\bigl((\lambda+1)(\lambda-b^2X_+)-\lambda\gamma K^{1/2}AK^{1/2}\bigr)$. The Schur complement of the lower right
-block $\lambda$ gives $\det(\lambda-\mathcal L)=p(\lambda)$ as well, for the self-adjoint matrix
-\[
-  \mathcal L=\begin{pmatrix}\gamma K^{1/2}AK^{1/2}+b^2X_+-1 & bX_+^{1/2}\\ bX_+^{1/2} & 0\end{pmatrix},
-\]
-which is affine in $A$. Since $\det(\lambda-YXY)=\det(\lambda-XY^2)$, the polynomials agree and $YXY$ and $\mathcal L$ have
-the same eigenvalues; hence $\Tr|YXY|=\|\mathcal L\|_1\ge\Tr(T\mathcal L)$ for every self-adjoint $T$ with $\|T\|\le1$.
-Take
-\[
-  T=\begin{pmatrix}-\Delta & G\\ G & \Delta\end{pmatrix},\qquad \Delta=\frac{1-X_+}{1+X_+},\quad G=\frac{2X_+^{1/2}}{1+X_+},
-\]
-so that $T^2=1$ ($\Delta$ and $G$ commute and $\Delta^2+G^2=1$). With $\Tr(Y|X|Y)=\Tr(|X|Y^2)=b^2\Tr X_++\gamma\Tr(X_+A)+mb^2+\gamma\Tr(1-A)$
-and $K^{1/2}\Delta K^{1/2}=1-X_+$, the terms containing $A$ cancel in $\Tr(|X|Y^2)-\Tr(T\mathcal L)$, and
-\[
-  \Tr(Y|X|Y)-\Tr|YXY|\le\sum_{i=1}^m\Bigl(b^2x_i+1+\frac{1-x_i}{1+x_i}(b^2x_i-1)-\frac{4bx_i}{1+x_i}\Bigr)=(1-b)^2\sum_{i=1}^m\frac{2x_i}{1+x_i}.
-\]
-For diagonal $X_+$ both operators are direct sums of $2\times2$ blocks, on which $X=\mathrm{diag}(x_i,-1)$, and
-Proposition~\ref{prop:k2}(b) gives the value $(1-b)^2\,2x_i/(1+x_i)$ at the stated angle (there $\gamma=\sin^2\theta_i$).
-\end{proof}
-
-\noindent Since $\mathcal L$ is affine in $A=PQP$ ($P$ the projection onto the first summand), $z$ is a concave
-function of $A$, and $T$ is the sign of $\mathcal L$ at the maximiser. For fixed angles, however, the maximum over the
-direction of the eigenvector for $\lambda_{\min}(|X|)$ is in general not attained in a single block; only the joint
-maximum is. Before this proof we had certified the cases $k=4$ and $k=6$ ($C=1$) numerically, by a rigorous branch and
-bound over the angles of the reduced model (\texttt{scripts/certify\_envelopes.py}; gaps $10^{-7}$ and $10^{-5}$,
-including floating-point rounding); it agrees with Theorem~\ref{thm:allk} and serves as an independent check. All
-upper envelopes of the three functionals studied here, along either contrast, are now proved, and so are the lower
-envelopes with the other contrast free; we have not studied the lower envelope of Exp.~1 with both contrasts
-prescribed for $k\ge3$. The optimiser reproduces the upper envelopes of Theorem~\ref{thm:allk} for all eight
-configurations, along either contrast, to a relative deviation of \BoundsSupDevOne\ (Exp.~1) and \BoundsSupDevThree\
-(Exp.~3). For this, half of the starts begin at the structure of the maximisers
-(\texttt{init} and \texttt{spectrum\_init} of \texttt{optimize}): $X$ diagonal, $Y$ rotated in pairs of eigenvectors of
-$X$, two-level spectra (in Exp.~3 one positive and one negative eigenvalue of $X$ per pair), and $U$ rotating the same
-pairs. The last point matters in a real algebra: a chart $U_0e^{G-G^*}$ never leaves the connected component of
-$U_0$, and the maximiser of Exp.~1 has determinant $+1$ in every sector, which a Haar-random $U_0$ has with probability
-$2^{-C}$. With Haar-random starts only, the run of the first version of this section fell short of
-Theorem~\ref{thm:allk} by up to $35\%$ (Exp.~3) and $13\%$ (Exp.~1) for $k=2$, $C=32$; with the structured starts, a CPU
-run with 12 starts per grid point and 240 steps reaches it to a relative $10^{-3}$ (Exp.~3) and $10^{-5}$ (Exp.~1)
-for $k=2$, $C=32$ and for $k=16$, $C=1,2,16$ (the remaining gap in Exp.~3 comes from the kink of $z$ at the maximiser,
-which is smoothed only on the scale $\lambda_{\min}(Y)=0.001/1.999$; it decreases with the step size).
-
-\paragraph{Relation to Kantorovich-type inequalities.} Exp.~1 compares $|\Tr(XUY)|$, whose supremum over $U$ is
-$\|YX\|_1$, with $\Tr(XY)$ for positive $X,Y$ whose spectra are confined by their contrasts. It thus belongs to the
-family of Kantorovich-type inequalities (reverse Cauchy--Schwarz and condition-number inequalities), in which the ratio
-$\lambda_{\max}/\lambda_{\min}$ of an operator, here $(1+\delta)/(1-\delta)$ for the contrast $\delta$, bounds how
-far an inequality can be reversed~\cite{greub1959,furuta2005}. The sharp envelopes with prescribed contrasts of
-Proposition~\ref{prop:k2} and Theorem~\ref{thm:allk}, and their additive form over the sectors (the factor $N$), are
-to our knowledge new.
-
-\begin{table}[h]
-\centering\small
-\begin{tabular}{rrrrrcr}
-\toprule
-Exp. & $k$ & $C$ & $\inf z$ & $\sup z$ & Monte Carlo range of $z$ & outside\\
-\midrule
-\BoundsRows
-\bottomrule
-\end{tabular}
-\caption[]{Global extremes of $z$ over both envelopes and contrasts in $[0,0.999]$ found by constrained optimisation (real algebras,
-orthogonal $U$), the range of the Monte Carlo samples with both contrasts in that interval, and the number of
-samples outside the envelopes (along either contrast) after re-optimisation
-\IfFileExists{generated/bounds.tex}{(\BoundsStarts\ starts per grid point, \BoundsSteps\ steps; \BoundsMode\
-run on \BoundsDevice)}{}; a sample counts as outside if it exceeds the envelope by more than $10^{-6}+10^{-3}\max|z|$;
-``--'': no Monte Carlo data of~\cite{v1} for this configuration. Monte Carlo values of $z$ slightly below
-$0$ in Exp.~3 (where $z\ge0$ is proved) are single-precision round-off of the samples of~\cite{v1}.}
-\label{tab:bounds}
-\end{table}
-
-\begin{figure}[p]
-\centering
-\fig{bounds_exp1_k2_C1.pdf}{0.64\textwidth}\\
-\fig{bounds_exp2_k2_C1.pdf}{0.64\textwidth}\\
-\fig{bounds_exp3_k2_C1.pdf}{0.64\textwidth}
-\IfFileExists{figures/bounds_exp2_k16_C1.pdf}{\\\fig{bounds_exp2_k16_C1.pdf}{0.64\textwidth}}{}
-\caption{Envelopes from constrained optimisation versus sampling for the three trace functionals (rows 1--3: $k=2$,
-$C=1$; row 4: Exp.~2 for $k=16$, $C=1$).
-Horizontal axis: Michelson contrast of the first operator (left) or of the second operator (right); vertical axis:
-$z$ for operators normalised to $\lambda_{\max}=1$. Grey: the Monte Carlo samples of~\cite{v1} (Haar eigenbases,
-uniform spectra); orange: structured samples (two-level spectra, permutation and rotation bases; computed with NumPy,
-independently of the library); red and blue: the upper and lower envelopes found by constrained optimisation, the
-other contrast being free; dashed: envelopes known in closed form; dotted: direct sums of the $k=2$, $C=1$ solution
-(where they apply). No sample lies outside the envelopes beyond the counts in Table~\ref{tab:bounds}. In the
-smallest case the Haar samples fill the region between the envelopes; for $k=16$ (row 4) they stay in a narrow band
-around $z=0$, while the structured samples and the exact envelopes $\pm8\cdot\frac{2\delta}{1+\delta}(1-\frac{0.001}{1.999})$
-show how far the range really extends. In Exp.~1 the region $z>0$ (violation of $|\Tr(XUY)|\le\Tr(XY)$)
-extends to the value of $\sup z$ in Table~\ref{tab:bounds}; in Exp.~3 the lower envelope is the proven bound $z\ge0$.}
-\label{fig:bounds}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\fig{bounds2d_exp1_k2_C1.pdf}{0.8\textwidth}
-\caption{Exp.~1, $k=2$, $C=1$, both contrasts prescribed: $\sup z$ (left) and $\inf z$ (right) on a grid of
-$\Delta(Y)$ (horizontal) and $\Delta(X)$ (vertical). The violation $\sup z>0$ needs both operators to be far from
-scalar and grows with both contrasts.}
-\label{fig:bounds2d}
-\end{figure}
+Two implementation details turned out to matter. (a) In a real algebra a chart $U_0e^{G-G^*}$ never leaves the
+connected component of $U_0$, and an extremiser with determinant $+1$ in every sector is reached from a Haar-random
+$U_0$ only with probability $2^{-C}$; half of the starts therefore begin at a structured point (\texttt{init},
+\texttt{spectrum\_init}: diagonal $X$, $Y$ rotated in pairs of eigenvectors of $X$, two-level spectra). With Haar-random
+starts only, a first run for $C=32$ sectors of size $2$ fell short of the true envelopes by up to $35\%$; with the
+structured starts it reaches them to a relative $10^{-5}$--$10^{-3}$. (b) Where the objective has a kink at the
+maximiser (a trace norm at a degenerate point), the remaining gap decreases with the step size and is smoothed only on
+the scale of the smallest admissible eigenvalue. Applied to the three trace functionals of~\cite{v1,abed2024}, the
+optimiser located their envelopes for sectors of every size; the closed forms it suggested are proved, and compared with
+sampling, in the companion paper~\cite{nn_trace}.
 
 \subsection{Rediscovering the data-processing thresholds of the Rényi divergences}\label{sec:renyi}
 
-The closed forms above were first found numerically and proved afterwards. A further test of the method, on an
+The envelopes above were first found numerically and proved afterwards~\cite{nn_trace}. A further test of the method, on an
 inequality whose range of validity is known exactly, is to ask it where that range ends, without telling it. For states $\rho,\sigma$ on $\M$ (densities with
 respect to $\Tr_{\mathrm{blunt}}$) and $\alpha\in(0,1)\cup(1,\infty)$ the Petz~\cite{petz1986} and the
 sandwiched~\cite{mullerlennert2013,wilde2014} Rényi divergences are
@@ -1347,17 +1156,106 @@ direct evaluation.
 \noindent Section~\ref{sec:cs} uses the conditional expectations of this section to compute the Connes--St{\o}rmer
 relative entropy of two maximal abelian subalgebras of $M_n$.
 
-\section{Use cases}\label{sec:usecases}
+\section{Use case: noisy circuits with a conserved charge}\label{sec:noisy}
 
-Each of the following computations asks a question from the literature, is validated against independent
-computations, and states what it reproduces and what is new. The first turns the characterisations of the trace into
-quantitative statements: batched, certified optimisation over the density and the operators gives the size of the
-failure of each inequality as a function of the Michelson contrast, and the sector structure shows that only the
-contrast inside a block is detected. The second uses the inclusions of Section~\ref{sec:symmetries} to settle the
-Connes--St{\o}rmer entropy of two MASAs of $M_2$ in closed form and to find, for $n\ge3$, partitions of unity that beat
-the orthonormal bases. The third evolves a boundary time crystal with local dissipation in the permutation-invariant
-algebra, with maps between sectors, to obtain finite-$N$ lifetimes; the fourth computes symmetry-resolved entanglement
-in the XXZ chain directly from the sector blocks of the reduced state.
+Quantum algorithms that preserve a charge offer a cheap test for errors: if the ideal evolution keeps the charge, a
+measurement of the charge at the end detects every error that changed it, and discarding those runs
+(\emph{symmetry verification}~\cite{bonetmonroig2018,mcardle2019}) improves the accepted results. The XY mixers of the
+quantum alternating operator ansatz keep the Hamming weight~\cite{hadfield2019}. In the language of this library the
+register then carries the algebra $\M=\bigoplus_{N=0}^nM_{\binom nN}$, the measurement of the weight is a central projection
+$P_w$, and post-selection is the Lüders conditioning on it. Noise is a Lindblad generator whose jumps either stay in a
+sector or move between sectors; so the noisy density matrix never leaves $\M$, and the whole question is a computation in
+the algebra.
+
+\paragraph{Model.} A ring of $n$ qubits evolves under the XY mixer
+\[
+  H=\tfrac12\sum_{\langle ij\rangle}(S^+_iS^-_j+S^-_iS^+_j)=\tfrac14\sum_{\langle ij\rangle}(X_iX_j+Y_iY_j)
+\]
+for a time
+$T=\NXYT$ from $|1^w0^{n-w}\rangle$, $w=n/2$, with three kinds of local noise: amplitude damping $S^-_i$ (rate
+$\gamma_\downarrow$, from sector $N$ to $N-1$), thermal excitation $S^+_i$ ($\gamma_\uparrow$, to $N+1$) and dephasing
+$S^z_i$ ($\gamma_\varphi$, inside the sectors). With $\psi$ the noiseless state at time $T$ we compute the acceptance
+probability $p=\Tr(P_w\rho(T))$, the fidelity $F=\langle\psi|\rho(T)|\psi\rangle$ and the fidelity after post-selection
+$F_{\mathrm{post}}=F/p$.
+
+\begin{proposition}\label{prop:noisy}
+Let $I=\int_0^T\sum_i\bigl(\frac14-\langle S^z_i\rangle_{\psi(t)}^2\bigr)\,dt$ along the noiseless trajectory.
+\begin{enumerate}
+\item[(a)] If $\gamma_\uparrow=\gamma_\varphi=0$: $p=e^{-w\gamma_\downarrow T}$ and $F_{\mathrm{post}}=1$ for every
+$\gamma_\downarrow$, $n$ and $T$.
+\item[(b)] If $\gamma_\varphi=0$: $1-F_{\mathrm{post}}=O(\gamma_\downarrow\gamma_\uparrow T^2)$.
+\item[(c)] If $\gamma_\downarrow=\gamma_\uparrow=0$: $p=1$ and $1-F_{\mathrm{post}}=1-F=\gamma_\varphi I+O(\gamma_\varphi^2)$.
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+Since $\sum_iS^+_iS^-_i=N$ and $\sum_iS^-_iS^+_i=n-N$ are central, the no-jump part of the generator is
+$\rho\mapsto-i(H_{\mathrm{eff}}\rho-\rho H_{\mathrm{eff}}^*)$ with $H_{\mathrm{eff}}=H-\frac i2(\gamma_\downarrow N+\gamma_\uparrow(n-N))$,
+and on sector $w$ it is the Hamiltonian evolution damped by the factor $e^{-(\gamma_\downarrow w+\gamma_\uparrow(n-w))t}$. In the
+Dyson expansion in the jumps, the part of $\rho(T)$ in sector $w$ consists of this no-jump term, proportional to
+$|\psi\rangle\langle\psi|$, and of the terms with equally many up and down jumps. (a) Without up jumps the second kind is
+absent, so $P_w\rho(T)P_w=e^{-w\gamma_\downarrow T}|\psi\rangle\langle\psi|$. (b) The terms with $m\ge1$ up and $m$ down jumps
+have total weight $O((\gamma_\downarrow\gamma_\uparrow T^2)^m)$ against a no-jump weight of order one. (c) Dephasing keeps the
+sector, and the first-order Dyson term gives $1-F=\gamma_\varphi\int_0^T\sum_i(\langle(S^z_i)^2\rangle-\langle S^z_i\rangle^2)\,dt$
+with $(S^z_i)^2=\frac14$.
+\end{proof}
+
+\noindent Statement (a) is the reason why symmetry verification removes amplitude damping completely at zero
+temperature: the damping commutes with the post-selection. Statements (b) and (c) say what remains: thermal noise is
+suppressed from first to second order, dephasing is not detected at all.
+
+\paragraph{Computation.} All noise models and rates are one batch: $\NXYBatch$ settings (four noise models, seven rates
+between $10^{-3}$ and $10^{-1}$) per $n$, with the rates folded into the coefficients of the jumps
+(\texttt{SpinChain.\allowbreak sector\_jump(i,~kind).\allowbreak scaled(...)}), one call of
+\texttt{lindblad\_evolve} with the completely positive splitting (\texttt{method='kraus'}, $\NXYSubsteps$ steps), the
+central projection \texttt{algebra.central} and \texttt{condition\_on}. The jumps are \texttt{SectorJump}s (Section~\ref{sec:speed}); as dense maps between sectors they
+would need $3n$ tensors of $(n+1)^2\binom n{n/2}^2$ entries, $2.3$\,GB each for $n=12$. Table~\ref{tab:noisy} and
+Figure~\ref{fig:noisy} show the results for $n=4,\dots,10$.
+
+\begin{table}[h]
+\centering\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{rrrrrrrrrrrr}
+\toprule
+ & & & & & \multicolumn{2}{c}{(a) $T_1$, zero temp.} & (b) thermal & \multicolumn{2}{c}{(c) dephasing} &
+ \multicolumn{2}{c}{mixed, $\gamma=0.01$}\\
+$n$ & $\binom n{w}$ & $\sum_N\binom nN^2$ & $4^n$ & time [s] & err.\ $p$ & $|1-F_{\mathrm{post}}|$ & slope & $I$ &
+$\frac{1-F_{\mathrm{post}}}{\gamma_\varphi I}$ & $1-F$ & $1-F_{\mathrm{post}}$\\
+\midrule
+\NXYRows
+\bottomrule
+\end{tabular}
+\caption[]{Noisy XY mixer on a ring of $n$ qubits, $T=\NXYT$ (CPU, double precision). Dimensions: the weight sector, the
+algebra and a dense density matrix. (a) Relative deviation of $p$ from $e^{-w\gamma T}$ (the error of the second-order
+splitting) and $|1-F_{\mathrm{post}}|$, maxima over the rates. (b) Slope of $\log(1-F_{\mathrm{post}})$ against
+$\log\gamma$ for $\gamma_\uparrow=0.2\gamma_\downarrow=0.2\gamma$, at small $\gamma$. (c) The integral $I$ of
+Proposition~\ref{prop:noisy} and the ratio of the computed infidelity to its first-order value at $\gamma_\varphi=10^{-3}$.
+Mixed: $\gamma_\downarrow=\gamma_\varphi=\gamma$, $\gamma_\uparrow=0.1\gamma$, without and with post-selection.}
+\label{tab:noisy}
+\end{table}
+
+\begin{figure}[h]
+\centering\fig{noisy_xy.pdf}{\textwidth}
+\caption{Infidelity of the noisy XY mixer without (dashed) and with (solid) post-selection on the Hamming weight, one
+panel per $n$. Thermal $T_1$ noise is suppressed from first to second order (slope $2$), dephasing passes undetected and
+follows its first-order value $\gamma_\varphi I$ (dotted), and for $T_1$ at zero temperature (not shown) the post-selected
+state is exact. For realistic mixed noise post-selection removes the $T_1$ part, and dephasing remains.}
+\label{fig:noisy}
+\end{figure}
+
+\paragraph{Results.} The computation confirms Proposition~\ref{prop:noisy} in every case: at zero temperature the
+post-selected state agrees with the noiseless one to $\NXYTOnePost$ and the acceptance with $e^{-w\gamma T}$ to
+$\NXYAccErr$ (the error of the time steps); the thermal infidelity after post-selection has slope $2.00$; the dephasing
+infidelity agrees with its first-order value to $0.1\%$. The integral $I$ grows linearly with $n$ (each qubit that
+leaves its initial value contributes), so the undetected dephasing error grows with the register while the detected part
+does not reach the accepted runs. For the mixed model, at a rate of $0.01$ per unit of time, post-selection reduces the
+infidelity by a factor of five to six for every $n$ (Table~\ref{tab:noisy}), and what is left is dephasing. For
+algorithm design this quantifies the value of the symmetry: it protects against energy relaxation, not against
+dephasing, and the remaining error is predicted to first order by a single integral over the noiseless trajectory.
+
+\section{Applications in the companion papers}\label{sec:usecases}
+
+The library was built for, and used in, four further studies, which are reported with proofs, validation and figures
+in companion papers; here we only name the parts of the library they use.
 
 \input{usecases/trace_characterizations.tex}
 
@@ -1478,7 +1376,9 @@ table also gives the CPU time and the speedup CPU/GPU.}
 \begin{itemize}
 \item \emph{Layout.} Blocks are padded to $k_{\max}$. For very different sector sizes (binomial sectors of
 spin chains) one works in single sectors, and \texttt{SU2Chain} builds the block of a single total spin without
-padding; operators acting on all sectors at once would need a bucketed layout, which is not implemented yet.
+padding; operators acting on all sectors at once would need a bucketed layout, which is not implemented yet. Matrix
+products of padded operators also multiply the padding: for the ten-qubit register of Section~\ref{sec:noisy} the dense
+Hamiltonian part of a time step costs about four times $\sum_Nk_N^3$, and it, not the jumps, dominates the run time.
 \item \emph{Symmetries.} Abelian charges with an arbitrary fusion rule and lattice translations are
 supported, and for spin-$\frac12$ chains the SU(2) multiplets reduce the blocks further (\texttt{su2}; dense up to
 $L\approx16$, Section~\ref{sec:symmetries}). Not yet implemented: SU(2) combined with momentum sectors, chains of
@@ -1500,7 +1400,8 @@ $\alpha\ge0.2$, $\rho,\sigma\ge\varepsilon/d$ in Section~\ref{sec:renyi}).
 \item \emph{Scale.} Choi matrices, superoperators and $e^{t\mathcal L}$ work with $k_c^2\times k_c^2$
 matrices and are limited to blocks of a few tens; RK4 integration scales to larger blocks.
 \item \emph{Scope.} Finite dimensions and Type~I only; no tensor-network methods, and sparse methods only for
-sector Hamiltonians (Lanczos and Krylov).
+sector Hamiltonians (Lanczos and Krylov) and for jumps that map basis vectors to basis vectors (\texttt{SectorJump});
+other sparse jumps between sectors are stored densely.
 \end{itemize}
 
 \section{Availability and reproducibility}
@@ -1514,66 +1415,6 @@ minutes (correctness against the CPU, absence of per-sector work, timings). The 
 they were produced with; the JSON file next to each table also records the commit of the code.
 
 \appendix
-\section{Proof of Theorem~\ref{thm:allk}}\label{app:envelopes}
-
-Throughout, $a=\ell=(1-\delta)/(1+\delta)$ and $b=\ell'=(1-\delta')/(1+\delta')$ are the smallest eigenvalues of the operators
-with contrasts $\delta$ and $\delta'$; it suffices to prove the upper bounds in the complex algebra, since the
-maximisers are real. A \emph{vertex argument} is used twice: a convex function on a face of a cube $[s,t]^n$ attains its
-maximum at a vertex of the face, i.e.\ at a point with all coordinates in $\{s,t\}$.
-
-\noindent\emph{Fact} (two projections; Halmos~\cite{halmos1969}). For projections $P,Q$ on a finite-dimensional
-Hilbert space $H$, $H$ is the orthogonal sum of subspaces of dimension $1$ or $2$ invariant under $P$ and $Q$; on each
-two-dimensional one there is an orthonormal basis $f,f'$ with $P=ff^*$ and $Q=qq^*$,
-$q=\cos\theta\,f+e^{i\psi}\sin\theta\,f'$.
-
-\begin{lemma}\label{lem:exp3}
-Let $X=X^*$ be invertible, $P$ the projection onto the positive part of $X$, $S=2P-1$, and $Y\ge0$. In Exp.~3:
-(a) if $|X|\le|X'|$, $X'=S|X'|$ and $|X'|$ commutes with $P$, then $z(X,Y)\le z(X',Y)$; (b) for fixed $X$, $z$ is
-a convex function of $Y^2$.
-\end{lemma}
-\begin{proof}
-With $A=YX_+Y$ and $B=YX_-Y$, $z=\Tr A+\Tr B-\|A-B\|_1$. (a) $A=Y|X|^{1/2}P|X|^{1/2}Y$ is non-decreasing in $|X|$ among
-operators commuting with $P$, and so is $B$; by the triangle inequality $\|A+R-B\|_1\le\|A-B\|_1+\Tr R$ for $R\ge0$,
-so $z$ does not decrease when $A$ or $B$ increases. (b) As $\|H\|_1=\max_{-1\le T\le1}\Tr(TH)$ for self-adjoint $H$, with
-$T=1-2E$ we get $z=2\min_{0\le E\le1}\Tr\bigl(EA+(1-E)B\bigr)$. For invertible $Y$, $N=|X|^{1/2}Y$ is invertible and
-$E\mapsto F=NEN^*$ maps $\{0\le E\le1\}$ onto $\{0\le F\le G\}$, $G=NN^*=|X|^{1/2}Y^2|X|^{1/2}$, with $\Tr(EA)=\Tr(PF)$ and
-$\Tr((1-E)B)=\Tr((1-P)(G-F))$. So $z=2\min\{\Tr(PF+(1-P)(G-F)):0\le F\le G\}$ is the partial minimum of a linear
-function over a convex set of pairs $(F,G)$, hence convex in $G$, which is affine in $Y^2$; by continuity also at
-singular $Y$.
-\end{proof}
-
-\emph{Exp.~1.} By the trace-norm duality $|\Tr(XUY)|\le\|YX\|_1$, with equality for the polar unitary of $YX$, which
-lies in $\M$; so $\sup_Uz=F(X,Y):=\|YX\|_1-\Tr(XY)$. For a fixed eigenbasis of $X$, $F$ is a convex function of the
-eigenvalues (a norm of a linear map minus a linear function), and the admissible eigenvalues form the union of the
-faces $\{x_i=1,\ x_j=a\}$ of $[a,1]^n$; by the vertex argument $F(X,Y)\le F(X',Y)$ for some $X'=a+(1-a)P$ with a
-projection $P$ in $\M$, and likewise $Y'=b+(1-b)Q$. By the two-projection Fact, applied in every sector, $X'$, $Y'$ are
-direct sums over subspaces of dimension $1$ or $2$, and so are $\|Y'X'\|_1$ and $\Tr(X'Y')$. One-dimensional summands
-contribute $0$; on a two-dimensional one $X'=\mathrm{diag}(1,a)$ and $Y'$ has the eigenvalues $1,b$, so it contributes
-at most $\delta^2\delta'^2/((1+\delta)(1+\delta'))$ by Proposition~\ref{prop:k2}(a); a sector of size $k_c$ holds at most
-$\lfloor k_c/2\rfloor$ of them. Equality: $N$ blocks at the angle of Proposition~\ref{prop:k2}(a), $X=Y=1$ on the
-remaining one-dimensional blocks, and the polar unitary.
-
-\emph{Exp.~3.} Let $\delta<1$, so that $X$ is invertible; $z(-X,Y)=z(X,Y)$. Since $|X|$ commutes with $P$, it has a
-unit eigenvector $e$ for its eigenvalue $a$ in one sector and in $\mathrm{ran}\,P$ or in $\ker P$; replacing $X$ by
-$-X$ if necessary, $e\in\mathrm{ran}\,P$. Then $|X|\le|X'|:=1-(1-a)ee^*$, and $X'=S|X'|=S-(1-a)ee^*$ has contrast $\delta$;
-by Lemma~\ref{lem:exp3}(a), $z(X,Y)\le z(X',Y)$. By Lemma~\ref{lem:exp3}(b) and the vertex argument for the eigenvalues
-of $Y^2$ in $[b^2,1]$, $z(X',Y)\le z(X',Y')$ with $Y'=b+(1-b)Q$, $Q\ne0,1$ a projection in $\M$. Apply
-the two-projection Fact to $P$ and $Q$ in every sector. In a sector without $e$, $X'=S$ is a direct sum over the
-subspaces, a one-dimensional summand contributes $0$, and a two-dimensional one contributes at most $(1-b)^2$ by
-Proposition~\ref{prop:k2}(b) ($|X|=1$ there): together at most $\lfloor k_c/2\rfloor(1-b)^2$. In the sector of $e$,
-Lemma~\ref{lem:exp3}(a) with $|X'|\le1$ gives the same bound for $z$ restricted to it, and, if its size $k_c$ is odd or
-it contains fewer than $k_c/2$ two-dimensional subspaces, at most $\lfloor k_c/2\rfloor(1-b)^2$, resp.\
-$(k_c/2-1)(1-b)^2$. Otherwise its $m=k_c/2$ two-dimensional subspaces fill it, with bases $f_j,f_j'$, $f_j\in\mathrm{ran}\,P$;
-the unitary that multiplies $f_j'$ by $e^{-i\psi_j}$ commutes with $X'$ (which is $-1$ on $\ker P$) and removes the
-phases, and in the basis $(f_1,\dots,f_m,f_1',\dots,f_m')$ we are in the setting of Proposition~\ref{prop:mblocks} with
-$X_+=1-(1-a)ee^*$, whose eigenvalues are $a,1,\dots,1$: the sector contributes at most
-$(1-b)^2\bigl(\frac{2a}{1+a}+m-1\bigr)=(k_c/2-\delta)(1-b)^2$. Summing over the sectors, $z\le(N-\delta)(1-b)^2$ if every $k_c$ is
-even and $z\le N(1-b)^2$ otherwise. Equality: if every $k_c$ is even, $X=\mathrm{diag}(a,-1)\oplus\mathrm{diag}(1,-1)^{\oplus(N-1)}$
-and $Y$ with eigenvalues $1,b$ in every block at the angle of Proposition~\ref{prop:k2}(b); if some $k_c$ is odd,
-$X=\mathrm{diag}(1,-1)$ on $N$ blocks, the eigenvalue $a$ on a one-dimensional block of an odd sector, $1$ on the other
-one-dimensional blocks, and $Y$ as before ($Y=1$ on the one-dimensional blocks). \qed
-
-
 {\sloppy
 \begin{thebibliography}{99}
 \bibitem{nn_trace} S.~A.~Abed, I.~A.~Nikolaeva, A.~A.~Novikov, ``Trace-characterising inequalities fail with the Michelson contrast of
@@ -1644,6 +1485,10 @@ one-dimensional blocks, and $Y$ as before ($Y=1$ on the one-dimensional blocks).
   Phys.\ Rev.\ Lett.\ 84 (2000), 2525--2528.
 \bibitem{beny2007} C.~B\'eny, A.~Kempf, D.~W.~Kribs, ``Generalization of quantum error correction via the Heisenberg
   picture'', Phys.\ Rev.\ Lett.\ 98 (2007), 100502.
+\bibitem{bonetmonroig2018} X.~Bonet-Monroig, R.~Sagastizabal, M.~Singh, T.~E.~O'Brien, ``Low-cost error mitigation
+by symmetry verification'', Phys.\ Rev.\ A \textbf{98} (2018), 062339.
+\bibitem{mcardle2019} S.~McArdle, X.~Yuan, S.~Benjamin, ``Error-mitigated digital quantum simulation'', Phys.\ Rev.\
+Lett.\ \textbf{122} (2019), 180501.
 \bibitem{hadfield2019} S.~Hadfield, Z.~Wang, B.~O'Gorman, E.~G.~Rieffel, D.~Venturelli, R.~Biswas, ``From the quantum
   approximate optimization algorithm to a quantum alternating operator ansatz'', Algorithms 12 (2019), 34.
 \bibitem{dyson1962} F.~J.~Dyson, ``The threefold way. Algebraic structure of symmetry groups and ensembles in quantum

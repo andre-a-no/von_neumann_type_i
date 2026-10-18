@@ -67,8 +67,9 @@ projections violate them many times more often. The search also exhibits the exc
 no violation occurs (monotonicity, subadditivity, the spectral geometric mean), a peak at the contrast of the density
 (the determinant inequality), invariance under shifts (Peierls--Bogoliubov), and two inequalities that in dimension
 three are violated more strongly by operators that are not two-level. Finally, we determine the sharp bound of the
-unnormalised violation $|\Tr(XZ)|-\Tr(X|Z|)$ with both contrasts prescribed, which answers a question raised in our earlier
-work on the Michelson contrast of operators. Since the operators enter the inequalities through composites, we also describe how
+unnormalised violation $|\Tr(XZ)|-\Tr(X|Z|)$ with both contrasts prescribed, and those of the two other trace
+functionals $\Tr|XY|-\Tr(|X||Y|)$ and $\Tr(Y|X|Y)-\Tr|YXY|$, which answers a question raised in our earlier work on the
+Michelson contrast of operators. Since the operators enter the inequalities through composites, we also describe how
 the contrast is transformed: under congruences, products and geometric means the rapidities $\operatorname{artanh}\Delta$
 add, under Jordan products the angles $\arcsin\Delta$ add (and $AB+BA\ge0$ for all relative positions if and only if
 $\Delta(A)^2+\Delta(B)^2\le1$, Gustafson's criterion), and the commutator characterisation $\varphi(AB)=\varphi(BA)$ fails
@@ -223,7 +224,8 @@ appears as a use case in the description of the software used for the computatio
 
 \paragraph{Organisation.} Section~\ref{sec:setting} fixes the notation, lists the inequalities, introduces the
 contrast of the operators and collects the tools, among them the vertex principle. Section~\ref{sec:gardner2} treats
-Gardner's inequality with both contrasts (Theorem~\ref{thm:gardnerD} and Theorem~C); Sections~\ref{sec:kant},
+Gardner's inequality with both contrasts (Theorem~\ref{thm:gardnerD} and Theorem~C) and the two other functionals
+of~\cite{abed2024} (Section~\ref{sec:exp23}); Sections~\ref{sec:kant},
 \ref{sec:linear}, \ref{sec:proj} and~\ref{sec:lower} prove Theorem~A, and Section~\ref{sec:sectors} Theorem~B.
 Section~\ref{sec:composite} describes the contrast of sums, congruences, means, Jordan products and commutators.
 Section~\ref{sec:numerics} reports the numerical results on both theses, and Section~\ref{sec:open} concludes.
@@ -565,6 +567,170 @@ far from scalar. (iv) Figures~\ref{fig:gardner1d} and~\ref{fig:gardner2d} compar
 numerical optimisation. Sampling, the method of~\cite{abed2024}, stays far below the bound as soon as the blocks are
 larger than $2\times2$, while the optimisation over both contrasts reproduces it.
 \end{remark}
+
+\subsection{The other two functionals of~\cite{abed2024}}\label{sec:exp23}
+
+Besides Gardner's inequality, \cite[Sect.~5]{abed2024} sampled two further unnormalised trace functionals,
+\[
+  z_2=\Tr|XY|-\Tr(|X|\,|Y|),\qquad z_3=\Tr(Y|X|Y)-\Tr|YXY|\quad(X=X^*,\ Y\ge0),
+\]
+with $|X|$ and $|Y|$ normalised to $\lambda_{\max}=1$ and their contrasts as parameters. Both are determined here in
+$\M=\bigoplus_cM_{k_c}$, with $N=\sum_c\lfloor k_c/2\rfloor$ and $\ell=\frac{1-\delta}{1+\delta}$, $\ell'=\frac{1-\delta'}{1+\delta'}$
+as before; note $1-\ell=\frac{2\delta}{1+\delta}$.
+
+\begin{proposition}\label{prop:exp2}
+Let $X=UX_0$, $Y=VY_0$ with $X_0,Y_0\ge0$ and unitaries $U,V\in\M$, so that $|X|=X_0$, $|Y|=Y_0$ and
+$z_2=\|X_0VY_0\|_1-\Tr(X_0Y_0)$. For given spectra,
+\[
+  \sup z_2=-\inf z_2=\sum_c\sum_ix_{c,i}^\downarrow\bigl(y_{c,i}^\downarrow-y_{c,i}^\uparrow\bigr),
+\]
+with $x_{c,i}^\downarrow$ the eigenvalues of $X_{0,c}$ in decreasing order and $y_{c,i}^\downarrow$, $y_{c,i}^\uparrow$ those of
+$Y_{0,c}$ in decreasing and increasing order. With $\Delta(|X|)=\delta$ and $\Delta(|Y|)=\delta'$ prescribed,
+$\sup z_2=-\inf z_2=N(1-\ell)(1-\ell')=\frac{4N\delta\delta'}{(1+\delta)(1+\delta')}$, attained by two-level spectra.
+\end{proposition}
+\begin{proof}
+$V$ and the eigenbases act sector by sector, and von Neumann's trace inequality $\|AB\|_1\le\sum_is_i(A)s_i(B)$, its lower
+counterpart $\|AB\|_1\ge\sum_is_i(A)s_{k+1-i}(B)$ and the rearrangement inequality for $\Tr(X_0Y_0)$ give the first
+formula; both extremes are attained by aligning or reversing the eigenbases. Pairing $i$ with $k+1-i$,
+$\sum_ix_{c,i}^\downarrow(y_{c,i}^\downarrow-y_{c,i}^\uparrow)=\sum_{i\le k/2}(x_{c,i}^\downarrow-x_{c,k+1-i}^\downarrow)
+(y_{c,i}^\downarrow-y_{c,k+1-i}^\downarrow)\le\lfloor k/2\rfloor(1-\ell)(1-\ell')$, with equality for two-level spectra.
+\end{proof}
+
+\noindent So $z_2$ is linear in each contrast, unlike Gardner's violation, which is quadratic in each. The third
+functional is never negative:
+
+\begin{proposition}\label{prop:exp3eq}
+For $X=X^*$ and $Y\ge0$, $\Tr|YXY|\le\Tr(Y|X|Y)$, with equality if and only if $YX_+Y^2X_-Y=0$, in particular if $Y$
+commutes with $X$.
+\end{proposition}
+\begin{proof}
+With $X=X_+-X_-$ and $|X|=X_++X_-$, the triangle inequality for the trace norm gives
+$\|YX_+Y-YX_-Y\|_1\le\Tr(YX_+Y)+\Tr(YX_-Y)$. For positive $A,B$, $\|A-B\|_1=\Tr A+\Tr B$ if and only if $AB=0$: with $P$
+the projection onto the positive part of $A-B$, $\|A-B\|_1=\Tr A+\Tr B-2\Tr((1-P)A)-2\Tr(PB)$, and equality forces
+$(1-P)A=0=PB$, so $AB=AP(1-P)B=0$; conversely, if $AB=0$ the supports are orthogonal and $|A-B|=A+B$. Apply this to
+$A=YX_+Y$, $B=YX_-Y$. If $XY=YX$, then $YX_+Y^2X_-Y=Y^4X_+X_-=0$.
+\end{proof}
+
+\begin{proposition}\label{prop:k2b}
+Let $X=X^*$ in $M_2(\C)$, let $|X|$ have eigenvalues $x_1\ge x_2\ge0$, $x_1>0$, and let $Y\ge0$ have eigenvalues
+$y_1\ge y_2\ge0$. Then
+\[
+  \Tr(Y|X|Y)-\Tr|YXY|\le\frac{2x_1x_2}{x_1+x_2}\,(y_1-y_2)^2 .
+\]
+With $S=x_1y_2+x_2y_1$, $q=(x_1+x_2)(y_1+y_2)$ and $\gamma=|\langle e_1,f_1\rangle|^2$ for unit eigenvectors $e_1$ of $X$
+for its eigenvalue of modulus $x_1$ and $f_1$ of $Y$ for $y_1$: if $x_2>0$ and $y_1>y_2$, the bound is attained if and only
+if $X$ is indefinite and $\gamma=S/q$; it is attained by real matrices.
+\end{proposition}
+\begin{proof}
+$z_3$ is invariant under $X\mapsto-X$ and vanishes for semidefinite $X$. Otherwise let $Xe_1=x_1e_1$, $Xe_2=-x_2e_2$,
+$u=\langle e_1,Y^2e_1\rangle=\gamma y_1^2+(1-\gamma)y_2^2$ and $s=y_1^2+y_2^2$. Then $\Tr(Y|X|Y)=\Tr(|X|Y^2)=A:=(x_1-x_2)u+x_2s$,
+and since $\det(YXY)=-x_1x_2y_1^2y_2^2\le0$, $\Tr|YXY|=\sqrt{\Tr(YXY)^2-4\det(YXY)}=\sqrt{L^2+K^2}$ with
+$L=\Tr(XY^2)=(x_1+x_2)u-x_2s$ and $K=2\sqrt{x_1x_2}\,y_1y_2$. For the unit vector
+$(\alpha,\beta)=(x_1-x_2,\,2\sqrt{x_1x_2})/(x_1+x_2)$ the Cauchy--Schwarz inequality gives $\sqrt{L^2+K^2}\ge\alpha L+\beta K$,
+and $A-\alpha L-\beta K=\frac{2x_1x_2}{x_1+x_2}(y_1-y_2)^2$ for every $u$; equality holds iff $\beta L=\alpha K$, i.e.\
+$u-y_2^2=(y_1-y_2)S/(x_1+x_2)$, i.e.\ $\gamma=S/q$. Real maximisers: diagonal $X$ and $Y$ rotated by $\arccos\sqrt\gamma$.
+\end{proof}
+
+\begin{theorem}\label{thm:exp3}
+Let $\M=\bigoplus_{c=1}^CM_{k_c}(\mathbb K)$, $\mathbb K\in\{\R,\C\}$, with $N\ge1$, and let $|X|$ and $Y$ be normalised to
+$\lambda_{\max}=1$, with $\Delta(|X|)=\delta\in[0,1)$ and $\Delta(Y)=\delta'\in[0,1]$. Then
+\[
+  \sup\bigl(\Tr(Y|X|Y)-\Tr|YXY|\bigr)=\begin{cases}(N-\delta)\bigl(\frac{2\delta'}{1+\delta'}\bigr)^2&\text{if every }k_c\text{ is even},\\[2pt]
+  N\bigl(\frac{2\delta'}{1+\delta'}\bigr)^2&\text{if some }k_c\text{ is odd},\end{cases}
+\]
+and the supremum is attained by real direct sums of the $2\times2$ maximisers of Proposition~\ref{prop:k2b} and $1\times1$
+blocks.
+\end{theorem}
+
+\noindent For odd blocks the eigenvalue $\ell$ of $|X|$ can sit on a one-dimensional summand, where it costs nothing, so
+the supremum does not depend on $\delta$; for $k=3$, $C=1$: $(2\delta'/(1+\delta'))^2>(1-\delta)(2\delta'/(1+\delta'))^2$. The
+proof reduces to two-level spectra and, with Lemma~\ref{lem:halmos}, to $2\times2$ blocks, except in one case: the
+eigenvector of $|X|$ for $\ell$ may be spread over all two-dimensional blocks of its sector, so that $X$ is not block
+diagonal. This case is settled by the following sharp bound, whose proof linearises the problem.
+
+\begin{proposition}\label{prop:mblocks}
+Let $X=X_+\oplus(-1)$ on $\C^m\oplus\C^m$, where $0<X_+\le1$ has eigenvalues $x_1,\dots,x_m$; let
+$c_\theta=\mathrm{diag}(\cos\theta_j)$, $s_\theta=\mathrm{diag}(\sin\theta_j)$, $Q$ the projection onto the range of
+$\binom{c_\theta}{s_\theta}:\C^m\to\C^{2m}$, $b\in[0,1)$ and $Y=b+(1-b)Q$. Then
+\[
+  \Tr(Y|X|Y)-\Tr|YXY|\ \le\ (1-b)^2\sum_{i=1}^m\frac{2x_i}{1+x_i},
+\]
+with equality for $X_+=\mathrm{diag}(x_1,\dots,x_m)$ and $\cos^2\theta_i=(1+bx_i)/((1+x_i)(1+b))$.
+\end{proposition}
+\begin{proof}
+Let $\gamma=1-b^2$, $K=1+X_+$, $A=c_\theta^2$ (so $s_\theta^2=1-A$). In the decomposition $\C^m\oplus\C^m$,
+$Y^2=b^2+\gamma Q$ has the blocks $b^2+\gamma A$, $\gamma c_\theta s_\theta$, $\gamma c_\theta s_\theta$, $b^2+\gamma s_\theta^2$, all diagonal.
+For $\lambda>0$ the lower right block of $\lambda-XY^2$ is the invertible diagonal $E=\lambda+1-\gamma A$, and as
+$(b^2+\gamma A)E-\gamma^2As_\theta^2=\lambda(b^2+\gamma A)+b^2$, the Schur complement formula gives
+\[
+  \det(\lambda-XY^2)=\det\bigl(\lambda E-X_+(\lambda(b^2+\gamma A)+b^2)\bigr)=\det\bigl((\lambda+1)(\lambda-b^2X_+)-\lambda\gamma KA\bigr)
+  =p(\lambda),
+\]
+$p(\lambda)=\det\bigl((\lambda+1)(\lambda-b^2X_+)-\lambda\gamma K^{1/2}AK^{1/2}\bigr)$. The Schur complement of the lower right
+block $\lambda$ gives $\det(\lambda-\mathcal L)=p(\lambda)$ as well, for the self-adjoint matrix
+\[
+  \mathcal L=\begin{pmatrix}\gamma K^{1/2}AK^{1/2}+b^2X_+-1 & bX_+^{1/2}\\ bX_+^{1/2} & 0\end{pmatrix},
+\]
+which is affine in $A$. Since $\det(\lambda-YXY)=\det(\lambda-XY^2)$, the polynomials agree and $YXY$ and $\mathcal L$ have
+the same eigenvalues; hence $\Tr|YXY|=\|\mathcal L\|_1\ge\Tr(T\mathcal L)$ for every self-adjoint $T$ with $\|T\|\le1$.
+Take
+\[
+  T=\begin{pmatrix}-R & G\\ G & R\end{pmatrix},\qquad R=\frac{1-X_+}{1+X_+},\quad G=\frac{2X_+^{1/2}}{1+X_+},
+\]
+so that $T^2=1$ ($R$ and $G$ commute and $R^2+G^2=1$). With $\Tr(Y|X|Y)=\Tr(|X|Y^2)=b^2\Tr X_++\gamma\Tr(X_+A)+mb^2+\gamma\Tr(1-A)$
+and $K^{1/2}RK^{1/2}=1-X_+$, the terms containing $A$ cancel in $\Tr(|X|Y^2)-\Tr(T\mathcal L)$, and
+\[
+  \Tr(Y|X|Y)-\Tr|YXY|\le\sum_{i=1}^m\Bigl(b^2x_i+1+\frac{1-x_i}{1+x_i}(b^2x_i-1)-\frac{4bx_i}{1+x_i}\Bigr)=(1-b)^2\sum_{i=1}^m\frac{2x_i}{1+x_i}.
+\]
+For diagonal $X_+$ both operators are direct sums of $2\times2$ blocks, on which $X=\mathrm{diag}(x_i,-1)$, and
+Proposition~\ref{prop:k2b} gives the value $(1-b)^2\,2x_i/(1+x_i)$ at the stated angle (there $\gamma=\sin^2\theta_i$).
+\end{proof}
+
+\begin{lemma}\label{lem:exp3}
+Let $X=X^*$ be invertible, $P$ the projection onto the positive part of $X$, $S=2P-1$, and $Y\ge0$. Then
+(a) if $|X|\le|X'|$, $X'=S|X'|$ and $|X'|$ commutes with $P$, then $z_3(X,Y)\le z_3(X',Y)$; (b) for fixed $X$, $z_3$ is a
+convex function of $Y^2$.
+\end{lemma}
+\begin{proof}
+With $A=YX_+Y$ and $B=YX_-Y$, $z_3=\Tr A+\Tr B-\|A-B\|_1$. (a) $A=Y|X|^{1/2}P|X|^{1/2}Y$ is non-decreasing in $|X|$ among
+operators commuting with $P$, and so is $B$; by the triangle inequality $\|A+R-B\|_1\le\|A-B\|_1+\Tr R$ for $R\ge0$, so
+$z_3$ does not decrease when $A$ or $B$ increases. (b) As $\|H\|_1=\max_{-1\le T\le1}\Tr(TH)$ for self-adjoint $H$, with
+$T=1-2E$ we get $z_3=2\min_{0\le E\le1}\Tr\bigl(EA+(1-E)B\bigr)$. For invertible $Y$, $N=|X|^{1/2}Y$ is invertible and
+$E\mapsto F=NEN^*$ maps $\{0\le E\le1\}$ onto $\{0\le F\le G\}$, $G=NN^*=|X|^{1/2}Y^2|X|^{1/2}$, with $\Tr(EA)=\Tr(PF)$ and
+$\Tr((1-E)B)=\Tr((1-P)(G-F))$. So $z_3=2\min\{\Tr(PF+(1-P)(G-F)):0\le F\le G\}$ is the partial minimum of a linear
+function over a convex set of pairs $(F,G)$, hence convex in $G$, which is affine in $Y^2$; by continuity also at
+singular $Y$.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:exp3}]
+Write $a=\ell$, $b=\ell'$; it suffices to treat the complex algebra, since the maximisers are real. Let $\delta<1$, so that
+$X$ is invertible; $z_3(-X,Y)=z_3(X,Y)$. Since $|X|$ commutes with $P$, it has a unit eigenvector $e$ for its eigenvalue $a$
+in one sector and in $\mathrm{ran}\,P$ or in $\ker P$; replacing $X$ by $-X$ if necessary, $e\in\mathrm{ran}\,P$. Then
+$|X|\le|X'|:=1-(1-a)ee^*$, and $X'=S|X'|=S-(1-a)ee^*$ has contrast $\delta$; by Lemma~\ref{lem:exp3}(a),
+$z_3(X,Y)\le z_3(X',Y)$. By Lemma~\ref{lem:exp3}(b), a convex function of the eigenvalues of $Y^2$ on the faces
+$\{y_i=1,\ y_j=b^2\}$ of $[b^2,1]^K$ is maximal at a vertex, so $z_3(X',Y)\le z_3(X',Y')$ with $Y'=b+(1-b)Q$, $Q\ne0,1$ a
+projection in $\M$. Apply Lemma~\ref{lem:halmos} to $P$ and $Q$ in every sector. In a sector without $e$, $X'=S$ is a
+direct sum over the subspaces, a one-dimensional summand contributes $0$, and a two-dimensional one at most $(1-b)^2$ by
+Proposition~\ref{prop:k2b} ($|X|=1$ there): together at most $\lfloor k_c/2\rfloor(1-b)^2$. In the sector of $e$,
+Lemma~\ref{lem:exp3}(a) with $|X'|\le1$ gives the same bound for $z_3$ restricted to it, and, if its size $k_c$ is odd or it
+contains fewer than $k_c/2$ two-dimensional subspaces, at most $\lfloor k_c/2\rfloor(1-b)^2$, resp.\ $(k_c/2-1)(1-b)^2$.
+Otherwise its $m=k_c/2$ two-dimensional subspaces fill it, with bases $f_j,f_j'$, $f_j\in\mathrm{ran}\,P$; the unitary that
+multiplies $f_j'$ by $e^{-i\chi_j}$ commutes with $X'$ (which is $-1$ on $\ker P$) and removes the phases, and in the basis
+$(f_1,\dots,f_m,f_1',\dots,f_m')$ we are in the setting of Proposition~\ref{prop:mblocks} with $X_+=1-(1-a)ee^*$, whose
+eigenvalues are $a,1,\dots,1$: the sector contributes at most $(1-b)^2\bigl(\frac{2a}{1+a}+m-1\bigr)=(k_c/2-\delta)(1-b)^2$.
+Summing over the sectors, $z_3\le(N-\delta)(1-b)^2$ if every $k_c$ is even and $z_3\le N(1-b)^2$ otherwise. Equality: if every
+$k_c$ is even, $X=\mathrm{diag}(a,-1)\oplus\mathrm{diag}(1,-1)^{\oplus(N-1)}$ and $Y$ with eigenvalues $1,b$ in every block at
+the angle of Proposition~\ref{prop:k2b}; if some $k_c$ is odd, $X=\mathrm{diag}(1,-1)$ on $N$ blocks, the eigenvalue $a$ on a
+one-dimensional block of an odd sector, $1$ on the other one-dimensional blocks, and $Y$ as before ($Y=1$ on the
+one-dimensional blocks).
+\end{proof}
+
+\noindent Before this proof the cases $k=4$ and $k=6$ ($C=1$) had been certified numerically by a rigorous branch and
+bound over the angles of the reduced model (\texttt{scripts/\allowbreak certify\_\allowbreak envelopes.py}; gaps $10^{-7}$
+and $10^{-5}$, including floating-point rounding), and the constrained optimiser of the library~\cite{lib} reproduces all
+envelopes of $z_2$ and $z_3$; Theorems~\ref{thm:gardner2} and~\ref{thm:exp3} and Proposition~\ref{prop:exp2} thus settle
+the three functionals of~\cite[Sect.~5]{abed2024} with both contrasts prescribed. Like Gardner's violation, they are
+additive over the blocks: they count the mutually orthogonal two-dimensional subspaces that fit into the sectors.
 
 \section{Young, Bikchentaev--Abed and the canonical trace}\label{sec:linear}
 

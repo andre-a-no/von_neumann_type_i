@@ -1,31 +1,7 @@
 % Use case (short): the Connes--Stormer entropy of two MASAs. Full account with proofs: man/connes_stormer.
 % Numbers: scripts/connes_stormer.py -> generated/connes_stormer.tex (macros \CS...).
-\subsection{Use case: the Connes--St{\o}rmer entropy of two MASAs}\label{sec:cs}
-
-The relative entropy of Connes and St{\o}rmer~\cite{connes1975,pimsner1986} of two subalgebras $P,Q\subset M_n$ is a
-supremum over all finite partitions of unity $x_j\ge0$, $\sum_jx_j=1$:
-$H(P|Q)=\sup\sum_j[\tau\eta(E_Qx_j)-\tau\eta(E_Px_j)]$, $\eta(t)=-t\log t$. For the diagonal algebra $\Delta_n$ and a rotated
-copy $U\Delta_nU^*$ the minimal projections give Choda's lower bound $h(U)$~\cite{choda}; Petz, Sz\'ant\'o and Weiner
-showed that $H>h(U)$ already for $n=2$ and called the correct formula a hard problem~\cite{petz2009}, and Bakshi and Guin
-note that it is open even for $n=2$~\cite{bakshi}. The library computes $H$ directly: the conditional expectations come
-from \texttt{Inclusion}, a partition of unity with $m$ elements is the image of an isometry (\texttt{UnitaryParam}), and
-many unitaries $U$ and many starts form one batch; the best points are recomputed in mpmath.
-
-For $n=2$ the computation suggested, and the companion paper~\cite{nn_cs} proves, the closed form
-\[
-  H(\Delta_2|U\Delta_2U^*)=\max_{\alpha}\int_{\alpha-\theta}^{\alpha}\sin(2\beta)\log\tan^2\beta\,d\beta,\qquad
-  |u_{11}|^2=\cos^2\theta,
-\]
-attained by an orthonormal basis, with $H\le\kappa\min(\theta,\frac\pi2-\theta)$, $\kappa\approx\CSKappa$, while
-$h(U)=o(\theta)$. For $n=3,4,5$ the batched search finds, for a small fraction of Haar-random $U$, partitions with $n+1$
-directions that beat every orthonormal basis found, and in all samples values strictly between $h(U)$ and the upper
-bound $G^*$ of~\cite{nn_cs}; these are numerical observations (Figure~\ref{fig:cs}).
-
-\begin{figure}[h]
-\centering\fig{connes_stormer.pdf}{\textwidth}
-\caption{Left: $H(\Delta_2|U\Delta_2U^*)$ (closed form of~\cite{nn_cs}) and Choda's value $h(c)$ against $c=|u_{11}|^2$,
-with the values found by the library (circles). Middle: the optimal angle $\alpha^*$ of the basis, and
-$\min(\theta,\frac\pi2-\theta)$ for comparison. Right: $H$ against $h(U)$ for Haar-random $U$, $n=3$ and $n=4$ (the
-best of general partitions and bases); dashed: $H=h(U)$.}
-\label{fig:cs}
-\end{figure}
+\paragraph{The Connes--St{\o}rmer entropy of two MASAs}\label{sec:cs} \cite{nn_cs}. The relative entropy
+$H(\Delta_n|U\Delta_nU^*)$ of the diagonal algebra and a rotated copy is a supremum over partitions of unity; with the
+conditional expectations of \texttt{Inclusion} and partitions parametrised by isometries, many unitaries and starts form
+one batch. For $n=2$ the computation suggested a closed form, proved in~\cite{nn_cs}; for $n=3,4,5$ it finds partitions
+that beat every orthonormal basis found.

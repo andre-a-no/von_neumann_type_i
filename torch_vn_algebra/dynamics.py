@@ -18,7 +18,7 @@ import warnings
 import torch
 
 from .algebra import TypeIAlgebra
-from .channels import Channel, InterSectorChannel
+from .channels import Channel, InterSectorChannel, SectorJump
 from . import cost
 from .states import DensityMatrix
 
@@ -215,11 +215,11 @@ def _lindblad_terms(H, jumps, rates, algebra):
         if isinstance(L, Channel):
             raise TypeError("a sector-preserving Channel is not a jump operator; pass its Kraus operators, or "
                             "channel.to_inter_sector() for a jump between sectors")
-    inter = [(g, L) for g, L in zip(rates, jumps) if isinstance(L, InterSectorChannel)]
+    inter = [(g, L) for g, L in zip(rates, jumps) if isinstance(L, (InterSectorChannel, SectorJump))]
     for _, L in inter:
-        if L.algebra_in.k_factors != L.algebra_out.k_factors:
+        if isinstance(L, InterSectorChannel) and L.algebra_in.k_factors != L.algebra_out.k_factors:
             raise ValueError("a jump between sectors must map the algebra into itself")
-    plain = [(g, L) for g, L in zip(rates, jumps) if not isinstance(L, InterSectorChannel)]
+    plain = [(g, L) for g, L in zip(rates, jumps) if not isinstance(L, (InterSectorChannel, SectorJump))]
     timedep = (callable(H) and not isinstance(H, Operator)) or any(callable(L) and not isinstance(L, Operator)
                                                                      for _, L in plain)
     if algebra is None:
@@ -246,6 +246,11 @@ def _lindblad_parts(H, plain, inter, algebra, t, dtype, device):
         A = torch.einsum('j,bjcai,bjcak->bcik', gs.to(dtype), Ls.conj(), Ls)
     Ks = []
     for g, L in inter:
+        if isinstance(L, SectorJump):                                     # sparse: L^*L diagonal, never formed densely
+            LdL = L.LdL().to(device=device, dtype=dtype)
+            A = g * LdL if A is None else A + g * LdL
+            Ks.append((g, L))
+            continue
         K = L.kraus.to(device=device, dtype=dtype)                        # (B, r, D, C, m, k)
         KdK = (K.conj().transpose(-2, -1) @ K).sum(dim=(1, 2))            # (B, C, k, k), block diagonal
         A = g * KdK if A is None else A + g * KdK
@@ -262,6 +267,9 @@ def _add_gain(out: torch.Tensor, rho: torch.Tensor, Ls, gs, Ks) -> torch.Tensor:
         Lc = Ls.permute(0, 2, 3, 1, 4).reshape(Ls.shape[0], C, k, J * k)
         out = out + Xc @ Lc.conj().transpose(-2, -1)
     for g, K in Ks:                        # gain between sectors: sum_{i, c} K^{dc} rho_c K^{dc*}
+        if isinstance(K, SectorJump):      # sparse jump: a weighted permutation of the entries, O(sum_c k_c^2)
+            out = out + g * K.sandwich(rho)
+            continue
         B_, r, D, C, m, k = K.shape
         X = K @ rho[:, None, None]                                          # (B, r, D, C, m, k)
         Bx = X.shape[0]
@@ -279,6 +287,9 @@ def _gain_dual(Z: torch.Tensor, Ls, gs, Ks) -> torch.Tensor:
         X = Ls.conj().transpose(-2, -1) @ Z.unsqueeze(1) @ Ls                    # (B, J, C, k, k)
         out = out + (X * gs[:, None, None, None].to(Z.dtype)).sum(dim=1)
     for g, K in Ks:
+        if isinstance(K, SectorJump):
+            out = out + g * K.dual_sandwich(Z)
+            continue
         X = K.conj().transpose(-2, -1) @ Z[:, None, :, None] @ K            # (B, r, D, C, k, k)
         out = out + g * X.sum(dim=(1, 2))
     return out
@@ -293,7 +304,8 @@ def lindblad_rhs(H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
     as a function (t, rho_matrix) -> drho/dt. H and L_j are constant, or callables of t.
 
     A jump that moves weight between sectors (particle loss N -> N-1, ...) is passed as an
-    InterSectorChannel Phi of the algebra into itself; it contributes Phi(rho) - 1/2 {Phi^*(1), rho}, where
+    InterSectorChannel Phi of the algebra into itself (or, for spin flips and other jumps that map basis vectors to
+    multiples of basis vectors, as a sparse SectorJump); it contributes Phi(rho) - 1/2 {Phi^*(1), rho}, where
     Phi^*(1)_c = sum_{d,i} K_i^{dc*} K_i^{dc} is block diagonal. This is the GKSL generator of the jumps
     K_i^{dc} compressed to M (the conditional expectation onto M applied to the generator on B(H)); it maps M
     into M and conserves the total trace. For constant H and jumps, A = sum g L^* L and the stacked jumps are
@@ -388,6 +400,8 @@ def _generator_matrix(parts, alg: TypeIAlgebra, dtype, device) -> torch.Tensor:
             Ls.shape[0], C, k * k, k * k)
     G = torch.einsum('bcij,cd->bcidj', blocks, torch.eye(C, dtype=dtype, device=device))
     for g, K in Ks:                                                   # sum_i K_i^{dc} (x) conj(K_i^{dc}) in block (d, c)
+        if isinstance(K, SectorJump):
+            K = K.to_inter_sector().kraus.to(device=device, dtype=dtype)
         G = G + g * torch.einsum('brdcai,brdcel->bdaecil', K, K.conj()).reshape(K.shape[0], C, k * k, C, k * k)
     return G.reshape(G.shape[0], C * k * k, C * k * k)
 
@@ -436,6 +450,8 @@ def lindblad_evolve(rho0: Operator, H: Optional[OperatorLike], jumps: Sequence[O
     def _batch(X):                                     # batch size of a (possibly time-dependent) H or jump
         if isinstance(X, InterSectorChannel):
             return X.kraus.shape[0]
+        if isinstance(X, SectorJump):
+            return X.val.shape[0]
         X = _mat(X(t0)) if callable(X) and not isinstance(X, Operator) else _mat(X)
         return X.shape[0] if isinstance(X, torch.Tensor) else 1
     batches = [rho0.matrix.shape[0]] + [_batch(X) for X in ([H] if H is not None else []) + list(jumps)]
