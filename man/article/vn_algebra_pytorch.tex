@@ -1536,7 +1536,8 @@ Kossakowski matrix (\texttt{LindbladParam}). No constraint is imposed and no pro
 optimiser of \texttt{torch.optim} trains the network without leaving the set of channels, and gradients go through $(Z_c^*Z_c)^{-1/2}$ and
 through the dynamics by the Daleckii--Krein backward pass of Section~\ref{sec:calculus}. Listing~\ref{lst:learn} shows
 a small network trained on input--output pairs; the losses provided are the infidelity, the trace distance, the
-relative entropy and the negative log-likelihood of measurement counts (\texttt{measurement.POVM}).
+relative entropy and the negative log-likelihood of measurement counts (from \texttt{POVM} of the module
+\texttt{measurement}).
 
 \begin{lstlisting}[float=t, caption={A network of channels of $\M=M_1\oplus M_3\oplus M_2$, trained end to end with
 \texttt{torch.optim}. Every iterate is a channel.}, label=lst:learn]
