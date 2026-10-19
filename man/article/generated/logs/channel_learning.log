@@ -1,0 +1,21 @@
+[1/65] n=4 dense    shots=   100 rep=0 h=0.1: loss 1.09e+00, trace distance 3.06e-01, Choi 5.15e-01, 208 s
+[2/65] n=4 dense    shots= 10000 rep=0 h=0.1: loss 1.23e-02, trace distance 7.07e-02, Choi 1.66e-01, 210 s
+[3/65] n=4 dense    shots=100000 rep=0 h=0.1: loss 1.07e-03, trace distance 3.31e-02, Choi 8.17e-02, 214 s
+[4/65] n=4 dense    shots=  1000 rep=0 h=0.1: loss 1.48e-01, trace distance 1.40e-01, Choi 2.84e-01, 214 s
+[5/65] n=4 dense    shots= exact rep=0 h=0.1: loss 8.76e-09, trace distance 1.16e-03, Choi 3.43e-03, 131 s
+[6/65] n=4 lindblad shots=  1000 rep=0 h=0.1: loss 6.28e-02, trace distance 5.85e-02, Choi 1.03e-01, 151 s
+[7/65] n=4 lindblad shots= 10000 rep=0 h=0.1: loss 6.39e-03, trace distance 2.16e-02, Choi 3.78e-02, 160 s
+[8/65] n=4 lindblad shots=   100 rep=0 h=0.1: loss 4.57e-01, trace distance 1.25e-01, Choi 1.92e-01, 168 s
+[9/65] n=3 dense    shots=   100 rep=0 h=0.1: loss 3.99e-01, trace distance 2.20e-01, Choi 3.97e-01, 17 s
+[10/65] n=3 dense    shots=  1000 rep=0 h=0.1: loss 3.62e-02, trace distance 9.01e-02, Choi 2.05e-01, 12 s
+[11/65] n=3 dense    shots= 10000 rep=0 h=0.1: loss 3.26e-03, trace distance 4.47e-02, Choi 9.16e-02, 11 s
+[12/65] n=3 dense    shots=100000 rep=0 h=0.1: loss 2.51e-04, trace distance 1.91e-02, Choi 4.69e-02, 15 s
+[13/65] n=3 dense    shots= exact rep=0 h=0.1: loss 5.60e-09, trace distance 8.44e-04, Choi 1.59e-03, 13 s
+[14/65] n=4 lindblad shots=100000 rep=0 h=0.1: loss 6.42e-04, trace distance 7.44e-03, Choi 1.35e-02, 139 s
+[15/65] n=4 algebra  shots=   100 rep=0 h=0.1: loss 4.45e-01, trace distance 1.40e-01, Choi 2.18e-01, 48 s
+[16/65] n=4 lindblad shots= exact rep=0 h=0.1: loss 6.58e-11, trace distance 1.35e-05, Choi 2.15e-05, 139 s
+[17/65] n=4 lindblad shots= exact rep=0 h=1.0: loss 2.49e-10, trace distance 2.47e-05, Choi 3.99e-05, 131 s
+[18/65] n=4 algebra  shots=  1000 rep=0 h=0.1: loss 5.94e-02, trace distance 6.28e-02, Choi 1.22e-01, 53 s
+[19/65] n=4 algebra  shots= 10000 rep=0 h=0.1: loss 5.77e-03, trace distance 2.64e-02, Choi 5.22e-02, 56 s
+[20/65] n=4 algebra  shots=100000 rep=0 h=0.1: loss 5.41e-04, trace distance 1.01e-02, Choi 2.46e-02, 59 s
+[21/65] n=4 algebra  shots= exact rep=0 h=0.1: loss 8.71e-09, trace distance 6.49e-04, Choi 1.33e-03, 59 s
