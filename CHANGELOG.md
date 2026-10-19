@@ -6,6 +6,17 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 
 ## [Unreleased]
 
+### Added
+- `interop` module: conversion of operators, states, channels and Lindblad jump operators to and from dense
+  matrices, `qutip.Qobj` and dynamiqs arrays (`to_dense`, `from_dense`, `channel_to_dense`, `to_qutip`, `from_qutip`,
+  `jumps_to_qutip`, `to_dynamiqs`, `jumps_to_dynamiqs`). `layout=chain` places a `SpinChain` in the computational basis
+  in QuTiP's convention (site 0 leftmost, |0> = spin up). Maps between algebras are converted with the pinching onto the
+  output sectors (Kraus operators P_d K_i). `from_dense` rejects matrices outside the algebra. Tests check the
+  conventions and that `lindblad_evolve` agrees with `qutip.mesolve` and `dynamiqs.mesolve`. Optional extra
+  `interop = ["qutip>=5"]`.
+- `SpinChain.bond(i, j, Jxy, Jz)`: the two-site XXZ term on any pair of sites, for bond-resolved Hamiltonians and
+  controls.
+
 ### Fixed
 - `dynamics.lindblad_evolve(method='kraus')` returned NaN gradients when the normalisation operator of a step had a
   degenerate spectrum (for example M = 1 without jumps). Its inverse square root is now computed with the

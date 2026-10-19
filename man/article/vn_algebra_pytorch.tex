@@ -368,6 +368,16 @@ the better choice.}
 \label{tab:software}
 \end{table}
 
+\paragraph{Working with QuTiP and dynamiqs.} The library is meant to complement the simulators, not to replace them.
+The module \texttt{interop} converts operators, states, channels and Lindblad jump operators to and from
+\texttt{qutip.Qobj} and dynamiqs arrays; for a spin chain it places the sectors in the computational basis with
+QuTiP's conventions. A map between algebras is a map into the algebra, so it is converted together with the pinching
+onto the output sectors, and a dense matrix outside the algebra is rejected on the way back. Through this module the
+Lindblad solvers of Section~\ref{sec:noisy} are checked against \texttt{qutip.mesolve} and \texttt{dynamiqs.mesolve}
+in the test suite (agreement to $10^{-10}$ on a four-qubit register with damping and dephasing), and a computation
+can move to whichever package suits its next step, for example to QuTiP for a large single system after the sector
+structure has been used to set it up.
+
 \section{Mathematical setting}\label{sec:math}
 
 \paragraph{Algebra and traces.} Let $\M=\bigoplus_{c=1}^C M_{k_c}$ act on $\mathcal H=\bigoplus_c\C^{k_c}$; an element
