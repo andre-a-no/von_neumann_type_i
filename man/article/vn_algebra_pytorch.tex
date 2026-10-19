@@ -76,7 +76,12 @@ Finite-dimensional von Neumann algebras, the direct sums $\bigoplus_cM_{k_c}(\C)
 of operator algebra theory and, through the commutant of a symmetry, the natural home of quantum systems with conserved
 charges or superselection rules. To our knowledge no numerical software treats them as a data type, with their centre,
 their family of traces, conditional expectations, inclusions and functional calculus. \texttt{torch\_vn\_algebra} is a
-PyTorch library that does, for batches of operators on CPUs and GPUs and with automatic differentiation. It began as a
+PyTorch library that does, for batches of operators on CPUs and GPUs and with automatic differentiation. It fills the
+gap between computer algebra, which treats algebras as objects but exactly and for small examples, and quantum
+simulators, which compute at scale but with matrices on a Hilbert space; it converts to and from QuTiP and dynamiqs.
+It is meant for operator algebraists who explore inequalities and extremal problems numerically, for quantum
+information theorists with variational problems over states and channels under a symmetry, and for physicists who need
+many small symmetric problems at once. It began as a
 re-implementation of our earlier NumPy Monte Carlo study of trace inequalities with the Michelson contrast, and this
 paper documents it. Its design rests on one thesis: keeping the sector structure inside the data type makes computations
 in the algebra correct by construction and cheap. Haar sampling is exact in every block, trace conventions survive maps
@@ -86,10 +91,11 @@ for small blocks. More important than speed, every operation is differentiable, 
 study into variational problems over the states, unitaries and channels of the algebra: from block size 4 on, a million
 Haar samples miss the violation of a trace inequality in every one of 16 test cases, while batched gradient ascent
 finds the exact supremum in all of them in seconds. We measure each architectural decision against the simple
-alternative and validate the library against exact results. Its generality is illustrated by symmetry verification for
-a noisy XY mixer of the quantum alternating operator ansatz, whose Hamming-weight sectors form the algebra. One batched
-run gives, for all noise models and rates, the exact acceptance probabilities and post-selected fidelities. It also
-gives the first-order dephasing integral and a gain from post-selection that grows with the register size.
+alternative and validate the library against exact results and against QuTiP and dynamiqs. Its generality is
+illustrated by a noisy XY mixer of the quantum alternating operator ansatz, whose Hamming-weight sectors form the
+algebra: one batched run gives, for all noise models and rates, the exact effect of post-selection on the weight, and
+optimising the controls for the post-selected fidelity shows that the measurement of the conserved charge, not the
+noise-aware design, removes most of the error.
 \end{abstract}
 
 \section*{Program summary}
@@ -242,13 +248,68 @@ errors (Section~\ref{sec:validation}), and batched optimisation finds extremes t
 symmetry reduction, and Section~\ref{sec:noisy} shows what this generality buys.
 Section~\ref{sec:control} turns the noisy register into a design problem: it optimises the controls of a Lindblad
 evolution for the post-selected fidelity, over a batch of noise models at once.
-The intended users are operator
-algebraists who test conjectures numerically, quantum information researchers who work with superselection rules or
-symmetric noise, and physicists who need many small symmetric problems, such as disorder realisations or noise sweeps,
-in one batch. The library is not a circuit simulator or a tensor-network code; for single large systems the packages
-of Section~\ref{sec:related} remain the better choice. This paper describes the software used in~\cite{abed2024} and
+Section~\ref{sec:ecosystem} places the library among existing software and says for whom it is made and for
+which tasks another package is the better choice. This paper describes the software used in~\cite{abed2024} and
 in three companion papers~\cite{nn_trace,nn_cs,nn_btc}; their results are summarised in Section~\ref{sec:usecases}
 and not repeated.
+
+\section{Place in the ecosystem and intended users}\label{sec:ecosystem}
+
+\begin{figure}[t]
+\centering\fig{ecosystem.pdf}{0.95\textwidth}
+\caption{Software for computations with the algebra~\eqref{eq:M}, ordered by two properties: exact and small versus
+numerical, batched and differentiable (horizontal), and matrices on a Hilbert space versus objects of the algebra
+itself (vertical). The upper right corner, where the algebra is the data type of a numerical code, was empty; the
+arrows show what the library builds on, where its results can be checked exactly, and the conversions to the
+simulators (Section~\ref{sec:related}).}
+\label{fig:ecosystem}
+\end{figure}
+
+\paragraph{The gap.} Software that touches finite-dimensional von Neumann algebras sits in two places
+(Figure~\ref{fig:ecosystem}). Computer-algebra systems treat algebras as objects, with centres, radicals, Wedderburn
+decompositions and Jordan structures, but in exact arithmetic and for small examples. Simulators, exact-diagonalisation
+and tensor-network codes compute numerically and at scale, but their object is a matrix or a tensor on a Hilbert space;
+blocks appear as storage, not as an algebra with a centre, a family of traces and maps between algebras. Generic linear
+algebra (NumPy, SciPy, PyTorch) is below both, and solvers for semidefinite and manifold problems handle convex or
+geometric constraints without the structure of~\eqref{eq:M}. What was missing is the numerical counterpart of the first
+group: a code in which one declares the sector sizes and then samples, transforms, optimises and learns elements,
+states and channels of the algebra in batches, on CPUs and GPUs, with derivatives and certified values. This is the
+place of \texttt{torch\_vn\_algebra}. It is built on PyTorch, checks small cases against exact computations, uses SDP
+solvers as references for convex problems, and hands states, operators and Lindblad data to QuTiP and dynamiqs through
+the module \texttt{interop}, so that a computation can move between the corners of the figure.
+
+\paragraph{For whom.} We have four groups of users in mind, each with a typical workflow.
+\begin{description}\itemsep2pt
+\item[Operator algebraists] who explore inequalities, extremal problems and invariants numerically before proving
+them: sharp constants of trace inequalities and their envelopes in terms of the Michelson contrast, the
+Connes--St{\o}rmer entropy as a supremum over partitions, conditional expectations, inclusions and their index, and
+Jordan products. The library supplies the constraint sets as exact parametrisations, batched multistart search, and
+recomputation of extremal values in 50-digit arithmetic, so that a numerical observation comes with a certified lower
+bound (Sections~\ref{sec:optimisation} and~\ref{sec:symmetries}; the companion papers~\cite{nn_trace,nn_cs}).
+\item[Quantum information theorists] with variational problems over states and channels that respect a symmetry or a
+superselection rule: data processing and its thresholds, recovery maps, divergences resolved by sector, and learning a
+channel or a Lindblad generator from measurement data. Channels within and between algebras and Lindblad generators are
+available as parameters in which every value is physical, and the module \texttt{measurement} provides POVMs,
+sampling, likelihoods, instruments that record their outcome in the centre, and Fisher information
+(Sections~\ref{sec:renyi} and~\ref{sec:optimisation}).
+\item[Physicists with conserved charges] who need many small symmetric problems at once rather than one large one:
+disorder realisations, sweeps over noise models and rates, symmetry verification and post-selection, and noise-aware
+design of circuits that conserve a charge (Sections~\ref{sec:chains}, \ref{sec:noisy} and~\ref{sec:control}). A system
+prepared here can be passed to QuTiP or dynamiqs for further simulation.
+\item[Teachers and students] of operator algebras and quantum information: the repository contains a course with
+runnable tutorials in which every construction of the lectures (traces, conditional expectations, the basic
+construction, channels, Lindblad dynamics) is an object one can sample and test.
+\end{description}
+A fifth group is emerging: researchers who treat quantum channels as layers of trainable networks. For them the
+library offers channels and generators as parameters with gradients; Section~\ref{sec:limitations} describes the
+direction we are taking.
+
+\paragraph{When to use something else.} The library is not a circuit simulator, a tensor-network code or a large-scale
+exact-diagonalisation package. For the dynamics of one large system, QuTiP, dynamiqs or QuantumToolbox.jl are faster and
+more complete; for ground states of long chains, QuSpin, XDiag or tensor networks; for pulse-level control, QuTiP-QOC;
+for convex problems over channels, an SDP solver, which also returns a certificate of optimality; for exact structure of
+small algebras, a computer-algebra system. The interoperability module exists so that these tools and the library can
+be used in one workflow.
 
 \section{Related software}\label{sec:related}
 
@@ -967,6 +1028,19 @@ objective has a kink at the maximiser (a trace norm at a degenerate point), the 
 size. Applied to the three functionals, the optimiser located their envelopes for sectors of every size; the closed
 forms it suggested are proved in the companion paper~\cite{nn_trace}.
 
+\paragraph{Channels, generators and measurements as parameters.} The same machinery applies to maps. In
+\texttt{optimize.StinespringParam} every input sector $c$ carries an isometry $V_c=Z_c(Z_c^*Z_c)^{-1/2}$ into an
+environment of dimension $r$ times the output sectors, and the Kraus operators are its blocks; every value of the free
+matrices $Z_c$ is a trace-preserving channel, within one algebra or between two algebras with a prescribed set of
+allowed sector transitions, and Gaussian $Z_c$ give Haar-random isometries. \texttt{LindbladParam} does the same for
+GKSL generators (a self-adjoint Hamiltonian and free jump operators inside and between sectors), and \texttt{fit}
+minimises a loss over such parameters and leaves them at the fitted point. With the module \texttt{measurement}
+(POVMs, sampling of counts, likelihoods, instruments, Fisher information) this turns learning a channel or a
+generator from data into a call of the optimiser. In the test suite a channel of $M_1\oplus M_3\oplus M_2$ of Kraus
+rank two is recovered from twelve input--output pairs to $10^{-5}$, and the generator of a damped and dephased qubit
+from two time points of six trajectories, predicting an unseen trajectory to $10^{-4}$. These are small checks, not
+studies; tomography in symmetry algebras is the subject of ongoing work.
+
 \subsection{Rediscovering the data-processing thresholds of the Rényi divergences}\label{sec:renyi}
 
 A further test of the method is to ask it where the range of validity of a known inequality ends, without telling it.
@@ -1485,9 +1559,12 @@ constraints of quantum mechanics built in: unitary layers as in unitary recurren
 completely positive layers as in dissipative quantum neural networks~\cite{beer2020}, and conditional expectations as
 pooling. Equivariant linear layers are elements of the commutant, i.e.\ of an algebra~\eqref{eq:M}, by Schur's
 lemma~\cite{cohen2016,finzi2021}, and networks with parameters in a $C^*$-algebra have been proposed
-in~\cite{hashimoto2022}. The library provides the primitives (parametrised unitaries and spectra, gradients through channels and
-through the dynamics; channels themselves are parametrised by Stinespring isometries in the scripts, not yet in the
-library) but no training layers or examples; this is the main direction of future work.
+in~\cite{hashimoto2022}. The library provides the primitives: parametrised unitaries and spectra, channels within and between algebras
+and Lindblad generators as parameters (Section~\ref{sec:optimisation}), measurements and instruments, and gradients
+through all of them and through the dynamics. Network architectures built from these pieces (residual blocks as steps
+of a jump process, feed-forward through the centre, encoders into smaller algebras), tomography in symmetry algebras
+and training viewed as a dynamics of the channel are the main direction of future work; the plan is kept in the
+repository (\texttt{ROADMAP\_learning.md}).
 \item \emph{Scope.} Finite dimensions and Type~I only; no tensor-network methods. Sparse methods exist only for sector
 Hamiltonians and for jumps that map basis vectors to basis vectors; other jumps between sectors are stored densely.
 Benchmarks against QuTiP, \texttt{dynamiqs}, QuantumToolbox.jl, QuSpin and XDiag are future work.
