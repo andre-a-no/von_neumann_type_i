@@ -78,7 +78,8 @@ charges or superselection rules. To our knowledge no numerical software treats t
 their family of traces, conditional expectations, inclusions and functional calculus. \texttt{torch\_vn\_algebra} is a
 PyTorch library that does, for batches of operators on CPUs and GPUs and with automatic differentiation. It fills the
 gap between computer algebra, which treats algebras as objects but exactly and for small examples, and quantum
-simulators, which compute at scale but with matrices on a Hilbert space; it converts to and from QuTiP and dynamiqs.
+simulators, which compute at scale but with matrices on a Hilbert space, and it converts operators, states and
+channels to and from QuTiP and dynamiqs.
 It is meant for operator algebraists who explore inequalities and extremal problems numerically, for quantum
 information theorists with variational problems over states and channels under a symmetry, and for physicists who need
 many small symmetric problems at once. It began as a
@@ -87,7 +88,7 @@ paper documents it. Its design rests on one thesis: keeping the sector structure
 in the algebra correct by construction and cheap. Haar sampling is exact in every block, trace conventions survive maps
 between sectors, and all blocks of one size go through one batched kernel. We show that the library reproduces the
 distributions of the earlier NumPy computation and is about two orders of magnitude faster than its loop formulation
-for small blocks. More important than speed, every operation is differentiable, which turns the sampling of the earlier
+for small blocks. More important than speed, the operations are differentiable, which turns the sampling of the earlier
 study into variational problems over the states, unitaries and channels of the algebra: from block size 4 on, a million
 Haar samples miss the violation of a trace inequality in every one of 16 test cases, while batched gradient ascent
 finds the exact supremum in all of them in seconds. We measure each architectural decision against the simple
@@ -151,8 +152,8 @@ Section~\ref{sec:reproduce} shows that it reproduces the earlier computation: th
 sample the same distribution. For small blocks the library is about two orders of magnitude faster than the loop
 formulation, and for blocks of size 16 about three times faster, and the same code runs on a GPU.
 
-\paragraph{From sampling to optimisation.} Speed is the smaller gain. Every operation of the library is
-differentiable, including spectral functions (by the Daleckii--Krein formula), channels between sectors and the time
+\paragraph{From sampling to optimisation.} Speed is the smaller gain. The numerical operations of the library are
+differentiable (the one exception is the unitary factor of the polar decomposition), including spectral functions (by the Daleckii--Krein formula), channels between sectors and the time
 steps of Hamiltonian and Lindblad dynamics, so a question asked by sampling can be asked again as a variational
 problem: maximise a functional over operators with a prescribed spectrum, over states, over unitaries of the algebra or
 over all channels, by batched gradient ascent with many starts in one call.
@@ -180,11 +181,11 @@ in an algebra~\eqref{eq:M}.
 Monte Carlo of~\cite{abed2024,v1} saw no violation of Gardner's inequality for blocks of size 16, and we now
 know why: by concentration of measure, the unitaries near the maximiser have Haar measure that decays rapidly with the
 dimension. From block size 4 on, a million Haar samples miss the violation in every test case, while gradient ascent
-finds the exact supremum in all of them, to a relative error of $3\times10^{-5}$ and in a few seconds
+finds the exact supremum in all of them, to a relative error of $3\times10^{-5}$ and in seconds
 (Section~\ref{sec:optimisation}). The violation envelopes of the companion paper~\cite{nn_trace}, the thresholds of
 the Rényi divergences in Section~\ref{sec:renyi} and the partitions in~\cite{nn_cs} are all found this way; every
-reported extremal value is then recomputed at the optimiser in 50-digit arithmetic, so it is a certified lower bound
-for the supremum.
+reported extremal value is then recomputed at the optimiser in 40- to 50-digit arithmetic (mpmath, in the paper
+scripts), so it is a certified lower bound for the supremum.
 
 \paragraph{Thesis.} The design rests on one thesis: keeping the sector structure inside the data type makes
 computations in~\eqref{eq:M} both correct by construction and cheap. By sector structure we mean the blocks, the centre,
@@ -230,8 +231,8 @@ For $C=1$ the library reduces to batched linear algebra in $M_k(\C)$, and all it
 
 \paragraph{What is new and what is re-implemented.} None of the numerical methods is new. Haar unitaries come from the
 QR decomposition of Gaussian matrices with Mezzadri's phase correction~\cite{mezzadri2007}. Gradients of matrix
-functions use the Daleckii--Krein formula~\cite{daleckii1965,bhatia1997}. Singular values come from the Hermitian
-dilation, holomorphic functions from contour integrals~\cite{trefethen2014}, and the Wedderburn decomposition from
+functions use the Daleckii--Krein formula~\cite{daleckii1965,bhatia1997}. Singular values come from batched SVD or,
+on GPUs for large blocks, from the Hermitian dilation, holomorphic functions from contour integrals~\cite{trefethen2014}, and the Wedderburn decomposition from
 the randomised algorithms of Murota and coauthors~\cite{murota2010,maehara2011}. Block-sparse storage of
 charge-conserving tensors is standard in tensor-network libraries~\cite{fishman2022,hauschild2018,rams2025}. Lazy
 linear operators that dispatch on their structure are the basis of GPyTorch's \texttt{linear\_operator}~\cite{gardner2018,linearoperator}
@@ -274,18 +275,18 @@ algebra (NumPy, SciPy, PyTorch) is below both, and solvers for semidefinite and 
 geometric constraints without the structure of~\eqref{eq:M}. What was missing is the numerical counterpart of the first
 group: a code in which one declares the sector sizes and then samples, transforms, optimises and learns elements,
 states and channels of the algebra in batches, on CPUs and GPUs, with derivatives and certified values. This is the
-place of \texttt{torch\_vn\_algebra}. It is built on PyTorch, checks small cases against exact computations, uses SDP
-solvers as references for convex problems, and hands states, operators and Lindblad data to QuTiP and dynamiqs through
-the module \texttt{interop}, so that a computation can move between the corners of the figure.
+place of \texttt{torch\_vn\_algebra}. It is built on PyTorch, its test suite checks small cases against exact
+results, and it exchanges states, operators, channels and Lindblad data with QuTiP and dynamiqs through the module
+\texttt{interop}, so that a computation can move between the corners of the figure.
 
 \paragraph{For whom.} We have four groups of users in mind, each with a typical workflow.
 \begin{description}\itemsep2pt
 \item[Operator algebraists] who explore inequalities, extremal problems and invariants numerically before proving
 them: sharp constants of trace inequalities and their envelopes in terms of the Michelson contrast, the
 Connes--St{\o}rmer entropy as a supremum over partitions, conditional expectations, inclusions and their index, and
-Jordan products. The library supplies the constraint sets as exact parametrisations, batched multistart search, and
-recomputation of extremal values in 50-digit arithmetic, so that a numerical observation comes with a certified lower
-bound (Sections~\ref{sec:optimisation} and~\ref{sec:symmetries}; the companion papers~\cite{nn_trace,nn_cs}).
+Jordan products. The library supplies the constraint sets as exact parametrisations and batched multistart search;
+the paper scripts recompute extremal values in 40- to 50-digit arithmetic (mpmath), so that a numerical observation
+comes with a certified lower bound (Sections~\ref{sec:optimisation} and~\ref{sec:symmetries}; the companion papers~\cite{nn_trace,nn_cs}).
 \item[Quantum information theorists] with variational problems over states and channels that respect a symmetry or a
 superselection rule: data processing and its thresholds, recovery maps, divergences resolved by sector, and learning a
 channel or a Lindblad generator from measurement data. Channels within and between algebras and Lindblad generators are
@@ -384,13 +385,13 @@ Manopt.jl~\cite{bergmann2022} works on the real and complex manifolds of Manifol
 
 What \texttt{torch\_vn\_algebra} adds lies between these groups. Its constraint sets are those of the algebra,
 parametrised exactly and batched: the unitary group $\prod_cU(k_c)$ with blocks of different sizes, positive and
-self-adjoint elements with a prescribed spectrum or Michelson contrast, states, and, in the scripts, channels between
-algebras with different sectors and partitions of unity, both parametrised by isometries
-(Sections~\ref{sec:renyi} and~\ref{sec:cs}). Objectives can use the centre, since sector probabilities, post-selection on a
+self-adjoint elements with a prescribed spectrum or Michelson contrast, channels within one algebra and between
+algebras with different sectors (\texttt{StinespringParam}) and Lindblad generators (\texttt{LindbladParam}); states
+and partitions of unity are parametrised in the paper scripts (Sections~\ref{sec:renyi} and~\ref{sec:cs}). Objectives can use the centre, since sector probabilities, post-selection on a
 charge and conditioning on a sector are operations of the data type. Independent starts, parameter values and models
 are elements of one batch, so an envelope over a grid, or a threshold scan over all $\alpha$ of
-Section~\ref{sec:renyi}, is one call. Reported extremal values are recomputed at the optimiser in 50-digit
-arithmetic, so they are certified lower bounds for suprema; they are not upper bounds. Other packages are better in
+Section~\ref{sec:renyi}, is one call. The paper scripts recompute reported extremal values at the optimiser in 40- to
+50-digit arithmetic, so they are certified lower bounds for suprema; they are not upper bounds. Other packages are better in
 three respects. A convex problem belongs to an SDP solver, which returns the global optimum with a certificate where
 our local search returns a lower bound. A single large system belongs to the simulators above. Pulse-level control,
 with waveform constraints and optimisation of the evolution time, is the purpose of QuTiP-QOC. The library is meant
@@ -430,12 +431,13 @@ the better choice.}
 \end{table}
 
 \paragraph{Working with QuTiP and dynamiqs.} The library is meant to complement the simulators, not to replace them.
-The module \texttt{interop} converts operators, states, channels and Lindblad jump operators to and from
-\texttt{qutip.Qobj} and dynamiqs arrays; for a spin chain it places the sectors in the computational basis with
+The module \texttt{interop} converts operators, states and channels to and from \texttt{qutip.Qobj} and dynamiqs
+arrays, and Lindblad jump operators to collapse operators; for a spin chain it places the sectors in the computational basis with
 QuTiP's conventions. A map between algebras is a map into the algebra, so it is converted together with the pinching
 onto the output sectors, and a dense matrix outside the algebra is rejected on the way back. Through this module the
 Lindblad solvers of Section~\ref{sec:noisy} are checked against \texttt{qutip.mesolve} and \texttt{dynamiqs.mesolve}
-in the test suite (agreement to $10^{-10}$ on a four-qubit register with damping and dephasing), and a computation
+in the test suite: on a four-qubit register with damping and dephasing the exact stepper agrees with both to better than
+$10^{-9}$, and the CPTP splitting used in Section~\ref{sec:noisy} converges to them at second order. A computation
 can move to whichever package suits its next step, for example to QuTiP for a large single system after the sector
 structure has been used to set it up.
 
@@ -513,12 +515,13 @@ $10^5$ samples in one batch. \texttt{operator\_from\_eigenvalues} draws independ
 import torch
 from torch_vn_algebra import TypeIAlgebra
 
-alg = TypeIAlgebra([4, 4, 8], [4, 4, 8], complex_valued=False)  # M_4 + M_4 + M_8, real
+alg = TypeIAlgebra([4, 4, 8], [4, 4, 8], complex_valued=False,  # M_4 + M_4 + M_8, real,
+                  precision='double')                           # as in Table baselines
 B = 100_000                                     # Monte Carlo samples: one batch
 
 def spectrum(dim, delta=0.6):                   # lambda_max = 1, Michelson contrast delta
     lo = (1 - delta) / (1 + delta)
-    lam = lo + (1 - lo) * torch.rand(B, dim)
+    lam = lo + (1 - lo) * torch.rand(B, dim, dtype=torch.float64)
     lam[:, 0], lam[:, 1] = 1.0, lo
     return lam
 
@@ -585,8 +588,9 @@ The library is pure Python on top of PyTorch~\cite{paszke2019} ($\ge1.13$) and N
 OpenBLAS) on CPUs and cuSOLVER, cuBLAS and MAGMA on NVIDIA GPUs; sparse products use PyTorch's CSR tensors; automatic
 differentiation is PyTorch's reverse mode. The validation and paper scripts also use SciPy, pandas, Matplotlib and
 mpmath. The test suite runs in continuous integration on Python~3.8--3.13 and with the oldest supported versions
-(Python~3.8, PyTorch~1.13, NumPy~1.21). Every paper script records the device, the matmul precision and the PyTorch,
-CUDA and cuDNN versions in a JSON file next to its table.
+(Python~3.8, PyTorch~1.13, NumPy~1.21). The paper scripts record the device, the matmul precision, the PyTorch, CUDA and
+cuDNN versions and the commit in a JSON file next to their tables; files written by earlier versions of a script lack
+some of these fields.
 
 A computation proceeds in four steps. (1) An algebra is declared by its sector sizes, and optionally sector charges,
 number field, precision and device (\texttt{TypeIAlgebra}, or a model such as \texttt{SpinChain} that creates it).
@@ -657,14 +661,20 @@ jumps between sectors; sparse sector Hamiltonians, batched Lanczos and Krylov\\
 \texttt{dynamics} & exact Schrödinger/von Neumann evolution, RK4, Lindblad equation (RK4, completely positive
 splitting, $e^{t\mathcal L}$)\\
 \texttt{functional} & functional calculus: self-adjoint, normal, singular values, holomorphic (contour); spectral cache\\
-\texttt{optimize}, \texttt{cost} & parametrisations with prescribed contrast, batched multistart \texttt{extremize};
-run-time and memory estimates\\
+\texttt{optimize}, \texttt{cost} & parametrisations with prescribed contrast, channels (\texttt{StinespringParam}) and
+Lindblad generators (\texttt{LindbladParam}); batched multistart \texttt{extremize} and \texttt{fit}; run-time and memory
+estimates\\
+\texttt{measurement} & POVMs (sectors, bases, rotated and randomised settings), sampling, likelihoods, instruments
+recording the outcome in the centre, Fisher information\\
 \texttt{inclusions} & \texttt{Inclusion}: inclusion matrices, conditional expectations, Markov trace, Jones,
 Watatani and Pimsner--Popa indices, basic construction, spin-chain tower\\
 \texttt{decompose}, \texttt{su2} & numerical Wedderburn decomposition, commutants, real/complex/quaternionic types;
 \texttt{SU2Chain}: SU(2) multiplets, Clebsch--Gordan coefficients, Wigner--Eckart theorem\\
 \texttt{divergences}, \texttt{jordan} & Petz and sandwiched Rényi divergences, recovery maps, $L^p$ norms; Jordan
 product, quadratic representation, spin factors\\
+\texttt{permutational} & $N$ two-level systems with permutation symmetry: total-spin sectors, collective operators,
+Dicke states, local jumps between sectors (\texttt{PermutationalLindbladian})\\
+\texttt{interop} & conversion to and from dense matrices, QuTiP and dynamiqs (chain layout, pinching of maps)\\
 \bottomrule
 \end{tabular}
 \caption{Modules of \texttt{torch\_vn\_algebra}.}
@@ -711,9 +721,9 @@ batch, so a Monte Carlo study of $10^5$ samples is one tensor program, not $10^5
 the stacked active blocks of all sectors of equal size, one batched call per distinct size
 (Figure~\ref{fig:layout}c); contiguous sectors are selected as views, and an unpadded algebra needs no scatter.
 
-The second principle is to compute only what is read. One batched Hermitian eigensolver serves spectra, $f(A)$, $|A|$,
-singular values, polar decompositions and normal operators (Section~\ref{sec:calculus}); it is fast and, unlike batched
-SVD on GPUs, not limited in block size. Where only the spectrum is needed (extreme eigenvalues, contrasts, entropies),
+The second principle is to compute only what is read. One batched Hermitian eigensolver serves spectra, $f(A)$ and
+normal operators, and on GPUs also $|A|$, singular values and polar decompositions of blocks larger than 32
+(Section~\ref{sec:calculus}); it is fast and, unlike batched SVD on GPUs, not limited in block size. Where only the spectrum is needed (extreme eigenvalues, contrasts, entropies),
 eigenvectors are not formed. Where the spectrum is known from the construction, no decomposition is run at all, and a
 cached eigendecomposition turns many functions of one operator into products.
 
@@ -761,14 +771,15 @@ from the Hermitian eigensolver. (2) For normal $A=H+iK$, $H$ and $K$ commute, an
 diagonalise $A$ for all but finitely many $\alpha$. The library tries a few irrational values, refines nearly tied
 eigenvectors with a second coefficient and corrects the remaining residual to first order, so normal operators also
 need only the Hermitian eigensolver. (3) Singular values, $|A|$, the pseudo-inverse and the polar decomposition come
+from batched SVD, except on GPUs for blocks larger than 32, where batched SVD falls back to a loop; there they come
 from the Hermitian eigensolver of the dilation $\left(\begin{smallmatrix}0&A\\A^*&0\end{smallmatrix}\right)$, whose
-eigenvalues are $\pm s_i$; batched SVD on GPUs is limited to blocks of size at most 32, the batched Hermitian
-eigensolver is not. (4) For arbitrary $A$ and $f$ holomorphic near the spectrum,
+eigenvalues are $\pm s_i$. (4) For arbitrary $A$ and $f$ holomorphic near the spectrum,
 $f(A)=(2\pi i)^{-1}\oint f(z)(z-A)^{-1}dz$ is evaluated by the trapezoidal rule on a circle around the
-spectrum~\cite{trefethen2014}, i.e.\ by batched LU solves, doubling the nodes until two results agree; an unconverged
-result raises an error instead of returning a wrong matrix.
+spectrum~\cite{trefethen2014}, i.e.\ by batched LU solves, doubling the nodes until two results agree; a result whose error
+estimate stays above the square root of the tolerance raises an error, and one between the two triggers a warning.
 
-\paragraph{Differentiation.} All operations are differentiable. Gradients propagated naively through eigenvectors
+\paragraph{Differentiation.} All numerical operations are differentiable, except the unitary factor of the polar
+decomposition, which is returned without gradient. Gradients propagated naively through eigenvectors
 contain factors $1/(\lambda_i-\lambda_j)$ and fail at degenerate spectra, which are typical here (projections,
 symmetric and extremal operators). The functional calculus therefore has its own backward pass: by the Daleckii--Krein
 formula~\cite{daleckii1965,bhatia1997}, the derivative of $f$ at self-adjoint $A$ is $dF=V\,(L\circ V^*dA\,V)\,V^*$,
@@ -776,7 +787,8 @@ with the Loewner matrix $L_{ij}=(f(\lambda_i)-f(\lambda_j))/(\lambda_i-\lambda_j
 $f'$ for coinciding eigenvalues, which is finite whenever $f$ is differentiable on the spectrum. Backward passes through
 the eigenvectors stay finite at degenerate spectra only for losses that do not mix a degenerate
 eigenspace~\cite{kasim2020}, and they then miss the entries $f'(\lambda)$ inside the degenerate blocks. The same
-backward pass serves $\sqrt A$, $\log A$, $A^p$, $|A|$ (as $\sqrt{A^*A}$, with $L_{ij}=1/(s_i+s_j)$) and inverses;
+backward pass serves $\sqrt A$, $\log A$, $A^p$, $|A|$ (as $\sqrt{A^*A}$, with $L_{ij}=1/(s_i+s_j)$) and inverses of
+self-adjoint operators (the pseudo-inverse of a general operator has a constant-rank backward pass of its own);
 normal $A$ use complex divided differences, and the contour integral is differentiated through its solves.
 
 \subsection{Number field and precision}\label{sec:numerics}
@@ -804,8 +816,9 @@ than $100\,\%$ in single precision, and the round-off floor of a trace inequalit
 magnitude higher.
 
 \paragraph{Cost.} An entry takes 4, 8, 8 or 16 bytes (\texttt{alg.bytes\_per\_operator(B)} reports the memory of a
-batch). A complex multiply--add costs about four real ones; for eigensolvers, and for double against single precision
-on CPUs, the measured ratios are smaller (Table~\ref{tab:numerics-time}). Data-centre GPUs execute FP64 at half the FP32
+batch). A complex multiply--add costs about four real ones; for eigensolvers the measured ratio of complex to real is
+smaller, while double against single precision costs a factor that depends on the device
+(Table~\ref{tab:numerics-time}, measured on the GPU of the full run). Data-centre GPUs execute FP64 at half the FP32
 rate, consumer GPUs at 1/32--1/64; the full-size runs of this paper used a consumer GPU. FP32 products may run in the
 TF32 format on recent GPUs; PyTorch keeps true FP32 by default, the library does not change this, and the paper scripts
 record the setting. We recommend the smallest type that is exact for the model and the precision that the size of the
