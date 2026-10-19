@@ -90,6 +90,7 @@ This README is the entry point of the repository:
 - **Interoperability with QuTiP and dynamiqs** – operators, states, channels and Lindblad jumps to and from
   `qutip.Qobj` and dynamiqs arrays, with the computational-basis layout of spin chains; the Lindblad solvers agree with
   `qutip.mesolve` and `dynamiqs.mesolve` to 1e-10 (`tests/test_interop.py`).
+- **Measurements** – POVMs and quantum instruments in the algebra: Born probabilities, sampling of counts, log-likelihoods for tomography, randomised measurements, post-measurement states, the outcome as a classical register in the centre of ⊕_j M, classical Fisher information by autograd (`tests/test_measurement.py`).
 - **Constrained optimisation** – batched multistart optimisation over unitaries and positive operators, trace
   inequalities ([Tutorial 11](man/tutorial/11_optimisation.md)).
 - **Equivariant machine learning** – equivariant linear layers as the commutant of a group representation
@@ -252,6 +253,7 @@ print((Lt(rho) - rho_t[-1]).frobenius_norm().max())
 | `divergences` | `petz_renyi_divergence`, `sandwiched_renyi_divergence`, `renyi_divergence` (with the limits α = 0, 1, ∞), `umegaki_relative_entropy`, `max_relative_entropy`, `min_relative_entropy`, `sector_contributions`; `PetzRecovery` / `petz_recovery` (also rotated), `universal_recovery`; `lp_norm`, `kosaki_norm` |
 | `jordan` | `jordan_product`, `jordan_multiplication`, `quadratic_representation`, `jordan_triple`, `jordan_power`, `transpose_map`; `jordan_algebra_generated`, `star_algebra_self_adjoint_part`, `is_jordan_subalgebra`, `compare_with_star_algebra` → `JordanAlgebra`; `SpinFactor`, `anticommuting_symmetries` |
 | `interop` | `to_dense`, `from_dense`, `channel_to_dense` (Kraus operators P_d K_i of a map into the algebra); `to_qutip`, `from_qutip`, `jumps_to_qutip` (collapse operators for `qutip.mesolve`); `to_dynamiqs`, `jumps_to_dynamiqs`; `chain_basis` (layout `layout=chain`: QuTiP's qubit order, \|0⟩ = spin up). QuTiP and dynamiqs are optional (`pip install torch_vn_algebra[interop]`) |
+| `measurement` | `POVM` (check of positivity and normalisation, Born `probabilities`, multinomial `sample`, `log_likelihood`; `sectors` (the charge), `basis` (computational basis of a `SpinChain`), `from_unitary` (tomography settings), `combine` (randomised measurements)), `Instrument` (`lueders`, `from_povm`, conditional `post_states`, `average_channel`, `as_channel`: an `InterSectorChannel` into ⊕_j M that records the outcome in the centre), `fisher_information` (classical Fisher information by autograd) |
 
 ### Inclusions, symmetries and divergences
 

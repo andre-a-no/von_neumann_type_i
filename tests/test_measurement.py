@@ -1,7 +1,5 @@
 """measurement: POVMs (checks, Born probabilities, sampling, likelihood), instruments (post-measurement states, the
 average channel, the outcome register in the centre) and the classical Fisher information."""
-import math
-
 import pytest
 import torch
 

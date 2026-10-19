@@ -7,6 +7,17 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 ## [Unreleased]
 
 ### Added
+- `measurement` module (`POVM` and `Instrument` exported at top level): POVMs with a one-time check of positivity
+  and normalisation, Born probabilities, batched multinomial sampling of counts (reproducible with a generator) and
+  log-likelihoods; constructors `POVM.sectors` (measurement of the charge), `POVM.basis` (rank-one
+  projections, the computational basis of a `SpinChain`), `POVM.from_unitary` (rotated bases for tomography) and
+  `POVM.combine` (randomised measurements, outcomes (setting, result)). `Instrument` (sector-preserving Kraus
+  operators per outcome; `lueders`, `from_povm`): probabilities, conditional `post_states`, `average_channel` (a
+  `Channel`) and `as_channel`, an `InterSectorChannel` from M into ⊕_j M (sectors (j, c)) whose centre records the
+  outcome. `fisher_information(prob_fn, params)`: classical Fisher information J^T diag(1/p) J by autograd, shared or
+  per-sample parameters, complex parameters as real and imaginary parts. Tests `tests/test_measurement.py` (agreement
+  with `born_probabilities`, `sector_probabilities`, `lueders_update` and QuTiP's computational basis, sampling
+  statistics, the analytic Fisher information of a qubit).
 - `interop` module: conversion of operators, states, channels and Lindblad jump operators to and from dense
   matrices, `qutip.Qobj` and dynamiqs arrays (`to_dense`, `from_dense`, `channel_to_dense`, `to_qutip`, `from_qutip`,
   `jumps_to_qutip`, `to_dynamiqs`, `jumps_to_dynamiqs`). `layout=chain` places a `SpinChain` in the computational basis
