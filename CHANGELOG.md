@@ -9,13 +9,23 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 ## [1.2.0] – 2026-10-19
 
 Backward compatible: everything of 1.1.0 works unchanged. New: conversion to QuTiP and dynamiqs, channels and
-Lindblad generators as trainable parameters, measurements and instruments.
+Lindblad generators as trainable parameters, measurements and instruments, the projection lattice and measures on it.
 
 ### Added
+- `projections` module: the projection lattice (`join` = P ∨ Q, `meet` = P ∧ Q, `complement`, `support`, `ranks`,
+  Haar `random_projection` with prescribed rank per sector, `bloch_vector` of a 2×2 block); `ProjectionMeasure`,
+  finitely additive measures on the projections of ⊕M_k: linear (a state, `from_state`), weighted dimension functions
+  (`dimension`), frame functions on 2×2 blocks (the only non-linear measures, by Gleason's theorem), dispersion-free
+  measures (`dispersion_free`, which exist only on blocks of size ≤ 2, by Kochen–Specker), `modular_defect`,
+  `gleason_state`, `is_linear`, `is_dimension_function`; `spectral_measure(A)`, the spectral measure of a self-adjoint
+  operator (eigenvalues merged across sectors, or one outcome per eigenvector for a batch).
+- `measurement.PVM` (exported): a projective POVM with real values per outcome; `observable`, `expectation`,
+  `variance`, spectral projections `projection(predicate)`, `pushforward(f)` (the spectral measure of f(A)).
+  Tests `tests/test_projections.py`, including the modular-law and measure propositions of the trace paper.
 - `learn` module: quantum channels as trainable networks. `ChannelLayer` (Stinespring isometries, within one algebra
   or between algebras with allowed sector transitions), `UnitaryLayer`, `LindbladLayer` (continuous depth),
   `Residual` ((1−p)·id + p·Φ, the completely positive skip connection; n blocks with p = t/n tend to exp(t(Φ − id))),
-  `PostSelect` (central projection, records the acceptance), `FeedForward` (instrument outcome in the centre, one
+  `PostSelect` (a projection of M, e.g. a set of sectors; records the acceptance), `FeedForward` (instrument outcome in the centre, one
   branch per outcome); losses and `count_parameters`. All are `torch.nn.Module`s; every parameter value is a channel.
 - `measurement` module (`POVM` and `Instrument` exported at top level): POVMs with a one-time check of positivity
   and normalisation, Born probabilities, batched multinomial sampling of counts (reproducible with a generator) and

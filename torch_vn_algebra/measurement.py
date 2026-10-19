@@ -22,7 +22,7 @@ sector label j, its distribution the sector probabilities of the output state.
 Everything is differentiable in the state, the effects and the Kraus operators. The effects are dense: a POVM costs
 J * C * k_max^2 entries per sample, so POVM.basis is meant for algebras of moderate size.
 """
-from typing import List, Optional, Sequence, Tuple
+from typing import Callable, List, Optional, Sequence, Tuple
 
 import torch
 
@@ -242,6 +242,91 @@ class POVM:
         E = torch.cat([w[s].to(P.effects.dtype) * P.effects.expand(B, *P.effects.shape[1:])
                        for s, P in enumerate(povms)], dim=1)
         return POVM(E, alg, check=False, outcomes=[(s, o) for s, P in enumerate(povms) for o in P.outcomes])
+
+
+# ======================================================================
+# PVM
+# ======================================================================
+class PVM(POVM):
+    """
+    Projection-valued measure: a POVM whose effects E_j are projections (hence mutually orthogonal, as they sum to 1),
+    with a real value lambda_j per outcome: the spectral measure of the self-adjoint A = sum_j lambda_j E_j
+    (projections.spectral_measure builds it from A). values: shape (J,) or (batch, J), default 0..J-1.
+
+        E = PVM.from_povm(POVM.basis(alg), values)        # a measurement in the computational basis with values
+        E.observable(), E.expectation(rho), E.variance(rho)
+        E.projection(lambda v: v > 0)                     # spectral projection E(Delta) for Delta = (0, oo)
+        E.pushforward(torch.abs)                          # spectral measure of f(A), equal values merged
+    """
+
+    def __init__(self, projections, values=None, algebra: Optional[TypeIAlgebra] = None, check: bool = True,
+                 outcomes: Optional[Sequence] = None, tol: Optional[float] = None):
+        super().__init__(projections, algebra, check=check, outcomes=outcomes, tol=tol)
+        J = len(self)
+        real = self.algebra.hilbert.real_dtype
+        v = torch.arange(J, dtype=real) if values is None else _as_tensor(values)
+        if torch.is_complex(v):
+            raise ValueError("PVM: the values must be real")
+        v = v.to(device=self.effects.device, dtype=real)
+        v = v.unsqueeze(0) if v.dim() == 1 else v
+        if v.dim() != 2 or v.shape[-1] != J:
+            raise ValueError(f"PVM: need one value per outcome ({J}), got shape {tuple(v.shape)}")
+        _check_batch(v.shape[0], self.batch_size, "PVM")
+        self.values = v
+        if check and not self.is_projective(tol):
+            raise ValueError("PVM: the effects must be projections")
+
+    @staticmethod
+    def from_povm(povm: POVM, values=None, tol: Optional[float] = None) -> 'PVM':
+        """A projective POVM with values attached (checked to be projective)."""
+        return PVM(povm.effects, values, povm.algebra, check=True, outcomes=povm.outcomes, tol=tol)
+
+    def __repr__(self) -> str:
+        return f"PVM(batch={self.batch_size}, outcomes={len(self)}, C={self.algebra.C}, k_max={self.algebra.k_max})"
+
+    def observable(self) -> Operator:
+        """A = sum_j lambda_j E_j, self-adjoint."""
+        v = self.values.to(self.effects.dtype)[..., None, None, None]
+        return self.algebra.operator((v * self.effects).sum(dim=1), is_self_adjoint=True)
+
+    def expectation(self, rho: Operator) -> torch.Tensor:
+        """sum_j lambda_j Tr(rho E_j), shape (batch,)."""
+        return (self.probabilities(rho) * self.values).sum(-1)
+
+    def variance(self, rho: Operator) -> torch.Tensor:
+        """sum_j p_j (lambda_j - mean)^2 for the normalised Born distribution, shape (batch,)."""
+        p = self.probabilities(rho)
+        p = p / p.sum(-1, keepdim=True)
+        m = (p * self.values).sum(-1, keepdim=True)
+        return (p * (self.values - m) ** 2).sum(-1)
+
+    def projection(self, predicate: Callable[[torch.Tensor], torch.Tensor]) -> Operator:
+        """The spectral projection E(Delta) = sum of E_j over the outcomes with predicate(lambda_j) true (predicate
+        maps the values tensor (batch, J) to a boolean tensor of the same shape)."""
+        mask = predicate(self.values)
+        if mask.shape != self.values.shape or mask.dtype != torch.bool:
+            raise ValueError("PVM.projection: the predicate must return a boolean tensor shaped like the values")
+        m = (mask.to(self.effects.dtype)[..., None, None, None] * self.effects).sum(dim=1)
+        return self.algebra.operator(m, is_self_adjoint=True, is_positive=True, is_projection=True)
+
+    def pushforward(self, f: Callable[[torch.Tensor], torch.Tensor], tol: Optional[float] = None) -> 'PVM':
+        """The spectral measure of f(A): values f(lambda_j); for batch 1, outcomes with values closer than tol are
+        merged (their projections added)."""
+        v = f(self.values)
+        if self.values.shape[0] != 1:
+            return PVM(self.effects, v, self.algebra, check=False, outcomes=self.outcomes)
+        tol = _default_tol(self.effects.dtype) if tol is None else tol
+        order = torch.argsort(v[0]).tolist()
+        vals = v[0].tolist()
+        groups = []
+        for j in order:
+            if groups and vals[j] - vals[groups[-1][-1]] <= tol:
+                groups[-1].append(j)
+            else:
+                groups.append([j])
+        E = torch.stack([self.effects[:, g].sum(dim=1) for g in groups], dim=1)
+        new = torch.stack([v[0, g].mean() for g in groups]).unsqueeze(0)
+        return PVM(E, new, self.algebra, check=False)
 
 
 # ======================================================================
