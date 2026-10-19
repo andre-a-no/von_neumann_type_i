@@ -12,8 +12,8 @@ of inputs for M); every output is measured in k_max + 3 Haar-random bases of M (
 unitaries, combined with equal weights; every outcome also reveals the charge N, so POVM.sectors is a coarse-graining
 of each setting). Counts are sampled with a fixed total number of shots per probe (1e2 ... 1e5), and the exact
 probabilities serve as the limit of infinitely many shots. Four models are fitted by maximum likelihood
-(learn.negative_log_likelihood, torch.optim.Adam with cosine decay, several random starts; the start with the smallest
-training loss is kept):
+(learn.negative_log_likelihood; torch.optim.Adam with cosine decay, then torch.optim.LBFGS; several random starts, the
+start with the smallest training loss is kept):
 
   rates     the noise model with known jump operators and four unknowns (J, g_down, g_up, g_phi);
   lindblad  learn.LindbladLayer: a free self-adjoint H in M, n-1 free jumps inside the sectors and n free jumps
@@ -32,7 +32,10 @@ the learned rates (GKSL: least-squares projection of the learned generator onto 
 with their spread over independent data sets and, for the rate model, the Cramer-Rao error bars from the Fisher
 information. Writes man/article/generated/channel_learning.{json,tex} and man/article/figures/channel_learning.pdf.
 
-    python scripts/channel_learning.py [--dims 3,4] [--steps 1500] [--starts 3] [--repeats 6] [--workers 4]
+    python scripts/channel_learning.py [--dims 3,4] [--adam 300] [--lbfgs 400] [--repeats 6] [--workers 4]
+    python scripts/channel_learning.py --replot man/article/generated/channel_learning.json   # figure and macros only
+
+About 15 minutes on 4 CPU cores (one fit per core, one thread each).
 """
 import argparse
 import json
@@ -66,6 +69,7 @@ COLORS = {'rates': '#1baf7a', 'lindblad': '#2a78d6', 'algebra': '#eda100', 'dens
 LABELS = {'rates': 'rates (4 parameters)', 'lindblad': r'GKSL in $\mathcal{M}$, jumps $N\to N, N\pm1$',
           'algebra': r'channel of $\mathcal{M}$', 'dense': r'channel of $M_{2^n}$ (dense)'}
 GREY, INK = '#7d848c', '#0b0b0b'
+OFFSET = {'rates': 0.7, 'lindblad': 0.85, 'algebra': 1.15, 'dense': 1.4}           # 'exact' markers side by side
 
 
 # ----------------------------------------------------------------------
@@ -496,7 +500,7 @@ def shots_key(shots):
     return 'exact' if shots is None else str(int(shots))
 
 
-def figure(main, fisher, nmax, path):
+def figure(main, spread, nmax, repeat_shots, repeats, path):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
@@ -504,7 +508,8 @@ def figure(main, fisher, nmax, path):
                          'ytick.color': GREY, 'text.color': INK})
     finite = [s for s in SHOTS if s is not None]
     xs = finite + [10 * finite[-1]]                                             # 'exact' drawn one decade right
-    fig, (ax, bx) = plt.subplots(1, 2, figsize=(7.2, 2.9))
+    floor = 1.5e-4
+    fig, (ax, bx) = plt.subplots(1, 2, figsize=(7.2, 3.1), gridspec_kw={'width_ratios': [1.25, 1]})
     ns = sorted({r['n'] for r in main})
     for model in MODELS:
         for n in ns:
@@ -514,49 +519,50 @@ def figure(main, fisher, nmax, path):
             ax.plot(xs[:-1], ys[:-1], '-' if solid else '--', color=COLORS[model], lw=1.5 if solid else 0.9,
                     marker='o' if solid else None, ms=3.5, alpha=1 if solid else 0.6,
                     label=LABELS[model] if solid else None)
-            ax.plot(xs[-1], ys[-1], marker='o' if solid else 'x', color=COLORS[model], ms=3.5, ls='none',
-                    alpha=1 if solid else 0.6)
+            if solid:                                          # exact data: the optimisation floor (clipped)
+                ax.plot(xs[-1] * OFFSET[model], max(ys[-1], floor), marker='o' if ys[-1] >= floor else 'v', color=COLORS[model],
+                        ms=4, ls='none')
     ref = np.array(finite, dtype=float)
-    ax.plot(ref, 0.5 * (ref / ref[0]) ** -0.5, ':', color=GREY, lw=0.9)
-    ax.text(ref[1], 0.5 * (ref[1] / ref[0]) ** -0.5 * 1.25, r'$\propto 1/\sqrt{\mathrm{shots}}$', color=GREY,
+    ax.plot(ref, 2.5e-2 * (ref / ref[0]) ** -0.5, ':', color=GREY, lw=0.9)
+    ax.text(ref[2], 2.5e-2 * (ref[2] / ref[0]) ** -0.5 * 1.3, r'$\propto 1/\sqrt{\mathrm{shots}}$', color=GREY,
             fontsize=7)
     ax.set_xscale('log')
     ax.set_yscale('log')
+    ax.set_ylim(1e-4, 1)
     ax.set_xticks(xs)
     ax.set_xticklabels([r'$10^{%d}$' % round(math.log10(s)) for s in finite] + ['exact'])
     ax.axvline(math.sqrt(finite[-1] * xs[-1]), color='#e6e5e1', lw=0.8)
     ax.set_xlabel('shots per probe state')
     ax.set_ylabel('held-out trace distance')
     ax.set_title(f'(a) prediction error, $n={nmax}$ (dashed: $n={min(ns)}$)', fontsize=8, loc='left')
-    ax.legend(frameon=False, fontsize=6.5, loc='lower left')
     ax.spines[['top', 'right']].set_visible(False)
-    # (b) relative error of the learned rates
-    marks = {'down': 'o', 'up': 's', 'phi': '^'}
-    names = {'down': r'$\gamma_\downarrow$', 'up': r'$\gamma_\uparrow$', 'phi': r'$\gamma_\varphi$'}
-    F = np.array(fisher[nmax])
-    cov = np.linalg.inv(F)
-    for model, filled in (('rates', True), ('lindblad', False)):
-        for i, k in enumerate(KINDS):
-            ys = [abs(next(r['rates'][k] for r in main if r['n'] == nmax and r['model'] == model
-                           and r['shots'] == s) / RATES[k] - 1) for s in finite]
-            bx.plot(finite, np.maximum(ys, 1e-6), marker=marks[k], color=COLORS[model], ms=4, lw=0.9,
-                    mfc=COLORS[model] if filled else 'white')
-    for i, k in enumerate(KINDS):
-        sd = np.sqrt(cov[1 + i, 1 + i] / np.array(finite, dtype=float)) / RATES[k]
-        bx.plot(finite, sd, ls=['-', '--', ':'][i], color=GREY, lw=0.9)
-    handles = [plt.Line2D([], [], color=INK, marker=marks[k], ls='none', mfc='white', ms=4, label=names[k])
-               for k in KINDS]
-    handles += [plt.Line2D([], [], color=COLORS['rates'], marker='o', ms=4, label='rate model'),
-                plt.Line2D([], [], color=COLORS['lindblad'], marker='o', mfc='white', ms=4, label='GKSL layer'),
-                plt.Line2D([], [], color=GREY, label='Cramér–Rao $\\sigma$ (rate model)')]
-    bx.legend(handles=handles, frameon=False, fontsize=6.5, loc='lower left', ncol=2)
-    bx.set_xscale('log')
-    bx.set_yscale('log')
-    bx.set_xlabel('shots per probe state')
-    bx.set_ylabel(r'$|\hat\gamma/\gamma-1|$')
-    bx.set_title(f'(b) learned rates, $n={nmax}$', fontsize=8, loc='left')
+    # (b) learned parameters over independent data sets
+    sp = spread[nmax]
+    keys = ('J',) + KINDS
+    true = dict(J=J_TRUE, **RATES)
+    names = {'J': '$J$', 'down': r'$\gamma_\downarrow$', 'up': r'$\gamma_\uparrow$', 'phi': r'$\gamma_\varphi$'}
+    for i, k in enumerate(keys):
+        cr = sp['cramer_rao'][k] / true[k]
+        bx.add_patch(plt.Rectangle((i - 0.3, 1 - cr), 0.6, 2 * cr, color='#e6e5e1', lw=0))
+    bx.axhline(1, color=GREY, lw=0.8)
+    for model, dx, filled in (('rates', -0.12, True), ('lindblad', 0.12, False)):
+        m = [sp[model][k]['mean'] / true[k] for k in keys]
+        e = [sp[model][k]['std'] / true[k] for k in keys]
+        bx.errorbar(np.arange(len(keys)) + dx, m, yerr=e, fmt='o', color=COLORS[model], ms=4, capsize=2, lw=1,
+                    mfc=COLORS[model] if filled else 'white', label=LABELS[model] if model == 'rates'
+                    else 'GKSL layer, projected')
+    bx.add_patch(plt.Rectangle((0, 0), 0, 0, color='#e6e5e1', label='Cramér–Rao $\\pm\\sigma$ (rate model)'))
+    bx.set_xticks(range(len(keys)))
+    bx.set_xticklabels([names[k] for k in keys])
+    bx.set_xlim(-0.6, len(keys) - 0.4)
+    bx.set_ylabel('learned / true')
+    bx.set_title(f'(b) parameters, $n={nmax}$, $10^{{{round(math.log10(repeat_shots))}}}$ shots, '
+                 f'{repeats} data sets', fontsize=8, loc='left')
+    bx.legend(frameon=False, fontsize=6.5, loc='lower left')
     bx.spines[['top', 'right']].set_visible(False)
-    fig.tight_layout()
+    handles = [plt.Line2D([], [], color=COLORS[m], marker='o', ms=3.5, lw=1.5, label=LABELS[m]) for m in MODELS]
+    fig.legend(handles=handles, loc='lower center', ncol=4, frameon=False, fontsize=7)
+    fig.tight_layout(rect=(0, 0.07, 1, 1))
     fig.savefig(path, metadata={'CreationDate': None})
     plt.close(fig)
 
@@ -677,14 +683,16 @@ def report(payload, outdir, figdir):
     dims = setup['dims']
     nmax = max(dims)
     starts = setup['starts']
-    checks, fisher = payload['checks'], payload['fisher_per_shot']
+    checks = payload['checks']
     runtime = payload['runtime_seconds']
     sp_all = payload['spread']
     fits = payload['fits']
     main_fits = [r for r in fits if r['repeat'] == 0 and r['h_scale'] == H_SCALE]
     init_study = [r for r in fits if r['h_scale'] != H_SCALE][0]
+    start_spread = max((max(r['losses']) - min(r['losses'])) / min(r['losses']) for r in fits
+                       if r['shots'] is not None and r['h_scale'] == H_SCALE)
     Path(figdir).mkdir(parents=True, exist_ok=True)
-    figure(main_fits, fisher, nmax, Path(figdir) / 'channel_learning.pdf')
+    figure(main_fits, sp_all, nmax, setup['repeat_shots'], setup['repeats'], Path(figdir) / 'channel_learning.pdf')
     gen = Path(outdir)
     # ---- TeX
     get = lambda n, m, s: next(r for r in main_fits if r['n'] == n and r['model'] == m and r['shots'] == s)
@@ -730,7 +738,8 @@ def report(payload, outdir, figdir):
            f'\\newcommand{{\\CLHScale}}{{{H_SCALE:g}}}',
            f'\\newcommand{{\\CLInitConverged}}{{{sum(l < 1e-6 for l in init_study["losses"])}}}',
            f'\\newcommand{{\\CLInitStarts}}{{{len(init_study["losses"])}}}',
-           f'\\newcommand{{\\CLInitLoss}}{{{sci(max(init_study["losses"]))}}}']
+           f'\\newcommand{{\\CLInitLoss}}{{{sci(max(init_study["losses"]))}}}',
+           f'\\newcommand{{\\CLStartSpread}}{{{sci(start_spread)}}}']
     for m in MODELS:
         M = MACRO[m]
         tex.append(f'\\newcommand{{\\CLPar{M}}}{{{get(nmax, m, None)["params"]}}}')
@@ -743,6 +752,12 @@ def report(payload, outdir, figdir):
             tex.append(f'\\newcommand{{\\CLTDMin{M}{WORD[s]}}}{{{sci(get(min(dims), m, s)["trace_distance"])}}}')
         tex.append(f'\\newcommand{{\\CLOff{M}}}{{{sci(get(nmax, m, 10000)["off_sector"])}}}')
         tex.append(f'\\newcommand{{\\CLSec{M}}}{{{get(nmax, m, 10000)["seconds"] / starts[m]:.0f}}}')
+    finite = [x for x in SHOTS if x is not None]
+    for m in MODELS:                                   # log-log slope of the error over the finite shot budgets
+        slope = -np.polyfit(np.log10(finite), np.log10([get(nmax, m, x)['trace_distance'] for x in finite]), 1)[0]
+        tex.append(f'\\newcommand{{\\CLSlope{MACRO[m]}}}{{{slope:.2f}}}')
+    ratio = get(nmax, 'algebra', None)['params'] / get(nmax, 'lindblad', None)['params']
+    tex.append(f'\\newcommand{{\\CLParRatio}}{{{ratio:.0f}}}')
     target = get(nmax, 'algebra', 1000)['trace_distance']
     need = {m: shots_to_reach(main_fits, nmax, m, target) for m in MODELS}
     tex.append(f'\\newcommand{{\\CLTarget}}{{{sci(target)}}}')

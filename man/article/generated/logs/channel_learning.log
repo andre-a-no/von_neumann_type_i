@@ -19,3 +19,52 @@
 [19/65] n=4 algebra  shots= 10000 rep=0 h=0.1: loss 5.77e-03, trace distance 2.64e-02, Choi 5.22e-02, 56 s
 [20/65] n=4 algebra  shots=100000 rep=0 h=0.1: loss 5.41e-04, trace distance 1.01e-02, Choi 2.46e-02, 59 s
 [21/65] n=4 algebra  shots= exact rep=0 h=0.1: loss 8.71e-09, trace distance 6.49e-04, Choi 1.33e-03, 59 s
+[22/65] n=4 lindblad shots= 10000 rep=1 h=0.1: loss 6.26e-03, trace distance 2.21e-02, Choi 3.93e-02, 86 s
+[23/65] n=4 lindblad shots= 10000 rep=2 h=0.1: loss 6.37e-03, trace distance 2.28e-02, Choi 4.24e-02, 90 s
+[24/65] n=4 lindblad shots= 10000 rep=4 h=0.1: loss 6.42e-03, trace distance 2.11e-02, Choi 3.67e-02, 84 s
+[25/65] n=4 lindblad shots= 10000 rep=3 h=0.1: loss 6.32e-03, trace distance 2.13e-02, Choi 3.84e-02, 90 s
+[26/65] n=3 lindblad shots=   100 rep=0 h=0.1: loss 1.84e-01, trace distance 8.95e-02, Choi 1.47e-01, 24 s
+[27/65] n=3 lindblad shots=  1000 rep=0 h=0.1: loss 2.05e-02, trace distance 3.75e-02, Choi 6.37e-02, 25 s
+[28/65] n=3 lindblad shots= 10000 rep=0 h=0.1: loss 1.94e-03, trace distance 1.55e-02, Choi 2.61e-02, 24 s
+[29/65] n=3 lindblad shots=100000 rep=0 h=0.1: loss 2.02e-04, trace distance 5.85e-03, Choi 9.46e-03, 25 s
+[30/65] n=4 rates    shots=   100 rep=0 h=0.1: loss 4.99e-01, trace distance 7.43e-03, Choi 8.64e-03, 12 s
+[31/65] n=3 lindblad shots= exact rep=0 h=0.1: loss 7.62e-12, trace distance 4.22e-06, Choi 5.44e-06, 26 s
+[32/65] n=4 rates    shots=  1000 rep=0 h=0.1: loss 6.95e-02, trace distance 2.57e-03, Choi 3.06e-03, 12 s
+[33/65] n=4 lindblad shots= 10000 rep=5 h=0.1: loss 6.29e-03, trace distance 2.16e-02, Choi 4.07e-02, 83 s
+[34/65] n=4 rates    shots= 10000 rep=0 h=0.1: loss 7.09e-03, trace distance 9.56e-04, Choi 1.04e-03, 13 s
+[35/65] n=4 rates    shots= exact rep=0 h=0.1: loss 0.00e+00, trace distance 3.59e-09, Choi 4.05e-09, 11 s
+[36/65] n=4 rates    shots=100000 rep=0 h=0.1: loss 7.08e-04, trace distance 2.55e-04, Choi 3.42e-04, 14 s
+[37/65] n=3 algebra  shots=   100 rep=0 h=0.1: loss 1.79e-01, trace distance 1.02e-01, Choi 1.67e-01, 13 s
+[38/65] n=3 algebra  shots=  1000 rep=0 h=0.1: loss 1.94e-02, trace distance 3.98e-02, Choi 7.03e-02, 12 s
+[39/65] n=3 algebra  shots= 10000 rep=0 h=0.1: loss 1.77e-03, trace distance 1.65e-02, Choi 2.97e-02, 14 s
+[40/65] n=3 algebra  shots=100000 rep=0 h=0.1: loss 1.75e-04, trace distance 7.24e-03, Choi 1.25e-02, 14 s
+[41/65] n=3 algebra  shots= exact rep=0 h=0.1: loss 7.02e-09, trace distance 4.64e-04, Choi 9.00e-04, 13 s
+[42/65] n=3 lindblad shots= 10000 rep=1 h=0.1: loss 1.94e-03, trace distance 1.43e-02, Choi 2.27e-02, 16 s
+[43/65] n=3 lindblad shots= 10000 rep=2 h=0.1: loss 2.00e-03, trace distance 1.54e-02, Choi 2.48e-02, 15 s
+[44/65] n=3 lindblad shots= 10000 rep=3 h=0.1: loss 1.87e-03, trace distance 1.63e-02, Choi 2.75e-02, 16 s
+[45/65] n=3 lindblad shots= 10000 rep=4 h=0.1: loss 2.16e-03, trace distance 1.65e-02, Choi 2.54e-02, 17 s
+[46/65] n=3 lindblad shots= 10000 rep=5 h=0.1: loss 1.99e-03, trace distance 1.48e-02, Choi 2.42e-02, 14 s
+[47/65] n=4 rates    shots= 10000 rep=1 h=0.1: loss 6.95e-03, trace distance 5.88e-04, Choi 6.26e-04, 8 s
+[48/65] n=4 rates    shots= 10000 rep=2 h=0.1: loss 7.07e-03, trace distance 3.36e-04, Choi 5.07e-04, 8 s
+[49/65] n=4 rates    shots= 10000 rep=4 h=0.1: loss 7.10e-03, trace distance 1.09e-03, Choi 1.23e-03, 9 s
+[50/65] n=3 rates    shots=   100 rep=0 h=0.1: loss 2.05e-01, trace distance 1.04e-02, Choi 1.32e-02, 3 s
+[51/65] n=4 rates    shots= 10000 rep=3 h=0.1: loss 6.93e-03, trace distance 1.48e-03, Choi 1.65e-03, 11 s
+[52/65] n=4 rates    shots= 10000 rep=5 h=0.1: loss 7.05e-03, trace distance 9.30e-04, Choi 1.35e-03, 7 s
+[53/65] n=3 rates    shots= 10000 rep=0 h=0.1: loss 2.32e-03, trace distance 1.46e-03, Choi 1.71e-03, 3 s
+[54/65] n=3 rates    shots=  1000 rep=0 h=0.1: loss 2.34e-02, trace distance 2.82e-03, Choi 3.52e-03, 5 s
+[55/65] n=3 rates    shots=100000 rep=0 h=0.1: loss 2.42e-04, trace distance 4.83e-04, Choi 6.68e-04, 3 s
+[56/65] n=3 rates    shots= 10000 rep=1 h=0.1: loss 2.29e-03, trace distance 4.75e-04, Choi 7.72e-04, 2 s
+[57/65] n=3 rates    shots= exact rep=0 h=0.1: loss 1.30e-13, trace distance 7.36e-08, Choi 1.15e-07, 3 s
+[58/65] n=3 rates    shots= 10000 rep=2 h=0.1: loss 2.37e-03, trace distance 6.10e-04, Choi 7.97e-04, 2 s
+[59/65] n=3 rates    shots= 10000 rep=3 h=0.1: loss 2.26e-03, trace distance 2.05e-03, Choi 2.27e-03, 2 s
+[60/65] n=3 rates    shots= 10000 rep=4 h=0.1: loss 2.54e-03, trace distance 1.58e-03, Choi 1.88e-03, 2 s
+[61/65] check n=3 (0 s)
+[62/65] check n=4 (1 s)
+[63/65] n=3 rates    shots= 10000 rep=5 h=0.1: loss 2.37e-03, trace distance 8.78e-04, Choi 1.14e-03, 2 s
+[64/65] fisher n=3 (2 s)
+[65/65] fisher n=4 (99 s)
+wrote figures/channel_learning.pdf and generated/channel_learning.{json,tex}; 863 s
+
+real	14m28.606s
+user	40m1.803s
+sys	1m29.620s

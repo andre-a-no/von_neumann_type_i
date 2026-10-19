@@ -1,0 +1,158 @@
+% Tomography in the algebra as training (part of Section sec:learn; the register of Section sec:noisy).
+% Numbers: scripts/channel_learning.py -> generated/channel_learning.tex (macros \CL...), figures/channel_learning.pdf.
+% The file loads its macros itself if the preamble has not (\gen{channel_learning}).
+\IfFileExists{generated/channel_learning.tex}{\ifdefined\CLRows\else\input{generated/channel_learning.tex}\fi}{}
+\providecommand{\CLRows}{\multicolumn{10}{c}{\emph{run scripts/channel\_learning.py}}\\}
+\providecommand{\CLT}{1}\providecommand{\CLGdown}{0.1}\providecommand{\CLGup}{0.02}\providecommand{\CLGphi}{0.05}
+\providecommand{\CLnMin}{3}\providecommand{\CLnMax}{4}\providecommand{\CLProbes}{--}\providecommand{\CLProbesMin}{--}
+\providecommand{\CLTest}{--}\providecommand{\CLSettingsAlg}{--}\providecommand{\CLSettingsDense}{--}
+\providecommand{\CLDimAlg}{--}\providecommand{\CLDimDense}{--}\providecommand{\CLSetAlg}{--}
+\providecommand{\CLSetDense}{--}\providecommand{\CLIdentDense}{--}\providecommand{\CLDenseCheck}{--}
+\providecommand{\CLFastPath}{--}\providecommand{\CLAdam}{--}\providecommand{\CLLbfgs}{--}
+\providecommand{\CLStartsRates}{--}\providecommand{\CLStartsLindblad}{--}\providecommand{\CLStartsAlgebra}{--}
+\providecommand{\CLStartsDense}{--}\providecommand{\CLStartSpread}{--}\providecommand{\CLRepeats}{--}
+\providecommand{\CLRepeatShots}{--}\providecommand{\CLRuntime}{--}\providecommand{\CLWorkers}{4}
+\providecommand{\CLHScale}{--}\providecommand{\CLInitConverged}{--}\providecommand{\CLInitStarts}{--}
+\providecommand{\CLInitLoss}{--}\providecommand{\CLParLindblad}{--}\providecommand{\CLParAlgebra}{--}
+\providecommand{\CLParDense}{--}\providecommand{\CLTDRatesTwo}{--}\providecommand{\CLTDRatesFour}{--}
+\providecommand{\CLTDLindbladFour}{--}\providecommand{\CLTDAlgebraFour}{--}\providecommand{\CLTDDenseFour}{--}
+\providecommand{\CLTDLindbladExact}{--}\providecommand{\CLTDAlgebraExact}{--}\providecommand{\CLTDDenseExact}{--}
+\providecommand{\CLTDAlgebraFive}{--}\providecommand{\CLOffDense}{--}\providecommand{\CLTarget}{--}
+\providecommand{\CLNeedLindblad}{--}\providecommand{\CLNeedAlgebra}{--}\providecommand{\CLNeedDense}{--}
+\providecommand{\CLNeedRatio}{--}\providecommand{\CLResidual}{--}\providecommand{\CLParRatio}{--}
+\providecommand{\CLSlopeRates}{--}\providecommand{\CLSlopeLindblad}{--}\providecommand{\CLSlopeAlgebra}{--}\providecommand{\CLSlopeDense}{--}
+\providecommand{\CLRatesJ}{--}\providecommand{\CLRatesJSd}{--}\providecommand{\CLCRJ}{--}
+\providecommand{\CLRatesDown}{--}\providecommand{\CLRatesDownSd}{--}\providecommand{\CLCRDown}{--}
+\providecommand{\CLRatesUp}{--}\providecommand{\CLRatesUpSd}{--}\providecommand{\CLCRUp}{--}
+\providecommand{\CLRatesPhi}{--}\providecommand{\CLRatesPhiSd}{--}\providecommand{\CLCRPhi}{--}
+\providecommand{\CLLindbladDown}{--}\providecommand{\CLLindbladDownSd}{--}
+\providecommand{\CLLindbladUp}{--}\providecommand{\CLLindbladUpSd}{--}
+\providecommand{\CLLindbladPhi}{--}\providecommand{\CLLindbladPhiSd}{--}
+\subsection{Tomography in the algebra as training}\label{sec:learn-tomo}
+
+Process tomography by maximum likelihood is training in the sense of this section: the model is a parametrised
+channel, the data are measurement counts on the outputs of known inputs, and the loss is the negative
+log-likelihood. Learned models of this kind are used for process tomography with tensor
+networks~\cite{torlai2023} and for state tomography with neural-network states~\cite{torlai2018}. The algebra enters
+twice. First, it fixes what has to be measured. If $\M\subset B(\mathcal H)$ is a unital $*$-subalgebra, then
+$\Tr(\rho A)=\Tr(E_\M(\rho)A)$ for $A\in\M$, where $E_\M$ is the trace-preserving conditional expectation, and the
+pairing $(\sigma,A)\mapsto\Tr(\sigma A)$ is nondegenerate on $\M$ (take $A=\sigma^*$). Measurements of observables of
+$\M$ therefore determine exactly $E_\M(\rho)$, and a process that maps $\M$ into $\M$, such as the noisy register of
+Section~\ref{sec:noisy}, is determined on $\M$ by inputs in $\M$ and measurements in $\M$. Permutationally invariant
+tomography~\cite{toth2010} is the case of the commutant of the permutations. Second, the model can respect the
+sectors. A channel of $\M=\bigoplus_NM_{\binom nN}$ ranges over a set of dimension $(\dim\M)^2-\dim\M$, which is
+$\CLSetAlg$ for $n=\CLnMax$, against $4^{2n}-4^n=\CLSetDense$ for a channel of $M_{2^n}$. A GKSL generator whose jumps
+change $N$ by at most one has fewer parameters still. We measure what each level of structure buys, with the same
+simulated experiment for all models.
+
+\paragraph{Setup.} The register is the ring of Section~\ref{sec:noisy} with $n=\CLnMin$ and $n=\CLnMax$ qubits. The
+XY mixer acts for a time $T=\CLT$, together with amplitude damping, thermal excitation and dephasing at the rates
+$\gamma_\downarrow=\CLGdown$, $\gamma_\uparrow=\CLGup$ and $\gamma_\varphi=\CLGphi$. The true process
+$\Phi=e^{T\mathcal L}$ is computed by \texttt{lindblad\_evolve} with the exact exponential. A dense Lindblad evolution in
+$M_{2^n}$, with $H$ and the jumps converted by \texttt{interop}, agrees with it to $\CLDenseCheck$. The training
+inputs are the $2^n$ basis states and $\binom nN^2$ Haar-random pure states in every sector with $\binom nN>1$. They
+span $\M$, and
+there are $\CLProbes$ of them for $n=\CLnMax$. The held-out inputs are $\CLTest$ further states: three pure states in each
+of these sectors and eight random mixed states with weight on all sectors. Each output is measured in $\CLSettingsAlg$
+Haar-random bases of $\M$ (\texttt{POVM.from\_unitary} of block-diagonal unitaries, combined with equal weights by
+\texttt{POVM.combine}). Every outcome of such a basis also reveals $N$, so the charge measurement
+\texttt{POVM.sectors} is a coarse-graining of each setting. The counts are sampled with $10^2$ to $10^5$ shots per
+input in total, and the exact probabilities serve as the limit of infinitely many shots. Four models are fitted:
+\begin{itemize}
+\item[(i)] \emph{rates}: the noise model with known jump operators and four unknowns $J,\gamma_\downarrow,
+\gamma_\uparrow,\gamma_\varphi$ (the coupling $J$ multiplies the mixer);
+\item[(ii)] \emph{GKSL layer}: a \texttt{LindbladLayer} with a free self-adjoint $H\in\M$, $n-1$ free jumps inside the
+sectors and $n$ free jumps between neighbouring sectors $N\to N\pm1$; it contains the true generator;
+\item[(iii)] \emph{channel of $\M$}: a \texttt{ChannelLayer} from $\M$ to $\M$ with all sector transitions and Kraus
+rank $k_{\max}^2$, enough for every channel of $\M$;
+\item[(iv)] \emph{channel of $M_{2^n}$}: a \texttt{ChannelLayer} on $M_{2^n}$ with Kraus rank $4^n$, enough for every
+channel. This is the experimenter who ignores the symmetry: the same inputs, embedded by \texttt{interop.to\_dense},
+are measured in $\CLSettingsDense$ Haar-random bases of $M_{2^n}$, with the same number of shots per input. The model
+has to learn that the process creates no coherences between sectors.
+\end{itemize}
+The raw parameter counts (\texttt{learn.count\_parameters}, Table~\ref{tab:learn-tomo}) include the Kraus gauge; the
+sets of channels that models (iii) and (iv) can reach have dimensions $\CLSetAlg$ and $\CLSetDense$, and the inputs
+in $\M$ identify $\CLIdentDense$ of the latter. Each model is fitted by $\CLAdam$ Adam steps followed by at most
+$\CLLbfgs$ iterations of L-BFGS (both from \texttt{torch.optim}), with $\CLStartsRates$, $\CLStartsLindblad$,
+$\CLStartsAlgebra$ and $\CLStartsDense$ random starts for models (i)--(iv), and the start with the smallest loss is
+kept. The losses of the starts agree to a relative $\CLStartSpread$ in every run with finite shots. During training the
+outputs are computed by equivalent fast paths: the exponential of the generator as a matrix on $\M$, of size
+$\dim\M=\CLDimAlg$, and Kraus operators applied to the pure input vectors. These agree with the forward passes of the
+layers to $\CLFastPath$. Evaluation uses the layers themselves. The whole study takes $\CLRuntime$ minutes on
+$\CLWorkers$ CPU cores.
+
+\begin{table}[t]
+\centering\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{rlrrrrrrrr}
+\toprule
+ & & & \multicolumn{5}{c}{held-out trace distance, shots per input} & Choi error & time\\
+$n$ & model & parameters & $10^2$ & $10^3$ & $10^4$ & $10^5$ & exact & $10^4$ shots & [s]\\
+\midrule
+\CLRows
+\bottomrule
+\end{tabular}
+\caption[]{Learning the noisy XY register from simulated counts. Parameters: real parameters of the model
+(\texttt{learn.count\_parameters}, Kraus gauge included). Trace distance: mean over the held-out inputs of
+$\frac12\|\hat\Phi(\rho)-\Phi(\rho)\|_1$, one data set per entry; ``exact'': fitted to the exact probabilities, which
+shows the optimisation error. Choi error: trace distance of the normalised Choi matrices of the restrictions to the
+input sectors, averaged over the sectors. Time: wall-clock seconds per random start, averaged over the shot budgets
+(one CPU core per fit).}
+\label{tab:learn-tomo}
+\end{table}
+
+\begin{figure}[t]
+\centering\fig{channel_learning.pdf}{\textwidth}
+\caption{(a) Held-out trace distance against the number of shots per input for the four models, $n=\CLnMax$ (solid)
+and $n=\CLnMin$ (dashed); at the right, the fit to the exact probabilities (triangles: below $10^{-4}$). (b) Learned
+coupling and rates for $n=\CLnMax$ at $\CLRepeatShots$ shots per input: mean and standard deviation over
+$\CLRepeats$ independent data sets, for the rate model and for the least-squares projection of the learned generator
+of the GKSL layer onto $-i[H,\cdot\,]$ and the three dissipators. Grey: the Cram\'er--Rao standard deviation of the
+rate model, from the Fisher information of the counts.}
+\label{fig:learn-tomo}
+\end{figure}
+
+\paragraph{Results.} The models differ by large factors only where the structure is strong
+(Figure~\ref{fig:learn-tomo}a). At $10^4$ shots per input and $n=\CLnMax$, the held-out trace distance is
+$\CLTDRatesFour$ for the rate model, $\CLTDLindbladFour$ for the GKSL layer, $\CLTDAlgebraFour$ for the channel of $\M$
+and $\CLTDDenseFour$ for the dense channel. The rate model follows the law $\text{shots}^{-1/2}$ (fitted slope
+$\CLSlopeRates$ over the four budgets). The larger models fall more slowly in this range, with slopes $\CLSlopeLindblad$,
+$\CLSlopeAlgebra$ and $\CLSlopeDense$, so they are not yet in their asymptotic regime and the gaps between them grow
+with the number of shots. The structure of the algebra is worth more than an order of magnitude in shots: the dense
+model needs $\CLNeedDense$ shots per input to reach the error $\CLTarget$ that the channel of $\M$ reaches with
+$\CLNeedAlgebra$, a factor $\CLNeedRatio$. A large part of its error has a simple origin. Its predictions contain
+coherences between sectors of trace norm $\CLOffDense$ (at $10^4$ shots), which the true process never creates and
+which the channel of $\M$ excludes by construction. The GKSL layer gains much less over the channel of $\M$ than its
+parameter count suggests: it needs $\CLNeedLindblad$ shots for the same error although it has $\CLParRatio$ times
+fewer raw parameters. For so small a register, Markovianity and nearest-neighbour jumps constrain little. Knowing the
+jump operators is what pays: the rate model is below the target error already at $10^2$ shots ($\CLTDRatesTwo$). The
+fits to the exact probabilities reach $\CLTDLindbladExact$, $\CLTDAlgebraExact$ and $\CLTDDenseExact$ for models
+(ii)--(iv), far below the statistical errors, so the comparison at finite shots is not limited by the optimiser. The
+same ordering holds for the Choi error and for $n=\CLnMin$.
+
+\paragraph{Learned rates.} For the rate model the learned values at $\CLRepeatShots$ shots are $J=\CLRatesJ\pm
+\CLRatesJSd$, $\gamma_\downarrow=\CLRatesDown\pm\CLRatesDownSd$, $\gamma_\uparrow=\CLRatesUp\pm\CLRatesUpSd$ and
+$\gamma_\varphi=\CLRatesPhi\pm\CLRatesPhiSd$ (mean and standard deviation over $\CLRepeats$ data sets). The
+Cram\'er--Rao standard deviations, from the Fisher information of the counts at the true parameters
+(\texttt{measurement.fisher\_information}), are $\CLCRJ$, $\CLCRDown$, $\CLCRUp$
+and $\CLCRPhi$, so the maximum-likelihood estimator is unbiased and close to efficient here (with six data sets the
+empirical spread is itself uncertain by about a third). The GKSL layer is not a rate estimator. Its generator,
+projected onto the physical terms, gives $\gamma_\downarrow=\CLLindbladDown\pm\CLLindbladDownSd$,
+$\gamma_\uparrow=\CLLindbladUp\pm\CLLindbladUpSd$ and $\gamma_\varphi=\CLLindbladPhi\pm\CLLindbladPhiSd$. These are
+biased by more than their spread, and a fraction $\CLResidual$ of the learned generator lies outside the physical span:
+the free jumps absorb statistical noise as extra dissipation, which the projection attributes in part to the rates.
+The bias shrinks with the number of shots. The GKSL layer does recover the rates exactly from the exact probabilities.
+
+\paragraph{Scope.} The data are simulated without state-preparation and measurement errors, the inputs and
+measurement bases are known exactly, and the true process lies inside every model class: it is Markovian and
+respects the sectors exactly. The experiment therefore measures statistical efficiency, not robustness to a wrong
+model. With noise that breaks the $U(1)$ symmetry, models (i)--(iii) would be biased and the dense model would not,
+which is where the dense model would win; we did not simulate this case. The dense comparison changes the measurement
+together with the model, as an experimenter without the symmetry would; we did not separate the two effects. The
+registers are small ($n\le\CLnMax$, one evolution time), and every fit is a local optimisation. For the GKSL layer the
+start matters: with the library's default initial Hamiltonian of unit scale, only $\CLInitConverged$ of
+$\CLInitStarts$ starts reached the optimum for the exact data at $n=\CLnMax$, and the others stopped at losses up to
+$\CLInitLoss$. We therefore start it near the identity channel, with the Hamiltonian scaled by $\CLHScale$, and with
+this choice all starts agree. The full-rank models cost one parameter per entry of a Stinespring isometry. At
+$n=5$ the dense model would have $4^{10}\approx10^6$ complex Kraus entries, which is why the study stops at
+$n=\CLnMax$; the GKSL layer and the channel of $\M$ would still be practical there.

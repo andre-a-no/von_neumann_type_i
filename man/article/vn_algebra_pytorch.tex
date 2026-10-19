@@ -30,7 +30,7 @@
 
 % numbers and tables produced by scripts/*.py (bash scripts/run_all.sh [quick|full] [device])
 \newcommand{\gen}[1]{\IfFileExists{generated/#1.tex}{\input{generated/#1.tex}}{}}
-\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}\gen{renyi_threshold}\gen{connes_stormer}\gen{permutational}\gen{trace_characterizations}\gen{symmetry_resolved}\gen{noisy_xy}\gen{architecture}\gen{noisy_control}
+\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}\gen{renyi_threshold}\gen{connes_stormer}\gen{permutational}\gen{trace_characterizations}\gen{symmetry_resolved}\gen{noisy_xy}\gen{architecture}\gen{noisy_control}\gen{channel_learning}\gen{residual_markov}
 % generated/baselines.tex written by the current scripts/baselines.py defines \BaseMinKS and has a single-precision
 % GPU column; an older file has one GPU column (double precision) and one library column (GPU) for ground states.
 \ifdefined\BaseMinKS\newcommand{\BaseNew}{1}\else\newcommand{\BaseNew}{0}\fi
@@ -96,9 +96,11 @@ alternative and validate the library against exact results and against QuTiP and
 illustrated by a noisy XY mixer of the quantum alternating operator ansatz, whose Hamming-weight sectors form the
 algebra: one batched run gives, for all noise models and rates, the exact effect of post-selection on the weight, and
 optimising the controls for the post-selected fidelity shows that the measurement of the conserved charge, not the
-noise-aware design, removes most of the error. Finally, channels between algebras become layers of trainable networks,
-which we apply to learning the noise of the register from measurement counts and to the expressivity of residual
-networks of channels.
+noise-aware design, removes most of the error. Finally, channels between algebras become layers of trainable networks. Learning
+the noise of the register from measurement counts, models that respect the sectors reach a given accuracy with about
+fourteen times fewer shots than a dense model, and a model with the known jump operators estimates the rates at the
+Cramér--Rao bound; residual networks of channels fit Markovian evolutions but provably not a channel with negative
+determinant, so their fit error witnesses non-Markovianity.
 \end{abstract}
 
 \section*{Program summary}

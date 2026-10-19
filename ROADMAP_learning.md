@@ -753,6 +753,14 @@ for kind in ('gradient', 'natural', 'heavy_ball', 'nesterov_ode'):
 
 ## 11. Plan, risks, measures of success
 
+**Status (19 October 2026, version 1.2.0).** Implemented: `torch_vn_algebra.learn` (ChannelLayer, UnitaryLayer,
+LindbladLayer, Residual, PostSelect, FeedForward, losses, count_parameters), `measurement`, `optimize.StinespringParam`,
+`LindbladParam`, `fit`. Experiments in the library preprint (Section "Quantum channels as trainable networks"):
+tomography of the noisy XY register in the algebra (`scripts/channel_learning.py`: sector-structured models need about
+14 times fewer shots than a dense model; the rate model reaches the Cramér–Rao bound) and residual networks versus
+Markovianity (`scripts/residual_markov.py`: determinant obstruction, floor >= 1/3 on the Pauli channel). The stages below
+keep their numbering; items covered by these are marked done in the tables.
+
 The plan replaces the version table of earlier drafts. Stages 1–3 build the library parts in the order the
 applications need them. Stage 4 keeps the experiments on training dynamics, and Stage 5 runs alongside as separate
 notes. The status column records the state of the branch at the time of writing.
