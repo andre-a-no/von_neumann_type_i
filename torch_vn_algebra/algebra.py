@@ -596,7 +596,7 @@ class TypeIAlgebra:
 
         def operator_norm(self) -> torch.Tensor:
             # largest singular value over the active blocks (exact; the padding is skipped)
-            if self._is_self_adjoint:                      # from the extreme eigenvalues (cached, no SVD)
+            if self.is_self_adjoint:                       # from the extreme eigenvalues (cached, no SVD)
                 return torch.maximum(self.lambda_max.abs(), self.lambda_min.abs())
             B = self.matrix.shape[0]
             norms = [_fc.singular_values(x)[..., 0].reshape(B, -1) for _, _, x in self._groups()]
@@ -653,7 +653,12 @@ class TypeIAlgebra:
         def abs(self) -> 'TypeIAlgebra.Operator':
             """|A| = (A^* A)^{1/2}: for self-adjoint A by the functional calculus, otherwise from the singular
             value decomposition (on GPUs for blocks > 32 via the Hermitian eigensolver of [[0, A], [A^*, 0]]);
-            gradients finite at degenerate singular values."""
+            gradients finite at degenerate singular values. Cached on the operator, like inv."""
+            if self._abs is None:
+                self._abs = self._compute_abs()
+            return self._abs
+
+        def _compute_abs(self) -> 'TypeIAlgebra.Operator':
             if self.is_self_adjoint:
                 op = self.apply_function(torch.abs)
                 op._is_self_adjoint = True

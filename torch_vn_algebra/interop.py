@@ -19,6 +19,7 @@ QuTiP dims of the target space.
     c_ops = interop.jumps_to_qutip(jumps, layout=chain)    # SectorJump / InterSectorChannel / Operator
     H_d, L_d = interop.to_dynamiqs(H, layout=chain), interop.jumps_to_dynamiqs(jumps, layout=chain)
     rho = interop.from_qutip(rho_q, chain.algebra, layout=chain, state=True)
+    ch = interop.channel_from_qutip(kraus_q, chain.algebra, layout_in=chain)   # Kraus Qobjs -> InterSectorChannel
     D = interop.to_dense(A)                                 # torch (batch, D, D)
 
 QuTiP and dynamiqs are optional; the functions that need them import them on use.
@@ -28,7 +29,7 @@ from typing import List, Optional, Sequence, Tuple, Union
 import torch
 
 from .algebra import TypeIAlgebra
-from .channels import InterSectorChannel, SectorJump
+from .channels import Channel, InterSectorChannel, SectorJump
 from .states import DensityMatrix
 
 Operator = TypeIAlgebra.Operator
@@ -96,7 +97,7 @@ def to_dense(x: Operator, layout=None) -> torch.Tensor:
     return out
 
 
-def channel_to_dense(channel: Union[InterSectorChannel, SectorJump], layout_in=None, layout_out=None,
+def channel_to_dense(channel: Union[Channel, InterSectorChannel, SectorJump], layout_in=None, layout_out=None,
                      per_output_sector: Optional[bool] = None) -> torch.Tensor:
     """
     Kraus operators of a map between algebras as dense matrices, shape (batch, r', n_out, n_in). By default an
@@ -106,8 +107,8 @@ def channel_to_dense(channel: Union[InterSectorChannel, SectorJump], layout_in=N
     output sector.
     """
     if per_output_sector is None:
-        per_output_sector = not isinstance(channel, SectorJump)
-    if isinstance(channel, SectorJump):
+        per_output_sector = not isinstance(channel, (SectorJump, Channel))     # a Channel keeps its sectors
+    if isinstance(channel, (SectorJump, Channel)):
         channel = channel.to_inter_sector()
     a_in, a_out = channel.algebra_in, channel.algebra_out
     b_in, n_in, _ = _layout(a_in, layout_in)
@@ -157,6 +158,34 @@ def from_dense(matrix, algebra: TypeIAlgebra, layout=None, state: bool = False, 
     return algebra.operator(blocks)
 
 
+def channel_from_dense(kraus, algebra_in: TypeIAlgebra, algebra_out: Optional[TypeIAlgebra] = None, layout_in=None,
+                       layout_out=None) -> InterSectorChannel:
+    """
+    The map between algebras of dense Kraus operators K_i ((r, n_out, n_in) or (batch, r, n_out, n_in); torch or
+    NumPy): its restriction to M_in followed by the pinching onto the sectors of M_out, with blocks
+    K_i^{dc} = P_d K_i P_c. It equals the dense channel on M_in whenever that channel maps M_in into M_out (for
+    instance a channel that commutes with the symmetry); otherwise it is the closest map into the algebra (the
+    conditional expectation of the output). algebra_out defaults to algebra_in.
+    """
+    algebra_out = algebra_in if algebra_out is None else algebra_out
+    b_in, n_in, _ = _layout(algebra_in, layout_in)
+    b_out, n_out, _ = _layout(algebra_out, layout_out)
+    K = torch.as_tensor(kraus)
+    if K.dim() == 3:
+        K = K.unsqueeze(0)
+    if tuple(K.shape[2:]) != (n_out, n_in):
+        raise ValueError(f"expected Kraus operators of size {n_out} x {n_in}, got {tuple(K.shape[2:])}")
+    K = K.to(device=algebra_in.hilbert.device, dtype=algebra_in.dtype)
+    B, r = K.shape[:2]
+    blocks = K.new_zeros(B, r, algebra_out.C, algebra_in.C, algebra_out.k_max, algebra_in.k_max)
+    p_in, p_out = _positions(algebra_in, b_in.to(K.device)), _positions(algebra_out, b_out.to(K.device))
+    for d, (m, po) in enumerate(zip(algebra_out.k_factors, p_out)):
+        for c, (k, pi) in enumerate(zip(algebra_in.k_factors, p_in)):
+            if m and k:
+                blocks[:, :, d, c, :m, :k] = K[:, :, po[:, None], pi[None, :]]
+    return InterSectorChannel(algebra_in, algebra_out, blocks)
+
+
 # ----------------------------------------------------------------------
 # QuTiP
 # ----------------------------------------------------------------------
@@ -193,6 +222,7 @@ def jumps_to_qutip(jumps: Sequence, layout=None, rates: Optional[Sequence[float]
     """
     out = []
     for j, J in enumerate(jumps):
+        _check_jump(J)
         s = 1.0 if rates is None else float(rates[j]) ** 0.5
         if isinstance(J, (SectorJump, InterSectorChannel)):
             alg = J.algebra if isinstance(J, SectorJump) else J.algebra_in
@@ -204,6 +234,19 @@ def jumps_to_qutip(jumps: Sequence, layout=None, rates: Optional[Sequence[float]
             q = to_qutip(J, layout, batch_index=min(batch_index, J.matrix.shape[0] - 1))
             out.append(s * q)
     return out
+
+
+def _check_jump(J):
+    if isinstance(J, Channel):                       # as dynamics.lindblad_evolve
+        raise TypeError("a sector-preserving Channel is not a jump operator; pass its Kraus operators, or "
+                        "channel.to_inter_sector() for a jump between sectors")
+
+
+def channel_from_qutip(kraus, algebra_in: TypeIAlgebra, algebra_out: Optional[TypeIAlgebra] = None, layout_in=None,
+                       layout_out=None) -> InterSectorChannel:
+    """channel_from_dense for a list of QuTiP Kraus operators (e.g. qutip.to_kraus of a superoperator)."""
+    return channel_from_dense(torch.stack([torch.as_tensor(k.full()) for k in kraus]), algebra_in, algebra_out,
+                              layout_in, layout_out)
 
 
 def from_qutip(q, algebra: TypeIAlgebra, layout=None, state: Optional[bool] = None, atol: float = 1e-10):
@@ -232,6 +275,7 @@ def jumps_to_dynamiqs(jumps: Sequence, layout=None, rates: Optional[Sequence[flo
     """Jump operators for dynamiqs.mesolve, as jumps_to_qutip (one array per Kraus operator, sqrt(rate) folded in)."""
     out = []
     for j, J in enumerate(jumps):
+        _check_jump(J)
         s = 1.0 if rates is None else float(rates[j]) ** 0.5
         a = to_dynamiqs(J, layout)
         if isinstance(J, (SectorJump, InterSectorChannel)):
@@ -243,15 +287,15 @@ def jumps_to_dynamiqs(jumps: Sequence, layout=None, rates: Optional[Sequence[flo
 
 
 def to_dynamiqs(x, layout=None):
-    """dynamiqs array (batch, n, n) of an element of M, or of the Kraus operators (batch, r, n, n) of a SectorJump
-    or InterSectorChannel; the batch dimension is kept, so a batch of Hamiltonians or states runs as one dynamiqs
-    batch."""
+    """dynamiqs array (batch, n, n) of an element of M, or of the Kraus operators (batch, r, n, n) of a Channel,
+    SectorJump or InterSectorChannel; the batch dimension is kept, so a batch of Hamiltonians or states runs as one
+    dynamiqs batch."""
     try:
         import dynamiqs as dq
     except ImportError as e:                                   # pragma: no cover - depends on the environment
         raise ImportError("this function needs dynamiqs (pip install dynamiqs)") from e
-    if isinstance(x, (SectorJump, InterSectorChannel)):
-        alg = x.algebra if isinstance(x, SectorJump) else x.algebra_in
+    if isinstance(x, (Channel, SectorJump, InterSectorChannel)):
+        alg = x.algebra if isinstance(x, (Channel, SectorJump)) else x.algebra_in
         dense = channel_to_dense(x, layout, layout)
     else:
         alg = x.algebra
@@ -259,3 +303,11 @@ def to_dynamiqs(x, layout=None):
     _, _, dims = _layout(alg, layout)
     arr = dense.detach().cpu().numpy()
     return dq.asqarray(arr, dims=tuple(dims[0])) if dims is not None else dq.asqarray(arr)
+
+
+def from_dynamiqs(x, algebra: TypeIAlgebra, layout=None, state: bool = False, atol: float = 1e-10):
+    """The element of M (state=True: the DensityMatrix) of a dynamiqs array (n, n) or (batch, n, n), e.g. a state of
+    dynamiqs.mesolve(...).states."""
+    import numpy as np
+    arr = x.to_numpy() if hasattr(x, 'to_numpy') else x
+    return from_dense(torch.from_numpy(np.array(arr)), algebra, layout, state=state, atol=atol)

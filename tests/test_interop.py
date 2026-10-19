@@ -74,7 +74,7 @@ def test_lindblad_evolution_agrees_with_qutip_mesolve(chain):
     res = qt.mesolve(interop.to_qutip(H, layout=chain), interop.to_qutip(rho0, layout=chain), [0.0, 1.5],
                      c_ops=interop.jumps_to_qutip(jumps, layout=chain, rates=rates),
                      options={'atol': 1e-12, 'rtol': 1e-10})
-    assert (interop.to_qutip(rho, layout=chain) - res.states[-1]).norm() < 1e-8
+    assert (interop.to_qutip(rho, layout=chain) - res.states[-1]).norm() < 1e-9
     back = interop.from_qutip(res.states[-1], chain.algebra, layout=chain, state=True)
     assert torch.allclose(back.matrix, rho.matrix, atol=1e-8)
 
@@ -88,7 +88,7 @@ def test_lindblad_evolution_agrees_with_dynamiqs(chain):
                      interop.to_dynamiqs(rho0, layout=chain)[0], np.array([0.0, 1.5]),
                      method=dq.method.Tsit5(rtol=1e-10, atol=1e-12), progress_meter=False)
     out = np.asarray(res.states[-1].to_jax())
-    assert np.abs(out - interop.to_dense(rho, layout=chain)[0].numpy()).max() < 1e-8
+    assert np.abs(out - interop.to_dense(rho, layout=chain)[0].numpy()).max() < 1e-9
 
 
 def test_inter_sector_jumps_agree_with_qutip_mesolve(chain):
@@ -101,4 +101,44 @@ def test_inter_sector_jumps_agree_with_qutip_mesolve(chain):
     res = qt.mesolve(interop.to_qutip(H, layout=chain), interop.to_qutip(rho0, layout=chain), [0.0, 1.0],
                      c_ops=interop.jumps_to_qutip(jumps, layout=chain, rates=[0.2] * L),
                      options={'atol': 1e-12, 'rtol': 1e-10})
-    assert (interop.to_qutip(rho, layout=chain) - res.states[-1]).norm() < 1e-8
+    assert (interop.to_qutip(rho, layout=chain) - res.states[-1]).norm() < 1e-9
+
+
+def test_kraus_splitting_converges_to_qutip_mesolve_at_second_order(chain):
+    qt = pytest.importorskip('qutip')
+    H, rho0, jumps, rates, _ = _noisy(chain)
+    ref = qt.mesolve(interop.to_qutip(H, layout=chain), interop.to_qutip(rho0, layout=chain), [0.0, 1.5],
+                     c_ops=interop.jumps_to_qutip(jumps, layout=chain, rates=rates),
+                     options={'atol': 1e-12, 'rtol': 1e-10}).states[-1]
+    err = []
+    for substeps in (60, 240):
+        rho = dynamics.lindblad_evolve(rho0, H, jumps, [0.0, 1.5], rates=rates, substeps=substeps, method='kraus')[-1]
+        err.append((interop.to_qutip(rho, layout=chain) - ref).norm())
+    assert err[0] < 2e-5
+    assert 10 < err[0] / err[1] < 22                         # 4 times smaller steps: 16 times smaller error
+
+
+def test_channels_round_trip_through_dense_kraus_operators(chain):
+    qt = pytest.importorskip('qutip')
+    alg = chain.algebra
+    ch = channels.random_channel(alg, kraus_rank=2, batch_size=1)
+    rho = states.random_density_matrix(alg, batch_size=1)
+    K = interop.channel_to_dense(ch, layout_in=chain, layout_out=chain)
+    back = interop.channel_from_qutip([qt.Qobj(k.numpy(), dims=[[2] * chain.L] * 2) for k in K[0]], alg,
+                                      layout_in=chain, layout_out=chain)
+    assert torch.allclose(back(rho).matrix, ch(rho).matrix, atol=1e-12)
+    # a dense channel that does not respect the sectors is restricted and pinched onto them
+    X = qt.tensor([qt.sigmax()] + [qt.qeye(2)] * (chain.L - 1))
+    flip = interop.channel_from_qutip([X], alg, layout_in=chain, layout_out=chain)
+    XrX = torch.as_tensor(X.full()) @ interop.to_dense(rho, layout=chain)[0] @ torch.as_tensor(X.full())
+    pinched = interop.from_dense(XrX, alg, layout=chain, atol=float('inf'))      # its blocks: E_M(X rho X)
+    assert torch.allclose(flip(rho).matrix, pinched.matrix, atol=1e-12)
+    with pytest.raises(TypeError):
+        interop.jumps_to_qutip([ch], layout=chain)
+
+
+def test_states_come_back_from_dynamiqs(chain):
+    dq = pytest.importorskip('dynamiqs')
+    rho = states.random_density_matrix(chain.algebra, batch_size=2)
+    back = interop.from_dynamiqs(interop.to_dynamiqs(rho, layout=chain), chain.algebra, layout=chain, state=True)
+    assert torch.allclose(back.matrix, rho.matrix)

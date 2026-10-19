@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Regenerate every number and figure of paper.
+# Regenerate every number and figure of the library paper (man/article).
 #   bash scripts/run_all.sh                     # quick mode, CPU or GPU (a few minutes); output in .quick_output/
 #   bash scripts/run_all.sh check cuda          # the sizes of full, minimal repetitions: tests a full run
 #                                                     # (memory, all code paths) in minutes; output in .check_output/
@@ -59,6 +59,19 @@ for s in $SCRIPTS; do
     failed+=("$s")
   fi
 done
+# the studies without --mode/--device (CPU, sizes of the paper) and the schematic figures: full runs only
+if [ "$MODE" = full ] && [ -z "${ONLY:-}" ] && [ -z "$TF32" ]; then
+  for s in architecture_bench noisy_xy_mixer noisy_xy_control library_paper_schematics; do
+    start=$(date +%s)
+    echo "=== $s  log: $LOGS/$s.log"
+    if python "scripts/$s.py" > "$LOGS/$s.log" 2>&1; then
+      echo "    ok in $(( $(date +%s) - start )) s"
+    else
+      echo "    FAILED after $(( $(date +%s) - start )) s; last lines:"; tail -n 5 "$LOGS/$s.log" | sed 's/^/      /'
+      failed+=("$s")
+    fi
+  done
+fi
 if [ -z "${ONLY:-}" ]; then
   for ex in man/article/listings/ex*.py; do echo "=== $ex"; env $EXAMPLE_ENV python "$ex" || failed+=("$ex"); done > "$OUTDIR/examples_output.txt" 2>&1
 fi
