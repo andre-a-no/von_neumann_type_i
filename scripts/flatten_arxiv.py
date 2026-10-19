@@ -6,8 +6,8 @@ back to placeholders when a generated file is missing. On arXiv a missing file w
 silently change the paper, so the upload contains a single .tex file with everything inlined and the fallbacks
 resolved: every generated file is inserted in place of the \\gen line, every \\input of a section is replaced by
 its text, \\IfFileExists{generated/...}{A}{B} becomes A, \\G is redefined to take its first branch, and \\fig
-includes the figure unconditionally (a missing figure is then a hard error). Only the figures remain as separate
-files.
+includes the figure unconditionally (a missing figure is then a hard error). The figures go next to the .tex
+file, without subdirectories (arXiv has lost files in subdirectories of earlier uploads).
 
     python scripts/flatten_arxiv.py SRC_DIR OUT_FILE
 """
@@ -115,6 +115,7 @@ def main(src: Path, out: Path):
     t = re.sub(r'\\newcommand\{\\G\}\[3\]\{.*\}\n', r'\\newcommand{\\G}[3]{#2}\n', t)
     t = re.sub(r'\\newcommand\{\\fig\}\[2\]\{.*\}\n', r'\\newcommand{\\fig}[2]{\\includegraphics[width=#2]{#1}}\n', t)
     t = expand(t)
+    t = re.sub(r'\\graphicspath\{\{figures/\}\}\n', '', t)    # the figures sit next to the .tex file
     for f in re.findall(r'\\G\{([A-Za-z_]+)\}', t):      # \G now takes its first branch; its file must exist
         generated(f)
     out.write_text(t)
