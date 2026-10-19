@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
 # Build the arXiv upload of the paper on trace characterisations, man/trace_envelopes/arxiv_trace_inequalities_contrast.zip (and arxiv_trace_inequalities_contrast.tar.gz):
-# trace_inequalities_contrast.tex, the generated numbers and the figures (from scripts/trace_characterizations.py and scripts/bounds_search.py in
-# man/article, figures/gardner_contrasts.pdf from scripts/trace_envelopes_figures.py, figures/mc_*.pdf and figures/ops_*.pdf from
-# scripts/trace_montecarlo.py and scripts/contrast_operations.py, and the schematics figures/ladder_of_orders.pdf,
-# figures/operator_angle.pdf and figures/contrast_square.pdf from scripts/trace_paper_schematics.py).
-# The archive is compiled twice in a clean directory first; the script fails if pdflatex reports an error or an
+# trace_inequalities_contrast.tex, the generated numbers and the figures. They come from (in this order; later scripts read
+# the JSON of earlier ones):
+#   scripts/trace_characterizations.py --mode full   man/article/generated/trace_characterizations.{json,tex} (about 8 min)
+#   scripts/trace_contrast.py --mode full            generated/trace_contrast.{json,tex} (about 13 min)
+#   scripts/trace_montecarlo.py                      generated/trace_montecarlo*.tex, figures/mc_*.pdf
+#   scripts/contrast_operations.py                   generated/contrast_operations.tex, figures/ops_*.pdf
+#   scripts/trace_envelopes_figures.py               figures/gardner_contrasts.pdf
+#   scripts/trace_paper_schematics.py                figures/ladder_of_orders.pdf, operator_angle.pdf, contrast_square.pdf
+#   scripts/bounds_search.py --mode full             man/article/figures/bounds2d_exp1_k2_C1.pdf (library pipeline, >1 h on a GPU;
+#                                                    --replot-2d redraws it from man/article/generated/bounds.json)
+# trace_characterizations.py, trace_contrast.py and contrast_operations.py also have a --report-only mode that rewrites the
+# tex from the saved JSON.
+# The archive is compiled three times in a clean directory first; the script fails if pdflatex reports an error or an
 # undefined reference. It also writes the compiled man/trace_envelopes/trace_inequalities_contrast.pdf.
 set -euo pipefail
 cd "$(dirname "$0")/../man/trace_envelopes"

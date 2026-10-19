@@ -11,7 +11,7 @@ XY mixer, drawn from data that already exist (no computation of the library is r
                              S^z inside the sectors, the post-selection projection P_w
   figures/ecosystem.pdf      the place of the library among software for the algebra: exact versus numerical
                              (batched, differentiable) computation, Hilbert-space matrices versus algebra-level
-                             objects; arrows for what it builds on and converts to
+                             objects; arrows for what it builds on, is checked against and converts to
   figures/noisy_summary.pdf  the integral I and the gain factor of post-selection against n, and the infidelities
                              for the largest register, from generated/noisy_xy.json (scripts/noisy_xy_mixer.py)
 
@@ -79,7 +79,7 @@ def ecosystem():
     box(ax, 10.0, 7.0, 5.7, 3.3, 'torch_vn_algebra',
         'the algebra $\\oplus_c M_{k_c}$ as the data type:\ncentre, traces, states, channels\n'
         'between algebras, inclusions, index,\nJordan product, contrast; batched\n'
-        'sampling, optimisation, learning,\ncertified values', edge=BLUE, fill='#f2f7fd', title_color=BLUE, lw=1.4)
+        'sampling, optimisation, trainable\nchannel networks (learn)', edge=BLUE, fill='#f2f7fd', title_color=BLUE, lw=1.4)
     box(ax, 1.4, 3.4, 4.8, 2.5, 'optimisation',
         'convex (SDP): CVXPY, PICOS,\nQETLAB; manifolds: pymanopt,\ngeoopt, Manopt.jl')
     box(ax, 6.55, 3.3, 2.4, 1.6, 'RepLAB', 'commutants of\ngroup actions', fs=7.5)
@@ -91,8 +91,6 @@ def ecosystem():
     ax.text(13.05, 6.1, 'interop:\nto_qutip, to_dynamiqs', ha='left', va='center', fontsize=6.6, color=BLUE)
     arrow(ax, (10.0, 9.0), (6.7, 9.0), color=GREY, ls=':')
     ax.text(8.35, 9.2, 'exact checks of\nsmall cases', ha='center', va='bottom', fontsize=6.6, color=GREY)
-    arrow(ax, (10.0, 7.6), (6.2, 5.7), color=GREY, ls=':')
-    ax.text(8.35, 7.6, 'SDP references for\nconvex problems', ha='center', va='center', fontsize=6.6, color=GREY)
     arrow(ax, (10.4, 7.0), (8.4, 2.3), color=GREY, ls='--')
     ax.text(8.6, 2.85, 'built on', ha='right', va='center', fontsize=6.6, color=GREY, style='italic')
     FIG.mkdir(exist_ok=True)

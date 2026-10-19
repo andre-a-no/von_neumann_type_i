@@ -29,6 +29,8 @@ from pathlib import Path
 import numpy as np
 import torch
 
+from common import environment                       # device, versions, matmul precision, commit
+
 from torch_vn_algebra import SpinChain, dynamics
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -155,7 +157,7 @@ def main():
     figure(results)
     gen = OUT / 'generated'
     gen.mkdir(exist_ok=True)
-    (gen / 'noisy_xy.json').write_text(json.dumps(dict(rates=RATES.tolist(), models=MODELS, summary=summary,
+    (gen / 'noisy_xy.json').write_text(json.dumps(dict(environment=environment('cpu'), rates=RATES.tolist(), models=MODELS, summary=summary,
                                                        results={n: r for n, (i, r) in results.items()}), indent=1))
     worst_acc = max(s['acc_err'] for s in summary.values())
     worst_t1 = max(s['t1_post'] for s in summary.values())

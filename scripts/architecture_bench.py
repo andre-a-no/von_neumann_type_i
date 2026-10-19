@@ -22,6 +22,8 @@ from pathlib import Path
 
 import torch
 
+from common import environment                       # device, versions, matmul precision, commit
+
 from torch_vn_algebra import TypeIAlgebra, SpinChain, dynamics, states
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -114,7 +116,7 @@ def main():
     ks = sum(J.val.numel() * J.val.element_size() + J.dst.numel() * 8 for J in sparse[:n])
 
     OUT.mkdir(parents=True, exist_ok=True)
-    data = dict(device='cpu', torch=torch.__version__, threads=torch.get_num_threads(),
+    data = dict(environment=environment('cpu'), device='cpu', torch=torch.__version__, threads=torch.get_num_threads(),
                 rows=[dict(name=a, what=b, library=c, naive=d, speedup=d / c) for a, b, c, d in rows],
                 jump_bytes_dense=kd, jump_bytes_sparse=ks, jump_max_diff=diff)
     (OUT / 'architecture.json').write_text(json.dumps(data, indent=1))

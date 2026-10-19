@@ -2,8 +2,8 @@
 
 Writes three PDFs to man/trace_envelopes/figures/:
 
-  ladder_of_orders.pdf   computed envelopes V(delta) on M_2 of all 25 items on log-log axes, grouped by the
-                         order of vanishing at the trace, with guide slopes 1, 2, 4, 8
+  ladder_of_orders.pdf   computed envelopes V(delta) on M_2 of all 25 items (the certified mpmath values) on
+                         log-log axes, grouped by the order of vanishing at the trace, with guide slopes 1, 2, 4, 8
                          (data: man/article/generated/trace_characterizations.json);
   operator_angle.pdf     the operator angle (a ball of radius Delta(A)|x| about x seen from the origin), the
                          Jordan product (angles add) and the Gardner quotient as the secant of arg(1 + r e^{i alpha}),
@@ -54,16 +54,17 @@ def ladder_of_orders():
     fig, ax = plt.subplots(figsize=(4.6, 3.3))
     for k, items in ORDER.items():
         for i in items:
-            v = np.array([np.nan if x is None else x for x in d['inequalities'][names[i - 1]]['dims']['2']['V']])
+            v = np.array([np.nan if x is None else x
+                          for x in d['inequalities'][names[i - 1]]['dims']['2']['certified']])
             keep = (grid > 0) & (v > 1e-8)
-            if i == 25:                                 # the search resolves item 25 only from delta = 0.4 on
+            if i == 25:                                 # item 25 is shown from delta = 0.4 on (resolved from 0.3)
                 keep &= grid >= 0.4
             ax.plot(grid[keep], v[keep], '-', color=ORDER_COLOR[k], lw=0.9, alpha=0.75, marker='o', ms=2.2)
     # guide slopes, anchored a factor below a representative item of each order
     anchors = {1: (19, 0.4, (0.01, 0.6)), 2: (17, 0.25, (0.01, 0.6)), 4: (10, 0.25, (0.05, 0.8)),
                8: (25, 0.25, (0.4, 0.95))}
     for k, (item, fac, (lo, hi)) in anchors.items():
-        v = np.array(d['inequalities'][names[item - 1]]['dims']['2']['V'])
+        v = np.array(d['inequalities'][names[item - 1]]['dims']['2']['certified'])
         j = int(np.argmin(abs(grid - (0.5 if k < 8 else 0.8))))
         c = fac * v[j] / grid[j] ** k
         xs = np.geomspace(lo, hi, 50)

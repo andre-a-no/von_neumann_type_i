@@ -53,7 +53,7 @@ Changelog = "https://github.com/andre-a-no/von_neumann_type_i/blob/main/CHANGELO
 
 [project.optional-dependencies]
 scripts = ["scipy", "pandas", "tqdm", "matplotlib", "seaborn", "mpmath"]
-test = ["pytest", "scipy>=1.7", "mpmath"]
+test = ["pytest", "scipy>=1.7", "mpmath", "qutip>=5; python_version >= '3.10'"]   # qutip: interop tests
 interop = ["qutip>=5"]                              # interop.to_qutip etc.; dynamiqs (Python >= 3.10) works too
 
 [tool.setuptools]

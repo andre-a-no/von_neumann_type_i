@@ -90,3 +90,29 @@ def test_commutator_trace_test_is_sharp(n):
     assert np.trace(W).real == pytest.approx(1)
     val = abs(np.trace(W @ (A @ B - B @ A)))
     assert val == pytest.approx(2 * co.trace_test_factor(n, dw) * dA * dB, rel=1e-9)
+
+
+def test_item12_threshold_is_sharp():
+    """Proposition prop:item12 of the trace paper: the configuration A = diag(1, l), B = R A R^T (R the rotation by pi/4)
+    satisfies (A+B)^{1/2} <= A^{1/2} + B^{1/2} up to 2 sqrt2/3 and violates it, in the eigenvector of the reflection
+    at pi/8, above; a density concentrated on that vector then violates item 12."""
+    def root(X):
+        w, V = np.linalg.eigh(X)
+        return (V * np.sqrt(np.clip(w, 0, None))) @ V.T
+
+    c = np.sqrt(0.5)
+    R = np.array([[c, -c], [c, c]])
+    u = np.array([np.cos(np.pi / 8 + np.pi / 2), np.sin(np.pi / 8 + np.pi / 2)])     # eigenvector of F for -1
+    thr = 2 * np.sqrt(2) / 3
+    for dp, violated in [(thr - 1e-3, False), (thr + 1e-3, True), (0.97, True)]:
+        ell = (1 - dp) / (1 + dp)
+        A = np.diag([1.0, ell])
+        B = R @ A @ R.T
+        D = root(A) + root(B) - root(A + B)
+        assert (np.linalg.eigvalsh(D)[0] < -1e-9) == violated
+        assert (u @ D @ u < -1e-9) == violated
+        assert abs(u @ D @ np.array([-u[1], u[0]])) < 1e-12                        # D is diagonal in the basis of F
+        if violated:
+            W = np.diag([1.999, 0.001])                                             # contrast 0.999
+            Q = np.array([u, [-u[1], u[0]]]).T
+            assert np.trace(Q @ W @ Q.T @ D) < 0

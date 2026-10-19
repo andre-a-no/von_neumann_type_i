@@ -1,0 +1,94 @@
+% Residual channel networks and Markovianity (part of Section sec:learn).
+% Numbers: scripts/residual_markov.py -> generated/residual_markov.tex (macros \RM...), figures/residual_markov.pdf.
+% The file loads its macros itself if the preamble has not (\gen{residual_markov}).
+\IfFileExists{generated/residual_markov.tex}{\ifdefined\RMSteps\else\input{generated/residual_markov.tex}\fi}{}
+\providecommand{\RMSteps}{--}\providecommand{\RMRestarts}{--}\providecommand{\RMp}{0.2}\providecommand{\RMDepthMax}{32}
+\providecommand{\RMDepths}{1, 2, 4, 8, 16, 32}\providecommand{\RMSeconds}{--}\providecommand{\RMWorkers}{4}
+\providecommand{\RMMarkovA}{--}\providecommand{\RMMarkovHS}{--}\providecommand{\RMMarkovTD}{--}
+\providecommand{\RMGkslChannel}{--}\providecommand{\RMGkslLindblad}{--}\providecommand{\RMGkslResOne}{--}
+\providecommand{\RMGkslResDeep}{--}\providecommand{\RMGkslDet}{--}
+\providecommand{\RMDampedChannel}{--}\providecommand{\RMDampedLindblad}{--}\providecommand{\RMDampedResOne}{--}
+\providecommand{\RMDampedResDeep}{--}\providecommand{\RMDampedDet}{--}
+\providecommand{\RMPauliChannel}{--}\providecommand{\RMPauliLindblad}{--}\providecommand{\RMPauliResOne}{--}
+\providecommand{\RMPauliResDeep}{--}\providecommand{\RMPauliDet}{--}
+\providecommand{\RMPauliResMin}{--}\providecommand{\RMPauliResMinTD}{--}\providecommand{\RMPauliLindbladTD}{--}
+\providecommand{\RMPauliResDetMin}{--}\providecommand{\RMPauliResDetMax}{--}\providecommand{\RMPauliLindbladDet}{--}
+\providecommand{\RMPauliChannelDet}{--}\providecommand{\RMDephasedHS}{--}\providecommand{\RMPauliResTDAll}{--}
+\providecommand{\RMPauliResTDAllDepth}{--}\providecommand{\RMSemigroupKmax}{--}\providecommand{\RMDampedSemigroupViolation}{--}
+\providecommand{\RMRestartSpread}{--}\providecommand{\RMSemigroupBound}{--}
+\subsection{Residual channel networks and Markovianity}\label{sec:learn-markov}
+
+A stack of residual blocks $(1-p_l)\,\mathrm{id}+p_l\Phi_l$ with small $p_l$ is a product of channels close to the
+identity. Wolf and Cirac~\cite{wolfcirac2008} call a channel \emph{infinitesimal divisible} if it is a limit of
+channels that are, for every $\varepsilon>0$, products of channels $\varepsilon$-close to the identity; these
+include all products of Markovian channels $e^{\mathcal L}$, and their superoperators have nonnegative determinant.
+For residual blocks the determinant condition has a two-line proof, and it gives a quantitative obstruction.
+
+\paragraph{The determinant obstruction.} Write the superoperator $T$ of a channel of $M_d$ in a basis of
+self-adjoint matrices: a real $d^2\times d^2$ matrix with spectrum in the closed unit disc. If $p<\tfrac12$, the
+eigenvalues $1-p+p\lambda$ of $(1-p)\,\mathrm{id}+p\,T$ have modulus at least $1-2p$; the real ones are positive and
+the others come in conjugate pairs, so its determinant is at least $(1-2p)^{d^2}>0$. Determinants multiply and
+$\det e^{t\mathcal L}=e^{t\operatorname{tr}\mathcal L}>0$, so every residual network with $p<\tfrac12$ and every
+Lindblad layer has positive determinant, at any depth. The Pauli channel
+$\Phi_P(\rho)=\tfrac13(X\rho X+Y\rho Y+Z\rho Z)$ has Pauli transfer matrix ($R_{ab}=\tfrac12\Tr(\sigma_a\Phi(\sigma_b))$,
+$\sigma=1,X,Y,Z$) equal to $\operatorname{diag}(1,-\tfrac13,-\tfrac13,-\tfrac13)$, with determinant $-\tfrac1{27}$.
+A trace-preserving map has $R=\bigl(\begin{smallmatrix}1&0\\t&M\end{smallmatrix}\bigr)$, so $\det R=\det M$. If
+$\det M\ge0$, the segment from $-\tfrac13\mathbf 1$ to $M$ contains a singular matrix, which by Eckart--Young is at
+distance at least $\tfrac13$ from $-\tfrac13\mathbf 1$ in the Frobenius and in the operator norm. Since the output
+Bloch vectors differ by $t+(M+\tfrac13\mathbf 1)n$, every such map $T$ satisfies
+\begin{equation}\label{eq:det-floor}
+\|R_T-R_{\Phi_P}\|_F\ge\tfrac13,\qquad\sup_\psi\tfrac12\bigl\|T(\psi)-\Phi_P(\psi)\bigr\|_1\ge\tfrac16 .
+\end{equation}
+The second bound is sharp for infinitesimal divisible channels: a rotation by $\pi$ about $x$ after the Pauli semigroup
+with eigenvalues $(\varepsilon,\varepsilon,\tfrac13)$ is a product of two Markovian channels, and as
+$\varepsilon\to0$ it tends to $\operatorname{diag}(1,0,0,-\tfrac13)$, at worst-case trace distance $\tfrac16$ (and
+Frobenius distance $\RMDephasedHS$). The best single semigroup we know, a rotation by $\pi$ about $z$ composed with
+a Pauli semigroup, $R=\operatorname{diag}(1,-a,-a,a^2)$, $a=\RMMarkovA$, is at Frobenius distance $\RMMarkovHS$.
+
+\paragraph{Experiment.} In $M_2$ we fit three targets: (i) $e^{\mathcal L}$ for a random GKSL generator (a random
+Hamiltonian and two random jump operators); (ii) amplitude damping ($\gamma=0.5$) after a rotation by $2\pi/3$, a
+product of two Markovian channels that is not itself a semigroup. Its spectrum is non-degenerate, so by the test of
+Wolf, Eisert, Cubitt and Cirac~\cite{wolf2008} it is $e^{\mathcal L}$ only if a branch of its logarithm is
+conditionally completely positive. The principal branch misses by $\RMDampedSemigroupViolation$, and on the branch $k$
+the compressed Choi matrix is $J_0+kG$, so a vector with $\langle v,Gv\rangle<0$ (for $k>0$) or $>0$ (for $k<0$)
+excludes all branches with $|k|$ above an explicit bound; here the bound is $\RMSemigroupBound$, so no branch passes;
+and (iii) $\Phi_P$. The models are (a) one \texttt{ChannelLayer} of Kraus rank four, which contains every qubit
+channel; (b) $L$ blocks \texttt{Residual(ChannelLayer(alg, 4), p)} with $p=\RMp$, $L\in\{\RMDepths\}$ (a learned
+weight $p'\le p$ would add nothing, since the inner channel may itself be $(1-s)\,\mathrm{id}+s\Psi$); and (c) one
+\texttt{LindbladLayer} with a Hamiltonian and three jump operators, which contains every generator of $M_2$. The data
+are the outputs on $|0\rangle,|1\rangle,|{+}\rangle,|{+i}\rangle$, the loss is $\|R_{\rm net}-R\|_F^2$, and every
+model is trained by Adam for \RMSteps\ steps from \RMRestarts\ random starts. The starts run in parallel as the
+sectors of $\bigoplus_cM_2$: every layer is sector preserving with independent blocks, so each sector is an independent
+network. The study takes \RMSeconds\,s on \RMWorkers\ CPU cores (\texttt{scripts/residual\_markov.py}).
+
+\begin{figure}[t]
+\centering
+\fig{residual_markov.pdf}{\textwidth}
+\caption{Fit error $\|R_{\rm net}-R\|_F$ (best of \RMRestarts\ starts) against the depth $L$ of a residual network
+with blocks $(1-p)\,\mathrm{id}+p\,\Phi_l$, $p=\RMp$ (circles), one Lindblad layer (dashed) and one Stinespring layer
+(dash-dotted), for (i) $e^{\mathcal L}$ with a random GKSL generator, (ii) amplitude damping after a rotation and
+(iii) the Pauli channel $\Phi_P$, $\det=-\tfrac1{27}$. In (iii), squares: smallest worst-case trace distance among
+the fitted networks; dotted: the bounds $\tfrac13$ and $\tfrac16$ of~\eqref{eq:det-floor}. Right: determinant of the
+fitted maps for (iii).}
+\label{fig:residual-markov}
+\end{figure}
+
+\paragraph{Results.} The Stinespring layer fits all three targets (errors $\RMGkslChannel$, $\RMDampedChannel$,
+$\RMPauliChannel$), Figure~\ref{fig:residual-markov}. On the Markovian targets the residual error decreases with
+depth, from $\RMGkslResOne$ at $L=1$ to $\RMGkslResDeep$ at $L=\RMDepthMax$ for (i), and from $\RMDampedResOne$ to
+$\RMDampedResDeep$ for (ii). The Lindblad layer fits (i) to $\RMGkslLindblad$ but stops at $\RMDampedLindblad$ on
+(ii), which is not a semigroup. On the Pauli channel every fitted residual network and the Lindblad layer have
+positive determinant, the residual error never falls below $\RMPauliResMin$, and the Lindblad layer stops at
+$\RMPauliLindblad$, the semigroup above. The smallest worst-case trace distance among the residual fits is
+$\RMPauliResTDAll$ (at $L=\RMPauliResTDAllDepth$): training minimises the Frobenius error, not this distance, whose
+infimum over infinitesimal divisible channels is $\tfrac16$. At every depth the \RMRestarts\ starts of the residual
+network end within $\RMRestartSpread$ of each other. Proved are~\eqref{eq:det-floor} and the sign of the determinant; the
+floor of the Frobenius error, between $\tfrac13$ and $\RMPauliResMin$, is observed, not proved.
+
+\paragraph{Reading.} The three models are nested: semigroups, limits of residual networks with small blocks, and all
+channels. On the same data the two gaps between their errors measure two kinds of non-Markovianity: dependence on
+time, as for (ii), which a time-dependent master equation can still produce; and no Markovian master equation at all,
+not even a time-dependent one, of which $\det R<0$ is an exact certificate, as for (iii). A residual fit error that stays away from zero as the depth grows is
+therefore a learned witness of non-Markovianity, comparable with the test of~\cite{wolf2008}. The witness is
+one-sided, since a large error can also be a failure of the optimiser; restarts and the Stinespring fit, which
+reaches the data, control this.

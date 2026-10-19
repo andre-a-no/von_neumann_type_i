@@ -30,7 +30,7 @@
 
 % numbers and tables produced by scripts/*.py (bash scripts/run_all.sh [quick|full] [device])
 \newcommand{\gen}[1]{\IfFileExists{generated/#1.tex}{\input{generated/#1.tex}}{}}
-\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}\gen{renyi_threshold}\gen{connes_stormer}\gen{permutational}\gen{trace_characterizations}\gen{symmetry_resolved}\gen{noisy_xy}\gen{architecture}\gen{noisy_control}
+\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}\gen{renyi_threshold}\gen{connes_stormer}\gen{permutational}\gen{trace_characterizations}\gen{symmetry_resolved}\gen{noisy_xy}\gen{architecture}\gen{noisy_control}\gen{channel_learning}\gen{residual_markov}
 % generated/baselines.tex written by the current scripts/baselines.py defines \BaseMinKS and has a single-precision
 % GPU column; an older file has one GPU column (double precision) and one library column (GPU) for ground states.
 \ifdefined\BaseMinKS\newcommand{\BaseNew}{1}\else\newcommand{\BaseNew}{0}\fi
@@ -78,7 +78,8 @@ charges or superselection rules. To our knowledge no numerical software treats t
 their family of traces, conditional expectations, inclusions and functional calculus. \texttt{torch\_vn\_algebra} is a
 PyTorch library that does, for batches of operators on CPUs and GPUs and with automatic differentiation. It fills the
 gap between computer algebra, which treats algebras as objects but exactly and for small examples, and quantum
-simulators, which compute at scale but with matrices on a Hilbert space; it converts to and from QuTiP and dynamiqs.
+simulators, which compute at scale but with matrices on a Hilbert space, and it converts operators, states and
+channels to and from QuTiP and dynamiqs.
 It is meant for operator algebraists who explore inequalities and extremal problems numerically, for quantum
 information theorists with variational problems over states and channels under a symmetry, and for physicists who need
 many small symmetric problems at once. It began as a
@@ -87,7 +88,7 @@ paper documents it. Its design rests on one thesis: keeping the sector structure
 in the algebra correct by construction and cheap. Haar sampling is exact in every block, trace conventions survive maps
 between sectors, and all blocks of one size go through one batched kernel. We show that the library reproduces the
 distributions of the earlier NumPy computation and is about two orders of magnitude faster than its loop formulation
-for small blocks. More important than speed, every operation is differentiable, which turns the sampling of the earlier
+for small blocks. More important than speed, the operations are differentiable, which turns the sampling of the earlier
 study into variational problems over the states, unitaries and channels of the algebra: from block size 4 on, a million
 Haar samples miss the violation of a trace inequality in every one of 16 test cases, while batched gradient ascent
 finds the exact supremum in all of them in seconds. We measure each architectural decision against the simple
@@ -95,7 +96,11 @@ alternative and validate the library against exact results and against QuTiP and
 illustrated by a noisy XY mixer of the quantum alternating operator ansatz, whose Hamming-weight sectors form the
 algebra: one batched run gives, for all noise models and rates, the exact effect of post-selection on the weight, and
 optimising the controls for the post-selected fidelity shows that the measurement of the conserved charge, not the
-noise-aware design, removes most of the error.
+noise-aware design, removes most of the error. Finally, channels between algebras become layers of trainable networks. Learning
+the noise of the register from measurement counts, models that respect the sectors reach a given accuracy with about
+fourteen times fewer shots than a dense model, and a model with the known jump operators estimates the rates close to
+the Cramér--Rao bound; residual networks of channels fit Markovian evolutions but provably not a channel with negative
+determinant, so their fit error witnesses non-Markovianity.
 \end{abstract}
 
 \section*{Program summary}
@@ -151,8 +156,8 @@ Section~\ref{sec:reproduce} shows that it reproduces the earlier computation: th
 sample the same distribution. For small blocks the library is about two orders of magnitude faster than the loop
 formulation, and for blocks of size 16 about three times faster, and the same code runs on a GPU.
 
-\paragraph{From sampling to optimisation.} Speed is the smaller gain. Every operation of the library is
-differentiable, including spectral functions (by the Daleckii--Krein formula), channels between sectors and the time
+\paragraph{From sampling to optimisation.} Speed is the smaller gain. The numerical operations of the library are
+differentiable (the one exception is the unitary factor of the polar decomposition), including spectral functions (by the Daleckii--Krein formula), channels between sectors and the time
 steps of Hamiltonian and Lindblad dynamics, so a question asked by sampling can be asked again as a variational
 problem: maximise a functional over operators with a prescribed spectrum, over states, over unitaries of the algebra or
 over all channels, by batched gradient ascent with many starts in one call.
@@ -180,11 +185,11 @@ in an algebra~\eqref{eq:M}.
 Monte Carlo of~\cite{abed2024,v1} saw no violation of Gardner's inequality for blocks of size 16, and we now
 know why: by concentration of measure, the unitaries near the maximiser have Haar measure that decays rapidly with the
 dimension. From block size 4 on, a million Haar samples miss the violation in every test case, while gradient ascent
-finds the exact supremum in all of them, to a relative error of $3\times10^{-5}$ and in a few seconds
+finds the exact supremum in all of them, to a relative error of $3\times10^{-5}$ and in seconds
 (Section~\ref{sec:optimisation}). The violation envelopes of the companion paper~\cite{nn_trace}, the thresholds of
 the Rényi divergences in Section~\ref{sec:renyi} and the partitions in~\cite{nn_cs} are all found this way; every
-reported extremal value is then recomputed at the optimiser in 50-digit arithmetic, so it is a certified lower bound
-for the supremum.
+reported extremal value is then recomputed at the optimiser in 40- to 50-digit arithmetic (mpmath, in the paper
+scripts), so it is a certified lower bound for the supremum.
 
 \paragraph{Thesis.} The design rests on one thesis: keeping the sector structure inside the data type makes
 computations in~\eqref{eq:M} both correct by construction and cheap. By sector structure we mean the blocks, the centre,
@@ -230,8 +235,8 @@ For $C=1$ the library reduces to batched linear algebra in $M_k(\C)$, and all it
 
 \paragraph{What is new and what is re-implemented.} None of the numerical methods is new. Haar unitaries come from the
 QR decomposition of Gaussian matrices with Mezzadri's phase correction~\cite{mezzadri2007}. Gradients of matrix
-functions use the Daleckii--Krein formula~\cite{daleckii1965,bhatia1997}. Singular values come from the Hermitian
-dilation, holomorphic functions from contour integrals~\cite{trefethen2014}, and the Wedderburn decomposition from
+functions use the Daleckii--Krein formula~\cite{daleckii1965,bhatia1997}. Singular values come from batched SVD or,
+on GPUs for large blocks, from the Hermitian dilation, holomorphic functions from contour integrals~\cite{trefethen2014}, and the Wedderburn decomposition from
 the randomised algorithms of Murota and coauthors~\cite{murota2010,maehara2011}. Block-sparse storage of
 charge-conserving tensors is standard in tensor-network libraries~\cite{fishman2022,hauschild2018,rams2025}. Lazy
 linear operators that dispatch on their structure are the basis of GPyTorch's \texttt{linear\_operator}~\cite{gardner2018,linearoperator}
@@ -274,18 +279,18 @@ algebra (NumPy, SciPy, PyTorch) is below both, and solvers for semidefinite and 
 geometric constraints without the structure of~\eqref{eq:M}. What was missing is the numerical counterpart of the first
 group: a code in which one declares the sector sizes and then samples, transforms, optimises and learns elements,
 states and channels of the algebra in batches, on CPUs and GPUs, with derivatives and certified values. This is the
-place of \texttt{torch\_vn\_algebra}. It is built on PyTorch, checks small cases against exact computations, uses SDP
-solvers as references for convex problems, and hands states, operators and Lindblad data to QuTiP and dynamiqs through
-the module \texttt{interop}, so that a computation can move between the corners of the figure.
+place of \texttt{torch\_vn\_algebra}. It is built on PyTorch, its test suite checks small cases against exact
+results, and it exchanges states, operators, channels and Lindblad data with QuTiP and dynamiqs through the module
+\texttt{interop}, so that a computation can move between the corners of the figure.
 
 \paragraph{For whom.} We have four groups of users in mind, each with a typical workflow.
 \begin{description}\itemsep2pt
 \item[Operator algebraists] who explore inequalities, extremal problems and invariants numerically before proving
 them: sharp constants of trace inequalities and their envelopes in terms of the Michelson contrast, the
 Connes--St{\o}rmer entropy as a supremum over partitions, conditional expectations, inclusions and their index, and
-Jordan products. The library supplies the constraint sets as exact parametrisations, batched multistart search, and
-recomputation of extremal values in 50-digit arithmetic, so that a numerical observation comes with a certified lower
-bound (Sections~\ref{sec:optimisation} and~\ref{sec:symmetries}; the companion papers~\cite{nn_trace,nn_cs}).
+Jordan products. The library supplies the constraint sets as exact parametrisations and batched multistart search;
+the paper scripts recompute extremal values in 40- to 50-digit arithmetic (mpmath), so that a numerical observation
+comes with a certified lower bound (Sections~\ref{sec:optimisation} and~\ref{sec:symmetries}; the companion papers~\cite{nn_trace,nn_cs}).
 \item[Quantum information theorists] with variational problems over states and channels that respect a symmetry or a
 superselection rule: data processing and its thresholds, recovery maps, divergences resolved by sector, and learning a
 channel or a Lindblad generator from measurement data. Channels within and between algebras and Lindblad generators are
@@ -301,8 +306,8 @@ runnable tutorials in which every construction of the lectures (traces, conditio
 construction, channels, Lindblad dynamics) is an object one can sample and test.
 \end{description}
 A fifth group is emerging: researchers who treat quantum channels as layers of trainable networks. For them the
-library offers channels and generators as parameters with gradients; Section~\ref{sec:limitations} describes the
-direction we are taking.
+module \texttt{learn} provides channel, unitary and Lindblad layers between algebras, residual blocks, post-selection
+and feed-forward through the centre as \texttt{torch.nn} modules (Section~\ref{sec:learn}).
 
 \paragraph{When to use something else.} The library is not a circuit simulator, a tensor-network code or a large-scale
 exact-diagonalisation package. For the dynamics of one large system, QuTiP, dynamiqs or QuantumToolbox.jl are faster and
@@ -384,13 +389,13 @@ Manopt.jl~\cite{bergmann2022} works on the real and complex manifolds of Manifol
 
 What \texttt{torch\_vn\_algebra} adds lies between these groups. Its constraint sets are those of the algebra,
 parametrised exactly and batched: the unitary group $\prod_cU(k_c)$ with blocks of different sizes, positive and
-self-adjoint elements with a prescribed spectrum or Michelson contrast, states, and, in the scripts, channels between
-algebras with different sectors and partitions of unity, both parametrised by isometries
-(Sections~\ref{sec:renyi} and~\ref{sec:cs}). Objectives can use the centre, since sector probabilities, post-selection on a
+self-adjoint elements with a prescribed spectrum or Michelson contrast, channels within one algebra and between
+algebras with different sectors (\texttt{StinespringParam}) and Lindblad generators (\texttt{LindbladParam}); states
+and partitions of unity are parametrised in the paper scripts (Sections~\ref{sec:renyi} and~\ref{sec:cs}). Objectives can use the centre, since sector probabilities, post-selection on a
 charge and conditioning on a sector are operations of the data type. Independent starts, parameter values and models
 are elements of one batch, so an envelope over a grid, or a threshold scan over all $\alpha$ of
-Section~\ref{sec:renyi}, is one call. Reported extremal values are recomputed at the optimiser in 50-digit
-arithmetic, so they are certified lower bounds for suprema; they are not upper bounds. Other packages are better in
+Section~\ref{sec:renyi}, is one call. The paper scripts recompute reported extremal values at the optimiser in 40- to
+50-digit arithmetic, so they are certified lower bounds for suprema; they are not upper bounds. Other packages are better in
 three respects. A convex problem belongs to an SDP solver, which returns the global optimum with a certificate where
 our local search returns a lower bound. A single large system belongs to the simulators above. Pulse-level control,
 with waveform constraints and optimisation of the evolution time, is the purpose of QuTiP-QOC. The library is meant
@@ -430,12 +435,13 @@ the better choice.}
 \end{table}
 
 \paragraph{Working with QuTiP and dynamiqs.} The library is meant to complement the simulators, not to replace them.
-The module \texttt{interop} converts operators, states, channels and Lindblad jump operators to and from
-\texttt{qutip.Qobj} and dynamiqs arrays; for a spin chain it places the sectors in the computational basis with
+The module \texttt{interop} converts operators, states and channels to and from \texttt{qutip.Qobj} and dynamiqs
+arrays, and Lindblad jump operators to collapse operators; for a spin chain it places the sectors in the computational basis with
 QuTiP's conventions. A map between algebras is a map into the algebra, so it is converted together with the pinching
 onto the output sectors, and a dense matrix outside the algebra is rejected on the way back. Through this module the
 Lindblad solvers of Section~\ref{sec:noisy} are checked against \texttt{qutip.mesolve} and \texttt{dynamiqs.mesolve}
-in the test suite (agreement to $10^{-10}$ on a four-qubit register with damping and dephasing), and a computation
+in the test suite: on a four-qubit register with damping and dephasing the exact stepper agrees with both to better than
+$10^{-9}$, and the CPTP splitting used in Section~\ref{sec:noisy} converges to them at second order. A computation
 can move to whichever package suits its next step, for example to QuTiP for a large single system after the sector
 structure has been used to set it up.
 
@@ -513,12 +519,13 @@ $10^5$ samples in one batch. \texttt{operator\_from\_eigenvalues} draws independ
 import torch
 from torch_vn_algebra import TypeIAlgebra
 
-alg = TypeIAlgebra([4, 4, 8], [4, 4, 8], complex_valued=False)  # M_4 + M_4 + M_8, real
+alg = TypeIAlgebra([4, 4, 8], [4, 4, 8], complex_valued=False,  # M_4 + M_4 + M_8, real,
+                  precision='double')                           # as in Table baselines
 B = 100_000                                     # Monte Carlo samples: one batch
 
 def spectrum(dim, delta=0.6):                   # lambda_max = 1, Michelson contrast delta
     lo = (1 - delta) / (1 + delta)
-    lam = lo + (1 - lo) * torch.rand(B, dim)
+    lam = lo + (1 - lo) * torch.rand(B, dim, dtype=torch.float64)
     lam[:, 0], lam[:, 1] = 1.0, lo
     return lam
 
@@ -585,8 +592,9 @@ The library is pure Python on top of PyTorch~\cite{paszke2019} ($\ge1.13$) and N
 OpenBLAS) on CPUs and cuSOLVER, cuBLAS and MAGMA on NVIDIA GPUs; sparse products use PyTorch's CSR tensors; automatic
 differentiation is PyTorch's reverse mode. The validation and paper scripts also use SciPy, pandas, Matplotlib and
 mpmath. The test suite runs in continuous integration on Python~3.8--3.13 and with the oldest supported versions
-(Python~3.8, PyTorch~1.13, NumPy~1.21). Every paper script records the device, the matmul precision and the PyTorch,
-CUDA and cuDNN versions in a JSON file next to its table.
+(Python~3.8, PyTorch~1.13, NumPy~1.21). The paper scripts record the device, the matmul precision, the PyTorch, CUDA and
+cuDNN versions and the commit in a JSON file next to their tables; files written by earlier versions of a script lack
+some of these fields.
 
 A computation proceeds in four steps. (1) An algebra is declared by its sector sizes, and optionally sector charges,
 number field, precision and device (\texttt{TypeIAlgebra}, or a model such as \texttt{SpinChain} that creates it).
@@ -657,14 +665,22 @@ jumps between sectors; sparse sector Hamiltonians, batched Lanczos and Krylov\\
 \texttt{dynamics} & exact Schrödinger/von Neumann evolution, RK4, Lindblad equation (RK4, completely positive
 splitting, $e^{t\mathcal L}$)\\
 \texttt{functional} & functional calculus: self-adjoint, normal, singular values, holomorphic (contour); spectral cache\\
-\texttt{optimize}, \texttt{cost} & parametrisations with prescribed contrast, batched multistart \texttt{extremize};
-run-time and memory estimates\\
+\texttt{optimize}, \texttt{cost} & parametrisations with prescribed contrast, channels (\texttt{StinespringParam}) and
+Lindblad generators (\texttt{LindbladParam}); batched multistart \texttt{extremize} and \texttt{fit}; run-time and memory
+estimates\\
+\texttt{measurement} & POVMs (sectors, bases, rotated and randomised settings), sampling, likelihoods, instruments
+recording the outcome in the centre, Fisher information\\
 \texttt{inclusions} & \texttt{Inclusion}: inclusion matrices, conditional expectations, Markov trace, Jones,
 Watatani and Pimsner--Popa indices, basic construction, spin-chain tower\\
 \texttt{decompose}, \texttt{su2} & numerical Wedderburn decomposition, commutants, real/complex/quaternionic types;
 \texttt{SU2Chain}: SU(2) multiplets, Clebsch--Gordan coefficients, Wigner--Eckart theorem\\
 \texttt{divergences}, \texttt{jordan} & Petz and sandwiched Rényi divergences, recovery maps, $L^p$ norms; Jordan
 product, quadratic representation, spin factors\\
+\texttt{permutational} & $N$ two-level systems with permutation symmetry: total-spin sectors, collective operators,
+Dicke states, local jumps between sectors (\texttt{PermutationalLindbladian})\\
+\texttt{interop} & conversion to and from dense matrices, QuTiP and dynamiqs (chain layout, pinching of maps)\\
+\texttt{learn} & channels as trainable networks: channel, unitary and Lindblad layers, residual blocks, post-selection,
+feed-forward through the centre; losses (Section~\ref{sec:learn})\\
 \bottomrule
 \end{tabular}
 \caption{Modules of \texttt{torch\_vn\_algebra}.}
@@ -711,9 +727,9 @@ batch, so a Monte Carlo study of $10^5$ samples is one tensor program, not $10^5
 the stacked active blocks of all sectors of equal size, one batched call per distinct size
 (Figure~\ref{fig:layout}c); contiguous sectors are selected as views, and an unpadded algebra needs no scatter.
 
-The second principle is to compute only what is read. One batched Hermitian eigensolver serves spectra, $f(A)$, $|A|$,
-singular values, polar decompositions and normal operators (Section~\ref{sec:calculus}); it is fast and, unlike batched
-SVD on GPUs, not limited in block size. Where only the spectrum is needed (extreme eigenvalues, contrasts, entropies),
+The second principle is to compute only what is read. One batched Hermitian eigensolver serves spectra, $f(A)$ and
+normal operators, and on GPUs also $|A|$, singular values and polar decompositions of blocks larger than 32
+(Section~\ref{sec:calculus}); it is fast and, unlike batched SVD on GPUs, not limited in block size. Where only the spectrum is needed (extreme eigenvalues, contrasts, entropies),
 eigenvectors are not formed. Where the spectrum is known from the construction, no decomposition is run at all, and a
 cached eigendecomposition turns many functions of one operator into products.
 
@@ -761,14 +777,15 @@ from the Hermitian eigensolver. (2) For normal $A=H+iK$, $H$ and $K$ commute, an
 diagonalise $A$ for all but finitely many $\alpha$. The library tries a few irrational values, refines nearly tied
 eigenvectors with a second coefficient and corrects the remaining residual to first order, so normal operators also
 need only the Hermitian eigensolver. (3) Singular values, $|A|$, the pseudo-inverse and the polar decomposition come
+from batched SVD, except on GPUs for blocks larger than 32, where batched SVD falls back to a loop; there they come
 from the Hermitian eigensolver of the dilation $\left(\begin{smallmatrix}0&A\\A^*&0\end{smallmatrix}\right)$, whose
-eigenvalues are $\pm s_i$; batched SVD on GPUs is limited to blocks of size at most 32, the batched Hermitian
-eigensolver is not. (4) For arbitrary $A$ and $f$ holomorphic near the spectrum,
+eigenvalues are $\pm s_i$. (4) For arbitrary $A$ and $f$ holomorphic near the spectrum,
 $f(A)=(2\pi i)^{-1}\oint f(z)(z-A)^{-1}dz$ is evaluated by the trapezoidal rule on a circle around the
-spectrum~\cite{trefethen2014}, i.e.\ by batched LU solves, doubling the nodes until two results agree; an unconverged
-result raises an error instead of returning a wrong matrix.
+spectrum~\cite{trefethen2014}, i.e.\ by batched LU solves, doubling the nodes until two results agree; a result whose error
+estimate stays above the square root of the tolerance raises an error, and one between the two triggers a warning.
 
-\paragraph{Differentiation.} All operations are differentiable. Gradients propagated naively through eigenvectors
+\paragraph{Differentiation.} All numerical operations are differentiable, except the unitary factor of the polar
+decomposition, which is returned without gradient. Gradients propagated naively through eigenvectors
 contain factors $1/(\lambda_i-\lambda_j)$ and fail at degenerate spectra, which are typical here (projections,
 symmetric and extremal operators). The functional calculus therefore has its own backward pass: by the Daleckii--Krein
 formula~\cite{daleckii1965,bhatia1997}, the derivative of $f$ at self-adjoint $A$ is $dF=V\,(L\circ V^*dA\,V)\,V^*$,
@@ -776,7 +793,8 @@ with the Loewner matrix $L_{ij}=(f(\lambda_i)-f(\lambda_j))/(\lambda_i-\lambda_j
 $f'$ for coinciding eigenvalues, which is finite whenever $f$ is differentiable on the spectrum. Backward passes through
 the eigenvectors stay finite at degenerate spectra only for losses that do not mix a degenerate
 eigenspace~\cite{kasim2020}, and they then miss the entries $f'(\lambda)$ inside the degenerate blocks. The same
-backward pass serves $\sqrt A$, $\log A$, $A^p$, $|A|$ (as $\sqrt{A^*A}$, with $L_{ij}=1/(s_i+s_j)$) and inverses;
+backward pass serves $\sqrt A$, $\log A$, $A^p$, $|A|$ (as $\sqrt{A^*A}$, with $L_{ij}=1/(s_i+s_j)$) and inverses of
+self-adjoint operators (the pseudo-inverse of a general operator has a constant-rank backward pass of its own);
 normal $A$ use complex divided differences, and the contour integral is differentiated through its solves.
 
 \subsection{Number field and precision}\label{sec:numerics}
@@ -804,8 +822,9 @@ than $100\,\%$ in single precision, and the round-off floor of a trace inequalit
 magnitude higher.
 
 \paragraph{Cost.} An entry takes 4, 8, 8 or 16 bytes (\texttt{alg.bytes\_per\_operator(B)} reports the memory of a
-batch). A complex multiply--add costs about four real ones; for eigensolvers, and for double against single precision
-on CPUs, the measured ratios are smaller (Table~\ref{tab:numerics-time}). Data-centre GPUs execute FP64 at half the FP32
+batch). A complex multiply--add costs about four real ones; for eigensolvers the measured ratio of complex to real is
+smaller, while double against single precision costs a factor that depends on the device
+(Table~\ref{tab:numerics-time}, measured on the GPU of the full run). Data-centre GPUs execute FP64 at half the FP32
 rate, consumer GPUs at 1/32--1/64; the full-size runs of this paper used a consumer GPU. FP32 products may run in the
 TF32 format on recent GPUs; PyTorch keeps true FP32 by default, the library does not change this, and the paper scripts
 record the setting. We recommend the smallest type that is exact for the model and the precision that the size of the
@@ -853,7 +872,8 @@ thresholds can be changed, and the checks can be switched off locally.
 \section{Usage by example}\label{sec:usage}
 
 The repository contains short complete programs in \texttt{man/article/listings}; the test suite runs them, so they
-stay in sync with the code. Each runs on a CPU in under half a minute and uses a GPU when available.
+stay in sync with the code. Each runs on a CPU in about half a minute or less; the nine programs \texttt{ex*.py} use a
+GPU when one is available.
 Table~\ref{tab:examples} lists the nine introductory examples; programs of later sections are described where they are
 used.
 
@@ -1023,7 +1043,8 @@ Two implementation details matter. (a) In a real algebra a chart $U_0e^{G-G^*}$ 
 $U_0$, and an extremiser with determinant $+1$ in every sector is reached from a Haar-random $U_0$ only with probability
 $2^{-C}$. Half of the starts therefore begin at a structured point (diagonal $X$, $Y$ rotated in pairs of eigenvectors of
 $X$, two-level spectra). With Haar-random starts only, a first run for $C=32$ sectors of size 2 fell short of the true
-envelopes by up to $35\%$; with structured starts it reaches them to a relative $10^{-5}$--$10^{-3}$. (b) Where the
+envelopes by up to $35\%$. With structured starts the searches of the companion paper~\cite{nn_trace} reproduce the
+known envelopes of the classical inequalities to $10^{-7}$, and every closed form proved there to $3\times10^{-4}$ or better. (b) Where the
 objective has a kink at the maximiser (a trace norm at a degenerate point), the remaining gap decreases with the step
 size. Applied to the three functionals, the optimiser located their envelopes for sectors of every size; the closed
 forms it suggested are proved in the companion paper~\cite{nn_trace}.
@@ -1243,7 +1264,7 @@ the incidence matrix of the path with $2L+3$ vertices, so
 the values $4\cos^2(\pi/n)$, $n=4,6,8,\dots$, of Jones' discrete series below 4~\cite{jones1983}.
 
 \paragraph{From a symmetry to the algebra: Wedderburn decomposition.} Given matrices $S_1,\dots,S_J\in M_n(\C)$, or a
-unitary representation $\pi$ of a finite group, \texttt{decompose} returns a unitary $V$ with
+unitary representation $\pi$ of a finite group, \texttt{decompose.wedderburn} returns a unitary $V$ with
 \[
   V^*\mathcal AV=\bigoplus_cM_{k_c}(\C)\otimes1_{m_c},\qquad V^*\mathcal A'V=\bigoplus_c1_{k_c}\otimes M_{m_c}(\C)
 \]
@@ -1293,7 +1314,7 @@ diagonalisation ($L\le12$, $10^{-10}$); ring energies of Table~\ref{tab:ring} ($
 theorem~\cite{lieb1962}; the two degenerate singlets at the Majumdar--Ghosh point~\cite{majumdar1969,majumdar1969b};
 Clebsch--Gordan coefficients against SymPy\\
 \texttt{divergences} & dense references; independence of the trace convention; data processing inside the proven
-ranges; Petz's equality condition; the recovery bound of~\cite[Remark~2.2]{junge2018}\\
+ranges; Petz's equality condition; the recovery bound of~\cite[Theorem~2.1]{junge2018}\\
 \bottomrule
 \end{tabular}
 \caption{Identities checked by the test suite for the modules of Sections~\ref{sec:renyi}--\ref{sec:symmetries}.}
@@ -1425,7 +1446,7 @@ T}$ (the error of the second-order splitting) and $|1-F_{\mathrm{post}}|$, maxim
 $\log(1-F_{\mathrm{post}})$ against $\log\gamma$ for $\gamma_\uparrow=0.2\gamma_\downarrow=0.2\gamma$, at small
 $\gamma$. (d) The integral $I$ and the ratio of the computed infidelity to its first-order value at
 $\gamma_\varphi=10^{-3}$. Mixed: $\gamma_\downarrow=\gamma_\varphi=\gamma$, $\gamma_\uparrow=0.1\gamma$ at
-$\gamma=10^{-5/3}\approx0.022$, without and with post-selection.}
+$\gamma=10^{-5/3}\approx0.022$, without and with post-selection. Full sizes of the study, CPU (4 threads).}
 \label{tab:noisy}
 \end{table}
 
@@ -1472,6 +1493,107 @@ The run for $n=10$ took 930\,s on a CPU for 28 settings, dominated by dense prod
 solvers~\cite{lambert2026,mercurio2025,dynamiqs}; comparisons with them are left for future work.
 
 \input{sec_control.tex}
+
+\section{Quantum channels as trainable networks}\label{sec:learn}
+
+The previous sections optimise a handful of parameters. The same differentiable objects can be stacked into networks
+whose layers are channels, and trained on data. This section describes the module \texttt{learn} that does this, the
+dictionary behind it, and two experiments that show what the algebra contributes: tomography in the algebra as
+training (Section~\ref{sec:learn-tomo}), and residual networks of channels as Markovian evolutions
+(Section~\ref{sec:learn-markov}).
+
+\paragraph{The dictionary.} A channel is a linear map of density matrices, so a network of channels is a deep
+\emph{linear} network with a constraint on every layer, and the analogy with neural networks is precise only where
+the constraint is respected. By Stinespring's theorem~\cite{stinespring1955} a channel is an isometry into a larger
+space followed by a partial trace: a linear layer followed by a contraction, whose width is the Kraus rank. Composition
+of channels is depth; a Lindblad evolution $e^{t\mathcal L}$ is a block of continuous depth, the open-system form of a
+neural ODE~\cite{chen2018,e2017}; a conditional expectation onto a subalgebra is a pooling layer. The sector structure
+of~\eqref{eq:M} is a structured sparsity of the weights: a channel that respects the sectors has Kraus operators with
+blocks only on the allowed transitions, and correspondingly fewer parameters. Table~\ref{tab:learn} lists the layers.
+
+\begin{table}[t]
+\centering\footnotesize
+\begin{tabular}{p{0.2\textwidth}p{0.34\textwidth}p{0.36\textwidth}}
+\toprule
+layer & map & network analogue\\
+\midrule
+\texttt{ChannelLayer} & Stinespring isometry per input sector, within one algebra or between algebras with allowed
+sector transitions & linear layer plus contraction; width = Kraus rank; sparsity = sectors\\
+\texttt{UnitaryLayer} & $\rho\mapsto U\rho U^*$, $U=e^{-iH}$, $H=H^*\in\M$ & unitary layer~\cite{arjovsky2016}\\
+\texttt{LindbladLayer} & $\rho\mapsto e^{t\mathcal L}\rho$, $\mathcal L$ a free GKSL generator & continuous depth~\cite{chen2018}\\
+\texttt{Residual} & $\rho\mapsto(1-p)\rho+p\,\Phi(\rho)$ & skip connection~\cite{he2016}\\
+\texttt{PostSelect} & $\rho\mapsto P\rho P/\Tr(P\rho P)$, $P\in\M$ a projection (central: a set of sectors) &
+nonlinear activation; cost $\Tr(P\rho P)$\\
+\texttt{FeedForward} & instrument, outcome in the centre, branch per outcome & fan-out skip, classical only\\
+\bottomrule
+\end{tabular}
+\caption{Layers of \texttt{torch\_vn\_algebra.learn}. Every layer is a \texttt{torch.nn.Module} that maps a batch of
+states to a batch of states; every value of its parameters is a physical map.}
+\label{tab:learn}
+\end{table}
+
+\paragraph{Every parameter value is a channel.} A \texttt{ChannelLayer} holds free matrices $Z_c$ and uses the
+isometries $V_c=Z_c(Z_c^*Z_c)^{-1/2}$ (from \texttt{StinespringParam} of the module \texttt{optimize}); a
+\texttt{LindbladLayer} holds a free Hamiltonian and free jump operators, i.e.\ a Cholesky-type factor of the
+Kossakowski matrix (\texttt{LindbladParam}). No constraint is imposed and no projection is needed, so any
+optimiser of \texttt{torch.optim} trains the network without leaving the set of channels, and gradients go through $(Z_c^*Z_c)^{-1/2}$ and
+through the dynamics by the Daleckii--Krein backward pass of Section~\ref{sec:calculus}. Listing~\ref{lst:learn} shows
+a small network trained on input--output pairs; the losses provided are the infidelity, the trace distance, the
+relative entropy and the negative log-likelihood of measurement counts (from \texttt{POVM} of the module
+\texttt{measurement}).
+
+\begin{lstlisting}[float=t, caption={A network of channels of $\M=M_1\oplus M_3\oplus M_2$, trained end to end with
+\texttt{torch.optim}. Every iterate is a channel.}, label=lst:learn]
+import torch
+from torch import nn
+from torch_vn_algebra import TypeIAlgebra, channels, learn, states
+
+alg = TypeIAlgebra([1, 3, 2], [1, 3, 2], precision='double')
+X = states.random_density_matrix(alg, batch_size=16)           # inputs
+Y = channels.random_channel(alg, kraus_rank=3)(X)                # outputs of an unknown channel
+net = nn.Sequential(learn.UnitaryLayer(alg),
+                    learn.Residual(learn.ChannelLayer(alg, kraus_rank=2), p=0.5, learn_p=True),
+                    learn.LindbladLayer(alg, n_jumps=1))
+opt = torch.optim.Adam(net.parameters(), lr=0.05)
+for step in range(200):
+    loss = learn.infidelity(net(X), Y).mean()
+    opt.zero_grad(); loss.backward(); opt.step()
+\end{lstlisting}
+
+\paragraph{Where the nonlinearity comes from.} A composition of channels is again a channel, so depth adds no new
+maps: one Stinespring layer of sufficient width is universal, and a deep network of channels is a reparametrisation of
+that set, as a deep linear network is of the linear maps. As a function of the parameters the output is nonlinear, as a
+function of the input state it is linear; on encoded classical data this makes such a model a kernel
+method~\cite{schuld2021}. A
+genuinely nonlinear layer needs one of three physical resources: post-selection, whose renormalisation by the
+acceptance $\Tr(P\rho P)$ is the activation (\texttt{PostSelect} records the acceptance, whose logarithm is the natural
+penalty, since acceptances multiply along the network); several copies of the state; or a mean-field limit of many
+symmetric systems, whose finite-size dynamics the module \texttt{permutational} computes exactly in its total-spin
+sectors.
+
+\paragraph{Skip connections.} The residual block of a ResNet~\cite{he2016}, $x\mapsto x+f(x)$, becomes
+$\mathrm{id}+\Phi$ for a channel $\Phi$, which is completely positive but doubles the trace. Its normalised counterpart \texttt{Residual} is the convex combination $(1-p)\,\mathrm{id}+p\,\Phi$: one
+step of a jump process that applies $\Phi$ at rate $p$, so that $n$ blocks with $p=t/n$ tend to
+$e^{t(\Phi-\mathrm{id})}$, the semigroup of the GKSL generator whose jump operators are the Kraus operators of $\Phi$
+(verified in the test suite). ResNets become Lindblad evolutions, with the consequence studied in
+Section~\ref{sec:learn-markov}. Skips that copy activations forward (DenseNet, U-Net) have no counterpart for quantum
+states, which can neither be cloned nor broadcast~\cite{barnum1996}; only the commutative part can be copied. In the
+algebra this is the centre: an instrument writes its outcome into the centre of $\bigoplus_j\M$
+(\texttt{measurement.Instrument.as\_channel}), and \texttt{FeedForward} applies a branch per outcome, the quantum form of
+a fan-out connection. A block-diagonal channel $\bigoplus_k\Phi_k$ is likewise a mixture of experts whose router, the
+measurement of the sector, does not disturb the state.
+
+\paragraph{Relation to other work.} Feed-forward networks whose layers are completely positive maps were trained on
+quantum data by Beer et al.~\cite{beer2020}; process tomography with learned models is done with tensor
+networks~\cite{torlai2023}, and state tomography with neural-network states~\cite{torlai2018}; networks with
+parameters in a $C^*$-algebra were proposed in~\cite{hashimoto2022}, and equivariant linear layers are elements of a
+commutant~\cite{cohen2016,finzi2021}. What the library adds is the algebra: layers between algebras with different
+sector structures, the centre as the carrier of classical information, losses defined through it, and the batching and
+gradients of the previous sections. The plan for this direction, with further experiments, is kept in the repository
+(\texttt{ROADMAP\_learning.md}).
+
+\IfFileExists{sec_learn_tomography.tex}{\input{sec_learn_tomography.tex}}{}
+\IfFileExists{sec_learn_markov.tex}{\input{sec_learn_markov.tex}}{}
 % goes here, at the end of Section~\ref{sec:noisy}.
 
 \section{Applications in the companion papers}\label{sec:usecases}
@@ -1499,7 +1621,8 @@ Library versions matter: batched Hermitian eigensolvers on GPUs cover all block 
 PyTorch releases, and batched SVD on GPUs is limited to blocks of size at most 32, which is why the library uses the
 Hermitian eigensolver wherever it can. Batched QR on GPUs factorises small matrices one at a time, so Haar sampling on
 GPUs uses a batched Gram--Schmidt orthonormalisation with reorthogonalisation (the same matrices as QR with the phase
-correction). On the CPU the library splits batched decompositions into one chunk per thread, so all cores are used.
+correction). Table~\ref{tab:benchmark} was measured before this change; its rows ``generate'' on the GPU therefore show
+the earlier per-sector QR and understate the GPU. On the CPU the library splits batched decompositions into one chunk per thread, so all cores are used.
 
 GPUs need enough independent work per kernel launch: many samples, many sectors or large blocks, and matrix products
 rather than decompositions of small matrices. The design follows from this. Everything is batched, so the batch
@@ -1527,7 +1650,7 @@ operation & $k$ & $C$ & batch & time per sample [$\mu$s]\\
 \caption[]{Wall-clock time per sample of library operations for $C$ sectors of size $k$ and the batch size
 shown\G{benchmark}{ (\BenchMode\ run on \BenchDevice, CPU with \BenchCpuThreads\ threads)}{} (single precision;
 ``exp($tL$)'' uses a smaller batch because its superoperators have $k^4$ entries). With a GPU the table also gives the
-CPU time and the speedup CPU/GPU.}
+CPU time and the speedup CPU/GPU. The run predates the batched Gram--Schmidt generator of Haar unitaries on GPUs.}
 \label{tab:benchmark}
 \end{table}
 
@@ -1552,31 +1675,28 @@ and second derivatives of $f(A)$ are correct at non-degenerate spectra only.
 \item \emph{Divergences and scale.} For small $\alpha$ the sandwiched divergence of ill-conditioned states is not
 accurate (hence $\alpha\ge0.2$ in Section~\ref{sec:renyi}). Choi matrices, superoperators and $e^{t\mathcal L}$ work
 with $k_c^2\times k_c^2$ matrices and are limited to blocks of a few tens; RK4 and the splitting scale further.
-\item \emph{Learning in the algebra.} Since a Hamiltonian or Lindblad evolution in the library is a differentiable
-composition of block-diagonal maps, a discretised evolution is a deep network whose layers are channels of the algebra,
-and its training is the continuous-depth idea of neural ordinary differential equations~\cite{chen2018} with the
-constraints of quantum mechanics built in: unitary layers as in unitary recurrent networks~\cite{arjovsky2016},
-completely positive layers as in dissipative quantum neural networks~\cite{beer2020}, and conditional expectations as
-pooling. Equivariant linear layers are elements of the commutant, i.e.\ of an algebra~\eqref{eq:M}, by Schur's
-lemma~\cite{cohen2016,finzi2021}, and networks with parameters in a $C^*$-algebra have been proposed
-in~\cite{hashimoto2022}. The library provides the primitives: parametrised unitaries and spectra, channels within and between algebras
-and Lindblad generators as parameters (Section~\ref{sec:optimisation}), measurements and instruments, and gradients
-through all of them and through the dynamics. Network architectures built from these pieces (residual blocks as steps
-of a jump process, feed-forward through the centre, encoders into smaller algebras), tomography in symmetry algebras
-and training viewed as a dynamics of the channel are the main direction of future work; the plan is kept in the
-repository (\texttt{ROADMAP\_learning.md}).
+\item \emph{Learning.} The layers of Section~\ref{sec:learn} are small: dense Kraus blocks and dense generators, trained
+on simulated data for registers of a few qubits. Encoders into smaller algebras, tomography of larger registers with
+sparse measurements, training viewed as a dynamics of the channel and certified upper bounds for the learned maps are
+not implemented; the plan is kept in the repository (\texttt{ROADMAP\_learning.md}).
 \item \emph{Scope.} Finite dimensions and Type~I only; no tensor-network methods. Sparse methods exist only for sector
 Hamiltonians and for jumps that map basis vectors to basis vectors; other jumps between sectors are stored densely.
-Benchmarks against QuTiP, \texttt{dynamiqs}, QuantumToolbox.jl, QuSpin and XDiag are future work.
+Results are cross-checked against QuTiP and QuSpin in the test suite, and the permutational Lindblad solver is timed
+against QuTiP's PIQS in~\cite{nn_btc}; systematic benchmarks against QuTiP, \texttt{dynamiqs}, QuantumToolbox.jl, QuSpin
+and XDiag are future work.
 \end{itemize}
 
 \section{Availability and reproducibility}\label{sec:availability}
 
-The code is available under the MIT licence at \url{https://github.com/andre-a-no/von_neumann_type_i}.
-The command \texttt{bash scripts/run\_all.sh full cuda} regenerates every table and figure on a GPU; without
-arguments it runs a reduced version on a CPU in a few minutes. The script \texttt{scripts/\allowbreak gpu\_check.py} checks a GPU, and \texttt{scripts/\allowbreak library\_paper\_schematics.py}
-draws the schematic figures. The tables state the device
-and mode they were produced with, and the JSON file next to each table records the commit of the code.
+The code is available under the MIT licence at \url{https://github.com/andre-a-no/von_neumann_type_i}; this paper
+describes version~1.2.0 (tag \texttt{v1.2.0}), and its scripts need the repository version of the library
+(\texttt{pip install -e ".[scripts]"}) rather than an older release from PyPI. The command
+\texttt{bash scripts/run\_all.sh full cuda} regenerates every table and figure on a GPU; without the mode argument it
+runs a reduced version on the default device, which takes well under an hour on a four-core CPU. The script
+\texttt{scripts/\allowbreak gpu\_check.py} checks a GPU, and \texttt{scripts/\allowbreak library\_paper\_schematics.py}
+draws the schematic figures and the summary figure of the noisy register. The tables state the device and, except the
+use-case tables of Sections~\ref{sec:noisy} and~\ref{sec:control}, which are single full-size runs, the mode they were
+produced with; the JSON files written by the current versions of the scripts also record the commit of the code.
 
 \appendix
 {\sloppy\small
@@ -1849,6 +1969,25 @@ degenerate cases'', arXiv:2011.04366 (2020).
   ``Training deep quantum neural networks'', Nat.\ Commun.\ 11 (2020), 808.
 \bibitem{hashimoto2022} Y.~Hashimoto, Z.~Wang, T.~Matsui, ``$C^*$-algebra net: a new approach generalizing neural
   network parameters to $C^*$-algebra'', Proc.\ 39th Int.\ Conf.\ Machine Learning, PMLR 162 (2022), 8523--8534.
+\bibitem{stinespring1955} W.~F.~Stinespring, ``Positive functions on $C^*$-algebras'', Proc.\ Amer.\ Math.\ Soc.\ 6
+  (1955), 211--216.
+\bibitem{e2017} W.~E, ``A proposal on machine learning via dynamical systems'', Commun.\ Math.\ Stat.\ 5 (2017), 1--11.
+\bibitem{he2016} K.~He, X.~Zhang, S.~Ren, J.~Sun, ``Deep residual learning for image recognition'', Proc.\ IEEE CVPR
+  2016, 770--778.
+\bibitem{barnum1996} H.~Barnum, C.~M.~Caves, C.~A.~Fuchs, R.~Jozsa, B.~Schumacher, ``Noncommuting mixed states cannot
+  be broadcast'', Phys.\ Rev.\ Lett.\ 76 (1996), 2818--2821.
+\bibitem{torlai2018} G.~Torlai, G.~Mazzola, J.~Carrasquilla, M.~Troyer, R.~Melko, G.~Carleo, ``Neural-network quantum
+  state tomography'', Nat.\ Phys.\ 14 (2018), 447--450.
+\bibitem{torlai2023} G.~Torlai, C.~J.~Wood, A.~Acharya, G.~Carleo, J.~Carrasquilla, L.~Aolita, ``Quantum process
+  tomography with unsupervised learning and tensor networks'', Nat.\ Commun.\ 14 (2023), 2858.
+\bibitem{toth2010} G.~T\'oth, W.~Wieczorek, D.~Gross, R.~Krischek, C.~Schwemmer, H.~Weinfurter, ``Permutationally
+  invariant quantum tomography'', Phys.\ Rev.\ Lett.\ 105 (2010), 250403.
+\bibitem{wolfcirac2008} M.~M.~Wolf, J.~I.~Cirac, ``Dividing quantum channels'', Commun.\ Math.\ Phys.\ 279 (2008),
+  147--168.
+\bibitem{schuld2021} M.~Schuld, ``Supervised quantum machine learning models are kernel methods'',
+  arXiv:2101.11020 (2021).
+\bibitem{wolf2008} M.~M.~Wolf, J.~Eisert, T.~S.~Cubitt, J.~I.~Cirac, ``Assessing non-Markovian quantum dynamics'',
+  Phys.\ Rev.\ Lett.\ 101 (2008), 150402.
 \end{thebibliography}
 }
 

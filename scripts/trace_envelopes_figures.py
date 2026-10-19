@@ -2,8 +2,10 @@
 
 Plain NumPy, independent of the library: random samples of z = |Tr(XUY)| - Tr(XY) in M_k(R) with ||X|| = ||Y|| = 1
 (Haar-orthogonal eigenbases and U, spectra with a uniformly drawn contrast and the other eigenvalues uniform in
-between), the sharp bound N d^2 d'^2 / ((1+d)(1+d')) with the other contrast free in [0, 1], and the value of the
-explicit maximisers of the proof, evaluated numerically. Writes man/trace_envelopes/figures/gardner_contrasts.pdf.
+between), the sharp bound nu d^2 d'^2 / ((1+d)(1+d')) with the other contrast free in [0, 1] (nu = floor(k/2), the
+paper's notation), and the value of the explicit maximisers of the proof, evaluated numerically; it prints the largest
+difference between the two (quoted in the caption of the figure). Writes
+man/trace_envelopes/figures/gardner_contrasts.pdf.
 
     python scripts/trace_envelopes_figures.py [--samples 100000] [--seed 0]
 """
@@ -85,7 +87,7 @@ for row, k in enumerate((2, 16)):
             ax.plot(grid, bound(N, 1.0, grid), color='#1b1b1b', lw=1.6, ls='--',
                     label=r'supremum, $\Delta(X)\to1$ (not attained)')
         ax.axhline(0, color='#555555', lw=0.6)
-        ax.set_title(f'$M_{{{k}}}(\\mathbb{{R}})$, $N={N}$', fontsize=9)
+        ax.set_title(f'$M_{{{k}}}(\\mathbb{{R}})$, $\\nu={N}$', fontsize=9)
         if row == 1:
             ax.set_xlabel(lab)
         if col == 0:

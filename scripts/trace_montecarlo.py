@@ -16,9 +16,14 @@ A second sample replaces every positive variable (and every modulus) by a scaled
 sampled violation relative to the envelope.
 
 For every dimension the samples are summarised in bins of Delta(W) and of the contrast of the operators (largest
-violation, 99th percentile, fraction violating); scripts/trace_figures.py draws them.
+violation, 99th percentile, fraction violating). The largest ratio of a sample to the computed envelope uses the
+envelope interpolated linearly in Delta(W) at the sample's own contrast. The figures (one per item, function figures()
+below) show the samples with the computed envelopes, i.e. the certified (mpmath) values of
+man/article/generated/trace_characterizations.json (top rows) and man/trace_envelopes/generated/trace_contrast.json
+(bottom rows); run scripts/trace_characterizations.py and scripts/trace_contrast.py first.
 
-Writes man/trace_envelopes/generated/trace_montecarlo.{json,tex}.
+Writes man/trace_envelopes/generated/trace_montecarlo.{json,tex}, generated/trace_montecarlo_figures.tex and
+figures/mc_*.pdf.
 
     python scripts/trace_montecarlo.py [--samples 200000] [--dims 2,3,4] [--seed 0]
 """
@@ -276,7 +281,7 @@ def envelope_curve(name, n):
     import trace_characterizations as tc
     d = json.loads((ROOT / 'man' / 'article' / 'generated' / 'trace_characterizations.json').read_text())
     grid = np.array(d['grid'], dtype=float)
-    V = np.array(d['inequalities'][name]['dims'][str(n)]['V'], dtype=float)
+    V = np.array(d['inequalities'][name]['dims'][str(n)]['certified'], dtype=float)
     xs = np.linspace(0, 0.95, 120)
     try:
         ref = tc.reference_curve(name, xs, n)
@@ -328,6 +333,7 @@ def sample_all(n, samples, seed):
 # ---------------------------------------------------------------------------------------------------- figures
 FIXED_DW = 0.9                                      # Delta(W) of the second sample (contrast of the operators varies)
 GREY, ORANGE, INK, MUTED, GRID = '#7d848c', '#eb6834', '#0b0b0b', '#52514e', '#e6e5e1'
+YLABEL = r'$(\mathcal{L}-\mathcal{R})/\mathcal{N}$'           # the paper's normalised violation
 
 
 def sample_fixed(n, samples, seed):
@@ -361,7 +367,8 @@ def _limits(curve, samples):
 
 
 def figures(res, fixed, dims, fixed_dims):
-    """One figure per item: Monte Carlo samples and the certified envelope, one panel per dimension."""
+    """One figure per item: Monte Carlo samples and the computed envelope (certified values, a lower bound for the
+    supremum), one panel per dimension."""
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
@@ -385,7 +392,7 @@ def figures(res, fixed, dims, fixed_dims):
         fig, axes = plt.subplots(2 if op else 1, len(dims), figsize=(10, 5.1 if op else 2.55), squeeze=False)
         for j, n in enumerate(dims):
             ax = axes[0, j]
-            V = np.array(env['inequalities'][name]['dims'][str(n)]['V'], dtype=float)
+            V = np.array(env['inequalities'][name]['dims'][str(n)]['certified'], dtype=float)
             allv = []
             for mode, c, a in (('projection', ORANGE, 0.18), ('random', GREY, 0.12)):   # random on top
                 if mode not in res[n][name]:
@@ -400,10 +407,10 @@ def figures(res, fixed, dims, fixed_dims):
             ax.set_title(f'$M_{n}$', fontsize=9, color=INK)
             ax.set_xlabel(r'$\Delta(W)$', fontsize=8, color=MUTED)
             _style(ax)
-        axes[0, 0].set_ylabel(r'$(L-R)/N$', fontsize=8, color=MUTED)
+        axes[0, 0].set_ylabel(YLABEL, fontsize=8, color=MUTED)
         handles = [plt.Line2D([], [], ls='', marker='o', ms=4, color=GREY, label='random operators'),
                    plt.Line2D([], [], ls='', marker='o', ms=4, color=ORANGE, label='scaled projections'),
-                   plt.Line2D([], [], color=INK, marker='o', ms=3.5, mfc='white', label='certified envelope')]
+                   plt.Line2D([], [], color=INK, marker='o', ms=3.5, mfc='white', label='computed envelope (lower bound)')]
         if not any('projection' in res[n][name] for n in dims):
             handles.pop(1)
         if op:
@@ -418,7 +425,7 @@ def figures(res, fixed, dims, fixed_dims):
                 ax.set_title(f'$M_{n}$, $\\Delta(W)={FIXED_DW}$', fontsize=9, color=INK)
                 ax.set_xlabel(r"contrast $\delta'$ of the operators", fontsize=8, color=MUTED)
                 _style(ax)
-            axes[1, 0].set_ylabel(r'$(L-R)/N$', fontsize=8, color=MUTED)
+            axes[1, 0].set_ylabel(YLABEL, fontsize=8, color=MUTED)
             for ax in axes[1, len(fixed_dims):]:
                 ax.axis('off')
             axes[1, -1].legend(handles=handles, loc='center', frameon=False, fontsize=8)

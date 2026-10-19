@@ -51,7 +51,7 @@ This README is the entry point of the repository:
 | understand the physics behind the models | the boxes *Physical meaning* in the [lecture notes](man/lecture_notes/README.md), e.g. [symmetries and charge sectors](man/lecture_notes/04_symmetries.md), [dynamics](man/lecture_notes/08_dynamics.md), [spin chains](man/lecture_notes/09_spin_chains.md) |
 | compare with other software | [When to use it, and alternatives](#when-to-use-it-and-alternatives) |
 | read the paper | [`man/article/vn_algebra_pytorch.pdf`](man/article/vn_algebra_pytorch.pdf) (source `man/article/vn_algebra_pytorch.tex`) |
-| read the paper on trace characterisations | [`man/trace_envelopes/trace_inequalities_contrast.pdf`](man/trace_envelopes/trace_inequalities_contrast.pdf): how strongly inequalities that characterise the trace fail, as functions of the Michelson contrasts of the functional and of the operators, and why projections suffice (source `man/trace_envelopes/trace_inequalities_contrast.tex`, numbers from `scripts/trace_characterizations.py` and `scripts/trace_contrast.py`, arXiv archive by `scripts/make_arxiv_trace.sh`) |
+| read the paper on trace characterisations | [`man/trace_envelopes/trace_inequalities_contrast.pdf`](man/trace_envelopes/trace_inequalities_contrast.pdf): how strongly inequalities that characterise the trace fail, as functions of the Michelson contrasts of the functional and of the operators, and how often projections and two-level operators already give the largest violation (an observation with exceptions) (source `man/trace_envelopes/trace_inequalities_contrast.tex`; run in this order: `scripts/trace_characterizations.py --mode full`, `scripts/trace_contrast.py --mode full`, then `scripts/trace_montecarlo.py`, `scripts/contrast_operations.py`, `scripts/trace_envelopes_figures.py` and `scripts/trace_paper_schematics.py`; the joint-contrast figure comes from `scripts/bounds_search.py` of the library pipeline; arXiv archive by `scripts/make_arxiv_trace.sh`) |
 | read the paper on the Connes–Størmer entropy | [`man/connes_stormer/connes_stormer_masas.pdf`](man/connes_stormer/connes_stormer_masas.pdf): closed form for two MASAs of M_2, partitions that beat bases for n ≥ 3 (numbers from `scripts/connes_stormer.py`, arXiv archive by `scripts/make_arxiv_connes_stormer.sh`) |
 | read the physics paper (time crystal, symmetry-resolved entanglement) | [`man/btc_sre/btc_sre_symmetry_sectors.pdf`](man/btc_sre/btc_sre_symmetry_sectors.pdf): finite-N lifetimes of a boundary time crystal under local dissipation, SRE in the XXZ chain (numbers from `scripts/permutational.py` and `scripts/symmetry_resolved.py`, arXiv archive by `scripts/make_arxiv_btc_sre.sh`) |
 | reproduce every number of the paper | [Reproducing the paper](#reproducing-the-paper) |
@@ -87,6 +87,9 @@ This README is the entry point of the repository:
   [`example_inclusions.py`](examples/example_inclusions.py)).
 - **Quantum Rényi divergences** – Petz and sandwiched Rényi divergences, Umegaki relative entropy, D_max, Petz recovery
   maps ([`example_divergences.py`](examples/example_divergences.py)).
+- **Quantum channels as trainable networks** (module `learn`) – channel layers within and between algebras (every
+  parameter value a channel), unitary and Lindblad layers, residual blocks (1−p)·id + p·Φ, post-selection as the
+  nonlinear layer, feed-forward of measurement outcomes through the centre; `torch.nn` modules trained with `torch.optim`.
 - **Interoperability with QuTiP and dynamiqs** – operators, states, channels and Lindblad jumps to and from
   `qutip.Qobj` and dynamiqs arrays, with the computational-basis layout of spin chains; the Lindblad solvers agree with
   `qutip.mesolve` and `dynamiqs.mesolve` to 1e-10 (`tests/test_interop.py`).
@@ -253,6 +256,7 @@ print((Lt(rho) - rho_t[-1]).frobenius_norm().max())
 | `divergences` | `petz_renyi_divergence`, `sandwiched_renyi_divergence`, `renyi_divergence` (with the limits α = 0, 1, ∞), `umegaki_relative_entropy`, `max_relative_entropy`, `min_relative_entropy`, `sector_contributions`; `PetzRecovery` / `petz_recovery` (also rotated), `universal_recovery`; `lp_norm`, `kosaki_norm` |
 | `jordan` | `jordan_product`, `jordan_multiplication`, `quadratic_representation`, `jordan_triple`, `jordan_power`, `transpose_map`; `jordan_algebra_generated`, `star_algebra_self_adjoint_part`, `is_jordan_subalgebra`, `compare_with_star_algebra` → `JordanAlgebra`; `SpinFactor`, `anticommuting_symmetries` |
 | `interop` | `to_dense`, `from_dense`, `channel_to_dense` (Kraus operators P_d K_i of a map into the algebra); `to_qutip`, `from_qutip`, `jumps_to_qutip` (collapse operators for `qutip.mesolve`); `to_dynamiqs`, `jumps_to_dynamiqs`; `chain_basis` (layout `layout=chain`: QuTiP's qubit order, \|0⟩ = spin up). QuTiP and dynamiqs are optional (`pip install torch_vn_algebra[interop]`) |
+| `learn` | `ChannelLayer`, `UnitaryLayer`, `LindbladLayer`, `Residual`, `PostSelect`, `FeedForward` (`torch.nn.Module`s mapping states to states); losses `infidelity`, `trace_distance`, `relative_entropy`, `negative_log_likelihood`; `count_parameters` |
 | `measurement` | `POVM` (check of positivity and normalisation, Born `probabilities`, multinomial `sample`, `log_likelihood`; `sectors` (the charge), `basis` (computational basis of a `SpinChain`), `from_unitary` (tomography settings), `combine` (randomised measurements)), `Instrument` (`lueders`, `from_povm`, conditional `post_states`, `average_channel`, `as_channel`: an `InterSectorChannel` into ⊕_j M that records the outcome in the centre), `fisher_information` (classical Fisher information by autograd) |
 
 ### Inclusions, symmetries and divergences
@@ -327,7 +331,7 @@ typed by hand: every table and figure comes from the scripts in [`scripts`](scri
 [`man/article/listings`](man/article/listings), run by one driver:
 
 ```bash
-bash scripts/run_all.sh                    # quick mode, about 4 minutes on a 4-thread CPU
+bash scripts/run_all.sh                    # quick mode, well under an hour on a 4-thread CPU
 bash scripts/run_all.sh full cuda          # sizes of the paper, on a GPU
 cd man/article && pdflatex vn_algebra_pytorch.tex && pdflatex vn_algebra_pytorch.tex
 ```

@@ -32,6 +32,7 @@ checked with fixed block densities on M_2 (+) M_3.
 Writes generated/trace_characterizations.{json,tex} and figures/trace_characterizations.pdf.
 
     python scripts/trace_characterizations.py --mode full --device cpu
+    python scripts/trace_characterizations.py --mode full --report-only    # tex from the saved JSON, no search
 """
 import functools
 import math
@@ -1477,10 +1478,32 @@ def _starred(x, star):
     return x + star
 
 
-def write_outputs(args, res):
-    from common import save_json, write_tex, env_macro, sci
+def _env_macro(args, res):
+    """Like common.env_macro, but from the environment stored with the results (report-only) and with the CPU
+    described as it was used: run() starts `workers` processes with one thread each."""
+    from common import environment
+    e = res.get('environment') or environment(args.device)
+    if e.get('gpu'):
+        hw = e['gpu']
+    elif res.get('workers', 1) > 1:
+        hw = f"{res['workers']} CPU processes with one thread each"
+    else:
+        hw = f"a CPU with {e.get('threads')} thread{'' if e.get('threads') == 1 else 's'}"
+    return (f"\\newcommand{{\\TCDevice}}{{{hw}}}\n"
+            f"\\newcommand{{\\TCMode}}{{{res.get('mode', args.mode)}}}\n"
+            f"\\newcommand{{\\TCTorch}}{{{e['torch']}}}\n"
+            f"\\newcommand{{\\TCCuda}}{{{e.get('cuda') or 'none'}}}\n"
+            f"\\newcommand{{\\TCCusolver}}{{{e.get('cusolver') or 'none'}}}\n"
+            f"\\newcommand{{\\TCMatmul}}{{{'TF32' if e['float32_matmul_precision'] != 'highest' else 'FP32'}}}\n")
+
+
+def write_outputs(args, res, report_only=False):
+    """generated/trace_characterizations.{json,tex} and the figure; with report_only (results loaded from the saved
+    JSON) only the tex, from the stored results and environment."""
+    from common import save_json, write_tex, sci
     cfg, S = res['config'], res['summary']
-    save_json(args, 'trace_characterizations', res)
+    if not report_only:
+        save_json(args, 'trace_characterizations', res)
 
     def num(x):
         if x is None:
@@ -1494,13 +1517,16 @@ def write_outputs(args, res):
     def sc(x, floor=1e-16):
         return sci(max(x, floor), 1)
 
+    def signed(x):                            # a largest difference that may be negative (no excess at all)
+        return sci(x, 1)
+
     sg = S['sgm_best']
     macros = [('Starts', cfg['starts']), ('Steps', cfg['rounds'] * cfg['steps']), ('GridSize', len(cfg['grid'])),
               ('Digits', cfg['digits']), ('Dims', ', '.join(map(str, cfg['dims']))),
               ('SectorStarts', cfg['sector_starts']), ('Workers', res['workers']), ('Seconds', f"{res['seconds']:.0f}"),
               ('Vzero', sc(S['V0'])), ('CertDev', sc(S['cert_rel_dev'])), ('SharpDev', sc(S['sharp_dev'])),
-              ('BoundExcess', sc(S['bound_excess'])), ('NDev', sc(S['n_dev'])),
-              ('SectorCentral', sc(S['sector_central'])), ('SectorExcess', sc(S['sector_excess'])),
+              ('BoundExcess', signed(S['bound_excess'])), ('NDev', sc(S['n_dev'])),
+              ('SectorCentral', sc(S['sector_central'])), ('SectorExcess', signed(S['sector_excess'])),
               ('SectorReached', S['sector_reached']), ('SectorTotal', S['sector_total']),
               ('SectorDet', sc(S['sector_det'])),
               ('SciRatioMin', f"{min(x[2] for x in S['scipy_ratios']):.3f}" if S['scipy_ratios'] else '--'),
@@ -1513,6 +1539,22 @@ def write_outputs(args, res):
               ('SGMExcessN', sg.get('n', '--')),
               ('SharpDevNew', sc(S['sharp_dev_new'])), ('SharpDevApproached', sc(S['sharp_dev_approached'])),
               ('NDevNew', sc(S['n_dev_new'])), ('Items', len(res['inequalities']))]
+    # n-independence item by item (items 9 and 10: n = 3, 4 against n = 2, delta >= 0.1, where V_2 > 1e-4)
+    grid = np.array(res['grid'])
+    for name, tag in (('projections', 'Proj'), ('monotone', 'Mon')):
+        if name in res['inequalities']:
+            r = res['inequalities'][name]
+            V2 = np.array(r['dims']['2']['certified'])
+            m = (grid >= 0.1) & (V2 > 1e-4)
+            dev = max((float(np.max(np.abs(np.array(r['dims'][n]['certified'])[m] / V2[m] - 1)))
+                       for n in r['dims'] if n != '2'), default=0.0)
+            macros.append((f'NDev{tag}', sc(dev)))
+    # single certified values quoted in the text: item 13 (Powers-Stormer) and item 6 (spectral geometric mean) on
+    # M_3 at delta = 0.9
+    for name, tag in (('powers', 'Powers'), ('sgm', 'Sgm')):
+        if name in res['inequalities'] and '3' in res['inequalities'][name]['dims']:
+            v = _at(grid, res['inequalities'][name]['dims']['3']['certified'], 0.9)
+            macros.append((f'V{tag}NineThree', num(v).strip('$')))
     # per item: certified search value on M_2 and V* (sharp value or lower bound) at delta = 0.1, 0.5, 0.9
     for name, p in S['per'].items():
         tag = name.capitalize()
@@ -1520,7 +1562,7 @@ def write_outputs(args, res):
             macros.append((f'V{tag}{xt}', num(p['V'][str(x)]).strip('$')))
             macros.append((f'Ref{tag}{xt}', num(p['ref'][k]).strip('$') if p['ref'] else '--'))
     if 'wmon' in S['per']:
-        macros.append(('WmonLead', f"{float(wmon_bound(0.1)[0]) / 0.1 ** 8 * 4096:.3f}"))   # m_25(0.1)/(0.1^8/4096)
+        macros.append(('WmonLead', f"{float(wmon_bound(0.1)[0]) / 0.1 ** 8 * 4096:.3f}"))   # g_25(0.1)/(0.1^8/4096)
     macros.append(('ExpOddHalf', f"{float(expqpq_exact(0.5, 3)[0]):.4f}"))   # item 20, n = 3: odd-n construction
     if 'wmon' in res['inequalities']:
         grid = np.array(res['grid'])
@@ -1531,7 +1573,7 @@ def write_outputs(args, res):
         k = int(np.argmin(np.abs(grid - 0.5)))
         macros.append(('WmonRatioHalf', f"{V2[k] / m25[k]:.2f}" if V2[k] > 0 else '--'))
         reach = (grid > 0) & (V2 >= (1 - 1e-3) * m25)
-        macros.append(('WmonReach', f"{grid[reach].min():g}" if reach.any() else '--'))   # search = m_25 to 1e-3
+        macros.append(('WmonReach', f"{grid[reach].min():g}" if reach.any() else '--'))   # search = g_25 to 1e-3
     # the search against the constructions that are only approached (items 6, 7), and against 9, 10
     for name, tag in (('sgm', 'SGM'), ('alt', 'ALT'), ('monotone', 'Mon'), ('projections', 'Proj')):
         if name in S['per']:
@@ -1539,7 +1581,7 @@ def write_outputs(args, res):
             for x, xt in ((0.5, 'Half'), (0.9, 'Nine'), (0.1, 'Tenth')):
                 v, rf = p['V'][str(x)], p['ref'][[0.1, 0.5, 0.9].index(x)] if p['ref'] else None
                 macros.append((f'{tag}Ratio{xt}', '--' if not v or not rf or v <= 0 else f'{v / rf:.3f}'))
-    tex = env_macro(args, 'TC')
+    tex = _env_macro(args, res)
     for k, v in macros:
         tex += "\\newcommand{\\TC" + k + "}{" + str(v) + "}\n"
     rows = ''
@@ -1562,7 +1604,8 @@ def write_outputs(args, res):
     tex += "\\newcommand{\\TCRows}{%\n" + rows + "}\n"
     tex += "\\newcommand{\\TCClassRows}{%\n" + class_rows(res, num) + "}\n"
     write_tex(args, 'trace_characterizations', tex)
-    make_figure(args, res)
+    if not report_only:
+        make_figure(args, res)
 
 
 # classes of behaviour (main-text table): items, V*(delta), leading order as delta -> 0, status
@@ -1587,8 +1630,8 @@ CLASSES = [
      'search'),
     None,
     # higher order
-    ('10', ['monotone'], '$\\ge m(\\delta)$', '$\\ge\\delta^4/16$', 'lower bound'),
-    ('25', ['wmon'], '$\\ge m_{25}(\\delta)$', '$\\ge\\delta^8/4096$', 'lower bound'),
+    ('10', ['monotone'], '$\\ge g_{10}(\\delta)$', '$\\ge\\delta^4/16$', 'lower bound'),
+    ('25', ['wmon'], '$\\ge g_{25}(\\delta)$', '$\\ge\\delta^8/4096$', 'lower bound'),
 ]
 
 
@@ -1744,8 +1787,18 @@ def make_figure(args, res):
 
 
 def main():
+    import json
     from common import parse_args
+    report_only = '--report-only' in sys.argv          # common.parse_args does not know this flag
+    if report_only:
+        sys.argv.remove('--report-only')
     args = parse_args(__doc__)
+    if report_only:
+        res = json.loads((Path(args.out) / 'trace_characterizations.json').read_text())
+        res['summary'] = summarise(res)
+        write_outputs(args, res, report_only=True)
+        print("written:", Path(args.out) / 'trace_characterizations.tex', "(from the saved JSON)")
+        return
     res = run(args.mode, args.device, args.seed, log=lambda s: print(s, flush=True))
     write_outputs(args, res)
     print("written:", args.out, args.figdir)
