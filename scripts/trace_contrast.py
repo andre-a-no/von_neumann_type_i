@@ -16,10 +16,13 @@ Experiment B ("both contrasts"): V(delta, delta') with every operator variable o
 Delta = delta' (general spectra and two-level spectra), on M_2 and M_3.
 
 The best final point of every grid value is recomputed in mpmath (trace_characterizations.certify), so every reported
-positive value is a certified violation. Writes generated/trace_contrast.{json,tex} and figures/trace_contrast*.pdf
-in man/trace_envelopes.
+positive value is a certified violation. Writes generated/trace_contrast.{json,tex} in man/trace_envelopes; the JSON
+is drawn by scripts/trace_montecarlo.py (bottom rows of figures/mc_*.pdf) and scripts/trace_paper_schematics.py
+(figures/contrast_square.pdf). Run scripts/trace_characterizations.py first (the item numbers come from it, and the
+report reads man/article/generated/bounds.json of scripts/bounds_search.py for the macro TCCGardnerTwoDDev).
 
-    python scripts/trace_contrast.py --mode full --device cpu
+    python scripts/trace_contrast.py --mode full            # about 13 minutes with 4 processes
+    python scripts/trace_contrast.py --report-only          # tex from the saved JSON
 """
 import argparse
 import json
@@ -239,7 +242,7 @@ def main():
     ap.add_argument('--workers', type=int, default=4)
     ap.add_argument('--items', default=','.join(OPERATOR_ITEMS))
     ap.add_argument('--out', default=str(ROOT / 'man' / 'trace_envelopes'))
-    ap.add_argument('--report-only', action='store_true', help='only write tables and figure from the JSON')
+    ap.add_argument('--report-only', action='store_true', help='only write the tex from the saved JSON')
     args = ap.parse_args()
     if args.report_only:
         report(args.out)
@@ -271,7 +274,8 @@ def main():
 
 
 # ----------------------------------------------------------------------------------------------------------------
-# report: tables (generated/trace_contrast.tex); figures: scripts/trace_figures.py
+# report: tables and macros (generated/trace_contrast.tex); figures: scripts/trace_montecarlo.py and
+# scripts/trace_paper_schematics.py
 # ----------------------------------------------------------------------------------------------------------------
 ITEM_NO = {name: i for i, name in enumerate(tc.INEQS, 1)}
 TITLES = dict(gardner='Gardner', triangle='triangle inequality', realpart=r'$\varphi(A+A^*)\leq2\varphi(|A^*|)$',
@@ -297,6 +301,20 @@ def gardner_two(d, dp, n):
 def young_two(d, dp):
     """Lower bound (A = B, two-level |A| anti-aligned with W) for the extended Young inequality, n = 2."""
     return 4 * d * dp / (1 + dp * dp - 2 * d * dp)
+
+
+def lp_two(d, dp, n):
+    """Envelope of the power-mean inequality (item 24, phi(1) = n) with Delta(W) = d and Delta(A) = dp: the bound
+    f(max(x0, x*)) - 1 of the paper's proposition on item 24 (equality on the grid used here, see report())."""
+    l, lp = (1 - d) / (1 + d), (1 - dp) / (1 + dp)
+    x0, xs = n * lp + (1 - lp) * n * l / (n - 1 + l), 2 * n * lp / (1 + lp)
+    x = max(x0, xs)
+    return math.sqrt((1 + lp) * x - n * lp) / x - 1, (x0 >= xs) or ((n - 1) * l * lp <= 1)
+
+
+def _sci(x):
+    m, e = f'{x:.0e}'.split('e')
+    return f"{m}\\times10^{{{int(e)}}}"
 
 
 def report(path):
@@ -338,16 +356,93 @@ def report(path):
            f"\\newcommand{{\\TCCDigits}}{{{cfg['digits']}}}",
            f"\\newcommand{{\\TCCSeconds}}{{{d['seconds']:.0f}}}",
            '\\newcommand{\\TCCRowsA}{%', *rows, '}']
-    # Gardner: largest deviation from the closed form (Theorem 4.1) over the grid, n = 2, 3
-    dev = 0.0
+    # Gardner (item 1): largest relative deviation from the closed form (theorem on Gardner's inequality with two
+    # contrasts) over the grid, n = 2, 3; items 2 and 3 against the same values: on M_2 (where the theorem gives them
+    # exactly) and on M_3 (where it only bounds them by the even value), signed: negative = below
+    def gdev(name, dims, signed=False):
+        worst = 0.0
+        for n in dims:
+            for vd in vg:
+                v = Bt[(name, n, 'free')][vd]
+                for gi, g in enumerate(gb):
+                    ref = gardner_two(g, vd, n)
+                    x = (v[gi] - ref) / max(ref, 1e-3)
+                    worst = max(worst, x, key=abs) if signed else max(worst, abs(x))
+        return worst
+    tex.append(f"\\newcommand{{\\TCCGardnerDev}}{{{_sci(gdev('gardner', cfg['dims']))}}}")
+    if 2 in cfg['dims']:
+        tex.append(f"\\newcommand{{\\TCCGardnerDevEven}}"
+                   f"{{{_sci(max(gdev('triangle', [2]), gdev('realpart', [2])))}}}")
+    if 3 in cfg['dims']:
+        tex.append(f"\\newcommand{{\\TCCTriangleDevOdd}}{{{_sci(gdev('triangle', [3], True))}}}")
+        tex.append(f"\\newcommand{{\\TCCRealpartDevOdd}}{{{_sci(gdev('realpart', [3], True))}}}")
+    # Gardner with both contrasts, unnormalised (Theorem C) on M_2(R): the 2d search of scripts/bounds_search.py
+    # (man/article/generated/bounds.json, figure bounds2d_exp1_k2_C1.pdf) against d^2 d'^2/((1+d)(1+d'))
+    bj = ROOT / 'man' / 'article' / 'generated' / 'bounds.json'
+    if bj.exists():
+        r2 = next((r for r in json.loads(bj.read_text())['results_2d']
+                   if r['experiment'] == 1 and r['k'] == 2 and r['C'] == 1), None)
+        if r2 is not None:
+            g2 = np.array(r2['grid'])
+            ex = g2[:, None] ** 2 * g2[None, :] ** 2 / ((1 + g2[:, None]) * (1 + g2[None, :]))
+            tex.append(f"\\newcommand{{\\TCCGardnerTwoDDev}}{{{_sci(float(np.abs(np.array(r2['sup']) - ex).max()))}}}")
+    # item 24 (power mean): largest absolute deviation from the closed form with both contrasts, n = 2, 3
+    dev24, eq24 = 0.0, True
     for n in cfg['dims']:
         for vd in vg:
-            v = Bt[('gardner', n, 'free')][vd]
             for gi, g in enumerate(gb):
-                ref = gardner_two(g, vd, n)
-                dev = max(dev, abs(v[gi] - ref) / max(ref, 1e-3))
-    m, e = f'{dev:.0e}'.split('e')
-    tex.append(f"\\newcommand{{\\TCCGardnerDev}}{{{m}\\times10^{{{int(e)}}}}}")
+                ref, eq = lp_two(g, vd, n)
+                eq24 &= eq
+                dev24 = max(dev24, abs(Bt[('lp', n, 'free')][vd][gi] - ref))
+    tex.append(f"\\newcommand{{\\TCCPowerMeanDev}}{{{_sci(dev24)}}}")
+    if not eq24:
+        print('warning: the item-24 formula is only an upper bound at some grid point')
+    # scaled projections against all operators (experiment A): largest relative shortfall in percent over the items
+    # whose envelope projections attain on M_2 and M_3 (all grid values of Delta(W))
+    gap = 0.0
+    for name in ('gardner', 'triangle', 'realpart', 'young', 'monotone', 'subadd', 'pb', 'lp'):
+        for n in cfg['dims']:
+            f, pr = clip(A[(name, n, 'free')]), clip(A[(name, n, 'proj')])
+            ok = np.abs(f) > 1e-9
+            gap = max(gap, float(np.max((f[ok] - pr[ok]) / np.abs(f[ok]))))
+    tex.append(f"\\newcommand{{\\TCCProjGap}}{{{100 * gap:.2f}}}")
+    # two-level against general spectra with prescribed contrast (experiment B) on the largest n: for every item the
+    # values of delta' at which the two-level search falls short by more than 1% of a violation > 1e-4
+    nb = max(cfg['dims'])
+    short = []
+    for name in OPERATOR_ITEMS:
+        bad = sorted({vd for vd in vg if vd > 0 for gi in range(len(gb))
+                      if Bt[(name, nb, 'free')][vd][gi] > 1e-4
+                      and Bt[(name, nb, 'free')][vd][gi] - Bt[(name, nb, 'two')][vd][gi]
+                      > 0.01 * Bt[(name, nb, 'free')][vd][gi]})
+        if bad:
+            pos = [vd for vd in vg if vd > 0]
+            rng_ = (f"\\ge{bad[0]:g}" if bad == pos[pos.index(bad[0]):] else
+                    "\\in\\{" + ', '.join(f'{x:g}' for x in bad) + "\\}")
+            short.append(f"{ITEM_NO[name]} ($\\delta'{rng_}$)")
+    tex.append('\\newcommand{\\TCCTwoLevelShort}{' + '; '.join(short) + '}')
+    tex.append(f"\\newcommand{{\\TCCTwoLevelDim}}{{{nb}}}")
+    # onset of violations (> 1e-4) along delta' for items 12 (subadditivity) and 10 (monotonicity)
+    for name, tag in (('subadd', 'Subadd'), ('monotone', 'Mon')):
+        per_n = {}
+        for n in cfg['dims']:
+            first = []
+            for gi, g in enumerate(gb):
+                f = next((vd for vd in vg if Bt[(name, n, 'free')][vd][gi] > 1e-4), None)
+                first.append(f"{'--' if f is None else f'{f:g}'} for $\\delta={g:g}$")
+            per_n[n] = ', '.join(first)
+        if len(set(per_n.values())) == 1:
+            txt = per_n[cfg['dims'][0]] + ' (' + ' and '.join(f'$M_{n}$' for n in cfg['dims']) + ' alike)'
+        else:
+            txt = '; '.join(f'$M_{n}$: {t}' for n, t in per_n.items())
+        tex.append(f"\\newcommand{{\\TCC{tag}Onset}}{{{txt}}}")
+        if 2 in cfg['dims']:
+            tex.append(f"\\newcommand{{\\TCC{tag}OnsetTwo}}{{{per_n[2]}}}")
+        # the largest grid value of delta' at and below which no grid point (any n, delta) shows a violation
+        clean = [vd for vd in vg if all(Bt[(name, n, 'free')][x][gi] <= 0 for n in cfg['dims'] for x in vg
+                                        if x <= vd for gi in range(len(gb)))]
+        tex.append(f"\\newcommand{{\\TCC{tag}None}}{{{max(clean):g}}}" if clean else
+                   f"\\newcommand{{\\TCC{tag}None}}{{--}}")
     # thresholds: smallest delta' with a certified violation > 1e-4 (n = 2, 3) at Delta(W) = 0.9
     thr = []
     for name in ('sgm', 'monotone', 'subadd', 'powers', 'lp', 'wmon'):
@@ -357,9 +452,11 @@ def report(path):
             thr.append((name, n, first))
     tex.append('\\newcommand{\\TCCThresholds}{' + '; '.join(
         f"{ITEM_NO[nm]} ($n={n}$): {('--' if f is None else f)}" for nm, n, f in thr) + '}')
+    tex.append(f"\\newcommand{{\\TCCThresholdMin}}{{{min(f for _, _, f in thr if f is not None):g}}}")
     (out / 'generated' / 'trace_contrast.tex').write_text('\n'.join(tex) + '\n')
 
-    # the figures (figures/operator_*.pdf) are drawn by scripts/trace_figures.py from generated/trace_contrast.json
+    # the figures are drawn from generated/trace_contrast.json by scripts/trace_montecarlo.py (bottom rows of
+    # figures/mc_*.pdf) and scripts/trace_paper_schematics.py (figures/contrast_square.pdf)
     print('wrote report to', out)
 
 
