@@ -373,16 +373,35 @@ def fit(model, prob, counts, steps, seed, h_scale=H_SCALE):
         if step % 25 == 0:
             history.append(float(loss.detach()))
     if lbfgs:
-        opt = torch.optim.LBFGS(net.parameters(), lr=1.0, max_iter=lbfgs, history_size=50,
+        # L-BFGS on one real vector holding the real and imaginary parts of all parameters, as torch.optim.LBFGS does
+        # internally for complex parameters in recent PyTorch; older releases (1.13) reject complex parameters.
+        params = [q for q in net.parameters() if q.requires_grad]
+
+        def real(t):
+            return torch.view_as_real(t) if t.is_complex() else t
+        x = torch.cat([real(q.detach()).reshape(-1) for q in params]).clone().requires_grad_(True)
+
+        def load():
+            i = 0
+            with torch.no_grad():
+                for q in params:
+                    r = real(q)
+                    r.copy_(x[i:i + r.numel()].view_as(r))
+                    i += r.numel()
+        opt = torch.optim.LBFGS([x], lr=1.0, max_iter=lbfgs, history_size=50,
                                 line_search_fn='strong_wolfe', tolerance_grad=1e-12, tolerance_change=1e-14)
 
         def closure():
-            opt.zero_grad()
+            load()
+            net.zero_grad()
             loss = objective()
             loss.backward()
+            x.grad = torch.cat([real(q.grad).reshape(-1) if q.grad is not None else real(q.detach()).new_zeros(
+                real(q).numel()) for q in params])
             history.append(float(loss.detach()))
             return loss
         opt.step(closure)
+        load()
     with torch.no_grad():
         final = float(objective())
     history.append(final)
@@ -726,15 +745,15 @@ def report(payload, outdir, figdir):
            f'\\newcommand{{\\CLIdentDense}}{{{c["identifiable_dense"]}}}',
            f'\\newcommand{{\\CLDenseCheck}}{{{sci(max(r["dense_check"] for r in checks.values()))}}}',
            f'\\newcommand{{\\CLFastPath}}{{{sci(max(r["fast_path"] for r in checks.values()))}}}',
-           f'\\newcommand{{\\CLAdam}}{{{setup['adam']}}}',
-           f'\\newcommand{{\\CLLbfgs}}{{{setup['lbfgs']}}}',
+           f'\\newcommand{{\\CLAdam}}{{{setup["adam"]}}}',
+           f'\\newcommand{{\\CLLbfgs}}{{{setup["lbfgs"]}}}',
            f'\\newcommand{{\\CLStartsRates}}{{{starts["rates"]}}}',
            f'\\newcommand{{\\CLStartsLindblad}}{{{starts["lindblad"]}}}',
            f'\\newcommand{{\\CLStartsAlgebra}}{{{starts["algebra"]}}}',
            f'\\newcommand{{\\CLStartsDense}}{{{starts["dense"]}}}',
-           f'\\newcommand{{\\CLRepeats}}{{{setup['repeats']}}}',
+           f'\\newcommand{{\\CLRepeats}}{{{setup["repeats"]}}}',
            f'\\newcommand{{\\CLRuntime}}{{{runtime / 60:.0f}}}',
-           f'\\newcommand{{\\CLWorkers}}{{{payload['workers']}}}',
+           f'\\newcommand{{\\CLWorkers}}{{{payload["workers"]}}}',
            f'\\newcommand{{\\CLHScale}}{{{H_SCALE:g}}}',
            f'\\newcommand{{\\CLInitConverged}}{{{sum(l < 1e-6 for l in init_study["losses"])}}}',
            f'\\newcommand{{\\CLInitStarts}}{{{len(init_study["losses"])}}}',
@@ -772,7 +791,7 @@ def report(payload, outdir, figdir):
             tex.append(f'\\newcommand{{\\CL{M}{K}}}{{{sp[m][k]["mean"]:.4f}}}')
             tex.append(f'\\newcommand{{\\CL{M}{K}Sd}}{{{sp[m][k]["std"]:.4f}}}')
         tex.append(f'\\newcommand{{\\CLCR{K}}}{{{sp["cramer_rao"][k]:.4f}}}')
-    tex.append(f'\\newcommand{{\\CLRepeatShots}}{{{sci(setup['repeat_shots'], 0)}}}')
+    tex.append(f'\\newcommand{{\\CLRepeatShots}}{{{sci(setup["repeat_shots"], 0)}}}')
     tex.append(f'\\newcommand{{\\CLResidual}}{{{sci(sp["lindblad"]["residual"])}}}')
     (gen / 'channel_learning.tex').write_text('\n'.join(tex) + '\n')
 
