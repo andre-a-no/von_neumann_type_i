@@ -6,6 +6,47 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 
 ## [Unreleased]
 
+## [1.2.0] – 2026-10-19
+
+Backward compatible: everything of 1.1.0 works unchanged. New: conversion to QuTiP and dynamiqs, channels and
+Lindblad generators as trainable parameters, measurements and instruments.
+
+### Added
+- `measurement` module (`POVM` and `Instrument` exported at top level): POVMs with a one-time check of positivity
+  and normalisation, Born probabilities, batched multinomial sampling of counts (reproducible with a generator) and
+  log-likelihoods; constructors `POVM.sectors` (measurement of the charge), `POVM.basis` (rank-one
+  projections, the computational basis of a `SpinChain`), `POVM.from_unitary` (rotated bases for tomography) and
+  `POVM.combine` (randomised measurements, outcomes (setting, result)). `Instrument` (sector-preserving Kraus
+  operators per outcome; `lueders`, `from_povm`): probabilities, conditional `post_states`, `average_channel` (a
+  `Channel`) and `as_channel`, an `InterSectorChannel` from M into ⊕_j M (sectors (j, c)) whose centre records the
+  outcome. `fisher_information(prob_fn, params)`: classical Fisher information J^T diag(1/p) J by autograd, shared or
+  per-sample parameters, complex parameters as real and imaginary parts. Tests `tests/test_measurement.py` (agreement
+  with `born_probabilities`, `sector_probabilities`, `lueders_update` and QuTiP's computational basis, sampling
+  statistics, the analytic Fisher information of a qubit).
+- `interop` module: conversion of operators, states, channels and Lindblad jump operators to and from dense
+  matrices, `qutip.Qobj` and dynamiqs arrays (`to_dense`, `from_dense`, `channel_to_dense`, `to_qutip`, `from_qutip`,
+  `jumps_to_qutip`, `to_dynamiqs`, `jumps_to_dynamiqs`). `layout=chain` places a `SpinChain` in the computational basis
+  in QuTiP's convention (site 0 leftmost, |0> = spin up). Maps between algebras are converted with the pinching onto the
+  output sectors (Kraus operators P_d K_i). `from_dense` rejects matrices outside the algebra. Tests check the
+  conventions and that `lindblad_evolve` agrees with `qutip.mesolve` and `dynamiqs.mesolve`. Optional extra
+  `interop = ["qutip>=5"]`.
+- `optimize.StinespringParam`: channels as parameters. For every input sector an isometry V_c = Z_c (Z_c^* Z_c)^{-1/2}
+  (Haar-random at the start), Kraus operators its blocks; every parameter value is a trace-preserving channel of one
+  algebra (`Channel`) or between algebras with a prescribed set of allowed sector transitions (`InterSectorChannel`).
+- `optimize.LindbladParam`: GKSL generators as parameters (a self-adjoint H and free jump operators inside the sectors
+  and, for a prescribed set of allowed transitions, between them); a test learns a qubit generator from trajectories
+  and predicts a new trajectory to 1e-4.
+- `optimize.fit` / `FitResult`: batched multistart minimisation that leaves the parameters at the fitted point (the
+  counterpart of `extremize` for learning); a test recovers a channel from 12 input/output pairs to 1e-5.
+- `SpinChain.bond(i, j, Jxy, Jz)`: the two-site XXZ term on any pair of sites, for bond-resolved Hamiltonians and
+  controls.
+
+### Fixed
+- `dynamics.lindblad_evolve(method='kraus')` returned NaN gradients when the normalisation operator of a step had a
+  degenerate spectrum (for example M = 1 without jumps). Its inverse square root is now computed with the
+  Daleckii–Krein backward pass of `functional.spectral_apply`, so gradients with respect to the Hamiltonian and the
+  jump rates are finite and agree with finite differences in all three methods (new test).
+
 ## [1.1.0] – 2026-10-18
 
 Backward compatible: everything of 1.0.0 works unchanged.
@@ -159,4 +200,6 @@ and with the latest ones on Python 3.8–3.13.
 - **0.1** (2026-10-09): the code of the first version of the paper (arXiv:2606.15882v1), with its Haar sampler and
   spectrum bugs fixed.
 
+[1.2.0]: https://github.com/andre-a-no/von_neumann_type_i/releases/tag/v1.2.0
+[1.1.0]: https://github.com/andre-a-no/von_neumann_type_i/releases/tag/v1.1.0
 [1.0.0]: https://github.com/andre-a-no/von_neumann_type_i/releases/tag/v1.0.0

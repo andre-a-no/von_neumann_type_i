@@ -13,6 +13,7 @@ Basis states are bit strings: bit i of a label is the spin on site i (1 = up).
     chain = SpinChain(L=10, boundary='periodic')
     H = chain.xxz(J=1.0, Delta=1.0, h=fields)          # fields: (L,) or (batch, L) -> batch of H
     H5 = chain.xxz(..., sector=5)                      # one sector only: no padding
+    Hb = chain.bond(2, 3, Jxy=0.7, Jz=0.1)             # one two-site term: bond-resolved Hamiltonians, controls
     rho_A = chain.reduced_state(rho, n_left=4)          # state of sites 0..3 (a SpinChain(4) state)
 
 Hamiltonian:  H = sum_<ij> [ J/2 (S+_i S-_j + S-_i S+_j) + J Delta S^z_i S^z_j ] + sum_i h_i S^z_i.
@@ -292,6 +293,31 @@ class SpinChain:
         """Heisenberg chain with i.i.d. fields h_i ~ U[-W, W]; one disorder realisation per batch element."""
         h = (2 * torch.rand(batch_size, self.L, generator=generator, dtype=self.real_dtype) - 1) * W
         return self.xxz(J, 1.0, h.to(self.device), sector)
+
+    def bond(self, i: int, j: int, Jxy: float = 1.0, Jz: float = 0.0, sector: Optional[int] = None) -> Operator:
+        """
+        The two-site term Jxy (S+_i S-_j + S-_i S+_j)/2 + Jz S^z_i S^z_j on any two sites i != j (not only the bonds
+        of the chain). Sums of these with per-bond (or trainable) coefficients give inhomogeneous XXZ Hamiltonians;
+        sum over `bonds` of bond(i, j, J, J Delta) is xxz(J, Delta). sector as in xxz.
+        """
+        if i == j or not (0 <= i < self.L and 0 <= j < self.L):
+            raise ValueError(f"bond needs two different sites in 0..{self.L - 1}, got ({i}, {j})")
+
+        def block(N):
+            lab = self.labels[N]
+            k = len(lab)
+            sz = self.bits(N).to(self.real_dtype) - 0.5
+            M = torch.diag_embed((Jz * sz[:, i] * sz[:, j]).to(self.dtype))
+            src = torch.nonzero(((lab >> i) & 1) != ((lab >> j) & 1)).squeeze(-1)    # the flip i <-> j
+            if len(src):
+                M[self.index_of[lab[src] ^ ((1 << i) | (1 << j))], src] = Jxy / 2
+            return M.reshape(1, k, k)
+
+        if sector is not None:
+            return self.sector_algebra(sector).operator(block(sector)[:, None], is_self_adjoint=True)
+        op = self.algebra.from_blocks([block(N) for N in range(self.L + 1)])
+        op._is_self_adjoint = True
+        return op
 
     def sz(self, i: int, sector: Optional[int] = None) -> Operator:
         """S^z on site i."""

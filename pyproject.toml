@@ -54,6 +54,7 @@ Changelog = "https://github.com/andre-a-no/von_neumann_type_i/blob/main/CHANGELO
 [project.optional-dependencies]
 scripts = ["scipy", "pandas", "tqdm", "matplotlib", "seaborn", "mpmath"]
 test = ["pytest", "scipy>=1.7", "mpmath"]
+interop = ["qutip>=5"]                              # interop.to_qutip etc.; dynamiqs (Python >= 3.10) works too
 
 [tool.setuptools]
 packages = ["torch_vn_algebra"]

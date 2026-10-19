@@ -9,6 +9,9 @@ XY mixer, drawn from data that already exist (no computation of the library is r
                              block-diagonal D x D matrix
   figures/ladder.pdf         the sector ladder of the noisy register: N = 0..n, S^- (N -> N-1), S^+ (N -> N+1),
                              S^z inside the sectors, the post-selection projection P_w
+  figures/ecosystem.pdf      the place of the library among software for the algebra: exact versus numerical
+                             (batched, differentiable) computation, Hilbert-space matrices versus algebra-level
+                             objects; arrows for what it builds on and converts to
   figures/noisy_summary.pdf  the integral I and the gain factor of post-selection against n, and the infidelities
                              for the largest register, from generated/noisy_xy.json (scripts/noisy_xy_mixer.py)
 
@@ -52,6 +55,49 @@ def box(ax, x, y, w, h, title, body=None, edge=GREY, fill='white', title_color=I
 def arrow(ax, p, q, color=GREY, lw=1.0, style='-|>', rad=0.0, ms=8, ls='-'):
     ax.add_patch(FancyArrowPatch(p, q, arrowstyle=style, mutation_scale=ms, color=color, lw=lw,
                                  connectionstyle=f'arc3,rad={rad}', linestyle=ls, shrinkA=0, shrinkB=0))
+
+
+# ------------------------------------------------------------------------------------------------ ecosystem
+def ecosystem():
+    fig, ax = plt.subplots(figsize=(7.2, 5.0))
+    ax.set_xlim(0, 16)
+    ax.set_ylim(0, 11.1)
+    ax.axis('off')
+    # axes of the map
+    arrow(ax, (0.8, 0.4), (15.9, 0.4), color=GREY, lw=0.8)
+    arrow(ax, (0.8, 0.4), (0.8, 11.0), color=GREY, lw=0.8)
+    ax.text(15.9, 0.05, 'numerical: large, batched, GPU, differentiable', ha='right', va='center', fontsize=7,
+            color=GREY, style='italic')
+    ax.text(1.0, 0.05, 'exact or symbolic, small', ha='left', va='center', fontsize=7, color=GREY, style='italic')
+    ax.text(1.0, 10.95, 'algebra-level objects (centre, traces, conditional expectations, inclusions)', ha='left',
+            va='center', fontsize=7, color=GREY, style='italic')
+    ax.text(1.0, 0.75, 'matrices on a Hilbert space', ha='left', va='center', fontsize=7, color=GREY, style='italic')
+    # boxes
+    box(ax, 1.4, 7.4, 5.3, 2.7, 'computer algebra',
+        'Sage, GAP, Magma: centre, radical,\nWedderburn decomposition;\nJordan algebras: mjo.eja, ALCO;\n'
+        'Lean/mathlib (formal)')
+    box(ax, 10.0, 7.0, 5.7, 3.3, 'torch_vn_algebra',
+        'the algebra $\\oplus_c M_{k_c}$ as the data type:\ncentre, traces, states, channels\n'
+        'between algebras, inclusions, index,\nJordan product, contrast; batched\n'
+        'sampling, optimisation, learning,\ncertified values', edge=BLUE, fill='#f2f7fd', title_color=BLUE, lw=1.4)
+    box(ax, 1.4, 3.4, 4.8, 2.5, 'optimisation',
+        'convex (SDP): CVXPY, PICOS,\nQETLAB; manifolds: pymanopt,\ngeoopt, Manopt.jl')
+    box(ax, 6.55, 3.3, 2.4, 1.6, 'RepLAB', 'commutants of\ngroup actions', fs=7.5)
+    box(ax, 10.0, 2.3, 5.7, 2.9, 'quantum simulators',
+        'QuTiP (PIQS), dynamiqs,\nQuantumToolbox.jl, Qiskit Aer,\ncuDensityMat; QuSpin, XDiag;\nITensor, TeNPy')
+    box(ax, 4.9, 0.95, 4.2, 1.35, 'linear algebra', 'NumPy, SciPy, PyTorch, JAX')
+    # relations, routed through the free corridors
+    arrow(ax, (12.85, 7.0), (12.85, 5.2), color=BLUE, style='<|-|>', lw=1.2)
+    ax.text(13.05, 6.1, 'interop:\nto_qutip, to_dynamiqs', ha='left', va='center', fontsize=6.6, color=BLUE)
+    arrow(ax, (10.0, 9.0), (6.7, 9.0), color=GREY, ls=':')
+    ax.text(8.35, 9.2, 'exact checks of\nsmall cases', ha='center', va='bottom', fontsize=6.6, color=GREY)
+    arrow(ax, (10.0, 7.6), (6.2, 5.7), color=GREY, ls=':')
+    ax.text(8.35, 7.6, 'SDP references for\nconvex problems', ha='center', va='center', fontsize=6.6, color=GREY)
+    arrow(ax, (10.4, 7.0), (8.4, 2.3), color=GREY, ls='--')
+    ax.text(8.6, 2.85, 'built on', ha='right', va='center', fontsize=6.6, color=GREY, style='italic')
+    FIG.mkdir(exist_ok=True)
+    fig.savefig(FIG / 'ecosystem.pdf', bbox_inches='tight', metadata=META)
+    plt.close(fig)
 
 
 # ------------------------------------------------------------------------------------------------ architecture
@@ -286,6 +332,7 @@ def noisy_summary():
 
 
 def main():
+    ecosystem()
     architecture()
     layout()
     ladder()

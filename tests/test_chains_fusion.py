@@ -227,3 +227,36 @@ def test_long_chain_sparse_only():
     # the zero vectors after the breakdown do not produce a spurious eigenvalue 0.
     assert abs(E.item() - (22 / 4 - 2)) < 1e-9
     assert res.item() < 1e-8
+
+
+@pytest.mark.parametrize('boundary', ['open', 'periodic'])
+def test_bond_terms_sum_to_the_xxz_hamiltonian(boundary):
+    ch = SpinChain(5, boundary)
+    J, Delta = 0.8, -0.3
+    H = sum((ch.bond(i, j, J, J * Delta) for i, j in ch.bonds), ch.algebra.zero())
+    assert torch.allclose(H.matrix, ch.xxz(J, Delta).matrix, atol=1e-14)
+    Hs = sum(ch.bond(i, j, J, J * Delta, sector=2).matrix for i, j in ch.bonds)
+    assert torch.allclose(Hs, ch.xxz(J, Delta, sector=2).matrix, atol=1e-14)
+
+
+def test_bond_on_distant_sites_matches_the_dense_two_site_operator():
+    # Jxy (S+_i S-_j + h.c.)/2 + Jz S^z_i S^z_j from Kronecker products on (C^2)^(x)L; bit i of a label = site i
+    L, i, j, Jxy, Jz = 5, 1, 4, 0.6, 0.25
+    ch = SpinChain(L, 'open')
+    up = torch.tensor([[0.0, 0.0], [1.0, 0.0]], dtype=torch.complex128)        # S+ = |1><0| (1 = up)
+    down = up.T.contiguous()
+    sz = torch.diag(torch.tensor([-0.5, 0.5], dtype=torch.complex128))
+
+    def site_op(ops):
+        out = torch.ones(1, 1, dtype=torch.complex128)
+        for s in reversed(range(L)):                                      # site L-1 is the most significant bit
+            out = torch.kron(out, ops.get(s, torch.eye(2, dtype=torch.complex128)))
+        return out
+    dense = Jxy / 2 * (site_op({i: up, j: down}) + site_op({i: down, j: up})) + Jz * site_op({i: sz, j: sz})
+    op = ch.bond(i, j, Jxy, Jz)
+    for N in range(L + 1):
+        lab = ch.labels[N]
+        k = len(lab)
+        assert torch.allclose(op.matrix[0, N, :k, :k], dense[lab][:, lab], atol=1e-14)
+    with pytest.raises(ValueError):
+        ch.bond(2, 2)

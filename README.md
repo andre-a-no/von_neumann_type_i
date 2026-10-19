@@ -87,6 +87,10 @@ This README is the entry point of the repository:
   [`example_inclusions.py`](examples/example_inclusions.py)).
 - **Quantum Rényi divergences** – Petz and sandwiched Rényi divergences, Umegaki relative entropy, D_max, Petz recovery
   maps ([`example_divergences.py`](examples/example_divergences.py)).
+- **Interoperability with QuTiP and dynamiqs** – operators, states, channels and Lindblad jumps to and from
+  `qutip.Qobj` and dynamiqs arrays, with the computational-basis layout of spin chains; the Lindblad solvers agree with
+  `qutip.mesolve` and `dynamiqs.mesolve` to 1e-10 (`tests/test_interop.py`).
+- **Measurements** – POVMs and quantum instruments in the algebra: Born probabilities, sampling of counts, log-likelihoods for tomography, randomised measurements, post-measurement states, the outcome as a classical register in the centre of ⊕_j M, classical Fisher information by autograd (`tests/test_measurement.py`).
 - **Constrained optimisation** – batched multistart optimisation over unitaries and positive operators, trace
   inequalities ([Tutorial 11](man/tutorial/11_optimisation.md)).
 - **Equivariant machine learning** – equivariant linear layers as the commutant of a group representation
@@ -238,7 +242,7 @@ print((Lt(rho) - rho_t[-1]).frobenius_norm().max())
 | `channels.InterSectorChannel` | CP maps between sectors and between different algebras, Φ(ρ)_d = Σ_c Σ_i K_i^{dc} ρ_c K_i^{dc*}: duals for each of the three traces, composition, sector transition matrix, `from_blocks`, `random_inter_sector_channel` |
 | `channels.SectorJump` | sparse jump operators that map basis vectors to multiples of basis vectors (S^±_i, S^z_i, particle loss): L ρ L^* as a weighted permutation, the dual as a gather, L^*L diagonal, O(Σ_c k_c²) per application; a batch of coefficients gives one jump per sample (`scaled`) |
 | `composite` | `tensor_product(alg1, alg2)` (sectors = pairs (c, d)), `fused_tensor_product(alg1, alg2, fuse=add)` (pairs with equal total charge merged into one sector), `kron(A, B, alg12)`, `partial_trace` and `partial_trace_channel` (an `InterSectorChannel`; its dual is the embedding A ↦ A ⊗ 1) |
-| `optimize` | constrained, batched multistart optimisation: `UnitaryParam`, `PositiveParam` / `SelfAdjointParam` with a prescribed or bounded Michelson contrast (hard constraint), `extremize` |
+| `optimize` | constrained, batched multistart optimisation: `UnitaryParam`, `PositiveParam` / `SelfAdjointParam` with a prescribed or bounded Michelson contrast (hard constraint), `StinespringParam` (every parameter value a trace-preserving channel, within one algebra or between algebras with allowed sector transitions), `LindbladParam` (GKSL generators: H and free jump operators inside and, with allowed transitions, between sectors), `extremize` (best value per start), `fit` (minimisation that leaves the parameters at the fitted point) |
 | `cost` | safeguards: ETA warnings for large batched decompositions and integrators, memory checks with `InsufficientMemoryError`, `set_limits`, `disabled()` |
 | `chains` | `SpinChain`: spin-1/2 chains with conserved S^z, sectors N = 0..L (basis = iterated fused products), XXZ Hamiltonians with batched disorder, full algebra or single sectors, sparse form (`xxz_sparse`), momentum sectors of rings (`xxz_momentum`), reduced states and entanglement, site amplitude damping and jump operators `lowering(i)` between sectors, sparse jumps `sector_jump(i, 'lower' | 'raise' | 'sz')`, level-spacing ratio |
 | `krylov` | `SparseSectorHamiltonian` (batch of diagonals + shared sparse hopping), batched Lanczos `ground_state`, Krylov `evolve` (exp(-itH) psi with adaptive steps and a proved error bound, `krylov_error_bound`); with `SpinChain.xxz_sparse` for sectors beyond dense matrices |
@@ -248,6 +252,8 @@ print((Lt(rho) - rho_t[-1]).frobenius_norm().max())
 | `su2` | `SU2Chain`: `multiplicities`, `hw_basis`, `multiplet_basis`, `embed`, `heisenberg` (J, J₂, field, arbitrary bonds; one spin without padding via `spin=`), `restrict` / `lift` (U(1) ↔ SU(2)), `full_spectrum`, `lowest_energies`, `ground_state`, `reduced_matrix_elements`, `spin_correlation`; `clebsch_gordan`, `clebsch_gordan_exact`, `wigner_eckart`, `multiplicity` |
 | `divergences` | `petz_renyi_divergence`, `sandwiched_renyi_divergence`, `renyi_divergence` (with the limits α = 0, 1, ∞), `umegaki_relative_entropy`, `max_relative_entropy`, `min_relative_entropy`, `sector_contributions`; `PetzRecovery` / `petz_recovery` (also rotated), `universal_recovery`; `lp_norm`, `kosaki_norm` |
 | `jordan` | `jordan_product`, `jordan_multiplication`, `quadratic_representation`, `jordan_triple`, `jordan_power`, `transpose_map`; `jordan_algebra_generated`, `star_algebra_self_adjoint_part`, `is_jordan_subalgebra`, `compare_with_star_algebra` → `JordanAlgebra`; `SpinFactor`, `anticommuting_symmetries` |
+| `interop` | `to_dense`, `from_dense`, `channel_to_dense` (Kraus operators P_d K_i of a map into the algebra); `to_qutip`, `from_qutip`, `jumps_to_qutip` (collapse operators for `qutip.mesolve`); `to_dynamiqs`, `jumps_to_dynamiqs`; `chain_basis` (layout `layout=chain`: QuTiP's qubit order, \|0⟩ = spin up). QuTiP and dynamiqs are optional (`pip install torch_vn_algebra[interop]`) |
+| `measurement` | `POVM` (check of positivity and normalisation, Born `probabilities`, multinomial `sample`, `log_likelihood`; `sectors` (the charge), `basis` (computational basis of a `SpinChain`), `from_unitary` (tomography settings), `combine` (randomised measurements)), `Instrument` (`lueders`, `from_povm`, conditional `post_states`, `average_channel`, `as_channel`: an `InterSectorChannel` into ⊕_j M that records the outcome in the centre), `fisher_information` (classical Fisher information by autograd) |
 
 ### Inclusions, symmetries and divergences
 
@@ -454,7 +460,7 @@ on Zenodo).
   title   = {torch\_vn\_algebra: block-diagonal operators, symmetry sectors and quantum channels in {PyTorch}},
   author  = {Nikolaeva, Irina and Novikov, Andrej},
   year    = {2026},
-  version = {1.1.0},
+  version = {1.2.0},
   url     = {https://github.com/andre-a-no/von_neumann_type_i}
 }
 ```
