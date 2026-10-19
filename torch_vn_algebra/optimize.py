@@ -12,8 +12,12 @@ so that sup / inf of a functional can be searched for with many independent star
                             prescribed (or bounded) Michelson contrast
     PositiveParam           X = U diag(lambda) U^*  with such a spectrum
     SelfAdjointParam        X = U diag(s * lambda) U^*  with fixed random signs s per start
+    StinespringParam        channels: an isometry V = Z (Z^* Z)^{-1/2} per input sector (Haar-random at the start),
+                            Kraus operators its blocks; within one algebra (Channel) or between algebras with a
+                            prescribed set of allowed sector transitions (InterSectorChannel)
 
-    best = optimize.extremize(objective, params, maximize=True)
+    best = optimize.extremize(objective, params, maximize=True)     # best value per start
+    res = optimize.fit(loss, params)                                # minimisation; the parameters end at the fit
 
 Initialisation (`init`, for a fraction `init_fraction` of the starts; the default 'haar' is unchanged): the extremes
 of many trace functionals sit at aligned eigenbases, a set of Haar measure zero, and in a real algebra a unitary chart
@@ -33,6 +37,7 @@ from typing import Callable, List, Optional, Sequence
 import torch
 
 from .algebra import TypeIAlgebra
+from .channels import Channel, InterSectorChannel
 from . import cost
 
 Operator = TypeIAlgebra.Operator
@@ -349,6 +354,72 @@ class SelfAdjointParam(PositiveParam):
                 best = torch.where(better, v, best)
 
 
+class StinespringParam(Param):
+    """
+    Trace-preserving CP maps from the algebra `alg` (one per start): for every input sector c an isometry
+    V_c = Z_c (Z_c^* Z_c)^{-1/2} from C^{k_c} into the environment C^r times the output sectors, and the Kraus
+    operators are the blocks of V_c. Every value of the free complex matrices Z is a channel (no constraint, no
+    projection); Gaussian Z gives Haar-random isometries, i.e. the distribution of channels.random_channel and
+    channels.random_inter_sector_channel. Gradients go through Z^* Z by the Daleckii-Krein formula. The Kraus gauge
+    (V -> (W (x) 1) V with a unitary W of the environment) is a symmetry of every objective of the channel.
+
+    alg_out=None: sector-preserving channels of `alg` (channel() is a Channel, Kraus rank r). Otherwise
+    InterSectorChannels into alg_out; `transitions` (an (D, C) boolean matrix, default all True) fixes which output
+    sectors d an input sector c may reach, e.g. a charge-lowering map. The isometry needs r * sum_{d allowed} m_d
+    >= k_c for every input sector c.
+    """
+
+    def __init__(self, alg: TypeIAlgebra, batch_size: int, kraus_rank: int = 1, alg_out: Optional[TypeIAlgebra] = None,
+                 transitions=None, generator: Optional[torch.Generator] = None):
+        self.alg, self.alg_out, self.r = alg, alg_out, kraus_rank
+        dev = alg.hilbert.device
+        C, k = alg.C, alg.k_max
+        if alg_out is None:
+            if transitions is not None:
+                raise ValueError("transitions need alg_out (a map between algebras)")
+            D, m = C, k
+            allowed = torch.eye(C, dtype=torch.bool, device=dev)
+        else:
+            D, m = alg_out.C, alg_out.k_max
+            allowed = (torch.ones(D, C, dtype=torch.bool, device=dev) if transitions is None
+                       else torch.as_tensor(transitions, dtype=torch.bool, device=dev).reshape(D, C))
+        out_rows = (alg_out or alg)._const('rows').to(dev)                        # (D, m) active rows of the outputs
+        width = (kraus_rank * (allowed.to(torch.long) * out_rows.sum(-1)[:, None]).sum(0)).tolist()
+        for c, k_c in enumerate(alg.k_factors):
+            if k_c and width[c] < k_c:
+                raise ValueError(f"input sector {c} (dimension {k_c}) cannot be mapped isometrically into "
+                                 f"{width[c]} dimensions: raise kraus_rank or allow more transitions")
+        # mask of Z, shape (C, r, D, m, k): allowed (d, c), active rows of d, active columns of c
+        in_cols = alg._const('rows').to(dev)                                       # (C, k)
+        self._mask = (allowed.t()[:, None, :, None, None] & out_rows[None, None, :, :, None]
+                      & in_cols[:, None, None, None, :]).expand(C, kraus_rank, D, m, k)
+        shape = (batch_size, C, kraus_rank, D, m, k)
+        Z = torch.randn(shape, dtype=alg.dtype, device=dev, generator=generator)
+        self.Z = (Z * self._mask).requires_grad_(True)
+        self._D, self._m = D, m
+
+    def parameters(self):
+        return [self.Z]
+
+    def kraus(self) -> torch.Tensor:
+        """Kraus tensor (batch, r, D, C, m, k) (between algebras) or (batch, r, C, k, k) (within one algebra)."""
+        B, C, r, D, m, k = self.Z.shape
+        Z = (self.Z * self._mask).reshape(B, C, r * D * m, k)
+        gram = self.alg.operator(Z.conj().transpose(-2, -1) @ Z, is_self_adjoint=True, is_positive=True)
+        V = Z @ gram.power(-0.5).matrix                                            # (B, C, r D m, k), V_c^* V_c = 1
+        K = V.reshape(B, C, r, D, m, k).permute(0, 2, 3, 1, 4, 5)                  # (B, r, D, C, m, k)
+        if self.alg_out is None:
+            idx = torch.arange(C, device=K.device)
+            K = K[:, :, idx, idx]                                                  # (B, r, C, k, k): d = c
+        return K
+
+    def channel(self):
+        """The current channels (trace preserving by construction)."""
+        if self.alg_out is None:
+            return Channel(self.alg, self.kraus(), trace_preserving=True)
+        return InterSectorChannel(self.alg, self.alg_out, self.kraus(), trace_preserving=True)
+
+
 def extremize(objective: Callable[[], torch.Tensor], params: Sequence[Param], maximize: bool = True,
               rounds: int = 10, steps: int = 50, lr: float = 0.05, decay: float = 0.6,
               progress: bool = False) -> torch.Tensor:
@@ -389,3 +460,45 @@ def extremize(objective: Callable[[], torch.Tensor], params: Sequence[Param], ma
         keep(objective())
     # a start whose objective was never finite has no attained value: NaN rather than -inf / +inf
     return torch.where(torch.isinf(best), torch.full_like(best, float('nan')), best)
+
+
+class FitResult:
+    """Outcome of fit: `loss` per start at the final point, `best` the index of the smallest, `history` the mean
+    loss over the starts after every round. The parameters themselves are left at the final point."""
+
+    def __init__(self, loss: torch.Tensor, history: List[float]):
+        self.loss, self.history = loss, history
+        finite = torch.nan_to_num(loss, nan=float('inf'))
+        self.best = int(finite.argmin()) if finite.numel() else 0
+
+    def __repr__(self) -> str:
+        return f"FitResult(best loss {float(self.loss[self.best]):.3e} at start {self.best}, {self.loss.numel()} starts)"
+
+
+def fit(loss: Callable[[], torch.Tensor], params: Sequence[Param], rounds: int = 10, steps: int = 50,
+        lr: float = 0.05, decay: float = 0.6, progress: bool = False) -> FitResult:
+    """
+    Minimise loss() -> tensor (batch,) over the parameters, every batch element an independent start (the same
+    schedule as extremize: Adam with learning rate lr * decay**round, unitary charts re-centred after every round).
+    Unlike extremize, which reports the best value seen, fit leaves the parameters at the final point, so that the
+    fitted operators or channels can be read from them (e.g. StinespringParam.channel()), and returns the final loss
+    per start. A local search: compare several starts, and convex problems with an exact solver.
+    """
+    timer = cost.StepTimer(rounds * steps, "optimize.fit", progress)
+    history = []
+    for rnd in range(rounds):
+        tensors = [t for p in params for t in p.parameters()]
+        opt = torch.optim.Adam(tensors, lr=lr * decay ** rnd)
+        for _ in range(steps):
+            v = loss()
+            opt.zero_grad()
+            torch.nan_to_num(v, nan=0.0).sum().backward()
+            opt.step()
+            timer.step(tensors[0].device)
+        for p in params:
+            p.recenter()
+        history.append(float(v.detach().mean()))
+    timer.close()
+    with torch.no_grad():
+        final = loss().detach()
+    return FitResult(final, history)

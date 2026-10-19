@@ -14,6 +14,11 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
   output sectors (Kraus operators P_d K_i). `from_dense` rejects matrices outside the algebra. Tests check the
   conventions and that `lindblad_evolve` agrees with `qutip.mesolve` and `dynamiqs.mesolve`. Optional extra
   `interop = ["qutip>=5"]`.
+- `optimize.StinespringParam`: channels as parameters. For every input sector an isometry V_c = Z_c (Z_c^* Z_c)^{-1/2}
+  (Haar-random at the start), Kraus operators its blocks; every parameter value is a trace-preserving channel of one
+  algebra (`Channel`) or between algebras with a prescribed set of allowed sector transitions (`InterSectorChannel`).
+- `optimize.fit` / `FitResult`: batched multistart minimisation that leaves the parameters at the fitted point (the
+  counterpart of `extremize` for learning); a test recovers a channel from 12 input/output pairs to 1e-5.
 - `SpinChain.bond(i, j, Jxy, Jz)`: the two-site XXZ term on any pair of sites, for bond-resolved Hamiltonians and
   controls.
 
