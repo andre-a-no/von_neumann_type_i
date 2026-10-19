@@ -59,43 +59,42 @@ def arrow(ax, p, q, color=GREY, lw=1.0, style='-|>', rad=0.0, ms=8, ls='-'):
 
 # ------------------------------------------------------------------------------------------------ ecosystem
 def ecosystem():
-    fig, ax = plt.subplots(figsize=(6.8, 4.1))
-    ax.set_xlim(0, 13.6)
-    ax.set_ylim(0, 8.2)
+    fig, ax = plt.subplots(figsize=(7.2, 5.0))
+    ax.set_xlim(0, 16)
+    ax.set_ylim(0, 11.1)
     ax.axis('off')
     # axes of the map
-    arrow(ax, (1.0, 0.55), (13.4, 0.55), color=GREY, lw=0.8)
-    arrow(ax, (1.0, 0.55), (1.0, 8.1), color=GREY, lw=0.8)
-    ax.text(13.4, 0.2, 'numerical: large, batched, GPU, differentiable', ha='right', va='center', fontsize=7,
+    arrow(ax, (0.8, 0.4), (15.9, 0.4), color=GREY, lw=0.8)
+    arrow(ax, (0.8, 0.4), (0.8, 11.0), color=GREY, lw=0.8)
+    ax.text(15.9, 0.05, 'numerical: large, batched, GPU, differentiable', ha='right', va='center', fontsize=7,
             color=GREY, style='italic')
-    ax.text(1.15, 0.2, 'exact or symbolic, small', ha='left', va='center', fontsize=7, color=GREY, style='italic')
-    ax.text(0.55, 8.0, 'algebra-level objects\n(centre, traces, conditional\nexpectations, inclusions)', ha='left',
-            va='top', fontsize=6.6, color=GREY, style='italic', rotation=0)
-    ax.text(0.55, 1.05, 'matrices on a\nHilbert space', ha='left', va='bottom', fontsize=6.6, color=GREY,
-            style='italic')
-    # exact, algebra level
-    box(ax, 1.7, 5.05, 4.6, 1.75, 'computer algebra',
-        'Sage, GAP, Magma: centre, radical,\nWedderburn; Jordan algebras\n(mjo.eja, ALCO); Lean/mathlib (formal)')
-    # numerical, Hilbert space
-    box(ax, 8.2, 2.35, 5.15, 1.9, 'quantum simulators',
-        'QuTiP (PIQS), dynamiqs,\nQuantumToolbox.jl, Qiskit Aer, cuDensityMat;\nQuSpin, XDiag; ITensor, TeNPy')
-    box(ax, 4.55, 0.85, 3.4, 1.25, 'linear algebra', 'NumPy, SciPy, PyTorch, JAX')
-    box(ax, 1.7, 2.35, 3.9, 1.9, 'optimisation',
+    ax.text(1.0, 0.05, 'exact or symbolic, small', ha='left', va='center', fontsize=7, color=GREY, style='italic')
+    ax.text(1.0, 10.95, 'algebra-level objects (centre, traces, conditional expectations, inclusions)', ha='left',
+            va='center', fontsize=7, color=GREY, style='italic')
+    ax.text(1.0, 0.75, 'matrices on a Hilbert space', ha='left', va='center', fontsize=7, color=GREY, style='italic')
+    # boxes
+    box(ax, 1.4, 7.4, 5.3, 2.7, 'computer algebra',
+        'Sage, GAP, Magma: centre, radical,\nWedderburn decomposition;\nJordan algebras: mjo.eja, ALCO;\n'
+        'Lean/mathlib (formal)')
+    box(ax, 10.0, 7.0, 5.7, 3.3, 'torch_vn_algebra',
+        'the algebra $\\oplus_c M_{k_c}$ as the data type:\ncentre, traces, states, channels\n'
+        'between algebras, inclusions, index,\nJordan product, contrast; batched\n'
+        'sampling, optimisation, learning,\ncertified values', edge=BLUE, fill='#f2f7fd', title_color=BLUE, lw=1.4)
+    box(ax, 1.4, 3.4, 4.8, 2.5, 'optimisation',
         'convex (SDP): CVXPY, PICOS,\nQETLAB; manifolds: pymanopt,\ngeoopt, Manopt.jl')
-    box(ax, 5.85, 2.75, 2.05, 1.25, 'RepLAB', 'commutants of\ngroup actions', fs=7)
-    # this library
-    box(ax, 8.2, 5.05, 5.15, 2.85, 'torch_vn_algebra',
-        'the algebra $\\oplus_c M_{k_c}$ as the data type:\ncentre, traces, states, channels between\n'
-        'algebras, inclusions and index, Jordan\nproduct, contrast; batched sampling,\n'
-        'optimisation and learning, certified values', edge=BLUE, fill='#f2f7fd', title_color=BLUE, lw=1.4)
-    arrow(ax, (10.0, 5.05), (10.0, 4.25), color=BLUE, style='<|-|>')
-    ax.text(10.15, 4.65, 'interop: to_qutip,\nto_dynamiqs', ha='left', va='center', fontsize=6.4, color=BLUE)
-    arrow(ax, (8.6, 5.05), (7.3, 2.1), color=GREY, rad=0.15, ls='--')
-    ax.text(7.55, 2.45, 'built on', ha='left', va='center', fontsize=6.4, color=GREY, style='italic')
-    arrow(ax, (8.2, 6.55), (6.3, 6.3), color=GREY, ls=':')
-    ax.text(6.75, 6.95, 'exact checks of small cases', ha='center', va='bottom', fontsize=6.2, color=GREY)
-    arrow(ax, (8.2, 5.3), (5.6, 4.25), color=GREY, ls=':')
-    ax.text(4.3, 4.65, 'SDP references (convex problems)', ha='center', va='center', fontsize=6.2, color=GREY)
+    box(ax, 6.55, 3.3, 2.4, 1.6, 'RepLAB', 'commutants of\ngroup actions', fs=7.5)
+    box(ax, 10.0, 2.3, 5.7, 2.9, 'quantum simulators',
+        'QuTiP (PIQS), dynamiqs,\nQuantumToolbox.jl, Qiskit Aer,\ncuDensityMat; QuSpin, XDiag;\nITensor, TeNPy')
+    box(ax, 4.9, 0.95, 4.2, 1.35, 'linear algebra', 'NumPy, SciPy, PyTorch, JAX')
+    # relations, routed through the free corridors
+    arrow(ax, (12.85, 7.0), (12.85, 5.2), color=BLUE, style='<|-|>', lw=1.2)
+    ax.text(13.05, 6.1, 'interop:\nto_qutip, to_dynamiqs', ha='left', va='center', fontsize=6.6, color=BLUE)
+    arrow(ax, (10.0, 9.0), (6.7, 9.0), color=GREY, ls=':')
+    ax.text(8.35, 9.2, 'exact checks of\nsmall cases', ha='center', va='bottom', fontsize=6.6, color=GREY)
+    arrow(ax, (10.0, 7.6), (6.2, 5.7), color=GREY, ls=':')
+    ax.text(8.35, 7.6, 'SDP references for\nconvex problems', ha='center', va='center', fontsize=6.6, color=GREY)
+    arrow(ax, (10.4, 7.0), (8.4, 2.3), color=GREY, ls='--')
+    ax.text(8.6, 2.85, 'built on', ha='right', va='center', fontsize=6.6, color=GREY, style='italic')
     FIG.mkdir(exist_ok=True)
     fig.savefig(FIG / 'ecosystem.pdf', bbox_inches='tight', metadata=META)
     plt.close(fig)

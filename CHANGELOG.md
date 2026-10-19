@@ -6,6 +6,11 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 
 ## [Unreleased]
 
+## [1.2.0] – 2026-10-19
+
+Backward compatible: everything of 1.1.0 works unchanged. New: conversion to QuTiP and dynamiqs, channels and
+Lindblad generators as trainable parameters, measurements and instruments.
+
 ### Added
 - `measurement` module (`POVM` and `Instrument` exported at top level): POVMs with a one-time check of positivity
   and normalisation, Born probabilities, batched multinomial sampling of counts (reproducible with a generator) and
@@ -195,4 +200,6 @@ and with the latest ones on Python 3.8–3.13.
 - **0.1** (2026-10-09): the code of the first version of the paper (arXiv:2606.15882v1), with its Haar sampler and
   spectrum bugs fixed.
 
+[1.2.0]: https://github.com/andre-a-no/von_neumann_type_i/releases/tag/v1.2.0
+[1.1.0]: https://github.com/andre-a-no/von_neumann_type_i/releases/tag/v1.1.0
 [1.0.0]: https://github.com/andre-a-no/von_neumann_type_i/releases/tag/v1.0.0
