@@ -855,7 +855,7 @@ checked against the literature before any publication claims them.
 - Bairey, E., Guo, C., Poletti, D., Lindner, N. H., Arad, I.: Learning the dynamics of open quantum systems from their steady states. New J. Phys. 22, 032001 (2020). doi:10.1088/1367-2630/ab73cd.
 - Baldi, P., Hornik, K.: Neural networks and principal component analysis: learning from examples without local minima. Neural Netw. 2(1), 53–58 (1989). doi:10.1016/0893-6080(89)90014-2.
 - Barnum, H., Caves, C. M., Fuchs, C. A., Jozsa, R., Schumacher, B.: Noncommuting mixed states cannot be broadcast. Phys. Rev. Lett. 76, 2818–2821 (1996). doi:10.1103/PhysRevLett.76.2818; arXiv:quant-ph/9511010.
-- Barnum, H., Knill, E.: Reversing quantum dynamics with near-optimal quantum and classical fidelity. J. Math. Phys. 43, 2097 (2002). arXiv:quant-ph/0004088.
+- Barnum, H., Knill, E.: Reversing quantum dynamics with near-optimal quantum and classical fidelity. J. Math. Phys. 43(5), 2097–2106 (2002). doi:10.1063/1.1459754; arXiv:quant-ph/0004088.
 - Bechmann-Pasquinucci, H., Huttner, B., Gisin, N.: Non-linear quantum state transformation of spin-1/2. Phys. Lett. A 242(4–5), 198–204 (1998). doi:10.1016/S0375-9601(98)00189-3; arXiv:quant-ph/9708040.
 - Beer, K., Bondarenko, D., Farrelly, T., Osborne, T. J., Salzmann, R., Scheiermann, D., Wolf, R.: Training deep quantum neural networks. Nat. Commun. 11, 808 (2020). doi:10.1038/s41467-020-14454-2.
 - Bény, C., Kempf, A., Kribs, D. W.: Generalization of quantum error correction via the Heisenberg picture. Phys. Rev. Lett. 98, 100502 (2007). doi:10.1103/PhysRevLett.98.100502; arXiv:quant-ph/0608071.
@@ -890,7 +890,7 @@ checked against the literature before any publication claims them.
 - Haber, E., Ruthotto, L.: Stable architectures for deep neural networks. Inverse Probl. 34(1), 014004 (2017; journal volume dated 2018). doi:10.1088/1361-6420/aa9a90; arXiv:1705.03341.
 - Hashimoto, Y., Ikeda, M., Kadri, H.: Position: C\*-algebraic machine learning — moving in a new direction. Proc. ICML 2024, PMLR 235, 17667–17679 (2024). arXiv:2402.02637.
 - Hashimoto, Y., Wang, Z., Matsui, T.: C\*-algebra net: a new approach generalizing neural network parameters to C\*-algebra. Proc. ICML 2022, PMLR 162, 8523–8534 (2022).
-- Hastings, M. B.: Superadditivity of communication capacity using entangled inputs. Nat. Phys. 5, 255 (2009). doi:10.1038/nphys1224.
+- Hastings, M. B.: Superadditivity of communication capacity using entangled inputs. Nat. Phys. 5(4), 255–257 (2009). doi:10.1038/nphys1224.
 - He, K., Zhang, X., Ren, S., Sun, J.: Deep residual learning for image recognition. Proc. IEEE CVPR 2016, 770–778 (2016). doi:10.1109/CVPR.2016.90; arXiv:1512.03385.
 - Huang, G., Liu, Z., van der Maaten, L., Weinberger, K. Q.: Densely connected convolutional networks. Proc. IEEE CVPR 2017, 2261–2269 (2017). doi:10.1109/CVPR.2017.243; arXiv:1608.06993.
 - Huang, G., Sun, Y., Liu, Z., Sedra, D., Weinberger, K. Q.: Deep networks with stochastic depth. In: Computer Vision – ECCV 2016, Lecture Notes in Computer Science 9908, 646–661. Springer (2016). doi:10.1007/978-3-319-46493-0_39; arXiv:1603.09382.
@@ -948,7 +948,7 @@ checked against the literature before any publication claims them.
 - Wen, Z., Yin, W.: A feasible method for optimization with orthogonality constraints. Math. Program. 142, 397–434 (2013). doi:10.1007/s10107-012-0584-1.
 - Wibisono, A., Wilson, A. C., Jordan, M. I.: A variational perspective on accelerated methods in optimization. Proc. Natl. Acad. Sci. USA 113(47), E7351–E7358 (2016). doi:10.1073/pnas.1614734113.
 - Wiseman, H. M., Milburn, G. J.: *Quantum Measurement and Control*. Cambridge University Press (2009). doi:10.1017/CBO9780511813948.
-- Wolf, M. M., Cirac, J. I.: Dividing quantum channels. Commun. Math. Phys. 279, 147 (2008). doi:10.1007/s00220-008-0411-y; arXiv:math-ph/0611057.
+- Wolf, M. M., Cirac, J. I.: Dividing quantum channels. Commun. Math. Phys. 279, 147–168 (2008). doi:10.1007/s00220-008-0411-y; arXiv:math-ph/0611057.
 - Wolf, M. M., Eisert, J., Cubitt, T. S., Cirac, J. I.: Assessing non-Markovian quantum dynamics. Phys. Rev. Lett. 101, 150402 (2008).
 - Wootters, W. K., Zurek, W. H.: A single quantum cannot be cloned. Nature 299, 802–803 (1982). doi:10.1038/299802a0.
 - Zhao, A., Miyake, A.: Group-theoretic error mitigation enabled by classical shadows and symmetries. npj Quantum Inf. 10, 57 (2024). doi:10.1038/s41534-024-00854-5; arXiv:2310.03071.
