@@ -24,8 +24,11 @@ rotated in pairs, U rotating the same pairs), the other half at Haar-random ones
 Writes generated/bounds.tex, generated/bounds.json, figures/bounds_*.pdf.
 
     python scripts/bounds_search.py --mode full --device cuda
+    python scripts/bounds_search.py --mode full --replot-2d     # only figures/bounds2d_*.pdf, from generated/bounds.json
 """
+import json
 import math
+import sys
 import time
 from pathlib import Path
 
@@ -38,6 +41,9 @@ from torch_vn_algebra import TypeIAlgebra, optimize as opt
 from bounds_checks import DMAX, structured_samples, direct_sum_bound, exact_envelope
 import certify_envelopes as ce
 
+REPLOT_2D = '--replot-2d' in sys.argv              # common.parse_args does not know this flag
+if REPLOT_2D:
+    sys.argv.remove('--replot-2d')
 args = parse_args(__doc__)
 dev = args.device
 FULL = args.mode in ('full', 'check')            # check: the sizes of full, minimal repetitions
@@ -155,6 +161,39 @@ import matplotlib.pyplot as plt
 
 LABELS = {1: ('$\\Delta(X)$', '$\\Delta(Y)$'), 2: ('$\\Delta(|X|)$', '$\\Delta(|Y|)$'),
           3: ('$\\Delta(|X|)$', '$\\Delta(Y)$')}
+# the functionals in the notation of man/trace_envelopes (Theorem C there; Exp. 1 is the unnormalised Gardner violation)
+FUNCTIONALS = {1: '$z=|\\mathrm{Tr}(XUY)|-\\mathrm{Tr}(XY)$',
+               2: '$z=\\mathrm{Tr}|XY|-\\mathrm{Tr}(|X|\\,|Y|)$',
+               3: '$z=\\mathrm{Tr}(Y|X|Y)-\\mathrm{Tr}|YXY|$'}
+
+
+def plot_2d(r2):
+    """figures/bounds2d_exp*_k*_C*.pdf: sup and inf of z on the joint grid of the two contrasts (rows: the contrast of X,
+    columns: that of Y), from a result of the joint search (also from the saved generated/bounds.json)."""
+    exp, k, C = r2['experiment'], r2['k'], r2['C']
+    g2 = np.array(r2['grid'])
+    h = 0.5 * (g2[1] - g2[0])                            # half a grid cell: imshow cells centred on the grid
+    alg = f'$M_{{{k}}}(\\mathbb{{R}})$' if C == 1 else f'$M_{{{k}}}(\\mathbb{{R}})^{{\\oplus {C}}}$'
+    fig, axes = plt.subplots(1, 2, figsize=(8, 3.4))
+    for ax, name in zip(axes, ('sup', 'inf')):
+        im = ax.imshow(np.array(r2[name]), origin='lower', extent=[g2[0] - h, g2[-1] + h, g2[0] - h, g2[-1] + h],
+                       aspect='auto', cmap='coolwarm' if name == 'inf' else 'viridis')
+        ax.set_xlabel(LABELS[exp][1])
+        ax.set_ylabel(LABELS[exp][0])
+        ax.set_title(f'$\\{name}\\,z$')
+        fig.colorbar(im, ax=ax)
+    fig.suptitle(f'{FUNCTIONALS[exp]} on {alg}, both contrasts prescribed', fontsize=10)
+    fig.tight_layout()
+    fig.savefig(f"{args.figdir}/bounds2d_exp{exp}_k{k}_C{C}.pdf", metadata={"CreationDate": None})
+    plt.close(fig)
+
+
+if REPLOT_2D:
+    for r2 in json.loads((Path(args.out) / 'bounds.json').read_text())['results_2d']:
+        plot_2d(r2)
+        print(f"replotted {args.figdir}/bounds2d_exp{r2['experiment']}_k{r2['k']}_C{r2['C']}.pdf")
+    sys.exit(0)
+
 results, rows = [], []
 t_start = time.time()
 for exp in (1, 2, 3):
@@ -286,7 +325,6 @@ for exp in (1, 2, 3):
         plt.close(fig)
 
 # joint constraints: both contrasts prescribed
-h2 = 0.5 * (GRID2[1] - GRID2[0])                         # half a grid cell: imshow cells centred on the grid
 results_2d = []
 for exp in (1, 2, 3):
     for k, C in CONFIGS_2D:
@@ -303,18 +341,7 @@ for exp in (1, 2, 3):
         print(f"exp{exp} k={k} C={C}, Delta(X), Delta(Y) prescribed: sup on grid in "
               f"[{e2['sup'].min():+.3g}, {e2['sup'].max():+.3g}], inf in [{e2['inf'].min():+.3g}, "
               f"{e2['inf'].max():+.3g}]  ({time.time() - t0:.0f} s)")
-        fig, axes = plt.subplots(1, 2, figsize=(8, 3.4))
-        for ax, name in zip(axes, ('sup', 'inf')):
-            im = ax.imshow(e2[name], origin='lower', extent=[GRID2[0] - h2, GRID2[-1] + h2, GRID2[0] - h2, GRID2[-1] + h2],
-                           aspect='auto', cmap='coolwarm' if name == 'inf' else 'viridis')
-            ax.set_xlabel(LABELS[exp][1])
-            ax.set_ylabel(LABELS[exp][0])
-            ax.set_title(f'{name} z')
-            fig.colorbar(im, ax=ax)
-        fig.suptitle(f'Experiment {exp}, $k={k}$, $C={C}$: both contrasts prescribed', fontsize=10)
-        fig.tight_layout()
-        fig.savefig(f"{args.figdir}/bounds2d_exp{exp}_k{k}_C{C}.pdf", metadata={"CreationDate": None})
-        plt.close(fig)
+        plot_2d(r2)
 
 # analytic check: for Exp 1, inf over U and Y of z at Delta(X) = d equals -(kC - 2d/(1+d))
 # (Tr(XY) <= Tr X <= kC - 1 + lambda_min, attained for Y = 1; |Tr(UYX)| can be made 0)

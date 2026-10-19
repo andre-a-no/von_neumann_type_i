@@ -388,6 +388,25 @@ def test_gardner_scipy_reaches_closed_form():
         assert best <= k + 1e-9 and best > k * (1 - 1e-2)       # BFGS stalls at the rank-deficient |X|
 
 
+def test_young_published_form_stays_at_kantorovich():
+    """man/trace_envelopes, remark after the proposition on Young's inequality (item 8): for the published form
+    phi(|AB|) <= (phi(A^2) + phi(B^2))/2 with A, B >= 0, an independent BFGS search on M_2 (A = L L^*, B = M M^*,
+    30 random starts, seed 1) comes within 0.1% of kappa - 1 at delta = 0.5 and 0.9 (0.1546 and 1.2938 against
+    0.1547 and 1.2942) and does not exceed it, whereas the extension to arbitrary A, B fails linearly (h - 1)."""
+    def neg_violation(x, w):
+        L, M = (x[:4] + 1j * x[4:8]).reshape(2, 2), (x[8:12] + 1j * x[12:]).reshape(2, 2)
+        A, B = L @ L.conj().T, M @ M.conj().T
+        rhs = 0.5 * (phi(w, A @ A) + phi(w, B @ B)).real
+        return -(phi(w, absm(A @ B)).real / rhs - 1)
+    for d in (0.5, 0.9):
+        w = density(d)
+        rng = np.random.default_rng(1)
+        best = max(-minimize(neg_violation, rng.normal(size=16), args=(w,), method='BFGS').fun for _ in range(30))
+        k = float(tc.kantorovich(d))
+        assert k * (1 - 1e-3) < best <= k * (1 + 1e-9), (d, best, k)
+        assert best < float(tc.young_exact(d)) / 10                     # far below h - 1 of the extension
+
+
 # ----------------------------------------------------------------------------------------------------------------
 # the library path
 # ----------------------------------------------------------------------------------------------------------------

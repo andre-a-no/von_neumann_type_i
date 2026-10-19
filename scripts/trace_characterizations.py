@@ -1486,9 +1486,9 @@ def _env_macro(args, res):
     if e.get('gpu'):
         hw = e['gpu']
     elif res.get('workers', 1) > 1:
-        hw = f"CPU ({res['workers']} processes, one thread each)"
+        hw = f"{res['workers']} CPU processes with one thread each"
     else:
-        hw = f"CPU ({e.get('threads')} thread{'' if e.get('threads') == 1 else 's'})"
+        hw = f"a CPU with {e.get('threads')} thread{'' if e.get('threads') == 1 else 's'}"
     return (f"\\newcommand{{\\TCDevice}}{{{hw}}}\n"
             f"\\newcommand{{\\TCMode}}{{{res.get('mode', args.mode)}}}\n"
             f"\\newcommand{{\\TCTorch}}{{{e['torch']}}}\n"

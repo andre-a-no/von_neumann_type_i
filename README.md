@@ -51,7 +51,7 @@ This README is the entry point of the repository:
 | understand the physics behind the models | the boxes *Physical meaning* in the [lecture notes](man/lecture_notes/README.md), e.g. [symmetries and charge sectors](man/lecture_notes/04_symmetries.md), [dynamics](man/lecture_notes/08_dynamics.md), [spin chains](man/lecture_notes/09_spin_chains.md) |
 | compare with other software | [When to use it, and alternatives](#when-to-use-it-and-alternatives) |
 | read the paper | [`man/article/vn_algebra_pytorch.pdf`](man/article/vn_algebra_pytorch.pdf) (source `man/article/vn_algebra_pytorch.tex`) |
-| read the paper on trace characterisations | [`man/trace_envelopes/trace_inequalities_contrast.pdf`](man/trace_envelopes/trace_inequalities_contrast.pdf): how strongly inequalities that characterise the trace fail, as functions of the Michelson contrasts of the functional and of the operators, and why projections suffice (source `man/trace_envelopes/trace_inequalities_contrast.tex`, numbers from `scripts/trace_characterizations.py` and `scripts/trace_contrast.py`, arXiv archive by `scripts/make_arxiv_trace.sh`) |
+| read the paper on trace characterisations | [`man/trace_envelopes/trace_inequalities_contrast.pdf`](man/trace_envelopes/trace_inequalities_contrast.pdf): how strongly inequalities that characterise the trace fail, as functions of the Michelson contrasts of the functional and of the operators, and how often projections and two-level operators already give the largest violation (an observation with exceptions) (source `man/trace_envelopes/trace_inequalities_contrast.tex`; run in this order: `scripts/trace_characterizations.py --mode full`, `scripts/trace_contrast.py --mode full`, then `scripts/trace_montecarlo.py`, `scripts/contrast_operations.py`, `scripts/trace_envelopes_figures.py` and `scripts/trace_paper_schematics.py`; the joint-contrast figure comes from `scripts/bounds_search.py` of the library pipeline; arXiv archive by `scripts/make_arxiv_trace.sh`) |
 | read the paper on the Connes–Størmer entropy | [`man/connes_stormer/connes_stormer_masas.pdf`](man/connes_stormer/connes_stormer_masas.pdf): closed form for two MASAs of M_2, partitions that beat bases for n ≥ 3 (numbers from `scripts/connes_stormer.py`, arXiv archive by `scripts/make_arxiv_connes_stormer.sh`) |
 | read the physics paper (time crystal, symmetry-resolved entanglement) | [`man/btc_sre/btc_sre_symmetry_sectors.pdf`](man/btc_sre/btc_sre_symmetry_sectors.pdf): finite-N lifetimes of a boundary time crystal under local dissipation, SRE in the XXZ chain (numbers from `scripts/permutational.py` and `scripts/symmetry_resolved.py`, arXiv archive by `scripts/make_arxiv_btc_sre.sh`) |
 | reproduce every number of the paper | [Reproducing the paper](#reproducing-the-paper) |
@@ -327,7 +327,7 @@ typed by hand: every table and figure comes from the scripts in [`scripts`](scri
 [`man/article/listings`](man/article/listings), run by one driver:
 
 ```bash
-bash scripts/run_all.sh                    # quick mode, about 4 minutes on a 4-thread CPU
+bash scripts/run_all.sh                    # quick mode, well under an hour on a 4-thread CPU
 bash scripts/run_all.sh full cuda          # sizes of the paper, on a GPU
 cd man/article && pdflatex vn_algebra_pytorch.tex && pdflatex vn_algebra_pytorch.tex
 ```

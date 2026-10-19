@@ -195,15 +195,18 @@ envelope and proves no bound.
 \paragraph{Numerical evidence.} For the inequalities without a closed form we computed the envelopes by constrained
 optimisation over all operator variables. Every reported value is recomputed in 40-digit arithmetic at an exactly
 admissible point, so it is a rigorous \emph{lower} bound for the supremum, not a certified value of it. Where the
-envelope is known the search reproduces it to $10^{-7}$; elsewhere it supports the conjectured values of
-Section~\ref{sec:open}. Two observations from the search guide the theory. First, the largest violation is usually found
+envelope is known, the search reproduces it to $\TCSharpDev$ (items 1--5, 8 and 11, and 9 for $n=2$), to $\TCSharpDevNew$
+(items 17, 18, 20--22 and 24) and, for the suprema of items 19 and 23, which are only approached, to
+$\TCSharpDevApproached$; elsewhere it supports the conjectured values of Section~\ref{sec:open}. Two observations from the search guide the theory. First, the largest violation is usually found
 at projections or at two-level operators $\ell+(1-\ell)P$; this is a theorem for the items to which the vertex principle
 (Lemma~\ref{lem:vertex}) applies and an observation for the others, with exceptions in which the extremisers have three
 eigenvalues. Second, random sampling, the method of~\cite{abed2024}, rarely comes close to the envelope: for
 monotonicity and subadditivity fewer than one random sample in a thousand violates the inequality at all, so sampling
-alone would suggest that these inequalities hold for every functional. The computations use the open-source library
+alone would suggest that these inequalities hold for every functional. The envelope searches use the open-source library
 described in the companion paper~\cite{lib}, which reproduces and extends the NumPy simulations of~\cite{abed2024};
-part of the present results appears there as a use case.
+part of the present results appears there as a use case. The random sampling, the figure for Theorem~C and the
+computations for composite operators are separate NumPy/SciPy programs that do not use the library
+(Section~\ref{sec:method}).
 
 \paragraph{Organisation.} Section~\ref{sec:related} reviews related work. Section~\ref{sec:setting} lists the
 inequalities and collects the tools, and Section~\ref{sec:results} states Theorems B--D. Section~\ref{sec:gardner2}
@@ -460,7 +463,8 @@ with $r=1$; and $V_n\le h-1$ for items 1--8 and~10 (Section~\ref{sec:lower} and 
 \centering\includegraphics[width=0.72\textwidth]{ladder_of_orders.pdf}
 \caption{The ladder of orders: the computed envelopes $V_2(\delta)$ of all 25 items (certified lower bounds for the
 suprema, Section~\ref{sec:numerics}) on logarithmic axes, coloured by the order of vanishing at the trace, with guide
-lines of slopes $1$, $2$, $4$ and~$8$. Item~25 is resolved by the search only for $\delta\ge0.4$.}
+lines of slopes $1$, $2$, $4$ and~$8$. Item~25 is shown for $\delta\ge0.4$ (the search resolves it for
+$\delta\ge\TCWmonFirst$).}
 \label{fig:ladder}
 \end{figure}
 
@@ -664,10 +668,11 @@ and the polar unitary, which makes all block traces positive.
 \begin{figure}[t]
 \centering\includegraphics[width=\textwidth]{gardner_contrasts.pdf}
 \caption{The unnormalised Gardner violation $z=|\Tr(XUY)|-\Tr(XY)$ for $\|X\|=\|Y\|=1$ in $M_2(\R)$ (top, $\nu=1$) and
-$M_{16}(\R)$ (bottom, $\nu=8$; the panels write $N$ for $\nu$), against $\Delta(X)$ (left) and $\Delta(Y)$ (right). Grey: $100000$ random samples with
+$M_{16}(\R)$ (bottom, $\nu=8$), against $\Delta(X)$ (left) and $\Delta(Y)$ (right). Grey: $100000$ random samples with
 Haar-orthogonal eigenbases and $U$ and uniformly drawn contrasts, as in~\cite[Fig.~1]{abed2024}. Solid: the bound of
 Theorem~\ref{thm:gardner2} with $\Delta(Y)$ free, $\nu\delta^2/(2(1+\delta))$; dots: $z$ at the explicit maximisers of its
-proof, which agree with it to $10^{-15}$. Dashed: the supremum along $\Delta(Y)$, approached as $\Delta(X)\to1$. In
+proof, which agree with it to $3\times10^{-15}$ (printed by \texttt{trace\_\allowbreak envelopes\_\allowbreak
+figures.py}). Dashed: the supremum along $\Delta(Y)$, approached as $\Delta(X)\to1$. In
 $M_{16}$ no sample violates Gardner's inequality ($z>0$), although violations up to almost $2$ exist: the maximisers,
 two-level spectra on aligned pairs of eigenvectors, form a set of negligible Haar measure.}
 \label{fig:gardner1d}
@@ -678,7 +683,7 @@ two-level spectra on aligned pairs of eigenvectors, form a set of negligible Haa
 \caption{$M_2(\R)$, both contrasts prescribed: the supremum (left) and infimum (right) of
 $z=|\Tr(XUY)|-\Tr(XY)$ found by constrained optimisation on a grid of $\Delta(Y)$ (horizontal) and $\Delta(X)$
 (vertical). The left panel agrees with $\delta^2\delta'^2/((1+\delta)(1+\delta'))$ (Theorem~\ref{thm:gardner2}) to
-$5\times10^{-10}$ at every grid point: a violation needs both operators to be far from scalar.}
+$\TCCGardnerTwoDDev$ at every grid point: a violation needs both operators to be far from scalar.}
 \label{fig:gardner2d}
 \end{figure}
 
@@ -866,9 +871,10 @@ $|AB^*|=e_1e_1^*$ and $|A|^2=e_2e_2^*$, so $\cL=a$ and $\cR=b$.
 \end{proof}
 
 \begin{remark}
-For the published form with $A,B\ge0$ an independent numerical search ($n=2,3$) gives only $V\approx\kappa-1$
-($0.1546$ at $\delta=0.5$ and $1.294$ at $\delta=0.9$, against $\kappa-1=0.1547$ and $1.294$). The linear failure of
-item~8 is a feature of the extension to arbitrary operators.
+For the published form with $A,B\ge0$ the violation seems to stay at the order $\delta^2$: an independent BFGS search
+over $A,B\ge0$ on $M_2$ (30 random starts; a test of the repository) comes within $0.1\%$ of $\kappa-1$ and does not
+exceed it ($0.1546$ at $\delta=0.5$ and $1.2938$ at $\delta=0.9$, against $\kappa-1=0.1547$ and $1.2942$). The linear
+failure of item~8 is a feature of the extension to arbitrary operators.
 \end{remark}
 
 \begin{proposition}\label{prop:youngtwo}
@@ -1318,7 +1324,8 @@ $\|A_2B_2+B_2A_2\|\le2$, and the smallest eigenvalue $\mu$.
 For $\delta_A=\delta_B=0.6$: the commuting value is $\COJordanTanh$, the maximum on $M_2$ is $\COJordanTwo$, the value of (b)
 for $n\ge3$ is $\COJordanThree$, and $\sin(\psi_A+\psi_B)=\COJordanSin$. A numerical optimisation over all relative
 positions and intermediate eigenvalues (24 starts per point) finds on $M_3$ and on $M_4$ exactly the value of (b)
-(largest difference $\COJordanDev$ on a grid of $\delta_A$ with $\delta_B=0.6$; Figure~\ref{fig:ops-jordan}). Equality for
+($\COJordanThreeOpt$ and $\COJordanFour$ at $\delta_A=\delta_B=0.6$, and largest difference $\COJordanDev$ on a grid
+of $\delta_A$ with $\delta_B=0.6$; Figure~\ref{fig:ops-jordan}). Equality for
 every $n\ge3$ would follow if the smallest eigenvalue of a Jordan product with spectra in $[\ell_A,1]$ and $[\ell_B,1]$
 were always attained on a two-dimensional subspace. Strang~\cite{strang1962} bounded this smallest eigenvalue from below,
 and Alikakos and Bates showed that his bound is best possible~\cite{alikakos1985}; we have not checked whether it
@@ -1417,10 +1424,9 @@ $(A+B)^{1/2}\le A^{1/2}+B^{1/2}$ in the larger green region (Proposition~\ref{pr
 \label{fig:square}
 \end{figure}
 
-The proved threshold is consistent with the computation: on $M_2$ and $M_3$ the search finds no violation of item~12 at
-$\delta'=0.95$ for $\delta\in\{0.3,0.6,0.9\}$, and the first violation above $10^{-4}$ at $\delta'=0.99$ for $\delta=0.6$
-and $0.9$ and only at $\delta'=0.999$ for $\delta=0.3$; all these grid values lie above $2\sqrt2/3$
-(Figure~\ref{fig:square}(a)). Whether the
+The proved threshold is consistent with the computation: on $M_2$ and $M_3$ the search finds no violation of item~12 for
+$\delta'\le\TCCSubaddNone$ and $\delta\in\{0.3,0.6,0.9\}$, and the first violation above $10^{-4}$ at
+$\delta'=$ \TCCSubaddOnset; all these grid values lie above $2\sqrt2/3$ (Figure~\ref{fig:square}(a)). Whether the
 operator inequality $(A+B)^{1/2}\le A^{1/2}+B^{1/2}$ is necessary for the absence of violations, i.e.\ whether the
 threshold $2\sqrt2/3$ is sharp as $\delta\to1$, we do not know: by~\cite[Theorem~2.1]{moslehian2011} the positivity of
 $A^{1/2}B^{1/2}+B^{1/2}A^{1/2}$ is equivalent to subadditivity for \emph{all} non-negative operator monotone functions,
@@ -1469,13 +1475,13 @@ $\delta\ge1/\sqrt2$.
 \end{proof}
 
 \noindent The computed envelopes of item~24 on $M_2$ and $M_3$ with both contrasts prescribed agree at every grid point
-with Proposition~\ref{prop:item24} to $2\times10^{-11}$. The threshold rises above $\sqrt{(n-1)/n}$ for smaller $\delta$ and
+with Proposition~\ref{prop:item24} to $\TCCPowerMeanDev$ (absolute difference). The threshold rises above $\sqrt{(n-1)/n}$ for smaller $\delta$ and
 tends to $1$ as $\delta\to0$ (Figure~\ref{fig:square}(a)): the less tracial the functional, the more moderate the
 operators that detect it. For monotonicity (item~10) an argument of this kind is not available: for $0\le A\le B=A+tvv^*$ with a unit vector $v$
 that is not an eigenvector of $A$, $B^2-A^2=t\bigl((A+\frac t2)vv^*+vv^*(A+\frac t2)\bigr)$ is indefinite for every $t>0$,
 however small the contrasts of $A$ and $B$, so the operator inequality fails and only the functional can prevent a
-violation. Correspondingly, the numerically observed onset of violations of item~10 depends on $\delta$: on $M_2$ at
-$\delta'=0.8$ the search finds a violation for $\delta=0.9$ but none for $\delta=0.3$ and $0.6$.
+violation. Correspondingly, the numerically observed onset of violations of item~10 depends on $\delta$: on $M_2$ the
+first grid value of $\delta'$ with a violation above $10^{-4}$ is \TCCMonOnsetTwo.
 
 \begin{figure}[!htbp]
 \centering\includegraphics[width=\textwidth]{ops_jordan.pdf}
@@ -1489,7 +1495,7 @@ optimisation (markers).}
 \centering\includegraphics[width=\textwidth]{ops_commutator.pdf}
 \caption[]{The commutator test $|\varphi_W(AB-BA)|/(\bar\lambda(A)\bar\lambda(B))$ for random states $\varphi_W$ and random
 $A,B$ against $\Delta(W)$, with $\Delta(A)=\Delta(B)=0.6$, and the sharp bound $2c_n(\delta)\cdot0.36$ of
-Proposition~\ref{prop:commutator}(b). (The panels write $m(A)$ for the midpoint $\bar\lambda(A)$ of the spectrum.)}
+Proposition~\ref{prop:commutator}(b).}
 \label{fig:ops-commutator}
 \end{figure}
 
@@ -1497,11 +1503,15 @@ Proposition~\ref{prop:commutator}(b). (The panels write $m(A)$ for the midpoint 
 
 \subsection{Method}\label{sec:method}
 The envelopes were computed by constrained gradient ascent with the library of~\cite{lib} (the programs
-\texttt{trace\_\allowbreak characterizations.py}, \texttt{trace\_\allowbreak contrast.py} and \texttt{trace\_\allowbreak
-montecarlo.py} of its repository). The density $W$ is diagonal with a spectrum parametrised so that $\Delta(W)=\delta$
+\texttt{trace\_\allowbreak characterizations.py} and \texttt{trace\_\allowbreak contrast.py} of its repository). The
+random sampling (\texttt{trace\_\allowbreak montecarlo.py}), the computations for composite operators
+(\texttt{contrast\_\allowbreak operations.py}) and Figure~\ref{fig:gardner1d} (\texttt{trace\_\allowbreak
+envelopes\_\allowbreak figures.py}) are plain NumPy/SciPy programs in the same repository that do not use the library.
+The density $W$ is diagonal with a spectrum parametrised so that $\Delta(W)=\delta$
 holds exactly, the other eigenvalues being free. Positive variables have a free contrast in $[0,1]$, so rank-deficient
 operators are included; there are self-adjoint and unitary variables (polar factors, and projections $UDU^*$ with every rank
-pattern spread over the starts) and positive scalars. Half of the starts begin at structured points (two-level spectra,
+pattern spread over the starts) and positive scalars. In item~2 the search runs over self-adjoint $X,Y$ only, which
+contain the extremiser of Theorem~\ref{thm:kant}. Half of the starts begin at structured points (two-level spectra,
 rotations in pairs of eigenvectors of $W$). The lattice operations are the spectral projections of $P+Q$ for the
 eigenvalue $2$ ($P\wedge Q$) and for its range ($P\vee Q$), computed by functional calculus with an indicator function. In
 items 19 and~23 the suprema are approached as $P$ and $Q$ merge, where $P\wedge Q$ and $P\vee Q$ jump; there the search
@@ -1514,9 +1524,9 @@ are re-orthonormalised and the contrast is recomputed from the stored eigenvalue
 exact violation at an exactly admissible point, and so a rigorous \emph{lower} bound for the supremum; we call it the
 \emph{computed envelope}. It is not an upper bound: where no theorem is available, the true envelope may be larger. The
 double-precision and high-precision values agree to $\TCCertDev$ (relative), and at $\delta=0$ no value exceeds
-$\TCVzero$. Independent NumPy/SciPy searches (BFGS from $\TCSciStarts$ random starts on $M_2$ at $\delta=0.3,0.5,0.9$)
-give values whose ratio to the batched search lies in $[\TCSciRatioMin,\TCSciRatioMax]$; the ratios above $1$ come from
-item~13, where BFGS stops earlier. The whole computation takes $\TCSeconds$~s on $\TCWorkers$ CPU processes.
+$\TCVzero$. For items 12--16, independent NumPy/SciPy searches (BFGS from $\TCSciStarts$ random starts on $M_2$ at
+$\delta=0.3,0.5,0.9$) give values such that the ratio of the batched search to them lies in
+$[\TCSciRatioMin,\TCSciRatioMax]$; the ratios above $1$ come from item~13, where BFGS stops earlier. The whole computation takes $\TCSeconds$~s on $\TCWorkers$ CPU processes.
 
 \subsection{Envelopes with the operators free}
 
@@ -1550,7 +1560,7 @@ items of a row). Items 11 and 24 are given for $n=2$.}
 $^a$: sharp for $n=2$ only, $^b$: a lower bound, $^c$: approached but not attained. ``order'': leading order of $V^\star$
 as $\delta\to0$; ``slope'': $\log_2(V(0.2)/V(0.1))$ of the search; ``$n$-dep.'': the largest $|V_n/V_2-1|$ for $n=3,4$ and
 $\delta\ge0.1$ (for item~7 it reflects search shortfalls, for item~13 a genuine increase with $n$; items 19 and 20 differ
-for odd $n$, Theorem~\ref{thm:proj}). ``n.r.'': no violation resolved by the search ($\TCMode$ run on $\TCDevice$).}
+for odd $n$, Theorem~\ref{thm:proj}). ``n.r.'': no violation resolved by the search (\TCMode{} run on \TCDevice).}
 \label{tab:values}
 \end{table}
 
@@ -1566,13 +1576,15 @@ The new information concerns the items without a proved envelope. All five items
 $V\approx0.5\,\delta^2$ (items 12 and 13), $\delta^2/36$ (item~14, equal to the lower bound of
 Proposition~\ref{prop:lower}(d) to leading order), $0.064\,\delta^2$ (item~15) and $0.09\,\delta^2$ (item~16). Item~15
 decreases with $n$, because the identity part of $e^{P/2}e^Qe^{P/2}$ enters $\cN$, whereas item~13 increases with $n$ at
-large $\delta$ (on $M_3$ at $\delta=0.9$ the value $0.3048$ against $0.2197$ on $M_2$); items 12, 14 and~16 give the same
-values for $n=2,3,4$. In item~16 the best points have large $\|A\|$ and $\|B\|$, and the supremum is approached as the
-scale grows. Among the items with a proved lower bound, no computed value exceeds the bound (largest relative excess
-$\TCBoundExcess$) except for item~6 in dimension $n\ge3$: on $M_2$ the search never exceeds $\kappa-1$, but for $n\ge3$ it
-finds larger violations, $V\ge\TCSGMExcessV$ at $n=\TCSGMExcessN$, $\delta=\TCSGMExcessDelta$, where
-$\kappa-1=\TCSGMExcessKappa$, and a stored point gives $V>2.1$ at $n=3$, $\delta=0.9$, where $\kappa-1=1.29$. For item~6 we
-therefore only know $\kappa-1\le V_n\le h-1$. Items 9 and 10 give the same values for $n=3,4$ as for $n=2$, to $\TCNDev$.
+large $\delta$ (on $M_3$ at $\delta=0.9$ the value $\TCVPowersNineThree$ against $\TCVPowersNine$ on $M_2$); items 12,
+14 and~16 give the same values for $n=2,3,4$ (to $\TCNDev$). In item~16 the best points have large $\|A\|$ and $\|B\|$, and the supremum is approached as the
+scale grows. Among the items with a proved lower bound, no computed value exceeds the bound (the largest relative
+difference, search minus bound, is $\TCBoundExcess$) except for item~6 in dimension $n\ge3$: on $M_2$ the search never
+exceeds $\kappa-1$, but for $n\ge3$ it finds larger violations, $V\ge\TCSGMExcessV$ at $n=\TCSGMExcessN$,
+$\delta=\TCSGMExcessDelta$, where $\kappa-1=\TCSGMExcessKappa$. At $n=3$, $\delta=0.9$ the present run reaches only
+$\TCVSgmNineThree<\kappa-1=\TCRefSgmNine$, but a point found by an earlier run and stored in the test suite of the
+repository gives $V>2.1$ there (recomputed with 60 digits). For item~6 we therefore only know $\kappa-1\le V_n\le h-1$. Items 9
+and 10 give the same values for $n=3,4$ as for $n=2$, to $\TCNDevProj$ and $\TCNDevMon$.
 
 Except for items 6 ($n\ge3$), 11 ($A=W^{-1}$) and 25 ($A$ of rank two with eigenvalue ratio $\approx\delta^2/8$), the best
 points are rank-one operators or matrix units in the span of eigenvectors of $W$ for its extreme eigenvalues, and they do
@@ -1583,21 +1595,25 @@ $g_{25}$ to $10^{-3}$ for $\delta\ge\TCWmonReach$ and does not exceed it. Finall
 $W=1\oplus s1$ and $W=\mathrm{diag}(1,\ell)\oplus s1$, $s\in\{\frac14,4\}$, and intra-block contrast
 $\delta\in\{0.3,0.5,0.7\}$, the computation confirms Theorem~D: for central $W$ the largest value found for the items that
 hold for every trace is $\TCSectorCentral$; for items 11 and 24 the search reproduces the exact values for the fixed
-density to $\TCSectorDet$; with intra-block contrast no value exceeds the $M_2$ envelope (largest relative excess
+density to $\TCSectorDet$; with intra-block contrast no value exceeds the $M_2$ envelope (largest relative difference
 $\TCSectorExcess$), and where Theorem~D gives equality the search reaches it to $10^{-3}$ in $\TCSectorReached$ of
 $\TCSectorTotal$ cases.
 
 \subsection{Both contrasts}\label{sec:bothcontrasts}
 
 For the 14 items with operator variables that are not projections, a second computation prescribes the contrast
-$\delta'$ of all operator variables as well ($\TCCStarts$ starts per grid point, $\TCCSteps$ gradient steps, best point
+$\delta'$ of all operator variables as well (in items 10 and 25 the variables of prescribed contrast are $A$ and $B-A$;
+$\TCCStarts$ starts per grid point, $\TCCSteps$ gradient steps, best point
 recomputed with $\TCCDigits$ digits; $\TCCSeconds$~s on four CPU processes). The bottom rows of
 Figures~\ref{fig:mc-gardner}--\ref{fig:mc-wmon} (Appendix~\ref{app:mc}) show the computed $V(0.9,\delta')$. At
 $\delta'=0$ no item is violated, as Proposition~\ref{prop:scalar} requires, but beyond that the dependence on $\delta'$
-takes several forms. For items 1--3 the values follow Theorem~\ref{thm:gardnerD} to $\TCCGardnerDev$ (relative, $n=2,3$,
-all grid points), and item~8 follows Proposition~\ref{prop:youngtwo} on $M_2$; here the violation grows smoothly with
-both contrasts. Items 6, 10, 12, 13, 24 and~25, in contrast, show no violation until $\delta'$ is close to $1$: at
-$\delta=0.9$ the first grid value of $\delta'$ with a violation above $10^{-4}$ is \TCCThresholds. For items 12 and 24
+takes several forms. For item~1 the values follow Theorem~\ref{thm:gardnerD} to $\TCCGardnerDev$ (relative, $n=2,3$,
+all grid points). For items 2 and~3 the theorem gives only the upper bound $\kappa(\delta\delta')-1$; on $M_2$ the
+search reaches it (to $\TCCGardnerDevEven$), and on $M_3$ it reaches the odd-dimensional value of item~1 up to the
+relative differences $\TCCTriangleDevOdd$ (item~2) and $\TCCRealpartDevOdd$ (item~3). Item~8 follows
+Proposition~\ref{prop:youngtwo} on $M_2$; here the violation grows smoothly with both contrasts. Items 6, 10, 12, 13, 24
+and~25, in contrast, show no violation above $10^{-4}$ for $\delta'<\TCCThresholdMin$: at $\delta=0.9$ the first grid
+value of $\delta'$ with a violation above $10^{-4}$ is \TCCThresholds\ (``--'': none on the grid). For items 12 and 24
 Section~\ref{sec:thresholds} proves such thresholds, and for item~24 the computed values agree with the exact envelope of
 Proposition~\ref{prop:item24}; for items 6, 10, 13 and 25 the thresholds remain observations. The determinant inequality
 (item~11) behaves differently again: it is violated most strongly when the contrast of $A$ is close to that of $W$, since
@@ -1605,9 +1621,21 @@ its extremiser is $W^{-1}$, and in $M_2$ items 4 and~7 also have an interior max
 contrast of $|A|$ for the extremiser $A=\sqrt a\,e_1e_2^*+\sqrt b\,e_2e_1^*$), which the additional dimension of $M_3$
 removes. Finally, item~16 does not see the contrast of the operators at all: it is invariant under $A\mapsto A+c$,
 $B\mapsto B+c$, which makes both contrasts arbitrarily small without changing the quotient, so $V(\delta,\delta')$ equals the
-envelope with free operators for every $\delta'>0$ and jumps to $0$ at $\delta'=0$. On $M_3$ two-level operators of
-contrast $\delta'$ reproduce the values of general spectra with the same contrast except in items 4, 6 and~7 near
-$\delta'=1$, where the extremisers need a third eigenvalue.
+envelope with free operators for every $\delta'>0$ and jumps to $0$ at $\delta'=0$.
+
+The same computation restricted to two-level operators of contrast $\delta'$ reproduces the violations found with
+general spectra on $M_{\TCCTwoLevelDim}$ (to $1\%$, wherever they exceed $10^{-4}$) except in the items and at the
+grid values \TCCTwoLevelShort. In item~4 the extremisers on $M_3$ apparently need a third eigenvalue (with the contrast
+free, the extremiser has the eigenvalues $\sqrt a,\sqrt b,0$; Section~\ref{sec:projsuffice}), and in items 6 and~7 the two-level values fall further behind as $\delta'\to1$. In item~25 two-level operators give no violation
+at $\delta=0.9$, $\delta'=0.99$ and $0.999$, where general spectra give $1.9\times10^{-4}$ and $1.5\times10^{-3}$; in
+item~11 they fall short most at $\delta=0.6$, $\delta'=0.9$ ($0.017$ against $0.045$), and in item~2 by about
+$10\%$ at $\delta=0.3$. In item~13 at $\delta=0.9$ two-level operators give no violation for $\delta'=0.9$--$0.99$,
+where general spectra give $0.019$--$0.11$, but this is a failure of the restricted search rather than evidence: on
+$M_3$ it returns the same values at every $\delta'\le0.99$, i.e.\ it does not move away from its starting points. On
+$M_2$, where every operator of contrast $\delta'$ is two-level, the two searches should agree; they differ in item~7
+($\delta=0.3$, $\delta'=0.9$) and in item~13 ($\delta=0.9$, $\delta'=0.9$ and $0.95$, where the restricted search finds
+the larger value), which indicates the reliability of the search near $\delta'=1$. In item~10 the two classes differ only
+where neither violates the inequality.
 
 \subsection{Projections and two-level operators}\label{sec:projsuffice}
 
@@ -1637,17 +1665,22 @@ column only checks the restricted parametrisation. ``--'': item~11 needs an inve
 \end{table}
 
 The result is an observation with clear exceptions, not a general principle. Scaled projections attain the computed
-envelope for items 1, 2, 3, 8, 10, 12, 16 (to within $0.3\%$) and 24 in $M_2$ and $M_3$, and for item~13 in $M_2$. In
-items 6 and~7 the supremum is approached only in a degenerate limit in which an operator becomes a projection and both
-sides of the inequality vanish; restricting the search to projections (item~6) or to two-level operators (item~7) brings
-it closer to the proved lower bounds $\kappa-1$ and $\kappa^2-1$ than the unrestricted search, but for item~7 the violation
-at projections themselves is zero. Two-level operators that are not projections are needed for item~4 (the extremiser has
+envelope for items 1, 2, 3, 8, 10, 12, 16 (to within $\TCCProjGap\%$) and 24 in $M_2$ and $M_3$, and for item~13 in $M_2$.
+The restricted searches are less reliable than the unrestricted one: two-level operators include the scaled projections,
+so every entry of the two-level column below the projection column is a failure of the restricted search, as are, on
+$M_2$, where every operator is two-level, the values $0$ for item~6 and $0.0329$ for item~13 at $\delta=0.5$. In items 6
+and~7 the supremum is approached only in a degenerate limit in which an operator becomes a projection and both sides of
+the inequality vanish; restricting the search to projections (item~6) brings it closer to the proved lower bound
+$\kappa-1$ than the unrestricted search, on $M_2$ and on $M_3$, and restricting it to two-level operators (item~7) brings
+it closer to $\kappa^2-1$ on $M_2$ (but not on $M_3$); for item~7 the violation at projections themselves is zero. Two-level operators that are not projections are needed for item~4 (the extremiser has
 $|A|$ with the eigenvalues $\sqrt a,\sqrt b$), item~11 ($A=W^{-1}$) and item~25 (rank-one $A$ gives no violation,
 Proposition~\ref{prop:wmon}). In $M_3$ the extremiser of item~4 lives on a two-dimensional subspace and vanishes on its
-complement, so it has the three eigenvalues $\sqrt a,\sqrt b,0$ and the restricted search misses it. Finally, operators
-that are not two-level do strictly better in two cases: in $M_3$ at $\delta=0.9$ item~13 is violated by $0.3048$, against
-$0.2197$ for projections and for $M_2$, and item~6 exceeds $\kappa-1$ for $n\ge3$. In short, projections and their affine
-images are a good first test of a characterisation, but they do not always realise the largest violation.
+complement, so it has the three eigenvalues $\sqrt a,\sqrt b,0$ and the restricted search misses it. Finally,
+general operators give strictly larger violations than the restricted searches find in two cases: in $M_3$ at
+$\delta=0.9$ item~13 is violated by $0.3048$, against $0.2197$ for projections and for $M_2$, and for item~6 with
+$n\ge3$ the unrestricted search of the previous sections exceeds $\kappa-1$, while the restricted searches stay below
+it. In short, projections and their affine images are a good first test of a characterisation, but they do not always
+realise the largest violation.
 
 \subsection{Random sampling}\label{sec:montecarlo}
 
@@ -1676,9 +1709,11 @@ or an invertible operator is needed).}
 \label{tab:montecarlo}
 \end{table}
 
-No sample exceeds the computed envelope: the largest ratio of a sampled violation to the envelope at the upper edge of
-its bin is $\TMCWorstRel$ over all items and dimensions, the excess over $1$ being due to the linear interpolation between
-grid values. This is an independent consistency check of the computed values. The samples also show why sampling alone is
+No sample exceeds the computed envelope by more than the interpolation between grid values allows: the largest ratio of
+a sampled violation to the envelope, interpolated linearly in $\Delta(W)$ at the sample's own contrast, is
+$\TMCWorstRel$ over all items and dimensions. Ratios slightly above $1$ are possible because the linear interpolation
+underestimates the envelope where it is concave between grid values, and for the items without a closed form the
+computed envelope is only a lower bound. This is an independent consistency check of the computed values. The samples also show why sampling alone is
 a poor test of a characterisation. Random operators rarely come close to the envelope, and for monotonicity,
 subadditivity, the Powers--St{\o}rmer inequality and the weighted monotonicity fewer than $0.1\%$ of the samples (or none)
 violate the inequality at all, so a Monte Carlo study alone would suggest that these inequalities hold for every
@@ -1725,12 +1760,24 @@ central elements~\cite{novikov2015}.
 \paragraph{Code availability.} The library, the programs that compute all numbers, tables and figures, and the tests
 are available at \url{https://github.com/andre-a-no/von_neumann_type_i} (MIT licence).
 
+\paragraph{Reproducing the computations.} The programs are in the directory \texttt{scripts} of the repository and
+run in this order, since later ones read the results of earlier ones:
+\texttt{trace\_\allowbreak characterizations.py --mode full} (the envelopes with free operators, Tables~\ref{tab:classes}
+and~\ref{tab:values}; $\TCSeconds$~s), \texttt{trace\_\allowbreak contrast.py --mode full} (both contrasts and the
+restricted searches, Table~\ref{tab:projsuffice}; $\TCCSeconds$~s), then \texttt{trace\_\allowbreak montecarlo.py}
+(Table~\ref{tab:montecarlo} and Appendix~\ref{app:mc}), \texttt{contrast\_\allowbreak operations.py}
+(Section~\ref{sec:composite}), \texttt{trace\_\allowbreak envelopes\_\allowbreak figures.py}
+(Figure~\ref{fig:gardner1d}) and \texttt{trace\_\allowbreak paper\_\allowbreak schematics.py}
+(Figures~\ref{fig:angle}, \ref{fig:ladder} and~\ref{fig:square}). Figure~\ref{fig:gardner2d} comes from
+\texttt{bounds\_\allowbreak search.py --mode full} of the pipeline of the companion paper~\cite{lib}. Finally,
+\texttt{make\_\allowbreak arxiv\_\allowbreak trace.sh} compiles this paper from the generated numbers and figures.
+
 \clearpage
 \appendix
 \section{Random samples and computed envelopes, item by item}\label{app:mc}
 
 Each figure shows one inequality, with one panel per dimension. Top row: the normalised violation $(\cL-\cR)/\cN$
-(labelled $(L-R)/N$ in the panels) of the random samples (grey) and, where the variables are not projections, of the
+of the random samples (grey) and, where the variables are not projections, of the
 scaled-projection samples (orange) against $\Delta(W)$ on $M_2$, $M_3$, $M_4$; black: the computed envelope $V(\delta)$,
 a certified lower bound for the supremum, joined by straight lines. Bottom row (items with operator variables): samples
 with $\Delta(W)=0.9$ and all operator variables of contrast $\delta'$, against $\delta'$, on $M_2$ and $M_3$, with the
