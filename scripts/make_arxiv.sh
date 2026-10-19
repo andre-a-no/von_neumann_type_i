@@ -7,6 +7,7 @@ cd "$(dirname "$0")/../man/article"
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$tmp/figures" "$tmp/generated" "$tmp/usecases"
 cp vn_algebra_pytorch.tex sec_control.tex "$tmp/"
+for f in sec_learn_tomography.tex sec_learn_markov.tex; do [ -f "$f" ] && cp "$f" "$tmp/"; done
 cp usecases/*.tex "$tmp/usecases/"
 cp figures/*.pdf "$tmp/figures/"
 cp generated/*.tex "$tmp/generated/"

@@ -12,6 +12,11 @@ Backward compatible: everything of 1.1.0 works unchanged. New: conversion to QuT
 Lindblad generators as trainable parameters, measurements and instruments.
 
 ### Added
+- `learn` module: quantum channels as trainable networks. `ChannelLayer` (Stinespring isometries, within one algebra
+  or between algebras with allowed sector transitions), `UnitaryLayer`, `LindbladLayer` (continuous depth),
+  `Residual` ((1−p)·id + p·Φ, the completely positive skip connection; n blocks with p = t/n tend to exp(t(Φ − id))),
+  `PostSelect` (central projection, records the acceptance), `FeedForward` (instrument outcome in the centre, one
+  branch per outcome); losses and `count_parameters`. All are `torch.nn.Module`s; every parameter value is a channel.
 - `measurement` module (`POVM` and `Instrument` exported at top level): POVMs with a one-time check of positivity
   and normalisation, Born probabilities, batched multinomial sampling of counts (reproducible with a generator) and
   log-likelihoods; constructors `POVM.sectors` (measurement of the charge), `POVM.basis` (rank-one

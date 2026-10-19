@@ -96,7 +96,9 @@ alternative and validate the library against exact results and against QuTiP and
 illustrated by a noisy XY mixer of the quantum alternating operator ansatz, whose Hamming-weight sectors form the
 algebra: one batched run gives, for all noise models and rates, the exact effect of post-selection on the weight, and
 optimising the controls for the post-selected fidelity shows that the measurement of the conserved charge, not the
-noise-aware design, removes most of the error.
+noise-aware design, removes most of the error. Finally, channels between algebras become layers of trainable networks,
+which we apply to learning the noise of the register from measurement counts and to the expressivity of residual
+networks of channels.
 \end{abstract}
 
 \section*{Program summary}
@@ -302,8 +304,8 @@ runnable tutorials in which every construction of the lectures (traces, conditio
 construction, channels, Lindblad dynamics) is an object one can sample and test.
 \end{description}
 A fifth group is emerging: researchers who treat quantum channels as layers of trainable networks. For them the
-library offers channels and generators as parameters with gradients; Section~\ref{sec:limitations} describes the
-direction we are taking.
+module \texttt{learn} provides channel, unitary and Lindblad layers between algebras, residual blocks, post-selection
+and feed-forward through the centre as \texttt{torch.nn} modules (Section~\ref{sec:learn}).
 
 \paragraph{When to use something else.} The library is not a circuit simulator, a tensor-network code or a large-scale
 exact-diagonalisation package. For the dynamics of one large system, QuTiP, dynamiqs or QuantumToolbox.jl are faster and
@@ -675,6 +677,8 @@ product, quadratic representation, spin factors\\
 \texttt{permutational} & $N$ two-level systems with permutation symmetry: total-spin sectors, collective operators,
 Dicke states, local jumps between sectors (\texttt{PermutationalLindbladian})\\
 \texttt{interop} & conversion to and from dense matrices, QuTiP and dynamiqs (chain layout, pinching of maps)\\
+\texttt{learn} & channels as trainable networks: channel, unitary and Lindblad layers, residual blocks, post-selection,
+feed-forward through the centre; losses (Section~\ref{sec:learn})\\
 \bottomrule
 \end{tabular}
 \caption{Modules of \texttt{torch\_vn\_algebra}.}
@@ -1487,6 +1491,103 @@ The run for $n=10$ took 930\,s on a CPU for 28 settings, dominated by dense prod
 solvers~\cite{lambert2026,mercurio2025,dynamiqs}; comparisons with them are left for future work.
 
 \input{sec_control.tex}
+
+\section{Quantum channels as trainable networks}\label{sec:learn}
+
+The previous sections optimise a handful of parameters. The same differentiable objects can be stacked into networks
+whose layers are channels, and trained on data. This section describes the module \texttt{learn} that does this, the
+dictionary behind it, and two experiments that show what the algebra contributes: tomography in the algebra as
+training (Section~\ref{sec:learn-tomo}), and residual networks of channels as Markovian evolutions
+(Section~\ref{sec:learn-markov}).
+
+\paragraph{The dictionary.} A channel is a linear map of density matrices, so a network of channels is a deep
+\emph{linear} network with a constraint on every layer, and the analogy with neural networks is precise only where
+the constraint is respected. By Stinespring's theorem~\cite{stinespring1955} a channel is an isometry into a larger
+space followed by a partial trace: a linear layer followed by a contraction, whose width is the Kraus rank. Composition
+of channels is depth; a Lindblad evolution $e^{t\mathcal L}$ is a block of continuous depth, the open-system form of a
+neural ODE~\cite{chen2018,e2017}; a conditional expectation onto a subalgebra is a pooling layer. The sector structure
+of~\eqref{eq:M} is a structured sparsity of the weights: a channel that respects the sectors has Kraus operators with
+blocks only on the allowed transitions, and correspondingly fewer parameters. Table~\ref{tab:learn} lists the layers.
+
+\begin{table}[t]
+\centering\footnotesize
+\begin{tabular}{p{0.2\textwidth}p{0.34\textwidth}p{0.36\textwidth}}
+\toprule
+layer & map & network analogue\\
+\midrule
+\texttt{ChannelLayer} & Stinespring isometry per input sector, within one algebra or between algebras with allowed
+sector transitions & linear layer plus contraction; width = Kraus rank; sparsity = sectors\\
+\texttt{UnitaryLayer} & $\rho\mapsto U\rho U^*$, $U=e^{-iH}$, $H=H^*\in\M$ & unitary layer~\cite{arjovsky2016}\\
+\texttt{LindbladLayer} & $\rho\mapsto e^{t\mathcal L}\rho$, $\mathcal L$ a free GKSL generator & continuous depth~\cite{chen2018}\\
+\texttt{Residual} & $\rho\mapsto(1-p)\rho+p\,\Phi(\rho)$ & skip connection~\cite{he2016}\\
+\texttt{PostSelect} & $\rho\mapsto P\rho P/\Tr(P\rho P)$, $P$ central & nonlinear activation; cost $\Tr(P\rho P)$\\
+\texttt{FeedForward} & instrument, outcome in the centre, branch per outcome & fan-out skip, classical only\\
+\bottomrule
+\end{tabular}
+\caption{Layers of \texttt{torch\_vn\_algebra.learn}. Every layer is a \texttt{torch.nn.Module} that maps a batch of
+states to a batch of states; every value of its parameters is a physical map.}
+\label{tab:learn}
+\end{table}
+
+\paragraph{Every parameter value is a channel.} A \texttt{ChannelLayer} holds free matrices $Z_c$ and uses the
+isometries $V_c=Z_c(Z_c^*Z_c)^{-1/2}$ (from \texttt{StinespringParam} of the module \texttt{optimize}); a
+\texttt{LindbladLayer} holds a free Hamiltonian and free jump operators, i.e.\ a Cholesky-type factor of the
+Kossakowski matrix (\texttt{LindbladParam}). No constraint is imposed and no projection is needed, so any
+optimiser of \texttt{torch.optim} trains the network without leaving the set of channels, and gradients go through $(Z_c^*Z_c)^{-1/2}$ and
+through the dynamics by the Daleckii--Krein backward pass of Section~\ref{sec:calculus}. Listing~\ref{lst:learn} shows
+a small network trained on input--output pairs; the losses provided are the infidelity, the trace distance, the
+relative entropy and the negative log-likelihood of measurement counts (\texttt{measurement.POVM}).
+
+\begin{lstlisting}[float=t, caption={A network of channels of $\M=M_1\oplus M_3\oplus M_2$, trained end to end with
+\texttt{torch.optim}. Every iterate is a channel.}, label=lst:learn]
+import torch
+from torch import nn
+from torch_vn_algebra import TypeIAlgebra, channels, learn, states
+
+alg = TypeIAlgebra([1, 3, 2], [1, 3, 2], precision='double')
+X = states.random_density_matrix(alg, batch_size=16)           # inputs
+Y = channels.random_channel(alg, kraus_rank=3)(X)                # outputs of an unknown channel
+net = nn.Sequential(learn.UnitaryLayer(alg),
+                    learn.Residual(learn.ChannelLayer(alg, kraus_rank=2), p=0.5, learn_p=True),
+                    learn.LindbladLayer(alg, n_jumps=1))
+opt = torch.optim.Adam(net.parameters(), lr=0.05)
+for step in range(200):
+    loss = learn.infidelity(net(X), Y).mean()
+    opt.zero_grad(); loss.backward(); opt.step()
+\end{lstlisting}
+
+\paragraph{Where the nonlinearity comes from.} A composition of channels is again a channel, so depth adds no new
+maps: one Stinespring layer of sufficient width is universal, and a deep network of channels is a reparametrisation of
+that set, as a deep linear network is of the linear maps. As a function of the parameters the output is nonlinear, as a
+function of the input state it is linear; on encoded classical data this makes such a model a kernel method. A
+genuinely nonlinear layer needs one of three physical resources: post-selection, whose renormalisation by the
+acceptance $\Tr(P\rho P)$ is the activation (\texttt{PostSelect} records the acceptance, whose logarithm is the natural
+penalty, since acceptances multiply along the network); several copies of the state; or a mean-field limit of many
+symmetric systems, which the module \texttt{permutational} computes exactly in its total-spin sectors.
+
+\paragraph{Skip connections.} The residual block of a ResNet~\cite{he2016}, $x\mapsto x+f(x)$, is not completely
+positive for channels. Its counterpart \texttt{Residual} is the convex combination $(1-p)\,\mathrm{id}+p\,\Phi$: one
+step of a jump process that applies $\Phi$ at rate $p$, so that $n$ blocks with $p=t/n$ tend to
+$e^{t(\Phi-\mathrm{id})}$, the semigroup of the GKSL generator whose jump operators are the Kraus operators of $\Phi$
+(verified in the test suite). ResNets become Lindblad evolutions, with the consequence studied in
+Section~\ref{sec:learn-markov}. Skips that copy activations forward (DenseNet, U-Net) have no counterpart for quantum
+states, which can neither be cloned nor broadcast~\cite{barnum1996}; only the commutative part can be copied. In the
+algebra this is the centre: an instrument writes its outcome into the centre of $\bigoplus_j\M$
+(\texttt{measurement.Instrument.as\_channel}), and \texttt{FeedForward} applies a branch per outcome, the quantum form of
+a fan-out connection. A block-diagonal channel $\bigoplus_k\Phi_k$ is likewise a mixture of experts whose router, the
+measurement of the sector, does not disturb the state.
+
+\paragraph{Relation to other work.} Networks of completely positive layers trained on data were introduced as
+dissipative quantum neural networks~\cite{beer2020}; process tomography with learned models is done with tensor
+networks~\cite{torlai2023}, and state tomography with neural-network states~\cite{torlai2018}; networks with
+parameters in a $C^*$-algebra were proposed in~\cite{hashimoto2022}, and equivariant linear layers are elements of a
+commutant~\cite{cohen2016,finzi2021}. What the library adds is the algebra: layers between algebras with different
+sector structures, the centre as the carrier of classical information, losses defined through it, and the batching and
+gradients of the previous sections. The plan for this direction, with further experiments, is kept in the repository
+(\texttt{ROADMAP\_learning.md}).
+
+\IfFileExists{sec_learn_tomography.tex}{\input{sec_learn_tomography.tex}}{}
+\IfFileExists{sec_learn_markov.tex}{\input{sec_learn_markov.tex}}{}
 % goes here, at the end of Section~\ref{sec:noisy}.
 
 \section{Applications in the companion papers}\label{sec:usecases}
@@ -1568,19 +1669,10 @@ and second derivatives of $f(A)$ are correct at non-degenerate spectra only.
 \item \emph{Divergences and scale.} For small $\alpha$ the sandwiched divergence of ill-conditioned states is not
 accurate (hence $\alpha\ge0.2$ in Section~\ref{sec:renyi}). Choi matrices, superoperators and $e^{t\mathcal L}$ work
 with $k_c^2\times k_c^2$ matrices and are limited to blocks of a few tens; RK4 and the splitting scale further.
-\item \emph{Learning in the algebra.} Since a Hamiltonian or Lindblad evolution in the library is a differentiable
-composition of block-diagonal maps, a discretised evolution is a deep network whose layers are channels of the algebra,
-and its training is the continuous-depth idea of neural ordinary differential equations~\cite{chen2018} with the
-constraints of quantum mechanics built in: unitary layers as in unitary recurrent networks~\cite{arjovsky2016},
-completely positive layers as in dissipative quantum neural networks~\cite{beer2020}, and conditional expectations as
-pooling. Equivariant linear layers are elements of the commutant, i.e.\ of an algebra~\eqref{eq:M}, by Schur's
-lemma~\cite{cohen2016,finzi2021}, and networks with parameters in a $C^*$-algebra have been proposed
-in~\cite{hashimoto2022}. The library provides the primitives: parametrised unitaries and spectra, channels within and between algebras
-and Lindblad generators as parameters (Section~\ref{sec:optimisation}), measurements and instruments, and gradients
-through all of them and through the dynamics. Network architectures built from these pieces (residual blocks as steps
-of a jump process, feed-forward through the centre, encoders into smaller algebras), tomography in symmetry algebras
-and training viewed as a dynamics of the channel are the main direction of future work; the plan is kept in the
-repository (\texttt{ROADMAP\_learning.md}).
+\item \emph{Learning.} The layers of Section~\ref{sec:learn} are small: dense Kraus blocks and dense generators, trained
+on simulated data for registers of a few qubits. Encoders into smaller algebras, tomography of larger registers with
+sparse measurements, training viewed as a dynamics of the channel and certified upper bounds for the learned maps are
+not implemented; the plan is kept in the repository (\texttt{ROADMAP\_learning.md}).
 \item \emph{Scope.} Finite dimensions and Type~I only; no tensor-network methods. Sparse methods exist only for sector
 Hamiltonians and for jumps that map basis vectors to basis vectors; other jumps between sectors are stored densely.
 Results are cross-checked against QuTiP and QuSpin in the test suite, and the permutational Lindblad solver is timed
@@ -1871,6 +1963,23 @@ degenerate cases'', arXiv:2011.04366 (2020).
   ``Training deep quantum neural networks'', Nat.\ Commun.\ 11 (2020), 808.
 \bibitem{hashimoto2022} Y.~Hashimoto, Z.~Wang, T.~Matsui, ``$C^*$-algebra net: a new approach generalizing neural
   network parameters to $C^*$-algebra'', Proc.\ 39th Int.\ Conf.\ Machine Learning, PMLR 162 (2022), 8523--8534.
+\bibitem{stinespring1955} W.~F.~Stinespring, ``Positive functions on $C^*$-algebras'', Proc.\ Amer.\ Math.\ Soc.\ 6
+  (1955), 211--216.
+\bibitem{e2017} W.~E, ``A proposal on machine learning via dynamical systems'', Commun.\ Math.\ Stat.\ 5 (2017), 1--11.
+\bibitem{he2016} K.~He, X.~Zhang, S.~Ren, J.~Sun, ``Deep residual learning for image recognition'', Proc.\ IEEE CVPR
+  2016, 770--778.
+\bibitem{barnum1996} H.~Barnum, C.~M.~Caves, C.~A.~Fuchs, R.~Jozsa, B.~Schumacher, ``Noncommuting mixed states cannot
+  be broadcast'', Phys.\ Rev.\ Lett.\ 76 (1996), 2818--2821.
+\bibitem{torlai2018} G.~Torlai, G.~Mazzola, J.~Carrasquilla, M.~Troyer, R.~Melko, G.~Carleo, ``Neural-network quantum
+  state tomography'', Nat.\ Phys.\ 14 (2018), 447--450.
+\bibitem{torlai2023} G.~Torlai, C.~J.~Wood, A.~Acharya, G.~Carleo, J.~Carrasquilla, L.~Aolita, ``Quantum process
+  tomography with unsupervised learning and tensor networks'', Nat.\ Commun.\ 14 (2023), 2858.
+\bibitem{toth2010} G.~T\'oth, W.~Wieczorek, D.~Gross, R.~Krischek, C.~Schwemmer, H.~Weinfurter, ``Permutationally
+  invariant quantum tomography'', Phys.\ Rev.\ Lett.\ 105 (2010), 250403.
+\bibitem{wolfcirac2008} M.~M.~Wolf, J.~I.~Cirac, ``Dividing quantum channels'', Commun.\ Math.\ Phys.\ 279 (2008),
+  147--168.
+\bibitem{wolf2008} M.~M.~Wolf, J.~Eisert, T.~S.~Cubitt, J.~I.~Cirac, ``Assessing non-Markovian quantum dynamics'',
+  Phys.\ Rev.\ Lett.\ 101 (2008), 150402.
 \end{thebibliography}
 }
 

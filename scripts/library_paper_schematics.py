@@ -79,7 +79,7 @@ def ecosystem():
     box(ax, 10.0, 7.0, 5.7, 3.3, 'torch_vn_algebra',
         'the algebra $\\oplus_c M_{k_c}$ as the data type:\ncentre, traces, states, channels\n'
         'between algebras, inclusions, index,\nJordan product, contrast; batched\n'
-        'sampling, optimisation, learning,\ncertified values', edge=BLUE, fill='#f2f7fd', title_color=BLUE, lw=1.4)
+        'sampling, optimisation, trainable\nchannel networks (learn)', edge=BLUE, fill='#f2f7fd', title_color=BLUE, lw=1.4)
     box(ax, 1.4, 3.4, 4.8, 2.5, 'optimisation',
         'convex (SDP): CVXPY, PICOS,\nQETLAB; manifolds: pymanopt,\ngeoopt, Manopt.jl')
     box(ax, 6.55, 3.3, 2.4, 1.6, 'RepLAB', 'commutants of\ngroup actions', fs=7.5)

@@ -87,6 +87,9 @@ This README is the entry point of the repository:
   [`example_inclusions.py`](examples/example_inclusions.py)).
 - **Quantum Rényi divergences** – Petz and sandwiched Rényi divergences, Umegaki relative entropy, D_max, Petz recovery
   maps ([`example_divergences.py`](examples/example_divergences.py)).
+- **Quantum channels as trainable networks** (module `learn`) – channel layers within and between algebras (every
+  parameter value a channel), unitary and Lindblad layers, residual blocks (1−p)·id + p·Φ, post-selection as the
+  nonlinear layer, feed-forward of measurement outcomes through the centre; `torch.nn` modules trained with `torch.optim`.
 - **Interoperability with QuTiP and dynamiqs** – operators, states, channels and Lindblad jumps to and from
   `qutip.Qobj` and dynamiqs arrays, with the computational-basis layout of spin chains; the Lindblad solvers agree with
   `qutip.mesolve` and `dynamiqs.mesolve` to 1e-10 (`tests/test_interop.py`).
@@ -253,6 +256,7 @@ print((Lt(rho) - rho_t[-1]).frobenius_norm().max())
 | `divergences` | `petz_renyi_divergence`, `sandwiched_renyi_divergence`, `renyi_divergence` (with the limits α = 0, 1, ∞), `umegaki_relative_entropy`, `max_relative_entropy`, `min_relative_entropy`, `sector_contributions`; `PetzRecovery` / `petz_recovery` (also rotated), `universal_recovery`; `lp_norm`, `kosaki_norm` |
 | `jordan` | `jordan_product`, `jordan_multiplication`, `quadratic_representation`, `jordan_triple`, `jordan_power`, `transpose_map`; `jordan_algebra_generated`, `star_algebra_self_adjoint_part`, `is_jordan_subalgebra`, `compare_with_star_algebra` → `JordanAlgebra`; `SpinFactor`, `anticommuting_symmetries` |
 | `interop` | `to_dense`, `from_dense`, `channel_to_dense` (Kraus operators P_d K_i of a map into the algebra); `to_qutip`, `from_qutip`, `jumps_to_qutip` (collapse operators for `qutip.mesolve`); `to_dynamiqs`, `jumps_to_dynamiqs`; `chain_basis` (layout `layout=chain`: QuTiP's qubit order, \|0⟩ = spin up). QuTiP and dynamiqs are optional (`pip install torch_vn_algebra[interop]`) |
+| `learn` | `ChannelLayer`, `UnitaryLayer`, `LindbladLayer`, `Residual`, `PostSelect`, `FeedForward` (`torch.nn.Module`s mapping states to states); losses `infidelity`, `trace_distance`, `relative_entropy`, `negative_log_likelihood`; `count_parameters` |
 | `measurement` | `POVM` (check of positivity and normalisation, Born `probabilities`, multinomial `sample`, `log_likelihood`; `sectors` (the charge), `basis` (computational basis of a `SpinChain`), `from_unitary` (tomography settings), `combine` (randomised measurements)), `Instrument` (`lueders`, `from_povm`, conditional `post_states`, `average_channel`, `as_channel`: an `InterSectorChannel` into ⊕_j M that records the outcome in the centre), `fisher_information` (classical Fisher information by autograd) |
 
 ### Inclusions, symmetries and divergences
