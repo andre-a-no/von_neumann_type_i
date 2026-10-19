@@ -30,7 +30,7 @@
 
 % numbers and tables produced by scripts/*.py (bash scripts/run_all.sh [quick|full] [device])
 \newcommand{\gen}[1]{\IfFileExists{generated/#1.tex}{\input{generated/#1.tex}}{}}
-\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}\gen{renyi_threshold}\gen{connes_stormer}\gen{permutational}\gen{trace_characterizations}\gen{symmetry_resolved}\gen{noisy_xy}\gen{architecture}
+\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}\gen{renyi_threshold}\gen{connes_stormer}\gen{permutational}\gen{trace_characterizations}\gen{symmetry_resolved}\gen{noisy_xy}\gen{architecture}\gen{noisy_control}
 % generated/baselines.tex written by the current scripts/baselines.py defines \BaseMinKS and has a single-precision
 % GPU column; an older file has one GPU column (double precision) and one library column (GPU) for ground states.
 \ifdefined\BaseMinKS\newcommand{\BaseNew}{1}\else\newcommand{\BaseNew}{0}\fi
@@ -240,7 +240,8 @@ resolve them. Monte Carlo estimates agree with exact Haar, Weingarten, Page and 
 errors (Section~\ref{sec:validation}), and batched optimisation finds extremes that sampling misses
 (Section~\ref{sec:optimisation}). Sections~\ref{sec:chains} and~\ref{sec:symmetries} add spin chains, inclusions and
 symmetry reduction, and Section~\ref{sec:noisy} shows what this generality buys.
-% CONTROL-DEMO-INTRO: Section~\ref{sec:control} optimises ... in the noisy register of Section~\ref{sec:noisy}.
+Section~\ref{sec:control} turns the noisy register into a design problem: it optimises the controls of a Lindblad
+evolution for the post-selected fidelity, over a batch of noise models at once.
 The intended users are operator
 algebraists who test conjectures numerically, quantum information researchers who work with superselection rules or
 symmetric noise, and physicists who need many small symmetric problems, such as disorder realisations or noise sweeps,
@@ -1386,7 +1387,7 @@ The run for $n=10$ took 930\,s on a CPU for 28 settings, dominated by dense prod
 (Section~\ref{sec:limitations}). A single density matrix of dimension $2^{10}$ is within easy reach of dedicated
 solvers~\cite{lambert2026,mercurio2025,dynamiqs}; comparisons with them are left for future work.
 
-% CONTROL-DEMO: the subsection on a noise-aware optimisation in the noisy register (sec_control.tex, label sec:control)
+\input{sec_control.tex}
 % goes here, at the end of Section~\ref{sec:noisy}.
 
 \section{Applications in the companion papers}\label{sec:usecases}

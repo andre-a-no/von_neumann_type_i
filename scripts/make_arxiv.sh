@@ -6,7 +6,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../man/article"
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$tmp/figures" "$tmp/generated" "$tmp/usecases"
-cp vn_algebra_pytorch.tex "$tmp/"
+cp vn_algebra_pytorch.tex sec_control.tex "$tmp/"
 cp usecases/*.tex "$tmp/usecases/"
 cp figures/*.pdf "$tmp/figures/"
 cp generated/*.tex "$tmp/generated/"

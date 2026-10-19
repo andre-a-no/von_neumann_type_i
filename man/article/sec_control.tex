@@ -1,0 +1,133 @@
+% Use case: noise-aware, post-selected state preparation in the XY register (continues Section sec:noisy).
+% Numbers: scripts/noisy_xy_control.py -> generated/noisy_control.tex (macros \NC...), figures/noisy_control.pdf.
+% The file loads its macros itself if the preamble has not (\gen{noisy_control}).
+\IfFileExists{generated/noisy_control.tex}{\ifdefined\NCRows\else\input{generated/noisy_control.tex}\fi}{}
+\providecommand{\NCSegments}{4}\providecommand{\NCSettings}{12}\providecommand{\NCSteps}{--}\providecommand{\NCStepsZero}{--}\providecommand{\NCSubsteps}{2}
+\providecommand{\NCStarts}{--}\providecommand{\NCWarm}{--}\providecommand{\NCWarmLarge}{--}\providecommand{\NCLambda}{0.05}\providecommand{\NCEvalSubsteps}{20}\providecommand{\NCnMax}{6}
+\providecommand{\NCRows}{\multicolumn{9}{c}{\emph{run scripts/noisy\_xy\_control.py}}\\}
+\subsection{Noise-aware state preparation with post-selection}\label{sec:control}
+
+Section~\ref{sec:noisy} evaluated a fixed evolution. In practice the evolution is designed, and the design can take
+into account the noise and the fact that the Hamming weight will be measured. XY-QAOA needs an initial state in the
+feasible subspace, and the Dicke state $|D^n_w\rangle$, the uniform superposition of all strings of weight $w$, is the
+standard choice~\cite{hadfield2019,wang2020}. Streif et al.~\cite{streif2021} computed how likely such circuits are
+to stay in the feasible subspace under local noise. Botelho et al.~\cite{botelho2022} proposed post-selection on
+Hamming-weight subspaces for QAOA, an instance of symmetry verification~\cite{cai2023}. This raises a design question. Does a preparation that will be
+post-selected need different controls from one that will not, and how much does designing for the noise gain over
+a noiseless design? The question is an optimisation over the controls of a Lindblad evolution in
+$\M=\bigoplus_NM_{\binom nN}$, and its objective uses the centre of $\M$. It needs gradients through open-system
+dynamics in the sectors, the central projection $P_w$, and many noise settings at once. These are the three things the
+library provides.
+
+\paragraph{Parametrisation.} A ring of $n$ qubits starts in $|1^w0^{n-w}\rangle$, $w=n/2$, and is driven during a time
+$T$ by $S=\NCSegments$ piecewise-constant segments of length $T/S$ with Hamiltonians
+\begin{equation}\label{eq:control}
+H_s=\sum_{\langle ij\rangle}J_{ij,s}\,\tfrac12\bigl(S^+_iS^-_j+S^-_iS^+_j\bigr)+\sum_ih_{i,s}S^z_i
++V_s\sum_{\langle ij\rangle}S^z_iS^z_j,\qquad |J_{ij,s}|,|h_{i,s}|,|V_s|\le1,\quad 0<T\le2n.
+\end{equation}
+These are bond-resolved XY couplings, local fields and a uniform phase-separator term. Every term commutes with $N$,
+so the controls stay in $\M$. The bond terms are \texttt{SpinChain.bond(i, j, Jxy, Jz)}, and $H_s$ is a linear
+combination of them with trainable coefficients. Without the fields the target cannot be reached. The global spin
+flip $\prod_iX_i$ commutes with all bond terms and maps sector $n/2$ to itself, the Dicke state is even under it, and
+$|1^w0^{n-w}\rangle$ has equal weight on both parities, so $F\le\frac12$. With $V_s=0$ as well, the evolution is
+quadratic in Jordan--Wigner fermions and cannot leave the Slater determinants. The noise consists of the four models of
+Section~\ref{sec:noisy} ($T_1$ at zero temperature, thermal, dephasing and mixed), each at the rates $\gamma=0.003$,
+$0.01$ and $0.03$, so the batch has $K=\NCSettings$ settings. Each segment is integrated over unit time with $H_s$
+replaced by $(T/S)H_s$ and jump coefficients $\sqrt{\gamma T/S}$ (\texttt{SectorJump.scaled}), so $\rho(T)$ is
+differentiable in all controls and in $T$.
+
+\paragraph{Objectives.} With $F_k=\langle D^n_w|\rho_k(T)|D^n_w\rangle$ for noise setting $k$,
+$p_k=\Tr(P_w\rho_k(T))$ the acceptance and $F_{\mathrm{post},k}=F_k/p_k$ the fidelity of the Lüders-conditioned state
+(\texttt{condition\_on}), we compare three designs:
+(i) the noiseless design, which maximises $F_0-\lambda T/T_{\max}$ without noise, $\lambda=\NCLambda$. The penalty
+pushes $T$ close to the shortest time at which the controls reach $F_0\approx1$, which is the most favourable choice
+for a design that ignores the noise;
+(ii) the noise-aware design without post-selection, which maximises $\bar F=\frac1K\sum_kF_k$; and
+(iii) the noise-aware design with post-selection, which maximises $\bar F_{\mathrm{post}}=\frac1K\sum_kF_{\mathrm{post},k}$.
+By Proposition~\ref{prop:noisy}(a), $p_k$ depends on $T$ and the rates but not on the controls. At fixed $T$,
+therefore, $F_k=p_k(T)F_{\mathrm{post},k}$, and (ii) and (iii) differ only in the weights $p_k$ of the settings and in
+the choice of $T$: design (ii) pays for the detected loss $\Gamma_wT$, design (iii) does not. Each objective is
+maximised by \texttt{optimize.extremize} (Adam, \NCSteps\ steps; \NCStepsZero\ for (i)). Every evaluation is a
+single batched \texttt{lindblad\_evolve} per segment for all starts and all $K$ settings (\texttt{method='kraus'},
+\NCSubsteps\ steps per segment). The noiseless design is the best of \NCStarts\ random starts. Designs (ii) and (iii)
+start from the \NCWarm\ ($n=4$) or \NCWarmLarge\ ($n=6$) best noiseless solutions, and the starts of (iii) also include
+the solution of (ii).
+
+\begin{table}[t]
+\centering\footnotesize
+\setlength{\tabcolsep}{3.2pt}
+\begin{tabular}{rlrrrrrrr}
+\toprule
+$n$ & design & $T$ & $F_0$ & $\bar p$ & $\bar F$ & $\bar F_{\mathrm{post}}$ & $\min_kF_k$ &
+$\min_kF_{\mathrm{post},k}$\\
+\midrule
+\NCRows
+\bottomrule
+\end{tabular}
+\caption[]{Dicke-state preparation on a ring of $n$ qubits by the three designs, evaluated over the $\NCSettings$ noise
+settings (four models, $\gamma\in\{0.003,0.01,0.03\}$). $F_0$: fidelity without noise. Means and minima over the
+settings; every value is from an independent evaluation with $\NCEvalSubsteps$ steps per segment.}
+\label{tab:control}
+\end{table}
+
+\begin{figure}[t]
+\centering\fig{noisy_control.pdf}{\textwidth}
+\caption{Designs (i)--(iii) for $n=\NCnMax$ under mixed noise
+($\gamma_\downarrow=\gamma_\varphi=\gamma$, $\gamma_\uparrow=0.1\gamma$) at rates inside and outside the training batch
+(grey bars). (a) Infidelity with $|D^n_w\rangle$ with (solid) and without (dashed) post-selection. (b) The same,
+relative to the noiseless design (i).}
+\label{fig:control}
+\end{figure}
+
+\paragraph{Results.} Table~\ref{tab:control} and Figure~\ref{fig:control} show the outcome. For $n=6$ the three
+designs use the times $T=\G{noisy_control}{\NCSixTOne}{--}$, $\G{noisy_control}{\NCSixTTwo}{--}$ and
+$\G{noisy_control}{\NCSixTThree}{--}$. Design (ii) is the fastest and gives up the most noiseless fidelity
+($F_0=\G{noisy_control}{\NCSixFZeroTwo}{--}$ against $\G{noisy_control}{\NCSixFZeroOne}{--}$ for (i)), because every
+unit of time costs it the detected loss as well. Design (iii) ignores that loss, so it spends more time than (ii) but
+still less than (i), because the undetected part of the noise (dephasing, and pairs of an up and a down jump) also
+grows with $T$. The order of the times is
+the same for $n=4$. Each noise-aware design wins on its own objective. Design (ii) has the largest mean raw fidelity,
+$\bar F=\G{noisy_control}{\NCSixFTwo}{--}$ against $\G{noisy_control}{\NCSixFOne}{--}$ for (i), and design (iii) the
+largest mean post-selected fidelity, $\bar F_{\mathrm{post}}=\G{noisy_control}{\NCSixFPostThree}{--}$ against
+$\G{noisy_control}{\NCSixFPostOne}{--}$. As factors on the infidelity, the noise-aware gains are modest:
+\G{noisy_control}{\NCSixGainRaw}{--} for (ii) and \G{noisy_control}{\NCSixGainPost}{--} for (iii) at $n=6$, and
+\G{noisy_control}{\NCFourGainRaw}{--} and \G{noisy_control}{\NCFourGainPost}{--} at $n=4$. In the worst setting of
+the batch the post-selected fidelity rises from \G{noisy_control}{\NCSixMinFPostOne}{--} for (i) to
+\G{noisy_control}{\NCSixMinFPostThree}{--} for (iii). Figure~\ref{fig:control}(b) shows the price. The noise-aware
+designs are worse than (i) at rates below the training batch (factor \G{noisy_control}{\NCSixRatioLow}{--} at
+$\gamma=10^{-3}$ for (iii)) and better above it (\G{noisy_control}{\NCSixRatioHigh}{--} at $\gamma=0.1$). Post-selection
+itself is far stronger than any choice of design. For the noiseless design it lowers the mean infidelity by a factor
+\G{noisy_control}{\NCSixPostFactor}{--} ($n=6$) and \G{noisy_control}{\NCFourPostFactor}{--} ($n=4$), and from the best
+design without post-selection, (ii), to design (iii) with it the factor is \G{noisy_control}{\NCSixGainTotal}{--} at
+$n=6$. The price is the acceptance, $\bar p=\G{noisy_control}{\NCSixPThree}{--}$ for (iii) against
+$\G{noisy_control}{\NCSixPTwo}{--}$ for (ii); it differs between the designs only through $T$. In short, once the
+noiseless design is as fast as the controls allow, little is left for noise-aware shaping. The centre does most of the
+work: the measurement of the weight removes the detected errors, and the optimiser then trades the remaining,
+undetected ones against time.
+
+\paragraph{Checks.} Every number in the table comes from a separate forward evaluation, not from the optimiser. It
+integrates in physical time, passes the rates as \texttt{rates} rather than as scaled coefficients, and uses
+\G{noisy_control}{\NCEvalSubsteps}{20} steps per segment. The optimiser's own values differ from it by at most
+\G{noisy_control}{$\NCRecheck$}{--}, the error of the coarse time steps. The acceptances agree with the birth--death
+process of Proposition~\ref{prop:noisy}(a) to \G{noisy_control}{$\NCBirthDeath$}{--}. At one point (design (iii),
+mixed noise, $\gamma=0.03$, $n=\G{noisy_control}{\NCnMax}{6}$), \texttt{method='exact'} reproduces $F$,
+$F_{\mathrm{post}}$ and $p$ to \G{noisy_control}{$\NCExactDiff$}{--}. A directional derivative of the objective of
+(iii) agrees with central differences to a relative \G{noisy_control}{$\NCGradErr$}{--}. The whole study ($n=4$ and
+$6$) took \G{noisy_control}{\NCSeconds\,s}{--} on a CPU with \G{noisy_control}{\NCThreads}{several} threads
+(script \texttt{scripts/noisy\_xy\_control.py}).
+
+\paragraph{What this shows, and what it does not.} The study shows that the library handles the whole loop of
+noise-aware design: a Lindblad evolution in symmetry sectors with sparse jumps, differentiated with respect to
+Hamiltonian controls and the duration; an objective defined through a central projection; and a batch of noise models,
+rates and starts in a single evolution. It also gives a quantitative answer for this model. With a time-optimal
+noiseless design as the reference, the noise-aware designs gain only a few per cent of the infidelity, while
+post-selection gains a factor of several. Proposition~\ref{prop:noisy}(a) explains why the two noise-aware objectives
+give such similar results: post-selection changes the objective only through $T$ and the weights $p_k$. The comparison
+depends on the reference. With a weaker time penalty $\lambda$, the noiseless design stays well above the shortest
+time, and the same optimisation then reports larger noise-aware gains, which are really gains in speed. The search is
+local: there are few starts (\G{noisy_control}{\NCWarmLarge}{four} for the noise-aware designs at $n=6$), $S$ is
+small, the controls are bounded and piecewise constant, and the reported designs are good solutions, not proven optima.
+The sizes are small ($n=4,6$). For $n=8$ the padded $70\times70$ blocks of all nine sectors make every gradient step
+much more expensive, and we did not attempt that size on a CPU. The noise models are the idealised local ones of
+Section~\ref{sec:noisy}, with rates measured in units of the coupling bound. Gate-level circuits, readout errors and
+non-covariant noise are not modelled, and nothing here is a claim about particular hardware.
