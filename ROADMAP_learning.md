@@ -41,10 +41,10 @@ item may be claimed as new in a publication before a full check.
 
 | channel notion | network notion | in the library now | missing |
 |---|---|---|---|
-| Stinespring isometry $`V:\mathcal H_{\rm in}\to\mathcal H_{\rm out}\otimes\mathbb C^r`$, then $`\operatorname{Tr}_{\mathbb C^r}`$ | linear (isometric) layer followed by a contraction / pooling over an environment index (Stinespring 1955) | `channels.random_channel` (Haar isometry); `composite.partial_trace_channel` | `optimize.StinespringParam` (sector preserving and inter-sector; unreleased, 1.2.0); an `nn.Module` layer |
+| Stinespring isometry $`V:\mathcal H_{\rm in}\to\mathcal H_{\rm out}\otimes\mathbb C^r`$, then $`\operatorname{Tr}_{\mathbb C^r}`$ | linear (isometric) layer followed by a contraction / pooling over an environment index (Stinespring 1955) | `channels.random_channel` (Haar isometry); `composite.partial_trace_channel` | `optimize.StinespringParam` (sector preserving and inter-sector; version 1.2.0); an `nn.Module` layer |
 | Kraus rank / environment dimension $`r`$ | width | `Channel.kraus_rank` | rank control (truncation, growth) during training |
 | composition $`\Phi_L\circ\dots\circ\Phi_1`$ | depth | `Channel.compose`, `InterSectorChannel.compose` | a sequential container with algebra checks |
-| $`e^{t\mathcal L}`$ of a GKSL generator | continuous depth (neural ODE, Chen et al. 2018; E 2017) | `lindblad_channel`, `lindblad_evolve`, differentiable | `optimize.LindbladParam` (unreleased, 1.2.0) |
+| $`e^{t\mathcal L}`$ of a GKSL generator | continuous depth (neural ODE, Chen et al. 2018; E 2017) | `lindblad_channel`, `lindblad_evolve`, differentiable | `optimize.LindbladParam` (version 1.2.0) |
 | CPTP splitting step $`\Psi_h(M^{-1/2}\,\cdot\,M^{-1/2})`$ (`dynamics._kraus_step`) | a second-order residual block that stays inside the constraint set (Section 6) | `lindblad_evolve(method='kraus')` | exposure as a layer |
 | conditional expectation $`E:\mathcal M\to\mathcal N\subset\mathcal M`$ | pooling onto a subalgebra (coarse-graining) | `inclusions.ConditionalExpectation`, `channels.center_expectation` | — (usable as fixed layers) |
 | sector (block) structure | structured sparsity and weight sharing (strong/weak symmetry of Lindbladians: Buča and Prosen 2012) | the storage format itself; `decompose` turns a symmetry into an algebra | sparse lists of allowed pairs $`(d,c)`$ |
@@ -105,10 +105,10 @@ and their costs.
 
 | family | parametrisation | gradient path | status |
 |---|---|---|---|
-| CPTP, Kraus rank $`r`$ | free $`Z_c\in\mathbb C^{(\sum_d m_d r)\times k_c}`$ per input sector; $`V_c=Z_c(Z_c^*Z_c)^{-1/2}`$ (polar), or QR, or Cayley updates (Wen and Yin 2013); Riemannian view in Absil et al. (2008) | inverse square root by `functional.spectral_apply`: Daleckii–Krein backward, finite at degenerate spectra | `optimize.StinespringParam`, sector preserving and inter-sector with allowed transitions (unreleased, 1.2.0) |
+| CPTP, Kraus rank $`r`$ | free $`Z_c\in\mathbb C^{(\sum_d m_d r)\times k_c}`$ per input sector; $`V_c=Z_c(Z_c^*Z_c)^{-1/2}`$ (polar), or QR, or Cayley updates (Wen and Yin 2013); Riemannian view in Absil et al. (2008) | inverse square root by `functional.spectral_apply`: Daleckii–Krein backward, finite at degenerate spectra | `optimize.StinespringParam`, sector preserving and inter-sector with allowed transitions (version 1.2.0) |
 | CPTP, Kraus form | $`K_i\mapsto K_iM^{-1/2}`$ (identical to the polar retraction above) | same | inside `dynamics._kraus_step` only |
 | unitary channels in $`\mathcal M`$ | $`U=U_0e^{G-G^*}`$ (cf. Lezcano-Casado and Martínez-Rubio 2019; Arjovsky et al. 2016) | `expm` | `optimize.UnitaryParam` |
-| GKSL generators | $`H=(A+A^*)/2`$; Kossakowski matrix $`K=LL^*\succeq0`$ in a jump basis $`F_\alpha`$ adapted to the sectors (Gorini, Kossakowski and Sudarshan 1976; Lindblad 1976) | differentiable `lindblad_evolve` (`'kraus'`: every step CPTP; `'exact'`: $`e^{h\mathcal L}`$) | `optimize.LindbladParam`: free jumps as a Cholesky-type factor, in-sector and inter-sector (unreleased, 1.2.0) |
+| GKSL generators | $`H=(A+A^*)/2`$; Kossakowski matrix $`K=LL^*\succeq0`$ in a jump basis $`F_\alpha`$ adapted to the sectors (Gorini, Kossakowski and Sudarshan 1976; Lindblad 1976) | differentiable `lindblad_evolve` (`'kraus'`: every step CPTP; `'exact'`: $`e^{h\mathcal L}`$) | `optimize.LindbladParam`: free jumps as a Cholesky-type factor, in-sector and inter-sector (version 1.2.0) |
 | states | $`\rho=(1-\varepsilon)GG^*/\operatorname{Tr}GG^*+\varepsilon/d`$, or Gibbs $`e^{-\beta H}/Z`$ | `states.gibbs_state` | `StateParam` in scripts only |
 | unital CPTP | alternate the TP and unital normalisations (an operator version of Sinkhorn scaling) | — | proposal; convergence not analysed |
 

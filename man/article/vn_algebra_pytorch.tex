@@ -866,7 +866,8 @@ thresholds can be changed, and the checks can be switched off locally.
 \section{Usage by example}\label{sec:usage}
 
 The repository contains short complete programs in \texttt{man/article/listings}; the test suite runs them, so they
-stay in sync with the code. Each runs on a CPU in under half a minute and uses a GPU when available.
+stay in sync with the code. Each runs on a CPU in about half a minute or less; the nine programs \texttt{ex*.py} use a
+GPU when one is available.
 Table~\ref{tab:examples} lists the nine introductory examples; programs of later sections are described where they are
 used.
 
@@ -1036,7 +1037,8 @@ Two implementation details matter. (a) In a real algebra a chart $U_0e^{G-G^*}$ 
 $U_0$, and an extremiser with determinant $+1$ in every sector is reached from a Haar-random $U_0$ only with probability
 $2^{-C}$. Half of the starts therefore begin at a structured point (diagonal $X$, $Y$ rotated in pairs of eigenvectors of
 $X$, two-level spectra). With Haar-random starts only, a first run for $C=32$ sectors of size 2 fell short of the true
-envelopes by up to $35\%$; with structured starts it reaches them to a relative $10^{-5}$--$10^{-3}$. (b) Where the
+envelopes by up to $35\%$. With structured starts the searches of the companion paper~\cite{nn_trace} reproduce the
+known envelopes of the classical inequalities to $10^{-7}$, and every closed form proved there to $3\times10^{-4}$ or better. (b) Where the
 objective has a kink at the maximiser (a trace norm at a degenerate point), the remaining gap decreases with the step
 size. Applied to the three functionals, the optimiser located their envelopes for sectors of every size; the closed
 forms it suggested are proved in the companion paper~\cite{nn_trace}.
@@ -1256,7 +1258,7 @@ the incidence matrix of the path with $2L+3$ vertices, so
 the values $4\cos^2(\pi/n)$, $n=4,6,8,\dots$, of Jones' discrete series below 4~\cite{jones1983}.
 
 \paragraph{From a symmetry to the algebra: Wedderburn decomposition.} Given matrices $S_1,\dots,S_J\in M_n(\C)$, or a
-unitary representation $\pi$ of a finite group, \texttt{decompose} returns a unitary $V$ with
+unitary representation $\pi$ of a finite group, \texttt{decompose.wedderburn} returns a unitary $V$ with
 \[
   V^*\mathcal AV=\bigoplus_cM_{k_c}(\C)\otimes1_{m_c},\qquad V^*\mathcal A'V=\bigoplus_c1_{k_c}\otimes M_{m_c}(\C)
 \]
@@ -1306,7 +1308,7 @@ diagonalisation ($L\le12$, $10^{-10}$); ring energies of Table~\ref{tab:ring} ($
 theorem~\cite{lieb1962}; the two degenerate singlets at the Majumdar--Ghosh point~\cite{majumdar1969,majumdar1969b};
 Clebsch--Gordan coefficients against SymPy\\
 \texttt{divergences} & dense references; independence of the trace convention; data processing inside the proven
-ranges; Petz's equality condition; the recovery bound of~\cite[Remark~2.2]{junge2018}\\
+ranges; Petz's equality condition; the recovery bound of~\cite[Theorem~2.1]{junge2018}\\
 \bottomrule
 \end{tabular}
 \caption{Identities checked by the test suite for the modules of Sections~\ref{sec:renyi}--\ref{sec:symmetries}.}
@@ -1438,7 +1440,7 @@ T}$ (the error of the second-order splitting) and $|1-F_{\mathrm{post}}|$, maxim
 $\log(1-F_{\mathrm{post}})$ against $\log\gamma$ for $\gamma_\uparrow=0.2\gamma_\downarrow=0.2\gamma$, at small
 $\gamma$. (d) The integral $I$ and the ratio of the computed infidelity to its first-order value at
 $\gamma_\varphi=10^{-3}$. Mixed: $\gamma_\downarrow=\gamma_\varphi=\gamma$, $\gamma_\uparrow=0.1\gamma$ at
-$\gamma=10^{-5/3}\approx0.022$, without and with post-selection.}
+$\gamma=10^{-5/3}\approx0.022$, without and with post-selection. Full sizes of the study, CPU (4 threads).}
 \label{tab:noisy}
 \end{table}
 
@@ -1512,7 +1514,8 @@ Library versions matter: batched Hermitian eigensolvers on GPUs cover all block 
 PyTorch releases, and batched SVD on GPUs is limited to blocks of size at most 32, which is why the library uses the
 Hermitian eigensolver wherever it can. Batched QR on GPUs factorises small matrices one at a time, so Haar sampling on
 GPUs uses a batched Gram--Schmidt orthonormalisation with reorthogonalisation (the same matrices as QR with the phase
-correction). On the CPU the library splits batched decompositions into one chunk per thread, so all cores are used.
+correction). Table~\ref{tab:benchmark} was measured before this change; its rows ``generate'' on the GPU therefore show
+the earlier per-sector QR and understate the GPU. On the CPU the library splits batched decompositions into one chunk per thread, so all cores are used.
 
 GPUs need enough independent work per kernel launch: many samples, many sectors or large blocks, and matrix products
 rather than decompositions of small matrices. The design follows from this. Everything is batched, so the batch
@@ -1540,7 +1543,7 @@ operation & $k$ & $C$ & batch & time per sample [$\mu$s]\\
 \caption[]{Wall-clock time per sample of library operations for $C$ sectors of size $k$ and the batch size
 shown\G{benchmark}{ (\BenchMode\ run on \BenchDevice, CPU with \BenchCpuThreads\ threads)}{} (single precision;
 ``exp($tL$)'' uses a smaller batch because its superoperators have $k^4$ entries). With a GPU the table also gives the
-CPU time and the speedup CPU/GPU.}
+CPU time and the speedup CPU/GPU. The run predates the batched Gram--Schmidt generator of Haar unitaries on GPUs.}
 \label{tab:benchmark}
 \end{table}
 
@@ -1580,16 +1583,22 @@ and training viewed as a dynamics of the channel are the main direction of futur
 repository (\texttt{ROADMAP\_learning.md}).
 \item \emph{Scope.} Finite dimensions and Type~I only; no tensor-network methods. Sparse methods exist only for sector
 Hamiltonians and for jumps that map basis vectors to basis vectors; other jumps between sectors are stored densely.
-Benchmarks against QuTiP, \texttt{dynamiqs}, QuantumToolbox.jl, QuSpin and XDiag are future work.
+Results are cross-checked against QuTiP and QuSpin in the test suite, and the permutational Lindblad solver is timed
+against QuTiP's PIQS in~\cite{nn_btc}; systematic benchmarks against QuTiP, \texttt{dynamiqs}, QuantumToolbox.jl, QuSpin
+and XDiag are future work.
 \end{itemize}
 
 \section{Availability and reproducibility}\label{sec:availability}
 
-The code is available under the MIT licence at \url{https://github.com/andre-a-no/von_neumann_type_i}.
-The command \texttt{bash scripts/run\_all.sh full cuda} regenerates every table and figure on a GPU; without
-arguments it runs a reduced version on a CPU in a few minutes. The script \texttt{scripts/\allowbreak gpu\_check.py} checks a GPU, and \texttt{scripts/\allowbreak library\_paper\_schematics.py}
-draws the schematic figures. The tables state the device
-and mode they were produced with, and the JSON file next to each table records the commit of the code.
+The code is available under the MIT licence at \url{https://github.com/andre-a-no/von_neumann_type_i}; this paper
+describes version~1.2.0 (tag \texttt{v1.2.0}), and its scripts need the repository version of the library
+(\texttt{pip install -e ".[scripts]"}) rather than an older release from PyPI. The command
+\texttt{bash scripts/run\_all.sh full cuda} regenerates every table and figure on a GPU; without the mode argument it
+runs a reduced version on the default device, which takes well under an hour on a four-core CPU. The script
+\texttt{scripts/\allowbreak gpu\_check.py} checks a GPU, and \texttt{scripts/\allowbreak library\_paper\_schematics.py}
+draws the schematic figures and the summary figure of the noisy register. The tables state the device and, except the
+use-case tables of Sections~\ref{sec:noisy} and~\ref{sec:control}, which are single full-size runs, the mode they were
+produced with; the JSON files written by the current versions of the scripts also record the commit of the code.
 
 \appendix
 {\sloppy\small
