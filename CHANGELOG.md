@@ -17,6 +17,9 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 - `optimize.StinespringParam`: channels as parameters. For every input sector an isometry V_c = Z_c (Z_c^* Z_c)^{-1/2}
   (Haar-random at the start), Kraus operators its blocks; every parameter value is a trace-preserving channel of one
   algebra (`Channel`) or between algebras with a prescribed set of allowed sector transitions (`InterSectorChannel`).
+- `optimize.LindbladParam`: GKSL generators as parameters (a self-adjoint H and free jump operators inside the sectors
+  and, for a prescribed set of allowed transitions, between them); a test learns a qubit generator from trajectories
+  and predicts a new trajectory to 1e-4.
 - `optimize.fit` / `FitResult`: batched multistart minimisation that leaves the parameters at the fitted point (the
   counterpart of `extremize` for learning); a test recovers a channel from 12 input/output pairs to 1e-5.
 - `SpinChain.bond(i, j, Jxy, Jz)`: the two-site XXZ term on any pair of sites, for bond-resolved Hamiltonians and

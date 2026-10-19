@@ -15,6 +15,9 @@ so that sup / inf of a functional can be searched for with many independent star
     StinespringParam        channels: an isometry V = Z (Z^* Z)^{-1/2} per input sector (Haar-random at the start),
                             Kraus operators its blocks; within one algebra (Channel) or between algebras with a
                             prescribed set of allowed sector transitions (InterSectorChannel)
+    LindbladParam           generators: a self-adjoint H and free jump operators (inside the sectors and, with
+                            allowed transitions, between them), i.e. the Kossakowski matrix as L^* L; for
+                            dynamics.lindblad_evolve
 
     best = optimize.extremize(objective, params, maximize=True)     # best value per start
     res = optimize.fit(loss, params)                                # minimisation; the parameters end at the fit
@@ -352,6 +355,62 @@ class SelfAdjointParam(PositiveParam):
                 # undo where it did not help (no data-dependent indexing: no synchronisation)
                 self.signs[b, c, i] *= torch.where(better, 1.0, -1.0).to(self.signs.dtype)
                 best = torch.where(better, v, best)
+
+
+class LindbladParam(Param):
+    """
+    GKSL generators of `alg` (one per start) for dynamics.lindblad_evolve: a self-adjoint Hamiltonian
+    H = (X + X^*)/2 and free jump operators, n_jumps inside the sectors (Operators) and n_inter between sectors
+    (InterSectorChannels of alg into itself, nonzero only for the allowed transitions[d, c], e.g. N -> N - 1).
+    Free jump operators L_j are a Cholesky-type factor of the Kossakowski matrix, so every parameter value is a
+    valid generator; the rates are absorbed into the L_j, and unitary mixing of the jumps (L_j -> sum_l u_jl L_l)
+    is a gauge symmetry. The jumps start at the scale `init_scale` (weak dissipation).
+
+        P = optimize.LindbladParam(alg, starts, n_jumps=2, n_inter=1, transitions=lowering)
+        rho = dynamics.lindblad_evolve(rho0, P.hamiltonian(), P.jumps(), times, method='exact')
+    """
+
+    def __init__(self, alg: TypeIAlgebra, batch_size: int, n_jumps: int = 1, n_inter: int = 0, transitions=None,
+                 hamiltonian: bool = True, init_scale: float = 0.1, generator: Optional[torch.Generator] = None):
+        self.alg = alg
+        dev = alg.hilbert.device
+        C, k = alg.C, alg.k_max
+        mask = alg._const('block_mask', torch.bool).to(dev)
+
+        def free(shape, scale):
+            Z = scale * torch.randn(shape, dtype=alg.dtype, device=dev, generator=generator)
+            return Z.requires_grad_(True)
+        self.X = free((batch_size, C, k, k), 1.0) if hamiltonian else None
+        self.L = free((batch_size, n_jumps, C, k, k), init_scale) if n_jumps else None
+        self._mask = mask
+        self.inter_mask = None
+        self.K = None
+        if n_inter:
+            allowed = (torch.ones(C, C, dtype=torch.bool, device=dev) if transitions is None
+                       else torch.as_tensor(transitions, dtype=torch.bool, device=dev).reshape(C, C))
+            rows = alg._const('rows').to(dev)                                       # (C, k)
+            self.inter_mask = allowed[:, :, None, None] & rows[:, None, :, None] & rows[None, :, None, :]
+            self.K = free((batch_size, n_inter, C, C, k, k), init_scale)
+
+    def parameters(self):
+        return [t for t in (self.X, self.L, self.K) if t is not None]
+
+    def hamiltonian(self) -> Optional[Operator]:
+        if self.X is None:
+            return None
+        X = self.X * self._mask
+        return self.alg.operator(0.5 * (X + X.conj().transpose(-2, -1)), is_self_adjoint=True)
+
+    def jumps(self) -> list:
+        out = []
+        if self.L is not None:
+            L = self.L * self._mask
+            out += [self.alg.operator(L[:, j]) for j in range(L.shape[1])]
+        if self.K is not None:
+            K = self.K * self.inter_mask
+            out += [InterSectorChannel(self.alg, self.alg, K[:, j:j + 1], trace_preserving=False)
+                    for j in range(K.shape[1])]
+        return out
 
 
 class StinespringParam(Param):
