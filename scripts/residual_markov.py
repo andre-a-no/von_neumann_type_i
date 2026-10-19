@@ -36,7 +36,9 @@ Bloch sphere by a grid and projected-gradient refinement), and det R_net.
 
 Whether (i) and (ii) are themselves of the form e^L is decided by the test of Wolf, Eisert, Cubitt and Cirac
 (PRL 101 (2008) 150402), run on the branches |k| <= 3 of the logarithm (semigroup_test): (i) passes on the principal
-branch, (ii) fails on all of them, so a gap between the Lindblad layer and the Stinespring layer is expected for (ii).
+branch, (ii) fails on all of them. On the branch k, w J w = J0 + k G is affine in k, and a vector with v* G v < 0
+(resp. > 0) shows that every branch beyond an explicit bound fails as well; for (ii) the bound is 0, so (ii) fails on
+every branch and is not of the form e^L. So a gap between the Lindblad layer and the Stinespring layer is expected for (ii).
 
 Proved (and checked on every learned map): every block (1 - p) id + p Phi with p < 1/2 has det > 0 (eigenvalues
 1 - p + p lambda, |lambda| <= 1, real ones >= 1 - 2p, complex ones in conjugate pairs), and so has every product of
@@ -165,14 +167,31 @@ def semigroup_test(f, kmax: int = 3) -> dict:
     mu, V = np.linalg.eig(S)
     omega = np.eye(2).reshape(4)
     w = np.eye(4) - np.outer(omega, omega) / 2
+    sgn = np.sign(np.where(abs(mu.imag) > 1e-9, mu.imag, 0.0))
+    Vinv = np.linalg.inv(V)
+
+    def wjw(lg):
+        L = V @ np.diag(lg) @ Vinv
+        J = L.reshape(2, 2, 2, 2).transpose(2, 0, 3, 1).reshape(4, 4)          # J[(i,a),(j,b)] = L[(a,b),(i,j)]
+        return w @ (0.5 * (J + J.conj().T)) @ w, float(abs(J - J.conj().T).max())
+    J0, _ = wjw(np.log(mu.astype(complex)))
+    G, _ = wjw(2j * np.pi * sgn)                       # w J(L_k) w = J0 + k G on the branch k
+    # All branches at once: if v* G v = -g < 0, then v* (J0 + k G) v < 0 for every k > v* J0 v / g, and likewise for
+    # k < 0 with a vector of positive v* G v; so only the branches up to these bounds need an explicit check.
+    g, U = np.linalg.eigh(G)
+    bound = None
+    if g[0] < -1e-9 and g[-1] > 1e-9:
+        kp = (U[:, 0].conj() @ J0 @ U[:, 0]).real / -g[0]
+        km = (U[:, -1].conj() @ J0 @ U[:, -1]).real / g[-1]
+        bound = max(0, math.floor(kp), math.floor(km))
+        kmax = max(kmax, bound)
     out = {}
     for k in range(-kmax, kmax + 1):
-        lg = np.log(mu.astype(complex)) + 2j * np.pi * k * np.sign(np.where(abs(mu.imag) > 1e-9, mu.imag, 0.0))
-        L = V @ np.diag(lg) @ np.linalg.inv(V)
-        J = L.reshape(2, 2, 2, 2).transpose(2, 0, 3, 1).reshape(4, 4)          # J[(i,a),(j,b)] = L[(a,b),(i,j)]
-        herm = float(abs(J - J.conj().T).max())
-        out[k] = dict(min_eig=float(np.linalg.eigvalsh(w @ (0.5 * (J + J.conj().T)) @ w).min()), herm_err=herm)
-    return dict(branches=out, best=max(v['min_eig'] for v in out.values()),
+        M, herm = wjw(np.log(mu.astype(complex)) + 2j * np.pi * k * sgn)
+        out[k] = dict(min_eig=float(np.linalg.eigvalsh(M).min()), herm_err=herm)
+    best = max(v['min_eig'] for v in out.values())
+    return dict(branches=out, best=best, branch_bound=bound,
+                all_branches_fail=bool(bound is not None and best < -1e-9),
                 degenerate=bool(min(abs(mu[a] - mu[b]) for a in range(4) for b in range(a)) < 1e-6))
 
 
@@ -380,6 +399,7 @@ def main():
             f"{t}: hs={r['hs']:.2e} td={r['worst_td']:.2e} det={r['det']:+.3e} (min {r['det_min']:+.3e})"
             for t, r in d['results'].items()))
     print('semigroup test (best branch, min eig of w J w):', {t: v['best'] for t, v in wecc.items()})
+    assert wecc['damped']['all_branches_fail'], 'target (ii) passed a branch of the semigroup test'
     print('targets det', tdet, '\npauli refs', refs, f'\ntotal {seconds:.0f} s')
 
     # consistency: all residual and Lindblad maps have det > 0, the Pauli fits respect the proved bounds
@@ -414,7 +434,8 @@ def main():
            f'\\newcommand{{\\RMMarkovTD}}{{{refs["markov_td"]:.3f}}}',
            f'\\newcommand{{\\RMDephasedHS}}{{{refs["dephased_hs"]:.3f}}}',
            f'\\newcommand{{\\RMSemigroupKmax}}{{{max(wecc["damped"]["branches"])}}}',
-           f'\\newcommand{{\\RMDampedSemigroupViolation}}{{{-wecc["damped"]["best"]:.3f}}}']
+           f'\\newcommand{{\\RMDampedSemigroupViolation}}{{{-wecc["damped"]["best"]:.3f}}}',
+           f'\\newcommand{{\\RMSemigroupBound}}{{{wecc["damped"]["branch_bound"]}}}']
     for t, N in names.items():
         tex += [f'\\newcommand{{\\RM{N}Channel}}{{{sci(R("channel", 0, t))}}}',
                 f'\\newcommand{{\\RM{N}Lindblad}}{{{num(R("lindblad", 0, t))}}}',

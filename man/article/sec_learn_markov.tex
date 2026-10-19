@@ -15,7 +15,7 @@
 \providecommand{\RMPauliResDetMin}{--}\providecommand{\RMPauliResDetMax}{--}\providecommand{\RMPauliLindbladDet}{--}
 \providecommand{\RMPauliChannelDet}{--}\providecommand{\RMDephasedHS}{--}\providecommand{\RMPauliResTDAll}{--}
 \providecommand{\RMPauliResTDAllDepth}{--}\providecommand{\RMSemigroupKmax}{--}\providecommand{\RMDampedSemigroupViolation}{--}
-\providecommand{\RMRestartSpread}{--}
+\providecommand{\RMRestartSpread}{--}\providecommand{\RMSemigroupBound}{--}
 \subsection{Residual channel networks and Markovianity}\label{sec:learn-markov}
 
 A stack of residual blocks $(1-p_l)\,\mathrm{id}+p_l\Phi_l$ with small $p_l$ is a product of channels close to the
@@ -47,8 +47,11 @@ a Pauli semigroup, $R=\operatorname{diag}(1,-a,-a,a^2)$, $a=\RMMarkovA$, is at F
 
 \paragraph{Experiment.} In $M_2$ we fit three targets: (i) $e^{\mathcal L}$ for a random GKSL generator (a random
 Hamiltonian and two random jump operators); (ii) amplitude damping ($\gamma=0.5$) after a rotation by $2\pi/3$, a
-product of two Markovian channels that is not itself a semigroup (no branch of its logarithm with $|k|\le\RMSemigroupKmax$
-passes the test of Wolf, Eisert, Cubitt and Cirac~\cite{wolf2008}; the best one misses by $\RMDampedSemigroupViolation$);
+product of two Markovian channels that is not itself a semigroup. Its spectrum is non-degenerate, so by the test of
+Wolf, Eisert, Cubitt and Cirac~\cite{wolf2008} it is $e^{\mathcal L}$ only if a branch of its logarithm is
+conditionally completely positive. The principal branch misses by $\RMDampedSemigroupViolation$, and on the branch $k$
+the compressed Choi matrix is $J_0+kG$, so a vector with $\langle v,Gv\rangle<0$ (for $k>0$) or $>0$ (for $k<0$)
+excludes all branches with $|k|$ above an explicit bound; here the bound is $\RMSemigroupBound$, so no branch passes;
 and (iii) $\Phi_P$. The models are (a) one \texttt{ChannelLayer} of Kraus rank four, which contains every qubit
 channel; (b) $L$ blocks \texttt{Residual(ChannelLayer(alg, 4), p)} with $p=\RMp$, $L\in\{\RMDepths\}$ (a learned
 weight $p'\le p$ would add nothing, since the inner channel may itself be $(1-s)\,\mathrm{id}+s\Psi$); and (c) one
@@ -84,8 +87,8 @@ floor of the Frobenius error, between $\tfrac13$ and $\RMPauliResMin$, is observ
 
 \paragraph{Reading.} The three models are nested: semigroups, limits of residual networks with small blocks, and all
 channels. On the same data the two gaps between their errors measure two kinds of non-Markovianity: dependence on
-time, as for (ii), which a time-dependent master equation can still produce; and no master equation at all,
-of which $\det R<0$ is an exact certificate, as for (iii). A residual fit error that stays away from zero as the depth grows is
+time, as for (ii), which a time-dependent master equation can still produce; and no Markovian master equation at all,
+not even a time-dependent one, of which $\det R<0$ is an exact certificate, as for (iii). A residual fit error that stays away from zero as the depth grows is
 therefore a learned witness of non-Markovianity, comparable with the test of~\cite{wolf2008}. The witness is
 one-sided, since a large error can also be a failure of the optimiser; restarts and the Stinespring fit, which
 reaches the data, control this.

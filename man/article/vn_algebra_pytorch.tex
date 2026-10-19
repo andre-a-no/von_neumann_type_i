@@ -98,8 +98,8 @@ algebra: one batched run gives, for all noise models and rates, the exact effect
 optimising the controls for the post-selected fidelity shows that the measurement of the conserved charge, not the
 noise-aware design, removes most of the error. Finally, channels between algebras become layers of trainable networks. Learning
 the noise of the register from measurement counts, models that respect the sectors reach a given accuracy with about
-fourteen times fewer shots than a dense model, and a model with the known jump operators estimates the rates at the
-Cramér--Rao bound; residual networks of channels fit Markovian evolutions but provably not a channel with negative
+fourteen times fewer shots than a dense model, and a model with the known jump operators estimates the rates close to
+the Cramér--Rao bound; residual networks of channels fit Markovian evolutions but provably not a channel with negative
 determinant, so their fit error witnesses non-Markovianity.
 \end{abstract}
 
@@ -1522,7 +1522,8 @@ sector transitions & linear layer plus contraction; width = Kraus rank; sparsity
 \texttt{UnitaryLayer} & $\rho\mapsto U\rho U^*$, $U=e^{-iH}$, $H=H^*\in\M$ & unitary layer~\cite{arjovsky2016}\\
 \texttt{LindbladLayer} & $\rho\mapsto e^{t\mathcal L}\rho$, $\mathcal L$ a free GKSL generator & continuous depth~\cite{chen2018}\\
 \texttt{Residual} & $\rho\mapsto(1-p)\rho+p\,\Phi(\rho)$ & skip connection~\cite{he2016}\\
-\texttt{PostSelect} & $\rho\mapsto P\rho P/\Tr(P\rho P)$, $P$ central & nonlinear activation; cost $\Tr(P\rho P)$\\
+\texttt{PostSelect} & $\rho\mapsto P\rho P/\Tr(P\rho P)$, $P\in\M$ a projection (central: a set of sectors) &
+nonlinear activation; cost $\Tr(P\rho P)$\\
 \texttt{FeedForward} & instrument, outcome in the centre, branch per outcome & fan-out skip, classical only\\
 \bottomrule
 \end{tabular}
@@ -1562,14 +1563,16 @@ for step in range(200):
 \paragraph{Where the nonlinearity comes from.} A composition of channels is again a channel, so depth adds no new
 maps: one Stinespring layer of sufficient width is universal, and a deep network of channels is a reparametrisation of
 that set, as a deep linear network is of the linear maps. As a function of the parameters the output is nonlinear, as a
-function of the input state it is linear; on encoded classical data this makes such a model a kernel method. A
+function of the input state it is linear; on encoded classical data this makes such a model a kernel
+method~\cite{schuld2021}. A
 genuinely nonlinear layer needs one of three physical resources: post-selection, whose renormalisation by the
 acceptance $\Tr(P\rho P)$ is the activation (\texttt{PostSelect} records the acceptance, whose logarithm is the natural
 penalty, since acceptances multiply along the network); several copies of the state; or a mean-field limit of many
-symmetric systems, which the module \texttt{permutational} computes exactly in its total-spin sectors.
+symmetric systems, whose finite-size dynamics the module \texttt{permutational} computes exactly in its total-spin
+sectors.
 
-\paragraph{Skip connections.} The residual block of a ResNet~\cite{he2016}, $x\mapsto x+f(x)$, is not completely
-positive for channels. Its counterpart \texttt{Residual} is the convex combination $(1-p)\,\mathrm{id}+p\,\Phi$: one
+\paragraph{Skip connections.} The residual block of a ResNet~\cite{he2016}, $x\mapsto x+f(x)$, becomes
+$\mathrm{id}+\Phi$ for a channel $\Phi$, which is completely positive but doubles the trace. Its normalised counterpart \texttt{Residual} is the convex combination $(1-p)\,\mathrm{id}+p\,\Phi$: one
 step of a jump process that applies $\Phi$ at rate $p$, so that $n$ blocks with $p=t/n$ tend to
 $e^{t(\Phi-\mathrm{id})}$, the semigroup of the GKSL generator whose jump operators are the Kraus operators of $\Phi$
 (verified in the test suite). ResNets become Lindblad evolutions, with the consequence studied in
@@ -1580,8 +1583,8 @@ algebra this is the centre: an instrument writes its outcome into the centre of 
 a fan-out connection. A block-diagonal channel $\bigoplus_k\Phi_k$ is likewise a mixture of experts whose router, the
 measurement of the sector, does not disturb the state.
 
-\paragraph{Relation to other work.} Networks of completely positive layers trained on data were introduced as
-dissipative quantum neural networks~\cite{beer2020}; process tomography with learned models is done with tensor
+\paragraph{Relation to other work.} Feed-forward networks whose layers are completely positive maps were trained on
+quantum data by Beer et al.~\cite{beer2020}; process tomography with learned models is done with tensor
 networks~\cite{torlai2023}, and state tomography with neural-network states~\cite{torlai2018}; networks with
 parameters in a $C^*$-algebra were proposed in~\cite{hashimoto2022}, and equivariant linear layers are elements of a
 commutant~\cite{cohen2016,finzi2021}. What the library adds is the algebra: layers between algebras with different
@@ -1981,6 +1984,8 @@ degenerate cases'', arXiv:2011.04366 (2020).
   invariant quantum tomography'', Phys.\ Rev.\ Lett.\ 105 (2010), 250403.
 \bibitem{wolfcirac2008} M.~M.~Wolf, J.~I.~Cirac, ``Dividing quantum channels'', Commun.\ Math.\ Phys.\ 279 (2008),
   147--168.
+\bibitem{schuld2021} M.~Schuld, ``Supervised quantum machine learning models are kernel methods'',
+  arXiv:2101.11020 (2021).
 \bibitem{wolf2008} M.~M.~Wolf, J.~Eisert, T.~S.~Cubitt, J.~I.~Cirac, ``Assessing non-Markovian quantum dynamics'',
   Phys.\ Rev.\ Lett.\ 101 (2008), 150402.
 \end{thebibliography}

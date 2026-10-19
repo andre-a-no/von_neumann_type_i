@@ -60,8 +60,8 @@ the sine of the Krein--Gustafson angle of an operator, the constant is the secan
 $\delta\delta'$. For 25 characterisations we find the largest violation exactly in sixteen cases and bound it from below
 in four; it vanishes at the trace to the orders $\delta$, $\delta^2$, $\delta^4$ or $\delta^8$, and on direct sums only
 the contrast inside the blocks counts. We also find the sharp bounds of three unnormalised trace functionals of our
-earlier work and, via Gustafson's criterion for positive Jordan products, contrast thresholds below which subadditivity of
-the square root and the power-mean inequality cannot fail. A numerical search, certified as a lower bound for each
+earlier work and sharp contrast thresholds below which subadditivity of the square root (via Gustafson's criterion for
+positive Jordan products) and the power-mean inequality cannot fail. A numerical search, certified as a lower bound for each
 supremum, supports conjectured values for the remaining inequalities.
 \end{abstract}
 
@@ -175,7 +175,8 @@ normalisation. These rules have a consequence for the inequalities themselves. T
 several characterisations are violated only by operators whose contrast is close to $1$. For subadditivity of the
 square root, $\varphi((A+B)^{1/2})\le\varphi(A^{1/2})+\varphi(B^{1/2})$, we prove this: if $\Delta(A)=\Delta(B)\le2\sqrt2/3$,
 then $A^{1/2}B^{1/2}+B^{1/2}A^{1/2}\ge0$ by Gustafson's criterion, hence $(A+B)^{1/2}\le A^{1/2}+B^{1/2}$ as operators, and
-no positive functional can violate the inequality. For the power-mean inequality $\varphi(A^2)^{1/2}\le\varphi(A)$ we
+no positive functional can violate the inequality; above $2\sqrt2/3$ suitable operators violate it for every density of
+contrast close enough to $1$. For the power-mean inequality $\varphi(A^2)^{1/2}\le\varphi(A)$ we
 find the envelope with both contrasts prescribed in closed form; it is never positive when $\Delta(A)\le\sqrt{(n-1)/n}$,
 and this threshold is sharp (Section~\ref{sec:thresholds} and Figure~\ref{fig:square}).
 
@@ -1391,14 +1392,16 @@ envelope $\frac12\tan^2(\psi/2)$ of Theorem~B.
 For subadditivity of the square root (item~12) the same mechanism works one level deeper, through the link between
 Jordan products and subadditivity found by Moslehian and Najafi~\cite{moslehian2011}.
 
-\begin{proposition}[No violation of item 12 below a contrast threshold]\label{prop:item12}
+\begin{proposition}[Sharp contrast threshold for item 12]\label{prop:item12}
 Let $A,B>0$ with $\Delta(A^{1/2})^2+\Delta(B^{1/2})^2\le1$, i.e.
 \[
   \Bigl(\frac{\Delta(A)}{1+\sqrt{1-\Delta(A)^2}}\Bigr)^2+\Bigl(\frac{\Delta(B)}{1+\sqrt{1-\Delta(B)^2}}\Bigr)^2\le1 .
 \]
 Then $(A+B)^{1/2}\le A^{1/2}+B^{1/2}$, and hence $\varphi((A+B)^{1/2})\le\varphi(A^{1/2})+\varphi(B^{1/2})$ for every
 positive functional $\varphi$. In particular, if $\Delta(A)=\Delta(B)=\delta'\le2\sqrt2/3\approx0.943$, item~12 is not
-violated for any density, so $V_n(\delta,\delta')\le0$ for all $\delta$ and $n$.
+violated for any density, so $V_n(\delta,\delta')\le0$ for all $\delta$ and $n$. The threshold is sharp: if
+$\delta'>2\sqrt2/3$, then for every $n\ge2$ item~12 is violated by operators of contrast $\delta'$ and every density of
+contrast $\delta$ close enough to $1$.
 \end{proposition}
 \begin{proof}
 By Proposition~\ref{prop:rapid}(a), $\Delta(A^{1/2})=\tanh(\eta_A/2)=\Delta(A)/(1+\sqrt{1-\Delta(A)^2})$, which gives the
@@ -1410,6 +1413,18 @@ $A^{1/2}B^{1/2}+B^{1/2}A^{1/2}\ge0$, hence
 and, the square root being operator monotone, $A^{1/2}+B^{1/2}\ge(A+B)^{1/2}$. A positive functional preserves this
 inequality. For $\Delta(A)=\Delta(B)=\delta'$ the hypothesis reads $\tanh(\eta/2)\le1/\sqrt2$ with $\tanh\eta=\delta'$, i.e.\
 $\delta'=2t/(1+t^2)$ at $t=1/\sqrt2$, which is $2\sqrt2/3$.
+
+Sharpness. Let $\delta'>2\sqrt2/3$, so that $t=\Delta(A^{1/2})>1/\sqrt2$, and on $M_2$ let $A=\mathrm{diag}(1,\ell')$ and
+$B=RAR^*$ with $R$ the rotation by $\pi/4$. The reflection $F$ in the line at angle $\pi/8$ interchanges $A$ and $B$, hence
+$A^{1/2}$ and $B^{1/2}$, so it commutes with $A+B$, with $S=A^{1/2}+B^{1/2}$ and with $J=A^{1/2}B^{1/2}+B^{1/2}A^{1/2}$.
+Since $F$ has the simple eigenvalues $\pm1$, these three matrices are diagonal in its eigenbasis $u_1,u_2$, and
+$S^2=A+B+J$ gives $\langle u_i,Su_i\rangle^2=\langle u_i,(A+B)u_i\rangle+\langle u_i,Ju_i\rangle$. The pair $A^{1/2}$,
+$B^{1/2}$ is the configuration of the converse in Theorem~\ref{thm:jordan}(a) with $\delta_A=\delta_B=t$, so $J$ is
+indefinite since $2t^2>1$, and for the $u_i$ with $\langle u_i,Ju_i\rangle<0$ we get
+$\langle u_i,(A^{1/2}+B^{1/2})u_i\rangle<\langle u_i,(A+B)^{1/2}u_i\rangle$. On $M_n$ replace $A,B$ by $A\oplus1_{n-2}$ and
+$B\oplus1_{n-2}$, which have the same contrast, and let $W$ have $u_i$ as eigenvector for its largest eigenvalue and all
+other eigenvalues equal. As $\delta\to1$, $\varphi_W\to n\langle u_i,\cdot\,u_i\rangle$, so
+$\varphi_W((A+B)^{1/2})>\varphi_W(A^{1/2})+\varphi_W(B^{1/2})$ for all $\delta$ close enough to $1$.
 \end{proof}
 
 \begin{figure}[t]
@@ -1426,11 +1441,13 @@ $(A+B)^{1/2}\le A^{1/2}+B^{1/2}$ in the larger green region (Proposition~\ref{pr
 
 The proved threshold is consistent with the computation: on $M_2$ and $M_3$ the search finds no violation of item~12 for
 $\delta'\le\TCCSubaddNone$ and $\delta\in\{0.3,0.6,0.9\}$, and the first violation above $10^{-4}$ at
-$\delta'=$ \TCCSubaddOnset; all these grid values lie above $2\sqrt2/3$ (Figure~\ref{fig:square}(a)). Whether the
-operator inequality $(A+B)^{1/2}\le A^{1/2}+B^{1/2}$ is necessary for the absence of violations, i.e.\ whether the
-threshold $2\sqrt2/3$ is sharp as $\delta\to1$, we do not know: by~\cite[Theorem~2.1]{moslehian2011} the positivity of
-$A^{1/2}B^{1/2}+B^{1/2}A^{1/2}$ is equivalent to subadditivity for \emph{all} non-negative operator monotone functions,
-not for the square root alone.
+$\delta'=$ \TCCSubaddOnset; all these grid values lie above $2\sqrt2/3$ (Figure~\ref{fig:square}(a)). Unlike item~24 below,
+whose whole threshold curve we find for $n=2$, here sharpness is proved only in the limit $\delta\to1$; at
+$\delta=0.3$, $0.6$ and $0.9$ the search finds the onset of violations higher. The criterion
+of Moslehian and Najafi~\cite[Theorem~2.1]{moslehian2011} is that $AB+BA\ge0$ if and only if $f(A+B)\le f(A)+f(B)$ for
+\emph{all} non-negative operator monotone functions $f$. For the square root alone the weaker hypothesis
+$A^{1/2}B^{1/2}+B^{1/2}A^{1/2}\ge0$ suffices, and the proof of sharpness shows that in the extremal configuration it is
+also necessary.
 
 For the power-mean inequality $\varphi(A^2)^{1/2}\le\varphi(A)$ with $\varphi(1)=n$ (item~24) a Kantorovich-type argument
 gives the envelope with both contrasts prescribed in closed form, and with it a sharp threshold.
@@ -1746,8 +1763,8 @@ $V_2=\kappa-1$ for item~6; the value of Proposition~\ref{prop:abed} holds for it
 bound of Proposition~\ref{prop:youngtwo} is the two-contrast envelope of item~8 for even $n$.
 \end{conjecture}
 
-Several questions remain open. Is the threshold $2\sqrt2/3$ of Proposition~\ref{prop:item12} sharp as $\delta\to1$, and
-what are the thresholds of items 6, 10, 13 and~25, which the search shows but which no operator inequality of the kind used
+Several questions remain open. What is the threshold of item~12 for $\delta<1$, where the search places it above
+the value $2\sqrt2/3$ of Proposition~\ref{prop:item12}, and what are the thresholds of items 6, 10, 13 and~25, which the search shows but which no operator inequality of the kind used
 in Section~\ref{sec:thresholds} can explain for item~10? What is the envelope of item~6 for $n\ge3$, where the search
 exceeds $\kappa-1$, and does it grow with $n$? Do items 12--16 have closed forms? The search gives the leading
 coefficients $\frac12$, $\frac12$, $\frac1{36}$, $0.064$ and $0.09$; for item~14 the coefficient $(1-\frac2p)^2/4$ is a

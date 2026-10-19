@@ -9,7 +9,7 @@
   "threads": 4,
   "numpy": "2.5.3",
   "scipy": "1.18.1",
-  "git": "a27a2e0"
+  "git": "39d970d+dirty"
  },
  "args": {
   "steps": 2000,
@@ -21,7 +21,7 @@
   "out": "/home/user/von_neumann_type_i/man/article",
   "replot": false
  },
- "seconds": 379.03857135772705,
+ "seconds": 281.28080463409424,
  "depths": [
   1,
   2,
@@ -238,6 +238,8 @@
     }
    },
    "best": 3.931919887305263e-17,
+   "branch_bound": 0,
+   "all_branches_fail": false,
    "degenerate": false
   },
   "damped": {
@@ -272,6 +274,8 @@
     }
    },
    "best": -0.25306611577878524,
+   "branch_bound": 0,
+   "all_branches_fail": true,
    "degenerate": false
   }
  },
@@ -279,7 +283,7 @@
   {
    "kind": "residual",
    "depth": 32,
-   "seconds": 378.87466764450073,
+   "seconds": 281.1687204837799,
    "results": {
     "gksl": {
      "hs": 2.479933888516337e-15,
@@ -706,7 +710,7 @@
   {
    "kind": "residual",
    "depth": 16,
-   "seconds": 235.5304319858551,
+   "seconds": 141.7334861755371,
    "results": {
     "gksl": {
      "hs": 0.026664353871816704,
@@ -1133,7 +1137,7 @@
   {
    "kind": "residual",
    "depth": 8,
-   "seconds": 139.65784311294556,
+   "seconds": 75.15979170799255,
    "results": {
     "gksl": {
      "hs": 0.2543109134915457,
@@ -1560,7 +1564,7 @@
   {
    "kind": "residual",
    "depth": 4,
-   "seconds": 58.78338670730591,
+   "seconds": 40.704434871673584,
    "results": {
     "gksl": {
      "hs": 0.6161928829790327,
@@ -1987,7 +1991,7 @@
   {
    "kind": "residual",
    "depth": 2,
-   "seconds": 46.59829235076904,
+   "seconds": 20.284647226333618,
    "results": {
     "gksl": {
      "hs": 1.0361978899426048,
@@ -2414,7 +2418,7 @@
   {
    "kind": "residual",
    "depth": 1,
-   "seconds": 28.96055316925049,
+   "seconds": 11.09976577758789,
    "results": {
     "gksl": {
      "hs": 1.3698646576812628,
@@ -2841,7 +2845,7 @@
   {
    "kind": "lindblad",
    "depth": 0,
-   "seconds": 63.68698477745056,
+   "seconds": 32.00469255447388,
    "results": {
     "gksl": {
      "hs": 0.00014449705543926624,
@@ -3267,7 +3271,7 @@
   {
    "kind": "channel",
    "depth": 0,
-   "seconds": 25.636637210845947,
+   "seconds": 11.254701137542725,
    "results": {
     "gksl": {
      "hs": 1.5150960037948574e-15,

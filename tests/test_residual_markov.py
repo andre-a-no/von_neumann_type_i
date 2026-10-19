@@ -63,3 +63,20 @@ def test_one_stinespring_layer_fits_the_pauli_channel():
     R = _fit(learn.ChannelLayer(alg, kraus_rank=4), _probes(alg), 400)
     assert torch.linalg.matrix_norm(R - TARGET) < 1e-2                    # far below the residual floor 1/3
     assert torch.linalg.det(R) < -0.03                                     # target: -1/27
+
+
+def test_damped_target_is_not_a_semigroup_on_any_branch():
+    """Target (ii) of the study fails the test of Wolf, Eisert, Cubitt and Cirac on every branch of its logarithm."""
+    import importlib.util
+    import sys
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    sys.path.insert(0, str(root / 'scripts'))
+    spec = importlib.util.spec_from_file_location('residual_markov', root / 'scripts' / 'residual_markov.py')
+    rm = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(rm)
+    maps, _ = rm.target_maps(7)
+    damped, gksl = rm.semigroup_test(maps['damped']), rm.semigroup_test(maps['gksl'])
+    assert damped['all_branches_fail'] and not damped['degenerate']
+    assert damped['best'] < -0.2
+    assert gksl['branches'][0]['min_eig'] > -1e-10                 # the random GKSL target passes on k = 0

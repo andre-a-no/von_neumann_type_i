@@ -128,7 +128,8 @@ fewer raw parameters. For so small a register, Markovianity and nearest-neighbou
 jump operators is what pays: the rate model is below the target error already at $10^2$ shots ($\CLTDRatesTwo$). The
 fits to the exact probabilities reach $\CLTDLindbladExact$, $\CLTDAlgebraExact$ and $\CLTDDenseExact$ for models
 (ii)--(iv), far below the statistical errors, so the comparison at finite shots is not limited by the optimiser. The
-same ordering holds for the Choi error and for $n=\CLnMin$.
+same ordering holds for the Choi error and for $n=\CLnMin$, where the GKSL layer and the channel of $\M$ tie at
+$10^4$ shots.
 
 \paragraph{Learned rates.} For the rate model the learned values at $\CLRepeatShots$ shots are $J=\CLRatesJ\pm
 \CLRatesJSd$, $\gamma_\downarrow=\CLRatesDown\pm\CLRatesDownSd$, $\gamma_\uparrow=\CLRatesUp\pm\CLRatesUpSd$ and
@@ -141,7 +142,8 @@ projected onto the physical terms, gives $\gamma_\downarrow=\CLLindbladDown\pm\C
 $\gamma_\uparrow=\CLLindbladUp\pm\CLLindbladUpSd$ and $\gamma_\varphi=\CLLindbladPhi\pm\CLLindbladPhiSd$. These are
 biased by more than their spread, and a fraction $\CLResidual$ of the learned generator lies outside the physical span:
 the free jumps absorb statistical noise as extra dissipation, which the projection attributes in part to the rates.
-The bias shrinks with the number of shots. The GKSL layer does recover the rates exactly from the exact probabilities.
+This fraction falls with the number of shots (from about $0.19$ at $10^2$ to $0.01$ at $10^5$ shots per input, one data set
+each), and from the exact probabilities the GKSL layer recovers the rates to a relative $10^{-4}$ or better.
 
 \paragraph{Scope.} The data are simulated without state-preparation and measurement errors, the inputs and
 measurement bases are known exactly, and the true process lies inside every model class: it is Markovian and
