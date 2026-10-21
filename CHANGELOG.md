@@ -12,6 +12,13 @@ Backward compatible: everything of 1.1.0 works unchanged. New: conversion to QuT
 Lindblad generators as trainable parameters, measurements and instruments, the projection lattice and measures on it.
 
 ### Added
+- `direct_integral` module (`DirectIntegral` exported): finite type I algebras with a continuous centre,
+  ∫^⊕_X M_{n(x)} dμ(x), discretised by nodes and weights (`grid`: Gauss–Legendre, midpoint or periodic product rules
+  with a density; `torus`: a Brillouin zone with dk/2π; `monte_carlo`; or any partition), one sector per node:
+  `field`, `scalar`, `indicator` (central projection of a measurable set), `integrate`, `measure`, `trace`,
+  `normalized_trace`, `state` (normal states ∫ Tr(ρ(x) ·) dμ), `ess_sup`. Tests `tests/test_direct_integral.py`
+  (SSH ground-state energy against the elliptic-integral formula; the direct-integral theorem of the trace paper);
+  `scripts/direct_integral_demo.py`.
 - `projections` module: the projection lattice (`join` = P ∨ Q, `meet` = P ∧ Q, `complement`, `support`, `ranks`,
   Haar `random_projection` with prescribed rank per sector, `bloch_vector` of a 2×2 block); `ProjectionMeasure`,
   finitely additive measures on the projections of ⊕M_k: linear (a state, `from_state`), weighted dimension functions

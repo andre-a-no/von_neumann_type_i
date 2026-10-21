@@ -58,9 +58,9 @@ Gardner's inequality the sharp constant depends on $\delta$ and on the contrast 
 product: $|\varphi_W(X)|\le(1-\delta^2\delta'^2)^{-1/2}\varphi_W(|X|)$, with equality in even dimension. As a contrast is
 the sine of the Krein--Gustafson angle of an operator, the constant is the secant of the angle whose sine is
 $\delta\delta'$. For 25 characterisations we find the largest violation exactly in sixteen cases and bound it from below
-in four; it vanishes at the trace to the orders $\delta$, $\delta^2$, $\delta^4$ or $\delta^8$, and on direct sums only
-the contrast inside the blocks counts. We also find the sharp bounds of three unnormalised trace functionals of our
-earlier work and sharp contrast thresholds below which subadditivity of the square root (via Gustafson's criterion for
+in four; it vanishes at the trace to the orders $\delta$, $\delta^2$, $\delta^4$ or $\delta^8$, and on direct sums and
+direct integrals (finite type~I algebras with arbitrary centre) only the contrast inside the fibres counts. We also find
+the sharp bounds of three unnormalised trace functionals of our earlier work and sharp contrast thresholds below which subadditivity of the square root (via Gustafson's criterion for
 positive Jordan products) and the power-mean inequality cannot fail. The characterisations by the projection lattice
 extend to measures on projections; there the only new measures live in $2\times2$ blocks, where the envelopes are the same
 but attained. A numerical search, certified as a lower bound for each supremum, supports conjectured values for the
@@ -166,7 +166,8 @@ to the unnormalised quantities of~\cite{abed2024}, we find the sharp bound of $|
 prescribed and those of the two other trace functionals sampled there (Theorem~C), which answers the question
 of~\cite{abed2024}. On a direct sum $\bigoplus_cM_{k_c}$ a functional is a trace when its density is central, however
 different the scalars on the blocks, and accordingly only the contrast inside the blocks enters the envelopes
-(Theorem~D).
+(Theorem~D). The same holds for direct integrals over an arbitrary measure space, i.e.\ for every finite type~I algebra,
+with the essential supremum of the fibre contrasts (Theorem~\ref{thm:integral}).
 
 The operators enter the inequalities through composites such as sums, congruences, Jordan products and commutators,
 and Section~\ref{sec:composite} records how contrasts behave under these operations: the rapidities
@@ -1266,6 +1267,55 @@ density their violations are $1-\mathrm{GM}/\mathrm{AM}$ and $w_{\min}^{-1/2}-1$
 $\Tr W=\sum_ck_c$ (Propositions~\ref{prop:det} and~\ref{prop:power}; the proofs do not use the block structure).
 \end{remark}
 
+\subsection{Direct integrals: continuous centres}\label{sec:integral}
+
+The finite direct sum is the case of a finite centre. Every finite von Neumann algebra of type~I with separable predual is
+a direct integral $\M=\int^\oplus_XM_{k(x)}\,d\mu(x)$ over a $\sigma$-finite measure space $(X,\mu)$, with a measurable
+fibre dimension $k(x)<\infty$: its elements are bounded measurable fields $x\mapsto A(x)\in M_{k(x)}$, its centre is
+$L^\infty(X,\mu)$, and $\Tr A=\int_X\Tr A(x)\,d\mu(x)$. For a measurable field $W(x)>0$ with $\int\Tr W\,d\mu<\infty$ the
+normal positive functional is $\varphi_W(A)=\int_X\Tr(W(x)A(x))\,d\mu(x)$, and $\varphi_W$ is a trace if and only if
+$W(x)$ is scalar for almost every $x$. If $\mu$ has no atoms, the centre has no minimal projections, and still only the
+fibres matter.
+
+\begin{theorem}\label{thm:integral}
+Let $\M$ and $W$ be as above, fix one inequality of Table~\ref{tab:items} other than 11, 16 and~24, and let
+$V_\M(W)$ and $V_{M_{k(x)}}(W(x))$ be as in Theorem~\ref{thm:sectors}.
+\begin{enumerate}
+\item[(a)] If $v:X\to[0,\infty]$ is measurable and $V_{M_{k(x)}}(W(x))\le v(x)$ for almost every $x$, then
+$V_\M(W)\le\operatorname{ess\,sup}_xv(x)$.
+\item[(b)] If $W$ is simple, $W(x)=W_c$ on the cells $X_c$ of a countable measurable partition with $\mu(X_c)>0$, then
+$V_\M(W)\le\sup_cV_{M_{k_c}}(W_c)$, with equality for the items listed in Theorem~\ref{thm:sectors}; the measures of the
+cells do not enter.
+\end{enumerate}
+In particular, for an item whose envelope $V_n(\delta)$ is known and increasing in $\delta$ (Theorem~\ref{thm:proj},
+Proposition~\ref{prop:modular}), $V_\M(W)\le\sup_nV_n(\delta^*)$ with the essential supremum
+$\delta^*=\operatorname{ess\,sup}_x\Delta(W(x))$ of the fibre contrasts, the supremum over the dimensions that occur.
+\end{theorem}
+\begin{proof}
+(a) The proof of Theorem~\ref{thm:sectors} goes through with the sums over $c$ replaced by integrals over $X$. All
+variables are measurable fields and every functional calculus acts fibrewise, so $\cL$, $\cR$ and $\cN$ are integrals of
+the fibre quantities $\cL_x$, $\cR_x$, $\cN_x$, which are integrable since the fields are bounded and
+$\int\Tr W\,d\mu<\infty$. Where $\cL$ contains the absolute value of a functional (items 1, 4 and~14),
+$|\int f\,d\mu|\le\int|f|\,d\mu$ gives $\cL\le\int\cL_x\,d\mu$, and in items 6 and~14 the Cauchy--Schwarz and Hölder
+inequalities for integrals give $\cR\ge\int\cR_x\,d\mu$. By the definition of $V_{M_{k(x)}}(W(x))$ we have
+$\cL_x-\cR_x\le v(x)\cN_x$ almost everywhere, and where $\cN_x=0$ the variables vanish where they enter $\cL_x$, so that
+$\cL_x\le\cR_x$, since $W(x)>0$. Hence $\cL-\cR\le\int v\,\cN_x\,d\mu\le(\operatorname{ess\,sup}v)\,\cN$; for $\cN=\cR$ in items
+6 and~14 the same argument applies to $\cL/\cR\le\int\cL_x\,d\mu/\int\cR_x\,d\mu$. (b) The bound is (a) with $v=V_{M_{k_c}}
+(W_c)$ on $X_c$. For the equality choose a cell $X_c$ and a measurable $S\subset X_c$ with $0<\mu(S)<\infty$ ($\mu$ is
+$\sigma$-finite), and let the variables be a near-optimal configuration of the block $M_{k_c}$ for $x\in S$ and zero
+elsewhere. Then $\cL$, $\cR$ and $\cN$ are $\mu(S)$ times the block quantities, and the quotient is that of the block. The
+corollary follows from (a) with $v(x)=V_{k(x)}(\Delta(W(x)))$, which is measurable because the eigenvalues of a measurable
+field are measurable.
+\end{proof}
+
+\noindent Theorem~\ref{thm:sectors} is the case of a finite $X$ with point masses. Conversely, a simple field is a finite or
+countable direct sum with the cells as blocks, whose weights $\mu(X_c)$ do not change the envelope. This is how the library
+computes on direct integrals: its class \texttt{DirectIntegral} represents $(X,\mu)$ by nodes $x_i$ with weights $w_i$ (a
+quadrature rule, Monte Carlo samples or the cells of a partition), the algebra by $\bigoplus_iM_{k(x_i)}$, a field by its
+values at the nodes and $\Tr$ by $\sum_iw_i\Tr A(x_i)$. Fibrewise operations are exact, and for simple fields so are the
+integrals; the test suite checks Theorem~\ref{thm:integral}(b) for item~23 with cells of very different measures
+(\texttt{tests/test\_direct\_integral.py}).
+
 \section{Contrasts of composite operators}\label{sec:composite}
 
 The operators of Table~\ref{tab:items} enter the inequalities through composites: sums $A+B$ (items 2, 10, 12, 13),
@@ -1831,7 +1881,7 @@ traces is measured by the Michelson contrast of its density. For Gardner's inequ
 be: the sharp constant is the secant of the angle whose sine is the product of the contrasts of the density and of the
 operator. For the other characterisations the envelopes vanish at the trace to the orders $\delta$, $\delta^2$, $\delta^4$
 or $\delta^8$, with the classical reverse-inequality constants as exact values where we could determine them; on direct
-sums only the contrast inside the blocks counts. The rules by which contrasts compose (rapidities add for products and
+sums and direct integrals only the contrast inside the fibres counts. The rules by which contrasts compose (rapidities add for products and
 means, angles add for Jordan products, three contrasts multiply in the commutator test) explain some of the thresholds in
 the contrast of the operators that the computation reveals, and prove them for subadditivity of the square root and for
 the power-mean inequality. The characterisations by the projection lattice (items 19, 23 and the modular law) hold

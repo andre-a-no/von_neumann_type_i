@@ -61,7 +61,7 @@ for s in $SCRIPTS; do
 done
 # the studies without --mode/--device (CPU, sizes of the paper) and the schematic figures: full runs only
 if [ "$MODE" = full ] && [ -z "${ONLY:-}" ] && [ -z "$TF32" ]; then
-  for s in architecture_bench noisy_xy_mixer noisy_xy_control channel_learning residual_markov library_paper_schematics; do
+  for s in architecture_bench noisy_xy_mixer noisy_xy_control channel_learning residual_markov direct_integral_demo library_paper_schematics; do
     start=$(date +%s)
     echo "=== $s  log: $LOGS/$s.log"
     if python "scripts/$s.py" > "$LOGS/$s.log" 2>&1; then

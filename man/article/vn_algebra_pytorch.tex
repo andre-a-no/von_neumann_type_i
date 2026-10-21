@@ -30,7 +30,7 @@
 
 % numbers and tables produced by scripts/*.py (bash scripts/run_all.sh [quick|full] [device])
 \newcommand{\gen}[1]{\IfFileExists{generated/#1.tex}{\input{generated/#1.tex}}{}}
-\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}\gen{renyi_threshold}\gen{connes_stormer}\gen{permutational}\gen{trace_characterizations}\gen{symmetry_resolved}\gen{noisy_xy}\gen{architecture}\gen{noisy_control}\gen{channel_learning}\gen{residual_markov}
+\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}\gen{renyi_threshold}\gen{connes_stormer}\gen{permutational}\gen{trace_characterizations}\gen{symmetry_resolved}\gen{noisy_xy}\gen{architecture}\gen{noisy_control}\gen{channel_learning}\gen{residual_markov}\gen{direct_integral}
 % generated/baselines.tex written by the current scripts/baselines.py defines \BaseMinKS and has a single-precision
 % GPU column; an older file has one GPU column (double precision) and one library column (GPU) for ground states.
 \ifdefined\BaseMinKS\newcommand{\BaseNew}{1}\else\newcommand{\BaseNew}{0}\fi
@@ -45,6 +45,9 @@
 \providecommand{\NumTimeRows}{\multicolumn{9}{c}{\emph{run scripts/numerics.py}}\\}
 \providecommand{\NumAccRows}{\multicolumn{5}{c}{\emph{run scripts/numerics.py}}\\}
 \providecommand{\NumTimeHeader}{generate & eigh $f(A)$ & SVD $|A|$ & channel & expm & opt.\ step}
+\providecommand{\DIRows}{\multicolumn{3}{c}{\emph{run scripts/direct\_integral\_demo.py}}\\}
+\providecommand{\DISlope}{--}\providecommand{\DIMCNodes}{--}\providecommand{\DIMCSeeds}{--}\providecommand{\DIMCErr}{--}
+\providecommand{\DIBigNodes}{--}\providecommand{\DIBigTime}{--}\providecommand{\DIThreads}{--}
 \providecommand{\BaseMCRows}{\multicolumn{6}{c}{\emph{run scripts/baselines.py}}\\}
 \providecommand{\BaseGSRows}{\multicolumn{6}{c}{\emph{run scripts/baselines.py}}\\}
 \providecommand{\ValTraceRows}{\multicolumn{5}{c}{\emph{run scripts/validate\_known\_results.py}}\\}
@@ -670,6 +673,8 @@ Lindblad generators (\texttt{LindbladParam}); batched multistart \texttt{extremi
 estimates\\
 \texttt{measurement} & POVMs (sectors, bases, rotated and randomised settings), sampling, likelihoods, instruments
 recording the outcome in the centre, Fisher information; projection-valued measures with values (\texttt{PVM})\\
+\texttt{direct\_integral} & \texttt{DirectIntegral}: a measure space by nodes and weights (product rules, torus,
+Monte Carlo, partitions); fields, trace, normal states, central projections (Section~\ref{sec:dintegral})\\
 \texttt{projections} & projection lattice ($P\vee Q$, $P\wedge Q$, ranks, Haar random projections); measures on
 projections (states by Gleason's theorem, frame functions on $2\times2$ blocks, dispersion-free measures);
 spectral measures of self-adjoint operators\\
@@ -1324,6 +1329,54 @@ ranges; Petz's equality condition; the recovery bound of~\cite[Theorem~2.1]{jung
 \label{tab:tests}
 \end{table}
 
+\subsection{Continuous centres: direct integrals}\label{sec:dintegral}
+
+The algebras of the library have a finite centre $\C^C$, the $L^\infty$ of a finite set with point masses. A finite
+type~I algebra in general is a direct integral $\int^\oplus_XM_{k(x)}\,d\mu(x)$ over a measure space $(X,\mu)$: its
+centre is $L^\infty(X,\mu)$, its elements are bounded measurable fields $x\mapsto A(x)$, and its trace is
+$\int\Tr A(x)\,d\mu(x)$. Examples are the translation-invariant observables of a lattice system, a direct integral over
+the Brillouin zone; averages over disorder, a direct integral over the realisations; and classical probability, with
+$k\equiv1$. The class \texttt{DirectIntegral} discretises $(X,\mu)$ by nodes $x_i$ with weights $w_i>0$: product rules on
+boxes (Gauss--Legendre or midpoint, with a density $\mu=\rho\,dx$), the periodic rule on a torus with the normalised Haar
+measure, Monte Carlo samples, or the cells of a partition with their measures. It works in $\bigoplus_iM_{k(x_i)}$, one
+sector per node, and maps a field to $\bigoplus_iA(x_i)$, the trace to $\sum_iw_i\Tr A(x_i)$, a normal state
+$\int\Tr(\rho(x)\,\cdot\,)\,d\mu$ to a density matrix, the central projection of a measurable set to a sum of sector
+units, and an essential supremum to a maximum over the nodes. Products, the functional calculus, spectra, norms and
+channels that preserve the centre act fibrewise and are exact at the nodes; only integrals carry the error of the rule,
+and for fields that are constant on the cells of a partition they are exact. The momentum sectors of
+Section~\ref{sec:chains} are the case of a torus, with the $n$ momenta of a periodic chain of $n$ cells.
+
+\begin{lstlisting}[caption={The ground-state energy per cell of the SSH chain as an integral over the Brillouin zone.},
+label=lst:dintegral]
+X = DirectIntegral.torus(64, dims=2)                      # [0, 2 pi) with dk/2pi, 64 momenta
+H = X.field(bloch_hamiltonian, is_self_adjoint=True)      # one 2x2 sector per momentum
+e0 = X.trace(H.apply_function(lambda w: w.clamp(max=0)))  # int Tr min(H(k), 0) dk/2pi
+\end{lstlisting}
+
+\begin{table}[tbp]
+\centering\small
+\begin{tabular}{rrr}
+\toprule
+momenta $n$ & error, $t=0.5$ & error, $t=1$\\
+\midrule
+\DIRows
+\bottomrule
+\end{tabular}
+\caption{Ground-state energy per cell of the SSH chain, $H(k)=\bigl(\begin{smallmatrix}0&1+te^{-ik}\\1+te^{ik}&0
+\end{smallmatrix}\bigr)$, from \texttt{DirectIntegral.torus(n)}, against $-\frac2\pi(1+t)E\bigl(\frac{4t}{(1+t)^2}\bigr)$
+(complete elliptic integral $E$); \texttt{scripts/direct\_integral\_demo.py}.}
+\label{tab:dintegral}
+\end{table}
+
+Listing~\ref{lst:dintegral} and Table~\ref{tab:dintegral} show the result for the SSH chain. For the gapped chain
+($t=0.5$) the integrand is analytic and periodic, and the error of the periodic rule falls exponentially, to rounding at
+$n=64$. For the gapless chain ($t=1$) the lower band touches zero at $k=\pi$, the integrand $-|2\cos(k/2)|$ has a kink,
+and the error falls as $n^{-2}$ (fitted slope $\DISlope$). With $\DIMCNodes$ Monte Carlo nodes the root-mean-square error
+over $\DIMCSeeds$ seeds is $\DIMCErr$, the rate $n^{-1/2}$ of random sampling. All nodes go through one batched
+eigendecomposition of $2\times2$ blocks: $\DIBigNodes$ momenta take $\DIBigTime$\,s on a CPU with $\DIThreads$ threads.
+The companion paper~\cite{nn_trace} uses the same picture to extend its theorem on direct sums to direct integrals: on
+every finite type~I algebra, only the contrast of the density inside the fibres enters the violation envelopes.
+
 \section{Use case: noisy circuits with a conserved charge}\label{sec:noisy}
 
 \paragraph{Context.} Quantum algorithms that preserve a charge offer a cheap test for errors. If the ideal evolution
@@ -1682,7 +1735,9 @@ with $k_c^2\times k_c^2$ matrices and are limited to blocks of a few tens; RK4 a
 on simulated data for registers of a few qubits. Encoders into smaller algebras, tomography of larger registers with
 sparse measurements, training viewed as a dynamics of the channel and certified upper bounds for the learned maps are
 not implemented; the plan is kept in the repository (\texttt{ROADMAP\_learning.md}).
-\item \emph{Scope.} Finite dimensions and Type~I only; no tensor-network methods. Sparse methods exist only for sector
+\item \emph{Scope.} Type~I with finite-dimensional fibres: a continuous centre only through the discretisation of
+Section~\ref{sec:dintegral}, infinite factors only through truncation, and types II and III only through the finite stages
+of towers of inclusions; no tensor-network methods. Sparse methods exist only for sector
 Hamiltonians and for jumps that map basis vectors to basis vectors; other jumps between sectors are stored densely.
 Results are cross-checked against QuTiP and QuSpin in the test suite, and the permutational Lindblad solver is timed
 against QuTiP's PIQS in~\cite{nn_btc}; systematic benchmarks against QuTiP, \texttt{dynamiqs}, QuantumToolbox.jl, QuSpin
