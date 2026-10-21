@@ -31,6 +31,7 @@ from typing import Callable, Optional, Sequence, Union
 import torch
 
 from .algebra import TypeIAlgebra
+from .channels import _check_input
 from .states import DensityMatrix
 
 Operator = TypeIAlgebra.Operator
@@ -105,7 +106,10 @@ class DirectIntegral:
         for m in wmesh:
             w = w * m.reshape(-1)
         if density is not None:
-            w = w * torch.as_tensor(density(x), dtype=torch.float64).reshape(-1)
+            rho = torch.as_tensor(density(x), dtype=torch.float64).reshape(-1)
+            if bool((rho < 0).any()):
+                raise ValueError("grid: the density must be non-negative")
+            w = w * rho
             keep = w > 0
             x, w = x[keep], w[keep]
         d = dims(x) if callable(dims) else dims
@@ -115,7 +119,10 @@ class DirectIntegral:
     @staticmethod
     def torus(n: Union[int, Sequence[int]], dims: Union[int, Callable], d: int = 1, **kw) -> 'DirectIntegral':
         """The torus [0, 2 pi)^d with the normalised Haar measure dk/(2 pi)^d (a Brillouin zone), n nodes per
-        direction (the momenta 2 pi j / n of a periodic chain of n cells), periodic trapezoid rule."""
+        direction (the momenta 2 pi j / n of a periodic chain of n cells), periodic trapezoid rule. Note: `dims` is
+        the fibre dimension n(x), `d` the dimension of the torus: torus(64, dims=2) is a circle with 2x2 fibres."""
+        if 'rule' in kw:
+            raise TypeError("torus: the rule is the periodic trapezoid rule; use grid for other rules")
         ns = [int(n)] * d if isinstance(n, int) else list(n)
         X = DirectIntegral.grid([(0.0, 2 * math.pi)] * len(ns), ns, dims, rule='periodic', **kw)
         X.weights = X.weights / (2 * math.pi) ** len(ns)
@@ -195,18 +202,21 @@ class DirectIntegral:
         v = torch.as_tensor(values).to(self.nodes.device)
         if v.shape[-1] != self.C:
             raise ValueError(f"integrate: need one value per node ({self.C}), got shape {tuple(v.shape)}")
-        return (v * self.weights.to(v.dtype if not torch.is_complex(v) else v.real.dtype)).sum(-1)
+        dt = torch.promote_types(v.dtype, self.weights.dtype)        # integer values must not truncate the weights
+        return (v.to(dt) * self.weights.to(dt)).sum(-1)
 
     def measure(self, predicate: Optional[Callable[[torch.Tensor], torch.Tensor]] = None) -> torch.Tensor:
         """mu(S) for S = {x : predicate(x)} (mu(X) without a predicate)."""
         if predicate is None:
             return self.weights.sum()
-        return self.weights[torch.as_tensor(predicate(self.nodes)).to(self.nodes.device)].sum()
+        mask = torch.as_tensor(predicate(self.nodes)).to(self.nodes.device)
+        if mask.dtype != torch.bool or mask.shape != (self.C,):
+            raise ValueError(f"measure: the predicate must return a boolean tensor of shape ({self.C},)")
+        return self.weights[mask].sum()
 
     def fibre_traces(self, A: Operator) -> torch.Tensor:
         """Tr A(x_i), shape (batch, C)."""
-        if A.algebra is not self.algebra and A.algebra.k_factors != self.algebra.k_factors:
-            raise ValueError("fibre_traces: the operator belongs to another algebra")
+        _check_input(A, self.algebra, "DirectIntegral")
         return torch.diagonal(A.matrix, dim1=-2, dim2=-1).sum(-1)
 
     def trace(self, A: Operator) -> torch.Tensor:

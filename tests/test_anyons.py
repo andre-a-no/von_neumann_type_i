@@ -34,13 +34,13 @@ def test_fibonacci_sizes_and_total_charge():
     assert odd.charges == [1, 3] and odd.algebra.k_factors == [34, 21]
 
 
-def test_tower_jones_index_markov_trace_and_basic_construction():
-    k, L = 3, 9
+@pytest.mark.parametrize('k,L', [(2, 4), (3, 9), (4, 6), (5, 7)])
+def test_tower_jones_index_markov_trace_and_basic_construction(k, L):
     inc = AnyonChain(k, L).inclusion()
     small, big = inc.smaller, AnyonChain(k, L)
     for i in range(1, L - 1):                                        # TL_{L-1} sits in TL_L in standard form
         assert torch.allclose(inc.embed(small.generator(i)).matrix, big.generator(i).matrix, atol=1e-12)
-    assert inc.index() == pytest.approx(big.d ** 2)                 # 4 cos^2(pi/5) = phi^2
+    assert inc.index() == pytest.approx(big.d ** 2)                 # 4 cos^2(pi/(k+2)) for L >= k
     t = inc.markov_trace().t.numpy()
     qd = np.array([big.quantum_dimension(b) for b in big.charges])
     assert np.allclose(t / t.sum(), qd / qd.sum())                  # Markov trace = quantum dimensions
@@ -66,10 +66,27 @@ def test_golden_chain_central_charge():
 
 
 def test_open_chain_gap_ratio_is_a_kac_dimension():
-    """Ising (k = 2): the lowest level of the sector b = 1 (spin 1) over the first excitation of b = 0 tends to
+    """Ising (k = 2): the lowest level of the sector b = 2 (spin 1) over the first excitation of b = 0 tends to
     h_{1,3}/2 = 1/4 (the vacuum tower has its first descendant at level 2)."""
     r = []
     for L in (12, 16, 20):
         e = AnyonChain(2, L).low_energies(levels=2)
         r.append(float((e[1][0] - e[0][0]) / (e[0][1] - e[0][0])))
     assert abs(r[-1] - AnyonChain.kac(2, 1, 3) / 2) < 3e-3 and abs(r[-1] - 0.25) < abs(r[0] - 0.25)
+
+
+def test_tower_below_k_is_not_yet_the_subfactor():
+    """For L < k not all charges occur: the index is below d^2 (k = 4, L = 3: phi^2 instead of 3)."""
+    inc = AnyonChain(4, 3).inclusion()
+    assert inc.index() == pytest.approx(((1 + math.sqrt(5)) / 2) ** 2)
+    assert inc.index() < AnyonChain(4, 3).d ** 2 - 0.1
+
+
+def test_periodic_chain_sectors_and_odd_length():
+    ch = AnyonChain(3, 10, periodic=True)
+    assert ch.charges == [0, 1] and ch.algebra.k_factors == [123, 123]   # Lucas number L_10 = 123 per parity
+    e = ch.low_energies(levels=3)
+    assert torch.allclose(e[0], e[1], atol=1e-10)                         # translation exchanges the parities
+    with pytest.raises(ValueError):
+        AnyonChain(3, 7, periodic=True)
+    assert AnyonChain(3, 8).algebra.charges == [0, 2]                     # integer charges 2 x spin

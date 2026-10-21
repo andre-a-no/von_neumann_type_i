@@ -310,17 +310,18 @@ class PVM(POVM):
         return self.algebra.operator(m, is_self_adjoint=True, is_positive=True, is_projection=True)
 
     def pushforward(self, f: Callable[[torch.Tensor], torch.Tensor], tol: Optional[float] = None) -> 'PVM':
-        """The spectral measure of f(A): values f(lambda_j); for batch 1, outcomes with values closer than tol are
-        merged (their projections added)."""
+        """The spectral measure of f(A): values f(lambda_j); for batch 1, outcomes whose values lie within tol of the
+        smallest of their group are merged (their projections added); default tol sqrt(eps) * max |f|."""
         v = f(self.values)
         if self.values.shape[0] != 1:
             return PVM(self.effects, v, self.algebra, check=False, outcomes=self.outcomes)
-        tol = _default_tol(self.effects.dtype) if tol is None else tol
-        order = torch.argsort(v[0]).tolist()
         vals = v[0].tolist()
+        if tol is None:                                  # as projections.spectral_measure: relative to max |value|
+            tol = _default_tol(self.effects.dtype) ** 0.5 * (max(abs(x) for x in vals) or 1.0)
+        order = torch.argsort(v[0]).tolist()
         groups = []
-        for j in order:
-            if groups and vals[j] - vals[groups[-1][-1]] <= tol:
+        for j in order:                                  # compare with the first member: no chaining of small gaps
+            if groups and vals[j] - vals[groups[-1][0]] <= tol:
                 groups[-1].append(j)
             else:
                 groups.append([j])

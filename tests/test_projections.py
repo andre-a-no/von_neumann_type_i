@@ -203,3 +203,22 @@ def test_modular_law_halves(n):
             else:
                 v = (mu(P) + mu(Q) - mu(J) - mu(Mt)) / (mu(J) + mu(Mt))
             assert bound - 1e-4 < float(v) <= bound + 1e-12
+
+
+def test_spectral_measure_scale_and_support():
+    alg = TypeIAlgebra([3], [3], precision='double')
+    A = alg.operator(1e-6 * torch.diag(torch.tensor([1.0, 2.0, 3.0], dtype=torch.complex128)).view(1, 1, 3, 3),
+                     is_self_adjoint=True)
+    E = spectral_measure(A)
+    assert len(E) == 3                                   # small eigenvalues are not merged by an absolute tolerance
+    assert torch.allclose(E.observable().matrix, A.matrix, atol=1e-20)
+    run = alg.operator(torch.diag(torch.tensor([0.0, 0.7e-5, 1.4e-5], dtype=torch.complex128)).view(1, 1, 3, 3),
+                       is_self_adjoint=True)
+    assert len(spectral_measure(run, tol=1e-5)) == 2     # no chaining of gaps below the tolerance
+    small = alg.operator(1e-11 * alg.identity().matrix, is_self_adjoint=True)
+    assert projections.ranks(projections.support(small)).tolist() == [[3]]       # relative tolerance
+    with pytest.raises(ValueError):
+        projections.support(alg.operator(-alg.identity().matrix, is_self_adjoint=True))
+    other = TypeIAlgebra([1, 2], [1, 2], precision='double')
+    with pytest.raises(ValueError):
+        projections.join(projections.random_projection(alg, [1]), projections.random_projection(other, [0, 1]))

@@ -27,11 +27,11 @@ mutually orthogonal projections E_j with real values lambda_j, A = sum_j lambda_
     mu(P), mu.modular_defect(P, Q)                                          # mu(PvQ) + mu(P^Q) - mu(P) - mu(Q)
     E = projections.spectral_measure(A)                                     # PVM: E.values, E[j], E.observable()
 """
-import math
 from typing import Callable, Dict, Optional, Sequence
 
 import torch
 
+from . import cost
 from .algebra import TypeIAlgebra
 from .channels import _check_input
 from .measurement import PVM, _default_tol
@@ -65,16 +65,25 @@ def complement(P: Operator) -> Operator:
 
 
 def support(A: Operator, tol: Optional[float] = None) -> Operator:
-    """The support (range projection) of a positive operator: its spectral projection onto the eigenvalues > tol."""
+    """The support (range projection) of a positive operator: its spectral projection onto the eigenvalues
+    > tol * ||A|| (relative tolerance, per sample). Raises ValueError for an operator with eigenvalues below
+    -tol * ||A|| (not positive)."""
     _check_input(A, A.algebra, "support")
     if not A.is_self_adjoint:
         raise ValueError("support: expected a self-adjoint (positive) operator")
     tol = _default_tol(A.matrix.dtype) if tol is None else tol
-    return _indicator(A, tol)
+    norm = A.operator_norm()
+    if bool((A.lambda_min < -tol * norm).any()):
+        raise ValueError("support: expected a positive operator")
+    B = A.matrix.shape[0]
+    thr = (tol * norm).reshape(B, 1)
+    out = A.apply_function(lambda w: (w > thr.to(w.dtype)).to(w.dtype))
+    return A.algebra.operator(out.matrix, is_self_adjoint=True, is_positive=True, is_projection=True)
 
 
 def join(P: Operator, Q: Operator, tol: Optional[float] = None) -> Operator:
     """P v Q, the projection onto ran P + ran Q: the support of P + Q (eigenvalues > tol)."""
+    _check_input(Q, P.algebra, "join")
     _require_projection(P, "join")
     _require_projection(Q, "join")
     tol = _default_tol(P.matrix.dtype) if tol is None else tol
@@ -84,6 +93,7 @@ def join(P: Operator, Q: Operator, tol: Optional[float] = None) -> Operator:
 
 def meet(P: Operator, Q: Operator, tol: Optional[float] = None) -> Operator:
     """P ^ Q, the projection onto ran P n ran Q: the spectral projection of P + Q for the eigenvalues > 2 - tol."""
+    _check_input(Q, P.algebra, "meet")
     _require_projection(P, "meet")
     _require_projection(Q, "meet")
     tol = _default_tol(P.matrix.dtype) if tol is None else tol
@@ -166,7 +176,8 @@ class ProjectionMeasure:
             return
         g = torch.Generator().manual_seed(0)
         n = torch.randn(samples, 3, generator=g, dtype=torch.float64)
-        n = (n / n.norm(dim=-1, keepdim=True)).to(rho.algebra.hilbert.real_dtype)
+        n = (n / n.norm(dim=-1, keepdim=True)).to(device=rho.algebra.hilbert.device,
+                                                  dtype=rho.algebra.hilbert.real_dtype)
         w = self.weights()
         for c, f in self.frames.items():
             a, b = f(n), f(-n)
@@ -210,9 +221,10 @@ class ProjectionMeasure:
         b = b - (b @ a) * a
         b = b / b.norm()
         e = torch.linalg.cross(a, b)
+        frame = torch.stack([a, b, e])                                             # (3, 3), rows a, b, e
 
         def g(n):
-            u = torch.stack([n.to(torch.float64) @ v for v in (a, b, e)])          # coordinates (3, ...)
+            u = torch.movedim(n.to(torch.float64) @ frame.to(n.device).T, -1, 0)    # coordinates (3, ...)
             eps = 1e-12
             s = torch.where(u[0].abs() > eps, u[0].sign(), torch.where(u[1].abs() > eps, u[1].sign(), u[2].sign()))
             return (0.5 * s).to(n.dtype)
@@ -272,8 +284,8 @@ class ProjectionMeasure:
         n = n / n.norm(dim=-1, keepdim=True)
         m = rho.matrix.clone()
         for c, g in self.frames.items():
-            y = g(n.to(rho.algebra.hilbert.real_dtype)).to(torch.float64)
-            a = torch.linalg.lstsq(n, y.unsqueeze(-1)).solution.squeeze(-1)       # (3,)
+            y = g(n.to(device=m.device, dtype=rho.algebra.hilbert.real_dtype)).to(device='cpu', dtype=torch.float64)
+            a = torch.linalg.lstsq(n, y.unsqueeze(-1)).solution.squeeze(-1).to(m.device)    # (3,)
             if float((n @ a - y).abs().max()) > tol:
                 raise ValueError(f"gleason_state: the frame function of sector {c} is not linear; mu is not a state")
             s = _paulis(m.dtype, m.device)
@@ -307,7 +319,8 @@ class ProjectionMeasure:
 def spectral_measure(A: Operator, tol: Optional[float] = None, group: bool = True) -> PVM:
     """
     The spectral measure of a self-adjoint A as a PVM. group=True (batch 1): one outcome per distinct eigenvalue
-    (eigenvalues closer than tol are merged, across sectors), E_j the spectral projection, values ascending.
+    (eigenvalues within tol of the smallest of their group are merged, across sectors; default tol
+    sqrt(eps) * ||A||), E_j the spectral projection, values ascending.
     group=False (any batch): one rank-one outcome per eigenvector, sector after sector, values (batch, sum_c k_c).
     """
     _check_input(A, A.algebra, "spectral_measure")
@@ -318,6 +331,9 @@ def spectral_measure(A: Operator, tol: Optional[float] = None, group: bool = Tru
     dec = A.eigh()
     dtype = A.matrix.dtype
     dev = A.matrix.device
+    J = sum(alg.k_factors)
+    cost.check_memory(cost.tensor_bytes((B, J, alg.C, alg.k_max, alg.k_max), dtype), dev,
+                      f"spectral_measure ({J} outcomes of {alg.C} sectors up to {alg.k_max})")
     if not group:
         E, vals, outs = [], [], []
         for c, (w, V) in enumerate(dec):
@@ -331,11 +347,12 @@ def spectral_measure(A: Operator, tol: Optional[float] = None, group: bool = Tru
         return PVM(torch.stack(E, dim=1), torch.stack(vals, dim=-1), alg, check=False, outcomes=outs)
     if B != 1:
         raise ValueError("spectral_measure: group=True needs a single operator (batch 1); use group=False for batches")
-    tol = math.sqrt(_default_tol(dtype)) if tol is None else tol
     items = sorted(((float(w[0, a]), c, a) for c, (w, V) in enumerate(dec) for a in range(alg.k_factors[c])))
+    scale = max(abs(x[0]) for x in items) or 1.0
+    tol = (_default_tol(dtype) ** 0.5) * scale if tol is None else tol    # relative to ||A||
     groups = []
-    for lam, c, a in items:
-        if groups and lam - groups[-1][-1][0] <= tol:
+    for lam, c, a in items:                              # compare with the first member: no chaining of small gaps
+        if groups and lam - groups[-1][0][0] <= tol:
             groups[-1].append((lam, c, a))
         else:
             groups.append([(lam, c, a)])
@@ -346,6 +363,6 @@ def spectral_measure(A: Operator, tol: Optional[float] = None, group: bool = Tru
             k_c = alg.k_factors[c]
             v = dec[c][1][0, :, a]
             E[0, j, c, :k_c, :k_c] += v.unsqueeze(-1) * v.conj().unsqueeze(-2)
-        vals.append(sum(x[0] for x in grp) / len(grp))
-    values = torch.tensor(vals, dtype=alg.hilbert.real_dtype, device=dev)
+        vals.append(torch.stack([dec[c][0][0, a] for _, c, a in grp]).mean())     # differentiable in A
+    values = torch.stack(vals).unsqueeze(0).to(alg.hilbert.real_dtype)
     return PVM(E, values, alg, check=False)

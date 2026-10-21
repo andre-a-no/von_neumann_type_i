@@ -42,7 +42,7 @@ def test_monte_carlo_and_gauss_rules():
                                    20000, dims=2, generator=g)
     H = X.field(ssh(t), is_self_adjoint=True)
     e0 = float(X.trace(H.apply_function(lambda w: w.clamp(max=0))).real)
-    assert abs(e0 - ssh_energy(t)) < 5 * 0.25 / math.sqrt(20000)    # |lambda_min| has spread below 0.25
+    assert abs(e0 - ssh_energy(t)) < 5 * 0.35 / math.sqrt(20000)    # |lambda_min| has standard deviation 0.345
     # Gauss-Legendre with a density: mu = 6 x (1 - x) dx on [0, 1] (mass 1), int x^2 dmu = 3/10
     Y = DirectIntegral.grid([(0, 1)], 6, dims=1, density=lambda x: 6 * x[:, 0] * (1 - x[:, 0]))
     assert float(Y.measure()) == pytest.approx(1.0, abs=1e-14)
@@ -94,3 +94,15 @@ def test_only_the_fibre_contrast_matters():
     v = (phi(projections.join(P, Q, 1e-12)) - phi(P) - phi(Q)) / (phi(P) + phi(Q))
     assert bound - 1e-6 < float(v) <= bound + 1e-12
     assert Wop.is_self_adjoint
+
+
+def test_integer_values_and_predicates():
+    X = DirectIntegral.grid([(0, 1)], 4, dims=1, rule='midpoint')
+    assert float(X.integrate(torch.tensor([1, 1, 1, 1]))) == pytest.approx(1.0)        # no truncation of weights
+    assert float(X.measure(lambda x: x[:, 0] > 0.5)) == pytest.approx(0.5)
+    with pytest.raises(ValueError):
+        X.measure(lambda x: (x[:, 0] > 0.5).long())
+    with pytest.raises(ValueError):
+        DirectIntegral.grid([(0, 1)], 4, dims=1, density=lambda x: x[:, 0] - 0.5)
+    with pytest.raises(TypeError):
+        DirectIntegral.torus(8, dims=1, rule='gauss')

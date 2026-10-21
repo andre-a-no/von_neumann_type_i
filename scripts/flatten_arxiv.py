@@ -20,16 +20,19 @@ def group(s: str, i: int) -> int:
     """Index just after the balanced {...} group that starts at s[i] == '{'."""
     assert s[i] == '{', s[i:i + 40]
     depth = 0
-    for j in range(i, len(s)):
+    j = i
+    while j < len(s):
         c = s[j]
-        if c == '\\':
+        if c == '\\':                                  # a control symbol: \{, \} and \\ are not braces
+            j += 2
             continue
-        if c == '{' and s[j - 1] != '\\':
+        if c == '{':
             depth += 1
-        elif c == '}' and s[j - 1] != '\\':
+        elif c == '}':
             depth -= 1
             if depth == 0:
                 return j + 1
+        j += 1
     raise ValueError('unbalanced group at ' + s[i:i + 60])
 
 
