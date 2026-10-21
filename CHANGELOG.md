@@ -12,6 +12,13 @@ Backward compatible: everything of 1.1.0 works unchanged. New: conversion to QuT
 Lindblad generators as trainable parameters, measurements and instruments, the projection lattice and measures on it.
 
 ### Added
+- `anyons` module (`AnyonChain` exported): chains of SU(2)_k anyons in the fusion-path basis (paths on A_{k+1}),
+  open (one sector per total charge) or periodic; Temperley–Lieb generators `generator(i)`, dense `hamiltonian` and
+  `sparse_hamiltonian` (krylov.SparseSectorHamiltonian), `low_energies` (dense or restarted Lanczos with deflation),
+  the tower TL_{L−1} ⊂ TL_L as an `Inclusion` in standard form (Jones index 4cos²(π/(k+2)), Markov trace = quantum
+  dimensions), conformal data `central_charge`, `velocity`, `kac`. Tests `tests/test_anyons.py` (Temperley–Lieb
+  relations, tower, Lanczos against dense, c = 7/10 of the golden chain, an Ising Kac ratio);
+  `scripts/anyon_chain.py` (Table in the library paper).
 - `direct_integral` module (`DirectIntegral` exported): finite type I algebras with a continuous centre,
   ∫^⊕_X M_{n(x)} dμ(x), discretised by nodes and weights (`grid`: Gauss–Legendre, midpoint or periodic product rules
   with a density; `torus`: a Brillouin zone with dk/2π; `monte_carlo`; or any partition), one sector per node:

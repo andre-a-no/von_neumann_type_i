@@ -39,7 +39,7 @@ SIDE_NAME = {'lecture_notes': {'en': 'Lecture notes', 'es': 'Apuntes de clase', 
 HOME_TITLE = 'Block-diagonal operators, symmetry sectors and quantum channels in PyTorch'
 API_MODULES = ['algebra', 'functional', 'hilbert_space', 'states', 'channels', 'composite', 'dynamics', 'chains',
                'krylov', 'su2', 'decompose', 'inclusions', 'divergences', 'jordan', 'optimize', 'cost',
-               'measurement', 'projections', 'direct_integral', 'learn', 'interop', 'permutational']
+               'measurement', 'projections', 'direct_integral', 'anyons', 'learn', 'interop', 'permutational']
 
 _files = {}
 
