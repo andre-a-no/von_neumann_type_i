@@ -6,16 +6,40 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 
 ## [Unreleased]
 
-## [1.2.0] – 2026-10-19
+## [1.2.0] – 2026-10-25
 
 Backward compatible: everything of 1.1.0 works unchanged. New: conversion to QuTiP and dynamiqs, channels and
-Lindblad generators as trainable parameters, measurements and instruments.
+Lindblad generators as trainable parameters, measurements and instruments, the projection lattice and measures on it.
 
 ### Added
+- `anyons` module (`AnyonChain` exported): chains of SU(2)_k anyons in the fusion-path basis (paths on A_{k+1}),
+  open (one sector per total charge) or periodic; Temperley–Lieb generators `generator(i)`, dense `hamiltonian` and
+  `sparse_hamiltonian` (krylov.SparseSectorHamiltonian), `low_energies` (dense or restarted Lanczos with deflation),
+  the tower TL_{L−1} ⊂ TL_L as an `Inclusion` in standard form (Jones index 4cos²(π/(k+2)), Markov trace = quantum
+  dimensions), conformal data `central_charge`, `velocity`, `kac`. Tests `tests/test_anyons.py` (Temperley–Lieb
+  relations, tower, Lanczos against dense, c = 7/10 of the golden chain, an Ising Kac ratio);
+  `scripts/anyon_chain.py` (Table in the library paper).
+- `direct_integral` module (`DirectIntegral` exported): finite type I algebras with a continuous centre,
+  ∫^⊕_X M_{n(x)} dμ(x), discretised by nodes and weights (`grid`: Gauss–Legendre, midpoint or periodic product rules
+  with a density; `torus`: a Brillouin zone with dk/2π; `monte_carlo`; or any partition), one sector per node:
+  `field`, `scalar`, `indicator` (central projection of a measurable set), `integrate`, `measure`, `trace`,
+  `normalized_trace`, `state` (normal states ∫ Tr(ρ(x) ·) dμ), `ess_sup`. Tests `tests/test_direct_integral.py`
+  (SSH ground-state energy against the elliptic-integral formula; the direct-integral theorem of the trace paper);
+  `scripts/direct_integral_demo.py`.
+- `projections` module: the projection lattice (`join` = P ∨ Q, `meet` = P ∧ Q, `complement`, `support`, `ranks`,
+  Haar `random_projection` with prescribed rank per sector, `bloch_vector` of a 2×2 block); `ProjectionMeasure`,
+  finitely additive measures on the projections of ⊕M_k: linear (a state, `from_state`), weighted dimension functions
+  (`dimension`), frame functions on 2×2 blocks (the only non-linear measures, by Gleason's theorem), dispersion-free
+  measures (`dispersion_free`, which exist only on blocks of size ≤ 2, by Kochen–Specker), `modular_defect`,
+  `gleason_state`, `is_linear`, `is_dimension_function`; `spectral_measure(A)`, the spectral measure of a self-adjoint
+  operator (eigenvalues merged across sectors, or one outcome per eigenvector for a batch).
+- `measurement.PVM` (exported): a projective POVM with real values per outcome; `observable`, `expectation`,
+  `variance`, spectral projections `projection(predicate)`, `pushforward(f)` (the spectral measure of f(A)).
+  Tests `tests/test_projections.py`, including the modular-law and measure propositions of the trace paper.
 - `learn` module: quantum channels as trainable networks. `ChannelLayer` (Stinespring isometries, within one algebra
   or between algebras with allowed sector transitions), `UnitaryLayer`, `LindbladLayer` (continuous depth),
   `Residual` ((1−p)·id + p·Φ, the completely positive skip connection; n blocks with p = t/n tend to exp(t(Φ − id))),
-  `PostSelect` (central projection, records the acceptance), `FeedForward` (instrument outcome in the centre, one
+  `PostSelect` (a projection of M, e.g. a set of sectors; records the acceptance), `FeedForward` (instrument outcome in the centre, one
   branch per outcome); losses and `count_parameters`. All are `torch.nn.Module`s; every parameter value is a channel.
 - `measurement` module (`POVM` and `Instrument` exported at top level): POVMs with a one-time check of positivity
   and normalisation, Born probabilities, batched multinomial sampling of counts (reproducible with a generator) and

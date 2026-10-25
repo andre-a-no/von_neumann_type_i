@@ -30,7 +30,7 @@
 
 % numbers and tables produced by scripts/*.py (bash scripts/run_all.sh [quick|full] [device])
 \newcommand{\gen}[1]{\IfFileExists{generated/#1.tex}{\input{generated/#1.tex}}{}}
-\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}\gen{renyi_threshold}\gen{connes_stormer}\gen{permutational}\gen{trace_characterizations}\gen{symmetry_resolved}\gen{noisy_xy}\gen{architecture}\gen{noisy_control}\gen{channel_learning}\gen{residual_markov}
+\gen{validation}\gen{search}\gen{bounds}\gen{chains}\gen{numerics}\gen{baselines}\gen{benchmark}\gen{renyi_threshold}\gen{connes_stormer}\gen{permutational}\gen{trace_characterizations}\gen{symmetry_resolved}\gen{noisy_xy}\gen{architecture}\gen{noisy_control}\gen{channel_learning}\gen{residual_markov}\gen{direct_integral}\gen{anyon_chain}
 % generated/baselines.tex written by the current scripts/baselines.py defines \BaseMinKS and has a single-precision
 % GPU column; an older file has one GPU column (double precision) and one library column (GPU) for ground states.
 \ifdefined\BaseMinKS\newcommand{\BaseNew}{1}\else\newcommand{\BaseNew}{0}\fi
@@ -45,8 +45,14 @@
 \providecommand{\NumTimeRows}{\multicolumn{9}{c}{\emph{run scripts/numerics.py}}\\}
 \providecommand{\NumAccRows}{\multicolumn{5}{c}{\emph{run scripts/numerics.py}}\\}
 \providecommand{\NumTimeHeader}{generate & eigh $f(A)$ & SVD $|A|$ & channel & expm & opt.\ step}
-\providecommand{\BaseMCRows}{\multicolumn{7}{c}{\emph{run scripts/baselines.py}}\\}
-\providecommand{\BaseGSRows}{\multicolumn{7}{c}{\emph{run scripts/baselines.py}}\\}
+\providecommand{\DIRows}{\multicolumn{3}{c}{\emph{run scripts/direct\_integral\_demo.py}}\\}
+\providecommand{\DISlope}{--}\providecommand{\DIMCNodes}{--}\providecommand{\DIMCSeeds}{--}\providecommand{\DIMCErr}{--}
+\providecommand{\DIBigNodes}{--}\providecommand{\DIBigTime}{--}\providecommand{\DIThreads}{--}
+\providecommand{\ACRows}{\multicolumn{9}{c}{\emph{run scripts/anyon\_chain.py}}\\}
+\providecommand{\ACGoldenC}{--}\providecommand{\ACGoldenE}{--}\providecommand{\ACGoldenDim}{--}\providecommand{\ACGoldenL}{--}
+\providecommand{\ACSeconds}{--}\providecommand{\ACThreads}{--}
+\providecommand{\BaseMCRows}{\multicolumn{6}{c}{\emph{run scripts/baselines.py}}\\}
+\providecommand{\BaseGSRows}{\multicolumn{6}{c}{\emph{run scripts/baselines.py}}\\}
 \providecommand{\ValTraceRows}{\multicolumn{5}{c}{\emph{run scripts/validate\_known\_results.py}}\\}
 \providecommand{\ChainKrylovRows}{\multicolumn{6}{c}{\emph{run scripts/chains.py}}\\}
 \providecommand{\BaseMinKS}{--}\providecommand{\BoundsStChecked}{--}\providecommand{\BoundsStOutside}{--}\providecommand{\BoundsShortfall}{--}
@@ -669,7 +675,14 @@ splitting, $e^{t\mathcal L}$)\\
 Lindblad generators (\texttt{LindbladParam}); batched multistart \texttt{extremize} and \texttt{fit}; run-time and memory
 estimates\\
 \texttt{measurement} & POVMs (sectors, bases, rotated and randomised settings), sampling, likelihoods, instruments
-recording the outcome in the centre, Fisher information\\
+recording the outcome in the centre, Fisher information; projection-valued measures with values (\texttt{PVM})\\
+\texttt{anyons} & \texttt{AnyonChain}: fusion paths of $SU(2)_k$ anyons, Temperley--Lieb generators, the tower
+$TL_{L-1}\subset TL_L$ as \texttt{Inclusion}, sparse Hamiltonians (Section~\ref{sec:anyons})\\
+\texttt{direct\_integral} & \texttt{DirectIntegral}: a measure space by nodes and weights (product rules, torus,
+Monte Carlo, partitions); fields, trace, normal states, central projections (Section~\ref{sec:dintegral})\\
+\texttt{projections} & projection lattice ($P\vee Q$, $P\wedge Q$, ranks, Haar random projections); measures on
+projections (states by Gleason's theorem, frame functions on $2\times2$ blocks, dispersion-free measures);
+spectral measures of self-adjoint operators\\
 \texttt{inclusions} & \texttt{Inclusion}: inclusion matrices, conditional expectations, Markov trace, Jones,
 Watatani and Pimsner--Popa indices, basic construction, spin-chain tower\\
 \texttt{decompose}, \texttt{su2} & numerical Wedderburn decomposition, commutants, real/complex/quaternionic types;
@@ -1321,6 +1334,104 @@ ranges; Petz's equality condition; the recovery bound of~\cite[Theorem~2.1]{jung
 \label{tab:tests}
 \end{table}
 
+\subsection{Continuous centres: direct integrals}\label{sec:dintegral}
+
+The algebras of the library have a finite centre $\C^C$, the $L^\infty$ of a finite set with point masses. A finite
+type~I algebra with separable predual is in general a direct integral $\int^\oplus_XM_{k(x)}\,d\mu(x)$ over a
+$\sigma$-finite measure space $(X,\mu)$: its centre is $L^\infty(X,\mu)$, its elements are bounded measurable fields
+$x\mapsto A(x)$, and $\int\Tr A(x)\,d\mu(x)$ is a trace on it (one for each measure in the class of $\mu$). Examples are the translation-invariant observables of a lattice system, a direct integral over
+the Brillouin zone; averages over disorder, a direct integral over the realisations; and classical probability, with
+$k\equiv1$. The class \texttt{DirectIntegral} discretises $(X,\mu)$ by nodes $x_i$ with weights $w_i>0$: product rules on
+boxes (Gauss--Legendre or midpoint, with a density $\mu=\rho\,dx$), the periodic rule on a torus with the normalised Haar
+measure, Monte Carlo samples, or the cells of a partition with their measures. It works in $\bigoplus_iM_{k(x_i)}$, one
+sector per node, and maps a field to $\bigoplus_iA(x_i)$, the trace to $\sum_iw_i\Tr A(x_i)$, a normal state
+$\int\Tr(\rho(x)\,\cdot\,)\,d\mu$ to a density matrix, the central projection of a measurable set to a sum of sector
+units, and an essential supremum to a maximum over the nodes. Products, the functional calculus, spectra, norms and
+channels that preserve the centre act fibrewise and are exact at the nodes; only integrals carry the error of the rule,
+and for fields that are constant on the cells of a partition they are exact. The momentum sectors of
+Section~\ref{sec:chains} are the case of a torus, with the $n$ momenta of a periodic chain of $n$ cells.
+
+\begin{lstlisting}[caption={The ground-state energy per cell of the SSH chain as an integral over the Brillouin zone.},
+label=lst:dintegral]
+X = DirectIntegral.torus(64, dims=2)                      # [0, 2 pi) with dk/2pi, 64 momenta
+H = X.field(bloch_hamiltonian, is_self_adjoint=True)      # one 2x2 sector per momentum
+e0 = X.trace(H.apply_function(lambda w: w.clamp(max=0)))  # int Tr min(H(k), 0) dk/2pi
+\end{lstlisting}
+
+\begin{table}[tbp]
+\centering\small
+\begin{tabular}{rrr}
+\toprule
+momenta $n$ & error, $t=0.5$ & error, $t=1$\\
+\midrule
+\DIRows
+\bottomrule
+\end{tabular}
+\caption{Ground-state energy per cell of the SSH chain, $H(k)=\bigl(\begin{smallmatrix}0&1+te^{-ik}\\1+te^{ik}&0
+\end{smallmatrix}\bigr)$, from \texttt{DirectIntegral.torus(n)}, against $-\frac2\pi(1+t)E\bigl(\frac{4t}{(1+t)^2}\bigr)$
+(complete elliptic integral $E$); \texttt{scripts/direct\_integral\_demo.py}.}
+\label{tab:dintegral}
+\end{table}
+
+Listing~\ref{lst:dintegral} and Table~\ref{tab:dintegral} show the result for the SSH chain. For the gapped chain
+($t=0.5$) the integrand is analytic and periodic, and the error of the periodic rule falls exponentially, to rounding at
+$n=64$. For the gapless chain ($t=1$) the lower band touches zero at $k=\pi$, the integrand $-|2\cos(k/2)|$ has a kink,
+and the error falls as $n^{-2}$ (fitted slope $\DISlope$). With $\DIMCNodes$ Monte Carlo nodes the root-mean-square error
+over $\DIMCSeeds$ seeds is $\DIMCErr$, the rate $n^{-1/2}$ of random sampling. All nodes go through one batched
+eigendecomposition of $2\times2$ blocks: $\DIBigNodes$ momenta take $\DIBigTime$\,s on a CPU with $\DIThreads$ threads.
+The companion paper~\cite{nn_trace} uses the same picture to extend its theorem on direct sums to direct integrals: on
+every finite type~I algebra, only the contrast of the density inside the fibres enters the violation envelopes.
+
+\subsection{Anyonic chains and Temperley--Lieb algebras}\label{sec:anyons}
+
+The algebras of anyon chains are finite direct sums of matrix algebras as well, with the total topological charge in
+place of the particle number. For $L$ spin-$\frac12$ anyons of $SU(2)_k$ the states are the fusion paths
+$a_0,a_1,\dots,a_L$ with $a_{i+1}=a_i\pm1\in\{0,\dots,k\}$ (twice the spin), paths on the Dynkin diagram $A_{k+1}$. The
+Temperley--Lieb generators~\cite{temperley1971}
+\[
+  (e_i)_{a',a}=\delta_{a_{i-1}a_{i+1}}\frac{\sqrt{S_aS_{a'}}}{S_{a_{i-1}}},\qquad S_a=\sin\frac{(a+1)\pi}{k+2},
+\]
+act on the charge $a=a_i$ between anyons $i$ and $i+1$ and satisfy $e_i^2=de_i$, $e_ie_{i\pm1}e_i=e_i$ with the quantum
+dimension $d=2\cos\frac{\pi}{k+2}$; $e_i/d$ projects onto their trivial fusion channel. For an open chain from the charge
+$0$ the last charge $b=a_L$ is the total charge, and the algebra generated by the $e_i$ is $\bigoplus_bM_{n_b}$, $n_b$ the
+number of paths from $0$ to $b$: a \texttt{TypeIAlgebra} with one sector per total charge. \texttt{AnyonChain} orders the
+paths so that $TL_{L-1}\subset TL_L$ is an \texttt{Inclusion} in standard form, with Bratteli diagram $A_{k+1}$. From
+$L=k$ on, when all charges of both parities occur, its index is $\|\Lambda\|^2=4\cos^2\frac{\pi}{k+2}$, its Markov trace
+weights the sectors by the quantum dimensions, and its basic construction reproduces the block sizes of $TL_{L+1}$: Jones'
+subfactors~\cite{jones1983,ghj1989} appear as towers of the library's algebras (\texttt{tests/test\_anyons.py}). A
+periodic chain (even $L$, since $A_{k+1}$ is bipartite) has two sectors, the parities of $a_0$, which translation by one
+site exchanges.
+
+The Hamiltonian $H=-\sum_ie_i$ rewards neighbouring anyons for fusing into the trivial channel. It is the critical RSOS
+chain of Andrews, Baxter and Forrester and Pasquier~\cite{abf1984,pasquier1987}, whose continuum limit is the unitary
+minimal model with central charge $c=1-\frac6{(k+1)(k+2)}$~\cite{huse1984}; for $k=3$ it is equivalent to the golden chain
+of Fibonacci anyons of Feiguin et al.~\cite{feiguin2007}, with $c=\frac7{10}$. Table~\ref{tab:anyons} recovers these data
+with the library alone, to within $1\%$: the central charge from periodic chains, $E_0(L)=e_\infty L-\pi vc/(6L)$ plus
+higher-order corrections (of order $L^{-3}$ and from irrelevant operators), with the velocity
+$v=\pi\sin\gamma/\gamma$, $\gamma=\pi/(k+2)$; the velocity from the first excitation of open chains in the sector $b=0$,
+which lies at level 2 of the vacuum tower; and the ratio of the lowest level of the sector $b=2$ to that excitation, which
+tends to the Kac value $h_{1,3}/2$ of the boundary condition $(0,b)$, whose spectrum is the character
+$\chi_{1,b+1}$~\cite{saleur1989}. For $k=3$ the periodic sizes reach $L=\ACGoldenL$ (dimension $\ACGoldenDim$ per sector,
+restarted Lanczos of the module \texttt{krylov}) and give $c=\ACGoldenC$ and
+$e_\infty=\ACGoldenE$, against $1-\sqrt5=-1.2360680$. The whole table takes $\ACSeconds$\,s on a CPU with $\ACThreads$
+threads (\texttt{scripts/anyon\_chain.py}).
+
+\begin{table}[tbp]
+\centering\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{rlrrrrrrr}
+\toprule
+$k$ & continuum limit & $c$ & fit & $h_{1,3}/2$ & extrap. & $v$ & extrap. & index\\
+\midrule
+\ACRows
+\bottomrule
+\end{tabular}
+\caption{Chains of $SU(2)_k$ anyons with $H=-\sum_ie_i$. Central charge fitted on periodic chains (sizes up to $L=22$ for
+$k\le3$ and $18$ for $k=4$) with the exact velocity; ratio of gaps and velocity of open chains (up to $L=24$, resp.\ $20$),
+extrapolated in $1/L$; Jones index of $TL_{L-1}\subset TL_L$, equal to $4\cos^2\frac{\pi}{k+2}$.}
+\label{tab:anyons}
+\end{table}
+
 \section{Use case: noisy circuits with a conserved charge}\label{sec:noisy}
 
 \paragraph{Context.} Quantum algorithms that preserve a charge offer a cheap test for errors. If the ideal evolution
@@ -1679,7 +1790,9 @@ with $k_c^2\times k_c^2$ matrices and are limited to blocks of a few tens; RK4 a
 on simulated data for registers of a few qubits. Encoders into smaller algebras, tomography of larger registers with
 sparse measurements, training viewed as a dynamics of the channel and certified upper bounds for the learned maps are
 not implemented; the plan is kept in the repository (\texttt{ROADMAP\_learning.md}).
-\item \emph{Scope.} Finite dimensions and Type~I only; no tensor-network methods. Sparse methods exist only for sector
+\item \emph{Scope.} Type~I with finite-dimensional fibres: a continuous centre only through the discretisation of
+Section~\ref{sec:dintegral}, infinite factors only through truncation, and types II and III only through the finite stages
+of towers of inclusions; no tensor-network methods. Sparse methods exist only for sector
 Hamiltonians and for jumps that map basis vectors to basis vectors; other jumps between sectors are stored densely.
 Results are cross-checked against QuTiP and QuSpin in the test suite, and the permutational Lindblad solver is timed
 against QuTiP's PIQS in~\cite{nn_btc}; systematic benchmarks against QuTiP, \texttt{dynamiqs}, QuantumToolbox.jl, QuSpin
@@ -1838,6 +1951,19 @@ degenerate cases'', arXiv:2011.04366 (2020).
   Math.\ 365 (2020), 107053.
 \bibitem{junge2018} M.~Junge, R.~Renner, D.~Sutter, M.~M.~Wilde, A.~Winter, ``Universal recovery maps and approximate
   sufficiency of quantum relative entropy'', Ann.\ Henri Poincar\'e 19 (2018), 2955--2978.
+\bibitem{temperley1971} H.~N.~V.~Temperley, E.~H.~Lieb, ``Relations between the `percolation' and `colouring' problem and
+  other graph-theoretical problems associated with regular planar lattices: some exact results for the `percolation'
+  problem'', Proc.\ R.\ Soc.\ Lond.\ A 322 (1971), 251--280.
+\bibitem{huse1984} D.~A.~Huse, ``Exact exponents for infinitely many new multicritical points'', Phys.\ Rev.\ B 30
+  (1984), 3908.
+\bibitem{saleur1989} H.~Saleur, M.~Bauer, ``On some relations between local height probabilities and conformal
+  invariance'', Nucl.\ Phys.\ B 320 (1989), 591--624.
+\bibitem{abf1984} G.~E.~Andrews, R.~J.~Baxter, P.~J.~Forrester, ``Eight-vertex SOS model and generalized
+  Rogers--Ramanujan-type identities'', J.\ Stat.\ Phys.\ 35 (1984), 193--266.
+\bibitem{pasquier1987} V.~Pasquier, ``Two-dimensional critical systems labelled by Dynkin diagrams'', Nucl.\ Phys.\ B 285
+  (1987), 162--172.
+\bibitem{feiguin2007} A.~Feiguin, S.~Trebst, A.~W.~W.~Ludwig, M.~Troyer, A.~Kitaev, Z.~Wang, M.~H.~Freedman,
+  ``Interacting anyons in topological quantum liquids: the golden chain'', Phys.\ Rev.\ Lett.\ 98 (2007), 160409.
 \bibitem{jones1983} V.~F.~R.~Jones, ``Index for subfactors'', Invent.\ Math.\ 72 (1983), 1--25.
 \bibitem{ghj1989} F.~M.~Goodman, P.~de~la~Harpe, V.~F.~R.~Jones, \emph{Coxeter Graphs and Towers of Algebras}, MSRI
   Publications 14, Springer, 1989.

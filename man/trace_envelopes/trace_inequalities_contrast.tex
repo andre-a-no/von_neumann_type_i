@@ -58,11 +58,14 @@ Gardner's inequality the sharp constant depends on $\delta$ and on the contrast 
 product: $|\varphi_W(X)|\le(1-\delta^2\delta'^2)^{-1/2}\varphi_W(|X|)$, with equality in even dimension. As a contrast is
 the sine of the Krein--Gustafson angle of an operator, the constant is the secant of the angle whose sine is
 $\delta\delta'$. For 25 characterisations we find the largest violation exactly in sixteen cases and bound it from below
-in four; it vanishes at the trace to the orders $\delta$, $\delta^2$, $\delta^4$ or $\delta^8$, and on direct sums only
-the contrast inside the blocks counts. We also find the sharp bounds of three unnormalised trace functionals of our
-earlier work and sharp contrast thresholds below which subadditivity of the square root (via Gustafson's criterion for
-positive Jordan products) and the power-mean inequality cannot fail. A numerical search, certified as a lower bound for each
-supremum, supports conjectured values for the remaining inequalities.
+in four; it vanishes at the trace to the orders $\delta$, $\delta^2$, $\delta^4$ or $\delta^8$, and on direct sums and
+direct integrals (finite type~I algebras with separable predual) only the contrast inside the fibres counts, for all items
+except three that single out the canonical trace or are non-linear in $\varphi$. We also find
+the sharp bounds of three unnormalised trace functionals of our earlier work and sharp contrast thresholds below which subadditivity of the square root (via Gustafson's criterion for
+positive Jordan products) and the power-mean inequality cannot fail. The characterisations by the projection lattice
+extend to measures on projections; there the only new measures live in $2\times2$ blocks, where the envelopes are the same
+but attained. A numerical search, certified as a lower bound for each supremum, supports conjectured values for the
+remaining inequalities.
 \end{abstract}
 
 \noindent\textbf{Keywords:} trace characterisation; positive functional; Michelson contrast; operator angle;
@@ -164,7 +167,9 @@ to the unnormalised quantities of~\cite{abed2024}, we find the sharp bound of $|
 prescribed and those of the two other trace functionals sampled there (Theorem~C), which answers the question
 of~\cite{abed2024}. On a direct sum $\bigoplus_cM_{k_c}$ a functional is a trace when its density is central, however
 different the scalars on the blocks, and accordingly only the contrast inside the blocks enters the envelopes
-(Theorem~D).
+(Theorem~D). For every finite type~I algebra with separable predual, i.e.\ for direct integrals over a $\sigma$-finite
+measure space, the envelope is bounded by the essential supremum of the fibre envelopes, with equality for densities that
+are constant on cells (Theorem~\ref{thm:integral}).
 
 The operators enter the inequalities through composites such as sums, congruences, Jordan products and commutators,
 and Section~\ref{sec:composite} records how contrasts behave under these operations: the rapidities
@@ -175,8 +180,8 @@ normalisation. These rules have a consequence for the inequalities themselves. T
 several characterisations are violated only by operators whose contrast is close to $1$. For subadditivity of the
 square root, $\varphi((A+B)^{1/2})\le\varphi(A^{1/2})+\varphi(B^{1/2})$, we prove this: if $\Delta(A)=\Delta(B)\le2\sqrt2/3$,
 then $A^{1/2}B^{1/2}+B^{1/2}A^{1/2}\ge0$ by Gustafson's criterion, hence $(A+B)^{1/2}\le A^{1/2}+B^{1/2}$ as operators, and
-no positive functional can violate the inequality; above $2\sqrt2/3$ suitable operators violate it for every density of
-contrast close enough to $1$. For the power-mean inequality $\varphi(A^2)^{1/2}\le\varphi(A)$ we
+no positive functional can violate the inequality; above $2\sqrt2/3$ it is violated, for every contrast of the density
+close enough to $1$, by suitable operators and densities. For the power-mean inequality $\varphi(A^2)^{1/2}\le\varphi(A)$ we
 find the envelope with both contrasts prescribed in closed form; it is never positive when $\Delta(A)\le\sqrt{(n-1)/n}$,
 and this threshold is sharp (Section~\ref{sec:thresholds} and Figure~\ref{fig:square}).
 
@@ -471,7 +476,8 @@ $\delta\ge\TCWmonFirst$).}
 
 The envelopes thus vanish at the trace to different orders, $\delta$, $\delta^2$, $\delta^4$ and $\delta^8$
 (Figure~\ref{fig:ladder} and Table~\ref{tab:classes}), and two inequalities that are equivalent for traces may fail at
-different rates. For instance, $\varphi(P\vee Q)+\varphi(P\wedge Q)=\varphi(P)+\varphi(Q)$ for every trace, yet the lattice
+different rates. For instance, $\varphi(P\vee Q)+\varphi(P\wedge Q)=\varphi(P)+\varphi(Q)$ for every trace (the two halves of this
+identity fail as $\delta/(1-\delta)$ and $\delta$, Proposition~\ref{prop:modular}), yet the lattice
 subadditivity fails as $\delta/(1-\delta)$, while $\varphi(|P-Q|)\le\varphi(P+Q)$, with the same right-hand side, fails only as
 $\kappa-1\sim\delta^2/2$. The orders refer to the normalisations $\cN$ of Table~\ref{tab:items}; a normalisation that
 vanishes at the extremisers can change them (Remark~\ref{rem:13}).
@@ -1062,6 +1068,90 @@ to $\cN$, i.e.\ $(1-\delta)/(n-1)$ to $\beta$ (normalisation $\Tr W_j=1$); this 
 the upper bound.
 \end{proof}
 
+\subsection{The modular law and measures on projections}\label{sec:measures}
+
+For every trace the rank identity gives the modular law $\varphi(P\vee Q)+\varphi(P\wedge Q)=\varphi(P)+\varphi(Q)$. Its two
+halves are
+\[
+  (M_\le)\quad\varphi(P\vee Q)+\varphi(P\wedge Q)\le\varphi(P)+\varphi(Q),\qquad
+  (M_\ge)\quad\varphi(P)+\varphi(Q)\le\varphi(P\vee Q)+\varphi(P\wedge Q),
+\]
+which we normalise, as in Table~\ref{tab:items}, by their right-hand sides. $M_\le$ strengthens item~23 by the term
+$\varphi(P\wedge Q)\ge0$, and $M_\ge$ differs from item~19 by $P\vee Q$ in place of $1$.
+
+\begin{proposition}\label{prop:modular}
+Let $W>0$ in $M_n$, $n\ge2$, with $\Delta(W)=\delta$. In every dimension, $V_n=\delta/(1-\delta)$ for $M_\le$ and
+$V_n=\delta$ for $M_\ge$, approached as $P\ne Q$ tend to the same eigenvector of $W$, for the smallest eigenvalue ($M_\le$)
+or the largest ($M_\ge$), inside the span of the eigenvectors for the largest and the smallest eigenvalue. In particular
+each half of the modular law characterises the traces among the faithful positive functionals on $M_n$.
+\end{proposition}
+\begin{proof}
+Step~1 of the proof of Theorem~\ref{thm:proj} applies: on a one-dimensional block both sides agree
+($\max(p,q)+\min(p,q)=p+q$) and the normalisations are non-negative, so $V_n$ is at most the supremum over two-dimensional
+blocks with $\Delta(W_j)\le\delta$, where $P_j\wedge Q_j=0$ and $P_j\vee Q_j=1$. There $M_\le$ is item~23, whose value is
+less than $\delta/(1-\delta)$ (Step~2), and $M_\ge$ gives $(\varphi(P)+\varphi(Q)-\varphi(1))/\varphi(1)=\frac\delta2(\mu_3+\nu_3)
+<\delta$. Both values are approached on the block spanned by the eigenvectors of $W$ for its largest and smallest
+eigenvalue, whose compression has contrast $\delta$; the other eigenvectors form one-dimensional blocks with $P=Q=0$,
+which add nothing to the violation or to the normalisation.
+\end{proof}
+
+\noindent Unlike item~19, $M_\ge$ shows no parity effect, because its normalisation does not contain $\varphi(1)$.
+
+\paragraph{Measures on projections.} Items 19 and 23 and the two halves of the modular law involve $\varphi$ only through
+its values on projections. They therefore make sense for every \emph{measure} on the projections of $M_n$, a function
+$\mu\ge0$ with $\mu(P+Q)=\mu(P)+\mu(Q)$ whenever $PQ=0$. By Gleason's theorem~\cite{gleason1957}, for $n\ge3$ every
+measure is $\mu(P)=\Tr(WP)$ with $W\ge0$. On $M_2$ a measure is a frame function: $\mu(P)=f(\nu)$ for rank-one $P$ with
+Bloch vector $\nu$, where $f\ge0$ and $f(\nu)+f(-\nu)=\mu(1)$, and $f$ is otherwise arbitrary. For a measure $\mu\ne0$
+we call $\Delta(\mu)=(\sup\mu(P)-\inf\mu(P))/(\sup\mu(P)+\inf\mu(P))$, over the rank-one projections $P$, the
+contrast of $\mu$. It equals $\Delta(W)$ for $\mu=\Tr(W\,\cdot\,)$, since $\sup_{\|e\|=1}\langle We,e\rangle=\lambda_{\max}(W)$,
+and on $M_2$, where $\mu(P)=f(\nu)$, we have $\sup f+\inf f=\mu(1)$.
+
+\begin{proposition}\label{prop:measures}
+Let $\mu$ be a measure on the projections of $M_n$, $n\ge2$, with $\Delta(\mu)=\delta<1$.
+\begin{enumerate}
+\item[(a)] For $n\ge3$ the envelopes of items 19 and 23 and of $M_\le$ and $M_\ge$ over the measures of contrast $\delta$
+are those over the states (Theorem~\ref{thm:proj}, Proposition~\ref{prop:modular}).
+\item[(b)] For $n=2$ they are, as for states, $\delta$ for item~19 and $M_\ge$ and $\delta/(1-\delta)$ for item~23 and
+$M_\le$. They are attained by every measure that takes its largest value (19, $M_\ge$) or its smallest value (23, $M_\le$)
+at two distinct rank-one projections. A state with $\delta>0$ takes each extreme value at only one rank-one projection,
+so for states these values are only approached.
+\item[(c)] Each of the four inequalities holds for all $P,Q$ if and only if $\mu$ is a multiple of the dimension function,
+$\mu(P)=c\,\mathrm{rank}\,P$, i.e.\ if and only if $\delta=0$.
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+(a) By Gleason's theorem $\mu=\Tr(W\,\cdot\,)$ with $\Delta(W)=\Delta(\mu)$. (b) Commuting $P,Q$ satisfy all four
+inequalities (the modular law with equality, since $P\vee Q=(P-PQ)+(Q-PQ)+PQ$ is an orthogonal sum). For distinct rank-one $P,Q$ we have $P\wedge Q=0$ and $P\vee Q=1$, and the normalised
+violations are $(f(P)+f(Q)-\mu(1))/\mu(1)$ for item~19 and $M_\ge$ and $(\mu(1)-f(P)-f(Q))/(f(P)+f(Q))$ for item~23 and
+$M_\le$. Since $\sup f=\frac12\mu(1)(1+\delta)$ and $\inf f=\frac12\mu(1)(1-\delta)$, they are at most $\delta$ and
+$\delta/(1-\delta)$, with equality if and only if $f(P)=f(Q)=\sup f$ or $=\inf f$, respectively. For a state,
+$f(\nu)=\frac12\mu(1)(1+\delta\,\nu\cdot e)$ attains its maximum only at $\nu=e$ and its minimum only at $\nu=-e$.
+(c) If $\delta=0$, $f$ is constant ($n=2$) or $W$ is scalar ($n\ge3$), so $\mu=c\,\mathrm{rank}$, and all four hold with
+equality. If $n\ge3$ and $\delta>0$, then $\mu=\Tr(W\,\cdot\,)$ with $W$ not scalar; for rank-one $P\ne Q$ close to the
+eigenvector of $W$ for its smallest (items 23, $M_\le$) or largest eigenvalue (items 19, $M_\ge$), inside the span of the
+eigenvectors for the largest and the smallest eigenvalue, the proofs of Theorem~\ref{thm:proj} and
+Proposition~\ref{prop:modular} give a positive violation for this $W$. If $n=2$ and $\delta>0$, there is a rank-one $P$
+with $f(P)<\frac12\mu(1)$. Every antipodal pair $\pm\nu$ has a member with $f\le\frac12\mu(1)$, so there is a rank-one
+$Q\notin\{P,1-P\}$ with $f(Q)\le\frac12\mu(1)$. Then $f(P)+f(Q)<\mu(1)=\mu(P\vee Q)$ violates item~23 and $M_\le$, and
+symmetrically with $\ge$ for item~19 and $M_\ge$.
+\end{proof}
+
+On $\M=\bigoplus_cM_{k_c}$ a measure is a sum $\mu=\sum_c\mu_c$ of measures on the projections of the blocks, so it is a
+positive linear functional (an unnormalised state) unless some $k_c$ equals $2$ (blocks of size $1$ are trivial). For
+von Neumann algebras without a type~I$_2$ summand positive measures extend to positive linear functionals by the
+theorems of Christensen and Yeadon~\cite{christensen1982,yeadon1983,yeadon1984}, and Bunce and Wright~\cite{bunce1992}
+extended this to bounded and vector-valued measures. The non-linear measures thus live in the $2\times2$ blocks. The same blocks decide whether the
+projections of $\M$ carry a $\{0,1\}$-valued measure, a non-contextual assignment of values. Such a measure takes the
+value $1$ on exactly one central projection $1_c$, and on that block it exists if $k_c\le2$ (choose one point of every
+antipodal pair of Bloch vectors) and not if $k_c\ge3$, by the Kochen--Specker theorem~\cite{kochen1967}, applied in a
+three-dimensional subspace containing a rank-one $P$ with $\mu(P)=1$ (alternatively by Gleason's theorem: $P\mapsto\Tr(WP)$
+is continuous on the connected set of rank-one projections, so a $\{0,1\}$-valued one is constant, which contradicts
+additivity over an orthonormal basis). So $\M$ admits one if and only if some $k_c\le2$. On the block where it lives such
+a measure has contrast $1$, where the envelopes of item~23 and $M_\le$ are infinite.
+The lattice operations, measures with frame functions on the $2\times2$ blocks and the extremal measures of
+Proposition~\ref{prop:measures}(b) are in the module \texttt{projections} of the library~\cite{lib}, and the test suite
+checks Propositions~\ref{prop:modular} and~\ref{prop:measures} (\texttt{tests/test\_projections.py}).
+
 \section{Lower bounds}\label{sec:lower}
 
 \begin{proposition}\label{prop:lower}
@@ -1186,6 +1276,61 @@ the \emph{canonical} trace $\Tr$ among the functionals with $\varphi(1)=\dim$, a
 density their violations are $1-\mathrm{GM}/\mathrm{AM}$ and $w_{\min}^{-1/2}-1$ of the eigenvalues of $W$ normalised to
 $\Tr W=\sum_ck_c$ (Propositions~\ref{prop:det} and~\ref{prop:power}; the proofs do not use the block structure).
 \end{remark}
+
+\subsection{Direct integrals: continuous centres}\label{sec:integral}
+
+The finite direct sum is the case of a finite centre. Every finite von Neumann algebra of type~I with separable predual is
+a direct integral $\M=\int^\oplus_XM_{k(x)}\,d\mu(x)$ over a $\sigma$-finite measure space $(X,\mu)$, with a measurable
+fibre dimension $k(x)<\infty$: its elements are bounded measurable fields $x\mapsto A(x)\in M_{k(x)}$, its centre is
+$L^\infty(X,\mu)$, and $\Tr A=\int_X\Tr A(x)\,d\mu(x)$. For a measurable field $W(x)>0$ with $\int\Tr W\,d\mu<\infty$ the
+normal positive functional is $\varphi_W(A)=\int_X\Tr(W(x)A(x))\,d\mu(x)$, and $\varphi_W$ is a trace if and only if
+$W(x)$ is scalar for almost every $x$. If $\mu$ has no atoms, the centre has no minimal projections, and still only the
+fibres matter.
+
+\begin{theorem}\label{thm:integral}
+Let $\M$ and $W$ be as above, fix one inequality of Table~\ref{tab:items} other than 11, 16 and~24, and let
+$V_\M(W)$ and $V_{M_{k(x)}}(W(x))$ be as in Theorem~\ref{thm:sectors}.
+\begin{enumerate}
+\item[(a)] If $v:X\to[0,\infty]$ is measurable and $V_{M_{k(x)}}(W(x))\le v(x)$ for almost every $x$, then
+$V_\M(W)\le\operatorname{ess\,sup}_xv(x)$.
+\item[(b)] If $W$ is simple, $k(x)=k_c$ and $W(x)=W_c$ on the cells $X_c$ of a countable measurable partition with
+$\mu(X_c)>0$, then
+$V_\M(W)\le\sup_cV_{M_{k_c}}(W_c)$, with equality for the items listed in Theorem~\ref{thm:sectors}; the measures of the
+cells do not enter.
+\end{enumerate}
+In particular, for an item whose envelope $V_n(\delta)$ is known and increasing in $\delta$ (Theorem~\ref{thm:proj},
+Proposition~\ref{prop:modular}), $V_\M(W)\le\sup_nV_n(\delta^*)$ with the essential supremum
+$\delta^*=\operatorname{ess\,sup}_x\Delta(W(x))$ of the fibre contrasts, the supremum over the essential range of $k$, and
+$V_n(1):=\lim_{\delta\to1}V_n(\delta)$ (possibly $\infty$). For the items listed in Theorem~\ref{thm:sectors} this bound
+is the envelope over all densities with $\operatorname{ess\,sup}_x\Delta(W(x))=\delta^*$, by (b) with one cell.
+\end{theorem}
+\begin{proof}
+(a) The proof of Theorem~\ref{thm:sectors} goes through with the sums over $c$ replaced by integrals over $X$. All
+variables are measurable fields and every functional calculus acts fibrewise, as do the lattice operations ($P\wedge
+Q=\chi_{\{1\}}(PQP)$ and $P\vee Q=1-(1-P)\wedge(1-Q)$, so $(P\wedge Q)(x)=P(x)\wedge Q(x)$ almost everywhere); hence
+$\cL$, $\cR$ and $\cN$ are integrals of
+the fibre quantities $\cL_x$, $\cR_x$, $\cN_x$, which are integrable since the fields are bounded and
+$\int\Tr W\,d\mu<\infty$. Where $\cL$ contains the absolute value of a functional (items 1, 4 and~14),
+$|\int f\,d\mu|\le\int|f|\,d\mu$ gives $\cL\le\int\cL_x\,d\mu$, and in items 6 and~14 the Cauchy--Schwarz and Hölder
+inequalities for integrals give $\cR\ge\int\cR_x\,d\mu$. By the definition of $V_{M_{k(x)}}(W(x))$ we have
+$\cL_x-\cR_x\le v(x)\cN_x$ almost everywhere, and where $\cN_x=0$ the variables vanish where they enter $\cL_x$, so that
+$\cL_x\le\cR_x$, since $W(x)>0$. Hence $\cL-\cR\le\int v\,\cN_x\,d\mu\le(\operatorname{ess\,sup}v)\,\cN$; for $\cN=\cR$ in items
+6 and~14 the same argument applies to $\cL/\cR\le\int\cL_x\,d\mu/\int\cR_x\,d\mu$. (b) The bound is (a) with $v=V_{M_{k_c}}
+(W_c)$ on $X_c$. For the equality choose a cell $X_c$, which has $0<\mu(X_c)<\infty$ since $\int\Tr W\,d\mu<\infty$
+and $W_c>0$, and let the variables be a near-optimal configuration of the block $M_{k_c}$ on $X_c$ and zero elsewhere
+($\varepsilon1$ with $\varepsilon\to0$ in item~6, where $A,B>0$, as in Theorem~\ref{thm:sectors}). Then $\cL$, $\cR$ and
+$\cN$ are $\mu(X_c)$ times the block quantities, and the quotient is that of the block. The
+corollary follows from (a) with $v(x)=V_{k(x)}(\Delta(W(x)))$, which is measurable because the eigenvalues of a measurable
+field are measurable.
+\end{proof}
+
+\noindent Theorem~\ref{thm:sectors} is the case of a finite $X$ with point masses. Conversely, for a simple density the
+envelope is that of the direct sum $\bigoplus_cM_{k_c}$, whatever the weights $\mu(X_c)$. This is how the library
+computes on direct integrals: its class \texttt{DirectIntegral} represents $(X,\mu)$ by nodes $x_i$ with weights $w_i$ (a
+quadrature rule, Monte Carlo samples or the cells of a partition), the algebra by $\bigoplus_iM_{k(x_i)}$, a field by its
+values at the nodes and $\Tr$ by $\sum_iw_i\Tr A(x_i)$. Fibrewise operations are exact, and for fields constant on the
+cells of a partition so are the integrals; the test suite checks Theorem~\ref{thm:integral}(b) for item~23 with cells of very different measures
+(\texttt{tests/test\_direct\_integral.py}).
 
 \section{Contrasts of composite operators}\label{sec:composite}
 
@@ -1400,8 +1545,8 @@ Let $A,B>0$ with $\Delta(A^{1/2})^2+\Delta(B^{1/2})^2\le1$, i.e.
 Then $(A+B)^{1/2}\le A^{1/2}+B^{1/2}$, and hence $\varphi((A+B)^{1/2})\le\varphi(A^{1/2})+\varphi(B^{1/2})$ for every
 positive functional $\varphi$. In particular, if $\Delta(A)=\Delta(B)=\delta'\le2\sqrt2/3\approx0.943$, item~12 is not
 violated for any density, so $V_n(\delta,\delta')\le0$ for all $\delta$ and $n$. The threshold is sharp: if
-$\delta'>2\sqrt2/3$, then for every $n\ge2$ item~12 is violated by operators of contrast $\delta'$ and every density of
-contrast $\delta$ close enough to $1$.
+$\delta'>2\sqrt2/3$, then for every $n\ge2$ and every $\delta$ close enough to $1$ there are a density of contrast $\delta$
+and operators of contrast $\delta'$ that violate item~12, i.e.\ $V_n(\delta,\delta')>0$.
 \end{proposition}
 \begin{proof}
 By Proposition~\ref{prop:rapid}(a), $\Delta(A^{1/2})=\tanh(\eta_A/2)=\Delta(A)/(1+\sqrt{1-\Delta(A)^2})$, which gives the
@@ -1422,8 +1567,9 @@ $S^2=A+B+J$ gives $\langle u_i,Su_i\rangle^2=\langle u_i,(A+B)u_i\rangle+\langle
 $B^{1/2}$ is the configuration of the converse in Theorem~\ref{thm:jordan}(a) with $\delta_A=\delta_B=t$, so $J$ is
 indefinite since $2t^2>1$, and for the $u_i$ with $\langle u_i,Ju_i\rangle<0$ we get
 $\langle u_i,(A^{1/2}+B^{1/2})u_i\rangle<\langle u_i,(A+B)^{1/2}u_i\rangle$. On $M_n$ replace $A,B$ by $A\oplus1_{n-2}$ and
-$B\oplus1_{n-2}$, which have the same contrast, and let $W$ have $u_i$ as eigenvector for its largest eigenvalue and all
-other eigenvalues equal. As $\delta\to1$, $\varphi_W\to n\langle u_i,\cdot\,u_i\rangle$, so
+$B\oplus1_{n-2}$, which have the same contrast, and let $W$, normalised by $\Tr W=n$, have $u_i$ (padded by zeros) as
+eigenvector for its largest eigenvalue and all other eigenvalues equal. As $\delta\to1$, $\varphi_W\to n\langle
+u_i,\cdot\,u_i\rangle$, so
 $\varphi_W((A+B)^{1/2})>\varphi_W(A^{1/2})+\varphi_W(B^{1/2})$ for all $\delta$ close enough to $1$.
 \end{proof}
 
@@ -1445,8 +1591,8 @@ $\delta'=$ \TCCSubaddOnset; all these grid values lie above $2\sqrt2/3$ (Figure~
 whose whole threshold curve we find for $n=2$, here sharpness is proved only in the limit $\delta\to1$; at
 $\delta=0.3$, $0.6$ and $0.9$ the search finds the onset of violations higher. The criterion
 of Moslehian and Najafi~\cite[Theorem~2.1]{moslehian2011} is that $AB+BA\ge0$ if and only if $f(A+B)\le f(A)+f(B)$ for
-\emph{all} non-negative operator monotone functions $f$. For the square root alone the weaker hypothesis
-$A^{1/2}B^{1/2}+B^{1/2}A^{1/2}\ge0$ suffices, and the proof of sharpness shows that in the extremal configuration it is
+\emph{all} non-negative operator monotone functions $f$. For the square root alone the hypothesis
+$A^{1/2}B^{1/2}+B^{1/2}A^{1/2}\ge0$ suffices, which is weaker in terms of contrasts since $\Delta(A^{1/2})<\Delta(A)$, and the proof of sharpness shows that in the extremal configuration it is
 also necessary.
 
 For the power-mean inequality $\varphi(A^2)^{1/2}\le\varphi(A)$ with $\varphi(1)=n$ (item~24) a Kantorovich-type argument
@@ -1752,10 +1898,12 @@ traces is measured by the Michelson contrast of its density. For Gardner's inequ
 be: the sharp constant is the secant of the angle whose sine is the product of the contrasts of the density and of the
 operator. For the other characterisations the envelopes vanish at the trace to the orders $\delta$, $\delta^2$, $\delta^4$
 or $\delta^8$, with the classical reverse-inequality constants as exact values where we could determine them; on direct
-sums only the contrast inside the blocks counts. The rules by which contrasts compose (rapidities add for products and
+sums and direct integrals only the contrast inside the fibres counts. The rules by which contrasts compose (rapidities add for products and
 means, angles add for Jordan products, three contrasts multiply in the commutator test) explain some of the thresholds in
 the contrast of the operators that the computation reveals, and prove them for subadditivity of the square root and for
-the power-mean inequality. The computation supports the following values.
+the power-mean inequality. The characterisations by the projection lattice (items 19, 23 and the modular law) hold
+verbatim for measures on the projections of $M_n$, which by Gleason's theorem are states unless $n=2$; for $n=2$ the
+envelopes do not change but are attained. The computation supports the following values.
 
 \begin{conjecture}\label{conj:values}
 $V_n=\kappa^2-1$ for item~7, $V_n=g_{10}(\delta)$ for item~10 and $V_n=g_{25}(\delta)$ for item~25 in every dimension;
@@ -1843,8 +1991,12 @@ $w=\frac{2}{1+\ell}(1,\ell)$.
   of tracial functionals in operator algebras'', Positivity 30 (2026), Art.~24; doi:10.1007/s11117-026-01180-0.
 \bibitem{bikchentaev2026sgm} A.~M.~Bikchentaev, T.~H.~Dinh, A.~V.~Le, M.~S.~Moslehian, ``Spectral geometric mean
   and trace characterizations'', Positivity 30 (2026), Art.~46.
+\bibitem{bunce1992} L.~J.~Bunce, J.~D.~M.~Wright, ``The Mackey--Gleason problem'', Bull.\ Amer.\ Math.\ Soc.\ (N.S.) 26
+  (1992), 288--293.
 \bibitem{bushell1973} P.~J.~Bushell, ``Hilbert's metric and positive contraction mappings in a Banach space'',
   Arch.\ Rational Mech.\ Anal.\ 52 (1973), 330--338.
+\bibitem{christensen1982} E.~Christensen, ``Measures on projections and physical states'', Commun.\ Math.\ Phys.\ 86
+  (1982), 529--538.
 \bibitem{cho2009} K.~Cho, T.~Sano, ``Young's inequality and trace'', Linear Algebra Appl.\ 431 (2009), no.~8,
   1218--1222.
 \bibitem{conley2005} C.~H.~Conley, P.~Pucci, J.~Serrin, ``Elliptic equations and products of positive definite
@@ -1853,6 +2005,8 @@ $w=\frac{2}{1+\ell}(1,\ell)$.
   Inequalities}, Element, Zagreb, 2005.
 \bibitem{gardner1979} L.~T.~Gardner, ``An inequality characterizes the trace'', Canad.\ J.\ Math.\ 31
   (1979), no.~6, 1322--1328.
+\bibitem{gleason1957} A.~M.~Gleason, ``Measures on the closed subspaces of a Hilbert space'', J.\ Math.\ Mech.\ 6 (1957),
+  885--893.
 \bibitem{greub1959} W.~Greub, W.~Rheinboldt, ``On a generalization of an inequality of L.~V.~Kantorovich'', Proc.\
   Amer.\ Math.\ Soc.\ 10 (1959), 407--415.
 \bibitem{gustafson1968} K.~Gustafson, ``The angle of an operator and positive operator products'', Bull.\ Amer.\
@@ -1873,6 +2027,8 @@ Operators and Matrices}, Springer, New York, 1997.
   (2007), no.~1, 132--143.
 \bibitem{kittaneh2008} F.~Kittaneh, ``Norm inequalities for commutators of positive operators and applications'',
   Math.\ Z.\ 258 (2008), no.~4, 845--849.
+\bibitem{kochen1967} S.~Kochen, E.~P.~Specker, ``The problem of hidden variables in quantum mechanics'', J.\ Math.\ Mech.\
+  17 (1967), 59--87.
 \bibitem{krein1969} M.~G.~Krein, ``Angular localization of the spectrum of a multiplicative integral in a Hilbert
   space'', Funct.\ Anal.\ Appl.\ 3 (1969), 73--74; translated from Funktsional.\ Anal.\ i Prilozhen.\ 3 (1969), no.~1, 89--90.
 \bibitem{lemmens2012} B.~Lemmens, R.~Nussbaum, \emph{Nonlinear Perron--Frobenius Theory}, Cambridge Tracts in
@@ -1901,6 +2057,10 @@ Operators and Matrices}, Springer, New York, 1997.
   Proc.\ Amer.\ Math.\ Soc.\ 14 (1963), 438--443.
 \bibitem{tikhonov2005} O.~E.~Tikhonov, ``Subadditivity inequalities in von Neumann algebras and characterization of
   tracial functionals'', Positivity 9 (2005), no.~2, 259--264.
+\bibitem{yeadon1983} F.~J.~Yeadon, ``Measures on projections in $W^*$-algebras of type II$_1$'', Bull.\ London Math.\ Soc.\ 15
+  (1983), 139--145.
+\bibitem{yeadon1984} F.~J.~Yeadon, ``Finitely additive measures on projections in finite $W^*$-algebras'', Bull.\ London
+  Math.\ Soc.\ 16 (1984), 145--150.
 \end{thebibliography}
 }
 
