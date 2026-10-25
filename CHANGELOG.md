@@ -6,7 +6,7 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 
 ## [Unreleased]
 
-## [1.2.0] – 2026-10-19
+## [1.2.0] – 2026-10-25
 
 Backward compatible: everything of 1.1.0 works unchanged. New: conversion to QuTiP and dynamiqs, channels and
 Lindblad generators as trainable parameters, measurements and instruments, the projection lattice and measures on it.
