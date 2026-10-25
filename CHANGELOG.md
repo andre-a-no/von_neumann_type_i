@@ -6,6 +6,15 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 
 ## [Unreleased]
 
+### Added
+- A guide for AI coding assistants, installed with the package:
+  - `python -m torch_vn_algebra.guide` prints `torch_vn_algebra/guide.md`: the data layout, conventions, common
+    mistakes, a task-to-function table and recipes run by the tests;
+  - `python -m torch_vn_algebra.guide --api [module]` prints every public signature of the installed version.
+- `AGENTS.md` and `CLAUDE.md`, instructions for agents that work in the repository.
+- `skills/torch-vn-algebra/SKILL.md`, a Claude Code skill.
+- The website serves `llms-full.txt` and a page with the guide. `llms.txt` now lists every module.
+
 ## [1.2.0] – 2026-10-25
 
 Backward compatible: everything of 1.1.0 works unchanged. New: conversion to QuTiP and dynamiqs, channels and

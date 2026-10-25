@@ -2,3 +2,6 @@ graft examples
 prune examples/**/__pycache__
 include CHANGELOG.md CITATION.cff CONTRIBUTING.md CODE_OF_CONDUCT.md
 include RELEASING.md
+include torch_vn_algebra/guide.md
+include AGENTS.md llms.txt
+recursive-include skills *.md

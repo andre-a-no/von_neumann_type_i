@@ -59,6 +59,9 @@ interop = ["qutip>=5"]                              # interop.to_qutip etc.; dyn
 [tool.setuptools]
 packages = ["torch_vn_algebra"]
 
+[tool.setuptools.package-data]
+torch_vn_algebra = ["guide.md"]   # python -m torch_vn_algebra.guide
+
 [tool.setuptools.dynamic]
 version = { attr = "torch_vn_algebra.__version__" }
 

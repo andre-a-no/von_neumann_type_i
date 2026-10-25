@@ -13,7 +13,9 @@ links between the files). This hook makes them a website without changing them:
   docstrings verbatim (the docstrings are plain text with ASCII formulas, which Markdown would mangle);
 * every page gets a meta description (its first paragraph unless it sets one), keywords, Open Graph tags, its
   language in <html lang>, and hreflang links to its translations; the home page gets a schema.org JSON-LD record;
-* robots.txt (with the sitemap that MkDocs writes) and llms.txt are added at the site root.
+* the guide for AI coding assistants (torch_vn_algebra/guide.md) becomes the page ai_guide.md;
+* robots.txt (with the sitemap that MkDocs writes), llms.txt and llms-full.txt (the guide followed by every API page)
+  are added at the site root.
 """
 import ast
 import html
@@ -60,6 +62,7 @@ def on_config(config):
     nav = [{'Home': 'index.md'}]
     nav += [{SIDE_NAME[s]['en']: _side_nav(s, 'en')} for s in SIDES]
     nav.append({'API reference': ['api/index.md'] + [f'api/{m}.md' for m in API_MODULES]})
+    nav.append({'Guide for AI assistants': 'ai_guide.md'})
     nav.append({'Papers (PDF)': [{'Library (torch_vn_algebra)': 'article/vn_algebra_pytorch.pdf'},
                                  {'Trace-characterising inequalities': 'trace_envelopes/trace_inequalities_contrast.pdf'},
                                  {'Connes-Stormer entropy': 'connes_stormer/connes_stormer_masas.pdf'},
@@ -197,6 +200,11 @@ def on_files(files, config):
     llms = ROOT / 'llms.txt'
     if llms.exists():
         add('llms.txt', llms.read_text(encoding='utf-8'))
+    guide = (ROOT / 'torch_vn_algebra' / 'guide.md').read_text(encoding='utf-8')
+    add('ai_guide.md', '---\ndescription: "torch_vn_algebra for AI coding assistants: data layout, conventions, '
+                       'pitfalls, a task-to-function table and tested recipes."\n---\n\n' + guide)
+    add('llms-full.txt', guide + '\n\n# API reference\n\n' +
+        '\n'.join(re.sub(r'^---\n.*?\n---\n\n', '', _api_page(m), flags=re.S) for m in API_MODULES))
     _files.clear()
     _files.update({f.src_uri: f for f in files})
     return files

@@ -54,6 +54,7 @@ This README is the entry point of the repository:
 | read the paper on trace characterisations | [`man/trace_envelopes/trace_inequalities_contrast.pdf`](man/trace_envelopes/trace_inequalities_contrast.pdf): how strongly inequalities that characterise the trace fail, as functions of the Michelson contrasts of the functional and of the operators, and how often projections and two-level operators already give the largest violation (an observation with exceptions) (source `man/trace_envelopes/trace_inequalities_contrast.tex`; run in this order: `scripts/trace_characterizations.py --mode full`, `scripts/trace_contrast.py --mode full`, then `scripts/trace_montecarlo.py`, `scripts/contrast_operations.py`, `scripts/trace_envelopes_figures.py` and `scripts/trace_paper_schematics.py`; the joint-contrast figure comes from `scripts/bounds_search.py` of the library pipeline; arXiv archive by `scripts/make_arxiv_trace.sh`) |
 | read the paper on the Connes–Størmer entropy | [`man/connes_stormer/connes_stormer_masas.pdf`](man/connes_stormer/connes_stormer_masas.pdf): closed form for two MASAs of M_2, partitions that beat bases for n ≥ 3 (numbers from `scripts/connes_stormer.py`, arXiv archive by `scripts/make_arxiv_connes_stormer.sh`) |
 | read the physics paper (time crystal, symmetry-resolved entanglement) | [`man/btc_sre/btc_sre_symmetry_sectors.pdf`](man/btc_sre/btc_sre_symmetry_sectors.pdf): finite-N lifetimes of a boundary time crystal under local dissipation, SRE in the XXZ chain (numbers from `scripts/permutational.py` and `scripts/symmetry_resolved.py`, arXiv archive by `scripts/make_arxiv_btc_sre.sh`) |
+| write code with an AI assistant | [Using it with AI coding assistants](#using-it-with-ai-coding-assistants) |
 | reproduce every number of the paper | [Reproducing the paper](#reproducing-the-paper) |
 | cite it | [Citation](#citation) |
 
@@ -327,6 +328,30 @@ Schur–Weyl duality from the symmetries alone (`example_decompose.py`), SU(2) m
 (`example_su2.py`), Rényi divergences with data processing and recovery (`example_divergences.py`), and Jordan
 algebras and spin factors (`example_jordan.py`).
 
+## Using it with AI coding assistants
+
+The library is recent, so language models know little about it and tend to invent function names. Four files help.
+
+- **[`torch_vn_algebra/guide.md`](torch_vn_algebra/guide.md)** is installed with the package. Print it with
+  `python -m torch_vn_algebra.guide`. It covers:
+  - the data layout;
+  - the conventions that differ from what one expects (three traces, per-sector spectra, zero padding, properties
+    versus methods);
+  - a table from tasks to functions;
+  - recipes whose code the test suite runs.
+- **The API index of the installed version.** `python -m torch_vn_algebra.guide --api [module]` prints every
+  public class, method and function with its exact signature and summary.
+
+  A good first prompt is: *"Run `python -m torch_vn_algebra.guide` and read it before writing code; look up every
+  function with `--api`."*
+- **[`skills/torch-vn-algebra/`](skills/torch-vn-algebra/SKILL.md)** is a skill for Claude Code that does the
+  above automatically. Copy the directory to `~/.claude/skills/`.
+- **[`llms.txt`](llms.txt)** is the index for language models. The website also serves `llms.txt` and
+  `llms-full.txt` (the guide followed by the complete API reference) at its root.
+- **[`AGENTS.md`](AGENTS.md)** (read by Claude Code through `CLAUDE.md`) is for agents that change the repository
+  itself. It covers compatibility with Python 3.8 and torch 1.13, layout invariants, generated numbers in the
+  papers, translations and releases.
+
 ## Reproducing the paper
 
 The paper ([`man/article/vn_algebra_pytorch.tex`](man/article/vn_algebra_pytorch.tex), compiled [`man/article/vn_algebra_pytorch.pdf`](man/article/vn_algebra_pytorch.pdf)) contains no number
@@ -403,8 +428,9 @@ nohup bash scripts/run_all.sh full cuda > full_run.log 2>&1 &   # the full run (
 ```
 torch_vn_algebra/    library: algebra.py (TypeIAlgebra, Operator), hilbert_space.py, channels.py,
                      states.py, dynamics.py, composite.py, chains.py, krylov.py, optimize.py, cost.py,
-                     functional.py, inclusions.py, decompose.py, su2.py, divergences.py,
-                     jordan.py
+                     functional.py, inclusions.py, decompose.py, su2.py, divergences.py, jordan.py,
+                     measurement.py, projections.py, direct_integral.py, anyons.py, learn.py, interop.py,
+                     permutational.py; guide.md and guide.py (the guide for AI coding assistants)
 tests/               pytest suite (CPU, runs in CI)
 examples/            short usage examples of the library
 man/                 the documentation:
@@ -412,6 +438,8 @@ man/                 the documentation:
   tutorial/          the library in the context of the theory, executed by the tests (7 languages)
   article/           the paper: vn_algebra_pytorch.tex and .pdf, generated/ (tables), figures/, listings/ (its programs)
 scripts/             run_all.sh and the scripts behind every table and figure of the paper
+skills/              a Claude Code skill for writing code with the library
+AGENTS.md, llms.txt  instructions for AI agents working in the repository; index for language models
 ```
 
 ## Tests
