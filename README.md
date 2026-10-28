@@ -33,9 +33,18 @@ The algebras are direct sums of full matrix algebras:
 (Nominal factor sizes `n_factors` $`n_c\ge k_c`$ describe computations in the corner $`p\mathcal M_0p`$ of a larger
 algebra $`\mathcal M_0=\bigoplus_c M_{n_c}`$ with rank-$`k_c`$ projections $`p_c`$; everything refers to the corner.)
 
-Operators are stored as one tensor of shape `(batch, C, k_max, k_max)`: the batch axis holds
-samples (or optimisation starts), the sector axis holds the direct summands, and block `c` occupies the
-top-left `k_c × k_c` corner (the rest is zero padding).
+Operators have two storage layouts, chosen per algebra with `TypeIAlgebra(..., layout=...)`:
+
+- **padded**: one tensor of shape `(batch, C, k_max, k_max)`. The batch axis holds samples (or optimisation
+  starts), the sector axis holds the direct summands, and block `c` occupies the top-left `k_c × k_c` corner; the
+  rest is zero padding.
+- **packed**: one tensor `(batch, n_g, k_g, k_g)` per block size (`alg.size_groups`), with no padding. Memory is
+  Σ_c k_c² instead of C·k_max² per sample, and products cost Σ_c k_c³ instead of C·k_max³.
+
+The default `layout='auto'` packs when the padding would fill at least half of the padded tensor, as in the full
+algebra of a spin chain. Results do not depend on the layout. `op.matrix` is always the padded tensor; in the
+packed layout it is assembled on first use. `op.parts`, `op.block(c)` and `alg.from_parts` give the blocks
+directly.
 
 Companion paper: I. Nikolaeva, A. Novikov, *Finite-Dimensional Type I von Neumann Algebras in
 PyTorch: A GPU-Accelerated Framework for Random Block-Diagonal Operators*, arXiv:2606.15882
@@ -60,8 +69,10 @@ This README is the entry point of the repository:
 
 ## Features
 
-- **Block-diagonal operators in batches** – an operator of ⊕_c M_{k_c} is one tensor `(batch, C, k_max, k_max)`;
-  products, adjoints, traces, norms and functional calculus run as batched kernels on CPU or CUDA GPU
+- **Block-diagonal operators in batches**
+  - An operator of ⊕_c M_{k_c} is one padded tensor `(batch, C, k_max, k_max)`, or, packed, one tensor per block
+    size.
+  - Products, adjoints, traces, norms and functional calculus run as batched kernels on CPU or CUDA GPU
   ([Tutorial 1](man/tutorial/01_matrix_algebras.md), [2.5](man/tutorial/02_von_neumann_algebras.md#s-2-5)).
 - **Random matrices and Haar-random unitaries** – Haar measure on U(n), O(n), SU(n), SO(n), COE, CSE, random
   operators with a prescribed spectrum, GUE/GOE level statistics, Weingarten-calculus checks
@@ -112,7 +123,7 @@ below are the better choice; the sections *What to compare with* of the tutorial
 
 | task | established tools | what torch_vn_algebra adds |
 |---|---|---|
-| open quantum systems ([8.6](man/tutorial/08_dynamics.md#s-8-6)) | QuTiP (`mesolve`, `mcsolve`), dynamiqs (JAX, GPU), QuantumOptics.jl | Lindblad dynamics sector by sector, jumps between sectors, batches of Hamiltonians; no adaptive step size and no quantum trajectories |
+| open quantum systems ([8.6](man/tutorial/08_dynamics.md#s-8-6)) | QuTiP (`mesolve`, `mcsolve`), dynamiqs (JAX, GPU), QuantumOptics.jl | Lindblad dynamics sector by sector, jumps between sectors, batches of Hamiltonians, batched quantum trajectories; no adaptive step size |
 | exact diagonalisation ([9.7](man/tutorial/09_spin_chains.md#s-9-7)) | QuSpin, XDiag, SPINPACK, HΦ | the chain as an algebra, so states, channels and entropies apply per sector; SU(2) blocks; batched disorder; dense to L ≈ 16, Krylov to L ≈ 24 |
 | symmetric tensor networks ([0.3](man/tutorial/00_overview.md#s-0-3)) | ITensor, TeNPy, TensorKit.jl, YASTN | no tensor networks; instead traces, states, conditional expectations and Haar measures of the algebra |
 | quantum channels ([6.6](man/tutorial/06_quantum_channels.md#s-6-6)) | Qiskit `quantum_info`, toqito, QETLAB, QuTiP | Kraus operators stored per sector and in batches, maps between different algebras, duals for each trace |
@@ -249,8 +260,8 @@ print((Lt(rho) - rho_t[-1]).frobenius_norm().max())
 | `optimize` | constrained, batched multistart optimisation: `UnitaryParam`, `PositiveParam` / `SelfAdjointParam` with a prescribed or bounded Michelson contrast (hard constraint), `StinespringParam` (every parameter value a trace-preserving channel, within one algebra or between algebras with allowed sector transitions), `LindbladParam` (GKSL generators: H and free jump operators inside and, with allowed transitions, between sectors), `extremize` (best value per start), `fit` (minimisation that leaves the parameters at the fitted point) |
 | `cost` | safeguards: ETA warnings for large batched decompositions and integrators, memory checks with `InsufficientMemoryError`, `set_limits`, `disabled()` |
 | `chains` | `SpinChain`: spin-1/2 chains with conserved S^z, sectors N = 0..L (basis = iterated fused products), XXZ Hamiltonians with batched disorder, full algebra or single sectors, sparse form (`xxz_sparse`), momentum sectors of rings (`xxz_momentum`), reduced states and entanglement, site amplitude damping and jump operators `lowering(i)` between sectors, sparse jumps `sector_jump(i, 'lower' | 'raise' | 'sz')`, level-spacing ratio |
-| `krylov` | `SparseSectorHamiltonian` (batch of diagonals + shared sparse hopping), batched Lanczos `ground_state`, Krylov `evolve` (exp(-itH) psi with adaptive steps and a proved error bound, `krylov_error_bound`); with `SpinChain.xxz_sparse` for sectors beyond dense matrices |
-| `dynamics` | (Lindblad jumps may be `InterSectorChannel`s, e.g. particle loss, or sparse `SectorJump`s) exact `propagator`, `schrodinger`, `von_neumann`; RK4 `schrodinger_rk4` (time-dependent H), `solve_operator_ode` (any dX/dt = f(t, X) in M), Lindblad `lindblad_evolve` (`method="rk4"` default, or the CPTP `"kraus"` and `"exact"` steps), `lindblad_superoperator`, `lindblad_channel` |
+| `krylov` | matrix-free operators of one sector: `SparseSectorHamiltonian` (batch of diagonals + shared sparse matrix; `from_coo`, `from_sparse`), `MatrixFreeOperator` (any function V -> HV), `DenseSectorOperator` / `from_operator`, sums with per-sample coefficients (`combine`, `+`, `*`), `Deflated`; batched Lanczos `ground_state`, `lowest_eigenvalues` (deflation), Krylov `evolve` (exp(-itH) psi with adaptive steps and a proved error bound, `krylov_error_bound`); with `SpinChain.xxz_sparse` for sectors beyond dense matrices |
+| `dynamics` | (Lindblad jumps may be `InterSectorChannel`s, e.g. particle loss, or sparse `SectorJump`s) exact `propagator`, `schrodinger`, `von_neumann`; RK4 `schrodinger_rk4` (time-dependent H), `solve_operator_ode` (any dX/dt = f(t, X) in M), Lindblad `lindblad_evolve` (`method="rk4"` default, or the CPTP `"kraus"` and `"exact"` steps), `lindblad_superoperator`, `lindblad_channel`; quantum trajectories `trajectories` (Monte Carlo wave functions, batched, jumps inside and between sectors) |
 | `inclusions` | `Inclusion` (inclusion matrix Λ, optional unitary): `embed`, `as_channel`, `conditional_expectation(trace)` (`ConditionalExpectation`: Kraus form, `index` (Watatani), `quasi_basis`, `pimsner_popa_constant(complete=...)`), `index` (‖Λ‖²), `markov_trace`, `basic_construction`, `jones_projection`, `jones_tower`, `relative_commutant`, `compose`; `bratteli_diagram`, `from_tensor_product`, `diagonal`, `scalars`, `centre`, `chain_algebra`, `chain_tower` |
 | `decompose` | `wedderburn`, `from_group` (all elements of a finite group), `from_generators` (any matrices, e.g. Lie algebra generators) → `Decomposition` (`algebra`, `commutant_algebra`, `to_algebra` / `from_algebra`, `to_commutant` / `from_commutant`, `conditional_expectation`, `central_projections`, `verify`); `commutant_basis`, `twirl`, `permutation_representation`, `total_spin` |
 | `su2` | `SU2Chain`: `multiplicities`, `hw_basis`, `multiplet_basis`, `embed`, `heisenberg` (J, J₂, field, arbitrary bonds; one spin without padding via `spin=`), `restrict` / `lift` (U(1) ↔ SU(2)), `full_spectrum`, `lowest_energies`, `ground_state`, `reduced_matrix_elements`, `spin_correlation`; `clebsch_gordan`, `clebsch_gordan_exact`, `wigner_eckart`, `multiplicity` |
@@ -461,7 +472,15 @@ Bug reports, questions and pull requests are welcome: see [CONTRIBUTING.md](CONT
   `InterSectorChannel`s. Only abelian charges are fused. Of the non-abelian symmetries, SU(2) reduces the blocks of
   spin-1/2 chains (`SU2Chain`, dense up to L ≈ 16); SU(2) combined with momentum and chains of larger spins are not
   implemented. `decompose` handles any symmetry given by matrices, but densely (n up to a few hundred) and over C only.
-  Operators on all sectors of a chain are stored padded (work in single sectors for large chains).
+  Operators on all sectors of a chain are stored packed by default, Σ_N binom(L, N)² = binom(2L, L) entries per
+  operator. Dense methods on the full algebra therefore reach L ≈ 14 on a CPU with 16 GB
+  (`scripts/layout_bench.py`); work in single sectors or with `krylov` beyond that.
+- In the packed layout, `op.matrix` is a padded copy assembled on demand. Modules that still work on padded
+  tensors assemble it when they need it: the Kraus tensors of `Channel` and `InterSectorChannel`, and parts of
+  `optimize`, `measurement`, `inclusions`, `divergences`, `jordan` and `permutational`. This is correct, but costs the memory of
+  the padded tensor.
+- `dynamics.trajectories` places a jump at the end of the step in which the norm crosses its random threshold, so
+  jump times carry an error O(h) (h = interval / substeps).
 - Sandwiched Rényi divergences for small α < 1 of ill-conditioned states are not accurate (the sandwich
   σ^g ρ σ^g, g = (1-α)/(2α), cannot be resolved in floating point).
 - `lindblad_channel`, `choi` and `superoperator` work with k_c² × k_c² matrices per block, which

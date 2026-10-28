@@ -24,6 +24,7 @@ tends to get wrong.
 pip install -e ".[test,scripts]"
 pytest -q                                   # everything
 pytest -q tests/test_projections.py -x      # one module while iterating
+TORCH_VN_ALGEBRA_LAYOUT=packed pytest -q    # every algebra packed (and =padded); CI runs both
 python -m torch_vn_algebra.guide --api states   # exact signatures of a module
 mkdocs build --strict                       # the website (needs docs_site/requirements.txt)
 bash scripts/make_arxiv.sh                  # the arXiv package of the library paper (compiles it twice)
@@ -38,8 +39,14 @@ bash scripts/make_arxiv.sh                  # the arXiv package of the library p
    - no `torch.func` without a fallback;
    - no complex parameters in `torch.optim.LBFGS` (torch 1.13).
 2. **Layout invariants.**
-   - Operators are `(batch, C, k_max, k_max)` with zero padding. Decompositions run as one batched call per block
-     size, never as a Python loop over sectors.
+   - Operators have two storage layouts, `padded` `(batch, C, k_max, k_max)` and `packed` (one tensor per block
+     size, `op.parts`); `TypeIAlgebra(layout='auto')` picks one per algebra.
+   - Results must not depend on the layout. CI runs the whole suite with `TORCH_VN_ALGEBRA_LAYOUT=padded` and
+     `=packed`; run both locally after touching the core or a module that builds operators.
+   - New code reads blocks with `op.block(c)`, `op.parts`, `op._canonical()` or the slab helpers of
+     `TypeIAlgebra` (`_slab_groups`, `_flatten`, `_unflatten`), and builds results with `alg.from_parts` /
+     `Operator(alg, parts=...)`. `op.matrix` pads a packed operator; use it only where a padded tensor is the point.
+   - Decompositions run as one batched call per block size, never as a Python loop over sectors.
    - No `.item()`, `bool(tensor)` or `.tolist()` in computational paths: `tests/test_sync_free.py` counts host
      synchronisations.
    - Set a property flag (`is_positive`, `is_projection`, …) only when it is guaranteed mathematically.

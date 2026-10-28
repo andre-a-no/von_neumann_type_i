@@ -28,6 +28,25 @@ jobs:
       - name: Test
         run: PYTHONPATH=$PWD pytest -q
 
+  # every algebra in one storage layout (the default 'auto' picks per algebra): results must not depend on it
+  layouts:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        layout: ["padded", "packed"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -e ".[test]"
+      - name: Test
+        run: TORCH_VN_ALGEBRA_LAYOUT=${{ matrix.layout }} PYTHONPATH=$PWD pytest -q
+
   # the lowest supported versions (pyproject.toml): Python 3.8, PyTorch 1.13, NumPy 1.21 (and SciPy 1.7 for the tests)
   oldest-dependencies:
     runs-on: ubuntu-22.04

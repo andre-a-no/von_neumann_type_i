@@ -7,6 +7,35 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 ## [Unreleased]
 
 ### Added
+- **Packed storage layout.**
+  - `TypeIAlgebra(..., layout='auto' | 'padded' | 'packed')`. Packed operators hold one tensor
+    `(batch, n_g, k_g, k_g)` per block size instead of the padded `(batch, C, k_max, k_max)`: memory Σ_c k_c²
+    instead of C·k_max², products Σ_c k_c³ instead of C·k_max³.
+  - `'auto'` (the default) packs when the padding would fill at least half of the padded tensor, for example the
+    full algebra of a `SpinChain`, `SU2Chain`, `AnyonChain`, or a tensor product. The environment variable
+    `TORCH_VN_ALGEBRA_LAYOUT` overrides the default. Results do not depend on the layout.
+  - New API: `op.parts`, `op.block(c)`, `op.sector_traces()`, `op.batch_size`, `alg.size_groups`,
+    `alg.from_parts`, `SpinChain(..., layout=...)`.
+  - Packed natively: all `Operator` methods and factories, `states`, `dynamics` (propagators, `von_neumann`,
+    `schrodinger`, `lindblad_evolve` with every method, `SectorJump`), `Channel.apply`, `composite.kron` and
+    `partial_trace`, `SpinChain` operators and reduced states, `SU2Chain.restrict` / `lift`, `AnyonChain`
+    operators. Other code reads `op.matrix`, the padded tensor, which is assembled on demand.
+  - `scripts/layout_bench.py` measures both layouts on the full algebra of a spin chain. On a CPU with complex128:
+    - L = 12: memory per operator 169 → 41 MB, peak memory 3.8 → 1.3 GB, H·H 4×, a Lindblad step 10× faster;
+    - L = 13: peak memory 12.6 → 3.0 GB;
+    - L = 14: fits in 9.3 GB packed (padded does not fit in 16 GB).
+- **Matrix-free sector operators** (`krylov`):
+  - the `SectorOperator` protocol;
+  - `MatrixFreeOperator` (any function v ↦ Hv), `DenseSectorOperator` / `from_operator`;
+  - `LinearCombination` via `combine`, `+`, `-`, `*`, with one coefficient per sample;
+  - `Deflated` and `lowest_eigenvalues` (excited states by deflation);
+  - `SparseSectorHamiltonian.from_coo` / `from_sparse`.
+- **Quantum trajectories:** `dynamics.trajectories`, Monte Carlo wave functions, batched.
+  - The no-jump evolution exp(-ih H_eff) is exact per block size.
+  - Jumps can act inside sectors (Operators) and between sectors (`SectorJump`, the Kraus operators of an
+    `InterSectorChannel`).
+  - Initial states are vectors or are drawn from a `DensityMatrix`.
+  - `Trajectories` gives the states, expectation values with standard errors, and the averaged density matrix.
 - A guide for AI coding assistants, installed with the package:
   - `python -m torch_vn_algebra.guide` prints `torch_vn_algebra/guide.md`: the data layout, conventions, common
     mistakes, a task-to-function table and recipes run by the tests;
@@ -14,6 +43,11 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 - `AGENTS.md` and `CLAUDE.md`, instructions for agents that work in the repository.
 - `skills/torch-vn-algebra/SKILL.md`, a Claude Code skill.
 - The website serves `llms-full.txt` and a page with the guide. `llms.txt` now lists every module.
+
+### Changed
+- `SectorJump` gathers and scatters block by block: it stores O(Σ_c k_c) indices instead of O(Σ_c k_c²). In the
+  padded layout the index arrays alone used to be larger than a state of the full algebra.
+- `lindblad_rhs` keeps its signature on padded tensors; `lindblad_evolve` integrates the stored blocks directly.
 
 ## [1.2.0] – 2026-10-25
 

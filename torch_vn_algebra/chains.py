@@ -74,7 +74,7 @@ MAX_L = 30                                               # 2^L labels are held i
 
 class SpinChain:
     def __init__(self, L: int, boundary: str = 'open', complex_valued: bool = True,
-                 precision: str = 'double', device=None):
+                 precision: str = 'double', device=None, layout: str = 'auto'):
         if boundary not in ('open', 'periodic'):
             raise ValueError("boundary must be 'open' or 'periodic'")
         if L > MAX_L:
@@ -83,6 +83,7 @@ class SpinChain:
         self.L, self.boundary = L, boundary
         self.complex_valued, self.precision = complex_valued, precision
         self._algebra = None
+        self._layout = layout                            # of the full algebra (TypeIAlgebra(layout=...))
         self._device_arg = device
         self._sector_algebras = {}
         ref = self.sector_algebra(0)                        # 1 x 1: fixes dtype and device
@@ -99,11 +100,12 @@ class SpinChain:
 
     @property
     def algebra(self) -> TypeIAlgebra:
-        """The full algebra (+)_N M_{binom(L, N)} (created on first use; padded to the largest sector)."""
+        """The full algebra (+)_N M_{binom(L, N)} (created on first use; packed by default for L >= 7, see
+        TypeIAlgebra(layout=...))."""
         if self._algebra is None:
             dims = [math.comb(self.L, N) for N in range(self.L + 1)]
             self._algebra = TypeIAlgebra(dims, dims, complex_valued=self.complex_valued, precision=self.precision,
-                                         device=self.device, charges=list(range(self.L + 1)))
+                                         device=self.device, charges=list(range(self.L + 1)), layout=self._layout)
         return self._algebra
     # ------------------------------------------------------------------
     @property

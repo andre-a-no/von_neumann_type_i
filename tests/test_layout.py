@@ -164,3 +164,51 @@ def test_layout_choice(monkeypatch):
         TypeIAlgebra([2, 3], [2, 3])
     with pytest.raises(ValueError):
         TypeIAlgebra([2, 3], [2, 3], layout='dense')
+
+
+def test_modules_agree_across_layouts():
+    """Dynamics (all Lindblad methods, with jumps inside and between sectors), channels, tensor products, partial
+    traces and spin-chain functions give the same results in both layouts."""
+    from torch_vn_algebra import channels, composite, dynamics, SpinChain
+    out = {}
+    for layout in ('padded', 'packed'):
+        pad = TypeIAlgebra([1, 4, 6, 4, 1], [1, 4, 6, 4, 1], precision='double', layout=layout)
+        torch.manual_seed(0)
+        H = pad.operator(torch.randn(2, 5, 6, 6, dtype=pad.dtype), is_self_adjoint=False)
+        H = (H + H.adjoint()) * 0.5
+        H._is_self_adjoint = True
+        L = pad.operator(torch.randn(1, 5, 6, 6, dtype=pad.dtype) / 3)
+        rho = states.DensityMatrix(pad, matrix=states.random_density_matrix(
+            TypeIAlgebra([1, 4, 6, 4, 1], [1, 4, 6, 4, 1], precision='double', layout='padded'), 2).matrix)
+        jump = channels.random_inter_sector_channel(pad, pad, kraus_rank=2)
+        r = {}
+        for m in ('rk4', 'kraus', 'exact'):
+            r[m] = dynamics.lindblad_evolve(rho, H, [L, jump], [0.0, 0.3, 0.6], rates=[0.5, 0.4], method=m)[-1].matrix
+        r['vn'] = dynamics.von_neumann(rho, H, [0.0, 0.7])[-1].matrix
+        psi = torch.zeros(2, 5, 6, dtype=pad.dtype)
+        psi[:, 2, :6] = 1 / 6 ** 0.5
+        r['schrodinger'] = dynamics.schrodinger(psi, H, [0.0, 0.5])
+        r['schrodinger_rk4'] = dynamics.schrodinger_rk4(psi, H, [0.0, 0.5])
+        Phi = channels.random_channel(pad, kraus_rank=2)
+        r['channel'] = Phi(rho).matrix
+        r['rhs'] = dynamics.lindblad_rhs(H, [L], rates=[0.5])(0.0, rho.matrix)
+        q = TypeIAlgebra([2, 3], [2, 3], precision='double', layout=layout)
+        q2 = composite.fused_tensor_product(q, q)
+        torch.manual_seed(1)
+        a = states.random_density_matrix(TypeIAlgebra([2, 3], [2, 3], precision='double', layout='padded'), 1)
+        a = states.DensityMatrix(q, matrix=a.matrix)
+        ab = composite.kron(a, a, q2)
+        r['kron'] = ab.matrix
+        r['ptrace'] = composite.partial_trace(ab, keep=1).matrix
+        ch = SpinChain(6, 'periodic', layout=layout)
+        assert ch.algebra.layout == layout
+        Hc = ch.xxz(1.0, 0.7)
+        g = states.gibbs_state(Hc, 0.4)
+        r['reduced'] = ch.reduced_state(g, 3).matrix
+        r['basis'] = ch.basis_state('110100').matrix
+        jumps = [ch.sector_jump(i, 'lower') for i in range(6)]
+        r['sector_jump'] = dynamics.lindblad_evolve(g, Hc, jumps, [0.0, 0.2], rates=[0.3] * 6,
+                                                    method='kraus')[-1].matrix
+        out[layout] = r
+    for key in out['padded']:
+        assert torch.allclose(out['padded'][key], out['packed'][key], atol=1e-10), key
