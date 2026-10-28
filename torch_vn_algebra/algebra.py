@@ -194,6 +194,16 @@ class TypeIAlgebra:
         # the two layouts coincide when there is one group of all sectors, of size k_max, in order
         self._uniform = len(groups) == 1 and self._size_groups_cache[0][1] == list(range(C))
         self._packed = self.layout == 'packed' and not self._uniform      # operators are stored as group tensors
+        self._sector_pos = {c: (g, j) for g, (_, idx) in enumerate(self._size_groups_cache) for j, c in enumerate(idx)}
+
+    def _block_view(self, data, c: int) -> torch.Tensor:
+        """The block (batch, k_c, k_c) of sector c in stored data (a padded tensor or the list of group tensors), as a
+        view (writes go to the data)."""
+        if isinstance(data, (list, tuple)):
+            g, j = self._sector_pos[c]
+            return data[g][:, j]
+        k = self.k_factors[c]
+        return data[:, c, :k, :k]
 
     @property
     def size_groups(self) -> List[Tuple[int, List[int]]]:

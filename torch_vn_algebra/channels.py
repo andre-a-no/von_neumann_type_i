@@ -634,31 +634,13 @@ class SectorJump:
         self.algebra = algebra
         self.target, self.dst, self.val, self._live = target, dst, val, live
         self._flat_rows = flat
-        if algebra._packed:
-            # indices into the flattened blocks (algebra._flatten): entry (c, a, b) of rho, at offset(c) + a k_c + b,
-            # lands at offset(d) + dst_a k_d + dst_b; built sector by sector, O(sum_c (support of L in c)^2)
-            off = algebra._flat_offsets().tolist()
-            src, dsts, wa, wb = [], [], [], []
-            for c in range(C):
-                a = torch.nonzero(live[c]).squeeze(-1)
-                if a.numel() == 0:
-                    continue
-                d = int(target[c])
-                kc, kd = algebra.k_factors[c], algebra.k_factors[d]
-                ra, rb = torch.meshgrid(a, a, indexing='ij')
-                ra, rb = ra.reshape(-1), rb.reshape(-1)
-                src.append(off[c] + ra * kc + rb)
-                dsts.append(off[d] + dst[c, ra] * kd + dst[c, rb])
-                wa.append(c * k + ra)
-                wb.append(c * k + rb)
-            cat = lambda xs: torch.cat(xs) if xs else torch.zeros(0, dtype=torch.long, device=dev)
-            self._src, self._dst, self._wa, self._wb = cat(src), cat(dsts), cat(wa), cat(wb)
-        else:
-            # flat indices into (C, k_max, k_max) for L rho L^*: entry (c, a, b) of rho lands at (d(c), dst_a, dst_b)
-            pair = live[:, :, None] & live[:, None, :]                       # (C, k_max, k_max)
-            idx = (tgt[:, None, None] * k + dst[:, :, None]) * k + dst[:, None, :]
-            self._pair = pair
-            self._pair_idx = idx[pair]                                       # (P,)
+        # per sector c of the support: (c, d(c), support positions a, target positions dst_a); L rho L^* and L^* Z L
+        # are gathered and scattered block by block (no index of size sum_c k_c^2 is stored)
+        self._sectors = []
+        for c in range(C):
+            a = torch.nonzero(live[c]).squeeze(-1)
+            if a.numel():
+                self._sectors.append((c, int(target[c]), a, dst[c, a]))
 
     def __repr__(self) -> str:
         return f"SectorJump(batch={self.val.shape[0]}, C={self.algebra.C}, nnz={int(self._live.sum())})"
@@ -669,50 +651,43 @@ class SectorJump:
         c = c.reshape(-1, 1, 1) if c.dim() else c
         return SectorJump(self.algebra, self.target, self.dst, self.val * c)
 
-    def _weights(self, dtype) -> torch.Tensor:
-        """v_a conj(v_b) of every pair of the support (packed layout), (batch, P)."""
-        v = self.val.to(dtype).reshape(self.val.shape[0], -1)
-        return v[:, self._wa] * v[:, self._wb].conj()
+    def _zeros(self, data, B: int):
+        alg = self.algebra
+        if isinstance(data, (list, tuple)):
+            return [x.new_zeros(B, *x.shape[1:]) for x in data]
+        return data.new_zeros(B, alg.C, alg.k_max, alg.k_max)
 
     def sandwich(self, rho):
         """L rho L^* for a block-diagonal rho: a tensor (B, C, k_max, k_max), or in the packed layout the list of
-        group tensors (returned as such)."""
+        group tensors (returned as such). O(sum_c (support of L in c)^2) per sample."""
         alg = self.algebra
         if alg._packed and not isinstance(rho, (list, tuple)):       # a padded tensor: through the blocks
             return alg._pad(self.sandwich(alg._unpad(rho)))
-        if isinstance(rho, (list, tuple)):
-            flat = alg._flatten(list(rho))
-            Y = flat[:, self._src] * self._weights(flat.dtype)
-            out = flat.new_zeros(Y.shape[0], flat.shape[1])
-            out.index_add_(1, self._dst, Y)
-            return alg._unflatten(out)
-        B = max(rho.shape[0], self.val.shape[0])
-        C, k = self.algebra.C, self.algebra.k_max
-        v = self.val.to(rho.dtype)
-        Y = v[:, :, :, None] * rho * v.conj()[:, :, None, :]                 # (B, C, k, k)
-        out = rho.new_zeros(B, C * k * k)
-        src = Y.expand(B, C, k, k)[:, self._pair]                             # (B, P)
-        out.index_add_(1, self._pair_idx, src)
-        return out.reshape(B, C, k, k)
+        first = rho[0] if isinstance(rho, (list, tuple)) else rho
+        B = max(first.shape[0], self.val.shape[0])
+        out = self._zeros(rho, B)
+        for c, d, a, dd in self._sectors:
+            X = alg._block_view(rho, c).index_select(-2, a).index_select(-1, a)     # (b, n, n)
+            v = self.val[:, c, a].to(X.dtype)                                        # (bv, n)
+            Y = v[:, :, None] * X * v.conj()[:, None, :]
+            O = alg._block_view(out, d)
+            O[:, dd[:, None], dd[None, :]] += Y                                      # dst is injective
+        return out
 
     def dual_sandwich(self, Z):
         """L^* Z L (Heisenberg picture) for a block-diagonal Z (a padded tensor, or the list of group tensors)."""
         alg = self.algebra
         if alg._packed and not isinstance(Z, (list, tuple)):
             return alg._pad(self.dual_sandwich(alg._unpad(Z)))
-        if isinstance(Z, (list, tuple)):
-            flat = alg._flatten(list(Z))
-            g = flat[:, self._dst] * self._weights(flat.dtype).conj()
-            out = flat.new_zeros(g.shape[0], flat.shape[1])
-            out[:, self._src] = g
-            return alg._unflatten(out)
-        B = max(Z.shape[0], self.val.shape[0])
-        C, k = self.algebra.C, self.algebra.k_max
-        v = self.val.to(Z.dtype)
-        g = Z.reshape(Z.shape[0], -1)[:, self._pair_idx]                     # (B, P)
-        out = Z.new_zeros(B, C, k, k)
-        out[:, self._pair] = g.expand(B, -1)
-        return v.conj()[:, :, :, None] * out * v[:, :, None, :]
+        first = Z[0] if isinstance(Z, (list, tuple)) else Z
+        B = max(first.shape[0], self.val.shape[0])
+        out = self._zeros(Z, B)
+        for c, d, a, dd in self._sectors:
+            X = alg._block_view(Z, d).index_select(-2, dd).index_select(-1, dd)
+            v = self.val[:, c, a].to(X.dtype)
+            O = alg._block_view(out, c)
+            O[:, a[:, None], a[None, :]] = v.conj()[:, :, None] * X * v[:, None, :]
+        return out
 
     def LdL(self, padded: bool = False):
         """L^*L, diagonal, as a tensor (batch, C, k_max, k_max), or in the packed layout (unless padded=True) as the
