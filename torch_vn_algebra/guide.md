@@ -219,9 +219,8 @@ index = I.index()                                     # ||Lambda||^2
 ```python
 from torch_vn_algebra import krylov
 
-chain = SpinChain(10, 'periodic')
-H = chain.xxz(J=1.0, Delta=0.5)                       # the full algebra, all 11 sectors
-assert chain.algebra.layout == 'packed'               # sizes 1, 10, 45, ..., 252: no padding stored
+chain = SpinChain(10, 'periodic')                     # full algebra packed by default (layout='auto'):
+H = chain.xxz(J=1.0, Delta=0.5)                       # sizes 1, 10, 45, ..., 252, no padding stored
 assert [p.shape[-1] for p in H.parts][:3] == [1, 10, 45] and H.block(5).shape == (1, 252, 252)
 E = torch.cat([w[0] for w in H.eigenvalues()]).min()  # per-sector spectra, no padded tensor formed
 
