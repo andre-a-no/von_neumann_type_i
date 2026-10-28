@@ -574,14 +574,13 @@ class SU2Chain:
         """
         if A.algebra.k_factors != self.u1.algebra.k_factors:
             raise ValueError("restrict expects an operator of SpinChain(L).algebra (all U(1) sectors)")
-        mat = A.matrix
+        dt = A._dtype()
         self._ensure_bases(self.two_spins)
         blocks = []
         for t in self.two_spins:
             N = (self.L + t) // 2
-            d = math.comb(self.L, N)
-            B = self.hw_basis(Fraction(t, 2), mat.real.dtype).to(mat.dtype)
-            blocks.append(B.mT @ mat[:, N, :d, :d] @ B)
+            B = self.hw_basis(Fraction(t, 2), A._real_dtype()).to(dt)
+            blocks.append(B.mT @ A.block(N) @ B)
         op = self.algebra.from_blocks(blocks)
         op._is_self_adjoint = A._is_self_adjoint
         return op
@@ -593,15 +592,15 @@ class SU2Chain:
         with X_{S,M} = multiplet_basis(S, M). Memory: one dense block per U(1) sector (sum_N binom(L, N)^2).
         """
         alg = self.u1.algebra
-        mat = A.matrix
-        cost.check_memory(cost.tensor_bytes((mat.shape[0], alg.C, alg.k_max, alg.k_max), mat.dtype), self.device,
+        B_, dt = A.batch_size, A._dtype()
+        cost.check_memory(sum(cost.tensor_bytes((B_, k, k), dt) for k in alg.k_factors), self.device,
                           f"lift to the U(1) algebra (L={self.L})")
         self._ensure_bases(self.two_spins)
-        blocks = [torch.zeros(mat.shape[0], k, k, dtype=mat.dtype, device=self.device) for k in alg.k_factors]
+        blocks = [torch.zeros(B_, k, k, dtype=dt, device=self.device) for k in alg.k_factors]
         for c, (t, m) in enumerate(zip(self.two_spins, self.multiplicities)):
-            As = mat[:, c, :m, :m]
+            As = A.block(c)
             for tm in range(-t, t + 1, 2):
-                X = self.multiplet_basis(Fraction(t, 2), Fraction(tm, 2)).to(mat.dtype)
+                X = self.multiplet_basis(Fraction(t, 2), Fraction(tm, 2)).to(dt)
                 blocks[(self.L + tm) // 2] += X @ As @ X.mT
         op = alg.from_blocks(blocks)
         op._is_self_adjoint = A._is_self_adjoint
@@ -620,10 +619,10 @@ class SU2Chain:
     def _field(self, H: Operator, h) -> torch.Tensor:
         if h is None:
             h = getattr(H, 'su2_field', None)
-        B = H.matrix.shape[0]
+        B = H.batch_size
         if h is None:
-            return torch.zeros(B, dtype=H.matrix.real.dtype, device=self.device)
-        return self._batch_param(h, 'h').to(H.matrix.real.dtype).expand(B)
+            return torch.zeros(B, dtype=H._real_dtype(), device=self.device)
+        return self._batch_param(h, 'h').to(H._real_dtype()).expand(B)
 
     def full_spectrum(self, H: Operator, h=None, return_quantum_numbers: bool = False):
         """
@@ -681,10 +680,10 @@ class SU2Chain:
         c_idx = self.sector_index(S)
         m = self.multiplicities[c_idx]
         if A.algebra.C == 1 and A.algebra.k_factors == [m] and A.algebra.charges == [self.two_spins[c_idx]]:
-            block = A.matrix[:, 0]
+            block = A.block(0)
         else:
             self._require_full(A, 'expectation')
-            block = A.matrix[:, c_idx, :m, :m]
+            block = A.block(c_idx)
         c = torch.as_tensor(coefficients, device=self.device).to(block.dtype)
         c = c[None] if c.dim() == 1 else c
         val = torch.einsum('bi,bij,bj->b', c.conj(), block, c)

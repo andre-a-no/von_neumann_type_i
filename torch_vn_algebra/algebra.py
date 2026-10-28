@@ -245,6 +245,55 @@ class TypeIAlgebra:
         parts = [mat[:, self._sel(idx), :k, :k] for k, idx in self._size_groups_cache]
         return [p.clone() for p in parts] if copy else parts
 
+    def _slab_groups(self) -> List[Tuple[int, List[int]]]:
+        """The groups of the stored tensors ("slabs"): the size groups when packed, one group of all sectors with
+        block size k_max (the padded tensor) otherwise. Code that loops over slabs works in both layouts."""
+        return self._size_groups_cache if self._packed else [(self.k_max, list(range(self.C)))]
+
+    def _slabs(self, data) -> List[torch.Tensor]:
+        """Stored data (a padded tensor or a list of group tensors) as slabs."""
+        return list(data) if isinstance(data, (list, tuple)) else [data]
+
+    def _unslab(self, slabs: List[torch.Tensor]):
+        """Slabs as stored data of this algebra's layout."""
+        return list(slabs) if self._packed else slabs[0]
+
+    def _flat_size(self) -> int:
+        return sum(len(idx) * k * k for k, idx in self._slab_groups())
+
+    def _flatten(self, slabs: List[torch.Tensor]) -> torch.Tensor:
+        """Slabs (batch, n_g, k_g, k_g) -> one tensor (batch, sum_g n_g k_g^2) (row-major blocks one after another)."""
+        if len(slabs) == 1:
+            return slabs[0].reshape(slabs[0].shape[0], -1)
+        B = max(s.shape[0] for s in slabs)
+        return torch.cat([s.expand(B, *s.shape[1:]).reshape(B, -1) for s in slabs], dim=1)
+
+    def _unflatten(self, flat: torch.Tensor) -> List[torch.Tensor]:
+        """The inverse of _flatten (views)."""
+        out, o = [], 0
+        for k, idx in self._slab_groups():
+            n = len(idx) * k * k
+            out.append(flat[..., o:o + n].reshape(*flat.shape[:-1], len(idx), k, k))
+            o += n
+        return out
+
+    def _flat_offsets(self) -> torch.Tensor:
+        """(C,) offset of every sector's block in the flattened slabs (row-major k_c x k_c blocks; -1 if empty)."""
+        t = self._const_cache.get('flat_offsets')
+        if t is None:
+            off = [-1] * self.C
+            o = 0
+            for k, idx in self._slab_groups():
+                for c in idx:
+                    off[c] = o
+                    o += k * k
+            t = self._const_cache['flat_offsets'] = torch.tensor(off, dtype=torch.long, device=self.hilbert.device)
+        return t
+
+    def _slab_eyes(self, dtype: Optional[torch.dtype] = None) -> List[torch.Tensor]:
+        """Identity of the active blocks of every slab, (1, n, k, k) (zero on the padding)."""
+        return self._eye_parts(dtype) if self._packed else [self._const('eye', dtype).unsqueeze(0)]
+
     def _eye_parts(self, dtype: Optional[torch.dtype] = None) -> List[torch.Tensor]:
         """Identity of every group, (1, n_g, k_g, k_g) (expanded views of one identity matrix per size), cached."""
         dtype = dtype or self.dtype

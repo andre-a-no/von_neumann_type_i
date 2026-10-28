@@ -41,6 +41,21 @@ def _check_input(op, alg: TypeIAlgebra, what: str) -> None:
                          f"{alg} ({alg.dtype}); convert with op.cast(alg)")
 
 
+def _kraus_sandwich(K: torch.Tensor, rho: torch.Tensor) -> torch.Tensor:
+    """sum_i K_i rho K_i^* for Kraus operators K (B, r, n, k, k) and blocks rho (B, n, k, k)."""
+    dtype = torch.promote_types(rho.dtype, K.dtype)
+    B = max(rho.shape[0], K.shape[0])
+    r, C, k = K.shape[1], K.shape[2], K.shape[-1]
+    cost.check_memory(2 * cost.tensor_bytes((B, *K.shape[1:]), dtype), K.device,
+                      f"Channel.apply (batch {B}, Kraus rank {r})")
+    Kd = K.to(dtype)
+    X = Kd @ rho.to(dtype).unsqueeze(1)                                    # (B, r, n, k, k)
+    # sum_i X_i K_i^* as one product over the merged index (i, column)
+    Xc = X.permute(0, 2, 3, 1, 4).reshape(B, C, k, r * k)
+    Kc = Kd.permute(0, 2, 3, 1, 4).reshape(Kd.shape[0], C, k, r * k)
+    return Xc @ Kc.conj().transpose(-2, -1)
+
+
 class Channel:
     """Sector-preserving completely positive map given by Kraus operators."""
 
@@ -80,20 +95,13 @@ class Channel:
         """
         _check_input(op, self.algebra, "Channel.apply")
         K = self.kraus
+        alg = self.algebra
 
         def generator():
-            rho = op.matrix
-            dtype = torch.promote_types(rho.dtype, K.dtype)
-            B = max(rho.shape[0], K.shape[0])
-            r, C, k = K.shape[1], K.shape[2], K.shape[-1]
-            cost.check_memory(2 * cost.tensor_bytes((B, *K.shape[1:]), dtype), K.device,
-                              f"Channel.apply (batch {B}, Kraus rank {r})")
-            Kd = K.to(dtype)
-            X = Kd @ rho.to(dtype).unsqueeze(1)                                # (B, r, C, k, k)
-            # sum_i X_i K_i^* as one product over the merged index (i, column)
-            Xc = X.permute(0, 2, 3, 1, 4).reshape(B, C, k, r * k)
-            Kc = Kd.permute(0, 2, 3, 1, 4).reshape(Kd.shape[0], C, k, r * k)
-            return Xc @ Kc.conj().transpose(-2, -1)
+            if alg._packed:                     # the Kraus blocks of each size applied to the stored blocks
+                return [_kraus_sandwich(K[:, :, alg._sel(idx), :k, :k], rho)
+                        for (k, idx), rho in zip(alg.size_groups, op.parts)]
+            return _kraus_sandwich(K, op.matrix)
 
         if isinstance(op, DensityMatrix):
             if self._trace_preserving is None:                 # checked once per channel (one synchronisation)
@@ -625,12 +633,32 @@ class SectorJump:
             raise ValueError("SectorJump: two basis vectors are mapped to the same basis vector (not injective)")
         self.algebra = algebra
         self.target, self.dst, self.val, self._live = target, dst, val, live
-        # flat indices into (C, k_max, k_max) for L rho L^*: entry (c, a, b) of rho lands at (d(c), dst_a, dst_b)
         self._flat_rows = flat
-        pair = live[:, :, None] & live[:, None, :]                           # (C, k_max, k_max)
-        idx = (tgt[:, None, None] * k + dst[:, :, None]) * k + dst[:, None, :]
-        self._pair = pair
-        self._pair_idx = idx[pair]                                           # (P,)
+        if algebra._packed:
+            # indices into the flattened blocks (algebra._flatten): entry (c, a, b) of rho, at offset(c) + a k_c + b,
+            # lands at offset(d) + dst_a k_d + dst_b; built sector by sector, O(sum_c (support of L in c)^2)
+            off = algebra._flat_offsets().tolist()
+            src, dsts, wa, wb = [], [], [], []
+            for c in range(C):
+                a = torch.nonzero(live[c]).squeeze(-1)
+                if a.numel() == 0:
+                    continue
+                d = int(target[c])
+                kc, kd = algebra.k_factors[c], algebra.k_factors[d]
+                ra, rb = torch.meshgrid(a, a, indexing='ij')
+                ra, rb = ra.reshape(-1), rb.reshape(-1)
+                src.append(off[c] + ra * kc + rb)
+                dsts.append(off[d] + dst[c, ra] * kd + dst[c, rb])
+                wa.append(c * k + ra)
+                wb.append(c * k + rb)
+            cat = lambda xs: torch.cat(xs) if xs else torch.zeros(0, dtype=torch.long, device=dev)
+            self._src, self._dst, self._wa, self._wb = cat(src), cat(dsts), cat(wa), cat(wb)
+        else:
+            # flat indices into (C, k_max, k_max) for L rho L^*: entry (c, a, b) of rho lands at (d(c), dst_a, dst_b)
+            pair = live[:, :, None] & live[:, None, :]                       # (C, k_max, k_max)
+            idx = (tgt[:, None, None] * k + dst[:, :, None]) * k + dst[:, None, :]
+            self._pair = pair
+            self._pair_idx = idx[pair]                                       # (P,)
 
     def __repr__(self) -> str:
         return f"SectorJump(batch={self.val.shape[0]}, C={self.algebra.C}, nnz={int(self._live.sum())})"
@@ -641,8 +669,23 @@ class SectorJump:
         c = c.reshape(-1, 1, 1) if c.dim() else c
         return SectorJump(self.algebra, self.target, self.dst, self.val * c)
 
-    def sandwich(self, rho: torch.Tensor) -> torch.Tensor:
-        """L rho L^* for a block-diagonal rho of shape (B, C, k_max, k_max)."""
+    def _weights(self, dtype) -> torch.Tensor:
+        """v_a conj(v_b) of every pair of the support (packed layout), (batch, P)."""
+        v = self.val.to(dtype).reshape(self.val.shape[0], -1)
+        return v[:, self._wa] * v[:, self._wb].conj()
+
+    def sandwich(self, rho):
+        """L rho L^* for a block-diagonal rho: a tensor (B, C, k_max, k_max), or in the packed layout the list of
+        group tensors (returned as such)."""
+        alg = self.algebra
+        if alg._packed and not isinstance(rho, (list, tuple)):       # a padded tensor: through the blocks
+            return alg._pad(self.sandwich(alg._unpad(rho)))
+        if isinstance(rho, (list, tuple)):
+            flat = alg._flatten(list(rho))
+            Y = flat[:, self._src] * self._weights(flat.dtype)
+            out = flat.new_zeros(Y.shape[0], flat.shape[1])
+            out.index_add_(1, self._dst, Y)
+            return alg._unflatten(out)
         B = max(rho.shape[0], self.val.shape[0])
         C, k = self.algebra.C, self.algebra.k_max
         v = self.val.to(rho.dtype)
@@ -652,8 +695,17 @@ class SectorJump:
         out.index_add_(1, self._pair_idx, src)
         return out.reshape(B, C, k, k)
 
-    def dual_sandwich(self, Z: torch.Tensor) -> torch.Tensor:
-        """L^* Z L (Heisenberg picture) for a block-diagonal Z."""
+    def dual_sandwich(self, Z):
+        """L^* Z L (Heisenberg picture) for a block-diagonal Z (a padded tensor, or the list of group tensors)."""
+        alg = self.algebra
+        if alg._packed and not isinstance(Z, (list, tuple)):
+            return alg._pad(self.dual_sandwich(alg._unpad(Z)))
+        if isinstance(Z, (list, tuple)):
+            flat = alg._flatten(list(Z))
+            g = flat[:, self._dst] * self._weights(flat.dtype).conj()
+            out = flat.new_zeros(g.shape[0], flat.shape[1])
+            out[:, self._src] = g
+            return alg._unflatten(out)
         B = max(Z.shape[0], self.val.shape[0])
         C, k = self.algebra.C, self.algebra.k_max
         v = self.val.to(Z.dtype)
@@ -662,9 +714,13 @@ class SectorJump:
         out[:, self._pair] = g.expand(B, -1)
         return v.conj()[:, :, :, None] * out * v[:, :, None, :]
 
-    def LdL(self) -> torch.Tensor:
-        """L^*L, diagonal, as a tensor (batch, C, k_max, k_max)."""
-        return torch.diag_embed((self.val.abs() ** 2).to(self.val.dtype))
+    def LdL(self, padded: bool = False):
+        """L^*L, diagonal, as a tensor (batch, C, k_max, k_max), or in the packed layout (unless padded=True) as the
+        list of group tensors (batch, n_g, k_g, k_g)."""
+        d = (self.val.abs() ** 2).to(self.val.dtype)
+        if self.algebra._packed and not padded:
+            return [torch.diag_embed(d[:, self.algebra._sel(idx), :k]) for k, idx in self.algebra.size_groups]
+        return torch.diag_embed(d)
 
     def to_inter_sector(self) -> InterSectorChannel:
         """The same jump as a dense InterSectorChannel (Kraus rank 1)."""

@@ -2,11 +2,20 @@
 Krylov-subspace methods for large sectors, where dense matrices no longer fit.
 
 A Hamiltonian is only needed through its action on vectors, `matvec(V)` with V of shape
-(batch, k) -> (batch, k); every batch element may be a different operator (e.g. one disorder
-realisation each). `SparseSectorHamiltonian` provides such an operator for spin chains: a
-batch of diagonals plus one shared sparse off-diagonal part.
+(batch, k) -> (batch, k) (or (batch, k, m) -> (batch, k, m)); every batch element may be a different operator
+(e.g. one disorder realisation each). An operator of one sector is any object with matvec, batch_size, dim, dtype
+and device (the protocol of `SectorOperator`); the module provides
+
+    SparseSectorHamiltonian      a batch of diagonals plus one shared sparse matrix (spin and anyon chains)
+    MatrixFreeOperator           any function V -> H V
+    DenseSectorOperator          a dense block, e.g. one sector of an Operator (from_operator)
+    LinearCombination            sum_i c_i H_i with numbers or one coefficient per sample (combine)
+    Deflated                     H + shift sum_j |psi_j><psi_j| (deflate; excited states)
+
+and the solvers
 
     E0, psi, res = krylov.ground_state(H)                # batched Lanczos with restarts
+    E, psi = krylov.lowest_eigenvalues(H, levels=4)      # the lowest levels by deflation
     psi_t   = krylov.evolve(H, psi0, times)              # exp(-i t H) psi0, Krylov steps
 
 Lanczos uses full re-orthogonalisation (memory batch * m * k).
@@ -20,11 +29,80 @@ import torch
 from . import cost
 
 
-class SparseSectorHamiltonian:
+class SectorOperator:
+    """
+    Base class (and protocol) of the operators of one sector known through their action on vectors: matvec(V) for
+    V of shape (batch, k) or (batch, k, m), and the attributes batch_size, dim, dtype, device. Every solver of this
+    module accepts any object with these attributes. Operators of this class can be added, subtracted and scaled
+    (by numbers, or by tensors (batch,) with one coefficient per sample): the results are LinearCombinations.
+    """
+    batch_size: int
+    dim: int
+    dtype: torch.dtype
+    device: torch.device
+
+    def matvec(self, V: torch.Tensor) -> torch.Tensor:
+        raise NotImplementedError
+
+    def __call__(self, V: torch.Tensor) -> torch.Tensor:
+        return self.matvec(V)
+
+    def __add__(self, other):
+        return combine([(1.0, self), (1.0, other)])
+
+    def __sub__(self, other):
+        return combine([(1.0, self), (-1.0, other)])
+
+    def __mul__(self, c):
+        return combine([(c, self)])
+
+    __rmul__ = __mul__
+
+    def __neg__(self):
+        return combine([(-1.0, self)])
+
+    def to_dense(self) -> torch.Tensor:
+        """The matrix (batch, k, k), column by column (k matvecs in one call); for checks on small sectors."""
+        cost.check_memory(cost.tensor_bytes((self.batch_size, self.dim, self.dim), self.dtype), self.device,
+                          f"dense sector operator ({self.dim} x {self.dim}, batch {self.batch_size})")
+        eye = torch.eye(self.dim, dtype=self.dtype, device=self.device).expand(self.batch_size, -1, -1)
+        return self.matvec(eye)
+
+    def expectation(self, psi: torch.Tensor) -> torch.Tensor:
+        """<psi|H|psi> / <psi|psi>, shape (batch,) (complex for a non-Hermitian H)."""
+        Hpsi = self.matvec(psi)
+        return _dot(psi.to(Hpsi.dtype), Hpsi) / _dot(psi, psi).real
+
+
+class SparseSectorHamiltonian(SectorOperator):
     """
     H_b = diag(d_b) + A for b = 1..batch, with d of shape (batch, k) (real) and one sparse k x k matrix A
-    shared by the batch (hopping terms). Memory O(batch * k + nnz).
+    shared by the batch (hopping terms). Memory O(batch * k + nnz). from_coo builds one from (row, column, value)
+    lists, from_sparse from a torch sparse matrix.
     """
+
+    @classmethod
+    def from_coo(cls, rows, cols, values, dim: int, diag=None, dtype: torch.dtype = torch.complex128,
+                 device=None) -> 'SparseSectorHamiltonian':
+        """H = diag(d_b) + A with A[rows, cols] = values (repeated entries add up); diag (k,) or (batch, k), real;
+        the diagonal may also be given through rows == cols."""
+        dev = torch.device('cpu') if device is None else torch.device(device)
+        rows = torch.as_tensor(rows, dtype=torch.long, device=dev).reshape(-1)
+        cols = torch.as_tensor(cols, dtype=torch.long, device=dev).reshape(-1)
+        vals = torch.as_tensor(values, device=dev).reshape(-1).to(dtype)
+        rdt = torch.empty((), dtype=dtype).real.dtype
+        d = torch.zeros(1, dim, dtype=rdt, device=dev) if diag is None else \
+            torch.as_tensor(diag, dtype=rdt, device=dev).reshape(-1, dim)
+        A = torch.sparse_coo_tensor(torch.stack([rows, cols]), vals, (dim, dim)).coalesce() if rows.numel() else None
+        return cls(d, A, dtype)
+
+    @classmethod
+    def from_sparse(cls, A: torch.Tensor, diag=None) -> 'SparseSectorHamiltonian':
+        """H = diag(d_b) + A for a torch sparse (or dense) k x k matrix A shared by the batch."""
+        A = A.to_sparse() if not A.is_sparse else A
+        A = A.coalesce()
+        i, v = A.indices(), A.values()
+        return cls.from_coo(i[0], i[1], v, A.shape[0], diag, dtype=v.dtype, device=v.device)
 
     def __init__(self, diag: torch.Tensor, offdiag: Optional[torch.Tensor], dtype: torch.dtype):
         self.diag = diag
@@ -73,8 +151,6 @@ class SparseSectorHamiltonian:
             out = out + AV
         return out.squeeze(-1) if squeeze else out
 
-    __call__ = matvec
-
     def to_dense(self) -> torch.Tensor:
         cost.check_memory(cost.tensor_bytes((self.batch_size, self.dim, self.dim), self.dtype), self.device,
                           f"dense Hamiltonian ({self.dim} x {self.dim}, batch {self.batch_size})")
@@ -82,6 +158,149 @@ class SparseSectorHamiltonian:
         if self.offdiag is not None:
             M = M + self.offdiag.to(self.dtype).to_dense()
         return M
+
+
+class MatrixFreeOperator(SectorOperator):
+    """
+    A sector operator given by a function: matvec(V) = fn(V) for V of shape (batch, k). With batched_columns=True
+    fn takes blocks of vectors (batch, k, m) instead (also for a single vector, as (batch, k, 1)); otherwise blocks
+    are applied column by column. hermitian: whether H is self-adjoint (Lanczos and the time evolution assume it; it
+    is not checked).
+    """
+
+    def __init__(self, fn: Callable[[torch.Tensor], torch.Tensor], dim: int, batch_size: int = 1,
+                 dtype: torch.dtype = torch.complex128, device=None, hermitian: bool = True,
+                 batched_columns: bool = False):
+        self.fn, self.dim, self.batch_size, self.dtype = fn, int(dim), int(batch_size), dtype
+        self.device = torch.device('cpu') if device is None else torch.device(device)
+        self.hermitian, self.batched_columns = hermitian, batched_columns
+
+    def matvec(self, V: torch.Tensor) -> torch.Tensor:
+        if self.batched_columns:
+            return self.fn(V.unsqueeze(-1)).squeeze(-1) if V.dim() == 2 else self.fn(V)
+        if V.dim() == 2:
+            return self.fn(V)
+        return torch.stack([self.fn(V[..., j]) for j in range(V.shape[-1])], dim=-1)
+
+
+class DenseSectorOperator(SectorOperator):
+    """A dense block (batch, k, k) as a sector operator (e.g. a sector of an Operator: from_operator)."""
+
+    def __init__(self, block: torch.Tensor):
+        self.block = block if block.dim() == 3 else block.unsqueeze(0)
+        self.batch_size, self.dim = self.block.shape[0], self.block.shape[-1]
+        self.dtype, self.device = self.block.dtype, self.block.device
+
+    def matvec(self, V: torch.Tensor) -> torch.Tensor:
+        dtype = torch.promote_types(V.dtype, self.dtype)
+        A = self.block.to(dtype)
+        return (A @ V.to(dtype).unsqueeze(-1)).squeeze(-1) if V.dim() == 2 else A @ V.to(dtype)
+
+    def to_dense(self) -> torch.Tensor:
+        return self.block
+
+
+def from_operator(op, sector: int) -> DenseSectorOperator:
+    """Sector `sector` of an Operator of a TypeIAlgebra as a sector operator (a view of its block)."""
+    return DenseSectorOperator(op.block(sector))
+
+
+class LinearCombination(SectorOperator):
+    """sum_i c_i H_i for sector operators of the same dimension; c_i numbers or tensors (batch,) (one coefficient
+    per sample, e.g. couplings to be optimised or a disorder average). Built by `combine` and by +, -, *."""
+
+    def __init__(self, terms):
+        terms = list(terms)
+        if not terms:
+            raise ValueError("LinearCombination: need at least one term")
+        dims = {H.dim for _, H in terms}
+        if len(dims) != 1:
+            raise ValueError(f"LinearCombination: all terms must have the same dimension, got {sorted(dims)}")
+        self.terms = terms
+        self.dim = dims.pop()
+        self.device = terms[0][1].device
+        bs = [H.batch_size for _, H in terms] + [c.shape[0] for c, _ in terms if isinstance(c, torch.Tensor) and c.dim()]
+        self.batch_size = max(bs)
+        dtype = terms[0][1].dtype
+        for c, H in terms:
+            dtype = torch.promote_types(dtype, H.dtype)
+            if isinstance(c, complex) or (isinstance(c, torch.Tensor) and torch.is_complex(c)):
+                dtype = torch.promote_types(dtype, torch.complex64)
+        self.dtype = dtype
+
+    def matvec(self, V: torch.Tensor) -> torch.Tensor:
+        out = None
+        for c, H in self.terms:
+            y = H.matvec(V)
+            if isinstance(c, torch.Tensor) and c.dim():
+                c = c.to(device=y.device).reshape(-1, *([1] * (y.dim() - 1)))
+            y = c * y
+            out = y if out is None else out + y
+        return out
+
+
+def combine(terms) -> LinearCombination:
+    """sum_i c_i H_i for [(c_i, H_i), ...]; nested combinations are flattened."""
+    flat = []
+    for c, H in terms:
+        if isinstance(H, LinearCombination):
+            flat += [(c * ci, Hi) for ci, Hi in H.terms]
+        else:
+            flat.append((c, H))
+    return LinearCombination(flat)
+
+
+class Deflated(SectorOperator):
+    """H + shift * sum_j |psi_j><psi_j| (the vectors normalised, (batch, k) each): moves the given eigenvectors above
+    the rest of the spectrum, so that ground_state finds the next level (excited states)."""
+
+    def __init__(self, H, vectors, shift: float):
+        self.H, self.vectors, self.shift = H, list(vectors), shift
+        self.batch_size, self.dim, self.dtype, self.device = H.batch_size, H.dim, H.dtype, H.device
+
+    def matvec(self, V):
+        out = self.H.matvec(V)
+        for psi in self.vectors:
+            p = psi.to(out.dtype)
+            if V.dim() == 2:
+                out = out + self.shift * (p.conj() * V).sum(-1, keepdim=True) * p
+            else:
+                out = out + self.shift * torch.einsum('bk,bkm->bm', p.conj(), V).unsqueeze(1) * p.unsqueeze(-1)
+        return out
+
+
+def deflate(H, vectors, shift: float) -> Deflated:
+    return Deflated(H, vectors, shift)
+
+
+def _spectral_bound(H, m: int = 20, generator=None) -> torch.Tensor:
+    """An upper bound of |H| per batch element from a short Lanczos run (largest |Ritz value| plus the residual)."""
+    k = H.dim
+    v = torch.randn(H.batch_size, k, generator=generator, dtype=torch.float64).to(device=H.device, dtype=H.dtype)
+    alpha, beta, Q = lanczos(H.matvec, v, min(m, k))
+    theta = torch.linalg.eigvalsh(_ritz_matrix(alpha, beta, Q))
+    return theta.abs().amax(-1) + (beta.abs().amax(-1) if beta.shape[-1] else 0)
+
+
+def lowest_eigenvalues(H, levels: int = 1, m: int = 80, tol: Optional[float] = None, max_restarts: int = 20,
+                       generator: Optional[torch.Generator] = None):
+    """
+    The `levels` lowest eigenvalues and eigenvectors of every operator of the batch, by restarted Lanczos and
+    deflation (each level found as the ground state of H + shift sum_{found} |psi><psi|, shift above the spectrum).
+    Degenerate levels are returned with their multiplicity. Returns E (batch, levels) ascending and psi
+    (batch, levels, k). For sectors that fit in memory a dense eigensolver is exact and often faster.
+    """
+    levels = min(int(levels), H.dim)
+    shift = None
+    Es, vecs = [], []
+    for _ in range(levels):
+        op = H if not vecs else Deflated(H, vecs, shift)
+        E, psi, _ = ground_state(op, m=m, tol=tol, max_restarts=max_restarts, generator=generator)
+        if shift is None:
+            shift = float(2 * _spectral_bound(H, generator=generator).max()) + 1.0
+        Es.append(E)
+        vecs.append(psi)
+    return torch.stack(Es, dim=-1), torch.stack(vecs, dim=1)
 
 
 def _dot(a, b):

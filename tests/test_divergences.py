@@ -250,7 +250,7 @@ def test_ordering_monotonicity_positivity():
             assert DIV[kind](rho, rho, a).abs().max() < 1e-12
             assert DIV[kind](rank1, rank1, a).abs().max() < 1e-12
     assert dv.umegaki_relative_entropy(rho, rho).abs().max() < 1e-12
-    assert dv.max_relative_entropy(rho, rho).abs().max() < 1e-12
+    assert dv.max_relative_entropy(rho, rho).abs().max() < 1e-11                # eps * cond(rho)
 
 
 def test_per_sample_alpha_and_broadcasting():

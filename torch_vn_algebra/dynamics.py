@@ -35,6 +35,50 @@ def _mat(x: OperatorLike, alg: Optional[TypeIAlgebra] = None) -> torch.Tensor:
     return x
 
 
+def _packed(alg: Optional[TypeIAlgebra]) -> bool:
+    return alg is not None and alg._packed
+
+
+def _slabs_of(x: OperatorLike, alg: Optional[TypeIAlgebra]) -> List[torch.Tensor]:
+    """An operator (or a raw padded tensor, masked to the blocks) as the slabs of `alg`: [padded tensor] or, in the
+    packed layout, the group tensors (TypeIAlgebra._slab_groups). Without an algebra: [padded tensor]."""
+    if alg is None:
+        return [_mat(x)]
+    if isinstance(x, Operator):
+        return list(x.parts) if alg._packed else [x.matrix]
+    x = _mat(x, alg)
+    return alg._unpad(x) if alg._packed else [x]
+
+
+def _y_of(slabs: List[torch.Tensor], alg: TypeIAlgebra) -> torch.Tensor:
+    """Slabs as the one tensor the integrators work on: the padded tensor, or the flattened blocks when packed."""
+    return alg._flatten(slabs) if alg._packed else slabs[0]
+
+
+def _slabs_of_y(y: torch.Tensor, alg: TypeIAlgebra) -> List[torch.Tensor]:
+    return alg._unflatten(y) if alg._packed else [y]
+
+
+def _apply_vec(op: Operator, psi: torch.Tensor) -> torch.Tensor:
+    """op psi for state vectors psi of shape (batch, C, k_max) (block layout), in either storage layout."""
+    alg = op.algebra
+    if not alg._packed:
+        m = op.matrix
+        return (m @ psi.to(m.dtype).unsqueeze(-1)).squeeze(-1)
+    dtype = torch.promote_types(op._dtype(), psi.dtype)
+    out = torch.zeros(max(op.batch_size, psi.shape[0]), *psi.shape[1:], dtype=dtype, device=psi.device)
+    for (k, idx), p in zip(alg.size_groups, op.parts):
+        sel = alg._sel(idx)
+        out[:, sel, :k] = (p.to(dtype) @ psi[:, sel, :k, None].to(dtype)).squeeze(-1)
+    return out
+
+
+def _batch_of(x) -> int:
+    if isinstance(x, Operator):
+        return x.batch_size
+    return x.shape[0] if isinstance(x, torch.Tensor) else 1
+
+
 def _algebra_of(*xs) -> Optional[TypeIAlgebra]:
     for x in xs:
         if isinstance(x, Operator):
@@ -71,19 +115,19 @@ def schrodinger(psi0: torch.Tensor, H: Operator, times) -> torch.Tensor:
     _require_complex(H.algebra)
     if psi0.dim() == 4:
         psi0 = psi0.squeeze(-1)
-    psi0 = psi0.to(H.matrix.device)                       # a state built on the CPU may meet H on a GPU
-    B = max(psi0.shape[0], H.matrix.shape[0])             # one initial state for a batch of Hamiltonians, or vice versa
+    psi0 = psi0.to(H._device())                           # a state built on the CPU may meet H on a GPU
+    B = max(psi0.shape[0], H.batch_size)                  # one initial state for a batch of Hamiltonians, or vice versa
     psi0 = psi0.expand(B, *psi0.shape[1:])
     ts = _times(times, psi0.device)
-    if psi0.dtype in (torch.float64, torch.complex128) and H.matrix.dtype in (torch.float32, torch.complex64):
+    hdt = H._dtype()
+    if psi0.dtype in (torch.float64, torch.complex128) and hdt in (torch.float32, torch.complex64):
         warnings.warn("schrodinger: psi0 is in double but H in single precision; the evolution is computed in single "
                       "precision (create H in a double-precision algebra)", UserWarning, stacklevel=2)
     alg = H.algebra
-    Bh = H.matrix.shape[0]
-    if torch.is_grad_enabled() and H.matrix.requires_grad:        # differentiable in H: propagators (Daleckii-Krein)
-        return torch.stack([(propagator(H, float(t)).matrix @ psi0.to(H.matrix.dtype).unsqueeze(-1)).squeeze(-1)
-                            for t in ts])
-    out = torch.zeros(len(ts), *psi0.shape, dtype=H.matrix.dtype, device=psi0.device)
+    Bh = H.batch_size
+    if torch.is_grad_enabled() and H._requires_grad():           # differentiable in H: propagators (Daleckii-Krein)
+        return torch.stack([_apply_vec(propagator(H, float(t)), psi0.to(hdt)) for t in ts])
+    out = torch.zeros(len(ts), *psi0.shape, dtype=hdt, device=psi0.device)
     for k, idx, _, (w, V) in H._decompositions('hermitian'):      # one decomposition per block size
         n = len(idx)
         sel = alg._sel(idx)
@@ -98,35 +142,46 @@ def von_neumann(rho0: Operator, H: Operator, times) -> List[Operator]:
     """rho(t) = U(t) rho0 U(t)^* for every t in `times` (exact)."""
     _require_complex(H.algebra)
     alg = H.algebra
-    rho = rho0.matrix.to(H.matrix.dtype)
-    Bh = H.matrix.shape[0]
-    B = max(rho.shape[0], Bh)                             # one initial state for a batch of Hamiltonians, or vice versa
-    rho = rho.expand(B, *rho.shape[1:])
-    ts = _times(times, rho.device)
+    hdt = H._dtype()
+    Bh = H.batch_size
+    B = max(rho0.batch_size, Bh)                          # one initial state for a batch of Hamiltonians, or vice versa
+    slabs = [s.to(hdt).expand(B, *s.shape[1:]) for s in _slabs_of(rho0, alg)]
+    ts = _times(times, slabs[0].device)
     T = len(ts)
-    cost.check_memory(2 * T * rho.numel() * rho.element_size(), rho.device, f"von_neumann ({T} time points)")
-    differentiable = torch.is_grad_enabled() and H.matrix.requires_grad
+    nbytes = sum(s.numel() for s in slabs) * slabs[0].element_size()
+    cost.check_memory(2 * T * nbytes, slabs[0].device, f"von_neumann ({T} time points)")
+    differentiable = torch.is_grad_enabled() and H._requires_grad()
     if differentiable:                                            # differentiable in H: propagators (Daleckii-Krein)
-        Us = [propagator(H, float(t)).matrix for t in ts]
-        traj = torch.stack([U @ rho @ U.conj().transpose(-2, -1) for U in Us])
+        R0 = Operator(alg, matrix=None if alg._packed else slabs[0], parts=slabs if alg._packed else None)
+        trajs = []
+        for t in ts:
+            U = propagator(H, float(t))
+            trajs.append(_slabs_of((U @ R0 @ U.adjoint()), alg))
     else:
-        traj = torch.zeros(T, *rho.shape, dtype=rho.dtype, device=rho.device)
-    for k, idx, _, (w, V) in ([] if differentiable else H._decompositions('hermitian')):
+        trajs = [[torch.zeros_like(s) for s in slabs] for _ in range(T)] if not alg._packed else [[] for _ in range(T)]
+    for g, (k, idx, _, (w, V)) in enumerate([] if differentiable else H._decompositions('hermitian')):
         n = len(idx)
         sel = alg._sel(idx)
         V = V.reshape(Bh, n, k, k)
         Vh = V.conj().transpose(-2, -1)
-        R = Vh @ rho[:, sel, :k, :k] @ V                                  # rho in the eigenbasis, (B, n, k, k)
+        rho_g = slabs[g] if alg._packed else slabs[0][:, sel, :k, :k]
+        R = Vh @ rho_g @ V                                                # rho in the eigenbasis, (B, n, k, k)
         wd = w.reshape(Bh, n, k).double()
         # all times at once: rho(t)_ij = exp(-i t (w_i - w_j)) rho_ij in the eigenbasis (phases in double)
         phase = torch.exp(-1j * ts[:, None, None, None, None] * (wd[..., :, None] - wd[..., None, :])[None])
-        traj[:, :, sel, :k, :k] = V[None] @ (phase.to(R.dtype) * R[None]) @ Vh[None]
+        Rt = V[None] @ (phase.to(R.dtype) * R[None]) @ Vh[None]           # (T, B, n, k, k)
+        for i in range(T):
+            if alg._packed:
+                trajs[i].append(Rt[i])
+            else:
+                trajs[i][0][:, sel, :k, :k] = Rt[i]
     out = []
-    for mat in traj:
+    for sl in trajs:
+        data = dict(parts=sl) if alg._packed else dict(matrix=sl[0])
         if isinstance(rho0, DensityMatrix):
-            out.append(DensityMatrix(alg, matrix=mat, validate=False))
+            out.append(DensityMatrix(alg, validate=False, **data))
         else:
-            out.append(alg.operator(mat, is_self_adjoint=rho0._is_self_adjoint, is_positive=rho0._is_positive))
+            out.append(Operator(alg, is_self_adjoint=rho0._is_self_adjoint, is_positive=rho0._is_positive, **data))
     return out
 
 
@@ -183,17 +238,23 @@ def schrodinger_rk4(psi0: torch.Tensor, H_of_t: Callable[[float], OperatorLike],
         psi0 = psi0.squeeze(-1)
     if algebra is None:
         algebra = _algebra_of(H_of_t)
-    const = None if callable(H_of_t) and not isinstance(H_of_t, Operator) else _mat(H_of_t, algebra)
-    if const is not None:
-        psi0 = psi0.to(const.device)
+    is_const = not (callable(H_of_t) and not isinstance(H_of_t, Operator))
+    packed_op = isinstance(H_of_t, Operator) and H_of_t.algebra._packed
+    const = None if not is_const or packed_op else _mat(H_of_t, algebra)
+    if is_const:
+        psi0 = psi0.to(H_of_t._device() if isinstance(H_of_t, Operator) else const.device)
     if algebra is not None and min(algebra.k_factors) != algebra.k_max:
         psi0 = psi0 * algebra._const('rows').to(psi0.device)        # entries in the padding are not part of psi
     y0 = psi0.to(torch.promote_types(psi0.dtype, torch.complex64))
     Hc = None if const is None else (-1j * const.to(y0.dtype))      # hoisted: constant H is cast once
 
     def f(t, psi):
-        A = Hc if Hc is not None else -1j * _mat(H_of_t(t), algebra).to(psi.dtype)
-        return (A @ psi.unsqueeze(-1)).squeeze(-1)
+        if Hc is not None:
+            return (Hc @ psi.unsqueeze(-1)).squeeze(-1)
+        Ht = H_of_t if packed_op else H_of_t(t)
+        if isinstance(Ht, Operator) and Ht.algebra._packed:          # blocks of each size, no padding
+            return -1j * _apply_vec(Ht, psi).to(psi.dtype)
+        return ((-1j * _mat(Ht, algebra).to(psi.dtype)) @ psi.unsqueeze(-1)).squeeze(-1)
     return rk4(f, y0, times, substeps, progress)
 
 
@@ -228,71 +289,119 @@ def _lindblad_terms(H, jumps, rates, algebra):
 
 
 def _lindblad_parts(H, plain, inter, algebra, t, dtype, device):
-    """(H, A, stacked jumps (B, J, C, k, k) with their rates, inter-sector Kraus tensors) at time t: with
+    """(H, A, stacked jumps with their rates, jumps between sectors) at time t, as slabs of `algebra` (lists with one
+    tensor per slab: (B, n, k, k) for H and A, (B, J, n, k, k) for the stacked jumps); with
     A = sum_j g_j L_j^* L_j, drho/dt = -i (H rho - rho H^*) - 1/2 (A rho + rho A) + sum_j g_j L_j rho L_j^*
     + (between sectors). A is kept apart from H so that a real algebra with real jumps stays real."""
     def get(x):
-        return _mat(x(t) if callable(x) and not isinstance(x, Operator) else x, algebra)
+        x = x(t) if callable(x) and not isinstance(x, Operator) else x
+        return [s.to(device=device, dtype=dtype) for s in _slabs_of(x, algebra)]
 
-    Hm = None
-    if H is not None:
-        Hm = get(H).to(device=device, dtype=dtype)
+    Hm = get(H) if H is not None else None
     A = None
     Ls, gs = None, None
     if plain:
-        Ls = torch.stack(torch.broadcast_tensors(*[get(L).to(device=device, dtype=dtype) for _, L in plain]),
-                         dim=1)                                           # (B, J, C, k, k)
-        gs = torch.tensor([g for g, _ in plain], dtype=Ls.real.dtype, device=device)
-        A = torch.einsum('j,bjcai,bjcak->bcik', gs.to(dtype), Ls.conj(), Ls)
+        per = [get(L) for _, L in plain]                                  # per jump, per slab
+        Ls = [torch.stack(torch.broadcast_tensors(*[p_[s] for p_ in per]), dim=1) for s in range(len(per[0]))]
+        gs = torch.tensor([g for g, _ in plain], dtype=Ls[0].real.dtype, device=device)
+        A = [torch.einsum('j,bjcai,bjcak->bcik', gs.to(dtype), L.conj(), L) for L in Ls]
     Ks = []
     for g, L in inter:
         if isinstance(L, SectorJump):                                     # sparse: L^*L diagonal, never formed densely
-            LdL = L.LdL().to(device=device, dtype=dtype)
-            A = g * LdL if A is None else A + g * LdL
+            LdL = _slabs_of(_jump_operator(L.LdL(), L.algebra), algebra)
+            LdL = [x.to(device=device, dtype=dtype) for x in LdL]
+            A = [g * x for x in LdL] if A is None else [a + g * x for a, x in zip(A, LdL)]
             Ks.append((g, L))
             continue
         K = L.kraus.to(device=device, dtype=dtype)                        # (B, r, D, C, m, k)
-        KdK = (K.conj().transpose(-2, -1) @ K).sum(dim=(1, 2))            # (B, C, k, k), block diagonal
-        A = g * KdK if A is None else A + g * KdK
+        KdK = _slabs_of((K.conj().transpose(-2, -1) @ K).sum(dim=(1, 2)), algebra)   # block diagonal
+        A = [g * x for x in KdK] if A is None else [a + g * x for a, x in zip(A, KdK)]
         Ks.append((g, K))
     return Hm, A, Ls, gs, Ks
 
 
-def _add_gain(out: torch.Tensor, rho: torch.Tensor, Ls, gs, Ks) -> torch.Tensor:
-    """out + Phi(rho), Phi(rho) = sum_j g_j L_j rho L_j^* + sum_m g_m Phi_m(rho) (the jump part of the generator)."""
-    if Ls is not None:                     # sum_j g_j L_j rho L_j^*: one product over the merged (j, column) index
-        X = (Ls @ rho.unsqueeze(1)) * gs[:, None, None, None].to(rho.dtype)          # (B, J, C, k, k)
-        Bx, J, C, k = X.shape[0], X.shape[1], X.shape[2], X.shape[-1]
-        Xc = X.permute(0, 2, 3, 1, 4).reshape(Bx, C, k, J * k)
-        Lc = Ls.permute(0, 2, 3, 1, 4).reshape(Ls.shape[0], C, k, J * k)
-        out = out + Xc @ Lc.conj().transpose(-2, -1)
-    for g, K in Ks:                        # gain between sectors: sum_{i, c} K^{dc} rho_c K^{dc*}
-        if isinstance(K, SectorJump):      # sparse jump: a weighted permutation of the entries, O(sum_c k_c^2)
-            out = out + g * K.sandwich(rho)
-            continue
+def _jump_operator(data, alg: TypeIAlgebra) -> Operator:
+    """Stored data of `alg` (a padded tensor or a list of group tensors) as an Operator (no copy)."""
+    return Operator(alg, parts=data) if isinstance(data, list) else Operator(alg, matrix=data)
+
+
+def _sector_jump(K: SectorJump, slabs, alg: TypeIAlgebra, dual: bool = False):
+    """K rho K^* (or K^* Z K) on slabs of `alg`; the jump may come from an algebra of the other layout."""
+    f = K.dual_sandwich if dual else K.sandwich
+    if alg is not None and K.algebra._packed == alg._packed:
+        return alg._slabs(f(alg._unslab(slabs)))
+    pad = alg._pad(slabs) if _packed(alg) else slabs[0]                  # through the padded tensor
+    res = f(pad)                                                         # (a packed jump pads and unpads itself)
+    return alg._unpad(res) if _packed(alg) else [res]
+
+
+def _kraus_between(K: torch.Tensor, slabs, alg: TypeIAlgebra, dual: bool = False):
+    """sum_{i,c} K^{dc} rho_c K^{dc*} (or the dual) for padded Kraus tensors (B, r, D, C, m, k), on slabs."""
+    rho = alg._pad(slabs) if _packed(alg) else slabs[0]
+    if dual:
+        X = (K.conj().transpose(-2, -1) @ rho[:, None, :, None] @ K).sum(dim=(1, 2))   # (B, C, k, k)
+    else:
         B_, r, D, C, m, k = K.shape
         X = K @ rho[:, None, None]                                          # (B, r, D, C, m, k)
         Bx = X.shape[0]
         Xc = X.permute(0, 2, 4, 1, 3, 5).reshape(Bx, D, m, r * C * k)
         Kc = K.permute(0, 2, 4, 1, 3, 5).reshape(B_, D, m, r * C * k)
-        out = out + g * (Xc @ Kc.conj().transpose(-2, -1))
+        X = Xc @ Kc.conj().transpose(-2, -1)
+    return alg._unpad(X) if _packed(alg) else [X]
+
+
+def _add_gain(out, rho, Ls, gs, Ks, alg: TypeIAlgebra):
+    """out + Phi(rho) on slabs, Phi(rho) = sum_j g_j L_j rho L_j^* + sum_m g_m Phi_m(rho) (the jump part of the
+    generator)."""
+    out = list(out)
+    if Ls is not None:                     # sum_j g_j L_j rho L_j^*: one product over the merged (j, column) index
+        for s, (L, r) in enumerate(zip(Ls, rho)):
+            X = (L @ r.unsqueeze(1)) * gs[:, None, None, None].to(r.dtype)              # (B, J, n, k, k)
+            Bx, J, C, k = X.shape[0], X.shape[1], X.shape[2], X.shape[-1]
+            Xc = X.permute(0, 2, 3, 1, 4).reshape(Bx, C, k, J * k)
+            Lc = L.permute(0, 2, 3, 1, 4).reshape(L.shape[0], C, k, J * k)
+            out[s] = out[s] + Xc @ Lc.conj().transpose(-2, -1)
+    for g, K in Ks:                        # gain between sectors: sum_{i, c} K^{dc} rho_c K^{dc*}
+        if isinstance(K, SectorJump):      # sparse jump: a weighted permutation of the entries, O(sum_c k_c^2)
+            Y = _sector_jump(K, rho, alg)
+        else:
+            Y = _kraus_between(K, rho, alg)
+        out = [o + g * y for o, y in zip(out, Y)]
     return out
 
 
-def _gain_dual(Z: torch.Tensor, Ls, gs, Ks) -> torch.Tensor:
-    """Phi^*(Z) = sum_j g_j L_j^* Z L_j + sum_m g_m Phi_m^*(Z), the dual of the jump part for the blunt trace
-    (Phi_m^*(Z)_c = sum_{d,i} K_i^{dc*} Z_d K_i^{dc})."""
-    out = torch.zeros_like(Z)
+def _gain_dual(Z, Ls, gs, Ks, alg: TypeIAlgebra):
+    """Phi^*(Z) = sum_j g_j L_j^* Z L_j + sum_m g_m Phi_m^*(Z) on slabs, the dual of the jump part for the blunt
+    trace (Phi_m^*(Z)_c = sum_{d,i} K_i^{dc*} Z_d K_i^{dc})."""
+    out = [torch.zeros_like(z) for z in Z]
     if Ls is not None:
-        X = Ls.conj().transpose(-2, -1) @ Z.unsqueeze(1) @ Ls                    # (B, J, C, k, k)
-        out = out + (X * gs[:, None, None, None].to(Z.dtype)).sum(dim=1)
+        for s, (L, z) in enumerate(zip(Ls, Z)):
+            X = L.conj().transpose(-2, -1) @ z.unsqueeze(1) @ L                  # (B, J, n, k, k)
+            out[s] = out[s] + (X * gs[:, None, None, None].to(z.dtype)).sum(dim=1)
     for g, K in Ks:
-        if isinstance(K, SectorJump):
-            out = out + g * K.dual_sandwich(Z)
-            continue
-        X = K.conj().transpose(-2, -1) @ Z[:, None, :, None] @ K            # (B, r, D, C, k, k)
-        out = out + g * X.sum(dim=(1, 2))
+        Y = _sector_jump(K, Z, alg, dual=True) if isinstance(K, SectorJump) else _kraus_between(K, Z, alg, dual=True)
+        out = [o + g * y for o, y in zip(out, Y)]
     return out
+
+
+def _rhs_slabs(H, jumps, rates, algebra):
+    """The GKSL right-hand side (t, slabs) -> slabs of lindblad_rhs, in the layout of `algebra`."""
+    plain, inter, timedep, algebra = _lindblad_terms(H, jumps, rates, algebra)
+    cache = {}
+
+    def f(t, rho):
+        key = (rho[0].dtype, rho[0].device)
+        if timedep or key not in cache:
+            cache[key] = _lindblad_parts(H, plain, inter, algebra, t, rho[0].dtype, rho[0].device)
+        Hm, A, Ls, gs, Ks = cache[key]
+        if Hm is None:
+            out = [torch.zeros_like(r) for r in rho]
+        else:
+            out = [-1j * (h @ r - r @ h.conj().transpose(-2, -1)) for h, r in zip(Hm, rho)]
+        if A is not None:
+            out = [o - 0.5 * (a @ r + r @ a) for o, a, r in zip(out, A, rho)]
+        return _add_gain(out, rho, Ls, gs, Ks, algebra)
+    return f, algebra
 
 
 def lindblad_rhs(H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
@@ -301,7 +410,8 @@ def lindblad_rhs(H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
     """
     Right-hand side of the GKSL equation
         drho/dt = -i[H, rho] + sum_j g_j (L_j rho L_j^* - 1/2 {L_j^* L_j, rho})
-    as a function (t, rho_matrix) -> drho/dt. H and L_j are constant, or callables of t.
+    as a function (t, rho_matrix) -> drho/dt on padded tensors (batch, C, k_max, k_max). H and L_j are constant, or
+    callables of t.
 
     A jump that moves weight between sectors (particle loss N -> N-1, ...) is passed as an
     InterSectorChannel Phi of the algebra into itself (or, for spin flips and other jumps that map basis vectors to
@@ -311,23 +421,15 @@ def lindblad_rhs(H: Optional[OperatorLike], jumps: Sequence[OperatorLike] = (),
     into M and conserves the total trace. For constant H and jumps, A = sum g L^* L and the stacked jumps are
     prepared once; callables of t are evaluated at every step. Raw tensors are restricted to the blocks of
     `algebra` (taken from H or the jumps when they are Operators); without an algebra their padding must be zero.
+    In the packed layout the computation runs on the blocks of each size (lindblad_evolve integrates them directly).
     """
-    plain, inter, timedep, algebra = _lindblad_terms(H, jumps, rates, algebra)
-    cache = {}
-
-    def f(t, rho):
-        key = (rho.dtype, rho.device)
-        if timedep or key not in cache:
-            cache[key] = _lindblad_parts(H, plain, inter, algebra, t, rho.dtype, rho.device)
-        Hm, A, Ls, gs, Ks = cache[key]
-        out = torch.zeros_like(rho) if Hm is None else -1j * (Hm @ rho - rho @ Hm.conj().transpose(-2, -1))
-        if A is not None:
-            out = out - 0.5 * (A @ rho + rho @ A)
-        return _add_gain(out, rho, Ls, gs, Ks)
-    return f
+    g, algebra = _rhs_slabs(H, jumps, rates, algebra)
+    if not _packed(algebra):
+        return lambda t, rho: g(t, [rho])[0]
+    return lambda t, rho: algebra._pad(g(t, algebra._unpad(rho)))
 
 
-def _kraus_step(parts, h: float, alg: TypeIAlgebra, dtype, device) -> Callable[[torch.Tensor], torch.Tensor]:
+def _kraus_step(parts, h: float, alg: TypeIAlgebra, dtype, device) -> Callable:
     """
     One step of the completely positive, trace-preserving splitting of Theorem 8.16 for the frozen generator
     `parts`: with E = exp(-i h/2 H_eff), H_eff = H - i/2 A, S(X) = E X E^*, and Phi the jump part,
@@ -335,61 +437,96 @@ def _kraus_step(parts, h: float, alg: TypeIAlgebra, dtype, device) -> Callable[[
     Every factor is CP and the last one makes the step exactly trace preserving. In floating point the trace is
     preserved up to about eps * cond(M); M is ill-conditioned when h times the spread of the decay rates (the
     eigenvalues of A) is large, and then the step is taken as two steps of size h/2 (recursively), each a channel.
+    The step maps slabs to slabs.
     """
     Hm, A, Ls, gs, Ks = parts
-    mask = alg._const('block_mask', torch.bool).to(device)
-    eye = alg._const('eye', dtype).to(device)
-    G = None                                                          # -i h/2 H_eff = -i h/2 H - h/4 A
-    if Hm is not None:
-        G = (-0.5j * h) * Hm
-    if A is not None:
-        G = -0.25 * h * A if G is None else G - 0.25 * h * A
-    if G is None:
-        E = eye[None]
-    else:
+    eyes = [e.to(device=device, dtype=dtype) for e in alg._slab_eyes(dtype)]
+    masks = [None] * len(eyes) if alg._packed else [alg._const('block_mask', torch.bool).to(device)]
+    Es = []
+    for s, (eye, mask) in enumerate(zip(eyes, masks)):
+        G = None                                                      # -i h/2 H_eff = -i h/2 H - h/4 A
+        if Hm is not None:
+            G = (-0.5j * h) * Hm[s]
+        if A is not None:
+            G = -0.25 * h * A[s] if G is None else G - 0.25 * h * A[s]
+        if G is None:
+            Es.append(eye)
+            continue
         k = G.shape[-1]
         E = cost.batched_call(torch.linalg.matrix_exp, G.reshape(-1, k, k), "exp(-i h/2 H_eff)",
-                              kind='expm').reshape(G.shape) * mask      # the padding of exp(G) is the identity
+                              kind='expm').reshape(G.shape)
+        Es.append(E if mask is None else E * mask)                    # the padding of exp(G) is the identity
     jumps = Ls is not None or len(Ks) > 0
 
     def phi2(Y):                                                      # Y + h Phi(Y) + h^2/2 Phi(Phi(Y))
         if not jumps:
             return Y
-        Y1 = _add_gain(torch.zeros_like(Y), Y, Ls, gs, Ks)
-        Y2 = _add_gain(torch.zeros_like(Y1), Y1, Ls, gs, Ks)
-        return Y + h * Y1 + (0.5 * h * h) * Y2
+        Y1 = _add_gain([torch.zeros_like(y) for y in Y], Y, Ls, gs, Ks, alg)
+        Y2 = _add_gain([torch.zeros_like(y) for y in Y1], Y1, Ls, gs, Ks, alg)
+        return [y + h * y1 + (0.5 * h * h) * y2 for y, y1, y2 in zip(Y, Y1, Y2)]
 
     def phi2_dual(W):
         if not jumps:
             return W
-        W1 = _gain_dual(W, Ls, gs, Ks)
-        W2 = _gain_dual(W1, Ls, gs, Ks)
-        return W + h * W1 + (0.5 * h * h) * W2
+        W1 = _gain_dual(W, Ls, gs, Ks, alg)
+        W2 = _gain_dual(W1, Ls, gs, Ks, alg)
+        return [w + h * w1 + (0.5 * h * h) * w2 for w, w1, w2 in zip(W, W1, W2)]
 
-    Eh = E.conj().transpose(-2, -1)
-    M = Eh @ phi2_dual(Eh @ E) @ E                                    # Psi_h^*(1) >= (E^2)^* E^2 > 0
-    M = 0.5 * (M + M.conj().transpose(-2, -1))
-    pad = torch.eye(M.shape[-1], dtype=dtype, device=device) - eye   # identity on the padding, for eigh
-    with torch.no_grad():
-        w, V = torch.linalg.eigh((M + pad).detach())
-    if h > 0 and (w[..., -1] / w[..., 0].clamp(min=torch.finfo(w.dtype).tiny)).max().item() \
-            > torch.finfo(w.dtype).eps ** -0.25:
+    Ehs = [E.conj().transpose(-2, -1) for E in Es]
+    D = phi2_dual([Eh @ E for E, Eh in zip(Es, Ehs)])
+    Ns, ratios = [], []
+    decs = []
+    for s, (E, Eh, eye) in enumerate(zip(Es, Ehs, eyes)):
+        M = Eh @ D[s] @ E                                             # Psi_h^*(1) >= (E^2)^* E^2 > 0
+        M = 0.5 * (M + M.conj().transpose(-2, -1))
+        pad = torch.eye(M.shape[-1], dtype=dtype, device=device) - eye   # identity on the padding, for eigh
+        with torch.no_grad():
+            w, V = torch.linalg.eigh((M + pad).detach())
+        decs.append((M + pad, w, V))
+        # condition of M, measured against 1 = Psi_0^*(1) as well: a block whose M has underflowed towards 0 must be
+        # split too (in the padded layout the eigenvalues 1 of the padding play this part)
+        top = w[..., -1] if not alg._packed else w[..., -1].clamp(min=1.0)
+        ratios.append((top / w[..., 0].clamp(min=torch.finfo(w.dtype).tiny)).max())
+    if h > 0 and torch.stack(ratios).max().item() > torch.finfo(decs[0][1].dtype).eps ** -0.25:
         half = _kraus_step(parts, 0.5 * h, alg, dtype, device)
         return lambda rho: half(half(rho))
-    tiny = torch.finfo(w.dtype).tiny                                  # M^{-1/2}, block diagonal; Daleckii-Krein
-    N = functional.spectral_apply(M + pad, lambda x: x.clamp(min=tiny).rsqrt(),   # backward: finite gradients
-                                  decomposition=(w, V)).to(dtype) * mask        # at the degenerate spectra of M
+    tiny = torch.finfo(decs[0][1].dtype).tiny                         # M^{-1/2}, block diagonal; Daleckii-Krein
+    for (Mp, w, V), mask in zip(decs, masks):
+        N = functional.spectral_apply(Mp, lambda x: x.clamp(min=tiny).rsqrt(),   # backward: finite gradients at
+                                      decomposition=(w, V)).to(dtype)           # the degenerate spectra of M
+        Ns.append(N if mask is None else N * mask)
 
     def step(rho):
-        Y = E @ (N @ rho @ N) @ Eh
-        return E @ phi2(Y) @ Eh
+        Y = [E @ (N @ r @ N) @ Eh for E, N, Eh, r in zip(Es, Ns, Ehs, rho)]
+        return [E @ y @ Eh for E, y, Eh in zip(Es, phi2(Y), Ehs)]
     return step
 
 
+def _packed_index(alg: TypeIAlgebra) -> torch.Tensor:
+    """Positions of the flattened blocks (TypeIAlgebra._flatten, packed) inside the flattened padded tensor."""
+    K = alg.k_max
+    out = []
+    for k, idx in alg.size_groups:
+        a = torch.arange(k, device=alg.hilbert.device)
+        rc = (a[:, None] * K + a[None, :]).reshape(-1)
+        out += [c * K * K + rc for c in idx]
+    return torch.cat(out)
+
+
 def _generator_matrix(parts, alg: TypeIAlgebra, dtype, device) -> torch.Tensor:
-    """Matrix of the generator on (+)_c M_{k_max} (zero padded blocks, row-major vec of every block, the sectors one
-    after the other), shape (batch, C k_max^2, C k_max^2); jumps between sectors give off-diagonal sector blocks."""
+    """Matrix of the generator on the flattened blocks (row-major vec of every block, the sectors one after the
+    other: (+)_c M_{k_max} zero padded, or the packed blocks without padding), shape (batch, n, n); jumps between
+    sectors give off-diagonal sector blocks."""
     Hm, A, Ls, gs, Ks = parts
+    if alg._packed:                                                   # built on the padded blocks, then restricted
+        Hm = None if Hm is None else alg._pad(Hm)
+        A = None if A is None else alg._pad(A)
+        Ls = None if Ls is None else torch.stack([alg._pad([L[:, j] for L in Ls]) for j in range(Ls[0].shape[1])],
+                                                 dim=1)
+    else:
+        Hm = None if Hm is None else Hm[0]
+        A = None if A is None else A[0]
+        Ls = None if Ls is None else Ls[0]
     C, k = alg.C, alg.k_max
     eye = torch.eye(k, dtype=dtype, device=device)
     blocks = torch.zeros(1, C, k * k, k * k, dtype=dtype, device=device)
@@ -405,12 +542,19 @@ def _generator_matrix(parts, alg: TypeIAlgebra, dtype, device) -> torch.Tensor:
         if isinstance(K, SectorJump):
             K = K.to_inter_sector().kraus.to(device=device, dtype=dtype)
         G = G + g * torch.einsum('brdcai,brdcel->bdaecil', K, K.conj()).reshape(K.shape[0], C, k * k, C, k * k)
-    return G.reshape(G.shape[0], C * k * k, C * k * k)
+    G = G.reshape(G.shape[0], C * k * k, C * k * k)
+    if alg._packed:
+        I = _packed_index(alg).to(device)
+        G = G[:, I][:, :, I]
+    return G
 
 
 def _exact_step(G: torch.Tensor, h: float, alg: TypeIAlgebra) -> Callable[[torch.Tensor], torch.Tensor]:
-    """rho -> exp(h L) rho with the generator matrix G of _generator_matrix."""
+    """y -> exp(h L) y with the generator matrix G of _generator_matrix (y: the padded tensor, or the flattened
+    blocks when packed)."""
     S = cost.batched_call(torch.linalg.matrix_exp, h * G, f"exp(hL) (size {G.shape[-1]})", kind='expm')
+    if alg._packed:
+        return lambda y: (S @ y.to(S.dtype).unsqueeze(-1)).squeeze(-1)
     mask = alg._const('block_mask', torch.bool).to(G.device)
 
     def step(rho):
@@ -438,11 +582,12 @@ def lindblad_evolve(rho0: Operator, H: Optional[OperatorLike], jumps: Sequence[O
         sectors; jumps between sectors included). For a constant generator the result is exact and one exponential
         is computed per interval length (`substeps` is not used).
     For time-dependent H or jumps, 'kraus' and 'exact' freeze the generator at the midpoint of each step; every
-    step is still a channel. `times` must be nondecreasing for these two methods.
+    step is still a channel. `times` must be nondecreasing for these two methods. In the packed layout every method
+    works on the blocks of each size (the state is never padded).
     """
     if method not in LINDBLAD_METHODS:
         raise ValueError(f"method must be one of {LINDBLAD_METHODS}, got {method!r}")
-    rdt = rho0.matrix.dtype
+    rdt = rho0._dtype()
     dtype = torch.promote_types(rdt, torch.complex64) if rho0.algebra.hilbert.complex_valued or H is not None else rdt
     if H is not None:
         _require_complex(rho0.algebra)
@@ -454,24 +599,28 @@ def lindblad_evolve(rho0: Operator, H: Optional[OperatorLike], jumps: Sequence[O
             return X.kraus.shape[0]
         if isinstance(X, SectorJump):
             return X.val.shape[0]
-        X = _mat(X(t0)) if callable(X) and not isinstance(X, Operator) else _mat(X)
-        return X.shape[0] if isinstance(X, torch.Tensor) else 1
-    batches = [rho0.matrix.shape[0]] + [_batch(X) for X in ([H] if H is not None else []) + list(jumps)]
-    y0 = rho0.matrix.to(dtype)
-    y0 = y0.expand(max(batches), *y0.shape[1:]).clone()
+        return _batch_of(X(t0) if callable(X) and not isinstance(X, Operator) else X)
+    batches = [rho0.batch_size] + [_batch(X) for X in ([H] if H is not None else []) + list(jumps)]
     alg = rho0.algebra
+    y0 = _y_of([s.to(dtype) for s in _slabs_of(rho0, alg)], alg)
+    y0 = y0.expand(max(batches), *y0.shape[1:]).clone()
     if method == 'rk4':
-        ys = rk4(lindblad_rhs(H, jumps, rates, algebra=alg), y0, times, substeps, progress)
+        g, _ = _rhs_slabs(H, jumps, rates, alg)
+        ys = rk4(lambda t, y: _y_of(g(t, _slabs_of_y(y, alg)), alg), y0, times, substeps, progress)
     else:
         ys = _lindblad_splitting(alg, H, jumps, rates, y0, times, substeps, progress, method)
-    ys = 0.5 * (ys + ys.conj().transpose(-2, -1))          # once for the whole trajectory
-    if isinstance(rho0, DensityMatrix):
-        return [DensityMatrix(alg, matrix=y, validate=False) for y in ys]
-    return [alg.operator(y, is_self_adjoint=True) for y in ys]
+    out = []
+    for y in ys:
+        sl = [0.5 * (s + s.conj().transpose(-2, -1)) for s in _slabs_of_y(y, alg)]
+        data = dict(parts=sl) if alg._packed else dict(matrix=sl[0])
+        out.append(DensityMatrix(alg, validate=False, **data) if isinstance(rho0, DensityMatrix)
+                   else Operator(alg, is_self_adjoint=True, **data))
+    return out
 
 
 def _lindblad_splitting(alg, H, jumps, rates, y0, times, substeps, progress, method) -> torch.Tensor:
-    """The 'kraus' and 'exact' time steppers of lindblad_evolve: rho at every point of `times`."""
+    """The 'kraus' and 'exact' time steppers of lindblad_evolve: y (the padded tensor, or the flattened blocks when
+    packed) at every point of `times`."""
     plain, inter, timedep, algebra = _lindblad_terms(H, jumps, rates, alg)
     ts = _times(times, 'cpu').tolist()
     if any(b < a for a, b in zip(ts[:-1], ts[1:])):
@@ -499,7 +648,8 @@ def _lindblad_splitting(alg, H, jumps, rates, y0, times, substeps, progress, met
                         const_parts = _lindblad_parts(H, plain, inter, algebra, ta, dtype, dev)
                     parts = const_parts
                 if method == 'kraus':
-                    step = _kraus_step(parts, h, alg, dtype, dev)
+                    kstep = _kraus_step(parts, h, alg, dtype, dev)
+                    step = (lambda ks: lambda y_: _y_of(ks(_slabs_of_y(y_, alg)), alg))(kstep)
                 else:
                     G = const_G if (const_G is not None and not timedep) else _generator_matrix(parts, alg, dtype, dev)
                     if not timedep:
@@ -530,39 +680,44 @@ def _lindblad_generators(alg: TypeIAlgebra, H: Optional[OperatorLike], jumps: Se
         if type(L).__name__ == 'InterSectorChannel':
             raise ValueError("lindblad_superoperator / lindblad_channel act sector by sector and do not accept jumps "
                              "between sectors (InterSectorChannel); use lindblad_evolve for those")
-        if not isinstance(_mat(L), torch.Tensor):
+        if not isinstance(L, (Operator, torch.Tensor)):
             raise TypeError(f"jump operators must be Operators or tensors of shape (batch, C, k_max, k_max), "
                             f"got {type(L).__name__}")
-    mats = ([_mat(H)] if H is not None else []) + [_mat(L) for L in jumps]
+    mats = ([H] if H is not None else []) + list(jumps)
     if not mats:
         raise ValueError("need a Hamiltonian or at least one jump operator")
     dtype = torch.float64
     for m in mats:
-        dtype = torch.promote_types(dtype, m.dtype)
+        dtype = torch.promote_types(dtype, m._dtype() if isinstance(m, Operator) else m.dtype)
     if H is not None:
         dtype = torch.complex128
-    dev = mats[0].device
-    batch = max(m.shape[0] for m in mats)
+    dev = mats[0]._device() if isinstance(mats[0], Operator) else mats[0].device
+    batch = max(_batch_of(m) for m in mats)
+
+    def group(x, g, k, sel):                          # the blocks of size k of x (no padded tensor for Operators)
+        if isinstance(x, Operator):
+            return x.parts[g] if alg._packed else x.matrix[:, sel, :k, :k]
+        return x[:, sel, :k, :k]
     # peak: the generator, a few Kronecker products and the exponential / Choi / eigenvector workspaces of
     # lindblad_channel, all of size k_c^4 per sector and sample
     cost.check_memory(12 * sum(cost.tensor_bytes((batch, k * k, k * k), dtype) for k in alg.k_factors),
                       dev, f"Lindblad superoperator / exp(tL) (batch {batch}, k_c^2 x k_c^2 per sector)")
     out = []
-    for k, idx in alg._size_groups():
+    for gi, (k, idx) in enumerate(alg._size_groups()):
         sel = alg._sel(idx)
         n = len(idx)
         eye = torch.eye(k, dtype=dtype, device=dev)
         G = torch.zeros(batch, n, k * k, k * k, dtype=dtype, device=dev)
         A = None
         if jumps:
-            Ls = torch.stack(torch.broadcast_tensors(*[_mat(L)[:, sel, :k, :k].to(device=dev, dtype=dtype)
+            Ls = torch.stack(torch.broadcast_tensors(*[group(L, gi, k, sel).to(device=dev, dtype=dtype)
                                                        for L in jumps]), dim=1)      # (B, J, n, k, k)
             g = torch.tensor(rates, dtype=dtype, device=dev)
             # sum_j g_j L_j (x) conj(L_j) in one contraction, and A = sum_j g_j L_j^* L_j
             G = G + torch.einsum('j,bjnai,bjnck->bnacik', g, Ls, Ls.conj()).reshape(Ls.shape[0], n, k * k, k * k)
             A = torch.einsum('j,bjnai,bjnak->bnik', g, Ls.conj(), Ls)
         if H is not None:
-            Hc = _mat(H)[:, sel, :k, :k].to(device=dev, dtype=dtype)
+            Hc = group(H, gi, k, sel).to(device=dev, dtype=dtype)
             G = G - 1j * (_kron(Hc, eye) - _kron(eye, Hc.transpose(-2, -1)))
         if A is not None:
             G = G - 0.5 * (_kron(A, eye) + _kron(eye, A.transpose(-2, -1)))

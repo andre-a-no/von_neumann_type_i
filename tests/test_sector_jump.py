@@ -13,8 +13,17 @@ def chain():
     return SpinChain(5, 'periodic', precision='double')
 
 
-def _gain(K, rho):
-    return dynamics._add_gain(torch.zeros_like(rho), rho, None, None, [(1.0, K)])
+def _gain(K, rho, alg):
+    """The jump part sum K rho K^* of the Lindblad solvers, on a padded tensor."""
+    slabs = alg._unpad(rho) if alg._packed else [rho]
+    out = dynamics._add_gain([torch.zeros_like(s) for s in slabs], slabs, None, None, [(1.0, K)], alg)
+    return alg._pad(out) if alg._packed else out[0]
+
+
+def _gain_dual(K, Z, alg):
+    slabs = alg._unpad(Z) if alg._packed else [Z]
+    out = dynamics._gain_dual(slabs, None, None, [(1.0, K)], alg)
+    return alg._pad(out) if alg._packed else out[0]
 
 
 @pytest.mark.parametrize('kind', ['lower', 'raise', 'sz'])
@@ -23,17 +32,17 @@ def test_sandwich_dual_and_LdL_agree_with_the_dense_jump(chain, kind):
     for i in range(chain.L):
         J = chain.sector_jump(i, kind)
         K = J.to_inter_sector().kraus.to(rho.dtype)
-        assert torch.allclose(J.sandwich(rho), _gain(K, rho), atol=1e-13)
-        assert torch.allclose(J.dual_sandwich(rho), dynamics._gain_dual(rho, None, None, [(1.0, K)]), atol=1e-13)
+        assert torch.allclose(J.sandwich(rho), _gain(K, rho, chain.algebra), atol=1e-13)
+        assert torch.allclose(J.dual_sandwich(rho), _gain_dual(K, rho, chain.algebra), atol=1e-13)
         LdL = (K.conj().transpose(-2, -1) @ K).sum(dim=(1, 2))
-        assert torch.allclose(J.LdL().to(rho.dtype), LdL, atol=1e-13)
+        assert torch.allclose(J.LdL(padded=True).to(rho.dtype), LdL, atol=1e-13)
 
 
 def test_lowering_jump_equals_the_dense_lowering(chain):
     rho = states.random_density_matrix(chain.algebra, batch_size=2).matrix
     for i in range(chain.L):
         dense = chain.lowering(i).kraus.to(rho.dtype)
-        assert torch.allclose(chain.sector_jump(i, 'lower').sandwich(rho), _gain(dense, rho), atol=1e-13)
+        assert torch.allclose(chain.sector_jump(i, 'lower').sandwich(rho), _gain(dense, rho, chain.algebra), atol=1e-13)
 
 
 @pytest.mark.parametrize('method', ['rk4', 'kraus', 'exact'])

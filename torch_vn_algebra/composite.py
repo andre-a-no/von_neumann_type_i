@@ -113,10 +113,17 @@ def kron(A: Operator, B: Operator, alg12: TypeIAlgebra) -> Operator:
         dtype = torch.promote_types(a.dtype, b.dtype)
         a, b = a.to(dtype), b.to(dtype)
         batch = max(a.shape[0], b.shape[0])
-        cost.check_memory(3 * cost.tensor_bytes((batch, alg12.C, alg12.k_max, alg12.k_max), dtype), a.device,
-                          f"kron (batch {batch}, {alg12.C} sectors of size up to {alg12.k_max})")
+        cost.check_memory(3 * alg12.bytes_per_operator(batch) * cost.itemsize(dtype) // cost.itemsize(alg12.dtype),
+                          a.device, f"kron (batch {batch}, {alg12.C} sectors of size up to {alg12.k_max})")
         ci, ai, aj, di, bi, bj, mask = _kron_index(alg12)
         # one gather per factor: (A (x) B)[s, i, j] = A[c, a_i, a_j] B[d, b_i, b_j] inside a pair block, else 0
+        if alg12._packed:                                   # the blocks of each size of the product, no padding
+            out = []
+            for k, idx in alg12.size_groups:
+                s = alg12._sel(idx)
+                g = lambda x: x[s, :k, :k]
+                out.append(a[:, g(ci), g(ai), g(aj)] * b[:, g(di), g(bi), g(bj)] * g(mask).to(dtype))
+            return out
         return a[:, ci, ai, aj] * b[:, di, bi, bj] * mask.to(dtype)
 
     if isinstance(A, DensityMatrix) and isinstance(B, DensityMatrix):
@@ -249,11 +256,20 @@ def partial_trace(X: Operator, keep: int = 1) -> Operator:
     out_alg = alg1 if keep == 1 else alg2
 
     def generator():
-        x = X.matrix
+        if alg12._packed:                                   # gathers from the flattened blocks, no padding
+            x = alg12._flatten(X.parts)
+            off = alg12._flat_offsets()
+            ks = torch.tensor(alg12.k_factors, dtype=torch.long, device=x.device)
+        else:
+            x = X.matrix
         B = x.shape[0]
         out = torch.zeros(B, out_alg.C, out_alg.k_max, out_alg.k_max, dtype=x.dtype, device=x.device)
         for k_c, m_d, S, rows, osec in _ptrace_index(alg12, keep):
-            blk = x[:, S[:, None, None], rows[:, :, None], rows[:, None, :]]              # (B, P, km, km)
+            if alg12._packed:
+                pos = off[S][:, None, None] + rows[:, :, None] * ks[S][:, None, None] + rows[:, None, :]
+                blk = x[:, pos]                                                           # (B, P, km, km)
+            else:
+                blk = x[:, S[:, None, None], rows[:, :, None], rows[:, None, :]]          # (B, P, km, km)
             blk = blk.reshape(B, len(S), k_c, m_d, k_c, m_d)
             red = blk.diagonal(dim1=3, dim2=5).sum(-1) if keep == 1 else blk.diagonal(dim1=2, dim2=4).sum(-1)
             n = red.shape[-1]

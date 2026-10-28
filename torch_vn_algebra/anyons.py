@@ -47,24 +47,6 @@ Operator = TypeIAlgebra.Operator
 __all__ = ['AnyonChain']
 
 
-class _Deflated:
-    """H + shift * sum_j |psi_j><psi_j| as a matvec object for krylov.ground_state (excited states)."""
-
-    def __init__(self, H, vectors: List[torch.Tensor], shift: float):
-        self.H, self.vectors, self.shift = H, vectors, shift
-        self.batch_size, self.dim, self.dtype, self.device = H.batch_size, H.dim, H.dtype, H.device
-
-    def matvec(self, V):
-        out = self.H.matvec(V)
-        for psi in self.vectors:
-            p = psi.to(V.dtype)
-            if V.dim() == 2:
-                out = out + self.shift * (p.conj() * V).sum(-1, keepdim=True) * p
-            else:
-                out = out + self.shift * torch.einsum('bk,bkm->bm', p.conj(), V).unsqueeze(1) * p.unsqueeze(-1)
-        return out
-
-
 class AnyonChain:
     """
     L spin-1/2 anyons of SU(2)_k in the fusion-path basis (see the module docstring). Attributes: k, L, periodic,
@@ -190,14 +172,18 @@ class AnyonChain:
     # ------------------------------------------------------------------ operators
     def _dense(self, s, r, c, v) -> Operator:
         alg = self.algebra
-        cost.check_memory(cost.tensor_bytes((1, alg.C, alg.k_max, alg.k_max), alg.dtype), alg.hilbert.device,
+        cost.check_memory(alg.bytes_per_operator(1), alg.hilbert.device,
                           f"AnyonChain dense operator ({alg.C} sectors up to {alg.k_max}); use sparse_hamiltonian")
-        m = torch.zeros(1, alg.C, alg.k_max, alg.k_max, dtype=alg.dtype, device=alg.hilbert.device)
+        dev = alg.hilbert.device
+        flat = torch.zeros(1, alg._flat_size(), dtype=alg.dtype, device=dev)     # the blocks, in the algebra's layout
         if len(s):
-            idx = [torch.as_tensor(np.asarray(x, dtype=np.int64), device=m.device) for x in (s, r, c)]
-            m.index_put_((torch.zeros_like(idx[0]),) + tuple(idx),
-                         torch.as_tensor(np.asarray(v, dtype=np.float64), device=m.device).to(m.dtype), accumulate=True)
-        return alg.operator(m, is_self_adjoint=True)
+            s, r, c = [torch.as_tensor(np.asarray(x, dtype=np.int64), device=dev) for x in (s, r, c)]
+            k = torch.tensor(alg.k_factors, dtype=torch.long, device=dev)
+            pos = alg._flat_offsets()[s] + r * (k[s] if alg._packed else alg.k_max) + c
+            flat.index_put_((torch.zeros_like(pos), pos),
+                            torch.as_tensor(np.asarray(v, dtype=np.float64), device=dev).to(flat.dtype), accumulate=True)
+        slabs = alg._unflatten(flat)
+        return Operator(alg, is_self_adjoint=True, **(dict(parts=slabs) if alg._packed else dict(matrix=slabs[0])))
 
     def generator(self, i: int) -> Operator:
         """The Temperley-Lieb generator e_i, 1 <= i <= L - 1 (open) or L (periodic), as a dense Operator."""
@@ -261,7 +247,7 @@ class AnyonChain:
             vecs, es = [], []
             g = torch.Generator().manual_seed(s)
             for _ in range(lv):
-                op = _Deflated(H, vecs, shift) if vecs else H
+                op = krylov.Deflated(H, vecs, shift) if vecs else H
                 E, psi, _ = krylov.ground_state(op, m=m, tol=tol, generator=g)
                 es.append(E[0])
                 vecs.append(psi)

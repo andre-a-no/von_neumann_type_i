@@ -344,11 +344,11 @@ class SpinChain:
         assert len(bits) == self.L
         label = sum(b << i for i, b in enumerate(bits))
         N = sum(bits)
-        mat = torch.zeros(1, self.algebra.C, self.algebra.k_max, self.algebra.k_max, dtype=self.dtype,
-                          device=self.device)
         p = self.index_of[label]
-        mat[0, N, p, p] = 1.0
-        return DensityMatrix(self.algebra, matrix=mat)
+        blocks = [torch.zeros(1, d, d, dtype=self.dtype, device=self.device) for d in self.algebra.k_factors]
+        blocks[N][0, p, p] = 1.0
+        return DensityMatrix(self.algebra, generator=lambda: self.algebra.from_blocks(blocks)._canonical(),
+                             validate=False)
 
     def vector_in_sector(self, bitstring) -> torch.Tensor:
         """Basis vector of a configuration as a column of its sector (shape (binom(L, N),))."""
@@ -368,14 +368,13 @@ class SpinChain:
         left = SpinChain(n_left, 'open', self.complex_valued, self.precision, self.device)
         nB = self.L - n_left
         mask = (1 << n_left) - 1
-        mat = rho.matrix
-        B = mat.shape[0]
-        out = torch.zeros(B, left.algebra.C, left.algebra.k_max, left.algebra.k_max, dtype=mat.dtype,
-                          device=mat.device)
+        B = rho.batch_size
+        dt, dev = rho._dtype(), rho._device()
+        out = torch.zeros(B, left.algebra.C, left.algebra.k_max, left.algebra.k_max, dtype=dt, device=dev)
         sectors = range(self.L + 1) if sector is None else [sector]
         right_index = SpinChain(nB, 'open', self.complex_valued, self.precision, self.device).index_of if nB else None
         for N in sectors:
-            block = mat[:, N if sector is None else 0]
+            block = rho.block(N if sector is None else 0)
             lab = self.labels[N]
             a, b = lab & mask, lab >> n_left
             ca = sum((a >> i) & 1 for i in range(n_left)) if n_left else torch.zeros_like(a)   # popcount on the device
@@ -385,7 +384,7 @@ class SpinChain:
                 ib = right_index[b[sel]] if nB else torch.zeros_like(ia)
                 dA, dB = left.sector_dim(c), math.comb(nB, N - c)
                 # (a, b) -> position in the sector is a bijection onto dA x dB: gather the block in (a, b) order
-                rows = torch.empty(dA * dB, dtype=torch.long, device=mat.device)
+                rows = torch.empty(dA * dB, dtype=torch.long, device=dev)
                 rows[ia * dB + ib] = sel
                 sub = block[:, rows][:, :, rows].reshape(B, dA, dB, dA, dB)
                 out[:, c, :dA, :dA] += torch.diagonal(sub, dim1=2, dim2=4).sum(-1)
