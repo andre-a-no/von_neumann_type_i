@@ -152,8 +152,26 @@ def test_in_place_change_of_parts_refreshes_the_padded_view():
 
 
 def test_layout_choice(monkeypatch):
+    from torch_vn_algebra import cost
+    monkeypatch.delenv('TORCH_VN_ALGEBRA_LAYOUT', raising=False)      # the CI jobs force a layout
     assert _auto_layout([1, 10, 45, 120, 210, 252, 210, 120, 45, 10, 1]) == 'packed'
     assert _auto_layout([4, 4, 4]) == 'padded' and _auto_layout([1, 2, 3]) == 'padded'
+    # the cost model: many small block sizes stay padded for small batches and are packed for large ones; more
+    # expensive kernel calls (CUDA) need larger batches; much padding is packed whatever the batch
+    sizes = list(range(1, 21))
+    assert _auto_layout(sizes, typical_batch=1) == 'padded' and _auto_layout(sizes, typical_batch=1000) == 'packed'
+    assert _auto_layout(sizes, 'cpu', 100) == 'packed' and _auto_layout(sizes, 'cuda', 100) == 'padded'
+    assert _auto_layout([30, 29], typical_batch=16) == 'padded'                     # little padding
+    assert _auto_layout([2000, 1, 1], typical_batch=1) == 'packed'                 # 8e6 padding entries per sample
+    assert TypeIAlgebra(sizes, sizes, typical_batch=1000).layout == 'packed'
+    old = cost.get_limits()
+    try:
+        cost.set_limits(layout_typical_batch=1)
+        assert TypeIAlgebra(sizes, sizes).layout == 'padded'
+        cost.set_limits(layout_entries_per_kernel_cpu=1.0)
+        assert TypeIAlgebra(sizes, sizes).layout == 'packed'
+    finally:
+        cost.set_limits(**old)
     assert TypeIAlgebra([2, 3], [2, 3], layout='packed').layout == 'packed'
     monkeypatch.setenv('TORCH_VN_ALGEBRA_LAYOUT', 'packed')
     assert TypeIAlgebra([2, 3], [2, 3]).layout == 'packed'

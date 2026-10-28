@@ -41,8 +41,16 @@ Operators have two storage layouts, chosen per algebra with `TypeIAlgebra(..., l
 - **packed**: one tensor `(batch, n_g, k_g, k_g)` per block size (`alg.size_groups`), with no padding. Memory is
   Σ_c k_c² instead of C·k_max² per sample, and products cost Σ_c k_c³ instead of C·k_max³.
 
-The default `layout='auto'` packs when the padding would fill at least half of the padded tensor, as in the full
-algebra of a spin chain. Results do not depend on the layout. `op.matrix` is always the padded tensor; in the
+The default `layout='auto'` uses a cost model. Packing saves the work on the padding, `batch · W` entries (W
+padding entries per sample), but costs one more kernel call per block size, worth about 3·10³ entries on a CPU and
+an estimated 3·10⁴ on a GPU. So the algebra is packed when `typical_batch · W` exceeds that price times the
+number of block sizes minus one.
+- Large, uneven algebras (the full algebra of a spin chain) are always packed.
+- A few small blocks with a small batch stay padded.
+- Pass `typical_batch=` when you know the batch. The constants are set with `cost.set_limits(...)`, and
+  `python scripts/layout_bench.py --calibrate [--device cuda]` measures them on your machine.
+
+Results do not depend on the layout. `op.matrix` is always the padded tensor; in the
 packed layout it is assembled on first use. `op.parts`, `op.block(c)` and `alg.from_parts` give the blocks
 directly.
 

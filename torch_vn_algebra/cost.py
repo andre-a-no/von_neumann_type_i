@@ -40,12 +40,22 @@ _config = dict(
     max_memory_fraction=0.9,     # raise above this share
     probe_items=8,               # size of the timed slice
     probe_flops=2e8,             # problems below this many flops are not probed
+    # TypeIAlgebra(layout='auto'): packed when typical_batch * (padding entries per sample) >= entries_per_kernel *
+    # (number of block sizes - 1), i.e. when the work saved on the padding outweighs one more kernel call per block
+    # size. CPU value measured with scripts/layout_bench.py --calibrate (4 threads, complex128); the CUDA value is an
+    # estimate (calls cost about as much, entries about 10x less) until measured on the target GPU.
+    layout_typical_batch=64,
+    layout_entries_per_kernel_cpu=3e3,      # measured 1.5e3 - 5.5e3 (median 2.5e3) on a 4-core CPU
+    layout_entries_per_kernel_cuda=3e4,     # estimate
+    layout_always_packed_entries=2 ** 20,   # this much padding per sample: packed whatever the batch (memory)
 )
 
 
 def set_limits(**kwargs):
     """Change thresholds: warn_seconds, warn_memory_fraction, max_memory_fraction, probe_items,
-    probe_flops, enabled."""
+    probe_flops, enabled; and the parameters of the layout choice of TypeIAlgebra(layout='auto'):
+    layout_typical_batch, layout_entries_per_kernel_cpu, layout_entries_per_kernel_cuda,
+    layout_always_packed_entries (they apply to algebras created afterwards)."""
     for key, value in kwargs.items():
         if key not in _config:
             raise KeyError(f"unknown option {key!r}; options: {sorted(_config)}")

@@ -11,11 +11,18 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
   - `TypeIAlgebra(..., layout='auto' | 'padded' | 'packed')`. Packed operators hold one tensor
     `(batch, n_g, k_g, k_g)` per block size instead of the padded `(batch, C, k_max, k_max)`: memory Σ_c k_c²
     instead of C·k_max², products Σ_c k_c³ instead of C·k_max³.
-  - `'auto'` (the default) packs when the padding would fill at least half of the padded tensor, for example the
-    full algebra of a `SpinChain`, `SU2Chain`, `AnyonChain`, or a tensor product. The environment variable
-    `TORCH_VN_ALGEBRA_LAYOUT` overrides the default. Results do not depend on the layout.
+  - `'auto'` (the default) uses a cost model: packed when `typical_batch · W ≥ κ · (G − 1)`.
+    - W is the number of padding entries per sample and G the number of block sizes.
+    - κ is the cost of one more kernel call in entries: 3·10³ on a CPU, measured with
+      `scripts/layout_bench.py --calibrate`; 3·10⁴ on CUDA, an estimate.
+    - Large uneven algebras (`SpinChain`, `SU2Chain`, `AnyonChain`, tensor products) are therefore packed, and a
+      few small blocks with a small batch stay padded.
+    - `TypeIAlgebra(..., typical_batch=)` gives the batch. `cost.set_limits(layout_...)` sets the constants, and
+      `TORCH_VN_ALGEBRA_LAYOUT` overrides the choice.
+    - Results do not depend on the layout.
   - New API: `op.parts`, `op.block(c)`, `op.sector_traces()`, `op.batch_size`, `alg.size_groups`,
-    `alg.from_parts`, `SpinChain(..., layout=...)`.
+    `alg.from_parts`, `TypeIAlgebra(..., typical_batch=)`, `SpinChain(..., layout=...)`.
+  - `Tr_norm` and `tau_vN` of packed operators weight the blocks of each size at once.
   - Packed natively: all `Operator` methods and factories, `states`, `dynamics` (propagators, `von_neumann`,
     `schrodinger`, `lindblad_evolve` with every method, `SectorJump`), `Channel.apply`, `composite.kron` and
     `partial_trace`, `SpinChain` operators and reduced states, `SU2Chain.restrict` / `lift`, `AnyonChain`

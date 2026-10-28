@@ -100,8 +100,8 @@ class SpinChain:
 
     @property
     def algebra(self) -> TypeIAlgebra:
-        """The full algebra (+)_N M_{binom(L, N)} (created on first use; packed by default for L >= 7, see
-        TypeIAlgebra(layout=...))."""
+        """The full algebra (+)_N M_{binom(L, N)} (created on first use; the layout is chosen by
+        TypeIAlgebra(layout='auto') unless given: packed for L >= 4 with the default typical batch)."""
         if self._algebra is None:
             dims = [math.comb(self.L, N) for N in range(self.L + 1)]
             self._algebra = TypeIAlgebra(dims, dims, complex_valued=self.complex_valued, precision=self.precision,

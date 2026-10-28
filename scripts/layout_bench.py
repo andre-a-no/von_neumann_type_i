@@ -4,6 +4,12 @@ of one operator, peak memory of the process and run times of typical operations,
 process (so that the peak resident memory belongs to it alone).
 
     python scripts/layout_bench.py [--L 10 12 13] [--device cpu] [--out .quick_output/layout_bench.json]
+    python scripts/layout_bench.py --calibrate [--device cuda]
+
+--calibrate measures, on the given device, where packing starts to pay off for algebras with several block sizes
+and prints the constant entries_per_kernel of the layout choice (TypeIAlgebra(layout='auto'), cost.set_limits):
+for every algebra the batch B* at which packed becomes faster gives B* W / (G - 1), W the padding entries per sample
+and G the number of block sizes; the median over the algebras is suggested.
 """
 import argparse
 import json
@@ -48,13 +54,70 @@ def run_case(L: int, layout: str, device: str) -> dict:
     return res
 
 
+def calibrate(device: str) -> float:
+    import math
+    import statistics
+    sys.path.insert(0, str(ROOT))
+    import torch
+    from torch_vn_algebra import TypeIAlgebra
+
+    def bench(fn, n=30):
+        for _ in range(3):
+            fn()
+        ts = []
+        for _ in range(n):
+            t0 = time.perf_counter()
+            fn()
+            if device.startswith('cuda'):
+                torch.cuda.synchronize()
+            ts.append(time.perf_counter() - t0)
+        return statistics.median(ts)
+
+    configs = {'1..20': list(range(1, 21)), '2..30 step 4': list(range(2, 31, 4)), '[30,5,10,15,20]': [30, 5, 10, 15, 20],
+               'chain L=6': [math.comb(6, n) for n in range(7)], 'chain L=7': [math.comb(7, n) for n in range(8)],
+               'chain L=8': [math.comb(8, n) for n in range(9)]}
+    batches = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]
+    kappas = []
+    for name, ks in configs.items():
+        C, km = len(ks), max(ks)
+        W, G = C * km * km - sum(k * k for k in ks), len(set(ks))
+        prev, found = None, None
+        for B in batches:
+            r = {}
+            for layout in ('padded', 'packed'):
+                alg = TypeIAlgebra(ks, ks, precision='double', layout=layout, device=device)
+                A = alg.operator(torch.randn(B, C, km, km, dtype=alg.dtype, device=device))
+                U = alg.operator(torch.randn(B, C, km, km, dtype=alg.dtype, device=device))
+                A._canonical(), U._canonical()
+                r[layout] = bench(lambda: ((A + U * 2.0) @ U).Tr_norm())
+            if r['padded'] > r['packed']:
+                found = B
+                break
+            prev = B
+        if found is None:
+            print(f"{name:16s} padded faster up to batch {batches[-1]}")
+            continue
+        lo = (prev or found / 2) * W / (G - 1)
+        k = math.sqrt(lo * found * W / (G - 1))
+        kappas.append(k)
+        print(f"{name:16s} W={W:7d} G={G:2d}: packed faster from batch {found}  -> entries_per_kernel ~ {k:.2e}")
+    kappa = statistics.median(kappas) if kappas else float('nan')
+    key = 'layout_entries_per_kernel_' + ('cuda' if device.startswith('cuda') else 'cpu')
+    print(f"\nsuggested: torch_vn_algebra.cost.set_limits({key}={kappa:.2g})")
+    return kappa
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--L', type=int, nargs='+', default=[10, 12, 13])
     ap.add_argument('--device', default='cpu')
     ap.add_argument('--out', default=str(ROOT / '.quick_output' / 'layout_bench.json'))
     ap.add_argument('--case', nargs=2, help=argparse.SUPPRESS)
+    ap.add_argument('--calibrate', action='store_true')
     a = ap.parse_args()
+    if a.calibrate:
+        calibrate(a.device)
+        return
     if a.case:
         print(json.dumps(run_case(int(a.case[0]), a.case[1], a.device)))
         return

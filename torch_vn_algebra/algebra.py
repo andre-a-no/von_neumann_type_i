@@ -12,8 +12,10 @@ Two storage layouts of an operator (the algebra's `layout`; results are identica
 op.matrix is the padded tensor in both layouts (in the packed layout it is assembled on first use and kept);
 op.parts is the list of group tensors in both layouts (in the padded layout views or copies of the padded tensor).
 When all sectors have the same size the two layouts coincide (op.parts == [op.matrix], no copy). The default
-layout='auto' picks 'packed' when the padding would be most of the padded tensor; the environment variable
-TORCH_VN_ALGEBRA_LAYOUT ('padded', 'packed' or 'auto') replaces this default (an explicit layout argument wins).
+layout='auto' decides by a cost model (_auto_layout): packed when the work saved on the padding, for a typical
+batch, outweighs the extra kernel call per block size; few small blocks with a small batch stay padded, large uneven
+algebras are packed. The environment variable TORCH_VN_ALGEBRA_LAYOUT ('padded', 'packed' or 'auto') replaces this
+default (an explicit layout argument wins).
 """
 
 import os
@@ -96,12 +98,27 @@ def _on_positive(w: torch.Tensor, f) -> torch.Tensor:
 LAYOUTS = ('auto', 'padded', 'packed')
 
 
-def _auto_layout(k_factors: List[int]) -> str:
-    """'packed' when at least half of the padded tensor would be padding and the padded tensor is not tiny (for a
-    few small blocks one padded kernel is faster than one kernel per block size), else 'padded'."""
-    padded = len(k_factors) * max(k_factors) ** 2
-    used = sum(k * k for k in k_factors)
-    return 'packed' if padded >= 4096 and used <= 0.5 * padded else 'padded'
+def _auto_layout(k_factors: List[int], device=None, typical_batch: Optional[int] = None) -> str:
+    """
+    The layout of TypeIAlgebra(layout='auto'), from a cost model. A padded operation is one kernel on
+    C k_max^2 entries per sample, a packed one is one kernel per block size on sum_c k_c^2 entries. With W the
+    padding entries per sample and G the number of distinct block sizes, packing saves batch * W entries and costs
+    G - 1 extra kernel calls, each worth about entries_per_kernel entries (cost.get_limits(): measured on a CPU,
+    estimated for CUDA). Packed when typical_batch * W >= entries_per_kernel * (G - 1), and always when W alone is
+    large (memory). typical_batch: the batch the algebra is used with (default cost limit layout_typical_batch).
+    """
+    lim = cost.get_limits()
+    sizes = [k for k in k_factors if k]
+    W = len(k_factors) * max(k_factors) ** 2 - sum(k * k for k in k_factors)
+    G = len(set(sizes))
+    if W == 0:                                            # no padding: the layouts coincide
+        return 'padded'
+    if W >= lim['layout_always_packed_entries']:
+        return 'packed'
+    cuda = device is not None and torch.device(device).type == 'cuda'
+    per_kernel = lim['layout_entries_per_kernel_cuda' if cuda else 'layout_entries_per_kernel_cpu']
+    B = lim['layout_typical_batch'] if typical_batch is None else typical_batch
+    return 'packed' if B * W >= per_kernel * (G - 1) else 'padded'
 
 
 class TypeIAlgebra:
@@ -122,7 +139,8 @@ class TypeIAlgebra:
         device: Optional[torch.device] = None,
         precision: str = 'single',
         charges: Optional[List] = None,
-        layout: str = 'auto'
+        layout: str = 'auto',
+        typical_batch: Optional[int] = None
     ):
         """
         n_factors, k_factors: sizes n_c of the factors and k_c <= n_c of the active subspaces.
@@ -130,6 +148,7 @@ class TypeIAlgebra:
         charges: labels of the sectors (e.g. particle numbers); default 0, 1, ..., C-1. They are
             used to merge sectors in symmetric tensor products (composite.FusedProduct).
         layout: storage of the operators, 'padded', 'packed' or 'auto' (module docstring).
+        typical_batch: the batch size the operators will mostly have; used only by layout='auto' (_auto_layout).
         """
         C = len(n_factors)
         assert len(k_factors) == C, "n_factors and k_factors must have same length"
@@ -159,7 +178,7 @@ class TypeIAlgebra:
             if env not in LAYOUTS:
                 raise ValueError(f"TORCH_VN_ALGEBRA_LAYOUT must be one of {LAYOUTS}, got {env!r}")
             layout = env
-        self.layout = _auto_layout(self.k_factors) if layout == 'auto' else layout
+        self.layout = _auto_layout(self.k_factors, device, typical_batch) if layout == 'auto' else layout
 
         # padded storage: warn when most of the (C, k_max, k_max) layout is padding
         padded = C * self.k_max ** 2
@@ -1392,8 +1411,13 @@ class TypeIAlgebra:
         def _weighted_trace(self, name: str) -> torch.Tensor:
             """sum_c w_c Tr(A_c), in the number field of the algebra (complex for complex algebras); the weights are
             cached on the algebra."""
+            alg = self.algebra
+            if self._packed:                              # one weight per group: no detour through the sectors
+                scale = 1.0 if name == 'w_norm' else 1.0 / sum(1 for k in alg.k_factors if k)
+                return sum(torch.diagonal(x, dim1=-2, dim2=-1).sum((-2, -1)) * (scale / k)
+                           for (k, _), x in zip(alg._size_groups_cache, self.parts))
             tr_c = self.sector_traces()                                            # (batch, C), padding = 0
-            return (tr_c * self.algebra._const(name, self._real_dtype())).sum(-1)
+            return (tr_c * alg._const(name, self._real_dtype())).sum(-1)
 
         def Tr_blunt(self) -> torch.Tensor:
             """sum_c Tr(A_c)."""

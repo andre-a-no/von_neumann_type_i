@@ -44,8 +44,11 @@ Do not use it for:
     `op.matrix[:, c]`; **the rest is zero padding**.
   - `'packed'`: one tensor `(batch, n_g, k_g, k_g)` per block size, in the order of `alg.size_groups`, with no
     padding.
-  - `layout='auto'` (default) packs when the padding would fill at least half of the padded tensor (for example
-    the full algebra of a `SpinChain`). The environment variable `TORCH_VN_ALGEBRA_LAYOUT` overrides the default.
+  - `layout='auto'` (default) uses a cost model. It packs when the work saved on the padding, for a typical batch,
+    outweighs the extra kernel call per block size, as for the full algebra of a `SpinChain`. A few small blocks
+    with a small batch stay padded.
+  - Pass `TypeIAlgebra(..., typical_batch=B)` if you know the batch. The environment variable
+    `TORCH_VN_ALGEBRA_LAYOUT` overrides the default.
   - Results do not depend on the layout. **`op.matrix` is always the padded tensor**; in the packed layout it is a
     copy assembled on demand, which costs memory and must not be modified in place.
   - Read blocks with `op.block(c)` (`(batch, k_c, k_c)`) or `op.parts`, which work in both layouts and never pad.
