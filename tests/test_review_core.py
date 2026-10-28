@@ -618,7 +618,8 @@ def test_spectral_cache_is_consistent():
         b = Hc.apply_function(torch.exp).matrix
         c = Hc.apply_function(torch.exp).matrix
         assert Hc.cache_info()['cached']
-        Hc.matrix.mul_(2.0)
+        for x in (Hc.parts if Hc._packed else [Hc.matrix]):   # in-place change of the stored tensors
+            x.mul_(2.0)
         d = Hc.apply_function(torch.exp).matrix
     assert torch.allclose(a, b) and torch.allclose(b, c)
     assert torch.allclose(d, (H * 2.0).apply_function(torch.exp).matrix, atol=1e-10)

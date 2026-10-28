@@ -37,11 +37,25 @@ def _trace_weights(alg: TypeIAlgebra, trace: str) -> torch.Tensor:
     return w
 
 
+def _dmap(data, fn):
+    """fn on stored data: a padded tensor or a list of group tensors (packed layout)."""
+    return [fn(x) for x in data] if isinstance(data, list) else fn(data)
+
+
+def _dtrace(data) -> torch.Tensor:
+    """Blunt trace (batch,) of stored data."""
+    xs = data if isinstance(data, list) else [data]
+    return sum(torch.diagonal(x, dim1=-2, dim2=-1).sum(dim=(-2, -1)) for x in xs)
+
+
 def trace_of_product(A: Operator, B: Operator) -> torch.Tensor:
     """Tr_blunt(A B) = sum_ij A_ij B_ji in O(k^2) per block, without forming A B."""
-    a, b = A.matrix, B.matrix
-    dtype = torch.promote_types(a.dtype, b.dtype)
-    return (a.to(dtype) * b.to(dtype).transpose(-2, -1)).sum(dim=(-3, -2, -1))
+    pairs = zip(A.parts, B.parts) if A._packed else [(A.matrix, B.matrix)]
+    out = 0
+    for a, b in pairs:
+        dtype = torch.promote_types(a.dtype, b.dtype)
+        out = out + (a.to(dtype) * b.to(dtype).transpose(-2, -1)).sum(dim=(-3, -2, -1))
+    return out
 
 
 class DensityMatrix(Operator):
@@ -55,25 +69,27 @@ class DensityMatrix(Operator):
     """
 
     def __init__(self, algebra: TypeIAlgebra, generator=None, matrix: Optional[torch.Tensor] = None,
-                 validate: bool = True):
+                 validate: bool = True, parts=None):
         if matrix is not None and validate:      # user data: the algebra's field, zero padding (as alg.operator)
             matrix = algebra._to_field(matrix, "DensityMatrix")
             if any(k_c < algebra.k_max for k_c in algebra.k_factors):
                 matrix = matrix * algebra._const('block_mask', torch.bool)
-        super().__init__(algebra, generator=generator, matrix=matrix,
+        if parts is not None and validate:
+            parts = [algebra._to_field(x, "DensityMatrix") for x in parts]
+        super().__init__(algebra, generator=generator, matrix=matrix, parts=parts,
                          is_self_adjoint=True, is_positive=True)
         self._validate = validate
         if not validate:          # keep the flags, skip the checks
             self._is_self_adjoint_set = False
             self._is_positive_set = False
-        elif matrix is not None:
+        elif matrix is not None or parts is not None:
             self._validate_properties()
 
     def _validate_properties(self):
         if not self._validate:                       # states produced by the library: nothing to check
             return
         super()._validate_properties()
-        tr = torch.diagonal(self._matrix, dim1=-2, dim2=-1).sum(dim=(-2, -1)).real
+        tr = _dtrace(self._canonical()).real
         if bool(((tr - 1).abs() > 100 * self._eps()).any()):        # the trace is 1: an absolute tolerance
             raise ValueError("DensityMatrix must have unit trace (Tr_blunt)")
 
@@ -140,7 +156,7 @@ class DensityMatrix(Operator):
                 pt = pt.reshape(-1, 1, 1, 1)
             elif pt.dim() > 1:
                 raise ValueError("mix: p must be a number or a tensor of shape (batch,)")
-        return DensityMatrix(self.algebra, generator=lambda: (1 - pt) * self.matrix + pt * other.matrix,
+        return DensityMatrix(self.algebra, generator=lambda: self._zip(other, lambda a, b: (1 - pt) * a + pt * b),
                              validate=False)
 
     def condition_on(self, P: Operator, eps: float = 1e-12) -> Tuple['DensityMatrix', torch.Tensor]:
@@ -148,14 +164,21 @@ class DensityMatrix(Operator):
         return lueders_update(self, P, eps)
 
 
-def _normalize(mat: torch.Tensor) -> torch.Tensor:
-    tr = torch.diagonal(mat, dim1=-2, dim2=-1).sum(dim=(-2, -1)).real
-    mat = mat / tr[:, None, None, None].to(mat.dtype)
-    return 0.5 * (mat + mat.conj().transpose(-2, -1))
+def _normalize(mat):
+    """data / Tr_blunt, made exactly Hermitian (data: a padded tensor or a list of group tensors)."""
+    tr = _dtrace(mat).real
+
+    def norm(x):
+        x = x / tr[:, None, None, None].to(x.dtype)
+        return 0.5 * (x + x.conj().transpose(-2, -1))
+    return _dmap(mat, norm)
 
 
-def _density(alg: TypeIAlgebra, mat: torch.Tensor) -> DensityMatrix:
-    return DensityMatrix(alg, matrix=_normalize(mat).to(alg.hilbert.device), validate=False)
+def _density(alg: TypeIAlgebra, mat) -> DensityMatrix:
+    mat = _dmap(_normalize(mat), lambda x: x.to(alg.hilbert.device))
+    if isinstance(mat, list):
+        return DensityMatrix(alg, parts=mat, validate=False)
+    return DensityMatrix(alg, matrix=mat, validate=False)
 
 
 def _ginibre(alg: TypeIAlgebra, batch_size: int, cols: Optional[int]) -> torch.Tensor:
@@ -201,18 +224,24 @@ def random_density_matrix(alg: TypeIAlgebra, batch_size: int = 1, rank: Optional
         raise ValueError("rank must be a positive integer (or None for the Hilbert-Schmidt measure)")
     r = rank or alg.k_max
     # G, rho and the temporaries of normalisation: about four batches of (k_max x max(k_max, r)) blocks
-    cost.check_memory(4 * cost.tensor_bytes((batch_size, alg.C, alg.k_max, max(alg.k_max, r)), alg.hilbert.dtype),
+    blocks = sum(k * max(k, r) for k in alg.k_factors) if alg._packed else alg.C * alg.k_max * max(alg.k_max, r)
+    cost.check_memory(4 * batch_size * blocks * cost.itemsize(alg.hilbert.dtype),
                       alg.hilbert.device, f"random_density_matrix(batch={batch_size}, k_max={alg.k_max})")
-    G = _ginibre(alg, batch_size, rank)                         # (B, C, k_max, rank or k_max)
+    if alg._packed:                                              # one Ginibre draw per block size
+        extra = 0 if alg.hilbert.complex_valued else 1
+        G = [torch.randn(batch_size, len(idx), k, rank or k + extra, dtype=alg.hilbert.dtype, device=alg.hilbert.device)
+             for k, idx in alg.size_groups]
+    else:
+        G = _ginibre(alg, batch_size, rank)                      # (B, C, k_max, rank or k_max)
     if measure == 'bures':
-        U = alg.random_unitary_operator(batch_size).matrix
-        G = G + U @ G                                            # (1 + U) G
-    return _density(alg, G @ G.conj().transpose(-2, -1))
+        U = alg.random_unitary_operator(batch_size)._canonical()
+        G = [g + u @ g for g, u in zip(G, U)] if alg._packed else G + U @ G     # (1 + U) G
+    return _density(alg, _dmap(G, lambda g: g @ g.conj().transpose(-2, -1)))
 
 
 def maximally_mixed_state(alg: TypeIAlgebra, batch_size: int = 1) -> DensityMatrix:
     """rho = 1 / sum_c k_c (the normalised trace of the full matrix algebra on H)."""
-    return _density(alg, alg.identity(batch_size).matrix.clone())
+    return _density(alg, _dmap(alg.identity(batch_size)._canonical(), torch.clone))
 
 
 def tracial_state(alg: TypeIAlgebra, batch_size: int = 1) -> DensityMatrix:
@@ -220,7 +249,9 @@ def tracial_state(alg: TypeIAlgebra, batch_size: int = 1) -> DensityMatrix:
     return _density(alg, _tracial_matrix(alg, batch_size))
 
 
-def _tracial_matrix(alg: TypeIAlgebra, batch_size: int) -> torch.Tensor:
+def _tracial_matrix(alg: TypeIAlgebra, batch_size: int):
+    if alg._packed:
+        return [(e / k).expand(batch_size, -1, -1, -1).clone() for e, (k, _) in zip(alg._eye_parts(), alg.size_groups)]
     w = alg._const('w_norm', alg.hilbert.real_dtype).to(alg.dtype)
     return (alg._const('eye') * w[:, None, None]).expand(batch_size, -1, -1, -1).clone()
 
@@ -230,17 +261,17 @@ def gibbs_state(H: Operator, beta: float) -> DensityMatrix:
     if not H.is_self_adjoint:
         raise RuntimeError("gibbs_state requires a self-adjoint Hamiltonian")
     alg = H.algebra
-    B = H.matrix.shape[0]
+    B = H.batch_size
     dec = H._decompositions('hermitian')                     # one eigendecomposition per block size
     x_max = torch.stack([(-beta * w).reshape(B, -1).amax(-1) for _, _, _, (w, _) in dec], dim=-1).amax(-1)  # (B,)
-    if torch.is_grad_enabled() and H.matrix.requires_grad:   # differentiable path (Daleckii-Krein); the shift is a
-        mat = H.apply_function(lambda w: torch.exp(-beta * w - x_max[:, None])).matrix   # constant and cancels in rho
+    if torch.is_grad_enabled() and H._requires_grad():       # differentiable path (Daleckii-Krein); the shift is a
+        mat = H.apply_function(lambda w: torch.exp(-beta * w - x_max[:, None]))._canonical()  # constant, cancels
         return _density(alg, mat)
-    mat = torch.zeros_like(H.matrix)
+    ys = []
     for k, idx, _, (w, V) in dec:
         e = torch.exp(-beta * w - x_max.repeat_interleave(len(idx))[:, None]).to(V.dtype)
-        mat[:, alg._sel(idx), :k, :k] = ((V * e.unsqueeze(-2)) @ V.conj().transpose(-2, -1)).reshape(B, len(idx), k, k)
-    return _density(alg, mat)
+        ys.append((V * e.unsqueeze(-2)) @ V.conj().transpose(-2, -1))
+    return _density(alg, H._assemble(ys, dtype=H._dtype()))
 
 
 def partition_function(H: Operator, beta: float) -> torch.Tensor:
@@ -257,7 +288,7 @@ def log_partition_function(H: Operator, beta: float) -> torch.Tensor:
 
 def sector_probabilities(rho: Operator) -> torch.Tensor:
     """p_c = Tr rho_c, shape (batch, C): the classical distribution over superselection sectors."""
-    return torch.diagonal(rho.matrix, dim1=-2, dim2=-1).sum(dim=-1).real
+    return rho.sector_traces().real
 
 
 def expectation(rho: Operator, A: Operator) -> torch.Tensor:
@@ -267,6 +298,8 @@ def expectation(rho: Operator, A: Operator) -> torch.Tensor:
 
 def born_probabilities(rho: Operator, effects: Sequence[Operator]) -> torch.Tensor:
     """Probabilities Tr(rho E_j) of a POVM {E_j}, shape (batch, len(effects))."""
+    if rho._packed:
+        return torch.stack([trace_of_product(rho, e) for e in effects], dim=1).real
     E = torch.stack(torch.broadcast_tensors(*[e.matrix for e in effects]), dim=1)       # (B, J, C, k, k)
     r = rho.matrix
     dtype = torch.promote_types(r.dtype, E.dtype)
@@ -279,11 +312,13 @@ def lueders_update(rho: Operator, P: Operator, eps: float = 1e-12) -> Tuple[Dens
     rho | P = P rho P / Tr(P rho P), together with the probability Tr(rho P).
     Samples with probability below eps are returned as zero operators.
     """
-    post = (P @ rho @ P).matrix
-    prob = torch.diagonal(post, dim1=-2, dim2=-1).sum(dim=(-2, -1)).real
+    post = (P @ rho @ P)._canonical()
+    prob = _dtrace(post).real
     safe = torch.where(prob > eps, prob, torch.ones_like(prob))
-    mat = torch.where(prob[:, None, None, None] > eps, post / safe[:, None, None, None].to(post.dtype),
-                      torch.zeros_like(post))
+    mat = _dmap(post, lambda x: torch.where(prob[:, None, None, None] > eps, x / safe[:, None, None, None].to(x.dtype),
+                                            torch.zeros_like(x)))
+    if isinstance(mat, list):
+        return DensityMatrix(rho.algebra, parts=mat, validate=False), prob
     return DensityMatrix(rho.algebra, matrix=mat, validate=False), prob
 
 

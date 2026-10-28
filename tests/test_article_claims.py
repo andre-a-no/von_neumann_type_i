@@ -419,13 +419,15 @@ def test_sec3_daleckii_krein_derivative_at_a_degenerate_spectrum():
 
 def test_sec3_storage_types_and_bytes():
     """Sec. 3: four storage types with 4, 8, 8, 16 bytes per entry; like() changes the numerics, cast() moves operators."""
-    alg = TypeIAlgebra([2, 3], [2, 3])
+    alg = TypeIAlgebra([2, 3], [2, 3], layout='padded')
+    packed = TypeIAlgebra([2, 3], [2, 3], layout='packed')
     expect = {(False, 'single'): (torch.float32, 4), (False, 'double'): (torch.float64, 8),
               (True, 'single'): (torch.complex64, 8), (True, 'double'): (torch.complex128, 16)}
     for (cv, pr), (dt, nbytes) in expect.items():
         a2 = alg.like(complex_valued=cv, precision=pr)
         assert a2.dtype == dt and list(a2.k_factors) == [2, 3]
-        assert a2.bytes_per_operator(7) == 7 * 2 * 3 * 3 * nbytes
+        assert a2.bytes_per_operator(7) == 7 * 2 * 3 * 3 * nbytes                      # C k_max^2 entries
+        assert packed.like(complex_valued=cv, precision=pr).bytes_per_operator(7) == 7 * (4 + 9) * nbytes
     a64 = alg.like(complex_valued=True, precision='double')
     X = rand_op(alg.like(complex_valued=False, precision='double'), 2, 'herm')
     Y = X.cast(a64)

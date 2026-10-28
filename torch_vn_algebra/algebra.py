@@ -1,15 +1,22 @@
 """
 Type I von Neumann algebra M = ⊕_{c=1}^{C} M_{n_c}(ℂ) with subspace dimensions k_c.
 
-Storage shape: (batch, C, k_max, k_max)
-- batch: parallel Monte Carlo samples
-- C: number of factors (channels)
-- k_max = max(k_c): maximum subspace dimension across channels
+Two storage layouts of an operator (the algebra's `layout`; results are identical, only memory and run time differ):
 
-Each channel c has an active block of size k_c × k_c in the top-left corner.
-The remaining (k_max - k_c) dimensions are padding.
+- 'padded': one tensor of shape (batch, C, k_max, k_max). Each sector c has an active block of size k_c × k_c in the
+  top-left corner; the remaining (k_max - k_c) rows and columns are zero padding.
+- 'packed': the sectors grouped by block size (alg.size_groups, in order of first appearance), one tensor
+  (batch, n_g, k_g, k_g) per group g holding the n_g blocks of size k_g: no padding. Memory sum_c k_c^2 instead of
+  C k_max^2 per sample, and products cost sum_c k_c^3 instead of C k_max^3.
+
+op.matrix is the padded tensor in both layouts (in the packed layout it is assembled on first use and kept);
+op.parts is the list of group tensors in both layouts (in the padded layout views or copies of the padded tensor).
+When all sectors have the same size the two layouts coincide (op.parts == [op.matrix], no copy). The default
+layout='auto' picks 'packed' when the padding would be most of the padded tensor; the environment variable
+TORCH_VN_ALGEBRA_LAYOUT ('padded', 'packed' or 'auto') replaces this default (an explicit layout argument wins).
 """
 
+import os
 import torch
 import numpy as np
 from typing import Optional, List, Tuple, Callable, Union
@@ -86,11 +93,23 @@ def _on_positive(w: torch.Tensor, f) -> torch.Tensor:
     return torch.where(pos, f(torch.where(pos, w, torch.ones_like(w))), torch.zeros_like(w))
 
 
+LAYOUTS = ('auto', 'padded', 'packed')
+
+
+def _auto_layout(k_factors: List[int]) -> str:
+    """'packed' when at least half of the padded tensor would be padding and the padded tensor is not tiny (for a
+    few small blocks one padded kernel is faster than one kernel per block size), else 'padded'."""
+    padded = len(k_factors) * max(k_factors) ** 2
+    used = sum(k * k for k in k_factors)
+    return 'packed' if padded >= 4096 and used <= 0.5 * padded else 'padded'
+
+
 class TypeIAlgebra:
     """
     Type I von Neumann algebra M = ⊕_{c=1}^{C} M_{n_c}(ℂ).
-    
-    Operator storage shape: (batch, C, k_max, k_max)
+
+    Operator storage: padded (batch, C, k_max, k_max) or packed (one tensor (batch, n_g, k_g, k_g) per block size),
+    see the module docstring and `layout`.
     """
 
     def __init__(
@@ -102,13 +121,15 @@ class TypeIAlgebra:
         complex_valued: bool = True,
         device: Optional[torch.device] = None,
         precision: str = 'single',
-        charges: Optional[List] = None
+        charges: Optional[List] = None,
+        layout: str = 'auto'
     ):
         """
         n_factors, k_factors: sizes n_c of the factors and k_c <= n_c of the active subspaces.
         precision: 'single' (float32 / complex64, default) or 'double' (float64 / complex128).
         charges: labels of the sectors (e.g. particle numbers); default 0, 1, ..., C-1. They are
             used to merge sectors in symmetric tensor products (composite.FusedProduct).
+        layout: storage of the operators, 'padded', 'packed' or 'auto' (module docstring).
         """
         C = len(n_factors)
         assert len(k_factors) == C, "n_factors and k_factors must have same length"
@@ -130,14 +151,24 @@ class TypeIAlgebra:
         self.charges = list(range(C)) if charges is None else list(charges)
         assert len(self.charges) == C, "one charge per sector"
 
+        if layout not in LAYOUTS:
+            raise ValueError(f"layout must be one of {LAYOUTS}, got {layout!r}")
+        self._layout_arg = layout
+        if layout == 'auto':
+            env = os.environ.get('TORCH_VN_ALGEBRA_LAYOUT', 'auto')
+            if env not in LAYOUTS:
+                raise ValueError(f"TORCH_VN_ALGEBRA_LAYOUT must be one of {LAYOUTS}, got {env!r}")
+            layout = env
+        self.layout = _auto_layout(self.k_factors) if layout == 'auto' else layout
+
         # padded storage: warn when most of the (C, k_max, k_max) layout is padding
         padded = C * self.k_max ** 2
         used = sum(k * k for k in k_factors)
-        if padded > 2 ** 24 and used < 0.5 * padded:
+        if self.layout == 'padded' and padded > 2 ** 24 and used < 0.5 * padded:
             import warnings
             warnings.warn(f"sector sizes are very uneven: {100 * (1 - used / padded):.0f}% of every operator "
-                          f"(C x k_max^2 = {padded:.2e} entries) is padding; consider working in single sectors "
-                          f"(e.g. SpinChain.sector_algebra).", cost.CostWarning, stacklevel=2)
+                          f"(C x k_max^2 = {padded:.2e} entries) is padding; use layout='packed' or work in single "
+                          f"sectors (e.g. SpinChain.sector_algebra).", cost.CostWarning, stacklevel=2)
 
         if hilbert is None:
             self.hilbert = HilbertSpace(
@@ -160,6 +191,70 @@ class TypeIAlgebra:
                 groups.setdefault(k_c, []).append(c)
         self._size_groups_cache = list(groups.items())
         self._const_cache = {}
+        # the two layouts coincide when there is one group of all sectors, of size k_max, in order
+        self._uniform = len(groups) == 1 and self._size_groups_cache[0][1] == list(range(C))
+        self._packed = self.layout == 'packed' and not self._uniform      # operators are stored as group tensors
+
+    @property
+    def size_groups(self) -> List[Tuple[int, List[int]]]:
+        """The non-empty sectors grouped by block size, in order of first appearance: [(k_g, [c, ...]), ...]. The
+        packed layout stores one tensor (batch, n_g, k_g, k_g) per group, in this order (op.parts)."""
+        return [(k, list(idx)) for k, idx in self._size_groups_cache]
+
+    def _order(self) -> torch.Tensor:
+        """Sector indices in group order (the concatenation of the groups' index lists), on the device."""
+        t = self._const_cache.get('order')
+        if t is None:
+            t = self._const_cache['order'] = torch.tensor([c for _, idx in self._size_groups_cache for c in idx],
+                                                          dtype=torch.long, device=self.hilbert.device)
+        return t
+
+    def _to_sectors(self, values: List[torch.Tensor]) -> torch.Tensor:
+        """Per-group values (batch, n_g, ...) as one tensor (batch, C, ...) in sector order (zero for empty sectors)."""
+        if self._uniform:
+            return values[0]
+        cat = torch.cat([v.expand(max(u.shape[0] for u in values), *v.shape[1:]) for v in values], dim=1)
+        out = cat.new_zeros(cat.shape[0], self.C, *cat.shape[2:])
+        out[:, self._order().to(cat.device)] = cat
+        return out
+
+    def _from_sectors(self, values: torch.Tensor) -> List[torch.Tensor]:
+        """The inverse of _to_sectors: (batch, C, ...) -> per-group (batch, n_g, ...)."""
+        if self._uniform:
+            return [values]
+        return [values[:, self._sel(idx)] for _, idx in self._size_groups_cache]
+
+    def _pad(self, parts: List[torch.Tensor]) -> torch.Tensor:
+        """Group tensors (batch, n_g, k_g, k_g) -> padded tensor (batch, C, k_max, k_max)."""
+        if self._uniform:
+            return parts[0]
+        B = max(p.shape[0] for p in parts)
+        dtype = parts[0].dtype
+        for p in parts[1:]:
+            dtype = torch.promote_types(dtype, p.dtype)
+        out = torch.zeros(B, self.C, self.k_max, self.k_max, dtype=dtype, device=parts[0].device)
+        for (k, idx), p in zip(self._size_groups_cache, parts):
+            out[:, self._sel(idx), :k, :k] = p
+        return out
+
+    def _unpad(self, mat: torch.Tensor, copy: bool = False) -> List[torch.Tensor]:
+        """Padded tensor -> group tensors: views when the sectors of a group are contiguous (copies with copy=True,
+        which do not keep the padded tensor alive), otherwise copies."""
+        if self._uniform:
+            return [mat]
+        parts = [mat[:, self._sel(idx), :k, :k] for k, idx in self._size_groups_cache]
+        return [p.clone() for p in parts] if copy else parts
+
+    def _eye_parts(self, dtype: Optional[torch.dtype] = None) -> List[torch.Tensor]:
+        """Identity of every group, (1, n_g, k_g, k_g) (expanded views of one identity matrix per size), cached."""
+        dtype = dtype or self.dtype
+        key = ('eye_parts', dtype)
+        t = self._const_cache.get(key)
+        if t is None:
+            dev = self.hilbert.device
+            t = self._const_cache[key] = [torch.eye(k, dtype=dtype, device=dev).expand(1, len(idx), k, k)
+                                          for k, idx in self._size_groups_cache]
+        return t
 
     def _sel(self, idx: List[int]):
         """Index for the sector axis selecting the sectors idx (sorted): a slice if they are contiguous, else a
@@ -219,13 +314,16 @@ class TypeIAlgebra:
         alg = TypeIAlgebra(self.n_factors, self.k_factors,
                            complex_valued=self.complex_valued if complex_valued is None else complex_valued,
                            precision=self.precision if precision is None else precision,
-                           device=self.hilbert.device if device is None else device, charges=self.charges)
+                           device=self.hilbert.device if device is None else device, charges=self.charges,
+                           layout=self.layout)
         alg.exact_eig_max_dim = self.exact_eig_max_dim
         return alg
 
     def bytes_per_operator(self, batch_size: int = 1) -> int:
-        """Memory of one materialised operator of this algebra (padded layout)."""
-        return batch_size * self.C * self.k_max ** 2 * cost.itemsize(self.dtype)
+        """Memory of one materialised operator of this algebra in its layout (sum_c k_c^2 entries per sample when
+        packed, C k_max^2 when padded)."""
+        entries = sum(k * k for k in self.k_factors) if self._packed else self.C * self.k_max ** 2
+        return batch_size * entries * cost.itemsize(self.dtype)
 
     # ========================================================================
     # Random Unitary / Orthogonal / SU(n)
@@ -321,8 +419,9 @@ class TypeIAlgebra:
     class Operator:
         """
         Operator in the von Neumann algebra.
-        
-        Storage: (batch, C, k_max, k_max)
+
+        Storage in the algebra's layout: a padded tensor (batch, C, k_max, k_max) or, packed, one tensor
+        (batch, n_g, k_g, k_g) per block size (`parts`); `matrix` gives the padded tensor in both layouts.
         """
 
         def __init__(
@@ -335,12 +434,16 @@ class TypeIAlgebra:
             is_positive: Optional[bool] = None,
             is_invertible: Optional[bool] = None,
             is_projection: Optional[bool] = None,
-            eigenvalues: Optional[List[torch.Tensor]] = None
+            eigenvalues: Optional[List[torch.Tensor]] = None,
+            parts: Optional[List[torch.Tensor]] = None
         ):
             self.algebra = algebra
             self._generator = generator
-            self._matrix = matrix
-            self._is_materialized = matrix is not None
+            self._matrix = None
+            self._parts = None
+            self._is_materialized = False
+            if matrix is not None or parts is not None:
+                self._store(matrix if matrix is not None else list(parts))
 
             self._is_self_adjoint = is_self_adjoint
             self._is_self_adjoint_set = is_self_adjoint is not None
@@ -361,37 +464,158 @@ class TypeIAlgebra:
             self._abs = None
             self._spectral_cache = None          # {'kind', 'key', 'groups': [(w, V), ...]} when caching is on
             self._cache_on = False
-            self._batch = None if matrix is None else matrix.shape[0]   # known batch size of a lazy operator
+            self._batch = self._data_batch() if self._is_materialized else None   # known batch of a lazy operator
 
             self._update_memory()
 
-        def _update_memory(self):
-            if self._matrix is not None:
-                self._bytes_held = self._matrix.element_size() * self._matrix.numel()
+        # ----- storage -----
+        def _store(self, data):
+            """Keep `data` (a padded tensor or a list of group tensors) in the algebra's layout."""
+            alg = self.algebra
+            if isinstance(data, torch.Tensor):
+                if alg._packed:
+                    self._parts, self._matrix = alg._unpad(data, copy=True), None
+                else:
+                    self._matrix, self._parts = data, None
             else:
-                self._bytes_held = 0
+                data = list(data)
+                if len(data) != len(alg._size_groups_cache):
+                    raise ValueError(f"expected {len(alg._size_groups_cache)} group tensors (one per block size), "
+                                     f"got {len(data)}")
+                B = max(p.shape[0] for p in data)
+                data = [p if p.shape[0] == B else p.expand(B, *p.shape[1:]) for p in data]
+                if alg._packed:
+                    self._parts, self._matrix = data, None
+                else:
+                    self._matrix, self._parts = alg._pad(data), None
+            self._is_materialized = True
 
-        @property
-        def matrix(self) -> torch.Tensor:
+        def _materialize(self):
             if not self._is_materialized:
-                self._matrix = self._generator()
-                self._is_materialized = True
+                self._store(self._generator())
                 # drop the recipe: it holds references to the parent operators (and their
                 # cached matrices), which would otherwise stay alive as long as this one
                 self._generator = None
                 self._validate_properties()
                 self._update_memory()
+
+        def _data_batch(self) -> int:
+            return self._parts[0].shape[0] if self._parts is not None else self._matrix.shape[0]
+
+        def _update_memory(self):
+            held = [] if not self._is_materialized else (self._parts or []) + (
+                [self._matrix] if self._matrix is not None else [])
+            self._bytes_held = sum(t.element_size() * t.numel() for t in held)
+
+        @property
+        def matrix(self) -> torch.Tensor:
+            """The padded tensor (batch, C, k_max, k_max). In the packed layout it is assembled on first use and kept
+            (a copy: in-place changes of it do not change the operator; change op.parts instead)."""
+            self._materialize()
+            if self._parts is not None and (self._matrix is None or self._matrix_key != self._cache_key()):
+                self._matrix = self.algebra._pad(self._parts)       # (again after an in-place change of the parts)
+                self._matrix_key = self._cache_key()
+                self._update_memory()
             return self._matrix
 
+        @property
+        def parts(self) -> List[torch.Tensor]:
+            """The blocks grouped by size: one tensor (batch, n_g, k_g, k_g) per entry of algebra.size_groups. In the
+            padded layout views of the padded tensor (copies for groups of non-contiguous sectors)."""
+            self._materialize()
+            if self._parts is not None:
+                return self._parts
+            return self.algebra._unpad(self._matrix)
+
+        def block(self, c: int) -> torch.Tensor:
+            """The block of sector c, shape (batch, k_c, k_c) (a view)."""
+            alg = self.algebra
+            k_c = alg.k_factors[c]
+            if k_c == 0:
+                return torch.zeros(self.batch_size, 0, 0, dtype=alg.dtype, device=alg.hilbert.device)
+            if not alg._packed:
+                return self.matrix[:, c, :k_c, :k_c]
+            for (k, idx), p in zip(alg._size_groups_cache, self.parts):
+                if k == k_c:
+                    return p[:, idx.index(c)]
+
+        @property
+        def batch_size(self) -> int:
+            if not self._is_materialized and self._batch is not None:
+                return self._batch
+            self._materialize()
+            return self._data_batch()
+
+        @property
+        def _packed(self) -> bool:
+            return self.algebra._packed
+
+        def _canonical(self):
+            """The stored data in the algebra's layout: a padded tensor, or the list of group tensors."""
+            self._materialize()
+            return self._parts if self._packed else self._matrix
+
+        def _map(self, fn):
+            """fn applied to the stored tensor(s): an elementwise or blockwise map that acts on the last two axes."""
+            if self._packed:
+                return [fn(p) for p in self.parts]
+            return fn(self.matrix)
+
+        def _zip(self, other, fn):
+            """fn(a, b) on the stored tensors of two operators with the same sector structure."""
+            if self._packed:
+                return [fn(a, b) for a, b in zip(self.parts, other.parts)]
+            return fn(self.matrix, other.matrix)
+
+        def _amax(self, fn=None) -> torch.Tensor:
+            """max |fn(A_c)_ij| over all blocks and samples, a 0-dim tensor (fn acts blockwise)."""
+            data = self.parts if self._packed else [self.matrix]
+            vals = [cost.abs_max(fn(x) if fn is not None else x) for x in data if x.numel()]
+            if not vals:
+                return torch.zeros((), dtype=self.algebra.hilbert.real_dtype, device=self.algebra.hilbert.device)
+            return torch.stack(vals).amax() if len(vals) > 1 else vals[0]
+
+        def _dtype(self) -> torch.dtype:
+            self._materialize()
+            return self._parts[0].dtype if self._parts is not None else self._matrix.dtype
+
+        def _device(self) -> torch.device:
+            self._materialize()
+            return self._parts[0].device if self._parts is not None else self._matrix.device
+
+        def _requires_grad(self) -> bool:
+            self._materialize()
+            return any(p.requires_grad for p in self._parts) if self._parts is not None else self._matrix.requires_grad
+
+        def _numel(self) -> int:
+            self._materialize()
+            return sum(p.numel() for p in self._parts) if self._parts is not None else self._matrix.numel()
+
+        def _real_dtype(self) -> torch.dtype:
+            return torch.empty((), dtype=self._dtype()).real.dtype
+
+        def _assemble(self, ys, dtype=None):
+            """Per-group results (batch * n_g, k_g, k_g) (or (batch, n_g, k_g, k_g)), in group order, as stored data
+            of the algebra's layout (zero padding in the padded layout)."""
+            alg = self.algebra
+            B = self.batch_size
+            parts = [y.reshape(B, len(idx), k, k) for (k, idx), y in zip(alg._size_groups_cache, ys)]
+            if dtype is not None:
+                parts = [p.to(dtype) for p in parts]
+            if self._packed:
+                return parts
+            if not parts:
+                return torch.zeros(B, alg.C, alg.k_max, alg.k_max, dtype=dtype or alg.dtype, device=alg.hilbert.device)
+            return alg._pad(parts)
+
         def _eps(self) -> float:
-            return 1e-5 if self._matrix.dtype in (torch.float32, torch.complex64) else 1e-10
+            return 1e-5 if self._dtype() in (torch.float32, torch.complex64) else 1e-10
 
         def _tol_t(self) -> torch.Tensor:
             """Tolerance for property checks as a 0-dim tensor on the device (no synchronisation): eps times the
             largest |entry|, i.e. relative to the size of the operator (an absolute floor would misclassify
             operators of small norm, e.g. 1e-6 times a nilpotent as self-adjoint)."""
-            mat = self._matrix
-            scale = cost.abs_max(mat) if mat.numel() else mat.new_zeros((), dtype=mat.real.dtype)
+            scale = self._amax()
             return self._eps() * torch.clamp(scale, min=torch.finfo(scale.dtype).tiny)
 
         def _tol(self) -> float:
@@ -406,23 +630,23 @@ class TypeIAlgebra:
             want = lambda flag: getattr(self, f'_is_{flag}_set') and getattr(self, f'_is_{flag}')
             if not any(want(f) for f in ('self_adjoint', 'normal', 'positive', 'invertible', 'projection')):
                 return
-            mat = self._matrix
-            if mat.numel() == 0:
+            if self._numel() == 0:
                 return
             tol = self._tol_t()
-            mat_d = mat.conj().transpose(-2, -1)
             if want('self_adjoint'):
-                checks.append(("Operator marked self-adjoint but not Hermitian", cost.abs_max(mat - mat_d) > tol))
+                checks.append(("Operator marked self-adjoint but not Hermitian",
+                               self._amax(lambda m: m - m.conj().transpose(-2, -1)) > tol))
             if want('normal'):
                 checks.append(("Operator marked normal but not normal",
-                               cost.abs_max(mat @ mat_d - mat_d @ mat) > tol * cost.abs_max(mat)))
+                               self._amax(lambda m: m @ m.conj().transpose(-2, -1) - m.conj().transpose(-2, -1) @ m)
+                               > tol * self._amax()))
             if want('positive'):
                 checks.append(("Operator marked positive but has negative eigenvalues", (self.lambda_min < -tol).any()))
             if want('invertible'):
                 checks.append(("Operator marked invertible but has zero eigenvalue",
                                (self._block_svdvals_min() <= tol).any()))
             if want('projection'):
-                checks.append(("Operator marked projection but P^2 != P", cost.abs_max(mat @ mat - mat) > tol))
+                checks.append(("Operator marked projection but P^2 != P", self._amax(lambda m: m @ m - m) > tol))
             failed = torch.stack([c for _, c in checks]).tolist()
             for (msg, _), bad in zip(checks, failed):
                 if bad:
@@ -430,26 +654,25 @@ class TypeIAlgebra:
 
         def _block_svdvals_min(self) -> torch.Tensor:
             """Smallest singular value over the active blocks, shape (batch,)."""
-            B = self.matrix.shape[0]
+            B = self.batch_size
             mins = [_fc.singular_values(x.detach())[..., -1].reshape(B, -1) for _, _, x in self._groups()]
             return torch.cat(mins, dim=-1).min(dim=-1)[0]
 
         @property
         def shape(self) -> Tuple[int, ...]:
-            if not self._is_materialized and self._batch is not None:
-                return (self._batch, self.algebra.C, self.algebra.k_max, self.algebra.k_max)
-            return self.matrix.shape
+            """Shape of the padded tensor, (batch, C, k_max, k_max), in both layouts."""
+            return (self.batch_size, self.algebra.C, self.algebra.k_max, self.algebra.k_max)
 
         # ----- type checks -----
         @property
         def is_self_adjoint(self) -> bool:
             if self._is_self_adjoint is not None:
                 return self._is_self_adjoint
-            mat = self.matrix
+            self._materialize()
             if self._is_self_adjoint is not None:          # set while materialising
                 return self._is_self_adjoint
-            self._is_self_adjoint = bool(cost.abs_max(mat - mat.conj().transpose(-2, -1)) <= self._tol_t()) \
-                if mat.numel() else True
+            self._is_self_adjoint = bool(self._amax(lambda m: m - m.conj().transpose(-2, -1)) <= self._tol_t()) \
+                if self._numel() else True
             return self._is_self_adjoint
 
         @is_self_adjoint.setter
@@ -464,15 +687,14 @@ class TypeIAlgebra:
             if self._is_self_adjoint:
                 self._is_normal = True
                 return True
-            mat = self.matrix
+            self._materialize()
             if self._is_normal is not None:                # set while materialising
                 return self._is_normal
-            if mat.numel() == 0:
+            if self._numel() == 0:
                 self._is_normal = True
                 return True
-            mat_d = mat.conj().transpose(-2, -1)
-            diff = mat @ mat_d - mat_d @ mat
-            self._is_normal = bool(cost.abs_max(diff) <= self._tol_t() * cost.abs_max(mat))
+            diff = self._amax(lambda m: m @ m.conj().transpose(-2, -1) - m.conj().transpose(-2, -1) @ m)
+            self._is_normal = bool(diff <= self._tol_t() * self._amax())
             return self._is_normal
 
         @is_normal.setter
@@ -487,7 +709,7 @@ class TypeIAlgebra:
             if not self.is_self_adjoint:
                 self._is_positive = False
                 return False
-            self.matrix
+            self._materialize()
             self._is_positive = bool((self.lambda_min >= -self._tol_t()).all())
             return self._is_positive
 
@@ -500,7 +722,7 @@ class TypeIAlgebra:
         def is_invertible(self) -> bool:
             if self._is_invertible is not None:
                 return self._is_invertible
-            self.matrix
+            self._materialize()
             self._is_invertible = bool((self._block_svdvals_min() > self._tol_t()).all())
             return self._is_invertible
 
@@ -516,8 +738,8 @@ class TypeIAlgebra:
             if not self.is_self_adjoint:
                 self._is_projection = False
                 return False
-            mat = self.matrix
-            self._is_projection = bool(cost.abs_max(mat @ mat - mat) <= self._tol_t()) if mat.numel() else True
+            self._materialize()
+            self._is_projection = bool(self._amax(lambda m: m @ m - m) <= self._tol_t()) if self._numel() else True
             return self._is_projection
 
         @is_projection.setter
@@ -552,33 +774,42 @@ class TypeIAlgebra:
         def trace(self) -> torch.Tensor:
             if self._trace is not None:
                 return self._trace
-            diag = torch.diagonal(self.matrix, dim1=-2, dim2=-1)
-            self._trace = torch.sum(diag, dim=(-2, -1))
+            self._trace = self.Tr_blunt()
             return self._trace
 
         @trace.setter
         def trace(self, value: torch.Tensor):
             self._trace = value
 
+        def sector_traces(self) -> torch.Tensor:
+            """Tr A_c of every sector, shape (batch, C) (zero for empty sectors)."""
+            if self._packed:
+                return self.algebra._to_sectors([torch.diagonal(p, dim1=-2, dim2=-1).sum(-1) for p in self.parts])
+            return torch.diagonal(self.matrix, dim1=-2, dim2=-1).sum(-1)
+
         def trace_norm(self) -> torch.Tensor:
             """||A||_1 = sum of the singular values of the active blocks (for self-adjoint A: sum of |eigenvalues|,
             computed with the batched Hermitian eigensolver)."""
-            B = self.matrix.shape[0]
+            B = self.batch_size
             if self.is_self_adjoint:            # one check (cached) instead of an SVD
                 vals = [cost.batched_call(torch.linalg.eigvalsh, x, f"eigvalsh (blocks of size {k})", kind='eigh').abs()
                         for k, _, x in self._groups()]
             else:
                 vals = [_fc.singular_values(x) for k, _, x in self._groups()]
-            total = torch.zeros(B, dtype=self.matrix.real.dtype, device=self.matrix.device)
+            total = torch.zeros(B, dtype=self._real_dtype(), device=self._device())
             for v in vals:
                 total = total + v.reshape(B, -1).sum(-1)
             return total
 
         def frobenius_norm(self) -> torch.Tensor:
             """(sum_c ||A_c||_F^2)^{1/2}; the padding is zero."""
-            mat = self.matrix
-            s = cost.abs_max(mat, (-3, -2, -1)).clamp(min=torch.finfo(mat.real.dtype).tiny)        # no overflow
-            return s * torch.linalg.vector_norm(mat * s.reciprocal()[:, None, None, None].to(mat.dtype), dim=(-3, -2, -1))
+            data = self.parts if self._packed else [self.matrix]
+            data = [x for x in data if x.numel()]
+            s = torch.stack([cost.abs_max(x, (-3, -2, -1)) for x in data]).amax(0)
+            s = s.clamp(min=torch.finfo(s.dtype).tiny)                                        # no overflow
+            sq = sum(torch.linalg.vector_norm(x * s.reciprocal()[:, None, None, None].to(x.dtype),
+                                              dim=(-3, -2, -1)) ** 2 for x in data)
+            return s * sq.sqrt()
 
         def _groups(self):
             """
@@ -586,38 +817,25 @@ class TypeIAlgebra:
             blocks the active blocks of these sectors, shape (batch * len(idx), k, k). Decompositions run as
             one batched call per distinct block size (one call in total when all sectors have the same size).
             """
-            mat = self.matrix
             alg = self.algebra
-            out = []
-            for k, idx in alg._size_groups():
-                x = mat[:, alg._sel(idx), :k, :k]          # a view when the sectors are contiguous
-                out.append((k, idx, x.reshape(-1, k, k)))
-            return out
+            return [(k, idx, x.reshape(-1, k, k))            # views when the sectors are contiguous or packed
+                    for (k, idx), x in zip(alg._size_groups(), self.parts)]
 
         def operator_norm(self) -> torch.Tensor:
             # largest singular value over the active blocks (exact; the padding is skipped)
             if self.is_self_adjoint:                       # from the extreme eigenvalues (cached, no SVD)
                 return torch.maximum(self.lambda_max.abs(), self.lambda_min.abs())
-            B = self.matrix.shape[0]
+            B = self.batch_size
             norms = [_fc.singular_values(x)[..., 0].reshape(B, -1) for _, _, x in self._groups()]
             if not norms:
-                return torch.zeros(B, dtype=self.matrix.real.dtype, device=self.matrix.device)
+                return torch.zeros(B, dtype=self._real_dtype(), device=self._device())
             return torch.cat(norms, dim=-1).max(dim=-1)[0]
 
         def _blockwise(self, f: Callable[[torch.Tensor], torch.Tensor], what: str) -> torch.Tensor:
             """f applied to the active block of every sector, one call per distinct block size (f acts on a
             stack (n, k, k)); the padding stays zero, so that decompositions and their gradients never see the
             zero singular values of the padding."""
-            mat = self.matrix
-            B = mat.shape[0]
-            sel = self.algebra._sel
-            groups = self._groups()
-            if len(groups) == 1 and groups[0][0] == self.algebra.k_max and len(groups[0][1]) == self.algebra.C:
-                return f(groups[0][2]).reshape(mat.shape)    # no padding: no scatter
-            out = torch.zeros_like(mat)
-            for k, idx, x in groups:
-                out[:, sel(idx), :k, :k] = f(x).reshape(B, len(idx), k, k)
-            return out
+            return self._assemble([f(x) for _, _, x in self._groups()])
 
         def inverse(self, tol: Optional[float] = None) -> 'TypeIAlgebra.Operator':
             """(Pseudo-)inverse by SVD of every block; singular values below tol are treated as zero (default:
@@ -684,15 +902,14 @@ class TypeIAlgebra:
 
             def factors():
                 if not memo:
-                    B, alg = self.matrix.shape[0], self.algebra
-                    w_out, p_out = torch.zeros_like(self.matrix), torch.zeros_like(self.matrix)
-                    for k, idx, x in self._groups():
-                        W_, P_ = _fc.polar(x)
-                        w_out[:, alg._sel(idx), :k, :k] = W_.reshape(B, len(idx), k, k)
-                        p_out[:, alg._sel(idx), :k, :k] = P_.reshape(B, len(idx), k, k)
-                    memo['W'], memo['P'] = w_out, p_out
+                    WP = [_fc.polar(x) for _, _, x in self._groups()]
+                    memo['W'] = self._assemble([w for w, _ in WP])
+                    memo['P'] = self._assemble([p for _, p in WP])
                 return memo
-            W = TypeIAlgebra.Operator(self.algebra, generator=lambda: factors()['W'].detach())
+
+            def detached(d):
+                return [x.detach() for x in d] if isinstance(d, list) else d.detach()
+            W = TypeIAlgebra.Operator(self.algebra, generator=lambda: detached(factors()['W']))
             P = TypeIAlgebra.Operator(self.algebra, generator=lambda: factors()['P'])
             W._is_normal = None
             P._is_self_adjoint = P._is_positive = P._is_normal = True
@@ -725,8 +942,8 @@ class TypeIAlgebra:
                 raise RuntimeError("trace_a_log_a requires positive operator")
             # eigenvalues of the active blocks only (the zero padding must not contribute), computed once and
             # also used for the positivity check if that is not known; values below tol count as exact zeros
-            B = self.matrix.shape[0]
-            out = torch.zeros(B, dtype=self.matrix.real.dtype, device=self.matrix.device)
+            B = self.batch_size
+            out = torch.zeros(B, dtype=self._real_dtype(), device=self._device())
             mins = []
             for k_c, _, x in self._groups():
                 S = cost.batched_call(torch.linalg.eigvalsh, 0.5 * (x + x.conj().transpose(-2, -1)),
@@ -783,13 +1000,13 @@ class TypeIAlgebra:
             self._compatible(other, '+')
             sa = True if (self._is_self_adjoint and other._is_self_adjoint) else None
             pos = True if (self._is_positive and other._is_positive) else None
-            return self._derived(lambda: self.matrix + other.matrix, other, self_adjoint=sa, positive=pos,
+            return self._derived(lambda: self._zip(other, torch.add), other, self_adjoint=sa, positive=pos,
                                  normal=True if sa else None)
 
         def __matmul__(self, other: 'TypeIAlgebra.Operator') -> 'TypeIAlgebra.Operator':
             self._compatible(other, '@')
             inv = True if (self._is_invertible and other._is_invertible) else None
-            return self._derived(lambda: torch.matmul(self.matrix, other.matrix), other, invertible=inv)
+            return self._derived(lambda: self._zip(other, torch.matmul), other, invertible=inv)
 
         def __mul__(self, scalar: Union[float, complex, torch.Tensor]) -> 'TypeIAlgebra.Operator':
             """Multiplication by a number, or by a tensor of shape (batch,) holding one number per sample."""
@@ -800,13 +1017,15 @@ class TypeIAlgebra:
             if not self.algebra.complex_valued and (
                     isinstance(scalar, complex) or (isinstance(scalar, torch.Tensor) and torch.is_complex(scalar))):
                 raise ValueError("complex scalar in a real algebra")
-            def scaled():
-                m = self.matrix
+            def scale(m):
                 if isinstance(scalar, torch.Tensor):     # keep the algebra's dtype (no promotion to float64)
                     sc = scalar.to(m.device)
                     sc = sc.to(m.dtype if torch.is_complex(sc) else m.real.dtype)
                     return m * sc
                 return m * scalar
+
+            def scaled():
+                return self._map(scale)
             real = isinstance(scalar, (int, float)) or (isinstance(scalar, torch.Tensor) and not torch.is_complex(scalar))
             nonneg = isinstance(scalar, (int, float)) and scalar >= 0
             nonzero = isinstance(scalar, (int, float, complex)) and scalar != 0
@@ -825,14 +1044,16 @@ class TypeIAlgebra:
         def __sub__(self, other: 'TypeIAlgebra.Operator') -> 'TypeIAlgebra.Operator':
             self._compatible(other, '-')
             sa = True if (self._is_self_adjoint and other._is_self_adjoint) else None
-            return self._derived(lambda: self.matrix - other.matrix, other, self_adjoint=sa, normal=True if sa else None)
+            return self._derived(lambda: self._zip(other, torch.sub), other, self_adjoint=sa,
+                                 normal=True if sa else None)
 
         def __neg__(self) -> 'TypeIAlgebra.Operator':
-            return self._derived(lambda: -self.matrix, self_adjoint=self._is_self_adjoint, normal=self._is_normal,
+            return self._derived(lambda: self._map(torch.neg), self_adjoint=self._is_self_adjoint, normal=self._is_normal,
                                  invertible=self._is_invertible)
 
         def adjoint(self) -> 'TypeIAlgebra.Operator':
-            return self._derived(lambda: self.matrix.conj().transpose(-2, -1), self_adjoint=self._is_self_adjoint,
+            return self._derived(lambda: self._map(lambda m: m.conj().transpose(-2, -1)),
+                                 self_adjoint=self._is_self_adjoint,
                                  normal=self._is_normal, positive=self._is_positive,
                                  invertible=self._is_invertible, projection=self._is_projection)
 
@@ -844,16 +1065,17 @@ class TypeIAlgebra:
             """
             if list(algebra.k_factors) != list(self.algebra.k_factors):
                 raise ValueError("cast: the sector structure must agree")
-            mat = self.matrix
-            if torch.is_complex(mat) and not algebra.complex_valued:
-                if mat.imag.abs().max() > 1e-6 * max(1.0, cost.abs_max(mat).item()):
+            data = self._canonical()
+            if torch.is_complex(data[0] if isinstance(data, list) else data) and not algebra.complex_valued:
+                if self._amax(lambda m: m.imag) > 1e-6 * max(1.0, self._amax().item()):
                     raise ValueError("operator has a non-negligible imaginary part; the target algebra is real")
-                mat = mat.real
+                data = [x.real for x in data] if isinstance(data, list) else data.real
+            conv = lambda x: x.to(dtype=algebra.dtype, device=algebra.hilbert.device)
             out = type(self).__new__(type(self))
             out.__dict__.update(self.__dict__)
             out.algebra = algebra
-            out._matrix = mat.to(dtype=algebra.dtype, device=algebra.hilbert.device)
-            out._is_materialized = True
+            out._matrix = out._parts = None
+            out._store([conv(x) for x in data] if isinstance(data, list) else conv(data))
             out._generator = None
             out._lambda_max = out._lambda_min = out._trace = out._inverse = out._abs = None
             out._eigenvalues = None
@@ -870,13 +1092,13 @@ class TypeIAlgebra:
             """
             if not self.is_self_adjoint:
                 raise RuntimeError("eigh requires a self-adjoint operator")
-            if self._caching() and not (self.matrix.requires_grad and torch.is_grad_enabled()):
+            if self._caching() and not (self._requires_grad() and torch.is_grad_enabled()):
                 return self._from_cache(lambda wv: wv)
             return self._per_sector(lambda x: cost.batched_call(torch.linalg.eigh, x, f"eigh (blocks of size {x.shape[-1]})"))
 
         def _from_cache(self, pick):
             """Per-sector results pick((w, V)) from the cached Hermitian decomposition."""
-            B = self.matrix.shape[0]
+            B = self.batch_size
             res = [None] * self.algebra.C
             for k, idx, x, (w, V) in self._decompositions('hermitian'):
                 y = pick((w, V))
@@ -885,18 +1107,19 @@ class TypeIAlgebra:
                 for j, c in enumerate(idx):
                     r = tuple(p[:, j] for p in parts)
                     res[c] = r if isinstance(y, tuple) else r[0]
-            mat = self.matrix
             for c, k_c in enumerate(self.algebra.k_factors):
                 if k_c == 0:
-                    e = torch.linalg.eigh(mat[:, c, :0, :0])
+                    e = torch.linalg.eigh(self._empty_block())
                     res[c] = pick((e[0], e[1]))
             return res
+
+        def _empty_block(self) -> torch.Tensor:
+            return torch.zeros(self.batch_size, 0, 0, dtype=self._dtype(), device=self._device())
 
         def _per_sector(self, fn):
             """fn on the stacked blocks of each size group, split back into one result per sector (tuples
             of tensors with leading dimensions (batch, ...)); empty sectors give empty tensors."""
-            mat = self.matrix
-            B = mat.shape[0]
+            B = self.batch_size
             res = [None] * self.algebra.C
             for k, idx, x in self._groups():
                 y = fn(x)
@@ -907,7 +1130,7 @@ class TypeIAlgebra:
                     res[c] = r if isinstance(y, tuple) else r[0]
             for c, k_c in enumerate(self.algebra.k_factors):
                 if k_c == 0:                                  # keep the old behaviour for empty sectors
-                    res[c] = fn(mat[:, c, :0, :0])
+                    res[c] = fn(self._empty_block())
             return res
 
         def eigenvalues(self) -> List[torch.Tensor]:
@@ -921,7 +1144,7 @@ class TypeIAlgebra:
             if self._eigenvalues is not None and self._batch is not None:   # spectrum known by construction
                 return [torch.broadcast_to(e.real if torch.is_complex(e) else e, (self._batch, k)).sort(dim=-1).values
                         for e, k in zip(self._eigenvalues, self.algebra.k_factors)]
-            if self._caching() and not (self.matrix.requires_grad and torch.is_grad_enabled()):
+            if self._caching() and not (self._requires_grad() and torch.is_grad_enabled()):
                 return self._from_cache(lambda wv: wv[0])
             return self._per_sector(lambda x: cost.batched_call(torch.linalg.eigvalsh, x,
                                                                 f"eigvalsh (blocks of size {x.shape[-1]})"))
@@ -953,8 +1176,8 @@ class TypeIAlgebra:
             return self._cache_on or _fc_cache_enabled()
 
         def _cache_key(self):
-            m = self.matrix
-            return (id(m), m._version)
+            data = self._canonical()
+            return tuple((id(m), m._version) for m in (data if isinstance(data, list) else [data]))
 
         def _cache_valid(self, c) -> bool:
             return c['key'] == self._cache_key()
@@ -1008,7 +1231,7 @@ class TypeIAlgebra:
                 else:
                     raise RuntimeError("apply_function requires a self-adjoint or normal operator "
                                        "(use holomorphic_function for other operators)")
-                B = self.matrix.shape[0]
+                B = self.batch_size
                 parts = []
                 for k_c, idx, x, wv in self._decompositions(kind):
                     n = len(idx)
@@ -1022,15 +1245,13 @@ class TypeIAlgebra:
                     y = _fc.spectral_apply(x, f_values, kind, decomposition=wv)
                     parts.append((k_c, idx, y))
                 cplx = any(torch.is_complex(y) for _, _, y in parts)
-                out_dtype = self.matrix.dtype
-                if cplx and not torch.is_complex(self.matrix):
+                out_dtype = self._dtype()
+                if cplx and not out_dtype.is_complex:
                     big = torch.stack([y.detach().imag.abs().amax() for _, _, y in parts if torch.is_complex(y)]).amax()
                     if bool(big > self._tol_t()):                # one synchronisation (validation)
                         raise ValueError("complex-valued f(A) requires a complex-valued algebra")
-                out = torch.zeros(self.matrix.shape, dtype=out_dtype, device=self.matrix.device)
-                for k_c, idx, y in parts:
-                    y = y.real if torch.is_complex(y) and not torch.is_complex(out) else y
-                    out[:, alg._sel(idx), :k_c, :k_c] = y.to(out_dtype).reshape(B, len(idx), k_c, k_c)
+                ys = [y.real if torch.is_complex(y) and not out_dtype.is_complex else y for _, _, y in parts]
+                out = self._assemble(ys, dtype=out_dtype)
                 result._is_normal = True                       # f(A) of a normal A is normal
                 if kind == 'hermitian' and not cplx:
                     result._is_self_adjoint = True
@@ -1059,15 +1280,14 @@ class TypeIAlgebra:
             result = None
 
             def generator():
-                out = torch.zeros_like(self.matrix)
-                B = out.shape[0]
                 error = 0.0
+                ys = []
                 for k_c, idx, x in self._groups():
                     y, err = _fc.holomorphic(x, f, center, radius, nodes, max_nodes, rtol, atol=atol)
                     error = max(error, err)
-                    out[:, alg._sel(idx), :k_c, :k_c] = y.to(out.dtype).reshape(B, len(idx), k_c, k_c)
+                    ys.append(y)
                 result.contour_error = error
-                return out
+                return self._assemble(ys, dtype=self._dtype())
             result = self._derived(generator)
             return result
 
@@ -1113,11 +1333,13 @@ class TypeIAlgebra:
         def _weighted_trace(self, name: str) -> torch.Tensor:
             """sum_c w_c Tr(A_c), in the number field of the algebra (complex for complex algebras); the weights are
             cached on the algebra."""
-            tr_c = torch.diagonal(self.matrix, dim1=-2, dim2=-1).sum(-1)          # (batch, C), padding = 0
-            return (tr_c * self.algebra._const(name, self.matrix.real.dtype)).sum(-1)
+            tr_c = self.sector_traces()                                            # (batch, C), padding = 0
+            return (tr_c * self.algebra._const(name, self._real_dtype())).sum(-1)
 
         def Tr_blunt(self) -> torch.Tensor:
             """sum_c Tr(A_c)."""
+            if self._packed:
+                return sum(torch.diagonal(p, dim1=-2, dim2=-1).sum((-2, -1)) for p in self.parts)
             return torch.diagonal(self.matrix, dim1=-2, dim2=-1).sum((-2, -1))
 
         def Tr_norm(self) -> torch.Tensor:
@@ -1133,7 +1355,7 @@ class TypeIAlgebra:
             if not self._is_materialized:   # do not trigger materialisation
                 return f"Operator(C={self.algebra.C}, k_max={self.algebra.k_max}, lazy)"
             mem = self._bytes_held / 1024
-            return f"Operator({tuple(self._matrix.shape)}, materialized, {mem:.1f}KB)"
+            return f"Operator({tuple(self.shape)}, {self.algebra.layout}, materialized, {mem:.1f}KB)"
 
     # ========================================================================
     # Factory Methods
@@ -1150,8 +1372,8 @@ class TypeIAlgebra:
         force_invertible: Optional[bool] = None,
         force_projection: Optional[bool] = None,
     ) -> Operator:
-        cost.check_memory(4 * cost.tensor_bytes((batch_size, self.C, self.k_max, self.k_max), self.hilbert.dtype),
-                          self.hilbert.device, f"operator_from_eigenvalues(batch={batch_size})")
+        cost.check_memory(4 * self.bytes_per_operator(batch_size), self.hilbert.device,
+                          f"operator_from_eigenvalues(batch={batch_size})")
         if unitary_measure not in self.UNITARY_MEASURES:
             raise ValueError(f"Unknown measure: {unitary_measure}. Choose from {self.UNITARY_MEASURES}")
         all_eig = []
@@ -1238,8 +1460,7 @@ class TypeIAlgebra:
 
         def generator():
             # one random_unitary call per distinct block size, for all sectors of that size at once
-            mat = torch.zeros(batch_size, self.C, self.k_max, self.k_max, dtype=self.hilbert.dtype,
-                              device=self.hilbert.device)
+            parts = []
             for k, idx in self._size_groups():
                 eig = torch.stack([torch.broadcast_to(all_eig[c], (batch_size, k)) for c in idx], dim=1)
                 U = self.random_unitary(k, measure=unitary_measure, batch_size=batch_size * len(idx))
@@ -1252,10 +1473,8 @@ class TypeIAlgebra:
                 elif any(real):
                     m = torch.tensor(real, device=A.device)
                     A = torch.where(m[:, None, None], 0.5 * (A + A.mH), A)
-                if k == self.k_max and len(idx) == self.C:
-                    return A                                 # one group without padding: no copy
-                mat[:, self._sel(idx), :k, :k] = A
-            return mat
+                parts.append(A)
+            return parts
 
         op = self.Operator(self, generator=generator)
         op._batch = batch_size
@@ -1288,9 +1507,34 @@ class TypeIAlgebra:
         if tuple(matrix.shape[1:]) != expected:
             raise ValueError(f"expected shape (batch, {self.C}, {self.k_max}, {self.k_max}), got {tuple(matrix.shape)}")
         mat = self._to_field(matrix, "matrix")
-        if any(k_c < self.k_max for k_c in self.k_factors):     # the padding must be zero (one mask product)
-            mat = mat * self._const('block_mask', torch.bool)
-        op = self.Operator(self, matrix=mat, **properties)
+        if self._packed:                                        # the padding is dropped
+            op = self.Operator(self, parts=self._unpad(mat, copy=True), **properties)
+        else:
+            if any(k_c < self.k_max for k_c in self.k_factors):     # the padding must be zero (one mask product)
+                mat = mat * self._const('block_mask', torch.bool)
+            op = self.Operator(self, matrix=mat, **properties)
+        if validate:
+            op._validate_properties()
+        return op
+
+    def from_parts(self, parts: List[torch.Tensor], validate: bool = False, **properties) -> Operator:
+        """
+        Operator from its blocks grouped by size: one tensor (batch, n_g, k_g, k_g) (or (n_g, k_g, k_g)) per entry
+        (k_g, idx) of size_groups, holding the blocks of the sectors idx in this order. The packed layout keeps them
+        as they are; flags as for operator().
+        """
+        groups = self._size_groups_cache
+        if len(parts) != len(groups):
+            raise ValueError(f"from_parts: need {len(groups)} tensors (one per block size), got {len(parts)}")
+        out = []
+        for (k, idx), x in zip(groups, parts):
+            x = _as_tensor(x)
+            x = x if x.dim() == 4 else x.unsqueeze(0)
+            if tuple(x.shape[1:]) != (len(idx), k, k):
+                raise ValueError(f"from_parts: expected shape (batch, {len(idx)}, {k}, {k}) for the blocks of size {k}, "
+                                 f"got {tuple(x.shape)}")
+            out.append(self._to_field(x, f"blocks of size {k}"))
+        op = self.Operator(self, parts=out, **properties)
         if validate:
             op._validate_properties()
         return op
@@ -1302,12 +1546,12 @@ class TypeIAlgebra:
         blocks = [_as_tensor(b) for b in blocks]
         blocks = [b if b.dim() == 3 else b.unsqueeze(0) for b in blocks]
         batch = max(b.shape[0] for b in blocks)
-        mat = torch.zeros(batch, self.C, self.k_max, self.k_max, dtype=self.hilbert.dtype, device=self.hilbert.device)
         for c, (b, k_c) in enumerate(zip(blocks, self.k_factors)):
             if tuple(b.shape[-2:]) != (k_c, k_c):
                 raise ValueError(f"block {c} has shape {tuple(b.shape[-2:])}, expected ({k_c}, {k_c})")
-            mat[:, c, :k_c, :k_c] = self._to_field(b, f"block {c}")
-        return self.Operator(self, matrix=mat)
+        blocks = [self._to_field(b, f"block {c}") for c, b in enumerate(blocks)]
+        parts = [torch.stack([blocks[c].expand(batch, k, k) for c in idx], dim=1) for k, idx in self._size_groups()]
+        return self.Operator(self, parts=parts)
 
     def random_unitary_operator(self, batch_size: int = 1, measure: str = 'haar') -> Operator:
         """
@@ -1317,15 +1561,9 @@ class TypeIAlgebra:
         if measure not in self.UNITARY_MEASURES:
             raise ValueError(f"Unknown measure: {measure}. Choose from {self.UNITARY_MEASURES}")
 
-        def generator():
-            mat = torch.zeros(batch_size, self.C, self.k_max, self.k_max,
-                              dtype=self.hilbert.dtype, device=self.hilbert.device)
-            for k, idx in self._size_groups():          # one call per distinct block size
-                U = self.random_unitary(k, measure=measure, batch_size=batch_size * len(idx))
-                if k == self.k_max and len(idx) == self.C:
-                    return U.reshape(batch_size, self.C, k, k)
-                mat[:, self._sel(idx), :k, :k] = U.reshape(batch_size, len(idx), k, k)
-            return mat
+        def generator():                                 # one call per distinct block size
+            return [self.random_unitary(k, measure=measure, batch_size=batch_size * len(idx))
+                    .reshape(batch_size, len(idx), k, k) for k, idx in self._size_groups()]
         op = self.Operator(self, generator=generator)
         op._batch = batch_size
         op._is_normal = True
@@ -1336,6 +1574,8 @@ class TypeIAlgebra:
         """The unit of the algebra. Its matrix is a read-only expanded view of a cached (C, k_max, k_max) tensor
         (no memory per sample); clone it before modifying it in place."""
         def generator():
+            if self._packed:
+                return [e.expand(batch_size, -1, -1, -1) for e in self._eye_parts()]
             return self._const('eye').unsqueeze(0).expand(batch_size, -1, -1, -1)
         op = self.Operator(self, generator=generator)
         op._batch = batch_size
@@ -1349,6 +1589,9 @@ class TypeIAlgebra:
     def zero(self, batch_size: int = 1) -> Operator:
         shape = (batch_size, self.C, self.k_max, self.k_max)
         def generator():
+            if self._packed:
+                return [torch.zeros(batch_size, len(idx), k, k, dtype=self.hilbert.dtype, device=self.hilbert.device)
+                        for k, idx in self._size_groups()]
             return torch.zeros(shape, dtype=self.hilbert.dtype, device=self.hilbert.device)
         op = self.Operator(self, generator=generator)
         op._batch = batch_size
@@ -1385,6 +1628,8 @@ class TypeIAlgebra:
         V = self._to_field(V, "central values")                              # (B, C)
 
         def generator():
+            if self._packed:
+                return [v[:, :, None, None] * e for v, e in zip(self._from_sectors(V), self._eye_parts())]
             return V[:, :, None, None] * self._const('eye')
         op = self.Operator(self, generator=generator)
         op._batch = B

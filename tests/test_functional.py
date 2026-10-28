@@ -188,7 +188,8 @@ class TestCache:
     def test_invalidated_by_in_place_change(self, alg):
         A = alg.operator_from_eigenvalues(lambda d: 1 + torch.rand(1, d), force_positive=True).cache_spectrum()
         before = A.sqrt().matrix
-        A.matrix.mul_(4.0)                                 # in-place change of the stored matrix
+        for x in (A.parts if A._packed else [A.matrix]):   # in-place change of the stored tensors
+            x.mul_(4.0)
         assert close(A.sqrt().matrix, 2 * before)
 
     def test_propagators_reuse_the_decomposition(self, alg, monkeypatch):
