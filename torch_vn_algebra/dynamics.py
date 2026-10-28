@@ -10,6 +10,8 @@ Exact solvers (time-independent generators):
 Fixed-step RK4 solvers (any generator, also time dependent):
     rk4, schrodinger_rk4, lindblad_evolve, solve_operator_ode
 lindblad_evolve(method='kraus' | 'exact'): time steps that are channels (CPTP) for every step size
+Quantum trajectories (Monte Carlo wave functions, a batch of pure states with jumps inside and between sectors):
+    trajectories -> Trajectories (states, expectation values, the averaged density matrix)
 """
 from typing import Callable, List, Optional, Sequence, Union
 
@@ -759,3 +761,239 @@ def lindblad_channel(alg: TypeIAlgebra, H: Optional[OperatorLike], jumps: Sequen
     ch = Channel.from_superoperator(alg, S)
     ch._trace_preserving = True                   # exp(tL) of a GKSL generator is trace preserving
     return ch
+
+
+
+# ----------------------------------------------------------------------
+# Quantum trajectories (Monte Carlo wave functions)
+# ----------------------------------------------------------------------
+class Trajectories:
+    """
+    Result of `trajectories`: N pure-state trajectories psi_b(t) of a Lindblad equation on M = (+)_c M_{k_c}.
+
+    times (T,); states (T, N, C, k_max): the normalised state vectors at the grid times (block layout, zero padding);
+    n_jumps (N,): the number of jumps of every trajectory; jumps: [(t, trajectory indices, jump indices)], one entry
+    per substep with jumps (jump indices count the jump operators in the order given, the Kraus operators of an
+    InterSectorChannel one after another). The average of |psi_b><psi_b| over b, restricted to the blocks of M,
+    converges to the solution rho(t) of the Lindblad equation (density); expectation values per trajectory give
+    error bars (mean).
+    """
+
+    def __init__(self, algebra: TypeIAlgebra, times: torch.Tensor, states: torch.Tensor, n_jumps: torch.Tensor,
+                 jumps: list):
+        self.algebra, self.times, self.states, self.n_jumps, self.jumps = algebra, times, states, n_jumps, jumps
+
+    @property
+    def n_traj(self) -> int:
+        return self.states.shape[1]
+
+    def __repr__(self) -> str:
+        return (f"Trajectories(n_traj={self.n_traj}, times={len(self.times)}, mean jumps="
+                f"{self.n_jumps.double().mean().item():.2f})")
+
+    def expectation(self, A: Operator) -> torch.Tensor:
+        """<psi_b(t)|A|psi_b(t)> for every time and trajectory, shape (T, N) (real for self-adjoint A)."""
+        T, N = self.states.shape[:2]
+        psi = self.states.reshape(T * N, *self.states.shape[2:])
+        Apsi = _apply_vec(A, psi)
+        val = (psi.conj().to(Apsi.dtype) * Apsi).sum(dim=(-2, -1)).reshape(T, N)
+        return val.real if A._is_self_adjoint else val
+
+    def mean(self, A: Operator):
+        """Mean of <A> over the trajectories and its standard error, two tensors of shape (T,)."""
+        v = self.expectation(A)
+        return v.mean(1), v.std(1) / max(self.n_traj, 1) ** 0.5
+
+    def density(self, i: int = -1) -> DensityMatrix:
+        """The average over the trajectories of |psi_b><psi_b| at the i-th time, restricted to the blocks of M (a
+        DensityMatrix of batch 1)."""
+        alg = self.algebra
+        psi = self.states[i]                                              # (N, C, k_max)
+        N = psi.shape[0]
+        blocks = [torch.einsum('bi,bj->ij', psi[:, c, :k], psi[:, c, :k].conj()) / N
+                  for c, k in enumerate(alg.k_factors)]
+        dt = psi.dtype
+        blocks = [b.to(dt) for b in blocks]
+        parts = [torch.stack([blocks[c] for c in idx])[None] for k, idx in alg.size_groups]
+        return DensityMatrix(alg, parts=parts, validate=False)
+
+    def densities(self) -> List[DensityMatrix]:
+        return [self.density(i) for i in range(len(self.times))]
+
+
+def _sample_pure_states(rho: Operator, n: int, generator=None) -> torch.Tensor:
+    """n state vectors (n, C, k_max) drawn from the spectral decomposition of the state rho (batch 1): sector c and
+    eigenvector a with probability w_{c,a}, so that the average of |psi><psi| is rho."""
+    alg = rho.algebra
+    if rho.batch_size != 1:
+        raise ValueError("trajectories: the initial state must have batch 1 (or pass state vectors)")
+    ws, vs, where = [], [], []
+    for c, (w, V) in enumerate(rho.eigh()):
+        if w.numel():
+            ws.append(w[0].clamp(min=0))
+            vs.append(V[0])
+            where += [(c, a) for a in range(w.shape[-1])]
+    p = torch.cat(ws).to(torch.float64)
+    pick = torch.multinomial(p / p.sum(), n, replacement=True, generator=generator).tolist()
+    psi = torch.zeros(n, alg.C, alg.k_max, dtype=alg.dtype, device=alg.hilbert.device)
+    starts = [0]
+    for w in ws:
+        starts.append(starts[-1] + w.shape[0])
+    for b, j in enumerate(pick):
+        s = next(i for i in range(len(ws)) if starts[i] <= j < starts[i + 1])
+        c, a = where[j]
+        psi[b, c, :alg.k_factors[c]] = vs[s][:, a]
+    return psi
+
+
+def _jump_maps(plain, inter, alg: TypeIAlgebra, dtype, device):
+    """The jump operators as maps of state vectors (N, C, k_max) -> (N, C, k_max), with their rates."""
+    maps = []
+    for g, L in list(plain) + list(inter):
+        b = L.val.shape[0] if isinstance(L, SectorJump) else L.kraus.shape[0] if isinstance(L, InterSectorChannel) \
+            else _batch_of(L)
+        if b != 1:
+            raise ValueError("trajectories: jump operators must have batch 1 (the same jumps for every trajectory)")
+    for g, L in plain:
+        op = L if isinstance(L, Operator) else _jump_operator(_mat(L, alg), alg)
+        maps.append((g, (lambda op_: lambda psi: _apply_vec(op_, psi).to(dtype))(op)))
+    for g, L in inter:
+        if isinstance(L, SectorJump):
+            src = torch.nonzero(L._live.reshape(-1)).squeeze(-1)          # (c, a) on the support
+            dst = L._flat_rows.reshape(-1)[src]
+            val = L.val.reshape(L.val.shape[0], -1)[:, src].to(device=device, dtype=dtype)
+
+            def f(psi, src=src, dst=dst, val=val):
+                flat = psi.reshape(psi.shape[0], -1)
+                out = torch.zeros_like(flat)
+                out.index_add_(1, dst, flat[:, src] * val)
+                return out.reshape(psi.shape)
+            maps.append((g, f))
+            continue
+        K = L.kraus.to(device=device, dtype=dtype)                        # (B, r, D, C, m, k)
+        for i in range(K.shape[1]):
+            maps.append((g, (lambda Ki: lambda psi: torch.einsum('bdcmk,bck->bdm', Ki, psi))(K[:, i])))
+    return maps
+
+
+def trajectories(psi0, H: Optional[Operator], jumps: Sequence = (), times=(0.0, 1.0),
+                 rates: Optional[Sequence[float]] = None, n_traj: Optional[int] = None, substeps: int = 20,
+                 generator: Optional[torch.Generator] = None, progress: bool = False) -> Trajectories:
+    """
+    Quantum trajectories (Monte Carlo wave functions) of the Lindblad equation of lindblad_rhs with constant H and
+    jumps: a batch of pure states, each evolving with the non-Hermitian H_eff = H - i/2 sum_j g_j L_j^* L_j and
+    jumping psi -> L_j psi / ||L_j psi|| (waiting-time algorithm of Dalibard, Castin and Moelmer 1992: a jump happens
+    when ||psi||^2 falls below a uniform random number; the jump is j with probability proportional to
+    g_j ||L_j psi||^2). The average of |psi><psi| over the trajectories converges to rho(t) with statistical error
+    O(N^{-1/2}).
+
+    psi0: state vectors (N, C, k_max) or (C, k_max) in the block layout (normalised here), or a DensityMatrix of
+        batch 1, from whose spectral decomposition n_traj pure states are drawn.
+    jumps: Operators of the algebra (jumps inside the sectors), SectorJumps and InterSectorChannels (every Kraus
+        operator a jump; jumps between sectors), with rates g_j (default 1).
+    The no-jump evolution is exact (exp(-i h H_eff) per block size, computed once per step size h); a jump is
+    located at the end of the step h in which the norm crosses the random threshold, so jump times carry an error
+    O(h) (h = interval / substeps): increase substeps until the averages no longer change. Every trajectory stays
+    in the algebra's blocks; jumps between sectors move it to another sector. Returns a Trajectories object.
+    """
+    if callable(H) and not isinstance(H, Operator):
+        raise ValueError("trajectories: time-dependent Hamiltonians are not supported (use lindblad_evolve)")
+    plain, inter, timedep, alg = _lindblad_terms(H, jumps, rates, None)
+    if timedep:
+        raise ValueError("trajectories: time-dependent jump operators are not supported (use lindblad_evolve)")
+    if isinstance(psi0, Operator):
+        alg = alg or psi0.algebra
+        if n_traj is None:
+            raise ValueError("trajectories: give n_traj when the initial state is a density matrix")
+        psi = _sample_pure_states(psi0, n_traj, generator)
+    else:
+        if alg is None:
+            raise ValueError("trajectories: need an algebra (from H or a jump operator given as an Operator)")
+        psi = torch.as_tensor(psi0)
+        psi = psi.unsqueeze(0) if psi.dim() == 2 else psi
+        if n_traj is not None and psi.shape[0] == 1:
+            psi = psi.expand(n_traj, -1, -1)
+        psi = psi.to(device=alg.hilbert.device, dtype=torch.promote_types(psi.dtype, alg.dtype))
+    if alg is None:
+        alg = psi0.algebra
+    if tuple(psi.shape[1:]) != (alg.C, alg.k_max):
+        raise ValueError(f"trajectories: state vectors must have shape (N, {alg.C}, {alg.k_max}), got {tuple(psi.shape)}")
+    _require_complex(alg)
+    dtype = torch.promote_types(alg.dtype, torch.complex64)
+    dev = alg.hilbert.device
+    psi = (psi * alg._const('rows').to(dev)).to(dtype)                   # the padding is not part of psi
+    psi = psi / torch.linalg.vector_norm(psi, dim=(-2, -1), keepdim=True).to(dtype)
+    psi = psi.clone()
+    N = psi.shape[0]
+    ts = _times(times, 'cpu').tolist()
+    if any(b < a for a, b in zip(ts[:-1], ts[1:])):
+        raise ValueError("trajectories: times must be nondecreasing")
+    Hm, A, _, _, _ = _lindblad_parts(H, plain, inter, alg, ts[0], dtype, dev)
+    maps = _jump_maps(plain, inter, alg, dtype, dev)
+    rate = torch.tensor([g for g, _ in maps], dtype=torch.float64, device=dev)
+    masks = [None] * len(alg._slab_groups()) if alg._packed else [alg._const('block_mask', torch.bool).to(dev)]
+    props = {}
+
+    def propagator_h(h):                                              # exp(-i h H_eff) on the slabs
+        if h not in props:
+            Us = []
+            for s, mask in enumerate(masks):
+                G = None
+                if Hm is not None:
+                    G = (-1j * h) * Hm[s]
+                if A is not None:
+                    G = -0.5 * h * A[s] if G is None else G - 0.5 * h * A[s]
+                if G is None:
+                    Us.append(None)
+                    continue
+                k = G.shape[-1]
+                U = cost.batched_call(torch.linalg.matrix_exp, G.reshape(-1, k, k), "exp(-i h H_eff)",
+                                      kind='expm').reshape(G.shape)
+                Us.append(U if mask is None else U * mask)
+            props[h] = Us
+        return props[h]
+
+    def evolve(psi, Us):
+        if alg._packed:
+            out = torch.zeros_like(psi)
+            for (k, idx), U in zip(alg.size_groups, Us):
+                sel = alg._sel(idx)
+                out[:, sel, :k] = psi[:, sel, :k] if U is None else (U @ psi[:, sel, :k, None]).squeeze(-1)
+            return out
+        return psi if Us[0] is None else (Us[0] @ psi.unsqueeze(-1)).squeeze(-1)
+
+    def uniform(n):
+        return torch.rand(n, generator=generator, dtype=torch.float64).to(dev)
+
+    r = uniform(N)
+    n_jumps = torch.zeros(N, dtype=torch.long, device=dev)
+    log = []
+    out = [psi.clone()]
+    timer = cost.StepTimer(max(len(ts) - 1, 0) * substeps, "trajectories", progress)
+    for ta, tb in zip(ts[:-1], ts[1:]):
+        h = (tb - ta) / substeps
+        Us = propagator_h(h)
+        for s_ in range(substeps):
+            psi = evolve(psi, Us)
+            nrm2 = (psi.abs() ** 2).sum(dim=(-2, -1)).to(torch.float64)
+            idx = crossed = torch.nonzero(nrm2 < r).squeeze(-1)
+            if idx.numel() and maps:
+                phi = psi[idx] / nrm2[idx].sqrt()[:, None, None].to(dtype)
+                cand = torch.stack([f(phi) for _, f in maps])             # (J, n, C, k_max)
+                w = (cand.abs() ** 2).sum(dim=(-2, -1)).to(torch.float64).T * rate   # (n, J)
+                tot = w.sum(-1)
+                ok = tot > 0
+                if ok.any():
+                    idx, w, cand, tot = idx[ok], w[ok], cand[:, ok], tot[ok]
+                    j = torch.multinomial(w / tot[:, None], 1, generator=generator).squeeze(-1)
+                    new = cand[j, torch.arange(len(idx), device=dev)]
+                    new = new / torch.linalg.vector_norm(new, dim=(-2, -1), keepdim=True).to(dtype)
+                    psi[idx] = new
+                    n_jumps[idx] += 1
+                    log.append((ta + (s_ + 1) * h, idx, j))
+            if crossed.numel():
+                r[crossed] = uniform(len(crossed))
+            timer.step(psi.device)
+        out.append(psi / torch.linalg.vector_norm(psi, dim=(-2, -1), keepdim=True).to(dtype))
+    timer.close()
+    return Trajectories(alg, torch.tensor(ts, dtype=torch.float64), torch.stack(out), n_jumps, log)
