@@ -22,6 +22,6 @@ __all__ = ["TypeIAlgebra", "Operator", "HilbertSpace", "tensor_product_hilbert",
            "Channel", "InterSectorChannel", "SectorJump", "DensityMatrix", "tensor_product", "fused_tensor_product", "kron", "partial_trace",
            "SpinChain", "SU2Chain", "su2", "Inclusion", "ConditionalExpectation", "inclusions", "Decomposition", "RealStructure", "wedderburn", "commutant_basis", "decompose", "divergences", "SpinFactor", "jordan_algebra_generated", "jordan", "chains", "channels", "composite", "krylov", "cost", "dynamics", "optimize", "states", "functional", "caching", "interop", "learn",
            "measurement", "POVM", "PVM", "Instrument", "projections", "ProjectionMeasure", "spectral_measure",
-           "direct_integral", "DirectIntegral", "anyons", "AnyonChain"]
+           "direct_integral", "DirectIntegral", "anyons", "AnyonChain", "permutational"]
 __version__ = "1.2.0"
 from . import permutational  # noqa: E402  (PermutationalSystem, PermutationalLindbladian)

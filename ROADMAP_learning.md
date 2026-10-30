@@ -1,6 +1,6 @@
 # Quantum channels as neural networks: a roadmap
 
-*Design proposal for the next versions of `torch_vn_algebra` (current release: 1.1.0; 1.2.0 in preparation, see
+*Design proposal for the next versions of `torch_vn_algebra` (current release: 1.2.0, see
 Section 11). Status: discussion draft. Nothing described under "proposed" exists in the library yet, except where a
 status column or Section 11 says otherwise; every code block marked **NOT IMPLEMENTED** is a sketch of an API, not
 working code. References are listed at the end with full bibliographic data; all of them were checked, and items we
