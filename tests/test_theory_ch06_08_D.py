@@ -1734,10 +1734,13 @@ def test_exercise_8_2_exceptional_point(J, g1, g2):
     delta = (g1-g2)/4, and is not diagonalisable at J = |delta|."""
     He = np.array([[-0.5j * g1, J], [J, -0.5j * g2]])
     delta = (g1 - g2) / 4
-    lam = np.sort_complex(np.linalg.eigvals(He))
+    lam = np.linalg.eigvals(He)
     root = np.sqrt(J ** 2 - delta ** 2 + 0j)
-    ref = np.sort_complex(-0.25j * (g1 + g2) + np.array([root, -root]))
-    assert np.abs(lam - ref).max() < 1e-7
+    ref = -0.25j * (g1 + g2) + np.array([root, -root])
+    # match the two spectra without sorting: for J < |delta| both eigenvalues are purely imaginary, and rounding noise
+    # in their real parts (~1e-18) would decide the order of np.sort_complex, which sorts by the real part first
+    dist = np.abs(lam[:, None] - ref[None, :])
+    assert max(dist.min(axis=1).max(), dist.min(axis=0).max()) < 1e-7
     Y = He + 0.25j * (g1 + g2) * np.eye(2)
     assert np.abs(Y @ Y - (J ** 2 - delta ** 2) * np.eye(2)).max() < 1e-15
     if abs(J - abs(delta)) < 1e-15:

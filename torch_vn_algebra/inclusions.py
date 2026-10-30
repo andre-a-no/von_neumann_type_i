@@ -536,7 +536,7 @@ class Inclusion:
         conjugated by u. Its inclusion matrix has entry k_c in row d and column (d, c); dim R = sum lambda_dc^2.
         `commutator_error` checks [iota(N), R] = 0 numerically.
         """
-        lam, k, m = self._lam, self._k(), self._m()
+        lam, k = self._lam, self._k()
         pairs = [(int(d), int(c)) for d, c in zip(*np.nonzero(lam))]       # row-major: ordered by d, then c
         R = _new_algebra(self.M, [lam[d, c] for d, c in pairs], charges=pairs)
         lam_R = np.zeros((self.M.C, len(pairs)), dtype=np.int64)
@@ -769,7 +769,7 @@ class ConditionalExpectation:
         (batch, J, D, m_max, m_max) with J = sum_d m_d sum_c lambda_dc.
         """
         inc = self.inclusion
-        lam, k, m = inc._lam, inc._k(), inc._m()
+        lam, m = inc._lam, inc._m()
         off = inc._offsets()
         dd, rr, cols, cc = [], [], [], []
         for d, c in zip(*np.nonzero(lam)):

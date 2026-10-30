@@ -6,6 +6,12 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 
 ## [Unreleased]
 
+### Fixed
+- `tests/test_theory_ch06_08_D.py::test_exercise_8_2_exceptional_point` matches the two spectra without
+  `np.sort_complex`: for J < |delta| both eigenvalues are purely imaginary, and rounding noise in the real parts
+  decided the sort order (the test failed with NumPy 2.5).
+- `permutational` listed in `__all__`; unused locals and imports removed (`decompose`, `inclusions`, `learn`).
+
 ## [1.2.0] – 2026-10-25
 
 Backward compatible: everything of 1.1.0 works unchanged. New: conversion to QuTiP and dynamiqs, channels and
