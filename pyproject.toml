@@ -53,11 +53,13 @@ Changelog = "https://github.com/andre-a-no/von_neumann_type_i/blob/main/CHANGELO
 
 [project.optional-dependencies]
 scripts = ["scipy", "pandas", "tqdm", "matplotlib", "seaborn", "mpmath"]
-test = ["pytest", "scipy>=1.7", "mpmath", "qutip>=5; python_version >= '3.10'"]   # qutip: interop tests
+test = ["pytest", "scipy>=1.7", "mpmath", "qutip>=5; python_version >= '3.10'",   # qutip: interop tests
+        "python-flint>=0.9; python_version >= '3.10'"]                             # certify tests
+certify = ["python-flint>=0.9", "scipy"]             # torch_vn_algebra.certify (the verifier needs python-flint only)
 interop = ["qutip>=5"]                              # interop.to_qutip etc.; dynamiqs (Python >= 3.10) works too
 
 [tool.setuptools]
-packages = ["torch_vn_algebra"]
+packages = ["torch_vn_algebra", "torch_vn_algebra.certify"]
 
 [tool.setuptools.dynamic]
 version = { attr = "torch_vn_algebra.__version__" }

@@ -1,0 +1,45 @@
+{
+ "about": "Numerical statements of the papers, each tied to a certificate. tests/test_certified_claims.py checks every entry. kind: 'rounded' = the printed number is V(delta) rounded as printed (both ends of [L, U] must round to it); 'lower' = the printed number is only claimed as a lower bound (it must be <= U).",
+ "claims": [
+  {
+   "id": "trace-characterizations/table/item14/delta=1/10",
+   "source": "man/article/generated/trace_characterizations.tex",
+   "macro": "TCVHolderTenth",
+   "printed": "2.8\\times10^{-4}",
+   "kind": "rounded",
+   "certificate": "certificates/holder_projections_alpha3_delta_1_10.json.gz"
+  },
+  {
+   "id": "trace-characterizations/table/item14/delta=1/2",
+   "source": "man/article/generated/trace_characterizations.tex",
+   "macro": "TCVHolderHalf",
+   "printed": "0.0086",
+   "kind": "rounded",
+   "certificate": "certificates/holder_projections_alpha3_delta_1_2.json.gz"
+  },
+  {
+   "id": "trace-characterizations/table/item14/delta=9/10",
+   "source": "man/article/generated/trace_characterizations.tex",
+   "macro": "TCVHolderNine",
+   "printed": "0.0711",
+   "kind": "rounded",
+   "certificate": "certificates/holder_projections_alpha3_delta_9_10.json.gz"
+  },
+  {
+   "id": "trace-characterizations/search/item14",
+   "source": "man/article/generated/trace_characterizations.json",
+   "path": [
+    "inequalities",
+    "holder",
+    "dims",
+    "*",
+    "certified"
+   ],
+   "grid": [
+    "grid"
+   ],
+   "kind": "lower",
+   "certificate": "certificates/holder_projections_alpha3_delta_{p}_{q}.json.gz"
+  }
+ ]
+}

@@ -6,6 +6,23 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 
 ## [Unreleased]
 
+### Added
+- `torch_vn_algebra.certify` (extra `certify`, python-flint): certified envelopes. `certify(problem, delta)` encloses
+  V(delta) = sup F in a rigorous interval [L, U] and writes a certificate (gzipped JSON). L comes from an exact
+  rational witness of the original problem (Cayley transforms, rational spectra), checked without rounding; U from
+  a branch and bound in Arb ball arithmetic (smallest of the natural extension, the mean-value form and a
+  second-order Taylor form with a Hessian enclosure by forward AD; monotonicity test; smear splitting). The search
+  tree is stored in preorder, so coverage holds by construction.
+- `torch_vn_algebra/certify/verify.py`: the independent verifier (python-flint and the standard library only, does
+  not import the package; about 280 lines). It replays the tree with exact rational boxes and checks the witness in
+  exact arithmetic. The reductions to the box problem are listed in the certificate with references.
+- First problem: item 14 of the trace catalogue (Hölder for projections, alpha = 3), reduced for every n and all
+  ranks (two-projection theorem, compression, Hölder, phases). `scripts/certify_item14.py` and 13 certificates in
+  `certificates/` on the grid of the trace preprint, relative width 1e-6 (e.g. 2.79878567081e-4 <= V(1/10) <=
+  2.79878846960e-4). All search values of the preprint are below U and below L (by up to 17 % at delta = 1/100).
+- `certificates/claims.json` and `tests/test_certified_claims.py`: numbers of the papers tied to certificates.
+- `ROADMAP_certify.md`: the plan of the module (SDP layer, matrix-function bounds, the remaining items).
+
 ## [1.2.0] – 2026-10-25
 
 Backward compatible: everything of 1.1.0 works unchanged. New: conversion to QuTiP and dynamiqs, channels and
