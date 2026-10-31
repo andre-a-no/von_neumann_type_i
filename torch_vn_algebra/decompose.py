@@ -941,7 +941,6 @@ class Decomposition:
                                  f"(residual {kron:.1e}); the algebra is not closed under complex conjugation")
             if d == c:
                 eps_J = float((torch.trace(J @ J.conj()) / k).real)
-                eps_M = float((torch.trace(M @ M.conj()) / m).real)
                 e = 1.0 if eps_J > 0 else -1.0
                 eye_k = torch.eye(k, dtype=J.dtype, device=J.device)
                 eye_m = torch.eye(m, dtype=J.dtype, device=J.device)

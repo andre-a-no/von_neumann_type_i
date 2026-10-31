@@ -27,7 +27,7 @@ count_parameters gives the number of real parameters of a network (sector struct
 respects the sectors has far fewer than a dense one).
 """
 import math
-from typing import List, Optional, Sequence, Union
+from typing import Optional, Sequence, Union
 
 import torch
 from torch import nn
