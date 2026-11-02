@@ -860,9 +860,19 @@ def _schatten(alg: TypeIAlgebra, svals, w: torch.Tensor, p: float, B: int) -> to
     smax = _scatter(alg, [(idx, s.amax(-1)) for idx, s in svals], B, rdt)          # (B, C)
     if p == math.inf:
         return torch.where(w > 0, smax, torch.zeros_like(smax)).amax(-1)
-    m = smax.amax(-1).clamp(min=torch.finfo(rdt).tiny)                              # (B,)
-    sums = _scatter(alg, [(idx, ((s / _rep(m, len(idx))) ** p).sum(-1)) for idx, s in svals], B, rdt)
-    return m * (w * sums).sum(-1) ** (1 / p)
+    active = (w > 0).expand(B, -1)
+    m = torch.where(active, smax, torch.zeros_like(smax)).amax(-1).clamp(min=torch.finfo(rdt).tiny)
+    parts = []
+    for idx, s in svals:
+        # Mask before taking powers: a large sector of zero weight must neither set the scale nor overflow.
+        on = active[:, alg._sel(idx)].reshape(-1, 1)
+        scaled = torch.where(on, s, torch.zeros_like(s)) / _rep(m, len(idx))
+        parts.append((idx, (scaled ** p).sum(-1)))
+    total = (w * _scatter(alg, parts, B, rdt)).sum(-1)
+    positive = total > 0
+    root = torch.where(positive, torch.where(positive, total, torch.ones_like(total)) ** (1 / p),
+                       torch.zeros_like(total))
+    return m * root
 
 
 def _svals(x: torch.Tensor, self_adjoint: bool) -> torch.Tensor:
@@ -883,11 +893,10 @@ def lp_norm(A: Operator, p: float, trace: str = 'blunt', weights: Optional[torch
     if not isinstance(A, Operator):
         raise TypeError(f"A: expected an Operator, got {type(A).__name__}")
     alg = A.algebra
-    B = A.matrix.shape[0]
     w = _weights(alg, trace, weights)
-    _batch(B, w.shape[0])
+    B = _batch(A.matrix.shape[0], w.shape[0])
     sa = A._is_self_adjoint is True
-    svals = [(idx, _svals(x, sa)) for k, idx, x in A._groups()]
+    svals = [(idx, _svals(x, sa)) for k, idx, x in _blocks(A, B)]
     return _schatten(alg, svals, w, p, B)
 
 

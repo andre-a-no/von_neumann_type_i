@@ -105,7 +105,9 @@ def lanczos(matvec: Callable, v0: torch.Tensor, m: int) -> Tuple[torch.Tensor, t
     Breakdown (an invariant subspace) is handled by zero beta and zero further vectors.
     """
     B, k = v0.shape
-    q = v0 * torch.clamp(_norm(v0), min=1e-300).reciprocal().unsqueeze(-1).to(v0.dtype)   # v0 = 0 stays 0
+    norm = _norm(v0)
+    safe = torch.where(norm > 0, norm, torch.ones_like(norm))
+    q = v0 * safe.reciprocal().unsqueeze(-1).to(v0.dtype)     # v0 = 0 stays 0 in either precision
     w_first = matvec(q)
     dtype = torch.promote_types(v0.dtype, w_first.dtype)     # a complex H makes the basis complex
     q = q.to(dtype)
@@ -132,9 +134,10 @@ def lanczos(matvec: Callable, v0: torch.Tensor, m: int) -> Tuple[torch.Tensor, t
         # the coupling is then exactly zero and all further vectors are zero. The threshold is tied to the
         # machine epsilon: a fixed relative threshold would cut off genuine couplings when H carries a large
         # constant shift (|Hq| ~ |shift|, while beta does not depend on it)
-        ok = b > 100 * torch.finfo(b.dtype).eps * torch.clamp(scale, min=1e-300)
+        ok = b > 100 * torch.finfo(b.dtype).eps * torch.clamp(scale, min=torch.finfo(b.dtype).tiny)
         beta[:, j] = torch.where(ok, b, torch.zeros_like(b))
-        q = torch.where(ok[:, None], w * torch.clamp(b, min=1e-300).reciprocal()[:, None].to(w.dtype), torch.zeros_like(w))
+        safe = torch.where(ok, b, torch.ones_like(b))
+        q = torch.where(ok[:, None], w * safe.reciprocal()[:, None].to(w.dtype), torch.zeros_like(w))
     return alpha, beta, Q
 
 

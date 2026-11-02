@@ -520,7 +520,7 @@ def fisher_information(prob_fn, params: Sequence[torch.Tensor], per_sample: bool
         ps = [torch.complex(x[..., 0], x[..., 1]) if c else x for x, c in zip(xs, cplx)]
         p = prob_fn(*ps)
         p = p.unsqueeze(0) if p.dim() == 1 else p
-        store['p'] = p.detach()
+        store['p'] = p if create_graph else p.detach()
         return p.sum(dim=0) if per_sample else p
 
     jac = torch.autograd.functional.jacobian(f, reals, create_graph=create_graph)

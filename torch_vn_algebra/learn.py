@@ -53,7 +53,8 @@ class ChannelLayer(nn.Module):
     their blocks (optimize.StinespringParam with one start). algebra_out=None: sector-preserving channels of
     `algebra`; otherwise maps into algebra_out with the allowed sector transitions `transitions` ((D, C) booleans).
     Gaussian initial Z gives a Haar-random channel; init_scale < 1 is not used here, see Residual for near-identity
-    blocks.
+    blocks. The polar factors are evaluated directly from Z (without a Gram matrix); deficient rank is completed
+    to an isometry, while gradients require numerical full column rank.
     """
 
     def __init__(self, algebra: TypeIAlgebra, kraus_rank: int = 1, algebra_out: Optional[TypeIAlgebra] = None,

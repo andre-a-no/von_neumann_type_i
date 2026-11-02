@@ -7,6 +7,19 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 ## [Unreleased]
 
 ### Fixed
+- Operator property checks use relative tolerances per sample and active block, so a large neighbour cannot
+  misclassify a small non-Hermitian, indefinite or singular matrix. In-place changes invalidate known spectra,
+  property flags and cached traces, inverses and absolute values as well as cached eigendecompositions.
+- Stinespring parameters use a direct thin-SVD polar factor instead of squaring the condition number in a Gram
+  matrix. Channels remain trace preserving for ill-conditioned full-rank parameters and at deficient rank
+  (completed within the allowed output space); gradients are finite at repeated positive singular values and
+  explicitly require numerical full column rank.
+- `fisher_information(create_graph=True)` retains the probability denominator's gradient, including gradients
+  with respect to captured measurement parameters.
+- Weighted `lp_norm` ignores zero-weight sectors when scaling and taking powers, handles all-zero weights with
+  finite gradients, and broadcasts a batch of weight vectors over a single operator.
+- Lanczos normalisation keeps zero starts and vectors after breakdown finite in single as well as double
+  precision; a zero member of a batch remains zero during Krylov evolution.
 - `tests/test_theory_ch06_08_D.py::test_exercise_8_2_exceptional_point` matches the two spectra without
   `np.sort_complex`: for J < |delta| both eigenvalues are purely imaginary, and rounding noise in the real parts
   decided the sort order (the test failed with NumPy 2.5).
