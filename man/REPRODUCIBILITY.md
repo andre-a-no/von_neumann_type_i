@@ -5,7 +5,8 @@ The papers describe version 1.2.0 and the corrections listed under **Unreleased*
 Rebuilding the PDFs updates the text and captions; it does not repeat the numerical experiments.
 
 The numerical corrections have regression tests, including analytic and dense references in
-`tests/test_article_contracts.py`, `tests/test_review_regressions.py` and `tests/test_followup_regressions.py`.
+`tests/test_article_contracts.py`, `tests/test_review_regressions.py`, `tests/test_followup_regressions.py` and
+`tests/test_boundary_contracts.py`.
 Passing these tests does not establish that every published table or benchmark is reproduced by the corrected code.
 Analytic theorems and their proofs are separate from these numerical validation claims.
 
@@ -42,6 +43,24 @@ approximation is not automatically a rigorous numerical lower bound. Such a cert
 error enclosure and use its lower endpoint. Local optimisation supplies no global upper bound; absence of a found
 violation does not prove an inequality. Analytic bounds and separately proved branch-and-bound guarantees are not
 reclassified by this terminology change.
+
+Separately, `torch_vn_algebra.certify` supplies exact rational witnesses and Arb interval upper bounds for item 14
+(Hölder's inequality for projections with alpha = 3). The repository contains 13 certificates on the contrast grid
+of the trace preprint. Their verifier replays the rational boxes and checks the witness; applying the resulting
+bounds to every matrix size and projection rank also relies on the analytic reductions proved in the problem's
+docstring. The verifier does not prove those reductions. Other envelopes and the historical mpmath outputs do not
+acquire error enclosures from these certificates.
+
+To verify every stored certificate and its linked numerical claims from a source checkout:
+
+```bash
+pip install -e ".[test,certify]"
+VN_VERIFY_CERTIFICATES=1 python -m pytest -q tests/test_certified_claims.py
+```
+
+The default test run verifies selected certificates and skips the remaining expensive replays. The full replay
+takes several minutes on a CPU. `ROADMAP_certify.md` describes the implemented problem and the pending work on
+matrix functions, complex witnesses and SDP certificates.
 
 ## Releasing updated numerical results
 
