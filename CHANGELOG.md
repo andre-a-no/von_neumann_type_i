@@ -7,6 +7,15 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 ## [Unreleased]
 
 ### Fixed
+- Pending square roots, logarithms and powers recheck the current parent's positivity when materialised,
+  rejecting a lost domain condition instead of silently dropping the negative spectrum.
+- Scalar multiplication retains negative property flags only for known nonzero coefficients; tensor zero
+  multiples therefore have the functional calculus of zero. Pseudoinverses do not inherit rank or negative
+  sign/normality flags that spectral truncation can invalidate.
+- Algebra-bearing learning layers transfer their algebra metadata, masks and group indices with the registered
+  tensors, including after dtype/device changes and assigned checkpoints, without mutating shared source algebras.
+- `FeedForward.state_dict()` includes the fixed instrument's Kraus tensor and outcome labels. Old checkpoints
+  without instrument data require reconstructing that instrument and explicitly loading with `strict=False`.
 - Elementwise spectral functions retain mixed second derivatives in the matrix and captured function parameters,
   including normal operators and cached spectra, without double-counting the eigenvalue contribution.
 - `LindbladLayer` accepts only `exact` and `kraus`; it rejects RK4, whose steps need not be positive maps.

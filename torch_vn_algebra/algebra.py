@@ -677,7 +677,8 @@ class TypeIAlgebra:
 
         def inverse(self, tol: Optional[float] = None) -> 'TypeIAlgebra.Operator':
             """(Pseudo-)inverse by SVD of every block; singular values below tol are treated as zero (default:
-            relative tolerance k_c * eps * largest singular value of the block, as numpy.linalg.pinv per block)."""
+            relative tolerance k_c * eps * largest singular value of the block, as numpy.linalg.pinv per block).
+            Rank and sign properties are checked on the result after this truncation."""
             if self.is_self_adjoint:                        # Hermitian eigensolver instead of an SVD
                 def f(w):                                   # w: eigenvalues of one block, (..., k_c)
                     thr = (w.shape[-1] * torch.finfo(w.dtype).eps * w.abs().amax(dim=-1, keepdim=True)
@@ -687,18 +688,14 @@ class TypeIAlgebra:
                 op = self._apply_function(f, per_block=True, coupled=False)
                 op._is_self_adjoint = True
                 op._is_normal = True
-                op._is_positive = self._is_positive
-                op._is_invertible = self._is_invertible
+                # Truncation may lower the rank or remove every negative eigenvalue.
+                op._is_positive = True if self._is_positive else None
                 return op
 
             def inv_block(A):
                 return _fc.pinv(A, tol)
-            op = TypeIAlgebra.Operator(self.algebra, generator=lambda: self._blockwise(inv_block, "inverse"))
-            # carry over what is known (A^+ is normal / invertible with A); nothing is computed here
-            op._is_normal = self._is_normal
-            op._is_invertible = self._is_invertible
-            op._batch = self._batch
-            return op
+            return self._derived(lambda: self._blockwise(inv_block, "inverse"),
+                                 normal=True if self._is_normal else None)
 
         @property
         def inv(self) -> 'TypeIAlgebra.Operator':
@@ -770,9 +767,11 @@ class TypeIAlgebra:
                 raise RuntimeError(what)
 
         def sqrt(self) -> 'TypeIAlgebra.Operator':
-            """A^{1/2} of a positive operator (spectral calculus on the active blocks)."""
+            """A^{1/2} of a positive operator (spectral calculus on the active blocks).
+            Pending results recheck positivity of the current parent when materialised."""
             self._require_positive("sqrt requires positive operator")
-            op = self.apply_function(lambda w: _on_positive(w, torch.sqrt))
+            op = self._apply_function(lambda w: _on_positive(w, torch.sqrt), False, False,
+                                      positive_domain="sqrt requires positive operator")
             op._is_self_adjoint = True
             op._is_positive = True
             op._is_normal = True
@@ -880,8 +879,11 @@ class TypeIAlgebra:
             nonzero = isinstance(scalar, (int, float, complex)) and scalar != 0
             if isinstance(scalar, (int, float, complex)) and scalar == 0:     # 0 * A = 0, whatever A is
                 return self._derived(scaled, normal=True, self_adjoint=True, positive=True, invertible=None)
-            out = self._derived(scaled, normal=self._is_normal,
-                                self_adjoint=self._is_self_adjoint if real else None,
+            # An unknown (possibly zero) tensor coefficient can turn False into True.
+            normal = self._is_normal if nonzero else (True if self._is_normal else None)
+            sa = (self._is_self_adjoint if real and nonzero else
+                  (True if real and self._is_self_adjoint else None))
+            out = self._derived(scaled, normal=normal, self_adjoint=sa,
                                 positive=True if (self._is_positive and nonneg) else None,
                                 invertible=self._is_invertible if nonzero else None)
             if isinstance(scalar, torch.Tensor) and scalar.dim() > 0 and self._batch is not None:
@@ -1074,10 +1076,12 @@ class TypeIAlgebra:
             """
             return self._apply_function(f, per_block, coupled=per_block)
 
-        def _apply_function(self, f, per_block: bool, coupled: bool):
+        def _apply_function(self, f, per_block: bool, coupled: bool, positive_domain=None):
             alg = self.algebra
 
             def generator():
+                if positive_domain is not None:
+                    self._require_positive(positive_domain)
                 if self.is_self_adjoint:
                     kind = 'hermitian'
                 elif self.is_normal:
@@ -1164,15 +1168,18 @@ class TypeIAlgebra:
             return self._derived(generator, invertible=True)
 
         def log(self, eps: float = 1e-12) -> 'TypeIAlgebra.Operator':
-            """log(A) of a positive operator; eigenvalues are clamped to eps."""
+            """log(A) of a positive operator; eigenvalues are clamped to eps.
+            Pending results recheck positivity of the current parent when materialised."""
             self._require_positive("log requires a positive operator")
-            op = self.apply_function(lambda w: torch.log(torch.clamp(w, min=eps)))
+            op = self._apply_function(lambda w: torch.log(torch.clamp(w, min=eps)), False, False,
+                                      positive_domain="log requires a positive operator")
             op._is_self_adjoint = True
             op._is_normal = True
             return op
 
         def power(self, p: float) -> 'TypeIAlgebra.Operator':
-            """A^p of a positive operator (negative p: on the support only)."""
+            """A^p of a positive operator (negative p: on the support only).
+            Pending results recheck positivity of the current parent when materialised."""
             self._require_positive("power requires a positive operator")
             def f(w):                                       # w: eigenvalues of one block, (..., k_c)
                 if p == 0:
@@ -1184,7 +1191,8 @@ class TypeIAlgebra:
                 thr = w.shape[-1] * torch.finfo(w.dtype).eps * w.amax(dim=-1, keepdim=True)
                 big = w > thr
                 return torch.where(big, torch.where(big, w, torch.ones_like(w)) ** p, torch.zeros_like(w))
-            op = self._apply_function(f, per_block=p < 0, coupled=False)
+            op = self._apply_function(f, per_block=p < 0, coupled=False,
+                                      positive_domain="power requires a positive operator")
             op._is_self_adjoint = True
             op._is_positive = True
             return op
