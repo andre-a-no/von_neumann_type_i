@@ -64,7 +64,7 @@ except three that single out the canonical trace or are non-linear in $\varphi$.
 the sharp bounds of three unnormalised trace functionals of our earlier work and sharp contrast thresholds below which subadditivity of the square root (via Gustafson's criterion for
 positive Jordan products) and the power-mean inequality cannot fail. The characterisations by the projection lattice
 extend to measures on projections; there the only new measures live in $2\times2$ blocks, where the envelopes are the same
-but attained. A numerical search, certified as a lower bound for each supremum, supports conjectured values for the
+but attained. A numerical search, checked by independent high-precision evaluation at explicit points, supports conjectured values for the
 remaining inequalities.
 \end{abstract}
 
@@ -199,8 +199,10 @@ of the envelopes; the closest work is~\cite{abed2024}, which samples the unnorma
 envelope and proves no bound.
 
 \paragraph{Numerical evidence.} For the inequalities without a closed form we computed the envelopes by constrained
-optimisation over all operator variables. Every reported value is recomputed in 40-digit arithmetic at an exactly
-admissible point, so it is a rigorous \emph{lower} bound for the supremum, not a certified value of it. Where the
+optimisation over all operator variables. Every reported value is recomputed in 40-digit arithmetic, with the
+unitaries re-orthonormalised at that precision. The exact value at the corresponding admissible point is a
+\emph{lower} bound for the supremum; the reported approximation has no guaranteed error enclosure and is not a
+rigorous numerical certificate. Where the
 envelope is known, the search reproduces it to $\TCSharpDev$ (items 1--5, 8 and 11, and 9 for $n=2$), to $\TCSharpDevNew$
 (items 17, 18, 20--22 and 24) and, for the suprema of items 19 and 23, which are only approached, to
 $\TCSharpDevApproached$; elsewhere it supports the conjectured values of Section~\ref{sec:open}. Two observations from the search guide the theory. First, the largest violation is usually found
@@ -467,8 +469,8 @@ with $r=1$; and $V_n\le h-1$ for items 1--8 and~10 (Section~\ref{sec:lower} and 
 
 \begin{figure}[t]
 \centering\includegraphics[width=0.72\textwidth]{ladder_of_orders.pdf}
-\caption{The ladder of orders: the computed envelopes $V_2(\delta)$ of all 25 items (certified lower bounds for the
-suprema, Section~\ref{sec:numerics}) on logarithmic axes, coloured by the order of vanishing at the trace, with guide
+\caption{The ladder of orders: the computed envelopes $V_2(\delta)$ of all 25 items (high-precision evaluations at
+candidate points, Section~\ref{sec:numerics}) on logarithmic axes, coloured by the order of vanishing at the trace, with guide
 lines of slopes $1$, $2$, $4$ and~$8$. Item~25 is shown for $\delta\ge0.4$ (the search resolves it for
 $\delta\ge\TCWmonFirst$).}
 \label{fig:ladder}
@@ -1683,9 +1685,11 @@ values are those of $(\cL-\cR)/\cN$. A grid of $\TCGridSize$ contrasts times $\T
 and dimension ($\TCSteps$ gradient steps, $n=\TCDims$).
 
 The best final point for every contrast is recomputed with $\TCDigits$-digit arithmetic (mpmath), after the unitaries
-are re-orthonormalised and the contrast is recomputed from the stored eigenvalues. Every reported value is therefore the
-exact violation at an exactly admissible point, and so a rigorous \emph{lower} bound for the supremum; we call it the
-\emph{computed envelope}. It is not an upper bound: where no theorem is available, the true envelope may be larger. The
+are re-orthonormalised and the contrast is recomputed from the stored eigenvalues. The exact functional value at an
+admissible point is a \emph{lower} bound for the supremum. We call its high-precision numerical approximation the
+\emph{computed envelope}; the computation supplies no interval enclosure or proved rounding-error bound, so the
+reported number is not a rigorous numerical lower bound. It is not an upper bound either: where no theorem is
+available, the true envelope may be larger. The
 double-precision and high-precision values agree to $\TCCertDev$ (relative), and at $\delta=0$ no value exceeds
 $\TCVzero$. For items 12--16, independent NumPy/SciPy searches (BFGS from $\TCSciStarts$ random starts on $M_2$ at
 $\delta=0.3,0.5,0.9$) give values such that the ratio of the batched search to them lies in
@@ -1719,7 +1723,7 @@ items of a row). Items 11 and 24 are given for $n=2$.}
 \TCRows
 \bottomrule
 \end{tabular}
-\caption[]{Computed envelopes (certified lower bounds) on $M_2$ at $\delta=0.1,0.5,0.9$ and the proved values $V^\star$;
+\caption[]{Computed envelopes (high-precision evaluations at candidate points) on $M_2$ at $\delta=0.1,0.5,0.9$ and the proved values $V^\star$;
 $^a$: sharp for $n=2$ only, $^b$: a lower bound, $^c$: approached but not attained. ``order'': leading order of $V^\star$
 as $\delta\to0$; ``slope'': $\log_2(V(0.2)/V(0.1))$ of the search; ``$n$-dep.'': the largest $|V_n/V_2-1|$ for $n=3,4$ and
 $\delta\ge0.1$ (for item~7 it reflects search shortfalls, for item~13 a genuine increase with $n$; items 19 and 20 differ
@@ -1821,7 +1825,7 @@ item & all & two-level & proj. & all & two-level & proj. & all & two-level & pro
 \TCCRowsA
 \bottomrule
 \end{tabular}
-\caption[]{Computed envelopes (certified lower bounds) over all operators, over two-level operators and over scaled
+\caption[]{Computed envelopes (high-precision evaluations at candidate points) over all operators, over two-level operators and over scaled
 projections, for the items whose variables are not projections. In $M_2$ every operator is two-level, so there the middle
 column only checks the restricted parametrisation. ``--'': item~11 needs an invertible $A$.}
 \label{tab:projsuffice}
@@ -1924,6 +1928,10 @@ central elements~\cite{novikov2015}.
 
 \paragraph{Code availability.} The library, the programs that compute all numbers, tables and figures, and the tests
 are available at \url{https://github.com/andre-a-no/von_neumann_type_i} (MIT licence).
+The stored numerical results predate the corrections listed under \texttt{Unreleased} in \texttt{CHANGELOG.md} and
+have not been regenerated with the corrected library. Some JSON provenance records contain \texttt{+dirty}; those
+records do not identify the uncommitted changes. See \texttt{man/REPRODUCIBILITY.md} for the status of the historical
+runs and the requirements for a new numerical release.
 
 \paragraph{Reproducing the computations.} The programs are in the directory \texttt{scripts} of the repository and
 run in this order, since later ones read the results of earlier ones:
@@ -1944,7 +1952,7 @@ restricted searches, Table~\ref{tab:projsuffice}; $\TCCSeconds$~s), then \texttt
 Each figure shows one inequality, with one panel per dimension. Top row: the normalised violation $(\cL-\cR)/\cN$
 of the random samples (grey) and, where the variables are not projections, of the
 scaled-projection samples (orange) against $\Delta(W)$ on $M_2$, $M_3$, $M_4$; black: the computed envelope $V(\delta)$,
-a certified lower bound for the supremum, joined by straight lines. Bottom row (items with operator variables): samples
+a high-precision evaluation at candidate points, joined by straight lines. Bottom row (items with operator variables): samples
 with $\Delta(W)=0.9$ and all operator variables of contrast $\delta'$, against $\delta'$, on $M_2$ and $M_3$, with the
 computed $V(0.9,\delta')$. Samples far below zero are cut off. Where an envelope is concave between grid points (item~11
 below its maximum at $\delta'=\delta$ and after its steep drop near $\delta'=1$), a few samples lie above the straight

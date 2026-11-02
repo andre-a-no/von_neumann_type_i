@@ -26,8 +26,8 @@ Parts (paper, Section "Use case"):
   n = 5   the same on fewer U; for the U where general partitions beat the best basis found, the basis search is
           repeated with many more starts (also at bases built from the directions of the best partition), and the
           values at both explicit points are recomputed in mpmath with 50 digits (the partition is re-normalised in
-          mpmath, so the certified value is a lower bound for H at an exactly admissible point; the U used is the
-          polar unitarisation of the double-precision U, stored in the JSON file). No upper bound over bases is
+          mpmath, giving a numerical approximation to the value at an admissible point; the U used is the
+          polar unitarisation of the double-precision U, stored in the JSON file). No rounding-error enclosure or upper bound over bases is
           certified: "general partitions beat bases" remains an observation;
   checks  H(P|P) = 0; complementary MASAs (Fourier U) give log n; two non-abelian examples, M_2 (+) C c M_3 and
           M_2 (x) 1 c M_4 against Ad(u) of themselves for seeded Haar u (m = n, 2n, n^2 elements).
@@ -277,8 +277,9 @@ def haar(nU, n, device='cpu'):
 def certify(U, Z, digits=50):
     """
     The functional at the partition x_j = S^{-1/2} Z_j Z_j^* S^{-1/2} (Z: (m, n, r)) for P = Delta_n, Q = Ad(U') P,
-    U' = U (U^* U)^{-1/2}, recomputed in mpmath: partition and unitary are exact at `digits` digits. Returns
-    (value, |sum x_j - 1|, |U'^* U' - 1|) as floats.
+    U' = U (U^* U)^{-1/2}, recomputed in mpmath: partition and unitary are normalised at `digits` digits. Returns
+    (value, |sum x_j - 1|, |U'^* U' - 1|) as floats, without a guaranteed error enclosure.
+    The historical name `certify` denotes high-precision recomputation, not a rigorous certificate.
     """
     import mpmath as mp
     with mp.workdps(digits):

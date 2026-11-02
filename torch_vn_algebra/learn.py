@@ -104,12 +104,15 @@ class LindbladLayer(nn.Module):
     n_jumps free jump operators inside the sectors and n_inter between sectors (allowed transitions[d, c]). The
     evolution is computed by dynamics.lindblad_evolve (method 'exact' by default, or the CPTP splitting 'kraus');
     every value of the parameters gives a channel, and the layer is a block of continuous depth.
+    Other integrators, including 'rk4', are rejected: a Runge-Kutta step need not be a positive map.
     """
 
     def __init__(self, algebra: TypeIAlgebra, time: float = 1.0, n_jumps: int = 1, n_inter: int = 0, transitions=None,
                  hamiltonian: bool = True, init_scale: float = 0.1, method: str = 'exact', substeps: int = 20,
                  generator: Optional[torch.Generator] = None):
         super().__init__()
+        if method not in ('exact', 'kraus'):
+            raise ValueError("LindbladLayer: method must be 'exact' or 'kraus' to preserve complete positivity")
         self.algebra, self.time, self.method, self.substeps = algebra, float(time), method, substeps
         self._param = optimize.LindbladParam(algebra, 1, n_jumps=n_jumps, n_inter=n_inter, transitions=transitions,
                                              hamiltonian=hamiltonian, init_scale=init_scale, generator=generator)

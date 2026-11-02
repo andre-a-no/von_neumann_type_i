@@ -198,8 +198,9 @@ respects. For most unitaries the best partition found is an orthonormal basis, b
 $7\%$ for $n=3$) the best partitions found consist of $n+1$ rank-one elements and beat every basis found, by up to
 $\CSThreeGapMax$. In every sample the best value found lies strictly between $h(U)$ and the computed $G^*$, so that
 neither Choda's lower bound nor the envelope bound appears to be attained. These are numerical observations: every value
-we report is attained at an explicit partition and recomputed with $\CSDigits$ digits, hence it is a rigorous lower bound
-for $H$ up to rounding, but the maxima over all bases are not certified. To turn the first observation into a theorem it
+we report is evaluated at an explicit partition and recomputed with $\CSDigits$ digits. The exact value at the
+corresponding admissible partition is a lower bound for $H$; the numerical approximation has no guaranteed error
+enclosure. Neither a rigorous numerical lower bound nor the global maximum over bases is certified. To turn the first observation into a theorem it
 would suffice to certify a global upper bound for the best basis for a single unitary, a global optimisation problem over
 a six-dimensional flag manifold for $n=3$; by continuity the strict inequality would then hold on a set of positive Haar
 measure (Section~\ref{sec:status}).
@@ -839,9 +840,9 @@ the directions of the best partition. The method is described in Appendix~\ref{a
 \paragraph{Status of the findings.} Apart from Proposition~\ref{prop:firstorder}, every statement about $n\ge3$ in this
 section is a numerical observation and is labelled as such once and for all here. Each value reported for a partition, a
 basis or a state is the value of the functional at an explicit point; where a comparison depends on it, the point was
-recomputed with $\CSDigits$ significant digits from an exactly normalised partition, so these values are rigorous lower
-bounds for $H$ (or $G^*$) up to rounding errors far below the reported digits. What is not certified is that any of the
-maxima is global: the best basis found need not be the best basis.
+recomputed with $\CSDigits$ significant digits after normalising the partition at that precision. These values
+approximate lower bounds for $H$ (or $G^*$), but the computation supplies no interval enclosure or proved
+rounding-error bound. None of the numerical maxima is certified as global: the best basis found need not be the best basis.
 
 \begin{table}[t]
 \centering\footnotesize
@@ -931,8 +932,9 @@ diagonal unitaries $D$ and permutation matrices $\Pi$, the maximisation runs ove
 dimension $n(n-1)$, i.e.\ six for $n=3$; for the stored $3\times3$ unitary with the largest gap the margin to be certified is
 about $7\times10^{-3}$, which seems within reach of interval branch-and-bound. The lower half of Conjecture~\ref{conj:n3}(b) is
 Proposition~\ref{prop:firstorder} together with an almost-everywhere statement for the condition $M_U\ne M_U^*$. For the upper
-half, the computed $G^*$ is a certified lower bound for $G^*$, since it is attained at an explicit state, and what is needed
-is a certified upper bound for $H$; the dual bound~\eqref{eq:dual} reduces this to exhibiting an affine function $a$ with
+half, an explicit state supplies a lower bound for $G^*$. A rigorous numerical argument would require an error
+enclosure for its high-precision evaluation together with a certified upper bound for $H$; the dual
+bound~\eqref{eq:dual} reduces the latter to exhibiting an affine function $a$ with
 $a(\frac1n)<G^*$ and verifying $a\ge G$ on the $(n^2-1)$-dimensional state space, again a single global inequality per
 unitary.
 
@@ -1013,8 +1015,8 @@ polar decomposition). For the unitary with the largest remaining gap (for each $
 run, again half of each kind.
 
 \paragraph{Recomputation in high precision.} For every unitary that remains flagged, the best partition and the best basis
-are recomputed in mpmath with $\CSDigits$ digits: $U$ is replaced by its polar unitarisation $U'=U(U^*U)^{-1/2}$, exactly
-unitary at this precision, and the partition $x_j=S^{-1/2}Z_jZ_j^*S^{-1/2}$ is re-normalised from the stored $Z_j$ (for the basis,
+are recomputed in mpmath with $\CSDigits$ digits: $U$ is replaced by its polar unitarisation $U'=U(U^*U)^{-1/2}$,
+unitary up to rounding at this precision, and the partition $x_j=S^{-1/2}Z_jZ_j^*S^{-1/2}$ is re-normalised from the stored $Z_j$ (for the basis,
 $Z_j=w_j$), so that $\|\sum_jx_j-1\|$ is of the order $10^{-50}$. This is a high-precision evaluation, not interval arithmetic.
 The flagged unitaries are stored in the file \texttt{connes\_\allowbreak stormer.json} written by the program.
 
@@ -1034,6 +1036,9 @@ the search gives $H=\log n$ to $\CSFourierDev$ (Remark~\ref{rem:envelope}(ii)), 
 
 \paragraph{Code availability.} The library, the programs that compute all numbers, tables and figures, and the tests are
 available at \url{https://github.com/andre-a-no/von_neumann_type_i} (MIT licence).
+The stored data were produced with revision \texttt{e8d5873} and have not been regenerated after the numerical
+corrections listed under \texttt{Unreleased} in \texttt{CHANGELOG.md}. They remain historical results, not a
+validation of the corrected implementation; the reproduction status is recorded in \texttt{man/REPRODUCIBILITY.md}.
 
 {\sloppy
 \begin{thebibliography}{99}

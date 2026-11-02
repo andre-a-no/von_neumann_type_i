@@ -16,7 +16,8 @@ Experiment B ("both contrasts"): V(delta, delta') with every operator variable o
 Delta = delta' (general spectra and two-level spectra), on M_2 and M_3.
 
 The best final point of every grid value is recomputed in mpmath (trace_characterizations.certify), so every reported
-positive value is a certified violation. Writes generated/trace_contrast.{json,tex} in man/trace_envelopes; the JSON
+positive value is a high-precision numerical violation, without a guaranteed error enclosure. The historical
+`certify`/`certified` names denote this recomputation. Writes generated/trace_contrast.{json,tex} in man/trace_envelopes; the JSON
 is drawn by scripts/trace_montecarlo.py (bottom rows of figures/mc_*.pdf) and scripts/trace_paper_schematics.py
 (figures/contrast_square.pdf). Run scripts/trace_characterizations.py first (the item numbers come from it, and the
 report reads man/article/generated/bounds.json of scripts/bounds_search.py for the macro TCCGardnerTwoDDev).

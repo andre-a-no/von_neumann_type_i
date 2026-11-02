@@ -256,29 +256,50 @@ def _warn_if_degenerate(w: torch.Tensor):
                       "derivatives", RuntimeWarning, stacklevel=4)
 
 
+def _ordered_eig(X: torch.Tensor, reference: torch.Tensor):
+    """Differentiable eig, with the eigenpairs in the order used by the normal forward pass.
+
+    eigh(H + alpha K) and eig(X) need not return the same permutation. Match distinct eigenvalues
+    before connecting eigenvalue sensitivities and eigenvector contributions in higher derivatives.
+    """
+    w, V = torch.linalg.eig(X)
+    target, wd = reference.detach().to(w.dtype), w.detach()
+    order = (target.unsqueeze(-1) - wd.unsqueeze(-2)).abs().argmin(-1)
+    # Tied/unresolved eigenvalues can pick the same column twice. Higher derivatives there are
+    # unsupported, but the first backward with create_graph must still reach its warning, not a
+    # singular inverse caused by duplicate columns. A sorted fallback supplies a permutation.
+    k = w.shape[-1]
+    valid = (order.sort(-1).values == torch.arange(k, device=w.device)).all(-1)
+    ref_sort = (target.real + _ALPHAS[0] * target.imag).argsort(-1)
+    eig_sort = (wd.real + _ALPHAS[0] * wd.imag).argsort(-1)
+    fallback = eig_sort.gather(-1, ref_sort.argsort(-1))
+    order = torch.where(valid.unsqueeze(-1), order, fallback)
+    return w.gather(-1, order), V.gather(-1, order.unsqueeze(-2).expand_as(V))
+
+
 class _SpectralValues(torch.autograd.Function):
     """Eigenvalue sensitivities without an eigensolver backward in the first derivative.
 
-    Coupled f(w, theta) keeps this connection to X, so mixed second derivatives in X and theta
+    f(w, theta) keeps this connection to X, so mixed second derivatives in X and theta
     include the dependence of f's parameter derivative on the eigenvalues.
     """
 
     @staticmethod
     def forward(ctx, X, w, V, kind):
-        ctx.save_for_backward(X, V)
+        ctx.save_for_backward(X, w, V)
         ctx.kind = kind
         return w
 
     @staticmethod
     def backward(ctx, g):
-        X, V = ctx.saved_tensors
+        X, reference, V = ctx.saved_tensors
         Vinv = V.conj().transpose(-2, -1)
         if torch.is_grad_enabled():
             if ctx.kind == 'hermitian':
                 w, V = torch.linalg.eigh(.5 * (X + X.conj().transpose(-2, -1)))
                 Vinv = V.conj().transpose(-2, -1)
             else:
-                w, V = torch.linalg.eig(X)
+                w, V = _ordered_eig(X, reference)
                 Vinv = torch.linalg.inv(V)
             _warn_if_degenerate(w)
         gradient = (Vinv.conj().transpose(-2, -1) * g.to(V.dtype).unsqueeze(-2)) @ V.conj().transpose(-2, -1)
@@ -290,8 +311,9 @@ class _SpectralValues(torch.autograd.Function):
 class _SpectralReconstruction(torch.autograd.Function):
     """
     F = V diag(f(w)) V^* as a function of X (diagonalised by V) and of the values f(w). The derivative in X is
-    dF = V (L o V^* dX V) V^* with the Loewner matrix L; for coupled maps its diagonal is replaced by the
-    full eigenvalue Jacobian. The values carry the gradient of parameters of f.
+    dF = V (L o V^* dX V) V^* with the Loewner matrix L. The diagonal part is propagated through
+    _SpectralValues and f(w), including the full eigenvalue Jacobian for coupled maps. The values also
+    carry the gradient of parameters of f and their mixed derivatives with X.
     With create_graph the backward pass recomputes the decomposition and L differentiably (second derivatives
     are then correct at non-degenerate spectra).
     """
@@ -313,9 +335,9 @@ class _SpectralReconstruction(torch.autograd.Function):
         Vh, Vinvh = V.conj().transpose(-2, -1), Vinv.conj().transpose(-2, -1)
         Gt = Vh @ G.to(V.dtype) @ Vinvh
         local = L.conj().to(Gt.dtype) * Gt
-        if jacobian is not None:
-            # f's full Jacobian is applied through _SpectralValues by the gfw return below.
-            local = local - torch.diag_embed(torch.diagonal(local, dim1=-2, dim2=-1))
+        # Eigenvalue sensitivities (elementwise or coupled) flow through _SpectralValues via gfw.
+        # Keep only the eigenvector contribution here, avoiding a second copy of the diagonal VJP.
+        local = local - torch.diag_embed(torch.diagonal(local, dim1=-2, dim2=-1))
         gX = Vinvh @ local @ Vh
         if not torch.is_complex(X) and torch.is_complex(gX):
             gX = gX.real
@@ -352,15 +374,12 @@ def spectral_apply(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], k
     correct = kind == 'normal'          # first-order correction for the residual off-diagonal part of V^* X V
     jacobian = None
     if needs_grad or correct:
+        values = _SpectralValues.apply(Xin, w, V, kind) if needs_grad else w
         if coupled:
-            fw, jacobian = _coupled_values(f, w)
+            fw, jacobian = _coupled_values(f, values)
             dfw = torch.diagonal(jacobian, dim1=-2, dim2=-1)
-            if needs_grad:
-                fw = f(_SpectralValues.apply(Xin, w, V, kind))
-                if not (fw.is_floating_point() or fw.is_complex()):
-                    fw = fw.to(w.dtype)
         else:
-            fw, dfw = values_and_derivative(f, w)
+            fw, dfw = values_and_derivative(f, values)
     else:
         fw = f(w)
         if not (fw.is_floating_point() or fw.is_complex()):
@@ -384,7 +403,7 @@ def spectral_apply(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], k
             w2, V2 = decompose(Y)
             V2inv = V2.conj().transpose(-2, -1)
         else:                                           # off the normal matrices: the eigenvectors of Y itself
-            w2, V2 = torch.linalg.eig(Y)
+            w2, V2 = _ordered_eig(Y, w)
             V2inv = torch.linalg.inv(V2)
         _warn_if_degenerate(w2)
         J2 = None

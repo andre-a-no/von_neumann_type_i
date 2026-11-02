@@ -66,6 +66,7 @@ def on_config(config):
                                  {'Time crystal and SRE': 'btc_sre/btc_sre_symmetry_sectors.pdf'}]})
     nav.append({'Translations': [{NATIVE[l]: [{SIDE_NAME[s][l]: _side_nav(s, l)} for s in SIDES]}
                                  for l in LANGS[1:]]})
+    nav.append({'Numerical reproducibility': 'REPRODUCIBILITY.md'})
     config['nav'] = nav
     return config
 

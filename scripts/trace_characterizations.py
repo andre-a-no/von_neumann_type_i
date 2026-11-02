@@ -21,8 +21,9 @@ UnitaryParam (polar factors, and projections U diag(1, .., 1, 0, .., 0) U^* of e
 batch holds the delta grid times the starts; optimize.extremize maximises. Every iterate is an admissible point, so the
 computed V is a lower bound for the envelope; it is compared with the closed forms that we prove (paper, Propositions),
 with an independent SciPy search (tests), and the best final point of every grid value is recomputed in mpmath, after
-re-orthonormalising the unitaries there (certified violation at an exactly admissible point, with the contrast of W
-recomputed from its eigenvalues).
+re-orthonormalising the unitaries at that precision, with the contrast of W recomputed from its eigenvalues.
+This is an independent high-precision check, not a rigorous error enclosure. The historical helper name `certify`
+and JSON keys `certified` are retained for compatibility and denote this numerical recomputation.
 
 Sectors: on M = (+)_c M_{k_c} every trace is sum_c t_c Tr_c, so a density W that is scalar on every block gives a trace
 and V must vanish (except for the determinant inequality, which characterises the *canonical* trace among functionals
@@ -1002,7 +1003,8 @@ def _dense(block, ks):
 
 def certify(name, point, ks, digits=40):
     """(LHS - RHS) / N at an exported point, recomputed in mpmath with `digits` digits; unitaries are re-orthonormalised
-    (U (U^* U)^{-1/2}), so the point is exactly admissible. Returns (value, contrast of W, intra-block contrasts)."""
+    (U (U^* U)^{-1/2}) at that precision. This is not an interval certificate or a proved error bound.
+    Returns (value, contrast of W, intra-block contrasts); the historical name is kept for compatibility."""
     import mpmath as mp
     with mp.workdps(digits):
         def M(a):

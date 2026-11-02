@@ -7,6 +7,13 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 ## [Unreleased]
 
 ### Fixed
+- Elementwise spectral functions retain mixed second derivatives in the matrix and captured function parameters,
+  including normal operators and cached spectra, without double-counting the eigenvalue contribution.
+- `LindbladLayer` accepts only `exact` and `kraus`; it rejects RK4, whose steps need not be positive maps.
+- The Renyi threshold script reuses the library's corrected Stinespring parameterisation instead of its duplicate
+  Gram-based implementation.
+- Papers describe the direct-SVD channel parameterisation and its rank condition, distinguish high-precision
+  numerical recomputation from rigorous certification, and identify the published tables as historical runs.
 - Dense exports of general inter-sector channels keep independent Kraus operators for input as well as output
   sectors, preserving Lindblad loss terms and QuTiP trajectories. Dense imports reject unrepresentable complex
   entries in real algebras instead of discarding coherences.
