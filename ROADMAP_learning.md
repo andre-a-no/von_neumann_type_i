@@ -677,7 +677,8 @@ as `Channel` / `InterSectorChannel` objects.
 *Placement (Section 11).* The parametrisations come first, as plain parameter objects in `optimize`:
 `StinespringParam`, `LindbladParam` and `fit` in 1.2.0. POVMs, instruments and the Fisher information go into a new
 `measurement` module, also in 1.2.0. The `learn` classes below wrap these as `nn.Module`s: `ChannelSequential` and
-the skips of Section 6 in 1.4 (Stage 3), and `ChannelFlow` and `learn.certify` in Stage 4. `learn.Instrument` is a
+the skips of Section 6 in 1.4 (Stage 3), and `ChannelFlow` and `learn.certify` in Stage 4 (two-sided certified
+envelopes are a separate module, `torch_vn_algebra.certify`; see ROADMAP_certify.md). `learn.Instrument` is a
 layer view of `measurement.Instrument`.
 
 1. **`StinespringChannel(alg_in, alg_out, kraus_rank, pairs=None, retraction='polar'|'qr'|'cayley', trace_preserving=True)`**.
@@ -704,7 +705,8 @@ layer view of `measurement.Instrument`.
 Losses are plain functions in `learn.losses`: infidelity, trace distance, Umegaki and Rényi divergences (wrapping
 `divergences`), entanglement and process fidelity from the Choi matrix, and the rapidity regulariser
 $`\sum_l\eta(\Phi_l(1))`$. `learn.certify(channel, objective, digits=50)` generalises the mpmath recomputation of the
-scripts.
+scripts; it gives lower bounds only, and two-sided intervals with a verifiable certificate come from
+`torch_vn_algebra.certify` (ROADMAP_certify.md).
 
 ```python
 # NOT IMPLEMENTED: proposed API (Stage 2, 1.3; the same fit is possible in 1.2.0 with optimize.StinespringParam).

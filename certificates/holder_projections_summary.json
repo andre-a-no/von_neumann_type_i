@@ -1,0 +1,132 @@
+{
+ "1/100": {
+  "delta": "1/100",
+  "lower": "2777986128376311/1000000000000000000000",
+  "upper": "1388994453181221/500000000000000000000",
+  "lower_float": 2.777986128376311e-06,
+  "upper_float": 2.777988906362442e-06,
+  "boxes": 357824,
+  "seconds": 226.46,
+  "file": "certificates/holder_projections_alpha3_delta_1_100.json.gz"
+ },
+ "1/50": {
+  "delta": "1/50",
+  "lower": "138930568473177/12500000000000000000",
+  "upper": "555722829614983/50000000000000000000",
+  "lower_float": 1.111444547785416e-05,
+  "upper_float": 1.111445659229966e-05,
+  "boxes": 178847,
+  "seconds": 120.25,
+  "file": "certificates/holder_projections_alpha3_delta_1_50.json.gz"
+ },
+ "1/20": {
+  "delta": "1/20",
+  "lower": "6957492372812577/100000000000000000000",
+  "upper": "139149986606099/2000000000000000000",
+  "lower_float": 6.957492372812576e-05,
+  "upper_float": 6.95749933030495e-05,
+  "boxes": 74410,
+  "seconds": 46.21,
+  "file": "certificates/holder_projections_alpha3_delta_1_20.json.gz"
+ },
+ "1/10": {
+  "delta": "1/10",
+  "lower": "279878567081437/1000000000000000000",
+  "upper": "2798788469600043/10000000000000000000",
+  "lower_float": 0.000279878567081437,
+  "upper_float": 0.0002798788469600043,
+  "boxes": 37984,
+  "seconds": 28.89,
+  "file": "certificates/holder_projections_alpha3_delta_1_10.json.gz"
+ },
+ "1/5": {
+  "delta": "1/5",
+  "lower": "572795948863241/500000000000000000",
+  "upper": "572796521659191/500000000000000000",
+  "lower_float": 0.001145591897726482,
+  "upper_float": 0.001145593043318382,
+  "boxes": 19573,
+  "seconds": 13.8,
+  "file": "certificates/holder_projections_alpha3_delta_1_5.json.gz"
+ },
+ "3/10": {
+  "delta": "3/10",
+  "lower": "2682439733851033/1000000000000000000",
+  "upper": "167652651018173/62500000000000000",
+  "lower_float": 0.002682439733851033,
+  "upper_float": 0.002682442416290768,
+  "boxes": 14135,
+  "seconds": 9.29,
+  "file": "certificates/holder_projections_alpha3_delta_3_10.json.gz"
+ },
+ "2/5": {
+  "delta": "2/5",
+  "lower": "2530091514483653/500000000000000000",
+  "upper": "5060188089150337/1000000000000000000",
+  "lower_float": 0.005060183028967306,
+  "upper_float": 0.005060188089150337,
+  "boxes": 11375,
+  "seconds": 7.54,
+  "file": "certificates/holder_projections_alpha3_delta_2_5.json.gz"
+ },
+ "1/2": {
+  "delta": "1/2",
+  "lower": "8592811275911231/1000000000000000000",
+  "upper": "8592819868722507/1000000000000000000",
+  "lower_float": 0.00859281127591123,
+  "upper_float": 0.008592819868722507,
+  "boxes": 9575,
+  "seconds": 6.57,
+  "file": "certificates/holder_projections_alpha3_delta_1_2.json.gz"
+ },
+ "3/5": {
+  "delta": "3/5",
+  "lower": "277639006346061/20000000000000000",
+  "upper": "1388196419925339/100000000000000000",
+  "lower_float": 0.01388195031730305,
+  "upper_float": 0.01388196419925339,
+  "boxes": 8464,
+  "seconds": 6.26,
+  "file": "certificates/holder_projections_alpha3_delta_3_5.json.gz"
+ },
+ "7/10": {
+  "delta": "7/10",
+  "lower": "2220983486801883/100000000000000000",
+  "upper": "555246426946343/25000000000000000",
+  "lower_float": 0.02220983486801883,
+  "upper_float": 0.02220985707785372,
+  "boxes": 7711,
+  "seconds": 5.25,
+  "file": "certificates/holder_projections_alpha3_delta_7_10.json.gz"
+ },
+ "4/5": {
+  "delta": "4/5",
+  "lower": "3691242447587683/100000000000000000",
+  "upper": "922811534707533/25000000000000000",
+  "lower_float": 0.03691242447587683,
+  "upper_float": 0.03691246138830132,
+  "boxes": 6966,
+  "seconds": 4.82,
+  "file": "certificates/holder_projections_alpha3_delta_4_5.json.gz"
+ },
+ "9/10": {
+  "delta": "9/10",
+  "lower": "7106561616232137/100000000000000000",
+  "upper": "1421313744558751/20000000000000000",
+  "lower_float": 0.07106561616232138,
+  "upper_float": 0.07106568722793755,
+  "boxes": 6143,
+  "seconds": 7.89,
+  "file": "certificates/holder_projections_alpha3_delta_9_10.json.gz"
+ },
+ "19/20": {
+  "delta": "19/20",
+  "lower": "1188075620417601/10000000000000000",
+  "upper": "148509601061653/1250000000000000",
+  "lower_float": 0.1188075620417601,
+  "upper_float": 0.1188076808493224,
+  "boxes": 5593,
+  "seconds": 5.23,
+  "file": "certificates/holder_projections_alpha3_delta_19_20.json.gz"
+ }
+}
