@@ -92,7 +92,8 @@ def values_and_derivative(f: Callable[[torch.Tensor], torch.Tensor], w: torch.Te
     return values, dy
 
 
-def divided_differences(w: torch.Tensor, fw: torch.Tensor, dfw: torch.Tensor) -> torch.Tensor:
+def divided_differences(w: torch.Tensor, fw: torch.Tensor, dfw: torch.Tensor,
+                        jacobian: Optional[torch.Tensor] = None) -> torch.Tensor:
     """
     Loewner matrix L_ij = f[w_i, w_j] = (f(w_i) - f(w_j)) / (w_i - w_j) (f'(w_i) on ties) of the Daleckii-Krein
     formula (Theorem 1.11 of the lecture notes), from the values fw = f(w) and dfw = f'(w). w may be complex.
@@ -116,15 +117,52 @@ def divided_differences(w: torch.Tensor, fw: torch.Tensor, dfw: torch.Tensor) ->
     safe = torch.where(tie, torch.ones_like(dw), dw)
     quotient = df.to(dtype) / safe.to(dtype)
     midpoint = 0.5 * (dfw.unsqueeze(-1) + dfw.unsqueeze(-2)).to(dtype)
+    if jacobian is not None:
+        # At a repeated eigenvalue, a permutation-equivariant spectral map has off-diagonal
+        # derivative J_ii - J_ij. Its diagonal derivative is handled by the full Jacobian below.
+        midpoint = 0.5 * (dfw.unsqueeze(-1) - jacobian + dfw.unsqueeze(-2)
+                          - jacobian.transpose(-2, -1)).to(dtype)
     with torch.no_grad():                                   # the choice is made on the values
         wd, q, mid = w.detach(), quotient.detach(), midpoint.detach()
         d = fw.detach().abs() + (wd * dfw.detach()).abs()
+        if jacobian is not None:
+            d = fw.detach().abs() + (wd.unsqueeze(-2) * jacobian.detach()).abs().sum(-1)
         R = finfo.eps * (d.unsqueeze(-1) + d.unsqueeze(-2)) / safe.abs() + 4 * finfo.eps * q.abs()
         use_mid = tie | ~torch.isfinite(q) | ((q - mid).abs() <= 2 * R)
         if w.shape[-1] > 1:
             radius = wd.abs().amax(dim=-1, keepdim=True).unsqueeze(-1)          # scale of the block's spectrum
             use_mid = use_mid | (dw.abs() <= w.shape[-1] * finfo.eps * radius)
     return torch.where(use_mid, midpoint, quotient)
+
+
+def _coupled_values(f, w: torch.Tensor, create_graph: bool = False):
+    """Values and the full per-block Jacobian of a coupled, permutation-equivariant spectral map."""
+    with torch.enable_grad():
+        wg = w if create_graph else w.detach().requires_grad_(True)
+        y = f(wg)
+        if not (y.is_floating_point() or y.is_complex()):
+            y = y.to(w.dtype)
+        rows = []
+        for i in range(w.shape[-1]):
+            def derivative(part):
+                if not part.requires_grad:
+                    return torch.zeros_like(wg)
+                g, = torch.autograd.grad(part.sum(), wg, retain_graph=True, create_graph=create_graph,
+                                          allow_unused=True)
+                return torch.zeros_like(wg) if g is None else g
+            yi = y[..., i]
+            if torch.is_complex(w):
+                row = derivative(yi.real if torch.is_complex(yi) else yi).conj()
+            elif torch.is_complex(y):
+                row = torch.complex(derivative(yi.real), derivative(yi.imag))
+            else:
+                row = derivative(yi)
+            rows.append(row)
+        jacobian = torch.stack(rows, dim=-2)
+    values = y if create_graph else f(w)
+    if not (values.is_floating_point() or values.is_complex()):
+        values = values.to(w.dtype)
+    return values, jacobian
 
 
 # ----------------------------------------------------------------------
@@ -218,47 +256,84 @@ def _warn_if_degenerate(w: torch.Tensor):
                       "derivatives", RuntimeWarning, stacklevel=4)
 
 
+class _SpectralValues(torch.autograd.Function):
+    """Eigenvalue sensitivities without an eigensolver backward in the first derivative.
+
+    Coupled f(w, theta) keeps this connection to X, so mixed second derivatives in X and theta
+    include the dependence of f's parameter derivative on the eigenvalues.
+    """
+
+    @staticmethod
+    def forward(ctx, X, w, V, kind):
+        ctx.save_for_backward(X, V)
+        ctx.kind = kind
+        return w
+
+    @staticmethod
+    def backward(ctx, g):
+        X, V = ctx.saved_tensors
+        Vinv = V.conj().transpose(-2, -1)
+        if torch.is_grad_enabled():
+            if ctx.kind == 'hermitian':
+                w, V = torch.linalg.eigh(.5 * (X + X.conj().transpose(-2, -1)))
+                Vinv = V.conj().transpose(-2, -1)
+            else:
+                w, V = torch.linalg.eig(X)
+                Vinv = torch.linalg.inv(V)
+            _warn_if_degenerate(w)
+        gradient = (Vinv.conj().transpose(-2, -1) * g.to(V.dtype).unsqueeze(-2)) @ V.conj().transpose(-2, -1)
+        if not torch.is_complex(X):
+            gradient = gradient.real
+        return gradient, None, None, None
+
+
 class _SpectralReconstruction(torch.autograd.Function):
     """
     F = V diag(f(w)) V^* as a function of X (diagonalised by V) and of the values f(w). The derivative in X is
-    dF = V (L o V^* dX V) V^* with the Loewner matrix L; the values carry the gradient of parameters of f.
+    dF = V (L o V^* dX V) V^* with the Loewner matrix L; for coupled maps its diagonal is replaced by the
+    full eigenvalue Jacobian. The values carry the gradient of parameters of f.
     With create_graph the backward pass recomputes the decomposition and L differentiably (second derivatives
     are then correct at non-degenerate spectra).
     """
 
     @staticmethod
-    def forward(ctx, X, fw, V, L, recompute):
-        ctx.save_for_backward(X, V, L)
+    def forward(ctx, X, fw, V, L, recompute, jacobian):
+        ctx.save_for_backward(X, V, L, jacobian)
         ctx.recompute = recompute
         ctx.fw_is_real = not torch.is_complex(fw)
         return (V * fw.to(V.dtype).unsqueeze(-2)) @ V.conj().transpose(-2, -1)
 
     @staticmethod
     def backward(ctx, G):
-        X, V, L = ctx.saved_tensors
+        X, V, L, jacobian = ctx.saved_tensors
         Vinv = V.conj().transpose(-2, -1)                      # unitary eigenbasis
         if torch.is_grad_enabled():                            # create_graph: differentiable recomputation
-            V, Vinv, L = ctx.recompute(X)
+            V, Vinv, L, jacobian = ctx.recompute(X)
         # F = V f(Λ) V^{-1}, dF = V (L o V^{-1} dX V) V^{-1}  =>  grad_X = V^{-*} (conj(L) o V^* G V^{-*}) V^*
         Vh, Vinvh = V.conj().transpose(-2, -1), Vinv.conj().transpose(-2, -1)
         Gt = Vh @ G.to(V.dtype) @ Vinvh
-        gX = Vinvh @ (L.conj().to(Gt.dtype) * Gt) @ Vh
+        local = L.conj().to(Gt.dtype) * Gt
+        if jacobian is not None:
+            # f's full Jacobian is applied through _SpectralValues by the gfw return below.
+            local = local - torch.diag_embed(torch.diagonal(local, dim1=-2, dim2=-1))
+        gX = Vinvh @ local @ Vh
         if not torch.is_complex(X) and torch.is_complex(gX):
             gX = gX.real
         gfw = torch.diagonal(Gt, dim1=-2, dim2=-1)
         if ctx.fw_is_real and torch.is_complex(gfw):
             gfw = gfw.real
         return (gX if ctx.needs_input_grad[0] else None,
-                gfw if ctx.needs_input_grad[1] else None, None, None, None)
+                gfw if ctx.needs_input_grad[1] else None, None, None, None, None)
 
 
 def spectral_apply(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], kind: str = 'hermitian',
                    decomposition: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
-                   what: str = "eigh") -> torch.Tensor:
+                   what: str = "eigh", coupled: bool = False) -> torch.Tensor:
     """
     f(X) for a stack X (n, k, k) of self-adjoint (kind='hermitian') or normal (kind='normal') matrices and an
     elementwise f on the eigenvalues (n, k). `decomposition` = (w, V) may be passed from a cache. For
-    self-adjoint X the function is evaluated at the self-adjoint part of X.
+    self-adjoint X the function is evaluated at the self-adjoint part of X. coupled=True supports a smooth
+    permutation-equivariant map on each row using its full Jacobian (k reverse passes, O(n k^2) storage).
     """
     if kind == 'hermitian':
         Xin = 0.5 * (X + X.conj().transpose(-2, -1))
@@ -275,8 +350,17 @@ def spectral_apply(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], k
         w, V = decomposition
     needs_grad = Xin.requires_grad and torch.is_grad_enabled()
     correct = kind == 'normal'          # first-order correction for the residual off-diagonal part of V^* X V
+    jacobian = None
     if needs_grad or correct:
-        fw, dfw = values_and_derivative(f, w)
+        if coupled:
+            fw, jacobian = _coupled_values(f, w)
+            dfw = torch.diagonal(jacobian, dim1=-2, dim2=-1)
+            if needs_grad:
+                fw = f(_SpectralValues.apply(Xin, w, V, kind))
+                if not (fw.is_floating_point() or fw.is_complex()):
+                    fw = fw.to(w.dtype)
+        else:
+            fw, dfw = values_and_derivative(f, w)
     else:
         fw = f(w)
         if not (fw.is_floating_point() or fw.is_complex()):
@@ -287,13 +371,13 @@ def spectral_apply(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], k
             Vh = V.conj().transpose(-2, -1)
             E = Vh @ Xin.detach().to(V.dtype) @ V
             E = E - torch.diag_embed(torch.diagonal(E, dim1=-2, dim2=-1))
-            L0 = divided_differences(w, fw.detach(), dfw)
+            L0 = divided_differences(w, fw.detach(), dfw, jacobian)
             correction = V @ (L0.to(E.dtype) * E) @ Vh      # f(V(Λ+E)V^*) = V(f(Λ) + L o E)V^* + O(|E|^2)
     if not needs_grad:
         dt = torch.promote_types(V.dtype, fw.dtype)
         out = (V.to(dt) * fw.to(dt).unsqueeze(-2)) @ V.conj().transpose(-2, -1).to(dt)
         return out if correction is None else out + correction.to(dt)
-    L = divided_differences(w, fw.detach(), dfw)
+    L = divided_differences(w, fw.detach(), dfw, jacobian)
 
     def recompute(Y):                                   # differentiable decomposition for second derivatives
         if kind == 'hermitian':
@@ -303,10 +387,15 @@ def spectral_apply(X: torch.Tensor, f: Callable[[torch.Tensor], torch.Tensor], k
             w2, V2 = torch.linalg.eig(Y)
             V2inv = torch.linalg.inv(V2)
         _warn_if_degenerate(w2)
-        fw2, dfw2 = values_and_derivative(f, w2, create_graph=True)
-        return V2, V2inv, divided_differences(w2, fw2, dfw2)
+        J2 = None
+        if coupled:
+            fw2, J2 = _coupled_values(f, w2, create_graph=True)
+            dfw2 = torch.diagonal(J2, dim1=-2, dim2=-1)
+        else:
+            fw2, dfw2 = values_and_derivative(f, w2, create_graph=True)
+        return V2, V2inv, divided_differences(w2, fw2, dfw2, J2), J2
     Vc = V if torch.is_complex(fw) == torch.is_complex(V) or torch.is_complex(V) else V.to(fw.dtype)
-    out = _SpectralReconstruction.apply(Xin, fw, Vc, L, recompute)
+    out = _SpectralReconstruction.apply(Xin, fw, Vc, L, recompute, jacobian)
     return out if correction is None else out + correction.to(out.dtype)
 
 

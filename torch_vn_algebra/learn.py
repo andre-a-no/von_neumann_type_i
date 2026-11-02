@@ -67,6 +67,8 @@ class ChannelLayer(nn.Module):
         self.algebra, self.algebra_out = algebra, algebra_out or algebra
 
     def channel(self) -> Union[Channel, InterSectorChannel]:
+        # Loading with assign=True can replace the registered Parameter.
+        self._param.Z = self.Z
         return self._param.channel()
 
     def forward(self, rho: DensityMatrix) -> DensityMatrix:
@@ -120,6 +122,9 @@ class LindbladLayer(nn.Module):
 
     def generator(self):
         """(H, jumps) for dynamics.lindblad_evolve."""
+        for name in ('X', 'L', 'K'):
+            if getattr(self._param, name) is not None:
+                setattr(self._param, name, getattr(self, name))
         return self._param.hamiltonian(), self._param.jumps()
 
     def forward(self, rho: DensityMatrix) -> DensityMatrix:

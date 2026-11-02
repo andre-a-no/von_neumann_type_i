@@ -3,10 +3,10 @@ Conversion between elements of M = (+)_c M_{k_c} and dense matrices, QuTiP objec
 
 An element of M becomes the block-diagonal D x D matrix, D = sum_c k_c, with the sectors in their order. A density
 stays a density: the library stores states with respect to Tr_blunt, which is the ordinary trace of that matrix. A
-map between algebras (InterSectorChannel) is a map into the algebra M_out, i.e. it ends with the pinching onto the
-output sectors; its dense Kraus operators are therefore P_d K_i, one for every Kraus operator K_i and output sector d
-(the sum over d of P_d K_i alone would create coherences between output sectors). A SectorJump, whose sectors each go
-to a single sector, becomes the dense jump operator L itself.
+map between algebras (InterSectorChannel) extends to dense matrices by pinching both the input and output sectors;
+its dense Kraus operators are therefore P_d K_i P_c, one per Kraus index and sector pair. Keeping c separate also
+preserves the block-diagonal loss term of a Lindblad generator. A SectorJump, whose sectors each go to a single
+sector, becomes the dense jump operator L itself.
 
 When the algebra acts on a Hilbert space with a basis of its own, `layout` places the basis vectors there: either a
 SpinChain (sector N, basis state with label x -> the computational basis of L qubits in QuTiP's convention: site 0
@@ -101,11 +101,13 @@ def channel_to_dense(channel: Union[Channel, InterSectorChannel, SectorJump], la
                      per_output_sector: Optional[bool] = None) -> torch.Tensor:
     """
     Kraus operators of a map between algebras as dense matrices, shape (batch, r', n_out, n_in). By default an
-    InterSectorChannel gives r' = r * D operators P_d K_i (the dense form of the map into M_out, see the module
+    InterSectorChannel gives separate operators P_d K_i P_c for each nonempty input/output sector pair
+    (the dense form includes pinching the input as well as the output; see the module
     docstring) and a SectorJump gives its operator L (r' = 1). per_output_sector=False returns the r operators
     sum_d P_d K_i, which agree with the channel on block-diagonal inputs only if every input sector goes to one
     output sector.
     """
+    split_inputs = isinstance(channel, InterSectorChannel)
     if per_output_sector is None:
         per_output_sector = not isinstance(channel, (SectorJump, Channel))     # a Channel keeps its sectors
     if isinstance(channel, (SectorJump, Channel)):
@@ -123,11 +125,18 @@ def channel_to_dense(channel: Union[Channel, InterSectorChannel, SectorJump], la
     if not per_output_sector:
         return out
     pieces = []
-    for m, po in zip(a_out.k_factors, p_out):                          # P_d K_i for every output sector d
+    for m, po in zip(a_out.k_factors, p_out):
         if m:
             P = torch.zeros(n_out, dtype=torch.bool, device=K.device)
             P[po] = True
-            pieces.append(out * P[:, None])
+            if split_inputs:
+                for k, pi in zip(a_in.k_factors, p_in):
+                    if k:
+                        Q = torch.zeros(n_in, dtype=torch.bool, device=K.device)
+                        Q[pi] = True
+                        pieces.append(out * (P[:, None] & Q[None, :]))
+            else:
+                pieces.append(out * P[:, None])
     return torch.stack(pieces, 2).reshape(K.shape[0], -1, n_out, n_in)
 
 
@@ -143,7 +152,7 @@ def from_dense(matrix, algebra: TypeIAlgebra, layout=None, state: bool = False, 
         A = A.unsqueeze(0)
     if tuple(A.shape[1:]) != (n, n):
         raise ValueError(f"expected matrices of size {n} x {n}, got {tuple(A.shape[1:])}")
-    A = A.to(device=algebra.hilbert.device, dtype=algebra.dtype)
+    A = algebra._to_field(A, 'dense matrix')
     blocks = A.new_zeros(A.shape[0], algebra.C, algebra.k_max, algebra.k_max)
     inside = A.new_zeros(A.shape, dtype=torch.bool)
     for c, (k, pos) in enumerate(zip(algebra.k_factors, _positions(algebra, basis.to(A.device)))):
@@ -175,7 +184,7 @@ def channel_from_dense(kraus, algebra_in: TypeIAlgebra, algebra_out: Optional[Ty
         K = K.unsqueeze(0)
     if tuple(K.shape[2:]) != (n_out, n_in):
         raise ValueError(f"expected Kraus operators of size {n_out} x {n_in}, got {tuple(K.shape[2:])}")
-    K = K.to(device=algebra_in.hilbert.device, dtype=algebra_in.dtype)
+    K = algebra_out._to_field(K, 'dense Kraus operators')
     B, r = K.shape[:2]
     blocks = K.new_zeros(B, r, algebra_out.C, algebra_in.C, algebra_out.k_max, algebra_in.k_max)
     p_in, p_out = _positions(algebra_in, b_in.to(K.device)), _positions(algebra_out, b_out.to(K.device))

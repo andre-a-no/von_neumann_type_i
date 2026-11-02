@@ -7,6 +7,16 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 ## [Unreleased]
 
 ### Fixed
+- Dense exports of general inter-sector channels keep independent Kraus operators for input as well as output
+  sectors, preserving Lindblad loss terms and QuTiP trajectories. Dense imports reject unrepresentable complex
+  entries in real algebras instead of discarding coherences.
+- Channel and Lindblad layers use their current registered parameters after `load_state_dict(assign=True)`.
+- Coupled, permutation-equivariant spectral functions with `per_block=True` use the full eigenvalue Jacobian,
+  including the off-diagonal derivative at repeated eigenvalues.
+- Renyi divergences near alpha = 1 use a relative-entropy/variance expansion and double-precision work for
+  single-precision near-limit arguments, retaining the alpha derivative and consistent sector contributions.
+- Pending lazy arithmetic expressions invalidate inferred property flags when their parents change, including
+  changes through multiple levels of dependencies; materialized results retain their snapshot semantics.
 - Operator property checks use relative tolerances per sample and active block, so a large neighbour cannot
   misclassify a small non-Hermitian, indefinite or singular matrix. In-place changes invalidate known spectra,
   property flags and cached traces, inverses and absolute values as well as cached eigendecompositions.

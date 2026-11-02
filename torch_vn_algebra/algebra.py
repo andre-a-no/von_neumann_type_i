@@ -361,6 +361,8 @@ class TypeIAlgebra:
             self._abs = None
             self._spectral_cache = None          # {'kind', 'key', 'groups': [(w, V), ...]} when caching is on
             self._cache_on = False
+            self._mutation_epoch = 0
+            self._dependencies = ()
             self._batch = None if matrix is None else matrix.shape[0]   # known batch size of a lazy operator
 
             self._update_memory()
@@ -383,7 +385,12 @@ class TypeIAlgebra:
 
         def _check_matrix_version(self):
             key = self._current_matrix_key()
-            if key != self._matrix_key:
+            dependencies = []
+            for parent, epoch in self._dependencies:
+                parent._check_matrix_version()
+                dependencies.append((parent, parent._mutation_epoch))
+            changed_parent = any(epoch != old for (_, epoch), (_, old) in zip(dependencies, self._dependencies))
+            if key != self._matrix_key or changed_parent:
                 self._eigenvalues = None
                 self._lambda_max = self._lambda_min = self._trace = None
                 self._inverse = self._abs = self._spectral_cache = None
@@ -391,9 +398,12 @@ class TypeIAlgebra:
                     setattr(self, f'_is_{flag}', None)
                     setattr(self, f'_is_{flag}_set', False)
                 self._matrix_key = key
+                self._mutation_epoch += 1
+            self._dependencies = tuple(dependencies)
 
         @property
         def matrix(self) -> torch.Tensor:
+            self._check_matrix_version()
             if not self._is_materialized:
                 self._matrix = self._generator()
                 self._is_materialized = True
@@ -401,10 +411,9 @@ class TypeIAlgebra:
                 # drop the recipe: it holds references to the parent operators (and their
                 # cached matrices), which would otherwise stay alive as long as this one
                 self._generator = None
+                self._dependencies = ()
                 self._validate_properties()
                 self._update_memory()
-            else:
-                self._check_matrix_version()
             return self._matrix
 
         def _eps(self) -> float:
@@ -675,7 +684,7 @@ class TypeIAlgebra:
                            if tol is None else tol)
                     big = w.abs() > thr
                     return torch.where(big, 1.0 / torch.where(big, w, torch.ones_like(w)), torch.zeros_like(w))
-                op = self.apply_function(f, per_block=True)
+                op = self._apply_function(f, per_block=True, coupled=False)
                 op._is_self_adjoint = True
                 op._is_normal = True
                 op._is_positive = self._is_positive
@@ -825,8 +834,11 @@ class TypeIAlgebra:
                                  f"{b.dtype}); convert one with op.cast(alg)")
 
         def _derived(self, generator, other=None, **flags) -> 'TypeIAlgebra.Operator':
-            """Lazy result with the property flags that are known to hold (not checked; None = unknown)."""
+            """Lazy result with inferred flags (None = unknown). Pending results follow parent values;
+            parent mutations invalidate inferred flags transitively. Materialization drops the dependencies."""
             op = TypeIAlgebra.Operator(self.algebra, generator=generator)
+            parents = (self,) if other is None else (self, other)
+            op._dependencies = tuple((parent, parent._mutation_epoch) for parent in parents)
             for name, value in flags.items():
                 setattr(op, f'_is_{name}', value)
             # known batch of the result: unknown (None) as soon as one operand's batch is unknown
@@ -1051,7 +1063,8 @@ class TypeIAlgebra:
             that size, a tensor (batch, n * k_c), and returns a tensor of the same shape (per-sample parameters
             of shape (batch, 1) broadcast; the operator must then have the full batch, e.g. (A * t) instead of a
             batch-1 A). With per_block=True f instead receives one block per row, (batch * n, k_c), and may
-            couple the eigenvalues of a block (e.g. thresholds relative to the block); per-sample parameters do
+            couple the eigenvalues of a block (e.g. normalising by their sum); the map must commute with
+            permutations of eigenvalues. Its full per-block Jacobian is used for gradients. Per-sample parameters do
             not broadcast then. A complex-valued result requires a complex algebra. Only the Hermitian
             eigensolver is used (for normal A, on H + alpha K with A = H + iK), one batched call per block size.
             Gradients with respect to A use the Daleckii-Krein formula (divided differences of f): finite also
@@ -1059,6 +1072,9 @@ class TypeIAlgebra:
             Gradients with respect to parameters of f (e.g. t in exp(-itw)) are propagated as usual. For
             non-normal A use holomorphic_function.
             """
+            return self._apply_function(f, per_block, coupled=per_block)
+
+        def _apply_function(self, f, per_block: bool, coupled: bool):
             alg = self.algebra
 
             def generator():
@@ -1080,7 +1096,7 @@ class TypeIAlgebra:
                         if per_block:
                             return f(w)
                         return f(w.reshape(B, n * k_c)).reshape(-1, k_c)
-                    y = _fc.spectral_apply(x, f_values, kind, decomposition=wv)
+                    y = _fc.spectral_apply(x, f_values, kind, decomposition=wv, coupled=coupled)
                     parts.append((k_c, idx, y))
                 cplx = any(torch.is_complex(y) for _, _, y in parts)
                 out_dtype = self.matrix.dtype
@@ -1168,7 +1184,7 @@ class TypeIAlgebra:
                 thr = w.shape[-1] * torch.finfo(w.dtype).eps * w.amax(dim=-1, keepdim=True)
                 big = w > thr
                 return torch.where(big, torch.where(big, w, torch.ones_like(w)) ** p, torch.zeros_like(w))
-            op = self.apply_function(f, per_block=p < 0)
+            op = self._apply_function(f, per_block=p < 0, coupled=False)
             op._is_self_adjoint = True
             op._is_positive = True
             return op
