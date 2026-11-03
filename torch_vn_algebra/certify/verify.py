@@ -9,7 +9,7 @@ next to a certificate and run it. It re-derives everything it checks:
 
 1. Problem: the id and parameters must be known to this file (VERIFIERS below), and delta must be a rational in (0, 1).
 2. Lower bound L: the witness matrices are checked in exact rational arithmetic in the ORIGINAL problem (P, Q
-   symmetric idempotents; W positive diagonal with Tr W = 1 and Michelson contrast exactly delta), and the violation
+   nonzero symmetric idempotents; W positive diagonal with Tr W = 1 and Michelson contrast exactly delta), and the violation
    |phi(PQ)|^alpha >= (1 + L)^alpha phi(P) phi(Q)^(alpha - 1) is checked exactly. Hence V(delta) >= L.
 3. Upper bound U: the reduced domain is rebuilt from delta; the search tree is replayed from the root box with exact
    rational midpoints (coverage by construction); on every leaf, one of three Arb bounds (natural extension,
@@ -155,6 +155,8 @@ class Holder:
         if (max(ev) - min(ev)) / (max(ev) + min(ev)) != self.delta:
             raise AssertionError("witness: contrast of W differs from delta")
         x, p, q = tr(mul(W, mul(P, Qm))), tr(mul(W, P)), tr(mul(W, Qm))
+        if p <= 0 or q <= 0:
+            raise AssertionError("witness: phi(P) and phi(Q) must be positive")
         A = self.alpha
         if not ((1 + L) ** A * p * q ** (A - 1) <= x ** A):              # |x| = x up to sign: x^alpha, alpha odd
             if not ((1 + L) ** A * p * q ** (A - 1) <= abs(x) ** A):

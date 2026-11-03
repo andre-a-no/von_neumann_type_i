@@ -24,6 +24,8 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 - `ROADMAP_certify.md`: the plan of the module (SDP layer, matrix-function bounds, the remaining items).
 
 ### Fixed
+- The certificate verifier rejects zero-projection witnesses: both denominator factors must be strictly
+  positive before the powered lower-bound inequality is checked, preventing a vacuous `0 <= 0` certificate.
 - Pending square roots, logarithms and powers recheck the current parent's positivity when materialised,
   rejecting a lost domain condition instead of silently dropping the negative spectrum.
 - Scalar multiplication retains negative property flags only for known nonzero coefficients; tensor zero

@@ -170,6 +170,29 @@ def _tampered(tmp_path, edit):
     return p
 
 
+@pytest.mark.parametrize("zeroed", [("P",), ("Q",), ("P", "Q")], ids=["P", "Q", "both"])
+def test_zero_projection_cannot_certify_a_tight_lower_bound(tmp_path, zeroed):
+    """A zero denominator makes the powered witness check vacuous, even with L = U."""
+    def edit(c):
+        for name in zeroed:
+            c["witness"][name] = [["0" for _ in row] for row in c["witness"][name]]
+        c["claim"]["lower"] = c["claim"]["upper"]
+
+    with pytest.raises(AssertionError, match="phi\\(P\\) and phi\\(Q\\) must be positive"):
+        _verifier().verify(_tampered(tmp_path, edit), log=lambda *a: None)
+
+
+@pytest.mark.parametrize("name", sorted(f for f in os.listdir(os.path.join(ROOT, "certificates"))
+                                       if f.endswith(".json.gz")))
+def test_published_witness_is_admissible(name):
+    """Check the exact lower-bound contract for every published certificate, without replaying its tree."""
+    with gzip.open(os.path.join(ROOT, "certificates", name), "rt") as f:
+        c = json.load(f)
+    v = _verifier()
+    prob = v.Holder(c["problem"]["params"], v.Q(c["problem"]["delta"]))
+    prob.check_witness(c["witness"], v.Q(c["claim"]["lower"]))
+
+
 @pytest.mark.parametrize("edit", [
     lambda c: c["witness"]["W"][0].__setitem__(0, "56/100"),                 # contrast of W changed (trace 1.01)
     lambda c: c["claim"].__setitem__("lower", "3/10000"),                     # L above the witness value
