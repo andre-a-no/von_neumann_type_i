@@ -141,8 +141,12 @@ class UnitaryParam(Param):
     def matrix(self) -> torch.Tensor:
         """U as a tensor; computed once per parameter state (an objective that uses U several times, e.g. X and
         |X| of a PositiveParam, pays one matrix exponential)."""
-        key = (self.G._version, id(self.base), torch.is_grad_enabled())
-        if self._cache[0] != key:
+        try:
+            base_version = self.base._version
+        except RuntimeError:                         # inference tensors have no version counter
+            base_version = None
+        key = (self.G._version, id(self.base), base_version, torch.is_grad_enabled())
+        if base_version is None or self._cache[0] != key:
             skew = self.G - self.G.conj().transpose(-2, -1)
             self._cache = (key, self.base @ self.alg.operator(skew).expm().matrix)
         return self._cache[1]
@@ -413,13 +417,48 @@ class LindbladParam(Param):
         return out
 
 
+class _StinespringPolar(torch.autograd.Function):
+    """Thin polar factor of full-column-rank matrices, without squaring their condition number.
+
+    SVD derivatives divide by differences of singular values. The polar derivative instead solves a
+    Sylvester equation with denominators s_i + s_j, so repeated positive singular values are harmless.
+    At deficient rank the thin SVD completes the factor to an isometry; its derivative is not defined.
+    """
+
+    @staticmethod
+    def forward(ctx, Z):
+        U, s, Vh = cost.batched_call(lambda x: torch.linalg.svd(x, full_matrices=False), Z,
+                                     "Stinespring polar factor", kind='svd')
+        ctx.save_for_backward(Z, U, s, Vh)
+        return U @ Vh
+
+    @staticmethod
+    def backward(ctx, G):
+        Z, U, s, Vh = ctx.saved_tensors
+        if bool((s[..., -1] <= max(Z.shape[-2:]) * torch.finfo(s.dtype).eps * s[..., 0]).any()):
+            raise RuntimeError("StinespringParam: gradients require full column rank in every active sector")
+        if torch.is_grad_enabled():                     # second derivatives, as for the spectral calculus
+            from .functional import _warn_if_degenerate
+            U, s, Vh = torch.linalg.svd(Z, full_matrices=False)
+            _warn_if_degenerate(s)
+        V = Vh.conj().transpose(-2, -1)
+        UhG = U.conj().transpose(-2, -1) @ G
+        A = UhG @ V
+        tangent = (A - A.conj().transpose(-2, -1)) / (s.unsqueeze(-1) + s.unsqueeze(-2))
+        normal = ((G - U @ UhG) @ V) / s.unsqueeze(-2)
+        return (U @ tangent + normal) @ Vh
+
+
 class StinespringParam(Param):
     """
     Trace-preserving CP maps from the algebra `alg` (one per start): for every input sector c an isometry
     V_c = Z_c (Z_c^* Z_c)^{-1/2} from C^{k_c} into the environment C^r times the output sectors, and the Kraus
     operators are the blocks of V_c. Every value of the free complex matrices Z is a channel (no constraint, no
     projection); Gaussian Z gives Haar-random isometries, i.e. the distribution of channels.random_channel and
-    channels.random_inter_sector_channel. Gradients go through Z^* Z by the Daleckii-Krein formula. The Kraus gauge
+    channels.random_inter_sector_channel. The polar factor is computed directly from a thin SVD of Z, with a
+    backward finite at repeated positive singular values. At deficient rank it is completed to an isometry inside
+    the allowed output space; gradients require numerical full column rank and otherwise raise (the polar factor
+    is not differentiable at deficient rank). The Kraus gauge
     (V -> (W (x) 1) V with a unitary W of the environment) is a symmetry of every objective of the channel.
 
     alg_out=None: sector-preserving channels of `alg` (channel() is a Channel, Kraus rank r). Otherwise
@@ -456,6 +495,15 @@ class StinespringParam(Param):
         Z = torch.randn(shape, dtype=alg.dtype, device=dev, generator=generator)
         self.Z = (Z * self._mask).requires_grad_(True)
         self._D, self._m = D, m
+        # Compact active matrices only: SVD completion must never populate forbidden transitions or padding.
+        groups = {}
+        for c, k_c in enumerate(alg.k_factors):
+            if k_c:
+                rows = torch.nonzero(self._mask[c, :, :, :, 0].reshape(-1), as_tuple=False).flatten()
+                groups.setdefault((k_c, rows.numel()), []).append((c, rows))
+        self._polar_groups = [(k_c, torch.tensor([c for c, _ in entries], device=dev),
+                               torch.stack([rows for _, rows in entries]))
+                              for (k_c, _), entries in groups.items()]
 
     def parameters(self):
         return [self.Z]
@@ -463,9 +511,12 @@ class StinespringParam(Param):
     def kraus(self) -> torch.Tensor:
         """Kraus tensor (batch, r, D, C, m, k) (between algebras) or (batch, r, C, k, k) (within one algebra)."""
         B, C, r, D, m, k = self.Z.shape
-        Z = (self.Z * self._mask).reshape(B, C, r * D * m, k)
-        gram = self.alg.operator(Z.conj().transpose(-2, -1) @ Z, is_self_adjoint=True, is_positive=True)
-        V = Z @ gram.power(-0.5).matrix                                            # (B, C, r D m, k), V_c^* V_c = 1
+        Z = self.Z.reshape(B, C, r * D * m, k)
+        V = torch.zeros_like(Z)
+        for k_c, sectors, rows in self._polar_groups:
+            compact = Z[:, sectors[:, None], rows, :k_c]
+            polar = _StinespringPolar.apply(compact.reshape(-1, rows.shape[-1], k_c))
+            V[:, sectors[:, None], rows, :k_c] = polar.reshape(B, len(sectors), rows.shape[-1], k_c)
         K = V.reshape(B, C, r, D, m, k).permute(0, 2, 3, 1, 4, 5)                  # (B, r, D, C, m, k)
         if self.alg_out is None:
             idx = torch.arange(C, device=K.device)
@@ -494,7 +545,8 @@ def extremize(objective: Callable[[], torch.Tensor], params: Sequence[Param], ma
 
     def keep(v):
         nonlocal best
-        v = torch.nan_to_num(v.detach(), nan=-float('inf') if maximize else float('inf'))
+        invalid = -float('inf') if maximize else float('inf')
+        v = torch.nan_to_num(v.detach(), nan=invalid, posinf=invalid, neginf=invalid)
         best = v if best is None else (torch.maximum(best, v) if maximize else torch.minimum(best, v))
 
     for rnd in range(rounds):

@@ -27,7 +27,7 @@ from typing import Callable, List, Tuple
 
 import torch
 
-from .algebra import TypeIAlgebra
+from .algebra import TypeIAlgebra, _same_device
 from . import cost
 from .channels import InterSectorChannel
 from .states import DensityMatrix
@@ -38,6 +38,10 @@ Operator = TypeIAlgebra.Operator
 def _make_product(alg1: TypeIAlgebra, alg2: TypeIAlgebra, groups: List[Tuple], charges: List) -> TypeIAlgebra:
     if alg1.hilbert.complex_valued != alg2.hilbert.complex_valued:
         raise ValueError("both factors must be real or both complex")
+    if alg1.precision != alg2.precision:
+        raise ValueError("tensor-product factors must have the same precision; convert one with alg.like() and op.cast()")
+    if not _same_device(alg1.hilbert.device, alg2.hilbert.device):
+        raise ValueError("tensor-product factors must be on the same device; convert one with alg.like() and op.cast()")
     blocks, n, k = [], [], []
     for pairs in groups:
         off, n_s, sec = 0, 0, []
@@ -56,7 +60,9 @@ def _make_product(alg1: TypeIAlgebra, alg2: TypeIAlgebra, groups: List[Tuple], c
 
 
 def tensor_product(alg1: TypeIAlgebra, alg2: TypeIAlgebra) -> TypeIAlgebra:
-    """The algebra alg1 (x) alg2 with sectors (c, d) -> c * alg2.C + d and charges (q_c, q_d)."""
+    """The algebra alg1 (x) alg2 with sectors (c, d) -> c * alg2.C + d and charges (q_c, q_d).
+    Both factors must have the same number field, precision and device.
+    """
     groups = [[(c, d)] for c in range(alg1.C) for d in range(alg2.C)]
     charges = [(q1, q2) for q1 in alg1.charges for q2 in alg2.charges]
     return _make_product(alg1, alg2, groups, charges)
@@ -68,6 +74,7 @@ def fused_tensor_product(alg1: TypeIAlgebra, alg2: TypeIAlgebra,
     Charge-conserving product: pairs (c, d) with equal fuse(q_c, q_d) are merged into one sector.
     Sectors are ordered by the fused charge (sorted when the charges are comparable), the pairs
     inside a sector by (c, d). Default fusion rule: addition (U(1) charges).
+    Both factors must have the same number field, precision and device.
     """
     groups = {}
     for c, q1 in enumerate(alg1.charges):
@@ -102,11 +109,27 @@ def pair_offset(alg12: TypeIAlgebra, c: int, d: int) -> Tuple[int, int]:
     return s, next(off for cc, dd, off in alg12.product_blocks[s] if cc == c and dd == d)
 
 
+def _derived_on(parent: Operator, algebra: TypeIAlgebra, generator, other=None, state=False, **flags) -> Operator:
+    """A lazy result in another algebra, retaining parent-version tracking and state type."""
+    out = parent._derived(generator, other, **flags)
+    if state:
+        rho = DensityMatrix(algebra, generator=generator, validate=False)
+        rho._dependencies = out._dependencies
+        rho._batch = out._batch
+        for name, value in flags.items():
+            setattr(rho, f'_is_{name}', value)
+        out = rho
+    out.algebra = algebra
+    return out
+
+
 def kron(A: Operator, B: Operator, alg12: TypeIAlgebra) -> Operator:
     """A (x) B in alg12 = tensor_product / fused_tensor_product of (A.algebra, B.algebra) (batched,
     lazy). In a fused product A (x) B is block diagonal inside the merged sectors. States give a state."""
     alg1, alg2 = _factors(alg12)
     assert A.algebra is alg1 and B.algebra is alg2
+    A._check_matrix_version()
+    B._check_matrix_version()
 
     def generator():
         a, b = A.matrix, B.matrix
@@ -119,14 +142,9 @@ def kron(A: Operator, B: Operator, alg12: TypeIAlgebra) -> Operator:
         # one gather per factor: (A (x) B)[s, i, j] = A[c, a_i, a_j] B[d, b_i, b_j] inside a pair block, else 0
         return a[:, ci, ai, aj] * b[:, di, bi, bj] * mask.to(dtype)
 
-    if isinstance(A, DensityMatrix) and isinstance(B, DensityMatrix):
-        return DensityMatrix(alg12, generator=generator, validate=False)
-    out = Operator(alg12, generator=generator)
-    if A._is_self_adjoint and B._is_self_adjoint:
-        out._is_self_adjoint = True
-    if A._is_positive and B._is_positive:
-        out._is_positive = True
-    return out
+    return _derived_on(A, alg12, generator, B, state=isinstance(A, DensityMatrix) and isinstance(B, DensityMatrix),
+                       self_adjoint=True if A._is_self_adjoint and B._is_self_adjoint else None,
+                       positive=True if A._is_positive and B._is_positive else None)
 
 
 def _kron_index(alg12: TypeIAlgebra):
@@ -247,6 +265,7 @@ def partial_trace(X: Operator, keep: int = 1) -> Operator:
     if keep not in (1, 2):
         raise ValueError("keep must be 1 or 2")
     out_alg = alg1 if keep == 1 else alg2
+    X._check_matrix_version()
 
     def generator():
         x = X.matrix
@@ -262,9 +281,6 @@ def partial_trace(X: Operator, keep: int = 1) -> Operator:
             out.index_add_(1, osec, pad)
         return out
 
-    if isinstance(X, DensityMatrix):
-        return DensityMatrix(out_alg, generator=generator, validate=False)
-    out = Operator(out_alg, generator=generator)
-    out._is_self_adjoint = X._is_self_adjoint
-    out._is_positive = X._is_positive
-    return out
+    return _derived_on(X, out_alg, generator, state=isinstance(X, DensityMatrix),
+                       self_adjoint=True if X._is_self_adjoint else None,
+                       positive=True if X._is_positive else None)

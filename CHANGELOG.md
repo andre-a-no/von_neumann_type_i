@@ -23,6 +23,78 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 - `certificates/claims.json` and `tests/test_certified_claims.py`: numbers of the papers tied to certificates.
 - `ROADMAP_certify.md`: the plan of the module (SDP layer, matrix-function bounds, the remaining items).
 
+### Fixed
+- CI uses Ubuntu 22.04 for Python 3.8/3.9, whose interpreter builds are unavailable on the Ubuntu 26.04
+  `ubuntu-latest` image. The full supported Python matrix is retained.
+- Sparse Hamiltonian gradients use a COO path with `torch.sparse.mm`, including for complex input vectors
+  on PyTorch 1.13, where COO-to-CSR and complex CSR backward are unsupported. Inference retains CSR caching.
+- Krylov evolution separates scalar spectral shifts from Ritz data and phase, retains residual error at
+  numerical breakdown, and advances by elapsed intervals even for large absolute timestamps. Schrödinger
+  RK4 broadcasts initial states over Hamiltonian batches and preserves Hamiltonian precision. Scaled
+  vector norms preserve subnormal values and finite gradients at extreme magnitudes.
+- Sparse Hamiltonian casts and prepared permutational generators refresh after tensor mutations and avoid
+  stale autograd graphs. Spin-coherent states retain their angular derivative at the poles.
+- Symmetry-resolved free-fermion checks use known pure-projector ranks and Schmidt singular values to
+  preserve structural zero modes without discarding genuine small modes or loosening test tolerances.
+- Composite operators track changes to their lazy parents and do not propagate negative positivity or
+  Hermiticity flags through partial traces. Tensor-product factors require matching precision and device.
+- Channels and instrument exports invalidate trace-preservation hints after Kraus data changes; pending
+  state outputs reject mutations that would make them unnormalised. Feed-forward instrument exports check
+  their current checkpointed buffers rather than trusting saved hints.
+- Differentiable PVM pushforwards retain coincident outcomes with distinct derivatives; Fisher information
+  accepts conjugate views of complex parameters. Parameter counts distinguish real from complex entries
+  and real symmetric from complex Hermitian Hamiltonians.
+- Sampled spectra are independent snapshots of reusable sampler buffers, preserving sampler gradients.
+  Unitary parameter caches notice base mutations; real matrix exponentials reject complex tensor scales
+  consistently with Python complex scalars. Optimisation bookkeeping excludes infinities as well as NaNs.
+- Relative certification preserves exact input rationals and requested widths, rejects nonpositive lower
+  bounds, and applies its covering budget to unresolved as well as completed regions.
+- The certificate verifier rejects zero-projection witnesses: both denominator factors must be strictly
+  positive before the powered lower-bound inequality is checked, preventing a vacuous `0 <= 0` certificate.
+- Pending square roots, logarithms and powers recheck the current parent's positivity when materialised,
+  rejecting a lost domain condition instead of silently dropping the negative spectrum.
+- Scalar multiplication retains negative property flags only for known nonzero coefficients; tensor zero
+  multiples therefore have the functional calculus of zero. Pseudoinverses do not inherit rank or negative
+  sign/normality flags that spectral truncation can invalidate.
+- Algebra-bearing learning layers transfer their algebra metadata, masks and group indices with the registered
+  tensors, including after dtype/device changes and assigned checkpoints, without mutating shared source algebras.
+- `FeedForward.state_dict()` includes the fixed instrument's Kraus tensor and outcome labels. Old checkpoints
+  without instrument data require reconstructing that instrument and explicitly loading with `strict=False`.
+- Elementwise spectral functions retain mixed second derivatives in the matrix and captured function parameters,
+  including normal operators and cached spectra, without double-counting the eigenvalue contribution.
+- `LindbladLayer` accepts only `exact` and `kraus`; it rejects RK4, whose steps need not be positive maps.
+- The Renyi threshold script reuses the library's corrected Stinespring parameterisation instead of its duplicate
+  Gram-based implementation.
+- Papers describe the direct-SVD channel parameterisation and its rank condition, distinguish high-precision
+  numerical recomputation from rigorous certification, and identify the published tables as historical runs.
+- Dense exports of general inter-sector channels keep independent Kraus operators for input as well as output
+  sectors, preserving Lindblad loss terms and QuTiP trajectories. Dense imports reject unrepresentable complex
+  entries in real algebras instead of discarding coherences.
+- Channel and Lindblad layers use their current registered parameters after `load_state_dict(assign=True)`.
+- Coupled, permutation-equivariant spectral functions with `per_block=True` use the full eigenvalue Jacobian,
+  including the off-diagonal derivative at repeated eigenvalues.
+- Renyi divergences near alpha = 1 use a relative-entropy/variance expansion and double-precision work for
+  single-precision near-limit arguments, retaining the alpha derivative and consistent sector contributions.
+- Pending lazy arithmetic expressions invalidate inferred property flags when their parents change, including
+  changes through multiple levels of dependencies; materialized results retain their snapshot semantics.
+- Operator property checks use relative tolerances per sample and active block, so a large neighbour cannot
+  misclassify a small non-Hermitian, indefinite or singular matrix. In-place changes invalidate known spectra,
+  property flags and cached traces, inverses and absolute values as well as cached eigendecompositions.
+- Stinespring parameters use a direct thin-SVD polar factor instead of squaring the condition number in a Gram
+  matrix. Channels remain trace preserving for ill-conditioned full-rank parameters and at deficient rank
+  (completed within the allowed output space); gradients are finite at repeated positive singular values and
+  explicitly require numerical full column rank.
+- `fisher_information(create_graph=True)` retains the probability denominator's gradient, including gradients
+  with respect to captured measurement parameters.
+- Weighted `lp_norm` ignores zero-weight sectors when scaling and taking powers, handles all-zero weights with
+  finite gradients, and broadcasts a batch of weight vectors over a single operator.
+- Lanczos normalisation keeps zero starts and vectors after breakdown finite in single as well as double
+  precision; a zero member of a batch remains zero during Krylov evolution.
+- `tests/test_theory_ch06_08_D.py::test_exercise_8_2_exceptional_point` matches the two spectra without
+  `np.sort_complex`: for J < |delta| both eigenvalues are purely imaginary, and rounding noise in the real parts
+  decided the sort order (the test failed with NumPy 2.5).
+- `permutational` listed in `__all__`; unused locals and imports removed (`decompose`, `inclusions`, `learn`).
+
 ## [1.2.0] – 2026-10-25
 
 Backward compatible: everything of 1.1.0 works unchanged. New: conversion to QuTiP and dynamiqs, channels and

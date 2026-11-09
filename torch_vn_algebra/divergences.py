@@ -54,6 +54,12 @@ and sigma + eps 1. The thresholds are relative, so all results are invariant und
 
 Numerical evaluation
 --------------------
+Near alpha = 1, the value is evaluated as D + (alpha-1) V/2, where V is the relative entropy variance,
+inside a dtype- and log-norm-dependent window; the omitted term is O((alpha-1)^2). Single-precision inputs
+use double precision internally for scalar alpha near one and for tensor alpha (which may mix near/far values),
+retaining the input support tolerances and returning the input real dtype. This also keeps the alpha derivative
+at one equal to V/2 instead of losing it in a cancellation of logarithms.
+
 The Renyi quantities are evaluated per sector as logarithms log Q_c, with rescaled factors (every factor <= 1, scales
 per block), so that large alpha (D_max as a limit) neither overflows nor underflows, also in single precision; the
 divergence is (alpha-1)^{-1} (logsumexp_c log Q_c - log Tr rho). The Petz value is the exact pair sum
@@ -316,6 +322,8 @@ class _Terms(NamedTuple):
     p: torch.Tensor          # (B, C) Tr rho_c
     q: torch.Tensor          # (B, C) Tr sigma_c
     alpha: torch.Tensor      # (B,) (ones for Umegaki)
+    second: Optional[torch.Tensor]     # (B, C) Tr rho (log rho - log sigma)^2, for the alpha -> 1 expansion
+    log_scale: Optional[torch.Tensor]  # (B, C) bounds on ||log rho - log sigma||
 
 
 def _block_scale(w: torch.Tensor, thr: torch.Tensor, smallest: torch.Tensor) -> torch.Tensor:
@@ -364,10 +372,18 @@ def _terms(rho: Operator, sigma: Operator, alpha: Optional[Alpha], kind: str, tr
     _check_pair(rho, sigma)
     alg = rho.algebra
     rdt, dev = alg.hilbert.real_dtype, alg.hilbert.device
+    # Cancellation near one amplifies float32 error by 1/|alpha-1|. Tensor alpha may contain
+    # a mixture of near/far values; promote that path without inspecting device values on the host.
+    if kind != 'umegaki' and rdt == torch.float32 and (
+            isinstance(alpha, torch.Tensor) or abs(float(alpha) - 1) < 1e-3):
+        work = alg.like(precision='double')
+        return _terms(rho.cast(work), sigma.cast(work), alpha, kind, 'blunt',
+                      _rtol(alg, rtol), _supp_tol(alg, supp_tol))
     if kind == 'umegaki':
         a = torch.ones(1, dtype=rdt, device=dev)
+        scalar_a = 1.0
     else:
-        a, _ = _alpha(alpha, rdt, dev)
+        a, scalar_a = _alpha(alpha, rdt, dev)
     B = _batch(rho.matrix.shape[0], sigma.matrix.shape[0], a.shape[0])
     a = a.expand(B)
     rt, st = _rtol(alg, rtol), _supp_tol(alg, supp_tol)
@@ -375,15 +391,21 @@ def _terms(rho: Operator, sigma: Operator, alpha: Optional[Alpha], kind: str, tr
     thr_s = rt * _global_max([w for *_, w, _ in ds], B)
     dr = _decomposed(rho, B)
     thr_r = rt * _global_max([w for *_, w, _ in dr], B)
-    per_sample = kind != 'umegaki' and isinstance(alpha, torch.Tensor)
+    need_entropy = kind == 'umegaki' or isinstance(alpha, torch.Tensor) or abs(scalar_a - 1) < 1e-3
     resolved = math.sqrt(torch.finfo(rdt).eps)
     uparts, parts, leaks, ps, qs = [], [], [], [], []
+    seconds, scales = [], []
     for (k, idx, xr, wr, Vr), (_, _, xs, ws, Vs) in zip(dr, ds):
         n = len(idx)
         tr_, ts, an = _rep(thr_r, n), _rep(thr_s, n), _rep(a, n)
-        if kind == 'umegaki' or per_sample:      # Tr rho log rho - Tr rho log sigma, logarithms on the supports
+        if need_entropy:      # Tr rho log rho - Tr rho log sigma, logarithms on the supports
             ent = _tr(_apply(xr, wr, Vr, _support_xlogx(tr_)))
-            uparts.append((idx, ent - _tr_prod(xr, _apply(xs, ws, Vs, _support_log(ts)))))
+            log_s = _apply(xs, ws, Vs, _support_log(ts))
+            uparts.append((idx, ent - _tr_prod(xr, log_s)))
+            if kind != 'umegaki':
+                delta_log = _apply(xr, wr, Vr, _support_log(tr_)) - log_s
+                seconds.append((idx, _tr_prod(xr, delta_log @ delta_log)))
+                scales.append((idx, k * cost.abs_max(delta_log.detach(), (-2, -1))))
         if kind != 'umegaki':
             with torch.no_grad():                # |<v_i|u_j>|^2 and the weight of rho_c inside supp sigma_c
                 W = Vr.conj().transpose(-2, -1) @ Vs.to(Vr.dtype)
@@ -436,7 +458,9 @@ def _terms(rho: Operator, sigma: Operator, alpha: Optional[Alpha], kind: str, tr
         qs.append((idx, _tr(xs)))
     log_terms = None if kind == 'umegaki' else _scatter(alg, parts, B, rdt, fill=-math.inf)
     ent = _scatter(alg, uparts, B, rdt) if uparts else None
-    return _Terms(log_terms, ent, _scatter(alg, leaks, B, rdt), _scatter(alg, ps, B, rdt), _scatter(alg, qs, B, rdt), a)
+    return _Terms(log_terms, ent, _scatter(alg, leaks, B, rdt), _scatter(alg, ps, B, rdt), _scatter(alg, qs, B, rdt), a,
+                  _scatter(alg, seconds, B, rdt) if seconds else None,
+                  _scatter(alg, scales, B, rdt) if scales else None)
 
 
 def _from_terms(t: _Terms, supp_tol: float) -> torch.Tensor:
@@ -458,6 +482,14 @@ def _from_terms(t: _Terms, supp_tol: float) -> torch.Tensor:
     D = torch.where(leak & (a > 1), inf, D)
     if t.ent is not None:
         D = torch.where(one, torch.where(leak, inf, t.ent.sum(-1) / tr_safe), D)
+    if t.second is not None:
+        mean = t.ent.sum(-1) / tr_safe
+        variance = (t.second.sum(-1) / tr_safe - mean.square()).clamp(min=0)
+        threshold = torch.finfo(a.dtype).eps ** (1 / 3) / (1 + t.log_scale.amax(-1).square())
+        near = ((a - 1).abs() <= threshold) & ~leak
+        # Both Renyi families have slope V(rho||sigma)/2 at one. The local expansion avoids
+        # subtracting nearly equal logarithms and retains the correct derivative in alpha.
+        D = torch.where(near, mean + 0.5 * (a - 1) * variance, D)
     return D
 
 
@@ -479,7 +511,7 @@ def petz_renyi_divergence(rho: Operator, sigma: Operator, alpha: Alpha, trace: s
     Differentiable in rho, sigma (and alpha) at points where the supports are stable.
     """
     t = _terms(rho, sigma, alpha, 'petz', trace, rtol, supp_tol)
-    return _from_terms(t, _supp_tol(rho.algebra, supp_tol))
+    return _from_terms(t, _supp_tol(rho.algebra, supp_tol)).to(rho.algebra.hilbert.real_dtype)
 
 
 def sandwiched_renyi_divergence(rho: Operator, sigma: Operator, alpha: Alpha, trace: str = 'blunt',
@@ -489,7 +521,7 @@ def sandwiched_renyi_divergence(rho: Operator, sigma: Operator, alpha: Alpha, tr
     g = (1-alpha)/(2 alpha), shape (batch,). Arguments as for petz_renyi_divergence; ~D_{1/2} = -log F (fidelity).
     """
     t = _terms(rho, sigma, alpha, 'sandwiched', trace, rtol, supp_tol)
-    return _from_terms(t, _supp_tol(rho.algebra, supp_tol))
+    return _from_terms(t, _supp_tol(rho.algebra, supp_tol)).to(rho.algebra.hilbert.real_dtype)
 
 
 def umegaki_relative_entropy(rho: Operator, sigma: Operator, trace: str = 'blunt', rtol: Optional[float] = None,
@@ -640,6 +672,13 @@ def sector_contributions(rho: Operator, sigma: Operator, alpha: Optional[Alpha] 
         cond = umegaki_conditional(terms)
     else:                                         # in logarithms: log Q_c does not overflow
         L = t.log_terms
+        if t.second is not None:
+            mean = t.ent / ps
+            variance = (t.second / ps - mean.square()).clamp(min=0)
+            threshold = torch.finfo(t.alpha.dtype).eps ** (1 / 3) / (1 + t.log_scale.square())
+            near = ((a - 1).abs() <= threshold) & ok & ~leak
+            local_D = mean + 0.5 * (a - 1) * variance
+            L = torch.where(near, torch.log(ps) + (a - 1) * local_D, L)
         terms = torch.exp(L)
         pos = torch.isfinite(L)
         is_one = a == 1                           # alpha given per sample: entries 1 are the Umegaki limit
@@ -647,11 +686,14 @@ def sector_contributions(rho: Operator, sigma: Operator, alpha: Optional[Alpha] 
         cond = (torch.where(pos, L, torch.zeros_like(L)) - a * torch.log(ps) - (1 - a) * torch.log(qs)) / den
         cond = torch.where(pos, cond, inf)
         cond = torch.where(leak & (a > 1), inf, cond)
+        if t.second is not None:
+            cond = torch.where(near, local_D - torch.log(ps / qs), cond)
         if t.ent is not None:
             cond = torch.where(is_one, umegaki_conditional(t.ent), cond)
     cond = torch.where(has_p & ~has_q, inf, cond)
     cond = torch.where(has_p, cond, nan)
-    return SectorContributions(p, q, terms, cond, t.alpha)
+    dtype = rho.algebra.hilbert.real_dtype
+    return SectorContributions(*(v.to(dtype) for v in (p, q, terms, cond, t.alpha)))
 
 
 # ======================================================================
@@ -860,9 +902,19 @@ def _schatten(alg: TypeIAlgebra, svals, w: torch.Tensor, p: float, B: int) -> to
     smax = _scatter(alg, [(idx, s.amax(-1)) for idx, s in svals], B, rdt)          # (B, C)
     if p == math.inf:
         return torch.where(w > 0, smax, torch.zeros_like(smax)).amax(-1)
-    m = smax.amax(-1).clamp(min=torch.finfo(rdt).tiny)                              # (B,)
-    sums = _scatter(alg, [(idx, ((s / _rep(m, len(idx))) ** p).sum(-1)) for idx, s in svals], B, rdt)
-    return m * (w * sums).sum(-1) ** (1 / p)
+    active = (w > 0).expand(B, -1)
+    m = torch.where(active, smax, torch.zeros_like(smax)).amax(-1).clamp(min=torch.finfo(rdt).tiny)
+    parts = []
+    for idx, s in svals:
+        # Mask before taking powers: a large sector of zero weight must neither set the scale nor overflow.
+        on = active[:, alg._sel(idx)].reshape(-1, 1)
+        scaled = torch.where(on, s, torch.zeros_like(s)) / _rep(m, len(idx))
+        parts.append((idx, (scaled ** p).sum(-1)))
+    total = (w * _scatter(alg, parts, B, rdt)).sum(-1)
+    positive = total > 0
+    root = torch.where(positive, torch.where(positive, total, torch.ones_like(total)) ** (1 / p),
+                       torch.zeros_like(total))
+    return m * root
 
 
 def _svals(x: torch.Tensor, self_adjoint: bool) -> torch.Tensor:
@@ -883,11 +935,10 @@ def lp_norm(A: Operator, p: float, trace: str = 'blunt', weights: Optional[torch
     if not isinstance(A, Operator):
         raise TypeError(f"A: expected an Operator, got {type(A).__name__}")
     alg = A.algebra
-    B = A.matrix.shape[0]
     w = _weights(alg, trace, weights)
-    _batch(B, w.shape[0])
+    B = _batch(A.matrix.shape[0], w.shape[0])
     sa = A._is_self_adjoint is True
-    svals = [(idx, _svals(x, sa)) for k, idx, x in A._groups()]
+    svals = [(idx, _svals(x, sa)) for k, idx, x in _blocks(A, B)]
     return _schatten(alg, svals, w, p, B)
 
 

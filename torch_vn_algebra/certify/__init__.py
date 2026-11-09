@@ -30,7 +30,7 @@ import time
 
 from flint import fmpq, ctx, __version__ as _flint_version
 
-from .problems import PROBLEMS, Problem, HolderProjections, _round_up
+from .problems import PROBLEMS, Problem, HolderProjections
 from .engine import upper_bound
 from .witness import parse_rational, fmt_rational
 
@@ -86,20 +86,36 @@ def _problem(problem, params):
 def certify(problem, delta, rel_tol=1e-6, prec=128, starts=40, max_leaves=2_000_000, **params):
     """
     Certified interval for V(delta) of `problem` (a key of PROBLEMS or a Problem instance; `params` go to its
-    constructor). `delta` is converted to an exact rational (pass a string such as "1/10" to avoid float input).
-    The target width is U - L = rel_tol * L (rel_tol > 0). Returns a :class:`Certificate`.
+    constructor). `delta` is converted without approximation to an exact rational: a float retains its exact
+    binary value (pass a string such as "1/10" for an intended decimal fraction). Native fmpq values and
+    fractions.Fraction values are accepted too. The target width is U - L = rel_tol * L, with rel_tol a finite
+    positive number interpreted by the same exact conversion. Relative certification requires a strictly
+    positive witness bound L; a zero envelope or an unresolved violation raises instead of starting an
+    impossible covering search. In particular, the Holder alpha=2 case has zero envelope and is not supported
+    by this relative-width API. Returns a :class:`Certificate`.
     """
     P = _problem(problem, params)
     delta = parse_rational(delta) if isinstance(delta, str) else fmpq(*_as_ratio(delta))
     if not (0 < delta < 1):
         raise ValueError("delta must lie in (0, 1)")
+    try:
+        tolerance = fmpq(*_as_ratio(rel_tol))
+    except (TypeError, ValueError, OverflowError, ZeroDivisionError) as exc:
+        raise ValueError("rel_tol must be a finite positive number") from exc
+    if tolerance <= 0:
+        raise ValueError("rel_tol must be a finite positive number")
+    if isinstance(P, HolderProjections) and P.alpha == 2:
+        raise ValueError("Holder alpha=2 has zero envelope; relative certification requires alpha >= 3")
     t0 = time.time()
     old = ctx.prec
     ctx.prec = prec
     try:
         point, fval = P.search(delta, starts=starts)
         wit, L = P.witness(point, delta)
-        U = _round_up(float(L) * (1 + rel_tol))
+        if L <= 0:
+            raise ValueError("relative certification requires a strictly positive witness lower bound; "
+                             "the envelope may be zero or the search did not resolve a violation")
+        U = L * (1 + tolerance)
         F = lambda x: P.objective(x, delta)  # noqa: E731
         bb = upper_bound(F, P.domain(delta), U, prec=prec, max_leaves=max_leaves)
     finally:
@@ -122,7 +138,9 @@ def certify(problem, delta, rel_tol=1e-6, prec=128, starts=40, max_leaves=2_000_
 
 def _as_ratio(x):
     from fractions import Fraction
-    f = Fraction(x).limit_denominator(10 ** 6) if isinstance(x, float) else Fraction(x)
+    if isinstance(x, fmpq):
+        return x.p, x.q
+    f = Fraction(x)
     return f.numerator, f.denominator
 
 

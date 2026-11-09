@@ -170,13 +170,32 @@ class Bipartition:
         return v
 
     def reduced_state(self, psi):
-        """rho_A = (+)_q Psi_q Psi_q^* as a DensityMatrix of SpinChain(ell).algebra (batched over psi)."""
+        """rho_A = (+)_q Psi_q Psi_q^* as a DensityMatrix of SpinChain(ell).algebra (batched over psi).
+        Wide Psi_q have a known kernel in rho_A. Keep their Schmidt values squared and exact kernel zeros:
+        diagonalising the larger Gram matrix can instead produce tiny positive eigenvalues with false entropy.
+        Other eigenvalues are not thresholded, so genuine small Schmidt modes survive. The cache keeps its
+        gradient to psi and uses the Operator's ordinary matrix-version invalidation.
+        """
         alg = self.left.algebra
         mat = torch.zeros(psi.shape[0], alg.C, alg.k_max, alg.k_max, dtype=psi.dtype, device=psi.device)
+        schmidt = {}
         for q, G in self.gather.items():
             P = psi[:, G]                                                  # (B, k_q, m_d)
             mat[:, q, :P.shape[1], :P.shape[1]] = P @ P.mH
-        return DensityMatrix(alg, matrix=mat, validate=False)
+            if P.shape[1] > P.shape[2]:
+                values = torch.linalg.svdvals(P).square()
+                zeros = values.new_zeros(psi.shape[0], P.shape[1]-P.shape[2])
+                schmidt[q] = torch.cat([values, zeros], dim=-1)
+        rho = DensityMatrix(alg, matrix=mat, validate=False)
+        if schmidt:
+            # Only prepare the spectrum when a wide factor needs stabilisation. At half filling the
+            # usual ell <= L/2 study retains its original grouped Hermitian-eigensolver path.
+            rho._eigenvalues = [
+                schmidt[q] if q in schmidt else
+                torch.linalg.eigvalsh(mat[:, q, :k, :k]) if q in self.gather else
+                mat.real.new_zeros(psi.shape[0], k)
+                for q, k in enumerate(alg.k_factors)]
+        return rho
 
 
 # ----------------------------------------------------------------------------------------------------------------
@@ -279,15 +298,41 @@ def ff_correlation(L, boundary, N):
     return occ @ occ.T, float(e[:N].sum())
 
 
-def ff_flux(C, ell, ns=(2, 3), theta=0.25):
+def ff_flux(C, ell, ns=(2, 3), theta=0.25, *, pure_projector_rank=None):
     """
     Charged moments Z_n(alpha) = Tr rho_A^n e^{i alpha Q_A} = prod_j [nu_j^n e^{i alpha} + (1 - nu_j)^n] (nu_j the
     eigenvalues of C restricted to A) on the ell + 1 points alpha_k = 2 pi (k + theta)/(ell + 1); Z_n(q) is the exact
     discrete Fourier transform (Z_n(alpha) is a polynomial of degree ell in e^{i alpha}). For S(q):
     T(q) = Tr Pi_q rho_A log rho_A = FT of dZ_n/dn at n = 1 = Z_1(alpha) sum_j [nu_j e^{i alpha} log nu_j +
     (1 - nu_j) log(1 - nu_j)] / [nu_j e^{i alpha} + 1 - nu_j]. Returns p(q), T(q), S(q), Z_n(q), S_n(q), nu.
+
+    pure_projector_rank=N asserts that the full L-by-L C describes a pure N-particle Slater state.
+    Its ell-site compression has at least max(ell-N, 0) exact zeros and max(ell-(L-N), 0) exact ones:
+    rank(C_A) <= N and rank(I_A-C_A) <= L-N. Restore only these forced multiplicities, after checking
+    that their computed values differ from the endpoints by at most 16*L*eps. Otherwise roundoff of an
+    exact unit/zero mode can create false entropy of order eps*log(eps). No small-eigenvalue threshold
+    is applied to other modes. Omit the hint for mixed correlations, including finite sections of the
+    infinite-chain correlator; purity/rank are caller-supplied information, not inferred from C_A.
     """
-    nu = np.clip(np.linalg.eigvalsh(C[:ell, :ell]), 0.0, 1.0)
+    if pure_projector_rank is not None:
+        L = C.shape[0]
+        if (C.ndim != 2 or C.shape[1] != L or not 0 <= ell <= L or
+                not isinstance(pure_projector_rank, (int, np.integer)) or not 0 <= pure_projector_rank <= L):
+            raise ValueError("pure_projector_rank requires a square correlation matrix, 0 <= ell <= L, "
+                             "and an integer rank between 0 and L")
+    nu = np.linalg.eigvalsh(C[:ell, :ell])
+    if pure_projector_rank is not None:
+        nzero = max(ell-pure_projector_rank, 0)
+        nunit = max(ell-(L-pure_projector_rank), 0)
+        tol = 16*max(1, L)*np.finfo(nu.dtype).eps
+        if (np.any(np.abs(nu[:nzero]) > tol) or
+                (nunit and np.any(np.abs(nu[-nunit:]-1) > tol))):
+            raise ValueError("compressed correlation spectrum is inconsistent with pure_projector_rank "
+                             "at working precision")
+        nu[:nzero] = 0.0
+        if nunit:
+            nu[-nunit:] = 1.0
+    nu = np.clip(nu, 0.0, 1.0)
     k = np.arange(ell + 1)
     alpha = 2 * np.pi * (k + theta) / (ell + 1)
     z = np.exp(1j * alpha)[:, None]
@@ -392,7 +437,7 @@ def compare_free_fermions(ch, psi, E0, how, p_cmp, log=print):
     cache = {}
     for ell in range(1, L // 2 + 1):
         st = sector_statistics(Bipartition(ch, N, ell, cache).reduced_state(psi))
-        fl = ff_flux(C, ell)
+        fl = ff_flux(C, ell, pure_projector_rank=N)
         p_lib = st['p'][0].cpu().numpy()
         devs['p'] = max(devs['p'], _max_dev(p_lib, fl['p']))
         devs['pS'] = max(devs['pS'], _max_dev(-st['T'][0].cpu().numpy(), -fl['T']))
@@ -645,7 +690,7 @@ def part_ff_ring(cfg, log=print):
     for L in cfg['ff_ring_L']:
         C, _ = ff_correlation(L, 'periodic', L // 2)
         ell = L // 2
-        fl = ff_flux(C, ell, ns=())
+        fl = ff_flux(C, ell, ns=(), pure_projector_rank=L // 2)
         B1, G1 = ff_central(fl, ell)
         q0 = (ell + 1) // 2
         d1, d2 = fl['Sq'][q0] - fl['Sq'][q0 + 1], fl['Sq'][q0] - fl['Sq'][q0 + 2]

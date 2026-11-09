@@ -18,7 +18,7 @@ sampled violation relative to the envelope.
 For every dimension the samples are summarised in bins of Delta(W) and of the contrast of the operators (largest
 violation, 99th percentile, fraction violating). The largest ratio of a sample to the computed envelope uses the
 envelope interpolated linearly in Delta(W) at the sample's own contrast. The figures (one per item, function figures()
-below) show the samples with the computed envelopes, i.e. the certified (mpmath) values of
+below) show the samples with the computed envelopes, i.e. the high-precision recomputed (mpmath) values of
 man/article/generated/trace_characterizations.json (top rows) and man/trace_envelopes/generated/trace_contrast.json
 (bottom rows); run scripts/trace_characterizations.py and scripts/trace_contrast.py first.
 
@@ -277,7 +277,7 @@ SHORT = dict(gardner='Gardner', triangle='triangle', realpart=r'$\varphi(A{+}A^*
 
 
 def envelope_curve(name, n):
-    """(grid, certified search values, proved value or bound or None) from the main computation."""
+    """(grid, high-precision search values, proved value or bound or None) from the main computation."""
     import trace_characterizations as tc
     d = json.loads((ROOT / 'man' / 'article' / 'generated' / 'trace_characterizations.json').read_text())
     grid = np.array(d['grid'], dtype=float)
@@ -367,8 +367,8 @@ def _limits(curve, samples):
 
 
 def figures(res, fixed, dims, fixed_dims):
-    """One figure per item: Monte Carlo samples and the computed envelope (certified values, a lower bound for the
-    supremum), one panel per dimension."""
+    """One figure per item: Monte Carlo samples and the computed envelope (high-precision evaluations at
+    candidate points, without a guaranteed error enclosure), one panel per dimension."""
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
@@ -436,7 +436,7 @@ def figures(res, fixed, dims, fixed_dims):
         fname = f'mc_{num[name]:02d}_{name}.pdf'
         fig.savefig(figdir / fname, metadata={'CreationDate': None}, dpi=200)
         plt.close(fig)
-        cap = (f'Item {num[name]}, {tc.INEQS[name]["label"]}: random samples and the computed envelope (a certified lower bound)'
+        cap = (f'Item {num[name]}, {tc.INEQS[name]["label"]}: random samples and the computed envelope (high-precision evaluations at candidate points)'
                + (r'; top: against $\Delta(W)$, bottom: against the contrast $\delta^\prime$ of the operators at '
                   f'$\\Delta(W)={FIXED_DW}$.' if op else r' against $\Delta(W)$.'))
         tex += [r'\begin{figure}[!htbp]', r'\centering', f'\\includegraphics[width=\\textwidth]{{{fname}}}',

@@ -81,7 +81,7 @@ def _cs(m):
 
 
 class HolderProjections(Problem):
-    """Item 14: |phi(PQ)| <= phi(P)^{1/alpha} phi(Q)^{1-1/alpha} for projections, alpha an integer >= 3."""
+    """Item 14 for integer alpha >= 2; relative certificate generation requires alpha >= 3 (alpha=2 is zero)."""
     id = "holder_projections"
     variables = ("m", "m'", "b")
     statement = ("V(delta) = sup |phi(PQ)| / (phi(P)^(1/alpha) phi(Q)^(1-1/alpha)) - 1 over projections P, Q in M_n "

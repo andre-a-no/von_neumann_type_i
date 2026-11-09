@@ -12,8 +12,9 @@ general outside these ranges. Without using this knowledge we maximise the viola
 on a grid of alpha in [0.2, 3] by batched multistart gradient ascent (optimize.extremize, one start per batch element,
 all alpha of the grid in one batch through per-sample alpha), over states rho, sigma on M_d and over two channel
 families: the complete dephasing (the conditional expectation onto the diagonal maximal abelian subalgebra; fixed)
-and all channels with a d-dimensional environment (Stinespring isometries V = Z (Z^* Z)^{-1/2}, Z a free complex
-dr x d matrix). The states are parametrised as rho = (1 - eps) G G^* / Tr(G G^*) + eps 1/d (G free complex d x d),
+and all channels with a d-dimensional environment (optimize.StinespringParam, using a direct thin-SVD polar factor
+and requiring full column rank for gradients). The states are parametrised as
+rho = (1 - eps) G G^* / Tr(G G^*) + eps 1/d (G free complex d x d),
 i.e. over the compact set {rho >= eps/d}: the supremum is finite and the sandwich sigma^g rho sigma^g,
 g = (1 - alpha)/(2 alpha), stays resolved in double precision for alpha >= 0.2 (its condition number is at most
 (d/eps)^(2|g|+1); for smaller alpha eigenvalues at the rounding level would contribute lambda^alpha and the computed
@@ -22,10 +23,10 @@ are then refined by further searches at interior points: random starts as before
 of the best point of the violating end of the bracket (continuation in alpha; the violation vanishes continuously at
 the threshold, so random starts alone often miss the small violations next to it). Every reported value v is attained
 at a known point (the final iterate of the best start) and is recomputed independently with mpmath at 50 significant
-digits (dense matrices, eigendecompositions in mpmath; the Kraus operators re-orthonormalised in mpmath, so that the
-certified point is an exactly trace-preserving channel); a violation counts only if the certified value exceeds TOL,
-which is far above the error of the certification: a certified violation is a proof that the DPI fails at that
-alpha. The other end of a bracket (no violation above TOL found) is evidence only: a local search can miss
+digits (dense matrices, eigendecompositions in mpmath; the Kraus operators re-orthonormalised at that precision).
+A violation counts only if the recomputed value exceeds TOL. This supplies numerical evidence, not a rigorous error
+enclosure or a proof of violation. Historical `certify`/`certified` names are kept for compatibility and denote
+high-precision recomputation. The other end of a bracket (no violation above TOL found) is evidence only: a local search can miss
 violations, and violations below TOL are not counted.
 
 Writes generated/renyi_threshold.tex, generated/renyi_threshold.json and figures/renyi_threshold.pdf.
@@ -40,7 +41,7 @@ import torch
 
 from common import parse_args, save_json, write_tex, env_macro, sci, load_partial, save_partial, finish_partial
 
-from torch_vn_algebra import TypeIAlgebra, Channel, DensityMatrix, channels, cost, divergences as dv, optimize as opt
+from torch_vn_algebra import TypeIAlgebra, DensityMatrix, channels, cost, divergences as dv, optimize as opt
 
 args = parse_args(__doc__)
 dev = args.device
@@ -52,8 +53,8 @@ ROUNDS, STEPS, LR, DECAY = (1, 4, 0.1, 0.6) if CHECK else (8, 75, 0.1, 0.6) if F
 REFINE_ROUNDS, REFINE_POINTS = (1, 3) if CHECK else (3, 7)
 INIT_NOISE, WARM_LR = 0.02, 0.2                  # continuation starts: relative perturbation, learning rate factor
 EPS = 0.01                                       # states rho >= EPS / d
-TOL = 1e-12                                      # a certified v above TOL is a violation (certification error ~1e-45)
-DIGITS = 50                                      # mpmath precision of the certification
+TOL = 1e-12                                      # threshold for a high-precision numerical violation
+DIGITS = 50                                      # mpmath precision; not a proved error bound
 ALPHAS = [0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.48, 0.49, 0.5, 0.51, 0.52, 0.55, 0.6, 0.7, 0.8, 0.9, 1.1, 1.25, 1.5,
           1.75, 1.9, 1.95, 1.98, 2.0, 2.02, 2.05, 2.1, 2.25, 2.5, 2.75, 3.0]
 FAMILIES = ('dephasing', 'stinespring')
@@ -83,29 +84,6 @@ class StateParam(opt.Param):
         return DensityMatrix(self.alg, matrix=(1 - EPS) * P + (EPS / d) * self.alg._const('eye'), validate=False)
 
 
-class StinespringParam(opt.Param):
-    """Channels of M_d with an r-dimensional environment: isometry V = Z (Z^* Z)^{-1/2}: C^d -> C^d (x) C^r and Kraus
-    operators K_j = (1 (x) <j|) V."""
-
-    def __init__(self, alg, batch, r):
-        self.alg, self.r = alg, r
-        d = alg.k_max
-        self.Z = torch.randn(batch, d * r, d, dtype=alg.dtype, device=alg.hilbert.device, requires_grad=True)
-
-    def parameters(self):
-        return [self.Z]
-
-    def kraus(self) -> torch.Tensor:
-        Z, d, r, B = self.Z, self.alg.k_max, self.r, self.Z.shape[0]
-        gram = self.alg.operator((Z.conj().transpose(-2, -1) @ Z).unsqueeze(1), is_self_adjoint=True,
-                                 is_positive=True)
-        V = Z @ gram.power(-0.5).matrix[:, 0]                                    # (B, d r, d), V^* V = 1
-        return V.reshape(B, d, r, d).permute(0, 2, 1, 3).unsqueeze(2)          # (B, r, 1, d, d)
-
-    def channel(self) -> Channel:
-        return Channel(self.alg, self.kraus(), trace_preserving=True)          # trace preserving by construction
-
-
 DIVERGENCE = {'sandwiched': dv.sandwiched_renyi_divergence, 'petz': dv.petz_renyi_divergence}
 
 
@@ -124,7 +102,7 @@ def search(d, family, kind, alphas, seed, starts=STARTS, lr=LR, init=None):
         deph = channels.dephasing_channel(alg, 1.0)
         get_channel = lambda: deph
     else:
-        W = StinespringParam(alg, B, r=d)
+        W = opt.StinespringParam(alg, B, kraus_rank=d)
         params.append(W)
         get_channel = W.channel
     tensors = [t for p in params for t in p.parameters()]
@@ -159,7 +137,7 @@ def search(d, family, kind, alphas, seed, starts=STARTS, lr=LR, init=None):
 
 
 # ----------------------------------------------------------------------------------------------------------------
-# independent certification in mpmath
+# independent high-precision recomputation in mpmath (historical `certify`/`certified` names)
 # ----------------------------------------------------------------------------------------------------------------
 def _mp(m):
     return mp.matrix([[mp.mpc(complex(x)) for x in row] for row in m])
@@ -185,13 +163,13 @@ def _mp_divergence(kind, a, rho, sigma):
 
 
 def certify(kind, a, rho, sigma, kraus):
-    """v = D(Phi rho||Phi sigma) - D(rho||sigma) at the given point, with mpmath at DIGITS significant digits."""
+    """v at the given point with mpmath at DIGITS digits, without a rigorous rounding-error enclosure."""
     with mp.workdps(DIGITS):
         r, s = _mp(rho), _mp(sigma)
         r, s = (r + r.transpose_conj()) / 2, (s + s.transpose_conj()) / 2
         Ks = [_mp(K) for K in kraus]
         # re-orthonormalise in mpmath, K_j -> K_j S^{-1/2} with S = sum_j K_j^* K_j (= 1 up to double rounding): the
-        # certified point is an exactly trace-preserving channel (a CP map with S != 1 could violate the DPI)
+        # recomputed channel is trace preserving up to rounding at this precision (S != 1 could violate the DPI)
         Sm = sum((K.transpose_conj() * K for K in Ks), mp.zeros(Ks[0].cols, Ks[0].cols))
         Si = _mp_power((Sm + Sm.transpose_conj()) / 2, -0.5)
         Ks = [K * Si for K in Ks]
@@ -202,7 +180,7 @@ def certify(kind, a, rho, sigma, kraus):
 
 def run(d, family, kind, alphas, seed, init=None):
     """search (random starts; with init also a continuation search from that point, keeping per alpha the better
-    final point), then certification of the final points."""
+    final point), then high-precision recomputation of the final points."""
     t0 = time.time()
     res = search(d, family, kind, alphas, seed)
     if init is not None:
@@ -220,7 +198,7 @@ def run(d, family, kind, alphas, seed, init=None):
 
 def bracket(points, kind):
     """(lo, hi): the threshold between the last grid point on one side and the first on the other, from the
-    certified values; None if the search found no violation (or no non-violating point)."""
+    recomputed values; None if the search found no violation (or no non-violating point). Not a rigorous bracket."""
     pts = sorted(points, key=lambda r: r['alpha'])
     viol = [r['alpha'] for r in pts if r['certified'] > TOL]
     if not viol:
@@ -287,10 +265,9 @@ total = time.time() - t_start
 # consistency with the theory (reported, not assumed)
 sand = [results[f'd{d}_{f}_sandwiched'] for d in DIMS for f in FAMILIES]
 petz = [results[f'd{d}_{f}_petz'] for d in DIMS for f in FAMILIES]
-# combined estimates (the threshold is the same for every channel): a certified violation at alpha proves that the
-# DPI fails there, so the sandwiched threshold is >= the largest certified violating alpha below 1 and the Petz
-# threshold <= the smallest certified violating alpha above 1, over all families; the other end of the bracket of that
-# family is the first point beyond it at which it found no violation above TOL (evidence, not proof)
+# Combined search estimates, not rigorous brackets: use high-precision violations above TOL on one side
+# and the first point with no violation found on the other. There is no guaranteed rounding-error enclosure
+# at the violating end and no global optimisation certificate at the other end.
 brs = [r['bracket'] for r in sand if r['bracket']]
 sand_lo, sand_hi = max(brs, key=lambda b: (b[0], -b[1])) if brs else (float('nan'), float('nan'))
 brp = [r['bracket'] for r in petz if r['bracket']]
@@ -298,24 +275,24 @@ petz_lo, petz_hi = min(brp, key=lambda b: (b[1], -b[0])) if brp else (float('nan
 
 
 def v_at(rows, a):
-    """Largest certified v at alpha = a over the families (NaN if a was not searched)."""
+    """Largest high-precision recomputed v at alpha = a (NaN if a was not searched)."""
     vs = [p['certified'] for r in rows for p in r['points'] if p['alpha'] == a]
     return max(vs) if vs else float('nan')
 
 
 sand_lo_v, petz_hi_v = v_at(sand, sand_lo), v_at(petz, petz_hi)
 max_dpi_side = max(r['max_v_on_dpi_side'] for r in sand + petz)
-print(f"sandwiched: DPI violated (certified) at alpha = {sand_lo:.6f} (v = {sand_lo_v:.2e}), no violation > {TOL:g} "
-      f"found at {sand_hi:.6f} -> threshold in [{sand_lo:.6f}, {sand_hi:.6f}] (theory 1/2); Petz: no violation found at "
-      f"{petz_lo:.6f}, violated (certified) at alpha = {petz_hi:.6f} (v = {petz_hi_v:.2e}) -> threshold in "
-      f"[{petz_lo:.6f}, {petz_hi:.6f}] (theory 2); largest certified v where the theorems guarantee the DPI: "
+print(f"sandwiched: DPI violation (high-precision numerical) at alpha = {sand_lo:.6f} (v = {sand_lo_v:.2e}), no violation > {TOL:g} "
+      f"found at {sand_hi:.6f} -> search bracket [{sand_lo:.6f}, {sand_hi:.6f}] (theory 1/2); Petz: no violation found at "
+      f"{petz_lo:.6f}, violation (high-precision numerical) at alpha = {petz_hi:.6f} (v = {petz_hi_v:.2e}) -> search bracket "
+      f"[{petz_lo:.6f}, {petz_hi:.6f}] (theory 2); largest recomputed v where the theorems guarantee the DPI: "
       f"{max_dpi_side:.1e}; total {total:.0f} s", flush=True)
 
 summary = dict(sandwiched_bracket=[sand_lo, sand_hi], sandwiched_v_at_lower_end=sand_lo_v,
                petz_bracket=[petz_lo, petz_hi], petz_v_at_upper_end=petz_hi_v,
-               bracket_semantics='sandwiched: certified violation at the lower end, no violation > tol found at the '
-                                 'upper end; Petz: no violation > tol found at the lower end, certified violation at '
-                                 'the upper end',
+               bracket_semantics='sandwiched: high-precision numerical violation at the lower end, no violation > tol '
+                                 'found at the upper end; Petz: no violation > tol found at the lower end, '
+                                 'high-precision numerical violation at the upper end; neither bracket is rigorous',
                max_v_where_dpi_holds=max_dpi_side, seconds=total)
 save_json(args, 'renyi_threshold', dict(results=results, summary=summary, alphas=ALPHAS, dims=DIMS, starts=STARTS,
                                         steps=ROUNDS * STEPS, eps=EPS, tol=TOL, digits=DIGITS,
@@ -338,7 +315,7 @@ tex += (f"\\newcommand{{\\RenyiStarts}}{{{STARTS}}}\n\\newcommand{{\\RenyiSteps}
         f"\\newcommand{{\\RenyiDims}}{{{', '.join(map(str, DIMS))}}}\n"
         f"\\newcommand{{\\RenyiSandLow}}{{{dec(sand_lo)}}}\n\\newcommand{{\\RenyiSandHigh}}{{{dec(sand_hi)}}}\n"
         f"\\newcommand{{\\RenyiPetzLow}}{{{dec(petz_lo)}}}\n\\newcommand{{\\RenyiPetzHigh}}{{{dec(petz_hi)}}}\n"
-        f"% certified violation at the violating end of the brackets (RenyiSandLow, RenyiPetzHigh)\n"
+        f"% high-precision numerical violation at the violating end of the search brackets\n"
         f"\\newcommand{{\\RenyiSandLowV}}{{{sci_or_nan(sand_lo_v)}}}\n\\newcommand{{\\RenyiPetzHighV}}{{{sci_or_nan(petz_hi_v)}}}\n"
         f"\\newcommand{{\\RenyiMaxDPISide}}{{{sci(max(max_dpi_side, 1e-300), 1) if max_dpi_side > 0 else '0'}}}\n"
         f"\\newcommand{{\\RenyiCertErr}}{{{sci(max(r['max_cert_discrepancy'] for r in sand + petz), 1)}}}\n"
@@ -387,7 +364,7 @@ for ax, kind in zip(axes, KINDS):
     ax.set_title('sandwiched $\\widetilde D_\\alpha$' if kind == 'sandwiched' else 'Petz $D_\\alpha$', fontsize=9)
     ax.text(0.98 if kind == 'sandwiched' else 0.02, 0.4, 'DPI theorem', transform=ax.transAxes, fontsize=7,
             ha='right' if kind == 'sandwiched' else 'left', color='0.4')
-axes[0].set_ylabel('largest certified violation $v(\\alpha)$')
+axes[0].set_ylabel('largest recomputed violation $v(\\alpha)$')
 axes[0].text(0.02, 0.06, f'open symbols: no violation ($v \\leq {sci(TOL, 1)}$)',
              transform=axes[0].transAxes, fontsize=7, color='0.3')
 axes[1].legend(frameon=False, fontsize=7, loc='upper left')

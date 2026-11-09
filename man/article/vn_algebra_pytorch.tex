@@ -195,7 +195,8 @@ finds the exact supremum in all of them, to a relative error of $3\times10^{-5}$
 (Section~\ref{sec:optimisation}). The violation envelopes of the companion paper~\cite{nn_trace}, the thresholds of
 the Rényi divergences in Section~\ref{sec:renyi} and the partitions in~\cite{nn_cs} are all found this way; every
 reported extremal value is then recomputed at the optimiser in 40- to 50-digit arithmetic (mpmath, in the paper
-scripts), so it is a certified lower bound for the supremum.
+scripts). This gives an independent high-precision evaluation at an explicit point, approximating a lower bound
+for the supremum; it is not a rigorous numerical certificate with a guaranteed rounding-error bound.
 
 \paragraph{Thesis.} The design rests on one thesis: keeping the sector structure inside the data type makes
 computations in~\eqref{eq:M} both correct by construction and cheap. By sector structure we mean the blocks, the centre,
@@ -284,7 +285,7 @@ blocks appear as storage, not as an algebra with a centre, a family of traces an
 algebra (NumPy, SciPy, PyTorch) is below both, and solvers for semidefinite and manifold problems handle convex or
 geometric constraints without the structure of~\eqref{eq:M}. What was missing is the numerical counterpart of the first
 group: a code in which one declares the sector sizes and then samples, transforms, optimises and learns elements,
-states and channels of the algebra in batches, on CPUs and GPUs, with derivatives and certified values. This is the
+states and channels of the algebra in batches, on CPUs and GPUs, with derivatives and high-precision cross-checks. This is the
 place of \texttt{torch\_vn\_algebra}. It is built on PyTorch, its test suite checks small cases against exact
 results, and it exchanges states, operators, channels and Lindblad data with QuTiP and dynamiqs through the module
 \texttt{interop}, so that a computation can move between the corners of the figure.
@@ -296,7 +297,7 @@ them: sharp constants of trace inequalities and their envelopes in terms of the 
 Connes--St{\o}rmer entropy as a supremum over partitions, conditional expectations, inclusions and their index, and
 Jordan products. The library supplies the constraint sets as exact parametrisations and batched multistart search;
 the paper scripts recompute extremal values in 40- to 50-digit arithmetic (mpmath), so that a numerical observation
-comes with a certified lower bound (Sections~\ref{sec:optimisation} and~\ref{sec:symmetries}; the companion papers~\cite{nn_trace,nn_cs}).
+comes with an independently recomputed candidate value (Sections~\ref{sec:optimisation} and~\ref{sec:symmetries}; the companion papers~\cite{nn_trace,nn_cs}).
 \item[Quantum information theorists] with variational problems over states and channels that respect a symmetry or a
 superselection rule: data processing and its thresholds, recovery maps, divergences resolved by sector, and learning a
 channel or a Lindblad generator from measurement data. Channels within and between algebras and Lindblad generators are
@@ -401,7 +402,8 @@ and partitions of unity are parametrised in the paper scripts (Sections~\ref{sec
 charge and conditioning on a sector are operations of the data type. Independent starts, parameter values and models
 are elements of one batch, so an envelope over a grid, or a threshold scan over all $\alpha$ of
 Section~\ref{sec:renyi}, is one call. The paper scripts recompute reported extremal values at the optimiser in 40- to
-50-digit arithmetic, so they are certified lower bounds for suprema; they are not upper bounds. Other packages are better in
+50-digit arithmetic. The exact value at a feasible point is a lower bound for the supremum; its computed approximation
+has no guaranteed error enclosure, and local search supplies no global upper bound. Other packages are better in
 three respects. A convex problem belongs to an SDP solver, which returns the global optimum with a certificate where
 our local search returns a lower bound. A single large system belongs to the simulators above. Pulse-level control,
 with waveform constraints and optimisation of the evolution time, is the purpose of QuTiP-QOC. The library is meant
@@ -444,7 +446,10 @@ the better choice.}
 The module \texttt{interop} converts operators, states and channels to and from \texttt{qutip.Qobj} and dynamiqs
 arrays, and Lindblad jump operators to collapse operators; for a spin chain it places the sectors in the computational basis with
 QuTiP's conventions. A map between algebras is a map into the algebra, so it is converted together with the pinching
-onto the output sectors, and a dense matrix outside the algebra is rejected on the way back. Through this module the
+onto both input and output sectors: a general \texttt{InterSectorChannel} has dense Kraus operators $P_dK_iP_c$,
+with independent Kraus indices for each input--output sector pair. This preserves the block-diagonal Lindblad loss
+term as well as the action on states. A \texttt{SectorJump} instead exports its coherent physical jump operator.
+A dense matrix outside the algebra is rejected on the way back. Through this module the
 Lindblad solvers of Section~\ref{sec:noisy} are checked against \texttt{qutip.mesolve} and \texttt{dynamiqs.mesolve}
 in the test suite: on a four-qubit register with damping and dephasing the exact stepper agrees with both to better than
 $10^{-9}$, and the CPTP splitting used in Section~\ref{sec:noisy} converges to them at second order. A computation
@@ -809,6 +814,11 @@ eigenspace~\cite{kasim2020}, and they then miss the entries $f'(\lambda)$ inside
 backward pass serves $\sqrt A$, $\log A$, $A^p$, $|A|$ (as $\sqrt{A^*A}$, with $L_{ij}=1/(s_i+s_j)$) and inverses of
 self-adjoint operators (the pseudo-inverse of a general operator has a constant-rank backward pass of its own);
 normal $A$ use complex divided differences, and the contour integral is differentiated through its solves.
+For \texttt{apply\_function(per\_block=True)}, a smooth permutation-equivariant function may couple the eigenvalues
+of one block. Its full Jacobian $J$ supplies the diagonal eigenvalue sensitivities, and the off-diagonal derivative
+at a repeated eigenvalue is $J_{ii}-J_{ij}$; computing $J$ takes $k$ reverse passes and $O(k^2)$ storage per block.
+Both the elementwise and coupled paths retain the dependence of function parameters on the spectrum, including
+mixed second derivatives. Second derivatives use a differentiable eigendecomposition and require distinct eigenvalues.
 
 \subsection{Number field and precision}\label{sec:numerics}
 
@@ -1063,10 +1073,15 @@ size. Applied to the three functionals, the optimiser located their envelopes fo
 forms it suggested are proved in the companion paper~\cite{nn_trace}.
 
 \paragraph{Channels, generators and measurements as parameters.} The same machinery applies to maps. In
-\texttt{optimize.StinespringParam} every input sector $c$ carries an isometry $V_c=Z_c(Z_c^*Z_c)^{-1/2}$ into an
-environment of dimension $r$ times the output sectors, and the Kraus operators are its blocks; every value of the free
+\texttt{optimize.StinespringParam} every input sector $c$ carries an isometry into an
+environment of dimension $r$ times the allowed output sectors. For the thin SVD $Z_c=U_cS_cW_c^*$ the code uses
+$V_c=U_cW_c^*$ directly, avoiding the squared condition number of $Z_c^*Z_c$; the Kraus operators are its blocks.
+For full column rank this equals $Z_c(Z_c^*Z_c)^{-1/2}$. At deficient rank the SVD completes an isometry within the
+allowed output space, so every value of the free
 matrices $Z_c$ is a trace-preserving channel, within one algebra or between two algebras with a prescribed set of
-allowed sector transitions, and Gaussian $Z_c$ give Haar-random isometries. \texttt{LindbladParam} does the same for
+allowed sector transitions. Gradients require numerical full column rank and otherwise raise an error; at full rank
+the polar backward uses denominators $s_i+s_j$, which remain finite at repeated positive singular values.
+Gaussian $Z_c$ give Haar-random isometries. \texttt{LindbladParam} does the same for
 GKSL generators (a self-adjoint Hamiltonian and free jump operators inside and between sectors), and \texttt{fit}
 minimises a loss over such parameters and leaves them at the fitted point. With the module \texttt{measurement}
 (POVMs, sampling of counts, likelihoods, instruments, Fisher information) this turns learning a channel or a
@@ -1081,8 +1096,12 @@ A further test of the method is to ask it where the range of validity of a known
 The module \texttt{divergences} evaluates the Petz divergences
 $D_\alpha(\rho\|\sigma)=\frac{1}{\alpha-1}\log\Tr(\rho^\alpha\sigma^{1-\alpha})$~\cite{petz1986} and the sandwiched
 divergences $\widetilde D_\alpha(\rho\|\sigma)=\frac{1}{\alpha-1}\log\Tr(\sigma^{\frac{1-\alpha}{2\alpha}}\rho\,
-\sigma^{\frac{1-\alpha}{2\alpha}})^{\alpha}$~\cite{mullerlennert2013,wilde2014}, batched and differentiable, with exact
-support conventions and as logarithms of sums over sectors; it also provides the Petz recovery
+\sigma^{\frac{1-\alpha}{2\alpha}})^{\alpha}$~\cite{mullerlennert2013,wilde2014}, batched and differentiable, with standard
+support conventions (implemented with relative numerical thresholds) and as logarithms of sums over sectors.
+Near $\alpha=1$, within a precision- and log-norm-dependent window, the code evaluates
+$D+(\alpha-1)V/2$, where $D$ is the Umegaki relative entropy and $V$ its relative entropy variance; the omitted term
+is $O((\alpha-1)^2)$. Single-precision inputs use double-precision work for scalar $\alpha$ near one and for tensor
+$\alpha$, while retaining the input support tolerances and returning the input real dtype. It also provides the Petz recovery
 map~\cite{petz1986suff,petz1988chan} and the universal recovery map of~\cite{junge2018}. The data-processing
 inequality $D(\Phi(\rho)\|\Phi(\sigma))\le D(\rho\|\sigma)$ holds for the Petz divergences for
 $\alpha\in(0,1)\cup(1,2]$~\cite{petz1986} and for the sandwiched ones for
@@ -1091,12 +1110,13 @@ ranges~\cite{mullerlennert2013,berta2017,zhang2020}. \texttt{scripts/renyi\_thre
 $v(\alpha)=D(\Phi(\rho)\|\Phi(\sigma))-D(\rho\|\sigma)$ on a grid of $\alpha\in[0.2,3]$, over states on $M_d$ and over
 the complete dephasing and all channels with a $d$-dimensional environment, with all values of $\alpha$ and all starts
 in one batch. Every reported violation is attained at an explicit point and recomputed in mpmath with
-\G{renyi_threshold}{\RenyiDigits}{50} significant digits, so a certified violation proves that the inequality fails at
-that $\alpha$; the absence of a violation is evidence only.
-\ifdefined\RenyiSandLow The sandwiched inequality is violated (certified) at
+\G{renyi_threshold}{\RenyiDigits}{50} significant digits, with the channel re-normalised at that precision.
+A positive recomputed value is numerical evidence of a violation; without a guaranteed error enclosure it is not a
+rigorous numerical certificate. The absence of a violation is evidence only, since the search is local.
+\ifdefined\RenyiSandLow The high-precision search finds a sandwiched violation at
 $\alpha=\RenyiSandLow$ with $v=\RenyiSandLowV$, and no violation above $\RenyiTol$ was found at
 $\alpha=\RenyiSandHigh$; the Petz inequality is violated at $\alpha=\RenyiPetzHigh$ with $v=\RenyiPetzHighV$, and no
-violation was found at $\alpha=\RenyiPetzLow$. The thresholds are thus bracketed by $[\RenyiSandLow,\RenyiSandHigh]$ and
+violation was found at $\alpha=\RenyiPetzLow$. The search brackets are $[\RenyiSandLow,\RenyiSandHigh]$ and
 $[\RenyiPetzLow,\RenyiPetzHigh]$, in agreement with $\frac12$ and $2$ ($d\in\{\RenyiDims\}$, \RenyiStarts\ starts and
 \RenyiSteps\ steps per $\alpha$; \RenyiMode\ run on \RenyiDevice). Table~\ref{tab:renyi} and Figure~\ref{fig:renyi}
 show $v(\alpha)$ on the grid.
@@ -1111,7 +1131,7 @@ $\alpha$ & dephasing & channels & dephasing & channels\\
 \RenyiRows
 \bottomrule
 \end{tabular}
-\caption[]{Largest certified violation $v(\alpha)$ of the data-processing inequality on $M_2$ (``--'': no violation
+\caption[]{Largest high-precision recomputed violation $v(\alpha)$ of the data-processing inequality on $M_2$ (``--'': no violation
 above the tolerance $\RenyiTol$ found; \RenyiMode\ run on \RenyiDevice). The theorems guarantee $v\le0$ for
 $\alpha\ge\frac12$ (sandwiched) and $\alpha\le2$ (Petz).}
 \label{tab:renyi}
@@ -1119,7 +1139,7 @@ $\alpha\ge\frac12$ (sandwiched) and $\alpha\le2$ (Petz).}
 
 \begin{figure}[t]
 \centering\fig{renyi_threshold.pdf}{\textwidth}
-\caption{Largest certified violation $v(\alpha)$ for the sandwiched (left) and the Petz (right) divergences; dashed:
+\caption{Largest high-precision recomputed violation $v(\alpha)$ for the sandwiched (left) and the Petz (right) divergences; dashed:
 the known thresholds; shaded: the range in which the data-processing inequality is a theorem.}
 \label{fig:renyi}
 \end{figure}
@@ -1639,16 +1659,21 @@ nonlinear activation; cost $\Tr(P\rho P)$\\
 \bottomrule
 \end{tabular}
 \caption{Layers of \texttt{torch\_vn\_algebra.learn}. Every layer is a \texttt{torch.nn.Module} that maps a batch of
-states to a batch of states; every value of its parameters is a physical map.}
+states to a batch of states; every value of its parameters is a physical map, with post-selection conditioned on
+acceptance above its numerical cutoff. \texttt{LindbladLayer} accepts the exact exponential or the CPTP Kraus splitting.}
 \label{tab:learn}
 \end{table}
 
 \paragraph{Every parameter value is a channel.} A \texttt{ChannelLayer} holds free matrices $Z_c$ and uses the
-isometries $V_c=Z_c(Z_c^*Z_c)^{-1/2}$ (from \texttt{StinespringParam} of the module \texttt{optimize}); a
+isometries from the direct thin-SVD polar factor (\texttt{StinespringParam} of the module \texttt{optimize}), with
+isometric completion at deficient rank as described in Section~\ref{sec:optimisation}; a
 \texttt{LindbladLayer} holds a free Hamiltonian and free jump operators, i.e.\ a Cholesky-type factor of the
 Kossakowski matrix (\texttt{LindbladParam}). No constraint is imposed and no projection is needed, so any
-optimiser of \texttt{torch.optim} trains the network without leaving the set of channels, and gradients go through $(Z_c^*Z_c)^{-1/2}$ and
-through the dynamics by the Daleckii--Krein backward pass of Section~\ref{sec:calculus}. Listing~\ref{lst:learn} shows
+optimiser of \texttt{torch.optim} trains the network without leaving the set of channels. The channel gradient uses
+the polar backward and requires numerical full column rank. A \texttt{LindbladLayer} accepts only \texttt{exact}
+(the matrix exponential) or \texttt{kraus} (the CPTP splitting); it rejects RK4, whose steps need not preserve
+positivity. Gradients through the dynamics follow the chosen propagator; the Kraus splitting also uses the
+Daleckii--Krein backward of Section~\ref{sec:calculus}. Listing~\ref{lst:learn} shows
 a small network trained on input--output pairs; the losses provided are the infidelity, the trace distance, the
 relative entropy and the negative log-likelihood of measurement counts (from \texttt{POVM} of the module
 \texttt{measurement}).
@@ -1802,7 +1827,8 @@ and XDiag are future work.
 \section{Availability and reproducibility}\label{sec:availability}
 
 The code is available under the MIT licence at \url{https://github.com/andre-a-no/von_neumann_type_i}; this paper
-describes version~1.2.0 (tag \texttt{v1.2.0}), and its scripts need the repository version of the library
+describes version~1.2.0 (tag \texttt{v1.2.0}) with the numerical corrections listed under \texttt{Unreleased} in
+\texttt{CHANGELOG.md}, and its scripts need the repository version of the library
 (\texttt{pip install -e ".[scripts]"}) rather than an older release from PyPI. The command
 \texttt{bash scripts/run\_all.sh full cuda} regenerates every table and figure on a GPU; without the mode argument it
 runs a reduced version on the default device, which takes well under an hour on a four-core CPU. The script
@@ -1810,6 +1836,11 @@ runs a reduced version on the default device, which takes well under an hour on 
 draws the schematic figures and the summary figure of the noisy register. The tables state the device and, except the
 use-case tables of Sections~\ref{sec:noisy} and~\ref{sec:control}, which are single full-size runs, the mode they were
 produced with; the JSON files written by the current versions of the scripts also record the commit of the code.
+The stored tables and figures retain the original runs, which predate these corrections; they have not been
+recomputed for the corrected implementation. Some provenance records contain \texttt{+dirty}, which does not
+identify the uncommitted source changes. They therefore do not establish exact reproducibility from the recorded
+commit alone. \texttt{man/REPRODUCIBILITY.md} records this status and the affected pipelines; a new numerical release
+requires runs from an identified clean revision and an explicit comparison with the stored results.
 
 \appendix
 {\sloppy\small

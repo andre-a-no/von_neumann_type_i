@@ -183,16 +183,32 @@ def schrodinger_rk4(psi0: torch.Tensor, H_of_t: Callable[[float], OperatorLike],
         psi0 = psi0.squeeze(-1)
     if algebra is None:
         algebra = _algebra_of(H_of_t)
-    const = None if callable(H_of_t) and not isinstance(H_of_t, Operator) else _mat(H_of_t, algebra)
-    if const is not None:
-        psi0 = psi0.to(const.device)
+    timedep = callable(H_of_t) and not isinstance(H_of_t, Operator)
+    t0 = float(_times(times, 'cpu')[0])
+    first_H = H_of_t(t0) if timedep else H_of_t
+    if algebra is None:
+        algebra = _algebra_of(first_H)
+    first = _mat(first_H, algebra)
+    psi0 = psi0.to(first.device)
+    B = torch.broadcast_shapes((psi0.shape[0],), (first.shape[0],))[0]
+    psi0 = psi0.expand(B, *psi0.shape[1:])
     if algebra is not None and min(algebra.k_factors) != algebra.k_max:
         psi0 = psi0 * algebra._const('rows').to(psi0.device)        # entries in the padding are not part of psi
-    y0 = psi0.to(torch.promote_types(psi0.dtype, torch.complex64))
-    Hc = None if const is None else (-1j * const.to(y0.dtype))      # hoisted: constant H is cast once
+    dtype = torch.promote_types(torch.promote_types(psi0.dtype, first.dtype), torch.complex64)
+    y0 = psi0.to(dtype)
+    first = -1j * first.to(dtype)
+    initial_pending = timedep
 
     def f(t, psi):
-        A = Hc if Hc is not None else -1j * _mat(H_of_t(t), algebra).to(psi.dtype)
+        nonlocal initial_pending
+        if not timedep:
+            A = first
+        elif initial_pending:
+            # This is RK4's first k1; retain its sample rather than evaluating H(t0) twice.
+            initial_pending = False
+            A = first
+        else:
+            A = -1j * _mat(H_of_t(t), algebra).to(device=psi.device, dtype=psi.dtype)
         return (A @ psi.unsqueeze(-1)).squeeze(-1)
     return rk4(f, y0, times, substeps, progress)
 

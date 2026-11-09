@@ -255,7 +255,7 @@ print((Lt(rho) - rho_t[-1]).frobenius_norm().max())
 | `su2` | `SU2Chain`: `multiplicities`, `hw_basis`, `multiplet_basis`, `embed`, `heisenberg` (J, J₂, field, arbitrary bonds; one spin without padding via `spin=`), `restrict` / `lift` (U(1) ↔ SU(2)), `full_spectrum`, `lowest_energies`, `ground_state`, `reduced_matrix_elements`, `spin_correlation`; `clebsch_gordan`, `clebsch_gordan_exact`, `wigner_eckart`, `multiplicity` |
 | `divergences` | `petz_renyi_divergence`, `sandwiched_renyi_divergence`, `renyi_divergence` (with the limits α = 0, 1, ∞), `umegaki_relative_entropy`, `max_relative_entropy`, `min_relative_entropy`, `sector_contributions`; `PetzRecovery` / `petz_recovery` (also rotated), `universal_recovery`; `lp_norm`, `kosaki_norm` |
 | `jordan` | `jordan_product`, `jordan_multiplication`, `quadratic_representation`, `jordan_triple`, `jordan_power`, `transpose_map`; `jordan_algebra_generated`, `star_algebra_self_adjoint_part`, `is_jordan_subalgebra`, `compare_with_star_algebra` → `JordanAlgebra`; `SpinFactor`, `anticommuting_symmetries` |
-| `interop` | `to_dense`, `from_dense`, `channel_to_dense` (Kraus operators P_d K_i of a map into the algebra); `to_qutip`, `from_qutip`, `jumps_to_qutip` (collapse operators for `qutip.mesolve`); `to_dynamiqs`, `jumps_to_dynamiqs`; `chain_basis` (layout `layout=chain`: QuTiP's qubit order, \|0⟩ = spin up). QuTiP and dynamiqs are optional (`pip install torch_vn_algebra[interop]`) |
+| `interop` | `to_dense`, `from_dense`, `channel_to_dense` (separate Kraus operators P_d K_i P_c for each input/output sector pair of an `InterSectorChannel`); `to_qutip`, `from_qutip`, `jumps_to_qutip` (collapse operators for `qutip.mesolve`); `to_dynamiqs`, `jumps_to_dynamiqs`; `chain_basis` (layout `layout=chain`: QuTiP's qubit order, \|0⟩ = spin up). QuTiP and dynamiqs are optional (`pip install torch_vn_algebra[interop]`) |
 | `learn` | `ChannelLayer`, `UnitaryLayer`, `LindbladLayer`, `Residual`, `PostSelect`, `FeedForward` (`torch.nn.Module`s mapping states to states); losses `infidelity`, `trace_distance`, `relative_entropy`, `negative_log_likelihood`; `count_parameters` |
 | `anyons` | `AnyonChain`: SU(2)_k anyon chains in the fusion-path basis (one sector per total charge), Temperley–Lieb generators, the tower TL_{L−1} ⊂ TL_L as an `Inclusion` (Jones index 4cos²(π/(k+2))), sparse Hamiltonians and Lanczos; the golden chain gives c = 7/10 |
 | `direct_integral` | `DirectIntegral`: a continuous centre ∫^⊕_X M_{n(x)} dμ(x) discretised by nodes and weights (`grid` with Gauss–Legendre/midpoint/periodic rules and a density, `torus` for Brillouin zones, `monte_carlo`, partitions); `field`, `trace`, `normalized_trace`, `state`, `indicator`, `integrate`, `ess_sup` |
@@ -355,10 +355,11 @@ nohup bash scripts/run_all.sh full cuda > full_run.log 2>&1 &   # the full run (
 
 - Scripts and the parts of the paper they produce: `validate_known_results` (Section 5), `numerics` (Section 3),
   `inequality_search` and `bounds_search` (Section 6), `renyi_threshold` (Section 6.1: the data-processing thresholds
-  of the sandwiched and Petz Rényi divergences, located by batched optimisation with violations certified in mpmath;
+  of the sandwiched and Petz Rényi divergences, located by batched optimisation with candidate violations recomputed
+  in mpmath without a guaranteed rounding-error enclosure;
   about 2 minutes in quick mode on one CPU thread), `connes_stormer` (Section 6, use case: the Connes–Størmer
-  relative entropy of two maximal abelian subalgebras of M_n, closed form for n = 2 and the observation that
-  orthonormal bases are not always optimal for n ≥ 3; about 12 minutes in full mode on a CPU), `chains` (Section 7), `baselines` (Section 9),
+  relative entropy of two maximal abelian subalgebras of M_n, a one-dimensional variational formula for n = 2 and
+  numerical partitions outperforming all bases found by the search for n ≥ 3; about 12 minutes in full mode on a CPU), `chains` (Section 7), `baselines` (Section 9),
   `benchmark_library` (Section 10), `permutational` (use case: a boundary time crystal of N two-level systems under
   local emission and dephasing, N up to 80 on a CPU and 200 on a GPU), `trace_characterizations` (use case: how strongly inequalities that characterise
   the trace fail for Tr(W·) as a function of the Michelson contrast of W; about 5 minutes on a CPU), `symmetry_resolved`

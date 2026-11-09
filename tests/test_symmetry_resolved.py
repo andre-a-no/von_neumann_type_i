@@ -60,7 +60,7 @@ def test_xx_chain_against_flux_insertion(boundary):
     C, E0 = sr.ff_correlation(L, boundary, L // 2)
     for ell in range(1, L):
         st = sr.sector_statistics(sr.Bipartition(ch, L // 2, ell).reduced_state(psi))
-        fl = sr.ff_flux(C, ell)
+        fl = sr.ff_flux(C, ell, pure_projector_rank=L // 2)
         p = st['p'][0].numpy()
         assert np.abs(p - fl['p']).max() < 1e-13
         assert np.abs(st['T'][0].numpy() - fl['T']).max() < 1e-13
@@ -186,3 +186,145 @@ def test_quspin_reduced_density_matrix():
 def test_listing_runs():
     """The listing man/article/listings/symmetry_resolved.py runs and satisfies S = sum_q p(q) S(q) + H(p)."""
     runpy.run_path(str(ROOT / 'man' / 'article' / 'listings' / 'symmetry_resolved.py'), run_name='__main__')
+
+
+def _bernoulli_sector_reference(nu, ns=(2, 3)):
+    """Direct occupation-state enumeration, independent of Fourier flux insertion."""
+    p = np.zeros(len(nu)+1)
+    T = np.zeros_like(p)
+    Z = {n: np.zeros_like(p) for n in ns}
+    for occupation in range(1 << len(nu)):
+        bits = [(occupation >> j) & 1 for j in range(len(nu))]
+        probability = math.prod(v if bit else 1-v for v, bit in zip(nu, bits))
+        q = sum(bits)
+        p[q] += probability
+        if probability > 0:
+            T[q] += probability*math.log(probability)
+        for n in ns:
+            Z[n][q] += probability**n
+    return p, T, Z
+
+
+@pytest.mark.parametrize('rotated', [False, True])
+def test_flux_uses_only_rank_forced_pure_modes(rotated):
+    # Two occupied orbitals in five sites: one entirely in A and one shared with B.
+    # The four-site compression has forced multiplicities (zero:2, one:1).
+    occupied = np.zeros((5, 2))
+    occupied[0, 0] = 1
+    occupied[1, 1] = math.sqrt(.3)
+    occupied[4, 1] = math.sqrt(.7)
+    C = occupied @ occupied.T
+    # Mimic eigensolver/projector-formation noise at known structural endpoints.
+    eps = np.finfo(float).eps
+    C[2, 2] = 2*eps
+    C[3, 3] = 4*eps
+    C[0, 0] -= 6*eps
+    if rotated:
+        unitary = np.eye(5)
+        unitary[:4, :4] = np.array([[1, 1, 1, 1], [1, -1, 1, -1],
+                                   [1, 1, -1, -1], [1, -1, -1, 1]])/2
+        C = unitary @ C @ unitary.T
+    result = sr.ff_flux(C, 4, pure_projector_rank=2)
+    p, T, Z = _bernoulli_sector_reference([0., 0., .3, 1.])
+    assert np.array_equal(result['nu'][:2], np.zeros(2))
+    assert result['nu'][-1] == 1
+    np.testing.assert_allclose(result['p'], p, rtol=0, atol=2e-15)
+    np.testing.assert_allclose(result['T'], T, rtol=0, atol=2e-15)
+    for n in (2, 3):
+        np.testing.assert_allclose(result['Z'][n], Z[n], rtol=0, atol=2e-15)
+    raw = sr.ff_flux(C, 4)
+    assert -raw['T'].sum() > -T.sum()+1e-14
+
+
+@pytest.mark.parametrize('rank', [0, 1, np.int64(2), 3, 5])
+def test_full_pure_slater_state_has_no_reference_entropy(rank):
+    L = 5
+    C = np.diag(np.r_[np.ones(rank), np.zeros(L-rank)])
+    result = sr.ff_flux(C, L, pure_projector_rank=rank)
+    expected_p = np.zeros(L+1)
+    expected_p[rank] = 1
+    np.testing.assert_allclose(result['p'], expected_p, rtol=0, atol=2e-15)
+    assert np.array_equal(result['T'], np.zeros(L+1))
+    for n in (2, 3):
+        np.testing.assert_allclose(result['Z'][n], expected_p, rtol=0, atol=2e-15)
+
+
+def test_genuine_small_entangled_modes_are_not_snapped_by_purity_hint():
+    small = 1e-15
+    # A genuine rank-two projector with no forced endpoints in its two-site
+    # compression. Both tiny probabilities are physical and must be retained.
+    occupied = np.zeros((4, 2))
+    occupied[0, 0], occupied[2, 0] = math.sqrt(small), math.sqrt(1-small)
+    occupied[1, 1], occupied[3, 1] = math.sqrt(1-small), math.sqrt(small)
+    C = occupied @ occupied.T
+    nu = np.linalg.eigvalsh(C[:2, :2])
+    result = sr.ff_flux(C, 2, pure_projector_rank=2)
+    assert np.array_equal(result['nu'], nu)
+    _, T, _ = _bernoulli_sector_reference(nu)
+    np.testing.assert_allclose(result['T'], T, rtol=0, atol=1e-27)
+    assert -result['T'].sum() > 1e-14
+
+
+def test_mixed_reference_keeps_genuine_near_endpoint_occupations():
+    nu = np.array([1e-15, 1-1e-15])
+    result = sr.ff_flux(np.diag(nu), 2)
+    assert np.array_equal(result['nu'], nu)
+    _, T, _ = _bernoulli_sector_reference(nu)
+    np.testing.assert_allclose(result['T'], T, rtol=0, atol=1e-27)
+    assert -result['T'].sum() > 1e-14
+
+
+def test_flux_rejects_inconsistent_forced_pure_endpoints():
+    with pytest.raises(ValueError, match='inconsistent'):
+        sr.ff_flux(np.diag([.2, .8]), 2, pure_projector_rank=1)
+
+
+@pytest.mark.parametrize('rank', [-1, 3, 1.5])
+def test_flux_rejects_invalid_pure_rank(rank):
+    with pytest.raises(ValueError, match='integer rank'):
+        sr.ff_flux(np.eye(2), 2, pure_projector_rank=rank)
+
+
+def test_wide_pure_schmidt_factor_retains_tiny_mode_and_exact_kernel():
+    ch = SpinChain(6, 'open', complex_valued=False, precision='double')
+    bp = sr.Bipartition(ch, 3, 4)
+    q = 2
+    k, m = bp.gather[q].shape
+    assert (k, m) == (6, 2)
+    basis, _ = torch.linalg.qr(torch.randn(k, m, dtype=torch.float64,
+                                          generator=torch.Generator().manual_seed(431)))
+    small = 1e-14
+    P = basis*torch.sqrt(torch.tensor([1-small, small], dtype=torch.float64))[None]
+    psi = torch.zeros(1, ch.sector_dim(3), dtype=torch.float64)
+    psi[0, bp.gather[q]] = P
+    rho = bp.reduced_state(psi)
+    values = rho.eigenvalues()[q][0]
+    assert torch.equal(values[:k-m], torch.zeros(k-m, dtype=torch.float64))
+    torch.testing.assert_close(values[-2], torch.tensor(small, dtype=torch.float64), rtol=1e-10, atol=0)
+    st = sr.sector_statistics(rho)
+    reference = torch.tensor([1-small, small], dtype=torch.float64)
+    torch.testing.assert_close(st['T'][0, q], torch.special.xlogy(reference, reference).sum(), rtol=0, atol=2e-15)
+
+
+@pytest.mark.parametrize('complex_valued', [False, True])
+def test_schmidt_spectrum_cache_preserves_gradients_and_matrix_invalidation(complex_valued):
+    ch = SpinChain(6, 'open', complex_valued=complex_valued, precision='double')
+    bp = sr.Bipartition(ch, 3, 4)
+    psi = torch.randn(2, ch.sector_dim(3), dtype=ch.algebra.dtype,
+                      generator=torch.Generator().manual_seed(583))
+    psi = (psi/torch.linalg.vector_norm(psi, dim=-1, keepdim=True)).requires_grad_(True)
+    rho = bp.reduced_state(psi)
+    assert rho._eigenvalues is not None
+    spectral_purity = sum(w.square().sum() for w in rho.eigenvalues())
+    dense_purity = rho.matrix.abs().square().sum()
+    spectral_grad, = torch.autograd.grad(spectral_purity, psi, retain_graph=True)
+    dense_grad, = torch.autograd.grad(dense_purity, psi)
+    torch.testing.assert_close(spectral_purity, dense_purity)
+    torch.testing.assert_close(spectral_grad, dense_grad)
+
+    q, k = 2, bp.left.algebra.k_factors[2]
+    with torch.no_grad():
+        rho.matrix[:, q, :k, :k].add_(.1*torch.eye(k, dtype=psi.dtype))
+    reference = torch.linalg.eigvalsh(rho.matrix[:, q, :k, :k])
+    torch.testing.assert_close(rho.eigenvalues()[q], reference)
+    assert rho._eigenvalues is None

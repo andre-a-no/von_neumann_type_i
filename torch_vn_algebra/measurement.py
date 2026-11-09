@@ -28,7 +28,8 @@ import torch
 
 from .algebra import TypeIAlgebra, _as_tensor
 from . import cost
-from .channels import Channel, InterSectorChannel, _check_input, _same_structure
+from .channels import (Channel, InterSectorChannel, _check_input, _kraus_key, _same_structure,
+                       _trace_preserving_hint)
 from .states import DensityMatrix
 
 Operator = TypeIAlgebra.Operator
@@ -311,9 +312,10 @@ class PVM(POVM):
 
     def pushforward(self, f: Callable[[torch.Tensor], torch.Tensor], tol: Optional[float] = None) -> 'PVM':
         """The spectral measure of f(A): values f(lambda_j); for batch 1, outcomes whose values lie within tol of the
-        smallest of their group are merged (their projections added); default tol sqrt(eps) * max |f|."""
+        smallest of their group are merged (their projections added); default tol sqrt(eps) * max |f|. Values that
+        require gradients retain separate outcomes, since equal values can have different derivatives."""
         v = f(self.values)
-        if self.values.shape[0] != 1:
+        if self.values.shape[0] != 1 or v.requires_grad:
             return PVM(self.effects, v, self.algebra, check=False, outcomes=self.outcomes)
         vals = v[0].tolist()
         if tol is None:                                  # as projections.spectral_measure: relative to max |value|
@@ -369,6 +371,7 @@ class Instrument:
             if bool(err > tol):
                 raise ValueError(f"Instrument: sum_j Phi_j is not trace preserving (deviation {float(err):.1e})")
             self._trace_preserving = True
+        self._trace_preserving_key = _kraus_key(self.kraus)
 
     @staticmethod
     def _from_sequence(items: list, algebra: Optional[TypeIAlgebra]) -> Tuple[TypeIAlgebra, torch.Tensor]:
@@ -446,7 +449,8 @@ class Instrument:
     def average_channel(self) -> Channel:
         """The non-selective measurement sum_j Phi_j as a Channel (Kraus operators K_{ji} for all j, i)."""
         K = self.kraus
-        return Channel(self.algebra, K.reshape(K.shape[0], -1, *K.shape[3:]), trace_preserving=self._trace_preserving)
+        return Channel(self.algebra, K.reshape(K.shape[0], -1, *K.shape[3:]),
+                       trace_preserving=_trace_preserving_hint(self))
 
     @property
     def register_algebra(self) -> TypeIAlgebra:
@@ -470,7 +474,7 @@ class Instrument:
         idx = torch.arange(C, device=K.device)
         G[:, :, :, idx, idx] = K.transpose(1, 2)                           # block (j, c) <- c
         return InterSectorChannel(alg, self.register_algebra, G.reshape(B, r, J * C, C, k, k),
-                                  trace_preserving=self._trace_preserving)
+                                  trace_preserving=_trace_preserving_hint(self))
 
     # ------------------------------------------------------------------
     @staticmethod
@@ -492,6 +496,7 @@ class Instrument:
 
     def _tp(self) -> 'Instrument':
         self._trace_preserving = True
+        self._trace_preserving_key = _kraus_key(self.kraus)
         return self
 
 
@@ -513,14 +518,14 @@ def fisher_information(prob_fn, params: Sequence[torch.Tensor], per_sample: bool
     """
     params = list(params)
     cplx = [torch.is_complex(t) for t in params]
-    reals = tuple(torch.view_as_real(t).detach() if c else t.detach() for t, c in zip(params, cplx))
+    reals = tuple(torch.view_as_real(t.resolve_conj()).detach() if c else t.detach() for t, c in zip(params, cplx))
     store = {}
 
     def f(*xs):
         ps = [torch.complex(x[..., 0], x[..., 1]) if c else x for x, c in zip(xs, cplx)]
         p = prob_fn(*ps)
         p = p.unsqueeze(0) if p.dim() == 1 else p
-        store['p'] = p.detach()
+        store['p'] = p if create_graph else p.detach()
         return p.sum(dim=0) if per_sample else p
 
     jac = torch.autograd.functional.jacobian(f, reals, create_graph=create_graph)

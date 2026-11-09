@@ -25,7 +25,14 @@ physical map, so training never leaves the set of channels:
 Losses: infidelity, trace_distance, relative_entropy (states), negative_log_likelihood (measurement.POVM data).
 count_parameters gives the number of real parameters of a network (sector structure shows up here: a channel that
 respects the sectors has far fewer than a dense one).
+
+Channel, unitary, Lindblad, post-selection and feed-forward layers support Module.to(device=..., dtype=...) for
+single/double real or complex arithmetic. Their algebra metadata follows the registered tensors; the original
+shared algebra is unchanged. Convert inputs with rho.cast(layer.algebra) after a transfer. Assigned checkpoints
+also update this metadata. FeedForward checkpoints include the fixed instrument and its outcome labels.
+PostSelect returns a conditional state only for acceptance above eps; other samples are zero operators.
 """
+import inspect
 import math
 from typing import Optional, Sequence, Union
 
@@ -35,37 +42,98 @@ from torch import nn
 from .algebra import TypeIAlgebra
 from .channels import Channel, InterSectorChannel
 from .states import DensityMatrix
-from . import dynamics, optimize, states
+from . import dynamics, measurement, optimize, states
 
 Operator = TypeIAlgebra.Operator
+_APPLY_HAS_RECURSE = 'recurse' in inspect.signature(nn.Module._apply).parameters
 
 
 def _as_state(alg: TypeIAlgebra, mat: torch.Tensor) -> DensityMatrix:
     return DensityMatrix(alg, matrix=mat, validate=False)
 
 
+def _sync_loaded_layer(module, incompatible_keys):
+    # assign=True can change dtype/device as well as replace a Parameter or buffer.
+    module._sync_algebra()
+
+
+def _algebra_like_tensor(alg: TypeIAlgebra, tensor: torch.Tensor) -> TypeIAlgebra:
+    if tensor.dtype not in (torch.float32, torch.float64, torch.complex64, torch.complex128):
+        raise TypeError("algebra layers support float32, float64, complex64 and complex128")
+    if alg.dtype == tensor.dtype and torch.device(alg.hilbert.device) == tensor.device:
+        return alg
+    return alg.like(complex_valued=torch.is_complex(tensor),
+                    precision='double' if tensor.dtype in (torch.float64, torch.complex128) else 'single',
+                    device=tensor.device)
+
+
+class _AlgebraLayer(nn.Module):
+    """Keep non-Module algebra metadata in step with the registered tensors."""
+
+    def __init__(self, algebra: TypeIAlgebra):
+        super().__init__()
+        self.algebra = algebra
+        # Also gives a parameter-free Lindblad identity layer a dtype/device to transfer.
+        self.register_buffer('_algebra_anchor', torch.empty(0, dtype=algebra.dtype, device=algebra.hilbert.device),
+                             persistent=False)
+        self.register_load_state_dict_post_hook(_sync_loaded_layer)
+
+    def _apply(self, fn, recurse=True):
+        # Older supported PyTorch versions do not expose the recurse argument.
+        super()._apply(fn, **({'recurse': recurse} if _APPLY_HAS_RECURSE else {}))
+        self._sync_algebra()
+        return self
+
+    def _sync_algebra(self):
+        tensors = list(self.parameters(recurse=False))
+        tensors += [t for name, t in self._buffers.items() if name != '_algebra_anchor' and t is not None]
+        tensor = tensors[0] if tensors else self._algebra_anchor
+        old = self.algebra
+        self.algebra = _algebra_like_tensor(old, tensor)
+        if hasattr(self, 'algebra_out'):
+            self.algebra_out = (self.algebra if self.algebra_out is old else
+                                _algebra_like_tensor(self.algebra_out, tensor))
+        self._algebra_anchor = tensor.new_empty(0)
+        self._sync_parameterisation(tensor.device)
+
+    def _sync_parameterisation(self, device):
+        pass
+
+
 # ----------------------------------------------------------------------
 # layers
 # ----------------------------------------------------------------------
-class ChannelLayer(nn.Module):
+class ChannelLayer(_AlgebraLayer):
     """
     A trainable channel: Stinespring isometries V_c = Z_c (Z_c^* Z_c)^{-1/2}, one per input sector, Kraus operators
     their blocks (optimize.StinespringParam with one start). algebra_out=None: sector-preserving channels of
     `algebra`; otherwise maps into algebra_out with the allowed sector transitions `transitions` ((D, C) booleans).
     Gaussian initial Z gives a Haar-random channel; init_scale < 1 is not used here, see Residual for near-identity
-    blocks.
+    blocks. The polar factors are evaluated directly from Z (without a Gram matrix); deficient rank is completed
+    to an isometry, while gradients require numerical full column rank.
     """
 
     def __init__(self, algebra: TypeIAlgebra, kraus_rank: int = 1, algebra_out: Optional[TypeIAlgebra] = None,
                  transitions=None, generator: Optional[torch.Generator] = None):
-        super().__init__()
+        super().__init__(algebra)
         self._param = optimize.StinespringParam(algebra, 1, kraus_rank, alg_out=algebra_out, transitions=transitions,
                                                 generator=generator)
         self.Z = nn.Parameter(self._param.Z.detach().clone())
         self._param.Z = self.Z
         self.algebra, self.algebra_out = algebra, algebra_out or algebra
 
+    def _sync_parameterisation(self, device):
+        self._param.alg = self.algebra
+        if self._param.alg_out is not None:
+            self._param.alg_out = self.algebra_out
+        self._param.Z = self.Z
+        self._param._mask = self._param._mask.to(device=device)
+        self._param._polar_groups = [(k, sectors.to(device=device), rows.to(device=device))
+                                     for k, sectors, rows in self._param._polar_groups]
+
     def channel(self) -> Union[Channel, InterSectorChannel]:
+        # Loading with assign=True can replace the registered Parameter.
+        self._param.Z = self.Z
         return self._param.channel()
 
     def forward(self, rho: DensityMatrix) -> DensityMatrix:
@@ -75,12 +143,11 @@ class ChannelLayer(nn.Module):
         return f"kraus_rank={self._param.r}, sectors {self.algebra.k_factors} -> {self.algebra_out.k_factors}"
 
 
-class UnitaryLayer(nn.Module):
+class UnitaryLayer(_AlgebraLayer):
     """rho -> U rho U^* with U = exp(-i H), H = (X + X^*)/2 free in the algebra (a unitary of prod_c U(k_c))."""
 
     def __init__(self, algebra: TypeIAlgebra, init_scale: float = 1.0, generator: Optional[torch.Generator] = None):
-        super().__init__()
-        self.algebra = algebra
+        super().__init__(algebra)
         X = init_scale * torch.randn(1, algebra.C, algebra.k_max, algebra.k_max, dtype=algebra.dtype,
                                      device=algebra.hilbert.device, generator=generator)
         self.X = nn.Parameter(X)
@@ -95,18 +162,21 @@ class UnitaryLayer(nn.Module):
         return _as_state(self.algebra, U @ rho.matrix @ U.conj().transpose(-2, -1))
 
 
-class LindbladLayer(nn.Module):
+class LindbladLayer(_AlgebraLayer):
     """
     rho -> exp(time L)(rho) for a trainable GKSL generator L (optimize.LindbladParam): a self-adjoint Hamiltonian,
     n_jumps free jump operators inside the sectors and n_inter between sectors (allowed transitions[d, c]). The
     evolution is computed by dynamics.lindblad_evolve (method 'exact' by default, or the CPTP splitting 'kraus');
     every value of the parameters gives a channel, and the layer is a block of continuous depth.
+    Other integrators, including 'rk4', are rejected: a Runge-Kutta step need not be a positive map.
     """
 
     def __init__(self, algebra: TypeIAlgebra, time: float = 1.0, n_jumps: int = 1, n_inter: int = 0, transitions=None,
                  hamiltonian: bool = True, init_scale: float = 0.1, method: str = 'exact', substeps: int = 20,
                  generator: Optional[torch.Generator] = None):
-        super().__init__()
+        super().__init__(algebra)
+        if method not in ('exact', 'kraus'):
+            raise ValueError("LindbladLayer: method must be 'exact' or 'kraus' to preserve complete positivity")
         self.algebra, self.time, self.method, self.substeps = algebra, float(time), method, substeps
         self._param = optimize.LindbladParam(algebra, 1, n_jumps=n_jumps, n_inter=n_inter, transitions=transitions,
                                              hamiltonian=hamiltonian, init_scale=init_scale, generator=generator)
@@ -117,8 +187,20 @@ class LindbladLayer(nn.Module):
                 setattr(self._param, name, p)
                 self.register_parameter(name, p)
 
+    def _sync_parameterisation(self, device):
+        self._param.alg = self.algebra
+        self._param._mask = self._param._mask.to(device=device)
+        if self._param.inter_mask is not None:
+            self._param.inter_mask = self._param.inter_mask.to(device=device)
+        for name in ('X', 'L', 'K'):
+            if getattr(self._param, name) is not None:
+                setattr(self._param, name, getattr(self, name))
+
     def generator(self):
         """(H, jumps) for dynamics.lindblad_evolve."""
+        for name in ('X', 'L', 'K'):
+            if getattr(self._param, name) is not None:
+                setattr(self._param, name, getattr(self, name))
         return self._param.hamiltonian(), self._param.jumps()
 
     def forward(self, rho: DensityMatrix) -> DensityMatrix:
@@ -158,7 +240,7 @@ class Residual(nn.Module):
         return _as_state(rho.algebra, (1 - p) * rho.matrix + p * out.matrix.to(rho.matrix.dtype))
 
 
-class PostSelect(nn.Module):
+class PostSelect(_AlgebraLayer):
     """
     rho -> P rho P / Tr(P rho P) for a projection P of the algebra, given as an Operator or as the list of its weights
     on the sectors (a central projection, e.g. a fixed charge). The nonlinearity of the network comes from this
@@ -167,7 +249,7 @@ class PostSelect(nn.Module):
     """
 
     def __init__(self, algebra: TypeIAlgebra, projection: Union[Operator, Sequence[float]], eps: float = 1e-12):
-        super().__init__()
+        super().__init__(algebra)
         self.algebra, self.eps = algebra, eps
         P = projection if isinstance(projection, Operator) else algebra.central(list(projection))
         self.register_buffer('P', P.matrix.detach().clone())
@@ -180,20 +262,45 @@ class PostSelect(nn.Module):
         return post
 
 
-class FeedForward(nn.Module):
+class FeedForward(_AlgebraLayer):
     """
     Measure the instrument {Phi_j} (measurement.Instrument), keep the outcome j as classical information (in the
     centre) and apply the branch layer j: rho -> sum_j Phi'_j(Phi_j(rho)), a channel. Branches are modules (e.g.
     ChannelLayer, nn.Identity()). Quantum states cannot be copied forward (no-cloning, no-broadcasting); outcomes in
     the centre can, so this is the form a fan-out skip connection takes for channels.
+    The instrument's Kraus tensor is a registered buffer; outcome labels are extra state, so state_dict
+    restores the fixed measurement as well as branch weights. The constructor must have matching sector,
+    outcome and Kraus dimensions. Legacy checkpoints without instrument data require reconstructing the
+    original instrument explicitly and loading with strict=False.
     """
 
     def __init__(self, instrument, branches: Sequence[nn.Module]):
-        super().__init__()
+        super().__init__(instrument.algebra)
         if len(branches) != len(instrument):
             raise ValueError(f"FeedForward: {len(instrument)} outcomes but {len(branches)} branches")
-        self.instrument = instrument
+        self.register_buffer('instrument_kraus', instrument.kraus.clone())
+        self._instrument_outcomes = list(instrument.outcomes)
+        self._instrument_trace_preserving = instrument._trace_preserving
         self.branches = nn.ModuleList(branches)
+
+    @property
+    def instrument(self):
+        """Instrument backed by the current checkpointed Kraus tensor and algebra."""
+        inst = measurement.Instrument(self.instrument_kraus, self.algebra, check=False,
+                                      outcomes=self._instrument_outcomes)
+        # The checkpointed buffer can change independently of its saved metadata. Leave its
+        # classification unknown so channel exports check the current Kraus data when needed.
+        return inst
+
+    def get_extra_state(self):
+        return dict(version=1, outcomes=list(self._instrument_outcomes),
+                    trace_preserving=self._instrument_trace_preserving)
+
+    def set_extra_state(self, state):
+        if state.get('version') != 1 or len(state['outcomes']) != len(self.branches):
+            raise ValueError("FeedForward: incompatible instrument metadata in checkpoint")
+        self._instrument_outcomes = list(state['outcomes'])
+        self._instrument_trace_preserving = state['trace_preserving']
 
     def forward(self, rho: DensityMatrix) -> DensityMatrix:
         X = self.instrument._branches(rho)                                  # (B, J, C, k, k): Phi_j(rho), unnormalised
@@ -230,25 +337,27 @@ def count_parameters(module: nn.Module, effective: bool = True) -> int:
     """
     Number of real parameters of a network (complex entries count twice). With effective=True only entries that can
     influence the map are counted: the active blocks, the allowed transitions of channel and generator layers, and a
-    Hamiltonian as a self-adjoint element (sum_c k_c^2 real numbers). The gauge freedom of Kraus operators is not
-    subtracted.
+    Hamiltonian as a self-adjoint element (k_c^2 real coordinates per complex block, or k_c(k_c+1)/2 per real
+    symmetric block). Gauge freedoms of Kraus operators and scalar Hamiltonian shifts are not subtracted.
     """
     total = 0
     for mod in module.modules():
         for name, p in mod.named_parameters(recurse=False):
+            scalar_dof = 2 if p.is_complex() else 1
             if not effective:
-                total += 2 * p.numel() if p.is_complex() else p.numel()
+                total += scalar_dof * p.numel()
                 continue
             if isinstance(mod, ChannelLayer):
-                total += 2 * int(mod._param._mask.sum())
+                total += scalar_dof * int(mod._param._mask.sum())
             elif isinstance(mod, (UnitaryLayer, LindbladLayer)) and name in ('X', 'L', 'K'):
                 block = int(sum(k * k for k in mod.algebra.k_factors))
                 if name == 'X':
-                    total += block
+                    total += (block if p.is_complex() else
+                              sum(k * (k + 1) // 2 for k in mod.algebra.k_factors))
                 elif name == 'L':
-                    total += 2 * p.shape[1] * block
+                    total += scalar_dof * p.shape[1] * block
                 else:
-                    total += 2 * p.shape[1] * int(mod._param.inter_mask.sum())
+                    total += scalar_dof * p.shape[1] * int(mod._param.inter_mask.sum())
             else:
-                total += 2 * p.numel() if p.is_complex() else p.numel()
+                total += scalar_dof * p.numel()
     return total

@@ -222,13 +222,15 @@ class PermutationalSystem:
         ph = torch.as_tensor(phi, dtype=torch.float64).reshape(-1)
         th, ph = torch.broadcast_tensors(th, ph)
         N = self.N
-        a = torch.arange(N + 1, dtype=torch.float64)                  # a = N/2 - m = number of down spins
+        a = torch.arange(N + 1, dtype=torch.long)                     # a = N/2 - m = number of down spins
         logb = torch.tensor([math.lgamma(N + 1) - math.lgamma(k + 1) - math.lgamma(N - k + 1) for k in range(N + 1)],
                             dtype=torch.float64)
         c, s = torch.cos(th / 2)[:, None], torch.sin(th / 2)[:, None]
-        amp = torch.exp(0.5 * logb)[None] * torch.where(a[None] < N, c.abs() ** (N - a)[None], torch.ones_like(c)) \
-            * torch.where(a[None] > 0, s.abs() ** a[None], torch.ones_like(s))
-        amp = amp * torch.sign(c) ** (N - a)[None] * torch.sign(s) ** a[None]
+        # Integer powers of signed sin/cos retain the nonzero first derivative at a pole. Factoring the
+        # sign out of abs(sin) would make that derivative zero at theta=0.
+        cp = torch.where(a[None] < N, c, torch.ones_like(c)) ** (N - a)[None]
+        sp = torch.where(a[None] > 0, s, torch.ones_like(s)) ** a[None]
+        amp = torch.exp(0.5 * logb)[None] * cp * sp
         psi = amp.to(torch.complex128) * torch.exp(1j * ph[:, None] * a[None])
         block = psi[:, :, None] * psi[:, None, :].conj()
         if not self.algebra.hilbert.complex_valued:
@@ -360,16 +362,30 @@ class PermutationalLindbladian:
         for name in self.PARAMETERS[3:]:
             if bool((self.params[name] < 0).any()):
                 raise ValueError(f"{name} must be non-negative")
-        self.real = not bool((self.params['omega_x'] != 0).any() or (self.params['omega_z'] != 0).any())
         if not system.algebra.hilbert.complex_valued and not self.real:
             raise ValueError("omega_x J_x and omega_z J_z need a complex algebra (drive about y in a real one)")
         self._prepared = {}
 
+    @property
+    def real(self):
+        return not bool((self.params['omega_x'] != 0).any() or (self.params['omega_z'] != 0).any())
+
     def _prepare(self, dtype, device):
         key = (dtype, str(device))
-        if key in self._prepared:
-            return self._prepared[key]
         ps, P = self.system, self.params
+        try:
+            versions = tuple((id(P[name]), P[name]._version) for name in self.PARAMETERS)
+        except RuntimeError:                                # inference tensors have no version counter
+            versions = None
+        differentiable = torch.is_grad_enabled() and any(P[name].requires_grad for name in self.PARAMETERS)
+        cached = self._prepared.get(key)
+        if versions is not None and not differentiable and cached is not None and cached[0] == versions:
+            return cached[1]
+        for name in self.PARAMETERS[3:]:
+            if bool((P[name] < 0).any()):
+                raise ValueError(f"{name} must be non-negative")
+        if not ps.algebra.hilbert.complex_valued and not self.real:
+            raise ValueError("omega_x J_x and omega_z J_z need a complex algebra (drive about y in a real one)")
         rdt = torch.float32 if dtype in (torch.float32, torch.complex64) else torch.float64
         C, k = ps.C, ps.k_max
 
@@ -377,7 +393,7 @@ class PermutationalLindbladian:
             return x.to(device=device, dtype=rdt)[:, None, None, None]
 
         def nz(name):
-            return bool((P[name] != 0).any())
+            return (torch.is_grad_enabled() and P[name].requires_grad) or bool((P[name] != 0).any())
 
         m = ps.m_values().to(device=device, dtype=rdt)                  # (C, k)
         p = ps.raising_coefficients().to(device=device, dtype=rdt)       # (C, k): <a-1|J_+|a>
@@ -430,7 +446,8 @@ class PermutationalLindbladian:
             zu, zl = zu.to(dtype)[:, :, :-1], zl.to(dtype)[:, :, 1:]
         prep = dict(E=E, terms=[(_shifted(dc, da, C, k), W.to(dtype)) for (dc, da), W in sorted(terms.items())],
                     zu=zu, zl=zl)
-        self._prepared[key] = prep
+        if versions is not None and not differentiable:
+            self._prepared[key] = versions, prep
         return prep
 
     def rhs(self, t: float, rho: torch.Tensor) -> torch.Tensor:

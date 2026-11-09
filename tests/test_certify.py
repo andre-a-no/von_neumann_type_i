@@ -170,6 +170,29 @@ def _tampered(tmp_path, edit):
     return p
 
 
+@pytest.mark.parametrize("zeroed", [("P",), ("Q",), ("P", "Q")], ids=["P", "Q", "both"])
+def test_zero_projection_cannot_certify_a_tight_lower_bound(tmp_path, zeroed):
+    """A zero denominator makes the powered witness check vacuous, even with L = U."""
+    def edit(c):
+        for name in zeroed:
+            c["witness"][name] = [["0" for _ in row] for row in c["witness"][name]]
+        c["claim"]["lower"] = c["claim"]["upper"]
+
+    with pytest.raises(AssertionError, match="phi\\(P\\) and phi\\(Q\\) must be positive"):
+        _verifier().verify(_tampered(tmp_path, edit), log=lambda *a: None)
+
+
+@pytest.mark.parametrize("name", sorted(f for f in os.listdir(os.path.join(ROOT, "certificates"))
+                                       if f.endswith(".json.gz")))
+def test_published_witness_is_admissible(name):
+    """Check the exact lower-bound contract for every published certificate, without replaying its tree."""
+    with gzip.open(os.path.join(ROOT, "certificates", name), "rt") as f:
+        c = json.load(f)
+    v = _verifier()
+    prob = v.Holder(c["problem"]["params"], v.Q(c["problem"]["delta"]))
+    prob.check_witness(c["witness"], v.Q(c["claim"]["lower"]))
+
+
 @pytest.mark.parametrize("edit", [
     lambda c: c["witness"]["W"][0].__setitem__(0, "56/100"),                 # contrast of W changed (trace 1.01)
     lambda c: c["claim"].__setitem__("lower", "3/10000"),                     # L above the witness value
@@ -192,3 +215,160 @@ def test_small_certificate_round_trip(tmp_path):
     L, U = _verifier().verify(p, log=lambda *a: None)
     assert (L, U) == (float(c.lower), float(c.upper))
     assert C.load(p).data == c.data
+
+
+# --------------------------------------------------------------------- public contrast and relative-target contract
+@pytest.mark.parametrize("contrast, expected", [
+    (1e-8, fmpq(*float(1e-8).as_integer_ratio())),
+    (0.99999999, fmpq(*float(0.99999999).as_integer_ratio())),
+    (0.123456789, fmpq(*float(0.123456789).as_integer_ratio())),
+    (0.1, fmpq(*float(0.1).as_integer_ratio())),
+    (fmpq(1, 10), fmpq(1, 10)),
+], ids=["small-float", "near-one-float", "general-float", "decimal-float", "native-fmpq"])
+def test_requested_contrast_reaches_search_without_approximation(monkeypatch, contrast, expected):
+    """A bounded-denominator replacement changes the optimization problem, even before its search starts."""
+    class SearchReached(Exception):
+        pass
+
+    def search(self, delta, starts):
+        assert delta == expected
+        raise SearchReached
+
+    monkeypatch.setattr(C.HolderProjections, "search", search)
+    with pytest.raises(SearchReached):
+        C.certify("holder_projections", contrast)
+
+
+def test_zero_envelope_alpha_two_stops_before_search(monkeypatch):
+    """Cauchy--Schwarz gives V=0; a relative positive-width search cannot resolve that case."""
+    def search(*args, **kwargs):
+        pytest.fail("the exactly zero envelope must not enter numerical search")
+
+    monkeypatch.setattr(C.HolderProjections, "search", search)
+    with pytest.raises(ValueError, match="alpha=2 has zero envelope"):
+        C.certify("holder_projections", "1/10", alpha=2, max_leaves=1)
+
+
+@pytest.mark.parametrize("lower", [fmpq(0), -fmpq(1, 10 ** 20)], ids=["zero", "negative"])
+def test_nonpositive_witness_bound_cannot_start_relative_cover(monkeypatch, lower):
+    """An unresolved search must fail explicitly, not send U<=0 to an unbounded leftmost proof branch."""
+    monkeypatch.setattr(C.HolderProjections, "search", lambda self, delta, starts: ([0, 0, 1], 0.0))
+    monkeypatch.setattr(C.HolderProjections, "witness", lambda self, point, delta: (_cert()["witness"], lower))
+
+    def cover(*args, **kwargs):
+        pytest.fail("a nonpositive lower bound must not enter branch and bound")
+
+    monkeypatch.setattr(C, "upper_bound", cover)
+    ctx.prec = 96
+    with pytest.raises(ValueError, match="strictly positive witness lower bound"):
+        C.certify("holder_projections", "1/10", prec=128)
+    assert ctx.prec == 96
+
+
+@pytest.mark.parametrize("tolerance", [0, -1e-6, float("nan"), float("inf")])
+def test_invalid_relative_tolerance_stops_before_search(monkeypatch, tolerance):
+    def search(*args, **kwargs):
+        pytest.fail("invalid relative tolerance must be rejected before search")
+
+    monkeypatch.setattr(C.HolderProjections, "search", search)
+    with pytest.raises(ValueError, match="rel_tol must be a finite positive number"):
+        C.certify("holder_projections", "1/10", rel_tol=tolerance)
+
+
+def test_float_contrast_exact_relative_width_and_native_delta_round_trip(tmp_path, monkeypatch):
+    """The complete producer/replay path uses the supplied binary contrast and an exact rational target."""
+    from fractions import Fraction
+
+    delta = 0.9
+    c = C.certify("holder_projections", delta, rel_tol=Fraction(1, 1000), starts=8)
+    assert c.delta == fmpq(*delta.as_integer_ratio())
+    assert c.upper / c.lower == fmpq(1001, 1000)
+    p = c.save(tmp_path / "binary-contrast.json.gz")
+    assert _verifier().verify(p, log=lambda *args: None) == (float(c.lower), float(c.upper))
+
+    class SearchReached(Exception):
+        pass
+
+    def search(self, requested, starts):
+        assert requested == c.delta
+        raise SearchReached
+
+    monkeypatch.setattr(C.HolderProjections, "search", search)
+    with pytest.raises(SearchReached):
+        C.certify("holder_projections", C.load(p).delta)
+
+
+def test_relative_target_does_not_underflow_through_binary_float():
+    """A constant positive objective has a known exact supremum even below the binary64 range."""
+    tiny = fmpq(1, 10 ** 400)
+
+    class ConstantEnvelope(C.Problem):
+        id = "constant-envelope-test"
+        statement = "supremum of the constant 10^-400 on [0,1]"
+        variables = ("x",)
+        reductions = []
+
+        def domain(self, delta):
+            return [(fmpq(0), fmpq(1))]
+
+        def objective(self, x, delta):
+            return x[0] * 0 + tiny
+
+        def search(self, delta, starts=40, seed=0):
+            return [0], 0.0
+
+        def witness(self, point, delta):
+            return {"point": "0"}, tiny
+
+    c = C.certify(ConstantEnvelope(), "1/2", rel_tol=fmpq(1, 1000))
+    assert c.lower == tiny
+    assert c.upper == fmpq(1001, 1000 * 10 ** 400)
+    assert c.data["upper"]["leaves"] == 1
+
+
+def test_positive_but_impossible_upper_target_obeys_cover_budget(monkeypatch):
+    """An optimizer can miss a peak: an unclosed leftmost path must still consume the leaf budget."""
+    class MissedPeak(C.Problem):
+        id = "missed-peak-budget-test"
+        statement = "supremum of 1-x^2 on [0,1] is 1"
+        variables = ("x",)
+        reductions = []
+
+        def domain(self, delta):
+            return [(fmpq(0), fmpq(1))]
+
+        def objective(self, x, delta):
+            return 1 - x[0] ** 2
+
+        def search(self, delta, starts=40, seed=0):
+            return [fmpq(3, 4)], 7 / 16
+
+        def witness(self, point, delta):
+            return {"point": "3/4"}, fmpq(7, 16)
+
+    original = engine.BranchAndBound.closed
+    calls = 0
+
+    def bounded(self, box):
+        nonlocal calls
+        calls += 1
+        if calls > 32:
+            pytest.fail("the leaf budget did not limit an unclosed proof branch")
+        return original(self, box)
+
+    monkeypatch.setattr(engine.BranchAndBound, "closed", bounded)
+    with pytest.raises(RuntimeError, match="more than 8 leaves"):
+        C.certify(MissedPeak(), "1/2", rel_tol=fmpq(1, 100), max_leaves=8)
+    assert calls <= 8
+
+
+@pytest.mark.parametrize("budget", [0, -1, 1.5])
+def test_cover_requires_positive_integer_leaf_budget(budget):
+    with pytest.raises(ValueError, match="max_leaves must be a positive integer"):
+        engine.BranchAndBound(lambda x: x[0], [(fmpq(0), fmpq(1))], fmpq(2), max_leaves=budget)
+
+
+def test_single_proved_root_fits_one_leaf_budget():
+    bb = engine.BranchAndBound(lambda x: x[0], [(fmpq(0), fmpq(1))], fmpq(2), max_leaves=1).run()
+    assert bb.leaves == bb.potential_leaves == 1
+    assert bb.tokens == ["L"]

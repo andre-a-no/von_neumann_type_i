@@ -361,6 +361,8 @@ class TypeIAlgebra:
             self._abs = None
             self._spectral_cache = None          # {'kind', 'key', 'groups': [(w, V), ...]} when caching is on
             self._cache_on = False
+            self._mutation_epoch = 0
+            self._dependencies = ()
             self._batch = None if matrix is None else matrix.shape[0]   # known batch size of a lazy operator
 
             self._update_memory()
@@ -370,15 +372,46 @@ class TypeIAlgebra:
                 self._bytes_held = self._matrix.element_size() * self._matrix.numel()
             else:
                 self._bytes_held = 0
+            self._matrix_key = self._current_matrix_key()
+
+        def _current_matrix_key(self):
+            if self._matrix is None:
+                return None
+            try:
+                version = self._matrix._version
+            except RuntimeError:                         # tensors made in inference_mode have no version counter
+                version = None
+            return id(self._matrix), version
+
+        def _check_matrix_version(self):
+            key = self._current_matrix_key()
+            dependencies = []
+            for parent, epoch in self._dependencies:
+                parent._check_matrix_version()
+                dependencies.append((parent, parent._mutation_epoch))
+            changed_parent = any(epoch != old for (_, epoch), (_, old) in zip(dependencies, self._dependencies))
+            if key != self._matrix_key or changed_parent:
+                self._eigenvalues = None
+                self._lambda_max = self._lambda_min = self._trace = None
+                self._inverse = self._abs = self._spectral_cache = None
+                for flag in ('self_adjoint', 'normal', 'positive', 'invertible', 'projection'):
+                    setattr(self, f'_is_{flag}', None)
+                    setattr(self, f'_is_{flag}_set', False)
+                self._matrix_key = key
+                self._mutation_epoch += 1
+            self._dependencies = tuple(dependencies)
 
         @property
         def matrix(self) -> torch.Tensor:
+            self._check_matrix_version()
             if not self._is_materialized:
                 self._matrix = self._generator()
                 self._is_materialized = True
+                self._matrix_key = self._current_matrix_key()
                 # drop the recipe: it holds references to the parent operators (and their
                 # cached matrices), which would otherwise stay alive as long as this one
                 self._generator = None
+                self._dependencies = ()
                 self._validate_properties()
                 self._update_memory()
             return self._matrix
@@ -387,16 +420,26 @@ class TypeIAlgebra:
             return 1e-5 if self._matrix.dtype in (torch.float32, torch.complex64) else 1e-10
 
         def _tol_t(self) -> torch.Tensor:
-            """Tolerance for property checks as a 0-dim tensor on the device (no synchronisation): eps times the
-            largest |entry|, i.e. relative to the size of the operator (an absolute floor would misclassify
-            operators of small norm, e.g. 1e-6 times a nilpotent as self-adjoint)."""
+            """Relative property tolerances per sample and block, shape (batch, C), without synchronisation.
+            Independent blocks must not borrow the scale of a large neighbour; no absolute floor is used."""
             mat = self._matrix
-            scale = cost.abs_max(mat) if mat.numel() else mat.new_zeros((), dtype=mat.real.dtype)
+            scale = cost.abs_max(mat, (-2, -1))
             return self._eps() * torch.clamp(scale, min=torch.finfo(scale.dtype).tiny)
 
         def _tol(self) -> float:
             """The same tolerance as a Python number (one host synchronisation)."""
-            return float(self._tol_t())
+            return float(self._tol_t().amax())
+
+        def _positive_spectrum(self, decompositions=None) -> torch.Tensor:
+            """Whether every active block is non-negative at its own relative tolerance (device scalar)."""
+            tol = self._tol_t()
+            if decompositions is None:
+                checks = [(w >= -tol[:, c, None]).all() for c, w in enumerate(self.eigenvalues())]
+            else:
+                B = self.matrix.shape[0]
+                checks = [(w.reshape(B, len(idx), k) >= -tol[:, self.algebra._sel(idx), None]).all()
+                          for k, idx, _, (w, _) in decompositions]
+            return torch.stack(checks).all()
 
         def _validate_properties(self):
             """Check the property flags passed by the user (one host synchronisation for all of them): run when a
@@ -412,27 +455,32 @@ class TypeIAlgebra:
             tol = self._tol_t()
             mat_d = mat.conj().transpose(-2, -1)
             if want('self_adjoint'):
-                checks.append(("Operator marked self-adjoint but not Hermitian", cost.abs_max(mat - mat_d) > tol))
+                checks.append(("Operator marked self-adjoint but not Hermitian",
+                               (cost.abs_max(mat - mat_d, (-2, -1)) > tol).any()))
             if want('normal'):
                 checks.append(("Operator marked normal but not normal",
-                               cost.abs_max(mat @ mat_d - mat_d @ mat) > tol * cost.abs_max(mat)))
+                               (cost.abs_max(mat @ mat_d - mat_d @ mat, (-2, -1))
+                                > tol * cost.abs_max(mat, (-2, -1))).any()))
             if want('positive'):
-                checks.append(("Operator marked positive but has negative eigenvalues", (self.lambda_min < -tol).any()))
+                checks.append(("Operator marked positive but has negative eigenvalues", ~self._positive_spectrum()))
             if want('invertible'):
                 checks.append(("Operator marked invertible but has zero eigenvalue",
                                (self._block_svdvals_min() <= tol).any()))
             if want('projection'):
-                checks.append(("Operator marked projection but P^2 != P", cost.abs_max(mat @ mat - mat) > tol))
+                checks.append(("Operator marked projection but P^2 != P",
+                               (cost.abs_max(mat @ mat - mat, (-2, -1)) > tol).any()))
             failed = torch.stack([c for _, c in checks]).tolist()
             for (msg, _), bad in zip(checks, failed):
                 if bad:
                     raise ValueError(msg)
 
         def _block_svdvals_min(self) -> torch.Tensor:
-            """Smallest singular value over the active blocks, shape (batch,)."""
+            """Smallest singular value of each active block, shape (batch, C); +inf for empty sectors."""
             B = self.matrix.shape[0]
-            mins = [_fc.singular_values(x.detach())[..., -1].reshape(B, -1) for _, _, x in self._groups()]
-            return torch.cat(mins, dim=-1).min(dim=-1)[0]
+            mins = torch.full((B, self.algebra.C), float('inf'), dtype=self.matrix.real.dtype, device=self.matrix.device)
+            for _, idx, x in self._groups():
+                mins[:, self.algebra._sel(idx)] = _fc.singular_values(x.detach())[..., -1].reshape(B, len(idx))
+            return mins
 
         @property
         def shape(self) -> Tuple[int, ...]:
@@ -443,12 +491,13 @@ class TypeIAlgebra:
         # ----- type checks -----
         @property
         def is_self_adjoint(self) -> bool:
+            self._check_matrix_version()
             if self._is_self_adjoint is not None:
                 return self._is_self_adjoint
             mat = self.matrix
             if self._is_self_adjoint is not None:          # set while materialising
                 return self._is_self_adjoint
-            self._is_self_adjoint = bool(cost.abs_max(mat - mat.conj().transpose(-2, -1)) <= self._tol_t()) \
+            self._is_self_adjoint = bool((cost.abs_max(mat - mat.conj().transpose(-2, -1), (-2, -1)) <= self._tol_t()).all()) \
                 if mat.numel() else True
             return self._is_self_adjoint
 
@@ -459,6 +508,7 @@ class TypeIAlgebra:
 
         @property
         def is_normal(self) -> bool:
+            self._check_matrix_version()
             if self._is_normal is not None:
                 return self._is_normal
             if self._is_self_adjoint:
@@ -472,7 +522,7 @@ class TypeIAlgebra:
                 return True
             mat_d = mat.conj().transpose(-2, -1)
             diff = mat @ mat_d - mat_d @ mat
-            self._is_normal = bool(cost.abs_max(diff) <= self._tol_t() * cost.abs_max(mat))
+            self._is_normal = bool((cost.abs_max(diff, (-2, -1)) <= self._tol_t() * cost.abs_max(mat, (-2, -1))).all())
             return self._is_normal
 
         @is_normal.setter
@@ -482,13 +532,14 @@ class TypeIAlgebra:
 
         @property
         def is_positive(self) -> bool:
+            self._check_matrix_version()
             if self._is_positive is not None:
                 return self._is_positive
             if not self.is_self_adjoint:
                 self._is_positive = False
                 return False
             self.matrix
-            self._is_positive = bool((self.lambda_min >= -self._tol_t()).all())
+            self._is_positive = bool(self._positive_spectrum())
             return self._is_positive
 
         @is_positive.setter
@@ -498,6 +549,7 @@ class TypeIAlgebra:
 
         @property
         def is_invertible(self) -> bool:
+            self._check_matrix_version()
             if self._is_invertible is not None:
                 return self._is_invertible
             self.matrix
@@ -511,13 +563,14 @@ class TypeIAlgebra:
 
         @property
         def is_projection(self) -> bool:
+            self._check_matrix_version()
             if self._is_projection is not None:
                 return self._is_projection
             if not self.is_self_adjoint:
                 self._is_projection = False
                 return False
             mat = self.matrix
-            self._is_projection = bool(cost.abs_max(mat @ mat - mat) <= self._tol_t()) if mat.numel() else True
+            self._is_projection = bool((cost.abs_max(mat @ mat - mat, (-2, -1)) <= self._tol_t()).all()) if mat.numel() else True
             return self._is_projection
 
         @is_projection.setter
@@ -528,6 +581,7 @@ class TypeIAlgebra:
         # ----- lambda_max and lambda_min (global extremes) -----
         @property
         def lambda_max(self) -> torch.Tensor:
+            self._check_matrix_version()
             if self._lambda_max is not None:
                 return self._lambda_max
             if not self.is_self_adjoint:
@@ -542,6 +596,7 @@ class TypeIAlgebra:
 
         @property
         def lambda_min(self) -> torch.Tensor:
+            self._check_matrix_version()
             if self._lambda_min is not None:
                 return self._lambda_min
             _ = self.lambda_max
@@ -550,6 +605,7 @@ class TypeIAlgebra:
         # ----- other methods (trace, norms, etc.) -----
         @property
         def trace(self) -> torch.Tensor:
+            self._check_matrix_version()
             if self._trace is not None:
                 return self._trace
             diag = torch.diagonal(self.matrix, dim1=-2, dim2=-1)
@@ -621,31 +677,29 @@ class TypeIAlgebra:
 
         def inverse(self, tol: Optional[float] = None) -> 'TypeIAlgebra.Operator':
             """(Pseudo-)inverse by SVD of every block; singular values below tol are treated as zero (default:
-            relative tolerance k_c * eps * largest singular value of the block, as numpy.linalg.pinv per block)."""
+            relative tolerance k_c * eps * largest singular value of the block, as numpy.linalg.pinv per block).
+            Rank and sign properties are checked on the result after this truncation."""
             if self.is_self_adjoint:                        # Hermitian eigensolver instead of an SVD
                 def f(w):                                   # w: eigenvalues of one block, (..., k_c)
                     thr = (w.shape[-1] * torch.finfo(w.dtype).eps * w.abs().amax(dim=-1, keepdim=True)
                            if tol is None else tol)
                     big = w.abs() > thr
                     return torch.where(big, 1.0 / torch.where(big, w, torch.ones_like(w)), torch.zeros_like(w))
-                op = self.apply_function(f, per_block=True)
+                op = self._apply_function(f, per_block=True, coupled=False)
                 op._is_self_adjoint = True
                 op._is_normal = True
-                op._is_positive = self._is_positive
-                op._is_invertible = self._is_invertible
+                # Truncation may lower the rank or remove every negative eigenvalue.
+                op._is_positive = True if self._is_positive else None
                 return op
 
             def inv_block(A):
                 return _fc.pinv(A, tol)
-            op = TypeIAlgebra.Operator(self.algebra, generator=lambda: self._blockwise(inv_block, "inverse"))
-            # carry over what is known (A^+ is normal / invertible with A); nothing is computed here
-            op._is_normal = self._is_normal
-            op._is_invertible = self._is_invertible
-            op._batch = self._batch
-            return op
+            return self._derived(lambda: self._blockwise(inv_block, "inverse"),
+                                 normal=True if self._is_normal else None)
 
         @property
         def inv(self) -> 'TypeIAlgebra.Operator':
+            self._check_matrix_version()
             if self._inverse is None:
                 self._inverse = self.inverse()
             return self._inverse
@@ -654,6 +708,7 @@ class TypeIAlgebra:
             """|A| = (A^* A)^{1/2}: for self-adjoint A by the functional calculus, otherwise from the singular
             value decomposition (on GPUs for blocks > 32 via the Hermitian eigensolver of [[0, A], [A^*, 0]]);
             gradients finite at degenerate singular values. Cached on the operator, like inv."""
+            self._check_matrix_version()
             if self._abs is None:
                 self._abs = self._compute_abs()
             return self._abs
@@ -702,25 +757,28 @@ class TypeIAlgebra:
         def _require_positive(self, what: str):
             """Positivity check that shares its decomposition with the functional calculus that follows: an
             unknown sign is decided from the eigendecomposition (computed once, kept for apply_function)."""
+            self._check_matrix_version()
             if self._is_positive is True:
                 return
             if self._is_positive is None and self.is_self_adjoint:
                 dec = self._decompositions('hermitian', keep_once=True)
-                wmin = torch.stack([wv[0].amin() for _, _, _, wv in dec]).amin()
-                self._is_positive = bool(wmin >= -self._tol_t())
+                self._is_positive = bool(self._positive_spectrum(dec))
             if not self._is_positive:
                 raise RuntimeError(what)
 
         def sqrt(self) -> 'TypeIAlgebra.Operator':
-            """A^{1/2} of a positive operator (spectral calculus on the active blocks)."""
+            """A^{1/2} of a positive operator (spectral calculus on the active blocks).
+            Pending results recheck positivity of the current parent when materialised."""
             self._require_positive("sqrt requires positive operator")
-            op = self.apply_function(lambda w: _on_positive(w, torch.sqrt))
+            op = self._apply_function(lambda w: _on_positive(w, torch.sqrt), False, False,
+                                      positive_domain="sqrt requires positive operator")
             op._is_self_adjoint = True
             op._is_positive = True
             op._is_normal = True
             return op
 
         def trace_a_log_a(self, tol: float = 1e-12) -> torch.Tensor:
+            self._check_matrix_version()
             if self._is_positive is False or not self.is_self_adjoint:
                 raise RuntimeError("trace_a_log_a requires positive operator")
             # eigenvalues of the active blocks only (the zero padding must not contribute), computed once and
@@ -728,14 +786,16 @@ class TypeIAlgebra:
             B = self.matrix.shape[0]
             out = torch.zeros(B, dtype=self.matrix.real.dtype, device=self.matrix.device)
             mins = []
-            for k_c, _, x in self._groups():
+            block_tol = self._tol_t()
+            for k_c, idx, x in self._groups():
                 S = cost.batched_call(torch.linalg.eigvalsh, 0.5 * (x + x.conj().transpose(-2, -1)),
                                       f"eigvalsh (blocks of size {k_c})")
-                mins.append(S.detach().amin())
+                mins.append((S.detach().reshape(B, len(idx), k_c)
+                             >= -block_tol[:, self.algebra._sel(idx), None]).all())
                 S = torch.where(S > tol, S, torch.zeros_like(S))
                 out = out + torch.special.xlogy(S, S).reshape(B, -1).sum(-1)
             if self._is_positive is None:
-                self._is_positive = bool(torch.stack(mins).amin() >= -self._tol_t())
+                self._is_positive = bool(torch.stack(mins).all())
             if not self._is_positive:
                 raise RuntimeError("trace_a_log_a requires positive operator")
             return out
@@ -750,6 +810,7 @@ class TypeIAlgebra:
             of a positive operator, with the extreme eigenvalues taken over the whole
             algebra (all channels). Returns a tensor of shape (batch,); Delta = 0 for A = 0.
             """
+            self._check_matrix_version()
             if self._is_positive is not True and not self.is_positive:
                 raise RuntimeError("Michelson contrast requires a positive operator.")
             lmax, lmin = self.lambda_max, self.lambda_min
@@ -763,6 +824,8 @@ class TypeIAlgebra:
             """Binary operations need operators of the same algebra (or of algebras with the same structure)."""
             if not isinstance(other, TypeIAlgebra.Operator):
                 raise TypeError(f"'{op}' needs two operators; for a multiple of the identity use alg.identity() * x")
+            self._check_matrix_version()
+            other._check_matrix_version()
             a, b = self.algebra, other.algebra
             if a is not b and (a.k_factors != b.k_factors or a.n_factors != b.n_factors or a.charges != b.charges
                                or a.dtype != b.dtype or _same_device(a.hilbert.device, b.hilbert.device) is False):
@@ -770,8 +833,11 @@ class TypeIAlgebra:
                                  f"{b.dtype}); convert one with op.cast(alg)")
 
         def _derived(self, generator, other=None, **flags) -> 'TypeIAlgebra.Operator':
-            """Lazy result with the property flags that are known to hold (not checked; None = unknown)."""
+            """Lazy result with inferred flags (None = unknown). Pending results follow parent values;
+            parent mutations invalidate inferred flags transitively. Materialization drops the dependencies."""
             op = TypeIAlgebra.Operator(self.algebra, generator=generator)
+            parents = (self,) if other is None else (self, other)
+            op._dependencies = tuple((parent, parent._mutation_epoch) for parent in parents)
             for name, value in flags.items():
                 setattr(op, f'_is_{name}', value)
             # known batch of the result: unknown (None) as soon as one operand's batch is unknown
@@ -793,6 +859,7 @@ class TypeIAlgebra:
 
         def __mul__(self, scalar: Union[float, complex, torch.Tensor]) -> 'TypeIAlgebra.Operator':
             """Multiplication by a number, or by a tensor of shape (batch,) holding one number per sample."""
+            self._check_matrix_version()
             if isinstance(scalar, torch.Tensor) and scalar.dim() > 0:
                 if scalar.dim() != 1:
                     raise ValueError("multiply by a number or by a tensor of shape (batch,)")
@@ -812,8 +879,11 @@ class TypeIAlgebra:
             nonzero = isinstance(scalar, (int, float, complex)) and scalar != 0
             if isinstance(scalar, (int, float, complex)) and scalar == 0:     # 0 * A = 0, whatever A is
                 return self._derived(scaled, normal=True, self_adjoint=True, positive=True, invertible=None)
-            out = self._derived(scaled, normal=self._is_normal,
-                                self_adjoint=self._is_self_adjoint if real else None,
+            # An unknown (possibly zero) tensor coefficient can turn False into True.
+            normal = self._is_normal if nonzero else (True if self._is_normal else None)
+            sa = (self._is_self_adjoint if real and nonzero else
+                  (True if real and self._is_self_adjoint else None))
+            out = self._derived(scaled, normal=normal, self_adjoint=sa,
                                 positive=True if (self._is_positive and nonneg) else None,
                                 invertible=self._is_invertible if nonzero else None)
             if isinstance(scalar, torch.Tensor) and scalar.dim() > 0 and self._batch is not None:
@@ -828,10 +898,12 @@ class TypeIAlgebra:
             return self._derived(lambda: self.matrix - other.matrix, other, self_adjoint=sa, normal=True if sa else None)
 
         def __neg__(self) -> 'TypeIAlgebra.Operator':
+            self._check_matrix_version()
             return self._derived(lambda: -self.matrix, self_adjoint=self._is_self_adjoint, normal=self._is_normal,
                                  invertible=self._is_invertible)
 
         def adjoint(self) -> 'TypeIAlgebra.Operator':
+            self._check_matrix_version()
             return self._derived(lambda: self.matrix.conj().transpose(-2, -1), self_adjoint=self._is_self_adjoint,
                                  normal=self._is_normal, positive=self._is_positive,
                                  invertible=self._is_invertible, projection=self._is_projection)
@@ -916,6 +988,7 @@ class TypeIAlgebra:
             Cheaper than eigh() (no eigenvectors are formed or stored); differentiable.
             Channels with k_c = 0 give empty tensors.
             """
+            self._check_matrix_version()
             if not self.is_self_adjoint:
                 raise RuntimeError("eigenvalues requires a self-adjoint operator")
             if self._eigenvalues is not None and self._batch is not None:   # spectrum known by construction
@@ -933,7 +1006,8 @@ class TypeIAlgebra:
             (apply_function, sqrt, log, power, eigenvalues, propagators for many times, ...) cost matrix products
             only. Costs one extra copy of the operator. Also switched on for all operators by
             `torch_vn_algebra.caching()`. Returns self. The cache is invalidated by in-place changes of the matrix
-            (PyTorch version counter), but not by changes through `.data`.
+            (PyTorch version counter), but not by changes through `.data` or to tensors created in inference_mode.
+            Known eigenvalues, property flags, trace, inv and abs are invalidated along with the decomposition.
             """
             self._cache_on = bool(enable)
             if not enable:
@@ -944,6 +1018,7 @@ class TypeIAlgebra:
             self._spectral_cache = None
 
         def cache_info(self) -> dict:
+            self._check_matrix_version()
             c = self._spectral_cache
             nbytes = 0 if c is None else sum(t.element_size() * t.numel() for g in c['groups'] for t in g)
             return {'enabled': self._caching(), 'cached': c is not None and self._cache_valid(c),
@@ -953,8 +1028,8 @@ class TypeIAlgebra:
             return self._cache_on or _fc_cache_enabled()
 
         def _cache_key(self):
-            m = self.matrix
-            return (id(m), m._version)
+            self.matrix
+            return self._current_matrix_key()
 
         def _cache_valid(self, c) -> bool:
             return c['key'] == self._cache_key()
@@ -990,7 +1065,8 @@ class TypeIAlgebra:
             that size, a tensor (batch, n * k_c), and returns a tensor of the same shape (per-sample parameters
             of shape (batch, 1) broadcast; the operator must then have the full batch, e.g. (A * t) instead of a
             batch-1 A). With per_block=True f instead receives one block per row, (batch * n, k_c), and may
-            couple the eigenvalues of a block (e.g. thresholds relative to the block); per-sample parameters do
+            couple the eigenvalues of a block (e.g. normalising by their sum); the map must commute with
+            permutations of eigenvalues. Its full per-block Jacobian is used for gradients. Per-sample parameters do
             not broadcast then. A complex-valued result requires a complex algebra. Only the Hermitian
             eigensolver is used (for normal A, on H + alpha K with A = H + iK), one batched call per block size.
             Gradients with respect to A use the Daleckii-Krein formula (divided differences of f): finite also
@@ -998,9 +1074,14 @@ class TypeIAlgebra:
             Gradients with respect to parameters of f (e.g. t in exp(-itw)) are propagated as usual. For
             non-normal A use holomorphic_function.
             """
+            return self._apply_function(f, per_block, coupled=per_block)
+
+        def _apply_function(self, f, per_block: bool, coupled: bool, positive_domain=None):
             alg = self.algebra
 
             def generator():
+                if positive_domain is not None:
+                    self._require_positive(positive_domain)
                 if self.is_self_adjoint:
                     kind = 'hermitian'
                 elif self.is_normal:
@@ -1019,13 +1100,15 @@ class TypeIAlgebra:
                         if per_block:
                             return f(w)
                         return f(w.reshape(B, n * k_c)).reshape(-1, k_c)
-                    y = _fc.spectral_apply(x, f_values, kind, decomposition=wv)
+                    y = _fc.spectral_apply(x, f_values, kind, decomposition=wv, coupled=coupled)
                     parts.append((k_c, idx, y))
                 cplx = any(torch.is_complex(y) for _, _, y in parts)
                 out_dtype = self.matrix.dtype
                 if cplx and not torch.is_complex(self.matrix):
-                    big = torch.stack([y.detach().imag.abs().amax() for _, _, y in parts if torch.is_complex(y)]).amax()
-                    if bool(big > self._tol_t()):                # one synchronisation (validation)
+                    tol = self._tol_t()
+                    bad = [(y.detach().imag.abs().amax((-2, -1)).reshape(B, len(idx))
+                            > tol[:, alg._sel(idx)]).any() for _, idx, y in parts if torch.is_complex(y)]
+                    if bool(torch.stack(bad).any()):                # one synchronisation (validation)
                         raise ValueError("complex-valued f(A) requires a complex-valued algebra")
                 out = torch.zeros(self.matrix.shape, dtype=out_dtype, device=self.matrix.device)
                 for k_c, idx, y in parts:
@@ -1074,7 +1157,8 @@ class TypeIAlgebra:
         def expm(self, scale: Union[float, complex] = 1.0) -> 'TypeIAlgebra.Operator':
             """exp(scale * A) for any operator (torch.linalg.matrix_exp on each active block)."""
             alg = self.algebra
-            if isinstance(scale, complex) and not alg.hilbert.complex_valued:
+            if (isinstance(scale, complex) or
+                    (isinstance(scale, torch.Tensor) and torch.is_complex(scale))) and not alg.hilbert.complex_valued:
                 raise ValueError("complex scale requires a complex-valued algebra")
             if isinstance(scale, torch.Tensor) and scale.dim() > 0:
                 raise ValueError("expm: scale must be a number (for one value per sample use (A * t).expm())")
@@ -1085,15 +1169,18 @@ class TypeIAlgebra:
             return self._derived(generator, invertible=True)
 
         def log(self, eps: float = 1e-12) -> 'TypeIAlgebra.Operator':
-            """log(A) of a positive operator; eigenvalues are clamped to eps."""
+            """log(A) of a positive operator; eigenvalues are clamped to eps.
+            Pending results recheck positivity of the current parent when materialised."""
             self._require_positive("log requires a positive operator")
-            op = self.apply_function(lambda w: torch.log(torch.clamp(w, min=eps)))
+            op = self._apply_function(lambda w: torch.log(torch.clamp(w, min=eps)), False, False,
+                                      positive_domain="log requires a positive operator")
             op._is_self_adjoint = True
             op._is_normal = True
             return op
 
         def power(self, p: float) -> 'TypeIAlgebra.Operator':
-            """A^p of a positive operator (negative p: on the support only)."""
+            """A^p of a positive operator (negative p: on the support only).
+            Pending results recheck positivity of the current parent when materialised."""
             self._require_positive("power requires a positive operator")
             def f(w):                                       # w: eigenvalues of one block, (..., k_c)
                 if p == 0:
@@ -1105,7 +1192,8 @@ class TypeIAlgebra:
                 thr = w.shape[-1] * torch.finfo(w.dtype).eps * w.amax(dim=-1, keepdim=True)
                 big = w > thr
                 return torch.where(big, torch.where(big, w, torch.ones_like(w)) ** p, torch.zeros_like(w))
-            op = self.apply_function(f, per_block=p < 0)
+            op = self._apply_function(f, per_block=p < 0, coupled=False,
+                                      positive_domain="power requires a positive operator")
             op._is_self_adjoint = True
             op._is_positive = True
             return op
@@ -1161,7 +1249,9 @@ class TypeIAlgebra:
                 all_eig.append(torch.zeros(0, dtype=self.hilbert.dtype, device=self.hilbert.device))
                 continue
             eig = eigenvalue_sampler(k_c)
-            eig = _as_tensor(eig)
+            # A sampler may reuse its storage or the caller may later mutate it. Keep the sampled
+            # spectrum and its inferred flags together; clone preserves the path to sampler parameters.
+            eig = _as_tensor(eig).clone()
             if eig.shape[-1:] != (k_c,) or eig.dim() > 2 or (eig.dim() == 2 and eig.shape[0] not in (1, batch_size)):
                 raise ValueError(f"eigenvalue_sampler({k_c}) must return shape ({k_c},) or ({batch_size}, {k_c}), "
                                  f"got {tuple(eig.shape)}")
