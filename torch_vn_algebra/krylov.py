@@ -54,13 +54,20 @@ class SparseSectorHamiltonian:
     def device(self):
         return self.diag.device
 
-    def _off(self, dtype):
+    def _off(self, dtype, force_coo=False):
         if self.offdiag is None:
             return None
         version = _version(self.offdiag)
-        cacheable = version is not None and not (torch.is_grad_enabled() and self.offdiag.requires_grad)
+        differentiable = torch.is_grad_enabled() and (self.offdiag.requires_grad or force_coo)
+        cacheable = version is not None and not differentiable
         cached = self._csr.get(dtype)
         if not cacheable or cached is None or cached[0] != version:
+            # PyTorch 1.13 has no backward for COO -> CSR. Keep the differentiable COO graph fresh.
+            if differentiable:
+                # Cast the dense values: casting an entire real sparse tensor to complex has no
+                # backward on PyTorch 1.13 either.
+                return torch.sparse_coo_tensor(self.offdiag.indices(), self.offdiag.values().to(dtype),
+                                                self.offdiag.shape).coalesce()
             # CSR is ~20x faster than COO for sparse @ dense on CPU (PyTorch 2.x); silence its beta warning
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
@@ -81,12 +88,13 @@ class SparseSectorHamiltonian:
             return out
         return cached[1]
 
-    def _split_sparse_diagonal(self, dtype):
-        """Shared sparse diagonal and strictly off-diagonal CSR, with the same mutation rules as _off."""
+    def _split_sparse_diagonal(self, dtype, force_coo=False):
+        """Shared sparse diagonal and strictly off-diagonal matrix, with the same cache/gradient rules as _off."""
         if self.offdiag is None:
             return None, None
         version = _version(self.offdiag)
-        cacheable = version is not None and not (torch.is_grad_enabled() and self.offdiag.requires_grad)
+        differentiable = torch.is_grad_enabled() and (self.offdiag.requires_grad or force_coo)
+        cacheable = version is not None and not differentiable
         cached = self._centered_parts.get(dtype)
         if not cacheable or cached is None or cached[0] != version:
             indices = self.offdiag.indices()
@@ -98,9 +106,11 @@ class SparseSectorHamiltonian:
                 with warnings.catch_warnings():
                     warnings.simplefilter('ignore', UserWarning)
                     off = torch.sparse_coo_tensor(indices[:, ~diagonal_mask], values[~diagonal_mask],
-                                                  self.offdiag.shape).coalesce().to_sparse_csr()
+                                                  self.offdiag.shape).coalesce()
+                    if not differentiable:
+                        off = off.to_sparse_csr()
             else:
-                off = self._off(dtype)
+                off = self._off(dtype, force_coo=force_coo)
             if cacheable:
                 self._centered_parts[dtype] = version, diagonal, off
             return diagonal, off
@@ -143,17 +153,22 @@ class SparseSectorHamiltonian:
             V = V.unsqueeze(-1)
         # never cast H to the type of V: a real V with a complex H would silently drop Im H
         V = V.to(torch.promote_types(V.dtype, self.dtype))
+        # PyTorch 1.13's CSR backward also fails for a complex dense input, even with a fixed H.
+        force_coo = torch.is_grad_enabled() and V.requires_grad
         d = self._diagonal(V.dtype)
         if shift is not None:
-            diagonal, A = self._split_sparse_diagonal(V.dtype)
+            diagonal, A = self._split_sparse_diagonal(V.dtype, force_coo=force_coo)
             d = d if diagonal is None else d + diagonal
             d = d - shift.to(V.dtype)[:, None]
         else:
-            A = self._off(V.dtype)
+            A = self._off(V.dtype, force_coo=force_coo)
         out = d.unsqueeze(-1) * V
         if A is not None:
             B, k, m = V.shape
-            AV = (A @ V.permute(1, 0, 2).reshape(k, B * m)).reshape(k, B, m).permute(1, 0, 2)
+            columns = V.permute(1, 0, 2).reshape(k, B * m)
+            # The generic COO @ dense path lacks sparse-input autograd on PyTorch 1.13.
+            AV = torch.sparse.mm(A, columns) if A.layout == torch.sparse_coo else A @ columns
+            AV = AV.reshape(k, B, m).permute(1, 0, 2)
             out = out + AV
         return out.squeeze(-1) if squeeze else out
 

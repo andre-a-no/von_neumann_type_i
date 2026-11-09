@@ -24,6 +24,10 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 - `ROADMAP_certify.md`: the plan of the module (SDP layer, matrix-function bounds, the remaining items).
 
 ### Fixed
+- CI uses Ubuntu 22.04 for Python 3.8/3.9, whose interpreter builds are unavailable on the Ubuntu 26.04
+  `ubuntu-latest` image. The full supported Python matrix is retained.
+- Sparse Hamiltonian gradients use a COO path with `torch.sparse.mm`, including for complex input vectors
+  on PyTorch 1.13, where COO-to-CSR and complex CSR backward are unsupported. Inference retains CSR caching.
 - Krylov evolution separates scalar spectral shifts from Ritz data and phase, retains residual error at
   numerical breakdown, and advances by elapsed intervals even for large absolute timestamps. Schrödinger
   RK4 broadcasts initial states over Hamiltonian batches and preserves Hamiltonian precision. Scaled

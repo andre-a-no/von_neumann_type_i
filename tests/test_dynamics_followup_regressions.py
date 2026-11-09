@@ -205,6 +205,56 @@ def test_sparse_diagonal_casts_do_not_reuse_a_finished_autograd_graph():
         torch.testing.assert_close(grad, 2 * diagonal.detach() * v.abs().square())
 
 
+@pytest.mark.parametrize('dtype', [torch.float64, torch.complex128])
+@pytest.mark.parametrize('has_sparse_diagonal', [False, True])
+def test_sparse_matvec_gradients_match_dense_after_repeated_backward(dtype, has_sparse_diagonal):
+    indices = torch.tensor([[0, 0, 1, 1], [0, 1, 0, 1]] if has_sparse_diagonal else [[0, 1], [1, 0]])
+    values = torch.tensor([.2, .3, .3, -.1] if has_sparse_diagonal else [.3, .3], dtype=torch.float64)
+    off = torch.sparse_coo_tensor(indices, values, (2, 2)).coalesce().requires_grad_(True)
+    diagonal = torch.tensor([[1., 2.]], dtype=torch.float64, requires_grad=True)
+    H = krylov.SparseSectorHamiltonian(diagonal, off, dtype)
+    vector_values = [[1.2, -.3]] if dtype == torch.float64 else [[1.2 + .2j, -.3 - .1j]]
+    v = torch.tensor(vector_values, dtype=dtype, requires_grad=True)
+    for _ in range(2):
+        loss = H.matvec(v).abs().square().sum()
+        sparse_grad, diagonal_grad, vector_grad = torch.autograd.grad(loss, (off, diagonal, v))
+        dense_values = values.detach().clone().requires_grad_(True)
+        dense_diagonal = diagonal.detach().clone().requires_grad_(True)
+        dense_v = v.detach().clone().requires_grad_(True)
+        shared = torch.zeros(2, 2, dtype=torch.float64).index_put(tuple(indices), dense_values)
+        dense = torch.diag_embed(dense_diagonal) + shared
+        reference = (dense.to(dtype) @ dense_v.unsqueeze(-1)).abs().square().sum()
+        expected = torch.autograd.grad(reference, (dense_values, dense_diagonal, dense_v))
+        shared_grad = torch.zeros(2, 2, dtype=torch.float64).index_put(tuple(indices), expected[0])
+        torch.testing.assert_close(sparse_grad.to_dense(), shared_grad)
+        torch.testing.assert_close(diagonal_grad, expected[1])
+        torch.testing.assert_close(vector_grad, expected[2])
+
+
+@pytest.mark.parametrize('dtype', [torch.float64, torch.complex128])
+@pytest.mark.parametrize('shifted', [False, True])
+@pytest.mark.parametrize('has_sparse_diagonal', [False, True])
+def test_fixed_sparse_matvec_vector_gradients_match_dense_repeatedly(dtype, shifted, has_sparse_diagonal):
+    shared = torch.tensor([[.2, .3], [.3, -.1]] if has_sparse_diagonal else [[0., .3], [.3, 0.]],
+                          dtype=torch.float64)
+    diagonal = torch.tensor([[1., 2.]], dtype=torch.float64)
+    H = krylov.SparseSectorHamiltonian(diagonal, shared.to_sparse(), dtype)
+    vector_values = [[1.2, -.3]] if dtype == torch.float64 else [[1.2 + .2j, -.3 - .1j]]
+    v = torch.tensor(vector_values, dtype=dtype, requires_grad=True)
+    shift = torch.tensor([.7], dtype=torch.float64)
+    # Populate the normal CSR cache before requesting gradients through the same fixed H.
+    H.matvec(v.detach())
+    H.matvec_shifted(v.detach(), shift)
+    for _ in range(2):
+        action = H.matvec_shifted(v, shift) if shifted else H.matvec(v)
+        actual, = torch.autograd.grad(action.abs().square().sum(), v)
+        dense_v = v.detach().clone().requires_grad_(True)
+        dense = torch.diag(diagonal[0] - (shift if shifted else 0)) + shared
+        loss = (dense.to(dtype) @ dense_v.T).abs().square().sum()
+        expected, = torch.autograd.grad(loss, dense_v)
+        torch.testing.assert_close(actual, expected)
+
+
 def test_sparse_diagonal_split_preserves_repeated_gradients():
     values = torch.tensor([.2, .3, .3, -.1], dtype=torch.float64)
     indices = torch.tensor([[0, 0, 1, 1], [0, 1, 0, 1]])
