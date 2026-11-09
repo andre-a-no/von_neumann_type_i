@@ -288,7 +288,8 @@ class FeedForward(_AlgebraLayer):
         """Instrument backed by the current checkpointed Kraus tensor and algebra."""
         inst = measurement.Instrument(self.instrument_kraus, self.algebra, check=False,
                                       outcomes=self._instrument_outcomes)
-        inst._trace_preserving = self._instrument_trace_preserving
+        # The checkpointed buffer can change independently of its saved metadata. Leave its
+        # classification unknown so channel exports check the current Kraus data when needed.
         return inst
 
     def get_extra_state(self):
@@ -336,25 +337,27 @@ def count_parameters(module: nn.Module, effective: bool = True) -> int:
     """
     Number of real parameters of a network (complex entries count twice). With effective=True only entries that can
     influence the map are counted: the active blocks, the allowed transitions of channel and generator layers, and a
-    Hamiltonian as a self-adjoint element (sum_c k_c^2 real numbers). The gauge freedom of Kraus operators is not
-    subtracted.
+    Hamiltonian as a self-adjoint element (k_c^2 real coordinates per complex block, or k_c(k_c+1)/2 per real
+    symmetric block). Gauge freedoms of Kraus operators and scalar Hamiltonian shifts are not subtracted.
     """
     total = 0
     for mod in module.modules():
         for name, p in mod.named_parameters(recurse=False):
+            scalar_dof = 2 if p.is_complex() else 1
             if not effective:
-                total += 2 * p.numel() if p.is_complex() else p.numel()
+                total += scalar_dof * p.numel()
                 continue
             if isinstance(mod, ChannelLayer):
-                total += 2 * int(mod._param._mask.sum())
+                total += scalar_dof * int(mod._param._mask.sum())
             elif isinstance(mod, (UnitaryLayer, LindbladLayer)) and name in ('X', 'L', 'K'):
                 block = int(sum(k * k for k in mod.algebra.k_factors))
                 if name == 'X':
-                    total += block
+                    total += (block if p.is_complex() else
+                              sum(k * (k + 1) // 2 for k in mod.algebra.k_factors))
                 elif name == 'L':
-                    total += 2 * p.shape[1] * block
+                    total += scalar_dof * p.shape[1] * block
                 else:
-                    total += 2 * p.shape[1] * int(mod._param.inter_mask.sum())
+                    total += scalar_dof * p.shape[1] * int(mod._param.inter_mask.sum())
             else:
-                total += 2 * p.numel() if p.is_complex() else p.numel()
+                total += scalar_dof * p.numel()
     return total

@@ -1157,7 +1157,8 @@ class TypeIAlgebra:
         def expm(self, scale: Union[float, complex] = 1.0) -> 'TypeIAlgebra.Operator':
             """exp(scale * A) for any operator (torch.linalg.matrix_exp on each active block)."""
             alg = self.algebra
-            if isinstance(scale, complex) and not alg.hilbert.complex_valued:
+            if (isinstance(scale, complex) or
+                    (isinstance(scale, torch.Tensor) and torch.is_complex(scale))) and not alg.hilbert.complex_valued:
                 raise ValueError("complex scale requires a complex-valued algebra")
             if isinstance(scale, torch.Tensor) and scale.dim() > 0:
                 raise ValueError("expm: scale must be a number (for one value per sample use (A * t).expm())")
@@ -1248,7 +1249,9 @@ class TypeIAlgebra:
                 all_eig.append(torch.zeros(0, dtype=self.hilbert.dtype, device=self.hilbert.device))
                 continue
             eig = eigenvalue_sampler(k_c)
-            eig = _as_tensor(eig)
+            # A sampler may reuse its storage or the caller may later mutate it. Keep the sampled
+            # spectrum and its inferred flags together; clone preserves the path to sampler parameters.
+            eig = _as_tensor(eig).clone()
             if eig.shape[-1:] != (k_c,) or eig.dim() > 2 or (eig.dim() == 2 and eig.shape[0] not in (1, batch_size)):
                 raise ValueError(f"eigenvalue_sampler({k_c}) must return shape ({k_c},) or ({batch_size}, {k_c}), "
                                  f"got {tuple(eig.shape)}")

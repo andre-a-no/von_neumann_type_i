@@ -141,8 +141,12 @@ class UnitaryParam(Param):
     def matrix(self) -> torch.Tensor:
         """U as a tensor; computed once per parameter state (an objective that uses U several times, e.g. X and
         |X| of a PositiveParam, pays one matrix exponential)."""
-        key = (self.G._version, id(self.base), torch.is_grad_enabled())
-        if self._cache[0] != key:
+        try:
+            base_version = self.base._version
+        except RuntimeError:                         # inference tensors have no version counter
+            base_version = None
+        key = (self.G._version, id(self.base), base_version, torch.is_grad_enabled())
+        if base_version is None or self._cache[0] != key:
             skew = self.G - self.G.conj().transpose(-2, -1)
             self._cache = (key, self.base @ self.alg.operator(skew).expm().matrix)
         return self._cache[1]
@@ -541,7 +545,8 @@ def extremize(objective: Callable[[], torch.Tensor], params: Sequence[Param], ma
 
     def keep(v):
         nonlocal best
-        v = torch.nan_to_num(v.detach(), nan=-float('inf') if maximize else float('inf'))
+        invalid = -float('inf') if maximize else float('inf')
+        v = torch.nan_to_num(v.detach(), nan=invalid, posinf=invalid, neginf=invalid)
         best = v if best is None else (torch.maximum(best, v) if maximize else torch.minimum(best, v))
 
     for rnd in range(rounds):

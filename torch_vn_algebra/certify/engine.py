@@ -22,7 +22,12 @@ over that face); else it is bisected along its relatively widest side. The searc
 The side is chosen by the smear rule (largest |dF/dx_k| times width); the verifier does not need to know the rule.
 
 so the verifier can rebuild every box exactly from the root box, and coverage holds by construction.
+
+``max_leaves`` bounds the current proof frontier, including unresolved regions. A split consumes one additional
+leaf slot even if no region has been proved yet, so an impossible target cannot evade the budget by endless bisection.
 """
+from operator import index
+
 from flint import arb, fmpq, ctx
 
 from .ad import Jet
@@ -61,9 +66,18 @@ def bounds(F, box, order=2):
 
 class BranchAndBound:
     def __init__(self, F, root, U, max_leaves=2_000_000, monotone=True, order=2, split="smear"):
+        try:
+            max_leaves = index(max_leaves)
+        except TypeError as exc:
+            raise ValueError("max_leaves must be a positive integer") from exc
+        if max_leaves < 1:
+            raise ValueError("max_leaves must be a positive integer")
         self.F, self.root, self.U, self.Ub = F, list(root), fmpq(U), _ball(fmpq(U))
         self.max_leaves, self.monotone, self.order, self.split = max_leaves, monotone, order, split
         self.tokens, self.leaves, self.max_depth = [], 0, 0
+        # Count the complete current frontier (closed leaves and open regions), not only proved leaves.
+        # Every binary split adds one potential leaf; monotonicity keeps the count unchanged.
+        self.potential_leaves = 1
         self.widths = [hi - lo for lo, hi in root]
 
     def split_side(self, box, grad):
@@ -90,8 +104,6 @@ class BranchAndBound:
             if ok:
                 self.tokens.append("L")
                 self.leaves += 1
-                if self.leaves > self.max_leaves:
-                    raise RuntimeError(f"branch and bound: more than {self.max_leaves} leaves; raise U or max_leaves")
                 continue
             if self.monotone:
                 k = next((i for i, g in enumerate(grad) if box[i][0] != box[i][1] and (g < 0 or g > 0)), None)
@@ -106,6 +118,9 @@ class BranchAndBound:
             k = self.split_side(box, grad)
             if k is None:
                 raise RuntimeError(f"branch and bound: a point box {box} is not below U = {self.U}; U < sup F?")
+            if self.potential_leaves >= self.max_leaves:
+                raise RuntimeError(f"branch and bound: more than {self.max_leaves} leaves; raise U or max_leaves")
+            self.potential_leaves += 1
             lo, hi = box[k]
             mid = (lo + hi) / 2
             left, right = list(box), list(box)

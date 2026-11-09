@@ -41,6 +41,32 @@ def _check_input(op, alg: TypeIAlgebra, what: str) -> None:
                          f"{alg} ({alg.dtype}); convert with op.cast(alg)")
 
 
+def _kraus_key(kraus: torch.Tensor):
+    """Identity/version of mutable Kraus data; inference tensors have no reliable version."""
+    try:
+        return id(kraus), kraus._version
+    except RuntimeError:
+        return None
+
+
+def _trace_preserving_hint(channel):
+    """Drop a cached classification after replacement or in-place mutation of its Kraus tensor."""
+    key = _kraus_key(channel.kraus)
+    if key is None or key != getattr(channel, '_trace_preserving_key', None):
+        channel._trace_preserving = None
+        channel._trace_preserving_key = key
+    return channel._trace_preserving
+
+
+def _checked_trace_preserving(channel) -> bool:
+    known = _trace_preserving_hint(channel)
+    if known is None:
+        known = channel.is_trace_preserving()
+        channel._trace_preserving = known
+        channel._trace_preserving_key = _kraus_key(channel.kraus)
+    return known
+
+
 class Channel:
     """Sector-preserving completely positive map given by Kraus operators."""
 
@@ -58,6 +84,7 @@ class Channel:
         self.algebra = algebra
         self.kraus = kraus
         self._trace_preserving = trace_preserving
+        self._trace_preserving_key = _kraus_key(kraus)
 
     # ------------------------------------------------------------------
     @property
@@ -77,11 +104,19 @@ class Channel:
         Schroedinger picture: rho -> sum_i K_i rho K_i^* (lazy).
         A DensityMatrix is mapped to a DensityMatrix if the channel is trace preserving;
         otherwise the result is a plain Operator and a warning is issued.
+        If its Kraus tensor loses trace preservation before a pending state is materialised,
+        materialisation raises instead of returning a misnormalised DensityMatrix.
         """
         _check_input(op, self.algebra, "Channel.apply")
         K = self.kraus
+        state_output = isinstance(op, DensityMatrix) and _checked_trace_preserving(self)
+        key = _kraus_key(K)
 
         def generator():
+            if state_output and (key is None or _kraus_key(K) != key):
+                if not Channel(self.algebra, K).is_trace_preserving():
+                    raise RuntimeError("Channel Kraus operators changed before the pending state was materialised "
+                                       "and are no longer trace preserving")
             rho = op.matrix
             dtype = torch.promote_types(rho.dtype, K.dtype)
             B = max(rho.shape[0], K.shape[0])
@@ -96,9 +131,7 @@ class Channel:
             return Xc @ Kc.conj().transpose(-2, -1)
 
         if isinstance(op, DensityMatrix):
-            if self._trace_preserving is None:                 # checked once per channel (one synchronisation)
-                self._trace_preserving = self.is_trace_preserving()
-            if self._trace_preserving:
+            if state_output:
                 return DensityMatrix(self.algebra, generator=generator, validate=False)
             warnings.warn("channel is not trace preserving: the image of a DensityMatrix is "
                           "returned as an unnormalised Operator", stacklevel=2)
@@ -127,7 +160,7 @@ class Channel:
         L = other.kraus.unsqueeze(1)           # (B, 1, r2, C, k, k)
         KL = K @ L
         B = KL.shape[0]
-        tp = True if (self._trace_preserving and other._trace_preserving) else None
+        tp = True if (_trace_preserving_hint(self) and _trace_preserving_hint(other)) else None
         return Channel(self.algebra, KL.reshape(B, -1, *KL.shape[3:]), trace_preserving=tp)
 
     __matmul__ = compose
@@ -139,7 +172,7 @@ class Channel:
         G = torch.zeros(B, r, C, C, k, k, dtype=K.dtype, device=K.device)
         idx = torch.arange(C, device=K.device)
         G[:, :, idx, idx] = K
-        return InterSectorChannel(self.algebra, self.algebra, G, trace_preserving=self._trace_preserving)
+        return InterSectorChannel(self.algebra, self.algebra, G, trace_preserving=_trace_preserving_hint(self))
 
     def mix(self, other: 'Channel', p: float) -> 'Channel':
         """Convex combination (1 - p) self + p other."""
@@ -153,7 +186,7 @@ class Channel:
         B = max(self.batch_size, other.batch_size)
         a = (1 - p) ** 0.5 * self.kraus.expand(B, *self.kraus.shape[1:])
         b = p ** 0.5 * other.kraus.expand(B, *other.kraus.shape[1:]).to(a.dtype)
-        tp = True if (self._trace_preserving and other._trace_preserving) else None
+        tp = True if (_trace_preserving_hint(self) and _trace_preserving_hint(other)) else None
         return Channel(self.algebra, torch.cat([a, b], dim=1), trace_preserving=tp)
 
     # ------------------------------------------------------------------
@@ -423,6 +456,7 @@ class InterSectorChannel:
         self.algebra_out = algebra_out
         self.kraus = kraus
         self._trace_preserving = trace_preserving
+        self._trace_preserving_key = _kraus_key(kraus)
 
     def __repr__(self) -> str:
         return (f"InterSectorChannel(batch={self.kraus.shape[0]}, kraus_rank={self.kraus.shape[1]}, "
@@ -453,8 +487,14 @@ class InterSectorChannel:
         """Schroedinger picture (lazy). Trace-preserving maps send a DensityMatrix to a DensityMatrix."""
         _check_input(op, self.algebra_in, "InterSectorChannel.apply")
         K = self.kraus
+        state_output = isinstance(op, DensityMatrix) and _checked_trace_preserving(self)
+        key = _kraus_key(K)
 
         def generator():
+            if state_output and (key is None or _kraus_key(K) != key):
+                if not InterSectorChannel(self.algebra_in, self.algebra_out, K).is_trace_preserving():
+                    raise RuntimeError("InterSectorChannel Kraus operators changed before the pending state was "
+                                       "materialised and are no longer trace preserving")
             rho = op.matrix
             dtype = torch.promote_types(rho.dtype, K.dtype)
             B, r, D, C, m, _ = K.shape
@@ -470,9 +510,7 @@ class InterSectorChannel:
             return Xc @ Kc.conj().transpose(-2, -1)                        # (B, D, m, m)
 
         if isinstance(op, DensityMatrix):
-            if self._trace_preserving is None:
-                self._trace_preserving = self.is_trace_preserving()
-            if self._trace_preserving:
+            if state_output:
                 return DensityMatrix(self.algebra_out, generator=generator, validate=False)
             warnings.warn("map is not trace preserving: the image of a DensityMatrix is returned "
                           "as an unnormalised Operator", stacklevel=2)
@@ -513,7 +551,7 @@ class InterSectorChannel:
         KL = K @ L                                        # (B, r2, r1, E, D, C, m_e, k_c)
         B, r2, r1, E, D, C = KL.shape[:6]
         KL = KL.permute(0, 1, 2, 4, 3, 5, 6, 7).reshape(B, r2 * r1 * D, E, C, *KL.shape[-2:])
-        tp = True if (self._trace_preserving and other._trace_preserving) else None
+        tp = True if (_trace_preserving_hint(self) and _trace_preserving_hint(other)) else None
         return InterSectorChannel(other.algebra_in, self.algebra_out, KL, trace_preserving=tp)
 
     __matmul__ = compose

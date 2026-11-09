@@ -24,6 +24,27 @@ versions follow [Semantic Versioning](https://semver.org/) from 1.0.0 on (the pu
 - `ROADMAP_certify.md`: the plan of the module (SDP layer, matrix-function bounds, the remaining items).
 
 ### Fixed
+- Krylov evolution separates scalar spectral shifts from Ritz data and phase, retains residual error at
+  numerical breakdown, and advances by elapsed intervals even for large absolute timestamps. Schrödinger
+  RK4 broadcasts initial states over Hamiltonian batches and preserves Hamiltonian precision. Scaled
+  vector norms preserve subnormal values and finite gradients at extreme magnitudes.
+- Sparse Hamiltonian casts and prepared permutational generators refresh after tensor mutations and avoid
+  stale autograd graphs. Spin-coherent states retain their angular derivative at the poles.
+- Symmetry-resolved free-fermion checks use known pure-projector ranks and Schmidt singular values to
+  preserve structural zero modes without discarding genuine small modes or loosening test tolerances.
+- Composite operators track changes to their lazy parents and do not propagate negative positivity or
+  Hermiticity flags through partial traces. Tensor-product factors require matching precision and device.
+- Channels and instrument exports invalidate trace-preservation hints after Kraus data changes; pending
+  state outputs reject mutations that would make them unnormalised. Feed-forward instrument exports check
+  their current checkpointed buffers rather than trusting saved hints.
+- Differentiable PVM pushforwards retain coincident outcomes with distinct derivatives; Fisher information
+  accepts conjugate views of complex parameters. Parameter counts distinguish real from complex entries
+  and real symmetric from complex Hermitian Hamiltonians.
+- Sampled spectra are independent snapshots of reusable sampler buffers, preserving sampler gradients.
+  Unitary parameter caches notice base mutations; real matrix exponentials reject complex tensor scales
+  consistently with Python complex scalars. Optimisation bookkeeping excludes infinities as well as NaNs.
+- Relative certification preserves exact input rationals and requested widths, rejects nonpositive lower
+  bounds, and applies its covering budget to unresolved as well as completed regions.
 - The certificate verifier rejects zero-projection witnesses: both denominator factors must be strictly
   positive before the powered lower-bound inequality is checked, preventing a vacuous `0 <= 0` certificate.
 - Pending square roots, logarithms and powers recheck the current parent's positivity when materialised,
